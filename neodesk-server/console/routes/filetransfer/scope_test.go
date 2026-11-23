@@ -9,13 +9,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/devicegroups"
-	service "github.com/unitronix/betterdesk-server/console/filetransfer"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/filetransfer"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/devicegroups"
+	service "github.com/neodeskapp/neodesk/neodesk-server/console/filetransfer"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath/proxytest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/filetransfer"
 )
 
 // peersOf is the API server's peer lookup of the device layer: it knows

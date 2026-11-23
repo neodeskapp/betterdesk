@@ -67,7 +67,7 @@ func TestParseGateArgs(t *testing.T) {
 		t.Errorf("default report dir %q", opts.reportDir)
 	}
 	env := func(k string) string {
-		if k == "BETTERDESK_LOCAL_GATE_REPORT_DIR" {
+		if k == "NEODESK_LOCAL_GATE_REPORT_DIR" {
 			return "reports"
 		}
 		return ""
@@ -408,7 +408,7 @@ func TestGateRefusesGitHubActions(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, want := range []string{
-		"# BetterDesk local gate\n\n- Overall: **BLOCKED**\n- Branch: `unknown`\n",
+		"# NeoDesk local gate\n\n- Overall: **BLOCKED**\n- Branch: `unknown`\n",
 		"## Checks\n\n- **BLOCKED** `local-only-guard` — Local-only execution guard: The local gate is intentionally disabled inside GitHub Actions.\n\n## Explicit boundaries\n\n",
 		"- **OUT_OF_SCOPE** Linux-only tests on a Windows host: Systemd/privileged Linux checks cannot run natively on Windows without changing a host or VM.\n\nThe report is local-only.",
 	} {

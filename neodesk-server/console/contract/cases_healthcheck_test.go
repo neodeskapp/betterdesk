@@ -5,7 +5,7 @@ package contract_test
 import (
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The health check as the route table and the steps around it answer it:
@@ -42,7 +42,7 @@ func init() {
 		},
 		contract.Case{
 			Name: "language-cookie", Path: "/health",
-			Headers: map[string]string{"Cookie": "betterdesk_lang=pl"}, Roles: contract.Roles("signed-out"),
+			Headers: map[string]string{"Cookie": "neodesk_lang=pl"}, Roles: contract.Roles("signed-out"),
 		},
 	)
 }

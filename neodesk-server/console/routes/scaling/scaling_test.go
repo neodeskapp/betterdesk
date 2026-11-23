@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 const (
@@ -66,12 +66,12 @@ func TestRoutesInTheOrderOfTheOldFileAtBothAddresses(t *testing.T) {
 		"PUT /api/panel/scaling/relays/{nodeId}", "DELETE /api/panel/scaling/relays/{nodeId}",
 		"GET /api/panel/scaling/relays/{nodeId}/health", "GET /api/panel/scaling/relays/{nodeId}/metrics",
 		"GET /api/panel/scaling/capacity", "GET /api/panel/scaling/rules", "POST /api/panel/scaling/rules",
-		"PUT /api/panel/scaling/rules/{ruleId}", "DELETE /api/panel/scaling/rules/{ruleId}", "POST /api/bd/scaling/relay-heartbeat",
+		"PUT /api/panel/scaling/rules/{ruleId}", "DELETE /api/panel/scaling/rules/{ruleId}", "POST /api/nd/scaling/relay-heartbeat",
 	}
 	want := append([]string{}, first...)
 	for _, route := range first {
 		method, path, _ := strings.Cut(route, " ")
-		want = append(want, method+" /api/bd"+path)
+		want = append(want, method+" /api/nd"+path)
 	}
 	if strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Errorf("routes:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
@@ -86,7 +86,7 @@ func TestGuards(t *testing.T) {
 			{"GET", rules}, {"POST", rules}, {"PUT", rules + "/r-1"}, {"DELETE", rules + "/r-1"},
 		}
 		viewer, global := s.signIn("viewer"), s.signIn("global_admin")
-		for _, prefix := range []string{"", "/api/bd"} {
+		for _, prefix := range []string{"", "/api/nd"} {
 			for _, w := range writes {
 				body := ""
 				if w.method == "POST" || w.method == "PUT" {
@@ -115,14 +115,14 @@ func TestGuards(t *testing.T) {
 func TestHeartbeatAnswersAnyoneAndStoresNothing(t *testing.T) {
 	each(t, func(t *testing.T, s *site, db *store.DB) {
 		const want = `{"ok":true,"note":"relay heartbeat acknowledged but not stored"}`
-		for _, path := range []string{"/api/bd/scaling/relay-heartbeat", "/api/bd/api/bd/scaling/relay-heartbeat", "/API/BD/Scaling/Relay-Heartbeat/"} {
+		for _, path := range []string{"/api/nd/scaling/relay-heartbeat", "/api/nd/api/nd/scaling/relay-heartbeat", "/API/ND/Scaling/Relay-Heartbeat/"} {
 			for _, cookie := range []string{"", s.signIn("viewer")} {
 				if status, answer := s.send(cookie, "POST", path, `{"relay":"r-1","sessions":3}`); status != 202 || answer != want {
 					t.Errorf("%s: %d %s", path, status, answer)
 				}
 			}
 		}
-		if status, _ := s.send("", "GET", "/api/bd/scaling/relay-heartbeat", ""); status != 404 {
+		if status, _ := s.send("", "GET", "/api/nd/scaling/relay-heartbeat", ""); status != 404 {
 			t.Errorf("GET: %d, want no route", status)
 		}
 		var rows int
@@ -149,7 +149,7 @@ func TestRelays(t *testing.T) {
 			t.Errorf("stored: %s", got)
 		}
 		check("read", "GET", relays+"/r-0000000000000001", "", 200, `{"data":`+first+`}`)
-		check("read at the second address", "GET", "/api/bd"+relays+"/r-0000000000000001", "", 200, `{"data":`+first+`}`)
+		check("read at the second address", "GET", "/api/nd"+relays+"/r-0000000000000001", "", 200, `{"data":`+first+`}`)
 		check("read unknown", "GET", relays+"/r-0000000000000009", "", 404, `{"error":"not found"}`)
 		check("list", "GET", relays, "", 200, `{"data":[`+first+`]}`)
 		check("same address", "POST", relays, `{"name":"Twin","address":"relay.example.com:21117"}`, 409, `{"error":"a relay with this address already exists"}`)
@@ -157,11 +157,11 @@ func TestRelays(t *testing.T) {
 		// An id no relay has is 404, as for reading it (BUGS.md SC17)
 		check("health of an unknown relay", "GET", relays+"/nope/health", "", 404, `{"error":"not found"}`)
 		check("metrics", "GET", relays+"/r-0000000000000001/metrics", "", 200, `{"data":[],"note":"live relay telemetry not yet available"}`)
-		check("metrics of an unknown relay", "GET", "/api/bd"+relays+"/nope/metrics", "", 404, `{"error":"not found"}`)
+		check("metrics of an unknown relay", "GET", "/api/nd"+relays+"/nope/metrics", "", 404, `{"error":"not found"}`)
 
 		// Defaults: 50 sessions and 100 Mbit/s when the body gives no number
 		const second = `{"id":"r-0000000000000002","created_at":"2026-11-10T12:00:00.003Z","name":"Edge 2","address":"[2001:db8::7]:443","location":"","max_sessions":50,"max_bandwidth_mbps":100,"updated_at":"2026-11-10T12:00:00.004Z","connected_devices":0,"active_sessions":0,"bandwidth_mbps":0,"cpu":0,"memory":0,"status":"unknown"}`
-		check("create with defaults", "POST", "/api/bd"+relays, `{"name":"Edge 2","address":"[2001:db8::7]:443","max_sessions":"many","max_bandwidth_mbps":null}`, 201, `{"data":`+second+`}`)
+		check("create with defaults", "POST", "/api/nd"+relays, `{"name":"Edge 2","address":"[2001:db8::7]:443","max_sessions":"many","max_bandwidth_mbps":null}`, 201, `{"data":`+second+`}`)
 		check("capacity", "GET", "/api/panel/scaling/capacity", "", 200, `{"data":{"relay_count":2,"max_devices":900,"max_sessions":60,"max_bandwidth_mbps":120}}`)
 
 		// An update keeps id and time of creation and replaces the rest
@@ -176,7 +176,7 @@ func TestRelays(t *testing.T) {
 
 		check("delete", "DELETE", relays+"/r-0000000000000001", "", 200, `{"ok":true}`)
 		check("delete again", "DELETE", relays+"/r-0000000000000001", "", 404, `{"error":"not found"}`)
-		check("delete at the second address", "DELETE", "/api/bd"+relays+"/r-0000000000000002", "", 200, `{"ok":true}`)
+		check("delete at the second address", "DELETE", "/api/nd"+relays+"/r-0000000000000002", "", 200, `{"ok":true}`)
 		if got := stored(t, db, keyRelays); got != "[]" {
 			t.Errorf("stored after deletes: %s", got)
 		}
@@ -398,7 +398,7 @@ func TestRules(t *testing.T) {
 		if s.send(admin, "PUT", rules+"/r-0000000000000001", `{`+body+`,"enabled":true}`); enabled(0) != true {
 			t.Error("the edit did not switch the rule on")
 		}
-		if s.send(admin, "PUT", "/api/bd"+rules+"/r-0000000000000001", `{`+body+`}`); enabled(0) != true {
+		if s.send(admin, "PUT", "/api/nd"+rules+"/r-0000000000000001", `{`+body+`}`); enabled(0) != true {
 			t.Error("an edit without the switch switched an enabled rule off")
 		}
 		if s.send(admin, "PUT", rules+"/r-0000000000000001", `{`+body+`,"enabled":false}`); enabled(0) != false {
@@ -411,7 +411,7 @@ func TestRules(t *testing.T) {
 			}
 		}
 		// creates a rule enabled when the request leaves the switch out
-		status, answer = s.send(admin, "POST", "/api/bd"+rules, `{"name":" Guests ","match_type":" tag ","match_value":" guest ","fallback":" direct ","priority":"7th"}`)
+		status, answer = s.send(admin, "POST", "/api/nd"+rules, `{"name":" Guests ","match_type":" tag ","match_value":" guest ","fallback":" direct ","priority":"7th"}`)
 		want = `{"data":{"id":"r-0000000000000002","created_at":"2026-11-10T12:00:00.011Z","name":"Guests","match_type":"tag","match_value":"guest","target_relay":"","fallback":"direct","priority":7,"enabled":true,"updated_at":"2026-11-10T12:00:00.012Z"}}`
 		if status != 201 || answer != want || enabled(1) != true {
 			t.Errorf("create without the switch:\n got  %d %s\n want 201 %s", status, answer, want)
@@ -574,7 +574,7 @@ func TestWritesAtTheSameTimeKeepEveryEntry(t *testing.T) {
 		for i := 0; i < n; i++ {
 			mount := ""
 			if i%2 == 1 {
-				mount = "/api/bd"
+				mount = "/api/nd"
 			}
 			wg.Add(2)
 			go func() {

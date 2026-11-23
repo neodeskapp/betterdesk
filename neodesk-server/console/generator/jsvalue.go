@@ -10,8 +10,8 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
 // The generator's bundle profiles are JavaScript objects that were built,

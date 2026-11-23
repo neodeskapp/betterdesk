@@ -11,7 +11,7 @@ import (
 
 // checkProvenance is "check-provenance": a guard for the clean-room
 // provenance process. It checks the policy the repository keeps (the
-// full register is on the website, betterde.sk/docs/development/provenance):
+// full register is on the website, neode.sk/docs/development/provenance):
 // the third-party notices define the clean-room workflow, the release gate
 // and the SBOM requirement, and the Go server context neither tells
 // contributors to copy outside protocol schemas nor claims they carry no

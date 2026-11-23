@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // With two-factor sign-in mandatory, the operator sign-in refuses a local
@@ -31,7 +31,7 @@ func TestOperatorLoginWhileTheSetUpIsDue(t *testing.T) {
 		if _, err := db.Exec(ctx, `UPDATE users SET password_hash = ? WHERE id = 5`, hash); err != nil {
 			t.Fatal(err)
 		}
-		got := w.SignedOut().Do("POST", "/api/bd/operator/login", `{"username":"e2e_operator","password":"A153-Op-1!x","device_id":"900100001"}`)
+		got := w.SignedOut().Do("POST", "/api/nd/operator/login", `{"username":"e2e_operator","password":"A153-Op-1!x","device_id":"900100001"}`)
 		if got.Status != 403 || got.Body != `{"error":"Two-factor sign-in is required for this account. Sign in to the web console once to set it up.","code":"totp_setup_required"}` {
 			t.Errorf("operator sign-in: %d %s", got.Status, got.Body)
 		}

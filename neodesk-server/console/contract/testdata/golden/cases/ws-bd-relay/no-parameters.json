@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/no-parameters",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-relay",
+  "path": "/ws/nd-relay",
   "notes": [
    "websocket a, own origin",
    "websocket wait for the close"

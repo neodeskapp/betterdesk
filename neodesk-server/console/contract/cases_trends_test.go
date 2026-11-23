@@ -5,7 +5,7 @@ package contract_test
 import (
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The trends of the reports page: sessions and help requests of the last

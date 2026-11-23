@@ -12,9 +12,9 @@ import (
 	"strings"
 	"testing"
 
-	gen "github.com/unitronix/betterdesk-server/console/generator"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	gen "github.com/neodeskapp/neodesk/neodesk-server/console/generator"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // writes are the routes that change the branding, with a body that would
@@ -56,7 +56,7 @@ func TestWritesNeedBrandingEdit(t *testing.T) {
 			}
 		}
 		before := len(w.AuditRows())
-		if before != 0 || w.Server.Deps().Branding.GetBranding().Text("appName") != "BetterDesk" {
+		if before != 0 || w.Server.Deps().Branding.GetBranding().Text("appName") != "NeoDesk" {
 			t.Errorf("refused writes changed something: %v, appName %q", w.AuditRows(), w.Server.Deps().Branding.GetBranding().Text("appName"))
 		}
 		for _, c := range writes {
@@ -68,7 +68,7 @@ func TestWritesNeedBrandingEdit(t *testing.T) {
 		if rows := w.AuditRows(); len(rows) == before {
 			t.Errorf("admin's writes left no audit rows")
 		}
-		if got := w.Server.Deps().Branding.GetBranding().Text("appName"); got != "BetterDesk" {
+		if got := w.Server.Deps().Branding.GetBranding().Text("appName"); got != "NeoDesk" {
 			t.Errorf("appName after the writes (the last that changes it is a reset): %q", got)
 		}
 	})
@@ -126,7 +126,7 @@ func TestExportImportReset(t *testing.T) {
 		admin.Do("POST", "/api/settings/branding", `{"appName":"Exported"}`)
 		res := admin.Do("GET", "/api/settings/branding/export", "")
 		if res.Status != http.StatusOK || res.Header.Get("Content-Type") != "application/json" ||
-			res.Header.Get("Content-Disposition") != `attachment; filename="betterdesk-theme.json"` ||
+			res.Header.Get("Content-Disposition") != `attachment; filename="neodesk-theme.json"` ||
 			keyOrder(t, res.Body) != "version,type,appearance,branding" || decode(t, res.Body)["branding"].(map[string]any)["appName"] != "Exported" {
 			t.Errorf("export: %d %v %.80s", res.Status, res.Header, res.Body)
 		}
@@ -137,7 +137,7 @@ func TestExportImportReset(t *testing.T) {
 		if got := lastAudit(t, w); got != "branding_reset|Reset branding to defaults|127.0.0.1|1" {
 			t.Errorf("reset audit: %s", got)
 		}
-		if got := w.Server.Deps().Branding.GetBranding().Text("appName"); got != "BetterDesk" {
+		if got := w.Server.Deps().Branding.GetBranding().Text("appName"); got != "NeoDesk" {
 			t.Errorf("after the reset: %s", got)
 		}
 		if res := admin.Do("POST", "/api/settings/branding/import", exported); res.Body != `{"success":true,"message":"Theme imported successfully"}` {
@@ -153,7 +153,7 @@ func TestExportImportReset(t *testing.T) {
 		before := len(w.AuditRows())
 		for _, c := range []struct{ body, contentType string }{
 			{`{"type":"other","branding":{"appName":"x"}}`, ""},
-			{`{"type":"betterdesk-theme"}`, ""},
+			{`{"type":"neodesk-theme"}`, ""},
 			{`[]`, ""},
 			{"not json", "text/plain"},
 		} {
@@ -165,11 +165,11 @@ func TestExportImportReset(t *testing.T) {
 				t.Errorf("import %s: %d %s", c.body, res.Status, res.Body)
 			}
 		}
-		if res := admin.Do("POST", "/api/settings/branding/import", `{"type":"betterdesk-theme","branding":{"colors":"red"}}`); res.Status != http.StatusInternalServerError {
+		if res := admin.Do("POST", "/api/settings/branding/import", `{"type":"neodesk-theme","branding":{"colors":"red"}}`); res.Status != http.StatusInternalServerError {
 			t.Errorf("colours as text: %d %s", res.Status, res.Body)
 		}
 		// a form is read: branding "x" is a theme with nothing in it
-		if res := admin.Do("POST", "/api/settings/branding/import", "type=betterdesk-theme&branding=x", "Content-Type", "application/x-www-form-urlencoded"); res.Status != http.StatusOK {
+		if res := admin.Do("POST", "/api/settings/branding/import", "type=neodesk-theme&branding=x", "Content-Type", "application/x-www-form-urlencoded"); res.Status != http.StatusOK {
 			t.Errorf("a form: %d %s", res.Status, res.Body)
 		}
 		if rows := w.AuditRows(); len(rows) != before+1 {
@@ -246,9 +246,9 @@ func TestASaveReachesEveryReader(t *testing.T) {
 			{"admin", "/api/console/bootstrap", []string{`"appName":"Reached Everywhere"`}},
 			{"visitor", "/console-boot.js", []string{`"themeMode":"light"`, `"brandingRevision":"` + revision + `"`}},
 			{"visitor", "/api/auth/login-page", []string{`"appName":"Reached Everywhere"`}},
-			{"visitor", "/api/bd/branding", []string{`"company_name":"Reached Everywhere"`}},
-			{"visitor", "/api/bd/appearance", []string{`"appName":"Reached Everywhere"`}},
-			{"visitor", "/api/bd/server-info", []string{`"panel_name":"Reached Everywhere"`, `"revision":"` + revision + `"`}},
+			{"visitor", "/api/nd/branding", []string{`"company_name":"Reached Everywhere"`}},
+			{"visitor", "/api/nd/appearance", []string{`"appName":"Reached Everywhere"`}},
+			{"visitor", "/api/nd/server-info", []string{`"panel_name":"Reached Everywhere"`, `"revision":"` + revision + `"`}},
 			{"visitor", "/css/branding.css", []string{".reached-everywhere{color:red}"}},
 			{"visitor", "/css/theme.css", []string{".reached-everywhere{color:red}"}},
 			{"visitor", "/branding/favicon.svg", []string{`<circle r="9"/>`}},
@@ -293,7 +293,7 @@ func TestEveryWriteReachesTheReaders(t *testing.T) {
 		w := world(t, db)
 		admin, visitor := w.As("admin"), w.SignedOut()
 		readName := func() string {
-			body := visitor.Do("GET", "/api/bd/branding", "").Body
+			body := visitor.Do("GET", "/api/nd/branding", "").Body
 			m := regexp.MustCompile(`"company_name":"([^"]*)"`).FindStringSubmatch(body)
 			if m == nil {
 				t.Fatalf("no company_name in %s", body)
@@ -302,10 +302,10 @@ func TestEveryWriteReachesTheReaders(t *testing.T) {
 		}
 		profile := decode(t, admin.Do("POST", "/api/settings/branding/profiles", `{"name":"P","branding":{"appName":"From profile"}}`).Body)["data"].(map[string]any)["id"].(float64)
 		steps := []struct{ method, path, body, want string }{
-			{"POST", "/api/settings/branding/import", `{"type":"betterdesk-theme","branding":{"appName":"Imported"}}`, "Imported"},
+			{"POST", "/api/settings/branding/import", `{"type":"neodesk-theme","branding":{"appName":"Imported"}}`, "Imported"},
 			{"POST", "/api/settings/branding/profiles/" + strconv.Itoa(int(profile)) + "/apply", "{}", "From profile"},
 			{"POST", "/api/settings/themes/insolve/apply", "{}", "insolve Core Server"},
-			{"POST", "/api/settings/branding/reset", "{}", "BetterDesk"},
+			{"POST", "/api/settings/branding/reset", "{}", "NeoDesk"},
 		}
 		for _, s := range steps {
 			if res := admin.Do(s.method, s.path, s.body); res.Status != http.StatusOK {

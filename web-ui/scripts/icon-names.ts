@@ -10,7 +10,7 @@
  * by the remote viewer's file sheet (src/lib/remote/client/file-modal.ts and
  * filetransfer.ts, which build icon spans from glyph names); and by the
  * sidebar from the section icons the server sends
- * (betterdesk-server/console/access/nav.go).
+ * (neodesk-server/console/access/nav.go).
  *
  * A name counts where it is written as a quoted literal in an icon place.
  * "Named like icon" means an identifier with icon, Icon or ICON in it
@@ -39,7 +39,7 @@ const UI = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
  * Folders and files that draw icons, from web-ui; the server's navigation
  * is missing when web-ui is checked out alone
  */
-const SCAN_ROOTS = ['src', 'static', '../betterdesk-server/console/access/nav.go'];
+const SCAN_ROOTS = ['src', 'static', '../neodesk-server/console/access/nav.go'];
 const SCAN_EXTS = new Set(['.js', '.mjs', '.ts', '.svelte', '.html', '.css']);
 const SKIP_DIRS = new Set(['node_modules', '.git', 'coverage', 'vendor', 'generated', 'tests', 'data']);
 

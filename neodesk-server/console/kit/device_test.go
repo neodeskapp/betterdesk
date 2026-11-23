@@ -12,13 +12,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/authn"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
-	"github.com/unitronix/betterdesk-server/console/webui"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/webui"
 )
 
 // deviceWorld is the two device guards in front of a handler that answers
@@ -530,10 +530,10 @@ func TestDeviceIsNilWithoutTheGuard(t *testing.T) {
 func TestAClaimWithoutTextIsAMismatch(t *testing.T) {
 	d := &Deps{}
 	for _, c := range []deviceCase{
-		{method: "POST", path: "/api/bd/x", body: `{"device_id":{"toString":1}}`},
-		{method: "POST", path: "/api/bd/x", body: `{"device_id":[{"toString":"device-a"}]}`},
-		{path: "/api/bd/x?device_id[toString]=x"},
-		{path: "/api/bd/x?device_id[][toString]=x"},
+		{method: "POST", path: "/api/nd/x", body: `{"device_id":{"toString":1}}`},
+		{method: "POST", path: "/api/nd/x", body: `{"device_id":[{"toString":"device-a"}]}`},
+		{path: "/api/nd/x?device_id[toString]=x"},
+		{path: "/api/nd/x?device_id[][toString]=x"},
 	} {
 		reached := false
 		h := middleware.Bodies(middleware.BodyOptions{})(d.RequireTokenDeviceMatch(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { reached = true })))

@@ -1,7 +1,7 @@
 # Recordings of the old console for console/goapipath
 
 The JSON files here are fixed records of what the Node console's
-`lib/goApiPath.js`, `lib/goApiProxy.js`, `services/betterdeskApi.js` and
+`lib/goApiPath.js`, `lib/goApiProxy.js`, `services/neodeskApi.js` and
 Express's query parser answered, made while they still existed. They can't
 be recorded again. The Go tests replay them and need no Node. Don't edit
 them: when a fix changes an answer on purpose, the vector goes into

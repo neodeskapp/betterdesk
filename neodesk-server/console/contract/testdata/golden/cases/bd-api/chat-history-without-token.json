@@ -2,7 +2,7 @@
  "id": "bd-api/chat-history-without-token",
  "request": {
   "method": "GET",
-  "path": "/api/bd/chat/history",
+  "path": "/api/nd/chat/history",
   "notes": [
    "no CSRF token",
    "no cookies"

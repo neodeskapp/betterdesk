@@ -2,7 +2,7 @@
  "id": "bd-api/operator-sessions-without-token",
  "request": {
   "method": "GET",
-  "path": "/api/bd/operator/sessions",
+  "path": "/api/nd/operator/sessions",
   "notes": [
    "no CSRF token",
    "no cookies"

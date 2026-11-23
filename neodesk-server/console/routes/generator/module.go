@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	gen "github.com/unitronix/betterdesk-server/console/generator"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/middleware"
+	gen "github.com/neodeskapp/neodesk/neodesk-server/console/generator"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 )
 
 // The JavaScript helpers of package generator, by their short names.

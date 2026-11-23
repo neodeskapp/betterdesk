@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/mail"
-	"github.com/unitronix/betterdesk-server/console/restart"
-	"github.com/unitronix/betterdesk-server/console/routes/commercialization"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath/proxytest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/restart"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/commercialization"
 )
 
 // clockWorld is the group with a .env file, a restart coordinator and a
@@ -24,7 +24,7 @@ func clockWorld(t *testing.T, docker bool) (*proxytest.World, string, *restart.S
 	var coordinator *restart.Service
 	w := proxytest.NewWorld(t, func(d *kit.Deps) {
 		d.Config = &config.Config{EnvPath: envPath, Docker: docker, Getenv: func(name string) string {
-			if name == "BETTERDESK_DOCKER_LAYOUT" {
+			if name == "NEODESK_DOCKER_LAYOUT" {
 				return "split"
 			}
 			return ""

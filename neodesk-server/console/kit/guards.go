@@ -5,11 +5,11 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/webui"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/webui"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // The guards are the middleware of middleware/auth.js under their old

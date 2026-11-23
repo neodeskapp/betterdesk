@@ -2,7 +2,7 @@
  "id": "activity-device/report-other-spelling",
  "request": {
   "method": "POST",
-  "path": "/API/BD/Activity/",
+  "path": "/API/ND/Activity/",
   "body": {
    "device_id": "900100001",
    "idle_seconds": 120,

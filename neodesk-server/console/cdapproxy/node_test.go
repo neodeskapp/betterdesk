@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
 )
 
 // oraclePermissions are the roles of the recording's permission stub.

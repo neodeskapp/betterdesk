@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 )
 
 func echo(name string) http.HandlerFunc {
@@ -175,7 +175,7 @@ func TestRouterMiddlewareOrder(t *testing.T) {
 
 func TestRouterRoutes(t *testing.T) {
 	rt := newTestRouter()
-	rt.Mount("/api/bd").Get("/x", echo("mounted"))
+	rt.Mount("/api/nd").Get("/x", echo("mounted"))
 	routes := rt.Routes()
 	if len(routes) != 9 {
 		t.Fatalf("got %d routes, want 9", len(routes))
@@ -183,7 +183,7 @@ func TestRouterRoutes(t *testing.T) {
 	if routes[3] != (Route{Method: "GET", Path: "/api/devices/{id}"}) {
 		t.Errorf("fourth route = %+v", routes[3])
 	}
-	if routes[8] != (Route{Method: "GET", Path: "/api/bd/x", Mount: "/api/bd"}) {
+	if routes[8] != (Route{Method: "GET", Path: "/api/nd/x", Mount: "/api/nd"}) {
 		t.Errorf("mounted route = %+v", routes[8])
 	}
 }
@@ -241,19 +241,19 @@ func TestMountedRoutes(t *testing.T) {
 	register := func(r *Router, name string) {
 		r.Get("/", echo(name+"-root"))
 		r.Get("/{id}", echo(name+"-one"), OnMount("/api/inventory"))
-		r.Get("/commands", echo(name+"-commands"), OnMount("/api/bd"))
+		r.Get("/commands", echo(name+"-commands"), OnMount("/api/nd"))
 	}
-	register(rt.Mount("/api/bd"), "bd")
+	register(rt.Mount("/api/nd"), "bd")
 	register(rt.Mount("/api/inventory"), "inv")
 
 	cases := []struct{ target, route, mount, path string }{
-		{"/api/bd", "bd-root", "/api/bd", "/"},
-		{"/api/bd/", "bd-root", "/api/bd", "/"},
-		{"/API/BD/commands", "bd-commands", "/api/bd", "/commands"},
+		{"/api/nd", "bd-root", "/api/nd", "/"},
+		{"/api/nd/", "bd-root", "/api/nd", "/"},
+		{"/API/ND/commands", "bd-commands", "/api/nd", "/commands"},
 		{"/api/inventory", "inv-root", "/api/inventory", "/"},
 		{"/api/inventory/7", "inv-one", "/api/inventory", "/7"},
 		// On the device mount the {id} route steps aside, and nothing else fits
-		{"/api/bd/7", "", "", ""},
+		{"/api/nd/7", "", "", ""},
 		// On the admin mount "commands" is an id: the first route that fits answers
 		{"/api/inventory/commands", "inv-one", "/api/inventory", "/commands"},
 	}

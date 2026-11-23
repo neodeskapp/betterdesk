@@ -2,7 +2,7 @@
  "id": "registration/device-route-with-the-delivered-token",
  "request": {
   "method": "GET",
-  "path": "/api/bd/session/contract-none",
+  "path": "/api/nd/session/contract-none",
   "notes": [
    "header Authorization: Bearer {secret:lan_device_token}",
    "no CSRF token",

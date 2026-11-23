@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/cdap"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/cdap"
 )
 
 // commandCounter generates unique command IDs for CDAP commands.

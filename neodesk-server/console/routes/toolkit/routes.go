@@ -16,8 +16,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
 )
 
 // Records reads the DNS records of a name. *net.Resolver is one.

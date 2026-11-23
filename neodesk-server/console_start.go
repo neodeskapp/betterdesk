@@ -11,15 +11,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/api"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/console"
-	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/signal"
+	"github.com/neodeskapp/neodesk/neodesk-server/api"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console"
+	consoleconfig "github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/signal"
 )
 
 // startConsole starts the web console on its own port: CONSOLE_PORT, else
@@ -114,12 +114,12 @@ func applySavedPublicRelay(cfg *config.Config, getenv func(string) string) {
 }
 
 // linkConsoleToServer points the console at the API of this process when
-// neither BETTERDESK_API_URL nor HBBS_API_URL names another, and at the
+// neither NEODESK_API_URL nor HBBS_API_URL names another, and at the
 // ports its signal server and relay listen on (the browser viewer's
 // sockets, the status page, the attestation) unless WS_HBBS_PORT or
 // WS_HBBR_PORT name others.
 func linkConsoleToServer(ccfg *consoleconfig.Config, cfg *config.Config, getenv func(string) string) {
-	if getenv("BETTERDESK_API_URL") == "" && getenv("HBBS_API_URL") == "" {
+	if getenv("NEODESK_API_URL") == "" && getenv("HBBS_API_URL") == "" {
 		ccfg.APIHost = net.JoinHostPort("127.0.0.1", strconv.Itoa(cfg.APIPort))
 	}
 	if strings.TrimSpace(getenv("WS_HBBS_PORT")) == "" && cfg.SignalPort > 0 {

@@ -47,7 +47,7 @@ func (f *fakeConsole) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(status)
 		_, _ = io.WriteString(w, text)
 	}
-	signedIn := strings.Contains(r.Header.Get("Cookie"), "bd.sid=s1")
+	signedIn := strings.Contains(r.Header.Get("Cookie"), "nd.sid=s1")
 	switch r.Method + " " + r.URL.Path {
 	case "GET /api/console/bootstrap":
 		if !signedIn {
@@ -67,7 +67,7 @@ func (f *fakeConsole) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			reply(401, `{"success":false}`)
 			return
 		}
-		http.SetCookie(w, &http.Cookie{Name: "bd.sid", Value: "s1", Path: "/", HttpOnly: true})
+		http.SetCookie(w, &http.Cookie{Name: "nd.sid", Value: "s1", Path: "/", HttpOnly: true})
 		reply(200, `{"success":true}`)
 	case "GET /api/users":
 		reply(200, `{"data":{"users":[{"username":"admin","id":1},{"username":"demo_viewer","id":3}]}}`)
@@ -128,7 +128,7 @@ func TestSignInTakesTheTokenAndTheSessionCookie(t *testing.T) {
 		t.Fatalf("requests:\n%s\nwant:\n%s", got, want)
 	}
 	last := f.seen()[4]
-	if last.CSRF != "tok-2" || last.Cookie != "__csrf_h=h1; bd.sid=s1" {
+	if last.CSRF != "tok-2" || last.Cookie != "__csrf_h=h1; nd.sid=s1" {
 		t.Errorf("the request after sign-in carried token %q and cookies %q", last.CSRF, last.Cookie)
 	}
 	// The headers of a Node fetch: the console keeps the user agent of the

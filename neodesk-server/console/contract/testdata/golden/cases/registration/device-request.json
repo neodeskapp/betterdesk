@@ -2,7 +2,7 @@
  "id": "registration/device-request",
  "request": {
   "method": "POST",
-  "path": "/api/bd/register-request",
+  "path": "/api/nd/register-request",
   "body": {
    "device_id": "900100021",
    "hostname": "contract-lan-kiosk",

@@ -275,7 +275,7 @@ func TestSettings(t *testing.T) {
 	env := func(values map[string]string) func(string) string {
 		return func(key string) string { return values[key] }
 	}
-	s, err := LoadSettings(env(map[string]string{"BD_URL": "http://bdgo-c1:5000/"}))
+	s, err := LoadSettings(env(map[string]string{"ND_URL": "http://bdgo-c1:5000/"}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -285,8 +285,8 @@ func TestSettings(t *testing.T) {
 		t.Errorf("defaults = %+v", s)
 	}
 	s, err = LoadSettings(env(map[string]string{
-		"BD_URL": "https://console.example", "BD_PASSWORD_FILE": "/p", "CONTRACT_GOLDEN": "/g", "CONTRACT_ROUTES": "/r",
-		"CONTRACT_RECORD": "merge", "CONTRACT_REQUIRE_GO": "1", "CONTRACT_TIMEOUT": "5s", "BD_SECRETS_DIR": "/s", "CONTRACT_RECORD_NEW": "1",
+		"ND_URL": "https://console.example", "ND_PASSWORD_FILE": "/p", "CONTRACT_GOLDEN": "/g", "CONTRACT_ROUTES": "/r",
+		"CONTRACT_RECORD": "merge", "CONTRACT_REQUIRE_GO": "1", "CONTRACT_TIMEOUT": "5s", "ND_SECRETS_DIR": "/s", "CONTRACT_RECORD_NEW": "1",
 	}))
 	if err != nil {
 		t.Fatal(err)
@@ -295,11 +295,11 @@ func TestSettings(t *testing.T) {
 		s.SecretsDir != "/s" || !s.RecordNew {
 		t.Errorf("settings = %+v", s)
 	}
-	if s, _ = LoadSettings(env(map[string]string{"BD_URL": "http://x", "CONTRACT_RECORD": "1"})); s == nil || s.Record != RecordFirst || s.Rewrite != nil {
+	if s, _ = LoadSettings(env(map[string]string{"ND_URL": "http://x", "CONTRACT_RECORD": "1"})); s == nil || s.Record != RecordFirst || s.Rewrite != nil {
 		t.Errorf("CONTRACT_RECORD=1 gives %+v", s)
 	}
 	// CONTRACT_REWRITE matches a golden's whole name
-	s, err = LoadSettings(env(map[string]string{"BD_URL": "http://x", "CONTRACT_RECORD": "1", "CONTRACT_REWRITE": "cases/devices/list|matrix/devices/GET_api_devices"}))
+	s, err = LoadSettings(env(map[string]string{"ND_URL": "http://x", "CONTRACT_RECORD": "1", "CONTRACT_REWRITE": "cases/devices/list|matrix/devices/GET_api_devices"}))
 	if err != nil || s.Rewrite == nil {
 		t.Fatalf("CONTRACT_REWRITE: %v, %+v", err, s)
 	}
@@ -313,14 +313,14 @@ func TestSettings(t *testing.T) {
 	}
 	for _, bad := range []map[string]string{
 		{},
-		{"BD_URL": "bdgo-c1:5000"},
-		{"BD_URL": "ftp://x"},
-		{"BD_URL": "http://x", "CONTRACT_RECORD": "yes"},
-		{"BD_URL": "http://x", "CONTRACT_TIMEOUT": "soon"},
-		{"BD_URL": "http://x", "CONTRACT_RECORD_NEW": "1"},
-		{"BD_URL": "http://x", "CONTRACT_RECORD": "1", "CONTRACT_RECORD_NEW": "yes"},
-		{"BD_URL": "http://x", "CONTRACT_REWRITE": "cases/devices/list"},
-		{"BD_URL": "http://x", "CONTRACT_RECORD": "1", "CONTRACT_REWRITE": "cases/(devices"},
+		{"ND_URL": "bdgo-c1:5000"},
+		{"ND_URL": "ftp://x"},
+		{"ND_URL": "http://x", "CONTRACT_RECORD": "yes"},
+		{"ND_URL": "http://x", "CONTRACT_TIMEOUT": "soon"},
+		{"ND_URL": "http://x", "CONTRACT_RECORD_NEW": "1"},
+		{"ND_URL": "http://x", "CONTRACT_RECORD": "1", "CONTRACT_RECORD_NEW": "yes"},
+		{"ND_URL": "http://x", "CONTRACT_REWRITE": "cases/devices/list"},
+		{"ND_URL": "http://x", "CONTRACT_RECORD": "1", "CONTRACT_REWRITE": "cases/(devices"},
 	} {
 		if _, err := LoadSettings(env(bad)); err == nil {
 			t.Errorf("LoadSettings(%v) accepted a bad value", bad)

@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // The desktop client's operator sign-in tells a disabled account that it
@@ -22,7 +22,7 @@ func TestOperatorLoginOfADisabledAccount(t *testing.T) {
 		if _, err := db.Exec(ctx, `UPDATE users SET password_hash = ?, disabled = `+db.Pick("1", "TRUE")+` WHERE id = 5`, hash); err != nil {
 			t.Fatal(err)
 		}
-		got := w.SignedOut().Do("POST", "/api/bd/operator/login", `{"username":"e2e_operator","password":"L107-Op-1!x","device_id":"900100001"}`)
+		got := w.SignedOut().Do("POST", "/api/nd/operator/login", `{"username":"e2e_operator","password":"L107-Op-1!x","device_id":"900100001"}`)
 		if got.Status != 403 || got.Body != `{"error":"This account is disabled","code":"account_disabled"}` {
 			t.Errorf("operator sign-in of a disabled account: %d %s", got.Status, got.Body)
 		}

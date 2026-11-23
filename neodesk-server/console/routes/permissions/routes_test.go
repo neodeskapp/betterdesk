@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
 )
 
 const (

@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/session-gone",
  "request": {
   "method": "GET",
-  "path": "/api/bd/session/{relay}",
+  "path": "/api/nd/session/{relay}",
   "notes": [
    "header Authorization: Bearer {secret:device_token_other}",
    "no cookies"

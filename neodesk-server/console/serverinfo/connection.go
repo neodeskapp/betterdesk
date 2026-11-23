@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // The connection mode says whether clients try a direct connection first
@@ -574,9 +574,9 @@ func (s *Service) isDockerRuntime() bool {
 
 // IsDockerSplitDeployment reports whether the console and the server run
 // in two containers: the console is in a container and
-// BETTERDESK_DOCKER_LAYOUT is "split".
+// NEODESK_DOCKER_LAYOUT is "split".
 func (s *Service) IsDockerSplitDeployment() bool {
-	return s.opts.IsDocker && lowerASCII(jsTrim(s.env("BETTERDESK_DOCKER_LAYOUT"))) == "split"
+	return s.opts.IsDocker && lowerASCII(jsTrim(s.env("NEODESK_DOCKER_LAYOUT"))) == "split"
 }
 
 // DetectDeploymentSource says where the connection mode is stored:
@@ -795,7 +795,7 @@ func (s *Service) systemdWriteError(err error) error {
 	return &FileError{
 		Code: "EACCES",
 		msg: "Cannot write systemd connection settings (permission denied on " + s.opts.SystemdUnit + "). " +
-			"Run once as root: sudo ./betterdesk.sh --update " +
+			"Run once as root: sudo ./neodesk.sh --update " +
 			"then retry \u2014 or set ALLOW_SHARED_NAT_INITIATOR via a systemd drop-in.",
 		err: err,
 	}
@@ -852,7 +852,7 @@ func (s *Service) RestartServer(ctx context.Context) (RestartResult, error) {
 		return result, nil
 
 	case ConnectionSourceDocker:
-		entry := goapi.NewObject("component", "server", "service", "betterdesk-server")
+		entry := goapi.NewObject("component", "server", "service", "neodesk-server")
 		if err := s.opts.RunShell(ctx, filepath.Dir(s.opts.ComposePath), "docker compose up -d server"); err != nil {
 			entry.Set("success", false).Set("error", err.Error())
 		} else {

@@ -2,7 +2,7 @@
  "id": "scaling/second-capacity",
  "request": {
   "method": "GET",
-  "path": "/api/bd/api/panel/scaling/capacity"
+  "path": "/api/nd/api/panel/scaling/capacity"
  },
  "recordings": 2,
  "answers": [
@@ -56,7 +56,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -93,7 +93,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",

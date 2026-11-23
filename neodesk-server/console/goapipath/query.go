@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // The query string as Express read it: qs.parse(text, { allowPrototypes:

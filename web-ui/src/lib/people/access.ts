@@ -186,6 +186,6 @@ export const FEATURE_HINTS: Record<string, { key: string; text: string }> = {
 	},
 	privacy_mode: {
 		key: 'users.access_feature_hint_privacy_mode',
-		text: 'Needs the BetterDesk client or RustDesk 1.4.7 or later on the device.'
+		text: 'Needs the NeoDesk client or RustDesk 1.4.7 or later on the device.'
 	}
 };

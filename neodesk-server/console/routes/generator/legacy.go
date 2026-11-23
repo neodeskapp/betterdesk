@@ -7,9 +7,9 @@ import (
 	"strings"
 	"unicode/utf16"
 
-	gen "github.com/unitronix/betterdesk-server/console/generator"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	gen "github.com/neodeskapp/neodesk/neodesk-server/console/generator"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 // The rustdesk.toml generator the console had before the Support

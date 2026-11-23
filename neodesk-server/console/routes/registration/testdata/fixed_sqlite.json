@@ -1,6 +1,6 @@
 [
  {
-  "step": "50 GET /api/bd/api/registrations",
+  "step": "50 GET /api/nd/api/registrations",
   "bugs": [
    "PA15"
   ],
@@ -8,7 +8,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "51 GET /api/bd/api/registrations/count",
+  "step": "51 GET /api/nd/api/registrations/count",
   "bugs": [
    "PA15"
   ],
@@ -16,7 +16,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "52 GET /api/bd/api/registrations/enrollment-ui",
+  "step": "52 GET /api/nd/api/registrations/enrollment-ui",
   "bugs": [
    "PA15"
   ],
@@ -24,7 +24,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "53 GET /api/bd/api/registrations/1",
+  "step": "53 GET /api/nd/api/registrations/1",
   "bugs": [
    "PA15"
   ],
@@ -32,7 +32,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "54 PUT /api/bd/api/registrations/999/approve",
+  "step": "54 PUT /api/nd/api/registrations/999/approve",
   "bugs": [
    "PA15"
   ],
@@ -40,7 +40,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "55 PUT /api/bd/api/registrations/999/reject",
+  "step": "55 PUT /api/nd/api/registrations/999/reject",
   "bugs": [
    "PA15"
   ],
@@ -48,7 +48,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "56 DELETE /api/bd/api/registrations/999",
+  "step": "56 DELETE /api/nd/api/registrations/999",
   "bugs": [
    "PA15"
   ],
@@ -56,7 +56,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "84 GET /api/bd/api/registrations",
+  "step": "84 GET /api/nd/api/registrations",
   "bugs": [
    "PA15"
   ],
@@ -64,7 +64,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "85 GET /api/bd/api/registrations/count",
+  "step": "85 GET /api/nd/api/registrations/count",
   "bugs": [
    "PA15"
   ],
@@ -72,7 +72,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "86 GET /api/bd/api/registrations/enrollment-ui",
+  "step": "86 GET /api/nd/api/registrations/enrollment-ui",
   "bugs": [
    "PA15"
   ],
@@ -80,7 +80,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "87 GET /api/bd/api/registrations/1",
+  "step": "87 GET /api/nd/api/registrations/1",
   "bugs": [
    "PA15"
   ],
@@ -88,7 +88,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "88 PUT /api/bd/api/registrations/999/approve",
+  "step": "88 PUT /api/nd/api/registrations/999/approve",
   "bugs": [
    "PA15"
   ],
@@ -96,7 +96,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "89 PUT /api/bd/api/registrations/999/reject",
+  "step": "89 PUT /api/nd/api/registrations/999/reject",
   "bugs": [
    "PA15"
   ],
@@ -104,7 +104,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "90 DELETE /api/bd/api/registrations/999",
+  "step": "90 DELETE /api/nd/api/registrations/999",
   "bugs": [
    "PA15"
   ],
@@ -142,7 +142,7 @@
   ]
  },
  {
-  "step": "118 GET /api/bd/api/registrations",
+  "step": "118 GET /api/nd/api/registrations",
   "bugs": [
    "PA15"
   ],
@@ -150,7 +150,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "119 GET /api/bd/api/registrations/count",
+  "step": "119 GET /api/nd/api/registrations/count",
   "bugs": [
    "PA15"
   ],
@@ -158,7 +158,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "120 GET /api/bd/api/registrations/enrollment-ui",
+  "step": "120 GET /api/nd/api/registrations/enrollment-ui",
   "bugs": [
    "PA15"
   ],
@@ -166,7 +166,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "121 GET /api/bd/api/registrations/1",
+  "step": "121 GET /api/nd/api/registrations/1",
   "bugs": [
    "PA15"
   ],
@@ -174,7 +174,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "122 PUT /api/bd/api/registrations/999/approve",
+  "step": "122 PUT /api/nd/api/registrations/999/approve",
   "bugs": [
    "PA15"
   ],
@@ -182,7 +182,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "123 PUT /api/bd/api/registrations/999/reject",
+  "step": "123 PUT /api/nd/api/registrations/999/reject",
   "bugs": [
    "PA15"
   ],
@@ -190,7 +190,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "124 DELETE /api/bd/api/registrations/999",
+  "step": "124 DELETE /api/nd/api/registrations/999",
   "bugs": [
    "PA15"
   ],
@@ -198,7 +198,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "131 POST /api/bd/api/help/requests/999/accept",
+  "step": "131 POST /api/nd/api/help/requests/999/accept",
   "bugs": [
    "C5"
   ],
@@ -213,7 +213,7 @@
   ]
  },
  {
-  "step": "132 POST /api/bd/api/help/requests/999/resolve",
+  "step": "132 POST /api/nd/api/help/requests/999/resolve",
   "bugs": [
    "C5"
   ],
@@ -258,7 +258,7 @@
   ]
  },
  {
-  "step": "152 GET /api/bd/api/registrations",
+  "step": "152 GET /api/nd/api/registrations",
   "bugs": [
    "PA15"
   ],
@@ -266,7 +266,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "153 GET /api/bd/api/registrations/count",
+  "step": "153 GET /api/nd/api/registrations/count",
   "bugs": [
    "PA15"
   ],
@@ -274,7 +274,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "154 GET /api/bd/api/registrations/enrollment-ui",
+  "step": "154 GET /api/nd/api/registrations/enrollment-ui",
   "bugs": [
    "PA15"
   ],
@@ -282,7 +282,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "155 GET /api/bd/api/registrations/1",
+  "step": "155 GET /api/nd/api/registrations/1",
   "bugs": [
    "PA15"
   ],
@@ -290,7 +290,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "156 PUT /api/bd/api/registrations/999/approve",
+  "step": "156 PUT /api/nd/api/registrations/999/approve",
   "bugs": [
    "PA15"
   ],
@@ -298,7 +298,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "157 PUT /api/bd/api/registrations/999/reject",
+  "step": "157 PUT /api/nd/api/registrations/999/reject",
   "bugs": [
    "PA15"
   ],
@@ -306,7 +306,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "158 DELETE /api/bd/api/registrations/999",
+  "step": "158 DELETE /api/nd/api/registrations/999",
   "bugs": [
    "PA15"
   ],
@@ -314,7 +314,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "165 POST /api/bd/api/help/requests/999/accept",
+  "step": "165 POST /api/nd/api/help/requests/999/accept",
   "bugs": [
    "C5"
   ],
@@ -329,7 +329,7 @@
   ]
  },
  {
-  "step": "166 POST /api/bd/api/help/requests/999/resolve",
+  "step": "166 POST /api/nd/api/help/requests/999/resolve",
   "bugs": [
    "C5"
   ],
@@ -394,7 +394,7 @@
   ]
  },
  {
-  "step": "186 GET /api/bd/api/registrations",
+  "step": "186 GET /api/nd/api/registrations",
   "bugs": [
    "L55"
   ],
@@ -414,7 +414,7 @@
   ]
  },
  {
-  "step": "199 POST /api/bd/api/help/requests/999/accept",
+  "step": "199 POST /api/nd/api/help/requests/999/accept",
   "bugs": [
    "C5"
   ],
@@ -429,7 +429,7 @@
   ]
  },
  {
-  "step": "200 POST /api/bd/api/help/requests/999/resolve",
+  "step": "200 POST /api/nd/api/help/requests/999/resolve",
   "bugs": [
    "C5"
   ],
@@ -500,7 +500,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "220 GET /api/bd/api/registrations",
+  "step": "220 GET /api/nd/api/registrations",
   "bugs": [
    "PA15"
   ],
@@ -508,7 +508,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "221 GET /api/bd/api/registrations/count",
+  "step": "221 GET /api/nd/api/registrations/count",
   "bugs": [
    "PA15"
   ],
@@ -516,7 +516,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "222 GET /api/bd/api/registrations/enrollment-ui",
+  "step": "222 GET /api/nd/api/registrations/enrollment-ui",
   "bugs": [
    "PA15"
   ],
@@ -524,7 +524,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "223 GET /api/bd/api/registrations/1",
+  "step": "223 GET /api/nd/api/registrations/1",
   "bugs": [
    "PA15"
   ],
@@ -532,7 +532,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "224 PUT /api/bd/api/registrations/999/approve",
+  "step": "224 PUT /api/nd/api/registrations/999/approve",
   "bugs": [
    "PA15"
   ],
@@ -540,7 +540,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "225 PUT /api/bd/api/registrations/999/reject",
+  "step": "225 PUT /api/nd/api/registrations/999/reject",
   "bugs": [
    "PA15"
   ],
@@ -548,7 +548,7 @@
   "answer": "{\"success\":false,\"error\":\"Panel access denied: registrations\",\"code\":\"panel_access_denied\"}"
  },
  {
-  "step": "226 DELETE /api/bd/api/registrations/999",
+  "step": "226 DELETE /api/nd/api/registrations/999",
   "bugs": [
    "PA15"
   ],
@@ -606,7 +606,7 @@
   ]
  },
  {
-  "step": "254 GET /api/bd/api/registrations",
+  "step": "254 GET /api/nd/api/registrations",
   "bugs": [
    "L55"
   ],
@@ -626,7 +626,7 @@
   ]
  },
  {
-  "step": "267 POST /api/bd/api/help/requests/999/accept",
+  "step": "267 POST /api/nd/api/help/requests/999/accept",
   "bugs": [
    "C5"
   ],
@@ -641,7 +641,7 @@
   ]
  },
  {
-  "step": "268 POST /api/bd/api/help/requests/999/resolve",
+  "step": "268 POST /api/nd/api/help/requests/999/resolve",
   "bugs": [
    "C5"
   ],
@@ -706,7 +706,7 @@
   ]
  },
  {
-  "step": "288 GET /api/bd/api/registrations",
+  "step": "288 GET /api/nd/api/registrations",
   "bugs": [
    "L55"
   ],
@@ -726,7 +726,7 @@
   ]
  },
  {
-  "step": "301 POST /api/bd/api/help/requests/999/accept",
+  "step": "301 POST /api/nd/api/help/requests/999/accept",
   "bugs": [
    "C5"
   ],
@@ -741,7 +741,7 @@
   ]
  },
  {
-  "step": "302 POST /api/bd/api/help/requests/999/resolve",
+  "step": "302 POST /api/nd/api/help/requests/999/resolve",
   "bugs": [
    "C5"
   ],
@@ -776,7 +776,7 @@
   ]
  },
  {
-  "step": "315 POST /api/bd/register-request",
+  "step": "315 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -784,7 +784,7 @@
   "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}"
  },
  {
-  "step": "316 POST /api/bd/register-request",
+  "step": "316 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -792,7 +792,7 @@
   "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}"
  },
  {
-  "step": "317 POST /api/bd/register-request",
+  "step": "317 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -800,7 +800,7 @@
   "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}"
  },
  {
-  "step": "318 POST /api/bd/register-request",
+  "step": "318 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -808,7 +808,7 @@
   "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}"
  },
  {
-  "step": "319 POST /api/bd/register-request",
+  "step": "319 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -816,7 +816,7 @@
   "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}"
  },
  {
-  "step": "321 POST /api/bd/register-request",
+  "step": "321 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -824,7 +824,7 @@
   "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}"
  },
  {
-  "step": "328 POST /api/bd/register-request",
+  "step": "328 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -835,7 +835,7 @@
   ]
  },
  {
-  "step": "329 POST /api/bd/register-request",
+  "step": "329 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -846,7 +846,7 @@
   ]
  },
  {
-  "step": "330 POST /api/bd/register-request",
+  "step": "330 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -857,7 +857,7 @@
   ]
  },
  {
-  "step": "331 POST /api/bd/register-request",
+  "step": "331 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -868,7 +868,7 @@
   ]
  },
  {
-  "step": "338 POST /api/bd/register-request",
+  "step": "338 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -879,7 +879,7 @@
   ]
  },
  {
-  "step": "339 POST /api/bd/register-request",
+  "step": "339 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -890,7 +890,7 @@
   ]
  },
  {
-  "step": "346 raw POST /api/bd/register-request",
+  "step": "346 raw POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -901,7 +901,7 @@
   ]
  },
  {
-  "step": "348 raw POST /api/bd/register-request",
+  "step": "348 raw POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -912,7 +912,7 @@
   ]
  },
  {
-  "step": "349 raw POST /api/bd/register-request",
+  "step": "349 raw POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -923,7 +923,7 @@
   ]
  },
  {
-  "step": "353 POST /api/bd/register-request",
+  "step": "353 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -941,7 +941,7 @@
   "rows": "[{\"id\":1,\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":2,\"device_id\":\"DEV2\",\"hostname\":\"Laptop 100%_off\",\"platform\":\"Linux\",\"version\":\"1.1\",\"ip_address\":\"10.0.0.2\",\"public_key\":\"key-2\",\"uuid\":\"uuid-2\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":3,\"device_id\":\"DEV3\",\"hostname\":\"approved-pc\",\"platform\":\"macOS\",\"version\":\"1.2\",\"ip_address\":\"10.0.0.3\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"rejected_reason\":\"\",\"token\":\"5\",\"console_url\":\"http://h:5000\",\"server_address\":\"h:21116\",\"server_key\":\"key-3\"},{\"id\":4,\"device_id\":\"DEV4\",\"hostname\":\"rejected-pc\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.4\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"rejected\",\"approved_by\":null,\"rejected_reason\":\"no\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":5,\"device_id\":\"DEV5\",\"hostname\":\"École-PC\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"192.168.1.5\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":6,\"device_id\":\"DEV6\",\"hostname\":null,\"platform\":null,\"version\":null,\"ip_address\":null,\"public_key\":null,\"uuid\":null,\"status\":null,\"approved_by\":null,\"rejected_reason\":null,\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":7,\"device_id\":\"DEV7\",\"hostname\":\"approved-bare\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":8,\"device_id\":\"DEV8\",\"hostname\":\"rejected-bare\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"rejected\",\"approved_by\":null,\"rejected_reason\":null,\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":9,\"device_id\":\"abc\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":10,\"device_id\":\"NEW1\",\"hostname\":\"h\",\"platform\":\"p\",\"version\":\"v\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"k\",\"uuid\":\"u\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":11,\"device_id\":\"NEW2\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"platform\":\"pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\",\"version\":\"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\",\"uuid\":\"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":12,\"device_id\":\"NEW3\",\"hostname\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀�\",\"platform\":\"éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"uuid\":\"x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":13,\"device_id\":\"NEW4\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":14,\"device_id\":\"NEW11\",\"hostname\":\"trimmed id\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":15,\"device_id\":\"NEW12\",\"hostname\":\"line\\nbreak\u2028sep\",\"platform\":\"\u003cb\u003e\u0026\u003c/b\u003e\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":16,\"device_id\":\"NEW15\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":17,\"device_id\":\"NEW13\",\"hostname\":\"proto\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":18,\"device_id\":\"NEW22\",\"hostname\":\"�\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":19,\"device_id\":\"NEW21\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null}]"
  },
  {
-  "step": "355 address POST /api/bd/register-request",
+  "step": "355 address POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -952,7 +952,7 @@
   ]
  },
  {
-  "step": "356 address POST /api/bd/register-request",
+  "step": "356 address POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -963,7 +963,7 @@
   ]
  },
  {
-  "step": "357 address POST /api/bd/register-request",
+  "step": "357 address POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -974,7 +974,7 @@
   ]
  },
  {
-  "step": "358 address POST /api/bd/register-request",
+  "step": "358 address POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -985,7 +985,7 @@
   ]
  },
  {
-  "step": "359 address POST /api/bd/register-request",
+  "step": "359 address POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -996,7 +996,7 @@
   ]
  },
  {
-  "step": "360 address POST /api/bd/register-request",
+  "step": "360 address POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -1007,7 +1007,7 @@
   ]
  },
  {
-  "step": "361 address POST /api/bd/register-request",
+  "step": "361 address POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -1018,7 +1018,7 @@
   ]
  },
  {
-  "step": "362 address POST /api/bd/register-request",
+  "step": "362 address POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -1029,7 +1029,7 @@
   ]
  },
  {
-  "step": "363 address POST /api/bd/register-request",
+  "step": "363 address POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -1040,7 +1040,7 @@
   ]
  },
  {
-  "step": "364 address POST /api/bd/register-request",
+  "step": "364 address POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -1051,7 +1051,7 @@
   ]
  },
  {
-  "step": "365 address POST /api/bd/register-request",
+  "step": "365 address POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -1062,7 +1062,7 @@
   ]
  },
  {
-  "step": "367 POST /api/bd/register-request",
+  "step": "367 POST /api/nd/register-request",
   "bugs": [
    "RG2"
   ],
@@ -1073,7 +1073,7 @@
   ]
  },
  {
-  "step": "369 POST /api/bd/register-request",
+  "step": "369 POST /api/nd/register-request",
   "bugs": [
    "RG2"
   ],
@@ -1081,7 +1081,7 @@
   "answer": "{\"success\":true,\"status\":\"rejected\",\"id\":4}"
  },
  {
-  "step": "370 POST /api/bd/register-request",
+  "step": "370 POST /api/nd/register-request",
   "bugs": [
    "RG2"
   ],
@@ -1089,7 +1089,7 @@
   "answer": "{\"success\":true,\"status\":null,\"id\":6}"
  },
  {
-  "step": "372 POST /api/bd/register-request",
+  "step": "372 POST /api/nd/register-request",
   "bugs": [
    "RG2"
   ],
@@ -1105,7 +1105,7 @@
   "rows": "[{\"id\":1,\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":2,\"device_id\":\"DEV2\",\"hostname\":\"Laptop 100%_off\",\"platform\":\"Linux\",\"version\":\"1.1\",\"ip_address\":\"10.0.0.2\",\"public_key\":\"key-2\",\"uuid\":\"uuid-2\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":3,\"device_id\":\"DEV3\",\"hostname\":\"approved-pc\",\"platform\":\"macOS\",\"version\":\"1.2\",\"ip_address\":\"10.0.0.3\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"rejected_reason\":\"\",\"token\":\"5\",\"console_url\":\"http://h:5000\",\"server_address\":\"h:21116\",\"server_key\":\"key-3\"},{\"id\":4,\"device_id\":\"DEV4\",\"hostname\":\"rejected-pc\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.4\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"rejected\",\"approved_by\":null,\"rejected_reason\":\"no\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":5,\"device_id\":\"DEV5\",\"hostname\":\"École-PC\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"192.168.1.5\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":6,\"device_id\":\"DEV6\",\"hostname\":null,\"platform\":null,\"version\":null,\"ip_address\":null,\"public_key\":null,\"uuid\":null,\"status\":null,\"approved_by\":null,\"rejected_reason\":null,\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":7,\"device_id\":\"DEV7\",\"hostname\":\"approved-bare\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":8,\"device_id\":\"DEV8\",\"hostname\":\"rejected-bare\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"rejected\",\"approved_by\":null,\"rejected_reason\":null,\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":9,\"device_id\":\"abc\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":10,\"device_id\":\"NEW1\",\"hostname\":\"h\",\"platform\":\"p\",\"version\":\"v\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"k\",\"uuid\":\"u\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":11,\"device_id\":\"NEW2\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"platform\":\"pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\",\"version\":\"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\",\"uuid\":\"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":12,\"device_id\":\"NEW3\",\"hostname\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀�\",\"platform\":\"éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"uuid\":\"x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":13,\"device_id\":\"NEW4\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":14,\"device_id\":\"NEW11\",\"hostname\":\"trimmed id\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":15,\"device_id\":\"NEW12\",\"hostname\":\"line\\nbreak\u2028sep\",\"platform\":\"\u003cb\u003e\u0026\u003c/b\u003e\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":16,\"device_id\":\"NEW15\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":17,\"device_id\":\"NEW13\",\"hostname\":\"proto\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":18,\"device_id\":\"NEW22\",\"hostname\":\"�\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":19,\"device_id\":\"NEW21\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":20,\"device_id\":\"ADDR0\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":21,\"device_id\":\"ADDR1\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":22,\"device_id\":\"ADDR2\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":23,\"device_id\":\"ADDR3\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":24,\"device_id\":\"ADDR4\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":25,\"device_id\":\"ADDR5\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":26,\"device_id\":\"ADDR6\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":27,\"device_id\":\"ADDR7\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":28,\"device_id\":\"ADDR8\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":29,\"device_id\":\"ADDR9\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":30,\"device_id\":\"ADDR10\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null}]"
  },
  {
-  "step": "378 GET /api/bd/register-status?device_id=DEV4",
+  "step": "378 GET /api/nd/register-status?device_id=DEV4",
   "bugs": [
    "RG2"
   ],
@@ -1113,7 +1113,7 @@
   "answer": "{\"success\":true,\"status\":\"rejected\",\"id\":4,\"reason\":\"no\"}"
  },
  {
-  "step": "380 GET /api/bd/register-status?device_id=DEV8",
+  "step": "380 GET /api/nd/register-status?device_id=DEV8",
   "bugs": [
    "RG2"
   ],
@@ -1121,7 +1121,7 @@
   "answer": "{\"success\":true,\"status\":\"rejected\",\"id\":8,\"reason\":\"\"}"
  },
  {
-  "step": "382 GET /api/bd/register-status?device_id=DEV1\u0026device_id=DEV2",
+  "step": "382 GET /api/nd/register-status?device_id=DEV1\u0026device_id=DEV2",
   "bugs": [
    "LS9"
   ],
@@ -1129,7 +1129,7 @@
   "answer": "{\"success\":true,\"status\":\"pending\",\"id\":1}"
  },
  {
-  "step": "384 GET /api/bd/register-status?device_id[]=DEV1\u0026device_id[]=DEV2",
+  "step": "384 GET /api/nd/register-status?device_id[]=DEV1\u0026device_id[]=DEV2",
   "bugs": [
    "LS9"
   ],
@@ -1137,7 +1137,7 @@
   "answer": "{\"success\":true,\"status\":\"pending\",\"id\":1}"
  },
  {
-  "step": "385 GET /api/bd/register-status?device_id[x]=DEV1",
+  "step": "385 GET /api/nd/register-status?device_id[x]=DEV1",
   "bugs": [
    "LS9"
   ],
@@ -1145,7 +1145,7 @@
   "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
  },
  {
-  "step": "388 GET /api/bd/register-status?device_id=NEW11",
+  "step": "388 GET /api/nd/register-status?device_id=NEW11",
   "bugs": [
    "RG4"
   ],
@@ -1153,7 +1153,7 @@
   "answer": "{\"success\":true,\"status\":\"pending\",\"id\":14}"
  },
  {
-  "step": "389 GET /api/bd/register-status?device_id=%F0%9F%98%80a",
+  "step": "389 GET /api/nd/register-status?device_id=%F0%9F%98%80a",
   "bugs": [
    "RG4"
   ],
@@ -1827,7 +1827,7 @@
   "answer": "{\"success\":false,\"error\":\"Cannot approve: status is rejected\"}"
  },
  {
-  "step": "494 POST /api/bd/register-request",
+  "step": "494 POST /api/nd/register-request",
   "bugs": [
    "RG2"
   ],
@@ -1913,7 +1913,7 @@
   ]
  },
  {
-  "step": "500 POST /api/bd/register-request",
+  "step": "500 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -1955,7 +1955,7 @@
   ]
  },
  {
-  "step": "502 POST /api/bd/register-request",
+  "step": "502 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -1997,7 +1997,7 @@
   ]
  },
  {
-  "step": "504 POST /api/bd/register-request",
+  "step": "504 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -2039,7 +2039,7 @@
   ]
  },
  {
-  "step": "506 POST /api/bd/register-request",
+  "step": "506 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -2081,7 +2081,7 @@
   ]
  },
  {
-  "step": "508 POST /api/bd/register-request",
+  "step": "508 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -2124,7 +2124,7 @@
   ]
  },
  {
-  "step": "510 POST /api/bd/register-request",
+  "step": "510 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -2166,7 +2166,7 @@
   ]
  },
  {
-  "step": "512 POST /api/bd/register-request",
+  "step": "512 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -2213,7 +2213,7 @@
   ]
  },
  {
-  "step": "514 POST /api/bd/register-request",
+  "step": "514 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -2256,7 +2256,7 @@
   ]
  },
  {
-  "step": "516 POST /api/bd/register-request",
+  "step": "516 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -2275,7 +2275,7 @@
   "answer": "{\"success\":false,\"error\":\"Invalid display_name\"}"
  },
  {
-  "step": "518 POST /api/bd/register-request",
+  "step": "518 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -2294,7 +2294,7 @@
   "answer": "{\"success\":false,\"error\":\"Invalid tags\"}"
  },
  {
-  "step": "520 POST /api/bd/register-request",
+  "step": "520 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -2336,7 +2336,7 @@
   ]
  },
  {
-  "step": "522 POST /api/bd/register-request",
+  "step": "522 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -2388,7 +2388,7 @@
   "rows": "[{\"user_id\":\"6\",\"action\":\"help_request_accepted\",\"details\":\"Help request 21 accepted\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":\"6\",\"action\":\"help_request_accepted\",\"details\":\"Help request 22 accepted\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":null,\"action\":\"help_request_resolved\",\"details\":\"Help request 23 resolved\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":\"5\",\"action\":\"help_request_accepted\",\"details\":\"Help request 24 accepted by the night shift\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device DEV1 (pc-1)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"4\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device DEV2 (Laptop 100%_off)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device DEV5 (École-PC)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR0 (approve-0)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR1 (approve-1)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR2 (approve-2)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR3 (approve-3)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR4 (approve-4)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR5 (approve-5)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR6 (approve-6)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR7 (approve-7)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR10 (approve-10)\",\"ip_address\":\"127.0.0.1\"}]"
  },
  {
-  "step": "530 POST /api/bd/register-request",
+  "step": "530 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -2407,7 +2407,7 @@
   "answer": "{\"success\":true,\"data\":{\"id\":43,\"device_id\":\"REJ1\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"rejected\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr�\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2026-11-19 01:19:07\",\"updated_at\":\"2026-11-19 01:19:07\"}}"
  },
  {
-  "step": "540 POST /api/bd/register-request",
+  "step": "540 POST /api/nd/register-request",
   "bugs": [
    "RG4"
   ],
@@ -2426,7 +2426,7 @@
   "answer": "{\"success\":true,\"data\":{\"id\":44,\"device_id\":\"REJ2\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"rejected\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2026-11-19 01:19:07\",\"updated_at\":\"2026-11-19 01:19:08\"}}"
  },
  {
-  "step": "542 POST /api/bd/register-request",
+  "step": "542 POST /api/nd/register-request",
   "bugs": [
    "RG2",
    "RG4"
@@ -2443,7 +2443,7 @@
   "answer": "{\"success\":false,\"error\":\"Cannot reject: status is rejected\"}"
  },
  {
-  "step": "544 POST /api/bd/register-request",
+  "step": "544 POST /api/nd/register-request",
   "bugs": [
    "RG2",
    "RG4"
@@ -2460,7 +2460,7 @@
   "answer": "{\"success\":false,\"error\":\"Cannot reject: status is rejected\"}"
  },
  {
-  "step": "546 POST /api/bd/register-request",
+  "step": "546 POST /api/nd/register-request",
   "bugs": [
    "RG2",
    "RG4"
@@ -2477,7 +2477,7 @@
   "answer": "{\"success\":false,\"error\":\"Cannot reject: status is rejected\"}"
  },
  {
-  "step": "548 POST /api/bd/register-request",
+  "step": "548 POST /api/nd/register-request",
   "bugs": [
    "RG2",
    "RG4"
@@ -2494,7 +2494,7 @@
   "answer": "{\"success\":false,\"error\":\"Cannot reject: status is rejected\"}"
  },
  {
-  "step": "550 GET /api/bd/register-status?device_id=REJ2",
+  "step": "550 GET /api/nd/register-status?device_id=REJ2",
   "bugs": [
    "RG4"
   ],

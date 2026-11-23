@@ -12,7 +12,7 @@ answer into the `_fixed.json` file next to the recording.
 |---|---|---|
 | `vectors.json` | requests to the resource control routes of the admin panel, the answers the Node console gave, and the calls it made to the API server meanwhile | `TestVectors` (`routes_test.go`) |
 | `vectors_fixed.json` | the Go console's answers to the vectors in `fixes` | `TestVectors` |
-| `device_vectors.json` | the route devices call (`GET /api/bd/resource-policy`) at both mounts | `TestDeviceVectors` (`device_test.go`) |
+| `device_vectors.json` | the route devices call (`GET /api/nd/resource-policy`) at both mounts | `TestDeviceVectors` (`device_test.go`) |
 | `device_vectors_fixed.json` | the Go console's answers to the vectors in `deviceFixes` | `TestDeviceVectors` |
 
 ## What is recorded

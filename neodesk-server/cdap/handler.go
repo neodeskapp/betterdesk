@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
 )
 
 // deviceIDPattern is the form of a device id the REST routes of a CDAP

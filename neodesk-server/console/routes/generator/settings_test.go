@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
 )
 
 // TestSettings reads the generator's settings with the old console's
@@ -20,10 +20,10 @@ func TestSettings(t *testing.T) {
 		dir      string
 	}{
 		{map[string]string{}, false, true, 5 * time.Second, time.Second, filepath.Join("/data", "agent-builds")},
-		{map[string]string{"BETTERDESK_CLIENT_GENERATOR_MODE": " Embedded ", "AGENT_BUILD_WORKER": "off", "AGENT_ARTIFACT_DIR": "/srv/a"}, true, false, 5 * time.Second, time.Second, "/srv/a"},
+		{map[string]string{"NEODESK_CLIENT_GENERATOR_MODE": " Embedded ", "AGENT_BUILD_WORKER": "off", "AGENT_ARTIFACT_DIR": "/srv/a"}, true, false, 5 * time.Second, time.Second, "/srv/a"},
 		// AGENT_BUILD_WORKER takes every on/off value in any case (BUGS L84),
 		// where the old console stayed on for "OFF"
-		{map[string]string{"BETTERDESK_CLIENT_GENERATOR_MODE": "embeddedx", "AGENT_BUILD_WORKER": "OFF", "AGENT_BUILD_POLL_MS": "250ms", "AGENT_BUILD_COOLDOWN_MS": "0"}, false, false, 250 * time.Millisecond, 0, filepath.Join("/data", "agent-builds")},
+		{map[string]string{"NEODESK_CLIENT_GENERATOR_MODE": "embeddedx", "AGENT_BUILD_WORKER": "OFF", "AGENT_BUILD_POLL_MS": "250ms", "AGENT_BUILD_COOLDOWN_MS": "0"}, false, false, 250 * time.Millisecond, 0, filepath.Join("/data", "agent-builds")},
 		{map[string]string{"AGENT_BUILD_POLL_MS": "soon", "AGENT_BUILD_COOLDOWN_MS": "later"}, false, true, time.Millisecond, 0, filepath.Join("/data", "agent-builds")},
 		{map[string]string{"AGENT_BUILD_POLL_MS": "-5", "AGENT_BUILD_COOLDOWN_MS": " 30"}, false, true, time.Millisecond, 30 * time.Millisecond, filepath.Join("/data", "agent-builds")},
 	} {

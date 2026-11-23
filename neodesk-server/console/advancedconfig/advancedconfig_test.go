@@ -11,7 +11,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 func testService(t *testing.T, env map[string]string) (*Service, string) {

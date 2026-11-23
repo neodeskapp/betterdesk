@@ -2,7 +2,7 @@
  "id": "fleet/second-mount-task-create-without-session",
  "request": {
   "method": "POST",
-  "path": "/api/bd/api/panel/fleet/tasks",
+  "path": "/api/nd/api/panel/fleet/tasks",
   "body": {
    "command": "echo",
    "device_id": "900100001",

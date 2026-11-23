@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
 )
 
 func newWorld(t *testing.T) (*routetest.World, *routetest.API) {
@@ -92,7 +92,7 @@ func TestSave(t *testing.T) {
 	// an answer with an error key is a failure, and an empty error the
 	// route's own text
 	api.On("POST /api/branding", http.StatusOK, `{"error":""}`)
-	if res := admin.Do("POST", "/api/client-branding", `{}`); res.Status != http.StatusBadGateway || res.Body != `{"success":false,"error":"Failed to save branding on BetterDesk server"}` {
+	if res := admin.Do("POST", "/api/client-branding", `{}`); res.Status != http.StatusBadGateway || res.Body != `{"success":false,"error":"Failed to save branding on NeoDesk server"}` {
 		t.Errorf("error key: %d %s", res.Status, res.Body)
 	}
 	if res := admin.Do("POST", "/api/client-branding", "company_name=x", "Content-Type", "application/x-www-form-urlencoded"); res.Status != http.StatusUnsupportedMediaType {

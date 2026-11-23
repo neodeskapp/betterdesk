@@ -2,7 +2,7 @@
  "id": "dataguard/bd-device-policies-as-a-device",
  "request": {
   "method": "GET",
-  "path": "/api/bd/dlp-policies",
+  "path": "/api/nd/dlp-policies",
   "notes": [
    "header Authorization: Bearer contract-no-such-token",
    "no cookies"

@@ -2,7 +2,7 @@
  "id": "bd-api/heartbeat",
  "request": {
   "method": "POST",
-  "path": "/api/bd/heartbeat",
+  "path": "/api/nd/heartbeat",
   "body": {
    "device_id": "900100001"
   },

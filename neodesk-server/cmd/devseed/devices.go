@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // Devices for performance checks of the device list (the console's budget

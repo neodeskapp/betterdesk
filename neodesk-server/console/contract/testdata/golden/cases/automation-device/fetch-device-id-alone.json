@@ -2,7 +2,7 @@
  "id": "automation-device/fetch-device-id-alone",
  "request": {
   "method": "GET",
-  "path": "/api/bd/commands",
+  "path": "/api/nd/commands",
   "notes": [
    "header X-Device-Id: 900100002",
    "no CSRF token",

@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
+	consoleconfig "github.com/neodeskapp/neodesk/neodesk-server/console/config"
 )
 
 // linkedConsole is the console's configuration for a start with env and the

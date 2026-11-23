@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // A code of the second factor signs an account in once: the same code, or

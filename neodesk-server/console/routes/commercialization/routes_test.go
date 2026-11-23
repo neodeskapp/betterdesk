@@ -12,10 +12,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/commercialization"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/reqquery"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath/proxytest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/commercialization"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/reqquery"
 )
 
 // The vectors are what routes/commercialization.routes.js of the Node

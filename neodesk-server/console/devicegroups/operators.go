@@ -7,10 +7,10 @@ import (
 	"math"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // Who hears of a device: the folder it is in, and the accounts on the

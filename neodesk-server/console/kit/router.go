@@ -10,8 +10,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // Middleware wraps a handler.
@@ -89,8 +89,8 @@ func (rt *Router) OnBadParam(fn func(w http.ResponseWriter, r *http.Request, err
 }
 
 // Mount returns a router that adds its routes to this table below prefix,
-// the way app.use(prefix, router) did: Mount("/api/bd").Get("/commands")
-// answers /api/bd/commands, and a route "/" answers the prefix itself.
+// the way app.use(prefix, router) did: Mount("/api/nd").Get("/commands")
+// answers /api/nd/commands, and a route "/" answers the prefix itself.
 // Handlers read the prefix with MountPath and the rest with RoutePath.
 func (rt *Router) Mount(prefix string) *Router {
 	if !strings.HasPrefix(prefix, "/") || strings.HasSuffix(prefix, "/") {

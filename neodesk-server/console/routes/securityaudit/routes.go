@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
-	"github.com/unitronix/betterdesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 )
 
 type handlers struct {

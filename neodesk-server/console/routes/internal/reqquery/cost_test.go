@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // deepIndexQuery is a query of about 32 KB whose 1,000 keys each ask for

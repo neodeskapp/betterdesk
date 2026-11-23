@@ -17,11 +17,11 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // The recordings in testdata (testdata/README.md) hold the Node console's
@@ -1031,7 +1031,7 @@ func (r *replay) noPublicURL() bool {
 }
 
 // helpLinkRow is the link of a help request mail's HTML.
-var helpLinkRow = regexp.MustCompile(`\n            <p style="margin-top: 16px;"><a href="[^"]*">Open help requests in BetterDesk</a></p>`)
+var helpLinkRow = regexp.MustCompile(`\n            <p style="margin-top: 16px;"><a href="[^"]*">Open help requests in NeoDesk</a></p>`)
 
 // spacedHelpText is the text of a help request mail Node sent, with the
 // blank lines Node dropped (BUGS EM7): after the first line, and before

@@ -2,7 +2,7 @@
  "id": "filetransfer/chain-progress-completed",
  "request": {
   "method": "GET",
-  "path": "/api/bd/transfers/{chain}",
+  "path": "/api/nd/transfers/{chain}",
   "notes": [
    "sent as admin in every role's turn"
   ]
@@ -28,7 +28,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",

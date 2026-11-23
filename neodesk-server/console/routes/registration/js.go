@@ -6,10 +6,10 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsjson"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
 // What the handlers read from a request is the value JSON.parse made of

@@ -25,13 +25,13 @@ const (
 
 // Settings is how a run is set up, read from the environment.
 type Settings struct {
-	// BaseURL is the console under test (BD_URL).
+	// BaseURL is the console under test (ND_URL).
 	BaseURL *url.URL
 	// PasswordFile holds the password of the e2e_<role> accounts
-	// (BD_PASSWORD_FILE).
+	// (ND_PASSWORD_FILE).
 	PasswordFile string
 	// SecretsDir is the folder whose files are the secrets cases send as
-	// {secret:<file name>} (BD_SECRETS_DIR). A folder that does not exist
+	// {secret:<file name>} (ND_SECRETS_DIR). A folder that does not exist
 	// holds none.
 	SecretsDir string
 	// Record is what to do with the answers (CONTRACT_RECORD).
@@ -80,20 +80,20 @@ func LoadSettings(getenv func(string) string) (*Settings, error) {
 		RoutesFile:   "testdata/routes.json",
 		Timeout:      60 * time.Second,
 	}
-	raw := strings.TrimSpace(getenv("BD_URL"))
+	raw := strings.TrimSpace(getenv("ND_URL"))
 	if raw == "" {
-		return nil, fmt.Errorf("BD_URL is not set: the suite needs the address of a console")
+		return nil, fmt.Errorf("ND_URL is not set: the suite needs the address of a console")
 	}
 	u, err := url.Parse(strings.TrimRight(raw, "/"))
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
-		return nil, fmt.Errorf("BD_URL %q is not an http(s) URL", raw)
+		return nil, fmt.Errorf("ND_URL %q is not an http(s) URL", raw)
 	}
 	s.BaseURL = u
 
-	if v := strings.TrimSpace(getenv("BD_PASSWORD_FILE")); v != "" {
+	if v := strings.TrimSpace(getenv("ND_PASSWORD_FILE")); v != "" {
 		s.PasswordFile = v
 	}
-	if v := strings.TrimSpace(getenv("BD_SECRETS_DIR")); v != "" {
+	if v := strings.TrimSpace(getenv("ND_SECRETS_DIR")); v != "" {
 		s.SecretsDir = v
 	}
 	if v := strings.TrimSpace(getenv("CONTRACT_GOLDEN")); v != "" {

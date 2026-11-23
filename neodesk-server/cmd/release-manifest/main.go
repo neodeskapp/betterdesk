@@ -1,11 +1,11 @@
 // Command release-manifest writes the files that make a folder of
-// betterdesk-server binaries a release the in-app updater installs
+// neodesk-server binaries a release the in-app updater installs
 // (console/updater): manifest.json, manifest.sig when a signing key is
 // given, and SHA256SUMS in the form "sha256sum -c" reads.
 //
 //	go run ./cmd/release-manifest -dir dist -version 3.6.0 -commit <sha> -branch main
 //
-// The signing key is in BETTERDESK_RELEASE_SIGNING_KEY: a PKCS#8 PEM
+// The signing key is in NEODESK_RELEASE_SIGNING_KEY: a PKCS#8 PEM
 // private key, as "openssl genpkey -algorithm ed25519" writes it, or the
 // ed25519 seed (32 bytes) or private key (64 bytes) in base64; it is never
 // taken from the command line. The written signature must verify against
@@ -38,10 +38,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/updater"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
 )
 
-var reBinary = regexp.MustCompile(`^betterdesk-server-([a-z0-9]+)-([a-z0-9]+)(\.exe)?$`)
+var reBinary = regexp.MustCompile(`^neodesk-server-([a-z0-9]+)-([a-z0-9]+)(\.exe)?$`)
 
 func main() {
 	if err := run(os.Args[1:], os.Getenv, os.Stdout); err != nil {
@@ -56,8 +56,8 @@ func run(args []string, getenv func(string) string, out io.Writer) error {
 	version := fs.String("version", "", "version of the release, X.Y.Z")
 	commit := fs.String("commit", "", "commit the binaries were built from, 40 hex digits")
 	branch := fs.String("branch", "main", "branch of the channel: main (stable) or dev (development)")
-	owner := fs.String("owner", "UNITRONIX", "GitHub owner the release is published under")
-	repo := fs.String("repo", "BetterDesk", "GitHub repository the release is published in")
+	owner := fs.String("owner", "neodeskapp", "GitHub owner the release is published under")
+	repo := fs.String("repo", "neodesk", "GitHub repository the release is published in")
 	minRollback := fs.String("min-rollback", "", "oldest version this release can be rolled back to (optional)")
 	created := fs.String("created", "", "time of the release, RFC 3339 (default: now)")
 	verifyKey := fs.String("verify-key", "", "public keys to check the signature against, base64, comma separated")
@@ -107,7 +107,7 @@ func run(args []string, getenv func(string) string, out io.Writer) error {
 
 	payload := updater.CanonicalPayload(manifest.Signed())
 	compiled, extra := updater.CompiledKeys(), updater.ParseKeys(*verifyKey)
-	if seed := strings.TrimSpace(getenv("BETTERDESK_RELEASE_SIGNING_KEY")); seed != "" {
+	if seed := strings.TrimSpace(getenv("NEODESK_RELEASE_SIGNING_KEY")); seed != "" {
 		key, err := privateKey(seed)
 		if err != nil {
 			return err
@@ -125,9 +125,9 @@ func run(args []string, getenv func(string) string, out io.Writer) error {
 		written = append(written, "manifest.sig")
 		fmt.Fprintf(out, "signed with the key %s\n", base64.StdEncoding.EncodeToString(key.Public().(ed25519.PublicKey)))
 	} else if len(compiled) > 0 || *verifyKey != "" {
-		return errors.New("BETTERDESK_RELEASE_SIGNING_KEY is not set, and the updater refuses a release without a signature")
+		return errors.New("NEODESK_RELEASE_SIGNING_KEY is not set, and the updater refuses a release without a signature")
 	} else {
-		fmt.Fprintln(out, "BETTERDESK_RELEASE_SIGNING_KEY is not set: the release is not signed")
+		fmt.Fprintln(out, "NEODESK_RELEASE_SIGNING_KEY is not set: the release is not signed")
 	}
 
 	var sums strings.Builder
@@ -156,17 +156,17 @@ func privateKey(text string) (ed25519.PrivateKey, error) {
 	if block, _ := pem.Decode([]byte(text)); block != nil {
 		parsed, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 		if err != nil {
-			return nil, errors.New("BETTERDESK_RELEASE_SIGNING_KEY is a PEM block but no PKCS#8 private key")
+			return nil, errors.New("NEODESK_RELEASE_SIGNING_KEY is a PEM block but no PKCS#8 private key")
 		}
 		key, ok := parsed.(ed25519.PrivateKey)
 		if !ok {
-			return nil, errors.New("BETTERDESK_RELEASE_SIGNING_KEY is no ed25519 key")
+			return nil, errors.New("NEODESK_RELEASE_SIGNING_KEY is no ed25519 key")
 		}
 		return key, nil
 	}
 	raw, err := base64.StdEncoding.DecodeString(text)
 	if err != nil {
-		return nil, errors.New("BETTERDESK_RELEASE_SIGNING_KEY is not base64")
+		return nil, errors.New("NEODESK_RELEASE_SIGNING_KEY is not base64")
 	}
 	switch len(raw) {
 	case ed25519.SeedSize:
@@ -174,7 +174,7 @@ func privateKey(text string) (ed25519.PrivateKey, error) {
 	case ed25519.PrivateKeySize:
 		return ed25519.PrivateKey(raw), nil
 	}
-	return nil, fmt.Errorf("BETTERDESK_RELEASE_SIGNING_KEY has %d bytes, expected 32 or 64", len(raw))
+	return nil, fmt.Errorf("NEODESK_RELEASE_SIGNING_KEY has %d bytes, expected 32 or 64", len(raw))
 }
 
 func hashFile(path string) (string, int64, error) {

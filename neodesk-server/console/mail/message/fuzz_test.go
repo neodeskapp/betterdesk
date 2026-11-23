@@ -170,8 +170,8 @@ func FuzzBuild(f *testing.F) {
 		from, to, to2, subject, text, html string
 		shape                              uint8
 	}{
-		{"betterdesk@localhost", "admin@example.com", "", "Hello", "Hi there", "<p>Hi</p>", 0},
-		{"BetterDesk <noreply@example.com>", "a@example.com, b@example.com", "c@example.com", "[BetterDesk Alert] CPU high — CRITICAL", "Alert: CPU high\nSeverity: critical\n", "", 1},
+		{"neodesk@localhost", "admin@example.com", "", "Hello", "Hi there", "<p>Hi</p>", 0},
+		{"NeoDesk <noreply@example.com>", "a@example.com, b@example.com", "c@example.com", "[NeoDesk Alert] CPU high — CRITICAL", "Alert: CPU high\nSeverity: critical\n", "", 1},
 		{"\"Müller, Jürgen\" <j@müller.de>", "Jürgen <jürgen@müller.de>", "用户@例子.测试", "日本語の件名", "", "<p>日本語</p>", 1},
 		{"a@b.c\r\nBcc: victim@example.com", "x@y.z\r\nCc: second@example.com", "", "Hi\r\nBcc: third@example.com\r\n\r\nbody", "line\r\n.\r\nMAIL FROM:<x>\r\n", "", 0},
 		{"a\x00b@c.d", "Name\x00 <n@example.com>, \"Quoted\r\nName\" <q@example.com>", "<\"a\r\n\"@b.c>", "nul\x00 bell\x07 del\x7f", "nul\x00", "\x01\x02", 1},

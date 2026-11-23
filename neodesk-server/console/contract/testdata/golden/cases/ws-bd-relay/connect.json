@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/connect",
  "request": {
   "method": "POST",
-  "path": "/api/bd/connect",
+  "path": "/api/nd/connect",
   "body": {
    "public_key": "contract-pk",
    "target_id": "900100001"

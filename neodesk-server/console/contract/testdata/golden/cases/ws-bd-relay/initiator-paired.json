@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/initiator-paired",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-relay",
+  "path": "/ws/nd-relay",
   "notes": [
    "websocket init, own origin",
    "websocket expect 1 messages"

@@ -1,5 +1,5 @@
 /**
- * BetterDesk Web Remote Client - inbound clipboard decode/apply
+ * NeoDesk Web Remote Client - inbound clipboard decode/apply
  * Handles RustDesk Clipboard / MultiClipboards (zstd, text/html/image).
  */
 import { RDCompress } from './compress.ts';

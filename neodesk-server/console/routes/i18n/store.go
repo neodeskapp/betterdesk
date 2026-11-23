@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // updateUserLanguage stores an account's language choice.

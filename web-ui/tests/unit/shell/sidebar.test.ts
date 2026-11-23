@@ -55,15 +55,15 @@ describe('Sidebar', () => {
 		expect(support).toHaveAttribute('aria-expanded', 'false');
 		await user.click(support);
 		expect(support).toHaveAttribute('aria-expanded', 'true');
-		expect(JSON.parse(sessionStorage.getItem('bd_nav_sections_collapsed')!)).toEqual({ support: false });
+		expect(JSON.parse(sessionStorage.getItem('nd_nav_sections_collapsed')!)).toEqual({ support: false });
 		// Closing the current section is not stored
 		await user.click(devices);
 		expect(devices).toHaveAttribute('aria-expanded', 'false');
-		expect(JSON.parse(sessionStorage.getItem('bd_nav_sections_collapsed')!)).toEqual({ support: false });
+		expect(JSON.parse(sessionStorage.getItem('nd_nav_sections_collapsed')!)).toEqual({ support: false });
 	});
 
 	test('a section opened in this tab stays open next time', async () => {
-		sessionStorage.setItem('bd_nav_sections_collapsed', JSON.stringify({ people: false }));
+		sessionStorage.setItem('nd_nav_sections_collapsed', JSON.stringify({ people: false }));
 		await setup('/devices');
 		expect(screen.getByRole('button', { name: /^People/ })).toHaveAttribute('aria-expanded', 'true');
 	});
@@ -78,7 +78,7 @@ describe('Sidebar', () => {
 		expect(more).toHaveAttribute('aria-expanded', 'true');
 		expect(more).toHaveTextContent('nav.fewer');
 		expect(within(list).getByRole('link', { name: 'Inventory' })).toBeVisible();
-		expect(JSON.parse(localStorage.getItem('bd_nav_more_open')!)).toEqual({ devices: true });
+		expect(JSON.parse(localStorage.getItem('nd_nav_more_open')!)).toEqual({ devices: true });
 	});
 
 	test('More is open when the current page is in it', async () => {
@@ -107,7 +107,7 @@ describe('Sidebar', () => {
 		await user.keyboard('{ArrowRight}{ArrowRight}');
 		expect(handle).toHaveAttribute('aria-valuenow', '252');
 		expect(document.documentElement.style.getPropertyValue('--sidebar-w')).toBe('252px');
-		expect(localStorage.getItem('bd_ux35_sidebar_width')).toBe('252');
+		expect(localStorage.getItem('nd_ux35_sidebar_width')).toBe('252');
 		await user.keyboard('{End}');
 		expect(handle).toHaveAttribute('aria-valuenow', '320');
 		await user.keyboard('{ArrowRight}');
@@ -126,18 +126,18 @@ describe('Sidebar', () => {
 	});
 
 	test('a saved width is used and kept within the limits', async () => {
-		localStorage.setItem('bd_ux35_sidebar_width', '900');
+		localStorage.setItem('nd_ux35_sidebar_width', '900');
 		await setup('/devices');
 		expect(screen.getByRole('separator')).toHaveAttribute('aria-valuenow', '320');
 	});
 
-	test('"Powered by BetterDesk" links to the project with the version, unless branding turns it off', async () => {
+	test('"Powered by NeoDesk" links to the project with the version, unless branding turns it off', async () => {
 		const { session } = await import('../../../src/lib/state/session.svelte.ts');
 		session.appVersion = '3.5.219';
 		await setup('/devices');
-		// Unit tests show string keys: the name is "branding.powered_by BetterDesk 3.5.219"
-		const powered = screen.getByRole('link', { name: /BetterDesk 3\.5\.219$/ });
-		expect(powered).toHaveAttribute('href', 'https://github.com/neodeskapp/betterdesk');
+		// Unit tests show string keys: the name is "branding.powered_by NeoDesk 3.5.219"
+		const powered = screen.getByRole('link', { name: /NeoDesk 3\.5\.219$/ });
+		expect(powered).toHaveAttribute('href', 'https://github.com/neodeskapp/neodesk');
 		expect(powered).toHaveAttribute('target', '_blank');
 		expect(powered).toHaveAttribute('rel', 'noopener noreferrer');
 		expect(powered).toHaveTextContent('3.5.219');

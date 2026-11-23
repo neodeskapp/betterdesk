@@ -55,7 +55,7 @@ export const NODE_DEFS: Readonly<Record<string, NodeDef>> = {
 	'rest-poll': { cat: 'sources', icon: 'api', label: 'REST Poll', desc: 'Poll HTTP/REST endpoint', ports: { in: 0, out: 1 }, config: { url: 'https://api.example.com/data', method: 'GET', headers: '', interval: 30000, jmesPath: '' } },
 	'mqtt-subscribe': { cat: 'sources', icon: 'cell_tower', label: 'MQTT Subscribe', desc: 'Listen to MQTT topic', ports: { in: 0, out: 1 }, config: { broker: 'mqtt://broker:1883', topic: 'sensors/#', qos: 0, tls: false } },
 	'webhook-listen': { cat: 'sources', icon: 'webhook', label: 'Webhook', desc: 'Receive HTTP webhooks', ports: { in: 0, out: 1 }, config: { path: '/webhook/data', method: 'POST', authToken: '' } },
-	'device-telemetry': { cat: 'sources', icon: 'developer_board', label: 'Device Telemetry', desc: 'BetterDesk agent metrics', ports: { in: 0, out: 1 }, config: { deviceId: '', metrics: 'cpu,memory,disk' } },
+	'device-telemetry': { cat: 'sources', icon: 'developer_board', label: 'Device Telemetry', desc: 'NeoDesk agent metrics', ports: { in: 0, out: 1 }, config: { deviceId: '', metrics: 'cpu,memory,disk' } },
 	'database-query': { cat: 'sources', icon: 'storage', label: 'Database Query', desc: 'Poll SQL database', ports: { in: 0, out: 1 }, config: { dsn: '', query: 'SELECT 1', interval: 60000 } },
 	'file-watch': { cat: 'sources', icon: 'folder_open', label: 'File Watch', desc: 'Watch file changes', ports: { in: 0, out: 1 }, config: { path: '/var/log/', pattern: '*.log', events: 'modify' } },
 

@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 type certFiles struct {
@@ -280,7 +280,7 @@ func TestCapabilityBit(t *testing.T) {
 		for value, want := range map[string]bool{"1": true, "true": true, " YES ": true, "y": true, "On": true, "0": false, "n": false, "": false} {
 			getenv := func(string) string { return value }
 			if got := CanBindLowPorts(getenv); got != want && !(mayBindAnyway() && !want) {
-				t.Errorf("BETTERDESK_HAS_BIND_SERVICE=%q: %v", value, got)
+				t.Errorf("NEODESK_HAS_BIND_SERVICE=%q: %v", value, got)
 			}
 		}
 	}

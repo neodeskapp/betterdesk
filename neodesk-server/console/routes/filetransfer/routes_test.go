@@ -12,12 +12,12 @@ import (
 	"testing"
 	"time"
 
-	service "github.com/unitronix/betterdesk-server/console/filetransfer"
-	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/limits"
-	"github.com/unitronix/betterdesk-server/console/routes/filetransfer"
+	service "github.com/neodeskapp/neodesk/neodesk-server/console/filetransfer"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath/proxytest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/filetransfer"
 )
 
 // vector is a request with the Node console's answer, or one of the two
@@ -74,7 +74,7 @@ func newWorld(t *testing.T) *world {
 		})
 		d.FileTransfer = w.transfers
 		filetransfer.Register(d.At("/api/files"))
-		filetransfer.Register(d.At("/api/bd"))
+		filetransfer.Register(d.At("/api/nd"))
 	})
 	return w
 }
@@ -440,13 +440,13 @@ func around(text, other string) string {
 func TestRegisteredRoutes(t *testing.T) {
 	d := &kit.Deps{Router: kit.NewRouter(), Log: kit.NewLogger("error", true), Limits: limits.NewSet(limits.Options{ClientIP: httpx.SocketIP, UserKey: func(*http.Request) string { return "" }})}
 	filetransfer.Register(d.At("/api/files"))
-	filetransfer.Register(d.At("/api/bd"))
+	filetransfer.Register(d.At("/api/nd"))
 	var got, want []string
 	for _, route := range d.Router.Routes() {
 		got = append(got, route.Method+" "+route.Path)
 	}
 	// In the order of the Node file, once per mount
-	for _, mount := range []string{"/api/files", "/api/bd"} {
+	for _, mount := range []string{"/api/files", "/api/nd"} {
 		want = append(want,
 			"POST "+mount+"/transfer",
 			"GET "+mount+"/transfers",

@@ -4262,7 +4262,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -4275,7 +4275,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -4288,7 +4288,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -4301,7 +4301,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -4314,7 +4314,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -4327,7 +4327,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -4340,7 +4340,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -4353,7 +4353,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -4366,7 +4366,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -4379,7 +4379,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -4392,7 +4392,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -4405,7 +4405,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -4418,7 +4418,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -4431,7 +4431,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -4444,7 +4444,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -4457,7 +4457,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -4470,7 +4470,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -4483,7 +4483,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -4496,7 +4496,7 @@
    "answer": "name,category,total_secs,sessions,devices\nChrome,browser,3660,2,2\n\"Zoom, \"\"Inc.\"\"\",meeting,3600,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -4509,7 +4509,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -4522,7 +4522,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -4535,7 +4535,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -4548,7 +4548,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -4561,7 +4561,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -4574,7 +4574,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -4587,7 +4587,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -4600,7 +4600,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -4613,7 +4613,7 @@
    "answer": "id,hostname,ip,ban_reason\n900000002,[object Object],,\"Stolen, \"\"really\"\"\"\n900000003,Büro ✓,\"10.0.0.3,x\",\"multi\nline\"",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -4626,7 +4626,7 @@
    "answer": "id,user_id,action,details,ip_address,created_at,username\n1,1,login,\"Signed in, \"\"really\"\"\",10.0.0.1,2019-11-01 10:00:00,e2e_admin\n2,6,device_banned,\"multi\nline\",,2019-07-01 12:00:00,e2e_viewer\n3,,boot,,,2019-01-01 00:00:00,",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -4639,7 +4639,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -4652,7 +4652,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -4665,7 +4665,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -4678,7 +4678,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -4691,7 +4691,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -4704,7 +4704,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -4717,7 +4717,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -4730,7 +4730,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -4743,7 +4743,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -4756,7 +4756,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -4769,7 +4769,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -4782,7 +4782,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -4795,7 +4795,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -4808,7 +4808,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -4821,7 +4821,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -4834,7 +4834,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -4847,7 +4847,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -4860,7 +4860,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -4873,7 +4873,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -4886,7 +4886,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -4899,7 +4899,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -4912,7 +4912,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -4925,7 +4925,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -4938,7 +4938,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -4951,7 +4951,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -4964,7 +4964,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -4977,7 +4977,7 @@
    "answer": "id,name,host,check_type,last_status,last_rtt_ms,last_check_at\n1,Gateway,gw,tcp,UP,1.5,2019-03-31 01:30:00\n3,Printer,p,ping,,,\n2,\"Web, \"\"main\"\"\",web,ping,down,0.1,2019-10-27 01:30:00",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -4990,7 +4990,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -5003,7 +5003,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -5016,7 +5016,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -5029,7 +5029,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -5042,7 +5042,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -5055,7 +5055,7 @@
    "answer": "id,name,host,check_type,last_status,last_rtt_ms,last_check_at\n1,Gateway,gw,tcp,UP,1.5,2019-03-31 01:30:00\n3,Printer,p,ping,,,\n2,\"Web, \"\"main\"\"\",web,ping,down,0.1,2019-10-27 01:30:00",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -5068,7 +5068,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -5081,7 +5081,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -5094,7 +5094,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -5107,7 +5107,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -5120,7 +5120,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -5133,7 +5133,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -5146,7 +5146,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -5159,7 +5159,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -5172,7 +5172,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -5185,7 +5185,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -5198,7 +5198,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -5211,7 +5211,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -5224,7 +5224,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -5237,7 +5237,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -5250,7 +5250,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -5263,7 +5263,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -5276,7 +5276,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -5289,7 +5289,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -5302,7 +5302,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -5315,7 +5315,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -5328,7 +5328,7 @@
    "answer": "id,rule_id,device_id,severity,message,triggered_at,acknowledged,acknowledged_by,acknowledged_at,created_at,rule_name\n2,1,,critical,\"multi\nline\",2019-11-01T10:00:00.000Z,0,,,2019-11-01 10:00:00,\"CPU, high\"\n1,1,D1,warning,\"CPU \"\"at\"\" 95%\",2019-10-27T00:30:00.000Z,1,alice,2019-07-01 12:00:00,2019-10-27 00:30:00,\"CPU, high\"",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -5341,7 +5341,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -5354,7 +5354,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -5367,7 +5367,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -5380,7 +5380,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -5393,7 +5393,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -5406,7 +5406,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -5419,7 +5419,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -5432,7 +5432,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -5565,7 +5565,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -5578,7 +5578,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -6155,7 +6155,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -6168,7 +6168,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -6181,7 +6181,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -6194,7 +6194,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -6207,7 +6207,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -6220,7 +6220,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -6233,7 +6233,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -6246,7 +6246,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -6259,7 +6259,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -6272,7 +6272,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -6285,7 +6285,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -6298,7 +6298,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -6311,7 +6311,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -6324,7 +6324,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -6337,7 +6337,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -6350,7 +6350,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -6363,7 +6363,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -6376,7 +6376,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -6389,7 +6389,7 @@
    "answer": "name,category,total_secs,sessions,devices\nChrome,browser,3660,2,2\n\"Zoom, \"\"Inc.\"\"\",meeting,3600,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -6402,7 +6402,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -6415,7 +6415,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -6428,7 +6428,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -6441,7 +6441,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -6454,7 +6454,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -6467,7 +6467,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -6480,7 +6480,7 @@
    "answer": "devices_with_activity,daily_reports,total_active_secs,total_idle_secs\n2,3,10860,151",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_activity_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_activity_2026-11-10.csv\""
    }
   },
   {
@@ -6493,7 +6493,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -6506,7 +6506,7 @@
    "answer": "id,hostname,ip,ban_reason\n900000002,[object Object],,\"Stolen, \"\"really\"\"\"\n900000003,Büro ✓,\"10.0.0.3,x\",\"multi\nline\"",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -6519,7 +6519,7 @@
    "answer": "id,user_id,action,details,ip_address,created_at,username\n1,1,login,\"Signed in, \"\"really\"\"\",10.0.0.1,2019-11-01 10:00:00,e2e_admin\n2,6,device_banned,\"multi\nline\",,2019-07-01 12:00:00,e2e_viewer\n3,,boot,,,2019-01-01 00:00:00,",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -6532,7 +6532,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -6545,7 +6545,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -6558,7 +6558,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -6571,7 +6571,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -6584,7 +6584,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -6597,7 +6597,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -6610,7 +6610,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -6623,7 +6623,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -6636,7 +6636,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -6649,7 +6649,7 @@
    "answer": "audit_log_count\n3",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_security_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_security_2026-11-10.csv\""
    }
   },
   {
@@ -6662,7 +6662,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -6675,7 +6675,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -6688,7 +6688,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -6701,7 +6701,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -6714,7 +6714,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -6727,7 +6727,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -6740,7 +6740,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -6753,7 +6753,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -6766,7 +6766,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -6779,7 +6779,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -6792,7 +6792,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -6805,7 +6805,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -6818,7 +6818,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {
@@ -6831,7 +6831,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -6844,7 +6844,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -6857,7 +6857,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -6870,7 +6870,7 @@
    "answer": "id,name,host,check_type,last_status,last_rtt_ms,last_check_at\n1,Gateway,gw,tcp,UP,1.5,2019-03-31 01:30:00\n3,Printer,p,ping,,,\n2,\"Web, \"\"main\"\"\",web,ping,down,0.1,2019-10-27 01:30:00",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -6883,7 +6883,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -6896,7 +6896,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -6909,7 +6909,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -6922,7 +6922,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -6935,7 +6935,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -6948,7 +6948,7 @@
    "answer": "id,name,host,check_type,last_status,last_rtt_ms,last_check_at\n1,Gateway,gw,tcp,UP,1.5,2019-03-31 01:30:00\n3,Printer,p,ping,,,\n2,\"Web, \"\"main\"\"\",web,ping,down,0.1,2019-10-27 01:30:00",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -6961,7 +6961,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -6974,7 +6974,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -6987,7 +6987,7 @@
    "answer": "total_targets,up,down,unknown\n3,1,1,1",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-10.csv\""
    }
   },
   {
@@ -7000,7 +7000,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -7013,7 +7013,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -7026,7 +7026,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -7039,7 +7039,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -7052,7 +7052,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -7065,7 +7065,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -7078,7 +7078,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -7091,7 +7091,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -7104,7 +7104,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -7117,7 +7117,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -7130,7 +7130,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -7143,7 +7143,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -7156,7 +7156,7 @@
    "answer": "total_inventoried,avg_ram_mb\n2,8194",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_inventory_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_inventory_2026-11-10.csv\""
    }
   },
   {
@@ -7169,7 +7169,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -7182,7 +7182,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -7195,7 +7195,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -7208,7 +7208,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -7221,7 +7221,7 @@
    "answer": "id,rule_id,device_id,severity,message,triggered_at,acknowledged,acknowledged_by,acknowledged_at,created_at,rule_name\n2,1,,critical,\"multi\nline\",2019-11-01T10:00:00.000Z,0,,,2019-11-01 10:00:00,\"CPU, high\"\n1,1,D1,warning,\"CPU \"\"at\"\" 95%\",2019-10-27T00:30:00.000Z,1,alice,2019-07-01 12:00:00,2019-10-27 00:30:00,\"CPU, high\"",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -7234,7 +7234,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -7247,7 +7247,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -7260,7 +7260,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -7273,7 +7273,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -7286,7 +7286,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -7299,7 +7299,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -7312,7 +7312,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -7325,7 +7325,7 @@
    "answer": "total_rules,active_rules,total_alerts\n1,1,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_alerts_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_alerts_2026-11-10.csv\""
    }
   },
   {
@@ -7458,7 +7458,7 @@
    "answer": "total_devices,online,offline,banned\n4,2,2,2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_devices_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_devices_2026-11-10.csv\""
    }
   },
   {
@@ -7471,7 +7471,7 @@
    "answer": "total_tickets\n2",
    "extra": {
     "content-type": "text/csv; charset=utf-8",
-    "content-disposition": "attachment; filename=\"betterdesk_tickets_2026-11-10.csv\""
+    "content-disposition": "attachment; filename=\"neodesk_tickets_2026-11-10.csv\""
    }
   },
   {

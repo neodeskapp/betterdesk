@@ -14,8 +14,8 @@
 //	                                               are /app and /app/data.
 //	CONSOLE_DIR              (searched)            Folder that holds the console's state: its .env and data/. Searched
 //	                                               in this order for a .env, or the lang/en.json an install of the Node
-//	                                               console left: /app in a container, /opt/BetterDeskConsole,
-//	                                               /opt/betterdesk, /var/lib/betterdesk (C:\BetterDeskConsole on
+//	                                               console left: /app in a container, /opt/NeoDeskConsole,
+//	                                               /opt/neodesk, /var/lib/neodesk (C:\NeoDeskConsole on
 //	                                               Windows); the first of them when none has either.
 //	CONSOLE_STATIC_DIR       (the files in the     A folder on disk with the console's own files in the shape of
 //	                         binary)               console/static/files (lang, public, protos, themes, config), read
@@ -27,7 +27,7 @@
 //	WEB_UI_DIR               (the build in the     A build of the web app on disk, for development. Without it the
 //	                         binary)               console serves the build in the binary (cmd/embed-webui); a binary
 //	                                               built without that step has no web app.
-//	HTTPS_ENABLED            off                   On: cookies are called betterdesk.sid and __csrf
+//	HTTPS_ENABLED            off                   On: cookies are called neodesk.sid and __csrf
 //	                                               and are Secure, the security headers are those of HTTPS. With a
 //	                                               certificate the console listens with TLS on HTTPS_PORT; without one
 //	                                               it stays on plain HTTP and keeps all of that (package listen).
@@ -51,7 +51,7 @@
 //	DEVICE_SCOPE_DEFAULT     open                  "restricted" hides devices nobody was given from non-admin roles.
 //	LOG_LEVEL                warn in production,   error, warn, info or debug.
 //	                         else info
-//	BETTERDESK_API_URL       http://127.0.0.1:21114/api  Its host and port are the Host of calls into the API server.
+//	NEODESK_API_URL       http://127.0.0.1:21114/api  Its host and port are the Host of calls into the API server.
 //	(or HBBS_API_URL)                              Without it the server's own API port is used.
 //	                                               Its host is also the host clients are given when nothing else
 //	                                               names one, and its scheme decides between http and https there.
@@ -69,7 +69,7 @@
 //	                                               value: TLS when the certificate loads, whatever HTTPS_ENABLED says.
 //	KEYS_PATH                (searched)            Folder the server writes its keys to. Else RUSTDESK_DIR, else
 //	(or RUSTDESK_DIR,                              RUSTDESK_PATH, else /opt/rustdesk in a container, else the first of
-//	RUSTDESK_PATH)                                 /opt/betterdesk and /opt/rustdesk that has id_ed25519 (C:\BetterDesk
+//	RUSTDESK_PATH)                                 /opt/neodesk and /opt/rustdesk that has id_ed25519 (C:\NeoDesk
 //	                                               and C:\RustDesk on Windows), else the first of the two.
 //	PUB_KEY_PATH             KEYS_PATH/id_ed25519.pub  The server's public key file.
 //	API_KEY_PATH             KEYS_PATH/.api_key    The API key file.
@@ -78,7 +78,7 @@
 //	WS_HBBS_PORT             21116                 reports the port and the ports next to it (NAT test, websockets).
 //	WS_HBBR_HOST             localhost             Where the console reaches the relay.
 //	WS_HBBR_PORT             21117
-//	BETTERDESK_CLIENT_GENERATOR_MODE  download     "embedded" builds the support client from source on this machine
+//	NEODESK_CLIENT_GENERATOR_MODE  download     "embedded" builds the support client from source on this machine
 //	                                               instead of using the downloaded templates.
 //	AGENT_BUILD_WORKER       (on)                  Off keeps the support client build worker from starting.
 //	AGENT_BUILD_POLL_MS      5000                  How often the build worker looks for a queued build. Zero, a
@@ -87,14 +87,14 @@
 //	AGENT_ARTIFACT_DIR       DATA_DIR/agent-builds  Where the finished installers are kept.
 //
 // The support client generator reads its other settings from the
-// environment when it needs them, with /etc/betterdesk/build.env
-// (BETTERDESK_BUILD_ENV_FILE) filling the names the environment lacks:
-// BETTERDESK_CLIENT_REPO, BETTERDESK_CLIENT_RELEASE_TAG, BETTERDESK_CLIENT_REF,
-// BETTERDESK_CLIENT_ALLOWED_REPOS, BETTERDESK_GITHUB_TOKEN (or GITHUB_TOKEN),
-// BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED, BETTERDESK_CLIENT_BUILD_COMMAND,
-// BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON, BETTERDESK_CLIENT_PROVIDER_TARGETS_FILE,
-// BETTERDESK_CLIENT_GITHUB_ACTIONS, BETTERDESK_CLIENT_BUILD_WORKFLOW,
-// BETTERDESK_CLIENT_BUILD_TIMEOUT_MS and the toolchain paths of the local
+// environment when it needs them, with /etc/neodesk/build.env
+// (NEODESK_BUILD_ENV_FILE) filling the names the environment lacks:
+// NEODESK_CLIENT_REPO, NEODESK_CLIENT_RELEASE_TAG, NEODESK_CLIENT_REF,
+// NEODESK_CLIENT_ALLOWED_REPOS, NEODESK_GITHUB_TOKEN (or GITHUB_TOKEN),
+// NEODESK_CUSTOM_CLIENT_SIGNING_SEED, NEODESK_CLIENT_BUILD_COMMAND,
+// NEODESK_CLIENT_PROVIDER_TARGETS_JSON, NEODESK_CLIENT_PROVIDER_TARGETS_FILE,
+// NEODESK_CLIENT_GITHUB_ACTIONS, NEODESK_CLIENT_BUILD_WORKFLOW,
+// NEODESK_CLIENT_BUILD_TIMEOUT_MS and the toolchain paths of the local
 // builder (package generator).
 //
 // On and off are 1/0, true/false, yes/no, y/n and on/off in any letter
@@ -146,18 +146,18 @@
 //	...                                            AUTH_DB_PATH, DB_TYPE, DATABASE_URL, SQLITE_AUTH_DB_MODE), the
 //	                                               lockouts (API_MAX_FAILED_ATTEMPTS, API_LOCKOUT_MINUTES,
 //	                                               API_IP_RATE_LIMIT, API_ATTEMPT_WINDOW), API_TOKEN_EXPIRY_DAYS and
-//	                                               BETTERDESK_AUTH_AUTOCREATE. It gets DATA_DIR and the keys folder
+//	                                               NEODESK_AUTH_AUTOCREATE. It gets DATA_DIR and the keys folder
 //	                                               from this package.
 //	SMTP_HOST                (none)                The mail server when no SMTP settings are saved (package mail),
 //	SMTP_PORT                587                   read at every use: SMTP_PORT, SMTP_SECURE ("true"), SMTP_USER,
-//	...                                            SMTP_PASS, SMTP_FROM (betterdesk@localhost), SMTP_ALERT_EMAIL.
+//	...                                            SMTP_PASS, SMTP_FROM (neodesk@localhost), SMTP_ALERT_EMAIL.
 //	PANEL_PUBLIC_URL         (none)                The console's address in mails. Without both: http or https,
 //	(or PUBLIC_URL)                                HOST (127.0.0.1 for 0.0.0.0) and the console's port.
 //
 // # The env file
 //
 // The old console loaded web-nodejs/.env before anything else. The server
-// loads the file BETTERDESK_ENV_FILE names as the first step of main, with
+// loads the file NEODESK_ENV_FILE names as the first step of main, with
 // the same rule: a variable that is set to more than "" keeps its value
 // (envfile.go). Values are read as dotenv files are read: 'single' and
 // "double" quotes (with \n, \r, \t, \" and \\ in double quotes) and a

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
 )
 
 // The device recordings read the tables after the reports: "the

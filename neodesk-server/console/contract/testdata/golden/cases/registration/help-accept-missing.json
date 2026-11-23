@@ -2,7 +2,7 @@
  "id": "registration/help-accept-missing",
  "request": {
   "method": "POST",
-  "path": "/api/bd/api/help/requests/999999999/accept",
+  "path": "/api/nd/api/help/requests/999999999/accept",
   "body": {}
  },
  "recordings": 2,
@@ -58,7 +58,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -95,7 +95,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 )
 
 // The three functions in this file are the handlers of the SMTP settings

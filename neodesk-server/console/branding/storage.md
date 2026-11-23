@@ -10,15 +10,15 @@ that copies one into the other:
 | What it is | How the web console looks: name, logo, theme, colours, wallpapers, sign-in page, custom CSS | What desktop clients show: company name, phone, e-mail, website, accent colour, support contact, a logo, colours |
 | Storage | table `branding_config` (one row per setting), profiles in `branding_profiles` | keys `branding_company_name`, `branding_phone`, `branding_email`, `branding_website`, `branding_accent_color`, `branding_support_contact`, `branding_colors`, `branding_logo`, `branding_revision` in `server_config` |
 | Written by | `SaveBranding`, `ResetBranding` (Node: `services/brandingService.js`) | `POST /api/branding` of the Go API (`api/branding_handlers.go:331-373`) |
-| Read by | the console and its pages, `/css/branding.css`, `/api/bd/appearance` | `GET /api/branding` of the Go API, the heartbeat of RustDesk clients |
-| Edited in | Settings, Appearance | Main, Client Branding (`/api/client-branding`, which only passes the request on to the Go API through `betterdeskApi.getBranding` and `saveBranding`) |
+| Read by | the console and its pages, `/css/branding.css`, `/api/nd/appearance` | `GET /api/branding` of the Go API, the heartbeat of RustDesk clients |
+| Edited in | Settings, Appearance | Main, Client Branding (`/api/client-branding`, which only passes the request on to the Go API through `neodeskApi.getBranding` and `saveBranding`) |
 | Revision | `Service.Revision()`, from `MAX(updated_at)` of `branding_config` | `branding_revision`, written at every save |
 
 `spec/data.md` (open question 6) asked how the two are kept in line. They
 are not. `brandingService.js` never calls the Go API, and
 `branding_handlers.go` never reads `branding_config`. Changing the app
 name in the console does not change the company name clients see, and the
-other way round. The only place both meet is `GET /api/bd/branding`
+other way round. The only place both meet is `GET /api/nd/branding`
 (`bd-api.routes.js:525`), which answers desktop clients from the console
 side alone (`appName` as `company_name`, `colors.accentBlue` as
 `accent_color`) and never looks at the server's keys. Its
@@ -83,7 +83,7 @@ otherwise. The revision is only compared for change, never parsed.
 `id, name UNIQUE, description, data, is_active, created_at, updated_at`.
 `data` is the JSON of a theme: what `ExportPreset` returns when the
 profile is made from the current settings, or `{version: "1.0", type:
-"betterdesk-theme", branding: ...}` when the caller sends settings.
+"neodesk-theme", branding: ...}` when the caller sends settings.
 `is_active` is 1 for the profile applied last.
 
 The list is sorted by name: without regard to ASCII case on SQLite, by

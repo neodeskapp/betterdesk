@@ -37,7 +37,7 @@ type PostgresDB struct {
 // OpenPostgres connects to a PostgreSQL server. The dsn must use the
 // postgres:// or postgresql:// scheme, for example:
 //
-//	postgres://user:pass@localhost:5432/betterdesk?sslmode=prefer
+//	postgres://user:pass@localhost:5432/neodesk?sslmode=prefer
 //
 // Connection pooling is built-in via pgxpool. Configure max connections
 // with the pool_max_conns query parameter:
@@ -271,7 +271,7 @@ func (pg *PostgresDB) Migrate() error {
 		`CREATE INDEX IF NOT EXISTS idx_peer_conn_sess_open
 			ON peer_connection_sessions(host_id, peer_id, ended_at)`,
 
-		// BetterDesk device telemetry snapshots and heartbeat-delivered commands.
+		// NeoDesk device telemetry snapshots and heartbeat-delivered commands.
 		`CREATE TABLE IF NOT EXISTS device_telemetry_snapshots (
 			device_id TEXT NOT NULL,
 			kind TEXT NOT NULL,

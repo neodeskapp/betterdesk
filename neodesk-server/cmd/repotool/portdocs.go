@@ -13,7 +13,7 @@ import (
 // presents 21120 as a live port. That number was in an early design and
 // never shipped; a file may mention it where it says so ("does not exist",
 // "never shipped", "historical"). The port table it once compared with the
-// code is on the website now (betterde.sk/docs/operations/ports), outside
+// code is on the website now (neode.sk/docs/operations/ports), outside
 // the repository, so the check no longer reads a document.
 func checkPortDocs(root string, args []string, stdout, stderr io.Writer) int {
 	if len(args) > 0 {
@@ -21,7 +21,7 @@ func checkPortDocs(root string, args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	var failures []string
-	for _, dir := range []string{"betterdesk-server", "scripts"} {
+	for _, dir := range []string{"neodesk-server", "scripts"} {
 		failures = append(failures, stalePortFindings(root, filepath.Join(root, dir))...)
 	}
 	if len(failures) > 0 {
@@ -43,8 +43,8 @@ var (
 
 // portDocsSelf are this check's own files, which name the stale port.
 var portDocsSelf = []string{
-	filepath.Join("betterdesk-server", "cmd", "repotool", "portdocs.go"),
-	filepath.Join("betterdesk-server", "cmd", "repotool", "portdocs_test.go"),
+	filepath.Join("neodesk-server", "cmd", "repotool", "portdocs.go"),
+	filepath.Join("neodesk-server", "cmd", "repotool", "portdocs_test.go"),
 }
 
 // stalePortFindings walks dir for files that mention the stale port

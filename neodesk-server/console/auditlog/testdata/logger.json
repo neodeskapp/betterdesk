@@ -1454,16 +1454,16 @@
    "out": "'h***x'"
   },
   {
-   "in": "'BETTERDESK_API_KEY'",
-   "out": "'BETTERDESK_API_KEY'"
+   "in": "'NEODESK_API_KEY'",
+   "out": "'NEODESK_API_KEY'"
   },
   {
-   "in": "'betterdesk_x'",
-   "out": "'betterdesk_x'"
+   "in": "'neodesk_x'",
+   "out": "'neodesk_x'"
   },
   {
-   "in": "'BETTERDESK'",
-   "out": "'B***K'"
+   "in": "'NEODESK'",
+   "out": "'N***K'"
   },
   {
    "in": "'LDAP+local'",
@@ -1902,12 +1902,12 @@
    "out": "x for 'u***r' y 'user'"
   },
   {
-   "in": "for 'BETTERDESK_X'",
-   "out": "for 'B***X'"
+   "in": "for 'NEODESK_X'",
+   "out": "for 'N***X'"
   },
   {
-   "in": "x for 'BETTERDESK_X' y 'BETTERDESK_X'",
-   "out": "x for 'B***X' y 'BETTERDESK_X'"
+   "in": "x for 'NEODESK_X' y 'NEODESK_X'",
+   "out": "x for 'N***X' y 'NEODESK_X'"
   },
   {
    "in": "x for 'for' y 'for'",
@@ -2202,12 +2202,12 @@
    "out": "x u***r 'user' y 'user'"
   },
   {
-   "in": "user 'BETTERDESK_X'",
-   "out": "user 'B***X'"
+   "in": "user 'NEODESK_X'",
+   "out": "user 'N***X'"
   },
   {
-   "in": "x user 'BETTERDESK_X' y 'BETTERDESK_X'",
-   "out": "x user 'B***X' y 'BETTERDESK_X'"
+   "in": "x user 'NEODESK_X' y 'NEODESK_X'",
+   "out": "x user 'N***X' y 'NEODESK_X'"
   },
   {
    "in": "user 'for'",
@@ -2522,12 +2522,12 @@
    "out": "x account 'u***r' y 'user'"
   },
   {
-   "in": "account 'BETTERDESK_X'",
-   "out": "account 'B***X'"
+   "in": "account 'NEODESK_X'",
+   "out": "account 'N***X'"
   },
   {
-   "in": "x account 'BETTERDESK_X' y 'BETTERDESK_X'",
-   "out": "x account 'B***X' y 'BETTERDESK_X'"
+   "in": "x account 'NEODESK_X' y 'NEODESK_X'",
+   "out": "x account 'N***X' y 'NEODESK_X'"
   },
   {
    "in": "account 'for'",
@@ -2838,12 +2838,12 @@
    "out": "x credentials for 'u***r' y 'user'"
   },
   {
-   "in": "credentials for 'BETTERDESK_X'",
-   "out": "credentials for 'B***X'"
+   "in": "credentials for 'NEODESK_X'",
+   "out": "credentials for 'N***X'"
   },
   {
-   "in": "x credentials for 'BETTERDESK_X' y 'BETTERDESK_X'",
-   "out": "x credentials for 'B***X' y 'BETTERDESK_X'"
+   "in": "x credentials for 'NEODESK_X' y 'NEODESK_X'",
+   "out": "x credentials for 'N***X' y 'NEODESK_X'"
   },
   {
    "in": "credentials for 'for'",
@@ -3158,12 +3158,12 @@
    "out": "x local u***r 'user' y 'user'"
   },
   {
-   "in": "local user 'BETTERDESK_X'",
-   "out": "local user 'B***X'"
+   "in": "local user 'NEODESK_X'",
+   "out": "local user 'N***X'"
   },
   {
-   "in": "x local user 'BETTERDESK_X' y 'BETTERDESK_X'",
-   "out": "x local user 'B***X' y 'BETTERDESK_X'"
+   "in": "x local user 'NEODESK_X' y 'NEODESK_X'",
+   "out": "x local user 'N***X' y 'NEODESK_X'"
   },
   {
    "in": "local user 'for'",
@@ -3478,12 +3478,12 @@
    "out": "x synced 'u***r' y 'user'"
   },
   {
-   "in": "synced 'BETTERDESK_X'",
-   "out": "synced 'B***X'"
+   "in": "synced 'NEODESK_X'",
+   "out": "synced 'N***X'"
   },
   {
-   "in": "x synced 'BETTERDESK_X' y 'BETTERDESK_X'",
-   "out": "x synced 'B***X' y 'BETTERDESK_X'"
+   "in": "x synced 'NEODESK_X' y 'NEODESK_X'",
+   "out": "x synced 'N***X' y 'NEODESK_X'"
   },
   {
    "in": "synced 'for'",
@@ -3794,12 +3794,12 @@
    "out": "x FOR 'u***r' y 'user'"
   },
   {
-   "in": "FOR 'BETTERDESK_X'",
-   "out": "FOR 'B***X'"
+   "in": "FOR 'NEODESK_X'",
+   "out": "FOR 'N***X'"
   },
   {
-   "in": "x FOR 'BETTERDESK_X' y 'BETTERDESK_X'",
-   "out": "x FOR 'B***X' y 'BETTERDESK_X'"
+   "in": "x FOR 'NEODESK_X' y 'NEODESK_X'",
+   "out": "x FOR 'N***X' y 'NEODESK_X'"
   },
   {
    "in": "FOR 'for'",
@@ -4110,12 +4110,12 @@
    "out": "x User 'u***r' y 'user'"
   },
   {
-   "in": "User 'BETTERDESK_X'",
-   "out": "User 'B***X'"
+   "in": "User 'NEODESK_X'",
+   "out": "User 'N***X'"
   },
   {
-   "in": "x User 'BETTERDESK_X' y 'BETTERDESK_X'",
-   "out": "x User 'B***X' y 'BETTERDESK_X'"
+   "in": "x User 'NEODESK_X' y 'NEODESK_X'",
+   "out": "x User 'N***X' y 'NEODESK_X'"
   },
   {
    "in": "User 'for'",
@@ -4430,12 +4430,12 @@
    "out": "x Synced 'u***r' y 'user'"
   },
   {
-   "in": "Synced 'BETTERDESK_X'",
-   "out": "Synced 'B***X'"
+   "in": "Synced 'NEODESK_X'",
+   "out": "Synced 'N***X'"
   },
   {
-   "in": "x Synced 'BETTERDESK_X' y 'BETTERDESK_X'",
-   "out": "x Synced 'B***X' y 'BETTERDESK_X'"
+   "in": "x Synced 'NEODESK_X' y 'NEODESK_X'",
+   "out": "x Synced 'N***X' y 'NEODESK_X'"
   },
   {
    "in": "Synced 'for'",
@@ -4750,12 +4750,12 @@
    "out": "x users 'user' y 'user'"
   },
   {
-   "in": "users 'BETTERDESK_X'",
-   "out": "users 'BETTERDESK_X'"
+   "in": "users 'NEODESK_X'",
+   "out": "users 'NEODESK_X'"
   },
   {
-   "in": "x users 'BETTERDESK_X' y 'BETTERDESK_X'",
-   "out": "x users 'BETTERDESK_X' y 'BETTERDESK_X'"
+   "in": "x users 'NEODESK_X' y 'NEODESK_X'",
+   "out": "x users 'NEODESK_X' y 'NEODESK_X'"
   },
   {
    "in": "users 'for'",
@@ -5070,12 +5070,12 @@
    "out": "x fo 'user' y 'user'"
   },
   {
-   "in": "fo 'BETTERDESK_X'",
-   "out": "fo 'BETTERDESK_X'"
+   "in": "fo 'NEODESK_X'",
+   "out": "fo 'NEODESK_X'"
   },
   {
-   "in": "x fo 'BETTERDESK_X' y 'BETTERDESK_X'",
-   "out": "x fo 'BETTERDESK_X' y 'BETTERDESK_X'"
+   "in": "x fo 'NEODESK_X' y 'NEODESK_X'",
+   "out": "x fo 'NEODESK_X' y 'NEODESK_X'"
   },
   {
    "in": "fo 'for'",
@@ -5302,8 +5302,8 @@
    "out": "x fo\\n'a' y 'a'"
   },
   {
-   "in": "alicebcrypt\u00a0_0orbob_BETTERDESK_",
-   "out": "alicebcrypt\u00a0_0orbob_BETTERDESK_"
+   "in": "alicebcrypt\u00a0_0orbob_NEODESK_",
+   "out": "alicebcrypt\u00a0_0orbob_NEODESK_"
   },
   {
    "in": "-local userroleuser: x.y",
@@ -5370,8 +5370,8 @@
    "out": " or"
   },
   {
-   "in": "'\u00a0admin\u00e90\u00e9-BETTERDESK_alice",
-   "out": "'\u00a0admin\u00e90\u00e9-BETTERDESK_alice"
+   "in": "'\u00a0admin\u00e90\u00e9-NEODESK_alice",
+   "out": "'\u00a0admin\u00e90\u00e9-NEODESK_alice"
   },
   {
    "in": " \ud83d\ude00\ud83d\ude00orbob'@userfor",
@@ -5398,8 +5398,8 @@
    "out": " user_'alice"
   },
   {
-   "in": "serBETTERDESK_aliceaccount'x.y",
-   "out": "serBETTERDESK_aliceaccount'x.y"
+   "in": "serNEODESK_aliceaccount'x.y",
+   "out": "serNEODESK_aliceaccount'x.y"
   },
   {
    "in": "0x.y''\u00e90a",
@@ -5426,8 +5426,8 @@
    "out": "\ud83d\ude00a/balicebcryptorbcrypt0alicex.y"
   },
   {
-   "in": ":x.ya/bBETTERDESK_\tBETTERDESK_a\u00a0 '",
-   "out": ":x.ya/bBETTERDESK_\tBETTERDESK_a\u00a0 '"
+   "in": ":x.ya/bNEODESK_\tNEODESK_a\u00a0 '",
+   "out": ":x.ya/bNEODESK_\tNEODESK_a\u00a0 '"
   },
   {
    "in": "bobuser-adminx.y$&_",
@@ -5562,8 +5562,8 @@
    "out": "ab"
   },
   {
-   "in": "'user'a/bx.yBETTERDESK_bcrypt0:User",
-   "out": "'user'a/bx.yBETTERDESK_bcrypt0:User"
+   "in": "'user'a/bx.yNEODESK_bcrypt0:User",
+   "out": "'user'a/bx.yNEODESK_bcrypt0:User"
   },
   {
    "in": "credentials for\n\u00a0ab:alice\tbcryptserbcrypt",
@@ -5590,8 +5590,8 @@
    "out": "role\u00a0 adminaccountcredentials forx.y\t:"
   },
   {
-   "in": "orUserabalicebcryptBETTERDESK_usabuser'",
-   "out": "orUserabalicebcryptBETTERDESK_usabuser'"
+   "in": "orUserabalicebcryptNEODESK_usabuser'",
+   "out": "orUserabalicebcryptNEODESK_usabuser'"
   },
   {
    "in": "credentials for _$&\taccountaccountfororalice",
@@ -5638,8 +5638,8 @@
    "out": "ser a\ud83d\ude00a"
   },
   {
-   "in": "alice$&BETTERDESK_'\na/b",
-   "out": "alice$&BETTERDESK_'\\na/b"
+   "in": "alice$&NEODESK_'\na/b",
+   "out": "alice$&NEODESK_'\\na/b"
   },
   {
    "in": "\u00a0",
@@ -5650,8 +5650,8 @@
    "out": "-bob"
   },
   {
-   "in": "bcryptBETTERDESK_alicecredentials for0:'",
-   "out": "bcryptBETTERDESK_alicecredentials for0:'"
+   "in": "bcryptNEODESK_alicecredentials for0:'",
+   "out": "bcryptNEODESK_alicecredentials for0:'"
   },
   {
    "in": "@syncedus ",
@@ -5678,12 +5678,12 @@
    "out": "_a0orsyncedus@aliceUsersynced"
   },
   {
-   "in": "BETTERDESK_",
-   "out": "BETTERDESK_"
+   "in": "NEODESK_",
+   "out": "NEODESK_"
   },
   {
-   "in": "us@BETTERDESK_BETTERDESK_user BETTERDESK_",
-   "out": "us@BETTERDESK_BETTERDESK_user BETTERDESK_"
+   "in": "us@NEODESK_NEODESK_user NEODESK_",
+   "out": "us@NEODESK_NEODESK_user NEODESK_"
   },
   {
    "in": "for'",
@@ -5714,8 +5714,8 @@
    "out": "User \\nadmin-userrole0"
   },
   {
-   "in": "'BETTERDESK_user\u00a0'",
-   "out": "'BETTERDESK_user\u00a0'"
+   "in": "'NEODESK_user\u00a0'",
+   "out": "'NEODESK_user\u00a0'"
   },
   {
    "in": "rolebobalice",
@@ -5754,12 +5754,12 @@
    "out": "- 0sercredentials for"
   },
   {
-   "in": "BETTERDESK_a/bfor'credentials for local usercredentials forbob\t",
-   "out": "BETTERDESK_a/bfor'credentials for local usercredentials forbob\t"
+   "in": "NEODESK_a/bfor'credentials for local usercredentials forbob\t",
+   "out": "NEODESK_a/bfor'credentials for local usercredentials forbob\t"
   },
   {
-   "in": "BETTERDESK_\u00e90@User userbcryptsyncedbob",
-   "out": "BETTERDESK_\u00e90@User userbcryptsyncedbob"
+   "in": "NEODESK_\u00e90@User userbcryptsyncedbob",
+   "out": "NEODESK_\u00e90@User userbcryptsyncedbob"
   },
   {
    "in": "UserUserx.y\u00a0:",
@@ -5790,16 +5790,16 @@
    "out": "role\\n_"
   },
   {
-   "in": "serab syncedUsercredentials forbobBETTERDESK_'",
-   "out": "serab syncedUsercredentials forbobBETTERDESK_'"
+   "in": "serab syncedUsercredentials forbobNEODESK_'",
+   "out": "serab syncedUsercredentials forbobNEODESK_'"
   },
   {
-   "in": "'useraccountBETTERDESK_x.ya",
-   "out": "'useraccountBETTERDESK_x.ya"
+   "in": "'useraccountNEODESK_x.ya",
+   "out": "'useraccountNEODESK_x.ya"
   },
   {
-   "in": "credentials forBETTERDESK_synced\u00a0\u00e9",
-   "out": "credentials forBETTERDESK_synced\u00a0\u00e9"
+   "in": "credentials forNEODESK_synced\u00a0\u00e9",
+   "out": "credentials forNEODESK_synced\u00a0\u00e9"
   },
   {
    "in": "a/blocal userusadmin",
@@ -5814,8 +5814,8 @@
    "out": "abforus:\u00e9for"
   },
   {
-   "in": "'admin':for\u00a0BETTERDESK_ ",
-   "out": "'admin':for\u00a0BETTERDESK_ "
+   "in": "'admin':for\u00a0NEODESK_ ",
+   "out": "'admin':for\u00a0NEODESK_ "
   },
   {
    "in": "'usera/b@ '_'Useruser",
@@ -5842,8 +5842,8 @@
    "out": "$&\t@\\nrole''"
   },
   {
-   "in": "abBETTERDESK_",
-   "out": "abBETTERDESK_"
+   "in": "abNEODESK_",
+   "out": "abNEODESK_"
   },
   {
    "in": ":for$&\u00a0\u00a0_$&a/ba/b:",
@@ -5854,20 +5854,20 @@
    "out": "role\\nx.y  or"
   },
   {
-   "in": "account\u00e9synced\u00a0BETTERDESK_'User0us'",
-   "out": "account\u00e9synced\u00a0BETTERDESK_'U***s'"
+   "in": "account\u00e9synced\u00a0NEODESK_'User0us'",
+   "out": "account\u00e9synced\u00a0NEODESK_'U***s'"
   },
   {
    "in": "alice'oror''\ud83d\ude00 @a/b",
    "out": "alice'o***r''\ud83d\ude00 @a/b"
   },
   {
-   "in": "BETTERDESK_admin'alicea/b $&0",
-   "out": "BETTERDESK_admin'alicea/b $&0"
+   "in": "NEODESK_admin'alicea/b $&0",
+   "out": "NEODESK_admin'alicea/b $&0"
   },
   {
-   "in": "$&BETTERDESK_'",
-   "out": "$&BETTERDESK_'"
+   "in": "$&NEODESK_'",
+   "out": "$&NEODESK_'"
   },
   {
    "in": "userlocal user ",
@@ -5890,8 +5890,8 @@
    "out": "alicealicea/brolea/bUser"
   },
   {
-   "in": "for:-0BETTERDESK_x.y\t'syncedBETTERDESK_",
-   "out": "for:-0BETTERDESK_x.y\t'syncedBETTERDESK_"
+   "in": "for:-0NEODESK_x.y\t'syncedNEODESK_",
+   "out": "for:-0NEODESK_x.y\t'syncedNEODESK_"
   },
   {
    "in": "ab-ser\t$&@user\nfor$&",
@@ -5918,16 +5918,16 @@
    "out": "us"
   },
   {
-   "in": "a''UseruserBETTERDESK_\u00e9credentials for'local user",
-   "out": "a''UseruserBETTERDESK_\u00e9credentials for'local user"
+   "in": "a''UseruserNEODESK_\u00e9credentials for'local user",
+   "out": "a''UseruserNEODESK_\u00e9credentials for'local user"
   },
   {
    "in": "rolebcrypt:",
    "out": "rolebcrypt:"
   },
   {
-   "in": "BETTERDESK_\u00e9UseraliceBETTERDESK_\u00e9credentials for bcryptUser",
-   "out": "BETTERDESK_\u00e9UseraliceBETTERDESK_\u00e9credentials for bcryptUser"
+   "in": "NEODESK_\u00e9UseraliceNEODESK_\u00e9credentials for bcryptUser",
+   "out": "NEODESK_\u00e9UseraliceNEODESK_\u00e9credentials for bcryptUser"
   },
   {
    "in": " account :",
@@ -5954,8 +5954,8 @@
    "out": "Userlocal user$&userus"
   },
   {
-   "in": "BETTERDESK_or'\u00e9@  :",
-   "out": "BETTERDESK_or'\u00e9@  :"
+   "in": "NEODESK_or'\u00e9@  :",
+   "out": "NEODESK_or'\u00e9@  :"
   },
   {
    "in": "@bcrypta'",
@@ -5966,8 +5966,8 @@
    "out": " user@"
   },
   {
-   "in": "BETTERDESK_a/bbob-",
-   "out": "BETTERDESK_a/bbob-"
+   "in": "NEODESK_a/bbob-",
+   "out": "NEODESK_a/bbob-"
   },
   {
    "in": "for$&bcrypt ",
@@ -5982,8 +5982,8 @@
    "out": "_ role':accounta/b'"
   },
   {
-   "in": "\t'forsynceda/b: BETTERDESK_",
-   "out": "\t'forsynceda/b: BETTERDESK_"
+   "in": "\t'forsynceda/b: NEODESK_",
+   "out": "\t'forsynceda/b: NEODESK_"
   },
   {
    "in": "bcryptuseralice ",
@@ -6006,16 +6006,16 @@
    "out": "ablocal userrole\\na0x.ybcrypt"
   },
   {
-   "in": "or'$&0\ud83d\ude00'local user:UserBETTERDESK_",
-   "out": "or'$&0\ud83d\ude00'local user:UserBETTERDESK_"
+   "in": "or'$&0\ud83d\ude00'local user:UserNEODESK_",
+   "out": "or'$&0\ud83d\ude00'local user:UserNEODESK_"
   },
   {
    "in": "forser",
    "out": "forser"
   },
   {
-   "in": "user' 'alice :BETTERDESK_",
-   "out": "user' 'alice :BETTERDESK_"
+   "in": "user' 'alice :NEODESK_",
+   "out": "user' 'alice :NEODESK_"
   },
   {
    "in": "_a/b",
@@ -6074,8 +6074,8 @@
    "out": "a'x.ybcrypt"
   },
   {
-   "in": "syncedserbcrypt\ud83d\ude00BETTERDESK_bob",
-   "out": "syncedserbcrypt\ud83d\ude00BETTERDESK_bob"
+   "in": "syncedserbcrypt\ud83d\ude00NEODESK_bob",
+   "out": "syncedserbcrypt\ud83d\ude00NEODESK_bob"
   },
   {
    "in": "\ud83d\ude00'Useradmin",
@@ -6102,8 +6102,8 @@
    "out": "usbcrypt@"
   },
   {
-   "in": "BETTERDESK_\ud83d\ude00serbcryptBETTERDESK_local usersyncedser",
-   "out": "BETTERDESK_\ud83d\ude00serbcryptBETTERDESK_local usersyncedser"
+   "in": "NEODESK_\ud83d\ude00serbcryptNEODESK_local usersyncedser",
+   "out": "NEODESK_\ud83d\ude00serbcryptNEODESK_local usersyncedser"
   },
   {
    "in": "\u00a0\t@_local user\ud83d\ude00:",
@@ -6126,8 +6126,8 @@
    "out": "a/bab"
   },
   {
-   "in": "synceda$&usBETTERDESK_usser'_",
-   "out": "synceda$&usBETTERDESK_usser'_"
+   "in": "synceda$&usNEODESK_usser'_",
+   "out": "synceda$&usNEODESK_usser'_"
   },
   {
    "in": "'@or\u00e9 \u00a0bob\ud83d\ude00",
@@ -6158,8 +6158,8 @@
    "out": "synced\\n'_x.yforab"
   },
   {
-   "in": "   0BETTERDESK_",
-   "out": "   0BETTERDESK_"
+   "in": "   0NEODESK_",
+   "out": "   0NEODESK_"
   },
   {
    "in": "ser",
@@ -6170,28 +6170,28 @@
    "out": "-\trole bcrypt\ud83d\ude00'usaccount"
   },
   {
-   "in": "BETTERDESK_'",
-   "out": "BETTERDESK_'"
+   "in": "NEODESK_'",
+   "out": "NEODESK_'"
   },
   {
-   "in": "_UseraccountUserx.yBETTERDESK_",
-   "out": "_UseraccountUserx.yBETTERDESK_"
+   "in": "_UseraccountUserx.yNEODESK_",
+   "out": "_UseraccountUserx.yNEODESK_"
   },
   {
-   "in": "bob'User-BETTERDESK_'accountx.y",
+   "in": "bob'User-NEODESK_'accountx.y",
    "out": "bob'U***_'accountx.y"
   },
   {
-   "in": "@aabbobusadmin0local userBETTERDESK_x.y",
-   "out": "@aabbobusadmin0local userBETTERDESK_x.y"
+   "in": "@aabbobusadmin0local userNEODESK_x.y",
+   "out": "@aabbobusadmin0local userNEODESK_x.y"
   },
   {
    "in": "\ud83d\ude00\u00e9-bob\n",
    "out": "\ud83d\ude00\u00e9-bob\\n"
   },
   {
-   "in": "account@admin:BETTERDESK_oruseruser",
-   "out": "account@admin:BETTERDESK_oruseruser"
+   "in": "account@admin:NEODESK_oruseruser",
+   "out": "account@admin:NEODESK_oruseruser"
   },
   {
    "in": "'synceduseraccount",
@@ -6246,8 +6246,8 @@
    "out": "accountorlocal useralice @alocal user-"
   },
   {
-   "in": "credentials forUserBETTERDESK_Usercredentials forUser",
-   "out": "credentials forUserBETTERDESK_Usercredentials forUser"
+   "in": "credentials forUserNEODESK_Usercredentials forUser",
+   "out": "credentials forUserNEODESK_Usercredentials forUser"
   },
   {
    "in": "alice: -bcryptaccount",
@@ -6290,16 +6290,16 @@
    "out": "a/b:role"
   },
   {
-   "in": "@BETTERDESK_serx.yalicesynced-",
-   "out": "@BETTERDESK_serx.yalicesynced-"
+   "in": "@NEODESK_serx.yalicesynced-",
+   "out": "@NEODESK_serx.yalicesynced-"
   },
   {
    "in": "\ud83d\ude00for'-ab@alice",
    "out": "\ud83d\ude00for'-ab@alice"
   },
   {
-   "in": "accountcredentials forab ab'BETTERDESK_",
-   "out": "accountcredentials forab ab'BETTERDESK_"
+   "in": "accountcredentials forab ab'NEODESK_",
+   "out": "accountcredentials forab ab'NEODESK_"
   },
   {
    "in": "aba/b\nsyncedbobuser",
@@ -6310,16 +6310,16 @@
    "out": "'ab a/bser''\\n "
   },
   {
-   "in": "BETTERDESK__-aoralice ",
-   "out": "BETTERDESK__-aoralice "
+   "in": "NEODESK__-aoralice ",
+   "out": "NEODESK__-aoralice "
   },
   {
    "in": ":_ bcrypt\t",
    "out": ":_ bcrypt\t"
   },
   {
-   "in": "local user0BETTERDESK_ syncedaliceadmin",
-   "out": "local user0BETTERDESK_ syncedaliceadmin"
+   "in": "local user0NEODESK_ syncedaliceadmin",
+   "out": "local user0NEODESK_ syncedaliceadmin"
   },
   {
    "in": "a/b'User\tab-:serus",
@@ -6350,8 +6350,8 @@
    "out": "\u00a0\tfor-a\tlocal user\u00e9 "
   },
   {
-   "in": "''us'aliceBETTERDESK_@abab",
-   "out": "''***'aliceBETTERDESK_@abab"
+   "in": "''us'aliceNEODESK_@abab",
+   "out": "''***'aliceNEODESK_@abab"
   },
   {
    "in": "\t\nadminforadminorx.yfor'",
@@ -6422,8 +6422,8 @@
    "out": " account\t\u00e9x.yalicebob'for"
   },
   {
-   "in": "userab\u00a00BETTERDESK_user",
-   "out": "userab\u00a00BETTERDESK_user"
+   "in": "userab\u00a00NEODESK_user",
+   "out": "userab\u00a00NEODESK_user"
   },
   {
    "in": "@ser syncedor",
@@ -6478,8 +6478,8 @@
    "out": "$&adminbob"
   },
   {
-   "in": "BETTERDESK_ abBETTERDESK_\nusercredentials forus",
-   "out": "BETTERDESK_ abBETTERDESK_\\nusercredentials forus"
+   "in": "NEODESK_ abNEODESK_\nusercredentials forus",
+   "out": "NEODESK_ abNEODESK_\\nusercredentials forus"
   },
   {
    "in": "'abalicebobaususer",
@@ -6498,8 +6498,8 @@
    "out": "local user'$&credentials forab$&'$&local user"
   },
   {
-   "in": "\n abBETTERDESK_@local user   ",
-   "out": "\\n abBETTERDESK_@local user   "
+   "in": "\n abNEODESK_@local user   ",
+   "out": "\\n abNEODESK_@local user   "
   },
   {
    "in": "'a@",
@@ -6510,8 +6510,8 @@
    "out": "credentials for@ or$&bob_0'"
   },
   {
-   "in": "'_adminBETTERDESK_local user\ud83d\ude00a/b",
-   "out": "'_adminBETTERDESK_local user\ud83d\ude00a/b"
+   "in": "'_adminNEODESK_local user\ud83d\ude00a/b",
+   "out": "'_adminNEODESK_local user\ud83d\ude00a/b"
   },
   {
    "in": "_a/b0bcrypt-a/b\tUser",
@@ -6582,8 +6582,8 @@
    "out": "a Userx.ylocal useror"
   },
   {
-   "in": " bob' BETTERDESK_",
-   "out": " bob' BETTERDESK_"
+   "in": " bob' NEODESK_",
+   "out": " bob' NEODESK_"
   },
   {
    "in": "0\u00a0ab'adminbcryptforrole_",
@@ -6598,8 +6598,8 @@
    "out": "credentials for0$& alice"
   },
   {
-   "in": "ababcredentials for'usBETTERDESK_credentials forbcryptx.y\t",
-   "out": "ababcredentials for'usBETTERDESK_credentials forbcryptx.y\t"
+   "in": "ababcredentials for'usNEODESK_credentials forbcryptx.y\t",
+   "out": "ababcredentials for'usNEODESK_credentials forbcryptx.y\t"
   },
   {
    "in": "_ credentials for'a/b'-alice",
@@ -6634,12 +6634,12 @@
    "out": "\t' aa/b$&us\ud83d\ude00"
   },
   {
-   "in": "roleusBETTERDESK_'",
-   "out": "roleusBETTERDESK_'"
+   "in": "roleusNEODESK_'",
+   "out": "roleusNEODESK_'"
   },
   {
-   "in": "- x.yforuserbob\u00a0\nBETTERDESK_user",
-   "out": "- x.yforuserbob\u00a0\\nBETTERDESK_user"
+   "in": "- x.yforuserbob\u00a0\nNEODESK_user",
+   "out": "- x.yforuserbob\u00a0\\nNEODESK_user"
   },
   {
    "in": "for\u00e9ab$&' adminorbcryptalice",
@@ -6746,12 +6746,12 @@
    "out": "bobbcryptaccount\\nus"
   },
   {
-   "in": "_accountcredentials for'BETTERDESK_for\ud83d\ude00$&or",
-   "out": "_accountcredentials for'BETTERDESK_for\ud83d\ude00$&or"
+   "in": "_accountcredentials for'NEODESK_for\ud83d\ude00$&or",
+   "out": "_accountcredentials for'NEODESK_for\ud83d\ude00$&or"
   },
   {
-   "in": "aBETTERDESK_@ alicesyncedlocal useruserlocal user",
-   "out": "aBETTERDESK_@ alicesyncedlocal useruserlocal user"
+   "in": "aNEODESK_@ alicesyncedlocal useruserlocal user",
+   "out": "aNEODESK_@ alicesyncedlocal useruserlocal user"
   },
   {
    "in": "'syncedUsercredentials for\ta/buser'",
@@ -6778,16 +6778,16 @@
    "out": "admin\ud83d\ude00\t:-ab"
   },
   {
-   "in": "synced'BETTERDESK_user'aa\u00e9\t",
-   "out": "synced'BETTERDESK_user'aa\u00e9\t"
+   "in": "synced'NEODESK_user'aa\u00e9\t",
+   "out": "synced'NEODESK_user'aa\u00e9\t"
   },
   {
    "in": "\nUser0x.y\ud83d\ude00'\ud83d\ude00a/b$&",
    "out": "\\nUser0x.y\ud83d\ude00'\ud83d\ude00a/b$&"
   },
   {
-   "in": "\n:\u00a0UsersyncedBETTERDESK_ -synced ",
-   "out": "\\n:\u00a0UsersyncedBETTERDESK_ -synced "
+   "in": "\n:\u00a0UsersyncedNEODESK_ -synced ",
+   "out": "\\n:\u00a0UsersyncedNEODESK_ -synced "
   },
   {
    "in": "$&local usersynced'_",
@@ -6798,8 +6798,8 @@
    "out": "bcryptabbcrypt'synced$&'"
   },
   {
-   "in": "@@\tBETTERDESK_usa/b'\u00a0BETTERDESK__",
-   "out": "@@\tBETTERDESK_usa/b'\u00a0BETTERDESK__"
+   "in": "@@\tNEODESK_usa/b'\u00a0NEODESK__",
+   "out": "@@\tNEODESK_usa/b'\u00a0NEODESK__"
   },
   {
    "in": "bob_0aliceablocal user'\n\u00e9",
@@ -6814,8 +6814,8 @@
    "out": "credentials forusercredentials for0a/b@ax.y \u00a0"
   },
   {
-   "in": "\u00a0for\u00a0local userforBETTERDESK_ser",
-   "out": "\u00a0for\u00a0local userforBETTERDESK_ser"
+   "in": "\u00a0for\u00a0local userforNEODESK_ser",
+   "out": "\u00a0for\u00a0local userforNEODESK_ser"
   },
   {
    "in": "\t$&@bob",
@@ -6842,8 +6842,8 @@
    "out": "x.ycredentials forx.ysynced"
   },
   {
-   "in": "BETTERDESK_x.y",
-   "out": "BETTERDESK_x.y"
+   "in": "NEODESK_x.y",
+   "out": "NEODESK_x.y"
   },
   {
    "in": " bcrypt0\n",
@@ -6862,8 +6862,8 @@
    "out": "a: syncedfor0seradmin\u00e9"
   },
   {
-   "in": "BETTERDESK_credentials forab'credentials for\ud83d\ude00 :",
-   "out": "BETTERDESK_credentials forab'credentials for\ud83d\ude00 :"
+   "in": "NEODESK_credentials forab'credentials for\ud83d\ude00 :",
+   "out": "NEODESK_credentials forab'credentials for\ud83d\ude00 :"
   },
   {
    "in": "bob:a/bx.ybcrypt'us$&user:",
@@ -6878,12 +6878,12 @@
    "out": "us\u00e9-local user:'"
   },
   {
-   "in": "local usera/baaliceroleroleabBETTERDESK_'ser",
-   "out": "local usera/baaliceroleroleabBETTERDESK_'ser"
+   "in": "local usera/baaliceroleroleabNEODESK_'ser",
+   "out": "local usera/baaliceroleroleabNEODESK_'ser"
   },
   {
-   "in": "forBETTERDESK_a/b",
-   "out": "forBETTERDESK_a/b"
+   "in": "forNEODESK_a/b",
+   "out": "forNEODESK_a/b"
   },
   {
    "in": "\n\n local user a/b",
@@ -6962,8 +6962,8 @@
    "out": "$&\u00e9'accountab: "
   },
   {
-   "in": "roleBETTERDESK_$&\u00e9  0bob",
-   "out": "roleBETTERDESK_$&\u00e9  0bob"
+   "in": "roleNEODESK_$&\u00e9  0bob",
+   "out": "roleNEODESK_$&\u00e9  0bob"
   },
   {
    "in": " x.ylocal useraccountseruserx.y bob ",
@@ -7006,16 +7006,16 @@
    "out": "\\nuser'\u00a0"
   },
   {
-   "in": "fora/b_BETTERDESK_ab",
-   "out": "fora/b_BETTERDESK_ab"
+   "in": "fora/b_NEODESK_ab",
+   "out": "fora/b_NEODESK_ab"
   },
   {
-   "in": "User\ud83d\ude00BETTERDESK_'",
-   "out": "User\ud83d\ude00BETTERDESK_'"
+   "in": "User\ud83d\ude00NEODESK_'",
+   "out": "User\ud83d\ude00NEODESK_'"
   },
   {
-   "in": "UserororBETTERDESK_bob",
-   "out": "UserororBETTERDESK_bob"
+   "in": "UserororNEODESK_bob",
+   "out": "UserororNEODESK_bob"
   },
   {
    "in": " 'alicebob\t credentials forabcryptlocal user",
@@ -7034,8 +7034,8 @@
    "out": "x.yalicebcrypt0a/boradmin"
   },
   {
-   "in": "\nBETTERDESK_:bcrypt",
-   "out": "\\nBETTERDESK_:bcrypt"
+   "in": "\nNEODESK_:bcrypt",
+   "out": "\\nNEODESK_:bcrypt"
   },
   {
    "in": "\tlocal userus0$&a/b:'0",
@@ -7070,8 +7070,8 @@
    "out": "alicesyncedsercredentials foraccount'"
   },
   {
-   "in": "BETTERDESK_bcrypt$&'serroleBETTERDESK_bobuserfor",
-   "out": "BETTERDESK_bcrypt$&'serroleBETTERDESK_bobuserfor"
+   "in": "NEODESK_bcrypt$&'serroleNEODESK_bobuserfor",
+   "out": "NEODESK_bcrypt$&'serroleNEODESK_bobuserfor"
   },
   {
    "in": "serbcryptalice-bcrypt'@ser",
@@ -7154,16 +7154,16 @@
    "out": "bob'@ bcryptaccount\u00a0"
   },
   {
-   "in": ":$&BETTERDESK_\t0'Userlocal useradminser",
-   "out": ":$&BETTERDESK_\t0'Userlocal useradminser"
+   "in": ":$&NEODESK_\t0'Userlocal useradminser",
+   "out": ":$&NEODESK_\t0'Userlocal useradminser"
   },
   {
    "in": "accountser'\u00e9_syncedusUser",
    "out": "accountser'\u00e9_syncedusUser"
   },
   {
-   "in": "_  0'aBETTERDESK_ ",
-   "out": "_  0'aBETTERDESK_ "
+   "in": "_  0'aNEODESK_ ",
+   "out": "_  0'aNEODESK_ "
   },
   {
    "in": "user@for: -a\ud83d\ude00us",
@@ -7186,8 +7186,8 @@
    "out": "user\u00a0\u00e9role0fora/bcredentials for\u00a0\\n"
   },
   {
-   "in": "'@':bobBETTERDESK_ @",
-   "out": "'@':bobBETTERDESK_ @"
+   "in": "'@':bobNEODESK_ @",
+   "out": "'@':bobNEODESK_ @"
   },
   {
    "in": " :",

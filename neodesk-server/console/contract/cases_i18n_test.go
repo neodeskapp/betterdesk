@@ -5,7 +5,7 @@ package contract_test
 import (
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The language routes under /api/i18n. Nothing here writes a language file:

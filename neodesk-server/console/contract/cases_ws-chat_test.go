@@ -5,7 +5,7 @@ package contract_test
 import (
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The chat sockets: the agent's /ws/chat/<device> (a device token in the
@@ -53,7 +53,7 @@ func init() {
 		contract.Case{Name: "agent-foreign-origin", Path: "/ws/chat/900100001", Query: agentQuery, NoCookies: true,
 			Socket: sock("a_foreign", contract.Socket{Origin: "https://evil.example"})},
 		contract.Case{Name: "agent-no-origin-with-session-cookie", Path: "/ws/chat/900100001", Query: agentQuery, NoCookies: true,
-			Headers: map[string]string{"Cookie": "bd.sid=s%3Anot-a-session"}, Socket: agent("a_cookie", contract.Socket{})},
+			Headers: map[string]string{"Cookie": "nd.sid=s%3Anot-a-session"}, Socket: agent("a_cookie", contract.Socket{})},
 		contract.Case{Name: "agent-no-token", Path: "/ws/chat/900100001", NoCookies: true, Socket: agent("a_none", contract.Socket{})},
 		contract.Case{Name: "agent-token-unknown", Path: "/ws/chat/900100001", Query: map[string][]string{"token": {"contract-no-such-token"}},
 			NoCookies: true, Socket: agent("a_unknown", contract.Socket{})},

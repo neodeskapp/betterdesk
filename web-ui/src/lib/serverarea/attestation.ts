@@ -79,5 +79,5 @@ export function tierName(
 }
 
 export function reportFileName(r: Pick<Result, 'testedAt'>, now = Date.now()): string {
-	return `betterdesk-server-attestation-${r.testedAt || now}.json`;
+	return `neodesk-server-attestation-${r.testedAt || now}.json`;
 }

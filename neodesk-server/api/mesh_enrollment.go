@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/meshcentral"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/meshcentral"
 )
 
 // maxPendingEnrollments is the most requests the enrollment queue takes

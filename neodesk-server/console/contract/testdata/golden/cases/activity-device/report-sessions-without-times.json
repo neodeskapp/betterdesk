@@ -2,7 +2,7 @@
  "id": "activity-device/report-sessions-without-times",
  "request": {
   "method": "POST",
-  "path": "/api/bd/activity",
+  "path": "/api/nd/activity",
   "body": {
    "device_id": "900100001",
    "idle_seconds": 120,

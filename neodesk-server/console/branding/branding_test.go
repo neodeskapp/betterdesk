@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // newService is a service on db with the console's files from
@@ -697,7 +697,7 @@ func TestFaviconAndLogo(t *testing.T) {
 			want string
 		}{
 			{[][2]string{{"logoType", "icon"}, {"logoIcon", "dns"}}, "default"},
-			{[][2]string{{"logoType", "image"}, {"logoUrl", "/img/betterdesk_icon.png"}}, "default"},
+			{[][2]string{{"logoType", "image"}, {"logoUrl", "/img/neodesk_icon.png"}}, "default"},
 			{[][2]string{{"logoType", "image"}, {"logoUrl", ""}}, "default"},
 			{[][2]string{{"logoType", "svg"}, {"logoSvg", ""}, {"logoIcon", " "}}, "default"},
 			{[][2]string{{"logoType", "text"}, {"logoText", "Acme"}}, "text"},
@@ -737,7 +737,7 @@ func TestAppearanceAndReadability(t *testing.T) {
 		if got := keyList(model); got != `["version","type","revision","identity","typography","palette","backgrounds","surfaces","login","footer","advanced"]` {
 			t.Errorf("sections of the appearance model: %s", got)
 		}
-		if model.Text("type") != "betterdesk-appearance" || model.Text("version") != "2.0" || model.Text("revision") != s.Revision() {
+		if model.Text("type") != "neodesk-appearance" || model.Text("version") != "2.0" || model.Text("revision") != s.Revision() {
 			t.Errorf("head of the appearance model: %s", clip(Stringify(model)))
 		}
 		if got := Stringify(property(model, "backgrounds")); got != `{"console":{"type":"none","color":"","gradient":"","imageUrl":"","blur":"","overlay":"","size":"cover"},`+
@@ -803,7 +803,7 @@ func TestExportAndImport(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if got := keyList(preset); got != `["version","type","appearance","branding"]` || preset.Text("version") != "2.0" || preset.Text("type") != "betterdesk-theme" {
+		if got := keyList(preset); got != `["version","type","appearance","branding"]` || preset.Text("version") != "2.0" || preset.Text("type") != "neodesk-theme" {
 			t.Errorf("export: keys %s", got)
 		}
 		exported := mustParse(t, Stringify(preset))
@@ -842,11 +842,11 @@ func TestExportAndImport(t *testing.T) {
 			t.Errorf("after applying a profile of the settings: %s", clip(Stringify(b)))
 		}
 		// an appearance part alone still applies what its names say
-		if ok, err := s.ImportPreset(ctx, object("type", "betterdesk-theme", "appearance", object("identity", object("appName", "From the appearance")))); !ok || err != nil || s.GetBranding().Text("appName") != "From the appearance" {
+		if ok, err := s.ImportPreset(ctx, object("type", "neodesk-theme", "appearance", object("identity", object("appName", "From the appearance")))); !ok || err != nil || s.GetBranding().Text("appName") != "From the appearance" {
 			t.Errorf("import of an appearance part: %v, %v, %q", ok, err, s.GetBranding().Text("appName"))
 		}
 		// with the flat part alone everything comes back
-		if ok, err := s.ImportPreset(ctx, object("type", "betterdesk-theme", "branding", property(exported, "branding"))); !ok || err != nil {
+		if ok, err := s.ImportPreset(ctx, object("type", "neodesk-theme", "branding", property(exported, "branding"))); !ok || err != nil {
 			t.Fatalf("import of the flat part: %v, %v", ok, err)
 		}
 		if b := s.GetBranding(); b.Text("themeMode") != "custom" || b.Text("bgType") != "color" || b.Text("bgColor") != "#040506" || b.Text("customCss") != ".a{}" {
@@ -856,7 +856,7 @@ func TestExportAndImport(t *testing.T) {
 		// an SVG of 50,000 characters stays whole, one longer is cut and so
 		// no longer a document
 		svgOf := func(length int) string { return "<svg><desc>" + strings.Repeat("d", length-24) + "</desc></svg>" }
-		flatOnly := object("type", "betterdesk-theme", "branding", object("appName", strings.Repeat("n", 600), "customCss", ".b{}", "logoSvg", svgOf(50000), "faviconSvg", svgOf(50001)))
+		flatOnly := object("type", "neodesk-theme", "branding", object("appName", strings.Repeat("n", 600), "customCss", ".b{}", "logoSvg", svgOf(50000), "faviconSvg", svgOf(50001)))
 		if ok, err := s.ImportPreset(ctx, flatOnly); !ok || err != nil {
 			t.Fatal(ok, err)
 		}
@@ -864,12 +864,12 @@ func TestExportAndImport(t *testing.T) {
 		if len(b.Text("appName")) != 500 || b.Text("customCss") != ".b{}" || b.Text("logoSvg") != svgOf(50000) || b.Text("faviconSvg") != "" {
 			t.Errorf("length limits of an import: appName %d, customCss %q, logoSvg %d, faviconSvg %d", len(b.Text("appName")), b.Text("customCss"), len(b.Text("logoSvg")), len(b.Text("faviconSvg")))
 		}
-		for _, bad := range []any{nil, "x", 5.0, object(), object("type", "betterdesk-theme"), object("type", "other", "branding", object()), []any{}} {
+		for _, bad := range []any{nil, "x", 5.0, object(), object("type", "neodesk-theme"), object("type", "other", "branding", object()), []any{}} {
 			if ok, err := s.ImportPreset(ctx, bad); ok || err != nil {
 				t.Errorf("ImportPreset(%s) = %v, %v; want false", Stringify(bad), ok, err)
 			}
 		}
-		_, err = s.ImportPreset(ctx, mustParse(t, `{"type":"betterdesk-theme","branding":{"colors":"red"}}`))
+		_, err = s.ImportPreset(ctx, mustParse(t, `{"type":"neodesk-theme","branding":{"colors":"red"}}`))
 		if Message(err) != "Cannot use 'in' operator to search for 'bgPrimary' in red" {
 			t.Errorf("import with colours that are text: %v", err)
 		}
@@ -938,7 +938,7 @@ func TestLoadFallsBackToDefaults(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := s.LoadBranding(ctx)
-	if got.Text("appName") != "BetterDesk" || s.GetBranding().Text("appName") != "BetterDesk" {
+	if got.Text("appName") != "NeoDesk" || s.GetBranding().Text("appName") != "NeoDesk" {
 		t.Errorf("settings without the table: appName %q", got.Text("appName"))
 	}
 	if s.Revision() != strconv.FormatInt(fixedNow.UnixMilli(), 36) {
@@ -1029,7 +1029,7 @@ func TestProfiles(t *testing.T) {
 		if err != nil || first != 1 {
 			t.Fatalf("create: %d, %v", first, err)
 		}
-		theme := mustParse(t, `{"version":"1.0","type":"betterdesk-theme","branding":{"appName":"From Profile","themeMode":"light"}}`)
+		theme := mustParse(t, `{"version":"1.0","type":"neodesk-theme","branding":{"appName":"From Profile","themeMode":"light"}}`)
 		second, err := s.CreateProfile(ctx, "Default", "", theme)
 		if err != nil || second != 2 {
 			t.Fatalf("create: %d, %v", second, err)
@@ -1057,7 +1057,7 @@ func TestProfiles(t *testing.T) {
 
 		// the profile made without a theme holds the settings of that moment
 		row, _, _ := getBrandingProfile(ctx, db, first)
-		if !strings.HasPrefix(row.Data, `{"version":"2.0","type":"betterdesk-theme","appearance":{"version":"2.0","type":"betterdesk-appearance","revision":"`) || !strings.Contains(row.Data, `"branding":{"appName":"BetterDesk"`) {
+		if !strings.HasPrefix(row.Data, `{"version":"2.0","type":"neodesk-theme","appearance":{"version":"2.0","type":"neodesk-appearance","revision":"`) || !strings.Contains(row.Data, `"branding":{"appName":"NeoDesk"`) {
 			t.Errorf("stored settings of a profile: %s", clip(row.Data))
 		}
 
@@ -1091,7 +1091,7 @@ func TestProfiles(t *testing.T) {
 			if !found || copyRow.Name != want || copyRow.IsActive.True() {
 				t.Errorf("duplicate %d is named %q (active %v), want %q", i, copyRow.Name, copyRow.IsActive.True(), want)
 			}
-			if copyRow.Data != `{"version":"1.0","type":"betterdesk-theme","branding":{"appName":"From Profile","themeMode":"light"}}` {
+			if copyRow.Data != `{"version":"1.0","type":"neodesk-theme","branding":{"appName":"From Profile","themeMode":"light"}}` {
 				t.Errorf("duplicate %d holds %s", i, copyRow.Data)
 			}
 		}
@@ -1121,7 +1121,7 @@ func TestProfiles(t *testing.T) {
 			t.Fatal(err)
 		}
 		row, _, _ = getBrandingProfile(ctx, db, second)
-		if row.Name != "Renamed" || row.Data != `{"version":"1.0","type":"betterdesk-theme","branding":{"appName":"Changed"}}` {
+		if row.Name != "Renamed" || row.Data != `{"version":"1.0","type":"neodesk-theme","branding":{"appName":"Changed"}}` {
 			t.Errorf("after a rename with settings: %q, %s", row.Name, row.Data)
 		}
 		if err := s.UpdateProfile(ctx, 99, ProfileUpdate{}); Message(err) != "Profile not found" {
@@ -1327,7 +1327,7 @@ func TestThemes(t *testing.T) {
 			t.Errorf("keys of a theme: %s", got)
 		}
 	}
-	if names["default"] != "BetterDesk Dark" || names["light"] != "BetterDesk Light" || names["insolve"] != "insolve Core Server" {
+	if names["default"] != "NeoDesk Dark" || names["light"] != "NeoDesk Light" || names["insolve"] != "insolve Core Server" {
 		t.Errorf("built-in themes: %v", names)
 	}
 	if result, err := s.ApplyTheme(ctx, "light"); result != ThemeApplied || err != nil {
@@ -1375,7 +1375,7 @@ func TestSupporters(t *testing.T) {
 	s.opts.Logf = func(string, ...any) { logged++ }
 	s.ResetSupportersCache()
 	empty := s.LoadSupporters()
-	if Stringify(empty) != `{"honorary":[],"individuals":[],"links":{"repo":"https://github.com/trybetterdesk/betterdesk","issues":"https://github.com/trybetterdesk/betterdesk/issues","sponsors":"https://github.com/sponsors/UNITRONIX","buyMeACoffee":"https://buymeacoffee.com/unitronix","sponsorsMd":"https://betterde.sk/docs/project/sponsors"}}` || logged != 1 {
+	if Stringify(empty) != `{"honorary":[],"individuals":[],"links":{"repo":"https://github.com/neodeskapp/neodesk","issues":"https://github.com/neodeskapp/neodesk/issues","sponsors":"https://github.com/sponsors/UNITRONIX","buyMeACoffee":"https://buymeacoffee.com/unitronix","sponsorsMd":"https://neode.sk/docs/project/sponsors"}}` || logged != 1 {
 		t.Errorf("supporters without the file: %s (%d log lines)", Stringify(empty), logged)
 	}
 }
@@ -1487,7 +1487,7 @@ func TestConcurrentUse(t *testing.T) {
 			go func() {
 				defer wg.Done()
 				for i := 0; i < 60; i++ {
-					if name := s.GetBranding().Text("appName"); name != "BetterDesk" && !strings.HasPrefix(name, "writer ") {
+					if name := s.GetBranding().Text("appName"); name != "NeoDesk" && !strings.HasPrefix(name, "writer ") {
 						t.Errorf("appName = %q", name)
 					}
 					if _, err := s.GenerateThemeCSS(); err != nil {
@@ -1557,12 +1557,12 @@ func TestSignInAndBootstrapBranding(t *testing.T) {
 			if got := Stringify(s.SignInBranding()); got != `{"logoType":"default","logoSvg":"","logoUrl":"","logoText":"","logoTextAccent":"","loginTitle":"","loginSubtitle":"","loginPromoMode":"classic","loginSlides":[],"footerText":"","showPoweredBy":true}` {
 				t.Errorf("sign-in branding of an untouched console (loaded %v): %s", loaded, got)
 			}
-			want := `{"appName":"BetterDesk","appDescription":"BetterDesk Server Management","themeMode":"system","logoType":"default","logoIcon":"dns","logoSvg":"","logoUrl":"","logoText":"","logoTextAccent":"","footerText":"","showPoweredBy":true,"revision":"` + s.Revision() + `"}`
+			want := `{"appName":"NeoDesk","appDescription":"NeoDesk Server Management","themeMode":"system","logoType":"default","logoIcon":"dns","logoSvg":"","logoUrl":"","logoText":"","logoTextAccent":"","footerText":"","showPoweredBy":true,"revision":"` + s.Revision() + `"}`
 			if got := Stringify(s.BootstrapBranding("Configured")); got != want {
 				t.Errorf("bootstrap branding of an untouched console (loaded %v):\n got  %s\n want %s", loaded, got, want)
 			}
 		}
-		if s.AppName("Configured") != "BetterDesk" || s.ThemeMode() != "system" {
+		if s.AppName("Configured") != "NeoDesk" || s.ThemeMode() != "system" {
 			t.Errorf("AppName %q, ThemeMode %q", s.AppName("Configured"), s.ThemeMode())
 		}
 		palettes := s.BootPalettes()

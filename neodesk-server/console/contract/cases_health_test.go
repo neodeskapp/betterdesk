@@ -2,7 +2,7 @@
 
 package contract_test
 
-import "github.com/unitronix/betterdesk-server/console/contract"
+import "github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 
 // What the console answers before a route's own code runs: the health
 // check, paths nothing serves, and writes the checks in front of the routes

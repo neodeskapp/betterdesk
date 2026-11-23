@@ -4,13 +4,13 @@ import (
 	"crypto/ed25519"
 	"encoding/base64"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 // The Support client reads its server settings from custom.txt: the JSON
 // below with sorted keys, signed with Ed25519 and written as
-// base64(signature || message), the format of BetterDesk-Client's
+// base64(signature || message), the format of NeoDesk-Client's
 // sign_custom_client_config.py. The client checks the signature with the
 // public key compiled into it, so these bytes are a contract.
 
@@ -46,7 +46,7 @@ func BuildSupportCustomTxt(o CustomTxtOptions) *goapi.Object {
 	} else if o.DisableSettings == true || o.DisableSettings == "Y" || o.DisableSettings == "y" {
 		disable = "Y"
 	}
-	appName := "BetterDesk Support Agent"
+	appName := "NeoDesk Support Agent"
 	if truthy(o.AppName) {
 		if name := jsTrim(jsString(o.AppName)); name != "" {
 			appName = name

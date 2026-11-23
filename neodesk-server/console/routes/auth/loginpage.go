@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/attestation"
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/i18n"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/attestation"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // configuredAppName is the name the old console's configuration gave
 // itself, the sign-in page's appName when the branding has none.
-const configuredAppName = "BetterDesk Console"
+const configuredAppName = "NeoDesk Console"
 
 // loginPageAnswer is the answer of GET /api/auth/login-page, with the keys
 // in the order the web app has always received them.
@@ -45,7 +45,7 @@ func (h *handlers) loginPage(w http.ResponseWriter, r *http.Request) {
 		h.d.WebUI.ServerError(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	desktop, _ := kit.Cookie(r, "betterdesk_desktop_mode")
+	desktop, _ := kit.Cookie(r, "neodesk_desktop_mode")
 	user := kit.User(r)
 	answer := loginPageAnswer{
 		Success:     true,

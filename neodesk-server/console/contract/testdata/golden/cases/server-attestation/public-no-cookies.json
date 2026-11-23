@@ -37,8 +37,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "badgeTitle": "Server capacity tested with BetterDesk",
-     "brand": "BetterDesk",
+     "badgeTitle": "Server capacity tested with NeoDesk",
+     "brand": "NeoDesk",
      "maxConnections": 0,
      "testedAt": null,
      "tier": null,

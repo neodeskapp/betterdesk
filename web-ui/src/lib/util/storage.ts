@@ -42,11 +42,11 @@ export function writeJsonPref(key: string, value: unknown): void {
 
 /** Keys the console uses. Old pages use the same ones, so switching back and forth keeps them. */
 export const PREF = {
-	theme: 'bd-theme-choice',
-	a11y: 'betterdesk_accessibility_v1',
-	sidebarWidth: 'bd_ux35_sidebar_width',
-	sidebarCollapsed: 'bd_ux35_sidebar_collapsed',
-	navMoreOpen: 'bd_nav_more_open',
-	lang: 'betterdesk_lang',
-	presence: 'bd_my_presence'
+	theme: 'nd-theme-choice',
+	a11y: 'neodesk_accessibility_v1',
+	sidebarWidth: 'nd_ux35_sidebar_width',
+	sidebarCollapsed: 'nd_ux35_sidebar_collapsed',
+	navMoreOpen: 'nd_nav_more_open',
+	lang: 'neodesk_lang',
+	presence: 'nd_my_presence'
 } as const;

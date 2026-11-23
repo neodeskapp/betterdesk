@@ -2,7 +2,7 @@
 // language file with its coverage, and the keys a language lacks.
 package languages
 
-import "github.com/unitronix/betterdesk-server/console/kit"
+import "github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 
 // Register adds the group's routes. The handlers are those of
 // console/i18n.

@@ -77,7 +77,7 @@ var matrixSkips = []Skip{
 	{"POST /api/settings/updates/install", SkipServer, "Installs a console update from GitHub."},
 	{"POST /api/settings/updates/restore", SkipServer, "Puts an update backup back and ends the process."},
 	{"POST /api/settings/updates/install-go", SkipServer, "Needs no body: downloads the Go toolchain from go.dev, unpacks and runs it."},
-	{"POST /api/settings/updates/server-binary/rebuild", SkipServer, "Needs no body: overwrites betterdesk-server in the source folder with the GitHub version, builds it and restarts the server."},
+	{"POST /api/settings/updates/server-binary/rebuild", SkipServer, "Needs no body: overwrites neodesk-server in the source folder with the GitHub version, builds it and restarts the server."},
 	{"POST /api/server-management/services/:name/:action", SkipServer, "Starts, stops or restarts a system service."},
 
 	// Commands on the server.

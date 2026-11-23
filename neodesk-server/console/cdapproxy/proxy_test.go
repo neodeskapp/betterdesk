@@ -10,10 +10,10 @@ import (
 
 	"github.com/coder/websocket"
 
-	"github.com/unitronix/betterdesk-server/api"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/api"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
 )
 
 // TestTheSocketActsForTheAccount: the socket to the API server is opened

@@ -21,9 +21,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // TestScenarios replays testdata/vectors/db-<dialect>.json: the scenarios
@@ -251,7 +251,7 @@ const adminBase = "/tmp/authn-admin"
 
 var (
 	watchedDirs = []string{adminBase + "/keys", adminBase + "/keys/data", adminBase + "/data", adminBase + "/other", "/opt/rustdesk", "/opt/rustdesk/data",
-		"/opt/betterdesk", "/opt/betterdesk/data", "/app/data", `C:\BetterDesk`, `C:\RustDesk`}
+		"/opt/neodesk", "/opt/neodesk/data", "/app/data", `C:\NeoDesk`, `C:\RustDesk`}
 	watchedFiles = []string{".admin_credentials", ".force_password_update", "auth.db"}
 )
 
@@ -578,18 +578,18 @@ func (r *scenarioRun) settings() Settings {
 			env[key] = *value
 		}
 	}
-	// BETTERDESK_AUTH_AUTOCREATE and FORCE_PASSWORD_UPDATE take every on
+	// NEODESK_AUTH_AUTOCREATE and FORCE_PASSWORD_UPDATE take every on
 	// value, where Node took only "true" (BUGS L84): the replay gives the
 	// recorded on values Node read as off as "false", and
 	// TestSettingsFromEnv checks the new reading
-	for _, key := range []string{"BETTERDESK_AUTH_AUTOCREATE", "FORCE_PASSWORD_UPDATE"} {
+	for _, key := range []string{"NEODESK_AUTH_AUTOCREATE", "FORCE_PASSWORD_UPDATE"} {
 		if nodeReadAsOff[env[key]] {
 			env[key] = "false"
 		}
 	}
 	getenv := func(key string) string {
 		if key == "DATABASE_URL" && r.db.IsPostgres() {
-			return "postgres://betterdesk@db/betterdesk"
+			return "postgres://neodesk@db/neodesk"
 		}
 		return env[key]
 	}

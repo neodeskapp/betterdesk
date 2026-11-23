@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
 // refusal is an answer to an upgrade that is not taken: the bytes that go

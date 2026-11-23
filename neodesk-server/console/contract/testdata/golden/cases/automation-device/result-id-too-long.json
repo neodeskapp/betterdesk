@@ -2,7 +2,7 @@
  "id": "automation-device/result-id-too-long",
  "request": {
   "method": "POST",
-  "path": "/api/bd/commands/99999999999999999999/result",
+  "path": "/api/nd/commands/99999999999999999999/result",
   "body": {
    "result": "demo-reception-02",
    "status": "completed"

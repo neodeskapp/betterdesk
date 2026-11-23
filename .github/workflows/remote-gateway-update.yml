@@ -59,8 +59,8 @@ jobs:
             exit 0
           fi
           git switch -c automation/remote-gateway-update
-          git config user.name "betterdesk-gateway-bot"
-          git config user.email "betterdesk-gateway-bot@users.noreply.github.com"
+          git config user.name "neodesk-gateway-bot"
+          git config user.email "neodesk-gateway-bot@users.noreply.github.com"
           git add remote-gateway/manifest.json
           git commit -m "chore(remote-gateway): update pinned upstream source"
           git push --set-upstream origin automation/remote-gateway-update

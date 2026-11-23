@@ -4,7 +4,7 @@
   "method": "GET",
   "path": "/api/guest/access-links/peers?t=unknown",
   "notes": [
-   "header Cookie: bd.guest={token}",
+   "header Cookie: nd.guest={token}",
    "no cookies"
   ]
  },

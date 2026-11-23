@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // steppingClock moves on by one second at every reading, so a revision
@@ -43,7 +43,7 @@ func TestWritesReachTheCache(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		ctx := context.Background()
 		s := cacheService(t, db)
-		profile, err := s.CreateProfile(ctx, "Cached", "", object("type", "betterdesk-theme", "branding", object("appName", "From a profile")))
+		profile, err := s.CreateProfile(ctx, "Cached", "", object("type", "neodesk-theme", "branding", object("appName", "From a profile")))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -53,7 +53,7 @@ func TestWritesReachTheCache(t *testing.T) {
 		}{
 			{"save", "Saved", func() error { return s.SaveBranding(ctx, object("appName", "Saved")) }},
 			{"import", "Imported", func() error {
-				_, err := s.ImportPreset(ctx, object("type", "betterdesk-theme", "branding", object("appName", "Imported")))
+				_, err := s.ImportPreset(ctx, object("type", "neodesk-theme", "branding", object("appName", "Imported")))
 				return err
 			}},
 			{"profile", "From a profile", func() error {
@@ -63,21 +63,21 @@ func TestWritesReachTheCache(t *testing.T) {
 				}
 				return err
 			}},
-			{"theme", "BetterDesk", func() error {
+			{"theme", "NeoDesk", func() error {
 				result, err := s.ApplyTheme(ctx, "light")
 				if result != ThemeApplied && err == nil {
 					t.Errorf("the theme was not applied: %d", result)
 				}
 				return err
 			}},
-			{"background", "BetterDesk", func() error {
+			{"background", "NeoDesk", func() error {
 				_, applied, err := s.ApplyBackground(ctx, "bgImageUrl", "/uploads/bg-0123456789abcdef.png")
 				if !applied && err == nil {
 					t.Error("the background was not applied")
 				}
 				return err
 			}},
-			{"reset", "BetterDesk", func() error { return s.ResetBranding(ctx) }},
+			{"reset", "NeoDesk", func() error { return s.ResetBranding(ctx) }},
 		}
 		for _, w := range writes {
 			before := s.Revision()
@@ -109,7 +109,7 @@ func TestRowsWrittenElsewhereShowAfterTheNextLoad(t *testing.T) {
 		if _, err := db.Exec(ctx, "INSERT INTO branding_config (key, value, updated_at) VALUES ('appName', 'Written elsewhere', '2026-01-02 03:04:05')"); err != nil {
 			t.Fatal(err)
 		}
-		if got := s.GetBranding().Text("appName"); got != "BetterDesk" || s.Revision() != before {
+		if got := s.GetBranding().Text("appName"); got != "NeoDesk" || s.Revision() != before {
 			t.Errorf("before a load: appName %q, revision %q (was %q)", got, s.Revision(), before)
 		}
 		if err := s.SaveBranding(ctx, object("footerText", "x")); err != nil {

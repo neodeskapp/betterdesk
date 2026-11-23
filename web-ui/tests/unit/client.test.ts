@@ -80,7 +80,7 @@ describe('request', () => {
 		await request('/api/x');
 		await request('/api/x', { method: 'POST' });
 		await request('/api/auth/verify', { activity: true });
-		const bg = (i: number) => (calls[i]!.init.headers as Record<string, string>)['X-BD-Background'];
+		const bg = (i: number) => (calls[i]!.init.headers as Record<string, string>)['X-ND-Background'];
 		expect(bg(0)).toBe('1');
 		expect(bg(1)).toBeUndefined();
 		expect(bg(2)).toBeUndefined();

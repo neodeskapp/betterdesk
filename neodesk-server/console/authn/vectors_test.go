@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // The tests in this file replay the vectors under testdata/vectors, which

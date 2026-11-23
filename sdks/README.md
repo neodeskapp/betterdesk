@@ -1,7 +1,7 @@
-# BetterDesk CDAP — SDKs & Bridges
+# NeoDesk CDAP — SDKs & Bridges
 
 Software Development Kits and reference bridge implementations for the
-**Connected Device Automation Protocol (CDAP)** used by BetterDesk server.
+**Connected Device Automation Protocol (CDAP)** used by NeoDesk server.
 
 ## SDKs
 
@@ -12,7 +12,7 @@ Software Development Kits and reference bridge implementations for the
 
 Each SDK has a runnable example, a simulated greenhouse:
 `python/examples/greenhouse.py` and `nodejs/examples/greenhouse.mts`. The
-Go tests in `betterdesk-server/cdap/sdk_examples_test.go` run both, and the
+Go tests in `neodesk-server/cdap/sdk_examples_test.go` run both, and the
 three bridges, against a gateway.
 
 ## Reference Bridges
@@ -39,7 +39,7 @@ python bridge_modbus.py -c config.json
 ### Node.js Bridge
 
 ```js
-const { CDAPBridge, gauge } = require('betterdesk-cdap');
+const { CDAPBridge, gauge } = require('neodesk-cdap');
 
 const bridge = new CDAPBridge({
   server: 'ws://your-server:21122/cdap',

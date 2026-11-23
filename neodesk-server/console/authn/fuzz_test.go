@@ -16,7 +16,7 @@ import (
 	xbcrypt "golang.org/x/crypto/bcrypt"
 	xpbkdf2 "golang.org/x/crypto/pbkdf2"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // The fuzz tests check the parsers of stored and outside text against a

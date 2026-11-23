@@ -27,7 +27,7 @@ read" is a GET or HEAD with a session.
 | `PasswordChange` | `passwordChangeLimiter` | 5 min | 3, fixed | `password:<user>`, signed out the address | nothing | Too many password change attempts. Please try again later. |
 | `Upload` | `uploadLimiter` | 60 s | `UPLOAD_RATE_LIMIT_MAX`, 30 | address | nothing | Too many upload requests. Please try again later. |
 | `FileAccess` | `fileAccessLimiter` | 60 s | `FILE_ACCESS_RATE_LIMIT_MAX`, 120 | address | nothing | Too many file requests. Please try again later. |
-| `Register` | `registerLimiter` | 60 s | `BD_REGISTER_RATE_LIMIT_MAX`, 20 | address | nothing | Too many registration requests. Please slow down. |
+| `Register` | `registerLimiter` | 60 s | `ND_REGISTER_RATE_LIMIT_MAX`, 20 | address | nothing | Too many registration requests. Please slow down. |
 | `Invitation` | `invitationLimiter` (Go only) | 15 min | 20, fixed | address | nothing | Too many invitation requests. Please try again later. |
 
 Every 429 body is `{"success":false,"error":"<text>"}`.
@@ -61,7 +61,7 @@ Poll paths: `/api/stats`, `/api/server/status`, `/api/server/bandwidth`,
 `/api/users`, `/api/audit-log`, `/api/system/info`,
 `/api/docker/containers`, `/api/settings/restart-status`,
 `/api/folders`, `/api/tags`,
-`/api/device-groups`, `/api/bd/notifications`.
+`/api/device-groups`, `/api/nd/notifications`.
 
 Settings read paths: `/api/settings/` followed by `audit`, `info`,
 `restart/pending`, `device-scope`, `connection-mode`, `public-endpoints`,

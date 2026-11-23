@@ -5,8 +5,8 @@ import (
 	"strings"
 	"unicode/utf16"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // found is the answer to a search.

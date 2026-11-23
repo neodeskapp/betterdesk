@@ -1,5 +1,5 @@
 // Auth handlers implement user authentication, user management,
-// API key management, and TOTP 2FA endpoints for the BetterDesk API.
+// API key management, and TOTP 2FA endpoints for the NeoDesk API.
 package api
 
 import (
@@ -15,9 +15,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // Context keys for authenticated request metadata.
@@ -1085,7 +1085,7 @@ func (s *Server) handleSetupTOTP(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"secret": secret,
-		"uri":    auth.TOTPUri(secret, "BetterDesk", user.Username),
+		"uri":    auth.TOTPUri(secret, "NeoDesk", user.Username),
 	})
 }
 
@@ -1457,9 +1457,9 @@ func (s *Server) authenticateRequest(r *http.Request) (username, role, orgID str
 // Currently rewrites:
 //   - /api/peers/{id}/...     -> /api/peers/<id>/...
 //   - /api/cdap/devices/{id}/ -> /api/cdap/devices/<id>/
-//   - /ws/bd-mgmt/{id}        -> /ws/bd-mgmt/<id>
+//   - /ws/nd-mgmt/{id}        -> /ws/nd-mgmt/<id>
 func redactPathSegment(p string) string {
-	for _, prefix := range []string{"/api/peers/", "/api/cdap/devices/", "/ws/bd-mgmt/", "/api/tokens/", "/api/users/", "/api/orgs/"} {
+	for _, prefix := range []string{"/api/peers/", "/api/cdap/devices/", "/ws/nd-mgmt/", "/api/tokens/", "/api/users/", "/api/orgs/"} {
 		if !strings.HasPrefix(p, prefix) {
 			continue
 		}
@@ -1527,7 +1527,7 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 			path == "/api/org/login" ||
 			path == "/api/auth/oidc/status" || path == "/api/auth/oidc/authorize" || path == "/api/auth/oidc/callback" ||
 			path == "/api/auth/oidc/session" || path == "/api/auth/oidc/exchange" || path == "/api/auth/sso/status" ||
-			strings.HasPrefix(path, "/ws/bd-mgmt/") ||
+			strings.HasPrefix(path, "/ws/nd-mgmt/") ||
 			path == "/api/devices/register" || path == "/api/devices/register/status" ||
 			path == "/api/devices/self/access-policy" || path == "/api/devices/self/help-request" ||
 			path == "/api/devices/self/totp" ||

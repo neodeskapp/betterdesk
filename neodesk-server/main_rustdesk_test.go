@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/devicegroups"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/devicegroups"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // Installed over an hbbs folder, the start moves RustDesk's db_v2.sqlite3

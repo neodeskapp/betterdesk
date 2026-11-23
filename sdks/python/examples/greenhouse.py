@@ -1,4 +1,4 @@
-"""A simulated greenhouse on a BetterDesk server's CDAP gateway.
+"""A simulated greenhouse on a NeoDesk server's CDAP gateway.
 
 It shows a temperature, a humidity, a heater switch and a status text,
 raises a frost alert below 2 °C, and warms up while the heater is on.
@@ -15,7 +15,7 @@ import asyncio
 import logging
 import os
 
-from betterdesk_cdap import CDAPBridge, gauge, text_widget, toggle
+from neodesk_cdap import CDAPBridge, gauge, text_widget, toggle
 
 bridge = CDAPBridge(
     server=os.environ.get("CDAP_SERVER", "ws://localhost:21122/cdap"),

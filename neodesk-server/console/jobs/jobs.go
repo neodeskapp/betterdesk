@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // StopTimeout is how long Stop waits for the jobs to return.

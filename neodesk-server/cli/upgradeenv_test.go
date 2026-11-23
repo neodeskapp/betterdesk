@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/managedconfig"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/managedconfig"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 // loadLikeTheServer reads env file text as the server's env loader does:
@@ -36,24 +36,24 @@ func settings(list []upgradeSetting) map[string]string {
 // A Node console's .env as the installer wrote it, with what older
 // installers and updaters added: the plan of spec 4.3.
 func TestUpgradeEnvOnAnInstallersFile(t *testing.T) {
-	subs, err := serverinfo.BuildEnvSubstitutions(serverinfo.EnvSubstitutionInput{Config: serverinfo.EnvConfig{RustdeskDir: "/opt/betterdesk", DataDir: "/opt/BetterDeskConsole/data"}})
+	subs, err := serverinfo.BuildEnvSubstitutions(serverinfo.EnvSubstitutionInput{Config: serverinfo.EnvConfig{RustdeskDir: "/opt/neodesk", DataDir: "/opt/NeoDeskConsole/data"}})
 	if err != nil {
 		t.Fatal(err)
 	}
 	old := serverinfo.ApplySubstitutions(managedconfig.Template(), subs) +
-		"WEB_UI_DIR=/opt/BetterDeskConsole/web-ui/build\nNODE_EXTRA_CA_CERTS=/opt/betterdesk/ssl/betterdesk.crt\nGOCACHE=/var/cache/go\n" +
+		"WEB_UI_DIR=/opt/NeoDeskConsole/web-ui/build\nNODE_EXTRA_CA_CERTS=/opt/neodesk/ssl/neodesk.crt\nGOCACHE=/var/cache/go\n" +
 		"CONSOLE_NODE_UPSTREAM=http://127.0.0.1:5001\n# GOMODCACHE=/x\n"
-	plan, err := planUpgrade(old, "/opt/BetterDeskConsole/.env", "systemd")
+	plan, err := planUpgrade(old, "/opt/NeoDeskConsole/.env", "systemd")
 	if err != nil {
 		t.Fatal(err)
 	}
 	added := settings(plan.Added)
 	want := map[string]string{
 		"CONSOLE_PORT": "5000", "SIGNAL_PORT": "21116", "RELAY_PORT": "21117",
-		"CONSOLE_DIR": "/opt/BetterDeskConsole", "BETTERDESK_ENV_FILE": "/opt/BetterDeskConsole/.env", "BETTERDESK_SUPERVISOR": "systemd",
+		"CONSOLE_DIR": "/opt/NeoDeskConsole", "NEODESK_ENV_FILE": "/opt/NeoDeskConsole/.env", "NEODESK_SUPERVISOR": "systemd",
 	}
 	if runtime.GOOS == "windows" {
-		want["CONSOLE_DIR"] = filepath.Dir("/opt/BetterDeskConsole/.env")
+		want["CONSOLE_DIR"] = filepath.Dir("/opt/NeoDeskConsole/.env")
 	}
 	for k, v := range want {
 		if added[k] != v {
@@ -97,7 +97,7 @@ func TestUpgradeEnvOnAnInstallersFile(t *testing.T) {
 	if strings.Count(plan.Text, "\n# WEB_UI_DIR=") != 2 {
 		t.Errorf("WEB_UI_DIR lines:\n%s", plan.Text)
 	}
-	if again, _ := planUpgrade(plan.Text, "/opt/BetterDeskConsole/.env", "systemd"); again.Changed() {
+	if again, _ := planUpgrade(plan.Text, "/opt/NeoDeskConsole/.env", "systemd"); again.Changed() {
 		t.Errorf("a second run changes %+v", again)
 	}
 }
@@ -120,15 +120,15 @@ func TestUpgradeEnvRules(t *testing.T) {
 		{name: "port negative", in: "PORT=-1\n", err: true},
 		{name: "console port kept", in: "PORT=70000\nCONSOLE_PORT=0\n", port: ""},
 		{name: "crlf", in: "PORT=5000\r\nA=1\r\n", port: "5000",
-			text: "PORT=5000\r\nA=1\r\n\r\n# Added by betterdesk-server upgrade-env: the console runs inside the server\r\nCONSOLE_PORT=5000\r\nHOST=127.0.0.1\r\n"},
-		{name: "no line end", in: "A=1", port: "5000", text: "A=1\n\n# Added by betterdesk-server upgrade-env: the console runs inside the server\nCONSOLE_PORT=5000\n"},
-		{name: "empty", in: "", port: "5000", text: "# Added by betterdesk-server upgrade-env: the console runs inside the server\nCONSOLE_PORT=5000\n"},
+			text: "PORT=5000\r\nA=1\r\n\r\n# Added by neodesk-server upgrade-env: the console runs inside the server\r\nCONSOLE_PORT=5000\r\nHOST=127.0.0.1\r\n"},
+		{name: "no line end", in: "A=1", port: "5000", text: "A=1\n\n# Added by neodesk-server upgrade-env: the console runs inside the server\nCONSOLE_PORT=5000\n"},
+		{name: "empty", in: "", port: "5000", text: "# Added by neodesk-server upgrade-env: the console runs inside the server\nCONSOLE_PORT=5000\n"},
 		{name: "bom", in: byteOrderMark + "PORT=5200\n", port: "5200", text: byteOrderMark + "PORT=5200\n\n# Added"},
-		{name: "bom before a commented key", in: byteOrderMark + "GOCACHE=x\n", port: "5000", text: byteOrderMark + "# Commented out by betterdesk-server upgrade-env: "},
-		{name: "bom alone", in: byteOrderMark, port: "5000", text: byteOrderMark + "# Added by betterdesk-server upgrade-env: the console runs inside the server\n"},
+		{name: "bom before a commented key", in: byteOrderMark + "GOCACHE=x\n", port: "5000", text: byteOrderMark + "# Commented out by neodesk-server upgrade-env: "},
+		{name: "bom alone", in: byteOrderMark, port: "5000", text: byteOrderMark + "# Added by neodesk-server upgrade-env: the console runs inside the server\n"},
 		{name: "commented", in: "  GOCACHE=a\nGOCACHE=b\n# GOCACHE=c\n", port: "5000",
-			text: "# Commented out by betterdesk-server upgrade-env: only the old console's updater built the server from source\n#   GOCACHE=a\n" +
-				"# Commented out by betterdesk-server upgrade-env: only the old console's updater built the server from source\n# GOCACHE=b\n# GOCACHE=c\n"},
+			text: "# Commented out by neodesk-server upgrade-env: only the old console's updater built the server from source\n#   GOCACHE=a\n" +
+				"# Commented out by neodesk-server upgrade-env: only the old console's updater built the server from source\n# GOCACHE=b\n# GOCACHE=c\n"},
 		{name: "removed", in: "NODE_EXTRA_CA_CERTS=x\nA=1\nNODE_EXTRA_CA_CERTS=y", port: "5000", text: "A=1\n\n# Added"},
 	} {
 		plan, err := planUpgrade(c.in, file, "nssm")
@@ -147,7 +147,7 @@ func TestUpgradeEnvRules(t *testing.T) {
 		if c.text != "" && !strings.HasPrefix(plan.Text, c.text) {
 			t.Errorf("%s:\n got %q\nwant %q...", c.name, plan.Text, c.text)
 		}
-		if settings(plan.Added)["BETTERDESK_SUPERVISOR"] != "nssm" {
+		if settings(plan.Added)["NEODESK_SUPERVISOR"] != "nssm" {
 			t.Errorf("%s: supervisor %v", c.name, plan.Added)
 		}
 		again, err := planUpgrade(plan.Text, file, "nssm")
@@ -195,7 +195,7 @@ func TestUpgradeEnvCommand(t *testing.T) {
 	}
 	written, _ := os.ReadFile(file)
 	plan, _ := planUpgrade(original, file, "systemd")
-	if string(written) != plan.Text || !strings.Contains(string(written), "\nBETTERDESK_SUPERVISOR=systemd\n") {
+	if string(written) != plan.Text || !strings.Contains(string(written), "\nNEODESK_SUPERVISOR=systemd\n") {
 		t.Errorf("written:\n%s", written)
 	}
 	if runtime.GOOS != "windows" {
@@ -227,14 +227,14 @@ func TestUpgradeEnvCommand(t *testing.T) {
 	if raw, _ := os.ReadFile(file + ".pre-go"); string(raw) != original {
 		t.Error("the earlier backup was replaced")
 	}
-	if raw, _ := os.ReadFile(file); !strings.Contains(string(raw), "BETTERDESK_SUPERVISOR=docker\n") || !strings.Contains(string(raw), "CONSOLE_PORT=5300\n") {
+	if raw, _ := os.ReadFile(file); !strings.Contains(string(raw), "NEODESK_SUPERVISOR=docker\n") || !strings.Contains(string(raw), "CONSOLE_PORT=5300\n") {
 		t.Errorf("docker run:\n%s", raw)
 	}
 
 	// A file that gets shorter (only a key taken out) has nothing of its
 	// old end left
 	short := filepath.Join(dir, "short.env")
-	complete := "CONSOLE_PORT=5000\nHOST=127.0.0.1\nSIGNAL_PORT=21116\nRELAY_PORT=21117\nGO_API_PORT=21114\nCONSOLE_DIR=/c\nBETTERDESK_ENV_FILE=/c/.env\nBETTERDESK_SUPERVISOR=systemd\n"
+	complete := "CONSOLE_PORT=5000\nHOST=127.0.0.1\nSIGNAL_PORT=21116\nRELAY_PORT=21117\nGO_API_PORT=21114\nCONSOLE_DIR=/c\nNEODESK_ENV_FILE=/c/.env\nNEODESK_SUPERVISOR=systemd\n"
 	if err := os.WriteFile(short, []byte(complete+"NODE_EXTRA_CA_CERTS="+strings.Repeat("x", 200)+"\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -251,7 +251,7 @@ func TestUpgradeEnvCommand(t *testing.T) {
 	}
 
 	for _, args := range [][]string{nil, {"--from"}, {"--from", ""}, {"--write"}, {"--from", file, "--bogus"}, {"--from", file, "--supervisor"}} {
-		if status, _, errOut := run(nil, args...); status != 2 || !strings.HasPrefix(errOut, "Usage: betterdesk-server upgrade-env") {
+		if status, _, errOut := run(nil, args...); status != 2 || !strings.HasPrefix(errOut, "Usage: neodesk-server upgrade-env") {
 			t.Errorf("%q: %d %q", args, status, errOut)
 		}
 	}
@@ -286,7 +286,7 @@ func TestUpgradeEnvSupervisorByPlatform(t *testing.T) {
 		}
 		env, out, _ := testEnv(map[string]string{"DOCKER": c.docker})
 		env.GOOS = c.goos
-		if status := UpgradeEnv([]string{"--from", file}, env); status != 0 || !strings.Contains(out.String(), "add      BETTERDESK_SUPERVISOR="+c.want+"\n") {
+		if status := UpgradeEnv([]string{"--from", file}, env); status != 0 || !strings.Contains(out.String(), "add      NEODESK_SUPERVISOR="+c.want+"\n") {
 			t.Errorf("%+v: %d\n%s", c, status, out)
 		}
 	}

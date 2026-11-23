@@ -118,18 +118,18 @@ func TestRequestLanguageIgnoresValuesThatAreNotText(t *testing.T) {
 	now := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
 	cases := []struct{ query, cookie, accept, want string }{
 		{"lang[toString]=de", "", "", "en"},
-		{"lang[toString]=de", "betterdesk_lang=pl", "", "pl"},
+		{"lang[toString]=de", "neodesk_lang=pl", "", "pl"},
 		{"lang[]=de", "", "", "en"},
-		{"lang[]=de", "betterdesk_lang=pl", "", "pl"},
+		{"lang[]=de", "neodesk_lang=pl", "", "pl"},
 		{"lang[0]=de", "", "", "en"},
 		{"lang[0][0]=de", "", "", "en"},
 		{"lang[x]=de", "", "pl", "pl"},
 		{"lang=de&lang=pl", "", "", "en"},
-		{"", `betterdesk_lang=j:["de"]`, "", "en"},
-		{"", `betterdesk_lang=j:["de"]`, "pl", "pl"},
-		{"", `betterdesk_lang=j:{"toString":1}`, "pl", "pl"},
-		{"", "betterdesk_lang=j:5", "pl", "pl"},
-		{"", `betterdesk_lang=j:"de"`, "pl", "de"},
+		{"", `neodesk_lang=j:["de"]`, "", "en"},
+		{"", `neodesk_lang=j:["de"]`, "pl", "pl"},
+		{"", `neodesk_lang=j:{"toString":1}`, "pl", "pl"},
+		{"", "neodesk_lang=j:5", "pl", "pl"},
+		{"", `neodesk_lang=j:"de"`, "pl", "de"},
 		{"lang=de", "", "", "de"},
 	}
 	for _, c := range cases {
@@ -159,13 +159,13 @@ func TestPickLanguageSkipsValuesThatAreNoLanguage(t *testing.T) {
 	now := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
 	cases := []struct{ query, pref, cookie, accept, want string }{
 		{"lang=xx", "de", "", "", "de"},
-		{"lang=xx", "", "betterdesk_lang=pl", "", "pl"},
+		{"lang=xx", "", "neodesk_lang=pl", "", "pl"},
 		{"lang=xx", "", "", "de", "de"},
-		{"", "xx", "betterdesk_lang=pl", "", "pl"},
+		{"", "xx", "neodesk_lang=pl", "", "pl"},
 		{"", "xx", "", "de-AT", "de"},
-		{"", "", "betterdesk_lang=xx", "pl;q=0.9, de", "de"},
-		{"lang=xx", "yy", "betterdesk_lang=zz", "qq", "en"},
-		{"lang=de", "pl", "betterdesk_lang=pl", "pl", "de"},
+		{"", "", "neodesk_lang=xx", "pl;q=0.9, de", "de"},
+		{"lang=xx", "yy", "neodesk_lang=zz", "qq", "en"},
+		{"lang=de", "pl", "neodesk_lang=pl", "pl", "de"},
 	}
 	for _, c := range cases {
 		r := &http.Request{URL: &url.URL{Path: "/", RawQuery: c.query}, Header: http.Header{}}
@@ -228,10 +228,10 @@ func TestPickLanguageOrder(t *testing.T) {
 
 func TestLangCookie(t *testing.T) {
 	now := time.Date(2026, 11, 10, 12, 0, 0, 0, time.FixedZone("x", 3600))
-	if got, want := LangCookie("zh-TW", false, now), "betterdesk_lang=zh-TW; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 11:00:00 GMT; SameSite=Lax"; got != want {
+	if got, want := LangCookie("zh-TW", false, now), "neodesk_lang=zh-TW; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 11:00:00 GMT; SameSite=Lax"; got != want {
 		t.Errorf("LangCookie = %q, want %q", got, want)
 	}
-	if got, want := LangCookie(`j:["de"]`, true, now), "betterdesk_lang=j%3A%5B%22de%22%5D; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 11:00:00 GMT; Secure; SameSite=Lax"; got != want {
+	if got, want := LangCookie(`j:["de"]`, true, now), "neodesk_lang=j%3A%5B%22de%22%5D; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 11:00:00 GMT; Secure; SameSite=Lax"; got != want {
 		t.Errorf("LangCookie = %q, want %q", got, want)
 	}
 }

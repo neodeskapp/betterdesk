@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // TestDeleteCascadeOnlyToTheNamedLinkedPeers: a delete with cascade and

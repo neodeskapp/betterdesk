@@ -11,14 +11,14 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/unitronix/betterdesk-server/console/backup"
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/scheduledbackup"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/scheduledbackup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 // maxUpload is the largest backup a restore takes, 200 MB.
@@ -82,7 +82,7 @@ func NewBackups(d *kit.Deps, serverDB string) *backup.Service {
 // FileOptions are the files and folders of the console's backup by its
 // configuration, and the server's database DSN as for NewBackups: what a
 // full backup holds besides the database. The console's backup service
-// and betterdesk-server backup both take them, so both make the same
+// and neodesk-server backup both take them, so both make the same
 // archive.
 func FileOptions(cfg *config.Config, serverDB string) backup.Options {
 	return backup.Options{

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // A profile from its making to its deletion, with what each step writes
@@ -38,7 +38,7 @@ func TestProfileChain(t *testing.T) {
 		if err := db.QueryRow(t.Context(), "SELECT data FROM branding_profiles WHERE id = ?", second).Scan(&data); err != nil {
 			t.Fatal(err)
 		}
-		if data != `{"version":"1.0","type":"betterdesk-theme","branding":{"appName":"From the body"}}` {
+		if data != `{"version":"1.0","type":"neodesk-theme","branding":{"appName":"From the body"}}` {
 			t.Errorf("stored with settings: %s", data)
 		}
 		for body, want := range map[string]string{

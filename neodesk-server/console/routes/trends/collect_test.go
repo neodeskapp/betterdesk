@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
 // scenario is one entry of testdata/trends.json: answers of the API client

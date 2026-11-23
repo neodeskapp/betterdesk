@@ -216,7 +216,7 @@ func StartupCheck(o StartupOptions) *Pending {
 		files := dataFiles{dir: dir, now: o.Now}
 		_ = files.markStale("rollback", detail, m.ToCommit)
 		_ = files.persistResult(LastResult{
-			SHA: m.ToCommit, Failed: []Failure{{File: "betterdesk-server-update", Error: detail}},
+			SHA: m.ToCommit, Failed: []Failure{{File: "neodesk-server-update", Error: detail}},
 			ServicesFailed: []ServiceFailure{}, ServicesRestarted: []string{}, RolledBack: p.rolledBack,
 		})
 	}

@@ -2,7 +2,7 @@
  "id": "bd-api/connect-offline-target",
  "request": {
   "method": "POST",
-  "path": "/api/bd/connect",
+  "path": "/api/nd/connect",
   "body": {
    "initiator_id": "900100001",
    "public_key": "contract-pk",

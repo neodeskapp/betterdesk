@@ -19,7 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // testdata/files.json.gz recorded everything that touches files:
@@ -670,9 +670,9 @@ func (r *filesReplay) themes() {
 // pointed at upstream, into the fork's that the console has instead
 // (BUGS L32). A file that names its own links keeps them.
 var forkLinks = strings.NewReplacer(
-	`"https://github.com/UNITRONIX/BetterDesk"`, `"https://github.com/trybetterdesk/betterdesk"`,
-	`"https://github.com/UNITRONIX/BetterDesk/issues"`, `"https://github.com/trybetterdesk/betterdesk/issues"`,
-	`"https://github.com/UNITRONIX/BetterDesk/blob/main/SPONSORS.md"`, `"https://betterde.sk/docs/project/sponsors"`,
+	`"https://github.com/UNITRONIX/BetterDesk"`, `"https://github.com/neodeskapp/neodesk"`,
+	`"https://github.com/UNITRONIX/BetterDesk/issues"`, `"https://github.com/neodeskapp/neodesk/issues"`,
+	`"https://github.com/UNITRONIX/BetterDesk/blob/main/SPONSORS.md"`, `"https://neode.sk/docs/project/sponsors"`,
 )
 
 func (r *filesReplay) supporters() {

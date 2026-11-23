@@ -1499,78 +1499,78 @@
    "rows": "[]"
   },
   {
-   "name": "128 GET /api/bd/rules",
+   "name": "128 GET /api/nd/rules",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/rules",
+   "path": "/api/nd/rules",
    "status": 404,
    "answer": "{\"oracle\":\"no route\"}"
   },
   {
-   "name": "129 GET /api/bd/rules/1",
+   "name": "129 GET /api/nd/rules/1",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/rules/1",
+   "path": "/api/nd/rules/1",
    "status": 404,
    "answer": "{\"oracle\":\"no route\"}"
   },
   {
-   "name": "130 POST /api/bd/rules",
+   "name": "130 POST /api/nd/rules",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/rules",
+   "path": "/api/nd/rules",
    "body": "{\"name\":\"At the device mount\",\"condition_type\":\"custom\"}",
    "status": 404,
    "answer": "{\"oracle\":\"no route\"}"
   },
   {
-   "name": "131 PATCH /api/bd/rules/1",
+   "name": "131 PATCH /api/nd/rules/1",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/rules/1",
+   "path": "/api/nd/rules/1",
    "body": "{\"description\":\"x\"}",
    "status": 404,
    "answer": "{\"oracle\":\"no route\"}"
   },
   {
-   "name": "132 DELETE /api/bd/rules/1",
+   "name": "132 DELETE /api/nd/rules/1",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/rules/1",
+   "path": "/api/nd/rules/1",
    "status": 404,
    "answer": "{\"oracle\":\"no route\"}"
   },
   {
-   "name": "133 GET /api/bd/alerts",
+   "name": "133 GET /api/nd/alerts",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/alerts",
+   "path": "/api/nd/alerts",
    "status": 404,
    "answer": "{\"oracle\":\"no route\"}"
   },
   {
-   "name": "134 POST /api/bd/alerts/1/ack",
+   "name": "134 POST /api/nd/alerts/1/ack",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/alerts/1/ack",
+   "path": "/api/nd/alerts/1/ack",
    "body": "{}",
    "status": 404,
    "answer": "{\"oracle\":\"no route\"}"
   },
   {
-   "name": "135 POST /api/bd/commands",
+   "name": "135 POST /api/nd/commands",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "body": "{\"device_id\":\"D3\",\"payload\":\"x\"}",
    "status": 404,
    "answer": "{\"oracle\":\"no route\"}"
   },
   {
-   "name": "136 GET /api/bd/commands/1",
+   "name": "136 GET /api/nd/commands/1",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/commands/1",
+   "path": "/api/nd/commands/1",
    "status": 404,
    "answer": "{\"oracle\":\"no route\"}"
   },

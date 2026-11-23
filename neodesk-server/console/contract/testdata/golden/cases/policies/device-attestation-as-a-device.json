@@ -2,7 +2,7 @@
  "id": "policies/device-attestation-as-a-device",
  "request": {
   "method": "POST",
-  "path": "/api/bd/attestation",
+  "path": "/api/nd/attestation",
   "body": {
    "device_id": "900100001",
    "fingerprint": "contract"

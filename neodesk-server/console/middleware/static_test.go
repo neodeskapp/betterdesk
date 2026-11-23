@@ -23,13 +23,13 @@ func TestStaticFoldersFromTheTree(t *testing.T) {
 	site := t.TempDir()
 	at := time.Date(2026, 11, 19, 2, 36, 24, 958814300, time.UTC)
 	for name, content := range map[string]string{
-		"tree/public/favicon.svg":             "<svg/>\r\n",
-		"tree/public/img/betterdesk_icon.png": "png bytes of the icon",
-		"tree/public/img/login-slides/a.jpg":  "jpeg",
-		"tree/public/.hidden":                 "hidden",
-		"tree/protos/message.proto":           "syntax = \"proto3\";",
-		"data/fonts/Inter/inter.woff2":        "woff2 of the font",
-		"data/fonts/Inter/meta.json":          `{"family":"Inter"}`,
+		"tree/public/favicon.svg":            "<svg/>\r\n",
+		"tree/public/img/neodesk_icon.png":   "png bytes of the icon",
+		"tree/public/img/login-slides/a.jpg": "jpeg",
+		"tree/public/.hidden":                "hidden",
+		"tree/protos/message.proto":          "syntax = \"proto3\";",
+		"data/fonts/Inter/inter.woff2":       "woff2 of the font",
+		"data/fonts/Inter/meta.json":         `{"family":"Inter"}`,
 	} {
 		full := filepath.Join(site, filepath.FromSlash(name))
 		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
@@ -57,11 +57,11 @@ func TestStaticFoldersFromTheTree(t *testing.T) {
 	}
 	requests := []request{}
 	for _, target := range []string{
-		"/favicon.svg", "/img/betterdesk_icon.png", "/img/login-slides/a.jpg", "/img", "/img/", "/img/login-slides",
-		"/IMG/betterdesk_icon.png", "/protos/message.proto", "/protos", "/protos/", "/PROTOS/message.proto",
+		"/favicon.svg", "/img/neodesk_icon.png", "/img/login-slides/a.jpg", "/img", "/img/", "/img/login-slides",
+		"/IMG/neodesk_icon.png", "/protos/message.proto", "/protos", "/protos/", "/PROTOS/message.proto",
 		"/fonts", "/fonts/", "/fonts/Inter/inter.woff2", "/fonts/Inter", "/fonts/missing.woff2",
 		"/.hidden", "/img/../favicon.svg", "/img/%2e%2e/favicon.svg", "/%2e%2e/%2e%2e/etc/passwd", "/favicon.svg?v=1",
-		"/missing.png", "/favicon.svg/", "/img%2fbetterdesk_icon.png", "/fav%69con.svg",
+		"/missing.png", "/favicon.svg/", "/img%2fneodesk_icon.png", "/fav%69con.svg",
 	} {
 		requests = append(requests,
 			request{"GET", target, nil},

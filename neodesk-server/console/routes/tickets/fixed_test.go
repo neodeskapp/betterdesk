@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // updated is the audit entry of a change of a ticket by admin.

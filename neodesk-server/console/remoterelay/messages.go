@@ -45,7 +45,7 @@ func agentMessage(text string) (verdict, string) {
 	return forward, msg.value.stringify()
 }
 
-// inputKinds are the kinds of input the agent handles (the BetterDesk
+// inputKinds are the kinds of input the agent handles (the NeoDesk
 // agent's InputEvent: mouse and key events).
 var inputKinds = map[string]bool{
 	"mouse_move": true, "mouse_down": true, "mouse_up": true, "wheel": true,

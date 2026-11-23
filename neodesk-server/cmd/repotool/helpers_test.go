@@ -29,7 +29,7 @@ func repoRoot(t *testing.T) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(filepath.Join(root, "betterdesk-server", "go.mod")); err != nil {
+	if _, err := os.Stat(filepath.Join(root, "neodesk-server", "go.mod")); err != nil {
 		t.Fatalf("no repository at %s: %v", root, err)
 	}
 	return root

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // checked reports what must hold for every picture that got through: an

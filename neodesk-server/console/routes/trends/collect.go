@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
 // collection is what the reports page gets: every time is in milliseconds

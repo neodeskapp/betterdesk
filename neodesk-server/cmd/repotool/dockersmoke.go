@@ -18,8 +18,8 @@ import (
 )
 
 // dockerSmoke is "docker-smoke", the local gate's runtime test of the
-// image: it starts the local image (BETTERDESK_LOCAL_IMAGE, default
-// betterdesk:local) in a container of its own with new named volumes,
+// image: it starts the local image (NEODESK_LOCAL_IMAGE, default
+// neodesk:local) in a container of its own with new named volumes,
 // waits until the API and the console answer their health addresses,
 // signs in as the admin, runs the server's own "check" inside the
 // container, restarts the container and checks that the API key stayed
@@ -37,7 +37,7 @@ func dockerSmoke(root string, args []string, stdout, stderr io.Writer) int {
 			root:   root,
 			stdout: stdout,
 			stderr: stderr,
-			image:  os.Getenv("BETTERDESK_LOCAL_IMAGE"),
+			image:  os.Getenv("NEODESK_LOCAL_IMAGE"),
 			docker: runDocker(root),
 			client: smokeClient(),
 			sleep:  time.Sleep,
@@ -54,7 +54,7 @@ func dockerSmoke(root string, args []string, stdout, stderr io.Writer) int {
 
 // smokePassword is the admin password of the throwaway container; it is
 // used for nothing else.
-const smokePassword = "BetterDesk-Local-Gate-Only-2026!"
+const smokePassword = "NeoDesk-Local-Gate-Only-2026!"
 
 const (
 	smokeRequestTimeout = 5 * time.Second
@@ -173,11 +173,11 @@ func (s *smoke) mustDocker(args ...string) (dockerResult, error) {
 func (s *smoke) run(o smokeOptions) (err error) {
 	image := s.image
 	if image == "" {
-		image = "betterdesk:local"
+		image = "neodesk:local"
 	}
-	container := "betterdesk-local-gate-" + s.suffix
-	dataVolume := "betterdesk-local-gate-data-" + s.suffix
-	consoleVolume := "betterdesk-local-gate-console-" + s.suffix
+	container := "neodesk-local-gate-" + s.suffix
+	dataVolume := "neodesk-local-gate-data-" + s.suffix
+	consoleVolume := "neodesk-local-gate-console-" + s.suffix
 
 	environment := []string{
 		"NODE_ENV=production",
@@ -185,8 +185,8 @@ func (s *smoke) run(o smokeOptions) (err error) {
 		"HOST=0.0.0.0",
 		"API_HOST=0.0.0.0",
 		"API_ENABLED=false",
-		"SERVER_BACKEND=betterdesk",
-		"BETTERDESK_API_URL=http://127.0.0.1:21121/api",
+		"SERVER_BACKEND=neodesk",
+		"NEODESK_API_URL=http://127.0.0.1:21121/api",
 		"HBBS_API_URL=http://127.0.0.1:21121/api",
 		"RUSTDESK_PATH=/opt/rustdesk",
 		"DATA_DIR=/app/data",
@@ -199,7 +199,7 @@ func (s *smoke) run(o smokeOptions) (err error) {
 		"DEFAULT_ADMIN_PASSWORD=" + smokePassword,
 		"DOCKER=true",
 		"AGENT_BUILD_WORKER=off",
-		"BETTERDESK_GITHUB_TOKEN=",
+		"NEODESK_GITHUB_TOKEN=",
 		"PUID=10001",
 		"PGID=10001",
 		"ENROLLMENT_MODE=managed",
@@ -232,7 +232,7 @@ func (s *smoke) run(o smokeOptions) (err error) {
 	runArgs := []string{
 		"run", "--detach",
 		"--name", container,
-		"--label", "com.betterdesk.local-gate=true",
+		"--label", "com.neodesk.local-gate=true",
 		"--publish", "127.0.0.1::5000",
 		"--publish", "127.0.0.1::21121",
 		"--volume", dataVolume + ":/opt/rustdesk",
@@ -265,7 +265,7 @@ func (s *smoke) run(o smokeOptions) (err error) {
 	}
 
 	// The server's own protocol check, inside the container
-	protocol := s.docker("exec", "-u", "betterdesk", container, "/usr/local/bin/betterdesk-server", "check",
+	protocol := s.docker("exec", "-u", "neodesk", container, "/usr/local/bin/neodesk-server", "check",
 		"--api", "http://127.0.0.1:21121/api/health",
 		"--panel", "http://127.0.0.1:5000/health",
 		"--port", "127.0.0.1:21121")
@@ -276,7 +276,7 @@ func (s *smoke) run(o smokeOptions) (err error) {
 		if protocol.err == nil {
 			code = strconv.Itoa(protocol.code)
 		}
-		return fmt.Errorf("betterdesk-server check failed with exit code %s", code)
+		return fmt.Errorf("neodesk-server check failed with exit code %s", code)
 	}
 
 	if _, err := s.mustDocker("restart", container); err != nil {

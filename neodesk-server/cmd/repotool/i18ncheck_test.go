@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-const consoleLang = "betterdesk-server/console/static/files/lang/"
+const consoleLang = "neodesk-server/console/static/files/lang/"
 
 // jsonEscape is a JSON \u escape of the code point in hex, written
 // without the escape in this file.
@@ -43,11 +43,11 @@ const i18nTableHead = "" +
 	"├─────────┼───────────┼──────┼─────────┼───────┼──────────────┼───────┼─────────────────┼────────┤\n"
 
 const i18nConsoleReport = `
-BetterDesk i18n audit
+NeoDesk i18n audit
 Reference baseline: union of en.json and pl.json keys
 English fallback check: exact EN values filtered through a technical-term allowlist
 
-=== Web Console (betterdesk-server/console/static/files/lang) ===
+=== Web Console (neodesk-server/console/static/files/lang) ===
 files=4 baseline=25 en=24 pl=24 en_missing_vs_pl=1 pl_missing_vs_en=1
   EN missing keys present in PL: plonly
   PL missing keys present in EN: _meta.lang
@@ -82,10 +82,10 @@ func TestI18nCheckReport(t *testing.T) {
 
 	// Without --system every system is audited; the missing ones are skipped
 	runCommand(i18nCheck, root).want(t, 1, i18nConsoleReport+`=== Agent Client (agent-client) ===
-Skipped: Directory not found: betterdesk-agent-client/src/locales
+Skipped: Directory not found: neodesk-agent-client/src/locales
 
 === MGMT Client (mgmt) ===
-Skipped: Directory not found: betterdesk-mgmt/src/locales
+Skipped: Directory not found: neodesk-mgmt/src/locales
 
 `+i18nFailed, "")
 	// --system without a name is all systems too
@@ -127,7 +127,7 @@ func TestI18nCheckJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(r.stdout), &results); err != nil {
 		t.Fatal(err)
 	}
-	if len(results) != 3 || results[1]["skipped"] != true || results[1]["reason"] != "Directory not found: betterdesk-agent-client/src/locales" {
+	if len(results) != 3 || results[1]["skipped"] != true || results[1]["reason"] != "Directory not found: neodesk-agent-client/src/locales" {
 		t.Fatalf("results: %v", results)
 	}
 	de := results[0]["rows"].([]any)[0].(map[string]any)
@@ -138,7 +138,7 @@ func TestI18nCheckJSON(t *testing.T) {
 	if !strings.Contains(r.stdout, `{
     "id": "console",
     "label": "Web Console",
-    "dir": "betterdesk-server/console/static/files/lang",
+    "dir": "neodesk-server/console/static/files/lang",
     "files": 4,
     "baselineCount": 25,
     "enCount": 24,
@@ -157,11 +157,11 @@ func TestI18nCheckClean(t *testing.T) {
 	writeTree(t, root, map[string]string{consoleLang + "en.json": clean, consoleLang + "pl.json": clean, consoleLang + "de.json": clean})
 	ok := "│ %d       │ '%s.json' │ 6    │ 0       │ 0     │ 0            │ 0     │ 0               │ 'OK'   │\n"
 	runCommand(i18nCheck, root, "--system", "console").want(t, 0, `
-BetterDesk i18n audit
+NeoDesk i18n audit
 Reference baseline: union of en.json and pl.json keys
 English fallback check: exact EN values filtered through a technical-term allowlist
 
-=== Web Console (betterdesk-server/console/static/files/lang) ===
+=== Web Console (neodesk-server/console/static/files/lang) ===
 files=3 baseline=6 en=6 pl=6 en_missing_vs_pl=0 pl_missing_vs_en=0
 `+i18nTableHead+
 		strings.NewReplacer("%d", "0", "%s", "de").Replace(ok)+
@@ -175,7 +175,7 @@ files=3 baseline=6 en=6 pl=6 en_missing_vs_pl=0 pl_missing_vs_en=0
   {
     "id": "console",
     "label": "Web Console",
-    "dir": "betterdesk-server/console/static/files/lang",
+    "dir": "neodesk-server/console/static/files/lang",
     "files": 3,
     "baselineCount": 6,
     "enCount": 6,

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // runLocalBuilder runs one build request with the local provider and
@@ -26,7 +26,7 @@ func (s *Service) runLocalBuilder(ctx context.Context, requestPath, sourceDir, o
 	b := s.newLocalBuilder(envMap)
 	var stdout strings.Builder
 	report := func(percent float64, phase string) {
-		stdout.WriteString("BETTERDESK_BUILD_PROGRESS|" + jsString(percent) + "|" + phase + "\n")
+		stdout.WriteString("NEODESK_BUILD_PROGRESS|" + jsString(percent) + "|" + phase + "\n")
 		progress(percent, phase)
 	}
 	err := b.main(ctx, s.absPath(requestPath), s.absPath(sourceDir), s.absPath(outputDir), report)
@@ -117,9 +117,9 @@ func (b *localBuilder) main(ctx context.Context, requestPath, sourceDir, outputD
 	if err := b.ensureFlutterRustBridge(ctx, sourceDir, toolchain); err != nil {
 		return err
 	}
-	python := b.toolPath(b.pythonName(), toolchain["BETTERDESK_CLIENT_PYTHON"])
+	python := b.toolPath(b.pythonName(), toolchain["NEODESK_CLIENT_PYTHON"])
 	args := []string{"build.py", "--flutter"}
-	if strings.ToLower(jsTrim(b.get("BETTERDESK_CLIENT_BUILD_HWCODEC"))) == "on" && toolchain["VCPKG_ROOT"] != "" {
+	if strings.ToLower(jsTrim(b.get("NEODESK_CLIENT_BUILD_HWCODEC"))) == "on" && toolchain["VCPKG_ROOT"] != "" {
 		args = append(args, "--hwcodec")
 	}
 	if b.windows {
@@ -130,8 +130,8 @@ func (b *localBuilder) main(ctx context.Context, requestPath, sourceDir, outputD
 	for k, v := range toolchain {
 		compileEnv[k] = v
 	}
-	compileEnv["BETTERDESK_SUPPORT_CONFIG_B64"] = jsString(prop(request, "signed_config_b64"))
-	compileEnv["BETTERDESK_FORCE_LOCAL_CARGO_TARGET"] = "1"
+	compileEnv["NEODESK_SUPPORT_CONFIG_B64"] = jsString(prop(request, "signed_config_b64"))
+	compileEnv["NEODESK_FORCE_LOCAL_CARGO_TARGET"] = "1"
 	build, err := b.run(ctx, python, args, sourceDir, compileEnv)
 	if err != nil {
 		return err
@@ -179,7 +179,7 @@ func (b *localBuilder) main(ctx context.Context, requestPath, sourceDir, outputD
 		"client_commit", or(prop(request, "clientCommit"), nil),
 		"external_config", false,
 		"assets", assets,
-		"builder", "betterdesk-local",
+		"builder", "neodesk-local",
 	)
 	if err := writeFileMode(filepath.Join(outputDir, "manifest.json"), []byte(dbText(stringifyIndent(manifest)+"\n")), 0o600); err != nil {
 		return err
@@ -188,7 +188,7 @@ func (b *localBuilder) main(ctx context.Context, requestPath, sourceDir, outputD
 	return nil
 }
 
-// ensureBuildCapacity needs BETTERDESK_CLIENT_BUILD_MIN_FREE_MB
+// ensureBuildCapacity needs NEODESK_CLIENT_BUILD_MIN_FREE_MB
 // (minFreeMB) free below the output folder.
 func (b *localBuilder) ensureBuildCapacity(ctx context.Context, outputDir string) error {
 	free, err := freeBytes(outputDir)
@@ -201,7 +201,7 @@ func (b *localBuilder) ensureBuildCapacity(ctx context.Context, outputDir string
 			return err
 		}
 	}
-	minimum := minFreeMB(b.get("BETTERDESK_CLIENT_BUILD_MIN_FREE_MB"))
+	minimum := minFreeMB(b.get("NEODESK_CLIENT_BUILD_MIN_FREE_MB"))
 	freeMB := free / (1024 * 1024)
 	if freeMB < minimum {
 		return codeError("local_builder_disk_space_insufficient:" + jsString(float64(freeMB)) + "MB<" + jsString(float64(minimum)) + "MB")
@@ -220,21 +220,21 @@ func minFreeMB(raw string) int64 {
 }
 
 // loadVisualStudioEnvironment would take the Visual Studio environment
-// from BETTERDESK_CLIENT_VSDEVCMD on Windows. The command shell is not on
+// from NEODESK_CLIENT_VSDEVCMD on Windows. The command shell is not on
 // the provider's list of tools, so the step refuses (BUGS).
 func (b *localBuilder) loadVisualStudioEnvironment(ctx context.Context, env map[string]string) (map[string]string, error) {
 	if !b.windows {
 		return env, nil
 	}
-	vsDevCmd := env["BETTERDESK_CLIENT_VSDEVCMD"]
+	vsDevCmd := env["NEODESK_CLIENT_VSDEVCMD"]
 	if vsDevCmd == "" {
-		vsDevCmd = b.get("BETTERDESK_CLIENT_VSDEVCMD")
+		vsDevCmd = b.get("NEODESK_CLIENT_VSDEVCMD")
 	}
 	if vsDevCmd == "" {
 		return env, nil
 	}
 	if !exists(vsDevCmd) {
-		return nil, codeError("local_builder_toolchain_invalid:BETTERDESK_CLIENT_VSDEVCMD")
+		return nil, codeError("local_builder_toolchain_invalid:NEODESK_CLIENT_VSDEVCMD")
 	}
 	shell := b.get("ComSpec")
 	if shell == "" {
@@ -255,13 +255,13 @@ func (b *localBuilder) ensureFlutterRustBridge(ctx context.Context, sourceDir st
 	if exists(bridgeRust) && exists(bridgeDart) {
 		return nil
 	}
-	codegenRoot := b.get("BETTERDESK_CLIENT_BRIDGE_CODEGEN_ROOT")
+	codegenRoot := b.get("NEODESK_CLIENT_BRIDGE_CODEGEN_ROOT")
 	if codegenRoot == "" {
 		codegenRoot = filepath.Join(b.toolchainRoot(), "bridge-codegen")
 	}
 	codegen := b.toolPath("flutter_rust_bridge_codegen", filepath.Join(codegenRoot, "bin", "flutter_rust_bridge_codegen"))
-	cargo := b.toolPath("cargo", env["BETTERDESK_CLIENT_CARGO"])
-	flutter := b.toolPath("flutter", env["BETTERDESK_CLIENT_FLUTTER"])
+	cargo := b.toolPath("cargo", env["NEODESK_CLIENT_CARGO"])
+	flutter := b.toolPath("flutter", env["NEODESK_CLIENT_FLUTTER"])
 	dart := b.toolPath("dart", filepath.Join(filepath.Dir(flutter), "cache", "dart-sdk", "bin", "dart"))
 	if err := os.MkdirAll(codegenRoot, 0o777); err != nil {
 		return nodeFSError(err, "mkdir", codegenRoot)
@@ -380,39 +380,39 @@ func generationOf(request any) string { return jsString(prop(request, "generatio
 func (b *localBuilder) packageLinuxDeb(ctx context.Context, request any, target *goapi.Object, bundle linuxBundle, outputDir string) (string, error) {
 	root := filepath.Join(outputDir, "packages", bundle.targetName+"-deb")
 	_ = os.RemoveAll(root)
-	for _, dir := range []string{filepath.Join(root, "DEBIAN"), filepath.Join(root, "opt", "betterdesk-support")} {
+	for _, dir := range []string{filepath.Join(root, "DEBIAN"), filepath.Join(root, "opt", "neodesk-support")} {
 		if err := os.MkdirAll(dir, 0o777); err != nil {
 			return "", nodeFSError(err, "mkdir", dir)
 		}
 	}
-	if err := copyTree(filepath.Join(bundle.stage, "bundle"), filepath.Join(root, "opt", "betterdesk-support")); err != nil {
+	if err := copyTree(filepath.Join(bundle.stage, "bundle"), filepath.Join(root, "opt", "neodesk-support")); err != nil {
 		return "", err
 	}
 	if err := os.MkdirAll(filepath.Join(root, "usr", "bin"), 0o777); err != nil {
 		return "", err
 	}
-	if err := os.Symlink("/opt/betterdesk-support/betterdesk", filepath.Join(root, "usr", "bin", "betterdesk")); err != nil {
-		return "", nodeFSError(err, "symlink", "/opt/betterdesk-support/betterdesk")
+	if err := os.Symlink("/opt/neodesk-support/neodesk", filepath.Join(root, "usr", "bin", "neodesk")); err != nil {
+		return "", nodeFSError(err, "symlink", "/opt/neodesk-support/neodesk")
 	}
 	debArch := "amd64"
 	if target.Get("arch") == "arm64" {
 		debArch = "arm64"
 	}
 	control := strings.Join([]string{
-		"Package: betterdesk-support",
+		"Package: neodesk-support",
 		"Version: " + packageVersion(request),
 		"Architecture: " + debArch,
 		"Section: net",
 		"Priority: optional",
-		"Maintainer: BetterDesk",
-		"Description: BetterDesk Support client",
+		"Maintainer: NeoDesk",
+		"Description: NeoDesk Support client",
 		" Embedded support client with signed server configuration.",
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(root, "DEBIAN", "control"), []byte(control), 0o666); err != nil {
 		return "", err
 	}
-	artifact := filepath.Join(outputDir, "betterdesk-support-"+generationOf(request)+"-linux-"+bundle.arch+".deb")
+	artifact := filepath.Join(outputDir, "neodesk-support-"+generationOf(request)+"-linux-"+bundle.arch+".deb")
 	res, err := b.run(ctx, "dpkg-deb", []string{"--build", root, artifact}, "", nil)
 	if err != nil {
 		return "", err
@@ -441,30 +441,30 @@ func (b *localBuilder) packageLinuxRpm(ctx context.Context, request any, target 
 		rpmArch = "aarch64"
 	}
 	spec := strings.Join([]string{
-		"Name: betterdesk-support",
+		"Name: neodesk-support",
 		"Version: " + version,
 		"Release: 1",
-		"Summary: BetterDesk Support client",
+		"Summary: NeoDesk Support client",
 		"License: AGPL-3.0",
 		"BuildArch: " + rpmArch,
 		"%description",
-		"BetterDesk Support client with signed server configuration.",
+		"NeoDesk Support client with signed server configuration.",
 		"%prep",
 		"%build",
 		"%install",
-		"mkdir -p %{buildroot}/opt/betterdesk-support",
-		"cp -a %{_sourcedir}/bundle/bundle/. %{buildroot}/opt/betterdesk-support/",
+		"mkdir -p %{buildroot}/opt/neodesk-support",
+		"cp -a %{_sourcedir}/bundle/bundle/. %{buildroot}/opt/neodesk-support/",
 		"mkdir -p %{buildroot}/usr/bin",
-		"ln -s /opt/betterdesk-support/betterdesk %{buildroot}/usr/bin/betterdesk",
+		"ln -s /opt/neodesk-support/neodesk %{buildroot}/usr/bin/neodesk",
 		"%files",
-		"/opt/betterdesk-support",
-		"/usr/bin/betterdesk",
+		"/opt/neodesk-support",
+		"/usr/bin/neodesk",
 		"%changelog",
-		"* Mon Oct 05 2026 BetterDesk <support@betterdesk.local> - 0.0.0-1",
-		"- Build signed BetterDesk Support client.",
+		"* Mon Oct 05 2026 NeoDesk <support@neodesk.local> - 0.0.0-1",
+		"- Build signed NeoDesk Support client.",
 		"",
 	}, "\n")
-	specPath := filepath.Join(specDir, "betterdesk-support.spec")
+	specPath := filepath.Join(specDir, "neodesk-support.spec")
 	if err := os.WriteFile(specPath, []byte(spec), 0o666); err != nil {
 		return "", err
 	}
@@ -475,8 +475,8 @@ func (b *localBuilder) packageLinuxRpm(ctx context.Context, request any, target 
 	if res.Code != 0 {
 		return "", codeError("local_builder_rpm_failed:" + lastChars(res.Stderr, 2000))
 	}
-	artifact := filepath.Join(outputDir, "betterdesk-support-"+generationOf(request)+"-linux-"+bundle.arch+".rpm")
-	built := filepath.Join(top, "RPMS", rpmArch, "betterdesk-support-"+version+"-1."+rpmArch+".rpm")
+	artifact := filepath.Join(outputDir, "neodesk-support-"+generationOf(request)+"-linux-"+bundle.arch+".rpm")
+	built := filepath.Join(top, "RPMS", rpmArch, "neodesk-support-"+version+"-1."+rpmArch+".rpm")
 	if !exists(built) {
 		return "", codeError("local_builder_rpm_output_missing:" + built)
 	}
@@ -489,37 +489,37 @@ func (b *localBuilder) packageLinuxRpm(ctx context.Context, request any, target 
 func (b *localBuilder) packageLinuxArch(ctx context.Context, request any, target *goapi.Object, bundle linuxBundle, outputDir string) (string, error) {
 	root := filepath.Join(outputDir, "packages", bundle.targetName+"-arch")
 	_ = os.RemoveAll(root)
-	if err := os.MkdirAll(filepath.Join(root, "opt", "betterdesk-support"), 0o777); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, "opt", "neodesk-support"), 0o777); err != nil {
 		return "", err
 	}
-	if err := copyTree(filepath.Join(bundle.stage, "bundle"), filepath.Join(root, "opt", "betterdesk-support")); err != nil {
+	if err := copyTree(filepath.Join(bundle.stage, "bundle"), filepath.Join(root, "opt", "neodesk-support")); err != nil {
 		return "", err
 	}
 	if err := os.MkdirAll(filepath.Join(root, "usr", "bin"), 0o777); err != nil {
 		return "", err
 	}
-	if err := os.Symlink("/opt/betterdesk-support/betterdesk", filepath.Join(root, "usr", "bin", "betterdesk")); err != nil {
-		return "", nodeFSError(err, "symlink", "/opt/betterdesk-support/betterdesk")
+	if err := os.Symlink("/opt/neodesk-support/neodesk", filepath.Join(root, "usr", "bin", "neodesk")); err != nil {
+		return "", nodeFSError(err, "symlink", "/opt/neodesk-support/neodesk")
 	}
 	arch := "x86_64"
 	if target.Get("arch") == "arm64" {
 		arch = "aarch64"
 	}
 	info := strings.Join([]string{
-		"pkgname = betterdesk-support",
-		"pkgbase = betterdesk-support",
+		"pkgname = neodesk-support",
+		"pkgbase = neodesk-support",
 		"pkgver = 0.0.0-1",
-		"pkgdesc = BetterDesk Support client",
-		"url = https://betterdesk.eu",
+		"pkgdesc = NeoDesk Support client",
+		"url = https://neodesk.eu",
 		"builddate = 1791158400",
-		"packager = BetterDesk",
+		"packager = NeoDesk",
 		"arch = " + arch,
 		"",
 	}, "\n")
 	if err := os.WriteFile(filepath.Join(root, ".PKGINFO"), []byte(info), 0o666); err != nil {
 		return "", err
 	}
-	artifact := filepath.Join(outputDir, "betterdesk-support-"+generationOf(request)+"-linux-"+bundle.arch+".pkg.tar.zst")
+	artifact := filepath.Join(outputDir, "neodesk-support-"+generationOf(request)+"-linux-"+bundle.arch+".pkg.tar.zst")
 	res, err := b.run(ctx, "tar", []string{"--zstd", "-cf", artifact, "."}, root, nil)
 	if err != nil {
 		return "", err
@@ -550,7 +550,7 @@ func (b *localBuilder) packageTarget(ctx context.Context, request any, target *g
 		if err := assertNoExternalConfig(stage); err != nil {
 			return "", err
 		}
-		zipPath := filepath.Join(outputDir, "betterdesk-support-"+generationOf(request)+"-"+targetName+".zip")
+		zipPath := filepath.Join(outputDir, "neodesk-support-"+generationOf(request)+"-"+targetName+".zip")
 		if err := writeFolderZip(stage, targetName, zipPath); err != nil {
 			return "", err
 		}
@@ -572,7 +572,7 @@ func (b *localBuilder) packageTarget(ctx context.Context, request any, target *g
 			}
 		}
 	} else {
-		source = filepath.Join(sourceDir, "flutter", "build", "macos", "Build", "Products", "Release", "BetterDesk Client.app")
+		source = filepath.Join(sourceDir, "flutter", "build", "macos", "Build", "Products", "Release", "NeoDesk Client.app")
 	}
 	if !exists(source) {
 		return "", codeError("local_builder_output_missing:" + source)
@@ -598,7 +598,7 @@ func (b *localBuilder) packageTarget(ctx context.Context, request any, target *g
 	if err := assertNoExternalConfig(stage); err != nil {
 		return "", err
 	}
-	archivePath := filepath.Join(outputDir, "betterdesk-support-"+generationOf(request)+"-"+targetName+".tar.gz")
+	archivePath := filepath.Join(outputDir, "neodesk-support-"+generationOf(request)+"-"+targetName+".tar.gz")
 	res, err := b.run(ctx, "tar", []string{"-czf", archivePath, targetName}, filepath.Dir(stage), nil)
 	if err != nil {
 		return "", err

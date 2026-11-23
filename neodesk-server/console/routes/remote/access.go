@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/guestaccess"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/reqquery"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/guestaccess"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/reqquery"
 )
 
 // grants are what the access check of the viewer found besides a session:

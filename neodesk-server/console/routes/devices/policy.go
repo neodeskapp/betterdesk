@@ -3,10 +3,10 @@ package devices
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/api"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/api"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
 // The unattended access policy of a device and the connect password the

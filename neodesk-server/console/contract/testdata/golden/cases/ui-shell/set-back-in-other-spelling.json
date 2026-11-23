@@ -67,8 +67,8 @@
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
-     "bd_ui_shell=<value>; Max-Age=<n>; Path=/; Expires=<date>; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+     "nd_ui_shell=<value>; Max-Age=<n>; Path=/; Expires=<date>; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",

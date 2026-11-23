@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify pinned BetterDesk RDP/VNC gateway sources and license gates.
+"""Verify pinned NeoDesk RDP/VNC gateway sources and license gates.
 
 This script intentionally never updates the manifest. CI can report upstream
 updates, but changing a dependency requires a reviewed pull request.
@@ -32,7 +32,7 @@ class VerificationError(RuntimeError):
 
 
 def request_json(url: str) -> object:
-    headers = {"User-Agent": "BetterDesk-remote-gateway-verifier/1"}
+    headers = {"User-Agent": "NeoDesk-remote-gateway-verifier/1"}
     token = os.environ.get("GITHUB_TOKEN", "").strip()
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -47,7 +47,7 @@ def request_json(url: str) -> object:
 
 
 def download(url: str) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": "BetterDesk-remote-gateway-verifier/1"})
+    request = urllib.request.Request(url, headers={"User-Agent": "NeoDesk-remote-gateway-verifier/1"})
     try:
         with urllib.request.urlopen(request, timeout=120) as response:
             data = response.read()

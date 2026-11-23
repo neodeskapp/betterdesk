@@ -2,7 +2,7 @@
  "id": "automation-device/result-with-session-without-csrf-token",
  "request": {
   "method": "POST",
-  "path": "/api/bd/commands/999999999/result",
+  "path": "/api/nd/commands/999999999/result",
   "body": {
    "result": "demo-reception-02",
    "status": "completed"
@@ -69,7 +69,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",

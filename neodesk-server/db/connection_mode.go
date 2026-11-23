@@ -22,7 +22,7 @@ const (
 	ConnectionRejectionModeMismatch = "mode_mismatch"
 
 	// VerifiedIdentityKind is the telemetry snapshot written only from a
-	// signed BetterDesk envelope. Plaintext heartbeats must not overwrite it.
+	// signed NeoDesk envelope. Plaintext heartbeats must not overwrite it.
 	VerifiedIdentityKind = "identity_verified"
 
 	connectionModeReasonMax   = 500

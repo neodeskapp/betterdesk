@@ -15,7 +15,7 @@ func TestStartAppliesTheEnvDefaults(t *testing.T) {
 	if err := os.WriteFile(path, []byte("SESSION_SECRET=x\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("BETTERDESK_ENV_FILE", path)
+	t.Setenv("NEODESK_ENV_FILE", path)
 	t.Setenv("SMTP_PORT", "")
 	t.Setenv("SESSION_SECRET", "from the service")
 	// The start fills the process environment; the other tests get it back

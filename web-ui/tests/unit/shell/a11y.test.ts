@@ -24,7 +24,7 @@ beforeEach(() => {
 
 describe('sanitize (accessibility.js sanitize)', () => {
 	test('the same key and defaults as the old panel', () => {
-		expect(STORAGE_KEY).toBe('betterdesk_accessibility_v1');
+		expect(STORAGE_KEY).toBe('neodesk_accessibility_v1');
 		expect(sanitize({})).toEqual(DEFAULTS);
 		expect(sanitize(null)).toEqual(DEFAULTS);
 		expect(sanitize('x')).toEqual(DEFAULTS);

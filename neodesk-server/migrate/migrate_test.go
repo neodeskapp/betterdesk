@@ -15,7 +15,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // execSQLite runs statements on the SQLite file at path, creating it in WAL
@@ -261,7 +261,7 @@ func TestNodeJS2GoRefusesASourceAsDestination(t *testing.T) {
 func TestRust2GoReplacesAnExistingDestinationOnlyWithOverwrite(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "db_v2.sqlite3")
-	dst := filepath.Join(dir, "betterdesk.sqlite3")
+	dst := filepath.Join(dir, "neodesk.sqlite3")
 	execSQLite(t, src, rustPeerTable,
 		`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'01', '123456789', x'02', x'03', '{}')`)
 	oldDestination(t, dst)
@@ -300,7 +300,7 @@ func TestRust2GoReplacesAnExistingDestinationOnlyWithOverwrite(t *testing.T) {
 			t.Errorf("a new destination has mode %v, want 0600", info.Mode())
 		}
 	}
-	if left := leftovers(t, dir, "db_v2.sqlite3", "db_v2.sqlite3-wal", "db_v2.sqlite3-shm", "betterdesk.sqlite3", "fresh.sqlite3"); len(left) != 0 {
+	if left := leftovers(t, dir, "db_v2.sqlite3", "db_v2.sqlite3-wal", "db_v2.sqlite3-shm", "neodesk.sqlite3", "fresh.sqlite3"); len(left) != 0 {
 		t.Errorf("files left behind: %v", left)
 	}
 }
@@ -308,7 +308,7 @@ func TestRust2GoReplacesAnExistingDestinationOnlyWithOverwrite(t *testing.T) {
 func TestFailedMigrationLeavesTheDestinationAlone(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "db_v2.sqlite3")
-	dst := filepath.Join(dir, "betterdesk.sqlite3")
+	dst := filepath.Join(dir, "neodesk.sqlite3")
 	// A peer table without the info column: the copy fails on it.
 	execSQLite(t, src, "CREATE TABLE peer (id TEXT, uuid TEXT, pk BLOB, note TEXT, created_at TEXT)",
 		"INSERT INTO peer VALUES ('123456789', 'u', x'00', '', '2026-01-01 00:00:00')")
@@ -320,7 +320,7 @@ func TestFailedMigrationLeavesTheDestinationAlone(t *testing.T) {
 	if !tableExistsIn(t, dst, "keep") || countRows(t, dst, "keep") != 1 {
 		t.Error("the failed migration changed the destination")
 	}
-	if left := leftovers(t, dir, "db_v2.sqlite3", "db_v2.sqlite3-wal", "db_v2.sqlite3-shm", "betterdesk.sqlite3", "fresh.sqlite3"); len(left) != 0 {
+	if left := leftovers(t, dir, "db_v2.sqlite3", "db_v2.sqlite3-wal", "db_v2.sqlite3-shm", "neodesk.sqlite3", "fresh.sqlite3"); len(left) != 0 {
 		t.Errorf("files left behind: %v", left)
 	}
 }
@@ -328,7 +328,7 @@ func TestFailedMigrationLeavesTheDestinationAlone(t *testing.T) {
 func TestOverwriteDropsTheOldDatabasesWAL(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "db_v2.sqlite3")
-	dst := filepath.Join(dir, "betterdesk.sqlite3")
+	dst := filepath.Join(dir, "neodesk.sqlite3")
 	execSQLite(t, src, rustPeerTable,
 		`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'01', '123456789', x'02', x'03', '{}')`)
 
@@ -389,7 +389,7 @@ func TestOverwriteDropsTheOldDatabasesWAL(t *testing.T) {
 }
 
 // pgDSN returns the DSN of a fresh schema on the server named by
-// BETTERDESK_TEST_POSTGRES_DSN, with the tool's PostgreSQL schema in it
+// NEODESK_TEST_POSTGRES_DSN, with the tool's PostgreSQL schema in it
 // plus the statements given, or skips the test when no server is set.
 func pgDSN(t *testing.T, stmts ...string) string {
 	t.Helper()
@@ -486,7 +486,7 @@ func countPG(t *testing.T, dsn, table string) int {
 func TestNodeJS2GoCopiesAPeerWithoutNote(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "db_v2.sqlite3")
-	dst := filepath.Join(dir, "betterdesk.sqlite3")
+	dst := filepath.Join(dir, "neodesk.sqlite3")
 	execSQLite(t, src, nodePeerTable,
 		`INSERT INTO peer (guid, id, uuid, pk, note, info) VALUES (x'01', '123456789', x'02', x'03', NULL, '{}')`)
 	if err := runNodeJS2Go(src, "", dst, false); err != nil {
@@ -500,7 +500,7 @@ func TestNodeJS2GoCopiesAPeerWithoutNote(t *testing.T) {
 func TestNodeJS2GoFailsOnAPeerItCannotRead(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "db_v2.sqlite3")
-	dst := filepath.Join(dir, "betterdesk.sqlite3")
+	dst := filepath.Join(dir, "neodesk.sqlite3")
 	execSQLite(t, src, strings.Replace(nodePeerTable, "info TEXT NOT NULL", "info TEXT", 1),
 		`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'01', '111111111', x'02', x'03', '{}')`,
 		`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'04', '222222222', x'05', x'06', NULL)`)
@@ -516,7 +516,7 @@ func TestNodeJS2GoFailsOnAUserItCannotWrite(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "db_v2.sqlite3")
 	auth := filepath.Join(dir, "auth.sqlite3")
-	dst := filepath.Join(dir, "betterdesk.sqlite3")
+	dst := filepath.Join(dir, "neodesk.sqlite3")
 	execSQLite(t, src, nodePeerTable)
 	execSQLite(t, auth, "CREATE TABLE users (username TEXT, password_hash TEXT, role TEXT, created_at TEXT, last_login TEXT)",
 		"INSERT INTO users VALUES ('admin', 'hash', 'admin', NULL, NULL)",
@@ -532,7 +532,7 @@ func TestNodeJS2GoFailsOnAUserItCannotWrite(t *testing.T) {
 func TestRust2GoFailsOnAPeerItCannotRead(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "db_v2.sqlite3")
-	dst := filepath.Join(dir, "betterdesk.sqlite3")
+	dst := filepath.Join(dir, "neodesk.sqlite3")
 	execSQLite(t, src, strings.Replace(rustPeerTable, "info TEXT NOT NULL", "info TEXT", 1),
 		`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'01', '111111111', x'02', x'03', '{}')`,
 		`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'04', '222222222', x'05', x'06', NULL)`)
@@ -744,7 +744,7 @@ func rollbackJournal(t *testing.T, path string, stmts ...string) {
 func TestRust2GoReadsASourceInRollbackJournalMode(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "db_v2.sqlite3")
-	dst := filepath.Join(dir, "betterdesk.sqlite3")
+	dst := filepath.Join(dir, "neodesk.sqlite3")
 	rollbackJournal(t, src, rustPeerTable,
 		`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'01', '123456789', x'02', x'03', '{}')`)
 	if err := runRust2Go(src, dst, false); err != nil {

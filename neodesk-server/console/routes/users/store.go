@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // The queries on accounts and their strategy assignments that only this

@@ -1,5 +1,5 @@
 // Package storetest gives tests a console database: SQLite always, and
-// PostgreSQL too when BETTERDESK_TEST_POSTGRES_DSN names a server.
+// PostgreSQL too when NEODESK_TEST_POSTGRES_DSN names a server.
 package storetest
 
 import (
@@ -13,12 +13,12 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // PostgresEnv is the environment variable with the DSN of a PostgreSQL
 // server tests may use. Each test gets its own schema there.
-const PostgresEnv = "BETTERDESK_TEST_POSTGRES_DSN"
+const PostgresEnv = "NEODESK_TEST_POSTGRES_DSN"
 
 // SQLite returns an empty SQLite database in the test's temp directory.
 func SQLite(t *testing.T) *store.DB {
@@ -32,7 +32,7 @@ func SQLite(t *testing.T) *store.DB {
 }
 
 // Postgres returns a database in a fresh schema of the server named by
-// BETTERDESK_TEST_POSTGRES_DSN, or skips the test when it is not set.
+// NEODESK_TEST_POSTGRES_DSN, or skips the test when it is not set.
 func Postgres(t *testing.T) *store.DB {
 	t.Helper()
 	dsn := os.Getenv(PostgresEnv)

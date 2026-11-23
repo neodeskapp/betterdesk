@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
 // nodeCommands is testdata/node_commands.json, recorded from the old
@@ -160,8 +160,8 @@ func (f *fakeRun) run(ctx context.Context, name string, args ...string) ([]byte,
 // allowed service in it (SM8). The old service matched only the last line,
 // which has no line end.
 var crlfServices = []any{
-	map[string]any{"name": "BetterDeskServer", "active": "active", "sub": "running", "description": "BetterDesk Server"},
-	map[string]any{"name": "BetterDeskConsole", "active": "inactive", "sub": "stopped", "description": "BetterDesk Console"},
+	map[string]any{"name": "NeoDeskServer", "active": "active", "sub": "running", "description": "NeoDesk Server"},
+	map[string]any{"name": "NeoDeskConsole", "active": "inactive", "sub": "stopped", "description": "NeoDesk Console"},
 }
 
 // TestNodeServiceList replays the service lists the old service made of

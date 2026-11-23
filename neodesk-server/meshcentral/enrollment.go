@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // MeshEnrollment is a new mesh agent's request to be enrolled, with what

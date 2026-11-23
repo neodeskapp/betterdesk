@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // TestParseStoredTime reads stored times in a process whose local time is

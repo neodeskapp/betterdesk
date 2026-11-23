@@ -15,8 +15,8 @@ import {
   gauge,
   parseMessage,
   toggle,
-} from 'betterdesk-cdap';
-import { authApiKey, authDeviceToken, authUserPassword } from 'betterdesk-cdap/protocol';
+} from 'neodesk-cdap';
+import { authApiKey, authDeviceToken, authUserPassword } from 'neodesk-cdap/protocol';
 
 /** The bridge's private parts the tests drive without a network */
 interface BridgeInternals {
@@ -185,7 +185,7 @@ test('a command gets an answer the gateway reads and its value goes out', async 
 
 test('the package loads with require, as the README shows', () => {
   const require = createRequire(import.meta.url);
-  const sdk = require('betterdesk-cdap');
+  const sdk = require('neodesk-cdap');
   assert.deepEqual(Object.keys(sdk).sort(), [
     'Action',
     'CDAPBridge',
@@ -204,6 +204,6 @@ test('the package loads with require, as the README shows', () => {
     'textWidget',
     'toggle',
   ]);
-  assert.equal(typeof require('betterdesk-cdap/widgets').gauge, 'function');
-  assert.equal(typeof require('betterdesk-cdap/protocol').authApiKey, 'function');
+  assert.equal(typeof require('neodesk-cdap/widgets').gauge, 'function');
+  assert.equal(typeof require('neodesk-cdap/protocol').authApiKey, 'function');
 });

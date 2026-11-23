@@ -59,7 +59,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -99,7 +99,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
@@ -167,7 +167,7 @@
        "exists": false,
        "id": "go-audit-log",
        "mtime": null,
-       "path": "/var/log/betterdesk/audit.jsonl",
+       "path": "/var/log/neodesk/audit.jsonl",
        "readable": false,
        "requiresRestart": "goserver",
        "size": 0,
@@ -179,7 +179,7 @@
        "exists": false,
        "id": "systemd-console",
        "mtime": null,
-       "path": "/etc/systemd/system/betterdesk-console.service",
+       "path": "/etc/systemd/system/neodesk-console.service",
        "readable": false,
        "requiresRestart": "systemd",
        "size": 0,
@@ -191,7 +191,7 @@
        "exists": false,
        "id": "systemd-server",
        "mtime": null,
-       "path": "/etc/systemd/system/betterdesk-server.service",
+       "path": "/etc/systemd/system/neodesk-server.service",
        "readable": false,
        "requiresRestart": "systemd",
        "size": 0,
@@ -203,7 +203,7 @@
        "exists": false,
        "id": "build-env",
        "mtime": null,
-       "path": "/etc/betterdesk/build.env",
+       "path": "/etc/neodesk/build.env",
        "readable": false,
        "requiresRestart": "none",
        "size": 0,

@@ -57,14 +57,14 @@ func TestAPIRedirects(t *testing.T) {
 // A release file must be one of the release found, on github.com.
 func TestDownloadAddress(t *testing.T) {
 	f := newFakeGitHub()
-	f.on("GET https://github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0/manifest.json", func(*http.Request) *http.Response {
+	f.on("GET https://github.com/neodeskapp/NeoDesk/releases/download/v1.0.0/manifest.json", func(*http.Request) *http.Response {
 		return respond(200, "ok", nil)
 	})
 	g := testClient(f, "")
-	want := releaseFile{owner: "UNITRONIX", repo: "BetterDesk", tag: "v1.0.0", name: "manifest.json"}
+	want := releaseFile{owner: "neodeskapp", repo: "NeoDesk", tag: "v1.0.0", name: "manifest.json"}
 	for _, address := range []string{
-		"https://github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0/manifest.json",
-		"https://GITHUB.com/unitronix/betterdesk/releases/download/v1.0.0/manifest.json",
+		"https://github.com/neodeskapp/NeoDesk/releases/download/v1.0.0/manifest.json",
+		"https://GITHUB.com/NEODESKAPP/neodesk/releases/download/v1.0.0/manifest.json",
 	} {
 		var buf bytes.Buffer
 		if _, err := g.download(context.Background(), address, want, 100, &buf); err != nil && !strings.Contains(err.Error(), "HTTP 404") {
@@ -72,17 +72,17 @@ func TestDownloadAddress(t *testing.T) {
 		}
 	}
 	for _, address := range []string{
-		"http://github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0/manifest.json",
-		"https://github.com:444/UNITRONIX/BetterDesk/releases/download/v1.0.0/manifest.json",
-		"https://user@github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0/manifest.json",
-		"https://evil.example/UNITRONIX/BetterDesk/releases/download/v1.0.0/manifest.json",
-		"https://github.com/other/BetterDesk/releases/download/v1.0.0/manifest.json",
-		"https://github.com/UNITRONIX/BetterDesk/releases/download/v0.9.0/manifest.json",
-		"https://github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0/manifest.sig",
-		"https://github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0/x/../manifest.json",
-		"https://github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0/manifest.json?x=1",
-		"https://github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0/manifest.json#x",
-		"https://github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0%2Fmanifest.json",
+		"http://github.com/neodeskapp/NeoDesk/releases/download/v1.0.0/manifest.json",
+		"https://github.com:444/neodeskapp/NeoDesk/releases/download/v1.0.0/manifest.json",
+		"https://user@github.com/neodeskapp/NeoDesk/releases/download/v1.0.0/manifest.json",
+		"https://evil.example/neodeskapp/NeoDesk/releases/download/v1.0.0/manifest.json",
+		"https://github.com/other/NeoDesk/releases/download/v1.0.0/manifest.json",
+		"https://github.com/neodeskapp/NeoDesk/releases/download/v0.9.0/manifest.json",
+		"https://github.com/neodeskapp/NeoDesk/releases/download/v1.0.0/manifest.sig",
+		"https://github.com/neodeskapp/NeoDesk/releases/download/v1.0.0/x/../manifest.json",
+		"https://github.com/neodeskapp/NeoDesk/releases/download/v1.0.0/manifest.json?x=1",
+		"https://github.com/neodeskapp/NeoDesk/releases/download/v1.0.0/manifest.json#x",
+		"https://github.com/neodeskapp/NeoDesk/releases/download/v1.0.0%2Fmanifest.json",
 		"",
 	} {
 		var buf bytes.Buffer
@@ -94,10 +94,10 @@ func TestDownloadAddress(t *testing.T) {
 		t.Errorf("requests sent for refused addresses: %v", f.requests)
 	}
 	var big bytes.Buffer
-	f.on("GET https://github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0/manifest.json", func(*http.Request) *http.Response {
+	f.on("GET https://github.com/neodeskapp/NeoDesk/releases/download/v1.0.0/manifest.json", func(*http.Request) *http.Response {
 		return respond(200, strings.Repeat("x", 101), nil)
 	})
-	if _, err := g.download(context.Background(), "https://github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0/manifest.json", want, 100, &big); err == nil {
+	if _, err := g.download(context.Background(), "https://github.com/neodeskapp/NeoDesk/releases/download/v1.0.0/manifest.json", want, 100, &big); err == nil {
 		t.Error("a file over the limit was taken")
 	}
 }
@@ -130,22 +130,22 @@ func TestVersions(t *testing.T) {
 		}
 	}
 	for out, want := range map[string][2]string{
-		"betterdesk-server 3.6.0 (built 2026-11-18, commit " + newCommit + ")\n": {"3.6.0", newCommit},
-		"betterdesk-server 3.5.224 (built unknown)":                              {"3.5.224", ""},
+		"neodesk-server 3.6.0 (built 2026-11-18, commit " + newCommit + ")\n": {"3.6.0", newCommit},
+		"neodesk-server 3.5.224 (built unknown)":                              {"3.5.224", ""},
 	} {
 		v, c, ok := ParseVersionOutput(out)
 		if !ok || v != want[0] || c != want[1] {
 			t.Errorf("%q: %q %q %v", out, v, c, ok)
 		}
 	}
-	for _, out := range []string{"", "betterdesk 3.6.0 (built x)", "betterdesk-server 3.6.0", "x\nbetterdesk-server 3.6.0 (built x)"} {
+	for _, out := range []string{"", "neodesk 3.6.0 (built x)", "neodesk-server 3.6.0", "x\nneodesk-server 3.6.0 (built x)"} {
 		if _, _, ok := ParseVersionOutput(out); ok {
 			t.Errorf("%q was read", out)
 		}
 	}
 	for platform, want := range map[[2]string]string{
-		{"linux", "amd64"}: "betterdesk-server-linux-amd64", {"linux", "arm"}: "betterdesk-server-linux-armv7",
-		{"windows", "amd64"}: "betterdesk-server-windows-amd64.exe", {"linux", "arm64"}: "betterdesk-server-linux-arm64",
+		{"linux", "amd64"}: "neodesk-server-linux-amd64", {"linux", "arm"}: "neodesk-server-linux-armv7",
+		{"windows", "amd64"}: "neodesk-server-windows-amd64.exe", {"linux", "arm64"}: "neodesk-server-linux-arm64",
 	} {
 		if got := AssetName(platform[0], platform[1]); got != want {
 			t.Errorf("%v: %s", platform, got)
@@ -156,14 +156,14 @@ func TestVersions(t *testing.T) {
 // A body of unknown length (chunked) is cut at the limit as it streams.
 func TestDownloadLimitWithoutLength(t *testing.T) {
 	f := newFakeGitHub()
-	address := "https://github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0/manifest.json"
+	address := "https://github.com/neodeskapp/NeoDesk/releases/download/v1.0.0/manifest.json"
 	f.on("GET "+address, func(*http.Request) *http.Response {
 		res := respond(200, strings.Repeat("x", 101), nil)
 		res.ContentLength = -1
 		return res
 	})
 	g := testClient(f, "")
-	want := releaseFile{owner: "UNITRONIX", repo: "BetterDesk", tag: "v1.0.0", name: "manifest.json"}
+	want := releaseFile{owner: "neodeskapp", repo: "NeoDesk", tag: "v1.0.0", name: "manifest.json"}
 	var buf bytes.Buffer
 	if _, err := g.download(context.Background(), address, want, 100, &buf); err == nil || !strings.Contains(err.Error(), "larger than allowed") {
 		t.Fatalf("error %v", err)

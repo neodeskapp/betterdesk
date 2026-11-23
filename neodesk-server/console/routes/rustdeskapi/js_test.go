@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 func TestSanitize(t *testing.T) {

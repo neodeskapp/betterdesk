@@ -1,14 +1,21 @@
-# BetterDesk third-party notices
+# NeoDesk third-party notices
 
 This file is the release index for third-party material distributed with
-BetterDesk. It complements, but does not replace, the license text and notices
+NeoDesk. It complements, but does not replace, the license text and notices
 required by each dependency.
+
+## Upstream project
+
+NeoDesk started as a fork of BetterDesk by UNITRONIX
+(<https://github.com/UNITRONIX/BetterDesk>), under AGPL-3.0. Most of the
+server code is BetterDesk's, and its copyright lines and the licensing
+information in `LICENSE` stay as UNITRONIX wrote them.
 
 ## Source manifests
 
 The authoritative dependency manifests for a release are:
 
-- `betterdesk-server/go.mod` and `betterdesk-server/go.sum`
+- `neodesk-server/go.mod` and `neodesk-server/go.sum`
 - `web-ui/package.json` and `web-ui/package-lock.json`
 - `sdks/nodejs/package.json` and `sdks/nodejs/package-lock.json`
 - `sdks/python/pyproject.toml`
@@ -19,19 +26,19 @@ manifests with the matching source revision as an SBOM.
 
 ## Desktop client
 
-The BetterDesk desktop client is not in this repository. It is built in
-[neodeskapp/betterdesk-client](https://github.com/neodeskapp/betterdesk-client)
+The NeoDesk desktop client is not in this repository. It is built in
+[neodeskapp/neodesk-client](https://github.com/neodeskapp/neodesk-client)
 under AGPL-3.0, and its dependency manifests and notices are there. The
 server hands out its release packages for join and support codes
-(`betterdesk-server/console/clientrelease`): it downloads them from that
+(`neodesk-server/console/clientrelease`): it downloads them from that
 repository's releases, checks them against the signed checksums and serves
 them unchanged. The console's Support agents page imports agent releases
 from the same repository by default
-(`betterdesk-server/console/agentreleases`); those ship their own notices.
+(`neodesk-server/console/agentreleases`); those ship their own notices.
 
 ## Server code
 
-The Go server in `betterdesk-server/` links the modules in its `go.mod`. The
+The Go server in `neodesk-server/` links the modules in its `go.mod`. The
 console inside it uses one of them directly that the server did not use
 directly before:
 
@@ -40,12 +47,12 @@ directly before:
   console always has, also for names that are not in Latin script. The module
   was already part of the server through its database driver.
 
-`betterdesk-server/console/branding/idna_table.go` holds a table of how
+`neodesk-server/console/branding/idna_table.go` holds a table of how
 host names outside ASCII are mapped (Unicode 17.0 IDNA mapping, as Node.js
 22 applies it). It is data derived from the Unicode Character Database,
 copyright Unicode, Inc., under the Unicode License v3.
 
-The console's mail code in `betterdesk-server/console/mail/` follows other
+The console's mail code in `neodesk-server/console/mail/` follows other
 projects closely, so that mails and SMTP conversations stay what they were:
 
 - Nodemailer 10.4.0 (address parser, MIME message builder, SMTP client),
@@ -57,7 +64,7 @@ projects closely, so that mails and SMTP conversations stay what they were:
   derived from the Unicode Character Database (Unicode 15.0 and 17.0),
   copyright Unicode, Inc., under the Unicode License v3.
 
-`betterdesk-server/console/alerts/jsdate.go` reads dates the way
+`neodesk-server/console/alerts/jsdate.go` reads dates the way
 JavaScript's `Date.parse` does in Node.js. It follows the date parser of the
 V8 engine, copyright the V8 project authors, BSD 3-Clause License.
 
@@ -119,9 +126,9 @@ for; the drawings are unchanged.
 
 ## Compatibility components
 
-Code that talks to the stock RustDesk client follows a protocol BetterDesk
+Code that talks to the stock RustDesk client follows a protocol NeoDesk
 did not design. The provenance register at
-<https://betterde.sk/docs/development/provenance> holds the whole policy.
+<https://neode.sk/docs/development/provenance> holds the whole policy.
 `repotool check-provenance` checks that this section keeps its two parts.
 
 ### Clean-room workflow

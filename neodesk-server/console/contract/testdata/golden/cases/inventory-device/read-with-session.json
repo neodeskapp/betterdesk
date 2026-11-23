@@ -2,7 +2,7 @@
  "id": "inventory-device/read-with-session",
  "request": {
   "method": "GET",
-  "path": "/api/bd/inventory/900100001",
+  "path": "/api/nd/inventory/900100001",
   "notes": [
    "header Authorization: Bearer {secret:device_token}"
   ]
@@ -108,7 +108,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",

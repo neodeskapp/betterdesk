@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/devicegroups"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/devicegroups"
 )
 
 // Tests of the settings snapshot that need neither Node nor, unless a
@@ -65,7 +65,7 @@ func TestSnapshotRestoresAddressBooks(t *testing.T) {
 		in := newInstall(t, dialect)
 		in.seed(t)
 		s := in.snapshotService(t)
-		snapshot := parsedJSON(t, `{"_format":"betterdesk-backup","_version":1,"console":{"addressBooks":[`+
+		snapshot := parsedJSON(t, `{"_format":"neodesk-backup","_version":1,"console":{"addressBooks":[`+
 			`{"user_id":50,"ab_type":"legacy","data":"{\"tags\":[\"a\"]}"},`+
 			`{"username":"second","ab_type":"personal","data":"{\"peers\":[]}"},`+
 			`{"username":"nobody","ab_type":"legacy","data":"{}"},`+
@@ -106,7 +106,7 @@ func TestSnapshotRestoresRulePermissions(t *testing.T) {
 		ctx := context.Background()
 		in := newInstall(t, dialect)
 		s := in.snapshotService(t)
-		snapshot := parsedJSON(t, `{"_format":"betterdesk-backup","_version":1,"console":{"strategies":[`+
+		snapshot := parsedJSON(t, `{"_format":"neodesk-backup","_version":1,"console":{"strategies":[`+
 			`{"guid":"s1","name":"text","permissions":"{\"x\":1}"},`+
 			`{"guid":"s2","name":"object","permissions":{"y":true,"z":[1]}},`+
 			`{"guid":"s3","name":"empty text","permissions":""},`+
@@ -167,7 +167,7 @@ func TestTheSnapshotHasNoSMTPPassword(t *testing.T) {
 			t.Errorf("after the restore: %s", got)
 		}
 
-		older := `{"_format":"betterdesk-backup","_version":1,"console":{"settings":{"smtp_config":"{\"host\":\"h\",\"pass\":\"from-the-file\"}"}}}`
+		older := `{"_format":"neodesk-backup","_version":1,"console":{"settings":{"smtp_config":"{\"host\":\"h\",\"pass\":\"from-the-file\"}"}}}`
 		restoreSettings(t, s, older)
 		if got := storedValue(t, in, "smtp_config"); got != `{"host":"h","pass":"from-the-file"}` {
 			t.Errorf("after an older snapshot: %s", got)
@@ -191,7 +191,7 @@ func TestOlderShareLoginIsLeftOut(t *testing.T) {
 		ctx := context.Background()
 		in := newInstall(t, dialect)
 		s := in.snapshotService(t)
-		older := `{"_format":"betterdesk-backup","_version":1,"console":{"settings":{"scheduled_backup_smb":"{\"host\":\"h\",\"password\":\"from-the-file\"}","backup_retention_count":"4"}}}`
+		older := `{"_format":"neodesk-backup","_version":1,"console":{"settings":{"scheduled_backup_smb":"{\"host\":\"h\",\"password\":\"from-the-file\"}","backup_retention_count":"4"}}}`
 		if res := restoreSettings(t, s, older); len(res.Warnings) != 0 || !slices.Contains(res.Restored, "settings") {
 			t.Fatalf("restore: %+v", res)
 		}

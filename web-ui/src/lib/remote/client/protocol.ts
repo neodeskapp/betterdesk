@@ -1,5 +1,5 @@
 /**
- * BetterDesk Web Remote Client - Protocol Handler
+ * NeoDesk Web Remote Client - Protocol Handler
  * Implements RustDesk rendezvous and peer-to-peer protocol using protobuf
  */
 import JMuxer from 'jmuxer';
@@ -324,7 +324,7 @@ export class RDProtocol {
 	}
 
 	// Client version advertised to RustDesk peers (keep in sync with product baseline)
-	static CLIENT_VERSION = 'BetterDesk-Web/1.4.9';
+	static CLIENT_VERSION = 'NeoDesk-Web/1.4.9';
 
 	/**
 	 * Build PunchHoleRequest for connecting to a device
@@ -414,7 +414,7 @@ export class RDProtocol {
 				username: opts.username || '',
 				password: passwordHash,
 				myId: opts.myId || 'web-client-ft',
-				myName: opts.myName || 'BetterDesk Web',
+				myName: opts.myName || 'NeoDesk Web',
 				myPlatform: 'Web',
 				version: RDProtocol.CLIENT_VERSION,
 				sessionId: Date.now(),
@@ -442,7 +442,7 @@ export class RDProtocol {
 				username: opts.username || '',
 				password: passwordHash,
 				myId: opts.myId || 'web-client',
-				myName: opts.myName || 'BetterDesk Web',
+				myName: opts.myName || 'NeoDesk Web',
 				myPlatform: 'Web',
 				version: RDProtocol.CLIENT_VERSION,
 				sessionId: Date.now(),

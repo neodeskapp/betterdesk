@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // TestRegistrationEndsWithADeviceToken: a device an agent template admits
@@ -22,7 +22,7 @@ import (
 func TestRegistrationEndsWithADeviceToken(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		db = storetest.Prepare(t, db, storetest.GoServerFirst)
-		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"BD_REGISTER_RATE_LIMIT_MAX": "1000"}})
+		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"ND_REGISTER_RATE_LIMIT_MAX": "1000"}})
 		ctx := context.Background()
 		template := strings.Repeat("k", 64)
 		if _, err := w.DB.Exec(ctx, "INSERT INTO agent_templates (name, enrollment_token) VALUES ('kiosk', ?)", template); err != nil {
@@ -30,7 +30,7 @@ func TestRegistrationEndsWithADeviceToken(t *testing.T) {
 		}
 		register := func(device, body string, headers ...string) string {
 			t.Helper()
-			got := w.SignedOut().Do("POST", "/api/bd/register", body, append([]string{"X-Device-Id", device}, headers...)...)
+			got := w.SignedOut().Do("POST", "/api/nd/register", body, append([]string{"X-Device-Id", device}, headers...)...)
 			if got.Status != 200 {
 				t.Fatalf("registration of %s: %d %s", device, got.Status, got.Body)
 			}
@@ -62,9 +62,9 @@ func TestRegistrationEndsWithADeviceToken(t *testing.T) {
 		key := base64.StdEncoding.EncodeToString(public)
 		signed := func(device, nonce string) []string {
 			timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
-			payload := strings.Join([]string{"bd-enrollment-v1", "POST", "/api/bd/register", device, key, timestamp, nonce}, "\n")
-			return []string{"X-BD-Enrollment-Timestamp", timestamp, "X-BD-Enrollment-Nonce", nonce,
-				"X-BD-Enrollment-Signature", base64.StdEncoding.EncodeToString(ed25519.Sign(private, []byte(payload)))}
+			payload := strings.Join([]string{"nd-enrollment-v1", "POST", "/api/nd/register", device, key, timestamp, nonce}, "\n")
+			return []string{"X-ND-Enrollment-Timestamp", timestamp, "X-ND-Enrollment-Nonce", nonce,
+				"X-ND-Enrollment-Signature", base64.StdEncoding.EncodeToString(ed25519.Sign(private, []byte(payload)))}
 		}
 		body := `{"public_key":"` + key + `","uuid":"uuid-proof"}`
 		byProof := register("PRFDEV1", body, signed("PRFDEV1", "n-1")...)

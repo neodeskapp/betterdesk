@@ -20,7 +20,7 @@ func checkPairingI18n(root string, args []string, stdout, stderr io.Writer) int 
 		return 2
 	}
 	const namespace = "pairing"
-	langDir := filepath.Join(root, "betterdesk-server", "console", "static", "files", "lang")
+	langDir := filepath.Join(root, "neodesk-server", "console", "static", "files", "lang")
 
 	entries, err := os.ReadDir(langDir)
 	if err != nil {

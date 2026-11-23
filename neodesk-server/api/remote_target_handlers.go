@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 const (

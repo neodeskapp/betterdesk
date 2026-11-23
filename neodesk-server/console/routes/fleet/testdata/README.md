@@ -12,7 +12,7 @@ file next to the recording (written by a run with
 | File | What it holds | Replayed by |
 |---|---|---|
 | `vectors.json` | requests to the fleet routes of the admin panel, the answers, and the calls to the API server | `TestVectors` (`routes_test.go`) |
-| `device_vectors.json` | the two routes agents report to, `POST /api/bd/fleet/task-result` and `/api/bd/fleet/software`, at both mounts | `TestDeviceVectors` (`device_test.go`) |
+| `device_vectors.json` | the two routes agents report to, `POST /api/nd/fleet/task-result` and `/api/nd/fleet/software`, at both mounts | `TestDeviceVectors` (`device_test.go`) |
 | `vectors_fixed.json`, `device_vectors_fixed.json` | the Go console's answers for the vectors a bug fix changed | the same tests |
 
 ## What is recorded

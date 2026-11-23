@@ -185,17 +185,17 @@ describe('client values', () => {
 	test('the typed address lasts for this tab only', () => {
 		expect(readClientHost()).toBe('');
 		writeClientHost('10.0.0.5');
-		expect(sessionStorage.getItem('bd_client_config_host')).toBe('10.0.0.5');
+		expect(sessionStorage.getItem('nd_client_config_host')).toBe('10.0.0.5');
 		expect(readClientHost()).toBe('10.0.0.5');
 		writeClientHost('');
 		expect(readClientHost()).toBe('');
-		expect(localStorage.getItem('bd_client_config_host')).toBeNull();
+		expect(localStorage.getItem('nd_client_config_host')).toBeNull();
 	});
 });
 
 describe('support agent pairing code', () => {
 	const code = (o: Record<string, unknown>) =>
-		JSON.stringify({ type: 'betterdesk-agent-pairing', version: 1, device_id: ' 123456789 ', ...o });
+		JSON.stringify({ type: 'neodesk-agent-pairing', version: 1, device_id: ' 123456789 ', ...o });
 
 	test('a code from the agent gives its device ID', () => {
 		expect(readPairingCode(code({}), 'console.example.com')).toBe('123456789');

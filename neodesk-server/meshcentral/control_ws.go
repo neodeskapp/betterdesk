@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 func (g *Gateway) handleControlWS(w http.ResponseWriter, r *http.Request) {

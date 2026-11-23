@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/internal/clientaddr"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/clientaddr"
 )
 
 // ForwardedClient is the forwarded entry that names a request's client,

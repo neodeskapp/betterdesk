@@ -158,7 +158,7 @@ func sanitizeLoginSlides(raw any) []any {
 	return out
 }
 
-// UsesDefaultLogo reports whether the console shows the BetterDesk logo:
+// UsesDefaultLogo reports whether the console shows the NeoDesk logo:
 // logoType "default", or what older versions stored as the default (the
 // icon "dns", the old logo image, or a type whose content is empty).
 func UsesDefaultLogo(branding any) (out bool, err error) {

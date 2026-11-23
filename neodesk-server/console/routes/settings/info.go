@@ -5,9 +5,9 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 // noAPIKey stands in for the masked API key when there is none: eight
@@ -72,7 +72,7 @@ func (g *general) info(w http.ResponseWriter, r *http.Request) {
 	health := g.d.Backend.GetHealth(r.Context())
 	if !kit.HasPermission(r, "server.config") {
 		kit.OK(w, r, shortInfo{
-			App:      shortApp{Name: "BetterDesk Console", Version: g.version},
+			App:      shortApp{Name: "NeoDesk Console", Version: g.version},
 			GoServer: shortServer{Status: health.Get("status"), Version: health.Get("version")},
 		})
 		return
@@ -84,7 +84,7 @@ func (g *general) info(w http.ResponseWriter, r *http.Request) {
 	}
 	cfg := g.d.Config
 	kit.OK(w, r, infoData{
-		App: appInfo{Name: "BetterDesk Console", Version: g.version, NodeVersion: runtime.Version(), Env: cfg.NodeEnv},
+		App: appInfo{Name: "NeoDesk Console", Version: g.version, NodeVersion: runtime.Version(), Env: cfg.NodeEnv},
 		Server: processInfo{
 			Hostname: hostname(), Platform: nodePlatform(), Arch: nodeArch(),
 			Uptime: int64(time.Since(g.started) / time.Second), MemoryUsage: heapUsed(),

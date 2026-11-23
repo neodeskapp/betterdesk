@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
 )
 
 // The rows of the launch (BUGS L rows) that the permission routes fixed.

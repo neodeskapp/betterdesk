@@ -5,7 +5,7 @@ package contract_test
 import (
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The sign-in page's data: the CSRF token, name and version of the
@@ -27,11 +27,11 @@ func init() {
 		},
 		contract.Case{
 			Name: "login-page-desktop-mode", Path: "/api/auth/login-page",
-			Headers: map[string]string{"Cookie": "betterdesk_desktop_mode=true"}, Roles: contract.Roles("signed-out"),
+			Headers: map[string]string{"Cookie": "neodesk_desktop_mode=true"}, Roles: contract.Roles("signed-out"),
 		},
 		contract.Case{
 			Name: "login-page-desktop-mode-other-value", Path: "/api/auth/login-page",
-			Headers: map[string]string{"Cookie": "betterdesk_desktop_mode=TRUE"}, Roles: contract.Roles("signed-out"),
+			Headers: map[string]string{"Cookie": "neodesk_desktop_mode=TRUE"}, Roles: contract.Roles("signed-out"),
 		},
 		contract.Case{Name: "login-page-without-session", Path: "/api/auth/login-page", NoSession: true, Roles: contract.Roles("viewer")},
 		contract.Case{

@@ -9,7 +9,7 @@ id.
 | File | What it holds | Replayed by |
 |---|---|---|
 | `node_sqlite.json`, `node_postgres.json` | the three read routes of `routes/activity.routes.js` | `TestNodeAnswers` (`replay_test.go`) |
-| `node_device_sqlite.json`, `node_device_postgres.json` | the desktop agent's route, `POST /activity` at `/api/bd` and `/api/activity` | `TestNodeDeviceAnswers` (`device_test.go`) |
+| `node_device_sqlite.json`, `node_device_postgres.json` | the desktop agent's route, `POST /activity` at `/api/nd` and `/api/activity` | `TestNodeDeviceAnswers` (`device_test.go`) |
 
 ## What is recorded
 

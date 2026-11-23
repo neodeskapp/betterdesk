@@ -5,7 +5,7 @@ package contract_test
 import (
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The remote desktop relay: the agent's socket /ws/remote-agent/<id>
@@ -48,7 +48,7 @@ func init() {
 		{Name: "agent-foreign-origin", Path: agentPath, Query: good, Roles: signedOut, NoCookies: true, Socket: sock("a1", contract.Socket{Origin: "https://evil.example"})},
 		{
 			Name: "agent-no-origin-with-session-cookie", Path: agentPath, Query: good, Roles: signedOut, NoCookies: true,
-			Headers: map[string]string{"Cookie": "bd.sid=s%3Anot-a-session"}, Socket: sock("a2", contract.Socket{Origin: "-"}),
+			Headers: map[string]string{"Cookie": "nd.sid=s%3Anot-a-session"}, Socket: sock("a2", contract.Socket{Origin: "-"}),
 		},
 		{Name: "agent-short-id", Path: "/ws/remote-agent/ab", Query: good, Roles: signedOut, NoCookies: true, Socket: sock("a3", contract.Socket{})},
 		{Name: "agent-odd-id", Path: "/ws/remote-agent/abc%20def", Query: good, Roles: signedOut, NoCookies: true, Socket: sock("a4", contract.Socket{})},

@@ -5,10 +5,10 @@ import (
 	"sort"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
 // The notification bell of the web app: the help requests of the API
@@ -61,7 +61,7 @@ type notificationList struct {
 	UnreadCount int             `json:"unread_count"`
 }
 
-// notifications answers GET /api/bd/notifications?limit=&unread_only=:
+// notifications answers GET /api/nd/notifications?limit=&unread_only=:
 // the newest notifications first, 20 unless limit says otherwise (1 to
 // 50), only the unread ones with unread_only=true in any letter case, and
 // the number of unread ones of all.
@@ -119,7 +119,7 @@ func (h *handlers) notifications(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, notificationList{Success: true, Items: items, UnreadCount: unreadCount})
 }
 
-// markRead answers POST /api/bd/notifications/{id}/read: the id, cut to
+// markRead answers POST /api/nd/notifications/{id}/read: the id, cut to
 // 128 UTF-16 units, is read for the account from now on, whether a
 // notification has it or not.
 func (h *handlers) markRead(w http.ResponseWriter, r *http.Request) {
@@ -130,7 +130,7 @@ func (h *handlers) markRead(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, done{Success: true})
 }
 
-// markAllRead answers POST /api/bd/notifications/read-all: every help
+// markAllRead answers POST /api/nd/notifications/read-all: every help
 // request of the API server and every registration the account sees is
 // read for it.
 func (h *handlers) markAllRead(w http.ResponseWriter, r *http.Request) {

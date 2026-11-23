@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // TestRoleLevelRoutesAskAPermission: wake-on-LAN, telemetry commands,
@@ -26,7 +26,7 @@ func TestRoleLevelRoutesAskAPermission(t *testing.T) {
 			{http.MethodGet, "/api/cdap/devices/PEERAAA1/video", ""},
 			{http.MethodGet, "/api/cdap/devices/PEERAAA1/audio", ""},
 			{http.MethodPost, "/api/mesh/devices/PEERAAA1/share", `{}`},
-			{http.MethodPost, "/api/bd/mgmt/PEERAAA1/send", `{"type":"ping"}`},
+			{http.MethodPost, "/api/nd/mgmt/PEERAAA1/send", `{"type":"ping"}`},
 		}},
 		{auth.PermDeviceView, []route{
 			{http.MethodGet, "/api/peers/PEERAAA1/access-policy", ""},

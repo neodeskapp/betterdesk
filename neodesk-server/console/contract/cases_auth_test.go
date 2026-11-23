@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The sign-in routes (routes/auth.routes.js): what a sign-in refuses, the

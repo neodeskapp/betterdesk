@@ -1,5 +1,5 @@
 /**
- * MeshCentral remote files protocol (relay p=5) for BetterDesk mesh transport.
+ * MeshCentral remote files protocol (relay p=5) for NeoDesk mesh transport.
  */
 import { RDFileTransfer } from './filetransfer.ts';
 import { page } from './page.ts';
@@ -214,7 +214,7 @@ export class MeshFileTransfer {
 				'Content-Type': 'application/json',
 				Accept: 'application/json'
 			};
-			const csrf = page().BetterDesk?.csrfToken || '';
+			const csrf = page().NeoDesk?.csrfToken || '';
 			if (csrf) headers['X-CSRF-Token'] = csrf;
 			const resp = await fetch(
 				'/api/mesh/devices/' +

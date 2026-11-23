@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/unitronix/betterdesk-server/billing"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/billing"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // SetBillingService attaches the billing engine.
@@ -482,7 +482,7 @@ func (s *Server) handleExportBillingReports(w http.ResponseWriter, r *http.Reque
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="billing-reports-%s.csv"`, stamp))
 		w.Write(data)
 	case "pdf":
-		data := billing.WriteReportsPDF(rows, "BetterDesk — Work Reports")
+		data := billing.WriteReportsPDF(rows, "NeoDesk — Work Reports")
 		w.Header().Set("Content-Type", "application/pdf")
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="billing-reports-%s.pdf"`, stamp))
 		w.Write(data)

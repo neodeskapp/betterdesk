@@ -171,7 +171,7 @@
 	let lines = $state.raw<Line[]>([]);
 	let lineId = 0;
 	const last = $derived(lines.at(-1) ?? null);
-	let logOpen = $state(readPref('bd.studio.log') === '1');
+	let logOpen = $state(readPref('nd.studio.log') === '1');
 	let logBody = $state<HTMLElement | null>(null);
 
 	function clock(): string {
@@ -185,7 +185,7 @@
 
 	function setLogOpen(open: boolean, remember: boolean) {
 		logOpen = open;
-		if (remember) writePref('bd.studio.log', open ? '1' : '0');
+		if (remember) writePref('nd.studio.log', open ? '1' : '0');
 	}
 
 	$effect(() => {
@@ -196,17 +196,17 @@
 
 	/* ── Panels ── */
 
-	let paletteOpen = $state(readPref('bd.studio.btn-toggle-palette') !== '0');
-	let settingsOpen = $state(readPref('bd.studio.btn-toggle-inspector') !== '0');
+	let paletteOpen = $state(readPref('nd.studio.btn-toggle-palette') !== '0');
+	let settingsOpen = $state(readPref('nd.studio.btn-toggle-inspector') !== '0');
 
 	function togglePalette() {
 		paletteOpen = !paletteOpen;
-		writePref('bd.studio.btn-toggle-palette', paletteOpen ? '1' : '0');
+		writePref('nd.studio.btn-toggle-palette', paletteOpen ? '1' : '0');
 	}
 
 	function toggleSettings() {
 		settingsOpen = !settingsOpen;
-		writePref('bd.studio.btn-toggle-inspector', settingsOpen ? '1' : '0');
+		writePref('nd.studio.btn-toggle-inspector', settingsOpen ? '1' : '0');
 	}
 
 	let search = $state('');

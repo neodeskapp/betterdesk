@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
 )
 
 // changingSessions is a session store and a permission table that a test

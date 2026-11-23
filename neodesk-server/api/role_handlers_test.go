@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 // Only super admins may change role permissions. A server_admin holds

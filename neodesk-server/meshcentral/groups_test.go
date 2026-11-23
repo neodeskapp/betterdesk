@@ -68,7 +68,7 @@ func TestResolveMeshIDHexRejectsLegacyPlaceholder(t *testing.T) {
 
 func TestBuildMSHMeshIDLength(t *testing.T) {
 	gw, _ := newTestGateway(t)
-	msh := gw.BuildMSH("BetterDesk Mesh", "", "wss://example.com/agent.ashx")
+	msh := gw.BuildMSH("NeoDesk Mesh", "", "wss://example.com/agent.ashx")
 	assertMSHMeshID96(t, msh)
 	if strings.Contains(strings.ToUpper(msh), "EDBE1BE377EFC5B6D11DE0D50FED96017ADFAD0") {
 		t.Fatal("legacy placeholder still present in .msh")

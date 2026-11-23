@@ -2,7 +2,7 @@
 
 package contract_test
 
-import "github.com/unitronix/betterdesk-server/console/contract"
+import "github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 
 // Branding saved through the settings routes, then read by every route
 // that only reads it: the bootstrap, the sign-in page's data, the boot

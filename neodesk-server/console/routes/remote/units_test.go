@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // refusedTokens are the requests of testdata/crashes.json whose guest or
@@ -123,7 +123,7 @@ func TestDevMockQueryThatIsNoTextIsRefused(t *testing.T) {
 }
 
 // TestDevMockSwitch checks that the viewer's data may turn the dev mock
-// on only when BD_DEV_MOCK_REMOTE is 1 (after trimming), as
+// on only when ND_DEV_MOCK_REMOTE is 1 (after trimming), as
 // lib/devMockRemote did.
 func TestDevMockSwitch(t *testing.T) {
 	for _, tc := range []struct {
@@ -131,14 +131,14 @@ func TestDevMockSwitch(t *testing.T) {
 		on  bool
 	}{{"", false}, {"1", true}, {" 1 ", true}, {"\t1\n", true}, {"0", false}, {"true", false}, {"11", false}, {"yes", false}} {
 		d := &kit.Deps{Router: kit.NewRouter(), Config: &config.Config{Getenv: func(key string) string {
-			if key == "BD_DEV_MOCK_REMOTE" {
+			if key == "ND_DEV_MOCK_REMOTE" {
 				return tc.env
 			}
 			return ""
 		}}}
 		src := defaultSources(d)
 		if got := src.mockOn; got != tc.on {
-			t.Errorf("BD_DEV_MOCK_REMOTE=%q: mock on %v, want %v", tc.env, got, tc.on)
+			t.Errorf("ND_DEV_MOCK_REMOTE=%q: mock on %v, want %v", tc.env, got, tc.on)
 		}
 	}
 	if src := defaultSources(&kit.Deps{}); src.mockOn {
@@ -187,7 +187,7 @@ func TestRegisteredRoutes(t *testing.T) {
 	for _, route := range w.deps.Early.Routes() {
 		early = append(early, route.Method+" "+route.Path)
 	}
-	if strings.Join(early, "\n") != "POST /api/bd/remote-agent-token" {
+	if strings.Join(early, "\n") != "POST /api/nd/remote-agent-token" {
 		t.Errorf("early routes: %v", early)
 	}
 }
@@ -212,7 +212,7 @@ func TestWithoutTheRelay(t *testing.T) {
 	}{
 		{vector{Request: request{Path: "/api/remote/sessions", Session: operator}}, 200, `{"sessions":[]}`},
 		{vector{Request: request{Path: "/api/remote/session/dev-1", Session: operator}}, 404, `{"error":"Remote relay not available"}`},
-		{vector{Request: request{Method: "POST", Path: "/api/bd/remote-agent-token", Type: "application/json", Body: &body,
+		{vector{Request: request{Method: "POST", Path: "/api/nd/remote-agent-token", Type: "application/json", Body: &body,
 			Headers: map[string]string{"Authorization": "Bearer tok-device-a"}}}, 500, `{"error":"Token issuance failed"}`},
 	} {
 		rec := w.do(&c.v)
@@ -224,7 +224,7 @@ func TestWithoutTheRelay(t *testing.T) {
 
 // TestNoComposeFileSwitchesTheMockOn keeps the dev mock out of every
 // compose file at the top of the repository: only the local dev setup may
-// set BD_DEV_MOCK_REMOTE.
+// set ND_DEV_MOCK_REMOTE.
 func TestNoComposeFileSwitchesTheMockOn(t *testing.T) {
 	root := repoRoot(t)
 	files, err := filepath.Glob(filepath.Join(root, "docker-compose*.y*ml"))
@@ -239,7 +239,7 @@ func TestNoComposeFileSwitchesTheMockOn(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if strings.Contains(string(text), "BD_DEV_MOCK_REMOTE") {
+		if strings.Contains(string(text), "ND_DEV_MOCK_REMOTE") {
 			t.Errorf("%s switches the dev mock on", filepath.Base(file))
 		}
 	}
@@ -271,7 +271,7 @@ func repoRoot(t *testing.T) string {
 func TestGuestCookieWithoutATextIsRefused(t *testing.T) {
 	w := newWorld(t, storetest.Migrated(t), "1.0.0", false)
 	for _, path := range []string{"/api/remote/guest-info", "/api/remote/viewer/dev-1"} {
-		v := &vector{Request: request{Method: "GET", Path: path, Headers: map[string]string{"Cookie": `bd.guest=j:{"toString":1}`}}}
+		v := &vector{Request: request{Method: "GET", Path: path, Headers: map[string]string{"Cookie": `nd.guest=j:{"toString":1}`}}}
 		rec := w.do(v)
 		if rec.Code != http.StatusBadRequest || strings.TrimSpace(rec.Body.String()) != `{"error":"Invalid guest token"}` {
 			t.Errorf("%s: %d %s", path, rec.Code, rec.Body.String())

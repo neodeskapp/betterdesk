@@ -2,7 +2,7 @@
  "id": "activity-device/report-without-sessions",
  "request": {
   "method": "POST",
-  "path": "/api/bd/activity",
+  "path": "/api/nd/activity",
   "body": {
    "device_id": "900100001",
    "timestamp": "2011-03-04T10:02:00.000Z"

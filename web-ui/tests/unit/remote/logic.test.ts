@@ -92,7 +92,7 @@ describe('viewer preferences', () => {
 		savePrefs(7, { ...DEFAULT_PREFS, quality: 'Balanced' });
 		expect(localStorage.getItem(prefsKey(7))).toBeNull();
 		vi.advanceTimersByTime(400);
-		expect(prefsKey(7)).toBe('betterdesk_remote_prefs_7');
+		expect(prefsKey(7)).toBe('neodesk_remote_prefs_7');
 		expect(loadPrefs(7).quality).toBe('Balanced');
 		expect(loadPrefs(8).quality).toBe('Best');
 	});

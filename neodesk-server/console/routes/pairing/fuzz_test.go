@@ -8,7 +8,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 )
 
 // labelValue reads raw as the "label" member of a request body, the way a

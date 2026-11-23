@@ -4,8 +4,8 @@ import (
 	"crypto/subtle"
 	"sync"
 
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // serveRelay is one side of a relay session. Before the handshake: the
@@ -27,7 +27,7 @@ import (
 // longer than SessionTTL is closed with 4408 "Timeout waiting for peer",
 // a pair that is silent for IdleTimeout with 4408 "Idle timeout".
 func (s *Service) serveRelay(u *ws.Upgrade) {
-	if !u.CheckOrigin("bd-relay /ws/bd-relay") {
+	if !u.CheckOrigin("nd-relay /ws/nd-relay") {
 		return
 	}
 	conn, ok := u.Accept(ws.AcceptOptions{MaxPayload: MaxFrameBytes})
@@ -85,7 +85,7 @@ type relayJoin struct {
 func (s *Service) joinRelay(u *ws.Upgrade, conn *ws.Conn, waitMu *sync.Mutex) (j relayJoin, ok bool) {
 	defer func() {
 		if r := recover(); r != nil {
-			logging.Logf("console", "ERROR: [bd-relay] connection handler failed: %v", r)
+			logging.Logf("console", "ERROR: [nd-relay] connection handler failed: %v", r)
 			conn.Close(1011, "Internal error")
 			_ = conn.Discard()
 			j, ok = relayJoin{}, false

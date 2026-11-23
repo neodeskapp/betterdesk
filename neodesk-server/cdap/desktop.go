@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/sessiongrant"
+	"github.com/neodeskapp/neodesk/neodesk-server/sessiongrant"
 )
 
 // DesktopSession represents an active remote desktop session relaying
@@ -50,7 +50,7 @@ type DesktopStartPayload struct {
 	VideoCodec   string   `json:"video_codec,omitempty"` // operator codec preference ("auto" = let agent choose)
 	ViewOnly     bool     `json:"view_only,omitempty"`
 	// SessionGrant is present only for passive Support Agent targets. It is
-	// signed by the BetterDesk server and verified locally before consent.
+	// signed by the NeoDesk server and verified locally before consent.
 	SessionGrant string   `json:"session_grant,omitempty"`
 	Capabilities []string `json:"capabilities,omitempty"`
 }

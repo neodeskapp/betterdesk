@@ -2,7 +2,7 @@
  "id": "automation-device/fetch-basic",
  "request": {
   "method": "GET",
-  "path": "/api/bd/commands",
+  "path": "/api/nd/commands",
   "notes": [
    "header Authorization: Basic {secret:device_token_other}",
    "no CSRF token",

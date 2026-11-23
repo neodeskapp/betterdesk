@@ -636,7 +636,7 @@ func (s *Server) enrollPairedDevice(r *http.Request, req *EnrollmentRequest) Enr
 }
 
 // issuePairedDeviceToken gives a device that redeemed a code its device
-// token when the request proves the device's key (the X-BD-Enrollment
+// token when the request proves the device's key (the X-ND-Enrollment
 // headers, signed for POST /api/pairing/redeem), the way a registration
 // does; without a proof the answer says so and the device gets its token
 // at its next signed registration. known is whether the device was

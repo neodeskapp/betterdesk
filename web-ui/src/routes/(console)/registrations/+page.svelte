@@ -1,6 +1,6 @@
 <!--
   Enrollment requests (/registrations): devices that asked to join, from
-  two queues (RustDesk clients through the Go server, BetterDesk clients on
+  two queues (RustDesk clients through the Go server, NeoDesk clients on
   the local network). Approve opens the request's sheet with the approve
   form; Reject asks in a dialog. A click anywhere on a row opens its sheet.
   Approved rows open their device in the device panel, on this page.

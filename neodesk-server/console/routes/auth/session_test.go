@@ -9,14 +9,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/routes/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/auth"
 )
 
 // The clearing cookies of a sign-out: the session cookie under both names
 // it can have, and no other cookie (BUGS.md S1).
 var clearedAfterSignOut = []string{
-	"betterdesk.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
-	"bd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+	"neodesk.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+	"nd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
 }
 
 func TestLogout(t *testing.T) {

@@ -10,11 +10,11 @@ import (
 
 	"github.com/coder/websocket"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/cdap"
-	"github.com/unitronix/betterdesk-server/config"
-	eventsModule "github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/cdap"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	eventsModule "github.com/neodeskapp/neodesk/neodesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 // TestCDAPRegistrationAsksTheAPIsPermission: the API server gives the CDAP

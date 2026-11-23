@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/mail/addressparser"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/addressparser"
 )
 
 // What an alert rule's notify_emails may hold: plain addresses separated

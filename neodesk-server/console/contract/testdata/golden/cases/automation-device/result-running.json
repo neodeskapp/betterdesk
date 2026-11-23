@@ -2,7 +2,7 @@
  "id": "automation-device/result-running",
  "request": {
   "method": "POST",
-  "path": "/api/bd/commands/{command}/result",
+  "path": "/api/nd/commands/{command}/result",
   "body": {
    "status": "running"
   },

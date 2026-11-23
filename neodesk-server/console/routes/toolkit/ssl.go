@@ -18,8 +18,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
 )
 
 // sslTimeout is how long connecting and the handshake of a certificate

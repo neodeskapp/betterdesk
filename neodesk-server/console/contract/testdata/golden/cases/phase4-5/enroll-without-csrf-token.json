@@ -2,7 +2,7 @@
  "id": "phase4-5/enroll-without-csrf-token",
  "request": {
   "method": "POST",
-  "path": "/api/bd/enroll",
+  "path": "/api/nd/enroll",
   "body": {
    "device_id": "d",
    "enrollment_token": "t"
@@ -63,7 +63,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",

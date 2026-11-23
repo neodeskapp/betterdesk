@@ -1,4 +1,4 @@
-// BetterDesk Server — Message Protocol Definitions
+// NeoDesk Server — Message Protocol Definitions
 // Copyright (c) 2025-2026 UNITRONIX. Licensed under AGPL-3.0.
 //
 // These protocol definitions describe message formats for interoperability
@@ -8,7 +8,7 @@
 syntax = "proto3";
 package hbb;
 
-option go_package = "github.com/unitronix/betterdesk-server/proto";
+option go_package = "github.com/neodeskapp/neodesk/neodesk-server/proto";
 
 message EncodedVideoFrame {
   bytes data = 1;

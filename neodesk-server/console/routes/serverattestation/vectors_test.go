@@ -13,10 +13,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/attestation"
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/attestation"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 )
 
 // The records of testdata/routes.json.gz: what the Node routes
@@ -273,7 +273,7 @@ func TestRoutesAsNodeAnswered(t *testing.T) {
 		settings.rows[attestation.ResultKey] = c.Result
 		settings.failing[attestation.ResultKey] = c.Failing
 		var logs []logged
-		h := testHandlers(settings, "BetterDesk", nil, false, &logs)
+		h := testHandlers(settings, "NeoDesk", nil, false, &logs)
 		if got := call(h.status, http.MethodGet, ""); got != c.Status {
 			differ("status %d %s (failing %v):\n  node %s\n    go %s", i, show(c.Result), c.Failing, c.Status.Body, got.Body)
 		}
@@ -283,7 +283,7 @@ func TestRoutesAsNodeAnswered(t *testing.T) {
 	}
 
 	var logs []logged
-	h := testHandlers(newFakeSettings(), "BetterDesk", nil, false, &logs)
+	h := testHandlers(newFakeSettings(), "NeoDesk", nil, false, &logs)
 	if got := call(h.abort, http.MethodPost, "{}"); got != v.Abort[0] {
 		differ("abort: node %s, go %s", v.Abort[0].Body, got.Body)
 	}

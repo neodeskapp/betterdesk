@@ -5,7 +5,7 @@ package contract_test
 import (
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The policies of an organization and the attestation records. The chain
@@ -109,15 +109,15 @@ func init() {
 		contract.Case{Name: "attestation-device-dots-inside", Path: "/api/panel/attestation/a..b"},
 
 		// The second mount
-		contract.Case{Name: "second-mount-read", Path: "/api/bd/api/panel/policies/no-such-org"},
-		contract.Case{Name: "second-mount-set", Method: "PUT", Path: "/api/bd/api/panel/policies/no-such-org/update", Body: connection},
-		contract.Case{Name: "second-mount-set-without-csrf-token", Method: "PUT", Path: "/api/bd/api/panel/policies/no-such-org/update", Body: connection, NoCSRF: true},
+		contract.Case{Name: "second-mount-read", Path: "/api/nd/api/panel/policies/no-such-org"},
+		contract.Case{Name: "second-mount-set", Method: "PUT", Path: "/api/nd/api/panel/policies/no-such-org/update", Body: connection},
+		contract.Case{Name: "second-mount-set-without-csrf-token", Method: "PUT", Path: "/api/nd/api/panel/policies/no-such-org/update", Body: connection, NoCSRF: true},
 		contract.Case{
-			Name: "second-mount-set-without-session", Method: "PUT", Path: "/api/bd/api/panel/policies/no-such-org/update", Body: connection,
+			Name: "second-mount-set-without-session", Method: "PUT", Path: "/api/nd/api/panel/policies/no-such-org/update", Body: connection,
 			NoCSRF: true, NoCookies: true, Roles: contract.Roles("signed-out", "admin"),
 		},
-		contract.Case{Name: "second-mount-attestation", Path: "/api/bd/api/panel/attestation"},
-		contract.Case{Name: "second-mount-attestation-device", Path: "/api/bd/api/panel/attestation/bad%20id"},
+		contract.Case{Name: "second-mount-attestation", Path: "/api/nd/api/panel/attestation"},
+		contract.Case{Name: "second-mount-attestation-device", Path: "/api/nd/api/panel/attestation/bad%20id"},
 	}, policiesDeviceCases()...)...)
 }
 
@@ -125,16 +125,16 @@ func init() {
 // They take a device token, which the suite has none of: the headers of a
 // case are written into its golden. So the cases show what comes before
 // the route: no token, a token nobody issued, a device id that proves
-// nothing, and the CSRF gate, which under /api/bd lets a write without a
+// nothing, and the CSRF gate, which under /api/nd lets a write without a
 // session through and checks one with a session. The answers with a token
 // are pinned by routes/policies/testdata/device_vectors.json.
 func policiesDeviceCases() []contract.Case {
 	attestation := map[string]any{"device_id": "900100001", "fingerprint": "contract"}
 	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
 	var cases []contract.Case
-	for _, mount := range []struct{ name, prefix string }{{"device", ""}, {"second-mount-device", "/api/bd"}} {
+	for _, mount := range []struct{ name, prefix string }{{"device", ""}, {"second-mount-device", "/api/nd"}} {
 		at := func(what string) string { return mount.name + "-" + what }
-		policy, report := mount.prefix+"/api/bd/device-policy", mount.prefix+"/api/bd/attestation"
+		policy, report := mount.prefix+"/api/nd/device-policy", mount.prefix+"/api/nd/attestation"
 		cases = append(cases,
 			contract.Case{Name: at("policy-without-token"), Path: policy},
 			contract.Case{Name: at("policy-unknown-token"), Path: policy, Headers: unknown},
@@ -150,9 +150,9 @@ func policiesDeviceCases() []contract.Case {
 		)
 	}
 	// Spelled in capitals only at the second mount. At the first,
-	// GET /API/BD/DEVICE-POLICY/ is answered by the inventory group's
-	// GET /api/bd/:id, whose check for the device mount compares the
+	// GET /API/ND/DEVICE-POLICY/ is answered by the inventory group's
+	// GET /api/nd/:id, whose check for the device mount compares the
 	// spelling of the address (BUGS DV8); that answer comes from Go only
 	// once the inventory group has moved.
-	return append(cases, contract.Case{Name: "second-mount-device-policy-other-spelling", Path: "/API/BD/API/BD/DEVICE-POLICY/", Headers: unknown})
+	return append(cases, contract.Case{Name: "second-mount-device-policy-other-spelling", Path: "/API/ND/API/ND/DEVICE-POLICY/", Headers: unknown})
 }

@@ -10,7 +10,7 @@ import (
 // here: nothing serves the service, so the started test waits.
 func TestRunIsRefusedWhileOneRuns(t *testing.T) {
 	var logs []logged
-	h := testHandlers(newFakeSettings(), "BetterDesk", nil, false, &logs)
+	h := testHandlers(newFakeSettings(), "NeoDesk", nil, false, &logs)
 	if got := call(h.run, http.MethodPost, "{}"); got.Status != http.StatusOK || got.Body != `{"success":true,"started":true}` {
 		t.Fatalf("first run = %d %s", got.Status, got.Body)
 	}

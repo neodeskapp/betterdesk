@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	pb "github.com/unitronix/betterdesk-server/proto"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 	"google.golang.org/protobuf/proto"
 )
 

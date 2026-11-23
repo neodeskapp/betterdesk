@@ -23,7 +23,7 @@ class Session {
 	path = $state('');
 	isSuperAdmin = $state(false);
 	nav = $state.raw<NavSection[]>([]);
-	appName = $state('BetterDesk');
+	appName = $state('NeoDesk');
 	appVersion = $state('');
 	emergencyMode = $state(false);
 	/** null while loading; an error when the console could not start */
@@ -195,7 +195,7 @@ export async function startSession(): Promise<void> {
  */
 function restoreLanguage(b: Bootstrap): void {
 	const saved = savedLanguage();
-	const cookie = document.cookie.split(';').some((c) => c.trim().startsWith('betterdesk_lang='));
+	const cookie = document.cookie.split(';').some((c) => c.trim().startsWith('neodesk_lang='));
 	const known = b.lang.available.some((l) => l.code === saved);
 	if (saved && saved !== b.lang.code && known && !cookie && !b.user.preferredLanguage) {
 		void switchLanguage(saved, saveLanguage).catch(() => {});

@@ -5,7 +5,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
 // objectMembers are the names every JavaScript object has, which the Node

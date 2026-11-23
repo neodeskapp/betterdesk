@@ -15,15 +15,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/crypto"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/peer"
-	pb "github.com/unitronix/betterdesk-server/proto"
-	"github.com/unitronix/betterdesk-server/relay"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/relay"
 )
 
 // refuseRelayProtocolMismatch is returned when one peer uses WebSocket Mode
@@ -214,7 +214,7 @@ func (s *Server) targetAcceptsInboundSession(targetID string) bool {
 		log.Printf("[signal] Target %s state lookup failed: %v", targetID, err)
 		return false
 	}
-	// A target that was never stored by the BetterDesk inventory can still use
+	// A target that was never stored by the NeoDesk inventory can still use
 	// compatibility signaling in open mode; a known soft-deleted ID cannot.
 	return state != db.PeerIDSoftDeleted
 }
@@ -2659,7 +2659,7 @@ func (s *Server) requireAuthorizedInitiator(raddr *net.UDPAddr, targetID, token 
 //
 // Authorization sources (first match wins):
 //  1. Same Secure TCP session that already completed RegisterPk (#327)
-//  2. Valid BetterDesk client login token on the punch/relay message (#327)
+//  2. Valid NeoDesk client login token on the punch/relay message (#327)
 //  3. The panel's web client (panel)
 //  4. Live peer with exact ip:port match (FindByAddr)
 //  5. PunchHoleRequest.udp_port hint: stock clients advertise their NAT-mapped
@@ -2871,7 +2871,7 @@ func hashOpaqueClientToken(token string) string {
 }
 
 // authorizeViaClientToken accepts PunchHole/RequestRelay when the stock RustDesk
-// client sends a BetterDesk opaque login token (service may be stopped, #327).
+// client sends a NeoDesk opaque login token (service may be stopped, #327).
 func (s *Server) authorizeViaClientToken(token string, raddr *net.UDPAddr, targetID string, operatorOnly bool) (string, bool) {
 	token = strings.ToLower(strings.TrimSpace(token))
 	if token == "" || s.db == nil || !opaqueClientTokenRegexp.MatchString(token) {

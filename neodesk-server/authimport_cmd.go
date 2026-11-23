@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/authimport"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authimport"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // authImportOutcome is what -migrate-sqlite-auth prints: the import's
@@ -37,7 +37,7 @@ func migrateSQLiteAuth(ctx context.Context, dbPath, authDBPath, backupDir string
 	}
 	target := dbPath
 	if dryRun {
-		dir, err := os.MkdirTemp("", "betterdesk-auth-import-")
+		dir, err := os.MkdirTemp("", "neodesk-auth-import-")
 		if err != nil {
 			return nil, fmt.Errorf("dry run: %w", err)
 		}

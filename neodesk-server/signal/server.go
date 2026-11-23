@@ -1,4 +1,4 @@
-// Package signal implements the BetterDesk signal server (hbbs equivalent).
+// Package signal implements the NeoDesk signal server (hbbs equivalent).
 // It handles device registration, hole punching, NAT tests, and online queries
 // over UDP, TCP, and WebSocket transports.
 package signal
@@ -16,18 +16,18 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/billing"
-	"github.com/unitronix/betterdesk-server/codec"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/crypto"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/peer"
-	"github.com/unitronix/betterdesk-server/policy"
-	pb "github.com/unitronix/betterdesk-server/proto"
-	"github.com/unitronix/betterdesk-server/ratelimit"
-	"github.com/unitronix/betterdesk-server/security"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/billing"
+	"github.com/neodeskapp/neodesk/neodesk-server/codec"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/policy"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/ratelimit"
+	"github.com/neodeskapp/neodesk/neodesk-server/security"
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
 )

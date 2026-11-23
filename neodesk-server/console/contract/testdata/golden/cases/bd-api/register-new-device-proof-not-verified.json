@@ -2,16 +2,16 @@
  "id": "bd-api/register-new-device-proof-not-verified",
  "request": {
   "method": "POST",
-  "path": "/api/bd/register",
+  "path": "/api/nd/register",
   "body": {
    "device_id": "contract-bd-new",
    "public_key": "11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo=",
    "uuid": "u-1"
   },
   "notes": [
-   "header X-BD-Enrollment-Nonce: contract-nonce",
-   "header X-BD-Enrollment-Signature: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-   "header X-BD-Enrollment-Timestamp: 2001-01-01T00:00:00Z",
+   "header X-ND-Enrollment-Nonce: contract-nonce",
+   "header X-ND-Enrollment-Signature: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+   "header X-ND-Enrollment-Timestamp: 2001-01-01T00:00:00Z",
    "header X-Device-Id: contract-bd-new",
    "no CSRF token",
    "no cookies"

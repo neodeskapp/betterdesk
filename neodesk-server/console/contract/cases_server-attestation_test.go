@@ -5,7 +5,7 @@ package contract_test
 import (
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The server attestation: the state of the capacity test, its last result,

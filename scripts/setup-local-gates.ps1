@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $repoRoot
 
-Write-Output "Checking local BetterDesk gate prerequisites..."
+Write-Output "Checking local NeoDesk gate prerequisites..."
 & (Join-Path $PSScriptRoot "local-gate.ps1") -PreflightOnly
 if ($LASTEXITCODE -ne 0) {
     throw "Prerequisite check failed. Install the missing tools before enabling local hooks."

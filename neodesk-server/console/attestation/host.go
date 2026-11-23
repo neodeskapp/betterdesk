@@ -4,7 +4,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/servermgmt"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/servermgmt"
 )
 
 // HostSnapshot reads the machine through a server management snapshot

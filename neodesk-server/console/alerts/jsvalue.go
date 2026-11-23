@@ -5,8 +5,8 @@ import (
 	"math"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
 // errNotPrimitive is the TypeError JavaScript throws when it needs text or

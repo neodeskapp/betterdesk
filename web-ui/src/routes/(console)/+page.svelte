@@ -13,7 +13,7 @@
   tab, as the old overview did). Trends (audit.view) load on their own.
 
   "Pair with code" (enrollment.approve) creates a one-time code for a
-  BetterDesk agent; the agent QR scanner opens from that dialog.
+  NeoDesk agent; the agent QR scanner opens from that dialog.
   URL: ?activateAgent=1 opens "Pair with code" (enrollment.approve).
 -->
 <script lang="ts">

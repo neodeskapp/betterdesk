@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // request is the address of a request as the console's routing reads it.

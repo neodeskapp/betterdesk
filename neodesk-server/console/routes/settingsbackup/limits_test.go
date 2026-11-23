@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/backup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
 )
 
 // UM42: a limit that is no whole number of at least 1 gets the default,

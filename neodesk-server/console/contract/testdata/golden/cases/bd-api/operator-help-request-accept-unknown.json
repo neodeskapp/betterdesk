@@ -2,7 +2,7 @@
  "id": "bd-api/operator-help-request-accept-unknown",
  "request": {
   "method": "POST",
-  "path": "/api/bd/help-requests/999999999/accept",
+  "path": "/api/nd/help-requests/999999999/accept",
   "notes": [
    "header Authorization: Bearer {secret:operator_token}",
    "no CSRF token",

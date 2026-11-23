@@ -15,12 +15,12 @@ import (
 	"testing"
 	"time"
 
-	apiserver "github.com/unitronix/betterdesk-server/api"
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	apiserver "github.com/neodeskapp/neodesk/neodesk-server/api"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // deviceToken adds a live device token bound to a device, issued by the
@@ -36,12 +36,12 @@ func deviceToken(t *testing.T, w *routetest.World, token, device string) string 
 }
 
 // The registration route has its own limit: 20 a minute per address
-// (BD_REGISTER_RATE_LIMIT_MAX), answered before the device is looked at.
+// (ND_REGISTER_RATE_LIMIT_MAX), answered before the device is looked at.
 func TestRegisterIsLimited(t *testing.T) {
-	w := routetest.New(t, routetest.Options{Env: map[string]string{"BD_REGISTER_RATE_LIMIT_MAX": "2", "RATE_LIMIT_MAX": "1000"}})
+	w := routetest.New(t, routetest.Options{Env: map[string]string{"ND_REGISTER_RATE_LIMIT_MAX": "2", "RATE_LIMIT_MAX": "1000"}})
 	device := w.SignedOut()
 	for i, want := range []int{401, 401, 429} {
-		got := device.Do("POST", "/api/bd/register", `{}`)
+		got := device.Do("POST", "/api/nd/register", `{}`)
 		if got.Status != want {
 			t.Fatalf("request %d: %d %s, want %d", i+1, got.Status, got.Body, want)
 		}
@@ -50,20 +50,20 @@ func TestRegisterIsLimited(t *testing.T) {
 		}
 	}
 	// The limit is the registration's own: a heartbeat is not counted
-	if got := device.Do("POST", "/api/bd/heartbeat", `{}`); got.Status != 401 {
+	if got := device.Do("POST", "/api/nd/heartbeat", `{}`); got.Status != 401 {
 		t.Errorf("heartbeat: %d %s", got.Status, got.Body)
 	}
 }
 
-// BD_REGISTER_ALLOW_OPEN lets a device register without a proof when it
+// ND_REGISTER_ALLOW_OPEN lets a device register without a proof when it
 // is on (L84: 1, true, yes, y, on), in any letter case and with white
 // space around.
 func TestOpenRegistration(t *testing.T) {
 	for value, open := range map[string]bool{"": false, "true": true, " YES ": true, "1": true, "on": true, "y": true, "false": false, "maybe": false} {
-		w := routetest.New(t, routetest.Options{Env: map[string]string{"BD_REGISTER_ALLOW_OPEN": value}})
-		got := w.SignedOut().Do("POST", "/api/bd/register", `{"device_id":"NEWDEV1"}`, "X-Device-Id", "NEWDEV1")
+		w := routetest.New(t, routetest.Options{Env: map[string]string{"ND_REGISTER_ALLOW_OPEN": value}})
+		got := w.SignedOut().Do("POST", "/api/nd/register", `{"device_id":"NEWDEV1"}`, "X-Device-Id", "NEWDEV1")
 		if (got.Status == 200) != open {
-			t.Errorf("BD_REGISTER_ALLOW_OPEN=%q: %d %s", value, got.Status, got.Body)
+			t.Errorf("ND_REGISTER_ALLOW_OPEN=%q: %d %s", value, got.Status, got.Body)
 		}
 	}
 }
@@ -83,7 +83,7 @@ func TestChatGoesThroughTheAPIServer(t *testing.T) {
 	token := deviceToken(t, w, "tok-chat-0123456789", "DEV1")
 	auth := []string{"Authorization", "Bearer " + token}
 
-	got := w.SignedOut().Do("POST", "/api/bd/chat/send", `{"device_id":"DEV1","sender":" Front desk ","content":" hello "}`, auth...)
+	got := w.SignedOut().Do("POST", "/api/nd/chat/send", `{"device_id":"DEV1","sender":" Front desk ","content":" hello "}`, auth...)
 	if got.Status != 200 || got.Body != `{"success":true,"message_id":"7"}` {
 		t.Errorf("send: %d %s", got.Status, got.Body)
 	}
@@ -91,19 +91,19 @@ func TestChatGoesThroughTheAPIServer(t *testing.T) {
 		t.Errorf("send called %q", calls)
 	}
 
-	got = w.SignedOut().Do("GET", "/api/bd/chat/history?device_id=DEV1", "", auth...)
+	got = w.SignedOut().Do("GET", "/api/nd/chat/history?device_id=DEV1", "", auth...)
 	want := `[{"id":"5","device_id":"DEV1","sender":"Alice","content":"hi","timestamp":"2026-11-18T10:00:00Z"},` +
 		`{"id":"7","device_id":"DEV1","sender":"DEV1","content":"hello","timestamp":"2026-11-18T10:01:00Z"}]`
 	if got.Status != 200 || got.Body != want {
 		t.Errorf("history: %d %s, want %s", got.Status, got.Body, want)
 	}
-	if got := w.SignedOut().Do("GET", "/api/bd/chat/history?device_id=DEV1&limit=1", "", auth...); got.Status != 200 || got.Body != `[]` {
+	if got := w.SignedOut().Do("GET", "/api/nd/chat/history?device_id=DEV1&limit=1", "", auth...); got.Status != 200 || got.Body != `[]` {
 		t.Errorf("history of one: %d %s", got.Status, got.Body)
 	}
-	if got := w.SignedOut().Do("GET", "/api/bd/chat/history", "", auth...); got.Status != 400 {
+	if got := w.SignedOut().Do("GET", "/api/nd/chat/history", "", auth...); got.Status != 400 {
 		t.Errorf("without a device id: %d %s", got.Status, got.Body)
 	}
-	if got := w.SignedOut().Do("GET", "/api/bd/chat/history?device_id[toString]=x", "", auth...); got.Status == 200 {
+	if got := w.SignedOut().Do("GET", "/api/nd/chat/history?device_id[toString]=x", "", auth...); got.Status == 200 {
 		t.Errorf("a device id without text: %d %s", got.Status, got.Body)
 	}
 
@@ -111,10 +111,10 @@ func TestChatGoesThroughTheAPIServer(t *testing.T) {
 	refusing := routetest.New(t, routetest.Options{})
 	token = deviceToken(t, refusing, "tok-chat-9876543210", "DEV1")
 	auth = []string{"Authorization", "Bearer " + token}
-	if got := refusing.SignedOut().Do("POST", "/api/bd/chat/send", `{"device_id":"DEV1","content":"x"}`, auth...); got.Status != 502 || got.Body != `{"error":"Failed to send message"}` {
+	if got := refusing.SignedOut().Do("POST", "/api/nd/chat/send", `{"device_id":"DEV1","content":"x"}`, auth...); got.Status != 502 || got.Body != `{"error":"Failed to send message"}` {
 		t.Errorf("send refused: %d %s", got.Status, got.Body)
 	}
-	if got := refusing.SignedOut().Do("GET", "/api/bd/chat/history?device_id=DEV1", "", auth...); got.Status != 200 || got.Body != `[]` {
+	if got := refusing.SignedOut().Do("GET", "/api/nd/chat/history?device_id=DEV1", "", auth...); got.Status != 200 || got.Body != `[]` {
 		t.Errorf("history refused: %d %s", got.Status, got.Body)
 	}
 }
@@ -123,7 +123,7 @@ func TestChatGoesThroughTheAPIServer(t *testing.T) {
 // of the pipeline comes after the device API.
 func TestNotificationWritesNeedTheCSRFToken(t *testing.T) {
 	w := routetest.New(t, routetest.Options{API: routetest.NewAPI().On("GET /api/help/requests", 200, `[]`)})
-	for _, path := range []string{"/api/bd/notifications/x/read", "/api/bd/notifications/read-all"} {
+	for _, path := range []string{"/api/nd/notifications/x/read", "/api/nd/notifications/read-all"} {
 		for _, role := range []string{"", "admin"} {
 			agent := w.SignedOut()
 			if role != "" {
@@ -155,7 +155,7 @@ func TestOperatorRoutesNeedAnOperator(t *testing.T) {
 			VALUES (?, ?, ?, '', '', '2999-01-01 00:00:00')`, row.token, hex.EncodeToString(sum[:]), row.user); err != nil {
 			t.Fatal(err)
 		}
-		got := w.SignedOut().Do("GET", "/api/bd/operator/sessions", "", "Authorization", "Bearer "+row.token)
+		got := w.SignedOut().Do("GET", "/api/nd/operator/sessions", "", "Authorization", "Bearer "+row.token)
 		if got.Status != row.want {
 			t.Errorf("token of user %d: %d %s, want %d", row.user, got.Status, got.Body, row.want)
 		}
@@ -174,7 +174,7 @@ func TestEnrollmentToken(t *testing.T) {
 		t.Fatal(err)
 	}
 	register := func(device, tok string) int {
-		return w.SignedOut().Do("POST", "/api/bd/register", `{"enrollment_token":"`+tok+`"}`, "X-Device-Id", device).Status
+		return w.SignedOut().Do("POST", "/api/nd/register", `{"enrollment_token":"`+tok+`"}`, "X-Device-Id", device).Status
 	}
 	if got := register("TOKDEV1", "  "+token+"xyz"); got != 200 {
 		t.Errorf("a token with more after its 64 characters: %d", got)
@@ -212,7 +212,7 @@ func TestRegistrationAddressIsTheTrustedOne(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		got := w.SignedOut().Do("POST", "/api/bd/register", `{}`, "X-Device-Id", "OLDID1", "X-Forwarded-For", "203.0.113.9")
+		got := w.SignedOut().Do("POST", "/api/nd/register", `{}`, "X-Device-Id", "OLDID1", "X-Forwarded-For", "203.0.113.9")
 		have := fmt.Sprint(got.Status, " ", got.Body)
 		if got.Status == 200 && strings.Contains(got.Body, `"device_id":"NEWID1"`) {
 			have = "200 NEWID1"
@@ -243,17 +243,17 @@ func TestBannedTarget(t *testing.T) {
 		}
 		token := deviceToken(t, w, "tok-banned-target-01", "DEV1")
 		auth := []string{"Authorization", "Bearer " + token}
-		if got := w.SignedOut().Do("POST", "/api/bd/connect", `{"target_id":"BANNED1"}`, auth...); got.Status != 403 || got.Body != `{"error":"Target device is banned"}` {
+		if got := w.SignedOut().Do("POST", "/api/nd/connect", `{"target_id":"BANNED1"}`, auth...); got.Status != 403 || got.Body != `{"error":"Target device is banned"}` {
 			t.Errorf("connect to a banned device: %d %s", got.Status, got.Body)
 		}
-		if got := w.SignedOut().Do("POST", "/api/bd/connect", `{"target_id":"FREE1"}`, auth...); got.Status != 200 {
+		if got := w.SignedOut().Do("POST", "/api/nd/connect", `{"target_id":"FREE1"}`, auth...); got.Status != 200 {
 			t.Errorf("connect to a device that is not banned: %d %s", got.Status, got.Body)
 		}
 		for id, want := range map[string]string{
 			"BANNED1": `{"success":true,"peer":{"id":"BANNED1","hostname":"banned box","banned":true}}`,
 			"FREE1":   `{"success":true,"peer":{"id":"FREE1","hostname":"free box","banned":false}}`,
 		} {
-			if got := w.SignedOut().Do("GET", "/api/bd/peer/"+id, "", auth...); got.Status != 200 || got.Body != want {
+			if got := w.SignedOut().Do("GET", "/api/nd/peer/"+id, "", auth...); got.Status != 200 || got.Body != want {
 				t.Errorf("peer %s: %d %s, want %s", id, got.Status, got.Body, want)
 			}
 		}
@@ -278,7 +278,7 @@ func TestStoredKeyAsBytes(t *testing.T) {
 				t.Fatal(err)
 			}
 			register := func(body string, header ...string) string {
-				got := w.SignedOut().Do("POST", "/api/bd/register", body, append([]string{"X-Device-Id", id}, header...)...)
+				got := w.SignedOut().Do("POST", "/api/nd/register", body, append([]string{"X-Device-Id", id}, header...)...)
 				if got.Status == 200 {
 					return "200"
 				}
@@ -298,9 +298,9 @@ func TestStoredKeyAsBytes(t *testing.T) {
 			// A proof made with the stored key allows the change
 			timestamp := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 			nonce := "nonce-" + id
-			payload := strings.Join([]string{"bd-enrollment-v1", "POST", "/api/bd/register", id, storedText, timestamp, nonce}, "\n")
-			proof := []string{"X-BD-Enrollment-Timestamp", timestamp, "X-BD-Enrollment-Nonce", nonce,
-				"X-BD-Enrollment-Signature", base64.StdEncoding.EncodeToString(ed25519.Sign(storedPriv, []byte(payload)))}
+			payload := strings.Join([]string{"nd-enrollment-v1", "POST", "/api/nd/register", id, storedText, timestamp, nonce}, "\n")
+			proof := []string{"X-ND-Enrollment-Timestamp", timestamp, "X-ND-Enrollment-Nonce", nonce,
+				"X-ND-Enrollment-Signature", base64.StdEncoding.EncodeToString(ed25519.Sign(storedPriv, []byte(payload)))}
 			if got := register(`{"public_key":"`+otherText+`","uuid":"uuid-1"}`, proof...); got != "200" {
 				t.Errorf("%s, another key with a proof of the stored one: %s", id, got)
 			}
@@ -319,7 +319,7 @@ func TestRegistrationWithoutUUIDKeepsTheStoredOne(t *testing.T) {
 			t.Fatal(err)
 		}
 		for _, body := range []string{`{}`, `{"uuid":""}`} {
-			if got := w.SignedOut().Do("POST", "/api/bd/register", body, "X-Device-Id", "UUIDDEV1"); got.Status != 200 {
+			if got := w.SignedOut().Do("POST", "/api/nd/register", body, "X-Device-Id", "UUIDDEV1"); got.Status != 200 {
 				t.Fatalf("%s: %d %s", body, got.Status, got.Body)
 			}
 			var uuid string
@@ -327,7 +327,7 @@ func TestRegistrationWithoutUUIDKeepsTheStoredOne(t *testing.T) {
 				t.Errorf("%s: stored uuid %q (%v), want uuid-1", body, uuid, err)
 			}
 		}
-		got := w.SignedOut().Do("POST", "/api/bd/register", `{"uuid":"uuid-2"}`, "X-Device-Id", "UUIDDEV1")
+		got := w.SignedOut().Do("POST", "/api/nd/register", `{"uuid":"uuid-2"}`, "X-Device-Id", "UUIDDEV1")
 		if got.Status != 409 || !strings.Contains(got.Body, "identity_change_not_allowed") {
 			t.Errorf("another uuid afterwards: %d %s", got.Status, got.Body)
 		}
@@ -349,7 +349,7 @@ func TestApprovalWithAKeyNeedsThatKey(t *testing.T) {
 			}
 		}
 		register := func(id, body string) string {
-			got := w.SignedOut().Do("POST", "/api/bd/register", body, "X-Device-Id", id)
+			got := w.SignedOut().Do("POST", "/api/nd/register", body, "X-Device-Id", id)
 			if got.Status == 200 {
 				return "200"
 			}
@@ -389,7 +389,7 @@ func TestUUIDInOtherLetterCaseIsTheSame(t *testing.T) {
 			`{"uuid":"ab-12-CD-34"}`: 200,
 			`{"uuid":"ab12-cd35"}`:   409,
 		} {
-			if got := w.SignedOut().Do("POST", "/api/bd/register", body, "X-Device-Id", "CASEDEV1"); got.Status != want {
+			if got := w.SignedOut().Do("POST", "/api/nd/register", body, "X-Device-Id", "CASEDEV1"); got.Status != want {
 				t.Errorf("%s: %d %s, want %d", body, got.Status, got.Body, want)
 			}
 		}
@@ -434,7 +434,7 @@ func TestRenameGuardOnBothDatabases(t *testing.T) {
 			if strings.HasPrefix(c.name, "OLDREN2") {
 				id, newID = "OLDREN2", "NEWREN2"
 			}
-			got := w.SignedOut().Do("POST", "/api/bd/register", c.body, "X-Device-Id", id)
+			got := w.SignedOut().Do("POST", "/api/nd/register", c.body, "X-Device-Id", id)
 			have := fmt.Sprint(got.Status, " ", got.Body)
 			if got.Status == 200 && strings.Contains(got.Body, `"device_id":"`+newID+`"`) {
 				have = "200 " + newID
@@ -465,7 +465,7 @@ func TestOperatorLogin(t *testing.T) {
 			t.Fatal(err)
 		}
 		login := func(username, password string) (int, string) {
-			got := w.SignedOut().Do("POST", "/api/bd/operator/login", `{"username":"`+username+`","password":"`+password+`","device_id":"OPDESK1"}`)
+			got := w.SignedOut().Do("POST", "/api/nd/operator/login", `{"username":"`+username+`","password":"`+password+`","device_id":"OPDESK1"}`)
 			return got.Status, got.Body
 		}
 		status, body := login("e2e_operator", "op-secret-1")
@@ -481,7 +481,7 @@ func TestOperatorLogin(t *testing.T) {
 		if err := w.DB.QueryRow(ctx, "SELECT client_id FROM access_tokens WHERE user_id = 5").Scan(&client); err != nil || client != "OPDESK1" {
 			t.Errorf("token bound to %q (%v)", client, err)
 		}
-		if got := w.SignedOut().Do("GET", "/api/bd/operator/sessions", "", "Authorization", "Bearer "+answer.Token); got.Status != 200 {
+		if got := w.SignedOut().Do("GET", "/api/nd/operator/sessions", "", "Authorization", "Bearer "+answer.Token); got.Status != 200 {
 			t.Errorf("operator route with the token: %d %s", got.Status, got.Body)
 		}
 		for _, c := range []struct{ user, password, want string }{
@@ -526,7 +526,7 @@ func TestOperatorLoginNamesTheClientsAddressToTheAPIServer(t *testing.T) {
 	w := routetest.New(t, routetest.Options{API: api, Config: func(cfg *config.Config) {
 		cfg.TrustProxy, _ = httpx.ParseTrustProxy("1")
 	}})
-	got := w.SignedOut().Do("POST", "/api/bd/operator/login", `{"username":"e2e_operator","password":"wrong","device_id":"OPDESK1"}`,
+	got := w.SignedOut().Do("POST", "/api/nd/operator/login", `{"username":"e2e_operator","password":"wrong","device_id":"OPDESK1"}`,
 		"X-Forwarded-For", "203.0.113.7")
 	if got.Status != http.StatusUnauthorized {
 		t.Fatalf("a password the API server refuses: %d %s", got.Status, got.Body)
@@ -580,7 +580,7 @@ func TestSessionHistoryIsTheOperatorsOwn(t *testing.T) {
 			{"e2e_operator", "s-1", "session_end", "2026-11-18 10:03:00"},
 		})
 		token := operatorToken(t, w, "tok-history-own-01")
-		got := w.SignedOut().Do("GET", "/api/bd/operator/sessions", "", "Authorization", "Bearer "+token)
+		got := w.SignedOut().Do("GET", "/api/nd/operator/sessions", "", "Authorization", "Bearer "+token)
 		var answer struct {
 			Sessions []struct {
 				ID       string `json:"id"`
@@ -608,7 +608,7 @@ func TestSessionHistoryTimes(t *testing.T) {
 			{"e2e_operator", "s-t", "session_end", "2026-11-18 10:00:05.750"},
 		})
 		token := operatorToken(t, w, "tok-history-time-1")
-		got := w.SignedOut().Do("GET", "/api/bd/operator/sessions", "", "Authorization", "Bearer "+token)
+		got := w.SignedOut().Do("GET", "/api/nd/operator/sessions", "", "Authorization", "Bearer "+token)
 		want := `"started_at":"2026-11-18 10:00:00","ended_at":"2026-11-18 10:00:05","duration_secs":5,`
 		if db.IsPostgres() {
 			want = `"started_at":"2026-11-18T10:00:00.250Z","ended_at":"2026-11-18T10:00:05.750Z","duration_secs":6,`

@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // Commercialization: the server's clock and its time sync, billing

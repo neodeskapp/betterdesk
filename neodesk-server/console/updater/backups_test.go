@@ -169,7 +169,7 @@ func TestRestore(t *testing.T) {
 		t.Errorf("invalid: %v", err)
 	}
 
-	changed := filepath.Join(*result.BackupPath, "server", "betterdesk-server")
+	changed := filepath.Join(*result.BackupPath, "server", "neodesk-server")
 	if err := os.WriteFile(changed, []byte("tampered"), 0o755); err != nil {
 		t.Fatal(err)
 	}

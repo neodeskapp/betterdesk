@@ -4,7 +4,7 @@
     "Next Updates",
     "compatibility"
   ],
-  "checklist_url": "https://betterde.sk/docs/development/rustdesk-compatibility#the-checklist-for-a-new-rustdesk-release",
+  "checklist_url": "https://neode.sk/docs/development/rustdesk-compatibility#the-checklist-for-a-new-rustdesk-release",
   "client": {
     "id": "client",
     "repository": "rustdesk/rustdesk",

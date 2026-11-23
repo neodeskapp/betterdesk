@@ -241,7 +241,7 @@ func (s *SQLiteDB) migrateSchema() error {
 		`CREATE INDEX IF NOT EXISTS idx_peer_conn_sess_open
 			ON peer_connection_sessions(host_id, peer_id, ended_at)`,
 
-		// BetterDesk device telemetry snapshots and heartbeat-delivered commands.
+		// NeoDesk device telemetry snapshots and heartbeat-delivered commands.
 		`CREATE TABLE IF NOT EXISTS device_telemetry_snapshots (
 			device_id TEXT NOT NULL,
 			kind TEXT NOT NULL,

@@ -129,7 +129,7 @@ export async function request(path: string, opts: RequestOptions = {}): Promise<
 	const method = opts.method ?? 'GET';
 	const url = safePath(path, opts.query);
 	const headers: Record<string, string> = { Accept: 'application/json', ...opts.headers };
-	if (!(opts.activity ?? method !== 'GET')) headers['X-BD-Background'] = '1';
+	if (!(opts.activity ?? method !== 'GET')) headers['X-ND-Background'] = '1';
 	let body: BodyInit | undefined;
 	if (method !== 'GET') {
 		if (csrfToken) headers['X-CSRF-Token'] = csrfToken;

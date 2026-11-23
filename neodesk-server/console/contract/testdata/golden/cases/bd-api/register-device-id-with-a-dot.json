@@ -2,7 +2,7 @@
  "id": "bd-api/register-device-id-with-a-dot",
  "request": {
   "method": "POST",
-  "path": "/api/bd/register",
+  "path": "/api/nd/register",
   "body": {},
   "notes": [
    "header X-Device-Id: contract.bd",

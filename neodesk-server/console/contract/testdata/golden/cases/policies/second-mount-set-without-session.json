@@ -2,7 +2,7 @@
  "id": "policies/second-mount-set-without-session",
  "request": {
   "method": "PUT",
-  "path": "/api/bd/api/panel/policies/no-such-org/update",
+  "path": "/api/nd/api/panel/policies/no-such-org/update",
   "body": {
    "idle_lock_timeout": 5,
    "max_session_duration": 60,

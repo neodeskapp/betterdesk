@@ -9,14 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // fixtures is the copy of the old console's branding files the branding
@@ -246,7 +246,7 @@ func TestBootstrap(t *testing.T) {
 			t.Errorf("sessionPolicy = %s", policy)
 		}
 		branding, _ := got["branding"].(map[string]any)
-		if branding["appName"] != "BetterDesk" || branding["revision"] != "0" || branding["showPoweredBy"] != true {
+		if branding["appName"] != "NeoDesk" || branding["revision"] != "0" || branding["showPoweredBy"] != true {
 			t.Errorf("branding = %v", branding)
 		}
 
@@ -320,7 +320,7 @@ func TestBrandingSavedShowsAtOnce(t *testing.T) {
 		}
 		before := bootRevision(t, viewer.Do("GET", "/console-boot.js", "").Body)
 		exec(t, db, "INSERT INTO branding_config (key, value, updated_at) VALUES ('appName', 'Written past it', '2026-01-02 03:04:05')")
-		if name, after := appName(), bootRevision(t, viewer.Do("GET", "/console-boot.js", "").Body); name != "BetterDesk" || after != before {
+		if name, after := appName(), bootRevision(t, viewer.Do("GET", "/console-boot.js", "").Body); name != "NeoDesk" || after != before {
 			t.Errorf("a row written past the service shows: appName %v, revision %q before and %q after", name, before, after)
 		}
 		if err := w.Server.Deps().Branding.SaveBranding(ctx, branding.NewObject()); err != nil {

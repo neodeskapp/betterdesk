@@ -14,8 +14,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // Options are what the group takes besides the console's services.
@@ -34,8 +34,8 @@ type handlers struct {
 }
 
 // Register adds the group's routes below the mount of d. The old console
-// mounted the group at the root and at /api/bd, so every route answers at
-// both: /api/panel/scaling/relays and /api/bd/api/panel/scaling/relays.
+// mounted the group at the root and at /api/nd, so every route answers at
+// both: /api/panel/scaling/relays and /api/nd/api/panel/scaling/relays.
 func Register(d *kit.Deps) { RegisterWith(d, Options{}) }
 
 // RegisterWith is Register with the clock and the random source of the
@@ -62,7 +62,7 @@ func RegisterWith(d *kit.Deps, o Options) {
 	r.Post("/api/panel/scaling/rules", h.createRule, admin...)
 	r.Put("/api/panel/scaling/rules/{ruleId}", h.updateRule, admin...)
 	r.Delete("/api/panel/scaling/rules/{ruleId}", h.deleteRule, admin...)
-	r.Post("/api/bd/scaling/relay-heartbeat", h.heartbeat)
+	r.Post("/api/nd/scaling/relay-heartbeat", h.heartbeat)
 }
 
 // The answers of this group have no "success" member.
@@ -107,7 +107,7 @@ func (h *handlers) isoNow() string {
 	return h.now().UTC().Format("2006-01-02T15:04:05.000Z")
 }
 
-// heartbeat answers POST /api/bd/scaling/relay-heartbeat for anyone, with
+// heartbeat answers POST /api/nd/scaling/relay-heartbeat for anyone, with
 // or without a session: 202, and nothing is stored (BUGS.md I4).
 func (h *handlers) heartbeat(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusAccepted, heartbeatAnswer{OK: true, Note: "relay heartbeat acknowledged but not stored"})

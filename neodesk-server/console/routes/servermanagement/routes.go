@@ -1,6 +1,6 @@
 // Package servermanagement answers the routes of the server management
 // page (routes/server-management.routes.js, beta): the runtime and the
-// machine, the file browser, which only lists and reads, and BetterDesk's
+// machine, the file browser, which only lists and reads, and NeoDesk's
 // system services. Every route
 // needs server.config. The work is done by package console/servermgmt.
 package servermanagement
@@ -8,8 +8,8 @@ package servermanagement
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/servermgmt"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/servermgmt"
 )
 
 // permission is what every route of the group needs.

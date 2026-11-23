@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // TestClientAPIPortReachesTheAPIInProcess: in proxy mode the client API

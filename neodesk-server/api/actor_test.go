@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/billing"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/billing"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // TestActorIsRecordedAsCreatorAndHandler: an in-process call that names

@@ -26,7 +26,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -37,7 +37,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Invalid backup archive: Archive is not a BetterDesk full backup (wrong _format); Unsupported full-backup version: undefined",
+     "error": "Invalid backup archive: Archive is not a NeoDesk full backup (wrong _format); Unsupported full-backup version: undefined",
      "success": false
     }
    }

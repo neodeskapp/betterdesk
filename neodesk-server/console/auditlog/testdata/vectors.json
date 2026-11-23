@@ -3203,12 +3203,12 @@
    "out": "Saved allowlisted environment keys: API_KEY, SESSION_SECRET, SMTP_PASSWORD"
   },
   {
-   "in": "Saved advanced config: /opt/betterdesk/.env (backup: /opt/betterdesk/.env.bak)",
-   "out": "Saved advanced config: /opt/betterdesk/.env (backup: /opt/betterdesk/.env.bak)"
+   "in": "Saved advanced config: /opt/neodesk/.env (backup: /opt/neodesk/.env.bak)",
+   "out": "Saved advanced config: /opt/neodesk/.env (backup: /opt/neodesk/.env.bak)"
   },
   {
-   "in": "path=/etc/betterdesk/secret.key bytes=12",
-   "out": "path=/etc/betterdesk/secret.key bytes=12"
+   "in": "path=/etc/neodesk/secret.key bytes=12",
+   "out": "path=/etc/neodesk/secret.key bytes=12"
   },
   {
    "in": "from=/a/token to=/b/token=1",
@@ -17473,8 +17473,8 @@
    "out": "ssh://10.0.0.1:22"
   },
   {
-   "in": "postgres://betterdesk:pw@db:5432/betterdesk?sslmode=disable",
-   "out": "postgres://db:5432/betterdesk?sslmode=disable"
+   "in": "postgres://neodesk:pw@db:5432/neodesk?sslmode=disable",
+   "out": "postgres://db:5432/neodesk?sslmode=disable"
   },
   {
    "in": "postgresql://u:p%40ss@db/x",

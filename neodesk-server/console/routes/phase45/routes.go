@@ -8,9 +8,9 @@ package phase45
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/agentreleases"
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/agentreleases"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 type handlers struct {
@@ -30,15 +30,15 @@ func Register(d *kit.Deps) {
 		log: d.Log.Child("phase4_5"),
 		releases: agentreleases.New(agentreleases.Options{
 			DataDir:   d.Config.DataDir,
-			Repo:      getenv("BETTERDESK_SUPPORT_RELEASE_REPO"),
-			PublicKey: getenv("BETTERDESK_SUPPORT_RELEASE_PUBLIC_KEY"),
+			Repo:      getenv("NEODESK_SUPPORT_RELEASE_REPO"),
+			PublicKey: getenv("NEODESK_SUPPORT_RELEASE_PUBLIC_KEY"),
 		}),
 	}
 	manage, approve := d.RequirePermission("enrollment.manage"), d.RequirePermission("enrollment.approve")
 	r := d.Router
 	r.Get("/api/users/me/profile", h.profile, d.RequireAuth)
 	r.Put("/api/users/me/profile", h.saveProfile, d.RequireAuth)
-	r.Get("/api/bd/operator-info", h.operatorInfo)
+	r.Get("/api/nd/operator-info", h.operatorInfo)
 	r.Get("/api/agent-templates", h.templates, d.RequireAuth, manage)
 	r.Post("/api/agent-templates", h.createTemplate, d.RequireAuth, manage)
 	r.Delete("/api/agent-templates/{id}", h.deleteTemplate, d.RequireAuth, manage)
@@ -47,7 +47,7 @@ func Register(d *kit.Deps) {
 	r.Post("/api/agent-releases/sync", h.syncRelease, d.RequireAuth, manage)
 	r.Post("/api/agent-pairing/activate", h.activate, d.RequireAuth, approve)
 	r.Get("/downloads/generic-agent/{tag}/{name}", h.download, d.Limits.FileAccess.Middleware)
-	r.Post("/api/bd/enroll", h.enroll)
+	r.Post("/api/nd/enroll", h.enroll)
 	r.Get("/api/portal/installers", h.installers, d.Limits.FileAccess.Middleware)
 }
 

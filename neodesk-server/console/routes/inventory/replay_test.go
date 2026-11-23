@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // TestNodeAnswers replays what the Node console's two read routes
@@ -67,11 +67,11 @@ func TestNodeAnswers(t *testing.T) {
 	})
 }
 
-// The console has the group's five routes at /api/bd and at
+// The console has the group's five routes at /api/nd and at
 // /api/inventory, in the order of the old file: the three of the desktop
 // agent, then the two read routes. The device routes ask for a device
 // token at both mounts, a session does not stand for one; the read routes
-// step aside at /api/bd, where nothing else of this console answers
+// step aside at /api/nd, where nothing else of this console answers
 // those addresses.
 func TestTheRoutesAtBothMounts(t *testing.T) {
 	w := replay.NewWorld(t, storetest.Migrated(t), nil)
@@ -81,7 +81,7 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 			first[route.Method+" "+route.Path] = i
 		}
 	}
-	for _, mount := range []string{"/api/bd", "/api/inventory"} {
+	for _, mount := range []string{"/api/nd", "/api/inventory"} {
 		last := -1
 		for _, route := range []string{"POST " + mount + "/inventory", "POST " + mount + "/telemetry", "GET " + mount + "/inventory/{id}", "GET " + mount, "GET " + mount + "/{id}"} {
 			i, ok := first[route]
@@ -95,8 +95,8 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 			last = i
 		}
 	}
-	if first["GET /api/bd/{id}"] > first["GET /api/inventory"] {
-		t.Errorf("the group is registered at /api/inventory before /api/bd")
+	if first["GET /api/nd/{id}"] > first["GET /api/inventory"] {
+		t.Errorf("the group is registered at /api/inventory before /api/nd")
 	}
 
 	body := replay.Text(`{"device_id":"D1","hardware":{}}`)
@@ -105,17 +105,17 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 		{Role: "admin", Method: "POST", Path: "/api/inventory/inventory", Body: body},
 		{Role: "admin", Method: "POST", Path: "/api/inventory/telemetry", Body: body},
 		{Role: "admin", Path: "/api/inventory/inventory/D1"},
-		{Role: "admin", Method: "POST", Path: "/api/bd/inventory", Body: body},
-		{Role: "admin", Method: "POST", Path: "/api/bd/telemetry", Body: body},
-		{Role: "admin", Path: "/api/bd/inventory/D1"},
-		{Method: "POST", Path: "/api/bd/inventory", Body: body},
-		{Path: "/API/BD/Inventory/D1/"},
+		{Role: "admin", Method: "POST", Path: "/api/nd/inventory", Body: body},
+		{Role: "admin", Method: "POST", Path: "/api/nd/telemetry", Body: body},
+		{Role: "admin", Path: "/api/nd/inventory/D1"},
+		{Method: "POST", Path: "/api/nd/inventory", Body: body},
+		{Path: "/API/ND/Inventory/D1/"},
 	} {
 		if got := w.Do(req); got.Status != 401 || got.Body != refused {
 			t.Errorf("%s %s as %q: %d %s, want 401 %s", req.Method, req.Path, req.Role, got.Status, got.Body, refused)
 		}
 	}
-	for _, path := range []string{"/api/bd", "/api/bd/D1", "/api/bd/inventory"} {
+	for _, path := range []string{"/api/nd", "/api/nd/D1", "/api/nd/inventory"} {
 		if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != 404 || got.Body != `{"success":false,"error":"Not Found"}` {
 			t.Errorf("GET %s as admin: %d %s, want the console's 404", path, got.Status, got.Body)
 		}

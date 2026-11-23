@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/console/qr"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/qr"
 )
 
 const (
@@ -28,7 +28,7 @@ func TestPasswordStepOfATwoFactorAccount(t *testing.T) {
 		before := a.sessionID()
 		res := a.post("/api/auth/login", login("alice", password))
 		want(t, "password step", res, http.StatusOK, secondFactorDue)
-		if len(res.cookies()) != 1 || res.cookie("bd.sid") == "" {
+		if len(res.cookies()) != 1 || res.cookie("nd.sid") == "" {
 			t.Errorf("cookies of the password step: %q", res.cookies())
 		}
 		// The pending account is in a new session; the old one is empty
@@ -86,7 +86,7 @@ func TestSecondFactor(t *testing.T) {
 		res := a.post("/api/auth/totp/verify", fmt.Sprintf(`{"code":%q,"return":"/devices"}`, currentCode(t, totpSecret)),
 			"User-Agent", "another-agent/2", "X-Client-Fingerprint", "fp-of-the-code-step")
 		want(t, "right code", res, http.StatusOK, strings.Replace(signedInAlice, `"redirect":"/"`, `"redirect":"/devices"`, 1))
-		if got := res.cookies(); len(got) != 2 || got[0] != clearedGuest || !strings.HasPrefix(got[1], "bd.sid=s%3A") {
+		if got := res.cookies(); len(got) != 2 || got[0] != clearedGuest || !strings.HasPrefix(got[1], "nd.sid=s%3A") {
 			t.Errorf("cookies of the code step: %q", got)
 		}
 		if a.sessionID() == pending {
@@ -324,13 +324,13 @@ func TestTwoFactorEnrolment(t *testing.T) {
 		want(t, "enable before set-up", a.post("/api/auth/totp/enable", `{"code":"123456"}`), http.StatusBadRequest, `{"success":false,"error":"TOTP not set up"}`)
 
 		res := a.post("/api/auth/totp/setup", `{}`)
-		setup := regexp.MustCompile(`^\{"success":true,"qrCode":"(data:image/png;base64,[A-Za-z0-9+/=]+)","secret":"([A-Z2-7]{32})","otpauthUrl":"otpauth://totp/BetterDesk:alice\?secret=([A-Z2-7]{32})&issuer=BetterDesk&digits=6&period=30"\}$`).FindStringSubmatch(res.body)
+		setup := regexp.MustCompile(`^\{"success":true,"qrCode":"(data:image/png;base64,[A-Za-z0-9+/=]+)","secret":"([A-Z2-7]{32})","otpauthUrl":"otpauth://totp/NeoDesk:alice\?secret=([A-Z2-7]{32})&issuer=NeoDesk&digits=6&period=30"\}$`).FindStringSubmatch(res.body)
 		if res.status != http.StatusOK || setup == nil || setup[2] != setup[3] {
 			t.Fatalf("set-up: %d %s", res.status, res.body)
 		}
 		secret := setup[2]
 		// The picture is the address as a QR code, 256 pixels wide with a margin of 2
-		if picture, err := qr.PNGDataURL("otpauth://totp/BetterDesk:alice?secret="+secret+"&issuer=BetterDesk&digits=6&period=30", qr.Options{Width: 256, Margin: 2}); err != nil || picture != setup[1] {
+		if picture, err := qr.PNGDataURL("otpauth://totp/NeoDesk:alice?secret="+secret+"&issuer=NeoDesk&digits=6&period=30", qr.Options{Width: 256, Margin: 2}); err != nil || picture != setup[1] {
 			t.Errorf("the QR code is not the one of the address (%v)", err)
 		}
 		if stored := w.text(`SELECT totp_secret FROM users WHERE id = ?`, alice); stored != secret {

@@ -7,9 +7,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/reports"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/reports"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // auditLogs is getAuditLogs(limit): the newest entries of the audit log

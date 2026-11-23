@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/authn"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath/proxytest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // withDevices mounts the group as register does, with the device token
@@ -63,13 +63,13 @@ func TestResourcePolicyIsTheTokensDevice(t *testing.T) {
 	policy := &proxytest.Answer{Status: 200, Type: "application/json", Body: `{"usb":{}}`}
 	own := `{"device_id":"device-a"}`
 	for _, req := range []proxytest.Request{
-		{Path: "/api/bd/resource-policy?device_id=device-a", Headers: map[string]string{"X-Device-Id": "device-b"}},
-		{Path: "/api/bd/resource-policy?device_id=device-a", Headers: map[string]string{"X-Device-Id": " device-c "}},
-		{Path: "/api/bd/resource-policy?device_id=device-a", Headers: map[string]string{"X-Device-Id": "bad id"}},
-		{Path: "/api/bd/resource-policy?device_id=device-c", Body: &own},
-		{Path: "/api/bd/resource-policy?device_id[]=device-c", Body: &own},
-		{Path: "/api/bd/resource-policy?device_id[toString]=x", Body: &own},
-		{Path: "/api/bd/api/bd/resource-policy?device_id=device-a", Headers: map[string]string{"X-Device-Id": "device-b"}},
+		{Path: "/api/nd/resource-policy?device_id=device-a", Headers: map[string]string{"X-Device-Id": "device-b"}},
+		{Path: "/api/nd/resource-policy?device_id=device-a", Headers: map[string]string{"X-Device-Id": " device-c "}},
+		{Path: "/api/nd/resource-policy?device_id=device-a", Headers: map[string]string{"X-Device-Id": "bad id"}},
+		{Path: "/api/nd/resource-policy?device_id=device-c", Body: &own},
+		{Path: "/api/nd/resource-policy?device_id[]=device-c", Body: &own},
+		{Path: "/api/nd/resource-policy?device_id[toString]=x", Body: &own},
+		{Path: "/api/nd/api/nd/resource-policy?device_id=device-a", Headers: map[string]string{"X-Device-Id": "device-b"}},
 	} {
 		if req.Body != nil {
 			req.Type = "application/json"

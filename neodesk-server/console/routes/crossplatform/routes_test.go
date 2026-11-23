@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
 )
 
 // scenario is one entry of testdata/crossplatform.json: an answer of the

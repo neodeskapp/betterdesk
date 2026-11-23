@@ -3,13 +3,13 @@ package remote
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/i18n"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/reqquery"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/reqquery"
 )
 
 // pageInfo is what the remote client's pages without a session may show:
@@ -37,7 +37,7 @@ func (h *handlers) pageInfo(r *http.Request) pageInfo {
 		logo.Set(key, or(key, ""))
 	}
 	return pageInfo{
-		AppName:    or("appName", "BetterDesk"),
+		AppName:    or("appName", "NeoDesk"),
 		AppVersion: h.src.appVersion,
 		Branding:   logo,
 		Languages:  h.languages(),

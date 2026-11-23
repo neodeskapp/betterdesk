@@ -1,11 +1,11 @@
 package generator
 
-import "github.com/unitronix/betterdesk-server/console/jsbind"
+import "github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 
-// ProductSupport is the one product the generator builds: the BetterDesk
+// ProductSupport is the one product the generator builds: the NeoDesk
 // Support client. Rows of the old Go support agent ("agent",
 // "support-agent", ...) count as this product.
-const ProductSupport = "betterdesk-support"
+const ProductSupport = "neodesk-support"
 
 // canonicalProductType maps the product names rows have used to
 // ProductSupport, and anything else to "".
@@ -15,7 +15,7 @@ func canonicalProductType(raw any) string {
 		value = jsbind.ToLower(jsTrim(jsString(raw)))
 	}
 	switch value {
-	case ProductSupport, "betterdesk_support", "support-agent", "support_agent", "agent", "agent-client", "agent_client", "rdclient":
+	case ProductSupport, "neodesk_support", "support-agent", "support_agent", "agent", "agent-client", "agent_client", "rdclient":
 		return ProductSupport
 	}
 	return ""
@@ -32,7 +32,7 @@ func NormalizeProductType(raw any) string {
 
 // IsSupportBundle reports whether a bundle row's profile was made by the
 // template generator (version 2): its sku or generator_kind is
-// betterdesk-support or its generator_version is 2 or more. Rows left from
+// neodesk-support or its generator_version is 2 or more. Rows left from
 // before have none of these. raw is the branding column: text or a parsed
 // object.
 func IsSupportBundle(raw any) bool {

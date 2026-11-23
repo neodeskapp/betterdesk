@@ -3,8 +3,8 @@ package bdapi
 import (
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // The operator list maps only the API server's "acknowledged" to "accepted" and

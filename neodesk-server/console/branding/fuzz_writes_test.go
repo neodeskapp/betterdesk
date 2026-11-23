@@ -16,12 +16,12 @@ import (
 // export and import back.
 func FuzzImportPreset(f *testing.F) {
 	for _, seed := range []string{
-		`{}`, `[]`, `null`, `"x"`, `{"type":"betterdesk-theme"}`, `{"type":"betterdesk-theme","branding":"x"}`,
-		`{"type":"betterdesk-theme","branding":{"colors":"red"}}`, `{"type":"betterdesk-theme","branding":{"colors":{"bgPrimary":{"toString":1}}}}`,
-		`{"type":"betterdesk-theme","appearance":{"identity":{"appName":"A"},"palette":{"mode":"light","semantic":{"constructor":1}}}}`,
-		`{"type":"betterdesk-theme","branding":{"appName":{"toString":1}}}`, `{"type":"betterdesk-theme","branding":[1,2,3]}`,
-		`{"type":"betterdesk-theme","branding":{"loginSlides":[{"imageUrl":"/a"},{"title":{"x":1}}],"customCss":"@import x;"}}`,
-		`{"version":"2.0","type":"betterdesk-theme","appearance":{"backgrounds":{"console":{"type":"image","imageUrl":"/u.png"}}},"branding":{"appName":"B"}}`,
+		`{}`, `[]`, `null`, `"x"`, `{"type":"neodesk-theme"}`, `{"type":"neodesk-theme","branding":"x"}`,
+		`{"type":"neodesk-theme","branding":{"colors":"red"}}`, `{"type":"neodesk-theme","branding":{"colors":{"bgPrimary":{"toString":1}}}}`,
+		`{"type":"neodesk-theme","appearance":{"identity":{"appName":"A"},"palette":{"mode":"light","semantic":{"constructor":1}}}}`,
+		`{"type":"neodesk-theme","branding":{"appName":{"toString":1}}}`, `{"type":"neodesk-theme","branding":[1,2,3]}`,
+		`{"type":"neodesk-theme","branding":{"loginSlides":[{"imageUrl":"/a"},{"title":{"x":1}}],"customCss":"@import x;"}}`,
+		`{"version":"2.0","type":"neodesk-theme","appearance":{"backgrounds":{"console":{"type":"image","imageUrl":"/u.png"}}},"branding":{"appName":"B"}}`,
 	} {
 		f.Add([]byte(seed))
 	}

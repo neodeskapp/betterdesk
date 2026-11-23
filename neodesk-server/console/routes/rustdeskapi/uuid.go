@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 )
 
 // What a client reports without signing in (heartbeats, system information,

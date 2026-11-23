@@ -48,10 +48,10 @@ func TestCSRFTokenAndCookies(t *testing.T) {
 		}
 	}
 	h := http.Header{}
-	h.Add("Set-Cookie", "bd.sid=s1; Path=/; HttpOnly")
+	h.Add("Set-Cookie", "nd.sid=s1; Path=/; HttpOnly")
 	h.Add("Set-Cookie", "csrf=c1")
 	h.Add("Set-Cookie", "; Path=/")
-	if got := firstCookie(h); got != "bd.sid=s1; csrf=c1" {
+	if got := firstCookie(h); got != "nd.sid=s1; csrf=c1" {
 		t.Errorf("firstCookie = %q", got)
 	}
 }
@@ -76,7 +76,7 @@ func (p *fakePanel) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "/app/login":
 		fmt.Fprint(w, "<html>the console</html>")
 	case "/api/auth/login-page":
-		http.SetCookie(w, &http.Cookie{Name: "bd.sid", Value: "pre"})
+		http.SetCookie(w, &http.Cookie{Name: "nd.sid", Value: "pre"})
 		fmt.Fprint(w, `{"csrfToken":"tok"}`)
 	case "/api/auth/login":
 		var body map[string]string
@@ -85,7 +85,7 @@ func (p *fakePanel) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, `{"success":false}`, http.StatusUnauthorized)
 			return
 		}
-		http.SetCookie(w, &http.Cookie{Name: "bd.sid", Value: "signed-in"})
+		http.SetCookie(w, &http.Cookie{Name: "nd.sid", Value: "signed-in"})
 		fmt.Fprint(w, p.login)
 	case "/api/auth/verify":
 		fmt.Fprint(w, p.verify)
@@ -112,7 +112,7 @@ func (d *fakeDocker) run(args ...string) dockerResult {
 		key := d.keys[0]
 		d.keys = d.keys[1:]
 		return dockerResult{stdout: key + "\n"}
-	case strings.Contains(call, "betterdesk-server check"):
+	case strings.Contains(call, "neodesk-server check"):
 		return dockerResult{stdout: "PASS http://127.0.0.1:21121/api/health (200)\n"}
 	case args[0] == "inspect":
 		status := d.healthy[0]
@@ -162,30 +162,30 @@ func TestDockerSmokeRun(t *testing.T) {
 		calls = append(calls, c)
 	}
 	want := []string{
-		"volume create betterdesk-local-gate-data-1-2",
-		"volume create betterdesk-local-gate-console-1-2",
+		"volume create neodesk-local-gate-data-1-2",
+		"volume create neodesk-local-gate-console-1-2",
 		"run ...",
-		"port betterdesk-local-gate-1-2 5000/tcp",
-		"port betterdesk-local-gate-1-2 21121/tcp",
-		"exec betterdesk-local-gate-1-2 sh -c cat /opt/rustdesk/.api_key",
-		"exec -u betterdesk betterdesk-local-gate-1-2 /usr/local/bin/betterdesk-server check --api http://127.0.0.1:21121/api/health --panel http://127.0.0.1:5000/health --port 127.0.0.1:21121",
-		"restart betterdesk-local-gate-1-2",
-		"port betterdesk-local-gate-1-2 5000/tcp",
-		"port betterdesk-local-gate-1-2 21121/tcp",
-		"exec betterdesk-local-gate-1-2 sh -c cat /opt/rustdesk/.api_key",
-		"inspect --format {{.State.Health.Status}} betterdesk-local-gate-1-2",
-		"inspect --format {{.State.Health.Status}} betterdesk-local-gate-1-2",
-		"rm --force betterdesk-local-gate-1-2",
-		"volume rm --force betterdesk-local-gate-data-1-2",
-		"volume rm --force betterdesk-local-gate-console-1-2",
+		"port neodesk-local-gate-1-2 5000/tcp",
+		"port neodesk-local-gate-1-2 21121/tcp",
+		"exec neodesk-local-gate-1-2 sh -c cat /opt/rustdesk/.api_key",
+		"exec -u neodesk neodesk-local-gate-1-2 /usr/local/bin/neodesk-server check --api http://127.0.0.1:21121/api/health --panel http://127.0.0.1:5000/health --port 127.0.0.1:21121",
+		"restart neodesk-local-gate-1-2",
+		"port neodesk-local-gate-1-2 5000/tcp",
+		"port neodesk-local-gate-1-2 21121/tcp",
+		"exec neodesk-local-gate-1-2 sh -c cat /opt/rustdesk/.api_key",
+		"inspect --format {{.State.Health.Status}} neodesk-local-gate-1-2",
+		"inspect --format {{.State.Health.Status}} neodesk-local-gate-1-2",
+		"rm --force neodesk-local-gate-1-2",
+		"volume rm --force neodesk-local-gate-data-1-2",
+		"volume rm --force neodesk-local-gate-console-1-2",
 	}
 	if !reflect.DeepEqual(calls, want) {
 		t.Errorf("docker calls:\n%s\nwant:\n%s", strings.Join(calls, "\n"), strings.Join(want, "\n"))
 	}
 	for _, part := range []string{
-		"run --detach --name betterdesk-local-gate-1-2 --label com.betterdesk.local-gate=true --publish 127.0.0.1::5000 --publish 127.0.0.1::21121 --volume betterdesk-local-gate-data-1-2:/opt/rustdesk --volume betterdesk-local-gate-console-1-2:/app/data --add-host host.docker.internal:host-gateway --env NODE_ENV=production",
+		"run --detach --name neodesk-local-gate-1-2 --label com.neodesk.local-gate=true --publish 127.0.0.1::5000 --publish 127.0.0.1::21121 --volume neodesk-local-gate-data-1-2:/opt/rustdesk --volume neodesk-local-gate-console-1-2:/app/data --add-host host.docker.internal:host-gateway --env NODE_ENV=production",
 		"--env ADMIN_PASSWORD=" + smokePassword,
-		"--env ENROLLMENT_MODE=managed --env DB_TYPE=sqlite betterdesk:local",
+		"--env ENROLLMENT_MODE=managed --env DB_TYPE=sqlite neodesk:local",
 	} {
 		if !strings.Contains(runCall, part) {
 			t.Errorf("docker run lacks %q:\n%s", part, runCall)
@@ -204,8 +204,8 @@ func TestDockerSmokeRun(t *testing.T) {
 		"GET /login cookie= csrf=",
 		"GET /app/login cookie= csrf=",
 		"GET /api/auth/login-page cookie= csrf=",
-		"POST /api/auth/login cookie=bd.sid=pre csrf=tok",
-		"GET /api/auth/verify cookie=bd.sid=pre; bd.sid=signed-in csrf=",
+		"POST /api/auth/login cookie=nd.sid=pre csrf=tok",
+		"GET /api/auth/verify cookie=nd.sid=pre; nd.sid=signed-in csrf=",
 	}
 	if !reflect.DeepEqual(signIn[:5], wantSignIn) || len(signIn) != 10 {
 		t.Errorf("sign-in requests:\n%s", strings.Join(signIn, "\n"))
@@ -216,7 +216,7 @@ func TestDockerSmokePostgres(t *testing.T) {
 	p := &fakePanel{login: `{"success":true}`, verify: `{"success":true,"user":{"id":1}}`}
 	d := &fakeDocker{keys: []string{"k", "k"}, healthy: []string{"healthy"}}
 	s, out, _ := newSmoke(t, p, d)
-	s.image = "betterdesk:test"
+	s.image = "neodesk:test"
 	if err := s.run(smokeOptions{databaseType: "postgres", databaseURL: "postgres://u:p@h/db", keep: true}); err != nil {
 		t.Fatal(err)
 	}
@@ -224,7 +224,7 @@ func TestDockerSmokePostgres(t *testing.T) {
 		t.Errorf("output %q", out)
 	}
 	for _, c := range d.calls {
-		if strings.HasPrefix(c, "run ") && !strings.HasSuffix(c, "--env DB_TYPE=postgres --env DATABASE_URL=postgres://u:p@h/db --env DB_URL=postgres://u:p@h/db betterdesk:test") {
+		if strings.HasPrefix(c, "run ") && !strings.HasSuffix(c, "--env DB_TYPE=postgres --env DATABASE_URL=postgres://u:p@h/db --env DB_URL=postgres://u:p@h/db neodesk:test") {
 			t.Errorf("run: %s", c)
 		}
 		if strings.HasPrefix(c, "rm ") || strings.HasPrefix(c, "volume rm") {
@@ -261,7 +261,7 @@ func TestDockerSmokeFailures(t *testing.T) {
 			if errOut.String() != "the container's log\n" {
 				t.Errorf("stderr %q", errOut)
 			}
-			if n := len(c.docker.calls); n < 3 || c.docker.calls[n-3] != "rm --force betterdesk-local-gate-1-2" {
+			if n := len(c.docker.calls); n < 3 || c.docker.calls[n-3] != "rm --force neodesk-local-gate-1-2" {
 				t.Errorf("calls %v", c.docker.calls)
 			}
 		})
@@ -277,11 +277,11 @@ func TestDockerSmokeDockerFails(t *testing.T) {
 		return dockerResult{}
 	}
 	err := s.run(smokeOptions{databaseType: "sqlite"})
-	if err == nil || !strings.HasPrefix(err.Error(), "docker run --detach --name betterdesk-local-gate-1-2 ") || !strings.HasSuffix(err.Error(), " betterdesk:local failed: Unable to find image") {
+	if err == nil || !strings.HasPrefix(err.Error(), "docker run --detach --name neodesk-local-gate-1-2 ") || !strings.HasSuffix(err.Error(), " neodesk:local failed: Unable to find image") {
 		t.Errorf("error %v", err)
 	}
 	s.docker = func(args ...string) dockerResult { return dockerResult{code: 1} }
-	if err := s.run(smokeOptions{databaseType: "sqlite"}); err == nil || err.Error() != "docker volume create betterdesk-local-gate-data-1-2 failed: exit code 1" {
+	if err := s.run(smokeOptions{databaseType: "sqlite"}); err == nil || err.Error() != "docker volume create neodesk-local-gate-data-1-2 failed: exit code 1" {
 		t.Errorf("error %v", err)
 	}
 }

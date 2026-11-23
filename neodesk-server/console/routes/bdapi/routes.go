@@ -1,5 +1,5 @@
-// Package bdapi is the device API of the console under /api/bd
-// (routes/bd-api.routes.js): the routes the BetterDesk agent and the
+// Package bdapi is the device API of the console under /api/nd
+// (routes/bd-api.routes.js): the routes the NeoDesk agent and the
 // desktop client call. Devices register and send heartbeats, ask for
 // relay sessions to another device and look at the devices online, raise
 // help requests and chat; the desktop client in operator mode lists the
@@ -15,7 +15,7 @@
 // admission rules in register.go. The relay sessions and the agents'
 // signal sockets are d.Relay (package bdrelay).
 //
-// POST /api/bd/remote-agent-token is in the remote group, beside the
+// POST /api/nd/remote-agent-token is in the remote group, beside the
 // socket that takes its tokens.
 package bdapi
 
@@ -25,8 +25,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/registrations"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/registrations"
 )
 
 type handlers struct {
@@ -42,10 +42,10 @@ type handlers struct {
 
 // configuredAppName is the name the old console's configuration gave
 // itself.
-const configuredAppName = "BetterDesk Console"
+const configuredAppName = "NeoDesk Console"
 
 // Register adds the group's routes to d.Early below the mount of d
-// (/api/bd), in the order of the old route file.
+// (/api/nd), in the order of the old route file.
 func Register(d *kit.Deps) {
 	h := &handlers{
 		d:       d,
@@ -110,7 +110,7 @@ type done struct {
 // csrfProtection is doubleCsrfProtection on a route: a write without the
 // cookie's token in X-CSRF-Token (or the body's _csrf) is refused with the
 // console's CSRF answer, signed in or not. The CSRF gate of the pipeline
-// lies behind this stage, and lets /api/bd/ through for nobody signed in.
+// lies behind this stage, and lets /api/nd/ through for nobody signed in.
 func (h *handlers) csrfProtection(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := h.d.CSRF.Check(r); err != nil {

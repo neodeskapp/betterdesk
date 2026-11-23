@@ -3,7 +3,7 @@
 package contract_test
 
 import (
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // Tenants: every route as the roles that may manage tenants (super_admin,

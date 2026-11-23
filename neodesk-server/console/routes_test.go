@@ -79,7 +79,7 @@ func TestUIShell(t *testing.T) {
 	if res := out.get("/api/ui-shell"); res.status != 401 || res.body != signedOut {
 		t.Errorf("GET signed out: %d %s", res.status, res.body)
 	}
-	if res := out.post("/api/ui-shell", `{"shell":"ux36"}`); res.status != 401 || res.body != signedOut || res.cookie("bd_ui_shell") != "" {
+	if res := out.post("/api/ui-shell", `{"shell":"ux36"}`); res.status != 401 || res.body != signedOut || res.cookie("nd_ui_shell") != "" {
 		t.Errorf("POST signed out: %d %s", res.status, res.body)
 	}
 	if res := w.agent().signIn("pro").get("/api/ui-shell"); res.status != 403 {
@@ -98,8 +98,8 @@ func TestUIShell(t *testing.T) {
 		if res.status != 200 || res.body != `{"success":true,"data":{"shell":"ux36"}}` {
 			t.Fatalf("%s POST: %d %s", role, res.status, res.body)
 		}
-		cookie := res.cookie("bd_ui_shell")
-		if !regexp.MustCompile(`^bd_ui_shell=ux36; Max-Age=31536000; Path=/; Expires=\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT; SameSite=Lax$`).MatchString(cookie) {
+		cookie := res.cookie("nd_ui_shell")
+		if !regexp.MustCompile(`^nd_ui_shell=ux36; Max-Age=31536000; Path=/; Expires=\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT; SameSite=Lax$`).MatchString(cookie) {
 			t.Errorf("%s cookie = %q", role, cookie)
 		}
 		expires, err := time.Parse(time.RFC1123, strings.TrimSuffix(strings.SplitN(cookie, "Expires=", 2)[1], "; SameSite=Lax"))
@@ -109,17 +109,17 @@ func TestUIShell(t *testing.T) {
 		if res := a.get("/api/ui-shell"); res.body != `{"success":true,"data":{"shell":"ux36","supported":["ux35","ux36"]}}` {
 			t.Errorf("%s GET with the cookie: %s", role, res.body)
 		}
-		for _, cookie := range []string{"bd_ui_shell=classic", `bd_ui_shell=j:{"a":1}`, "bd_ui_shell="} {
+		for _, cookie := range []string{"nd_ui_shell=classic", `nd_ui_shell=j:{"a":1}`, "nd_ui_shell="} {
 			if res := a.get("/api/ui-shell", "+Cookie", cookie); !strings.Contains(res.body, `"shell":"ux35"`) {
 				t.Errorf("%s GET with %s: %s", role, cookie, res.body)
 			}
 		}
-		if res := a.get("/api/ui-shell", "+Cookie", "bd_ui_shell=%20UX36"); !strings.Contains(res.body, `"shell":"ux36"`) {
+		if res := a.get("/api/ui-shell", "+Cookie", "nd_ui_shell=%20UX36"); !strings.Contains(res.body, `"shell":"ux36"`) {
 			t.Errorf("%s GET with a cookie in other spelling: %s", role, res.body)
 		}
 		for _, body := range []string{`{"shell":"ux37"}`, `{"shell":36}`, `{"shell":["ux36"]}`, `{}`, `[]`, `{"shell":null}`} {
 			res := a.post("/api/ui-shell", body)
-			if res.status != 400 || res.body != `{"success":false,"error":"Unsupported shell. Allowed: ux35, ux36"}` || res.cookie("bd_ui_shell") != "" {
+			if res.status != 400 || res.body != `{"success":false,"error":"Unsupported shell. Allowed: ux35, ux36"}` || res.cookie("nd_ui_shell") != "" {
 				t.Errorf("%s POST %s: %d %s", role, body, res.status, res.body)
 			}
 		}
@@ -149,7 +149,7 @@ func TestUIShellCookieIsSecureInHTTPSMode(t *testing.T) {
 		send := func(path, body string) answer {
 			return a.do("POST", path, body, append([]string{"Content-Type", "application/json", "X-CSRF-Token", token}, c.header...)...)
 		}
-		for name, res := range map[string]answer{"bd_ui_shell": send("/api/ui-shell", `{"shell":"ux35"}`), "betterdesk_lang": send("/api/i18n/set/de", "{}")} {
+		for name, res := range map[string]answer{"nd_ui_shell": send("/api/ui-shell", `{"shell":"ux35"}`), "neodesk_lang": send("/api/i18n/set/de", "{}")} {
 			if res.status != 200 || strings.HasSuffix(res.cookie(name), "; Secure; SameSite=Lax") != c.secure {
 				t.Errorf("%s %s: %d, cookie %q, want Secure %v", name, c.name, res.status, res.cookie(name), c.secure)
 			}
@@ -276,10 +276,10 @@ func TestI18nSetStoresTheChoice(t *testing.T) {
 	if res.status != 200 || res.body != `{"success":true}` {
 		t.Fatalf("signed out: %d %s", res.status, res.body)
 	}
-	if cookie := res.cookie("betterdesk_lang"); !strings.HasPrefix(cookie, "betterdesk_lang=de; Max-Age=31536000; Path=/; Expires=") || !strings.HasSuffix(cookie, "GMT; SameSite=Lax") {
+	if cookie := res.cookie("neodesk_lang"); !strings.HasPrefix(cookie, "neodesk_lang=de; Max-Age=31536000; Path=/; Expires=") || !strings.HasSuffix(cookie, "GMT; SameSite=Lax") {
 		t.Errorf("cookie = %q", cookie)
 	}
-	if res := out.post("/api/i18n/set/xx", "{}"); res.status != 400 || res.body != `{"success":false,"error":"Language not supported"}` || res.cookie("betterdesk_lang") != "" {
+	if res := out.post("/api/i18n/set/xx", "{}"); res.status != 400 || res.body != `{"success":false,"error":"Language not supported"}` || res.cookie("neodesk_lang") != "" {
 		t.Errorf("unknown language: %d %s", res.status, res.body)
 	}
 
@@ -297,7 +297,7 @@ func TestI18nSetStoresTheChoice(t *testing.T) {
 	if language("viewer").Valid {
 		t.Error("another account's row was written")
 	}
-	delete(a.cookies, "betterdesk_lang")
+	delete(a.cookies, "neodesk_lang")
 	if res := a.get("/api/probe", "Accept-Language", "de"); res.json(t)["lang"] != "pl" {
 		t.Errorf("the session does not carry the choice: %s", res.body)
 	}
@@ -312,7 +312,7 @@ func TestI18nSetStoresTheChoice(t *testing.T) {
 	// Production mode alone does not make it Secure: over plain HTTP a
 	// browser would drop it (BUGS LS3)
 	prod := routesWorld(t, setup{production: true})
-	if cookie := prod.agent().post("/api/i18n/set/de", "{}").cookie("betterdesk_lang"); cookie == "" || strings.Contains(cookie, "; Secure") {
+	if cookie := prod.agent().post("/api/i18n/set/de", "{}").cookie("neodesk_lang"); cookie == "" || strings.Contains(cookie, "; Secure") {
 		t.Errorf("in production over plain HTTP the cookie is %q, want it without Secure", cookie)
 	}
 }

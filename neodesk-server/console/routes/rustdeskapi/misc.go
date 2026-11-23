@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // software answers GET /api/software and
@@ -107,7 +107,7 @@ func (rec *recorded) Write(b []byte) (int, error) {
 	return rec.body.Write(b)
 }
 
-// telemetryKey answers GET /api/telemetry/key, the key BetterDesk clients
+// telemetryKey answers GET /api/telemetry/key, the key NeoDesk clients
 // fetch before they sign in, with what the server's API answers to the
 // same request (middleware/goApiProxy.js): its status, its headers over
 // the console's and its body.

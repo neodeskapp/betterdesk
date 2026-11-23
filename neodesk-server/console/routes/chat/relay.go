@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsjson"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // The limits of the relay.

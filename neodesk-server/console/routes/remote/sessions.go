@@ -3,7 +3,7 @@ package remote
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 type sessionList struct {
@@ -95,7 +95,7 @@ func (h *handlers) scopeFailed(w http.ResponseWriter, r *http.Request, err error
 	kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
 }
 
-// agentToken is the answer of POST /api/bd/remote-agent-token.
+// agentToken is the answer of POST /api/nd/remote-agent-token.
 type agentToken struct {
 	Success   bool   `json:"success"`
 	DeviceID  string `json:"device_id"`
@@ -103,7 +103,7 @@ type agentToken struct {
 	ExpiresIn int    `json:"expires_in"`
 }
 
-// remoteAgentToken answers POST /api/bd/remote-agent-token: the
+// remoteAgentToken answers POST /api/nd/remote-agent-token: the
 // single-use token an agent opens its remote relay socket with, for the
 // device of its device token. The body's device_id, when it is not the
 // empty text, must be that device's id; the device guards in front refuse

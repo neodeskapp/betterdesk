@@ -10,7 +10,7 @@ import * as v from 'valibot';
 import { api, request, wrapped, BoolLike, Text, NumLike } from '#lib/api/client.ts';
 import type { Bootstrap } from '#lib/api/console.ts';
 
-/* ── Notifications: GET /api/bd/notifications, POST .../:id/read, POST .../read-all ── */
+/* ── Notifications: GET /api/nd/notifications, POST .../:id/read, POST .../read-all ── */
 
 const NotifId = v.pipe(v.union([v.string(), v.number()]), v.transform(String));
 
@@ -77,7 +77,7 @@ export const NOTIFICATION_LIMIT = 10;
 export async function listNotifications(
 	signal?: AbortSignal
 ): Promise<{ items: Notification[]; unread: number }> {
-	const out = await api(NotificationList, '/api/bd/notifications', {
+	const out = await api(NotificationList, '/api/nd/notifications', {
 		query: { limit: NOTIFICATION_LIMIT },
 		signal
 	});
@@ -91,11 +91,11 @@ export async function listNotifications(
 
 export function markNotificationRead(id: string): Promise<unknown> {
 	// Sent as the person follows the notification's link, so it must survive leaving the page
-	return request(`/api/bd/notifications/${encodeURIComponent(id)}/read`, { method: 'POST', keepalive: true });
+	return request(`/api/nd/notifications/${encodeURIComponent(id)}/read`, { method: 'POST', keepalive: true });
 }
 
 export function markAllNotificationsRead(): Promise<unknown> {
-	return request('/api/bd/notifications/read-all', { method: 'POST' });
+	return request('/api/nd/notifications/read-all', { method: 'POST' });
 }
 
 /* ── Registrations waiting for approval: GET /api/registrations/count ── */

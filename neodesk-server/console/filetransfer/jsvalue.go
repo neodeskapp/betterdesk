@@ -12,8 +12,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/goapipath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
 )
 
 // The old service took whatever JSON a device or a request sent and let

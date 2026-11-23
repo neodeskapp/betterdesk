@@ -1,6 +1,6 @@
 <!--
   "Add a computer" (Devices, enrollment.approve), a side sheet as
-  launch/design/DESIGN.md draws it: an invite link that sets up BetterDesk
+  launch/design/DESIGN.md draws it: an invite link that sets up NeoDesk
   on a computer and joins it to this server, approved, named and in its
   folder. Every field is optional: a name, a folder, an address to send
   the link to (only with mail set up), how long it works (7 days) and how

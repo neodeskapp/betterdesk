@@ -527,7 +527,7 @@
  {
   "vector": 2799,
   "bug": "FL6",
-  "request": "POST /api/bd/api/panel/fleet/workflows/wf-1/execute",
+  "request": "POST /api/nd/api/panel/fleet/workflows/wf-1/execute",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"ok\":true,\"items\":[]}",

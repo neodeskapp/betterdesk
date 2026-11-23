@@ -92,10 +92,10 @@ describe('the file clipboard of the desktop shell', () => {
 	/** The desktop shell's bridge: answers what the file clipboard asks */
 	function desktop(answers: Record<string, unknown>) {
 		const w = window as unknown as Record<string, unknown>;
-		w.__BETTERDESK_RDCLIENT_DESKTOP__ = true;
+		w.__NEODESK_RDCLIENT_DESKTOP__ = true;
 		w.__TAURI__ = { core: { invoke: async (cmd: string) => answers[cmd] ?? null } };
 		return () => {
-			delete w.__BETTERDESK_RDCLIENT_DESKTOP__;
+			delete w.__NEODESK_RDCLIENT_DESKTOP__;
 			delete w.__TAURI__;
 		};
 	}

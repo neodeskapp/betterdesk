@@ -177,7 +177,7 @@ test.describe('download pages', () => {
 						accent: '#1d4ed8',
 						background: '',
 						showPoweredBy: true,
-						product: { type: 'betterdesk-support', label: '', hidden: false },
+						product: { type: 'neodesk-support', label: '', hidden: false },
 						defaultLang: null,
 						platforms: [
 							{ platform: 'windows', arch: 'x64', format: 'portable', label: 'Windows x64', status: 'ready' },

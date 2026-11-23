@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 const configPrefix = "gal_"

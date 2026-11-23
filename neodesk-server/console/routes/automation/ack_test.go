@@ -3,9 +3,9 @@ package automation_test
 import (
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // Acknowledging an alert that does not exist is 404, and an alert that is

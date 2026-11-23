@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/codec"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/peer"
-	pb "github.com/unitronix/betterdesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/codec"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 )
 
 // Package-level keepalive timings use atomic nanoseconds so tests can override

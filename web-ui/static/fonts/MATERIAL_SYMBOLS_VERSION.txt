@@ -1,4 +1,4 @@
-BetterDesk self-hosted Material Symbols (Apache-2.0)
+NeoDesk self-hosted Material Symbols (Apache-2.0)
 Upstream: https://github.com/google/material-design-icons (variablefont / Google Fonts CSS API)
 License: Apache License 2.0
 Generated: 2026-11-09T23:51:19.455Z

@@ -1,17 +1,17 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Apply BetterDesk server settings to an installed RustDesk client (Windows).
+    Apply NeoDesk server settings to an installed RustDesk client (Windows).
 
 .DESCRIPTION
     Example post-install script for PSADT 4.x, Intune Win32, or Robopack.
     Copy to rustdesk-apply-config.ps1 and set -ServerHost / -PublicKey,
-    or pass -CfgString from the BetterDesk dashboard "Copy deploy string".
+    or pass -CfgString from the NeoDesk dashboard "Copy deploy string".
 
     Run elevated after the RustDesk MSI completes.
 
 .PARAMETER ServerHost
-    Public IP or DNS name clients use to reach the BetterDesk server.
+    Public IP or DNS name clients use to reach the NeoDesk server.
 
 .PARAMETER PublicKey
     Contents of id_ed25519.pub from the server.

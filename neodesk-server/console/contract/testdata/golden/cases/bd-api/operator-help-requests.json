@@ -2,7 +2,7 @@
  "id": "bd-api/operator-help-requests",
  "request": {
   "method": "GET",
-  "path": "/api/bd/help-requests",
+  "path": "/api/nd/help-requests",
   "notes": [
    "header Authorization: Bearer {secret:operator_token}",
    "no CSRF token",

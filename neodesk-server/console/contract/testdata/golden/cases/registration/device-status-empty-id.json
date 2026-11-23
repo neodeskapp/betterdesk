@@ -2,7 +2,7 @@
  "id": "registration/device-status-empty-id",
  "request": {
   "method": "GET",
-  "path": "/api/bd/register-status?device_id=",
+  "path": "/api/nd/register-status?device_id=",
   "notes": [
    "no CSRF token",
    "no cookies"

@@ -12,13 +12,13 @@
 //	console-session-secret   <data>/.session_secret                    may be created
 //	go-blocklist             <keys>/blocklist.txt                      may be created
 //	go-audit-log             AUDIT_LOG_FILE when absolute, else the    may be created
-//	                         first of /var/log/betterdesk/audit.jsonl
+//	                         first of /var/log/neodesk/audit.jsonl
 //	                         and <keys>/audit.jsonl that exists, else
-//	                         /var/log/betterdesk/audit.jsonl
-//	systemd-console          /etc/systemd/system/betterdesk-console.service   Linux only
-//	systemd-server           /etc/systemd/system/betterdesk-server.service    Linux only
-//	build-env                BETTERDESK_BUILD_ENV_FILE, else           may be created, Linux only
-//	                         /etc/betterdesk/build.env
+//	                         /var/log/neodesk/audit.jsonl
+//	systemd-console          /etc/systemd/system/neodesk-console.service   Linux only
+//	systemd-server           /etc/systemd/system/neodesk-server.service    Linux only
+//	build-env                NEODESK_BUILD_ENV_FILE, else           may be created, Linux only
+//	                         /etc/neodesk/build.env
 //	docker-supervisord       <console>/../docker/supervisord.conf
 //	docker-compose           <console>/../docker-compose.yml
 //
@@ -40,8 +40,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/managedconfig"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/managedconfig"
 )
 
 // MaxBytes is the largest file the editor reads or writes.
@@ -71,7 +71,7 @@ type Options struct {
 	// KeysPath is the server's keys folder (KEYS_PATH, RUSTDESK_DIR,
 	// RUSTDESK_PATH): blocklist.txt and audit.jsonl.
 	KeysPath string
-	// Getenv reads AUDIT_LOG_FILE and BETTERDESK_BUILD_ENV_FILE on every
+	// Getenv reads AUDIT_LOG_FILE and NEODESK_BUILD_ENV_FILE on every
 	// call. Nil reads nothing.
 	Getenv func(string) string
 	// Platform is the operating system as Node names it
@@ -132,15 +132,15 @@ var catalog = []definition{
 	{id: "go-audit-log", category: "goserver", requiresRestart: "goserver", canCreate: true,
 		path: (*Service).auditLogPath},
 	{id: "systemd-console", category: "system", requiresRestart: "systemd", linuxOnly: true,
-		path: func(*Service) string { return "/etc/systemd/system/betterdesk-console.service" }},
+		path: func(*Service) string { return "/etc/systemd/system/neodesk-console.service" }},
 	{id: "systemd-server", category: "system", requiresRestart: "systemd", linuxOnly: true,
-		path: func(*Service) string { return "/etc/systemd/system/betterdesk-server.service" }},
+		path: func(*Service) string { return "/etc/systemd/system/neodesk-server.service" }},
 	{id: "build-env", category: "system", requiresRestart: "none", canCreate: true, linuxOnly: true,
 		path: func(s *Service) string {
-			if p := s.opts.Getenv("BETTERDESK_BUILD_ENV_FILE"); p != "" {
+			if p := s.opts.Getenv("NEODESK_BUILD_ENV_FILE"); p != "" {
 				return p
 			}
-			return "/etc/betterdesk/build.env"
+			return "/etc/neodesk/build.env"
 		}},
 	{id: "docker-supervisord", category: "console", requiresRestart: "console",
 		path: func(s *Service) string { return filepath.Join(s.opts.ConsoleDir, "..", "docker", "supervisord.conf") }},
@@ -148,7 +148,7 @@ var catalog = []definition{
 		path: func(s *Service) string { return filepath.Join(s.opts.ConsoleDir, "..", "docker-compose.yml") }},
 }
 
-const defaultAuditLog = "/var/log/betterdesk/audit.jsonl"
+const defaultAuditLog = "/var/log/neodesk/audit.jsonl"
 
 // auditLogPath is AUDIT_LOG_FILE when it is absolute, else the first of
 // the usual places that exists, else the first usual place.

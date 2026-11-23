@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/codec"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/crypto"
-	pb "github.com/unitronix/betterdesk-server/proto"
-	"github.com/unitronix/betterdesk-server/sessiongrant"
+	"github.com/neodeskapp/neodesk/neodesk-server/codec"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/sessiongrant"
 )
 
 // Connection security suite — local loopback only.

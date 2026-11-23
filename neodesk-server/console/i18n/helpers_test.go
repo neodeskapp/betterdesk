@@ -11,10 +11,10 @@ import (
 	"testing"
 )
 
-// realLangDir is the console's language folder: BD_LANG_DIR when set,
+// realLangDir is the console's language folder: ND_LANG_DIR when set,
 // else the one in the repository.
 var realLangDir = func() string {
-	if dir := os.Getenv("BD_LANG_DIR"); dir != "" {
+	if dir := os.Getenv("ND_LANG_DIR"); dir != "" {
 		return dir
 	}
 	return "../static/files/lang"

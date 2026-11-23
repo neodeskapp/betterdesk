@@ -10,14 +10,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/devicegroups"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/devicegroups"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
 )
 
 // handshake is an upgrade request to path of the oracle's client, with a
@@ -42,7 +42,7 @@ func TestBothSocketsCheckTheOrigin(t *testing.T) {
 		}{
 			{"foreign origin", admin, "Origin: https://evil.example\r\n", "HTTP/1.1 403 Forbidden\r\n\r\n"},
 			{"foreign origin, signed out", "", "Origin: https://evil.example\r\n", "HTTP/1.1 403 Forbidden\r\n\r\n"},
-			{"no origin with a session cookie", admin, "Cookie: bd.sid=x\r\n", "HTTP/1.1 403 Forbidden\r\n\r\n"},
+			{"no origin with a session cookie", admin, "Cookie: nd.sid=x\r\n", "HTTP/1.1 403 Forbidden\r\n\r\n"},
 			{"own origin", admin, "Origin: http://console.test\r\n", "HTTP/1.1 101 Switching Protocols\r\n"},
 			{"no origin, no cookie", admin, "", "HTTP/1.1 101 Switching Protocols\r\n"},
 		} {

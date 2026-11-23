@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // At /api/automation every route can answer: the device's list of
-// commands is registered at /api/bd only, because at /api/automation the
+// commands is registered at /api/nd only, because at /api/automation the
 // people's list of the same path answers every request first (BUGS I5).
 func TestAutomationMountHasNoUnreachableRoute(t *testing.T) {
 	w := newWorld(t, storetest.Migrated(t))

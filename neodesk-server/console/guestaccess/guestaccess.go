@@ -6,7 +6,7 @@
 // the pages and sockets that follow.
 //
 // The token comes from the query (?guest= or ?t=, an open link) or from
-// the cookie bd.guest, betterdesk.guest in HTTPS mode. The cookie holds
+// the cookie nd.guest, neodesk.guest in HTTPS mode. The cookie holds
 // the token as it is, HttpOnly and SameSite=Lax, for as long as the link
 // lasts and for a day at most.
 //
@@ -26,9 +26,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/goapipath"
-	"github.com/unitronix/betterdesk-server/console/session/cookie"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session/cookie"
 )
 
 // maxCookieAge is the longest the guest cookie lasts.
@@ -43,7 +43,7 @@ var ErrNotText = errors.New("Cannot convert object to primitive value")
 // Options are the settings of a Service.
 type Options struct {
 	// HTTPS is the console's HTTPS mode (config.httpsEnabled,
-	// HTTPS_ENABLED): the cookie is then called betterdesk.guest.
+	// HTTPS_ENABLED): the cookie is then called neodesk.guest.
 	HTTPS bool
 	// Secure marks the cookie Secure: set it when the console serves
 	// HTTPS. In HTTPS mode without a usable certificate the console serves
@@ -75,9 +75,9 @@ func New(opts Options) *Service {
 // CookieName is the name of the guest cookie (GUEST_COOKIE).
 func (s *Service) CookieName() string {
 	if s.opts.HTTPS {
-		return "betterdesk.guest"
+		return "neodesk.guest"
 	}
-	return "bd.guest"
+	return "nd.guest"
 }
 
 // HashToken is the SHA-256 of a token as hex.

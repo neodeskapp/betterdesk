@@ -11,7 +11,7 @@ import (
 const maxReturnLength = 2048
 
 // sessionCookies are the names the console's session cookie has had.
-var sessionCookies = []string{"bd.sid", "betterdesk.sid"}
+var sessionCookies = []string{"nd.sid", "neodesk.sid"}
 
 // SafeReturnPath checks a path the sign-in page is asked to send someone to
 // afterwards. It answers the path as a browser would normalise it (with

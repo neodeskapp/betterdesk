@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Verify that the running BetterDesk host matches a documented firewall profile.
+# Verify that the running NeoDesk host matches a documented firewall profile.
 #
 # Profiles and their expected exposure (what each port does:
-# https://betterde.sk/docs/operations/ports):
+# https://neode.sk/docs/operations/ports):
 #   a  minimal, no reverse proxy: 21116 and 21117 open, the client API
 #      reachable on 21114
 #   b  behind a reverse proxy on 443 (recommended): the console and the
@@ -174,7 +174,7 @@ fi
 
 echo
 if [ "$FAIL" -ne 0 ]; then
-  echo "Profile $PROFILE: $FAIL problem(s), $WARN warning(s). Ports: https://betterde.sk/docs/operations/ports" >&2
+  echo "Profile $PROFILE: $FAIL problem(s), $WARN warning(s). Ports: https://neode.sk/docs/operations/ports" >&2
   exit 1
 fi
 echo "Profile $PROFILE: OK ($WARN warning(s))"

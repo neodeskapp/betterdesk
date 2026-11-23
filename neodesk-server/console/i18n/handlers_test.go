@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // routes registers the handlers the way the console's router does.

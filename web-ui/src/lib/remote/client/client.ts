@@ -1,5 +1,5 @@
 /**
- * BetterDesk Web Remote Client - Main Client Orchestrator
+ * NeoDesk Web Remote Client - Main Client Orchestrator
  * Ties together all rdclient modules: connection, protocol, crypto,
  * video, audio, renderer, and input.
  *
@@ -371,9 +371,9 @@ export class RDClient {
 			});
 	}
 
-	/** Verbose relay/auth logging (window.BetterDesk.debugRelay = true) */
+	/** Verbose relay/auth logging (window.NeoDesk.debugRelay = true) */
 	static isRelayDebug(): boolean {
-		return typeof window !== 'undefined' && page().BetterDesk?.debugRelay === true;
+		return typeof window !== 'undefined' && page().NeoDesk?.debugRelay === true;
 	}
 
 	static isMobileRuntime(): boolean {
@@ -608,7 +608,7 @@ export class RDClient {
 			this._fileConnection = new RDFileConnection({
 				deviceId: this.deviceId,
 				serverPubKey: this.opts.serverPubKey || '',
-				myName: this.opts.myName || 'BetterDesk Web',
+				myName: this.opts.myName || 'NeoDesk Web',
 				proto: this.proto,
 				connection: this._connectionParams || this.opts.connection || null,
 				rendezvousTimeoutMs: this._rendezvousTimeoutMs,
@@ -713,8 +713,8 @@ export class RDClient {
 			// username must be set to target device ID (RustDesk validates: is_ip || is_domain_port || == Config::get_id())
 			const loginReq = this.proto.buildLoginRequest(hash, {
 				username: this.deviceId,
-				myId: 'betterdesk-web-' + Date.now().toString(36),
-				myName: this.opts.myName || this.opts.myName || 'BetterDesk Web',
+				myId: 'neodesk-web-' + Date.now().toString(36),
+				myName: this.opts.myName || this.opts.myName || 'NeoDesk Web',
 				disableAudio: this.opts.disableAudio || false,
 				fps: this._getInitialStreamFps(),
 				imageQuality: this.opts.imageQuality || 'Best',

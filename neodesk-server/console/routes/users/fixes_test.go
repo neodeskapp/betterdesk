@@ -12,9 +12,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/auditlog"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
 )
 
 // fix is a step of the recordings that the Go console answers otherwise

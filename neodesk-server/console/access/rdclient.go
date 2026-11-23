@@ -13,7 +13,7 @@ import (
 const (
 	rdClientHome  = "/remote"
 	rdClientLogin = "/remote/login"
-	rdClientHost  = "betterdesk.local"
+	rdClientHost  = "neodesk.local"
 )
 
 // NormalizeRdClientReturnURL returns the path, query and fragment of a
@@ -82,7 +82,7 @@ func hasEncodedControl(s string) bool {
 }
 
 // resolveLocalPath resolves a reference that starts with "/" against
-// https://betterdesk.local/ as a browser does and returns the resulting
+// https://neodesk.local/ as a browser does and returns the resulting
 // path, query (with "?", or "" when empty) and fragment (with "#", or ""
 // when empty). ok is false when the result points at another origin or
 // cannot be parsed. raw holds no backslash, line break or NUL.
@@ -140,7 +140,7 @@ func resolveLocalPath(raw string) (pathname, search, hash string, ok bool) {
 }
 
 // isLocalAuthority reports whether an authority (userinfo, host, port)
-// names https://betterdesk.local: that host, in any letter case or
+// names https://neodesk.local: that host, in any letter case or
 // percent-encoded, with no port or port 443. Other spellings a browser
 // would map to the same host are not recognised.
 func isLocalAuthority(authority string) bool {

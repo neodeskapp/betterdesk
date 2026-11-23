@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/browser",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-relay",
+  "path": "/ws/nd-relay",
   "notes": [
    "websocket browser, own origin",
    "websocket wait for the close"

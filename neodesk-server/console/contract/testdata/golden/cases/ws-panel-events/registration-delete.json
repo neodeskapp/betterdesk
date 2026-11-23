@@ -2,7 +2,7 @@
  "id": "ws-panel-events/registration-delete",
  "request": {
   "method": "DELETE",
-  "path": "/api/bd/api/registrations/{registration}",
+  "path": "/api/nd/api/registrations/{registration}",
   "notes": [
    "sent as admin in every role's turn"
   ]
@@ -34,7 +34,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",

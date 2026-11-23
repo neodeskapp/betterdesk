@@ -52,7 +52,7 @@
       "open": "c",
       "path": "/ws/chat/dev1?token=tok-dev1-good",
       "headers": {
-       "Cookie": "bd.sid=x"
+       "Cookie": "nd.sid=x"
       }
      },
      "events": [
@@ -1136,7 +1136,7 @@
       "path": "/ws/chat-operator/dev1",
       "headers": {
        "X-Oracle-Session": "{\"userId\":7,\"user\":{\"id\":7,\"username\":\"n\",\"role\":\"operator\"}}",
-       "Cookie": "bd.sid=x"
+       "Cookie": "nd.sid=x"
       }
      },
      "events": [
@@ -1155,7 +1155,7 @@
       "open": "n",
       "path": "/ws/chat-operator/dev1",
       "headers": {
-       "Cookie": "bd.sid=x"
+       "Cookie": "nd.sid=x"
       }
      },
      "events": [

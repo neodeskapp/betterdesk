@@ -23,8 +23,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // Imported is a release ImportLatest stored.
@@ -116,7 +116,7 @@ func (s *Service) ImportLatest(ctx context.Context) (Imported, error) {
 		return Imported{}, errors.New("Cannot read properties of null (reading 'schema_version')")
 	}
 	manifestAssets, _ := goapi.Dig(manifest, "assets").([]any)
-	if goapi.Dig(manifest, "schema_version") != float64(1) || goapi.Dig(manifest, "sku") != "betterdesk-support" ||
+	if goapi.Dig(manifest, "schema_version") != float64(1) || goapi.Dig(manifest, "sku") != "neodesk-support" ||
 		goapi.Dig(manifest, "generic") != true || goapi.Dig(manifest, "external_config") != false ||
 		len(manifestAssets) == 0 {
 		return Imported{}, errors.New("generic_agent_release_manifest_invalid")

@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/meshcentral"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/meshcentral"
 )
 
 func (s *Server) handleMeshServerID(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +77,7 @@ func (s *Server) handleMeshDownloadMSH(w http.ResponseWriter, r *http.Request) {
 	}
 	meshName := r.URL.Query().Get("name")
 	if meshName == "" {
-		meshName = "BetterDesk Mesh"
+		meshName = "NeoDesk Mesh"
 	}
 	// Prefer explicit mesh_id (64 or 96 hex); otherwise use stable per-group SHA-384.
 	meshID := s.meshGw.ResolveMeshIDHex(r.URL.Query().Get("mesh_id"))

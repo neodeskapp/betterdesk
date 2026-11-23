@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsjson"
 )
 
 // What {...info, hostname: ..., ...} and JSON.stringify make of the info

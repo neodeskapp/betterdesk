@@ -2,7 +2,7 @@
  "id": "registration/device-request-list-body",
  "request": {
   "method": "POST",
-  "path": "/api/bd/register-request",
+  "path": "/api/nd/register-request",
   "body": "[\"contract-list\"]",
   "notes": [
    "raw body, content type \"application/json\"",

@@ -5,7 +5,7 @@
  * for the dashboard and the viewer), the main tasks work, and axe finds
  * nothing in the page, its menus, sheets and dialogs.
  *
- * The viewer tests need the console running with BD_DEV_MOCK_REMOTE=1 (the
+ * The viewer tests need the console running with ND_DEV_MOCK_REMOTE=1 (the
  * dev compose file sets it): the viewer's data then turns the mock device
  * on. Without it they are skipped.
  */
@@ -83,7 +83,7 @@ for (const role of ROLES) {
 		test('viewer: connects to the mock device, controls, menus, sheets and the New connection dialog', async ({
 			page
 		}) => {
-			test.skip(!(await mockOn(page)), 'the console runs without BD_DEV_MOCK_REMOTE=1');
+			test.skip(!(await mockOn(page)), 'the console runs without ND_DEV_MOCK_REMOTE=1');
 			// An axe scan of every menu and sheet, and a session that may take up to a minute to stream
 			test.slow();
 			await devicesPage(page);
@@ -129,7 +129,7 @@ for (const role of ROLES) {
 		});
 
 		test('viewer: a failed connection says why, with details', async ({ page }) => {
-			test.skip(!(await mockOn(page)), 'the console runs without BD_DEV_MOCK_REMOTE=1');
+			test.skip(!(await mockOn(page)), 'the console runs without ND_DEV_MOCK_REMOTE=1');
 			await devicesPage(page);
 			test.skip(!(await canConnect(page)), 'needs device.connect');
 			await page.goto(`${UI}/remote/${MOCK_DEVICE}?mock=1&scenario=fail-relay`);
@@ -142,7 +142,7 @@ for (const role of ROLES) {
 
 		test('viewer: a seeded demo device uses the mock without ?mock=1; ?mock=0 does not', async ({ page }) => {
 			test.skip(role !== 'admin', 'the rule is the same for every role that may connect');
-			test.skip(!(await mockOn(page)), 'the console runs without BD_DEV_MOCK_REMOTE=1');
+			test.skip(!(await mockOn(page)), 'the console runs without ND_DEV_MOCK_REMOTE=1');
 			await page.goto(`${UI}/remote/${MOCK_DEVICE}`);
 			await expect(page.locator('.session-panel.streaming')).toBeVisible({ timeout: 60_000 });
 			const data = await page.request.get(`/api/remote/viewer/${MOCK_DEVICE}?mock=0`);
@@ -150,7 +150,7 @@ for (const role of ROLES) {
 		});
 
 		test('viewer: password prompt of the mock device', async ({ page }) => {
-			test.skip(!(await mockOn(page)), 'the console runs without BD_DEV_MOCK_REMOTE=1');
+			test.skip(!(await mockOn(page)), 'the console runs without ND_DEV_MOCK_REMOTE=1');
 			await devicesPage(page);
 			test.skip(!(await canConnect(page)), 'needs device.connect');
 			await page.goto(`${UI}/remote/${MOCK_DEVICE}?mock=1&scenario=password`);

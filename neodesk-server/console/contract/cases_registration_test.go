@@ -5,11 +5,11 @@ package contract_test
 import (
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The registration routes (routes/registration.routes.js), mounted at the
-// root and at /api/bd: the two routes devices call after LAN discovery
+// root and at /api/nd: the two routes devices call after LAN discovery
 // (register-request, register-status), the registration list for people
 // with its approval and rejection, the enrollment queue of the API server,
 // and the help requests.
@@ -22,7 +22,7 @@ import (
 // the folder and the group. Rejected enrollments of the turn are cleared
 // again. The seeded help request 2 ends resolved: the console cannot set a
 // help request back to pending, and cannot open one either (the device
-// route POST /api/bd/help-request answers with a made-up id, because the
+// route POST /api/nd/help-request answers with a made-up id, because the
 // API server has no route to create one).
 //
 // console_url in an approval says the console's port. In the test stack
@@ -30,7 +30,7 @@ import (
 // so the value depends on which process answers; the marks with ~ leave
 // only its type to compare.
 func init() {
-	const bd = "/api/bd"
+	const bd = "/api/nd"
 	device := func(c contract.Case) contract.Case {
 		c.NoCSRF, c.NoCookies, c.Roles = true, true, contract.Roles("signed-out")
 		return c
@@ -177,7 +177,7 @@ func init() {
 		contract.Case{Name: "cleanup-folder", Method: "DELETE", Path: "/api/folders/{folder}", As: "admin"},
 		contract.Case{Name: "restored-device", Path: "/api/devices/900100021", As: "admin"},
 
-		// A rejection at /api/bd, and a rejected device asking again
+		// A rejection at /api/nd, and a rejected device asking again
 		setupDevice(contract.Case{
 			Name: "device-request-to-reject", Method: "POST", Path: bd + "/register-request",
 			Body: request("contract-reject", "contract-reject-box"), Capture: map[string]string{"rejected": "id"},
@@ -205,7 +205,7 @@ func init() {
 		contract.Case{Name: "delete-missing", Method: "DELETE", Path: "/api/registrations/999999999"},
 		contract.Case{Name: "cleanup-doomed", Method: "DELETE", Path: "/api/registrations/{doomed}", As: "admin"},
 
-		// The device routes at the root mount, and with a session at /api/bd,
+		// The device routes at the root mount, and with a session at /api/nd,
 		// where the CSRF gate answers first
 		contract.Case{
 			Name: "root-request", Method: "POST", Path: "/register-request",

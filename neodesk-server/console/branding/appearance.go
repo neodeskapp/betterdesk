@@ -230,7 +230,7 @@ func (s *Service) appearanceModel(input any) *Object {
 	}
 	out := object(
 		"version", "2.0",
-		"type", "betterdesk-appearance",
+		"type", "neodesk-appearance",
 		"revision", s.Revision(),
 		"identity", object(
 			"appName", get("appName"),
@@ -415,9 +415,9 @@ func (s *Service) publicAppearance() *Object {
 	return object(
 		"version", "2.0",
 		"revision", s.Revision(),
-		"product", "betterdesk-appearance",
+		"product", "neodesk-appearance",
 		"identity", object(
-			"appName", or(identity("appName"), "BetterDesk"),
+			"appName", or(identity("appName"), "NeoDesk"),
 			"appDescription", or(identity("appDescription"), ""),
 			"logoType", or(identity("logoType"), "icon"),
 			"logoIcon", or(identity("logoIcon"), "dns"),

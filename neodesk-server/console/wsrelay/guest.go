@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/guestaccess"
-	grants "github.com/unitronix/betterdesk-server/guestaccess"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/guestaccess"
+	grants "github.com/neodeskapp/neodesk/neodesk-server/guestaccess"
 )
 
 // guestGrant is a guest link the API server found good for an upgrade.

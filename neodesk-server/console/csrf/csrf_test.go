@@ -388,32 +388,32 @@ func TestGateDeviceAPIException(t *testing.T) {
 	f := newFixture(t)
 	// A device agent: no session, a bearer token, no CSRF token
 	f.signedIn = false
-	for _, path := range []string{"/api/bd/commands", "/api/bd/", "/api/bd/a/b?x=1"} {
+	for _, path := range []string{"/api/nd/commands", "/api/nd/", "/api/nd/a/b?x=1"} {
 		if !f.gate(req("POST", path, "", "")) {
 			t.Errorf("%s without a session was checked", path)
 		}
 	}
-	for _, path := range []string{"/api/bd", "/api/bdx/commands", "/API/BD/commands", "/api/%62d/commands", "/x/api/bd/commands", "/api/devices"} {
+	for _, path := range []string{"/api/nd", "/api/ndx/commands", "/API/ND/commands", "/api/%6Ed/commands", "/x/api/nd/commands", "/api/devices"} {
 		if f.gate(req("POST", path, "", "")) {
 			t.Errorf("%s without a session passed unchecked", path)
 		}
 	}
 	// A signed-in browser on the same paths is checked
 	f.signedIn = true
-	if f.gate(req("POST", "/api/bd/commands", "", "")) {
-		t.Fatal("a signed-in browser posted to /api/bd/ without the token")
+	if f.gate(req("POST", "/api/nd/commands", "", "")) {
+		t.Fatal("a signed-in browser posted to /api/nd/ without the token")
 	}
-	if f.gate(req("POST", "/api/bd/commands", vectorPair, "wrong")) {
-		t.Fatal("a signed-in browser posted to /api/bd/ with a wrong token")
+	if f.gate(req("POST", "/api/nd/commands", vectorPair, "wrong")) {
+		t.Fatal("a signed-in browser posted to /api/nd/ with a wrong token")
 	}
-	if !f.gate(req("POST", "/api/bd/commands", vectorPair, vectorToken)) {
+	if !f.gate(req("POST", "/api/nd/commands", vectorPair, vectorToken)) {
 		t.Fatal("a signed-in browser with the token was refused")
 	}
 }
 
 // TestABearerWriteWithoutASessionPasses: a write with a bearer token in
 // its Authorization header and no session passes without a CSRF token on
-// any path, so a device reaches its routes outside /api/bd/ and in any
+// any path, so a device reaches its routes outside /api/nd/ and in any
 // spelling of it. A browser cannot send that header to another site
 // without asking first, and without a session there is nothing to forge.
 // With a session the write is checked (BUGS DV2, DV9).
@@ -427,7 +427,7 @@ func TestABearerWriteWithoutASessionPasses(t *testing.T) {
 		return r
 	}
 	f.signedIn = false
-	for _, path := range []string{"/api/tickets/bd", "/api/dataguard/dlp-events", "/api/activity/activity", "/API/BD/Activity/", "/api/bd", "/api/devices"} {
+	for _, path := range []string{"/api/tickets/bd", "/api/dataguard/dlp-events", "/api/activity/activity", "/API/ND/Activity/", "/api/nd", "/api/devices"} {
 		if !f.gate(bearer(path, "Bearer tok-device-a", "", "")) {
 			t.Errorf("%s with a bearer token and no session was checked", path)
 		}

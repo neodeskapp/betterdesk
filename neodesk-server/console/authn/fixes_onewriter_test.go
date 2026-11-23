@@ -9,7 +9,7 @@ import (
 
 	xbcrypt "golang.org/x/crypto/bcrypt"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // newHashMark stands for a password hash a scenario wrote: Node's bcrypt

@@ -9,10 +9,10 @@ import (
 	"net/http"
 )
 
-const secureHTTPEnvelopeHeader = "X-BetterDesk-Envelope"
+const secureHTTPEnvelopeHeader = "X-NeoDesk-Envelope"
 
 type secureHTTPEnvelopeRequest struct {
-	BetterDeskEnvelope json.RawMessage `json:"betterdesk_envelope"`
+	NeoDeskEnvelope json.RawMessage `json:"neodesk_envelope"`
 }
 
 type secureHTTPResponseWriter struct {
@@ -45,7 +45,7 @@ func (s *Server) secureEnvelopeMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		deviceID := r.Header.Get("X-BetterDesk-Device")
+		deviceID := r.Header.Get("X-NeoDesk-Device")
 		if deviceID == "" {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "secure_device_required"})
 			return
@@ -57,10 +57,10 @@ func (s *Server) secureEnvelopeMiddleware(next http.Handler) http.Handler {
 		}
 		envelopeRaw := raw
 		var wrapped secureHTTPEnvelopeRequest
-		if json.Unmarshal(raw, &wrapped) == nil && len(wrapped.BetterDeskEnvelope) > 0 {
-			// BetterDesk Client wraps secure HTTP requests in the same
-			// betterdesk_envelope object used by heartbeat responses.
-			envelopeRaw = wrapped.BetterDeskEnvelope
+		if json.Unmarshal(raw, &wrapped) == nil && len(wrapped.NeoDeskEnvelope) > 0 {
+			// NeoDesk Client wraps secure HTTP requests in the same
+			// neodesk_envelope object used by heartbeat responses.
+			envelopeRaw = wrapped.NeoDeskEnvelope
 		}
 		opened, err := s.openTelemetryEnvelope(deviceID, envelopeRaw)
 		if err != nil {
@@ -83,10 +83,10 @@ func (s *Server) secureEnvelopeMiddleware(next http.Handler) http.Handler {
 			status = http.StatusOK
 		}
 		payload := map[string]any{
-			"__betterdesk_http": true,
-			"status_code":       status,
-			"content_type":      capture.header.Get("Content-Type"),
-			"body":              base64.StdEncoding.EncodeToString(capture.body.Bytes()),
+			"__neodesk_http": true,
+			"status_code":    status,
+			"content_type":   capture.header.Get("Content-Type"),
+			"body":           base64.StdEncoding.EncodeToString(capture.body.Bytes()),
 		}
 		envelope, err := s.sealTelemetryResponse(deviceID, payload, *opened.ResponsePublicKey)
 		if err != nil {
@@ -96,6 +96,6 @@ func (s *Server) secureEnvelopeMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set(secureHTTPEnvelopeHeader, "1")
 		w.WriteHeader(status)
-		_ = json.NewEncoder(w).Encode(map[string]any{"betterdesk_envelope": envelope})
+		_ = json.NewEncoder(w).Encode(map[string]any{"neodesk_envelope": envelope})
 	})
 }

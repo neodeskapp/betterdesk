@@ -1,6 +1,6 @@
 # Go build artifacts
-betterdesk-server
-betterdesk-server-*
+neodesk-server
+neodesk-server-*
 *.exe
 *.test
 

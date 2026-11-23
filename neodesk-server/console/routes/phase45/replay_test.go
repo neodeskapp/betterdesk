@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // writeReleaseCache puts the release cache of testdata/releases.json,
@@ -29,7 +29,7 @@ func writeReleaseCache(t *testing.T, dataDir string) {
 	if err := json.Unmarshal(raw, &cache); err != nil {
 		t.Fatal(err)
 	}
-	root := filepath.Join(dataDir, "modules", "betterdesk-support-releases")
+	root := filepath.Join(dataDir, "modules", "neodesk-support-releases")
 	for rel, content := range cache.Files {
 		file := filepath.Join(root, filepath.FromSlash(rel))
 		if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {

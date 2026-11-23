@@ -8,7 +8,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
 )
 
 // deviceIDPattern is a device id the agent's socket takes.

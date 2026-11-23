@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // clientToken stores a live access token of a test account and returns
@@ -390,7 +390,7 @@ func TestASignInTokenProvesNoDevice(t *testing.T) {
 		if got := agent.Do("GET", "/api/currentUser", "", account...); got.Status != 200 {
 			t.Errorf("current user with the sign-in's token: %d %s", got.Status, got.Body)
 		}
-		for _, target := range []string{"/api/bd/heartbeat", "/api/bd/remote-agent-token", "/api/bd/help-request"} {
+		for _, target := range []string{"/api/nd/heartbeat", "/api/nd/remote-agent-token", "/api/nd/help-request"} {
 			got := agent.Do("POST", target, `{"device_id":"900100001"}`, account...)
 			if got.Status != 401 || got.Body != `{"error":"Invalid or unbound access token"}` {
 				t.Errorf("%s with the sign-in's token: %d %s", target, got.Status, got.Body)
@@ -400,7 +400,7 @@ func TestASignInTokenProvesNoDevice(t *testing.T) {
 		if got := agent.Do("GET", "/api/currentUser", "", bound...); got.Status != 401 || got.Body != `{"error":"Invalid or expired token"}` {
 			t.Errorf("current user with the device token: %d %s", got.Status, got.Body)
 		}
-		if got := agent.Do("POST", "/api/bd/heartbeat", `{"device_id":"900100001"}`, bound...); got.Status == 401 || got.Status == 403 {
+		if got := agent.Do("POST", "/api/nd/heartbeat", `{"device_id":"900100001"}`, bound...); got.Status == 401 || got.Status == 403 {
 			t.Errorf("heartbeat with the device token: %d %s", got.Status, got.Body)
 		}
 	})

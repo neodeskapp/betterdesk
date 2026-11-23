@@ -3,7 +3,7 @@ package guest
 import (
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath/proxytest"
 )
 
 // twoLinks is the API server's list with a link of e2e_operator and one

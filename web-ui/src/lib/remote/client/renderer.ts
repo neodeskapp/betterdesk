@@ -1,5 +1,5 @@
 /**
- * BetterDesk Web Remote Client - Canvas Renderer
+ * NeoDesk Web Remote Client - Canvas Renderer
  * Renders decoded video frames on canvas with cursor overlay
  */
 import type { ICursorData, ICursorPosition } from './generated/protos.ts';

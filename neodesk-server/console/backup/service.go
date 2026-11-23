@@ -11,17 +11,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // The format names and versions an archive and a settings snapshot carry.
 const (
-	FormatName        = "betterdesk-backup"
+	FormatName        = "neodesk-backup"
 	FormatVersion     = 1
-	FullFormatName    = "betterdesk-full-backup"
+	FullFormatName    = "neodesk-full-backup"
 	FullFormatVersion = 1
 )
 
@@ -224,7 +224,7 @@ func (s *Service) BackupStats(ctx context.Context) (*goapi.Object, error) {
 		return nil, err
 	}
 	o, _ := v.(*goapi.Object)
-	return o.Set("backend", "betterdesk"), nil
+	return o.Set("backend", "neodesk"), nil
 }
 
 // FullBackupStats is getFullBackupStats.
@@ -243,7 +243,7 @@ func (s *Service) FullBackupStats(ctx context.Context) FullStats {
 	}
 	return FullStats{
 		Stats:   backupStats(ctx, s.o.Store),
-		Backend: "betterdesk",
+		Backend: "neodesk",
 		DBType:  s.dbType(),
 		Components: Components{
 			Env:           exists(p.env),
@@ -310,7 +310,7 @@ type Manifest struct {
 }
 
 // CreateFullBackup makes the full disaster-recovery archive and its file
-// name, betterdesk-backup-YYYY-MM-DD-HH-MM-SS.tar.gz (UTC). It holds, in
+// name, neodesk-backup-YYYY-MM-DD-HH-MM-SS.tar.gz (UTC). It holds, in
 // this order:
 //
 //	manifest.json                    format, version, time, product version, backend, database, components
@@ -425,7 +425,7 @@ func (s *Service) CreateFullBackup(ctx context.Context) ([]byte, string, error) 
 		Version:        FullFormatVersion,
 		Created:        timestamp,
 		ConsoleVersion: s.o.AppVersion,
-		Backend:        "betterdesk",
+		Backend:        "neodesk",
 		DBType:         s.dbType(),
 		Components:     present,
 	}
@@ -441,7 +441,7 @@ func (s *Service) CreateFullBackup(ctx context.Context) ([]byte, string, error) 
 		return nil, "", err
 	}
 	stamp := strings.NewReplacer(":", "-", "T", "-").Replace(timestamp[:19])
-	return archive, "betterdesk-backup-" + stamp + ".tar.gz", nil
+	return archive, "neodesk-backup-" + stamp + ".tar.gz", nil
 }
 
 // goServerData is fetchGoServerData: what the API server says, each call
@@ -477,7 +477,7 @@ func indentJSON(v any) ([]byte, error) {
 
 func recoveryReadme(m Manifest) string {
 	return strings.Join([]string{
-		"BetterDesk Console \u2014 Full Disaster-Recovery Backup",
+		"NeoDesk Console \u2014 Full Disaster-Recovery Backup",
 		"==================================================",
 		"",
 		"Created:          " + m.Created,
@@ -491,7 +491,7 @@ func recoveryReadme(m Manifest) string {
 		"",
 		"How to restore on a fresh machine",
 		"---------------------------------",
-		"1. Install BetterDesk using the ALL-IN-ONE installer (betterdesk.sh / .ps1).",
+		"1. Install NeoDesk using the ALL-IN-ONE installer (neodesk.sh / .ps1).",
 		"2. Stop the console and Go server services.",
 		"3. Open the web console Settings page and use \"Restore from backup\",",
 		"   OR extract this archive manually with: tar -xzf <backup>.tar.gz",
@@ -527,7 +527,7 @@ type Validation struct {
 }
 
 // ValidateFullBackup unpacks an archive and checks its manifest: it must
-// be a JSON object with _format "betterdesk-full-backup" and a numeric
+// be a JSON object with _format "neodesk-full-backup" and a numeric
 // _version of at most 1. A manifest that is no object (null, a list, text)
 // has neither.
 func (s *Service) ValidateFullBackup(buf []byte) Validation {
@@ -545,7 +545,7 @@ func (s *Service) ValidateFullBackup(buf []byte) Validation {
 	}
 	var errs []string
 	if prop(manifest, "_format") != FullFormatName {
-		errs = append(errs, "Archive is not a BetterDesk full backup (wrong _format)")
+		errs = append(errs, "Archive is not a NeoDesk full backup (wrong _format)")
 	}
 	version := prop(manifest, "_version")
 	if n, isNumber := version.(float64); !isNumber || n > FullFormatVersion {

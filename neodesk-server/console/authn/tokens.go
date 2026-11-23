@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // Access tokens of the RustDesk client API: 32 random bytes as 64

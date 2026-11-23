@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 )
 
 // Relays and rules are stored as JSON text and handed to the client as

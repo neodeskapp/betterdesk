@@ -8,10 +8,10 @@ import (
 
 func portTree() map[string]string {
 	return map[string]string{
-		"betterdesk-server/config/constants.go":         "package config\n\nconst (\n\tDefaultSignalPort = 21116\n\tDefaultRelayPort  = 21117\n\tDefaultAPIPort\t= 21114\n)\n",
-		"betterdesk-server/cmd/repotool/portdocs.go":    "the stale port 21120\n",
-		"betterdesk-server/cmd/repotool/other_test.go":  "no port here\n",
-		"betterdesk-server/cmd/repotool/portdocs_x.txt": "21120\n",
+		"neodesk-server/config/constants.go":         "package config\n\nconst (\n\tDefaultSignalPort = 21116\n\tDefaultRelayPort  = 21117\n\tDefaultAPIPort\t= 21114\n)\n",
+		"neodesk-server/cmd/repotool/portdocs.go":    "the stale port 21120\n",
+		"neodesk-server/cmd/repotool/other_test.go":  "no port here\n",
+		"neodesk-server/cmd/repotool/portdocs_x.txt": "21120\n",
 		"scripts/a.sh": "echo 21116\n",
 	}
 }
@@ -30,31 +30,31 @@ func TestCheckPortDocsFindings(t *testing.T) {
 	root := t.TempDir()
 	tree := portTree()
 	for name, text := range map[string]string{
-		"scripts/b.md":                                    "port 21120 never shipped",
-		"scripts/c.md":                                    "port 21120 is HiStOrIcAl",
-		"scripts/d.txt":                                   "21120",
-		"scripts/node_modules/x.md":                       "21120",
-		"scripts/private/x.md":                            "21120",
-		"scripts/e.sh":                                    "21120",
-		"scripts/f.ps1":                                   "21120",
-		"betterdesk-server/g.go":                          "x := 21120",
-		"betterdesk-server/data/go-toolchain/h.go":        "21120",
-		"betterdesk-server/sub/data/go-toolchain/i.go":    "21120",
-		"betterdesk-server/j.js":                          "21120",
-		"betterdesk-server/k.md":                          "211201",
-		"betterdesk-server/cmd/repotool/portdocs_test.go": "21120",
+		"scripts/b.md":                                 "port 21120 never shipped",
+		"scripts/c.md":                                 "port 21120 is HiStOrIcAl",
+		"scripts/d.txt":                                "21120",
+		"scripts/node_modules/x.md":                    "21120",
+		"scripts/private/x.md":                         "21120",
+		"scripts/e.sh":                                 "21120",
+		"scripts/f.ps1":                                "21120",
+		"neodesk-server/g.go":                          "x := 21120",
+		"neodesk-server/data/go-toolchain/h.go":        "21120",
+		"neodesk-server/sub/data/go-toolchain/i.go":    "21120",
+		"neodesk-server/j.js":                          "21120",
+		"neodesk-server/k.md":                          "211201",
+		"neodesk-server/cmd/repotool/portdocs_test.go": "21120",
 	} {
 		tree[name] = text
 	}
 	writeTree(t, root, tree)
 	// A link is not followed
-	if err := os.Symlink(filepath.Join("..", "scripts", "e.sh"), filepath.Join(root, "betterdesk-server", "link.md")); err != nil {
+	if err := os.Symlink(filepath.Join("..", "scripts", "e.sh"), filepath.Join(root, "neodesk-server", "link.md")); err != nil {
 		t.Logf("no symlink: %v", err)
 	}
 	runCommand(checkPortDocs, root).want(t, 1, "", "Port check failed:\n"+
-		"  - "+filepath.Join("betterdesk-server", "g.go")+" mentions port 21120, which does not exist in the code\n"+
-		"  - "+filepath.Join("betterdesk-server", "j.js")+" mentions port 21120, which does not exist in the code\n"+
-		"  - "+filepath.Join("betterdesk-server", "k.md")+" mentions port 21120, which does not exist in the code\n"+
+		"  - "+filepath.Join("neodesk-server", "g.go")+" mentions port 21120, which does not exist in the code\n"+
+		"  - "+filepath.Join("neodesk-server", "j.js")+" mentions port 21120, which does not exist in the code\n"+
+		"  - "+filepath.Join("neodesk-server", "k.md")+" mentions port 21120, which does not exist in the code\n"+
 		"  - "+filepath.Join("scripts", "e.sh")+" mentions port 21120, which does not exist in the code\n"+
 		"  - "+filepath.Join("scripts", "f.ps1")+" mentions port 21120, which does not exist in the code\n")
 }

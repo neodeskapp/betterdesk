@@ -3,14 +3,14 @@ package servermgmt
 import (
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
 // ReadRoots are the folders the file browser may list and read
 // (getAllowedFileRoots), each once, in this order: the server's folder
 // (serverPath), the console's folder
-// (BETTERDESK_CONSOLE_PATH, default WorkDir), the account's home, LogDir,
-// the temp folder, the TempDirs, then BETTERDESK_FILE_ALLOWED_ROOTS. All
+// (NEODESK_CONSOLE_PATH, default WorkDir), the account's home, LogDir,
+// the temp folder, the TempDirs, then NEODESK_FILE_ALLOWED_ROOTS. All
 // are made absolute except LogDir, the temp folder and the TempDirs, which
 // are listed as they are.
 func (s *Service) ReadRoots() []string {
@@ -23,28 +23,28 @@ func (s *Service) ReadRoots() []string {
 	for _, dir := range s.opts.TempDirs {
 		roots.add(dir)
 	}
-	s.addListed(roots, "BETTERDESK_FILE_ALLOWED_ROOTS")
+	s.addListed(roots, "NEODESK_FILE_ALLOWED_ROOTS")
 	return roots.list
 }
 
 // serverPath is the server's folder by the rule of the update and
-// management routes (managedconfig.Config.Paths): BETTERDESK_PATH,
-// RUSTDESK_DIR or RUSTDESK_PATH, else /opt/betterdesk, on Windows
-// C:\BetterDesk.
+// management routes (managedconfig.Config.Paths): NEODESK_PATH,
+// RUSTDESK_DIR or RUSTDESK_PATH, else /opt/neodesk, on Windows
+// C:\NeoDesk.
 func (s *Service) serverPath() string {
 	env := s.opts.Getenv
-	dir := firstSet(env("BETTERDESK_PATH"), env("RUSTDESK_DIR"), env("RUSTDESK_PATH"))
+	dir := firstSet(env("NEODESK_PATH"), env("RUSTDESK_DIR"), env("RUSTDESK_PATH"))
 	if dir == "" {
-		dir = "/opt/betterdesk"
+		dir = "/opt/neodesk"
 		if s.windows() {
-			dir = `C:\BetterDesk`
+			dir = `C:\NeoDesk`
 		}
 	}
 	return s.resolve(dir)
 }
 
 func (s *Service) consolePath() string {
-	return s.resolve(firstSet(s.opts.Getenv("BETTERDESK_CONSOLE_PATH"), s.opts.WorkDir))
+	return s.resolve(firstSet(s.opts.Getenv("NEODESK_CONSOLE_PATH"), s.opts.WorkDir))
 }
 
 // addListed adds the folders of a comma-separated variable: each entry

@@ -3,8 +3,8 @@ package commercialization_test
 import (
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
-	"github.com/unitronix/betterdesk-server/console/routes/commercialization"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath/proxytest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/commercialization"
 )
 
 // The routes that pass the query on leave out the parameters written with

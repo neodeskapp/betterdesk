@@ -14,9 +14,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // Options are the settings of a Service. The paths are the places the
@@ -343,12 +343,12 @@ func (s *Service) ResetBranding(ctx context.Context) error {
 	return nil
 }
 
-// defaultFaviconFallback is the BetterDesk mark, used when FaviconFile
+// defaultFaviconFallback is the NeoDesk mark, used when FaviconFile
 // cannot be read.
 const defaultFaviconFallback = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="9.5 9.5 45 45"><style>.s{fill:#1f6feb}.c{fill:#4d8f06}.o{fill:#0f9e96}@media (prefers-color-scheme: dark){.s{fill:#58a6ff}.c{fill:#a3e635}.o{fill:#3fd0c4}}</style><defs><clipPath id="bdf"><circle cx="38" cy="26" r="16"/></clipPath></defs><rect class="s" x="10" y="22" width="32" height="32" rx="10"/><circle class="c" cx="38" cy="26" r="16"/><rect class="o" x="10" y="22" width="32" height="32" rx="10" clip-path="url(#bdf)"/></svg>`
 
 // GenerateFavicon returns the SVG for /branding/favicon.svg: the
-// administrator's own favicon when one is set, otherwise the BetterDesk
+// administrator's own favicon when one is set, otherwise the NeoDesk
 // mark from FaviconFile. The file is read once.
 func (s *Service) GenerateFavicon() string {
 	if own, _ := s.GetBranding().Get("faviconSvg"); Truthy(own) {
@@ -380,14 +380,14 @@ func (s *Service) exportPreset() *Object {
 	branding := s.GetBranding()
 	return object(
 		"version", "2.0",
-		"type", "betterdesk-theme",
+		"type", "neodesk-theme",
 		"appearance", s.appearanceModel(branding),
 		"branding", branding,
 	)
 }
 
 // ImportPreset applies a theme file. It answers false when preset is not
-// a theme (type "betterdesk-theme" with an appearance or a branding
+// a theme (type "neodesk-theme" with an appearance or a branding
 // part). When both are there, the flat settings of the branding part are
 // laid over the appearance part: the console's own export writes both,
 // and only the flat part holds every setting by its stored name (the
@@ -395,7 +395,7 @@ func (s *Service) exportPreset() *Object {
 // stored as SaveBranding stores them.
 func (s *Service) ImportPreset(ctx context.Context, preset any) (ok bool, err error) {
 	defer catch(&err)
-	if !Truthy(preset) || property(preset, "type") != "betterdesk-theme" {
+	if !Truthy(preset) || property(preset, "type") != "neodesk-theme" {
 		return false, nil
 	}
 	appearance, branding := property(preset, "appearance"), property(preset, "branding")

@@ -12,12 +12,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/bdrelay/fakeagent"
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/bdrelay/fakeagent"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
 )
 
 // The bugs of BUGS.md that the device routes fixed, each with the

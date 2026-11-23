@@ -33,7 +33,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -90,7 +90,7 @@
        "text": ""
       },
       "identity": {
-       "appDescription": "BetterDesk Server Management",
+       "appDescription": "NeoDesk Server Management",
        "appName": "Nested Name",
        "faviconSvg": "",
        "logoIcon": "dns",
@@ -201,7 +201,7 @@
        "glassEnabled": false,
        "glassOpacity": "55"
       },
-      "type": "betterdesk-appearance",
+      "type": "neodesk-appearance",
       "typography": {
        "fontBody": "",
        "fontHeading": "Inter"
@@ -214,7 +214,7 @@
       "agentBgImageUrl": "",
       "agentBgType": "none",
       "agentShowPoweredBy": "true",
-      "appDescription": "BetterDesk Server Management",
+      "appDescription": "NeoDesk Server Management",
       "appName": "Nested Name",
       "appearanceSchemaVersion": "2",
       "bgBlur": "",

@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/billing"
-	"github.com/unitronix/betterdesk-server/config"
-	cryptopkg "github.com/unitronix/betterdesk-server/crypto"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/peer"
-	pb "github.com/unitronix/betterdesk-server/proto"
-	"github.com/unitronix/betterdesk-server/timesync"
+	"github.com/neodeskapp/neodesk/neodesk-server/billing"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	cryptopkg "github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/timesync"
 )
 
 // addDeviceContract gives deviceID an active billing contract.

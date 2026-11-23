@@ -49,7 +49,7 @@ func build(t *testing.T, m Mail) *Message {
 // TestBuildShapes pins the whole message for the four ways a mail can have
 // bodies.
 func TestBuildShapes(t *testing.T) {
-	const head = "From: betterdesk@localhost\r\nTo: admin@example.com\r\nSubject: Hello\r\n"
+	const head = "From: neodesk@localhost\r\nTo: admin@example.com\r\nSubject: Hello\r\n"
 	const date = "Date: Tue, 10 Nov 2026 20:25:17 +0000\r\nMIME-Version: 1.0\r\n"
 	tests := []struct {
 		name       string
@@ -89,14 +89,14 @@ func TestBuildShapes(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			message := build(t, Mail{From: "betterdesk@localhost", To: []string{"admin@example.com"}, Subject: "Hello", Text: tt.text, HTML: tt.html})
+			message := build(t, Mail{From: "neodesk@localhost", To: []string{"admin@example.com"}, Subject: "Hello", Text: tt.text, HTML: tt.html})
 			if string(message.Raw) != tt.want {
 				t.Errorf("message\n got  %q\n want %q", message.Raw, tt.want)
 			}
 			if message.MessageID != tt.id {
 				t.Errorf("Message-ID %q, want %q", message.MessageID, tt.id)
 			}
-			if message.EnvelopeFrom != "betterdesk@localhost" || !slices.Equal(message.EnvelopeTo, []string{"admin@example.com"}) {
+			if message.EnvelopeFrom != "neodesk@localhost" || !slices.Equal(message.EnvelopeTo, []string{"admin@example.com"}) {
 				t.Errorf("envelope %q -> %q", message.EnvelopeFrom, message.EnvelopeTo)
 			}
 		})

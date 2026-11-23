@@ -2,7 +2,7 @@
  "id": "filetransfer/device-unknown-action",
  "request": {
   "method": "POST",
-  "path": "/api/bd/file-transfer",
+  "path": "/api/nd/file-transfer",
   "body": {
    "action": "nope"
   },

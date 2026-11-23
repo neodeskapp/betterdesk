@@ -2,7 +2,7 @@
  "id": "remote-agent-token/issue-unknown-token",
  "request": {
   "method": "POST",
-  "path": "/api/bd/remote-agent-token",
+  "path": "/api/nd/remote-agent-token",
   "body": {},
   "notes": [
    "header Authorization: Bearer contract-no-such-token",

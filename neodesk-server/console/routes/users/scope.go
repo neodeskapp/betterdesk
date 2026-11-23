@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/devicegroups"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/goapipath"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/devicegroups"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 )
 
 // plainMember is body[name] as encoding/json decodes it, the form the
@@ -72,7 +72,7 @@ func (h *handlers) applyScope(ctx context.Context, userID int64, username string
 		if err != nil {
 			return err
 		}
-		if h.d.Backend.IsBetterDesk() {
+		if h.d.Backend.IsNeoDesk() {
 			h.tellStrategy(ctx, username, assigned)
 		}
 	}

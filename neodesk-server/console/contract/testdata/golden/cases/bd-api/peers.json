@@ -2,7 +2,7 @@
  "id": "bd-api/peers",
  "request": {
   "method": "GET",
-  "path": "/api/bd/peers",
+  "path": "/api/nd/peers",
   "notes": [
    "header Authorization: Bearer {secret:device_token}",
    "no CSRF token",

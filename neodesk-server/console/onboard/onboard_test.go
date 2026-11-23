@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 func TestCodeForms(t *testing.T) {
@@ -32,23 +32,23 @@ func TestConsoleLinksAndFileNames(t *testing.T) {
 		base, join, support, deep, setup, quick string
 	}{
 		{"https://desk.example.com", "https://desk.example.com/join/ABCD2345", "https://desk.example.com/s/ABCD2345",
-			"betterdesk://join/desk.example.com/ABCD2345",
-			"BetterDesk-Setup-desk.example.com-ABCD2345.exe", "BetterDesk-QuickSupport-desk.example.com-ABCD2345.exe"},
+			"neodesk://join/desk.example.com/ABCD2345",
+			"NeoDesk-Setup-desk.example.com-ABCD2345.exe", "NeoDesk-QuickSupport-desk.example.com-ABCD2345.exe"},
 		{"https://Desk.Example.com:443/", "https://desk.example.com/join/ABCD2345", "https://desk.example.com/s/ABCD2345",
-			"betterdesk://join/desk.example.com/ABCD2345",
-			"BetterDesk-Setup-desk.example.com-ABCD2345.exe", "BetterDesk-QuickSupport-desk.example.com-ABCD2345.exe"},
+			"neodesk://join/desk.example.com/ABCD2345",
+			"NeoDesk-Setup-desk.example.com-ABCD2345.exe", "NeoDesk-QuickSupport-desk.example.com-ABCD2345.exe"},
 		{"https://desk.example.com:8443", "https://desk.example.com:8443/join/ABCD2345", "https://desk.example.com:8443/s/ABCD2345",
-			"betterdesk://join/desk.example.com:8443/ABCD2345",
-			"BetterDesk-Setup-desk.example.com_8443-ABCD2345.exe", "BetterDesk-QuickSupport-desk.example.com_8443-ABCD2345.exe"},
+			"neodesk://join/desk.example.com:8443/ABCD2345",
+			"NeoDesk-Setup-desk.example.com_8443-ABCD2345.exe", "NeoDesk-QuickSupport-desk.example.com_8443-ABCD2345.exe"},
 		{"http://192.168.1.5:5000", "http://192.168.1.5:5000/join/ABCD2345", "http://192.168.1.5:5000/s/ABCD2345",
-			"betterdesk://join/192.168.1.5:5000/ABCD2345?http=1",
-			"BetterDesk-Setup-192.168.1.5_5000_http-ABCD2345.exe", "BetterDesk-QuickSupport-192.168.1.5_5000_http-ABCD2345.exe"},
+			"neodesk://join/192.168.1.5:5000/ABCD2345?http=1",
+			"NeoDesk-Setup-192.168.1.5_5000_http-ABCD2345.exe", "NeoDesk-QuickSupport-192.168.1.5_5000_http-ABCD2345.exe"},
 		{"http://desk.lan", "http://desk.lan/join/ABCD2345", "http://desk.lan/s/ABCD2345",
-			"betterdesk://join/desk.lan/ABCD2345?http=1",
-			"BetterDesk-Setup-desk.lan_http-ABCD2345.exe", "BetterDesk-QuickSupport-desk.lan_http-ABCD2345.exe"},
+			"neodesk://join/desk.lan/ABCD2345?http=1",
+			"NeoDesk-Setup-desk.lan_http-ABCD2345.exe", "NeoDesk-QuickSupport-desk.lan_http-ABCD2345.exe"},
 		{"https://[2001:db8::1]:8443", "https://[2001:db8::1]:8443/join/ABCD2345", "https://[2001:db8::1]:8443/s/ABCD2345",
-			"betterdesk://join/[2001:db8::1]:8443/ABCD2345",
-			"BetterDesk-Setup-ABCD2345.exe", "BetterDesk-QuickSupport-ABCD2345.exe"},
+			"neodesk://join/[2001:db8::1]:8443/ABCD2345",
+			"NeoDesk-Setup-ABCD2345.exe", "NeoDesk-QuickSupport-ABCD2345.exe"},
 	} {
 		c, ok := ParseConsole(tc.base)
 		if !ok {
@@ -63,7 +63,7 @@ func TestConsoleLinksAndFileNames(t *testing.T) {
 			}
 		}
 	}
-	if c, _ := ParseConsole("https://desk.example.com"); c.DeepLink(KindSupport, "ABCD2345") != "betterdesk://support/desk.example.com/ABCD2345" {
+	if c, _ := ParseConsole("https://desk.example.com"); c.DeepLink(KindSupport, "ABCD2345") != "neodesk://support/desk.example.com/ABCD2345" {
 		t.Errorf("support deep link %q", c.DeepLink(KindSupport, "ABCD2345"))
 	}
 }
@@ -79,7 +79,7 @@ func TestConsoleRefusesHostsAShellOrFileNameCannotCarry(t *testing.T) {
 func TestScriptsCarryTheirLinkAndCode(t *testing.T) {
 	install := InstallScript("https://desk.example.com", "ABCD2345")
 	for _, want := range []string{
-		"BASE='https://desk.example.com'", "CODE='ABCD2345'", `betterdesk --join "$BASE/join/$CODE"`,
+		"BASE='https://desk.example.com'", "CODE='ABCD2345'", `neodesk --join "$BASE/join/$CODE"`,
 		`/api/onboard/public/$CODE/download?os=linux&arch=$arch&format=$format`, "apt-get install -y", "dnf install -y",
 	} {
 		if !strings.Contains(install, want) {
@@ -87,7 +87,7 @@ func TestScriptsCarryTheirLinkAndCode(t *testing.T) {
 		}
 	}
 	run := RunScript("https://desk.example.com", "ABCD2345")
-	if !strings.Contains(run, `exec "$dir/betterdesk" --join "$BASE/s/$CODE"`) || strings.Contains(run, "sudo") || strings.Contains(run, "@BASE@") {
+	if !strings.Contains(run, `exec "$dir/neodesk" --join "$BASE/s/$CODE"`) || strings.Contains(run, "sudo") || strings.Contains(run, "@BASE@") {
 		t.Errorf("run script:\n%s", run)
 	}
 }

@@ -1,5 +1,5 @@
 /**
- * BetterDesk Web Remote Client - Connection Manager
+ * NeoDesk Web Remote Client - Connection Manager
  * Handles WebSocket connections to hbbs (rendezvous) and hbbr (relay)
  * via the Node.js WS proxy endpoints.
  */
@@ -18,7 +18,7 @@ function isOnArrayBuffer(data: Uint8Array): data is Uint8Array<ArrayBuffer> {
 }
 
 export interface RDConnectionOptions {
-	/** Base URL of the BetterDesk server (auto-detected) */
+	/** Base URL of the NeoDesk server (auto-detected) */
 	baseUrl?: string;
 	deviceId?: string | number;
 	guestSessionId?: string;

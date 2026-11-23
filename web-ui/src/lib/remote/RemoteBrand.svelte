@@ -1,6 +1,6 @@
 <!--
   The console's logo on the remote client's pages, as Settings › Appearance
-  sets it: the BetterDesk logo, text with an accent, an SVG (shown as a
+  sets it: the NeoDesk logo, text with an accent, an SVG (shown as a
   picture, so it can't run anything) or an image, with the app name.
   Same rules as the shell's sidebar logo.
 -->

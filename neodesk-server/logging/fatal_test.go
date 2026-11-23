@@ -14,7 +14,7 @@ import (
 // for info and dropped at LOG_LEVEL=warn or error, so it exited without a
 // word (L223).
 func TestFatalfReachesTheLogAtEveryLevel(t *testing.T) {
-	if child := os.Getenv("BD_LOGGING_FATAL_CHILD"); child != "" {
+	if child := os.Getenv("ND_LOGGING_FATAL_CHILD"); child != "" {
 		format, level, _ := strings.Cut(child, "/")
 		Setup(format, level)
 		Fatalf("Failed to initialize keypair: %v", errors.New("bad key"))
@@ -23,7 +23,7 @@ func TestFatalfReachesTheLogAtEveryLevel(t *testing.T) {
 	for _, format := range []string{"text", "json"} {
 		for _, level := range []string{"error", "warn", "info"} {
 			cmd := exec.Command(os.Args[0], "-test.run=^TestFatalfReachesTheLogAtEveryLevel$")
-			cmd.Env = append(os.Environ(), "BD_LOGGING_FATAL_CHILD="+format+"/"+level)
+			cmd.Env = append(os.Environ(), "ND_LOGGING_FATAL_CHILD="+format+"/"+level)
 			out, err := cmd.CombinedOutput()
 			var exit *exec.ExitError
 			if !errors.As(err, &exit) || exit.ExitCode() != 1 {

@@ -8,9 +8,9 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/unitronix/betterdesk-server/console/advancedconfig"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/advancedconfig"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 // The keys of the settings in the console's .env file.
@@ -34,7 +34,7 @@ type Options struct {
 	// Docker says the console runs in a container (config.isDocker:
 	// DOCKER=true or /.dockerenv).
 	Docker bool
-	// Getenv reads BETTERDESK_DOCKER_LAYOUT; "split" with Docker is the
+	// Getenv reads NEODESK_DOCKER_LAYOUT; "split" with Docker is the
 	// layout with two containers. Nil means it is not set.
 	Getenv func(string) string
 	// Linux says the console runs on Linux (process.platform ===
@@ -79,7 +79,7 @@ func New(opts Options) *Service {
 // IsDockerSplitDeployment reports the Docker layout with one container
 // for the console and one for the server.
 func (s *Service) IsDockerSplitDeployment() bool {
-	return s.opts.Docker && strings.ToLower(jsTrim(s.opts.Getenv("BETTERDESK_DOCKER_LAYOUT"))) == "split"
+	return s.opts.Docker && strings.ToLower(jsTrim(s.opts.Getenv("NEODESK_DOCKER_LAYOUT"))) == "split"
 }
 
 // DetectOSTimezone is the machine's time zone when Intl takes it, else

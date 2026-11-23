@@ -6,7 +6,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 )
 
 // unitsOf counts UTF-16 units the way JavaScript does, a lone surrogate
@@ -35,7 +35,7 @@ func unitsOf(s string) int {
 // and a title, and the brand and title are clean text within their
 // limits.
 func FuzzSignInBadge(f *testing.F) {
-	f.Add(`{"tier":"iron","valid":true}`, `{"badgeTitle":"x","tierLabels":{"iron":"y"}}`, "BetterDesk")
+	f.Add(`{"tier":"iron","valid":true}`, `{"badgeTitle":"x","tierLabels":{"iron":"y"}}`, "NeoDesk")
 	f.Add(`{"tier":["iron"]}`, `[]`, "")
 	f.Add(`{"tier":{"toString":1}}`, `{"badgeTitle":{"toString":1}}`, "  \x01  ")
 	f.Add(`{"tier":"__proto__"}`, `null`, "Brand")

@@ -9,18 +9,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/session/cookie"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session/cookie"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // The session cookie's name: one for a console set up for HTTPS, one for
 // plain HTTP, so a Secure cookie left from an HTTPS setup never shadows
 // the HTTP one.
 const (
-	cookieNameHTTPS = "betterdesk.sid"
-	cookieNameHTTP  = "bd.sid"
+	cookieNameHTTPS = "neodesk.sid"
+	cookieNameHTTP  = "nd.sid"
 )
 
 // Options configure a Manager.

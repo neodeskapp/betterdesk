@@ -19,13 +19,13 @@ func TestPreflight(t *testing.T) {
 		t.Fatalf("%+v", pf)
 	}
 	// Unsigned and unsupervised: two warnings, no issue.
-	if len(pf.Warnings) != 2 || !strings.Contains(strings.Join(pf.Warnings, "|"), "BETTERDESK_SUPERVISOR") ||
+	if len(pf.Warnings) != 2 || !strings.Contains(strings.Join(pf.Warnings, "|"), "NEODESK_SUPERVISOR") ||
 		!strings.Contains(strings.Join(pf.Warnings, "|"), "was not signed") {
 		t.Errorf("warnings %v", pf.Warnings)
 	}
 
 	in.opts.FreeSpace = func(string) (int64, error) { return 10 << 20, nil }
-	in.env["BETTERDESK_SUPERVISOR"] = "systemd"
+	in.env["NEODESK_SUPERVISOR"] = "systemd"
 	in.env[EnvPublicKey] = base64.StdEncoding.EncodeToString(ed25519.NewKeyFromSeed(bytes.Repeat([]byte{4}, 32)).Public().(ed25519.PublicKey))
 	in.svc = New(in.opts)
 	pf = in.svc.Preflight(context.Background(), "")
@@ -63,18 +63,18 @@ func TestCapabilities(t *testing.T) {
 	if got := strings.Join(ids, ","); got != "console-read,console-write,data-write,server-read,server-write,backup-write,env-write,restart,config-schema,update" {
 		t.Errorf("checks %s", got)
 	}
-	if c.Platform != "linux" || len(c.Services) != 1 || c.Services[0] != "betterdesk-server" {
+	if c.Platform != "linux" || len(c.Services) != 1 || c.Services[0] != "neodesk-server" {
 		t.Errorf("%+v", c)
 	}
 	restart := c.Checks[7]
-	if restart.Ready || restart.Method != "unavailable" || !strings.Contains(restart.Error, "BETTERDESK_SUPERVISOR") || c.Groups.Restart.Ready {
+	if restart.Ready || restart.Method != "unavailable" || !strings.Contains(restart.Error, "NEODESK_SUPERVISOR") || c.Groups.Restart.Ready {
 		t.Errorf("restart %+v", restart)
 	}
 	update := c.Checks[9]
 	if !update.Ready || update.Method != "release" {
 		t.Errorf("update %+v", update)
 	}
-	in.env["BETTERDESK_SUPERVISOR"] = "nssm"
+	in.env["NEODESK_SUPERVISOR"] = "nssm"
 	if c := in.svc.Capabilities(); !c.Checks[7].Ready || c.Checks[7].Method != "exit" || !c.Groups.Restart.Ready {
 		t.Errorf("supervised %+v", c.Checks[7])
 	}
@@ -86,14 +86,14 @@ func TestCapabilities(t *testing.T) {
 		t.Errorf("schema %s", s)
 	}
 	windows := newInstall(t, func(o *Options) { o.GOOS = "windows" })
-	if c := windows.svc.Capabilities(); c.Platform != "win32" || c.Services[0] != "BetterDeskServer" {
+	if c := windows.svc.Capabilities(); c.Platform != "win32" || c.Services[0] != "NeoDeskServer" {
 		t.Errorf("windows %+v", c)
 	}
 }
 
 // The report looks at the env file the management config routes save to:
-// with BETTERDESK_ENV_FILE unset that is the .env of the console folder
-// BETTERDESK_CONSOLE_PATH names, also when CONSOLE_DIR names another one
+// with NEODESK_ENV_FILE unset that is the .env of the console folder
+// NEODESK_CONSOLE_PATH names, also when CONSOLE_DIR names another one
 // (BN1). The channel still goes into the console folder's .env.
 func TestCapabilitiesFollowTheConsolePath(t *testing.T) {
 	in := newInstall(t)
@@ -101,19 +101,19 @@ func TestCapabilitiesFollowTheConsolePath(t *testing.T) {
 	if err := os.MkdirAll(installed, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	in.env["BETTERDESK_CONSOLE_PATH"] = installed
+	in.env["NEODESK_CONSOLE_PATH"] = installed
 	svc := New(in.opts)
 	c := svc.Capabilities()
 	want := filepath.Join(installed, ".env")
 	if c.Paths.EnvPath != want || c.Checks[6].ID != "env-write" || c.Checks[6].Path != want {
 		t.Errorf("env path %q, check %+v, want %q", c.Paths.EnvPath, c.Checks[6], want)
 	}
-	// BETTERDESK_ENV_FILE still decides when it is set
+	// NEODESK_ENV_FILE still decides when it is set
 	named := filepath.Join(t.TempDir(), "named.env")
 	opts := in.opts
 	opts.EnvFile = named
 	if c := New(opts).Capabilities(); c.Paths.EnvPath != named || c.Checks[6].Path != named {
-		t.Errorf("BETTERDESK_ENV_FILE: %q, check %+v", c.Paths.EnvPath, c.Checks[6])
+		t.Errorf("NEODESK_ENV_FILE: %q, check %+v", c.Paths.EnvPath, c.Checks[6])
 	}
 	if err := os.MkdirAll(in.opts.ConsoleDir, 0o755); err != nil {
 		t.Fatal(err)

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // TestControlSocketRefusesADisabledAccount: the token of a disabled account

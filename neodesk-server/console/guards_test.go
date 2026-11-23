@@ -30,8 +30,8 @@ func guardWorld(t *testing.T, o setup) *world {
 		r.Get(path, probe, d.RequireRdClientAuth("device.connect"))
 	}
 	// Mounted twice, as several groups are: the guard still answers JSON
-	// below /api/bd
-	d.At("/api/bd").Router.Get("/g/auth", probe, d.RequireAuth)
+	// below /api/nd
+	d.At("/api/nd").Router.Get("/g/auth", probe, d.RequireAuth)
 	return w
 }
 
@@ -177,18 +177,18 @@ func checkGuard(t *testing.T, w *world, role, guard string, want expectation, bu
 
 func TestGuardBelowAMountAnswersJSON(t *testing.T) {
 	w := guardWorld(t, setup{})
-	res := w.agent().get("/api/bd/g/auth")
+	res := w.agent().get("/api/nd/g/auth")
 	if res.status != 401 || res.body != `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}` {
 		t.Errorf("got %d %s", res.status, res.body)
 	}
-	if res := w.agent().signIn("viewer").get("/api/bd/g/auth"); res.status != 200 {
+	if res := w.agent().signIn("viewer").get("/api/nd/g/auth"); res.status != 200 {
 		t.Errorf("signed in: %d", res.status)
 	}
 }
 
 func TestSignedOutPageRedirectKnowsAnEndedSession(t *testing.T) {
 	w := guardWorld(t, setup{})
-	res := w.agent().get("/g/auth?tab=1", "Cookie", "bd.sid=s%3Agone.sig", "Accept", "text/html")
+	res := w.agent().get("/g/auth?tab=1", "Cookie", "nd.sid=s%3Agone.sig", "Accept", "text/html")
 	if res.status != 302 || res.header.Get("Location") != "/login?expired=1&return=%2Fg%2Fauth%3Ftab%3D1" {
 		t.Errorf("got %d to %q", res.status, res.header.Get("Location"))
 	}
@@ -212,8 +212,8 @@ func TestProAccountLosesItsSessionAtTheGuard(t *testing.T) {
 		if res.status != 403 && res.status != 302 {
 			t.Fatalf("%s: %d", path, res.status)
 		}
-		if res.cookie("bd.sid") != "" {
-			t.Errorf("%s: the refusal renews the session cookie: %q", path, res.cookie("bd.sid"))
+		if res.cookie("nd.sid") != "" {
+			t.Errorf("%s: the refusal renews the session cookie: %q", path, res.cookie("nd.sid"))
 		}
 		// The browser still sends the cookie; the session behind it is gone
 		if res := a.get("/api/probe"); res.json(t)["user"] != float64(0) {

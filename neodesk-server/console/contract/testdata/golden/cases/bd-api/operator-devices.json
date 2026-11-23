@@ -2,7 +2,7 @@
  "id": "bd-api/operator-devices",
  "request": {
   "method": "GET",
-  "path": "/api/bd/operator/devices",
+  "path": "/api/nd/operator/devices",
   "notes": [
    "header Authorization: Bearer {secret:operator_token}",
    "no CSRF token",

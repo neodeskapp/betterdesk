@@ -3,7 +3,7 @@
 package contract_test
 
 import (
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // Organizations: every route on the seeded organization (Demo Northwind
@@ -108,7 +108,7 @@ func init() {
 			CaptureSecret: map[string]string{"invitation_code": "token"},
 		},
 		contract.Case{Name: "created-invitations", Path: "/api/panel/org/{created}/invitations"},
-		// Redeeming one makes a sign-in for the BetterDesk client in the
+		// Redeeming one makes a sign-in for the NeoDesk client in the
 		// organization (BUGS L42; recorded from Go, Node had no such
 		// routes). The page's routes need no session and allow 20 requests
 		// per address in 15 minutes, so the chain runs in the admin's turn

@@ -232,19 +232,19 @@
  ],
  "steps": [
   {
-   "name": "1 GET /api/bd/commands",
+   "name": "1 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {},
    "status": 401,
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "2 POST /api/bd/commands/5/result",
+   "name": "2 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {},
    "body": "{\"status\":\"nope\"}",
    "status": 401,
@@ -261,10 +261,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "4 GET /api/bd/commands",
+   "name": "4 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "X-Device-Id": "device-a"
    },
@@ -272,10 +272,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "5 POST /api/bd/commands/5/result",
+   "name": "5 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "X-Device-Id": "device-a"
    },
@@ -296,10 +296,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "7 GET /api/bd/commands",
+   "name": "7 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer nope"
    },
@@ -307,10 +307,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "8 POST /api/bd/commands/5/result",
+   "name": "8 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer nope"
    },
@@ -331,10 +331,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "10 GET /api/bd/commands",
+   "name": "10 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-unbound"
    },
@@ -342,10 +342,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "11 POST /api/bd/commands/5/result",
+   "name": "11 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-unbound"
    },
@@ -366,10 +366,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "13 GET /api/bd/commands",
+   "name": "13 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-null-client"
    },
@@ -377,10 +377,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "14 POST /api/bd/commands/5/result",
+   "name": "14 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-null-client"
    },
@@ -401,10 +401,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "16 GET /api/bd/commands",
+   "name": "16 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-short"
    },
@@ -412,10 +412,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "17 POST /api/bd/commands/5/result",
+   "name": "17 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-short"
    },
@@ -436,10 +436,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "19 GET /api/bd/commands",
+   "name": "19 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-spaced"
    },
@@ -447,10 +447,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "20 POST /api/bd/commands/5/result",
+   "name": "20 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-spaced"
    },
@@ -471,10 +471,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "22 GET /api/bd/commands",
+   "name": "22 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-expired"
    },
@@ -482,10 +482,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "23 POST /api/bd/commands/5/result",
+   "name": "23 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-expired"
    },
@@ -506,10 +506,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "25 GET /api/bd/commands",
+   "name": "25 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-revoked"
    },
@@ -517,10 +517,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "26 POST /api/bd/commands/5/result",
+   "name": "26 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-revoked"
    },
@@ -541,10 +541,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "28 GET /api/bd/commands",
+   "name": "28 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Basic tok-device-a"
    },
@@ -552,10 +552,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "29 POST /api/bd/commands/5/result",
+   "name": "29 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Basic tok-device-a"
    },
@@ -576,10 +576,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "31 GET /api/bd/commands",
+   "name": "31 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "bearer tok-device-a"
    },
@@ -587,10 +587,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "32 POST /api/bd/commands/5/result",
+   "name": "32 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "bearer tok-device-a"
    },
@@ -611,10 +611,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "34 GET /api/bd/commands",
+   "name": "34 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer  tok-device-a"
    },
@@ -622,10 +622,10 @@
    "answer": "{\"commands\":[{\"id\":2,\"device_id\":\"device-a\",\"command_type\":\"powershell\",\"payload\":\"Get-Process\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_operator\",\"created_at\":\"2001-01-01T00:01:00.000Z\",\"executed_at\":null,\"completed_at\":null},{\"id\":1,\"device_id\":\"device-a\",\"command_type\":\"shell\",\"payload\":\"hostname\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:02:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
   },
   {
-   "name": "35 POST /api/bd/commands/5/result",
+   "name": "35 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer  tok-device-a"
    },
@@ -646,10 +646,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "37 GET /api/bd/commands",
+   "name": "37 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-device-a more"
    },
@@ -657,10 +657,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "38 POST /api/bd/commands/5/result",
+   "name": "38 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a more"
    },
@@ -681,10 +681,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "40 GET /api/bd/commands",
+   "name": "40 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-plain"
    },
@@ -692,10 +692,10 @@
    "answer": "{\"commands\":[]}"
   },
   {
-   "name": "41 POST /api/bd/commands/5/result",
+   "name": "41 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-plain"
    },
@@ -716,19 +716,19 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "43 GET /api/bd/commands",
+   "name": "43 GET /api/nd/commands",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {},
    "status": 401,
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "44 GET /api/bd/commands",
+   "name": "44 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -736,10 +736,10 @@
    "answer": "{\"commands\":[{\"id\":2,\"device_id\":\"device-a\",\"command_type\":\"powershell\",\"payload\":\"Get-Process\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_operator\",\"created_at\":\"2001-01-01T00:01:00.000Z\",\"executed_at\":null,\"completed_at\":null},{\"id\":1,\"device_id\":\"device-a\",\"command_type\":\"shell\",\"payload\":\"hostname\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:02:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
   },
   {
-   "name": "45 GET /api/bd/commands/",
+   "name": "45 GET /api/nd/commands/",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands/",
+   "path": "/api/nd/commands/",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -747,10 +747,10 @@
    "answer": "{\"commands\":[{\"id\":2,\"device_id\":\"device-a\",\"command_type\":\"powershell\",\"payload\":\"Get-Process\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_operator\",\"created_at\":\"2001-01-01T00:01:00.000Z\",\"executed_at\":null,\"completed_at\":null},{\"id\":1,\"device_id\":\"device-a\",\"command_type\":\"shell\",\"payload\":\"hostname\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:02:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
   },
   {
-   "name": "46 GET /API/BD/COMMANDS",
+   "name": "46 GET /API/ND/COMMANDS",
    "role": "",
    "method": "GET",
-   "path": "/API/BD/COMMANDS",
+   "path": "/API/ND/COMMANDS",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -758,10 +758,10 @@
    "answer": "{\"commands\":[{\"id\":2,\"device_id\":\"device-a\",\"command_type\":\"powershell\",\"payload\":\"Get-Process\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_operator\",\"created_at\":\"2001-01-01T00:01:00.000Z\",\"executed_at\":null,\"completed_at\":null},{\"id\":1,\"device_id\":\"device-a\",\"command_type\":\"shell\",\"payload\":\"hostname\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:02:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
   },
   {
-   "name": "47 GET /api/bd/commands?device_id=device-b&status=completed",
+   "name": "47 GET /api/nd/commands?device_id=device-b&status=completed",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands?device_id=device-b&status=completed",
+   "path": "/api/nd/commands?device_id=device-b&status=completed",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -769,10 +769,10 @@
    "answer": "{\"commands\":[{\"id\":2,\"device_id\":\"device-a\",\"command_type\":\"powershell\",\"payload\":\"Get-Process\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_operator\",\"created_at\":\"2001-01-01T00:01:00.000Z\",\"executed_at\":null,\"completed_at\":null},{\"id\":1,\"device_id\":\"device-a\",\"command_type\":\"shell\",\"payload\":\"hostname\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:02:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
   },
   {
-   "name": "48 GET /api/bd/commands",
+   "name": "48 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-device-a",
     "X-Device-Id": "device-b"
@@ -781,10 +781,10 @@
    "answer": "{\"commands\":[{\"id\":2,\"device_id\":\"device-a\",\"command_type\":\"powershell\",\"payload\":\"Get-Process\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_operator\",\"created_at\":\"2001-01-01T00:01:00.000Z\",\"executed_at\":null,\"completed_at\":null},{\"id\":1,\"device_id\":\"device-a\",\"command_type\":\"shell\",\"payload\":\"hostname\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:02:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
   },
   {
-   "name": "49 GET /api/bd/commands",
+   "name": "49 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-device-b"
    },
@@ -792,10 +792,10 @@
    "answer": "{\"commands\":[{\"id\":5,\"device_id\":\"device-b\",\"command_type\":\"shell\",\"payload\":\"whoami\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:05:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
   },
   {
-   "name": "50 GET /api/bd/commands",
+   "name": "50 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-numeric"
    },
@@ -803,10 +803,10 @@
    "answer": "{\"commands\":[{\"id\":6,\"device_id\":\"123\",\"command_type\":\"shell\",\"payload\":\"id\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:06:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
   },
   {
-   "name": "51 GET /api/bd/commands",
+   "name": "51 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-plain"
    },
@@ -814,10 +814,10 @@
    "answer": "{\"commands\":[]}"
   },
   {
-   "name": "52 HEAD /api/bd/commands",
+   "name": "52 HEAD /api/nd/commands",
    "role": "",
    "method": "HEAD",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -825,10 +825,10 @@
    "answer": ""
   },
   {
-   "name": "53 POST /api/bd/commands/1/result",
+   "name": "53 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -854,10 +854,10 @@
    "rows": "[]"
   },
   {
-   "name": "54 POST /api/bd/commands/999/result",
+   "name": "54 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -866,10 +866,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "55 POST /api/bd/commands/5/result",
+   "name": "55 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -878,10 +878,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "56 POST /api/bd/commands/1/result",
+   "name": "56 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -907,10 +907,10 @@
    "rows": "[]"
   },
   {
-   "name": "57 POST /api/bd/commands/999/result",
+   "name": "57 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -919,10 +919,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "58 POST /api/bd/commands/5/result",
+   "name": "58 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -931,10 +931,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "59 POST /api/bd/commands/1/result",
+   "name": "59 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -960,10 +960,10 @@
    "rows": "[]"
   },
   {
-   "name": "60 POST /api/bd/commands/999/result",
+   "name": "60 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -972,10 +972,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "61 POST /api/bd/commands/5/result",
+   "name": "61 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -984,10 +984,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "62 POST /api/bd/commands/1/result",
+   "name": "62 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1013,10 +1013,10 @@
    "rows": "[]"
   },
   {
-   "name": "63 POST /api/bd/commands/999/result",
+   "name": "63 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1025,10 +1025,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "64 POST /api/bd/commands/5/result",
+   "name": "64 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1037,10 +1037,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "65 POST /api/bd/commands/1/result",
+   "name": "65 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1066,10 +1066,10 @@
    "rows": "[]"
   },
   {
-   "name": "66 POST /api/bd/commands/999/result",
+   "name": "66 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1078,10 +1078,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "67 POST /api/bd/commands/5/result",
+   "name": "67 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1090,10 +1090,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "68 POST /api/bd/commands/1/result",
+   "name": "68 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1119,10 +1119,10 @@
    "rows": "[]"
   },
   {
-   "name": "69 POST /api/bd/commands/999/result",
+   "name": "69 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1131,10 +1131,10 @@
    "answer": "{\"error\":\"Command not found\"}"
   },
   {
-   "name": "70 POST /api/bd/commands/5/result",
+   "name": "70 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1143,10 +1143,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "71 POST /api/bd/commands/1/result",
+   "name": "71 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1172,10 +1172,10 @@
    "rows": "[]"
   },
   {
-   "name": "72 POST /api/bd/commands/999/result",
+   "name": "72 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1184,10 +1184,10 @@
    "answer": "{\"error\":\"Command not found\"}"
   },
   {
-   "name": "73 POST /api/bd/commands/5/result",
+   "name": "73 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1196,10 +1196,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "74 POST /api/bd/commands/1/result",
+   "name": "74 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1225,10 +1225,10 @@
    "rows": "[]"
   },
   {
-   "name": "75 POST /api/bd/commands/999/result",
+   "name": "75 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1237,10 +1237,10 @@
    "answer": "{\"error\":\"Command not found\"}"
   },
   {
-   "name": "76 POST /api/bd/commands/5/result",
+   "name": "76 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1249,10 +1249,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "77 POST /api/bd/commands/1/result",
+   "name": "77 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1278,10 +1278,10 @@
    "rows": "[]"
   },
   {
-   "name": "78 POST /api/bd/commands/999/result",
+   "name": "78 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1290,10 +1290,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "79 POST /api/bd/commands/5/result",
+   "name": "79 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1302,10 +1302,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "80 POST /api/bd/commands/1/result",
+   "name": "80 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1331,10 +1331,10 @@
    "rows": "[]"
   },
   {
-   "name": "81 POST /api/bd/commands/999/result",
+   "name": "81 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1343,10 +1343,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "82 POST /api/bd/commands/5/result",
+   "name": "82 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1355,10 +1355,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "83 POST /api/bd/commands/1/result",
+   "name": "83 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1384,10 +1384,10 @@
    "rows": "[]"
   },
   {
-   "name": "84 POST /api/bd/commands/999/result",
+   "name": "84 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1396,10 +1396,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "85 POST /api/bd/commands/5/result",
+   "name": "85 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1408,10 +1408,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "86 POST /api/bd/commands/1/result",
+   "name": "86 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1437,10 +1437,10 @@
    "rows": "[]"
   },
   {
-   "name": "87 POST /api/bd/commands/999/result",
+   "name": "87 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1449,10 +1449,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "88 POST /api/bd/commands/5/result",
+   "name": "88 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1461,10 +1461,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "89 POST /api/bd/commands/1/result",
+   "name": "89 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1490,10 +1490,10 @@
    "rows": "[]"
   },
   {
-   "name": "90 POST /api/bd/commands/999/result",
+   "name": "90 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1502,10 +1502,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "91 POST /api/bd/commands/5/result",
+   "name": "91 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1514,10 +1514,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "92 POST /api/bd/commands/1/result",
+   "name": "92 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1543,10 +1543,10 @@
    "rows": "[]"
   },
   {
-   "name": "93 POST /api/bd/commands/999/result",
+   "name": "93 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1555,10 +1555,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "94 POST /api/bd/commands/5/result",
+   "name": "94 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1567,10 +1567,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "95 POST /api/bd/commands/1/result",
+   "name": "95 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1596,10 +1596,10 @@
    "rows": "[]"
   },
   {
-   "name": "96 POST /api/bd/commands/999/result",
+   "name": "96 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1608,10 +1608,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "97 POST /api/bd/commands/5/result",
+   "name": "97 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1620,10 +1620,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "98 POST /api/bd/commands/1/result",
+   "name": "98 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1649,10 +1649,10 @@
    "rows": "[]"
   },
   {
-   "name": "99 POST /api/bd/commands/999/result",
+   "name": "99 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1661,10 +1661,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "100 POST /api/bd/commands/5/result",
+   "name": "100 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1673,10 +1673,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "101 POST /api/bd/commands/2/result",
+   "name": "101 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1693,10 +1693,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":null,\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "102 POST /api/bd/commands/2/result",
+   "name": "102 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1713,10 +1713,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"null\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "103 POST /api/bd/commands/2/result",
+   "name": "103 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1733,10 +1733,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"0\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "104 POST /api/bd/commands/2/result",
+   "name": "104 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1753,10 +1753,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"0\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "105 POST /api/bd/commands/2/result",
+   "name": "105 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1773,10 +1773,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "106 POST /api/bd/commands/2/result",
+   "name": "106 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1793,10 +1793,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"text\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "107 POST /api/bd/commands/2/result",
+   "name": "107 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1813,10 +1813,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"5.5\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "108 POST /api/bd/commands/2/result",
+   "name": "108 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1833,10 +1833,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"1e+21\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "109 POST /api/bd/commands/2/result",
+   "name": "109 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1853,10 +1853,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"true\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "110 POST /api/bd/commands/2/result",
+   "name": "110 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1873,10 +1873,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"false\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "111 POST /api/bd/commands/2/result",
+   "name": "111 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1893,10 +1893,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "112 POST /api/bd/commands/2/result",
+   "name": "112 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1913,10 +1913,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"1,2,\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "113 POST /api/bd/commands/2/result",
+   "name": "113 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1933,10 +1933,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "114 POST /api/bd/commands/2/result",
+   "name": "114 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1953,10 +1953,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"[object Object]\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "115 POST /api/bd/commands/2/result",
+   "name": "115 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1973,10 +1973,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"[object Object]\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "116 POST /api/bd/commands/2/result",
+   "name": "116 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1993,10 +1993,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"[object Object]\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "117 POST /api/bd/commands/2/result",
+   "name": "117 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2013,10 +2013,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"[object Object]\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "118 POST /api/bd/commands/2/result",
+   "name": "118 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2033,10 +2033,10 @@
    "rows": "[{\"id\":2,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":\"café 😀\",\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "119 POST /api/bd/commands/2/result",
+   "name": "119 POST /api/nd/commands/2/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2/result",
+   "path": "/api/nd/commands/2/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2062,10 +2062,10 @@
    "rows": "[]"
   },
   {
-   "name": "120 POST /api/bd/commands/3/result",
+   "name": "120 POST /api/nd/commands/3/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/3/result",
+   "path": "/api/nd/commands/3/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2082,10 +2082,10 @@
    "rows": "[{\"id\":3,\"device_id\":\"device-a\",\"status\":\"completed\",\"result\":null,\"executed\":1,\"completed\":0}]"
   },
   {
-   "name": "121 POST /api/bd/commands/3/result",
+   "name": "121 POST /api/nd/commands/3/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/3/result",
+   "path": "/api/nd/commands/3/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2102,10 +2102,10 @@
    "rows": "[{\"id\":3,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":null,\"executed\":0,\"completed\":0}]"
   },
   {
-   "name": "122 POST /api/bd/commands/3/result",
+   "name": "122 POST /api/nd/commands/3/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/3/result",
+   "path": "/api/nd/commands/3/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2122,10 +2122,10 @@
    "rows": "[{\"id\":3,\"device_id\":\"device-a\",\"status\":\"failed\",\"result\":null,\"executed\":0,\"completed\":0}]"
   },
   {
-   "name": "123 POST /api/bd/commands/3/result",
+   "name": "123 POST /api/nd/commands/3/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/3/result",
+   "path": "/api/nd/commands/3/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2142,10 +2142,10 @@
    "rows": "[{\"id\":3,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":null,\"executed\":0,\"completed\":0}]"
   },
   {
-   "name": "124 POST /api/bd/commands/3/result",
+   "name": "124 POST /api/nd/commands/3/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/3/result",
+   "path": "/api/nd/commands/3/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2162,10 +2162,10 @@
    "rows": "[{\"id\":3,\"device_id\":\"device-a\",\"status\":\"completed\",\"result\":null,\"executed\":0,\"completed\":0}]"
   },
   {
-   "name": "125 GET /api/bd/commands",
+   "name": "125 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2173,10 +2173,10 @@
    "answer": "{\"commands\":[{\"id\":2,\"device_id\":\"device-a\",\"command_type\":\"powershell\",\"payload\":\"Get-Process\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_operator\",\"created_at\":\"2001-01-01T00:01:00.000Z\",\"executed_at\":null,\"completed_at\":null},{\"id\":1,\"device_id\":\"device-a\",\"command_type\":\"shell\",\"payload\":\"hostname\",\"status\":\"pending\",\"result\":null,\"created_by\":\"e2e_admin\",\"created_at\":\"2001-01-01T00:02:00.000Z\",\"executed_at\":null,\"completed_at\":null}]}"
   },
   {
-   "name": "126 POST /api/bd/commands/4/result",
+   "name": "126 POST /api/nd/commands/4/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/4/result",
+   "path": "/api/nd/commands/4/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2185,10 +2185,10 @@
    "answer": "{\"success\":true}"
   },
   {
-   "name": "127 POST /api/bd/commands/9/result",
+   "name": "127 POST /api/nd/commands/9/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/9/result",
+   "path": "/api/nd/commands/9/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2197,10 +2197,10 @@
    "answer": "{\"success\":true}"
   },
   {
-   "name": "128 POST /api/bd/commands/5/result",
+   "name": "128 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2209,10 +2209,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "129 POST /api/bd/commands/6/result",
+   "name": "129 POST /api/nd/commands/6/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/6/result",
+   "path": "/api/nd/commands/6/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2221,10 +2221,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "130 POST /api/bd/commands/7/result",
+   "name": "130 POST /api/nd/commands/7/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/7/result",
+   "path": "/api/nd/commands/7/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2233,10 +2233,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "131 POST /api/bd/commands/8/result",
+   "name": "131 POST /api/nd/commands/8/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/8/result",
+   "path": "/api/nd/commands/8/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2245,10 +2245,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "132 POST /api/bd/commands/0/result",
+   "name": "132 POST /api/nd/commands/0/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/0/result",
+   "path": "/api/nd/commands/0/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2257,10 +2257,10 @@
    "answer": "{\"error\":\"Command not found\"}"
   },
   {
-   "name": "133 POST /api/bd/commands/999/result",
+   "name": "133 POST /api/nd/commands/999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/999/result",
+   "path": "/api/nd/commands/999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2269,10 +2269,10 @@
    "answer": "{\"error\":\"Command not found\"}"
   },
   {
-   "name": "134 POST /api/bd/commands/01/result",
+   "name": "134 POST /api/nd/commands/01/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/01/result",
+   "path": "/api/nd/commands/01/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2281,10 +2281,10 @@
    "answer": "{\"success\":true}"
   },
   {
-   "name": "135 POST /api/bd/commands/0002/result",
+   "name": "135 POST /api/nd/commands/0002/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/0002/result",
+   "path": "/api/nd/commands/0002/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2293,10 +2293,10 @@
    "answer": "{\"success\":true}"
   },
   {
-   "name": "136 POST /api/bd/commands/2147483647/result",
+   "name": "136 POST /api/nd/commands/2147483647/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2147483647/result",
+   "path": "/api/nd/commands/2147483647/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2305,10 +2305,10 @@
    "answer": "{\"error\":\"Command not found\"}"
   },
   {
-   "name": "137 POST /api/bd/commands/2147483648/result",
+   "name": "137 POST /api/nd/commands/2147483648/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/2147483648/result",
+   "path": "/api/nd/commands/2147483648/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2317,10 +2317,10 @@
    "answer": "{\"error\":\"Internal server error\"}"
   },
   {
-   "name": "138 POST /api/bd/commands/9007199254740993/result",
+   "name": "138 POST /api/nd/commands/9007199254740993/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/9007199254740993/result",
+   "path": "/api/nd/commands/9007199254740993/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2329,10 +2329,10 @@
    "answer": "{\"error\":\"Internal server error\"}"
   },
   {
-   "name": "139 POST /api/bd/commands/99999999999999999999/result",
+   "name": "139 POST /api/nd/commands/99999999999999999999/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/99999999999999999999/result",
+   "path": "/api/nd/commands/99999999999999999999/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2341,10 +2341,10 @@
    "answer": "{\"error\":\"Internal server error\"}"
   },
   {
-   "name": "140 POST /api/bd/commands/10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000/result",
+   "name": "140 POST /api/nd/commands/10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000/result",
+   "path": "/api/nd/commands/10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2369,10 +2369,10 @@
    "rows": "[{\"id\":9,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":null,\"executed\":0,\"completed\":1}]"
   },
   {
-   "name": "141 POST /api/bd/commands/6/result",
+   "name": "141 POST /api/nd/commands/6/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/6/result",
+   "path": "/api/nd/commands/6/result",
    "headers": {
     "Authorization": "Bearer tok-numeric"
    },
@@ -2389,10 +2389,10 @@
    "rows": "[{\"id\":6,\"device_id\":\"123\",\"status\":\"completed\",\"result\":\"uid=0\",\"executed\":1,\"completed\":0}]"
   },
   {
-   "name": "142 POST /api/bd/commands/5/result",
+   "name": "142 POST /api/nd/commands/5/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/5/result",
+   "path": "/api/nd/commands/5/result",
    "headers": {
     "Authorization": "Bearer tok-device-b"
    },
@@ -2409,10 +2409,10 @@
    "rows": "[{\"id\":5,\"device_id\":\"device-b\",\"status\":\"completed\",\"result\":null,\"executed\":1,\"completed\":0}]"
   },
   {
-   "name": "143 POST /api/bd/commands/7/result",
+   "name": "143 POST /api/nd/commands/7/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/7/result",
+   "path": "/api/nd/commands/7/result",
    "headers": {
     "Authorization": "Bearer tok-spaced"
    },
@@ -2421,10 +2421,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "144 POST /api/bd/commands/abc/result",
+   "name": "144 POST /api/nd/commands/abc/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/abc/result",
+   "path": "/api/nd/commands/abc/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2433,10 +2433,10 @@
    "answer": "{\"oracle\":\"no route\"}"
   },
   {
-   "name": "145 POST /api/bd/commands/-1/result",
+   "name": "145 POST /api/nd/commands/-1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/-1/result",
+   "path": "/api/nd/commands/-1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2445,10 +2445,10 @@
    "answer": "{\"oracle\":\"no route\"}"
   },
   {
-   "name": "146 POST /api/bd/commands/1.0/result",
+   "name": "146 POST /api/nd/commands/1.0/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1.0/result",
+   "path": "/api/nd/commands/1.0/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2457,10 +2457,10 @@
    "answer": "{\"oracle\":\"no route\"}"
   },
   {
-   "name": "147 POST /api/bd/commands/%31/result",
+   "name": "147 POST /api/nd/commands/%31/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/%31/result",
+   "path": "/api/nd/commands/%31/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2469,10 +2469,10 @@
    "answer": "{\"oracle\":\"no route\"}"
   },
   {
-   "name": "148 POST /api/bd/commands/1/results",
+   "name": "148 POST /api/nd/commands/1/results",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/results",
+   "path": "/api/nd/commands/1/results",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2481,10 +2481,10 @@
    "answer": "{\"oracle\":\"no route\"}"
   },
   {
-   "name": "149 POST /api/bd/commands//result",
+   "name": "149 POST /api/nd/commands//result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands//result",
+   "path": "/api/nd/commands//result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2513,10 +2513,10 @@
    "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"failed\",\"result\":\"at the other mount\",\"executed\":0,\"completed\":0}]"
   },
   {
-   "name": "151 POST /API/BD/Commands/1/Result/",
+   "name": "151 POST /API/ND/Commands/1/Result/",
    "role": "",
    "method": "POST",
-   "path": "/API/BD/Commands/1/Result/",
+   "path": "/API/ND/Commands/1/Result/",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2533,10 +2533,10 @@
    "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"completed\",\"result\":null,\"executed\":0,\"completed\":0}]"
   },
   {
-   "name": "152 POST /api/bd/commands/1/result?status=failed",
+   "name": "152 POST /api/nd/commands/1/result?status=failed",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result?status=failed",
+   "path": "/api/nd/commands/1/result?status=failed",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2545,10 +2545,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "153 POST /api/bd/commands/1/result",
+   "name": "153 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a",
     "X-Device-Id": "device-b"
@@ -2566,10 +2566,10 @@
    "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"running\",\"result\":null,\"executed\":0,\"completed\":0}]"
   },
   {
-   "name": "154 POST /api/bd/commands/1/result",
+   "name": "154 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2578,10 +2578,10 @@
    "answer": "{\"error\":\"Status must be completed, failed, or running\"}"
   },
   {
-   "name": "155 POST /api/bd/commands/1/result",
+   "name": "155 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a",
     "Content-Type": "application/x-www-form-urlencoded"
@@ -2591,10 +2591,10 @@
    "answer": "{\"success\":false,\"error\":\"Content-Type must be application/json\"}"
   },
   {
-   "name": "156 POST /api/bd/commands/1/result",
+   "name": "156 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2603,10 +2603,10 @@
    "answer": "{\"success\":false,\"error\":\"Internal Server Error\"}"
   },
   {
-   "name": "157 POST /api/bd/commands/1/result",
+   "name": "157 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2614,10 +2614,10 @@
    "answer": "{\"success\":false,\"error\":\"Content-Type must be application/json\"}"
   },
   {
-   "name": "158 POST /api/bd/commands/1/result",
+   "name": "158 POST /api/nd/commands/1/result",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/commands/1/result",
+   "path": "/api/nd/commands/1/result",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2634,10 +2634,10 @@
    "rows": "[{\"id\":1,\"device_id\":\"device-a\",\"status\":\"failed\",\"result\":\"2\",\"executed\":0,\"completed\":0}]"
   },
   {
-   "name": "159 GET /api/bd/commands",
+   "name": "159 GET /api/nd/commands",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/commands",
+   "path": "/api/nd/commands",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },

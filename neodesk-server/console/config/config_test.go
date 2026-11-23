@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/internal/productversion"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/productversion"
 )
 
 func env(values map[string]string) func(string) string {
@@ -50,7 +50,7 @@ func TestLoadDefaults(t *testing.T) {
 	if cfg.DefaultLanguage != "en" || cfg.DeviceScopeDefault != "open" || cfg.LogLevel != "" || cfg.APIHost != "127.0.0.1:21114" {
 		t.Errorf("defaults = %+v", cfg)
 	}
-	console := "/opt/BetterDeskConsole"
+	console := "/opt/NeoDeskConsole"
 	want := map[string]string{
 		"ConsoleDir":    console,
 		"DataDir":       filepath.Join(console, "data"),
@@ -73,7 +73,7 @@ func TestLoadDefaults(t *testing.T) {
 		t.Fatal("no files in the binary")
 	}
 	for _, name := range []string{
-		"lang/en.json", "lang/pl.json", "lang/zh-TW.json", "public/favicon.svg", "public/img/betterdesk_icon.png",
+		"lang/en.json", "lang/pl.json", "lang/zh-TW.json", "public/favicon.svg", "public/img/neodesk_icon.png",
 		"public/img/login-slides/free.jpg", "protos/rendezvous.proto", "protos/message.proto", "themes/default.json",
 		"config/theme-palettes.json", "config/supporters.json",
 	} {
@@ -265,17 +265,17 @@ func TestConsoleDirSearch(t *testing.T) {
 		windows bool
 		want    string
 	}{
-		{"nothing found: the folder the installer uses", nil, []string{"/srv/web-nodejs/lang/en.json", "/srv/web-nodejs/.env"}, false, "/opt/BetterDeskConsole"},
-		{"a Node install in the folder the installer uses", nil, []string{"/opt/BetterDeskConsole/lang/en.json", "/opt/betterdesk/lang/en.json"}, false, "/opt/BetterDeskConsole"},
-		{"a Node install in the older folder", nil, []string{"/opt/betterdesk/lang/en.json"}, false, "/opt/betterdesk"},
-		{"an install with only its .env", nil, []string{"/var/lib/betterdesk/.env"}, false, "/var/lib/betterdesk"},
-		{"the first folder with either", nil, []string{"/opt/betterdesk/lang/en.json", "/var/lib/betterdesk/.env"}, false, "/opt/betterdesk"},
-		{"neither in the folder the installer uses", nil, []string{"/opt/BetterDeskConsole/data/auth.db", "/opt/betterdesk/.env"}, false, "/opt/betterdesk"},
-		{"a container without either in /app", map[string]string{"DOCKER": "true"}, []string{"/opt/betterdesk/lang/en.json"}, false, "/opt/betterdesk"},
-		{"a container of the Node image", map[string]string{"DOCKER": "true"}, []string{"/app/lang/en.json", "/opt/betterdesk/lang/en.json"}, false, "/app"},
+		{"nothing found: the folder the installer uses", nil, []string{"/srv/web-nodejs/lang/en.json", "/srv/web-nodejs/.env"}, false, "/opt/NeoDeskConsole"},
+		{"a Node install in the folder the installer uses", nil, []string{"/opt/NeoDeskConsole/lang/en.json", "/opt/neodesk/lang/en.json"}, false, "/opt/NeoDeskConsole"},
+		{"a Node install in the older folder", nil, []string{"/opt/neodesk/lang/en.json"}, false, "/opt/neodesk"},
+		{"an install with only its .env", nil, []string{"/var/lib/neodesk/.env"}, false, "/var/lib/neodesk"},
+		{"the first folder with either", nil, []string{"/opt/neodesk/lang/en.json", "/var/lib/neodesk/.env"}, false, "/opt/neodesk"},
+		{"neither in the folder the installer uses", nil, []string{"/opt/NeoDeskConsole/data/auth.db", "/opt/neodesk/.env"}, false, "/opt/neodesk"},
+		{"a container without either in /app", map[string]string{"DOCKER": "true"}, []string{"/opt/neodesk/lang/en.json"}, false, "/opt/neodesk"},
+		{"a container of the Node image", map[string]string{"DOCKER": "true"}, []string{"/app/lang/en.json", "/opt/neodesk/lang/en.json"}, false, "/app"},
 		{"a container with nothing found", map[string]string{"DOCKER": "true"}, nil, false, "/app"},
-		{"CONSOLE_DIR wins", map[string]string{"CONSOLE_DIR": "/x"}, []string{"/app/lang/en.json", "/opt/BetterDeskConsole/.env"}, false, "/x"},
-		{"Windows", nil, nil, true, `C:\BetterDeskConsole`},
+		{"CONSOLE_DIR wins", map[string]string{"CONSOLE_DIR": "/x"}, []string{"/app/lang/en.json", "/opt/NeoDeskConsole/.env"}, false, "/x"},
+		{"Windows", nil, nil, true, `C:\NeoDeskConsole`},
 	}
 	for _, c := range cases {
 		p := machine(c.files...)
@@ -294,14 +294,14 @@ func TestConsoleDirSearch(t *testing.T) {
 // console's folder has beside or inside it are not looked for, so an
 // upgraded install serves the build in the binary.
 func TestWebUIDirOnlyFromTheVariable(t *testing.T) {
-	inside := filepath.Join("/opt/BetterDeskConsole", "web-ui", "build")
-	beside := filepath.Join("/opt/BetterDeskConsole", "..", "web-ui", "build")
+	inside := filepath.Join("/opt/NeoDeskConsole", "web-ui", "build")
+	beside := filepath.Join("/opt/NeoDeskConsole", "..", "web-ui", "build")
 	builds := machine(inside+"/index.html", beside+"/index.html")
-	cfg, _ := load(env(map[string]string{"CONSOLE_DIR": "/opt/BetterDeskConsole"}), builds)
+	cfg, _ := load(env(map[string]string{"CONSOLE_DIR": "/opt/NeoDeskConsole"}), builds)
 	if cfg.WebUIDir != "" {
 		t.Errorf("without WEB_UI_DIR: %q, want the build in the binary", cfg.WebUIDir)
 	}
-	cfg, _ = load(env(map[string]string{"CONSOLE_DIR": "/opt/BetterDeskConsole", "WEB_UI_DIR": inside}), builds)
+	cfg, _ = load(env(map[string]string{"CONSOLE_DIR": "/opt/NeoDeskConsole", "WEB_UI_DIR": inside}), builds)
 	if cfg.WebUIDir != inside {
 		t.Errorf("WEB_UI_DIR=%s: %q", inside, cfg.WebUIDir)
 	}
@@ -349,9 +349,9 @@ func TestAPIHost(t *testing.T) {
 		{"", "https://api.example/api", "api.example"},
 		{"not a url", "", "127.0.0.1:21114"},
 	} {
-		cfg, _ := load(env(map[string]string{"BETTERDESK_API_URL": c.better, "HBBS_API_URL": c.hbbs}), machine())
+		cfg, _ := load(env(map[string]string{"NEODESK_API_URL": c.better, "HBBS_API_URL": c.hbbs}), machine())
 		if cfg.APIHost != c.want {
-			t.Errorf("BETTERDESK_API_URL=%q HBBS_API_URL=%q: APIHost = %q, want %q", c.better, c.hbbs, cfg.APIHost, c.want)
+			t.Errorf("NEODESK_API_URL=%q HBBS_API_URL=%q: APIHost = %q, want %q", c.better, c.hbbs, cfg.APIHost, c.want)
 		}
 	}
 }
@@ -396,7 +396,7 @@ func TestSettingsAsTheOldConsoleReadThem(t *testing.T) {
 			APIPort    int    `json:"apiPort"`
 			APIEnabled bool   `json:"apiEnabled"`
 			HbbsAPIURL string `json:"hbbsApiUrl"`
-			APIURL     string `json:"betterdeskApiUrl"`
+			APIURL     string `json:"neodeskApiUrl"`
 			KeysPath   string `json:"keysPath"`
 			DBPath     string `json:"dbPath"`
 			PubKeyPath string `json:"pubKeyPath"`
@@ -473,16 +473,16 @@ func TestKeysPathSearch(t *testing.T) {
 		on   probe
 		want string
 	}{
-		{"nothing found: the newer folder", nil, machine(), "/opt/betterdesk"},
-		{"the newer folder has the key", nil, machine("/opt/betterdesk/id_ed25519", "/opt/rustdesk/id_ed25519"), "/opt/betterdesk"},
+		{"nothing found: the newer folder", nil, machine(), "/opt/neodesk"},
+		{"the newer folder has the key", nil, machine("/opt/neodesk/id_ed25519", "/opt/rustdesk/id_ed25519"), "/opt/neodesk"},
 		{"only the older folder has the key", nil, machine("/opt/rustdesk/id_ed25519"), "/opt/rustdesk"},
-		{"the public key alone does not count", nil, machine("/opt/rustdesk/id_ed25519.pub"), "/opt/betterdesk"},
-		{"a container", nil, machine("/.dockerenv", "/opt/betterdesk/id_ed25519"), "/opt/rustdesk"},
+		{"the public key alone does not count", nil, machine("/opt/rustdesk/id_ed25519.pub"), "/opt/neodesk"},
+		{"a container", nil, machine("/.dockerenv", "/opt/neodesk/id_ed25519"), "/opt/rustdesk"},
 		{"KEYS_PATH first", map[string]string{"KEYS_PATH": "/k", "RUSTDESK_DIR": "/d", "RUSTDESK_PATH": "/p"}, machine("/.dockerenv"), "/k"},
 		{"then RUSTDESK_DIR", map[string]string{"RUSTDESK_DIR": "/d", "RUSTDESK_PATH": "/p"}, machine(), "/d"},
 		{"then RUSTDESK_PATH", map[string]string{"RUSTDESK_PATH": "/p"}, machine("/opt/rustdesk/id_ed25519"), "/p"},
-		{"Windows, nothing found", nil, windows(), `C:\BetterDesk`},
-		{"Windows, the newer folder", nil, windows(`C:\BetterDesk\id_ed25519`, `C:\RustDesk\id_ed25519`), `C:\BetterDesk`},
+		{"Windows, nothing found", nil, windows(), `C:\NeoDesk`},
+		{"Windows, the newer folder", nil, windows(`C:\NeoDesk\id_ed25519`, `C:\RustDesk\id_ed25519`), `C:\NeoDesk`},
 		{"Windows, the older folder", nil, windows(`C:\RustDesk\id_ed25519`), `C:\RustDesk`},
 	}
 	for _, c := range cases {
@@ -518,11 +518,11 @@ func TestKeyFilesHaveTheirOwnSettings(t *testing.T) {
 }
 
 func TestEnvAndComposePaths(t *testing.T) {
-	cfg, err := load(env(map[string]string{"CONSOLE_DIR": "/opt/BetterDeskConsole"}), machine())
+	cfg, err := load(env(map[string]string{"CONSOLE_DIR": "/opt/NeoDeskConsole"}), machine())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := filepath.Join("/opt/BetterDeskConsole", ".env"); cfg.EnvPath != want {
+	if want := filepath.Join("/opt/NeoDeskConsole", ".env"); cfg.EnvPath != want {
 		t.Errorf("EnvPath = %q, want %q", cfg.EnvPath, want)
 	}
 	if want := filepath.Join("/opt", "docker-compose.yml"); cfg.ComposePath != want {

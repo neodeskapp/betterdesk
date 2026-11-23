@@ -5,7 +5,7 @@ package contract_test
 import (
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // Guest access links under /api/guest: an operator makes a link for some
@@ -93,12 +93,12 @@ func init() {
 		},
 		contract.Case{
 			Name: "peers-from-cookie", Path: links + "/peers", NoCookies: true,
-			Headers: map[string]string{"Cookie": "bd.guest={token}"}, Roles: issuers,
+			Headers: map[string]string{"Cookie": "nd.guest={token}"}, Roles: issuers,
 		},
 		contract.Case{
 			Name: "peers-query-before-cookie", Path: links + "/peers", NoCookies: true,
 			Query:   url.Values{"t": {"unknown"}},
-			Headers: map[string]string{"Cookie": "bd.guest={token}"}, Roles: issuers,
+			Headers: map[string]string{"Cookie": "nd.guest={token}"}, Roles: issuers,
 		},
 		contract.Case{
 			Name: "desktop-guest", Method: "POST", Path: desktop,
@@ -166,7 +166,7 @@ func init() {
 		},
 		contract.Case{
 			Name: "peers-unknown-cookie", Path: links + "/peers", NoCookies: true,
-			Headers: map[string]string{"Cookie": "bd.guest=abc%20def"}, Roles: ends,
+			Headers: map[string]string{"Cookie": "nd.guest=abc%20def"}, Roles: ends,
 		},
 		contract.Case{Name: "delete-unknown", Method: "DELETE", Path: links + "/no-such-link"},
 		contract.Case{Name: "delete-id-two-dots", Method: "DELETE", Path: links + "/%2e%2e", Roles: few},

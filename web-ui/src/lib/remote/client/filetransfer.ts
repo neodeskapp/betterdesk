@@ -1,5 +1,5 @@
 /**
- * BetterDesk Web Remote Client - File Transfer Module
+ * NeoDesk Web Remote Client - File Transfer Module
  * Handles RustDesk file transfer protocol: browse, download, upload, manage
  *
  * Protocol flow (RustDesk client io_loop — operator pulls from / pushes to peer):
@@ -473,7 +473,7 @@ export class RDFileTransfer {
 	}
 
 	_supportsStreamDownload(): boolean {
-		return !!(page().__BETTERDESK_RDCLIENT_DESKTOP__ && tauriInvoke());
+		return !!(page().__NEODESK_RDCLIENT_DESKTOP__ && tauriInvoke());
 	}
 
 	_bytesToBase64(data: Uint8Array | ArrayBuffer | number[]): string {

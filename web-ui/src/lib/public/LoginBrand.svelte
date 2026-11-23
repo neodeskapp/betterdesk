@@ -1,5 +1,5 @@
 <!--
-  The logo above the sign-in form (views/login.ejs): the BetterDesk logo,
+  The logo above the sign-in form (views/login.ejs): the NeoDesk logo,
   the admin's text logo, an SVG or image logo with the name next to it, or
   the name alone. An admin's SVG is shown as a picture (data URL), where it
   can't run anything; image addresses must be on this server or http(s).
@@ -45,7 +45,7 @@
 		margin-bottom: var(--space-6);
 		font-weight: 700;
 	}
-	/* The BetterDesk logo 28 px high, as on the old page */
+	/* The NeoDesk logo 28 px high, as on the old page */
 	.login-brand > :global(.brand-logo-full) {
 		width: auto;
 		height: 28px;

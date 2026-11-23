@@ -1,4 +1,4 @@
-// Role and Permission management handlers for the BetterDesk API (Phase 52 RBAC).
+// Role and Permission management handlers for the NeoDesk API (Phase 52 RBAC).
 //
 // Provides endpoints:
 //
@@ -15,7 +15,7 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // roleInfo describes a single role for the /api/roles response.

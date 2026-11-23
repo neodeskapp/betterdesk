@@ -134,8 +134,8 @@ describe('services', () => {
 	const svc = (
 		over: Partial<{ name: string; description: string; state: string; status: string; sub: string }>
 	) => ({
-		name: 'betterdesk-server',
-		description: 'BetterDesk server',
+		name: 'neodesk-server',
+		description: 'NeoDesk server',
 		state: '',
 		status: '',
 		sub: '',
@@ -164,8 +164,8 @@ describe('services', () => {
 
 	test('search by name and description', () => {
 		const list = [
-			svc({ name: 'betterdesk-server' }),
-			svc({ name: 'betterdesk-console', description: 'Web console' })
+			svc({ name: 'neodesk-server' }),
+			svc({ name: 'neodesk-console', description: 'Web console' })
 		];
 		expect(filterServices(list, 'CONSOLE')).toHaveLength(1);
 		expect(filterServices(list, 'web')).toHaveLength(1);

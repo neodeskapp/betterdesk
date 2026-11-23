@@ -15,8 +15,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 )
 
 // Body is req.body as JSON.parse left it: an object or a list for a JSON

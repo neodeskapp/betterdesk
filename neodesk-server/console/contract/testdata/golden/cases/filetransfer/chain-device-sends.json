@@ -2,7 +2,7 @@
  "id": "filetransfer/chain-device-sends",
  "request": {
   "method": "POST",
-  "path": "/api/bd/file-transfer",
+  "path": "/api/nd/file-transfer",
   "body": {
    "action": "chunk",
    "chunk_index": 0,

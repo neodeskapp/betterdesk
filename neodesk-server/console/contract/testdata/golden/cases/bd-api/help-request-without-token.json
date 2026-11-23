@@ -2,7 +2,7 @@
  "id": "bd-api/help-request-without-token",
  "request": {
   "method": "POST",
-  "path": "/api/bd/help-request",
+  "path": "/api/nd/help-request",
   "body": {
    "device_id": "900100001"
   },

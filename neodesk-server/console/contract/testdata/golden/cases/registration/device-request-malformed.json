@@ -2,7 +2,7 @@
  "id": "registration/device-request-malformed",
  "request": {
   "method": "POST",
-  "path": "/api/bd/register-request",
+  "path": "/api/nd/register-request",
   "body": "{\"device_id\":",
   "notes": [
    "raw body, content type \"application/json\"",

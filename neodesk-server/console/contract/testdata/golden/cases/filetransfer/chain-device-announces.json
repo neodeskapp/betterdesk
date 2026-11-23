@@ -2,7 +2,7 @@
  "id": "filetransfer/chain-device-announces",
  "request": {
   "method": "POST",
-  "path": "/api/bd/file-transfer",
+  "path": "/api/nd/file-transfer",
   "body": {
    "action": "init",
    "filename": "../reports/q3 report.pdf",

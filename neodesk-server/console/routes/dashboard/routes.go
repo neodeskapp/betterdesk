@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 type handlers struct {
@@ -86,7 +86,7 @@ func serverError(w http.ResponseWriter, r *http.Request) {
 type statsData struct {
 	Devices any           `json:"devices"`
 	Hbbs    *goapi.Object `json:"hbbs"`
-	// Backend names the server the console works with: always betterdesk.
+	// Backend names the server the console works with: always neodesk.
 	Backend   string `json:"backend"`
 	PublicKey bool   `json:"publicKey"`
 }
@@ -111,7 +111,7 @@ func (h *handlers) stats(w http.ResponseWriter, r *http.Request) {
 	}
 	health := h.backend.GetHealth(r.Context())
 	key := h.info.ResolvePublicKey(r.Context())
-	kit.OK(w, r, statsData{Devices: devices, Hbbs: health, Backend: "betterdesk", PublicKey: key != ""})
+	kit.OK(w, r, statsData{Devices: devices, Hbbs: health, Backend: "neodesk", PublicKey: key != ""})
 }
 
 type clientConfigData struct {

@@ -3,7 +3,7 @@ package guest
 import (
 	"slices"
 
-	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath/proxytest"
 )
 
 // The links the API server's stand-in answers with in the vectors below.

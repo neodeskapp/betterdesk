@@ -60,7 +60,7 @@ These steps cover the routes that ask a running agent (services,
 processes, events, activity, the file routes, clipboard, screenshot,
 mouse, key, text, terminal). They ran with the real `services/bdRelay.js`,
 the real database adapter and the API server table, and a made-up agent
-of device A1001 connected to `/ws/bd-signal` that answered each request
+of device A1001 connected to `/ws/nd-signal` that answered each request
 the way the step says: data of every JSON type, an error of every type
 (`agent_offline` and `agent_timeout` included), or nothing (the route's
 timeout). B1002 has no agent, so its steps show the server's snapshot, a

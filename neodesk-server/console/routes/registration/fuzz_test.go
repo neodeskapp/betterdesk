@@ -10,9 +10,9 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsjson"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // FuzzRegisterRequest sends the request route anything a device on the
@@ -40,7 +40,7 @@ func FuzzRegisterRequest(f *testing.F) {
 	}
 	h := clientAPIHandler(db, true)
 	f.Fuzz(func(t *testing.T, body, forwarded, real string) {
-		req := httptest.NewRequest(http.MethodPost, "/api/bd/register-request", strings.NewReader(body))
+		req := httptest.NewRequest(http.MethodPost, "/api/nd/register-request", strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		if forwarded != "" {
 			req.Header["X-Forwarded-For"] = []string{forwarded}

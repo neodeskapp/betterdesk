@@ -3,8 +3,8 @@ package automation
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/mail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
 )
 
 // The three SMTP routes hand the request to the mail service, which

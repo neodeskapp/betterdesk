@@ -1,13 +1,13 @@
-# BetterDesk RDP/VNC gateway
+# NeoDesk RDP/VNC gateway
 
 This directory contains the deployment contract for the optional Guacamole
-daemon used by BetterDesk's RDP/VNC session broker. The pinned source version
+daemon used by NeoDesk's RDP/VNC session broker. The pinned source version
 is verified by `.github/workflows/remote-gateway-supply-chain.yml`; the
 workflow reports upstream changes but never changes the manifest or deploys
 code automatically. `.github/workflows/remote-gateway-update.yml` may prepare
 an update PR against `main`, but merging that PR remains a reviewed decision.
 
-The broker in `betterdesk-server/api/remote_target_gateway.go` only connects
+The broker in `neodesk-server/api/remote_target_gateway.go` only connects
 to `GUACD_ADDRESS` on loopback. It rejects remote guacd addresses and refuses
 to create a session when the daemon is unavailable. The browser never receives
 the target password or a direct target socket.
@@ -15,7 +15,7 @@ the target password or a direct target socket.
 ## Supply-chain and licence policy
 
 Only an upstream Apache Guacamole release and dependencies whose runtime
-licences are explicitly approved by BetterDesk may be used. The installer must
+licences are explicitly approved by NeoDesk may be used. The installer must
 not download an unpinned npm fork or an unverified binary. A release must
 include:
 
@@ -31,7 +31,7 @@ database/API/UI parts can still be configured and tested for reachability.
 The current pinned source is Apache Guacamole `1.6.0`. Its RDP path still
 requires a complete transitive runtime audit. The VNC path is explicitly
 blocked because the required LibVNCServer dependency is GPL-2.0, which is
-outside BetterDesk's permissive-license policy. A future replacement or
+outside NeoDesk's permissive-license policy. A future replacement or
 separate licensing decision is required before VNC can be enabled.
 
 ## Runtime contract

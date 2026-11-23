@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 // The agent-server certificate of a bare MESH_AGENT_CERT_FILE (the default

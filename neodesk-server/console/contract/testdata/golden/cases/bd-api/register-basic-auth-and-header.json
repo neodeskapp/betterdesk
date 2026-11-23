@@ -2,7 +2,7 @@
  "id": "bd-api/register-basic-auth-and-header",
  "request": {
   "method": "POST",
-  "path": "/api/bd/register",
+  "path": "/api/nd/register",
   "body": {
    "device_id": "contract-bd-new"
   },

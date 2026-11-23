@@ -34,7 +34,7 @@
    "volatile": [
     {
      "path": "data.cacheVersion",
-     "format": "<aaaaaaa>.9999999999999"
+     "format": "9.9.9.9999999999999"
     },
     {
      "path": "data.uptime",
@@ -72,7 +72,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -84,7 +84,7 @@
    "volatile": [
     {
      "path": "data.cacheVersion",
-     "format": "<aaaaaaa>.9999999999999"
+     "format": "9.9.9.9999999999999"
     },
     {
      "path": "data.uptime",

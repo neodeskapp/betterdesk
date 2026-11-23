@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/goapipath"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // orEmpty is the column, or "" when it is empty in JavaScript's eyes.
@@ -174,7 +174,7 @@ type operatorData struct {
 	AvatarURL   any `json:"avatar_url"`
 }
 
-// operatorInfo answers GET /api/bd/operator-info?session_id=: who is asking
+// operatorInfo answers GET /api/nd/operator-info?session_id=: who is asking
 // for a remote session, for the agent's consent popup. Until sessions are
 // brokered it is the signed-in account itself.
 func (h *handlers) operatorInfo(w http.ResponseWriter, r *http.Request) {

@@ -58,8 +58,8 @@ export function identityOf(d: PanelDevice): Obj {
 
 /** The support agent: incoming connections only, no administration */
 export function isSupportAgent(identity: Obj): boolean {
-	if (identity.product_sku === 'betterdesk-support') return true;
-	if (identity.product_sku === 'betterdesk-desktop') return false;
+	if (identity.product_sku === 'neodesk-support') return true;
+	if (identity.product_sku === 'neodesk-desktop') return false;
 	return identity.conn_mode === 'incoming-only';
 }
 

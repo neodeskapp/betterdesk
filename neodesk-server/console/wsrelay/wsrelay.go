@@ -47,10 +47,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // The limits of the old relay proxy.
@@ -129,8 +129,8 @@ type Options struct {
 	// their uses (/consume) and records guest sessions (/events).
 	GoAPI *goapi.Client
 	// GuestCookie is the name of the guest cookie (GUEST_COOKIE:
-	// bd.guest, betterdesk.guest in HTTPS mode). bd.guest and
-	// betterdesk.guest are read after it.
+	// nd.guest, neodesk.guest in HTTPS mode). nd.guest and
+	// neodesk.guest are read after it.
 	GuestCookie string
 	// Dial opens the TCP connection to a server. nil: a net.Dialer
 	// without a timeout of its own, as the old service had none; the
@@ -185,7 +185,7 @@ func New(opts Options) *Service {
 		opts.Interfaces = systemInterfaces
 	}
 	if opts.GuestCookie == "" {
-		opts.GuestCookie = "bd.guest"
+		opts.GuestCookie = "nd.guest"
 	}
 	if opts.SessionCheck <= 0 {
 		opts.SessionCheck = SessionCheck

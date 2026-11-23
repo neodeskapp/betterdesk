@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // The remote sign-in and guest pages read the console's branding as it
@@ -44,7 +44,7 @@ func TestRemotePagesShowTheSavedBranding(t *testing.T) {
 		}
 		return page.Page.AppName
 	}
-	if got := appName("/api/remote/login-info"); got != "BetterDesk" {
+	if got := appName("/api/remote/login-info"); got != "NeoDesk" {
 		t.Fatalf("before the save the sign-in page says %q", got)
 	}
 	update, err := branding.ParseJSON([]byte(`{"appName":"Front Desk Remote"}`))

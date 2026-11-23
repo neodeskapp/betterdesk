@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // The client API port's connection timeouts. The listener's http.Server
@@ -70,8 +70,8 @@ var wanMethods = map[string][]string{
 	"/api/group":                         {"*"},
 	"/api/group/get":                     {"*"},
 	"/api/peers/list":                    {"*"},
-	"/api/bd/register-request":           {"POST"},
-	"/api/bd/register-status":            {"GET"},
+	"/api/nd/register-request":           {"POST"},
+	"/api/nd/register-status":            {"GET"},
 }
 
 // wanPatterns are the paths with a parameter. They take GET only.

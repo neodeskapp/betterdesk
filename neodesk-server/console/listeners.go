@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/discovery"
-	"github.com/unitronix/betterdesk-server/console/listen"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/discovery"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/listen"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // listeners are what the console listens on, as the old console's
@@ -119,7 +119,7 @@ func (s *Server) loadCertificates() error {
 
 // newClientAPI builds the client API port when API_ENABLED is on. In
 // proxy mode it passes requests to the server's API in this process
-// (Options.APIListener), or without it at the scheme of BETTERDESK_API_URL
+// (Options.APIListener), or without it at the scheme of NEODESK_API_URL
 // and the host the console calls the API by.
 func (s *Server) newClientAPI() {
 	cfg := s.cfg

@@ -7,10 +7,10 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/backup"
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // RV18: the service NewBackups builds backs up and restores the server's

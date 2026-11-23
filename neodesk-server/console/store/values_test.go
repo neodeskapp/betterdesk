@@ -16,8 +16,8 @@ import (
 	"time"
 	_ "time/tzdata" // the zone of the Berlin vectors, whatever the machine has
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // valueVectors is what the Node console's drivers returned for a table of

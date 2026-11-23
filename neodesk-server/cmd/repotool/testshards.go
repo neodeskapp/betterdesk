@@ -53,7 +53,7 @@ const (
 // everything the times do not name, so a new test always runs once.
 //
 // run starts one go test -json per package or part in --dir (default
-// betterdesk-server), the longest first and one per CPU at a time,
+// neodesk-server), the longest first and one per CPU at a time,
 // prints the results of the packages and the output of failed tests, and
 // writes the times of this run to --times-out. merge adds such files up
 // into a times file.
@@ -396,7 +396,7 @@ func parseShardFlags(action string, args []string, stderr io.Writer) (*shardFlag
 	f := &shardFlags{}
 	fs.StringVar(&f.times, "times", testTimesFile, "the times file, from the repository's root")
 	fs.StringVar(&f.set, "set", "", "the set of times to use (go-race-sqlite, go-race-postgres)")
-	fs.StringVar(&f.dir, "dir", "betterdesk-server", "the module to test, from the repository's root")
+	fs.StringVar(&f.dir, "dir", "neodesk-server", "the module to test, from the repository's root")
 	fs.StringVar(&f.packages, "packages", "", "comma-separated packages (default: every package of the module that has tests)")
 	fs.StringVar(&f.timesOut, "times-out", "", "write the times of this run to this file")
 	fs.IntVar(&f.shards, "shards", 0, "the number of shards")

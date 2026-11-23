@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/restart"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/restart"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 // The connection mode (P2P first or relay only, and its switches) and the

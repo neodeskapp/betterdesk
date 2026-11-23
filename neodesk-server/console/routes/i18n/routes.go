@@ -6,7 +6,7 @@ package i18n
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // Register adds the group's routes. The handlers are those of

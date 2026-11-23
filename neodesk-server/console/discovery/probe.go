@@ -1,23 +1,27 @@
 package discovery
 
 // probeType is the "type" of a probe the responder answers.
-const probeType = "betterdesk-discover"
+const probeType = "neodesk-discover"
 
 // IsProbe reports whether a datagram is a discovery probe: JSON text, as
 // JSON.parse reads it after decoding the bytes as UTF-8, whose value is an
-// object with a "type" member that is the text "betterdesk-discover"
+// object with a "type" member that is the text "neodesk-discover"
 // (the last "type" member counts). Nothing else gets an answer.
 //
 // The grammar is that of JSON.parse, with no limit on nesting.
-func IsProbe(msg []byte) bool {
-	p := probeParser{s: decodeUTF8(msg)}
+func IsProbe(msg []byte) bool { return isProbeOf(msg, probeType) }
+
+// isProbeOf is IsProbe for probes whose "type" is kind.
+func isProbeOf(msg []byte, kind string) bool {
+	p := probeParser{s: decodeUTF8(msg), kind: kind}
 	return p.probe()
 }
 
 // probeParser checks JSON text without building values.
 type probeParser struct {
-	s   string
-	pos int
+	s    string
+	kind string
+	pos  int
 }
 
 func (p *probeParser) skipSpace() {
@@ -108,7 +112,7 @@ func (p *probeParser) value() (matches, ok bool) {
 		if !p.str() {
 			return false, false
 		}
-		return p.decodedEquals(start, probeType), true
+		return p.decodedEquals(start, p.kind), true
 	case '{', '[':
 		return false, p.container()
 	}

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-const langDir = "betterdesk-server/console/static/files/lang/"
+const langDir = "neodesk-server/console/static/files/lang/"
 
 func TestCheckPairingI18nPasses(t *testing.T) {
 	root := t.TempDir()

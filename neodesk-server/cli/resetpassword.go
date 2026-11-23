@@ -19,16 +19,16 @@ import (
 	// The SQLite driver ("sqlite")
 	_ "modernc.org/sqlite"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/console/authn"
-	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/internal/envvar"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	consoleconfig "github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
 )
 
-const resetUsage = "Usage: betterdesk-server reset-password [username]   (the new password is the first line of standard input)"
+const resetUsage = "Usage: neodesk-server reset-password [username]   (the new password is the first line of standard input)"
 
 // resetOptions are what reset-password reads besides Env. Tests replace
 // them.
@@ -52,7 +52,7 @@ type resetOptions struct {
 // DB_PATH, or db_v2.sqlite3 in KEYS_PATH, RUSTDESK_DIR or the data folder.
 // It reads the console's env file for
 // what the environment does not set, as the script read its .env: the
-// file BETTERDESK_ENV_FILE names (main loads it), else the .env in
+// file NEODESK_ENV_FILE names (main loads it), else the .env in
 // CONSOLE_DIR. A database without a users table is first set up as a
 // server start sets it up.
 //
@@ -108,7 +108,7 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 		username = args[0]
 	}
 	if opts.terminal(env.Stdin) {
-		return usage(`Pipe it in, for example: printf '%s\n' "$PASSWORD" | betterdesk-server reset-password admin`)
+		return usage(`Pipe it in, for example: printf '%s\n' "$PASSWORD" | neodesk-server reset-password admin`)
 	}
 	password, ok, err := firstLine(env.Stdin)
 	if err != nil {
@@ -230,11 +230,11 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 }
 
 // consoleEnv reads the environment and, for what it does not set, the
-// console's env file: BETTERDESK_ENV_FILE when set (main has loaded it
+// console's env file: NEODESK_ENV_FILE when set (main has loaded it
 // already), else the .env in the console's folder, read with the loader's
 // rule (the first value of a key that is not empty).
 func consoleEnv(getenv func(string) string) func(string) string {
-	if getenv("BETTERDESK_ENV_FILE") != "" {
+	if getenv("NEODESK_ENV_FILE") != "" {
 		return getenv
 	}
 	cfg, err := consoleconfig.Load(getenv)
@@ -297,10 +297,10 @@ func findDataDir(getenv func(string) string, opts resetOptions) string {
 	for _, p := range []string{
 		getenv("RUSTDESK_DATA"),
 		getenv("DATA_DIR"),
-		`C:\BetterDeskConsole\data`,
-		`C:\BetterDesk\BetterDeskConsole\data`,
-		`C:\BetterDesk\data`,
-		"/opt/BetterDeskConsole/data",
+		`C:\NeoDeskConsole\data`,
+		`C:\NeoDesk\NeoDeskConsole\data`,
+		`C:\NeoDesk\data`,
+		"/opt/NeoDeskConsole/data",
 		"/opt/rustdesk",
 		"/var/lib/rustdesk",
 		`C:\RustDesk`,

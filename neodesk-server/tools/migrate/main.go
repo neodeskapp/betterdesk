@@ -1,11 +1,11 @@
-// Command migrate is betterdesk-server migrate as a program of its own,
+// Command migrate is neodesk-server migrate as a program of its own,
 // for scripts that build it from source.
 package main
 
 import (
 	"os"
 
-	"github.com/unitronix/betterdesk-server/migrate"
+	"github.com/neodeskapp/neodesk/neodesk-server/migrate"
 )
 
 func main() {

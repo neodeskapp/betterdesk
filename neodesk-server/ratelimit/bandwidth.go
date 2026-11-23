@@ -1,4 +1,4 @@
-// Package ratelimit provides rate limiting utilities for the BetterDesk server.
+// Package ratelimit provides rate limiting utilities for the NeoDesk server.
 // This file implements a token bucket bandwidth limiter for relay sessions.
 package ratelimit
 

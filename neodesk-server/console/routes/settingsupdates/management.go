@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/managedconfig"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/restart"
-	"github.com/unitronix/betterdesk-server/console/updater"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/managedconfig"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/restart"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
 )
 
 // capabilities answers GET /api/settings/management/capabilities.

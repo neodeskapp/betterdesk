@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // emptyLike returns a new empty database of the same kind as like.
@@ -498,7 +498,7 @@ func TestMigrateFixesAgentBundleProductTypes(t *testing.T) {
 			dropColumn(t, db, "agent_bundles", "product_type")
 			mustExec(t, db, `ALTER TABLE agent_bundles ADD COLUMN product_type TEXT DEFAULT 'agent'`)
 		}
-		for i, value := range []any{"agent", "rdclient", " Support-Agent ", "betterdesk-support", "something else", nil, ""} {
+		for i, value := range []any{"agent", "rdclient", " Support-Agent ", "neodesk-support", "something else", nil, ""} {
 			mustExec(t, db, `INSERT INTO agent_bundles (bundle_id, name, slug, product_type) VALUES (?, ?, ?, ?)`,
 				fmt.Sprintf("bundle-%d", i), fmt.Sprintf("Bundle %d", i), fmt.Sprintf("bundle-%d", i), value)
 		}
@@ -510,13 +510,13 @@ func TestMigrateFixesAgentBundleProductTypes(t *testing.T) {
 				t.Fatalf("run %d: %d bundles, want 7", run, len(rows))
 			}
 			for _, r := range rows {
-				if r[0] != "betterdesk-support" {
-					t.Errorf("run %d: product_type = %q, want betterdesk-support", run, r[0])
+				if r[0] != "neodesk-support" {
+					t.Errorf("run %d: product_type = %q, want neodesk-support", run, r[0])
 				}
 			}
 			col := db.Shape().Table("agent_bundles").Column("product_type")
 			if db.IsPostgres() {
-				if !col.NotNull || !strings.Contains(col.Default, "betterdesk-support") {
+				if !col.NotNull || !strings.Contains(col.Default, "neodesk-support") {
 					t.Errorf("run %d: product_type column = %+v, want NOT NULL with the current default", run, col)
 				}
 			} else if col.NotNull || col.Default != "'agent'" {
@@ -534,11 +534,11 @@ func TestMigrateAddsAgentBundleProductType(t *testing.T) {
 		mustExec(t, db, `INSERT INTO agent_bundles (bundle_id, name, slug) VALUES ('b1', 'One', 'one')`)
 		dropColumn(t, db, "agent_bundles", "product_type")
 		mustMigrate(t, db)
-		if rows := queryStrings(t, db, `SELECT product_type FROM agent_bundles`); len(rows) != 1 || rows[0][0] != "betterdesk-support" {
+		if rows := queryStrings(t, db, `SELECT product_type FROM agent_bundles`); len(rows) != 1 || rows[0][0] != "neodesk-support" {
 			t.Errorf("product_type after the column was added = %v", rows)
 		}
 		col := db.Shape().Table("agent_bundles").Column("product_type")
-		if !col.NotNull || !strings.Contains(col.Default, "betterdesk-support") {
+		if !col.NotNull || !strings.Contains(col.Default, "neodesk-support") {
 			t.Errorf("product_type column = %+v", col)
 		}
 	})

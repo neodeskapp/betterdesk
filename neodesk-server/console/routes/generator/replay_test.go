@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // The made-up keys of the recording (testdata/README.md).
@@ -93,7 +93,7 @@ func TestNodeAnswers(t *testing.T) {
 		if err := os.MkdirAll(artifacts, 0o755); err != nil {
 			t.Fatal(err)
 		}
-		artifact := filepath.Join(artifacts, "betterdesk-support-win.zip")
+		artifact := filepath.Join(artifacts, "neodesk-support-win.zip")
 		if err := os.WriteFile(artifact, []byte("zip-content"), 0o644); err != nil {
 			t.Fatal(err)
 		}
@@ -121,6 +121,7 @@ func TestNodeAnswers(t *testing.T) {
 			scrub = func(s string) string { return buildIDs.ReplaceAllString(plain(s), `"id":<id>,"branding_hash"`) }
 		}
 		failed := 0
+		hashes := brandingHashes{}
 		for i, step := range rec.Steps {
 			if step.SQL != "" {
 				if strings.HasPrefix(step.SQL, "SELECT") {
@@ -148,7 +149,8 @@ func TestNodeAnswers(t *testing.T) {
 				}
 				continue
 			}
-			status, want, have := step.Status, clientRepoFix.Replace(scrub(step.Answer)), scrub(got.Body)
+			hashes.learn(t, step.Answer)
+			status, want, have := step.Status, hashes.translate(clientRepoFix.Replace(scrub(step.Answer))), scrub(got.Body)
 			if f, fixed := fixes[step.Name]; fixed {
 				status, want = f.status, f.answer
 			}

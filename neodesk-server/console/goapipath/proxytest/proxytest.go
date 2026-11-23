@@ -23,15 +23,15 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/auditlog"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/limits"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
-	"github.com/unitronix/betterdesk-server/console/webui"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/webui"
 )
 
 // Answer is what the API server says to every call during one request.

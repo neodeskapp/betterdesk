@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/ssrfguard/guardtest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard/guardtest"
 )
 
 // plainlyDangerous is the rule the guard exists for, written without the

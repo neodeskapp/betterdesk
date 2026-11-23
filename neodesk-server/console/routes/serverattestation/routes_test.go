@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // keys lists the keys of a JSON object in the order they came.
@@ -110,7 +110,7 @@ func TestBadgeTextsChain(t *testing.T) {
 		admin := w.As("admin")
 		got := admin.Do(http.MethodPut, "/api/server-attestation/badge-config", `{"badgeTitle":"  Ours\u0001 ","tierLabels":{"iron":"Eisen","x":"y"}}`)
 		want := `{"success":true,"config":{"badgeTitle":"Ours","tierLabels":{"bronze":"","iron":"Eisen","platinum":"","titanium":"","obsidian":""}},` +
-			`"presentation":{"brand":"BetterDesk","badgeTitle":"Ours","tierLabels":{"bronze":"BRONZE","iron":"Eisen","platinum":"PLATINUM","titanium":"TITANIUM","obsidian":"OBSIDIAN"},"tierLabel":null}}`
+			`"presentation":{"brand":"NeoDesk","badgeTitle":"Ours","tierLabels":{"bronze":"BRONZE","iron":"Eisen","platinum":"PLATINUM","titanium":"TITANIUM","obsidian":"OBSIDIAN"},"tierLabel":null}}`
 		if got.Status != http.StatusOK || got.Body != want {
 			t.Fatalf("PUT = %d %s", got.Status, got.Body)
 		}
@@ -127,7 +127,7 @@ func TestBadgeTextsChain(t *testing.T) {
 		if got := w.As("server_admin").Do(http.MethodGet, "/api/server-attestation/badge-config", ""); !strings.Contains(got.Body, `"config":{"badgeTitle":"Ours"`) {
 			t.Errorf("GET after PUT = %s", got.Body)
 		}
-		if got := w.SignedOut().Do(http.MethodGet, "/api/public/server-attestation", ""); got.Body != `{"tier":null,"maxConnections":0,"testedAt":null,"valid":false,"brand":"BetterDesk","badgeTitle":"Ours",`+
+		if got := w.SignedOut().Do(http.MethodGet, "/api/public/server-attestation", ""); got.Body != `{"tier":null,"maxConnections":0,"testedAt":null,"valid":false,"brand":"NeoDesk","badgeTitle":"Ours",`+
 			`"tierLabels":{"bronze":"BRONZE","iron":"Eisen","platinum":"PLATINUM","titanium":"TITANIUM","obsidian":"OBSIDIAN"}}` {
 			t.Errorf("public = %s", got.Body)
 		}
@@ -158,8 +158,8 @@ func TestPublicBadgeGivesOutNoMore(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := w.SignedOut().Do(http.MethodGet, "/api/public/server-attestation", "")
-	want := `{"tier":"titanium","maxConnections":250,"testedAt":"2026-11-10T09:00:00.000Z","valid":true,"brand":"BetterDesk",` +
-		`"badgeTitle":"BetterDesk Server Attestation","tierLabel":"TITANIUM",` +
+	want := `{"tier":"titanium","maxConnections":250,"testedAt":"2026-11-10T09:00:00.000Z","valid":true,"brand":"NeoDesk",` +
+		`"badgeTitle":"NeoDesk Server Attestation","tierLabel":"TITANIUM",` +
 		`"tierLabels":{"bronze":"BRONZE","iron":"IRON","platinum":"PLATINUM","titanium":"TITANIUM","obsidian":"OBSIDIAN"}}`
 	if got.Body != want {
 		t.Errorf("public:\n got %s\nwant %s", got.Body, want)
@@ -176,7 +176,7 @@ func TestPublicBadgeGivesOutNoMore(t *testing.T) {
 		t.Errorf("Cache-Control %q", got.Header.Get("Cache-Control"))
 	}
 	page := w.SignedOut().Do(http.MethodGet, "/api/auth/login-page", "")
-	if !strings.Contains(page.Body, `"attestation":{"tier":"titanium","brand":"BetterDesk","badgeTitle":"BetterDesk Server Attestation","tierLabel":"TITANIUM"}`) {
+	if !strings.Contains(page.Body, `"attestation":{"tier":"titanium","brand":"NeoDesk","badgeTitle":"NeoDesk Server Attestation","tierLabel":"TITANIUM"}`) {
 		t.Errorf("sign-in page: %s", page.Body)
 	}
 	if got := w.As("admin").Do(http.MethodGet, "/api/server-attestation/result", ""); got.Body != `{"success":true,"result":`+result+`}` {

@@ -3,67 +3,67 @@
   "kind": "product",
   "input": null,
   "missing": true,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
   "input": null,
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
   "input": true,
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
   "input": false,
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
   "input": 0,
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
   "input": 1,
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
   "input": 0,
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
   "input": 0.5,
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
   "input": 2,
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
   "input": 21114,
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
   "input": "21114",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -75,7 +75,7 @@
   "kind": "product",
   "input": [],
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
@@ -83,7 +83,7 @@
    "#aabbcc"
   ],
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
@@ -92,13 +92,13 @@
    2
   ],
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
   "input": {},
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
@@ -106,13 +106,13 @@
    "a": 1
   },
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "product",
   "input": "",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -124,7 +124,7 @@
   "kind": "product",
   "input": " ",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -136,7 +136,7 @@
   "kind": "product",
   "input": "a",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -148,7 +148,7 @@
   "kind": "product",
   "input": " Acme ",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -160,7 +160,7 @@
   "kind": "product",
   "input": "Acme Support",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -172,7 +172,7 @@
   "kind": "product",
   "input": "Łódź & Warszawa",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -184,7 +184,7 @@
   "kind": "product",
   "input": "Moja Firma IT",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -196,7 +196,7 @@
   "kind": "product",
   "input": "Žluťoučký kůň",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -208,7 +208,7 @@
   "kind": "product",
   "input": "Straße",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -220,7 +220,7 @@
   "kind": "product",
   "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -232,7 +232,7 @@
   "kind": "product",
   "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -244,7 +244,7 @@
   "kind": "product",
   "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -256,7 +256,7 @@
   "kind": "product",
   "input": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -268,7 +268,7 @@
   "kind": "product",
   "input": "\ud83d",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -280,7 +280,7 @@
   "kind": "product",
   "input": "a\udc00b",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -292,7 +292,7 @@
   "kind": "product",
   "input": " line ",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -304,7 +304,7 @@
   "kind": "product",
   "input": "﻿bom",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -316,7 +316,7 @@
   "kind": "product",
   "input": " nbsp　",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -328,7 +328,7 @@
   "kind": "product",
   "input": "İstanbul",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -340,7 +340,7 @@
   "kind": "product",
   "input": "tab\there",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -352,7 +352,7 @@
   "kind": "product",
   "input": "quote\"back\\slash",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -364,7 +364,7 @@
   "kind": "product",
   "input": "<b>html</b>&",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -376,7 +376,7 @@
   "kind": "product",
   "input": "desk.example.com",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -388,7 +388,7 @@
   "kind": "product",
   "input": "https://Desk.Example.com:8443/path",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -400,7 +400,7 @@
   "kind": "product",
   "input": "http://[::1]:80",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -412,7 +412,7 @@
   "kind": "product",
   "input": "10.0.0.1",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -424,7 +424,7 @@
   "kind": "product",
   "input": "300.1.1.1",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -436,7 +436,7 @@
   "kind": "product",
   "input": "bad host!",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -448,7 +448,7 @@
   "kind": "product",
   "input": "-leading",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -460,7 +460,7 @@
   "kind": "product",
   "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -472,7 +472,7 @@
   "kind": "product",
   "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -484,7 +484,7 @@
   "kind": "product",
   "input": "xn--bcher-kva.example",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -496,7 +496,7 @@
   "kind": "product",
   "input": "bücher.example",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -508,7 +508,7 @@
   "kind": "product",
   "input": "UPPER.example",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -520,7 +520,7 @@
   "kind": "product",
   "input": "#ABCDEF",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -532,7 +532,7 @@
   "kind": "product",
   "input": "#abcdef",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -544,7 +544,7 @@
   "kind": "product",
   "input": "#12345",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -556,7 +556,7 @@
   "kind": "product",
   "input": "#1234567",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -568,7 +568,7 @@
   "kind": "product",
   "input": "red",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -580,7 +580,7 @@
   "kind": "product",
   "input": "#aBcDeF",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -592,7 +592,7 @@
   "kind": "product",
   "input": "data:image/png;base64,AAAA",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -604,7 +604,7 @@
   "kind": "product",
   "input": "data:image/svg+xml;base64,PHN2Zz4=",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -616,7 +616,7 @@
   "kind": "product",
   "input": "data:text/plain;base64,AAAA",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -628,7 +628,7 @@
   "kind": "product",
   "input": "data:image/png,raw",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -640,7 +640,7 @@
   "kind": "product",
   "input": "example.com/help",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -652,7 +652,7 @@
   "kind": "product",
   "input": "https://example.com/x?y=1#z",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -664,7 +664,7 @@
   "kind": "product",
   "input": "javascript:alert(1)",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -676,7 +676,7 @@
   "kind": "product",
   "input": "ftp://example.com",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -688,7 +688,7 @@
   "kind": "product",
   "input": "mailto:a@b.c",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -700,7 +700,7 @@
   "kind": "product",
   "input": "http://exa mple.com",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -712,7 +712,7 @@
   "kind": "product",
   "input": "https://",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -724,7 +724,7 @@
   "kind": "product",
   "input": "en",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -736,7 +736,7 @@
   "kind": "product",
   "input": "de",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -748,7 +748,7 @@
   "kind": "product",
   "input": "zh-TW",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -760,7 +760,7 @@
   "kind": "product",
   "input": "zh-tw",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -772,7 +772,7 @@
   "kind": "product",
   "input": "xx",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -784,7 +784,7 @@
   "kind": "product",
   "input": "EN",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -796,7 +796,7 @@
   "kind": "product",
   "input": "agent",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -808,7 +808,7 @@
   "kind": "product",
   "input": "AGENT",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -820,7 +820,7 @@
   "kind": "product",
   "input": " support-agent ",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -832,7 +832,7 @@
   "kind": "product",
   "input": "support_agent",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -844,7 +844,7 @@
   "kind": "product",
   "input": "agent_client",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -856,7 +856,7 @@
   "kind": "product",
   "input": "agent-client",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -868,7 +868,7 @@
   "kind": "product",
   "input": "rdclient",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -878,33 +878,33 @@
  },
  {
   "kind": "product",
-  "input": "betterdesk_support",
+  "input": "neodesk_support",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
-  "input": "betterdesk_support",
-  "out": "betterdesk_support",
+  "input": "neodesk_support",
+  "out": "neodesk_support",
   "queued": false
  },
  {
   "kind": "product",
-  "input": "betterdesk-support",
+  "input": "neodesk-support",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
-  "input": "betterdesk-support",
-  "out": "betterdesk-support",
+  "input": "neodesk-support",
+  "out": "neodesk-support",
   "queued": false
  },
  {
   "kind": "product",
   "input": "unknown",
   "missing": false,
-  "out": "betterdesk-support"
+  "out": "neodesk-support"
  },
  {
   "kind": "status",
@@ -962,12 +962,12 @@
  },
  {
   "kind": "support",
-  "input": "{\"sku\":\"betterdesk-support\"}",
+  "input": "{\"sku\":\"neodesk-support\"}",
   "out": true
  },
  {
   "kind": "support",
-  "input": "{\"generator_kind\":\"betterdesk-support\"}",
+  "input": "{\"generator_kind\":\"neodesk-support\"}",
   "out": true
  },
  {
@@ -1037,7 +1037,7 @@
  },
  {
   "kind": "support",
-  "input": "{\"sku\":\"BetterDesk-Support\"}",
+  "input": "{\"sku\":\"NeoDesk-Support\"}",
   "out": false
  },
  {

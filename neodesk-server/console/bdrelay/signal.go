@@ -6,17 +6,17 @@ import (
 	"sync/atomic"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
 )
 
 // deviceIDPattern is a device id the signal socket takes.
 var deviceIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{3,64}$`)
 
-// Register adds /ws/bd-relay and /ws/bd-signal.
+// Register adds /ws/nd-relay and /ws/nd-signal.
 func (s *Service) Register(reg *ws.Registry) {
-	reg.Handle("/ws/bd-relay", s.serveRelay)
-	reg.Handle("/ws/bd-signal", s.serveSignal)
+	reg.Handle("/ws/nd-relay", s.serveRelay)
+	reg.Handle("/ws/nd-signal", s.serveSignal)
 }
 
 // serveSignal is an agent's signal socket. Before the handshake: the
@@ -32,7 +32,7 @@ func (s *Service) Register(reg *ws.Registry) {
 // they were when no message listener was attached yet. A socket that ends
 // while its token is checked leaves no trace.
 func (s *Service) serveSignal(u *ws.Upgrade) {
-	if !u.CheckOrigin("bd-signal /ws/bd-signal") {
+	if !u.CheckOrigin("nd-signal /ws/nd-signal") {
 		return
 	}
 	conn, ok := u.Accept(ws.AcceptOptions{MaxPayload: SignalMaxPayload})

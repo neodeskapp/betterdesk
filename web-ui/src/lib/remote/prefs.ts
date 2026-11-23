@@ -1,6 +1,6 @@
 /**
  * Remote viewer preferences per console account, in this browser
- * (localStorage "betterdesk_remote_prefs_<user id>", the key the old
+ * (localStorage "neodesk_remote_prefs_<user id>", the key the old
  * viewer used, so choices carry over). Port of public/js/remoteViewerPrefs.js.
  */
 
@@ -64,7 +64,7 @@ export function sanitizePrefs(raw: unknown): ViewerPrefs {
 }
 
 export function prefsKey(userId: string | number | null | undefined): string {
-	return 'betterdesk_remote_prefs_' + (userId != null ? String(userId) : 'anonymous');
+	return 'neodesk_remote_prefs_' + (userId != null ? String(userId) : 'anonymous');
 }
 
 export function loadPrefs(userId: string | number | null | undefined): ViewerPrefs {

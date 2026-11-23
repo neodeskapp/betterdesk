@@ -8,13 +8,13 @@ import (
 )
 
 // panelGroupStores runs a test on SQLite and, when
-// BETTERDESK_TEST_POSTGRES_DSN names one, on PostgreSQL.
+// NEODESK_TEST_POSTGRES_DSN names one, on PostgreSQL.
 func panelGroupStores(t *testing.T, test func(t *testing.T, store Database)) {
 	t.Run("sqlite", func(t *testing.T) { test(t, newTestDB(t)) })
 	t.Run("postgres", func(t *testing.T) {
-		dsn := os.Getenv("BETTERDESK_TEST_POSTGRES_DSN")
+		dsn := os.Getenv("NEODESK_TEST_POSTGRES_DSN")
 		if dsn == "" {
-			t.Skip("BETTERDESK_TEST_POSTGRES_DSN is not set")
+			t.Skip("NEODESK_TEST_POSTGRES_DSN is not set")
 		}
 		database, err := OpenPostgres(dsn)
 		if err != nil {

@@ -3,9 +3,9 @@ package bdapi
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // What a client may read of the panel without signing in: who it is and
@@ -25,15 +25,15 @@ type serverInfoAnswer struct {
 	AppearanceContract appearanceContract `json:"appearance_contract"`
 }
 
-// serverInfo answers GET /api/bd/server-info: the panel's identity, which
+// serverInfo answers GET /api/nd/server-info: the panel's identity, which
 // the remote viewer checks a panel address with.
 func (h *handlers) serverInfo(w http.ResponseWriter, r *http.Request) {
 	b := h.d.Branding.GetBranding()
 	kit.JSON(w, r, http.StatusOK, serverInfoAnswer{
-		OK: true, Product: "betterdesk-panel", Version: h.version,
+		OK: true, Product: "neodesk-panel", Version: h.version,
 		PanelName: orValue(member(b, "appName"), configuredAppName),
 		AppearanceContract: appearanceContract{
-			Version: "2.0", Endpoint: "/api/bd/appearance", Revision: h.d.Branding.Revision(),
+			Version: "2.0", Endpoint: "/api/nd/appearance", Revision: h.d.Branding.Revision(),
 		},
 	})
 }
@@ -47,7 +47,7 @@ type brandingAnswer struct {
 	Appearance *branding.Object `json:"appearance,omitempty"`
 }
 
-// branding answers GET /api/bd/branding: the company's name, colour and
+// branding answers GET /api/nd/branding: the company's name, colour and
 // contact for the desktop client, with the public appearance. When the
 // appearance cannot be made the defaults go out, never an error.
 func (h *handlers) branding(w http.ResponseWriter, r *http.Request) {
@@ -55,19 +55,19 @@ func (h *handlers) branding(w http.ResponseWriter, r *http.Request) {
 	appearance, err := h.d.Branding.GetPublicAppearance()
 	if err != nil {
 		h.log.Error("Branding error:", err)
-		kit.JSON(w, r, http.StatusOK, brandingAnswer{CompanyName: "BetterDesk", AccentColor: "#3b82f6", SupportContact: ""})
+		kit.JSON(w, r, http.StatusOK, brandingAnswer{CompanyName: "NeoDesk", AccentColor: "#3b82f6", SupportContact: ""})
 		return
 	}
 	colors, _ := member(b, "colors").(*branding.Object)
 	kit.JSON(w, r, http.StatusOK, brandingAnswer{
-		CompanyName:    orValue(member(b, "appName"), "BetterDesk"),
+		CompanyName:    orValue(member(b, "appName"), "NeoDesk"),
 		AccentColor:    orValue(member(colors, "accentBlue"), "#3b82f6"),
 		SupportContact: orValue(member(b, "supportContact"), ""),
 		Appearance:     appearance,
 	})
 }
 
-// appearance answers GET /api/bd/appearance: the public appearance, never
+// appearance answers GET /api/nd/appearance: the public appearance, never
 // cached; a fixed dark appearance when it cannot be made.
 func (h *handlers) appearance(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, private")
@@ -85,8 +85,8 @@ func fallbackAppearance() *goapi.Object {
 	return goapi.NewObject(
 		"version", "2.0",
 		"revision", "fallback",
-		"product", "betterdesk-appearance",
-		"identity", goapi.NewObject("appName", "BetterDesk", "logoType", "icon", "logoIcon", "dns"),
+		"product", "neodesk-appearance",
+		"identity", goapi.NewObject("appName", "NeoDesk", "logoType", "icon", "logoIcon", "dns"),
 		"palette", goapi.NewObject(
 			"mode", "dark",
 			"primary", "#58a6ff",

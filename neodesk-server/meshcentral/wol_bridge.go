@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 var macAddrRe = regexp.MustCompile(`(?i)(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}`)

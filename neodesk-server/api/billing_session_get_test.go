@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/billing"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/billing"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // TestGetBillingSessionByID: GET /api/billing/sessions/{id} answers one

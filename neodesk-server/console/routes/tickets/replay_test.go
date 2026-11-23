@@ -11,10 +11,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // uploads is the folder the console of a test world keeps attachments in.
@@ -170,7 +170,7 @@ func TestAgentTicketWithANumberTitleIs400(t *testing.T) {
 }
 
 // A device that writes to /api/tickets/bd with its token and no session
-// needs no CSRF token, as below /api/bd/ (BUGS DV2). A signed-in browser
+// needs no CSRF token, as below /api/nd/ (BUGS DV2). A signed-in browser
 // needs it there like anywhere.
 func TestADeviceWriteNeedsNoCSRFToken(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {

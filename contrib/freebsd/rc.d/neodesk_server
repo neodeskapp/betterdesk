@@ -1,53 +1,53 @@
 #!/bin/sh
 
-# PROVIDE: betterdesk_server
+# PROVIDE: neodesk_server
 # REQUIRE: LOGIN NETWORKING
 # KEYWORD: shutdown
 #
 # Add the following lines to /etc/rc.conf to enable:
-#   betterdesk_server_enable="YES"
-#   betterdesk_server_relay="YOUR.PUBLIC.IP"   # required for clients
+#   neodesk_server_enable="YES"
+#   neodesk_server_relay="YOUR.PUBLIC.IP"   # required for clients
 # Optional:
-#   betterdesk_server_dir="/usr/local/betterdesk"
-#   betterdesk_server_bin="/usr/local/betterdesk/betterdesk-server"
-#   betterdesk_server_key_file="/usr/local/betterdesk/id_ed25519"
-#   betterdesk_server_api_port="21114"
-#   betterdesk_server_flags=""                 # extra CLI flags (e.g. -db ...)
-#   betterdesk_server_user="root"
-#   betterdesk_server_env="CONSOLE_DIR=... BETTERDESK_ENV_FILE=..."
+#   neodesk_server_dir="/usr/local/neodesk"
+#   neodesk_server_bin="/usr/local/neodesk/neodesk-server"
+#   neodesk_server_key_file="/usr/local/neodesk/id_ed25519"
+#   neodesk_server_api_port="21114"
+#   neodesk_server_flags=""                 # extra CLI flags (e.g. -db ...)
+#   neodesk_server_user="root"
+#   neodesk_server_env="CONSOLE_DIR=... NEODESK_ENV_FILE=..."
 #                                              # default: the console's state and .env
-#                                              # in betterdesk_server_dir
+#                                              # in neodesk_server_dir
 #
 # Example community rc.d unit for FreeBSD (Tier 3). See contrib/freebsd/README.md.
 # Refs: https://github.com/UNITRONIX/BetterDesk/issues/310
 
 . /etc/rc.subr
 
-name="betterdesk_server"
-desc="BetterDesk Server (signal, relay, API and web console)"
+name="neodesk_server"
+desc="NeoDesk Server (signal, relay, API and web console)"
 rcvar="${name}_enable"
 
 load_rc_config $name
 
-: ${betterdesk_server_enable:="NO"}
-: ${betterdesk_server_dir:="/usr/local/betterdesk"}
-: ${betterdesk_server_bin:="${betterdesk_server_dir}/betterdesk-server"}
-: ${betterdesk_server_key_file:="${betterdesk_server_dir}/id_ed25519"}
-: ${betterdesk_server_api_port:="21114"}
-: ${betterdesk_server_relay:="127.0.0.1"}
-: ${betterdesk_server_flags:=""}
-: ${betterdesk_server_user:="root"}
-: ${betterdesk_server_env:="CONSOLE_DIR=${betterdesk_server_dir} BETTERDESK_ENV_FILE=${betterdesk_server_dir}/.env"}
+: ${neodesk_server_enable:="NO"}
+: ${neodesk_server_dir:="/usr/local/neodesk"}
+: ${neodesk_server_bin:="${neodesk_server_dir}/neodesk-server"}
+: ${neodesk_server_key_file:="${neodesk_server_dir}/id_ed25519"}
+: ${neodesk_server_api_port:="21114"}
+: ${neodesk_server_relay:="127.0.0.1"}
+: ${neodesk_server_flags:=""}
+: ${neodesk_server_user:="root"}
+: ${neodesk_server_env:="CONSOLE_DIR=${neodesk_server_dir} NEODESK_ENV_FILE=${neodesk_server_dir}/.env"}
 
 pidfile="/var/run/${name}.pid"
-procname="${betterdesk_server_bin}"
+procname="${neodesk_server_bin}"
 
 command="/usr/sbin/daemon"
-command_args="-f -c ${betterdesk_server_dir} -p ${pidfile} -u ${betterdesk_server_user} \
-	${betterdesk_server_bin} -mode all \
-	-relay-servers ${betterdesk_server_relay} \
-	-key-file ${betterdesk_server_key_file} \
-	-api-port ${betterdesk_server_api_port} \
-	${betterdesk_server_flags}"
+command_args="-f -c ${neodesk_server_dir} -p ${pidfile} -u ${neodesk_server_user} \
+	${neodesk_server_bin} -mode all \
+	-relay-servers ${neodesk_server_relay} \
+	-key-file ${neodesk_server_key_file} \
+	-api-port ${neodesk_server_api_port} \
+	${neodesk_server_flags}"
 
 run_rc_command "$1"

@@ -172,14 +172,14 @@ export function bottomItems(nav: readonly NavSection[], key: string): BottomItem
 /* ── Remembered sidebar state (same keys and meaning as the old shell) ── */
 
 /** localStorage: { sectionId: true } for "More" lists left open */
-export const MORE_KEY = 'bd_nav_more_open';
+export const MORE_KEY = 'nd_nav_more_open';
 /** sessionStorage: { sectionId: true (closed) | false (open) } for sections other than the current one */
-export const COLLAPSED_KEY = 'bd_nav_sections_collapsed';
+export const COLLAPSED_KEY = 'nd_nav_sections_collapsed';
 /** sessionStorage: the nav's scroll position */
-export const SCROLL_KEY = 'bd_ux35_sidebar_scroll';
+export const SCROLL_KEY = 'nd_ux35_sidebar_scroll';
 
 /** Width of the docked sidebar (public/js/ux35-shell.js) */
-export const WIDTH_KEY = 'bd_ux35_sidebar_width';
+export const WIDTH_KEY = 'nd_ux35_sidebar_width';
 export const WIDTH_MIN = 200;
 export const WIDTH_MAX = 320;
 export const WIDTH_DEFAULT = 232;

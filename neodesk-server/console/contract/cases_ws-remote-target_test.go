@@ -3,7 +3,7 @@
 package contract_test
 
 import (
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The RDP and VNC gateway /ws/remote-target/<id>: a session with

@@ -13,16 +13,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/api"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/console"
-	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/api"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console"
+	consoleconfig "github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 var roleIDs = map[string]int64{
@@ -58,9 +58,9 @@ func newWorld(t *testing.T, sdb *store.DB) *world {
 
 	packages := t.TempDir()
 	for name, data := range map[string]string{
-		"betterdesk-1.4.6-windows-x86_64.exe":           "windows exe",
-		"betterdesk-1.4.6-linux-x86_64.deb":             "debian package",
-		"betterdesk-1.4.6-linux-x86_64-portable.tar.gz": "portable tar",
+		"neodesk-1.4.6-windows-x86_64.exe":           "windows exe",
+		"neodesk-1.4.6-linux-x86_64.deb":             "debian package",
+		"neodesk-1.4.6-linux-x86_64-portable.tar.gz": "portable tar",
 	} {
 		if err := os.WriteFile(filepath.Join(packages, name), []byte(data), 0o644); err != nil {
 			t.Fatal(err)
@@ -68,8 +68,8 @@ func newWorld(t *testing.T, sdb *store.DB) *world {
 	}
 	data := t.TempDir()
 	env := map[string]string{
-		"SESSION_SECRET":                "onboard-secret-0123456789abcdef0123456789abcdef",
-		"BETTERDESK_CLIENT_RELEASE_DIR": packages,
+		"SESSION_SECRET":             "onboard-secret-0123456789abcdef0123456789abcdef",
+		"NEODESK_CLIENT_RELEASE_DIR": packages,
 	}
 	ccfg := &consoleconfig.Config{
 		Host: "127.0.0.1", NodeEnv: "development", DataDir: data,
@@ -247,7 +247,7 @@ func TestJoinFlow(t *testing.T) {
 		}
 		exe := downloads[0].(map[string]any)
 		file := str(exe, "file")
-		if !regexp.MustCompile(`^BetterDesk-Setup-127\.0\.0\.1_\d+_http-` + code + `\.exe$`).MatchString(file) {
+		if !regexp.MustCompile(`^NeoDesk-Setup-127\.0\.0\.1_\d+_http-` + code + `\.exe$`).MatchString(file) {
 			t.Fatalf("file name %q", file)
 		}
 		dl := visitor.do(http.MethodGet, str(exe, "url"), "")

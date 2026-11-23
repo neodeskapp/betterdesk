@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // Redirect is the plain port of a console in HTTPS mode: every request,
@@ -96,7 +96,7 @@ func publicHostPage(httpsPort int) string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BetterDesk: use HTTPS</title>
+<title>NeoDesk: use HTTPS</title>
 </head>
 <body>
 <h1>This console uses HTTPS</h1>

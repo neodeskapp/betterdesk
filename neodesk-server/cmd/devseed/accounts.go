@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/authn"
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // roleAccounts are the test accounts, one per role.

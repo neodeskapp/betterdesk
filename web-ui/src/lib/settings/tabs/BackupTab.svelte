@@ -272,8 +272,8 @@
 			id: 'backup-stat-backend',
 			label: t('settings.backup_tab.stat_backend'),
 			value: stats
-				? stats.backend === 'betterdesk'
-					? t('settings.backup_tab.backend_betterdesk')
+				? stats.backend === 'neodesk'
+					? t('settings.backup_tab.backend_neodesk')
 					: 'RustDesk'
 				: undefined
 		},

@@ -15,7 +15,7 @@ import (
 	"testing/fstest"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/embedfs"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/embedfs"
 )
 
 // embedBuild turns the build in dir into an embedded one, as

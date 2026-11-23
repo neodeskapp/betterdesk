@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"strings"
 
-	gen "github.com/unitronix/betterdesk-server/console/generator"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/console/store"
+	gen "github.com/neodeskapp/neodesk/neodesk-server/console/generator"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // failure is {"success":false,"error":...}.
@@ -193,19 +193,19 @@ func (h *handlers) defaults(w http.ResponseWriter, r *http.Request) {
 		UseHTTPS:   h.serverInfo.DefaultUseHTTPS(),
 		APIPort:    h.serverInfo.DefaultAPIPort(),
 		PublicKey:  string(h.serverInfo.ResolvePublicKey(r.Context())),
-		AppName:    "BetterDesk Support Agent",
+		AppName:    "NeoDesk Support Agent",
 	}})
 }
 
 // buildErrorKeys turn a build error's code into the text the web app
 // shows.
 var buildErrorKeys = map[string]string{
-	"platforms_required":                  "platforms_required",
-	"unsupported_platform":                "unsupported_platform",
-	"local_builder_no_supported_targets":  "no_supported_targets",
-	"local_builder_toolchain_missing":     "toolchain_missing",
-	"betterdesk_client_builder_not_ready": "validation_failed",
-	"support_generator_module_not_ready":  "validation_failed",
+	"platforms_required":                 "platforms_required",
+	"unsupported_platform":               "unsupported_platform",
+	"local_builder_no_supported_targets": "no_supported_targets",
+	"local_builder_toolchain_missing":    "toolchain_missing",
+	"neodesk_client_builder_not_ready":   "validation_failed",
+	"support_generator_module_not_ready": "validation_failed",
 }
 
 func buildErrorKey(code string) string {
@@ -244,7 +244,7 @@ func (h *handlers) sendBuildError(w http.ResponseWriter, r *http.Request, err er
 
 func (h *handlers) notReadyCode() string {
 	if h.gen.Embedded() {
-		return "betterdesk_client_builder_not_ready"
+		return "neodesk_client_builder_not_ready"
 	}
 	return "module_not_ready"
 }

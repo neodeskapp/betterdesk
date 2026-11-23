@@ -3,9 +3,9 @@ Routes that call this package. From inventory.json: every route whose
 calls.services names brandingService, fontService or supportersService.
 Method, path, file and line of the Node route.
 
-GET    /api/bd/server-info                               routes/bd-api.routes.js:161
-GET    /api/bd/branding                                  routes/bd-api.routes.js:525
-GET    /api/bd/appearance                                routes/bd-api.routes.js:550
+GET    /api/nd/server-info                               routes/bd-api.routes.js:161
+GET    /api/nd/branding                                  routes/bd-api.routes.js:525
+GET    /api/nd/appearance                                routes/bd-api.routes.js:550
 GET    /api/auth/login-page                              routes/auth.routes.js:91
 GET    /console-boot.js                                  routes/console.routes.js:187
 GET    /api/console/bootstrap                            routes/console.routes.js:245
@@ -76,10 +76,10 @@ of a full backup). The writes are in `console/routes/settings`
 
 | Route | Node | Go |
 |---|---|---|
-| `GET /api/bd/server-info` | bd-api.routes.js:161 | `b.Text("appName")` (or the configured app name when empty), `s.Revision()` |
-| `GET /api/bd/branding` | :525 | `b`, `s.GetPublicAppearance()`. `company_name` is appName or "BetterDesk", `accent_color` is `colors.accentBlue` or "#3b82f6", `support_contact` is always "" (no such setting). An error of GetPublicAppearance means the three-field fallback answer |
-| `GET /api/bd/appearance` | :550 | `s.GetPublicAppearance()`; on error the fixed fallback object of the route (revision "fallback") |
-| `GET /api/auth/login-page` | auth.routes.js:91 | `appName`: `s.AppName(config app name)`, and "BetterDesk" when that is empty too. `branding`: `s.SignInBranding()`, the whole object as the route sent it. The capacity badge (`attestationSummary`, auth.routes.js:51) takes `s.GetBranding().Text("appName")` as the brand name |
+| `GET /api/nd/server-info` | bd-api.routes.js:161 | `b.Text("appName")` (or the configured app name when empty), `s.Revision()` |
+| `GET /api/nd/branding` | :525 | `b`, `s.GetPublicAppearance()`. `company_name` is appName or "NeoDesk", `accent_color` is `colors.accentBlue` or "#3b82f6", `support_contact` is always "" (no such setting). An error of GetPublicAppearance means the three-field fallback answer |
+| `GET /api/nd/appearance` | :550 | `s.GetPublicAppearance()`; on error the fixed fallback object of the route (revision "fallback") |
+| `GET /api/auth/login-page` | auth.routes.js:91 | `appName`: `s.AppName(config app name)`, and "NeoDesk" when that is empty too. `branding`: `s.SignInBranding()`, the whole object as the route sent it. The capacity badge (`attestationSummary`, auth.routes.js:51) takes `s.GetBranding().Text("appName")` as the brand name |
 | `GET /console-boot.js` | console.routes.js:94 (`publicBoot`), :187 | `themeMode`: `s.ThemeMode()`, `palettes`: `s.BootPalettes()`, `brandingRevision`: `s.Revision()` |
 | `GET /api/console/bootstrap` | :245 | `branding`: `s.BootstrapBranding(config app name)`, `palettes`: `s.BootPalettes()` |
 | `GET /api/console/supporters` | :315 | `{success: true}` plus the three keys of `s.LoadSupporters()` (honorary, individuals, links) |
@@ -100,10 +100,10 @@ At start, after the database is ready: `s.LoadBranding(ctx)` (server.js:432).
 | `GET /api/settings/appearance` | signed in | `{success, data: model, flat: b, readability, revision}` |
 | `POST /api/settings/branding` | branding.edit | Body that is no object or list: 400 "Invalid branding data". `s.SaveBranding(ctx, body)`; any error: 500 server error. Answer as GET. Audit: `theme_toggle` "Theme switched to <themeMode>" when the body has at least one key, every key is one of themeMode, colors, glassColor and themeMode is not empty; otherwise `branding_update` "Updated branding configuration" |
 | `POST .../branding/reset` | branding.edit | `s.ResetBranding(ctx)`, audit `branding_reset`, `{success, message: "Branding reset to defaults"}` |
-| `GET .../branding/export` | branding.edit | `s.ExportPreset()` as the whole body, `Content-Disposition: attachment; filename="betterdesk-theme.json"` |
+| `GET .../branding/export` | branding.edit | `s.ExportPreset()` as the whole body, `Content-Disposition: attachment; filename="neodesk-theme.json"` |
 | `POST .../branding/import` | branding.edit | `s.ImportPreset(ctx, body)`: false is 400 "Invalid theme preset file", an error 500; audit `branding_import` |
 | `GET .../branding/profiles` | signed in | `s.ListProfiles(ctx)` as `data` |
-| `POST .../branding/profiles` | branding.edit | name and description are `String(x \|\| '').trim()` of the body values; empty name: 400 "Profile name is required". When `body.branding` is an object the theme is `{version: "1.0", type: "betterdesk-theme", branding: body.branding}`, else nil. `s.CreateProfile(ctx, name, description, theme)`. Any error is 400: "Profile name already exists" when `branding.Message(err)` contains "UNIQUE" (SQLite only; PostgreSQL sends the database's message), else the message. Audit `branding_profile_create` "Created profile: <name>" |
+| `POST .../branding/profiles` | branding.edit | name and description are `String(x \|\| '').trim()` of the body values; empty name: 400 "Profile name is required". When `body.branding` is an object the theme is `{version: "1.0", type: "neodesk-theme", branding: body.branding}`, else nil. `s.CreateProfile(ctx, name, description, theme)`. Any error is 400: "Profile name already exists" when `branding.Message(err)` contains "UNIQUE" (SQLite only; PostgreSQL sends the database's message), else the message. Audit `branding_profile_create` "Created profile: <name>" |
 | `PUT .../profiles/:id` | branding.edit | id is `parseInt`; not a number: 400 "Invalid profile id". `s.UpdateProfile(ctx, id, ProfileUpdate{Name: body.name, Description: body.description, Branding: body.branding})` with the raw body values (`branding.Undefined` for a missing key). Errors are 400 with `branding.Message(err)` |
 | `POST .../profiles/:id/apply` | branding.edit | `s.ApplyProfile(ctx, id)`: false is 404 "Profile not found or invalid", an error 500. Answer `{success, data: b, revision}` |
 | `POST .../profiles/:id/duplicate` | branding.edit | `s.DuplicateProfile(ctx, id, body.name or "")`; errors are 400 with the message; answer `{success, data: {id}}`. No audit entry |

@@ -1,4 +1,4 @@
-// Package updater installs new versions of betterdesk-server from the
+// Package updater installs new versions of neodesk-server from the
 // project's GitHub releases (DECISIONS A28, spec updater-installers.md
 // 4.4): no toolchain, no Node and no source on the host.
 //
@@ -9,16 +9,16 @@
 // pre-release tagged "dev", which the release job replaces on every dev
 // build. UPDATE_GITHUB_OWNER and UPDATE_GITHUB_REPO name the repository,
 // UPDATE_GITHUB_BRANCH the channel. A release has one binary per
-// platform (betterdesk-server-linux-amd64, -linux-arm64, -linux-armv7,
+// platform (neodesk-server-linux-amd64, -linux-arm64, -linux-armv7,
 // -windows-amd64.exe), manifest.json, manifest.sig when it is signed, and
 // SHA256SUMS for people who check by hand.
 //
 // manifest.json:
 //
-//	{"schema_version": 1, "product": "betterdesk-server", "version": "3.6.0",
+//	{"schema_version": 1, "product": "neodesk-server", "version": "3.6.0",
 //	 "channel": "stable", "created": "<RFC 3339>", "min_rollback_version": "3.5.0",
-//	 "owner": "trybetterdesk", "repo": "betterdesk", "branch": "main", "sha": "<commit>",
-//	 "files": [{"path": "betterdesk-server-linux-amd64", "sha256": "<hex>", "size": 41234567,
+//	 "owner": "neodeskapp", "repo": "neodesk", "branch": "main", "sha": "<commit>",
+//	 "files": [{"path": "neodesk-server-linux-amd64", "sha256": "<hex>", "size": 41234567,
 //	            "os": "linux", "arch": "amd64"}, ...]}
 //
 // manifest.sig is an ed25519 signature in base64 over the canonical text
@@ -43,7 +43,7 @@
 // data backup of console/backup only when Options.DataBackup is set; the
 // answer's backedUp and the manifest's dataBackup say which were made),
 // the swap, and the pending marker. The route then answers, and with a
-// supervisor (BETTERDESK_SUPERVISOR) the process ends with ExitRestart
+// supervisor (NEODESK_SUPERVISOR) the process ends with ExitRestart
 // two seconds later.
 //
 // The swap works in the running binary's own folder (os.Executable). On

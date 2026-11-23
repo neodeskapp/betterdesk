@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/agentreleases"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/agentreleases"
 )
 
 const (

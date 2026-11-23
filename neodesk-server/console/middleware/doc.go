@@ -46,9 +46,9 @@
 //     (NODE_ENV=production). The uploads folder is DATA_DIR/uploads and
 //     has to exist; the console creates it at start.
 //   - MarkAPICompression: a function that is true for requests the
-//     RustDesk client API routes and the device API router under /api/bd
+//     RustDesk client API routes and the device API router under /api/nd
 //     answer. Those routers sit before step 17, so their answers were
-//     never compressed. Admin routes that are also mounted under /api/bd
+//     never compressed. Admin routes that are also mounted under /api/nd
 //     come later and are compressed.
 package middleware
 

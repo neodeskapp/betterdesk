@@ -59,7 +59,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -83,7 +83,7 @@
        "allow_unattended": true,
        "api_port": "21114",
        "api_server": "http://Desk.Example.com:21114",
-       "app_name": "BetterDesk Support Agent",
+       "app_name": "NeoDesk Support Agent",
        "autostart": true,
        "background_color": "#ffffff",
        "capabilities": {
@@ -94,7 +94,7 @@
         "restart": true,
         "terminal": true
        },
-       "company_name": "BetterDesk Support Agent",
+       "company_name": "NeoDesk Support Agent",
        "contact_email": "help@example.com",
        "contact_phone": "+49 30 1",
        "contact_url": "https://example.com/help",

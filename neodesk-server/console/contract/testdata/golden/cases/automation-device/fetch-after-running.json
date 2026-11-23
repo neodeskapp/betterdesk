@@ -2,7 +2,7 @@
  "id": "automation-device/fetch-after-running",
  "request": {
   "method": "GET",
-  "path": "/api/bd/commands",
+  "path": "/api/nd/commands",
   "notes": [
    "header Authorization: Bearer {secret:device_token_other}",
    "no CSRF token",

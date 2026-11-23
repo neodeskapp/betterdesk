@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
-	"github.com/unitronix/betterdesk-server/guestaccess"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/guestaccess"
 )
 
 // lastUseAPI is the API server for a link with max_uses 1: good until its

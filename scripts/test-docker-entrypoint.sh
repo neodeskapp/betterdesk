@@ -19,12 +19,12 @@ test_dsn_for_log_drops_credentials() (
     # shellcheck source=/dev/null
     . "$SCRIPT_ROOT/docker/dsn.sh"
     local got
-    got=$(dsn_for_log 'postgres://bdesk:S3cr3tPw@postgres:5432/betterdesk?sslmode=disable')
-    [ "$got" = 'postgres://postgres:5432/betterdesk' ] || fail "dsn_for_log gave '$got'"
+    got=$(dsn_for_log 'postgres://bdesk:S3cr3tPw@postgres:5432/neodesk?sslmode=disable')
+    [ "$got" = 'postgres://postgres:5432/neodesk' ] || fail "dsn_for_log gave '$got'"
     got=$(dsn_for_log 'postgresql://bdesk:p@ss:w0rd@db.example.net/bd')
     [ "$got" = 'postgresql://db.example.net/bd' ] || fail "a password with @ and : gave '$got'"
-    got=$(dsn_for_log 'postgres://bdesk@db:5432/betterdesk?password=Hunter2')
-    [ "$got" = 'postgres://db:5432/betterdesk' ] || fail "a password in the query gave '$got'"
+    got=$(dsn_for_log 'postgres://bdesk@db:5432/neodesk?password=Hunter2')
+    [ "$got" = 'postgres://db:5432/neodesk' ] || fail "a password in the query gave '$got'"
     got=$(dsn_for_log 'host=db user=bdesk password=Hunter2')
     case "$got" in *Hunter2*|*bdesk*) fail "a key=value DSN gave '$got'" ;; esac
     got=$(dsn_for_log '/opt/rustdesk/db_v2.sqlite3')
@@ -40,7 +40,7 @@ test_dsn_for_log_drops_credentials() (
 test_scripts_print_no_raw_dsn() (
     local hits
     hits=$(grep -nE '(echo|printf).*\$\{?(DATABASE_URL|DB_URL|POSTGRESQL_URI|POSTGRESQL_PASS|POSTGRES_PASSWORD|PG_PASSWORD)' \
-        "$SCRIPT_ROOT"/docker/*.sh "$SCRIPT_ROOT/betterdesk-docker.sh" | grep -v 'dsn_for_log' || true)
+        "$SCRIPT_ROOT"/docker/*.sh "$SCRIPT_ROOT/neodesk-docker.sh" | grep -v 'dsn_for_log' || true)
     [ -z "$hits" ] || fail "a script prints a database address or password: $hits"
 )
 
@@ -69,7 +69,7 @@ test_enrollment_mode_is_not_forced() (
 # nothing and follows releases; every compose file says which one is which.
 test_quick_compose_pulls_the_published_image() (
     local quick="$SCRIPT_ROOT/docker-compose.quick.single.yml" f other
-    grep -q 'image: ghcr.io/neodeskapp/betterdesk:${BETTERDESK_IMAGE_TAG:-latest}' "$quick" || fail "docker-compose.quick.single.yml does not run ghcr.io/neodeskapp/betterdesk:latest"
+    grep -q 'image: ghcr.io/neodeskapp/neodesk:${NEODESK_IMAGE_TAG:-latest}' "$quick" || fail "docker-compose.quick.single.yml does not run ghcr.io/neodeskapp/neodesk:latest"
     if grep -qE '^[[:space:]]+build:' "$quick"; then fail "docker-compose.quick.single.yml builds an image"; fi
     if grep -qE 'pull_policy:[[:space:]]*never' "$quick"; then fail "docker-compose.quick.single.yml never pulls"; fi
     for f in "$SCRIPT_ROOT"/docker-compose*.yml; do
@@ -102,7 +102,7 @@ test_compose_reads_env_file() (
         grep -A2 -E '^[[:space:]]+env_file:' "$f" | grep -qE 'required: false' || fail "$(basename "$f") needs a .env to start"
     done
     for f in docker-compose.quick.single.yml docker-compose.single.yml; do
-        grep -qF '"${BETTERDESK_CONSOLE_BIND:-0.0.0.0}:${BETTERDESK_CONSOLE_PORT:-5000}:5000"' "$SCRIPT_ROOT/$f" || fail "$f fixes the console's bind address"
+        grep -qF '"${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_PORT:-5000}:5000"' "$SCRIPT_ROOT/$f" || fail "$f fixes the console's bind address"
     done
 )
 
@@ -130,9 +130,9 @@ STUB
     if PATH="$dir:$PATH" CONSOLE_PORT=0 sh "$SCRIPT_ROOT/docker/healthcheck.sh"; then fail "healthy without the API"; fi
     rm -rf "$dir"
     for out in Dockerfile Dockerfile.server; do
-        grep -qE '^[[:space:]]+CMD /usr/local/bin/betterdesk-healthcheck' "$SCRIPT_ROOT/$out" || fail "$out does not use the health check script"
-        grep -q 'COPY docker/healthcheck.sh /usr/local/bin/betterdesk-healthcheck' "$SCRIPT_ROOT/$out" || fail "$out does not copy the health check script"
-        grep -qE '^RUN chmod [+]x .*/usr/local/bin/betterdesk-healthcheck' "$SCRIPT_ROOT/$out" || fail "$out does not make the health check script executable"
+        grep -qE '^[[:space:]]+CMD /usr/local/bin/neodesk-healthcheck' "$SCRIPT_ROOT/$out" || fail "$out does not use the health check script"
+        grep -q 'COPY docker/healthcheck.sh /usr/local/bin/neodesk-healthcheck' "$SCRIPT_ROOT/$out" || fail "$out does not copy the health check script"
+        grep -qE '^RUN chmod [+]x .*/usr/local/bin/neodesk-healthcheck' "$SCRIPT_ROOT/$out" || fail "$out does not make the health check script executable"
     done
     for out in "$SCRIPT_ROOT"/docker-compose*.yml; do
         if grep -A1 -E '^[[:space:]]+healthcheck:' "$out" | grep -q 'curl'; then fail "$(basename "$out") checks health with plain curl"; fi
@@ -146,20 +146,20 @@ STUB
 test_image_binary_knows_its_build() (
     local df
     for df in Dockerfile Dockerfile.server; do
-        grep -qF -- '-X main.Commit=${BETTERDESK_COMMIT_SHA}' "$SCRIPT_ROOT/$df" || fail "$df builds without the commit"
+        grep -qF -- '-X main.Commit=${NEODESK_COMMIT_SHA}' "$SCRIPT_ROOT/$df" || fail "$df builds without the commit"
         grep -qF -- '-X main.BuildDate=${built}' "$SCRIPT_ROOT/$df" || fail "$df builds without the build date"
-        grep -qF -- 'version="${BETTERDESK_PRODUCT_VERSION:-$(tr -d' "$SCRIPT_ROOT/$df" || fail "$df does not take the version from VERSION"
+        grep -qF -- 'version="${NEODESK_PRODUCT_VERSION:-$(tr -d' "$SCRIPT_ROOT/$df" || fail "$df does not take the version from VERSION"
     done
-    grep -qE '^[[:space:]]+BETTERDESK_COMMIT_SHA: \$\{BETTERDESK_COMMIT_SHA:-\}' "$SCRIPT_ROOT/docker-compose.single.yml" \
+    grep -qE '^[[:space:]]+NEODESK_COMMIT_SHA: \$\{NEODESK_COMMIT_SHA:-\}' "$SCRIPT_ROOT/docker-compose.single.yml" \
         || fail "docker-compose.single.yml does not pass the commit to the build"
 )
 
-# L78: the credentials command's hints name the compose service betterdesk.
+# L78: the credentials command's hints name the compose service neodesk.
 test_credentials_hint_names_the_service() (
     if grep -q 'logs server' "$SCRIPT_ROOT/docker/show-admin-credentials.sh"; then
         fail "show-admin-credentials.sh points at a service called server"
     fi
-    grep -q 'docker compose logs betterdesk' "$SCRIPT_ROOT/docker/show-admin-credentials.sh" || fail "show-admin-credentials.sh does not point at docker compose logs betterdesk"
+    grep -q 'docker compose logs neodesk' "$SCRIPT_ROOT/docker/show-admin-credentials.sh" || fail "show-admin-credentials.sh does not point at docker compose logs neodesk"
 )
 
 # L77: after the console removed the first password (it leaves
@@ -187,7 +187,7 @@ test_remote_targets_work_out_of_the_box() (
     grep -q 'VAULT_KEY_FILE="/opt/rustdesk/.remote_target_vault_key"' "$ep" || fail "the entrypoint keeps no vault key in the volume"
     grep -q 'export REMOTE_TARGET_VAULT_KEY' "$ep" || fail "the entrypoint does not pass the vault key to the server"
     if grep -nE '^[^#]*echo.*\$\{?REMOTE_TARGET_VAULT_KEY' "$ep"; then fail "the entrypoint prints the vault key"; fi
-    sed -n '/^  guacd:/,/^  [a-z]/p' "$quick" | grep -q 'network_mode: "service:betterdesk"' || fail "guacd does not share the container's network"
+    sed -n '/^  guacd:/,/^  [a-z]/p' "$quick" | grep -q 'network_mode: "service:neodesk"' || fail "guacd does not share the container's network"
     sed -n '/^  guacd:/,/^  [a-z]/p' "$quick" | grep -qE '^ +- guacd$' || fail "guacd is not an optional service (profile guacd)"
 )
 

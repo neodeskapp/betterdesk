@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/crypto"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/peer"
-	pb "github.com/unitronix/betterdesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 	"google.golang.org/protobuf/proto"
 )
 

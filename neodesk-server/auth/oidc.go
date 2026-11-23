@@ -1,4 +1,4 @@
-// Package auth — OIDC/OAuth2 authentication provider for BetterDesk server.
+// Package auth — OIDC/OAuth2 authentication provider for NeoDesk server.
 //
 // Supports OpenID Connect Authorization Code Flow with:
 //   - Auto-discovery via .well-known/openid-configuration
@@ -38,8 +38,8 @@ type OIDCConfig struct {
 	IssuerURL           string `json:"issuer_url"`            // e.g. "https://accounts.google.com"
 	ClientID            string `json:"client_id"`             // OAuth2 client ID
 	ClientSecret        string `json:"client_secret"`         // OAuth2 client secret
-	RedirectURL         string `json:"redirect_url"`          // e.g. "https://betterdesk.example.com/api/auth/oidc/callback"
-	PanelURL            string `json:"panel_url"`             // e.g. "https://betterdesk.example.com" (Node console origin)
+	RedirectURL         string `json:"redirect_url"`          // e.g. "https://neodesk.example.com/api/auth/oidc/callback"
+	PanelURL            string `json:"panel_url"`             // e.g. "https://neodesk.example.com" (Node console origin)
 	Scopes              string `json:"scopes"`                // space-separated, default "openid profile email"
 	UsePKCE             bool   `json:"use_pkce"`              // enable PKCE (S256)
 	AutoDiscovery       bool   `json:"auto_discovery"`        // use .well-known/openid-configuration
@@ -800,7 +800,7 @@ func (p *OIDCProvider) fetchUserInfo(ctx context.Context, accessToken string) (m
 	return claims, nil
 }
 
-// resolveRole maps OIDC groups to a BetterDesk role using the configured group-role map.
+// resolveRole maps OIDC groups to a NeoDesk role using the configured group-role map.
 func (p *OIDCProvider) resolveRole(groups []string) string {
 	role, _ := p.resolveRoleWithSource(groups)
 	return role

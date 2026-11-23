@@ -28,7 +28,7 @@ MARKER_RE = re.compile(
 )
 COMPONENT_KEYS = ("client", "server_oss")
 # The checklist a review issue links to
-CHECKLIST_URL = "https://betterde.sk/docs/development/rustdesk-compatibility#the-checklist-for-a-new-rustdesk-release"
+CHECKLIST_URL = "https://neode.sk/docs/development/rustdesk-compatibility#the-checklist-for-a-new-rustdesk-release"
 
 
 class WatchError(RuntimeError):
@@ -36,7 +36,7 @@ class WatchError(RuntimeError):
 
 
 def request_json(url: str) -> Any:
-    headers = {"User-Agent": "BetterDesk-rustdesk-upstream-watch/1", "Accept": "application/vnd.github+json"}
+    headers = {"User-Agent": "NeoDesk-rustdesk-upstream-watch/1", "Accept": "application/vnd.github+json"}
     token = os.environ.get("GITHUB_TOKEN", "").strip() or os.environ.get("GH_TOKEN", "").strip()
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -154,7 +154,7 @@ def ensure_labels(labels: list[str]) -> None:
                 "--color",
                 color,
                 "--description",
-                "RustDesk / BetterDesk compatibility tracking",
+                "RustDesk / NeoDesk compatibility tracking",
             ],
             check=False,
         )
@@ -213,7 +213,7 @@ def build_issue_body(
     title_component = "client" if component_id == "client" else "OSS server"
     return f"""## RustDesk upstream watch
 
-New **{title_component}** release needs a BetterDesk compatibility review.
+New **{title_component}** release needs a NeoDesk compatibility review.
 
 - Repository: `{repository}`
 - Tag: `{tag}`
@@ -231,13 +231,13 @@ Follow [the compatibility checklist]({checklist_url}) end-to-end (manual lab + c
 - [ ] Relay host:port + TLS/WSS
 - [ ] Client API: login, AB, heartbeat, strategy/options (locked keys)
 - [ ] Session smoke: remote, clipboard, files, terminal
-- [ ] Proto drift vs BetterDesk canonical schemas (diff only, no AGPL import)
+- [ ] Proto drift vs NeoDesk canonical schemas (diff only, no AGPL import)
 - [ ] Update `config/rustdesk-upstream-watch.json` → `last_reviewed_tag` for `{component_id}`
 - [ ] Findings for `{tag}` recorded in this issue
 
 ### Notes
 
-- BetterDesk ships clean-room `betterdesk-server` (not AGPL `rustdesk-server`).
+- NeoDesk ships clean-room `neodesk-server` (not AGPL `rustdesk-server`).
 - Do **not** auto-close this issue; leave closing to the operator.
 - Stock RustDesk GUI binaries stay out of CI — lab verification is manual.
 """
@@ -254,7 +254,7 @@ def create_review_issue(
     dry_run: bool,
 ) -> None:
     title_component = "client" if component_id == "client" else "OSS server"
-    title = f"compat: review RustDesk {title_component} {tag} vs BetterDesk"
+    title = f"compat: review RustDesk {title_component} {tag} vs NeoDesk"
     body = build_issue_body(
         component_id=component_id,
         repository=repository,

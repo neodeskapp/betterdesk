@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/crypto"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 func startLimitTestServer(t *testing.T, signalPort int, configure func(*Server)) *Server {

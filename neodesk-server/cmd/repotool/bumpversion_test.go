@@ -13,18 +13,18 @@ import (
 // the shapes the real files have.
 func versionTree(v string) map[string]string {
 	return map[string]string{
-		"VERSION":                   v + "\n",
-		"betterdesk.sh":             "#!/bin/bash\n#   BetterDesk Console Manager v" + v + "\nVERSION=\"" + v + "\"\necho \"BetterDesk Console Manager v$VERSION\"\n",
-		"betterdesk.ps1":            "<#\n    BetterDesk Console Manager v" + v + " - All-in-One\n#>\n$script:VERSION = \"" + v + "\"\n",
-		"betterdesk-docker.sh":      "#   BetterDesk Console Manager v" + v + " (Docker)\nVERSION=\"" + v + "\"\n",
-		"Dockerfile":                "FROM alpine\nLABEL version=\"" + v + "\"\n",
-		"Dockerfile.server":         "FROM alpine\nLABEL version=\"" + v + "\"\n",
-		"install.sh":                "#   --version TAG   Docker image tag / release baseline (default: " + v + ")\nBETTERDESK_VERSION=\"${BETTERDESK_VERSION:-" + v + "}\"\n",
-		"docker/entrypoint.sh":      "echo \"  Version: ${BETTERDESK_IMAGE_VERSION:-" + v + "}\"\n",
-		"betterdesk-server/VERSION": v + "\n",
-		"betterdesk-server/internal/productversion/VERSION": v + "\n",
+		"VERSION":                v + "\n",
+		"neodesk.sh":             "#!/bin/bash\n#   NeoDesk Console Manager v" + v + "\nVERSION=\"" + v + "\"\necho \"NeoDesk Console Manager v$VERSION\"\n",
+		"neodesk.ps1":            "<#\n    NeoDesk Console Manager v" + v + " - All-in-One\n#>\n$script:VERSION = \"" + v + "\"\n",
+		"neodesk-docker.sh":      "#   NeoDesk Console Manager v" + v + " (Docker)\nVERSION=\"" + v + "\"\n",
+		"Dockerfile":             "FROM alpine\nLABEL version=\"" + v + "\"\n",
+		"Dockerfile.server":      "FROM alpine\nLABEL version=\"" + v + "\"\n",
+		"install.sh":             "#   --version TAG   Docker image tag / release baseline (default: " + v + ")\nNEODESK_VERSION=\"${NEODESK_VERSION:-" + v + "}\"\n",
+		"docker/entrypoint.sh":   "echo \"  Version: ${NEODESK_IMAGE_VERSION:-" + v + "}\"\n",
+		"neodesk-server/VERSION": v + "\n",
+		"neodesk-server/internal/productversion/VERSION": v + "\n",
 		"CHANGELOG.md": "## [Unreleased]\n\n### Changed\n- _(none yet)_\n\n---\n\n## [" + v + "] — 2026-11-21\n\n- x\n\n" +
-			"[" + v + "]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.269...v" + v + "\n",
+			"[" + v + "]: https://github.com/neodeskapp/neodesk/compare/v3.5.269...v" + v + "\n",
 	}
 }
 
@@ -62,20 +62,20 @@ func TestBumpVersionVerify(t *testing.T) {
 	runCommand(bumpVersion, root, "--verify").want(t, 0, "All Tier 1/2 version files match VERSION (3.5.270).\n", "")
 
 	writeTree(t, root, map[string]string{
-		"Dockerfile":                "LABEL version=\"3.5.1\"\n",
-		"betterdesk.ps1":            "$script:VERSION = \"3.5.2\"\n",
-		"betterdesk-docker.sh":      "  VERSION=\"3.5.3\"\n",
-		"betterdesk-server/VERSION": "  3.5.270 \n",
+		"Dockerfile":             "LABEL version=\"3.5.1\"\n",
+		"neodesk.ps1":            "$script:VERSION = \"3.5.2\"\n",
+		"neodesk-docker.sh":      "  VERSION=\"3.5.3\"\n",
+		"neodesk-server/VERSION": "  3.5.270 \n",
 		// README.md and the quick-start compose files are not version files
 		"README.md":                       "img.shields.io/badge/version-1.0.0-blue",
-		"docker-compose.quick.single.yml": "image: x:${BETTERDESK_IMAGE_TAG:-latest}\n",
+		"docker-compose.quick.single.yml": "image: x:${NEODESK_IMAGE_TAG:-latest}\n",
 	})
 	if err := os.Remove(filepath.Join(root, "install.sh")); err != nil {
 		t.Fatal(err)
 	}
 	runBump(root, nil, "--verify").want(t, 1, "", "Version mismatch detected (canonical VERSION = 3.5.270):\n"+
-		"  - betterdesk.ps1: expected 3.5.270, got 3.5.2\n"+
-		"  - betterdesk-docker.sh: expected 3.5.270, got (not found)\n"+
+		"  - neodesk.ps1: expected 3.5.270, got 3.5.2\n"+
+		"  - neodesk-docker.sh: expected 3.5.270, got (not found)\n"+
 		"  - Dockerfile: expected 3.5.270, got 3.5.1\n"+
 		"  - install.sh: expected 3.5.270, got (missing file)\n")
 }
@@ -84,16 +84,16 @@ func TestBumpVersionPatch(t *testing.T) {
 	root := t.TempDir()
 	writeTree(t, root, versionTree("3.5.270"))
 	runBump(root, nil, "--patch").want(t, 0, "Version 3.5.270 → 3.5.271\nUpdated files:\n"+
-		"  - VERSION\n  - betterdesk.sh\n  - betterdesk.ps1\n  - betterdesk-docker.sh\n  - Dockerfile\n  - Dockerfile.server\n"+
-		"  - install.sh\n  - docker/entrypoint.sh\n  - betterdesk-server/VERSION\n  - betterdesk-server/internal/productversion/VERSION\n"+
+		"  - VERSION\n  - neodesk.sh\n  - neodesk.ps1\n  - neodesk-docker.sh\n  - Dockerfile\n  - Dockerfile.server\n"+
+		"  - install.sh\n  - docker/entrypoint.sh\n  - neodesk-server/VERSION\n  - neodesk-server/internal/productversion/VERSION\n"+
 		"  - CHANGELOG.md\n", "")
 	got := readTree(t, root)
 	want := versionTree("3.5.271")
 	// The changelog's new section has today's date (UTC) and the compare link
 	want["CHANGELOG.md"] = "## [Unreleased]\n\n### Changed\n- _(none yet)_\n\n---\n\n" +
 		"## [3.5.271] — 2026-11-22\n\n### Changed\n- _(none yet)_\n\n---\n\n## [3.5.270] — 2026-11-21\n\n- x\n\n" +
-		"[3.5.270]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.269...v3.5.270\n" +
-		"[3.5.271]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.270...v3.5.271\n"
+		"[3.5.270]: https://github.com/neodeskapp/neodesk/compare/v3.5.269...v3.5.270\n" +
+		"[3.5.271]: https://github.com/neodeskapp/neodesk/compare/v3.5.270...v3.5.271\n"
 	for name, text := range want {
 		if got[name] != text {
 			t.Errorf("%s:\n%q\nwant:\n%q", name, got[name], text)
@@ -119,20 +119,20 @@ func TestBumpVersionManagerScripts(t *testing.T) {
 	tree := versionTree("3.5.270")
 	// Every version line and banner of a manager script changes; only the
 	// first label, default and image version of the others do
-	tree["betterdesk.sh"] = "VERSION=\"3.5.270\"\nVERSION=\"3.5.270\"\n# BetterDesk Console Manager v3.5.270 x Console Manager v3.5.270\n"
+	tree["neodesk.sh"] = "VERSION=\"3.5.270\"\nVERSION=\"3.5.270\"\n# NeoDesk Console Manager v3.5.270 x Console Manager v3.5.270\n"
 	tree["Dockerfile"] = "LABEL version=\"3.5.270\"\nLABEL version=\"3.5.270\"\n"
-	tree["install.sh"] = "#   --version TAG  Docker image tag / release baseline (default: 3.5.270)\nBETTERDESK_VERSION=\"${BETTERDESK_VERSION:-3.5.270}\"\nBETTERDESK_VERSION=\"${BETTERDESK_VERSION:-3.5.270}\"\n"
-	tree["docker/entrypoint.sh"] = "a ${BETTERDESK_IMAGE_VERSION:-3.5.270} b ${BETTERDESK_IMAGE_VERSION:-3.5.270}\n"
+	tree["install.sh"] = "#   --version TAG  Docker image tag / release baseline (default: 3.5.270)\nNEODESK_VERSION=\"${NEODESK_VERSION:-3.5.270}\"\nNEODESK_VERSION=\"${NEODESK_VERSION:-3.5.270}\"\n"
+	tree["docker/entrypoint.sh"] = "a ${NEODESK_IMAGE_VERSION:-3.5.270} b ${NEODESK_IMAGE_VERSION:-3.5.270}\n"
 	writeTree(t, root, tree)
 	if r := runBump(root, nil, "--set", "4.0.0"); r.code != 0 {
 		t.Fatalf("got %+v", r)
 	}
 	got := readTree(t, root)
 	for name, want := range map[string]string{
-		"betterdesk.sh":        "VERSION=\"4.0.0\"\nVERSION=\"4.0.0\"\n# BetterDesk Console Manager v4.0.0 x Console Manager v3.5.270\n",
+		"neodesk.sh":           "VERSION=\"4.0.0\"\nVERSION=\"4.0.0\"\n# NeoDesk Console Manager v4.0.0 x Console Manager v3.5.270\n",
 		"Dockerfile":           "LABEL version=\"4.0.0\"\nLABEL version=\"3.5.270\"\n",
-		"install.sh":           "#   --version TAG  Docker image tag / release baseline (default: 4.0.0)\nBETTERDESK_VERSION=\"${BETTERDESK_VERSION:-4.0.0}\"\nBETTERDESK_VERSION=\"${BETTERDESK_VERSION:-3.5.270}\"\n",
-		"docker/entrypoint.sh": "a ${BETTERDESK_IMAGE_VERSION:-4.0.0} b ${BETTERDESK_IMAGE_VERSION:-3.5.270}\n",
+		"install.sh":           "#   --version TAG  Docker image tag / release baseline (default: 4.0.0)\nNEODESK_VERSION=\"${NEODESK_VERSION:-4.0.0}\"\nNEODESK_VERSION=\"${NEODESK_VERSION:-3.5.270}\"\n",
+		"docker/entrypoint.sh": "a ${NEODESK_IMAGE_VERSION:-4.0.0} b ${NEODESK_IMAGE_VERSION:-3.5.270}\n",
 	} {
 		if got[name] != want {
 			t.Errorf("%s:\n%q\nwant:\n%q", name, got[name], want)
@@ -145,23 +145,23 @@ func TestBumpVersionSync(t *testing.T) {
 	writeTree(t, root, versionTree("3.5.270"))
 	runBump(root, nil, "--sync").want(t, 0, "All Tier 1/2 files already match VERSION (3.5.270).\n", "")
 
-	writeTree(t, root, map[string]string{"Dockerfile": "LABEL version=\"3.5.1\"\n", "betterdesk-server/VERSION": "  3.5.270 \n"})
-	runBump(root, nil, "--sync", "--dry-run").want(t, 0, "[dry-run] Synced drifted files to VERSION (3.5.270):\n  - Dockerfile\n  - betterdesk-server/VERSION\n", "")
+	writeTree(t, root, map[string]string{"Dockerfile": "LABEL version=\"3.5.1\"\n", "neodesk-server/VERSION": "  3.5.270 \n"})
+	runBump(root, nil, "--sync", "--dry-run").want(t, 0, "[dry-run] Synced drifted files to VERSION (3.5.270):\n  - Dockerfile\n  - neodesk-server/VERSION\n", "")
 	if got := readTree(t, root)["Dockerfile"]; got != "LABEL version=\"3.5.1\"\n" {
 		t.Errorf("a dry run wrote %q", got)
 	}
-	runBump(root, nil, "--sync").want(t, 0, "Synced drifted files to VERSION (3.5.270):\n  - Dockerfile\n  - betterdesk-server/VERSION\n", "")
+	runBump(root, nil, "--sync").want(t, 0, "Synced drifted files to VERSION (3.5.270):\n  - Dockerfile\n  - neodesk-server/VERSION\n", "")
 	got := readTree(t, root)
-	if got["Dockerfile"] != "LABEL version=\"3.5.270\"\n" || got["betterdesk-server/VERSION"] != "3.5.270\n" || got["CHANGELOG.md"] != versionTree("3.5.270")["CHANGELOG.md"] {
-		t.Errorf("synced: %q %q", got["Dockerfile"], got["betterdesk-server/VERSION"])
+	if got["Dockerfile"] != "LABEL version=\"3.5.270\"\n" || got["neodesk-server/VERSION"] != "3.5.270\n" || got["CHANGELOG.md"] != versionTree("3.5.270")["CHANGELOG.md"] {
+		t.Errorf("synced: %q %q", got["Dockerfile"], got["neodesk-server/VERSION"])
 	}
 }
 
 func TestBumpVersionArguments(t *testing.T) {
 	root := t.TempDir()
 	writeTree(t, root, versionTree("3.5.270"))
-	runBump(root, nil, "--list-paths", "--verify").want(t, 0, "VERSION\nbetterdesk.sh\nbetterdesk.ps1\nbetterdesk-docker.sh\nDockerfile\nDockerfile.server\n"+
-		"install.sh\ndocker/entrypoint.sh\nbetterdesk-server/VERSION\nbetterdesk-server/internal/productversion/VERSION\nCHANGELOG.md\n", "")
+	runBump(root, nil, "--list-paths", "--verify").want(t, 0, "VERSION\nneodesk.sh\nneodesk.ps1\nneodesk-docker.sh\nDockerfile\nDockerfile.server\n"+
+		"install.sh\ndocker/entrypoint.sh\nneodesk-server/VERSION\nneodesk-server/internal/productversion/VERSION\nCHANGELOG.md\n", "")
 	runBump(root, nil, "--set", "4.0").want(t, 1, "", "Invalid --set version (expected X.Y.Z or X.Y.Z-suffix): 4.0\n")
 	runBump(root, nil, "--set", "4.0.0-").want(t, 1, "", "Invalid --set version (expected X.Y.Z or X.Y.Z-suffix): 4.0.0-\n")
 	runBump(root, nil, "--set").want(t, 1, bumpUsage, "")
@@ -193,7 +193,7 @@ func TestBumpVersionReleaseCandidate(t *testing.T) {
 		}
 	}
 	if !strings.Contains(got["CHANGELOG.md"], "## [3.6.0-rc.1] — 2026-11-22") ||
-		!strings.HasSuffix(got["CHANGELOG.md"], "[3.6.0-rc.1]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.272...v3.6.0-rc.1\n") {
+		!strings.HasSuffix(got["CHANGELOG.md"], "[3.6.0-rc.1]: https://github.com/neodeskapp/neodesk/compare/v3.5.272...v3.6.0-rc.1\n") {
 		t.Errorf("changelog:\n%s", got["CHANGELOG.md"])
 	}
 	runBump(root, nil, "--verify").want(t, 0, "All Tier 1/2 version files match VERSION (3.6.0-rc.1).\n", "")
@@ -213,7 +213,7 @@ func TestBumpVersionChangelog(t *testing.T) {
 		"no unreleased section": {
 			"# Changelog\n\n## [3.5.270] — 2026-11-21\n- x\n\n\n  \n",
 			"## [Unreleased]\n\n### Changed\n- _(none yet)_\n\n---\n\n## [3.5.271] — 2026-11-22\n\n### Changed\n- Version bump to 3.5.271.\n\n---\n\n# Changelog\n\n## [3.5.270] — 2026-11-21\n- x\n" +
-				"[3.5.271]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.270...v3.5.271\n",
+				"[3.5.271]: https://github.com/neodeskapp/neodesk/compare/v3.5.270...v3.5.271\n",
 		},
 		"the section exists": {
 			"## [Unreleased]\n\n## [3.5.271] — 2026-11-22\n",

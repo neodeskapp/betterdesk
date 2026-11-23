@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/session/cookie"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session/cookie"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // signedByHand is the signed cookie value for a session id, computed
@@ -32,18 +32,18 @@ func signedByHand(sid string) string {
 func FuzzCookieValue(f *testing.F) {
 	const victim = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
 	for _, v := range signVectors {
-		f.Add("bd.sid=" + v.wire)
-		f.Add("bd.sid=" + v.signed)
-		f.Add("a=b; bd.sid=" + v.wire[:len(v.wire)-1])
+		f.Add("nd.sid=" + v.wire)
+		f.Add("nd.sid=" + v.signed)
+		f.Add("a=b; nd.sid=" + v.wire[:len(v.wire)-1])
 	}
-	f.Add("bd.sid=s%3A" + victim + ".")
-	f.Add("bd.sid=s%3A" + victim)
-	f.Add("bd.sid=" + victim)
-	f.Add("bd.sid=s%3A.47DEQpj8HBSa%2B%2FTImW%2B5JCeuQeRkm5NMpJWZG3hSuFU")
-	f.Add("bd.sid=s:%zz; bd.sid=" + signVectors[0].wire)
-	f.Add(`bd.sid="` + signVectors[0].signed + `"`)
-	f.Add("bd.sid=s%3A" + victim + ".Qb%2FrWF8%2BjkBOBM6RtELK7KYpNGwASfnZPgGVN%2BFmpz4%3D")
-	f.Add("betterdesk.sid=" + signVectors[0].wire)
+	f.Add("nd.sid=s%3A" + victim + ".")
+	f.Add("nd.sid=s%3A" + victim)
+	f.Add("nd.sid=" + victim)
+	f.Add("nd.sid=s%3A.47DEQpj8HBSa%2B%2FTImW%2B5JCeuQeRkm5NMpJWZG3hSuFU")
+	f.Add("nd.sid=s:%zz; nd.sid=" + signVectors[0].wire)
+	f.Add(`nd.sid="` + signVectors[0].signed + `"`)
+	f.Add("nd.sid=s%3A" + victim + ".Qb%2FrWF8%2BjkBOBM6RtELK7KYpNGwASfnZPgGVN%2BFmpz4%3D")
+	f.Add("neodesk.sid=" + signVectors[0].wire)
 
 	db, err := store.OpenSQLite(filepath.Join(f.TempDir(), "fuzz.sqlite3"))
 	if err != nil {
@@ -68,9 +68,9 @@ func FuzzCookieValue(f *testing.F) {
 	f.Fuzz(func(t *testing.T, header string) {
 		r := httptest.NewRequest(http.MethodGet, "/", nil)
 		r.Header["Cookie"] = []string{header}
-		r.Header.Set("X-BD-Background", "1")
+		r.Header.Set("X-ND-Background", "1")
 
-		value, found := cookie.Lookup(header, "bd.sid")
+		value, found := cookie.Lookup(header, "nd.sid")
 		id, ok := m.cookieID(r)
 		if ok {
 			if !found || id == "" || value != signedByHand(id) {

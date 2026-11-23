@@ -42,7 +42,7 @@ type ConsolePeerSysinfo struct {
 	Version  string
 }
 
-// OpenConsoleAuth opens auth.db read-only (shared with BetterDesk Console).
+// OpenConsoleAuth opens auth.db read-only (shared with NeoDesk Console).
 func OpenConsoleAuth(path string) (*ConsoleAuthDB, error) {
 	if strings.TrimSpace(path) == "" {
 		return nil, fmt.Errorf("console auth path is empty")

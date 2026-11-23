@@ -340,7 +340,7 @@
       },
       "headers": {
        "Origin": "https://evil.example",
-       "Cookie": "bd.sid=x"
+       "Cookie": "nd.sid=x"
       }
      },
      "events": [
@@ -367,7 +367,7 @@
        }
       },
       "headers": {
-       "Cookie": "bd.sid=x"
+       "Cookie": "nd.sid=x"
       }
      },
      "events": [
@@ -571,7 +571,7 @@
       "open": "r",
       "path": "/ws/rendezvous?peer_id=TARGET01&guest_session=s",
       "headers": {
-       "Cookie": "bd.guest=tok-invalid"
+       "Cookie": "nd.guest=tok-invalid"
       }
      },
      "events": [
@@ -601,7 +601,7 @@
       "open": "s",
       "path": "/ws/rendezvous?peer_id=TARGET01&guest_session=s",
       "headers": {
-       "Cookie": "bd.guest=%E0%A4%A; betterdesk.guest=tok-invalid"
+       "Cookie": "nd.guest=%E0%A4%A; neodesk.guest=tok-invalid"
       }
      },
      "events": [
@@ -620,7 +620,7 @@
       "open": "t",
       "path": "/ws/rendezvous?peer_id=TARGET01&guest_session=s",
       "headers": {
-       "Cookie": "bd.guest=; betterdesk.guest=tok-invalid"
+       "Cookie": "nd.guest=; neodesk.guest=tok-invalid"
       }
      },
      "events": [
@@ -650,7 +650,7 @@
       "open": "u",
       "path": "/ws/rendezvous?peer_id=%20TARGET01%20&guest_session=s",
       "headers": {
-       "Cookie": "x=1;  bd.guest=%20tok-invalid%20 "
+       "Cookie": "x=1;  nd.guest=%20tok-invalid%20 "
       }
      },
      "events": [

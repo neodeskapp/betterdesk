@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start a seeded BetterDesk test instance on a CI runner, for the contract
+# Start a seeded NeoDesk test instance on a CI runner, for the contract
 # suite and the e2e tests. The instance is a container named bdgo-<name>
 # on the docker network bdgo, with the checkout at /repo and the server
 # and devseed from <bin dir>; instance.sh runs inside it.
@@ -21,7 +21,7 @@ case "$cmd" in
     start)
         bin="${3:?bin dir}"
         mkdir -p "$dir/secrets" "$dir/logs"
-        chmod +x "$bin/betterdesk-server" "$bin/devseed"
+        chmod +x "$bin/neodesk-server" "$bin/devseed"
         docker network inspect bdgo >/dev/null 2>&1 || docker network create bdgo >/dev/null
         # The console keeps its state in /repo/web-nodejs, a fresh tmpfs here
         # as in the local stack. The image is the base of the local stack's
@@ -34,7 +34,7 @@ case "$cmd" in
             ${UPDATE_GITHUB_TOKEN:+-e UPDATE_GITHUB_TOKEN} \
             -v "$GITHUB_WORKSPACE:/repo" --tmpfs /repo/web-nodejs:exec,mode=0755 \
             -v "$dir/secrets:/stack/secrets" -v "$dir/logs:/stack/logs" \
-            -v "$bin/betterdesk-server:/usr/local/bin/betterdesk-server:ro" \
+            -v "$bin/neodesk-server:/usr/local/bin/neodesk-server:ro" \
             -v "$bin/devseed:/usr/local/bin/devseed:ro" \
             node:22-bookworm-slim bash /repo/.github/test-stack/instance.sh >/dev/null
         echo "bdgo-$name started"

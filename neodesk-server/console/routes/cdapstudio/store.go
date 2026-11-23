@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // text is a text column. In JSON it is written the way the old console

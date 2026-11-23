@@ -2,14 +2,14 @@
  "cases": [
   {
    "name": "good",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "ok"
   },
   {
    "name": "good",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -22,7 +22,7 @@
   },
   {
    "name": "good",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -35,14 +35,14 @@
   },
   {
    "name": "good",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [],
    "result": "ok"
   },
   {
    "name": "good",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -55,7 +55,7 @@
   },
   {
    "name": "good",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -68,48 +68,15 @@
   },
   {
    "name": "schema",
-   "manifest": "{\"schema_version\":2,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":2,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_contract_invalid"
   },
   {
    "name": "schema",
-   "manifest": "{\"schema_version\":2,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":2,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": null,
-   "required": [
-    {
-     "platform": "windows",
-     "arch": "x64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_contract_invalid"
-  },
-  {
-   "name": "schema",
-   "manifest": "{\"schema_version\":2,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
-   "bundleCommit": null,
-   "required": [
-    {
-     "platform": "linux",
-     "arch": "arm64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_contract_invalid"
-  },
-  {
-   "name": "schema",
-   "manifest": "{\"schema_version\":2,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-   "required": [],
-   "result": "embedded_manifest_contract_invalid"
-  },
-  {
-   "name": "schema",
-   "manifest": "{\"schema_version\":2,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
      "platform": "windows",
@@ -121,7 +88,40 @@
   },
   {
    "name": "schema",
-   "manifest": "{\"schema_version\":2,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":2,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "bundleCommit": null,
+   "required": [
+    {
+     "platform": "linux",
+     "arch": "arm64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_contract_invalid"
+  },
+  {
+   "name": "schema",
+   "manifest": "{\"schema_version\":2,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [],
+   "result": "embedded_manifest_contract_invalid"
+  },
+  {
+   "name": "schema",
+   "manifest": "{\"schema_version\":2,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [
+    {
+     "platform": "windows",
+     "arch": "x64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_contract_invalid"
+  },
+  {
+   "name": "schema",
+   "manifest": "{\"schema_version\":2,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -200,14 +200,14 @@
   },
   {
    "name": "external",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":true,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":true,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_external_config"
   },
   {
    "name": "external",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":true,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":true,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -220,7 +220,7 @@
   },
   {
    "name": "external",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":true,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":true,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -233,14 +233,14 @@
   },
   {
    "name": "external",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":true,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":true,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [],
    "result": "embedded_manifest_external_config"
   },
   {
    "name": "external",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":true,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":true,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -253,7 +253,7 @@
   },
   {
    "name": "external",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":true,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":true,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -266,14 +266,14 @@
   },
   {
    "name": "external-missing",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_external_config"
   },
   {
    "name": "external-missing",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -286,7 +286,7 @@
   },
   {
    "name": "external-missing",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -299,14 +299,14 @@
   },
   {
    "name": "external-missing",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [],
    "result": "embedded_manifest_external_config"
   },
   {
    "name": "external-missing",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -319,7 +319,7 @@
   },
   {
    "name": "external-missing",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -332,14 +332,14 @@
   },
   {
    "name": "commit",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "ok"
   },
   {
    "name": "commit",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -352,7 +352,7 @@
   },
   {
    "name": "commit",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -365,14 +365,14 @@
   },
   {
    "name": "commit",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [],
    "result": "embedded_manifest_client_commit_mismatch"
   },
   {
    "name": "commit",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -385,7 +385,7 @@
   },
   {
    "name": "commit",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"},{\"name\":\"a-lin.deb\",\"platform\":\"linux\",\"arch\":\"x86_64\",\"format\":\"deb\",\"size\":3,\"sha256\":\"9cfa1468c93fc18652e34a000f0c6614b0fa18f6f4887477ad9b0d36ca6a7eaa\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -398,48 +398,15 @@
   },
   {
    "name": "no-assets",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_assets_missing"
   },
   {
    "name": "no-assets",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[]}",
    "bundleCommit": null,
-   "required": [
-    {
-     "platform": "windows",
-     "arch": "x64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_assets_missing"
-  },
-  {
-   "name": "no-assets",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[]}",
-   "bundleCommit": null,
-   "required": [
-    {
-     "platform": "linux",
-     "arch": "arm64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_assets_missing"
-  },
-  {
-   "name": "no-assets",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-   "required": [],
-   "result": "embedded_manifest_assets_missing"
-  },
-  {
-   "name": "no-assets",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
      "platform": "windows",
@@ -451,7 +418,40 @@
   },
   {
    "name": "no-assets",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[]}",
+   "bundleCommit": null,
+   "required": [
+    {
+     "platform": "linux",
+     "arch": "arm64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_assets_missing"
+  },
+  {
+   "name": "no-assets",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [],
+   "result": "embedded_manifest_assets_missing"
+  },
+  {
+   "name": "no-assets",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [
+    {
+     "platform": "windows",
+     "arch": "x64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_assets_missing"
+  },
+  {
+   "name": "no-assets",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -464,14 +464,14 @@
   },
   {
    "name": "assets-text",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":\"x\"}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":\"x\"}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_assets_missing"
   },
   {
    "name": "assets-text",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":\"x\"}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":\"x\"}",
    "bundleCommit": null,
    "required": [
     {
@@ -484,7 +484,7 @@
   },
   {
    "name": "assets-text",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":\"x\"}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":\"x\"}",
    "bundleCommit": null,
    "required": [
     {
@@ -497,14 +497,14 @@
   },
   {
    "name": "assets-text",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":\"x\"}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":\"x\"}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [],
    "result": "embedded_manifest_assets_missing"
   },
   {
    "name": "assets-text",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":\"x\"}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":\"x\"}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -517,7 +517,7 @@
   },
   {
    "name": "assets-text",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":\"x\"}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":\"x\"}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -530,14 +530,14 @@
   },
   {
    "name": "bad-name",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"../x.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"../x.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_asset_invalid"
   },
   {
    "name": "bad-name",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"../x.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"../x.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -550,7 +550,7 @@
   },
   {
    "name": "bad-name",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"../x.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"../x.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -563,14 +563,14 @@
   },
   {
    "name": "bad-name",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"../x.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"../x.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [],
    "result": "embedded_manifest_asset_invalid"
   },
   {
    "name": "bad-name",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"../x.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"../x.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -583,7 +583,7 @@
   },
   {
    "name": "bad-name",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"../x.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"../x.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -596,14 +596,14 @@
   },
   {
    "name": "dup-name",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_asset_invalid"
   },
   {
    "name": "dup-name",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -616,7 +616,7 @@
   },
   {
    "name": "dup-name",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -629,14 +629,14 @@
   },
   {
    "name": "dup-name",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [],
    "result": "embedded_manifest_asset_invalid"
   },
   {
    "name": "dup-name",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -649,7 +649,7 @@
   },
   {
    "name": "dup-name",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -662,14 +662,14 @@
   },
   {
    "name": "dup-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_asset_target_invalid:windows/x86_64/portable"
   },
   {
    "name": "dup-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -682,7 +682,7 @@
   },
   {
    "name": "dup-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -695,14 +695,14 @@
   },
   {
    "name": "dup-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [],
    "result": "embedded_manifest_asset_target_invalid:windows/x86_64/portable"
   },
   {
    "name": "dup-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -715,7 +715,7 @@
   },
   {
    "name": "dup-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"},{\"name\":\"a-lin.tar.gz\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":5,\"sha256\":\"caf90169eefa5f807d577486b9f795ab86ae2983c5c20806cff959117e90af18\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -728,14 +728,14 @@
   },
   {
    "name": "bad-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"beos\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"beos\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_asset_target_invalid:beos/x86_64/portable"
   },
   {
    "name": "bad-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"beos\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"beos\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -748,7 +748,7 @@
   },
   {
    "name": "bad-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"beos\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"beos\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -761,14 +761,14 @@
   },
   {
    "name": "bad-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"beos\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"beos\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [],
    "result": "embedded_manifest_asset_target_invalid:beos/x86_64/portable"
   },
   {
    "name": "bad-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"beos\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"beos\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -781,7 +781,7 @@
   },
   {
    "name": "bad-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"beos\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"beos\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -794,14 +794,14 @@
   },
   {
    "name": "upper-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"WINDOWS\",\"arch\":\"X86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"WINDOWS\",\"arch\":\"X86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "ok"
   },
   {
    "name": "upper-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"WINDOWS\",\"arch\":\"X86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"WINDOWS\",\"arch\":\"X86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -814,7 +814,7 @@
   },
   {
    "name": "upper-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"WINDOWS\",\"arch\":\"X86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"WINDOWS\",\"arch\":\"X86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -827,14 +827,14 @@
   },
   {
    "name": "upper-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"WINDOWS\",\"arch\":\"X86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"WINDOWS\",\"arch\":\"X86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [],
    "result": "ok"
   },
   {
    "name": "upper-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"WINDOWS\",\"arch\":\"X86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"WINDOWS\",\"arch\":\"X86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -847,7 +847,7 @@
   },
   {
    "name": "upper-target",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"WINDOWS\",\"arch\":\"X86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"WINDOWS\",\"arch\":\"X86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -860,48 +860,15 @@
   },
   {
    "name": "no-sha",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_asset_checksum_missing:a-win.zip"
   },
   {
    "name": "no-sha",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3}]}",
    "bundleCommit": null,
-   "required": [
-    {
-     "platform": "windows",
-     "arch": "x64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_asset_checksum_missing:a-win.zip"
-  },
-  {
-   "name": "no-sha",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3}]}",
-   "bundleCommit": null,
-   "required": [
-    {
-     "platform": "linux",
-     "arch": "arm64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_asset_checksum_missing:a-win.zip"
-  },
-  {
-   "name": "no-sha",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3}]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-   "required": [],
-   "result": "embedded_manifest_asset_checksum_missing:a-win.zip"
-  },
-  {
-   "name": "no-sha",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3}]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
      "platform": "windows",
@@ -913,7 +880,40 @@
   },
   {
    "name": "no-sha",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3}]}",
+   "bundleCommit": null,
+   "required": [
+    {
+     "platform": "linux",
+     "arch": "arm64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_asset_checksum_missing:a-win.zip"
+  },
+  {
+   "name": "no-sha",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3}]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [],
+   "result": "embedded_manifest_asset_checksum_missing:a-win.zip"
+  },
+  {
+   "name": "no-sha",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3}]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [
+    {
+     "platform": "windows",
+     "arch": "x64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_asset_checksum_missing:a-win.zip"
+  },
+  {
+   "name": "no-sha",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -926,48 +926,15 @@
   },
   {
    "name": "size-text",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":\"3\",\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":\"3\",\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_asset_size_invalid:a-win.zip"
   },
   {
    "name": "size-text",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":\"3\",\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":\"3\",\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
-   "required": [
-    {
-     "platform": "windows",
-     "arch": "x64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
-  },
-  {
-   "name": "size-text",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":\"3\",\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": null,
-   "required": [
-    {
-     "platform": "linux",
-     "arch": "arm64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
-  },
-  {
-   "name": "size-text",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":\"3\",\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-   "required": [],
-   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
-  },
-  {
-   "name": "size-text",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":\"3\",\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
      "platform": "windows",
@@ -979,7 +946,40 @@
   },
   {
    "name": "size-text",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":\"3\",\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":\"3\",\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": null,
+   "required": [
+    {
+     "platform": "linux",
+     "arch": "arm64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
+  },
+  {
+   "name": "size-text",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":\"3\",\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [],
+   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
+  },
+  {
+   "name": "size-text",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":\"3\",\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [
+    {
+     "platform": "windows",
+     "arch": "x64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
+  },
+  {
+   "name": "size-text",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":\"3\",\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -992,48 +992,15 @@
   },
   {
    "name": "size-zero",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":0,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":0,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_asset_size_invalid:a-win.zip"
   },
   {
    "name": "size-zero",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":0,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":0,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
-   "required": [
-    {
-     "platform": "windows",
-     "arch": "x64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
-  },
-  {
-   "name": "size-zero",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":0,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": null,
-   "required": [
-    {
-     "platform": "linux",
-     "arch": "arm64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
-  },
-  {
-   "name": "size-zero",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":0,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-   "required": [],
-   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
-  },
-  {
-   "name": "size-zero",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":0,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
      "platform": "windows",
@@ -1045,7 +1012,40 @@
   },
   {
    "name": "size-zero",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":0,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":0,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": null,
+   "required": [
+    {
+     "platform": "linux",
+     "arch": "arm64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
+  },
+  {
+   "name": "size-zero",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":0,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [],
+   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
+  },
+  {
+   "name": "size-zero",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":0,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [
+    {
+     "platform": "windows",
+     "arch": "x64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
+  },
+  {
+   "name": "size-zero",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":0,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -1058,48 +1058,15 @@
   },
   {
    "name": "size-frac",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":1.5,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":1.5,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_asset_size_invalid:a-win.zip"
   },
   {
    "name": "size-frac",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":1.5,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":1.5,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
-   "required": [
-    {
-     "platform": "windows",
-     "arch": "x64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
-  },
-  {
-   "name": "size-frac",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":1.5,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": null,
-   "required": [
-    {
-     "platform": "linux",
-     "arch": "arm64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
-  },
-  {
-   "name": "size-frac",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":1.5,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-   "required": [],
-   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
-  },
-  {
-   "name": "size-frac",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":1.5,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
      "platform": "windows",
@@ -1111,7 +1078,40 @@
   },
   {
    "name": "size-frac",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":1.5,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":1.5,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": null,
+   "required": [
+    {
+     "platform": "linux",
+     "arch": "arm64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
+  },
+  {
+   "name": "size-frac",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":1.5,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [],
+   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
+  },
+  {
+   "name": "size-frac",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":1.5,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [
+    {
+     "platform": "windows",
+     "arch": "x64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_asset_size_invalid:a-win.zip"
+  },
+  {
+   "name": "size-frac",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":1.5,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -1124,48 +1124,15 @@
   },
   {
    "name": "missing-file",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"nope.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"nope.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_asset_missing:nope.zip"
   },
   {
    "name": "missing-file",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"nope.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"nope.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
-   "required": [
-    {
-     "platform": "windows",
-     "arch": "x64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_asset_missing:nope.zip"
-  },
-  {
-   "name": "missing-file",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"nope.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": null,
-   "required": [
-    {
-     "platform": "linux",
-     "arch": "arm64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_asset_missing:nope.zip"
-  },
-  {
-   "name": "missing-file",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"nope.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-   "required": [],
-   "result": "embedded_manifest_asset_missing:nope.zip"
-  },
-  {
-   "name": "missing-file",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"nope.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
      "platform": "windows",
@@ -1177,7 +1144,40 @@
   },
   {
    "name": "missing-file",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"nope.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"nope.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": null,
+   "required": [
+    {
+     "platform": "linux",
+     "arch": "arm64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_asset_missing:nope.zip"
+  },
+  {
+   "name": "missing-file",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"nope.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [],
+   "result": "embedded_manifest_asset_missing:nope.zip"
+  },
+  {
+   "name": "missing-file",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"nope.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [
+    {
+     "platform": "windows",
+     "arch": "x64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_asset_missing:nope.zip"
+  },
+  {
+   "name": "missing-file",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"nope.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -1190,48 +1190,15 @@
   },
   {
    "name": "size-mismatch",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":99,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":99,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_asset_size_mismatch:a-win.zip"
   },
   {
    "name": "size-mismatch",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":99,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":99,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
-   "required": [
-    {
-     "platform": "windows",
-     "arch": "x64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_asset_size_mismatch:a-win.zip"
-  },
-  {
-   "name": "size-mismatch",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":99,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": null,
-   "required": [
-    {
-     "platform": "linux",
-     "arch": "arm64",
-     "format": "portable"
-    }
-   ],
-   "result": "embedded_manifest_asset_size_mismatch:a-win.zip"
-  },
-  {
-   "name": "size-mismatch",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":99,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-   "required": [],
-   "result": "embedded_manifest_asset_size_mismatch:a-win.zip"
-  },
-  {
-   "name": "size-mismatch",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":99,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
-   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
      "platform": "windows",
@@ -1243,7 +1210,40 @@
   },
   {
    "name": "size-mismatch",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":99,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":99,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": null,
+   "required": [
+    {
+     "platform": "linux",
+     "arch": "arm64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_asset_size_mismatch:a-win.zip"
+  },
+  {
+   "name": "size-mismatch",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":99,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [],
+   "result": "embedded_manifest_asset_size_mismatch:a-win.zip"
+  },
+  {
+   "name": "size-mismatch",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":99,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "required": [
+    {
+     "platform": "windows",
+     "arch": "x64",
+     "format": "portable"
+    }
+   ],
+   "result": "embedded_manifest_asset_size_mismatch:a-win.zip"
+  },
+  {
+   "name": "size-mismatch",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":99,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -1256,14 +1256,14 @@
   },
   {
    "name": "sha-mismatch",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_asset_checksum_mismatch:a-win.zip"
   },
   {
    "name": "sha-mismatch",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -1276,7 +1276,7 @@
   },
   {
    "name": "sha-mismatch",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -1289,14 +1289,14 @@
   },
   {
    "name": "sha-mismatch",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [],
    "result": "embedded_manifest_asset_checksum_mismatch:a-win.zip"
   },
   {
    "name": "sha-mismatch",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -1309,7 +1309,7 @@
   },
   {
    "name": "sha-mismatch",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"format\":\"portable\",\"size\":3,\"sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -1322,14 +1322,14 @@
   },
   {
    "name": "null-asset",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[null]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[null]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_asset_invalid"
   },
   {
    "name": "null-asset",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[null]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[null]}",
    "bundleCommit": null,
    "required": [
     {
@@ -1342,7 +1342,7 @@
   },
   {
    "name": "null-asset",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[null]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[null]}",
    "bundleCommit": null,
    "required": [
     {
@@ -1355,14 +1355,14 @@
   },
   {
    "name": "null-asset",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[null]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[null]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [],
    "result": "embedded_manifest_asset_invalid"
   },
   {
    "name": "null-asset",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[null]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[null]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -1375,7 +1375,7 @@
   },
   {
    "name": "null-asset",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[null]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[null]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -1388,14 +1388,14 @@
   },
   {
    "name": "format-missing",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [],
    "result": "embedded_manifest_asset_invalid"
   },
   {
    "name": "format-missing",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -1408,7 +1408,7 @@
   },
   {
    "name": "format-missing",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": null,
    "required": [
     {
@@ -1421,14 +1421,14 @@
   },
   {
    "name": "format-missing",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [],
    "result": "embedded_manifest_asset_invalid"
   },
   {
    "name": "format-missing",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {
@@ -1441,7 +1441,7 @@
   },
   {
    "name": "format-missing",
-   "manifest": "{\"schema_version\":1,\"sku\":\"betterdesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
+   "manifest": "{\"schema_version\":1,\"sku\":\"neodesk-support\",\"external_config\":false,\"client_commit\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"assets\":[{\"name\":\"a-win.zip\",\"platform\":\"windows\",\"arch\":\"x86_64\",\"size\":3,\"sha256\":\"823a3180dad3c9c3c4dea43ab2baf9f04bac9c3a7711745ff5f702551496d735\"}]}",
    "bundleCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
    "required": [
     {

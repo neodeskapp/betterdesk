@@ -368,14 +368,14 @@ func TestResolveIPv6Endpoints(t *testing.T) {
 func TestClientFacingHostSkipsLoopbackAPIHost(t *testing.T) {
 	req := &RequestHost{Host: "desk.example.com:5000"}
 	for apiURL, want := range map[string]string{
-		"http://127.0.0.1:21114/api":         "desk.example.com request",
-		"http://127.0.0.2:21114/api":         "desk.example.com request",
-		"http://localhost:21114/api":         "desk.example.com request",
-		"http://betterdesk-server:21114/api": "desk.example.com request",
-		"http://[::1]:21114/api":             "desk.example.com request",
-		"http://0.0.0.0:21114/api":           "desk.example.com request",
-		"http://api.example.com:21114/api":   "api.example.com config",
-		"http://192.0.2.10:21114/api":        "192.0.2.10 config",
+		"http://127.0.0.1:21114/api":       "desk.example.com request",
+		"http://127.0.0.2:21114/api":       "desk.example.com request",
+		"http://localhost:21114/api":       "desk.example.com request",
+		"http://neodesk-server:21114/api":  "desk.example.com request",
+		"http://[::1]:21114/api":           "desk.example.com request",
+		"http://0.0.0.0:21114/api":         "desk.example.com request",
+		"http://api.example.com:21114/api": "api.example.com config",
+		"http://192.0.2.10:21114/api":      "192.0.2.10 config",
 	} {
 		s := New(Options{APIURL: apiURL, GoAPIPort: 21114, DataDir: t.TempDir(), EnvPath: filepath.Join(t.TempDir(), ".env"), Getenv: envMap(nil)})
 		got := s.ResolveRustDeskEndpoints(req, "")

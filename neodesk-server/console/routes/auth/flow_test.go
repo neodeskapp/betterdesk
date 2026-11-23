@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The flow test signs in the way a person does, on an account of its own:
@@ -28,7 +28,7 @@ import (
 // test keeps its own recording, testdata/flow.json, made from the Node
 // console before the routes moved. It runs against a test instance:
 //
-//	BD_URL=http://bdgo-au2:5000 go test -tags authflow -count=1 -run TestSignInFlow ./console/routes/auth/
+//	ND_URL=http://bdgo-au2:5000 go test -tags authflow -count=1 -run TestSignInFlow ./console/routes/auth/
 //
 // The recording is fixed: it can't be made again. CONTRACT_REQUIRE_GO=1
 // fails when a sign-in route was not answered by the Go console. Use a
@@ -187,7 +187,7 @@ func TestSignInFlow(t *testing.T) {
 	if !regexp.MustCompile(`^[A-Z2-7]{32}$`).MatchString(secret) {
 		t.Fatalf("setup: the secret is not 32 base32 characters")
 	}
-	wantURL := "otpauth://totp/BetterDesk:" + flowUser + "?secret=" + secret + "&issuer=BetterDesk&digits=6&period=30"
+	wantURL := "otpauth://totp/NeoDesk:" + flowUser + "?secret=" + secret + "&issuer=NeoDesk&digits=6&period=30"
 	if got := field(t, setup, "otpauthUrl"); got != wantURL {
 		t.Errorf("setup: otpauthUrl is not the address of the secret for %s", flowUser)
 	}

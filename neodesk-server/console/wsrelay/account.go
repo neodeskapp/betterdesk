@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
 )
 
 // account is the signed-in account of a bridge.

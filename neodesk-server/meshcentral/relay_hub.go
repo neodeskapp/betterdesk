@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 )
 
 // relayHub multiplexes one mesh agent tunnel to multiple browser viewers

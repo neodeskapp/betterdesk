@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // TestNodeAnswers replays what the Node console's policy and event routes
@@ -21,7 +21,7 @@ import (
 // front of the routes in the console: it lets the roles with device.view
 // read /api/dataguard and only the roles with server.config write it (PA3
 // F5). Where the guard refuses a write, its answer is taken. Node's guard
-// had no rule for the routes at /api/bd; the writes there that the guard
+// had no rule for the routes at /api/nd; the writes there that the guard
 // refuses now (DG6) are listed in policyFixes (fixed_test.go) with the
 // steps the other bug fixes change.
 func TestNodeAnswers(t *testing.T) {
@@ -73,7 +73,7 @@ func TestPolicyColumnsHaveOneOrder(t *testing.T) {
 			t.Fatal(err)
 		}
 		w := replay.NewWorld(t, db, nil)
-		got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/bd/policies", Body: replay.Text(`{"name":"old table","policy_type":"usb","scope":"all","rules":[{"b":1,"a":2}]}`)})
+		got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/nd/policies", Body: replay.Text(`{"name":"old table","policy_type":"usb","scope":"all","rules":[{"b":1,"a":2}]}`)})
 		want := db.Pick(
 			`{"id":1,"name":"old table","description":"","policy_type":"usb","action":"log","scope":"all","enabled":1,"rules":[{"b":1,"a":2}],"created_at":"<now, SQLite form>","updated_at":"<now, SQLite form>"}`,
 			`{"id":1,"name":"old table","description":"","policy_type":"usb","action":"log","scope":"all","enabled":true,"rules":[{"a":2,"b":1}],"created_at":"<now, ISO form>","updated_at":"<now, ISO form>"}`)
@@ -92,7 +92,7 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 	w := replay.NewWorld(t, storetest.Migrated(t), nil)
 	var want []string
 	wanted := map[string]bool{}
-	for _, mount := range []string{"/api/dataguard", "/api/bd"} {
+	for _, mount := range []string{"/api/dataguard", "/api/nd"} {
 		for _, route := range []string{"GET /policies", "GET /policies/{id}", "POST /policies", "PATCH /policies/{id}", "DELETE /policies/{id}", "GET /events", "GET /stats", "GET /dlp-policies", "POST /dlp-events"} {
 			method, path, _ := strings.Cut(route, " ")
 			want = append(want, method+" "+mount+path)
@@ -109,7 +109,7 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 		t.Errorf("routes:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
 	}
 	// A session is no device token
-	for _, path := range []string{"/api/bd/dlp-policies", "/api/dataguard/dlp-policies"} {
+	for _, path := range []string{"/api/nd/dlp-policies", "/api/dataguard/dlp-policies"} {
 		if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != 401 || got.Body != `{"error":"Bearer access token required"}` {
 			t.Errorf("GET %s as admin: %d %s", path, got.Status, got.Body)
 		}
@@ -152,9 +152,9 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 			status           int
 			body             string
 		}{
-			{"at /api/bd without a session", "", "/api/bd/dlp-events", 201, `{"ok":true,"id":1}`},
+			{"at /api/nd without a session", "", "/api/nd/dlp-events", 201, `{"ok":true,"id":1}`},
 			{"at /api/dataguard without a session", "", "/api/dataguard/dlp-events", 201, `{"ok":true,"id":2}`},
-			{"at /api/bd with a session", "operator", "/api/bd/dlp-events", 403, refused},
+			{"at /api/nd with a session", "operator", "/api/nd/dlp-events", 403, refused},
 			{"at /api/dataguard with a session", "admin", "/api/dataguard/dlp-events", 403, refused},
 		} {
 			got := w.Do(replay.Request{Role: c.role, Method: "POST", Path: c.path, Body: event, Headers: device, NoCSRF: true})
@@ -169,7 +169,7 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 }
 
 // The panel access guard covers the routes for people at both mounts
-// (BUGS DG6): every role gets the same answer at /api/bd as at
+// (BUGS DG6): every role gets the same answer at /api/nd as at
 // /api/dataguard, and a policy row that closes the data guard closes it
 // at both.
 func TestTheGuardAtBothMounts(t *testing.T) {
@@ -192,15 +192,15 @@ func TestTheGuardAtBothMounts(t *testing.T) {
 		}
 		for _, role := range []string{"viewer", "operator", "guest_issuer", "global_admin"} {
 			for _, route := range routes {
-				want, got := do(role, "/api/dataguard", route), do(role, "/api/bd", route)
+				want, got := do(role, "/api/dataguard", route), do(role, "/api/nd", route)
 				if got.Status != want.Status || got.Body != want.Body {
-					t.Errorf("%s %s as %s: %d %s at /api/bd, %d %s at /api/dataguard", route.method, route.path, role, got.Status, got.Body, want.Status, want.Body)
+					t.Errorf("%s %s as %s: %d %s at /api/nd, %d %s at /api/dataguard", route.method, route.path, role, got.Status, got.Body, want.Status, want.Body)
 				}
 			}
 		}
 		w.Exec("INSERT INTO panel_access_policies (subject_type, subject_id, resource_key, access_level, updated_at) VALUES ('user', '3', 'dataguard', 'none', '2019-01-01 00:00:00')", nil)
 		closed := `{"success":false,"error":"Panel access denied: dataguard","code":"panel_access_denied"}`
-		for _, mount := range []string{"/api/dataguard", "/api/bd"} {
+		for _, mount := range []string{"/api/dataguard", "/api/nd"} {
 			for _, route := range routes {
 				if got := do("server_admin", mount, route); got.Status != 403 || got.Body != closed {
 					t.Errorf("%s %s%s as a server admin with the data guard closed: %d %s", route.method, mount, route.path, got.Status, got.Body)
@@ -224,11 +224,11 @@ func TestPermissions(t *testing.T) {
 		"operator": {"device.view": false, "audit.view": false, "server.config": true},
 		"viewer":   {"device.view": false, "audit.view": false, "server.config": false},
 	})
-	if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/bd/policies", Body: replay.Text(`{"name":"one"}`)}); got.Status != 201 {
+	if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/nd/policies", Body: replay.Text(`{"name":"one"}`)}); got.Status != 201 {
 		t.Fatalf("create: %d %s", got.Status, got.Body)
 	}
 	const guarded = `{"success":false,"error":"Panel access denied: dataguard","code":"panel_access_denied"}`
-	for _, mount := range []string{"/api/dataguard", "/api/bd"} {
+	for _, mount := range []string{"/api/dataguard", "/api/nd"} {
 		for _, tt := range []struct{ method, path, body, permission string }{
 			{"GET", "/policies", "", "device.view"},
 			{"GET", "/policies/1", "", "device.view"},
@@ -255,7 +255,7 @@ func TestPermissions(t *testing.T) {
 			}
 		}
 	}
-	if got := w.Do(replay.Request{Role: "admin", Path: "/api/bd/policies/1"}); got.Status != 200 || !strings.Contains(got.Body, `"name":"one"`) {
+	if got := w.Do(replay.Request{Role: "admin", Path: "/api/nd/policies/1"}); got.Status != 200 || !strings.Contains(got.Body, `"name":"one"`) {
 		t.Errorf("the policy after the refused writes: %d %s", got.Status, got.Body)
 	}
 }

@@ -255,7 +255,7 @@ release created both tables with the column, so this concerns 2.x files only.
 |---|---|---|---|---|---|
 | `hash access tokens` | Adds `access_tokens.token_hash TEXT` and the partial unique index `idx_access_tokens_hash`, then sets `token_hash` to the SHA-256 (hex) of `token` | column: missing. Index: `IF NOT EXISTS`. Rows: `token_hash` is NULL or empty and `token` is not empty | last step | right after access_tokens | 324-342, 4181-4190 |
 | `agent_bundles.slug` | Adds `agent_bundles.slug TEXT DEFAULT NULL` and the partial unique index `idx_agent_bundles_slug`, then gives each bundle without a slug one: from its name, else from its bundle id, numbered `-2`, `-3` while taken | column: missing. Index: `IF NOT EXISTS`. Rows: `slug` is NULL or empty. Tolerated | after the agent_bundle_builds columns | after `run indexes_agent_bundles` | 1022-1049, 4644-4666 |
-| `agent_bundles.product_type` | Adds `agent_bundles.product_type TEXT NOT NULL DEFAULT 'betterdesk-support'`; sets every value that is not `betterdesk-support` to it | column: missing. SQLite: the `UPDATE` runs at every start. PostgreSQL: the `UPDATE` runs only when the column was already there; then also `SET NOT NULL` when the column is nullable and `SET DEFAULT 'betterdesk-support'` when its default is another. Tolerated | after `agent_bundles.slug` | after `agent_bundles.slug` | 1051-1079, 4667-4701 |
+| `agent_bundles.product_type` | Adds `agent_bundles.product_type TEXT NOT NULL DEFAULT 'neodesk-support'`; sets every value that is not `neodesk-support` to it | column: missing. SQLite: the `UPDATE` runs at every start. PostgreSQL: the `UPDATE` runs only when the column was already there; then also `SET NOT NULL` when the column is nullable and `SET DEFAULT 'neodesk-support'` when its default is another. Tolerated | after `agent_bundles.slug` | after `agent_bundles.slug` | 1051-1079, 4667-4701 |
 | `seed user_groups` | Inserts the group `Default` (note `Default user group`, random guid) | the table has no row | after the device_groups columns | after user_peer_grants | 720-726, 4942-4946 |
 | `seed device_groups` | Inserts the group `Default` (note `Default device group`, random guid) | the table has no row | after `seed user_groups` | after `seed user_groups` | 727-733, 4947-4951 |
 | `widen alert_rules.condition_value` | Changes the column to `double precision`, then sets every limit to the shortest number that names its four bytes, the value Node and the Go console read (0.1, where the cast alone gives 0.10000000149011612); NaN and the infinities stay. Logs `Migration: widened alert_rules.condition_value to double precision`. Not in Node (BUGS AE4); a Node console started on the wider column reads the same limits | the column is `real` | no step | last step | |
@@ -271,7 +271,7 @@ The slug rules are those of `web-nodejs/services/agentBundleService.js`
 ## The one statement that changes a column
 
 On PostgreSQL the step `agent_bundles.product_type` can run
-`ALTER COLUMN product_type SET NOT NULL` and `SET DEFAULT 'betterdesk-support'`.
+`ALTER COLUMN product_type SET NOT NULL` and `SET DEFAULT 'neodesk-support'`.
 Node did the same (4692-4697). It applies to installs that last ran a console
 between 3.5.16 and 3.5.86, which created the column with the default
 `'support-agent'`. The type does not change and no row is lost. After a
@@ -305,7 +305,7 @@ is its own task.
 
 ## Tables both programs create
 
-The signal server (`betterdesk-server/db`) creates 10 of these tables on
+The signal server (`neodesk-server/db`) creates 10 of these tables on
 SQLite and 17 on PostgreSQL itself, with other column types. Whoever starts
 first decides the shape of each, and nothing converts it (DECISIONS D2).
 `Migrate` does on such a table what Node did: `CREATE TABLE IF NOT EXISTS`

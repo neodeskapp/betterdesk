@@ -3,9 +3,9 @@ package settings
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 )
 
 // requestBody is req.body as the branding service reads it: the JSON the
@@ -113,7 +113,7 @@ func (h *handlers) exportBranding(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Content-Disposition", `attachment; filename="betterdesk-theme.json"`)
+	w.Header().Set("Content-Disposition", `attachment; filename="neodesk-theme.json"`)
 	kit.JSON(w, r, http.StatusOK, preset)
 }
 

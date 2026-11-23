@@ -12,7 +12,7 @@ export type HelpFilter = 'open' | 'pending' | 'accepted' | 'resolved' | '';
 export type HelpSort = 'oldest' | 'newest';
 
 /** Same key as the old page, so the choice carries over */
-export const PREF_HELP_SORT = 'betterdesk_help_requests_sort';
+export const PREF_HELP_SORT = 'neodesk_help_requests_sort';
 export const TREND_DAYS = 14;
 
 /** A request changed here, waiting for the server to report the same */

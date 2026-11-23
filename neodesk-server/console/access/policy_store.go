@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // truthyColumn reads a flag column: PostgreSQL stores it as a boolean,

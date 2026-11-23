@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // An approval for a device the API server knows asks first whether the
@@ -75,21 +75,21 @@ func TestApprovalOfAKnownDeviceAsksForTheScope(t *testing.T) {
 }
 
 // A registration request for a new device counts against the limit of
-// device registrations per address (BD_REGISTER_RATE_LIMIT_MAX), on the
-// root mount and at /api/bd alike; a request for a device that has its
+// device registrations per address (ND_REGISTER_RATE_LIMIT_MAX), on the
+// root mount and at /api/nd alike; a request for a device that has its
 // registration counts not (BUGS RV8).
 func TestRegisterRequestIsLimited(t *testing.T) {
-	w := routetest.New(t, routetest.Options{Env: map[string]string{"BD_REGISTER_RATE_LIMIT_MAX": "2", "RATE_LIMIT_MAX": "1000"}})
+	w := routetest.New(t, routetest.Options{Env: map[string]string{"ND_REGISTER_RATE_LIMIT_MAX": "2", "RATE_LIMIT_MAX": "1000"}})
 	for i, c := range []struct {
 		path string
 		want int
-	}{{"/api/bd/register-request", 200}, {"/register-request", 200}, {"/api/bd/register-request", 429}} {
+	}{{"/api/nd/register-request", 200}, {"/register-request", 200}, {"/api/nd/register-request", 429}} {
 		got := w.SignedOut().Do(http.MethodPost, c.path, `{"device_id":"limited-`+strconv.Itoa(i)+`"}`)
 		if got.Status != c.want {
 			t.Errorf("request %d at %s: %d %s, want %d", i+1, c.path, got.Status, got.Body, c.want)
 		}
 	}
-	if got := w.SignedOut().Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"limited-0"}`); got.Status != 200 {
+	if got := w.SignedOut().Do(http.MethodPost, "/api/nd/register-request", `{"device_id":"limited-0"}`); got.Status != 200 {
 		t.Errorf("a device that has its registration: %d %s", got.Status, got.Body)
 	}
 }
@@ -100,7 +100,7 @@ func TestRegisterRequestIsLimited(t *testing.T) {
 // 500 rows a page and counts all of them in total (BUGS RV8).
 func TestPendingRegistrationsAreCapped(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
-		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"BD_REGISTER_RATE_LIMIT_MAX": "100000", "RATE_LIMIT_MAX": "100000"}})
+		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"ND_REGISTER_RATE_LIMIT_MAX": "100000", "RATE_LIMIT_MAX": "100000"}})
 		ctx := context.Background()
 		insert := func(prefix, address, status string, n int) {
 			t.Helper()
@@ -115,7 +115,7 @@ func TestPendingRegistrationsAreCapped(t *testing.T) {
 			}
 		}
 		request := func(id string) (int, string) {
-			got := w.SignedOut().Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"`+id+`"}`)
+			got := w.SignedOut().Do(http.MethodPost, "/api/nd/register-request", `{"device_id":"`+id+`"}`)
 			return got.Status, got.Body
 		}
 		insert("decided-", routetest.ClientIP, "rejected", 60)
@@ -235,7 +235,7 @@ func TestApprovalGivesTheDeviceADeviceTokenOnce(t *testing.T) {
 		device := w.SignedOut()
 		status := func() string {
 			t.Helper()
-			got := device.Do(http.MethodGet, "/api/bd/register-status?device_id=900100031", "")
+			got := device.Do(http.MethodGet, "/api/nd/register-status?device_id=900100031", "")
 			var answer struct {
 				Status string `json:"status"`
 				Config struct {
@@ -272,12 +272,12 @@ func TestApprovalGivesTheDeviceADeviceTokenOnce(t *testing.T) {
 
 		bearer := []string{"Authorization", "Bearer " + token}
 		heartbeat := func() routetest.Answer {
-			return device.Do(http.MethodPost, "/api/bd/heartbeat", `{"device_id":"900100031"}`, bearer...)
+			return device.Do(http.MethodPost, "/api/nd/heartbeat", `{"device_id":"900100031"}`, bearer...)
 		}
 		if got := heartbeat(); got.Status == http.StatusUnauthorized || got.Status == http.StatusForbidden {
 			t.Errorf("heartbeat with the delivered token: %d %s", got.Status, got.Body)
 		}
-		if got := device.Do(http.MethodPost, "/api/bd/heartbeat", `{"device_id":"900100032"}`, bearer...); got.Status != http.StatusForbidden && got.Status != http.StatusUnauthorized {
+		if got := device.Do(http.MethodPost, "/api/nd/heartbeat", `{"device_id":"900100032"}`, bearer...); got.Status != http.StatusForbidden && got.Status != http.StatusUnauthorized {
 			t.Errorf("heartbeat for another device with the token: %d %s", got.Status, got.Body)
 		}
 		if got := admin.Do(http.MethodPost, "/api/enrollment/reject/900100031", `{"ban":true}`); got.Status != http.StatusOK {
@@ -304,7 +304,7 @@ func TestDeletingTheApproverEndsNoDeviceToken(t *testing.T) {
 			t.Fatalf("approval: %d %s", got.Status, got.Body)
 		}
 		device := w.SignedOut()
-		got := device.Do(http.MethodGet, "/api/bd/register-status?device_id=900100041", "")
+		got := device.Do(http.MethodGet, "/api/nd/register-status?device_id=900100041", "")
 		var answer struct {
 			Config struct {
 				AccessToken string `json:"access_token"`
@@ -315,7 +315,7 @@ func TestDeletingTheApproverEndsNoDeviceToken(t *testing.T) {
 		}
 		bearer := []string{"Authorization", "Bearer " + answer.Config.AccessToken}
 		heartbeat := func() routetest.Answer {
-			return device.Do(http.MethodPost, "/api/bd/heartbeat", `{"device_id":"900100041"}`, bearer...)
+			return device.Do(http.MethodPost, "/api/nd/heartbeat", `{"device_id":"900100041"}`, bearer...)
 		}
 		if got := heartbeat(); got.Status == http.StatusUnauthorized || got.Status == http.StatusForbidden {
 			t.Fatalf("heartbeat with the delivered token: %d %s", got.Status, got.Body)

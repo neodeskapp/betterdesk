@@ -8,9 +8,9 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
 )
 
 // peerIDPattern is a device id a guest may name.
@@ -102,7 +102,7 @@ func (s *Service) serve(u *ws.Upgrade, label string) {
 }
 
 // guestToken reads a guest's token and device: ?guest=, else ?t=, else
-// the first guest cookie (GuestCookie, bd.guest, betterdesk.guest) that
+// the first guest cookie (GuestCookie, nd.guest, neodesk.guest) that
 // holds a token, and ?peer_id=, each without the white space around it. A
 // cookie value whose escapes are not UTF-8 makes the token "", as the old
 // service's catch did.
@@ -150,7 +150,7 @@ func cookieToken(header, guestCookie string) string {
 	for i, p := range parts {
 		parts[i] = jsbind.Trim(p)
 	}
-	for _, name := range []string{guestCookie, "bd.guest", "betterdesk.guest"} {
+	for _, name := range []string{guestCookie, "nd.guest", "neodesk.guest"} {
 		for _, p := range parts {
 			if !strings.HasPrefix(p, name+"=") {
 				continue

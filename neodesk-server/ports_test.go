@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
+	consoleconfig "github.com/neodeskapp/neodesk/neodesk-server/console/config"
 )
 
 // portsOf is the listeners a start with env and the given flags opens.

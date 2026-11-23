@@ -29,7 +29,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
@@ -380,8 +380,8 @@
      },
      "appVersion": "<version>",
      "branding": {
-      "appDescription": "BetterDesk Server Management",
-      "appName": "BetterDesk",
+      "appDescription": "NeoDesk Server Management",
+      "appName": "NeoDesk",
       "footerText": "",
       "logoIcon": "dns",
       "logoSvg": "",
@@ -583,7 +583,7 @@
       ],
       "code": "ar",
       "dir": "rtl",
-      "stringsUrl": "/api/console/strings/ar?v=8332c667a6825621"
+      "stringsUrl": "/api/console/strings/ar?v=7061ba5f6752f55b"
      },
      "nav": [
       {
@@ -872,7 +872,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
@@ -1223,8 +1223,8 @@
      },
      "appVersion": "<version>",
      "branding": {
-      "appDescription": "BetterDesk Server Management",
-      "appName": "BetterDesk",
+      "appDescription": "NeoDesk Server Management",
+      "appName": "NeoDesk",
       "footerText": "",
       "logoIcon": "dns",
       "logoSvg": "",
@@ -1426,7 +1426,7 @@
       ],
       "code": "ar",
       "dir": "rtl",
-      "stringsUrl": "/api/console/strings/ar?v=8332c667a6825621"
+      "stringsUrl": "/api/console/strings/ar?v=7061ba5f6752f55b"
      },
      "nav": [
       {

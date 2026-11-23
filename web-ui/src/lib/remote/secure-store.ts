@@ -10,13 +10,13 @@
  *   replaced, so passwords saved before still open.
  * - Device passwords saved before the last sign-out in this browser are
  *   forgotten: sign-out (the shell's account menu) leaves a "logout"
- *   record under betterdesk.session.expired, and the store drops older
+ *   record under neodesk.session.expired, and the store drops older
  *   device passwords when it next opens. forgetDevicePasswords() clears
  *   them right away.
  * - "Remember me" starts off (the sign-in page decides; nothing here
  *   remembers a password unless asked to).
  *
- * Same database as before (betterdesk-rdclient, store "vault").
+ * Same database as before (neodesk-rdclient, store "vault").
  */
 
 export interface VaultBackend {
@@ -46,14 +46,14 @@ interface Encrypted {
 	data: string;
 }
 
-const DB_NAME = 'betterdesk-rdclient';
+const DB_NAME = 'neodesk-rdclient';
 const DB_VERSION = 2;
 const STORE = 'vault';
 export const KEY_ID = 'device-key';
 export const CRED_ID = 'credentials';
-export const USERNAME_KEY = 'bd_rdclient_last_user';
+export const USERNAME_KEY = 'nd_rdclient_last_user';
 /** Written by the shell on sign-out (session-guard broadcastExpired) */
-export const SIGN_OUT_KEY = 'betterdesk.session.expired';
+export const SIGN_OUT_KEY = 'neodesk.session.expired';
 const PEER_PREFIX = 'peer:';
 
 function b64(buf: ArrayBuffer | Uint8Array): string {
@@ -345,8 +345,7 @@ export function watchSignOut(
 	window.addEventListener('storage', onStorage);
 	let channel: BroadcastChannel | null = null;
 	try {
-		channel =
-			typeof BroadcastChannel === 'function' ? new BroadcastChannel('betterdesk-panel-session') : null;
+		channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('neodesk-panel-session') : null;
 		if (channel)
 			channel.onmessage = (e: MessageEvent<{ type?: string; code?: string }>) => {
 				if (e.data?.type === 'expired' && e.data.code === 'logout') onSignOut();

@@ -14,8 +14,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
 // The vectors are what the Node console's own modules answered
@@ -420,11 +420,11 @@ type valueVectors struct {
 // any other manifest that is no object, the version as "[object Object]".
 var (
 	fullCheckDifferences = map[string][]string{
-		`null`: {"Archive is not a BetterDesk full backup (wrong _format)", "Unsupported full-backup version: undefined"},
-		`{"_format":"betterdesk-full-backup","_version":{"toString":1}}`: {"Unsupported full-backup version: [object Object]"},
+		`null`: {"Archive is not a NeoDesk full backup (wrong _format)", "Unsupported full-backup version: undefined"},
+		`{"_format":"neodesk-full-backup","_version":{"toString":1}}`: {"Unsupported full-backup version: [object Object]"},
 	}
 	snapshotCheckDifferences = map[string][]string{
-		`{"_format":"betterdesk-backup","_version":{"toString":2},"console":{}}`: {"Unsupported backup version: [object Object] (max supported: 1)"},
+		`{"_format":"neodesk-backup","_version":{"toString":2},"console":{}}`: {"Unsupported backup version: [object Object] (max supported: 1)"},
 	}
 )
 

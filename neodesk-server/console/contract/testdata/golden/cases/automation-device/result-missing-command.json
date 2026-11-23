@@ -2,7 +2,7 @@
  "id": "automation-device/result-missing-command",
  "request": {
   "method": "POST",
-  "path": "/api/bd/commands/999999999/result",
+  "path": "/api/nd/commands/999999999/result",
   "body": {
    "result": "demo-reception-02",
    "status": "completed"

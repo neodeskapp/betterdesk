@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/unitronix/betterdesk-server/console/updater"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
 )
 
 const verifyReleaseUsage = "verify-release --manifest FILE --signature FILE [--name ASSET] BINARY   check a downloaded binary against its release's signed manifest"
@@ -16,7 +16,7 @@ const verifyReleaseUsage = "verify-release --manifest FILE --signature FILE [--n
 // runVerifyRelease is "verify-release": it checks a downloaded binary
 // against the manifest of its release and the manifest's signature with
 // the release key compiled into this binary (updater.VerifyFile). ASSET
-// is the binary's name in the manifest (betterdesk-server-linux-amd64),
+// is the binary's name in the manifest (neodesk-server-linux-amd64),
 // the file's own name by default. Exit status: 0 verified, 1 refused, 2 a
 // usage error.
 func runVerifyRelease(args []string, _ io.Reader, stdout, stderr io.Writer) int {
@@ -25,7 +25,7 @@ func runVerifyRelease(args []string, _ io.Reader, stdout, stderr io.Writer) int 
 
 func verifyRelease(args []string, stdout, stderr io.Writer, keys updater.Keys) int {
 	usage := func() int {
-		fmt.Fprintln(stderr, "Usage: betterdesk-server "+verifyReleaseUsage)
+		fmt.Fprintln(stderr, "Usage: neodesk-server "+verifyReleaseUsage)
 		return 2
 	}
 	var manifestPath, signaturePath, name, binary string
@@ -58,7 +58,7 @@ func verifyRelease(args []string, stdout, stderr io.Writer, keys updater.Keys) i
 		name = filepath.Base(binary)
 	}
 	refuse := func(err error) int {
-		fmt.Fprintf(stderr, "betterdesk-server verify-release: %v\n", err)
+		fmt.Fprintf(stderr, "neodesk-server verify-release: %v\n", err)
 		return 1
 	}
 	manifest, err := os.ReadFile(manifestPath)

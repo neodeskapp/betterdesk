@@ -29,7 +29,7 @@ func newFixture(t *testing.T) fixture {
 	if err := os.WriteFile(filepath.Join(f.console, ".env"), []byte("PORT=5000\nSESSION_SECRET=old-secret\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	env := map[string]string{"BETTERDESK_PATH": f.server, "DATA_DIR": f.data}
+	env := map[string]string{"NEODESK_PATH": f.server, "DATA_DIR": f.data}
 	f.cfg = New(Options{
 		ConsoleDir: f.console, Getenv: func(k string) string { return env[k] }, Allowed: []string{"PORT", "SESSION_SECRET", "DB_PATH", "LOG_LEVEL", "TRUST_PROXY"},
 		Now: func() time.Time { return time.Date(2026, 11, 18, 10, 20, 30, 456e6, time.UTC) }, PID: 9,
@@ -69,10 +69,10 @@ func TestValidate(t *testing.T) {
 		{changes("PORT", "0"), "Invalid port for PORT"},
 		{changes("PORT", "5000\nExecStart=evil"), "Invalid control character in PORT"},
 		{changes("PORT", "50\x00"), "Invalid control character in PORT"},
-		{changes("DB_PATH", "/etc/passwd"), "Path is outside BetterDesk roots for DB_PATH"},
+		{changes("DB_PATH", "/etc/passwd"), "Path is outside NeoDesk roots for DB_PATH"},
 		{changes("DB_PATH", "relative/db"), "Path must be absolute for DB_PATH"},
-		{changes("DB_PATH", filepath.Join(f.server, "..", "x")), "Path is outside BetterDesk roots for DB_PATH"},
-		{changes("DB_PATH", f.server+"-other/db"), "Path is outside BetterDesk roots for DB_PATH"},
+		{changes("DB_PATH", filepath.Join(f.server, "..", "x")), "Path is outside NeoDesk roots for DB_PATH"},
+		{changes("DB_PATH", f.server+"-other/db"), "Path is outside NeoDesk roots for DB_PATH"},
 		{changes("LOG_LEVEL", "verbose"), "Invalid value for LOG_LEVEL"},
 		{changes("TRUST_PROXY", "maybe"), "Invalid boolean for TRUST_PROXY"},
 		{changes("PORT", nil), "Invalid value for PORT"},
@@ -155,7 +155,7 @@ func TestReadAndMask(t *testing.T) {
 	if values, err := ReadEnvFile(filepath.Join(f.root, "missing")); err != nil || len(values) != 0 {
 		t.Errorf("missing: %v %v", values, err)
 	}
-	for key, secret := range map[string]bool{"SESSION_SECRET": true, "SMTP_PASS": true, "UPDATE_GITHUB_TOKEN": true, "database_url": true, "PORT": false, "BETTERDESK_API_KEY": true} {
+	for key, secret := range map[string]bool{"SESSION_SECRET": true, "SMTP_PASS": true, "UPDATE_GITHUB_TOKEN": true, "database_url": true, "PORT": false, "NEODESK_API_KEY": true} {
 		if (Mask(key, "v") == "********") != secret {
 			t.Errorf("%s masked %v", key, !secret)
 		}
@@ -166,17 +166,17 @@ func TestReadAndMask(t *testing.T) {
 // one comes out of Mask as "********" (RV15). A key added to the template
 // fails here until someone decides which list it belongs in.
 func TestEverySecretKeyOfTheAllowlistIsMasked(t *testing.T) {
-	secret := setOf("BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED", "BETTERDESK_GITHUB_TOKEN", "DATABASE_URL",
+	secret := setOf("NEODESK_CUSTOM_CLIENT_SIGNING_SEED", "NEODESK_GITHUB_TOKEN", "DATABASE_URL",
 		"DEFAULT_ADMIN_PASSWORD", "ORG_PEER_VAULT_KEY", "PANEL_TRUST_SECRET", "REMOTE_TARGET_VAULT_KEY",
 		"SESSION_SECRET", "SMTP_PASS", "UPDATE_GITHUB_TOKEN")
 	shown := setOf("AGENT_ARTIFACT_DIR", "AGENT_BUILD_COOLDOWN_MS", "AGENT_BUILD_POLL_MS", "AGENT_BUILD_WORKER",
 		"ALLOW_SHARED_NAT_INITIATOR", "API_ENABLED", "API_HOST", "API_KEY_PATH", "API_PORT", "API_TOKEN_EXPIRY_DAYS",
-		"BACKEND_PANEL_GROUPING", "BD_REGISTER_ALLOW_OPEN", "BD_REGISTER_RATE_LIMIT_MAX", "BETTERDESK_API_URL",
-		"BETTERDESK_CLIENT_ALLOWED_REPOS", "BETTERDESK_CLIENT_BUILD_COMMAND", "BETTERDESK_CLIENT_BUILD_MIN_FREE_MB",
-		"BETTERDESK_CLIENT_BUILD_TIMEOUT_MS", "BETTERDESK_CLIENT_BUILD_WORKFLOW", "BETTERDESK_CLIENT_GENERATOR_MODE",
-		"BETTERDESK_CLIENT_GITHUB_ACTIONS", "BETTERDESK_CLIENT_PROVIDER_TARGETS_FILE",
-		"BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON", "BETTERDESK_CLIENT_REF", "BETTERDESK_CLIENT_RELEASE_TAG",
-		"BETTERDESK_CLIENT_REPO", "BETTERDESK_SUPPORT_RELEASE_PUBLIC_KEY", "BILLING_MAX_CLOCK_SKEW_MS",
+		"BACKEND_PANEL_GROUPING", "ND_REGISTER_ALLOW_OPEN", "ND_REGISTER_RATE_LIMIT_MAX", "NEODESK_API_URL",
+		"NEODESK_CLIENT_ALLOWED_REPOS", "NEODESK_CLIENT_BUILD_COMMAND", "NEODESK_CLIENT_BUILD_MIN_FREE_MB",
+		"NEODESK_CLIENT_BUILD_TIMEOUT_MS", "NEODESK_CLIENT_BUILD_WORKFLOW", "NEODESK_CLIENT_GENERATOR_MODE",
+		"NEODESK_CLIENT_GITHUB_ACTIONS", "NEODESK_CLIENT_PROVIDER_TARGETS_FILE",
+		"NEODESK_CLIENT_PROVIDER_TARGETS_JSON", "NEODESK_CLIENT_REF", "NEODESK_CLIENT_RELEASE_TAG",
+		"NEODESK_CLIENT_REPO", "NEODESK_SUPPORT_RELEASE_PUBLIC_KEY", "BILLING_MAX_CLOCK_SKEW_MS",
 		"BILLING_REQUIRE_SYNCED_CLOCK", "BILLING_REQUIRE_WORK_REPORT", "BILLING_ROUNDING_MINUTES", "BILLING_TRUST_OS_NTP",
 		"CDAP_ENABLED", "CDAP_TLS", "CDAP_TLS_REQUIRED", "CLIENT_SESSION_EXPIRY_DAYS", "CLIENT_SESSION_MAX_DAYS",
 		"CLIENT_SESSION_SLIDING", "DATA_DIR", "DB_PATH", "DB_TYPE", "DEFAULT_ADMIN_USERNAME", "GO_API_PORT",
@@ -204,15 +204,15 @@ func TestEverySecretKeyOfTheAllowlistIsMasked(t *testing.T) {
 }
 
 func TestPaths(t *testing.T) {
-	cfg := New(Options{ConsoleDir: "/opt/BetterDeskConsole", GOOS: "linux"})
+	cfg := New(Options{ConsoleDir: "/opt/NeoDeskConsole", GOOS: "linux"})
 	p := cfg.Paths()
-	if runtime.GOOS != "windows" && (p.ServerPath != "/opt/betterdesk" || p.DataPath != "/opt/BetterDeskConsole/data" ||
-		p.EnvPath != "/opt/BetterDeskConsole/.env" || p.BackupPath != "/opt/BetterDeskConsole/data/backups") {
+	if runtime.GOOS != "windows" && (p.ServerPath != "/opt/neodesk" || p.DataPath != "/opt/NeoDeskConsole/data" ||
+		p.EnvPath != "/opt/NeoDeskConsole/.env" || p.BackupPath != "/opt/NeoDeskConsole/data/backups") {
 		t.Errorf("%+v", p)
 	}
-	env := map[string]string{"BETTERDESK_CONSOLE_PATH": "/srv/c", "RUSTDESK_PATH": "/srv/s"}
-	cfg = New(Options{ConsoleDir: "/x", EnvFile: "/etc/betterdesk.env", Getenv: func(k string) string { return env[k] }})
-	if p := cfg.Paths(); runtime.GOOS != "windows" && (p.ConsolePath != "/srv/c" || p.ServerPath != "/srv/s" || p.EnvPath != "/etc/betterdesk.env") {
+	env := map[string]string{"NEODESK_CONSOLE_PATH": "/srv/c", "RUSTDESK_PATH": "/srv/s"}
+	cfg = New(Options{ConsoleDir: "/x", EnvFile: "/etc/neodesk.env", Getenv: func(k string) string { return env[k] }})
+	if p := cfg.Paths(); runtime.GOOS != "windows" && (p.ConsolePath != "/srv/c" || p.ServerPath != "/srv/s" || p.EnvPath != "/etc/neodesk.env") {
 		t.Errorf("%+v", p)
 	}
 }

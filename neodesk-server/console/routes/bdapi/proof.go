@@ -10,16 +10,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
 // The Ed25519 proof of possession a device can send with its registration
 // (lib/enrollmentProof.js), the same challenge the API server's
-// /api/devices/register takes (bd-enrollment-v1). The device signs, with
+// /api/devices/register takes (nd-enrollment-v1). The device signs, with
 // the private half of the key it registers or already has:
 //
-//	bd-enrollment-v1
+//	nd-enrollment-v1
 //	<METHOD>
 //	<PATH>
 //	<DEVICE_ID>
@@ -28,11 +28,11 @@ import (
 //	<nonce>
 //
 // joined by newlines, and sends timestamp, nonce and signature in the
-// headers X-BD-Enrollment-Timestamp, -Nonce and -Signature. A proof is
+// headers X-ND-Enrollment-Timestamp, -Nonce and -Signature. A proof is
 // good for five minutes either side of now, and each nonce once per
 // device for ten minutes.
 const (
-	proofVersion   = "bd-enrollment-v1"
+	proofVersion   = "nd-enrollment-v1"
 	clockSkewMs    = 5 * 60 * 1000
 	nonceMaxLength = 256
 	nonceTTLMs     = 10 * 60 * 1000
@@ -118,9 +118,9 @@ func proofPayload(method, path, deviceID, key, timestamp, nonce string) []byte {
 
 // proofHeaders are the three headers, trimmed.
 func proofHeaders(r *http.Request) (timestamp, nonce, signature string) {
-	return trim(headerText(r, "X-Bd-Enrollment-Timestamp")),
-		trim(headerText(r, "X-Bd-Enrollment-Nonce")),
-		trim(headerText(r, "X-Bd-Enrollment-Signature"))
+	return trim(headerText(r, "X-Nd-Enrollment-Timestamp")),
+		trim(headerText(r, "X-Nd-Enrollment-Nonce")),
+		trim(headerText(r, "X-Nd-Enrollment-Signature"))
 }
 
 // verifyProof checks the proof of a request for a device and a public

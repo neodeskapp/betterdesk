@@ -2,7 +2,7 @@
  "id": "registration/device-status-unknown",
  "request": {
   "method": "GET",
-  "path": "/api/bd/register-status?device_id=contract-none",
+  "path": "/api/nd/register-status?device_id=contract-none",
   "notes": [
    "no CSRF token",
    "no cookies"

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/session/cookie"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session/cookie"
 )
 
 // Cookie is req.cookies[name] for a cookie that holds text: the first

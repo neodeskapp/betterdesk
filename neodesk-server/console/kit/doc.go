@@ -34,7 +34,7 @@
 //			kit.Fail(w, r, http.StatusBadRequest, kit.T(r, "notes.text_required", nil))
 //			return
 //		}
-//		// A call into the API server, as betterdeskApi.getPeer(id) was
+//		// A call into the API server, as neodeskApi.getPeer(id) was
 //		if h.d.GoAPI.GetPeer(r.Context(), device) == nil {
 //			kit.Fail(w, r, http.StatusNotFound, "Device not found")
 //			return
@@ -95,7 +95,7 @@
 //
 // d.Router is where nearly every group registers: its routes sit behind
 // the whole pipeline. d.Early is for the RustDesk client API and the
-// device API under /api/bd, which Node mounted before the request
+// device API under /api/nd, which Node mounted before the request
 // language, the CSRF gate, the no-store cache header, compression and the
 // JSON content-type rule. A handler in the early stage has no kit.Lang, is
 // never CSRF-checked, and its answers are never compressed.
@@ -131,7 +131,7 @@
 // A group that Node mounted at a prefix registers below it, and a group
 // mounted twice is registered twice (every address is kept):
 //
-//	inventory.Register(d.At("/api/bd"))        // router.use('/api/bd', inventoryRoutes)
+//	inventory.Register(d.At("/api/nd"))        // router.use('/api/nd', inventoryRoutes)
 //	inventory.Register(d.At("/api/inventory")) // router.use('/api/inventory', inventoryRoutes)
 //
 // Inside, the group writes its patterns as the Node router did ("/",
@@ -184,7 +184,7 @@
 //
 // Neither looks at the session. They go where Node had them in the list:
 //
-//	r.Post("/api/bd/fleet/task-result", h.taskResult, d.RequireDeviceToken, d.RequireTokenDeviceMatch)
+//	r.Post("/api/nd/fleet/task-result", h.taskResult, d.RequireDeviceToken, d.RequireTokenDeviceMatch)
 //
 //	func (h *handlers) taskResult(w http.ResponseWriter, r *http.Request) {
 //		device := kit.Device(r) // never nil behind RequireDeviceToken
@@ -196,7 +196,7 @@
 // kit.DeviceIDHeader(r) is req.headers['x-device-id'] for a handler that
 // reads the header itself. The CSRF gate in front of Router lets a write
 // through without a token when nobody is signed in and its path starts
-// with /api/bd/ or it carries a bearer token, so a device reaches its
+// with /api/nd/ or it carries a bearer token, so a device reaches its
 // routes mounted elsewhere too (/api/tickets/bd, /api/dataguard/dlp-events).
 //
 // # Websockets

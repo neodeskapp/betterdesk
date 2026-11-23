@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 )
 
 // Refusals of unauthenticated requests are audited once per address, action

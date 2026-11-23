@@ -17,11 +17,11 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/console/authn"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 type resetRow struct {
@@ -141,7 +141,7 @@ func compareReset(t *testing.T, c resetCase, status int, stdout, stderr string, 
 		t.Errorf("%s: stdout\n got %q\nwant %q", c.Name, stdout, c.Stdout)
 	}
 	if strings.HasPrefix(c.Stderr, "Usage:") {
-		if !strings.HasPrefix(stderr, "Usage: betterdesk-server reset-password") {
+		if !strings.HasPrefix(stderr, "Usage: neodesk-server reset-password") {
 			t.Errorf("%s: stderr %q, want the usage", c.Name, stderr)
 		}
 	} else if stderr != c.Stderr {
@@ -763,7 +763,7 @@ func TestResetPasswordTakesThePasswordFromStandardInputOnly(t *testing.T) {
 		{nil, "", false},
 	} {
 		status, out := run(c.args, c.stdin, c.terminal)
-		if status != 1 || !strings.Contains(out, "Usage: betterdesk-server reset-password") {
+		if status != 1 || !strings.Contains(out, "Usage: neodesk-server reset-password") {
 			t.Errorf("%v (terminal %v): %d %q", c.args, c.terminal, status, out)
 		}
 		if _, err := os.Stat(file); err == nil {

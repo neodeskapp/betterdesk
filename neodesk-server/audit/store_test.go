@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 func storeForTest(t *testing.T) db.Database {

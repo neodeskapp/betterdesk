@@ -45,7 +45,7 @@ func localGate(root string, args []string, stdout, stderr io.Writer) int {
 
 const gateUsage = `Usage: go run ./cmd/repotool local-gate [options]
 
-Runs the complete local-only BetterDesk diagnostic gate.
+Runs the complete local-only NeoDesk diagnostic gate.
 
 Options:
   --dry-run             Print the planned command categories without running them
@@ -61,7 +61,7 @@ const (
 	maxCapture       = 512 * 1024
 	commandTimeout   = 30 * time.Minute
 	securityTimeout  = 20 * time.Minute
-	postgresPassword = "BetterDeskLocalGateOnly2026"
+	postgresPassword = "NeoDeskLocalGateOnly2026"
 )
 
 var composeFiles = []string{
@@ -72,8 +72,8 @@ var composeFiles = []string{
 
 var bashInstallerFiles = []string{
 	"install.sh",
-	"betterdesk.sh",
-	"betterdesk-docker.sh",
+	"neodesk.sh",
+	"neodesk-docker.sh",
 	"scripts/test-native-installer.sh",
 	"scripts/test-go-installer.sh",
 	"scripts/check-go-toolchain-pins.sh",
@@ -107,12 +107,12 @@ type gateOptions struct {
 }
 
 // parseGateArgs reads the options. The report folder is --report-dir,
-// else BETTERDESK_LOCAL_GATE_REPORT_DIR, else .local-test-results; a
+// else NEODESK_LOCAL_GATE_REPORT_DIR, else .local-test-results; a
 // relative folder is taken from the repository's root, where the
 // wrappers and hooks run the gate.
 func parseGateArgs(args []string, getenv func(string) string, root string) (gateOptions, error) {
 	opts := gateOptions{reportDir: filepath.Join(root, ".local-test-results")}
-	if dir := getenv("BETTERDESK_LOCAL_GATE_REPORT_DIR"); dir != "" {
+	if dir := getenv("NEODESK_LOCAL_GATE_REPORT_DIR"); dir != "" {
 		opts.reportDir = fromRoot(root, dir)
 	}
 	for i := 0; i < len(args); i++ {
@@ -908,10 +908,10 @@ func (g *gate) runNodeChecks(tools gateTools) {
 }
 
 func (g *gate) runGoChecks(tools gateTools, postgresDSN string) {
-	server := g.path("betterdesk-server")
+	server := g.path("neodesk-server")
 	var goEnv map[string]string
 	if postgresDSN != "" {
-		goEnv = map[string]string{"BETTERDESK_TEST_POSTGRES_DSN": postgresDSN}
+		goEnv = map[string]string{"NEODESK_TEST_POSTGRES_DSN": postgresDSN}
 	}
 	g.runCheck("go-vet", "Go static analysis", tools["go"], []string{"vet", "./..."}, runOptions{cwd: server, env: goEnv})
 	g.runCheck("go-tests-race", "Go tests with race detector", tools["go"], []string{"test", "-race", "-count=1", "./..."}, runOptions{cwd: server, env: goEnv})
@@ -921,12 +921,12 @@ func (g *gate) runGoChecks(tools gateTools, postgresDSN string) {
 	if runtime.GOOS == "windows" {
 		exe = ".exe"
 	}
-	binary := filepath.Join(os.TempDir(), fmt.Sprintf("betterdesk-server-local-gate-%d%s", os.Getpid(), exe))
-	g.runCheck("go-build", "Build BetterDesk server binary", tools["go"], []string{"build", "-o", binary, "."}, runOptions{cwd: server})
+	binary := filepath.Join(os.TempDir(), fmt.Sprintf("neodesk-server-local-gate-%d%s", os.Getpid(), exe))
+	g.runCheck("go-build", "Build NeoDesk server binary", tools["go"], []string{"build", "-o", binary, "."}, runOptions{cwd: server})
 	if _, err := os.Stat(binary); err == nil {
-		g.runCheck("go-binary-help", "Verify BetterDesk server binary help", binary, []string{"--help"}, runOptions{cwd: server, timeout: 15 * time.Second})
+		g.runCheck("go-binary-help", "Verify NeoDesk server binary help", binary, []string{"--help"}, runOptions{cwd: server, timeout: 15 * time.Second})
 	} else {
-		g.addInternal("go-binary-help", "Verify BetterDesk server binary help", "BLOCKED", "Build did not create the expected binary", internalExtra{})
+		g.addInternal("go-binary-help", "Verify NeoDesk server binary help", "BLOCKED", "Build did not create the expected binary", internalExtra{})
 	}
 	_ = os.Remove(binary)
 
@@ -936,7 +936,7 @@ func (g *gate) runGoChecks(tools gateTools, postgresDSN string) {
 		if goos == "windows" {
 			suffix = ".exe"
 		}
-		output := filepath.Join(os.TempDir(), fmt.Sprintf("betterdesk-server-%s-%s-%d%s", goos, goarch, os.Getpid(), suffix))
+		output := filepath.Join(os.TempDir(), fmt.Sprintf("neodesk-server-%s-%s-%d%s", goos, goarch, os.Getpid(), suffix))
 		g.runCheck("go-cross-"+goos+"-"+goarch, "Cross-compile Go server for "+goos+"/"+goarch, tools["go"],
 			[]string{"build", "-o", output, "."}, runOptions{cwd: server, env: map[string]string{"GOOS": goos, "GOARCH": goarch}})
 		_ = os.Remove(output)
@@ -945,7 +945,7 @@ func (g *gate) runGoChecks(tools gateTools, postgresDSN string) {
 	if postgresDSN != "" {
 		g.runCheck("go-postgres-tests", "Go PostgreSQL integration tests", tools["go"],
 			[]string{"test", "./db/...", "-run", "Postgres", "-count=1"},
-			runOptions{cwd: server, env: map[string]string{"BETTERDESK_TEST_POSTGRES_DSN": postgresDSN}})
+			runOptions{cwd: server, env: map[string]string{"NEODESK_TEST_POSTGRES_DSN": postgresDSN}})
 	} else {
 		g.addInternal("go-postgres-tests", "Go PostgreSQL integration tests", "BLOCKED", "No temporary PostgreSQL DSN was created", internalExtra{})
 	}
@@ -969,7 +969,7 @@ func (g *gate) runPythonChecks(tools gateTools, m securityManifests) {
 			g.addInternal(id, label, "BLOCKED", "No project dependencies could be extracted", internalExtra{})
 			continue
 		}
-		temp := filepath.Join(os.TempDir(), fmt.Sprintf("betterdesk-python-deps-%d.txt", os.Getpid()))
+		temp := filepath.Join(os.TempDir(), fmt.Sprintf("neodesk-python-deps-%d.txt", os.Getpid()))
 		if err := os.WriteFile(temp, []byte(strings.Join(deps, "\n")+"\n"), 0o600); err != nil {
 			g.addInternal(id, label, "FAIL", err.Error(), internalExtra{})
 			continue
@@ -1015,8 +1015,8 @@ func (g *gate) runInstallerChecks(tools gateTools) {
 	}
 	for _, c := range [][3]string{
 		{"installer-help", "install.sh", "Check install.sh help path"},
-		{"betterdesk-help", "betterdesk.sh", "Check betterdesk.sh help path"},
-		{"docker-installer-help", "betterdesk-docker.sh", "Check betterdesk-docker.sh help path"},
+		{"neodesk-help", "neodesk.sh", "Check neodesk.sh help path"},
+		{"docker-installer-help", "neodesk-docker.sh", "Check neodesk-docker.sh help path"},
 	} {
 		g.runCheck(c[0], c[2], tools["bash"], []string{c[1], "--help"}, runOptions{timeout: time.Minute})
 	}
@@ -1064,9 +1064,9 @@ func (g *gate) runComposeConfigChecks(tools gateTools) dockerBuilds {
 		})
 	}
 	single := g.runCheck("docker-build-single", "Build local single-container image", tools["docker"],
-		[]string{"compose", "-f", g.path("docker-compose.single.yml"), "build", "betterdesk"}, runOptions{cwd: g.root})
+		[]string{"compose", "-f", g.path("docker-compose.single.yml"), "build", "neodesk"}, runOptions{cwd: g.root})
 	g.runCheck("docker-build-server", "Build local server-only image", tools["docker"],
-		[]string{"build", "-f", g.path("Dockerfile.server"), "-t", "betterdesk-server:local", g.root}, runOptions{cwd: g.root})
+		[]string{"build", "-f", g.path("Dockerfile.server"), "-t", "neodesk-server:local", g.root}, runOptions{cwd: g.root})
 	// There is no console image: the server serves the web console
 	return dockerBuilds{singleBuilt: single.Status == "PASS"}
 }
@@ -1079,14 +1079,14 @@ var (
 )
 
 func (g *gate) startPostgres(tools gateTools) postgresInstance {
-	p := postgresInstance{name: fmt.Sprintf("betterdesk-local-gate-postgres-%d-%d", os.Getpid(), time.Now().UnixMilli())}
+	p := postgresInstance{name: fmt.Sprintf("neodesk-local-gate-postgres-%d-%d", os.Getpid(), time.Now().UnixMilli())}
 	start := g.runCheck("postgres-start", "Start isolated PostgreSQL container", tools["docker"], []string{
 		"run", "--detach",
 		"--name", p.name,
-		"--label", "com.betterdesk.local-gate=true",
+		"--label", "com.neodesk.local-gate=true",
 		"--publish", "127.0.0.1::5432",
-		"--env", "POSTGRES_USER=betterdesk",
-		"--env", "POSTGRES_DB=betterdesk",
+		"--env", "POSTGRES_USER=neodesk",
+		"--env", "POSTGRES_DB=neodesk",
 		"--env", "POSTGRES_PASSWORD",
 		"postgres:16-alpine",
 	}, runOptions{cwd: g.root, env: map[string]string{"POSTGRES_PASSWORD": postgresPassword}})
@@ -1096,7 +1096,7 @@ func (g *gate) startPostgres(tools gateTools) postgresInstance {
 	deadline := time.Now().Add(2 * time.Minute)
 	ready := false
 	for time.Now().Before(deadline) {
-		probe := g.runProcess(tools["docker"], []string{"exec", p.name, "pg_isready", "-U", "betterdesk", "-d", "betterdesk"}, runOptions{timeout: 10 * time.Second})
+		probe := g.runProcess(tools["docker"], []string{"exec", p.name, "pg_isready", "-U", "neodesk", "-d", "neodesk"}, runOptions{timeout: 10 * time.Second})
 		if probe.code != nil && *probe.code == 0 {
 			ready = true
 			break
@@ -1115,8 +1115,8 @@ func (g *gate) startPostgres(tools gateTools) postgresInstance {
 		g.addInternal("postgres-ready", "Wait for isolated PostgreSQL", "FAIL", "Could not determine the mapped PostgreSQL port", internalExtra{})
 		return p
 	}
-	p.dsn = "postgres://betterdesk:" + postgresPassword + "@127.0.0.1:" + m[1] + "/betterdesk?sslmode=disable"
-	p.containerDSN = "postgres://betterdesk:" + postgresPassword + "@host.docker.internal:" + m[1] + "/betterdesk?sslmode=disable"
+	p.dsn = "postgres://neodesk:" + postgresPassword + "@127.0.0.1:" + m[1] + "/neodesk?sslmode=disable"
+	p.containerDSN = "postgres://neodesk:" + postgresPassword + "@host.docker.internal:" + m[1] + "/neodesk?sslmode=disable"
 	g.addInternal("postgres-ready", "Wait for isolated PostgreSQL", "PASS", "PostgreSQL is ready on an ephemeral local port "+m[1], internalExtra{})
 	return p
 }
@@ -1134,7 +1134,7 @@ func (g *gate) runDockerRuntimeChecks(tools gateTools, p postgresInstance, build
 	} else {
 		g.addInternal("docker-smoke-postgres", "Smoke-test local Docker image with PostgreSQL", "BLOCKED", "PostgreSQL container was not ready", internalExtra{})
 	}
-	for _, image := range []string{"betterdesk:local", "betterdesk-server:local"} {
+	for _, image := range []string{"neodesk:local", "neodesk-server:local"} {
 		g.runCheck("trivy-image-"+reNotAlnum.ReplaceAllString(image, "-"), "Scan local image "+image, tools["trivy"], []string{
 			"image",
 			"--scanners", "vuln,secret,misconfig",
@@ -1145,7 +1145,7 @@ func (g *gate) runDockerRuntimeChecks(tools gateTools, p postgresInstance, build
 	}
 	g.runCheck("docker-hardening", "Test hardened Docker bind mounts and restart behavior", tools["bash"],
 		[]string{"scripts/test-docker-hardening.sh"},
-		runOptions{cwd: g.root, env: map[string]string{"BETTERDESK_HARDENING_IMAGE": "betterdesk:local"}})
+		runOptions{cwd: g.root, env: map[string]string{"NEODESK_HARDENING_IMAGE": "neodesk:local"}})
 }
 
 func (g *gate) runFullNodeTests(tools gateTools) {
@@ -1181,7 +1181,7 @@ func writeReports(r *gateReport, dir string) (reportPaths, error) {
 		finished = *r.FinishedAt
 	}
 	lines := []string{
-		"# BetterDesk local gate",
+		"# NeoDesk local gate",
 		"",
 		"- Overall: **" + r.Overall + "**",
 		"- Branch: `" + r.Repository.Branch + "`",

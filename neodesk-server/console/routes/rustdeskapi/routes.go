@@ -1,6 +1,6 @@
 // Package rustdeskapi is the RustDesk client API of the console
 // (routes/rustdesk-api.routes.js): the HTTP API RustDesk desktop clients
-// and the BetterDesk client speak. Clients sign in with POST /api/login
+// and the NeoDesk client speak. Clients sign in with POST /api/login
 // and send the access token they get as "Authorization: Bearer"; they keep
 // their address books here, list devices, groups and strategies, and
 // report heartbeats, system information and audit records.
@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 type handlers struct {

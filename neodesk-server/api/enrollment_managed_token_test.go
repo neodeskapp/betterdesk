@@ -9,9 +9,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 // enrollmentTokenFixture creates a server in the given enrollment mode with one
@@ -50,7 +50,7 @@ func registerWithToken(t *testing.T, srv *Server, deviceID, token string) *httpt
 		"uuid":        "machine-" + deviceID,
 		"hostname":    "token-host",
 		"platform":    "linux",
-		"device_type": "betterdesk-desktop",
+		"device_type": "neodesk-desktop",
 	}
 	if token != "" {
 		payload["token"] = token

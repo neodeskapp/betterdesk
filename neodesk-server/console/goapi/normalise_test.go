@@ -69,7 +69,7 @@ func TestNormalisePeerFields(t *testing.T) {
 		{"last online in milliseconds", `{"last_online":` + itoa(int(fixedNow.Add(-time.Minute).UnixMilli())) + `}`, map[string]string{"no_signal": "true"}},
 		{"last online without a zone", `{"last_online":"` + fixedNow.Add(-time.Minute).In(time.Local).Format("2006-01-02 15:04:05") + `"}`, map[string]string{"no_signal": "true"}},
 		{"last online that is no date", `{"last_online":"yesterday"}`, map[string]string{"no_signal": "false", "last_online": `"yesterday"`}},
-		{"device type is trimmed and lowered", `{"device_type":"  BetterDesk "}`, map[string]string{"device_type": `"betterdesk"`}},
+		{"device type is trimmed and lowered", `{"device_type":"  NeoDesk "}`, map[string]string{"device_type": `"neodesk"`}},
 		{"tags as a list", `{"tags":["a",1]}`, map[string]string{"tags": `["a",1]`}},
 		{"tags as a JSON list in text", `{"tags":"[\"a\",\"b\"]"}`, map[string]string{"tags": `["a","b"]`}},
 		{"tags as JSON that is no list", `{"tags":"123"}`, map[string]string{"tags": `["123"]`}},

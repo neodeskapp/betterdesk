@@ -1,6 +1,6 @@
 /**
  * Pairing codes (routes/pairing.routes.js): short one-time codes a
- * BetterDesk client redeems with the server address. Every call needs
+ * NeoDesk client redeems with the server address. Every call needs
  * enrollment.approve. The code itself is only in the create answer.
  */
 

@@ -15,10 +15,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
-	serverdb "github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
+	serverdb "github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // origin is the history of a test database: which program created the
@@ -487,7 +487,7 @@ func requireSameRows(t *testing.T, src, dst *store.DB, skip ...string) {
 		t.Fatal(err)
 	}
 	for _, name := range srcShape.Tables() {
-		if name == "betterdesk_migrations" {
+		if name == "neodesk_migrations" {
 			continue
 		}
 		dt := dstShape.Table(name)
@@ -674,7 +674,7 @@ func schemaText(t *testing.T, path string) string {
 	}
 	var b strings.Builder
 	for _, name := range cat.names() {
-		if name == "betterdesk_migrations" {
+		if name == "neodesk_migrations" {
 			continue
 		}
 		b.WriteString(name + "(")

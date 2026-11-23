@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 )
 
 // The boot script is, byte for byte, the one the Node route sent for the

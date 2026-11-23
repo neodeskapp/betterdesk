@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // injectOrgPeerCredentialsIntoAB decrypts org vault passwords and injects the

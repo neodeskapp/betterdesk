@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/internal/envvar"
-	pb "github.com/unitronix/betterdesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 	"google.golang.org/protobuf/proto"
 )
 

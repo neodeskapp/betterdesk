@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	jwtIssuer   = "betterdesk-server"
-	jwtAudience = "betterdesk-api"
+	jwtIssuer   = "neodesk-server"
+	jwtAudience = "neodesk-api"
 	// Allow small clock skew between issuer and verifier.
 	jwtNbfSkewSeconds = 60
 )

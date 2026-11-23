@@ -1,15 +1,15 @@
 // Package automation holds the automation routes. The console mounts the
-// group twice, at /api/automation and at /api/bd:
+// group twice, at /api/automation and at /api/nd:
 //
 //   - The routes people manage alerts and remote commands with: alert
 //     rules, the alert history, the commands sent to devices, and the SMTP
 //     settings. All of them need the permission server.config, the
 //     commands also device.connect and a device in the account's device
-//     scope (commands.go), and all of them step aside at /api/bd for the
+//     scope (commands.go), and all of them step aside at /api/nd for the
 //     routes of other groups there.
 //   - The routes of the device agent, behind the device token guard
 //     (device.go): it fetches its pending commands (GET commands, registered
-//     at /api/bd only, because at /api/automation the people's list of
+//     at /api/nd only, because at /api/automation the people's list of
 //     commands answers first) and reports a command's result (POST
 //     commands/{id}/result, at both mounts).
 //
@@ -27,11 +27,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/alerts"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/devicemount"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/alerts"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/devicemount"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 var (
@@ -70,7 +70,7 @@ func Register(d *kit.Deps) {
 	r.Get("/commands/{id}", h.command, id, notOnDeviceMount, d.RequireAuth, canConfigure, canConnect)
 
 	// At /api/automation the people's list of the same path answers every
-	// request first, so the device route is registered at /api/bd only
+	// request first, so the device route is registered at /api/nd only
 	if r.Prefix() == devicemount.DeviceMount {
 		r.Get("/commands", h.pendingCommands, d.RequireDeviceToken)
 	}

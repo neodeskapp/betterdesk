@@ -9,14 +9,14 @@ import "strings"
 
 // InstallScript installs the client package of an invite as root (deb
 // with apt-get, rpm with dnf, zypper or yum) and joins the server with
-// betterdesk --join <link>.
+// neodesk --join <link>.
 func InstallScript(base, code string) string {
 	return fill(installScript, base, code)
 }
 
 // RunScript starts quick support from the portable package in the
 // person's cache folder, without root and without installing anything:
-// betterdesk --join <support link>.
+// neodesk --join <support link>.
 func RunScript(base, code string) string {
 	return fill(runScript, base, code)
 }
@@ -29,14 +29,14 @@ const archCase = `case "$(uname -m)" in
 	x86_64 | amd64) arch=x64 ;;
 	aarch64 | arm64) arch=arm64 ;;
 	*)
-		echo "There is no BetterDesk package for $(uname -m)." >&2
+		echo "There is no NeoDesk package for $(uname -m)." >&2
 		exit 1
 		;;
 esac
 `
 
 const installScript = `#!/bin/sh
-# Installs BetterDesk and joins it to @BASE@ with an invite.
+# Installs NeoDesk and joins it to @BASE@ with an invite.
 # The script works as long as the invite does.
 set -eu
 
@@ -54,18 +54,18 @@ if command -v apt-get >/dev/null 2>&1; then
 elif command -v dnf >/dev/null 2>&1 || command -v zypper >/dev/null 2>&1 || command -v yum >/dev/null 2>&1; then
 	format=rpm
 else
-	echo "This system has no apt-get, dnf, zypper or yum to install BetterDesk with." >&2
+	echo "This system has no apt-get, dnf, zypper or yum to install NeoDesk with." >&2
 	exit 1
 fi
 
 dir=$(mktemp -d)
 trap 'rm -rf "$dir"' EXIT
 chmod 755 "$dir"
-package="$dir/betterdesk.$format"
-echo "Downloading BetterDesk..."
+package="$dir/neodesk.$format"
+echo "Downloading NeoDesk..."
 curl -fsSL -o "$package" "$BASE/api/onboard/public/$CODE/download?os=linux&arch=$arch&format=$format"
 
-echo "Installing BetterDesk..."
+echo "Installing NeoDesk..."
 case "$format" in
 	deb) DEBIAN_FRONTEND=noninteractive apt-get install -y "$package" ;;
 	rpm)
@@ -80,11 +80,11 @@ case "$format" in
 esac
 
 echo "Joining $BASE..."
-betterdesk --join "$BASE/join/$CODE"
+neodesk --join "$BASE/join/$CODE"
 `
 
 const runScript = `#!/bin/sh
-# Starts BetterDesk Quick Support for @BASE@. Nothing is installed: the
+# Starts NeoDesk Quick Support for @BASE@. Nothing is installed: the
 # app runs from a folder in your cache and asks you before anyone sees
 # your screen.
 set -eu
@@ -93,12 +93,12 @@ BASE='@BASE@'
 CODE='@CODE@'
 
 ` + archCase + `
-dir="${XDG_CACHE_HOME:-$HOME/.cache}/betterdesk-quick-support"
+dir="${XDG_CACHE_HOME:-$HOME/.cache}/neodesk-quick-support"
 rm -rf "$dir"
 mkdir -p "$dir"
-echo "Downloading BetterDesk Quick Support..."
+echo "Downloading NeoDesk Quick Support..."
 curl -fsSL -o "$dir/package.tar.gz" "$BASE/api/onboard/public/$CODE/download?os=linux&arch=$arch&format=tar.gz"
 tar -xzf "$dir/package.tar.gz" -C "$dir"
 rm -f "$dir/package.tar.gz"
-exec "$dir/betterdesk" --join "$BASE/s/$CODE"
+exec "$dir/neodesk" --join "$BASE/s/$CODE"
 `

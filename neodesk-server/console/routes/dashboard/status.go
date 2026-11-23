@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 // probeTimeout is how long a port probe waits for the connection.
@@ -77,7 +77,7 @@ func (h *handlers) serverStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	kit.OK(w, r, statusData{
-		Backend:       "betterdesk",
+		Backend:       "neodesk",
 		Uptime:        int64(h.now().Sub(h.started) / time.Second),
 		Hbbs:          api,
 		Hbbr:          relay,

@@ -7,7 +7,7 @@ package updater
 // without a valid one; the environment can add keys (a fork's) but not
 // take these away.
 //
-// The key of the releases of trybetterdesk/betterdesk (DECISIONS A152);
+// The key of the releases of neodeskapp/neodesk (DECISIONS A152);
 // release-go.yml signs with its private half. The client packages the
 // console serves are checked against the same keys (clientrelease.Keys).
 var releaseKeys = []string{"iwissiXvSjeFFsG8SdKEZq11uAtRLWCrD7Ky1vfY2n4="}

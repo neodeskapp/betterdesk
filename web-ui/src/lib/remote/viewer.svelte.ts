@@ -460,7 +460,7 @@ export class Viewer {
 			deviceId: s.deviceId,
 			serverPubKey: this.data.serverPubKey,
 			connection: this.data.connection,
-			myName: this.data.user?.name || 'BetterDesk Web',
+			myName: this.data.user?.name || 'NeoDesk Web',
 			scaleMode: p.scale,
 			fps: fpsForMode(p.fpsMode, p.quality),
 			fpsMode: p.fpsMode,
@@ -652,7 +652,7 @@ export class Viewer {
 			s.statsTick++;
 		});
 		on('diagnostics', () => {
-			/* window.BetterDesk.debugRelay logs them in the client */
+			/* window.NeoDesk.debugRelay logs them in the client */
 		});
 		on('latency', (rtt: unknown) => {
 			s.latency = Number(rtt) || 0;
@@ -929,7 +929,7 @@ export class Viewer {
 		const s = this.active;
 		if (!s) return;
 		try {
-			sessionStorage.setItem(`bd-billing-report-intent:${s.deviceId}`, '1');
+			sessionStorage.setItem(`nd-billing-report-intent:${s.deviceId}`, '1');
 		} catch {
 			/* storage blocked */
 		}
@@ -1125,7 +1125,7 @@ export class Viewer {
 				const url = URL.createObjectURL(blob);
 				const a = document.createElement('a');
 				a.href = url;
-				a.download = `betterdesk-${s.deviceId}-${Date.now()}.webm`;
+				a.download = `neodesk-${s.deviceId}-${Date.now()}.webm`;
 				a.click();
 				URL.revokeObjectURL(url);
 				s.mediaRecorder = null;

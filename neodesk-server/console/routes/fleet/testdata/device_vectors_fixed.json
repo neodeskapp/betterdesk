@@ -2,7 +2,7 @@
  {
   "vector": 13,
   "bug": "DV4",
-  "request": "POST /api/bd/fleet/task-result",
+  "request": "POST /api/nd/fleet/task-result",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
@@ -11,7 +11,7 @@
  {
   "vector": 14,
   "bug": "DV4",
-  "request": "POST /api/bd/fleet/task-result",
+  "request": "POST /api/nd/fleet/task-result",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
@@ -20,7 +20,7 @@
  {
   "vector": 15,
   "bug": "DV3",
-  "request": "POST /api/bd/fleet/task-result",
+  "request": "POST /api/nd/fleet/task-result",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
@@ -29,7 +29,7 @@
  {
   "vector": 19,
   "bug": "FL6",
-  "request": "POST /api/bd/fleet/task-result",
+  "request": "POST /api/nd/fleet/task-result",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"ok\":true}",
@@ -45,7 +45,7 @@
  {
   "vector": 35,
   "bug": "DV4",
-  "request": "POST /api/bd/fleet/software",
+  "request": "POST /api/nd/fleet/software",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
@@ -54,7 +54,7 @@
  {
   "vector": 36,
   "bug": "DV4",
-  "request": "POST /api/bd/fleet/software",
+  "request": "POST /api/nd/fleet/software",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
@@ -63,7 +63,7 @@
  {
   "vector": 37,
   "bug": "DV3",
-  "request": "POST /api/bd/fleet/software",
+  "request": "POST /api/nd/fleet/software",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
@@ -72,7 +72,7 @@
  {
   "vector": 41,
   "bug": "FL6",
-  "request": "POST /api/bd/fleet/software",
+  "request": "POST /api/nd/fleet/software",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"ok\":true}",
@@ -88,7 +88,7 @@
  {
   "vector": 57,
   "bug": "DV4",
-  "request": "POST /api/bd/api/bd/fleet/task-result",
+  "request": "POST /api/nd/api/nd/fleet/task-result",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
@@ -97,7 +97,7 @@
  {
   "vector": 58,
   "bug": "DV4",
-  "request": "POST /api/bd/api/bd/fleet/task-result",
+  "request": "POST /api/nd/api/nd/fleet/task-result",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
@@ -106,7 +106,7 @@
  {
   "vector": 59,
   "bug": "DV3",
-  "request": "POST /api/bd/api/bd/fleet/task-result",
+  "request": "POST /api/nd/api/nd/fleet/task-result",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
@@ -115,7 +115,7 @@
  {
   "vector": 63,
   "bug": "FL6",
-  "request": "POST /api/bd/api/bd/fleet/task-result",
+  "request": "POST /api/nd/api/nd/fleet/task-result",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"ok\":true}",
@@ -131,7 +131,7 @@
  {
   "vector": 79,
   "bug": "DV4",
-  "request": "POST /api/bd/api/bd/fleet/software",
+  "request": "POST /api/nd/api/nd/fleet/software",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
@@ -140,7 +140,7 @@
  {
   "vector": 80,
   "bug": "DV4",
-  "request": "POST /api/bd/api/bd/fleet/software",
+  "request": "POST /api/nd/api/nd/fleet/software",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
@@ -149,7 +149,7 @@
  {
   "vector": 81,
   "bug": "DV3",
-  "request": "POST /api/bd/api/bd/fleet/software",
+  "request": "POST /api/nd/api/nd/fleet/software",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"error\":\"Device ID mismatch\"}",
@@ -158,7 +158,7 @@
  {
   "vector": 85,
   "bug": "FL6",
-  "request": "POST /api/bd/api/bd/fleet/software",
+  "request": "POST /api/nd/api/nd/fleet/software",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"ok\":true}",

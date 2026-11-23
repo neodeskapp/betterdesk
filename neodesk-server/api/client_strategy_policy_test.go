@@ -42,7 +42,7 @@ func TestMergeRustDeskStrategyOptionsPreservesBrandingLocks(t *testing.T) {
 }
 
 // RustDesk 1.5.3+ ignores these keys in heartbeat strategy updates (#16696).
-// BetterDesk must not treat them as deployable via rustDeskStrategyOptionKeys.
+// NeoDesk must not treat them as deployable via rustDeskStrategyOptionKeys.
 func TestRustDeskStrategyOptionKeysExcludeLockedEndpointKeys(t *testing.T) {
 	locked := []string{
 		"api-server",

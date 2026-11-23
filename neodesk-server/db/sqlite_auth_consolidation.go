@@ -66,12 +66,12 @@ func SQLiteAuthConsolidated(dbPath string) (bool, error) {
 	}
 	defer db.Close()
 	var count int
-	err = db.QueryRow(`SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='betterdesk_migrations'`).Scan(&count)
+	err = db.QueryRow(`SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='neodesk_migrations'`).Scan(&count)
 	if err != nil || count == 0 {
 		return false, nil
 	}
 	var marker int
-	err = db.QueryRow(`SELECT COUNT(*) FROM betterdesk_migrations WHERE name = ? AND status = 'complete'`, sqliteAuthConsolidationName).Scan(&marker)
+	err = db.QueryRow(`SELECT COUNT(*) FROM neodesk_migrations WHERE name = ? AND status = 'complete'`, sqliteAuthConsolidationName).Scan(&marker)
 	if err != nil {
 		return false, nil
 	}

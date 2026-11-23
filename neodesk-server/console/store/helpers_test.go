@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 func testContext(t *testing.T) context.Context {
@@ -473,7 +473,7 @@ func readForeignKeys(t *testing.T, db *store.DB) []foreignKey {
 // rewrites every product type that is not the current one, as the Node
 // console did.
 var fixtureOverrides = map[string]any{
-	"agent_bundles.product_type": "betterdesk-support",
+	"agent_bundles.product_type": "neodesk-support",
 }
 
 // fillTables puts rowsPerTable rows into each of the given tables, parents

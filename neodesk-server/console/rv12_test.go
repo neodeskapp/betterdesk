@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // raw sends a request line as written, which net/http's client would

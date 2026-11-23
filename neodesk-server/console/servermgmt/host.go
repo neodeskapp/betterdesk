@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
 // historyMax is how many samples the snapshot's history keeps.

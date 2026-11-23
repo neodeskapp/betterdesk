@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // TestChatSenderAndGroupDelete: a message posted over the network carries

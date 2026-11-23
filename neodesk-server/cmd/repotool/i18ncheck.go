@@ -101,7 +101,7 @@ func i18nCheck(root string, args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
-const i18nHelp = `BetterDesk i18n audit
+const i18nHelp = `NeoDesk i18n audit
 
 Usage:
   go run ./cmd/repotool i18n-check [--system console|agent-client|mgmt] [--json] [--verbose]
@@ -123,9 +123,9 @@ type i18nSystem struct {
 }
 
 var i18nSystems = []i18nSystem{
-	{ID: "console", Label: "Web Console", Dir: "betterdesk-server/console/static/files/lang"},
-	{ID: "agent-client", Label: "Agent Client", Dir: "betterdesk-agent-client/src/locales"},
-	{ID: "mgmt", Label: "MGMT Client", Dir: "betterdesk-mgmt/src/locales"},
+	{ID: "console", Label: "Web Console", Dir: "neodesk-server/console/static/files/lang"},
+	{ID: "agent-client", Label: "Agent Client", Dir: "neodesk-agent-client/src/locales"},
+	{ID: "mgmt", Label: "MGMT Client", Dir: "neodesk-mgmt/src/locales"},
 }
 
 var i18nReferenceFiles = []string{"en.json", "pl.json"}
@@ -380,7 +380,7 @@ var sharedExactValues = toSet(
 	"CDAP", "CPU", "DataGuard", "GPU", "HTTP", "HTTPS", "IoT", "JSON", "JWT", "LAN",
 	"LDAP", "LDAPS (TLS)", "OIDC", "OAuth2", "RAM", "SCADA", "SDK", "SDK Studio", "SSO",
 	"StartTLS", "TCP", "TLS", "TOTP", "UDP", "URL", "UTF-8", "WS", "WSS", "WebSocket",
-	"Windows", "Linux", "macOS", "Node.js", "RustDesk", "BetterDesk", "BetterDesk MGMT",
+	"Windows", "Linux", "macOS", "Node.js", "RustDesk", "NeoDesk", "NeoDesk MGMT",
 	"Ctrl+Alt+Del", "Ctrl+K", "Wake on LAN", "OpenID Connect", "Active Directory",
 	"Azure AD", "Okta", "Google", "Keycloak", "GitHub", "Docker", "PostgreSQL", "SQLite",
 	"NSIS", "MSI", "AppImage",
@@ -475,7 +475,7 @@ func listed(keys []string, n int) string {
 }
 
 func printI18nHuman(w io.Writer, results []i18nResult, verbose bool) {
-	fmt.Fprintln(w, "\nBetterDesk i18n audit")
+	fmt.Fprintln(w, "\nNeoDesk i18n audit")
 	fmt.Fprintln(w, "Reference baseline: union of en.json and pl.json keys")
 	fmt.Fprint(w, "English fallback check: exact EN values filtered through a technical-term allowlist\n\n")
 

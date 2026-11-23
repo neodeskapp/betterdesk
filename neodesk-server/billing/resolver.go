@@ -3,7 +3,7 @@ package billing
 import (
 	"fmt"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // ContractResolver resolves the effective billing contract for a device.

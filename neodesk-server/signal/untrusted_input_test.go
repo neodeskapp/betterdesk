@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/config"
-	cryptopkg "github.com/unitronix/betterdesk-server/crypto"
-	"github.com/unitronix/betterdesk-server/peer"
-	pb "github.com/unitronix/betterdesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	cryptopkg "github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 )
 
 // A relay uuid is client text of any length; a short one must be answered,

@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 func TestMain(m *testing.M) { os.Exit(contract.Main(m)) }

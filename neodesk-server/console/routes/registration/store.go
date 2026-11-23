@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // getSetting is db.getSetting: the value of a console setting as the

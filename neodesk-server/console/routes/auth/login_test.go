@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 const signedInAlice = `{"success":true,"user":{"username":"alice","role":"operator"},"redirect":"/","session":{"replacedPriorSessions":0,"idleTimeoutMs":1800000,"maxAgeMs":86400000}}`
@@ -171,7 +171,7 @@ func TestLoginRefusesALockedAccount(t *testing.T) {
 		if retry := res.header.Get("Retry-After"); retry != "600" && retry != "599" {
 			t.Errorf("Retry-After: %q", retry)
 		}
-		if res.cookie("bd.sid") != "" {
+		if res.cookie("nd.sid") != "" {
 			t.Errorf("a refused sign-in set a session cookie: %q", res.cookies())
 		}
 		equal(t, "audit", w.audit(), []string{"login_blocked|Account/IP locked; ip=198.51.100.30|198.51.100.30|0"})
@@ -300,7 +300,7 @@ func TestLoginSignsIn(t *testing.T) {
 		res := a.post("/api/auth/login", login("alice", password))
 		want(t, "sign-in", res, http.StatusOK, signedInAlice)
 		if got := res.cookies(); len(got) != 2 || got[0] != clearedGuest ||
-			!regexp.MustCompile(`^bd\.sid=s%3A[\w-]{32}\.[\w%]+; Path=/; Expires=\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT; HttpOnly; SameSite=Lax$`).MatchString(got[1]) {
+			!regexp.MustCompile(`^nd\.sid=s%3A[\w-]{32}\.[\w%]+; Path=/; Expires=\w{3}, \d\d \w{3} \d{4} \d\d:\d\d:\d\d GMT; HttpOnly; SameSite=Lax$`).MatchString(got[1]) {
 			t.Errorf("cookies of a sign-in: %q", got)
 		}
 		// The session is a new one: the id from before sign-in is worth nothing
@@ -554,10 +554,10 @@ func TestLoginOverHTTPS(t *testing.T) {
 	if res.status != http.StatusOK {
 		t.Fatalf("sign-in: %d %s", res.status, res.body)
 	}
-	if got := res.cookie("betterdesk.guest"); got != "betterdesk.guest=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=Lax" {
+	if got := res.cookie("neodesk.guest"); got != "neodesk.guest=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=Lax" {
 		t.Errorf("guest cookie over HTTPS: %q", got)
 	}
-	if got := res.cookie("betterdesk.sid"); !strings.Contains(got, "; HttpOnly; Secure; SameSite=Lax") {
+	if got := res.cookie("neodesk.sid"); !strings.Contains(got, "; HttpOnly; Secure; SameSite=Lax") {
 		t.Errorf("session cookie over HTTPS: %q", got)
 	}
 	// The audit entry has the client's address behind the proxy, twice
@@ -576,10 +576,10 @@ func TestLoginOverPlainHTTPInHTTPSMode(t *testing.T) {
 	if res.status != http.StatusOK {
 		t.Fatalf("sign-in: %d %s", res.status, res.body)
 	}
-	if got := res.cookie("betterdesk.guest"); got != "betterdesk.guest=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax" {
+	if got := res.cookie("neodesk.guest"); got != "neodesk.guest=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax" {
 		t.Errorf("guest cookie over plain HTTP: %q", got)
 	}
-	if got := res.cookie("betterdesk.sid"); got == "" || strings.Contains(got, "; Secure") {
+	if got := res.cookie("neodesk.sid"); got == "" || strings.Contains(got, "; Secure") {
 		t.Errorf("session cookie over plain HTTP: %q", got)
 	}
 }

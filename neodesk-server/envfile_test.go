@@ -39,23 +39,23 @@ func TestEnvFileFillsWhatIsNotSet(t *testing.T) {
 	if err := os.WriteFile(file, []byte(text), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	env := fakeEnv{"BETTERDESK_ENV_FILE": file, "KEPT": "from-service", "EMPTY_BEFORE": ""}
+	env := fakeEnv{"NEODESK_ENV_FILE": file, "KEPT": "from-service", "EMPTY_BEFORE": ""}
 	if err := loadEnvFile(env.get, env.set, os.ReadFile); err != nil {
 		t.Fatal(err)
 	}
 	want := fakeEnv{
-		"BETTERDESK_ENV_FILE": file,
-		"PORT":                "5000",
-		"CONSOLE_PORT":        "5000",
-		"HOST":                "127.0.0.1",
-		"EMPTY_BEFORE":        "filled",
-		"KEPT":                "from-service",
-		"SPACED KEY":          "spaced value",
-		"DUP":                 "first",
-		"LATER_EMPTY":         "second",
-		"WITH_EQUALS":         "a=b=c",
-		"QUOTED":              "kept as written",
-		"LAST":                "no newline",
+		"NEODESK_ENV_FILE": file,
+		"PORT":             "5000",
+		"CONSOLE_PORT":     "5000",
+		"HOST":             "127.0.0.1",
+		"EMPTY_BEFORE":     "filled",
+		"KEPT":             "from-service",
+		"SPACED KEY":       "spaced value",
+		"DUP":              "first",
+		"LATER_EMPTY":      "second",
+		"WITH_EQUALS":      "a=b=c",
+		"QUOTED":           "kept as written",
+		"LAST":             "no newline",
 	}
 	if !reflect.DeepEqual(env, want) {
 		t.Errorf("environment\n got %v\nwant %v", env, want)
@@ -65,7 +65,7 @@ func TestEnvFileFillsWhatIsNotSet(t *testing.T) {
 func TestEnvFileOnlyWhenNamed(t *testing.T) {
 	env := fakeEnv{}
 	read := func(string) ([]byte, error) {
-		t.Error("a file was read without BETTERDESK_ENV_FILE")
+		t.Error("a file was read without NEODESK_ENV_FILE")
 		return nil, nil
 	}
 	if err := loadEnvFile(env.get, env.set, read); err != nil || len(env) != 0 {
@@ -74,7 +74,7 @@ func TestEnvFileOnlyWhenNamed(t *testing.T) {
 }
 
 func TestEnvFileThatCannotBeRead(t *testing.T) {
-	env := fakeEnv{"BETTERDESK_ENV_FILE": filepath.Join(t.TempDir(), "missing")}
+	env := fakeEnv{"NEODESK_ENV_FILE": filepath.Join(t.TempDir(), "missing")}
 	err := loadEnvFile(env.get, env.set, os.ReadFile)
 	if !errors.Is(err, os.ErrNotExist) || len(env) != 1 {
 		t.Errorf("err %v, env %v", err, env)
@@ -97,21 +97,21 @@ func TestEnvFileReadsQuotesAndComments(t *testing.T) {
 	if err := os.WriteFile(file, []byte(text), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	env := fakeEnv{"BETTERDESK_ENV_FILE": file}
+	env := fakeEnv{"NEODESK_ENV_FILE": file}
 	if err := loadEnvFile(env.get, env.set, os.ReadFile); err != nil {
 		t.Fatal(err)
 	}
 	want := fakeEnv{
-		"BETTERDESK_ENV_FILE": file,
-		"DOUBLE":              "kept as written",
-		"SINGLE":              "single # not a comment",
-		"ESCAPES":             "a\"b\\c\nd",
-		"COMMENTED":           "value",
-		"QUOTED_COMMENTED":    "x # y",
-		"PADDED":              "  inside  ",
-		"HASH":                "pa#ss",
-		"PLAIN":               "as before",
-		"UNCLOSED":            "\"open",
+		"NEODESK_ENV_FILE": file,
+		"DOUBLE":           "kept as written",
+		"SINGLE":           "single # not a comment",
+		"ESCAPES":          "a\"b\\c\nd",
+		"COMMENTED":        "value",
+		"QUOTED_COMMENTED": "x # y",
+		"PADDED":           "  inside  ",
+		"HASH":             "pa#ss",
+		"PLAIN":            "as before",
+		"UNCLOSED":         "\"open",
 	}
 	if !reflect.DeepEqual(env, want) {
 		t.Errorf("environment\n got %q\nwant %q", env, want)

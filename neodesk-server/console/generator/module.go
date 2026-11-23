@@ -13,21 +13,21 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
-// The template module: portable desktop builds of the BetterDesk client
+// The template module: portable desktop builds of the NeoDesk client
 // without a configuration, downloaded from the client's GitHub releases
 // (or uploaded as the same archive) into
-// DataDir/modules/betterdesk-support-generator. A build copies a template,
+// DataDir/modules/neodesk-support-generator. A build copies a template,
 // adds a signed custom.txt and packs it
 // (services/supportGeneratorModule.js).
 
 const (
-	moduleID          = "betterdesk-support-generator"
-	defaultClientRepo = "trybetterdesk/betterdesk-client"
+	moduleID          = "neodesk-support-generator"
+	defaultClientRepo = "neodeskapp/neodesk-client"
 	signingSeedName   = "custom-client-signing.seed"
 	minBinarySize     = 32 * 1024
 )
@@ -281,10 +281,10 @@ func sortedStrings(list []string) []string {
 }
 
 // ClientRepo is the GitHub repository the templates come from
-// (BETTERDESK_CLIENT_REPO, default trybetterdesk/betterdesk-client).
+// (NEODESK_CLIENT_REPO, default neodeskapp/neodesk-client).
 func (s *Service) ClientRepo() string {
-	repo := jsTrim(s.getenv("BETTERDESK_CLIENT_REPO"))
-	if s.getenv("BETTERDESK_CLIENT_REPO") == "" || repo == "" {
+	repo := jsTrim(s.getenv("NEODESK_CLIENT_REPO"))
+	if s.getenv("NEODESK_CLIENT_REPO") == "" || repo == "" {
 		return defaultClientRepo
 	}
 	return repo
@@ -608,14 +608,14 @@ func (s *Service) installFromGitHub(ctx context.Context, repo, tag string) (*goa
 }
 
 // resolveRelease finds the release to install: the tag (argument, else
-// BETTERDESK_CLIENT_RELEASE_TAG) when one is given, else /releases/latest
+// NEODESK_CLIENT_RELEASE_TAG) when one is given, else /releases/latest
 // when it has the archive, else the newest of the last 30 releases that
 // has it.
 func (s *Service) resolveRelease(ctx context.Context, targetRepo, preferredTag string) (any, error) {
 	apiBase := "https://api.github.com/repos/" + targetRepo + "/releases"
 	envTag := jsTrim(preferredTag)
 	if preferredTag == "" {
-		envTag = jsTrim(s.getenv("BETTERDESK_CLIENT_RELEASE_TAG"))
+		envTag = jsTrim(s.getenv("NEODESK_CLIENT_RELEASE_TAG"))
 	}
 	if envTag != "" {
 		release, err := s.githubGetJSON(ctx, apiBase+"/tags/"+goapi.EncodeURIComponent(envTag))
@@ -647,8 +647,8 @@ func (s *Service) resolveRelease(ctx context.Context, targetRepo, preferredTag s
 	if !isList || len(list) == 0 {
 		return nil, &CodedError{Code: "no_release", Message: "No GitHub releases found for " + targetRepo + ". " +
 			"Publish a release with generator-templates-*.tar.gz " +
-			"(workflow betterdesk-desktop-release.yml, tag desktop/*), " +
-			"or set BETTERDESK_CLIENT_RELEASE_TAG."}
+			"(workflow neodesk-desktop-release.yml, tag desktop/*), " +
+			"or set NEODESK_CLIENT_RELEASE_TAG."}
 	}
 	for _, release := range list {
 		if release == nil {
@@ -659,7 +659,7 @@ func (s *Service) resolveRelease(ctx context.Context, targetRepo, preferredTag s
 		}
 	}
 	return nil, &CodedError{Code: "no_template_asset", Message: fmt.Sprintf("No generator-templates-*.tar.gz found in the last %d releases of %s. ", len(list), targetRepo) +
-		"Run Client CI workflow betterdesk-desktop-release.yml or attach the archive to a release."}
+		"Run Client CI workflow neodesk-desktop-release.yml or attach the archive to a release."}
 }
 
 var (
@@ -879,8 +879,8 @@ func (s *Service) installArchive(ctx context.Context, archivePath, version strin
 }
 
 // CopySigningSeedIfPresent takes the signing seed from
-// BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED, else from the first of these
-// files that exists: DataDir, ConsoleDir, ../res/betterdesk next to
+// NEODESK_CUSTOM_CLIENT_SIGNING_SEED, else from the first of these
+// files that exists: DataDir, ConsoleDir, ../res/neodesk next to
 // ConsoleDir and the working directory, each custom-client-signing.seed.
 // It writes it into the module and reports whether it found one; a seed
 // that is not base64 of 32 bytes is an error.
@@ -897,13 +897,13 @@ func (s *Service) CopySigningSeedIfPresent() (bool, error) {
 		}
 		return true, nil
 	}
-	if fromEnv := jsTrim(s.getenv("BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED")); fromEnv != "" {
+	if fromEnv := jsTrim(s.getenv("NEODESK_CUSTOM_CLIENT_SIGNING_SEED")); fromEnv != "" {
 		return write(removeJSSpace(fromEnv))
 	}
 	candidates := []string{
 		filepath.Join(s.opts.DataDir, signingSeedName),
 		filepath.Join(s.opts.ConsoleDir, signingSeedName),
-		filepath.Join(s.opts.ConsoleDir, "..", "res", "betterdesk", signingSeedName),
+		filepath.Join(s.opts.ConsoleDir, "..", "res", "neodesk", signingSeedName),
 		filepath.Join(s.opts.WorkDir, signingSeedName),
 	}
 	for _, src := range candidates {
@@ -975,12 +975,12 @@ func (s *Service) ResolveTemplateDir(platform, arch string) string {
 }
 
 // SigningSeed is the seed custom.txt files are signed with: the module's
-// seed file, else BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED.
+// seed file, else NEODESK_CUSTOM_CLIENT_SIGNING_SEED.
 func (s *Service) SigningSeed() string {
 	if raw, err := os.ReadFile(s.SigningSeedPath()); err == nil {
 		return jsTrim(decodeUTF8(raw))
 	} else if exists(s.SigningSeedPath()) {
 		return ""
 	}
-	return jsTrim(s.getenv("BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED"))
+	return jsTrim(s.getenv("NEODESK_CUSTOM_CLIENT_SIGNING_SEED"))
 }

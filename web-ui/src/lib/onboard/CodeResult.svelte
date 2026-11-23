@@ -1,7 +1,7 @@
 <!--
   A new invite or quick support link, shown once (the server keeps only a
   fingerprint): the link with Copy, the short code people type into a
-  BetterDesk that is already installed, the QR code of the link, and Send
+  NeoDesk that is already installed, the QR code of the link, and Send
   by email when the console can send mail. A warning when the console is
   not on HTTPS: the person's computer then trusts whatever answers on the
   network.
@@ -33,7 +33,7 @@
 		mailed?: boolean;
 		/** Why the mail asked for when it was made did not go out (an error code) */
 		mailError?: string;
-		/** The short code is for typing into an installed BetterDesk (invites) */
+		/** The short code is for typing into an installed NeoDesk (invites) */
 		showCode?: boolean;
 		onmail: (to: string) => Promise<void>;
 	}

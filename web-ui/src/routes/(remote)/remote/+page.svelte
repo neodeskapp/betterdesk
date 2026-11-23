@@ -2,7 +2,7 @@
   The remote client's start page (/remote): connect by ID, then the device
   list with folders, groups and tags, refreshed every 30 seconds while the
   tab is visible. Connect adds a tab to an open viewer (BroadcastChannel
-  "betterdesk-remote") or opens one; on phones the RustDesk app opens
+  "neodesk-remote") or opens one; on phones the RustDesk app opens
   instead; in the desktop app (Tauri) the app opens the session. Needs a
   console session with device.connect (GET /api/remote/desk, which also
   drops a guest link's cookie, as GET /remote did).
@@ -39,13 +39,13 @@
 	let syncFailed = $state(false);
 
 	interface TauriWindow {
-		__BETTERDESK_RDCLIENT_DESKTOP__?: boolean;
+		__NEODESK_RDCLIENT_DESKTOP__?: boolean;
 		__TAURI__?: { core?: { invoke?: (cmd: string, args?: unknown) => Promise<unknown> } };
 	}
 	const tauri = () => (window as unknown as TauriWindow).__TAURI__?.core?.invoke ?? null;
 	const desktop = $derived(
 		typeof window !== 'undefined' &&
-			(!!(window as unknown as TauriWindow).__BETTERDESK_RDCLIENT_DESKTOP__ || !!tauri())
+			(!!(window as unknown as TauriWindow).__NEODESK_RDCLIENT_DESKTOP__ || !!tauri())
 	);
 
 	const user = $derived(session.raw?.user.username ?? '');
@@ -89,7 +89,7 @@
 			return;
 		}
 		if (typeof BroadcastChannel === 'undefined') return openViewerTab(id);
-		const bc = new BroadcastChannel('betterdesk-remote');
+		const bc = new BroadcastChannel('neodesk-remote');
 		let handled = false;
 		bc.onmessage = (ev: MessageEvent<{ type?: string }>) => {
 			if (ev.data?.type === 'pong' && !handled) {
@@ -164,7 +164,7 @@
 		phone = checkPhone();
 		const onResize = () => (phone = checkPhone());
 		window.addEventListener('resize', onResize, { passive: true });
-		window.addEventListener('betterdesk:posture-change', onResize);
+		window.addEventListener('neodesk:posture-change', onResize);
 		void start();
 		// Background refresh every 30 s while the tab is visible (AddressBook loads the first time itself)
 		const stop = poll(
@@ -176,7 +176,7 @@
 		return () => {
 			stop();
 			window.removeEventListener('resize', onResize);
-			window.removeEventListener('betterdesk:posture-change', onResize);
+			window.removeEventListener('neodesk:posture-change', onResize);
 		};
 	});
 </script>

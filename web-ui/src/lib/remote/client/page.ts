@@ -1,8 +1,8 @@
 /**
  * The page globals the remote client reads. The viewer's loader
- * (../rdclient.ts) sets the BetterDesk object, t and the __ values before
+ * (../rdclient.ts) sets the NeoDesk object, t and the __ values before
  * a client starts; the RdClient desktop shell (Tauri) adds __TAURI__ and
- * __BETTERDESK_RDCLIENT_DESKTOP__; the dev mock reads and sets its own.
+ * __NEODESK_RDCLIENT_DESKTOP__; the dev mock reads and sets its own.
  * Everything is optional: a value that is not there reads as undefined.
  */
 import type { ViewerCapabilities } from '../access.ts';
@@ -19,7 +19,7 @@ export interface TauriApi {
 }
 
 export interface PageGlobals {
-	BetterDesk?: {
+	NeoDesk?: {
 		csrfToken?: string;
 		t?: (key: string) => string;
 		/** Verbose relay and sign-in logging (set by hand in the browser console) */
@@ -34,7 +34,7 @@ export interface PageGlobals {
 	__initialDeviceId?: string;
 	__mockRemote?: { scenario: string } | null;
 	__TAURI__?: TauriApi;
-	__BETTERDESK_RDCLIENT_DESKTOP__?: boolean;
+	__NEODESK_RDCLIENT_DESKTOP__?: boolean;
 	/** The viewer's touch detection (none in this console: the client treats it as a desktop) */
 	DeviceCapabilities?: { isTouch(): boolean; isPhone(): boolean };
 	/** A shared clipboard of several viewers (none in this console) */

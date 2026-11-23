@@ -51,7 +51,7 @@
       "open": "agent-cookie",
       "path": "/agent.ashx",
       "headers": {
-       "Cookie": "bd.sid=x"
+       "Cookie": "nd.sid=x"
       }
      },
      "events": [
@@ -219,7 +219,7 @@
       "open": "meshrelay-cookie",
       "path": "/meshrelay.ashx",
       "headers": {
-       "Cookie": "bd.sid=x"
+       "Cookie": "nd.sid=x"
       }
      },
      "events": [
@@ -385,7 +385,7 @@
       "open": "control-cookie",
       "path": "/control.ashx",
       "headers": {
-       "Cookie": "bd.sid=x"
+       "Cookie": "nd.sid=x"
       }
      },
      "events": [

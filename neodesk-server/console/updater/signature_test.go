@@ -58,6 +58,12 @@ func loadVectors(t *testing.T) vectorFile {
 	return v
 }
 
+// upstreamDomain is the first line of upstream's canonical text, which
+// the recorded vectors were built and signed with. NeoDesk's text starts
+// with manifestDomain instead (TestCanonicalPayloadRules); the rest is
+// built the same way.
+const upstreamDomain = "betterdesk-update-manifest-v1"
+
 func signedFields(v vectorFile, i int) SignedFields {
 	m := v.Manifests[i].Manifest
 	f := SignedFields{Owner: m.Owner, Repo: m.Repo, Branch: m.Branch, SHA: m.SHA}
@@ -81,7 +87,7 @@ func TestCanonicalPayloadAndSignatureMatchUpstream(t *testing.T) {
 	}
 	for i, vec := range v.Manifests {
 		want, _ := base64.StdEncoding.DecodeString(vec.Payload)
-		got := CanonicalPayload(signedFields(v, i))
+		got := canonicalPayload(upstreamDomain, signedFields(v, i))
 		if !bytes.Equal(got, want) {
 			t.Fatalf("manifest %d: payload\n%q\nupstream\n%q", i, got, want)
 		}
@@ -99,7 +105,7 @@ func TestCanonicalPayloadAndSignatureMatchUpstream(t *testing.T) {
 func TestVerifySignatureMatchesUpstream(t *testing.T) {
 	v := loadVectors(t)
 	for _, vec := range v.Verify {
-		payload := CanonicalPayload(signedFields(v, vec.Index))
+		payload := canonicalPayload(upstreamDomain, signedFields(v, vec.Index))
 		if got := VerifySignature(payload, []byte(vec.Signature), ParseKeys(vec.Key)); got != vec.OK {
 			t.Errorf("manifest %d, signature %q, key %q: %v, upstream %v", vec.Index, vec.Signature, vec.Key, got, vec.OK)
 		}
@@ -112,7 +118,7 @@ func TestVerifySignatureMatchesUpstream(t *testing.T) {
 // A28 refuses it.
 func TestEvaluateTrustMatchesUpstream(t *testing.T) {
 	v := loadVectors(t)
-	payload := CanonicalPayload(signedFields(v, 0))
+	payload := canonicalPayload(upstreamDomain, signedFields(v, 0))
 	differ := 0
 	for _, vec := range v.Trust {
 		var sig []byte
@@ -157,7 +163,7 @@ func TestEvaluateTrustMatchesUpstream(t *testing.T) {
 // The Jest tests of updateManifestSignature.js: the text does not depend
 // on the order of the files or the separators, and changes with a hash.
 func TestCanonicalPayloadRules(t *testing.T) {
-	base := SignedFields{Owner: "UNITRONIX", Repo: "BetterDesk", Branch: "dev", SHA: "abc1234", Files: []SignedFile{
+	base := SignedFields{Owner: "neodeskapp", Repo: "neodesk", Branch: "dev", SHA: "abc1234", Files: []SignedFile{
 		{Path: "web-nodejs/server.js", SHA256: strings.Repeat("a", 64)},
 		{Path: "web-nodejs/routes/auth.routes.js", SHA256: strings.Repeat("b", 64)},
 	}}
@@ -176,7 +182,7 @@ func TestCanonicalPayloadRules(t *testing.T) {
 	if bytes.Equal(CanonicalPayload(base), CanonicalPayload(tampered)) {
 		t.Error("a changed hash keeps the text")
 	}
-	want := "betterdesk-update-manifest-v1\nowner=UNITRONIX\nrepo=BetterDesk\nbranch=dev\nsha=abc1234\nfiles=2\n" +
+	want := "neodesk-update-manifest-v1\nowner=neodeskapp\nrepo=neodesk\nbranch=dev\nsha=abc1234\nfiles=2\n" +
 		strings.Repeat("b", 64) + "  web-nodejs/routes/auth.routes.js\n" + strings.Repeat("a", 64) + "  web-nodejs/server.js\n"
 	if got := string(CanonicalPayload(base)); got != want {
 		t.Errorf("text\n%s\nwant\n%s", got, want)

@@ -2,7 +2,7 @@
  "id": "registration/device-status-two-ids",
  "request": {
   "method": "GET",
-  "path": "/api/bd/register-status?device_id=contract-a&device_id=contract-b",
+  "path": "/api/nd/register-status?device_id=contract-a&device_id=contract-b",
   "notes": [
    "no CSRF token",
    "no cookies"

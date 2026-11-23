@@ -123,7 +123,7 @@ export function installCapabilities(): void {
 		nav.devicePosture.addEventListener('change', () => {
 			state.devicePosture = nav.devicePosture?.type || 'unknown';
 			window.dispatchEvent(
-				new CustomEvent('betterdesk:posture-change', { detail: { posture: state.devicePosture } })
+				new CustomEvent('neodesk:posture-change', { detail: { posture: state.devicePosture } })
 			);
 		});
 	}

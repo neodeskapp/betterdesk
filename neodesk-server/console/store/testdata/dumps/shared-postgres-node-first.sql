@@ -1,5 +1,5 @@
 -- One PostgreSQL database used by both: Node console initialised first, then the Go server started.
--- Worktree betterdesk-go, dumped 2026-11-19 on 3f4ffd70 plus the change that adds agent_templates to store.Migrate (upstream 3.5.264 merged).
+-- Worktree neodesk-go, dumped 2026-11-19 on 3f4ffd70 plus the change that adds agent_templates to store.Migrate (upstream 3.5.264 merged).
 -- pg_dump --schema-only --no-owner --no-privileges --no-comments  (PostgreSQL 16)
 -- Do not edit: regenerate (see data.md, section "How the schema dumps were produced").
 -- users.credentials_changed_at and the trigger users_credentials_changed (with its function on PostgreSQL) added on 2026-11-21 in the text the signal server's Migrate creates since RV181, at the place a regenerated dump has them; the Node console's part is unchanged.
@@ -285,7 +285,7 @@ CREATE TABLE public.agent_bundles (
     client_commit text,
     active_generation_hash text,
     created_by integer,
-    product_type text DEFAULT 'betterdesk-support'::text NOT NULL,
+    product_type text DEFAULT 'neodesk-support'::text NOT NULL,
     revoked boolean DEFAULT false NOT NULL,
     download_count integer DEFAULT 0 NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,

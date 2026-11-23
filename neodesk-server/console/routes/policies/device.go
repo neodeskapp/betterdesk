@@ -3,12 +3,12 @@ package policies
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/goapipath"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
-// devicePolicy answers GET /api/bd/device-policy: the policy of the
+// devicePolicy answers GET /api/nd/device-policy: the policy of the
 // token's device as the API server has it. A device the request names
 // besides the token (the body's or the query's device_id, X-Device-Id)
 // only has to be that device, which the match guard in front checks.
@@ -26,7 +26,7 @@ func (h *handlers) devicePolicy(w http.ResponseWriter, r *http.Request) {
 	goapipath.WriteJSON(w, r, http.StatusOK, resp.Data())
 }
 
-// report answers POST /api/bd/attestation with {device_id, fingerprint,
+// report answers POST /api/nd/attestation with {device_id, fingerprint,
 // platform_data?}: the device's attestation goes to the API server as
 // {fingerprint, platform_data}. The match guard in front made the text of
 // device_id the token's device id, which is always an id the API path

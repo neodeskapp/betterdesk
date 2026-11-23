@@ -16,9 +16,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // fakeClock is time that moves only when the run waits or connects. Events
@@ -129,9 +129,9 @@ type scenarioRecord struct {
 	Name   string            `json:"name"`
 	Env    map[string]string `json:"env"`
 	Config struct {
-		BetterdeskAPIURL string `json:"betterdeskApiUrl"`
-		HbbsAPIURL       string `json:"hbbsApiUrl"`
-		WsProxy          *struct {
+		NeodeskAPIURL string `json:"neodeskApiUrl"`
+		HbbsAPIURL    string `json:"hbbsApiUrl"`
+		WsProxy       *struct {
 			HbbsHost string  `json:"hbbsHost"`
 			HbbsPort float64 `json:"hbbsPort"`
 			HbbrPort float64 `json:"hbbrPort"`
@@ -314,7 +314,7 @@ func (sc *scenarioRecord) network() Network {
 	n := Network{
 		SignalHostEnv:   sc.Env["WS_HBBS_HOST"],
 		RelayHostEnv:    sc.Env["WS_HBBR_HOST"],
-		APIURL:          sc.Config.BetterdeskAPIURL,
+		APIURL:          sc.Config.NeodeskAPIURL,
 		TLS:             strings.ToLower(sc.Env["WS_USE_TLS"]) == "true",
 		AllowSelfSigned: sc.Config.AllowSelfSignedCerts,
 	}

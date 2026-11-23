@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 const networkPolicyKey = "policy_network"

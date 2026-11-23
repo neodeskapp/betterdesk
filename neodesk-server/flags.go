@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/unitronix/betterdesk-server/internal/envvar"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
 )
 
 // switchFlag is an on/off flag. The flag alone turns it on; -name=value

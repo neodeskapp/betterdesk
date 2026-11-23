@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // upload is the body of an attachment upload that is made while it is
@@ -247,7 +247,7 @@ func TestADownloadAfterTheInstallMoved(t *testing.T) {
 	if err := w.DB.QueryRow(t.Context(), "SELECT storage_path FROM ticket_attachments WHERE id = 1").Scan(&name); err != nil || !randomPart.MatchString(name) || strings.ContainsAny(name, `/\`) {
 		t.Fatalf("storage_path = %q, %v; want the name of the file alone", name, err)
 	}
-	for _, old := range []string{"/opt/betterdesk/web-nodejs/data/attachments/" + name, `C:\BetterDesk\web-nodejs\data\attachments\` + name} {
+	for _, old := range []string{"/opt/neodesk/web-nodejs/data/attachments/" + name, `C:\NeoDesk\web-nodejs\data\attachments\` + name} {
 		w.Exec("UPDATE ticket_attachments SET storage_path = ? WHERE id = 1", []any{old})
 		if got := w.Do(replay.Request{Role: "admin", Path: "/api/tickets/attachments/1"}); got.Status != 200 || got.Body != "hi" {
 			t.Errorf("download of the row %s: %d %s, want the file", old, got.Status, got.Body)

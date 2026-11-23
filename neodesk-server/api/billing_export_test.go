@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/timesync"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/timesync"
 )
 
 // TestBillingExportNamesTheBillingDay: an export's file name carries the

@@ -5,16 +5,16 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/registrations"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/registrations"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
 // The two routes devices call without signing in.
 
-// deviceIDPattern is the form of a device id, as /api/bd/register checks
+// deviceIDPattern is the form of a device id, as /api/nd/register checks
 // it.
 var deviceIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{3,64}$`)
 
@@ -34,13 +34,13 @@ func clientIP(r *http.Request) string {
 // again changes neither the key an approver reviews nor a rejection. No
 // credential is needed. A request for a device without a registration
 // counts against the limit of device registrations (d.Limits.Register,
-// BD_REGISTER_RATE_LIMIT_MAX a minute per address, shared with
-// /api/bd/register), which answers 429 past it; a request for a device
+// ND_REGISTER_RATE_LIMIT_MAX a minute per address, shared with
+// /api/nd/register), which answers 429 past it; a request for a device
 // that has its registration, or one refused for its fields, counts not.
 // A new registration is also refused with 429 while
 // registrations.MaxPending wait, or registrations.MaxPendingPerAddress
 // from the client's address. The device id, trimmed, has to be an id
-// /api/bd/register takes: 3 to 64 letters, digits, "_" and "-". The other
+// /api/nd/register takes: 3 to 64 letters, digits, "_" and "-". The other
 // fields are cut to their length, and a field that is truthy but no text
 // is the 500 of a TypeError.
 func (h *handlers) registerRequest(w http.ResponseWriter, r *http.Request) {

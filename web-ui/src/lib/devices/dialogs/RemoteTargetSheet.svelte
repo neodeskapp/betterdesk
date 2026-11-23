@@ -1,5 +1,5 @@
 <!--
-  Add or edit an RDP/VNC target (a computer without the BetterDesk client
+  Add or edit an RDP/VNC target (a computer without the NeoDesk client
   that people reach in the browser through this server). The password field
   shows only when the password is saved here; the fingerprint only with TLS.
   Switching the technology moves the port along while it is still the other
@@ -173,7 +173,7 @@
 		: tf('devices.remote_add_title', 'Add RDP/VNC target')}
 	subtitle={tf(
 		'devices.remote_sheet_desc',
-		'A computer without the BetterDesk client. People connect to it in the browser, through this server.'
+		'A computer without the NeoDesk client. People connect to it in the browser, through this server.'
 	)}
 	{status}
 	statusTone={tone}

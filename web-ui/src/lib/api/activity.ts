@@ -1,5 +1,5 @@
 /**
- * App usage reports from devices with the BetterDesk agent's activity
+ * App usage reports from devices with the NeoDesk agent's activity
  * tracking (routes/activity.routes.js). Every call needs audit.view.
  * Answers come without the { success, data } envelope. `from` and `to`
  * are ISO strings compared to the report time as text.

@@ -19,7 +19,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
 )
 
 // DefaultTimeoutMs is how long a check waits when its target names no

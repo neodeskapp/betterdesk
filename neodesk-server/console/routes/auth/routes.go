@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/authn"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 )
 
 // housekeepingInterval is how often expired access tokens and old sign-in
@@ -37,12 +37,12 @@ func newHandlers(d *kit.Deps) *handlers {
 		log:         d.Log.Child("AUTH"),
 		authn:       d.Authn,
 		sessions:    d.Sessions,
-		guestCookie: "bd.guest",
+		guestCookie: "nd.guest",
 		now:         time.Now,
 		appVersion:  d.Config.Version,
 	}
 	if d.Config.HTTPS {
-		h.guestCookie = "betterdesk.guest"
+		h.guestCookie = "neodesk.guest"
 	}
 	if d.Avatars != nil {
 		h.syncPicture = func(userID int64, exchange *goapi.Object) { d.Avatars.StartOIDCSync(userID, exchange) }

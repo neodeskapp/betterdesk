@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/auditlog"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // Logger is the console's logger for route groups. It drops lines below its
@@ -215,7 +215,7 @@ func maskQuotedNames(s string) string {
 // The quoted texts that could be user names by their letters but are not:
 // what sign-in messages quote besides names.
 var (
-	logQuotedPrefixes = []string{"betterdesk_", "pbkdf2", "bcrypt"}
+	logQuotedPrefixes = []string{"neodesk_", "pbkdf2", "bcrypt"}
 	logQuotedWords    = []string{"admin", "operator", "viewer", "user", "role", "provider", "empty", "invalid"}
 )
 

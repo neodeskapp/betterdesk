@@ -13,10 +13,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/avatars"
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/avatars"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // Tests of what a restore writes, refuses and leaves behind. They need
@@ -46,7 +46,7 @@ func TestFullBackupHoldsEveryPart(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if name != "betterdesk-backup-2026-11-10-08-09-10.tar.gz" {
+		if name != "neodesk-backup-2026-11-10-08-09-10.tar.gz" {
 			t.Errorf("name %q", name)
 		}
 		entries := tarEntries(t, archive)
@@ -76,7 +76,7 @@ func TestFullBackupHoldsEveryPart(t *testing.T) {
 			}
 		}
 		manifest := string(entries[0].data)
-		for _, part := range []string{`"_format": "betterdesk-full-backup"`, `"_version": 1`, `"_created": "2026-11-10T08:09:10.123Z"`,
+		for _, part := range []string{`"_format": "neodesk-full-backup"`, `"_version": 1`, `"_created": "2026-11-10T08:09:10.123Z"`,
 			`"_console_version": "3.5.224"`, `"dbType": "` + dialect + `"`, `"components": [` + "\n" + `    "console/data.json",`} {
 			if !strings.Contains(manifest, part) {
 				t.Errorf("manifest has no %q:\n%s", part, manifest)
@@ -94,7 +94,7 @@ func TestFullBackupStats(t *testing.T) {
 		in := newInstall(t, dialect)
 		in.seed(t)
 		st := in.service(t, "x").FullBackupStats(context.Background())
-		if st.Users != 2 || st.Folders != 1 || st.Strategies != 1 || st.Settings < 4 || st.Backend != "betterdesk" || st.DBType != dialect {
+		if st.Users != 2 || st.Folders != 1 || st.Strategies != 1 || st.Settings < 4 || st.Backend != "neodesk" || st.DBType != dialect {
 			t.Errorf("stats %+v", st)
 		}
 		c := st.Components
@@ -198,7 +198,7 @@ func TestUploadNamesFromTheArchive(t *testing.T) {
 	if err := os.Symlink(outside, filepath.Join(uploads, "link")); err != nil {
 		t.Fatal(err)
 	}
-	entries := []Entry{{Name: "manifest.json", Data: []byte(`{"_format":"betterdesk-full-backup","_version":1}`)}}
+	entries := []Entry{{Name: "manifest.json", Data: []byte(`{"_format":"neodesk-full-backup","_version":1}`)}}
 	for _, name := range []string{"console/uploads/ok.png", "console/uploads/../evil.png", "console/uploads/a..b.png", "console/uploads/sub/deep.png",
 		"console/uploads/", "console/uploads/./dot.png", "console/uploads/link/escape.png", "console/uploadsX/no.png",
 		// a NUL survives the name cut when a line break follows it
@@ -507,7 +507,7 @@ func TestRestoreDropsTheListOfPictures(t *testing.T) {
 			{`{"users":[{"id":50,"username":"renamed","password_hash":"h","role":"admin"}]}`, "seed_admin"},
 		} {
 			dump, err := CreateTarGz([]Entry{
-				{Name: "manifest.json", Data: []byte(`{"_format":"betterdesk-full-backup","_version":1}`)},
+				{Name: "manifest.json", Data: []byte(`{"_format":"neodesk-full-backup","_version":1}`)},
 				{Name: "console/data.json", Data: []byte(`{"tables":` + c.tables + `}`)},
 			}, 1)
 			if err != nil {
@@ -534,7 +534,7 @@ func TestRestoreDropsTheListOfPictures(t *testing.T) {
 		if got := listed(av); got != "seed_admin" {
 			t.Fatalf("pictures before the snapshot: %q", got)
 		}
-		snapshot := parsedJSON(t, `{"_format":"betterdesk-backup","_version":1,"console":{"users":[{"id":60,"username":"restored","password_hash":"h","role":"admin"}]}}`)
+		snapshot := parsedJSON(t, `{"_format":"neodesk-backup","_version":1,"console":{"users":[{"id":60,"username":"restored","password_hash":"h","role":"admin"}]}}`)
 		if res := s.RestoreBackup(ctx, snapshot, SnapshotOptions{Users: true}); !slices.Contains(res.Restored, "users") {
 			t.Fatalf("snapshot restore: %+v", res)
 		}

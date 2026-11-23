@@ -4,7 +4,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 )
 
 // Texts here are JavaScript strings as package branding keeps them: UTF-8,

@@ -2,7 +2,7 @@
  "id": "remote-agent-token/issue-without-token",
  "request": {
   "method": "POST",
-  "path": "/api/bd/remote-agent-token",
+  "path": "/api/nd/remote-agent-token",
   "body": {},
   "notes": [
    "no CSRF token",

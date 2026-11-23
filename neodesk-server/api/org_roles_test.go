@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // Organization roles change nothing for the console's accounts, so the

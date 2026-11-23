@@ -209,8 +209,8 @@ type fileChange struct {
 // fileChanges are the steps of the recording where the Go file browser
 // differs on purpose, by scenario and step:
 //
-//   - SM13: without BETTERDESK_PATH, RUSTDESK_DIR and RUSTDESK_PATH the
-//     server's folder is /opt/betterdesk, as for the update and management
+//   - SM13: without NEODESK_PATH, RUSTDESK_DIR and RUSTDESK_PATH the
+//     server's folder is /opt/neodesk, as for the update and management
 //     routes, not /opt/rustdesk.
 var fileChanges = map[string]map[int]fileChange{
 	"roots by default": {
@@ -226,7 +226,7 @@ var fileChanges = map[string]map[int]fileChange{
 // answer is a change's answer that does not depend on the recorded one.
 func answer(v any) func(any) any { return func(any) any { return v } }
 
-// serverDefault is a recorded pair of folder lists with /opt/betterdesk as
+// serverDefault is a recorded pair of folder lists with /opt/neodesk as
 // the server's default folder.
 func serverDefault(recorded any) any {
 	out := map[string]any{}
@@ -234,7 +234,7 @@ func serverDefault(recorded any) any {
 		var dirs []any
 		for _, dir := range list.([]any) {
 			if dir == "/opt/rustdesk" {
-				dir = "/opt/betterdesk"
+				dir = "/opt/neodesk"
 			}
 			dirs = append(dirs, dir)
 		}

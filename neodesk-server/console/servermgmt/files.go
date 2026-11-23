@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/safepath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/safepath"
 )
 
 // The file browser's limits.

@@ -1,6 +1,6 @@
 <!--
   Pairing codes (/pairing): a short one-time code and the server address,
-  for setting up a BetterDesk client without the long config string.
+  for setting up a NeoDesk client without the long config string.
   Create a code (shown once, large enough to read out, with the time it
   still works), and revoke active codes in the list below.
 

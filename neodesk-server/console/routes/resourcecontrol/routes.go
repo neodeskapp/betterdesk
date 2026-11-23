@@ -1,16 +1,16 @@
 // Package resourcecontrol holds the console's routes for what a device
 // may use: USB, optical drives, monitors, disks and quotas, per device
 // and as the default of the organization, and the route devices fetch
-// their own policy from (GET /api/bd/resource-policy). The routes pass
+// their own policy from (GET /api/nd/resource-policy). The routes pass
 // their calls on to the API server.
 package resourcecontrol
 
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/goapipath"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 type handlers struct {
@@ -41,14 +41,14 @@ func Register(d *kit.Deps) {
 	r.Get("/api/panel/resource-control/org-policy", h.orgPolicy, config...)
 	r.Put("/api/panel/resource-control/org-policy", h.orgPolicy, config...)
 
-	r.Get("/api/bd/resource-policy", h.resourcePolicy, d.RequireDeviceToken, d.RequireTokenDeviceMatch)
+	r.Get("/api/nd/resource-policy", h.resourcePolicy, d.RequireDeviceToken, d.RequireTokenDeviceMatch)
 }
 
 type noPolicy struct {
 	Policy any `json:"policy"`
 }
 
-// resourcePolicy answers GET /api/bd/resource-policy: what the API server
+// resourcePolicy answers GET /api/nd/resource-policy: what the API server
 // says the token's device may use. A device the request names besides the
 // token (the body's or the query's device_id, X-Device-Id) only has to be
 // that device, which the match guard in front checks. When the call fails

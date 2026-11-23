@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/config"
-	cryptopkg "github.com/unitronix/betterdesk-server/crypto"
-	"github.com/unitronix/betterdesk-server/peer"
-	pb "github.com/unitronix/betterdesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	cryptopkg "github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 )
 
 // A peer's own relay value wins over the server-derived one, because the peer

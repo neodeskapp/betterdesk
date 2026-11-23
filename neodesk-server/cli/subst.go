@@ -9,8 +9,8 @@ import (
 	"strings"
 	"unicode/utf16"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 // substValue is the value of a substitution as merge-env.js held it. text

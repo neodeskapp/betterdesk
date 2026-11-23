@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 )
 
 func adminHash(t *testing.T, w *world) string {

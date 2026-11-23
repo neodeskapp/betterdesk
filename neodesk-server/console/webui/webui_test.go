@@ -92,7 +92,7 @@ func TestSignedOutUnderAnotherBaseGoesToItsSignIn(t *testing.T) {
 		// The address it leads to is the sign-in page
 		wantPage(t, serve(h, "GET", a.get("Location"), nil), "the sign-in page of "+target, 200)
 	}
-	a := serve(h, "GET", "/app2/devices", map[string]string{"Cookie": "bd.sid=s%3Agone.sig"})
+	a := serve(h, "GET", "/app2/devices", map[string]string{"Cookie": "nd.sid=s%3Agone.sig"})
 	wantRedirect(t, a, "after a session ended", 302, "/app2/login?expired=1&return=%2Fapp2%2Fdevices")
 	// At the root nothing changes
 	root, _ := testHost(t, "")
@@ -341,11 +341,11 @@ func TestExpiredNoticeOnlyAfterASessionEnded(t *testing.T) {
 	bases(t, func(t *testing.T, h *Host, base, _ string) {
 		b := encodedBase(base)
 		wantRedirect(t, serve(h, "GET", base+"/devices?open=1", nil), "a first visit", 302, base+"/login?return="+b+"%2Fdevices%3Fopen%3D1")
-		wantRedirect(t, serve(h, "GET", base+"/devices", map[string]string{"Cookie": "bd.sid=s%3Agone.sig"}), "after a session ended", 302,
+		wantRedirect(t, serve(h, "GET", base+"/devices", map[string]string{"Cookie": "nd.sid=s%3Agone.sig"}), "after a session ended", 302,
 			base+"/login?expired=1&return="+b+"%2Fdevices")
 		wantRedirect(t, serve(h, "GET", base+"/devices", map[string]string{"Cookie": "theme=dark"}), "another cookie", 302, base+"/login?return="+b+"%2Fdevices")
 		// The remote sign-in has no such notice
-		wantRedirect(t, serve(h, "GET", base+"/remote", map[string]string{"Cookie": "bd.sid=x"}), "a remote page", 302, base+"/remote/login?return="+b+"%2Fremote")
+		wantRedirect(t, serve(h, "GET", base+"/remote", map[string]string{"Cookie": "nd.sid=x"}), "a remote page", 302, base+"/remote/login?return="+b+"%2Fremote")
 	})
 }
 

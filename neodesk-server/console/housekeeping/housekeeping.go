@@ -17,8 +17,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // IntegrationInterval is how often the hourly clean-up (Integration)
@@ -200,7 +200,7 @@ func (j *Jobs) RunIntegration(ctx context.Context) {
 // The old console also asked its server backend to sync the online
 // status at each run and once five seconds after the start. With the
 // signal server owning the device list that call did nothing and logged
-// nothing (betterdeskApi.syncOnlineStatus answered {synced: 0}), so there
+// nothing (neodeskApi.syncOnlineStatus answered {synced: 0}), so there
 // is nothing to run for it here.
 func (j *Jobs) RunStatusSync(ctx context.Context) {
 	j.every(ctx, j.interval, func() { _, _ = j.opts.StalePeers(ctx, j.threshold) })

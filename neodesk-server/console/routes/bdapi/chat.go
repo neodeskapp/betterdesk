@@ -5,16 +5,16 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
 // The chat of an agent with the operators. The messages live on the API
 // server, in the conversation named by the device id, as the chat
 // sockets keep them.
 
-// chatSend answers POST /api/bd/chat/send {device_id, sender, content,
+// chatSend answers POST /api/nd/chat/send {device_id, sender, content,
 // timestamp} from a device: the message goes into the device's
 // conversation, from the device, under the sender's name (the device id
 // when sender is no text). 502 when the API server does not take it.
@@ -62,7 +62,7 @@ func (h *handlers) chatSend(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "message_id", messageID))
 }
 
-// chatHistory answers GET /api/bd/chat/history?device_id=&limit= from a
+// chatHistory answers GET /api/nd/chat/history?device_id=&limit= from a
 // device: the newest messages of its conversation (100 unless limit says
 // otherwise, at most 200), oldest first, as {id, device_id, sender,
 // content, timestamp}. An empty list when the API server fails.

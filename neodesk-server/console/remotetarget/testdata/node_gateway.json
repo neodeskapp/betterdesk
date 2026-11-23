@@ -29,7 +29,7 @@
       "open": "b",
       "path": "/ws/remote-target/rt_echo-0001",
       "headers": {
-       "Cookie": "bd.sid=s%3Ax"
+       "Cookie": "nd.sid=s%3Ax"
       }
      },
      "events": [

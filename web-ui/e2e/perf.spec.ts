@@ -12,7 +12,7 @@ import type { Browser } from '@playwright/test';
 import { test, expect } from './fixtures.ts';
 import { UI } from './roles.ts';
 
-const BUILD = process.env.BD_UI_BUILD ?? 'build';
+const BUILD = process.env.ND_UI_BUILD ?? 'build';
 const results: Record<string, unknown> = {};
 
 // One measurement at a time, in order: page loads running side by side slow each

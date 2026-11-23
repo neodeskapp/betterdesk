@@ -1,5 +1,5 @@
 // Package activity holds the activity routes. The console mounts the
-// group twice, at /api/bd and at /api/activity, so each route answers at
+// group twice, at /api/nd and at /api/activity, so each route answers at
 // both:
 //
 //   - The route the desktop agent reports its app usage with, POST
@@ -7,7 +7,7 @@
 //   - The routes people read app usage with: the summaries devices
 //     reported, one device's sessions and summaries, and its most used
 //     apps. All three need the permission audit.view and keep to the
-//     account's device scope, and all three step aside at /api/bd for the
+//     account's device scope, and all three step aside at /api/nd for the
 //     routes of other groups there.
 package activity
 
@@ -17,14 +17,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/alerts"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/devicemount"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/alerts"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/devicemount"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsjson"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 type handlers struct {

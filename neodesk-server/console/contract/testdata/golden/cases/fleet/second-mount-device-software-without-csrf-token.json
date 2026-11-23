@@ -2,7 +2,7 @@
  "id": "fleet/second-mount-device-software-without-csrf-token",
  "request": {
   "method": "POST",
-  "path": "/api/bd/api/bd/fleet/software",
+  "path": "/api/nd/api/nd/fleet/software",
   "body": {
    "device_id": "900100001",
    "output": "ok",
@@ -71,7 +71,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",

@@ -2,8 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 /**
  * End-to-end tests against a running console (the dev container, or the
- * production image in CI). BD_URL is the console's origin; the app is at its
- * root, or under BD_UI_BASE for a build made for another base.
+ * production image in CI). ND_URL is the console's origin; the app is at its
+ * root, or under ND_UI_BASE for a build made for another base.
  * The e2e accounts share one password (see e2e/roles.ts): E2E_PASSWORD_FILE
  * names a file that holds it (in a container, a read-only mount), or
  * E2E_PASSWORD has it (CI secrets).
@@ -21,7 +21,7 @@ export default defineConfig({
 	reporter: [['list'], ['json', { outputFile: 'test-results/e2e.json' }]],
 	globalSetup: './e2e/global-setup.ts',
 	use: {
-		baseURL: process.env.BD_URL ?? 'http://host.docker.internal:5000',
+		baseURL: process.env.ND_URL ?? 'http://host.docker.internal:5000',
 		trace: 'retain-on-failure',
 		screenshot: 'only-on-failure'
 	},

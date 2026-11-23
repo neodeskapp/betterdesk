@@ -1,4 +1,4 @@
-// Package security provides IP/ID blocklist management for the BetterDesk server.
+// Package security provides IP/ID blocklist management for the NeoDesk server.
 // Supports loading from files, runtime additions, and both IP and ID blocking.
 // Runtime additions are kept in the database (UseStore), so they survive a
 // restart.
@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // BlockType identifies what kind of entry is blocked.
@@ -376,7 +376,7 @@ func (b *Blocklist) SaveToFile(path string) error {
 	defer f.Close()
 
 	w := bufio.NewWriter(f)
-	w.WriteString("# BetterDesk Blocklist (auto-generated)\n")
+	w.WriteString("# NeoDesk Blocklist (auto-generated)\n")
 	w.WriteString("# Format: IP, CIDR, or id:DEVICE_ID [,reason]\n\n")
 
 	for _, e := range b.ips {

@@ -4,33 +4,33 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/alerts"
-	"github.com/unitronix/betterdesk-server/console/auditlog"
-	"github.com/unitronix/betterdesk-server/console/authn"
-	"github.com/unitronix/betterdesk-server/console/avatars"
-	"github.com/unitronix/betterdesk-server/console/bdrelay"
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/csrf"
-	"github.com/unitronix/betterdesk-server/console/devicegroups"
-	"github.com/unitronix/betterdesk-server/console/filetransfer"
-	"github.com/unitronix/betterdesk-server/console/generator"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/guestaccess"
-	"github.com/unitronix/betterdesk-server/console/i18n"
-	"github.com/unitronix/betterdesk-server/console/limits"
-	"github.com/unitronix/betterdesk-server/console/mail"
-	"github.com/unitronix/betterdesk-server/console/remoterelay"
-	"github.com/unitronix/betterdesk-server/console/restart"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/console/servermgmt"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/statuspush"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/updater"
-	"github.com/unitronix/betterdesk-server/console/webui"
-	"github.com/unitronix/betterdesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/alerts"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/avatars"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/bdrelay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/csrf"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/devicegroups"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/filetransfer"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/generator"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/guestaccess"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/remoterelay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/restart"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/servermgmt"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/statuspush"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/webui"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
 )
 
 // Jobs is where a group adds background work that runs for as long as
@@ -49,7 +49,7 @@ type Deps struct {
 	// content-type rule.
 	Router *Router
 	// Early is the table of the RustDesk client API and the device API
-	// under /api/bd (steps 12 and 13): behind the session, the guard and
+	// under /api/nd (steps 12 and 13): behind the session, the guard and
 	// the limiters, but before the request language and the CSRF gate. Its
 	// answers are never compressed. A handler there that calls PassOn
 	// leaves the request to Router.
@@ -77,7 +77,7 @@ type Deps struct {
 	// WebUI serves the web app and its error pages.
 	WebUI *webui.Host
 	// GoAPI is the client for the API server in this process
-	// (services/betterdeskApi.js).
+	// (services/neodeskApi.js).
 	GoAPI *goapi.Client
 	// ServerInfo answers how clients reach this server: the keys, the
 	// addresses, the client configuration (services/keyService.js,
@@ -155,7 +155,7 @@ type Deps struct {
 // a group that the old console mounted there:
 //
 //	inventory.Register(d.At("/api/inventory"))
-//	inventory.Register(d.At("/api/bd"))
+//	inventory.Register(d.At("/api/nd"))
 //
 // The group writes its patterns below the mount ("/", "/{id}").
 func (d *Deps) At(prefix string) *Deps {

@@ -393,7 +393,7 @@ func (s *Server) admitOnboardDevice(r *http.Request, dev *onboardDevice) (create
 	case existing.DeviceType == onboardDeviceType:
 		// A computer that had quick support joins for good: it stops
 		// being temporary.
-		if err := s.db.UpdatePeerFields(req.DeviceID, map[string]string{"device_type": "betterdesk", "tags": ""}); err != nil {
+		if err := s.db.UpdatePeerFields(req.DeviceID, map[string]string{"device_type": "neodesk", "tags": ""}); err != nil {
 			return false, fmt.Errorf("keep device: %w", err)
 		}
 	}

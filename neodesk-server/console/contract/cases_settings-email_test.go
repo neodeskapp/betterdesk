@@ -3,7 +3,7 @@
 package contract_test
 
 import (
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The SMTP settings under /api/settings/email: the same handlers as the

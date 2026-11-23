@@ -5,7 +5,7 @@ set -euo pipefail
 # Keep this guard so an explicitly configured CI checkout never runs the
 # local-only gate.
 if [[ "${CI:-}" == "true" || "${GITHUB_ACTIONS:-}" == "true" ]]; then
-    printf '%s\n' "Skipping local-only BetterDesk gate in CI."
+    printf '%s\n' "Skipping local-only NeoDesk gate in CI."
     exit 0
 fi
 

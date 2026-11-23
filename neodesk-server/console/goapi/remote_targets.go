@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // GetAllRemoteTargets calls GET /api/remote-targets with org_id (also when

@@ -7,12 +7,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/limits"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // roleIDs gives each test account its own id: an account has one session
@@ -80,7 +80,7 @@ func (s *site) call(cookie, method, target, body string) *httptest.ResponseRecor
 func (s *site) signIn(role string) string {
 	s.t.Helper()
 	pair, _, _ := strings.Cut(s.call("", "GET", "/signin/"+role, "").Header().Get("Set-Cookie"), ";")
-	if !strings.HasPrefix(pair, "bd.sid=") {
+	if !strings.HasPrefix(pair, "nd.sid=") {
 		s.t.Fatalf("sign in as %s set the cookie %q", role, pair)
 	}
 	return pair

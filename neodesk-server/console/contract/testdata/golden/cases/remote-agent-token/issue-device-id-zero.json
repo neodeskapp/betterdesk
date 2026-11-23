@@ -2,7 +2,7 @@
  "id": "remote-agent-token/issue-device-id-zero",
  "request": {
   "method": "POST",
-  "path": "/api/bd/remote-agent-token",
+  "path": "/api/nd/remote-agent-token",
   "body": {
    "device_id": 0
   },

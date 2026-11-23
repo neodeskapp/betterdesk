@@ -2,7 +2,7 @@
  "id": "inventory-device/upload-form",
  "request": {
   "method": "POST",
-  "path": "/api/bd/inventory",
+  "path": "/api/nd/inventory",
   "body": "device_id=900100001&hardware=x",
   "notes": [
    "raw body, content type \"application/x-www-form-urlencoded\"",

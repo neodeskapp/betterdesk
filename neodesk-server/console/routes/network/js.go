@@ -6,10 +6,10 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/netmonitor"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/netmonitor"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // The old routes took the members of a body and of a query as they came,

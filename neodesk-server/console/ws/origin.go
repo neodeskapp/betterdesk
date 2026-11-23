@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
 // OriginPolicy decides which pages may open a socket (the old console's
@@ -18,7 +18,7 @@ type OriginPolicy struct {
 	// none.
 	Allowed []string
 	// AllowMissing accepts an upgrade without Origin even when it carries
-	// a session cookie (BD_ALLOW_MISSING_ORIGIN=true). Default false: only
+	// a session cookie (ND_ALLOW_MISSING_ORIGIN=true). Default false: only
 	// a request without a session cookie may leave Origin out.
 	AllowMissing bool
 }
@@ -36,8 +36,8 @@ func ParseAllowedOrigins(value string) []string {
 }
 
 // sessionCookie finds a session cookie anywhere in the Cookie header, as
-// the old check did with /bd\.sid=|betterdesk\.sid=/.
-var sessionCookie = regexp.MustCompile(`bd\.sid=|betterdesk\.sid=`)
+// the old check did with /nd\.sid=|neodesk\.sid=/.
+var sessionCookie = regexp.MustCompile(`nd\.sid=|neodesk\.sid=`)
 
 // Allow reports whether an upgrade may go on, and when not, why (for the
 // log line).

@@ -2,7 +2,7 @@
  "id": "filetransfer/device-read-unknown-transfer",
  "request": {
   "method": "GET",
-  "path": "/api/bd/file-transfer/no-such-transfer",
+  "path": "/api/nd/file-transfer/no-such-transfer",
   "notes": [
    "header Authorization: Bearer {secret:device_token}",
    "no CSRF token",

@@ -1,15 +1,15 @@
 #!/bin/bash
 #===============================================================================
 #
-#   BetterDesk Console Manager v3.6.2 (Docker)
+#   NeoDesk Console Manager v3.6.2 (Docker)
 #
-#   Installs, updates and removes BetterDesk on Docker: one container that
-#   runs the published image ghcr.io/neodeskapp/betterdesk (signal,
+#   Installs, updates and removes NeoDesk on Docker: one container that
+#   runs the published image ghcr.io/neodeskapp/neodesk (signal,
 #   relay, API and the web console), with docker-compose.yml and .env in
-#   one folder (/opt/betterdesk/docker).
+#   one folder (/opt/neodesk/docker).
 #
-#   sudo bash betterdesk-docker.sh            install, or update an install
-#   sudo bash betterdesk-docker.sh --help     every command and option
+#   sudo bash neodesk-docker.sh            install, or update an install
+#   sudo bash neodesk-docker.sh --help     every command and option
 #
 #===============================================================================
 
@@ -24,16 +24,16 @@ VERSION="3.6.2"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || pwd)"
 
 # Settings: flags win over these variables, which win over the defaults
-BETTERDESK_DIR="${BETTERDESK_DIR:-/opt/betterdesk/docker}"
+NEODESK_DIR="${NEODESK_DIR:-/opt/neodesk/docker}"
 # The image the compose file runs (a mirror goes into docker-compose.override.yml)
-BETTERDESK_IMAGE="ghcr.io/neodeskapp/betterdesk"
-BETTERDESK_IMAGE_TAG_SET="${BETTERDESK_IMAGE_TAG:-}"
-BETTERDESK_RAW_BASE="${BETTERDESK_RAW_BASE:-https://raw.githubusercontent.com/neodeskapp/betterdesk/${BETTERDESK_BRANCH:-main}}"
+NEODESK_IMAGE="ghcr.io/neodeskapp/neodesk"
+NEODESK_IMAGE_TAG_SET="${NEODESK_IMAGE_TAG:-}"
+NEODESK_RAW_BASE="${NEODESK_RAW_BASE:-https://raw.githubusercontent.com/neodeskapp/neodesk/${NEODESK_BRANCH:-main}}"
 RELAY_SERVERS_SET="${RELAY_SERVERS:-}"
 RELAY_MODE="${RELAY_MODE:-auto}"
-CONSOLE_PORT_SET="${BETTERDESK_CONSOLE_PORT:-}"
+CONSOLE_PORT_SET="${NEODESK_CONSOLE_PORT:-}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-}"
-USE_POSTGRES="${BETTERDESK_POSTGRES:-false}"
+USE_POSTGRES="${NEODESK_POSTGRES:-false}"
 
 COMMAND=""
 ASSUME_YES=false
@@ -47,13 +47,13 @@ MOVE_DATA=""
 OVERWRITE_POSTGRES=false
 MANAGED_CONFIG_CHANGES=()
 
-CONTAINER="betterdesk"
-PG_CONTAINER="betterdesk-postgres"
-DATA_VOLUME="betterdesk-data"
-CONSOLE_VOLUME="betterdesk-console-data"
-PG_VOLUME="betterdesk-postgres-data"
-OLD_CONTAINERS=(betterdesk betterdesk-server betterdesk-console)
-HEALTH_TIMEOUT="${BETTERDESK_HEALTH_TIMEOUT:-180}"
+CONTAINER="neodesk"
+PG_CONTAINER="neodesk-postgres"
+DATA_VOLUME="neodesk-data"
+CONSOLE_VOLUME="neodesk-console-data"
+PG_VOLUME="neodesk-postgres-data"
+OLD_CONTAINERS=(neodesk neodesk-server neodesk-console)
+HEALTH_TIMEOUT="${NEODESK_HEALTH_TIMEOUT:-180}"
 KEEP_BACKUPS=5
 DOCKER_PORTS_TCP=(21115 21116 21117 21118 21119 21121 21122)
 DOCKER_PORTS_UDP=(21116)
@@ -83,10 +83,10 @@ case "$COLOR_DEPTH" in
         ;;
 esac
 
-# The BetterDesk mark: the logo's square (b), circle (g) and their overlap
+# The NeoDesk mark: the logo's square (b), circle (g) and their overlap
 # (t) on a 12 x 12 grid, sampled from its geometry. Two rows make one line
 # of half blocks.
-BD_MARK_ROWS=(
+ND_MARK_ROWS=(
     '......gggg..'
     '....ggggggg.'
     '....gggggggg'
@@ -157,21 +157,21 @@ mark_line() {
     REPLY="$line${label:+   $label}"
 }
 
-# print_header: the BetterDesk mark beside the name, what this script is
+# print_header: the NeoDesk mark beside the name, what this script is
 # and its version; one plain line without colour (no terminal, NO_COLOR).
 # install.sh shows its own before it runs this script
-# (BETTERDESK_HEADER_SHOWN=1), and this one stays out then.
+# (NEODESK_HEADER_SHOWN=1), and this one stays out then.
 print_header() {
     local title="Docker installer ${VERSION}" line
-    [ "${BETTERDESK_HEADER_SHOWN:-}" != 1 ] || return 0
+    [ "${NEODESK_HEADER_SHOWN:-}" != 1 ] || return 0
     if [ -z "$COLOR_DEPTH" ]; then
-        say "BetterDesk $title"
+        say "NeoDesk $title"
         return 0
     fi
-    local labels=('' '' "${BOLD}BetterDesk${NC}" "$title" '' '')
+    local labels=('' '' "${BOLD}NeoDesk${NC}" "$title" '' '')
     say ""
     for ((line = 0; line < 6; line++)); do
-        mark_line "${BD_MARK_ROWS[line * 2]}" "${BD_MARK_ROWS[line * 2 + 1]}" "${labels[line]}"
+        mark_line "${ND_MARK_ROWS[line * 2]}" "${ND_MARK_ROWS[line * 2 + 1]}" "${labels[line]}"
         say "$REPLY"
     done
     say ""
@@ -179,12 +179,12 @@ print_header() {
 
 usage() {
     cat <<EOF
-BetterDesk on Docker, manager v${VERSION}
+NeoDesk on Docker, manager v${VERSION}
 
-Usage: sudo bash betterdesk-docker.sh [command] [options]
+Usage: sudo bash neodesk-docker.sh [command] [options]
 
 Commands:
-  install          Install BetterDesk, or update the install (the default)
+  install          Install NeoDesk, or update the install (the default)
   update           Update the install: back up the data, pull the image,
                    start it, and go back to the old image when the new
                    container does not get healthy
@@ -198,17 +198,17 @@ Commands:
   menu             The same commands as a menu
 
 Options:
-  --dir PATH             Install folder (BETTERDESK_DIR, /opt/betterdesk/docker)
-  --tag TAG              Image tag (BETTERDESK_IMAGE_TAG); latest, the default,
+  --dir PATH             Install folder (NEODESK_DIR, /opt/neodesk/docker)
+  --tag TAG              Image tag (NEODESK_IMAGE_TAG); latest, the default,
                          is the newest release, a version such as 3.5.270
                          pins one
   --relay ADDRESS        The address clients reach this server at, public IP
                          or DNS name (RELAY_SERVERS); found by itself when empty
   --relay-mode MODE      How to find it: auto, public or local (RELAY_MODE)
-  --console-port PORT    Host port of the web console (BETTERDESK_CONSOLE_PORT,
+  --console-port PORT    Host port of the web console (NEODESK_CONSOLE_PORT,
                          5000)
   --postgres             A new install on PostgreSQL instead of SQLite
-                         (BETTERDESK_POSTGRES=true)
+                         (NEODESK_POSTGRES=true)
   --no-move              postgres: do not move the data; the install stays on
                          SQLite and nothing changes
   --overwrite-postgres   postgres: delete the PostgreSQL volume of an earlier
@@ -216,7 +216,7 @@ Options:
   --user NAME            reset-password: the account (admin)
   --purge                uninstall: also delete the volumes (all data)
   --yes                  Answer yes to every question
-  --adopt                Take over a BetterDesk container of another install
+  --adopt                Take over a NeoDesk container of another install
                          (an older manager, a split install, another folder):
                          its data is copied into this install's volumes and
                          the old container is kept, stopped and renamed
@@ -246,7 +246,7 @@ HTTPS for the console: a reverse proxy with TLS in front (TRUST_PROXY=1 in
 .env), or HTTPS_ENABLED=true with SSL_CERT_PATH and SSL_KEY_PATH naming
 files in the data volume (/opt/rustdesk/...); the console then answers on
 port 5443.
-Logs: cd <folder> && docker compose logs -f betterdesk
+Logs: cd <folder> && docker compose logs -f neodesk
 EOF
 }
 
@@ -256,10 +256,10 @@ parse_args() {
             install|update|status|logs|backup|reset-password|postgres|uninstall|menu)
                 [ -z "$COMMAND" ] || die "Two commands given: $COMMAND and $1" "Run one at a time."
                 COMMAND="$1" ;;
-            --dir) [ $# -ge 2 ] || die "--dir needs a folder"; BETTERDESK_DIR="$2"; shift ;;
-            --dir=*) BETTERDESK_DIR="${1#*=}" ;;
-            --tag) [ $# -ge 2 ] || die "--tag needs a tag"; BETTERDESK_IMAGE_TAG_SET="$2"; shift ;;
-            --tag=*) BETTERDESK_IMAGE_TAG_SET="${1#*=}" ;;
+            --dir) [ $# -ge 2 ] || die "--dir needs a folder"; NEODESK_DIR="$2"; shift ;;
+            --dir=*) NEODESK_DIR="${1#*=}" ;;
+            --tag) [ $# -ge 2 ] || die "--tag needs a tag"; NEODESK_IMAGE_TAG_SET="$2"; shift ;;
+            --tag=*) NEODESK_IMAGE_TAG_SET="${1#*=}" ;;
             --relay) [ $# -ge 2 ] || die "--relay needs an address"; RELAY_SERVERS_SET="$2"; shift ;;
             --relay=*) RELAY_SERVERS_SET="${1#*=}" ;;
             --relay-mode) [ $# -ge 2 ] || die "--relay-mode needs auto, public or local"; RELAY_MODE="$2"; shift ;;
@@ -285,7 +285,7 @@ parse_args() {
                 if [ $# -lt 2 ] || [[ "$2" != *=* ]]; then die "--set-config needs KEY=VALUE"; fi
                 MANAGED_CONFIG_CHANGES+=("$2"); COMMAND="${COMMAND:-set-config}"; shift ;;
             -h|--help) usage; exit 0 ;;
-            *) die "Unknown option: $1" "See: bash betterdesk-docker.sh --help" ;;
+            *) die "Unknown option: $1" "See: bash neodesk-docker.sh --help" ;;
         esac
         shift
     done
@@ -319,13 +319,13 @@ confirm() {
 # The install folder: docker-compose.yml and .env
 #===============================================================================
 
-compose_file() { printf '%s\n' "$BETTERDESK_DIR/docker-compose.yml"; }
-env_file() { printf '%s\n' "$BETTERDESK_DIR/.env"; }
+compose_file() { printf '%s\n' "$NEODESK_DIR/docker-compose.yml"; }
+env_file() { printf '%s\n' "$NEODESK_DIR/.env"; }
 
 # compose ARGS...: docker compose in the install folder (its .env and
 # docker-compose.override.yml included)
 compose() {
-    (cd "$BETTERDESK_DIR" && docker compose "$@")
+    (cd "$NEODESK_DIR" && docker compose "$@")
 }
 
 # compose_quiet ARGS...: docker compose without its progress lines; they
@@ -342,14 +342,14 @@ compose_quiet() {
 # compose files and .env
 settings_fingerprint() {
     local f files=()
-    for f in "$(compose_file)" "$BETTERDESK_DIR/docker-compose.override.yml" "$(env_file)"; do
+    for f in "$(compose_file)" "$NEODESK_DIR/docker-compose.override.yml" "$(env_file)"; do
         [ ! -f "$f" ] || files+=("$f")
     done
     cat "${files[@]}" | sha256sum | cut -d' ' -f1
 }
 
 # remember_applied: the settings the running container was made from
-remember_applied() { settings_fingerprint > "$BETTERDESK_DIR/.applied.sha256"; }
+remember_applied() { settings_fingerprint > "$NEODESK_DIR/.applied.sha256"; }
 
 # env_get KEY: the value of KEY in .env, empty when it has none
 env_get() {
@@ -369,7 +369,7 @@ env_set() {
         if [ -f "$file" ]; then
             grep -vE "^${1}=" "$file" > "$tmp" || true
         else
-            printf '# BetterDesk settings: one KEY=value per line; every key reaches the server.\n' > "$tmp"
+            printf '# NeoDesk settings: one KEY=value per line; every key reaches the server.\n' > "$tmp"
         fi
         printf '%s=%s\n' "$1" "$2" >> "$tmp"
     )
@@ -406,15 +406,15 @@ profile_off() {
 
 image_tag() {
     local tag
-    tag="${BETTERDESK_IMAGE_TAG_SET:-$(env_get BETTERDESK_IMAGE_TAG)}"
+    tag="${NEODESK_IMAGE_TAG_SET:-$(env_get NEODESK_IMAGE_TAG)}"
     printf '%s\n' "${tag:-latest}"
 }
 
-image_ref() { printf '%s:%s\n' "$BETTERDESK_IMAGE" "$(image_tag)"; }
+image_ref() { printf '%s:%s\n' "$NEODESK_IMAGE" "$(image_tag)"; }
 
 console_port() {
     local port
-    port="${CONSOLE_PORT_SET:-$(env_get BETTERDESK_CONSOLE_PORT)}"
+    port="${CONSOLE_PORT_SET:-$(env_get NEODESK_CONSOLE_PORT)}"
     printf '%s\n' "${port:-5000}"
 }
 
@@ -422,7 +422,7 @@ console_port() {
 # whether HTTPS is on or not
 console_https_port() {
     local port
-    port="$(env_get BETTERDESK_CONSOLE_HTTPS_PORT)"
+    port="$(env_get NEODESK_CONSOLE_HTTPS_PORT)"
     printf '%s\n' "${port:-5443}"
 }
 
@@ -443,10 +443,10 @@ fetch_compose_file() {
         cp "$src" "$1"
         return 0
     fi
-    curl -fsSL --connect-timeout 15 --max-time 60 -o "$1" "$BETTERDESK_RAW_BASE/docker-compose.quick.single.yml" \
-        || die "Could not download the compose file from $BETTERDESK_RAW_BASE" \
+    curl -fsSL --connect-timeout 15 --max-time 60 -o "$1" "$NEODESK_RAW_BASE/docker-compose.quick.single.yml" \
+        || die "Could not download the compose file from $NEODESK_RAW_BASE" \
             "Check the internet connection, or run the script from a checkout of the repository."
-    grep -q 'ghcr.io/neodeskapp/betterdesk' "$1" || die "The downloaded compose file is not BetterDesk's ($BETTERDESK_RAW_BASE)"
+    grep -q 'ghcr.io/neodeskapp/neodesk' "$1" || die "The downloaded compose file is not NeoDesk's ($NEODESK_RAW_BASE)"
 }
 
 # write_compose_file: docker-compose.yml of this release. A file the user
@@ -454,7 +454,7 @@ fetch_compose_file() {
 write_compose_file() {
     local dest new record
     dest=$(compose_file)
-    record="$BETTERDESK_DIR/.compose.sha256"
+    record="$NEODESK_DIR/.compose.sha256"
     new="$dest.new.$$"
     fetch_compose_file "$new"
     if [ -f "$dest" ]; then
@@ -485,17 +485,17 @@ write_compose_file() {
 need_root_or_docker() {
     if [ "$(id -u)" -eq 0 ]; then return 0; fi
     if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 \
-        && mkdir -p "$BETTERDESK_DIR" 2>/dev/null && [ -w "$BETTERDESK_DIR" ]; then
+        && mkdir -p "$NEODESK_DIR" 2>/dev/null && [ -w "$NEODESK_DIR" ]; then
         return 0
     fi
     die "This needs root: run it with sudo." \
-        "sudo bash betterdesk-docker.sh ${COMMAND}" \
-        "Without sudo it works when your user may use Docker (the docker group) and write $BETTERDESK_DIR (--dir)."
+        "sudo bash neodesk-docker.sh ${COMMAND}" \
+        "Without sudo it works when your user may use Docker (the docker group) and write $NEODESK_DIR (--dir)."
 }
 
 install_docker_engine() {
     if [ "$(id -u)" -ne 0 ]; then
-        die "Docker is not installed, and installing it needs root." "Run: sudo bash betterdesk-docker.sh"
+        die "Docker is not installed, and installing it needs root." "Run: sudo bash neodesk-docker.sh"
     fi
     if ! command -v curl >/dev/null 2>&1; then
         die "Docker is not installed, and curl is missing to install it." \
@@ -590,9 +590,9 @@ check_ports() {
         hint="Stop it, or give the console another port: --console-port 5080"
     fi
     if [ "${#taken[@]}" -eq 1 ] && [[ "${taken[0]}" == "TCP $(console_https_port):"* ]]; then
-        hint="Stop it, or give the console's HTTPS another port: BETTERDESK_CONSOLE_HTTPS_PORT=5444 in $(env_file)"
+        hint="Stop it, or give the console's HTTPS another port: NEODESK_CONSOLE_HTTPS_PORT=5444 in $(env_file)"
     fi
-    die "Ports BetterDesk needs are in use:" "${taken[@]}" "$hint"
+    die "Ports NeoDesk needs are in use:" "${taken[@]}" "$hint"
 }
 
 check_internet() {
@@ -619,11 +619,11 @@ container_dir() {
 real_dir() { (cd "$1" 2>/dev/null && pwd -P) || printf '%s\n' "$1"; }
 
 # install_state: "new", "ours" (this folder's install, its container made)
-# or "foreign" (a BetterDesk container of another install). A folder whose
+# or "foreign" (a NeoDesk container of another install). A folder whose
 # container was never made (a first install that stopped early) is new.
 install_state() {
     local c dir own
-    own=$(real_dir "$BETTERDESK_DIR")
+    own=$(real_dir "$NEODESK_DIR")
     for c in "${OLD_CONTAINERS[@]}"; do
         container_exists "$c" || continue
         dir=$(container_dir "$c")
@@ -647,10 +647,10 @@ foreign_install_error() {
         dir=$(container_dir "$c")
         lines+=("container $c (${dir:-not made by docker compose})")
     done
-    die "Found BetterDesk from another install, so nothing was changed:" "${lines[@]}" \
-        "Take it over into $BETTERDESK_DIR (its data is copied, the old container is kept stopped):" \
-        "  sudo bash betterdesk-docker.sh --adopt" \
-        "Or manage it in its own folder: sudo bash betterdesk-docker.sh --dir <that folder>"
+    die "Found NeoDesk from another install, so nothing was changed:" "${lines[@]}" \
+        "Take it over into $NEODESK_DIR (its data is copied, the old container is kept stopped):" \
+        "  sudo bash neodesk-docker.sh --adopt" \
+        "Or manage it in its own folder: sudo bash neodesk-docker.sh --dir <that folder>"
 }
 
 pull_image() {
@@ -665,24 +665,24 @@ pull_image() {
     fi
     step "Pulling $(image_ref)"
     local out ok=true
-    out=$(compose pull --quiet betterdesk 2>&1) || ok=false
+    out=$(compose pull --quiet neodesk 2>&1) || ok=false
     # Before the first release there is no latest image: without a tag given
     # or saved, the install runs the development image, as the native
     # installers take the development build then
     if [ "$ok" = false ] && printf '%s' "$out" | grep -qiE 'manifest unknown|not found' && [ "$(image_tag)" = latest ] \
-        && [ -z "$BETTERDESK_IMAGE_TAG_SET" ] && [ -z "$(env_get BETTERDESK_IMAGE_TAG)" ]; then
+        && [ -z "$NEODESK_IMAGE_TAG_SET" ] && [ -z "$(env_get NEODESK_IMAGE_TAG)" ]; then
         warn "ghcr.io has no release image yet (latest): running the development image dev instead."
-        warn "Once a release is out: sudo bash betterdesk-docker.sh update --tag latest"
-        env_set BETTERDESK_IMAGE_TAG dev
+        warn "Once a release is out: sudo bash neodesk-docker.sh update --tag latest"
+        env_set NEODESK_IMAGE_TAG dev
         step "Pulling $(image_ref)"
         ok=true
-        out=$(compose pull --quiet betterdesk 2>&1) || ok=false
+        out=$(compose pull --quiet neodesk 2>&1) || ok=false
     fi
     if [ "$ok" = false ]; then
         if printf '%s' "$out" | grep -qiE 'manifest unknown|not found|denied|unauthorized'; then
             die "The image $(image_ref) was not found on ghcr.io." \
-                "Check the tag (--tag, BETTERDESK_IMAGE_TAG in $(env_file)); latest is the newest release." \
-                "Or build it from a checkout of the repository: sudo bash betterdesk-docker.sh --build"
+                "Check the tag (--tag, NEODESK_IMAGE_TAG in $(env_file)); latest is the newest release." \
+                "Or build it from a checkout of the repository: sudo bash neodesk-docker.sh --build"
         fi
         printf '%s\n' "$out" >&2
         die "Pulling the image failed (output above)." "Check the internet connection and run this again."
@@ -693,15 +693,15 @@ pull_image() {
 }
 
 build_image() {
-    [ -f "$SCRIPT_DIR/Dockerfile" ] && [ -d "$SCRIPT_DIR/betterdesk-server" ] \
+    [ -f "$SCRIPT_DIR/Dockerfile" ] && [ -d "$SCRIPT_DIR/neodesk-server" ] \
         || die "--build needs a checkout of the repository next to this script." \
-            "git clone https://github.com/neodeskapp/betterdesk.git && sudo bash betterdesk/betterdesk-docker.sh --build"
-    BETTERDESK_IMAGE_TAG_SET="local"
-    env_set BETTERDESK_IMAGE_TAG local
+            "git clone https://github.com/neodeskapp/neodesk.git && sudo bash neodesk/neodesk-docker.sh --build"
+    NEODESK_IMAGE_TAG_SET="local"
+    env_set NEODESK_IMAGE_TAG local
     step "Building $(image_ref) from $SCRIPT_DIR (several minutes)"
     local commit
     commit=$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || true)
-    docker build -t "$(image_ref)" --build-arg BETTERDESK_COMMIT_SHA="$commit" "$SCRIPT_DIR" \
+    docker build -t "$(image_ref)" --build-arg NEODESK_COMMIT_SHA="$commit" "$SCRIPT_DIR" \
         || die "The image did not build (output above); the running container was not changed."
 }
 
@@ -738,21 +738,21 @@ wait_healthy() {
 
 save_failed_log() {
     local file
-    mkdir -p "$BETTERDESK_DIR/logs"
-    file="$BETTERDESK_DIR/logs/failed-start-$(date +%Y%m%d-%H%M%S).log"
+    mkdir -p "$NEODESK_DIR/logs"
+    file="$NEODESK_DIR/logs/failed-start-$(date +%Y%m%d-%H%M%S).log"
     docker logs --tail 300 "$CONTAINER" > "$file" 2>&1 || true
     printf '%s\n' "$file"
 }
 
 server_version() {
-    docker exec "$CONTAINER" /usr/local/bin/betterdesk-server -version 2>/dev/null | head -n 1 || printf 'version unknown\n'
+    docker exec "$CONTAINER" /usr/local/bin/neodesk-server -version 2>/dev/null | head -n 1 || printf 'version unknown\n'
 }
 
 #===============================================================================
 # Backups of the volumes
 #===============================================================================
 
-backup_dir() { printf '%s\n' "$BETTERDESK_DIR/backups"; }
+backup_dir() { printf '%s\n' "$NEODESK_DIR/backups"; }
 
 # backup_volumes: a tar.gz of the data volumes (and a dump of PostgreSQL),
 # taken while the container is stopped. Prints the file.
@@ -761,7 +761,7 @@ backup_volumes() {
     dir=$(backup_dir)
     mkdir -p "$dir"
     chmod 700 "$dir"
-    name="betterdesk-$(date +%Y%m%d-%H%M%S)"
+    name="neodesk-$(date +%Y%m%d-%H%M%S)"
     image=$(docker container inspect -f '{{.Config.Image}}' "$CONTAINER" 2>/dev/null || true)
     if [ -z "$image" ] || ! docker image inspect "$image" >/dev/null 2>&1; then image=$(image_ref); fi
     docker run --rm --entrypoint tar --user 0 \
@@ -771,12 +771,12 @@ backup_volumes() {
     cp -p "$(compose_file)" "$dir/$name.docker-compose.yml" 2>/dev/null || true
     cp -p "$(env_file)" "$dir/$name.env" 2>/dev/null || true
     if on_postgres && container_exists "$PG_CONTAINER"; then
-        compose exec -T postgres pg_dump -U betterdesk betterdesk 2>/dev/null | gzip > "$dir/$name.postgres.sql.gz" \
+        compose exec -T postgres pg_dump -U neodesk neodesk 2>/dev/null | gzip > "$dir/$name.postgres.sql.gz" \
             || warn "The PostgreSQL dump failed; the volume backup is there."
     fi
     chmod 600 "$dir/$name".* 2>/dev/null || true
     # The last KEEP_BACKUPS stay
-    ls -1t "$dir"/betterdesk-*.tar.gz 2>/dev/null | tail -n +$((KEEP_BACKUPS + 1)) | while read -r old; do
+    ls -1t "$dir"/neodesk-*.tar.gz 2>/dev/null | tail -n +$((KEEP_BACKUPS + 1)) | while read -r old; do
         rm -f "$old" "${old%.tar.gz}".*
     done
     printf '%s\n' "$dir/$name.tar.gz"
@@ -816,11 +816,11 @@ detect_relay_address() {
 }
 
 write_settings() {
-    mkdir -p "$BETTERDESK_DIR"
-    chmod 755 "$BETTERDESK_DIR"
-    [ -f "$(env_file)" ] || env_set BETTERDESK_DOCKER_LAYOUT single
-    [ -z "$BETTERDESK_IMAGE_TAG_SET" ] || env_set BETTERDESK_IMAGE_TAG "$BETTERDESK_IMAGE_TAG_SET"
-    [ -z "$CONSOLE_PORT_SET" ] || env_set BETTERDESK_CONSOLE_PORT "$CONSOLE_PORT_SET"
+    mkdir -p "$NEODESK_DIR"
+    chmod 755 "$NEODESK_DIR"
+    [ -f "$(env_file)" ] || env_set NEODESK_DOCKER_LAYOUT single
+    [ -z "$NEODESK_IMAGE_TAG_SET" ] || env_set NEODESK_IMAGE_TAG "$NEODESK_IMAGE_TAG_SET"
+    [ -z "$CONSOLE_PORT_SET" ] || env_set NEODESK_CONSOLE_PORT "$CONSOLE_PORT_SET"
     [ -z "${PUID:-}" ] || env_set PUID "$PUID"
     [ -z "${PGID:-}" ] || env_set PGID "$PGID"
     if [ -n "$RELAY_SERVERS_SET" ]; then
@@ -839,7 +839,7 @@ new_secret() {
 }
 
 # postgres_url PASSWORD: the server's address of the postgres service
-postgres_url() { printf 'postgres://betterdesk:%s@postgres:5432/betterdesk?sslmode=disable\n' "$1"; }
+postgres_url() { printf 'postgres://neodesk:%s@postgres:5432/neodesk?sslmode=disable\n' "$1"; }
 
 # use_database ADDRESS: the server's database in .env, DATABASE_URL alone
 # (the type follows from the address); the DB_TYPE of an older .env goes
@@ -868,17 +868,17 @@ do_install() {
         foreign_install_error
     fi
     if [ "$state" = ours ]; then
-        [ "$COMMAND" != install ] || say "BetterDesk is installed in $BETTERDESK_DIR: updating it."
+        [ "$COMMAND" != install ] || say "NeoDesk is installed in $NEODESK_DIR: updating it."
         do_update
         return
     fi
     if [ "$COMMAND" = update ]; then
-        die "There is no install in $BETTERDESK_DIR to update." \
-            "Install it: sudo bash betterdesk-docker.sh" "Another folder: --dir <folder>"
+        die "There is no install in $NEODESK_DIR to update." \
+            "Install it: sudo bash neodesk-docker.sh" "Another folder: --dir <folder>"
     fi
 
     local started=$SECONDS
-    say "${BOLD}Installing BetterDesk on Docker into $BETTERDESK_DIR${NC}"
+    say "${BOLD}Installing NeoDesk on Docker into $NEODESK_DIR${NC}"
     [ "$state" = foreign ] || check_ports
     check_internet
     if [ "$state" != foreign ] && docker volume inspect "$DATA_VOLUME" >/dev/null 2>&1; then
@@ -893,18 +893,18 @@ do_install() {
     if [ "$state" = foreign ]; then
         adopt_old_install
     fi
-    step "Starting BetterDesk"
+    step "Starting NeoDesk"
     export ADMIN_PASSWORD
     compose_quiet up -d --remove-orphans \
-        || die "docker compose up failed (output above)." "Its log: cd $BETTERDESK_DIR && docker compose logs betterdesk"
+        || die "docker compose up failed (output above)." "Its log: cd $NEODESK_DIR && docker compose logs neodesk"
     if ! wait_healthy; then
         local log
         log=$(save_failed_log)
-        die "BetterDesk did not get healthy within ${HEALTH_TIMEOUT}s." "Its log is in $log" \
-            "Follow it: cd $BETTERDESK_DIR && docker compose logs -f betterdesk"
+        die "NeoDesk did not get healthy within ${HEALTH_TIMEOUT}s." "Its log is in $log" \
+            "Follow it: cd $NEODESK_DIR && docker compose logs -f neodesk"
     fi
     remember_applied
-    ok "BetterDesk runs ($((SECONDS - started))s)"
+    ok "NeoDesk runs ($((SECONDS - started))s)"
     print_summary first
 }
 
@@ -914,7 +914,7 @@ do_update() {
     case "$(install_state)" in
         ours) ;;
         foreign) foreign_install_error ;;
-        *) die "There is no install in $BETTERDESK_DIR to update." "Install it: sudo bash betterdesk-docker.sh" ;;
+        *) die "There is no install in $NEODESK_DIR to update." "Install it: sudo bash neodesk-docker.sh" ;;
     esac
     check_internet
     write_settings
@@ -923,16 +923,16 @@ do_update() {
     old_image=$(container_image_id)
     pull_image
     new_image=$(image_id "$(image_ref)")
-    applied=$(cat "$BETTERDESK_DIR/.applied.sha256" 2>/dev/null || true)
+    applied=$(cat "$NEODESK_DIR/.applied.sha256" 2>/dev/null || true)
     if [ -n "$old_image" ] && [ "$old_image" = "$new_image" ] && [ "$applied" = "$(settings_fingerprint)" ] \
         && container_running && wait_healthy; then
-        ok "BetterDesk is up to date: $(server_version)"
+        ok "NeoDesk is up to date: $(server_version)"
         print_summary
         return 0
     fi
 
-    step "Stopping BetterDesk for the backup"
-    compose stop -t 30 betterdesk >/dev/null 2>&1 || true
+    step "Stopping NeoDesk for the backup"
+    compose stop -t 30 neodesk >/dev/null 2>&1 || true
     backup=$(backup_volumes)
     ok "Backup: $backup"
     step "Starting $(image_ref)"
@@ -949,29 +949,29 @@ do_update() {
     if [ -n "$old_image" ] && [ "$old_image" != "$new_image" ]; then
         step "Going back to the previous image"
         docker tag "$old_image" "$(image_ref)"
-        compose_quiet up -d --force-recreate betterdesk || true
+        compose_quiet up -d --force-recreate neodesk || true
         if wait_healthy; then
-            die "The update failed; BetterDesk runs the previous version again: $(server_version)" \
+            die "The update failed; NeoDesk runs the previous version again: $(server_version)" \
                 "The failed start's log: $log" "The data before the update: $backup"
         fi
     fi
     step "Putting the data of the backup back"
-    compose stop -t 10 betterdesk >/dev/null 2>&1 || true
+    compose stop -t 10 neodesk >/dev/null 2>&1 || true
     restore_volumes "$backup" || true
-    compose_quiet up -d --force-recreate betterdesk || true
+    compose_quiet up -d --force-recreate neodesk || true
     if wait_healthy; then
-        die "The update failed; BetterDesk runs again with the data from before the update." \
+        die "The update failed; NeoDesk runs again with the data from before the update." \
             "The failed start's log: $log"
     fi
-    die "BetterDesk does not start, also not with the previous version." \
+    die "NeoDesk does not start, also not with the previous version." \
         "The failed start's log: $log" "The data before the update: $backup" \
-        "Follow the log: cd $BETTERDESK_DIR && docker compose logs -f betterdesk"
+        "Follow the log: cd $NEODESK_DIR && docker compose logs -f neodesk"
 }
 
 # first_password: the admin's generated first password from the volume,
 # empty when there is none
 first_password() {
-    docker exec -u betterdesk "$CONTAINER" sh -c 'cat /opt/rustdesk/.admin_credentials 2>/dev/null' 2>/dev/null \
+    docker exec -u neodesk "$CONTAINER" sh -c 'cat /opt/rustdesk/.admin_credentials 2>/dev/null' 2>/dev/null \
         | sed -n 's/^Admin Password:[[:space:]]*//p' | head -n 1 || true
 }
 
@@ -991,7 +991,7 @@ print_summary() {
     key=$(public_key)
     tag=$(image_tag)
     say ""
-    say "${BOLD}BetterDesk on Docker${NC}: $(server_version)"
+    say "${BOLD}NeoDesk on Docker${NC}: $(server_version)"
     if [ "$tag" = latest ]; then
         say "Image:           $(image_ref), the newest release (pin one: --tag <version>)"
     else
@@ -1008,23 +1008,23 @@ print_summary() {
                 say "Sign in:         user admin, password ${BOLD}${password}${NC}"
                 say "                 (shown this once; change it after the first sign-in)"
             else
-                say "Sign in:         user admin; the password: cd $BETTERDESK_DIR && docker compose exec betterdesk betterdesk-show-admin-credentials"
+                say "Sign in:         user admin; the password: cd $NEODESK_DIR && docker compose exec neodesk neodesk-show-admin-credentials"
             fi
         fi
     else
-        say "Sign in:         with your accounts; a new admin password: sudo bash betterdesk-docker.sh reset-password"
+        say "Sign in:         with your accounts; a new admin password: sudo bash neodesk-docker.sh reset-password"
     fi
     say ""
     say "RustDesk clients (Settings, Network, ID/Relay server):"
     say "  ID server:     ${addr}"
     say "  Relay server:  ${addr}"
     say "  API server:    http://${addr}:21121"
-    say "  Key:           ${key:-not made yet; later: docker exec betterdesk cat /opt/rustdesk/id_ed25519.pub}"
+    say "  Key:           ${key:-not made yet; later: docker exec neodesk cat /opt/rustdesk/id_ed25519.pub}"
     say ""
     say "Ports to open in a firewall in front of this machine: TCP ${port}, 21115-21119, 21121, 21122 and UDP 21116"
-    say "Logs:            cd $BETTERDESK_DIR && docker compose logs -f betterdesk"
-    say "Update:          sudo bash betterdesk-docker.sh   (or: cd $BETTERDESK_DIR && docker compose pull && docker compose up -d)"
-    say "Settings:        $(env_file)   (then: cd $BETTERDESK_DIR && docker compose up -d)"
+    say "Logs:            cd $NEODESK_DIR && docker compose logs -f neodesk"
+    say "Update:          sudo bash neodesk-docker.sh   (or: cd $NEODESK_DIR && docker compose pull && docker compose up -d)"
+    say "Settings:        $(env_file)   (then: cd $NEODESK_DIR && docker compose up -d)"
 }
 
 #===============================================================================
@@ -1093,8 +1093,8 @@ adopt_old_install() {
 require_install() {
     need_root_or_docker
     check_docker
-    [ -f "$(compose_file)" ] || die "There is no install in $BETTERDESK_DIR." \
-        "Install it: sudo bash betterdesk-docker.sh" "Another folder: --dir <folder>"
+    [ -f "$(compose_file)" ] || die "There is no install in $NEODESK_DIR." \
+        "Install it: sudo bash neodesk-docker.sh" "Another folder: --dir <folder>"
 }
 
 do_status() {
@@ -1105,13 +1105,13 @@ do_status() {
         say "Health: $(docker container inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}no check{{end}}' "$CONTAINER")"
         print_summary
     else
-        say "BetterDesk is not running. Start it: cd $BETTERDESK_DIR && docker compose up -d"
+        say "NeoDesk is not running. Start it: cd $NEODESK_DIR && docker compose up -d"
     fi
 }
 
 do_logs() {
     require_install
-    compose logs -f --tail 200 betterdesk
+    compose logs -f --tail 200 neodesk
 }
 
 do_backup() {
@@ -1119,24 +1119,24 @@ do_backup() {
     local was_running=false file
     container_running && was_running=true
     if [ "$was_running" = true ]; then
-        step "Stopping BetterDesk for the backup"
-        compose stop -t 30 betterdesk >/dev/null
+        step "Stopping NeoDesk for the backup"
+        compose stop -t 30 neodesk >/dev/null
     fi
     file=$(backup_volumes)
-    [ "$was_running" = false ] || compose start betterdesk >/dev/null
+    [ "$was_running" = false ] || compose start neodesk >/dev/null
     ok "Backup: $file"
 }
 
 do_reset_password() {
     require_install
-    container_running || die "BetterDesk is not running." "Start it: cd $BETTERDESK_DIR && docker compose up -d"
+    container_running || die "NeoDesk is not running." "Start it: cd $NEODESK_DIR && docker compose up -d"
     local password
     password=$(new_secret 12)
-    printf '%s\n' "$password" | docker exec -i -u betterdesk "$CONTAINER" \
-        /usr/local/bin/betterdesk-server reset-password "$RESET_USER" >/dev/null \
+    printf '%s\n' "$password" | docker exec -i -u neodesk "$CONTAINER" \
+        /usr/local/bin/neodesk-server reset-password "$RESET_USER" >/dev/null \
         || die "The password of $RESET_USER was not changed (does the account exist?)."
     # The first password in the volume signs nobody in any more
-    docker exec -u betterdesk "$CONTAINER" sh -c '
+    docker exec -u neodesk "$CONTAINER" sh -c '
         for d in /opt/rustdesk /app/data; do
             if [ -f "$d/.admin_credentials" ] && grep -q "^Admin Username: $1\$" "$d/.admin_credentials"; then
                 rm -f "$d/.admin_credentials"
@@ -1157,34 +1157,34 @@ do_uninstall() {
             [ "$answer" = delete ] || die "Nothing was deleted."
         fi
         step "Backing up the data before it is deleted"
-        # BetterDesk stops; the postgres service runs on for its dump
-        compose stop -t 30 betterdesk >/dev/null 2>&1 || true
+        # NeoDesk stops; the postgres service runs on for its dump
+        compose stop -t 30 neodesk >/dev/null 2>&1 || true
         file=$(backup_volumes)
         ok "Backup: $file"
         compose_quiet --profile postgres --profile guacd down -v --remove-orphans
         docker volume rm "$DATA_VOLUME" "$CONSOLE_VOLUME" "$PG_VOLUME" >/dev/null 2>&1 || true
-        ok "BetterDesk's containers and volumes are removed."
+        ok "NeoDesk's containers and volumes are removed."
     else
         compose_quiet --profile postgres --profile guacd down --remove-orphans
-        ok "BetterDesk's containers are removed."
+        ok "NeoDesk's containers are removed."
         say "Left on this machine:"
         say "  volumes:  $DATA_VOLUME (database, server key), $CONSOLE_VOLUME$(docker volume inspect "$PG_VOLUME" >/dev/null 2>&1 && printf ', %s' "$PG_VOLUME" || true)"
         say "            an install uses them again; delete them: docker volume rm $DATA_VOLUME $CONSOLE_VOLUME$(docker volume inspect "$PG_VOLUME" >/dev/null 2>&1 && printf ' %s' "$PG_VOLUME" || true)"
     fi
     say "  image:    $(image_ref)   (delete: docker image rm $(image_ref))"
-    say "  folder:   $BETTERDESK_DIR with .env and the backups   (delete: sudo rm -rf $BETTERDESK_DIR)"
+    say "  folder:   $NEODESK_DIR with .env and the backups   (delete: sudo rm -rf $NEODESK_DIR)"
 }
 
 do_set_config() {
     require_install
     step "Applying allowed settings to $(env_file)"
-    # The image's own betterdesk-server checks the keys against its allowlist
-    docker run --rm --user "$(id -u):$(id -g)" --entrypoint /usr/local/bin/betterdesk-server \
-        -v "$BETTERDESK_DIR:/cfg" -e BETTERDESK_ENV_FILE=/cfg/.env \
+    # The image's own neodesk-server checks the keys against its allowlist
+    docker run --rm --user "$(id -u):$(id -g)" --entrypoint /usr/local/bin/neodesk-server \
+        -v "$NEODESK_DIR:/cfg" -e NEODESK_ENV_FILE=/cfg/.env \
         "$(image_ref)" config set "${MANAGED_CONFIG_CHANGES[@]}" || die "The settings were refused (output above)."
     compose_quiet up -d || die "docker compose up failed (output above)."
-    wait_healthy || die "BetterDesk did not get healthy after the change."
-    remember_applied "Its log: cd $BETTERDESK_DIR && docker compose logs betterdesk"
+    wait_healthy || die "NeoDesk did not get healthy after the change."
+    remember_applied "Its log: cd $NEODESK_DIR && docker compose logs neodesk"
     ok "Settings applied"
 }
 
@@ -1195,14 +1195,14 @@ do_check() {
     fi
     docker compose version >/dev/null 2>&1 || { warn "Docker Compose v2 is missing"; failures=$((failures + 1)); }
     [ -f "$(compose_file)" ] || { warn "No compose file: $(compose_file)"; failures=$((failures + 1)); }
-    if ! { mkdir -p "$BETTERDESK_DIR" 2>/dev/null && [ -w "$BETTERDESK_DIR" ]; }; then
-        warn "$BETTERDESK_DIR is not writable"; failures=$((failures + 1))
+    if ! { mkdir -p "$NEODESK_DIR" 2>/dev/null && [ -w "$NEODESK_DIR" ]; }; then
+        warn "$NEODESK_DIR is not writable"; failures=$((failures + 1))
     fi
     if [ -f "$(compose_file)" ] && ! compose config --quiet 2>/dev/null; then
         warn "The compose configuration is invalid"; failures=$((failures + 1))
     fi
     if [ "$failures" -eq 0 ]; then
-        ok "Docker, Compose and $BETTERDESK_DIR are usable"
+        ok "Docker, Compose and $NEODESK_DIR are usable"
         return 0
     fi
     return 1
@@ -1225,7 +1225,7 @@ do_repair_permissions() {
 do_rescue() {
     do_repair_permissions
     compose_quiet up -d || true
-    if wait_healthy; then ok "BetterDesk runs"; else warn "BetterDesk is not healthy; see the diagnostics below."; fi
+    if wait_healthy; then ok "NeoDesk runs"; else warn "NeoDesk is not healthy; see the diagnostics below."; fi
     do_diagnose
 }
 
@@ -1235,7 +1235,7 @@ do_diagnose() {
         say "Docker is not usable on this machine."
         return 0
     fi
-    say "Install folder: $BETTERDESK_DIR"
+    say "Install folder: $NEODESK_DIR"
     if [ -f "$(compose_file)" ]; then compose ps 2>/dev/null || true; else say "No compose file there."; fi
     say ""
     say "Last log lines of $CONTAINER:"
@@ -1246,14 +1246,14 @@ do_diagnose() {
         [ "$port" = 21121 ] && path=api/health
         if answers "http://127.0.0.1:${port}/${path}"; then say "Port $port: answers"; else say "Port $port: no answer"; fi
     done
-    docker volume ls --format '{{.Name}}' 2>/dev/null | grep -E '^betterdesk' | sed 's/^/Volume: /' || true
+    docker volume ls --format '{{.Name}}' 2>/dev/null | grep -E '^neodesk' | sed 's/^/Volume: /' || true
 }
 
 do_menu() {
     local choice
     while true; do
         say ""
-        say "BetterDesk on Docker ($BETTERDESK_DIR)"
+        say "NeoDesk on Docker ($NEODESK_DIR)"
         say "  1) Install or update       5) Reset a password"
         say "  2) Status                  6) Move to PostgreSQL"
         say "  3) Logs                    7) Diagnostics"
@@ -1280,7 +1280,7 @@ do_menu() {
 
 # The server's migrate command (sqlite2pg moves every table of the server
 # and the console); an image older than the command answers its -h with 2
-MIGRATE_TOOL="/usr/local/bin/betterdesk-server migrate"
+MIGRATE_TOOL="/usr/local/bin/neodesk-server migrate"
 
 # wait_postgres: the postgres service answers within a minute
 wait_postgres() {
@@ -1300,8 +1300,8 @@ back_to_sqlite() {
     env_unset DB_TYPE
     profile_off postgres
     compose --profile postgres stop -t 10 postgres >/dev/null 2>&1 || true
-    compose_quiet up -d betterdesk || true
-    wait_healthy || warn "BetterDesk on SQLite did not answer either; its log: cd $BETTERDESK_DIR && docker compose logs betterdesk"
+    compose_quiet up -d neodesk || true
+    wait_healthy || warn "NeoDesk on SQLite did not answer either; its log: cd $NEODESK_DIR && docker compose logs neodesk"
     die "$@"
 }
 
@@ -1315,15 +1315,15 @@ do_postgres() {
         ok "The install runs on PostgreSQL already."
         return 0
     fi
-    container_exists "$CONTAINER" || die "BetterDesk is not installed in $BETTERDESK_DIR yet." \
-        "Install it on PostgreSQL right away: sudo bash betterdesk-docker.sh --postgres"
+    container_exists "$CONTAINER" || die "NeoDesk is not installed in $NEODESK_DIR yet." \
+        "Install it on PostgreSQL right away: sudo bash neodesk-docker.sh --postgres"
     local image uid gid pass out
     image=$(docker container inspect -f '{{.Config.Image}}' "$CONTAINER")
     docker run --rm --entrypoint sh "$image" -c "$MIGRATE_TOOL -h" >/dev/null 2>&1 \
-        || die "The image $image has no move tool yet." "Update first: sudo bash betterdesk-docker.sh, then run this again."
+        || die "The image $image has no move tool yet." "Update first: sudo bash neodesk-docker.sh, then run this again."
 
     say "This moves every device, account and setting from SQLite into a PostgreSQL"
-    say "container (betterdesk-postgres, volume $PG_VOLUME). BetterDesk stops for it;"
+    say "container (neodesk-postgres, volume $PG_VOLUME). NeoDesk stops for it;"
     say "the data volumes are backed up first, and the SQLite file stays as it is."
     if [ "$MOVE_DATA" = no ] || ! confirm "Move the data into PostgreSQL? Without the move the install stays on SQLite." y; then
         say "Nothing changed: the install stays on SQLite."
@@ -1332,7 +1332,7 @@ do_postgres() {
 
     if docker volume inspect "$PG_VOLUME" >/dev/null 2>&1; then
         [ "$OVERWRITE_POSTGRES" = true ] || die "The volume $PG_VOLUME holds a PostgreSQL database from before; nothing was changed." \
-            "Delete it and move again: sudo bash betterdesk-docker.sh postgres --overwrite-postgres"
+            "Delete it and move again: sudo bash neodesk-docker.sh postgres --overwrite-postgres"
         compose --profile postgres rm -sf postgres >/dev/null 2>&1 || true
         docker volume rm "$PG_VOLUME" >/dev/null || die "The volume $PG_VOLUME could not be deleted (is a container using it?)."
         env_unset POSTGRES_PASSWORD
@@ -1341,17 +1341,17 @@ do_postgres() {
     [ -n "$pass" ] || pass=$(new_secret 24)
     env_set POSTGRES_PASSWORD "$pass"
 
-    step "Stopping BetterDesk for the backup and the move"
-    compose stop -t 30 betterdesk >/dev/null 2>&1 || true
+    step "Stopping NeoDesk for the backup and the move"
+    compose stop -t 30 neodesk >/dev/null 2>&1 || true
     local backup
     backup=$(backup_volumes)
     ok "Backup: $backup"
 
     step "Starting PostgreSQL"
     compose_quiet --profile postgres up -d postgres || back_to_sqlite "PostgreSQL did not start; the install stays on SQLite." \
-        "Its log: cd $BETTERDESK_DIR && docker compose logs postgres"
+        "Its log: cd $NEODESK_DIR && docker compose logs postgres"
     wait_postgres || back_to_sqlite "PostgreSQL did not get ready within a minute; the install stays on SQLite." \
-        "Its log: cd $BETTERDESK_DIR && docker compose logs postgres"
+        "Its log: cd $NEODESK_DIR && docker compose logs postgres"
 
     step "Moving the data (the server's sqlite2pg)"
     uid=$(env_get PUID)
@@ -1359,25 +1359,25 @@ do_postgres() {
     # The address reaches the tool through the container's environment,
     # not its arguments on this machine
     if ! out=$(DATABASE_URL="$(postgres_url "$pass")" compose run --rm --no-deps -T --user "${uid:-10001}:${gid:-10001}" \
-        --entrypoint sh betterdesk -c "exec $MIGRATE_TOOL -mode sqlite2pg -src /opt/rustdesk/db_v2.sqlite3 -dst \"\$DATABASE_URL\"" 2>&1); then
+        --entrypoint sh neodesk -c "exec $MIGRATE_TOOL -mode sqlite2pg -src /opt/rustdesk/db_v2.sqlite3 -dst \"\$DATABASE_URL\"" 2>&1); then
         printf '%s\n' "$out" >&2
         back_to_sqlite "The move failed (output above); the install stays on SQLite and nothing of it changed." \
-            "Run it again after the cause is fixed: sudo bash betterdesk-docker.sh postgres --overwrite-postgres"
+            "Run it again after the cause is fixed: sudo bash neodesk-docker.sh postgres --overwrite-postgres"
     fi
     printf '%s\n' "$out" | grep -E 'Migration complete|Backup created' || true
 
-    step "Starting BetterDesk on PostgreSQL"
+    step "Starting NeoDesk on PostgreSQL"
     profile_on postgres
     use_database "$(postgres_url "$pass")"
     compose_quiet up -d || true
     if ! wait_healthy; then
         local log
         log=$(save_failed_log)
-        back_to_sqlite "BetterDesk did not get healthy on PostgreSQL; it runs on SQLite again with its data as it was." \
+        back_to_sqlite "NeoDesk did not get healthy on PostgreSQL; it runs on SQLite again with its data as it was." \
             "The failed start's log: $log"
     fi
     remember_applied
-    ok "BetterDesk runs on PostgreSQL. The SQLite file stays in the volume $DATA_VOLUME; the backup is $backup."
+    ok "NeoDesk runs on PostgreSQL. The SQLite file stays in the volume $DATA_VOLUME; the backup is $backup."
     print_summary
 }
 
@@ -1401,7 +1401,7 @@ main() {
     esac
 }
 
-# Run (tests source the functions with BETTERDESK_DOCKER_SOURCED=1)
-if [ "${BETTERDESK_DOCKER_SOURCED:-0}" != 1 ]; then
+# Run (tests source the functions with NEODESK_DOCKER_SOURCED=1)
+if [ "${NEODESK_DOCKER_SOURCED:-0}" != 1 ]; then
     main "$@"
 fi

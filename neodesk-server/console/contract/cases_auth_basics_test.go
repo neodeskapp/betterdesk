@@ -2,7 +2,7 @@
 
 package contract_test
 
-import "github.com/unitronix/betterdesk-server/console/contract"
+import "github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 
 // What the web app asks before and right after sign-in: the sign-in page's
 // data, the console's bootstrap for every role, and a sign-in that fails.

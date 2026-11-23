@@ -14,7 +14,7 @@ it does for SK2.
 ## What is recorded
 
 The proxies ran in front of a made-up API server (a websocket server
-reached through `BETTERDESK_API_URL`) whose sockets did what each
+reached through `NEODESK_API_URL`) whose sockets did what each
 scenario's plan said: echo every message, greet with a first message, hold
 the handshake until a step let it go, or refuse it with a status. The
 permission lookup (admin and global_admin have `cdap.terminal`,

@@ -4,7 +4,7 @@
   "method": "GET",
   "path": "/api/remote/guest-info",
   "notes": [
-   "header Cookie: bd.guest={secret:glink}",
+   "header Cookie: nd.guest={secret:glink}",
    "no cookies"
   ]
  },
@@ -31,7 +31,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.guest=<value>; Max-Age=<n>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.guest=<value>; Max-Age=<n>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
@@ -70,7 +70,7 @@
       "view_only": false
      },
      "page": {
-      "appName": "BetterDesk",
+      "appName": "NeoDesk",
       "appVersion": "<version>",
       "branding": {
        "logoIcon": "dns",

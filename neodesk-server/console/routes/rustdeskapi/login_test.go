@@ -7,7 +7,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/api"
+	"github.com/neodeskapp/neodesk/neodesk-server/api"
 )
 
 // A password the console cannot check makes it ask the API server, and

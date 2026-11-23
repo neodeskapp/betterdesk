@@ -129,7 +129,7 @@ func devRemoteConnectAgent(t *testing.T, env devRemoteInteropEnv) (*devRemoteAge
 	}
 
 	meshRaw := make([]byte, 48)
-	copy(meshRaw, []byte("BetterDeskInteropDevRemoteAgent!!"))
+	copy(meshRaw, []byte("NeoDeskInteropDevRemoteAgent!!"))
 	authInfo := buildAuthInfoPacket(meshRaw, "interop-win-dev")
 	if err := conn.Write(ctx, websocket.MessageBinary, authInfo); err != nil {
 		cancel()
@@ -253,7 +253,7 @@ func devRemoteWriteState(path string, payload map[string]any) error {
 }
 
 // TestDevRemoteAgentHandshake connects a protocol-compatible agent client to a
-// running BetterDesk server (local dev interop) and verifies inventory registration.
+// running NeoDesk server (local dev interop) and verifies inventory registration.
 func TestDevRemoteAgentHandshake(t *testing.T) {
 	env := devRemoteInteropEnvFromOS()
 	session, cleanup := devRemoteConnectAgent(t, env)

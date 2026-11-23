@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // Identity is who an in-process request acts as. It stands in for the
@@ -178,7 +178,7 @@ var noCredentialPaths = map[string]bool{
 // without a credential, and so without putting a caller into the context.
 // TestNoCredentialPathsMatchAuthMiddleware holds the two together.
 func needsNoCredential(method, path string) bool {
-	if noCredentialPaths[path] || strings.HasPrefix(path, "/ws/bd-mgmt/") {
+	if noCredentialPaths[path] || strings.HasPrefix(path, "/ws/nd-mgmt/") {
 		return true
 	}
 	switch path {

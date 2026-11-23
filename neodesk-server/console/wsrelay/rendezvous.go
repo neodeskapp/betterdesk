@@ -4,7 +4,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	pb "github.com/unitronix/betterdesk-server/proto"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 )
 
 // The guest check reads the browser's frames as hbb.RendezvousMessage

@@ -91,7 +91,7 @@ func TestRustDeskDatabaseIsMovedAside(t *testing.T) {
 	}
 }
 
-// Databases of BetterDesk stay where they are: one the server made (it has
+// Databases of NeoDesk stay where they are: one the server made (it has
 // peers, also next to an older peer table), one with only the console's
 // peer table, an empty file, a missing file and a PostgreSQL address.
 func TestOtherDatabasesStay(t *testing.T) {
@@ -114,7 +114,7 @@ func TestOtherDatabasesStay(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for _, path := range []string{server, upgraded, console, empty, filepath.Join(dir, "missing.sqlite3"), "postgres://u:p@db/betterdesk"} {
+	for _, path := range []string{server, upgraded, console, empty, filepath.Join(dir, "missing.sqlite3"), "postgres://u:p@db/neodesk"} {
 		moved, err := MoveAsideRustDeskDatabase(path, time.Now())
 		if err != nil || moved != "" {
 			t.Errorf("%s: moved to %q, %v; want it left alone", filepath.Base(path), moved, err)

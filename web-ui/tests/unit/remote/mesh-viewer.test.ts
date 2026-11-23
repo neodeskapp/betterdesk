@@ -294,7 +294,7 @@ describe('mesh file transfer', () => {
 	const f = { MeshFileTransfer };
 
 	test('the files tunnel request carries the CSRF token', async () => {
-		(window as unknown as { BetterDesk: Record<string, unknown> }).BetterDesk = { csrfToken: 'csrf-1' };
+		(window as unknown as { NeoDesk: Record<string, unknown> }).NeoDesk = { csrfToken: 'csrf-1' };
 		const fetchMock = vi.fn(async () => ({ ok: false, json: async () => ({ error: 'stop here' }) }));
 		vi.stubGlobal('fetch', fetchMock);
 		const ft = new f.MeshFileTransfer('mesh01', () => {});

@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The routes of the settings group that write the branding: save, export,
@@ -112,29 +112,29 @@ func init() {
 		contract.Case{
 			Name: "import", Method: "POST", Path: imports, Roles: editors,
 			Body: map[string]any{
-				"version": "2.0", "type": "betterdesk-theme",
+				"version": "2.0", "type": "neodesk-theme",
 				"appearance": map[string]any{"identity": map[string]any{"appName": "Imported"}},
 				"branding":   map[string]any{"appName": "Flat part, not used"},
 			},
 		},
 		contract.Case{
 			Name: "import-flat", Method: "POST", Path: imports, Roles: admin,
-			Body: map[string]any{"type": "betterdesk-theme", "branding": map[string]any{
+			Body: map[string]any{"type": "neodesk-theme", "branding": map[string]any{
 				"appName": "Imported flat", "themeMode": "light", "colors": map[string]any{"accentBlue": "#00ff00"}, "customCss": strings.Repeat("a", 20010),
 			}},
 		},
 		contract.Case{Name: "export-after-import", Path: export, Roles: admin},
 		contract.Case{Name: "import-other-type", Method: "POST", Path: imports, Body: map[string]any{"type": "other", "branding": map[string]any{"appName": "x"}}, Roles: admin},
-		contract.Case{Name: "import-without-parts", Method: "POST", Path: imports, Body: map[string]any{"type": "betterdesk-theme"}, Roles: admin},
+		contract.Case{Name: "import-without-parts", Method: "POST", Path: imports, Body: map[string]any{"type": "neodesk-theme"}, Roles: admin},
 		contract.Case{Name: "import-list", Method: "POST", Path: imports, Body: []any{}, Roles: admin},
 		contract.Case{Name: "import-text", Method: "POST", Path: imports, RawBody: "not json", ContentType: "text/plain", Roles: admin},
 		contract.Case{
 			Name: "import-form", Method: "POST", Path: imports, Roles: admin,
-			RawBody: "type=betterdesk-theme&branding=x", ContentType: "application/x-www-form-urlencoded",
+			RawBody: "type=neodesk-theme&branding=x", ContentType: "application/x-www-form-urlencoded",
 		},
 		contract.Case{
 			Name: "import-colors-as-text", Method: "POST", Path: imports, Roles: admin,
-			Body: map[string]any{"type": "betterdesk-theme", "branding": map[string]any{"colors": "red"}},
+			Body: map[string]any{"type": "neodesk-theme", "branding": map[string]any{"colors": "red"}},
 		},
 		contract.Case{Name: "reset", Method: "POST", Path: reset, Body: map[string]any{}, Roles: editors},
 		contract.Case{Name: "export-after-reset", Path: export, Roles: admin},

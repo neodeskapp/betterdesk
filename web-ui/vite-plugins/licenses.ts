@@ -75,7 +75,7 @@ export function licenseText(ids: Iterable<string>): { text: string; problems: st
 		if (!text) problems.push(`${name}: no license text in the package`);
 		parts.push(`${name} ${pkg.version} (${license})\n\n${text}`);
 	}
-	const head = 'Third-party code in the BetterDesk console (see THIRD_PARTY_NOTICES.md)';
+	const head = 'Third-party code in the NeoDesk console (see THIRD_PARTY_NOTICES.md)';
 	return { text: [head, ...parts].join('\n\n' + '-'.repeat(72) + '\n\n') + '\n', problems };
 }
 

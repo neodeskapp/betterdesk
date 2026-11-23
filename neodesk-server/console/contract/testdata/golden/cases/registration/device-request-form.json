@@ -2,7 +2,7 @@
  "id": "registration/device-request-form",
  "request": {
   "method": "POST",
-  "path": "/api/bd/register-request",
+  "path": "/api/nd/register-request",
   "body": "device_id=contract-form",
   "notes": [
    "raw body, content type \"application/x-www-form-urlencoded\"",

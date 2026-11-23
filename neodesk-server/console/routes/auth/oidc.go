@@ -12,12 +12,12 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/authn"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/session/cookie"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session/cookie"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // Single sign-on. The signal server speaks with the identity provider and
@@ -77,7 +77,7 @@ func queryDecode(s string) string {
 // callback came through this console. It lives as long as the signal
 // server keeps a state.
 const (
-	oidcCookie    = "bd.oidc"
+	oidcCookie    = "nd.oidc"
 	oidcCookieAge = 10 * time.Minute
 	// oidcSessionPath is where the signal server sends the browser after
 	// the callback of a console sign-in.

@@ -18,8 +18,8 @@ var fixes = map[string]fix{
 	"28 POST /api/generator/bundles": {bug: "GN2", status: 400,
 		answer: `{"success":false,"error":"Validation failed","errors":["primary_color_invalid"],"details":["primary_color_invalid"]}`},
 	"104 POST /api/generator/preview": {bug: "GN2", status: 200,
-		answer: `{"success":true,"data":{"valid":false,"errors":["accent_color_invalid"],"branding":{"app_name":"BetterDesk Support Agent",` +
-			`"company_name":"BetterDesk Support Agent","relay_host":"h.example:21117","api_server":"https://h.example:21114","api_port":"21114",` +
+		answer: `{"success":true,"data":{"valid":false,"errors":["accent_color_invalid"],"branding":{"app_name":"NeoDesk Support Agent",` +
+			`"company_name":"NeoDesk Support Agent","relay_host":"h.example:21117","api_server":"https://h.example:21114","api_port":"21114",` +
 			`"disable_settings":true,"short_text":"","product_label":"","hide_product_type":false,"contact_email":"","contact_phone":"",` +
 			`"contact_url":"","logo_data_url":"","primary_color":"#2563eb","accent_color":"#e0f2fe","background_color":"#ffffff",` +
 			`"surface_color":"#f3f4f6","text_color":"#1f2937","text_muted_color":"#6b7280","status_ready_color":"#22c55e",` +
@@ -46,7 +46,7 @@ var fixes = map[string]fix{
 
 // clientRepoFix names the client fork in the module status where the
 // recordings named upstream's repository as the default (L238).
-var clientRepoFix = strings.NewReplacer(`"clientRepo":"UNITRONIX/BetterDesk-Client"`, `"clientRepo":"trybetterdesk/betterdesk-client"`)
+var clientRepoFix = strings.NewReplacer(`"clientRepo":"UNITRONIX/BetterDesk-Client"`, `"clientRepo":"neodeskapp/neodesk-client"`)
 
 // tomlWithRelay is the old toml generator's answer for the host h with
 // the relay given (UM4).

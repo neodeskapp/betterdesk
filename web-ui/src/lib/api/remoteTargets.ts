@@ -1,6 +1,6 @@
 /**
  * RDP/VNC targets (routes/devices.routes.js "remote-targets"): computers
- * without the BetterDesk client that people reach in the browser through
+ * without the NeoDesk client that people reach in the browser through
  * this server. In the device list they are devices with remote_target set.
  */
 

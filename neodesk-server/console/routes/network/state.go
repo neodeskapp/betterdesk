@@ -7,7 +7,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/netmonitor"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/netmonitor"
 )
 
 // monitorKey is the row of the settings table that keeps whether the

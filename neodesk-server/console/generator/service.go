@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // Logger takes the service's messages. *kit.Logger is one. Messages never
@@ -47,7 +47,7 @@ type Options struct {
 	// client builder and the build cache live below it.
 	DataDir string
 	// ConsoleDir is the old console's folder (web-nodejs). A signing seed
-	// placed there, or in ../res/betterdesk next to it, is taken over.
+	// placed there, or in ../res/neodesk next to it, is taken over.
 	ConsoleDir string
 	// WorkDir is the process's working directory, the last place a
 	// signing seed is looked for. os.Getwd when empty.
@@ -57,7 +57,7 @@ type Options struct {
 	ArtifactDir string
 	// Embedded switches from the downloaded templates to builds of the
 	// client's source on this machine
-	// (BETTERDESK_CLIENT_GENERATOR_MODE=embedded; default "download").
+	// (NEODESK_CLIENT_GENERATOR_MODE=embedded; default "download").
 	Embedded bool
 	// WorkerEnabled is false with AGENT_BUILD_WORKER=off.
 	WorkerEnabled bool
@@ -70,8 +70,8 @@ type Options struct {
 	// Env is the process environment as os.Environ gives it. The client
 	// builder reads its settings from it when it needs them (the
 	// repository, the token, the toolchain paths), and hands it to the
-	// build tools. Values from /etc/betterdesk/build.env
-	// (BETTERDESK_BUILD_ENV_FILE) fill the names it lacks.
+	// build tools. Values from /etc/neodesk/build.env
+	// (NEODESK_BUILD_ENV_FILE) fill the names it lacks.
 	Env func() []string
 
 	// HTTP sends the requests to GitHub. Nil means http.DefaultTransport.
@@ -192,9 +192,9 @@ var buildEnvLine = regexp.MustCompile(`^[\t\n\v\f\r \x{a0}\x{1680}\x{2000}-\x{20
 // are taken.
 func (s *Service) loadBuildEnvironment() map[string]string {
 	process := s.environ()
-	file, set := process["BETTERDESK_BUILD_ENV_FILE"]
+	file, set := process["NEODESK_BUILD_ENV_FILE"]
 	if !set || file == "" {
-		file = "/etc/betterdesk/build.env"
+		file = "/etc/neodesk/build.env"
 	}
 	raw, err := os.ReadFile(file)
 	if err != nil {

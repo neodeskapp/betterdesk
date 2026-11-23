@@ -13,10 +13,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/internal/envvar"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
 )
 
 // Logger takes the service's log lines. The arguments of a call are the
@@ -68,7 +68,7 @@ func (osFS) Remove(name string) error                  { return os.Remove(name) 
 type Settings struct {
 	// AutoCreate lets an unknown user sign in through the signal server
 	// and get a local account, also when no single sign-on is configured.
-	// BETTERDESK_AUTH_AUTOCREATE, an on value (envvar.Switch); off unset.
+	// NEODESK_AUTH_AUTOCREATE, an on value (envvar.Switch); off unset.
 	AutoCreate bool
 
 	// TokenExpiryDays is how long an access token lasts.
@@ -131,7 +131,7 @@ type Settings struct {
 // configuration resolved.
 func SettingsFromEnv(getenv func(string) string, dataDir, keysPath string) Settings {
 	s := Settings{
-		AutoCreate:           envvar.SwitchOr(getenv("BETTERDESK_AUTH_AUTOCREATE"), false),
+		AutoCreate:           envvar.SwitchOr(getenv("NEODESK_AUTH_AUTOCREATE"), false),
 		TokenExpiryDays:      intOr(getenv("API_TOKEN_EXPIRY_DAYS"), 7),
 		MaxFailedAttempts:    intOr(getenv("API_MAX_FAILED_ATTEMPTS"), 10),
 		LockoutMinutes:       intOr(getenv("API_LOCKOUT_MINUTES"), 15),

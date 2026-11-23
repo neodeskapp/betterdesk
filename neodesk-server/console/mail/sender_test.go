@@ -6,13 +6,13 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // A save with a host names its sender: without one it is refused with 400
 // and nothing is stored, where the old handler stored the sender
-// "betterdesk@localhost", which most mail servers refuse (BUGS EM9).
+// "neodesk@localhost", which most mail servers refuse (BUGS EM9).
 func TestSaveNeedsASender(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		ctx := context.Background()

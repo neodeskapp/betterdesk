@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // generateSecureToken creates a cryptographically secure random token.

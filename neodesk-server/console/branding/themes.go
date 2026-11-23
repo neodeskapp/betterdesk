@@ -9,7 +9,7 @@ import (
 var reThemeID = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 // ListThemes lists the built-in theme presets: every *.json file of
-// ThemesDir, or of themes in Files, that is a theme (type "betterdesk-theme" with a branding
+// ThemesDir, or of themes in Files, that is a theme (type "neodesk-theme" with a branding
 // part), as {id, name, description, colors}. Files that cannot be read as
 // such are left out. The order is by file name.
 func (s *Service) ListThemes() ([]any, error) {
@@ -35,7 +35,7 @@ func (s *Service) ListThemes() ([]any, error) {
 			if err != nil {
 				return
 			}
-			if property(data, "type") != "betterdesk-theme" {
+			if property(data, "type") != "neodesk-theme" {
 				return
 			}
 			branding := property(data, "branding")

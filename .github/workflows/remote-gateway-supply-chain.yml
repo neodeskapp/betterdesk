@@ -45,9 +45,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
-          go-version-file: betterdesk-server/go.mod
-          cache-dependency-path: betterdesk-server/go.sum
+          go-version-file: neodesk-server/go.mod
+          cache-dependency-path: neodesk-server/go.sum
 
       - name: Test remote-target gateway security
-        working-directory: betterdesk-server
+        working-directory: neodesk-server
         run: go test ./api -run 'RemoteTarget|Guac' -count=1

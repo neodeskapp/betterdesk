@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // Options configure a Service.

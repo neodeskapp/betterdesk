@@ -2,7 +2,7 @@
   The page of an invite (/join/<code>) or a quick support link (/s/<code>),
   as launch/design/DESIGN.md draws them: who sent it, one big button for
   this computer (lib/public/onboard.ts) with the file and its publisher,
-  the steps for the system, the short code for a BetterDesk that is
+  the steps for the system, the short code for a NeoDesk that is
   already installed, a warning when the console is not on HTTPS, the other
   systems' downloads folded away, and until when the link works. A phone
   gets the link to copy or mail to oneself. A code that cannot be used
@@ -163,7 +163,7 @@
 				{#if steps.length}<Steps items={steps} />{/if}
 				{#if mine.platform === 'macos' && data.kind === 'join' && data.deep_link}
 					<div class="open-app">
-						<Button href={data.deep_link} class="open-betterdesk">{t('onboard.public.open_app')}</Button>
+						<Button href={data.deep_link} class="open-neodesk">{t('onboard.public.open_app')}</Button>
 					</div>
 				{/if}
 			{:else if main.kind === 'command'}

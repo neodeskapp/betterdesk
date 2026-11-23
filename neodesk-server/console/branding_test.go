@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // The console loads the stored branding at start, before it listens. A
@@ -34,7 +34,7 @@ func TestBrandingAtStart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := s.Deps().Branding.GetBranding().Text("appName"); got != "BetterDesk" {
+	if got := s.Deps().Branding.GetBranding().Text("appName"); got != "NeoDesk" {
 		t.Errorf("appName before Start = %q", got)
 	}
 	if err := s.Start(ctx); err != nil {

@@ -141,7 +141,7 @@ func TestRedactURL(t *testing.T) {
 		{"IPv4 in other forms", "http://u:p@0x7f.1/", "http://127.0.0.1/"},
 		{"IPv6", "http://u:p@[2001:DB8:0:0:0:0:0:1]:80/", "http://[2001:db8::1]/"},
 		{"IPv6 with IPv4 end", "http://u:p@[::ffff:192.168.1.1]/", "http://[::ffff:c0a8:101]/"},
-		{"other scheme", "postgres://betterdesk:pw@db:5432/betterdesk?sslmode=disable", "postgres://db:5432/betterdesk?sslmode=disable"},
+		{"other scheme", "postgres://neodesk:pw@db:5432/neodesk?sslmode=disable", "postgres://db:5432/neodesk?sslmode=disable"},
 		{"other scheme keeps the host as written", "foo://U:P@HOST/a/../b", "foo://HOST/b"},
 		{"other scheme, nothing left of the path", "foo://u:p@h/..", "foo://h"},
 		{"no host", "mailto:user@example.com", "mailto:user@example.com"},

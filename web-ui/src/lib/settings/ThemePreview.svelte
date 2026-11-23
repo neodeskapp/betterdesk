@@ -24,9 +24,9 @@
 
 	let { palette, mode, name, description, logoType, logoSrc, fontHeading, fontBody }: Props = $props();
 
-	const shownName = $derived(name.trim() || 'BetterDesk');
+	const shownName = $derived(name.trim() || 'NeoDesk');
 	const isDefault = $derived(logoType === 'default');
-	const fullLogo = $derived(isDefault && shownName.toLowerCase() === 'betterdesk');
+	const fullLogo = $derived(isDefault && shownName.toLowerCase() === 'neodesk');
 	const safeLogo = $derived(
 		logoType === 'image' && /^(\/(?!\/)|https?:|blob:)/i.test(logoSrc) ? logoSrc : ''
 	);

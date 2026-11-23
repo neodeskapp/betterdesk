@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // BK6: the SQLite file in a full backup is one consistent copy with what
@@ -340,7 +340,7 @@ func TestRestoreFollowsTheServersDatabase(t *testing.T) {
 		t.Error("a file next to the console's DB_PATH")
 	}
 
-	s.o.ServerDB = "postgres://betterdesk@localhost/betterdesk"
+	s.o.ServerDB = "postgres://neodesk@localhost/neodesk"
 	if res, err := s.RestoreFullBackup(ctx, archive, opts); err != nil || !slices.Contains(res.Skipped, "goserver-db") || res.RequiresRestart {
 		t.Errorf("a PostgreSQL server: %+v %v", res, err)
 	}

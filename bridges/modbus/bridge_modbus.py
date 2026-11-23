@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""BetterDesk CDAP — Modbus TCP/RTU Bridge.
+"""NeoDesk CDAP — Modbus TCP/RTU Bridge.
 
 Polls Modbus registers/coils at a configurable interval and pushes values
-to BetterDesk via CDAP.  Incoming commands (toggle, slider set) are written
+to NeoDesk via CDAP.  Incoming commands (toggle, slider set) are written
 back to the Modbus target.
 
 Usage:
-    pip install betterdesk-cdap pymodbus
+    pip install neodesk-cdap pymodbus
     python bridge_modbus.py --config config.json
 """
 
@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from betterdesk_cdap import CDAPBridge, gauge, slider, text_widget, toggle
+from neodesk_cdap import CDAPBridge, gauge, slider, text_widget, toggle
 
 logger = logging.getLogger("bridge_modbus")
 
@@ -245,7 +245,7 @@ class ModbusBridge:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="BetterDesk CDAP Modbus Bridge")
+    parser = argparse.ArgumentParser(description="NeoDesk CDAP Modbus Bridge")
     parser.add_argument("--config", "-c", default="config.json", help="Path to config file")
     parser.add_argument("--log-level", "-l", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     args = parser.parse_args()

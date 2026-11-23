@@ -2,7 +2,7 @@
  "id": "bd-api/operator-login-without-body",
  "request": {
   "method": "POST",
-  "path": "/api/bd/operator/login",
+  "path": "/api/nd/operator/login",
   "notes": [
    "no CSRF token",
    "no cookies"

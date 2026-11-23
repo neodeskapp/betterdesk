@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/managedconfig"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/managedconfig"
 )
 
 // Check is one capability check (getCapabilityReport).
@@ -94,12 +94,12 @@ func (s *Service) Capabilities() Capabilities {
 		}
 		return g
 	}
-	service := "betterdesk-server"
+	service := "neodesk-server"
 	switch {
 	case s.opts.Docker:
-		service = "betterdesk"
+		service = "neodesk"
 	case s.opts.GOOS == "windows":
-		service = "BetterDeskServer"
+		service = "NeoDeskServer"
 	}
 	return Capabilities{
 		Success: true, Platform: nodePlatform(s.opts.GOOS), Docker: s.opts.Docker, Paths: paths,
@@ -120,7 +120,7 @@ func (s *Service) restartCheck() Check {
 	if s.Supervised() {
 		return Check{ID: "restart", Ready: true, Method: "exit"}
 	}
-	return Check{ID: "restart", Method: "unavailable", Error: "No supervisor is configured (BETTERDESK_SUPERVISOR)"}
+	return Check{ID: "restart", Method: "unavailable", Error: "No supervisor is configured (NEODESK_SUPERVISOR)"}
 }
 
 func (s *Service) updateCheck() Check {
@@ -270,7 +270,7 @@ func (s *Service) Preflight(ctx context.Context, remoteSHA string) Preflight {
 	} else {
 		if writable(paths.Dir) != nil {
 			out.Issues = append(out.Issues, "The folder of the server binary is not writable: "+paths.Dir+
-				" — run `betterdesk-server update` as its owner, or let the service account write there")
+				" — run `neodesk-server update` as its owner, or let the service account write there")
 		}
 		if paths.Dir != s.opts.DataDir {
 			bd := s.disk(paths.Dir)
@@ -279,7 +279,7 @@ func (s *Service) Preflight(ctx context.Context, remoteSHA string) Preflight {
 		}
 	}
 	if !s.Supervised() {
-		out.Warnings = append(out.Warnings, "No supervisor is configured (BETTERDESK_SUPERVISOR): after the update the server has to be started again by hand")
+		out.Warnings = append(out.Warnings, "No supervisor is configured (NEODESK_SUPERVISOR): after the update the server has to be started again by hand")
 	}
 
 	rel, err := s.lookupRelease(ctx, "", false)

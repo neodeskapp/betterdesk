@@ -13,10 +13,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 func signedEnrollmentHeaders(t *testing.T, privateKey ed25519.PrivateKey, method, path, deviceID string, publicKey ed25519.PublicKey) http.Header {
@@ -27,9 +27,9 @@ func signedEnrollmentHeaders(t *testing.T, privateKey ed25519.PrivateKey, method
 	signature := ed25519.Sign(privateKey, enrollmentProofPayload(method, path, deviceID, canonicalKey, timestamp, nonce))
 
 	headers := make(http.Header)
-	headers.Set("X-BD-Enrollment-Timestamp", timestamp)
-	headers.Set("X-BD-Enrollment-Nonce", nonce)
-	headers.Set("X-BD-Enrollment-Signature", base64.StdEncoding.EncodeToString(signature))
+	headers.Set("X-ND-Enrollment-Timestamp", timestamp)
+	headers.Set("X-ND-Enrollment-Nonce", nonce)
+	headers.Set("X-ND-Enrollment-Signature", base64.StdEncoding.EncodeToString(signature))
 	return headers
 }
 

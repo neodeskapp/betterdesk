@@ -1,7 +1,7 @@
 // Package clientrelease keeps the official client packages that join and
 // support codes hand out. The server takes them from the releases of the
-// client fork (BETTERDESK_CLIENT_REPO, trybetterdesk/betterdesk-client
-// when unset; BETTERDESK_CLIENT_RELEASE_TAG picks a release, else the
+// client fork (NEODESK_CLIENT_REPO, neodeskapp/neodesk-client
+// when unset; NEODESK_CLIENT_RELEASE_TAG picks a release, else the
 // latest, else the newest pre-release while the fork has no stable
 // release), checks the release's SHA256SUMS against its ed25519 signature
 // (SHA256SUMS.sig, keys.go), downloads each package the first time it is
@@ -9,7 +9,7 @@
 // data folder (client-releases/<tag>/). A release without a valid
 // signature is not used.
 //
-// BETTERDESK_CLIENT_RELEASE_DIR names a folder that holds the packages
+// NEODESK_CLIENT_RELEASE_DIR names a folder that holds the packages
 // instead, for tests and for servers without access to GitHub: its files
 // are used under their release names, checked against a SHA256SUMS in
 // the folder when there is one and against its signature when there is a
@@ -34,17 +34,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/updater"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
 )
 
 // DefaultRepo is the client fork.
-const DefaultRepo = "trybetterdesk/betterdesk-client"
+const DefaultRepo = "neodeskapp/neodesk-client"
 
 // The settings the service reads.
 const (
-	EnvRepo     = "BETTERDESK_CLIENT_REPO"
-	EnvTag      = "BETTERDESK_CLIENT_RELEASE_TAG"
-	EnvLocalDir = "BETTERDESK_CLIENT_RELEASE_DIR"
+	EnvRepo     = "NEODESK_CLIENT_REPO"
+	EnvTag      = "NEODESK_CLIENT_RELEASE_TAG"
+	EnvLocalDir = "NEODESK_CLIENT_RELEASE_DIR"
 )
 
 const (
@@ -535,10 +535,10 @@ func (s *Service) request(ctx context.Context, rawURL string, api bool) (*http.R
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "betterdesk-server")
+	req.Header.Set("User-Agent", "neodesk-server")
 	if api {
 		req.Header.Set("Accept", "application/vnd.github+json")
-		token := s.opts.Getenv("BETTERDESK_GITHUB_TOKEN")
+		token := s.opts.Getenv("NEODESK_GITHUB_TOKEN")
 		if token == "" {
 			token = s.opts.Getenv("GITHUB_TOKEN")
 		}

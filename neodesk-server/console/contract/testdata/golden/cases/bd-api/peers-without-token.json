@@ -2,7 +2,7 @@
  "id": "bd-api/peers-without-token",
  "request": {
   "method": "GET",
-  "path": "/api/bd/peers",
+  "path": "/api/nd/peers",
   "notes": [
    "no CSRF token",
    "no cookies"

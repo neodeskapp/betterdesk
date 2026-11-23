@@ -59,64 +59,64 @@ func (c *Collector) WritePrometheus(w io.Writer) {
 	c.MemSysBytes.Store(int64(mem.Sys))
 
 	// Process info
-	writeGauge(w, "betterdesk_uptime_seconds", "Server uptime in seconds",
+	writeGauge(w, "neodesk_uptime_seconds", "Server uptime in seconds",
 		time.Since(c.startTime).Seconds())
 
 	// Peer gauges
-	writeGaugeInt(w, "betterdesk_peers_total", "Total registered peers",
+	writeGaugeInt(w, "neodesk_peers_total", "Total registered peers",
 		c.PeersTotal.Load())
-	writeGaugeInt(w, "betterdesk_peers_online", "Currently online peers",
+	writeGaugeInt(w, "neodesk_peers_online", "Currently online peers",
 		c.PeersOnline.Load())
-	writeGaugeInt(w, "betterdesk_peers_degraded", "Peers in degraded state",
+	writeGaugeInt(w, "neodesk_peers_degraded", "Peers in degraded state",
 		c.PeersDegraded.Load())
-	writeGaugeInt(w, "betterdesk_peers_critical", "Peers in critical state",
+	writeGaugeInt(w, "neodesk_peers_critical", "Peers in critical state",
 		c.PeersCritical.Load())
-	writeGaugeInt(w, "betterdesk_peers_offline", "Peers in offline state",
+	writeGaugeInt(w, "neodesk_peers_offline", "Peers in offline state",
 		c.PeersOffline.Load())
-	writeGaugeInt(w, "betterdesk_peers_banned", "Banned peers",
+	writeGaugeInt(w, "neodesk_peers_banned", "Banned peers",
 		c.PeersBanned.Load())
 
 	// Transport breakdown
-	writeGaugeInt(w, "betterdesk_peers_udp", "Peers connected via UDP",
+	writeGaugeInt(w, "neodesk_peers_udp", "Peers connected via UDP",
 		c.PeersUDP.Load())
-	writeGaugeInt(w, "betterdesk_peers_tcp", "Peers connected via TCP",
+	writeGaugeInt(w, "neodesk_peers_tcp", "Peers connected via TCP",
 		c.PeersTCP.Load())
-	writeGaugeInt(w, "betterdesk_peers_ws", "Peers connected via WebSocket",
+	writeGaugeInt(w, "neodesk_peers_ws", "Peers connected via WebSocket",
 		c.PeersWS.Load())
 
 	// Registration counters
-	writeCounter(w, "betterdesk_registrations_total", "Total peer registrations",
+	writeCounter(w, "neodesk_registrations_total", "Total peer registrations",
 		c.TotalRegistrations.Load())
-	writeCounter(w, "betterdesk_expired_total", "Total expired peers",
+	writeCounter(w, "neodesk_expired_total", "Total expired peers",
 		c.TotalExpired.Load())
 
 	// Relay metrics
-	writeGaugeInt(w, "betterdesk_relay_active_sessions", "Active relay sessions",
+	writeGaugeInt(w, "neodesk_relay_active_sessions", "Active relay sessions",
 		c.RelayActiveSessions.Load())
-	writeCounter(w, "betterdesk_relay_sessions_total", "Total relay sessions",
+	writeCounter(w, "neodesk_relay_sessions_total", "Total relay sessions",
 		c.TotalRelaySessions.Load())
-	writeCounter(w, "betterdesk_bandwidth_throttle_hits_total", "Bandwidth throttle events",
+	writeCounter(w, "neodesk_bandwidth_throttle_hits_total", "Bandwidth throttle events",
 		c.ThrottleHits.Load())
 
 	// Security
-	writeGaugeInt(w, "betterdesk_blocklist_entries", "Blocklist entry count",
+	writeGaugeInt(w, "neodesk_blocklist_entries", "Blocklist entry count",
 		c.BlocklistCount.Load())
 
 	// Events
-	writeGaugeInt(w, "betterdesk_event_subscribers", "Active WebSocket event subscribers",
+	writeGaugeInt(w, "neodesk_event_subscribers", "Active WebSocket event subscribers",
 		c.EventSubscribers.Load())
-	writeCounter(w, "betterdesk_audit_events_total", "Total audit events logged",
+	writeCounter(w, "neodesk_audit_events_total", "Total audit events logged",
 		c.AuditEvents.Load())
 
-	writeGaugeInt(w, "betterdesk_billing_pending_relays", "Billing relay UUIDs awaiting pairing",
+	writeGaugeInt(w, "neodesk_billing_pending_relays", "Billing relay UUIDs awaiting pairing",
 		c.BillingPendingRelays.Load())
 
 	// Go runtime
-	writeGaugeInt(w, "betterdesk_goroutines", "Number of goroutines",
+	writeGaugeInt(w, "neodesk_goroutines", "Number of goroutines",
 		c.Goroutines.Load())
-	writeGaugeInt(w, "betterdesk_memory_alloc_bytes", "Memory allocated (bytes)",
+	writeGaugeInt(w, "neodesk_memory_alloc_bytes", "Memory allocated (bytes)",
 		c.MemAllocBytes.Load())
-	writeGaugeInt(w, "betterdesk_memory_sys_bytes", "Memory obtained from OS (bytes)",
+	writeGaugeInt(w, "neodesk_memory_sys_bytes", "Memory obtained from OS (bytes)",
 		c.MemSysBytes.Load())
 }
 

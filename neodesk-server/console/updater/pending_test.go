@@ -61,7 +61,7 @@ func TestRollbackAfterThreeFailedStarts(t *testing.T) {
 			}
 			var last LastResult
 			in.readJSON(filepath.Join(in.dataDir, lastResultFile), &last)
-			if !last.RolledBack || last.SHA != newCommit || len(last.Failed) != 1 || last.Failed[0].File != "betterdesk-server-update" {
+			if !last.RolledBack || last.SHA != newCommit || len(last.Failed) != 1 || last.Failed[0].File != "neodesk-server-update" {
 				t.Errorf("last result %+v", last)
 			}
 			// The panel shows it: a failure that is not one of the old
@@ -217,7 +217,7 @@ func TestRollbackSwapFails(t *testing.T) {
 // A corrupt marker is removed; leftovers of earlier swaps go.
 func TestStartupCheckCleansUp(t *testing.T) {
 	in := newInstall(t)
-	for _, name := range []string{".betterdesk-server.new.77", "betterdesk-server.old.77.123", "betterdesk-server.prev", "keep.txt", ".other.new.1"} {
+	for _, name := range []string{".neodesk-server.new.77", "neodesk-server.old.77.123", "neodesk-server.prev", "keep.txt", ".other.new.1"} {
 		if err := os.WriteFile(filepath.Join(in.dir, name), []byte("x"), 0o644); err != nil {
 			t.Fatal(err)
 		}
@@ -227,8 +227,8 @@ func TestStartupCheckCleansUp(t *testing.T) {
 	}
 	in.startAs("3.5.0", oldCommit)
 	for name, want := range map[string]bool{
-		".betterdesk-server.new.77": false, "betterdesk-server.old.77.123": false, "betterdesk-server.prev": true,
-		"keep.txt": true, ".other.new.1": true, "betterdesk-server.update-pending.json": false,
+		".neodesk-server.new.77": false, "neodesk-server.old.77.123": false, "neodesk-server.prev": true,
+		"keep.txt": true, ".other.new.1": true, "neodesk-server.update-pending.json": false,
 	} {
 		_, err := os.Stat(filepath.Join(in.dir, name))
 		if (err == nil) != want {

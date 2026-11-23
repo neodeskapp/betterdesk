@@ -91,6 +91,44 @@ var (
 	mdnsErr  error
 )
 
+// upstreamNames are the names the old console announced. The recording
+// in testdata was made with them, so the tests that replay it run the
+// announcement under these names. TestMDNSAnnouncesNeoDeskNames checks
+// the names the console announces itself.
+var upstreamNames = mdnsNames{instance: "BetterDesk Console", kind: "_betterdesk._tcp"}
+
+// newRecordedMDNS is NewMDNS under the recording's names.
+func newRecordedMDNS(settings Settings) *MDNS {
+	m := NewMDNS(settings)
+	m.names = upstreamNames
+	return m
+}
+
+// TestMDNSAnnouncesNeoDeskNames: the console publishes "NeoDesk Console"
+// in the service type _neodesk._tcp and says so in the log.
+func TestMDNSAnnouncesNeoDeskNames(t *testing.T) {
+	ifaces := []Interface{{Name: "eth0", Entries: []Address{{Family: "IPv4", Address: "192.168.1.20", MAC: "aa:bb:cc:dd:ee:ff"}}}}
+	settings := mdnsSettings(map[string]string{"HOST": "0.0.0.0"}, nodeConfig{Port: 5000, AppVersion: "1.0"}, ifaces, "desk")
+	m := NewMDNS(settings)
+	var logs []string
+	m.logf = func(format string, args ...any) { logs = append(logs, fmt.Sprintf(format, args...)) }
+	svc, ok := m.prepare()
+	if !ok || svc.fqdn != "NeoDesk Console._neodesk._tcp.local" {
+		t.Fatalf("published %v as %+v", ok, svc)
+	}
+	if len(logs) != 1 || !strings.Contains(logs[0], "mDNS discovery published _neodesk._tcp port 5000") {
+		t.Errorf("log %q", logs)
+	}
+	records := svc.records(ifaces)
+	if records[0].Name != "_neodesk._tcp.local" || records[3].Data != "_neodesk._tcp.local" {
+		t.Errorf("records %+v", records)
+	}
+	svc.rename(2)
+	if svc.fqdn != "NeoDesk Console (2)._neodesk._tcp.local" {
+		t.Errorf("renamed to %q", svc.fqdn)
+	}
+}
+
 func loadMDNS(t testing.TB) *mdnsRecording {
 	t.Helper()
 	mdnsOnce.Do(func() {
@@ -282,7 +320,7 @@ type harness struct {
 func startHarness(settings Settings, random float64, wantSends int) *harness {
 	h := &harness{clock: newFakeClock(), logs: &lines{}, done: make(chan struct{}), opened: make(chan struct{})}
 	h.sock = newFakeSocket(h.clock, wantSends)
-	h.m = NewMDNS(settings)
+	h.m = newRecordedMDNS(settings)
 	h.m.logf = h.logs.logf
 	h.m.random = func() float64 { return random }
 	h.m.after = h.clock.after
@@ -522,7 +560,7 @@ func TestMDNSAnnouncesAWildcardConsoleAtItsAddress(t *testing.T) {
 		{Name: "eth0", Entries: []Address{{Family: "IPv4", Address: "192.168.1.20", MAC: "aa:bb:cc:dd:ee:ff"}}},
 	}
 	settings := mdnsSettings(map[string]string{"HOST": "0.0.0.0"}, nodeConfig{Port: 5000, AppVersion: "1.0"}, ifaces, "desk")
-	m := NewMDNS(settings)
+	m := newRecordedMDNS(settings)
 	m.logf = func(string, ...any) {}
 	svc, ok := m.prepare()
 	if !ok || string(svc.txt[0]) != "url=http://192.168.1.20:5000" {
@@ -533,7 +571,7 @@ func TestMDNSAnnouncesAWildcardConsoleAtItsAddress(t *testing.T) {
 // goodbyeOf is the goodbye of the service the settings describe.
 func goodbyeOf(t *testing.T, settings Settings) []byte {
 	t.Helper()
-	m := NewMDNS(settings)
+	m := newRecordedMDNS(settings)
 	m.logf = func(string, ...any) {}
 	svc, ok := m.prepare()
 	if !ok {
@@ -577,8 +615,9 @@ func TestMDNSSaysGoodbyeAtStop(t *testing.T) {
 
 // TestMDNSConflictAgainstNode: a response that claims the service's name
 // while probing makes the announcement probe again under the next name,
-// "BetterDesk Console (2)", and announce that, where Node withdrew for
-// good (BUGS JB8); one that comes before the first query is ignored.
+// "BetterDesk Console (2)" with the recording's names, and announce that,
+// where Node withdrew for good (BUGS JB8); one that comes before the
+// first query is ignored.
 func TestMDNSConflictAgainstNode(t *testing.T) {
 	rec := loadMDNS(t)
 	s := rec.Scenarios[0]
@@ -597,10 +636,10 @@ func TestMDNSConflictAgainstNode(t *testing.T) {
 	sent := append([]sentPacket(nil), h.sock.sent...)
 	h.sock.mu.Unlock()
 	compareSends(t, "first query", sent[:1], nodeConflict[:1])
-	m := NewMDNS(settings)
+	m := newRecordedMDNS(settings)
 	m.logf = func(string, ...any) {}
 	svc, _ := m.prepare()
-	svc.fqdn = "BetterDesk Console (2)." + serviceType + tld
+	svc.fqdn = "BetterDesk Console (2)." + upstreamNames.kind + tld
 	ifaces, _ := settings.interfaces()
 	want := [][]byte{encodeQuery(svc.fqdn), encodeQuery(svc.fqdn), encodeQuery(svc.fqdn), encodeResponse(svc.records(ifaces), nil)}
 	if len(sent) < 1+len(want) {
@@ -628,7 +667,7 @@ func TestMDNSConflictAgainstNode(t *testing.T) {
 	h.sock.mu.Lock()
 	last := h.sock.sent[len(h.sock.sent)-2].bytes
 	h.sock.mu.Unlock()
-	svc.fqdn = "BetterDesk Console (3)." + serviceType + tld
+	svc.fqdn = "BetterDesk Console (3)." + upstreamNames.kind + tld
 	if string(last) != string(encodeResponse(svc.records(ifaces), nil)) {
 		t.Errorf("after two conflicts: announced %x", last)
 	}
@@ -690,7 +729,7 @@ func TestMDNSAnswersAgainstNode(t *testing.T) {
 	total, answered := 0, 0
 	for _, a := range loadMDNS(t).Answers {
 		settings := mdnsSettings(map[string]string{"PANEL_PUBLIC_URL": "http://panel.example:5000/"}, a.Config, toInterfaces(a.Interfaces), a.Hostname)
-		m := NewMDNS(settings)
+		m := newRecordedMDNS(settings)
 		m.logf = func(string, ...any) {}
 		svc, ok := m.prepare()
 		if !ok {
@@ -790,7 +829,7 @@ func TestMDNSAnswersWhileRunning(t *testing.T) {
 	}
 	// 3 queries and the first announcement are out; a question about the
 	// service type gets one answer
-	h.sock.packets <- encodeQuery(serviceType + tld)
+	h.sock.packets <- encodeQuery(upstreamNames.kind + tld)
 	<-h.sock.enough
 	h.clock.ticks <- time.Time{}
 	h.stop(t, false)
@@ -801,10 +840,10 @@ func TestMDNSAnswersWhileRunning(t *testing.T) {
 		t.Fatalf("%d datagrams sent", len(h.sock.sent))
 	}
 	answer := newRegistry()
-	svc, _ := NewMDNS(settings).prepare()
+	svc, _ := newRecordedMDNS(settings).prepare()
 	ifaces, _ := settings.interfaces()
 	answer.register(svc.records(ifaces))
-	if want := answer.respond(encodeQuery(serviceType + tld)); len(want) != 1 || string(h.sock.sent[4].bytes) != string(want[0]) {
+	if want := answer.respond(encodeQuery(upstreamNames.kind + tld)); len(want) != 1 || string(h.sock.sent[4].bytes) != string(want[0]) {
 		t.Errorf("answer %x, want %x", h.sock.sent[4].bytes, want)
 	}
 	// The membership goroutine may still be at its tick when Run ends;

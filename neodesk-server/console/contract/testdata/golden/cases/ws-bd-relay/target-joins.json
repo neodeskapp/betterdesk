@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/target-joins",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-relay?role=target&session=%7Brelay%7D&token=%7Bsecret%3Atarget_token%7D",
+  "path": "/ws/nd-relay?role=target&session=%7Brelay%7D&token=%7Bsecret%3Atarget_token%7D",
   "notes": [
    "websocket tgt, own origin",
    "websocket expect 1 messages"

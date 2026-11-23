@@ -4,7 +4,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
 )
 
 // TestWSEffectiveRemoteAddrTakesTheRightmostUntrustedForwardedAddress:

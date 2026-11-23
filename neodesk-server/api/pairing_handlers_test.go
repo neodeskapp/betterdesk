@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 // newPairingTestServer builds a server with a real DB but no listener; handlers are

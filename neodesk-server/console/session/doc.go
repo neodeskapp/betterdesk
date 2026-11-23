@@ -6,7 +6,7 @@
 //
 // # The cookie
 //
-// The cookie is called bd.sid, or betterdesk.sid when the console is set up
+// The cookie is called nd.sid, or neodesk.sid when the console is set up
 // for HTTPS. Its value is
 //
 //	s:<id>.<mac>
@@ -62,7 +62,7 @@
 // 401 and the code session_idle or session_expired, or a redirect to the
 // sign-in page.
 //
-// A request with the header X-BD-Background: 1 (polls the person did not
+// A request with the header X-ND-Background: 1 (polls the person did not
 // start) is checked but does not count as activity. Its answer still
 // renews the cookie.
 //

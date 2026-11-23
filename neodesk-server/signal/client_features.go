@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	pb "github.com/unitronix/betterdesk-server/proto"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 )
 
 // The client features of a console account (the switches of the access

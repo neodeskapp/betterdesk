@@ -30,7 +30,7 @@
       "open": "b",
       "path": "/ws/remote-agent/dev1?token=tok-dev1-good",
       "headers": {
-       "Cookie": "bd.sid=s%3Ax"
+       "Cookie": "nd.sid=s%3Ax"
       }
      },
      "events": [
@@ -309,7 +309,7 @@
       "path": "/ws/remote-agent/a_b-9?token=tok-a_b-9-good",
       "headers": {
        "Origin": "https://console.test",
-       "Cookie": "bd.sid=s%3Ax"
+       "Cookie": "nd.sid=s%3Ax"
       }
      },
      "events": [

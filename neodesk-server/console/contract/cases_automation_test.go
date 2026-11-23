@@ -5,13 +5,13 @@ package contract_test
 import (
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // Automation: alert rules, the alert history, remote commands and the
 // SMTP settings under /api/automation. Every route needs the permission
 // server.config (server_admin, super_admin, admin). The routes for device
-// agents (GET /api/bd/commands and the two result routes) take a device
+// agents (GET /api/nd/commands and the two result routes) take a device
 // token; they are the group automation-device below, which runs after
 // this one, so the commands it completes do not reach the lists here.
 //
@@ -402,9 +402,9 @@ func init() {
 }
 
 // automation-device: the routes an agent fetches its commands with and
-// reports their results to, GET /commands at /api/bd (at /api/automation
+// reports their results to, GET /commands at /api/nd (at /api/automation
 // the people's list answers first) and POST /commands/{id}/result at
-// /api/bd and /api/automation. They take a Bearer token bound to a device;
+// /api/nd and /api/automation. They take a Bearer token bound to a device;
 // the result route then compares the command's device with the token's.
 //
 // In the signed-out turn admin sends a command to 900100002, and that
@@ -423,7 +423,7 @@ func init() {
 // (testdata/node_sqlite.json: a command with a device and a payload as
 // text gets {"success":true,"command":{"id":...,"device_id":...,"status":"pending"}}).
 func init() {
-	const bd = "/api/bd"
+	const bd = "/api/nd"
 	const own = "/api/automation"
 	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
 	other := map[string]string{"Authorization": "Bearer {secret:device_token_other}"}
@@ -482,7 +482,7 @@ func init() {
 		asDevice(contract.Case{Name: "result-of-other-device", Body: completed, Headers: device}),
 		asDevice(contract.Case{Name: "result-of-other-device-bad-status", Body: map[string]any{"status": "done"}, Headers: device}),
 		asDevice(contract.Case{Name: "result-at-automation", Path: own + "/commands/{command}/result", Body: completed}),
-		asDevice(contract.Case{Name: "result-other-spelling", Path: "/API/BD/Commands/{command}/Result", Body: completed}),
+		asDevice(contract.Case{Name: "result-other-spelling", Path: "/API/ND/Commands/{command}/Result", Body: completed}),
 
 		// The body and the command
 		result("result-without-status", map[string]any{"result": "x"}),

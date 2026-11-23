@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/session-delete",
  "request": {
   "method": "DELETE",
-  "path": "/api/bd/session/{relay3}",
+  "path": "/api/nd/session/{relay3}",
   "notes": [
    "header Authorization: Bearer {secret:device_token_other}",
    "no CSRF token",

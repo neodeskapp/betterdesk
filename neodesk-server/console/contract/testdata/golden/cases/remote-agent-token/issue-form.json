@@ -2,7 +2,7 @@
  "id": "remote-agent-token/issue-form",
  "request": {
   "method": "POST",
-  "path": "/api/bd/remote-agent-token",
+  "path": "/api/nd/remote-agent-token",
   "body": "device_id=900100001",
   "notes": [
    "raw body, content type \"application/x-www-form-urlencoded\"",

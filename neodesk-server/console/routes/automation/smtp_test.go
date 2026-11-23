@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // What the old console answered on the three SMTP routes, as the contract
@@ -131,19 +131,19 @@ func TestSMTPSettings(t *testing.T) {
 
 // The panel routes step aside for the device mount in any letter case, as
 // the mount itself matches in any letter case (BUGS DV8), and so does the
-// inventory group, which the console mounts at /api/bd before this one:
-// below /API/BD only the device route answers, as below /api/bd. At the
+// inventory group, which the console mounts at /api/nd before this one:
+// below /API/ND only the device route answers, as below /api/nd. At the
 // group's own mount the panel routes answer in any spelling.
 func TestTheDeviceMountInAnotherSpelling(t *testing.T) {
 	w := replay.NewWorld(t, storetest.Migrated(t), nil)
 
-	for _, path := range []string{"/API/BD/smtp", "/Api/Bd/rules", "/API/BD/Rules/7", "/Api/bd/commands/7", "/api/bd/smtp", "/api/bd/rules", "/api/bd/rules/7", "/api/bd/commands/1"} {
+	for _, path := range []string{"/API/ND/smtp", "/Api/Nd/rules", "/API/ND/Rules/7", "/Api/nd/commands/7", "/api/nd/smtp", "/api/nd/rules", "/api/nd/rules/7", "/api/nd/commands/1"} {
 		if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != http.StatusNotFound || got.Body != `{"success":false,"error":"Not Found"}` {
 			t.Errorf("GET %s as admin: %d %s, want the console's 404", path, got.Status, got.Body)
 		}
 	}
 	// The device route after the panel routes
-	for _, path := range []string{"/api/bd/commands", "/API/BD/Commands"} {
+	for _, path := range []string{"/api/nd/commands", "/API/ND/Commands"} {
 		if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != http.StatusUnauthorized || got.Body != `{"error":"Bearer access token required"}` {
 			t.Errorf("GET %s as admin: %d %s, want the device route's 401", path, got.Status, got.Body)
 		}

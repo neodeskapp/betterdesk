@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // The SQLite file of an install (DB_PATH) is open while the console runs,
@@ -35,7 +35,7 @@ const BeforeRestoreSuffix = ".before-restore"
 // copySQLite returns a copy of the open SQLite database, made with VACUUM
 // INTO in a folder of its own below the system's temporary folder.
 func copySQLite(ctx context.Context, db *store.DB) ([]byte, error) {
-	dir, err := os.MkdirTemp("", "betterdesk-backup-")
+	dir, err := os.MkdirTemp("", "neodesk-backup-")
 	if err != nil {
 		return nil, fmt.Errorf("make a folder for the database copy: %w", err)
 	}

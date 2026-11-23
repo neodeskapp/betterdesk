@@ -32,7 +32,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // Handlers serves the language routes.

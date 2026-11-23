@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // featuresFor is the console's access service with the test account (7)

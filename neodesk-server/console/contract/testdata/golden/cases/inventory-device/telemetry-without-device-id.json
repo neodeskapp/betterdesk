@@ -2,7 +2,7 @@
  "id": "inventory-device/telemetry-without-device-id",
  "request": {
   "method": "POST",
-  "path": "/api/bd/telemetry",
+  "path": "/api/nd/telemetry",
   "body": {
    "cpu_usage_percent": 12.5,
    "memory_total_bytes": 34359738368,

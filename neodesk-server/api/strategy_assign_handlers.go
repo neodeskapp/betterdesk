@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 func strategyPayload(st *db.Strategy, summary *db.StrategyAssignmentSummary) map[string]any {

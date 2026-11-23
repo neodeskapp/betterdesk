@@ -10,7 +10,7 @@ import (
 	"time"
 	"unicode/utf16"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
 // ServiceNamePattern is what a service name must look like before it is
@@ -18,18 +18,18 @@ import (
 var ServiceNamePattern = regexp.MustCompile(`^[A-Za-z0-9_.@:-]{1,128}$`)
 
 // AllowedServices are the system services the page may list and control:
-// BetterDesk's own under every name an install used.
+// NeoDesk's own under every name an install used.
 var AllowedServices = map[string]bool{
-	"betterdesk-server": true, "betterdesk-server.service": true,
-	"betterdesk-console": true, "betterdesk-console.service": true,
-	"betterdesk":     true,
-	"betterdesk-api": true, "betterdesk-api.service": true,
-	"betterdesk-go": true, "betterdesk-go.service": true,
+	"neodesk-server": true, "neodesk-server.service": true,
+	"neodesk-console": true, "neodesk-console.service": true,
+	"neodesk":     true,
+	"neodesk-api": true, "neodesk-api.service": true,
+	"neodesk-go": true, "neodesk-go.service": true,
 	"rustdesksignal": true, "rustdesksignal.service": true,
 	"rustdeskrelay": true, "rustdeskrelay.service": true,
 	"hbbs": true, "hbbs.service": true,
 	"hbbr": true, "hbbr.service": true,
-	"BetterDeskServer": true, "BetterDeskConsole": true, "BetterDeskSignal": true, "BetterDeskRelay": true,
+	"NeoDeskServer": true, "NeoDeskConsole": true, "NeoDeskSignal": true, "NeoDeskRelay": true,
 }
 
 // The actions systemctl may run on Linux and PowerShell on Windows.
@@ -192,9 +192,9 @@ func (s *Service) ControlService(ctx context.Context, name, action string) (*Con
 // process that runs the server and the console.
 func (s *Service) isOwnService(name string) bool {
 	if s.windows() {
-		return name == "BetterDeskServer"
+		return name == "NeoDeskServer"
 	}
-	return strings.TrimSuffix(name, ".service") == "betterdesk-server"
+	return strings.TrimSuffix(name, ".service") == "neodesk-server"
 }
 
 // output is safeExecSync: what a command printed, trimmed, or "" when it

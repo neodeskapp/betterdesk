@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // oldVersions are console releases whose schema, made by that release's own
@@ -87,7 +87,7 @@ func TestMigrateOldInstalls(t *testing.T) {
 						t.Errorf("agent bundle slug %q is empty or taken", r[0])
 					}
 					slugs[r[0]] = true
-					if r[1] != "betterdesk-support" {
+					if r[1] != "neodesk-support" {
 						t.Errorf("agent bundle product type = %q", r[1])
 					}
 				}

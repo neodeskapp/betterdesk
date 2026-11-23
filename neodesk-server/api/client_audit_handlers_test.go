@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/config"
-	cryptopkg "github.com/unitronix/betterdesk-server/crypto"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	cryptopkg "github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 // startTestServer spins up a Server on the given port with a generated

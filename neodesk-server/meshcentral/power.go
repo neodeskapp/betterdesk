@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 )
 
 // SendPowerAction forwards MeshCentral poweraction to the connected agent.

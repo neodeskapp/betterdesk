@@ -2,9 +2,9 @@
  "id": "ws-bd-signal/no-origin-with-session-cookie",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-signal?device_id=900100001&token=%7Bsecret%3Adevice_token%7D",
+  "path": "/ws/nd-signal?device_id=900100001&token=%7Bsecret%3Adevice_token%7D",
   "notes": [
-   "header Cookie: bd.sid=s%3Anot-a-session",
+   "header Cookie: nd.sid=s%3Anot-a-session",
    "no cookies",
    "websocket j, no Origin"
   ]

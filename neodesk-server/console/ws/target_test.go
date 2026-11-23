@@ -110,7 +110,7 @@ func TestNodeOrigins(t *testing.T) {
 	for _, c := range v.Origins {
 		policy := OriginPolicy{
 			Allowed:      ParseAllowedOrigins(c.Env["WS_ALLOWED_ORIGINS"]),
-			AllowMissing: c.Env["BD_ALLOW_MISSING_ORIGIN"] == "true",
+			AllowMissing: c.Env["ND_ALLOW_MISSING_ORIGIN"] == "true",
 		}
 		r := &http.Request{Header: http.Header{}, Host: c.Host}
 		if c.Origin != "" {

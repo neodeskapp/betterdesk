@@ -1,5 +1,5 @@
 /**
- * BetterDesk Console — CDAP Audio Stream Widget
+ * NeoDesk Console — CDAP Audio Stream Widget
  * Provides bidirectional audio streaming from CDAP devices via WebSocket.
  * Decodes Opus/PCM audio and renders using Web Audio API.
  */
@@ -82,7 +82,7 @@ function openAudio(deviceId: string, widgetId: string, opts?: CDAPAudioOptions):
 	const levelBar = widgetEl.querySelector<HTMLElement>('.cdap-audio-level-fill');
 
 	if (statusEl) {
-		statusEl.textContent = page().BetterDesk?.t?.('cdap.audio_connecting') || 'Connecting...';
+		statusEl.textContent = page().NeoDesk?.t?.('cdap.audio_connecting') || 'Connecting...';
 		statusEl.className = 'cdap-audio-status connecting';
 	}
 
@@ -161,7 +161,7 @@ function handleMessage(session: CDAPAudioSession, msg: CDAPAudioMessage): void {
 			session.connected = true;
 			initAudioContext(session);
 			if (session.statusEl) {
-				session.statusEl.textContent = page().BetterDesk?.t?.('cdap.audio_streaming') || 'Streaming';
+				session.statusEl.textContent = page().NeoDesk?.t?.('cdap.audio_streaming') || 'Streaming';
 				session.statusEl.className = 'cdap-audio-status streaming';
 			}
 			// Start level meter
@@ -410,7 +410,7 @@ function setDisconnected(session: CDAPAudioSession): void {
 		session.audioCtx = null;
 	}
 	if (session.statusEl) {
-		session.statusEl.textContent = page().BetterDesk?.t?.('cdap.disconnected') || 'Disconnected';
+		session.statusEl.textContent = page().NeoDesk?.t?.('cdap.disconnected') || 'Disconnected';
 		session.statusEl.className = 'cdap-audio-status disconnected';
 	}
 	if (session.levelBar) {

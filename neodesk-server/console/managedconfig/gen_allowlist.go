@@ -4,7 +4,7 @@
 // the binary embeds (Template): every key on a line "KEY=" or "# KEY=", as
 // the old console read it.
 //
-//	cd betterdesk-server/console/managedconfig && go generate
+//	cd neodesk-server/console/managedconfig && go generate
 package main
 
 import (

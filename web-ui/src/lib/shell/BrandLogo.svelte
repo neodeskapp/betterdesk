@@ -1,22 +1,22 @@
 <!--
-  The BetterDesk logo (.ui-rework/brand, views/partials/brand-logo.ejs):
+  The NeoDesk logo (.ui-rework/brand, views/partials/brand-logo.ejs):
   the mark (square, circle, overlap in --logo-* colours, which follow the
   theme) and the wordmark drawn 1.3 times its size in the brand file, in
   currentColor so it follows --text. Static, reviewed markup; never set
   the wordmark as live text.
 
-  name: the app name. "BetterDesk" (or empty) draws mark and wordmark; any
+  name: the app name. "NeoDesk" (or empty) draws mark and wordmark; any
   other name draws the mark followed by that name as text.
   mark: draw the mark alone (where it is tight; below 24 px use the mark).
   The full logo is labelled with the name; the mark alone is decoration.
 -->
 <script lang="ts">
-	let { name = 'BetterDesk', mark = false }: { name?: string; mark?: boolean } = $props();
+	let { name = 'NeoDesk', mark = false }: { name?: string; mark?: boolean } = $props();
 
 	const uid = $props.id();
 	const trimmed = $derived(name.trim());
-	const full = $derived(!mark && (!trimmed || trimmed.toLowerCase() === 'betterdesk'));
-	const label = $derived(trimmed || 'BetterDesk');
+	const full = $derived(!mark && (!trimmed || trimmed.toLowerCase() === 'neodesk'));
+	const label = $derived(trimmed || 'NeoDesk');
 </script>
 
 {#snippet shapes(clip: string)}

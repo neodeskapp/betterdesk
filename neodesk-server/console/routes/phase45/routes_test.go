@@ -9,10 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // Pairing a generic agent: one that waits for approval is approved under
@@ -189,7 +189,7 @@ func TestDownload(t *testing.T) {
 			res.Header.Get("RateLimit-Limit") != "5" || res.Header.Get("RateLimit-Remaining") != "4" {
 			t.Errorf("installers without a cache: %s, limit %q, remaining %q", res.Body, res.Header.Get("RateLimit-Limit"), res.Header.Get("RateLimit-Remaining"))
 		}
-		dir := filepath.Join(w.DataDir, "modules", "betterdesk-support-releases", "support-v1.0.0")
+		dir := filepath.Join(w.DataDir, "modules", "neodesk-support-releases", "support-v1.0.0")
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -228,7 +228,7 @@ func TestDownload(t *testing.T) {
 // A release cache without a manifest is reported as incomplete.
 func TestInstallersOfAnIncompleteCache(t *testing.T) {
 	w := routetest.New(t, routetest.Options{DB: storetest.Migrated(t)})
-	dir := filepath.Join(w.DataDir, "modules", "betterdesk-support-releases", "support-v1.0.0")
+	dir := filepath.Join(w.DataDir, "modules", "neodesk-support-releases", "support-v1.0.0")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -303,7 +303,7 @@ func TestTemplatesWithoutTheirTable(t *testing.T) {
 		if _, err := db.Exec(context.Background(), "DROP TABLE agent_templates"); err != nil {
 			t.Fatal(err)
 		}
-		if res := w.SignedOut().Do("POST", "/api/bd/enroll", `{"enrollment_token":"tok","device_id":"dev"}`); res.Status != http.StatusUnauthorized || res.Body != `{"success":false,"error":"invalid_token"}` {
+		if res := w.SignedOut().Do("POST", "/api/nd/enroll", `{"enrollment_token":"tok","device_id":"dev"}`); res.Status != http.StatusUnauthorized || res.Body != `{"success":false,"error":"invalid_token"}` {
 			t.Errorf("enroll: %d %s", res.Status, res.Body)
 		}
 		res := w.As("admin").Do("GET", "/api/agent-templates", "")

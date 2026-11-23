@@ -9,7 +9,7 @@
  *
  * The dev-only mock device (./client/mock-session.ts, a chunk of its own)
  * loads only when the viewer's data says the server has it on
- * (BD_DEV_MOCK_REMOTE=1, then ?mock=1 or a seeded demo device); without
+ * (ND_DEV_MOCK_REMOTE=1, then ?mock=1 or a seeded demo device); without
  * the flag the viewer data has no mock and the chunk is never fetched.
  */
 
@@ -166,7 +166,7 @@ interface ClientModules {
 }
 
 interface RdWindow {
-	BetterDesk?: Record<string, unknown>;
+	NeoDesk?: Record<string, unknown>;
 	t?: (key: string) => string;
 	__capabilities?: ViewerCapabilities;
 	__guestToken?: string;
@@ -191,7 +191,7 @@ export function setGlobals(opts: LoadOptions): void {
 	// The viewer's own console calls (the quick support password) go through the API client
 	setCsrfToken(opts.csrfToken);
 	const win = w();
-	win.BetterDesk = { ...(win.BetterDesk ?? {}), csrfToken: opts.csrfToken, t };
+	win.NeoDesk = { ...(win.NeoDesk ?? {}), csrfToken: opts.csrfToken, t };
 	// The file sheet, CDAP and mesh code translate through window.t (key back when missing)
 	win.t = (key: string) => t(key);
 	win.__capabilities = opts.capabilities;

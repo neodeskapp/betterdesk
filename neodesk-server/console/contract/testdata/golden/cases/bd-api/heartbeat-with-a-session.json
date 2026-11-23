@@ -2,7 +2,7 @@
  "id": "bd-api/heartbeat-with-a-session",
  "request": {
   "method": "POST",
-  "path": "/api/bd/heartbeat",
+  "path": "/api/nd/heartbeat",
   "body": {
    "device_id": "900100001"
   },
@@ -76,7 +76,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",

@@ -2,7 +2,7 @@
  "id": "bd-api/connect-unknown-target",
  "request": {
   "method": "POST",
-  "path": "/api/bd/connect",
+  "path": "/api/nd/connect",
   "body": {
    "target_id": "contract-none"
   },

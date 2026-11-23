@@ -13,7 +13,7 @@ import (
 )
 
 // TestAgainstRunningNode sends the same requests to a running Node console
-// (BD_URL) and to the Go handlers on the same language folder (BD_LANG_DIR,
+// (ND_URL) and to the Go handlers on the same language folder (ND_LANG_DIR,
 // the repository's by default), and compares status, the headers that
 // matter and the decoded body byte for byte.
 //
@@ -23,9 +23,9 @@ import (
 // offered nothing else, uncompressed. Go has no brotli decoder either, so
 // for those answers only status and headers are compared.
 func TestAgainstRunningNode(t *testing.T) {
-	node := strings.TrimRight(os.Getenv("BD_URL"), "/")
+	node := strings.TrimRight(os.Getenv("ND_URL"), "/")
 	if node == "" {
-		t.Skip("BD_URL is not set")
+		t.Skip("ND_URL is not set")
 	}
 	langDir := realLangDir
 	b, _ := loaded(t, langDir, "en")

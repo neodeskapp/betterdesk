@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // TestIdleRowAnswersSessionIdle: a signed-in session whose row is past the
@@ -29,7 +29,7 @@ func TestIdleRowAnswersSessionIdle(t *testing.T) {
 		if rec.Code != http.StatusUnauthorized || rec.Body.String() != want {
 			t.Fatalf("answer %d %s\nwant 401 %s", rec.Code, rec.Body.String(), want)
 		}
-		if got := strings.Join(setCookies(rec), "\n"); !strings.Contains(got, "bd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT") {
+		if got := strings.Join(setCookies(rec), "\n"); !strings.Contains(got, "nd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT") {
 			t.Errorf("the cookie is not cleared: %q", got)
 		}
 		row := f.row(sid)

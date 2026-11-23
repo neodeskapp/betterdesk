@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // TestUnifiedExecAsksTheTransportsTerminalPermission: POST

@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The backup routes of the settings group: the full backup and the
@@ -170,11 +170,11 @@ func init() {
 		},
 		contract.Case{
 			Name: "restore-json-newer", Method: "POST", Path: "/api/settings/restore",
-			Multipart: upload("backup.json", []byte(`{"_format":"betterdesk-backup","_version":2,"console":{}}`)), Roles: admin,
+			Multipart: upload("backup.json", []byte(`{"_format":"neodesk-backup","_version":2,"console":{}}`)), Roles: admin,
 		},
 		contract.Case{
 			Name: "restore-json-nothing-chosen", Method: "POST", Path: "/api/settings/restore",
-			Multipart: upload("backup.json", []byte(`{"_format":"betterdesk-backup","_version":1,"_created":"2026-01-02T03:04:05.000Z","_console_version":"3.5.0","console":{"settings":{"x":"y"},"folders":[]}}`), snapshotOff...),
+			Multipart: upload("backup.json", []byte(`{"_format":"neodesk-backup","_version":1,"_created":"2026-01-02T03:04:05.000Z","_console_version":"3.5.0","console":{"settings":{"x":"y"},"folders":[]}}`), snapshotOff...),
 			Roles:     some,
 		},
 		contract.Case{
@@ -183,7 +183,7 @@ func init() {
 		},
 		contract.Case{
 			Name: "restore-truncated", Method: "POST", Path: "/api/settings/restore",
-			Multipart: upload("backup.tar.gz", manifest(`{"_format":"betterdesk-full-backup","_version":1}`)[:60]), Roles: admin,
+			Multipart: upload("backup.tar.gz", manifest(`{"_format":"neodesk-full-backup","_version":1}`)[:60]), Roles: admin,
 		},
 		contract.Case{
 			Name: "restore-not-gzip-method", Method: "POST", Path: "/api/settings/restore",
@@ -207,7 +207,7 @@ func init() {
 		},
 		contract.Case{
 			Name: "restore-full-nothing-chosen", Method: "POST", Path: "/api/settings/restore",
-			Multipart: upload("backup.tar.gz", manifest(`{"_format":"betterdesk-full-backup","_version":1}`), fullOff...), Roles: some,
+			Multipart: upload("backup.tar.gz", manifest(`{"_format":"neodesk-full-backup","_version":1}`), fullOff...), Roles: some,
 		},
 		contract.Case{
 			Name: "restore-other-field", Method: "POST", Path: "/api/settings/restore",

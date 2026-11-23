@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 func TestParsedInfo(t *testing.T) {
@@ -53,16 +53,16 @@ func TestParsedInfo(t *testing.T) {
 	}
 }
 
-// The group is mounted at /api/bd too, for the route a device uploads
+// The group is mounted at /api/nd too, for the route a device uploads
 // with. There the three read routes step aside, so that GET
-// /api/bd/commands and the like reach the routes they are meant for.
+// /api/nd/commands and the like reach the routes they are meant for.
 func TestTheReadRoutesStepAsideAtTheDeviceMount(t *testing.T) {
 	router := kit.NewRouter()
-	Register((&kit.Deps{Router: router, Log: kit.NewLogger("silent", true)}).At("/api/bd"))
+	Register((&kit.Deps{Router: router, Log: kit.NewLogger("silent", true)}).At("/api/nd"))
 	if len(router.Routes()) != 4 {
 		t.Fatalf("%d routes registered, want the device route and the three read routes", len(router.Routes()))
 	}
-	for _, path := range []string{"/api/bd", "/api/bd/commands", "/api/bd/D1/top"} {
+	for _, path := range []string{"/api/nd", "/api/nd/commands", "/api/nd/D1/top"} {
 		rec := httptest.NewRecorder()
 		if router.Serve(rec, httptest.NewRequest(http.MethodGet, path, nil)) {
 			t.Errorf("GET %s was answered with %d: the route has to pass the request on", path, rec.Code)

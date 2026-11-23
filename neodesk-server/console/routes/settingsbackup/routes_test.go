@@ -16,11 +16,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/backup"
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 type world struct {
@@ -121,7 +121,7 @@ func TestDownloads(t *testing.T) {
 		if res.Status != 200 || res.Header.Get("Content-Type") != "application/gzip" {
 			t.Fatalf("%d %q", res.Status, res.Header.Get("Content-Type"))
 		}
-		if !regexp.MustCompile(`^attachment; filename="betterdesk-backup-\d{4}-\d\d-\d\d-\d\d-\d\d-\d\d\.tar\.gz"$`).MatchString(res.Header.Get("Content-Disposition")) {
+		if !regexp.MustCompile(`^attachment; filename="neodesk-backup-\d{4}-\d\d-\d\d-\d\d-\d\d-\d\d\.tar\.gz"$`).MatchString(res.Header.Get("Content-Disposition")) {
 			t.Errorf("disposition %q", res.Header.Get("Content-Disposition"))
 		}
 		if res.Header.Get("ETag") == "" || res.Header.Get("Content-Encoding") != "" {
@@ -146,11 +146,11 @@ func TestDownloads(t *testing.T) {
 		if res.Status != 200 || res.Header.Get("Content-Type") != "application/json; charset=utf-8" || res.Header.Get("Content-Encoding") != "" {
 			t.Fatalf("%d %q %s", res.Status, res.Header.Get("Content-Type"), shown(res))
 		}
-		if !regexp.MustCompile(`^attachment; filename="betterdesk-config-\d{4}-\d\d-\d\d\.json"$`).MatchString(res.Header.Get("Content-Disposition")) {
+		if !regexp.MustCompile(`^attachment; filename="neodesk-config-\d{4}-\d\d-\d\d\.json"$`).MatchString(res.Header.Get("Content-Disposition")) {
 			t.Errorf("disposition %q", res.Header.Get("Content-Disposition"))
 		}
-		if !strings.HasPrefix(res.Body, "{\n  \"_format\": \"betterdesk-backup\",\n  \"_version\": 1,\n  \"_created\": \"") ||
-			!strings.Contains(res.Body, "\n  \"_backend\": \"betterdesk\",\n  \"console\": {\n    \"settings\": ") {
+		if !strings.HasPrefix(res.Body, "{\n  \"_format\": \"neodesk-backup\",\n  \"_version\": 1,\n  \"_created\": \"") ||
+			!strings.Contains(res.Body, "\n  \"_backend\": \"neodesk\",\n  \"console\": {\n    \"settings\": ") {
 			t.Errorf("snapshot does not start the way Node's does (%d bytes)", len(res.Body))
 		}
 		kb := regexp.MustCompile(`^backup_created\|Config snapshot downloaded \(\d+\.\d KB\)\|127\.0\.0\.1\|1$`)
@@ -215,7 +215,7 @@ func TestRestore(t *testing.T) {
 			{"broken archive", post("backup", "b.tar.gz", archive[:len(archive)/2], nil), 400,
 				`{"success":false,"error":"Invalid backup archive: Not a valid gzip/tar archive: unexpected end of file"}`},
 			{"other field", post("file", "b.json", []byte("{}"), nil), 500, ""},
-			{"snapshot, nothing chosen", post("backup", "b.json", []byte(`{"_format":"betterdesk-backup","_version":1,"_created":null,"console":{}}`),
+			{"snapshot, nothing chosen", post("backup", "b.json", []byte(`{"_format":"neodesk-backup","_version":1,"_created":null,"console":{}}`),
 				map[string]string{"restoreSettings": "false", "restoreBranding": "false", "restoreFolders": "false", "restoreGroups": "false", "restoreAddressBooks": "false"}), 200,
 				`{"success":true,"data":{"type":"config","restored":[],"skipped":["settings","branding","users","folders","groups","addressBooks"],"warnings":[],"backupDate":null}}`},
 		} {
@@ -290,7 +290,7 @@ func TestRestoreAnswersWhenTheAuditFails(t *testing.T) {
 		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM folders WHERE name = 'after the backup'`).Scan(&folders); err != nil || folders != 0 {
 			t.Errorf("the restore did not run: %d %v", folders, err)
 		}
-		res = post("b.json", []byte(`{"_format":"betterdesk-backup","_version":1,"_created":"2026-11-10T08:00:00.000Z","console":{"folders":[{"name":"from the snapshot"}]}}`))
+		res = post("b.json", []byte(`{"_format":"neodesk-backup","_version":1,"_created":"2026-11-10T08:00:00.000Z","console":{"folders":[{"name":"from the snapshot"}]}}`))
 		if res.Status != 200 || res.Body != `{"success":true,"data":{"type":"config","restored":["folders","groups"],"skipped":["settings","branding","users","addressBooks"],"warnings":[],"backupDate":"2026-11-10T08:00:00.000Z"}}` {
 			t.Errorf("snapshot restore: %d %s", res.Status, res.Body)
 		}
@@ -387,7 +387,7 @@ func TestRestoreOutlivesTheRequest(t *testing.T) {
 // 1.5.
 func TestRestoreArchiveLimits(t *testing.T) {
 	archive, err := backup.CreateTarGz([]backup.Entry{
-		{Name: "manifest.json", Data: []byte(`{"_format":"betterdesk-full-backup","_version":1}`)},
+		{Name: "manifest.json", Data: []byte(`{"_format":"neodesk-full-backup","_version":1}`)},
 		{Name: "a", Data: []byte("1")}, {Name: "b", Data: []byte("2")},
 	}, 1)
 	if err != nil {

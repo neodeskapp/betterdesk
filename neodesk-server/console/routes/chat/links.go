@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 )
 
 // A chat file's links say who may download it: the account that uploaded

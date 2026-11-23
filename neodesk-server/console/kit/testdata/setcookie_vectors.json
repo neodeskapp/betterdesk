@@ -1,8 +1,8 @@
 {"express":"4.22.3","now":1794312000000,"vectors":[
-{"name":"language","cookie":"betterdesk_lang","value":"de","options":{"maxAge":31536000000,"httpOnly":false,"sameSite":"lax","secure":false},"header":"betterdesk_lang=de; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 12:00:00 GMT; SameSite=Lax"},
-{"name":"language, production","cookie":"betterdesk_lang","value":"zh-TW","options":{"maxAge":31536000000,"httpOnly":false,"sameSite":"lax","secure":true},"header":"betterdesk_lang=zh-TW; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 12:00:00 GMT; Secure; SameSite=Lax"},
-{"name":"shell","cookie":"bd_ui_shell","value":"ux36","options":{"httpOnly":false,"sameSite":"lax","secure":false,"maxAge":31536000000,"path":"/"},"header":"bd_ui_shell=ux36; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 12:00:00 GMT; SameSite=Lax"},
-{"name":"shell, https","cookie":"bd_ui_shell","value":"ux35","options":{"httpOnly":false,"sameSite":"lax","secure":true,"maxAge":31536000000,"path":"/"},"header":"bd_ui_shell=ux35; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 12:00:00 GMT; Secure; SameSite=Lax"},
+{"name":"language","cookie":"neodesk_lang","value":"de","options":{"maxAge":31536000000,"httpOnly":false,"sameSite":"lax","secure":false},"header":"neodesk_lang=de; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 12:00:00 GMT; SameSite=Lax"},
+{"name":"language, production","cookie":"neodesk_lang","value":"zh-TW","options":{"maxAge":31536000000,"httpOnly":false,"sameSite":"lax","secure":true},"header":"neodesk_lang=zh-TW; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 12:00:00 GMT; Secure; SameSite=Lax"},
+{"name":"shell","cookie":"nd_ui_shell","value":"ux36","options":{"httpOnly":false,"sameSite":"lax","secure":false,"maxAge":31536000000,"path":"/"},"header":"nd_ui_shell=ux36; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 12:00:00 GMT; SameSite=Lax"},
+{"name":"shell, https","cookie":"nd_ui_shell","value":"ux35","options":{"httpOnly":false,"sameSite":"lax","secure":true,"maxAge":31536000000,"path":"/"},"header":"nd_ui_shell=ux35; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 12:00:00 GMT; Secure; SameSite=Lax"},
 {"name":"no lifetime","cookie":"s","value":"a b|c","options":{"httpOnly":true,"secure":true,"sameSite":"strict","path":"/api"},"header":"s=a%20b%7Cc; Path=/api; HttpOnly; Secure; SameSite=Strict"},
 {"name":"bare","cookie":"n","value":"v","options":{},"header":"n=v; Path=/"},
 {"name":"none","cookie":"n","value":"v","options":{"sameSite":"none","secure":true},"header":"n=v; Path=/; Secure; SameSite=None"},

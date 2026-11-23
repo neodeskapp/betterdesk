@@ -1,15 +1,15 @@
-# BetterDesk unified security suite (local only).
+# NeoDesk unified security suite (local only).
 # Run before publishing a release to GitHub.
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
-if (-not (Test-Path (Join-Path $Root 'betterdesk-server'))) {
+if (-not (Test-Path (Join-Path $Root 'neodesk-server'))) {
     throw "Cannot locate repo root from $PSScriptRoot"
 }
 
-Write-Host "== BetterDesk security suite ==" -ForegroundColor Cyan
+Write-Host "== NeoDesk security suite ==" -ForegroundColor Cyan
 Write-Host "Root: $Root"
 
-Push-Location (Join-Path $Root 'betterdesk-server')
+Push-Location (Join-Path $Root 'neodesk-server')
 try {
     Write-Host "`n-- Go: relay / sessiongrant / crypto connection security --" -ForegroundColor Yellow
     go test ./relay/ ./sessiongrant/ ./crypto/ ./auth/ -count=1 -run 'ConnectionSecurity|AuthorizationRegistry|SignIdPk|IssueAndVerify|VerifyRejects|JWT'

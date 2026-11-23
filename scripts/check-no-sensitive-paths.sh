@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-RG_BIN="${BETTERDESK_RG_BIN:-}"
+RG_BIN="${NEODESK_RG_BIN:-}"
 if [[ -z "$RG_BIN" ]]; then
   RG_BIN="$(command -v rg 2>/dev/null || command -v rg.exe 2>/dev/null || true)"
 fi
@@ -17,9 +17,9 @@ fi
 SCAN_PATHS=(
   docs/
   bridges/
-  betterdesk-agent/
-  betterdesk-agent-client/
-  betterdesk-server/
+  neodesk-agent/
+  neodesk-agent-client/
+  neodesk-server/
   sdks/
   scripts/
   .github/

@@ -1,4 +1,4 @@
-// Package ratelimit implements IP-based rate limiting for the BetterDesk server.
+// Package ratelimit implements IP-based rate limiting for the NeoDesk server.
 // It uses a sliding window approach: each IP tracks a list of timestamps.
 // If the number of events in the window exceeds the limit, new events are rejected.
 package ratelimit

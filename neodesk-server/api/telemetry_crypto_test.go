@@ -6,10 +6,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/config"
-	bdcrypto "github.com/unitronix/betterdesk-server/crypto"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	bdcrypto "github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 func TestTelemetryKeyPersistsAcrossServerInstances(t *testing.T) {
@@ -183,20 +183,20 @@ func TestFreshEnrollmentDoesNotResetActiveOrDeletedPeerState(t *testing.T) {
 	})
 }
 
-func TestClassifyBetterDeskDevice(t *testing.T) {
+func TestClassifyNeoDeskDevice(t *testing.T) {
 	tests := []struct {
 		name, sku, mode, want string
 	}{
 		{"legacy rustdesk", "", "", ""},
-		{"managed betterdesk", "betterdesk-desktop", "normal", "betterdesk"},
-		{"desktop incoming-only", "betterdesk-desktop", "incoming-only", "betterdesk"},
-		{"support sku", "betterdesk-support", "incoming-only", "betterdesk-support"},
-		{"support mode", "", "incoming-only", "betterdesk-support"},
+		{"managed neodesk", "neodesk-desktop", "normal", "neodesk"},
+		{"desktop incoming-only", "neodesk-desktop", "incoming-only", "neodesk"},
+		{"support sku", "neodesk-support", "incoming-only", "neodesk-support"},
+		{"support mode", "", "incoming-only", "neodesk-support"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			if got := classifyBetterDeskDevice(test.sku, test.mode); got != test.want {
-				t.Fatalf("classifyBetterDeskDevice(%q, %q) = %q, want %q",
+			if got := classifyNeoDeskDevice(test.sku, test.mode); got != test.want {
+				t.Fatalf("classifyNeoDeskDevice(%q, %q) = %q, want %q",
 					test.sku, test.mode, got, test.want)
 			}
 		})

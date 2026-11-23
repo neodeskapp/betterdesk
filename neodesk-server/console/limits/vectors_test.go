@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // The vectors in testdata are a fixed record of the Node console's own
@@ -187,7 +187,7 @@ func sampleRoutes(set *Set) http.Handler {
 			limiter = set.FileAccess
 		case get && route == "/api/logs/recent":
 			limiter = set.API
-		case post && route == "/api/bd/register":
+		case post && route == "/api/nd/register":
 			limiter = set.Register
 		}
 		if limiter != nil {

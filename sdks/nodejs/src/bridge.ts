@@ -76,7 +76,7 @@ export interface AlertDefinition {
 const SEVERITIES: readonly string[] = Object.values(Severity);
 
 /**
- * CDAPBridge — connects a Node.js process to BetterDesk CDAP Gateway.
+ * CDAPBridge — connects a Node.js process to NeoDesk CDAP Gateway.
  *
  * Events: connected, disconnected, registered, command, error, message,
  * and the type of any other message the server sends.
@@ -232,7 +232,7 @@ export class CDAPBridge extends EventEmitter {
   private async _connectOnce(): Promise<void> {
     return new Promise((resolve, reject) => {
       const ws = new WebSocket(this.server, SUBPROTOCOL, {
-        headers: { 'User-Agent': `betterdesk-cdap-nodejs/${this.bridgeVersion}` },
+        headers: { 'User-Agent': `neodesk-cdap-nodejs/${this.bridgeVersion}` },
         handshakeTimeout: 10000,
       });
 

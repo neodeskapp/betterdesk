@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 const connectionModeCapability = "connection-mode.remote-control"
@@ -147,13 +147,13 @@ func (s *Server) connectionModeEligibility(peer *db.Peer) (controllable, support
 		return false, false
 	}
 	identity := s.verifiedIdentity(peer.ID)
-	if identity.ProductSKU == "betterdesk-support" {
+	if identity.ProductSKU == "neodesk-support" {
 		return false, true
 	}
-	if identity.ProductSKU == "" && (identity.ConnMode == db.ConnectionModeIncomingOnly || strings.EqualFold(peer.DeviceType, "betterdesk-support")) {
+	if identity.ProductSKU == "" && (identity.ConnMode == db.ConnectionModeIncomingOnly || strings.EqualFold(peer.DeviceType, "neodesk-support")) {
 		return false, true
 	}
-	if identity.ProductSKU == "betterdesk-desktop" && hasConnectionModeCapability(identity.Capabilities) {
+	if identity.ProductSKU == "neodesk-desktop" && hasConnectionModeCapability(identity.Capabilities) {
 		return true, false
 	}
 	return false, false
@@ -217,28 +217,28 @@ func (s *Server) rememberUnverifiedIdentity(deviceID string, body clientHeartbea
 }
 
 func (s *Server) classifyPeerFromClient(deviceID, productSKU, connMode string, trusted bool) {
-	deviceType := classifyBetterDeskDevice(productSKU, connMode)
+	deviceType := classifyNeoDeskDevice(productSKU, connMode)
 	if deviceType == "" {
 		return
 	}
-	if !trusted && deviceType == "betterdesk-support" && s.verifiedIdentity(deviceID).ProductSKU == "betterdesk-desktop" {
+	if !trusted && deviceType == "neodesk-support" && s.verifiedIdentity(deviceID).ProductSKU == "neodesk-desktop" {
 		return
 	}
 	if err := s.db.UpdatePeerFields(deviceID, map[string]string{"device_type": deviceType}); err != nil {
-		log.Printf("[api] failed to classify BetterDesk device %s: %v", deviceID, err)
+		log.Printf("[api] failed to classify NeoDesk device %s: %v", deviceID, err)
 	}
 }
 
 func (s *Server) withholdClientStrategy(deviceID string, body clientHeartbeatRequest, peerDeviceType string, envelopeVerified bool) bool {
 	if envelopeVerified {
-		if body.ProductSKU == "betterdesk-support" || body.ConnMode == db.ConnectionModeIncomingOnly {
+		if body.ProductSKU == "neodesk-support" || body.ConnMode == db.ConnectionModeIncomingOnly {
 			return true
 		}
 	} else if identity := s.verifiedIdentity(deviceID); identity.ProductSKU != "" || identity.ConnMode != "" {
-		if identity.ProductSKU == "betterdesk-support" || identity.ConnMode == db.ConnectionModeIncomingOnly {
+		if identity.ProductSKU == "neodesk-support" || identity.ConnMode == db.ConnectionModeIncomingOnly {
 			return true
 		}
-	} else if classifyBetterDeskDevice(body.ProductSKU, body.ConnMode) == "betterdesk-support" || strings.EqualFold(peerDeviceType, "betterdesk-support") {
+	} else if classifyNeoDeskDevice(body.ProductSKU, body.ConnMode) == "neodesk-support" || strings.EqualFold(peerDeviceType, "neodesk-support") {
 		return true
 	}
 	policy, err := s.db.GetConnectionModePolicy(deviceID)
@@ -306,5 +306,5 @@ func (s *Server) writeHeartbeatResponse(w http.ResponseWriter, deviceID string, 
 			log.Printf("[api] connection mode delivered mark for %s: %v", deviceID, err)
 		}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"betterdesk_envelope": envelope})
+	writeJSON(w, http.StatusOK, map[string]any{"neodesk_envelope": envelope})
 }

@@ -2,7 +2,7 @@
 
 Usage example:
 
-    from betterdesk_cdap import CDAPBridge, gauge, toggle
+    from neodesk_cdap import CDAPBridge, gauge, toggle
 
     bridge = CDAPBridge(
         server="ws://203.0.113.10:21122/cdap",
@@ -38,7 +38,7 @@ from typing import Any, Callable
 import websockets
 import websockets.exceptions
 
-from betterdesk_cdap.protocol import (
+from neodesk_cdap.protocol import (
     SEVERITY_CRITICAL,
     SEVERITY_INFO,
     SEVERITY_WARNING,
@@ -48,9 +48,9 @@ from betterdesk_cdap.protocol import (
     auth_payload_device_token,
     auth_payload_user_password,
 )
-from betterdesk_cdap.widgets import Widget
+from neodesk_cdap.widgets import Widget
 
-logger = logging.getLogger("betterdesk_cdap")
+logger = logging.getLogger("neodesk_cdap")
 
 # A device id the gateway takes
 DEVICE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
@@ -59,7 +59,7 @@ SEVERITIES = (SEVERITY_CRITICAL, SEVERITY_WARNING, SEVERITY_INFO)
 
 
 class CDAPBridge:
-    """Python bridge that connects to a BetterDesk CDAP gateway."""
+    """Python bridge that connects to a NeoDesk CDAP gateway."""
 
     def __init__(
         self,

@@ -1,11 +1,11 @@
-# BetterDesk CDAP Python SDK
+# NeoDesk CDAP Python SDK
 
 Build CDAP device bridges in Python for IoT sensors, industrial equipment, and automation systems.
 
 ## Installation
 
 ```bash
-pip install betterdesk-cdap
+pip install neodesk-cdap
 # or from source
 pip install -e sdks/python/
 ```
@@ -34,7 +34,7 @@ The short version:
 ```python
 import os
 
-from betterdesk_cdap import CDAPBridge, gauge, toggle, button
+from neodesk_cdap import CDAPBridge, gauge, toggle, button
 
 # Create bridge
 bridge = CDAPBridge(

@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/console/auditlog"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
 )
 
 // The bug fixes of BUGS.md that change what the recorded scenarios of
@@ -180,7 +180,7 @@ func noPasswordFromTheNextLine(sc *scenarioVector) bool {
 	// The folders the credentials file is looked for in, in order
 	var candidates []string
 	for _, dir := range []string{sc.Dirs.KeysPath, "/opt/rustdesk", sc.Dirs.KeysPath + "/data", sc.Dirs.DataDir,
-		"/opt/betterdesk", "/opt/betterdesk/data", "/opt/rustdesk/data"} {
+		"/opt/neodesk", "/opt/neodesk/data", "/opt/rustdesk/data"} {
 		candidates = append(candidates, dir+"/.admin_credentials")
 	}
 	changed := false

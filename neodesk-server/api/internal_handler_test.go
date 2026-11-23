@@ -18,14 +18,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/db"
-	eventsModule "github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/metrics"
-	"github.com/unitronix/betterdesk-server/peer"
-	"github.com/unitronix/betterdesk-server/security"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	eventsModule "github.com/neodeskapp/neodesk/neodesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/metrics"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/security"
 )
 
 const (
@@ -537,7 +537,7 @@ func TestInternalHandlerSetsNoCallerOnPathsWithoutCredential(t *testing.T) {
 	if sawRole != auth.RoleAdmin || sawUsername != "apikey:test-key" || !internal {
 		t.Errorf("guarded path: role %q, username %q, internal %v; want the identity", sawRole, sawUsername, internal)
 	}
-	for _, c := range [][2]string{{"GET", "/api/health"}, {"POST", "/api/auth/login"}, {"GET", "/api/branding"}, {"GET", "/ws/bd-mgmt/DEV1"}, {"GET", "/agent.ashx"}} {
+	for _, c := range [][2]string{{"GET", "/api/health"}, {"POST", "/api/auth/login"}, {"GET", "/api/branding"}, {"GET", "/ws/nd-mgmt/DEV1"}, {"GET", "/agent.ashx"}} {
 		sawRole, sawUsername, internal = "unset", "unset", false
 		call(c[0], c[1])
 		if sawRole != "" || sawUsername != "" || !internal {
@@ -778,7 +778,7 @@ func TestNoCredentialPathsMatchAuthMiddleware(t *testing.T) {
 	if len(paths) < 200 {
 		t.Fatalf("found %d route paths in server.go, expected over 200: the pattern no longer matches", len(paths))
 	}
-	for _, extra := range []string{"/agent.ashx", "/meshrelay.ashx", "/control.ashx", "/bettercore.js", "/meshcore.js", "/ws/bd-mgmt/DEV1/extra", "/api/unknown"} {
+	for _, extra := range []string{"/agent.ashx", "/meshrelay.ashx", "/control.ashx", "/bettercore.js", "/meshcore.js", "/ws/nd-mgmt/DEV1/extra", "/api/unknown"} {
 		paths[extra] = true
 	}
 	for path := range noCredentialPaths {

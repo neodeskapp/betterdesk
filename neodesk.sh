@@ -1,11 +1,11 @@
 #!/bin/bash
 #===============================================================================
 #
-#   BetterDesk Console Manager v3.6.2
+#   NeoDesk Console Manager v3.6.2
 #   All-in-One Interactive Tool for Linux
 #
 #   Features:
-#     - Fresh installation: one service, betterdesk-server, that serves the
+#     - Fresh installation: one service, neodesk-server, that serves the
 #       signal and relay server, the API and the web console
 #     - Minimal installation (the same server with its web console off)
 #     - Update an installation (release binaries checked by SHA-256 and the
@@ -30,12 +30,12 @@
 #     - CDAP (Custom Device API Protocol) support
 #
 #   Usage: 
-#     Interactive: sudo ./betterdesk.sh
-#     Auto mode:   sudo ./betterdesk.sh --auto
-#     PostgreSQL:  sudo ./betterdesk.sh --auto --postgresql
-#     Update:      sudo ./betterdesk.sh --update
-#     Upgrade the Node.js console install: sudo ./betterdesk.sh --update (or --auto)
-#     Roll that upgrade back: sudo ./betterdesk.sh --rollback-go
+#     Interactive: sudo ./neodesk.sh
+#     Auto mode:   sudo ./neodesk.sh --auto
+#     PostgreSQL:  sudo ./neodesk.sh --auto --postgresql
+#     Update:      sudo ./neodesk.sh --update
+#     Upgrade the Node.js console install: sudo ./neodesk.sh --update (or --auto)
+#     Roll that upgrade back: sudo ./neodesk.sh --rollback-go
 #
 #===============================================================================
 
@@ -44,12 +44,12 @@ set -e
 # Version
 VERSION="3.6.2"
 # Bump when installer control-flow changes must apply mid-session after Update (#219).
-BETTERDESK_SH_REVISION="20260725-console-start-306"
+NEODESK_SH_REVISION="20260725-console-start-306"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # This file; empty when the script is piped into bash
-BETTERDESK_SELF="${BASH_SOURCE[0]:-}"
+NEODESK_SELF="${BASH_SOURCE[0]:-}"
 # Preserve argv before shift — used to re-exec after installer self-update (#219).
-BETTERDESK_ORIG_ARGV=("$@")
+NEODESK_ORIG_ARGV=("$@")
 
 # Auto mode flag
 AUTO_MODE=false
@@ -122,7 +122,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --nodejs|--flask)
-            echo "NOTE: $1 is no longer needed: the web console is part of betterdesk-server"
+            echo "NOTE: $1 is no longer needed: the web console is part of neodesk-server"
             shift
             ;;
         --update)
@@ -143,7 +143,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         --binary)
             if [ $# -lt 2 ] || [ ! -f "$2" ]; then
-                echo "ERROR: --binary needs the path of a betterdesk-server binary"
+                echo "ERROR: --binary needs the path of a neodesk-server binary"
                 exit 1
             fi
             SERVER_BINARY_FILE="$(cd "$(dirname "$2")" && pwd)/$(basename "$2")"
@@ -195,9 +195,9 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --help|-h)
-            echo "BetterDesk Console Manager v$VERSION"
+            echo "NeoDesk Console Manager v$VERSION"
             echo ""
-            echo "Usage: sudo ./betterdesk.sh [OPTIONS]"
+            echo "Usage: sudo ./neodesk.sh [OPTIONS]"
             echo ""
             echo "Options:"
             echo "  --auto, -a       Run in automatic mode (non-interactive); on an install"
@@ -210,17 +210,17 @@ while [[ $# -gt 0 ]]; do
             echo "                   upgrade back (binaries, services, .env); data stays"
             echo "  --cleanup-node   Delete the Node.js console's code and its disabled service"
             echo "                   after an upgrade"
-            echo "  --binary FILE    Install this betterdesk-server binary instead of the release"
+            echo "  --binary FILE    Install this neodesk-server binary instead of the release"
             echo "  --channel C      Release channel: 'stable' (default, the newest release) or"
             echo "                   'dev' (the development build); kept for later updates. Without"
             echo "                   it, a repository with no stable release yet installs 'dev'"
-            echo "  --from-source    Build betterdesk-server from this checkout (needs Go, and"
+            echo "  --from-source    Build neodesk-server from this checkout (needs Go, and"
             echo "                   Node.js unless web-ui/build exists)"
             echo "  --uninstall      Stop and remove the service, after a backup; the data stays,"
             echo "                   and the end lists what is left on the machine"
-            echo "  --purge          With --uninstall, also remove the data, keys and the betterdesk command"
+            echo "  --purge          With --uninstall, also remove the data, keys and the neodesk command"
             echo "  --check-permissions  Report panel/update/config/restart capabilities"
-            echo "  --repair-permissions Repair BetterDesk ownership and service access"
+            echo "  --repair-permissions Repair NeoDesk ownership and service access"
             echo "  --set-config K=V Apply an allowlisted .env setting (repeatable)"
             echo "  --skip-verify    Skip the SHA-256 and signature checks of a downloaded binary"
             echo "  --minimal        Install the server with its web console off"
@@ -234,9 +234,9 @@ while [[ $# -gt 0 ]]; do
             echo "Environment variables:"
             echo "  USE_POSTGRESQL=true     Use PostgreSQL"
             echo "  POSTGRESQL_URI=...      PostgreSQL connection URI"
-            echo "  POSTGRESQL_USER=...     PostgreSQL username (default: betterdesk)"
+            echo "  POSTGRESQL_USER=...     PostgreSQL username (default: neodesk)"
             echo "  POSTGRESQL_PASS=...     PostgreSQL password (auto-generated if empty)"
-            echo "  POSTGRESQL_DB=...       PostgreSQL database (default: betterdesk)"
+            echo "  POSTGRESQL_DB=...       PostgreSQL database (default: neodesk)"
             echo "  POSTGRESQL_HOST=...     PostgreSQL host (default: localhost)"
             echo "  POSTGRESQL_PORT=...     PostgreSQL port (default: 5432)"
             echo "  RELAY_MODE=auto|local|public  Relay IP selection mode (default: auto)"
@@ -249,12 +249,12 @@ while [[ $# -gt 0 ]]; do
             echo "                          manifest.sig and the binaries)"
             echo "  SSL_DOMAIN=...          Host name for the self-signed certificate and the console's address"
             echo "  RUSTDESK_PATH=... / CONSOLE_PATH=... / BACKUP_DIR=...  Install folders"
-            echo "                          (default /opt/betterdesk, /opt/BetterDeskConsole, /opt/rustdesk-backups)"
+            echo "                          (default /opt/neodesk, /opt/NeoDeskConsole, /opt/rustdesk-backups)"
             echo "  GO_API_PORT=21114 / CLIENT_API_PORT=21121  The server's own API port and the client API port"
             echo "  SIGNAL_RATE_LIMIT_PER_IP=20  Signal registrations per address and minute (0: no limit)"
             echo ""
-            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/betterdesk.sh | sudo bash"
-            echo "Later:                     sudo betterdesk (menu), sudo betterdesk --update, sudo betterdesk --uninstall"
+            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/neodesk.sh | sudo bash"
+            echo "Later:                     sudo neodesk (menu), sudo neodesk --update, sudo neodesk --uninstall"
             exit 0
             ;;
         *)
@@ -265,9 +265,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Go server source directory
-GO_SERVER_SOURCE="$SCRIPT_DIR/betterdesk-server"
+GO_SERVER_SOURCE="$SCRIPT_DIR/neodesk-server"
 
-# Minimum Go version required for compilation (must match betterdesk-server/go.mod).
+# Minimum Go version required for compilation (must match neodesk-server/go.mod).
 GO_MIN_VERSION="1.26.11"
 # Point release downloaded when system Go is missing/outdated (must exist on go.dev/dl).
 GO_DOWNLOAD_VERSION="1.26.11"
@@ -284,13 +284,13 @@ GO_COMMAND_KILL_AFTER="${GO_COMMAND_KILL_AFTER:-15}"
 GO_MODULE_PREFLIGHT_TIMEOUT="${GO_MODULE_PREFLIGHT_TIMEOUT:-20}"
 # Set when preflight detects IPv4 OK but IPv6 broken (common on GCP VMs).
 GO_FORCE_IPV4=0
-# Toolchain for native compile (override with BETTERDESK_GOTOOLCHAIN; default local).
-BETTERDESK_GOTOOLCHAIN="${BETTERDESK_GOTOOLCHAIN:-local}"
+# Toolchain for native compile (override with NEODESK_GOTOOLCHAIN; default local).
+NEODESK_GOTOOLCHAIN="${NEODESK_GOTOOLCHAIN:-local}"
 
 # Default paths (can be overridden by environment variables)
 RUSTDESK_PATH="${RUSTDESK_PATH:-}"
 CONSOLE_PATH="${CONSOLE_PATH:-}"
-CONSOLE_TYPE="none"  # none, go (the console in betterdesk-server), nodejs (the old console)
+CONSOLE_TYPE="none"  # none, go (the console in neodesk-server), nodejs (the old console)
 BACKUP_DIR="${BACKUP_DIR:-/opt/rustdesk-backups}"
 
 # API: the server's own API on GO_API_PORT (21114). The web console inside the
@@ -303,19 +303,19 @@ STORE_ADMIN_CREDENTIALS="${STORE_ADMIN_CREDENTIALS:-false}"
 
 # The one service. It runs as SERVICE_USER, so the binary lives in the
 # server folder, which that user may write: the in-app updater replaces the
-# binary by rename and keeps the old one as betterdesk-server.prev.
-SERVER_SERVICE="betterdesk-server"
-SERVER_UNIT="/etc/systemd/system/betterdesk-server.service"
+# binary by rename and keeps the old one as neodesk-server.prev.
+SERVER_SERVICE="neodesk-server"
+SERVER_UNIT="/etc/systemd/system/neodesk-server.service"
 # This installer as a command, for updates and the uninstall later.
-MANAGER_COMMAND="/usr/local/sbin/betterdesk"
-SERVICE_USER="betterdesk"
+MANAGER_COMMAND="/usr/local/sbin/neodesk"
+SERVICE_USER="neodesk"
 # What the installs with the Node.js console had besides the server: the
 # console's unit (disabled and kept for one release after the upgrade), the
 # sudoers rule and the root helper the console called.
-LEGACY_CONSOLE_SERVICE="betterdesk-console"
-LEGACY_CONSOLE_UNIT="/etc/systemd/system/betterdesk-console.service"
-LEGACY_SUDOERS_FILE="/etc/sudoers.d/betterdesk-console-updates"
-LEGACY_BROKER_DIR="/usr/local/libexec/betterdesk"
+LEGACY_CONSOLE_SERVICE="neodesk-console"
+LEGACY_CONSOLE_UNIT="/etc/systemd/system/neodesk-console.service"
+LEGACY_SUDOERS_FILE="/etc/sudoers.d/neodesk-console-updates"
+LEGACY_BROKER_DIR="/usr/local/libexec/neodesk"
 # The record of an upgrade from the Node.js console, in the console's data
 # folder: {from, to, at, backup}. The rollback reads it.
 GO_UPGRADE_RECORD=".go-upgrade.json"
@@ -324,15 +324,15 @@ GO_UPGRADE_RECORD=".go-upgrade.json"
 USE_POSTGRESQL="${USE_POSTGRESQL:-false}"  # true = PostgreSQL, false = SQLite
 POSTGRESQL_URI="${POSTGRESQL_URI:-}"       # postgres://user:pass@host:5432/dbname
 POSTGRESQL_DB_CREATED=false                # this run created the (empty) database
-POSTGRESQL_USER="${POSTGRESQL_USER:-betterdesk}"
+POSTGRESQL_USER="${POSTGRESQL_USER:-neodesk}"
 POSTGRESQL_PASS="${POSTGRESQL_PASS:-}"
-POSTGRESQL_DB="${POSTGRESQL_DB:-betterdesk}"
+POSTGRESQL_DB="${POSTGRESQL_DB:-neodesk}"
 POSTGRESQL_HOST="${POSTGRESQL_HOST:-localhost}"
 POSTGRESQL_PORT="${POSTGRESQL_PORT:-5432}"
 
 # Common installation paths to search
 COMMON_RUSTDESK_PATHS=(
-    "/opt/betterdesk"
+    "/opt/neodesk"
     "/opt/rustdesk"
     "/usr/local/rustdesk"
     "/var/lib/rustdesk"
@@ -341,10 +341,10 @@ COMMON_RUSTDESK_PATHS=(
 )
 
 COMMON_CONSOLE_PATHS=(
-    "/opt/BetterDeskConsole"
-    "/opt/betterdesk"
-    "/var/lib/betterdesk"
-    "$HOME/BetterDeskConsole"
+    "/opt/NeoDeskConsole"
+    "/opt/neodesk"
+    "/var/lib/neodesk"
+    "$HOME/NeoDeskConsole"
 )
 
 # Colours: 24-bit where the terminal says it has them (COLORTERM), else the
@@ -385,10 +385,10 @@ else
     WHITE='' NC='' BOLD='' DIM=''
 fi
 
-# The BetterDesk mark: the logo's square (b), circle (g) and their overlap
+# The NeoDesk mark: the logo's square (b), circle (g) and their overlap
 # (t) on a 12 x 12 grid, sampled from its geometry. Two rows make one line
 # of half blocks.
-BD_MARK_ROWS=(
+ND_MARK_ROWS=(
     '......gggg..'
     '....ggggggg.'
     '....gggggggg'
@@ -404,7 +404,7 @@ BD_MARK_ROWS=(
 )
 
 # Logging
-LOG_FILE="/tmp/betterdesk_$(date +%Y%m%d_%H%M%S).log"
+LOG_FILE="/tmp/neodesk_$(date +%Y%m%d_%H%M%S).log"
 
 #===============================================================================
 # Helper Functions
@@ -457,21 +457,21 @@ mark_line() {
     REPLY="$line${label:+   $label}"
 }
 
-# print_header: clears the terminal and shows the BetterDesk mark beside
+# print_header: clears the terminal and shows the NeoDesk mark beside
 # the name, what this script is and its version. Without colour (no
 # terminal, NO_COLOR) it is one plain line.
 print_header() {
     local title="Server installer ${VERSION}" line
     if [ -z "$COLOR_DEPTH" ]; then
-        printf 'BetterDesk %s\n' "$title"
+        printf 'NeoDesk %s\n' "$title"
         return 0
     fi
     # Without TERM, clear fails; the run goes on
     clear 2>/dev/null || true
-    local labels=('' '' "${BOLD}BetterDesk${NC}" "$title" '' '')
+    local labels=('' '' "${BOLD}NeoDesk${NC}" "$title" '' '')
     printf '\n'
     for ((line = 0; line < 6; line++)); do
-        mark_line "${BD_MARK_ROWS[line * 2]}" "${BD_MARK_ROWS[line * 2 + 1]}" "${labels[line]}"
+        mark_line "${ND_MARK_ROWS[line * 2]}" "${ND_MARK_ROWS[line * 2 + 1]}" "${labels[line]}"
         printf '%b\n' "$REPLY"
     done
     printf '\n'
@@ -489,7 +489,7 @@ print_step() { echo -e "${BOLD}▶${NC} $1"; log "STEP: $1"; }
 
 # The server binary of this install.
 server_binary_path() {
-    printf '%s\n' "$RUSTDESK_PATH/betterdesk-server"
+    printf '%s\n' "$RUSTDESK_PATH/neodesk-server"
 }
 
 # True when the installed binary carries the commands of the release with
@@ -529,11 +529,11 @@ server_cmd() {
         return 1
     fi
     if [ "$as_service" = true ]; then
-        run_as_service_user env BETTERDESK_ENV_FILE="$CONSOLE_PATH/.env" BETTERDESK_CONSOLE_PATH="$CONSOLE_PATH" \
-            BETTERDESK_PATH="$RUSTDESK_PATH" "$bin" "$@"
+        run_as_service_user env NEODESK_ENV_FILE="$CONSOLE_PATH/.env" NEODESK_CONSOLE_PATH="$CONSOLE_PATH" \
+            NEODESK_PATH="$RUSTDESK_PATH" "$bin" "$@"
     else
-        BETTERDESK_ENV_FILE="$CONSOLE_PATH/.env" BETTERDESK_CONSOLE_PATH="$CONSOLE_PATH" \
-            BETTERDESK_PATH="$RUSTDESK_PATH" "$bin" "$@"
+        NEODESK_ENV_FILE="$CONSOLE_PATH/.env" NEODESK_CONSOLE_PATH="$CONSOLE_PATH" \
+            NEODESK_PATH="$RUSTDESK_PATH" "$bin" "$@"
     fi
 }
 
@@ -543,19 +543,19 @@ check_management_capabilities() {
             print_info "Management capabilities are checked after the upgrade to the server with its console"
             return 0
         fi
-        print_error "Management capability check needs an installed betterdesk-server"
+        print_error "Management capability check needs an installed neodesk-server"
         return 1
     fi
-    print_step "Checking BetterDesk management capabilities..."
+    print_step "Checking NeoDesk management capabilities..."
     server_cmd --as-service config check || {
         print_warning "One or more management capabilities are blocked; see the report above"
         return 1
     }
-    print_success "BetterDesk management capabilities are ready"
+    print_success "NeoDesk management capabilities are ready"
 }
 
 repair_management_permissions() {
-    print_step "Repairing BetterDesk management permissions..."
+    print_step "Repairing NeoDesk management permissions..."
     ensure_service_user || true
     if [ -d "$CONSOLE_PATH" ]; then
         own_by_service_user "$CONSOLE_PATH"
@@ -574,7 +574,7 @@ apply_managed_config() {
         print_error "No allowlisted configuration changes supplied"
         return 1
     fi
-    print_step "Applying allowlisted BetterDesk configuration..."
+    print_step "Applying allowlisted NeoDesk configuration..."
     server_cmd --as-service config set "${MANAGED_CONFIG_CHANGES[@]}" || return 1
     systemctl daemon-reload 2>/dev/null || true
     systemctl restart "$SERVER_SERVICE" 2>/dev/null || true
@@ -595,7 +595,7 @@ configure_management() {
         $'Back\tReturn to the main menu'
     )
     local _menu_returns=( 1 2 3 0 )
-    menu_choose "BetterDesk Management" "Only allowlisted BetterDesk operations are available"
+    menu_choose "NeoDesk Management" "Only allowlisted NeoDesk operations are available"
     case "${MENU_CHOICE:-0}" in
         1)
             repair_management_permissions
@@ -650,20 +650,20 @@ default_to_auto_without_terminal() {
     fi
 }
 
-# install_manager_command: this installer as the command betterdesk, for
+# install_manager_command: this installer as the command neodesk, for
 # updates, repairs and the uninstall later. Run from the command itself
 # (an update), it takes the newest one of INSTALLER_REF; piped from curl,
 # it fetches itself from the same place.
 install_manager_command() {
-    local self="$BETTERDESK_SELF" tmp
+    local self="$NEODESK_SELF" tmp
     tmp=$(mktemp) || return 0
     if [ -n "$self" ] && [ -f "$self" ] && [ "$(readlink -f "$self")" != "$(readlink -f "$MANAGER_COMMAND" 2>/dev/null)" ]; then
         cp "$self" "$tmp"
     elif ! curl -fsSL --retry 2 --connect-timeout 20 -o "$tmp" \
-        "https://raw.githubusercontent.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/${INSTALLER_REF}/betterdesk.sh" \
-        || ! grep -q '^BETTERDESK_SH_REVISION=' "$tmp"; then
+        "https://raw.githubusercontent.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/${INSTALLER_REF}/neodesk.sh" \
+        || ! grep -q '^NEODESK_SH_REVISION=' "$tmp"; then
         rm -f "$tmp"
-        [ -x "$MANAGER_COMMAND" ] || print_warning "Could not save the betterdesk command; run this installer again for updates"
+        [ -x "$MANAGER_COMMAND" ] || print_warning "Could not save the neodesk command; run this installer again for updates"
         return 0
     fi
     mkdir -p "$(dirname "$MANAGER_COMMAND")"
@@ -681,7 +681,7 @@ TUI_RESULT=""
 
 # Detect whether the modern arrow-key interface can be used.
 tui_available() {
-    [ "${BETTERDESK_CLASSIC_MENU:-0}" = "1" ] && return 1
+    [ "${NEODESK_CLASSIC_MENU:-0}" = "1" ] && return 1
     [ -t 0 ] && [ -t 1 ] || return 1
     return 0
 }
@@ -1008,14 +1008,14 @@ ensure_postgresql_local_hba_rules() {
         return 0
     fi
 
-    local backup_file="${hba_file}.betterdesk-backup-$(date +%Y%m%d%H%M%S)"
+    local backup_file="${hba_file}.neodesk-backup-$(date +%Y%m%d%H%M%S)"
     if ! sudo cp -p "$hba_file" "$backup_file" || ! sudo chmod 600 "$backup_file"; then
         print_error "Could not back up PostgreSQL pg_hba.conf before editing"
         return 1
     fi
 
     local temp_file
-    if ! temp_file=$(mktemp "${TMPDIR:-/tmp}/betterdesk-pg-hba.XXXXXX"); then
+    if ! temp_file=$(mktemp "${TMPDIR:-/tmp}/neodesk-pg-hba.XXXXXX"); then
         print_error "Could not create a temporary PostgreSQL pg_hba.conf"
         return 1
     fi
@@ -1073,7 +1073,7 @@ ensure_postgresql_local_hba_rules() {
         return 1
     fi
 
-    print_success "Configured PostgreSQL localhost authentication for BetterDesk"
+    print_success "Configured PostgreSQL localhost authentication for NeoDesk"
     return 0
 }
 
@@ -1100,26 +1100,26 @@ wait_for_service_stop() {
 }
 
 # Kill any stale processes that might be holding files/ports
-# Free BetterDesk ports when systemd stop left orphan listeners (#219).
+# Free NeoDesk ports when systemd stop left orphan listeners (#219).
 # port_listener_pids PORT: the processes listening on a TCP port.
 port_listener_pids() {
     ss -ltnpH "sport = :$1" 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u
 }
 
-# is_betterdesk_process PID: the server, the old Rust servers, or the old
+# is_neodesk_process PID: the server, the old Rust servers, or the old
 # Node.js console of this install.
-is_betterdesk_process() {
+is_neodesk_process() {
     local comm args
     comm=$(cat "/proc/$1/comm" 2>/dev/null) || return 1
     args=$(tr '\0' ' ' < "/proc/$1/cmdline" 2>/dev/null)
     case "$comm" in
-        betterdesk-serv*|hbbs|hbbr|hbbs-v8-api) return 0 ;;
+        neodesk-serv*|hbbs|hbbr|hbbs-v8-api) return 0 ;;
         node) [[ "$args" == *"$CONSOLE_PATH"* || "$args" == *"server.js"* ]] && return 0 ;;
     esac
     return 1
 }
 
-# kill_processes_holding_ports: BetterDesk's own processes left on its
+# kill_processes_holding_ports: NeoDesk's own processes left on its
 # ports are stopped (#219). A port another program holds is named in
 # FOREIGN_PORT_HOLDERS and that program is left alone.
 kill_processes_holding_ports() {
@@ -1128,8 +1128,8 @@ kill_processes_holding_ports() {
     for port in $(signal_port) $(relay_port) $(resolve_panel_http_port) $(resolve_panel_https_port); do
         [ "$port" = 0 ] && continue
         for pid in $(port_listener_pids "$port"); do
-            if is_betterdesk_process "$pid"; then
-                print_warning "Port ${port} is still held by an old BetterDesk process (pid $pid): stopping it (#219)"
+            if is_neodesk_process "$pid"; then
+                print_warning "Port ${port} is still held by an old NeoDesk process (pid $pid): stopping it (#219)"
                 kill -TERM "$pid" 2>/dev/null || true
                 sleep 1
                 kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null
@@ -1140,8 +1140,8 @@ kill_processes_holding_ports() {
         done
     done
     if [ -n "$FOREIGN_PORT_HOLDERS" ]; then
-        print_error "Ports BetterDesk needs are taken by other programs: $FOREIGN_PORT_HOLDERS"
-        print_info "Stop those programs, or give BetterDesk other ports: SIGNAL_PORT, RELAY_PORT, CONSOLE_PORT or HTTPS_PORT in $CONSOLE_PATH/.env"
+        print_error "Ports NeoDesk needs are taken by other programs: $FOREIGN_PORT_HOLDERS"
+        print_info "Stop those programs, or give NeoDesk other ports: SIGNAL_PORT, RELAY_PORT, CONSOLE_PORT or HTTPS_PORT in $CONSOLE_PATH/.env"
     fi
     return 0
 }
@@ -1150,7 +1150,7 @@ kill_stale_processes() {
     local process_name="$1"
     # The program itself, as the first word of the command line: a process
     # that only names it in its arguments (this installer run with
-    # --binary .../betterdesk-server-linux-amd64) is left alone
+    # --binary .../neodesk-server-linux-amd64) is left alone
     local pattern="^([^ ]*/)?${process_name}( |$)"
 
     # Find and kill any remaining processes
@@ -1216,8 +1216,8 @@ _hint_panel_privileged_port_mismatch() {
 
     if [ "$expected_port" = "443" ] && _tcp_port_is_listening 5443; then
         print_info "  Panel is listening on :5443 instead of configured :443"
-        print_info "  → Run Repair → Repair permissions (adds CAP_NET_BIND_SERVICE), then restart betterdesk-server"
-        print_info "  → Or set HTTPS_PORT=5443 and use a reverse proxy on :443 (https://betterde.sk/docs/operations/reverse-proxy-tls)"
+        print_info "  → Run Repair → Repair permissions (adds CAP_NET_BIND_SERVICE), then restart neodesk-server"
+        print_info "  → Or set HTTPS_PORT=5443 and use a reverse proxy on :443 (https://neode.sk/docs/operations/reverse-proxy-tls)"
         return 0
     fi
 
@@ -1273,14 +1273,14 @@ show_service_logs() {
     echo ""
 }
 
-# Gracefully stop all BetterDesk services with proper cleanup
+# Gracefully stop all NeoDesk services with proper cleanup
 graceful_stop_services() {
     print_step "Stopping services gracefully..."
     
     # New Go services (primary)
-    local services=("betterdesk-console" "betterdesk-server")
+    local services=("neodesk-console" "neodesk-server")
     # Legacy services (for migration)
-    local legacy_services=("betterdesk" "rustdesksignal" "rustdeskrelay" "betterdesk-api" "betterdesk-go")
+    local legacy_services=("neodesk" "rustdesksignal" "rustdeskrelay" "neodesk-api" "neodesk-go")
     
     # Stop current services
     for service in "${services[@]}"; do
@@ -1304,7 +1304,7 @@ graceful_stop_services() {
     done
     
     # Kill any stale processes (Go and legacy Rust)
-    kill_stale_processes "betterdesk-server"
+    kill_stale_processes "neodesk-server"
     kill_stale_processes "hbbs"
     kill_stale_processes "hbbr"
     kill_processes_holding_ports
@@ -1356,9 +1356,9 @@ set_panel_http_port() {
     fi
 }
 
-# Keep betterdesk-console.service Environment=PORT/HTTPS_PORT aligned with .env (#219).
+# Keep neodesk-console.service Environment=PORT/HTTPS_PORT aligned with .env (#219).
 _sync_console_panel_ports_to_systemd() {
-    local svc_file="/etc/systemd/system/betterdesk-console.service"
+    local svc_file="/etc/systemd/system/neodesk-console.service"
     local env_file="${CONSOLE_PATH}/.env"
     local http_port https_port changed=0
 
@@ -1435,7 +1435,7 @@ infer_tls_mode_from_cert() {
 # Resolve Let's Encrypt live/ dir from .env, paths, symlinks, LE_CERT_DOMAIN, or cert SAN (#219).
 resolve_le_cert_live_dir() {
     local env_file="${1:-${CONSOLE_PATH}/.env}"
-    local cert_hint="${2:-$RUSTDESK_PATH/ssl/betterdesk.crt}"
+    local cert_hint="${2:-$RUSTDESK_PATH/ssl/neodesk.crt}"
     local ssl_key_env ssl_cert_env le_live_dir le_domain dns_name
 
     le_live_dir=$(grep -m1 '^LE_CERT_LIVE_DIR=' "$env_file" 2>/dev/null | cut -d= -f2- || true)
@@ -1491,7 +1491,7 @@ _safe_cp_tls_file() {
             fi
         fi
     fi
-    tmp="${dest}.betterdesk.$$.tmp"
+    tmp="${dest}.neodesk.$$.tmp"
     cp -L "$src" "$tmp" || return 1
     mv -f "$tmp" "$dest" || { rm -f "$tmp"; return 1; }
     return 0
@@ -1540,13 +1540,13 @@ ensure_go_server_signal_ports() {
 }
 
 # Copy TLS material into $RUSTDESK_PATH/ssl/ as real files (not symlinks) so the
-# betterdesk console user can read them. LE live dirs are root-only (#219).
+# neodesk console user can read them. LE live dirs are root-only (#219).
 deploy_ssl_material_to_rustdesk_dir() {
     local cert_src="$1"
     local key_src="$2"
     local le_live_dir="${3:-}"
     local ssl_dir="$RUSTDESK_PATH/ssl"
-    local svc_user="betterdesk"
+    local svc_user="neodesk"
     local env_file="${CONSOLE_PATH}/.env"
 
     if [ ! -f "$cert_src" ] || [ ! -f "$key_src" ]; then
@@ -1555,19 +1555,19 @@ deploy_ssl_material_to_rustdesk_dir() {
     fi
 
     mkdir -p "$ssl_dir"
-    if ! _safe_cp_tls_file "$cert_src" "$ssl_dir/betterdesk.crt"; then
-        print_error "Failed to deploy certificate to $ssl_dir/betterdesk.crt"
+    if ! _safe_cp_tls_file "$cert_src" "$ssl_dir/neodesk.crt"; then
+        print_error "Failed to deploy certificate to $ssl_dir/neodesk.crt"
         return 1
     fi
-    if ! _safe_cp_tls_file "$key_src" "$ssl_dir/betterdesk.key"; then
-        print_error "Failed to deploy private key to $ssl_dir/betterdesk.key"
+    if ! _safe_cp_tls_file "$key_src" "$ssl_dir/neodesk.key"; then
+        print_error "Failed to deploy private key to $ssl_dir/neodesk.key"
         return 1
     fi
 
     if id "$svc_user" &>/dev/null; then
-        chown root:"$svc_user" "$ssl_dir/betterdesk.crt" "$ssl_dir/betterdesk.key" 2>/dev/null || true
+        chown root:"$svc_user" "$ssl_dir/neodesk.crt" "$ssl_dir/neodesk.key" 2>/dev/null || true
     fi
-    chmod 640 "$ssl_dir/betterdesk.crt" "$ssl_dir/betterdesk.key" 2>/dev/null || true
+    chmod 640 "$ssl_dir/neodesk.crt" "$ssl_dir/neodesk.key" 2>/dev/null || true
 
     if [ -n "$le_live_dir" ]; then
         _upsert_env_line "$env_file" LE_CERT_LIVE_DIR "$le_live_dir"
@@ -1578,11 +1578,11 @@ deploy_ssl_material_to_rustdesk_dir() {
     return 0
 }
 
-# certbot deploy hook: re-copy renewed LE certs then restart BetterDesk services.
+# certbot deploy hook: re-copy renewed LE certs then restart NeoDesk services.
 install_le_certbot_renew_hook() {
     local hook_dir="/etc/letsencrypt/renewal-hooks/deploy"
-    local hook="$hook_dir/betterdesk-reload.sh"
-    local conf="$hook_dir/betterdesk-reload.conf"
+    local hook="$hook_dir/neodesk-reload.sh"
+    local conf="$hook_dir/neodesk-reload.conf"
     mkdir -p "$hook_dir"
 
     cat > "$conf" <<EOF
@@ -1594,26 +1594,26 @@ EOF
     cat > "$hook" <<'HOOK'
 #!/bin/bash
 set -euo pipefail
-CONF="/etc/letsencrypt/renewal-hooks/deploy/betterdesk-reload.conf"
+CONF="/etc/letsencrypt/renewal-hooks/deploy/neodesk-reload.conf"
 [ -f "$CONF" ] && . "$CONF"
 RUSTDESK_PATH="${RUSTDESK_PATH:-/opt/rustdesk}"
-CONSOLE_PATH="${CONSOLE_PATH:-/opt/betterdesk}"
+CONSOLE_PATH="${CONSOLE_PATH:-/opt/neodesk}"
 ENV_FILE="$CONSOLE_PATH/.env"
 SSL_DIR="$RUSTDESK_PATH/ssl"
-SVC_USER="betterdesk"
+SVC_USER="neodesk"
 
 le_live_dir=""
 if [ -f "$ENV_FILE" ]; then
     le_live_dir=$(grep -m1 '^LE_CERT_LIVE_DIR=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
 fi
 if [ -z "$le_live_dir" ] || [ ! -d "$le_live_dir" ]; then
-    echo "betterdesk-reload: LE_CERT_LIVE_DIR missing or invalid — skipping cert copy" >&2
-    systemctl restart betterdesk-server 2>/dev/null || true
+    echo "neodesk-reload: LE_CERT_LIVE_DIR missing or invalid — skipping cert copy" >&2
+    systemctl restart neodesk-server 2>/dev/null || true
     exit 0
 fi
 
 mkdir -p "$SSL_DIR"
-for pair in "fullchain.pem:betterdesk.crt" "privkey.pem:betterdesk.key"; do
+for pair in "fullchain.pem:neodesk.crt" "privkey.pem:neodesk.key"; do
     src_name="${pair%%:*}"
     dest_name="${pair##*:}"
     src="$le_live_dir/$src_name"
@@ -1623,15 +1623,15 @@ for pair in "fullchain.pem:betterdesk.crt" "privkey.pem:betterdesk.key"; do
         dest_real=$(readlink -f "$dest" 2>/dev/null || echo "$dest")
         [ "$src_real" = "$dest_real" ] && rm -f "$dest"
     fi
-    tmp="${dest}.betterdesk.$$.tmp"
+    tmp="${dest}.neodesk.$$.tmp"
     cp -L "$src" "$tmp"
     mv -f "$tmp" "$dest"
 done
 if id "$SVC_USER" &>/dev/null; then
-    chown root:"$SVC_USER" "$SSL_DIR/betterdesk.crt" "$SSL_DIR/betterdesk.key"
+    chown root:"$SVC_USER" "$SSL_DIR/neodesk.crt" "$SSL_DIR/neodesk.key"
 fi
-chmod 640 "$SSL_DIR/betterdesk.crt" "$SSL_DIR/betterdesk.key"
-systemctl restart betterdesk-server 2>/dev/null || true
+chmod 640 "$SSL_DIR/neodesk.crt" "$SSL_DIR/neodesk.key"
+systemctl restart neodesk-server 2>/dev/null || true
 HOOK
     chmod +x "$hook"
 }
@@ -1639,12 +1639,12 @@ HOOK
 # Repair installs that symlinked LE certs into ssl/ (console user cannot read privkey).
 maybe_repair_le_ssl_symlinks() {
     local ssl_dir="$RUSTDESK_PATH/ssl"
-    local crt="$ssl_dir/betterdesk.crt"
-    local key="$ssl_dir/betterdesk.key"
+    local crt="$ssl_dir/neodesk.crt"
+    local key="$ssl_dir/neodesk.key"
     local env_file="${CONSOLE_PATH}/.env"
     local needs_redeploy="no"
     local ssl_key_env ssl_cert_env
-    local console_user="betterdesk"
+    local console_user="neodesk"
 
     for f in "$crt" "$key"; do
         if [ -L "$f" ]; then
@@ -1690,7 +1690,7 @@ maybe_repair_le_ssl_symlinks() {
 # When HTTPS uses standard port 443, align HTTP redirect listener to :80 (#219).
 _ensure_standard_https_redirect_ports() {
     local env_file="${CONSOLE_PATH}/.env"
-    local svc_file="/etc/systemd/system/betterdesk-console.service"
+    local svc_file="/etc/systemd/system/neodesk-console.service"
     local https_port http_port https_enabled changed=0
     local svc_port svc_https
 
@@ -1768,13 +1768,13 @@ repair_https_stuck_state() {
 _sync_deployed_ssl_paths_to_env() {
     local ssl_dir="$RUSTDESK_PATH/ssl"
     local env_file="${CONSOLE_PATH}/.env"
-    local svc_file="/etc/systemd/system/betterdesk-console.service"
+    local svc_file="/etc/systemd/system/neodesk-console.service"
 
-    _upsert_env_line "$env_file" SSL_CERT_PATH "$ssl_dir/betterdesk.crt"
-    _upsert_env_line "$env_file" SSL_KEY_PATH "$ssl_dir/betterdesk.key"
+    _upsert_env_line "$env_file" SSL_CERT_PATH "$ssl_dir/neodesk.crt"
+    _upsert_env_line "$env_file" SSL_KEY_PATH "$ssl_dir/neodesk.key"
     if [ -f "$svc_file" ]; then
-        _upsert_systemd_env "$svc_file" SSL_CERT_PATH "$ssl_dir/betterdesk.crt"
-        _upsert_systemd_env "$svc_file" SSL_KEY_PATH "$ssl_dir/betterdesk.key"
+        _upsert_systemd_env "$svc_file" SSL_CERT_PATH "$ssl_dir/neodesk.crt"
+        _upsert_systemd_env "$svc_file" SSL_KEY_PATH "$ssl_dir/neodesk.key"
         systemctl daemon-reload 2>/dev/null || true
     fi
 }
@@ -1782,7 +1782,7 @@ _sync_deployed_ssl_paths_to_env() {
 # When HTTPS is enabled, ensure the console user can read the TLS private key (#219).
 # Re-copies from LE_CERT_LIVE_DIR when symlinks, unreadable keys, or /etc/letsencrypt paths remain.
 ensure_console_tls_material_readable() {
-    local https_enabled console_user="betterdesk"
+    local https_enabled console_user="neodesk"
     local env_file="${CONSOLE_PATH}/.env"
     local ssl_dir="$RUSTDESK_PATH/ssl"
     local ssl_key_path ssl_cert_path
@@ -1797,7 +1797,7 @@ ensure_console_tls_material_readable() {
     ssl_key_path=$(read_effective_console_setting SSL_KEY_PATH "")
     ssl_cert_path=$(read_effective_console_setting SSL_CERT_PATH "")
     if [ -z "$ssl_key_path" ]; then
-        ssl_key_path="$ssl_dir/betterdesk.key"
+        ssl_key_path="$ssl_dir/neodesk.key"
     fi
 
     if id "$console_user" &>/dev/null && [ -e "$ssl_key_path" ]; then
@@ -1816,15 +1816,15 @@ ensure_console_tls_material_readable() {
         print_info "Re-deploying Let's Encrypt certificate for console user (#219)"
         if deploy_ssl_material_to_rustdesk_dir "$le_live_dir/fullchain.pem" "$le_live_dir/privkey.pem" "$le_live_dir"; then
             _sync_deployed_ssl_paths_to_env
-            if id "$console_user" &>/dev/null && runuser -u "$console_user" -- test -r "$ssl_dir/betterdesk.key" 2>/dev/null; then
+            if id "$console_user" &>/dev/null && runuser -u "$console_user" -- test -r "$ssl_dir/neodesk.key" 2>/dev/null; then
                 return 0
             fi
         fi
     fi
 
-    print_warning "HTTPS is enabled but console user cannot read TLS key (${ssl_key_path:-$ssl_dir/betterdesk.key})"
-    print_info "  Check: runuser -u betterdesk -- test -r ${ssl_key_path:-$ssl_dir/betterdesk.key}"
-    print_info "  Logs:  journalctl -u betterdesk-server -n 30 --no-pager"
+    print_warning "HTTPS is enabled but console user cannot read TLS key (${ssl_key_path:-$ssl_dir/neodesk.key})"
+    print_info "  Check: runuser -u neodesk -- test -r ${ssl_key_path:-$ssl_dir/neodesk.key}"
+    print_info "  Logs:  journalctl -u neodesk-server -n 30 --no-pager"
     return 1
 }
 
@@ -1854,7 +1854,7 @@ _wait_for_http_code() {
     return 1
 }
 
-# Sync .env + betterdesk-console.service for HTTP or HTTPS panel mode (#219).
+# Sync .env + neodesk-console.service for HTTP or HTTPS panel mode (#219).
 apply_console_protocol_mode() {
     local mode="$1"
     local cert_crt="${2:-}"
@@ -1862,7 +1862,7 @@ apply_console_protocol_mode() {
     local api_tls="${4:-false}"
     local allow_self_signed="${5:-true}"
     local env_file="${CONSOLE_PATH}/.env"
-    local svc_file="/etc/systemd/system/betterdesk-console.service"
+    local svc_file="/etc/systemd/system/neodesk-console.service"
     local go_port="${GO_API_PORT:-21114}"
 
     if [ "$mode" = "http" ]; then
@@ -1872,7 +1872,7 @@ apply_console_protocol_mode() {
         _upsert_env_line "$env_file" HTTP_REDIRECT_HTTPS false
         _upsert_env_line "$env_file" TRUST_PROXY false
         _upsert_env_line "$env_file" HBBS_API_URL "http://localhost:${go_port}/api"
-        _upsert_env_line "$env_file" BETTERDESK_API_URL "http://localhost:${go_port}/api"
+        _upsert_env_line "$env_file" NEODESK_API_URL "http://localhost:${go_port}/api"
         _remove_env_line "$env_file" NODE_EXTRA_CA_CERTS
         _remove_env_line "$env_file" ENTERPRISE_TLS
 
@@ -1883,7 +1883,7 @@ apply_console_protocol_mode() {
             _upsert_systemd_env "$svc_file" HTTP_REDIRECT_HTTPS false
             _upsert_systemd_env "$svc_file" TRUST_PROXY false
             sed -i "s|Environment=HBBS_API_URL=https://localhost|Environment=HBBS_API_URL=http://localhost|" "$svc_file"
-            sed -i "s|Environment=BETTERDESK_API_URL=https://localhost|Environment=BETTERDESK_API_URL=http://localhost|" "$svc_file"
+            sed -i "s|Environment=NEODESK_API_URL=https://localhost|Environment=NEODESK_API_URL=http://localhost|" "$svc_file"
             _remove_systemd_env "$svc_file" NODE_EXTRA_CA_CERTS
             _remove_systemd_env "$svc_file" ENTERPRISE_TLS
         fi
@@ -1900,7 +1900,7 @@ apply_console_protocol_mode() {
         _upsert_env_line "$env_file" RUSTDESK_API_TLS "$api_tls"
         _upsert_env_line "$env_file" ALLOW_SELF_SIGNED_CERTS "$allow_self_signed"
         _upsert_env_line "$env_file" HBBS_API_URL "http://localhost:${go_port}/api"
-        _upsert_env_line "$env_file" BETTERDESK_API_URL "http://localhost:${go_port}/api"
+        _upsert_env_line "$env_file" NEODESK_API_URL "http://localhost:${go_port}/api"
         # Only the Node.js console read NODE_EXTRA_CA_CERTS
         _remove_env_line "$env_file" NODE_EXTRA_CA_CERTS
 
@@ -1913,7 +1913,7 @@ apply_console_protocol_mode() {
             _upsert_systemd_env "$svc_file" ALLOW_SELF_SIGNED_CERTS "$allow_self_signed"
             _upsert_systemd_env "$svc_file" TRUST_PROXY false
             sed -i "s|Environment=HBBS_API_URL=https://localhost|Environment=HBBS_API_URL=http://localhost|" "$svc_file"
-            sed -i "s|Environment=BETTERDESK_API_URL=https://localhost|Environment=BETTERDESK_API_URL=http://localhost|" "$svc_file"
+            sed -i "s|Environment=NEODESK_API_URL=https://localhost|Environment=NEODESK_API_URL=http://localhost|" "$svc_file"
             if [ "$allow_self_signed" = "true" ]; then
                 _upsert_systemd_env "$svc_file" NODE_EXTRA_CA_CERTS "$cert_crt"
             else
@@ -1929,7 +1929,7 @@ apply_console_protocol_mode() {
     systemctl daemon-reload 2>/dev/null || true
 }
 
-# Enable signal/relay TLS on betterdesk-server using deployed panel cert (#219).
+# Enable signal/relay TLS on neodesk-server using deployed panel cert (#219).
 sync_go_server_signal_relay_tls() {
     local ssl_dir="${1:-$RUSTDESK_PATH/ssl}"
     local go_svc_file="$SERVER_UNIT"
@@ -1941,11 +1941,11 @@ sync_go_server_signal_relay_tls() {
     sed -i 's/ -tls-relay//g' "$go_svc_file"
     sed -i 's/ -tls-api//g' "$go_svc_file"
     sed -i 's/ -force-https//g' "$go_svc_file"
-    sed -i "s|\(ExecStart=.*betterdesk-server[^$]*\)|\1 -tls-cert $ssl_dir/betterdesk.crt -tls-key $ssl_dir/betterdesk.key -tls-signal -tls-relay|" "$go_svc_file"
+    sed -i "s|\(ExecStart=.*neodesk-server[^$]*\)|\1 -tls-cert $ssl_dir/neodesk.crt -tls-key $ssl_dir/neodesk.key -tls-signal -tls-relay|" "$go_svc_file"
     systemctl daemon-reload 2>/dev/null || true
 }
 
-# Remove signal/relay TLS from betterdesk-server (#219).
+# Remove signal/relay TLS from neodesk-server (#219).
 clear_go_server_signal_relay_tls() {
     local go_svc_file="$SERVER_UNIT"
 
@@ -1979,7 +1979,7 @@ sync_go_server_trust_proxy() {
             _upsert_systemd_env "$go_svc_file" TRUSTED_PROXIES "$trusted_cidrs"
         fi
         if ! grep -q '\-trust-proxy' "$go_svc_file" 2>/dev/null; then
-            sed -i 's|\(ExecStart=.*betterdesk-server[^$]*\)|\1 -trust-proxy|' "$go_svc_file"
+            sed -i 's|\(ExecStart=.*neodesk-server[^$]*\)|\1 -trust-proxy|' "$go_svc_file"
         fi
     else
         _remove_systemd_env "$go_svc_file" TRUST_PROXY
@@ -1996,7 +1996,7 @@ apply_console_reverse_proxy_mode() {
     local ws_origins="${3:-}"
     local panel_bind="${4:-127.0.0.1}"
     local env_file="${CONSOLE_PATH}/.env"
-    local svc_file="/etc/systemd/system/betterdesk-console.service"
+    local svc_file="/etc/systemd/system/neodesk-console.service"
     local go_port="${GO_API_PORT:-21114}"
 
     apply_console_protocol_mode http
@@ -2014,7 +2014,7 @@ apply_console_reverse_proxy_mode() {
     fi
     _upsert_env_line "$env_file" HTTP_REDIRECT_HTTPS false
     _upsert_env_line "$env_file" HBBS_API_URL "http://localhost:${go_port}/api"
-    _upsert_env_line "$env_file" BETTERDESK_API_URL "http://localhost:${go_port}/api"
+    _upsert_env_line "$env_file" NEODESK_API_URL "http://localhost:${go_port}/api"
 
     if [ -n "$panel_host" ]; then
         _upsert_env_line "$env_file" PANEL_PUBLIC_HOST "$panel_host"
@@ -2061,7 +2061,7 @@ generate_reverse_proxy_config() {
     fi
 
     if [ -z "$panel_bind" ]; then
-        if confirm "Is the reverse proxy on THIS server (same host as BetterDesk)?"; then
+        if confirm "Is the reverse proxy on THIS server (same host as NeoDesk)?"; then
             panel_bind="127.0.0.1"
             upstream_addr="127.0.0.1"
         else
@@ -2069,7 +2069,7 @@ generate_reverse_proxy_config() {
             upstream_addr=$(ip route get 1 2>/dev/null | awk '{print $7; exit}')
             [ -z "$upstream_addr" ] && upstream_addr=$(hostname -I 2>/dev/null | awk '{print $1}')
             echo ""
-            read -p "BetterDesk LAN IP for proxy upstream [${upstream_addr}]: " _custom_up
+            read -p "NeoDesk LAN IP for proxy upstream [${upstream_addr}]: " _custom_up
             [ -n "$_custom_up" ] && upstream_addr="$_custom_up"
             if [ -z "$upstream_addr" ]; then
                 print_error "LAN IP required when the proxy runs on another host"
@@ -2115,8 +2115,8 @@ generate_reverse_proxy_config() {
     local ws_origins="https://${panel_host}"
     [ "$panel_host" != "$server_id" ] && ws_origins="${ws_origins},https://${server_id}"
 
-    cat > "$out_dir/betterdesk.env.snippet" << EOF
-# BetterDesk reverse-proxy mode (#267) — merge into $CONSOLE_PATH/.env
+    cat > "$out_dir/neodesk.env.snippet" << EOF
+# NeoDesk reverse-proxy mode (#267) — merge into $CONSOLE_PATH/.env
 HOST=${panel_bind}
 HTTPS_ENABLED=false
 HTTP_REDIRECT_HTTPS=false
@@ -2131,8 +2131,8 @@ WS_ALLOWED_ORIGINS=${ws_origins}
 EOF
 
     if [ "$proxy_type" = "nginx" ]; then
-        cat > "$out_dir/nginx.betterdesk.conf.snippet" << EOF
-# BetterDesk reverse-proxy snippet (#267) — merge into your nginx site config.
+        cat > "$out_dir/nginx.neodesk.conf.snippet" << EOF
+# NeoDesk reverse-proxy snippet (#267) — merge into your nginx site config.
 # TLS certificates: use certbot --nginx or your existing cert setup.
 
 map \$http_upgrade \$connection_upgrade {
@@ -2147,7 +2147,7 @@ server {
     client_max_body_size 100M;
 EOF
         if [ "$route_wss" = "yes" ]; then
-            cat >> "$out_dir/nginx.betterdesk.conf.snippet" << EOF
+            cat >> "$out_dir/nginx.neodesk.conf.snippet" << EOF
 
     location = /ws/id {
         proxy_pass http://${upstream_addr}:21118;
@@ -2178,7 +2178,7 @@ EOF
     }
 EOF
         fi
-        cat >> "$out_dir/nginx.betterdesk.conf.snippet" << EOF
+        cat >> "$out_dir/nginx.neodesk.conf.snippet" << EOF
 
     location ~ ^/ws/ {
         proxy_pass http://${upstream_addr}:5000;
@@ -2209,10 +2209,10 @@ EOF
     }
 }
 EOF
-        print_success "Nginx snippet: $out_dir/nginx.betterdesk.conf.snippet"
+        print_success "Nginx snippet: $out_dir/nginx.neodesk.conf.snippet"
     else
         cat > "$out_dir/caddy.Caddyfile.snippet" << EOF
-# BetterDesk reverse-proxy snippet (#267) — merge into /etc/caddy/Caddyfile
+# NeoDesk reverse-proxy snippet (#267) — merge into /etc/caddy/Caddyfile
 # Caddy obtains TLS automatically when this block is active.
 
 ${panel_host} {
@@ -2252,7 +2252,7 @@ EOF
     fi
 
     cat > "$out_dir/firewall-notes.txt" << EOF
-BetterDesk firewall notes — every port is described at https://betterde.sk/docs/operations/ports
+NeoDesk firewall notes — every port is described at https://neode.sk/docs/operations/ports
 
 WAN (clients reach these directly — cannot be HTTP-proxied):
   - 21116/tcp + 21116/udp  Signal (registration, hole punching)
@@ -2285,7 +2285,7 @@ EOF
 
     cat > "$out_dir/verify.sh" << 'VERIFYEOF'
 #!/usr/bin/env bash
-# BetterDesk reverse-proxy verification (#267)
+# NeoDesk reverse-proxy verification (#267)
 set -euo pipefail
 PANEL_HOST="${1:-}"
 if [ -z "$PANEL_HOST" ]; then
@@ -2303,18 +2303,18 @@ curl -i -N --max-time 8 \
   -H "Connection: Upgrade" -H "Upgrade: websocket" \
   -H "Sec-WebSocket-Version: 13" \
   -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" \
-  "https://${PANEL_HOST}/ws/bd-signal" 2>/dev/null | head -8 || true
+  "https://${PANEL_HOST}/ws/nd-signal" 2>/dev/null | head -8 || true
 VERIFYEOF
     chmod +x "$out_dir/verify.sh"
     # Inject hostname into verify script usage (already passed as arg)
 
     echo ""
     print_info "Reverse-proxy files written to: $out_dir"
-    print_info "  betterdesk.env.snippet"
-    [ "$proxy_type" = "nginx" ] && print_info "  nginx.betterdesk.conf.snippet" || print_info "  caddy.Caddyfile.snippet"
+    print_info "  neodesk.env.snippet"
+    [ "$proxy_type" = "nginx" ] && print_info "  nginx.neodesk.conf.snippet" || print_info "  caddy.Caddyfile.snippet"
     print_info "  verify.sh $panel_host"
     print_info "  firewall-notes.txt"
-    print_info "Documentation: https://betterde.sk/docs/operations/reverse-proxy-tls"
+    print_info "Documentation: https://neode.sk/docs/operations/reverse-proxy-tls"
     echo ""
     print_warning "Configure your proxy, then open https://${panel_host}/ (not :5443)"
     if [ "$panel_host" != "$server_id" ]; then
@@ -2328,13 +2328,13 @@ VERIFYEOF
     REVERSE_PROXY_UPSTREAM_ADDR="$upstream_addr"
 }
 
-# Interactive reverse-proxy wizard: apply BetterDesk settings + emit proxy snippets (#267).
+# Interactive reverse-proxy wizard: apply NeoDesk settings + emit proxy snippets (#267).
 do_configure_reverse_proxy() {
     local panel_host server_id ws_origins panel_bind
 
     echo ""
-    print_step "Configuring BetterDesk for external reverse proxy (TLS at Caddy/Nginx)..."
-    print_info "Your proxy terminates TLS on :443; BetterDesk panel stays plain HTTP"
+    print_step "Configuring NeoDesk for external reverse proxy (TLS at Caddy/Nginx)..."
+    print_info "Your proxy terminates TLS on :443; NeoDesk panel stays plain HTTP"
     echo ""
 
     read -p "Public panel hostname (e.g., console.example.com): " panel_host
@@ -2355,7 +2355,7 @@ do_configure_reverse_proxy() {
     # A proxy on another machine still needs the console's port
     [ "$panel_bind" = "0.0.0.0" ] || close_console_firewall_ports
 
-    print_success "BetterDesk configured for external reverse proxy"
+    print_success "NeoDesk configured for external reverse proxy"
     echo ""
     if [ "$panel_bind" = "0.0.0.0" ]; then
         print_info "  Panel (bind):   http://0.0.0.0:$(resolve_panel_http_port) (remote proxy host)"
@@ -2403,7 +2403,7 @@ resolve_panel_health_port() {
 # Offer native HTTPS on standard port 443 after enabling TLS (#219 follow-up).
 maybe_offer_standard_https_port() {
     local env_file="${CONSOLE_PATH}/.env"
-    local svc_file="/etc/systemd/system/betterdesk-console.service"
+    local svc_file="/etc/systemd/system/neodesk-console.service"
     local current_https_port
 
     current_https_port=$(read_effective_console_setting HTTPS_PORT 5443)
@@ -2461,9 +2461,9 @@ prepare_console_after_update() {
     return 0
 }
 
-# Start betterdesk-server and check that it answers (#306).
+# Start neodesk-server and check that it answers (#306).
 start_services_with_verification() {
-    print_step "Starting betterdesk-server with health verification..."
+    print_step "Starting neodesk-server with health verification..."
 
     local has_errors=false
     if ! systemctl is-active --quiet "$SERVER_SERVICE" 2>/dev/null; then
@@ -2477,7 +2477,7 @@ start_services_with_verification() {
         fi
     fi
     if [ "$has_errors" = true ]; then
-        print_error "Cannot start betterdesk-server - ports are in use"
+        print_error "Cannot start neodesk-server - ports are in use"
         print_info "Try: sudo lsof -i :21116 and sudo lsof -i :21117 to find conflicts"
         return 1
     fi
@@ -2491,11 +2491,11 @@ start_services_with_verification() {
     fi
 
     if ! verify_go_install 90; then
-        print_error "betterdesk-server did not come up"
-        print_info "Run: journalctl -u betterdesk-server -n 50 --no-pager"
+        print_error "neodesk-server did not come up"
+        print_info "Run: journalctl -u neodesk-server -n 50 --no-pager"
         return 1
     fi
-    print_success "betterdesk-server started and verified"
+    print_success "neodesk-server started and verified"
     return 0
 }
 
@@ -2517,7 +2517,7 @@ detect_installation() {
         INSTALL_STATUS="partial"
         
         # Check Go server binary (primary) or legacy Rust binaries
-        if [ -f "$RUSTDESK_PATH/betterdesk-server" ]; then
+        if [ -f "$RUSTDESK_PATH/neodesk-server" ]; then
             BINARIES_OK=true
             SERVER_TYPE="go"
         elif [ -f "$RUSTDESK_PATH/hbbs" ] || [ -f "$RUSTDESK_PATH/hbbs-v8-api" ]; then
@@ -2557,7 +2557,7 @@ detect_installation() {
     fi
     
     # Check services (Go server or legacy Rust)
-    if systemctl is-active --quiet betterdesk-server 2>/dev/null; then
+    if systemctl is-active --quiet neodesk-server 2>/dev/null; then
         HBBS_RUNNING=true
         HBBR_RUNNING=true  # Go server handles both
     elif systemctl is-active --quiet rustdesksignal 2>/dev/null || \
@@ -2600,7 +2600,7 @@ preserve_database_config() {
 
 # Write or merge the console's .env from the template built into the server
 # (issue #158), then let upgrade-env add what the server needs (CONSOLE_PORT,
-# BETTERDESK_ENV_FILE, the pinned ports) and comment out what it does not.
+# NEODESK_ENV_FILE, the pinned ports) and comment out what it does not.
 # Usage: merge_console_env true   — fresh install (full template)
 #        merge_console_env false  — update (append missing keys only)
 merge_console_env() {
@@ -2652,26 +2652,26 @@ merge_console_env() {
     [ "$fresh_install" = "true" ] && merge_args+=(--fresh)
 
     local merge_output=""
-    if ! merge_output=$(BETTERDESK_ENV_FILE='' \
-        BD_SUBST_RUSTDESK_DIR="$RUSTDESK_PATH" \
-        BD_SUBST_PUB_KEY_PATH="$RUSTDESK_PATH/id_ed25519.pub" \
-        BD_SUBST_API_KEY_PATH="$RUSTDESK_PATH/.api_key" \
-        BD_SUBST_DB_TYPE="$db_type" \
-        BD_SUBST_DB_PATH="$RUSTDESK_PATH/db_v2.sqlite3" \
-        BD_SUBST_DATABASE_URL="$database_url" \
-        BD_SUBST_DATA_DIR="$CONSOLE_PATH/data" \
-        BD_SUBST_GO_API_PORT="$go_port" \
-        BD_SUBST_HBBS_API_URL="http://localhost:${go_port}/api" \
-        BD_SUBST_BETTERDESK_API_URL="http://localhost:${go_port}/api" \
-        BD_SUBST_API_PORT="$client_port" \
-        BD_SUBST_DEFAULT_ADMIN_PASSWORD="$admin_password" \
-        BD_SUBST_SESSION_SECRET="$session_secret" \
-        BD_SUBST_REMOTE_TARGET_VAULT_KEY="$remote_target_vault_key" \
-        BD_SUBST_GUACD_ADDRESS="127.0.0.1:4822" \
-        BD_SUBST_SSL_CERT_PATH="$ssl_dir/betterdesk.crt" \
-        BD_SUBST_SSL_KEY_PATH="$ssl_dir/betterdesk.key" \
+    if ! merge_output=$(NEODESK_ENV_FILE='' \
+        ND_SUBST_RUSTDESK_DIR="$RUSTDESK_PATH" \
+        ND_SUBST_PUB_KEY_PATH="$RUSTDESK_PATH/id_ed25519.pub" \
+        ND_SUBST_API_KEY_PATH="$RUSTDESK_PATH/.api_key" \
+        ND_SUBST_DB_TYPE="$db_type" \
+        ND_SUBST_DB_PATH="$RUSTDESK_PATH/db_v2.sqlite3" \
+        ND_SUBST_DATABASE_URL="$database_url" \
+        ND_SUBST_DATA_DIR="$CONSOLE_PATH/data" \
+        ND_SUBST_GO_API_PORT="$go_port" \
+        ND_SUBST_HBBS_API_URL="http://localhost:${go_port}/api" \
+        ND_SUBST_NEODESK_API_URL="http://localhost:${go_port}/api" \
+        ND_SUBST_API_PORT="$client_port" \
+        ND_SUBST_DEFAULT_ADMIN_PASSWORD="$admin_password" \
+        ND_SUBST_SESSION_SECRET="$session_secret" \
+        ND_SUBST_REMOTE_TARGET_VAULT_KEY="$remote_target_vault_key" \
+        ND_SUBST_GUACD_ADDRESS="127.0.0.1:4822" \
+        ND_SUBST_SSL_CERT_PATH="$ssl_dir/neodesk.crt" \
+        ND_SUBST_SSL_KEY_PATH="$ssl_dir/neodesk.key" \
         "$bin" "${merge_args[@]}" 2>&1) || ! printf '%s' "$merge_output" | grep -q '"success":true'; then
-        print_error "Failed to write .env (betterdesk-server env merge)"
+        print_error "Failed to write .env (neodesk-server env merge)"
         [ -n "$merge_output" ] && print_info "$merge_output"
         return 1
     fi
@@ -2697,8 +2697,8 @@ merge_console_env() {
     # The update channel the installer was given, over the template's main
     save_given_update_channel
 
-    if ! BETTERDESK_ENV_FILE='' "$bin" upgrade-env --from "$env_file" --write --supervisor systemd >/dev/null; then
-        print_error "betterdesk-server upgrade-env could not finish .env"
+    if ! NEODESK_ENV_FILE='' "$bin" upgrade-env --from "$env_file" --write --supervisor systemd >/dev/null; then
+        print_error "neodesk-server upgrade-env could not finish .env"
         return 1
     fi
     # A fresh file has no older version to keep
@@ -2739,7 +2739,7 @@ auto_detect_paths() {
     
     # If RUSTDESK_PATH is already set (via env var), validate it
     if [ -n "$RUSTDESK_PATH" ]; then
-        if [ -d "$RUSTDESK_PATH" ] && { [ -f "$RUSTDESK_PATH/betterdesk-server" ] || [ -f "$RUSTDESK_PATH/hbbs" ] || [ -f "$RUSTDESK_PATH/hbbs-v8-api" ]; }; then
+        if [ -d "$RUSTDESK_PATH" ] && { [ -f "$RUSTDESK_PATH/neodesk-server" ] || [ -f "$RUSTDESK_PATH/hbbs" ] || [ -f "$RUSTDESK_PATH/hbbs-v8-api" ]; }; then
             print_info "Using configured RustDesk path: $RUSTDESK_PATH"
         else
             print_warning "Configured RUSTDESK_PATH ($RUSTDESK_PATH) is invalid"
@@ -2750,7 +2750,7 @@ auto_detect_paths() {
     # Auto-detect if not found
     if [ -z "$RUSTDESK_PATH" ]; then
         for path in "${COMMON_RUSTDESK_PATHS[@]}"; do
-            if [ -d "$path" ] && { [ -f "$path/betterdesk-server" ] || [ -f "$path/hbbs" ] || [ -f "$path/hbbs-v8-api" ]; }; then
+            if [ -d "$path" ] && { [ -f "$path/neodesk-server" ] || [ -f "$path/hbbs" ] || [ -f "$path/hbbs-v8-api" ]; }; then
                 RUSTDESK_PATH="$path"
                 print_success "Detected RustDesk installation: $RUSTDESK_PATH"
                 break
@@ -2760,7 +2760,7 @@ auto_detect_paths() {
     
     # If still not found, use default for new installations
     if [ -z "$RUSTDESK_PATH" ]; then
-        RUSTDESK_PATH="/opt/betterdesk"
+        RUSTDESK_PATH="/opt/neodesk"
         print_info "No installation detected. Default path: $RUSTDESK_PATH"
     fi
     
@@ -2779,7 +2779,7 @@ auto_detect_paths() {
     # The server's unit names the console's env file
     if [ -z "$CONSOLE_PATH" ] && is_go_only_install; then
         local env_from_unit
-        env_from_unit=$(unit_env_value "$SERVER_UNIT" BETTERDESK_ENV_FILE)
+        env_from_unit=$(unit_env_value "$SERVER_UNIT" NEODESK_ENV_FILE)
         if [ -n "$env_from_unit" ] && [ -f "$env_from_unit" ]; then
             CONSOLE_PATH=$(dirname "$env_from_unit")
             print_success "Detected the console folder: $CONSOLE_PATH"
@@ -2803,7 +2803,7 @@ auto_detect_paths() {
     
     # Default Console path if not found
     if [ -z "$CONSOLE_PATH" ]; then
-        CONSOLE_PATH="/opt/BetterDeskConsole"
+        CONSOLE_PATH="/opt/NeoDeskConsole"
     fi
     
     # Update DB_PATH based on detected RUSTDESK_PATH
@@ -2818,7 +2818,7 @@ configure_paths() {
         $'Auto-detect paths\tScan common install locations'
         $'Set server path\tManually set the RustDesk server path'
         $'Set console path\tManually set the web console path'
-        $'Reset to defaults\t/opt/betterdesk + /opt/BetterDeskConsole'
+        $'Reset to defaults\t/opt/neodesk + /opt/NeoDeskConsole'
         $'Back\tReturn to the main menu'
     )
     local _menu_returns=( 1 2 3 4 0 )
@@ -2858,7 +2858,7 @@ configure_paths() {
             ;;
         3)
             echo ""
-            echo -n "Enter Console path (e.g., /opt/BetterDeskConsole): "
+            echo -n "Enter Console path (e.g., /opt/NeoDeskConsole): "
             read -r new_path
             if [ -n "$new_path" ]; then
                 if [ -d "$new_path" ]; then
@@ -2877,8 +2877,8 @@ configure_paths() {
             configure_paths
             ;;
         4)
-            RUSTDESK_PATH="/opt/betterdesk"
-            CONSOLE_PATH="/opt/BetterDeskConsole"
+            RUSTDESK_PATH="/opt/neodesk"
+            CONSOLE_PATH="/opt/NeoDeskConsole"
             DB_PATH="$RUSTDESK_PATH/db_v2.sqlite3"
             print_success "Paths reset to defaults"
             press_enter
@@ -2956,8 +2956,8 @@ print_status() {
     
     if [ -d "$CONSOLE_PATH" ]; then
         case "$CONSOLE_TYPE" in
-            go) echo -e "  Web Console:  ${GREEN}✓ OK${NC} (inside betterdesk-server)" ;;
-            nodejs) echo -e "  Web Console:  ${YELLOW}! Node.js${NC} (Update moves it into betterdesk-server)" ;;
+            go) echo -e "  Web Console:  ${GREEN}✓ OK${NC} (inside neodesk-server)" ;;
+            nodejs) echo -e "  Web Console:  ${YELLOW}! Node.js${NC} (Update moves it into neodesk-server)" ;;
             *) echo -e "  Web Console:  ${GREEN}✓ OK${NC}" ;;
         esac
     else
@@ -2969,21 +2969,21 @@ print_status() {
     echo ""
     
     # Check if using Go server (single binary) or legacy Rust (two binaries)
-    if [ "${SERVER_TYPE:-}" = "go" ] || systemctl is-active --quiet betterdesk-server 2>/dev/null; then
+    if [ "${SERVER_TYPE:-}" = "go" ] || systemctl is-active --quiet neodesk-server 2>/dev/null; then
         local go_state
-        go_state=$(systemctl show betterdesk-server --property=ActiveState --value 2>/dev/null || echo "unknown")
+        go_state=$(systemctl show neodesk-server --property=ActiveState --value 2>/dev/null || echo "unknown")
         case "$go_state" in
             active)
-                echo -e "  BetterDesk Server: ${GREEN}● Active${NC} (Signal + Relay + API$([ "$CONSOLE_TYPE" = go ] && [ "$CONSOLE_RUNNING" = true ] && echo " + web console"))"
+                echo -e "  NeoDesk Server: ${GREEN}● Active${NC} (Signal + Relay + API$([ "$CONSOLE_TYPE" = go ] && [ "$CONSOLE_RUNNING" = true ] && echo " + web console"))"
                 ;;
             failed)
-                echo -e "  BetterDesk Server: ${RED}✗ Failed${NC} (check: journalctl -u betterdesk-server -n 30)"
+                echo -e "  NeoDesk Server: ${RED}✗ Failed${NC} (check: journalctl -u neodesk-server -n 30)"
                 ;;
             activating)
-                echo -e "  BetterDesk Server: ${YELLOW}◌ Starting...${NC}"
+                echo -e "  NeoDesk Server: ${YELLOW}◌ Starting...${NC}"
                 ;;
             *)
-                echo -e "  BetterDesk Server: ${RED}○ Inactive${NC} ($go_state)"
+                echo -e "  NeoDesk Server: ${RED}○ Inactive${NC} ($go_state)"
                 ;;
         esac
     else
@@ -3007,7 +3007,7 @@ print_status() {
         console_state=$(systemctl show "$LEGACY_CONSOLE_SERVICE" --property=ActiveState --value 2>/dev/null || echo "unknown")
         case "$console_state" in
             active) echo -e "  Web Console (Node.js): ${GREEN}● Active${NC}" ;;
-            failed) echo -e "  Web Console (Node.js): ${RED}✗ Failed${NC} (check: journalctl -u betterdesk-server -n 30)" ;;
+            failed) echo -e "  Web Console (Node.js): ${RED}✗ Failed${NC} (check: journalctl -u neodesk-server -n 30)" ;;
             *) echo -e "  Web Console (Node.js): ${RED}○ Inactive${NC} ($console_state)" ;;
         esac
     fi
@@ -3479,8 +3479,8 @@ embed_web_ui_build() {
             return 1
         fi
         print_step "Building the web app (npm, a few minutes)..."
-        if ! (cd "$web_ui" && npx -y npm@11.6.2 ci --no-audit --no-fund && npm run build) > /tmp/betterdesk-web-ui-build.log 2>&1; then
-            print_error "The web app build failed (log: /tmp/betterdesk-web-ui-build.log)"
+        if ! (cd "$web_ui" && npx -y npm@11.6.2 ci --no-audit --no-fund && npm run build) > /tmp/neodesk-web-ui-build.log 2>&1; then
+            print_error "The web app build failed (log: /tmp/neodesk-web-ui-build.log)"
             return 1
         fi
     fi
@@ -3493,7 +3493,7 @@ embed_web_ui_build() {
 }
 
 compile_go_server() {
-    print_step "Compiling BetterDesk Go server..."
+    print_step "Compiling NeoDesk Go server..."
     
     if [ ! -d "$GO_SERVER_SOURCE" ]; then
         print_error "Go server source not found: $GO_SERVER_SOURCE"
@@ -3513,18 +3513,18 @@ compile_go_server() {
     cd "$GO_SERVER_SOURCE"
     
     # Clean previous builds
-    rm -f betterdesk-server betterdesk-server-linux-*
+    rm -f neodesk-server neodesk-server-linux-*
     
     # Build
-    print_info "Building BetterDesk server for $ARCH_NAME..."
-    local output_name="betterdesk-server"
+    print_info "Building NeoDesk server for $ARCH_NAME..."
+    local output_name="neodesk-server"
     local go_bin
     go_bin=$(command -v go)
 
     # Force local toolchain for native compile so host GOTOOLCHAIN=auto cannot
     # silently download another toolchain mid-install (hang risk on cloud VMs).
-    # Override with BETTERDESK_GOTOOLCHAIN if needed. GOPROXY/GOSUMDB still honour env.
-    export GOTOOLCHAIN="${BETTERDESK_GOTOOLCHAIN:-local}"
+    # Override with NEODESK_GOTOOLCHAIN if needed. GOPROXY/GOSUMDB still honour env.
+    export GOTOOLCHAIN="${NEODESK_GOTOOLCHAIN:-local}"
     export GOPROXY="${GOPROXY:-https://proxy.golang.org,direct}"
     export GOSUMDB="${GOSUMDB:-sum.golang.org}"
 
@@ -3582,7 +3582,7 @@ compile_go_server() {
     fi
 
     # Build with optimizations
-    print_info "Building BetterDesk server (timeout: ${GO_BUILD_TIMEOUT}s)..."
+    print_info "Building NeoDesk server (timeout: ${GO_BUILD_TIMEOUT}s)..."
     local build_status=0 commit
     commit=$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || true)
     if _run_go_command_bounded "building Go server" "$GO_BUILD_TIMEOUT" \
@@ -3689,7 +3689,7 @@ install_postgresql() {
 }
 
 setup_postgresql_database() {
-    print_step "Setting up PostgreSQL database for BetterDesk..."
+    print_step "Setting up PostgreSQL database for NeoDesk..."
 
     if ! is_valid_pg_identifier "$POSTGRESQL_USER"; then
         print_error "Invalid PostgreSQL username: $POSTGRESQL_USER"
@@ -3759,7 +3759,7 @@ setup_postgresql_database() {
 
 # prepare_postgresql: a database given with --pg-uri (or POSTGRESQL_URI) is
 # used as it is; without one, PostgreSQL is installed on this machine with
-# a user and a database for BetterDesk.
+# a user and a database for NeoDesk.
 prepare_postgresql() {
     if [ -n "$POSTGRESQL_URI" ]; then
         print_info "PostgreSQL: the database given with --pg-uri; nothing is set up on this machine"
@@ -3841,20 +3841,20 @@ migrate_sqlite_to_postgresql() {
     local migrate_bin=""
     if binary_migrates; then
         migrate_bin=server_migrate
-    elif [ -f "$SCRIPT_DIR/betterdesk-server/tools/migrate/migrate-linux-amd64" ]; then
-        migrate_bin="$SCRIPT_DIR/betterdesk-server/tools/migrate/migrate-linux-amd64"
+    elif [ -f "$SCRIPT_DIR/neodesk-server/tools/migrate/migrate-linux-amd64" ]; then
+        migrate_bin="$SCRIPT_DIR/neodesk-server/tools/migrate/migrate-linux-amd64"
     elif [ -f "$SCRIPT_DIR/tools/migrate/migrate-linux-amd64" ]; then
         migrate_bin="$SCRIPT_DIR/tools/migrate/migrate-linux-amd64"
-    elif [ -f "/opt/betterdesk-go/migrate" ]; then
-        migrate_bin="/opt/betterdesk-go/migrate"
+    elif [ -f "/opt/neodesk-go/migrate" ]; then
+        migrate_bin="/opt/neodesk-go/migrate"
     fi
     
     # Try to compile migration tool from source if not found or outdated
     if [ -z "$migrate_bin" ] && command -v go &>/dev/null; then
-        local migrate_src="$SCRIPT_DIR/betterdesk-server/tools/migrate"
+        local migrate_src="$SCRIPT_DIR/neodesk-server/tools/migrate"
         if [ -d "$migrate_src" ]; then
             print_info "Compiling migration tool from source..."
-            if (cd "$SCRIPT_DIR/betterdesk-server" && go build -o "tools/migrate/migrate-linux-amd64" ./tools/migrate/) 2>&1; then
+            if (cd "$SCRIPT_DIR/neodesk-server" && go build -o "tools/migrate/migrate-linux-amd64" ./tools/migrate/) 2>&1; then
                 migrate_bin="$migrate_src/migrate-linux-amd64"
                 print_success "Migration tool compiled successfully"
             else
@@ -3878,7 +3878,7 @@ migrate_sqlite_to_postgresql() {
     migrate_help=$("$migrate_bin" -h 2>&1 || true)
     if ! grep -q -- "-mode" <<< "$migrate_help"; then
         print_warning "Migration binary is outdated (missing -mode flag): the server keeps using $sqlite_db"
-        print_info "Rebuild with: cd betterdesk-server && go build -o tools/migrate/migrate-linux-amd64 ./tools/migrate/"
+        print_info "Rebuild with: cd neodesk-server && go build -o tools/migrate/migrate-linux-amd64 ./tools/migrate/"
         keep_sqlite_install "$sqlite_db"
         return 0
     fi
@@ -3950,9 +3950,9 @@ keep_sqlite_install() {
 # The release file of this machine's binary.
 release_asset_name() {
     case "$(uname -m)" in
-        x86_64|amd64) echo "betterdesk-server-linux-amd64" ;;
-        aarch64|arm64) echo "betterdesk-server-linux-arm64" ;;
-        armv7l|armv7|armhf) echo "betterdesk-server-linux-armv7" ;;
+        x86_64|amd64) echo "neodesk-server-linux-amd64" ;;
+        aarch64|arm64) echo "neodesk-server-linux-arm64" ;;
+        armv7l|armv7|armhf) echo "neodesk-server-linux-armv7" ;;
         *) return 1 ;;
     esac
 }
@@ -3999,7 +3999,7 @@ newest_prerelease_tag() {
 }
 
 # download_release_binary DIR: the release binary for this machine into
-# DIR/betterdesk-server, checked against the release's SHA256SUMS and the
+# DIR/neodesk-server, checked against the release's SHA256SUMS and the
 # signature of its manifest (verify_release_files). While the repository
 # has no stable release, the stable channel takes the newest pre-release,
 # and the development build when there is none and no channel was given or
@@ -4097,7 +4097,7 @@ download_release_binary() {
             2)
                 print_warning "The release signature cannot be checked on this machine: $RELEASE_CHECK_PROBLEM."
                 print_warning "The binary is checked by its SHA-256 over HTTPS only. From the next update on,"
-                print_warning "the installed betterdesk-server checks the signature itself."
+                print_warning "the installed neodesk-server checks the signature itself."
                 ;;
             *)
                 print_info "Nothing was installed. A release signed with another key (a fork's) installs with --skip-verify"
@@ -4105,7 +4105,7 @@ download_release_binary() {
                 ;;
         esac
     fi
-    mv -f "$dir/$asset" "$dir/betterdesk-server"
+    mv -f "$dir/$asset" "$dir/neodesk-server"
 }
 
 # binary_verifies_releases [BIN]: true when the binary checks a release's
@@ -4143,7 +4143,7 @@ release_payload() {
     count=$(printf '%s\n' "$files" | grep -c .) || true
     paths=$(tr -d '\r\n' < "$manifest" | grep -oE '"path"[[:space:]]*:' | wc -l)
     [ "$count" -gt 0 ] && [ "$count" -eq "$paths" ] || return 1
-    printf 'betterdesk-update-manifest-v1\nowner=%s\nrepo=%s\nbranch=%s\nsha=%s\nfiles=%s\n%s\n' \
+    printf 'neodesk-update-manifest-v1\nowner=%s\nrepo=%s\nbranch=%s\nsha=%s\nfiles=%s\n%s\n' \
         "$owner" "$repo" "$branch" "$sha" "$count" "$files"
 }
 
@@ -4188,11 +4188,11 @@ verify_release_files() {
                     print_error "The release is not one of the $branch channel, so $asset is not installed"
                     return 1
                 fi
-                print_success "Release signature checked by the installed betterdesk-server (${out#verified: })"
+                print_success "Release signature checked by the installed neodesk-server (${out#verified: })"
                 return 0
                 ;;
             1)
-                print_error "The installed betterdesk-server refused the release: ${out#betterdesk-server verify-release: }"
+                print_error "The installed neodesk-server refused the release: ${out#neodesk-server verify-release: }"
                 return 1
                 ;;
         esac
@@ -4230,24 +4230,24 @@ verify_release_files() {
     return "$rc"
 }
 
-# build_server_from_source DEST: builds betterdesk-server from this checkout,
+# build_server_from_source DEST: builds neodesk-server from this checkout,
 # with the web app built in, into DEST.
 build_server_from_source() {
     local dest="$1"
     detect_architecture
     if ! compile_go_server; then
-        print_error "Failed to build betterdesk-server from $GO_SERVER_SOURCE"
+        print_error "Failed to build neodesk-server from $GO_SERVER_SOURCE"
         return 1
     fi
-    cp "$GO_SERVER_SOURCE/betterdesk-server" "$dest"
+    cp "$GO_SERVER_SOURCE/neodesk-server" "$dest"
 }
 
 # obtain_server_binary: a checked binary for this machine, from --binary,
 # --from-source or the release, at STAGED_SERVER_BINARY in a temporary
 # folder STAGED_SERVER_DIR that the caller removes.
 obtain_server_binary() {
-    STAGED_SERVER_DIR=$(mktemp -d /tmp/betterdesk-server.XXXXXX)
-    STAGED_SERVER_BINARY="$STAGED_SERVER_DIR/betterdesk-server"
+    STAGED_SERVER_DIR=$(mktemp -d /tmp/neodesk-server.XXXXXX)
+    STAGED_SERVER_BINARY="$STAGED_SERVER_DIR/neodesk-server"
     if [ -n "$SERVER_BINARY_FILE" ]; then
         print_info "Using the binary $SERVER_BINARY_FILE"
         cp "$SERVER_BINARY_FILE" "$STAGED_SERVER_BINARY" || return 1
@@ -4271,7 +4271,7 @@ obtain_server_binary() {
 }
 
 # install_staged_binary [SUFFIX]: puts STAGED_SERVER_BINARY in place of the
-# installed binary and keeps the old one as betterdesk-server<SUFFIX>
+# installed binary and keeps the old one as neodesk-server<SUFFIX>
 # (.prev unless given). The service must be stopped.
 install_staged_binary() {
     local suffix="${1:-.prev}" bin
@@ -4289,7 +4289,7 @@ install_staged_binary() {
 }
 
 install_binaries() {
-    print_step "Installing betterdesk-server..."
+    print_step "Installing neodesk-server..."
     obtain_server_binary || { rm -rf "${STAGED_SERVER_DIR:-}"; return 1; }
     if systemctl is-active --quiet "$SERVER_SERVICE" 2>/dev/null; then
         graceful_stop_services
@@ -4301,13 +4301,13 @@ install_binaries() {
 # The account the server runs as.
 ensure_service_user() {
     if ! id "$SERVICE_USER" &>/dev/null; then
-        useradd -r -s /usr/sbin/nologin -d /var/lib/betterdesk -c "BetterDesk server" "$SERVICE_USER" || {
+        useradd -r -s /usr/sbin/nologin -d /var/lib/neodesk -c "NeoDesk server" "$SERVICE_USER" || {
             print_error "Could not create the system user $SERVICE_USER"
             return 1
         }
     fi
-    mkdir -p /var/lib/betterdesk
-    chown "$SERVICE_USER:$SERVICE_USER" /var/lib/betterdesk 2>/dev/null || true
+    mkdir -p /var/lib/neodesk
+    chown "$SERVICE_USER:$SERVICE_USER" /var/lib/neodesk 2>/dev/null || true
 }
 
 # own_by_service_user PATH...: hands files and folders below PATH to the
@@ -4331,7 +4331,7 @@ set_server_folder_permissions() {
     [ "${#entries[@]}" -gt 0 ] && own_by_service_user "${entries[@]}"
     chmod 750 "$RUSTDESK_PATH/ssl" 2>/dev/null || true
     local f
-    for f in .api_key id_ed25519 ssl/betterdesk.key; do
+    for f in .api_key id_ed25519 ssl/neodesk.key; do
         [ -f "$RUSTDESK_PATH/$f" ] && chmod 600 "$RUSTDESK_PATH/$f"
     done
     return 0
@@ -4378,7 +4378,7 @@ setup_console_home() {
         cat > "$CONSOLE_PATH/data/.admin_credentials" << CREDEOF
 Admin Username: admin
 Admin Password: $ADMIN_PASSWORD
-Generated by: BetterDesk installer
+Generated by: NeoDesk installer
 Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)
 CREDEOF
     fi
@@ -4401,7 +4401,7 @@ generate_ssl_certificates() {
     local ssl_dir="$RUSTDESK_PATH/ssl"
     
     # Skip if certificates already exist
-    if [ -f "$ssl_dir/betterdesk.crt" ] && [ -f "$ssl_dir/betterdesk.key" ]; then
+    if [ -f "$ssl_dir/neodesk.crt" ] && [ -f "$ssl_dir/neodesk.key" ]; then
         print_info "TLS certificates already exist at $ssl_dir"
         print_info "Skipping certificate generation (use SSL config menu to regenerate)"
         return 0
@@ -4456,17 +4456,17 @@ generate_ssl_certificates() {
         fi
         # Generate certificate with SAN extension (valid for 10 years for self-signed)
         openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
-            -keyout "$ssl_dir/betterdesk.key" \
-            -out "$ssl_dir/betterdesk.crt" \
-            -subj "/CN=$cn/O=BetterDesk/C=PL" \
+            -keyout "$ssl_dir/neodesk.key" \
+            -out "$ssl_dir/neodesk.crt" \
+            -subj "/CN=$cn/O=NeoDesk/C=PL" \
             -addext "subjectAltName=$san_list" \
             >/dev/null 2>&1 || {
             print_warning "Certificate generation failed (openssl too old for -addext?)"
             # Fallback without SAN for older openssl
             openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
-                -keyout "$ssl_dir/betterdesk.key" \
-                -out "$ssl_dir/betterdesk.crt" \
-                -subj "/CN=$cn/O=BetterDesk/C=PL" \
+                -keyout "$ssl_dir/neodesk.key" \
+                -out "$ssl_dir/neodesk.crt" \
+                -subj "/CN=$cn/O=NeoDesk/C=PL" \
                 2>&1 || {
                 print_error "Failed to generate self-signed certificate"
                 return 1
@@ -4475,7 +4475,7 @@ generate_ssl_certificates() {
     fi
 
     # Deploy with console-user-readable permissions (#219)
-    if ! deploy_ssl_material_to_rustdesk_dir "$ssl_dir/betterdesk.crt" "$ssl_dir/betterdesk.key"; then
+    if ! deploy_ssl_material_to_rustdesk_dir "$ssl_dir/neodesk.crt" "$ssl_dir/neodesk.key"; then
         print_error "Failed to set permissions on self-signed certificate"
         return 1
     fi
@@ -4486,8 +4486,8 @@ generate_ssl_certificates() {
         local env_file="$CONSOLE_PATH/.env"
         if [ -f "$env_file" ]; then
             sed -i "s|^HTTPS_ENABLED=.*|HTTPS_ENABLED=true|" "$env_file"
-            sed -i "s|^SSL_CERT_PATH=.*|SSL_CERT_PATH=$ssl_dir/betterdesk.crt|" "$env_file"
-            sed -i "s|^SSL_KEY_PATH=.*|SSL_KEY_PATH=$ssl_dir/betterdesk.key|" "$env_file"
+            sed -i "s|^SSL_CERT_PATH=.*|SSL_CERT_PATH=$ssl_dir/neodesk.crt|" "$env_file"
+            sed -i "s|^SSL_KEY_PATH=.*|SSL_KEY_PATH=$ssl_dir/neodesk.key|" "$env_file"
             # RustDesk clients refuse a self-signed certificate: the client
             # API port stays on HTTP until a trusted certificate is set up
             _upsert_env_line "$env_file" RUSTDESK_API_TLS false
@@ -4502,22 +4502,22 @@ generate_ssl_certificates() {
                     echo "ALLOW_SELF_SIGNED_CERTS=true" >> "$env_file"
                 fi
                 sed -i "s|^HBBS_API_URL=https://localhost|HBBS_API_URL=http://localhost|" "$env_file"
-                sed -i "s|^BETTERDESK_API_URL=https://localhost|BETTERDESK_API_URL=http://localhost|" "$env_file"
+                sed -i "s|^NEODESK_API_URL=https://localhost|NEODESK_API_URL=http://localhost|" "$env_file"
                 print_info "Enterprise TLS: Go API stays HTTP for RustDesk client compatibility"
             fi
         fi
     fi
     
     print_success "Self-signed TLS certificate generated (valid 10 years)"
-    print_info "Certificate: $ssl_dir/betterdesk.crt"
-    print_info "Private key: $ssl_dir/betterdesk.key"
+    print_info "Certificate: $ssl_dir/neodesk.crt"
+    print_info "Private key: $ssl_dir/neodesk.key"
     print_info "SANs: $san_list"
     [ -n "$lan_ip" ] && [ "$lan_ip" != "$server_ip" ] && print_info "LAN IP included: $lan_ip"
     return 0
 }
 
 #===============================================================================
-# The service: betterdesk-server with the web console inside
+# The service: neodesk-server with the web console inside
 #===============================================================================
 
 # env_file_value FILE KEY: the value the first line setting KEY has, trimmed.
@@ -4649,7 +4649,7 @@ unit_exec_args() {
 
 # The settings write_server_unit writes itself, and the ports that live in
 # .env (carry_unit_ports moves them there).
-SERVER_UNIT_OWN_KEYS=" BETTERDESK_ENV_FILE BETTERDESK_SUPERVISOR SIGNAL_PORT RELAY_PORT GO_API_PORT MESH_ENABLED CONSOLE_PORT "
+SERVER_UNIT_OWN_KEYS=" NEODESK_ENV_FILE NEODESK_SUPERVISOR SIGNAL_PORT RELAY_PORT GO_API_PORT MESH_ENABLED CONSOLE_PORT "
 
 # server_unit_extra_environment: the Environment= lines of the installed
 # unit besides the ones write_server_unit writes (connection mode, proxy
@@ -4676,11 +4676,11 @@ console_uses_privileged_port() {
     return 1
 }
 
-# write_server_unit ARGS EXTRA_ENV: betterdesk-server.service, the one
+# write_server_unit ARGS EXTRA_ENV: neodesk-server.service, the one
 # process that serves signal, relay, API and the web console, as the
 # service account. ARGS are the server's arguments; EXTRA_ENV are more
 # Environment= lines. The server reads the console's .env itself
-# (BETTERDESK_ENV_FILE) and fills only what the unit leaves unset. Exit
+# (NEODESK_ENV_FILE) and fills only what the unit leaves unset. Exit
 # status 3 is the server's request to be started again (a restart, an
 # update or a restore from the panel).
 write_server_unit() {
@@ -4691,8 +4691,8 @@ write_server_unit() {
     # Lines of the template that stay empty are left out
     cat << EOF | grep -v '^__EMPTY__$' > "$SERVER_UNIT"
 [Unit]
-Description=BetterDesk server and web console v$VERSION
-Documentation=https://github.com/neodeskapp/betterdesk
+Description=NeoDesk server and web console v$VERSION
+Documentation=https://github.com/neodeskapp/neodesk
 After=network-online.target postgresql.service
 Wants=network-online.target
 
@@ -4701,8 +4701,8 @@ Type=simple
 User=$SERVICE_USER
 Group=$SERVICE_USER
 WorkingDirectory=$RUSTDESK_PATH
-Environment=BETTERDESK_ENV_FILE=$CONSOLE_PATH/.env
-Environment=BETTERDESK_SUPERVISOR=systemd
+Environment=NEODESK_ENV_FILE=$CONSOLE_PATH/.env
+Environment=NEODESK_SUPERVISOR=systemd
 Environment=GO_API_PORT=${GO_API_PORT:-21114}
 Environment=MESH_ENABLED=Y
 ${extra_env:-__EMPTY__}
@@ -4721,11 +4721,11 @@ EOF
     chmod 0644 "$SERVER_UNIT"
 }
 
-# Removes the units of retired BetterDesk services (Rust signal and relay,
+# Removes the units of retired NeoDesk services (Rust signal and relay,
 # Flask console, manual installs).
 remove_retired_units() {
     local svc
-    for svc in rustdesksignal rustdeskrelay betterdesk-api betterdesk-go betterdesk; do
+    for svc in rustdesksignal rustdeskrelay neodesk-api neodesk-go neodesk; do
         if [ -f "/etc/systemd/system/$svc.service" ]; then
             systemctl stop "$svc" 2>/dev/null || true
             systemctl disable "$svc" 2>/dev/null || true
@@ -4785,8 +4785,8 @@ setup_services() {
     # HTTP: RustDesk desktop clients call it without TLS.
     local tls_arg=""
     local ssl_dir="$RUSTDESK_PATH/ssl"
-    if [ -f "$ssl_dir/betterdesk.crt" ] && [ -f "$ssl_dir/betterdesk.key" ]; then
-        tls_arg=" -tls-cert $ssl_dir/betterdesk.crt -tls-key $ssl_dir/betterdesk.key -tls-signal -tls-relay"
+    if [ -f "$ssl_dir/neodesk.crt" ] && [ -f "$ssl_dir/neodesk.key" ]; then
+        tls_arg=" -tls-cert $ssl_dir/neodesk.crt -tls-key $ssl_dir/neodesk.key -tls-signal -tls-relay"
         print_info "TLS: on for signal and relay (API stays HTTP)"
     fi
 
@@ -4799,7 +4799,7 @@ setup_services() {
         "$CONNECTION_MODE_ENV_BLOCK"
     remove_retired_units
     systemctl daemon-reload
-    print_success "Created betterdesk-server.service (server and web console, user $SERVICE_USER)"
+    print_success "Created neodesk-server.service (server and web console, user $SERVICE_USER)"
 }
 
 # set_panel_public_host ADDRESS: the host of the address clients get becomes
@@ -4844,7 +4844,7 @@ maybe_update_services() {
     set_panel_public_host "$(unit_exec_flag_value "$SERVER_UNIT" -relay-servers)"
     write_server_unit "$args" "$extra"
     systemctl daemon-reload
-    print_info "betterdesk-server.service written again with its arguments and settings"
+    print_info "neodesk-server.service written again with its arguments and settings"
 }
 
 # The port the web console answers /health on: HTTPS_PORT when HTTPS is on
@@ -4904,7 +4904,7 @@ verify_go_install() {
         client_port=$(read_effective_console_setting API_PORT "${CLIENT_API_PORT:-21121}")
         _tcp_port_is_listening "$client_port" || print_warning "The client API port $client_port is not listening"
     fi
-    print_success "betterdesk-server answers: API :${GO_API_PORT:-21114}${console_url:+, web console $console_url}, signal :$signal, relay :$relay"
+    print_success "neodesk-server answers: API :${GO_API_PORT:-21114}${console_url:+, web console $console_url}, signal :$signal, relay :$relay"
 }
 
 #===============================================================================
@@ -4912,9 +4912,9 @@ verify_go_install() {
 #===============================================================================
 
 # True when the installed unit runs the server with the web console
-# inside: this installer writes BETTERDESK_SUPERVISOR into it.
+# inside: this installer writes NEODESK_SUPERVISOR into it.
 is_go_only_install() {
-    [ -f "$SERVER_UNIT" ] && grep -q '^Environment=BETTERDESK_SUPERVISOR=' "$SERVER_UNIT" 2>/dev/null
+    [ -f "$SERVER_UNIT" ] && grep -q '^Environment=NEODESK_SUPERVISOR=' "$SERVER_UNIT" 2>/dev/null
 }
 
 # True when the install still runs the Node.js console.
@@ -4925,7 +4925,7 @@ is_node_era_install() {
 # Settings of the old units the server does not take over: the console port
 # the installer kept off while Node held it, what only Node read, and the
 # old binary's path (the updater uses the binary that runs).
-UPGRADE_SKIPPED_UNIT_KEYS=" CONSOLE_PORT NODE_EXTRA_CA_CERTS NODE_OPTIONS BETTERDESK_SERVER_BINARY "
+UPGRADE_SKIPPED_UNIT_KEYS=" CONSOLE_PORT NODE_EXTRA_CA_CERTS NODE_OPTIONS NEODESK_SERVER_BINARY "
 
 # carry_unit_environment UNIT ENV_FILE: appends to the env file the
 # settings of a unit's Environment= lines that the file does not set. Under
@@ -4942,7 +4942,7 @@ carry_unit_environment() {
         grep -q "^${key}=" "$env_file" 2>/dev/null && continue
         if [ "$header" = false ]; then
             [ -s "$env_file" ] && [ -n "$(tail -c1 "$env_file")" ] && echo >> "$env_file"
-            printf '\n# Carried from %s by betterdesk.sh (upgrade to the server with its console)\n' "$(basename "$unit")" >> "$env_file"
+            printf '\n# Carried from %s by neodesk.sh (upgrade to the server with its console)\n' "$(basename "$unit")" >> "$env_file"
             header=true
         fi
         printf '%s\n' "$pair" >> "$env_file"
@@ -4971,8 +4971,8 @@ upgrade_backup() {
     [ -d "$SERVER_UNIT.d" ] && cp -a "$SERVER_UNIT.d" "$dir/units/"
     [ -d "$LEGACY_CONSOLE_UNIT.d" ] && cp -a "$LEGACY_CONSOLE_UNIT.d" "$dir/units/"
     cp -a "$CONSOLE_PATH/.env" "$dir/console.env"
-    [ -f "$LEGACY_SUDOERS_FILE" ] && cp -a "$LEGACY_SUDOERS_FILE" "$dir/sudoers-betterdesk-console-updates"
-    [ -d "$LEGACY_BROKER_DIR" ] && cp -a "$LEGACY_BROKER_DIR" "$dir/libexec-betterdesk"
+    [ -f "$LEGACY_SUDOERS_FILE" ] && cp -a "$LEGACY_SUDOERS_FILE" "$dir/sudoers-neodesk-console-updates"
+    [ -d "$LEGACY_BROKER_DIR" ] && cp -a "$LEGACY_BROKER_DIR" "$dir/libexec-neodesk"
 
     # Every copy of the old binary the old unit or the folder holds
     old_bin=$(unit_exec_binary "$SERVER_UNIT")
@@ -5035,7 +5035,7 @@ upgrade_snapshot_database() {
 }
 
 # upgrade_node_install_to_go: an install with the Node.js console becomes
-# one service, betterdesk-server, that serves the web console itself. Data
+# one service, neodesk-server, that serves the web console itself. Data
 # stays where it is; the old binary, units and .env are kept, and the
 # console's unit stays disabled for one release, so --rollback-go can put
 # the old pair back. A failed start rolls back by itself.
@@ -5043,14 +5043,14 @@ upgrade_node_install_to_go() {
     echo -e "${WHITE}${BOLD}══════════ UPGRADE: WEB CONSOLE INTO THE SERVER ══════════${NC}"
     echo ""
     if [ ! -f "$SERVER_UNIT" ] || [ ! -f "$CONSOLE_PATH/.env" ]; then
-        print_error "No betterdesk-server.service or $CONSOLE_PATH/.env: this is no install to upgrade"
+        print_error "No neodesk-server.service or $CONSOLE_PATH/.env: this is no install to upgrade"
         return 1
     fi
-    print_info "This upgrade moves the web console into betterdesk-server:"
-    print_info "  - one service, betterdesk-server, running as $SERVICE_USER, serves the panel on the same ports"
-    print_info "  - betterdesk-console is stopped and disabled (kept for a rollback until the next update)"
+    print_info "This upgrade moves the web console into neodesk-server:"
+    print_info "  - one service, neodesk-server, running as $SERVICE_USER, serves the panel on the same ports"
+    print_info "  - neodesk-console is stopped and disabled (kept for a rollback until the next update)"
     print_info "  - data, keys and accounts stay where they are"
-    print_info "  - roll back with: sudo ./betterdesk.sh --rollback-go"
+    print_info "  - roll back with: sudo ./neodesk.sh --rollback-go"
     if [ "$AUTO_MODE" != true ] && [ "$UPDATE_MODE" != true ] && ! confirm "Upgrade now?"; then
         return 0
     fi
@@ -5078,7 +5078,7 @@ upgrade_node_install_to_go() {
     upgrade_backup "$backup" || { print_error "Backup failed; nothing was changed"; rm -rf "$STAGED_SERVER_DIR"; return 1; }
 
     # 4. Stop both, then the database copy
-    print_step "[3/9] Stopping betterdesk-console and betterdesk-server..."
+    print_step "[3/9] Stopping neodesk-console and neodesk-server..."
     systemctl stop "$LEGACY_CONSOLE_SERVICE" 2>/dev/null || true
     systemctl stop "$SERVER_SERVICE" 2>/dev/null || true
     wait_for_service_stop "$LEGACY_CONSOLE_SERVICE" 15 || true
@@ -5086,10 +5086,10 @@ upgrade_node_install_to_go() {
     upgrade_snapshot_database "$backup"
 
     # 5. The console's unit stays, disabled
-    print_step "[4/9] Disabling betterdesk-console (the unit stays for a rollback)..."
+    print_step "[4/9] Disabling neodesk-console (the unit stays for a rollback)..."
     systemctl disable "$LEGACY_CONSOLE_SERVICE" 2>/dev/null || true
 
-    # 6. The binary; the old one stays as betterdesk-server.pre-go
+    # 6. The binary; the old one stays as neodesk-server.pre-go
     print_step "[5/9] Installing the new binary..."
     local old_args db_flag init_pass
     old_args=$(unit_exec_args "$SERVER_UNIT")
@@ -5119,7 +5119,7 @@ upgrade_node_install_to_go() {
         print_info "  move     -init-admin-pass -> INIT_ADMIN_PASS"
     fi
     local upgrade_output
-    if ! upgrade_output=$(BETTERDESK_ENV_FILE='' "$(server_binary_path)" upgrade-env --from "$env_file" --write --supervisor systemd 2>&1); then
+    if ! upgrade_output=$(NEODESK_ENV_FILE='' "$(server_binary_path)" upgrade-env --from "$env_file" --write --supervisor systemd 2>&1); then
         printf '%s\n' "$upgrade_output"
         print_error "upgrade-env failed; rolling back"
         rollback_go_upgrade "$backup"
@@ -5137,7 +5137,7 @@ upgrade_node_install_to_go() {
 
     # 9. The one unit, without the sudoers rule and root helper the Node
     # console used (both are in the backup)
-    print_step "[8/9] Writing betterdesk-server.service..."
+    print_step "[8/9] Writing neodesk-server.service..."
     local extra_env=""
     [ -d "$SERVER_UNIT.d" ] && print_info "  The drop-ins in $SERVER_UNIT.d stay in effect"
     write_server_unit "$old_args" "$extra_env"
@@ -5147,7 +5147,7 @@ upgrade_node_install_to_go() {
     systemctl enable "$SERVER_SERVICE" 2>/dev/null || true
 
     # 10. Start and check; roll back when it does not come up
-    print_step "[9/9] Starting betterdesk-server..."
+    print_step "[9/9] Starting neodesk-server..."
     systemctl reset-failed "$SERVER_SERVICE" 2>/dev/null || true
     systemctl start "$SERVER_SERVICE" || true
     if ! verify_go_install 90; then
@@ -5165,15 +5165,15 @@ upgrade_node_install_to_go() {
     chown "$SERVICE_USER:$SERVICE_USER" "$CONSOLE_PATH/data/$GO_UPGRADE_RECORD"
 
     echo ""
-    print_success "Upgrade done: betterdesk-server serves the web console"
+    print_success "Upgrade done: neodesk-server serves the web console"
     print_info "Backup: $backup"
-    print_info "Roll back: sudo ./betterdesk.sh --rollback-go"
-    print_info "The next successful update removes the Node.js console's code (or: sudo ./betterdesk.sh --cleanup-node)"
+    print_info "Roll back: sudo ./neodesk.sh --rollback-go"
+    print_info "The next successful update removes the Node.js console's code (or: sudo ./neodesk.sh --cleanup-node)"
 }
 
 # rollback_go_upgrade [BACKUP]: puts the binaries, units, .env, sudoers rule,
 # root helper and file ownership from before the upgrade back and starts
-# betterdesk-server and betterdesk-console. The database stays as it is (the
+# neodesk-server and neodesk-console. The database stays as it is (the
 # server keeps its schema readable by the old version); an interactive run
 # offers the snapshot from before the upgrade.
 rollback_go_upgrade() {
@@ -5184,11 +5184,11 @@ rollback_go_upgrade() {
     if [ -z "$backup" ]; then
         backup=$(find "$BACKUP_DIR" -maxdepth 1 -type d -name 'pre-go-*' 2>/dev/null | sort | tail -1)
     fi
-    if [ -z "$backup" ] || [ ! -f "$backup/units/betterdesk-server.service" ]; then
+    if [ -z "$backup" ] || [ ! -f "$backup/units/neodesk-server.service" ]; then
         print_error "No backup from an upgrade to roll back to (looked for $BACKUP_DIR/pre-go-*)"
         return 1
     fi
-    if [ -f "$backup/units/betterdesk-console.service" ] && [ ! -f "$CONSOLE_PATH/server.js" ]; then
+    if [ -f "$backup/units/neodesk-console.service" ] && [ ! -f "$CONSOLE_PATH/server.js" ]; then
         print_error "The Node.js console's code is gone from $CONSOLE_PATH (--cleanup-node); it cannot be started again"
         return 1
     fi
@@ -5203,21 +5203,21 @@ rollback_go_upgrade() {
     done < "$backup/bin/paths"
     rm -f "$(server_binary_path).pre-go"
 
-    cp -a "$backup/units/betterdesk-server.service" "$SERVER_UNIT"
-    if [ -f "$backup/units/betterdesk-console.service" ]; then
-        cp -a "$backup/units/betterdesk-console.service" "$LEGACY_CONSOLE_UNIT"
+    cp -a "$backup/units/neodesk-server.service" "$SERVER_UNIT"
+    if [ -f "$backup/units/neodesk-console.service" ]; then
+        cp -a "$backup/units/neodesk-console.service" "$LEGACY_CONSOLE_UNIT"
     fi
     rm -rf "$SERVER_UNIT.d"
-    [ -d "$backup/units/betterdesk-server.service.d" ] && cp -a "$backup/units/betterdesk-server.service.d" "$SERVER_UNIT.d"
+    [ -d "$backup/units/neodesk-server.service.d" ] && cp -a "$backup/units/neodesk-server.service.d" "$SERVER_UNIT.d"
 
     cp -a "$backup/console.env" "$CONSOLE_PATH/.env"
     rm -f "$CONSOLE_PATH/.env.pre-go"
-    if [ -f "$backup/sudoers-betterdesk-console-updates" ]; then
-        cp -a "$backup/sudoers-betterdesk-console-updates" "$LEGACY_SUDOERS_FILE"
+    if [ -f "$backup/sudoers-neodesk-console-updates" ]; then
+        cp -a "$backup/sudoers-neodesk-console-updates" "$LEGACY_SUDOERS_FILE"
     fi
-    if [ -d "$backup/libexec-betterdesk" ]; then
+    if [ -d "$backup/libexec-neodesk" ]; then
         rm -rf "$LEGACY_BROKER_DIR"
-        cp -a "$backup/libexec-betterdesk" "$LEGACY_BROKER_DIR"
+        cp -a "$backup/libexec-neodesk" "$LEGACY_BROKER_DIR"
     fi
     while IFS=$'\t' read -r owner mode path; do
         [ -e "$path" ] || continue
@@ -5247,7 +5247,7 @@ rollback_go_upgrade() {
     [ -f "$record" ] && mv -f "$record" "$CONSOLE_PATH/data/.go-upgrade.rolled-back.json"
 
     if verify_service_health "$SERVER_SERVICE" 21116 60 && verify_service_health "$LEGACY_CONSOLE_SERVICE" "$(resolve_panel_health_port)" 60; then
-        print_success "Rolled back: betterdesk-server and betterdesk-console run as before the upgrade"
+        print_success "Rolled back: neodesk-server and neodesk-console run as before the upgrade"
         return 0
     fi
     print_error "Rolled back, but a service did not come up; see the logs above"
@@ -5281,7 +5281,7 @@ cleanup_node_leftovers() {
     rm -f "$(server_binary_path).pre-go"
     print_success "Removed $removed leftovers of the Node.js console"
     if command -v node &>/dev/null; then
-        print_info "BetterDesk no longer needs Node.js; remove it with your package manager if nothing else uses it"
+        print_info "NeoDesk no longer needs Node.js; remove it with your package manager if nothing else uses it"
     fi
 }
 
@@ -5311,7 +5311,7 @@ update_go_install() {
         # The server's own updater: the release of the channel, its manifest
         # signature (with the release key the installed binary carries) and
         # SHA-256 checked, the old binary kept as .prev
-        print_step "Installing the newest release with betterdesk-server update (it checks the release signature)..."
+        print_step "Installing the newest release with neodesk-server update (it checks the release signature)..."
         # The repository goes to the updater: an installed binary may have
         # an older default
         local owner repo
@@ -5319,7 +5319,7 @@ update_go_install() {
         repo="${UPDATE_GITHUB_REPO_GIVEN:-$(env_file_value "$CONSOLE_PATH/.env" UPDATE_GITHUB_REPO)}"
         if ! UPDATE_GITHUB_OWNER="${owner:-$UPDATE_GITHUB_OWNER}" UPDATE_GITHUB_REPO="${repo:-$UPDATE_GITHUB_REPO}" \
             server_cmd --as-service update --yes; then
-            print_error "betterdesk-server update failed"
+            print_error "neodesk-server update failed"
             return 1
         fi
     fi
@@ -5349,7 +5349,7 @@ update_go_install() {
         cleanup_node_leftovers || true
     fi
     if [ "$before" = "$after" ]; then
-        print_success "betterdesk-server is up to date: $(timeout 10 "$bin" -version 2>/dev/null)"
+        print_success "neodesk-server is up to date: $(timeout 10 "$bin" -version 2>/dev/null)"
     else
         print_success "Updated to $(timeout 10 "$bin" -version 2>/dev/null)"
     fi
@@ -5386,7 +5386,7 @@ create_admin_user() {
             cat > "$RUSTDESK_PATH/.admin_credentials" << CREDEOF
 Admin Username: admin
 Admin Password: $admin_password
-Generated by: BetterDesk installer
+Generated by: NeoDesk installer
 Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)
 CREDEOF
             chown root:root "$RUSTDESK_PATH/.admin_credentials" 2>/dev/null || true
@@ -5434,13 +5434,13 @@ print_install_summary() {
     [ "$relay" = 21117 ] || relay_server="$host:$relay"
 
     echo ""
-    echo -e "${GREEN}${BOLD}BetterDesk is installed${NC}"
+    echo -e "${GREEN}${BOLD}NeoDesk is installed${NC}"
     echo ""
     echo -e "  Web console:   ${WHITE}$console${NC}"
     local subject="" issuer=""
-    if [ -f "$RUSTDESK_PATH/ssl/betterdesk.crt" ]; then
-        subject=$(openssl x509 -in "$RUSTDESK_PATH/ssl/betterdesk.crt" -noout -subject 2>/dev/null | sed 's/^subject=//')
-        issuer=$(openssl x509 -in "$RUSTDESK_PATH/ssl/betterdesk.crt" -noout -issuer 2>/dev/null | sed 's/^issuer=//')
+    if [ -f "$RUSTDESK_PATH/ssl/neodesk.crt" ]; then
+        subject=$(openssl x509 -in "$RUSTDESK_PATH/ssl/neodesk.crt" -noout -subject 2>/dev/null | sed 's/^subject=//')
+        issuer=$(openssl x509 -in "$RUSTDESK_PATH/ssl/neodesk.crt" -noout -issuer 2>/dev/null | sed 's/^issuer=//')
     fi
     if [ -n "$subject" ] && [ "$subject" = "$issuer" ]; then
         echo "                 The certificate is self-signed, so the browser warns once."
@@ -5457,8 +5457,8 @@ print_install_summary() {
     client_api_should_use_tls && api_scheme=https
     echo -e "    API server:    ${WHITE}$api_scheme://$host:$(read_effective_console_setting API_PORT "${CLIENT_API_PORT:-21121}")${NC}"
     echo -e "    Key:           ${WHITE}$key${NC}"
-    echo "  Log:           sudo journalctl -u betterdesk-server -f"
-    echo "  Settings:      $env_file (then: sudo systemctl restart betterdesk-server)"
+    echo "  Log:           sudo journalctl -u neodesk-server -f"
+    echo "  Settings:      $env_file (then: sudo systemctl restart neodesk-server)"
     echo "  Update:        sudo $cmd --update"
     echo "  Uninstall:     sudo $cmd --uninstall"
     echo ""
@@ -5505,13 +5505,13 @@ do_install() {
     # installed over
     if is_node_era_install; then
         print_warning "This server runs the Node.js web console."
-        print_info "The upgrade moves it into betterdesk-server and keeps all data."
+        print_info "The upgrade moves it into neodesk-server and keeps all data."
         upgrade_node_install_to_go
         return
     fi
 
     if [ "$INSTALL_STATUS" = "complete" ]; then
-        print_warning "BetterDesk is already installed!"
+        print_warning "NeoDesk is already installed!"
         if [ "$AUTO_MODE" = false ]; then
             if ! confirm "Do you want to reinstall?"; then
                 return
@@ -5521,7 +5521,7 @@ do_install() {
     fi
 
     echo ""
-    print_info "Starting BetterDesk v$VERSION installation..."
+    print_info "Starting NeoDesk v$VERSION installation..."
     echo ""
 
     # Choose database type (SQLite or PostgreSQL)
@@ -5570,7 +5570,7 @@ do_install() {
     if [ "$install_ok" = true ]; then
         print_success "Installation completed successfully!"
     else
-        print_warning "Installation finished but betterdesk-server does not answer."
+        print_warning "Installation finished but neodesk-server does not answer."
         print_info "Run option 8 (Diagnostics) to investigate."
     fi
     echo ""
@@ -5582,7 +5582,7 @@ do_install() {
         echo ""
         print_info "Production TLS options:"
         print_info "  • External reverse proxy (Caddy/Nginx on :443) — recommended when a proxy already handles certificates"
-        print_info "  • Enterprise TLS (Option 5 in SSL menu) — BetterDesk-native HTTPS on panel + signal/relay"
+        print_info "  • Enterprise TLS (Option 5 in SSL menu) — NeoDesk-native HTTPS on panel + signal/relay"
         echo ""
         if confirm "Will TLS terminate at an external reverse proxy (Caddy/Nginx)?"; then
             do_configure_reverse_proxy || true
@@ -5608,13 +5608,13 @@ do_install() {
 UPDATE_GITHUB_OWNER_GIVEN="${UPDATE_GITHUB_OWNER:-}"
 UPDATE_GITHUB_REPO_GIVEN="${UPDATE_GITHUB_REPO:-}"
 UPDATE_GITHUB_OWNER="${UPDATE_GITHUB_OWNER:-neodeskapp}"
-UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-betterdesk}"
+UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-neodesk}"
 # A channel given to the installer (--channel, or install.sh's --channel)
 # wins over .env and is written into it. UPDATE_GITHUB_BRANCH holds the
 # channel's id, main for stable and dev for development, not a git branch.
 UPDATE_GITHUB_BRANCH_GIVEN="${UPDATE_GITHUB_BRANCH:-}"
 UPDATE_GITHUB_BRANCH="${UPDATE_GITHUB_BRANCH:-main}"
-# The branch the installer itself comes from for the betterdesk command:
+# The branch the installer itself comes from for the neodesk command:
 # the repository's branch, main. The release channel above is separate.
 INSTALLER_REF="${INSTALLER_REF:-main}"
 
@@ -5668,7 +5668,7 @@ switch_update_channel() {
     echo ""
     detect_installation
     if [ "$INSTALL_STATUS" = "none" ]; then
-        print_error "BetterDesk is not installed!"
+        print_error "NeoDesk is not installed!"
         press_enter
         return
     fi
@@ -5699,23 +5699,23 @@ switch_update_channel() {
     press_enter
 }
 
-# If Update already wrote a newer betterdesk.sh, re-exec before Repair/Toggle (#219).
+# If Update already wrote a newer neodesk.sh, re-exec before Repair/Toggle (#219).
 maybe_reexec_if_installer_on_disk_is_newer() {
     if [ "${AUTO_MODE:-false}" = "true" ]; then
         return 0
     fi
-    if [ "${BETTERDESK_REEXECED:-}" = "1" ]; then
+    if [ "${NEODESK_REEXECED:-}" = "1" ]; then
         return 0
     fi
-    local self="${SCRIPT_DIR}/betterdesk.sh"
+    local self="${SCRIPT_DIR}/neodesk.sh"
     [ -f "$self" ] || return 0
     local disk_rev
-    disk_rev=$(grep -m1 '^BETTERDESK_SH_REVISION=' "$self" 2>/dev/null | cut -d= -f2- | tr -d "\"'[:space:]")
-    if [ -z "$disk_rev" ] || [ "$disk_rev" = "${BETTERDESK_SH_REVISION:-}" ]; then
+    disk_rev=$(grep -m1 '^NEODESK_SH_REVISION=' "$self" 2>/dev/null | cut -d= -f2- | tr -d "\"'[:space:]")
+    if [ -z "$disk_rev" ] || [ "$disk_rev" = "${NEODESK_SH_REVISION:-}" ]; then
         return 0
     fi
     print_info "Installer on disk is newer (revision $disk_rev) — reloading before this action (#219)"
-    exec env BETTERDESK_REEXECED=1 bash "$self" "${BETTERDESK_ORIG_ARGV[@]}"
+    exec env NEODESK_REEXECED=1 bash "$self" "${NEODESK_ORIG_ARGV[@]}"
 }
 
 do_update() {
@@ -5726,7 +5726,7 @@ do_update() {
     detect_installation
 
     if [ "$INSTALL_STATUS" = "none" ] && ! is_node_era_install; then
-        print_error "BetterDesk is not installed!"
+        print_error "NeoDesk is not installed!"
         print_info "Use 'FRESH INSTALLATION' option"
         [ "$AUTO_MODE" = true ] || press_enter
         return 1
@@ -5810,7 +5810,7 @@ do_repair() {
     print_status
     
     local _menu_items=(
-        $'Repair binaries\tReplace the server binary with BetterDesk Go'
+        $'Repair binaries\tReplace the server binary with NeoDesk Go'
         $'Repair database\tAdd missing columns / run migrations'
         $'Repair services\tRegenerate systemd service units'
         $'Repair permissions\tFix file ownership and permissions'
@@ -5843,7 +5843,7 @@ do_repair() {
 }
 
 repair_binaries() {
-    print_step "Repairing betterdesk-server..."
+    print_step "Repairing neodesk-server..."
     if is_node_era_install; then
         print_error "This install runs the Node.js console; use Update to upgrade it"
         return 1
@@ -5857,7 +5857,7 @@ repair_binaries() {
     install_staged_binary .prev || { rm -rf "$STAGED_SERVER_DIR"; return 1; }
     rm -rf "$STAGED_SERVER_DIR"
     if ! start_services_with_verification; then
-        print_error "betterdesk-server failed to start after the binary repair"
+        print_error "neodesk-server failed to start after the binary repair"
         return 1
     fi
     print_success "Server binary repaired and verified!"
@@ -5868,11 +5868,11 @@ repair_binaries() {
 repair_database() {
     print_step "Checking the database..."
     if [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
-        print_info "PostgreSQL: betterdesk-server migrates its tables at start"
+        print_info "PostgreSQL: neodesk-server migrates its tables at start"
         return 0
     fi
     if [ ! -f "$DB_PATH" ]; then
-        print_warning "No database at $DB_PATH; betterdesk-server creates it at start"
+        print_warning "No database at $DB_PATH; neodesk-server creates it at start"
         return 0
     fi
     if ! command -v sqlite3 &>/dev/null; then
@@ -5882,7 +5882,7 @@ repair_database() {
     local result
     result=$(sqlite3 "$DB_PATH" "PRAGMA integrity_check;" 2>&1 | head -5)
     if [ "$result" = "ok" ]; then
-        print_success "Database integrity: ok (betterdesk-server migrates its tables at start)"
+        print_success "Database integrity: ok (neodesk-server migrates its tables at start)"
     else
         print_error "Database integrity check: $result"
         return 1
@@ -5897,7 +5897,7 @@ repair_services() {
         return 1
     fi
     if [ ! -f "$(server_binary_path)" ]; then
-        print_error "betterdesk-server binary not found at $(server_binary_path)"
+        print_error "neodesk-server binary not found at $(server_binary_path)"
         print_info "Run 'Repair binaries' first"
         return 1
     fi
@@ -5912,7 +5912,7 @@ repair_services() {
     maybe_update_services
 
     if ! start_services_with_verification; then
-        print_error "betterdesk-server failed to start after the repair"
+        print_error "neodesk-server failed to start after the repair"
         if [ -n "$backup_file" ]; then
             print_info "Restoring the previous unit..."
             cp "$backup_file" "$SERVER_UNIT"
@@ -5940,9 +5940,9 @@ repair_permissions() {
     if systemctl is-enabled --quiet "$SERVER_SERVICE" 2>/dev/null; then
         systemctl restart "$SERVER_SERVICE" 2>/dev/null || true
         if verify_go_install 60; then
-            print_success "Permissions repaired — betterdesk-server is running"
+            print_success "Permissions repaired — neodesk-server is running"
         else
-            print_warning "Permissions synced but betterdesk-server does not answer — check: journalctl -u betterdesk-server -n 40 --no-pager"
+            print_warning "Permissions synced but neodesk-server does not answer — check: journalctl -u neodesk-server -n 40 --no-pager"
         fi
     else
         print_success "Permissions repaired"
@@ -5954,13 +5954,13 @@ repair_https_tls() {
 
     repair_https_stuck_state
 
-    if confirm "Restart BetterDesk services now?"; then
+    if confirm "Restart NeoDesk services now?"; then
         systemctl restart "$SERVER_SERVICE" 2>/dev/null || true
         verify_go_install 60 >/dev/null 2>&1 || true
-        print_success "betterdesk-server restarted"
+        print_success "neodesk-server restarted"
         run_protocol_tests
     else
-        print_info "Repair saved. Restart later: systemctl restart betterdesk-server"
+        print_info "Repair saved. Restart later: systemctl restart neodesk-server"
     fi
 }
 
@@ -6000,8 +6000,8 @@ do_validate() {
     fi
     
     # Check Go server binary
-    echo -n "  BetterDesk Server (Go): "
-    if [ -x "$RUSTDESK_PATH/betterdesk-server" ]; then
+    echo -n "  NeoDesk Server (Go): "
+    if [ -x "$RUSTDESK_PATH/neodesk-server" ]; then
         echo -e "${GREEN}✓ Single binary (signal + relay + API)${NC}"
     elif [ -x "$RUSTDESK_PATH/hbbs" ] && [ -x "$RUSTDESK_PATH/hbbr" ]; then
         echo -e "${YELLOW}! Legacy Rust binaries (consider upgrading to Go)${NC}"
@@ -6061,7 +6061,7 @@ do_validate() {
         fi
     else
         # Check if Go server is running — it creates the DB on start
-        if systemctl is-active --quiet betterdesk-server 2>/dev/null; then
+        if systemctl is-active --quiet neodesk-server 2>/dev/null; then
             echo -e "${YELLOW}! SQLite file not yet created (server running, will create on first connection)${NC}"
             warnings=$((warnings + 1))
         else
@@ -6085,13 +6085,13 @@ do_validate() {
     echo ""
     
     # Check Go server service first
-    echo -n "  betterdesk-server (Go): "
-    if systemctl is-active --quiet betterdesk-server 2>/dev/null; then
+    echo -n "  neodesk-server (Go): "
+    if systemctl is-active --quiet neodesk-server 2>/dev/null; then
         echo -e "${GREEN}● Active (signal + relay + API)${NC}"
-    elif systemctl is-enabled --quiet betterdesk-server 2>/dev/null; then
+    elif systemctl is-enabled --quiet neodesk-server 2>/dev/null; then
         echo -e "${YELLOW}○ Enabled but inactive${NC}"
         warnings=$((warnings + 1))
-    elif systemctl list-unit-files betterdesk-server.service &>/dev/null 2>&1; then
+    elif systemctl list-unit-files neodesk-server.service &>/dev/null 2>&1; then
         echo -e "${RED}○ Disabled${NC}"
         errors=$((errors + 1))
     else
@@ -6113,7 +6113,7 @@ do_validate() {
     fi
     
     if is_go_only_install; then
-        echo -n "  Web console (in betterdesk-server): "
+        echo -n "  Web console (in neodesk-server): "
         local console_url
         console_url=$(console_health_url)
         if [ -z "$console_url" ]; then
@@ -6125,12 +6125,12 @@ do_validate() {
             errors=$((errors + 1))
         fi
         if [ -f "$LEGACY_CONSOLE_UNIT" ]; then
-            echo -e "  betterdesk-console (Node.js): ${CYAN}kept disabled for a rollback${NC} (removed by the next update or --cleanup-node)"
+            echo -e "  neodesk-console (Node.js): ${CYAN}kept disabled for a rollback${NC} (removed by the next update or --cleanup-node)"
         fi
     else
-        echo -n "  betterdesk-console (Node.js): "
+        echo -n "  neodesk-console (Node.js): "
         if systemctl is-active --quiet "$LEGACY_CONSOLE_SERVICE" 2>/dev/null; then
-            echo -e "${GREEN}● Active${NC} (Update moves the console into betterdesk-server)"
+            echo -e "${GREEN}● Active${NC} (Update moves the console into neodesk-server)"
         elif systemctl is-enabled --quiet "$LEGACY_CONSOLE_SERVICE" 2>/dev/null; then
             echo -e "${YELLOW}○ Enabled but inactive${NC}"
             warnings=$((warnings + 1))
@@ -6189,7 +6189,7 @@ do_backup() {
 }
 
 do_backup_silent() {
-    local backup_name="betterdesk_backup_$(date +%Y%m%d_%H%M%S)"
+    local backup_name="neodesk_backup_$(date +%Y%m%d_%H%M%S)"
     local backup_path="$BACKUP_DIR/$backup_name"
     
     mkdir -p "$backup_path"
@@ -6205,7 +6205,7 @@ do_backup_silent() {
         print_info "  - Database, settings and the console's data ($(basename "$archive"))"
     else
         if binary_backs_up; then
-            print_warning "betterdesk-server backup failed (its message is in $LOG_FILE); the backup holds a copy of the database file instead"
+            print_warning "neodesk-server backup failed (its message is in $LOG_FILE); the backup holds a copy of the database file instead"
         fi
         if [ -f "$DB_PATH" ]; then
             cp "$DB_PATH" "$backup_path/"
@@ -6257,7 +6257,7 @@ do_reset_password() {
         return 1
     fi
     if [ "$CONSOLE_TYPE" = "nodejs" ]; then
-        print_error "This install runs the Node.js console; use Update to move it into betterdesk-server first"
+        print_error "This install runs the Node.js console; use Update to move it into neodesk-server first"
         press_enter
         return 1
     fi
@@ -6330,7 +6330,7 @@ do_reset_password() {
             cat > "$RUSTDESK_PATH/.admin_credentials" << CREDEOF
 Admin Username: admin
 Admin Password: $new_password
-Generated by: BetterDesk password reset
+Generated by: NeoDesk password reset
 Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)
 CREDEOF
             chmod 600 "$RUSTDESK_PATH/.admin_credentials"
@@ -6348,31 +6348,31 @@ CREDEOF
 # Build Functions
 #===============================================================================
 
-# Legacy Support Agent source staging — Generator now downloads BetterDesk-Client
-# templates into data/modules/betterdesk-support-generator/. Kept as a no-op so
+# Legacy Support Agent source staging — Generator now downloads NeoDesk-Client
+# templates into data/modules/neodesk-support-generator/. Kept as a no-op so
 # older install/update call sites do not fail.
 stage_support_agent_source() {
     print_info "Support Generator uses Client templates (module install); skipping Go support-agent staging"
     return 0
 }
 
-# Optional developer toolchain for local embedded BetterDesk-Client builds.
+# Optional developer toolchain for local embedded NeoDesk-Client builds.
 # Production installs should Import latest release in Generator instead —
-# signed agents come from GitHub (BetterDesk-Client), not from this host.
+# signed agents come from GitHub (NeoDesk-Client), not from this host.
 do_install_build_toolchain() {
     print_header
     echo -e "${WHITE}${BOLD}══════════ AGENT BUILD TOOLCHAIN (OPTIONAL / DEV) ══════════${NC}"
     echo ""
     echo "  Production: use Generator → Import latest release"
-    echo "  (signed incoming-only agents from BetterDesk-Client)."
+    echo "  (signed incoming-only agents from NeoDesk-Client)."
     echo "  This host does NOT need Flutter/Cargo for that path."
     echo ""
     echo "  This menu is for maintainers who set"
-    echo "  BETTERDESK_CLIENT_GENERATOR_MODE=embedded and compile"
+    echo "  NEODESK_CLIENT_GENERATOR_MODE=embedded and compile"
     echo "  Support agents locally (large download; not required)."
     echo ""
     echo "  Disk:  ~3 GB download, ~5 GB after install,"
-    echo "         plus cargo build cache (/var/cache/betterdesk-build)."
+    echo "         plus cargo build cache (/var/cache/neodesk-build)."
     echo ""
 
     local script_dir
@@ -6399,7 +6399,7 @@ do_install_build_toolchain() {
     local extra_args=()
     [ "$AUTO_MODE" = true ] && extra_args+=(--unattended)
 
-    BUILD_USER="${SUDO_USER:-${BUILD_USER:-unitronix}}" \
+    BUILD_USER="${SUDO_USER:-${BUILD_USER:-neodesk}}" \
         bash "$toolchain_script" "${extra_args[@]}"
 
     local rc=$?
@@ -6407,7 +6407,7 @@ do_install_build_toolchain() {
         stage_support_agent_source "$script_dir" || true
         print_success "Build toolchain installed."
         print_info "Restart the server to pick up the new PATH:"
-        print_info "  sudo systemctl restart betterdesk-server"
+        print_info "  sudo systemctl restart neodesk-server"
     else
         print_error "Toolchain installer exited with code $rc"
     fi
@@ -6423,7 +6423,7 @@ do_build() {
         $'Back\tReturn to the main menu'
     )
     local _menu_returns=( 1 2 3 0 )
-    menu_choose "Build & Deploy" "Rebuild and deploy the BetterDesk Go server"
+    menu_choose "Build & Deploy" "Rebuild and deploy the NeoDesk Go server"
     local build_choice="${MENU_CHOICE:-1}"
 
     case $build_choice in
@@ -6444,7 +6444,7 @@ do_rebuild_go_server() {
     detect_installation
 
     if [ "$INSTALL_STATUS" = "none" ]; then
-        print_warning "BetterDesk is not installed. Binary will be compiled but not deployed."
+        print_warning "NeoDesk is not installed. Binary will be compiled but not deployed."
         if ! confirm "Continue with compilation only?"; then
             press_enter
             return
@@ -6463,7 +6463,7 @@ do_rebuild_go_server() {
         return
     fi
 
-    local new_binary="$GO_SERVER_SOURCE/betterdesk-server"
+    local new_binary="$GO_SERVER_SOURCE/neodesk-server"
     if [ ! -f "$new_binary" ]; then
         print_error "Compiled binary not found at $new_binary"
         press_enter
@@ -6472,7 +6472,7 @@ do_rebuild_go_server() {
 
     # Step 2: Backup current binary
     print_step "[2/5] Backing up current binary..."
-    local installed_binary="$RUSTDESK_PATH/betterdesk-server"
+    local installed_binary="$RUSTDESK_PATH/neodesk-server"
     local ts
     ts=$(date +%Y%m%d_%H%M%S)
     if [ -f "$installed_binary" ]; then
@@ -6499,12 +6499,12 @@ do_rebuild_go_server() {
     print_step "[5/5] Starting services..."
     start_services_with_verification
 
-    if systemctl is-active --quiet betterdesk-server 2>/dev/null; then
+    if systemctl is-active --quiet neodesk-server 2>/dev/null; then
         echo ""
         print_success "Go server rebuilt and deployed successfully!"
         echo ""
         echo -e "${WHITE}Recent logs:${NC}"
-        journalctl -u betterdesk-server -n 5 --no-pager 2>/dev/null || true
+        journalctl -u neodesk-server -n 5 --no-pager 2>/dev/null || true
     else
         print_error "Service failed to start after rebuild!"
         echo ""
@@ -6512,15 +6512,15 @@ do_rebuild_go_server() {
         if [ -f "${installed_binary}.backup.${ts}" ]; then
             cp "${installed_binary}.backup.${ts}" "$installed_binary"
             chmod +x "$installed_binary"
-            systemctl start betterdesk-server 2>/dev/null || true
+            systemctl start neodesk-server 2>/dev/null || true
             sleep 2
-            if systemctl is-active --quiet betterdesk-server 2>/dev/null; then
+            if systemctl is-active --quiet neodesk-server 2>/dev/null; then
                 print_success "Rollback successful — previous binary restored"
             else
-                print_error "Rollback also failed. Check: journalctl -u betterdesk-server -n 50"
+                print_error "Rollback also failed. Check: journalctl -u neodesk-server -n 50"
             fi
         else
-            print_error "No backup to rollback to. Check: journalctl -u betterdesk-server -n 50"
+            print_error "No backup to rollback to. Check: journalctl -u neodesk-server -n 50"
         fi
     fi
 
@@ -6541,7 +6541,7 @@ do_compile_go_only() {
         return
     fi
 
-    local new_binary="$GO_SERVER_SOURCE/betterdesk-server"
+    local new_binary="$GO_SERVER_SOURCE/neodesk-server"
     local size
     size=$(du -h "$new_binary" | cut -f1)
     print_success "Binary compiled: $new_binary ($size)"
@@ -6578,7 +6578,7 @@ do_build_legacy_rust() {
     print_info "Rust: $(cargo --version)"
     echo ""
 
-    local build_dir="/tmp/betterdesk_build_$$"
+    local build_dir="/tmp/neodesk_build_$$"
     mkdir -p "$build_dir"
     cd "$build_dir"
 
@@ -6587,7 +6587,7 @@ do_build_legacy_rust() {
     cd rustdesk-server
     git submodule update --init --recursive
 
-    print_step "Applying BetterDesk modifications..."
+    print_step "Applying NeoDesk modifications..."
 
     # Copy modified sources
     if [ -d "$SCRIPT_DIR/hbbs-patch-v2/src" ]; then
@@ -6656,18 +6656,18 @@ configure_firewall_rules() {
     local entries entry created=0
     mapfile -t entries < <(firewall_ports)
     if command -v ufw &>/dev/null && ufw status 2>/dev/null | grep -q "Status: active"; then
-        print_info "Opening the BetterDesk ports in ufw..."
+        print_info "Opening the NeoDesk ports in ufw..."
         for entry in "${entries[@]}"; do
-            ufw allow "$entry" comment "BetterDesk" >/dev/null 2>&1 && created=$((created + 1))
+            ufw allow "$entry" comment "NeoDesk" >/dev/null 2>&1 && created=$((created + 1))
         done
     elif command -v firewall-cmd &>/dev/null && systemctl is-active --quiet firewalld 2>/dev/null; then
-        print_info "Opening the BetterDesk ports in firewalld..."
+        print_info "Opening the NeoDesk ports in firewalld..."
         for entry in "${entries[@]}"; do
             firewall-cmd --permanent --add-port="$entry" >/dev/null 2>&1 && created=$((created + 1))
         done
         firewall-cmd --reload >/dev/null 2>&1 || true
     elif command -v iptables &>/dev/null; then
-        print_info "Opening the BetterDesk ports with iptables..."
+        print_info "Opening the NeoDesk ports with iptables..."
         for entry in "${entries[@]}"; do
             iptables -C INPUT -p "${entry#*/}" --dport "${entry%/*}" -j ACCEPT 2>/dev/null \
                 || iptables -A INPUT -p "${entry#*/}" --dport "${entry%/*}" -j ACCEPT 2>/dev/null
@@ -6728,9 +6728,9 @@ do_diagnostics() {
     echo ""
     
     # Check for Go server first, then legacy Rust services
-    if systemctl list-unit-files betterdesk-server.service &>/dev/null 2>&1; then
-        echo -e "${CYAN}--- betterdesk-server (Go) ---${NC}"
-        journalctl -u betterdesk-server -n 10 --no-pager 2>/dev/null || echo "No logs found"
+    if systemctl list-unit-files neodesk-server.service &>/dev/null 2>&1; then
+        echo -e "${CYAN}--- neodesk-server (Go) ---${NC}"
+        journalctl -u neodesk-server -n 10 --no-pager 2>/dev/null || echo "No logs found"
     else
         echo -e "${CYAN}--- rustdesksignal (Legacy Rust) ---${NC}"
         journalctl -u rustdesksignal -n 10 --no-pager 2>/dev/null || echo "No logs found"
@@ -6756,9 +6756,9 @@ do_diagnostics() {
         diag_pg_uri=$(env_database_url "$CONSOLE_PATH/.env")
     fi
     # The Go server may also carry the DSN in its systemd unit (-db postgres://...)
-    if [ "$diag_db_type" != "postgres" ] && [ -f /etc/systemd/system/betterdesk-server.service ]; then
+    if [ "$diag_db_type" != "postgres" ] && [ -f /etc/systemd/system/neodesk-server.service ]; then
         local svc_db
-        svc_db=$(grep -oP '\-db\s+"?\K(postgres|postgresql)://[^" ]+' /etc/systemd/system/betterdesk-server.service 2>/dev/null | head -1)
+        svc_db=$(grep -oP '\-db\s+"?\K(postgres|postgresql)://[^" ]+' /etc/systemd/system/neodesk-server.service 2>/dev/null | head -1)
         if [ -n "$svc_db" ]; then
             diag_db_type="postgres"
             diag_pg_uri="${diag_pg_uri:-$svc_db}"
@@ -6816,12 +6816,12 @@ do_diagnostics() {
     
     local port_issues=0
     local port_defs=(
-        "${GO_API_PORT:-21114}:TCP:betterdesk-serv|betterdesk-server|hbbs:Go HTTP API (handlers)"
+        "${GO_API_PORT:-21114}:TCP:neodesk-serv|neodesk-server|hbbs:Go HTTP API (handlers)"
         "${CLIENT_API_PORT:-21121}:TCP:node|MainThread:Client API compat proxy → Go"
-        "21115:TCP:betterdesk-serv|betterdesk-server|hbbs:NAT Test"
-        "21116:TCP:betterdesk-serv|betterdesk-server|hbbs:ID Server (TCP)"
-        "21116:UDP:betterdesk-serv|betterdesk-server|hbbs:ID Server (UDP)"
-        "21117:TCP:betterdesk-serv|betterdesk-server|hbbr:Relay Server"
+        "21115:TCP:neodesk-serv|neodesk-server|hbbs:NAT Test"
+        "21116:TCP:neodesk-serv|neodesk-server|hbbs:ID Server (TCP)"
+        "21116:UDP:neodesk-serv|neodesk-server|hbbs:ID Server (UDP)"
+        "21117:TCP:neodesk-serv|neodesk-server|hbbr:Relay Server"
         "5000:TCP:node|MainThread:Web Console"
     )
     
@@ -6942,7 +6942,7 @@ do_diagnostics() {
     # Detect if Go server API uses TLS (only if explicit --tls-api in service args)
     local api_use_tls=false
     local api_scheme="http"
-    if systemctl cat betterdesk-server.service 2>/dev/null | grep -qE '\-tls-api'; then
+    if systemctl cat neodesk-server.service 2>/dev/null | grep -qE '\-tls-api'; then
         api_use_tls=true
         api_scheme="https"
     fi
@@ -6958,7 +6958,7 @@ do_diagnostics() {
                 echo -e "  ${YELLOW}⚠ Note: Go server has TLS cert but API responds on HTTP${NC}"
             else
                 echo -e "${RED}UNREACHABLE${NC}"
-                echo -e "  ${YELLOW}Tip: Check betterdesk-server logs: journalctl -u betterdesk-server -n 20${NC}"
+                echo -e "  ${YELLOW}Tip: Check neodesk-server logs: journalctl -u neodesk-server -n 20${NC}"
             fi
         fi
     else
@@ -6980,11 +6980,11 @@ do_diagnostics() {
     if [ "$api_use_tls" = true ]; then
         local console_api_url=""
         # Check what URL the console is configured to use
-        if [ -f /etc/systemd/system/betterdesk-console.service ]; then
-            console_api_url=$(grep 'BETTERDESK_API_URL=' /etc/systemd/system/betterdesk-console.service 2>/dev/null | tail -1 | sed 's/.*BETTERDESK_API_URL=//')
+        if [ -f /etc/systemd/system/neodesk-console.service ]; then
+            console_api_url=$(grep 'NEODESK_API_URL=' /etc/systemd/system/neodesk-console.service 2>/dev/null | tail -1 | sed 's/.*NEODESK_API_URL=//')
         fi
         if [ -z "$console_api_url" ] && [ -f "$CONSOLE_PATH/.env" ]; then
-            console_api_url=$(grep -m1 '^BETTERDESK_API_URL=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
+            console_api_url=$(grep -m1 '^NEODESK_API_URL=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
         fi
         
         if [ -n "$console_api_url" ] && echo "$console_api_url" | grep -q '^http://'; then
@@ -7048,7 +7048,7 @@ do_uninstall() {
     echo -e "${RED}${BOLD}══════════ UNINSTALL ══════════${NC}"
     echo ""
     
-    print_warning "This operation will remove BetterDesk Console!"
+    print_warning "This operation will remove NeoDesk Console!"
     echo ""
     
     if [ "$AUTO_MODE" != true ] && [ "$UNINSTALL_MODE" != true ]; then
@@ -7063,22 +7063,22 @@ do_uninstall() {
     
     print_step "Stopping services..."
     # Stop Go server (primary)
-    systemctl stop betterdesk-server betterdesk-console 2>/dev/null || true
-    systemctl disable betterdesk-server betterdesk-console 2>/dev/null || true
+    systemctl stop neodesk-server neodesk-console 2>/dev/null || true
+    systemctl disable neodesk-server neodesk-console 2>/dev/null || true
     # Stop legacy Rust services if they exist
-    systemctl stop rustdesksignal rustdeskrelay betterdesk betterdesk-api betterdesk-go 2>/dev/null || true
-    systemctl disable rustdesksignal rustdeskrelay betterdesk betterdesk-api betterdesk-go 2>/dev/null || true
+    systemctl stop rustdesksignal rustdeskrelay neodesk neodesk-api neodesk-go 2>/dev/null || true
+    systemctl disable rustdesksignal rustdeskrelay neodesk neodesk-api neodesk-go 2>/dev/null || true
     
     print_step "Removing service files..."
     # Remove Go services
-    rm -f /etc/systemd/system/betterdesk-server.service
-    rm -f /etc/systemd/system/betterdesk-console.service
+    rm -f /etc/systemd/system/neodesk-server.service
+    rm -f /etc/systemd/system/neodesk-console.service
     # Remove legacy services
     rm -f /etc/systemd/system/rustdesksignal.service
     rm -f /etc/systemd/system/rustdeskrelay.service
-    rm -f /etc/systemd/system/betterdesk.service
-    rm -f /etc/systemd/system/betterdesk-api.service
-    rm -f /etc/systemd/system/betterdesk-go.service
+    rm -f /etc/systemd/system/neodesk.service
+    rm -f /etc/systemd/system/neodesk-api.service
+    rm -f /etc/systemd/system/neodesk-go.service
     systemctl daemon-reload
     
     if [ "$PURGE_MODE" = true ] || { [ "$AUTO_MODE" != true ] && confirm "Remove installation files ($RUSTDESK_PATH)?"; }; then
@@ -7099,14 +7099,14 @@ do_uninstall() {
         rm -f "$MANAGER_COMMAND"
     fi
 
-    print_success "BetterDesk has been uninstalled"
+    print_success "NeoDesk has been uninstalled"
     local left=()
     [ -d "$RUSTDESK_PATH" ] && left+=("$RUSTDESK_PATH: the database, the server's keys and certificates")
     [ -d "$CONSOLE_PATH" ] && left+=("$CONSOLE_PATH: the settings (.env) and the console's data")
     [ -d "$BACKUP_DIR" ] && left+=("$BACKUP_DIR: the backups")
     id "$SERVICE_USER" &>/dev/null && left+=("the system user $SERVICE_USER (sudo userdel $SERVICE_USER)")
     [ "$USE_POSTGRESQL" = true ] && left+=("the PostgreSQL database and PostgreSQL itself")
-    left+=("the firewall rules for the BetterDesk ports")
+    left+=("the firewall rules for the NeoDesk ports")
     [ -x "$MANAGER_COMMAND" ] && left+=("the command $MANAGER_COMMAND, to install again")
     echo ""
     echo "Left on this machine:"
@@ -7129,14 +7129,14 @@ do_configure_ssl() {
 
     if [ ! -f "$CONSOLE_PATH/.env" ]; then
         print_error "Console .env not found at $CONSOLE_PATH/.env"
-        print_info "Please install BetterDesk first (option 1)"
+        print_info "Please install NeoDesk first (option 1)"
         press_enter
         return
     fi
 
     local ssl_dir="$RUSTDESK_PATH/ssl"
     local env_file="$CONSOLE_PATH/.env"
-    local svc_file="/etc/systemd/system/betterdesk-console.service"
+    local svc_file="/etc/systemd/system/neodesk-console.service"
     local ssl_tls_active="no"
 
     local _menu_items=(
@@ -7154,7 +7154,7 @@ do_configure_ssl() {
     case "${ssl_choice:-1}" in
         1)
             echo ""
-            read -p "Enter your domain name (e.g., betterdesk.example.com): " domain
+            read -p "Enter your domain name (e.g., neodesk.example.com): " domain
             if [ -z "$domain" ]; then
                 print_error "Domain name required for Let's Encrypt"
                 press_enter
@@ -7193,7 +7193,7 @@ do_configure_ssl() {
                 return
             fi
 
-            apply_console_protocol_mode https "$ssl_dir/betterdesk.crt" "$ssl_dir/betterdesk.key" true false
+            apply_console_protocol_mode https "$ssl_dir/neodesk.crt" "$ssl_dir/neodesk.key" true false
             ssl_tls_active="yes"
 
             if ! crontab -l 2>/dev/null | grep -q "certbot renew"; then
@@ -7235,8 +7235,8 @@ do_configure_ssl() {
             fi
             [ -n "$merged_crt" ] && rm -f "$merged_crt"
 
-            infer_tls_mode_from_cert "$ssl_dir/betterdesk.crt"
-            apply_console_protocol_mode https "$ssl_dir/betterdesk.crt" "$ssl_dir/betterdesk.key" \
+            infer_tls_mode_from_cert "$ssl_dir/neodesk.crt"
+            apply_console_protocol_mode https "$ssl_dir/neodesk.crt" "$ssl_dir/neodesk.key" \
                 "$INFERRED_RUSTDESK_API_TLS" "$INFERRED_ALLOW_SELF_SIGNED"
             if [ -n "$ca_path" ] && [ -f "$ca_path" ]; then
                 _upsert_env_line "$env_file" SSL_CA_PATH "$ca_path"
@@ -7261,25 +7261,25 @@ do_configure_ssl() {
             print_step "Generating self-signed certificate..."
             print_info "SANs: $san_list"
             openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
-                -keyout "$ssl_dir/betterdesk.key" \
-                -out "$ssl_dir/betterdesk.crt" \
-                -subj "/CN=$cn/O=BetterDesk/C=PL" \
+                -keyout "$ssl_dir/neodesk.key" \
+                -out "$ssl_dir/neodesk.crt" \
+                -subj "/CN=$cn/O=NeoDesk/C=PL" \
                 -addext "subjectAltName=$san_list" 2>/dev/null || \
             openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
-                -keyout "$ssl_dir/betterdesk.key" \
-                -out "$ssl_dir/betterdesk.crt" \
-                -subj "/CN=$cn/O=BetterDesk/C=PL" 2>/dev/null
+                -keyout "$ssl_dir/neodesk.key" \
+                -out "$ssl_dir/neodesk.crt" \
+                -subj "/CN=$cn/O=NeoDesk/C=PL" 2>/dev/null
 
-            if ! deploy_ssl_material_to_rustdesk_dir "$ssl_dir/betterdesk.crt" "$ssl_dir/betterdesk.key"; then
+            if ! deploy_ssl_material_to_rustdesk_dir "$ssl_dir/neodesk.crt" "$ssl_dir/neodesk.key"; then
                 print_error "Failed to set permissions on self-signed certificate"
                 press_enter
                 return
             fi
 
-            apply_console_protocol_mode https "$ssl_dir/betterdesk.crt" "$ssl_dir/betterdesk.key" false true
+            apply_console_protocol_mode https "$ssl_dir/neodesk.crt" "$ssl_dir/neodesk.key" false true
             ssl_tls_active="yes"
             print_success "Self-signed certificate generated (valid 10 years)"
-            print_info "Certificate: $ssl_dir/betterdesk.crt"
+            print_info "Certificate: $ssl_dir/neodesk.crt"
             [ -n "$lan_ip" ] && [ "$lan_ip" != "$server_ip" ] && print_info "LAN IP included: $lan_ip"
             print_warning "Browsers will show security warning. Use Let's Encrypt for public servers."
             ;;
@@ -7310,22 +7310,22 @@ do_configure_ssl() {
             print_step "Generating Enterprise certificate..."
             print_info "SANs: $san_list"
             openssl req -x509 -nodes -days 3650 -newkey rsa:4096 \
-                -keyout "$ssl_dir/betterdesk.key" \
-                -out "$ssl_dir/betterdesk.crt" \
-                -subj "/CN=$cn/O=BetterDesk Enterprise/C=PL" \
+                -keyout "$ssl_dir/neodesk.key" \
+                -out "$ssl_dir/neodesk.crt" \
+                -subj "/CN=$cn/O=NeoDesk Enterprise/C=PL" \
                 -addext "subjectAltName=$san_list" 2>/dev/null || \
             openssl req -x509 -nodes -days 3650 -newkey rsa:4096 \
-                -keyout "$ssl_dir/betterdesk.key" \
-                -out "$ssl_dir/betterdesk.crt" \
-                -subj "/CN=$cn/O=BetterDesk Enterprise/C=PL" 2>/dev/null
+                -keyout "$ssl_dir/neodesk.key" \
+                -out "$ssl_dir/neodesk.crt" \
+                -subj "/CN=$cn/O=NeoDesk Enterprise/C=PL" 2>/dev/null
 
-            if ! deploy_ssl_material_to_rustdesk_dir "$ssl_dir/betterdesk.crt" "$ssl_dir/betterdesk.key"; then
+            if ! deploy_ssl_material_to_rustdesk_dir "$ssl_dir/neodesk.crt" "$ssl_dir/neodesk.key"; then
                 print_error "Failed to set permissions on Enterprise certificate"
                 press_enter
                 return
             fi
 
-            apply_console_protocol_mode https "$ssl_dir/betterdesk.crt" "$ssl_dir/betterdesk.key" true true
+            apply_console_protocol_mode https "$ssl_dir/neodesk.crt" "$ssl_dir/neodesk.key" true true
             _upsert_env_line "$env_file" ENTERPRISE_TLS true
             if [ -f "$svc_file" ]; then
                 _upsert_systemd_env "$svc_file" ENTERPRISE_TLS true
@@ -7334,8 +7334,8 @@ do_configure_ssl() {
 
             print_success "Enterprise TLS configured successfully!"
             echo ""
-            print_info "Certificate: $ssl_dir/betterdesk.crt"
-            print_info "Private key: $ssl_dir/betterdesk.key"
+            print_info "Certificate: $ssl_dir/neodesk.crt"
+            print_info "Private key: $ssl_dir/neodesk.key"
             [ -n "$lan_ip" ] && [ "$lan_ip" != "$server_ip" ] && print_info "LAN IP: $lan_ip"
             echo ""
             print_info "  Panel HTTPS: :$(resolve_panel_https_port)"
@@ -7361,12 +7361,12 @@ do_configure_ssl() {
     fi
 
     echo ""
-    if confirm "Restart BetterDesk to apply changes?"; then
+    if confirm "Restart NeoDesk to apply changes?"; then
         repair_https_stuck_state yes
         ensure_console_tls_material_readable 2>/dev/null || true
-        systemctl restart betterdesk-server 2>/dev/null || true
-        print_success "BetterDesk services restarted"
-        verify_service_health "betterdesk-server" "21116" 15 >/dev/null 2>&1 || true
+        systemctl restart neodesk-server 2>/dev/null || true
+        print_success "NeoDesk services restarted"
+        verify_service_health "neodesk-server" "21116" 15 >/dev/null 2>&1 || true
         verify_go_install 60 >/dev/null 2>&1 || true
         run_protocol_tests
     fi
@@ -7394,28 +7394,28 @@ run_protocol_tests() {
     _test_warn() { echo -e "  ${YELLOW}!${NC} $1"; warn=$((warn+1)); }
 
     # ── 1. Services running ──
-    if systemctl is-active --quiet betterdesk-server 2>/dev/null; then
+    if systemctl is-active --quiet neodesk-server 2>/dev/null; then
         _test_ok "Go server service is active"
     else
-        _test_fail "Go server service is NOT active (journalctl -u betterdesk-server)"
-        if journalctl -u betterdesk-server --no-pager -n 40 2>/dev/null | grep -q 'listen tcp :5000'; then
+        _test_fail "Go server service is NOT active (journalctl -u neodesk-server)"
+        if journalctl -u neodesk-server --no-pager -n 40 2>/dev/null | grep -q 'listen tcp :5000'; then
             echo -e "      ${DIM}Hint: Go tried signal on :5000 — panel PORT in .env leaked; run Repair → Repair HTTPS/TLS (#219)${NC}"
         fi
     fi
     if systemctl is-active --quiet "$(console_service_name)" 2>/dev/null; then
         _test_ok "Web console service is active"
     else
-        _test_fail "Web console service is NOT active (journalctl -u betterdesk-server)"
+        _test_fail "Web console service is NOT active (journalctl -u neodesk-server)"
     fi
 
     # ── 1b. Wait for Go signal port (post-restart boot delay) ──
-    if systemctl is-active --quiet betterdesk-server 2>/dev/null; then
-        if verify_service_health "betterdesk-server" "21116" 15 >/dev/null 2>&1; then
+    if systemctl is-active --quiet neodesk-server 2>/dev/null; then
+        if verify_service_health "neodesk-server" "21116" 15 >/dev/null 2>&1; then
             _test_ok "Go server listening on signal port :21116"
-        elif journalctl -u betterdesk-server --no-pager -n 40 2>/dev/null | grep -q 'listen tcp :5000'; then
+        elif journalctl -u neodesk-server --no-pager -n 40 2>/dev/null | grep -q 'listen tcp :5000'; then
             _test_fail "Go server tried signal on :5000 (conflicts with panel redirect) — Repair → Repair HTTPS/TLS (#219)"
         else
-            _test_fail "Go server not listening on :21116 yet (journalctl -u betterdesk-server)"
+            _test_fail "Go server not listening on :21116 yet (journalctl -u neodesk-server)"
         fi
     fi
 
@@ -7463,7 +7463,7 @@ run_protocol_tests() {
             _test_fail "Go server TRUST_PROXY not enabled — API rate limits may use proxy IP only"
         fi
         local rp_dir="$RUSTDESK_PATH/reverse-proxy"
-        if [ -d "$rp_dir" ] && { [ -f "$rp_dir/caddy.Caddyfile.snippet" ] || [ -f "$rp_dir/nginx.betterdesk.conf.snippet" ]; }; then
+        if [ -d "$rp_dir" ] && { [ -f "$rp_dir/caddy.Caddyfile.snippet" ] || [ -f "$rp_dir/nginx.neodesk.conf.snippet" ]; }; then
             _test_ok "Reverse-proxy snippets in $rp_dir/"
         else
             _test_warn "No snippets in $rp_dir/ — re-run SSL menu → External reverse proxy"
@@ -7472,13 +7472,13 @@ run_protocol_tests() {
 
     # ── 2b. TLS key readable by console user (HTTPS only) ──
     if [ "$(echo "$https_enabled" | tr '[:upper:]' '[:lower:]')" = "true" ]; then
-        local ssl_key_path console_user="betterdesk"
+        local ssl_key_path console_user="neodesk"
         ssl_key_path=$(read_effective_console_setting SSL_KEY_PATH "")
         if id "$console_user" &>/dev/null && [ -n "$ssl_key_path" ] && [ -e "$ssl_key_path" ]; then
             if runuser -u "$console_user" -- test -r "$ssl_key_path" 2>/dev/null; then
                 _test_ok "TLS private key readable by console user ($console_user)"
             else
-                _test_fail "Console user $console_user cannot read TLS key ($ssl_key_path) — HTTPS panel will fall back to HTTP (journalctl -u betterdesk-server)"
+                _test_fail "Console user $console_user cannot read TLS key ($ssl_key_path) — HTTPS panel will fall back to HTTP (journalctl -u neodesk-server)"
             fi
         fi
     fi
@@ -7506,8 +7506,8 @@ run_protocol_tests() {
             _test_fail "Web panel NOT reachable on ${panel_scheme}://127.0.0.1:${panel_port} (got $panel_code)"
         fi
         if systemctl is-active --quiet "$(console_service_name)" 2>/dev/null && [ "$panel_scheme" = "https" ]; then
-            if journalctl -u betterdesk-server --no-pager -n 80 2>/dev/null | grep -qi 'Falling back to HTTP'; then
-                echo -e "      ${DIM}Hint: console logged HTTPS fallback — check TLS key permissions (runuser -u betterdesk test -r key)${NC}"
+            if journalctl -u neodesk-server --no-pager -n 80 2>/dev/null | grep -qi 'Falling back to HTTP'; then
+                echo -e "      ${DIM}Hint: console logged HTTPS fallback — check TLS key permissions (runuser -u neodesk test -r key)${NC}"
             elif [ -n "$alt_panel_port" ]; then
                 echo -e "      ${DIM}Hint: configured HTTPS_PORT=443 but Node bound :5443 — Repair → Repair permissions, then restart (#219)${NC}"
             fi
@@ -7571,7 +7571,7 @@ run_protocol_tests() {
     else
         _test_fail "Go API not responding over HTTP on :${go_api_port} (got $api_code)"
         if ! ss -tlnH 2>/dev/null | grep -q ":${go_api_port} "; then
-            if ss -tlnpH 2>/dev/null | grep ":${client_api_port} " | grep -qiE 'betterdesk-server|betterdesk-serv'; then
+            if ss -tlnpH 2>/dev/null | grep ":${client_api_port} " | grep -qiE 'neodesk-server|neodesk-serv'; then
                 echo -e "      ${DIM}Hint: Go API bound to :${client_api_port} — API_PORT from .env leaked; run Repair → Repair HTTPS/TLS or update (#219)${NC}"
             fi
         fi
@@ -7610,10 +7610,10 @@ run_protocol_tests() {
     local tls_active="no"
     [ -f "$go_svc_file" ] && grep -q '\-tls-signal' "$go_svc_file" 2>/dev/null && tls_active="yes"
     if [ "$(echo "$https_enabled" | tr '[:upper:]' '[:lower:]')" = "true" ] || [ "$tls_active" = "yes" ]; then
-        if [ -f "$ssl_dir/betterdesk.crt" ]; then
-            if openssl x509 -in "$ssl_dir/betterdesk.crt" -noout 2>/dev/null; then
+        if [ -f "$ssl_dir/neodesk.crt" ]; then
+            if openssl x509 -in "$ssl_dir/neodesk.crt" -noout 2>/dev/null; then
                 local not_after days_left
-                not_after=$(openssl x509 -in "$ssl_dir/betterdesk.crt" -noout -enddate 2>/dev/null | cut -d= -f2)
+                not_after=$(openssl x509 -in "$ssl_dir/neodesk.crt" -noout -enddate 2>/dev/null | cut -d= -f2)
                 if [ -n "$not_after" ]; then
                     local exp_epoch now_epoch
                     exp_epoch=$(date -d "$not_after" +%s 2>/dev/null || echo 0)
@@ -7630,13 +7630,13 @@ run_protocol_tests() {
                     fi
                 fi
                 local san
-                san=$(openssl x509 -in "$ssl_dir/betterdesk.crt" -noout -ext subjectAltName 2>/dev/null | tail -n +2 | tr -d ' ')
+                san=$(openssl x509 -in "$ssl_dir/neodesk.crt" -noout -ext subjectAltName 2>/dev/null | tail -n +2 | tr -d ' ')
                 [ -n "$san" ] && echo -e "      ${DIM}SAN: ${san}${NC}"
             else
                 _test_fail "Certificate file is not a valid X.509 certificate"
             fi
         else
-            _test_fail "HTTPS/TLS enabled but no certificate found at $ssl_dir/betterdesk.crt"
+            _test_fail "HTTPS/TLS enabled but no certificate found at $ssl_dir/neodesk.crt"
         fi
 
         if [ "$tls_active" = "yes" ]; then
@@ -7661,10 +7661,10 @@ run_protocol_tests() {
         echo -e "  ${GREEN}Configuration verified successfully.${NC}"
         if [ "$(echo "$https_enabled" | tr '[:upper:]' '[:lower:]')" = "true" ] && [ "$https_port" = "5443" ]; then
             echo ""
-            echo -e "  ${DIM}Tip: for https://your-domain without :5443, set HTTPS_PORT=443 in .env and run Repair → Repair permissions, or re-run Protocol Toggle / SSL config and choose standard port 443. See https://betterde.sk/docs/operations/reverse-proxy-tls#https-without-a-proxy${NC}"
+            echo -e "  ${DIM}Tip: for https://your-domain without :5443, set HTTPS_PORT=443 in .env and run Repair → Repair permissions, or re-run Protocol Toggle / SSL config and choose standard port 443. See https://neode.sk/docs/operations/reverse-proxy-tls#https-without-a-proxy${NC}"
         elif [ "$(echo "$https_enabled" | tr '[:upper:]' '[:lower:]')" != "true" ] && [ "$_trust_on" = "yes" ]; then
             echo ""
-            echo -e "  ${DIM}Tip: configure Caddy/Nginx using $RUSTDESK_PATH/reverse-proxy/ snippets, then open https://your-domain/ (not :5443). See https://betterde.sk/docs/operations/reverse-proxy-tls${NC}"
+            echo -e "  ${DIM}Tip: configure Caddy/Nginx using $RUSTDESK_PATH/reverse-proxy/ snippets, then open https://your-domain/ (not :5443). See https://neode.sk/docs/operations/reverse-proxy-tls${NC}"
         fi
     fi
     echo ""
@@ -7683,7 +7683,7 @@ do_toggle_protocol() {
     echo ""
 
     local env_file="$CONSOLE_PATH/.env"
-    local svc_file="/etc/systemd/system/betterdesk-console.service"
+    local svc_file="/etc/systemd/system/neodesk-console.service"
     local go_svc_file="$SERVER_UNIT"
     local ssl_dir="$RUSTDESK_PATH/ssl"
 
@@ -7734,9 +7734,9 @@ do_toggle_protocol() {
             # ── Switch to HTTPS ──
             echo ""
             local have_cert="no"
-            [ -f "$ssl_dir/betterdesk.crt" ] && [ -f "$ssl_dir/betterdesk.key" ] && have_cert="yes"
+            [ -f "$ssl_dir/neodesk.crt" ] && [ -f "$ssl_dir/neodesk.key" ] && have_cert="yes"
             local _keep_desc="No existing certificate found"
-            [ "$have_cert" = "yes" ] && _keep_desc="Reuse $ssl_dir/betterdesk.crt"
+            [ "$have_cert" = "yes" ] && _keep_desc="Reuse $ssl_dir/neodesk.crt"
             local _menu_items=(
                 $'Keep existing certificate\t'"$_keep_desc"
                 $'Self-signed certificate\tGenerate one for LAN / testing'
@@ -7756,7 +7756,7 @@ do_toggle_protocol() {
                         return
                     fi
                     maybe_repair_le_ssl_symlinks 2>/dev/null || true
-                    print_info "Using existing certificate at $ssl_dir/betterdesk.crt"
+                    print_info "Using existing certificate at $ssl_dir/neodesk.crt"
                     ;;
                 2)
                     mkdir -p "$ssl_dir"
@@ -7769,15 +7769,15 @@ do_toggle_protocol() {
                     [ -n "$ss_domain" ] && san_list="$san_list,DNS:$ss_domain"
                     print_step "Generating self-signed certificate..."
                     openssl req -x509 -nodes -days 3650 -newkey rsa:4096 \
-                        -keyout "$ssl_dir/betterdesk.key" \
-                        -out "$ssl_dir/betterdesk.crt" \
-                        -subj "/CN=${ss_domain:-$server_ip}/O=BetterDesk/C=PL" \
+                        -keyout "$ssl_dir/neodesk.key" \
+                        -out "$ssl_dir/neodesk.crt" \
+                        -subj "/CN=${ss_domain:-$server_ip}/O=NeoDesk/C=PL" \
                         -addext "subjectAltName=$san_list" 2>/dev/null || \
                     openssl req -x509 -nodes -days 3650 -newkey rsa:4096 \
-                        -keyout "$ssl_dir/betterdesk.key" \
-                        -out "$ssl_dir/betterdesk.crt" \
-                        -subj "/CN=${ss_domain:-$server_ip}/O=BetterDesk/C=PL" 2>/dev/null
-                    if ! deploy_ssl_material_to_rustdesk_dir "$ssl_dir/betterdesk.crt" "$ssl_dir/betterdesk.key"; then
+                        -keyout "$ssl_dir/neodesk.key" \
+                        -out "$ssl_dir/neodesk.crt" \
+                        -subj "/CN=${ss_domain:-$server_ip}/O=NeoDesk/C=PL" 2>/dev/null
+                    if ! deploy_ssl_material_to_rustdesk_dir "$ssl_dir/neodesk.crt" "$ssl_dir/neodesk.key"; then
                         print_error "Failed to set permissions on self-signed certificate"
                         press_enter
                         return
@@ -7862,7 +7862,7 @@ do_toggle_protocol() {
             local api_tls="false" allow_self_signed="true"
             case "${cert_choice:-2}" in
                 1)
-                    infer_tls_mode_from_cert "$ssl_dir/betterdesk.crt"
+                    infer_tls_mode_from_cert "$ssl_dir/neodesk.crt"
                     api_tls="$INFERRED_RUSTDESK_API_TLS"
                     allow_self_signed="$INFERRED_ALLOW_SELF_SIGNED"
                     ;;
@@ -7875,7 +7875,7 @@ do_toggle_protocol() {
                     allow_self_signed="false"
                     ;;
                 4)
-                    infer_tls_mode_from_cert "$ssl_dir/betterdesk.crt"
+                    infer_tls_mode_from_cert "$ssl_dir/neodesk.crt"
                     api_tls="$INFERRED_RUSTDESK_API_TLS"
                     allow_self_signed="$INFERRED_ALLOW_SELF_SIGNED"
                     ;;
@@ -7883,7 +7883,7 @@ do_toggle_protocol() {
 
             print_step "Switching to HTTPS mode..."
 
-            apply_console_protocol_mode https "$ssl_dir/betterdesk.crt" "$ssl_dir/betterdesk.key" "$api_tls" "$allow_self_signed"
+            apply_console_protocol_mode https "$ssl_dir/neodesk.crt" "$ssl_dir/neodesk.key" "$api_tls" "$allow_self_signed"
 
             sync_go_server_signal_relay_tls "$ssl_dir"
             ensure_service_user >/dev/null
@@ -7911,16 +7911,16 @@ do_toggle_protocol() {
     esac
 
     echo ""
-    if confirm "Restart BetterDesk services now?"; then
+    if confirm "Restart NeoDesk services now?"; then
         repair_https_stuck_state yes
         ensure_console_tls_material_readable 2>/dev/null || true
-        systemctl restart betterdesk-server 2>/dev/null || true
-        verify_service_health "betterdesk-server" "21116" 15 >/dev/null 2>&1 || true
+        systemctl restart neodesk-server 2>/dev/null || true
+        verify_service_health "neodesk-server" "21116" 15 >/dev/null 2>&1 || true
         verify_go_install 60 >/dev/null 2>&1 || true
-        print_success "BetterDesk services restarted"
+        print_success "NeoDesk services restarted"
         run_protocol_tests
     else
-        print_info "Changes saved. Restart later with: systemctl restart betterdesk-server"
+        print_info "Changes saved. Restart later with: systemctl restart neodesk-server"
     fi
 
     press_enter
@@ -7966,10 +7966,10 @@ do_migrate_database() {
     # older release
     local migrate_bin=""
     local search_paths=(
-        "$SCRIPT_DIR/betterdesk-server/tools/migrate/migrate-linux-amd64"
+        "$SCRIPT_DIR/neodesk-server/tools/migrate/migrate-linux-amd64"
         "$SCRIPT_DIR/tools/migrate/migrate-linux-amd64"
         "$RUSTDESK_PATH/migrate"
-        "/usr/local/bin/betterdesk-migrate"
+        "/usr/local/bin/neodesk-migrate"
     )
 
     binary_migrates && migrate_bin=server_migrate
@@ -8013,7 +8013,7 @@ do_migrate_database() {
         $'Back\tReturn to the main menu'
     )
     local _menu_returns=( 1 2 3 4 0 )
-    menu_choose "Database Migration" "Migrate databases between BetterDesk components"
+    menu_choose "Database Migration" "Migrate databases between NeoDesk components"
     local mig_choice="$MENU_CHOICE"
 
     case $mig_choice in
@@ -8031,7 +8031,7 @@ do_migrate_database() {
             fi
 
             read -p "Destination (SQLite path or postgres:// URI) [new file next to source]: " dst_db
-            dst_db="${dst_db:-$(dirname "$src_db")/betterdesk.sqlite3}"
+            dst_db="${dst_db:-$(dirname "$src_db")/neodesk.sqlite3}"
             if ! migrate_dst_overwrite "$dst_db"; then
                 press_enter
                 return
@@ -8205,7 +8205,7 @@ show_menu() {
     echo "  R. ↩️  Roll back the upgrade (Node.js console back)"
     echo "  0. ❌ Exit"
     echo ""
-    echo -e "  ${DIM}Tip: this menu also supports arrow-key navigation (set BETTERDESK_CLASSIC_MENU=1 to force this list).${NC}"
+    echo -e "  ${DIM}Tip: this menu also supports arrow-key navigation (set NEODESK_CLASSIC_MENU=1 to force this list).${NC}"
     echo ""
 }
 
@@ -8270,7 +8270,7 @@ main() {
         case "$(auto_action)" in
             uninstall) do_uninstall ;;
             upgrade|update)
-                print_info "BetterDesk is installed here: updating it"
+                print_info "NeoDesk is installed here: updating it"
                 do_update
                 ;;
             minimal) do_install_minimal ;;
@@ -8290,7 +8290,7 @@ main() {
         $'Reset admin password\tReset the console admin'
         $'Build & deploy server\tCompile and deploy the Go server'
         $'Diagnostics\tDetailed problem analysis'
-        $'Uninstall\tRemove BetterDesk'
+        $'Uninstall\tRemove NeoDesk'
         $'Minimal installation\tServer with its web console off'
         $'Configure SSL certificates\tLet'"'"'s Encrypt / custom / self-signed'
         $'Toggle HTTP/HTTPS\tSwitch protocol + run tests'
@@ -8310,7 +8310,7 @@ main() {
             local status_line="Install: ${INSTALL_STATUS:-unknown}"
             [ "$HBBS_RUNNING" = true ] && status_line="$status_line  |  server: running" || status_line="$status_line  |  server: stopped"
             [ "$CONSOLE_RUNNING" = true ] && status_line="$status_line  |  console: running" || status_line="$status_line  |  console: stopped"
-            if tui_select "BetterDesk Console Manager v${VERSION}" "$status_line" "${menu_labels[@]}"; then
+            if tui_select "NeoDesk Console Manager v${VERSION}" "$status_line" "${menu_labels[@]}"; then
                 choice="${menu_actions[$TUI_RESULT]}"
             else
                 choice="0"

@@ -2,7 +2,7 @@
  "id": "activity-device/report-device-id-empty",
  "request": {
   "method": "POST",
-  "path": "/api/bd/activity",
+  "path": "/api/nd/activity",
   "body": {
    "device_id": "",
    "idle_seconds": 120,

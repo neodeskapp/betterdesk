@@ -11,9 +11,9 @@ import (
 
 	"github.com/coder/websocket"
 
-	"github.com/unitronix/betterdesk-server/api"
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/api"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
 )
 
 // remoteAPI is a made-up API server for the remote sockets: guest link g1

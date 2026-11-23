@@ -23,10 +23,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
 )
 
 // fakeClock is the clock of the Node oracle: time moves only when a test
@@ -681,7 +681,7 @@ func TestNodeScenarios(t *testing.T) {
 				SignalHost: "127.0.0.1", SignalPort: signalPort,
 				RelayHost: "127.0.0.1", RelayPort: hbbr.port(),
 				GoAPI:       goapi.New(http.HandlerFunc(p.serveAPI)),
-				GuestCookie: "bd.guest",
+				GuestCookie: "nd.guest",
 				Clock:       clock,
 				Interfaces: func() []InterfaceAddr {
 					return []InterfaceAddr{{"IPv4", "127.0.0.1", true}, {"IPv4", rec.RelayHost, false}}

@@ -99,7 +99,7 @@ func (r *relayRecorder) Write(messageType int, data []byte) {
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	// Simple container: ASCII line prefix + payload (BetterDesk raw capture, not MC-native mcrec).
+	// Simple container: ASCII line prefix + payload (NeoDesk raw capture, not MC-native mcrec).
 	header := []byte{byte('T'), byte(messageType), byte(len(data) >> 16), byte(len(data) >> 8), byte(len(data))}
 	r.file.Write(header)
 	r.file.Write(data)

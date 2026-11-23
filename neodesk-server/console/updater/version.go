@@ -138,10 +138,10 @@ func parseVersion(v string) (version, bool) {
 	return out, true
 }
 
-// reVersionLine reads what "betterdesk-server -version" prints:
-// "betterdesk-server 3.6.0 (built 2026-11-18, commit <hex>)". Builds
+// reVersionLine reads what "neodesk-server -version" prints:
+// "neodesk-server 3.6.0 (built 2026-11-18, commit <hex>)". Builds
 // without a commit leave ", commit ..." out.
-var reVersionLine = regexp.MustCompile(`^betterdesk-server (\S+) \(built [^,)]*(?:, commit ([0-9a-f]{7,40}))?\)\s*$`)
+var reVersionLine = regexp.MustCompile(`^neodesk-server (\S+) \(built [^,)]*(?:, commit ([0-9a-f]{7,40}))?\)\s*$`)
 
 // ParseVersionOutput reads the version and the commit from the output of
 // -version. ok is false when the output is not that line.
@@ -154,7 +154,7 @@ func ParseVersionOutput(out string) (ver, commit string, ok bool) {
 }
 
 // AssetName is the name of the binary for a platform:
-// betterdesk-server-<goos>-<arch>, with armv7 for 32-bit ARM and ".exe"
+// neodesk-server-<goos>-<arch>, with armv7 for 32-bit ARM and ".exe"
 // on Windows.
 func AssetName(goos, goarch string) string {
 	arch := goarch

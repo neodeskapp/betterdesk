@@ -4,7 +4,7 @@
   "method": "GET",
   "path": "/api/remote/viewer/900100002",
   "notes": [
-   "header Cookie: bd.guest={secret:glink}",
+   "header Cookie: nd.guest={secret:glink}",
    "no cookies"
   ]
  },

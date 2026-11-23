@@ -19,4 +19,4 @@ with the row id.
   whether it threw, its pathname, and `searchParams.get()` for eight names;
 - 1,320 origin checks: `validateOrigin` of `middleware/wsOrigin.js` for
   eleven origins, eight cookie headers and three hosts under five settings
-  of `WS_ALLOWED_ORIGINS` and `BD_ALLOW_MISSING_ORIGIN`.
+  of `WS_ALLOWED_ORIGINS` and `ND_ALLOW_MISSING_ORIGIN`.

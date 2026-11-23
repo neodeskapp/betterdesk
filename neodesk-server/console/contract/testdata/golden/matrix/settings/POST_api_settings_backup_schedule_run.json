@@ -57,7 +57,7 @@
     "etag": "<present>",
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -93,7 +93,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -104,7 +104,7 @@
    "volatile": [
     {
      "path": "data.filename",
-     "format": "/aaa/aaaa/aaaaaaaaa-aaaaaaa/aaaaaaaaaa-aaaaaa-9999-99-99-99-99-99.aaa.aa"
+     "format": "/aaa/aaaa/aaaaaaaaa-aaaaaaa/aaaaaaa-aaaaaa-9999-99-99-99-99-99.aaa.aa"
     },
     {
      "path": "data.sha256",

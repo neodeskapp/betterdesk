@@ -71,6 +71,40 @@ var (
 	lanErr  error
 )
 
+// upstreamProbe and upstreamAnnounce are the types of the old console's
+// probe and announcement. The recording in testdata was made with them,
+// so the tests that replay it use them; TestLANTypesAreNeoDesks checks
+// the console's own.
+const (
+	upstreamProbe    = "betterdesk-discover"
+	upstreamAnnounce = "betterdesk-announce"
+)
+
+// TestLANTypesAreNeoDesks: the responder answers neodesk-discover probes
+// only, with a neodesk-announce announcement.
+func TestLANTypesAreNeoDesks(t *testing.T) {
+	if !IsProbe([]byte(`{"type":"neodesk-discover","version":1}`)) {
+		t.Error("a neodesk-discover probe gets no answer")
+	}
+	if IsProbe([]byte(`{"type":"` + upstreamProbe + `","version":1}`)) {
+		t.Error("the old console's probe gets an answer")
+	}
+	lan := NewLAN(Settings{})
+	if lan.probeKind != "neodesk-discover" || lan.announceKind != "neodesk-announce" {
+		t.Errorf("responder types %q, %q", lan.probeKind, lan.announceKind)
+	}
+	settings := Settings{
+		Hostname:   func() (string, error) { return "h", nil },
+		Interfaces: func() ([]Interface, error) { return nil, nil },
+		Host:       "192.168.1.10",
+		Port:       5000,
+	}
+	out, err := settings.Announcement()
+	if err != nil || !strings.HasPrefix(string(out), `{"type":"neodesk-announce","version":1,"server":{"name":"h",`) {
+		t.Errorf("announcement %s, %v", out, err)
+	}
+}
+
 func loadLAN(t testing.TB) *lanRecording {
 	t.Helper()
 	lanOnce.Do(func() {
@@ -157,7 +191,7 @@ func TestAnnouncementsAgainstNode(t *testing.T) {
 		if settings.DiscoveryPort != c.Config.DiscoveryPort {
 			t.Errorf("case %d: discovery port %v, Node %v", i, settings.DiscoveryPort, c.Config.DiscoveryPort)
 		}
-		got, err := settings.Announcement()
+		got, err := settings.announcement(upstreamAnnounce)
 		want, silent := announcedAs(t, c.Env, decode64(t, c.Reply))
 		if silent {
 			silenced++
@@ -236,7 +270,7 @@ func TestProbesAgainstNode(t *testing.T) {
 	answered := 0
 	for i, c := range rec.Probes {
 		msg := decode64(t, c.Probe)
-		if got := IsProbe(msg); got != c.Answered {
+		if got := isProbeOf(msg, upstreamProbe); got != c.Answered {
 			shown := string(msg)
 			if len(shown) > 120 {
 				shown = shown[:120] + "..."
@@ -412,10 +446,10 @@ func TestResponderAnswersOverUDP(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	send(prober, `{"type":"betterdesk-discover","version":1}`)
-	send(other, `{"type":"betterdesk-announce"}`)
+	send(prober, `{"type":"neodesk-discover","version":1}`)
+	send(other, `{"type":"neodesk-announce"}`)
 	send(other, "not json")
-	send(prober, `{"type":"betterdesk-discover"}`)
+	send(prober, `{"type":"neodesk-discover"}`)
 	_ = prober.SetReadDeadline(time.Now().Add(10 * time.Second))
 	buf := make([]byte, 65536)
 	for i := 1; i <= 2; i++ {
@@ -426,7 +460,7 @@ func TestResponderAnswersOverUDP(t *testing.T) {
 		if from.(*net.UDPAddr).Port != port {
 			t.Errorf("reply from port %d, want %d", from.(*net.UDPAddr).Port, port)
 		}
-		want := `{"type":"betterdesk-announce","version":1,"server":{"name":"host-` + fmt.Sprint(i) +
+		want := `{"type":"neodesk-announce","version":1,"server":{"name":"host-` + fmt.Sprint(i) +
 			`","version":"1.0","port":5000,"apiPort":21121,"protocol":"http","publicKey":"","addresses":[],"discoveryPort":21119,"panelUrl":"http://192.168.1.10:5000"}}`
 		if string(buf[:n]) != want {
 			t.Errorf("reply %d %s, want %s", i, buf[:n], want)
@@ -476,7 +510,7 @@ func TestResponderIgnoresForeignSenders(t *testing.T) {
 	})
 	now := time.Date(2026, 11, 20, 10, 0, 0, 0, time.UTC)
 	lan.now = func() time.Time { return now }
-	probe := []byte(`{"type":"betterdesk-discover"}`)
+	probe := []byte(`{"type":"neodesk-discover"}`)
 	conn := &sentTo{}
 	send := func(ip string) bool {
 		t.Helper()

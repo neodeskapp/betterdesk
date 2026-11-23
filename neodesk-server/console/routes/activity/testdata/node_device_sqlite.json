@@ -149,10 +149,10 @@
  ],
  "steps": [
   {
-   "name": "1 POST /api/bd/activity",
+   "name": "1 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {},
    "body": "{\"device_id\":\"device-a\",\"timestamp\":\"2011-03-04T10:00:00.000Z\"}",
    "status": 401,
@@ -169,10 +169,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "3 POST /api/bd/activity",
+   "name": "3 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "X-Device-Id": "device-a"
    },
@@ -193,10 +193,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "5 POST /api/bd/activity",
+   "name": "5 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer nope"
    },
@@ -217,10 +217,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "7 POST /api/bd/activity",
+   "name": "7 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-unbound"
    },
@@ -241,10 +241,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "9 POST /api/bd/activity",
+   "name": "9 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-null-client"
    },
@@ -265,10 +265,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "11 POST /api/bd/activity",
+   "name": "11 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-short"
    },
@@ -289,10 +289,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "13 POST /api/bd/activity",
+   "name": "13 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-spaced"
    },
@@ -313,10 +313,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "15 POST /api/bd/activity",
+   "name": "15 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-long"
    },
@@ -337,10 +337,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "17 POST /api/bd/activity",
+   "name": "17 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-expired"
    },
@@ -361,10 +361,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "19 POST /api/bd/activity",
+   "name": "19 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-revoked"
    },
@@ -385,10 +385,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "21 POST /api/bd/activity",
+   "name": "21 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Basic tok-device-a"
    },
@@ -409,10 +409,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "23 POST /api/bd/activity",
+   "name": "23 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "bearer tok-device-a"
    },
@@ -433,10 +433,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "25 POST /api/bd/activity",
+   "name": "25 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer  tok-device-a"
    },
@@ -457,10 +457,10 @@
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
   },
   {
-   "name": "27 POST /api/bd/activity",
+   "name": "27 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a more"
    },
@@ -481,10 +481,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "29 POST /api/bd/activity",
+   "name": "29 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-plain"
    },
@@ -505,10 +505,10 @@
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
   },
   {
-   "name": "31 POST /api/bd/activity",
+   "name": "31 POST /api/nd/activity",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {},
    "body": "{\"device_id\":\"device-a\",\"sessions\":[{\"app_name\":\"Editor\",\"window_title\":\"notes.txt\",\"category\":\"productivity\",\"started_at\":\"2011-03-04T09:01:00.000Z\",\"ended_at\":\"2011-03-04T09:01:30.000Z\",\"duration_secs\":30},{\"app_name\":\"Editor\",\"window_title\":\"notes.txt\",\"category\":\"productivity\",\"started_at\":\"2011-03-04T09:02:00.000Z\",\"ended_at\":\"2011-03-04T09:02:30.000Z\",\"duration_secs\":30}],\"idle_seconds\":120,\"timestamp\":\"2011-03-04T10:00:00.000Z\"}",
    "status": 401,
@@ -551,10 +551,10 @@
    "rows": "[]"
   },
   {
-   "name": "32 POST /api/bd/activity",
+   "name": "32 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -563,10 +563,10 @@
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
   },
   {
-   "name": "33 POST /api/bd/activity",
+   "name": "33 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -575,10 +575,10 @@
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
   },
   {
-   "name": "34 POST /api/bd/activity",
+   "name": "34 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -587,10 +587,10 @@
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
   },
   {
-   "name": "35 POST /api/bd/activity",
+   "name": "35 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -599,10 +599,10 @@
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
   },
   {
-   "name": "36 POST /api/bd/activity",
+   "name": "36 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -611,10 +611,10 @@
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
   },
   {
-   "name": "37 POST /api/bd/activity",
+   "name": "37 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -623,10 +623,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "38 POST /api/bd/activity",
+   "name": "38 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -635,10 +635,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "39 POST /api/bd/activity",
+   "name": "39 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -647,10 +647,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "40 POST /api/bd/activity",
+   "name": "40 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -659,10 +659,10 @@
    "answer": "{\"success\":false,\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "41 POST /api/bd/activity",
+   "name": "41 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -671,10 +671,10 @@
    "answer": "{\"success\":false,\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "42 POST /api/bd/activity",
+   "name": "42 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -683,10 +683,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "43 POST /api/bd/activity",
+   "name": "43 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -695,10 +695,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "44 POST /api/bd/activity",
+   "name": "44 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -707,10 +707,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "45 POST /api/bd/activity",
+   "name": "45 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -719,10 +719,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "46 POST /api/bd/activity",
+   "name": "46 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -731,10 +731,10 @@
    "answer": "{\"success\":false,\"error\":\"Internal Server Error\"}"
   },
   {
-   "name": "47 POST /api/bd/activity",
+   "name": "47 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -743,10 +743,10 @@
    "answer": "{\"success\":false,\"error\":\"Internal Server Error\"}"
   },
   {
-   "name": "48 POST /api/bd/activity",
+   "name": "48 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-numeric"
    },
@@ -755,10 +755,10 @@
    "answer": "{\"success\":false,\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "49 POST /api/bd/activity",
+   "name": "49 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-numeric"
    },
@@ -767,10 +767,10 @@
    "answer": "{\"success\":true}"
   },
   {
-   "name": "50 POST /api/bd/activity?device_id=device-b",
+   "name": "50 POST /api/nd/activity?device_id=device-b",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity?device_id=device-b",
+   "path": "/api/nd/activity?device_id=device-b",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -779,10 +779,10 @@
    "answer": "{\"success\":true}"
   },
   {
-   "name": "51 POST /api/bd/activity?device_id=device-a",
+   "name": "51 POST /api/nd/activity?device_id=device-a",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity?device_id=device-a",
+   "path": "/api/nd/activity?device_id=device-a",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -791,10 +791,10 @@
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
   },
   {
-   "name": "52 POST /api/bd/activity?device_id=device-b",
+   "name": "52 POST /api/nd/activity?device_id=device-b",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity?device_id=device-b",
+   "path": "/api/nd/activity?device_id=device-b",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -803,10 +803,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "53 POST /api/bd/activity?device_id%5B%5D=device-a",
+   "name": "53 POST /api/nd/activity?device_id%5B%5D=device-a",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity?device_id%5B%5D=device-a",
+   "path": "/api/nd/activity?device_id%5B%5D=device-a",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -815,10 +815,10 @@
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
   },
   {
-   "name": "54 POST /api/bd/activity?device_id%5BtoString%5D=x",
+   "name": "54 POST /api/nd/activity?device_id%5BtoString%5D=x",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity?device_id%5BtoString%5D=x",
+   "path": "/api/nd/activity?device_id%5BtoString%5D=x",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -827,10 +827,10 @@
    "answer": "{\"success\":false,\"error\":\"Internal Server Error\"}"
   },
   {
-   "name": "55 POST /api/bd/activity",
+   "name": "55 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a",
     "X-Device-Id": "device-b"
@@ -840,10 +840,10 @@
    "answer": "{\"success\":true}"
   },
   {
-   "name": "56 POST /api/bd/activity",
+   "name": "56 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a",
     "X-Device-Id": "device-b"
@@ -853,10 +853,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "57 POST /api/bd/activity",
+   "name": "57 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a",
     "X-Device-Id": "device-a"
@@ -866,10 +866,10 @@
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
   },
   {
-   "name": "58 POST /api/bd/activity",
+   "name": "58 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a",
     "X-Device-Id": ""
@@ -879,10 +879,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "59 POST /api/bd/activity",
+   "name": "59 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a",
     "X-Device-Id": "device-a"
@@ -892,10 +892,10 @@
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
   },
   {
-   "name": "60 POST /api/bd/activity",
+   "name": "60 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-b"
    },
@@ -904,10 +904,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "61 POST /api/bd/activity",
+   "name": "61 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-b"
    },
@@ -952,10 +952,10 @@
    "rows": "[]"
   },
   {
-   "name": "62 POST /api/bd/activity",
+   "name": "62 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1000,10 +1000,10 @@
    "rows": "[]"
   },
   {
-   "name": "63 POST /API/BD/Activity/",
+   "name": "63 POST /API/ND/Activity/",
    "role": "",
    "method": "POST",
-   "path": "/API/BD/Activity/",
+   "path": "/API/ND/Activity/",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1072,10 +1072,10 @@
    "rows": "[]"
   },
   {
-   "name": "66 POST /api/bd/activity",
+   "name": "66 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1084,10 +1084,10 @@
    "answer": "{\"success\":true}"
   },
   {
-   "name": "67 POST /api/bd/activity",
+   "name": "67 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1132,10 +1132,10 @@
    "rows": "[]"
   },
   {
-   "name": "68 POST /api/bd/activity",
+   "name": "68 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1162,10 +1162,10 @@
    "rows": "[]"
   },
   {
-   "name": "69 POST /api/bd/activity",
+   "name": "69 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1210,10 +1210,10 @@
    "rows": "[]"
   },
   {
-   "name": "70 POST /api/bd/activity",
+   "name": "70 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1258,10 +1258,10 @@
    "rows": "[]"
   },
   {
-   "name": "71 POST /api/bd/activity",
+   "name": "71 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1306,10 +1306,10 @@
    "rows": "[]"
   },
   {
-   "name": "72 POST /api/bd/activity",
+   "name": "72 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1354,10 +1354,10 @@
    "rows": "[]"
   },
   {
-   "name": "73 POST /api/bd/activity",
+   "name": "73 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1402,10 +1402,10 @@
    "rows": "[]"
   },
   {
-   "name": "74 POST /api/bd/activity",
+   "name": "74 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1450,10 +1450,10 @@
    "rows": "[]"
   },
   {
-   "name": "75 POST /api/bd/activity",
+   "name": "75 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1498,10 +1498,10 @@
    "rows": "[]"
   },
   {
-   "name": "76 POST /api/bd/activity",
+   "name": "76 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1546,10 +1546,10 @@
    "rows": "[]"
   },
   {
-   "name": "77 POST /api/bd/activity",
+   "name": "77 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1594,10 +1594,10 @@
    "rows": "[]"
   },
   {
-   "name": "78 POST /api/bd/activity",
+   "name": "78 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1642,10 +1642,10 @@
    "rows": "[]"
   },
   {
-   "name": "79 POST /api/bd/activity",
+   "name": "79 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1690,10 +1690,10 @@
    "rows": "[]"
   },
   {
-   "name": "80 POST /api/bd/activity",
+   "name": "80 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1738,10 +1738,10 @@
    "rows": "[]"
   },
   {
-   "name": "81 POST /api/bd/activity",
+   "name": "81 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1786,10 +1786,10 @@
    "rows": "[]"
   },
   {
-   "name": "82 POST /api/bd/activity",
+   "name": "82 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1834,10 +1834,10 @@
    "rows": "[]"
   },
   {
-   "name": "83 POST /api/bd/activity",
+   "name": "83 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1882,10 +1882,10 @@
    "rows": "[]"
   },
   {
-   "name": "84 POST /api/bd/activity",
+   "name": "84 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1930,10 +1930,10 @@
    "rows": "[]"
   },
   {
-   "name": "85 POST /api/bd/activity",
+   "name": "85 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1978,10 +1978,10 @@
    "rows": "[]"
   },
   {
-   "name": "86 POST /api/bd/activity",
+   "name": "86 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2026,10 +2026,10 @@
    "rows": "[]"
   },
   {
-   "name": "87 POST /api/bd/activity",
+   "name": "87 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2074,10 +2074,10 @@
    "rows": "[]"
   },
   {
-   "name": "88 POST /api/bd/activity",
+   "name": "88 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2122,10 +2122,10 @@
    "rows": "[]"
   },
   {
-   "name": "89 POST /api/bd/activity",
+   "name": "89 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2170,10 +2170,10 @@
    "rows": "[]"
   },
   {
-   "name": "90 POST /api/bd/activity",
+   "name": "90 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2218,10 +2218,10 @@
    "rows": "[]"
   },
   {
-   "name": "91 POST /api/bd/activity",
+   "name": "91 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2266,10 +2266,10 @@
    "rows": "[]"
   },
   {
-   "name": "92 POST /api/bd/activity",
+   "name": "92 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2314,10 +2314,10 @@
    "rows": "[]"
   },
   {
-   "name": "93 POST /api/bd/activity",
+   "name": "93 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2362,10 +2362,10 @@
    "rows": "[]"
   },
   {
-   "name": "94 POST /api/bd/activity",
+   "name": "94 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2410,10 +2410,10 @@
    "rows": "[]"
   },
   {
-   "name": "95 POST /api/bd/activity",
+   "name": "95 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2458,10 +2458,10 @@
    "rows": "[]"
   },
   {
-   "name": "96 POST /api/bd/activity",
+   "name": "96 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2506,10 +2506,10 @@
    "rows": "[]"
   },
   {
-   "name": "97 POST /api/bd/activity",
+   "name": "97 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2554,10 +2554,10 @@
    "rows": "[]"
   },
   {
-   "name": "98 POST /api/bd/activity",
+   "name": "98 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2602,10 +2602,10 @@
    "rows": "[]"
   },
   {
-   "name": "99 POST /api/bd/activity",
+   "name": "99 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2650,10 +2650,10 @@
    "rows": "[]"
   },
   {
-   "name": "100 POST /api/bd/activity",
+   "name": "100 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2698,10 +2698,10 @@
    "rows": "[]"
   },
   {
-   "name": "101 POST /api/bd/activity",
+   "name": "101 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2746,10 +2746,10 @@
    "rows": "[]"
   },
   {
-   "name": "102 POST /api/bd/activity",
+   "name": "102 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2794,10 +2794,10 @@
    "rows": "[]"
   },
   {
-   "name": "103 POST /api/bd/activity",
+   "name": "103 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2842,10 +2842,10 @@
    "rows": "[]"
   },
   {
-   "name": "104 POST /api/bd/activity",
+   "name": "104 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2890,10 +2890,10 @@
    "rows": "[]"
   },
   {
-   "name": "105 POST /api/bd/activity",
+   "name": "105 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2938,10 +2938,10 @@
    "rows": "[]"
   },
   {
-   "name": "106 POST /api/bd/activity",
+   "name": "106 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -2986,10 +2986,10 @@
    "rows": "[]"
   },
   {
-   "name": "107 POST /api/bd/activity",
+   "name": "107 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3034,10 +3034,10 @@
    "rows": "[]"
   },
   {
-   "name": "108 POST /api/bd/activity",
+   "name": "108 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3082,10 +3082,10 @@
    "rows": "[]"
   },
   {
-   "name": "109 POST /api/bd/activity",
+   "name": "109 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3130,10 +3130,10 @@
    "rows": "[]"
   },
   {
-   "name": "110 POST /api/bd/activity",
+   "name": "110 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3178,10 +3178,10 @@
    "rows": "[]"
   },
   {
-   "name": "111 POST /api/bd/activity",
+   "name": "111 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3226,10 +3226,10 @@
    "rows": "[]"
   },
   {
-   "name": "112 POST /api/bd/activity",
+   "name": "112 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3274,10 +3274,10 @@
    "rows": "[]"
   },
   {
-   "name": "113 POST /api/bd/activity",
+   "name": "113 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3322,10 +3322,10 @@
    "rows": "[]"
   },
   {
-   "name": "114 POST /api/bd/activity",
+   "name": "114 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3370,10 +3370,10 @@
    "rows": "[]"
   },
   {
-   "name": "115 POST /api/bd/activity",
+   "name": "115 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3418,10 +3418,10 @@
    "rows": "[]"
   },
   {
-   "name": "116 POST /api/bd/activity",
+   "name": "116 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3466,10 +3466,10 @@
    "rows": "[]"
   },
   {
-   "name": "117 POST /api/bd/activity",
+   "name": "117 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3514,10 +3514,10 @@
    "rows": "[]"
   },
   {
-   "name": "118 POST /api/bd/activity",
+   "name": "118 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3562,10 +3562,10 @@
    "rows": "[]"
   },
   {
-   "name": "119 POST /api/bd/activity",
+   "name": "119 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3610,10 +3610,10 @@
    "rows": "[]"
   },
   {
-   "name": "120 POST /api/bd/activity",
+   "name": "120 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3658,10 +3658,10 @@
    "rows": "[]"
   },
   {
-   "name": "121 POST /api/bd/activity",
+   "name": "121 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3706,10 +3706,10 @@
    "rows": "[]"
   },
   {
-   "name": "122 POST /api/bd/activity",
+   "name": "122 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3754,10 +3754,10 @@
    "rows": "[]"
   },
   {
-   "name": "123 POST /api/bd/activity",
+   "name": "123 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3802,10 +3802,10 @@
    "rows": "[]"
   },
   {
-   "name": "124 POST /api/bd/activity",
+   "name": "124 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3850,10 +3850,10 @@
    "rows": "[]"
   },
   {
-   "name": "125 POST /api/bd/activity",
+   "name": "125 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3898,10 +3898,10 @@
    "rows": "[]"
   },
   {
-   "name": "126 POST /api/bd/activity",
+   "name": "126 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3946,10 +3946,10 @@
    "rows": "[]"
   },
   {
-   "name": "127 POST /api/bd/activity",
+   "name": "127 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -3994,10 +3994,10 @@
    "rows": "[]"
   },
   {
-   "name": "128 POST /api/bd/activity",
+   "name": "128 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4042,10 +4042,10 @@
    "rows": "[]"
   },
   {
-   "name": "129 POST /api/bd/activity",
+   "name": "129 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4090,10 +4090,10 @@
    "rows": "[]"
   },
   {
-   "name": "130 POST /api/bd/activity",
+   "name": "130 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4138,10 +4138,10 @@
    "rows": "[]"
   },
   {
-   "name": "131 POST /api/bd/activity",
+   "name": "131 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4186,10 +4186,10 @@
    "rows": "[]"
   },
   {
-   "name": "132 POST /api/bd/activity",
+   "name": "132 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4234,10 +4234,10 @@
    "rows": "[]"
   },
   {
-   "name": "133 POST /api/bd/activity",
+   "name": "133 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4282,10 +4282,10 @@
    "rows": "[]"
   },
   {
-   "name": "134 POST /api/bd/activity",
+   "name": "134 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4330,10 +4330,10 @@
    "rows": "[]"
   },
   {
-   "name": "135 POST /api/bd/activity",
+   "name": "135 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4378,10 +4378,10 @@
    "rows": "[]"
   },
   {
-   "name": "136 POST /api/bd/activity",
+   "name": "136 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4426,10 +4426,10 @@
    "rows": "[]"
   },
   {
-   "name": "137 POST /api/bd/activity",
+   "name": "137 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4474,10 +4474,10 @@
    "rows": "[]"
   },
   {
-   "name": "138 POST /api/bd/activity",
+   "name": "138 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4522,10 +4522,10 @@
    "rows": "[]"
   },
   {
-   "name": "139 POST /api/bd/activity",
+   "name": "139 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4570,10 +4570,10 @@
    "rows": "[]"
   },
   {
-   "name": "140 POST /api/bd/activity",
+   "name": "140 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4618,10 +4618,10 @@
    "rows": "[]"
   },
   {
-   "name": "141 POST /api/bd/activity",
+   "name": "141 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4666,10 +4666,10 @@
    "rows": "[]"
   },
   {
-   "name": "142 POST /api/bd/activity",
+   "name": "142 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4714,10 +4714,10 @@
    "rows": "[]"
   },
   {
-   "name": "143 POST /api/bd/activity",
+   "name": "143 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4762,10 +4762,10 @@
    "rows": "[]"
   },
   {
-   "name": "144 POST /api/bd/activity",
+   "name": "144 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4810,10 +4810,10 @@
    "rows": "[]"
   },
   {
-   "name": "145 POST /api/bd/activity",
+   "name": "145 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4858,10 +4858,10 @@
    "rows": "[]"
   },
   {
-   "name": "146 POST /api/bd/activity",
+   "name": "146 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4906,10 +4906,10 @@
    "rows": "[]"
   },
   {
-   "name": "147 POST /api/bd/activity",
+   "name": "147 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -4954,10 +4954,10 @@
    "rows": "[]"
   },
   {
-   "name": "148 POST /api/bd/activity",
+   "name": "148 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5002,10 +5002,10 @@
    "rows": "[]"
   },
   {
-   "name": "149 POST /api/bd/activity",
+   "name": "149 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5050,10 +5050,10 @@
    "rows": "[]"
   },
   {
-   "name": "150 POST /api/bd/activity",
+   "name": "150 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5098,10 +5098,10 @@
    "rows": "[]"
   },
   {
-   "name": "151 POST /api/bd/activity",
+   "name": "151 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5146,10 +5146,10 @@
    "rows": "[]"
   },
   {
-   "name": "152 POST /api/bd/activity",
+   "name": "152 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5194,10 +5194,10 @@
    "rows": "[]"
   },
   {
-   "name": "153 POST /api/bd/activity",
+   "name": "153 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5242,10 +5242,10 @@
    "rows": "[]"
   },
   {
-   "name": "154 POST /api/bd/activity",
+   "name": "154 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5290,10 +5290,10 @@
    "rows": "[]"
   },
   {
-   "name": "155 POST /api/bd/activity",
+   "name": "155 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5338,10 +5338,10 @@
    "rows": "[]"
   },
   {
-   "name": "156 POST /api/bd/activity",
+   "name": "156 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5386,10 +5386,10 @@
    "rows": "[]"
   },
   {
-   "name": "157 POST /api/bd/activity",
+   "name": "157 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5434,10 +5434,10 @@
    "rows": "[]"
   },
   {
-   "name": "158 POST /api/bd/activity",
+   "name": "158 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5482,10 +5482,10 @@
    "rows": "[]"
   },
   {
-   "name": "159 POST /api/bd/activity",
+   "name": "159 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5530,10 +5530,10 @@
    "rows": "[]"
   },
   {
-   "name": "160 POST /api/bd/activity",
+   "name": "160 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5578,10 +5578,10 @@
    "rows": "[]"
   },
   {
-   "name": "161 POST /api/bd/activity",
+   "name": "161 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5626,10 +5626,10 @@
    "rows": "[]"
   },
   {
-   "name": "162 POST /api/bd/activity",
+   "name": "162 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5674,10 +5674,10 @@
    "rows": "[]"
   },
   {
-   "name": "163 POST /api/bd/activity",
+   "name": "163 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5722,10 +5722,10 @@
    "rows": "[]"
   },
   {
-   "name": "164 POST /api/bd/activity",
+   "name": "164 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5770,10 +5770,10 @@
    "rows": "[]"
   },
   {
-   "name": "165 POST /api/bd/activity",
+   "name": "165 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5818,10 +5818,10 @@
    "rows": "[]"
   },
   {
-   "name": "166 POST /api/bd/activity",
+   "name": "166 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5866,10 +5866,10 @@
    "rows": "[]"
   },
   {
-   "name": "167 POST /api/bd/activity",
+   "name": "167 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5914,10 +5914,10 @@
    "rows": "[]"
   },
   {
-   "name": "168 POST /api/bd/activity",
+   "name": "168 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -5962,10 +5962,10 @@
    "rows": "[]"
   },
   {
-   "name": "169 POST /api/bd/activity",
+   "name": "169 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6010,10 +6010,10 @@
    "rows": "[]"
   },
   {
-   "name": "170 POST /api/bd/activity",
+   "name": "170 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6058,10 +6058,10 @@
    "rows": "[]"
   },
   {
-   "name": "171 POST /api/bd/activity",
+   "name": "171 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6106,10 +6106,10 @@
    "rows": "[]"
   },
   {
-   "name": "172 POST /api/bd/activity",
+   "name": "172 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6154,10 +6154,10 @@
    "rows": "[]"
   },
   {
-   "name": "173 POST /api/bd/activity",
+   "name": "173 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6202,10 +6202,10 @@
    "rows": "[]"
   },
   {
-   "name": "174 POST /api/bd/activity",
+   "name": "174 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6250,10 +6250,10 @@
    "rows": "[]"
   },
   {
-   "name": "175 POST /api/bd/activity",
+   "name": "175 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6298,10 +6298,10 @@
    "rows": "[]"
   },
   {
-   "name": "176 POST /api/bd/activity",
+   "name": "176 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6346,10 +6346,10 @@
    "rows": "[]"
   },
   {
-   "name": "177 POST /api/bd/activity",
+   "name": "177 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6394,10 +6394,10 @@
    "rows": "[]"
   },
   {
-   "name": "178 POST /api/bd/activity",
+   "name": "178 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6442,10 +6442,10 @@
    "rows": "[]"
   },
   {
-   "name": "179 POST /api/bd/activity",
+   "name": "179 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6490,10 +6490,10 @@
    "rows": "[]"
   },
   {
-   "name": "180 POST /api/bd/activity",
+   "name": "180 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6538,10 +6538,10 @@
    "rows": "[]"
   },
   {
-   "name": "181 POST /api/bd/activity",
+   "name": "181 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6586,10 +6586,10 @@
    "rows": "[]"
   },
   {
-   "name": "182 POST /api/bd/activity",
+   "name": "182 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6634,10 +6634,10 @@
    "rows": "[]"
   },
   {
-   "name": "183 POST /api/bd/activity",
+   "name": "183 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6682,10 +6682,10 @@
    "rows": "[]"
   },
   {
-   "name": "184 POST /api/bd/activity",
+   "name": "184 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6730,10 +6730,10 @@
    "rows": "[]"
   },
   {
-   "name": "185 POST /api/bd/activity",
+   "name": "185 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6778,10 +6778,10 @@
    "rows": "[]"
   },
   {
-   "name": "186 POST /api/bd/activity",
+   "name": "186 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6826,10 +6826,10 @@
    "rows": "[]"
   },
   {
-   "name": "187 POST /api/bd/activity",
+   "name": "187 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6874,10 +6874,10 @@
    "rows": "[]"
   },
   {
-   "name": "188 POST /api/bd/activity",
+   "name": "188 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6922,10 +6922,10 @@
    "rows": "[]"
   },
   {
-   "name": "189 POST /api/bd/activity",
+   "name": "189 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -6970,10 +6970,10 @@
    "rows": "[]"
   },
   {
-   "name": "190 POST /api/bd/activity",
+   "name": "190 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7018,10 +7018,10 @@
    "rows": "[]"
   },
   {
-   "name": "191 POST /api/bd/activity",
+   "name": "191 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7066,10 +7066,10 @@
    "rows": "[]"
   },
   {
-   "name": "192 POST /api/bd/activity",
+   "name": "192 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7114,10 +7114,10 @@
    "rows": "[]"
   },
   {
-   "name": "193 POST /api/bd/activity",
+   "name": "193 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7162,10 +7162,10 @@
    "rows": "[]"
   },
   {
-   "name": "194 POST /api/bd/activity",
+   "name": "194 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7210,10 +7210,10 @@
    "rows": "[]"
   },
   {
-   "name": "195 POST /api/bd/activity",
+   "name": "195 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7258,10 +7258,10 @@
    "rows": "[]"
   },
   {
-   "name": "196 POST /api/bd/activity",
+   "name": "196 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7306,10 +7306,10 @@
    "rows": "[]"
   },
   {
-   "name": "197 POST /api/bd/activity",
+   "name": "197 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7354,10 +7354,10 @@
    "rows": "[]"
   },
   {
-   "name": "198 POST /api/bd/activity",
+   "name": "198 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7402,10 +7402,10 @@
    "rows": "[]"
   },
   {
-   "name": "199 POST /api/bd/activity",
+   "name": "199 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7450,10 +7450,10 @@
    "rows": "[]"
   },
   {
-   "name": "200 POST /api/bd/activity",
+   "name": "200 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7498,10 +7498,10 @@
    "rows": "[]"
   },
   {
-   "name": "201 POST /api/bd/activity",
+   "name": "201 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7546,10 +7546,10 @@
    "rows": "[]"
   },
   {
-   "name": "202 POST /api/bd/activity",
+   "name": "202 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7594,10 +7594,10 @@
    "rows": "[]"
   },
   {
-   "name": "203 POST /api/bd/activity",
+   "name": "203 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7642,10 +7642,10 @@
    "rows": "[]"
   },
   {
-   "name": "204 POST /api/bd/activity",
+   "name": "204 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7690,10 +7690,10 @@
    "rows": "[]"
   },
   {
-   "name": "205 POST /api/bd/activity",
+   "name": "205 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7738,10 +7738,10 @@
    "rows": "[]"
   },
   {
-   "name": "206 POST /api/bd/activity",
+   "name": "206 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7786,10 +7786,10 @@
    "rows": "[]"
   },
   {
-   "name": "207 POST /api/bd/activity",
+   "name": "207 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7834,10 +7834,10 @@
    "rows": "[]"
   },
   {
-   "name": "208 POST /api/bd/activity",
+   "name": "208 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7882,10 +7882,10 @@
    "rows": "[]"
   },
   {
-   "name": "209 POST /api/bd/activity",
+   "name": "209 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7930,10 +7930,10 @@
    "rows": "[]"
   },
   {
-   "name": "210 POST /api/bd/activity",
+   "name": "210 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -7978,10 +7978,10 @@
    "rows": "[]"
   },
   {
-   "name": "211 POST /api/bd/activity",
+   "name": "211 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8026,10 +8026,10 @@
    "rows": "[]"
   },
   {
-   "name": "212 POST /api/bd/activity",
+   "name": "212 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8074,10 +8074,10 @@
    "rows": "[]"
   },
   {
-   "name": "213 POST /api/bd/activity",
+   "name": "213 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8122,10 +8122,10 @@
    "rows": "[]"
   },
   {
-   "name": "214 POST /api/bd/activity",
+   "name": "214 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8170,10 +8170,10 @@
    "rows": "[]"
   },
   {
-   "name": "215 POST /api/bd/activity",
+   "name": "215 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8218,10 +8218,10 @@
    "rows": "[]"
   },
   {
-   "name": "216 POST /api/bd/activity",
+   "name": "216 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8266,10 +8266,10 @@
    "rows": "[]"
   },
   {
-   "name": "217 POST /api/bd/activity",
+   "name": "217 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8314,10 +8314,10 @@
    "rows": "[]"
   },
   {
-   "name": "218 POST /api/bd/activity",
+   "name": "218 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8362,10 +8362,10 @@
    "rows": "[]"
   },
   {
-   "name": "219 POST /api/bd/activity",
+   "name": "219 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8410,10 +8410,10 @@
    "rows": "[]"
   },
   {
-   "name": "220 POST /api/bd/activity",
+   "name": "220 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8458,10 +8458,10 @@
    "rows": "[]"
   },
   {
-   "name": "221 POST /api/bd/activity",
+   "name": "221 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8506,10 +8506,10 @@
    "rows": "[]"
   },
   {
-   "name": "222 POST /api/bd/activity",
+   "name": "222 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8554,10 +8554,10 @@
    "rows": "[]"
   },
   {
-   "name": "223 POST /api/bd/activity",
+   "name": "223 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8602,10 +8602,10 @@
    "rows": "[]"
   },
   {
-   "name": "224 POST /api/bd/activity",
+   "name": "224 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8650,10 +8650,10 @@
    "rows": "[]"
   },
   {
-   "name": "225 POST /api/bd/activity",
+   "name": "225 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8698,10 +8698,10 @@
    "rows": "[]"
   },
   {
-   "name": "226 POST /api/bd/activity",
+   "name": "226 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8746,10 +8746,10 @@
    "rows": "[]"
   },
   {
-   "name": "227 POST /api/bd/activity",
+   "name": "227 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8794,10 +8794,10 @@
    "rows": "[]"
   },
   {
-   "name": "228 POST /api/bd/activity",
+   "name": "228 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8842,10 +8842,10 @@
    "rows": "[]"
   },
   {
-   "name": "229 POST /api/bd/activity",
+   "name": "229 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8890,10 +8890,10 @@
    "rows": "[]"
   },
   {
-   "name": "230 POST /api/bd/activity",
+   "name": "230 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8938,10 +8938,10 @@
    "rows": "[]"
   },
   {
-   "name": "231 POST /api/bd/activity",
+   "name": "231 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -8986,10 +8986,10 @@
    "rows": "[]"
   },
   {
-   "name": "232 POST /api/bd/activity",
+   "name": "232 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9034,10 +9034,10 @@
    "rows": "[]"
   },
   {
-   "name": "233 POST /api/bd/activity",
+   "name": "233 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9082,10 +9082,10 @@
    "rows": "[]"
   },
   {
-   "name": "234 POST /api/bd/activity",
+   "name": "234 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9130,10 +9130,10 @@
    "rows": "[]"
   },
   {
-   "name": "235 POST /api/bd/activity",
+   "name": "235 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9178,10 +9178,10 @@
    "rows": "[]"
   },
   {
-   "name": "236 POST /api/bd/activity",
+   "name": "236 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9226,10 +9226,10 @@
    "rows": "[]"
   },
   {
-   "name": "237 POST /api/bd/activity",
+   "name": "237 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9274,10 +9274,10 @@
    "rows": "[]"
   },
   {
-   "name": "238 POST /api/bd/activity",
+   "name": "238 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9322,10 +9322,10 @@
    "rows": "[]"
   },
   {
-   "name": "239 POST /api/bd/activity",
+   "name": "239 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9370,10 +9370,10 @@
    "rows": "[]"
   },
   {
-   "name": "240 POST /api/bd/activity",
+   "name": "240 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9418,10 +9418,10 @@
    "rows": "[]"
   },
   {
-   "name": "241 POST /api/bd/activity",
+   "name": "241 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9466,10 +9466,10 @@
    "rows": "[]"
   },
   {
-   "name": "242 POST /api/bd/activity",
+   "name": "242 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9514,10 +9514,10 @@
    "rows": "[]"
   },
   {
-   "name": "243 POST /api/bd/activity",
+   "name": "243 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9562,10 +9562,10 @@
    "rows": "[]"
   },
   {
-   "name": "244 POST /api/bd/activity",
+   "name": "244 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9610,10 +9610,10 @@
    "rows": "[]"
   },
   {
-   "name": "245 POST /api/bd/activity",
+   "name": "245 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9658,10 +9658,10 @@
    "rows": "[]"
   },
   {
-   "name": "246 POST /api/bd/activity",
+   "name": "246 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9688,10 +9688,10 @@
    "rows": "[]"
   },
   {
-   "name": "247 POST /api/bd/activity",
+   "name": "247 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9718,10 +9718,10 @@
    "rows": "[]"
   },
   {
-   "name": "248 POST /api/bd/activity",
+   "name": "248 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9748,10 +9748,10 @@
    "rows": "[]"
   },
   {
-   "name": "249 POST /api/bd/activity",
+   "name": "249 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9796,10 +9796,10 @@
    "rows": "[]"
   },
   {
-   "name": "250 POST /api/bd/activity",
+   "name": "250 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9844,10 +9844,10 @@
    "rows": "[]"
   },
   {
-   "name": "251 POST /api/bd/activity",
+   "name": "251 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9892,10 +9892,10 @@
    "rows": "[]"
   },
   {
-   "name": "252 POST /api/bd/activity",
+   "name": "252 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9940,10 +9940,10 @@
    "rows": "[]"
   },
   {
-   "name": "253 POST /api/bd/activity",
+   "name": "253 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -9988,10 +9988,10 @@
    "rows": "[]"
   },
   {
-   "name": "254 POST /api/bd/activity",
+   "name": "254 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -10036,10 +10036,10 @@
    "rows": "[]"
   },
   {
-   "name": "255 POST /api/bd/activity",
+   "name": "255 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -10084,10 +10084,10 @@
    "rows": "[]"
   },
   {
-   "name": "256 POST /api/bd/activity",
+   "name": "256 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -10132,10 +10132,10 @@
    "rows": "[]"
   },
   {
-   "name": "257 POST /api/bd/activity",
+   "name": "257 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -10144,10 +10144,10 @@
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}"
   },
   {
-   "name": "258 POST /api/bd/activity",
+   "name": "258 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a",
     "Content-Type": "application/x-www-form-urlencoded"
@@ -10157,10 +10157,10 @@
    "answer": "{\"success\":false,\"error\":\"Content-Type must be application/json\"}"
   },
   {
-   "name": "259 POST /api/bd/activity",
+   "name": "259 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -10169,10 +10169,10 @@
    "answer": "{\"success\":false,\"error\":\"Internal Server Error\"}"
   },
   {
-   "name": "260 POST /api/bd/activity",
+   "name": "260 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -10180,10 +10180,10 @@
    "answer": "{\"success\":false,\"error\":\"Content-Type must be application/json\"}"
   },
   {
-   "name": "261 POST /api/bd/activity",
+   "name": "261 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -10192,10 +10192,10 @@
    "answer": "{\"error\":\"Device ID mismatch\"}"
   },
   {
-   "name": "262 POST /api/bd/activity",
+   "name": "262 POST /api/nd/activity",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/activity",
+   "path": "/api/nd/activity",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },

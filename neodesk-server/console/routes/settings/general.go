@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/advancedconfig"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/restart"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/advancedconfig"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/restart"
 )
 
 // general holds the routes of the settings area that are not about the

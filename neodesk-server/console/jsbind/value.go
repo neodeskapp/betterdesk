@@ -31,8 +31,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 type kind uint8

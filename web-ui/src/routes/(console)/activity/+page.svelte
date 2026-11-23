@@ -1,6 +1,6 @@
 <!--
   App usage (/activity, audit.view): daily reports from devices running the
-  BetterDesk agent with activity tracking, newest first. Search by device,
+  NeoDesk agent with activity tracking, newest first. Search by device,
   a date range (or 7 days, 30 days, all), a click on a report opens that
   device's apps and sessions. The side column adds up the reports: active
   against idle time, and the most used apps over all devices (there is no

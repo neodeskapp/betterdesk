@@ -107,7 +107,7 @@ type Session struct {
 
 // The cookies the console uses: one name over HTTPS, one over HTTP.
 var (
-	sessionCookies = []string{"bd.sid", "betterdesk.sid"}
+	sessionCookies = []string{"nd.sid", "neodesk.sid"}
 	csrfCookies    = []string{"__csrf_h", "__csrf"}
 )
 

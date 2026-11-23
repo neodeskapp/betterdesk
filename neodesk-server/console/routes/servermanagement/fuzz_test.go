@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/servermgmt"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/servermgmt"
 )
 
 // FuzzGoDuration reads any text as the API server's uptime: no part is

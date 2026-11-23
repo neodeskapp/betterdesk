@@ -5,7 +5,7 @@ package contract_test
 import (
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The data the web remote client asks for: the sign-in page's data, a
@@ -54,17 +54,17 @@ func init() {
 		contract.Case{Name: "guest-info-guest-parameter", Path: "/api/remote/guest-info", Query: url.Values{"guest": {"{secret:glink}"}}, NoCookies: true, Roles: ends},
 		contract.Case{
 			Name: "guest-info-from-cookie", Path: "/api/remote/guest-info", NoCookies: true, Roles: ends,
-			Headers: map[string]string{"Cookie": "bd.guest={secret:glink}"},
+			Headers: map[string]string{"Cookie": "nd.guest={secret:glink}"},
 		},
 		contract.Case{Name: "viewer-guest", Path: viewer + "900100001", Query: guest, NoCookies: true},
 		contract.Case{Name: "viewer-guest-other-device", Path: viewer + "900100002", Query: guest, NoCookies: true},
 		contract.Case{
 			Name: "viewer-guest-cookie-other-device", Path: viewer + "900100002", NoCookies: true, Roles: ends,
-			Headers: map[string]string{"Cookie": "bd.guest={secret:glink}"},
+			Headers: map[string]string{"Cookie": "nd.guest={secret:glink}"},
 		},
 		contract.Case{
 			Name: "viewer-guest-cookie", Path: viewer + "900100001", NoCookies: true, Roles: ends,
-			Headers: map[string]string{"Cookie": "bd.guest={secret:glink}"},
+			Headers: map[string]string{"Cookie": "nd.guest={secret:glink}"},
 		},
 		// A console session with device.connect wins over the link. Only roles
 		// with device.connect: for every other role the link wins and sets the

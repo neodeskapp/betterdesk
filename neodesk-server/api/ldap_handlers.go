@@ -1,4 +1,4 @@
-// LDAP configuration API handlers for the BetterDesk server.
+// LDAP configuration API handlers for the NeoDesk server.
 // Endpoints for managing LDAP/AD authentication provider settings.
 package api
 
@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // ldapConfigKeys are the server_config keys used to store LDAP settings.

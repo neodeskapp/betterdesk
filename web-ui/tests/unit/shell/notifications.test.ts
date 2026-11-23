@@ -46,7 +46,7 @@ const ITEMS = [
 ];
 
 const listCalls = () =>
-	fetchMock.mock.calls.filter(([url]) => String(url).startsWith('/api/bd/notifications?')).length;
+	fetchMock.mock.calls.filter(([url]) => String(url).startsWith('/api/nd/notifications?')).length;
 
 beforeEach(() => {
 	hidden = false;
@@ -60,7 +60,7 @@ beforeEach(() => {
 	fetchMock.mockImplementation(async (url: string) => {
 		if (status !== 200)
 			return json({ success: false, error: 'Unauthorized', code: 'session_required' }, status);
-		if (url.startsWith('/api/bd/notifications?'))
+		if (url.startsWith('/api/nd/notifications?'))
 			return json({ success: true, items: ITEMS, unread_count: 7 });
 		return json({ success: true });
 	});
@@ -85,7 +85,7 @@ describe('polling', () => {
 		startNotifications();
 		await vi.advanceTimersByTimeAsync(0);
 		expect(listCalls()).toBe(1);
-		expect(fetchMock.mock.calls[0]![0]).toBe('/api/bd/notifications?limit=10');
+		expect(fetchMock.mock.calls[0]![0]).toBe('/api/nd/notifications?limit=10');
 		expect(notifications.unread).toBe(7);
 		expect(notifications.items.map((i) => i.id)).toEqual(['registration:lan:13', '29']);
 		expect(notifications.items[1]!.read).toBe(true);
@@ -129,7 +129,7 @@ describe('read state', () => {
 		await vi.advanceTimersByTimeAsync(0);
 		await markRead('registration:lan:13');
 		const call = fetchMock.mock.calls.find(([url]) => String(url).includes('/read'))!;
-		expect(call[0]).toBe('/api/bd/notifications/registration%3Alan%3A13/read');
+		expect(call[0]).toBe('/api/nd/notifications/registration%3Alan%3A13/read');
 		expect(call[1]).toMatchObject({
 			method: 'POST',
 			headers: expect.objectContaining({ 'X-CSRF-Token': 'tok-123' })
@@ -147,7 +147,7 @@ describe('read state', () => {
 		startNotifications();
 		await vi.advanceTimersByTimeAsync(0);
 		await markAllRead();
-		const call = fetchMock.mock.calls.find(([url]) => String(url) === '/api/bd/notifications/read-all')!;
+		const call = fetchMock.mock.calls.find(([url]) => String(url) === '/api/nd/notifications/read-all')!;
 		expect(call[1]).toMatchObject({
 			method: 'POST',
 			headers: expect.objectContaining({ 'X-CSRF-Token': 'tok-123' })

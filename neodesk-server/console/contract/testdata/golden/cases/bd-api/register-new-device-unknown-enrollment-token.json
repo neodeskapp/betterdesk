@@ -2,7 +2,7 @@
  "id": "bd-api/register-new-device-unknown-enrollment-token",
  "request": {
   "method": "POST",
-  "path": "/api/bd/register",
+  "path": "/api/nd/register",
   "body": {
    "device_id": "contract-bd-new",
    "enrollment_token": "contract-no-such-enrollment-token"

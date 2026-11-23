@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // TestNodeAnswers replays what the Node console's ten panel routes
@@ -192,10 +192,10 @@ func answersTheRow(t *testing.T, w *replay.World, step replay.Step, got replay.A
 	}
 }
 
-// The console has the group's routes at /api/automation and at /api/bd,
+// The console has the group's routes at /api/automation and at /api/nd,
 // in this order and in the order of the old file: the thirteen panel
-// routes, with the device routes after GET commands/{id}: both at /api/bd,
-// the result route alone at /api/automation (BUGS I5). At /api/bd the
+// routes, with the device routes after GET commands/{id}: both at /api/nd,
+// the result route alone at /api/automation (BUGS I5). At /api/nd the
 // panel routes step aside, and nothing else of this console answers their
 // addresses there. The device routes ask for a device token, a session
 // does not stand for one.
@@ -203,7 +203,7 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 	w := replay.NewWorld(t, storetest.Migrated(t), nil)
 	var registered []string
 	for _, route := range w.Server.Router().Routes() {
-		for _, mount := range []string{"/api/automation", "/api/bd"} {
+		for _, mount := range []string{"/api/automation", "/api/nd"} {
 			for _, part := range []string{"/rules", "/alerts", "/commands", "/smtp"} {
 				if strings.HasPrefix(route.Path, mount+part) {
 					registered = append(registered, route.Method+" "+route.Path)
@@ -212,7 +212,7 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 		}
 	}
 	var want []string
-	for _, mount := range []string{"/api/automation", "/api/bd"} {
+	for _, mount := range []string{"/api/automation", "/api/nd"} {
 		for _, route := range []string{
 			"GET %s/rules", "POST %s/rules", "GET %s/rules/{id}", "PATCH %s/rules/{id}", "DELETE %s/rules/{id}",
 			"GET %s/alerts", "POST %s/alerts/{id}/ack",
@@ -221,7 +221,7 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 			"GET %s/smtp", "PUT %s/smtp", "POST %s/smtp/test",
 		} {
 			if strings.HasSuffix(route, " (device)") {
-				if mount != "/api/bd" {
+				if mount != "/api/nd" {
 					continue
 				}
 				route = strings.TrimSuffix(route, " (device)")
@@ -236,23 +236,23 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 	body := replay.Text(`{"status":"completed","result":"x","host":"127.0.0.1"}`)
 	refused := `{"error":"Bearer access token required"}`
 	for _, req := range []replay.Request{
-		{Role: "admin", Path: "/api/bd/commands"},
-		{Role: "admin", Method: "POST", Path: "/api/bd/commands/1/result", Body: body},
+		{Role: "admin", Path: "/api/nd/commands"},
+		{Role: "admin", Method: "POST", Path: "/api/nd/commands/1/result", Body: body},
 		{Role: "admin", Method: "POST", Path: "/api/automation/commands/1/result", Body: body},
-		{Path: "/api/bd/commands"},
+		{Path: "/api/nd/commands"},
 	} {
 		if got := w.Do(req); got.Status != 401 || got.Body != refused {
 			t.Errorf("%s %s as %q: %d %s, want 401 %s", req.Method, req.Path, req.Role, got.Status, got.Body, refused)
 		}
 	}
 	for _, req := range []replay.Request{
-		{Role: "admin", Path: "/api/bd/smtp"},
-		{Role: "admin", Method: "PUT", Path: "/api/bd/smtp", Body: body},
-		{Role: "admin", Method: "POST", Path: "/api/bd/smtp/test", Body: body},
-		{Role: "admin", Path: "/api/bd/rules"},
-		{Role: "admin", Path: "/api/bd/alerts"},
-		{Role: "admin", Path: "/api/bd/commands/1"},
-		{Role: "admin", Method: "POST", Path: "/api/bd/rules", Body: replay.Text(`{"name":"x","condition_type":"custom"}`)},
+		{Role: "admin", Path: "/api/nd/smtp"},
+		{Role: "admin", Method: "PUT", Path: "/api/nd/smtp", Body: body},
+		{Role: "admin", Method: "POST", Path: "/api/nd/smtp/test", Body: body},
+		{Role: "admin", Path: "/api/nd/rules"},
+		{Role: "admin", Path: "/api/nd/alerts"},
+		{Role: "admin", Path: "/api/nd/commands/1"},
+		{Role: "admin", Method: "POST", Path: "/api/nd/rules", Body: replay.Text(`{"name":"x","condition_type":"custom"}`)},
 		// An id that is not written in digits is no id of the routes
 		{Role: "admin", Path: "/api/automation/rules/abc"},
 		{Role: "admin", Path: "/api/automation/rules/%31"},
@@ -266,7 +266,7 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 		}
 	}
 	if rows := w.Rows("SELECT id FROM alert_rules", nil); rows != "[]" {
-		t.Errorf("rules after the requests under /api/bd: %s", rows)
+		t.Errorf("rules after the requests under /api/nd: %s", rows)
 	}
 }
 

@@ -6,20 +6,20 @@ import (
 	"os"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/managedconfig"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/managedconfig"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 // installerSubstKeys are the placeholders the installers fill, in the
 // order write-installer-env-subst.js wrote them.
 var installerSubstKeys = []string{
 	"RUSTDESK_DIR", "PUB_KEY_PATH", "API_KEY_PATH", "DB_TYPE", "DB_PATH", "DATABASE_URL",
-	"DATA_DIR", "GO_API_PORT", "HBBS_API_URL", "BETTERDESK_API_URL", "API_PORT",
+	"DATA_DIR", "GO_API_PORT", "HBBS_API_URL", "NEODESK_API_URL", "API_PORT",
 	"DEFAULT_ADMIN_PASSWORD", "SESSION_SECRET", "REMOTE_TARGET_VAULT_KEY",
 	"GUACD_ADDRESS", "SSL_CERT_PATH", "SSL_KEY_PATH",
 }
 
-const envMergeUsage = "Usage: betterdesk-server env merge --target FILE [--fresh] [--subst-file JSON] [--subst-env] [--subst KEY=VALUE ...]"
+const envMergeUsage = "Usage: neodesk-server env merge --target FILE [--fresh] [--subst-file JSON] [--subst-env] [--subst KEY=VALUE ...]"
 
 // templatePath is the name the embedded template goes by.
 const templatePath = "(built in)/.env.example"
@@ -32,7 +32,7 @@ const templatePath = "(built in)/.env.example"
 //
 // Placeholders come from --subst-file (a JSON file, read as JSON.parse and
 // Object.assign read it), --subst KEY=VALUE and --subst-env, which takes
-// the BD_SUBST_<KEY> variables the installers set, as
+// the ND_SUBST_<KEY> variables the installers set, as
 // write-installer-env-subst.js wrote them into the file they then passed.
 // Later ones win, in the order given.
 //
@@ -69,7 +69,7 @@ func envMerge(args []string, env Env, template string, files serverinfo.FS) int 
 				err = readSubstFile(subs, raw)
 			}
 			if err != nil {
-				fmt.Fprintf(env.Stderr, "betterdesk-server env merge: %v\n", substFileError(next, err))
+				fmt.Fprintf(env.Stderr, "neodesk-server env merge: %v\n", substFileError(next, err))
 				return 1
 			}
 		case a == "--subst" && next != "":
@@ -81,7 +81,7 @@ func envMerge(args []string, env Env, template string, files serverinfo.FS) int 
 			subs.set(key, substValue{text: value})
 		case a == "--subst-env":
 			for _, key := range installerSubstKeys {
-				subs.set(key, substValue{text: env.Getenv("BD_SUBST_" + key)})
+				subs.set(key, substValue{text: env.Getenv("ND_SUBST_" + key)})
 			}
 		case a == "--help" || a == "-h":
 			return usage()

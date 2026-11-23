@@ -2,7 +2,7 @@
  "id": "bd-api/operator-login",
  "request": {
   "method": "POST",
-  "path": "/api/bd/operator/login",
+  "path": "/api/nd/operator/login",
   "body": {
    "device_id": "900100001",
    "password": "contract-wrong",

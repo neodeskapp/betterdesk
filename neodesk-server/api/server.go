@@ -1,4 +1,4 @@
-// Package api implements the BetterDesk HTTP REST API server.
+// Package api implements the NeoDesk HTTP REST API server.
 // Provides endpoints for peer management, server health, statistics,
 // detailed device status, blocklist management, and bandwidth stats.
 package api
@@ -18,22 +18,22 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/billing"
-	"github.com/unitronix/betterdesk-server/cdap"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/crypto"
-	"github.com/unitronix/betterdesk-server/crypto/peervault"
-	"github.com/unitronix/betterdesk-server/db"
-	eventsModule "github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/meshcentral"
-	"github.com/unitronix/betterdesk-server/metrics"
-	"github.com/unitronix/betterdesk-server/peer"
-	"github.com/unitronix/betterdesk-server/ratelimit"
-	"github.com/unitronix/betterdesk-server/relay"
-	"github.com/unitronix/betterdesk-server/security"
-	"github.com/unitronix/betterdesk-server/timesync"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/billing"
+	"github.com/neodeskapp/neodesk/neodesk-server/cdap"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/crypto/peervault"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	eventsModule "github.com/neodeskapp/neodesk/neodesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/meshcentral"
+	"github.com/neodeskapp/neodesk/neodesk-server/metrics"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/ratelimit"
+	"github.com/neodeskapp/neodesk/neodesk-server/relay"
+	"github.com/neodeskapp/neodesk/neodesk-server/security"
+	"github.com/neodeskapp/neodesk/neodesk-server/timesync"
 
 	"github.com/coder/websocket"
 	"golang.org/x/crypto/bcrypt"
@@ -755,12 +755,12 @@ func (s *Server) routes() *http.ServeMux {
 		s.meshGw.RegisterRoutes(mux)
 	}
 
-	// BetterDesk desktop client management WebSocket (no API key — device auth)
-	mux.HandleFunc("GET /ws/bd-mgmt/{device_id}", s.handleBdMgmt)
+	// NeoDesk desktop client management WebSocket (no API key — device auth)
+	mux.HandleFunc("GET /ws/nd-mgmt/{device_id}", s.handleBdMgmt)
 	// Management REST endpoints: status asks device.view, send device.connect
-	mux.HandleFunc("GET /api/bd/mgmt/{device_id}/status", s.requirePermission(auth.PermDeviceView, s.handleBdMgmtStatus))
-	mux.HandleFunc("POST /api/bd/mgmt/{device_id}/send", s.requirePermission(auth.PermDeviceConnect, s.handleBdMgmtSend))
-	mux.HandleFunc("GET /api/bd/mgmt/connected", s.requirePermission(auth.PermDeviceView, s.handleBdMgmtConnected))
+	mux.HandleFunc("GET /api/nd/mgmt/{device_id}/status", s.requirePermission(auth.PermDeviceView, s.handleBdMgmtStatus))
+	mux.HandleFunc("POST /api/nd/mgmt/{device_id}/send", s.requirePermission(auth.PermDeviceConnect, s.handleBdMgmtSend))
+	mux.HandleFunc("GET /api/nd/mgmt/connected", s.requirePermission(auth.PermDeviceView, s.handleBdMgmtConnected))
 
 	// Prometheus metrics. Gated via H-03 — see handleMetrics for the actual
 	// IP-allowlist / auth check. We register a wrapper here that enforces the
@@ -1114,7 +1114,7 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 		if snap, ok := s.peers.GetSnapshot(p.ID, config.DegradedThreshold, config.CriticalThreshold); ok {
 			liveStatus = snap.Status
 		}
-		// BetterDesk clients may be reachable through the HTTP heartbeat API
+		// NeoDesk clients may be reachable through the HTTP heartbeat API
 		// without a UDP/WebSocket signal entry. Use the recent DB heartbeat as
 		// the liveness source in that case.
 		if !liveOnline && !p.LastOnline.IsZero() && time.Since(p.LastOnline) <= config.RegTimeout {

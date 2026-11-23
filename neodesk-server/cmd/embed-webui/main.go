@@ -1,5 +1,5 @@
 // Command embed-webui prepares the files the server binary embeds
-// (DECISIONS A25). Run it in betterdesk-server after "npm run build" in
+// (DECISIONS A25). Run it in neodesk-server after "npm run build" in
 // web-ui and before go build:
 //
 //	go run ./cmd/embed-webui              # from ../web-ui/build
@@ -23,7 +23,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/unitronix/betterdesk-server/console/embedfs"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/embedfs"
 )
 
 func main() {
@@ -50,7 +50,7 @@ func run(from, to, static string) error {
 	}
 	for _, dir := range []string{filepath.Dir(to), static} {
 		if info, err := os.Stat(dir); err != nil || !info.IsDir() {
-			return fmt.Errorf("%s does not exist: run this in betterdesk-server", dir)
+			return fmt.Errorf("%s does not exist: run this in neodesk-server", dir)
 		}
 	}
 	files, size, err := embedfs.Copy(from, to)

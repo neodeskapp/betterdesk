@@ -147,7 +147,7 @@ function openViewer(id: string) {
 
 /**
  * The web viewer. An RDClient tab that is already open gets the device as a
- * new session (BroadcastChannel 'betterdesk-remote', 300 ms to answer);
+ * new session (BroadcastChannel 'neodesk-remote', 300 ms to answer);
  * otherwise a new tab opens. A phone asks first: the viewer needs a wider
  * screen, so it offers the RustDesk app instead.
  */
@@ -163,7 +163,7 @@ export async function connectInBrowser(d: DeviceLike): Promise<boolean> {
 		openViewer(d.id);
 		return true;
 	}
-	const bc = new BroadcastChannel('betterdesk-remote');
+	const bc = new BroadcastChannel('neodesk-remote');
 	let handled = false;
 	bc.onmessage = (ev: MessageEvent) => {
 		const type = (ev.data as { type?: string } | null)?.type;
@@ -617,7 +617,7 @@ export async function changeId(d: DeviceLike): Promise<string | null> {
 	const answer = await prompt({
 		title: t('devices.change_id_title'),
 		label: t('devices.new_id'),
-		// Only the BetterDesk client follows a change made here
+		// Only the NeoDesk client follows a change made here
 		message: t('devices.change_id_stock_note'),
 		placeholder: 'NEWID123',
 		hint: t('devices.change_id_hint'),

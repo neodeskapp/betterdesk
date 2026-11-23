@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // RoleSource answers which permissions a role has in effect: the built-in

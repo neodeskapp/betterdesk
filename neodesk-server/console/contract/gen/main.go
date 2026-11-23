@@ -17,7 +17,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // inventory is the part of the inventory file this program reads.

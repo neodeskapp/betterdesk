@@ -6,11 +6,11 @@
   at the bottom; a handle on the end edge to change the width.
 
   Remembered with the old keys: sections opened or closed in this tab
-  (sessionStorage bd_nav_sections_collapsed; the current page's section is
-  always open), "More" lists left open (localStorage bd_nav_more_open),
-  the width (localStorage bd_ux35_sidebar_width, 200 to 320 px, applied
+  (sessionStorage nd_nav_sections_collapsed; the current page's section is
+  always open), "More" lists left open (localStorage nd_nav_more_open),
+  the width (localStorage nd_ux35_sidebar_width, 200 to 320 px, applied
   before first paint by /console-boot.js as --sidebar-w), and the scroll
-  position in this tab (sessionStorage bd_ux35_sidebar_scroll).
+  position in this tab (sessionStorage nd_ux35_sidebar_scroll).
 -->
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
@@ -219,7 +219,7 @@
 	/* ── Logo and footer (branding) ── */
 
 	const appName = $derived(session.appName);
-	/** Logo kinds other than the BetterDesk logo (Settings › Appearance) */
+	/** Logo kinds other than the NeoDesk logo (Settings › Appearance) */
 	const OTHER_LOGOS = new Set(['text', 'svg', 'image', 'icon']);
 	const logoType = $derived(branding?.logoType || session.raw?.branding.logoType || 'default');
 	/** An admin's SVG logo as a picture: it can't run anything there */
@@ -232,7 +232,7 @@
 		branding?.logoUrl && /^(\/(?!\/)|https?:\/\/)/i.test(branding.logoUrl) ? branding.logoUrl : ''
 	);
 	const showPoweredBy = $derived(branding ? branding.showPoweredBy : true);
-	const PROJECT_URL = 'https://github.com/neodeskapp/betterdesk';
+	const PROJECT_URL = 'https://github.com/neodeskapp/neodesk';
 	const footerText = $derived(branding?.footerText ?? '');
 </script>
 
@@ -340,7 +340,7 @@
 					<!-- The project's page, in a new tab so the console stays open -->
 					<a class="powered-by" href={PROJECT_URL} target="_blank" rel="noopener noreferrer">
 						<BrandLogo mark />
-						<span>{t('branding.powered_by')} <span translate="no">BetterDesk</span></span>
+						<span>{t('branding.powered_by')} <span translate="no">NeoDesk</span></span>
 						{#if session.appVersion}<span class="powered-version">{session.appVersion}</span>{/if}
 					</a>
 				{/if}

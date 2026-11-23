@@ -1,5 +1,5 @@
 /**
- * BetterViewer — BetterDesk browser remote desktop (MNG_KVM protocol, AGPL-3.0).
+ * BetterViewer — NeoDesk browser remote desktop (MNG_KVM protocol, AGPL-3.0).
  * SPDX-License-Identifier: AGPL-3.0-only
  * Copyright (c) BetterDesk contributors
  */

@@ -87,7 +87,7 @@
 		groupFilter: '(member={{dn}})',
 		groupAttr: 'cn',
 		ldapRoleMap:
-			'CN=BetterDesk Admins,OU=Groups,DC=example,DC=com=admin|CN=Operators,OU=Groups,DC=example,DC=com=operator',
+			'CN=NeoDesk Admins,OU=Groups,DC=example,DC=com=admin|CN=Operators,OU=Groups,DC=example,DC=com=operator',
 		oidcName: 'Azure AD / Okta / Google',
 		issuer: 'https://login.microsoftonline.com/{tenant}/v2.0',
 		cidrs: '10.20.0.0/16, 192.168.50.10',
@@ -101,7 +101,7 @@
 		claimEmail: 'email',
 		claimName: 'name',
 		claimGroups: 'groups',
-		oidcRoleMap: 'betterdesk-admins=admin\nbetterdesk-operators=operator'
+		oidcRoleMap: 'neodesk-admins=admin\nneodesk-operators=operator'
 	} as const;
 	const errText = (err: unknown, fallback = t('errors.server_error')) =>
 		err instanceof Error && err.message ? err.message : fallback;

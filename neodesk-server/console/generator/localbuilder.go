@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // The local build provider (services/localClientBuilder.js): it compiles
@@ -16,7 +16,7 @@ import (
 // and packs the result for the host's platform: a zip on Windows, a
 // tar.gz on Linux and macOS, and on Linux also a .deb, .rpm and Arch
 // package when dpkg-deb, rpmbuild and zstd are there. The signed Support
-// configuration goes to the compiler in BETTERDESK_SUPPORT_CONFIG_B64. It
+// configuration goes to the compiler in NEODESK_SUPPORT_CONFIG_B64. It
 // never builds without one.
 //
 // The old console ran it as a separate Node process; here it runs in the
@@ -72,15 +72,15 @@ func (b *localBuilder) toolPath(name, configured string) string {
 	if configured != "" {
 		candidates = append(candidates, configured)
 	}
-	roots := []string{b.get("BETTERDESK_CLIENT_TOOLCHAIN_BIN")}
+	roots := []string{b.get("NEODESK_CLIENT_TOOLCHAIN_BIN")}
 	if b.windows {
 		root := ""
-		if r := b.get("BETTERDESK_CLIENT_TOOLCHAIN_ROOT"); r != "" {
+		if r := b.get("NEODESK_CLIENT_TOOLCHAIN_ROOT"); r != "" {
 			root = filepath.Join(r, "bin")
 		}
 		roots = append(roots, root, `C:\tools\flutter-3.24.5\bin`, `C:\tools\LLVM-15.0.6\bin`)
 	} else {
-		roots = append(roots, "/opt/betterdesk-toolchain/bin", "/opt/betterdesk-toolchain/cargo/bin", "/opt/flutter-3.24.5/bin")
+		roots = append(roots, "/opt/neodesk-toolchain/bin", "/opt/neodesk-toolchain/cargo/bin", "/opt/flutter-3.24.5/bin")
 	}
 	for _, p := range strings.Split(b.get("PATH"), b.delimiter()) {
 		roots = append(roots, p)
@@ -135,21 +135,21 @@ func (b *localBuilder) pythonName() string {
 }
 
 func (b *localBuilder) toolchainRoot() string {
-	if r := b.get("BETTERDESK_CLIENT_TOOLCHAIN_ROOT"); r != "" {
+	if r := b.get("NEODESK_CLIENT_TOOLCHAIN_ROOT"); r != "" {
 		return r
 	}
 	if b.windows {
-		return `C:\ProgramData\BetterDesk\toolchain`
+		return `C:\ProgramData\NeoDesk\toolchain`
 	}
-	return "/opt/betterdesk-toolchain"
+	return "/opt/neodesk-toolchain"
 }
 
 // buildEnvironment is the environment of the compile step: the toolchain
 // folders first on PATH, VCPKG_ROOT, PUB_CACHE, LIBCLANG_PATH when found.
 func (b *localBuilder) buildEnvironment() (map[string]string, error) {
-	cargo := b.toolPath("cargo", b.get("BETTERDESK_CLIENT_CARGO"))
-	flutter := b.toolPath("flutter", b.get("BETTERDESK_CLIENT_FLUTTER"))
-	python := b.toolPath(b.pythonName(), b.get("BETTERDESK_CLIENT_PYTHON"))
+	cargo := b.toolPath("cargo", b.get("NEODESK_CLIENT_CARGO"))
+	flutter := b.toolPath("flutter", b.get("NEODESK_CLIENT_FLUTTER"))
+	python := b.toolPath(b.pythonName(), b.get("NEODESK_CLIENT_PYTHON"))
 	switch {
 	case cargo == "":
 		return nil, codeError("local_builder_toolchain_missing:cargo")
@@ -175,7 +175,7 @@ func (b *localBuilder) buildEnvironment() (map[string]string, error) {
 	configuredLibclang := jsTrim(b.get("LIBCLANG_PATH"))
 	defaultLibclang := ""
 	if b.windows {
-		root := b.get("BETTERDESK_CLIENT_LLVM_ROOT")
+		root := b.get("NEODESK_CLIENT_LLVM_ROOT")
 		if root == "" {
 			root = `C:\tools\LLVM-15.0.6`
 		}
@@ -209,7 +209,7 @@ func (b *localBuilder) buildEnvironment() (map[string]string, error) {
 	}
 	env["VCPKG_ROOT"] = vcpkgRoot
 	env["PUB_CACHE"] = pubCache
-	env["BETTERDESK_CLIENT_PYTHON"] = python
+	env["NEODESK_CLIENT_PYTHON"] = python
 	if libclang != "" {
 		env["LIBCLANG_PATH"] = libclang
 	}
@@ -235,7 +235,7 @@ func (b *localBuilder) buildEnvironment() (map[string]string, error) {
 	add(pubBin)
 	add(b.get("PATH"))
 	env["PATH"] = strings.Join(parts, b.delimiter())
-	env["BETTERDESK_CLIENT_SUPPORT_BUILD"] = "1"
+	env["NEODESK_CLIENT_SUPPORT_BUILD"] = "1"
 	return env, nil
 }
 
@@ -289,27 +289,27 @@ func (b *localBuilder) linuxPackageFormats() []any {
 
 func (b *localBuilder) toolchainStatus() *goapi.Object {
 	missing := []any{}
-	if b.toolPath("cargo", b.get("BETTERDESK_CLIENT_CARGO")) == "" {
+	if b.toolPath("cargo", b.get("NEODESK_CLIENT_CARGO")) == "" {
 		missing = append(missing, "cargo")
 	}
-	if b.toolPath("flutter", b.get("BETTERDESK_CLIENT_FLUTTER")) == "" {
+	if b.toolPath("flutter", b.get("NEODESK_CLIENT_FLUTTER")) == "" {
 		missing = append(missing, "flutter")
 	}
-	if b.toolPath(b.pythonName(), b.get("BETTERDESK_CLIENT_PYTHON")) == "" {
+	if b.toolPath(b.pythonName(), b.get("NEODESK_CLIENT_PYTHON")) == "" {
 		missing = append(missing, "python")
 	}
 	if root := b.resolveVcpkgRoot(); root == "" || !exists(filepath.Join(root, b.vcpkgName())) {
 		missing = append(missing, "VCPKG_ROOT")
 	}
 	if b.windows {
-		vsDevCmd := b.get("BETTERDESK_CLIENT_VSDEVCMD")
-		msvc := b.toolPath("cl", b.get("BETTERDESK_CLIENT_CL")) != "" || b.get("VCINSTALLDIR") != "" || b.get("VSINSTALLDIR") != "" ||
+		vsDevCmd := b.get("NEODESK_CLIENT_VSDEVCMD")
+		msvc := b.toolPath("cl", b.get("NEODESK_CLIENT_CL")) != "" || b.get("VCINSTALLDIR") != "" || b.get("VSINSTALLDIR") != "" ||
 			(vsDevCmd != "" && exists(vsDevCmd))
 		if !msvc {
 			missing = append(missing, "msvc")
 		}
 		var sdkRoots []string
-		for _, r := range []string{b.get("BETTERDESK_CLIENT_WINDOWS_SDK_DIR"), b.get("WindowsSdkDir")} {
+		for _, r := range []string{b.get("NEODESK_CLIENT_WINDOWS_SDK_DIR"), b.get("WindowsSdkDir")} {
 			if r != "" {
 				sdkRoots = append(sdkRoots, r)
 			}
@@ -330,7 +330,7 @@ func (b *localBuilder) toolchainStatus() *goapi.Object {
 		if !sdk {
 			missing = append(missing, "windows-sdk")
 		}
-		llvmRoot := b.get("BETTERDESK_CLIENT_LLVM_ROOT")
+		llvmRoot := b.get("NEODESK_CLIENT_LLVM_ROOT")
 		if llvmRoot == "" && b.get("ProgramFiles") != "" {
 			llvmRoot = filepath.Join(b.get("ProgramFiles"), "LLVM")
 		}

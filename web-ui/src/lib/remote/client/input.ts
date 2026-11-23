@@ -1,5 +1,5 @@
 /**
- * BetterDesk Web Remote Client - Input Manager
+ * NeoDesk Web Remote Client - Input Manager
  * Captures keyboard and mouse events and converts them to RustDesk protocol messages
  */
 import type { MessageInit } from './generated/protos.ts';

@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // unreadable are the reports of testdata/node_*.json that the old list
@@ -387,7 +387,7 @@ func TestUploadKeepsTheInfoTheReportDoesNotName(t *testing.T) {
 		upload := func(i int, device, hardware string) {
 			t.Helper()
 			body := `{"device_id":"` + device + `","hardware":` + hardware + `}`
-			got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/inventory", Body: replay.Text(body), Headers: map[string]string{"Authorization": fmt.Sprintf("Bearer tok-%d", i)}})
+			got := w.Do(replay.Request{Method: "POST", Path: "/api/nd/inventory", Body: replay.Text(body), Headers: map[string]string{"Authorization": fmt.Sprintf("Bearer tok-%d", i)}})
 			if got.Status != 200 {
 				t.Errorf("upload of %s: %d %s", device, got.Status, got.Body)
 			}
@@ -445,7 +445,7 @@ func TestARefusedReportIsNotStored(t *testing.T) {
 		w.Exec("INSERT INTO peer (id, note, info) VALUES ('device-a', '', '{\"hostname\":\"old\"}')", nil)
 		upload := func(hardware, software string) replay.Answer {
 			body := `{"device_id":"device-a","hardware":` + hardware + `,"software":` + software + `,"collected_at":"2011-03-04T10:00:00.000Z"}`
-			return w.Do(replay.Request{Method: "POST", Path: "/api/bd/inventory", Body: replay.Text(body), Headers: deviceA})
+			return w.Do(replay.Request{Method: "POST", Path: "/api/nd/inventory", Body: replay.Text(body), Headers: deviceA})
 		}
 		for _, disk := range []string{
 			`{"mount_point":"/t","total_bytes":{"toString":1},"used_bytes":10}`,
@@ -477,14 +477,14 @@ func TestARefusedReportIsNotStored(t *testing.T) {
 // longer fails the stored report (BUGS AI14).
 var changedUploads = map[string]map[string]replay.Fix{
 	"sqlite": {
-		"549 POST /api/bd/inventory": invalidDisks, "550 POST /api/bd/inventory": invalidDisks, "608 POST /api/bd/inventory": invalidDisks,
-		"609 POST /api/bd/inventory": invalidDisks, "610 POST /api/bd/inventory": invalidDisks, "620 POST /api/bd/inventory": invalidDisks,
-		"629 POST /api/bd/inventory": appsCounted, "630 POST /api/bd/inventory": appsCounted,
+		"549 POST /api/nd/inventory": invalidDisks, "550 POST /api/nd/inventory": invalidDisks, "608 POST /api/nd/inventory": invalidDisks,
+		"609 POST /api/nd/inventory": invalidDisks, "610 POST /api/nd/inventory": invalidDisks, "620 POST /api/nd/inventory": invalidDisks,
+		"629 POST /api/nd/inventory": appsCounted, "630 POST /api/nd/inventory": appsCounted,
 	},
 	"postgres": {
-		"547 POST /api/bd/inventory": invalidDisks, "548 POST /api/bd/inventory": invalidDisks, "606 POST /api/bd/inventory": invalidDisks,
-		"607 POST /api/bd/inventory": invalidDisks, "608 POST /api/bd/inventory": invalidDisks, "618 POST /api/bd/inventory": invalidDisks,
-		"627 POST /api/bd/inventory": appsCounted, "628 POST /api/bd/inventory": appsCounted,
+		"547 POST /api/nd/inventory": invalidDisks, "548 POST /api/nd/inventory": invalidDisks, "606 POST /api/nd/inventory": invalidDisks,
+		"607 POST /api/nd/inventory": invalidDisks, "608 POST /api/nd/inventory": invalidDisks, "618 POST /api/nd/inventory": invalidDisks,
+		"627 POST /api/nd/inventory": appsCounted, "628 POST /api/nd/inventory": appsCounted,
 	},
 }
 
@@ -532,7 +532,7 @@ func TestUploadValuesHaveTheirTypes(t *testing.T) {
 			return w.Do(replay.Request{Method: "POST", Path: path, Body: replay.Text(body), Headers: deviceA})
 		}
 		good := `"cpu_usage_percent":12.5,"memory_used_bytes":1048576,"memory_total_bytes":2097152,"uptime_secs":60,"timestamp":"2011-03-04T10:00:00.000Z"`
-		if got := send("/api/bd/telemetry", `{"device_id":"device-a",`+good+`}`); got.Status != 200 {
+		if got := send("/api/nd/telemetry", `{"device_id":"device-a",`+good+`}`); got.Status != 200 {
 			t.Fatalf("good telemetry: %d %s", got.Status, got.Body)
 		}
 		stored := w.Rows("SELECT cpu_usage_percent, memory_used_bytes, memory_total_bytes, uptime_secs FROM device_telemetry", nil)
@@ -545,21 +545,21 @@ func TestUploadValuesHaveTheirTypes(t *testing.T) {
 			{"timestamp", `5`}, {"timestamp", `"garbage"`}, {"timestamp", `true`}, {"timestamp", `"2011-13-01T00:00:00Z"`},
 		} {
 			body := `{"device_id":"device-a",` + strings.Replace(good, `"`+c.name+`":`, `"`+c.name+`":`+c.values+`,"was_`+c.name+`":`, 1) + `}`
-			if got := send("/api/bd/telemetry", body); got.Status != 400 || got.Body != `{"success":false,"error":"Invalid `+c.name+`"}` {
+			if got := send("/api/nd/telemetry", body); got.Status != 400 || got.Body != `{"success":false,"error":"Invalid `+c.name+`"}` {
 				t.Errorf("telemetry with %s %s: %d %s, want 400 Invalid %s", c.name, c.values, got.Status, got.Body, c.name)
 			}
 		}
 		if got := w.Rows("SELECT cpu_usage_percent, memory_used_bytes, memory_total_bytes, uptime_secs FROM device_telemetry", nil); got != stored {
 			t.Errorf("the telemetry after the refused uploads: %s, want %s", got, stored)
 		}
-		if got := send("/api/bd/telemetry", `{"device_id":"device-a","cpu_usage_percent":null,"timestamp":null}`); got.Status != 200 {
+		if got := send("/api/nd/telemetry", `{"device_id":"device-a","cpu_usage_percent":null,"timestamp":null}`); got.Status != 200 {
 			t.Errorf("telemetry without values: %d %s, want it stored", got.Status, got.Body)
 		}
 
 		report := func(hardware, software, collectedAt string) string {
 			return `{"device_id":"device-a","hardware":` + hardware + `,"software":` + software + `,"collected_at":` + collectedAt + `}`
 		}
-		if got := send("/api/bd/inventory", report(`{"hostname":"pc"}`, `{"apps":[]}`, `"2011-03-04T10:00:00.000Z"`)); got.Status != 200 {
+		if got := send("/api/nd/inventory", report(`{"hostname":"pc"}`, `{"apps":[]}`, `"2011-03-04T10:00:00.000Z"`)); got.Status != 200 {
 			t.Fatalf("a good report: %d %s", got.Status, got.Body)
 		}
 		for _, c := range []struct{ name, body string }{
@@ -571,14 +571,14 @@ func TestUploadValuesHaveTheirTypes(t *testing.T) {
 			{"hardware", report(`{"\udc00":1}`, `{}`, `null`)},
 			{"software", report(`{"hostname":"x"}`, `{"apps":[{"name":"\u0000"}]}`, `null`)},
 		} {
-			if got := send("/api/bd/inventory", c.body); got.Status != 400 || got.Body != `{"success":false,"error":"Invalid `+c.name+`"}` {
+			if got := send("/api/nd/inventory", c.body); got.Status != 400 || got.Body != `{"success":false,"error":"Invalid `+c.name+`"}` {
 				t.Errorf("the report %s: %d %s, want 400 Invalid %s", c.body, got.Status, got.Body, c.name)
 			}
 		}
 		if got := w.Rows("SELECT hardware FROM device_inventory", nil); got != `[{"hardware":"{\"hostname\":`+db.Pick("", " ")+`\"pc\"}"}]` {
 			t.Errorf("the report after the refused uploads: %s, want the good one", got)
 		}
-		if got := send("/api/bd/inventory", report(`{"hostname":"a😀"}`, `{}`, `false`)); got.Status != 200 {
+		if got := send("/api/nd/inventory", report(`{"hostname":"a😀"}`, `{}`, `false`)); got.Status != 200 {
 			t.Errorf("a report with a whole surrogate pair and no time: %d %s, want it stored", got.Status, got.Body)
 		}
 	})

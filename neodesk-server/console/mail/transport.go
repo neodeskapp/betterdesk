@@ -8,9 +8,9 @@ import (
 	"net/netip"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/mail/message"
-	"github.com/unitronix/betterdesk-server/console/mail/smtpwire"
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/message"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/smtpwire"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
 )
 
 // SMTP is the Transport of a running console: it builds the message

@@ -1,10 +1,10 @@
-# Dockerfile for BetterDesk Server (Go)
+# Dockerfile for NeoDesk Server (Go)
 # Multi-stage build: compile from source, then copy to minimal runtime image
 #
-# The BetterDesk server is a single binary that replaces both hbbs and hbbr.
+# The NeoDesk server is a single binary that replaces both hbbs and hbbr.
 # It provides: signal (UDP/TCP/WS), relay (TCP/WS), HTTP API, admin console.
 #
-# Build: docker build -f Dockerfile.server -t betterdesk-server:local .
+# Build: docker build -f Dockerfile.server -t neodesk-server:local .
 
 # ---- Web app build (embedded in the binary, DECISIONS A25) ----
 FROM node:22.23.2-alpine3.24 AS web-ui-builder
@@ -16,8 +16,8 @@ COPY web-ui/package.json web-ui/package-lock.json ./
 RUN npx -y npm@11.6.2 ci --no-audit --no-fund
 
 # The web app build generates the remote viewer's protobuf code from the
-# server's schema (web-ui/vite-plugins/protos.ts reads ../betterdesk-server/protos)
-COPY betterdesk-server/protos/ /betterdesk-server/protos/
+# server's schema (web-ui/vite-plugins/protos.ts reads ../neodesk-server/protos)
+COPY neodesk-server/protos/ /neodesk-server/protos/
 COPY web-ui/ .
 RUN npm run build
 
@@ -30,12 +30,12 @@ RUN apk add --no-cache git || { sleep 2 && apk add --no-cache git; }
 WORKDIR /src
 
 # Copy Go module files first (cache dependencies)
-COPY betterdesk-server/go.mod betterdesk-server/go.sum ./
+COPY neodesk-server/go.mod neodesk-server/go.sum ./
 
 RUN go mod download
 
 # Copy full source
-COPY betterdesk-server/ .
+COPY neodesk-server/ .
 
 # The binary carries the web app, as the release binaries do
 COPY --from=web-ui-builder /web-ui/build /web-ui-build
@@ -43,26 +43,26 @@ RUN go run ./cmd/embed-webui -from /web-ui-build
 
 # The binary's version, build date and commit (-version, the update check).
 # Without build arguments: the version in VERSION and the time of the build;
-# the commit only when BETTERDESK_COMMIT_SHA names it (the publish workflow
+# the commit only when NEODESK_COMMIT_SHA names it (the publish workflow
 # and docker-compose.single.yml pass it).
-ARG BETTERDESK_PRODUCT_VERSION=
-ARG BETTERDESK_COMMIT_SHA=
-ARG BETTERDESK_BUILD_DATE=
+ARG NEODESK_PRODUCT_VERSION=
+ARG NEODESK_COMMIT_SHA=
+ARG NEODESK_BUILD_DATE=
 
 # Build static binary (modernc.org/sqlite is pure Go — no CGO needed)
-RUN version="${BETTERDESK_PRODUCT_VERSION:-$(tr -d '[:space:]' < VERSION)}" && \
-    built="${BETTERDESK_BUILD_DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" && \
+RUN version="${NEODESK_PRODUCT_VERSION:-$(tr -d '[:space:]' < VERSION)}" && \
+    built="${NEODESK_BUILD_DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" && \
     CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -trimpath \
-    -ldflags="-s -w -X main.Version=${version} -X main.Commit=${BETTERDESK_COMMIT_SHA} -X main.BuildDate=${built}" \
+    -ldflags="-s -w -X main.Version=${version} -X main.Commit=${NEODESK_COMMIT_SHA} -X main.BuildDate=${built}" \
     -tags "netgo osusergo" \
-    -o /betterdesk-server .
+    -o /neodesk-server .
 
 # ---- Runtime stage ----
 FROM alpine:3.22
 
 LABEL maintainer="neodeskapp"
-LABEL description="BetterDesk Server - RustDesk-compatible signal + relay"
-LABEL org.opencontainers.image.source="https://github.com/neodeskapp/betterdesk"
+LABEL description="NeoDesk Server - RustDesk-compatible signal + relay"
+LABEL org.opencontainers.image.source="https://github.com/neodeskapp/neodesk"
 LABEL version="3.6.2"
 
 RUN apk add --no-cache \
@@ -74,33 +74,33 @@ RUN apk add --no-cache \
     shadow \
     || { sleep 2 && apk add --no-cache \
     ca-certificates curl sqlite tini su-exec shadow; } \
-    && addgroup -g 10001 -S betterdesk \
-    && adduser -u 10001 -S -G betterdesk betterdesk
+    && addgroup -g 10001 -S neodesk \
+    && adduser -u 10001 -S -G neodesk neodesk
 
-COPY --from=builder /betterdesk-server /usr/local/bin/betterdesk-server
-RUN chmod +x /usr/local/bin/betterdesk-server
+COPY --from=builder /neodesk-server /usr/local/bin/neodesk-server
+RUN chmod +x /usr/local/bin/neodesk-server
 
 # Create data directory before writing build metadata into it
-RUN mkdir -p /opt/rustdesk && chown betterdesk:betterdesk /opt/rustdesk
+RUN mkdir -p /opt/rustdesk && chown neodesk:neodesk /opt/rustdesk
 
-ARG BETTERDESK_COMMIT_SHA=unknown
-ARG BETTERDESK_IMAGE_VERSION=unknown
-ENV BETTERDESK_IMAGE_SHA=${BETTERDESK_COMMIT_SHA}
-ENV BETTERDESK_IMAGE_VERSION=${BETTERDESK_IMAGE_VERSION}
-RUN printf '%s\n' "${BETTERDESK_COMMIT_SHA}" > /opt/rustdesk/.image-commit
+ARG NEODESK_COMMIT_SHA=unknown
+ARG NEODESK_IMAGE_VERSION=unknown
+ENV NEODESK_IMAGE_SHA=${NEODESK_COMMIT_SHA}
+ENV NEODESK_IMAGE_VERSION=${NEODESK_IMAGE_VERSION}
+RUN printf '%s\n' "${NEODESK_COMMIT_SHA}" > /opt/rustdesk/.image-commit
 
-# Entrypoint script: fixes volume permissions, then drops to betterdesk user
+# Entrypoint script: fixes volume permissions, then drops to neodesk user
 COPY docker/ensure-app-user.sh /ensure-app-user.sh
 COPY docker/server-entrypoint.sh /server-entrypoint.sh
 COPY docker/bootstrap-admin-credentials.sh /docker/bootstrap-admin-credentials.sh
-COPY docker/show-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials
-COPY docker/healthcheck.sh /usr/local/bin/betterdesk-healthcheck
-RUN chmod +x /ensure-app-user.sh /server-entrypoint.sh /docker/bootstrap-admin-credentials.sh /usr/local/bin/betterdesk-show-admin-credentials /usr/local/bin/betterdesk-healthcheck
+COPY docker/show-admin-credentials.sh /usr/local/bin/neodesk-show-admin-credentials
+COPY docker/healthcheck.sh /usr/local/bin/neodesk-healthcheck
+RUN chmod +x /ensure-app-user.sh /server-entrypoint.sh /docker/bootstrap-admin-credentials.sh /usr/local/bin/neodesk-show-admin-credentials /usr/local/bin/neodesk-healthcheck
 
 WORKDIR /opt/rustdesk
 
 # Server only: the console in this binary is on by default (DECISIONS A27)
-# and stays off in this image; the betterdesk image runs both in one process
+# and stays off in this image; the neodesk image runs both in one process
 ENV CONSOLE_PORT=0
 
 # Ports:
@@ -115,10 +115,10 @@ EXPOSE 21115 21116/tcp 21116/udp 21117 21118 21119 21121 21122
 
 # Health check via the API (the console is off here), over HTTPS with TLS_API
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD /usr/local/bin/betterdesk-healthcheck
+    CMD /usr/local/bin/neodesk-healthcheck
 
 # Note: Container starts as root so entrypoint can fix volume permissions.
-# server-entrypoint.sh drops to betterdesk user via su-exec before running the server.
+# server-entrypoint.sh drops to neodesk user via su-exec before running the server.
 
 ENTRYPOINT ["/sbin/tini", "--", "/server-entrypoint.sh"]
-CMD ["/usr/local/bin/betterdesk-server", "-mode", "all", "-api-port", "21121", "-key-file", "/opt/rustdesk/id_ed25519"]
+CMD ["/usr/local/bin/neodesk-server", "-mode", "all", "-api-port", "21121", "-key-file", "/opt/rustdesk/id_ed25519"]

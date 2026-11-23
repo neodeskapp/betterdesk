@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsjson"
 )
 
 // object builds a JavaScript object to write out as JSON.stringify wrote

@@ -22,10 +22,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/discovery"
-	"github.com/unitronix/betterdesk-server/console/listen"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/discovery"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/listen"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // goSuites are the OpenSSL names of the probed TLS 1.2 suites in Go.
@@ -630,8 +630,8 @@ func TestHTTPSFallbackCookiesAreNotSecure(t *testing.T) {
 			t.Errorf("Secure cookie over the plain HTTP fallback: %s", line)
 		}
 	}
-	if !names["betterdesk.sid"] || !names["__csrf"] {
-		t.Errorf("cookies %v, want betterdesk.sid and __csrf", names)
+	if !names["neodesk.sid"] || !names["__csrf"] {
+		t.Errorf("cookies %v, want neodesk.sid and __csrf", names)
 	}
 	if _, who := do(http.MethodGet, "/api/probe", ""); who["user"] != float64(roleIDs["admin"]) {
 		t.Errorf("the next request is signed in as %v", who["user"])
@@ -642,7 +642,7 @@ func TestHTTPSFallbackCookiesAreNotSecure(t *testing.T) {
 	}
 	guest := httptest.NewRecorder()
 	w.s.deps.GuestAccess.SetCookie(guest, "t", nil)
-	if line := guest.Header().Get("Set-Cookie"); !strings.HasPrefix(line, "betterdesk.guest=") || strings.Contains(line, "; Secure") {
+	if line := guest.Header().Get("Set-Cookie"); !strings.HasPrefix(line, "neodesk.guest=") || strings.Contains(line, "; Secure") {
 		t.Errorf("guest cookie %q", line)
 	}
 	if res := w.agent().get("/login", "Accept", "text/html"); res.status != http.StatusOK || strings.Contains(res.header.Get("Content-Security-Policy"), "upgrade-insecure-requests") {

@@ -365,16 +365,16 @@ func TestBackendPassesThrough(t *testing.T) {
 	api := &fakeAPI{answer: answerJSON(200, okBody)}
 	b := NewBackend(New(api), store)
 
-	if b.GetActiveBackend() != "betterdesk" || !b.IsBetterDesk() {
-		t.Error("the backend is not betterdesk")
+	if b.GetActiveBackend() != "neodesk" || !b.IsNeoDesk() {
+		t.Error("the backend is not neodesk")
 	}
-	if err := b.SetActiveBackend(ctx, "rustdesk"); err == nil || err.Error() != "Invalid backend: rustdesk. Only 'betterdesk' is supported." {
+	if err := b.SetActiveBackend(ctx, "rustdesk"); err == nil || err.Error() != "Invalid backend: rustdesk. Only 'neodesk' is supported." {
 		t.Errorf("SetActiveBackend(rustdesk) = %v", err)
 	}
-	if err := b.SetActiveBackend(ctx, "betterdesk"); err != nil || store.settings["server_backend"] != "betterdesk" {
-		t.Errorf("SetActiveBackend(betterdesk) = %v, settings %v", err, store.settings)
+	if err := b.SetActiveBackend(ctx, "neodesk"); err != nil || store.settings["server_backend"] != "neodesk" {
+		t.Errorf("SetActiveBackend(neodesk) = %v, settings %v", err, store.settings)
 	}
-	if got := toJSON(t, b.SyncOnlineStatus()); got != `{"synced":0,"skipped":true,"reason":"betterdesk_manages_state"}` {
+	if got := toJSON(t, b.SyncOnlineStatus()); got != `{"synced":0,"skipped":true,"reason":"neodesk_manages_state"}` {
 		t.Errorf("SyncOnlineStatus = %s", got)
 	}
 
@@ -408,7 +408,7 @@ func TestBackendPassesThrough(t *testing.T) {
 			t.Errorf("%s: requests %q bodies %q, want %s %s", c.name, api.requests, api.bodies, c.want, c.body)
 		}
 	}
-	if got := toJSON(t, b.GetServerInfo(ctx)); got != `{"health":{"ok":true},"stats":{"ok":true},"backend":"betterdesk"}` {
+	if got := toJSON(t, b.GetServerInfo(ctx)); got != `{"health":{"ok":true},"stats":{"ok":true},"backend":"neodesk"}` {
 		t.Errorf("GetServerInfo = %s", got)
 	}
 }

@@ -2,7 +2,7 @@
  "id": "bd-api/heartbeat-device-id-header-alone",
  "request": {
   "method": "POST",
-  "path": "/api/bd/heartbeat",
+  "path": "/api/nd/heartbeat",
   "body": {},
   "notes": [
    "header X-Device-Id: 900100001",

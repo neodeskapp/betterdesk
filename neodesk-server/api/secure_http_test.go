@@ -21,7 +21,7 @@ func TestSecureEnvelopeMiddlewareAcceptsClientWrapper(t *testing.T) {
 		responsePub,
 	)
 	body, err := json.Marshal(map[string]json.RawMessage{
-		"betterdesk_envelope": envelope,
+		"neodesk_envelope": envelope,
 	})
 	if err != nil {
 		t.Fatalf("marshal wrapped envelope: %v", err)
@@ -32,8 +32,8 @@ func TestSecureEnvelopeMiddlewareAcceptsClientWrapper(t *testing.T) {
 		"/api/device-group/accessible",
 		bytes.NewReader(body),
 	)
-	req.Header.Set("X-BetterDesk-Envelope", "1")
-	req.Header.Set("X-BetterDesk-Device", deviceID)
+	req.Header.Set("X-NeoDesk-Envelope", "1")
+	req.Header.Set("X-NeoDesk-Device", deviceID)
 	rec := httptest.NewRecorder()
 
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +58,7 @@ func TestSecureEnvelopeMiddlewareAcceptsClientWrapper(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &response); err != nil {
 		t.Fatalf("decode encrypted response: %v", err)
 	}
-	if _, ok := response["betterdesk_envelope"]; !ok {
-		t.Fatalf("response missing betterdesk_envelope: %s", rec.Body.String())
+	if _, ok := response["neodesk_envelope"]; !ok {
+		t.Fatalf("response missing neodesk_envelope: %s", rec.Body.String())
 	}
 }

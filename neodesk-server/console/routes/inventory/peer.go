@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsjson"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // The console keeps its own table of devices, peer, beside the signal

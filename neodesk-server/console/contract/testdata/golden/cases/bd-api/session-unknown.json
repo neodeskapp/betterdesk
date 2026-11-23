@@ -2,7 +2,7 @@
  "id": "bd-api/session-unknown",
  "request": {
   "method": "GET",
-  "path": "/api/bd/session/contract-none",
+  "path": "/api/nd/session/contract-none",
   "notes": [
    "header Authorization: Bearer {secret:device_token}",
    "no CSRF token",

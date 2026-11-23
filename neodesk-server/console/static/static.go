@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/embedfs"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/embedfs"
 )
 
 //go:embed all:files

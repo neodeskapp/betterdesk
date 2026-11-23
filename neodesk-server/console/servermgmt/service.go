@@ -1,7 +1,7 @@
 // Package servermgmt is the server management of the console (beta): what
 // the machine the console runs on looks like (processor, memory, disks,
 // network), a file browser confined to a list of folders that reads and
-// changes nothing, and the control of BetterDesk's system services. It
+// changes nothing, and the control of NeoDesk's system services. It
 // opens no shell.
 //
 // Everything here acts on the machine with the rights of the console's
@@ -24,16 +24,16 @@ import (
 // Options configure the service. A zero field is the real thing.
 type Options struct {
 	// Getenv reads the environment as the service reads it on every call:
-	// BETTERDESK_PATH, RUSTDESK_DIR and RUSTDESK_PATH (the server's folder,
-	// default /opt/betterdesk or C:\BetterDesk),
-	// BETTERDESK_CONSOLE_PATH (the console's folder, default WorkDir),
-	// BETTERDESK_FILE_ALLOWED_ROOTS (more folders to read, separated by
+	// NEODESK_PATH, RUSTDESK_DIR and RUSTDESK_PATH (the server's folder,
+	// default /opt/neodesk or C:\NeoDesk),
+	// NEODESK_CONSOLE_PATH (the console's folder, default WorkDir),
+	// NEODESK_FILE_ALLOWED_ROOTS (more folders to read, separated by
 	// commas), HOME and
 	// USERPROFILE, and TMPDIR, TMP and TEMP (the temp folder). Default
 	// os.Getenv.
 	Getenv func(string) string
 	// WorkDir is the folder relative paths are taken from, and the
-	// console's folder when BETTERDESK_CONSOLE_PATH is not set. The old
+	// console's folder when NEODESK_CONSOLE_PATH is not set. The old
 	// console used its working directory, which its service definitions
 	// set to the console's folder; the console passes CONSOLE_DIR.
 	// Default: the working directory.
@@ -53,7 +53,7 @@ type Options struct {
 	// when it passes.
 	Run func(ctx context.Context, name string, args ...string) (stdout, stderr []byte, exitCode int, err error)
 	// RestartSelf is asked when a service action would restart the
-	// console's own service (betterdesk-server, BetterDeskServer): true
+	// console's own service (neodesk-server, NeoDeskServer): true
 	// means the process ends by itself so that its supervisor starts it
 	// again, and nothing is run. Nil runs the action like any other.
 	RestartSelf func() bool

@@ -2,7 +2,7 @@
  "id": "registration/device-status-delivered",
  "request": {
   "method": "GET",
-  "path": "/api/bd/register-status?device_id=900100021",
+  "path": "/api/nd/register-status?device_id=900100021",
   "notes": [
    "no CSRF token",
    "no cookies",

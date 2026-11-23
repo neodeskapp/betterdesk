@@ -4,7 +4,7 @@
   "method": "GET",
   "path": "/api/settings/backup/schedule/status"
  },
- "recordings": 3,
+ "recordings": 2,
  "answers": [
   {
    "roles": [
@@ -25,7 +25,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -41,7 +41,7 @@
     },
     {
      "path": "data.lastFile",
-     "format": "/aaa/aaaa/aaaaaaaaa-aaaaaaa/aaaaaaaaaa-aaaaaa-9999-99-99-99-99-99.aaa.aa"
+     "format": "/aaa/aaaa/aaaaaaaaa-aaaaaaa/aaaaaaa-aaaaaa-9999-99-99-99-99-99.aaa.aa"
     },
     {
      "path": "data.lastSha256",

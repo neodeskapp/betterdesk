@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 func testFiles(t *testing.T) dataFiles {
@@ -53,9 +53,9 @@ func TestResultForDisplay(t *testing.T) {
 		t.Error("non-critical failures are shown")
 	}
 	// Critical ones stay, split from the others, keys in their order.
-	writeRecord(t, d, `{"savedAt":"t","sha":"bbbbbbb","failed":[{"file":"web-nodejs/services/dbAdapter.js","error":"e"},{"file":"betterdesk-server-deploy"}],"servicesFailed":[]}`)
+	writeRecord(t, d, `{"savedAt":"t","sha":"bbbbbbb","failed":[{"file":"web-nodejs/services/dbAdapter.js","error":"e"},{"file":"neodesk-server-deploy"}],"servicesFailed":[]}`)
 	got := d.resultForDisplay(full, "", "")
-	if s := mustJSON(t, got); s != `{"savedAt":"t","sha":"bbbbbbb","failed":[{"file":"web-nodejs/services/dbAdapter.js","error":"e"}],"servicesFailed":[],"nonCriticalFailures":[{"file":"betterdesk-server-deploy"}]}` {
+	if s := mustJSON(t, got); s != `{"savedAt":"t","sha":"bbbbbbb","failed":[{"file":"web-nodejs/services/dbAdapter.js","error":"e"}],"servicesFailed":[],"nonCriticalFailures":[{"file":"neodesk-server-deploy"}]}` {
 		t.Errorf("display %s", s)
 	}
 	// A restart that could not happen is shown.
@@ -79,9 +79,9 @@ func TestSplitFailures(t *testing.T) {
 	_ = os.MkdirAll(filepath.Join(root, "lib", "x"), 0o755)
 	_ = os.WriteFile(filepath.Join(root, "lib", "x", "index.js"), nil, 0o644)
 	for file, want := range map[string]bool{
-		"npm install": true, "betterdesk-server.service": true, "support-agent-source-sync": true, "support-agent-rebuild-defer": true,
+		"npm install": true, "neodesk-server.service": true, "support-agent-source-sync": true, "support-agent-rebuild-defer": true,
 		"web-nodejs/routes.js": true, "web-nodejs/scripts/scripts/foo.js": true, "web-nodejs/lib/x.js": true,
-		"web-nodejs/services/dbAdapter.js": false, "betterdesk-server-update": false,
+		"web-nodejs/services/dbAdapter.js": false, "neodesk-server-update": false,
 	} {
 		if got := failureNonCritical(goapi.NewObject("file", file), root); got != want {
 			t.Errorf("%s: non-critical %v", file, got)

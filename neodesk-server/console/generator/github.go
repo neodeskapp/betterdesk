@@ -16,14 +16,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
 )
 
 // Requests to GitHub. The template module fetches from four GitHub hosts
 // only, over https, and follows up to eight redirects among them; the
 // client builder asks api.github.com and follows the redirects of an
 // artifact download over https to hosts the outbound guard lets through.
-// The token (BETTERDESK_GITHUB_TOKEN, else GITHUB_TOKEN) goes to
+// The token (NEODESK_GITHUB_TOKEN, else GITHUB_TOKEN) goes to
 // api.github.com only. Requests carry no Accept-Encoding, and nothing
 // here logs a token.
 
@@ -54,7 +54,7 @@ func (s *Service) transport() http.RoundTripper {
 }
 
 func (s *Service) githubToken() string {
-	token := s.getenv("BETTERDESK_GITHUB_TOKEN")
+	token := s.getenv("NEODESK_GITHUB_TOKEN")
 	if token == "" {
 		token = s.getenv("GITHUB_TOKEN")
 	}
@@ -201,7 +201,7 @@ func (s *Service) githubGetBuffer(ctx context.Context, rawURL, accept string) ([
 			stop()
 			return nil, err
 		}
-		req.Header.Set("User-Agent", "BetterDesk-Console-Generator")
+		req.Header.Set("User-Agent", "NeoDesk-Console-Generator")
 		req.Header.Set("Accept", accept)
 		req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 		if token := s.githubToken(); token != "" && validated.host == "api.github.com" {
@@ -297,7 +297,7 @@ func networkError(err error, host string, port int) error {
 const maxGithubResponse = 64 * 1024 * 1024
 
 func (s *Service) builderHeaders(h http.Header, accept, requestURL string) {
-	h.Set("User-Agent", "BetterDesk-Console-Client-Builder")
+	h.Set("User-Agent", "NeoDesk-Console-Client-Builder")
 	h.Set("Accept", accept)
 	h.Set("X-GitHub-Api-Version", "2022-11-28")
 	host := ""

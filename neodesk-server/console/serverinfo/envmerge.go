@@ -321,8 +321,8 @@ func BuildEnvSubstitutions(in EnvSubstitutionInput) ([]Substitution, error) {
 	goPort := pick("GO_API_PORT", cfg.GoAPIPort, "21114")
 	apiPort := pick("API_PORT", cfg.APIPort, "21121")
 	dbType := pick("DB_TYPE", cfg.DBType, "sqlite")
-	sslCert := pick("SSL_CERT_PATH", cfg.SSLCertPath, under(rustdeskDir, "ssl/betterdesk.crt"))
-	sslKey := pick("SSL_KEY_PATH", cfg.SSLKeyPath, under(rustdeskDir, "ssl/betterdesk.key"))
+	sslCert := pick("SSL_CERT_PATH", cfg.SSLCertPath, under(rustdeskDir, "ssl/neodesk.crt"))
+	sslKey := pick("SSL_KEY_PATH", cfg.SSLKeyPath, under(rustdeskDir, "ssl/neodesk.key"))
 
 	random := in.Random
 	if random == nil {
@@ -346,7 +346,7 @@ func BuildEnvSubstitutions(in EnvSubstitutionInput) ([]Substitution, error) {
 		{"DATA_DIR", pick("DATA_DIR", cfg.DataDir)},
 		{"GO_API_PORT", goPort},
 		{"HBBS_API_URL", pick("HBBS_API_URL", goAPIBase)},
-		{"BETTERDESK_API_URL", pick("BETTERDESK_API_URL", goAPIBase)},
+		{"NEODESK_API_URL", pick("NEODESK_API_URL", goAPIBase)},
 		{"API_PORT", apiPort},
 		{"DEFAULT_ADMIN_PASSWORD", pick("DEFAULT_ADMIN_PASSWORD")},
 		{"SESSION_SECRET", pick("SESSION_SECRET", cfg.SessionSecret)},

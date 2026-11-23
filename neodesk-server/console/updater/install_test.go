@@ -36,7 +36,7 @@ func TestInstallSwapsTheBinary(t *testing.T) {
 			in := newInstall(t, func(o *Options) { o.RenameAside = &aside })
 			rel := newTestRelease("3.6.0", newCommit, BranchStable)
 			in.gh.serve(rel)
-			in.env["BETTERDESK_SUPERVISOR"] = "systemd"
+			in.env["NEODESK_SUPERVISOR"] = "systemd"
 
 			result := installed(t, in, newCommit[:7])
 			if in.binaryContent() != string(rel.binaries[asset]) {
@@ -55,7 +55,7 @@ func TestInstallSwapsTheBinary(t *testing.T) {
 				marker.Starts != 0 || marker.DataDir != in.dataDir || marker.PrevSHA256 != sum(prev) {
 				t.Errorf("marker %+v", marker)
 			}
-			if got := mustJSON(t, result.Applied); got != `["betterdesk-server 3.6.0"]` {
+			if got := mustJSON(t, result.Applied); got != `["neodesk-server 3.6.0"]` {
 				t.Errorf("applied %s", got)
 			}
 			if result.ConsoleRestartBlocked != nil || !result.NeedsConsoleRestart || result.ServerDeploy == nil ||
@@ -71,10 +71,10 @@ func TestInstallSwapsTheBinary(t *testing.T) {
 			var bm BackupManifest
 			in.readJSON(filepath.Join(*result.BackupPath, "manifest.json"), &bm)
 			if bm.Version != "3.5.0" || bm.SHA != oldCommit || bm.Kind != backupKind || bm.FilesBackedUp != 1 ||
-				mustJSON(t, bm.Files) != `["server/betterdesk-server"]` || bm.BinarySHA256 != sum(prev) {
+				mustJSON(t, bm.Files) != `["server/neodesk-server"]` || bm.BinarySHA256 != sum(prev) {
 				t.Errorf("backup manifest %+v", bm)
 			}
-			if copied, _ := os.ReadFile(filepath.Join(*result.BackupPath, "server", "betterdesk-server")); !bytes.Equal(copied, prev) {
+			if copied, _ := os.ReadFile(filepath.Join(*result.BackupPath, "server", "neodesk-server")); !bytes.Equal(copied, prev) {
 				t.Error("the backup does not hold the old binary")
 			}
 			if entries, _ := os.ReadDir(filepath.Join(in.dataDir, updatesDir)); len(entries) != 0 {
@@ -113,17 +113,17 @@ func TestInstallWithoutSupervisor(t *testing.T) {
 // A data backup goes into the backup folder beside the binary.
 func TestInstallMakesTheDataBackup(t *testing.T) {
 	in := newInstall(t, func(o *Options) {
-		o.DataBackup = fakeBackup{data: []byte("archive"), name: "betterdesk-backup-2026-11-18-12-00-00.tar.gz"}
+		o.DataBackup = fakeBackup{data: []byte("archive"), name: "neodesk-backup-2026-11-18-12-00-00.tar.gz"}
 	})
 	in.gh.serve(newTestRelease("3.6.0", newCommit, BranchStable))
 	result := installed(t, in, newCommit)
-	data, err := os.ReadFile(filepath.Join(*result.BackupPath, "betterdesk-backup-2026-11-18-12-00-00.tar.gz"))
+	data, err := os.ReadFile(filepath.Join(*result.BackupPath, "neodesk-backup-2026-11-18-12-00-00.tar.gz"))
 	if err != nil || string(data) != "archive" || result.BackedUp != 2 {
 		t.Fatalf("data backup: %v %q, backedUp %d", err, data, result.BackedUp)
 	}
 	var bm BackupManifest
 	in.readJSON(filepath.Join(*result.BackupPath, "manifest.json"), &bm)
-	if bm.DataBackup != "betterdesk-backup-2026-11-18-12-00-00.tar.gz" {
+	if bm.DataBackup != "neodesk-backup-2026-11-18-12-00-00.tar.gz" {
 		t.Errorf("manifest %+v", bm)
 	}
 }
@@ -187,12 +187,12 @@ func TestInstallFailuresLeaveTheInstall(t *testing.T) {
 		want  string
 	}{
 		{"release lookup fails", func(in *install, _ *testRelease) {
-			in.gh.on("GET https://api.github.com/repos/trybetterdesk/betterdesk/releases/latest", func(*http.Request) *http.Response {
+			in.gh.on("GET https://api.github.com/repos/neodeskapp/neodesk/releases/latest", func(*http.Request) *http.Response {
 				return respond(500, "boom", nil)
 			})
 		}, newCommit, "GitHub API 500: boom"},
 		{"rate limit", func(in *install, _ *testRelease) {
-			in.gh.on("GET https://api.github.com/repos/trybetterdesk/betterdesk/releases/latest", func(*http.Request) *http.Response {
+			in.gh.on("GET https://api.github.com/repos/neodeskapp/neodesk/releases/latest", func(*http.Request) *http.Response {
 				return respond(403, "API rate limit exceeded", http.Header{"X-Ratelimit-Reset": {"1795000000"}})
 			})
 		}, newCommit, "rate limit exceeded for unauthenticated requests"},
@@ -210,7 +210,7 @@ func TestInstallFailuresLeaveTheInstall(t *testing.T) {
 			rel.manifest.Owner = "evil"
 			rel.render()
 			in.gh.serve(rel)
-		}, newCommit, `owner "evil" is not trybetterdesk`},
+		}, newCommit, `owner "evil" is not neodeskapp`},
 		{"manifest of another branch", func(in *install, rel *testRelease) {
 			rel.manifest.Branch, rel.manifest.Channel = "dev", "development"
 			rel.render()
@@ -237,17 +237,17 @@ func TestInstallFailuresLeaveTheInstall(t *testing.T) {
 			})
 		}, newCommit, "HTTP 503"},
 		{"redirect to another host", func(in *install, rel *testRelease) {
-			in.gh.on("GET https://github.com/trybetterdesk/betterdesk/releases/download/"+rel.tag+"/"+asset, func(*http.Request) *http.Response {
+			in.gh.on("GET https://github.com/neodeskapp/neodesk/releases/download/"+rel.tag+"/"+asset, func(*http.Request) *http.Response {
 				return redirect("https://evil.example/file")
 			})
 		}, newCommit, "not GitHub's"},
 		{"redirect to plain http", func(in *install, rel *testRelease) {
-			in.gh.on("GET https://github.com/trybetterdesk/betterdesk/releases/download/"+rel.tag+"/"+asset, func(*http.Request) *http.Response {
+			in.gh.on("GET https://github.com/neodeskapp/neodesk/releases/download/"+rel.tag+"/"+asset, func(*http.Request) *http.Response {
 				return redirect("http://objects.githubusercontent.com/x")
 			})
 		}, newCommit, "not GitHub's"},
 		{"redirect loop", func(in *install, rel *testRelease) {
-			loop := "https://github.com/trybetterdesk/betterdesk/releases/download/" + rel.tag + "/" + asset
+			loop := "https://github.com/neodeskapp/neodesk/releases/download/" + rel.tag + "/" + asset
 			in.gh.on("GET "+loop, func(*http.Request) *http.Response { return redirect(loop) })
 		}, newCommit, "too many redirects"},
 		{"checksum mismatch", func(in *install, rel *testRelease) {
@@ -431,12 +431,12 @@ func TestRunVersionRunsTheBinary(t *testing.T) {
 	}
 	dir := t.TempDir()
 	script := filepath.Join(dir, "bin")
-	if err := os.WriteFile(script, []byte("#!/bin/sh\necho \"betterdesk-server 1.2.3 (built x, commit "+newCommit+")$SECRET_FOR_TEST\"\n"), 0o755); err != nil {
+	if err := os.WriteFile(script, []byte("#!/bin/sh\necho \"neodesk-server 1.2.3 (built x, commit "+newCommit+")$SECRET_FOR_TEST\"\n"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("SECRET_FOR_TEST", "leak")
 	out, err := runVersion(context.Background(), script)
-	if err != nil || strings.TrimSpace(out) != "betterdesk-server 1.2.3 (built x, commit "+newCommit+")" {
+	if err != nil || strings.TrimSpace(out) != "neodesk-server 1.2.3 (built x, commit "+newCommit+")" {
 		t.Fatalf("out %q err %v", out, err)
 	}
 	if err := os.WriteFile(script, []byte("#!/bin/sh\nexit 3\n"), 0o755); err != nil {

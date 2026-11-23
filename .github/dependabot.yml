@@ -11,12 +11,12 @@ updates:
           - "*"
 
   - package-ecosystem: "gomod"
-    directory: "/betterdesk-server"
+    directory: "/neodesk-server"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 3
     groups:
-      betterdesk-server-gomod:
+      neodesk-server-gomod:
         patterns:
           - "*"
 

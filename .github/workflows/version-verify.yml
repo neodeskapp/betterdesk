@@ -5,31 +5,31 @@ on:
     branches: [main]
     paths:
       - 'VERSION'
-      - 'betterdesk-server/VERSION'
-      - 'betterdesk-server/internal/productversion/VERSION'
-      - 'betterdesk.sh'
-      - 'betterdesk.ps1'
-      - 'betterdesk-docker.sh'
+      - 'neodesk-server/VERSION'
+      - 'neodesk-server/internal/productversion/VERSION'
+      - 'neodesk.sh'
+      - 'neodesk.ps1'
+      - 'neodesk-docker.sh'
       - 'install.sh'
       - 'CHANGELOG.md'
       - 'Dockerfile*'
       - 'docker/**'
-      - 'betterdesk-server/cmd/repotool/**'
+      - 'neodesk-server/cmd/repotool/**'
       - '.github/workflows/version-verify.yml'
   pull_request:
     branches: [main]
     paths:
       - 'VERSION'
-      - 'betterdesk-server/VERSION'
-      - 'betterdesk-server/internal/productversion/VERSION'
-      - 'betterdesk.sh'
-      - 'betterdesk.ps1'
-      - 'betterdesk-docker.sh'
+      - 'neodesk-server/VERSION'
+      - 'neodesk-server/internal/productversion/VERSION'
+      - 'neodesk.sh'
+      - 'neodesk.ps1'
+      - 'neodesk-docker.sh'
       - 'install.sh'
       - 'CHANGELOG.md'
       - 'Dockerfile*'
       - 'docker/**'
-      - 'betterdesk-server/cmd/repotool/**'
+      - 'neodesk-server/cmd/repotool/**'
       - '.github/workflows/version-verify.yml'
 
 permissions:
@@ -47,8 +47,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
-          go-version-file: betterdesk-server/go.mod
-          cache-dependency-path: betterdesk-server/go.sum
+          go-version-file: neodesk-server/go.mod
+          cache-dependency-path: neodesk-server/go.sum
       - name: Verify product version parity
-        working-directory: betterdesk-server
+        working-directory: neodesk-server
         run: go run ./cmd/repotool bump-version --verify

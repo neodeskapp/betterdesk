@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
-	"github.com/unitronix/betterdesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
 )
 
 // recording is testdata/node_push.json, recorded from the old console's

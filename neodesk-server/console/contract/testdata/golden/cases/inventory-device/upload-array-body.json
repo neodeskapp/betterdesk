@@ -2,7 +2,7 @@
  "id": "inventory-device/upload-array-body",
  "request": {
   "method": "POST",
-  "path": "/api/bd/inventory",
+  "path": "/api/nd/inventory",
   "body": "[{\"device_id\":\"900100001\",\"hardware\":{}}]",
   "notes": [
    "raw body, content type \"application/json\"",

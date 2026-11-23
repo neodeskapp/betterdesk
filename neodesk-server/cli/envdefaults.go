@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/managedconfig"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/managedconfig"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 // placeholder is a __KEY__ the installers fill when they write the
@@ -20,7 +20,7 @@ var placeholder = regexp.MustCompile(`__[A-Z0-9_]+__`)
 // console's port.
 var leftToInstallers = map[string]bool{
 	"PORT": true, "CONSOLE_PORT": true, "HOST": true, "SIGNAL_PORT": true, "RELAY_PORT": true,
-	"GO_API_PORT": true, "CONSOLE_DIR": true, "BETTERDESK_ENV_FILE": true, "BETTERDESK_SUPERVISOR": true,
+	"GO_API_PORT": true, "CONSOLE_DIR": true, "NEODESK_ENV_FILE": true, "NEODESK_SUPERVISOR": true,
 }
 
 // ApplyEnvDefaults appends to the env file at path the keys of the

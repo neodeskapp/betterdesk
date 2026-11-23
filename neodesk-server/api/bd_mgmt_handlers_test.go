@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 func signedBdMgmtHeaders(t *testing.T, privateKey ed25519.PrivateKey, deviceID string) http.Header {
@@ -24,9 +24,9 @@ func signedBdMgmtHeaders(t *testing.T, privateKey ed25519.PrivateKey, deviceID s
 	signature := ed25519.Sign(privateKey, payload)
 
 	headers := make(http.Header)
-	headers.Set("X-BD-Timestamp", timestamp)
-	headers.Set("X-BD-Nonce", nonce)
-	headers.Set("X-BD-Signature", base64.StdEncoding.EncodeToString(signature))
+	headers.Set("X-ND-Timestamp", timestamp)
+	headers.Set("X-ND-Nonce", nonce)
+	headers.Set("X-ND-Signature", base64.StdEncoding.EncodeToString(signature))
 	return headers
 }
 
@@ -51,7 +51,7 @@ func TestVerifyBdMgmtRequestAcceptsValidSignature(t *testing.T) {
 	}
 
 	srv := New(config.DefaultConfig(), database, peer.NewMap(), nil, "test")
-	req, err := http.NewRequest("GET", "http://example.test/ws/bd-mgmt/BDM001", nil)
+	req, err := http.NewRequest("GET", "http://example.test/ws/nd-mgmt/BDM001", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +77,7 @@ func TestVerifyBdMgmtRequestRejectsReplay(t *testing.T) {
 	srv := New(config.DefaultConfig(), database, peer.NewMap(), nil, "test")
 	headers := signedBdMgmtHeaders(t, priv, "BDM002")
 
-	firstReq, err := http.NewRequest("GET", "http://example.test/ws/bd-mgmt/BDM002", nil)
+	firstReq, err := http.NewRequest("GET", "http://example.test/ws/nd-mgmt/BDM002", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestVerifyBdMgmtRequestRejectsReplay(t *testing.T) {
 		t.Fatalf("first verifyBdMgmtRequest returned error: %v", err)
 	}
 
-	replayReq, err := http.NewRequest("GET", "http://example.test/ws/bd-mgmt/BDM002", nil)
+	replayReq, err := http.NewRequest("GET", "http://example.test/ws/nd-mgmt/BDM002", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,7 +119,7 @@ func TestBdMgmtWebSocketRequiresProof(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	wsURL := fmt.Sprintf("ws://127.0.0.1:%d/ws/bd-mgmt/BDM003", cfg.APIPort)
+	wsURL := fmt.Sprintf("ws://127.0.0.1:%d/ws/nd-mgmt/BDM003", cfg.APIPort)
 
 	unauthConn, resp, err := websocket.Dial(ctx, wsURL, nil)
 	if err == nil {
@@ -163,7 +163,7 @@ func TestBdMgmtReconnectStaysConnected(t *testing.T) {
 	defer cancel()
 	open := func() *websocket.Conn {
 		t.Helper()
-		conn, _, err := websocket.Dial(ctx, "ws://"+f.host+"/ws/bd-mgmt/BDMRV183", &websocket.DialOptions{
+		conn, _, err := websocket.Dial(ctx, "ws://"+f.host+"/ws/nd-mgmt/BDMRV183", &websocket.DialOptions{
 			HTTPHeader: signedBdMgmtHeaders(t, priv, "BDMRV183"),
 		})
 		if err != nil {
@@ -190,7 +190,7 @@ func TestBdMgmtReconnectStaysConnected(t *testing.T) {
 	if !mgmtHub.IsConnected("BDMRV183") {
 		t.Fatal("the device is not listed while its second socket is open")
 	}
-	if a := f.overListener(t, http.MethodPost, "/api/bd/mgmt/BDMRV183/send", `{"type":"ping"}`, testOperatorKey); a.status != http.StatusOK {
+	if a := f.overListener(t, http.MethodPost, "/api/nd/mgmt/BDMRV183/send", `{"type":"ping"}`, testOperatorKey); a.status != http.StatusOK {
 		t.Errorf("send to the reconnected device: %d %s, want 200", a.status, a.body)
 	}
 }

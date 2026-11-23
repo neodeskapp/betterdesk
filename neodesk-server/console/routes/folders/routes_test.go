@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // devices is what the made-up API server lists: A, B and C. Z is no
@@ -162,7 +162,7 @@ func TestFolderRoutes(t *testing.T) {
 		want(t, "a blank name", admin.Do("PATCH", "/api/folders/1", `{"name":"  "}`), 400, required)
 		want(t, "change", admin.Do("PATCH", "/api/folders/1", `{"name":" Lab 2 ","icon":"box","allowed_users":[]}`), 200, ok)
 		want(t, "change the second", admin.Do("PATCH", "/api/folders/2", `{}`), 200, ok)
-		if got := rows(t, db, `SELECT name || '|' || note FROM device_groups WHERE guid LIKE 'folder_%' ORDER BY guid`); got != "Lab 2|BetterDesk folder access scope,Odd|BetterDesk folder access scope" {
+		if got := rows(t, db, `SELECT name || '|' || note FROM device_groups WHERE guid LIKE 'folder_%' ORDER BY guid`); got != "Lab 2|NeoDesk folder access scope,Odd|NeoDesk folder access scope" {
 			t.Errorf("folder groups after changing: %q", got)
 		}
 

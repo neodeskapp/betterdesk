@@ -90,7 +90,7 @@ func issue(t testing.TB, template *x509.Certificate, parent *issuedCert) *issued
 
 func authority(cn string, serial int64) *x509.Certificate {
 	return &x509.Certificate{
-		SerialNumber: big.NewInt(serial), Subject: pkix.Name{CommonName: cn, Organization: []string{"BetterDesk Test"}},
+		SerialNumber: big.NewInt(serial), Subject: pkix.Name{CommonName: cn, Organization: []string{"NeoDesk Test"}},
 		IsCA: true, BasicConstraintsValid: true, KeyUsage: x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
 	}
 }

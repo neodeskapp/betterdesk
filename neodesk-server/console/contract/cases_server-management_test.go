@@ -6,11 +6,11 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // Server management (beta): the machine the console runs on, its files and
-// BetterDesk's system services, all behind server.config.
+// NeoDesk's system services, all behind server.config.
 //
 // The file browser only lists and reads (A194): a request to write, make a
 // folder, rename or delete finds no route. The read and list cases name
@@ -78,7 +78,7 @@ func init() {
 		post("service-name-too-long", "services/"+strings.Repeat("a", 129)+"/status", map[string]any{}, few...),
 		post("service-name-longest", "services/"+strings.Repeat("a", 128)+"/status", map[string]any{}, few...),
 		post("service-name-with-colon", "services/a:b/start", map[string]any{}, few...),
-		post("service-action-not-listed", "services/betterdesk-server/kill", map[string]any{}, few...),
+		post("service-action-not-listed", "services/neodesk-server/kill", map[string]any{}, few...),
 		post("service-action-other-case", "services/hbbs/START", map[string]any{}, few...),
 		post("service-name-other-case", "services/HBBS/status", map[string]any{}, few...),
 	)

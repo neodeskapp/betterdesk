@@ -12,7 +12,7 @@ import { parseDate } from '#lib/i18n/format.ts';
 export type DeviceLike = Pick<Device, 'id'> & Partial<Device>;
 
 /** Show deleted devices in the list (same storage key as the old page) */
-export const PREF_SHOW_DELETED = 'bd_devices_show_deleted';
+export const PREF_SHOW_DELETED = 'nd_devices_show_deleted';
 
 /**
  * Whether the device menu and the panel offer the Access policy sheet. The
@@ -59,8 +59,8 @@ export function deviceLabel(d: DeviceLike): string {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-	betterdesk: 'BetterDesk',
-	'betterdesk-support': 'BetterDesk Support',
+	neodesk: 'NeoDesk',
+	'neodesk-support': 'NeoDesk Support',
 	rustdesk: 'RustDesk',
 	rdp: 'RDP',
 	vnc: 'VNC',

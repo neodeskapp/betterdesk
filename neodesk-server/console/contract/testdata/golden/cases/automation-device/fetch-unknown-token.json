@@ -2,7 +2,7 @@
  "id": "automation-device/fetch-unknown-token",
  "request": {
   "method": "GET",
-  "path": "/api/bd/commands",
+  "path": "/api/nd/commands",
   "notes": [
    "header Authorization: Bearer contract-no-such-token",
    "no CSRF token",

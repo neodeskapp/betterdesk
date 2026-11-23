@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"testing"
 
-	eventsModule "github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/meshcentral"
-	"github.com/unitronix/betterdesk-server/peer"
+	eventsModule "github.com/neodeskapp/neodesk/neodesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/meshcentral"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 // TestShareValidateRefusalIsBoolean: a share link that is not valid is

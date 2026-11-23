@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/backup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
 )
 
 // The start puts the database a restore left in place of the server
@@ -31,7 +31,7 @@ func TestStartSwapsInTheRestoredDatabase(t *testing.T) {
 	}
 
 	t.Chdir(dir)
-	dsn := "postgres://u:p@db/betterdesk"
+	dsn := "postgres://u:p@db/neodesk"
 	if err := os.MkdirAll(filepath.Join(dir, "postgres:"), 0o700); err != nil {
 		t.Fatal(err)
 	}

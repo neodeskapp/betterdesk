@@ -13,7 +13,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/advancedconfig"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/advancedconfig"
 )
 
 // commandTimeout is how long one command may take.

@@ -60,7 +60,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
@@ -614,7 +614,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=8ff29795b5c29404"
+      "stringsUrl": "/api/console/strings/en?v=d35bc129fb154211"
      },
      "nav": [
       {
@@ -842,7 +842,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
@@ -1396,7 +1396,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=8ff29795b5c29404"
+      "stringsUrl": "/api/console/strings/en?v=d35bc129fb154211"
      },
      "nav": [
       {
@@ -1685,7 +1685,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
@@ -2239,7 +2239,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=8ff29795b5c29404"
+      "stringsUrl": "/api/console/strings/en?v=d35bc129fb154211"
      },
      "nav": [
       {
@@ -2617,7 +2617,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
@@ -3171,7 +3171,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=8ff29795b5c29404"
+      "stringsUrl": "/api/console/strings/en?v=d35bc129fb154211"
      },
      "nav": [
       {

@@ -63,7 +63,7 @@ Jest tests of these routes, for the route step: `tests/sensitiveEndpoints.test.j
 |---|---|
 | `GET /api/stats` (17) | `ResolvePublicKey`: `publicKey: key != ""`. The rest is `serverBackend` |
 | `GET /api/dashboard/client-config` (137) | `ResolveRustDeskEndpoints(req, query host)`, `GetClientConfig`, `GetServerConfigQR`. `data` is the client config's seven fields, then `client_server_host: host`, `endpoint_sources`, `env_override_active`, `phone_unreachable_host`, `qr` (null without a key) |
-| `GET /api/server/status` (52) | none of this package. It reads `config.betterdeskApiUrl`, `goApiPort`, `apiPort`, `apiEnabled`, `port`, `wsProxy` |
+| `GET /api/server/status` (52) | none of this package. It reads `config.neodeskApiUrl`, `goApiPort`, `apiPort`, `apiEnabled`, `port`, `wsProxy` |
 | `GET /api/server/bandwidth` (167), `POST /api/sync-status` (194), `GET /api/dashboard/activity` (216) | none of this package |
 
 `GetClientConfig` and `GetServerConfigQR` each resolve the key, as in Node.
@@ -98,12 +98,12 @@ it gave none: a route can then wait for two requests of up to 5 seconds.
 | generator | `GET /api/generator/defaults` (404) | `ResolveClientFacingHost(req, "")`, else `DefaultServerHost`; `ResolvePublicKey` |
 | generator | `POST /api/generator/bundles`, `PUT /api/generator/bundles/:bundleId` (481), `POST /api/generator/preview` (667), through `finalizeSupportBranding` (190) | `NormalizeServerHost`, `ResolveClientFacingHost(nil, "")`, `DefaultServerHost`, `DefaultAPIPort`, `ResolvePublicKey` |
 | generator | `GET /api/generator/config` (829), `POST /api/generator/generate-config` (846) | `ResolvePublicKey` |
-| registration | `PUT /api/registrations/:id/approve` (295, also reached as `/api/bd/api/registrations/:id/approve`), through `buildServerConfig` (81) | `ResolvePublicKey` (`""` on any failure) |
+| registration | `PUT /api/registrations/:id/approve` (295, also reached as `/api/nd/api/registrations/:id/approve`), through `buildServerConfig` (81) | `ResolvePublicKey` (`""` on any failure) |
 | remote | `GET /api/remote/viewer/:deviceId` (369), through `resolveViewer` | `ResolvePublicKey`; `GetConnectionMode` when the server's health has no `connection` |
 | rustdesk-api | `GET /api/server-key` (1624), `GET /api/server-key/fingerprint` (1639), on the console port and on the client API port in legacy mode | `ResolvePublicKey` |
 | commercialization | billing clock settings (`services/billingClockConfigService.js`) | `UpsertEnvKey` five times on the console's `.env`, `RestartServer`, `IsDockerSplitDeployment` |
 | restart (`services/restartCoordinator.js`) | rollback and confirm | `SetConnectionMode(ctx, mode.Input())`, `RestartServer` |
 | updater (`services/updateService.js`) | channel, web app folder, env merge, build | `UpsertEnvKey`, `ParseEnvLines`, `MergeEnvFile`, `BuildEnvSubstitutions`, `ReadProductVersion`, `ReadEmbeddedServerVersion` |
 | generator worker (`services/clientTemplateWorker.js`) | support client build | `ResolvePublicKey`; `services/customTxtBuilder.js`, which is not in this package |
-| installers | `scripts/merge-env.js`, called by `betterdesk.sh` | `MergeEnvFile`; needs a command of the server binary when Node goes |
+| installers | `scripts/merge-env.js`, called by `neodesk.sh` | `MergeEnvFile`; needs a command of the server binary when Node goes |
 | config (`config/config.js`) | start | `ReadProductVersion(fs, projectRoot, consoleDir, "0.0.0")` for the app version |

@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/goapipath"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/reqquery"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/reqquery"
 )
 
 // The routes that pass a call on to the API server. A path parameter

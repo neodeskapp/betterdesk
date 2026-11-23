@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/codec"
+	"github.com/neodeskapp/neodesk/neodesk-server/codec"
 )
 
 // The fuzz tests check properties of their own. The answers of the old
@@ -127,14 +127,14 @@ func FuzzEncodeRelayFrame(f *testing.F) {
 // FuzzCookieToken reads a guest token from any Cookie header without
 // failing.
 func FuzzCookieToken(f *testing.F) {
-	f.Add([]byte("bd.guest=abc"), false)
-	f.Add([]byte("x=1; bd.guest=%E0%A4%A; betterdesk.guest=t"), true)
-	f.Add([]byte("bd.guest=; betterdesk.guest=%20t%20"), false)
-	f.Add([]byte("bd.guest=\xe9%C3%A9"), false)
+	f.Add([]byte("nd.guest=abc"), false)
+	f.Add([]byte("x=1; nd.guest=%E0%A4%A; neodesk.guest=t"), true)
+	f.Add([]byte("nd.guest=; neodesk.guest=%20t%20"), false)
+	f.Add([]byte("nd.guest=\xe9%C3%A9"), false)
 	f.Fuzz(func(t *testing.T, header []byte, https bool) {
-		name := "bd.guest"
+		name := "nd.guest"
 		if https {
-			name = "betterdesk.guest"
+			name = "neodesk.guest"
 		}
 		_ = cookieToken(latin1(string(header)), name)
 	})

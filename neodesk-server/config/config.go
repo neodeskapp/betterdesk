@@ -1,4 +1,4 @@
-// Package config provides configuration management for BetterDesk server.
+// Package config provides configuration management for NeoDesk server.
 // Supports CLI flags, environment variables, and sensible defaults.
 package config
 
@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/internal/envvar"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
 )
 
 // Enrollment mode constants for Dual Key System.
@@ -130,11 +130,11 @@ type Config struct {
 	// (#302). Default: disabled.
 	AllowSharedNATInitiator bool
 
-	// LoggedInOnlyInitiator requires a valid BetterDesk RustDesk client
+	// LoggedInOnlyInitiator requires a valid NeoDesk RustDesk client
 	// session token for outbound PunchHole/RequestRelay initiation. The
 	// panel Web Remote proxy remains an explicit exception. Default: disabled.
 	LoggedInOnlyInitiator bool
-	// OperatorOnlyOutbound requires a valid BetterDesk client session whose
+	// OperatorOnlyOutbound requires a valid NeoDesk client session whose
 	// user has device.connect permission for outbound PunchHole/RequestRelay.
 	// It also disables address-based initiator fallbacks. Default: disabled.
 	OperatorOnlyOutbound bool
@@ -518,7 +518,7 @@ func (c *Config) LoadEnv() {
 	// multiple live peers when stock clients cannot prove initiator identity
 	// (no token / udp_port). Default off — preserves #302 enrollment gate.
 	readSwitch("ALLOW_SHARED_NAT_INITIATOR", &connection.AllowSharedNATInitiator)
-	// Issue #414: require a valid BetterDesk client login token for stock
+	// Issue #414: require a valid NeoDesk client login token for stock
 	// PunchHole/RequestRelay initiators. The console's web client, which
 	// proves itself to the signal server, remains allowed.
 	readSwitch("LOGGED_IN_ONLY_INITIATOR", &connection.LoggedInOnlyInitiator)

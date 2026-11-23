@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // clock is a hand-moved clock in milliseconds.
@@ -81,7 +81,7 @@ func TestLoginLimiterHeadersAndAnswer(t *testing.T) {
 func TestEveryLimiterHasItsOwnAnswer(t *testing.T) {
 	c := &clock{}
 	set := newSet(c, map[string]string{"RATE_LIMIT_MAX": "1", "LOGIN_RATE_LIMIT_MAX": "1", "PANEL_READ_RATE_LIMIT_MAX": "1", "WIDGET_RATE_LIMIT_MAX": "1",
-		"PANEL_PREFERENCE_RATE_LIMIT_MAX": "1", "RDCLIENT_PAGE_RATE_LIMIT_MAX": "1", "UPLOAD_RATE_LIMIT_MAX": "1", "FILE_ACCESS_RATE_LIMIT_MAX": "1", "BD_REGISTER_RATE_LIMIT_MAX": "1"})
+		"PANEL_PREFERENCE_RATE_LIMIT_MAX": "1", "RDCLIENT_PAGE_RATE_LIMIT_MAX": "1", "UPLOAD_RATE_LIMIT_MAX": "1", "FILE_ACCESS_RATE_LIMIT_MAX": "1", "ND_REGISTER_RATE_LIMIT_MAX": "1"})
 	want := map[string]string{
 		"apiLimiter":             "Too many requests. Please try again later.",
 		"sessionReadLimiter":     "Too many requests. Please slow down.",
@@ -341,7 +341,7 @@ func TestSetFromEnvironment(t *testing.T) {
 		}
 	}
 	set = newSet(&clock{}, map[string]string{"RATE_LIMIT_WINDOW_MS": "2000", "RATE_LIMIT_MAX": "11", "LOGIN_RATE_LIMIT_MAX": "12", "PANEL_READ_RATE_LIMIT_MAX": "13",
-		"WIDGET_RATE_LIMIT_MAX": "14", "PANEL_PREFERENCE_RATE_LIMIT_MAX": "15", "RDCLIENT_PAGE_RATE_LIMIT_MAX": "16", "UPLOAD_RATE_LIMIT_MAX": "17", "FILE_ACCESS_RATE_LIMIT_MAX": "18", "BD_REGISTER_RATE_LIMIT_MAX": "19"})
+		"WIDGET_RATE_LIMIT_MAX": "14", "PANEL_PREFERENCE_RATE_LIMIT_MAX": "15", "RDCLIENT_PAGE_RATE_LIMIT_MAX": "16", "UPLOAD_RATE_LIMIT_MAX": "17", "FILE_ACCESS_RATE_LIMIT_MAX": "18", "ND_REGISTER_RATE_LIMIT_MAX": "19"})
 	custom := map[string]row{
 		// RATE_LIMIT_WINDOW_MS is the window of five limiters; the others keep theirs
 		"apiLimiter": {2 * time.Second, 11}, "sessionReadLimiter": {2 * time.Second, 13}, "widgetLimiter": {time.Minute, 14}, "panelReadLimiter": {2 * time.Second, 13},
@@ -437,7 +437,7 @@ func TestPathClassification(t *testing.T) {
 	if poll("POST", "/api/devices") || poll("POST", "/api/dashboard/client-config") {
 		t.Error("POST is never a panel poll")
 	}
-	for _, p := range []string{"/api/stats", "/api/dashboard/activity", "/api/folders", "/api/tags", "/api/device-groups", "/api/bd/notifications"} {
+	for _, p := range []string{"/api/stats", "/api/dashboard/activity", "/api/folders", "/api/tags", "/api/device-groups", "/api/nd/notifications"} {
 		if !contains(pollPaths, p) || !poll("GET", p) || !poll("HEAD", p) {
 			t.Errorf("%s is a poll path", p)
 		}

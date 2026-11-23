@@ -251,7 +251,7 @@
    []
   ],
   [
-   "INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('folder_1', 'Office', 'BetterDesk folder access scope', '', 'manual', '')",
+   "INSERT INTO device_groups (guid, name, note, team_id, source_type, tag_filter) VALUES ('folder_1', 'Office', 'NeoDesk folder access scope', '', 'manual', '')",
    []
   ],
   [
@@ -2894,7 +2894,7 @@
    "name": "172 device groups",
    "sql": "SELECT guid, name, note, source_type, tag_filter FROM device_groups WHERE name <> 'Default' ORDER BY guid",
    "params": [],
-   "rows": "[{\"guid\":\"dg-lab\",\"name\":\"Lab devices\",\"note\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"lab\"},{\"guid\":\"folder_1\",\"name\":\"Office\",\"note\":\"BetterDesk folder access scope\",\"source_type\":\"manual\",\"tag_filter\":\"\"}]"
+   "rows": "[{\"guid\":\"dg-lab\",\"name\":\"Lab devices\",\"note\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"lab\"},{\"guid\":\"folder_1\",\"name\":\"Office\",\"note\":\"NeoDesk folder access scope\",\"source_type\":\"manual\",\"tag_filter\":\"\"}]"
   },
   {
    "name": "173 peer grants",
@@ -4804,7 +4804,7 @@
    "name": "303 device groups",
    "sql": "SELECT guid, name, note, source_type, tag_filter FROM device_groups WHERE name <> 'Default' ORDER BY guid",
    "params": [],
-   "rows": "[{\"guid\":\"dg-lab\",\"name\":\"Lab devices\",\"note\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"lab\"},{\"guid\":\"folder_1\",\"name\":\"Office\",\"note\":\"BetterDesk folder access scope\",\"source_type\":\"manual\",\"tag_filter\":\"\"},{\"guid\":\"folder_2\",\"name\":\"Lab\",\"note\":\"BetterDesk folder access scope\",\"source_type\":\"manual\",\"tag_filter\":\"\"}]"
+   "rows": "[{\"guid\":\"dg-lab\",\"name\":\"Lab devices\",\"note\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"lab\"},{\"guid\":\"folder_1\",\"name\":\"Office\",\"note\":\"NeoDesk folder access scope\",\"source_type\":\"manual\",\"tag_filter\":\"\"},{\"guid\":\"folder_2\",\"name\":\"Lab\",\"note\":\"NeoDesk folder access scope\",\"source_type\":\"manual\",\"tag_filter\":\"\"}]"
   },
   {
    "name": "304 peer grants",
@@ -6100,7 +6100,7 @@
    "name": "393 device groups",
    "sql": "SELECT guid, name, note, source_type, tag_filter FROM device_groups WHERE name <> 'Default' ORDER BY guid",
    "params": [],
-   "rows": "[{\"guid\":\"dg-lab\",\"name\":\"Lab devices\",\"note\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"lab\"},{\"guid\":\"folder_1\",\"name\":\"Office\",\"note\":\"BetterDesk folder access scope\",\"source_type\":\"manual\",\"tag_filter\":\"\"},{\"guid\":\"folder_2\",\"name\":\"Lab\",\"note\":\"BetterDesk folder access scope\",\"source_type\":\"manual\",\"tag_filter\":\"\"}]"
+   "rows": "[{\"guid\":\"dg-lab\",\"name\":\"Lab devices\",\"note\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"lab\"},{\"guid\":\"folder_1\",\"name\":\"Office\",\"note\":\"NeoDesk folder access scope\",\"source_type\":\"manual\",\"tag_filter\":\"\"},{\"guid\":\"folder_2\",\"name\":\"Lab\",\"note\":\"NeoDesk folder access scope\",\"source_type\":\"manual\",\"tag_filter\":\"\"}]"
   },
   {
    "name": "394 peer grants",
@@ -7230,7 +7230,7 @@
    "name": "465 device groups",
    "sql": "SELECT guid, name, note, source_type, tag_filter FROM device_groups WHERE name <> 'Default' ORDER BY guid",
    "params": [],
-   "rows": "[{\"guid\":\"dg-lab\",\"name\":\"Lab devices\",\"note\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"lab\"},{\"guid\":\"folder_1\",\"name\":\"Office\",\"note\":\"BetterDesk folder access scope\",\"source_type\":\"manual\",\"tag_filter\":\"\"},{\"guid\":\"folder_2\",\"name\":\"Lab\",\"note\":\"BetterDesk folder access scope\",\"source_type\":\"manual\",\"tag_filter\":\"\"}]"
+   "rows": "[{\"guid\":\"dg-lab\",\"name\":\"Lab devices\",\"note\":\"\",\"source_type\":\"tag\",\"tag_filter\":\"lab\"},{\"guid\":\"folder_1\",\"name\":\"Office\",\"note\":\"NeoDesk folder access scope\",\"source_type\":\"manual\",\"tag_filter\":\"\"},{\"guid\":\"folder_2\",\"name\":\"Lab\",\"note\":\"NeoDesk folder access scope\",\"source_type\":\"manual\",\"tag_filter\":\"\"}]"
   },
   {
    "name": "466 peer grants",

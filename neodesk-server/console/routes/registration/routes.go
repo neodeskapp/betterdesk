@@ -4,15 +4,15 @@
 // those requests for people with their approval and rejection, the API
 // server's enrollment queue, and the help requests devices raise.
 //
-// The old console mounted the file at the root and at /api/bd, and the
-// client API port mounted it at /api/bd as well, where only the two device
+// The old console mounted the file at the root and at /api/nd, and the
+// client API port mounted it at /api/nd as well, where only the two device
 // routes pass its path list. Both mounts of the console share one list of
 // the names of the accounts that accepted or resolved a help request; a
 // Routes value holds it, so it is built once and registered at each mount:
 //
 //	routes := registration.New()
 //	routes.Register(d)
-//	routes.Register(d.At("/api/bd"))
+//	routes.Register(d.At("/api/nd"))
 //
 // ClientAPI registers the two device routes on the client API port.
 package registration
@@ -20,8 +20,8 @@ package registration
 import (
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/registrations"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/registrations"
 )
 
 // Routes is the group with what its mounts share.
@@ -90,7 +90,7 @@ func (g *Routes) Register(d *kit.Deps) {
 	r.Post("/api/help/requests/{id}/resolve", h.helpResolve, chat)
 }
 
-// ClientAPI adds the two device routes at /api/bd on the client API port
+// ClientAPI adds the two device routes at /api/nd on the client API port
 // (startRustDeskApiServer in server.js), whose Deps carry the port's own
 // router as Early. The port's path list lets nothing else of the group
 // through. There the routes have no session, no CSRF gate, no JSON
@@ -99,7 +99,7 @@ func (g *Routes) Register(d *kit.Deps) {
 // sees no body at all.
 func ClientAPI(d *kit.Deps) {
 	h := newHandlers(d, newHelpActors())
-	r := d.At("/api/bd").Early
+	r := d.At("/api/nd").Early
 	r.Post("/register-request", h.registerRequest)
 	r.Get("/register-status", h.registerStatus)
 }

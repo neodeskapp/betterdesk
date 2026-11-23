@@ -38,8 +38,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/session/cookie"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session/cookie"
 )
 
 // ErrInvalidToken is what Check returns for a write without a good token.
@@ -54,7 +54,7 @@ const (
 	bodyLimit = 2 << 20
 	// devicePrefix is where device agents call in, some routes without a
 	// bearer token (registration).
-	devicePrefix = "/api/bd/"
+	devicePrefix = "/api/nd/"
 )
 
 // Options configure a Protector.
@@ -74,7 +74,7 @@ type Options struct {
 	// session cookie is. Pass the session manager's SecureCookie.
 	SecureRequest func(r *http.Request) bool
 	// SignedIn reports whether a request carries a signed-in session. Gate
-	// asks it for requests under /api/bd/ and requests with a bearer token.
+	// asks it for requests under /api/nd/ and requests with a bearer token.
 	SignedIn func(r *http.Request) bool
 	// BodyToken returns the _csrf field of a request's body, "" when the
 	// body has none. Set it where something in front of the protector has
@@ -170,7 +170,7 @@ func (p *Protector) Provider(next http.Handler) http.Handler {
 
 // Gate refuses writes without a good token through OnError. A request
 // without a signed-in session passes unchecked when its path starts with
-// /api/bd/, where device agents call in, or when it carries a bearer token
+// /api/nd/, where device agents call in, or when it carries a bearer token
 // in its Authorization header, on any path: device agents send one, a
 // browser cannot send it to another site without asking first, and
 // without a session there is nothing to forge. With a session a request is

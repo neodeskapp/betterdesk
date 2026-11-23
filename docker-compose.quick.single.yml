@@ -1,5 +1,5 @@
 # =============================================================================
-# BetterDesk with Docker: the compose file to start from
+# NeoDesk with Docker: the compose file to start from
 # =============================================================================
 # It runs the published image and builds nothing: one container, one process
 # (signal, relay, API and the web console).
@@ -12,45 +12,45 @@
 #                                            of the repository (development)
 #
 # Install with the script. It saves this file as docker-compose.yml with a
-# .env next to it in /opt/betterdesk/docker, starts it and prints how to
+# .env next to it in /opt/neodesk/docker, starts it and prints how to
 # sign in:
-#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/betterdesk-docker.sh -o betterdesk-docker.sh
-#   sudo bash betterdesk-docker.sh
+#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/neodesk-docker.sh -o neodesk-docker.sh
+#   sudo bash neodesk-docker.sh
 #
 # Or by hand:
-#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/docker-compose.quick.single.yml -o docker-compose.yml
 #   docker compose up -d
-#   docker compose exec betterdesk betterdesk-show-admin-credentials
+#   docker compose exec neodesk neodesk-show-admin-credentials
 #
-# Image: ghcr.io/neodeskapp/betterdesk with the tag "latest", the newest
+# Image: ghcr.io/neodeskapp/neodesk with the tag "latest", the newest
 # release. Update to the newest release:
 #   docker compose pull && docker compose up -d
-# Pin a release instead: put BETTERDESK_IMAGE_TAG=<version> (for example
+# Pin a release instead: put NEODESK_IMAGE_TAG=<version> (for example
 # 3.5.270) into .env next to this file.
 #
 # Settings go into .env next to this file, one KEY=value per line; every
 # key reaches the server (Docker Compose 2.24 or newer reads it):
 #   RELAY_SERVERS=203.0.113.10     the address clients reach this server at
 #                                  (found by itself at every start when empty)
-#   BETTERDESK_CONSOLE_PORT=5080   the host port of the web console (5000)
-#   BETTERDESK_CONSOLE_BIND=127.0.0.1  publish the console on this host
+#   NEODESK_CONSOLE_PORT=5080   the host port of the web console (5000)
+#   NEODESK_CONSOLE_BIND=127.0.0.1  publish the console on this host
 #                                  address only (behind a reverse proxy)
 #   ADMIN_PASSWORD=...             the admin's password, at the first start only
 #   TRUST_PROXY=1                  the console is behind one reverse proxy
 #
 # Web console: http://<server>:5000
 # RustDesk clients: ID server and relay <server>, API http://<server>:21121
-# Logs: docker compose logs -f betterdesk
+# Logs: docker compose logs -f neodesk
 # =============================================================================
 
 services:
-  betterdesk:
-    image: ghcr.io/neodeskapp/betterdesk:${BETTERDESK_IMAGE_TAG:-latest}
-    container_name: betterdesk
-    hostname: betterdesk
+  neodesk:
+    image: ghcr.io/neodeskapp/neodesk:${NEODESK_IMAGE_TAG:-latest}
+    container_name: neodesk
+    hostname: neodesk
     ports:
-      - "${BETTERDESK_CONSOLE_BIND:-0.0.0.0}:${BETTERDESK_CONSOLE_PORT:-5000}:5000"  # Web console
-      - "${BETTERDESK_CONSOLE_BIND:-0.0.0.0}:${BETTERDESK_CONSOLE_HTTPS_PORT:-5443}:5443"  # Web console with HTTPS_ENABLED=true
+      - "${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_PORT:-5000}:5000"  # Web console
+      - "${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_HTTPS_PORT:-5443}:5443"  # Web console with HTTPS_ENABLED=true
       - "21115:21115"           # NAT type test
       - "21116:21116/tcp"       # Signal TCP
       - "21116:21116/udp"       # Signal UDP
@@ -60,7 +60,7 @@ services:
       - "21121:21121"           # HTTP API (RustDesk client + REST)
       - "21122:21122"           # CDAP gateway (custom devices and agents)
     volumes:
-      - betterdesk-data:/opt/rustdesk
+      - neodesk-data:/opt/rustdesk
       - console-data:/app/data
     # Every KEY=value of .env next to this file reaches the server; the
     # entries under environment below win over it.
@@ -76,15 +76,15 @@ services:
       - API_HOST=0.0.0.0
       - API_ENABLED=false
       - ENCRYPTED_ONLY=1
-      - SERVER_BACKEND=betterdesk
+      - SERVER_BACKEND=neodesk
       - HBBS_API_URL=http://127.0.0.1:21121/api
-      - BETTERDESK_API_URL=http://127.0.0.1:21121/api
+      - NEODESK_API_URL=http://127.0.0.1:21121/api
       - RUSTDESK_PATH=/opt/rustdesk
       - DATA_DIR=/app/data
-      - BETTERDESK_CLIENT_REPO=${BETTERDESK_CLIENT_REPO:-neodeskapp/betterdesk-client}
-      - BETTERDESK_CLIENT_RELEASE_TAG=${BETTERDESK_CLIENT_RELEASE_TAG:-}
-      - BETTERDESK_GITHUB_TOKEN=${BETTERDESK_GITHUB_TOKEN:-}
-      - BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED=${BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED:-}
+      - NEODESK_CLIENT_REPO=${NEODESK_CLIENT_REPO:-neodeskapp/neodesk-client}
+      - NEODESK_CLIENT_RELEASE_TAG=${NEODESK_CLIENT_RELEASE_TAG:-}
+      - NEODESK_GITHUB_TOKEN=${NEODESK_GITHUB_TOKEN:-}
+      - NEODESK_CUSTOM_CLIENT_SIGNING_SEED=${NEODESK_CUSTOM_CLIENT_SIGNING_SEED:-}
       - AGENT_ARTIFACT_DIR=/app/data/agent-builds
       - AGENT_BUILD_WORKER=${AGENT_BUILD_WORKER:-on}
       - AGENT_BUILD_POLL_MS=${AGENT_BUILD_POLL_MS:-5000}
@@ -105,12 +105,12 @@ services:
       - SESSION_IDLE_WARN_MS=${SESSION_IDLE_WARN_MS:-}
       - SESSION_MAX_PER_USER=${SESSION_MAX_PER_USER:-}
       - DOCKER=true
-      # Optional: map betterdesk to host bind-mount owner (Synology etc.). Default 10001.
+      # Optional: map neodesk to host bind-mount owner (Synology etc.). Default 10001.
       - PUID=${PUID:-10001}
       - PGID=${PGID:-10001}
-      - BETTERDESK_UPDATE_MODE=image
-      - BETTERDESK_DOCKER_LAYOUT=single
-      - BETTERDESK_IMAGE_TAG=${BETTERDESK_IMAGE_TAG:-latest}
+      - NEODESK_UPDATE_MODE=image
+      - NEODESK_DOCKER_LAYOUT=single
+      - NEODESK_IMAGE_TAG=${NEODESK_IMAGE_TAG:-latest}
       - DB_TYPE=${DB_TYPE:-sqlite}
       - DATABASE_URL=${DATABASE_URL:-}
       - DB_URL=${DATABASE_URL:-}
@@ -132,7 +132,7 @@ services:
       - BILLING_TRUST_OS_NTP=${BILLING_TRUST_OS_NTP:-Y}
       - AUTH_DB_PATH=/app/data/auth.db
       # The admin account of the first start. Without ADMIN_PASSWORD the
-      # container makes a random password; betterdesk-show-admin-credentials
+      # container makes a random password; neodesk-show-admin-credentials
       # prints it. An account that exists keeps its password.
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - INIT_ADMIN_USER=${ADMIN_USERNAME:-admin}
@@ -141,7 +141,7 @@ services:
       - DEFAULT_ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - TZ=${TZ:-UTC}
     networks:
-      - betterdesk-net
+      - neodesk-net
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -153,7 +153,7 @@ services:
       - CHOWN
       - FOWNER
     healthcheck:
-      test: ["CMD", "/usr/local/bin/betterdesk-healthcheck"]
+      test: ["CMD", "/usr/local/bin/neodesk-healthcheck"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -161,44 +161,44 @@ services:
 
   # guacd for RDP and VNC targets in the browser (the profile "guacd": put
   # COMPOSE_PROFILES=guacd into .env, or postgres,guacd with PostgreSQL). It
-  # shares the betterdesk container's network, because the server talks to
+  # shares the neodesk container's network, because the server talks to
   # guacd only on loopback (GUACD_ADDRESS, 127.0.0.1:4822).
   guacd:
     image: guacamole/guacd:1.5.5
-    container_name: betterdesk-guacd
+    container_name: neodesk-guacd
     profiles:
       - guacd
-    network_mode: "service:betterdesk"
+    network_mode: "service:neodesk"
     depends_on:
-      - betterdesk
+      - neodesk
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
 
-  # PostgreSQL instead of SQLite (the profile "postgres"; betterdesk-docker.sh
+  # PostgreSQL instead of SQLite (the profile "postgres"; neodesk-docker.sh
   # sets it up). By hand, in .env next to this file:
   #   COMPOSE_PROFILES=postgres
   #   POSTGRES_PASSWORD=<a long random password>
-  #   DATABASE_URL=postgres://betterdesk:<the same password>@postgres:5432/betterdesk?sslmode=disable
-  # A volume with SQLite data is not moved by that: betterdesk-docker.sh
+  #   DATABASE_URL=postgres://neodesk:<the same password>@postgres:5432/neodesk?sslmode=disable
+  # A volume with SQLite data is not moved by that: neodesk-docker.sh
   # postgres moves it.
   postgres:
     image: postgres:16-alpine
-    container_name: betterdesk-postgres
+    container_name: neodesk-postgres
     profiles:
       - postgres
     environment:
-      - POSTGRES_USER=betterdesk
+      - POSTGRES_USER=neodesk
       # Compose reads this also while the profile is off; PostgreSQL itself
       # refuses to start with an empty one.
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-}
-      - POSTGRES_DB=betterdesk
+      - POSTGRES_DB=neodesk
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - betterdesk-net
+      - neodesk-net
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -211,19 +211,19 @@ services:
       - FOWNER
       - DAC_OVERRIDE
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U betterdesk -d betterdesk"]
+      test: ["CMD-SHELL", "pg_isready -U neodesk -d neodesk"]
       interval: 5s
       timeout: 5s
       retries: 12
 
 networks:
-  betterdesk-net:
+  neodesk-net:
     driver: bridge
 
 volumes:
-  betterdesk-data:
-    name: betterdesk-data
+  neodesk-data:
+    name: neodesk-data
   console-data:
-    name: betterdesk-console-data
+    name: neodesk-console-data
   postgres-data:
-    name: betterdesk-postgres-data
+    name: neodesk-postgres-data

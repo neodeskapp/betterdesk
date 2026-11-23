@@ -4,7 +4,7 @@
  * - /ws/panel-events (the server checks enrollment.approve on upgrade):
  *   registration_pending, registration_changed and help_request. Each
  *   message goes to the notification list, updates the registration count,
- *   and is passed on as the old window events (betterdesk:panel-event,
+ *   and is passed on as the old window events (neodesk:panel-event,
  *   registrations:pending-changed, and app:refresh after an approval) for
  *   pages that listen to them.
  * - The number of devices waiting for approval next to "Enrollment
@@ -58,7 +58,7 @@ function dispatch(payload: Record<string, unknown>): void {
 	// An approval creates the device at once; the devices page reloads
 	if (type === 'registration_changed')
 		window.dispatchEvent(new CustomEvent('app:refresh', { detail: payload }));
-	window.dispatchEvent(new CustomEvent('betterdesk:panel-event', { detail: payload }));
+	window.dispatchEvent(new CustomEvent('neodesk:panel-event', { detail: payload }));
 	for (const fn of listeners) fn(payload);
 }
 

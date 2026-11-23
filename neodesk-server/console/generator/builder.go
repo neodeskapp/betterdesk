@@ -16,16 +16,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
-// The client builder: a pinned snapshot of the BetterDesk-Client source
-// below DataDir/modules/betterdesk-client-builder, kept up to date from
+// The client builder: a pinned snapshot of the NeoDesk-Client source
+// below DataDir/modules/neodesk-client-builder, kept up to date from
 // GitHub with git, and a build provider that compiles the client with the
 // signed Support configuration inside (services/clientBuilderService.js).
 // The provider is the local builder of this package, an external command
-// (BETTERDESK_CLIENT_BUILD_COMMAND) or a GitHub Actions workflow.
+// (NEODESK_CLIENT_BUILD_COMMAND) or a GitHub Actions workflow.
 
 const (
 	defaultBuilderRef = "master"
@@ -39,7 +39,7 @@ var providerTargetKeys = map[string]bool{
 }
 
 func (s *Service) builderRoot() string {
-	return filepath.Join(s.opts.DataDir, "modules", "betterdesk-client-builder")
+	return filepath.Join(s.opts.DataDir, "modules", "neodesk-client-builder")
 }
 
 // SourceDir is the client source snapshot.
@@ -56,18 +56,18 @@ var (
 	commitPattern   = regexp.MustCompile(`(?i)^[a-f0-9]{40}$`)
 	requestIDRule   = regexp.MustCompile(`(?i)^[a-f0-9-]{8,128}$`)
 	workflowPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+$`)
-	progressLine    = regexp.MustCompile(`^BETTERDESK_BUILD_PROGRESS\|(\d{1,3})\|(.+)$`)
+	progressLine    = regexp.MustCompile(`^NEODESK_BUILD_PROGRESS\|(\d{1,3})\|(.+)$`)
 )
 
 // NormalizeRepo checks a repository name: owner/name, and one of
-// BETTERDESK_CLIENT_ALLOWED_REPOS (default trybetterdesk/betterdesk-client).
+// NEODESK_CLIENT_ALLOWED_REPOS (default neodeskapp/neodesk-client).
 // value is the request's value as it came; nil or "" take the setting.
 func (s *Service) NormalizeRepo(value any) (string, error) {
-	repo := jsTrim(jsString(or(or(value, s.getenv("BETTERDESK_CLIENT_REPO")), defaultClientRepo)))
+	repo := jsTrim(jsString(or(or(value, s.getenv("NEODESK_CLIENT_REPO")), defaultClientRepo)))
 	if !repoPattern.MatchString(repo) {
-		return "", codeError("betterdesk_client_repo_invalid")
+		return "", codeError("neodesk_client_repo_invalid")
 	}
-	allowedText := s.getenv("BETTERDESK_CLIENT_ALLOWED_REPOS")
+	allowedText := s.getenv("NEODESK_CLIENT_ALLOWED_REPOS")
 	if allowedText == "" {
 		allowedText = defaultClientRepo
 	}
@@ -76,15 +76,15 @@ func (s *Service) NormalizeRepo(value any) (string, error) {
 			return repo, nil
 		}
 	}
-	return "", codeError("betterdesk_client_repo_not_allowed")
+	return "", codeError("neodesk_client_repo_not_allowed")
 }
 
-// ClientRef checks a git ref (BETTERDESK_CLIENT_REF, default master): not
+// ClientRef checks a git ref (NEODESK_CLIENT_REF, default master): not
 // empty, at most 200 characters, no NUL or line break.
 func (s *Service) ClientRef(value any) (string, error) {
-	ref := jsTrim(jsString(or(or(value, s.getenv("BETTERDESK_CLIENT_REF")), defaultBuilderRef)))
+	ref := jsTrim(jsString(or(or(value, s.getenv("NEODESK_CLIENT_REF")), defaultBuilderRef)))
 	if ref == "" || jsLength(ref) > 200 || strings.ContainsAny(ref, "\x00\r\n") {
-		return "", codeError("betterdesk_client_ref_invalid")
+		return "", codeError("neodesk_client_ref_invalid")
 	}
 	return ref, nil
 }
@@ -149,11 +149,11 @@ type SigningKey struct {
 }
 
 // EnsureSigningKey makes sure the install has a signing seed and its
-// public key on disk: the seed from BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED
+// public key on disk: the seed from NEODESK_CUSTOM_CLIENT_SIGNING_SEED
 // when set, else the stored one, else a new random one. A file that
 // holds its value already is left as it is.
 func (s *Service) EnsureSigningKey() (SigningKey, error) {
-	configured := decodeSigningSeed(s.getenv("BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED"))
+	configured := decodeSigningSeed(s.getenv("NEODESK_CUSTOM_CLIENT_SIGNING_SEED"))
 	existing := s.readStoredSigningSeed()
 	seed := configured
 	if seed == nil {
@@ -196,16 +196,16 @@ func (s *Service) prepareClientSigningPublicKey() (SigningKey, error) {
 	if err != nil {
 		return key, err
 	}
-	target := filepath.Join(s.SourceDir(), "res", "betterdesk", "custom-client-signing.pub")
+	target := filepath.Join(s.SourceDir(), "res", "neodesk", "custom-client-signing.pub")
 	if !exists(s.SourceDir()) || !exists(filepath.Dir(target)) {
-		return key, codeError("betterdesk_client_source_missing_for_signing_key")
+		return key, codeError("neodesk_client_source_missing_for_signing_key")
 	}
 	info, err := os.Lstat(target)
 	if err != nil {
 		return key, nodeFSError(err, "lstat", target)
 	}
 	if info.Mode()&os.ModeSymlink != 0 {
-		return key, codeError("betterdesk_client_signing_key_symlink")
+		return key, codeError("neodesk_client_signing_key_symlink")
 	}
 	raw, err := os.ReadFile(target)
 	if err != nil {
@@ -305,7 +305,7 @@ func (s *Service) GetRemoteRevision(ctx context.Context, repo, ref any) (RemoteR
 	}
 	sha := jsTrim(jsString(or(prop(commit, "sha"), "")))
 	if !commitPattern.MatchString(sha) {
-		return RemoteRevision{}, codeError("betterdesk_client_commit_invalid")
+		return RemoteRevision{}, codeError("neodesk_client_commit_invalid")
 	}
 	return RemoteRevision{Repo: targetRepo, Ref: targetRef, SHA: sha}, nil
 }
@@ -373,7 +373,7 @@ func (s *Service) SyncSource(ctx context.Context, repo, ref any, force bool) (Sy
 			return SyncResult{}, err
 		}
 		if clone.Code != 0 {
-			return SyncResult{}, codeError("betterdesk_client_git_clone_failed:" + clone.Stderr)
+			return SyncResult{}, codeError("neodesk_client_git_clone_failed:" + clone.Stderr)
 		}
 		if _, err := s.writeBuilderState(goapi.NewObject("phase", "syncing_submodules")); err != nil {
 			return SyncResult{}, err
@@ -394,17 +394,17 @@ func (s *Service) SyncSource(ctx context.Context, repo, ref any, force bool) (Sy
 			}
 		}
 		if checkout.Code != 0 {
-			return SyncResult{}, codeError("betterdesk_client_git_checkout_failed:" + checkout.Stderr)
+			return SyncResult{}, codeError("neodesk_client_git_checkout_failed:" + checkout.Stderr)
 		}
 		submodules, err := s.runCommand(ctx, "git", []string{"-C", staged, "submodule", "update", "--init", "--recursive"}, "", nil)
 		if err != nil {
 			return SyncResult{}, err
 		}
 		if submodules.Code != 0 {
-			return SyncResult{}, codeError("betterdesk_client_submodule_failed:" + submodules.Stderr)
+			return SyncResult{}, codeError("neodesk_client_submodule_failed:" + submodules.Stderr)
 		}
 		if !exists(filepath.Join(staged, "Cargo.toml")) || !exists(filepath.Join(staged, "libs", "hbb_common", "Cargo.toml")) {
-			return SyncResult{}, codeError("betterdesk_client_source_invalid")
+			return SyncResult{}, codeError("neodesk_client_source_invalid")
 		}
 		previous := filepath.Join(s.builderRoot(), ".source.previous")
 		_ = os.RemoveAll(previous)
@@ -464,7 +464,7 @@ func (s *Service) SyncAndQueueRebuilds(ctx context.Context, force bool) (*goapi.
 }
 
 func (s *Service) externalProviderCommand() string {
-	return jsTrim(s.getenv("BETTERDESK_CLIENT_BUILD_COMMAND"))
+	return jsTrim(s.getenv("NEODESK_CLIENT_BUILD_COMMAND"))
 }
 
 func normalizeProviderTarget(raw any) *goapi.Object {
@@ -478,12 +478,12 @@ func normalizeProviderTarget(raw any) *goapi.Object {
 }
 
 // configuredProviderTargets reads the targets an external provider
-// builds: BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON, else the file in
-// BETTERDESK_CLIENT_PROVIDER_TARGETS_FILE; a list or {targets: [...]}.
+// builds: NEODESK_CLIENT_PROVIDER_TARGETS_JSON, else the file in
+// NEODESK_CLIENT_PROVIDER_TARGETS_FILE; a list or {targets: [...]}.
 func (s *Service) configuredProviderTargets() ([]*goapi.Object, string) {
-	raw := jsTrim(s.getenv("BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON"))
+	raw := jsTrim(s.getenv("NEODESK_CLIENT_PROVIDER_TARGETS_JSON"))
 	if raw == "" {
-		if file := jsTrim(s.getenv("BETTERDESK_CLIENT_PROVIDER_TARGETS_FILE")); file != "" {
+		if file := jsTrim(s.getenv("NEODESK_CLIENT_PROVIDER_TARGETS_FILE")); file != "" {
 			data, err := os.ReadFile(file)
 			if err != nil {
 				code := "unknown"
@@ -533,7 +533,7 @@ func (s *Service) configuredProviderTargets() ([]*goapi.Object, string) {
 }
 
 func (s *Service) githubActionsEnabled() bool {
-	v := s.getenv("BETTERDESK_CLIENT_GITHUB_ACTIONS")
+	v := s.getenv("NEODESK_CLIENT_GITHUB_ACTIONS")
 	if v == "" {
 		v = "off"
 	}
@@ -603,7 +603,7 @@ func (s *Service) BuildReadiness() *goapi.Object {
 	caps := s.BuildCapabilities()
 	reason := caps.Get("reason")
 	if !sourceReady {
-		reason = "betterdesk_client_builder_not_ready"
+		reason = "neodesk_client_builder_not_ready"
 	}
 	return goapi.NewObject(
 		"sourceReady", sourceReady,
@@ -645,9 +645,9 @@ func (s *Service) AcceptBuilderTerms() (*goapi.Object, error) {
 	return s.writeBuilderState(goapi.NewObject("termsAccepted", true, "error", nil))
 }
 
-// buildTimeout is BETTERDESK_CLIENT_BUILD_TIMEOUT_MS (buildTimeoutOf).
+// buildTimeout is NEODESK_CLIENT_BUILD_TIMEOUT_MS (buildTimeoutOf).
 func (s *Service) buildTimeout() time.Duration {
-	return buildTimeoutOf(s.getenv("BETTERDESK_CLIENT_BUILD_TIMEOUT_MS"))
+	return buildTimeoutOf(s.getenv("NEODESK_CLIENT_BUILD_TIMEOUT_MS"))
 }
 
 // buildTimeoutOf is the time an embedded build may take, from the
@@ -703,10 +703,10 @@ type Progress func(percent float64, phase string)
 func (s *Service) RunBuild(ctx context.Context, request *goapi.Object, onProgress Progress) (BuildResult, error) {
 	readiness := s.BuildReadiness()
 	if !truthy(readiness.Get("sourceReady")) {
-		return BuildResult{}, codeError("betterdesk_client_builder_not_ready")
+		return BuildResult{}, codeError("neodesk_client_builder_not_ready")
 	}
 	if !truthy(readiness.Get("buildReady")) {
-		reason := jsString(or(readiness.Get("reason"), "betterdesk_client_builder_no_supported_targets"))
+		reason := jsString(or(readiness.Get("reason"), "neodesk_client_builder_no_supported_targets"))
 		return BuildResult{}, codeError(reason)
 	}
 	key, err := s.prepareClientSigningPublicKey()
@@ -717,7 +717,7 @@ func (s *Service) RunBuild(ctx context.Context, request *goapi.Object, onProgres
 	request.Set("signing_public_key", key.PublicKey)
 	requestID := jsTrim(jsString(or(request.Get("generationId"), "")))
 	if !requestIDRule.MatchString(requestID) {
-		return BuildResult{}, codeError("betterdesk_client_generation_id_invalid")
+		return BuildResult{}, codeError("neodesk_client_generation_id_invalid")
 	}
 	for _, dir := range []string{s.requestRoot(), s.outputRoot()} {
 		if err := os.MkdirAll(dir, 0o777); err != nil {
@@ -750,9 +750,9 @@ func (s *Service) RunBuild(ctx context.Context, request *goapi.Object, onProgres
 		return result, nil
 	}
 	env := s.childEnv(map[string]string{
-		"BETTERDESK_CLIENT_SOURCE_DIR":    s.SourceDir(),
-		"BETTERDESK_CLIENT_OUTPUT_DIR":    outputDir,
-		"BETTERDESK_CLIENT_BUILD_REQUEST": requestPath,
+		"NEODESK_CLIENT_SOURCE_DIR":    s.SourceDir(),
+		"NEODESK_CLIENT_OUTPUT_DIR":    outputDir,
+		"NEODESK_CLIENT_BUILD_REQUEST": requestPath,
 	})
 	var res Result
 	if external != "" {
@@ -767,15 +767,15 @@ func (s *Service) RunBuild(ctx context.Context, request *goapi.Object, onProgres
 		res = s.runLocalBuilder(ctx, requestPath, s.SourceDir(), outputDir, env, progress)
 	}
 	if res.TimedOut {
-		return BuildResult{}, codeError("betterdesk_client_build_timeout")
+		return BuildResult{}, codeError("neodesk_client_build_timeout")
 	}
 	if res.Code != 0 {
-		return BuildResult{}, codeError("betterdesk_client_build_failed:" + codeText(res.Code) + ":" + lastChars(res.Stderr, 4000))
+		return BuildResult{}, codeError("neodesk_client_build_failed:" + codeText(res.Code) + ":" + lastChars(res.Stderr, 4000))
 	}
 	return BuildResult{OutputDir: outputDir, Stdout: lastChars(res.Stdout, 4000), Stderr: lastChars(res.Stderr, 4000)}, nil
 }
 
-// progressWriter reads BETTERDESK_BUILD_PROGRESS|<percent>|<phase> lines
+// progressWriter reads NEODESK_BUILD_PROGRESS|<percent>|<phase> lines
 // from a provider's output.
 type progressWriter struct {
 	report  Progress
@@ -815,13 +815,13 @@ func (s *Service) runGithubActionsBuild(ctx context.Context, request *goapi.Obje
 	if err != nil {
 		return BuildResult{}, err
 	}
-	workflow := s.getenv("BETTERDESK_CLIENT_BUILD_WORKFLOW")
+	workflow := s.getenv("NEODESK_CLIENT_BUILD_WORKFLOW")
 	if workflow == "" {
 		workflow = "support-build.yml"
 	}
 	workflow = jsTrim(workflow)
 	if !workflowPattern.MatchString(workflow) {
-		return BuildResult{}, codeError("betterdesk_client_workflow_invalid")
+		return BuildResult{}, codeError("neodesk_client_workflow_invalid")
 	}
 	startedAt := s.opts.Now()
 	clientCommit := or(request.Get("clientCommit"), prop(state, "installedCommit"))
@@ -866,7 +866,7 @@ func (s *Service) runGithubActionsBuild(ctx context.Context, request *goapi.Obje
 		}
 	}
 	if run == nil {
-		return BuildResult{}, codeError("betterdesk_client_workflow_run_not_found")
+		return BuildResult{}, codeError("neodesk_client_workflow_run_not_found")
 	}
 	runID := jsString(prop(run, "id"))
 	runState := run
@@ -882,7 +882,7 @@ func (s *Service) runGithubActionsBuild(ctx context.Context, request *goapi.Obje
 		}
 	}
 	if prop(runState, "status") != "completed" || prop(runState, "conclusion") != "success" {
-		return BuildResult{}, codeError("betterdesk_client_workflow_failed:" + jsString(or(prop(runState, "status"), "unknown")) + ":" + jsString(or(prop(runState, "conclusion"), "unknown")))
+		return BuildResult{}, codeError("neodesk_client_workflow_failed:" + jsString(or(prop(runState, "status"), "unknown")) + ":" + jsString(or(prop(runState, "conclusion"), "unknown")))
 	}
 	artifacts, err := s.githubJSON(ctx, "https://api.github.com/repos/"+repo+"/actions/runs/"+runID+"/artifacts?per_page=100")
 	if err != nil {
@@ -890,7 +890,7 @@ func (s *Service) runGithubActionsBuild(ctx context.Context, request *goapi.Obje
 	}
 	list, _ := prop(artifacts, "artifacts").([]any)
 	var artifact any
-	name := "betterdesk-support-" + jsString(request.Get("generationId"))
+	name := "neodesk-support-" + jsString(request.Get("generationId"))
 	for _, candidate := range list {
 		if prop(candidate, "name") == name && !truthy(prop(candidate, "expired")) {
 			artifact = candidate
@@ -898,7 +898,7 @@ func (s *Service) runGithubActionsBuild(ctx context.Context, request *goapi.Obje
 		}
 	}
 	if !truthy(prop(artifact, "archive_download_url")) {
-		return BuildResult{}, codeError("betterdesk_client_workflow_artifact_missing")
+		return BuildResult{}, codeError("neodesk_client_workflow_artifact_missing")
 	}
 	archivePath := filepath.Join(s.requestRoot(), jsString(request.Get("generationId"))+".actions.zip")
 	if err := s.downloadToFile(ctx, jsString(prop(artifact, "archive_download_url")), archivePath); err != nil {
@@ -941,7 +941,7 @@ func extractWorkflowArtifact(archivePath, outputDir string) error {
 	for _, f := range zr.File {
 		name := strings.ReplaceAll(f.Name, `\`, "/")
 		if strings.HasPrefix(name, "/") || driveLetter.MatchString(name) || hasDotDot(name) || strings.HasSuffix(strings.ToLower(name), "/custom.txt") {
-			return codeError("betterdesk_client_workflow_artifact_invalid")
+			return codeError("neodesk_client_workflow_artifact_invalid")
 		}
 	}
 	for _, f := range zr.File {

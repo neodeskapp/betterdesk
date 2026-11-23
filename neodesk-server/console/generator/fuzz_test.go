@@ -11,7 +11,7 @@ import (
 
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // FuzzParseJSON reads request bodies and stored profiles: it accepts what

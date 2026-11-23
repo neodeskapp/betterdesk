@@ -2,8 +2,8 @@
 // inventory, activity and automation groups put first.
 //
 // The old console mounted each of these routers twice: at its own prefix
-// (/api/inventory, /api/activity, /api/automation) and at /api/bd for its
-// device routes. The routes for people then also sat under /api/bd, where a
+// (/api/inventory, /api/activity, /api/automation) and at /api/nd for its
+// device routes. The routes for people then also sat under /api/nd, where a
 // route like GET /:id would catch a device path. So they step aside there,
 // in any letter case of the mount, as the mount itself matches in any
 // letter case.
@@ -13,15 +13,15 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // DeviceMount is the mount of the device API.
-const DeviceMount = "/api/bd"
+const DeviceMount = "/api/nd"
 
 // Not passes a request on when the route's group was reached through the
-// device mount, spelled in any letter case (/api/bd, /API/BD, /Api/bd), and
+// device mount, spelled in any letter case (/api/nd, /API/ND, /Api/nd), and
 // lets the route answer at the group's own mount.
 func Not(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -1,7 +1,7 @@
 package netmonitor
 
 import (
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
 )
 
 // Every check asks console/ssrfguard before anything leaves the server, in

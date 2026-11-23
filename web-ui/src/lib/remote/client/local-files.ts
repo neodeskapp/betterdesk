@@ -113,7 +113,7 @@ function showDirectoryPicker(options: { mode?: 'read' | 'readwrite' }): Promise<
 }
 
 function isDesktopBridge(): boolean {
-	return page().__BETTERDESK_RDCLIENT_DESKTOP__ === true && tauriInvoke() !== null;
+	return page().__NEODESK_RDCLIENT_DESKTOP__ === true && tauriInvoke() !== null;
 }
 
 function desktopInvoke(cmd: string, args?: Record<string, unknown>): Promise<unknown> {

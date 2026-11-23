@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // getSetting returns the value stored under key in the settings table, ""

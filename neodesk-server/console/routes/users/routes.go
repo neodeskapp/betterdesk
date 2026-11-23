@@ -18,8 +18,8 @@ package users
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/goapipath"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 type handlers struct {

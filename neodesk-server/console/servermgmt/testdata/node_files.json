@@ -418,10 +418,10 @@
   {
    "name": "standard reads",
    "env": {
-    "BETTERDESK_PATH": "{B}/server",
-    "BETTERDESK_CONSOLE_PATH": "{B}/console",
-    "BETTERDESK_FILE_ALLOWED_ROOTS": "{B}/extra",
-    "BETTERDESK_MUTABLE_ROOTS": "{B}/mut",
+    "NEODESK_PATH": "{B}/server",
+    "NEODESK_CONSOLE_PATH": "{B}/console",
+    "NEODESK_FILE_ALLOWED_ROOTS": "{B}/extra",
+    "NEODESK_MUTABLE_ROOTS": "{B}/mut",
     "HOME": "{B}/home",
     "TMPDIR": "{B}/tmpdir"
    },
@@ -3035,10 +3035,10 @@
   {
    "name": "roots from the environment",
    "env": {
-    "BETTERDESK_PATH": "server/",
-    "BETTERDESK_CONSOLE_PATH": "./console/../console",
-    "BETTERDESK_FILE_ALLOWED_ROOTS": " {B}/extra , ,{B}/extra2/ ,{B}/extra,{B}/server",
-    "BETTERDESK_MUTABLE_ROOTS": ",{B}/mut,{B}/server, mut2 ",
+    "NEODESK_PATH": "server/",
+    "NEODESK_CONSOLE_PATH": "./console/../console",
+    "NEODESK_FILE_ALLOWED_ROOTS": " {B}/extra , ,{B}/extra2/ ,{B}/extra,{B}/server",
+    "NEODESK_MUTABLE_ROOTS": ",{B}/mut,{B}/server, mut2 ",
     "HOME": "{B}/home/",
     "TMPDIR": "{B}/tmpdir/"
    },
@@ -4036,10 +4036,10 @@
   {
    "name": "roots, empty values",
    "env": {
-    "BETTERDESK_PATH": "",
-    "BETTERDESK_CONSOLE_PATH": "",
-    "BETTERDESK_FILE_ALLOWED_ROOTS": "",
-    "BETTERDESK_MUTABLE_ROOTS": "",
+    "NEODESK_PATH": "",
+    "NEODESK_CONSOLE_PATH": "",
+    "NEODESK_FILE_ALLOWED_ROOTS": "",
+    "NEODESK_MUTABLE_ROOTS": "",
     "HOME": "{B}/home",
     "TMPDIR": ""
    },
@@ -4194,9 +4194,9 @@
   {
    "name": "roots, the same folder twice",
    "env": {
-    "BETTERDESK_PATH": "{B}/server",
-    "BETTERDESK_CONSOLE_PATH": "{B}/server/",
-    "BETTERDESK_MUTABLE_ROOTS": "{B}/server,{B}/server/.",
+    "NEODESK_PATH": "{B}/server",
+    "NEODESK_CONSOLE_PATH": "{B}/server/",
+    "NEODESK_MUTABLE_ROOTS": "{B}/server,{B}/server/.",
     "HOME": "{B}/server",
     "TMPDIR": "{B}/server"
    },
@@ -4222,10 +4222,10 @@
   {
    "name": "writes",
    "env": {
-    "BETTERDESK_PATH": "{B}/server",
-    "BETTERDESK_CONSOLE_PATH": "{B}/console",
-    "BETTERDESK_FILE_ALLOWED_ROOTS": "{B}/extra",
-    "BETTERDESK_MUTABLE_ROOTS": "{B}/mut",
+    "NEODESK_PATH": "{B}/server",
+    "NEODESK_CONSOLE_PATH": "{B}/console",
+    "NEODESK_FILE_ALLOWED_ROOTS": "{B}/extra",
+    "NEODESK_MUTABLE_ROOTS": "{B}/mut",
     "HOME": "{B}/home",
     "TMPDIR": "{B}/tmpdir"
    },
@@ -21909,10 +21909,10 @@
   {
    "name": "folders",
    "env": {
-    "BETTERDESK_PATH": "{B}/server",
-    "BETTERDESK_CONSOLE_PATH": "{B}/console",
-    "BETTERDESK_FILE_ALLOWED_ROOTS": "{B}/extra",
-    "BETTERDESK_MUTABLE_ROOTS": "{B}/mut",
+    "NEODESK_PATH": "{B}/server",
+    "NEODESK_CONSOLE_PATH": "{B}/console",
+    "NEODESK_FILE_ALLOWED_ROOTS": "{B}/extra",
+    "NEODESK_MUTABLE_ROOTS": "{B}/mut",
     "HOME": "{B}/home",
     "TMPDIR": "{B}/tmpdir"
    },
@@ -29427,10 +29427,10 @@
   {
    "name": "renames",
    "env": {
-    "BETTERDESK_PATH": "{B}/server",
-    "BETTERDESK_CONSOLE_PATH": "{B}/console",
-    "BETTERDESK_FILE_ALLOWED_ROOTS": "{B}/extra",
-    "BETTERDESK_MUTABLE_ROOTS": "{B}/mut",
+    "NEODESK_PATH": "{B}/server",
+    "NEODESK_CONSOLE_PATH": "{B}/console",
+    "NEODESK_FILE_ALLOWED_ROOTS": "{B}/extra",
+    "NEODESK_MUTABLE_ROOTS": "{B}/mut",
     "HOME": "{B}/home",
     "TMPDIR": "{B}/tmpdir"
    },
@@ -38487,10 +38487,10 @@
   {
    "name": "deletes",
    "env": {
-    "BETTERDESK_PATH": "{B}/server",
-    "BETTERDESK_CONSOLE_PATH": "{B}/console",
-    "BETTERDESK_FILE_ALLOWED_ROOTS": "{B}/extra",
-    "BETTERDESK_MUTABLE_ROOTS": "{B}/mut",
+    "NEODESK_PATH": "{B}/server",
+    "NEODESK_CONSOLE_PATH": "{B}/console",
+    "NEODESK_FILE_ALLOWED_ROOTS": "{B}/extra",
+    "NEODESK_MUTABLE_ROOTS": "{B}/mut",
     "HOME": "{B}/home",
     "TMPDIR": "{B}/tmpdir"
    },
@@ -44407,10 +44407,10 @@
   {
    "name": "the filesystem root writable",
    "env": {
-    "BETTERDESK_PATH": "{B}/server",
-    "BETTERDESK_CONSOLE_PATH": "{B}/console",
-    "BETTERDESK_FILE_ALLOWED_ROOTS": "{B}/extra",
-    "BETTERDESK_MUTABLE_ROOTS": "/",
+    "NEODESK_PATH": "{B}/server",
+    "NEODESK_CONSOLE_PATH": "{B}/console",
+    "NEODESK_FILE_ALLOWED_ROOTS": "{B}/extra",
+    "NEODESK_MUTABLE_ROOTS": "/",
     "HOME": "{B}/home",
     "TMPDIR": "{B}/tmpdir"
    },

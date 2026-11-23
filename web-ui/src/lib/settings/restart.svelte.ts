@@ -141,7 +141,7 @@ function showFailed(code: string | null | undefined): void {
 	const item = restartFlow.item;
 	if (restartFlow.rolledBack && item) {
 		for (const fn of canceledListeners) fn(item);
-		window.dispatchEvent(new CustomEvent('betterdesk:restart-canceled', { detail: item }));
+		window.dispatchEvent(new CustomEvent('neodesk:restart-canceled', { detail: item }));
 	}
 }
 
@@ -176,7 +176,7 @@ export async function cancelPendingRestart(): Promise<void> {
 			tf('settings.restart_prompt.canceled', 'The changes were cancelled and the previous values are back.')
 		);
 		for (const fn of canceledListeners) fn(item);
-		window.dispatchEvent(new CustomEvent('betterdesk:restart-canceled', { detail: item }));
+		window.dispatchEvent(new CustomEvent('neodesk:restart-canceled', { detail: item }));
 	} catch (err) {
 		toast.error(
 			message(err, tf('settings.restart_prompt.rollback_failed', 'Could not put the previous values back.'))

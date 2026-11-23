@@ -13,7 +13,7 @@ function page(over: Partial<LoginPage> = {}, branding: Partial<LoginPage['brandi
 	return {
 		success: true,
 		csrfToken: 'tok',
-		appName: 'BetterDesk',
+		appName: 'NeoDesk',
 		appVersion: '3.5.0',
 		desktopMode: false,
 		signedIn: false,
@@ -267,7 +267,7 @@ describe('notices, branding and the compact sign-in', () => {
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Acme support');
 		expect(screen.getByText('Staff only')).toBeInTheDocument();
 		expect(screen.getByText('(c) Acme')).toBeInTheDocument();
-		expect(screen.getByText('BetterDesk 3.5.0')).toBeInTheDocument();
+		expect(screen.getByText('NeoDesk 3.5.0')).toBeInTheDocument();
 		expect(document.body).toHaveClass('login-page', 'login-layout-classic');
 	});
 

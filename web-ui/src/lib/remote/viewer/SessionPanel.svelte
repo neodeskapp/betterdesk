@@ -160,7 +160,7 @@
 							{#if s.cdapFallback}
 								<LinkButton
 									href={link(`/remote/${encodeURIComponent(s.deviceId)}?transport=cdap`)}
-									title={tf('remote.cdap_fallback_hint', 'Connect through the BetterDesk agent instead')}
+									title={tf('remote.cdap_fallback_hint', 'Connect through the NeoDesk agent instead')}
 									>{tf('remote.use_cdap_fallback', 'Use agent connection')}</LinkButton
 								>
 							{/if}

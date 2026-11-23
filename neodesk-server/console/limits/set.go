@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // Options are what the limiters need from the rest of the console.
@@ -52,7 +52,7 @@ var pollPaths = []string{
 	"/api/folders",
 	"/api/tags",
 	"/api/device-groups",
-	"/api/bd/notifications",
+	"/api/nd/notifications",
 }
 
 // pollPrefixes are read-only groups of routes that count like poll paths.
@@ -157,7 +157,7 @@ type Set struct {
 	Upload *Limiter
 	// FileAccess is the limit of file downloads.
 	FileAccess *Limiter
-	// Register is the limit of device registrations (POST /api/bd/register).
+	// Register is the limit of device registrations (POST /api/nd/register).
 	Register *Limiter
 	// Invitation is the limit of looking up and redeeming organization
 	// invitations, signed in or not.
@@ -177,7 +177,7 @@ type Set struct {
 //	RDCLIENT_PAGE_RATE_LIMIT_MAX     120    RDClientPage
 //	UPLOAD_RATE_LIMIT_MAX            30     Upload
 //	FILE_ACCESS_RATE_LIMIT_MAX       120    FileAccess
-//	BD_REGISTER_RATE_LIMIT_MAX       20     Register
+//	ND_REGISTER_RATE_LIMIT_MAX       20     Register
 //
 // Invitation allows 20 requests in 15 minutes per address, fixed.
 //
@@ -228,7 +228,7 @@ func NewSet(opts Options) *Set {
 		func(r *http.Request) string { return s.userOrAddressKey("password:", r) }, nil)
 	s.Upload = limiter("uploadLimiter", minute, env("UPLOAD_RATE_LIMIT_MAX", 30), "Too many upload requests. Please try again later.", s.addressKey, nil)
 	s.FileAccess = limiter("fileAccessLimiter", minute, env("FILE_ACCESS_RATE_LIMIT_MAX", 120), "Too many file requests. Please try again later.", s.addressKey, nil)
-	s.Register = limiter("registerLimiter", minute, env("BD_REGISTER_RATE_LIMIT_MAX", 20), "Too many registration requests. Please slow down.", s.addressKey, nil)
+	s.Register = limiter("registerLimiter", minute, env("ND_REGISTER_RATE_LIMIT_MAX", 20), "Too many registration requests. Please slow down.", s.addressKey, nil)
 	s.Invitation = limiter("invitationLimiter", 15*minute, 20, "Too many invitation requests. Please try again later.", s.addressKey, nil)
 	return s
 }

@@ -13,9 +13,9 @@ import (
 	"strconv"
 	"strings"
 
-	avatarsvc "github.com/unitronix/betterdesk-server/console/avatars"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	avatarsvc "github.com/neodeskapp/neodesk/neodesk-server/console/avatars"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 type handlers struct {

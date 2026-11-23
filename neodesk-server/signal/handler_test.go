@@ -10,16 +10,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/codec"
-	"github.com/unitronix/betterdesk-server/config"
-	cryptopkg "github.com/unitronix/betterdesk-server/crypto"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/peer"
-	pb "github.com/unitronix/betterdesk-server/proto"
-	"github.com/unitronix/betterdesk-server/ratelimit"
-	"github.com/unitronix/betterdesk-server/relay"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/codec"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	cryptopkg "github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/ratelimit"
+	"github.com/neodeskapp/neodesk/neodesk-server/relay"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -1713,7 +1713,7 @@ func TestInboundOnlyAgentCanBeConnectionTarget(t *testing.T) {
 	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
 	if err := database.UpsertPeer(&db.Peer{
 		ID:         "CLIENTIN1",
-		DeviceType: "betterdesk",
+		DeviceType: "neodesk",
 		Status:     "ONLINE",
 		IP:         "198.51.100.102",
 	}); err != nil {

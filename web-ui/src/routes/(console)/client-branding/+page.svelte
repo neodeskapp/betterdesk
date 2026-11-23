@@ -1,6 +1,6 @@
 <!--
   Client app branding (/client-branding): the name, contact details,
-  accent colour and logo that BetterDesk clients and support agents show.
+  accent colour and logo that NeoDesk clients and support agents show.
   One form with one save; a live preview beside it follows the form as
   people type. Clients pick changes up when they next check in.
 
@@ -277,7 +277,7 @@
 							{:else}
 								<span class="cb-pv-logo"><BrandLogo mark /></span>
 							{/if}
-							<span class="cb-pv-name">{form.values.company_name.trim() || 'BetterDesk'}</span>
+							<span class="cb-pv-name">{form.values.company_name.trim() || 'NeoDesk'}</span>
 						</div>
 						<div class="cb-preview-body">
 							{#if form.values.support_contact.trim()}

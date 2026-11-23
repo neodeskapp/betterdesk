@@ -5,7 +5,7 @@ package contract_test
 import (
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The shell choice: reading it, setting it in every spelling the route

@@ -19,13 +19,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/api"
-	"github.com/unitronix/betterdesk-server/console"
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/api"
+	"github.com/neodeskapp/neodesk/neodesk-server/console"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // The password of the test accounts and its bcrypt hash with the lowest
@@ -106,7 +106,7 @@ type setup struct {
 }
 
 // testPage is the page of the web app build a test console gets.
-const testPage = "<!doctype html>\n<html><head><title>BetterDesk</title></head><body></body></html>\n"
+const testPage = "<!doctype html>\n<html><head><title>NeoDesk</title></head><body></body></html>\n"
 
 // world is a console on a database with a fake signal server behind it.
 type world struct {
@@ -438,7 +438,7 @@ func (a *agent) signIn(name string) answer {
 
 // sessionID is the id in the agent's session cookie, "" without one.
 func (a *agent) sessionID() string {
-	for _, name := range []string{"bd.sid", "betterdesk.sid"} {
+	for _, name := range []string{"nd.sid", "neodesk.sid"} {
 		if value, err := url.QueryUnescape(a.cookies[name]); err == nil && strings.HasPrefix(value, "s:") {
 			id, _, _ := strings.Cut(value[2:], ".")
 			return id
@@ -476,7 +476,7 @@ const (
 	serverErrorBody    = `{"success":false,"error":"Server error"}`
 	invalidCode        = `{"success":false,"error":"Invalid verification code. Please try again."}`
 	notSignedIn        = `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`
-	clearedGuest       = "bd.guest=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax"
+	clearedGuest       = "nd.guest=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax"
 )
 
 // totpSecret is a two-factor secret for the tests: the base32 of

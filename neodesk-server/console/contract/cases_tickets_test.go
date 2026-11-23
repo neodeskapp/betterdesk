@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // Tickets: the routes people use, and at the end the two device routes
@@ -208,7 +208,7 @@ func init() {
 // ticketsDeviceCases are the two routes of the desktop agent,
 // /api/tickets/bd. First what comes before the route: no token, a token
 // nobody issued, and the CSRF gate, which checks every write here, also
-// one without a session (the mount is not below /api/bd/), with the panel
+// one without a session (the mount is not below /api/nd/), with the panel
 // access guard in front of it for the roles without device.edit. Then the
 // instance's own device (the token of 900100001 in
 // /stack/secrets/device_token, of 900100002 in device_token_other) opens

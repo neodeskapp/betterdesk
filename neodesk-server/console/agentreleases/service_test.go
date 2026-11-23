@@ -95,7 +95,7 @@ func TestListCachedAndResolveAsset(t *testing.T) {
 		t.Fatalf("without a cache: %v, exists %v", got, s.CacheExists())
 	}
 	root := s.Root()
-	if root != filepath.Join(data, "modules", "betterdesk-support-releases") {
+	if root != filepath.Join(data, "modules", "neodesk-support-releases") {
 		t.Fatalf("root = %s", root)
 	}
 	writeFile(t, filepath.Join(root, "support-v1.2.0", "manifest.json"), `{"imported_at":"x","assets":[]}`)
@@ -124,7 +124,7 @@ func TestListCachedAndResolveAsset(t *testing.T) {
 		{"support-v1.2.0", "missing.zip", ""},
 		{"support-v1.2.0", "sub", ""},
 		{"support-v1.2.0", "..", ""},
-		{"..", "betterdesk-support-releases", ""},
+		{"..", "neodesk-support-releases", ""},
 		{"..", "beside.txt", ""},
 		{"support-v1.2.0", "a b.zip", ""},
 		{"", "agent.zip", ""},
@@ -210,7 +210,7 @@ func newRelease(t *testing.T, zipBody []byte) *releaseFixture {
 		sums.WriteString(digest + "  " + name + "\n")
 		assets = append(assets, map[string]any{"name": name, "platform": "p", "sha256": strings.ToUpper(digest), "size": len(f.files[name])})
 	}
-	f.manifest = map[string]any{"schema_version": 1, "sku": "betterdesk-support", "generic": true, "external_config": false, "assets": assets}
+	f.manifest = map[string]any{"schema_version": 1, "sku": "neodesk-support", "generic": true, "external_config": false, "assets": assets}
 	f.sign(t)
 	f.files["SHA256SUMS"] = []byte(sums.String())
 	return f
@@ -230,7 +230,7 @@ func (f *releaseFixture) serve() *github {
 	g := &github{answers: map[string]func() *http.Response{}}
 	var assets []any
 	for name, body := range f.files {
-		page := "https://github.com/trybetterdesk/betterdesk-client/releases/download/support-v2.0.0/" + name
+		page := "https://github.com/neodeskapp/neodesk-client/releases/download/support-v2.0.0/" + name
 		file := "https://objects.githubusercontent.com/files/" + name
 		g.answers[page] = reply(http.StatusFound, nil, "Location", file)
 		g.answers[file] = reply(http.StatusOK, body)
@@ -242,7 +242,7 @@ func (f *releaseFixture) serve() *github {
 		map[string]any{"tag_name": "other-v9"},
 		map[string]any{"tag_name": "support-v2.0.0", "assets": assets},
 	})
-	g.answers["https://api.github.com/repos/trybetterdesk/betterdesk-client/releases?per_page=30"] = reply(http.StatusOK, list)
+	g.answers["https://api.github.com/repos/neodeskapp/neodesk-client/releases?per_page=30"] = reply(http.StatusOK, list)
 	f.gh = g
 	return g
 }
@@ -256,9 +256,9 @@ func (f *releaseFixture) service(t *testing.T, data string, tar string) *Service
 }
 
 func TestImportLatest(t *testing.T) {
-	f := newRelease(t, zipOf(t, "agent/BetterDesk.exe", "agent/README.txt"))
+	f := newRelease(t, zipOf(t, "agent/NeoDesk.exe", "agent/README.txt"))
 	data := t.TempDir()
-	s := f.service(t, data, "agent/\nagent/betterdesk\n")
+	s := f.service(t, data, "agent/\nagent/neodesk\n")
 	imported, err := s.ImportLatest(context.Background())
 	if err != nil {
 		t.Fatal(err)
@@ -288,7 +288,7 @@ func TestImportLatest(t *testing.T) {
 		t.Errorf("ListCached after the import: %+v", got)
 	}
 	first := f.gh.requests[0]
-	if first != "GET https://api.github.com/repos/trybetterdesk/betterdesk-client/releases?per_page=30 UA=BetterDesk-Console-Support-Releases Accept=application/vnd.github+json" {
+	if first != "GET https://api.github.com/repos/neodeskapp/neodesk-client/releases?per_page=30 UA=NeoDesk-Console-Support-Releases Accept=application/vnd.github+json" {
 		t.Errorf("first request: %s", first)
 	}
 	for _, r := range f.gh.requests[1:] {
@@ -354,7 +354,7 @@ func TestImportRefusals(t *testing.T) {
 }
 
 func TestRequestsToGitHub(t *testing.T) {
-	list := "https://api.github.com/repos/trybetterdesk/betterdesk-client/releases?per_page=30"
+	list := "https://api.github.com/repos/neodeskapp/neodesk-client/releases?per_page=30"
 	for _, c := range []struct {
 		name   string
 		answer func() *http.Response

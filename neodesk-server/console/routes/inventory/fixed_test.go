@@ -3,7 +3,7 @@ package inventory_test
 import (
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
 )
 
 // deviceFixes are the steps of the device routes' recordings whose
@@ -21,7 +21,7 @@ const memoryAlerts = "SELECT rule_id, device_id, severity, message FROM alert_hi
 // route refuses such a total before it stores or checks anything (BUGS
 // AI15, typedUploads in stored_test.go).
 var _ = deviceFixes.Add("AE5", map[string]replay.Fix{
-	` POST /api/bd/telemetry {"device_id":"device-a","cpu_usage_percent":50,"memory_used_bytes":0,"memory_total_bytes":2097152,"uptime_secs":60,"timestamp":"2011-03-04T10:00:00.000Z"}`: {
+	` POST /api/nd/telemetry {"device_id":"device-a","cpu_usage_percent":50,"memory_used_bytes":0,"memory_total_bytes":2097152,"uptime_secs":60,"timestamp":"2011-03-04T10:00:00.000Z"}`: {
 		Status: 200, Answer: `{"success":true}`,
 		After: func(t *testing.T, w *replay.World, step replay.Step) {
 			w.Server.Deps().Alerts.Wait()
@@ -46,13 +46,13 @@ const reportOfPCA = `"hardware":{"hostname":"pc-a","os_name":"Windows 11 Pro","o
 // read Node's alerts. What it stored, the device's next upload replaces,
 // as the recordings' statements show.
 var _ = deviceFixes.Add("AI18", map[string]replay.Fix{
-	` POST /api/bd/inventory {` + reportOfPCA:                          storedFor(diskAlert),
-	` POST /api/bd/inventory {"device_id":null,` + reportOfPCA:         storedFor(diskAlert),
-	` POST /api/bd/inventory {"device_id":"",` + reportOfPCA:           storedFor(diskAlert),
-	` POST /api/bd/telemetry {"cpu_usage_percent":5}`:                  storedFor(cpuAlert),
-	` POST /api/bd/telemetry {"device_id":null,"cpu_usage_percent":5}`: storedFor(cpuAlert),
-	` POST /api/bd/telemetry {"device_id":"","cpu_usage_percent":5}`:   storedFor(cpuAlert),
-	` POST /api/bd/telemetry {}`:                                       storedFor(""),
+	` POST /api/nd/inventory {` + reportOfPCA:                          storedFor(diskAlert),
+	` POST /api/nd/inventory {"device_id":null,` + reportOfPCA:         storedFor(diskAlert),
+	` POST /api/nd/inventory {"device_id":"",` + reportOfPCA:           storedFor(diskAlert),
+	` POST /api/nd/telemetry {"cpu_usage_percent":5}`:                  storedFor(cpuAlert),
+	` POST /api/nd/telemetry {"device_id":null,"cpu_usage_percent":5}`: storedFor(cpuAlert),
+	` POST /api/nd/telemetry {"device_id":"","cpu_usage_percent":5}`:   storedFor(cpuAlert),
+	` POST /api/nd/telemetry {}`:                                       storedFor(""),
 })
 
 // The alerts an upload of device-a raises: a full disk, a CPU load.

@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"hash/fnv"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // Rule is a row of alert_rules as the engine reads it. The columns are
@@ -218,7 +218,7 @@ func (s dbStore) cooldownStep(ctx context.Context, ruleID, deviceID jsbind.Value
 // both as text, in the key space of the alert engine.
 func cooldownLockKey(ruleID, deviceID jsbind.Value) int64 {
 	h := fnv.New64a()
-	h.Write([]byte("betterdesk alert cooldown\x00" + ruleID.ToString() + "\x00" + deviceID.ToString()))
+	h.Write([]byte("neodesk alert cooldown\x00" + ruleID.ToString() + "\x00" + deviceID.ToString()))
 	return int64(h.Sum64())
 }
 

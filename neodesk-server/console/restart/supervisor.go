@@ -3,8 +3,8 @@ package restart
 import (
 	"context"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 // SupervisorRestart is the restart of a process that a supervisor starts

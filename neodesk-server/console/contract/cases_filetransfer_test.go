@@ -6,11 +6,11 @@ import (
 	"encoding/base64"
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // File transfers as people start and watch them, under /api/files and
-// under /api/bd, where the same routes answer too. A transfer is a record
+// under /api/nd, where the same routes answer too. A transfer is a record
 // in the console's memory; the file itself comes from the device, through
 // the two routes that take a device token (fileTransferDeviceCases). In
 // the cases for people no transfer gets past "pending", and a download
@@ -23,7 +23,7 @@ import (
 // transfers of another.
 func init() {
 	const files = "/api/files"
-	const bd = "/api/bd"
+	const bd = "/api/nd"
 	few := contract.Roles("signed-out", "viewer", "operator", "admin")
 	ends := contract.Roles("signed-out", "admin")
 	admin := contract.Roles("admin")
@@ -118,7 +118,7 @@ func init() {
 			Query: url.Values{"status": {"cancelled"}, "device_id": {"no-such-device"}}, Roles: some,
 		},
 
-		// The same under /api/bd
+		// The same under /api/nd
 		{
 			Name: "bd-start", Method: "POST", Path: bd + "/transfer",
 			Body:    map[string]any{"direction": "upload", "device_id": "900100002", "filename": "report.pdf", "size": "262145"},
@@ -166,7 +166,7 @@ func init() {
 // a device's request.
 func fileTransferDeviceCases() []contract.Case {
 	const files = "/api/files"
-	const bd = "/api/bd"
+	const bd = "/api/nd"
 	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
 	other := map[string]string{"Authorization": "Bearer {secret:device_token_other}"}
 	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
@@ -245,7 +245,7 @@ func fileTransferDeviceCases() []contract.Case {
 // downloaded bytes.
 func fileTransferChainCases() []contract.Case {
 	const files = "/api/files"
-	const bd = "/api/bd"
+	const bd = "/api/nd"
 	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
 	once := contract.Roles("signed-out")
 	// asDevice sends a case the way a device does: no session, no cookies,

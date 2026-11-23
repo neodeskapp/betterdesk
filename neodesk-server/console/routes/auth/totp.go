@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/authn"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // totpCodeLength is the number of digits of a two-factor code.

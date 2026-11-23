@@ -5,7 +5,7 @@ package contract_test
 import (
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // Relay nodes and assignment rules, at both addresses the group answers
@@ -16,7 +16,7 @@ func init() {
 	const (
 		relays = "/api/panel/scaling/relays"
 		rules  = "/api/panel/scaling/rules"
-		second = "/api/bd"
+		second = "/api/nd"
 	)
 	send := func(name, method, path string, body any, roles ...contract.Role) contract.Case {
 		return contract.Case{Name: name, Method: method, Path: path, Body: body, Roles: roles}
@@ -142,10 +142,10 @@ func init() {
 		send("rule-delete-again", "DELETE", rules+"/{rule}", nil, few...),
 
 		// The heartbeat of a relay
-		send("heartbeat", "POST", "/api/bd/scaling/relay-heartbeat", map[string]any{"relay": "r-1", "sessions": 3}),
-		contract.Case{Name: "heartbeat-without-csrf-token", Method: "POST", Path: "/api/bd/scaling/relay-heartbeat", Body: map[string]any{}, NoCSRF: true, Roles: few},
-		contract.Case{Name: "heartbeat-without-cookies", Method: "POST", Path: "/api/bd/scaling/relay-heartbeat", Body: map[string]any{}, NoCookies: true, NoCSRF: true, Roles: contract.Roles("signed-out", "admin")},
-		contract.Case{Name: "heartbeat-not-json", Method: "POST", Path: "/api/bd/scaling/relay-heartbeat", RawBody: "alive", ContentType: "text/plain", Roles: few},
+		send("heartbeat", "POST", "/api/nd/scaling/relay-heartbeat", map[string]any{"relay": "r-1", "sessions": 3}),
+		contract.Case{Name: "heartbeat-without-csrf-token", Method: "POST", Path: "/api/nd/scaling/relay-heartbeat", Body: map[string]any{}, NoCSRF: true, Roles: few},
+		contract.Case{Name: "heartbeat-without-cookies", Method: "POST", Path: "/api/nd/scaling/relay-heartbeat", Body: map[string]any{}, NoCookies: true, NoCSRF: true, Roles: contract.Roles("signed-out", "admin")},
+		contract.Case{Name: "heartbeat-not-json", Method: "POST", Path: "/api/nd/scaling/relay-heartbeat", RawBody: "alive", ContentType: "text/plain", Roles: few},
 
 		// The same routes under the second address
 		contract.Case{Name: "second-relays", Path: second + relays},
@@ -167,6 +167,6 @@ func init() {
 		},
 		send("second-rule-update", "PUT", second+rules+"/{rule3}", rule(map[string]any{"match_type": "country", "match_value": "DE"}), few...),
 		send("second-rule-delete", "DELETE", second+rules+"/{rule3}", nil),
-		send("second-heartbeat", "POST", second+"/api/bd/scaling/relay-heartbeat", map[string]any{}),
+		send("second-heartbeat", "POST", second+"/api/nd/scaling/relay-heartbeat", map[string]any{}),
 	)
 }

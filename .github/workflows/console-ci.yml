@@ -1,5 +1,5 @@
 # The console against a running server: the contract suite
-# (betterdesk-server/console/contract) and the web app's Playwright tests
+# (neodesk-server/console/contract) and the web app's Playwright tests
 # (web-ui/e2e). Each job starts its own seeded test instance
 # (.github/test-stack) from the server the build job makes.
 name: Console CI
@@ -8,13 +8,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'betterdesk-server/**'
+      - 'neodesk-server/**'
       - 'web-ui/**'
       - '.github/test-stack/**'
       - '.github/workflows/console-ci.yml'
   pull_request:
     paths:
-      - 'betterdesk-server/**'
+      - 'neodesk-server/**'
       - 'web-ui/**'
       - '.github/test-stack/**'
       - '.github/workflows/console-ci.yml'
@@ -57,33 +57,33 @@ jobs:
 
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
-          go-version-file: betterdesk-server/go.mod
+          go-version-file: neodesk-server/go.mod
           cache: false
 
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/go/pkg/mod
-          key: go-mod-${{ hashFiles('betterdesk-server/go.sum') }}
+          key: go-mod-${{ hashFiles('neodesk-server/go.sum') }}
 
       # Saved once a day; the contract jobs restore it
       - name: Name today's build cache
         id: key
-        run: echo "key=go-build-${{ hashFiles('betterdesk-server/go.sum') }}-$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+        run: echo "key=go-build-${{ hashFiles('neodesk-server/go.sum') }}-$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/go-build
           key: ${{ steps.key.outputs.key }}
           restore-keys: |
-            go-build-${{ hashFiles('betterdesk-server/go.sum') }}-
+            go-build-${{ hashFiles('neodesk-server/go.sum') }}-
             go-build-
 
       - name: Build the server and devseed
-        working-directory: betterdesk-server
+        working-directory: neodesk-server
         run: |
           go run ./cmd/embed-webui
           mkdir -p "$RUNNER_TEMP/bin"
-          go build -o "$RUNNER_TEMP/bin/betterdesk-server" .
+          go build -o "$RUNNER_TEMP/bin/neodesk-server" .
           go build -o "$RUNNER_TEMP/bin/devseed" ./cmd/devseed
           go test -tags contract -c -o /dev/null ./console/contract
 
@@ -142,29 +142,29 @@ jobs:
 
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
-          go-version-file: betterdesk-server/go.mod
+          go-version-file: neodesk-server/go.mod
           cache: false
 
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/go/pkg/mod
-          key: go-mod-${{ hashFiles('betterdesk-server/go.sum') }}
+          key: go-mod-${{ hashFiles('neodesk-server/go.sum') }}
 
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/go-build
-          key: go-build-${{ hashFiles('betterdesk-server/go.sum') }}
+          key: go-build-${{ hashFiles('neodesk-server/go.sum') }}
           restore-keys: |
-            go-build-${{ hashFiles('betterdesk-server/go.sum') }}-
+            go-build-${{ hashFiles('neodesk-server/go.sum') }}-
             go-build-
 
       - name: Build the suite
-        working-directory: betterdesk-server
+        working-directory: neodesk-server
         run: go test -tags contract -c -o /dev/null ./console/contract
 
       - name: go vet with the contract tag
         if: matrix.part.name == 'matrix'
-        working-directory: betterdesk-server
+        working-directory: neodesk-server
         run: go vet -tags contract ./console/contract
 
       - name: Wait for the test instance
@@ -173,11 +173,11 @@ jobs:
       # From the suite's folder without a package argument, so a passing
       # run prints its summary too
       - name: Check ${{ matrix.part.name }}
-        working-directory: betterdesk-server/console/contract
+        working-directory: neodesk-server/console/contract
         run: |
-          export BD_URL="http://bdgo-$INSTANCE:5000"
-          export BD_PASSWORD_FILE="$RUNNER_TEMP/bdgo-$INSTANCE/secrets/e2e_password"
-          export BD_SECRETS_DIR="$RUNNER_TEMP/bdgo-$INSTANCE/secrets"
+          export ND_URL="http://bdgo-$INSTANCE:5000"
+          export ND_PASSWORD_FILE="$RUNNER_TEMP/bdgo-$INSTANCE/secrets/e2e_password"
+          export ND_SECRETS_DIR="$RUNNER_TEMP/bdgo-$INSTANCE/secrets"
           args=(-run "$RUN")
           [ -z "$SKIP" ] || args+=(-skip "$SKIP")
           go test -tags contract -count=1 -timeout 25m "${args[@]}"
@@ -257,7 +257,7 @@ jobs:
         env:
           SHARD: ${{ matrix.shard }}
         run: |
-          export BD_URL=http://bdgo-e2e:5000
+          export ND_URL=http://bdgo-e2e:5000
           export E2E_PASSWORD_FILE="$RUNNER_TEMP/bdgo-e2e/secrets/e2e_password"
           npx playwright test --shard="$SHARD/6"
 

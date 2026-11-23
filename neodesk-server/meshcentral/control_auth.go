@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // pendingSecondFactorRole is the role of the partial token a sign-in gets

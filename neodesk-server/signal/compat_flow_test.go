@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/codec"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/peer"
-	pb "github.com/unitronix/betterdesk-server/proto"
-	"github.com/unitronix/betterdesk-server/relay"
+	"github.com/neodeskapp/neodesk/neodesk-server/codec"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/relay"
 )
 
 // TestSignalRelayWireFlow verifies signal relay assignment plus hbbr byte relay

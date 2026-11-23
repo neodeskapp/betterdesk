@@ -1,4 +1,4 @@
-// Package cli holds the commands of betterdesk-server besides running the
+// Package cli holds the commands of neodesk-server besides running the
 // server that the installers and images call (spec updater-installers.md
 // 4.9, DECISIONS A33): upgrade-env, env merge, reset-password, config
 // check and config set, and check. Each replaces a Node script of the old
@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
 // Env is what a command uses besides files: its streams, the environment,

@@ -1,6 +1,6 @@
 // Package cdap implements the Custom Device Automation Protocol (CDAP) gateway.
 // CDAP enables non-RustDesk devices (SCADA, IoT, OS agents, custom hardware) to
-// connect to BetterDesk via a WebSocket-based JSON protocol and appear as
+// connect to NeoDesk via a WebSocket-based JSON protocol and appear as
 // manageable devices in the admin panel alongside standard RustDesk peers.
 package cdap
 
@@ -17,15 +17,15 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/peer"
-	"github.com/unitronix/betterdesk-server/ratelimit"
-	"github.com/unitronix/betterdesk-server/security"
-	"github.com/unitronix/betterdesk-server/sessiongrant"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/ratelimit"
+	"github.com/neodeskapp/neodesk/neodesk-server/security"
+	"github.com/neodeskapp/neodesk/neodesk-server/sessiongrant"
 )
 
 // Gateway is the CDAP WebSocket server.

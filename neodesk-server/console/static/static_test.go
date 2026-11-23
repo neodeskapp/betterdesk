@@ -8,7 +8,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/embedfs"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/embedfs"
 )
 
 // The tree in the binary is the committed folder: the same files with the

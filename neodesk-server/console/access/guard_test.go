@@ -65,33 +65,33 @@ var guardPaths = []struct {
 	// letter case does not count, as for the routes (PA1)
 	{"/USERS", "users"}, {"/Users", "users"}, {"/API/users", "users"}, {"/api/Users", "users"}, {"/api/USERS/1", "users"},
 	{"/Settings", ""}, {"/API/SETTINGS/Ldap", "settings"}, {"/Api/Settings/Branding", ""}, {"/API/PANEL/ACCESS/users/1", "users"},
-	{"/API/BD/Transfers", "files"}, {"/Api/Bd/Policies/7", "dataguard"}, {"/API/Automation/Rules", "automation"},
+	{"/API/ND/Transfers", "files"}, {"/Api/Nd/Policies/7", "dataguard"}, {"/API/Automation/Rules", "automation"},
 	// only ASCII letters: the routes match the escaped path, where any other
 	// letter is a percent escape
 	{"/api/uſers", ""}, {"/api/ticKets", ""}, {"/api/%75sers", ""},
 
-	// the second mount below /api/bd of the file transfer routes (FT8)
-	{"/api/bd/transfer", "files"}, {"/api/bd/transfers", "files"}, {"/api/bd/transfers/abc/download", "files"},
-	{"/api/bd/file-transfer", ""}, {"/api/bd/transfersx", ""},
+	// the second mount below /api/nd of the file transfer routes (FT8)
+	{"/api/nd/transfer", "files"}, {"/api/nd/transfers", "files"}, {"/api/nd/transfers/abc/download", "files"},
+	{"/api/nd/file-transfer", ""}, {"/api/nd/transfersx", ""},
 
-	// the second mount below /api/bd of the data guard's routes for people
+	// the second mount below /api/nd of the data guard's routes for people
 	// (DG6); the device routes beside them have no rule
-	{"/api/bd/policies", "dataguard"}, {"/api/bd/policies/7", "dataguard"}, {"/api/bd/events", "dataguard"},
-	{"/api/bd/stats", "dataguard"}, {"/api/bd/dlp-policies", ""}, {"/api/bd/dlp-events", ""}, {"/api/bd/policiesx", ""},
-	{"/api/bd/statistics", ""},
+	{"/api/nd/policies", "dataguard"}, {"/api/nd/policies/7", "dataguard"}, {"/api/nd/events", "dataguard"},
+	{"/api/nd/stats", "dataguard"}, {"/api/nd/dlp-policies", ""}, {"/api/nd/dlp-events", ""}, {"/api/nd/policiesx", ""},
+	{"/api/nd/statistics", ""},
 
-	// the second mount below /api/bd of the registration routes (PA15); the
+	// the second mount below /api/nd of the registration routes (PA15); the
 	// two device routes beside them have no rule
-	{"/api/bd/api/registrations", "registrations"}, {"/api/bd/api/registrations/count", "registrations"},
-	{"/api/bd/api/registrations/5/approve", "registrations"}, {"/API/BD/API/Registrations/5", "registrations"},
-	{"/api/bd/api/registrationsx", ""}, {"/api/bd/register-request", ""}, {"/api/bd/register-status", ""},
+	{"/api/nd/api/registrations", "registrations"}, {"/api/nd/api/registrations/count", "registrations"},
+	{"/api/nd/api/registrations/5/approve", "registrations"}, {"/API/ND/API/Registrations/5", "registrations"},
+	{"/api/nd/api/registrationsx", ""}, {"/api/nd/register-request", ""}, {"/api/nd/register-status", ""},
 
 	// the real prefixes of the sections whose rules named none (PA4)
 	{"/api/panel/org/1", "organizations"}, {"/api/panel/fleet/tasks", "fleet"}, {"/api/panel/scaling/relays", "scaling"},
 	{"/api/panel/languages/de/missing", "languages"}, {"/api/panel/resource-control/policies", "resource-control"},
 	{"/api/panel/cross-platform/protocols", "cross-platform"}, {"/api/chat/search", "chat"},
-	{"/api/bd/api/panel/fleet/tasks", "fleet"}, {"/api/bd/api/panel/scaling/relays", "scaling"},
-	{"/api/bd/api/panel/resource-control/devices", "resource-control"},
+	{"/api/nd/api/panel/fleet/tasks", "fleet"}, {"/api/nd/api/panel/scaling/relays", "scaling"},
+	{"/api/nd/api/panel/resource-control/devices", "resource-control"},
 	{"/api/organizations", ""}, {"/api/scaling", ""}, {"/api/cross-platform", ""}, {"/api/languages", ""},
 	{"/api/resource-control", ""}, {"/api/panel/orgx", ""}, {"/api/chatx", ""},
 	{"/api/panel/security-audit/events", "security-audit"}, {"/api/security-audit", ""},
@@ -99,7 +99,7 @@ var guardPaths = []struct {
 	// API paths without a rule
 	{"/api", ""}, {"/api/", ""}, {"/api/panel", ""},
 	{"/api/panel/roles", ""}, {"/api/panel/role-permissions", ""},
-	{"/api/cdap/devices", ""}, {"/api/bd/commands", ""}, {"/api/auth/login", ""},
+	{"/api/cdap/devices", ""}, {"/api/nd/commands", ""}, {"/api/auth/login", ""},
 	{"/api/console/bootstrap", ""}, {"/api/inventory", ""}, {"/api/keys", ""}, {"/api/tenants", ""},
 
 	// pages without a rule
@@ -389,19 +389,19 @@ func TestRulesAreLowerCase(t *testing.T) {
 }
 
 // FT8, DG6: the file transfer and data guard routes for people that answer
-// a second time below /api/bd keep the section of their first address.
+// a second time below /api/nd keep the section of their first address.
 func TestGuardCoversTheBDMounts(t *testing.T) {
 	closed := func(section string) *Context {
 		return &Context{UserID: 7, HasUser: true, Role: "global_admin", Policy: policyWith(section, LevelNone)}
 	}
 	for _, c := range []struct{ method, path, section string }{
-		{"POST", "/api/bd/transfer", "files"}, {"GET", "/api/bd/transfers", "files"},
-		{"GET", "/api/bd/transfers/t1", "files"}, {"POST", "/api/bd/transfers/t1/cancel", "files"},
-		{"GET", "/api/bd/transfers/t1/download", "files"},
-		{"GET", "/api/bd/policies", "dataguard"}, {"POST", "/api/bd/policies", "dataguard"},
-		{"GET", "/api/bd/policies/1", "dataguard"}, {"PATCH", "/api/bd/policies/1", "dataguard"},
-		{"DELETE", "/api/bd/policies/1", "dataguard"}, {"GET", "/api/bd/events", "dataguard"},
-		{"GET", "/api/bd/stats", "dataguard"},
+		{"POST", "/api/nd/transfer", "files"}, {"GET", "/api/nd/transfers", "files"},
+		{"GET", "/api/nd/transfers/t1", "files"}, {"POST", "/api/nd/transfers/t1/cancel", "files"},
+		{"GET", "/api/nd/transfers/t1/download", "files"},
+		{"GET", "/api/nd/policies", "dataguard"}, {"POST", "/api/nd/policies", "dataguard"},
+		{"GET", "/api/nd/policies/1", "dataguard"}, {"PATCH", "/api/nd/policies/1", "dataguard"},
+		{"DELETE", "/api/nd/policies/1", "dataguard"}, {"GET", "/api/nd/events", "dataguard"},
+		{"GET", "/api/nd/stats", "dataguard"},
 	} {
 		got := closed(c.section).Guard(c.method, c.path)
 		if got.Verdict != VerdictDenied || got.Section != c.section || got.Decision.Status != 403 {
@@ -410,7 +410,7 @@ func TestGuardCoversTheBDMounts(t *testing.T) {
 	}
 	// The device routes beside them have no section: devices call them
 	// without a session.
-	for _, path := range []string{"/api/bd/file-transfer", "/api/bd/file-transfer/t1", "/api/bd/commands", "/api/bd/inventory", "/api/bd/dlp-policies", "/api/bd/dlp-events"} {
+	for _, path := range []string{"/api/nd/file-transfer", "/api/nd/file-transfer/t1", "/api/nd/commands", "/api/nd/inventory", "/api/nd/dlp-policies", "/api/nd/dlp-events"} {
 		if got := closed("files").Guard("POST", path); got.Verdict != VerdictNoRule {
 			t.Errorf("POST %s: %+v, want no rule", path, got)
 		}

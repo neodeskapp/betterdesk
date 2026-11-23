@@ -2,7 +2,7 @@
 
 package contract_test
 
-import "github.com/unitronix/betterdesk-server/console/contract"
+import "github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 
 // The desktop of the console: each account's widget layout and wallpaper.
 // Every role writes its own and ends its turn with an empty layout and no

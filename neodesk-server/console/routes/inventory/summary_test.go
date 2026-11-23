@@ -9,12 +9,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsjson"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 func TestRound(t *testing.T) {
@@ -199,15 +199,15 @@ func TestTheListFallsBackToThePeerList(t *testing.T) {
 	}
 }
 
-// The group is mounted at /api/bd too, for the routes of the desktop
+// The group is mounted at /api/nd too, for the routes of the desktop
 // agent. There the two read routes step aside.
 func TestTheReadRoutesStepAsideAtTheDeviceMount(t *testing.T) {
 	router := kit.NewRouter()
-	Register((&kit.Deps{Router: router, Log: kit.NewLogger("silent", true)}).At("/api/bd"))
+	Register((&kit.Deps{Router: router, Log: kit.NewLogger("silent", true)}).At("/api/nd"))
 	if len(router.Routes()) != 5 {
 		t.Fatalf("%d routes registered, want the three device routes and the two read routes", len(router.Routes()))
 	}
-	for _, path := range []string{"/api/bd", "/api/bd/commands"} {
+	for _, path := range []string{"/api/nd", "/api/nd/commands"} {
 		rec := httptest.NewRecorder()
 		if router.Serve(rec, httptest.NewRequest(http.MethodGet, path, nil)) {
 			t.Errorf("GET %s was answered with %d: the route has to pass the request on", path, rec.Code)

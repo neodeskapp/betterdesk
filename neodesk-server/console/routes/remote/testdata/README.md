@@ -8,7 +8,7 @@ with the row id.
 
 | File | What it holds | Replayed by |
 |---|---|---|
-| `vectors.json` | 1,096 requests to the remote routes and to `POST /api/bd/remote-agent-token`, what the Node console answered (status, Content-Type, Cache-Control, Location, cookies, rate limit, body) and what it asked the API server, the device table and the remote relay | `TestNodeVectors` (`routes_test.go`), on SQLite and PostgreSQL |
+| `vectors.json` | 1,096 requests to the remote routes and to `POST /api/nd/remote-agent-token`, what the Node console answered (status, Content-Type, Cache-Control, Location, cookies, rate limit, body) and what it asked the API server, the device table and the remote relay | `TestNodeVectors` (`routes_test.go`), on SQLite and PostgreSQL |
 | `crashes.json` | 16 requests with a query value that has a member `toString`, and whether the Node process was still there to answer | `TestRequestsThatEndedNode` (`units_test.go`) |
 
 ## What is recorded

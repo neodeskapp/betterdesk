@@ -1,11 +1,11 @@
 ﻿#Requires -RunAsAdministrator
 <#
 .SYNOPSIS
-    BetterDesk Console Manager v3.6.2 - All-in-One Interactive Tool for Windows
+    NeoDesk Console Manager v3.6.2 - All-in-One Interactive Tool for Windows
 
 .DESCRIPTION
     Features:
-      - Fresh installation: one service, BetterDeskServer, that serves the
+      - Fresh installation: one service, NeoDeskServer, that serves the
         signal and relay server, the API and the web console
       - Minimal installation (the same server with its web console off)
       - Update an installation (release binaries checked by SHA-256 and,
@@ -53,10 +53,10 @@
     Delete the Node.js console's code and its disabled service after an upgrade.
 
 .PARAMETER Binary
-    Install this betterdesk-server.exe instead of the release.
+    Install this neodesk-server.exe instead of the release.
 
 .PARAMETER FromSource
-    Build betterdesk-server.exe from this checkout (needs Go, and Node.js
+    Build neodesk-server.exe from this checkout (needs Go, and Node.js
     unless web-ui\build exists).
 
 .PARAMETER Channel
@@ -87,10 +87,10 @@
     run under low-privilege per-service virtual accounts (privilege separation).
 
 .PARAMETER CheckPermissions
-    Report whether BetterDesk can update files, change configuration and control services.
+    Report whether NeoDesk can update files, change configuration and control services.
 
 .PARAMETER RepairPermissions
-    Repair BetterDesk ACLs and recheck management capabilities.
+    Repair NeoDesk ACLs and recheck management capabilities.
 
 .PARAMETER SetConfig
     Apply one or more allowlisted .env settings as KEY=VALUE.
@@ -105,38 +105,38 @@
     POSTGRESQL_DB, UPDATE_GITHUB_BRANCH, UPDATE_GITHUB_OWNER,
     UPDATE_GITHUB_REPO, RELEASE_BASE_URL, SSL_DOMAIN, RUSTDESK_PATH,
     CONSOLE_PATH, BACKUP_DIR, GO_API_PORT, CLIENT_API_PORT,
-    STORE_ADMIN_CREDENTIALS and BETTERDESK_RUN_AS_ROOT.
+    STORE_ADMIN_CREDENTIALS and NEODESK_RUN_AS_ROOT.
 
 .EXAMPLE
-    .\betterdesk.ps1
+    .\neodesk.ps1
     Interactive mode
 
 .EXAMPLE
-    .\betterdesk.ps1 -Auto
+    .\neodesk.ps1 -Auto
     Automatic installation with SQLite; an install with the Node.js console is upgraded
 
 .EXAMPLE
-    .\betterdesk.ps1 -Update
+    .\neodesk.ps1 -Update
     Update, or upgrade an install with the Node.js console
 
 .EXAMPLE
-    .\betterdesk.ps1 -RollbackGo
+    .\neodesk.ps1 -RollbackGo
     Put the Node.js console back after an upgrade
 
 .EXAMPLE
-    .\betterdesk.ps1 -Auto -PostgreSQL
+    .\neodesk.ps1 -Auto -PostgreSQL
     Automatic installation with PostgreSQL
 
 .EXAMPLE
-    .\betterdesk.ps1 -Auto -RelayMode local
+    .\neodesk.ps1 -Auto -RelayMode local
     Automatic LAN-only installation (relay uses the server's local IP)
 
 .EXAMPLE
-    .\betterdesk.ps1 -Auto -RelayServers 203.0.113.10
+    .\neodesk.ps1 -Auto -RelayServers 203.0.113.10
     Automatic installation with a fixed public relay address
 
 .EXAMPLE
-    .\betterdesk.ps1 -SkipVerify
+    .\neodesk.ps1 -SkipVerify
     Skip binary verification
 #>
 
@@ -208,12 +208,12 @@ $script:GO_UPGRADE_RECORD = ".go-upgrade.json"
 
 # Privilege separation (default). The installer needs Administrator, but the
 # services run under low-privilege per-service virtual accounts (NT SERVICE\...)
-# instead of LocalSystem. Use -RunAsRoot or BETTERDESK_RUN_AS_ROOT=1 to keep the
+# instead of LocalSystem. Use -RunAsRoot or NEODESK_RUN_AS_ROOT=1 to keep the
 # legacy behavior of running services as LocalSystem.
-$script:RUN_AS_ROOT = $RunAsRoot -or ($env:BETTERDESK_RUN_AS_ROOT -eq "1") -or ($env:BETTERDESK_RUN_AS_ROOT -eq "true")
+$script:RUN_AS_ROOT = $RunAsRoot -or ($env:NEODESK_RUN_AS_ROOT -eq "1") -or ($env:NEODESK_RUN_AS_ROOT -eq "true")
 
 if ($NodeJs -or $Flask) {
-    Write-Host "NOTE: -NodeJs and -Flask are no longer needed: the web console is part of betterdesk-server" -ForegroundColor Yellow
+    Write-Host "NOTE: -NodeJs and -Flask are no longer needed: the web console is part of neodesk-server" -ForegroundColor Yellow
 }
 
 # Database configuration. -PgUri names a PostgreSQL database, so it means
@@ -223,9 +223,9 @@ function Test-PostgreSQLWanted([bool]$Switch, [string]$Uri) {
 }
 $script:USE_POSTGRESQL = Test-PostgreSQLWanted -Switch $PostgreSQL.IsPresent -Uri $PgUri
 $script:POSTGRESQL_URI = if ($PgUri) { $PgUri } elseif ($env:POSTGRESQL_URI) { $env:POSTGRESQL_URI } else { "" }
-$script:POSTGRESQL_USER = if ($env:POSTGRESQL_USER) { $env:POSTGRESQL_USER } else { "betterdesk" }
+$script:POSTGRESQL_USER = if ($env:POSTGRESQL_USER) { $env:POSTGRESQL_USER } else { "neodesk" }
 $script:POSTGRESQL_PASS = if ($env:POSTGRESQL_PASS) { $env:POSTGRESQL_PASS } else { "" }
-$script:POSTGRESQL_DB = if ($env:POSTGRESQL_DB) { $env:POSTGRESQL_DB } else { "betterdesk" }
+$script:POSTGRESQL_DB = if ($env:POSTGRESQL_DB) { $env:POSTGRESQL_DB } else { "neodesk" }
 $script:POSTGRESQL_HOST = if ($env:POSTGRESQL_HOST) { $env:POSTGRESQL_HOST } else { "localhost" }
 $script:POSTGRESQL_PORT = if ($env:POSTGRESQL_PORT) { $env:POSTGRESQL_PORT } else { "5432" }
 
@@ -240,8 +240,8 @@ if ($script:RELAY_MODE -eq "wan") { $script:RELAY_MODE = "public" }
 $script:RELAY_SERVERS = if ($RelayServers) { $RelayServers } elseif ($env:RELAY_SERVERS) { $env:RELAY_SERVERS } else { "" }
 
 # Go server configuration
-$script:GO_SERVER_SOURCE = Join-Path $script:ScriptDir "betterdesk-server"
-# Must match the toolchain pinned in betterdesk-server/go.mod.
+$script:GO_SERVER_SOURCE = Join-Path $script:ScriptDir "neodesk-server"
+# Must match the toolchain pinned in neodesk-server/go.mod.
 $script:GO_MIN_VERSION = "1.26.11"
 $script:GO_DOWNLOAD_VERSION = "1.26.11"
 # Legacy Rust checksums (deprecated, kept for migration purposes)
@@ -249,9 +249,9 @@ $script:HBBS_WINDOWS_X86_64_SHA256 = "B790FA44CAC7482A057ED322412F6D178FB33F3B05
 $script:HBBR_WINDOWS_X86_64_SHA256 = "368C71E8D3AEF4C5C65177FBBBB99EA045661697A89CB7C2A703759C575E8E9F"
 
 # Default paths
-$script:RUSTDESK_PATH = if ($env:RUSTDESK_PATH) { $env:RUSTDESK_PATH } else { "C:\BetterDesk" }
-$script:CONSOLE_PATH = if ($env:CONSOLE_PATH) { $env:CONSOLE_PATH } else { "C:\BetterDeskConsole" }
-$script:BACKUP_DIR = if ($env:BACKUP_DIR) { $env:BACKUP_DIR } else { "C:\BetterDesk-Backups" }
+$script:RUSTDESK_PATH = if ($env:RUSTDESK_PATH) { $env:RUSTDESK_PATH } else { "C:\NeoDesk" }
+$script:CONSOLE_PATH = if ($env:CONSOLE_PATH) { $env:CONSOLE_PATH } else { "C:\NeoDeskConsole" }
+$script:BACKUP_DIR = if ($env:BACKUP_DIR) { $env:BACKUP_DIR } else { "C:\NeoDesk-Backups" }
 $script:DB_PATH = "$script:RUSTDESK_PATH\db_v2.sqlite3"
 
 # API configuration
@@ -262,24 +262,24 @@ $script:STORE_ADMIN_CREDENTIALS = ($env:STORE_ADMIN_CREDENTIALS -eq "true")
 
 # Common installation paths to search
 $script:COMMON_RUSTDESK_PATHS = @(
-    "C:\BetterDesk",
+    "C:\NeoDesk",
     "C:\RustDesk",
-    "C:\Program Files\BetterDesk",
+    "C:\Program Files\NeoDesk",
     "C:\Program Files\RustDesk",
-    "$env:LOCALAPPDATA\BetterDesk"
+    "$env:LOCALAPPDATA\NeoDesk"
 )
 
 $script:COMMON_CONSOLE_PATHS = @(
-    "C:\BetterDeskConsole",
-    "C:\Program Files\BetterDeskConsole",
-    "$env:LOCALAPPDATA\BetterDeskConsole"
+    "C:\NeoDeskConsole",
+    "C:\Program Files\NeoDeskConsole",
+    "$env:LOCALAPPDATA\NeoDeskConsole"
 )
 
 # Service names
-$script:SERVER_SERVICE = "BetterDeskServer"    # Go server (replaces HBBS + HBBR)
-$script:HBBS_SERVICE = "BetterDeskSignal"      # Legacy Rust signal
-$script:HBBR_SERVICE = "BetterDeskRelay"       # Legacy Rust relay
-$script:CONSOLE_SERVICE = "BetterDeskConsole"
+$script:SERVER_SERVICE = "NeoDeskServer"    # Go server (replaces HBBS + HBBR)
+$script:HBBS_SERVICE = "NeoDeskSignal"      # Legacy Rust signal
+$script:HBBR_SERVICE = "NeoDeskRelay"       # Legacy Rust relay
+$script:CONSOLE_SERVICE = "NeoDeskConsole"
 
 # Status variables
 $script:INSTALL_STATUS = "none"
@@ -292,7 +292,7 @@ $script:DATABASE_OK = $false
 $script:CONSOLE_TYPE = "none"  # none, nodejs
 $script:SERVER_TYPE = "none"    # none, go, rust
 # Logging
-$script:LOG_FILE = "$env:TEMP\betterdesk_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+$script:LOG_FILE = "$env:TEMP\neodesk_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
 
 #===============================================================================
 # Helper Functions
@@ -352,7 +352,7 @@ function Write-Status {
     }
 }
 
-# Write-Mark LABELS: the BetterDesk mark in half blocks, six lines high,
+# Write-Mark LABELS: the NeoDesk mark in half blocks, six lines high,
 # with LABELS[i] beside line i. The rows are the logo's square (b), circle
 # (g) and their overlap (t) on a 12 x 12 grid, sampled from its geometry;
 # two rows make one line.
@@ -416,17 +416,17 @@ function Write-Mark {
     }
 }
 
-# Print-Header: clears the console and shows the BetterDesk mark beside
+# Print-Header: clears the console and shows the NeoDesk mark beside
 # the name, what this script is and its version. Without colour (a file,
 # a pipe, NO_COLOR) it is one plain line.
 function Print-Header {
     $title = "Server installer $($script:VERSION)"
     if ((Get-ColorMode) -eq 'none') {
-        Write-Host "BetterDesk $title"
+        Write-Host "NeoDesk $title"
     } else {
         Clear-Host
         Write-Host ''
-        Write-Mark @('', '', 'BetterDesk', $title)
+        Write-Mark @('', '', 'NeoDesk', $title)
         Write-Host ''
     }
     Write-Status '[!]' warning 'Windows support is experimental.'
@@ -469,10 +469,10 @@ function Print-Step {
 #===============================================================================
 
 function Test-ManagementCapabilities {
-    Print-Step "Checking BetterDesk management capabilities..."
+    Print-Step "Checking NeoDesk management capabilities..."
     $ok = Invoke-ManagementCli -Action "check"
     if ($ok) {
-        Print-Success "BetterDesk management capabilities are ready"
+        Print-Success "NeoDesk management capabilities are ready"
     } else {
         Print-Warning "One or more management capabilities are blocked; see the report above"
     }
@@ -502,7 +502,7 @@ $script:TUI_RESULT = -1
 $script:MENU_CHOICE = ''
 
 function Test-TuiAvailable {
-    if ($env:BETTERDESK_CLASSIC_MENU -eq '1') { return $false }
+    if ($env:NEODESK_CLASSIC_MENU -eq '1') { return $false }
     if ($script:AUTO_MODE) { return $false }
     try {
         if ([Console]::IsInputRedirected -or [Console]::IsOutputRedirected) { return $false }
@@ -746,7 +746,7 @@ function Generate-RandomPassword {
 
 # Write or merge the console's .env from the template built into the server
 # (issue #158), then let upgrade-env add what the server needs (CONSOLE_PORT,
-# BETTERDESK_ENV_FILE, the pinned ports) and comment out what it does not.
+# NEODESK_ENV_FILE, the pinned ports) and comment out what it does not.
 function Merge-ConsoleEnv {
     param(
         [bool]$FreshInstall = $false
@@ -798,29 +798,29 @@ function Merge-ConsoleEnv {
         DATA_DIR                = (Join-Path $script:CONSOLE_PATH "data")
         GO_API_PORT             = [string]$goPort
         HBBS_API_URL            = "http://localhost:${goPort}/api"
-        BETTERDESK_API_URL      = "http://localhost:${goPort}/api"
+        NEODESK_API_URL      = "http://localhost:${goPort}/api"
         API_PORT                = [string]$clientPort
         DEFAULT_ADMIN_PASSWORD  = [string]$adminPassword
         SESSION_SECRET          = [string]$sessionSecret
         REMOTE_TARGET_VAULT_KEY = [string]$remoteTargetVaultKey
         GUACD_ADDRESS           = "127.0.0.1:4822"
-        SSL_CERT_PATH           = (Join-Path $sslDir "betterdesk.crt")
-        SSL_KEY_PATH            = (Join-Path $sslDir "betterdesk.key")
+        SSL_CERT_PATH           = (Join-Path $sslDir "neodesk.crt")
+        SSL_KEY_PATH            = (Join-Path $sslDir "neodesk.key")
     }
-    foreach ($k in $subst.Keys) { [Environment]::SetEnvironmentVariable("BD_SUBST_$k", $subst[$k], "Process") }
-    $savedEnvFile = $env:BETTERDESK_ENV_FILE
-    $env:BETTERDESK_ENV_FILE = $null
+    foreach ($k in $subst.Keys) { [Environment]::SetEnvironmentVariable("ND_SUBST_$k", $subst[$k], "Process") }
+    $savedEnvFile = $env:NEODESK_ENV_FILE
+    $env:NEODESK_ENV_FILE = $null
     try {
         $mergeArgs = @("env", "merge", "--target", $envFile, "--subst-env")
         if ($FreshInstall) { $mergeArgs += "--fresh" }
         $output = & $bin @mergeArgs 2>&1
         $mergeCode = $LASTEXITCODE
     } finally {
-        foreach ($k in $subst.Keys) { [Environment]::SetEnvironmentVariable("BD_SUBST_$k", $null, "Process") }
+        foreach ($k in $subst.Keys) { [Environment]::SetEnvironmentVariable("ND_SUBST_$k", $null, "Process") }
     }
     if ($mergeCode -ne 0 -or "$output" -notmatch '"success":true') {
-        $env:BETTERDESK_ENV_FILE = $savedEnvFile
-        Print-Error "Failed to write .env (betterdesk-server env merge): $output"
+        $env:NEODESK_ENV_FILE = $savedEnvFile
+        Print-Error "Failed to write .env (neodesk-server env merge): $output"
         return $false
     }
 
@@ -851,9 +851,9 @@ function Merge-ConsoleEnv {
     $supervisor = if (Get-NssmPath) { "nssm" } else { "task" }
     & $bin upgrade-env --from $envFile --write --supervisor $supervisor | Out-Null
     $upgradeCode = $LASTEXITCODE
-    $env:BETTERDESK_ENV_FILE = $savedEnvFile
+    $env:NEODESK_ENV_FILE = $savedEnvFile
     if ($upgradeCode -ne 0) {
-        Print-Error "betterdesk-server upgrade-env could not finish .env"
+        Print-Error "neodesk-server upgrade-env could not finish .env"
         return $false
     }
     # A fresh file has no older version to keep
@@ -946,7 +946,7 @@ function Get-NssmPath {
 }
 
 function Get-ServerBinaryPath {
-    return (Join-Path $script:RUSTDESK_PATH "betterdesk-server.exe")
+    return (Join-Path $script:RUSTDESK_PATH "neodesk-server.exe")
 }
 
 # True when the binary carries the commands of the release with the console
@@ -973,18 +973,18 @@ function Get-NssmEnvironment {
     return @(@(& $Nssm get $Service AppEnvironmentExtra 2>$null) | ForEach-Object { "$_".Trim([char]0, ' ') } | Where-Object { $_ -match '^[A-Za-z_][A-Za-z0-9_]*=' })
 }
 
-# True when BetterDeskServer runs the server with its web console: this
-# installer puts BETTERDESK_SUPERVISOR into its environment (NSSM) or its
+# True when NeoDeskServer runs the server with its web console: this
+# installer puts NEODESK_SUPERVISOR into its environment (NSSM) or its
 # launcher (scheduled task).
 function Test-GoOnlyInstall {
     $nssm = Get-NssmPath
     if ($nssm -and (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)) {
-        if (Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE | Where-Object { $_ -like 'BETTERDESK_SUPERVISOR=*' }) {
+        if (Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE | Where-Object { $_ -like 'NEODESK_SUPERVISOR=*' }) {
             return $true
         }
     }
-    $launcher = Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd"
-    return ((Test-Path $launcher) -and [bool](Select-String -Path $launcher -Pattern 'BETTERDESK_SUPERVISOR=' -SimpleMatch -Quiet))
+    $launcher = Join-Path $script:RUSTDESK_PATH "start-neodesk-server.cmd"
+    return ((Test-Path $launcher) -and [bool](Select-String -Path $launcher -Pattern 'NEODESK_SUPERVISOR=' -SimpleMatch -Quiet))
 }
 
 # True when the install still runs the Node.js console.
@@ -1009,9 +1009,9 @@ function Invoke-ServerCommand {
     }
     $saved = @{}
     $vars = @{
-        BETTERDESK_ENV_FILE     = (Join-Path $script:CONSOLE_PATH ".env")
-        BETTERDESK_CONSOLE_PATH = $script:CONSOLE_PATH
-        BETTERDESK_PATH         = $script:RUSTDESK_PATH
+        NEODESK_ENV_FILE     = (Join-Path $script:CONSOLE_PATH ".env")
+        NEODESK_CONSOLE_PATH = $script:CONSOLE_PATH
+        NEODESK_PATH         = $script:RUSTDESK_PATH
     }
     foreach ($k in $vars.Keys) {
         $saved[$k] = [Environment]::GetEnvironmentVariable($k, "Process")
@@ -1077,7 +1077,7 @@ function Get-StableRelease {
 # path or $null.
 function Get-ReleaseBinary {
     param([string]$Dir)
-    $asset = "betterdesk-server-windows-amd64.exe"
+    $asset = "neodesk-server-windows-amd64.exe"
     if (-not [Environment]::Is64BitOperatingSystem) {
         Print-Error "There is no release binary for 32-bit Windows; use -FromSource"
         return $null
@@ -1108,7 +1108,7 @@ function Get-ReleaseBinary {
                 $script:RELEASE_TAG = $prerelease
             } elseif ($fallback) {
                 Print-Warning "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release or pre-release yet: installing the development build (-Channel dev) instead"
-                Print-Info "Updates follow the development channel; once a stable release is out: & '$(Join-Path $script:RUSTDESK_PATH 'betterdesk.ps1')' -Update -Channel stable"
+                Print-Info "Updates follow the development channel; once a stable release is out: & '$(Join-Path $script:RUSTDESK_PATH 'neodesk.ps1')' -Update -Channel stable"
                 $script:UPDATE_GITHUB_BRANCH = "dev"
                 $script:UPDATE_GITHUB_BRANCH_GIVEN = "dev"
                 $env:UPDATE_GITHUB_BRANCH = "dev"
@@ -1147,7 +1147,7 @@ function Get-ReleaseBinary {
         }
         if ($failure -and $status -eq 404 -and $fallback -and -not $script:RELEASE_TAG -and $script:UPDATE_GITHUB_BRANCH -ne "dev") {
             Print-Warning "$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO) has no stable release or pre-release yet: installing the development build (-Channel dev) instead"
-            Print-Info "Updates follow the development channel; once a stable release is out: & '$(Join-Path $script:RUSTDESK_PATH 'betterdesk.ps1')' -Update -Channel stable"
+            Print-Info "Updates follow the development channel; once a stable release is out: & '$(Join-Path $script:RUSTDESK_PATH 'neodesk.ps1')' -Update -Channel stable"
             $script:UPDATE_GITHUB_BRANCH = "dev"
             $script:UPDATE_GITHUB_BRANCH_GIVEN = "dev"
             $env:UPDATE_GITHUB_BRANCH = "dev"
@@ -1192,7 +1192,7 @@ function Get-ReleaseBinary {
             return $null
         }
     }
-    $target = Join-Path $Dir "betterdesk-server.exe"
+    $target = Join-Path $Dir "neodesk-server.exe"
     Move-Item -Path $file -Destination $target -Force
     return $target
 }
@@ -1206,7 +1206,7 @@ function Test-BinaryVerifiesReleases {
 }
 
 # Checks the downloaded $Dir\$Asset against the signed manifest of the
-# release at $Base with the installed betterdesk-server (verify-release).
+# release at $Base with the installed neodesk-server (verify-release).
 # Windows has no tool for an ed25519 signature before the server is
 # installed, so a first install (or one of a binary older than the release
 # key) says so and keeps the SHA-256 check over HTTPS. Returns $false when
@@ -1216,7 +1216,7 @@ function Test-ReleaseSignature {
     $installed = Get-ServerBinaryPath
     if (-not (Test-BinaryVerifiesReleases -Path $installed)) {
         Print-Warning "The release signature is checked from the second install on: this install checks the binary's SHA-256 over HTTPS only."
-        Print-Info "Windows has no tool for the signature before betterdesk-server is installed; from the next update on, the installed betterdesk-server checks it."
+        Print-Info "Windows has no tool for the signature before neodesk-server is installed; from the next update on, the installed neodesk-server checks it."
         return $true
     }
     $manifest = Join-Path $Dir "manifest.json"
@@ -1238,10 +1238,10 @@ function Test-ReleaseSignature {
             Print-Error "The release is not one of the $($script:UPDATE_GITHUB_BRANCH) channel, so $Asset is not installed"
             return $false
         }
-        Print-Success "Release signature checked by the installed betterdesk-server ($((($output -join ' ') -replace '^verified: ', '')))"
+        Print-Success "Release signature checked by the installed neodesk-server ($((($output -join ' ') -replace '^verified: ', '')))"
         return $true
     }
-    Print-Error "The installed betterdesk-server refused the release: $((($output -join ' ') -replace '^betterdesk-server verify-release: ', ''))"
+    Print-Error "The installed neodesk-server refused the release: $((($output -join ' ') -replace '^neodesk-server verify-release: ', ''))"
     return $false
 }
 
@@ -1249,17 +1249,17 @@ function Test-ReleaseSignature {
 # release, in a temporary folder. Sets $script:STAGED_SERVER_BINARY and
 # $script:STAGED_SERVER_VERSION; returns $true on success.
 function Get-StagedServerBinary {
-    $dir = Join-Path $env:TEMP "betterdesk-server-$PID"
+    $dir = Join-Path $env:TEMP "neodesk-server-$PID"
     Remove-Item -Path $dir -Recurse -Force -ErrorAction SilentlyContinue
     New-Item -ItemType Directory -Path $dir -Force | Out-Null
     $script:STAGED_SERVER_DIR = $dir
-    $staged = Join-Path $dir "betterdesk-server.exe"
+    $staged = Join-Path $dir "neodesk-server.exe"
     if ($script:BINARY_FILE) {
         Print-Info "Using the binary $($script:BINARY_FILE)"
         Copy-Item -Path $script:BINARY_FILE -Destination $staged -Force
     } elseif ($script:FROM_SOURCE) {
         if (-not (Compile-GoServer)) { return $false }
-        Copy-Item -Path (Join-Path $script:GO_SERVER_SOURCE "betterdesk-server.exe") -Destination $staged -Force
+        Copy-Item -Path (Join-Path $script:GO_SERVER_SOURCE "neodesk-server.exe") -Destination $staged -Force
     } else {
         $downloaded = Get-ReleaseBinary -Dir $dir
         if (-not $downloaded) { return $false }
@@ -1280,7 +1280,7 @@ function Get-StagedServerBinary {
 }
 
 # Puts the staged binary in place of the installed one and keeps the old
-# one as betterdesk-server.exe<Suffix>. The service must be stopped.
+# one as neodesk-server.exe<Suffix>. The service must be stopped.
 function Install-StagedBinary {
     param([string]$Suffix = ".prev")
     $target = Get-ServerBinaryPath
@@ -1299,7 +1299,7 @@ function Install-StagedBinary {
 }
 
 function Install-Binaries {
-    Print-Step "Installing betterdesk-server..."
+    Print-Step "Installing neodesk-server..."
     $ok = Get-StagedServerBinary
     if ($ok) {
         Stop-AllServices
@@ -1350,8 +1350,8 @@ function Get-ServerArguments {
         $signalRateLimit = "20"
     }
     $serverArgs = "-mode all -relay-servers $ServerIP -key-file `"$script:RUSTDESK_PATH\id_ed25519`" -api-port $script:GO_API_PORT -signal-rate-limit-per-ip $signalRateLimit"
-    $certPath = Join-Path $script:RUSTDESK_PATH "ssl\betterdesk.crt"
-    $keyPath = Join-Path $script:RUSTDESK_PATH "ssl\betterdesk.key"
+    $certPath = Join-Path $script:RUSTDESK_PATH "ssl\neodesk.crt"
+    $keyPath = Join-Path $script:RUSTDESK_PATH "ssl\neodesk.key"
     if ((Test-Path $certPath) -and (Test-Path $keyPath)) {
         $serverArgs += " -tls-cert `"$certPath`" -tls-key `"$keyPath`" -tls-signal -tls-relay"
         Print-Info "TLS: on for signal and relay (API stays HTTP)"
@@ -1359,13 +1359,13 @@ function Get-ServerArguments {
     return $serverArgs
 }
 
-# The settings BetterDeskServer gets besides those it reads from .env. The
+# The settings NeoDeskServer gets besides those it reads from .env. The
 # signal and relay ports are in .env, where the admin changes them.
 function Get-ServerBaseEnvironment {
     param([string]$Supervisor = "nssm")
     return @(
-        "BETTERDESK_ENV_FILE=$(Join-Path $script:CONSOLE_PATH '.env')",
-        "BETTERDESK_SUPERVISOR=$Supervisor",
+        "NEODESK_ENV_FILE=$(Join-Path $script:CONSOLE_PATH '.env')",
+        "NEODESK_SUPERVISOR=$Supervisor",
         "GO_API_PORT=$($script:GO_API_PORT)",
         "MESH_ENABLED=Y"
     )
@@ -1416,7 +1416,7 @@ function Merge-EnvironmentLists {
     return , $out
 }
 
-# Writes BetterDeskServer as an NSSM service that NSSM starts again after
+# Writes NeoDeskServer as an NSSM service that NSSM starts again after
 # every exit (exit code 3 is the server's restart request after a restart,
 # update or restore from the panel). $Environment are its settings.
 function Set-NssmServerService {
@@ -1428,8 +1428,8 @@ function Set-NssmServerService {
     & $Nssm set $script:SERVER_SERVICE Application $serverExe | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppParameters $Arguments | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppDirectory $script:RUSTDESK_PATH | Out-Null
-    & $Nssm set $script:SERVER_SERVICE DisplayName "BetterDesk Server $($script:VERSION)" | Out-Null
-    & $Nssm set $script:SERVER_SERVICE Description "BetterDesk server and web console (signal, relay, API, panel)" | Out-Null
+    & $Nssm set $script:SERVER_SERVICE DisplayName "NeoDesk Server $($script:VERSION)" | Out-Null
+    & $Nssm set $script:SERVER_SERVICE Description "NeoDesk server and web console (signal, relay, API, panel)" | Out-Null
     & $Nssm set $script:SERVER_SERVICE Start SERVICE_AUTO_START | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppEnvironmentExtra $Environment | Out-Null
     & $Nssm set $script:SERVER_SERVICE AppExit Default Restart | Out-Null
@@ -1450,16 +1450,16 @@ function Set-NssmServerService {
 # The scheduled-task launcher of the server. Task Scheduler does not start a
 # task again after a clean exit, so the launcher loops: when the server ends
 # (exit code 3 is its restart request) it starts it again after two
-# seconds. Only this loop makes BETTERDESK_SUPERVISOR true.
+# seconds. Only this loop makes NEODESK_SUPERVISOR true.
 function Write-ServerLauncher {
     param([string]$Arguments, [string[]]$Environment)
-    $launcher = Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd"
+    $launcher = Join-Path $script:RUSTDESK_PATH "start-neodesk-server.cmd"
     $lines = @("@echo off")
     foreach ($pair in $Environment) {
-        if ($pair -like 'BETTERDESK_SUPERVISOR=*') { continue }
+        if ($pair -like 'NEODESK_SUPERVISOR=*') { continue }
         $lines += "set `"$pair`""
     }
-    $lines += "set `"BETTERDESK_SUPERVISOR=task`""
+    $lines += "set `"NEODESK_SUPERVISOR=task`""
     $log = Get-ServerLogPath
     New-Item -ItemType Directory -Path (Split-Path -Parent $log) -Force | Out-Null
     $lines += ":run"
@@ -1473,7 +1473,7 @@ function Write-ServerLauncher {
 
 # The environment of an existing launcher: its "set" lines.
 function Get-LauncherEnvironment {
-    $launcher = Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd"
+    $launcher = Join-Path $script:RUSTDESK_PATH "start-neodesk-server.cmd"
     if (-not (Test-Path $launcher)) { return @() }
     return @(Get-Content $launcher | ForEach-Object {
         if ($_ -match '^set "([A-Za-z_][A-Za-z0-9_]*=.*)"$') { $Matches[1] }
@@ -1483,10 +1483,10 @@ function Get-LauncherEnvironment {
 # The arguments of an existing launcher's server line, without the
 # redirect of its output.
 function Get-LauncherArguments {
-    $launcher = Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd"
+    $launcher = Join-Path $script:RUSTDESK_PATH "start-neodesk-server.cmd"
     if (-not (Test-Path $launcher)) { return $null }
     foreach ($line in Get-Content $launcher) {
-        if ($line -match '^"[^"]*betterdesk-server\.exe"\s*(.*)$') {
+        if ($line -match '^"[^"]*neodesk-server\.exe"\s*(.*)$') {
             return ($Matches[1] -replace '\s*>>\s*"[^"]*"\s*2>&1\s*$', '').Trim()
         }
     }
@@ -1506,7 +1506,7 @@ function Register-ServerTask {
     $trigger = New-ScheduledTaskTrigger -AtStartup
     $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
     $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero)
-    Register-ScheduledTask -TaskName $script:SERVER_SERVICE -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description "BetterDesk server and web console" | Out-Null
+    Register-ScheduledTask -TaskName $script:SERVER_SERVICE -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Description "NeoDesk server and web console" | Out-Null
 }
 
 # The URL the web console answers /health on: HTTPS_PORT when HTTPS is on
@@ -1531,7 +1531,7 @@ function Get-SignalPort { $p = Get-ConsoleEnvValue -Key "SIGNAL_PORT"; if ($p) {
 function Get-RelayPort { $p = Get-ConsoleEnvValue -Key "RELAY_PORT"; if ($p) { $p } else { "21117" } }
 
 # The server answers: API and web console /health, signal and relay ports
-# (betterdesk-server check).
+# (neodesk-server check).
 function Test-GoInstall {
     param([int]$TimeoutSeconds = 90)
     $signal = Get-SignalPort
@@ -1543,13 +1543,13 @@ function Test-GoInstall {
     do {
         $code = Invoke-ServerCommand -Arguments $checkArgs 6>$null
         if ($code -eq 0) {
-            Print-Success "betterdesk-server answers: API :$($script:GO_API_PORT)$(if ($consoleUrl) { ", web console $consoleUrl" }), signal :$signal, relay :$relay"
+            Print-Success "neodesk-server answers: API :$($script:GO_API_PORT)$(if ($consoleUrl) { ", web console $consoleUrl" }), signal :$signal, relay :$relay"
             return $true
         }
         Start-Sleep -Seconds 3
     } while ((Get-Date) -lt $deadline)
     Invoke-ServerCommand -Arguments $checkArgs | Out-Null
-    Print-Error "betterdesk-server does not answer (logs: $script:RUSTDESK_PATH\logs)"
+    Print-Error "neodesk-server does not answer (logs: $script:RUSTDESK_PATH\logs)"
     return $false
 }
 
@@ -1564,7 +1564,7 @@ function Start-ServerService {
 function Stop-ServerService {
     Stop-Service -Name $script:SERVER_SERVICE -Force -ErrorAction SilentlyContinue
     Stop-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue
-    Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    Get-Process -Name "neodesk-server" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
     Start-Sleep -Seconds 2
 }
 
@@ -1575,7 +1575,7 @@ function Stop-ServerService {
 # Settings of the old services the server does not take over: the console
 # port the installer kept off while Node held it, what only Node read, and
 # the old binary's path.
-$script:UPGRADE_SKIPPED_KEYS = @("CONSOLE_PORT", "NODE_EXTRA_CA_CERTS", "NODE_OPTIONS", "BETTERDESK_SERVER_BINARY")
+$script:UPGRADE_SKIPPED_KEYS = @("CONSOLE_PORT", "NODE_EXTRA_CA_CERTS", "NODE_OPTIONS", "NEODESK_SERVER_BINARY")
 
 # The NSSM settings the upgrade changes and the rollback puts back.
 $script:NSSM_SAVED_SETTINGS = @("Application", "AppParameters", "AppDirectory", "AppEnvironmentExtra", "ObjectName", "Start", "AppStdout", "AppStderr", "DisplayName", "AppExit", "AppRestartDelay")
@@ -1619,7 +1619,7 @@ function Restore-NssmSettings {
 }
 
 # The upgrade: an install with the Node.js console becomes one service,
-# BetterDeskServer, that serves the web console itself. Data stays where it
+# NeoDeskServer, that serves the web console itself. Data stays where it
 # is; the old binary, the services' settings and .env are kept, and the
 # console's service stays disabled for one release, so -RollbackGo can put
 # the old pair back. A failed start rolls back by itself.
@@ -1632,11 +1632,11 @@ function Invoke-GoUpgrade {
         Print-Error "No ${envFile}: this is no install to upgrade"
         return $false
     }
-    Print-Info "This upgrade moves the web console into BetterDeskServer:"
+    Print-Info "This upgrade moves the web console into NeoDeskServer:"
     Print-Info "  - one service, $($script:SERVER_SERVICE), serves the panel on the same ports"
     Print-Info "  - $($script:CONSOLE_SERVICE) is stopped and disabled (kept for a rollback until the next update)"
     Print-Info "  - data, keys and accounts stay where they are"
-    Print-Info "  - roll back with: .\betterdesk.ps1 -RollbackGo"
+    Print-Info "  - roll back with: .\neodesk.ps1 -RollbackGo"
     if (-not $script:AUTO_MODE -and -not (Confirm-Action "Upgrade now?")) { return $true }
 
     $nssm = Get-NssmPath
@@ -1654,10 +1654,10 @@ function Invoke-GoUpgrade {
     Print-Step "[2/8] Backing up the binary, services and .env to $backup..."
     New-Item -ItemType Directory -Path $backup -Force | Out-Null
     $serverExe = Get-ServerBinaryPath
-    if (Test-Path $serverExe) { Copy-Item -Path $serverExe -Destination (Join-Path $backup "betterdesk-server.exe") -Force }
+    if (Test-Path $serverExe) { Copy-Item -Path $serverExe -Destination (Join-Path $backup "neodesk-server.exe") -Force }
     Copy-Item -Path $envFile -Destination (Join-Path $backup "console.env") -Force
-    $launcher = Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd"
-    if (Test-Path $launcher) { Copy-Item -Path $launcher -Destination (Join-Path $backup "start-betterdesk-server.cmd") -Force }
+    $launcher = Join-Path $script:RUSTDESK_PATH "start-neodesk-server.cmd"
+    if (Test-Path $launcher) { Copy-Item -Path $launcher -Destination (Join-Path $backup "start-neodesk-server.cmd") -Force }
     if ($taskMode) {
         foreach ($task in @($script:SERVER_SERVICE, $script:CONSOLE_SERVICE)) {
             if (Get-ScheduledTask -TaskName $task -ErrorAction SilentlyContinue) {
@@ -1700,7 +1700,7 @@ function Invoke-GoUpgrade {
         & $nssm set $script:CONSOLE_SERVICE Start SERVICE_DISABLED 2>$null | Out-Null
     }
 
-    # 6. The binary; the old one stays as betterdesk-server.exe.pre-go
+    # 6. The binary; the old one stays as neodesk-server.exe.pre-go
     Print-Step "[5/8] Installing the new binary..."
     $installed = Install-StagedBinary -Suffix ".pre-go"
     Remove-Item -Path $script:STAGED_SERVER_DIR -Recurse -Force -ErrorAction SilentlyContinue
@@ -1776,8 +1776,8 @@ function Invoke-GoUpgrade {
     Write-Host ""
     Print-Success "Upgrade done: $($script:SERVER_SERVICE) serves the web console"
     Print-Info "Backup: $backup"
-    Print-Info "Roll back: .\betterdesk.ps1 -RollbackGo"
-    Print-Info "The next successful update removes the Node.js console's code (or: .\betterdesk.ps1 -CleanupNode)"
+    Print-Info "Roll back: .\neodesk.ps1 -RollbackGo"
+    Print-Info "The next successful update removes the Node.js console's code (or: .\neodesk.ps1 -CleanupNode)"
     return $true
 }
 
@@ -1808,13 +1808,13 @@ function Undo-GoUpgrade {
     Stop-ServerService
 
     $serverExe = Get-ServerBinaryPath
-    $savedExe = Join-Path $Backup "betterdesk-server.exe"
+    $savedExe = Join-Path $Backup "neodesk-server.exe"
     if (Test-Path $savedExe) { Copy-Item -Path $savedExe -Destination $serverExe -Force }
     Remove-Item -Path "$serverExe.pre-go" -Force -ErrorAction SilentlyContinue
     Copy-Item -Path (Join-Path $Backup "console.env") -Destination (Join-Path $script:CONSOLE_PATH ".env") -Force
     Remove-Item -Path (Join-Path $script:CONSOLE_PATH ".env.pre-go") -Force -ErrorAction SilentlyContinue
-    $savedLauncher = Join-Path $Backup "start-betterdesk-server.cmd"
-    if (Test-Path $savedLauncher) { Copy-Item -Path $savedLauncher -Destination (Join-Path $script:RUSTDESK_PATH "start-betterdesk-server.cmd") -Force }
+    $savedLauncher = Join-Path $Backup "start-neodesk-server.cmd"
+    if (Test-Path $savedLauncher) { Copy-Item -Path $savedLauncher -Destination (Join-Path $script:RUSTDESK_PATH "start-neodesk-server.cmd") -Force }
 
     if ($manifest.task_mode) {
         foreach ($task in @($script:SERVER_SERVICE, $script:CONSOLE_SERVICE)) {
@@ -1892,7 +1892,7 @@ function Remove-NodeLeftovers {
     Remove-Item -Path "$(Get-ServerBinaryPath).pre-go" -Force -ErrorAction SilentlyContinue
     Print-Success "Removed $removed leftovers of the Node.js console"
     if (Get-Command node -ErrorAction SilentlyContinue) {
-        Print-Info "BetterDesk no longer needs Node.js; uninstall it if nothing else uses it"
+        Print-Info "NeoDesk no longer needs Node.js; uninstall it if nothing else uses it"
     }
     return $true
 }
@@ -1925,7 +1925,7 @@ function Update-GoInstall {
         # signature (with the release key the installed binary carries) and
         # SHA-256 checked; the running exe is renamed aside and the old one
         # kept as .prev
-        Print-Step "Installing the newest release with betterdesk-server update (it checks the release signature)..."
+        Print-Step "Installing the newest release with neodesk-server update (it checks the release signature)..."
         # The repository goes to the updater: an installed binary may have
         # an older default
         $owner = if ($script:UPDATE_GITHUB_OWNER_GIVEN) { $script:UPDATE_GITHUB_OWNER_GIVEN } else { Get-ConsoleEnvValue -Key "UPDATE_GITHUB_OWNER" }
@@ -1936,7 +1936,7 @@ function Update-GoInstall {
         try { $updateCode = Invoke-ServerCommand -Arguments @("update", "--yes") }
         finally { $env:UPDATE_GITHUB_OWNER, $env:UPDATE_GITHUB_REPO = $savedOwner, $savedRepo }
         if ($updateCode -ne 0) {
-            Print-Error "betterdesk-server update failed"
+            Print-Error "neodesk-server update failed"
             return $false
         }
         Stop-ServerService
@@ -1964,11 +1964,11 @@ function Update-GoInstall {
     }
     Remove-FirstAdminPassword
     Install-ManagerScript
-    Print-Success "betterdesk-server: $(& $serverExe -version 2>$null | Select-Object -First 1)"
+    Print-Success "neodesk-server: $(& $serverExe -version 2>$null | Select-Object -First 1)"
     return $true
 }
 
-# Writes BetterDeskServer's settings again from the template, keeping its
+# Writes NeoDeskServer's settings again from the template, keeping its
 # arguments and its other environment; rewrites the scheduled-task launcher
 # (a launcher written before held CONSOLE_PORT=0 and no restart loop).
 function Update-ServerServiceDefinition {
@@ -2004,7 +2004,7 @@ function Invoke-ManagementCli {
             Print-Info "Management capabilities are checked after the upgrade to the server with its console"
             return $true
         }
-        Print-Error "The management check needs an installed betterdesk-server.exe"
+        Print-Error "The management check needs an installed neodesk-server.exe"
         return $false
     }
     $code = Invoke-ServerCommand -Arguments (@("config", $Action) + $Arguments)
@@ -2012,7 +2012,7 @@ function Invoke-ManagementCli {
 }
 
 function Repair-ManagementPermissions {
-    Print-Step "Repairing BetterDesk management permissions..."
+    Print-Step "Repairing NeoDesk management permissions..."
     foreach ($path in @($script:RUSTDESK_PATH, $script:CONSOLE_PATH)) {
         if (Test-Path $path) {
             & icacls $path /inheritance:e /grant "Administrators:(OI)(CI)F" /grant "SYSTEM:(OI)(CI)F" /T /C /Q 2>$null | Out-Null
@@ -2037,7 +2037,7 @@ function Repair-ManagementPermissions {
             & icacls $path /inheritance:r /grant:r "Administrators:F" "SYSTEM:F" "${account}:M" 2>$null | Out-Null
         }
     }
-    $seed = Join-Path $script:CONSOLE_PATH "data\modules\betterdesk-support-generator\custom-client-signing.seed"
+    $seed = Join-Path $script:CONSOLE_PATH "data\modules\neodesk-support-generator\custom-client-signing.seed"
     if (Test-Path $seed) {
         & icacls $seed /inheritance:r /grant:r "SYSTEM:F" "${account}:R" 2>$null | Out-Null
     }
@@ -2049,7 +2049,7 @@ function Set-ManagedConfiguration {
         Print-Error "No allowlisted configuration changes supplied"
         return $false
     }
-    Print-Step "Applying allowlisted BetterDesk configuration..."
+    Print-Step "Applying allowlisted NeoDesk configuration..."
     if (-not (Invoke-ManagementCli -Action "set" -Arguments $script:MANAGED_CONFIG_CHANGES)) {
         return $false
     }
@@ -2058,7 +2058,7 @@ function Set-ManagedConfiguration {
 }
 
 function Compile-GoServer {
-    Print-Step "Compiling BetterDesk Go Server..."
+    Print-Step "Compiling NeoDesk Go Server..."
 
     if (-not (Test-Path $script:GO_SERVER_SOURCE)) {
         Print-Error "Go server source not found at: $script:GO_SERVER_SOURCE"
@@ -2107,15 +2107,15 @@ function Compile-GoServer {
         if (Get-Command git -ErrorAction SilentlyContinue) {
             $commit = "$(& git -C $script:ScriptDir rev-parse HEAD 2>$null)".Trim()
         }
-        & go build -trimpath -ldflags="-s -w -X main.Version=$($script:VERSION) -X main.Commit=$commit" -o "betterdesk-server.exe" . 2>&1 | ForEach-Object { Write-Host "  $_" }
+        & go build -trimpath -ldflags="-s -w -X main.Version=$($script:VERSION) -X main.Commit=$commit" -o "neodesk-server.exe" . 2>&1 | ForEach-Object { Write-Host "  $_" }
     } finally {
         Set-Location $currentDir
     }
 
-    $outputBinary = Join-Path $script:GO_SERVER_SOURCE "betterdesk-server.exe"
+    $outputBinary = Join-Path $script:GO_SERVER_SOURCE "neodesk-server.exe"
     if (Test-Path $outputBinary) {
         $size = [math]::Round((Get-Item $outputBinary).Length / 1MB, 2)
-        Print-Success "Build successful: betterdesk-server.exe ($size MB)"
+        Print-Success "Build successful: neodesk-server.exe ($size MB)"
         return $true
     } else {
         Print-Error "Build failed - binary not created"
@@ -2182,7 +2182,7 @@ function Setup-Services {
     }
 
     # Retired services
-    foreach ($svc in @($script:HBBS_SERVICE, $script:HBBR_SERVICE, "BetterDeskAPI")) {
+    foreach ($svc in @($script:HBBS_SERVICE, $script:HBBR_SERVICE, "NeoDeskAPI")) {
         & $nssm stop $svc 2>$null | Out-Null
         & $nssm remove $svc confirm 2>$null | Out-Null
     }
@@ -2204,23 +2204,23 @@ function Start-Services {
 function Start-ServicesWithVerification {
     Print-Step "Starting $($script:SERVER_SERVICE) with health verification..."
 
-    $running = Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue
+    $running = Get-Process -Name "neodesk-server" -ErrorAction SilentlyContinue
     if (-not $running) {
         $hasErrors = $false
-        if (-not (Test-PortAvailable -Port 21116 -ServiceName "betterdesk-server")) { $hasErrors = $true }
-        if (-not (Test-PortAvailable -Port 21117 -ServiceName "betterdesk-server")) { $hasErrors = $true }
+        if (-not (Test-PortAvailable -Port 21116 -ServiceName "neodesk-server")) { $hasErrors = $true }
+        if (-not (Test-PortAvailable -Port 21117 -ServiceName "neodesk-server")) { $hasErrors = $true }
         if ($hasErrors) {
-            Print-Error "Cannot start betterdesk-server - ports in use"
+            Print-Error "Cannot start neodesk-server - ports in use"
             Print-Info "Use: Get-NetTCPConnection -State Listen | Where-Object LocalPort -in 21116,21117"
             return $false
         }
     }
     Start-ServerService
     if (-not (Test-GoInstall -TimeoutSeconds 90)) {
-        Print-Error "betterdesk-server did not come up"
+        Print-Error "neodesk-server did not come up"
         return $false
     }
-    Print-Success "betterdesk-server started and verified"
+    Print-Success "neodesk-server started and verified"
     return $true
 }
 
@@ -2239,7 +2239,7 @@ function Do-Update {
     Detect-Installation
 
     if ($script:INSTALL_STATUS -eq "none" -and -not (Test-NodeEraInstall)) {
-        Print-Error "BetterDesk is not installed!"
+        Print-Error "NeoDesk is not installed!"
         Print-Info "Use 'FRESH INSTALLATION' option"
         Press-Enter
         return $false
@@ -2291,7 +2291,7 @@ function Do-Update {
 }
 
 function Repair-Binaries {
-    Print-Step "Repairing betterdesk-server.exe..."
+    Print-Step "Repairing neodesk-server.exe..."
     if (Test-NodeEraInstall) {
         Print-Error "This install runs the Node.js console; use Update to upgrade it"
         return
@@ -2306,7 +2306,7 @@ function Repair-Binaries {
     Remove-Item -Path $script:STAGED_SERVER_DIR -Recurse -Force -ErrorAction SilentlyContinue
     if (-not $installed) { Start-ServerService; return }
     if (-not (Start-ServicesWithVerification)) {
-        Print-Error "betterdesk-server failed to start after the binary repair"
+        Print-Error "neodesk-server failed to start after the binary repair"
         return
     }
     Print-Success "Server binary repaired and verified!"
@@ -2315,7 +2315,7 @@ function Repair-Binaries {
 # The server migrates its tables at every start.
 function Repair-Database {
     Print-Step "Repairing database..."
-    Print-Info "betterdesk-server migrates its tables at start; restarting it"
+    Print-Info "neodesk-server migrates its tables at start; restarting it"
     Stop-ServerService
     if (Start-ServicesWithVerification) {
         Print-Success "Database checked by the server's start"
@@ -2329,14 +2329,14 @@ function Repair-Services {
         return
     }
     if (-not (Test-Path (Get-ServerBinaryPath))) {
-        Print-Error "betterdesk-server.exe not found at $script:RUSTDESK_PATH"
+        Print-Error "neodesk-server.exe not found at $script:RUSTDESK_PATH"
         Print-Info "Run 'Repair binaries' first"
         return
     }
     Stop-ServerService
     Update-ServerServiceDefinition
     if (-not (Start-ServicesWithVerification)) {
-        Print-Error "betterdesk-server failed to start after the repair"
+        Print-Error "neodesk-server failed to start after the repair"
         return
     }
     Print-Success "Service repaired and verified!"
@@ -2411,7 +2411,7 @@ function Create-AdminUser {
 
     if (-not $script:FRESH_CONSOLE_ENV) {
         Print-Info "The admin account and its password stay as they are."
-        Print-Info "Forgot it? Reset admin password in the menu of $(Join-Path $script:RUSTDESK_PATH 'betterdesk.ps1')"
+        Print-Info "Forgot it? Reset admin password in the menu of $(Join-Path $script:RUSTDESK_PATH 'neodesk.ps1')"
         return $null
     }
     $adminPassword = $env:ADMIN_PASSWORD
@@ -2453,16 +2453,16 @@ function Remove-FirstAdminPassword {
     }
 }
 
-# This script as C:\BetterDesk\betterdesk.ps1, for updates, repairs and the
+# This script as C:\NeoDesk\neodesk.ps1, for updates, repairs and the
 # uninstall later. Run from that copy (an update), it takes the newest one
 # of INSTALLER_REF; run from Invoke-Expression, it fetches itself.
 function Install-ManagerScript {
-    $target = Join-Path $script:RUSTDESK_PATH "betterdesk.ps1"
+    $target = Join-Path $script:RUSTDESK_PATH "neodesk.ps1"
     try {
         if ($script:SELF_PATH -and (Test-Path $script:SELF_PATH) -and ((Resolve-Path $script:SELF_PATH).Path -ne $target)) {
             Copy-Item -Path $script:SELF_PATH -Destination $target -Force -ErrorAction Stop
         } else {
-            $url = "https://raw.githubusercontent.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/$($script:INSTALLER_REF)/betterdesk.ps1"
+            $url = "https://raw.githubusercontent.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/$($script:INSTALLER_REF)/neodesk.ps1"
             $tmp = "$target.download"
             Invoke-WebRequest -Uri $url -OutFile $tmp -UseBasicParsing -ErrorAction Stop
             if (-not (Select-String -Path $tmp -Pattern 'function Install-ManagerScript' -SimpleMatch -Quiet)) { throw "not the installer" }
@@ -2479,7 +2479,7 @@ function Install-ManagerScript {
 # the settings file and the commands for later.
 function Show-InstallSummary {
     $envFile = Join-Path $script:CONSOLE_PATH ".env"
-    $manager = Join-Path $script:RUSTDESK_PATH "betterdesk.ps1"
+    $manager = Join-Path $script:RUSTDESK_PATH "neodesk.ps1"
     $hostName = Get-ConsoleEnvValue -Key "PANEL_PUBLIC_HOST"
     if (-not $hostName) { $hostName = Get-PublicIP }
     $pubKeyPath = Join-Path $script:RUSTDESK_PATH "id_ed25519.pub"
@@ -2492,7 +2492,7 @@ function Show-InstallSummary {
     $idServer = if ($signal -eq "21116") { $hostName } else { "${hostName}:$signal" }
     $relayServer = if ($relay -eq "21117") { $hostName } else { "${hostName}:$relay" }
     Write-Host ""
-    Write-Host "BetterDesk is installed" -ForegroundColor Green
+    Write-Host "NeoDesk is installed" -ForegroundColor Green
     Write-Host ""
     Write-Host "  Web console:   " -NoNewline; Write-Host $console -ForegroundColor White
     if ($script:FRESH_CONSOLE_ENV) {
@@ -2529,7 +2529,7 @@ function Update-EnvForTLS {
         $content = $content -replace 'SSL_KEY_PATH=.*', "SSL_KEY_PATH=$KeyPath"
         # Internal Go API URLs must stay HTTP for RustDesk client compatibility.
         $content = $content -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
-        $content = $content -replace 'BETTERDESK_API_URL=https://localhost', 'BETTERDESK_API_URL=http://localhost'
+        $content = $content -replace 'NEODESK_API_URL=https://localhost', 'NEODESK_API_URL=http://localhost'
         # Only the Node.js console read NODE_EXTRA_CA_CERTS
         $content = $content -replace '(?m)^NODE_EXTRA_CA_CERTS=.*\r?\n?', ''
         Set-Content -Path $envFile -Value $content -NoNewline
@@ -2555,7 +2555,7 @@ function Detect-Installation {
     # Check paths and binary type
     if (Test-Path $script:RUSTDESK_PATH) {
         # Check for Go server first
-        if (Test-Path "$script:RUSTDESK_PATH\betterdesk-server.exe") {
+        if (Test-Path "$script:RUSTDESK_PATH\neodesk-server.exe") {
             $script:BINARIES_OK = $true
             $script:SERVER_TYPE = "go"
             $script:INSTALL_STATUS = "partial"
@@ -2610,7 +2610,7 @@ function Detect-Installation {
     }
     
     if ($script:CONSOLE_TYPE -eq "go") {
-        $script:CONSOLE_RUNNING = $script:SERVER_RUNNING -or [bool](Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue)
+        $script:CONSOLE_RUNNING = $script:SERVER_RUNNING -or [bool](Get-Process -Name "neodesk-server" -ErrorAction SilentlyContinue)
     } else {
         $consoleService = Get-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
         if ($consoleService -and $consoleService.Status -eq 'Running') {
@@ -2643,7 +2643,7 @@ function Auto-DetectPaths {
     
     # Check configured path first - Go server or legacy Rust
     if ($script:RUSTDESK_PATH -and (Test-Path $script:RUSTDESK_PATH)) {
-        if ((Test-Path "$script:RUSTDESK_PATH\betterdesk-server.exe") -or 
+        if ((Test-Path "$script:RUSTDESK_PATH\neodesk-server.exe") -or 
             (Test-Path "$script:RUSTDESK_PATH\hbbs.exe") -or 
             (Test-Path "$script:RUSTDESK_PATH\hbbs-v8-api.exe")) {
             Print-Info "Using configured RustDesk path: $script:RUSTDESK_PATH"
@@ -2655,7 +2655,7 @@ function Auto-DetectPaths {
     if (-not $found) {
         foreach ($path in $script:COMMON_RUSTDESK_PATHS) {
             if ((Test-Path $path) -and 
-                ((Test-Path "$path\betterdesk-server.exe") -or 
+                ((Test-Path "$path\neodesk-server.exe") -or 
                  (Test-Path "$path\hbbs.exe") -or 
                  (Test-Path "$path\hbbs-v8-api.exe"))) {
                 $script:RUSTDESK_PATH = $path
@@ -2668,7 +2668,7 @@ function Auto-DetectPaths {
     
     # Default path for new installations
     if (-not $found) {
-        $script:RUSTDESK_PATH = "C:\BetterDesk"
+        $script:RUSTDESK_PATH = "C:\NeoDesk"
         Print-Info "No installation detected. Default path: $script:RUSTDESK_PATH"
     }
     
@@ -2688,7 +2688,7 @@ function Auto-DetectPaths {
     }
 
     if (-not $consoleFound) {
-        $script:CONSOLE_PATH = "C:\BetterDeskConsole"
+        $script:CONSOLE_PATH = "C:\NeoDeskConsole"
     }
     if (Test-GoOnlyInstall) {
         $script:CONSOLE_TYPE = "go"
@@ -2741,8 +2741,8 @@ function Print-Status {
     
     if (Test-Path $script:CONSOLE_PATH) {
         $consoleTypeLabel = switch ($script:CONSOLE_TYPE) {
-            "go" { " (inside betterdesk-server)" }
-            "nodejs" { " (Node.js; Update moves it into betterdesk-server)" }
+            "go" { " (inside neodesk-server)" }
+            "nodejs" { " (Node.js; Update moves it into neodesk-server)" }
             default { "" }
         }
         Write-Host "  Web Console:  " -NoNewline; Write-Host "[OK]$consoleTypeLabel" -ForegroundColor Green
@@ -2757,15 +2757,15 @@ function Print-Status {
     # Check if using Go server or legacy Rust
     if ($script:SERVER_RUNNING -or $script:SERVER_TYPE -eq "go") {
         if ($script:SERVER_RUNNING) {
-            Write-Host "  BetterDesk Server (Go): " -NoNewline; Write-Host "* Active (Signal + Relay + API)" -ForegroundColor Green
+            Write-Host "  NeoDesk Server (Go): " -NoNewline; Write-Host "* Active (Signal + Relay + API)" -ForegroundColor Green
         } else {
             # Check service state for better diagnostics
             $svc = Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue
             if ($svc -and $svc.Status -eq 'Stopped') {
-                Write-Host "  BetterDesk Server (Go): " -NoNewline; Write-Host "o Stopped" -ForegroundColor Red
+                Write-Host "  NeoDesk Server (Go): " -NoNewline; Write-Host "o Stopped" -ForegroundColor Red
                 Write-Host "    Hint: Check the log $(Get-ServerLogPath)" -ForegroundColor Yellow
             } else {
-                Write-Host "  BetterDesk Server (Go): " -NoNewline; Write-Host "o Inactive" -ForegroundColor Red
+                Write-Host "  NeoDesk Server (Go): " -NoNewline; Write-Host "o Inactive" -ForegroundColor Red
             }
         }
     } else {
@@ -2958,7 +2958,7 @@ function Choose-DatabaseType {
 # or POSTGRESQL_URI as it is, else from its parts with the password of the
 # existing user (POSTGRESQL_PASS, or asked for in an interactive run).
 function Setup-PostgreSQLDatabase {
-    Print-Step "Setting up PostgreSQL for BetterDesk..."
+    Print-Step "Setting up PostgreSQL for NeoDesk..."
     $where = "$($script:POSTGRESQL_HOST):$($script:POSTGRESQL_PORT)/$($script:POSTGRESQL_DB)"
     if ($script:POSTGRESQL_URI) {
         Print-Info "Using the PostgreSQL address given (-PgUri or POSTGRESQL_URI)"
@@ -3078,8 +3078,8 @@ function Generate-SSLCertificates {
     Print-Step "Generating self-signed TLS certificates..."
     
     $sslDir = Join-Path $script:RUSTDESK_PATH "ssl"
-    $certPath = Join-Path $sslDir "betterdesk.crt"
-    $keyPath = Join-Path $sslDir "betterdesk.key"
+    $certPath = Join-Path $sslDir "neodesk.crt"
+    $keyPath = Join-Path $sslDir "neodesk.key"
     
     # Skip if certificates already exist
     if ((Test-Path $certPath) -and (Test-Path $keyPath)) {
@@ -3110,7 +3110,7 @@ function Generate-SSLCertificates {
             Print-Success "Self-signed TLS certificate made (valid 10 years): $sslDir"
             return $true
         }
-        Print-Warning "betterdesk-server cert failed (output above)"
+        Print-Warning "neodesk-server cert failed (output above)"
     }
 
     # Try PowerShell native certificate generation first
@@ -3121,22 +3121,22 @@ function Generate-SSLCertificates {
             -NotAfter (Get-Date).AddYears(10) `
             -KeyAlgorithm RSA `
             -KeyLength 2048 `
-            -FriendlyName "BetterDesk Server" `
+            -FriendlyName "NeoDesk Server" `
             -TextExtension @("2.5.29.17={text}DNS=localhost&IPAddress=$serverIP&IPAddress=127.0.0.1")
         
         # Export certificate (public)
-        Export-Certificate -Cert $cert -FilePath "$sslDir\betterdesk.cer" -Type CERT | Out-Null
+        Export-Certificate -Cert $cert -FilePath "$sslDir\neodesk.cer" -Type CERT | Out-Null
         
         # Export PFX then convert to PEM using openssl if available
-        $pfxPath = Join-Path $sslDir "betterdesk.pfx"
-        $securePassword = ConvertTo-SecureString -String "betterdesk-temp" -Force -AsPlainText
+        $pfxPath = Join-Path $sslDir "neodesk.pfx"
+        $securePassword = ConvertTo-SecureString -String "neodesk-temp" -Force -AsPlainText
         Export-PfxCertificate -Cert $cert -FilePath $pfxPath -Password $securePassword | Out-Null
         
         # Check if openssl is available for PEM conversion
         $opensslCmd = Get-Command openssl -ErrorAction SilentlyContinue
         if ($opensslCmd) {
-            & openssl pkcs12 -in $pfxPath -out $certPath -clcerts -nokeys -passin "pass:betterdesk-temp" 2>$null
-            & openssl pkcs12 -in $pfxPath -out $keyPath -nocerts -nodes -passin "pass:betterdesk-temp" 2>$null
+            & openssl pkcs12 -in $pfxPath -out $certPath -clcerts -nokeys -passin "pass:neodesk-temp" 2>$null
+            & openssl pkcs12 -in $pfxPath -out $keyPath -nocerts -nodes -passin "pass:neodesk-temp" 2>$null
             Remove-Item $pfxPath -Force -ErrorAction SilentlyContinue
         } else {
             # Keep PFX format for Windows (Go server can use it)
@@ -3150,7 +3150,7 @@ function Generate-SSLCertificates {
         # The server reads PEM files only: without them HTTPS stays off
         if (-not ((Test-Path $certPath) -and (Test-Path $keyPath))) {
             Print-Warning "The certificate could not be written as PEM files (OpenSSL is missing): the console stays on HTTP"
-            Print-Info "Update to a release whose betterdesk-server makes the certificate, or install OpenSSL, then use the SSL menu (option C)"
+            Print-Info "Update to a release whose neodesk-server makes the certificate, or install OpenSSL, then use the SSL menu (option C)"
             return $false
         }
 
@@ -3175,7 +3175,7 @@ function Generate-SSLCertificates {
                 & openssl req -x509 -nodes -days 3650 -newkey rsa:2048 `
                     -keyout $keyPath `
                     -out $certPath `
-                    -subj "/CN=$serverIP/O=BetterDesk/C=US" `
+                    -subj "/CN=$serverIP/O=NeoDesk/C=US" `
                     -addext "subjectAltName=IP:$serverIP,IP:127.0.0.1,DNS:localhost" 2>$null
                 
                 if ((Test-Path $certPath) -and (Test-Path $keyPath)) {
@@ -3242,11 +3242,11 @@ function Stop-AllServices {
     Stop-ScheduledTask -TaskName $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
     
     # Kill processes directly (Go server + legacy)
-    Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue | Stop-Process -Force
+    Get-Process -Name "neodesk-server" -ErrorAction SilentlyContinue | Stop-Process -Force
     Get-Process -Name "hbbs" -ErrorAction SilentlyContinue | Stop-Process -Force
     Get-Process -Name "hbbr" -ErrorAction SilentlyContinue | Stop-Process -Force
     Get-Process -Name "node" -ErrorAction SilentlyContinue | Where-Object {
-        $_.MainModule.FileName -like "*betterdesk*" -or $_.CommandLine -like "*server.js*"
+        $_.MainModule.FileName -like "*neodesk*" -or $_.CommandLine -like "*server.js*"
     } | Stop-Process -Force -ErrorAction SilentlyContinue
     
     Start-Sleep -Seconds 2
@@ -3277,11 +3277,11 @@ function Test-ServiceHealth {
     )
     
     # Check if process is running
-    $processName = if ($ServiceName -eq $script:SERVER_SERVICE) { "betterdesk-server" }
+    $processName = if ($ServiceName -eq $script:SERVER_SERVICE) { "neodesk-server" }
                    elseif ($ServiceName -match "Signal") { "hbbs" }
                    elseif ($ServiceName -match "Relay") { "hbbr" }
                    elseif ($ServiceName -eq $script:CONSOLE_SERVICE) { "node" }
-                   else { "betterdesk-server" }
+                   else { "neodesk-server" }
     
     $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
     
@@ -3353,12 +3353,12 @@ function Do-Install {
     # installed over
     if (Test-NodeEraInstall) {
         Print-Warning "This server runs the Node.js web console."
-        Print-Info "The upgrade moves it into betterdesk-server and keeps all data."
+        Print-Info "The upgrade moves it into neodesk-server and keeps all data."
         return (Invoke-GoUpgrade)
     }
 
     if ($script:INSTALL_STATUS -eq "complete") {
-        Print-Warning "BetterDesk is already installed!"
+        Print-Warning "NeoDesk is already installed!"
         if (-not $script:AUTO_MODE) {
             if (-not (Confirm-Action "Do you want to reinstall?")) {
                 return
@@ -3368,7 +3368,7 @@ function Do-Install {
     }
 
     Write-Host ""
-    Print-Info "Starting BetterDesk v$script:VERSION installation..."
+    Print-Info "Starting NeoDesk v$script:VERSION installation..."
     Write-Host ""
 
     # Choose database type (SQLite or PostgreSQL)
@@ -3410,7 +3410,7 @@ function Do-Install {
     if ($installOk) {
         Print-Success "Installation completed successfully!"
     } else {
-        Print-Warning "Installation finished but betterdesk-server does not answer; see $script:RUSTDESK_PATH\logs"
+        Print-Warning "Installation finished but neodesk-server does not answer; see $script:RUSTDESK_PATH\logs"
     }
     Write-Host ""
     
@@ -3445,7 +3445,7 @@ function Do-Install {
 $script:UPDATE_GITHUB_OWNER_GIVEN = "$env:UPDATE_GITHUB_OWNER"
 $script:UPDATE_GITHUB_REPO_GIVEN = "$env:UPDATE_GITHUB_REPO"
 $script:UPDATE_GITHUB_OWNER = if ($env:UPDATE_GITHUB_OWNER) { $env:UPDATE_GITHUB_OWNER } else { "neodeskapp" }
-$script:UPDATE_GITHUB_REPO = if ($env:UPDATE_GITHUB_REPO) { $env:UPDATE_GITHUB_REPO } else { "betterdesk" }
+$script:UPDATE_GITHUB_REPO = if ($env:UPDATE_GITHUB_REPO) { $env:UPDATE_GITHUB_REPO } else { "neodesk" }
 # A channel given to the installer (-Channel, else UPDATE_GITHUB_BRANCH) wins
 # over .env and is written into it. UPDATE_GITHUB_BRANCH holds the channel's
 # id, main for stable and dev for development, not a git branch.
@@ -3507,7 +3507,7 @@ function Switch-UpdateChannel {
     Write-Host ""
     Detect-Installation
     if ($script:INSTALL_STATUS -eq "none") {
-        Print-Error "BetterDesk is not installed!"
+        Print-Error "NeoDesk is not installed!"
         Press-Enter
         return
     }
@@ -3554,7 +3554,7 @@ function Do-Repair {
     Print-Status
     
     $items = @(
-        "Repair binaries`tReplace the server binary with BetterDesk",
+        "Repair binaries`tReplace the server binary with NeoDesk",
         "Repair database`tAdd any missing columns",
         "Repair services`tRecreate the Windows services",
         "Full repair`tDo everything above",
@@ -3615,8 +3615,8 @@ function Do-Validate {
     }
     
     # Check binaries (Go server or legacy Rust)
-    Write-Host "  BetterDesk Server: " -NoNewline
-    if (Test-Path (Join-Path $script:RUSTDESK_PATH "betterdesk-server.exe")) {
+    Write-Host "  NeoDesk Server: " -NoNewline
+    if (Test-Path (Join-Path $script:RUSTDESK_PATH "neodesk-server.exe")) {
         Write-Host "[OK] (Go: signal + relay + API)" -ForegroundColor Green
     } elseif ((Test-Path (Join-Path $script:RUSTDESK_PATH "hbbs.exe")) -and (Test-Path (Join-Path $script:RUSTDESK_PATH "hbbr.exe"))) {
         Write-Host "[OK] (Legacy Rust)" -ForegroundColor Yellow
@@ -3686,9 +3686,9 @@ function Do-Validate {
     Write-Host "Checking ports..." -ForegroundColor White
     Write-Host ""
     
-    $consoleProcess = if (Test-GoOnlyInstall) { "betterdesk-server" } else { "node" }
+    $consoleProcess = if (Test-GoOnlyInstall) { "neodesk-server" } else { "node" }
     $ports = @(
-        @{Port=[int]$script:GO_API_PORT; Desc="Go API"; Expected="betterdesk-server"},
+        @{Port=[int]$script:GO_API_PORT; Desc="Go API"; Expected="neodesk-server"},
         @{Port=[int]$script:CLIENT_API_PORT; Desc="Client API"; Expected=$consoleProcess},
         @{Port=21115; Desc="NAT Test"; Expected="hbbs"},
         @{Port=21116; Desc="ID Server"; Expected="hbbs"},
@@ -3721,7 +3721,7 @@ function Do-Validate {
     if ($activeProfiles) {
         # Ports that must be reachable for clients. The panel (5000/5443) is deliberately
         # absent: it is a local port and exposing it to WAN defeats the reverse-proxy setup.
-        # See https://betterde.sk/docs/operations/ports.
+        # See https://neode.sk/docs/operations/ports.
         $fwPorts = @(21116, 21117, [int]$script:GO_API_PORT)
         $fwMissing = 0
         foreach ($fwPort in $fwPorts) {
@@ -3774,7 +3774,7 @@ function Do-Backup {
 }
 
 function Do-BackupSilent {
-    $backupName = "betterdesk_backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
+    $backupName = "neodesk_backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
     $backupPath = Join-Path $script:BACKUP_DIR $backupName
     
     if (-not (Test-Path $script:BACKUP_DIR)) {
@@ -3793,7 +3793,7 @@ function Do-BackupSilent {
     if (Test-BinaryBacksUp) {
         $serverBackup = ((Invoke-ServerCommand -Arguments @("backup", "--out", $backupPath)) -eq 0)
         if ($serverBackup) { Print-Info "  - Database, settings and the console's data" }
-        else { Print-Warning "betterdesk-server backup failed (output above); the backup holds a copy of the database file instead" }
+        else { Print-Warning "neodesk-server backup failed (output above); the backup holds a copy of the database file instead" }
     }
     if (-not $serverBackup -and (Test-Path $script:DB_PATH)) {
         Copy-Item -Path $script:DB_PATH -Destination $backupPath
@@ -3888,25 +3888,25 @@ function Get-FirewallPorts {
     $signal = [int](Get-SignalPort)
     $relay = [int](Get-RelayPort)
     $ports = @(
-        @{Port = $signal - 1; Proto = "TCP"; Name = "BetterDesk NAT test"},
-        @{Port = $signal; Proto = "TCP"; Name = "BetterDesk ID server TCP"},
-        @{Port = $signal; Proto = "UDP"; Name = "BetterDesk ID server UDP"},
-        @{Port = $relay; Proto = "TCP"; Name = "BetterDesk relay"}
+        @{Port = $signal - 1; Proto = "TCP"; Name = "NeoDesk NAT test"},
+        @{Port = $signal; Proto = "TCP"; Name = "NeoDesk ID server TCP"},
+        @{Port = $signal; Proto = "UDP"; Name = "NeoDesk ID server UDP"},
+        @{Port = $relay; Proto = "TCP"; Name = "NeoDesk relay"}
     )
     $api = Get-ConsoleEnvValue -Key "API_PORT"
     if (-not $api) { $api = $script:CLIENT_API_PORT }
-    $ports += @{Port = [int]$api; Proto = "TCP"; Name = "BetterDesk client API"}
+    $ports += @{Port = [int]$api; Proto = "TCP"; Name = "NeoDesk client API"}
     if ((Get-ConsoleEnvValue -Key "CDAP_ENABLED") -notmatch '^(?i)(n|no|0|false|off)$') {
-        $ports += @{Port = 21122; Proto = "TCP"; Name = "BetterDesk CDAP gateway"}
+        $ports += @{Port = 21122; Proto = "TCP"; Name = "NeoDesk CDAP gateway"}
     }
     if ((Get-ConsoleEnvValue -Key "TRUST_PROXY") -match '^(?i)(y|yes|1|true|on)$') { return $ports }
     $http = Get-ConsoleEnvValue -Key "CONSOLE_PORT"
     if (-not $http) { $http = "5000" }
-    if ($http -ne "0") { $ports += @{Port = [int]$http; Proto = "TCP"; Name = "BetterDesk web console"} }
+    if ($http -ne "0") { $ports += @{Port = [int]$http; Proto = "TCP"; Name = "NeoDesk web console"} }
     if ((Get-ConsoleEnvValue -Key "HTTPS_ENABLED") -eq "true") {
         $https = Get-ConsoleEnvValue -Key "HTTPS_PORT"
         if (-not $https) { $https = "5443" }
-        $ports += @{Port = [int]$https; Proto = "TCP"; Name = "BetterDesk web console HTTPS"}
+        $ports += @{Port = [int]$https; Proto = "TCP"; Name = "NeoDesk web console HTTPS"}
     }
     return $ports
 }
@@ -3979,7 +3979,7 @@ function Configure-Firewall {
     $created = 0
     
     foreach ($p in $MissingRules) {
-        $ruleName = "BetterDesk - $($p.Name)"
+        $ruleName = "NeoDesk - $($p.Name)"
         try {
             New-NetFirewallRule -DisplayName $ruleName `
                 -Direction Inbound -Action Allow `
@@ -4008,9 +4008,9 @@ function Do-Diagnostics {
     Write-Host "=== Process Information ===" -ForegroundColor White
     Write-Host ""
     
-    $serverProc = Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue
+    $serverProc = Get-Process -Name "neodesk-server" -ErrorAction SilentlyContinue
     if ($serverProc) {
-        Write-Host "  BetterDesk Server: PID $($serverProc.Id), Memory $('{0:N0}' -f ($serverProc.WorkingSet64/1MB)) MB" -ForegroundColor Green
+        Write-Host "  NeoDesk Server: PID $($serverProc.Id), Memory $('{0:N0}' -f ($serverProc.WorkingSet64/1MB)) MB" -ForegroundColor Green
     } else {
         # Fallback: check legacy hbbs/hbbr processes
         $hbbsProc = Get-Process -Name "hbbs" -ErrorAction SilentlyContinue
@@ -4024,7 +4024,7 @@ function Do-Diagnostics {
             }
             Print-Warning "Legacy Rust processes detected. Consider migrating to Go server."
         } else {
-            Write-Host "  BetterDesk Server: Not running" -ForegroundColor Red
+            Write-Host "  NeoDesk Server: Not running" -ForegroundColor Red
         }
     }
     
@@ -4077,14 +4077,14 @@ conn.close()
     Write-Host "=== Port Diagnostics ===" -ForegroundColor White
     Write-Host ""
     
-    $consoleProcess = if (Test-GoOnlyInstall) { "betterdesk-server" } else { "node" }
+    $consoleProcess = if (Test-GoOnlyInstall) { "neodesk-server" } else { "node" }
     $portDefs = @(
-        @{Port=[int]$script:GO_API_PORT; Proto="TCP"; Expected="betterdesk-server"; Desc="Go API (default)"},
+        @{Port=[int]$script:GO_API_PORT; Proto="TCP"; Expected="neodesk-server"; Desc="Go API (default)"},
         @{Port=[int]$script:CLIENT_API_PORT; Proto="TCP"; Expected=$consoleProcess; Desc="Client API"},
-        @{Port=21115; Proto="TCP"; Expected="betterdesk-server"; Desc="NAT Test"},
-        @{Port=21116; Proto="TCP"; Expected="betterdesk-server"; Desc="ID Server (TCP)"},
-        @{Port=21116; Proto="UDP"; Expected="betterdesk-server"; Desc="ID Server (UDP)"},
-        @{Port=21117; Proto="TCP"; Expected="betterdesk-server"; Desc="Relay Server"},
+        @{Port=21115; Proto="TCP"; Expected="neodesk-server"; Desc="NAT Test"},
+        @{Port=21116; Proto="TCP"; Expected="neodesk-server"; Desc="ID Server (TCP)"},
+        @{Port=21116; Proto="UDP"; Expected="neodesk-server"; Desc="ID Server (UDP)"},
+        @{Port=21117; Proto="TCP"; Expected="neodesk-server"; Desc="Relay Server"},
         @{Port=5000;  Proto="TCP"; Expected=$consoleProcess; Desc="Web Console"}
     )
     
@@ -4207,7 +4207,7 @@ function Do-Uninstall {
     Write-Host "========== UNINSTALL ==========" -ForegroundColor Red
     Write-Host ""
     
-    Print-Warning "This operation will remove BetterDesk Console!"
+    Print-Warning "This operation will remove NeoDesk Console!"
     Write-Host ""
     
     if (-not $script:AUTO_MODE -and -not $script:UNINSTALL_MODE) {
@@ -4254,7 +4254,7 @@ function Do-Uninstall {
         $script:HBBS_SERVICE,
         $script:HBBR_SERVICE,
         $script:CONSOLE_SERVICE,
-        "BetterDeskAPI"
+        "NeoDeskAPI"
     )) {
         if (Get-Service -Name $serviceName -ErrorAction SilentlyContinue) {
             Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue
@@ -4282,7 +4282,7 @@ function Do-Uninstall {
         Print-Info "Preserved console data: $script:CONSOLE_PATH"
     }
     
-    Print-Success "BetterDesk has been uninstalled"
+    Print-Success "NeoDesk has been uninstalled"
     Press-Enter
 }
 
@@ -4302,7 +4302,7 @@ function Configure-Paths {
     
     $items = @(
         "Auto-detect paths`tProbe for an existing installation",
-        "Set server path`tEnter the BetterDesk server path",
+        "Set server path`tEnter the NeoDesk server path",
         "Set console path`tEnter the web console path",
         "Reset to defaults`tRestore the default paths",
         "Back`tReturn to the main menu"
@@ -4321,7 +4321,7 @@ function Configure-Paths {
         }
         "2" {
             Write-Host ""
-            $newPath = Read-Host "Enter RustDesk server path (e.g., C:\BetterDesk)"
+            $newPath = Read-Host "Enter RustDesk server path (e.g., C:\NeoDesk)"
             if ($newPath) {
                 if (Test-Path $newPath) {
                     $script:RUSTDESK_PATH = $newPath
@@ -4342,7 +4342,7 @@ function Configure-Paths {
         }
         "3" {
             Write-Host ""
-            $newPath = Read-Host "Enter Console path (e.g., C:\BetterDeskConsole)"
+            $newPath = Read-Host "Enter Console path (e.g., C:\NeoDeskConsole)"
             if ($newPath) {
                 if (Test-Path $newPath) {
                     $script:CONSOLE_PATH = $newPath
@@ -4360,8 +4360,8 @@ function Configure-Paths {
             Configure-Paths
         }
         "4" {
-            $script:RUSTDESK_PATH = "C:\BetterDesk"
-            $script:CONSOLE_PATH = "C:\BetterDeskConsole"
+            $script:RUSTDESK_PATH = "C:\NeoDesk"
+            $script:CONSOLE_PATH = "C:\NeoDeskConsole"
             $script:DB_PATH = "$script:RUSTDESK_PATH\db_v2.sqlite3"
             Print-Success "Paths reset to defaults"
             Press-Enter
@@ -4389,7 +4389,7 @@ function Do-Build {
         "Back`tReturn to the main menu"
     )
     $returns = @("1", "2", "3", "0")
-    Invoke-MenuChoose -Title "Build & Deploy" -Subtitle "Compile the BetterDesk server" -Items $items -Returns $returns
+    Invoke-MenuChoose -Title "Build & Deploy" -Subtitle "Compile the NeoDesk server" -Items $items -Returns $returns
     $buildChoice = $script:MENU_CHOICE
     if ([string]::IsNullOrEmpty($buildChoice)) { $buildChoice = "1" }
 
@@ -4411,7 +4411,7 @@ function Do-RebuildGoServer {
     Detect-Installation
 
     if ($script:INSTALL_STATUS -eq "none") {
-        Print-Warning "BetterDesk is not installed. Binary will be compiled but not deployed."
+        Print-Warning "NeoDesk is not installed. Binary will be compiled but not deployed."
         if (-not (Confirm-Action "Continue with compilation only?")) {
             Press-Enter
             return
@@ -4428,7 +4428,7 @@ function Do-RebuildGoServer {
         return
     }
 
-    $newBinary = Join-Path $script:GO_SERVER_SOURCE "betterdesk-server.exe"
+    $newBinary = Join-Path $script:GO_SERVER_SOURCE "neodesk-server.exe"
     if (-not (Test-Path $newBinary)) {
         Print-Error "Compiled binary not found at $newBinary"
         Press-Enter
@@ -4437,7 +4437,7 @@ function Do-RebuildGoServer {
 
     # Step 2: Backup current binary
     Print-Step "[2/5] Backing up current binary..."
-    $installedBinary = Join-Path $script:RUSTDESK_PATH "betterdesk-server.exe"
+    $installedBinary = Join-Path $script:RUSTDESK_PATH "neodesk-server.exe"
     $ts = Get-Date -Format "yyyyMMdd_HHmmss"
     $backupPath = "${installedBinary}.backup.${ts}"
     if (Test-Path $installedBinary) {
@@ -4465,7 +4465,7 @@ function Do-RebuildGoServer {
         } catch {
             Print-Warning "File is locked, waiting..."
             Start-Sleep -Seconds 3
-            Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue | Stop-Process -Force
+            Get-Process -Name "neodesk-server" -ErrorAction SilentlyContinue | Stop-Process -Force
             Start-Sleep -Seconds 2
         }
     }
@@ -4480,7 +4480,7 @@ function Do-RebuildGoServer {
 
     # Verify
     Start-Sleep -Seconds 3
-    $serverProcess = Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue
+    $serverProcess = Get-Process -Name "neodesk-server" -ErrorAction SilentlyContinue
     if ($serverProcess) {
         Write-Host ""
         Print-Success "Go server rebuilt and deployed successfully!"
@@ -4490,12 +4490,12 @@ function Do-RebuildGoServer {
         Write-Host "Rolling back to previous binary..." -ForegroundColor Yellow
         if (Test-Path $backupPath) {
             # Stop again
-            Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+            Get-Process -Name "neodesk-server" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 2
             Copy-Item -Path $backupPath -Destination $installedBinary -Force
             Start-Services
             Start-Sleep -Seconds 3
-            $rollbackProcess = Get-Process -Name "betterdesk-server" -ErrorAction SilentlyContinue
+            $rollbackProcess = Get-Process -Name "neodesk-server" -ErrorAction SilentlyContinue
             if ($rollbackProcess) {
                 Print-Success "Rollback successful - previous binary restored"
             } else {
@@ -4521,7 +4521,7 @@ function Do-CompileGoOnly {
         return
     }
 
-    $newBinary = Join-Path $script:GO_SERVER_SOURCE "betterdesk-server.exe"
+    $newBinary = Join-Path $script:GO_SERVER_SOURCE "neodesk-server.exe"
     $size = [math]::Round((Get-Item $newBinary).Length / 1MB, 2)
     Print-Success "Binary compiled: $newBinary ($size MB)"
     Print-Info "Use option 7 -> 1 to deploy it, or copy manually."
@@ -4557,7 +4557,7 @@ function Do-BuildLegacyRust {
     Print-Info "Rust: $rustVersion"
     Write-Host ""
 
-    $buildDir = Join-Path $env:TEMP "betterdesk_build_$((Get-Date).Ticks)"
+    $buildDir = Join-Path $env:TEMP "neodesk_build_$((Get-Date).Ticks)"
     New-Item -ItemType Directory -Path $buildDir -Force | Out-Null
 
     Push-Location $buildDir
@@ -4568,7 +4568,7 @@ function Do-BuildLegacyRust {
         Set-Location "rustdesk-server"
         git submodule update --init --recursive
 
-        Print-Step "Applying BetterDesk modifications..."
+        Print-Step "Applying NeoDesk modifications..."
 
         $srcDir = Join-Path $script:ScriptDir "hbbs-patch-v2\src"
         if (Test-Path $srcDir) {
@@ -4614,7 +4614,7 @@ function Do-ConfigureSSL {
     $envFile = Join-Path $script:CONSOLE_PATH ".env"
     if (-not (Test-Path $envFile)) {
         Print-Error "Console .env not found at $envFile"
-        Print-Info "Please install BetterDesk first (option 1)"
+        Print-Info "Please install NeoDesk first (option 1)"
         Press-Enter
         return
     }
@@ -4682,8 +4682,8 @@ function Do-ConfigureSSL {
             # Self-signed with full SANs
             New-Item -ItemType Directory -Path $sslDir -Force | Out-Null
             
-            $certPath = Join-Path $sslDir "betterdesk.crt"
-            $keyPath = Join-Path $sslDir "betterdesk.key"
+            $certPath = Join-Path $sslDir "neodesk.crt"
+            $keyPath = Join-Path $sslDir "neodesk.key"
             
             Write-Host ""
             $certDomain = Read-Host "Enter domain name (optional, press Enter to skip)"
@@ -4721,14 +4721,14 @@ function Do-ConfigureSSL {
                 $sanArg = "subjectAltName=$sanList"
                 & openssl req -x509 -nodes -days 3650 -newkey rsa:2048 `
                     -keyout $keyPath -out $certPath `
-                    -subj "/CN=$cn/O=BetterDesk/C=PL" `
+                    -subj "/CN=$cn/O=NeoDesk/C=PL" `
                     -addext $sanArg 2>&1 | Out-Null
                     
                 if (-not (Test-Path $certPath)) {
                     # Fallback for older openssl without -addext
                     & openssl req -x509 -nodes -days 3650 -newkey rsa:2048 `
                         -keyout $keyPath -out $certPath `
-                        -subj "/CN=$cn/O=BetterDesk/C=PL" 2>&1 | Out-Null
+                        -subj "/CN=$cn/O=NeoDesk/C=PL" 2>&1 | Out-Null
                 }
             } else {
                 # PowerShell self-signed cert
@@ -4741,7 +4741,7 @@ function Do-ConfigureSSL {
                     -KeyExportPolicy Exportable
                     
                 # Export as PFX then convert to PEM via openssl if available
-                $pfxPath = Join-Path $sslDir "betterdesk.pfx"
+                $pfxPath = Join-Path $sslDir "neodesk.pfx"
                 $certBytes = $cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pfx)
                 [System.IO.File]::WriteAllBytes($pfxPath, $certBytes)
                 
@@ -4840,8 +4840,8 @@ function Do-ConfigureSSL {
             
             New-Item -ItemType Directory -Path $sslDir -Force | Out-Null
             
-            $certPath = Join-Path $sslDir "betterdesk.crt"
-            $keyPath = Join-Path $sslDir "betterdesk.key"
+            $certPath = Join-Path $sslDir "neodesk.crt"
+            $keyPath = Join-Path $sslDir "neodesk.key"
             
             $certDomain = Read-Host "Enter domain name (optional, press Enter to skip)"
             
@@ -4873,13 +4873,13 @@ function Do-ConfigureSSL {
                 $sanArg = "subjectAltName=$sanList"
                 & openssl req -x509 -nodes -days 3650 -newkey rsa:4096 `
                     -keyout $keyPath -out $certPath `
-                    -subj "/CN=$cn/O=BetterDesk Enterprise/C=PL" `
+                    -subj "/CN=$cn/O=NeoDesk Enterprise/C=PL" `
                     -addext $sanArg 2>&1 | Out-Null
                     
                 if (-not (Test-Path $certPath)) {
                     & openssl req -x509 -nodes -days 3650 -newkey rsa:4096 `
                         -keyout $keyPath -out $certPath `
-                        -subj "/CN=$cn/O=BetterDesk Enterprise/C=PL" 2>&1 | Out-Null
+                        -subj "/CN=$cn/O=NeoDesk Enterprise/C=PL" 2>&1 | Out-Null
                 }
             } else {
                 $dnsNames = @("localhost")
@@ -4891,7 +4891,7 @@ function Do-ConfigureSSL {
                     -KeyExportPolicy Exportable `
                     -KeyLength 4096
                     
-                $pfxPath = Join-Path $sslDir "betterdesk.pfx"
+                $pfxPath = Join-Path $sslDir "neodesk.pfx"
                 $certBytes = $cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pfx)
                 [System.IO.File]::WriteAllBytes($pfxPath, $certBytes)
                 $certPath = $pfxPath
@@ -4926,7 +4926,7 @@ function Do-ConfigureSSL {
             
             # Keep internal Go API URLs on HTTP for RustDesk client compatibility
             $envContent = $envContent -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
-            $envContent = $envContent -replace 'BETTERDESK_API_URL=https://localhost', 'BETTERDESK_API_URL=http://localhost'
+            $envContent = $envContent -replace 'NEODESK_API_URL=https://localhost', 'NEODESK_API_URL=http://localhost'
             
             # Set ENTERPRISE_TLS marker
             if ($envContent -match 'ENTERPRISE_TLS=') {
@@ -4990,7 +4990,7 @@ function Do-ConfigureSSL {
         # === Enterprise TLS compatibility mode: Go API stays HTTP ===
         Print-Info "Enterprise TLS mode: panel/signal/relay use TLS; Go API stays HTTP"
         $envContent = $envContent -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
-        $envContent = $envContent -replace 'BETTERDESK_API_URL=https://localhost', 'BETTERDESK_API_URL=http://localhost'
+        $envContent = $envContent -replace 'NEODESK_API_URL=https://localhost', 'NEODESK_API_URL=http://localhost'
         
         # Ensure NSSM service has ALLOW_SELF_SIGNED_CERTS
         $nssm = Get-Command nssm -ErrorAction SilentlyContinue
@@ -5008,7 +5008,7 @@ function Do-ConfigureSSL {
                         $currentEnv = "$currentEnv`nRUSTDESK_API_TLS=true"
                     }
                     $currentEnv = $currentEnv -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
-                    $currentEnv = $currentEnv -replace 'BETTERDESK_API_URL=https://localhost', 'BETTERDESK_API_URL=http://localhost'
+                    $currentEnv = $currentEnv -replace 'NEODESK_API_URL=https://localhost', 'NEODESK_API_URL=http://localhost'
                     & nssm set $svcName AppEnvironmentExtra $currentEnv 2>$null
                 }
             } catch { }
@@ -5027,7 +5027,7 @@ function Do-ConfigureSSL {
     } elseif ($sslChoice -ne "4") {
         # === Standard SSL (options 1-3): API stays HTTP for RustDesk client compatibility ===
         $envContent = $envContent -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
-        $envContent = $envContent -replace 'BETTERDESK_API_URL=https://localhost', 'BETTERDESK_API_URL=http://localhost'
+        $envContent = $envContent -replace 'NEODESK_API_URL=https://localhost', 'NEODESK_API_URL=http://localhost'
         
         # For self-signed certs, Node.js needs NODE_EXTRA_CA_CERTS to trust the CA
         $sslCertValue = [regex]::Match($envContent, 'SSL_CERT_PATH=(.+)').Groups[1].Value.Trim()
@@ -5049,7 +5049,7 @@ function Do-ConfigureSSL {
                 if ($currentEnv) {
                     # Ensure API URLs stay HTTP in NSSM service
                     $currentEnv = $currentEnv -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
-                    $currentEnv = $currentEnv -replace 'BETTERDESK_API_URL=https://localhost', 'BETTERDESK_API_URL=http://localhost'
+                    $currentEnv = $currentEnv -replace 'NEODESK_API_URL=https://localhost', 'NEODESK_API_URL=http://localhost'
                     $apiTlsMode = if ($sslChoice -eq "3") { 'false' } else { 'true' }
                     if ($currentEnv -match 'RUSTDESK_API_TLS=') {
                         $currentEnv = $currentEnv -replace 'RUSTDESK_API_TLS=.*', "RUSTDESK_API_TLS=$apiTlsMode"
@@ -5076,7 +5076,7 @@ function Do-ConfigureSSL {
     } else {
         # === SSL disabled (option 4) — revert API URLs to HTTP ===
         $envContent = $envContent -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
-        $envContent = $envContent -replace 'BETTERDESK_API_URL=https://localhost', 'BETTERDESK_API_URL=http://localhost'
+        $envContent = $envContent -replace 'NEODESK_API_URL=https://localhost', 'NEODESK_API_URL=http://localhost'
         $envContent = $envContent -replace '(?m)^NODE_EXTRA_CA_CERTS=.*\r?\n?', ''
         $envContent = $envContent -replace '(?m)^ENTERPRISE_TLS=.*\r?\n?', ''
         $envContent = $envContent -replace 'ALLOW_SELF_SIGNED_CERTS=.*', 'ALLOW_SELF_SIGNED_CERTS=false'
@@ -5118,7 +5118,7 @@ function Do-ConfigureSSL {
     Set-Content $envFile -Value $envContent -NoNewline
     
     Write-Host ""
-    if (Confirm-Action "Restart BetterDesk to apply changes?") {
+    if (Confirm-Action "Restart NeoDesk to apply changes?") {
         $serverService = $script:SERVER_SERVICE
         $consoleService = $script:CONSOLE_SERVICE
         if (Get-Service -Name $serverService -ErrorAction SilentlyContinue) {
@@ -5127,7 +5127,7 @@ function Do-ConfigureSSL {
         if (-not (Test-GoOnlyInstall) -and (Get-Service -Name $consoleService -ErrorAction SilentlyContinue)) {
             Restart-Service -Name $consoleService -Force -ErrorAction SilentlyContinue
         }
-        Print-Success "BetterDesk services restarted"
+        Print-Success "NeoDesk services restarted"
     }
     
     Press-Enter
@@ -5147,7 +5147,7 @@ function Do-ToggleProtocol {
 
     # Detect current mode from NSSM or .env
     $currentMode = "HTTP"
-    $nssmConsole = if (Test-GoOnlyInstall) { $script:SERVER_SERVICE } else { "BetterDeskConsole" }
+    $nssmConsole = if (Test-GoOnlyInstall) { $script:SERVER_SERVICE } else { "NeoDeskConsole" }
     try {
         $nssmEnv = (nssm get $nssmConsole AppEnvironmentExtra 2>$null) -join "`n"
         if ($nssmEnv -match "HTTPS_ENABLED=true") {
@@ -5164,7 +5164,7 @@ function Do-ToggleProtocol {
 
     $tlsSignal = "no"
     $tlsRelay = "no"
-    $nssmServer = "BetterDeskServer"
+    $nssmServer = "NeoDeskServer"
     try {
         $serverArgs = nssm get $nssmServer AppParameters 2>$null
         if ($serverArgs -match "-tls-signal") { $tlsSignal = "yes" }
@@ -5197,7 +5197,7 @@ function Do-ToggleProtocol {
                 $content = $content -replace "(?m)^RUSTDESK_API_TLS=.*$", "RUSTDESK_API_TLS=false"
                 $content = $content -replace "(?m)^ALLOW_SELF_SIGNED_CERTS=.*$", "ALLOW_SELF_SIGNED_CERTS=false"
                 $content = $content -replace "(?m)^HBBS_API_URL=https://localhost", "HBBS_API_URL=http://localhost"
-                $content = $content -replace "(?m)^BETTERDESK_API_URL=https://localhost", "BETTERDESK_API_URL=http://localhost"
+                $content = $content -replace "(?m)^NEODESK_API_URL=https://localhost", "NEODESK_API_URL=http://localhost"
                 $content = $content -replace "(?m)^HTTP_REDIRECT_HTTPS=.*$", "HTTP_REDIRECT_HTTPS=false"
                 $content = $content -replace "(?m)^NODE_EXTRA_CA_CERTS=.*`n?", ""
                 $content = $content -replace "(?m)^ENTERPRISE_TLS=.*`n?", ""
@@ -5211,7 +5211,7 @@ function Do-ToggleProtocol {
                 $env = $env -replace "ALLOW_SELF_SIGNED_CERTS=true", "ALLOW_SELF_SIGNED_CERTS=false"
                 $env = $env -replace "RUSTDESK_API_TLS=[^\s]+", "RUSTDESK_API_TLS=false"
                 $env = $env -replace "HBBS_API_URL=https://localhost", "HBBS_API_URL=http://localhost"
-                $env = $env -replace "BETTERDESK_API_URL=https://localhost", "BETTERDESK_API_URL=http://localhost"
+                $env = $env -replace "NEODESK_API_URL=https://localhost", "NEODESK_API_URL=http://localhost"
                 $env = $env -replace "(?m)^NODE_EXTRA_CA_CERTS=.*$", ""
                 $env = $env -replace "(?m)^ENTERPRISE_TLS=.*$", ""
                 $env = ($env -split "`n" | Where-Object { $_.Trim() -ne "" }) -join "`n"
@@ -5244,8 +5244,8 @@ function Do-ToggleProtocol {
             # --- Switch to HTTPS ---
             Write-Host ""
 
-            $certFile = Join-Path $sslDir "betterdesk.crt"
-            $keyFile = Join-Path $sslDir "betterdesk.key"
+            $certFile = Join-Path $sslDir "neodesk.crt"
+            $keyFile = Join-Path $sslDir "neodesk.key"
 
             # Check for SSL certificates
             if (-not (Test-Path $certFile) -or -not (Test-Path $keyFile)) {
@@ -5261,7 +5261,7 @@ function Do-ToggleProtocol {
 
                     & openssl req -x509 -nodes -days 3650 -newkey rsa:4096 `
                         -keyout $keyFile -out $certFile `
-                        -subj "/CN=$serverIp/O=BetterDesk/C=PL" 2>$null
+                        -subj "/CN=$serverIp/O=NeoDesk/C=PL" 2>$null
 
                     if (Test-Path $certFile) {
                         Print-Success "Self-signed certificate generated"
@@ -5289,7 +5289,7 @@ function Do-ToggleProtocol {
                 $content = $content -replace "(?m)^HTTP_REDIRECT_HTTPS=.*$", "HTTP_REDIRECT_HTTPS=true"
                 # Keep Go API on HTTP
                 $content = $content -replace "(?m)^HBBS_API_URL=https://localhost", "HBBS_API_URL=http://localhost"
-                $content = $content -replace "(?m)^BETTERDESK_API_URL=https://localhost", "BETTERDESK_API_URL=http://localhost"
+                $content = $content -replace "(?m)^NEODESK_API_URL=https://localhost", "NEODESK_API_URL=http://localhost"
                 if ($content -notmatch "ALLOW_SELF_SIGNED_CERTS=") {
                     $content += "`nALLOW_SELF_SIGNED_CERTS=true"
                 } else {
@@ -5312,7 +5312,7 @@ function Do-ToggleProtocol {
                 if ($env -notmatch "ALLOW_SELF_SIGNED_CERTS=") { $env += "`nALLOW_SELF_SIGNED_CERTS=true" }
                 # Go API stays HTTP
                 $env = $env -replace "HBBS_API_URL=https://localhost", "HBBS_API_URL=http://localhost"
-                $env = $env -replace "BETTERDESK_API_URL=https://localhost", "BETTERDESK_API_URL=http://localhost"
+                $env = $env -replace "NEODESK_API_URL=https://localhost", "NEODESK_API_URL=http://localhost"
                 if ($env -notmatch "NODE_EXTRA_CA_CERTS=") { $env += "`nNODE_EXTRA_CA_CERTS=$certFile" }
                 else { $env = $env -replace "(?m)^NODE_EXTRA_CA_CERTS=.*$", "NODE_EXTRA_CA_CERTS=$certFile" }
                 $env = ($env -split "`n" | Where-Object { $_.Trim() -ne "" }) -join "`n"
@@ -5346,13 +5346,13 @@ function Do-ToggleProtocol {
     }
 
     Write-Host ""
-    $restart = Read-Host "Restart BetterDesk services now? [Y/n]"
+    $restart = Read-Host "Restart NeoDesk services now? [Y/n]"
     if ($restart -ne "n" -and $restart -ne "N") {
         try {
             nssm restart $nssmServer 2>$null | Out-Null
             nssm restart $nssmConsole 2>$null | Out-Null
             Start-Sleep -Seconds 2
-            Print-Success "BetterDesk services restarted"
+            Print-Success "NeoDesk services restarted"
             Write-Host ""
             # Quick status check
             $serverStatus = (nssm status $nssmServer 2>$null)
@@ -5401,10 +5401,10 @@ function Invoke-ServerMigrate {
 function Get-MigrateBin {
     if (Test-BinaryMigrates) { return "Invoke-ServerMigrate" }
     $searchPaths = @(
-        (Join-Path $script:ScriptDir "betterdesk-server\tools\migrate\migrate.exe"),
+        (Join-Path $script:ScriptDir "neodesk-server\tools\migrate\migrate.exe"),
         (Join-Path $script:ScriptDir "tools\migrate\migrate.exe"),
         (Join-Path $script:RUSTDESK_PATH "migrate.exe"),
-        "C:\BetterDesk\migrate.exe"
+        "C:\NeoDesk\migrate.exe"
     )
     foreach ($p in $searchPaths) {
         if (Test-Path $p) { return $p }
@@ -5453,7 +5453,7 @@ function Do-MigrateDatabase {
         "Back`tReturn to the main menu"
     )
     $returns = @("1", "2", "3", "4", "0")
-    Invoke-MenuChoose -Title "Database Migration" -Subtitle "Move data between BetterDesk components" -Items $items -Returns $returns
+    Invoke-MenuChoose -Title "Database Migration" -Subtitle "Move data between NeoDesk components" -Items $items -Returns $returns
     $migChoice = $script:MENU_CHOICE
 
     switch ($migChoice) {
@@ -5471,7 +5471,7 @@ function Do-MigrateDatabase {
             }
 
             $dstDb = Read-Host "Destination (SQLite path or postgres:// URI) [new file next to source]"
-            if ([string]::IsNullOrEmpty($dstDb)) { $dstDb = Join-Path (Split-Path -Parent $srcDb) "betterdesk.sqlite3" }
+            if ([string]::IsNullOrEmpty($dstDb)) { $dstDb = Join-Path (Split-Path -Parent $srcDb) "neodesk.sqlite3" }
             if (-not (Confirm-MigrateOverwrite $dstDb)) {
                 Press-Enter
                 return
@@ -5703,7 +5703,7 @@ function Main {
         $ok = $true
         switch (Get-AutoAction) {
             "uninstall" { Do-Uninstall }
-            { $_ -in "upgrade", "update" } { Print-Info "BetterDesk is installed here: updating it"; $ok = Do-Update }
+            { $_ -in "upgrade", "update" } { Print-Info "NeoDesk is installed here: updating it"; $ok = Do-Update }
             "minimal" { $ok = Do-InstallMinimal }
             default { $ok = Do-Install }
         }
@@ -5720,7 +5720,7 @@ function Main {
             "Reset admin password`tReset the console admin",
             "Build & deploy server`tCompile and deploy the Go server",
             "Diagnostics`tDetailed problem analysis",
-            "Uninstall`tRemove BetterDesk",
+            "Uninstall`tRemove NeoDesk",
             "Minimal installation`tServer with its web console off",
             "Configure SSL certificates`tLet's Encrypt / custom / self-signed",
             "Toggle HTTP/HTTPS`tSwitch protocol mode",
@@ -5734,8 +5734,8 @@ function Main {
 
         $choice = ""
         if (Test-TuiAvailable) {
-            $statusLine = "BetterDesk Console Manager v$VERSION"
-            if (Invoke-TuiSelect -Title "BetterDesk Console Manager v$VERSION" -Subtitle "Use arrow keys, Enter to select" -Items $menuLabels) {
+            $statusLine = "NeoDesk Console Manager v$VERSION"
+            if (Invoke-TuiSelect -Title "NeoDesk Console Manager v$VERSION" -Subtitle "Use arrow keys, Enter to select" -Items $menuLabels) {
                 $choice = $menuActions[$script:TUI_RESULT]
             } else {
                 $choice = "0"

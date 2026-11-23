@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // TestLDAPAutoCreateSwitch: Auto-create users is on for a directory that

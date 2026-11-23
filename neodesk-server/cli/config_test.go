@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/updater"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
 )
 
 type managementCase struct {
@@ -34,7 +34,7 @@ var managementDifferences = map[string]string{
 	// The allowlist is compiled in (spec 4.9); the script read it from the
 	// console folder's .env.example and refused every key without one
 	"set/noexample":    "the allowlist is built in",
-	"set/noconsoledir": "the allowlist is built in (the folder BETTERDESK_CONSOLE_PATH names has no .env.example)",
+	"set/noconsoledir": "the allowlist is built in (the folder NEODESK_CONSOLE_PATH names has no .env.example)",
 }
 
 var backupStamp = regexp.MustCompile(`\.bak\.\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-\d{3}Z`)
@@ -63,10 +63,10 @@ func managementSetup(t *testing.T, c managementCase) (string, map[string]string)
 			t.Fatal(err)
 		}
 	}
-	// The console's folder comes from BETTERDESK_CONSOLE_PATH alone, as in
+	// The console's folder comes from NEODESK_CONSOLE_PATH alone, as in
 	// the script: CONSOLE_DIR names another one
 	env := map[string]string{
-		"BETTERDESK_CONSOLE_PATH": consoleDir, "BETTERDESK_PATH": filepath.Join(root, "server"),
+		"NEODESK_CONSOLE_PATH": consoleDir, "NEODESK_PATH": filepath.Join(root, "server"),
 		"DATA_DIR": filepath.Join(root, "data"), "CONSOLE_DIR": filepath.Join(root, "elsewhere"),
 	}
 	for k, v := range c.Env {
@@ -266,7 +266,7 @@ func TestConfigCheckExitStatus(t *testing.T) {
 		}
 	}
 	base := map[string]string{
-		"BETTERDESK_CONSOLE_PATH": filepath.Join(root, "console"), "BETTERDESK_PATH": filepath.Join(root, "server"),
+		"NEODESK_CONSOLE_PATH": filepath.Join(root, "console"), "NEODESK_PATH": filepath.Join(root, "server"),
 		"DATA_DIR": filepath.Join(root, "data"), "CONSOLE_DIR": filepath.Join(root, "console"),
 	}
 	run := func(extra map[string]string) (int, updater.Capabilities) {
@@ -285,7 +285,7 @@ func TestConfigCheckExitStatus(t *testing.T) {
 		}
 		return status, report
 	}
-	status, report := run(map[string]string{"BETTERDESK_SUPERVISOR": "systemd"})
+	status, report := run(map[string]string{"NEODESK_SUPERVISOR": "systemd"})
 	ready := report.Groups.Update.Ready && report.Groups.Config.Ready && report.Groups.Restart.Ready &&
 		report.Groups.Permissions.Ready && report.Groups.Backup.Ready && report.Groups.Health.Ready
 	if want := map[bool]int{true: 0, false: 1}[ready]; status != want {

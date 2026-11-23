@@ -13,11 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/agentreleases"
-	"github.com/unitronix/betterdesk-server/console/auditlog"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/agentreleases"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 type roundTrip func(*http.Request) (*http.Response, error)
@@ -102,7 +102,7 @@ func TestSyncRefusalOfTheCacheIsAConflict(t *testing.T) {
 			{"not newer", "support-v2.0.0", `{"success":false,"error":"generic_agent_release_not_newer:support-v1.2.0"}`},
 		} {
 			dataDir := t.TempDir()
-			folder := filepath.Join(dataDir, "modules", "betterdesk-support-releases", c.cached)
+			folder := filepath.Join(dataDir, "modules", "neodesk-support-releases", c.cached)
 			if err := os.MkdirAll(folder, 0o755); err != nil {
 				t.Fatal(err)
 			}

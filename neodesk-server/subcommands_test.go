@@ -46,13 +46,13 @@ func TestCLICommandsAreWired(t *testing.T) {
 		code  int
 		usage string
 	}{
-		{"env", nil, 2, "usage: betterdesk-server env merge"},
-		{"env", []string{"split"}, 2, "usage: betterdesk-server env merge"},
-		{"env", []string{"merge"}, 2, "Usage: betterdesk-server env merge"},
-		{"upgrade-env", nil, 2, "Usage: betterdesk-server upgrade-env"},
-		{"reset-password", []string{"a", "b"}, 1, "Usage: betterdesk-server reset-password"},
+		{"env", nil, 2, "usage: neodesk-server env merge"},
+		{"env", []string{"split"}, 2, "usage: neodesk-server env merge"},
+		{"env", []string{"merge"}, 2, "Usage: neodesk-server env merge"},
+		{"upgrade-env", nil, 2, "Usage: neodesk-server upgrade-env"},
+		{"reset-password", []string{"a", "b"}, 1, "Usage: neodesk-server reset-password"},
 		{"check", []string{"--bogus"}, 1, "FAIL Unknown option: --bogus"},
-		{"config", []string{"bogus"}, 2, "Usage:\n  betterdesk-server config check"},
+		{"config", []string{"bogus"}, 2, "Usage:\n  neodesk-server config check"},
 	} {
 		var out, errOut strings.Builder
 		code := subcommands[c.name].run(c.args, strings.NewReader(""), &out, &errOut)
@@ -62,13 +62,13 @@ func TestCLICommandsAreWired(t *testing.T) {
 	}
 }
 
-// betterdesk-server migrate is the migration tool with its flags: -mode
+// neodesk-server migrate is the migration tool with its flags: -mode
 // backup copies a SQLite file next to it, -h prints the modes and
 // succeeds, a mode it does not know prints them and fails (L71).
 func TestMigrateCommand(t *testing.T) {
 	cmd, ok := subcommands["migrate"]
 	if !ok {
-		t.Fatal("betterdesk-server has no migrate command")
+		t.Fatal("neodesk-server has no migrate command")
 	}
 	dir := t.TempDir()
 	src := filepath.Join(dir, "db_v2.sqlite3")

@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/listen"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/listen"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // exchangeRaw writes text on a new connection to addr and reads until the

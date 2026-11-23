@@ -49,7 +49,7 @@ func TestCertMakesASelfSignedPair(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("exit %d: %s", code, out)
 	}
-	crtPath, keyPath := filepath.Join(dir, "betterdesk.crt"), filepath.Join(dir, "betterdesk.key")
+	crtPath, keyPath := filepath.Join(dir, "neodesk.crt"), filepath.Join(dir, "neodesk.key")
 	if _, err := tls.LoadX509KeyPair(crtPath, keyPath); err != nil {
 		t.Fatalf("the key does not belong to the certificate: %v", err)
 	}

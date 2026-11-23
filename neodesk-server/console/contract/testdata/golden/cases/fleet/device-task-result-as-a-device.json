@@ -2,7 +2,7 @@
  "id": "fleet/device-task-result-as-a-device",
  "request": {
   "method": "POST",
-  "path": "/api/bd/fleet/task-result",
+  "path": "/api/nd/fleet/task-result",
   "body": {
    "device_id": "900100001",
    "output": "ok",

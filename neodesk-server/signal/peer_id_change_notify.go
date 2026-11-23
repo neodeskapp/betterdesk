@@ -3,8 +3,8 @@ package signal
 import (
 	"log"
 
-	"github.com/unitronix/betterdesk-server/events"
-	pb "github.com/unitronix/betterdesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 )
 
 func (s *Server) startPeerIDChangeListener() {

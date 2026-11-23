@@ -28,7 +28,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -58,7 +58,7 @@
     "kind": "json",
     "json": {
      "code": "{secret:invite_code}",
-     "deep_link": "betterdesk://join/<host>/{secret:invite_code}?http=1",
+     "deep_link": "neodesk://join/<host>/{secret:invite_code}?http=1",
      "display_code": "<volatile>",
      "invite": {
       "created_at": "<volatile>",
@@ -95,7 +95,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -125,7 +125,7 @@
     "kind": "json",
     "json": {
      "code": "{secret:invite_code}",
-     "deep_link": "betterdesk://join/<host>/{secret:invite_code}?http=1",
+     "deep_link": "neodesk://join/<host>/{secret:invite_code}?http=1",
      "display_code": "<volatile>",
      "invite": {
       "created_at": "<volatile>",
@@ -162,7 +162,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -192,7 +192,7 @@
     "kind": "json",
     "json": {
      "code": "{secret:invite_code}",
-     "deep_link": "betterdesk://join/<host>/{secret:invite_code}?http=1",
+     "deep_link": "neodesk://join/<host>/{secret:invite_code}?http=1",
      "display_code": "<volatile>",
      "invite": {
       "created_at": "<volatile>",

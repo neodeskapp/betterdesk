@@ -82,14 +82,14 @@ func (c Console) Link(kind, code string) string {
 }
 
 // DeepLink is the link the desktop client takes:
-// betterdesk://join/<host[:port]>/<code>, or support instead of join,
+// neodesk://join/<host[:port]>/<code>, or support instead of join,
 // with ?http=1 for a console on plain HTTP.
 func (c Console) DeepLink(kind, code string) string {
 	verb := "join"
 	if kind == KindSupport {
 		verb = "support"
 	}
-	link := "betterdesk://" + verb + "/" + c.hostPort() + "/" + Normalize(code)
+	link := "neodesk://" + verb + "/" + c.hostPort() + "/" + Normalize(code)
 	if !c.HTTPS {
 		link += "?http=1"
 	}
@@ -115,13 +115,13 @@ func (c Console) FileHost() string {
 }
 
 // FileName is the name a client package is served under for a code:
-// BetterDesk-Setup-<host>-<code><ext> for join codes,
-// BetterDesk-QuickSupport-<host>-<code><ext> for support codes. Without a
+// NeoDesk-Setup-<host>-<code><ext> for join codes,
+// NeoDesk-QuickSupport-<host>-<code><ext> for support codes. Without a
 // host form (FileHost) the host part is left out.
 func (c Console) FileName(kind, code, ext string) string {
-	prefix := "BetterDesk-Setup-"
+	prefix := "NeoDesk-Setup-"
 	if kind == KindSupport {
-		prefix = "BetterDesk-QuickSupport-"
+		prefix = "NeoDesk-QuickSupport-"
 	}
 	if host := c.FileHost(); host != "" {
 		return prefix + host + "-" + Normalize(code) + ext

@@ -16,9 +16,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 const signedOut = `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`
@@ -237,8 +237,8 @@ func TestOwnProcess(t *testing.T) {
 }
 
 func TestLogs(t *testing.T) {
-	const console = "journalctl -u betterdesk-console --no-pager -n 50 --output=short-iso 2>/dev/null"
-	const server5 = "journalctl -u betterdesk-server --no-pager -n 5 --output=short-iso 2>/dev/null || journalctl -u betterdesk-go --no-pager -n 5 --output=short-iso 2>/dev/null"
+	const console = "journalctl -u neodesk-console --no-pager -n 50 --output=short-iso 2>/dev/null"
+	const server5 = "journalctl -u neodesk-server --no-pager -n 5 --output=short-iso 2>/dev/null || journalctl -u neodesk-go --no-pager -n 5 --output=short-iso 2>/dev/null"
 	sh := &shell{outputs: map[string]string{
 		console: "2026-11-10T10:00:00+0000 host console[1]: started\n   \n2026-11-10T10:00:01+0000 host console[1]: \"quoted\"\n",
 		server5: "one\n\ntwo",
@@ -275,7 +275,7 @@ func TestLogs(t *testing.T) {
 		if !strings.HasPrefix(got, `{"source":`+c.source+`,"lines":[`) {
 			t.Errorf("%s: %s, want the source %s", c.query, got, c.source)
 		}
-		want := "5s journalctl -u betterdesk-console --no-pager -n " + c.n + " --output=short-iso 2>/dev/null"
+		want := "5s journalctl -u neodesk-console --no-pager -n " + c.n + " --output=short-iso 2>/dev/null"
 		if len(sh.ran) != 1 || sh.ran[0] != want {
 			t.Errorf("%s ran %q, want %q", c.query, sh.ran, want)
 		}
@@ -284,10 +284,10 @@ func TestLogs(t *testing.T) {
 
 func TestLogsFromFiles(t *testing.T) {
 	files := map[string]string{
-		"/opt/betterdesk/server.log":       "a\nb\n\nc\nd\n",
-		"/var/log/betterdesk-server.log":   "never read: an earlier file exists",
-		"/var/log/betterdesk-console.log":  "x\ny\nz",
-		"/opt/rustdesk/betterdesk-go.log":  "not a file the route knows",
+		"/opt/neodesk/server.log":          "a\nb\n\nc\nd\n",
+		"/var/log/neodesk-server.log":      "never read: an earlier file exists",
+		"/var/log/neodesk-console.log":     "x\ny\nz",
+		"/opt/rustdesk/neodesk-go.log":     "not a file the route knows",
 		"/opt/rustdesk/console.log.broken": "",
 	}
 	var opened []string
@@ -315,7 +315,7 @@ func TestLogsFromFiles(t *testing.T) {
 	}
 	opened = nil
 	s.call(admin, "GET", "/api/logs/recent?source=go", "")
-	if strings.Join(opened, " ") != "/opt/rustdesk/betterdesk-server.log /opt/betterdesk/server.log" {
+	if strings.Join(opened, " ") != "/opt/rustdesk/neodesk-server.log /opt/neodesk/server.log" {
 		t.Errorf("files tried: %q", opened)
 	}
 
@@ -359,7 +359,7 @@ func TestLogsReadOnlyTheEndOfALargeFile(t *testing.T) {
 	}
 	read := 0
 	open := func(path string) (io.ReadSeekCloser, error) {
-		if path != "/opt/rustdesk/betterdesk-server.log" {
+		if path != "/opt/rustdesk/neodesk-server.log" {
 			return nil, fs.ErrNotExist
 		}
 		return countingFile{bytes.NewReader([]byte(content.String())), &read}, nil
@@ -529,7 +529,7 @@ func TestExec(t *testing.T) {
 	sh := &shell{outputs: map[string]string{"whoami": "root\n", "uptime": " 12:00:00 up 3 days\n", "date": "", "top -bn1 | head -20": "top - \"12:00\"\n\tTasks: 5 "}}
 	s := linuxSite(t, sh, nil)
 	admin := s.signIn("admin")
-	const refused = `{"error":"Command not in allowed list. Allowed: uptime, date, hostname, whoami, df -h, free -m, uname -a, cat /etc/os-release, systemctl status betterdesk-server, systemctl status betterdesk-console, docker ps, docker stats --no-stream, ip addr, ss -tlnp, netstat -tlnp, top -bn1 | head -20"}`
+	const refused = `{"error":"Command not in allowed list. Allowed: uptime, date, hostname, whoami, df -h, free -m, uname -a, cat /etc/os-release, systemctl status neodesk-server, systemctl status neodesk-console, docker ps, docker stats --no-stream, ip addr, ss -tlnp, netstat -tlnp, top -bn1 | head -20"}`
 	cases := []struct {
 		body   string
 		status int

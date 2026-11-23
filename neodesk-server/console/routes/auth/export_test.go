@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // RunHousekeeping runs the group's clean-up job with a short interval

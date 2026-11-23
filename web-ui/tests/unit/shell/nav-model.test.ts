@@ -171,9 +171,9 @@ describe('remembered state', () => {
 			getItem: (k: string) => store.get(k) ?? null,
 			setItem: (k: string, v: string) => void store.set(k, v)
 		};
-		writeFlags(storage, 'bd_nav_more_open', { devices: true, settings: false });
-		expect(store.get('bd_nav_more_open')).toBe('{"devices":true,"settings":false}');
-		expect(readFlags(storage, 'bd_nav_more_open')).toEqual({ devices: true, settings: false });
+		writeFlags(storage, 'nd_nav_more_open', { devices: true, settings: false });
+		expect(store.get('nd_nav_more_open')).toBe('{"devices":true,"settings":false}');
+		expect(readFlags(storage, 'nd_nav_more_open')).toEqual({ devices: true, settings: false });
 		store.set('x', '{"a":true,"b":"yes","c":1}');
 		expect(readFlags(storage, 'x')).toEqual({ a: true });
 		store.set('y', 'not json');

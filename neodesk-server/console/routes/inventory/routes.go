@@ -1,5 +1,5 @@
 // Package inventory holds the inventory routes. The console mounts the
-// group twice, at /api/bd and at /api/inventory, so each route answers at
+// group twice, at /api/nd and at /api/inventory, so each route answers at
 // both:
 //
 //   - The routes of the desktop agent, which take a device token: it
@@ -9,7 +9,7 @@
 //   - The routes people read inventory with: the list of devices with their
 //     hardware in short, and one device's last report with its last
 //     telemetry. Both need the permission device.view and keep to the
-//     account's device scope, and both step aside at /api/bd for the
+//     account's device scope, and both step aside at /api/nd for the
 //     routes of other groups there.
 package inventory
 
@@ -18,14 +18,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/alerts"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/devicemount"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/alerts"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/devicemount"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsjson"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 type handlers struct {

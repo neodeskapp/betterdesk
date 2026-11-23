@@ -2,7 +2,7 @@
  "id": "inventory-device/read-other-spelling",
  "request": {
   "method": "GET",
-  "path": "/API/BD/Inventory/900100001/",
+  "path": "/API/ND/Inventory/900100001/",
   "notes": [
    "header Authorization: Bearer {secret:device_token}",
    "no CSRF token",

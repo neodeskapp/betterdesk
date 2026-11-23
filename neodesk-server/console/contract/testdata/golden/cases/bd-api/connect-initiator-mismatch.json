@@ -2,7 +2,7 @@
  "id": "bd-api/connect-initiator-mismatch",
  "request": {
   "method": "POST",
-  "path": "/api/bd/connect",
+  "path": "/api/nd/connect",
   "body": {
    "initiator_id": "900100003",
    "target_id": "900100002"

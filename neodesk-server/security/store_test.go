@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // memStore is a Store in memory, keyed by kind and value.

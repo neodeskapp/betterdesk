@@ -2,7 +2,7 @@
  "id": "scaling/heartbeat-without-cookies",
  "request": {
   "method": "POST",
-  "path": "/api/bd/scaling/relay-heartbeat",
+  "path": "/api/nd/scaling/relay-heartbeat",
   "body": {},
   "notes": [
    "no CSRF token",

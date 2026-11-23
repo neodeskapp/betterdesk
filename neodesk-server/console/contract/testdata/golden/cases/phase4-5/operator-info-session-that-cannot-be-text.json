@@ -2,7 +2,7 @@
  "id": "phase4-5/operator-info-session-that-cannot-be-text",
  "request": {
   "method": "GET",
-  "path": "/api/bd/operator-info?session_id%5BtoString%5D=a"
+  "path": "/api/nd/operator-info?session_id%5BtoString%5D=a"
  },
  "recordings": 2,
  "answers": [
@@ -59,7 +59,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",

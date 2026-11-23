@@ -52,7 +52,7 @@ func TestBuildSettingsThatAreNoNumber(t *testing.T) {
 		"90000ms": 90 * time.Second,
 	} {
 		if got := buildTimeoutOf(raw); got != want {
-			t.Errorf("BETTERDESK_CLIENT_BUILD_TIMEOUT_MS=%q: %v, want %v", raw, got, want)
+			t.Errorf("NEODESK_CLIENT_BUILD_TIMEOUT_MS=%q: %v, want %v", raw, got, want)
 		}
 	}
 	for raw, want := range map[string]int64{
@@ -64,7 +64,7 @@ func TestBuildSettingsThatAreNoNumber(t *testing.T) {
 		"2048MB": 2048,
 	} {
 		if got := minFreeMB(raw); got != want {
-			t.Errorf("BETTERDESK_CLIENT_BUILD_MIN_FREE_MB=%q: %d, want %d", raw, got, want)
+			t.Errorf("NEODESK_CLIENT_BUILD_MIN_FREE_MB=%q: %d, want %d", raw, got, want)
 		}
 	}
 }

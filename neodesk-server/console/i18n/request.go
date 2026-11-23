@@ -12,7 +12,7 @@ import (
 )
 
 // CookieName is the cookie that remembers the console language.
-const CookieName = "betterdesk_lang"
+const CookieName = "neodesk_lang"
 
 // cookieMaxAge is one year in seconds.
 const cookieMaxAge = 365 * 24 * 60 * 60

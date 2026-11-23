@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 func loginPageWorld(t *testing.T, db *store.DB) *routetest.World {
@@ -52,7 +52,7 @@ func TestLoginPage(t *testing.T) {
 		if got := strings.Join(keys, ","); got != "success,csrfToken,appName,appVersion,desktopMode,signedIn,branding,languages,attestation" {
 			t.Errorf("keys = %s", got)
 		}
-		if page["appName"] != "BetterDesk" || page["appVersion"] != "1.2.3" || page["desktopMode"] != false ||
+		if page["appName"] != "NeoDesk" || page["appVersion"] != "1.2.3" || page["desktopMode"] != false ||
 			page["signedIn"] != false || page["attestation"] != nil {
 			t.Errorf("login page = %v", page)
 		}
@@ -66,7 +66,7 @@ func TestLoginPage(t *testing.T) {
 
 		// The old desktop mode's cookie, exactly "true"
 		for value, want := range map[string]bool{"true": true, "TRUE": false, "1": false} {
-			if _, page := loginPage(t, w.SignedOut(), "Cookie", "betterdesk_desktop_mode="+value); page["desktopMode"] != want {
+			if _, page := loginPage(t, w.SignedOut(), "Cookie", "neodesk_desktop_mode="+value); page["desktopMode"] != want {
 				t.Errorf("desktop mode cookie %q: %v", value, page["desktopMode"])
 			}
 		}

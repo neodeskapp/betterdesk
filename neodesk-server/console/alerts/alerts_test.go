@@ -11,12 +11,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jobs"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/mail"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jobs"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // addRule writes an enabled rule and returns its id.
@@ -580,9 +580,9 @@ func TestAlertMailThroughTheMailService(t *testing.T) {
 			t.Fatalf("settings %+v", with)
 		}
 		if m.From != "panel@example.com" || len(m.To) != 1 || m.To[0] != "ops@example.com, oncall@example.com" || m.ToList ||
-			m.Subject != "[BetterDesk Alert] CPU <high> — CRITICAL" ||
+			m.Subject != "[NeoDesk Alert] CPU <high> — CRITICAL" ||
 			!strings.Contains(*m.Text, "Message: CPU <high>: cpu_usage = 95.5 (gt 80)\n") || !strings.Contains(*m.Text, "\nDevice: dev-1\n") ||
-			!strings.Contains(*m.HTML, "BetterDesk Alert: CPU &lt;high&gt;</h2>") {
+			!strings.Contains(*m.HTML, "NeoDesk Alert: CPU &lt;high&gt;</h2>") {
 			t.Fatalf("mail from %q to %q subject %q\n%s\n%s", m.From, m.To, m.Subject, *m.Text, *m.HTML)
 		}
 	})

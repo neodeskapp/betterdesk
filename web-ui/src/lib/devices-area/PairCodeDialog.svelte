@@ -1,5 +1,5 @@
 <!--
-  "Pair with code" (enrollment.approve): a one-time code for a BetterDesk
+  "Pair with code" (enrollment.approve): a one-time code for a NeoDesk
   agent. The server address is filled in with the client address the
   overview resolved (the person can change it), the label is optional.
   Create code asks the server for a code (POST /api/panel/pairing/codes);

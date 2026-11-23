@@ -1,10 +1,10 @@
-# BetterDesk Mesh interop — simulated handshake + optional live MeshAgent.
+# NeoDesk Mesh interop — simulated handshake + optional live MeshAgent.
 # Usage:
 #   docker compose -f interop/docker-compose.yml up --abort-on-container-exit
 services:
   mesh-interop:
     image: golang:1.26-bookworm
-    working_dir: /src/betterdesk-server
+    working_dir: /src/neodesk-server
     volumes:
       - ../../:/src
     command: >

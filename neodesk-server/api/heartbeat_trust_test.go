@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // postPlainHeartbeat sends a heartbeat body without a verified envelope.

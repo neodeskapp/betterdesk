@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/backup"
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // fakeBackups makes small archives with the real archive code, so the
@@ -45,7 +45,7 @@ func (f *fakeBackups) CreateFullBackup(context.Context) ([]byte, string, error) 
 		return nil, "", f.fail
 	}
 	f.made++
-	manifest := `{"_format":"betterdesk-full-backup","_version":1,"components":["console/data.json"]}`
+	manifest := `{"_format":"neodesk-full-backup","_version":1,"components":["console/data.json"]}`
 	if f.corrupt {
 		manifest = `{"_format":"other","_version":1}`
 	}
@@ -53,7 +53,7 @@ func (f *fakeBackups) CreateFullBackup(context.Context) ([]byte, string, error) 
 	if err != nil {
 		return nil, "", err
 	}
-	name := "betterdesk-backup-" + f.now().UTC().Format("2006-01-02-15-04-05") + ".tar.gz"
+	name := "neodesk-backup-" + f.now().UTC().Format("2006-01-02-15-04-05") + ".tar.gz"
 	return archive, name, nil
 }
 
@@ -105,7 +105,7 @@ func TestRunWritesArchiveAndChecksum(t *testing.T) {
 		t.Fatal(err)
 	}
 	dir := filepath.Join(data, "scheduled-backups")
-	name := "betterdesk-backup-2026-11-10-10-00-00.tar.gz"
+	name := "neodesk-backup-2026-11-10-10-00-00.tar.gz"
 	if res.Filename != filepath.Join(dir, name) {
 		t.Errorf("filename %q", res.Filename)
 	}
@@ -188,7 +188,7 @@ func TestFailedRunsAreRecorded(t *testing.T) {
 	ctx := context.Background()
 
 	fb.corrupt = true
-	if _, err := s.CreateScheduledBackup(ctx); err == nil || err.Error() != "Generated backup failed validation: Archive is not a BetterDesk full backup (wrong _format)" {
+	if _, err := s.CreateScheduledBackup(ctx); err == nil || err.Error() != "Generated backup failed validation: Archive is not a NeoDesk full backup (wrong _format)" {
 		t.Errorf("corrupt: %v", err)
 	}
 	st := branding.Stringify(status(t, s))
@@ -236,7 +236,7 @@ func TestTemporaryFilesDoNotStay(t *testing.T) {
 	s, _, clk, data := newTestService(t)
 	ctx := context.Background()
 	dir := filepath.Join(data, "scheduled-backups")
-	name := "betterdesk-backup-2026-11-10-10-00-00.tar.gz"
+	name := "neodesk-backup-2026-11-10-10-00-00.tar.gz"
 	// a folder that holds a file cannot take the archive's place
 	if err := os.MkdirAll(filepath.Join(dir, name, "inside"), 0o755); err != nil {
 		t.Fatal(err)
@@ -427,7 +427,7 @@ func TestDestinationProbe(t *testing.T) {
 		t.Errorf("the probe stayed: %v", entries)
 	}
 	if _, err := s.TestDestination(mustParse(t, `{"destinationType":"path","destinationPath":"/app/console/sub"}`)); err == nil ||
-		err.Error() != "The BetterDesk application directory cannot be used as a backup destination" {
+		err.Error() != "The NeoDesk application directory cannot be used as a backup destination" {
 		t.Errorf("app folder: %v", err)
 	}
 }

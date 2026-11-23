@@ -1,7 +1,7 @@
-# Gitleaks configuration for BetterDesk
+# Gitleaks configuration for NeoDesk
 # Suppresses false positives from auto-generated lock files
 
-title = "BetterDesk Gitleaks Config"
+title = "NeoDesk Gitleaks Config"
 
 [allowlist]
   description = "Allowlisted files and patterns"
@@ -16,27 +16,27 @@ title = "BetterDesk Gitleaks Config"
     '''scripts/check-no-sensitive-paths\.sh''',
     '''\.cargo-cache/''',
     '''node_modules/''',
-    '''betterdesk-agent-client/src-tauri/binaries/''',
-    '''betterdesk-agent-client/src-tauri/target/''',
+    '''neodesk-agent-client/src-tauri/binaries/''',
+    '''neodesk-agent-client/src-tauri/target/''',
     '''rdclient-desktop/src-tauri/target/''',
-    '''betterdesk-mgmt/''',
+    '''neodesk-mgmt/''',
   ]
 
 # Operator-specific infrastructure fingerprints — must not reappear in tracked files.
 [[rules]]
-id = "betterdesk-internal-lan-ip"
+id = "neodesk-internal-lan-ip"
 description = "Known internal LAN IP used in operator docs (use 203.0.113.x instead)"
 regex = '''192\.168\.0\.110'''
-tags = ["betterdesk", "infrastructure"]
+tags = ["neodesk", "infrastructure"]
 
 [[rules]]
-id = "betterdesk-operator-home-path"
+id = "neodesk-operator-home-path"
 description = "Developer home path that must not be committed"
 regex = '''/home/unitronix'''
-tags = ["betterdesk", "infrastructure"]
+tags = ["neodesk", "infrastructure"]
 
 [[rules]]
-id = "betterdesk-operator-ssh"
+id = "neodesk-operator-ssh"
 description = "SSH user@internal IP pattern from operator runbooks"
 regex = '''unitronix@192\.168'''
-tags = ["betterdesk", "infrastructure"]
+tags = ["neodesk", "infrastructure"]

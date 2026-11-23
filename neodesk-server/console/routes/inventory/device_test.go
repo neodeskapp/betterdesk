@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // TestNodeDeviceAnswers replays what the Node console's three device
@@ -141,11 +141,11 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 			status           int
 			answer           string
 		}{
-			{"inventory at /api/bd without a session", "", "/api/bd/inventory", report, 200, stored},
-			{"telemetry at /api/bd without a session", "", "/api/bd/telemetry", telemetry, 200, stored},
+			{"inventory at /api/nd without a session", "", "/api/nd/inventory", report, 200, stored},
+			{"telemetry at /api/nd without a session", "", "/api/nd/telemetry", telemetry, 200, stored},
 			{"inventory at /api/inventory without a session", "", "/api/inventory/inventory", report, 200, stored},
 			{"telemetry at /api/inventory without a session", "", "/api/inventory/telemetry", telemetry, 200, stored},
-			{"inventory at /api/bd with a session", "operator", "/api/bd/inventory", report, 403, csrfRefused},
+			{"inventory at /api/nd with a session", "operator", "/api/nd/inventory", report, 403, csrfRefused},
 			{"inventory at /api/inventory with a session", "admin", "/api/inventory/inventory", report, 403, csrfRefused},
 		} {
 			got := w.Do(replay.Request{Role: c.role, Method: "POST", Path: c.path, Body: c.body, Headers: deviceA, NoCSRF: true})
@@ -154,7 +154,7 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 			}
 		}
 		for _, role := range []string{"", "pro", "guest_issuer", "viewer", "operator", "global_admin", "server_admin", "super_admin", "admin"} {
-			for _, path := range []string{"/api/inventory/inventory", "/api/bd/inventory"} {
+			for _, path := range []string{"/api/inventory/inventory", "/api/nd/inventory"} {
 				if got := w.Do(replay.Request{Role: role, Method: "POST", Path: path, Body: report, Headers: deviceA}); got.Status != 200 || got.Body != stored {
 					t.Errorf("POST %s as %q with the CSRF token: %d %s", path, role, got.Status, got.Body)
 				}
@@ -172,21 +172,21 @@ func TestTheTokenCheckWhenTheDatabaseFails(t *testing.T) {
 		tokenDeviceA(w)
 		w.Exec("INSERT INTO device_inventory (device_id, hardware, software) VALUES ('device-a', '{}', '{}')", nil)
 		refuseUpdates(w, "access_tokens")
-		if got := w.Do(replay.Request{Path: "/api/bd/inventory/device-a", Headers: deviceA}); got.Status != 200 || !strings.Contains(got.Body, `"device_id":"device-a"`) {
+		if got := w.Do(replay.Request{Path: "/api/nd/inventory/device-a", Headers: deviceA}); got.Status != 200 || !strings.Contains(got.Body, `"device_id":"device-a"`) {
 			t.Errorf("a good token whose use cannot be noted: %d %s, want the report", got.Status, got.Body)
 		}
 		w.Exec("DROP TABLE access_tokens", nil)
 		want := `{"error":"Invalid or expired access token"}`
 		for _, req := range []replay.Request{
-			{Path: "/api/bd/inventory/device-a", Headers: deviceA},
-			{Method: "POST", Path: "/api/bd/inventory", Body: replay.Text(`{}`), Headers: deviceA},
+			{Path: "/api/nd/inventory/device-a", Headers: deviceA},
+			{Method: "POST", Path: "/api/nd/inventory", Body: replay.Text(`{}`), Headers: deviceA},
 			{Method: "POST", Path: "/api/inventory/telemetry", Body: replay.Text(`{}`), Headers: deviceA},
 		} {
 			if got := w.Do(req); got.Status != 401 || got.Body != want {
 				t.Errorf("%s %s without the token table: %d %s, want 401 %s", req.Method, req.Path, got.Status, got.Body, want)
 			}
 		}
-		if got := w.Do(replay.Request{Path: "/api/bd/inventory/device-a"}); got.Status != 401 || got.Body != `{"error":"Bearer access token required"}` {
+		if got := w.Do(replay.Request{Path: "/api/nd/inventory/device-a"}); got.Status != 401 || got.Body != `{"error":"Bearer access token required"}` {
 			t.Errorf("without a token and without the token table: %d %s, want the 401 of a missing token", got.Status, got.Body)
 		}
 	})
@@ -201,7 +201,7 @@ func TestDeviceRouteFailures(t *testing.T) {
 		tokenDeviceA(w)
 		w.Exec("DROP TABLE peer", nil)
 		report := replay.Text(`{"device_id":"device-a","hardware":{"hostname":"pc"}}`)
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/inventory", Body: report, Headers: deviceA}); got.Status != 200 || got.Body != `{"success":true}` {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/nd/inventory", Body: report, Headers: deviceA}); got.Status != 200 || got.Body != `{"success":true}` {
 			t.Errorf("an upload without the device table: %d %s, want it stored", got.Status, got.Body)
 		}
 		if got := w.Rows("SELECT device_id FROM device_inventory", nil); got != `[{"device_id":"device-a"}]` {
@@ -212,21 +212,21 @@ func TestDeviceRouteFailures(t *testing.T) {
 		w.Exec("DROP TABLE device_inventory", nil)
 		upload := `{"success":false,"error":"Internal server error"}`
 		for _, req := range []replay.Request{
-			{Method: "POST", Path: "/api/bd/inventory", Body: report, Headers: deviceA},
-			{Method: "POST", Path: "/api/bd/telemetry", Body: replay.Text(`{"device_id":"device-a"}`), Headers: deviceA},
+			{Method: "POST", Path: "/api/nd/inventory", Body: report, Headers: deviceA},
+			{Method: "POST", Path: "/api/nd/telemetry", Body: replay.Text(`{"device_id":"device-a"}`), Headers: deviceA},
 		} {
 			if got := w.Do(req); got.Status != 500 || got.Body != upload {
 				t.Errorf("%s without its table: %d %s, want 500 %s", req.Path, got.Status, got.Body, upload)
 			}
 		}
-		if got := w.Do(replay.Request{Path: "/api/bd/inventory/device-a", Headers: deviceA}); got.Status != 500 || got.Body != `{"error":"Internal server error"}` {
+		if got := w.Do(replay.Request{Path: "/api/nd/inventory/device-a", Headers: deviceA}); got.Status != 500 || got.Body != `{"error":"Internal server error"}` {
 			t.Errorf("the report without its table: %d %s", got.Status, got.Body)
 		}
 		// The checks before the database answer as before
-		if got := w.Do(replay.Request{Path: "/api/bd/inventory/device-b", Headers: deviceA}); got.Status != 403 {
+		if got := w.Do(replay.Request{Path: "/api/nd/inventory/device-b", Headers: deviceA}); got.Status != 403 {
 			t.Errorf("another device's report without the table: %d %s, want 403", got.Status, got.Body)
 		}
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/inventory", Body: replay.Text(`{"device_id":"device-a"}`), Headers: deviceA}); got.Status != 400 {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/nd/inventory", Body: replay.Text(`{"device_id":"device-a"}`), Headers: deviceA}); got.Status != 400 {
 			t.Errorf("an upload without hardware without the table: %d %s, want 400", got.Status, got.Body)
 		}
 	})
@@ -262,15 +262,15 @@ func TestInventoryUsesTheDeviceGuards(t *testing.T) {
 			status int
 			answer string
 		}{
-			{"a report with a token of the client id x", replay.Request{Method: "POST", Path: "/api/bd/inventory", Body: replay.Text(`{"device_id":"x","hardware":{"hostname":"pc"}}`), Headers: short}, 401, unbound},
+			{"a report with a token of the client id x", replay.Request{Method: "POST", Path: "/api/nd/inventory", Body: replay.Text(`{"device_id":"x","hardware":{"hostname":"pc"}}`), Headers: short}, 401, unbound},
 			{"telemetry with a token of the client id x", replay.Request{Method: "POST", Path: "/api/inventory/telemetry", Body: replay.Text(`{"device_id":"x"}`), Headers: short}, 401, unbound},
-			{"the report of x with its token", replay.Request{Path: "/api/bd/inventory/x", Headers: short}, 401, unbound},
-			{"a device id that is a number", replay.Request{Method: "POST", Path: "/api/bd/inventory", Body: replay.Text(`{"device_id":900100001,"hardware":{"hostname":"pc"}}`), Headers: deviceA}, 403, mismatch},
+			{"the report of x with its token", replay.Request{Path: "/api/nd/inventory/x", Headers: short}, 401, unbound},
+			{"a device id that is a number", replay.Request{Method: "POST", Path: "/api/nd/inventory", Body: replay.Text(`{"device_id":900100001,"hardware":{"hostname":"pc"}}`), Headers: deviceA}, 403, mismatch},
 			{"a device id in a list", replay.Request{Method: "POST", Path: "/api/inventory/inventory", Body: replay.Text(`{"device_id":["device-a"],"hardware":{"hostname":"pc"}}`), Headers: deviceA}, 403, mismatch},
-			{"telemetry of a device id that is a number", replay.Request{Method: "POST", Path: "/api/bd/telemetry", Body: replay.Text(`{"device_id":5}`), Headers: deviceA}, 403, mismatch},
-			{"another device in the query", replay.Request{Method: "POST", Path: "/api/bd/inventory?device_id=device-b", Body: replay.Text(`{"device_id":"","hardware":{"hostname":"pc"}}`), Headers: deviceA}, 403, mismatch},
-			{"another device in the header", replay.Request{Path: "/api/bd/inventory/device-a", Headers: map[string]string{"Authorization": "Bearer tok-device-a", "X-Device-Id": "device-b"}}, 403, mismatch},
-			{"its own report", replay.Request{Method: "POST", Path: "/api/bd/inventory", Body: replay.Text(`{"device_id":"device-a","hardware":{"hostname":"pc"}}`), Headers: deviceA}, 200, `{"success":true}`},
+			{"telemetry of a device id that is a number", replay.Request{Method: "POST", Path: "/api/nd/telemetry", Body: replay.Text(`{"device_id":5}`), Headers: deviceA}, 403, mismatch},
+			{"another device in the query", replay.Request{Method: "POST", Path: "/api/nd/inventory?device_id=device-b", Body: replay.Text(`{"device_id":"","hardware":{"hostname":"pc"}}`), Headers: deviceA}, 403, mismatch},
+			{"another device in the header", replay.Request{Path: "/api/nd/inventory/device-a", Headers: map[string]string{"Authorization": "Bearer tok-device-a", "X-Device-Id": "device-b"}}, 403, mismatch},
+			{"its own report", replay.Request{Method: "POST", Path: "/api/nd/inventory", Body: replay.Text(`{"device_id":"device-a","hardware":{"hostname":"pc"}}`), Headers: deviceA}, 200, `{"success":true}`},
 		} {
 			if got := w.Do(c.req); got.Status != c.status || got.Body != c.answer {
 				t.Errorf("%s: %d %s, want %d %s", c.name, got.Status, got.Body, c.status, c.answer)
@@ -300,17 +300,17 @@ func TestUploadsTakeTheTokensDevice(t *testing.T) {
 			status           int
 			answer           string
 		}{
-			{"a report naming its device nowhere", "/api/bd/inventory", `{` + hardware + `}`, deviceA, 200, `{"success":true}`},
+			{"a report naming its device nowhere", "/api/nd/inventory", `{` + hardware + `}`, deviceA, 200, `{"success":true}`},
 			{"a report naming it only in the query", "/api/inventory/inventory?device_id=device-a", `{` + hardware + `}`, deviceA, 200, `{"success":true}`},
-			{"a report naming it only in X-Device-Id", "/api/bd/inventory", `{` + hardware + `}`, map[string]string{"Authorization": "Bearer tok-device-a", "X-Device-Id": "device-a"}, 200, `{"success":true}`},
-			{"a report with device_id null", "/api/bd/inventory", `{"device_id":null,` + hardware + `}`, deviceA, 200, `{"success":true}`},
-			{"a report with device_id empty", "/api/bd/inventory", `{"device_id":"",` + hardware + `}`, deviceA, 200, `{"success":true}`},
-			{"a report without hardware", "/api/bd/inventory", `{"device_id":"device-a"}`, deviceA, 400, `{"success":false,"error":"Missing device_id or hardware"}`},
-			{"a report in a list", "/api/bd/inventory", `[{` + hardware + `}]`, deviceA, 400, `{"success":false,"error":"Missing device_id or hardware"}`},
-			{"telemetry naming its device nowhere", "/api/bd/telemetry", `{"cpu_usage_percent":5}`, deviceA, 200, `{"success":true}`},
+			{"a report naming it only in X-Device-Id", "/api/nd/inventory", `{` + hardware + `}`, map[string]string{"Authorization": "Bearer tok-device-a", "X-Device-Id": "device-a"}, 200, `{"success":true}`},
+			{"a report with device_id null", "/api/nd/inventory", `{"device_id":null,` + hardware + `}`, deviceA, 200, `{"success":true}`},
+			{"a report with device_id empty", "/api/nd/inventory", `{"device_id":"",` + hardware + `}`, deviceA, 200, `{"success":true}`},
+			{"a report without hardware", "/api/nd/inventory", `{"device_id":"device-a"}`, deviceA, 400, `{"success":false,"error":"Missing device_id or hardware"}`},
+			{"a report in a list", "/api/nd/inventory", `[{` + hardware + `}]`, deviceA, 400, `{"success":false,"error":"Missing device_id or hardware"}`},
+			{"telemetry naming its device nowhere", "/api/nd/telemetry", `{"cpu_usage_percent":5}`, deviceA, 200, `{"success":true}`},
 			{"telemetry of nothing", "/api/inventory/telemetry", `{}`, deviceA, 200, `{"success":true}`},
-			{"telemetry with device_id null", "/api/bd/telemetry", `{"device_id":null,"cpu_usage_percent":7}`, deviceA, 200, `{"success":true}`},
-			{"telemetry in a list", "/api/bd/telemetry", `[{"cpu_usage_percent":5}]`, deviceA, 400, `{"success":false,"error":"Invalid telemetry"}`},
+			{"telemetry with device_id null", "/api/nd/telemetry", `{"device_id":null,"cpu_usage_percent":7}`, deviceA, 200, `{"success":true}`},
+			{"telemetry in a list", "/api/nd/telemetry", `[{"cpu_usage_percent":5}]`, deviceA, 400, `{"success":false,"error":"Invalid telemetry"}`},
 		} {
 			got := w.Do(replay.Request{Method: "POST", Path: c.path, Body: replay.Text(c.body), Headers: c.headers})
 			if got.Status != c.status || got.Body != c.answer {

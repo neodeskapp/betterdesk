@@ -2,7 +2,7 @@
  "id": "ws-bd-signal/other-device",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-signal?device_id=900100002&token=%7Bsecret%3Adevice_token_other%7D",
+  "path": "/ws/nd-signal?device_id=900100002&token=%7Bsecret%3Adevice_token_other%7D",
   "notes": [
    "websocket other, own origin",
    "websocket expect 1 messages",

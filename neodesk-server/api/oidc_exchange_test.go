@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 func exchangeOIDCCodeForTest(t *testing.T, s *Server, code string) map[string]interface{} {
@@ -73,7 +73,7 @@ func privateIPv4(t *testing.T) string {
 
 // A panel sign-in that comes back to the API port's callback hands the
 // console a one-time code whose exchange names the sign-in's state, the
-// value the console's bd.oidc cookie holds for a callback it did not see
+// value the console's nd.oidc cookie holds for a callback it did not see
 // itself (RV120).
 func TestOIDCCallbackCodeExchangesWithTheState(t *testing.T) {
 	// The provider never fetches from loopback, so the token endpoint

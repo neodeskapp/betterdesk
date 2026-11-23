@@ -1,5 +1,5 @@
 <!--
-  Hardware (/inventory): what the BetterDesk agent reports from each device.
+  Hardware (/inventory): what the NeoDesk agent reports from each device.
   The table lists every device; a click anywhere on a row opens the device
   panel on its Hardware tab, which shows the full report (disks, network
   adapters, programs). Beside it: the systems across all devices (a system

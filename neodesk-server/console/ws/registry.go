@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 )
 
 // Handler takes an upgrade to a registered path. It runs the checks of

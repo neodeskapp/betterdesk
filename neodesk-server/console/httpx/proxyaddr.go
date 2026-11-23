@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/internal/clientaddr"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/clientaddr"
 )
 
 // TrustProxy decides which hops in front of the console may speak for the

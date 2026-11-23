@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/config"
-	pb "github.com/unitronix/betterdesk-server/proto"
-	"github.com/unitronix/betterdesk-server/ratelimit"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/ratelimit"
 )
 
 func TestRegisterPkForNewIDsIsRateLimited(t *testing.T) {

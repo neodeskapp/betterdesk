@@ -1,0 +1,402 @@
+{
+ "id": "GET /api/nd/notifications",
+ "request": {
+  "method": "GET",
+  "path": "/api/nd/notifications"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "server_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "items[*].created_at",
+     "format": "9999-99-99A99:99:99.999A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "items": [
+      {
+       "created_at": "<volatile>",
+       "device_id": "900100001",
+       "hostname": "demo-reception-01",
+       "icon": "support_agent",
+       "id": "1",
+       "kind": "help_request",
+       "link": "/help-requests",
+       "message": "Printer does not show up",
+       "read": false,
+       "status": "pending",
+       "title": "demo-reception-01"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900100017",
+       "hostname": "demo-sales-laptop-01",
+       "icon": "support_agent",
+       "id": "2",
+       "kind": "help_request",
+       "link": "/help-requests",
+       "message": "VPN keeps dropping since the update",
+       "read": false,
+       "status": "pending",
+       "title": "demo-sales-laptop-01"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900100008",
+       "hostname": "demo-warehouse-pc",
+       "icon": "support_agent",
+       "id": "3",
+       "kind": "help_request",
+       "link": "/help-requests",
+       "message": "Label software crashes on start",
+       "read": false,
+       "status": "accepted",
+       "title": "demo-warehouse-pc"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900100006",
+       "hostname": "demo-design-imac",
+       "icon": "support_agent",
+       "id": "4",
+       "kind": "help_request",
+       "link": "/help-requests",
+       "message": "Need a font installed",
+       "read": false,
+       "status": "resolved",
+       "title": "demo-design-imac"
+      }
+     ],
+     "success": true,
+     "unread_count": 4
+    }
+   }
+  },
+  {
+   "roles": [
+    "global_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "items[*].created_at",
+     "format": "9999-99-99A99:99:99.999A"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "items": [
+      {
+       "created_at": "<volatile>",
+       "device_id": "900300001",
+       "hostname": "demo-lan-printer-pc",
+       "icon": "how_to_reg",
+       "id": "registration:lan:1",
+       "ip": "10.0.9.14",
+       "kind": "registration",
+       "link": "/registrations",
+       "message": "900300001 · Windows · 10.0.9.14",
+       "platform": "Windows",
+       "read": false,
+       "source": "lan",
+       "status": "pending",
+       "title": "demo-lan-printer-pc"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900100001",
+       "hostname": "demo-reception-01",
+       "icon": "support_agent",
+       "id": "1",
+       "kind": "help_request",
+       "link": "/help-requests",
+       "message": "Printer does not show up",
+       "read": false,
+       "status": "pending",
+       "title": "demo-reception-01"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900200004",
+       "hostname": "demo-pos-terminal",
+       "icon": "how_to_reg",
+       "id": "registration:enrollment:900200004",
+       "ip": "10.0.0.54",
+       "kind": "registration",
+       "link": "/registrations",
+       "message": "900200004 · Windows · 10.0.0.54",
+       "platform": "Windows",
+       "read": false,
+       "source": "enrollment",
+       "status": "pending",
+       "title": "demo-pos-terminal"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900200001",
+       "hostname": "demo-new-laptop",
+       "icon": "how_to_reg",
+       "id": "registration:enrollment:900200001",
+       "ip": "10.0.0.51",
+       "kind": "registration",
+       "link": "/registrations",
+       "message": "900200001 · Windows · 10.0.0.51",
+       "platform": "Windows",
+       "read": false,
+       "source": "enrollment",
+       "status": "pending",
+       "title": "demo-new-laptop"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900100017",
+       "hostname": "demo-sales-laptop-01",
+       "icon": "support_agent",
+       "id": "2",
+       "kind": "help_request",
+       "link": "/help-requests",
+       "message": "VPN keeps dropping since the update",
+       "read": false,
+       "status": "pending",
+       "title": "demo-sales-laptop-01"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900200002",
+       "hostname": "demo-new-tablet",
+       "icon": "how_to_reg",
+       "id": "registration:enrollment:900200002",
+       "ip": "10.0.0.52",
+       "kind": "registration",
+       "link": "/registrations",
+       "message": "900200002 · Android · 10.0.0.52",
+       "platform": "Android",
+       "read": false,
+       "source": "enrollment",
+       "status": "pending",
+       "title": "demo-new-tablet"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900200003",
+       "hostname": "",
+       "icon": "how_to_reg",
+       "id": "registration:enrollment:900200003",
+       "ip": "10.0.0.53",
+       "kind": "registration",
+       "link": "/registrations",
+       "message": "900200003 · Linux · 10.0.0.53",
+       "platform": "Linux",
+       "read": false,
+       "source": "enrollment",
+       "status": "pending",
+       "title": "900200003"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900100008",
+       "hostname": "demo-warehouse-pc",
+       "icon": "support_agent",
+       "id": "3",
+       "kind": "help_request",
+       "link": "/help-requests",
+       "message": "Label software crashes on start",
+       "read": false,
+       "status": "accepted",
+       "title": "demo-warehouse-pc"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900100006",
+       "hostname": "demo-design-imac",
+       "icon": "support_agent",
+       "id": "4",
+       "kind": "help_request",
+       "link": "/help-requests",
+       "message": "Need a font installed",
+       "read": false,
+       "status": "resolved",
+       "title": "demo-design-imac"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900200005",
+       "hostname": "demo-field-tablet",
+       "icon": "how_to_reg",
+       "id": "registration:enrollment:900200005",
+       "ip": "10.0.0.55",
+       "kind": "registration",
+       "link": "/registrations",
+       "message": "900200005 · Android · 10.0.0.55",
+       "platform": "Android",
+       "read": false,
+       "source": "enrollment",
+       "status": "pending",
+       "title": "demo-field-tablet"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900300002",
+       "hostname": "demo-meeting-room-pc",
+       "icon": "how_to_reg",
+       "id": "registration:lan:2",
+       "ip": "10.0.9.15",
+       "kind": "registration",
+       "link": "/registrations",
+       "message": "900300002 · Windows · 10.0.9.15",
+       "platform": "Windows",
+       "read": false,
+       "source": "lan",
+       "status": "pending",
+       "title": "demo-meeting-room-pc"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900200006",
+       "hostname": "demo-intern-laptop",
+       "icon": "how_to_reg",
+       "id": "registration:enrollment:900200006",
+       "ip": "10.0.0.56",
+       "kind": "registration",
+       "link": "/registrations",
+       "message": "900200006 · Windows · 10.0.0.56",
+       "platform": "Windows",
+       "read": false,
+       "source": "enrollment",
+       "status": "pending",
+       "title": "demo-intern-laptop"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900300003",
+       "hostname": "demo-label-printer-host",
+       "icon": "how_to_reg",
+       "id": "registration:lan:3",
+       "ip": "10.0.9.16",
+       "kind": "registration",
+       "link": "/registrations",
+       "message": "900300003 · Linux · 10.0.9.16",
+       "platform": "Linux",
+       "read": false,
+       "source": "lan",
+       "status": "pending",
+       "title": "demo-label-printer-host"
+      },
+      {
+       "created_at": "<volatile>",
+       "device_id": "900200007",
+       "hostname": "",
+       "icon": "how_to_reg",
+       "id": "registration:enrollment:900200007",
+       "ip": "10.0.0.57",
+       "kind": "registration",
+       "link": "/registrations",
+       "message": "900200007 · macOS · 10.0.0.57",
+       "platform": "macOS",
+       "read": false,
+       "source": "enrollment",
+       "status": "pending",
+       "title": "900200007"
+      }
+     ],
+     "success": true,
+     "unread_count": 14
+    }
+   }
+  }
+ ]
+}

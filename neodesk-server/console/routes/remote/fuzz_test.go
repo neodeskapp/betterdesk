@@ -8,14 +8,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/guestaccess"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/i18n"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/limits"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/webui"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/guestaccess"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/webui"
 )
 
 // fuzzAPI answers a guest link as good for dev-1 only and a share link
@@ -40,9 +40,9 @@ func fuzzAPI(w http.ResponseWriter, r *http.Request) {
 // reaches.
 func FuzzRequests(f *testing.F) {
 	for _, seed := range [][3]string{
-		{"dev-1", "guest=tok", ""}, {"rt_abcdefgh", "transport=mesh", ""}, {"dev-1", "mesh_share=s&t=x", "bd.guest=tok"},
-		{"900100001", "mock=1&scenario=SLOW", ""}, {"a%20b", "guest[toString]=1", ""}, {"dev-2", "return=/remote", "bd.guest=j:5"},
-		{"dev-1", "t[a][b]=1&t=2", "bd.guest=%zz"}, {"login", "return=%2F%2Fevil", ""},
+		{"dev-1", "guest=tok", ""}, {"rt_abcdefgh", "transport=mesh", ""}, {"dev-1", "mesh_share=s&t=x", "nd.guest=tok"},
+		{"900100001", "mock=1&scenario=SLOW", ""}, {"a%20b", "guest[toString]=1", ""}, {"dev-2", "return=/remote", "nd.guest=j:5"},
+		{"dev-1", "t[a][b]=1&t=2", "nd.guest=%zz"}, {"login", "return=%2F%2Fevil", ""},
 	} {
 		f.Add(seed[0], seed[1], seed[2])
 	}

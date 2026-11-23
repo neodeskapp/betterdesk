@@ -5,7 +5,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 // TestUnbanWritesThePeerUnderTheMapLock: unbanning a connected peer clears

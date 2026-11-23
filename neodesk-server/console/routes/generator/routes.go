@@ -17,13 +17,13 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	gen "github.com/unitronix/betterdesk-server/console/generator"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/console/webui"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	gen "github.com/neodeskapp/neodesk/neodesk-server/console/generator"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/webui"
 )
 
 type handlers struct {
@@ -107,11 +107,11 @@ func (h *handlers) runWorker(ctx context.Context) {
 		go func() {
 			result, err := h.gen.SyncAndQueueRebuilds(ctx, false)
 			if err != nil {
-				h.log.Warn("BetterDesk-Client sync/rebuild deferred:", err.Error())
+				h.log.Warn("NeoDesk-Client sync/rebuild deferred:", err.Error())
 				return
 			}
 			if result.Get("queued") == true {
-				h.log.Info("BetterDesk-Client " + result.Str("sha") + " changed; embedded Support rebuild queued")
+				h.log.Info("NeoDesk-Client " + result.Str("sha") + " changed; embedded Support rebuild queued")
 			}
 		}()
 	}

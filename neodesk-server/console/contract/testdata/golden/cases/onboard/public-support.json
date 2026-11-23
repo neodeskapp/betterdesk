@@ -49,8 +49,8 @@
     "kind": "json",
     "json": {
      "code": "{secret:support_code}",
-     "company": "BetterDesk",
-     "deep_link": "betterdesk://support/<host>/{secret:support_code}?http=1",
+     "company": "NeoDesk",
+     "deep_link": "neodesk://support/<host>/{secret:support_code}?http=1",
      "display_code": "<volatile>",
      "downloads": [],
      "expires_at": "<volatile>",
@@ -61,7 +61,7 @@
      "server": {
       "host": "<hostname>",
       "https": false,
-      "name": "BetterDesk"
+      "name": "NeoDesk"
      },
      "success": true,
      "supporter": "e2e_admin"

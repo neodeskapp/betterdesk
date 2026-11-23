@@ -156,17 +156,17 @@
 </script>
 
 <svelte:head>
-	<title>{tf('rdclient_login.title', 'Sign in to remote desktop')} - {info?.appName ?? 'BetterDesk'}</title>
+	<title>{tf('rdclient_login.title', 'Sign in to remote desktop')} - {info?.appName ?? 'NeoDesk'}</title>
 </svelte:head>
 
 <main class="login-main">
 	<div class="login-box">
 		<div class="login-brand">
-			<RemoteBrand appName={info?.appName ?? 'BetterDesk'} branding={info?.branding ?? null} />
+			<RemoteBrand appName={info?.appName ?? 'NeoDesk'} branding={info?.branding ?? null} />
 		</div>
 
 		<h1 class="login-title">{tf('rdclient_login.title', 'Sign in to remote desktop')}</h1>
-		<p class="login-subtitle">{tf('rdclient_login.subtitle', 'Use your BetterDesk console account.')}</p>
+		<p class="login-subtitle">{tf('rdclient_login.subtitle', 'Use your NeoDesk console account.')}</p>
 
 		{#if loadFailed}
 			<Notice tone="danger" message={tf('shell.start_failed', 'The console could not start.')} />

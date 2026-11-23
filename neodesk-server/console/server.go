@@ -21,45 +21,45 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/alerts"
-	"github.com/unitronix/betterdesk-server/console/auditlog"
-	"github.com/unitronix/betterdesk-server/console/authimport"
-	"github.com/unitronix/betterdesk-server/console/authn"
-	"github.com/unitronix/betterdesk-server/console/avatars"
-	"github.com/unitronix/betterdesk-server/console/bdrelay"
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/csrf"
-	"github.com/unitronix/betterdesk-server/console/devicegroups"
-	"github.com/unitronix/betterdesk-server/console/discovery"
-	"github.com/unitronix/betterdesk-server/console/filetransfer"
-	"github.com/unitronix/betterdesk-server/console/generator"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/guestaccess"
-	"github.com/unitronix/betterdesk-server/console/helpmail"
-	"github.com/unitronix/betterdesk-server/console/housekeeping"
-	"github.com/unitronix/betterdesk-server/console/i18n"
-	"github.com/unitronix/betterdesk-server/console/jobs"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/limits"
-	"github.com/unitronix/betterdesk-server/console/listen"
-	"github.com/unitronix/betterdesk-server/console/mail"
-	"github.com/unitronix/betterdesk-server/console/qr"
-	"github.com/unitronix/betterdesk-server/console/remoterelay"
-	"github.com/unitronix/betterdesk-server/console/restart"
-	"github.com/unitronix/betterdesk-server/console/routes/settingsbackup"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/console/servermgmt"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/statuspush"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/updater"
-	"github.com/unitronix/betterdesk-server/console/webui"
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/internal/envvar"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/alerts"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authimport"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/avatars"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/bdrelay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/csrf"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/devicegroups"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/discovery"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/filetransfer"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/generator"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/guestaccess"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/helpmail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/housekeeping"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jobs"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/listen"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/qr"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/remoterelay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/restart"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/settingsbackup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/servermgmt"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/statuspush"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/webui"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // Options are what the console needs from the server it runs in.
@@ -88,7 +88,7 @@ type Options struct {
 	Version, Commit string
 	// Exit asks the process to end with the exit status that makes its
 	// supervisor start it again (DECISIONS A30). The console calls it only
-	// when an installer named a supervisor (BETTERDESK_SUPERVISOR): after
+	// when an installer named a supervisor (NEODESK_SUPERVISOR): after
 	// a confirmed restart, an installed update and a restore. Nil never
 	// ends the process.
 	Exit func()
@@ -331,7 +331,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	updates := updater.Options{
 		DataDir:    cfg.DataDir,
 		ConsoleDir: cfg.ConsoleDir,
-		EnvFile:    getenv("BETTERDESK_ENV_FILE"),
+		EnvFile:    getenv("NEODESK_ENV_FILE"),
 		Version:    opts.Version,
 		Commit:     opts.Commit,
 		Docker:     cfg.Docker,
@@ -403,7 +403,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		SectionAccess: ws.SectionAccessOf(s.deps.Access),
 		Origins: ws.OriginPolicy{
 			Allowed:      ws.ParseAllowedOrigins(getenv("WS_ALLOWED_ORIGINS")),
-			AllowMissing: envvar.SwitchOr(getenv("BD_ALLOW_MISSING_ORIGIN"), false),
+			AllowMissing: envvar.SwitchOr(getenv("ND_ALLOW_MISSING_ORIGIN"), false),
 		},
 		ClientIP: cfg.TrustProxy.ClientIP,
 	})

@@ -22,8 +22,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // directoryTTL is how long the list of who has a picture is kept. Every

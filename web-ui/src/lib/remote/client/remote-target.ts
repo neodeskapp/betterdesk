@@ -1,7 +1,7 @@
 /**
- * BetterDesk Remote Target viewer.
+ * NeoDesk Remote Target viewer.
  *
- * Minimal Guacamole protocol client kept local to BetterDesk. It deliberately
+ * Minimal Guacamole protocol client kept local to NeoDesk. It deliberately
  * handles only the protocol primitives required for RDP/VNC screen, mouse,
  * keyboard and clipboard sessions; optional Guacamole capabilities are exposed
  * through capability flags instead of being silently emulated.

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// MeshGroup represents a MeshCentral device group mapped to BetterDesk folders.
+// MeshGroup represents a MeshCentral device group mapped to NeoDesk folders.
 // MeshID is the 96-hex (SHA-384) group identity written into MeshAgent .msh files.
 type MeshGroup struct {
 	ID     string `json:"id"`

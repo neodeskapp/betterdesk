@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // An agent reports on its command only while the command waits or runs
@@ -21,7 +21,7 @@ func TestAFinishedCommandStaysFinished(t *testing.T) {
 		w.Exec("INSERT INTO remote_commands (device_id, payload, created_by) VALUES ('device-a', 'uptime', 'e2e_admin')", nil)
 		report := func(id, body string) replay.Answer {
 			t.Helper()
-			return w.Do(replay.Request{Method: "POST", Path: "/api/bd/commands/" + id + "/result", Body: replay.Text(body),
+			return w.Do(replay.Request{Method: "POST", Path: "/api/nd/commands/" + id + "/result", Body: replay.Text(body),
 				Headers: map[string]string{"Authorization": "Bearer tok-device-a"}})
 		}
 		const row = "SELECT id, status, result, CASE WHEN executed_at IS NULL THEN 'no' ELSE 'yes' END AS ran," +

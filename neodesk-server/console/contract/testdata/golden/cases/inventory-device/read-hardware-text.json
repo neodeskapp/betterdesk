@@ -2,7 +2,7 @@
  "id": "inventory-device/read-hardware-text",
  "request": {
   "method": "GET",
-  "path": "/api/bd/inventory/900100001",
+  "path": "/api/nd/inventory/900100001",
   "notes": [
    "header Authorization: Bearer {secret:device_token}",
    "no CSRF token",

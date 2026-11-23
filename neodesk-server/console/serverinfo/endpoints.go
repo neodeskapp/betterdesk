@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/internal/envvar"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
 )
 
 // The public endpoints are the addresses an operator sets for clients when

@@ -7,7 +7,7 @@ import (
 	"time"
 	_ "time/tzdata"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // dateVectors is testdata/dates.json, recorded from JavaScript in the Node

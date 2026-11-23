@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // The files the updater keeps in the data folder. Their names and forms
@@ -118,10 +118,10 @@ func (d dataFiles) clearResult() bool { return d.remove(lastResultFile) }
 // nonCriticalFailures are the failures of the old updater that never
 // blocked an install (updateFailurePolicy.js).
 var nonCriticalFailures = map[string]bool{
-	"betterdesk-server": true, "betterdesk-server-deploy": true, "betterdesk-server.service": true,
+	"neodesk-server": true, "neodesk-server-deploy": true, "neodesk-server.service": true,
 	"server-source": true, "npm install": true, "web-ui": true, "web-ui source": true, "web-ui build": true,
 	"web-ui env": true, "support-agent-source-sync": true, "support-agent-rebuild-defer": true,
-	"betterdesk.sh": true, "betterdesk.ps1": true, "betterdesk-docker.sh": true, "docker-compose.yml": true,
+	"neodesk.sh": true, "neodesk.ps1": true, "neodesk-docker.sh": true, "docker-compose.yml": true,
 	"docker-compose.single.yml": true, "docker-compose.quick.yml": true, "docker-compose.quick.single.yml": true,
 	"docker-compose.quick.single.macvlan.yml": true, "Dockerfile": true, "Dockerfile.server": true,
 	"Dockerfile.console": true, "VERSION": true,

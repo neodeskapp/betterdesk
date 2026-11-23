@@ -1,5 +1,5 @@
 <!--
-  Server events tab: what the BetterDesk server recorded itself, 25 a page,
+  Server events tab: what the NeoDesk server recorded itself, 25 a page,
   filtered by kind on the server. Above the table, events per day for the
   last 14 days, drawn only when the loaded events reach back that far (the
   server keeps its events for 90 days); otherwise one sentence says which

@@ -1,5 +1,5 @@
 <!--
-  Services (?tab=services): BetterDesk's own system services on the
+  Services (?tab=services): NeoDesk's own system services on the
   console's machine, with Restart and Start/Stop per row and a menu for
   Reload, Start at boot and Don't start at boot (not on Windows). Stop,
   Restart and Don't start at boot ask first. Without any service (the

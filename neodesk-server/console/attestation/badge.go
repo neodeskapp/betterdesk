@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 )
 
 // tierNames are the tiers of the capacity badge, lowest first. Each has a
@@ -142,7 +142,7 @@ var prototypeKeys = map[string]bool{
 // tier is the JSON value of a stored result's tier, nil for none. t gives
 // the texts of the request language; nil uses the English fallbacks.
 // brandName is the console's name from the branding (a missing one,
-// branding.Undefined, means BetterDesk). It fails where JavaScript threw:
+// branding.Undefined, means NeoDesk). It fails where JavaScript threw:
 // on texts or a tier that cannot be made text.
 func ResolveBadgePresentation(config any, tier any, t Translate, brandName any) (*Presentation, error) {
 	if c, ok := config.(BadgeConfig); ok {
@@ -157,7 +157,7 @@ func ResolveBadgePresentation(config any, tier any, t Translate, brandName any) 
 		return nil, err
 	}
 	if brand == "" {
-		brand = "BetterDesk"
+		brand = "NeoDesk"
 	}
 	p := &Presentation{Brand: brand}
 	for i, id := range tierNames {

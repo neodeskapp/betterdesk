@@ -6,11 +6,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
-// Notifications is listRegistrationNotifications(db, betterdeskApi).items:
+// Notifications is listRegistrationNotifications(db, neodeskApi).items:
 // the pending LAN registrations and the devices waiting in the API
 // server's enrollment queue, newest first (LAN entries before enrollment
 // entries of the same time), each with the keys id, title, message, icon,

@@ -3,7 +3,7 @@
  "request": {
   "method": "POST",
   "path": "/api/settings/branding/import",
-  "body": "type=betterdesk-theme&branding=x",
+  "body": "type=neodesk-theme&branding=x",
   "notes": [
    "raw body, content type \"application/x-www-form-urlencoded\""
   ]
@@ -27,7 +27,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",

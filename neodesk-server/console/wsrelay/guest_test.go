@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // TestExpiresAt is new Date(grant.expires_at).getTime(): a missing end is

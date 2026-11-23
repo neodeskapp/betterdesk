@@ -1,5 +1,5 @@
 /**
- * BetterDesk Web Remote Client - zstd compression helpers
+ * NeoDesk Web Remote Client - zstd compression helpers
  * Shared by file transfer and clipboard sync (RustDesk wire format).
  */
 import { page } from './page.ts';

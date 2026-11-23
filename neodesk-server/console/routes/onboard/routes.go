@@ -26,12 +26,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/clientrelease"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/limits"
-	"github.com/unitronix/betterdesk-server/console/onboard"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/clientrelease"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/onboard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // CodeLimit is how many requests with a code one address may send a
@@ -210,9 +210,9 @@ func (h *handlers) serverOf(r *http.Request) serverAnswer {
 // serverName is the console's name as people see it.
 func (h *handlers) serverName() string {
 	if h.d.Branding != nil {
-		return h.d.Branding.AppName("BetterDesk")
+		return h.d.Branding.AppName("NeoDesk")
 	}
-	return "BetterDesk"
+	return "NeoDesk"
 }
 
 // personName is an account's first and last name, else its user name.

@@ -1,6 +1,6 @@
 /**
  * Client app branding (routes/client-branding.routes.js, Go /api/branding):
- * the name, contact details, accent colour and logo BetterDesk clients and
+ * the name, contact details, accent colour and logo NeoDesk clients and
  * support agents show. Needs branding.edit.
  */
 

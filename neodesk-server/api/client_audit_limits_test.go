@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/ratelimit"
+	"github.com/neodeskapp/neodesk/neodesk-server/ratelimit"
 )
 
 // Audit M5 (2026-11-13): caller-supplied pagination must be clamped so an

@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	gen "github.com/unitronix/betterdesk-server/console/generator"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	gen "github.com/neodeskapp/neodesk/neodesk-server/console/generator"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // The public download portal of a bundle: /api/d/{publicId}/... answer
@@ -136,7 +136,7 @@ func (h *handlers) page(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	ok(w, r, goapi.NewObject(
 		"publicId", row.PublicID(),
-		"companyName", jsString(or(or(prop(brand, "company_name"), value(gb, "appName")), "BetterDesk Support")),
+		"companyName", jsString(or(or(prop(brand, "company_name"), value(gb, "appName")), "NeoDesk Support")),
 		"shortText", jsString(or(prop(brand, "short_text"), "")),
 		"logo", logo,
 		"contact", goapi.NewObject(

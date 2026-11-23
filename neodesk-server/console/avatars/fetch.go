@@ -178,7 +178,7 @@ func requestOnce(ctx context.Context, transport http.RoundTripper, t target, max
 	}
 	req.URL = t.url()
 	req.Header.Set("Accept", "image/png,image/jpeg,image/webp,image/gif;q=0.9")
-	req.Header.Set("User-Agent", "BetterDesk-Console/avatar")
+	req.Header.Set("User-Agent", "NeoDesk-Console/avatar")
 	res, err := transport.RoundTrip(req)
 	if err != nil {
 		return fail(err)

@@ -26,8 +26,8 @@ import (
 	"time"
 	"unicode/utf16"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
 )
 
 // The defaults of the settings. trust_os_ntp defaults to true on Linux

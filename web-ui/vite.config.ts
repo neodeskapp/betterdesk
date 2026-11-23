@@ -7,18 +7,18 @@ import { licenses } from './vite-plugins/licenses.ts';
 import { protos } from './vite-plugins/protos.ts';
 import { withRoutesList } from './vite-plugins/routes.ts';
 
-// Where the console is served from: the root, or the path in BD_UI_BASE
-const base = (process.env.BD_UI_BASE ?? '') as '' | `/${string}`;
-// The console of the Go server (betterdesk-server, CONSOLE_PORT 5000) that
+// Where the console is served from: the root, or the path in ND_UI_BASE
+const base = (process.env.ND_UI_BASE ?? '') as '' | `/${string}`;
+// The console of the Go server (neodesk-server, CONSOLE_PORT 5000) that
 // answers the API, sockets and its own addresses in dev
-const backend = process.env.BD_BACKEND ?? 'http://localhost:5000';
+const backend = process.env.ND_BACKEND ?? 'http://localhost:5000';
 // What the server answers at the root: the API, sockets, its own addresses
 // (sign-out, downloads, branding, uploaded files, the old addresses that
 // redirect), user fonts in /fonts/<family>/ and the images only the server
 // has. The app's own fonts and images come from static/.
 const serverPaths =
 	'^/(?:api|ws|health|logout|register-status|downloads|dev|generator|tenants|remote-dashboard|remote-cdap|remote-desktop' +
-	'|css|branding|uploads|wallpapers|protos|console-boot[.]js|favicon[.]svg|img/betterdesk_icon[.]png)(?=[/?]|$)' +
+	'|css|branding|uploads|wallpapers|protos|console-boot[.]js|favicon[.]svg|img/neodesk_icon[.]png)(?=[/?]|$)' +
 	'|^/img/(?:login-slides|supporters)/|^/fonts/[^/?]+/';
 // The proxy keeps its connections to the server open and reuses them.
 // Without an agent it opens a new connection for every request, and from a
@@ -30,9 +30,9 @@ const backendAgent = new Agent({ keepAlive: true, timeout: 4000 });
 
 export default defineConfig({
 	// Several dev servers share this folder (one per worker); each keeps its own dependency cache
-	cacheDir: process.env.BD_VITE_CACHE,
+	cacheDir: process.env.ND_VITE_CACHE,
 	plugins: [
-		// The remote viewer's protobuf messages, generated from betterdesk-server/protos
+		// The remote viewer's protobuf messages, generated from neodesk-server/protos
 		protos(),
 		// licenses.txt next to the code; fails the build on a license the console may not ship
 		licenses(),
@@ -80,7 +80,7 @@ export default defineConfig({
 		port: 5173,
 		strictPort: true,
 		// Windows bind mounts don't deliver file events into containers
-		watch: process.env.BD_POLL ? { usePolling: true, interval: 300 } : undefined,
+		watch: process.env.ND_POLL ? { usePolling: true, interval: 300 } : undefined,
 		proxy: {
 			// Under another base, everything outside it goes to the server
 			[base === '' ? serverPaths : `^/(?!${base.slice(1)}(/|$))`]: {

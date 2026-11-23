@@ -1,4 +1,4 @@
-// BetterDesk Server — Rendezvous Protocol Definitions
+// NeoDesk Server — Rendezvous Protocol Definitions
 // Copyright (c) 2025-2026 UNITRONIX. Licensed under AGPL-3.0.
 //
 // These protocol definitions describe message formats for interoperability
@@ -3092,7 +3092,7 @@ const file_rendezvous_proto_rawDesc = "" +
 	"\vUNKNOWN_NAT\x10\x00\x12\x0e\n" +
 	"\n" +
 	"ASYMMETRIC\x10\x01\x12\r\n" +
-	"\tSYMMETRIC\x10\x02B.Z,github.com/unitronix/betterdesk-server/protob\x06proto3"
+	"\tSYMMETRIC\x10\x02B4Z2github.com/neodeskapp/neodesk/neodesk-server/protob\x06proto3"
 
 var (
 	file_rendezvous_proto_rawDescOnce sync.Once

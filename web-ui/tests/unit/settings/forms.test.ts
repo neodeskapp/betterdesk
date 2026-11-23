@@ -195,7 +195,7 @@ describe('Appearance', () => {
 			bgColor: '  #000000 '
 		});
 		expect(out.colors).toEqual({ bgPrimary: '#112233' });
-		expect(out.appName).toBe('BetterDesk');
+		expect(out.appName).toBe('NeoDesk');
 		expect(out.bgBlur).toBe('4');
 		expect(out.glassEnabled).toBe('false');
 		expect(out.showPoweredBy).toBe('true');

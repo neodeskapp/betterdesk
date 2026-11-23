@@ -28,7 +28,7 @@ func main() {
 	long := [2]time.Time{time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC), time.Date(2099, 1, 1, 0, 0, 0, 0, time.UTC)}
 	caKey := key()
 	caTemplate := &x509.Certificate{
-		SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: "BetterDesk test CA"},
+		SerialNumber: big.NewInt(1), Subject: pkix.Name{CommonName: "NeoDesk test CA"},
 		NotBefore: long[0], NotAfter: long[1], IsCA: true, BasicConstraintsValid: true,
 		KeyUsage: x509.KeyUsageCertSign | x509.KeyUsageDigitalSignature,
 	}

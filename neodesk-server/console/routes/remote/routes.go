@@ -5,26 +5,26 @@
 // relay's sessions. The pages themselves (/remote, /remote/:deviceId,
 // /remote/login, /remote/guest) belong to the web app.
 //
-// It also holds POST /api/bd/remote-agent-token of the device API
+// It also holds POST /api/nd/remote-agent-token of the device API
 // (routes/bd-api.routes.js), which gives an agent the single-use token
 // of its remote relay socket: the token, the route that issues it and
 // the socket that takes it live in one process (console/remoterelay).
 //
 // The viewer's data turns the web app's dev mock device on only when
-// BD_DEV_MOCK_REMOTE is 1 (mock.go).
+// ND_DEV_MOCK_REMOTE is 1 (mock.go).
 package remote
 
 import (
 	"context"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/i18n"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/remoterelay"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/remoterelay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 )
 
 // relay is what the routes use of the remote relay (console/remoterelay).
@@ -51,7 +51,7 @@ type sources struct {
 	// appVersion is config.appVersion.
 	appVersion string
 	// mockOn is whether the viewer's data may turn the dev mock on
-	// (BD_DEV_MOCK_REMOTE is 1).
+	// (ND_DEV_MOCK_REMOTE is 1).
 	mockOn bool
 	// canAccess is the account's device scope
 	// (devicegroups.Service.UserCanAccessDevice): whether it holds the
@@ -71,9 +71,9 @@ func Register(d *kit.Deps) {
 	register(d, defaultSources(d))
 }
 
-// RegisterAgentToken adds POST /api/bd/remote-agent-token of the device
+// RegisterAgentToken adds POST /api/nd/remote-agent-token of the device
 // API to the early stage, where routes/bd-api.routes.js was mounted
-// (server.js, app.use('/api/bd', ...)), behind the device token guards.
+// (server.js, app.use('/api/nd', ...)), behind the device token guards.
 func RegisterAgentToken(d *kit.Deps) {
 	registerAgentToken(d, defaultSources(d))
 }
@@ -96,7 +96,7 @@ func register(d *kit.Deps, src sources) {
 
 func registerAgentToken(d *kit.Deps, src sources) {
 	h := &handlers{d: d, src: src, log: d.Log.Child("BD-API")}
-	d.Early.Post("/api/bd/remote-agent-token", h.remoteAgentToken, d.RequireDeviceToken, d.RequireTokenDeviceMatch)
+	d.Early.Post("/api/nd/remote-agent-token", h.remoteAgentToken, d.RequireDeviceToken, d.RequireTokenDeviceMatch)
 }
 
 // defaultSources are the console's own services.
@@ -120,7 +120,7 @@ func defaultSources(d *kit.Deps) sources {
 	}
 	if d.Config != nil {
 		src.appVersion = d.Config.Version
-		if d.Config.Getenv != nil && jsbind.Trim(d.Config.Getenv("BD_DEV_MOCK_REMOTE")) == "1" {
+		if d.Config.Getenv != nil && jsbind.Trim(d.Config.Getenv("ND_DEV_MOCK_REMOTE")) == "1" {
 			src.mockOn = true
 		}
 	}

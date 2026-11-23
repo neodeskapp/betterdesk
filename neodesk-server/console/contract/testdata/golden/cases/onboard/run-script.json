@@ -37,9 +37,9 @@
    "body": {
     "kind": "bytes",
     "type": "text/x-shellscript",
-    "length": 756,
-    "sha256": "8d016abdd584d0f09e26f3e940d5855407e6aa00adb15516d8d54ad500cef83b",
-    "head": "#!/bin/sh\n# Starts BetterDesk Quick Support for <base>. Nothing is installed: the\n# app runs from a folder in your cache and asks you before anyone sees\n# your screen.\nset -eu\n\nBASE='<base>'\nCODE='{secret:support_code}'\n\ncase \"$(uname -m)\" in\n\tx86_64 | amd64) arch=x64 ;;\n\taarch64 | arm64) arch=arm64"
+    "length": 741,
+    "sha256": "618272158bfdb3fef6028bd6d7914858f5bc1d20a278fa30f18a783199303079",
+    "head": "#!/bin/sh\n# Starts NeoDesk Quick Support for <base>. Nothing is installed: the\n# app runs from a folder in your cache and asks you before anyone sees\n# your screen.\nset -eu\n\nBASE='<base>'\nCODE='{secret:support_code}'\n\ncase \"$(uname -m)\" in\n\tx86_64 | amd64) arch=x64 ;;\n\taarch64 | arm64) arch=arm64 ;;"
    }
   }
  ]

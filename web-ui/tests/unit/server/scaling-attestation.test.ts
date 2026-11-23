@@ -200,8 +200,8 @@ describe('capacity test', () => {
 	});
 	test('report file name', () => {
 		expect(reportFileName({ testedAt: '2026-11-09T10:00:00Z' })).toBe(
-			'betterdesk-server-attestation-2026-11-09T10:00:00Z.json'
+			'neodesk-server-attestation-2026-11-09T10:00:00Z.json'
 		);
-		expect(reportFileName({ testedAt: null }, 42)).toBe('betterdesk-server-attestation-42.json');
+		expect(reportFileName({ testedAt: null }, 42)).toBe('neodesk-server-attestation-42.json');
 	});
 });

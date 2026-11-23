@@ -35,8 +35,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "badgeTitle": "Server capacity tested with BetterDesk",
-     "brand": "BetterDesk",
+     "badgeTitle": "Server capacity tested with NeoDesk",
+     "brand": "NeoDesk",
      "maxConnections": 0,
      "testedAt": null,
      "tier": null,
@@ -76,7 +76,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -88,8 +88,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "badgeTitle": "Server capacity tested with BetterDesk",
-     "brand": "BetterDesk",
+     "badgeTitle": "Server capacity tested with NeoDesk",
+     "brand": "NeoDesk",
      "maxConnections": 0,
      "testedAt": null,
      "tier": null,

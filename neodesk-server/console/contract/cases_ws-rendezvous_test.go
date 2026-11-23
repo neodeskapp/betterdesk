@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The web remote client's socket to the signal server, /ws/rendezvous:
@@ -94,7 +94,7 @@ func init() {
 		{
 			Name: "guest-from-cookie", Path: path, NoCookies: true, Roles: signedOut,
 			Query:   url.Values{"peer_id": {"900100001"}, "guest_session": {"contract-cookie"}},
-			Headers: map[string]string{"Cookie": "bd.guest={secret:glink}"},
+			Headers: map[string]string{"Cookie": "nd.guest={secret:glink}"},
 			Socket:  sock("g9", contract.Socket{Expect: 1, Close: true}),
 		},
 		{

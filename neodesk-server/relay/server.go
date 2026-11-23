@@ -1,4 +1,4 @@
-// Package relay implements the BetterDesk relay server (hbbr equivalent).
+// Package relay implements the NeoDesk relay server (hbbr equivalent).
 // It pairs two clients by UUID and creates a bidirectional byte stream between them.
 // The relay does NOT parse message.proto content — it's an opaque byte pipe.
 package relay
@@ -18,10 +18,10 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/codec"
-	"github.com/unitronix/betterdesk-server/config"
-	pb "github.com/unitronix/betterdesk-server/proto"
-	"github.com/unitronix/betterdesk-server/ratelimit"
+	"github.com/neodeskapp/neodesk/neodesk-server/codec"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/ratelimit"
 )
 
 // Server is the relay server instance.

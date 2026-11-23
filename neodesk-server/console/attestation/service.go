@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 )
 
 // The two rows of the settings table and the limits of the badge texts.
@@ -66,7 +66,7 @@ type Options struct {
 	// wait. Default: the own host's reading when Snapshot is not given,
 	// else nothing.
 	Warm func()
-	// ServerStats is betterdeskApi.getServerStats: the data of a
+	// ServerStats is neodeskApi.getServerStats: the data of a
 	// successful answer (branding.Undefined when it has none), nil when the
 	// call failed. Default: always nil.
 	ServerStats func(ctx context.Context) any

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // The routes that write the saved appearance profiles. A refusal answers
@@ -113,7 +113,7 @@ func (h *handlers) createProfile(w http.ResponseWriter, r *http.Request) {
 	case *branding.Object, []any:
 		theme := branding.NewObject()
 		theme.Set("version", "1.0")
-		theme.Set("type", "betterdesk-theme")
+		theme.Set("type", "neodesk-theme")
 		theme.Set("branding", settings)
 		preset = theme
 	}

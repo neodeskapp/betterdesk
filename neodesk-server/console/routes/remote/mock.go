@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/reqquery"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/reqquery"
 )
 
 // The dev mock of the viewer stands in for the remote client in the
@@ -13,7 +13,7 @@ import (
 // without a device. Its code is part of the web app
 // (web-ui/src/lib/remote/client/mock-session.ts); the server only says in
 // the viewer's data whether a request gets it, and only with
-// BD_DEV_MOCK_REMOTE=1.
+// ND_DEV_MOCK_REMOTE=1.
 
 // mockScenarios are the scenarios the mock knows (SCENARIOS).
 var mockScenarios = []string{"ok", "slow", "password", "2fa", "fail-relay", "refused", "offline", "timeout", "ended", "dropped"}

@@ -1,8 +1,8 @@
 {
-	"name": "betterdesk-web-ui",
+	"name": "neodesk-web-ui",
 	"version": "0.1.0",
 	"private": true,
-	"description": "BetterDesk web console frontend (Svelte 5, SvelteKit SPA)",
+	"description": "NeoDesk web console frontend (Svelte 5, SvelteKit SPA)",
 	"license": "AGPL-3.0",
 	"type": "module",
 	"engines": {

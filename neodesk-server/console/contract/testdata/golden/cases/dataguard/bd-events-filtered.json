@@ -2,7 +2,7 @@
  "id": "dataguard/bd-events-filtered",
  "request": {
   "method": "GET",
-  "path": "/api/bd/events?device_id=900100001&event_source=usb&event_type=info&from=2000-01-01&limit=5&to=2100-01-01"
+  "path": "/api/nd/events?device_id=900100001&event_source=usb&event_type=info&from=2000-01-01&limit=5&to=2100-01-01"
  },
  "recordings": 2,
  "answers": [
@@ -60,7 +60,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -101,7 +101,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",

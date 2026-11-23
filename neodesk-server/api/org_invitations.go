@@ -13,15 +13,15 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // Redeeming an organization invitation. An invitation's code is 32 random
 // bytes in hex; the table keeps only its SHA-256 (invitationHash), and the
 // code goes out once, in the answer that creates the invitation. A person
 // redeems it on the console's /invite page: the console asks lookup what
-// the code is for and redeem to make a sign-in for the BetterDesk client
+// the code is for and redeem to make a sign-in for the NeoDesk client
 // in the invitation's organization (an organization account, the default
 // role, the invitation's email). The two routes answer only the console
 // (requireConsoleCaller), which limits them per address; a code that is

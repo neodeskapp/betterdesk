@@ -33,7 +33,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -56,7 +56,7 @@
      },
      "presentation": {
       "badgeTitle": "t,1",
-      "brand": "BetterDesk",
+      "brand": "NeoDesk",
       "tierLabel": null,
       "tierLabels": {
        "bronze": "Bronze",

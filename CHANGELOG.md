@@ -1,7 +1,40 @@
 ## [Unreleased]
 
 ### Changed
-- _(none yet)_
+- The project is now called NeoDesk and is developed on its own. It
+  started as a fork of BetterDesk by UNITRONIX
+  (github.com/UNITRONIX/BetterDesk). The repository is
+  github.com/neodeskapp/neodesk, the client github.com/neodeskapp/neodesk-client,
+  and the documentation is on neode.sk.
+- New names for admins:
+  - Installers: `neodesk.sh`, `neodesk.ps1` and `neodesk-docker.sh`.
+  - Linux: the service `neodesk-server` (`neodesk-server.service`), the
+    system user `neodesk`, the folder `/opt/neodesk` and the binary
+    `/usr/local/bin/neodesk-server`.
+  - Windows: the service `NeoDeskServer` and the folders `C:\NeoDesk` and
+    `C:\NeoDeskConsole`.
+  - Docker: the image `ghcr.io/neodeskapp/neodesk`, the container
+    `neodesk`, the volumes `neodesk-data`, `neodesk-console-data` and
+    `neodesk-postgres-data`, and `neodesk-show-admin-credentials`.
+  - Environment variables: `BETTERDESK_*` are now `NEODESK_*`, and `BD_*`
+    are `ND_*`.
+- The console's cookies and the settings it keeps in the browser have new
+  names: everyone signs in again, and theme and sidebar choices start
+  over. New two-factor set-ups show NeoDesk as the issuer.
+- The device API and its sockets moved from `bd` to `nd`, with no old
+  names kept: `/api/bd/*` is `/api/nd/*`, `/ws/bd-signal`, `/ws/bd-relay`
+  and `/ws/bd-mgmt` are `/ws/nd-signal`, `/ws/nd-relay` and `/ws/nd-mgmt`,
+  the `X-BD-*` headers are `X-ND-*` (`X-ND-Enrollment-Timestamp`, `-Nonce`
+  and `-Signature`, `X-ND-Background`), and devices sign
+  `nd-enrollment-v1` and `nd-mgmt-v1`. BetterDesk agents and clients
+  can't register with or connect to a NeoDesk server; scripts and
+  integrations that call these paths need the new names.
+- LAN discovery answers `neodesk-discover` probes, mDNS announces
+  `_neodesk._tcp`, and update manifests are signed for NeoDesk, so a
+  BetterDesk install can't update itself to NeoDesk.
+- There is no migration from BetterDesk: the installers don't take over a
+  BetterDesk install's services, folders, volumes or settings. Install
+  NeoDesk fresh.
 
 ---
 

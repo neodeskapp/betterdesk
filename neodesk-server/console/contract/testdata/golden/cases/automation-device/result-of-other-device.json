@@ -2,7 +2,7 @@
  "id": "automation-device/result-of-other-device",
  "request": {
   "method": "POST",
-  "path": "/api/bd/commands/{command}/result",
+  "path": "/api/nd/commands/{command}/result",
   "body": {
    "result": "demo-reception-02",
    "status": "completed"

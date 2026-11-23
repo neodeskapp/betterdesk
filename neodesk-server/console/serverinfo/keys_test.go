@@ -408,7 +408,7 @@ func TestKeyRunsAgainstNode(t *testing.T) {
 		qrFails := false
 		var qrTexts []string
 		opts := run.Cfg.options()
-		opts.PubKeyPath, opts.APIKeyPath, opts.DBPath = pubKey, apiKey, "/opt/betterdesk/db_v2.sqlite3"
+		opts.PubKeyPath, opts.APIKeyPath, opts.DBPath = pubKey, apiKey, "/opt/neodesk/db_v2.sqlite3"
 		opts.GoAPI = api.client()
 		opts.Now = func() time.Time { return clock }
 		opts.Logger = &recordingLogger{}

@@ -21,7 +21,7 @@ const (
 )
 
 func fuzzSeeds(f *testing.F) {
-	small, _ := CreateTarGz([]Entry{{Name: "manifest.json", Data: []byte(`{"_format":"betterdesk-full-backup","_version":1}`)},
+	small, _ := CreateTarGz([]Entry{{Name: "manifest.json", Data: []byte(`{"_format":"neodesk-full-backup","_version":1}`)},
 		{Name: "console/uploads/a.png", Data: bytes.Repeat([]byte{7}, 700)}}, 1700000000)
 	f.Add(small)
 	f.Add(small[:len(small)/2])

@@ -13,9 +13,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // maxClientOIDCBody caps the body of POST /api/oidc/auth: a device id, a
@@ -230,7 +230,7 @@ func (s *Server) ensureOIDCUser(result *auth.OIDCResult, cfg *auth.OIDCConfig) (
 	// With a group map set the map decides the role at every sign-in, the
 	// default role for a person in none of its groups included. Without
 	// one the default role is only for provisioning and must not undo a
-	// role chosen by a BetterDesk administrator on later logins.
+	// role chosen by a NeoDesk administrator on later logins.
 	if result.RoleFromGroup && result.Role != "" && result.Role != user.Role {
 		user.Role = result.Role
 		changed = true

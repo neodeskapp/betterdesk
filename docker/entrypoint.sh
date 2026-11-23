@@ -1,12 +1,12 @@
 #!/bin/sh
-# BetterDesk — container entrypoint
-# Prepares the volumes and settings, then runs betterdesk-server (signal,
-# relay, API and web console in one process) as the betterdesk user.
+# NeoDesk — container entrypoint
+# Prepares the volumes and settings, then runs neodesk-server (signal,
+# relay, API and web console in one process) as the neodesk user.
 set -e
 
 # shellcheck source=/dev/null
 . /ensure-app-user.sh
-ensure_betterdesk_user
+ensure_neodesk_user
 # shellcheck source=docker/dsn.sh
 . /docker/dsn.sh
 
@@ -23,8 +23,8 @@ server_ports() {
 }
 
 echo "========================================"
-echo "  BetterDesk"
-echo "  Version: ${BETTERDESK_IMAGE_VERSION:-3.6.2}"
+echo "  NeoDesk"
+echo "  Version: ${NEODESK_IMAGE_VERSION:-3.6.2}"
 echo "========================================"
 echo ""
 echo "  Server:       $(server_ports)"
@@ -34,29 +34,29 @@ echo ""
 
 # Ensure data directories exist and have correct permissions
 mkdir -p /opt/rustdesk /app/data 2>/dev/null || true
-chown -R betterdesk:betterdesk /opt/rustdesk /app/data 2>/dev/null || true
+chown -R neodesk:neodesk /opt/rustdesk /app/data 2>/dev/null || true
 
 # Shared bootstrap password of the admin account (issue #385).
 # shellcheck source=/docker/bootstrap-admin-credentials.sh
 . /docker/bootstrap-admin-credentials.sh
 
-# Write a file as betterdesk. Fresh named volumes inherit image ownership
+# Write a file as neodesk. Fresh named volumes inherit image ownership
 # (UID 10001 by default, or PUID after remap); with compose cap_drop:ALL root
 # has no CAP_DAC_OVERRIDE and cannot create files there (Permission denied on
 # .api_key, issue #299).
-write_as_betterdesk() {
-    # usage: write_as_betterdesk <path> <content>
-    printf '%s\n' "$2" | su-exec betterdesk sh -c "umask 077; cat > \"$1\""
+write_as_neodesk() {
+    # usage: write_as_neodesk <path> <content>
+    printf '%s\n' "$2" | su-exec neodesk sh -c "umask 077; cat > \"$1\""
 }
 
 # API key of the server's API
 API_KEY_FILE="/opt/rustdesk/.api_key"
-if [ -z "${API_KEY:-}" ] && ! file_exists_as_betterdesk "$API_KEY_FILE"; then
+if [ -z "${API_KEY:-}" ] && ! file_exists_as_neodesk "$API_KEY_FILE"; then
     API_KEY=$(openssl rand -hex 32)
-    write_as_betterdesk "$API_KEY_FILE" "$API_KEY"
+    write_as_neodesk "$API_KEY_FILE" "$API_KEY"
     echo "Auto-generated API key → $API_KEY_FILE"
-elif [ -n "${API_KEY:-}" ] && ! file_exists_as_betterdesk "$API_KEY_FILE"; then
-    write_as_betterdesk "$API_KEY_FILE" "$API_KEY"
+elif [ -n "${API_KEY:-}" ] && ! file_exists_as_neodesk "$API_KEY_FILE"; then
+    write_as_neodesk "$API_KEY_FILE" "$API_KEY"
     echo "API key from env → $API_KEY_FILE"
 fi
 
@@ -65,11 +65,11 @@ fi
 # is set
 VAULT_KEY_FILE="/opt/rustdesk/.remote_target_vault_key"
 if [ -z "${REMOTE_TARGET_VAULT_KEY:-}" ]; then
-    if ! file_exists_as_betterdesk "$VAULT_KEY_FILE"; then
-        write_as_betterdesk "$VAULT_KEY_FILE" "$(openssl rand -hex 32)"
+    if ! file_exists_as_neodesk "$VAULT_KEY_FILE"; then
+        write_as_neodesk "$VAULT_KEY_FILE" "$(openssl rand -hex 32)"
         echo "Made the remote target vault key → $VAULT_KEY_FILE"
     fi
-    REMOTE_TARGET_VAULT_KEY=$(su-exec betterdesk cat "$VAULT_KEY_FILE")
+    REMOTE_TARGET_VAULT_KEY=$(su-exec neodesk cat "$VAULT_KEY_FILE")
 fi
 export REMOTE_TARGET_VAULT_KEY
 
@@ -84,24 +84,24 @@ export REMOTE_TARGET_VAULT_KEY
 # or SQLite database is treated as pre-existing.
 if [ -z "${ENROLLMENT_MODE:-}" ]; then
     ENROLLMENT_SENTINEL="/opt/rustdesk/.enrollment_initialized"
-    if ! file_exists_as_betterdesk "$ENROLLMENT_SENTINEL"; then
-        if file_exists_as_betterdesk /opt/rustdesk/db_v2.sqlite3 \
-            || file_exists_as_betterdesk /opt/rustdesk/id_ed25519; then
+    if ! file_exists_as_neodesk "$ENROLLMENT_SENTINEL"; then
+        if file_exists_as_neodesk /opt/rustdesk/db_v2.sqlite3 \
+            || file_exists_as_neodesk /opt/rustdesk/id_ed25519; then
             echo "Enrollment:   preserving existing policy (pre-existing volume)"
         else
             export ENROLLMENT_MODE="managed"
             echo "Enrollment:   managed (fresh install — new devices need approval)"
         fi
-        su-exec betterdesk touch "$ENROLLMENT_SENTINEL" 2>/dev/null || true
+        su-exec neodesk touch "$ENROLLMENT_SENTINEL" 2>/dev/null || true
     fi
 fi
 
 # Verify write access — SQLite WAL mode requires writable directory (Issue #78)
 _app_uid="${PUID:-10001}"
 _app_gid="${PGID:-10001}"
-if ! su-exec betterdesk touch /opt/rustdesk/.write_test 2>/dev/null; then
+if ! su-exec neodesk touch /opt/rustdesk/.write_test 2>/dev/null; then
     echo ""
-    echo "ERROR: /opt/rustdesk is NOT writable by the betterdesk user (UID ${_app_uid})."
+    echo "ERROR: /opt/rustdesk is NOT writable by the neodesk user (UID ${_app_uid})."
     echo "  SQLite WAL mode requires write access to the database directory."
     echo "  If using bind mounts, either set PUID/PGID to the host owner, or run:"
     echo "    chown -R ${_app_uid}:${_app_gid} /path/to/your/data"
@@ -110,9 +110,9 @@ if ! su-exec betterdesk touch /opt/rustdesk/.write_test 2>/dev/null; then
 fi
 rm -f /opt/rustdesk/.write_test 2>/dev/null || true
 # Fix private key permissions (volume mounts may preserve wrong UID/mode)
-if file_exists_as_betterdesk /opt/rustdesk/id_ed25519; then
+if file_exists_as_neodesk /opt/rustdesk/id_ed25519; then
     chmod 600 /opt/rustdesk/id_ed25519 2>/dev/null || true
-    chown betterdesk:betterdesk /opt/rustdesk/id_ed25519 2>/dev/null || true
+    chown neodesk:neodesk /opt/rustdesk/id_ed25519 2>/dev/null || true
 fi
 
 # BD-2026-007: Warn about weak default secrets
@@ -216,6 +216,6 @@ echo "  API:          http://localhost:21121/api"
 echo "========================================"
 echo ""
 
-# One process as betterdesk. tini passes its exit on; status 3 is a restart
+# One process as neodesk. tini passes its exit on; status 3 is a restart
 # request and the restart policy starts the container again.
-exec su-exec betterdesk "$@"
+exec su-exec neodesk "$@"

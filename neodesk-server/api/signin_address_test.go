@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // TestConsoleSignInsCountPerBrowser: the web console's in-process sign-ins

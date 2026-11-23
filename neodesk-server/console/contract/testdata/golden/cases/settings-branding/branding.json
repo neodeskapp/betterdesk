@@ -67,7 +67,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
@@ -135,8 +135,8 @@
        "text": ""
       },
       "identity": {
-       "appDescription": "BetterDesk Server Management",
-       "appName": "BetterDesk",
+       "appDescription": "NeoDesk Server Management",
+       "appName": "NeoDesk",
        "faviconSvg": "",
        "logoIcon": "dns",
        "logoSvg": "",
@@ -246,7 +246,7 @@
        "glassEnabled": false,
        "glassOpacity": "55"
       },
-      "type": "betterdesk-appearance",
+      "type": "neodesk-appearance",
       "typography": {
        "fontBody": "",
        "fontHeading": ""
@@ -259,8 +259,8 @@
       "agentBgImageUrl": "",
       "agentBgType": "none",
       "agentShowPoweredBy": "true",
-      "appDescription": "BetterDesk Server Management",
-      "appName": "BetterDesk",
+      "appDescription": "NeoDesk Server Management",
+      "appName": "NeoDesk",
       "appearanceSchemaVersion": "2",
       "bgBlur": "",
       "bgColor": "",

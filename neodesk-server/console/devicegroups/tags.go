@@ -5,8 +5,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // Tags are free text on devices. Renaming or deleting a tag rewrites the

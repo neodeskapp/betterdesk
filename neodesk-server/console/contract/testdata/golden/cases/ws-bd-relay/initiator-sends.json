@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/initiator-sends",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-relay",
+  "path": "/ws/nd-relay",
   "notes": [
    "websocket init, own origin",
    "websocket send text \"hello target\"",

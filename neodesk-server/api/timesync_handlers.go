@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/timesync"
+	"github.com/neodeskapp/neodesk/neodesk-server/timesync"
 )
 
 var ntpHostnamePattern = regexp.MustCompile(`^[a-zA-Z0-9](?:[a-zA-Z0-9.-]*[a-zA-Z0-9])?$`)

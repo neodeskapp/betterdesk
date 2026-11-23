@@ -12,8 +12,8 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // Paths are the sockets, in the order the old console listed them.

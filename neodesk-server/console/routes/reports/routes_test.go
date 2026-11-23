@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // reads are the routes that need a session and audit.view.
@@ -554,7 +554,7 @@ func TestTheExportIsNamedAfterTheDay(t *testing.T) {
 	if got.Status != 200 || got.Header.Get("Content-Type") != "text/csv; charset=utf-8" || got.Body != "total_inventoried,avg_ram_mb\n0,0" {
 		t.Fatalf("export: %d %q %q", got.Status, got.Header.Get("Content-Type"), got.Body)
 	}
-	if disposition != `attachment; filename="betterdesk_inventory_`+before+`.csv"` && disposition != `attachment; filename="betterdesk_inventory_`+after+`.csv"` {
+	if disposition != `attachment; filename="neodesk_inventory_`+before+`.csv"` && disposition != `attachment; filename="neodesk_inventory_`+after+`.csv"` {
 		t.Errorf("Content-Disposition: %q", disposition)
 	}
 

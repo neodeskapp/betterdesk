@@ -242,7 +242,7 @@ CREATE TABLE public.agent_bundles (
     client_commit text,
     active_generation_hash text,
     created_by integer,
-    product_type text DEFAULT 'betterdesk-support'::text NOT NULL,
+    product_type text DEFAULT 'neodesk-support'::text NOT NULL,
     revoked boolean DEFAULT false NOT NULL,
     download_count integer DEFAULT 0 NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,

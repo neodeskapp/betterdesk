@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
 )
 
 func TestClientIPHonorsForwardedHeaderOnlyForTrustedProxy(t *testing.T) {

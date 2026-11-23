@@ -15,7 +15,7 @@ func FuzzEncode(f *testing.F) {
 		"0123456789",
 		"HELLO WORLD",
 		"A1B2c3",
-		"otpauth://totp/BetterDesk:alice?secret=JBSWY3DPEHPK3PXP&issuer=BetterDesk",
+		"otpauth://totp/NeoDesk:alice?secret=JBSWY3DPEHPK3PXP&issuer=NeoDesk",
 		"rustdesk://config/9JSPrxWYpJXZ0NXYt9lI6ISeltmIsISM0ETMyoTZk5Cc",
 		"OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=",
 		"äöü€😀",

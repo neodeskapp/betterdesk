@@ -4,8 +4,8 @@ import (
 	"net"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/config"
-	pb "github.com/unitronix/betterdesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 )
 
 // ConfigUpdate.rendezvous_servers tells the client which ID server to use.

@@ -60,7 +60,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -93,7 +93,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -108,7 +108,7 @@
     },
     {
      "path": "deep_link",
-     "pattern": "^[9aA+/_=-]{10}:[9aA+/_=-]{10}<[9aA+/_=-]{4}>[9aA+/_=-]{9}\\?[9aA+/_=-]{6}$"
+     "pattern": "^[9aA+/_=-]{7}:[9aA+/_=-]{10}<[9aA+/_=-]{4}>[9aA+/_=-]{9}\\?[9aA+/_=-]{6}$"
     },
     {
      "path": "display_code",
@@ -178,7 +178,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -193,7 +193,7 @@
     },
     {
      "path": "deep_link",
-     "pattern": "^[9aA+/_=-]{10}:[9aA+/_=-]{10}<[9aA+/_=-]{4}>[9aA+/_=-]{9}\\?[9aA+/_=-]{6}$"
+     "pattern": "^[9aA+/_=-]{7}:[9aA+/_=-]{10}<[9aA+/_=-]{4}>[9aA+/_=-]{9}\\?[9aA+/_=-]{6}$"
     },
     {
      "path": "display_code",
@@ -263,7 +263,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -278,7 +278,7 @@
     },
     {
      "path": "deep_link",
-     "pattern": "^[9aA+/_=-]{10}:[9aA+/_=-]{10}<[9aA+/_=-]{4}>[9aA+/_=-]{9}\\?[9aA+/_=-]{6}$"
+     "pattern": "^[9aA+/_=-]{7}:[9aA+/_=-]{10}<[9aA+/_=-]{4}>[9aA+/_=-]{9}\\?[9aA+/_=-]{6}$"
     },
     {
      "path": "display_code",
@@ -348,7 +348,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -363,7 +363,7 @@
     },
     {
      "path": "deep_link",
-     "pattern": "^[9aA+/_=-]{10}:[9aA+/_=-]{10}<[9aA+/_=-]{4}>[9aA+/_=-]{9}\\?[9aA+/_=-]{6}$"
+     "pattern": "^[9aA+/_=-]{7}:[9aA+/_=-]{10}<[9aA+/_=-]{4}>[9aA+/_=-]{9}\\?[9aA+/_=-]{6}$"
     },
     {
      "path": "display_code",

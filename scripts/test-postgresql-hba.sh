@@ -2,9 +2,9 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-INSTALLER="$REPO_ROOT/betterdesk.sh"
+INSTALLER="$REPO_ROOT/neodesk.sh"
 TEST_ROOT="$(mktemp -d)"
-FUNCTIONS_FILE="$TEST_ROOT/betterdesk-functions.sh"
+FUNCTIONS_FILE="$TEST_ROOT/neodesk-functions.sh"
 FAKE_BIN="$TEST_ROOT/bin"
 HBA_FILE="$TEST_ROOT/pg_hba.conf"
 STATE_DIR="$TEST_ROOT/state"
@@ -31,7 +31,7 @@ set -euo pipefail
 
 case "$*" in
     *"SHOW hba_file;"*)
-        printf '%s\n' "$BETTERDESK_TEST_HBA"
+        printf '%s\n' "$NEODESK_TEST_HBA"
         ;;
     *)
         exit 0
@@ -44,7 +44,7 @@ cat > "$FAKE_BIN/systemctl" <<'EOF'
 set -euo pipefail
 
 if [ "${1:-}" = "reload" ] && [ "${2:-}" = "postgresql" ]; then
-    touch "$BETTERDESK_TEST_RELOADED"
+    touch "$NEODESK_TEST_RELOADED"
 fi
 EOF
 
@@ -65,10 +65,10 @@ run_hba_setup() {
     PATH="$FAKE_BIN:$PATH" \
         AUTO_MODE=true \
         POSTGRESQL_HOST="$host" \
-        POSTGRESQL_DB=betterdesk \
-        POSTGRESQL_USER=betterdesk \
-        BETTERDESK_TEST_HBA="$HBA_FILE" \
-        BETTERDESK_TEST_RELOADED="$STATE_DIR/reloaded" \
+        POSTGRESQL_DB=neodesk \
+        POSTGRESQL_USER=neodesk \
+        NEODESK_TEST_HBA="$HBA_FILE" \
+        NEODESK_TEST_RELOADED="$STATE_DIR/reloaded" \
         bash -c 'script="$1"; shift; source "$script" --auto; ensure_postgresql_local_hba_rules' \
         -- "$FUNCTIONS_FILE"
 }
@@ -82,12 +82,12 @@ EOF
 
 run_hba_setup localhost
 
-ipv4_rule='host    betterdesk    betterdesk    127.0.0.1/32    scram-sha-256'
-ipv6_rule='host    betterdesk    betterdesk    ::1/128         scram-sha-256'
+ipv4_rule='host    neodesk    neodesk    127.0.0.1/32    scram-sha-256'
+ipv6_rule='host    neodesk    neodesk    ::1/128         scram-sha-256'
 
 if [ "$(count_exact_line "$ipv4_rule")" -ne 1 ] ||
     [ "$(count_exact_line "$ipv6_rule")" -ne 1 ]; then
-    printf 'Expected both BetterDesk localhost HBA rules exactly once.\n' >&2
+    printf 'Expected both NeoDesk localhost HBA rules exactly once.\n' >&2
     exit 1
 fi
 

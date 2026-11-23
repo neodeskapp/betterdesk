@@ -78,13 +78,13 @@
 {/snippet}
 
 <svelte:head>
-	<title>{tf('guest_access.title', 'Guest Remote')} - {page?.appName ?? 'BetterDesk'}</title>
+	<title>{tf('guest_access.title', 'Guest Remote')} - {page?.appName ?? 'NeoDesk'}</title>
 </svelte:head>
 
 <div class="guest">
 	<header class="desk-header">
 		<span class="desk-brand"
-			><RemoteBrand appName={page?.appName ?? 'BetterDesk'} branding={page?.branding ?? null} /></span
+			><RemoteBrand appName={page?.appName ?? 'NeoDesk'} branding={page?.branding ?? null} /></span
 		>
 	</header>
 

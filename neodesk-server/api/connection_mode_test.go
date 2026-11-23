@@ -12,12 +12,12 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/config"
-	bdcrypto "github.com/unitronix/betterdesk-server/crypto"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	bdcrypto "github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 	"golang.org/x/crypto/nacl/box"
 	"golang.org/x/crypto/nacl/secretbox"
 )
@@ -109,9 +109,9 @@ func sealClientHeartbeat(t *testing.T, srv *Server, deviceID string, devicePriv 
 func postHeartbeat(t *testing.T, srv *Server, deviceID, deviceUUID string, envelope json.RawMessage) map[string]any {
 	t.Helper()
 	body, err := json.Marshal(map[string]any{
-		"id":                  deviceID,
-		"uuid":                deviceUUID,
-		"betterdesk_envelope": envelope,
+		"id":               deviceID,
+		"uuid":             deviceUUID,
+		"neodesk_envelope": envelope,
 	})
 	if err != nil {
 		t.Fatalf("marshal heartbeat: %v", err)
@@ -129,7 +129,7 @@ func postHeartbeat(t *testing.T, srv *Server, deviceID, deviceUUID string, envel
 
 func openSealedHeartbeat(t *testing.T, srv *Server, response map[string]any, responsePriv *[32]byte) map[string]any {
 	t.Helper()
-	envelope, ok := response["betterdesk_envelope"].(map[string]any)
+	envelope, ok := response["neodesk_envelope"].(map[string]any)
 	if !ok {
 		t.Fatalf("response is not sealed: %#v", response)
 	}
@@ -187,7 +187,7 @@ func desktopIdentity(deviceID, deviceUUID, mode string) map[string]any {
 	return map[string]any{
 		"id":           deviceID,
 		"uuid":         deviceUUID,
-		"product_sku":  "betterdesk-desktop",
+		"product_sku":  "neodesk-desktop",
 		"conn_mode":    mode,
 		"capabilities": []string{"connection-mode.remote-control"},
 		"modified_at":  0,
@@ -225,7 +225,7 @@ func TestConnectionModeRoundTripAndPlaintextHold(t *testing.T) {
 		t.Fatal("command delivered before an operator request")
 	}
 
-	plainReq := httptest.NewRequest(http.MethodPost, "/api/heartbeat", bytes.NewReader([]byte(`{"id":"`+deviceID+`","conn_mode":"incoming-only","product_sku":"betterdesk-support"}`)))
+	plainReq := httptest.NewRequest(http.MethodPost, "/api/heartbeat", bytes.NewReader([]byte(`{"id":"`+deviceID+`","conn_mode":"incoming-only","product_sku":"neodesk-support"}`)))
 	plainReq.RemoteAddr = "198.51.100.11:9"
 	plainRec := httptest.NewRecorder()
 	srv.handleClientHeartbeat(plainRec, plainReq)
@@ -293,7 +293,7 @@ func TestConnectionModeBadSignatureStaysQueued(t *testing.T) {
 	tampered.Signature = base64.StdEncoding.EncodeToString(bytes.Repeat([]byte{1}, ed25519.SignatureSize))
 	raw, _ := json.Marshal(tampered)
 	response := postHeartbeat(t, srv, deviceID, deviceUUID, raw)
-	if _, ok := response["betterdesk_envelope"]; ok || response["connection_mode_command"] != nil {
+	if _, ok := response["neodesk_envelope"]; ok || response["connection_mode_command"] != nil {
 		t.Fatalf("bad signature delivered a command: %#v", response)
 	}
 	if bytes.Contains([]byte(mustJSON(response)), []byte("connection_mode_command")) {
@@ -322,7 +322,7 @@ func TestConnectionModeBadSignatureStaysQueued(t *testing.T) {
 func TestConnectionModeSupportAgentRejectsNormal(t *testing.T) {
 	srv, deviceID, deviceUUID, devicePriv, responsePub, _ := newConnectionModeFixture(t)
 	payload := map[string]any{
-		"id": deviceID, "uuid": deviceUUID, "product_sku": "betterdesk-support",
+		"id": deviceID, "uuid": deviceUUID, "product_sku": "neodesk-support",
 		"conn_mode": "incoming-only", "capabilities": []string{"connection-mode.remote-control"},
 	}
 	postHeartbeat(t, srv, deviceID, deviceUUID, sealClientHeartbeat(t, srv, deviceID, devicePriv, 1, payload, responsePub))
@@ -362,7 +362,7 @@ func TestConnectionModeRequiresCapabilityAndUUID(t *testing.T) {
 	}
 	// Eligibility requires a verified desktop identity before the UUID check.
 	identity, _ := json.Marshal(map[string]any{
-		"product_sku": "betterdesk-desktop", "conn_mode": "normal",
+		"product_sku": "neodesk-desktop", "conn_mode": "normal",
 		"capabilities": []string{"connection-mode.remote-control"},
 	})
 	if err := srv.db.SaveTelemetrySnapshot(&db.TelemetrySnapshot{

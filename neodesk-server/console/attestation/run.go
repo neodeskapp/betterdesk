@@ -8,7 +8,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 )
 
 // run is one capacity test.

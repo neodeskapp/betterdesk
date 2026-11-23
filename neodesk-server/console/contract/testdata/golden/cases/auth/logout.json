@@ -29,8 +29,8 @@
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.sid=; Path=/; Expires=<past>",
-     "betterdesk.sid=; Path=/; Expires=<past>"
+     "nd.sid=; Path=/; Expires=<past>",
+     "neodesk.sid=; Path=/; Expires=<past>"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",

@@ -2,7 +2,7 @@
  "id": "bd-api/chat-history-without-device-id",
  "request": {
   "method": "GET",
-  "path": "/api/bd/chat/history",
+  "path": "/api/nd/chat/history",
   "notes": [
    "header Authorization: Bearer {secret:device_token}",
    "no CSRF token",

@@ -1,5 +1,5 @@
 /**
- * BetterDesk Web Remote Client — touch and touchpad input for tablet / fold devices.
+ * NeoDesk Web Remote Client — touch and touchpad input for tablet / fold devices.
  */
 import type { MessageInit } from './generated/protos.ts';
 import { RDInput, type RDInputRenderer, type RDRemotePoint } from './input.ts';

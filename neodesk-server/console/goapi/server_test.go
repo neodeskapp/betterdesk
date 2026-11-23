@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi/internal/apitest"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi/internal/apitest"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // realClient returns a client on a real API server with two peers.
@@ -53,7 +53,7 @@ func TestAgainstAPIServer(t *testing.T) {
 	t.Run("health and statistics", func(t *testing.T) {
 		health := c.GetHealth(ctx)
 		wantAt(t, "GetHealth", health, `"running"`, "status")
-		wantAt(t, "GetHealth", health, `"betterdesk"`, "backend")
+		wantAt(t, "GetHealth", health, `"neodesk"`, "backend")
 		wantAt(t, "GetHealth", health, `2`, "peers_total")
 		wantAt(t, "GetHealth", health, `"test"`, "version")
 
@@ -66,7 +66,7 @@ func TestAgainstAPIServer(t *testing.T) {
 		info := c.GetServerInfo(ctx)
 		wantAt(t, "GetServerInfo", info, `"ok"`, "health", "status")
 		wantAt(t, "GetServerInfo", info, `2`, "stats", "peers_total")
-		wantAt(t, "GetServerInfo", info, `"betterdesk"`, "backend")
+		wantAt(t, "GetServerInfo", info, `"neodesk"`, "backend")
 
 		got, err := NewBackend(c, &fakeStore{}).GetStats(ctx)
 		if err != nil {
@@ -268,7 +268,7 @@ func TestAgainstAPIServer(t *testing.T) {
 	t.Run("branding", func(t *testing.T) {
 		branding := c.GetBranding(ctx)
 		wantAt(t, "GetBranding", branding, `true`, "success")
-		wantAt(t, "GetBranding", branding, `"BetterDesk"`, "data", "company_name")
+		wantAt(t, "GetBranding", branding, `"NeoDesk"`, "data", "company_name")
 		wantAt(t, "SaveBranding", c.SaveBranding(ctx, NewObject("company_name", "Acme")), `"Acme"`, "data", "branding", "company_name")
 		wantAt(t, "GetBranding after the save", c.GetBranding(ctx), `"Acme"`, "data", "company_name")
 		wantJSON(t, "SaveBranding with a text", c.SaveBranding(ctx, "not an object"), badRequest400)

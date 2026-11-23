@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // policyFixes are the steps of testdata/node_*.json that the bug fixes
@@ -104,23 +104,23 @@ var _ = policyFixes.Add("DG1", map[string]replay.Fix{
 	`admin POST /api/dataguard/policies {"name":"Policy 53","scope":[]}`:                         {Status: 400, Answer: `{"error":"Invalid scope"}`, After: nodePolicy},
 	`admin POST /api/dataguard/policies {"name":"Policy 54","scope":{}}`:                         {Status: 400, Answer: `{"error":"Invalid scope"}`, After: nodePolicy},
 	`admin POST /api/dataguard/policies {"name":"Policy 55","scope":{"a":1}}`:                    {Status: 400, Answer: `{"error":"Invalid scope"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 61","enabled":2}`:                               {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 62","enabled":-1}`:                              {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 63","enabled":"yes"}`:                           {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 64","enabled":"no"}`:                            {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 65","enabled":"true"}`:                          {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 66","enabled":"false"}`:                         {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 67","enabled":"t"}`:                             {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 68","enabled":"on"}`:                            {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 69","enabled":"off"}`:                           {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 70","enabled":""}`:                              {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 71","enabled":" "}`:                             {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 72","enabled":"abc"}`:                           {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 73","enabled":null}`:                            {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 74","enabled":[]}`:                              {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 75","enabled":[1]}`:                             {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 76","enabled":{}}`:                              {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
-	`admin POST /api/bd/policies {"name":"Policy 77","enabled":1.5}`:                             {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 61","enabled":2}`:                               {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 62","enabled":-1}`:                              {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 63","enabled":"yes"}`:                           {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 64","enabled":"no"}`:                            {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 65","enabled":"true"}`:                          {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 66","enabled":"false"}`:                         {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 67","enabled":"t"}`:                             {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 68","enabled":"on"}`:                            {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 69","enabled":"off"}`:                           {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 70","enabled":""}`:                              {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 71","enabled":" "}`:                             {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 72","enabled":"abc"}`:                           {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 73","enabled":null}`:                            {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 74","enabled":[]}`:                              {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 75","enabled":[1]}`:                             {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 76","enabled":{}}`:                              {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
+	`admin POST /api/nd/policies {"name":"Policy 77","enabled":1.5}`:                             {Status: 400, Answer: `{"error":"Invalid enabled"}`, After: nodePolicy},
 	`admin POST /api/dataguard/policies {"name":"Policy 92","description":{},"scope":["a","b"]}`: {Status: 400, Answer: `{"error":"Invalid description"}`, After: nodePolicy},
 	`admin PATCH /api/dataguard/policies/2 {"name":null}`:                                        {Status: 400, Answer: `{"error":"Policy name is required"}`, After: nodePolicy},
 	`admin PATCH /api/dataguard/policies/2 {"name":5}`:                                           {Status: 400, Answer: `{"error":"Policy name is required"}`, After: nodePolicy},
@@ -142,19 +142,19 @@ var _ = policyFixes.Add("DG1", map[string]replay.Fix{
 // DG2: a change that names no column answers the policy as it is.
 var _ = policyFixes.Add("DG2", map[string]replay.Fix{
 	"admin PATCH /api/dataguard/policies/2 {}": {Dialect: "sqlite", Status: 200,
-		Answer: `{"id":2,"name":"By admin at /api/bd","description":"","policy_type":"","action":"log","scope":"","enabled":1,"rules":[],"created_at":"2001-02-03 04:05:06","updated_at":"2001-02-03 04:05:07"}`},
-	`admin PATCH /api/bd/policies/2 {"unknown":true}`: {Dialect: "sqlite", Status: 200,
-		Answer: `{"id":2,"name":"By admin at /api/bd","description":"","policy_type":"","action":"log","scope":"","enabled":1,"rules":[],"created_at":"2001-02-03 04:05:06","updated_at":"2001-02-03 04:05:07"}`},
-	`admin PATCH /api/bd/policies/2 [{"name":"In a list"}]`: {Dialect: "sqlite", Status: 200,
+		Answer: `{"id":2,"name":"By admin at /api/nd","description":"","policy_type":"","action":"log","scope":"","enabled":1,"rules":[],"created_at":"2001-02-03 04:05:06","updated_at":"2001-02-03 04:05:07"}`},
+	`admin PATCH /api/nd/policies/2 {"unknown":true}`: {Dialect: "sqlite", Status: 200,
+		Answer: `{"id":2,"name":"By admin at /api/nd","description":"","policy_type":"","action":"log","scope":"","enabled":1,"rules":[],"created_at":"2001-02-03 04:05:06","updated_at":"2001-02-03 04:05:07"}`},
+	`admin PATCH /api/nd/policies/2 [{"name":"In a list"}]`: {Dialect: "sqlite", Status: 200,
 		Answer: `{"id":2,"name":"Last","description":"x","policy_type":"usb","action":"log","scope":"y","enabled":1,"rules":[1],"created_at":"2001-02-03 04:05:06","updated_at":"<now, SQLite form>"}`},
 })
 
 var _ = policyFixes.Add("DG2", map[string]replay.Fix{
 	"admin PATCH /api/dataguard/policies/2 {}": {Dialect: "postgres", Status: 200,
-		Answer: `{"id":2,"name":"By admin at /api/bd","description":"","policy_type":"","action":"log","scope":"","enabled":true,"rules":[],"created_at":"2001-02-03T04:05:06.000Z","updated_at":"2001-02-03T04:05:07.000Z"}`},
-	`admin PATCH /api/bd/policies/2 {"unknown":true}`: {Dialect: "postgres", Status: 200,
-		Answer: `{"id":2,"name":"By admin at /api/bd","description":"","policy_type":"","action":"log","scope":"","enabled":true,"rules":[],"created_at":"2001-02-03T04:05:06.000Z","updated_at":"2001-02-03T04:05:07.000Z"}`},
-	`admin PATCH /api/bd/policies/2 [{"name":"In a list"}]`: {Dialect: "postgres", Status: 200,
+		Answer: `{"id":2,"name":"By admin at /api/nd","description":"","policy_type":"","action":"log","scope":"","enabled":true,"rules":[],"created_at":"2001-02-03T04:05:06.000Z","updated_at":"2001-02-03T04:05:07.000Z"}`},
+	`admin PATCH /api/nd/policies/2 {"unknown":true}`: {Dialect: "postgres", Status: 200,
+		Answer: `{"id":2,"name":"By admin at /api/nd","description":"","policy_type":"","action":"log","scope":"","enabled":true,"rules":[],"created_at":"2001-02-03T04:05:06.000Z","updated_at":"2001-02-03T04:05:07.000Z"}`},
+	`admin PATCH /api/nd/policies/2 [{"name":"In a list"}]`: {Dialect: "postgres", Status: 200,
 		Answer: `{"id":2,"name":"Last","description":"{}","policy_type":"usb","action":"log","scope":"{\"x\",\"y\"}","enabled":true,"rules":[1],"created_at":"2001-02-03T04:05:06.000Z","updated_at":"<now, ISO form>"}`},
 })
 
@@ -174,18 +174,18 @@ var _ = policyFixes.Add("DG3", map[string]replay.Fix{
 // (a text such as "yes" is off), and rules that are no list, or no JSON, as
 // no rules; one unreadable row no longer fails the list.
 var _ = deviceFixes.Add("DV7", map[string]replay.Fix{
-	" GET /api/bd/dlp-policies ":                           {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
-	" GET /api/bd/dlp-policies?device_id=device-b ":        {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
-	"operator GET /api/bd/dlp-policies ":                   {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+	" GET /api/nd/dlp-policies ":                           {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+	" GET /api/nd/dlp-policies?device_id=device-b ":        {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+	"operator GET /api/nd/dlp-policies ":                   {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 	"operator GET /api/dataguard/dlp-policies ":            {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 	" GET /api/dataguard/dlp-policies ":                    {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 	" GET /api/dataguard/dlp-policies?device_id=device-b ": {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 	" GET /API/DATAGUARD/DLP-POLICIES/ ":                   {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
-	" GET /API/BD/DLP-POLICIES/ ":                          {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+	" GET /API/ND/DLP-POLICIES/ ":                          {NodeStatus: 200, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 })
 
 var _ = deviceFixes.Add("DV7", map[string]replay.Fix{
-	" GET /api/bd/dlp-policies ":        {NodeStatus: 500, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
+	" GET /api/nd/dlp-policies ":        {NodeStatus: 500, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 	" GET /api/dataguard/dlp-policies ": {NodeStatus: 500, Status: 200, Has: dv7Has, Lacks: dv7Lacks},
 })
 
@@ -194,22 +194,22 @@ var (
 	dv7Lacks = []string{`"rules":{`, `"rules":0`, `"rules":null`, `"rules":"`, `"name":"enabled text"`}
 )
 
-// DG6: the panel access guard covers the routes for people at /api/bd as
+// DG6: the panel access guard covers the routes for people at /api/nd as
 // at /api/dataguard, so the roles that may read the data guard but not
 // write it (device.view without server.config, PA3 F5) get its refusal
 // of their writes there too. Their reads answer as the routes say, as at
-// /api/bd in the recording.
+// /api/nd in the recording.
 var _ = policyFixes.Add("DG6", guardRefuses(bdSteps()...))
 
-// bdSteps are the writes of the recording at /api/bd that a role without
+// bdSteps are the writes of the recording at /api/nd that a role without
 // server.config sends.
 func bdSteps() []string {
 	var keys []string
 	for _, role := range []string{"global_admin", "operator", "viewer", "guest_issuer"} {
 		keys = append(keys,
-			role+` POST /api/bd/policies {"name":"By `+role+` at /api/bd"}`,
-			role+` PATCH /api/bd/policies/999 {"name":"x"}`,
-			role+" DELETE /api/bd/policies/999 ",
+			role+` POST /api/nd/policies {"name":"By `+role+` at /api/nd"}`,
+			role+` PATCH /api/nd/policies/999 {"name":"x"}`,
+			role+" DELETE /api/nd/policies/999 ",
 		)
 	}
 	return keys
@@ -231,7 +231,7 @@ var _ = policyFixes.Add("DG3", map[string]replay.Fix{
 	"admin GET /api/dataguard/events?event_source=usb ": {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":8,"device_id":"D3"`}},
 	"admin GET /api/dataguard/events?DEVICE_ID=D3 ":     {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":10,"device_id":"D4"`}},
 	"admin GET /api/dataguard/events ":                  {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":10,"device_id":"D4"`}},
-	"admin GET /api/bd/events?device_id=D2 ":            {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":6,"device_id":"D2"`}},
+	"admin GET /api/nd/events?device_id=D2 ":            {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":6,"device_id":"D2"`}},
 	"admin GET /api/dataguard/policies/903 ":            {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":903,"name":"rules a broken string"`, `"rules":[]`}},
 	"admin GET /api/dataguard/policies ":                {Dialect: "postgres", NodeStatus: 500, Status: 200, Has: []string{`"id":903,"name":"rules a broken string"`, `"id":1,"name":"By admin at /api/dataguard"`}},
 })
@@ -321,7 +321,7 @@ func dv6Steps(dialect string) map[string]replay.Fix {
 	at := map[string]int{"sqlite": 1, "postgres": 3}[dialect]
 	steps := map[string]replay.Fix{}
 	for member, e := range dv6Events {
-		steps[` POST /api/bd/dlp-events {"event_source":"usb",`+member+`}`] = replay.Fix{
+		steps[` POST /api/nd/dlp-events {"event_source":"usb",`+member+`}`] = replay.Fix{
 			Dialect: dialect, Status: 400, Answer: `{"error":"Invalid ` + e[0].(string) + `"}`,
 			After: nodeEvent(e[at].(int), e[0].(string), e[at+1]),
 		}
@@ -356,13 +356,13 @@ func nodeEvent(id int, member string, value any) func(t *testing.T, w *replay.Wo
 // C7: an id that is no whole number, or one beyond 2147483647, names no
 // policy on either database, where PostgreSQL failed with 500.
 var _ = policyFixes.Add("C7", noPolicy(
-	"admin GET /api/dataguard/policies/1.5 ", "admin GET /api/bd/policies/1.5 ", `admin PATCH /api/bd/policies/1.5 {"scope":"set-by-1.5"}`,
-	"admin GET /api/dataguard/policies/abc ", "admin GET /api/bd/policies/abc ", `admin PATCH /api/bd/policies/abc {"scope":"set-by-abc"}`,
-	"admin GET /api/dataguard/policies/Infinity ", "admin GET /api/bd/policies/Infinity ", `admin PATCH /api/bd/policies/Infinity {"scope":"set-by-Infinity"}`,
-	"admin GET /api/dataguard/policies/3000000000 ", "admin GET /api/bd/policies/3000000000 ", `admin PATCH /api/bd/policies/3000000000 {"scope":"set-by-3000000000"}`,
-	"admin GET /api/dataguard/policies/99999999999999999999 ", "admin GET /api/bd/policies/99999999999999999999 ",
-	`admin PATCH /api/bd/policies/99999999999999999999 {"scope":"set-by-99999999999999999999"}`,
-	"admin DELETE /api/bd/policies/abc ", "admin DELETE /api/bd/policies/1e400 ", "admin DELETE /api/bd/policies/3.5 ",
+	"admin GET /api/dataguard/policies/1.5 ", "admin GET /api/nd/policies/1.5 ", `admin PATCH /api/nd/policies/1.5 {"scope":"set-by-1.5"}`,
+	"admin GET /api/dataguard/policies/abc ", "admin GET /api/nd/policies/abc ", `admin PATCH /api/nd/policies/abc {"scope":"set-by-abc"}`,
+	"admin GET /api/dataguard/policies/Infinity ", "admin GET /api/nd/policies/Infinity ", `admin PATCH /api/nd/policies/Infinity {"scope":"set-by-Infinity"}`,
+	"admin GET /api/dataguard/policies/3000000000 ", "admin GET /api/nd/policies/3000000000 ", `admin PATCH /api/nd/policies/3000000000 {"scope":"set-by-3000000000"}`,
+	"admin GET /api/dataguard/policies/99999999999999999999 ", "admin GET /api/nd/policies/99999999999999999999 ",
+	`admin PATCH /api/nd/policies/99999999999999999999 {"scope":"set-by-99999999999999999999"}`,
+	"admin DELETE /api/nd/policies/abc ", "admin DELETE /api/nd/policies/1e400 ", "admin DELETE /api/nd/policies/3.5 ",
 ))
 
 // noPolicy are fixes of PostgreSQL steps that now find no policy.

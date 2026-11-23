@@ -5,13 +5,13 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/goapipath"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
-// Invitations. An invitation makes a sign-in for the BetterDesk client in
+// Invitations. An invitation makes a sign-in for the NeoDesk client in
 // its organization (an organization account): the person it is sent to
 // opens its link on the web app's /invite page and picks the username and
 // password. The API server keeps the invitations and only a hash of each

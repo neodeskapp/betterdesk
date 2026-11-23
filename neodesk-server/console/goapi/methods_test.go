@@ -131,9 +131,9 @@ func fellBack(msg string, extra string) string {
 
 var methodCases = []methodCase{
 	{fn: "getHealth", request: "GET /api/health/detail", failedRequests: []string{"GET /api/health/detail", "GET /api/health"},
-		ok:     `{"ok":true,"status":"running","backend":"betterdesk"}`,
-		failed: `{"status":"unreachable","backend":"betterdesk","error":"` + notFound + `"}`,
-		down:   `{"status":"unreachable","backend":"betterdesk","error":"` + hangUp + `"}`},
+		ok:     `{"ok":true,"status":"running","backend":"neodesk"}`,
+		failed: `{"status":"unreachable","backend":"neodesk","error":"` + notFound + `"}`,
+		down:   `{"status":"unreachable","backend":"neodesk","error":"` + hangUp + `"}`},
 	{fn: "getServerStats", request: "GET /api/server/stats", kind: "f1"},
 	{fn: "getAllPeers", request: "GET /api/peers", ok: `[]`, failed: `[]`, down: `[]`},
 	{fn: "getAllPeers", args: `[{"includeDeleted":true}]`, request: "GET /api/peers?include_deleted=true", ok: `[]`, failed: `[]`, down: `[]`},
@@ -393,9 +393,9 @@ func TestGetServerInfoCallsBothRoutes(t *testing.T) {
 		answer func(http.ResponseWriter, *http.Request)
 		want   string
 	}{
-		{"ok", answerJSON(200, okBody), `{"health":{"ok":true},"stats":{"ok":true},"backend":"betterdesk"}`},
-		{"failed", answerJSON(500, `{"error":"x"}`), `{"health":{},"stats":{},"backend":"betterdesk"}`},
-		{"down", noAnswer, `{"health":{},"stats":{},"backend":"betterdesk"}`},
+		{"ok", answerJSON(200, okBody), `{"health":{"ok":true},"stats":{"ok":true},"backend":"neodesk"}`},
+		{"failed", answerJSON(500, `{"error":"x"}`), `{"health":{},"stats":{},"backend":"neodesk"}`},
+		{"down", noAnswer, `{"health":{},"stats":{},"backend":"neodesk"}`},
 	} {
 		api := &fakeAPI{answer: c.answer}
 		got := toJSON(t, New(api).GetServerInfo(context.Background()))
@@ -416,7 +416,7 @@ func TestGetServerInfoCallsBothRoutes(t *testing.T) {
 		}
 		answerJSON(401, `{"error":"x"}`)(w, r)
 	}}
-	if got, want := toJSON(t, New(api).GetServerInfo(context.Background())), `{"health":{"status":"ok"},"stats":{},"backend":"betterdesk"}`; got != want {
+	if got, want := toJSON(t, New(api).GetServerInfo(context.Background())), `{"health":{"status":"ok"},"stats":{},"backend":"neodesk"}`; got != want {
 		t.Errorf("stats failing: result = %s, want %s", got, want)
 	}
 }
@@ -431,11 +431,11 @@ func TestGetHealthFallsBackToTheShortPayload(t *testing.T) {
 		detail func(http.ResponseWriter, *http.Request)
 		want   string
 	}{
-		{"detail answers", answerJSON(200, `{"status":"ok","peers_total":3}`), `{"status":"running","peers_total":3,"backend":"betterdesk"}`},
-		{"no detail route", answerJSON(404, `{"error":"x"}`), `{"status":"running","version":"v","backend":"betterdesk"}`},
-		{"detail refused", answerJSON(401, `{"error":"x"}`), `{"status":"running","version":"v","backend":"betterdesk"}`},
-		{"detail fails", answerJSON(500, `{"error":"x"}`), `{"status":"running","version":"v","backend":"betterdesk"}`},
-		{"detail gives no answer", noAnswer, `{"status":"running","version":"v","backend":"betterdesk"}`},
+		{"detail answers", answerJSON(200, `{"status":"ok","peers_total":3}`), `{"status":"running","peers_total":3,"backend":"neodesk"}`},
+		{"no detail route", answerJSON(404, `{"error":"x"}`), `{"status":"running","version":"v","backend":"neodesk"}`},
+		{"detail refused", answerJSON(401, `{"error":"x"}`), `{"status":"running","version":"v","backend":"neodesk"}`},
+		{"detail fails", answerJSON(500, `{"error":"x"}`), `{"status":"running","version":"v","backend":"neodesk"}`},
+		{"detail gives no answer", noAnswer, `{"status":"running","version":"v","backend":"neodesk"}`},
 	} {
 		api := &fakeAPI{answer: func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/api/health/detail" {
@@ -456,7 +456,7 @@ func TestGetHealthFallsBackToTheShortPayload(t *testing.T) {
 		}
 		answerJSON(503, `{"error":"x"}`)(w, r)
 	}}
-	if got, want := toJSON(t, New(api).GetHealth(context.Background())), `{"status":"unreachable","backend":"betterdesk","error":"Request failed with status code 503"}`; got != want {
+	if got, want := toJSON(t, New(api).GetHealth(context.Background())), `{"status":"unreachable","backend":"neodesk","error":"Request failed with status code 503"}`; got != want {
 		t.Errorf("both failing: GetHealth = %s, want %s", got, want)
 	}
 }
@@ -464,7 +464,7 @@ func TestGetHealthFallsBackToTheShortPayload(t *testing.T) {
 func TestSyncOnlineStatusMakesNoCall(t *testing.T) {
 	api := &fakeAPI{answer: answerJSON(200, okBody)}
 	got := toJSON(t, New(api).SyncOnlineStatus())
-	if want := `{"synced":0,"skipped":true,"reason":"betterdesk_manages_state"}`; got != want {
+	if want := `{"synced":0,"skipped":true,"reason":"neodesk_manages_state"}`; got != want {
 		t.Errorf("result = %s, want %s", got, want)
 	}
 	if len(api.requests) != 0 {

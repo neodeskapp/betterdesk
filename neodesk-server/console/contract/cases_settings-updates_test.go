@@ -5,7 +5,7 @@ package contract_test
 import (
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The update and management routes of the settings: the update check,
@@ -43,7 +43,7 @@ func init() {
 		return []string{
 			prefix + "services",                             // A29: one service instead of the console and the server
 			prefix + "groups.update",                        // A29: the update check is the binary's folder (method release)
-			"~" + prefix + "groups.restart.checks[0].error", // A29: a restart needs BETTERDESK_SUPERVISOR
+			"~" + prefix + "groups.restart.checks[0].error", // A29: a restart needs NEODESK_SUPERVISOR
 			"~" + prefix + "checks[7].error",                // A29: the restart check
 			prefix + "checks[9]",                            // A29: the update check
 		}

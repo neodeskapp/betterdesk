@@ -1,10 +1,10 @@
-name: BetterDesk CodeQL
+name: NeoDesk CodeQL
 
 # Dev-only tooling and test harnesses are not production attack surface.
 paths-ignore:
-  - betterdesk-mgmt
+  - neodesk-mgmt
   # MeshAgent tunnel TLS pin (checkServerIdentity); not default chain validation.
-  - betterdesk-server/meshcentral/assets/bettercore.js
+  - neodesk-server/meshcentral/assets/bettercore.js
   # Vendored wry cookie read helpers (copy Secure from platform cookies).
   - rdclient-desktop/vendor/wry/**
 
@@ -13,7 +13,7 @@ query-filters:
   - exclude:
       id: go/request-forgery
       paths:
-        - betterdesk-server/auth/oidc_url.go
+        - neodesk-server/auth/oidc_url.go
 
   # --- Nonce / ephemeral client ID; not auth secret material ---
   - exclude:
@@ -25,20 +25,20 @@ query-filters:
   - exclude:
       id: js/disabling-certificate-validation
       paths:
-        - betterdesk-server/meshcentral/assets/bettercore.js
+        - neodesk-server/meshcentral/assets/bettercore.js
 
   # --- Legacy / protocol-required hashing (documented; not password storage) ---
   - exclude:
       id: go/weak-sensitive-data-hashing
       paths:
-        - betterdesk-server/api/auth_handlers.go
-        - betterdesk-server/main.go
+        - neodesk-server/api/auth_handlers.go
+        - neodesk-server/main.go
 
   # --- Agent mTLS / self-signed relay in controlled deployments ---
   - exclude:
       id: go/disabled-certificate-check
       paths:
-        - betterdesk-agent/agent/agent.go
+        - neodesk-agent/agent/agent.go
         # API cert pinning uses VerifyPeerCertificate; development-only
         # insecure TLS is additionally gated by !release and explicit opt-in.
 
@@ -46,16 +46,16 @@ query-filters:
   - exclude:
       id: rust/disabled-certificate-check
       paths:
-        - betterdesk-agent-client/src-tauri/src/tls.rs
+        - neodesk-agent-client/src-tauri/src/tls.rs
         - rdclient-desktop/src-tauri/src/server_probe.rs
 
   # --- Test golden vectors + Tauri handler registration FP (not production secrets) ---
   - exclude:
       id: rust/hard-coded-cryptographic-value
       paths:
-        - betterdesk-desktop/src/crypto.rs
-        - betterdesk-agent-client/src-tauri/src/settings_lock.rs
-        - betterdesk-agent-client/src-tauri/src/lib.rs
+        - neodesk-desktop/src/crypto.rs
+        - neodesk-agent-client/src-tauri/src/settings_lock.rs
+        - neodesk-agent-client/src-tauri/src/lib.rs
 
   # --- Vendored wry: copies Secure flag from platform cookies (read path) ---
   - exclude:
@@ -67,9 +67,9 @@ query-filters:
   - exclude:
       id: go/incorrect-integer-conversion
       paths:
-        - betterdesk-server/main.go
+        - neodesk-server/main.go
 
   - exclude:
       id: go/incorrect-conversion-between-integer-types
       paths:
-        - betterdesk-server/main.go
+        - neodesk-server/main.go

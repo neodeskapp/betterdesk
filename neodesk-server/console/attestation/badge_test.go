@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // badgeVectors is what testdata/badge.json.gz recorded from the Node
@@ -135,7 +135,7 @@ func TestSignInBadgeReadsTheSettings(t *testing.T) {
 		ctx := context.Background()
 		settings := StoreSettings(db)
 		same := func(key string) string { return key }
-		if got := SignInBadge(ctx, settings, "BetterDesk", same); got != nil {
+		if got := SignInBadge(ctx, settings, "NeoDesk", same); got != nil {
 			t.Errorf("badge without settings = %s", branding.Stringify(got))
 		}
 		put := func(key, value string) {

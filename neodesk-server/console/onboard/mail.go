@@ -35,7 +35,7 @@ type MailFacts struct {
 
 // BuildMail writes the mail of a code: a heading, who sends it, what to
 // do, the link (a button in HTML), until when it works, for an invite the
-// code for a BetterDesk that is already installed, and who sent the mail.
+// code for a NeoDesk that is already installed, and who sent the mail.
 // The keys are below onboard.mail in the language files.
 func BuildMail(t Translate, f MailFacts) Mail {
 	prefix := "onboard.mail.invite_"

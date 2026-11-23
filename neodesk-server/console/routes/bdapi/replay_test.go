@@ -23,13 +23,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // recording is what testdata/node_<database>.json recorded from the Node
@@ -163,7 +163,7 @@ func newReplayer(t *testing.T, db *store.DB, rec recording) *replayer {
 		API: p.api,
 		Env: map[string]string{
 			"RATE_LIMIT_MAX": "1000000", "PANEL_READ_RATE_LIMIT_MAX": "1000000", "WIDGET_RATE_LIMIT_MAX": "1000000",
-			"BD_REGISTER_RATE_LIMIT_MAX": "1000000",
+			"ND_REGISTER_RATE_LIMIT_MAX": "1000000",
 		},
 	})
 	p.client = &http.Client{
@@ -439,32 +439,32 @@ var fixes = []fix{
 	// The replay sends from 127.0.0.1 without TRUST_PROXY: the address in
 	// X-Forwarded-For is not taken, so the renamed device's stored address
 	// does not match and its row stays as it was
-	{bug: "BD3", dialect: "sqlite", steps: []string{"41 renamed, same address POST /api/bd/register"}, status: http.StatusConflict,
+	{bug: "BD3", dialect: "sqlite", steps: []string{"41 renamed, same address POST /api/nd/register"}, status: http.StatusConflict,
 		answer: `{"error":"Device ID has been changed","new_id":"NEWID1","message":"This device ID was renamed to NEWID1. Please update your configuration."}`},
 	{bug: "BD3", dialect: "sqlite", steps: []string{"46 renamed devices after"}, edits: []string{
 		`{"id":"NEWID1","uuid":"","pk":null,"info":"{\"hostname\":\"\",\"os\":\"\",\"version\":\"\",\"ip\":\"203.0.113.9\"}","ip":"203.0.113.9","status_online":1,`,
 		`{"id":"NEWID1","uuid":"uuid-n","pk":null,"info":"{}","ip":"203.0.113.9","status_online":0,`,
 	}},
-	{bug: "BD3", dialect: "sqlite", steps: []string{"132 GET /api/bd/operator/devices", "135 token with spaces GET /api/bd/operator/devices"}, edits: []string{
+	{bug: "BD3", dialect: "sqlite", steps: []string{"132 GET /api/nd/operator/devices", "135 token with spaces GET /api/nd/operator/devices"}, edits: []string{
 		`{"id":"NEWID1","hostname":"","platform":"","online":true,"last_online":"2026-11-18 17:40:53"}`,
 		`{"id":"NEWID1","hostname":"","platform":"","online":false,"last_online":""}`,
 	}},
 	// A banned device is no target, and the lookup says it is banned
-	{bug: "BD4", steps: []string{"87 banned target POST /api/bd/connect"}, status: http.StatusForbidden, answer: `{"error":"Target device is banned"}`},
-	{bug: "BD4", steps: []string{"101 GET /api/bd/peer/BANNED1"}, edits: []string{`"banned":false`, `"banned":true`}},
+	{bug: "BD4", steps: []string{"87 banned target POST /api/nd/connect"}, status: http.StatusForbidden, answer: `{"error":"Target device is banned"}`},
+	{bug: "BD4", steps: []string{"101 GET /api/nd/peer/BANNED1"}, edits: []string{`"banned":false`, `"banned":true`}},
 	// A key stored as bytes, as PostgreSQL keeps every key, is the
 	// device's key: a key or uuid change needs the proof there too
 	{bug: "BD6", dialect: "postgres", like: "sqlite", steps: []string{
-		"27 key swap without proof POST /api/bd/register",
-		"28 key swap, proof by another key POST /api/bd/register",
-		"29 key swap, proof too old POST /api/bd/register",
-		"30 key swap, proof from the future POST /api/bd/register",
-		"31 key swap, unreadable time POST /api/bd/register",
-		"32 key swap, nonce too long POST /api/bd/register",
-		"33 key swap, signature too short POST /api/bd/register",
-		"34 key swap, signature of another path POST /api/bd/register",
-		"35 key swap, uuid change with proof POST /api/bd/register",
-		"36 the same proof again POST /api/bd/register",
+		"27 key swap without proof POST /api/nd/register",
+		"28 key swap, proof by another key POST /api/nd/register",
+		"29 key swap, proof too old POST /api/nd/register",
+		"30 key swap, proof from the future POST /api/nd/register",
+		"31 key swap, unreadable time POST /api/nd/register",
+		"32 key swap, nonce too long POST /api/nd/register",
+		"33 key swap, signature too short POST /api/nd/register",
+		"34 key swap, signature of another path POST /api/nd/register",
+		"35 key swap, uuid change with proof POST /api/nd/register",
+		"36 the same proof again POST /api/nd/register",
 	}},
 	{bug: "BD6", dialect: "postgres", steps: []string{"38 known devices after"}, edits: []string{
 		`{"id":"KEYDEV","uuid":"uuid-k",`, `{"id":"KEYDEV","uuid":"uuid-k2",`,
@@ -482,7 +482,7 @@ var fixes = []fix{
 	}},
 	// An approval whose request carried a key admits only that key: the
 	// device that sent none is refused and never registered
-	{bug: "BD8", steps: []string{"49 approved, no key sent POST /api/bd/register"}, status: http.StatusForbidden,
+	{bug: "BD8", steps: []string{"49 approved, no key sent POST /api/nd/register"}, status: http.StatusForbidden,
 		answer: `{"error":"enrollment_proof_required","message":"Registration requires operator approval, an enrollment token, or an Ed25519 proof of possession"}`},
 	{bug: "BD8", dialect: "sqlite", steps: []string{"73 new devices after"}, edits: []string{
 		`,{"id":"APPROVED2","uuid":"","pk":null,"info":"{\"hostname\":\"\",\"os\":\"\",\"version\":\"\",\"ip\":\"127.0.0.1\"}","ip":"127.0.0.1","status_online":1,"is_deleted":0}`, ``,
@@ -490,10 +490,10 @@ var fixes = []fix{
 	{bug: "BD8", dialect: "postgres", steps: []string{"73 new devices after"}, edits: []string{
 		`,{"id":"APPROVED2","uuid":"","pk":null,"info":{"ip":"127.0.0.1","os":"","version":"","hostname":""},"ip":"127.0.0.1","status_online":true,"is_deleted":false}`, ``,
 	}},
-	{bug: "BD8", dialect: "sqlite", steps: []string{"132 GET /api/bd/operator/devices", "135 token with spaces GET /api/bd/operator/devices"}, edits: []string{
+	{bug: "BD8", dialect: "sqlite", steps: []string{"132 GET /api/nd/operator/devices", "135 token with spaces GET /api/nd/operator/devices"}, edits: []string{
 		`,{"id":"APPROVED2","hostname":"","platform":"","online":true,"last_online":"2026-11-18 17:40:53"}`, ``,
 	}},
-	{bug: "BD8", dialect: "postgres", steps: []string{"132 GET /api/bd/operator/devices", "135 token with spaces GET /api/bd/operator/devices"}, edits: []string{
+	{bug: "BD8", dialect: "postgres", steps: []string{"132 GET /api/nd/operator/devices", "135 token with spaces GET /api/nd/operator/devices"}, edits: []string{
 		`,{"id":"APPROVED2","hostname":"","platform":"","online":true,"last_online":"2026-11-18T17:41:22.789Z"}`, ``,
 	}},
 }
@@ -597,7 +597,7 @@ func (f fix) apply(step *recordedStep) bool {
 
 // firstSessionHistory is the first step that reads the operator sessions
 // the replay recorded.
-const firstSessionHistory = "159 GET /api/bd/operator/sessions"
+const firstSessionHistory = "159 GET /api/nd/operator/sessions"
 
 // sameSecond gives the connection rows the replay wrote the times they
 // had in the recordings: one second, on PostgreSQL in the order they were
@@ -678,7 +678,7 @@ func (p *replayer) proofHeaders(step recordedStep, path string) map[string]strin
 	if target == "" {
 		target, _, _ = strings.Cut(path, "?")
 	}
-	payload := strings.Join([]string{"bd-enrollment-v1", strings.ToUpper(method), target, spec.Device, public, timestamp, spec.Nonce}, "\n")
+	payload := strings.Join([]string{"nd-enrollment-v1", strings.ToUpper(method), target, spec.Device, public, timestamp, spec.Nonce}, "\n")
 	signer := spec.Sign
 	if signer == "" {
 		signer = spec.Key
@@ -688,9 +688,9 @@ func (p *replayer) proofHeaders(step recordedStep, path string) map[string]strin
 		signature = *spec.Signature
 	}
 	return map[string]string{
-		"X-BD-Enrollment-Timestamp": timestamp,
-		"X-BD-Enrollment-Nonce":     spec.Nonce,
-		"X-BD-Enrollment-Signature": signature,
+		"X-ND-Enrollment-Timestamp": timestamp,
+		"X-ND-Enrollment-Nonce":     spec.Nonce,
+		"X-ND-Enrollment-Signature": signature,
 	}
 }
 

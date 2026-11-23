@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/managedconfig"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/managedconfig"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 type fileState struct {
@@ -154,7 +154,7 @@ func TestEnvMergeLikeNode(t *testing.T) {
 				t.Errorf("%s: stderr\n got %q\nwant %q", c.Name, gotErr, c.Stderr)
 			}
 		case "usage":
-			if !strings.HasPrefix(gotErr, "Usage: betterdesk-server env merge") {
+			if !strings.HasPrefix(gotErr, "Usage: neodesk-server env merge") {
 				t.Errorf("%s: stderr %q, want the usage", c.Name, gotErr)
 			}
 		case "uncaught":
@@ -216,7 +216,7 @@ func TestSubstFilesLikeNode(t *testing.T) {
 func TestEnvMergeUsesTheBuiltInTemplate(t *testing.T) {
 	dir := t.TempDir()
 	target := filepath.Join(dir, ".env")
-	env, out, errOut := testEnv(map[string]string{"BD_SUBST_RUSTDESK_DIR": "/srv/rd"})
+	env, out, errOut := testEnv(map[string]string{"ND_SUBST_RUSTDESK_DIR": "/srv/rd"})
 	if status := EnvMerge([]string{"--target", target, "--fresh", "--subst-env"}, env); status != 0 {
 		t.Fatalf("exit %d: %s", status, errOut)
 	}

@@ -2,7 +2,7 @@
  "id": "inventory-device/telemetry-odd-values",
  "request": {
   "method": "POST",
-  "path": "/api/bd/telemetry",
+  "path": "/api/nd/telemetry",
   "body": {
    "cpu_usage_percent": "hot",
    "device_id": "900100001",

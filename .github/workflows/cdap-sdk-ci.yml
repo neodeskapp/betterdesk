@@ -1,5 +1,5 @@
 # The CDAP SDKs (sdks/) and the reference bridges (bridges/) against the
-# gateway: betterdesk-server/cdap/sdk_examples_test.go runs each SDK's
+# gateway: neodesk-server/cdap/sdk_examples_test.go runs each SDK's
 # example and each bridge with its example config. CDAP_SDK_TESTS=1 makes a
 # missing tool or module a failure instead of a skip.
 name: CDAP SDK CI
@@ -10,14 +10,14 @@ on:
     paths:
       - 'sdks/**'
       - 'bridges/**'
-      - 'betterdesk-server/cdap/**'
+      - 'neodesk-server/cdap/**'
       - '.github/workflows/cdap-sdk-ci.yml'
   pull_request:
     branches: [main]
     paths:
       - 'sdks/**'
       - 'bridges/**'
-      - 'betterdesk-server/cdap/**'
+      - 'neodesk-server/cdap/**'
       - '.github/workflows/cdap-sdk-ci.yml'
 
 permissions:
@@ -38,8 +38,8 @@ jobs:
 
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
-          go-version-file: betterdesk-server/go.mod
-          cache-dependency-path: betterdesk-server/go.sum
+          go-version-file: neodesk-server/go.mod
+          cache-dependency-path: neodesk-server/go.sum
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
@@ -62,7 +62,7 @@ jobs:
         run: python3 -m pip install websockets==17.4 aiohttp==3.14.5 pymodbus==3.16.2
 
       - name: Run the SDK examples and the bridges against the gateway
-        working-directory: betterdesk-server
+        working-directory: neodesk-server
         env:
           CDAP_SDK_TESTS: '1'
         run: go test ./cdap/ -run 'SDKExample|Bridge' -count=1 -v -timeout 10m

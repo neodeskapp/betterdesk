@@ -23,11 +23,11 @@ export function safeRemoteReturn(u: string | null | undefined): string | null {
 	if (!u.startsWith('/') || u.startsWith('//')) return null;
 	let parsed: URL;
 	try {
-		parsed = new URL(u, 'https://betterdesk.local');
+		parsed = new URL(u, 'https://neodesk.local');
 	} catch {
 		return null;
 	}
-	if (parsed.origin !== 'https://betterdesk.local') return null;
+	if (parsed.origin !== 'https://neodesk.local') return null;
 	if (parsed.pathname !== '/remote' && !parsed.pathname.startsWith('/remote/')) return null;
 	if (parsed.pathname === '/remote/login' || parsed.pathname.startsWith('/remote/login/')) return null;
 	return `${parsed.pathname}${parsed.search}${parsed.hash}`;

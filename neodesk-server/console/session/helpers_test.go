@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // testSecret is the secret of the spec's test vectors.
@@ -111,7 +111,7 @@ func setCookies(rec *httptest.ResponseRecorder) []string {
 	return rec.Result().Header.Values("Set-Cookie")
 }
 
-// sessionCookie returns the cookie pair ("bd.sid=...") an answer set for
+// sessionCookie returns the cookie pair ("nd.sid=...") an answer set for
 // the session, and "" when it set none.
 func (f *fixture) sessionCookie(rec *httptest.ResponseRecorder) string {
 	for _, c := range setCookies(rec) {

@@ -5,11 +5,11 @@ import (
 	"testing"
 )
 
-func TestBetterDeskDesktopManifestCapabilitiesAreAccepted(t *testing.T) {
+func TestNeoDeskDesktopManifestCapabilitiesAreAccepted(t *testing.T) {
 	manifest := &Manifest{
 		ManifestVersion: "1.0",
 		Device: ManifestDevice{
-			Name: "BetterDesk Desktop",
+			Name: "NeoDesk Desktop",
 			Type: "desktop",
 		},
 		Capabilities: []string{
@@ -25,7 +25,7 @@ func TestBetterDeskDesktopManifestCapabilitiesAreAccepted(t *testing.T) {
 	}
 
 	if err := ValidateManifest(manifest); err != nil {
-		t.Fatalf("BetterDesk Desktop capability contract rejected: %v", err)
+		t.Fatalf("NeoDesk Desktop capability contract rejected: %v", err)
 	}
 }
 

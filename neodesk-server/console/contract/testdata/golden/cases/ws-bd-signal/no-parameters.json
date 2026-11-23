@@ -2,7 +2,7 @@
  "id": "ws-bd-signal/no-parameters",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-signal",
+  "path": "/ws/nd-signal",
   "notes": [
    "websocket a, own origin",
    "websocket wait for the close"

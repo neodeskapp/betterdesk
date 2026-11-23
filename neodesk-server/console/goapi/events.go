@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/unitronix/betterdesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
 )
 
 // ErrNoEventBus is returned by Events when the client has no event bus.

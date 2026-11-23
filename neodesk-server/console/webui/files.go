@@ -17,7 +17,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // fileSystem is the file access a Host needs. Every file it reads or sends

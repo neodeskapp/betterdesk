@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The RustDesk client API on the console port (routes/rustdesk-api.routes.js).

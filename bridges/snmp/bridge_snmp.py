@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""BetterDesk CDAP — SNMP v2c/v3 Bridge.
+"""NeoDesk CDAP — SNMP v2c/v3 Bridge.
 
-Periodically polls SNMP OIDs and pushes values to BetterDesk via CDAP.
+Periodically polls SNMP OIDs and pushes values to NeoDesk via CDAP.
 Supports counter-rate computation, timetick formatting, and byte formatting.
 
 Usage:
-    pip install betterdesk-cdap pysnmp
+    pip install neodesk-cdap pysnmp
     python bridge_snmp.py --config config.json
 """
 
@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from betterdesk_cdap import CDAPBridge, gauge, text_widget
+from neodesk_cdap import CDAPBridge, gauge, text_widget
 
 logger = logging.getLogger("bridge_snmp")
 
@@ -230,7 +230,7 @@ class SNMPBridge:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="BetterDesk CDAP SNMP Bridge")
+    parser = argparse.ArgumentParser(description="NeoDesk CDAP SNMP Bridge")
     parser.add_argument("--config", "-c", default="config.json", help="Path to config file")
     parser.add_argument("--log-level", "-l", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     args = parser.parse_args()

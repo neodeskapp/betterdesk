@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/token-wrong",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-relay?role=initiator&session=%7Brelay%7D&token=0000000000000000000000000000000000000000000000000000000000000000",
+  "path": "/ws/nd-relay?role=initiator&session=%7Brelay%7D&token=0000000000000000000000000000000000000000000000000000000000000000",
   "notes": [
    "websocket wrong, own origin",
    "websocket wait for the close"

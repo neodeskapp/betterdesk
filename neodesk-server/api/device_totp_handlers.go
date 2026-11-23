@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 type deviceTOTPStatus struct {
@@ -70,7 +70,7 @@ func (s *Server) handleDeviceSelfTOTP(w http.ResponseWriter, r *http.Request) {
 	case "setup":
 		secret := auth.GenerateTOTPSecret()
 		_ = s.db.SetConfig(secretKey, secret)
-		uri := auth.TOTPUri(secret, "BetterDesk", body.DeviceID)
+		uri := auth.TOTPUri(secret, "NeoDesk", body.DeviceID)
 		writeDeviceJSON(w, deviceTOTPStatus{Secret: secret, URI: uri})
 	case "enable":
 		secret, _ := s.db.GetConfig(secretKey)

@@ -2,7 +2,7 @@
  "id": "fleet/device-software-as-a-device",
  "request": {
   "method": "POST",
-  "path": "/api/bd/fleet/software",
+  "path": "/api/nd/fleet/software",
   "body": {
    "device_id": "900100001",
    "output": "ok",

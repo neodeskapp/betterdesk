@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // The recordings testdata/lockout_<db>.json (testdata/README.md): what the

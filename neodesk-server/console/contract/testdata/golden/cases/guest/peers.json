@@ -67,7 +67,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.guest=<value>; Max-Age=<n>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.guest=<value>; Max-Age=<n>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",

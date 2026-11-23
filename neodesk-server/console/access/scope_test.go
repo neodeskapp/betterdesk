@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 func folder(id int64) *int64 { return &id }
@@ -425,7 +425,7 @@ func TestScopeStore(t *testing.T) {
 		if err != nil || mirror == nil {
 			t.Fatalf("mirror group: %v, %v", mirror, err)
 		}
-		if mirror.Name != "Lab" || *mirror.Note != "BetterDesk folder access scope" || mirror.SourceType != "manual" || !reflect.DeepEqual(mirror.AllowedUsers, []string{"op1"}) || mirror.MemberCount != nil {
+		if mirror.Name != "Lab" || *mirror.Note != "NeoDesk folder access scope" || mirror.SourceType != "manual" || !reflect.DeepEqual(mirror.AllowedUsers, []string{"op1"}) || mirror.MemberCount != nil {
 			t.Errorf("mirror group: %+v", mirror)
 		}
 		// A second account joins one folder, the first leaves the other.

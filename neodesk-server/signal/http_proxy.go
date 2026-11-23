@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/codec"
-	pb "github.com/unitronix/betterdesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/codec"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 )
 
 // A client whose API server setting is empty sends its API calls through

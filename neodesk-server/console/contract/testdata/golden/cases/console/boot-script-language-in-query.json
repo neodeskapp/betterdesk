@@ -24,7 +24,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "betterdesk_lang=<value>; Max-Age=<n>; Path=/; Expires=<date>; SameSite=Lax"
+     "neodesk_lang=<value>; Max-Age=<n>; Path=/; Expires=<date>; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // TestRoutesAskAPermission: the CDAP reads ask cdap.view, the strategies
@@ -35,8 +35,8 @@ func TestRoutesAskAPermission(t *testing.T) {
 	refused := map[string][]string{
 		issuerKey: {"/api/cdap/status", "/api/cdap/devices", "/api/cdap/alerts", "/api/cdap/devices/PEERAAA1",
 			"/api/server/stats", "/api/health/detail", "/metrics"},
-		proKey: {"/api/cdap/status", "/api/strategies", "/api/strategies/abc", "/api/bd/mgmt/connected",
-			"/api/bd/mgmt/BDM00001/status", "/api/server/stats", "/metrics"},
+		proKey: {"/api/cdap/status", "/api/strategies", "/api/strategies/abc", "/api/nd/mgmt/connected",
+			"/api/nd/mgmt/BDM00001/status", "/api/server/stats", "/metrics"},
 		testOperatorKey: {"/api/org/org-a/invitations"},
 	}
 	for key, paths := range refused {

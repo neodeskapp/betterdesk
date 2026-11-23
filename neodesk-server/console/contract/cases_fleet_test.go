@@ -6,14 +6,14 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The fleet routes pass every call on to the API server, which has no
 // fleet functions: a call that gets there comes back as 404 {"error":"not
 // found"}. The cases show who gets that far, what is refused before the
 // call (a parameter that cannot go into a path), and how the query of the
-// two list routes is read. The same routes answer under /api/bd.
+// two list routes is read. The same routes answer under /api/nd.
 func init() {
 	body := map[string]any{"name": "contract", "device_id": "900100001", "command": "echo"}
 	contract.Group("fleet", append([]contract.Case{
@@ -24,7 +24,7 @@ func init() {
 			Name: "availability-not-modified", Path: "/api/panel/fleet/availability",
 			Headers: map[string]string{"If-None-Match": "*"},
 		},
-		contract.Case{Name: "availability-second-mount", Path: "/api/bd/api/panel/fleet/availability"},
+		contract.Case{Name: "availability-second-mount", Path: "/api/nd/api/panel/fleet/availability"},
 
 		// Resource mapping
 		contract.Case{Name: "resources", Path: "/api/panel/fleet/resources/acme"},
@@ -112,17 +112,17 @@ func init() {
 		contract.Case{Name: "compliance-remediate", Method: "POST", Path: "/api/panel/fleet/compliance/900100001/remediate", Body: body},
 		contract.Case{Name: "compliance-remediate-bad-id", Method: "POST", Path: "/api/panel/fleet/compliance/bad%20id/remediate", Body: body},
 
-		// The second mount. Under /api/bd a write without a session is
+		// The second mount. Under /api/nd a write without a session is
 		// not asked for a CSRF token, one with a session is.
-		contract.Case{Name: "second-mount-tasks", Path: "/api/bd/api/panel/fleet/tasks", Query: url.Values{"orgId": {"bad id"}}},
-		contract.Case{Name: "second-mount-task-create", Method: "POST", Path: "/api/bd/api/panel/fleet/tasks", Body: body},
-		contract.Case{Name: "second-mount-task-create-without-csrf-token", Method: "POST", Path: "/api/bd/api/panel/fleet/tasks", Body: body, NoCSRF: true},
+		contract.Case{Name: "second-mount-tasks", Path: "/api/nd/api/panel/fleet/tasks", Query: url.Values{"orgId": {"bad id"}}},
+		contract.Case{Name: "second-mount-task-create", Method: "POST", Path: "/api/nd/api/panel/fleet/tasks", Body: body},
+		contract.Case{Name: "second-mount-task-create-without-csrf-token", Method: "POST", Path: "/api/nd/api/panel/fleet/tasks", Body: body, NoCSRF: true},
 		contract.Case{
-			Name: "second-mount-task-create-without-session", Method: "POST", Path: "/api/bd/api/panel/fleet/tasks", Body: body,
+			Name: "second-mount-task-create-without-session", Method: "POST", Path: "/api/nd/api/panel/fleet/tasks", Body: body,
 			NoCSRF: true, NoCookies: true, Roles: contract.Roles("signed-out", "admin"),
 		},
-		contract.Case{Name: "second-mount-resource-delete", Method: "DELETE", Path: "/api/bd/api/panel/fleet/resources/acme/bad%20res"},
-		contract.Case{Name: "second-mount-workflow-history", Path: "/api/bd/api/panel/fleet/workflows/wf-1/history"},
+		contract.Case{Name: "second-mount-resource-delete", Method: "DELETE", Path: "/api/nd/api/panel/fleet/resources/acme/bad%20res"},
+		contract.Case{Name: "second-mount-workflow-history", Path: "/api/nd/api/panel/fleet/workflows/wf-1/history"},
 	}, fleetDeviceCases()...)...)
 }
 
@@ -130,15 +130,15 @@ func init() {
 // They take a device token, which the suite has none of: the headers of a
 // case are written into its golden. So the cases show what comes before
 // the route: no token, a token nobody issued, another scheme, a device id
-// that proves nothing, and the CSRF gate, which under /api/bd lets a write
+// that proves nothing, and the CSRF gate, which under /api/nd lets a write
 // without a session through and checks one with a session. The answers
 // with a token are pinned by routes/fleet/testdata/device_vectors.json.
 func fleetDeviceCases() []contract.Case {
 	report := map[string]any{"device_id": "900100001", "task_id": "contract", "status": "done", "output": "ok"}
 	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
 	var cases []contract.Case
-	for _, mount := range []struct{ name, prefix string }{{"device", ""}, {"second-mount-device", "/api/bd"}} {
-		for _, route := range []struct{ name, path string }{{"task-result", "/api/bd/fleet/task-result"}, {"software", "/api/bd/fleet/software"}} {
+	for _, mount := range []struct{ name, prefix string }{{"device", ""}, {"second-mount-device", "/api/nd"}} {
+		for _, route := range []struct{ name, path string }{{"task-result", "/api/nd/fleet/task-result"}, {"software", "/api/nd/fleet/software"}} {
 			at := func(what string) string { return mount.name + "-" + route.name + "-" + what }
 			path := mount.prefix + route.path
 			cases = append(cases,

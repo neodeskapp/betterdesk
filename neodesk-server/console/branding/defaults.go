@@ -5,7 +5,7 @@ const MaxLoginSlides = 10
 
 // LegacyDefaultLogoURL is the logo image older versions stored as the
 // default. It counts as "no logo of your own".
-const LegacyDefaultLogoURL = "/img/betterdesk_icon.png"
+const LegacyDefaultLogoURL = "/img/neodesk_icon.png"
 
 // colorKeys are the colours of a palette, in the order they are stored and
 // written.
@@ -105,8 +105,8 @@ var appearanceSections = []struct {
 // the console lists them. "loginSlides" and "colors" are filled in by
 // DefaultBranding.
 var defaultSettings = [][2]string{
-	{"appName", "BetterDesk"},
-	{"appDescription", "BetterDesk Server Management"},
+	{"appName", "NeoDesk"},
+	{"appDescription", "NeoDesk Server Management"},
 	{"logoType", "default"},
 	{"logoIcon", "dns"},
 	{"logoSvg", ""},

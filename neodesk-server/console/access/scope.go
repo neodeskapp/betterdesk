@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // Which devices an account may see. Admin roles see everything. For the
@@ -26,7 +26,7 @@ const (
 	maxAccessListEntries = 100
 	maxFolderIDs         = 200
 	maxPeerGrants        = 500
-	folderGroupNote      = "BetterDesk folder access scope"
+	folderGroupNote      = "NeoDesk folder access scope"
 	maxUnknownPeerLogs   = 20
 )
 

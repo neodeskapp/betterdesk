@@ -2,7 +2,7 @@
  "id": "bd-api/operator-help-requests-pending",
  "request": {
   "method": "GET",
-  "path": "/api/bd/help-requests?status=pending",
+  "path": "/api/nd/help-requests?status=pending",
   "notes": [
    "header Authorization: Bearer {secret:operator_token}",
    "no CSRF token",

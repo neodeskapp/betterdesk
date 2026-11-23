@@ -29,7 +29,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "betterdesk_lang=<value>; Max-Age=<n>; Path=/; Expires=<date>; SameSite=Lax"
+     "neodesk_lang=<value>; Max-Age=<n>; Path=/; Expires=<date>; SameSite=Lax"
     ],
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
@@ -48,7 +48,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "appName": "BetterDesk",
+     "appName": "NeoDesk",
      "appVersion": "<version>",
      "attestation": null,
      "branding": {

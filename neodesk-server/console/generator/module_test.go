@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // TestValidateTemplates refuses each way a template tree can be broken,
@@ -40,10 +40,10 @@ func TestValidateTemplates(t *testing.T) {
 			os.WriteFile(filepath.Join(root, "windows-x86_64", "custom.txt"), []byte("x"), 0o644)
 		}, "generator_template_contains_custom_txt:windows-x86_64"},
 		{"small binary", func(root string) {
-			os.WriteFile(filepath.Join(root, "linux-x86_64", "betterdesk"), make([]byte, minBinarySize-1), 0o755)
+			os.WriteFile(filepath.Join(root, "linux-x86_64", "neodesk"), make([]byte, minBinarySize-1), 0o755)
 		}, "generator_template_binary_missing:linux-x86_64"},
 		{"binary outside", func(root string) {
-			rewrite(root, `"binary_path":"betterdesk.exe"`, `"binary_path":"a/../../windows-aarch64/betterdesk.exe"`)
+			rewrite(root, `"binary_path":"neodesk.exe"`, `"binary_path":"a/../../windows-aarch64/neodesk.exe"`)
 		}, "generator_template_binary_path_invalid:windows-x86_64"},
 		{"no checksum", func(root string) { rewriteOnce(root, `"sha256":"`+strings.Repeat("a", 64)+`"`, `"sha256":"x"`) }, "generator_template_hash_invalid:windows-x86_64"},
 		{"no archive", func(root string) { os.Remove(filepath.Join(root, "macos-aarch64.tar.gz")) }, "generator_template_archive_missing:macos-aarch64"},
@@ -117,7 +117,7 @@ func TestSigningSeedCopy(t *testing.T) {
 		data := t.TempDir()
 		env := []string{}
 		if c.env != "" {
-			env = append(env, "BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED="+c.env)
+			env = append(env, "NEODESK_CUSTOM_CLIENT_SIGNING_SEED="+c.env)
 		}
 		if c.file != "" {
 			must(t, os.WriteFile(filepath.Join(data, signingSeedName), []byte(c.file), 0o600))

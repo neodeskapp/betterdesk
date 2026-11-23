@@ -16,27 +16,27 @@ func TestRedactedDBPathHidesPassword(t *testing.T) {
 	}{
 		{
 			name:       "postgres dsn with password",
-			dsn:        "postgres://bdesk:S3cr3tP@ss@postgres:5432/betterdesk?sslmode=disable",
+			dsn:        "postgres://bdesk:S3cr3tP@ss@postgres:5432/neodesk?sslmode=disable",
 			wantSecret: "S3cr3tP@ss",
-			mustKeep:   []string{"postgres://", "postgres:", "5432", "betterdesk", "sslmode=disable"},
+			mustKeep:   []string{"postgres://", "postgres:", "5432", "neodesk", "sslmode=disable"},
 		},
 		{
 			name:       "postgres dsn without password",
-			dsn:        "postgres://bdesk@db:5432/betterdesk",
+			dsn:        "postgres://bdesk@db:5432/neodesk",
 			wantSecret: "",
 			mustKeep:   []string{"db", "5432"},
 		},
 		{
 			name:       "password in query string",
-			dsn:        "postgres://bdesk@db:5432/betterdesk?password=Hunter2",
+			dsn:        "postgres://bdesk@db:5432/neodesk?password=Hunter2",
 			wantSecret: "Hunter2",
-			mustKeep:   []string{"betterdesk"},
+			mustKeep:   []string{"neodesk"},
 		},
 		{
 			name:       "user in query string",
-			dsn:        "postgres://db:5432/betterdesk?user=bdesk&password=Hunter2",
+			dsn:        "postgres://db:5432/neodesk?user=bdesk&password=Hunter2",
 			wantSecret: "Hunter2",
-			mustKeep:   []string{"db", "betterdesk"},
+			mustKeep:   []string{"db", "neodesk"},
 		},
 	}
 
@@ -62,7 +62,7 @@ func TestRedactedDBPathHidesPassword(t *testing.T) {
 func TestRedactedDBPathLeavesSQLitePathsAlone(t *testing.T) {
 	for _, path := range []string{
 		"db_v2.sqlite3",
-		"/var/lib/betterdesk/db_v2.sqlite3",
+		"/var/lib/neodesk/db_v2.sqlite3",
 		"data/auth.db",
 	} {
 		if got := RedactedDBPath(path); got != path {

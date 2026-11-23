@@ -20,7 +20,7 @@ lines() {
     tr -d '\r' < "$1"
 }
 
-toolchain=$(lines "$ROOT/betterdesk-server/go.mod" | sed -n 's/^toolchain go\([0-9][0-9.]*\)$/\1/p')
+toolchain=$(lines "$ROOT/neodesk-server/go.mod" | sed -n 's/^toolchain go\([0-9][0-9.]*\)$/\1/p')
 [ -n "$toolchain" ] || { printf 'FAIL: go.mod has no toolchain line\n' >&2; exit 1; }
 
 # check_pin FILE NAME VALUE
@@ -33,10 +33,10 @@ check_pin() {
 }
 
 for name in GO_MIN_VERSION GO_DOWNLOAD_VERSION; do
-    check_pin betterdesk.sh "$name" \
-        "$(lines "$ROOT/betterdesk.sh" | sed -n "s/^${name}=\"\\([0-9.]*\\)\".*/\\1/p" | head -n 1)"
-    check_pin betterdesk.ps1 "$name" \
-        "$(lines "$ROOT/betterdesk.ps1" | sed -n "s/^\\\$script:${name} = \"\\([0-9.]*\\)\".*/\\1/p" | head -n 1)"
+    check_pin neodesk.sh "$name" \
+        "$(lines "$ROOT/neodesk.sh" | sed -n "s/^${name}=\"\\([0-9.]*\\)\".*/\\1/p" | head -n 1)"
+    check_pin neodesk.ps1 "$name" \
+        "$(lines "$ROOT/neodesk.ps1" | sed -n "s/^\\\$script:${name} = \"\\([0-9.]*\\)\".*/\\1/p" | head -n 1)"
 done
 
 for dockerfile in "$ROOT"/Dockerfile*; do

@@ -1,9 +1,9 @@
 # =============================================================================
-# BetterDesk Docker Images - Build & Publish to GitHub Container Registry
+# NeoDesk Docker Images - Build & Publish to GitHub Container Registry
 # =============================================================================
 # Images:
-#   ghcr.io/<owner>/betterdesk-server   (server only, console off)
-#   ghcr.io/<owner>/betterdesk          (server with its web console, one process)
+#   ghcr.io/<owner>/neodesk-server   (server only, console off)
+#   ghcr.io/<owner>/neodesk          (server with its web console, one process)
 #
 # Tags:
 #   - main: dev, sha-<commit>
@@ -54,7 +54,7 @@ on:
       - 'Dockerfile*'
       - 'docker-compose*.yml'
       - 'docker/**'
-      - 'betterdesk-server/**'
+      - 'neodesk-server/**'
       - 'web-ui/**'
       - '.github/workflows/docker-publish.yml'
       - 'VERSION'
@@ -151,7 +151,7 @@ jobs:
             echo "GHCR auth probe attempt $attempt/$max"
             if token=$(curl -fsS -m 20 \
                  -u "${GHCR_USER}:${GHCR_TOKEN}" \
-                 "https://${REGISTRY}/token?scope=repository%3A${OWNER}%2Fbetterdesk-server%3Apush&service=${REGISTRY}" \
+                 "https://${REGISTRY}/token?scope=repository%3A${OWNER}%2Fneodesk-server%3Apush&service=${REGISTRY}" \
                  | sed -n 's/.*"token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p'); then
               if [ -n "$token" ]; then
                 echo "GHCR preflight OK — registry issued a push token."
@@ -203,7 +203,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
-          images: ${{ needs.read-version.outputs.image_prefix }}/betterdesk-server
+          images: ${{ needs.read-version.outputs.image_prefix }}/neodesk-server
           # Prefer product VERSION over tag name (dispatch with tag=latest must not label as "latest")
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
@@ -223,14 +223,14 @@ jobs:
         with:
           context: .
           file: ./Dockerfile.server
-          outputs: type=image,name=${{ needs.read-version.outputs.image_prefix }}/betterdesk-server,push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ needs.read-version.outputs.image_prefix }}/neodesk-server,push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            BETTERDESK_COMMIT_SHA=${{ github.sha }}
-            BETTERDESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
-            BETTERDESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
-          cache-from: type=gha,scope=betterdesk-server-amd64
-          cache-to: type=gha,mode=max,scope=betterdesk-server-amd64
+            NEODESK_COMMIT_SHA=${{ github.sha }}
+            NEODESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
+            NEODESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
+          cache-from: type=gha,scope=neodesk-server-amd64
+          cache-to: type=gha,mode=max,scope=neodesk-server-amd64
           platforms: linux/amd64
 
       - name: Export image digest
@@ -238,14 +238,14 @@ jobs:
           set -euo pipefail
           digest="${{ steps.build.outputs.digest }}"
           test -n "$digest"
-          mkdir -p /tmp/digests/betterdesk-server
-          touch "/tmp/digests/betterdesk-server/${digest#sha256:}"
+          mkdir -p /tmp/digests/neodesk-server
+          touch "/tmp/digests/neodesk-server/${digest#sha256:}"
 
       - name: Upload image digest
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: digests-server-amd64
-          path: /tmp/digests/betterdesk-server
+          path: /tmp/digests/neodesk-server
           if-no-files-found: error
 
   build-allinone:
@@ -288,7 +288,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
-          images: ${{ needs.read-version.outputs.image_prefix }}/betterdesk
+          images: ${{ needs.read-version.outputs.image_prefix }}/neodesk
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
           # latest only by the rule below, never added for a tag by itself
@@ -307,16 +307,16 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          outputs: type=image,name=${{ needs.read-version.outputs.image_prefix }}/betterdesk,push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ needs.read-version.outputs.image_prefix }}/neodesk,push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            BETTERDESK_COMMIT_SHA=${{ github.sha }}
-            BETTERDESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
-            BETTERDESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
+            NEODESK_COMMIT_SHA=${{ github.sha }}
+            NEODESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
+            NEODESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
           cache-from: |
-            type=gha,scope=betterdesk-aio-amd64
-            type=gha,scope=betterdesk-server-amd64
-          cache-to: type=gha,mode=max,scope=betterdesk-aio-amd64
+            type=gha,scope=neodesk-aio-amd64
+            type=gha,scope=neodesk-server-amd64
+          cache-to: type=gha,mode=max,scope=neodesk-aio-amd64
           platforms: ${{ steps.plats.outputs.platforms }}
 
       - name: Export image digest
@@ -324,14 +324,14 @@ jobs:
           set -euo pipefail
           digest="${{ steps.build.outputs.digest }}"
           test -n "$digest"
-          mkdir -p /tmp/digests/betterdesk
-          touch "/tmp/digests/betterdesk/${digest#sha256:}"
+          mkdir -p /tmp/digests/neodesk
+          touch "/tmp/digests/neodesk/${digest#sha256:}"
 
       - name: Upload image digest
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: digests-aio-amd64
-          path: /tmp/digests/betterdesk
+          path: /tmp/digests/neodesk
           if-no-files-found: error
 
   # Phase 2: ARM64 on native runners (after amd64). Soft-merge still
@@ -353,7 +353,7 @@ jobs:
       matrix:
         include:
           - name: server
-            image: betterdesk-server
+            image: neodesk-server
             file: Dockerfile.server
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 330
@@ -381,11 +381,11 @@ jobs:
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
           build-args: |
-            BETTERDESK_COMMIT_SHA=${{ github.sha }}
-            BETTERDESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
-            BETTERDESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
-          cache-from: type=gha,scope=betterdesk-${{ matrix.name }}-arm64
-          cache-to: type=gha,mode=max,scope=betterdesk-${{ matrix.name }}-arm64
+            NEODESK_COMMIT_SHA=${{ github.sha }}
+            NEODESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
+            NEODESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
+          cache-from: type=gha,scope=neodesk-${{ matrix.name }}-arm64
+          cache-to: type=gha,mode=max,scope=neodesk-${{ matrix.name }}-arm64
           platforms: linux/arm64
 
       - name: Export image digest
@@ -438,18 +438,18 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          outputs: type=image,name=${{ needs.read-version.outputs.image_prefix }}/betterdesk,push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=${{ needs.read-version.outputs.image_prefix }}/neodesk,push-by-digest=true,name-canonical=true,push=true
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
             org.opencontainers.image.revision=${{ github.sha }}
           build-args: |
-            BETTERDESK_COMMIT_SHA=${{ github.sha }}
-            BETTERDESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
-            BETTERDESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
+            NEODESK_COMMIT_SHA=${{ github.sha }}
+            NEODESK_IMAGE_VERSION=${{ needs.read-version.outputs.version }}
+            NEODESK_PRODUCT_VERSION=${{ needs.read-version.outputs.version }}
           cache-from: |
-            type=gha,scope=betterdesk-aio-arm64
-            type=gha,scope=betterdesk-server-arm64
-          cache-to: type=gha,mode=max,scope=betterdesk-aio-arm64
+            type=gha,scope=neodesk-aio-arm64
+            type=gha,scope=neodesk-server-arm64
+          cache-to: type=gha,mode=max,scope=neodesk-aio-arm64
           platforms: linux/arm64
 
       - name: Export image digest
@@ -457,14 +457,14 @@ jobs:
           set -euo pipefail
           digest="${{ steps.build.outputs.digest }}"
           test -n "$digest"
-          mkdir -p /tmp/digests/betterdesk
-          touch "/tmp/digests/betterdesk/${digest#sha256:}"
+          mkdir -p /tmp/digests/neodesk
+          touch "/tmp/digests/neodesk/${digest#sha256:}"
 
       - name: Upload image digest
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: digests-aio-arm64
-          path: /tmp/digests/betterdesk
+          path: /tmp/digests/neodesk
           if-no-files-found: error
 
   # Soft-merge (#476): require amd64 success; include ARM digests when present.
@@ -481,9 +481,9 @@ jobs:
       matrix:
         include:
           - name: server
-            image: betterdesk-server
+            image: neodesk-server
           - name: aio
-            image: betterdesk
+            image: neodesk
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -614,12 +614,12 @@ jobs:
             echo "Requested tag: \`${requested_tag}\`"
             echo "Product version: \`${pin_ver}\`"
             echo ""
-            echo "- \`${IMAGE_PREFIX}/betterdesk-server\`"
-            echo "- \`${IMAGE_PREFIX}/betterdesk\`"
+            echo "- \`${IMAGE_PREFIX}/neodesk-server\`"
+            echo "- \`${IMAGE_PREFIX}/neodesk\`"
             echo ""
             echo "### Pin a version (production — recommended)"
             echo "\`\`\`bash"
-            echo "export BETTERDESK_IMAGE_TAG=${pin_ver}"
+            echo "export NEODESK_IMAGE_TAG=${pin_ver}"
             echo "curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose.quick.single.yml -o docker-compose.yml"
             echo "docker compose pull"
             echo "docker compose up -d"
@@ -628,7 +628,7 @@ jobs:
             echo "### Newest release (\`latest\`: the newest stable release, or the newest pre-release while there is none)"
             echo "\`\`\`bash"
             echo "curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose.quick.single.yml -o docker-compose.yml"
-            echo "BETTERDESK_IMAGE_TAG=latest docker compose up -d"
+            echo "NEODESK_IMAGE_TAG=latest docker compose up -d"
             echo "\`\`\`"
             echo ""
             echo "### Package visibility"

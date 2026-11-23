@@ -1,4 +1,4 @@
-# BetterDesk Go server: vet, race tests on SQLite and PostgreSQL, the
+# NeoDesk Go server: vet, race tests on SQLite and PostgreSQL, the
 # release build
 name: Go Server CI
 
@@ -6,13 +6,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'betterdesk-server/**'
+      - 'neodesk-server/**'
       - 'web-ui/**'
       - '.github/test-times.json'
       - '.github/workflows/go-server-ci.yml'
   pull_request:
     paths:
-      - 'betterdesk-server/**'
+      - 'neodesk-server/**'
       - 'web-ui/**'
       - '.github/test-times.json'
       - '.github/workflows/go-server-ci.yml'
@@ -28,7 +28,7 @@ concurrency:
 
 defaults:
   run:
-    working-directory: betterdesk-server
+    working-directory: neodesk-server
 
 jobs:
   vet:
@@ -40,7 +40,7 @@ jobs:
 
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
-          go-version-file: betterdesk-server/go.mod
+          go-version-file: neodesk-server/go.mod
           cache: false
 
       # The module cache every Go job of CI restores; this job saves it when
@@ -48,7 +48,7 @@ jobs:
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/go/pkg/mod
-          key: go-mod-${{ hashFiles('betterdesk-server/go.sum') }}
+          key: go-mod-${{ hashFiles('neodesk-server/go.sum') }}
 
       - name: Download modules
         run: go mod download
@@ -77,12 +77,12 @@ jobs:
   # Each shard uploads the times it measured (test-times-*). To refresh
   # the file from a green run:
   #
-  #   gh run download <run id> -R trybetterdesk/betterdesk -p 'test-times-*' -D /tmp/times
-  #   cd betterdesk-server
+  #   gh run download <run id> -R neodeskapp/neodesk -p 'test-times-*' -D /tmp/times
+  #   cd neodesk-server
   #   go run ./cmd/repotool test-shards merge --out ../.github/test-times.json /tmp/times/*/test-times.json
   #   go run ./cmd/repotool test-shards plan --set go-race-postgres --shards 9 --split-over 240
   #
-  # The PostgreSQL shards run every test with BETTERDESK_TEST_POSTGRES_DSN
+  # The PostgreSQL shards run every test with NEODESK_TEST_POSTGRES_DSN
   # set, so the store tests run on both databases there; the SQLite shards
   # run them without it, as an install without PostgreSQL does.
   test:
@@ -104,34 +104,34 @@ jobs:
         # No image, no service: the SQLite shards go without
         image: ${{ matrix.db == 'postgres' && 'postgres:16-alpine' || '' }}
         env:
-          POSTGRES_USER: betterdesk
-          POSTGRES_DB: betterdesk_test
+          POSTGRES_USER: neodesk
+          POSTGRES_DB: neodesk_test
           POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U betterdesk -d betterdesk_test"
+          --health-cmd "pg_isready -U neodesk -d neodesk_test"
           --health-interval 2s --health-timeout 5s --health-retries 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
-          go-version-file: betterdesk-server/go.mod
+          go-version-file: neodesk-server/go.mod
           cache: false
 
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/go/pkg/mod
-          key: go-mod-${{ hashFiles('betterdesk-server/go.sum') }}
+          key: go-mod-${{ hashFiles('neodesk-server/go.sum') }}
 
       # The race build of every test binary, saved by the job "go test cache"
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/go-build
-          key: go-race-${{ hashFiles('betterdesk-server/go.sum') }}
+          key: go-race-${{ hashFiles('neodesk-server/go.sum') }}
           restore-keys: |
-            go-race-${{ hashFiles('betterdesk-server/go.sum') }}-
+            go-race-${{ hashFiles('neodesk-server/go.sum') }}-
             go-race-
 
       # The tests open many connections side by side, and need no
@@ -143,14 +143,14 @@ jobs:
           PG: ${{ job.services.postgres.id }}
         run: |
           echo "127.0.0.1 bdgo-testpg" | sudo tee -a /etc/hosts >/dev/null
-          docker exec "$PG" psql -U betterdesk -d betterdesk_test -q \
+          docker exec "$PG" psql -U neodesk -d neodesk_test -q \
             -c "ALTER SYSTEM SET max_connections = 300" \
             -c "ALTER SYSTEM SET fsync = off" \
             -c "ALTER SYSTEM SET synchronous_commit = off" \
             -c "ALTER SYSTEM SET full_page_writes = off"
           docker restart "$PG" >/dev/null
           for _ in $(seq 1 60); do
-            docker exec "$PG" pg_isready -U betterdesk -d betterdesk_test -q && exit 0
+            docker exec "$PG" pg_isready -U neodesk -d neodesk_test -q && exit 0
             sleep 1
           done
           echo "PostgreSQL did not come back"
@@ -158,7 +158,7 @@ jobs:
 
       - name: go test
         env:
-          BETTERDESK_TEST_POSTGRES_DSN: ${{ matrix.db == 'postgres' && 'postgres://betterdesk@bdgo-testpg:5432/betterdesk_test?sslmode=disable' || '' }}
+          NEODESK_TEST_POSTGRES_DSN: ${{ matrix.db == 'postgres' && 'postgres://neodesk@bdgo-testpg:5432/neodesk_test?sslmode=disable' || '' }}
           SET: go-race-${{ matrix.db }}
           SHARD: ${{ matrix.shard }}
           SHARDS: ${{ matrix.db == 'sqlite' && 7 || 9 }}
@@ -188,12 +188,12 @@ jobs:
 
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
-          go-version-file: betterdesk-server/go.mod
+          go-version-file: neodesk-server/go.mod
           cache: false
 
       - name: Name today's cache
         id: key
-        run: echo "key=go-race-${{ hashFiles('betterdesk-server/go.sum') }}-$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+        run: echo "key=go-race-${{ hashFiles('neodesk-server/go.sum') }}-$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
 
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         id: today
@@ -206,7 +206,7 @@ jobs:
         if: steps.today.outputs.cache-hit != 'true'
         with:
           path: ~/go/pkg/mod
-          key: go-mod-${{ hashFiles('betterdesk-server/go.sum') }}
+          key: go-mod-${{ hashFiles('neodesk-server/go.sum') }}
 
       # Test failures and build errors are the shards' to report
       - name: Build every test binary with the race detector
@@ -228,20 +228,20 @@ jobs:
 
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
-          go-version-file: betterdesk-server/go.mod
+          go-version-file: neodesk-server/go.mod
           cache: false
 
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/go/pkg/mod
-          key: go-mod-${{ hashFiles('betterdesk-server/go.sum') }}
+          key: go-mod-${{ hashFiles('neodesk-server/go.sum') }}
 
       - name: Mesh interop (simulated handshake)
-        working-directory: betterdesk-server
+        working-directory: neodesk-server
         run: go test ./meshcentral/... -count=1 -timeout 5m
 
       - name: Mesh interop (live MeshAgent binary)
-        working-directory: betterdesk-server
+        working-directory: neodesk-server
         continue-on-error: true
         run: go test -tags=meshagent_live ./meshcentral/... -run TestMeshAgentLiveConnect -count=1 -timeout 10m
 
@@ -269,13 +269,13 @@ jobs:
 
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
-          go-version-file: betterdesk-server/go.mod
+          go-version-file: neodesk-server/go.mod
           cache: false
 
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/go/pkg/mod
-          key: go-mod-${{ hashFiles('betterdesk-server/go.sum') }}
+          key: go-mod-${{ hashFiles('neodesk-server/go.sum') }}
 
       - name: Check the console's language files
         run: go run ./cmd/repotool i18n-check --system console
@@ -290,4 +290,4 @@ jobs:
           test -s console/static/files/.embedfs-times.json
 
       - name: Build with the embedded files
-        run: go build -o /tmp/betterdesk-server . && /tmp/betterdesk-server -version
+        run: go build -o /tmp/neodesk-server . && /tmp/neodesk-server -version

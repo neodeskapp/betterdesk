@@ -14,9 +14,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
 )
 
 // ---------------------------------------------------------------------------
@@ -30,15 +30,15 @@ const (
 	brandingMaxLogoBytes  = 512 * 1024
 )
 
-// BrandingLogo is an optional image payload for BetterDesk desktop clients.
+// BrandingLogo is an optional image payload for NeoDesk desktop clients.
 type BrandingLogo struct {
 	Mime       string `json:"mime,omitempty"`
 	DataBase64 string `json:"data_base64,omitempty"`
 	URL        string `json:"url,omitempty"`
 }
 
-// BrandingBetterDeskProfile lists fields BetterDesk clients should apply.
-type BrandingBetterDeskProfile struct {
+// BrandingNeoDeskProfile lists fields NeoDesk clients should apply.
+type BrandingNeoDeskProfile struct {
 	Apply []string `json:"apply"`
 }
 
@@ -47,10 +47,10 @@ type BrandingRustDeskProfile struct {
 	ConfigOptions map[string]string `json:"config_options,omitempty"`
 }
 
-// BrandingProfiles separates BetterDesk-rich and RustDesk-compatible projections.
+// BrandingProfiles separates NeoDesk-rich and RustDesk-compatible projections.
 type BrandingProfiles struct {
-	BetterDesk BrandingBetterDeskProfile `json:"betterdesk"`
-	RustDesk   BrandingRustDeskProfile   `json:"rustdesk"`
+	NeoDesk  BrandingNeoDeskProfile  `json:"neodesk"`
+	RustDesk BrandingRustDeskProfile `json:"rustdesk"`
 }
 
 // BrandingConfig is the payload returned by GET /api/branding.
@@ -94,7 +94,7 @@ var (
 	}
 )
 
-func defaultBetterDeskApply() []string {
+func defaultNeoDeskApply() []string {
 	return []string{"company_name", "phone", "email", "website", "logo", "accent_color"}
 }
 
@@ -103,13 +103,13 @@ func (s *Server) loadBrandingConfig() BrandingConfig {
 	cfg := BrandingConfig{
 		SchemaVersion:  brandingSchemaVersion,
 		Revision:       "0",
-		CompanyName:    "BetterDesk",
+		CompanyName:    "NeoDesk",
 		AccentColor:    "#4f6ef7",
 		SupportContact: "",
 		SyncModes:      defaultSyncModes,
 		Profiles: BrandingProfiles{
-			BetterDesk: BrandingBetterDeskProfile{Apply: defaultBetterDeskApply()},
-			RustDesk:   BrandingRustDeskProfile{ConfigOptions: map[string]string{}},
+			NeoDesk:  BrandingNeoDeskProfile{Apply: defaultNeoDeskApply()},
+			RustDesk: BrandingRustDeskProfile{ConfigOptions: map[string]string{}},
 		},
 	}
 
@@ -158,7 +158,7 @@ func (s *Server) loadBrandingConfig() BrandingConfig {
 func rustDeskConfigOptionsFromBranding(cfg BrandingConfig) map[string]string {
 	out := map[string]string{}
 	name := strings.TrimSpace(cfg.CompanyName)
-	if name != "" && !strings.EqualFold(name, "BetterDesk") {
+	if name != "" && !strings.EqualFold(name, "NeoDesk") {
 		out["display-name"] = name
 	}
 	return out
@@ -391,14 +391,14 @@ func (s *Server) handleSaveBranding(w http.ResponseWriter, r *http.Request) {
 //  Device enrollment — desktop client self-registration
 // ---------------------------------------------------------------------------
 
-// EnrollmentRequest is sent by the BetterDesk desktop client on first connect.
+// EnrollmentRequest is sent by the NeoDesk desktop client on first connect.
 type EnrollmentRequest struct {
 	DeviceID   string `json:"device_id"`
 	UUID       string `json:"uuid"`
 	Hostname   string `json:"hostname"`
 	Platform   string `json:"platform"`
 	Version    string `json:"version"`
-	DeviceType string `json:"device_type,omitempty"` // "betterdesk", "rustdesk", "os_agent", etc.
+	DeviceType string `json:"device_type,omitempty"` // "neodesk", "rustdesk", "os_agent", etc.
 	BundleID   string `json:"bundle_id,omitempty"`
 	Tags       string `json:"tags,omitempty"` // comma-separated enrollment metadata
 	PublicKey  string `json:"public_key,omitempty"`
@@ -1616,7 +1616,7 @@ func (s *Server) createPeerFromEnrollment(req *EnrollmentRequest, clientIP strin
 
 	devType := strings.TrimSpace(req.DeviceType)
 	if devType == "" {
-		devType = "betterdesk"
+		devType = "neodesk"
 	}
 	tags := normalizeEnrollmentTags(req.Tags)
 

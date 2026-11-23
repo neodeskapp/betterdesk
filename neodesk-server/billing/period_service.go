@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 func (s *Service) nowUTC() time.Time {

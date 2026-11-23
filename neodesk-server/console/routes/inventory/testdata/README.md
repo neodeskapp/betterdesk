@@ -61,7 +61,7 @@ devices it shows there. All times in the rows are fixed and lie in March
 ### The device routes
 
 The recorder ran the three routes of the desktop agent, `POST /inventory`,
-`POST /telemetry` and `GET /inventory/:id` at `/api/bd` and
+`POST /telemetry` and `GET /inventory/:id` at `/api/nd` and
 `/api/inventory`, behind the route file's own token check, with the real
 `services/database.js` and adapter and the real alert rules engine (its
 mail stubbed; no rule mails): 1,727 steps on SQLite and 1,723 on

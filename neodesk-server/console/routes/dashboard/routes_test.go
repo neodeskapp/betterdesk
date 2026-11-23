@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 const (
@@ -63,8 +63,8 @@ func TestStats(t *testing.T) {
 	w.api.set("/api/server/stats", `{"peers_total":30,"peers_online":14,"peers_banned":2,"relay_active_sessions":1}`)
 	want(t, "stats", w.get("viewer", "/api/stats"), 200,
 		`{"success":true,"data":{"devices":{"total":30,"online":14,"offline":16,"banned":2,"withNotes":0},`+
-			`"hbbs":{"status":"running","version":"3.5.224","uptime":"1h2m3s","peers_online":14,"backend":"betterdesk"},`+
-			`"backend":"betterdesk","publicKey":true}}`)
+			`"hbbs":{"status":"running","version":"3.5.224","uptime":"1h2m3s","peers_online":14,"backend":"neodesk"},`+
+			`"backend":"neodesk","publicKey":true}}`)
 
 	// No key in the file and none from the server: publicKey is false.
 	// A server that does not answer its health check is "unreachable".
@@ -73,8 +73,8 @@ func TestStats(t *testing.T) {
 	w.api.setStatus("/api/health", 503, `{"error":"down"}`)
 	want(t, "no key, no health", w.get("viewer", "/api/stats"), 200,
 		`{"success":true,"data":{"devices":{"total":3,"online":"1","offline":2,"banned":0,"withNotes":2},`+
-			`"hbbs":{"status":"unreachable","backend":"betterdesk","error":"Request failed with status code 503"},`+
-			`"backend":"betterdesk","publicKey":false}}`)
+			`"hbbs":{"status":"unreachable","backend":"neodesk","error":"Request failed with status code 503"},`+
+			`"backend":"neodesk","publicKey":false}}`)
 }
 
 func TestStatsFromTheConsoleTablesWhenTheServerGivesNone(t *testing.T) {
@@ -121,7 +121,7 @@ func TestServerStatus(t *testing.T) {
 	}
 	w.h.now = func() time.Time { return w.h.started.Add(125*time.Second + 900*time.Millisecond) }
 	want(t, "running", w.get("viewer", "/api/server/status"), 200,
-		`{"success":true,"data":{"backend":"betterdesk","uptime":125,"hbbs":{"status":"running"},"hbbr":{"status":"running"},"signal":{"status":"running"},`+
+		`{"success":true,"data":{"backend":"neodesk","uptime":125,"hbbs":{"status":"running"},"hbbr":{"status":"running"},"signal":{"status":"running"},`+
 			`"api_port":21114,"signal_port":21116,"relay_port":21117,"nat_port":21115,"ws_signal_port":21118,"ws_relay_port":21119,"client_api_port":21121,"console_port":5000}}`)
 
 	// The ports follow the configuration
@@ -129,7 +129,7 @@ func TestServerStatus(t *testing.T) {
 	w.cfg.SignalPort, w.cfg.RelayPort = 31116, 41117
 	w.h.now = func() time.Time { return w.h.started }
 	want(t, "other ports", w.get("viewer", "/api/server/status"), 200,
-		`{"success":true,"data":{"backend":"betterdesk","uptime":0,"hbbs":{"status":"running"},"hbbr":{"status":"running"},"signal":{"status":"running"},`+
+		`{"success":true,"data":{"backend":"neodesk","uptime":0,"hbbs":{"status":"running"},"hbbr":{"status":"running"},"signal":{"status":"running"},`+
 			`"api_port":21121,"signal_port":31116,"relay_port":41117,"nat_port":31115,"ws_signal_port":31118,"ws_relay_port":41119,"client_api_port":21121,"console_port":8443}}`)
 }
 
@@ -293,7 +293,7 @@ func TestBandwidth(t *testing.T) {
 func TestSyncStatusSyncsNothing(t *testing.T) {
 	w := newWorld(t, nil, nil)
 	want(t, "sync", w.do("viewer", "POST", "/api/sync-status"), 200,
-		`{"success":true,"data":{"synced":0,"skipped":true,"reason":"betterdesk_manages_state"}}`)
+		`{"success":true,"data":{"synced":0,"skipped":true,"reason":"neodesk_manages_state"}}`)
 	if calls := w.api.seen(); len(calls) != 0 {
 		t.Errorf("the sync called the API server: %v", calls)
 	}

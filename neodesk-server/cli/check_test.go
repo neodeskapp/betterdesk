@@ -345,7 +345,7 @@ func TestCheckRunsLikeNode(t *testing.T) {
 			t.Errorf("%s: exit %d, Node %d", name, status, run.Status)
 		}
 		if strings.HasPrefix(run.Stdout, "Usage:") {
-			if !strings.HasPrefix(out.String(), "Usage: betterdesk-server check") {
+			if !strings.HasPrefix(out.String(), "Usage: neodesk-server check") {
 				t.Errorf("%s: %q", name, out.String())
 			}
 			continue

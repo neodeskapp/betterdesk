@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // The audit log and the client audit records.

@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
 )
 
 // TestUpgradeGoesToTheSocketOrThePipeline: an upgrade to a path a socket
@@ -38,7 +38,7 @@ func TestUpgradeGoesToTheSocketOrThePipeline(t *testing.T) {
 	wantSecurityHeaders(t, res)
 
 	// Which paths the sockets take
-	for path, want := range map[string]bool{"/ws/device-status": true, "/ws/bd-signal": true, "/ws/echo": false, "/ws/chat/1": true,
+	for path, want := range map[string]bool{"/ws/device-status": true, "/ws/nd-signal": true, "/ws/echo": false, "/ws/chat/1": true,
 		"/ws/chat-operator/panel": true, "/api/cdap/devices/1/terminal": true, "/api/cdap/devices/1/audio": true, "/control.ashx": true,
 		"/api/cdap/devices/1/other": false, "/api/cdap/devices/./terminal": false, "/ws/chat/a/b": false} {
 		r := httptest.NewRequest("GET", path, nil)
@@ -104,7 +104,7 @@ func TestStopEndsOpenSockets(t *testing.T) {
 	}
 	id, token, _ := s.Deps().Relay.CreateRelaySession("dev2", "dev1")
 	q := url.Values{"session": {id}, "token": {token}, "role": {"initiator"}}
-	c, _, err := wstest.Dial(s.Addr(), "/ws/bd-relay?"+q.Encode(), nil)
+	c, _, err := wstest.Dial(s.Addr(), "/ws/nd-relay?"+q.Encode(), nil)
 	if err != nil || c == nil {
 		t.Fatalf("dial: %v", err)
 	}

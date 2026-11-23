@@ -14,9 +14,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/netmonitor"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/netmonitor"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 type handlers struct {

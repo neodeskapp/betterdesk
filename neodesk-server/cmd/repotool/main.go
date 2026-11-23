@@ -6,7 +6,7 @@
 //	go run ./cmd/repotool --root DIR <command> [flags]
 //
 // It works on the repository that holds the current folder (the first
-// folder upwards with betterdesk-server/go.mod in it), or on --root.
+// folder upwards with neodesk-server/go.mod in it), or on --root.
 // Each command exits with 0 when it passed, 1 when it found something and
 // 2 when it was called wrongly. "go run ./cmd/repotool help" lists the
 // commands.
@@ -126,19 +126,19 @@ func usage(w io.Writer) {
 }
 
 // findRoot is the first folder from the current one upwards that holds
-// betterdesk-server/go.mod.
+// neodesk-server/go.mod.
 func findRoot() (string, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
 	for {
-		if _, err := os.Stat(filepath.Join(dir, "betterdesk-server", "go.mod")); err == nil {
+		if _, err := os.Stat(filepath.Join(dir, "neodesk-server", "go.mod")); err == nil {
 			return dir, nil
 		}
 		parent := filepath.Dir(dir)
 		if parent == dir {
-			return "", errors.New("no repository here: no folder upwards holds betterdesk-server/go.mod (use --root)")
+			return "", errors.New("no repository here: no folder upwards holds neodesk-server/go.mod (use --root)")
 		}
 		dir = parent
 	}

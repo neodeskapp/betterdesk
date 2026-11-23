@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 func goConfig(key, value string) *goapi.Object {
@@ -24,7 +24,7 @@ func goConfig(key, value string) *goapi.Object {
 func okRestart(context.Context) (serverinfo.RestartResult, error) {
 	return serverinfo.RestartResult{
 		Source:   "docker",
-		Restarts: []*goapi.Object{goapi.NewObject("component", "server", "service", "betterdesk-server", "success", true)},
+		Restarts: []*goapi.Object{goapi.NewObject("component", "server", "service", "neodesk-server", "success", true)},
 	}, nil
 }
 

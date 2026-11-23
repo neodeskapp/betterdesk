@@ -17,20 +17,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/restart"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/routes/settingsupdates"
-	"github.com/unitronix/betterdesk-server/console/updater"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/restart"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/settingsupdates"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
 )
 
 const (
 	oldCommit = "1111111111111111111111111111111111111111"
 	newCommit = "2222222222222222222222222222222222222222"
-	asset     = "betterdesk-server-linux-amd64"
+	asset     = "neodesk-server-linux-amd64"
 )
 
 // github answers what the updater asks GitHub: a release of version 3.6.0
@@ -43,7 +43,7 @@ type github struct {
 }
 
 func binaryFor(version, commit string) []byte {
-	return []byte(fmt.Sprintf("#!/bin/sh\necho 'betterdesk-server %s (built x, commit %s)'\n", version, commit))
+	return []byte(fmt.Sprintf("#!/bin/sh\necho 'neodesk-server %s (built x, commit %s)'\n", version, commit))
 }
 
 func hexSum(b []byte) string {
@@ -67,21 +67,21 @@ func (g *github) RoundTrip(req *http.Request) (*http.Response, error) {
 	bin := binaryFor("3.6.0", newCommit)
 	files := map[string]string{asset: string(bin)}
 	manifest, _ := json.Marshal(map[string]any{
-		"schema_version": 1, "product": "betterdesk-server", "version": "3.6.0", "channel": "stable", "owner": "trybetterdesk",
-		"repo": "betterdesk", "branch": "main", "sha": newCommit,
+		"schema_version": 1, "product": "neodesk-server", "version": "3.6.0", "channel": "stable", "owner": "neodeskapp",
+		"repo": "neodesk", "branch": "main", "sha": newCommit,
 		"files": []any{map[string]any{"path": asset, "sha256": hexSum(bin), "size": len(bin)}},
 	})
 	files["manifest.json"] = string(manifest)
 	switch u := req.URL.String(); {
-	case u == "https://api.github.com/repos/trybetterdesk/betterdesk/releases/latest":
+	case u == "https://api.github.com/repos/neodeskapp/neodesk/releases/latest":
 		var assets []map[string]any
 		for name := range files {
-			assets = append(assets, map[string]any{"name": name, "browser_download_url": "https://github.com/trybetterdesk/betterdesk/releases/download/v3.6.0/" + name})
+			assets = append(assets, map[string]any{"name": name, "browser_download_url": "https://github.com/neodeskapp/neodesk/releases/download/v3.6.0/" + name})
 		}
-		body, _ := json.Marshal(map[string]any{"tag_name": "v3.6.0", "name": "BetterDesk 3.6.0", "assets": assets})
+		body, _ := json.Marshal(map[string]any{"tag_name": "v3.6.0", "name": "NeoDesk 3.6.0", "assets": assets})
 		return reply(200, string(body))
-	case strings.HasPrefix(u, "https://github.com/trybetterdesk/betterdesk/releases/download/v3.6.0/"):
-		return reply(200, files[strings.TrimPrefix(u, "https://github.com/trybetterdesk/betterdesk/releases/download/v3.6.0/")])
+	case strings.HasPrefix(u, "https://github.com/neodeskapp/neodesk/releases/download/v3.6.0/"):
+		return reply(200, files[strings.TrimPrefix(u, "https://github.com/neodeskapp/neodesk/releases/download/v3.6.0/")])
 	}
 	return reply(404, `{"message":"Not Found"}`)
 }
@@ -116,7 +116,7 @@ func newWorld(t *testing.T, docker bool) *world {
 	w := &world{gh: &github{}, env: map[string]string{}, console: consoleDir, exits: new(int)}
 	w.World = routetest.New(t, routetest.Options{Config: func(cfg *config.Config) { cfg.ConsoleDir = consoleDir }})
 	bin := t.TempDir()
-	w.binary = filepath.Join(bin, "betterdesk-server")
+	w.binary = filepath.Join(bin, "neodesk-server")
 	if err := os.WriteFile(w.binary, binaryFor("3.5.0", oldCommit), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -132,9 +132,9 @@ func newWorld(t *testing.T, docker bool) *world {
 }
 
 // supervise gives the console a restart coordinator that ends the process
-// (counted) at once, as with BETTERDESK_SUPERVISOR.
+// (counted) at once, as with NEODESK_SUPERVISOR.
 func (w *world) supervise() {
-	w.env["BETTERDESK_SUPERVISOR"] = "systemd"
+	w.env["NEODESK_SUPERVISOR"] = "systemd"
 	d := w.Server.Deps()
 	d.Restart = restart.New(restart.Options{
 		DataDir: w.DataDir, Exit: func() { *w.exits++ }, After: func(_ time.Duration, f func()) { f() },
@@ -194,7 +194,7 @@ func TestReadRoutes(t *testing.T) {
 		res.Body != `{"success":false,"error":"Updates install prebuilt releases; no Go toolchain is needed"}` {
 		t.Errorf("install-go %d %s", res.Status, res.Body)
 	}
-	if res := admin.Do("GET", "/api/settings/updates/channel", ""); res.Body != `{"success":true,"data":{"channel":"stable","branch":"main","label":"Stable","owner":"trybetterdesk","repo":"betterdesk"}}` {
+	if res := admin.Do("GET", "/api/settings/updates/channel", ""); res.Body != `{"success":true,"data":{"channel":"stable","branch":"main","label":"Stable","owner":"neodeskapp","repo":"neodesk"}}` {
 		t.Errorf("channel %s", res.Body)
 	}
 	if res := admin.Do("GET", "/api/settings/updates/install-status", ""); res.Body != `{"success":true,"data":{"inProgress":false,"marker":null,"localSHA":"`+oldCommit+`","lastResult":null}}` {
@@ -210,7 +210,7 @@ func TestReadRoutes(t *testing.T) {
 		t.Errorf("last-result %s", res.Body)
 	}
 	caps := data(t, admin.Do("GET", "/api/settings/management/capabilities", "").Body)["data"].(map[string]any)
-	if caps["success"] != true || caps["services"].([]any)[0] != "betterdesk-server" || len(caps["checks"].([]any)) != 10 {
+	if caps["success"] != true || caps["services"].([]any)[0] != "neodesk-server" || len(caps["checks"].([]any)) != 10 {
 		t.Errorf("capabilities %v", caps)
 	}
 	pf := data(t, admin.Do("GET", "/api/settings/updates/preflight?sha=abc1234", "").Body)["data"].(map[string]any)
@@ -306,7 +306,7 @@ func TestInstallRoute(t *testing.T) {
 	res = admin.Do("POST", "/api/settings/updates/install", `{"remoteSHA":"`+newCommit[:7]+`","createBackup":false}`)
 	got := data(t, res.Body)
 	result := got["data"].(map[string]any)
-	if res.Status != 200 || result["consoleRestartBlocked"] != updater.RestartBlocked || result["backupPath"] != nil || fmt.Sprint(result["applied"]) != "[betterdesk-server 3.6.0]" {
+	if res.Status != 200 || result["consoleRestartBlocked"] != updater.RestartBlocked || result["backupPath"] != nil || fmt.Sprint(result["applied"]) != "[neodesk-server 3.6.0]" {
 		t.Fatalf("install %d %s", res.Status, res.Body)
 	}
 	if text, _ := os.ReadFile(w.binary); string(text) != string(binaryFor("3.6.0", newCommit)) {

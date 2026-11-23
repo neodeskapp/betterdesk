@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // Inventory: the two routes people read, the list of devices with their
@@ -78,7 +78,7 @@ func init() {
 	)
 }
 
-// inventory-device: the three routes of the desktop agent, at /api/bd and
+// inventory-device: the three routes of the desktop agent, at /api/nd and
 // at /api/inventory. They check the token themselves (not with the
 // device guards of the other groups): a Bearer token bound to any device,
 // and then the device the request names, compared with the token's
@@ -91,7 +91,7 @@ func init() {
 // back, sends telemetry, and sends what the routes refuse or store
 // oddly. Then each role's session in front of a device's request: the
 // CSRF gate, which checks every write at /api/inventory and a signed-in
-// write at /api/bd, and the panel access guard.
+// write at /api/nd, and the panel access guard.
 //
 // Every upload keeps the host name, the operating system and the memory
 // the demo data gave 900100001, and the last upload of a turn is the
@@ -99,7 +99,7 @@ func init() {
 // counts systems and memory. Times are in 2011, outside every window the
 // reports cases ask for.
 func init() {
-	const bd = "/api/bd"
+	const bd = "/api/nd"
 	const own = "/api/inventory"
 	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
 	other := map[string]string{"Authorization": "Bearer {secret:device_token_other}"}
@@ -175,7 +175,7 @@ func init() {
 		sent("upload", nil),
 		read("read"),
 		asDevice(contract.Case{Name: "read-at-inventory", Path: own + "/inventory/900100001"}),
-		asDevice(contract.Case{Name: "read-other-spelling", Path: "/API/BD/Inventory/900100001/"}),
+		asDevice(contract.Case{Name: "read-other-spelling", Path: "/API/ND/Inventory/900100001/"}),
 		asDevice(contract.Case{Name: "read-other-device", Path: bd + "/inventory/900100002"}),
 		asDevice(contract.Case{Name: "read-as-other-device", Headers: other}),
 		// The seed dates the apps from the day it runs, as the detail cases

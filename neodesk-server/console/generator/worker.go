@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 // The build queue (services/clientTemplateWorker.js). A bundle's
@@ -244,7 +244,7 @@ func (s *Service) EnqueueBuildsForHash(ctx context.Context, brandingHash string,
 			return err
 		}
 		if !ready {
-			return buildError("betterdesk_client_builder_not_ready", []string{})
+			return buildError("neodesk_client_builder_not_ready", []string{})
 		}
 	} else {
 		ready, err := s.ModuleReady(nil)
@@ -255,7 +255,7 @@ func (s *Service) EnqueueBuildsForHash(ctx context.Context, brandingHash string,
 			return buildError("support_generator_module_not_ready", []string{})
 		}
 		if !s.TemplatesHaveBinaries() {
-			return errors.New("support_generator_templates_incomplete: installed templates have no BetterDesk desktop binaries. " +
+			return errors.New("support_generator_templates_incomplete: installed templates have no NeoDesk desktop binaries. " +
 				"Publish a full Client release with generator-templates, then reinstall the module.")
 		}
 	}
@@ -338,7 +338,7 @@ func (s *Service) RebuildBundleByID(ctx context.Context, bundleID string, platfo
 func (s *Service) RebuildAllForClientRevision(ctx context.Context, clientCommit string, force bool) (*goapi.Object, error) {
 	commit := jsTrim(clientCommit)
 	if !commitPattern.MatchString(commit) {
-		return nil, errors.New("betterdesk_client_commit_invalid")
+		return nil, errors.New("neodesk_client_commit_invalid")
 	}
 	bundles, err := s.ListBundles(ctx, false)
 	if err != nil {
@@ -781,7 +781,7 @@ func (s *Service) BuildCustomTxtContent(ctx context.Context, branding any) (Sign
 	if !truthy(key) {
 		key = or(string(s.opts.ServerInfo.ResolvePublicKey(ctx)), "")
 	}
-	appName := or(or(or(prop(branding, "app_name"), prop(branding, "company_name")), prop(branding, "product_name")), "BetterDesk Support Agent")
+	appName := or(or(or(prop(branding, "app_name"), prop(branding, "company_name")), prop(branding, "product_name")), "NeoDesk Support Agent")
 	signed, _, err := BuildAndSignSupportCustomTxt(CustomTxtOptions{
 		AppName:            appName,
 		Host:               host,
@@ -866,7 +866,7 @@ func templateHasBinary(stageDir, platform string) bool {
 	if strings.ToLower(platform) == "macos" && findDirEnding(stageDir, ".app") != "" {
 		return true
 	}
-	names := map[string]bool{"betterdesk.exe": true, "rustdesk.exe": true, "betterdesk": true, "rustdesk": true}
+	names := map[string]bool{"neodesk.exe": true, "rustdesk.exe": true, "neodesk": true, "rustdesk": true}
 	stack := []string{stageDir}
 	for len(stack) > 0 {
 		dir := stack[len(stack)-1]
@@ -945,13 +945,13 @@ func (s *Service) runOne(ctx context.Context, c *claim) error {
 		if templateDir == "" {
 			return errors.New("template_missing:" + key)
 		}
-		stageDir := filepath.Join(workDir, "betterdesk-support-"+row.Platform+"-"+row.Arch)
+		stageDir := filepath.Join(workDir, "neodesk-support-"+row.Platform+"-"+row.Arch)
 		if err := copyTree(templateDir, stageDir); err != nil {
 			return err
 		}
 		if !templateHasBinary(stageDir, row.Platform) {
-			return errors.New("template_missing_binary:" + key + " — installed templates are a stub without betterdesk.exe / binary. " +
-				"Publish a full BetterDesk-Client release (workflow betterdesk-desktop-release.yml) " +
+			return errors.New("template_missing_binary:" + key + " — installed templates are a stub without neodesk.exe / binary. " +
+				"Publish a full NeoDesk-Client release (workflow neodesk-desktop-release.yml) " +
 				"with generator-templates containing desktop binaries, then reinstall the module.")
 		}
 		branding := parseRowBranding(c.bundle.Branding)
@@ -983,7 +983,7 @@ func (s *Service) runOne(ctx context.Context, c *claim) error {
 		if row.Platform == "windows" {
 			ext = "zip"
 		}
-		artifactPath := filepath.Join(s.opts.ArtifactDir, "betterdesk-support-"+jsSlice(row.BrandingHash, 12)+"-"+row.Platform+"-"+row.Arch+"."+ext)
+		artifactPath := filepath.Join(s.opts.ArtifactDir, "neodesk-support-"+jsSlice(row.BrandingHash, 12)+"-"+row.Platform+"-"+row.Arch+"."+ext)
 		if err := s.packArtifact(ctx, stageDir, artifactPath, row.Platform); err != nil {
 			return err
 		}
@@ -1122,7 +1122,7 @@ func (s *Service) assertEmbeddedArtifact(ctx context.Context, artifactPath, form
 var assetNamePattern = regexp.MustCompile(`^[a-zA-Z0-9._-]+$`)
 
 // validateEmbeddedManifest checks the provider's manifest.json: schema 1,
-// sku betterdesk-support, no external configuration, the bundle's client
+// sku neodesk-support, no external configuration, the bundle's client
 // commit, and for every asset a safe unique name, a catalogue target, a
 // SHA-256 and size that match the file. Every required target must be
 // there.
@@ -1273,7 +1273,7 @@ func (s *Service) runEmbeddedOne(ctx context.Context, c *claim) error {
 				return err
 			}
 			ext := strings.TrimPrefix(artifactExtension(p.Platform, p.Format), ".")
-			artifactPath := filepath.Join(s.opts.ArtifactDir, "betterdesk-support-"+jsSlice(row.BrandingHash, 12)+"-"+p.Platform+"-"+p.Arch+"."+ext)
+			artifactPath := filepath.Join(s.opts.ArtifactDir, "neodesk-support-"+jsSlice(row.BrandingHash, 12)+"-"+p.Platform+"-"+p.Arch+"."+ext)
 			temporary := fmt.Sprintf("%s.tmp-%d-%d", artifactPath, s.opts.PID, s.opts.Now().UnixMilli())
 			if err := copyFile(source, temporary); err != nil {
 				return err

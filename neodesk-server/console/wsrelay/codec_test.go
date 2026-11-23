@@ -14,8 +14,8 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"github.com/unitronix/betterdesk-server/codec"
-	pb "github.com/unitronix/betterdesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/codec"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 )
 
 // codecRecording is testdata/node_codec.json, recorded from the old service.

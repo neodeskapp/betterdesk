@@ -5,9 +5,9 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/attestation"
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/attestation"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // status answers GET /api/server-attestation/status: whether a capacity

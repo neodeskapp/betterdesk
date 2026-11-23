@@ -13,7 +13,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/ssrfguard/guardtest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard/guardtest"
 )
 
 // testdata/vectors.jsonl.gz was recorded from web-nodejs/lib/ssrfGuard.js

@@ -1,4 +1,4 @@
-// BetterDesk Server — Clean-room RustDesk-compatible signal + relay server
+// NeoDesk Server — Clean-room RustDesk-compatible signal + relay server
 // Single binary replacing both hbbs and hbbr
 package main
 
@@ -18,28 +18,28 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/admin"
-	"github.com/unitronix/betterdesk-server/api"
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/billing"
-	"github.com/unitronix/betterdesk-server/cdap"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/console/backup"
-	"github.com/unitronix/betterdesk-server/console/updater"
-	"github.com/unitronix/betterdesk-server/crypto"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/internal/envvar"
-	"github.com/unitronix/betterdesk-server/internal/productversion"
-	"github.com/unitronix/betterdesk-server/logging"
-	"github.com/unitronix/betterdesk-server/meshcentral"
-	"github.com/unitronix/betterdesk-server/metrics"
-	"github.com/unitronix/betterdesk-server/ratelimit"
-	"github.com/unitronix/betterdesk-server/relay"
-	"github.com/unitronix/betterdesk-server/reload"
-	"github.com/unitronix/betterdesk-server/security"
-	sigServer "github.com/unitronix/betterdesk-server/signal"
-	"github.com/unitronix/betterdesk-server/timesync"
+	"github.com/neodeskapp/neodesk/neodesk-server/admin"
+	"github.com/neodeskapp/neodesk/neodesk-server/api"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/billing"
+	"github.com/neodeskapp/neodesk/neodesk-server/cdap"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
+	"github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/productversion"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/meshcentral"
+	"github.com/neodeskapp/neodesk/neodesk-server/metrics"
+	"github.com/neodeskapp/neodesk/neodesk-server/ratelimit"
+	"github.com/neodeskapp/neodesk/neodesk-server/relay"
+	"github.com/neodeskapp/neodesk/neodesk-server/reload"
+	"github.com/neodeskapp/neodesk/neodesk-server/security"
+	sigServer "github.com/neodeskapp/neodesk/neodesk-server/signal"
+	"github.com/neodeskapp/neodesk/neodesk-server/timesync"
 )
 
 var (
@@ -183,7 +183,7 @@ func init() {
 }
 
 func main() {
-	// BETTERDESK_ENV_FILE first: the flags and every setting read the
+	// NEODESK_ENV_FILE first: the flags and every setting read the
 	// environment it fills
 	loadEnvFileFromOS()
 	if code, handled := runSubcommand(os.Args[1:]); handled {
@@ -244,7 +244,7 @@ func main() {
 	}
 
 	log.Printf("========================================")
-	log.Printf("  BetterDesk Server %s", Version)
+	log.Printf("  NeoDesk Server %s", Version)
 	log.Printf("  Build: %s", BuildDate)
 	log.Printf("========================================")
 	log.Printf("  Mode:       %s", cfg.Mode)
@@ -1138,8 +1138,8 @@ func resolveAuthDBPath(explicit, dbPath string) string {
 		return explicit
 	}
 	candidates := []string{
-		"/opt/BetterDeskConsole/data/auth.db",
-		"/opt/rustdesk/../BetterDeskConsole/data/auth.db",
+		"/opt/NeoDeskConsole/data/auth.db",
+		"/opt/rustdesk/../NeoDeskConsole/data/auth.db",
 	}
 	if v := os.Getenv("CONSOLE_DATA_DIR"); v != "" {
 		candidates = append(candidates, filepath.Join(v, "auth.db"))
@@ -1147,7 +1147,7 @@ func resolveAuthDBPath(explicit, dbPath string) string {
 	if v := os.Getenv("DATA_DIR"); v != "" {
 		candidates = append(candidates, filepath.Join(v, "auth.db"))
 	}
-	if v := os.Getenv("BETTERDESK_AUTH_DB_PATH"); v != "" {
+	if v := os.Getenv("NEODESK_AUTH_DB_PATH"); v != "" {
 		candidates = append(candidates, v)
 	}
 	if dbPath != "" && !strings.HasPrefix(dbPath, "postgres") {
@@ -1155,8 +1155,8 @@ func resolveAuthDBPath(explicit, dbPath string) string {
 		candidates = append(candidates,
 			filepath.Join(dir, "auth.db"),
 			filepath.Join(dir, "../data/auth.db"),
-			filepath.Join(dir, "../../BetterDeskConsole/data/auth.db"),
-			filepath.Join(dir, "../BetterDeskConsole/data/auth.db"),
+			filepath.Join(dir, "../../NeoDeskConsole/data/auth.db"),
+			filepath.Join(dir, "../NeoDeskConsole/data/auth.db"),
 		)
 	}
 	for _, p := range candidates {
@@ -1253,9 +1253,9 @@ func parseFlags() *config.Config {
 	if showVersion {
 		// The updater reads this line from a binary it is about to install.
 		if Commit != "" {
-			fmt.Printf("betterdesk-server %s (built %s, commit %s)\n", Version, BuildDate, Commit)
+			fmt.Printf("neodesk-server %s (built %s, commit %s)\n", Version, BuildDate, Commit)
 		} else {
-			fmt.Printf("betterdesk-server %s (built %s)\n", Version, BuildDate)
+			fmt.Printf("neodesk-server %s (built %s)\n", Version, BuildDate)
 		}
 		os.Exit(0)
 	}
@@ -1300,7 +1300,7 @@ func configure(fs *flag.FlagSet, args []string) (cfg *config.Config, showVersion
 	fs.IntVar(&cfg.SignalRateLimitPerIP, "signal-rate-limit-per-ip", cfg.SignalRateLimitPerIP, "Max signal registrations per IP per minute (0 = unlimited; raise for large NAT deployments — issue #122)")
 	switchVar(fs, &cfg.SameNATRelay, "same-nat-relay", "Auto-fallback to relay when both peers share the same public IP (avoids NAT hairpin failures — issue #121)")
 	switchVar(fs, &cfg.AllowSharedNATInitiator, "allow-shared-nat-initiator", "Allow PunchHole/RequestRelay when multiple live peers share the initiator public IP without token/udp_port (synthetic shared-nat-initiator — issue #399; default off)")
-	switchVar(fs, &cfg.LoggedInOnlyInitiator, "logged-in-only-initiator", "Require a valid BetterDesk client login token for stock PunchHole/RequestRelay initiators (issue #414; default off)")
+	switchVar(fs, &cfg.LoggedInOnlyInitiator, "logged-in-only-initiator", "Require a valid NeoDesk client login token for stock PunchHole/RequestRelay initiators (issue #414; default off)")
 	switchVar(fs, &cfg.OperatorOnlyOutbound, "operator-only-outbound", "Require a valid Admin/Operator client session for stock PunchHole/RequestRelay initiators (issue #425; default off)")
 	switchVar(fs, &cfg.P2PFirst, "p2p-first", "Wait for the target's hole punch before answering the initiator so direct P2P can succeed (issue #157; disable to always answer immediately)")
 	fs.IntVar(&cfg.P2PFallbackMs, "p2p-fallback-ms", cfg.P2PFallbackMs, "Grace period (ms) to wait for the target's PunchHoleSent before sending the relay fallback response (only with --p2p-first)")
@@ -1386,6 +1386,6 @@ func moveAsideRustDeskDatabase(dsn string) {
 		return
 	}
 	if moved != "" {
-		log.Printf("WARN: %s was the database of a RustDesk server (hbbs). It is now %s, and BetterDesk starts with a database of its own. The key pair stays, so clients keep this server: each device comes back when it next connects, in Managed mode under Enrollment requests.", dsn, moved)
+		log.Printf("WARN: %s was the database of a RustDesk server (hbbs). It is now %s, and NeoDesk starts with a database of its own. The key pair stays, so clients keep this server: each device comes back when it next connects, in Managed mode under Enrollment requests.", dsn, moved)
 	}
 }

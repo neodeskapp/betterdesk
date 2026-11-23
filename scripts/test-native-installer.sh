@@ -10,13 +10,13 @@ fail() {
 
 # run_script FILE CODE [NAME=value...]: CODE after FILE is sourced, with
 # the variables given and without NO_COLOR, COLORTERM or
-# BETTERDESK_HEADER_SHOWN from outside; its output goes to a pipe
+# NEODESK_HEADER_SHOWN from outside; its output goes to a pipe
 run_script() {
     local file=$1 code=$2 run
     shift 2
     run=$(mktemp)
     printf 'set --\nsource %q\n%s\n' "$file" "$code" > "$run"
-    env -u NO_COLOR -u COLORTERM -u BETTERDESK_HEADER_SHOWN TERM=xterm "$@" bash "$run" < /dev/null 2>&1 | cat
+    env -u NO_COLOR -u COLORTERM -u NEODESK_HEADER_SHOWN TERM=xterm "$@" bash "$run" < /dev/null 2>&1 | cat
     rm -f "$run"
 }
 
@@ -27,7 +27,7 @@ in_terminal() {
     shift 2
     run=$(mktemp)
     printf 'set --\nsource %q\n%s\n' "$file" "$code" > "$run"
-    env -u NO_COLOR -u COLORTERM -u BETTERDESK_HEADER_SHOWN TERM=xterm "$@" script -qec "bash $run" /dev/null < /dev/null | tr -d '\r'
+    env -u NO_COLOR -u COLORTERM -u NEODESK_HEADER_SHOWN TERM=xterm "$@" script -qec "bash $run" /dev/null < /dev/null | tr -d '\r'
     rm -f "$run"
 }
 
@@ -70,13 +70,13 @@ blue_or_magenta() {
 }
 
 # check_header NAME OUT TITLE: OUT is NAME's header drawn in a terminal:
-# six lines of the mark with BetterDesk and TITLE beside it, no box
+# six lines of the mark with NeoDesk and TITLE beside it, no box
 # characters, no blue or magenta, no line wider than 60 columns or ending
 # in spaces
 check_header() {
     local name=$1 out=$2 title=$3 text line box LC_ALL=C.UTF-8
     text=$(printf '%s\n' "$out" | sed $'s/\033\\[[0-9;?]*[A-Za-z]//g')
-    case "$text" in *BetterDesk*"$title"*) ;; *) fail "$name's header does not say BetterDesk and $title: $text" ;; esac
+    case "$text" in *NeoDesk*"$title"*) ;; *) fail "$name's header does not say NeoDesk and $title: $text" ;; esac
     for box in ═ ║ ╔ ╗ ╚ ╝ ─ │ ┌ ┐ └ ┘ ╭ ╮ ╯ ╰; do
         case "$text" in *"$box"*) fail "$name's header draws a box: $text" ;; esac
     done
@@ -91,8 +91,8 @@ check_header() {
 }
 
 # check_output NAME TITLE HELPERS [NAME=value...]: NAME's header is the
-# mark beside BetterDesk and TITLE in a terminal, and one plain line
-# "BetterDesk TITLE" without a terminal or with NO_COLOR, with no escape
+# mark beside NeoDesk and TITLE in a terminal, and one plain line
+# "NeoDesk TITLE" without a terminal or with NO_COLOR, with no escape
 # codes at all then. The status helpers (HELPERS, code that calls each)
 # use no blue or magenta, and their 24-bit colours keep 3.5:1 on black,
 # on PowerShell's blue and on white.
@@ -101,10 +101,10 @@ check_output() {
     shift 3
     out=$(run_script "$file" "print_header; $helpers" "$@")
     case "$out" in *$'\033'*) fail "$name has escape codes without a terminal: $(printf '%q' "$out")" ;; esac
-    [ "$(printf '%s\n' "$out" | head -1)" = "BetterDesk $title" ] || fail "without a terminal $name's header is not one plain line: $out"
+    [ "$(printf '%s\n' "$out" | head -1)" = "NeoDesk $title" ] || fail "without a terminal $name's header is not one plain line: $out"
     out=$(in_terminal "$file" "print_header; $helpers" NO_COLOR=1 "$@")
     case "$out" in *$'\033'*) fail "$name has escape codes with NO_COLOR: $(printf '%q' "$out")" ;; esac
-    [ "$(printf '%s\n' "$out" | head -1)" = "BetterDesk $title" ] || fail "with NO_COLOR $name's header is not one plain line: $out"
+    [ "$(printf '%s\n' "$out" | head -1)" = "NeoDesk $title" ] || fail "with NO_COLOR $name's header is not one plain line: $out"
 
     out=$(in_terminal "$file" print_header "$@")
     check_header "$name" "$out" "$title"
@@ -125,23 +125,23 @@ check_output() {
 }
 
 # The installers' header and status colours (check_output). install.sh's
-# header stands for the managers it runs: betterdesk-docker.sh leaves its
+# header stands for the managers it runs: neodesk-docker.sh leaves its
 # own out then.
 test_headers_and_colours() (
     local version out
-    version=$(sed -n 's/^VERSION="\(.*\)"$/\1/p' "$SCRIPT_ROOT/betterdesk.sh")
-    check_output betterdesk.sh "Server installer $version" \
+    version=$(sed -n 's/^VERSION="\(.*\)"$/\1/p' "$SCRIPT_ROOT/neodesk.sh")
+    check_output neodesk.sh "Server installer $version" \
         'print_success s; print_error e; print_warning w; print_info i; print_step p'
-    version=$(sed -n 's/^VERSION="\(.*\)"$/\1/p' "$SCRIPT_ROOT/betterdesk-docker.sh")
-    check_output betterdesk-docker.sh "Docker installer $version" \
-        'step s; ok o; warn w; (die e) || true' BETTERDESK_DOCKER_SOURCED=1
-    version=$(sed -n 's/^BETTERDESK_VERSION="${BETTERDESK_VERSION:-\(.*\)}"$/\1/p' "$SCRIPT_ROOT/install.sh")
+    version=$(sed -n 's/^VERSION="\(.*\)"$/\1/p' "$SCRIPT_ROOT/neodesk-docker.sh")
+    check_output neodesk-docker.sh "Docker installer $version" \
+        'step s; ok o; warn w; (die e) || true' NEODESK_DOCKER_SOURCED=1
+    version=$(sed -n 's/^NEODESK_VERSION="${NEODESK_VERSION:-\(.*\)}"$/\1/p' "$SCRIPT_ROOT/install.sh")
     check_output install.sh "Installer $version" 'log l; ok o; warn w; (die e) || true'
 
-    out=$(run_script "$SCRIPT_ROOT/install.sh" 'print_header > /dev/null; printenv BETTERDESK_HEADER_SHOWN')
+    out=$(run_script "$SCRIPT_ROOT/install.sh" 'print_header > /dev/null; printenv NEODESK_HEADER_SHOWN')
     [ "$out" = 1 ] || fail "install.sh does not tell the managers it showed the header: $out"
-    out=$(in_terminal "$SCRIPT_ROOT/betterdesk-docker.sh" print_header BETTERDESK_DOCKER_SOURCED=1 BETTERDESK_HEADER_SHOWN=1)
-    [ -z "$out" ] || fail "betterdesk-docker.sh shows its header after install.sh's: $out"
+    out=$(in_terminal "$SCRIPT_ROOT/neodesk-docker.sh" print_header NEODESK_DOCKER_SOURCED=1 NEODESK_HEADER_SHOWN=1)
+    [ -z "$out" ] || fail "neodesk-docker.sh shows its header after install.sh's: $out"
 )
 
 test_bounded_go_commands() (
@@ -149,7 +149,7 @@ test_bounded_go_commands() (
     export GO_COMMAND_KILL_AFTER=1
     set --
     # shellcheck disable=SC1091
-    source "$SCRIPT_ROOT/betterdesk.sh"
+    source "$SCRIPT_ROOT/neodesk.sh"
 
     if ! _run_go_command_bounded "successful test command" 5 sh -c 'exit 0'; then
         fail "successful bounded command returned non-zero"
@@ -177,9 +177,9 @@ test_dirty_native_clone() (
     fake_bin="$temp_dir/bin"
     install_dir="$temp_dir/install"
     repo_dir="$install_dir/source"
-    mkdir -p "$fake_bin" "$repo_dir/.git" "$repo_dir/betterdesk-server/data"
-    printf 'local edit\n' > "$repo_dir/betterdesk.sh"
-    printf 'runtime state\n' > "$repo_dir/betterdesk-server/data/state.txt"
+    mkdir -p "$fake_bin" "$repo_dir/.git" "$repo_dir/neodesk-server/data"
+    printf 'local edit\n' > "$repo_dir/neodesk.sh"
+    printf 'runtime state\n' > "$repo_dir/neodesk-server/data/state.txt"
 
     cat > "$fake_bin/git" <<'FAKE_GIT'
 #!/usr/bin/env bash
@@ -192,7 +192,7 @@ if [ "${1:-}" = "-C" ]; then
             exit 0
             ;;
         status)
-            printf ' M betterdesk.sh\n'
+            printf ' M neodesk.sh\n'
             exit 0
             ;;
         checkout)
@@ -212,8 +212,8 @@ if [ "${1:-}" = "clone" ]; then
         exit 1
     fi
     destination="${!#}"
-    mkdir -p "$destination/.git" "$destination/betterdesk-server"
-    printf '#!/usr/bin/env bash\nexit 0\n' > "$destination/betterdesk.sh"
+    mkdir -p "$destination/.git" "$destination/neodesk-server"
+    printf '#!/usr/bin/env bash\nexit 0\n' > "$destination/neodesk.sh"
     exit 0
 fi
 
@@ -234,8 +234,8 @@ FAKE_ID
     export PATH="$fake_bin:$PATH"
     export INSTALL_DIR="$install_dir"
     export RELAY_SERVERS="127.0.0.1:21117"
-    export BETTERDESK_REPO="example/BetterDesk"
-    export BETTERDESK_BRANCH="main"
+    export NEODESK_REPO="example/NeoDesk"
+    export NEODESK_BRANCH="main"
     set --
     # shellcheck disable=SC1091
     source "$SCRIPT_ROOT/install.sh"
@@ -243,7 +243,7 @@ FAKE_ID
     install_native_mode
 
     [ -d "$repo_dir/.git" ] || fail "fresh clone was not installed"
-    [ -f "$repo_dir/betterdesk-server/data/state.txt" ] \
+    [ -f "$repo_dir/neodesk-server/data/state.txt" ] \
         || fail "runtime Go data was not preserved"
     compgen -G "$install_dir/source.backup.*" > /dev/null \
         || fail "dirty source backup was not preserved"
@@ -254,7 +254,7 @@ FAKE_ID
             break
         fi
     done
-    [ -f "$backup_dir/betterdesk.sh" ] || fail "original dirty source was not backed up"
+    [ -f "$backup_dir/neodesk.sh" ] || fail "original dirty source was not backed up"
 
     if (
         export FAKE_GIT_FAIL_CLONE=1
@@ -276,8 +276,8 @@ FAKE_ID
 )
 
 # UP8: the native install passes the release channel it was given
-# (--channel) to betterdesk.sh. The branch only names the installer's
-# files: every branch, main included, passes no channel, and betterdesk.sh
+# (--channel) to neodesk.sh. The branch only names the installer's
+# files: every branch, main included, passes no channel, and neodesk.sh
 # keeps its default.
 test_native_update_channel() (
     local temp_dir fake_bin
@@ -294,7 +294,7 @@ fi
 if [ "${1:-}" = "clone" ]; then
     destination="${!#}"
     mkdir -p "$destination/.git"
-    printf '#!/usr/bin/env bash\nprintf "%%s" "${UPDATE_GITHUB_BRANCH:-}" > "%s/channel"\n' "$CHANNEL_DIR" > "$destination/betterdesk.sh"
+    printf '#!/usr/bin/env bash\nprintf "%%s" "${UPDATE_GITHUB_BRANCH:-}" > "%s/channel"\n' "$CHANNEL_DIR" > "$destination/neodesk.sh"
     exit 0
 fi
 exit 1
@@ -302,7 +302,7 @@ FAKE_GIT
     chmod +x "$fake_bin/git"
     printf '#!/usr/bin/env bash\n[ "${1:-}" = "-u" ] && { printf "0\\n"; exit 0; }\nexec /usr/bin/id "$@"\n' > "$fake_bin/id"
     chmod +x "$fake_bin/id"
-    export PATH="$fake_bin:$PATH" RELAY_SERVERS="127.0.0.1:21117" BETTERDESK_REPO="example/BetterDesk"
+    export PATH="$fake_bin:$PATH" RELAY_SERVERS="127.0.0.1:21117" NEODESK_REPO="example/NeoDesk"
     export CHANNEL_DIR="$temp_dir"
     unset UPDATE_GITHUB_BRANCH
 
@@ -311,18 +311,18 @@ FAKE_GIT
         expected=""
         rm -f "$temp_dir/channel"
         (
-            export INSTALL_DIR="$temp_dir/install-$branch" BETTERDESK_BRANCH="$branch"
+            export INSTALL_DIR="$temp_dir/install-$branch" NEODESK_BRANCH="$branch"
             set --
             # shellcheck disable=SC1091
             source "$SCRIPT_ROOT/install.sh"
             install_native_mode
         ) >/dev/null
-        got=$(cat "$temp_dir/channel" 2>/dev/null || echo "(betterdesk.sh did not run)")
+        got=$(cat "$temp_dir/channel" 2>/dev/null || echo "(neodesk.sh did not run)")
         [ "$got" = "$expected" ] \
             || fail "native install from $branch passes update channel '$got', expected '$expected'"
     done
 
-    # Without --branch the default branch's files install and betterdesk.sh
+    # Without --branch the default branch's files install and neodesk.sh
     # picks the channel (stable, or dev while there is no stable release);
     # --channel names one
     local args
@@ -334,16 +334,16 @@ FAKE_GIT
         esac
         rm -f "$temp_dir/channel"
         (
-            unset BETTERDESK_BRANCH
+            unset NEODESK_BRANCH
             export INSTALL_DIR="$temp_dir/install-default"
             # shellcheck disable=SC2086
             set -- $args
             # shellcheck disable=SC1091
             source "$SCRIPT_ROOT/install.sh"
-            [ "$BETTERDESK_BRANCH" = main ] || fail "install.sh installs the files of $BETTERDESK_BRANCH"
+            [ "$NEODESK_BRANCH" = main ] || fail "install.sh installs the files of $NEODESK_BRANCH"
             install_native_mode
         ) >/dev/null
-        got=$(cat "$temp_dir/channel" 2>/dev/null || echo "(betterdesk.sh did not run)")
+        got=$(cat "$temp_dir/channel" 2>/dev/null || echo "(neodesk.sh did not run)")
         [ "$got" = "$expected" ] || fail "install.sh $args passes update channel '$got', expected '$expected'"
     done
 )
@@ -359,8 +359,8 @@ test_migration_menus() (
     trap 'rm -rf "$temp_dir"' EXIT
     calls="$temp_dir/calls"
     owned="$temp_dir/owned"
-    mkdir -p "$temp_dir/betterdesk-server/tools/migrate" "$temp_dir/rustdesk"
-    cat > "$temp_dir/betterdesk-server/tools/migrate/migrate-linux-amd64" <<FAKE_MIGRATE
+    mkdir -p "$temp_dir/neodesk-server/tools/migrate" "$temp_dir/rustdesk"
+    cat > "$temp_dir/neodesk-server/tools/migrate/migrate-linux-amd64" <<FAKE_MIGRATE
 #!/usr/bin/env bash
 printf '%s\n' "\$*" >> "$calls"
 if [ "\${1:-}" = "-h" ]; then
@@ -368,11 +368,11 @@ if [ "\${1:-}" = "-h" ]; then
 fi
 exit 0
 FAKE_MIGRATE
-    chmod +x "$temp_dir/betterdesk-server/tools/migrate/migrate-linux-amd64"
+    chmod +x "$temp_dir/neodesk-server/tools/migrate/migrate-linux-amd64"
 
     set --
     # shellcheck disable=SC1091
-    source "$SCRIPT_ROOT/betterdesk.sh"
+    source "$SCRIPT_ROOT/neodesk.sh"
     SCRIPT_DIR="$temp_dir"
     RUSTDESK_PATH="$temp_dir/rustdesk"
     CONSOLE_PATH="$temp_dir/console"
@@ -382,7 +382,7 @@ FAKE_MIGRATE
     menu_choose() { MENU_CHOICE="$TEST_MENU_CHOICE"; printf '%s\n' "${_menu_items[@]}" > "$temp_dir/items"; }
     own_by_service_user() { printf '%s\n' "$*" >> "$owned"; }
 
-    local src="$RUSTDESK_PATH/db_v2.sqlite3" dst="$RUSTDESK_PATH/betterdesk.sqlite3"
+    local src="$RUSTDESK_PATH/db_v2.sqlite3" dst="$RUSTDESK_PATH/neodesk.sqlite3"
     printf 'db' > "$src"
     printf 'old' > "$dst"
 
@@ -419,7 +419,7 @@ FAKE_MIGRATE
     grep -qx 'DB_TYPE=postgres' "$CONSOLE_PATH/.env" && grep -qx 'DATABASE_URL=postgres://u@h/db' "$CONSOLE_PATH/.env" \
         && grep -qx 'DB_URL=postgres://u@h/db' "$CONSOLE_PATH/.env" || fail "after the menu's move .env does not point at PostgreSQL: $(cat "$CONSOLE_PATH/.env")"
     grep -qx 'SESSION_SECRET=kept' "$CONSOLE_PATH/.env" || fail "the menu's move lost a line of .env"
-    grep -q 'systemctl restart betterdesk-server' "$calls" || fail "the server was not restarted after the move"
+    grep -q 'systemctl restart neodesk-server' "$calls" || fail "the server was not restarted after the move"
     run_menu 3 $'postgres://u@h/db\n\ny'
     grep -qx 'DB_TYPE=sqlite' "$CONSOLE_PATH/.env" && grep -qxF "DB_URL=$src" "$CONSOLE_PATH/.env" \
         || fail "after the menu's move back .env does not point at SQLite: $(cat "$CONSOLE_PATH/.env")"
@@ -460,19 +460,19 @@ FAKE_MIGRATE
     fi
 
     # L71: with the installed binary's migrate command the menu uses it
-    cat > "$RUSTDESK_PATH/betterdesk-server" <<FAKE_SERVER
+    cat > "$RUSTDESK_PATH/neodesk-server" <<FAKE_SERVER
 #!/usr/bin/env bash
 # Stands in for the binary: migrate -mode sqlite2pg|pg2sqlite (its commands)
 printf 'server %s\n' "\$*" >> "$calls"
 exit 0
 FAKE_SERVER
-    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
     printf 'old' > "$dst"
     run_menu 1 $'\n\ny'
     grep -qxF -- "server migrate -mode rust2go -src $src -dst $dst -overwrite" "$calls" \
         || fail "the menu did not use the server's migrate command: $(cat "$calls")"
     if grep -q -- '^-mode' "$calls"; then fail "the menu ran the separate migrate tool beside the server's command"; fi
-    rm -f "$RUSTDESK_PATH/betterdesk-server"
+    rm -f "$RUSTDESK_PATH/neodesk-server"
 )
 
 # RV81: the install's switch to PostgreSQL moves the whole SQLite install
@@ -484,8 +484,8 @@ test_postgresql_switch() (
     temp_dir=$(mktemp -d)
     trap 'rm -rf "$temp_dir"' EXIT
     calls="$temp_dir/calls"
-    mkdir -p "$temp_dir/betterdesk-server/tools/migrate" "$temp_dir/rustdesk" "$temp_dir/console"
-    cat > "$temp_dir/betterdesk-server/tools/migrate/migrate-linux-amd64" <<FAKE_MIGRATE
+    mkdir -p "$temp_dir/neodesk-server/tools/migrate" "$temp_dir/rustdesk" "$temp_dir/console"
+    cat > "$temp_dir/neodesk-server/tools/migrate/migrate-linux-amd64" <<FAKE_MIGRATE
 #!/usr/bin/env bash
 printf '%s\n' "\$*" >> "$calls"
 case "\${1:-}\${2:-}" in
@@ -494,11 +494,11 @@ case "\${1:-}\${2:-}" in
 esac
 exit 0
 FAKE_MIGRATE
-    chmod +x "$temp_dir/betterdesk-server/tools/migrate/migrate-linux-amd64"
+    chmod +x "$temp_dir/neodesk-server/tools/migrate/migrate-linux-amd64"
 
     set --
     # shellcheck disable=SC1091
-    source "$SCRIPT_ROOT/betterdesk.sh"
+    source "$SCRIPT_ROOT/neodesk.sh"
     SCRIPT_DIR="$temp_dir"
     RUSTDESK_PATH="$temp_dir/rustdesk"
     CONSOLE_PATH="$temp_dir/console"
@@ -557,55 +557,55 @@ FAKE_MIGRATE
 
     # L71: the installed binary's migrate command moves the data; the
     # separate tool of an older release is not used
-    cat > "$RUSTDESK_PATH/betterdesk-server" <<FAKE_SERVER
+    cat > "$RUSTDESK_PATH/neodesk-server" <<FAKE_SERVER
 #!/usr/bin/env bash
 # Stands in for the binary: migrate -mode sqlite2pg|pg2sqlite (its commands)
 printf 'server %s\n' "\$*" >> "$calls"
 [ "\${2:-}" = -h ] && { printf 'Usage of migrate:\n  -mode string\n  -overwrite\n' >&2; exit 2; }
 exit 0
 FAKE_SERVER
-    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
     run_switch 0 true true ""
     grep -qxF -- "server migrate -mode sqlite2pg -src $src -dst $uri -overwrite" "$calls" \
         || fail "the switch did not move the data with the server's migrate command: $(cat "$calls")"
     grep -qxF -- "server migrate -mode backup -src $src" "$calls" || fail "the switch made no backup with the migrate command: $(cat "$calls")"
     if grep -q -- '^-mode' "$calls"; then fail "the separate migrate tool ran beside the server's command: $(cat "$calls")"; fi
     [ "$USE_POSTGRESQL" = true ] || fail "after a move with the migrate command the install does not use PostgreSQL"
-    rm -f "$RUSTDESK_PATH/betterdesk-server"
+    rm -f "$RUSTDESK_PATH/neodesk-server"
 )
 
 # L31: the one-line installer clones and downloads from the fork.
 test_install_sh_uses_the_fork() (
-    unset BETTERDESK_REPO BETTERDESK_RAW_BASE BETTERDESK_BRANCH
+    unset NEODESK_REPO NEODESK_RAW_BASE NEODESK_BRANCH
     set --
     # shellcheck disable=SC1091
     source "$SCRIPT_ROOT/install.sh"
-    [ "$BETTERDESK_REPO" = neodeskapp/betterdesk ] || fail "install.sh clones $BETTERDESK_REPO"
-    case "$BETTERDESK_RAW_BASE" in
-        https://raw.githubusercontent.com/neodeskapp/betterdesk/*) ;;
-        *) fail "install.sh downloads from $BETTERDESK_RAW_BASE" ;;
+    [ "$NEODESK_REPO" = neodeskapp/neodesk ] || fail "install.sh clones $NEODESK_REPO"
+    case "$NEODESK_RAW_BASE" in
+        https://raw.githubusercontent.com/neodeskapp/neodesk/*) ;;
+        *) fail "install.sh downloads from $NEODESK_RAW_BASE" ;;
     esac
-    # The one-liners and the installers' own downloads name the fork's
-    # only branch, main; there is no dev branch, and upstream's main holds
-    # its older installer
-    [ "$BETTERDESK_RAW_BASE" = https://raw.githubusercontent.com/neodeskapp/betterdesk/main ] \
-        || fail "install.sh downloads from $BETTERDESK_RAW_BASE"
+    # The one-liners and the installers' own downloads name the only
+    # branch, main; there is no dev branch, and nothing downloads from
+    # upstream's repository
+    [ "$NEODESK_RAW_BASE" = https://raw.githubusercontent.com/neodeskapp/neodesk/main ] \
+        || fail "install.sh downloads from $NEODESK_RAW_BASE"
     local hits
-    hits=$(cd "$SCRIPT_ROOT" && grep -nE 'raw\.githubusercontent\.com/(neodeskapp/betterdesk/dev/|UNITRONIX/BetterDesk/main/(install\.sh|betterdesk(-docker)?\.(sh|ps1)|docker-compose))|github\.com/neodeskapp/betterdesk/(blob|tree)/dev/' \
-        install.sh betterdesk.sh betterdesk.ps1 betterdesk-docker.sh docker-compose*.yml README.md SECURITY.md || true)
+    hits=$(cd "$SCRIPT_ROOT" && grep -nE 'raw\.githubusercontent\.com/(neodeskapp/neodesk/dev/|UNITRONIX/BetterDesk/)|github\.com/neodeskapp/neodesk/(blob|tree)/dev/' \
+        install.sh neodesk.sh neodesk.ps1 neodesk-docker.sh docker-compose*.yml README.md SECURITY.md || true)
     [ -z "$hits" ] || fail "one-liners name a branch without the current installers: $hits"
     local docker_base
     docker_base=$(
-        unset BETTERDESK_RAW_BASE BETTERDESK_BRANCH
-        BETTERDESK_DOCKER_SOURCED=1
+        unset NEODESK_RAW_BASE NEODESK_BRANCH
+        NEODESK_DOCKER_SOURCED=1
         # shellcheck disable=SC1091
-        source "$SCRIPT_ROOT/betterdesk-docker.sh"
-        printf '%s\n' "$BETTERDESK_RAW_BASE"
+        source "$SCRIPT_ROOT/neodesk-docker.sh"
+        printf '%s\n' "$NEODESK_RAW_BASE"
     )
-    [ "$docker_base" = https://raw.githubusercontent.com/neodeskapp/betterdesk/main ] \
-        || fail "betterdesk-docker.sh downloads from $docker_base"
-    grep -qF '$script:INSTALLER_REF = if ($env:INSTALLER_REF) { $env:INSTALLER_REF } else { "main" }' "$SCRIPT_ROOT/betterdesk.ps1" \
-        || fail "betterdesk.ps1 does not fetch itself from main"
+    [ "$docker_base" = https://raw.githubusercontent.com/neodeskapp/neodesk/main ] \
+        || fail "neodesk-docker.sh downloads from $docker_base"
+    grep -qF '$script:INSTALLER_REF = if ($env:INSTALLER_REF) { $env:INSTALLER_REF } else { "main" }' "$SCRIPT_ROOT/neodesk.ps1" \
+        || fail "neodesk.ps1 does not fetch itself from main"
 )
 
 test_bounded_go_commands

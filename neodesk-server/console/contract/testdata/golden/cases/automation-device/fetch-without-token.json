@@ -2,7 +2,7 @@
  "id": "automation-device/fetch-without-token",
  "request": {
   "method": "GET",
-  "path": "/api/bd/commands",
+  "path": "/api/nd/commands",
   "notes": [
    "no CSRF token",
    "no cookies"

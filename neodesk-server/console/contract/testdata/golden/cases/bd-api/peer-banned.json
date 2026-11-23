@@ -2,7 +2,7 @@
  "id": "bd-api/peer-banned",
  "request": {
   "method": "GET",
-  "path": "/api/bd/peer/900100028",
+  "path": "/api/nd/peer/900100028",
   "notes": [
    "header Authorization: Bearer {secret:device_token}",
    "no CSRF token",

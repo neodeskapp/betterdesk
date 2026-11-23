@@ -40,9 +40,9 @@
 
 	const title = $derived(
 		view === 'restarting'
-			? tf('settings.restart_prompt.title_progress', 'Restarting BetterDesk')
+			? tf('settings.restart_prompt.title_progress', 'Restarting NeoDesk')
 			: view === 'ready'
-				? tf('settings.restart_prompt.title_ready', 'BetterDesk is back')
+				? tf('settings.restart_prompt.title_ready', 'NeoDesk is back')
 				: view === 'failed'
 					? tf('settings.restart_prompt.title_failed', 'The restart needs attention')
 					: tf('settings.restart_prompt.title_pending', 'Restart needed')
@@ -52,7 +52,7 @@
 		view === 'restarting'
 			? tf(
 					'settings.restart_prompt.message_progress',
-					'The BetterDesk services are restarting. Keep this page open.'
+					'The NeoDesk services are restarting. Keep this page open.'
 				)
 			: view === 'ready'
 				? tf(
@@ -62,11 +62,11 @@
 				: view === 'failed'
 					? tf(
 							'settings.restart_prompt.message_failed',
-							'BetterDesk could not finish the restart. Check the service permissions, then try again.'
+							'NeoDesk could not finish the restart. Check the service permissions, then try again.'
 						)
 					: tf(
 							'settings.restart_prompt.message_pending',
-							'The settings you saved take effect after the BetterDesk services restart. Restart now, or cancel to put the previous values back.'
+							'The settings you saved take effect after the NeoDesk services restart. Restart now, or cancel to put the previous values back.'
 						)
 	);
 </script>

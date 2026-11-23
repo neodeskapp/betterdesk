@@ -2,7 +2,7 @@
  "id": "bd-api/connect-without-target",
  "request": {
   "method": "POST",
-  "path": "/api/bd/connect",
+  "path": "/api/nd/connect",
   "body": {},
   "notes": [
    "header Authorization: Bearer {secret:device_token}",

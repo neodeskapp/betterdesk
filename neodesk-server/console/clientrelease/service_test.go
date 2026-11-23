@@ -19,7 +19,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/updater"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
 )
 
 // fakeGitHub serves one release of the client fork.
@@ -51,7 +51,7 @@ func newFakeGitHub(t *testing.T, files map[string][]byte) *fakeGitHub {
 		f.mu.Lock()
 		f.hits[r.URL.Path]++
 		f.mu.Unlock()
-		if r.URL.Path == "/repos/trybetterdesk/betterdesk-client/releases/latest" {
+		if r.URL.Path == "/repos/neodeskapp/neodesk-client/releases/latest" {
 			if f.prereleases != nil {
 				http.NotFound(w, r)
 				return
@@ -59,7 +59,7 @@ func newFakeGitHub(t *testing.T, files map[string][]byte) *fakeGitHub {
 			_ = json.NewEncoder(w).Encode(map[string]any{"tag_name": "1.4.6-dev.3", "assets": assets()})
 			return
 		}
-		if r.URL.Path == "/repos/trybetterdesk/betterdesk-client/releases" && f.prereleases != nil {
+		if r.URL.Path == "/repos/neodeskapp/neodesk-client/releases" && f.prereleases != nil {
 			list := []map[string]any{}
 			for _, p := range f.prereleases {
 				entry := map[string]any{"assets": []map[string]any{}}
@@ -121,17 +121,17 @@ func newKey(t *testing.T) (ed25519.PublicKey, ed25519.PrivateKey) {
 // packages are a release's package files.
 func packages() map[string][]byte {
 	return map[string][]byte{
-		"betterdesk-1.4.6-dev.3-windows-x86_64.exe":             []byte("windows exe"),
-		"betterdesk-1.4.6-dev.3-linux-x86_64.deb":               []byte("debian package"),
-		"betterdesk-1.4.6-dev.3-linux-x86_64-portable.tar.gz":   []byte("portable tar"),
-		"betterdesk-1.4.6-dev.3-macos-aarch64.dmg":              []byte("disk image"),
-		"betterdesk-1.4.6-dev.3-windows-x86_64.msi":             []byte("not handed out"),
-		"betterdesk-1.4.6-dev.3-linux-x86_64-suse.rpm":          []byte("not handed out either"),
-		"generator-templates-1.4.6-dev.3.tar.gz":                []byte("templates"),
-		"betterdesk-1.4.6-dev.3-macos-aarch64-portable.zip":     []byte("app zip"),
-		"betterdesk-1.4.6-dev.3-linux-aarch64.rpm":              []byte("arm rpm"),
-		"betterdesk-1.4.6-dev.3-windows-aarch64.tar.gz":         []byte("build folder"),
-		"betterdesk-1.4.6-dev.3-linux-x86_64-portable.tar.gz.x": []byte("junk"),
+		"neodesk-1.4.6-dev.3-windows-x86_64.exe":             []byte("windows exe"),
+		"neodesk-1.4.6-dev.3-linux-x86_64.deb":               []byte("debian package"),
+		"neodesk-1.4.6-dev.3-linux-x86_64-portable.tar.gz":   []byte("portable tar"),
+		"neodesk-1.4.6-dev.3-macos-aarch64.dmg":              []byte("disk image"),
+		"neodesk-1.4.6-dev.3-windows-x86_64.msi":             []byte("not handed out"),
+		"neodesk-1.4.6-dev.3-linux-x86_64-suse.rpm":          []byte("not handed out either"),
+		"generator-templates-1.4.6-dev.3.tar.gz":             []byte("templates"),
+		"neodesk-1.4.6-dev.3-macos-aarch64-portable.zip":     []byte("app zip"),
+		"neodesk-1.4.6-dev.3-linux-aarch64.rpm":              []byte("arm rpm"),
+		"neodesk-1.4.6-dev.3-windows-aarch64.tar.gz":         []byte("build folder"),
+		"neodesk-1.4.6-dev.3-linux-x86_64-portable.tar.gz.x": []byte("junk"),
 	}
 }
 
@@ -205,7 +205,7 @@ func TestSignedReleaseIsOfferedAndEachPackageDownloadedOnce(t *testing.T) {
 			t.Fatalf("package %q %+v", text, offer)
 		}
 	}
-	if n := gh.hitsOf("/download/betterdesk-1.4.6-dev.3-windows-x86_64.exe"); n != 1 {
+	if n := gh.hitsOf("/download/neodesk-1.4.6-dev.3-windows-x86_64.exe"); n != 1 {
 		t.Fatalf("the package was downloaded %d times", n)
 	}
 	if _, _, err := s.Open(ctx, KindJoin, "linux", "x64", "tar.gz"); !errors.Is(err, ErrNoPackage) {
@@ -265,7 +265,7 @@ func TestReleaseSignedByAnotherKeyIsNotUsed(t *testing.T) {
 	if st := s.Status(context.Background()); !strings.Contains(st.Error, "signature") {
 		t.Fatalf("status %+v", st)
 	}
-	if n := gh.hitsOf("/download/betterdesk-1.4.6-dev.3-windows-x86_64.exe"); n != 0 {
+	if n := gh.hitsOf("/download/neodesk-1.4.6-dev.3-windows-x86_64.exe"); n != 0 {
 		t.Fatal("a package of an unsigned release was downloaded")
 	}
 }
@@ -284,7 +284,7 @@ func TestReleaseWithoutSignatureIsNotUsed(t *testing.T) {
 func TestPackageThatDoesNotMatchItsChecksumIsRefused(t *testing.T) {
 	pub, priv := newKey(t)
 	files := signedRelease(priv, packages())
-	files["betterdesk-1.4.6-dev.3-windows-x86_64.exe"] = []byte("tampered exe")
+	files["neodesk-1.4.6-dev.3-windows-x86_64.exe"] = []byte("tampered exe")
 	gh := newFakeGitHub(t, files)
 	s := newService(t, gh, pub, nil)
 	if _, _, err := s.Open(context.Background(), KindJoin, "windows", "x64", "exe"); !errors.Is(err, ErrUnavailable) {
@@ -361,7 +361,7 @@ func TestFolderSource(t *testing.T) {
 		if st := s.Status(ctx); st.Source != "folder" || !st.Verified {
 			t.Fatalf("status %+v", st)
 		}
-		write(dir, map[string][]byte{"betterdesk-1.4.6-dev.3-linux-x86_64.deb": []byte("changed")})
+		write(dir, map[string][]byte{"neodesk-1.4.6-dev.3-linux-x86_64.deb": []byte("changed")})
 		if _, _, err := s.Open(ctx, KindJoin, "linux", "x64", "deb"); err == nil {
 			t.Fatal("a changed file was served")
 		}

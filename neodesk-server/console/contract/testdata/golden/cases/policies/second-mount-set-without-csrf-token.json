@@ -2,7 +2,7 @@
  "id": "policies/second-mount-set-without-csrf-token",
  "request": {
   "method": "PUT",
-  "path": "/api/bd/api/panel/policies/no-such-org/update",
+  "path": "/api/nd/api/panel/policies/no-such-org/update",
   "body": {
    "idle_lock_timeout": 5,
    "max_session_duration": 60,
@@ -72,7 +72,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",

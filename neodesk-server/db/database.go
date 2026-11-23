@@ -1,4 +1,4 @@
-// Package db defines the database interface and models for the BetterDesk server.
+// Package db defines the database interface and models for the NeoDesk server.
 // Implementations: sqlite.go (default), postgres.go (PostgreSQL via pgx/v5).
 package db
 
@@ -667,7 +667,7 @@ type Database interface {
 	GetLatestPeerMetric(peerID string) (*PeerMetric, error)
 	CleanupOldMetrics(maxAge time.Duration) (int64, error) // Delete metrics older than maxAge
 
-	// BetterDesk device telemetry and heartbeat-delivered commands.
+	// NeoDesk device telemetry and heartbeat-delivered commands.
 	SaveTelemetrySnapshot(snapshot *TelemetrySnapshot) error
 	GetTelemetrySnapshot(deviceID, kind string) (*TelemetrySnapshot, error)
 	QueueTelemetryCommand(command *TelemetryCommand) (int64, error)

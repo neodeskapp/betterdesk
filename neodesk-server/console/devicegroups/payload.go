@@ -16,7 +16,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 )
 
 // GroupPayload is a submitted device group after normalising.

@@ -2,7 +2,7 @@
  "id": "automation-device/result-id-with-zeros",
  "request": {
   "method": "POST",
-  "path": "/api/bd/commands/00{command}/result",
+  "path": "/api/nd/commands/00{command}/result",
   "body": {
    "result": 5,
    "status": "running"

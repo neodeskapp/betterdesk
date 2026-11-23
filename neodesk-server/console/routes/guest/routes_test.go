@@ -15,14 +15,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
-	"github.com/unitronix/betterdesk-server/console/guestaccess"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/limits"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath/proxytest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/guestaccess"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // vector is a proxytest vector with what the vectors of this group add:
@@ -125,7 +125,7 @@ func cookies(header []string) string {
 	var guest []string
 	for _, value := range header {
 		// The session cookie of the test's pipeline is not the group's
-		if strings.HasPrefix(value, "bd.guest=") || strings.HasPrefix(value, "betterdesk.guest=") {
+		if strings.HasPrefix(value, "nd.guest=") || strings.HasPrefix(value, "neodesk.guest=") {
 			guest = append(guest, value)
 		}
 	}
@@ -336,7 +336,7 @@ func TestTokensWithoutATextAreRefused(t *testing.T) {
 	} {
 		refused("POST ?"+query, proxytest.Request{Method: "POST", Path: "/api/guest/mesh/devices/dev-1/desktop?" + query, Type: "application/json", Body: &body}, want)
 	}
-	cookie := map[string]string{"Cookie": `bd.guest=j:{"toString":1}`}
+	cookie := map[string]string{"Cookie": `nd.guest=j:{"toString":1}`}
 	refused("a cookie without a text", proxytest.Request{Path: "/api/guest/access-links/peers", Headers: cookie}, badGuest)
 	refused("a cookie without a text on the desktop route", proxytest.Request{Method: "POST", Path: "/api/guest/mesh/devices/dev-1/desktop", Headers: cookie, Type: "application/json", Body: &body}, badGuest)
 }
@@ -382,7 +382,7 @@ func TestDesktopSendsTheCheckedTokenAsGuest(t *testing.T) {
 		query, cookie, grant, sent string
 	}{
 		{"guest=&t=tok", "", `{"valid":true,"peer_ids":["dev-1"]}`, "guest=tok"},
-		{"guest=%20&x=1", "bd.guest=tok", `{"valid":true,"peer_ids":["dev-1"]}`, "guest=tok&x=1"},
+		{"guest=%20&x=1", "nd.guest=tok", `{"valid":true,"peer_ids":["dev-1"]}`, "guest=tok&x=1"},
 		{"t=tok&view_only=0", "", `{"valid":true,"peer_ids":["dev-1"],"view_only":true}`, "view_only=1&guest=tok"},
 		{"guest=%20tok%20", "", `{"valid":true,"peer_ids":["dev-1"]}`, "guest=tok"},
 	}

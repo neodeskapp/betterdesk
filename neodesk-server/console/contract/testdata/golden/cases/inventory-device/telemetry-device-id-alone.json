@@ -2,7 +2,7 @@
  "id": "inventory-device/telemetry-device-id-alone",
  "request": {
   "method": "POST",
-  "path": "/api/bd/telemetry",
+  "path": "/api/nd/telemetry",
   "body": {
    "cpu_usage_percent": 12.5,
    "device_id": "900100001",

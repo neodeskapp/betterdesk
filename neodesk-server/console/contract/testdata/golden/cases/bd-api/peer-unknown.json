@@ -2,7 +2,7 @@
  "id": "bd-api/peer-unknown",
  "request": {
   "method": "GET",
-  "path": "/api/bd/peer/contract-none",
+  "path": "/api/nd/peer/contract-none",
   "notes": [
    "header Authorization: Bearer {secret:device_token}",
    "no CSRF token",

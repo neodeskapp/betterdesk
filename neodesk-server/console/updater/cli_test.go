@@ -18,7 +18,7 @@ func TestUpdateCommand(t *testing.T) {
 	in.gh.serve(newTestRelease("3.6.0", newCommit, BranchStable))
 
 	code, out := runCLI(in, "", "--check")
-	if code != 0 || !strings.Contains(out, "Release: betterdesk-server 3.6.0 (2222222), tag v3.6.0") || !strings.Contains(out, "Check complete") {
+	if code != 0 || !strings.Contains(out, "Release: neodesk-server 3.6.0 (2222222), tag v3.6.0") || !strings.Contains(out, "Check complete") {
 		t.Errorf("check: %d\n%s", code, out)
 	}
 	in.assertUntouched()
@@ -33,7 +33,7 @@ func TestUpdateCommand(t *testing.T) {
 	}
 
 	code, out = runCLI(in, "yes\n", "--no-backup")
-	if code != 0 || !strings.Contains(out, "Installed: betterdesk-server 3.6.0") || !strings.Contains(out, "Backup: not created") {
+	if code != 0 || !strings.Contains(out, "Installed: neodesk-server 3.6.0") || !strings.Contains(out, "Backup: not created") {
 		t.Fatalf("install: %d\n%s", code, out)
 	}
 	if in.binaryContent() != string(binaryFor("3.6.0", newCommit)) {

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/meshcentral"
+	"github.com/neodeskapp/neodesk/neodesk-server/meshcentral"
 )
 
 // TestMeshAgentEnrollmentQueue: a new mesh agent's request is listed in

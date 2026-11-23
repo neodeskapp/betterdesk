@@ -6,14 +6,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/managedconfig"
-	"github.com/unitronix/betterdesk-server/console/updater"
+	consoleconfig "github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/managedconfig"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
 )
 
 const configUsage = `Usage:
-  betterdesk-server config check
-  betterdesk-server config set KEY=VALUE [KEY=VALUE ...]`
+  neodesk-server config check
+  neodesk-server config set KEY=VALUE [KEY=VALUE ...]`
 
 // Config is "config check" and "config set", what management-cli.js did
 // with "check" and "set".
@@ -28,7 +28,7 @@ const configUsage = `Usage:
 // prints what it did as JSON. A refused change prints its reason on
 // standard error and exits with 1.
 //
-// The env file is BETTERDESK_ENV_FILE, else .env in BETTERDESK_CONSOLE_PATH,
+// The env file is NEODESK_ENV_FILE, else .env in NEODESK_CONSOLE_PATH,
 // else in the console's folder. No action, -h and --help print the usage
 // and exit with 0; another action exits with 2.
 func Config(args []string, env Env) int {
@@ -50,9 +50,9 @@ func Config(args []string, env Env) int {
 		fmt.Fprintln(env.Stderr, err)
 		return 1
 	}
-	envFile := env.Getenv("BETTERDESK_ENV_FILE")
+	envFile := env.Getenv("NEODESK_ENV_FILE")
 	if envFile == "" {
-		envFile = filepath.Join(orElse(env.Getenv("BETTERDESK_CONSOLE_PATH"), cfg.ConsoleDir), ".env")
+		envFile = filepath.Join(orElse(env.Getenv("NEODESK_CONSOLE_PATH"), cfg.ConsoleDir), ".env")
 	}
 	if action == "check" {
 		svc := updater.New(updater.Options{

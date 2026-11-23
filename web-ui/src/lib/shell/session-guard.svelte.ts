@@ -4,8 +4,8 @@
  * idle sign-out.
  *
  * - Cross-tab: a tab whose session ended (401, or Sign out) tells the
- *   others through BroadcastChannel "betterdesk-panel-session" and the
- *   storage key "betterdesk.session.expired"; they go to the sign-in page.
+ *   others through BroadcastChannel "neodesk-panel-session" and the
+ *   storage key "neodesk.session.expired"; they go to the sign-in page.
  * - Idle: a warning `warnBeforeMs` before `idleTimeoutMs` without
  *   activity (mouse, keys, scroll, touch), with "Stay signed in". At the
  *   end the session is checked: a 401 is sign-in; a session another tab
@@ -24,8 +24,8 @@ import { ApiError, setUnauthorizedHandler } from '#lib/api/client.ts';
 import { poll } from '#lib/state/live.ts';
 import { verifySession, type SessionInfo } from './api.ts';
 
-export const CHANNEL = 'betterdesk-panel-session';
-export const EXPIRED_KEY = 'betterdesk.session.expired';
+export const CHANNEL = 'neodesk-panel-session';
+export const EXPIRED_KEY = 'neodesk.session.expired';
 export const SYNC_MS = 5 * 60_000;
 /** How soon the check at the end of the idle time runs again when it could not decide */
 export const RECHECK_MS = 30_000;

@@ -5,7 +5,7 @@
 // stand for a web app's build output.
 
 /*
- * BetterCore — BetterDesk MeshAgent module (AGPL-3.0).
+ * BetterCore — NeoDesk MeshAgent module (AGPL-3.0).
  * SPDX-License-Identifier: AGPL-3.0-only
  * Copyright (c) BetterDesk contributors
  *
@@ -132,7 +132,7 @@ function consentTitle(httprequest) {
     if (httprequest.soptions && httprequest.soptions.consentTitle) {
         return httprequest.soptions.consentTitle;
     }
-    return 'BetterDesk';
+    return 'NeoDesk';
 }
 
 function needsConsent(httprequest, flag) {
@@ -455,7 +455,7 @@ function kvm_consent_ok(ws) {
     if (needsConsent(ws.httprequest, CONSENT_DESKTOP_NOTIFY)) {
         try {
             var who = ws.httprequest.realname || ws.httprequest.username || 'operator';
-            require('toaster').Toast('BetterDesk', 'Remote desktop session started by ' + who, ws.tsid);
+            require('toaster').Toast('NeoDesk', 'Remote desktop session started by ' + who, ws.tsid);
         } catch (ex) { /* ignore */ }
     }
     if ((ws.httprequest.desktopviewonly !== true) && hasRemoteControl(ws.httprequest)) {

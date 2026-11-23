@@ -19,12 +19,12 @@ $ErrorActionPreference = 'Stop'
 $profileInstallsService = __INSTALL_SERVICE__
 $profileAutostarts = __AUTOSTART__
 $app = @(
-    (Join-Path $PSScriptRoot 'betterdesk.exe'),
+    (Join-Path $PSScriptRoot 'neodesk.exe'),
     (Join-Path $PSScriptRoot 'rustdesk.exe')
 ) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 
 if (-not $app) {
-    throw 'BetterDesk executable was not found next to this installer.'
+    throw 'NeoDesk executable was not found next to this installer.'
 }
 
 $appName = [IO.Path]::GetFileNameWithoutExtension($app)
@@ -53,7 +53,7 @@ if ($isUninstall) {
     if ($profileInstallsService -and (Test-Path -LiteralPath $app)) {
         $process = Start-Process -FilePath $app -ArgumentList '--uninstall-service' -Wait -PassThru -WindowStyle Hidden
         if ($process.ExitCode -ne 0) {
-            throw "BetterDesk service uninstall failed with exit code $($process.ExitCode)."
+            throw "NeoDesk service uninstall failed with exit code $($process.ExitCode)."
         }
     }
     exit 0
@@ -62,11 +62,11 @@ if ($isUninstall) {
 if ($profileInstallsService) {
     $process = Start-Process -FilePath $app -ArgumentList '--install-service' -Wait -PassThru -WindowStyle Hidden
     if ($process.ExitCode -ne 0) {
-        throw "BetterDesk service installation failed with exit code $($process.ExitCode)."
+        throw "NeoDesk service installation failed with exit code $($process.ExitCode)."
     }
     $service = Get-Service -Name $serviceName -ErrorAction Stop
     if ($service.Status -notin @('Running', 'StartPending')) {
-        throw "BetterDesk service is not running (status: $($service.Status))."
+        throw "NeoDesk service is not running (status: $($service.Status))."
     }
 }
 
@@ -80,9 +80,9 @@ if ($profileAutostarts -and (-not $profileInstallsService -or $UseScheduledTask)
 }
 
 if (-not $profileInstallsService -and -not $profileAutostarts) {
-    Write-Host "BetterDesk installed without service or autostart."
+    Write-Host "NeoDesk installed without service or autostart."
 } else {
-    Write-Host "BetterDesk Support startup configuration installed successfully."
+    Write-Host "NeoDesk Support startup configuration installed successfully."
 }
 `
 
@@ -106,11 +106,11 @@ func WindowsInstallerScript(o InstallerOptions) string {
 	return strings.Replace(script, "__AUTOSTART__", psBool(o.Autostart), 1)
 }
 
-// writeWindowsInstallers writes Install-BetterDesk.ps1 and
-// Uninstall-BetterDesk.ps1 into dir.
+// writeWindowsInstallers writes Install-NeoDesk.ps1 and
+// Uninstall-NeoDesk.ps1 into dir.
 func writeWindowsInstallers(dir string, o InstallerOptions) error {
 	script := []byte(WindowsInstallerScript(o))
-	for _, name := range []string{"Install-BetterDesk.ps1", "Uninstall-BetterDesk.ps1"} {
+	for _, name := range []string{"Install-NeoDesk.ps1", "Uninstall-NeoDesk.ps1"} {
 		if err := os.WriteFile(filepath.Join(dir, name), script, 0o666); err != nil {
 			return err
 		}
@@ -128,8 +128,8 @@ func shellBool(v bool) string {
 func linuxInstaller(o InstallerOptions) string {
 	return `#!/bin/sh
 set -eu
-APP_DIR="/opt/betterdesk-support-agent"
-UNIT="betterdesk-support-agent.service"
+APP_DIR="/opt/neodesk-support-agent"
+UNIT="neodesk-support-agent.service"
 SOURCE_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 INSTALL_SERVICE="` + shellBool(o.InstallService) + `"
 AUTOSTART="` + shellBool(o.Autostart) + `"
@@ -140,17 +140,17 @@ fi
 
 mkdir -p "$APP_DIR"
 cp -a "$SOURCE_DIR"/. "$APP_DIR"/
-chmod 755 "$APP_DIR"/betterdesk 2>/dev/null || true
+chmod 755 "$APP_DIR"/neodesk 2>/dev/null || true
 if [ "$INSTALL_SERVICE" = 1 ]; then
     cat >"/etc/systemd/system/$UNIT" <<EOF
 [Unit]
-Description=BetterDesk Support Agent
+Description=NeoDesk Support Agent
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=$APP_DIR/betterdesk --service
+ExecStart=$APP_DIR/neodesk --service
 Restart=on-failure
 RestartSec=5
 User=root
@@ -166,15 +166,15 @@ EOF
         systemctl disable "$UNIT" 2>/dev/null || true
     fi
 fi
-echo "BetterDesk Support Agent installed."
+echo "NeoDesk Support Agent installed."
 `
 }
 
 func linuxUninstaller(o InstallerOptions) string {
 	return `#!/bin/sh
 set -eu
-APP_DIR="/opt/betterdesk-support-agent"
-UNIT="betterdesk-support-agent.service"
+APP_DIR="/opt/neodesk-support-agent"
+UNIT="neodesk-support-agent.service"
 if [ "$(id -u)" -ne 0 ]; then
     exec sudo "$0" "$@"
 fi
@@ -184,7 +184,7 @@ if [ "` + shellBool(o.InstallService) + `" = 1 ]; then
     systemctl daemon-reload
 fi
 rm -rf "$APP_DIR"
-echo "BetterDesk Support Agent removed."
+echo "NeoDesk Support Agent removed."
 `
 }
 
@@ -197,20 +197,20 @@ func macInstaller(o InstallerOptions) string {
 set -eu
 SOURCE_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 APP="$(find "$SOURCE_DIR" -maxdepth 2 -name '*.app' -type d | head -n 1)"
-TARGET="/Applications/BetterDesk Support Agent.app"
-PLIST="/Library/LaunchDaemons/com.unitronix.betterdesk-support-agent.plist"
-if [ -z "$APP" ]; then echo "BetterDesk app bundle not found" >&2; exit 1; fi
+TARGET="/Applications/NeoDesk Support Agent.app"
+PLIST="/Library/LaunchDaemons/sk.neode.neodesk-support-agent.plist"
+if [ -z "$APP" ]; then echo "NeoDesk app bundle not found" >&2; exit 1; fi
 if [ "$(id -u)" -ne 0 ]; then exec sudo "$0" "$@"; fi
 rm -rf "$TARGET"
 ditto "$APP" "$TARGET"
 if [ "` + shellBool(o.InstallService) + `" = 1 ]; then
     SERVICE="$TARGET/Contents/MacOS/service"
-    [ -x "$SERVICE" ] || SERVICE="$TARGET/Contents/MacOS/betterdesk"
+    [ -x "$SERVICE" ] || SERVICE="$TARGET/Contents/MacOS/neodesk"
     cat >"$PLIST" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-<key>Label</key><string>com.unitronix.betterdesk-support-agent</string>
+<key>Label</key><string>sk.neode.neodesk-support-agent</string>
 <key>ProgramArguments</key><array><string>$SERVICE</string><string>--service</string></array>
 <key>RunAtLoad</key><` + runAtLoad + `/>
 <key>KeepAlive</key><true/>
@@ -218,23 +218,23 @@ if [ "` + shellBool(o.InstallService) + `" = 1 ]; then
 EOF
     launchctl bootout system "$PLIST" 2>/dev/null || true
     launchctl bootstrap system "$PLIST"
-    if [ "` + shellBool(o.Autostart) + `" = 1 ]; then launchctl kickstart -k system/com.unitronix.betterdesk-support-agent; fi
+    if [ "` + shellBool(o.Autostart) + `" = 1 ]; then launchctl kickstart -k system/sk.neode.neodesk-support-agent; fi
 fi
-echo "BetterDesk Support Agent installed."
+echo "NeoDesk Support Agent installed."
 `
 }
 
 func macUninstaller(o InstallerOptions) string {
 	return `#!/bin/sh
 set -eu
-PLIST="/Library/LaunchDaemons/com.unitronix.betterdesk-support-agent.plist"
+PLIST="/Library/LaunchDaemons/sk.neode.neodesk-support-agent.plist"
 if [ "$(id -u)" -ne 0 ]; then exec sudo "$0" "$@"; fi
 if [ "` + shellBool(o.InstallService) + `" = 1 ]; then
     launchctl bootout system "$PLIST" 2>/dev/null || true
     rm -f "$PLIST"
 fi
-rm -rf "/Applications/BetterDesk Support Agent.app"
-echo "BetterDesk Support Agent removed."
+rm -rf "/Applications/NeoDesk Support Agent.app"
+echo "NeoDesk Support Agent removed."
 `
 }
 
@@ -247,11 +247,11 @@ func UnixInstallerScripts(platform string, o InstallerOptions) (install, uninsta
 	return macInstaller(o), macUninstaller(o)
 }
 
-// writeUnixInstallers writes install-betterdesk-support.sh and
-// uninstall-betterdesk-support.sh, both executable, into dir.
+// writeUnixInstallers writes install-neodesk-support.sh and
+// uninstall-neodesk-support.sh, both executable, into dir.
 func writeUnixInstallers(dir, platform string, o InstallerOptions) error {
 	install, uninstall := UnixInstallerScripts(platform, o)
-	for name, text := range map[string]string{"install-betterdesk-support.sh": install, "uninstall-betterdesk-support.sh": uninstall} {
+	for name, text := range map[string]string{"install-neodesk-support.sh": install, "uninstall-neodesk-support.sh": uninstall} {
 		path := filepath.Join(dir, name)
 		if err := os.WriteFile(path, []byte(text), 0o755); err != nil {
 			return err

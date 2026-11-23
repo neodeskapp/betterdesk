@@ -30,11 +30,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/backup"
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // The setting keys and the limits of the schedule.
@@ -324,7 +324,7 @@ func (s *Service) ValidateDestinationPath(p string) (string, error) {
 	}
 	app := filepath.Clean(s.o.AppDir)
 	if s.o.AppDir != "" && (resolved == app || strings.HasPrefix(resolved, app+string(filepath.Separator))) {
-		return "", errors.New("The BetterDesk application directory cannot be used as a backup destination")
+		return "", errors.New("The NeoDesk application directory cannot be used as a backup destination")
 	}
 	return resolved, nil
 }
@@ -524,7 +524,7 @@ func (s *Service) write(ctx context.Context, status *branding.Object) (*Result, 
 	return &Result{Filename: finalPath, SHA256: digest, Validation: validation, Deleted: deleted}, nil
 }
 
-var archiveName = regexp.MustCompile(`^betterdesk-backup-[^\n\r\x{2028}\x{2029}]*\.tar\.gz$`)
+var archiveName = regexp.MustCompile(`^neodesk-backup-[^\n\r\x{2028}\x{2029}]*\.tar\.gz$`)
 
 // prune removes the archives beyond keep, newest first by modification
 // time, each with its .sha256. A file that cannot be removed stays and is
@@ -568,7 +568,7 @@ func prune(dir string, keep int) []string {
 
 // temporaryName is the name of a run's temporary file:
 // <archive name>.<pid>.<milliseconds>.tmp.
-var temporaryName = regexp.MustCompile(`^betterdesk-backup-[^\n\r\x{2028}\x{2029}]*\.tar\.gz\.[0-9]+\.[0-9]+\.tmp$`)
+var temporaryName = regexp.MustCompile(`^neodesk-backup-[^\n\r\x{2028}\x{2029}]*\.tar\.gz\.[0-9]+\.[0-9]+\.tmp$`)
 
 // staleTemporary is the age from which a temporary file counts as left by
 // a run that ended without removing it (a crash, a kill); a younger one
@@ -683,12 +683,12 @@ func (s *Service) TestDestination(v any) (string, error) {
 	if err := os.MkdirAll(destination, 0o777); err != nil {
 		return "", backup.NodeFSError(err, "mkdir", destination)
 	}
-	probe := filepath.Join(destination, fmt.Sprintf(".betterdesk-backup-probe-%d-%d", s.o.PID, s.o.Now().UnixMilli()))
+	probe := filepath.Join(destination, fmt.Sprintf(".neodesk-backup-probe-%d-%d", s.o.PID, s.o.Now().UnixMilli()))
 	f, err := os.OpenFile(probe, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {
 		return "", backup.NodeFSError(err, "open", probe)
 	}
-	_, werr := f.WriteString("BetterDesk backup destination test\n")
+	_, werr := f.WriteString("NeoDesk backup destination test\n")
 	if cerr := f.Close(); werr == nil {
 		werr = cerr
 	}

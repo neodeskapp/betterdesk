@@ -1,6 +1,6 @@
-# Verify that the running BetterDesk host matches a documented firewall profile.
+# Verify that the running NeoDesk host matches a documented firewall profile.
 #
-# Profiles (what each port does: https://betterde.sk/docs/operations/ports):
+# Profiles (what each port does: https://neode.sk/docs/operations/ports):
 #   a  minimal, no reverse proxy: 21116 and 21117 open, the client API
 #      reachable on 21114
 #   b  behind a reverse proxy on 443 (recommended): the console and the
@@ -109,7 +109,7 @@ try {
 
 Write-Host ''
 if ($failCount -gt 0) {
-    Write-Host "Profile $Profile`: $failCount problem(s), $warnCount warning(s). Ports: https://betterde.sk/docs/operations/ports" -ForegroundColor Red
+    Write-Host "Profile $Profile`: $failCount problem(s), $warnCount warning(s). Ports: https://neode.sk/docs/operations/ports" -ForegroundColor Red
     exit 1
 }
 Write-Host "Profile $Profile`: OK ($warnCount warning(s))" -ForegroundColor Green

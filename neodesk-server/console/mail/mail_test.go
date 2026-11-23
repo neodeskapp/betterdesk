@@ -11,10 +11,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // newTestService returns a service on db with a recording transport and
@@ -246,7 +246,7 @@ func TestTLSVerification(t *testing.T) {
 func TestMailsEscapeWhatTheyPrint(t *testing.T) {
 	hostile := `<script>alert("x")</script>&`
 	escaped := `&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;&amp;`
-	_, _, html, err := alertMail(
+	_, _, html, err := alertMail("NeoDesk",
 		Alert{Severity: jsbind.String(hostile), DeviceID: jsbind.String(hostile), Message: jsbind.String(hostile), TriggeredAt: jsbind.String(hostile)},
 		AlertRule{Name: jsbind.String(hostile), Description: jsbind.String(hostile), ConditionValue: jsbind.Number(1)})
 	if err != nil {
@@ -255,7 +255,7 @@ func TestMailsEscapeWhatTheyPrint(t *testing.T) {
 	if strings.Count(html, escaped) != 6 || strings.Contains(html, "<script>") {
 		t.Fatalf("alert mail: %s", html)
 	}
-	_, _, html, err = helpRequestMail(HelpRequest{Hostname: jsbind.String(hostile), DeviceID: jsbind.String(hostile), Message: jsbind.String(hostile)},
+	_, _, html, err = helpRequestMail("NeoDesk", HelpRequest{Hostname: jsbind.String(hostile), DeviceID: jsbind.String(hostile), Message: jsbind.String(hostile)},
 		jsbind.String(hostile), `https://panel.example.org/?a="b"&c=<d>`)
 	if err != nil {
 		t.Fatal(err)

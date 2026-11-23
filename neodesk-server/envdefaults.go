@@ -5,17 +5,17 @@ import (
 	"os"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/cli"
+	"github.com/neodeskapp/neodesk/neodesk-server/cli"
 )
 
-// applyEnvDefaultsFromOS gives the env file BETTERDESK_ENV_FILE names the
+// applyEnvDefaultsFromOS gives the env file NEODESK_ENV_FILE names the
 // keys of the built-in template it lacks (cli.ApplyEnvDefaults) and reads
 // the file again, so this start has them. An update from the console's
 // Updates page replaces only the binary; this brings the env file to what
 // the installers' update leaves (DECISIONS A125). A file that cannot be
 // read or written is reported on stderr and the start goes on.
 func applyEnvDefaultsFromOS() {
-	path := os.Getenv("BETTERDESK_ENV_FILE")
+	path := os.Getenv("NEODESK_ENV_FILE")
 	if path == "" {
 		return
 	}

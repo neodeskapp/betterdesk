@@ -11,10 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 func TestNormalizeAbDataField(t *testing.T) {
@@ -40,15 +40,15 @@ func TestNormalizeAbDataField(t *testing.T) {
 	}
 }
 
-func TestClassifyBetterDeskSupportSKU(t *testing.T) {
+func TestClassifyNeoDeskSupportSKU(t *testing.T) {
 	t.Parallel()
-	if got := classifyBetterDeskDevice("betterdesk-support", "normal"); got != "betterdesk-support" {
+	if got := classifyNeoDeskDevice("neodesk-support", "normal"); got != "neodesk-support" {
 		t.Fatalf("support SKU classified as %q", got)
 	}
-	if got := classifyBetterDeskDevice("", "incoming-only"); got != "betterdesk-support" {
+	if got := classifyNeoDeskDevice("", "incoming-only"); got != "neodesk-support" {
 		t.Fatalf("incoming-only mode classified as %q", got)
 	}
-	if got := classifyBetterDeskDevice("betterdesk-desktop", "normal"); got != "betterdesk" {
+	if got := classifyNeoDeskDevice("neodesk-desktop", "normal"); got != "neodesk" {
 		t.Fatalf("full client classified as %q", got)
 	}
 }

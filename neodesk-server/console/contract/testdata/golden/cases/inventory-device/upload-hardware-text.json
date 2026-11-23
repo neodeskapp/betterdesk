@@ -2,7 +2,7 @@
  "id": "inventory-device/upload-hardware-text",
  "request": {
   "method": "POST",
-  "path": "/api/bd/inventory",
+  "path": "/api/nd/inventory",
   "body": {
    "collected_at": "",
    "device_id": "900100001",

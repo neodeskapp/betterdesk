@@ -9,15 +9,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/resourcecontrol"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath/proxytest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/resourcecontrol"
 )
 
 // register mounts the group the way console/routes.go does.
 func register(d *kit.Deps) {
 	resourcecontrol.Register(d)
-	resourcecontrol.Register(d.At("/api/bd"))
+	resourcecontrol.Register(d.At("/api/nd"))
 }
 
 // fixes are the vectors of vectors.json whose answer a bug fix of
@@ -64,12 +64,12 @@ func TestRegisteredRoutes(t *testing.T) {
 		"GET /api/panel/resource-control/compliance",
 		"GET /api/panel/resource-control/org-policy",
 		"PUT /api/panel/resource-control/org-policy",
-		"GET /api/bd/resource-policy",
+		"GET /api/nd/resource-policy",
 	}
 	var want []string
 	for _, route := range routes {
 		method, pattern, _ := strings.Cut(route, " ")
-		want = append(want, route, method+" /api/bd"+pattern)
+		want = append(want, route, method+" /api/nd"+pattern)
 	}
 	sort.Strings(want)
 	if strings.Join(got, "\n") != strings.Join(want, "\n") {

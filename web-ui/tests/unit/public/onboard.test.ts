@@ -30,7 +30,7 @@ function dl(os: 'windows' | 'macos' | 'linux', arch: string, format: string) {
 		format,
 		version: '1.4.6',
 		size: 1000,
-		file: `BetterDesk-Setup-desk.example.com-ABCD2345.${format}`,
+		file: `NeoDesk-Setup-desk.example.com-ABCD2345.${format}`,
 		url: `/api/onboard/public/ABCD2345/download?os=${os}&arch=${arch}&format=${format}`
 	};
 }
@@ -55,7 +55,7 @@ function code(over: Partial<PublicCode> = {}): PublicCode {
 		],
 		install_command: "curl -fsSL 'https://desk.example.com/join/ABCD2345/install.sh' | sudo sh",
 		run_command: '',
-		deep_link: 'betterdesk://join/desk.example.com/ABCD2345',
+		deep_link: 'neodesk://join/desk.example.com/ABCD2345',
 		release_error: '',
 		...over
 	};
@@ -154,7 +154,7 @@ describe('the invite page', () => {
 		expect(button.getAttribute('href')).toBe(
 			'/api/onboard/public/ABCD2345/download?os=windows&arch=x64&format=exe'
 		);
-		expect(button.getAttribute('download')).toBe('BetterDesk-Setup-desk.example.com-ABCD2345.exe');
+		expect(button.getAttribute('download')).toBe('NeoDesk-Setup-desk.example.com-ABCD2345.exe');
 		expect(screen.getByText(/onboard.public.publisher/)).toBeInTheDocument();
 		expect(screen.getByText('ABCD-2345')).toBeInTheDocument();
 		expect(document.querySelector('.insecure')).toBeNull();

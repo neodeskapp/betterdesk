@@ -1,10 +1,10 @@
 {
   "version": "1.0",
-  "type": "betterdesk-theme",
-  "displayName": "BetterDesk Dark",
+  "type": "neodesk-theme",
+  "displayName": "NeoDesk Dark",
   "branding": {
-    "appName": "BetterDesk",
-    "appDescription": "BetterDesk Server Management",
+    "appName": "NeoDesk",
+    "appDescription": "NeoDesk Server Management",
     "logoType": "default",
     "logoIcon": "dns",
     "logoSvg": "",

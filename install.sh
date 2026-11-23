@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
 # =============================================================================
-# BetterDesk — one-line installer (Linux)
+# NeoDesk — one-line installer (Linux)
 #
-# Docker (default: the published image in one container, betterdesk-docker.sh):
-#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/install.sh | sudo bash
+# Docker (default: the published image in one container, neodesk-docker.sh):
+#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install.sh | sudo bash
 #
 # Docker, move a two-container (split) install to the one container:
 #   curl -fsSL .../install.sh | sudo bash -s -- --migrate-split
 #
-# Native (git clone + betterdesk.sh --auto): the newest stable release, or
+# Native (git clone + neodesk.sh --auto): the newest stable release, or
 # the development build while the repository has none:
-#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/install.sh | sudo bash -s -- --native
+#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install.sh | sudo bash -s -- --native
 # Native, the development build: add --channel dev
 #
 # Options (pass after "bash -s --"):
 #   --docker | --native          Installation mode (default: docker)
 #   --migrate-split              Replace a split install (server + console containers)
 #                                with the one container, which takes its data over
-#   --install-dir PATH             Install directory (default: /opt/betterdesk)
+#   --install-dir PATH             Install directory (default: /opt/neodesk)
 #   --version TAG                  Docker image tag to pin (default: latest, the newest release)
 #   --branch BRANCH                Git branch of the installer files (default: main)
 #   --channel stable|dev           Native: release channel (default: stable)
@@ -32,33 +32,33 @@
 #   --check-permissions            Check update/config/restart capabilities
 #   --set-config KEY=VALUE         Apply an allowlisted runtime setting
 #   --purge                        With --uninstall: also remove Docker volumes
-#   --uninstall                    Remove BetterDesk Docker installation
+#   --uninstall                    Remove NeoDesk Docker installation
 #   --help                         Show usage
 #
 # Environment overrides (same names as flags where applicable):
-#   BETTERDESK_REPO, BETTERDESK_BRANCH, BETTERDESK_VERSION, INSTALL_DIR,
-#   RELAY_MODE, RELAY_SERVERS, ADMIN_PASSWORD, BETTERDESK_RAW_BASE
+#   NEODESK_REPO, NEODESK_BRANCH, NEODESK_VERSION, INSTALL_DIR,
+#   RELAY_MODE, RELAY_SERVERS, ADMIN_PASSWORD, NEODESK_RAW_BASE
 # =============================================================================
 
 set -euo pipefail
 
 VERSION="1.0.0"
-BETTERDESK_REPO="${BETTERDESK_REPO:-neodeskapp/betterdesk}"
-# The branch whose files this installer fetches (betterdesk.sh for a native
-# install, betterdesk-docker.sh for Docker): the repository's branch, main.
-# Override with --branch / BETTERDESK_BRANCH. The branch names no release
+NEODESK_REPO="${NEODESK_REPO:-neodeskapp/neodesk}"
+# The branch whose files this installer fetches (neodesk.sh for a native
+# install, neodesk-docker.sh for Docker): the repository's branch, main.
+# Override with --branch / NEODESK_BRANCH. The branch names no release
 # channel; that is --channel.
-BETTERDESK_INSTALLER_CHANNEL="main"
-BETTERDESK_BRANCH="${BETTERDESK_BRANCH:-$BETTERDESK_INSTALLER_CHANNEL}"
+NEODESK_INSTALLER_CHANNEL="main"
+NEODESK_BRANCH="${NEODESK_BRANCH:-$NEODESK_INSTALLER_CHANNEL}"
 # The release channel of a native install: stable or dev; empty leaves it
-# to betterdesk.sh (stable, or dev while there is no stable release)
+# to neodesk.sh (stable, or dev while there is no stable release)
 RELEASE_CHANNEL=""
-# An image tag given (--version, BETTERDESK_VERSION) pins it; without one
+# An image tag given (--version, NEODESK_VERSION) pins it; without one
 # the install runs latest, the newest release (DECISIONS A163)
-BETTERDESK_VERSION_GIVEN="${BETTERDESK_VERSION:-}"
-BETTERDESK_VERSION="${BETTERDESK_VERSION:-3.6.2}"
-BETTERDESK_RAW_BASE="${BETTERDESK_RAW_BASE:-https://raw.githubusercontent.com/${BETTERDESK_REPO}/${BETTERDESK_BRANCH}}"
-INSTALL_DIR="${INSTALL_DIR:-/opt/betterdesk}"
+NEODESK_VERSION_GIVEN="${NEODESK_VERSION:-}"
+NEODESK_VERSION="${NEODESK_VERSION:-3.6.2}"
+NEODESK_RAW_BASE="${NEODESK_RAW_BASE:-https://raw.githubusercontent.com/${NEODESK_REPO}/${NEODESK_BRANCH}}"
+INSTALL_DIR="${INSTALL_DIR:-/opt/neodesk}"
 INSTALL_MODE="docker"
 MIGRATE_SPLIT=false
 RELAY_MODE="${RELAY_MODE:-auto}"
@@ -114,10 +114,10 @@ else
     C_RESET='' C_BOLD=''
 fi
 
-# The BetterDesk mark: the logo's square (b), circle (g) and their overlap
+# The NeoDesk mark: the logo's square (b), circle (g) and their overlap
 # (t) on a 12 x 12 grid, sampled from its geometry. Two rows make one line
 # of half blocks.
-BD_MARK_ROWS=(
+ND_MARK_ROWS=(
     '......gggg..'
     '....ggggggg.'
     '....gggggggg'
@@ -180,21 +180,21 @@ mark_line() {
     REPLY="$line${label:+   $label}"
 }
 
-# print_header: the BetterDesk mark beside the name, what this script is
+# print_header: the NeoDesk mark beside the name, what this script is
 # and the release it installs; one plain line without colour (no
 # terminal, NO_COLOR). The managers this script runs leave theirs out
-# (BETTERDESK_HEADER_SHOWN).
+# (NEODESK_HEADER_SHOWN).
 print_header() {
-    local title="Installer ${BETTERDESK_VERSION}" line
-    export BETTERDESK_HEADER_SHOWN=1
+    local title="Installer ${NEODESK_VERSION}" line
+    export NEODESK_HEADER_SHOWN=1
     if [ -z "$COLOR_DEPTH" ]; then
-        printf 'BetterDesk %s\n' "$title"
+        printf 'NeoDesk %s\n' "$title"
         return 0
     fi
-    local labels=('' '' "${C_BOLD}BetterDesk${C_RESET}" "$title" '' '')
+    local labels=('' '' "${C_BOLD}NeoDesk${C_RESET}" "$title" '' '')
     printf '\n'
     for ((line = 0; line < 6; line++)); do
-        mark_line "${BD_MARK_ROWS[line * 2]}" "${BD_MARK_ROWS[line * 2 + 1]}" "${labels[line]}"
+        mark_line "${ND_MARK_ROWS[line * 2]}" "${ND_MARK_ROWS[line * 2 + 1]}" "${labels[line]}"
         printf '%b\n' "$REPLY"
     done
     printf '\n'
@@ -211,11 +211,11 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --docker) INSTALL_MODE="docker"; shift ;;
         --migrate-split) MIGRATE_SPLIT=true; shift ;;
-        --split) die "--split is gone: BetterDesk runs as one container. An existing split install moves with --migrate-split" ;;
+        --split) die "--split is gone: NeoDesk runs as one container. An existing split install moves with --migrate-split" ;;
         --native) INSTALL_MODE="native"; shift ;;
         --install-dir) INSTALL_DIR="$2"; shift 2 ;;
-        --version) BETTERDESK_VERSION="$2"; BETTERDESK_VERSION_GIVEN="$2"; shift 2 ;;
-        --branch) BETTERDESK_BRANCH="$2"; BETTERDESK_RAW_BASE="https://raw.githubusercontent.com/${BETTERDESK_REPO}/${BETTERDESK_BRANCH}"; shift 2 ;;
+        --version) NEODESK_VERSION="$2"; NEODESK_VERSION_GIVEN="$2"; shift 2 ;;
+        --branch) NEODESK_BRANCH="$2"; NEODESK_RAW_BASE="https://raw.githubusercontent.com/${NEODESK_REPO}/${NEODESK_BRANCH}"; shift 2 ;;
         --channel)
             case "${2:-}" in
                 stable|main|dev|development) RELEASE_CHANNEL="$2" ;;
@@ -363,10 +363,10 @@ configure_firewall() {
     if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -qi "active"; then
         for port in $docker_ports; do
             if [ "$port" = "21116" ]; then
-                ufw allow 21116/tcp comment "BetterDesk signal TCP" >/dev/null 2>&1 && created=$((created + 1)) || true
-                ufw allow 21116/udp comment "BetterDesk signal UDP" >/dev/null 2>&1 && created=$((created + 1)) || true
+                ufw allow 21116/tcp comment "NeoDesk signal TCP" >/dev/null 2>&1 && created=$((created + 1)) || true
+                ufw allow 21116/udp comment "NeoDesk signal UDP" >/dev/null 2>&1 && created=$((created + 1)) || true
             elif ! ufw status 2>/dev/null | grep -qE "^${port}[/ ]"; then
-                ufw allow "${port}/tcp" comment "BetterDesk port ${port}" >/dev/null 2>&1 && created=$((created + 1)) || true
+                ufw allow "${port}/tcp" comment "NeoDesk port ${port}" >/dev/null 2>&1 && created=$((created + 1)) || true
             fi
         done
         ufw reload >/dev/null 2>&1 || true
@@ -396,38 +396,38 @@ configure_firewall() {
 # or its compose file runs a console service.
 is_split_install() {
     local compose_dir="$1"
-    grep -qs '^BETTERDESK_DOCKER_LAYOUT=split' "${compose_dir}/.env" \
-        || grep -Eqs 'ghcr\.io/[a-z0-9._-]+/betterdesk-console' "${compose_dir}/docker-compose.yml"
+    grep -qs '^NEODESK_DOCKER_LAYOUT=split' "${compose_dir}/.env" \
+        || grep -Eqs 'ghcr\.io/[a-z0-9._-]+/neodesk-console' "${compose_dir}/docker-compose.yml"
 }
 
-# fetch_docker_manager DEST: betterdesk-docker.sh of this installer's
-# branch, which installs, updates and removes BetterDesk on Docker.
+# fetch_docker_manager DEST: neodesk-docker.sh of this installer's
+# branch, which installs, updates and removes NeoDesk on Docker.
 fetch_docker_manager() {
     local dest="$1"
     mkdir -p "$(dirname "$dest")"
-    fetch_url_to_file "${BETTERDESK_RAW_BASE}/betterdesk-docker.sh" "$dest.tmp" 4096 524288
-    if ! grep -q 'BETTERDESK_DOCKER_SOURCED' "$dest.tmp"; then
+    fetch_url_to_file "${NEODESK_RAW_BASE}/neodesk-docker.sh" "$dest.tmp" 4096 524288
+    if ! grep -q 'NEODESK_DOCKER_SOURCED' "$dest.tmp"; then
         rm -f "$dest.tmp"
-        die "The downloaded betterdesk-docker.sh is not BetterDesk's Docker manager (${BETTERDESK_RAW_BASE})"
+        die "The downloaded neodesk-docker.sh is not NeoDesk's Docker manager (${NEODESK_RAW_BASE})"
     fi
     install -m 0755 "$dest.tmp" "$dest"
     rm -f "$dest.tmp"
 }
 
-# install_docker_mode: betterdesk-docker.sh in the compose folder installs
+# install_docker_mode: neodesk-docker.sh in the compose folder installs
 # the one container there (or updates the install it finds), with the
 # options given here; a split install is taken over (--adopt) on its data.
 install_docker_mode() {
     local compose_dir="${INSTALL_DIR}/docker"
-    local manager="${compose_dir}/betterdesk-docker.sh"
+    local manager="${compose_dir}/neodesk-docker.sh"
     local args=(install --dir "$compose_dir" --yes)
 
-    log "BetterDesk Docker installer v${VERSION}: betterdesk-docker.sh installs the one container in ${compose_dir}"
+    log "NeoDesk Docker installer v${VERSION}: neodesk-docker.sh installs the one container in ${compose_dir}"
     if is_split_install "$compose_dir"; then
         if [ "$MIGRATE_SPLIT" != true ]; then
-            warn "This is a split install (server and console containers). BetterDesk now runs as one container."
+            warn "This is a split install (server and console containers). NeoDesk now runs as one container."
         fi
-        warn "Its data moves into the one container (betterdesk-docker.sh --adopt); the old containers are kept, stopped and renamed."
+        warn "Its data moves into the one container (neodesk-docker.sh --adopt); the old containers are kept, stopped and renamed."
         args+=(--adopt)
     elif [ "$MIGRATE_SPLIT" = true ]; then
         log "No split install in ${compose_dir}; installing the one container"
@@ -437,12 +437,12 @@ install_docker_mode() {
     else
         args+=(--relay-mode "$RELAY_MODE")
     fi
-    [ -z "$BETTERDESK_VERSION_GIVEN" ] || args+=(--tag "$BETTERDESK_VERSION_GIVEN")
+    [ -z "$NEODESK_VERSION_GIVEN" ] || args+=(--tag "$NEODESK_VERSION_GIVEN")
     [ "$SKIP_DOCKER_INSTALL" != true ] || args+=(--no-install-docker)
 
     fetch_docker_manager "$manager"
     ok "Docker manager: $manager"
-    export ADMIN_PASSWORD BETTERDESK_RAW_BASE
+    export ADMIN_PASSWORD NEODESK_RAW_BASE
     "$manager" "${args[@]}"
     configure_firewall
     log "Later: sudo bash $manager (update), status, logs, backup, uninstall (see --help)"
@@ -450,7 +450,7 @@ install_docker_mode() {
 
 rescue_docker_mode() {
     local rescue_dir="${INSTALL_DIR}/rescue"
-    local rescue_script="${rescue_dir}/betterdesk-docker.sh"
+    local rescue_script="${rescue_dir}/neodesk-docker.sh"
     local rescue_flag
 
     case "$RESCUE_ACTION" in
@@ -459,7 +459,7 @@ rescue_docker_mode() {
         rescue|*) rescue_flag="--rescue" ;;
     esac
 
-    log "Preparing BetterDesk Docker rescue toolkit..."
+    log "Preparing NeoDesk Docker rescue toolkit..."
     require_command curl
     if [ "$RESCUE_ACTION" != "diagnose" ]; then
         check_docker || die "Docker is not available or the daemon is not running"
@@ -477,7 +477,7 @@ rescue_docker_mode() {
 uninstall_docker_mode() {
     local compose_dir="${INSTALL_DIR}/docker"
     local compose_file="${compose_dir}/docker-compose.yml"
-    local manager="${compose_dir}/betterdesk-docker.sh"
+    local manager="${compose_dir}/neodesk-docker.sh"
 
     require_root
     # The manager of the install removes it and says what it leaves
@@ -493,7 +493,7 @@ uninstall_docker_mode() {
         die "No Docker installation found at ${compose_dir}"
     fi
 
-    log "Stopping BetterDesk Docker stack..."
+    log "Stopping NeoDesk Docker stack..."
     if [ "$DO_PURGE" = true ]; then
         (cd "$compose_dir" && "${COMPOSE_CMD[@]}" --env-file .env down -v)
         ok "Containers and volumes removed"
@@ -529,8 +529,8 @@ native_clone_source() {
     staging_parent=$(mktemp -d "${INSTALL_DIR}/.source-clone.XXXXXX")
     staging_repo="${staging_parent}/source"
 
-    if ! git clone --depth 1 --branch "$BETTERDESK_BRANCH" \
-        "https://github.com/${BETTERDESK_REPO}.git" "$staging_repo"; then
+    if ! git clone --depth 1 --branch "$NEODESK_BRANCH" \
+        "https://github.com/${NEODESK_REPO}.git" "$staging_repo"; then
         rm -rf "$staging_parent"
         if [ -n "$backup_dir" ] && [ ! -e "$repo_dir" ]; then
             mv "$backup_dir" "$repo_dir" 2>/dev/null || true
@@ -541,9 +541,9 @@ native_clone_source() {
     # The native update path keeps local Go runtime data beside the source.
     # Carry it forward without replacing anything created by the fresh clone.
     if [ -n "$backup_dir" ] \
-        && [ -d "$backup_dir/betterdesk-server/data" ] \
-        && [ ! -e "$staging_repo/betterdesk-server/data" ]; then
-        if ! cp -a "$backup_dir/betterdesk-server/data" "$staging_repo/betterdesk-server/"; then
+        && [ -d "$backup_dir/neodesk-server/data" ] \
+        && [ ! -e "$staging_repo/neodesk-server/data" ]; then
+        if ! cp -a "$backup_dir/neodesk-server/data" "$staging_repo/neodesk-server/"; then
             rm -rf "$staging_parent"
             if [ -n "$backup_dir" ]; then
                 mv "$backup_dir" "$repo_dir" 2>/dev/null || true
@@ -570,22 +570,22 @@ install_native_mode() {
     local source_backup=""
     local checkout_error=""
 
-    log "BetterDesk native installer v${VERSION}"
-    log "Native install branch: ${BETTERDESK_BRANCH} (override with --branch)"
+    log "NeoDesk native installer v${VERSION}"
+    log "Native install branch: ${NEODESK_BRANCH} (override with --branch)"
 
     require_command git
     relay=$(resolve_relay_address)
 
     if [ -d "$repo_dir/.git" ]; then
-        log "Updating existing clone in ${repo_dir} to ${BETTERDESK_BRANCH}..."
-        git -C "$repo_dir" remote set-url origin "https://github.com/${BETTERDESK_REPO}.git" || true
-        git -C "$repo_dir" fetch --depth 1 origin "$BETTERDESK_BRANCH"
+        log "Updating existing clone in ${repo_dir} to ${NEODESK_BRANCH}..."
+        git -C "$repo_dir" remote set-url origin "https://github.com/${NEODESK_REPO}.git" || true
+        git -C "$repo_dir" fetch --depth 1 origin "$NEODESK_BRANCH"
         # Shallow clones previously pinned to another branch need a branch switch.
         checkout_error=$(mktemp)
-        if git -C "$repo_dir" checkout -B "$BETTERDESK_BRANCH" "FETCH_HEAD" 2>"$checkout_error"; then
+        if git -C "$repo_dir" checkout -B "$NEODESK_BRANCH" "FETCH_HEAD" 2>"$checkout_error"; then
             rm -f "$checkout_error"
         else
-            warn "Could not switch existing clone to ${BETTERDESK_BRANCH}."
+            warn "Could not switch existing clone to ${NEODESK_BRANCH}."
             if [ -n "$(git -C "$repo_dir" status --short 2>/dev/null || true)" ]; then
                 warn "The existing clone contains local changes; preserving it before recloning."
                 cat "$checkout_error" >&2 || true
@@ -598,12 +598,12 @@ install_native_mode() {
                 die "Cannot preserve ${repo_dir}; refusing to remove the existing native source"
             fi
             if ! native_clone_source "$repo_dir" "$source_backup"; then
-                die "Could not clone ${BETTERDESK_REPO}@${BETTERDESK_BRANCH}; original source preserved at ${source_backup}"
+                die "Could not clone ${NEODESK_REPO}@${NEODESK_BRANCH}; original source preserved at ${source_backup}"
             fi
             warn "Previous native source preserved at ${source_backup}"
         fi
     else
-        log "Cloning ${BETTERDESK_REPO} (${BETTERDESK_BRANCH})..."
+        log "Cloning ${NEODESK_REPO} (${NEODESK_BRANCH})..."
         if [ -e "$repo_dir" ]; then
             if ! source_backup=$(native_backup_source "$repo_dir"); then
                 die "Cannot preserve ${repo_dir}; refusing to remove the existing native source"
@@ -611,7 +611,7 @@ install_native_mode() {
             warn "Existing non-Git source preserved at ${source_backup}"
         fi
         if ! native_clone_source "$repo_dir" "$source_backup"; then
-            die "Could not clone ${BETTERDESK_REPO}@${BETTERDESK_BRANCH}; original source preserved at ${source_backup:-none}"
+            die "Could not clone ${NEODESK_REPO}@${NEODESK_BRANCH}; original source preserved at ${source_backup:-none}"
         fi
         if [ -n "$source_backup" ]; then
             warn "Previous native source preserved at ${source_backup}"
@@ -619,30 +619,30 @@ install_native_mode() {
     fi
 
     commit_sha=$(git -C "$repo_dir" rev-parse --short HEAD 2>/dev/null || echo "unknown")
-    log "Using ${BETTERDESK_REPO}@${BETTERDESK_BRANCH} (${commit_sha})"
+    log "Using ${NEODESK_REPO}@${NEODESK_BRANCH} (${commit_sha})"
 
-    chmod +x "${repo_dir}/betterdesk.sh"
+    chmod +x "${repo_dir}/neodesk.sh"
 
-    log "Running betterdesk.sh --auto..."
+    log "Running neodesk.sh --auto..."
     export RELAY_MODE RELAY_SERVERS="$relay"
     if [ -n "$ADMIN_PASSWORD" ]; then
         export ADMIN_PASSWORD
     fi
     # The release channel: --channel (dev updates from the dev pre-release,
-    # stable from the newest release), else betterdesk.sh's own choice
+    # stable from the newest release), else neodesk.sh's own choice
     case "$RELEASE_CHANNEL" in
         stable|main) export UPDATE_GITHUB_BRANCH=main ;;
         dev|development) export UPDATE_GITHUB_BRANCH=dev ;;
     esac
     [ -z "${UPDATE_GITHUB_BRANCH:-}" ] || log "Update channel: ${UPDATE_GITHUB_BRANCH}"
-    (cd "$repo_dir" && ./betterdesk.sh --auto --relay-servers "$relay")
+    (cd "$repo_dir" && ./neodesk.sh --auto --relay-servers "$relay")
 
     ok "Native installation finished. See ${repo_dir} for logs and credentials."
 }
 
 uninstall_native_mode() {
     local repo_dir="${INSTALL_DIR}/source"
-    local native_installer="${repo_dir}/betterdesk.sh"
+    local native_installer="${repo_dir}/neodesk.sh"
 
     require_root
     if [ ! -x "$native_installer" ]; then
@@ -660,14 +660,14 @@ uninstall_native_mode() {
 rescue_native_mode() {
     local repo_dir="${INSTALL_DIR}/source"
 
-    if [ "$RESCUE_ACTION" = "repair-permissions" ] && [ -x "$repo_dir/betterdesk.sh" ]; then
-        "$repo_dir/betterdesk.sh" --repair-permissions
+    if [ "$RESCUE_ACTION" = "repair-permissions" ] && [ -x "$repo_dir/neodesk.sh" ]; then
+        "$repo_dir/neodesk.sh" --repair-permissions
         return $?
     fi
-    warn "Native rescue is handled by betterdesk.sh on the installed host."
-    if [ -x "$repo_dir/betterdesk.sh" ]; then
+    warn "Native rescue is handled by neodesk.sh on the installed host."
+    if [ -x "$repo_dir/neodesk.sh" ]; then
         echo "Run the interactive native repair toolkit with:"
-        echo "  sudo ${repo_dir}/betterdesk.sh"
+        echo "  sudo ${repo_dir}/neodesk.sh"
         echo "Then choose: Repair Installation or Diagnostics."
         return 0
     fi
@@ -677,8 +677,8 @@ rescue_native_mode() {
 
 run_native_management_action() {
     local repo_dir="${INSTALL_DIR}/source"
-    local native_installer="${repo_dir}/betterdesk.sh"
-    [ -x "$native_installer" ] || die "Native BetterDesk manager not found at ${native_installer}"
+    local native_installer="${repo_dir}/neodesk.sh"
+    [ -x "$native_installer" ] || die "Native NeoDesk manager not found at ${native_installer}"
     local args=()
     [ "$CHECK_CAPABILITIES" = true ] && args+=(--check-permissions)
     [ "$REPAIR_PERMISSIONS" = true ] && args+=(--repair-permissions)
@@ -690,8 +690,8 @@ run_native_management_action() {
 }
 
 run_docker_management_action() {
-    local manager="${INSTALL_DIR}/docker/betterdesk-docker.sh"
-    [ -x "$manager" ] || die "Docker BetterDesk manager not found at ${manager}"
+    local manager="${INSTALL_DIR}/docker/neodesk-docker.sh"
+    [ -x "$manager" ] || die "Docker NeoDesk manager not found at ${manager}"
     local args=(--dir "${INSTALL_DIR}/docker")
     [ "$CHECK_CAPABILITIES" = true ] && args+=(--check-permissions)
     [ "$REPAIR_PERMISSIONS" = true ] && args+=(--repair-permissions)

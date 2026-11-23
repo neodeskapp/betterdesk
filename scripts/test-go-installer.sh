@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Unit checks of betterdesk.sh's upgrade to the server with its web console:
+# Unit checks of neodesk.sh's upgrade to the server with its web console:
 # reading the old units, carrying their settings into .env and writing the
 # one unit. Runs without systemd: the functions work on files in a
 # temporary folder.
@@ -16,11 +16,11 @@ fail() {
 load() {
     set --
     # shellcheck disable=SC1091
-    source "$SCRIPT_ROOT/betterdesk.sh"
+    source "$SCRIPT_ROOT/neodesk.sh"
     TEST_DIR=$(mktemp -d)
-    SERVER_UNIT="$TEST_DIR/betterdesk-server.service"
-    LEGACY_CONSOLE_UNIT="$TEST_DIR/betterdesk-console.service"
-    RUSTDESK_PATH="$TEST_DIR/opt-betterdesk"
+    SERVER_UNIT="$TEST_DIR/neodesk-server.service"
+    LEGACY_CONSOLE_UNIT="$TEST_DIR/neodesk-console.service"
+    RUSTDESK_PATH="$TEST_DIR/opt-neodesk"
     CONSOLE_PATH="$TEST_DIR/console"
     mkdir -p "$RUSTDESK_PATH" "$CONSOLE_PATH"
     LOG_FILE=/dev/null
@@ -30,36 +30,36 @@ load() {
 # fake_current_binary: an installed binary that checks release signatures
 # itself (it names verify-release in its help), as this release's does.
 fake_current_binary() {
-    printf '#!/bin/sh\n# verify-release --manifest FILE (the commands it has)\nexit 0\n' > "$RUSTDESK_PATH/betterdesk-server"
-    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    printf '#!/bin/sh\n# verify-release --manifest FILE (the commands it has)\nexit 0\n' > "$RUSTDESK_PATH/neodesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
 }
 
-# The units an install with the Node.js console has (betterdesk.sh 3.5.221).
+# The units an install with the Node.js console has (neodesk.sh 3.5.221).
 write_node_era_units() {
     cat > "$SERVER_UNIT" <<'UNIT'
 [Service]
 Type=simple
 User=root
-EnvironmentFile=-/opt/BetterDeskConsole/.env
-Environment=AUTH_DB_PATH=/opt/BetterDeskConsole/data/auth.db
+EnvironmentFile=-/opt/NeoDeskConsole/.env
+Environment=AUTH_DB_PATH=/opt/NeoDeskConsole/data/auth.db
 Environment=MESH_ENABLED=Y
 Environment=SIGNAL_PORT=21116
 Environment=GO_API_PORT=21114
 Environment=CONSOLE_PORT=0
 Environment="P2P_FIRST=Y"
 Environment=P2P_FALLBACK_MS=2000 SAME_NAT_RELAY=Y
-ExecStart=/opt/betterdesk/betterdesk-server -mode all -relay-servers 203.0.113.7 -db "postgres://u:p$$w%%d@localhost:5432/bd" -key-file /opt/betterdesk/id_ed25519 -api-port 21121 -signal-rate-limit-per-ip 20 -init-admin-pass S3cr$$t -tls-cert /opt/betterdesk/ssl/betterdesk.crt -tls-key /opt/betterdesk/ssl/betterdesk.key -tls-signal -tls-relay -tls-api
+ExecStart=/opt/neodesk/neodesk-server -mode all -relay-servers 203.0.113.7 -db "postgres://u:p$$w%%d@localhost:5432/bd" -key-file /opt/neodesk/id_ed25519 -api-port 21121 -signal-rate-limit-per-ip 20 -init-admin-pass S3cr$$t -tls-cert /opt/neodesk/ssl/neodesk.crt -tls-key /opt/neodesk/ssl/neodesk.key -tls-signal -tls-relay -tls-api
 UNIT
     cat > "$LEGACY_CONSOLE_UNIT" <<'UNIT'
 [Service]
-User=betterdesk
-EnvironmentFile=-/opt/BetterDeskConsole/.env
+User=neodesk
+EnvironmentFile=-/opt/NeoDeskConsole/.env
 ExecStart=/usr/bin/node server.js
 Environment=NODE_ENV=production
 Environment=PORT=8080
 Environment=HOST=0.0.0.0
-Environment=NODE_EXTRA_CA_CERTS=/opt/betterdesk/ssl/betterdesk.crt
-Environment=BETTERDESK_SERVER_BINARY=/usr/local/bin/betterdesk-server
+Environment=NODE_EXTRA_CA_CERTS=/opt/neodesk/ssl/neodesk.crt
+Environment=NEODESK_SERVER_BINARY=/usr/local/bin/neodesk-server
 UNIT
 }
 
@@ -68,7 +68,7 @@ test_unit_environment() (
     write_node_era_units
     local got
     got=$(unit_environment "$SERVER_UNIT" | tr '\n' ' ')
-    [ "$got" = "AUTH_DB_PATH=/opt/BetterDeskConsole/data/auth.db MESH_ENABLED=Y SIGNAL_PORT=21116 GO_API_PORT=21114 CONSOLE_PORT=0 P2P_FIRST=Y P2P_FALLBACK_MS=2000 SAME_NAT_RELAY=Y " ] \
+    [ "$got" = "AUTH_DB_PATH=/opt/NeoDeskConsole/data/auth.db MESH_ENABLED=Y SIGNAL_PORT=21116 GO_API_PORT=21114 CONSOLE_PORT=0 P2P_FIRST=Y P2P_FALLBACK_MS=2000 SAME_NAT_RELAY=Y " ] \
         || fail "unit_environment: $got"
     [ "$(unit_env_value "$LEGACY_CONSOLE_UNIT" PORT)" = 8080 ] || fail "unit_env_value PORT"
     [ -z "$(unit_env_value "$LEGACY_CONSOLE_UNIT" MISSING)" ] || fail "unit_env_value of a missing key"
@@ -80,11 +80,11 @@ test_exec_args() (
     write_node_era_units
     local args
     args=$(unit_exec_args "$SERVER_UNIT")
-    [ "$args" = "-mode all -relay-servers 203.0.113.7 -key-file /opt/betterdesk/id_ed25519 -api-port 21114 -signal-rate-limit-per-ip 20 -tls-cert /opt/betterdesk/ssl/betterdesk.crt -tls-key /opt/betterdesk/ssl/betterdesk.key -tls-signal -tls-relay" ] \
+    [ "$args" = "-mode all -relay-servers 203.0.113.7 -key-file /opt/neodesk/id_ed25519 -api-port 21114 -signal-rate-limit-per-ip 20 -tls-cert /opt/neodesk/ssl/neodesk.crt -tls-key /opt/neodesk/ssl/neodesk.key -tls-signal -tls-relay" ] \
         || fail "unit_exec_args: $args"
     [ "$(unit_exec_flag_value "$SERVER_UNIT" -db)" = 'postgres://u:p$w%d@localhost:5432/bd' ] || fail "-db value"
     [ "$(unit_exec_flag_value "$SERVER_UNIT" -init-admin-pass)" = 'S3cr$t' ] || fail "-init-admin-pass value"
-    [ "$(unit_exec_binary "$SERVER_UNIT")" = /opt/betterdesk/betterdesk-server ] || fail "unit_exec_binary"
+    [ "$(unit_exec_binary "$SERVER_UNIT")" = /opt/neodesk/neodesk-server ] || fail "unit_exec_binary"
     rm -rf "$TEST_DIR"
 )
 
@@ -105,8 +105,8 @@ test_carry_unit_environment() (
     grep -qx 'P2P_FIRST=Y' "$env_file" || fail "P2P_FIRST not carried"
     grep -qx 'SAME_NAT_RELAY=Y' "$env_file" || fail "SAME_NAT_RELAY not carried"
     [ "$(grep -c '^SIGNAL_PORT=' "$env_file")" = 1 ] || fail "SIGNAL_PORT carried although .env sets it (empty)"
-    if grep -q '^CONSOLE_PORT=\|^NODE_EXTRA_CA_CERTS=\|^BETTERDESK_SERVER_BINARY=' "$env_file"; then
-        fail "a skipped key was carried: $(grep '^CONSOLE_PORT=\|^NODE_EXTRA_CA_CERTS=\|^BETTERDESK_SERVER_BINARY=' "$env_file")"
+    if grep -q '^CONSOLE_PORT=\|^NODE_EXTRA_CA_CERTS=\|^NEODESK_SERVER_BINARY=' "$env_file"; then
+        fail "a skipped key was carried: $(grep '^CONSOLE_PORT=\|^NODE_EXTRA_CA_CERTS=\|^NEODESK_SERVER_BINARY=' "$env_file")"
     fi
     rm -rf "$TEST_DIR"
 )
@@ -115,13 +115,13 @@ test_write_server_unit() (
     load
     write_server_unit "-mode all -api-port 21114" ""
     local unit="$SERVER_UNIT"
-    grep -qx "User=betterdesk" "$unit" || fail "unit user"
-    grep -qx "Environment=BETTERDESK_SUPERVISOR=systemd" "$unit" || fail "BETTERDESK_SUPERVISOR"
-    grep -qx "Environment=BETTERDESK_ENV_FILE=$CONSOLE_PATH/.env" "$unit" || fail "BETTERDESK_ENV_FILE"
+    grep -qx "User=neodesk" "$unit" || fail "unit user"
+    grep -qx "Environment=NEODESK_SUPERVISOR=systemd" "$unit" || fail "NEODESK_SUPERVISOR"
+    grep -qx "Environment=NEODESK_ENV_FILE=$CONSOLE_PATH/.env" "$unit" || fail "NEODESK_ENV_FILE"
     grep -qx "SuccessExitStatus=3" "$unit" || fail "SuccessExitStatus"
     if grep -q 'ENROLLMENT_MODE' "$unit"; then fail "the unit sets the enrollment mode"; fi
     grep -qx "Restart=always" "$unit" || fail "Restart"
-    grep -qx "ExecStart=$RUSTDESK_PATH/betterdesk-server -mode all -api-port 21114" "$unit" || fail "ExecStart"
+    grep -qx "ExecStart=$RUSTDESK_PATH/neodesk-server -mode all -api-port 21114" "$unit" || fail "ExecStart"
     if grep -q 'CONSOLE_PORT\|EnvironmentFile\|__EMPTY__\|AmbientCapabilities' "$unit"; then
         fail "unexpected line in the unit: $(grep 'CONSOLE_PORT\|EnvironmentFile\|__EMPTY__\|AmbientCapabilities' "$unit")"
     fi
@@ -145,7 +145,7 @@ test_update_keeps_the_admins_ports() (
     print_info() { :; }
     write_server_unit "-mode all -api-port 21114" ""
     if grep -q 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT"; then fail "the unit sets $(grep 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT")"; fi
-    sed -i '/^Environment=BETTERDESK_SUPERVISOR=/a Environment=SIGNAL_PORT=31116\nEnvironment=RELAY_PORT=31117' "$SERVER_UNIT"
+    sed -i '/^Environment=NEODESK_SUPERVISOR=/a Environment=SIGNAL_PORT=31116\nEnvironment=RELAY_PORT=31117' "$SERVER_UNIT"
     printf 'SIGNAL_PORT=21116\nRELAY_PORT=21117\nSESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
     maybe_update_services
     if grep -q 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT"; then fail "the updated unit sets $(grep 'SIGNAL_PORT\|RELAY_PORT' "$SERVER_UNIT")"; fi
@@ -173,26 +173,26 @@ test_node_era_detection() (
     rm -rf "$TEST_DIR"
 )
 
-# Stopping stale servers ends a running betterdesk-server, never a process
+# Stopping stale servers ends a running neodesk-server, never a process
 # that only names the binary in its arguments (the installer run with
-# --binary /dist/betterdesk-server-linux-amd64).
+# --binary /dist/neodesk-server-linux-amd64).
 test_kill_stale_processes() (
     load
     print_warning() { :; }
     mkdir -p "$TEST_DIR/bin"
-    cp "$(command -v sleep)" "$TEST_DIR/bin/betterdesk-server"
-    "$TEST_DIR/bin/betterdesk-server" 60 &
+    cp "$(command -v sleep)" "$TEST_DIR/bin/neodesk-server"
+    "$TEST_DIR/bin/neodesk-server" 60 &
     local server=$!
-    bash -c 'sleep 60; : --binary /dist/betterdesk-server-linux-amd64' &
+    bash -c 'sleep 60; : --binary /dist/neodesk-server-linux-amd64' &
     local installer=$!
     sleep 0.5
-    kill_stale_processes "betterdesk-server"
+    kill_stale_processes "neodesk-server"
     if kill -0 "$server" 2>/dev/null; then
         kill "$server" "$installer" 2>/dev/null || true
-        fail "the stale betterdesk-server kept running"
+        fail "the stale neodesk-server kept running"
     fi
     if ! kill -0 "$installer" 2>/dev/null; then
-        fail "a process that only names betterdesk-server in its arguments was killed"
+        fail "a process that only names neodesk-server in its arguments was killed"
     fi
     kill "$installer" 2>/dev/null || true
     wait 2>/dev/null || true
@@ -204,16 +204,16 @@ test_kill_stale_processes() (
 # starts, and the console keeps an admin it did not make.
 test_fresh_env_admin_password() (
     load
-    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+    cat > "$RUSTDESK_PATH/neodesk-server" <<'FAKE'
 #!/bin/bash
 # Stands in for the binary: upgrade-env --from FILE (the commands it has)
 if [ "$1 $2" = "env merge" ]; then
-    printf 'DEFAULT_ADMIN_PASSWORD=%s\nDB_TYPE=sqlite\n' "$BD_SUBST_DEFAULT_ADMIN_PASSWORD" > "$4"
+    printf 'DEFAULT_ADMIN_PASSWORD=%s\nDB_TYPE=sqlite\n' "$ND_SUBST_DEFAULT_ADMIN_PASSWORD" > "$4"
     echo '{"success":true,"mode":"fresh","added":[]}'
 fi
 exit 0
 FAKE
-    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
     ADMIN_PASSWORD='Fresh-Admin-Pass-1'
     USE_POSTGRESQL=false
     merge_console_env true >/dev/null
@@ -236,20 +236,20 @@ database_lines() {
 # binary that reads it; older env files are read as the server reads them.
 test_database_url_only() (
     load
-    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+    cat > "$RUSTDESK_PATH/neodesk-server" <<'FAKE'
 #!/bin/bash
 # Stands in for the binary: upgrade-env --from FILE (the commands it has),
 # and the server's warning "Remove DB_TYPE to use DATABASE_URL". env merge
 # writes the template's lines, or appends those the file lacks
 if [ "$1 $2" = "env merge" ]; then
     case " $* " in *" --fresh "*) : > "$4" ;; esac
-    grep -q '^DEFAULT_ADMIN_PASSWORD=' "$4" 2>/dev/null || printf 'DEFAULT_ADMIN_PASSWORD=%s\n' "$BD_SUBST_DEFAULT_ADMIN_PASSWORD" >> "$4"
-    grep -q '^DATABASE_URL=' "$4" 2>/dev/null || printf 'DATABASE_URL=%s\n' "$BD_SUBST_DATABASE_URL" >> "$4"
+    grep -q '^DEFAULT_ADMIN_PASSWORD=' "$4" 2>/dev/null || printf 'DEFAULT_ADMIN_PASSWORD=%s\n' "$ND_SUBST_DEFAULT_ADMIN_PASSWORD" >> "$4"
+    grep -q '^DATABASE_URL=' "$4" 2>/dev/null || printf 'DATABASE_URL=%s\n' "$ND_SUBST_DATABASE_URL" >> "$4"
     echo '{"success":true,"mode":"merge","added":[]}'
 fi
 exit 0
 FAKE
-    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
     ADMIN_PASSWORD='Database-Url-Pass-1'
     USE_POSTGRESQL=false
     merge_console_env true >/dev/null
@@ -320,7 +320,7 @@ CASES
 test_update_channel_in_env() (
     export UPDATE_GITHUB_BRANCH=dev
     load
-    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+    cat > "$RUSTDESK_PATH/neodesk-server" <<'FAKE'
 #!/bin/bash
 # Stands in for the binary: upgrade-env --from FILE (the commands it has)
 if [ "$1 $2" = "env merge" ]; then
@@ -329,7 +329,7 @@ if [ "$1 $2" = "env merge" ]; then
 fi
 exit 0
 FAKE
-    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
     ADMIN_PASSWORD='Channel-Test-1'
     USE_POSTGRESQL=false
     merge_console_env true >/dev/null
@@ -348,7 +348,7 @@ FAKE
 )
 
 # The server's own updater reads the channel from .env, so a given channel
-# is in .env before betterdesk-server update runs
+# is in .env before neodesk-server update runs
 test_update_channel_before_server_update() (
     export UPDATE_GITHUB_BRANCH=dev
     load
@@ -366,20 +366,20 @@ test_update_channel_before_server_update() (
     }
     update_go_install >/dev/null 2>&1 || true
     [ "$(cat "$TEST_DIR/seen" 2>/dev/null)" = "UPDATE_GITHUB_BRANCH=dev" ] \
-        || fail "betterdesk-server update ran with $(cat "$TEST_DIR/seen" 2>/dev/null || echo 'no channel') in .env"
+        || fail "neodesk-server update ran with $(cat "$TEST_DIR/seen" 2>/dev/null || echo 'no channel') in .env"
     rm -rf "$TEST_DIR"
 )
 
 test_update_channel_kept_without_one() (
     unset UPDATE_GITHUB_BRANCH
     load
-    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+    cat > "$RUSTDESK_PATH/neodesk-server" <<'FAKE'
 #!/bin/bash
 # Stands in for the binary: upgrade-env --from FILE (the commands it has)
 [ "$1 $2" = "env merge" ] && echo '{"success":true,"mode":"merge","added":[]}'
 exit 0
 FAKE
-    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
     USE_POSTGRESQL=false
     printf 'UPDATE_GITHUB_BRANCH=dev\nDEFAULT_ADMIN_PASSWORD=x\n' > "$CONSOLE_PATH/.env"
     merge_console_env false >/dev/null
@@ -441,14 +441,14 @@ test_releases_come_from_the_fork() (
     load
     local base
     base=$(release_base_url)
-    [ "$base" = "https://github.com/neodeskapp/betterdesk/releases/latest/download" ] \
+    [ "$base" = "https://github.com/neodeskapp/neodesk/releases/latest/download" ] \
         || fail "the stable channel downloads from $base"
     UPDATE_GITHUB_BRANCH=dev
     base=$(release_base_url)
-    [ "$base" = "https://github.com/neodeskapp/betterdesk/releases/download/dev" ] \
+    [ "$base" = "https://github.com/neodeskapp/neodesk/releases/download/dev" ] \
         || fail "the development channel downloads from $base"
     write_server_unit "-mode all" ""
-    grep -qx "Documentation=https://github.com/neodeskapp/betterdesk" "$SERVER_UNIT" \
+    grep -qx "Documentation=https://github.com/neodeskapp/neodesk" "$SERVER_UNIT" \
         || fail "the unit's documentation link: $(grep '^Documentation=' "$SERVER_UNIT")"
     rm -rf "$TEST_DIR"
 )
@@ -459,7 +459,7 @@ test_channel_and_download_errors() (
     unset UPDATE_GITHUB_BRANCH RELEASE_BASE_URL UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO
     set -- --channel dev
     # shellcheck disable=SC1091
-    source "$SCRIPT_ROOT/betterdesk.sh"
+    source "$SCRIPT_ROOT/neodesk.sh"
     [ "$UPDATE_GITHUB_BRANCH" = dev ] && [ "$UPDATE_GITHUB_BRANCH_GIVEN" = dev ] \
         || fail "--channel dev gives the channel '$UPDATE_GITHUB_BRANCH' (given '$UPDATE_GITHUB_BRANCH_GIVEN')"
     load
@@ -479,19 +479,19 @@ test_channel_and_download_errors() (
         *"Could not reach"*"--binary"*) ;;
         *) fail "a download without network says: $out" ;;
     esac
-    if bash "$SCRIPT_ROOT/betterdesk.sh" --channel nightly >/dev/null 2>&1; then fail "--channel nightly was taken"; fi
+    if bash "$SCRIPT_ROOT/neodesk.sh" --channel nightly >/dev/null 2>&1; then fail "--channel nightly was taken"; fi
     rm -rf "$TEST_DIR"
 )
 
 # L141: the installer runs piped from curl, takes no answers from a pipe,
-# and leaves the betterdesk command behind for updates and the uninstall.
+# and leaves the neodesk command behind for updates and the uninstall.
 test_one_command_install() (
     local out
     # main runs: it asks for root, or as root it looks for an install
-    out=$(cd "$(mktemp -d)" && timeout 60 bash -s -- --check-permissions < "$SCRIPT_ROOT/betterdesk.sh" 2>&1 || true)
+    out=$(cd "$(mktemp -d)" && timeout 60 bash -s -- --check-permissions < "$SCRIPT_ROOT/neodesk.sh" 2>&1 || true)
     case "$out" in
         *"requires root"*|*"Detecting installation"*) ;;
-        *) fail "betterdesk.sh piped into bash did not start: $out" ;;
+        *) fail "neodesk.sh piped into bash did not start: $out" ;;
     esac
     load
     AUTO_MODE=false
@@ -502,25 +502,25 @@ test_one_command_install() (
         *no) ;;
         *) fail "without a terminal a question did not take its default: $out" ;;
     esac
-    MANAGER_COMMAND="$TEST_DIR/sbin/betterdesk"
+    MANAGER_COMMAND="$TEST_DIR/sbin/neodesk"
     install_manager_command >/dev/null
-    [ -x "$MANAGER_COMMAND" ] || fail "no betterdesk command was left behind"
-    cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/betterdesk.sh" || fail "the betterdesk command is not this installer"
+    [ -x "$MANAGER_COMMAND" ] || fail "no neodesk command was left behind"
+    cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/neodesk.sh" || fail "the neodesk command is not this installer"
     # Piped from curl, it fetches itself from the repository's branch,
     # main, whatever the release channel: the development channel's id is
     # dev, and there is no dev branch
     rm -f "$MANAGER_COMMAND"
-    BETTERDESK_SELF=""
+    NEODESK_SELF=""
     UPDATE_GITHUB_BRANCH=dev
     curl() {
         local a prev="" dest=""
         for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; done
         printf '%s\n' "${!#}" > "$TEST_DIR/fetched"
-        cp "$SCRIPT_ROOT/betterdesk.sh" "$dest"
+        cp "$SCRIPT_ROOT/neodesk.sh" "$dest"
     }
     install_manager_command >/dev/null
-    [ "$(cat "$TEST_DIR/fetched")" = "https://raw.githubusercontent.com/neodeskapp/betterdesk/main/betterdesk.sh" ] \
-        || fail "the betterdesk command came from $(cat "$TEST_DIR/fetched")"
+    [ "$(cat "$TEST_DIR/fetched")" = "https://raw.githubusercontent.com/neodeskapp/neodesk/main/neodesk.sh" ] \
+        || fail "the neodesk command came from $(cat "$TEST_DIR/fetched")"
     unset -f curl
     rm -rf "$TEST_DIR"
 )
@@ -532,7 +532,7 @@ test_runs_without_term() (
     local out
     # A shell of its own: set -e is in force there as in a run of the script
     out=$(env -u TERM bash -c 'script=$1; set --; source "$script"; print_header; echo "after the header"' \
-        test "$SCRIPT_ROOT/betterdesk.sh" 2>&1 < /dev/null) || true
+        test "$SCRIPT_ROOT/neodesk.sh" 2>&1 < /dev/null) || true
     case "$out" in *"after the header"*) ;; *) fail "the header stopped a run without TERM: $out" ;; esac
     rm -rf "$TEST_DIR"
 )
@@ -545,7 +545,7 @@ test_apt_source_failure_goes_on() (
     out=$(bash -c 'script=$1; set --; source "$script"
         LOG_FILE=/dev/null
         apt-get() { if [ "$1" = update ]; then echo "E: Failed to fetch https://packages.example.org/Packages.xz" >&2; return 100; fi; echo "apt-get $*"; }
-        install_dependencies; echo "after the dependencies"' test "$SCRIPT_ROOT/betterdesk.sh" 2>&1 < /dev/null) || true
+        install_dependencies; echo "after the dependencies"' test "$SCRIPT_ROOT/neodesk.sh" 2>&1 < /dev/null) || true
     case "$out" in *"apt-get install -y -qq sqlite3"*"after the dependencies"*) ;; *) fail "a failing package source stopped the install: $out" ;; esac
     case "$out" in *"apt-get update failed for a package source"*) ;; *) fail "the failing package source is not said: $out" ;; esac
 )
@@ -564,29 +564,29 @@ test_backup_uses_the_servers_backup() (
     printf 'sqlite file\n' > "$DB_PATH"
     printf 'private key\n' > "$RUSTDESK_PATH/id_ed25519"
     printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
-    cat > "$RUSTDESK_PATH/betterdesk-server" <<FAKE
+    cat > "$RUSTDESK_PATH/neodesk-server" <<FAKE
 #!/bin/bash
 # Stands in for the binary: upgrade-env --from FILE, backup [--out DIR] (its commands)
-printf '%s|%s\n' "\$*" "\$BETTERDESK_ENV_FILE" > "$TEST_DIR/args"
+printf '%s|%s\n' "\$*" "\$NEODESK_ENV_FILE" > "$TEST_DIR/args"
 [ -f "$TEST_DIR/backup-fails" ] && { echo "open PostgreSQL: refused" >&2; exit 1; }
-printf 'archive\n' > "\$3/betterdesk-full-backup.zip"
-echo "\$3/betterdesk-full-backup.zip"
+printf 'archive\n' > "\$3/neodesk-full-backup.zip"
+echo "\$3/neodesk-full-backup.zip"
 FAKE
-    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
     local out list
     out=$(do_backup_silent 2>&1) || fail "the backup failed: $out"
     [ "$(cut -d'|' -f2 "$TEST_DIR/args")" = "$CONSOLE_PATH/.env" ] || fail "the server's backup did not get the env file: $(cat "$TEST_DIR/args")"
-    case "$(cut -d'|' -f1 "$TEST_DIR/args")" in "backup --out $BACKUP_DIR/betterdesk_backup_"*) ;; *) fail "the server's backup ran as: $(cat "$TEST_DIR/args")" ;; esac
-    list=$(tar -tzf "$BACKUP_DIR"/betterdesk_backup_*.tar.gz)
-    case "$list" in *betterdesk-full-backup.zip*) ;; *) fail "the backup has no archive of the server: $list" ;; esac
+    case "$(cut -d'|' -f1 "$TEST_DIR/args")" in "backup --out $BACKUP_DIR/neodesk_backup_"*) ;; *) fail "the server's backup ran as: $(cat "$TEST_DIR/args")" ;; esac
+    list=$(tar -tzf "$BACKUP_DIR"/neodesk_backup_*.tar.gz)
+    case "$list" in *neodesk-full-backup.zip*) ;; *) fail "the backup has no archive of the server: $list" ;; esac
     case "$list" in *id_ed25519*) ;; *) fail "the backup has no server key: $list" ;; esac
     case "$list" in *db_v2.sqlite3*) fail "the backup copied the live SQLite file beside the server's backup: $list" ;; esac
 
     rm -f "$BACKUP_DIR"/*.tar.gz
     touch "$TEST_DIR/backup-fails"
     out=$(do_backup_silent 2>&1) || fail "the backup with a failing server backup failed: $out"
-    case "$out" in *"betterdesk-server backup failed"*) ;; *) fail "the failed server backup is not said: $out" ;; esac
-    tar -tzf "$BACKUP_DIR"/betterdesk_backup_*.tar.gz | grep -q 'db_v2.sqlite3$' || fail "without the server's backup the database file is not in the backup"
+    case "$out" in *"neodesk-server backup failed"*) ;; *) fail "the failed server backup is not said: $out" ;; esac
+    tar -tzf "$BACKUP_DIR"/neodesk_backup_*.tar.gz | grep -q 'db_v2.sqlite3$' || fail "without the server's backup the database file is not in the backup"
     rm -rf "$TEST_DIR"
 )
 
@@ -612,12 +612,12 @@ test_release_workflow_publishes_candidates_as_prereleases() (
     publish=$(workflow_step 'name: Publish')
     [ -n "$plan" ] && [ -n "$publish" ] || fail "release-go.yml has no plan or Publish step"
     for version in 3.6.0-rc.1 3.6.0; do
-        mkdir -p "$dir/$version/betterdesk-server/internal/productversion" "$dir/$version/dist"
-        printf '%s\n' "$version" > "$dir/$version/betterdesk-server/internal/productversion/VERSION"
-        touch "$dir/$version/dist/betterdesk-server-linux-amd64" "$dir/$version/dist/manifest.json" "$dir/$version/dist/SHA256SUMS"
+        mkdir -p "$dir/$version/neodesk-server/internal/productversion" "$dir/$version/dist"
+        printf '%s\n' "$version" > "$dir/$version/neodesk-server/internal/productversion/VERSION"
+        touch "$dir/$version/dist/neodesk-server-linux-amd64" "$dir/$version/dist/manifest.json" "$dir/$version/dist/SHA256SUMS"
         (
             cd "$dir/$version"
-            SERVER_DIR=betterdesk-server GITHUB_REF_TYPE=tag GITHUB_REF_NAME="v$version" GITHUB_OUTPUT="$dir/$version/out" \
+            SERVER_DIR=neodesk-server GITHUB_REF_TYPE=tag GITHUB_REF_NAME="v$version" GITHUB_OUTPUT="$dir/$version/out" \
                 bash -c "$plan" >/dev/null
             # The outputs reach the Publish step as its env does
             export GH_LOG="$dir/$version/gh"
@@ -644,7 +644,7 @@ test_no_stable_release_installs_the_newest_prerelease() (
     print_info() { echo "$1"; }
     print_warning() { echo "$1"; }
     print_error() { echo "$1"; }
-    release_asset_name() { echo betterdesk-server-linux-amd64; }
+    release_asset_name() { echo neodesk-server-linux-amd64; }
     SKIP_VERIFY=true
     # curl: no stable release; the list of releases, newest first: the dev
     # pre-release, a draft, two release candidates
@@ -652,21 +652,21 @@ test_no_stable_release_installs_the_newest_prerelease() (
         local a prev="" dest="" url="${!#}"
         for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; done
         case "$url" in
-            https://api.github.com/repos/neodeskapp/betterdesk/releases?per_page=50)
+            https://api.github.com/repos/neodeskapp/neodesk/releases?per_page=50)
                 printf '[\n  {\n    "url": "x",\n    "author": {"login": "bot"},\n    "tag_name": "dev",\n    "draft": false,\n    "prerelease": true,\n    "assets": [{"name": "manifest.json"}]\n  },\n'
                 printf '  {"tag_name": "v3.7.0-rc.1", "draft": true, "prerelease": true, "assets": []},\n'
-                printf '  {"tag_name": "v3.6.0-rc.2", "name": "BetterDesk 3.6.0-rc.2", "draft": false, "prerelease": true, "assets": []},\n'
+                printf '  {"tag_name": "v3.6.0-rc.2", "name": "NeoDesk 3.6.0-rc.2", "draft": false, "prerelease": true, "assets": []},\n'
                 printf '  {"tag_name": "v3.6.0-rc.1", "draft": false, "prerelease": true, "assets": []}\n]\n' ;;
             */releases/download/v3.6.0-rc.2/SHA256SUMS)
-                printf '%s  betterdesk-server-linux-amd64\n' "$(printf 'candidate\n' | sha256sum | cut -d' ' -f1)" > "$dest"
+                printf '%s  neodesk-server-linux-amd64\n' "$(printf 'candidate\n' | sha256sum | cut -d' ' -f1)" > "$dest"
                 printf '200' ;;
-            */releases/download/v3.6.0-rc.2/betterdesk-server-linux-amd64) printf 'candidate\n' > "$dest"; printf '200' ;;
+            */releases/download/v3.6.0-rc.2/neodesk-server-linux-amd64) printf 'candidate\n' > "$dest"; printf '200' ;;
             *) printf '404' ;;
         esac
     }
     local given
     for given in "" main saved; do
-        rm -f "$TEST_DIR/betterdesk-server" "$CONSOLE_PATH/.env"
+        rm -f "$TEST_DIR/neodesk-server" "$CONSOLE_PATH/.env"
         unset UPDATE_GITHUB_BRANCH_GIVEN
         UPDATE_GITHUB_BRANCH=main
         case "$given" in
@@ -674,7 +674,7 @@ test_no_stable_release_installs_the_newest_prerelease() (
             saved) printf 'UPDATE_GITHUB_BRANCH=main\n' > "$CONSOLE_PATH/.env" ;;
         esac
         download_release_binary "$TEST_DIR" > "$TEST_DIR/out" 2>&1 || fail "no stable release and the candidate was not installed ($given): $(cat "$TEST_DIR/out")"
-        [ "$(cat "$TEST_DIR/betterdesk-server")" = candidate ] || fail "the newest pre-release is not staged ($given)"
+        [ "$(cat "$TEST_DIR/neodesk-server")" = candidate ] || fail "the newest pre-release is not staged ($given)"
         grep -q 'no stable release yet: installing the newest pre-release v3.6.0-rc.2' "$TEST_DIR/out" \
             || fail "the run does not say which release it took ($given): $(cat "$TEST_DIR/out")"
         [ "$UPDATE_GITHUB_BRANCH" = main ] || fail "the install left the stable channel for $UPDATE_GITHUB_BRANCH ($given)"
@@ -693,7 +693,7 @@ test_no_stable_release_installs_dev() (
     print_info() { echo "$1"; }
     print_warning() { echo "$1"; }
     print_error() { echo "$1"; }
-    release_asset_name() { echo betterdesk-server-linux-amd64; }
+    release_asset_name() { echo neodesk-server-linux-amd64; }
     unset UPDATE_GITHUB_BRANCH_GIVEN
     UPDATE_GITHUB_BRANCH=main
     SKIP_VERIFY=true
@@ -704,14 +704,14 @@ test_no_stable_release_installs_dev() (
         case "$url" in
             */releases/latest/download/*) printf '404' ;;
             */releases/download/dev/SHA256SUMS)
-                printf '%s  betterdesk-server-linux-amd64\n' "$(printf 'dev build\n' | sha256sum | cut -d' ' -f1)" > "$dest"
+                printf '%s  neodesk-server-linux-amd64\n' "$(printf 'dev build\n' | sha256sum | cut -d' ' -f1)" > "$dest"
                 printf '200' ;;
-            */releases/download/dev/betterdesk-server-linux-amd64) printf 'dev build\n' > "$dest"; printf '200' ;;
+            */releases/download/dev/neodesk-server-linux-amd64) printf 'dev build\n' > "$dest"; printf '200' ;;
             *) printf '404' ;;
         esac
     }
     download_release_binary "$TEST_DIR" > "$TEST_DIR/out" 2>&1 || fail "no stable release and no fallback: $(cat "$TEST_DIR/out")"
-    [ -f "$TEST_DIR/betterdesk-server" ] || fail "the development build is not staged"
+    [ -f "$TEST_DIR/neodesk-server" ] || fail "the development build is not staged"
     grep -q 'no stable release or pre-release yet: installing the development build' "$TEST_DIR/out" || fail "the fallback is not said: $(cat "$TEST_DIR/out")"
     grep -q -- '--update --channel stable' "$TEST_DIR/out" || fail "the fallback does not say how to go back to stable: $(cat "$TEST_DIR/out")"
     [ "$UPDATE_GITHUB_BRANCH" = dev ] && [ "$UPDATE_GITHUB_BRANCH_GIVEN" = dev ] \
@@ -721,7 +721,7 @@ test_no_stable_release_installs_dev() (
     grep -qx 'UPDATE_GITHUB_BRANCH=dev' "$CONSOLE_PATH/.env" || fail "the development channel does not reach .env"
 
     local out
-    rm -f "$TEST_DIR/betterdesk-server"
+    rm -f "$TEST_DIR/neodesk-server"
     UPDATE_GITHUB_BRANCH=main
     UPDATE_GITHUB_BRANCH_GIVEN=main
     out=$(download_release_binary "$TEST_DIR" 2>&1) && fail "--channel stable installed the development build: $out"
@@ -738,10 +738,10 @@ test_no_stable_release_installs_dev() (
 # its copies keep no admin password.
 test_rerun_updates_and_forgets_the_password() (
     load
-    [ "$(auto_action)" = install ] || fail "a machine without BetterDesk gets $(auto_action)"
+    [ "$(auto_action)" = install ] || fail "a machine without NeoDesk gets $(auto_action)"
     write_server_unit "-mode all" ""
-    printf '#!/bin/sh\n' > "$RUSTDESK_PATH/betterdesk-server"
-    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    printf '#!/bin/sh\n' > "$RUSTDESK_PATH/neodesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
     printf 'DEFAULT_ADMIN_PASSWORD=First-Pass-1\nINIT_ADMIN_PASS=First-Pass-1\nSESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
     cp "$CONSOLE_PATH/.env" "$CONSOLE_PATH/.env.pre-go"
     [ "$(auto_action)" = update ] || fail "a second run on an install gets $(auto_action)"
@@ -803,8 +803,8 @@ test_install_summary() (
     out=$(print_install_summary 2>&1)
     case "$out" in *"API server:    "*"http://desk.example.org:21121"*) ;; *) fail "the summary gives clients another API address: $out" ;; esac
     for want in "https://desk.example.org:5443" "admin" "ID server" "desk.example.org" \
-        "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ=" "journalctl -u betterdesk-server" "$CONSOLE_PATH/.env" \
-        "betterdesk --update" "betterdesk --uninstall"; do
+        "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ=" "journalctl -u neodesk-server" "$CONSOLE_PATH/.env" \
+        "neodesk --update" "neodesk --uninstall"; do
         case "$out" in *"$want"*) ;; *) fail "the summary does not name $want: $out" ;; esac
     done
     case "$out" in *Summary-Pass-1*) fail "the summary shows the password" ;; esac
@@ -812,7 +812,7 @@ test_install_summary() (
 )
 
 # L149: the uninstall says what it leaves on the machine, and --purge
-# removes the data and the betterdesk command too.
+# removes the data and the neodesk command too.
 test_uninstall_says_what_stays() (
     load
     systemctl() { :; }
@@ -820,7 +820,7 @@ test_uninstall_says_what_stays() (
     print_header() { :; }
     AUTO_MODE=true
     UNINSTALL_MODE=true
-    MANAGER_COMMAND="$TEST_DIR/sbin/betterdesk"
+    MANAGER_COMMAND="$TEST_DIR/sbin/neodesk"
     mkdir -p "$TEST_DIR/sbin" && printf '#!/bin/sh\n' > "$MANAGER_COMMAND" && chmod +x "$MANAGER_COMMAND"
     printf 'DB_TYPE=sqlite\n' > "$CONSOLE_PATH/.env"
     local out
@@ -852,8 +852,8 @@ test_update_asks_the_fork() (
     server_cmd() { printf '%s/%s\n' "${UPDATE_GITHUB_OWNER:-}" "${UPDATE_GITHUB_REPO:-}" > "$TEST_DIR/seen"; return 1; }
     printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
     update_go_install >/dev/null 2>&1 || true
-    [ "$(cat "$TEST_DIR/seen" 2>/dev/null)" = neodeskapp/betterdesk ] \
-        || fail "betterdesk-server update ran for $(cat "$TEST_DIR/seen" 2>/dev/null || echo 'no repository')"
+    [ "$(cat "$TEST_DIR/seen" 2>/dev/null)" = neodeskapp/neodesk ] \
+        || fail "neodesk-server update ran for $(cat "$TEST_DIR/seen" 2>/dev/null || echo 'no repository')"
     printf 'UPDATE_GITHUB_OWNER=acme\nUPDATE_GITHUB_REPO=desk\n' > "$CONSOLE_PATH/.env"
     update_go_install >/dev/null 2>&1 || true
     [ "$(cat "$TEST_DIR/seen" 2>/dev/null)" = acme/desk ] || fail "the repository of .env lost to the default: $(cat "$TEST_DIR/seen")"
@@ -933,15 +933,15 @@ test_self_signed_keeps_the_client_api_on_http() (
 
     # L66: a binary with the cert command makes the pair, no OpenSSL needed
     rm -rf "$RUSTDESK_PATH/ssl"
-    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+    cat > "$RUSTDESK_PATH/neodesk-server" <<'FAKE'
 #!/bin/bash
 # Stands in for the binary: cert --out DIR [--host NAME]... (the commands it has)
 [ "$1" = cert ] || exit 2
 printf '%s\n' "$*" > "$3/args"
-printf 'crt\n' > "$3/betterdesk.crt"
-printf 'key\n' > "$3/betterdesk.key"
+printf 'crt\n' > "$3/neodesk.crt"
+printf 'key\n' > "$3/neodesk.key"
 FAKE
-    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
     openssl() { echo "openssl was used" >> "$TEST_DIR/openssl"; command openssl "$@"; }
     generate_ssl_certificates >/dev/null 2>&1 || fail "the cert command made no certificate"
     [ ! -e "$TEST_DIR/openssl" ] || fail "OpenSSL made the certificate although the binary can"
@@ -950,7 +950,7 @@ FAKE
 )
 
 # L162: a port held by another program is named and left alone; only
-# BetterDesk's own leftovers are stopped.
+# NeoDesk's own leftovers are stopped.
 test_port_taken_by_another_program() (
     load
     command -v python3 >/dev/null && command -v ss >/dev/null || { echo "skipped: no python3 or ss"; exit 0; }
@@ -977,31 +977,31 @@ write_release() {
     local dir="$1" branch="$2" channel=stable amd arm
     [ "$branch" = dev ] && channel=development
     mkdir -p "$dir"
-    [ -f "$dir/betterdesk-server-linux-amd64" ] || printf 'the new amd64 server\n' > "$dir/betterdesk-server-linux-amd64"
-    printf 'the new arm64 server\n' > "$dir/betterdesk-server-linux-arm64"
-    amd=$(sha256sum "$dir/betterdesk-server-linux-amd64" | cut -d' ' -f1)
-    arm=$(sha256sum "$dir/betterdesk-server-linux-arm64" | cut -d' ' -f1)
+    [ -f "$dir/neodesk-server-linux-amd64" ] || printf 'the new amd64 server\n' > "$dir/neodesk-server-linux-amd64"
+    printf 'the new arm64 server\n' > "$dir/neodesk-server-linux-arm64"
+    amd=$(sha256sum "$dir/neodesk-server-linux-amd64" | cut -d' ' -f1)
+    arm=$(sha256sum "$dir/neodesk-server-linux-arm64" | cut -d' ' -f1)
     cat > "$dir/manifest.json" <<JSON
 {
   "schema_version": 1,
-  "product": "betterdesk-server",
+  "product": "neodesk-server",
   "version": "3.6.0",
   "channel": "$channel",
   "created": "2026-11-22T10:00:00Z",
   "owner": "neodeskapp",
-  "repo": "betterdesk",
+  "repo": "neodesk",
   "branch": "$branch",
   "sha": "$RELEASE_COMMIT",
   "files": [
     {
-      "path": "betterdesk-server-linux-arm64",
+      "path": "neodesk-server-linux-arm64",
       "sha256": "$arm",
       "size": 21,
       "os": "linux",
       "arch": "arm64"
     },
     {
-      "path": "betterdesk-server-linux-amd64",
+      "path": "neodesk-server-linux-amd64",
       "sha256": "$amd",
       "size": 21,
       "os": "linux",
@@ -1010,16 +1010,16 @@ write_release() {
   ]
 }
 JSON
-    printf '%s  betterdesk-server-linux-amd64\n%s  betterdesk-server-linux-arm64\n' "$amd" "$arm" > "$dir/SHA256SUMS"
+    printf '%s  neodesk-server-linux-amd64\n%s  neodesk-server-linux-arm64\n' "$amd" "$arm" > "$dir/SHA256SUMS"
 }
 
 # sign_release DIR KEY BRANCH: manifest.sig with KEY over the text the
 # release workflow signs (updater.CanonicalPayload), written out here.
 sign_release() {
     local dir="$1" amd arm
-    amd=$(sha256sum "$dir/betterdesk-server-linux-amd64" | cut -d' ' -f1)
-    arm=$(sha256sum "$dir/betterdesk-server-linux-arm64" | cut -d' ' -f1)
-    printf 'betterdesk-update-manifest-v1\nowner=neodeskapp\nrepo=betterdesk\nbranch=%s\nsha=%s\nfiles=2\n%s  betterdesk-server-linux-amd64\n%s  betterdesk-server-linux-arm64\n' \
+    amd=$(sha256sum "$dir/neodesk-server-linux-amd64" | cut -d' ' -f1)
+    arm=$(sha256sum "$dir/neodesk-server-linux-arm64" | cut -d' ' -f1)
+    printf 'neodesk-update-manifest-v1\nowner=neodeskapp\nrepo=neodesk\nbranch=%s\nsha=%s\nfiles=2\n%s  neodesk-server-linux-amd64\n%s  neodesk-server-linux-arm64\n' \
         "$3" "$RELEASE_COMMIT" "$amd" "$arm" > "$dir/.payload"
     openssl pkeyutl -sign -inkey "$2" -rawin -in "$dir/.payload" -out "$dir/.sig" 2>/dev/null || fail "openssl could not sign"
     { base64 -w0 "$dir/.sig"; echo; } > "$dir/manifest.sig"
@@ -1028,7 +1028,7 @@ sign_release() {
 
 # A152: a downloaded binary is installed only when the release's manifest
 # carries a valid signature of the release key and names that binary for
-# the channel. The installed betterdesk-server checks it when it has
+# the channel. The installed neodesk-server checks it when it has
 # verify-release, else openssl with the key in the script; an openssl that
 # cannot check ed25519 is said plainly and the SHA-256 check stays.
 test_release_signature() (
@@ -1037,7 +1037,7 @@ test_release_signature() (
         echo "skipped: no OpenSSL 3"
         exit 0
     fi
-    local rel="$TEST_DIR/release" asset=betterdesk-server-linux-amd64 out rc
+    local rel="$TEST_DIR/release" asset=neodesk-server-linux-amd64 out rc
     openssl genpkey -algorithm ed25519 -out "$TEST_DIR/key.pem" 2>/dev/null
     openssl genpkey -algorithm ed25519 -out "$TEST_DIR/other.pem" 2>/dev/null
     RELEASE_PUBLIC_KEY_PEM=$(openssl pkey -in "$TEST_DIR/key.pem" -pubout 2>/dev/null)
@@ -1085,23 +1085,23 @@ test_release_signature() (
 
     # An installed binary with verify-release checks the release itself,
     # with the release key it carries
-    cat > "$RUSTDESK_PATH/betterdesk-server" <<'FAKE'
+    cat > "$RUSTDESK_PATH/neodesk-server" <<'FAKE'
 #!/bin/sh
 # Stands in for the binary: verify-release --manifest FILE (the commands it has)
 printf '%s\n' "$*" > "$(dirname "$0")/verify-args"
 if [ -f "$(dirname "$0")/refuse" ]; then
-    echo "betterdesk-server verify-release: the signature of the manifest does not verify against the release key" >&2
+    echo "neodesk-server verify-release: the signature of the manifest does not verify against the release key" >&2
     exit 1
 fi
-echo "verified: betterdesk-server 3.6.0 (0123456), $7"
+echo "verified: neodesk-server 3.6.0 (0123456), $7"
 FAKE
-    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
     sign_release "$rel" "$TEST_DIR/other.pem" dev
     check dev
     [ "$rc" = 0 ] || fail "the installed binary's check was not used ($rc): $out"
     [ "$(cat "$RUSTDESK_PATH/verify-args")" = "verify-release --manifest $rel/manifest.json --signature $rel/manifest.sig --name $asset $rel/$asset" ] \
         || fail "verify-release ran as: $(cat "$RUSTDESK_PATH/verify-args")"
-    case "$out" in *"installed betterdesk-server"*"3.6.0"*) ;; *) fail "the check does not say who checked it: $out" ;; esac
+    case "$out" in *"installed neodesk-server"*"3.6.0"*) ;; *) fail "the check does not say who checked it: $out" ;; esac
     check main
     [ "$rc" = 1 ] || fail "the installed binary's check let another channel's release pass ($rc): $out"
     touch "$RUSTDESK_PATH/refuse"
@@ -1125,7 +1125,7 @@ test_download_checks_the_signature() (
     print_info() { echo "$1"; }
     print_error() { echo "$1"; }
     print_warning() { echo "$1"; }
-    release_asset_name() { echo betterdesk-server-linux-amd64; }
+    release_asset_name() { echo neodesk-server-linux-amd64; }
     write_release "$rel" main
     sign_release "$rel" "$TEST_DIR/key.pem" main
     unset UPDATE_GITHUB_BRANCH_GIVEN RELEASE_BASE_URL
@@ -1138,13 +1138,13 @@ test_download_checks_the_signature() (
     }
     mkdir -p "$TEST_DIR/stage"
     out=$(download_release_binary "$TEST_DIR/stage" 2>&1) || fail "a signed release was not installed: $out"
-    [ -f "$TEST_DIR/stage/betterdesk-server" ] || fail "the checked binary is not staged"
+    [ -f "$TEST_DIR/stage/neodesk-server" ] || fail "the checked binary is not staged"
     case "$out" in *"SHA-256"*"signature checked"*) ;; *) fail "the download does not say what it checked: $out" ;; esac
 
     rm -rf "$TEST_DIR/stage" && mkdir -p "$TEST_DIR/stage"
     rm -f "$rel/manifest.sig"
     if out=$(download_release_binary "$TEST_DIR/stage" 2>&1); then fail "a release without a signature was installed: $out"; fi
-    [ ! -f "$TEST_DIR/stage/betterdesk-server" ] || fail "a binary without a signature is staged"
+    [ ! -f "$TEST_DIR/stage/neodesk-server" ] || fail "a binary without a signature is staged"
     case "$out" in *"no signed manifest"*"--skip-verify"*) ;; *) fail "the refusal does not say what to do: $out" ;; esac
     SKIP_VERIFY=true
     out=$(download_release_binary "$TEST_DIR/stage" 2>&1) || fail "--skip-verify did not install: $out"
@@ -1165,8 +1165,8 @@ test_older_binary_updates_through_the_installer() (
     SERVER_BINARY_FILE=""
     FROM_SOURCE=false
     unset RELEASE_BASE_URL
-    printf '#!/bin/sh\n# upgrade-env --from FILE (an older binary)\n' > "$RUSTDESK_PATH/betterdesk-server"
-    chmod +x "$RUSTDESK_PATH/betterdesk-server"
+    printf '#!/bin/sh\n# upgrade-env --from FILE (an older binary)\n' > "$RUSTDESK_PATH/neodesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
     printf 'UPDATE_GITHUB_OWNER=acme\nUPDATE_GITHUB_REPO=desk\n' > "$CONSOLE_PATH/.env"
     server_cmd() { echo "server's updater" > "$TEST_DIR/seen"; return 1; }
     curl() { printf '%s\n' "${!#}" >> "$TEST_DIR/urls"; printf '000'; }

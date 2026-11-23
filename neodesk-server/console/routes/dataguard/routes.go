@@ -1,7 +1,7 @@
 // Package dataguard holds the data loss prevention routes: the policies
 // that say what devices watch (USB sticks, file operations) and the
 // events devices reported. The group is mounted twice, at
-// /api/dataguard and at /api/bd, and every route answers at both.
+// /api/dataguard and at /api/nd, and every route answers at both.
 //
 // The two routes for devices, GET dlp-policies and POST dlp-events, take
 // a device token instead of a session (device.go).
@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 type handlers struct {

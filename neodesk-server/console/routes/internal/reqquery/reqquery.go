@@ -12,7 +12,7 @@ package reqquery
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // Query is req.query: one value per parameter, in the order JavaScript

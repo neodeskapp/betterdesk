@@ -17,8 +17,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // listed is the client API port's path list, written out again here
@@ -35,7 +35,7 @@ var listed = map[string]string{
 	"/api/strategies/assign": "POST", "/api/devices": "GET", "/api/ab": "*", "/api/ab/personal": "*", "/api/ab/tags": "GET",
 	"/api/users": "GET", "/api/software": "GET", "/api/software/client-download-link": "GET", "/api/health": "GET",
 	"/api/server/pubkey": "GET", "/api/server-key": "GET", "/api/server-key/fingerprint": "GET", "/api/group": "*",
-	"/api/group/get": "*", "/api/peers/list": "*", "/api/bd/register-request": "POST", "/api/bd/register-status": "GET",
+	"/api/group/get": "*", "/api/peers/list": "*", "/api/nd/register-request": "POST", "/api/nd/register-status": "GET",
 }
 
 var listedPatterns = []*regexp.Regexp{
@@ -100,7 +100,7 @@ func (g *registered) register(d *kit.Deps) {
 		g.mu.Unlock()
 		w.WriteHeader(http.StatusOK)
 	}
-	r := d.At("/api/bd").Early
+	r := d.At("/api/nd").Early
 	r.Post("/register-request", answer)
 	r.Get("/register-status", answer)
 }
@@ -155,15 +155,15 @@ var allowedStatus = map[int]bool{200: true, 204: true, 400: true, 404: true, 405
 
 // FuzzClientAPIPathList: whatever the request target, the server's API
 // gets only listed paths with a method the list allows, as the client
-// wrote them, and never one of /api/bd/; the port's registration routes
+// wrote them, and never one of /api/nd/; the port's registration routes
 // get only the two listed registration requests.
 func FuzzClientAPIPathList(f *testing.F) {
 	for _, seed := range []string{
 		"GET /api/health", "POST /api/login", "GET /api/peer-key/abc", "GET /api/strategies/0123abcd-0123-4567-89ab-0123456789ab",
-		"POST /api/bd/register-request", "GET /api/bd/register-status?device_id=x", "GET /api/bd/../login",
-		"GET /api/bd/register-status/../../x", "GET /api/bd%2Fregister-status", "GET //api/health", "GET /API/health",
-		"GET /api/health/", "GET http://evil/api/health", "OPTIONS *", "GET /api/bd/register-status#x?y", "PUT /api/ab",
-		"GET /api/health?x=%2F..%2F", "GET /api/bd/REGISTER-STATUS", "GET /api/bd/register-status;x", "GET /api/./health",
+		"POST /api/nd/register-request", "GET /api/nd/register-status?device_id=x", "GET /api/nd/../login",
+		"GET /api/nd/register-status/../../x", "GET /api/nd%2Fregister-status", "GET //api/health", "GET /API/health",
+		"GET /api/health/", "GET http://evil/api/health", "OPTIONS *", "GET /api/nd/register-status#x?y", "PUT /api/ab",
+		"GET /api/health?x=%2F..%2F", "GET /api/nd/REGISTER-STATUS", "GET /api/nd/register-status;x", "GET /api/./health",
 	} {
 		method, target, _ := strings.Cut(seed, " ")
 		f.Add(method, target, []byte("{}"))
@@ -191,13 +191,13 @@ func FuzzClientAPIPathList(f *testing.F) {
 			for _, seen := range api.take() {
 				m, uri, _ := strings.Cut(seen, " ")
 				path, _, _ := strings.Cut(uri, "?")
-				if m != r.Method || path != p || !mayPass(m, path) || strings.HasPrefix(path, "/api/bd/") {
+				if m != r.Method || path != p || !mayPass(m, path) || strings.HasPrefix(path, "/api/nd/") {
 					t.Fatalf("%s %q reached the API as %q", method, target, seen)
 				}
 			}
 			for _, seen := range reg.take() {
 				m, path, _ := strings.Cut(seen, " ")
-				if m != r.Method || path != p || !mayPass(m, path) || !strings.HasPrefix(path, "/api/bd/") {
+				if m != r.Method || path != p || !mayPass(m, path) || !strings.HasPrefix(path, "/api/nd/") {
 					t.Fatalf("%s %q reached a registration route as %q", method, target, seen)
 				}
 			}

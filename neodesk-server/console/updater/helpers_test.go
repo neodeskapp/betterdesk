@@ -23,7 +23,7 @@ import (
 const (
 	oldCommit = "1111111111111111111111111111111111111111"
 	newCommit = "2222222222222222222222222222222222222222"
-	asset     = "betterdesk-server-linux-amd64"
+	asset     = "neodesk-server-linux-amd64"
 )
 
 // fakeGitHub answers the requests of a Service: the API, the release
@@ -70,7 +70,7 @@ func (f *fakeGitHub) list(release json.RawMessage) {
 	defer f.mu.Unlock()
 	f.listed = append([]json.RawMessage{release}, f.listed...)
 	listed, _ := json.Marshal(f.listed)
-	f.routes["GET https://api.github.com/repos/trybetterdesk/betterdesk/releases?per_page=50"] = func(*http.Request) *http.Response {
+	f.routes["GET https://api.github.com/repos/neodeskapp/neodesk/releases?per_page=50"] = func(*http.Request) *http.Response {
 		return respond(200, string(listed), nil)
 	}
 }
@@ -113,7 +113,7 @@ type testRelease struct {
 // binaryFor is the content of a fake binary: a shell script that prints
 // the -version line, so the real runVersion can run it on Unix.
 func binaryFor(version, commit string) []byte {
-	line := fmt.Sprintf("betterdesk-server %s (built 2026-11-18", version)
+	line := fmt.Sprintf("neodesk-server %s (built 2026-11-18", version)
 	if commit != "" {
 		line += ", commit " + commit
 	}
@@ -131,12 +131,12 @@ func newTestRelease(version, commit, branch string) *testRelease {
 		tag = "dev"
 	}
 	r := &testRelease{tag: tag, version: version, commit: commit, branch: branch, binaries: map[string][]byte{
-		asset:                                 binaryFor(version, commit),
-		"betterdesk-server-windows-amd64.exe": []byte("MZ windows " + version),
+		asset:                              binaryFor(version, commit),
+		"neodesk-server-windows-amd64.exe": []byte("MZ windows " + version),
 	}}
 	r.manifest = &Manifest{SchemaVersion: 1, Product: Product, Version: version, Channel: ChannelOf(branch), Created: "2026-11-18T10:00:00Z",
-		Owner: "trybetterdesk", Repo: "betterdesk", Branch: branch, SHA: commit}
-	for _, name := range []string{asset, "betterdesk-server-windows-amd64.exe"} {
+		Owner: "neodeskapp", Repo: "neodesk", Branch: branch, SHA: commit}
+	for _, name := range []string{asset, "neodesk-server-windows-amd64.exe"} {
 		r.manifest.Files = append(r.manifest.Files, ManifestFile{Path: name, SHA256: sum(r.binaries[name]), Size: int64(len(r.binaries[name]))})
 	}
 	r.render()
@@ -154,9 +154,9 @@ func (r *testRelease) sign(private ed25519.PrivateKey) {
 // serve puts the release on the fake GitHub: the API's answer and every
 // file, each on github.com with a redirect to the file host.
 func (f *fakeGitHub) serve(r *testRelease) {
-	path := "/repos/trybetterdesk/betterdesk/releases/latest"
+	path := "/repos/neodeskapp/neodesk/releases/latest"
 	if r.branch == BranchDevelopment {
-		path = "/repos/trybetterdesk/betterdesk/releases/tags/dev"
+		path = "/repos/neodeskapp/neodesk/releases/tags/dev"
 	}
 	type ghAsset struct {
 		Name string `json:"name"`
@@ -172,7 +172,7 @@ func (f *fakeGitHub) serve(r *testRelease) {
 	}
 	var assets []ghAsset
 	for name, body := range files {
-		url := "https://github.com/trybetterdesk/betterdesk/releases/download/" + r.tag + "/" + name
+		url := "https://github.com/neodeskapp/neodesk/releases/download/" + r.tag + "/" + name
 		assets = append(assets, ghAsset{Name: name, Size: len(body), URL: url})
 		content := body
 		target := "https://objects.githubusercontent.com/github-production-release-asset/" + name
@@ -180,15 +180,15 @@ func (f *fakeGitHub) serve(r *testRelease) {
 		f.on("GET "+target, func(*http.Request) *http.Response { return respond(200, string(content), nil) })
 	}
 	release, _ := json.Marshal(map[string]any{
-		"tag_name": r.tag, "name": "BetterDesk " + r.version + "\nnotes", "draft": false, "prerelease": r.prerelease || r.branch == BranchDevelopment,
-		"published_at": "2026-11-18T10:00:00Z", "author": map[string]string{"login": "unitronix"}, "assets": assets,
+		"tag_name": r.tag, "name": "NeoDesk " + r.version + "\nnotes", "draft": false, "prerelease": r.prerelease || r.branch == BranchDevelopment,
+		"published_at": "2026-11-18T10:00:00Z", "author": map[string]string{"login": "neodeskapp"}, "assets": assets,
 	})
 	if !r.prerelease {
 		f.on("GET https://api.github.com"+path, func(*http.Request) *http.Response { return respond(200, string(release), nil) })
 	}
 	f.list(release)
 	if r.tag != "dev" {
-		f.on("GET https://api.github.com/repos/trybetterdesk/betterdesk/releases/tags/"+r.tag, func(*http.Request) *http.Response { return respond(200, string(release), nil) })
+		f.on("GET https://api.github.com/repos/neodeskapp/neodesk/releases/tags/"+r.tag, func(*http.Request) *http.Response { return respond(200, string(release), nil) })
 	}
 	compare, _ := json.Marshal(map[string]any{
 		"total_commits": 3,
@@ -197,14 +197,14 @@ func (f *fakeGitHub) serve(r *testRelease) {
 			{"sha": r.commit, "commit": map[string]any{"message": "last", "committer": map[string]string{"date": "d2"}, "author": map[string]string{"name": "b"}}},
 		},
 		"files": []map[string]string{
-			{"filename": "betterdesk-server/main.go", "status": "modified", "sha": "x"},
+			{"filename": "neodesk-server/main.go", "status": "modified", "sha": "x"},
 			{"filename": "web-ui/src/app.ts", "status": "renamed", "previous_filename": "web-ui/src/old.ts"},
 			{"filename": "docs/readme.md", "status": "modified"},
 			{"filename": "web-nodejs/server.js", "status": "removed"},
-			{"filename": "betterdesk.sh"},
+			{"filename": "neodesk.sh"},
 		},
 	})
-	f.on("GET https://api.github.com/repos/trybetterdesk/betterdesk/compare/"+oldCommit+"..."+r.commit, func(*http.Request) *http.Response {
+	f.on("GET https://api.github.com/repos/neodeskapp/neodesk/compare/"+oldCommit+"..."+r.commit, func(*http.Request) *http.Response {
 		return respond(200, string(compare), nil)
 	})
 }
@@ -226,7 +226,7 @@ func newInstall(t *testing.T, mutate ...func(*Options)) *install {
 	t.Helper()
 	root := t.TempDir()
 	in := &install{t: t, dir: filepath.Join(root, "bin"), dataDir: filepath.Join(root, "data"), gh: newFakeGitHub(), env: map[string]string{}}
-	in.binary = filepath.Join(in.dir, "betterdesk-server")
+	in.binary = filepath.Join(in.dir, "neodesk-server")
 	for _, dir := range []string{in.dir, in.dataDir} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatal(err)
@@ -300,7 +300,7 @@ func (in *install) assertUntouched() {
 	}
 	entries, _ := os.ReadDir(in.dir)
 	for _, e := range entries {
-		if e.Name() != "betterdesk-server" && e.Name() != "betterdesk-server.prev" {
+		if e.Name() != "neodesk-server" && e.Name() != "neodesk-server.prev" {
 			in.t.Errorf("left in the binary's folder: %s", e.Name())
 		}
 	}

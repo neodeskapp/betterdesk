@@ -10,7 +10,7 @@ import (
 	"github.com/coder/websocket"
 	"google.golang.org/protobuf/proto"
 
-	pb "github.com/unitronix/betterdesk-server/proto"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 )
 
 // Dialer opens the run's websocket connections.

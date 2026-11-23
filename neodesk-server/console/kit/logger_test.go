@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/auditlog"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 type logLine struct{ level, line string }
@@ -305,7 +305,7 @@ func TestLoggerArguments(t *testing.T) {
 		{"the quoted name, not the word before it", []any{"for 'or'"}, "for '***'"},
 		{"name with spaces around", []any{"for ' bob '"}, "for 'b***b'"},
 		{"role and provider words stay", []any{"role 'Admin' provider 'local' hash 'bcrypt' and 'PBKDF2-SHA256'"}, "role 'Admin' provider 'l***l' hash 'bcrypt' and 'PBKDF2-SHA256'"},
-		{"paths, addresses and settings stay", []any{"file '/etc/x' host 'a.b' at '10:30' env 'BETTERDESK_API_KEY' kind 'hash type'"}, "file '/etc/x' host 'a.b' at '10:30' env 'BETTERDESK_API_KEY' kind 'hash type'"},
+		{"paths, addresses and settings stay", []any{"file '/etc/x' host 'a.b' at '10:30' env 'NEODESK_API_KEY' kind 'hash type'"}, "file '/etc/x' host 'a.b' at '10:30' env 'NEODESK_API_KEY' kind 'hash type'"},
 		{"64 code units", []any{"'" + strings.Repeat("a", 64) + "' '" + strings.Repeat("b", 65) + "'"}, "'a***a' '" + strings.Repeat("b", 65) + "'"},
 		{"an emoji is two code units", []any{"'\U0001F600'ab'cd'"}, "'\U0001F600'ab'***'"},
 		{"the closing quote opens nothing", []any{"'alice'bob'carol'"}, "'a***e'bob'c***l'"},

@@ -4,10 +4,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // TestNodeDeviceAnswers replays what the Node console's two device routes
@@ -109,9 +109,9 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 			status           int
 			answer           string
 		}{
-			{"at /api/bd without a session", "", "/api/bd/commands/1/result", 200, stored},
+			{"at /api/nd without a session", "", "/api/nd/commands/1/result", 200, stored},
 			{"at /api/automation without a session", "", "/api/automation/commands/1/result", 200, stored},
-			{"at /api/bd with a session", "operator", "/api/bd/commands/1/result", 403, refused},
+			{"at /api/nd with a session", "operator", "/api/nd/commands/1/result", 403, refused},
 			{"at /api/automation with a session", "admin", "/api/automation/commands/1/result", 403, refused},
 		} {
 			got := w.Do(replay.Request{Role: c.role, Method: "POST", Path: c.path, Body: result, Headers: deviceA, NoCSRF: true})
@@ -127,12 +127,12 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 			if passes && (got.Status != 200 || got.Body != stored) || !passes && (got.Status != 403 || got.Body != guarded) {
 				t.Errorf("POST /api/automation/commands/1/result as %q with the CSRF token: %d %s, the guard lets it pass: %v", role, got.Status, got.Body, passes)
 			}
-			if got := w.Do(replay.Request{Role: role, Method: "POST", Path: "/api/bd/commands/1/result", Body: result, Headers: deviceA}); got.Status != 200 || got.Body != stored {
-				t.Errorf("POST /api/bd/commands/1/result as %q with the CSRF token: %d %s", role, got.Status, got.Body)
+			if got := w.Do(replay.Request{Role: role, Method: "POST", Path: "/api/nd/commands/1/result", Body: result, Headers: deviceA}); got.Status != 200 || got.Body != stored {
+				t.Errorf("POST /api/nd/commands/1/result as %q with the CSRF token: %d %s", role, got.Status, got.Body)
 			}
 			// Reading needs no CSRF token
-			if got := w.Do(replay.Request{Role: role, Path: "/api/bd/commands", Headers: deviceA}); got.Status != 200 || got.Body != `{"commands":[]}` {
-				t.Errorf("GET /api/bd/commands as %q: %d %s", role, got.Status, got.Body)
+			if got := w.Do(replay.Request{Role: role, Path: "/api/nd/commands", Headers: deviceA}); got.Status != 200 || got.Body != `{"commands":[]}` {
+				t.Errorf("GET /api/nd/commands as %q: %d %s", role, got.Status, got.Body)
 			}
 		}
 	})
@@ -143,24 +143,24 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 func TestDeviceRouteFailures(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := deviceWorld(t, db)
-		if got := w.Do(replay.Request{Path: "/api/bd/commands", Headers: deviceA}); got.Status != 200 || !strings.Contains(got.Body, `"payload":"whoami"`) {
+		if got := w.Do(replay.Request{Path: "/api/nd/commands", Headers: deviceA}); got.Status != 200 || !strings.Contains(got.Body, `"payload":"whoami"`) {
 			t.Fatalf("the pending command: %d %s", got.Status, got.Body)
 		}
 		refuseCommandUpdates(w)
 		failed := `{"error":"Internal server error"}`
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/commands/1/result", Body: replay.Text(`{"status":"failed"}`), Headers: deviceA}); got.Status != 500 || got.Body != failed {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/nd/commands/1/result", Body: replay.Text(`{"status":"failed"}`), Headers: deviceA}); got.Status != 500 || got.Body != failed {
 			t.Errorf("a result the database refuses: %d %s, want 500 %s", got.Status, got.Body, failed)
 		}
 		w.Exec("DROP TABLE remote_commands", nil)
 		for _, req := range []replay.Request{
-			{Path: "/api/bd/commands", Headers: deviceA},
-			{Method: "POST", Path: "/api/bd/commands/1/result", Body: replay.Text(`{"status":"completed"}`), Headers: deviceA},
+			{Path: "/api/nd/commands", Headers: deviceA},
+			{Method: "POST", Path: "/api/nd/commands/1/result", Body: replay.Text(`{"status":"completed"}`), Headers: deviceA},
 		} {
 			if got := w.Do(req); got.Status != 500 || got.Body != failed {
 				t.Errorf("%s %s without the table: %d %s, want 500 %s", req.Method, req.Path, got.Status, got.Body, failed)
 			}
 		}
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/commands/1/result", Body: replay.Text(`{"status":"done"}`), Headers: deviceA}); got.Status != 400 {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/nd/commands/1/result", Body: replay.Text(`{"status":"done"}`), Headers: deviceA}); got.Status != 400 {
 			t.Errorf("a status that is none without the table: %d %s, want 400", got.Status, got.Body)
 		}
 	})
@@ -177,7 +177,7 @@ func TestAnotherDevicesCommandIsNotFound(t *testing.T) {
 			[]any{"tok-device-b", "638c3bcb28bd43d785bdb2b9555c0d22e2eb931e3a0298384de110a801b52b46"})
 		deviceB := map[string]string{"Authorization": "Bearer tok-device-b"}
 		notFound := `{"error":"Command not found"}`
-		for _, path := range []string{"/api/bd/commands/1/result", "/api/bd/commands/999/result"} {
+		for _, path := range []string{"/api/nd/commands/1/result", "/api/nd/commands/999/result"} {
 			for _, status := range []string{"running", "completed", "failed"} {
 				got := w.Do(replay.Request{Method: "POST", Path: path, Body: replay.Text(`{"status":"` + status + `","result":"x"}`), Headers: deviceB})
 				if got.Status != 404 || got.Body != notFound {
@@ -185,7 +185,7 @@ func TestAnotherDevicesCommandIsNotFound(t *testing.T) {
 				}
 			}
 		}
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/commands/1/result", Body: replay.Text(`{"status":"done"}`), Headers: deviceB}); got.Status != 400 {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/nd/commands/1/result", Body: replay.Text(`{"status":"done"}`), Headers: deviceB}); got.Status != 400 {
 			t.Errorf("a status that is none for another device's command: %d %s, want 400", got.Status, got.Body)
 		}
 		if got := w.Rows("SELECT status, result, executed_at, completed_at FROM remote_commands", nil); got != `[{"status":"pending","result":null,"executed_at":null,"completed_at":null}]` {

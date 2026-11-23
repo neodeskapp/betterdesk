@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // Single sign-on (OIDC) settings and sign-in.

@@ -9,13 +9,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/cli"
-	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/updater"
-	"github.com/unitronix/betterdesk-server/migrate"
+	"github.com/neodeskapp/neodesk/neodesk-server/cli"
+	consoleconfig "github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
+	"github.com/neodeskapp/neodesk/neodesk-server/migrate"
 )
 
-// subcommand is a command of betterdesk-server besides running the
+// subcommand is a command of neodesk-server besides running the
 // server. run takes the arguments after the command's name and returns
 // the exit status.
 type subcommand struct {
@@ -87,7 +87,7 @@ func withEnv(run func(args []string, env cli.Env) int) func([]string, io.Reader,
 // runEnv is "env merge"; "env" names a group of commands.
 func runEnv(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	if len(args) == 0 || args[0] != "merge" {
-		fmt.Fprintln(stderr, "betterdesk-server: usage: betterdesk-server "+envMergeUsage)
+		fmt.Fprintln(stderr, "neodesk-server: usage: neodesk-server "+envMergeUsage)
 		return 2
 	}
 	return withEnv(cli.EnvMerge)(args[1:], stdin, stdout, stderr)
@@ -101,14 +101,14 @@ func runSubcommand(args []string) (code int, handled bool) {
 	}
 	cmd, ok := subcommands[args[0]]
 	if !ok {
-		fmt.Fprintf(os.Stderr, "betterdesk-server: unknown command %q\n\nCommands:\n", args[0])
+		fmt.Fprintf(os.Stderr, "neodesk-server: unknown command %q\n\nCommands:\n", args[0])
 		names := make([]string, 0, len(subcommands))
 		for name := range subcommands {
 			names = append(names, name)
 		}
 		sort.Strings(names)
 		for _, name := range names {
-			fmt.Fprintf(os.Stderr, "  betterdesk-server %s\n", subcommands[name].usage)
+			fmt.Fprintf(os.Stderr, "  neodesk-server %s\n", subcommands[name].usage)
 		}
 		return 2, true
 	}
@@ -121,13 +121,13 @@ func runSubcommand(args []string) (code int, handled bool) {
 func updaterForCommand(stderr io.Writer) (*updater.Service, bool) {
 	cfg, err := consoleconfig.Load(os.Getenv)
 	if err != nil {
-		fmt.Fprintf(stderr, "betterdesk-server: configuration: %v\n", err)
+		fmt.Fprintf(stderr, "neodesk-server: configuration: %v\n", err)
 		return nil, false
 	}
 	return updater.New(updater.Options{
 		DataDir:    cfg.DataDir,
 		ConsoleDir: cfg.ConsoleDir,
-		EnvFile:    os.Getenv("BETTERDESK_ENV_FILE"),
+		EnvFile:    os.Getenv("NEODESK_ENV_FILE"),
 		Version:    Version,
 		Commit:     Commit,
 		Docker:     cfg.Docker,

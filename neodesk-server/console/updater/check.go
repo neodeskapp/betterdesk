@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// Component is one part of BetterDesk a changed file belongs to, as the
+// Component is one part of NeoDesk a changed file belongs to, as the
 // panel groups them (COMPONENTS of the old updater).
 type Component struct {
 	Changed    bool   `json:"changed"`
@@ -25,8 +25,8 @@ var componentMeta = map[string]struct {
 }{
 	"console": {"web-nodejs/", "Web Console", true},
 	"webui":   {"web-ui/", "Web Console (web-ui)", true},
-	"server":  {"betterdesk-server/", "Go Server", true},
-	"agent":   {"betterdesk-agent/", "Agent library", false},
+	"server":  {"neodesk-server/", "Go Server", true},
+	"agent":   {"neodesk-agent/", "Agent library", false},
 	"scripts": {"", "Scripts & Docker", true},
 }
 
@@ -34,7 +34,7 @@ var componentMeta = map[string]struct {
 var componentOrder = []string{"console", "webui", "server", "agent", "scripts"}
 
 var scriptFiles = []string{
-	"install.sh", "betterdesk.sh", "betterdesk.ps1", "betterdesk-docker.sh",
+	"install.sh", "neodesk.sh", "neodesk.ps1", "neodesk-docker.sh",
 	"docker-compose.yml", "docker-compose.single.yml", "docker-compose.quick.yml",
 	"docker-compose.quick.single.yml", "docker-compose.quick.single.macvlan.yml",
 	"Dockerfile", "Dockerfile.server", "Dockerfile.console",
@@ -62,7 +62,7 @@ var excludePatterns = []*regexp.Regexp{
 	regexp.MustCompile(`^\.github/`), regexp.MustCompile(`^archive/`), regexp.MustCompile(`^docs/`),
 	regexp.MustCompile(`^screenshots/`), regexp.MustCompile(`^dev_modules/`), regexp.MustCompile(`^tasks/`),
 	regexp.MustCompile(`^sdks/`), regexp.MustCompile(`^bridges/`), regexp.MustCompile(`node_modules/`),
-	regexp.MustCompile(`\.exe$`), regexp.MustCompile(`^betterdesk-server/betterdesk-server`),
+	regexp.MustCompile(`\.exe$`), regexp.MustCompile(`^neodesk-server/neodesk-server`),
 	regexp.MustCompile(`^web-nodejs/data/`), regexp.MustCompile(`(^|/)data/`),
 	regexp.MustCompile(`\.sqlite3?$`), regexp.MustCompile(`\.sqlite3?-(shm|wal|journal)$`),
 	regexp.MustCompile(`\.db$`), regexp.MustCompile(`\.db-(shm|wal|journal)$`),

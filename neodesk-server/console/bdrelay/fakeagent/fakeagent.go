@@ -1,5 +1,5 @@
-// Package fakeagent is a made-up BetterDesk agent for tests: it connects
-// to a console's /ws/bd-signal with a device id and a token, keeps the
+// Package fakeagent is a made-up NeoDesk agent for tests: it connects
+// to a console's /ws/nd-signal with a device id and a token, keeps the
 // requests the console sends, and answers them the way the test says.
 //
 //	agent, err := fakeagent.Connect(addr, "A1001", token)
@@ -18,9 +18,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
 )
 
 // Request is one request the console sent the agent.
@@ -49,7 +49,7 @@ type Agent struct {
 // console's welcome.
 func Connect(addr, deviceID, token string) (*Agent, error) {
 	q := url.Values{"device_id": {deviceID}, "token": {token}}
-	c, res, err := wstest.Dial(addr, "/ws/bd-signal?"+q.Encode(), nil)
+	c, res, err := wstest.Dial(addr, "/ws/nd-signal?"+q.Encode(), nil)
 	if err != nil {
 		return nil, err
 	}

@@ -40,7 +40,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -68,9 +68,9 @@
      "data": {
       "branding": {
        "accent_color": "#4f6ef7",
-       "company_name": "BetterDesk",
+       "company_name": "NeoDesk",
        "profiles": {
-        "betterdesk": {
+        "neodesk": {
          "apply": [
           "company_name",
           "phone",

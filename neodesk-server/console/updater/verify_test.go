@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-// releasePublicKeyPEM is the release key of trybetterdesk/betterdesk as
+// releasePublicKeyPEM is the release key of neodeskapp/neodesk as
 // the owner gave it (DECISIONS A152).
 const releasePublicKeyPEM = `-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEAiwissiXvSjeFFsG8SdKEZq11uAtRLWCrD7Ky1vfY2n4=
@@ -84,7 +84,7 @@ func TestVerifyFile(t *testing.T) {
 		"another key":                    {r.manifestText, r.signature, binary, asset, Keys{other}},
 		"no signature":                   {r.manifestText, nil, binary, asset, keys},
 		"no key":                         {r.manifestText, r.signature, binary, asset, nil},
-		"a name the manifest lacks":      {r.manifestText, r.signature, binary, "betterdesk-server-linux-riscv64", keys},
+		"a name the manifest lacks":      {r.manifestText, r.signature, binary, "neodesk-server-linux-riscv64", keys},
 	} {
 		if _, err := VerifyFile(c.manifest, c.signature, c.file, c.asset, c.keys); err == nil {
 			t.Errorf("%s passed", name)

@@ -14,7 +14,7 @@ vi.mock('#lib/api/settings-system.ts', async (orig) => ({
 		userGroups: 0,
 		deviceGroups: 0,
 		strategies: 0,
-		backend: 'betterdesk',
+		backend: 'neodesk',
 		dbType: 'sqlite',
 		components: { env: true, goPrivKey: true, goApiKey: true, uploads: 0 }
 	})),

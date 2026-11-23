@@ -2,7 +2,7 @@
  "id": "activity-device/report-other-device-in-the-query",
  "request": {
   "method": "POST",
-  "path": "/api/bd/activity?device_id=900100002",
+  "path": "/api/nd/activity?device_id=900100002",
   "body": {
    "device_id": "900100001",
    "idle_seconds": 120,

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 )
 
 // relayWaitDefault is how long a relay waits for its peers: the agent and

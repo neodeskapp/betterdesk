@@ -14,14 +14,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/routes/settings"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/settings"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // site is a console for the general settings: its folders are temporary,
@@ -281,7 +281,7 @@ func TestAdvancedFileChain(t *testing.T) {
 // answers 409 and leaves the compose file as the admin's save wrote it
 // (BUGS.md RV94).
 func TestConnectionModeWaitsForAnotherOperatorsChange(t *testing.T) {
-	if _, err := os.Stat("/etc/systemd/system/betterdesk-server.service"); err == nil {
+	if _, err := os.Stat("/etc/systemd/system/neodesk-server.service"); err == nil {
 		t.Skip("this machine has the server's systemd unit")
 	}
 	s := newSite(t, nil, nil, nil)
@@ -289,7 +289,7 @@ func TestConnectionModeWaitsForAnotherOperatorsChange(t *testing.T) {
 	if err := os.MkdirAll(filepath.Dir(compose), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(compose, []byte("services:\n  server:\n    image: betterdesk-server:local\n    environment:\n      - P2P_FIRST=Y\n"), 0o644); err != nil {
+	if err := os.WriteFile(compose, []byte("services:\n  server:\n    image: neodesk-server:local\n    environment:\n      - P2P_FIRST=Y\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	res := s.As("admin").Do("PUT", "/api/settings/connection-mode", `{"mode":"relay_only"}`)
@@ -321,7 +321,7 @@ func TestConnectionModeWaitsForAnotherOperatorsChange(t *testing.T) {
 // with: confirming fails the transaction with no_restart. Both routes that
 // restart after one setting confirm the caller's transaction.
 func TestConfirm(t *testing.T) {
-	if _, err := os.Stat("/etc/systemd/system/betterdesk-server.service"); err == nil {
+	if _, err := os.Stat("/etc/systemd/system/neodesk-server.service"); err == nil {
 		t.Skip("this machine has the server's systemd unit")
 	}
 	s := newSite(t, nil, nil, nil)
@@ -359,7 +359,7 @@ func TestConfirm(t *testing.T) {
 }
 
 func TestAdvancedFileRefusals(t *testing.T) {
-	s := newSite(t, nil, nil, map[string]string{"BETTERDESK_BUILD_ENV_FILE": ""})
+	s := newSite(t, nil, nil, map[string]string{"NEODESK_BUILD_ENV_FILE": ""})
 	admin := s.As("admin")
 	if err := os.MkdirAll(s.Keys, 0o755); err != nil {
 		t.Fatal(err)
@@ -390,7 +390,7 @@ func TestAdvancedFileRefusals(t *testing.T) {
 	// A file that needs no restart registers nothing
 	if runtime.GOOS == "linux" {
 		envFile := filepath.Join(t.TempDir(), "build.env")
-		s2 := newSite(t, nil, nil, map[string]string{"BETTERDESK_BUILD_ENV_FILE": envFile})
+		s2 := newSite(t, nil, nil, map[string]string{"NEODESK_BUILD_ENV_FILE": envFile})
 		res := s2.As("admin").Do("PUT", "/api/settings/advanced/files/build-env", `{"content":"A=1\n"}`)
 		if res.Status != http.StatusOK || !strings.HasSuffix(res.Body, `"created":true,"restartRequired":null},"message":"settings.advanced_saved","restartRequired":null}`) {
 			t.Errorf("build env: %d %s", res.Status, res.Body)
@@ -413,7 +413,7 @@ func TestInfoAndServerInfo(t *testing.T) {
 		// F1); the rest is for server.config (BUGS RV98, A83)
 		for _, role := range []string{"viewer", "operator", "global_admin"} {
 			res := s.As(role).Do("GET", "/api/settings/info", "")
-			if want := `{"success":true,"data":{"app":{"name":"BetterDesk Console","version":"4.5.6"},"goServer":{"status":"running","version":"9.9.9"}}}`; res.Status != http.StatusOK || res.Body != want {
+			if want := `{"success":true,"data":{"app":{"name":"NeoDesk Console","version":"4.5.6"},"goServer":{"status":"running","version":"9.9.9"}}}`; res.Status != http.StatusOK || res.Body != want {
 				t.Errorf("%s: %d %s, want %s", role, res.Status, res.Body, want)
 			}
 		}
@@ -428,7 +428,7 @@ func TestInfoAndServerInfo(t *testing.T) {
 			t.Errorf("keys %s", keys)
 		}
 		app := data["app"].(map[string]any)
-		if app["name"] != "BetterDesk Console" || app["nodeVersion"] != runtime.Version() || app["env"] != "production" || app["version"] != "4.5.6" {
+		if app["name"] != "NeoDesk Console" || app["nodeVersion"] != runtime.Version() || app["env"] != "production" || app["version"] != "4.5.6" {
 			t.Errorf("app %v", app)
 		}
 		server := data["server"].(map[string]any)
@@ -443,10 +443,10 @@ func TestInfoAndServerInfo(t *testing.T) {
 		if runtime.GOARCH == "amd64" && server["arch"] != "x64" {
 			t.Errorf("arch %v", server["arch"])
 		}
-		if goServer := data["goServer"].(map[string]any); goServer["status"] != "running" || goServer["version"] != "9.9.9" || goServer["backend"] != "betterdesk" {
+		if goServer := data["goServer"].(map[string]any); goServer["status"] != "running" || goServer["version"] != "9.9.9" || goServer["backend"] != "neodesk" {
 			t.Errorf("goServer %v", goServer)
 		}
-		if data["backend"] != "betterdesk" || !reflect.DeepEqual(data["paths"], map[string]any{
+		if data["backend"] != "neodesk" || !reflect.DeepEqual(data["paths"], map[string]any{
 			"database": "/srv/db_v2.sqlite3", "publicKey": "/srv/id_ed25519.pub", "apiKey": filepath.Join(s.Keys, ".api_key"),
 		}) || !reflect.DeepEqual(data["stats"], map[string]any{"total": 2.0, "online": 1.0, "banned": 1.0, "offline": 1.0}) {
 			t.Errorf("info %s", res.Body)

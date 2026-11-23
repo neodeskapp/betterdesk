@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // The commands of the widgets, as the old routes ran them.
@@ -158,8 +158,8 @@ type logAnswer struct {
 
 // logFiles are read when the journal has nothing.
 var logFiles = map[bool][]string{
-	true:  {"/opt/rustdesk/betterdesk-server.log", "/opt/betterdesk/server.log", "/var/log/betterdesk-server.log"},
-	false: {"/opt/rustdesk/console.log", "/var/log/betterdesk-console.log"},
+	true:  {"/opt/rustdesk/neodesk-server.log", "/opt/neodesk/server.log", "/var/log/neodesk-server.log"},
+	false: {"/opt/rustdesk/console.log", "/var/log/neodesk-console.log"},
 }
 
 // logs answers GET /api/logs/recent?source=go|console&limit=50: the last
@@ -184,9 +184,9 @@ func (h *handlers) logs(w http.ResponseWriter, r *http.Request) {
 
 	var lines []string
 	if h.linux {
-		command := "journalctl -u betterdesk-console --no-pager -n " + n + " --output=short-iso 2>/dev/null"
+		command := "journalctl -u neodesk-console --no-pager -n " + n + " --output=short-iso 2>/dev/null"
 		if server {
-			command = "journalctl -u betterdesk-server --no-pager -n " + n + " --output=short-iso 2>/dev/null || journalctl -u betterdesk-go --no-pager -n " + n + " --output=short-iso 2>/dev/null"
+			command = "journalctl -u neodesk-server --no-pager -n " + n + " --output=short-iso 2>/dev/null || journalctl -u neodesk-go --no-pager -n " + n + " --output=short-iso 2>/dev/null"
 		}
 		if raw := h.run(r.Context(), command, shortTimeout); raw != "" {
 			lines = strings.Split(raw, "\n")
@@ -308,8 +308,8 @@ func (h *handlers) containers(w http.ResponseWriter, r *http.Request) {
 // allowedCommands are the commands the runner takes, word for word.
 var allowedCommands = []string{
 	"uptime", "date", "hostname", "whoami", "df -h", "free -m",
-	"uname -a", "cat /etc/os-release", "systemctl status betterdesk-server",
-	"systemctl status betterdesk-console", "docker ps", "docker stats --no-stream",
+	"uname -a", "cat /etc/os-release", "systemctl status neodesk-server",
+	"systemctl status neodesk-console", "docker ps", "docker stats --no-stream",
 	"ip addr", "ss -tlnp", "netstat -tlnp", "top -bn1 | head -20",
 }
 

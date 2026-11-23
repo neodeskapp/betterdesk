@@ -7,15 +7,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/fleet"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath/proxytest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/fleet"
 )
 
 // register mounts the group the way console/routes.go does.
 func register(d *kit.Deps) {
 	fleet.Register(d)
-	fleet.Register(d.At("/api/bd"))
+	fleet.Register(d.At("/api/nd"))
 }
 
 // fixes are the vectors of vectors.json whose answer a bug fix of
@@ -75,13 +75,13 @@ func TestRegisteredRoutes(t *testing.T) {
 		"GET /api/panel/fleet/compliance/{deviceId}",
 		"POST /api/panel/fleet/compliance/{deviceId}/scan",
 		"POST /api/panel/fleet/compliance/{deviceId}/remediate",
-		"POST /api/bd/fleet/task-result",
-		"POST /api/bd/fleet/software",
+		"POST /api/nd/fleet/task-result",
+		"POST /api/nd/fleet/software",
 	}
 	var want []string
 	for _, route := range routes {
 		method, pattern, _ := strings.Cut(route, " ")
-		want = append(want, route, method+" /api/bd"+pattern)
+		want = append(want, route, method+" /api/nd"+pattern)
 	}
 	sort.Strings(want)
 	if strings.Join(got, "\n") != strings.Join(want, "\n") {
@@ -108,8 +108,8 @@ func TestListFiltersThatAreNoText(t *testing.T) {
 		"/api/panel/fleet/tasks?orgId=acme&status[x]=1":        "Invalid status",
 		"/api/panel/fleet/compliance?orgId[toString]=x":        "Invalid orgId",
 		"/api/panel/fleet/compliance?orgId[]=acme":             "Invalid orgId",
-		"/api/bd/api/panel/fleet/compliance?orgId[][]=acme":    "Invalid orgId",
-		"/api/bd/api/panel/fleet/tasks?status=x&orgId[x]=acme": "Invalid orgId",
+		"/api/nd/api/panel/fleet/compliance?orgId[][]=acme":    "Invalid orgId",
+		"/api/nd/api/panel/fleet/tasks?status=x&orgId[x]=acme": "Invalid orgId",
 	} {
 		rec, calls := w.Do(proxytest.Request{Path: target, Session: operator}, empty)
 		if rec.Code != 400 || rec.Body.String() != `{"error":"`+want+`"}` || len(calls) != 0 {

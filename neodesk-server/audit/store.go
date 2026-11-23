@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // Store keeps the events in the database; db.Database is one.

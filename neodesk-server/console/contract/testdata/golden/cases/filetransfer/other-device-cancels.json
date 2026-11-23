@@ -2,7 +2,7 @@
  "id": "filetransfer/other-device-cancels",
  "request": {
   "method": "POST",
-  "path": "/api/bd/file-transfer",
+  "path": "/api/nd/file-transfer",
   "body": {
    "action": "cancel",
    "transfer_id": "{announced}"

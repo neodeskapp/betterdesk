@@ -39,7 +39,7 @@ func checkPixels(t *testing.T, what string, data []byte, code *Code, scale, marg
 }
 
 func TestPNGScalesModulesToPixels(t *testing.T) {
-	code, err := Encode("otpauth://totp/BetterDesk:alice?secret=JBSWY3DPEHPK3PXP&issuer=BetterDesk", M)
+	code, err := Encode("otpauth://totp/NeoDesk:alice?secret=JBSWY3DPEHPK3PXP&issuer=NeoDesk", M)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +75,7 @@ func TestPNGScalesModulesToPixels(t *testing.T) {
 // per module. Pixel i shows module floor(i/6.24) of the 41, margin
 // included.
 func TestPNGWithAScaleThatIsNotWhole(t *testing.T) {
-	code, err := Encode("otpauth://totp/BetterDesk:alice?secret=JBSWY3DPEHPK3PXP&issuer=BetterDesk", M)
+	code, err := Encode("otpauth://totp/NeoDesk:alice?secret=JBSWY3DPEHPK3PXP&issuer=NeoDesk", M)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -5,11 +5,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
 )
 
 // AuthorizationRegistry permits exactly one relay pair for a UUID that signal
-// has authorized. Relay traffic cannot carry an additional BetterDesk-specific
+// has authorized. Relay traffic cannot carry an additional NeoDesk-specific
 // credential without changing RustDesk's wire framing, so the signal server
 // records the already-negotiated UUID here before either peer reaches relay.
 type AuthorizationRegistry struct {
@@ -28,7 +28,7 @@ type relayAuthorization struct {
 }
 
 // NewAuthorizationRegistry creates an in-memory authorization store. Tickets
-// are deliberately process-local: signal and relay run together in BetterDesk's
+// are deliberately process-local: signal and relay run together in NeoDesk's
 // all-in-one server mode, and no ticket is persisted across restarts.
 func NewAuthorizationRegistry() *AuthorizationRegistry {
 	return &AuthorizationRegistry{

@@ -4,7 +4,7 @@
   "method": "GET",
   "path": "/health",
   "notes": [
-   "header Cookie: betterdesk_lang=pl"
+   "header Cookie: neodesk_lang=pl"
   ]
  },
  "recordings": 2,

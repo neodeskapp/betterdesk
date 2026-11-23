@@ -3,7 +3,7 @@ package signal
 import (
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
 )
 
 func TestParseDefaultGateway(t *testing.T) {

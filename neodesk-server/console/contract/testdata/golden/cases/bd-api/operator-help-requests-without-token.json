@@ -2,7 +2,7 @@
  "id": "bd-api/operator-help-requests-without-token",
  "request": {
   "method": "GET",
-  "path": "/api/bd/help-requests",
+  "path": "/api/nd/help-requests",
   "notes": [
    "no CSRF token",
    "no cookies"

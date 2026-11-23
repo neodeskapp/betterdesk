@@ -2,13 +2,13 @@
 * @rathlinus
 
 # Security-sensitive paths require explicit maintainer ownership.
-/betterdesk-server/signal/ @rathlinus
-/betterdesk-server/relay/ @rathlinus
-/betterdesk-server/peer/ @rathlinus
-/betterdesk-server/auth/ @rathlinus
-/betterdesk-server/db/ @rathlinus
-/betterdesk-server/console/wsrelay/ @rathlinus
-/betterdesk-server/console/routes/ @rathlinus
-/betterdesk-server/console/static/files/lang/ @rathlinus
+/neodesk-server/signal/ @rathlinus
+/neodesk-server/relay/ @rathlinus
+/neodesk-server/peer/ @rathlinus
+/neodesk-server/auth/ @rathlinus
+/neodesk-server/db/ @rathlinus
+/neodesk-server/console/wsrelay/ @rathlinus
+/neodesk-server/console/routes/ @rathlinus
+/neodesk-server/console/static/files/lang/ @rathlinus
 /docker* @rathlinus
 /.github/workflows/ @rathlinus

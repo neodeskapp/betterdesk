@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/backup"
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
 // stats answers GET /api/settings/backup/stats: what a full backup would
@@ -39,7 +39,7 @@ func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 			h.serverError(w, r)
 			return
 		}
-		filename := "betterdesk-config-" + store10(snapshot) + ".json"
+		filename := "neodesk-config-" + store10(snapshot) + ".json"
 		size := backup.ToFixed(int64(backup.UTF16Len(string(text))), 1024, 1)
 		if err := h.d.LogAction(r, "backup_created", "Config snapshot downloaded ("+size+" KB)"); err != nil {
 			h.log.Error("Backup download error:", err)

@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // eachDatabase runs test on a new SQLite database and, when
-// BETTERDESK_TEST_POSTGRES_DSN names a server, on a new PostgreSQL
+// NEODESK_TEST_POSTGRES_DSN names a server, on a new PostgreSQL
 // database, both migrated.
 func eachDatabase(t *testing.T, test func(t *testing.T, database db.Database)) {
 	t.Run("sqlite", func(t *testing.T) {
@@ -29,9 +29,9 @@ func eachDatabase(t *testing.T, test func(t *testing.T, database db.Database)) {
 		test(t, database)
 	})
 	t.Run("postgres", func(t *testing.T) {
-		dsn := os.Getenv("BETTERDESK_TEST_POSTGRES_DSN")
+		dsn := os.Getenv("NEODESK_TEST_POSTGRES_DSN")
 		if dsn == "" {
-			t.Skip("BETTERDESK_TEST_POSTGRES_DSN is not set")
+			t.Skip("NEODESK_TEST_POSTGRES_DSN is not set")
 		}
 		ctx := context.Background()
 		name := fmt.Sprintf("bdgo_billing_%d", time.Now().UnixNano())

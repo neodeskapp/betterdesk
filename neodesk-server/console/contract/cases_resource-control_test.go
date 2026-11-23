@@ -3,7 +3,7 @@
 package contract_test
 
 import (
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // Resource control. The API server has no resource policies: a call that
@@ -49,16 +49,16 @@ func init() {
 		contract.Case{Name: "org-policy-set-without-csrf-token", Method: "PUT", Path: "/api/panel/resource-control/org-policy", Body: map[string]any{}, NoCSRF: true},
 
 		// The second mount
-		contract.Case{Name: "second-mount-devices", Path: "/api/bd/api/panel/resource-control/devices", Volatile: []string{"~devices[*].status"}},
-		contract.Case{Name: "second-mount-device-policy", Path: "/api/bd/api/panel/resource-control/policies/bad%20id"},
-		contract.Case{Name: "second-mount-set-usb", Method: "POST", Path: "/api/bd/api/panel/resource-control/policies/900100001/usb", Body: usb},
-		contract.Case{Name: "second-mount-set-usb-without-csrf-token", Method: "POST", Path: "/api/bd/api/panel/resource-control/policies/900100001/usb", Body: usb, NoCSRF: true},
+		contract.Case{Name: "second-mount-devices", Path: "/api/nd/api/panel/resource-control/devices", Volatile: []string{"~devices[*].status"}},
+		contract.Case{Name: "second-mount-device-policy", Path: "/api/nd/api/panel/resource-control/policies/bad%20id"},
+		contract.Case{Name: "second-mount-set-usb", Method: "POST", Path: "/api/nd/api/panel/resource-control/policies/900100001/usb", Body: usb},
+		contract.Case{Name: "second-mount-set-usb-without-csrf-token", Method: "POST", Path: "/api/nd/api/panel/resource-control/policies/900100001/usb", Body: usb, NoCSRF: true},
 		contract.Case{
-			Name: "second-mount-set-usb-without-session", Method: "POST", Path: "/api/bd/api/panel/resource-control/policies/900100001/usb", Body: usb,
+			Name: "second-mount-set-usb-without-session", Method: "POST", Path: "/api/nd/api/panel/resource-control/policies/900100001/usb", Body: usb,
 			NoCSRF: true, NoCookies: true, Roles: contract.Roles("signed-out", "admin"),
 		},
-		contract.Case{Name: "second-mount-compliance", Path: "/api/bd/api/panel/resource-control/compliance"},
-		contract.Case{Name: "second-mount-org-policy-set", Method: "PUT", Path: "/api/bd/api/panel/resource-control/org-policy", Body: map[string]any{}},
+		contract.Case{Name: "second-mount-compliance", Path: "/api/nd/api/panel/resource-control/compliance"},
+		contract.Case{Name: "second-mount-org-policy-set", Method: "PUT", Path: "/api/nd/api/panel/resource-control/org-policy", Body: map[string]any{}},
 	}, resourceControlDeviceCases()...)...)
 }
 
@@ -70,9 +70,9 @@ func init() {
 func resourceControlDeviceCases() []contract.Case {
 	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
 	var cases []contract.Case
-	for _, mount := range []struct{ name, prefix string }{{"device", ""}, {"second-mount-device", "/api/bd"}} {
+	for _, mount := range []struct{ name, prefix string }{{"device", ""}, {"second-mount-device", "/api/nd"}} {
 		at := func(what string) string { return mount.name + "-policy-" + what }
-		path := mount.prefix + "/api/bd/resource-policy"
+		path := mount.prefix + "/api/nd/resource-policy"
 		cases = append(cases,
 			contract.Case{Name: at("without-token"), Path: path},
 			contract.Case{Name: at("unknown-token"), Path: path, Headers: unknown},

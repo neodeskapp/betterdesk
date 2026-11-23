@@ -209,7 +209,7 @@ export function brandingPayload(v: BrandingValues): Record<string, unknown> {
 		if (isHex(c)) colors[k] = c;
 	}
 	return {
-		appName: v.appName || 'BetterDesk',
+		appName: v.appName || 'NeoDesk',
 		appDescription: v.appDescription,
 		logoType: v.logoType,
 		logoIcon: v.logoIcon || 'dns',

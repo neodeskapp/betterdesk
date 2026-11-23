@@ -1,5 +1,5 @@
 /**
- * BetterDesk Web Remote Client — MeshCentral transport adapter.
+ * NeoDesk Web Remote Client — MeshCentral transport adapter.
  * Uses BetterViewer (MNG_KVM) over meshrelay.
  */
 import type { ViewerCapabilities } from '../access.ts';
@@ -121,7 +121,7 @@ export class MeshSession {
 		if (pageQs.get('record') === '1' || this.opts.serverRecord) {
 			tunnelQs.set('record', '1');
 		}
-		const csrf = page().BetterDesk?.csrfToken || '';
+		const csrf = page().NeoDesk?.csrfToken || '';
 		const headers: Record<string, string> = {
 			'Content-Type': 'application/json',
 			Accept: 'application/json'

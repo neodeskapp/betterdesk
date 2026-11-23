@@ -347,7 +347,7 @@
 	let groupsStatus = $state<Line>({ message: '', tone: 'neutral' });
 	let recordings = $state.raw<Recording[] | null>(null);
 	let recordingsError = $state('');
-	let mshName = $state('BetterDesk Mesh');
+	let mshName = $state('NeoDesk Mesh');
 
 	async function loadMesh() {
 		mesh = await getMeshStatus();

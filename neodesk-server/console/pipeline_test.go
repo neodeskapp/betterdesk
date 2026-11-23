@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // goOnly is a console with a probe route in each stage.
@@ -183,15 +183,15 @@ func TestStep4BodyReachesTheHandler(t *testing.T) {
 func TestStep6SessionIsLoadedAndRenewed(t *testing.T) {
 	w := goOnly(t, setup{})
 	a := w.agent()
-	if res := a.get("/api/probe"); res.json(t)["user"] != float64(0) || res.cookie("bd.sid") != "" {
-		t.Errorf("signed out: body %s, session cookie %q", res.body, res.cookie("bd.sid"))
+	if res := a.get("/api/probe"); res.json(t)["user"] != float64(0) || res.cookie("nd.sid") != "" {
+		t.Errorf("signed out: body %s, session cookie %q", res.body, res.cookie("nd.sid"))
 	}
 	a.signIn("operator")
 	res := a.get("/api/probe")
 	if res.json(t)["user"] != float64(roleIDs["operator"]) {
 		t.Errorf("the handler saw user %v", res.json(t)["user"])
 	}
-	cookie := res.cookie("bd.sid")
+	cookie := res.cookie("nd.sid")
 	if !strings.Contains(cookie, "; Path=/; Expires=") || !strings.HasSuffix(cookie, "; HttpOnly; SameSite=Lax") {
 		t.Errorf("the answer does not renew the session cookie: %q", cookie)
 	}
@@ -332,7 +332,7 @@ func TestStep9StaticFilesComeBeforeGuardLimitersAndCacheHeader(t *testing.T) {
 	if res.header.Get("Cache-Control") != "public, max-age=0" {
 		t.Errorf("Cache-Control of a file = %q, want the folder's max-age", res.header.Get("Cache-Control"))
 	}
-	if res.cookie("__csrf_h") == "" || res.cookie("bd.sid") == "" {
+	if res.cookie("__csrf_h") == "" || res.cookie("nd.sid") == "" {
 		t.Errorf("a file answer must carry the cookies of steps 6 and 8: %q", res.header.Values("Set-Cookie"))
 	}
 	for _, target := range []string{"/img/logo.png", "/notes.txt"} {
@@ -430,8 +430,8 @@ func TestStep12EarlyStageHasNoLanguageNoCSRFCheckNoCompression(t *testing.T) {
 		if res.status != 200 {
 			t.Fatalf("%s: POST to the early stage without a token: %d %s", name, res.status, res.body)
 		}
-		if res.json(t)["lang"] != "" || res.cookie("betterdesk_lang") != "" {
-			t.Errorf("%s: the early stage has a request language: %s, cookie %q", name, res.body, res.cookie("betterdesk_lang"))
+		if res.json(t)["lang"] != "" || res.cookie("neodesk_lang") != "" {
+			t.Errorf("%s: the early stage has a request language: %s, cookie %q", name, res.body, res.cookie("neodesk_lang"))
 		}
 		if res.header.Get("Cache-Control") != "no-store" {
 			t.Errorf("%s: Cache-Control = %q, want step 1's", name, res.header.Get("Cache-Control"))
@@ -474,7 +474,7 @@ func TestStep12PassOnLeavesTheRequestToTheLaterStage(t *testing.T) {
 		t.Errorf("with a bearer token: %s", res.body)
 	}
 	res := a.get("/api/client-devices?lang=de&pad=1", "Accept-Encoding", "gzip")
-	if res.status != 200 || res.header.Get("Content-Encoding") != "gzip" || res.cookie("betterdesk_lang") == "" ||
+	if res.status != 200 || res.header.Get("Content-Encoding") != "gzip" || res.cookie("neodesk_lang") == "" ||
 		res.header.Get("Cache-Control") != "no-cache, no-store, must-revalidate" {
 		t.Errorf("without one the console route must answer, with language, cache header and compression: %d %v", res.status, res.header)
 	}
@@ -498,8 +498,8 @@ func TestStep14RequestLanguage(t *testing.T) {
 		t.Errorf("default language: %s", res.body)
 	}
 	res := a.get("/api/probe?lang=de")
-	if res.json(t)["lang"] != "de" || !strings.HasPrefix(res.cookie("betterdesk_lang"), "betterdesk_lang=de; Max-Age=31536000; Path=/; Expires=") {
-		t.Errorf("?lang=de: %s, cookie %q", res.body, res.cookie("betterdesk_lang"))
+	if res.json(t)["lang"] != "de" || !strings.HasPrefix(res.cookie("neodesk_lang"), "neodesk_lang=de; Max-Age=31536000; Path=/; Expires=") {
+		t.Errorf("?lang=de: %s, cookie %q", res.body, res.cookie("neodesk_lang"))
 	}
 	if res := a.get("/api/probe", "Accept-Language", "pl,en;q=0.5"); res.json(t)["lang"] != "de" {
 		t.Errorf("the cookie must win over Accept-Language: %s", res.body)
@@ -519,8 +519,8 @@ func TestStep14RequestLanguage(t *testing.T) {
 	}
 	// The language is picked before the CSRF gate refuses
 	res = w.agent().do("POST", "/api/probe?lang=de", "{}", "Content-Type", "application/json")
-	if res.status != 403 || res.cookie("betterdesk_lang") == "" {
-		t.Errorf("refused write with ?lang=de: %d, cookie %q", res.status, res.cookie("betterdesk_lang"))
+	if res.status != 403 || res.cookie("neodesk_lang") == "" {
+		t.Errorf("refused write with ?lang=de: %d, cookie %q", res.status, res.cookie("neodesk_lang"))
 	}
 }
 
@@ -548,7 +548,7 @@ func TestStep15CacheHeaderIsOnRoutesAndNotOnFileNames(t *testing.T) {
 
 func TestStep16CSRFGate(t *testing.T) {
 	w := goOnly(t, setup{})
-	w.s.Router().Post("/api/bd/thing", probe)
+	w.s.Router().Post("/api/nd/thing", probe)
 	const refusal = `{"success":false,"error":"Invalid CSRF token. Please refresh the page and try again. If you recently disabled SSL, clear your browser cookies for this site and reload."}`
 
 	a := w.agent()
@@ -566,16 +566,16 @@ func TestStep16CSRFGate(t *testing.T) {
 		t.Errorf("write with a wrong token: %d", res.status)
 	}
 
-	// Under /api/bd/ a request without a session is a device and passes; with one it is a browser
-	if res := w.agent().do("POST", "/api/bd/thing", `{}`, "Content-Type", "application/json"); res.status != 200 {
-		t.Errorf("/api/bd/ without a session: %d %s", res.status, res.body)
+	// Under /api/nd/ a request without a session is a device and passes; with one it is a browser
+	if res := w.agent().do("POST", "/api/nd/thing", `{}`, "Content-Type", "application/json"); res.status != 200 {
+		t.Errorf("/api/nd/ without a session: %d %s", res.status, res.body)
 	}
 	signedIn := w.agent().signIn("admin")
-	if res := signedIn.do("POST", "/api/bd/thing", `{}`, "Content-Type", "application/json"); res.status != 403 || res.body != refusal {
-		t.Errorf("/api/bd/ with a session and no token: %d %s", res.status, res.body)
+	if res := signedIn.do("POST", "/api/nd/thing", `{}`, "Content-Type", "application/json"); res.status != 403 || res.body != refusal {
+		t.Errorf("/api/nd/ with a session and no token: %d %s", res.status, res.body)
 	}
-	if res := signedIn.post("/api/bd/thing", `{}`); res.status != 200 {
-		t.Errorf("/api/bd/ with a session and the token: %d", res.status)
+	if res := signedIn.post("/api/nd/thing", `{}`); res.status != 200 {
+		t.Errorf("/api/nd/ with a session and the token: %d", res.status)
 	}
 
 	// A page write is refused in plain text when there is no build

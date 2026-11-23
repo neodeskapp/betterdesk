@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/devicegroups"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/devicegroups"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 func newService(t *testing.T, db *store.DB) *devicegroups.Service {
@@ -324,7 +324,7 @@ func TestDeviceStore(t *testing.T) {
 		if err := db.QueryRow(ctx, `SELECT note FROM peer WHERE id = 'P1'`).Scan(&note); err != nil || note != "new" {
 			t.Errorf("note of P1: %q %v", note, err)
 		}
-		if err := ds.SetSetting(ctx, "server_backend", "betterdesk"); err != nil {
+		if err := ds.SetSetting(ctx, "server_backend", "neodesk"); err != nil {
 			t.Fatal(err)
 		}
 		if err := ds.SetSetting(ctx, "server_backend", "again"); err != nil {

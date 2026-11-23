@@ -2,7 +2,7 @@
  "id": "fleet/second-mount-device-task-result-as-a-device",
  "request": {
   "method": "POST",
-  "path": "/api/bd/api/bd/fleet/task-result",
+  "path": "/api/nd/api/nd/fleet/task-result",
   "body": {
    "device_id": "900100001",
    "output": "ok",

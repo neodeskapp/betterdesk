@@ -2,7 +2,7 @@
  "id": "inventory-device/upload-device-id-in-a-list",
  "request": {
   "method": "POST",
-  "path": "/api/bd/inventory",
+  "path": "/api/nd/inventory",
   "body": {
    "collected_at": "2011-03-04T10:00:00.000Z",
    "device_id": [

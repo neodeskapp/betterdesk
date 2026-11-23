@@ -20,11 +20,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/mail"
-	"github.com/unitronix/betterdesk-server/console/mail/smtpwire"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/smtpwire"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // The sessions of testdata/e2e_sessions.json were made by calling the Node
@@ -317,9 +317,13 @@ func replayEndToEnd(t *testing.T, sess *e2eSession, panelBaseURL string, roots *
 	// Node built the address of the recordings from the listen address
 	// 0.0.0.0, port 5000 and HTTP_REDIRECT_HTTPS; the Go console takes the
 	// panel's public host and its HTTPS port instead (BUGS EM8)
+	// The recording is upstream's, made before the rename: the service
+	// writes upstream's product name, which decides where long headers
+	// fold
 	svc := mail.New(mail.Options{
 		DB: db, Transport: transport, Logger: logged, HTTPSPort: 5000,
 		PanelHost: func() string { return "127.0.0.1" }, ServesHTTPS: func() bool { return true },
+		Product: "BetterDesk",
 	})
 	if got := svc.GetPanelBaseURL(); got != panelBaseURL {
 		t.Errorf("the console's address in mails is %q, want %q", got, panelBaseURL)

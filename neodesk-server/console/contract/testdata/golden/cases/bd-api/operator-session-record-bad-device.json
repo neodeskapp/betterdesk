@@ -2,7 +2,7 @@
  "id": "bd-api/operator-session-record-bad-device",
  "request": {
   "method": "POST",
-  "path": "/api/bd/operator/sessions",
+  "path": "/api/nd/operator/sessions",
   "body": {
    "action": "start",
    "device_id": "9 0"

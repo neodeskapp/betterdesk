@@ -14,8 +14,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgconn"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // setup creates audit_log from the console's schema file. On PostgreSQL

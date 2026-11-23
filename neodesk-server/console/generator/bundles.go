@@ -8,9 +8,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
 )
 
 // Platform is one installer the generator can deliver.
@@ -126,7 +126,7 @@ func ValidateBranding(input any, relayPort func() string) (Validation, error) {
 	companyName := clip(or(or(get("company_name"), get("companyName")), appName), maxName)
 	out.Set("company_name", companyName)
 	if companyName == "" {
-		companyName = "BetterDesk Support Agent"
+		companyName = "NeoDesk Support Agent"
 		out.Set("company_name", companyName)
 	}
 	if appName == "" {
@@ -323,7 +323,7 @@ func PublicBundleID(slug, bundleID string) string {
 // whose branding column cannot be read shows.
 func DefaultBranding() *goapi.Object {
 	return goapi.NewObject(
-		"app_name", "BetterDesk Support Agent",
+		"app_name", "NeoDesk Support Agent",
 		"company_name", "",
 		"short_text", "",
 		"product_label", "",

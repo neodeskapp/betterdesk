@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/webui"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/webui"
 )
 
 // htmlEscaper escapes an address the way a redirect's HTML body shows it.
@@ -92,7 +92,7 @@ func TestGuardsAnswerTheAPI(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			// Below a mount the address still starts with /api/
-			rec, reached := guarded(d, c.guard, c.who, "POST", "/api/bd/thing?x=1")
+			rec, reached := guarded(d, c.guard, c.who, "POST", "/api/nd/thing?x=1")
 			if c.status == 0 {
 				if !reached || rec.Body.Len() != 0 {
 					t.Fatalf("refused with %d %s, want the request to pass", rec.Code, rec.Body.String())
@@ -129,9 +129,9 @@ func TestGuardsAnswerPagesWithoutABuild(t *testing.T) {
 		body     string
 	}{
 		{"requireAuth signed out", d.RequireAuth, signedOut, "/tickets/7?tab=notes", "", 302, "/login?return=%2Ftickets%2F7%3Ftab%3Dnotes", ""},
-		{"requireAuth signed out with an old cookie", d.RequireAuth, signedOut, "/tickets", "bd.sid=gone", 302, "/login?expired=1&return=%2Ftickets", ""},
+		{"requireAuth signed out with an old cookie", d.RequireAuth, signedOut, "/tickets", "nd.sid=gone", 302, "/login?expired=1&return=%2Ftickets", ""},
 		{"requireAuth pro", d.RequireAuth, account(7, "pro"), "/tickets", "", 302, "/login", ""},
-		{"requireAdmin signed out", d.RequireAdmin, signedOut, "/tickets", "bd.sid=gone", 302, "/login", ""},
+		{"requireAdmin signed out", d.RequireAdmin, signedOut, "/tickets", "nd.sid=gone", 302, "/login", ""},
 		{"requireAdmin viewer", d.RequireAdmin, account(7, "viewer"), "/tickets", "", 403, "", "Forbidden"},
 		{"requireRole signed out", d.RequireRole("operator"), signedOut, "/tickets", "", 302, "/login", ""},
 		{"requireRole viewer", d.RequireRole("operator"), account(7, "viewer"), "/tickets", "", 403, "", "Forbidden"},
@@ -264,21 +264,21 @@ func TestCookie(t *testing.T) {
 		want   string
 		ok     bool
 	}{
-		{"bd_ui_shell=ux36", "ux36", true},
-		{"a=1; bd_ui_shell=ux36; b=2", "ux36", true},
-		{"a=1;bd_ui_shell = ux36 ;b=2", "ux36", true},
-		{"bd_ui_shell=first; bd_ui_shell=second", "first", true},
-		{`bd_ui_shell="ux36"`, "ux36", true},
-		{`bd_ui_shell="`, "", true},
-		{"bd_ui_shell=ux%33%36", "ux36", true},
-		{"bd_ui_shell=ux%zz", "ux%zz", true},
-		{"bd_ui_shell=%ff", "%ff", true},
-		{`bd_ui_shell=j:"ux36"`, "ux36", true},
-		{`bd_ui_shell=j%3A%22ux36%22`, "ux36", true},
-		{`bd_ui_shell=j:{"a":1}`, "", false},
-		{`bd_ui_shell=j:0`, "j:0", true},
-		{`bd_ui_shell=j:{broken`, "j:{broken", true},
-		{"flag; bd_ui_shell=ux36", "ux36", true},
+		{"nd_ui_shell=ux36", "ux36", true},
+		{"a=1; nd_ui_shell=ux36; b=2", "ux36", true},
+		{"a=1;nd_ui_shell = ux36 ;b=2", "ux36", true},
+		{"nd_ui_shell=first; nd_ui_shell=second", "first", true},
+		{`nd_ui_shell="ux36"`, "ux36", true},
+		{`nd_ui_shell="`, "", true},
+		{"nd_ui_shell=ux%33%36", "ux36", true},
+		{"nd_ui_shell=ux%zz", "ux%zz", true},
+		{"nd_ui_shell=%ff", "%ff", true},
+		{`nd_ui_shell=j:"ux36"`, "ux36", true},
+		{`nd_ui_shell=j%3A%22ux36%22`, "ux36", true},
+		{`nd_ui_shell=j:{"a":1}`, "", false},
+		{`nd_ui_shell=j:0`, "j:0", true},
+		{`nd_ui_shell=j:{broken`, "j:{broken", true},
+		{"flag; nd_ui_shell=ux36", "ux36", true},
 		{"other=ux36", "", false},
 		{"xbd_ui_shell=ux36", "", false},
 		{"", "", false},
@@ -288,7 +288,7 @@ func TestCookie(t *testing.T) {
 		if c.header != "" {
 			r.Header.Set("Cookie", c.header)
 		}
-		got, ok := Cookie(r, "bd_ui_shell")
+		got, ok := Cookie(r, "nd_ui_shell")
 		if got != c.want || ok != c.ok {
 			t.Errorf("Cookie(%q) = %q, %v; want %q, %v", c.header, got, ok, c.want, c.ok)
 		}
@@ -298,11 +298,11 @@ func TestCookie(t *testing.T) {
 func TestSetCookie(t *testing.T) {
 	now := time.Date(2026, 11, 10, 12, 0, 0, 0, time.UTC)
 	rec := httptest.NewRecorder()
-	SetCookie(rec, "bd_ui_shell", "ux36", CookieOptions{MaxAge: 365 * 24 * time.Hour, SameSite: "lax", Now: now})
+	SetCookie(rec, "nd_ui_shell", "ux36", CookieOptions{MaxAge: 365 * 24 * time.Hour, SameSite: "lax", Now: now})
 	SetCookie(rec, "s", "a b|c", CookieOptions{HTTPOnly: true, Secure: true, SameSite: "strict", Path: "/api"})
 	got := rec.Header().Values("Set-Cookie")
 	want := []string{
-		"bd_ui_shell=ux36; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 12:00:00 GMT; SameSite=Lax",
+		"nd_ui_shell=ux36; Max-Age=31536000; Path=/; Expires=Wed, 10 Nov 2027 12:00:00 GMT; SameSite=Lax",
 		"s=a%20b%7Cc; Path=/api; HttpOnly; Secure; SameSite=Strict",
 	}
 	if len(got) != 2 || got[0] != want[0] || got[1] != want[1] {

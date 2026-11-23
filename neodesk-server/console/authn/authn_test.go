@@ -13,9 +13,9 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // The costs of the hashes tests make: PBKDF2 with 1000 iterations for
@@ -107,10 +107,10 @@ func TestSettingsFromEnv(t *testing.T) {
 		read       func(Settings) any
 		want       any
 	}{
-		{"BETTERDESK_AUTH_AUTOCREATE", "true", func(s Settings) any { return s.AutoCreate }, true},
-		{"BETTERDESK_AUTH_AUTOCREATE", "TRUE", func(s Settings) any { return s.AutoCreate }, true},
-		{"BETTERDESK_AUTH_AUTOCREATE", "1", func(s Settings) any { return s.AutoCreate }, true},
-		{"BETTERDESK_AUTH_AUTOCREATE", "maybe", func(s Settings) any { return s.AutoCreate }, false},
+		{"NEODESK_AUTH_AUTOCREATE", "true", func(s Settings) any { return s.AutoCreate }, true},
+		{"NEODESK_AUTH_AUTOCREATE", "TRUE", func(s Settings) any { return s.AutoCreate }, true},
+		{"NEODESK_AUTH_AUTOCREATE", "1", func(s Settings) any { return s.AutoCreate }, true},
+		{"NEODESK_AUTH_AUTOCREATE", "maybe", func(s Settings) any { return s.AutoCreate }, false},
 		{"FORCE_PASSWORD_UPDATE", "true", func(s Settings) any { return s.ForcePasswordUpdate }, true},
 		{"FORCE_PASSWORD_UPDATE", "yes", func(s Settings) any { return s.ForcePasswordUpdate }, true},
 		{"FORCE_PASSWORD_UPDATE", "off", func(s Settings) any { return s.ForcePasswordUpdate }, false},
@@ -218,13 +218,13 @@ func TestBruteForceJSON(t *testing.T) {
 // tests/authService.totp.test.js
 func TestTOTPSetup(t *testing.T) {
 	uri := OtpauthURL("admin", "K5MQOUIXDV6D4BLCPFKQ6YRRJ4LQS43T")
-	if uri != "otpauth://totp/BetterDesk:admin?secret=K5MQOUIXDV6D4BLCPFKQ6YRRJ4LQS43T&issuer=BetterDesk&digits=6&period=30" {
+	if uri != "otpauth://totp/NeoDesk:admin?secret=K5MQOUIXDV6D4BLCPFKQ6YRRJ4LQS43T&issuer=NeoDesk&digits=6&period=30" {
 		t.Errorf("address: %s", uri)
 	}
 	if strings.Contains(uri, " ") || strings.Contains(strings.ToLower(uri), "algorithm=") {
 		t.Errorf("address has a space or an algorithm: %s", uri)
 	}
-	if got := OtpauthURL("admin user", "ABCDEFGH"); !strings.Contains(got, "BetterDesk:admin%20user") {
+	if got := OtpauthURL("admin user", "ABCDEFGH"); !strings.Contains(got, "NeoDesk:admin%20user") {
 		t.Errorf("a space in the account is not escaped: %s", got)
 	}
 
@@ -375,12 +375,12 @@ func TestReadAdminCredentialsFile(t *testing.T) {
 	if got := s.ReadAdminCredentialsFile(); got != "from-rustdesk" {
 		t.Errorf("the key folder comes first: %q", got)
 	}
-	want := []string{"/opt/rustdesk", "/opt/rustdesk/data", "/app/data", "/opt/betterdesk", "/opt/betterdesk/data"}
+	want := []string{"/opt/rustdesk", "/opt/rustdesk/data", "/app/data", "/opt/neodesk", "/opt/neodesk/data"}
 	if got := s.credentialDirs(); strings.Join(got, "|") != strings.Join(want, "|") {
 		t.Errorf("folders %v, want %v", got, want)
 	}
 	s.windows = true
-	if got := s.credentialDirs(); len(got) != len(want)+4 || got[len(got)-4] != `C:\BetterDesk` || got[len(got)-1] != `C:\RustDesk\data` {
+	if got := s.credentialDirs(); len(got) != len(want)+4 || got[len(got)-4] != `C:\NeoDesk` || got[len(got)-1] != `C:\RustDesk\data` {
 		t.Errorf("folders on Windows: %v", got)
 	}
 }

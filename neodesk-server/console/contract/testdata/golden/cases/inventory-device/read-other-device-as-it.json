@@ -2,7 +2,7 @@
  "id": "inventory-device/read-other-device-as-it",
  "request": {
   "method": "GET",
-  "path": "/api/bd/inventory/900100002",
+  "path": "/api/nd/inventory/900100002",
   "notes": [
    "header Authorization: Bearer {secret:device_token_other}",
    "no CSRF token",
@@ -138,8 +138,8 @@
        },
        {
         "installed_at": "<volatile>",
-        "name": "BetterDesk",
-        "publisher": "BetterDesk (demo)",
+        "name": "NeoDesk",
+        "publisher": "NeoDesk (demo)",
         "version": "1.4.2"
        },
        {

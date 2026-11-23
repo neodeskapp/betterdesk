@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // routes/phase4_5.routes.js: the operator's own profile and what the
@@ -43,7 +43,7 @@ func init() {
 		return contract.Case{Name: name, Method: "DELETE", Path: "/api/agent-templates/" + id, Roles: writers}
 	}
 	enroll := func(name string, body any) contract.Case {
-		return contract.Case{Name: name, Method: "POST", Path: "/api/bd/enroll", Body: body, Roles: some}
+		return contract.Case{Name: name, Method: "POST", Path: "/api/nd/enroll", Body: body, Roles: some}
 	}
 	activate := func(name string, body any) contract.Case {
 		return contract.Case{Name: name, Method: "POST", Path: "/api/agent-pairing/activate", Body: body, Roles: writers}
@@ -54,14 +54,14 @@ func init() {
 		// The profile
 		get("profile", nil),
 		contract.Case{Name: "profile-head", Method: "HEAD", Path: "/api/users/me/profile", Roles: some},
-		contract.Case{Name: "operator-info", Path: "/api/bd/operator-info"},
+		contract.Case{Name: "operator-info", Path: "/api/nd/operator-info"},
 		put("profile-save", profile, nil),
 		get("profile-after-save", writers),
-		contract.Case{Name: "operator-info-after-save", Path: "/api/bd/operator-info", Query: url.Values{"session_id": {"remote-42"}}, Roles: writers},
+		contract.Case{Name: "operator-info-after-save", Path: "/api/nd/operator-info", Query: url.Values{"session_id": {"remote-42"}}, Roles: writers},
 		put("profile-save-the-same-address", profile, writers),
 		put("profile-save-one-field", map[string]any{"phone": "555"}, writers),
 		get("profile-after-one-field", writers),
-		contract.Case{Name: "operator-info-after-one-field", Path: "/api/bd/operator-info", Roles: writers},
+		contract.Case{Name: "operator-info-after-one-field", Path: "/api/nd/operator-info", Roles: writers},
 		put("profile-save-other-types", map[string]any{
 			"first_name": 42, "last_name": true, "email": 1e21, "phone": nil, "role_display": []any{"a", 1, nil}, "avatar_url": "",
 		}, writers),
@@ -72,7 +72,7 @@ func init() {
 			"first_name": strings.Repeat("x", 250), "last_name": strings.Repeat("ü", 199) + "😀", "phone": "  padded  ",
 		}, writers),
 		get("profile-after-long-values", writers),
-		contract.Case{Name: "operator-info-after-long-values", Path: "/api/bd/operator-info", Roles: writers},
+		contract.Case{Name: "operator-info-after-long-values", Path: "/api/nd/operator-info", Roles: writers},
 		put("profile-save-email-too-long", map[string]any{"email": strings.Repeat("e", 201)}, writers),
 		put("profile-save-email-200", map[string]any{"email": strings.Repeat("e", 200)}, writers),
 		put("profile-save-email-number", map[string]any{"email": 123456}, writers),
@@ -88,11 +88,11 @@ func init() {
 		get("profile-after-empty", writers),
 
 		// The consent popup's query
-		contract.Case{Name: "operator-info-long-session", Path: "/api/bd/operator-info", Query: url.Values{"session_id": {strings.Repeat("s", 200)}}, Roles: some},
-		contract.Case{Name: "operator-info-session-list", Path: "/api/bd/operator-info", Query: url.Values{"session_id": {"a", "b"}}, Roles: some},
-		contract.Case{Name: "operator-info-session-object", Path: "/api/bd/operator-info", Query: url.Values{"session_id[x]": {"a"}}, Roles: some},
-		contract.Case{Name: "operator-info-session-that-cannot-be-text", Path: "/api/bd/operator-info", Query: url.Values{"session_id[toString]": {"a"}}, Roles: some},
-		contract.Case{Name: "operator-info-other-spelling", Path: "/API/BD/Operator-Info/", Roles: some},
+		contract.Case{Name: "operator-info-long-session", Path: "/api/nd/operator-info", Query: url.Values{"session_id": {strings.Repeat("s", 200)}}, Roles: some},
+		contract.Case{Name: "operator-info-session-list", Path: "/api/nd/operator-info", Query: url.Values{"session_id": {"a", "b"}}, Roles: some},
+		contract.Case{Name: "operator-info-session-object", Path: "/api/nd/operator-info", Query: url.Values{"session_id[x]": {"a"}}, Roles: some},
+		contract.Case{Name: "operator-info-session-that-cannot-be-text", Path: "/api/nd/operator-info", Query: url.Values{"session_id[toString]": {"a"}}, Roles: some},
+		contract.Case{Name: "operator-info-other-spelling", Path: "/API/ND/Operator-Info/", Roles: some},
 
 		// Agent templates
 		contract.Case{Name: "templates", Path: "/api/agent-templates"},
@@ -123,7 +123,7 @@ func init() {
 		enroll("enroll-numbers", map[string]any{"enrollment_token": 1, "device_id": 2}),
 		enroll("enroll-zeros", map[string]any{"enrollment_token": 0, "device_id": "d"}),
 		enroll("enroll-token-that-cannot-be-text", map[string]any{"enrollment_token": toString, "device_id": "d"}),
-		contract.Case{Name: "enroll-without-csrf-token", Method: "POST", Path: "/api/bd/enroll", Body: map[string]any{"enrollment_token": "t", "device_id": "d"}, NoCSRF: true, Roles: some},
+		contract.Case{Name: "enroll-without-csrf-token", Method: "POST", Path: "/api/nd/enroll", Body: map[string]any{"enrollment_token": "t", "device_id": "d"}, NoCSRF: true, Roles: some},
 
 		// Releases of the generic agent, its downloads and the portal
 		contract.Case{Name: "releases", Path: "/api/agent-releases"},

@@ -58,7 +58,7 @@
 	/* ── Leaving ── */
 
 	interface TauriWindow {
-		__BETTERDESK_RDCLIENT_DESKTOP__?: boolean;
+		__NEODESK_RDCLIENT_DESKTOP__?: boolean;
 		__TAURI__?: {
 			core?: { invoke?: (cmd: string, args?: unknown) => Promise<unknown> };
 			window?: { getCurrentWindow?: () => { close?: () => Promise<unknown> } };
@@ -83,7 +83,7 @@
 			invoke('close_current_window').catch(() => void w.__TAURI__?.window?.getCurrentWindow?.()?.close?.());
 			return;
 		}
-		if (w.__BETTERDESK_RDCLIENT_DESKTOP__) return;
+		if (w.__NEODESK_RDCLIENT_DESKTOP__) return;
 		try {
 			if (window.opener && !window.opener.closed) {
 				try {
@@ -219,7 +219,7 @@
 		window.addEventListener('resize', onResize, { passive: true });
 		window.visualViewport?.addEventListener('resize', onResize, { passive: true });
 		window.addEventListener('orientationchange', onOrientation);
-		window.addEventListener('betterdesk:posture-change', evaluatePhone);
+		window.addEventListener('neodesk:posture-change', evaluatePhone);
 
 		// F8 leaves the remote screen (capture phase: the screen keeps every other key)
 		const onF8 = (e: KeyboardEvent) => {
@@ -268,7 +268,7 @@
 		// Other console tabs add a session here instead of opening another viewer tab
 		let bc: BroadcastChannel | null = null;
 		try {
-			bc = new BroadcastChannel('betterdesk-remote');
+			bc = new BroadcastChannel('neodesk-remote');
 			bc.onmessage = (ev: MessageEvent<unknown>) => {
 				const msg = ev.data as { type?: string; deviceId?: string; deviceName?: string } | null;
 				if (!msg || typeof msg !== 'object') return;
@@ -288,7 +288,7 @@
 			window.removeEventListener('resize', onResize);
 			window.visualViewport?.removeEventListener('resize', onResize);
 			window.removeEventListener('orientationchange', onOrientation);
-			window.removeEventListener('betterdesk:posture-change', evaluatePhone);
+			window.removeEventListener('neodesk:posture-change', evaluatePhone);
 			window.removeEventListener('keydown', onF8, true);
 			document.removeEventListener('keydown', onKey);
 			document.removeEventListener('fullscreenchange', onFullscreen);

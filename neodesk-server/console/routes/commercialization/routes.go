@@ -13,10 +13,10 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/unitronix/betterdesk-server/console/billingclock"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/servicedef"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/billingclock"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/servicedef"
 )
 
 type handlers struct {
@@ -85,8 +85,8 @@ func NewClock(d *kit.Deps) *billingclock.Service {
 	windows := runtime.GOOS == "windows"
 	service := servicedef.New(servicedef.Options{
 		Windows:        windows,
-		ServerService:  serviceName(windows, "BetterDeskServer", "betterdesk-server"),
-		ConsoleService: serviceName(windows, "BetterDeskConsole", "betterdesk-console"),
+		ServerService:  serviceName(windows, "NeoDeskServer", "neodesk-server"),
+		ConsoleService: serviceName(windows, "NeoDeskConsole", "neodesk-console"),
 		ConsoleEnvPath: opts.EnvPath,
 	})
 	opts.ServiceConfig = func(ctx context.Context) any { return service.Check(ctx) }

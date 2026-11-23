@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
 )
 
 type connectionConfigRequest struct {

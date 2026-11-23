@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // cssSelectors are the selectors of every rule the stylesheet can have
@@ -684,7 +684,7 @@ func cssStructureOfFontFace(css string) error {
 // meta file of a font, and JSON as such.
 func FuzzConfigFiles(f *testing.F) {
 	for _, seed := range []string{``, `{`, `null`, `[]`, `{"honorary":[1],"links":["a"]}`, `[{"family":"Zeta","category":"serif"},null,{"family":5}]`,
-		`{"type":"betterdesk-theme","branding":{"appName":"T","colors":"red"}}`, `{"type":"betterdesk-theme","displayName":0,"branding":{"colors":{"bgPrimary":{"toString":1}}}}`,
+		`{"type":"neodesk-theme","branding":{"appName":"T","colors":"red"}}`, `{"type":"neodesk-theme","displayName":0,"branding":{"colors":{"bgPrimary":{"toString":1}}}}`,
 		`{"family":["x"],"category":{}}`, "\uFEFF[]", strings.Repeat("[", 6000)} {
 		f.Add([]byte(seed))
 	}

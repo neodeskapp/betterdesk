@@ -7,7 +7,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -22,7 +22,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://127.0.0.1:21114/api"
+   "NEODESK_API_URL": "http://127.0.0.1:21114/api"
   },
   "docker": true,
   "config": {
@@ -30,7 +30,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -45,7 +45,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://127.0.0.1:21121/api"
+   "NEODESK_API_URL": "http://127.0.0.1:21121/api"
   },
   "docker": true,
   "config": {
@@ -53,7 +53,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21121/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21121/api",
+   "neodeskApiUrl": "http://127.0.0.1:21121/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -68,7 +68,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "https://api.example/api"
+   "NEODESK_API_URL": "https://api.example/api"
   },
   "docker": true,
   "config": {
@@ -76,7 +76,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example/api",
-   "betterdeskApiUrl": "https://api.example/api",
+   "neodeskApiUrl": "https://api.example/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -91,7 +91,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -99,7 +99,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -114,15 +114,15 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://betterdesk-server:21114/api"
+   "NEODESK_API_URL": "http://neodesk-server:21114/api"
   },
   "docker": true,
   "config": {
    "goApiPort": 21114,
    "apiPort": 21121,
    "apiEnabled": true,
-   "hbbsApiUrl": "http://betterdesk-server:21114/api",
-   "betterdeskApiUrl": "http://betterdesk-server:21114/api",
+   "hbbsApiUrl": "http://neodesk-server:21114/api",
+   "neodeskApiUrl": "http://neodesk-server:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -137,7 +137,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host"
+   "NEODESK_API_URL": "http://host"
   },
   "docker": true,
   "config": {
@@ -145,7 +145,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host",
-   "betterdeskApiUrl": "http://host",
+   "neodeskApiUrl": "http://host",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -160,7 +160,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "https://host"
+   "NEODESK_API_URL": "https://host"
   },
   "docker": true,
   "config": {
@@ -168,7 +168,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://host",
-   "betterdeskApiUrl": "https://host",
+   "neodeskApiUrl": "https://host",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -183,7 +183,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:80/api"
+   "NEODESK_API_URL": "http://host:80/api"
   },
   "docker": true,
   "config": {
@@ -191,7 +191,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:80/api",
-   "betterdeskApiUrl": "http://host:80/api",
+   "neodeskApiUrl": "http://host:80/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -206,7 +206,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "https://host:443"
+   "NEODESK_API_URL": "https://host:443"
   },
   "docker": true,
   "config": {
@@ -214,7 +214,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://host:443",
-   "betterdeskApiUrl": "https://host:443",
+   "neodeskApiUrl": "https://host:443",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -229,7 +229,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:443"
+   "NEODESK_API_URL": "http://host:443"
   },
   "docker": true,
   "config": {
@@ -237,7 +237,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:443",
-   "betterdeskApiUrl": "http://host:443",
+   "neodeskApiUrl": "http://host:443",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -252,7 +252,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "https://host:80"
+   "NEODESK_API_URL": "https://host:80"
   },
   "docker": true,
   "config": {
@@ -260,7 +260,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://host:80",
-   "betterdeskApiUrl": "https://host:80",
+   "neodeskApiUrl": "https://host:80",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -275,7 +275,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:021114/api"
+   "NEODESK_API_URL": "http://host:021114/api"
   },
   "docker": true,
   "config": {
@@ -283,7 +283,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:021114/api",
-   "betterdeskApiUrl": "http://host:021114/api",
+   "neodeskApiUrl": "http://host:021114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -298,7 +298,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:0/api"
+   "NEODESK_API_URL": "http://host:0/api"
   },
   "docker": true,
   "config": {
@@ -306,7 +306,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:0/api",
-   "betterdeskApiUrl": "http://host:0/api",
+   "neodeskApiUrl": "http://host:0/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -321,7 +321,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:65535"
+   "NEODESK_API_URL": "http://host:65535"
   },
   "docker": true,
   "config": {
@@ -329,7 +329,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:65535",
-   "betterdeskApiUrl": "http://host:65535",
+   "neodeskApiUrl": "http://host:65535",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -344,7 +344,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:65536"
+   "NEODESK_API_URL": "http://host:65536"
   },
   "docker": true,
   "config": {
@@ -352,7 +352,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:65536",
-   "betterdeskApiUrl": "http://host:65536",
+   "neodeskApiUrl": "http://host:65536",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -367,7 +367,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:99999"
+   "NEODESK_API_URL": "http://host:99999"
   },
   "docker": true,
   "config": {
@@ -375,7 +375,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:99999",
-   "betterdeskApiUrl": "http://host:99999",
+   "neodeskApiUrl": "http://host:99999",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -390,7 +390,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:/api"
+   "NEODESK_API_URL": "http://host:/api"
   },
   "docker": true,
   "config": {
@@ -398,7 +398,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:/api",
-   "betterdeskApiUrl": "http://host:/api",
+   "neodeskApiUrl": "http://host:/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -413,7 +413,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:abc"
+   "NEODESK_API_URL": "http://host:abc"
   },
   "docker": true,
   "config": {
@@ -421,7 +421,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:abc",
-   "betterdeskApiUrl": "http://host:abc",
+   "neodeskApiUrl": "http://host:abc",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -436,7 +436,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:5:6"
+   "NEODESK_API_URL": "http://host:5:6"
   },
   "docker": true,
   "config": {
@@ -444,7 +444,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:5:6",
-   "betterdeskApiUrl": "http://host:5:6",
+   "neodeskApiUrl": "http://host:5:6",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -459,7 +459,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:+5"
+   "NEODESK_API_URL": "http://host:+5"
   },
   "docker": true,
   "config": {
@@ -467,7 +467,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:+5",
-   "betterdeskApiUrl": "http://host:+5",
+   "neodeskApiUrl": "http://host:+5",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -482,7 +482,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:-5"
+   "NEODESK_API_URL": "http://host:-5"
   },
   "docker": true,
   "config": {
@@ -490,7 +490,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:-5",
-   "betterdeskApiUrl": "http://host:-5",
+   "neodeskApiUrl": "http://host:-5",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -505,7 +505,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://[::1]:5000/api"
+   "NEODESK_API_URL": "http://[::1]:5000/api"
   },
   "docker": true,
   "config": {
@@ -513,7 +513,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://[::1]:5000/api",
-   "betterdeskApiUrl": "http://[::1]:5000/api",
+   "neodeskApiUrl": "http://[::1]:5000/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -528,7 +528,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://[::1]/api"
+   "NEODESK_API_URL": "http://[::1]/api"
   },
   "docker": true,
   "config": {
@@ -536,7 +536,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://[::1]/api",
-   "betterdeskApiUrl": "http://[::1]/api",
+   "neodeskApiUrl": "http://[::1]/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -551,7 +551,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://user:pw@host:7000/api"
+   "NEODESK_API_URL": "http://user:pw@host:7000/api"
   },
   "docker": true,
   "config": {
@@ -559,7 +559,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://user:pw@host:7000/api",
-   "betterdeskApiUrl": "http://user:pw@host:7000/api",
+   "neodeskApiUrl": "http://user:pw@host:7000/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -574,7 +574,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "HTTP://HOST:7001/API"
+   "NEODESK_API_URL": "HTTP://HOST:7001/API"
   },
   "docker": true,
   "config": {
@@ -582,7 +582,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "HTTP://HOST:7001/API",
-   "betterdeskApiUrl": "HTTP://HOST:7001/API",
+   "neodeskApiUrl": "HTTP://HOST:7001/API",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -597,7 +597,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": " http://host:7002/api "
+   "NEODESK_API_URL": " http://host:7002/api "
   },
   "docker": true,
   "config": {
@@ -605,7 +605,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": " http://host:7002/api ",
-   "betterdeskApiUrl": " http://host:7002/api ",
+   "neodeskApiUrl": " http://host:7002/api ",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -620,7 +620,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:7003/api\n"
+   "NEODESK_API_URL": "http://host:7003/api\n"
   },
   "docker": true,
   "config": {
@@ -628,7 +628,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:7003/api\n",
-   "betterdeskApiUrl": "http://host:7003/api\n",
+   "neodeskApiUrl": "http://host:7003/api\n",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -643,7 +643,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://ho\tst:7004/api"
+   "NEODESK_API_URL": "http://ho\tst:7004/api"
   },
   "docker": true,
   "config": {
@@ -651,7 +651,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://ho\tst:7004/api",
-   "betterdeskApiUrl": "http://ho\tst:7004/api",
+   "neodeskApiUrl": "http://ho\tst:7004/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -666,7 +666,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "ws://host"
+   "NEODESK_API_URL": "ws://host"
   },
   "docker": true,
   "config": {
@@ -674,7 +674,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "ws://host",
-   "betterdeskApiUrl": "ws://host",
+   "neodeskApiUrl": "ws://host",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -689,7 +689,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "wss://host"
+   "NEODESK_API_URL": "wss://host"
   },
   "docker": true,
   "config": {
@@ -697,7 +697,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "wss://host",
-   "betterdeskApiUrl": "wss://host",
+   "neodeskApiUrl": "wss://host",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -712,7 +712,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "wss://host:9"
+   "NEODESK_API_URL": "wss://host:9"
   },
   "docker": true,
   "config": {
@@ -720,7 +720,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "wss://host:9",
-   "betterdeskApiUrl": "wss://host:9",
+   "neodeskApiUrl": "wss://host:9",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -735,7 +735,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "ftp://host"
+   "NEODESK_API_URL": "ftp://host"
   },
   "docker": true,
   "config": {
@@ -743,7 +743,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "ftp://host",
-   "betterdeskApiUrl": "ftp://host",
+   "neodeskApiUrl": "ftp://host",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -758,7 +758,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "ftp://host:21"
+   "NEODESK_API_URL": "ftp://host:21"
   },
   "docker": true,
   "config": {
@@ -766,7 +766,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "ftp://host:21",
-   "betterdeskApiUrl": "ftp://host:21",
+   "neodeskApiUrl": "ftp://host:21",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -781,7 +781,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "ftp://host:2121"
+   "NEODESK_API_URL": "ftp://host:2121"
   },
   "docker": true,
   "config": {
@@ -789,7 +789,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "ftp://host:2121",
-   "betterdeskApiUrl": "ftp://host:2121",
+   "neodeskApiUrl": "ftp://host:2121",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -804,7 +804,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "foo://host:80"
+   "NEODESK_API_URL": "foo://host:80"
   },
   "docker": true,
   "config": {
@@ -812,7 +812,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "foo://host:80",
-   "betterdeskApiUrl": "foo://host:80",
+   "neodeskApiUrl": "foo://host:80",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -827,7 +827,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "foo://host"
+   "NEODESK_API_URL": "foo://host"
   },
   "docker": true,
   "config": {
@@ -835,7 +835,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "foo://host",
-   "betterdeskApiUrl": "foo://host",
+   "neodeskApiUrl": "foo://host",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -850,7 +850,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "foo://host:7005/x"
+   "NEODESK_API_URL": "foo://host:7005/x"
   },
   "docker": true,
   "config": {
@@ -858,7 +858,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "foo://host:7005/x",
-   "betterdeskApiUrl": "foo://host:7005/x",
+   "neodeskApiUrl": "foo://host:7005/x",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -873,7 +873,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "file:///etc/passwd"
+   "NEODESK_API_URL": "file:///etc/passwd"
   },
   "docker": true,
   "config": {
@@ -881,7 +881,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "file:///etc/passwd",
-   "betterdeskApiUrl": "file:///etc/passwd",
+   "neodeskApiUrl": "file:///etc/passwd",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -896,7 +896,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "mailto:a@b"
+   "NEODESK_API_URL": "mailto:a@b"
   },
   "docker": true,
   "config": {
@@ -904,7 +904,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "mailto:a@b",
-   "betterdeskApiUrl": "mailto:a@b",
+   "neodeskApiUrl": "mailto:a@b",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -919,7 +919,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "not a url"
+   "NEODESK_API_URL": "not a url"
   },
   "docker": true,
   "config": {
@@ -927,7 +927,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "not a url",
-   "betterdeskApiUrl": "not a url",
+   "neodeskApiUrl": "not a url",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -942,7 +942,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "127.0.0.1:21114/api"
+   "NEODESK_API_URL": "127.0.0.1:21114/api"
   },
   "docker": true,
   "config": {
@@ -950,7 +950,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "127.0.0.1:21114/api",
-   "betterdeskApiUrl": "127.0.0.1:21114/api",
+   "neodeskApiUrl": "127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -965,7 +965,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "localhost:21114/api"
+   "NEODESK_API_URL": "localhost:21114/api"
   },
   "docker": true,
   "config": {
@@ -973,7 +973,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "localhost:21114/api",
-   "betterdeskApiUrl": "localhost:21114/api",
+   "neodeskApiUrl": "localhost:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -988,7 +988,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "//host:7006"
+   "NEODESK_API_URL": "//host:7006"
   },
   "docker": true,
   "config": {
@@ -996,7 +996,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "//host:7006",
-   "betterdeskApiUrl": "//host:7006",
+   "neodeskApiUrl": "//host:7006",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1011,7 +1011,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "/api"
+   "NEODESK_API_URL": "/api"
   },
   "docker": true,
   "config": {
@@ -1019,7 +1019,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "/api",
-   "betterdeskApiUrl": "/api",
+   "neodeskApiUrl": "/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1034,7 +1034,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://"
+   "NEODESK_API_URL": "http://"
   },
   "docker": true,
   "config": {
@@ -1042,7 +1042,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://",
-   "betterdeskApiUrl": "http://",
+   "neodeskApiUrl": "http://",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1057,7 +1057,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://:7007"
+   "NEODESK_API_URL": "http://:7007"
   },
   "docker": true,
   "config": {
@@ -1065,7 +1065,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://:7007",
-   "betterdeskApiUrl": "http://:7007",
+   "neodeskApiUrl": "http://:7007",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1080,7 +1080,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "https://:7008/api"
+   "NEODESK_API_URL": "https://:7008/api"
   },
   "docker": true,
   "config": {
@@ -1088,7 +1088,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://:7008/api",
-   "betterdeskApiUrl": "https://:7008/api",
+   "neodeskApiUrl": "https://:7008/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1103,7 +1103,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:7009?x=1"
+   "NEODESK_API_URL": "http://host:7009?x=1"
   },
   "docker": true,
   "config": {
@@ -1111,7 +1111,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:7009?x=1",
-   "betterdeskApiUrl": "http://host:7009?x=1",
+   "neodeskApiUrl": "http://host:7009?x=1",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1126,7 +1126,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:7010#f"
+   "NEODESK_API_URL": "http://host:7010#f"
   },
   "docker": true,
   "config": {
@@ -1134,7 +1134,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:7010#f",
-   "betterdeskApiUrl": "http://host:7010#f",
+   "neodeskApiUrl": "http://host:7010#f",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1149,7 +1149,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://ho st:7011"
+   "NEODESK_API_URL": "http://ho st:7011"
   },
   "docker": true,
   "config": {
@@ -1157,7 +1157,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://ho st:7011",
-   "betterdeskApiUrl": "http://ho st:7011",
+   "neodeskApiUrl": "http://ho st:7011",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1172,7 +1172,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:70 12"
+   "NEODESK_API_URL": "http://host:70 12"
   },
   "docker": true,
   "config": {
@@ -1180,7 +1180,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:70 12",
-   "betterdeskApiUrl": "http://host:70 12",
+   "neodeskApiUrl": "http://host:70 12",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1195,7 +1195,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://example.com:00000000000007013"
+   "NEODESK_API_URL": "http://example.com:00000000000007013"
   },
   "docker": true,
   "config": {
@@ -1203,7 +1203,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://example.com:00000000000007013",
-   "betterdeskApiUrl": "http://example.com:00000000000007013",
+   "neodeskApiUrl": "http://example.com:00000000000007013",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1218,7 +1218,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "x"
+   "NEODESK_API_URL": "x"
   },
   "docker": true,
   "config": {
@@ -1226,7 +1226,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "x",
-   "betterdeskApiUrl": "x",
+   "neodeskApiUrl": "x",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1241,7 +1241,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://10.0.0.5:21114"
+   "NEODESK_API_URL": "http://10.0.0.5:21114"
   },
   "docker": true,
   "config": {
@@ -1249,7 +1249,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://10.0.0.5:21114",
-   "betterdeskApiUrl": "http://10.0.0.5:21114",
+   "neodeskApiUrl": "http://10.0.0.5:21114",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1264,7 +1264,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://exa_mple:7014/api"
+   "NEODESK_API_URL": "http://exa_mple:7014/api"
   },
   "docker": true,
   "config": {
@@ -1272,7 +1272,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://exa_mple:7014/api",
-   "betterdeskApiUrl": "http://exa_mple:7014/api",
+   "neodeskApiUrl": "http://exa_mple:7014/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1287,7 +1287,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "https://host:0443/"
+   "NEODESK_API_URL": "https://host:0443/"
   },
   "docker": true,
   "config": {
@@ -1295,7 +1295,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://host:0443/",
-   "betterdeskApiUrl": "https://host:0443/",
+   "neodeskApiUrl": "https://host:0443/",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1310,7 +1310,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://host:080/"
+   "NEODESK_API_URL": "http://host:080/"
   },
   "docker": true,
   "config": {
@@ -1318,7 +1318,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://host:080/",
-   "betterdeskApiUrl": "http://host:080/",
+   "neodeskApiUrl": "http://host:080/",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1333,7 +1333,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "ws://host:80"
+   "NEODESK_API_URL": "ws://host:80"
   },
   "docker": true,
   "config": {
@@ -1341,7 +1341,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "ws://host:80",
-   "betterdeskApiUrl": "ws://host:80",
+   "neodeskApiUrl": "ws://host:80",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1356,7 +1356,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "wss://host:443"
+   "NEODESK_API_URL": "wss://host:443"
   },
   "docker": true,
   "config": {
@@ -1364,7 +1364,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "wss://host:443",
-   "betterdeskApiUrl": "wss://host:443",
+   "neodeskApiUrl": "wss://host:443",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1387,7 +1387,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://10.1.1.1:7100/api",
-   "betterdeskApiUrl": "http://10.1.1.1:7100/api",
+   "neodeskApiUrl": "http://10.1.1.1:7100/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1402,7 +1402,7 @@
  },
  {
   "env": {
-   "BETTERDESK_API_URL": "http://10.1.1.2:7101/api",
+   "NEODESK_API_URL": "http://10.1.1.2:7101/api",
    "HBBS_API_URL": "http://10.1.1.1:7100/api"
   },
   "docker": true,
@@ -1411,7 +1411,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://10.1.1.2:7101/api",
-   "betterdeskApiUrl": "http://10.1.1.2:7101/api",
+   "neodeskApiUrl": "http://10.1.1.2:7101/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1434,7 +1434,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1450,7 +1450,7 @@
  {
   "env": {
    "GO_API_PORT": "21114",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -1458,7 +1458,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1481,7 +1481,7 @@
    "apiPort": 21114,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1505,7 +1505,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1528,7 +1528,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1544,7 +1544,7 @@
  {
   "env": {
    "GO_API_PORT": "8080",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -1552,7 +1552,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1575,7 +1575,7 @@
    "apiPort": 8080,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1599,7 +1599,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1622,7 +1622,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1638,7 +1638,7 @@
  {
   "env": {
    "GO_API_PORT": "0",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -1646,7 +1646,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1669,7 +1669,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1693,7 +1693,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1716,7 +1716,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1732,7 +1732,7 @@
  {
   "env": {
    "GO_API_PORT": "-1",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -1740,7 +1740,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1763,7 +1763,7 @@
    "apiPort": -1,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1787,7 +1787,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1810,7 +1810,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1826,7 +1826,7 @@
  {
   "env": {
    "GO_API_PORT": "-0",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -1834,7 +1834,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1857,7 +1857,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1881,7 +1881,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1904,7 +1904,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1920,7 +1920,7 @@
  {
   "env": {
    "GO_API_PORT": " 9000",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -1928,7 +1928,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1951,7 +1951,7 @@
    "apiPort": 9000,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1975,7 +1975,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -1998,7 +1998,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2014,7 +2014,7 @@
  {
   "env": {
    "GO_API_PORT": "9001 ",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -2022,7 +2022,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2045,7 +2045,7 @@
    "apiPort": 9001,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2069,7 +2069,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2092,7 +2092,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2108,7 +2108,7 @@
  {
   "env": {
    "GO_API_PORT": "\t9002",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -2116,7 +2116,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2139,7 +2139,7 @@
    "apiPort": 9002,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2163,7 +2163,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2186,7 +2186,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2202,7 +2202,7 @@
  {
   "env": {
    "GO_API_PORT": "+9003",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -2210,7 +2210,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2233,7 +2233,7 @@
    "apiPort": 9003,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2257,7 +2257,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2280,7 +2280,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2296,7 +2296,7 @@
  {
   "env": {
    "GO_API_PORT": "9004abc",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -2304,7 +2304,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2327,7 +2327,7 @@
    "apiPort": 9004,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2351,7 +2351,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2374,7 +2374,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2390,7 +2390,7 @@
  {
   "env": {
    "GO_API_PORT": "abc",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -2398,7 +2398,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2421,7 +2421,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2445,7 +2445,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2468,7 +2468,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2484,7 +2484,7 @@
  {
   "env": {
    "GO_API_PORT": "1e3",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -2492,7 +2492,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2515,7 +2515,7 @@
    "apiPort": 1,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2539,7 +2539,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2562,7 +2562,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2578,7 +2578,7 @@
  {
   "env": {
    "GO_API_PORT": "12.9",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -2586,7 +2586,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2609,7 +2609,7 @@
    "apiPort": 12,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2633,7 +2633,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2656,7 +2656,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2672,7 +2672,7 @@
  {
   "env": {
    "GO_API_PORT": "0x10",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -2680,7 +2680,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2703,7 +2703,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2727,7 +2727,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2750,7 +2750,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2766,7 +2766,7 @@
  {
   "env": {
    "GO_API_PORT": "00017",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -2774,7 +2774,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2797,7 +2797,7 @@
    "apiPort": 17,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2821,7 +2821,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2844,7 +2844,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2860,7 +2860,7 @@
  {
   "env": {
    "GO_API_PORT": "99999",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -2868,7 +2868,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2891,7 +2891,7 @@
    "apiPort": 99999,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2915,7 +2915,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2938,7 +2938,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2954,7 +2954,7 @@
  {
   "env": {
    "GO_API_PORT": "",
-   "BETTERDESK_API_URL": "https://api.example:8443/api"
+   "NEODESK_API_URL": "https://api.example:8443/api"
   },
   "docker": true,
   "config": {
@@ -2962,7 +2962,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "https://api.example:8443/api",
-   "betterdeskApiUrl": "https://api.example:8443/api",
+   "neodeskApiUrl": "https://api.example:8443/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -2985,7 +2985,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -3009,7 +3009,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -3032,7 +3032,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -3055,7 +3055,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -3078,7 +3078,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -3101,7 +3101,7 @@
    "apiPort": 21121,
    "apiEnabled": false,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -3124,7 +3124,7 @@
    "apiPort": 21121,
    "apiEnabled": false,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -3147,7 +3147,7 @@
    "apiPort": 21121,
    "apiEnabled": false,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -3170,7 +3170,7 @@
    "apiPort": 21121,
    "apiEnabled": false,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -3193,7 +3193,7 @@
    "apiPort": 21121,
    "apiEnabled": false,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -3217,7 +3217,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -3241,7 +3241,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -3266,7 +3266,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/k",
    "dbPath": "/k/db_v2.sqlite3",
    "pubKeyPath": "/k/id_ed25519.pub",
@@ -3290,7 +3290,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/d",
    "dbPath": "/d/db_v2.sqlite3",
    "pubKeyPath": "/d/id_ed25519.pub",
@@ -3313,7 +3313,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/p",
    "dbPath": "/p/db_v2.sqlite3",
    "pubKeyPath": "/p/id_ed25519.pub",
@@ -3336,7 +3336,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/opt/rustdesk",
    "dbPath": "/opt/rustdesk/db_v2.sqlite3",
    "pubKeyPath": "/opt/rustdesk/id_ed25519.pub",
@@ -3360,7 +3360,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/k",
    "dbPath": "/k/db_v2.sqlite3",
    "pubKeyPath": "/k/id_ed25519.pub",
@@ -3386,7 +3386,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/k",
    "dbPath": "/x/db.sqlite3",
    "pubKeyPath": "/x/key.pub",
@@ -3410,7 +3410,7 @@
    "apiPort": 21121,
    "apiEnabled": true,
    "hbbsApiUrl": "http://127.0.0.1:21114/api",
-   "betterdeskApiUrl": "http://127.0.0.1:21114/api",
+   "neodeskApiUrl": "http://127.0.0.1:21114/api",
    "keysPath": "/p",
    "dbPath": "/p/db_v2.sqlite3",
    "pubKeyPath": "/x/key.pub",

@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // policyRow reads the columns a request writes of a policy, as JSON rows.
@@ -83,7 +83,7 @@ func TestPolicyMembersOfTheWrongType(t *testing.T) {
 func TestUpdateWithoutColumnsAnswersThePolicy(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		created := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/bd/policies", Body: replay.Text(`{"name":"Kept"}`)})
+		created := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/nd/policies", Body: replay.Text(`{"name":"Kept"}`)})
 		if created.Status != 201 {
 			t.Fatalf("create: %d %s", created.Status, created.Body)
 		}
@@ -108,7 +108,7 @@ func TestPolicyIDsThatNameNoRow(t *testing.T) {
 			t.Fatalf("create: %d %s", created.Status, created.Body)
 		}
 		notFound := `{"error":"Policy not found"}`
-		for _, mount := range []string{"/api/dataguard", "/api/bd"} {
+		for _, mount := range []string{"/api/dataguard", "/api/nd"} {
 			for _, id := range []string{"1.5", "abc", "Infinity", "NaN", "1e400", "2147483648", "3000000000", "99999999999999999999", "%C3%BC", "-0", "1x"} {
 				path := mount + "/policies/" + id
 				for _, req := range []replay.Request{
@@ -127,7 +127,7 @@ func TestPolicyIDsThatNameNoRow(t *testing.T) {
 				}
 			}
 		}
-		if got := w.Do(replay.Request{Role: "admin", Method: "DELETE", Path: "/api/bd/policies/1.0"}); got.Status != 200 || got.Body != `{"ok":true}` {
+		if got := w.Do(replay.Request{Role: "admin", Method: "DELETE", Path: "/api/nd/policies/1.0"}); got.Status != 200 || got.Body != `{"ok":true}` {
 			t.Errorf("DELETE 1.0: %d %s", got.Status, got.Body)
 		}
 	})
@@ -138,7 +138,7 @@ func TestPolicyIDsThatNameNoRow(t *testing.T) {
 func TestStatsWithoutEventsAreZero(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := replay.NewWorld(t, db, nil)
-		for _, path := range []string{"/api/dataguard/stats", "/api/bd/stats"} {
+		for _, path := range []string{"/api/dataguard/stats", "/api/nd/stats"} {
 			if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != 200 || got.Body != `{"total":0,"blocked":0,"logged":0,"usb_events":0,"file_events":0,"by_policy":{}}` {
 				t.Errorf("%s: %d %s", path, got.Status, got.Body)
 			}
@@ -156,7 +156,7 @@ func TestStatsCountEventsPerPolicy(t *testing.T) {
 		w.Exec(`INSERT INTO dlp_events (device_id, event_source, action, policy_id) VALUES
 			('D1', 'usb', 'block', 3), ('D2', 'usb', 'log', 3), ('D1', 'file', 'log', 12), ('D3', 'file', 'log', NULL)`, nil)
 		want := `{"total":4,"blocked":1,"logged":3,"usb_events":2,"file_events":2,"by_policy":{"12":1,"3":2}}`
-		for _, path := range []string{"/api/dataguard/stats", "/api/bd/stats"} {
+		for _, path := range []string{"/api/dataguard/stats", "/api/nd/stats"} {
 			if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != 200 || got.Body != want {
 				t.Errorf("%s: %d %s, want 200 %s", path, got.Status, got.Body, want)
 			}
@@ -198,7 +198,7 @@ func TestActivePoliciesSkipABadRow(t *testing.T) {
 		if !db.IsPostgres() {
 			w.Exec("INSERT INTO dlp_policies (id, name, enabled, rules) VALUES (4, 'enabled yes', 'yes', '[2]')", nil)
 		}
-		got := w.Do(replay.Request{Path: "/api/bd/dlp-policies", Headers: map[string]string{"Authorization": "Bearer tok-device-a"}})
+		got := w.Do(replay.Request{Path: "/api/nd/dlp-policies", Headers: map[string]string{"Authorization": "Bearer tok-device-a"}})
 		want := `[{"id":1,"name":"list","rules":[1]},{"id":2,"name":"broken","rules":[]},{"id":3,"name":"object","rules":[]}]`
 		if got.Status != 200 || got.Body != want {
 			t.Errorf("the policies of a device: %d %s, want %s", got.Status, got.Body, want)
@@ -230,7 +230,7 @@ func TestEventFiltersGivenTwiceOrAsAnObject(t *testing.T) {
 			"device_id[x]=D1&device_id=D2":     "D1 D2",
 			"event_source=usb&event_type=warn": "",
 		} {
-			for _, mount := range []string{"/api/dataguard", "/api/bd"} {
+			for _, mount := range []string{"/api/dataguard", "/api/nd"} {
 				got := w.Do(replay.Request{Role: "admin", Path: mount + "/events?" + query})
 				devices := ""
 				for _, id := range []string{"D1", "D2"} {
@@ -315,7 +315,7 @@ func TestDeviceEventChecksTheTypes(t *testing.T) {
 			[]any{"tok-device-a", "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155"})
 		w.Exec("INSERT INTO dlp_policies (name) VALUES ('usb block')", nil)
 		send := func(body string) replay.Answer {
-			return w.Do(replay.Request{Method: "POST", Path: "/api/bd/dlp-events", Body: replay.Text(body), Headers: map[string]string{"Authorization": "Bearer tok-device-a"}})
+			return w.Do(replay.Request{Method: "POST", Path: "/api/nd/dlp-events", Body: replay.Text(body), Headers: map[string]string{"Authorization": "Bearer tok-device-a"}})
 		}
 		for member, values := range map[string][]string{
 			"event_type":  {`7`, `true`, `["a"]`, `{"a":1}`},

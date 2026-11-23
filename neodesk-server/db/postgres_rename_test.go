@@ -6,9 +6,9 @@ import (
 )
 
 func TestPostgresRoundTripRenameTreatsCurrentIDAsActive(t *testing.T) {
-	dsn := os.Getenv("BETTERDESK_TEST_POSTGRES_DSN")
+	dsn := os.Getenv("NEODESK_TEST_POSTGRES_DSN")
 	if dsn == "" {
-		t.Skip("BETTERDESK_TEST_POSTGRES_DSN is not set")
+		t.Skip("NEODESK_TEST_POSTGRES_DSN is not set")
 	}
 
 	database, err := OpenPostgres(dsn)

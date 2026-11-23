@@ -1,5 +1,5 @@
 <!--
-  The BetterDesk agent's inventory report in the Hardware tab: hardware
+  The NeoDesk agent's inventory report in the Hardware tab: hardware
   facts, disks, network adapters, the system, and the installed programs
   with a search. The same data the inventory page lists.
 -->

@@ -3,14 +3,14 @@ package devices
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/registrations"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/registrations"
 )
 
 // issueDeviceToken answers POST /api/devices/{id}/device-token ("Issue a
 // new token"): every device token of the device ends now, and the device
 // gets a new one the next time it checks in. A device approved through a
 // registration request finds it in its next registration status, once
-// (registrations.ReissueToken); the BetterDesk client gets one at its next
+// (registrations.ReissueToken); the NeoDesk client gets one at its next
 // enrollment request signed with its key, and an agent at its next signed
 // registration, since the server issues a token to a device that proves
 // its key and holds none that works. No token is shown or stored in plain

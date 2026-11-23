@@ -27,26 +27,26 @@
    "answer": "{\"total\":0,\"blocked\":null,\"logged\":null,\"usb_events\":null,\"file_events\":null}"
   },
   {
-   "name": "4 GET /api/bd/policies",
+   "name": "4 GET /api/nd/policies",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "status": 200,
    "answer": "[]"
   },
   {
-   "name": "5 GET /api/bd/events",
+   "name": "5 GET /api/nd/events",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/events",
+   "path": "/api/nd/events",
    "status": 200,
    "answer": "[]"
   },
   {
-   "name": "6 GET /api/bd/stats",
+   "name": "6 GET /api/nd/stats",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/stats",
+   "path": "/api/nd/stats",
    "status": 200,
    "answer": "{\"total\":0,\"blocked\":null,\"logged\":null,\"usb_events\":null,\"file_events\":null}"
   },
@@ -109,60 +109,60 @@
    "answer": "{\"total\":0,\"blocked\":null,\"logged\":null,\"usb_events\":null,\"file_events\":null}"
   },
   {
-   "name": "14 POST /api/bd/policies",
+   "name": "14 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
-   "body": "{\"name\":\"By admin at /api/bd\"}",
+   "path": "/api/nd/policies",
+   "body": "{\"name\":\"By admin at /api/nd\"}",
    "status": 201,
-   "answer": "{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
+   "answer": "{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "15 GET /api/bd/policies",
+   "name": "15 GET /api/nd/policies",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
-   "name": "16 GET /api/bd/policies/1",
+   "name": "16 GET /api/nd/policies/1",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/1",
+   "path": "/api/nd/policies/1",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "17 PATCH /api/bd/policies/999",
+   "name": "17 PATCH /api/nd/policies/999",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "body": "{\"name\":\"x\"}",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "18 DELETE /api/bd/policies/999",
+   "name": "18 DELETE /api/nd/policies/999",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "19 GET /api/bd/events",
+   "name": "19 GET /api/nd/events",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/events",
+   "path": "/api/nd/events",
    "status": 200,
    "answer": "[]"
   },
   {
-   "name": "20 GET /api/bd/stats",
+   "name": "20 GET /api/nd/stats",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/stats",
+   "path": "/api/nd/stats",
    "status": 200,
    "answer": "{\"total\":0,\"blocked\":null,\"logged\":null,\"usb_events\":null,\"file_events\":null}"
   },
@@ -181,7 +181,7 @@
    "method": "GET",
    "path": "/api/dataguard/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
    "name": "23 GET /api/dataguard/policies/1",
@@ -225,60 +225,60 @@
    "answer": "{\"total\":0,\"blocked\":null,\"logged\":null,\"usb_events\":null,\"file_events\":null}"
   },
   {
-   "name": "28 POST /api/bd/policies",
+   "name": "28 POST /api/nd/policies",
    "role": "super_admin",
    "method": "POST",
-   "path": "/api/bd/policies",
-   "body": "{\"name\":\"By super_admin at /api/bd\"}",
+   "path": "/api/nd/policies",
+   "body": "{\"name\":\"By super_admin at /api/nd\"}",
    "status": 201,
-   "answer": "{\"id\":4,\"name\":\"By super_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
+   "answer": "{\"id\":4,\"name\":\"By super_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "29 GET /api/bd/policies",
+   "name": "29 GET /api/nd/policies",
    "role": "super_admin",
    "method": "GET",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
-   "name": "30 GET /api/bd/policies/1",
+   "name": "30 GET /api/nd/policies/1",
    "role": "super_admin",
    "method": "GET",
-   "path": "/api/bd/policies/1",
+   "path": "/api/nd/policies/1",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "31 PATCH /api/bd/policies/999",
+   "name": "31 PATCH /api/nd/policies/999",
    "role": "super_admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "body": "{\"name\":\"x\"}",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "32 DELETE /api/bd/policies/999",
+   "name": "32 DELETE /api/nd/policies/999",
    "role": "super_admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "33 GET /api/bd/events",
+   "name": "33 GET /api/nd/events",
    "role": "super_admin",
    "method": "GET",
-   "path": "/api/bd/events",
+   "path": "/api/nd/events",
    "status": 200,
    "answer": "[]"
   },
   {
-   "name": "34 GET /api/bd/stats",
+   "name": "34 GET /api/nd/stats",
    "role": "super_admin",
    "method": "GET",
-   "path": "/api/bd/stats",
+   "path": "/api/nd/stats",
    "status": 200,
    "answer": "{\"total\":0,\"blocked\":null,\"logged\":null,\"usb_events\":null,\"file_events\":null}"
   },
@@ -297,7 +297,7 @@
    "method": "GET",
    "path": "/api/dataguard/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
    "name": "37 GET /api/dataguard/policies/1",
@@ -341,60 +341,60 @@
    "answer": "{\"total\":0,\"blocked\":null,\"logged\":null,\"usb_events\":null,\"file_events\":null}"
   },
   {
-   "name": "42 POST /api/bd/policies",
+   "name": "42 POST /api/nd/policies",
    "role": "server_admin",
    "method": "POST",
-   "path": "/api/bd/policies",
-   "body": "{\"name\":\"By server_admin at /api/bd\"}",
+   "path": "/api/nd/policies",
+   "body": "{\"name\":\"By server_admin at /api/nd\"}",
    "status": 201,
-   "answer": "{\"id\":6,\"name\":\"By server_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
+   "answer": "{\"id\":6,\"name\":\"By server_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "43 GET /api/bd/policies",
+   "name": "43 GET /api/nd/policies",
    "role": "server_admin",
    "method": "GET",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
-   "name": "44 GET /api/bd/policies/1",
+   "name": "44 GET /api/nd/policies/1",
    "role": "server_admin",
    "method": "GET",
-   "path": "/api/bd/policies/1",
+   "path": "/api/nd/policies/1",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "45 PATCH /api/bd/policies/999",
+   "name": "45 PATCH /api/nd/policies/999",
    "role": "server_admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "body": "{\"name\":\"x\"}",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "46 DELETE /api/bd/policies/999",
+   "name": "46 DELETE /api/nd/policies/999",
    "role": "server_admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "47 GET /api/bd/events",
+   "name": "47 GET /api/nd/events",
    "role": "server_admin",
    "method": "GET",
-   "path": "/api/bd/events",
+   "path": "/api/nd/events",
    "status": 200,
    "answer": "[]"
   },
   {
-   "name": "48 GET /api/bd/stats",
+   "name": "48 GET /api/nd/stats",
    "role": "server_admin",
    "method": "GET",
-   "path": "/api/bd/stats",
+   "path": "/api/nd/stats",
    "status": 200,
    "answer": "{\"total\":0,\"blocked\":null,\"logged\":null,\"usb_events\":null,\"file_events\":null}"
   },
@@ -413,7 +413,7 @@
    "method": "GET",
    "path": "/api/dataguard/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
    "name": "51 GET /api/dataguard/policies/1",
@@ -457,60 +457,60 @@
    "answer": "{\"total\":0,\"blocked\":null,\"logged\":null,\"usb_events\":null,\"file_events\":null}"
   },
   {
-   "name": "56 POST /api/bd/policies",
+   "name": "56 POST /api/nd/policies",
    "role": "global_admin",
    "method": "POST",
-   "path": "/api/bd/policies",
-   "body": "{\"name\":\"By global_admin at /api/bd\"}",
+   "path": "/api/nd/policies",
+   "body": "{\"name\":\"By global_admin at /api/nd\"}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: server.config\"}"
   },
   {
-   "name": "57 GET /api/bd/policies",
+   "name": "57 GET /api/nd/policies",
    "role": "global_admin",
    "method": "GET",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
-   "name": "58 GET /api/bd/policies/1",
+   "name": "58 GET /api/nd/policies/1",
    "role": "global_admin",
    "method": "GET",
-   "path": "/api/bd/policies/1",
+   "path": "/api/nd/policies/1",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "59 PATCH /api/bd/policies/999",
+   "name": "59 PATCH /api/nd/policies/999",
    "role": "global_admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "body": "{\"name\":\"x\"}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: server.config\"}"
   },
   {
-   "name": "60 DELETE /api/bd/policies/999",
+   "name": "60 DELETE /api/nd/policies/999",
    "role": "global_admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: server.config\"}"
   },
   {
-   "name": "61 GET /api/bd/events",
+   "name": "61 GET /api/nd/events",
    "role": "global_admin",
    "method": "GET",
-   "path": "/api/bd/events",
+   "path": "/api/nd/events",
    "status": 200,
    "answer": "[]"
   },
   {
-   "name": "62 GET /api/bd/stats",
+   "name": "62 GET /api/nd/stats",
    "role": "global_admin",
    "method": "GET",
-   "path": "/api/bd/stats",
+   "path": "/api/nd/stats",
    "status": 200,
    "answer": "{\"total\":0,\"blocked\":null,\"logged\":null,\"usb_events\":null,\"file_events\":null}"
   },
@@ -529,7 +529,7 @@
    "method": "GET",
    "path": "/api/dataguard/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
    "name": "65 GET /api/dataguard/policies/1",
@@ -573,60 +573,60 @@
    "answer": "{\"total\":0,\"blocked\":null,\"logged\":null,\"usb_events\":null,\"file_events\":null}"
   },
   {
-   "name": "70 POST /api/bd/policies",
+   "name": "70 POST /api/nd/policies",
    "role": "operator",
    "method": "POST",
-   "path": "/api/bd/policies",
-   "body": "{\"name\":\"By operator at /api/bd\"}",
+   "path": "/api/nd/policies",
+   "body": "{\"name\":\"By operator at /api/nd\"}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: server.config\"}"
   },
   {
-   "name": "71 GET /api/bd/policies",
+   "name": "71 GET /api/nd/policies",
    "role": "operator",
    "method": "GET",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
-   "name": "72 GET /api/bd/policies/1",
+   "name": "72 GET /api/nd/policies/1",
    "role": "operator",
    "method": "GET",
-   "path": "/api/bd/policies/1",
+   "path": "/api/nd/policies/1",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "73 PATCH /api/bd/policies/999",
+   "name": "73 PATCH /api/nd/policies/999",
    "role": "operator",
    "method": "PATCH",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "body": "{\"name\":\"x\"}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: server.config\"}"
   },
   {
-   "name": "74 DELETE /api/bd/policies/999",
+   "name": "74 DELETE /api/nd/policies/999",
    "role": "operator",
    "method": "DELETE",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: server.config\"}"
   },
   {
-   "name": "75 GET /api/bd/events",
+   "name": "75 GET /api/nd/events",
    "role": "operator",
    "method": "GET",
-   "path": "/api/bd/events",
+   "path": "/api/nd/events",
    "status": 200,
    "answer": "[]"
   },
   {
-   "name": "76 GET /api/bd/stats",
+   "name": "76 GET /api/nd/stats",
    "role": "operator",
    "method": "GET",
-   "path": "/api/bd/stats",
+   "path": "/api/nd/stats",
    "status": 200,
    "answer": "{\"total\":0,\"blocked\":null,\"logged\":null,\"usb_events\":null,\"file_events\":null}"
   },
@@ -645,7 +645,7 @@
    "method": "GET",
    "path": "/api/dataguard/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
    "name": "79 GET /api/dataguard/policies/1",
@@ -689,60 +689,60 @@
    "answer": "{\"total\":0,\"blocked\":null,\"logged\":null,\"usb_events\":null,\"file_events\":null}"
   },
   {
-   "name": "84 POST /api/bd/policies",
+   "name": "84 POST /api/nd/policies",
    "role": "viewer",
    "method": "POST",
-   "path": "/api/bd/policies",
-   "body": "{\"name\":\"By viewer at /api/bd\"}",
+   "path": "/api/nd/policies",
+   "body": "{\"name\":\"By viewer at /api/nd\"}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: server.config\"}"
   },
   {
-   "name": "85 GET /api/bd/policies",
+   "name": "85 GET /api/nd/policies",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
-   "name": "86 GET /api/bd/policies/1",
+   "name": "86 GET /api/nd/policies/1",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/policies/1",
+   "path": "/api/nd/policies/1",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "87 PATCH /api/bd/policies/999",
+   "name": "87 PATCH /api/nd/policies/999",
    "role": "viewer",
    "method": "PATCH",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "body": "{\"name\":\"x\"}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: server.config\"}"
   },
   {
-   "name": "88 DELETE /api/bd/policies/999",
+   "name": "88 DELETE /api/nd/policies/999",
    "role": "viewer",
    "method": "DELETE",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: server.config\"}"
   },
   {
-   "name": "89 GET /api/bd/events",
+   "name": "89 GET /api/nd/events",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/events",
+   "path": "/api/nd/events",
    "status": 200,
    "answer": "[]"
   },
   {
-   "name": "90 GET /api/bd/stats",
+   "name": "90 GET /api/nd/stats",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/stats",
+   "path": "/api/nd/stats",
    "status": 200,
    "answer": "{\"total\":0,\"blocked\":null,\"logged\":null,\"usb_events\":null,\"file_events\":null}"
   },
@@ -761,7 +761,7 @@
    "method": "GET",
    "path": "/api/dataguard/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
    "name": "93 GET /api/dataguard/policies/1",
@@ -805,60 +805,60 @@
    "answer": "{\"success\":false,\"error\":\"Permission denied: audit.view\"}"
   },
   {
-   "name": "98 POST /api/bd/policies",
+   "name": "98 POST /api/nd/policies",
    "role": "guest_issuer",
    "method": "POST",
-   "path": "/api/bd/policies",
-   "body": "{\"name\":\"By guest_issuer at /api/bd\"}",
+   "path": "/api/nd/policies",
+   "body": "{\"name\":\"By guest_issuer at /api/nd\"}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: server.config\"}"
   },
   {
-   "name": "99 GET /api/bd/policies",
+   "name": "99 GET /api/nd/policies",
    "role": "guest_issuer",
    "method": "GET",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
-   "name": "100 GET /api/bd/policies/1",
+   "name": "100 GET /api/nd/policies/1",
    "role": "guest_issuer",
    "method": "GET",
-   "path": "/api/bd/policies/1",
+   "path": "/api/nd/policies/1",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "101 PATCH /api/bd/policies/999",
+   "name": "101 PATCH /api/nd/policies/999",
    "role": "guest_issuer",
    "method": "PATCH",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "body": "{\"name\":\"x\"}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: server.config\"}"
   },
   {
-   "name": "102 DELETE /api/bd/policies/999",
+   "name": "102 DELETE /api/nd/policies/999",
    "role": "guest_issuer",
    "method": "DELETE",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: server.config\"}"
   },
   {
-   "name": "103 GET /api/bd/events",
+   "name": "103 GET /api/nd/events",
    "role": "guest_issuer",
    "method": "GET",
-   "path": "/api/bd/events",
+   "path": "/api/nd/events",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: audit.view\"}"
   },
   {
-   "name": "104 GET /api/bd/stats",
+   "name": "104 GET /api/nd/stats",
    "role": "guest_issuer",
    "method": "GET",
-   "path": "/api/bd/stats",
+   "path": "/api/nd/stats",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: audit.view\"}"
   },
@@ -921,60 +921,60 @@
    "answer": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}"
   },
   {
-   "name": "112 POST /api/bd/policies",
+   "name": "112 POST /api/nd/policies",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/policies",
-   "body": "{\"name\":\"By nobody at /api/bd\"}",
+   "path": "/api/nd/policies",
+   "body": "{\"name\":\"By nobody at /api/nd\"}",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}"
   },
   {
-   "name": "113 GET /api/bd/policies",
+   "name": "113 GET /api/nd/policies",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}"
   },
   {
-   "name": "114 GET /api/bd/policies/1",
+   "name": "114 GET /api/nd/policies/1",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/policies/1",
+   "path": "/api/nd/policies/1",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}"
   },
   {
-   "name": "115 PATCH /api/bd/policies/999",
+   "name": "115 PATCH /api/nd/policies/999",
    "role": "",
    "method": "PATCH",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "body": "{\"name\":\"x\"}",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}"
   },
   {
-   "name": "116 DELETE /api/bd/policies/999",
+   "name": "116 DELETE /api/nd/policies/999",
    "role": "",
    "method": "DELETE",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}"
   },
   {
-   "name": "117 GET /api/bd/events",
+   "name": "117 GET /api/nd/events",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/events",
+   "path": "/api/nd/events",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}"
   },
   {
-   "name": "118 GET /api/bd/stats",
+   "name": "118 GET /api/nd/stats",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/stats",
+   "path": "/api/nd/stats",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}"
   },
@@ -1069,19 +1069,19 @@
    "answer": "{\"error\":\"Policy name is required\"}"
   },
   {
-   "name": "129 POST /api/bd/policies",
+   "name": "129 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{}",
    "status": 400,
    "answer": "{\"error\":\"Policy name is required\"}"
   },
   {
-   "name": "130 POST /api/bd/policies",
+   "name": "130 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "[{\"name\":\"In a list\"}]",
    "status": 400,
    "answer": "{\"error\":\"Policy name is required\"}"
@@ -1591,190 +1591,190 @@
    "answer": "{\"id\":44,\"name\":\"Policy 56\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"UNIQUE\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "187 POST /api/bd/policies",
+   "name": "187 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 57\",\"enabled\":true}",
    "status": 201,
    "answer": "{\"id\":45,\"name\":\"Policy 57\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "188 POST /api/bd/policies",
+   "name": "188 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 58\",\"enabled\":false}",
    "status": 201,
    "answer": "{\"id\":46,\"name\":\"Policy 58\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "189 POST /api/bd/policies",
+   "name": "189 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 59\",\"enabled\":1}",
    "status": 201,
    "answer": "{\"id\":47,\"name\":\"Policy 59\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "190 POST /api/bd/policies",
+   "name": "190 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 60\",\"enabled\":0}",
    "status": 201,
    "answer": "{\"id\":48,\"name\":\"Policy 60\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "191 POST /api/bd/policies",
+   "name": "191 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 61\",\"enabled\":2}",
    "status": 201,
    "answer": "{\"id\":49,\"name\":\"Policy 61\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "192 POST /api/bd/policies",
+   "name": "192 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 62\",\"enabled\":-1}",
    "status": 201,
    "answer": "{\"id\":50,\"name\":\"Policy 62\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "193 POST /api/bd/policies",
+   "name": "193 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 63\",\"enabled\":\"yes\"}",
    "status": 201,
    "answer": "{\"id\":51,\"name\":\"Policy 63\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "194 POST /api/bd/policies",
+   "name": "194 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 64\",\"enabled\":\"no\"}",
    "status": 201,
    "answer": "{\"id\":52,\"name\":\"Policy 64\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "195 POST /api/bd/policies",
+   "name": "195 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 65\",\"enabled\":\"true\"}",
    "status": 201,
    "answer": "{\"id\":53,\"name\":\"Policy 65\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "196 POST /api/bd/policies",
+   "name": "196 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 66\",\"enabled\":\"false\"}",
    "status": 201,
    "answer": "{\"id\":54,\"name\":\"Policy 66\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "197 POST /api/bd/policies",
+   "name": "197 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 67\",\"enabled\":\"t\"}",
    "status": 201,
    "answer": "{\"id\":55,\"name\":\"Policy 67\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "198 POST /api/bd/policies",
+   "name": "198 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 68\",\"enabled\":\"on\"}",
    "status": 201,
    "answer": "{\"id\":56,\"name\":\"Policy 68\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "199 POST /api/bd/policies",
+   "name": "199 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 69\",\"enabled\":\"off\"}",
    "status": 201,
    "answer": "{\"id\":57,\"name\":\"Policy 69\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "200 POST /api/bd/policies",
+   "name": "200 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 70\",\"enabled\":\"\"}",
    "status": 201,
    "answer": "{\"id\":58,\"name\":\"Policy 70\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "201 POST /api/bd/policies",
+   "name": "201 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 71\",\"enabled\":\" \"}",
    "status": 201,
    "answer": "{\"id\":59,\"name\":\"Policy 71\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "202 POST /api/bd/policies",
+   "name": "202 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 72\",\"enabled\":\"abc\"}",
    "status": 201,
    "answer": "{\"id\":60,\"name\":\"Policy 72\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "203 POST /api/bd/policies",
+   "name": "203 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 73\",\"enabled\":null}",
    "status": 201,
    "answer": "{\"id\":61,\"name\":\"Policy 73\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "204 POST /api/bd/policies",
+   "name": "204 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 74\",\"enabled\":[]}",
    "status": 201,
    "answer": "{\"id\":62,\"name\":\"Policy 74\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "205 POST /api/bd/policies",
+   "name": "205 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 75\",\"enabled\":[1]}",
    "status": 201,
    "answer": "{\"id\":63,\"name\":\"Policy 75\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "206 POST /api/bd/policies",
+   "name": "206 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 76\",\"enabled\":{}}",
    "status": 201,
    "answer": "{\"id\":64,\"name\":\"Policy 76\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "207 POST /api/bd/policies",
+   "name": "207 POST /api/nd/policies",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "body": "{\"name\":\"Policy 77\",\"enabled\":1.5}",
    "status": 201,
    "answer": "{\"id\":65,\"name\":\"Policy 77\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
@@ -1920,15 +1920,15 @@
    "method": "GET",
    "path": "/api/dataguard/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":7,\"name\":\"P\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":8,\"name\":\"spaced out\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":9,\"name\":\"Policy 1\",\"description\":\"text\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":10,\"name\":\"Policy 2\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":11,\"name\":\"Policy 3\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":12,\"name\":\"Policy 4\",\"description\":\"5.0\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":13,\"name\":\"Policy 5\",\"description\":\"1.5\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":14,\"name\":\"Policy 7\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":15,\"name\":\"Policy 8\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":16,\"name\":\"Policy 9\",\"description\":\"one\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":17,\"name\":\"Policy 14\",\"description\":\"UNIQUE\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":18,\"name\":\"Policy 15\",\"description\":\"\",\"policy_type\":\"text\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":19,\"name\":\"Policy 16\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":20,\"name\":\"Policy 17\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":21,\"name\":\"Policy 18\",\"description\":\"\",\"policy_type\":\"5.0\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":22,\"name\":\"Policy 19\",\"description\":\"\",\"policy_type\":\"1.5\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":23,\"name\":\"Policy 21\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":24,\"name\":\"Policy 22\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":25,\"name\":\"Policy 23\",\"description\":\"\",\"policy_type\":\"one\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":26,\"name\":\"Policy 28\",\"description\":\"\",\"policy_type\":\"UNIQUE\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":27,\"name\":\"Policy 29\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"text\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":28,\"name\":\"Policy 30\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":29,\"name\":\"Policy 31\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":30,\"name\":\"Policy 32\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"5.0\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":31,\"name\":\"Policy 33\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"1.5\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":32,\"name\":\"Policy 35\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":33,\"name\":\"Policy 36\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":34,\"name\":\"Policy 37\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"one\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":35,\"name\":\"Policy 42\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"UNIQUE\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":36,\"name\":\"Policy 43\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"text\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":37,\"name\":\"Policy 44\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":38,\"name\":\"Policy 45\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":39,\"name\":\"Policy 46\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"5.0\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":40,\"name\":\"Policy 47\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"1.5\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":41,\"name\":\"Policy 49\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":42,\"name\":\"Policy 50\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":43,\"name\":\"Policy 51\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"one\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":44,\"name\":\"Policy 56\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"UNIQUE\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":45,\"name\":\"Policy 57\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":46,\"name\":\"Policy 58\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":47,\"name\":\"Policy 59\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":48,\"name\":\"Policy 60\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":49,\"name\":\"Policy 61\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":50,\"name\":\"Policy 62\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":51,\"name\":\"Policy 63\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":52,\"name\":\"Policy 64\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":53,\"name\":\"Policy 65\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":54,\"name\":\"Policy 66\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":55,\"name\":\"Policy 67\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":56,\"name\":\"Policy 68\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":57,\"name\":\"Policy 69\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":58,\"name\":\"Policy 70\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":59,\"name\":\"Policy 71\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":60,\"name\":\"Policy 72\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":61,\"name\":\"Policy 73\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":62,\"name\":\"Policy 74\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":63,\"name\":\"Policy 75\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":64,\"name\":\"Policy 76\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":65,\"name\":\"Policy 77\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":66,\"name\":\"Policy 78\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":67,\"name\":\"Policy 79\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[1,\"a\",null,true,[2,[3]],{\"2\":\"x\",\"10\":\"y\",\"b\":1,\"a\":1.5}],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":68,\"name\":\"Policy 80\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[{\"rule_type\":\"usb\",\"action\":\"block\",\"filter\":\"*\"}],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":69,\"name\":\"Policy 81\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[\" <&>\\\"\\\\\",1e+21,1e-7,0,123456789012345680000],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":70,\"name\":\"Policy 91\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[1,100,12345678901234567000,{\"b\":3,\"a\":2}],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":71,\"name\":\"Policy 92\",\"description\":\"\",\"policy_type\":\"log\",\"action\":\"a\",\"scope\":\"b\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":7,\"name\":\"P\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":8,\"name\":\"spaced out\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":9,\"name\":\"Policy 1\",\"description\":\"text\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":10,\"name\":\"Policy 2\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":11,\"name\":\"Policy 3\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":12,\"name\":\"Policy 4\",\"description\":\"5.0\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":13,\"name\":\"Policy 5\",\"description\":\"1.5\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":14,\"name\":\"Policy 7\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":15,\"name\":\"Policy 8\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":16,\"name\":\"Policy 9\",\"description\":\"one\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":17,\"name\":\"Policy 14\",\"description\":\"UNIQUE\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":18,\"name\":\"Policy 15\",\"description\":\"\",\"policy_type\":\"text\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":19,\"name\":\"Policy 16\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":20,\"name\":\"Policy 17\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":21,\"name\":\"Policy 18\",\"description\":\"\",\"policy_type\":\"5.0\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":22,\"name\":\"Policy 19\",\"description\":\"\",\"policy_type\":\"1.5\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":23,\"name\":\"Policy 21\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":24,\"name\":\"Policy 22\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":25,\"name\":\"Policy 23\",\"description\":\"\",\"policy_type\":\"one\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":26,\"name\":\"Policy 28\",\"description\":\"\",\"policy_type\":\"UNIQUE\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":27,\"name\":\"Policy 29\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"text\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":28,\"name\":\"Policy 30\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":29,\"name\":\"Policy 31\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":30,\"name\":\"Policy 32\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"5.0\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":31,\"name\":\"Policy 33\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"1.5\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":32,\"name\":\"Policy 35\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":33,\"name\":\"Policy 36\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":34,\"name\":\"Policy 37\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"one\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":35,\"name\":\"Policy 42\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"UNIQUE\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":36,\"name\":\"Policy 43\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"text\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":37,\"name\":\"Policy 44\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":38,\"name\":\"Policy 45\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":39,\"name\":\"Policy 46\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"5.0\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":40,\"name\":\"Policy 47\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"1.5\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":41,\"name\":\"Policy 49\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":42,\"name\":\"Policy 50\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":43,\"name\":\"Policy 51\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"one\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":44,\"name\":\"Policy 56\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"UNIQUE\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":45,\"name\":\"Policy 57\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":46,\"name\":\"Policy 58\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":47,\"name\":\"Policy 59\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":48,\"name\":\"Policy 60\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":49,\"name\":\"Policy 61\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":50,\"name\":\"Policy 62\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":51,\"name\":\"Policy 63\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":52,\"name\":\"Policy 64\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":53,\"name\":\"Policy 65\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":54,\"name\":\"Policy 66\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":55,\"name\":\"Policy 67\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":56,\"name\":\"Policy 68\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":57,\"name\":\"Policy 69\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":58,\"name\":\"Policy 70\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":59,\"name\":\"Policy 71\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":60,\"name\":\"Policy 72\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":61,\"name\":\"Policy 73\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":62,\"name\":\"Policy 74\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":63,\"name\":\"Policy 75\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":64,\"name\":\"Policy 76\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":65,\"name\":\"Policy 77\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":66,\"name\":\"Policy 78\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":67,\"name\":\"Policy 79\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[1,\"a\",null,true,[2,[3]],{\"2\":\"x\",\"10\":\"y\",\"b\":1,\"a\":1.5}],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":68,\"name\":\"Policy 80\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[{\"rule_type\":\"usb\",\"action\":\"block\",\"filter\":\"*\"}],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":69,\"name\":\"Policy 81\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[\" <&>\\\"\\\\\",1e+21,1e-7,0,123456789012345680000],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":70,\"name\":\"Policy 91\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[1,100,12345678901234567000,{\"b\":3,\"a\":2}],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":71,\"name\":\"Policy 92\",\"description\":\"\",\"policy_type\":\"log\",\"action\":\"a\",\"scope\":\"b\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
-   "name": "224 GET /api/bd/policies",
+   "name": "224 GET /api/nd/policies",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/policies",
+   "path": "/api/nd/policies",
    "status": 200,
-   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":7,\"name\":\"P\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":8,\"name\":\"spaced out\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":9,\"name\":\"Policy 1\",\"description\":\"text\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":10,\"name\":\"Policy 2\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":11,\"name\":\"Policy 3\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":12,\"name\":\"Policy 4\",\"description\":\"5.0\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":13,\"name\":\"Policy 5\",\"description\":\"1.5\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":14,\"name\":\"Policy 7\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":15,\"name\":\"Policy 8\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":16,\"name\":\"Policy 9\",\"description\":\"one\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":17,\"name\":\"Policy 14\",\"description\":\"UNIQUE\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":18,\"name\":\"Policy 15\",\"description\":\"\",\"policy_type\":\"text\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":19,\"name\":\"Policy 16\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":20,\"name\":\"Policy 17\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":21,\"name\":\"Policy 18\",\"description\":\"\",\"policy_type\":\"5.0\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":22,\"name\":\"Policy 19\",\"description\":\"\",\"policy_type\":\"1.5\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":23,\"name\":\"Policy 21\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":24,\"name\":\"Policy 22\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":25,\"name\":\"Policy 23\",\"description\":\"\",\"policy_type\":\"one\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":26,\"name\":\"Policy 28\",\"description\":\"\",\"policy_type\":\"UNIQUE\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":27,\"name\":\"Policy 29\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"text\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":28,\"name\":\"Policy 30\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":29,\"name\":\"Policy 31\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":30,\"name\":\"Policy 32\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"5.0\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":31,\"name\":\"Policy 33\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"1.5\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":32,\"name\":\"Policy 35\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":33,\"name\":\"Policy 36\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":34,\"name\":\"Policy 37\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"one\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":35,\"name\":\"Policy 42\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"UNIQUE\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":36,\"name\":\"Policy 43\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"text\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":37,\"name\":\"Policy 44\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":38,\"name\":\"Policy 45\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":39,\"name\":\"Policy 46\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"5.0\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":40,\"name\":\"Policy 47\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"1.5\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":41,\"name\":\"Policy 49\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":42,\"name\":\"Policy 50\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":43,\"name\":\"Policy 51\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"one\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":44,\"name\":\"Policy 56\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"UNIQUE\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":45,\"name\":\"Policy 57\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":46,\"name\":\"Policy 58\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":47,\"name\":\"Policy 59\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":48,\"name\":\"Policy 60\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":49,\"name\":\"Policy 61\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":50,\"name\":\"Policy 62\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":51,\"name\":\"Policy 63\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":52,\"name\":\"Policy 64\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":53,\"name\":\"Policy 65\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":54,\"name\":\"Policy 66\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":55,\"name\":\"Policy 67\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":56,\"name\":\"Policy 68\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":57,\"name\":\"Policy 69\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":58,\"name\":\"Policy 70\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":59,\"name\":\"Policy 71\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":60,\"name\":\"Policy 72\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":61,\"name\":\"Policy 73\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":62,\"name\":\"Policy 74\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":63,\"name\":\"Policy 75\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":64,\"name\":\"Policy 76\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":65,\"name\":\"Policy 77\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":66,\"name\":\"Policy 78\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":67,\"name\":\"Policy 79\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[1,\"a\",null,true,[2,[3]],{\"2\":\"x\",\"10\":\"y\",\"b\":1,\"a\":1.5}],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":68,\"name\":\"Policy 80\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[{\"rule_type\":\"usb\",\"action\":\"block\",\"filter\":\"*\"}],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":69,\"name\":\"Policy 81\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[\" <&>\\\"\\\\\",1e+21,1e-7,0,123456789012345680000],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":70,\"name\":\"Policy 91\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[1,100,12345678901234567000,{\"b\":3,\"a\":2}],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":71,\"name\":\"Policy 92\",\"description\":\"\",\"policy_type\":\"log\",\"action\":\"a\",\"scope\":\"b\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
+   "answer": "[{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":3,\"name\":\"By super_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":4,\"name\":\"By super_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":6,\"name\":\"By server_admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":7,\"name\":\"P\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":8,\"name\":\"spaced out\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":9,\"name\":\"Policy 1\",\"description\":\"text\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":10,\"name\":\"Policy 2\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":11,\"name\":\"Policy 3\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":12,\"name\":\"Policy 4\",\"description\":\"5.0\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":13,\"name\":\"Policy 5\",\"description\":\"1.5\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":14,\"name\":\"Policy 7\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":15,\"name\":\"Policy 8\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":16,\"name\":\"Policy 9\",\"description\":\"one\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":17,\"name\":\"Policy 14\",\"description\":\"UNIQUE\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":18,\"name\":\"Policy 15\",\"description\":\"\",\"policy_type\":\"text\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":19,\"name\":\"Policy 16\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":20,\"name\":\"Policy 17\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":21,\"name\":\"Policy 18\",\"description\":\"\",\"policy_type\":\"5.0\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":22,\"name\":\"Policy 19\",\"description\":\"\",\"policy_type\":\"1.5\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":23,\"name\":\"Policy 21\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":24,\"name\":\"Policy 22\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":25,\"name\":\"Policy 23\",\"description\":\"\",\"policy_type\":\"one\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":26,\"name\":\"Policy 28\",\"description\":\"\",\"policy_type\":\"UNIQUE\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":27,\"name\":\"Policy 29\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"text\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":28,\"name\":\"Policy 30\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":29,\"name\":\"Policy 31\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":30,\"name\":\"Policy 32\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"5.0\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":31,\"name\":\"Policy 33\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"1.5\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":32,\"name\":\"Policy 35\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":33,\"name\":\"Policy 36\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":34,\"name\":\"Policy 37\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"one\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":35,\"name\":\"Policy 42\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"UNIQUE\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":36,\"name\":\"Policy 43\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"text\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":37,\"name\":\"Policy 44\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":38,\"name\":\"Policy 45\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":39,\"name\":\"Policy 46\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"5.0\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":40,\"name\":\"Policy 47\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"1.5\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":41,\"name\":\"Policy 49\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":42,\"name\":\"Policy 50\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":43,\"name\":\"Policy 51\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"one\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":44,\"name\":\"Policy 56\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"UNIQUE\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":45,\"name\":\"Policy 57\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":46,\"name\":\"Policy 58\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":47,\"name\":\"Policy 59\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":48,\"name\":\"Policy 60\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":49,\"name\":\"Policy 61\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":50,\"name\":\"Policy 62\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":51,\"name\":\"Policy 63\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":52,\"name\":\"Policy 64\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":53,\"name\":\"Policy 65\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":54,\"name\":\"Policy 66\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":55,\"name\":\"Policy 67\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":56,\"name\":\"Policy 68\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":57,\"name\":\"Policy 69\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":58,\"name\":\"Policy 70\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":59,\"name\":\"Policy 71\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":60,\"name\":\"Policy 72\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":61,\"name\":\"Policy 73\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":0,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":62,\"name\":\"Policy 74\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":63,\"name\":\"Policy 75\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":64,\"name\":\"Policy 76\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":65,\"name\":\"Policy 77\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":66,\"name\":\"Policy 78\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":67,\"name\":\"Policy 79\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[1,\"a\",null,true,[2,[3]],{\"2\":\"x\",\"10\":\"y\",\"b\":1,\"a\":1.5}],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":68,\"name\":\"Policy 80\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[{\"rule_type\":\"usb\",\"action\":\"block\",\"filter\":\"*\"}],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":69,\"name\":\"Policy 81\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[\" <&>\\\"\\\\\",1e+21,1e-7,0,123456789012345680000],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":70,\"name\":\"Policy 91\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[1,100,12345678901234567000,{\"b\":3,\"a\":2}],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"},{\"id\":71,\"name\":\"Policy 92\",\"description\":\"\",\"policy_type\":\"log\",\"action\":\"a\",\"scope\":\"b\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}]"
   },
   {
    "name": "225 GET /api/dataguard/policies/1",
@@ -1939,18 +1939,18 @@
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "226 GET /api/bd/policies/1",
+   "name": "226 GET /api/nd/policies/1",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/1",
+   "path": "/api/nd/policies/1",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "227 PATCH /api/bd/policies/1",
+   "name": "227 PATCH /api/nd/policies/1",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/1",
+   "path": "/api/nd/policies/1",
    "body": "{\"scope\":\"set-by-1\"}",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-1\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
@@ -1964,18 +1964,18 @@
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-1\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "229 GET /api/bd/policies/01",
+   "name": "229 GET /api/nd/policies/01",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/01",
+   "path": "/api/nd/policies/01",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-1\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "230 PATCH /api/bd/policies/01",
+   "name": "230 PATCH /api/nd/policies/01",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/01",
+   "path": "/api/nd/policies/01",
    "body": "{\"scope\":\"set-by-01\"}",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-01\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
@@ -1989,18 +1989,18 @@
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-01\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "232 GET /api/bd/policies/1.0",
+   "name": "232 GET /api/nd/policies/1.0",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/1.0",
+   "path": "/api/nd/policies/1.0",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-01\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "233 PATCH /api/bd/policies/1.0",
+   "name": "233 PATCH /api/nd/policies/1.0",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/1.0",
+   "path": "/api/nd/policies/1.0",
    "body": "{\"scope\":\"set-by-1.0\"}",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-1.0\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
@@ -2014,18 +2014,18 @@
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-1.0\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "235 GET /api/bd/policies/1e0",
+   "name": "235 GET /api/nd/policies/1e0",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/1e0",
+   "path": "/api/nd/policies/1e0",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-1.0\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:25\"}"
   },
   {
-   "name": "236 PATCH /api/bd/policies/1e0",
+   "name": "236 PATCH /api/nd/policies/1e0",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/1e0",
+   "path": "/api/nd/policies/1e0",
    "body": "{\"scope\":\"set-by-1e0\"}",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-1e0\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:26\"}"
@@ -2039,18 +2039,18 @@
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-1e0\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:26\"}"
   },
   {
-   "name": "238 GET /api/bd/policies/%201",
+   "name": "238 GET /api/nd/policies/%201",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/%201",
+   "path": "/api/nd/policies/%201",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-1e0\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:26\"}"
   },
   {
-   "name": "239 PATCH /api/bd/policies/%201",
+   "name": "239 PATCH /api/nd/policies/%201",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/%201",
+   "path": "/api/nd/policies/%201",
    "body": "{\"scope\":\"set-by-%201\"}",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-%201\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:26\"}"
@@ -2064,18 +2064,18 @@
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-%201\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:26\"}"
   },
   {
-   "name": "241 GET /api/bd/policies/0x1",
+   "name": "241 GET /api/nd/policies/0x1",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/0x1",
+   "path": "/api/nd/policies/0x1",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-%201\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:26\"}"
   },
   {
-   "name": "242 PATCH /api/bd/policies/0x1",
+   "name": "242 PATCH /api/nd/policies/0x1",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/0x1",
+   "path": "/api/nd/policies/0x1",
    "body": "{\"scope\":\"set-by-0x1\"}",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-0x1\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:26\"}"
@@ -2089,18 +2089,18 @@
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "244 GET /api/bd/policies/1.5",
+   "name": "244 GET /api/nd/policies/1.5",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/1.5",
+   "path": "/api/nd/policies/1.5",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "245 PATCH /api/bd/policies/1.5",
+   "name": "245 PATCH /api/nd/policies/1.5",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/1.5",
+   "path": "/api/nd/policies/1.5",
    "body": "{\"scope\":\"set-by-1.5\"}",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
@@ -2114,18 +2114,18 @@
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "247 GET /api/bd/policies/abc",
+   "name": "247 GET /api/nd/policies/abc",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/abc",
+   "path": "/api/nd/policies/abc",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "248 PATCH /api/bd/policies/abc",
+   "name": "248 PATCH /api/nd/policies/abc",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/abc",
+   "path": "/api/nd/policies/abc",
    "body": "{\"scope\":\"set-by-abc\"}",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
@@ -2139,18 +2139,18 @@
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "250 GET /api/bd/policies/Infinity",
+   "name": "250 GET /api/nd/policies/Infinity",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/Infinity",
+   "path": "/api/nd/policies/Infinity",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "251 PATCH /api/bd/policies/Infinity",
+   "name": "251 PATCH /api/nd/policies/Infinity",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/Infinity",
+   "path": "/api/nd/policies/Infinity",
    "body": "{\"scope\":\"set-by-Infinity\"}",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
@@ -2164,18 +2164,18 @@
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "253 GET /api/bd/policies/999",
+   "name": "253 GET /api/nd/policies/999",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "254 PATCH /api/bd/policies/999",
+   "name": "254 PATCH /api/nd/policies/999",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/999",
+   "path": "/api/nd/policies/999",
    "body": "{\"scope\":\"set-by-999\"}",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
@@ -2189,18 +2189,18 @@
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "256 GET /api/bd/policies/0",
+   "name": "256 GET /api/nd/policies/0",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/0",
+   "path": "/api/nd/policies/0",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "257 PATCH /api/bd/policies/0",
+   "name": "257 PATCH /api/nd/policies/0",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/0",
+   "path": "/api/nd/policies/0",
    "body": "{\"scope\":\"set-by-0\"}",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
@@ -2214,18 +2214,18 @@
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "259 GET /api/bd/policies/-1",
+   "name": "259 GET /api/nd/policies/-1",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/-1",
+   "path": "/api/nd/policies/-1",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "260 PATCH /api/bd/policies/-1",
+   "name": "260 PATCH /api/nd/policies/-1",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/-1",
+   "path": "/api/nd/policies/-1",
    "body": "{\"scope\":\"set-by--1\"}",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
@@ -2239,18 +2239,18 @@
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "262 GET /api/bd/policies/3000000000",
+   "name": "262 GET /api/nd/policies/3000000000",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/3000000000",
+   "path": "/api/nd/policies/3000000000",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "263 PATCH /api/bd/policies/3000000000",
+   "name": "263 PATCH /api/nd/policies/3000000000",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/3000000000",
+   "path": "/api/nd/policies/3000000000",
    "body": "{\"scope\":\"set-by-3000000000\"}",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
@@ -2264,18 +2264,18 @@
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "265 GET /api/bd/policies/99999999999999999999",
+   "name": "265 GET /api/nd/policies/99999999999999999999",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/99999999999999999999",
+   "path": "/api/nd/policies/99999999999999999999",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "266 PATCH /api/bd/policies/99999999999999999999",
+   "name": "266 PATCH /api/nd/policies/99999999999999999999",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/99999999999999999999",
+   "path": "/api/nd/policies/99999999999999999999",
    "body": "{\"scope\":\"set-by-99999999999999999999\"}",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
@@ -2289,18 +2289,18 @@
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "268 GET /api/bd/policies/%20",
+   "name": "268 GET /api/nd/policies/%20",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/%20",
+   "path": "/api/nd/policies/%20",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "269 PATCH /api/bd/policies/%20",
+   "name": "269 PATCH /api/nd/policies/%20",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/%20",
+   "path": "/api/nd/policies/%20",
    "body": "{\"scope\":\"set-by-%20\"}",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
@@ -2320,10 +2320,10 @@
    "answer": "null"
   },
   {
-   "name": "271 PATCH /api/bd/policies/2",
+   "name": "271 PATCH /api/nd/policies/2",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/2",
+   "path": "/api/nd/policies/2",
    "body": "{\"unknown\":true}",
    "status": 200,
    "answer": "null"
@@ -2334,7 +2334,7 @@
    "method": "GET",
    "path": "/api/dataguard/policies/2",
    "status": 200,
-   "answer": "{\"id\":2,\"name\":\"By admin at /api/bd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2001-02-03 04:05:06\",\"updated_at\":\"2001-02-03 04:05:07\"}"
+   "answer": "{\"id\":2,\"name\":\"By admin at /api/nd\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2001-02-03 04:05:06\",\"updated_at\":\"2001-02-03 04:05:07\"}"
   },
   {
    "name": "273 PATCH /api/dataguard/policies/2",
@@ -2607,19 +2607,19 @@
    "answer": "{\"id\":2,\"name\":\"Last\",\"description\":\"x\",\"policy_type\":\"usb\",\"action\":\"log\",\"scope\":\"y\",\"enabled\":1,\"rules\":[1],\"created_at\":\"2001-02-03 04:05:06\",\"updated_at\":\"2026-11-10 12:45:26\"}"
   },
   {
-   "name": "303 PATCH /api/bd/policies/2",
+   "name": "303 PATCH /api/nd/policies/2",
    "role": "admin",
    "method": "PATCH",
-   "path": "/api/bd/policies/2",
+   "path": "/api/nd/policies/2",
    "body": "[{\"name\":\"In a list\"}]",
    "status": 200,
    "answer": "null"
   },
   {
-   "name": "304 GET /api/bd/policies/2",
+   "name": "304 GET /api/nd/policies/2",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/2",
+   "path": "/api/nd/policies/2",
    "status": 200,
    "answer": "{\"id\":2,\"name\":\"Last\",\"description\":\"x\",\"policy_type\":\"usb\",\"action\":\"log\",\"scope\":\"y\",\"enabled\":1,\"rules\":[1],\"created_at\":\"2001-02-03 04:05:06\",\"updated_at\":\"2026-11-10 12:45:26\"}"
   },
@@ -2782,10 +2782,10 @@
    "answer": "{\"total\":10,\"blocked\":2,\"logged\":5,\"usb_events\":5,\"file_events\":3}"
   },
   {
-   "name": "306 GET /api/bd/stats",
+   "name": "306 GET /api/nd/stats",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/stats",
+   "path": "/api/nd/stats",
    "status": 200,
    "answer": "{\"total\":10,\"blocked\":2,\"logged\":5,\"usb_events\":5,\"file_events\":3}"
   },
@@ -3094,18 +3094,18 @@
    "answer": "[]"
   },
   {
-   "name": "345 GET /api/bd/events?device_id=D1",
+   "name": "345 GET /api/nd/events?device_id=D1",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/events?device_id=D1",
+   "path": "/api/nd/events?device_id=D1",
    "status": 200,
    "answer": "[{\"id\":3,\"device_id\":\"D1\",\"event_source\":\"file\",\"event_type\":\"copy\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":{\"2\":\"b\",\"10\":\"a\",\"path\":\"C:\\\\Users\\\\a\\\\x.docx\",\"size\":1.5,\"tags\":[1,[2]]},\"created_at\":\"2001-01-01 00:03:00\"},{\"id\":2,\"device_id\":\"D1\",\"event_source\":\"usb\",\"event_type\":\"removed\",\"policy_id\":1,\"policy_name\":\"By admin\",\"action\":\"log\",\"details\":{},\"created_at\":\"2001-01-01 00:02:00\"},{\"id\":1,\"device_id\":\"D1\",\"event_source\":\"usb\",\"event_type\":\"connected\",\"policy_id\":1,\"policy_name\":\"By admin\",\"action\":\"block\",\"details\":{\"vendor\":\"0781\",\"product\":\"5567\",\"label\":\"SanDisk\"},\"created_at\":\"2001-01-01 00:01:00\"}]"
   },
   {
-   "name": "346 GET /api/bd/events?device_id=D1&limit=1",
+   "name": "346 GET /api/nd/events?device_id=D1&limit=1",
    "role": "operator",
    "method": "GET",
-   "path": "/api/bd/events?device_id=D1&limit=1",
+   "path": "/api/nd/events?device_id=D1&limit=1",
    "status": 200,
    "answer": "[{\"id\":3,\"device_id\":\"D1\",\"event_source\":\"file\",\"event_type\":\"copy\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":{\"2\":\"b\",\"10\":\"a\",\"path\":\"C:\\\\Users\\\\a\\\\x.docx\",\"size\":1.5,\"tags\":[1,[2]]},\"created_at\":\"2001-01-01 00:03:00\"}]"
   },
@@ -3118,10 +3118,10 @@
    "answer": "[{\"id\":10,\"device_id\":\"D4\",\"event_source\":\"file\",\"event_type\":\"copy\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":\"{\\\"inner\\\":true}\",\"created_at\":\"2001-01-01 00:10:00\"},{\"id\":9,\"device_id\":\"D3\",\"event_source\":\"USB\",\"event_type\":\"INFO\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"BLOCK\",\"details\":0,\"created_at\":\"2001-01-01 00:09:00\"},{\"id\":8,\"device_id\":\"D3\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":null,\"created_at\":\"2001-01-01 00:08:00\"},{\"id\":7,\"device_id\":\"D3\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":5,\"created_at\":\"2001-01-01 00:07:00\"},{\"id\":6,\"device_id\":\"D2\",\"event_source\":\"unknown\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":null,\"action\":null,\"details\":{},\"created_at\":\"2001-01-01 00:06:00\"},{\"id\":5,\"device_id\":\"D2\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"allow\",\"details\":\"a JSON string holding {\\\"x\\\":1}\",\"created_at\":\"2001-01-01 00:05:00\"},{\"id\":4,\"device_id\":\"D2\",\"event_source\":\"file\",\"event_type\":\"delete\",\"policy_id\":2,\"policy_name\":\"By super_admin\",\"action\":\"block\",\"details\":[1,2,3],\"created_at\":\"2001-01-01 00:04:00\"},{\"id\":3,\"device_id\":\"D1\",\"event_source\":\"file\",\"event_type\":\"copy\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":{\"2\":\"b\",\"10\":\"a\",\"path\":\"C:\\\\Users\\\\a\\\\x.docx\",\"size\":1.5,\"tags\":[1,[2]]},\"created_at\":\"2001-01-01 00:03:00\"},{\"id\":2,\"device_id\":\"D1\",\"event_source\":\"usb\",\"event_type\":\"removed\",\"policy_id\":1,\"policy_name\":\"By admin\",\"action\":\"log\",\"details\":{},\"created_at\":\"2001-01-01 00:02:00\"},{\"id\":1,\"device_id\":\"D1\",\"event_source\":\"usb\",\"event_type\":\"connected\",\"policy_id\":1,\"policy_name\":\"By admin\",\"action\":\"block\",\"details\":{\"vendor\":\"0781\",\"product\":\"5567\",\"label\":\"SanDisk\"},\"created_at\":\"2001-01-01 00:01:00\"}]"
   },
   {
-   "name": "348 GET /api/bd/events?device_id=D2",
+   "name": "348 GET /api/nd/events?device_id=D2",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/events?device_id=D2",
+   "path": "/api/nd/events?device_id=D2",
    "status": 200,
    "answer": "[{\"id\":6,\"device_id\":\"D2\",\"event_source\":\"unknown\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":null,\"action\":null,\"details\":{},\"created_at\":\"2001-01-01 00:06:00\"},{\"id\":5,\"device_id\":\"D2\",\"event_source\":\"usb\",\"event_type\":\"info\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"allow\",\"details\":\"a JSON string holding {\\\"x\\\":1}\",\"created_at\":\"2001-01-01 00:05:00\"},{\"id\":4,\"device_id\":\"D2\",\"event_source\":\"file\",\"event_type\":\"delete\",\"policy_id\":2,\"policy_name\":\"By super_admin\",\"action\":\"block\",\"details\":[1,2,3],\"created_at\":\"2001-01-01 00:04:00\"}]"
   },
@@ -3196,10 +3196,10 @@
    "answer": "{\"total\":12,\"blocked\":2,\"logged\":7,\"usb_events\":7,\"file_events\":3}"
   },
   {
-   "name": "354 GET /api/bd/stats",
+   "name": "354 GET /api/nd/stats",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/stats",
+   "path": "/api/nd/stats",
    "status": 200,
    "answer": "{\"total\":12,\"blocked\":2,\"logged\":7,\"usb_events\":7,\"file_events\":3}"
   },
@@ -3345,66 +3345,66 @@
    "answer": "{\"id\":903,\"name\":\"rules a number\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:26\",\"updated_at\":\"2026-11-10 12:45:26\"}"
   },
   {
-   "name": "365 DELETE /api/bd/policies/900",
+   "name": "365 DELETE /api/nd/policies/900",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/900",
+   "path": "/api/nd/policies/900",
    "status": 200,
    "answer": "{\"ok\":true}"
   },
   {
-   "name": "366 DELETE /api/bd/policies/901",
+   "name": "366 DELETE /api/nd/policies/901",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/901",
+   "path": "/api/nd/policies/901",
    "status": 200,
    "answer": "{\"ok\":true}"
   },
   {
-   "name": "367 DELETE /api/bd/policies/902",
+   "name": "367 DELETE /api/nd/policies/902",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/902",
+   "path": "/api/nd/policies/902",
    "status": 200,
    "answer": "{\"ok\":true}"
   },
   {
-   "name": "368 DELETE /api/bd/policies/903",
+   "name": "368 DELETE /api/nd/policies/903",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/903",
+   "path": "/api/nd/policies/903",
    "status": 200,
    "answer": "{\"ok\":true}"
   },
   {
-   "name": "369 DELETE /api/bd/policies/904",
+   "name": "369 DELETE /api/nd/policies/904",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/904",
+   "path": "/api/nd/policies/904",
    "status": 200,
    "answer": "{\"ok\":true}"
   },
   {
-   "name": "370 DELETE /api/bd/policies/905",
+   "name": "370 DELETE /api/nd/policies/905",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/905",
+   "path": "/api/nd/policies/905",
    "status": 200,
    "answer": "{\"ok\":true}"
   },
   {
-   "name": "371 DELETE /api/bd/policies/906",
+   "name": "371 DELETE /api/nd/policies/906",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/906",
+   "path": "/api/nd/policies/906",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "372 GET /api/bd/policies/1",
+   "name": "372 GET /api/nd/policies/1",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/policies/1",
+   "path": "/api/nd/policies/1",
    "status": 200,
    "answer": "{\"id\":1,\"name\":\"By admin at /api/dataguard\",\"description\":\"\",\"policy_type\":\"\",\"action\":\"log\",\"scope\":\"set-by-0x1\",\"enabled\":1,\"rules\":[],\"created_at\":\"2026-11-10 12:45:25\",\"updated_at\":\"2026-11-10 12:45:26\"}"
   },
@@ -3441,49 +3441,49 @@
    "answer": "[{\"id\":3,\"device_id\":\"D1\",\"event_source\":\"file\",\"event_type\":\"copy\",\"policy_id\":null,\"policy_name\":\"\",\"action\":\"log\",\"details\":{\"2\":\"b\",\"10\":\"a\",\"path\":\"C:\\\\Users\\\\a\\\\x.docx\",\"size\":1.5,\"tags\":[1,[2]]},\"created_at\":\"2001-01-01 00:03:00\"},{\"id\":2,\"device_id\":\"D1\",\"event_source\":\"usb\",\"event_type\":\"removed\",\"policy_id\":null,\"policy_name\":\"By admin\",\"action\":\"log\",\"details\":{},\"created_at\":\"2001-01-01 00:02:00\"},{\"id\":1,\"device_id\":\"D1\",\"event_source\":\"usb\",\"event_type\":\"connected\",\"policy_id\":null,\"policy_name\":\"By admin\",\"action\":\"block\",\"details\":{\"vendor\":\"0781\",\"product\":\"5567\",\"label\":\"SanDisk\"},\"created_at\":\"2001-01-01 00:01:00\"}]"
   },
   {
-   "name": "377 DELETE /api/bd/policies/2.0",
+   "name": "377 DELETE /api/nd/policies/2.0",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/2.0",
+   "path": "/api/nd/policies/2.0",
    "status": 200,
    "answer": "{\"ok\":true}"
   },
   {
-   "name": "378 DELETE /api/bd/policies/abc",
+   "name": "378 DELETE /api/nd/policies/abc",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/abc",
+   "path": "/api/nd/policies/abc",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "379 DELETE /api/bd/policies/1e400",
+   "name": "379 DELETE /api/nd/policies/1e400",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/1e400",
+   "path": "/api/nd/policies/1e400",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "380 DELETE /api/bd/policies/3.5",
+   "name": "380 DELETE /api/nd/policies/3.5",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/3.5",
+   "path": "/api/nd/policies/3.5",
    "status": 404,
    "answer": "{\"error\":\"Policy not found\"}"
   },
   {
-   "name": "381 DELETE /api/bd/policies/%204",
+   "name": "381 DELETE /api/nd/policies/%204",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/policies/%204",
+   "path": "/api/nd/policies/%204",
    "status": 200,
    "answer": "{\"ok\":true}"
   },
   {
    "name": "policies left",
    "sql": "SELECT id, name FROM dlp_policies ORDER BY id",
-   "rows": "[{\"id\":3,\"name\":\"By super_admin at /api/dataguard\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\"},{\"id\":6,\"name\":\"By server_admin at /api/bd\"},{\"id\":7,\"name\":\"P\"},{\"id\":8,\"name\":\"spaced out\"},{\"id\":9,\"name\":\"Policy 1\"},{\"id\":10,\"name\":\"Policy 2\"},{\"id\":11,\"name\":\"Policy 3\"},{\"id\":12,\"name\":\"Policy 4\"},{\"id\":13,\"name\":\"Policy 5\"},{\"id\":14,\"name\":\"Policy 7\"},{\"id\":15,\"name\":\"Policy 8\"},{\"id\":16,\"name\":\"Policy 9\"},{\"id\":17,\"name\":\"Policy 14\"},{\"id\":18,\"name\":\"Policy 15\"},{\"id\":19,\"name\":\"Policy 16\"},{\"id\":20,\"name\":\"Policy 17\"},{\"id\":21,\"name\":\"Policy 18\"},{\"id\":22,\"name\":\"Policy 19\"},{\"id\":23,\"name\":\"Policy 21\"},{\"id\":24,\"name\":\"Policy 22\"},{\"id\":25,\"name\":\"Policy 23\"},{\"id\":26,\"name\":\"Policy 28\"},{\"id\":27,\"name\":\"Policy 29\"},{\"id\":28,\"name\":\"Policy 30\"},{\"id\":29,\"name\":\"Policy 31\"},{\"id\":30,\"name\":\"Policy 32\"},{\"id\":31,\"name\":\"Policy 33\"},{\"id\":32,\"name\":\"Policy 35\"},{\"id\":33,\"name\":\"Policy 36\"},{\"id\":34,\"name\":\"Policy 37\"},{\"id\":35,\"name\":\"Policy 42\"},{\"id\":36,\"name\":\"Policy 43\"},{\"id\":37,\"name\":\"Policy 44\"},{\"id\":38,\"name\":\"Policy 45\"},{\"id\":39,\"name\":\"Policy 46\"},{\"id\":40,\"name\":\"Policy 47\"},{\"id\":41,\"name\":\"Policy 49\"},{\"id\":42,\"name\":\"Policy 50\"},{\"id\":43,\"name\":\"Policy 51\"},{\"id\":44,\"name\":\"Policy 56\"},{\"id\":45,\"name\":\"Policy 57\"},{\"id\":46,\"name\":\"Policy 58\"},{\"id\":47,\"name\":\"Policy 59\"},{\"id\":48,\"name\":\"Policy 60\"},{\"id\":49,\"name\":\"Policy 61\"},{\"id\":50,\"name\":\"Policy 62\"},{\"id\":51,\"name\":\"Policy 63\"},{\"id\":52,\"name\":\"Policy 64\"},{\"id\":53,\"name\":\"Policy 65\"},{\"id\":54,\"name\":\"Policy 66\"},{\"id\":55,\"name\":\"Policy 67\"},{\"id\":56,\"name\":\"Policy 68\"},{\"id\":57,\"name\":\"Policy 69\"},{\"id\":58,\"name\":\"Policy 70\"},{\"id\":59,\"name\":\"Policy 71\"},{\"id\":60,\"name\":\"Policy 72\"},{\"id\":61,\"name\":\"Policy 73\"},{\"id\":62,\"name\":\"Policy 74\"},{\"id\":63,\"name\":\"Policy 75\"},{\"id\":64,\"name\":\"Policy 76\"},{\"id\":65,\"name\":\"Policy 77\"},{\"id\":66,\"name\":\"Policy 78\"},{\"id\":67,\"name\":\"Policy 79\"},{\"id\":68,\"name\":\"Policy 80\"},{\"id\":69,\"name\":\"Policy 81\"},{\"id\":70,\"name\":\"Policy 91\"},{\"id\":71,\"name\":\"Policy 92\"}]"
+   "rows": "[{\"id\":3,\"name\":\"By super_admin at /api/dataguard\"},{\"id\":5,\"name\":\"By server_admin at /api/dataguard\"},{\"id\":6,\"name\":\"By server_admin at /api/nd\"},{\"id\":7,\"name\":\"P\"},{\"id\":8,\"name\":\"spaced out\"},{\"id\":9,\"name\":\"Policy 1\"},{\"id\":10,\"name\":\"Policy 2\"},{\"id\":11,\"name\":\"Policy 3\"},{\"id\":12,\"name\":\"Policy 4\"},{\"id\":13,\"name\":\"Policy 5\"},{\"id\":14,\"name\":\"Policy 7\"},{\"id\":15,\"name\":\"Policy 8\"},{\"id\":16,\"name\":\"Policy 9\"},{\"id\":17,\"name\":\"Policy 14\"},{\"id\":18,\"name\":\"Policy 15\"},{\"id\":19,\"name\":\"Policy 16\"},{\"id\":20,\"name\":\"Policy 17\"},{\"id\":21,\"name\":\"Policy 18\"},{\"id\":22,\"name\":\"Policy 19\"},{\"id\":23,\"name\":\"Policy 21\"},{\"id\":24,\"name\":\"Policy 22\"},{\"id\":25,\"name\":\"Policy 23\"},{\"id\":26,\"name\":\"Policy 28\"},{\"id\":27,\"name\":\"Policy 29\"},{\"id\":28,\"name\":\"Policy 30\"},{\"id\":29,\"name\":\"Policy 31\"},{\"id\":30,\"name\":\"Policy 32\"},{\"id\":31,\"name\":\"Policy 33\"},{\"id\":32,\"name\":\"Policy 35\"},{\"id\":33,\"name\":\"Policy 36\"},{\"id\":34,\"name\":\"Policy 37\"},{\"id\":35,\"name\":\"Policy 42\"},{\"id\":36,\"name\":\"Policy 43\"},{\"id\":37,\"name\":\"Policy 44\"},{\"id\":38,\"name\":\"Policy 45\"},{\"id\":39,\"name\":\"Policy 46\"},{\"id\":40,\"name\":\"Policy 47\"},{\"id\":41,\"name\":\"Policy 49\"},{\"id\":42,\"name\":\"Policy 50\"},{\"id\":43,\"name\":\"Policy 51\"},{\"id\":44,\"name\":\"Policy 56\"},{\"id\":45,\"name\":\"Policy 57\"},{\"id\":46,\"name\":\"Policy 58\"},{\"id\":47,\"name\":\"Policy 59\"},{\"id\":48,\"name\":\"Policy 60\"},{\"id\":49,\"name\":\"Policy 61\"},{\"id\":50,\"name\":\"Policy 62\"},{\"id\":51,\"name\":\"Policy 63\"},{\"id\":52,\"name\":\"Policy 64\"},{\"id\":53,\"name\":\"Policy 65\"},{\"id\":54,\"name\":\"Policy 66\"},{\"id\":55,\"name\":\"Policy 67\"},{\"id\":56,\"name\":\"Policy 68\"},{\"id\":57,\"name\":\"Policy 69\"},{\"id\":58,\"name\":\"Policy 70\"},{\"id\":59,\"name\":\"Policy 71\"},{\"id\":60,\"name\":\"Policy 72\"},{\"id\":61,\"name\":\"Policy 73\"},{\"id\":62,\"name\":\"Policy 74\"},{\"id\":63,\"name\":\"Policy 75\"},{\"id\":64,\"name\":\"Policy 76\"},{\"id\":65,\"name\":\"Policy 77\"},{\"id\":66,\"name\":\"Policy 78\"},{\"id\":67,\"name\":\"Policy 79\"},{\"id\":68,\"name\":\"Policy 80\"},{\"id\":69,\"name\":\"Policy 81\"},{\"id\":70,\"name\":\"Policy 91\"},{\"id\":71,\"name\":\"Policy 92\"}]"
   }
  ]
 }

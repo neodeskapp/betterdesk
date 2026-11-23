@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	eventsModule "github.com/unitronix/betterdesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	eventsModule "github.com/neodeskapp/neodesk/neodesk-server/events"
 )
 
 // TestCreateHelpRequestIsStored: POST /api/help/requests, which the

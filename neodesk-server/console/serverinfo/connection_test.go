@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // oracleVars are the variables a script passed to a patch function: any of
@@ -542,11 +542,11 @@ func TestRunShellAgainstNode(t *testing.T) {
 // connection service.
 const (
 	sampleSystemd = `[Unit]
-Description=BetterDesk Server
+Description=NeoDesk Server
 
 [Service]
 Type=simple
-ExecStart=/opt/betterdesk/betterdesk-server -mode all
+ExecStart=/opt/neodesk/neodesk-server -mode all
 Environment=P2P_FIRST=Y
 Environment=ALWAYS_USE_RELAY=N
 Restart=always
@@ -556,7 +556,7 @@ WantedBy=multi-user.target
 `
 	sampleCompose = `services:
   server:
-    image: betterdesk-server:local
+    image: neodesk-server:local
     environment:
       - ENCRYPTED_ONLY=1
       - DB_URL=/opt/rustdesk/db_v2.sqlite3
@@ -604,7 +604,7 @@ func TestPatchSystemdSample(t *testing.T) {
 		t.Fatalf("parsed %q", env)
 	}
 	want := `[Unit]
-Description=BetterDesk Server
+Description=NeoDesk Server
 
 [Service]
 Type=simple
@@ -615,7 +615,7 @@ Environment=SAME_NAT_RELAY=N
 Environment=ALLOW_SHARED_NAT_INITIATOR=N
 Environment=LOGGED_IN_ONLY_INITIATOR=Y
 Environment=OPERATOR_ONLY_OUTBOUND=Y
-ExecStart=/opt/betterdesk/betterdesk-server -mode all
+ExecStart=/opt/neodesk/neodesk-server -mode all
 Restart=always
 
 [Install]
@@ -637,7 +637,7 @@ func TestSystemdEnvironmentSeveralAssignmentsOnALine(t *testing.T) {
 		"  Environment=SAME_NAT_RELAY=N LOG_LEVEL=debug\n" +
 		"Environment='OPERATOR_ONLY_OUTBOUND=Y' \"TITLE=a b\"\n" +
 		"Environment=P2P_FALLBACK_MS=500\n" +
-		"ExecStart=/opt/betterdesk/betterdesk-server\n"
+		"ExecStart=/opt/neodesk/neodesk-server\n"
 	want := map[string]string{"P2P_FIRST": "N", "ALWAYS_USE_RELAY": "Y", "SAME_NAT_RELAY": "N", "OPERATOR_ONLY_OUTBOUND": "Y", "P2P_FALLBACK_MS": "500"}
 	if got := ParseSystemdEnvironment(unit); !reflect.DeepEqual(got, want) {
 		t.Errorf("parsed %q, want %q", got, want)
@@ -652,7 +652,7 @@ func TestSystemdEnvironmentSeveralAssignmentsOnALine(t *testing.T) {
 		"Environment=ALLOW_SHARED_NAT_INITIATOR=N\n" +
 		"Environment=LOGGED_IN_ONLY_INITIATOR=Y\n" +
 		"Environment=OPERATOR_ONLY_OUTBOUND=Y\n" +
-		"ExecStart=/opt/betterdesk/betterdesk-server\n"
+		"ExecStart=/opt/neodesk/neodesk-server\n"
 	if got := PatchSystemdEnvironment(unit, relayOnlyVars()); got != patched {
 		t.Errorf("patched unit\n%s\nwant\n%s", got, patched)
 	}
@@ -665,7 +665,7 @@ func TestPatchComposeSample(t *testing.T) {
 	}
 	want := `services:
   server:
-    image: betterdesk-server:local
+    image: neodesk-server:local
     environment:
       - ENCRYPTED_ONLY=1
       - DB_URL=/opt/rustdesk/db_v2.sqlite3
@@ -723,12 +723,12 @@ func TestSettingsFromEnvSwitches(t *testing.T) {
 }
 
 func TestSystemdPaths(t *testing.T) {
-	if !strings.Contains(DefaultSystemdDropIn, "betterdesk-server.service.d") || !strings.Contains(DefaultSystemdDropIn, "50-betterdesk-connection.conf") {
+	if !strings.Contains(DefaultSystemdDropIn, "neodesk-server.service.d") || !strings.Contains(DefaultSystemdDropIn, "50-neodesk-connection.conf") {
 		t.Errorf("drop-in path %q", DefaultSystemdDropIn)
 	}
 	s := New(Options{})
-	if s.opts.SystemdUnit != "/etc/systemd/system/betterdesk-server.service" || s.opts.SystemdDropIn != DefaultSystemdDropIn ||
-		s.opts.DockerEnvFile != "/.dockerenv" || s.opts.ServerServiceName != "betterdesk-server" {
+	if s.opts.SystemdUnit != "/etc/systemd/system/neodesk-server.service" || s.opts.SystemdDropIn != DefaultSystemdDropIn ||
+		s.opts.DockerEnvFile != "/.dockerenv" || s.opts.ServerServiceName != "neodesk-server" {
 		t.Errorf("defaults %+v", s.opts)
 	}
 }
@@ -742,7 +742,7 @@ func TestConnectionModeSplitDocker(t *testing.T) {
 	api.set("PUT", &apiAnswer{Data: json.RawMessage(`{"config":{"mode":"relay_only","p2p_fallback_ms":3500,"same_nat_relay":false,` +
 		`"allow_shared_nat_initiator":true,"logged_in_only_initiator":true,"operator_only_outbound":true}}`)})
 	api.set("GET", api.answers["GET"])
-	s := New(Options{IsDocker: true, Getenv: envMap(map[string]string{"BETTERDESK_DOCKER_LAYOUT": "split"}), GoAPI: api.client(),
+	s := New(Options{IsDocker: true, Getenv: envMap(map[string]string{"NEODESK_DOCKER_LAYOUT": "split"}), GoAPI: api.client(),
 		DockerEnvFile: filepath.Join(t.TempDir(), "none"), SystemdUnit: filepath.Join(t.TempDir(), "none")})
 	if !s.IsDockerSplitDeployment() {
 		t.Fatal("not a split deployment")
@@ -803,7 +803,7 @@ func TestSetConnectionModePermissionDenied(t *testing.T) {
 		s := New(Options{SystemdUnit: unit, DockerEnvFile: filepath.Join(dir, "none"), FS: fsys, Getenv: envMap(nil)})
 		_, err := s.SetConnectionMode(context.Background(), ConnectionInput{Mode: "relay_only"})
 		want := "Cannot write systemd connection settings (permission denied on " + unit + "). " +
-			"Run once as root: sudo ./betterdesk.sh --update " +
+			"Run once as root: sudo ./neodesk.sh --update " +
 			"then retry \u2014 or set ALLOW_SHARED_NAT_INITIATOR via a systemd drop-in."
 		if err == nil || err.Error() != want || !errors.Is(err, fs.ErrPermission) {
 			t.Errorf("%s: error %v", name, err)

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 )
 
 // MeshShareGrant is a time-limited guest desktop link for a mesh agent peer.

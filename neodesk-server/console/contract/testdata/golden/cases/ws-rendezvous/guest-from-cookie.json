@@ -4,7 +4,7 @@
   "method": "GET",
   "path": "/ws/rendezvous?guest_session=contract-cookie&peer_id=900100001",
   "notes": [
-   "header Cookie: bd.guest={secret:glink}",
+   "header Cookie: nd.guest={secret:glink}",
    "no cookies",
    "websocket g9, own origin",
    "websocket expect 1 messages",

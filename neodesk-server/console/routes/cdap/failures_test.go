@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath/proxytest"
 )
 
 // A call the API server fails is answered with its status and its body,

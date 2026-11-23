@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/api"
+	"github.com/neodeskapp/neodesk/neodesk-server/api"
 )
 
 func TestRequestCarriesWhatTheAPIServerSaw(t *testing.T) {

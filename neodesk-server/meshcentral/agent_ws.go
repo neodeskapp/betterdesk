@@ -12,8 +12,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
 )
 
 // AgentConn represents an authenticated MeshAgent control WebSocket.
@@ -397,8 +397,8 @@ func (g *Gateway) SendTunnel(peerID, tunnelURL string, rights uint32, viewOnly b
 		"value":    tunnelURL,
 		"rights":   rights,
 		"consent":  0,
-		"username": "BetterDesk",
-		"realname": "BetterDesk Operator",
+		"username": "NeoDesk",
+		"realname": "NeoDesk Operator",
 	}
 	if viewOnly {
 		msg["desktopviewonly"] = true

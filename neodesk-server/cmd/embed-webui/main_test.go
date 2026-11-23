@@ -8,14 +8,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/embedfs"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/embedfs"
 )
 
 func TestRunCopiesABuildAndStampsTheConsoleFiles(t *testing.T) {
 	root := t.TempDir()
 	from := filepath.Join(root, "web-ui", "build")
-	to := filepath.Join(root, "betterdesk-server", "console", "webui", "dist")
-	static := filepath.Join(root, "betterdesk-server", "console", "static", "files")
+	to := filepath.Join(root, "neodesk-server", "console", "webui", "dist")
+	static := filepath.Join(root, "neodesk-server", "console", "static", "files")
 	for _, dir := range []string{filepath.Join(from, "_ui"), filepath.Dir(to), filepath.Join(static, "lang")} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatal(err)
@@ -70,10 +70,10 @@ func TestRunRefuses(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(noBuild, "index.html"), []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := run(noBuild, filepath.Join(root, "no", "such", "dist"), static); err == nil || !strings.Contains(err.Error(), "run this in betterdesk-server") {
+	if err := run(noBuild, filepath.Join(root, "no", "such", "dist"), static); err == nil || !strings.Contains(err.Error(), "run this in neodesk-server") {
 		t.Errorf("outside the module: %v", err)
 	}
-	if err := run(noBuild, filepath.Join(root, "dist"), filepath.Join(root, "no-static")); err == nil || !strings.Contains(err.Error(), "run this in betterdesk-server") {
+	if err := run(noBuild, filepath.Join(root, "dist"), filepath.Join(root, "no-static")); err == nil || !strings.Contains(err.Error(), "run this in neodesk-server") {
 		t.Errorf("without the console files: %v", err)
 	}
 	for _, dir := range []string{"no", "dist"} {

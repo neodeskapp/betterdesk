@@ -56,7 +56,7 @@
      "code": "invalid",
      "error": "invalid or expired guest link",
      "page": {
-      "appName": "BetterDesk",
+      "appName": "NeoDesk",
       "appVersion": "<version>",
       "branding": {
        "logoIcon": "dns",

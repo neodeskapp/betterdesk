@@ -16,7 +16,7 @@
 //
 // # Three layers
 //
-// The methods named after the functions of services/betterdeskApi.js
+// The methods named after the functions of services/neodeskApi.js
 // (GetPeer for getPeer, ChangePeerID for changePeerId, GetCDAPStatus for
 // getCDAPStatus) return what those functions returned: see wrap.go for the
 // shapes. The methods never return an error, because the functions never

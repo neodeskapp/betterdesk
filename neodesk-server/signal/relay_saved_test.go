@@ -3,7 +3,7 @@ package signal
 import (
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
 )
 
 // L90: the relay devices are given is the "Public relay server" saved in

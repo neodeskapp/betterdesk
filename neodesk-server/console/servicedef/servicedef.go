@@ -1,10 +1,10 @@
-// Package servicedef keeps the service definition of the BetterDesk
+// Package servicedef keeps the service definition of the NeoDesk
 // server in shape for the console's settings (the part of
 // services/updateService.js that sanitizeGoServerServiceConfig was): the
 // server's API stays on plain HTTP, the mesh is on, the server reads the
 // console's .env file and keeps its own ports.
 //
-// On Linux that is the systemd unit of betterdesk-server, rewritten in
+// On Linux that is the systemd unit of neodesk-server, rewritten in
 // place and followed by a reload of the units through the privileged
 // helper. On Windows it is the NSSM service's parameters and environment,
 // and the billing clock keys of the console's .env are copied into the
@@ -18,7 +18,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/advancedconfig"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/advancedconfig"
 )
 
 // Result is what a check did, as the console's answers show it:
@@ -38,8 +38,8 @@ type Options struct {
 	// 'win32').
 	Windows bool
 	// ServerService and ConsoleService are the names of the two services:
-	// betterdesk-server and betterdesk-console, on Windows BetterDeskServer
-	// and BetterDeskConsole.
+	// neodesk-server and neodesk-console, on Windows NeoDeskServer
+	// and NeoDeskConsole.
 	ServerService, ConsoleService string
 	// ConsoleEnvPath is the console's .env file (web-nodejs/.env).
 	ConsoleEnvPath string
@@ -67,12 +67,12 @@ var ErrNoPrivilegedHelper = errors.New("Privileged update failed")
 
 // unitHint is what a refused read or write of the unit adds to its
 // message: the installer's update writes the unit as it should be.
-const unitHint = "Run once as root: sudo ./betterdesk.sh --update"
+const unitHint = "Run once as root: sudo ./neodesk.sh --update"
 
 // allowedUnits are the unit files the privileged helper may touch.
 var allowedUnits = map[string]bool{
-	"/etc/systemd/system/betterdesk-server.service":  true,
-	"/etc/systemd/system/betterdesk-console.service": true,
+	"/etc/systemd/system/neodesk-server.service":  true,
+	"/etc/systemd/system/neodesk-console.service": true,
 }
 
 // Service checks the server's service definition.
@@ -141,22 +141,22 @@ func (s *Service) checkSystemd(ctx context.Context, result *Result) error {
 	original := advancedconfig.DecodeUTF8(data)
 	clean := StripIncompatibleGoAPITLSArgs(original, false)
 	clean = strings.ReplaceAll(clean, "Environment=HBBS_API_URL=https://localhost", "Environment=HBBS_API_URL=http://localhost")
-	clean = strings.ReplaceAll(clean, "Environment=BETTERDESK_API_URL=https://localhost", "Environment=BETTERDESK_API_URL=http://localhost")
+	clean = strings.ReplaceAll(clean, "Environment=NEODESK_API_URL=https://localhost", "Environment=NEODESK_API_URL=http://localhost")
 
 	if lineStarting(clean, "Environment=MESH_ENABLED=") < 0 {
 		clean = insertServiceLine(clean, "Environment=MESH_ENABLED=Y")
 		result.NeedsRestart = true
-		result.Changes = append(result.Changes, "set MESH_ENABLED=Y in betterdesk-server systemd unit")
+		result.Changes = append(result.Changes, "set MESH_ENABLED=Y in neodesk-server systemd unit")
 	}
 	if text, changed := EnsureGoServerEnvironmentFile(clean, s.opts.ConsoleEnvPath); changed {
 		clean = text
 		result.NeedsRestart = true
-		result.Changes = append(result.Changes, "set EnvironmentFile for console .env on betterdesk-server systemd unit")
+		result.Changes = append(result.Changes, "set EnvironmentFile for console .env on neodesk-server systemd unit")
 	}
 	if text, changed := EnsureGoServerSignalRelayPorts(clean); changed {
 		clean = text
 		result.NeedsRestart = true
-		result.Changes = append(result.Changes, "set SIGNAL_PORT=21116 / RELAY_PORT=21117 / GO_API_PORT=21114 on betterdesk-server systemd unit (#219)")
+		result.Changes = append(result.Changes, "set SIGNAL_PORT=21116 / RELAY_PORT=21117 / GO_API_PORT=21114 on neodesk-server systemd unit (#219)")
 	}
 
 	if clean == original {
@@ -176,7 +176,7 @@ func (s *Service) checkSystemd(ctx context.Context, result *Result) error {
 		}
 	}
 	if !mesh {
-		result.Changes = append(result.Changes, "patched betterdesk-server systemd unit")
+		result.Changes = append(result.Changes, "patched neodesk-server systemd unit")
 	}
 	return nil
 }
@@ -226,18 +226,18 @@ func (s *Service) checkWindows(ctx context.Context, result *Result) error {
 		if text, changed := EnsureMeshEnabledInServiceEnv(env); changed {
 			if s.opts.Exec(ctx, "nssm", "set", server, "AppEnvironmentExtra", text) == nil {
 				result.Changed, result.NeedsRestart = true, true
-				result.Changes = append(result.Changes, "set MESH_ENABLED=Y on BetterDesk Go Server NSSM environment")
+				result.Changes = append(result.Changes, "set MESH_ENABLED=Y on NeoDesk Go Server NSSM environment")
 			}
 		}
 	}
 	if changed, err := s.syncBillingEnv(ctx); err == nil && changed {
 		result.Changed, result.NeedsRestart = true, true
-		result.Changes = append(result.Changes, "synced billing/NTP env to BetterDesk Go Server NSSM environment")
+		result.Changes = append(result.Changes, "synced billing/NTP env to NeoDesk Go Server NSSM environment")
 	}
 	console := s.opts.ConsoleService
 	if env, err := s.opts.Shell(ctx, `nssm get "`+console+`" AppEnvironmentExtra 2>nul`); err == nil {
 		clean := strings.ReplaceAll(env, "HBBS_API_URL=https://localhost", "HBBS_API_URL=http://localhost")
-		clean = strings.ReplaceAll(clean, "BETTERDESK_API_URL=https://localhost", "BETTERDESK_API_URL=http://localhost")
+		clean = strings.ReplaceAll(clean, "NEODESK_API_URL=https://localhost", "NEODESK_API_URL=http://localhost")
 		if clean != env && s.opts.Exec(ctx, "nssm", "set", console, "AppEnvironmentExtra", clean) == nil {
 			result.Changed = true
 			result.Changes = append(result.Changes, "kept console Go API URLs on HTTP in NSSM environment")

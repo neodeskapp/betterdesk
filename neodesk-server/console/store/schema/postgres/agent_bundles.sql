@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS agent_bundles (
     client_commit TEXT DEFAULT NULL,
     active_generation_hash TEXT DEFAULT NULL,
     created_by INTEGER DEFAULT NULL,
-    product_type TEXT NOT NULL DEFAULT 'betterdesk-support',
+    product_type TEXT NOT NULL DEFAULT 'neodesk-support',
     revoked BOOLEAN NOT NULL DEFAULT FALSE,
     download_count INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

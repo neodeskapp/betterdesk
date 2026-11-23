@@ -1,4 +1,4 @@
-# Checks of betterdesk.ps1's service set-up for the server with its web
+# Checks of neodesk.ps1's service set-up for the server with its web
 # console, without Windows: the installer's functions are loaded from the
 # script's syntax tree and the Windows-only commands (scheduled tasks,
 # icacls, NSSM) are replaced by stand-ins.
@@ -7,11 +7,11 @@
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $PSScriptRoot
-$installer = Join-Path $root 'betterdesk.ps1'
+$installer = Join-Path $root 'neodesk.ps1'
 $tokens = $null
 $parseErrors = $null
 $ast = [System.Management.Automation.Language.Parser]::ParseFile($installer, [ref]$tokens, [ref]$parseErrors)
-if ($parseErrors.Count -gt 0) { throw "betterdesk.ps1 does not parse: $($parseErrors[0].Message)" }
+if ($parseErrors.Count -gt 0) { throw "neodesk.ps1 does not parse: $($parseErrors[0].Message)" }
 foreach ($fn in $ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $false)) {
     . ([scriptblock]::Create($fn.Extent.Text))
 }
@@ -45,10 +45,10 @@ function New-TestInstall {
     $script:RUSTDESK_PATH = Join-Path $dir 'server'
     $script:CONSOLE_PATH = Join-Path $dir 'console'
     $script:ScriptDir = $dir
-    $script:SERVER_SERVICE = 'BetterDeskServer'
-    $script:CONSOLE_SERVICE = 'BetterDeskConsole'
-    $script:HBBS_SERVICE = 'BetterDeskSignal'
-    $script:HBBR_SERVICE = 'BetterDeskRelay'
+    $script:SERVER_SERVICE = 'NeoDeskServer'
+    $script:CONSOLE_SERVICE = 'NeoDeskConsole'
+    $script:HBBS_SERVICE = 'NeoDeskSignal'
+    $script:HBBR_SERVICE = 'NeoDeskRelay'
     $script:GO_API_PORT = '21114'
     $script:AUTO_MODE = $true
     $script:RELAY_SERVERS = '203.0.113.7'
@@ -67,15 +67,15 @@ function New-TestInstall {
 function Test-TaskLauncherLoops {
     $dir = New-TestInstall
     Setup-Services | Out-Null
-    $launcher = Join-Path $script:RUSTDESK_PATH 'start-betterdesk-server.cmd'
+    $launcher = Join-Path $script:RUSTDESK_PATH 'start-neodesk-server.cmd'
     if (-not (Test-Path $launcher)) { Fail 'no launcher written'; return }
     $text = Get-Content $launcher -Raw
     if ($text -notmatch '(?m)^:run\r?$') { Fail 'the launcher has no loop label' }
     if ($text -notmatch '(?m)^goto run\r?$') { Fail 'the launcher does not start the server again' }
-    if ($text -notmatch '(?m)^set "BETTERDESK_SUPERVISOR=task"\r?$') { Fail 'the launcher does not set BETTERDESK_SUPERVISOR=task' }
-    if ($text -notmatch [regex]::Escape('set "BETTERDESK_ENV_FILE=' + (Join-Path $script:CONSOLE_PATH '.env') + '"')) { Fail 'the launcher does not name the env file' }
+    if ($text -notmatch '(?m)^set "NEODESK_SUPERVISOR=task"\r?$') { Fail 'the launcher does not set NEODESK_SUPERVISOR=task' }
+    if ($text -notmatch [regex]::Escape('set "NEODESK_ENV_FILE=' + (Join-Path $script:CONSOLE_PATH '.env') + '"')) { Fail 'the launcher does not name the env file' }
     if ($text -match 'CONSOLE_PORT=0') { Fail 'the launcher keeps the console off' }
-    $settings = $script:registeredTasks['BetterDeskServer']
+    $settings = $script:registeredTasks['NeoDeskServer']
     if (-not $settings) { Fail 'no task registered' }
     elseif ($settings.ExecutionTimeLimit -ne [TimeSpan]::Zero) { Fail 'the task has a time limit, which would stop the loop' }
     Remove-Item -Recurse -Force $dir
@@ -85,26 +85,26 @@ function Test-TaskLauncherLoops {
 # Node.js console ran (CONSOLE_PORT=0, no loop).
 function Test-UpdateRewritesOldLauncher {
     $dir = New-TestInstall
-    $launcher = Join-Path $script:RUSTDESK_PATH 'start-betterdesk-server.cmd'
-    $exe = Join-Path $script:RUSTDESK_PATH 'betterdesk-server.exe'
+    $launcher = Join-Path $script:RUSTDESK_PATH 'start-neodesk-server.cmd'
+    $exe = Join-Path $script:RUSTDESK_PATH 'neodesk-server.exe'
     Set-Content -Path $launcher -Encoding ASCII -Value @(
         '@echo off',
-        'set "DB_URL=C:\BetterDesk\db_v2.sqlite3"',
+        'set "DB_URL=C:\NeoDesk\db_v2.sqlite3"',
         'set "CONSOLE_PORT=0"',
         "`"$exe`" -mode all -relay-servers 203.0.113.7 -api-port 21114"
     )
-    $script:registeredTasks['BetterDeskServer'] = 'old'
+    $script:registeredTasks['NeoDeskServer'] = 'old'
     Update-ServerServiceDefinition | Out-Null
     $text = Get-Content $launcher -Raw
     if ($text -match 'CONSOLE_PORT=0') { Fail 'the update kept CONSOLE_PORT=0 in the launcher' }
     if ($text -notmatch '(?m)^goto run\r?$') { Fail 'the update did not give the launcher its loop' }
-    if ($text -notmatch [regex]::Escape('set "DB_URL=C:\BetterDesk\db_v2.sqlite3"')) { Fail 'the update lost the launcher settings' }
+    if ($text -notmatch [regex]::Escape('set "DB_URL=C:\NeoDesk\db_v2.sqlite3"')) { Fail 'the update lost the launcher settings' }
     if ($text -notmatch [regex]::Escape("`"$exe`" -mode all -relay-servers 203.0.113.7 -api-port 21114")) { Fail 'the update changed the server arguments' }
     Remove-Item -Recurse -Force $dir
 }
 
 # RC1: the NSSM service tells the server that NSSM starts it again
-# (BETTERDESK_SUPERVISOR=nssm) and restarts it after any exit.
+# (NEODESK_SUPERVISOR=nssm) and restarts it after any exit.
 function Test-NssmServiceIsSupervised {
     $dir = New-TestInstall
     $script:fakeNssm = 'fake-nssm'
@@ -114,7 +114,7 @@ function Test-NssmServiceIsSupervised {
     $envCall = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'AppEnvironmentExtra' } | Select-Object -Last 1
     if (-not $envCall) { Fail 'the NSSM service gets no environment' }
     else {
-        if ($envCall -notcontains 'BETTERDESK_SUPERVISOR=nssm') { Fail "the NSSM service has no BETTERDESK_SUPERVISOR=nssm: $($envCall -join ' ')" }
+        if ($envCall -notcontains 'NEODESK_SUPERVISOR=nssm') { Fail "the NSSM service has no NEODESK_SUPERVISOR=nssm: $($envCall -join ' ')" }
         if ($envCall -contains 'CONSOLE_PORT=0') { Fail 'the NSSM service keeps the console off' }
     }
     $exitCall = $script:nssmCalls | Where-Object { $_[0] -eq 'set' -and $_[2] -eq 'AppExit' } | Select-Object -Last 1
@@ -175,7 +175,7 @@ function Test-MigrationMenusPassOverwrite {
     }
 
     $src = Join-Path $script:RUSTDESK_PATH 'db_v2.sqlite3'
-    $dst = Join-Path $script:RUSTDESK_PATH 'betterdesk.sqlite3'
+    $dst = Join-Path $script:RUSTDESK_PATH 'neodesk.sqlite3'
     Set-Content -Path $src -Value 'db'
     Set-Content -Path $dst -Value 'old'
 
@@ -303,15 +303,15 @@ function Test-ReleasesComeFromTheFork {
     if ($defaults.Count -lt 2) { Fail "the installer sets no repository for releases ($($defaults.Count) lines)" }
     foreach ($a in $defaults) { . ([scriptblock]::Create($a.Extent.Text)) }
     $base = Get-ReleaseBaseUrl
-    if ($base -ne 'https://github.com/neodeskapp/betterdesk/releases/latest/download') { Fail "the stable channel downloads from $base" }
+    if ($base -ne 'https://github.com/neodeskapp/neodesk/releases/latest/download') { Fail "the stable channel downloads from $base" }
     $script:UPDATE_GITHUB_BRANCH = 'dev'
     $base = Get-ReleaseBaseUrl
-    if ($base -ne 'https://github.com/neodeskapp/betterdesk/releases/download/dev') { Fail "the development channel downloads from $base" }
+    if ($base -ne 'https://github.com/neodeskapp/neodesk/releases/download/dev') { Fail "the development channel downloads from $base" }
     $script:UPDATE_GITHUB_BRANCH = 'main'
     foreach ($k in $saved.Keys) { [Environment]::SetEnvironmentVariable($k, $saved[$k]) }
 }
 
-# A stand-in for betterdesk-server.exe: env merge writes a small .env (the
+# A stand-in for neodesk-server.exe: env merge writes a small .env (the
 # admin password only on a fresh one), upgrade-env changes nothing.
 function Use-FakeServerBinary {
     function script:Get-ServerBinaryPath { 'fake-server' }
@@ -320,7 +320,7 @@ function Use-FakeServerBinary {
         if ($args[0] -eq 'env' -and $args[1] -eq 'merge') {
             $target = $args[3]
             if ($args -contains '--fresh') {
-                Set-Content -Path $target -Value @("DEFAULT_ADMIN_PASSWORD=$env:BD_SUBST_DEFAULT_ADMIN_PASSWORD", 'DB_TYPE=sqlite')
+                Set-Content -Path $target -Value @("DEFAULT_ADMIN_PASSWORD=$env:ND_SUBST_DEFAULT_ADMIN_PASSWORD", 'DB_TYPE=sqlite')
             }
             Write-Output '{"success":true}'
         }
@@ -359,7 +359,7 @@ function Test-FreshInstallStartsManaged {
 # the password of the existing database instead of making one up.
 function Test-PostgreSQLAddressIsKept {
     $dir = New-TestInstall
-    $script:POSTGRESQL_USER, $script:POSTGRESQL_HOST, $script:POSTGRESQL_PORT, $script:POSTGRESQL_DB = 'betterdesk', 'localhost', '5432', 'betterdesk'
+    $script:POSTGRESQL_USER, $script:POSTGRESQL_HOST, $script:POSTGRESQL_PORT, $script:POSTGRESQL_DB = 'neodesk', 'localhost', '5432', 'neodesk'
     $script:USE_POSTGRESQL = $true
     $script:POSTGRESQL_URI = 'postgres://bd:Given-Pass@db.example:5433/desk?sslmode=require'
     $script:POSTGRESQL_PASS = ''
@@ -373,7 +373,7 @@ function Test-PostgreSQLAddressIsKept {
 
     $script:POSTGRESQL_PASS = 'p@ss/word'
     $ok = Setup-PostgreSQLDatabase 6> $null
-    if (-not $ok -or $script:POSTGRESQL_URI -ne 'postgres://betterdesk:p%40ss%2Fword@localhost:5432/betterdesk?sslmode=disable') { Fail "the address from the parts is $($script:POSTGRESQL_URI)" }
+    if (-not $ok -or $script:POSTGRESQL_URI -ne 'postgres://neodesk:p%40ss%2Fword@localhost:5432/neodesk?sslmode=disable') { Fail "the address from the parts is $($script:POSTGRESQL_URI)" }
     $script:USE_POSTGRESQL = $false
     $script:POSTGRESQL_URI = ''
     $script:POSTGRESQL_PASS = ''
@@ -422,12 +422,12 @@ function Test-ServerLogFile {
     }
     $script:registeredTasks = @{}
     Setup-Services | Out-Null
-    $launcher = Join-Path $script:RUSTDESK_PATH 'start-betterdesk-server.cmd'
+    $launcher = Join-Path $script:RUSTDESK_PATH 'start-neodesk-server.cmd'
     $redirect = '>> "' + $log + '" 2>&1'
-    $line = @(Get-Content $launcher | Where-Object { $_ -like '"*betterdesk-server.exe"*' })
+    $line = @(Get-Content $launcher | Where-Object { $_ -like '"*neodesk-server.exe"*' })
     if ($line.Count -ne 1 -or -not $line[0].EndsWith($redirect)) { Fail "the task's server line does not write $log`: $line" }
     Update-ServerServiceDefinition | Out-Null
-    $line = @(Get-Content $launcher | Where-Object { $_ -like '"*betterdesk-server.exe"*' })
+    $line = @(Get-Content $launcher | Where-Object { $_ -like '"*neodesk-server.exe"*' })
     if ($line.Count -ne 1 -or -not $line[0].EndsWith($redirect) -or ($line[0] -split '>>').Count -ne 2) { Fail "an update of the task changed the redirect: $line" }
     Remove-Item -Recurse -Force $dir
 }
@@ -440,12 +440,12 @@ function Test-UpdateKeepsTheAdminsPorts {
     $envFile = Join-Path $script:CONSOLE_PATH '.env'
     Set-Content -Path $envFile -Value @('SESSION_SECRET=kept', 'SIGNAL_PORT=21116', 'RELAY_PORT=21117')
     Setup-Services | Out-Null
-    $launcher = Join-Path $script:RUSTDESK_PATH 'start-betterdesk-server.cmd'
+    $launcher = Join-Path $script:RUSTDESK_PATH 'start-neodesk-server.cmd'
     if ((Get-Content $launcher -Raw) -match '(SIGNAL|RELAY)_PORT') { Fail "the launcher sets the ports: $(Get-Content $launcher)" }
-    $exe = Join-Path $script:RUSTDESK_PATH 'betterdesk-server.exe'
+    $exe = Join-Path $script:RUSTDESK_PATH 'neodesk-server.exe'
     Set-Content -Path $launcher -Encoding ASCII -Value @(
         '@echo off',
-        'set "BETTERDESK_SUPERVISOR=task"',
+        'set "NEODESK_SUPERVISOR=task"',
         'set "SIGNAL_PORT=31116"',
         'set "RELAY_PORT=31117"',
         ':run',
@@ -540,9 +540,9 @@ function Test-WindowsFirstHour {
     $dir = New-TestInstall
     $script:UNINSTALL_MODE = $false
     $script:MINIMAL_MODE = $false
-    if ((Get-AutoAction) -ne 'install') { Fail "a machine without BetterDesk gets $(Get-AutoAction)" }
+    if ((Get-AutoAction) -ne 'install') { Fail "a machine without NeoDesk gets $(Get-AutoAction)" }
     Setup-Services | Out-Null
-    Set-Content -Path (Join-Path $script:RUSTDESK_PATH 'betterdesk-server.exe') -Value 'exe'
+    Set-Content -Path (Join-Path $script:RUSTDESK_PATH 'neodesk-server.exe') -Value 'exe'
     $envFile = Join-Path $script:CONSOLE_PATH '.env'
     Set-Content -Path $envFile -Value @('DEFAULT_ADMIN_PASSWORD=First-Pass-1', 'INIT_ADMIN_PASS=First-Pass-1', 'SESSION_SECRET=kept', 'DB_TYPE=sqlite')
     Copy-Item $envFile "$envFile.pre-go"
@@ -566,7 +566,7 @@ function Test-WindowsFirstHour {
 
     $script:SELF_PATH = $installer
     Install-ManagerScript 6> $null
-    $copy = Join-Path $script:RUSTDESK_PATH 'betterdesk.ps1'
+    $copy = Join-Path $script:RUSTDESK_PATH 'neodesk.ps1'
     if (-not (Test-Path $copy) -or (Get-FileHash $copy).Hash -ne (Get-FileHash $installer).Hash) { Fail "the install keeps no copy of the script at $copy" }
 
     Set-Content -Path (Join-Path $script:RUSTDESK_PATH 'id_ed25519.pub') -Value 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ='
@@ -587,7 +587,7 @@ function Test-WindowsFirstHour {
 # in .env stays.
 function Test-UpdateAsksTheFork {
     $dir = New-TestInstall
-    $script:UPDATE_GITHUB_OWNER, $script:UPDATE_GITHUB_REPO = 'neodeskapp', 'betterdesk'
+    $script:UPDATE_GITHUB_OWNER, $script:UPDATE_GITHUB_REPO = 'neodeskapp', 'neodesk'
     $script:UPDATE_GITHUB_OWNER_GIVEN, $script:UPDATE_GITHUB_REPO_GIVEN = '', ''
     function script:Invoke-ServerCommand { param([string[]]$Arguments, $InputText, $Binary) $script:seenRepo = "$env:UPDATE_GITHUB_OWNER/$env:UPDATE_GITHUB_REPO"; return 1 }
     function script:Do-BackupSilent { }
@@ -598,7 +598,7 @@ function Test-UpdateAsksTheFork {
     $envFile = Join-Path $script:CONSOLE_PATH '.env'
     Set-Content -Path $envFile -Value @('SESSION_SECRET=kept')
     Update-GoInstall *> $null
-    if ($script:seenRepo -ne 'neodeskapp/betterdesk') { Fail "betterdesk-server update ran for $($script:seenRepo)" }
+    if ($script:seenRepo -ne 'neodeskapp/neodesk') { Fail "neodesk-server update ran for $($script:seenRepo)" }
     Set-Content -Path $envFile -Value @('UPDATE_GITHUB_OWNER=acme', 'UPDATE_GITHUB_REPO=desk')
     Update-GoInstall *> $null
     if ($script:seenRepo -ne 'acme/desk') { Fail "the repository of .env lost to the default: $($script:seenRepo)" }
@@ -635,8 +635,8 @@ function Test-CertificateFromTheBinary {
         param([string[]]$Arguments, $InputText, $Binary)
         $script:certArgs = $Arguments -join ' '
         $out = $Arguments[2]
-        Set-Content -Path (Join-Path $out 'betterdesk.crt') -Value 'crt'
-        Set-Content -Path (Join-Path $out 'betterdesk.key') -Value 'key'
+        Set-Content -Path (Join-Path $out 'neodesk.crt') -Value 'crt'
+        Set-Content -Path (Join-Path $out 'neodesk.key') -Value 'key'
         return 0
     }
     if (-not (Generate-SSLCertificates 6> $null)) { Fail 'the cert command made no certificate' }
@@ -692,7 +692,7 @@ function Test-DatabaseUrlOnly {
         if ($args[0] -eq 'env' -and $args[1] -eq 'merge') {
             $target = $args[3]
             if ($args -contains '--fresh') { Set-Content -Path $target -Value @() }
-            foreach ($pair in @(@('DEFAULT_ADMIN_PASSWORD', $env:BD_SUBST_DEFAULT_ADMIN_PASSWORD), @('DATABASE_URL', $env:BD_SUBST_DATABASE_URL))) {
+            foreach ($pair in @(@('DEFAULT_ADMIN_PASSWORD', $env:ND_SUBST_DEFAULT_ADMIN_PASSWORD), @('DATABASE_URL', $env:ND_SUBST_DATABASE_URL))) {
                 if (-not (Get-Content $target | Where-Object { $_ -like "$($pair[0])=*" })) { Add-Content -Path $target -Value "$($pair[0])=$($pair[1])" }
             }
             Write-Output '{"success":true}'
@@ -755,14 +755,14 @@ function Test-DatabaseUrlOnly {
 }
 
 # A152: a download is checked against the release's signed manifest by the
-# installed betterdesk-server (verify-release). A first install has no tool
+# installed neodesk-server (verify-release). A first install has no tool
 # for the signature on Windows: it says plainly that the signature is
 # checked from the second install on, and keeps the SHA-256 check. An
 # update of a binary older than the release key goes through this download,
 # not the old updater.
 function Test-ReleaseSignatureOnWindows {
     $dir = New-TestInstall
-    $asset = 'betterdesk-server-windows-amd64.exe'
+    $asset = 'neodesk-server-windows-amd64.exe'
     $rel = Join-Path $dir 'release'
     $stage = Join-Path $dir 'stage'
     New-Item -ItemType Directory -Path $rel, $stage -Force | Out-Null
@@ -793,7 +793,7 @@ function Test-ReleaseSignatureOnWindows {
     # A first install: no installed binary
     $script:downloads = @()
     $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
-    if (-not (Test-Path (Join-Path $stage 'betterdesk-server.exe'))) { Fail "a first install with a matching SHA-256 installed nothing: $out" }
+    if (-not (Test-Path (Join-Path $stage 'neodesk-server.exe'))) { Fail "a first install with a matching SHA-256 installed nothing: $out" }
     if ($out -notmatch 'checked from the second install on') { Fail "a first install does not say when the signature is checked: $out" }
     if ($script:downloads -contains 'manifest.sig') { Fail 'a first install fetched a signature it cannot check' }
 
@@ -802,32 +802,32 @@ function Test-ReleaseSignatureOnWindows {
     function Test-BinaryVerifiesReleases { param($Path) $Path -eq 'fake-verify' }
     function fake-verify {
         $script:verifyArgs = @($args | ForEach-Object { "$_" })
-        if ($script:refuse) { Write-Output 'betterdesk-server verify-release: the signature of the manifest does not verify against the release key'; $global:LASTEXITCODE = 1; return }
-        Write-Output "verified: betterdesk-server 3.6.0 (0123456), $($args[6])"
+        if ($script:refuse) { Write-Output 'neodesk-server verify-release: the signature of the manifest does not verify against the release key'; $global:LASTEXITCODE = 1; return }
+        Write-Output "verified: neodesk-server 3.6.0 (0123456), $($args[6])"
         $global:LASTEXITCODE = 0
     }
     $script:refuse = $false
     Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
     $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
-    if (-not (Test-Path (Join-Path $stage 'betterdesk-server.exe'))) { Fail "a release the installed binary checked was not installed: $out" }
+    if (-not (Test-Path (Join-Path $stage 'neodesk-server.exe'))) { Fail "a release the installed binary checked was not installed: $out" }
     $want = "verify-release --manifest $(Join-Path $stage 'manifest.json') --signature $(Join-Path $stage 'manifest.sig') --name $asset $(Join-Path $stage $asset)"
     if (($script:verifyArgs -join ' ') -ne $want) { Fail "verify-release ran as: $($script:verifyArgs -join ' ')" }
-    if ($out -notmatch 'checked by the installed betterdesk-server') { Fail "the download does not say who checked the signature: $out" }
+    if ($out -notmatch 'checked by the installed neodesk-server') { Fail "the download does not say who checked the signature: $out" }
     $script:refuse = $true
     Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
     $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
-    if (Test-Path (Join-Path $stage 'betterdesk-server.exe')) { Fail 'a release the installed binary refused was installed' }
+    if (Test-Path (Join-Path $stage 'neodesk-server.exe')) { Fail 'a release the installed binary refused was installed' }
     if ($out -notmatch 'does not verify' -or $out -notmatch '-SkipVerify') { Fail "the refusal does not say why and what to do: $out" }
     $script:refuse = $false
     $script:UPDATE_GITHUB_BRANCH = 'dev'
     Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
     $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
-    if (Test-Path (Join-Path $stage 'betterdesk-server.exe')) { Fail "a stable release was installed for the development channel: $out" }
+    if (Test-Path (Join-Path $stage 'neodesk-server.exe')) { Fail "a stable release was installed for the development channel: $out" }
     $script:UPDATE_GITHUB_BRANCH = 'main'
     Remove-Item -Force (Join-Path $rel 'manifest.sig')
     Remove-Item -Recurse -Force $stage; New-Item -ItemType Directory -Path $stage | Out-Null
     $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
-    if (Test-Path (Join-Path $stage 'betterdesk-server.exe')) { Fail 'a release without a signature was installed' }
+    if (Test-Path (Join-Path $stage 'neodesk-server.exe')) { Fail 'a release without a signature was installed' }
     if ($out -notmatch 'no signed manifest') { Fail "a release without a signature says: $out" }
 
     # An update of an older binary does not run its updater
@@ -851,7 +851,7 @@ function Test-ReleaseSignatureOnWindows {
 # development build only when there is no pre-release either.
 function Test-NoStableReleaseTakesTheNewestPrerelease {
     $dir = New-TestInstall
-    $asset = 'betterdesk-server-windows-amd64.exe'
+    $asset = 'neodesk-server-windows-amd64.exe'
     $rel = Join-Path $dir 'rc2'
     New-Item -ItemType Directory -Path $rel -Force | Out-Null
     Set-Content -Path (Join-Path $rel $asset) -Value 'candidate'
@@ -869,20 +869,20 @@ function Test-NoStableReleaseTakesTheNewestPrerelease {
     $script:latest = $null
     function Invoke-RestMethod {
         param($Uri, $Headers, [switch]$UseBasicParsing, $ErrorAction)
-        if ($Uri -eq 'https://api.github.com/repos/neodeskapp/betterdesk/releases/latest') {
+        if ($Uri -eq 'https://api.github.com/repos/neodeskapp/neodesk/releases/latest') {
             if ($script:latest) { return $script:latest }
             throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.')
         }
-        if ($Uri -ne 'https://api.github.com/repos/neodeskapp/betterdesk/releases?per_page=50') { throw "unexpected $Uri" }
+        if ($Uri -ne 'https://api.github.com/repos/neodeskapp/neodesk/releases?per_page=50') { throw "unexpected $Uri" }
         return $script:releases
     }
     function Invoke-WebRequest {
         param($Uri, $OutFile, [switch]$UseBasicParsing, $ErrorAction)
-        if ($Uri -like 'https://github.com/neodeskapp/betterdesk/releases/latest/*') { throw [System.Net.WebException]::new('The underlying connection was closed: The connection was closed unexpectedly.') }
-        if ($Uri -notlike 'https://github.com/neodeskapp/betterdesk/releases/download/v3.6.0-rc.2/*' -and $Uri -notlike 'https://github.com/neodeskapp/betterdesk/releases/download/v3.6.0/*') { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
+        if ($Uri -like 'https://github.com/neodeskapp/neodesk/releases/latest/*') { throw [System.Net.WebException]::new('The underlying connection was closed: The connection was closed unexpectedly.') }
+        if ($Uri -notlike 'https://github.com/neodeskapp/neodesk/releases/download/v3.6.0-rc.2/*' -and $Uri -notlike 'https://github.com/neodeskapp/neodesk/releases/download/v3.6.0/*') { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
         Copy-Item -Path (Join-Path $rel (($Uri -split '/')[-1])) -Destination $OutFile -Force
     }
-    $script:UPDATE_GITHUB_OWNER, $script:UPDATE_GITHUB_REPO = 'neodeskapp', 'betterdesk'
+    $script:UPDATE_GITHUB_OWNER, $script:UPDATE_GITHUB_REPO = 'neodeskapp', 'neodesk'
     $script:SKIP_VERIFY = $true
     foreach ($given in @('', 'main')) {
         $stage = Join-Path $dir "stage-$given"
@@ -890,7 +890,7 @@ function Test-NoStableReleaseTakesTheNewestPrerelease {
         $script:UPDATE_GITHUB_BRANCH_GIVEN = $given
         $script:UPDATE_GITHUB_BRANCH = 'main'
         $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
-        if (-not (Test-Path (Join-Path $stage 'betterdesk-server.exe'))) { Fail "the newest pre-release was not installed (given '$given'): $out" }
+        if (-not (Test-Path (Join-Path $stage 'neodesk-server.exe'))) { Fail "the newest pre-release was not installed (given '$given'): $out" }
         if ($out -notmatch 'no stable release yet: installing the newest pre-release v3\.6\.0-rc\.2') { Fail "the install does not say which release it took: $out" }
         if ($script:UPDATE_GITHUB_BRANCH -ne 'main') { Fail "the install left the stable channel for $($script:UPDATE_GITHUB_BRANCH)" }
     }
@@ -911,7 +911,7 @@ function Test-NoStableReleaseTakesTheNewestPrerelease {
     $stage = Join-Path $dir 'stage-stable'
     New-Item -ItemType Directory -Path $stage -Force | Out-Null
     $out = (Get-ReleaseBinary -Dir $stage 6>&1 | Out-String -Width 4096)
-    if (-not (Test-Path (Join-Path $stage 'betterdesk-server.exe')) -or $out -notmatch 'releases/download/v3\.6\.0') { Fail "the stable release was not installed by its tag: $out" }
+    if (-not (Test-Path (Join-Path $stage 'neodesk-server.exe')) -or $out -notmatch 'releases/download/v3\.6\.0') { Fail "the stable release was not installed by its tag: $out" }
     $script:latest = $null
     $script:UPDATE_GITHUB_BRANCH_GIVEN = ''
     $script:UPDATE_GITHUB_BRANCH = 'main'
@@ -979,7 +979,7 @@ function Test-BackupUsesTheServersBackup {
         param([string[]]$Arguments, $InputText, $Binary)
         $script:backupArgs = $Arguments
         if ($script:backupFails) { return 1 }
-        Set-Content -Path (Join-Path $Arguments[2] 'betterdesk-full-backup.zip') -Value 'archive'
+        Set-Content -Path (Join-Path $Arguments[2] 'neodesk-full-backup.zip') -Value 'archive'
         return 0
     }
     $script:backupFails = $false
@@ -987,15 +987,15 @@ function Test-BackupUsesTheServersBackup {
     $zip = @(Get-ChildItem -Path $script:BACKUP_DIR -Filter '*.zip')[0]
     if (-not $zip) { Fail 'no backup was made' }
     else {
-        if ($script:backupArgs[0] -ne 'backup' -or $script:backupArgs[1] -ne '--out' -or $script:backupArgs[2] -notlike (Join-Path $script:BACKUP_DIR 'betterdesk_backup_*')) { Fail "the server's backup ran as: $($script:backupArgs -join ' ')" }
+        if ($script:backupArgs[0] -ne 'backup' -or $script:backupArgs[1] -ne '--out' -or $script:backupArgs[2] -notlike (Join-Path $script:BACKUP_DIR 'neodesk_backup_*')) { Fail "the server's backup ran as: $($script:backupArgs -join ' ')" }
         $names = Get-ZipNames $zip.FullName
-        if ($names -notcontains 'betterdesk-full-backup.zip' -or $names -notcontains 'id_ed25519') { Fail "the backup holds: $($names -join ', ')" }
+        if ($names -notcontains 'neodesk-full-backup.zip' -or $names -notcontains 'id_ed25519') { Fail "the backup holds: $($names -join ', ')" }
         if ($names -contains 'db_v2.sqlite3') { Fail 'the backup copied the live SQLite file beside the server backup' }
         Remove-Item -Force $zip.FullName
     }
     $script:backupFails = $true
     $out = (Do-BackupSilent 6>&1 | Out-String -Width 4096)
-    if ($out -notmatch 'betterdesk-server backup failed') { Fail "a failed server backup is not said: $out" }
+    if ($out -notmatch 'neodesk-server backup failed') { Fail "a failed server backup is not said: $out" }
     $zip = @(Get-ChildItem -Path $script:BACKUP_DIR -Filter '*.zip')[0]
     $names = Get-ZipNames $zip.FullName
     if ($names -notcontains 'db_v2.sqlite3') { Fail "without the server backup the database file is not in the backup: $($names -join ', ')" }
@@ -1039,7 +1039,7 @@ function Get-Contrast([int]$R, [int]$G, [int]$B) {
     return $min
 }
 
-# The header: the BetterDesk mark beside the name and the version in a
+# The header: the NeoDesk mark beside the name and the version in a
 # console, one plain line when the output goes to a file or a pipe or
 # NO_COLOR is set, and no escape codes then. No box characters, no line
 # wider than 60 columns. The status helpers use no blue or magenta, and
@@ -1048,7 +1048,7 @@ function Test-HeaderAndColours {
     function Clear-Host { }
     $dir = New-TestInstall
     $script:VERSION = [regex]::Match((Get-Content $installer -Raw), '(?m)^\$script:VERSION = "([^"]+)"').Groups[1].Value
-    $plain = "BetterDesk Server installer $($script:VERSION)"
+    $plain = "NeoDesk Server installer $($script:VERSION)"
     $esc = [string][char]27
     $banned = 'Blue', 'DarkBlue', 'Magenta', 'DarkMagenta'
     # Box drawing (U+2500 to U+257F) and the half and full blocks of the mark
@@ -1087,7 +1087,7 @@ function Test-HeaderAndColours {
         $script:COLOR_MODE = $mode
         $got = Get-HostLines { Print-Header }
         $text = @($got.Lines | ForEach-Object { $_ -replace "$esc\[[0-9;]*m", '' })
-        if (($text -join "`n") -notmatch "BetterDesk[\s\S]*Server installer $([regex]::Escape($script:VERSION))") { Fail "the $mode header does not say BetterDesk and the version: $($text -join ' | ')" }
+        if (($text -join "`n") -notmatch "NeoDesk[\s\S]*Server installer $([regex]::Escape($script:VERSION))") { Fail "the $mode header does not say NeoDesk and the version: $($text -join ' | ')" }
         if (($text -join "`n") -match $boxChars) { Fail "the $mode header draws a box: $($text -join ' | ')" }
         $markLines = @($text | Where-Object { $_ -match $halfBlocks })
         if ($markLines.Count -ne 6) { Fail "the $mode header has $($markLines.Count) lines of the mark, not 6" }

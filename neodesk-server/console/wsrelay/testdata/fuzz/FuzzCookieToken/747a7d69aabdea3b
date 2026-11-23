@@ -1,3 +1,3 @@
 go test fuzz v1
-[]byte("bd.guest=%C2080")
+[]byte("nd.guest=%C2080")
 bool(true)

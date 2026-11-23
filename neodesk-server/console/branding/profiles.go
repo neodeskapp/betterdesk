@@ -32,7 +32,7 @@ func profileData(data any) string {
 
 // CreateProfile saves a profile and returns its id. The name is trimmed
 // and cut at 80 characters, the description at 200. brandingData is the
-// theme to store; when it is not a theme (type "betterdesk-theme") the
+// theme to store; when it is not a theme (type "neodesk-theme") the
 // current settings are stored. An empty name fails with "Profile name is
 // required", a name that exists with ErrProfileNameTaken.
 func (s *Service) CreateProfile(ctx context.Context, name, description string, brandingData any) (id int64, err error) {
@@ -42,7 +42,7 @@ func (s *Service) CreateProfile(ctx context.Context, name, description string, b
 		throw("Profile name is required")
 	}
 	preset := brandingData
-	if !Truthy(brandingData) || property(brandingData, "type") != "betterdesk-theme" {
+	if !Truthy(brandingData) || property(brandingData, "type") != "neodesk-theme" {
 		preset = s.exportPreset()
 	}
 	id, err = createBrandingProfile(ctx, s.opts.DB, trimmed, substring(description, 200), profileData(preset))
@@ -92,7 +92,7 @@ func (s *Service) UpdateProfile(ctx context.Context, id int64, updates ProfileUp
 	}
 	var data any
 	if Truthy(updates.Branding) {
-		data = object("version", "1.0", "type", "betterdesk-theme", "branding", updates.Branding)
+		data = object("version", "1.0", "type", "neodesk-theme", "branding", updates.Branding)
 	} else {
 		parsed, err := parseJSON(profile.Data)
 		if err != nil {

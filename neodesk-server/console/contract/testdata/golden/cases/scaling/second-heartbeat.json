@@ -2,7 +2,7 @@
  "id": "scaling/second-heartbeat",
  "request": {
   "method": "POST",
-  "path": "/api/bd/api/bd/scaling/relay-heartbeat",
+  "path": "/api/nd/api/nd/scaling/relay-heartbeat",
   "body": {}
  },
  "recordings": 2,
@@ -63,7 +63,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",

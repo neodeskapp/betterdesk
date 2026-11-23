@@ -5,10 +5,10 @@ package contract_test
 import (
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
-// POST /api/bd/remote-agent-token: an agent asks with its device token
+// POST /api/nd/remote-agent-token: an agent asks with its device token
 // for a single-use token of its remote desktop socket
 // /ws/remote-agent/<id>. The device is the instance's own: the token of
 // 900100001 in /stack/secrets/device_token, that of 900100002 for another
@@ -20,7 +20,7 @@ import (
 // request, with and without the CSRF token (the device API sits before
 // the CSRF gate).
 func init() {
-	const path = "/api/bd/remote-agent-token"
+	const path = "/api/nd/remote-agent-token"
 	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
 	other := map[string]string{"Authorization": "Bearer {secret:device_token_other}"}
 	asDevice := func(c contract.Case) contract.Case {

@@ -2,7 +2,7 @@
  "id": "resource-control/device-policy-as-a-device",
  "request": {
   "method": "GET",
-  "path": "/api/bd/resource-policy",
+  "path": "/api/nd/resource-policy",
   "notes": [
    "header Authorization: Bearer contract-no-such-token",
    "no cookies"

@@ -2,7 +2,7 @@
  "id": "activity-device/report-form",
  "request": {
   "method": "POST",
-  "path": "/api/bd/activity",
+  "path": "/api/nd/activity",
   "body": "device_id=900100001",
   "notes": [
    "raw body, content type \"application/x-www-form-urlencoded\"",

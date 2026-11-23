@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 func TestWriteBootstrapAdminCredentialsDoesNotOverwriteExistingFile(t *testing.T) {
@@ -86,7 +86,7 @@ func TestReadBootstrapAdminPassword(t *testing.T) {
 func TestFirstAdminOnPostgresWritesItsCredentials(t *testing.T) {
 	keys, data := t.TempDir(), t.TempDir()
 	keyFile := filepath.Join(keys, "id_ed25519")
-	for _, dsn := range []string{"postgres://bd:made-up@db:5432/betterdesk?sslmode=disable", "POSTGRESQL://db/betterdesk"} {
+	for _, dsn := range []string{"postgres://bd:made-up@db:5432/neodesk?sslmode=disable", "POSTGRESQL://db/neodesk"} {
 		dir := bootstrapCredentialsDir(dsn, keyFile)
 		path, wrote, err := writeBootstrapAdminCredentials(dir, "admin", "made-up-first-pass")
 		if err != nil || !wrote || path != filepath.Join(keys, ".admin_credentials") {

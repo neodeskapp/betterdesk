@@ -1,4 +1,4 @@
-// A simulated greenhouse on a BetterDesk server's CDAP gateway. It shows a
+// A simulated greenhouse on a NeoDesk server's CDAP gateway. It shows a
 // temperature, a humidity, a heater switch and a status text, raises a
 // frost alert below 2 °C, and warms up while the heater is on.
 //
@@ -8,7 +8,7 @@
 //   CDAP_SERVER=ws://desk.example.com:21122/cdap CDAP_API_KEY=... node examples/greenhouse.mts
 //
 // CDAP_DEVICE_ID sets the device's id (default greenhouse-1).
-import { CDAPBridge, gauge, textWidget, toggle } from 'betterdesk-cdap';
+import { CDAPBridge, gauge, textWidget, toggle } from 'neodesk-cdap';
 
 const bridge = new CDAPBridge({
   server: process.env.CDAP_SERVER ?? 'ws://localhost:21122/cdap',

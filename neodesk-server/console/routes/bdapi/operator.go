@@ -6,21 +6,21 @@ import (
 	"sort"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/authn"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsjson"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // The desktop client's operator mode: sign-in, the device list, and the
 // record of the operator's remote sessions.
 
-// operatorLogin answers POST /api/bd/operator/login {username, password,
+// operatorLogin answers POST /api/nd/operator/login {username, password,
 // device_id}: an account's access token that stores the device id, for the
 // desktop client in operator mode. It is no device token: the device
 // routes refuse it. Only an account with the role admin or
@@ -136,7 +136,7 @@ type devicesAnswer struct {
 	Devices []operatorDevice `json:"devices"`
 }
 
-// operatorDevices answers GET /api/bd/operator/devices: every device of
+// operatorDevices answers GET /api/nd/operator/devices: every device of
 // the console's table that is not deleted and is in the account's device
 // scope, after bringing it up to date with the signal server's, by id.
 // hostname and platform come from the device's info where it has them; an
@@ -232,7 +232,7 @@ func sessionAction(v any) (string, error) {
 // row of this type, and the session history reads only rows of it.
 const operatorSessionType = 100
 
-// recordSession answers POST /api/bd/operator/sessions {action,
+// recordSession answers POST /api/nd/operator/sessions {action,
 // device_id, hostname, session_id}: the start or end of an operator's
 // session with a device goes into the connection audit, under the
 // operator's name and the client id of the token, with the connection
@@ -309,7 +309,7 @@ type historyAnswer struct {
 	Count    int             `json:"count"`
 }
 
-// sessionHistory answers GET /api/bd/operator/sessions?limit=: the
+// sessionHistory answers GET /api/nd/operator/sessions?limit=: the
 // calling operator's sessions put together from the newest rows of the
 // connection audit that the operator recorded through recordSession (four
 // rows for each session asked for), the newest first, 100 unless limit

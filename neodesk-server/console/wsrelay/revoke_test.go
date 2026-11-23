@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
 )
 
 // TestRevokeRightAfterTheBridgeIsListed takes a guest link back as soon as

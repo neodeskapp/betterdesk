@@ -53,17 +53,17 @@ instances, because the matrix writes to everything it reaches.
 
 To run the tests by hand against a console you started yourself:
 
-    cd betterdesk-server/console/contract
-    BD_URL=http://bdgo-c1:5000 go test -tags contract -count=1 -run '^TestCases$/^devices$'
+    cd neodesk-server/console/contract
+    ND_URL=http://bdgo-c1:5000 go test -tags contract -count=1 -run '^TestCases$/^devices$'
 
 Run `go test` from this folder without a package argument, otherwise it
 hides the summary of a passing run.
 
 | Variable | Meaning |
 |---|---|
-| `BD_URL` | The console to test. Required. |
-| `BD_PASSWORD_FILE` | File with the password of the `e2e_<role>` accounts. Default `/stack/secrets/e2e_password`. |
-| `BD_SECRETS_DIR` | Folder of the secrets cases send as `{secret:<file name>}` (see "Secrets"). Default `/stack/secrets`. |
+| `ND_URL` | The console to test. Required. |
+| `ND_PASSWORD_FILE` | File with the password of the `e2e_<role>` accounts. Default `/stack/secrets/e2e_password`. |
+| `ND_SECRETS_DIR` | Folder of the secrets cases send as `{secret:<file name>}` (see "Secrets"). Default `/stack/secrets`. |
 | `CONTRACT_RECORD` | `1` writes goldens from this run. `merge` adds a second run to them (see below). Unset compares. |
 | `CONTRACT_RECORD_NEW` | `1` with `CONTRACT_RECORD` also writes new goldens of requests the Go console answers (see "Recording a new case"). |
 | `CONTRACT_REWRITE` | With `CONTRACT_RECORD`, a regular expression of golden names (`cases/devices/list`, `matrix/devices/GET_api_devices`) that a recording writes although the Go console answers them (see "Rewriting goldens for a bug fix"). |
@@ -94,7 +94,7 @@ package contract_test
 import (
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 func init() {
@@ -192,7 +192,7 @@ a client API token, a two-factor secret. It names the value as
 
 ```go
 contract.Case{
-	Name: "device-init", Method: "POST", Path: "/api/bd/file-transfer",
+	Name: "device-init", Method: "POST", Path: "/api/nd/file-transfer",
 	Headers: map[string]string{"Authorization": "Bearer {secret:device_token}"},
 	Body:    map[string]any{"action": "init", "filename": "report.pdf", "size": 12},
 	Capture: map[string]string{"transfer": "transfer_id"},
@@ -202,12 +202,12 @@ contract.Case{
 
 The value comes from one of two places:
 
-- **A file of the secrets folder** (`BD_SECRETS_DIR`, default
+- **A file of the secrets folder** (`ND_SECRETS_DIR`, default
   `/stack/secrets`, which `stack.sh run` mounts from the instance). Every
   file there is a secret named after the file, its content without white
   space around it. A test instance has `device_token` (bound to device
   `900100001`) and `device_token_other` (bound to `900100002`), made by
-  `devseed accounts` (`betterdesk-server/cmd/devseed`).
+  `devseed accounts` (`neodesk-server/cmd/devseed`).
 - **An earlier answer of the same turn**, taken with `CaptureSecret`
   (same sources as `Capture`). The value must be text, or a number, of at
   least eight characters.
@@ -333,9 +333,9 @@ variable on; run the two halves by hand on two fresh instances:
 
     stack.sh up ft1; stack.sh up ft2
     DEV_DOCKER_ARGS="-e CONTRACT_RECORD=1 -e CONTRACT_RECORD_NEW=1" stack.sh run ft1 \
-      "cd betterdesk-server/console/contract && go test -tags contract -count=1 -run '^TestCases\$/^tickets\$'"
+      "cd neodesk-server/console/contract && go test -tags contract -count=1 -run '^TestCases\$/^tickets\$'"
     DEV_DOCKER_ARGS="-e CONTRACT_RECORD=merge -e CONTRACT_RECORD_NEW=1" stack.sh run ft2 \
-      "cd betterdesk-server/console/contract && go test -tags contract -count=1 -run '^TestCases\$/^tickets\$'"
+      "cd neodesk-server/console/contract && go test -tags contract -count=1 -run '^TestCases\$/^tickets\$'"
 
 ## Rewriting goldens for a bug fix
 
@@ -596,7 +596,7 @@ says whether a Go socket takes the upgrade.
 `testdata/routes.json` is a trimmed copy of the route inventory. Make it
 again after the inventory changed:
 
-    cd betterdesk-server/console/contract && go generate
+    cd neodesk-server/console/contract && go generate
 
 (in the dev container, where the inventory is at `/notes/inventory.json`).
 

@@ -11,12 +11,12 @@ import (
 	"modernc.org/sqlite"
 	sqlite3 "modernc.org/sqlite/lib"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/goapipath"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
 // Agent templates are enrollment presets with a one-use token
@@ -140,11 +140,11 @@ func (h *handlers) deleteTemplate(w http.ResponseWriter, r *http.Request) {
 	fail(w, r, http.StatusNotImplemented, "db_backend_missing_run")
 }
 
-// enroll answers POST /api/bd/enroll {enrollment_token, device_id}, which
+// enroll answers POST /api/nd/enroll {enrollment_token, device_id}, which
 // an agent calls without a session: both are needed, the token must be a
 // template's, and the answer is the template's name and its configuration
 // as JSON.parse reads it ({} when it cannot). The token is not bound to
-// the device here; /api/bd/register does that.
+// the device here; /api/nd/register does that.
 func (h *handlers) enroll(w http.ResponseWriter, r *http.Request) {
 	token, err := textOr(field(r, "enrollment_token"), "")
 	if err != nil {

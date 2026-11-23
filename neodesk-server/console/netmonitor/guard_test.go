@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
-	"github.com/unitronix/betterdesk-server/console/ssrfguard/guardtest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard/guardtest"
 )
 
 // outcome is what a function of the Node console answered: its result, or

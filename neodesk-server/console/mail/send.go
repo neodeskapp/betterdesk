@@ -12,8 +12,8 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/mail/smtpwire"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/smtpwire"
 )
 
 // Email is a message for SendEmail.
@@ -88,7 +88,7 @@ func fromText(from value) (string, error) {
 // whether the mail server took it. It logs the outcome: how many
 // recipients a sent message had, or why it failed, never an address.
 //
-// The sender is the configuration's from, else "betterdesk@localhost".
+// The sender is the configuration's from, else "neodesk@localhost".
 // Without a configuration nothing is sent and the answer is false.
 //
 // A failed delivery is false with a log line, also for a stored
@@ -123,7 +123,7 @@ func (s *Service) send(ctx context.Context, t *transporter, m Email) error {
 	}
 	from := t.config.get("from")
 	if !from.truthy() {
-		from = stringValue(defaultFrom)
+		from = stringValue(s.defaultFrom())
 	}
 	sender, err := fromText(from)
 	if err != nil {
@@ -339,10 +339,10 @@ func (t *texts) or(v jsbind.Value, fallback string) string {
 	return t.of(v)
 }
 
-// alertMail builds subject, text and HTML of an alert mail. The error is
-// the TypeError the console threw: for a severity that is no text, and
-// for a value it could not make text of.
-func alertMail(alert Alert, rule AlertRule) (subject, text, html string, err error) {
+// alertMail builds subject, text and HTML of an alert mail that names
+// the product product. The error is the TypeError the console threw: for
+// a severity that is no text, and for a value it could not make text of.
+func alertMail(product string, alert Alert, rule AlertRule) (subject, text, html string, err error) {
 	var t texts
 	name := t.of(rule.Name)
 	if t.err != nil {
@@ -371,7 +371,7 @@ func alertMail(alert Alert, rule AlertRule) (subject, text, html string, err err
 		return "", "", "", t.err
 	}
 
-	subject = "[BetterDesk Alert] " + name + " — " + upper(severity)
+	subject = "[" + product + " Alert] " + name + " — " + upper(severity)
 	text = strings.Join([]string{
 		"Alert: " + name,
 		"Severity: " + severity,
@@ -383,7 +383,7 @@ func alertMail(alert Alert, rule AlertRule) (subject, text, html string, err err
 	}, "\n")
 	html = `
         <div style="font-family: sans-serif; max-width: 600px;">
-            <h2 style="color: #e74c3c;">BetterDesk Alert: ` + escapeHTML(name) + `</h2>
+            <h2 style="color: #e74c3c;">` + product + ` Alert: ` + escapeHTML(name) + `</h2>
             <table style="border-collapse: collapse; width: 100%;">
                 <tr><td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">Severity</td>
                     <td style="padding: 8px; border-bottom: 1px solid #eee;">` + escapeHTML(severity) + `</td></tr>
@@ -434,7 +434,7 @@ func recipients(v jsbind.Value) (to []string, list bool, err error) {
 // is no text, or for a value it could not make text of. Rows of the
 // console's own tables never cause one.
 func (s *Service) SendAlertEmail(ctx context.Context, alert Alert, rule AlertRule) (bool, error) {
-	subject, text, html, err := alertMail(alert, rule)
+	subject, text, html, err := alertMail(s.product(), alert, rule)
 	if err != nil {
 		return false, err
 	}
@@ -464,9 +464,10 @@ type HelpRequestEmail struct {
 	FolderName jsbind.Value
 }
 
-// helpRequestMail builds subject, text and HTML of a help request mail.
-// Without a baseURL the mail has no link to the console.
-func helpRequestMail(help HelpRequest, folderName jsbind.Value, baseURL string) (subject, text, html string, err error) {
+// helpRequestMail builds subject, text and HTML of a help request mail
+// that names the product product. Without a baseURL the mail has no link
+// to the console.
+func helpRequestMail(product string, help HelpRequest, folderName jsbind.Value, baseURL string) (subject, text, html string, err error) {
 	var t texts
 	hostname := "Unknown device"
 	switch {
@@ -503,7 +504,7 @@ func helpRequestMail(help HelpRequest, folderName jsbind.Value, baseURL string) 
 	if baseURL != "" {
 		lines = append(lines, "", "Open in panel: "+link)
 		linkRow = `
-            <p style="margin-top: 16px;"><a href="` + escapeHTML(link) + `">Open help requests in BetterDesk</a></p>`
+            <p style="margin-top: 16px;"><a href="` + escapeHTML(link) + `">Open help requests in ` + product + `</a></p>`
 	}
 	text = strings.Join(lines, "\n")
 
@@ -534,7 +535,7 @@ func helpRequestMail(help HelpRequest, folderName jsbind.Value, baseURL string) 
 // /help-requests; without that address the mail has no link. The error is
 // as for SendAlertEmail.
 func (s *Service) SendHelpRequestEmail(ctx context.Context, m HelpRequestEmail) (bool, error) {
-	subject, text, html, err := helpRequestMail(m.HelpRequest, m.FolderName, s.GetPanelBaseURL())
+	subject, text, html, err := helpRequestMail(s.product(), m.HelpRequest, m.FolderName, s.GetPanelBaseURL())
 	if err != nil {
 		return false, err
 	}

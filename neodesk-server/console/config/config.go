@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/static"
-	"github.com/unitronix/betterdesk-server/internal/envvar"
-	"github.com/unitronix/betterdesk-server/internal/productversion"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/static"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/productversion"
 )
 
 // Config is the console's configuration.
@@ -162,7 +162,7 @@ type Config struct {
 	// LogLevel is the raw LOG_LEVEL value (kit.NewLogger reads it).
 	LogLevel string
 	// APIHost is the host and port the console knows the API server by
-	// (BETTERDESK_API_URL). Calls into the API carry it as Host.
+	// (NEODESK_API_URL). Calls into the API carry it as Host.
 	APIHost string
 
 	// KeysPath is the folder the server writes its keys to (KEYS_PATH,
@@ -177,7 +177,7 @@ type Config struct {
 	PubKeyPath string
 	APIKeyPath string
 	// APIURL is the address of the server's API as configured
-	// (BETTERDESK_API_URL, else HBBS_API_URL, else
+	// (NEODESK_API_URL, else HBBS_API_URL, else
 	// http://127.0.0.1:21114/api), as written.
 	APIURL string
 	// GoAPIPort is the port of the server's API: GO_API_PORT, else the
@@ -212,7 +212,7 @@ type Config struct {
 	EnvPath     string
 	ComposePath string
 
-	// GeneratorEmbedded is BETTERDESK_CLIENT_GENERATOR_MODE=embedded (any
+	// GeneratorEmbedded is NEODESK_CLIENT_GENERATOR_MODE=embedded (any
 	// letter case, space around it): the support generator builds the
 	// client from source instead of using the downloaded templates.
 	GeneratorEmbedded bool
@@ -358,7 +358,7 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg.DBPath = orDefault(getenv("DB_PATH"), filepath.Join(cfg.KeysPath, "db_v2.sqlite3"))
 	cfg.PubKeyPath = orDefault(getenv("PUB_KEY_PATH"), filepath.Join(cfg.KeysPath, "id_ed25519.pub"))
 	cfg.APIKeyPath = orDefault(getenv("API_KEY_PATH"), filepath.Join(cfg.KeysPath, ".api_key"))
-	cfg.APIURL = orDefault(orDefault(getenv("BETTERDESK_API_URL"), getenv("HBBS_API_URL")), defaultAPIURL)
+	cfg.APIURL = orDefault(orDefault(getenv("NEODESK_API_URL"), getenv("HBBS_API_URL")), defaultAPIURL)
 	cfg.GoAPIPort = parseIntOr(getenv("GO_API_PORT"), apiURLPort(cfg.APIURL, defaultGoAPIPort))
 	cfg.APIPort = parseIntOr(getenv("API_PORT"), 21121)
 	cfg.APIEnabled = isOn(nullish(getenv, p, "API_ENABLED", "true"))
@@ -374,7 +374,7 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 	cfg.RelayPort = parseIntOr(getenv("WS_HBBR_PORT"), 21117)
 	cfg.EnvPath = filepath.Join(cfg.ConsoleDir, ".env")
 	cfg.ComposePath = filepath.Join(cfg.ConsoleDir, "..", "docker-compose.yml")
-	cfg.GeneratorEmbedded = strings.ToLower(strings.TrimSpace(orDefault(getenv("BETTERDESK_CLIENT_GENERATOR_MODE"), "download"))) == "embedded"
+	cfg.GeneratorEmbedded = strings.ToLower(strings.TrimSpace(orDefault(getenv("NEODESK_CLIENT_GENERATOR_MODE"), "download"))) == "embedded"
 	cfg.AgentBuildWorker = envvar.SwitchOr(getenv("AGENT_BUILD_WORKER"), true)
 	cfg.AgentBuildPoll = timerDelay(orDefault(getenv("AGENT_BUILD_POLL_MS"), "5000"))
 	if ms, ok := parseInt(orDefault(getenv("AGENT_BUILD_COOLDOWN_MS"), "1000")); ok && ms > 0 {
@@ -473,9 +473,9 @@ func consoleDir(getenv func(string) string, p probe, docker bool) string {
 		places = append(places, "/app")
 	}
 	if p.windows {
-		places = append(places, `C:\BetterDeskConsole`)
+		places = append(places, `C:\NeoDeskConsole`)
 	} else {
-		places = append(places, "/opt/BetterDeskConsole", "/opt/betterdesk", "/var/lib/betterdesk")
+		places = append(places, "/opt/NeoDeskConsole", "/opt/neodesk", "/var/lib/neodesk")
 	}
 	for _, place := range places {
 		if p.exists(filepath.Join(place, ".env")) || p.exists(filepath.Join(place, "lang", "en.json")) {
@@ -486,10 +486,10 @@ func consoleDir(getenv func(string) string, p probe, docker bool) string {
 }
 
 // apiHost is the host and port of the API address the old console was
-// configured with: BETTERDESK_API_URL, else HBBS_API_URL, else
+// configured with: NEODESK_API_URL, else HBBS_API_URL, else
 // 127.0.0.1:21114, as that address writes them.
 func apiHost(getenv func(string) string) string {
-	raw := orDefault(getenv("BETTERDESK_API_URL"), getenv("HBBS_API_URL"))
+	raw := orDefault(getenv("NEODESK_API_URL"), getenv("HBBS_API_URL"))
 	if raw == "" {
 		return "127.0.0.1:21114"
 	}
@@ -523,9 +523,9 @@ func keysPath(getenv func(string) string, p probe, docker bool) string {
 	if docker {
 		return "/opt/rustdesk"
 	}
-	places, separator := []string{"/opt/betterdesk", "/opt/rustdesk"}, "/"
+	places, separator := []string{"/opt/neodesk", "/opt/rustdesk"}, "/"
 	if p.windows {
-		places, separator = []string{`C:\BetterDesk`, `C:\RustDesk`}, `\`
+		places, separator = []string{`C:\NeoDesk`, `C:\RustDesk`}, `\`
 	}
 	for _, place := range places {
 		if p.exists(place + separator + "id_ed25519") {

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"math"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/internal/envvar"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
 )
 
 // settingKey is the row of the settings table with the SMTP configuration.
@@ -15,9 +15,6 @@ const settingKey = "smtp_config"
 // MaskedPass stands for a stored password in every answer of the settings
 // routes. A save that sends it back keeps the stored password.
 const MaskedPass = "********"
-
-// defaultFrom is the sender when the configuration names none.
-const defaultFrom = "betterdesk@localhost"
 
 // Config is an SMTP configuration: the stored one, or the one made from
 // the environment. Its members are JavaScript values, as the console had
@@ -110,7 +107,7 @@ func (s *Service) LoadSMTPConfig(ctx context.Context) *Config {
 		"secure", boolValue(envvar.SwitchOr(s.getenv("SMTP_SECURE"), false)),
 		"user", stringValue(s.getenv("SMTP_USER")),
 		"pass", stringValue(s.getenv("SMTP_PASS")),
-		"from", stringValue(orDefault("SMTP_FROM", defaultFrom)),
+		"from", stringValue(orDefault("SMTP_FROM", s.defaultFrom())),
 		"alert_email", stringValue(s.getenv("SMTP_ALERT_EMAIL")),
 		"tlsVerify", boolValue(s.opts.TLSVerify),
 	)}

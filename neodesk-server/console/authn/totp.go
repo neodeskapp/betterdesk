@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // Two-factor sign-in with time-based codes: HMAC-SHA1, 6 digits, a step
@@ -28,7 +28,7 @@ import (
 // Secrets made here have 20 bytes.
 
 const (
-	totpIssuer     = "BetterDesk"
+	totpIssuer     = "NeoDesk"
 	totpStepMillis = 30_000
 	totpDigits     = 6
 	totpKeyLength  = 20
@@ -102,7 +102,7 @@ func formEncode(s string) string {
 // OtpauthURL builds the address an authenticator app reads from the QR
 // code:
 //
-//	otpauth://totp/BetterDesk:<account>?secret=<secret>&issuer=BetterDesk&digits=6&period=30
+//	otpauth://totp/NeoDesk:<account>?secret=<secret>&issuer=NeoDesk&digits=6&period=30
 //
 // The issuer has no space and there is no algorithm parameter, because
 // some apps refuse those.

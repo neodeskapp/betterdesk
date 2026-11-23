@@ -1,4 +1,4 @@
-// Package productversion exposes the embedded BetterDesk product semver.
+// Package productversion exposes the embedded NeoDesk product semver.
 package productversion
 
 import (

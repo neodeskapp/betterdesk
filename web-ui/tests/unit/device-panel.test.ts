@@ -132,7 +132,7 @@ describe('permission gates per role', () => {
 
 	test('support agent: no live data, no editing, its limits instead of management', () => {
 		const d = device({
-			telemetry: { snapshots: { identity: { data: { product_sku: 'betterdesk-support' } } } }
+			telemetry: { snapshots: { identity: { data: { product_sku: 'neodesk-support' } } } }
 		} as Partial<PanelDevice>);
 		const can = canFor('admin');
 		expect(liveViews(d, can)).toEqual([]);

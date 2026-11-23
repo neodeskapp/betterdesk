@@ -2,7 +2,7 @@
  "id": "filetransfer/device-read-cancelled",
  "request": {
   "method": "GET",
-  "path": "/api/bd/file-transfer/{announced}",
+  "path": "/api/nd/file-transfer/{announced}",
   "notes": [
    "header Authorization: Bearer {secret:device_token}",
    "no CSRF token",

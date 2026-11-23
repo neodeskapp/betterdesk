@@ -52,7 +52,7 @@
    "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
-    "content-disposition": "attachment; filename=\"betterdesk_network_2026-11-19.csv\"",
+    "content-disposition": "attachment; filename=\"neodesk_network_2026-11-19.csv\"",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "text/csv; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
@@ -63,7 +63,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",

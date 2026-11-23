@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // Activity: the three routes people read (the summaries of all devices,
@@ -115,7 +115,7 @@ func init() {
 }
 
 // activity-device: the route the desktop agent reports its app usage
-// with, POST /activity at /api/bd and at /api/activity, behind the device
+// with, POST /activity at /api/nd and at /api/activity, behind the device
 // guards: a Bearer token bound to a device, then the device the request
 // names (the body's device_id, else the query's, else X-Device-Id)
 // compared as text. The route compares the body's device_id once more,
@@ -129,7 +129,7 @@ func init() {
 // window the reports group asks for, and the sessions and summaries it
 // leaves are older than anything the activity cases above read.
 func init() {
-	const bd = "/api/bd"
+	const bd = "/api/nd"
 	const own = "/api/activity"
 	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
 	other := map[string]string{"Authorization": "Bearer {secret:device_token_other}"}
@@ -183,7 +183,7 @@ func init() {
 
 	contract.Group("activity-device",
 		sent("report", nil),
-		asDevice(contract.Case{Name: "report-other-spelling", Path: "/API/BD/Activity/", Body: report(map[string]any{"timestamp": "2011-03-04T10:01:00.000Z"})}),
+		asDevice(contract.Case{Name: "report-other-spelling", Path: "/API/ND/Activity/", Body: report(map[string]any{"timestamp": "2011-03-04T10:01:00.000Z"})}),
 		asDevice(contract.Case{Name: "report-at-activity", Path: own + "/activity", Body: report(nil)}),
 
 		// Who may report

@@ -2,7 +2,7 @@
  "id": "dataguard/bd-read-id-not-a-number",
  "request": {
   "method": "GET",
-  "path": "/api/bd/policies/abc"
+  "path": "/api/nd/policies/abc"
  },
  "recordings": 2,
  "answers": [
@@ -66,7 +66,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",

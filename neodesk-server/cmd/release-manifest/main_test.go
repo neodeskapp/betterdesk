@@ -15,7 +15,7 @@ import (
 func releaseDir(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "betterdesk-server-linux-amd64"), []byte("a binary"), 0o755); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "neodesk-server-linux-amd64"), []byte("a binary"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	return dir
@@ -23,7 +23,7 @@ func releaseDir(t *testing.T) string {
 
 func args(dir string) []string {
 	return []string{"-dir", dir, "-version", "3.6.0", "-commit", strings.Repeat("d", 40), "-branch", "main",
-		"-owner", "trybetterdesk", "-repo", "betterdesk", "-created", "2026-11-22T10:00:00Z"}
+		"-owner", "neodeskapp", "-repo", "neodesk", "-created", "2026-11-22T10:00:00Z"}
 }
 
 // TestReleaseNeedsTheReleaseKey: with the release key compiled into the
@@ -51,7 +51,7 @@ func TestReleaseNeedsTheReleaseKey(t *testing.T) {
 		t.Fatalf("the PEM key: %v", err)
 	}
 	getenv := func(k string) string {
-		if k == "BETTERDESK_RELEASE_SIGNING_KEY" {
+		if k == "NEODESK_RELEASE_SIGNING_KEY" {
 			return keyPEM
 		}
 		return ""

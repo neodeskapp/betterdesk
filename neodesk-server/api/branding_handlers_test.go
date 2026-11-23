@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 func TestBrandingGetDefaultsAndSave(t *testing.T) {
@@ -44,11 +44,11 @@ func TestBrandingGetDefaultsAndSave(t *testing.T) {
 	if got.SchemaVersion != brandingSchemaVersion {
 		t.Fatalf("schema_version=%d", got.SchemaVersion)
 	}
-	if got.CompanyName != "BetterDesk" {
+	if got.CompanyName != "NeoDesk" {
 		t.Fatalf("company=%q", got.CompanyName)
 	}
-	if len(got.Profiles.BetterDesk.Apply) == 0 {
-		t.Fatal("expected betterdesk apply list")
+	if len(got.Profiles.NeoDesk.Apply) == 0 {
+		t.Fatal("expected neodesk apply list")
 	}
 	etag := resp.Header.Get("ETag")
 	if etag == "" {

@@ -5,7 +5,7 @@ package contract_test
 import (
 	"fmt"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // Add a computer and Quick support (console/routes/onboard). These routes

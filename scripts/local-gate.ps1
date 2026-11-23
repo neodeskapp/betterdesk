@@ -6,7 +6,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
-Set-Location -LiteralPath (Join-Path $repoRoot "betterdesk-server")
+Set-Location -LiteralPath (Join-Path $repoRoot "neodesk-server")
 
 $arguments = @("run", "./cmd/repotool", "local-gate")
 if ($DryRun) { $arguments += "--dry-run" }

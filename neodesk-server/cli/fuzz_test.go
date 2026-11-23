@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 )
 
 // Any env file: upgrade-env keeps every line it does not change byte for
@@ -66,7 +66,7 @@ func FuzzUpgradeEnv(f *testing.F) {
 						noteEnd = "\r\n"
 					}
 				}
-				want := "# Commented out by betterdesk-server upgrade-env: " + commentedKeys[entry.Key] + noteEnd + "# " + content + ending
+				want := "# Commented out by neodesk-server upgrade-env: " + commentedKeys[entry.Key] + noteEnd + "# " + content + ending
 				if !strings.HasPrefix(out, want) {
 					t.Fatalf("%q: %q is not commented out at %q", text, content, out)
 				}
@@ -98,7 +98,7 @@ func FuzzUpgradeEnv(f *testing.F) {
 				t.Fatalf("%q: %s is still set", text, key)
 			}
 		}
-		for _, key := range []string{"CONSOLE_PORT", "HOST", "SIGNAL_PORT", "RELAY_PORT", "GO_API_PORT", "CONSOLE_DIR", "BETTERDESK_ENV_FILE", "BETTERDESK_SUPERVISOR"} {
+		for _, key := range []string{"CONSOLE_PORT", "HOST", "SIGNAL_PORT", "RELAY_PORT", "GO_API_PORT", "CONSOLE_DIR", "NEODESK_ENV_FILE", "NEODESK_SUPERVISOR"} {
 			if _, ok := serverinfo.ParseEnvLines(plan.Text).Get(key); !ok {
 				t.Fatalf("%q: no %s after the upgrade", text, key)
 			}

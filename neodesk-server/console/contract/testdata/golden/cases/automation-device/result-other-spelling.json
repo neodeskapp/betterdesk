@@ -2,7 +2,7 @@
  "id": "automation-device/result-other-spelling",
  "request": {
   "method": "POST",
-  "path": "/API/BD/Commands/{command}/Result",
+  "path": "/API/ND/Commands/{command}/Result",
   "body": {
    "result": "demo-reception-02",
    "status": "completed"

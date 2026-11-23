@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // TestSigningSeedWrittenOnlyWhenItDiffers leaves the seed file alone
@@ -20,7 +20,7 @@ import (
 // changes (BUGS RV58: every readiness check rewrote it).
 func TestSigningSeedWrittenOnlyWhenItDiffers(t *testing.T) {
 	seed := testSeed
-	s := New(Options{DataDir: t.TempDir(), Env: func() []string { return []string{"BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED=" + seed} }})
+	s := New(Options{DataDir: t.TempDir(), Env: func() []string { return []string{"NEODESK_CUSTOM_CLIENT_SIGNING_SEED=" + seed} }})
 	if _, err := s.EnsureSigningKey(); err != nil {
 		t.Fatal(err)
 	}
@@ -103,21 +103,21 @@ func TestTemplateInstallChecksRepo(t *testing.T) {
 		wantErr             string
 		wantPath            string
 	}{
-		{"path in the name", "o/r/../../../user/repos?per_page=100&x=", "", "", "betterdesk_client_repo_invalid", ""},
-		{"not on the list", "someorg/private-repo", "", "", "betterdesk_client_repo_not_allowed", ""},
-		{"default", "", "", "", "", "/repos/trybetterdesk/betterdesk-client/releases/latest"},
+		{"path in the name", "o/r/../../../user/repos?per_page=100&x=", "", "", "neodesk_client_repo_invalid", ""},
+		{"not on the list", "someorg/private-repo", "", "", "neodesk_client_repo_not_allowed", ""},
+		{"default", "", "", "", "", "/repos/neodeskapp/neodesk-client/releases/latest"},
 		// the compose files set the client fork (L238)
-		{"setting of the compose files", "", "", "trybetterdesk/betterdesk-client", "", "/repos/trybetterdesk/betterdesk-client/releases/latest"},
-		{"on the list", " someorg/private-repo ", "trybetterdesk/betterdesk-client, someorg/private-repo", "", "", "/repos/someorg/private-repo/releases/latest"},
+		{"setting of the compose files", "", "", "neodeskapp/neodesk-client", "", "/repos/neodeskapp/neodesk-client/releases/latest"},
+		{"on the list", " someorg/private-repo ", "neodeskapp/neodesk-client, someorg/private-repo", "", "", "/repos/someorg/private-repo/releases/latest"},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			gh := &fakeGitHub{answer: func(r *http.Request) *http.Response { return reply(500, []byte(`{}`)) }}
-			env := []string{"BETTERDESK_GITHUB_TOKEN=made-up-token"}
+			env := []string{"NEODESK_GITHUB_TOKEN=made-up-token"}
 			if c.allowed != "" {
-				env = append(env, "BETTERDESK_CLIENT_ALLOWED_REPOS="+c.allowed)
+				env = append(env, "NEODESK_CLIENT_ALLOWED_REPOS="+c.allowed)
 			}
 			if c.repoSetting != "" {
-				env = append(env, "BETTERDESK_CLIENT_REPO="+c.repoSetting)
+				env = append(env, "NEODESK_CLIENT_REPO="+c.repoSetting)
 			}
 			s := New(Options{DataDir: t.TempDir(), HTTP: gh, Env: func() []string { return env }})
 			must(t, os.WriteFile(filepath.Join(s.opts.DataDir, signingSeedName), []byte(testSeed), 0o600))

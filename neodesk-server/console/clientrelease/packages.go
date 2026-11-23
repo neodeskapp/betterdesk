@@ -50,7 +50,7 @@ func (p Package) For(kind string) bool {
 func (p Package) Ext() string { return "." + p.Format }
 
 // Packages are the packages of the client fork's releases
-// (scripts/collect_desktop_dist.sh in trybetterdesk/betterdesk-client),
+// (scripts/collect_desktop_dist.sh in neodeskapp/neodesk-client),
 // in the order the public pages offer them. The Windows exe runs without
 // an install and installs itself, so it serves both kinds; the client
 // tells the two apart by its file name. The Linux packages install, the
@@ -68,9 +68,9 @@ var Packages = []Package{
 	{OS: "linux", Arch: "arm64", Format: "tar.gz", Kinds: []string{KindSupport}, asset: assetPattern("linux-aarch64-portable", "tar.gz")},
 }
 
-// assetPattern matches betterdesk-<version>-<platform>.<ext>.
+// assetPattern matches neodesk-<version>-<platform>.<ext>.
 func assetPattern(platform, ext string) *regexp.Regexp {
-	return regexp.MustCompile(`^betterdesk-([0-9][0-9A-Za-z.+_-]*)-` + regexp.QuoteMeta(platform) + `\.` + regexp.QuoteMeta(ext) + `$`)
+	return regexp.MustCompile(`^neodesk-([0-9][0-9A-Za-z.+_-]*)-` + regexp.QuoteMeta(platform) + `\.` + regexp.QuoteMeta(ext) + `$`)
 }
 
 // FindPackage returns the package for a system, processor and format; an

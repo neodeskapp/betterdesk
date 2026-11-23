@@ -4,7 +4,7 @@ import (
 	"context"
 	"math"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 )
 
 // Snapshot is what the run reads of the host (the part of

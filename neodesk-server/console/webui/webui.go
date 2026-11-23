@@ -46,7 +46,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // oldBase is where the console lived while old and new pages ran side by

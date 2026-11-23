@@ -112,7 +112,7 @@ test.describe('system settings tasks', () => {
 		await expect(page.locator('#restore-start-btn')).toHaveCount(0);
 
 		await page.locator('#restore-file-input').setInputFiles({
-			name: 'betterdesk-backup.tar.gz',
+			name: 'neodesk-backup.tar.gz',
 			mimeType: 'application/gzip',
 			buffer: Buffer.from([0x1f, 0x8b, 0, 0])
 		});
@@ -122,7 +122,7 @@ test.describe('system settings tasks', () => {
 		await expect(page.locator('#restore-start-btn')).toBeEnabled();
 		await page.locator('#restore-start-btn').click();
 		const dialog = page.getByRole('dialog');
-		await expect(dialog).toContainText('betterdesk-backup.tar.gz');
+		await expect(dialog).toContainText('neodesk-backup.tar.gz');
 		await expect(dialog).toContainText('Uploaded images');
 		await expectNoAxeViolations(page);
 		await page.keyboard.press('Escape');

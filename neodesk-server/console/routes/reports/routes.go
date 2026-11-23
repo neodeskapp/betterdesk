@@ -18,14 +18,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	engine "github.com/unitronix/betterdesk-server/console/reports"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	engine "github.com/neodeskapp/neodesk/neodesk-server/console/reports"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // scopeFunc is the device scope of the account of a request, nil when
@@ -239,7 +239,7 @@ func (h *handlers) generateCSV(w http.ResponseWriter, r *http.Request) {
 	}
 	csv := h.engine.ToCSV(report.CSVRows(jsbind.Of(body.Get("section"))))
 	// The date of the export in UTC, as toISOString().slice(0, 10)
-	filename := "betterdesk_" + report.Type.Str() + "_" + store.ISOTime(h.now())[:10] + ".csv"
+	filename := "neodesk_" + report.Type.Str() + "_" + store.ISOTime(h.now())[:10] + ".csv"
 	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
 	// res.send: an ETag, never compressed (only JSON answers are)
 	httpx.WriteBody(w, r, http.StatusOK, "text/csv; charset=utf-8", []byte(csv))

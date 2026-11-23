@@ -2,7 +2,7 @@
  "id": "bd-api/operator-help-request-accept-without-token",
  "request": {
   "method": "POST",
-  "path": "/api/bd/help-requests/1/accept",
+  "path": "/api/nd/help-requests/1/accept",
   "notes": [
    "no CSRF token",
    "no cookies"

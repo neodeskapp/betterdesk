@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // TestNodeAnswers replays what the Node console's three read routes
@@ -89,11 +89,11 @@ func TestNodeAnswers(t *testing.T) {
 	})
 }
 
-// The console has the group's four routes at /api/bd and at
+// The console has the group's four routes at /api/nd and at
 // /api/activity, in the order of the old file: the route of the desktop
 // agent, then the three read routes, after the inventory group at each
 // mount. The device route asks for a device token at both mounts, a
-// session does not stand for one; the read routes step aside at /api/bd,
+// session does not stand for one; the read routes step aside at /api/nd,
 // where nothing else of this console answers those addresses.
 func TestTheRoutesAtBothMounts(t *testing.T) {
 	w := replay.NewWorld(t, storetest.Migrated(t), nil)
@@ -110,8 +110,8 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 		}
 		return -1
 	}
-	for _, mount := range []string{"/api/bd", "/api/activity"} {
-		// At /api/bd the inventory group has GET /api/bd and GET /api/bd/{id} too, before this one
+	for _, mount := range []string{"/api/nd", "/api/activity"} {
+		// At /api/nd the inventory group has GET /api/nd and GET /api/nd/{id} too, before this one
 		at := index("POST "+mount+"/activity", 0)
 		if at < 0 {
 			t.Errorf("POST %s/activity is not registered", mount)
@@ -126,21 +126,21 @@ func TestTheRoutesAtBothMounts(t *testing.T) {
 			at = next
 		}
 	}
-	if index("POST /api/bd/activity", 0) > index("POST /api/activity/activity", 0) {
-		t.Errorf("the group is registered at /api/activity before /api/bd")
+	if index("POST /api/nd/activity", 0) > index("POST /api/activity/activity", 0) {
+		t.Errorf("the group is registered at /api/activity before /api/nd")
 	}
 
 	refused := `{"error":"Bearer access token required"}`
 	for _, req := range []replay.Request{
 		{Role: "admin", Method: "POST", Path: "/api/activity/activity", Body: replay.Text(`{"device_id":"D1"}`)},
-		{Role: "admin", Method: "POST", Path: "/api/bd/activity", Body: replay.Text(`{"device_id":"D1"}`)},
-		{Method: "POST", Path: "/api/bd/activity", Body: replay.Text(`{"device_id":"D1"}`)},
+		{Role: "admin", Method: "POST", Path: "/api/nd/activity", Body: replay.Text(`{"device_id":"D1"}`)},
+		{Method: "POST", Path: "/api/nd/activity", Body: replay.Text(`{"device_id":"D1"}`)},
 	} {
 		if got := w.Do(req); got.Status != 401 || got.Body != refused {
 			t.Errorf("%s %s as %q: %d %s, want 401 %s", req.Method, req.Path, req.Role, got.Status, got.Body, refused)
 		}
 	}
-	for _, path := range []string{"/api/bd", "/api/bd/D1", "/api/bd/D1/top", "/api/bd/activity"} {
+	for _, path := range []string{"/api/nd", "/api/nd/D1", "/api/nd/D1/top", "/api/nd/activity"} {
 		if got := w.Do(replay.Request{Role: "admin", Path: path}); got.Status != 404 || got.Body != `{"success":false,"error":"Not Found"}` {
 			t.Errorf("GET %s as admin: %d %s, want the console's 404", path, got.Status, got.Body)
 		}

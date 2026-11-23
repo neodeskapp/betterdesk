@@ -142,29 +142,29 @@
  ],
  "steps": [
   {
-   "name": "1 GET /api/bd/dlp-policies",
+   "name": "1 GET /api/nd/dlp-policies",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/dlp-policies",
+   "path": "/api/nd/dlp-policies",
    "headers": {},
    "status": 401,
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "2 POST /api/bd/dlp-events",
+   "name": "2 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {},
    "body": "{\"event_source\":\"usb\"}",
    "status": 401,
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "3 GET /api/bd/dlp-policies",
+   "name": "3 GET /api/nd/dlp-policies",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/dlp-policies",
+   "path": "/api/nd/dlp-policies",
    "headers": {
     "X-Device-Id": "device-a"
    },
@@ -172,10 +172,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "4 POST /api/bd/dlp-events",
+   "name": "4 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "X-Device-Id": "device-a"
    },
@@ -184,10 +184,10 @@
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "5 GET /api/bd/dlp-policies",
+   "name": "5 GET /api/nd/dlp-policies",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/dlp-policies",
+   "path": "/api/nd/dlp-policies",
    "headers": {
     "Authorization": "Bearer nope"
    },
@@ -195,10 +195,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "6 POST /api/bd/dlp-events",
+   "name": "6 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer nope"
    },
@@ -207,10 +207,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "7 GET /api/bd/dlp-policies",
+   "name": "7 GET /api/nd/dlp-policies",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/dlp-policies",
+   "path": "/api/nd/dlp-policies",
    "headers": {
     "Authorization": "Bearer tok-unbound"
    },
@@ -218,10 +218,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "8 POST /api/bd/dlp-events",
+   "name": "8 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-unbound"
    },
@@ -230,10 +230,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "9 GET /api/bd/dlp-policies",
+   "name": "9 GET /api/nd/dlp-policies",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/dlp-policies",
+   "path": "/api/nd/dlp-policies",
    "headers": {
     "Authorization": "Bearer tok-expired"
    },
@@ -241,10 +241,10 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "10 POST /api/bd/dlp-events",
+   "name": "10 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-expired"
    },
@@ -253,29 +253,29 @@
    "answer": "{\"error\":\"Invalid or unbound access token\"}"
   },
   {
-   "name": "11 GET /api/bd/dlp-policies",
+   "name": "11 GET /api/nd/dlp-policies",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/dlp-policies",
+   "path": "/api/nd/dlp-policies",
    "headers": {},
    "status": 401,
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "12 POST /api/bd/dlp-events",
+   "name": "12 POST /api/nd/dlp-events",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {},
    "body": "{\"event_source\":\"usb\"}",
    "status": 401,
    "answer": "{\"error\":\"Bearer access token required\"}"
   },
   {
-   "name": "13 GET /api/bd/dlp-policies",
+   "name": "13 GET /api/nd/dlp-policies",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/dlp-policies",
+   "path": "/api/nd/dlp-policies",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -283,10 +283,10 @@
    "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
   },
   {
-   "name": "14 GET /api/bd/dlp-policies",
+   "name": "14 GET /api/nd/dlp-policies",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/dlp-policies",
+   "path": "/api/nd/dlp-policies",
    "headers": {
     "Authorization": "Bearer tok-device-b"
    },
@@ -294,10 +294,10 @@
    "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
   },
   {
-   "name": "15 GET /api/bd/dlp-policies?device_id=device-b",
+   "name": "15 GET /api/nd/dlp-policies?device_id=device-b",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/dlp-policies?device_id=device-b",
+   "path": "/api/nd/dlp-policies?device_id=device-b",
    "headers": {
     "Authorization": "Bearer tok-device-a",
     "X-Device-Id": "device-b"
@@ -306,10 +306,10 @@
    "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
   },
   {
-   "name": "16 GET /API/BD/DLP-POLICIES/",
+   "name": "16 GET /API/ND/DLP-POLICIES/",
    "role": "",
    "method": "GET",
-   "path": "/API/BD/DLP-POLICIES/",
+   "path": "/API/ND/DLP-POLICIES/",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -317,10 +317,10 @@
    "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
   },
   {
-   "name": "17 HEAD /api/bd/dlp-policies",
+   "name": "17 HEAD /api/nd/dlp-policies",
    "role": "",
    "method": "HEAD",
-   "path": "/api/bd/dlp-policies",
+   "path": "/api/nd/dlp-policies",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -328,10 +328,10 @@
    "answer": ""
   },
   {
-   "name": "18 GET /api/bd/dlp-policies",
+   "name": "18 GET /api/nd/dlp-policies",
    "role": "operator",
    "method": "GET",
-   "path": "/api/bd/dlp-policies",
+   "path": "/api/nd/dlp-policies",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -536,10 +536,10 @@
    "answer": "[{\"id\":1,\"name\":\"usb block\",\"rules\":[{\"type\":\"usb\",\"action\":\"block\"}]},{\"id\":4,\"name\":\"rules null\",\"rules\":[]},{\"id\":5,\"name\":\"rules a JSON null\",\"rules\":[]},{\"id\":6,\"name\":\"rules zero\",\"rules\":[]},{\"id\":7,\"name\":\"rules a text of a list\",\"rules\":[1,2]},{\"id\":8,\"name\":\"rules an object\",\"rules\":{\"zeta\":1,\"alpha\":{\"a\":1,\"b\":2}}},{\"id\":10,\"name\":\"Ünïcödé\",\"rules\":[{\"ext\":[\".docx\",\".xlsx\"],\"path\":\"C:\\\\Users\"}]}]"
   },
   {
-   "name": "37 POST /api/bd/dlp-events",
+   "name": "37 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -548,10 +548,10 @@
    "answer": "{\"error\":\"event_source is required (usb | file)\"}"
   },
   {
-   "name": "38 POST /api/bd/dlp-events",
+   "name": "38 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -560,10 +560,10 @@
    "answer": "{\"error\":\"event_source is required (usb | file)\"}"
   },
   {
-   "name": "39 POST /api/bd/dlp-events",
+   "name": "39 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -572,10 +572,10 @@
    "answer": "{\"error\":\"event_source is required (usb | file)\"}"
   },
   {
-   "name": "40 POST /api/bd/dlp-events",
+   "name": "40 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -584,10 +584,10 @@
    "answer": "{\"error\":\"event_source is required (usb | file)\"}"
   },
   {
-   "name": "41 POST /api/bd/dlp-events",
+   "name": "41 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -596,10 +596,10 @@
    "answer": "{\"error\":\"event_source is required (usb | file)\"}"
   },
   {
-   "name": "42 POST /api/bd/dlp-events",
+   "name": "42 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -608,10 +608,10 @@
    "answer": "{\"error\":\"event_source is required (usb | file)\"}"
   },
   {
-   "name": "43 POST /api/bd/dlp-events",
+   "name": "43 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -620,10 +620,10 @@
    "answer": "{\"error\":\"event_source is required (usb | file)\"}"
   },
   {
-   "name": "44 POST /api/bd/dlp-events",
+   "name": "44 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -632,10 +632,10 @@
    "answer": "{\"ok\":true,\"id\":1}"
   },
   {
-   "name": "45 POST /api/bd/dlp-events",
+   "name": "45 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -644,10 +644,10 @@
    "answer": "{\"ok\":true,\"id\":2}"
   },
   {
-   "name": "46 POST /api/bd/dlp-events",
+   "name": "46 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -656,10 +656,10 @@
    "answer": "{\"ok\":true,\"id\":3}"
   },
   {
-   "name": "47 POST /api/bd/dlp-events",
+   "name": "47 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -668,10 +668,10 @@
    "answer": "{\"ok\":true,\"id\":4}"
   },
   {
-   "name": "48 POST /api/bd/dlp-events",
+   "name": "48 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -680,10 +680,10 @@
    "answer": "{\"ok\":true,\"id\":5}"
   },
   {
-   "name": "49 POST /api/bd/dlp-events",
+   "name": "49 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -692,10 +692,10 @@
    "answer": "{\"ok\":true,\"id\":6}"
   },
   {
-   "name": "50 POST /api/bd/dlp-events",
+   "name": "50 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -704,10 +704,10 @@
    "answer": "{\"ok\":true,\"id\":7}"
   },
   {
-   "name": "51 POST /api/bd/dlp-events",
+   "name": "51 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -716,10 +716,10 @@
    "answer": "{\"ok\":true,\"id\":8}"
   },
   {
-   "name": "52 POST /api/bd/dlp-events",
+   "name": "52 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -728,10 +728,10 @@
    "answer": "{\"ok\":true,\"id\":9}"
   },
   {
-   "name": "53 POST /api/bd/dlp-events",
+   "name": "53 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -740,10 +740,10 @@
    "answer": "{\"ok\":true,\"id\":10}"
   },
   {
-   "name": "54 POST /api/bd/dlp-events",
+   "name": "54 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -752,10 +752,10 @@
    "answer": "{\"ok\":true,\"id\":11}"
   },
   {
-   "name": "55 POST /api/bd/dlp-events",
+   "name": "55 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -764,10 +764,10 @@
    "answer": "{\"error\":\"Failed to record event\"}"
   },
   {
-   "name": "56 POST /api/bd/dlp-events",
+   "name": "56 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -776,10 +776,10 @@
    "answer": "{\"error\":\"Failed to record event\"}"
   },
   {
-   "name": "57 POST /api/bd/dlp-events",
+   "name": "57 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -788,10 +788,10 @@
    "answer": "{\"error\":\"Failed to record event\"}"
   },
   {
-   "name": "58 POST /api/bd/dlp-events",
+   "name": "58 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -800,10 +800,10 @@
    "answer": "{\"error\":\"Failed to record event\"}"
   },
   {
-   "name": "59 POST /api/bd/dlp-events",
+   "name": "59 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -812,10 +812,10 @@
    "answer": "{\"ok\":true,\"id\":13}"
   },
   {
-   "name": "60 POST /api/bd/dlp-events",
+   "name": "60 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -824,10 +824,10 @@
    "answer": "{\"ok\":true,\"id\":14}"
   },
   {
-   "name": "61 POST /api/bd/dlp-events",
+   "name": "61 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -836,10 +836,10 @@
    "answer": "{\"ok\":true,\"id\":15}"
   },
   {
-   "name": "62 POST /api/bd/dlp-events",
+   "name": "62 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -848,10 +848,10 @@
    "answer": "{\"ok\":true,\"id\":16}"
   },
   {
-   "name": "63 POST /api/bd/dlp-events",
+   "name": "63 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -860,10 +860,10 @@
    "answer": "{\"ok\":true,\"id\":17}"
   },
   {
-   "name": "64 POST /api/bd/dlp-events",
+   "name": "64 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -872,10 +872,10 @@
    "answer": "{\"ok\":true,\"id\":18}"
   },
   {
-   "name": "65 POST /api/bd/dlp-events",
+   "name": "65 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -884,10 +884,10 @@
    "answer": "{\"ok\":true,\"id\":19}"
   },
   {
-   "name": "66 POST /api/bd/dlp-events",
+   "name": "66 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -896,10 +896,10 @@
    "answer": "{\"ok\":true,\"id\":20}"
   },
   {
-   "name": "67 POST /api/bd/dlp-events",
+   "name": "67 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -908,10 +908,10 @@
    "answer": "{\"ok\":true,\"id\":21}"
   },
   {
-   "name": "68 POST /api/bd/dlp-events",
+   "name": "68 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -920,10 +920,10 @@
    "answer": "{\"error\":\"Failed to record event\"}"
   },
   {
-   "name": "69 POST /api/bd/dlp-events",
+   "name": "69 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -932,10 +932,10 @@
    "answer": "{\"ok\":true,\"id\":22}"
   },
   {
-   "name": "70 POST /api/bd/dlp-events",
+   "name": "70 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -944,10 +944,10 @@
    "answer": "{\"ok\":true,\"id\":23}"
   },
   {
-   "name": "71 POST /api/bd/dlp-events",
+   "name": "71 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -956,10 +956,10 @@
    "answer": "{\"ok\":true,\"id\":24}"
   },
   {
-   "name": "72 POST /api/bd/dlp-events",
+   "name": "72 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -968,10 +968,10 @@
    "answer": "{\"ok\":true,\"id\":25}"
   },
   {
-   "name": "73 POST /api/bd/dlp-events",
+   "name": "73 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -980,10 +980,10 @@
    "answer": "{\"ok\":true,\"id\":26}"
   },
   {
-   "name": "74 POST /api/bd/dlp-events",
+   "name": "74 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -992,10 +992,10 @@
    "answer": "{\"ok\":true,\"id\":27}"
   },
   {
-   "name": "75 POST /api/bd/dlp-events",
+   "name": "75 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1004,10 +1004,10 @@
    "answer": "{\"ok\":true,\"id\":28}"
   },
   {
-   "name": "76 POST /api/bd/dlp-events",
+   "name": "76 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1016,10 +1016,10 @@
    "answer": "{\"error\":\"event_source is required (usb | file)\"}"
   },
   {
-   "name": "77 POST /api/bd/dlp-events",
+   "name": "77 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1028,10 +1028,10 @@
    "answer": "{\"ok\":true,\"id\":29}"
   },
   {
-   "name": "78 POST /api/bd/dlp-events",
+   "name": "78 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a",
     "Content-Type": "application/x-www-form-urlencoded"
@@ -1041,10 +1041,10 @@
    "answer": "{\"success\":false,\"error\":\"Content-Type must be application/json\"}"
   },
   {
-   "name": "79 POST /api/bd/dlp-events",
+   "name": "79 POST /api/nd/dlp-events",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-b"
    },
@@ -1065,10 +1065,10 @@
    "answer": "{\"ok\":true,\"id\":31}"
   },
   {
-   "name": "81 POST /api/bd/dlp-events",
+   "name": "81 POST /api/nd/dlp-events",
    "role": "operator",
    "method": "POST",
-   "path": "/api/bd/dlp-events",
+   "path": "/api/nd/dlp-events",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },
@@ -1091,10 +1091,10 @@
    "rows": "[]"
   },
   {
-   "name": "82 GET /api/bd/dlp-policies",
+   "name": "82 GET /api/nd/dlp-policies",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/dlp-policies",
+   "path": "/api/nd/dlp-policies",
    "headers": {
     "Authorization": "Bearer tok-device-a"
    },

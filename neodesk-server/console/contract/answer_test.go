@@ -52,8 +52,8 @@ func TestNormalizeHeadersKeepsTheAllowlist(t *testing.T) {
 
 func TestNormalizeSetCookie(t *testing.T) {
 	cases := map[string]string{
-		"bd.sid=s%3Aabc.def; Path=/; Expires=Tue, 10 Nov 2026 01:42:20 GMT; HttpOnly; SameSite=Lax": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
-		"bd.guest=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax":          "bd.guest=; Path=/; Expires=<past>; HttpOnly; SameSite=Lax",
+		"nd.sid=s%3Aabc.def; Path=/; Expires=Tue, 10 Nov 2026 01:42:20 GMT; HttpOnly; SameSite=Lax": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+		"nd.guest=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax":          "nd.guest=; Path=/; Expires=<past>; HttpOnly; SameSite=Lax",
 		"__csrf_h=a21957%7C8dc98f; Path=/; HttpOnly; SameSite=Lax":                                  "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
 		"lang=de; Max-Age=31536000; Path=/; Secure":                                                 "lang=<value>; Max-Age=<n>; Path=/; Secure",
 		"gone=x; Max-Age=0; Path=/":                                                                 "gone=<value>; Max-Age=0; Path=/",
@@ -68,11 +68,11 @@ func TestNormalizeSetCookie(t *testing.T) {
 
 func TestSetCookieHeadersAreSortedByName(t *testing.T) {
 	header := http.Header{}
-	header.Add("Set-Cookie", "bd.sid=two; Path=/")
-	header.Add("Set-Cookie", "bd.guest=; Path=/")
-	header.Add("Set-Cookie", "bd.sid=; Path=/login")
+	header.Add("Set-Cookie", "nd.sid=two; Path=/")
+	header.Add("Set-Cookie", "nd.guest=; Path=/")
+	header.Add("Set-Cookie", "nd.sid=; Path=/login")
 	got := NormalizeHeaders(header, nil)["set-cookie"]
-	want := []string{"bd.guest=; Path=/", "bd.sid=<value>; Path=/", "bd.sid=; Path=/login"}
+	want := []string{"nd.guest=; Path=/", "nd.sid=<value>; Path=/", "nd.sid=; Path=/login"}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("set-cookie = %q, want %q (by name, the same name in the order sent)", got, want)
 	}
@@ -215,7 +215,7 @@ func TestNormalizerWritesTheProductVersionAsAWord(t *testing.T) {
 		t.Fatal("no product version: " + versionFile + " cannot be read")
 	}
 	n := NewNormalizer("http://bdgo-c1:5000", "")
-	if got := n.Text(`{"version":"` + version + `","client":"BetterDesk/` + version + `"}`); got != `{"version":"<version>","client":"BetterDesk/<version>"}` {
+	if got := n.Text(`{"version":"` + version + `","client":"NeoDesk/` + version + `"}`); got != `{"version":"<version>","client":"NeoDesk/<version>"}` {
 		t.Errorf("the version in an answer: %s", got)
 	}
 	if got := n.Text("1" + version[1:]); strings.Contains(version, ".") && got == "<version>" {
@@ -230,7 +230,7 @@ func TestNormalizerLeavesAVersionInsideADottedNumber(t *testing.T) {
 	productVersion = func() string { return "3.6.1" }
 	defer func() { productVersion = saved }()
 	n := NewNormalizer("http://bdgo-c1:5000", "")
-	if got := n.Text(`{"oid":"1.3.6.1.2.1.1.3.0","v":"3.6.1","c":"BetterDesk/3.6.1"}`); got != `{"oid":"1.3.6.1.2.1.1.3.0","v":"<version>","c":"BetterDesk/<version>"}` {
+	if got := n.Text(`{"oid":"1.3.6.1.2.1.1.3.0","v":"3.6.1","c":"NeoDesk/3.6.1"}`); got != `{"oid":"1.3.6.1.2.1.1.3.0","v":"<version>","c":"NeoDesk/<version>"}` {
 		t.Errorf("got %s", got)
 	}
 }

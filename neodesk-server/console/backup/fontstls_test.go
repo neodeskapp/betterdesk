@@ -16,7 +16,7 @@ func (in *install) withFontsAndTLS(t *testing.T) *Service {
 	s := in.service(t, "x")
 	s.o.FontsDir = filepath.Join(in.dataDir, "fonts")
 	tls := filepath.Join(in.keysPath, "ssl")
-	s.o.CertFile, s.o.KeyFile, s.o.CAFile = filepath.Join(tls, "betterdesk.crt"), filepath.Join(tls, "betterdesk.key"), filepath.Join(tls, "ca.crt")
+	s.o.CertFile, s.o.KeyFile, s.o.CAFile = filepath.Join(tls, "neodesk.crt"), filepath.Join(tls, "neodesk.key"), filepath.Join(tls, "ca.crt")
 	s.o.EndpointsFile = filepath.Join(in.dataDir, "public-endpoints.env")
 	return s
 }
@@ -32,7 +32,7 @@ func TestFullBackupCarriesFontsTLSAndEndpoints(t *testing.T) {
 	s := src.withFontsAndTLS(t)
 	fonts := map[string]string{"inter/inter-400.woff2": "font bytes", "fonts.css": "@font-face {}"}
 	writeFiles(t, s.o.FontsDir, fonts)
-	tls := map[string]string{"betterdesk.crt": "CERT", "betterdesk.key": "KEY", "ca.crt": "CA"}
+	tls := map[string]string{"neodesk.crt": "CERT", "neodesk.key": "KEY", "ca.crt": "CA"}
 	writeFiles(t, filepath.Dir(s.o.CertFile), tls)
 	if err := os.WriteFile(s.o.EndpointsFile, []byte("PUBLIC_SERVER_ID=desk.example.org\n"), 0o600); err != nil {
 		t.Fatal(err)

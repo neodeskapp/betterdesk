@@ -12,7 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/upstreamname"
 )
 
 // The vectors of the generator worker (testdata/README.md).
@@ -20,7 +21,9 @@ import (
 // TestFolderZipMatchesAdmZip packs the fixture the oracle packed with
 // adm-zip and compares every entry as a program that unpacks it sees it:
 // name, order, attributes, method, DOS time, CRC, size, "made by",
-// version, flags and content.
+// version, flags and content. The order follows the names, so the
+// fixture is packed with upstream's names, as adm-zip packed it
+// (upstream_test.go).
 func TestFolderZipMatchesAdmZip(t *testing.T) {
 	var z struct {
 		Fixture []struct {
@@ -44,7 +47,10 @@ func TestFolderZipMatchesAdmZip(t *testing.T) {
 		} `json:"entries"`
 	}
 	load(t, "zip", &z)
-	stage := filepath.Join(t.TempDir(), "betterdesk-support-windows-x64")
+	stage := filepath.Join(t.TempDir(), upstreamname.Names("neodesk-support-windows-x64"))
+	for i := range z.Fixture {
+		z.Fixture[i].Path = upstreamname.Names(z.Fixture[i].Path)
+	}
 	for _, f := range z.Fixture {
 		if f.Dir != "" {
 			if err := os.MkdirAll(filepath.Join(stage, f.Dir), 0o755); err != nil {
@@ -88,6 +94,7 @@ func TestFolderZipMatchesAdmZip(t *testing.T) {
 	for i, f := range zr.File {
 		want := z.Entries[i]
 		dos := uint32(f.ModifiedDate)<<16 | uint32(f.ModifiedTime)
+		want.Name = upstreamname.Names(want.Name)
 		if f.Name != want.Name || f.ExternalAttrs != want.Attr || f.Method != want.Method || dos != want.Time ||
 			f.CRC32 != want.CRC || f.UncompressedSize64 != want.Size || f.CreatorVersion != want.Made ||
 			f.ReaderVersion != want.Version || f.Flags != want.Flags {
@@ -153,11 +160,11 @@ func TestEmbeddedPlatformsMatchNode(t *testing.T) {
 				env = append(env, k+"="+v)
 			}
 		}
-		add("BETTERDESK_CLIENT_BUILD_COMMAND", c.Settings.Command)
-		add("BETTERDESK_CLIENT_GITHUB_ACTIONS", c.Settings.Actions)
-		add("BETTERDESK_GITHUB_TOKEN", c.Settings.Token)
+		add("NEODESK_CLIENT_BUILD_COMMAND", c.Settings.Command)
+		add("NEODESK_CLIENT_GITHUB_ACTIONS", c.Settings.Actions)
+		add("NEODESK_GITHUB_TOKEN", c.Settings.Token)
 		if c.Settings.Targets != nil {
-			add("BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON", *c.Settings.Targets)
+			add("NEODESK_CLIENT_PROVIDER_TARGETS_JSON", *c.Settings.Targets)
 		}
 		if c.Settings.File != "" {
 			file := strings.Replace(c.Settings.File, "<SCRATCH>", scratch, 1)
@@ -166,7 +173,7 @@ func TestEmbeddedPlatformsMatchNode(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			add("BETTERDESK_CLIENT_PROVIDER_TARGETS_FILE", file)
+			add("NEODESK_CLIENT_PROVIDER_TARGETS_FILE", file)
 		}
 		s := New(Options{DataDir: filepath.Join(scratch, "data"), Embedded: true, Env: func() []string { return env }})
 		if got := strings.ReplaceAll(stringify(s.BuildCapabilities()), scratch, "<SCRATCH>"); got != c.Capabilities {
@@ -194,7 +201,7 @@ func TestEmbeddedPlatformsMatchNode(t *testing.T) {
 			}
 		}
 		row := &Build{Platform: "linux", Arch: "x64", Format: "portable"}
-		if got := len(s.failedPlatformsForError("local_builder_x", row)) + 100*len(s.failedPlatformsForError("betterdesk_client_build_failed:1", row)); got != c.FailedFor {
+		if got := len(s.failedPlatformsForError("local_builder_x", row)) + 100*len(s.failedPlatformsForError("neodesk_client_build_failed:1", row)); got != c.FailedFor {
 			t.Errorf("case %d failed platforms: node %d, go %d", i, c.FailedFor, got)
 		}
 	}

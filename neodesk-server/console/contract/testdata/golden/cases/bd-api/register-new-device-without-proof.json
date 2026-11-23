@@ -2,7 +2,7 @@
  "id": "bd-api/register-new-device-without-proof",
  "request": {
   "method": "POST",
-  "path": "/api/bd/register",
+  "path": "/api/nd/register",
   "body": {
    "device_id": "contract-bd-new",
    "public_key": "AAAA1111",

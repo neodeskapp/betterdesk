@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
 // maxBufferLength is the largest Buffer of Node 22 (buffer.constants.MAX_LENGTH),

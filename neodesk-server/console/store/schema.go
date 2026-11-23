@@ -19,7 +19,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // The console's tables, one file per table and database. schema.md lists
@@ -926,25 +926,25 @@ func agentBundleSlugs() step {
 const productTypeFix = `
 	UPDATE agent_bundles
 	SET product_type = CASE LOWER(TRIM(COALESCE(product_type, '')))
-		WHEN 'betterdesk-support' THEN 'betterdesk-support'
-		WHEN 'betterdesk_support' THEN 'betterdesk-support'
-		WHEN 'rdclient' THEN 'betterdesk-support'
-		WHEN 'agent-client' THEN 'betterdesk-support'
-		WHEN 'agent_client' THEN 'betterdesk-support'
-		WHEN 'support-agent' THEN 'betterdesk-support'
-		WHEN 'support_agent' THEN 'betterdesk-support'
-		WHEN 'agent' THEN 'betterdesk-support'
-		ELSE 'betterdesk-support'
+		WHEN 'neodesk-support' THEN 'neodesk-support'
+		WHEN 'neodesk_support' THEN 'neodesk-support'
+		WHEN 'rdclient' THEN 'neodesk-support'
+		WHEN 'agent-client' THEN 'neodesk-support'
+		WHEN 'agent_client' THEN 'neodesk-support'
+		WHEN 'support-agent' THEN 'neodesk-support'
+		WHEN 'support_agent' THEN 'neodesk-support'
+		WHEN 'agent' THEN 'neodesk-support'
+		ELSE 'neodesk-support'
 	END
 	WHERE product_type IS NULL
-	   OR LOWER(TRIM(product_type)) NOT IN ('betterdesk-support')`
+	   OR LOWER(TRIM(product_type)) NOT IN ('neodesk-support')`
 
 // agentBundleProductTypes adds agent_bundles.product_type and rewrites old
 // values. On SQLite the rewrite runs at every start. On PostgreSQL it runs
 // only when the column was already there, and the column then also gets
 // NOT NULL and its default when an older version made it without them.
 func agentBundleProductTypes() step {
-	const column, definition = "product_type", "TEXT NOT NULL DEFAULT 'betterdesk-support'"
+	const column, definition = "product_type", "TEXT NOT NULL DEFAULT 'neodesk-support'"
 	return step{
 		name:    "agent_bundles.product_type",
 		lenient: true,
@@ -976,8 +976,8 @@ func agentBundleProductTypes() step {
 				}
 				logging.Logf(logComponent, "Migration: agent_bundles.product_type is now NOT NULL")
 			}
-			if !strings.Contains(state.defaultSQL, "betterdesk-support") {
-				if _, err := tx.Exec(ctx, `ALTER TABLE agent_bundles ALTER COLUMN product_type SET DEFAULT 'betterdesk-support'`); err != nil {
+			if !strings.Contains(state.defaultSQL, "neodesk-support") {
+				if _, err := tx.Exec(ctx, `ALTER TABLE agent_bundles ALTER COLUMN product_type SET DEFAULT 'neodesk-support'`); err != nil {
 					return err
 				}
 				logging.Logf(logComponent, "Migration: agent_bundles.product_type has its default")

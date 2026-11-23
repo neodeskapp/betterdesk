@@ -424,7 +424,7 @@ var apps = map[string][]app{
 		{"7-Zip 24.08 (x64)", "24.08", "Igor Pavlov"},
 		{"Notepad++ (64-bit x64)", "8.7.1", "Notepad++ Team"},
 		{"VLC media player", "3.0.21", "VideoLAN"},
-		{"BetterDesk", "1.4.2", "BetterDesk (demo)"},
+		{"NeoDesk", "1.4.2", "NeoDesk (demo)"},
 		{"Demo Label Studio", "5.2.0", "Example Software GmbH"},
 		{"Demo Accounting Suite", "2024.3", "Example Ledger Ltd"},
 	},
@@ -435,7 +435,7 @@ var apps = map[string][]app{
 		{"Slack", "4.41.97", "Slack Technologies"},
 		{"Figma", "124.5.5", "Figma, Inc."},
 		{"Adobe Photoshop 2025", "26.1", "Adobe"},
-		{"BetterDesk", "1.4.2", "BetterDesk (demo)"},
+		{"NeoDesk", "1.4.2", "NeoDesk (demo)"},
 	},
 	"linux": {
 		{"openssh-server", "1:9.6p1-3ubuntu13.5", "Ubuntu Developers"},
@@ -443,20 +443,20 @@ var apps = map[string][]app{
 		{"docker-ce", "5:27.3.1-1~ubuntu.24.04~noble", "Docker Inc."},
 		{"nginx", "1.24.0-2ubuntu7.1", "Ubuntu Developers"},
 		{"prometheus-node-exporter", "1.7.0-1ubuntu0.2", "Ubuntu Developers"},
-		{"betterdesk", "1.4.2", "BetterDesk (demo)"},
+		{"neodesk", "1.4.2", "NeoDesk (demo)"},
 	},
 	"rpi": {
 		{"raspi-config", "20240617", "Raspberry Pi Ltd"},
 		{"python3", "3.11.2-1+b1", "Debian"},
 		{"mosquitto", "2.0.11-1.2", "Debian"},
-		{"betterdesk", "1.3.9", "BetterDesk (demo)"},
+		{"neodesk", "1.3.9", "NeoDesk (demo)"},
 	},
 	"winserver": {
 		{"Microsoft Edge", "130.0.2849.68", "Microsoft Corporation"},
 		{"Windows Admin Center", "2410", "Microsoft Corporation"},
 		{"Microsoft SQL Server 2022 (64-bit)", "16.0.4135.4", "Microsoft Corporation"},
 		{"PowerShell 7-x64", "7.4.6", "Microsoft Corporation"},
-		{"BetterDesk", "1.4.1", "BetterDesk (demo)"},
+		{"NeoDesk", "1.4.1", "NeoDesk (demo)"},
 	},
 }
 

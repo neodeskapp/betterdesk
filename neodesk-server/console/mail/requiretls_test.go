@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // The console's SMTP_REQUIRE_TLS reaches the connection with every stored

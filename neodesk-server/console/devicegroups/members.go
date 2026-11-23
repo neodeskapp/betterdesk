@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // The stored members of device groups: which devices an account put into

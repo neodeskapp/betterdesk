@@ -1,5 +1,5 @@
 /**
- * BetterDesk Web Remote — dedicated FILE_TRANSFER relay connection.
+ * NeoDesk Web Remote — dedicated FILE_TRANSFER relay connection.
  * RustDesk peers only handle FileAction on ConnType::FILE_TRANSFER sessions.
  */
 import { RDConnection } from './connection.ts';
@@ -291,8 +291,8 @@ export class RDFileConnection {
 		const hash = await this.crypto.hashPassword(password, this._loginSalt || '', this._loginChallenge || '');
 		const loginReq = this.proto.buildFileTransferLoginRequest(hash, {
 			username: this.deviceId,
-			myId: 'betterdesk-web-ft-' + Date.now().toString(36),
-			myName: this.opts.myName || 'BetterDesk Web',
+			myId: 'neodesk-web-ft-' + Date.now().toString(36),
+			myName: this.opts.myName || 'NeoDesk Web',
 			showHidden: false
 		});
 		this._sendPeerMessageRaw(loginReq);

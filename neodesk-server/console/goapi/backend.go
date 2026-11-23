@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // Store is what Backend reads and writes in the console's own tables.
@@ -39,19 +39,19 @@ func NewBackend(api *Client, store Store) *Backend {
 	return &Backend{api: api, store: store}
 }
 
-// GetActiveBackend returns "betterdesk", the only backend.
-func (b *Backend) GetActiveBackend() string { return "betterdesk" }
+// GetActiveBackend returns "neodesk", the only backend.
+func (b *Backend) GetActiveBackend() string { return "neodesk" }
 
-// SetActiveBackend stores the backend name. Only "betterdesk" is accepted.
+// SetActiveBackend stores the backend name. Only "neodesk" is accepted.
 func (b *Backend) SetActiveBackend(ctx context.Context, name string) error {
-	if name != "betterdesk" {
-		return fmt.Errorf("Invalid backend: %s. Only 'betterdesk' is supported.", name)
+	if name != "neodesk" {
+		return fmt.Errorf("Invalid backend: %s. Only 'neodesk' is supported.", name)
 	}
 	return b.store.SetSetting(ctx, "server_backend", name)
 }
 
-// IsBetterDesk reports true: the Go server is the only backend.
-func (b *Backend) IsBetterDesk() bool { return true }
+// IsNeoDesk reports true: the Go server is the only backend.
+func (b *Backend) IsNeoDesk() bool { return true }
 
 // GetHealth is Client.GetHealth.
 func (b *Backend) GetHealth(ctx context.Context) *Object { return b.api.GetHealth(ctx) }

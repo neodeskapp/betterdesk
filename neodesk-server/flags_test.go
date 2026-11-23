@@ -5,13 +5,13 @@ import (
 	"io"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
 )
 
 // configureWith runs the start's reading of flags and variables on args.
 func configureWith(t *testing.T, args ...string) *config.Config {
 	t.Helper()
-	fs := flag.NewFlagSet("betterdesk-server", flag.ContinueOnError)
+	fs := flag.NewFlagSet("neodesk-server", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	cfg, showVersion, err := configure(fs, args)
 	if err != nil || showVersion {
@@ -36,7 +36,7 @@ func TestOnOffFlagsTakeEveryOnOffValue(t *testing.T) {
 	if cfg := configureWith(t, "-force-https", "-trust-proxy"); !cfg.ForceHTTPS || !cfg.TrustProxy {
 		t.Errorf("flags alone: force HTTPS %v, trust proxy %v; want both on", cfg.ForceHTTPS, cfg.TrustProxy)
 	}
-	fs := flag.NewFlagSet("betterdesk-server", flag.ContinueOnError)
+	fs := flag.NewFlagSet("neodesk-server", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	if _, _, err := configure(fs, []string{"-tls-relay=maybe"}); err == nil {
 		t.Error("-tls-relay=maybe was taken")

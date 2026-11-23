@@ -17,9 +17,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/api"
-	"github.com/unitronix/betterdesk-server/events"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/api"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 const (
@@ -37,7 +37,7 @@ const (
 	// limits that count per address use it.
 	DefaultRemoteAddr = "127.0.0.1:0"
 
-	// DefaultTimeout is how long a call may take (BETTERDESK_API_TIMEOUT).
+	// DefaultTimeout is how long a call may take (NEODESK_API_TIMEOUT).
 	DefaultTimeout = 5 * time.Second
 
 	apiPrefix    = "/api"
@@ -397,7 +397,7 @@ func (c *Client) Request(ctx context.Context, method, path string, opts ...CallO
 	cl := &call{header: http.Header{}, timeout: c.timeout}
 	cl.header.Set("Accept", "application/json, text/plain, */*")
 	cl.header.Set("Content-Type", "application/json")
-	cl.header.Set("User-Agent", "betterdesk-console")
+	cl.header.Set("User-Agent", "neodesk-console")
 	for _, opt := range opts {
 		opt(cl)
 	}

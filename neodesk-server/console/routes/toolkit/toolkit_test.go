@@ -17,7 +17,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
 )
 
 const signedOut = `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`
@@ -200,7 +200,7 @@ func TestSSLDescribesTheCertificateOfAName(t *testing.T) {
 		t.Fatal(err)
 	}
 	d := got.Data
-	if !got.Success || d.Subject != "live.test" || d.Issuer != "Live Test Intermediate" || d.Organization != "BetterDesk Test" || d.Serial != "F1A2B3" || d.DaysLeft != 3338 || strings.Join(d.AltNames, " ") != "live.test *.live.test" {
+	if !got.Success || d.Subject != "live.test" || d.Issuer != "Live Test Intermediate" || d.Organization != "NeoDesk Test" || d.Serial != "F1A2B3" || d.DaysLeft != 3338 || strings.Join(d.AltNames, " ") != "live.test *.live.test" {
 		t.Errorf("certificate: %s", answer)
 	}
 	if !d.Authorized {

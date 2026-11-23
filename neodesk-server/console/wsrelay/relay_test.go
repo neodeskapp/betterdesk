@@ -15,10 +15,10 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
-	pb "github.com/unitronix/betterdesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 )
 
 // sink is a TCP server that keeps what each connection sent.
@@ -334,26 +334,26 @@ func TestRevokedLinkEndsItsBridgesAtOnce(t *testing.T) {
 // TestCookieToken pins the old handler's cookie reader.
 func TestCookieToken(t *testing.T) {
 	for _, c := range []struct{ header, name, want string }{
-		{"bd.guest=abc", "bd.guest", "abc"},
-		{" x=1 ;  bd.guest=%20abc%20 ", "bd.guest", "abc"},
-		{"bd.guest=; betterdesk.guest=t2", "bd.guest", "t2"},
-		{"bd.guest=%E0%A4%A; betterdesk.guest=t2", "bd.guest", ""},
-		{"betterdesk.guest=t3; bd.guest=t4", "betterdesk.guest", "t3"},
-		{"betterdesk.guest=; bd.guest=t4", "betterdesk.guest", "t4"},
-		{"bd.guest=a; bd.guest=b", "bd.guest", "a"},
-		{"bd.guestx=a", "bd.guest", ""},
-		{"bd.guest=%25", "bd.guest", "%"},
-		{"bd.guest=%C0%80", "bd.guest", ""},
-		{"bd.guest=%C2080", "bd.guest", ""},
-		{"bd.guest=%C2%80", "bd.guest", "\u0080"},
-		{"bd.guest=%ED%A0%80", "bd.guest", ""},
-		{"bd.guest=café%C3%A9", "bd.guest", "caféé"},
+		{"nd.guest=abc", "nd.guest", "abc"},
+		{" x=1 ;  nd.guest=%20abc%20 ", "nd.guest", "abc"},
+		{"nd.guest=; neodesk.guest=t2", "nd.guest", "t2"},
+		{"nd.guest=%E0%A4%A; neodesk.guest=t2", "nd.guest", ""},
+		{"neodesk.guest=t3; nd.guest=t4", "neodesk.guest", "t3"},
+		{"neodesk.guest=; nd.guest=t4", "neodesk.guest", "t4"},
+		{"nd.guest=a; nd.guest=b", "nd.guest", "a"},
+		{"nd.guestx=a", "nd.guest", ""},
+		{"nd.guest=%25", "nd.guest", "%"},
+		{"nd.guest=%C0%80", "nd.guest", ""},
+		{"nd.guest=%C2080", "nd.guest", ""},
+		{"nd.guest=%C2%80", "nd.guest", "\u0080"},
+		{"nd.guest=%ED%A0%80", "nd.guest", ""},
+		{"nd.guest=café%C3%A9", "nd.guest", "caféé"},
 	} {
 		if got := cookieToken(c.header, c.name); got != c.want {
 			t.Errorf("%q (%s): want %q, got %q", c.header, c.name, c.want, got)
 		}
 	}
-	if got := cookieToken(latin1("bd.guest=\xe9"), "bd.guest"); got != "é" {
+	if got := cookieToken(latin1("nd.guest=\xe9"), "nd.guest"); got != "é" {
 		t.Errorf("latin1: got %q", got)
 	}
 }
@@ -399,8 +399,8 @@ func TestOnlyItsPaths(t *testing.T) {
 // byte as a character.
 func TestCookieHeader(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, "/ws/rendezvous", nil)
-	r.Header["Cookie"] = []string{"a=1", "bd.guest=\xe9x"}
-	if got := cookieHeader(r); got != "a=1; bd.guest=éx" {
+	r.Header["Cookie"] = []string{"a=1", "nd.guest=\xe9x"}
+	if got := cookieHeader(r); got != "a=1; nd.guest=éx" {
 		t.Fatalf("got %q", got)
 	}
 }

@@ -2,7 +2,7 @@
  "id": "fleet/device-task-result-unknown-token",
  "request": {
   "method": "POST",
-  "path": "/api/bd/fleet/task-result",
+  "path": "/api/nd/fleet/task-result",
   "body": {
    "device_id": "900100001",
    "output": "ok",
@@ -70,7 +70,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",

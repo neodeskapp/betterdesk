@@ -9,15 +9,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 )
 
 // onboardStores runs a test on a new SQLite database and, when
-// BETTERDESK_TEST_POSTGRES_DSN names a server, on a schema of its own on
+// NEODESK_TEST_POSTGRES_DSN names a server, on a schema of its own on
 // PostgreSQL.
 func onboardStores(t *testing.T, test func(t *testing.T, srv *Server)) {
 	storetest.Each(t, func(t *testing.T, sdb *store.DB) {
@@ -355,7 +355,7 @@ func TestTemporaryDeviceIsAdmittedAndRemoved(t *testing.T) {
 		if p == nil || p.DeviceType != onboardDeviceType {
 			t.Fatalf("peer %+v", p)
 		}
-		if err := srv.db.UpsertPeer(&db.Peer{ID: "500000002", DeviceType: "betterdesk"}); err != nil {
+		if err := srv.db.UpsertPeer(&db.Peer{ID: "500000002", DeviceType: "neodesk"}); err != nil {
 			t.Fatal(err)
 		}
 		status, out = onboardCall(t, srv, http.MethodPost, "/api/onboard/devices", map[string]any{

@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/upstreamname"
 )
 
 func listJSON(t *testing.T, b *Bundle) string {
@@ -53,13 +55,17 @@ func TestRealFilesLikeNode(t *testing.T) {
 			t.Errorf("Has(%q) = false", code)
 			continue
 		}
-		if got, w := sha(stringify(b.Translations(code), "")), str(want, "plainSha", code); got != w {
+		// Node hashed the texts with upstream's names (internal/upstreamname)
+		if text := stringify(b.Merged(code), ""); upstreamname.Holds(text) {
+			t.Errorf("%s: the texts name upstream", code)
+		}
+		if got, w := sha(upstreamname.Names(stringify(b.Translations(code), ""))), str(want, "plainSha", code); got != w {
 			t.Errorf("%s: the texts written back as JSON differ from Node's", code)
 		}
-		if got, w := sha(stringify(b.Translations(code), "  ")), str(want, "prettySha", code); got != w {
+		if got, w := sha(upstreamname.Names(stringify(b.Translations(code), "  "))), str(want, "prettySha", code); got != w {
 			t.Errorf("%s: the texts written back with indentation differ from Node's", code)
 		}
-		if got, w := sha(stringify(b.Merged(code), "")), str(want, "mergedSha", code); got != w {
+		if got, w := sha(upstreamname.Names(stringify(b.Merged(code), ""))), str(want, "mergedSha", code); got != w {
 			t.Errorf("%s: the merged texts differ from Node's", code)
 		}
 	}

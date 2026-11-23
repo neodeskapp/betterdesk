@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // publicPaths are the pages that work without a session; the boot script
@@ -83,7 +83,7 @@ const bootScriptHead = `(function (boot) {
     root.lang = boot.lang;
     root.dir = boot.dir;
     root.setAttribute('data-theme-mode', boot.themeMode);
-    var choice = get('bd-theme-choice');
+    var choice = get('nd-theme-choice');
     var mode = boot.themeMode;
     if ((choice === 'light' || choice === 'dark') && boot.palettes[choice]) {
         root.setAttribute('data-theme-default', boot.themeMode);
@@ -99,7 +99,7 @@ const bootScriptHead = `(function (boot) {
     // Accessibility panel settings: same key, defaults and limits as
     // web-ui/src/lib/shell/a11y.svelte.ts
     var a = {};
-    try { a = JSON.parse(get('betterdesk_accessibility_v1') || '{}') || {}; } catch (e) { a = {}; }
+    try { a = JSON.parse(get('neodesk_accessibility_v1') || '{}') || {}; } catch (e) { a = {}; }
     function num(v, min, max, d) { v = Number(v); return isFinite(v) ? Math.min(max, Math.max(min, v)) : d; }
     var fontScale = num(a.fontScale, 90, 160, 100), lineHeight = num(a.lineHeight, 1.2, 2.1, 1.5);
     var letter = num(a.letterSpacing, 0, 0.14, 0), word = num(a.wordSpacing, 0, 0.22, 0), sat = num(a.saturation, 0, 180, 100);
@@ -124,7 +124,7 @@ const bootScriptHead = `(function (boot) {
     root.dataset.a11yFiltered = String(filters.length > 0);
     root.style.setProperty('--bd-a11y-visual-filter', filters.length ? filters.join(' ') : 'none');
     // Sidebar width (same key and 200-320 px range as the shell), so the layout does not jump on load
-    var sw = parseInt(get('bd_ux35_sidebar_width') || '', 10);
+    var sw = parseInt(get('nd_ux35_sidebar_width') || '', 10);
     if (sw > 0) root.style.setProperty('--sidebar-w', Math.min(320, Math.max(200, sw)) + 'px');
     window.__BD_BOOT__ = boot;
     // Start both requests now, before the app's modules load

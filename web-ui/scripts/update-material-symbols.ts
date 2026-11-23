@@ -9,7 +9,7 @@
  *
  * The icon names come from scripts/icon-names.ts, which scans the console
  * (src and the remote viewer's scripts in static) and the icons the server
- * sends it (the navigation in betterdesk-server/console/access/nav.go). Its
+ * sends it (the navigation in neodesk-server/console/access/nav.go). Its
  * header says which ways of writing a name it reads. tests/unit/icons.test.ts
  * checks the font against the same scan.
  *
@@ -205,7 +205,7 @@ async function main(): Promise<void> {
 
 	const versionPath = path.join(FONTS_DIR, 'MATERIAL_SYMBOLS_VERSION.txt');
 	const lines = [
-		'BetterDesk self-hosted Material Symbols (Apache-2.0)',
+		'NeoDesk self-hosted Material Symbols (Apache-2.0)',
 		'Upstream: https://github.com/google/material-design-icons (variablefont / Google Fonts CSS API)',
 		'License: Apache License 2.0',
 		`Generated: ${new Date().toISOString()}`,

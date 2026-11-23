@@ -1,13 +1,13 @@
-# BetterDesk CDAP — Node.js SDK
+# NeoDesk CDAP — Node.js SDK
 
 Node.js SDK for the **Connected Device Automation Protocol (CDAP)** used by
-BetterDesk server. Build custom bridges, IoT gateways, or automation agents
-that expose widgets and handle commands through the BetterDesk web panel.
+NeoDesk server. Build custom bridges, IoT gateways, or automation agents
+that expose widgets and handle commands through the NeoDesk web panel.
 
 ## Installation
 
 ```bash
-npm install betterdesk-cdap
+npm install neodesk-cdap
 # or from local path: build it first
 (cd sdks/nodejs && npm ci && npm run build)
 npm install ./sdks/nodejs
@@ -40,7 +40,7 @@ CDAP_SERVER=ws://your-server:21122/cdap CDAP_API_KEY=YOUR_API_KEY node examples/
 The short version:
 
 ```js
-const { CDAPBridge, gauge, toggle } = require('betterdesk-cdap');
+const { CDAPBridge, gauge, toggle } = require('neodesk-cdap');
 
 const bridge = new CDAPBridge({
   server: 'ws://your-server:21122/cdap',
@@ -158,7 +158,7 @@ Listen for `error`: like every Node.js event emitter, the bridge throws an
 ### Widget helpers
 
 ```js
-const { gauge, toggle, button, textWidget, led, slider, select, chart, table } = require('betterdesk-cdap');
+const { gauge, toggle, button, textWidget, led, slider, select, chart, table } = require('neodesk-cdap');
 ```
 
 All helpers accept `(id, label, opts?)` and return a `Widget` object.
@@ -166,7 +166,7 @@ All helpers accept `(id, label, opts?)` and return a `Widget` object.
 ## Requirements
 
 - Node.js 22 or newer (22.18 or newer to run the tests and the example, which Node runs as TypeScript)
-- BetterDesk server with CDAP enabled (port 21122)
+- NeoDesk server with CDAP enabled (port 21122)
 
 ## License
 

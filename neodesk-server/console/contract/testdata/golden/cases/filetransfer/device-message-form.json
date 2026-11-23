@@ -2,7 +2,7 @@
  "id": "filetransfer/device-message-form",
  "request": {
   "method": "POST",
-  "path": "/api/bd/file-transfer",
+  "path": "/api/nd/file-transfer",
   "body": "action=browse",
   "notes": [
    "raw body, content type \"application/x-www-form-urlencoded\"",

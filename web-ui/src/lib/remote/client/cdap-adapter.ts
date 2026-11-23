@@ -1,8 +1,8 @@
 /**
- * BetterDesk Web Remote Client — CDAP Transport Adapter
+ * NeoDesk Web Remote Client — CDAP Transport Adapter
  *
  * Drop-in replacement for `RDClient` when the target device is a
- * BetterDesk OS-agent (CDAP transport). Exposes the same public surface
+ * NeoDesk OS-agent (CDAP transport). Exposes the same public surface
  * (`connect`, `disconnect`, `authenticate`, `verify2fa`, event emitter
  * with `state`/`log`/`session_start`/`disconnected`/`error`/`stats`)
  * so the viewer can swap implementations without branching.
@@ -24,7 +24,7 @@ import { page } from './page.ts';
 import { RDVideo, type RDDecodedFrame } from './video.ts';
 
 function debugLog(...args: unknown[]): void {
-	if (page().BetterDesk?.debugRemote === true) {
+	if (page().NeoDesk?.debugRemote === true) {
 		log.debugLog(...args);
 	}
 }

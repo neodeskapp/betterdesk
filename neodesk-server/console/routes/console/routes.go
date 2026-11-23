@@ -4,7 +4,7 @@
 // of the Help panel.
 package console
 
-import "github.com/unitronix/betterdesk-server/console/kit"
+import "github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 
 type handlers struct {
 	d *kit.Deps
@@ -17,7 +17,7 @@ type handlers struct {
 
 // configuredAppName is the name the old console's configuration gave
 // itself.
-const configuredAppName = "BetterDesk Console"
+const configuredAppName = "NeoDesk Console"
 
 // Register adds the group's routes.
 func Register(d *kit.Deps) {

@@ -4,7 +4,7 @@
   "method": "GET",
   "path": "/ws/chat/900100001?token=%7Bsecret%3Adevice_token%7D",
   "notes": [
-   "header Cookie: bd.sid=s%3Anot-a-session",
+   "header Cookie: nd.sid=s%3Anot-a-session",
    "no cookies",
    "websocket a_cookie, no Origin"
   ]

@@ -1,6 +1,6 @@
 /**
  * Server management (routes/server-management.routes.js): the machine that
- * runs the console, its files (to list and read only) and BetterDesk's
+ * runs the console, its files (to list and read only) and NeoDesk's
  * system services. Every call needs server.config.
  *
  * These routes answer `{ success: true, ...fields }` without a data
@@ -39,7 +39,7 @@ export const ServerInfo = v.looseObject({
 	nodeVersion: Str,
 	pid: Num,
 	fileRoots: Strings,
-	/** The BetterDesk (Go) server; null when it did not answer */
+	/** The NeoDesk (Go) server; null when it did not answer */
 	server: v.optional(
 		v.nullable(
 			v.looseObject({
@@ -89,7 +89,7 @@ export async function getResources(signal?: AbortSignal): Promise<Snapshot> {
 	return out.snapshot;
 }
 
-/** One of the two BetterDesk servers in GET /api/server/status */
+/** One of the two NeoDesk servers in GET /api/server/status */
 const ServerPart = v.optional(
 	v.nullable(v.looseObject({ status: v.optional(v.string()), online: v.optional(v.boolean()) })),
 	null

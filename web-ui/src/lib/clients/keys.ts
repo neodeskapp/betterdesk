@@ -7,7 +7,7 @@
 import type { EnrollmentMode } from '#lib/api/enrollment.ts';
 
 /** Same key as the overview: its client address override, per browser tab (#368) */
-export const CLIENT_HOST_KEY = 'bd_client_config_host';
+export const CLIENT_HOST_KEY = 'nd_client_config_host';
 
 /** The overview's override for this tab, or '' */
 export function storedClientHost(): string {

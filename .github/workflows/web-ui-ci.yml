@@ -5,13 +5,13 @@ on:
     branches: [main]
     paths:
       - 'web-ui/**'
-      - 'betterdesk-server/protos/**'
+      - 'neodesk-server/protos/**'
       - '.github/workflows/web-ui-ci.yml'
   pull_request:
     branches: [main]
     paths:
       - 'web-ui/**'
-      - 'betterdesk-server/protos/**'
+      - 'neodesk-server/protos/**'
       - '.github/workflows/web-ui-ci.yml'
 
 permissions:

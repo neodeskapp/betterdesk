@@ -69,7 +69,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -95,7 +95,7 @@
     "json": {
      "data": {
       "app": {
-       "name": "BetterDesk Console",
+       "name": "NeoDesk Console",
        "version": "<version>"
       },
       "goServer": {
@@ -128,7 +128,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -155,13 +155,13 @@
      "data": {
       "app": {
        "env": "production",
-       "name": "BetterDesk Console",
+       "name": "NeoDesk Console",
        "nodeVersion": "<volatile>",
        "version": "<version>"
       },
-      "backend": "betterdesk",
+      "backend": "neodesk",
       "goServer": {
-       "backend": "betterdesk",
+       "backend": "neodesk",
        "billing_pending_relays": 0,
        "clock_synced": true,
        "connection": {

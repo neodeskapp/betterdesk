@@ -62,7 +62,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -101,7 +101,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -116,19 +116,19 @@
      "data": {
       "binariesPresent": false,
       "buildsPossible": false,
-      "clientRepo": "trybetterdesk/betterdesk-client",
+      "clientRepo": "neodeskapp/neodesk-client",
       "error": null,
       "installedAt": null,
       "installedVersion": null,
       "manifestError": "generator_manifest_invalid",
       "manifestValid": false,
       "manifestVersion": null,
-      "moduleDir": "/app/data/modules/betterdesk-support-generator",
+      "moduleDir": "/app/data/modules/neodesk-support-generator",
       "ready": false,
       "signingSeedPresent": false,
       "status": "not_installed",
       "templateCount": 0,
-      "templatesDir": "/app/data/modules/betterdesk-support-generator/templates",
+      "templatesDir": "/app/data/modules/neodesk-support-generator/templates",
       "templatesPresent": false,
       "termsAccepted": false,
       "warning": "Templates are missing, invalid, or incomplete. Publish a complete Client release and reinstall."

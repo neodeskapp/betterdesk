@@ -18,12 +18,12 @@ import (
 // every header but Date, body. Every file of the build is asked for with
 // and without compression, validators and a range:
 //
-//	BD_URL=http://bdgo-bb1:5000 BD_DISK_URL=http://bdgo-bb2:5000 WEB_UI_DIR=/repo/web-ui/build \
+//	ND_URL=http://bdgo-bb1:5000 ND_DISK_URL=http://bdgo-bb2:5000 WEB_UI_DIR=/repo/web-ui/build \
 //	    go test -tags webuidiff ./console/webui/ -run TestEmbeddedServerAgainstDisk -v
 func TestEmbeddedServerAgainstDisk(t *testing.T) {
-	embeddedURL, diskURL, dir := os.Getenv("BD_URL"), os.Getenv("BD_DISK_URL"), os.Getenv("WEB_UI_DIR")
+	embeddedURL, diskURL, dir := os.Getenv("ND_URL"), os.Getenv("ND_DISK_URL"), os.Getenv("WEB_UI_DIR")
 	if embeddedURL == "" || diskURL == "" || dir == "" {
-		t.Skip("BD_URL, BD_DISK_URL and WEB_UI_DIR are not set")
+		t.Skip("ND_URL, ND_DISK_URL and WEB_UI_DIR are not set")
 	}
 	inBinary, err := url.Parse(embeddedURL)
 	if err != nil {

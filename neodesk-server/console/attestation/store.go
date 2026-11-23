@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // Settings is the settings table as the attestation uses it: two rows,

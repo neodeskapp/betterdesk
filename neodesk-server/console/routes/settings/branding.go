@@ -3,10 +3,10 @@ package settings
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/goapipath"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // brandingAnswer is GET /api/settings/branding: the flat settings, the
@@ -193,7 +193,7 @@ func (h *handlers) themeCSS(w http.ResponseWriter, r *http.Request) {
 }
 
 // favicon answers GET /branding/favicon.svg: the administrator's own
-// favicon, else the BetterDesk mark, cached for five minutes. The answer
+// favicon, else the NeoDesk mark, cached for five minutes. The answer
 // is an SVG document from the console's address, so the console's policy
 // gets the directive sandbox: nothing in the document runs, even when
 // someone opens the address itself.

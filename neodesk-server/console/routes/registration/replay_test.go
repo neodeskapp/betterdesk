@@ -20,16 +20,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/registrations"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/registrations"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
 )
 
 // recording is what testdata/node_<database>.json holds, recorded from
@@ -161,7 +161,7 @@ func newReplayer(t *testing.T, db *store.DB, rec recording) *replayer {
 		DB:  db,
 		API: p.api,
 		Env: map[string]string{
-			"RATE_LIMIT_MAX": "1000000", "PANEL_READ_RATE_LIMIT_MAX": "1000000", "WIDGET_RATE_LIMIT_MAX": "1000000", "BD_REGISTER_RATE_LIMIT_MAX": "1000000",
+			"RATE_LIMIT_MAX": "1000000", "PANEL_READ_RATE_LIMIT_MAX": "1000000", "WIDGET_RATE_LIMIT_MAX": "1000000", "ND_REGISTER_RATE_LIMIT_MAX": "1000000",
 		},
 		Config: func(cfg *config.Config) {
 			cfg.NodeEnv, cfg.Production = "production", true
@@ -440,14 +440,14 @@ var fixes = []fix{
 	// The replay sends from 127.0.0.1 without TRUST_PROXY: the addresses
 	// its requests name in X-Forwarded-For and X-Real-IP are not taken,
 	// and a search for one of them finds nothing
-	{bug: "RG1", steps: []string{"355 address POST /api/bd/register-request..."}, edits: forwardedAddresses()},
+	{bug: "RG1", steps: []string{"355 address POST /api/nd/register-request..."}, edits: forwardedAddresses()},
 	{bug: "RG1", steps: []string{"411 GET /api/registrations?search=100%25_"}, answer: `{"success":true,"data":[],"total":0}`},
 	// S17: a path parameter or a body the console refuses says why, also
 	// in production, where Node said "Internal Server Error"
 	{bug: "S17", steps: []string{"309 escape of no UTF-8 GET /api/registrations/%E0%A4"}, answer: `{"success":false,"error":"Failed to decode param '%E0%A4'"}`},
-	{bug: "S17", steps: []string{"340 raw POST /api/bd/register-request", "343 raw POST /api/bd/register-request", "344 raw POST /api/bd/register-request", "345 raw POST /api/bd/register-request"},
+	{bug: "S17", steps: []string{"340 raw POST /api/nd/register-request", "343 raw POST /api/nd/register-request", "344 raw POST /api/nd/register-request", "345 raw POST /api/nd/register-request"},
 		answer: `{"success":false,"error":"invalid JSON: the body has to be an object or an array"}`},
-	{bug: "S17", steps: []string{"347 raw POST /api/bd/register-request"}, answer: `{"success":false,"error":"invalid JSON: unexpected end of JSON input"}`},
+	{bug: "S17", steps: []string{"347 raw POST /api/nd/register-request"}, answer: `{"success":false,"error":"invalid JSON: unexpected end of JSON input"}`},
 }
 
 // forwardedAddresses are the edits of RG1: each address the requests of

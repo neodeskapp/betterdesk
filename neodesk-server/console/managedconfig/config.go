@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
 // Paths are the folders and files the management routes report and
@@ -39,12 +39,12 @@ type Paths struct {
 // Options are the settings of a Config.
 type Options struct {
 	// ConsoleDir is the console's folder (CONSOLE_DIR). The environment
-	// variable BETTERDESK_CONSOLE_PATH wins over it.
+	// variable NEODESK_CONSOLE_PATH wins over it.
 	ConsoleDir string
-	// EnvFile is the env file the process loaded (BETTERDESK_ENV_FILE).
+	// EnvFile is the env file the process loaded (NEODESK_ENV_FILE).
 	// Empty means the file .env in the console's folder.
 	EnvFile string
-	// Getenv reads BETTERDESK_CONSOLE_PATH, BETTERDESK_PATH,
+	// Getenv reads NEODESK_CONSOLE_PATH, NEODESK_PATH,
 	// RUSTDESK_DIR, RUSTDESK_PATH and DATA_DIR. Nil reads nothing.
 	Getenv func(string) string
 	// GOOS decides the default server folder. Empty means runtime.GOOS.
@@ -89,18 +89,18 @@ func New(opts Options) *Config {
 }
 
 // Paths resolves the folders as the old console did (resolvePaths): the
-// console folder from BETTERDESK_CONSOLE_PATH or the configured one, the
-// server folder from BETTERDESK_PATH, RUSTDESK_DIR or RUSTDESK_PATH with
+// console folder from NEODESK_CONSOLE_PATH or the configured one, the
+// server folder from NEODESK_PATH, RUSTDESK_DIR or RUSTDESK_PATH with
 // the platform's default, the data folder from DATA_DIR or the console's
 // data folder, the backups below it, and the env file.
 func (c *Config) Paths() Paths {
 	getenv := c.opts.Getenv
-	consolePath := firstSet(getenv("BETTERDESK_CONSOLE_PATH"), c.opts.ConsoleDir)
-	serverPath := firstSet(getenv("BETTERDESK_PATH"), getenv("RUSTDESK_DIR"), getenv("RUSTDESK_PATH"))
+	consolePath := firstSet(getenv("NEODESK_CONSOLE_PATH"), c.opts.ConsoleDir)
+	serverPath := firstSet(getenv("NEODESK_PATH"), getenv("RUSTDESK_DIR"), getenv("RUSTDESK_PATH"))
 	if serverPath == "" {
-		serverPath = "/opt/betterdesk"
+		serverPath = "/opt/neodesk"
 		if c.opts.GOOS == "windows" {
-			serverPath = `C:\BetterDesk`
+			serverPath = `C:\NeoDesk`
 		}
 	}
 	dataPath := firstSet(getenv("DATA_DIR"), filepath.Join(consolePath, "data"))
@@ -161,7 +161,7 @@ var (
 		"DB_TYPE":              setOf("sqlite", "postgres", "postgresql"),
 		"NODE_ENV":             setOf("development", "test", "production"),
 		"LOG_LEVEL":            setOf("error", "warn", "info", "debug"),
-		"SERVER_BACKEND":       setOf("betterdesk", "rustdesk"),
+		"SERVER_BACKEND":       setOf("neodesk", "rustdesk"),
 		"RUSTDESK_API_TLS":     setOf("auto", "true", "false"),
 		"UPDATE_GITHUB_BRANCH": setOf("main", "dev"),
 		"CDAP_TLS":             setOf("Y", "N", "y", "n", "true", "false", "1", "0"),
@@ -268,7 +268,7 @@ func (c *Config) validateValue(key string, value any) (string, error) {
 			}
 		}
 		if !inside {
-			return "", invalid("Path is outside BetterDesk roots for %s", key)
+			return "", invalid("Path is outside NeoDesk roots for %s", key)
 		}
 	}
 	if portKeys[key] {

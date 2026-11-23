@@ -12,13 +12,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/access"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/limits"
-	"github.com/unitronix/betterdesk-server/console/mail"
-	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 )
 
 // apiCall is one request the API server got.
@@ -375,14 +375,14 @@ func TestStatus(t *testing.T) {
 }
 
 func TestDownload(t *testing.T) {
-	file := "MeshName=BetterDesk Mesh\nMeshType=2\n"
+	file := "MeshName=NeoDesk Mesh\nMeshType=2\n"
 	next := answer{status: 200, contentType: "application/octet-stream", body: file}
 	w := newWorld(t, func(string, string) answer { return next })
 
 	rec := w.do("admin", "GET", "/api/mesh/download.msh", "")
 	expect(t, "download", rec, 200, file)
 	h := rec.Header()
-	if h.Get("Content-Type") != "application/octet-stream" || h.Get("Content-Disposition") != `attachment; filename="meshagents.msh"` || h.Get("Content-Length") != "36" || !strings.HasPrefix(h.Get("ETag"), `W/"24-`) {
+	if h.Get("Content-Type") != "application/octet-stream" || h.Get("Content-Disposition") != `attachment; filename="meshagents.msh"` || h.Get("Content-Length") != "33" || !strings.HasPrefix(h.Get("ETag"), `W/"21-`) {
 		t.Errorf("download headers: %v", h)
 	}
 	// The file names the address the request came to (example.com, the
@@ -449,7 +449,7 @@ func TestTheMSHFileNamesTheConsolesPublicAddress(t *testing.T) {
 		PanelHost:   func() string { return env["PANEL_PUBLIC_HOST"] },
 		ServesHTTPS: func() bool { return servesHTTPS },
 	})
-	file := answer{status: 200, contentType: "application/octet-stream", body: "MeshName=BetterDesk Mesh\n"}
+	file := answer{status: 200, contentType: "application/octet-stream", body: "MeshName=NeoDesk Mesh\n"}
 	w := newWorldWith(t, func(string, string) answer { return file }, "", nil, func(d *kit.Deps) { d.Mail = mailer })
 
 	cases := []struct {

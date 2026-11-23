@@ -203,7 +203,7 @@ No second factor and no `pro` check on this path (kept defect S11).
 
 ## Other console routes
 
-### `POST /api/bd/operator/login` (`routes/bd-api.routes.js:709-761`)
+### `POST /api/nd/operator/login` (`routes/bd-api.routes.js:709-761`)
 
 1. `username` and `password` must be non-empty text: else
    `400 {error:"Username and password are required"}`.
@@ -258,7 +258,7 @@ device token in device_tokens issued for the device (`created_by`
 "system", on behalf of no account): the API server's enrollment and
 pairing, or `s.IssueDeviceToken(ctx, deviceID, note)`, which the console
 issues for a device an approver admitted (register-status), at
-`/api/bd/register` and at a join (`s.ServerDeviceToken` names its device).
+`/api/nd/register` and at a join (`s.ServerDeviceToken` names its device).
 A device token an older console issued in access_tokens (token_kind
 "device") passes too. Such a token
 signs no account in (`s.ValidateAccessToken` gives nil for it) and does not
@@ -282,16 +282,16 @@ The 41 routes with `requireDeviceToken`, 19 of them also with
 
 | File | Routes |
 |---|---|
-| `bd-api.routes.js` | `POST /api/bd/heartbeat` +match, `POST /api/bd/remote-agent-token` +match, `GET` and `DELETE /api/bd/session/:id`, `GET /api/bd/peers`, `GET /api/bd/peer/:id`, `POST /api/bd/help-request` +match, `POST /api/bd/chat/send` +match, `GET /api/bd/chat/history` +match |
-| `activity.routes.js` | `POST /api/bd/activity` +match, `POST /api/activity/activity` +match |
-| `automation.routes.js` | `GET /api/bd/commands`, `POST /api/bd/commands/:id/result`, `POST /api/automation/commands/:id/result` (`GET /api/automation/commands` is shadowed) |
-| `dataguard.routes.js` | `GET /api/bd/dlp-policies`, `POST /api/bd/dlp-events`, and both under `/api/dataguard` |
-| `fileTransfer.routes.js` | `POST /api/bd/file-transfer` +match, `GET /api/bd/file-transfer/:id`, and both under `/api/files` |
-| `fleet.routes.js` | `POST /api/bd/fleet/task-result` +match, `POST /api/bd/fleet/software` +match, and both under `/api/bd/api/bd/fleet` |
-| `policies.routes.js` | `GET /api/bd/device-policy` +match, `POST /api/bd/attestation` +match, and both under `/api/bd/api/bd` |
-| `resource-control.routes.js` | `GET /api/bd/resource-policy` +match, and under `/api/bd/api/bd` |
+| `bd-api.routes.js` | `POST /api/nd/heartbeat` +match, `POST /api/nd/remote-agent-token` +match, `GET` and `DELETE /api/nd/session/:id`, `GET /api/nd/peers`, `GET /api/nd/peer/:id`, `POST /api/nd/help-request` +match, `POST /api/nd/chat/send` +match, `GET /api/nd/chat/history` +match |
+| `activity.routes.js` | `POST /api/nd/activity` +match, `POST /api/activity/activity` +match |
+| `automation.routes.js` | `GET /api/nd/commands`, `POST /api/nd/commands/:id/result`, `POST /api/automation/commands/:id/result` (`GET /api/automation/commands` is shadowed) |
+| `dataguard.routes.js` | `GET /api/nd/dlp-policies`, `POST /api/nd/dlp-events`, and both under `/api/dataguard` |
+| `fileTransfer.routes.js` | `POST /api/nd/file-transfer` +match, `GET /api/nd/file-transfer/:id`, and both under `/api/files` |
+| `fleet.routes.js` | `POST /api/nd/fleet/task-result` +match, `POST /api/nd/fleet/software` +match, and both under `/api/nd/api/nd/fleet` |
+| `policies.routes.js` | `GET /api/nd/device-policy` +match, `POST /api/nd/attestation` +match, and both under `/api/nd/api/nd` |
+| `resource-control.routes.js` | `GET /api/nd/resource-policy` +match, and under `/api/nd/api/nd` |
 | `tickets.routes.js` | `POST /api/tickets/bd`, `GET /api/tickets/bd` |
-| `inventory.routes.js` | `POST /api/bd/inventory`, `POST /api/bd/telemetry`, `GET /api/bd/inventory/:id`, and the three under `/api/inventory` |
+| `inventory.routes.js` | `POST /api/nd/inventory`, `POST /api/nd/telemetry`, `GET /api/nd/inventory/:id`, and the three under `/api/inventory` |
 
 `inventory.routes.js` (35-90) has its own copies, which differ: the token
 only needs a `client_id` that is not empty (no check of its form), and the
@@ -304,7 +304,7 @@ group with `authn.ExtractBearerToken`, `s.LookupAccessToken` and
 same three calls and `s.UserByID`: `requireDeviceAuth` (any live token;
 `401 {error:"Missing or invalid Bearer access token"}`; the operator
 routes behind it refuse a device token) and `identifyDevice` for `POST
-/api/bd/register` (a device token bound to a device id, else the header
+/api/nd/register` (a device token bound to a device id, else the header
 `X-Device-Id` when `authn.IsDeviceID`). Both use the
 route's loose Bearer parsing (starts with `Bearer `, rest trimmed).
 

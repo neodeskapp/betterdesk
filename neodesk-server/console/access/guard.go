@@ -94,17 +94,17 @@ var RouteRules = []Rule{
 	{Prefix: "/api/panel/billing", Section: "commercialization"},
 	{Prefix: "/commercialization", Section: "commercialization"},
 	{Prefix: "/activity", Section: "activity"},
-	// The file transfer group answers at /api/bd too, with the routes for
+	// The file transfer group answers at /api/nd too, with the routes for
 	// people beside the device routes.
-	{Prefix: "/api/bd/transfer", Section: "files"},
-	{Prefix: "/api/bd/transfers", Section: "files"},
+	{Prefix: "/api/nd/transfer", Section: "files"},
+	{Prefix: "/api/nd/transfers", Section: "files"},
 	{Prefix: "/api/panel/fleet", Section: "fleet"},
 	{Prefix: "/api/chat", Section: "chat"},
 	// The fleet, scaling and resource control groups answer at
-	// /api/bd + their path too.
-	{Prefix: "/api/bd/api/panel/fleet", Section: "fleet"},
-	{Prefix: "/api/bd/api/panel/scaling", Section: "scaling"},
-	{Prefix: "/api/bd/api/panel/resource-control", Section: "resource-control"},
+	// /api/nd + their path too.
+	{Prefix: "/api/nd/api/panel/fleet", Section: "fleet"},
+	{Prefix: "/api/nd/api/panel/scaling", Section: "scaling"},
+	{Prefix: "/api/nd/api/panel/resource-control", Section: "resource-control"},
 	// What the shell and the Settings page read for every account; the
 	// branding writes ask branding.edit themselves.
 	{Prefix: "/api/settings/info"},
@@ -139,14 +139,14 @@ var RouteRules = []Rule{
 	{Prefix: "/api/remote/viewer"},
 	{Prefix: "/api/remote/login-info"},
 	{Prefix: "/api/remote-targets", Section: "remote"},
-	// The data guard group answers at /api/bd too, with the routes for
+	// The data guard group answers at /api/nd too, with the routes for
 	// people beside the device routes.
-	{Prefix: "/api/bd/policies", Section: "dataguard"},
-	{Prefix: "/api/bd/events", Section: "dataguard"},
-	{Prefix: "/api/bd/stats", Section: "dataguard"},
-	// The registration routes for people answer at /api/bd too, beside
+	{Prefix: "/api/nd/policies", Section: "dataguard"},
+	{Prefix: "/api/nd/events", Section: "dataguard"},
+	{Prefix: "/api/nd/stats", Section: "dataguard"},
+	// The registration routes for people answer at /api/nd too, beside
 	// the two device routes.
-	{Prefix: "/api/bd/api/registrations", Section: "registrations"},
+	{Prefix: "/api/nd/api/registrations", Section: "registrations"},
 }
 
 const apiPrefix = "/api/"

@@ -113,8 +113,8 @@ Start-Process -FilePath $RustDesk -ArgumentList @('--config', $CfgString) -Wait 
 }
 
 /**
- * The QR code a BetterDesk support agent shows: JSON
- * { type: 'betterdesk-agent-pairing', version: 1, device_id, server? }.
+ * The QR code a NeoDesk support agent shows: JSON
+ * { type: 'neodesk-agent-pairing', version: 1, device_id, server? }.
  * A code for another server (its host differs from this console's) is
  * refused. Returns the device ID, or null for anything else.
  */
@@ -127,7 +127,7 @@ export function readPairingCode(raw: string, consoleHost: string): string | null
 	}
 	if (!payload || typeof payload !== 'object') return null;
 	const p = payload as Record<string, unknown>;
-	if (p.type !== 'betterdesk-agent-pairing' || p.version !== 1) return null;
+	if (p.type !== 'neodesk-agent-pairing' || p.version !== 1) return null;
 	if (typeof p.device_id !== 'string' || !p.device_id.trim()) return null;
 	if (p.server !== undefined && p.server !== null && p.server !== '') {
 		if (typeof p.server !== 'string') return null;
@@ -142,7 +142,7 @@ export function readPairingCode(raw: string, consoleHost: string): string | null
 
 /* ── The address typed into "Client server address", for this tab only ── */
 
-export const CLIENT_HOST_KEY = 'bd_client_config_host';
+export const CLIENT_HOST_KEY = 'nd_client_config_host';
 
 export function readClientHost(): string {
 	try {

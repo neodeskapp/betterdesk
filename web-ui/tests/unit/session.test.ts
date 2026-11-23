@@ -27,7 +27,7 @@ const boot = {
 		available: [{ code: 'en', name: 'English', native: 'English', flag: 'en', rtl: false }]
 	},
 	branding: {
-		appName: 'BetterDesk',
+		appName: 'NeoDesk',
 		appDescription: '',
 		themeMode: 'system',
 		logoType: 'text',
@@ -118,7 +118,7 @@ describe('startSession', () => {
 		});
 
 		test('comes back when the account has none', async () => {
-			localStorage.setItem('betterdesk_lang', 'de');
+			localStorage.setItem('neodesk_lang', 'de');
 			const urls = setup(withDe);
 			await startSession();
 			await vi.waitFor(() => expect(urls()).toContain('/api/i18n/set/de'));
@@ -126,12 +126,12 @@ describe('startSession', () => {
 		});
 
 		test('stays away when the account has its own language, and the current one is remembered', async () => {
-			localStorage.setItem('betterdesk_lang', 'de');
+			localStorage.setItem('neodesk_lang', 'de');
 			const urls = setup({ ...withDe, user: { ...withDe.user, preferredLanguage: 'en' } });
 			await startSession();
 			await new Promise((r) => setTimeout(r, 20));
 			expect(urls().some((u) => u.includes('/i18n/set/'))).toBe(false);
-			expect(localStorage.getItem('betterdesk_lang')).toBe('en');
+			expect(localStorage.getItem('neodesk_lang')).toBe('en');
 		});
 	});
 });

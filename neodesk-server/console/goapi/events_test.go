@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
 )
 
 func nextFrame(t *testing.T, frames <-chan *Object) *Object {

@@ -2,7 +2,7 @@
  "id": "bd-api/appearance",
  "request": {
   "method": "GET",
-  "path": "/api/bd/appearance"
+  "path": "/api/nd/appearance"
  },
  "recordings": 2,
  "answers": [
@@ -51,8 +51,8 @@
        "type": "none"
       },
       "identity": {
-       "appDescription": "BetterDesk Server Management",
-       "appName": "BetterDesk",
+       "appDescription": "NeoDesk Server Management",
+       "appName": "NeoDesk",
        "logoIcon": "dns",
        "logoText": "",
        "logoTextAccent": "",
@@ -73,7 +73,7 @@
        "text": "#e6edf3",
        "warning": "#d29922"
       },
-      "product": "betterdesk-appearance",
+      "product": "neodesk-appearance",
       "readability": {
        "issues": [],
        "ok": true
@@ -115,7 +115,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -143,8 +143,8 @@
        "type": "none"
       },
       "identity": {
-       "appDescription": "BetterDesk Server Management",
-       "appName": "BetterDesk",
+       "appDescription": "NeoDesk Server Management",
+       "appName": "NeoDesk",
        "logoIcon": "dns",
        "logoText": "",
        "logoTextAccent": "",
@@ -165,7 +165,7 @@
        "text": "#e6edf3",
        "warning": "#d29922"
       },
-      "product": "betterdesk-appearance",
+      "product": "neodesk-appearance",
       "readability": {
        "issues": [],
        "ok": true

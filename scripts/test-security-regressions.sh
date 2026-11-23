@@ -22,7 +22,7 @@ repo() {
     rm -rf "$TEST_DIR/repo"
     mkdir -p "$TEST_DIR/repo/scripts"
     cp "$SCRIPT_ROOT/scripts/check-security-regressions.sh" "$TEST_DIR/repo/scripts/"
-    printf '%s\n' '#!/usr/bin/env bash' 'echo "Environment=DB_TYPE=sqlite"' > "$TEST_DIR/repo/betterdesk.sh"
+    printf '%s\n' '#!/usr/bin/env bash' 'echo "Environment=DB_TYPE=sqlite"' > "$TEST_DIR/repo/neodesk.sh"
 }
 
 # check: runs the check of $TEST_DIR/repo from another folder; its exit
@@ -37,21 +37,21 @@ check
 [ "$status" = 0 ] || fail "clean files: exit $status: $(cat "$TEST_DIR/out")"
 
 repo
-printf '%s\n' 'Environment=SESSION_SECRET=from-the-installer' >> "$TEST_DIR/repo/betterdesk.sh"
+printf '%s\n' 'Environment=SESSION_SECRET=from-the-installer' >> "$TEST_DIR/repo/neodesk.sh"
 check
 [ "$status" = 1 ] || fail "an installer writing a secret into a unit passed: $(cat "$TEST_DIR/out")"
-grep -q 'betterdesk.sh' "$TEST_DIR/out" || fail "the failure does not name the installer: $(cat "$TEST_DIR/out")"
+grep -q 'neodesk.sh' "$TEST_DIR/out" || fail "the failure does not name the installer: $(cat "$TEST_DIR/out")"
 
 repo
-printf '%s\n' '[Service]' 'Environment=DATABASE_URL=postgres://u:p@db/x' > "$TEST_DIR/repo/betterdesk.service"
+printf '%s\n' '[Service]' 'Environment=DATABASE_URL=postgres://u:p@db/x' > "$TEST_DIR/repo/neodesk.service"
 check
 [ "$status" = 1 ] || fail "a unit with a secret passed: $(cat "$TEST_DIR/out")"
 
 # The files around the repository are not the repository's
 repo
-printf '%s\n' 'Environment=SESSION_SECRET=outside' > "$TEST_DIR/betterdesk.sh"
+printf '%s\n' 'Environment=SESSION_SECRET=outside' > "$TEST_DIR/neodesk.sh"
 check
 [ "$status" = 0 ] || fail "a file outside the repository failed the check: $(cat "$TEST_DIR/out")"
-rm -f "$TEST_DIR/betterdesk.sh"
+rm -f "$TEST_DIR/neodesk.sh"
 
 echo "security regression check: all checks passed"

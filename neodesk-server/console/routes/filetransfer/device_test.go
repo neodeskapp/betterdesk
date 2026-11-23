@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/authn"
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // deviceVector is one request of testdata/device_vectors.json with the
@@ -77,7 +77,7 @@ var (
 var refusedVectors = map[int]string{47: "DV4", 48: "DV4"}
 
 // TestDeviceVectors replays what the Node console answered on the device
-// routes, POST /file-transfer and GET /file-transfer/{id} at /api/bd and
+// routes, POST /file-transfer and GET /file-transfer/{id} at /api/nd and
 // /api/files, with the routes for people of the same file on the same
 // transfers (testdata/device_vectors.json): who may call, the device a
 // request names, every action, a file a device announces and sends and
@@ -186,12 +186,12 @@ func TestPeopleAndDevicesShareTheTransfers(t *testing.T) {
 			t.Fatalf("start: %d %s", started.Status, started.Body)
 		}
 		id := m[1]
-		if got := w.Do(replay.Request{Path: "/api/bd/file-transfer/" + id, Headers: device}); got.Status != 200 || !strings.Contains(got.Body, `"status":"pending"`) {
+		if got := w.Do(replay.Request{Path: "/api/nd/file-transfer/" + id, Headers: device}); got.Status != 200 || !strings.Contains(got.Body, `"status":"pending"`) {
 			t.Fatalf("the device reads the transfer: %d %s", got.Status, got.Body)
 		}
 		for i, part := range []string{"hello ", "world"} {
 			body := `{"action":"chunk","transfer_id":"` + id + `","chunk_index":` + strconv.Itoa(i) + `,"data":"` + base64.StdEncoding.EncodeToString([]byte(part)) + `"}`
-			if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/file-transfer", Body: &body, Headers: device, NoCSRF: true}); got.Status != 200 || !strings.Contains(got.Body, `"action":"chunk_ack"`) {
+			if got := w.Do(replay.Request{Method: "POST", Path: "/api/nd/file-transfer", Body: &body, Headers: device, NoCSRF: true}); got.Status != 200 || !strings.Contains(got.Body, `"action":"chunk_ack"`) {
 				t.Fatalf("chunk %d: %d %s", i, got.Status, got.Body)
 			}
 		}
@@ -211,7 +211,7 @@ func TestADeviceReachesOnlyItsOwnTransfers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := deviceWorld(t, db)
 		post := func(token, body string) replay.Answer {
-			return w.Do(replay.Request{Method: "POST", Path: "/api/bd/file-transfer", Body: &body, Headers: map[string]string{"Authorization": "Bearer " + token}, NoCSRF: true})
+			return w.Do(replay.Request{Method: "POST", Path: "/api/nd/file-transfer", Body: &body, Headers: map[string]string{"Authorization": "Bearer " + token}, NoCSRF: true})
 		}
 		m := announcedID.FindStringSubmatch(post("tok-device-a", `{"action":"init","filename":"a.txt","size":4}`).Body)
 		if m == nil {
@@ -225,29 +225,29 @@ func TestADeviceReachesOnlyItsOwnTransfers(t *testing.T) {
 		if got := post("tok-device-b", `{"action":"cancel","transfer_id":"`+id+`"}`); got.Status != 200 || got.Body != notFound {
 			t.Errorf("device-b cancels it: %d %s", got.Status, got.Body)
 		}
-		if got := w.Do(replay.Request{Path: "/api/bd/file-transfer/" + id, Headers: map[string]string{"Authorization": "Bearer tok-device-a"}}); !strings.Contains(got.Body, `"status":"pending","bytesTransferred":0`) {
+		if got := w.Do(replay.Request{Path: "/api/nd/file-transfer/" + id, Headers: map[string]string{"Authorization": "Bearer tok-device-a"}}); !strings.Contains(got.Body, `"status":"pending","bytesTransferred":0`) {
 			t.Errorf("device-a's transfer after that: %d %s", got.Status, got.Body)
 		}
 		if got := post("tok-device-a", `{"action":"chunk","transfer_id":"`+id+`","chunk_index":0,"data":"YWJjZA=="}`); !strings.Contains(got.Body, `"status":"completed"`) {
 			t.Errorf("device-a writes into its transfer: %d %s", got.Status, got.Body)
 		}
 		// Reading stays with the transfer's device
-		if got := w.Do(replay.Request{Path: "/api/bd/file-transfer/" + id, Headers: map[string]string{"Authorization": "Bearer tok-device-b"}}); got.Status != 403 || got.Body != `{"error":"Access denied"}` {
+		if got := w.Do(replay.Request{Path: "/api/nd/file-transfer/" + id, Headers: map[string]string{"Authorization": "Bearer tok-device-b"}}); got.Status != 403 || got.Body != `{"error":"Access denied"}` {
 			t.Errorf("device-b reads it: %d %s", got.Status, got.Body)
 		}
 	})
 }
 
 // A device that writes with its token and no session needs no CSRF token
-// under /api/bd or /api/files (BUGS DV2). With a session it needs one, like
+// under /api/nd or /api/files (BUGS DV2). With a session it needs one, like
 // a browser.
 func TestTheCSRFGateAtEachMount(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := deviceWorld(t, db)
 		device := map[string]string{"Authorization": "Bearer tok-device-a"}
 		body := `{"action":"browse","path":"/"}`
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/file-transfer", Body: &body, Headers: device, NoCSRF: true}); got.Status != 200 {
-			t.Errorf("/api/bd without the CSRF token: %d %s", got.Status, got.Body)
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/nd/file-transfer", Body: &body, Headers: device, NoCSRF: true}); got.Status != 200 {
+			t.Errorf("/api/nd without the CSRF token: %d %s", got.Status, got.Body)
 		}
 		if got := w.Do(replay.Request{Method: "POST", Path: "/api/files/file-transfer", Body: &body, Headers: device, NoCSRF: true}); got.Status != 200 {
 			t.Errorf("/api/files without the CSRF token: %d %s", got.Status, got.Body)
@@ -255,9 +255,9 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 		if got := w.Do(replay.Request{Method: "POST", Path: "/api/files/file-transfer", Body: &body, Headers: device}); got.Status != 200 {
 			t.Errorf("/api/files with the CSRF token: %d %s", got.Status, got.Body)
 		}
-		// With a session the gate checks under /api/bd too
-		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/bd/file-transfer", Body: &body, Headers: device, NoCSRF: true}); got.Status != 403 {
-			t.Errorf("/api/bd with a session and without the CSRF token: %d %s", got.Status, got.Body)
+		// With a session the gate checks under /api/nd too
+		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/nd/file-transfer", Body: &body, Headers: device, NoCSRF: true}); got.Status != 403 {
+			t.Errorf("/api/nd with a session and without the CSRF token: %d %s", got.Status, got.Body)
 		}
 	})
 }
@@ -280,7 +280,7 @@ func TestAStartBeyondTheCapIsTooManyRequests(t *testing.T) {
 			if got := start(); got.Status != 201 {
 				t.Fatalf("start %d: %d %s", i+1, got.Status, got.Body)
 			}
-			if got := initMessage("/api/bd/file-transfer"); got.Status != 200 || !strings.Contains(got.Body, `"action":"init_ack"`) {
+			if got := initMessage("/api/nd/file-transfer"); got.Status != 200 || !strings.Contains(got.Body, `"action":"init_ack"`) {
 				t.Fatalf("init %d: %d %s", i+1, got.Status, got.Body)
 			}
 		}
@@ -288,7 +288,7 @@ func TestAStartBeyondTheCapIsTooManyRequests(t *testing.T) {
 		if got := start(); got.Status != 429 || got.Body != `{"error":"`+refusal+`"}` {
 			t.Errorf("start 11: %d %s", got.Status, got.Body)
 		}
-		for _, path := range []string{"/api/bd/file-transfer", "/api/files/file-transfer"} {
+		for _, path := range []string{"/api/nd/file-transfer", "/api/files/file-transfer"} {
 			if got := initMessage(path); got.Status != 429 || got.Body != `{"action":"error","error":"`+refusal+`"}` {
 				t.Errorf("init 11 at %s: %d %s", path, got.Status, got.Body)
 			}
@@ -298,7 +298,7 @@ func TestAStartBeyondTheCapIsTooManyRequests(t *testing.T) {
 		}
 		// Another failure of a message stays 200
 		body := `{"action":"init","filename":"a.txt","size":-1}`
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/file-transfer", Body: &body, Headers: map[string]string{"Authorization": "Bearer tok-device-b"}, NoCSRF: true}); got.Status != 200 || !strings.Contains(got.Body, `"action":"error"`) {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/nd/file-transfer", Body: &body, Headers: map[string]string{"Authorization": "Bearer tok-device-b"}, NoCSRF: true}); got.Status != 200 || !strings.Contains(got.Body, `"action":"error"`) {
 			t.Errorf("an init with a negative size: %d %s", got.Status, got.Body)
 		}
 	})

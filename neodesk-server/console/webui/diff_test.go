@@ -21,7 +21,7 @@ import (
 // TestAgainstNode sends the same requests to a running Node console and to
 // a Host over the same build, and compares the answers:
 //
-//	BD_URL=http://bdgo-w1:5000 WEB_UI_DIR=/repo/web-ui/build \
+//	ND_URL=http://bdgo-w1:5000 WEB_UI_DIR=/repo/web-ui/build \
 //	    go test -tags webuidiff ./console/webui/ -run TestAgainstNode -v
 //
 // Both must see the same directory (same files, same modification times).
@@ -31,9 +31,9 @@ import (
 // what a session changes is covered by the recorded answers
 // (TestAnswersMatchNode).
 func TestAgainstNode(t *testing.T) {
-	nodeURL, dir := os.Getenv("BD_URL"), os.Getenv("WEB_UI_DIR")
+	nodeURL, dir := os.Getenv("ND_URL"), os.Getenv("WEB_UI_DIR")
 	if nodeURL == "" || dir == "" {
-		t.Skip("BD_URL and WEB_UI_DIR are not set")
+		t.Skip("ND_URL and WEB_UI_DIR are not set")
 	}
 	node, err := url.Parse(nodeURL)
 	if err != nil {
@@ -231,9 +231,9 @@ func diffRequests(t *testing.T, dir string) []diffRequest {
 		add("GET", "/no-such-file.zzz", headers...)
 		add("GET", "/webui-diff/missing.txt", headers...)
 	}
-	add("GET", "/devices", "Accept", browser, "Cookie", "bd.sid=s%3Agone.sig")
+	add("GET", "/devices", "Accept", browser, "Cookie", "nd.sid=s%3Agone.sig")
 	add("GET", "/devices", "Accept", browser, "Cookie", "theme=dark")
-	add("GET", "/remote", "Accept", browser, "Cookie", "bd.sid=s%3Agone.sig")
+	add("GET", "/remote", "Accept", browser, "Cookie", "nd.sid=s%3Agone.sig")
 
 	for _, p := range []string{"/app", "/app/", "/app?activateAgent=1", "/app/devices?open=900100001", "/app/_ui/immutable/start.js", "/app//evil.example/x",
 		`/app/\evil.example`, "/APP/devices", "/app/x?return=//evil.example", "/app/..//evil.example", "/app/%2F%2Fevil.example", "/app/a%20b"} {
@@ -316,7 +316,7 @@ func diffRequests(t *testing.T, dir string) []diffRequest {
 
 func mustHost(t *testing.T) string {
 	t.Helper()
-	node, err := url.Parse(os.Getenv("BD_URL"))
+	node, err := url.Parse(os.Getenv("ND_URL"))
 	if err != nil {
 		t.Fatal(err)
 	}

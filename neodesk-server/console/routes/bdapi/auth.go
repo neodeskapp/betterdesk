@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/unitronix/betterdesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 )
 
 // The route file's own checks of a request. They read the Authorization

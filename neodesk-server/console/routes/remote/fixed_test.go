@@ -133,7 +133,7 @@ func issues(v *vector) int {
 // true or false, a list or an object. The device guard refuses such a
 // request as another device (DV4).
 func namesNoText(r request) bool {
-	if r.Method != "POST" || r.Path != "/api/bd/remote-agent-token" || r.Body == nil {
+	if r.Method != "POST" || r.Path != "/api/nd/remote-agent-token" || r.Body == nil {
 		return false
 	}
 	var body map[string]any

@@ -1,8 +1,8 @@
 // Package bdrelay is the agent's connection to the console
 // (services/bdRelay.js of the old console): the signal socket
-// /ws/bd-signal each BetterDesk agent keeps open, through which the
+// /ws/nd-signal each NeoDesk agent keeps open, through which the
 // console pushes connection requests and asks the agent for things
-// (RequestFromDevice), and the relay socket /ws/bd-relay that pairs two
+// (RequestFromDevice), and the relay socket /ws/nd-relay that pairs two
 // devices and passes their end-to-end encrypted frames on.
 //
 // Relay sessions and the open signal sockets live in this process only,
@@ -18,9 +18,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // The limits of the old relay.

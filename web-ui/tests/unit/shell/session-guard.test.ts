@@ -39,7 +39,7 @@ describe('session guard', () => {
 	test('other storage keys do nothing', async () => {
 		const g = await import('../../../src/lib/shell/session-guard.svelte.ts');
 		g.startGuard(null);
-		window.dispatchEvent(new StorageEvent('storage', { key: 'bd-theme-choice', newValue: 'dark' }));
+		window.dispatchEvent(new StorageEvent('storage', { key: 'nd-theme-choice', newValue: 'dark' }));
 		expect(assign).not.toHaveBeenCalled();
 	});
 
@@ -50,7 +50,7 @@ describe('session guard', () => {
 		const other = typeof BroadcastChannel === 'function' ? new BroadcastChannel(g.CHANNEL) : null;
 		if (other) other.onmessage = (e) => received.push(e.data);
 		g.broadcastExpired('logout');
-		expect(JSON.parse(localStorage.getItem('betterdesk.session.expired')!)).toMatchObject({ code: 'logout' });
+		expect(JSON.parse(localStorage.getItem('neodesk.session.expired')!)).toMatchObject({ code: 'logout' });
 		if (other) {
 			await vi.waitFor(() => expect(received).toEqual([{ type: 'expired', code: 'logout' }]), {
 				timeout: 1000
@@ -78,7 +78,7 @@ describe('session guard', () => {
 		expect(new URL(assign.mock.calls[0]![0] as string, 'http://localhost').searchParams.get('reason')).toBe(
 			'session_idle'
 		);
-		expect(localStorage.getItem('betterdesk.session.expired')).toContain('session_idle');
+		expect(localStorage.getItem('neodesk.session.expired')).toContain('session_idle');
 	});
 
 	test('activity here reaches the server at most once a minute, the last one late', async () => {
@@ -92,7 +92,7 @@ describe('session guard', () => {
 			vi
 				.mocked(fetch)
 				.mock.calls.filter(([url]) => String(url).startsWith('/api/auth/verify'))
-				.map(([, init]) => (init?.headers as Record<string, string>)['X-BD-Background']);
+				.map(([, init]) => (init?.headers as Record<string, string>)['X-ND-Background']);
 		// Loading the page counted on the server; a key right away doesn't ping
 		document.dispatchEvent(new Event('keydown'));
 		expect(pings()).toEqual([]);

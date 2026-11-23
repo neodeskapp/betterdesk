@@ -1,4 +1,4 @@
-# BetterDesk Go Server — Clean-Room Implementation Context
+# NeoDesk Go Server — Clean-Room Implementation Context
 
 > This file is automatically included in every Copilot conversation context.
 > It contains the complete specification for building a clean-room RustDesk-compatible server in Go.
@@ -9,16 +9,16 @@
 
 Build a **clean-room** signal + relay server in **Go** that is 100% compatible with existing
 RustDesk clients (desktop, mobile, web) but completely independent of the AGPL-3.0 RustDesk
-server codebase. The result is a single binary called **`betterdesk-server`** that replaces
+server codebase. The result is a single binary called **`neodesk-server`** that replaces
 both `hbbs` (signal) and `hbbr` (relay).
 
 ### Legal Basis
 
 - Do not infer the provenance or copyright status of `.proto` files from their
   protocol role or file headers. Existing schemas are subject to the provenance
-  gate of the provenance register (https://betterde.sk/docs/development/provenance).
+  gate of the provenance register (https://neode.sk/docs/development/provenance).
 - Do not copy external source, generated artifacts, comments, or test fixtures.
-  Implement only from BetterDesk-owned specifications and independently
+  Implement only from NeoDesk-owned specifications and independently
   authored black-box test vectors.
 - Do not make clean-room or relicensing claims in code, documentation, or
   release notes until the provenance register has been reviewed.
@@ -29,7 +29,7 @@ both `hbbs` (signal) and `hbbr` (relay).
 
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
-| 0.1 | Create Go project skeleton (`betterdesk-server/`) | ✅ done | `go mod init`, folder structure |
+| 0.1 | Create Go project skeleton (`neodesk-server/`) | ✅ done | `go mod init`, folder structure |
 | 0.2 | Compile protobuf → Go structs | ✅ done | `rendezvous.pb.go` + `message.pb.go` (12K LOC) |
 | 0.3 | Implement AddrMangle (encode/decode) | ✅ done | `crypto/addr_mangle.go` + tests |
 | 0.4 | Implement framing codec (TCP) | ✅ done | `codec/` — 2-byte BE length prefix + protobuf |
@@ -91,18 +91,18 @@ both `hbbs` (signal) and `hbbr` (relay).
 | ID | Task | Status | Notes |
 |----|------|--------|-------|
 | 4.1 | `tools/migrate/main.go` | ⬜ todo | CLI migration binary |
-| 4.2 | Original RustDesk → BetterDesk | ⬜ todo | `peer` → `peers` schema mapping |
-| 4.3 | BetterDesk SQLite → PostgreSQL | ⬜ todo | Full schema migration |
+| 4.2 | Original RustDesk → NeoDesk | ⬜ todo | `peer` → `peers` schema mapping |
+| 4.3 | NeoDesk SQLite → PostgreSQL | ⬜ todo | Full schema migration |
 | 4.4 | Node.js tables migration | ⬜ todo | address_books, groups, sysinfo |
 | 4.5 | Reverse: PG → SQLite | ⬜ todo | Downgrade/testing |
-| 4.6 | ALL-IN-ONE script integration | ⬜ todo | betterdesk.sh / .ps1 |
+| 4.6 | ALL-IN-ONE script integration | ⬜ todo | neodesk.sh / .ps1 |
 
 ---
 
 ## 🏗️ Architecture — Single Binary
 
 ```
-betterdesk-server [--port 21116] [--relay-port 21117] [--api-port 21114] [--key <base64>]
+neodesk-server [--port 21116] [--relay-port 21117] [--api-port 21114] [--key <base64>]
 
 Mode:
   --mode=all       ← default and the only mode: signal + relay + api + console in one process
@@ -126,7 +126,7 @@ Mode:
 ### Folder Structure
 
 ```
-betterdesk-server/
+neodesk-server/
 ├── main.go                    # Entry point, flag parsing, mode selection
 ├── go.mod
 ├── go.sum
@@ -563,7 +563,7 @@ states is a bitmask: 2 bits per peer
 
 ```go
 // go.mod
-module github.com/unitronix/betterdesk-server
+module github.com/neodeskapp/neodesk/neodesk-server
 
 go 1.22
 
@@ -597,7 +597,7 @@ api/             → TestHealthEndpoint, TestPeersEndpoint, TestAPIKeyAuth
 
 ### Integration Tests
 ```
-1. Start betterdesk-server in test mode
+1. Start neodesk-server in test mode
 2. Use Go test client that speaks the protobuf protocol
 3. Test full flows: register → punch hole → relay → disconnect
 4. Test with real RustDesk client binary (manual/CI)
@@ -611,29 +611,29 @@ api/             → TestHealthEndpoint, TestPeersEndpoint, TestAPIKeyAuth
 
 ```bash
 # Linux amd64
-GOOS=linux GOARCH=amd64 go build -o betterdesk-server-linux-amd64 .
+GOOS=linux GOARCH=amd64 go build -o neodesk-server-linux-amd64 .
 
 # Linux arm64
-GOOS=linux GOARCH=arm64 go build -o betterdesk-server-linux-arm64 .
+GOOS=linux GOARCH=arm64 go build -o neodesk-server-linux-arm64 .
 
 # Windows amd64
-GOOS=windows GOARCH=amd64 go build -o betterdesk-server-windows-amd64.exe .
+GOOS=windows GOARCH=amd64 go build -o neodesk-server-windows-amd64.exe .
 
 # With version info
-go build -ldflags "-X main.Version=1.0.0 -X main.BuildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" -o betterdesk-server .
+go build -ldflags "-X main.Version=1.0.0 -X main.BuildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" -o neodesk-server .
 ```
 
 ### Systemd Service (replaces both hbbs + hbbr services)
 
 ```ini
 [Unit]
-Description=BetterDesk Server (Signal + Relay + API)
+Description=NeoDesk Server (Signal + Relay + API)
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/opt/betterdesk/betterdesk-server --port 21116 --relay-port 21117 --api-port 21114
-WorkingDirectory=/opt/betterdesk
+ExecStart=/opt/neodesk/neodesk-server --port 21116 --relay-port 21117 --api-port 21114
+WorkingDirectory=/opt/neodesk
 Restart=always
 RestartSec=5
 LimitNOFILE=65536
@@ -668,7 +668,7 @@ WantedBy=multi-user.target
 15. **Blacklist/blocklist** — IP-based, file-loaded
 
 ### Phase 4: API & Features (Tasks 0.12–0.18)
-16. **HTTP API** — all existing endpoints from BetterDesk
+16. **HTTP API** — all existing endpoints from NeoDesk
 17. **Ban system** — integrated with signal + relay
 18. **ID change** — with rate limiting and history
 19. **Integration with web-nodejs** — replace Rust hbbs, keep Node.js console
@@ -676,7 +676,7 @@ WantedBy=multi-user.target
 ### Phase 5: Production (Tasks 0.19–0.20)
 20. **Full integration testing** with real RustDesk clients
 21. **Cross-compilation** and release pipeline
-22. **Update ALL-IN-ONE scripts** (`betterdesk.sh`, `betterdesk.ps1`) for Go binary
+22. **Update ALL-IN-ONE scripts** (`neodesk.sh`, `neodesk.ps1`) for Go binary
 
 ---
 
@@ -713,16 +713,16 @@ Node.js web console (`web-nodejs/`) works without changes.
 
 ---
 
-## 🔗 Integration with Existing BetterDesk Components
+## 🔗 Integration with Existing NeoDesk Components
 
 The Go server replaces ONLY the Rust binaries (`hbbs` + `hbbr`). Everything else stays:
 
 | Component | Status | Notes |
 |-----------|--------|-------|
 | `web-nodejs/` | ✅ Unchanged | Reads `db_v2.sqlite3` + calls HTTP API on 21114 |
-| `betterdesk.sh` | 🔧 Update needed | Download/install Go binary instead of Rust binaries |
-| `betterdesk.ps1` | 🔧 Update needed | Same |
-| `betterdesk-docker.sh` | 🔧 Update needed | Update Dockerfile for single binary |
+| `neodesk.sh` | 🔧 Update needed | Download/install Go binary instead of Rust binaries |
+| `neodesk.ps1` | 🔧 Update needed | Same |
+| `neodesk-docker.sh` | 🔧 Update needed | Update Dockerfile for single binary |
 | `Dockerfile.hbbs` | 🔄 Replace | Single `Dockerfile.server` for Go binary |
 | `Dockerfile.hbbr` | 🔄 Remove | Not needed — single binary |
 | `docker-compose.yml` | 🔧 Update needed | Single `server` service instead of `hbbs` + `hbbr` |

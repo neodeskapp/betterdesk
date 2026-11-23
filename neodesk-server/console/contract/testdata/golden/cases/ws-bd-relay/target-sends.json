@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/target-sends",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-relay",
+  "path": "/ws/nd-relay",
   "notes": [
    "websocket tgt, own origin",
    "websocket send {\"n\":1,\"type\":\"e2e\"}"

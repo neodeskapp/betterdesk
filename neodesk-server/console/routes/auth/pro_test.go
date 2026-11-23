@@ -18,7 +18,7 @@ func TestLoginRefusesProWith403(t *testing.T) {
 		a := w.agent()
 		res := a.post("/api/auth/login", login("pia", password))
 		want(t, "right password", res, http.StatusForbidden, proOnly)
-		if res.cookie("bd.sid") != "" {
+		if res.cookie("nd.sid") != "" {
 			t.Errorf("the refusal set a session cookie: %v", res.cookies())
 		}
 		want(t, "wrong password", a.post("/api/auth/login", login("pia", "not-the-password")), http.StatusUnauthorized, invalidCredentials)
@@ -50,7 +50,7 @@ func TestOIDCSessionRefusesPro(t *testing.T) {
 		a := w.agent()
 		res := singleSignOn(t, a, "/devices")
 		want(t, c.what, res, http.StatusForbidden, proOnly)
-		if res.cookie("bd.sid") != "" {
+		if res.cookie("nd.sid") != "" {
 			t.Errorf("%s: the refusal set a session cookie: %v", c.what, res.cookies())
 		}
 	}

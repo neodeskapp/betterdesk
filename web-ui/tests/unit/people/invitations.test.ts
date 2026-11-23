@@ -15,7 +15,7 @@ const code = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 const loginPage = {
 	success: true,
 	csrfToken: 'csrf-1',
-	appName: 'BetterDesk',
+	appName: 'NeoDesk',
 	appVersion: '1',
 	desktopMode: false,
 	signedIn: false,
@@ -136,7 +136,7 @@ describe('the invite page', () => {
 		render(InvitePage);
 		await vi.waitFor(() => expect(screen.getByText('organizations.invite_for')).toBeInTheDocument());
 		expect(location.hash).toBe('');
-		expect(sessionStorage.getItem('bd.invitation')).toBe(code);
+		expect(sessionStorage.getItem('nd.invitation')).toBe(code);
 		expect(sent.find((s) => s.path === '/api/invitations/lookup')).toMatchObject({
 			body: { token: code },
 			csrf: 'csrf-1'
@@ -159,11 +159,11 @@ describe('the invite page', () => {
 			username: 'anna',
 			password: 'long-enough-1'
 		});
-		expect(sessionStorage.getItem('bd.invitation')).toBeNull();
+		expect(sessionStorage.getItem('nd.invitation')).toBeNull();
 	});
 
 	test('signed in: the page says the new sign-in is separate from the console account', async () => {
-		sessionStorage.setItem('bd.invitation', code);
+		sessionStorage.setItem('nd.invitation', code);
 		history.replaceState(null, '', '/invite');
 		replies['/api/invitations/lookup'] = [lookup({ username: 'e2e_admin' })];
 		render(InvitePage);
@@ -179,7 +179,7 @@ describe('the invite page', () => {
 		render(InvitePage);
 		await vi.waitFor(() => expect(document.body.textContent).toContain('organizations.invite_invalid'));
 		expect(screen.queryByLabelText('organizations.username')).toBeNull();
-		expect(sessionStorage.getItem('bd.invitation')).toBeNull();
+		expect(sessionStorage.getItem('nd.invitation')).toBeNull();
 	});
 
 	test('a username the organization has is refused on its field, and the invitation stays', async () => {
@@ -196,7 +196,7 @@ describe('the invite page', () => {
 		await vi.waitFor(() =>
 			expect(screen.getByText('organizations.invite_username_taken')).toBeInTheDocument()
 		);
-		expect(sessionStorage.getItem('bd.invitation')).toBe(code);
+		expect(sessionStorage.getItem('nd.invitation')).toBe(code);
 	});
 
 	test('without a code the page asks for the link', async () => {

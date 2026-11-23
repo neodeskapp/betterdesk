@@ -1,6 +1,6 @@
 // Package serverinfo answers how a client reaches this server: the public
 // key and the API key, the host names and addresses a RustDesk or
-// BetterDesk client is given, the configuration string and link a client
+// NeoDesk client is given, the configuration string and link a client
 // imports, the public endpoints an operator can set, the server's
 // connection mode, the product version, and the rewriting of ".env" files
 // that several of these need.
@@ -18,8 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // Logger takes the warnings and errors of the service. *kit.Logger is one.
@@ -41,7 +41,7 @@ type Options struct {
 	// db_v2.sqlite3 in the keys folder. It is only reported.
 	DBPath string
 	// APIURL is the address of the server's API as configured
-	// (config.hbbsApiUrl): BETTERDESK_API_URL, else HBBS_API_URL, else
+	// (config.hbbsApiUrl): NEODESK_API_URL, else HBBS_API_URL, else
 	// "http://127.0.0.1:21114/api". Its host is the client-facing host of
 	// last resort, and its scheme decides between http and https in the
 	// API address given to clients.
@@ -74,17 +74,17 @@ type Options struct {
 	IsDocker bool
 	// Getenv reads the process environment: PUBLIC_SERVER_ID,
 	// PUBLIC_RELAY_SERVER, PUBLIC_API_URL, PANEL_PUBLIC_HOST, DOCKER and
-	// BETTERDESK_DOCKER_LAYOUT. The Node console has the values of its
+	// NEODESK_DOCKER_LAYOUT. The Node console has the values of its
 	// ".env" file in its environment for variables that are not set, so
 	// Getenv should give those too. Nil means os.Getenv.
 	Getenv func(string) string
 
 	// SystemdUnit is the server's systemd unit. Default
-	// /etc/systemd/system/betterdesk-server.service.
+	// /etc/systemd/system/neodesk-server.service.
 	SystemdUnit string
 	// SystemdDropIn is the drop-in the privileged helper writes the
 	// connection mode to. Default
-	// /etc/systemd/system/betterdesk-server.service.d/50-betterdesk-connection.conf.
+	// /etc/systemd/system/neodesk-server.service.d/50-neodesk-connection.conf.
 	SystemdDropIn string
 	// ComposePath is the compose file whose "server" service carries the
 	// connection mode: docker-compose.yml in the folder above the console.
@@ -93,8 +93,8 @@ type Options struct {
 	// DockerEnvFile marks a container. Default /.dockerenv.
 	DockerEnvFile string
 	// ServerServiceName is the name of the server's system service
-	// (updateService.COMPONENTS.server.service): "BetterDeskServer" on
-	// Windows, else "betterdesk-server", which is the default.
+	// (updateService.COMPONENTS.server.service): "NeoDeskServer" on
+	// Windows, else "neodesk-server", which is the default.
 	ServerServiceName string
 
 	// CanUsePrivileged reports whether the privileged update helper can be
@@ -137,10 +137,10 @@ type Options struct {
 
 // Paths of the systemd files on a Linux install.
 const (
-	DefaultSystemdUnit   = "/etc/systemd/system/betterdesk-server.service"
-	DefaultSystemdDropIn = "/etc/systemd/system/betterdesk-server.service.d/50-betterdesk-connection.conf"
+	DefaultSystemdUnit   = "/etc/systemd/system/neodesk-server.service"
+	DefaultSystemdDropIn = "/etc/systemd/system/neodesk-server.service.d/50-neodesk-connection.conf"
 	defaultDockerEnvFile = "/.dockerenv"
-	defaultServerService = "betterdesk-server"
+	defaultServerService = "neodesk-server"
 )
 
 // Service gives the answers of this package for one console. It is safe

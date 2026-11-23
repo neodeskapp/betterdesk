@@ -50,7 +50,7 @@
  {
   "vector": 13,
   "bug": "FL7",
-  "request": "GET /api/bd/api/panel/resource-control/devices",
+  "request": "GET /api/nd/api/panel/resource-control/devices",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"devices\":[],\"total\":0}",
@@ -66,7 +66,7 @@
  {
   "vector": 14,
   "bug": "FL7",
-  "request": "GET /api/bd/api/panel/resource-control/devices",
+  "request": "GET /api/nd/api/panel/resource-control/devices",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"devices\":[],\"total\":0}",
@@ -82,7 +82,7 @@
  {
   "vector": 15,
   "bug": "FL7",
-  "request": "GET /api/bd/api/panel/resource-control/devices",
+  "request": "GET /api/nd/api/panel/resource-control/devices",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"devices\":[],\"total\":0}",
@@ -584,7 +584,7 @@
  {
   "vector": 551,
   "bug": "FL6",
-  "request": "PUT /api/bd/api/panel/resource-control/org-policy",
+  "request": "PUT /api/nd/api/panel/resource-control/org-policy",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"ok\":true,\"usb\":{\"mode\":\"block\"}}",

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // getSetting reads a row of the settings table (dbAdapter getSetting). ok

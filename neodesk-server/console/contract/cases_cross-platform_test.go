@@ -2,7 +2,7 @@
 
 package contract_test
 
-import "github.com/unitronix/betterdesk-server/console/contract"
+import "github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 
 // The cross-platform page: the seeded devices counted by platform,
 // architecture and client version, the codecs and features of the devices

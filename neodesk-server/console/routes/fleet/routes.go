@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/goapipath"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 type handlers struct {
@@ -61,8 +61,8 @@ func Register(d *kit.Deps) {
 
 	// Agents report back with their device token; the body goes on as it came
 	device := []kit.Middleware{d.RequireDeviceToken, d.RequireTokenDeviceMatch}
-	r.Post("/api/bd/fleet/task-result", h.passBody("POST", "/fleet/task-result"), device...)
-	r.Post("/api/bd/fleet/software", h.passBody("POST", "/fleet/software"), device...)
+	r.Post("/api/nd/fleet/task-result", h.passBody("POST", "/fleet/task-result"), device...)
+	r.Post("/api/nd/fleet/software", h.passBody("POST", "/fleet/software"), device...)
 }
 
 type availability struct {

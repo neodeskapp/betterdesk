@@ -1,6 +1,6 @@
 <!--
   "Scan agent QR" (enrollment.approve), opened from "Pair with code": read the QR code the
-  BetterDesk support agent shows, with the camera or from a picture, then
+  NeoDesk support agent shows, with the camera or from a picture, then
   name the device, pick a folder and activate it. A centred dialog: Cancel,
   and Activate once a code has been read.
 

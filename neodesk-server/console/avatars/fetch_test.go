@@ -209,7 +209,7 @@ func TestFetchFromALANAddress(t *testing.T) {
 	// What the request carries: the two headers of the old console, a new
 	// connection, no compression asked for
 	h := s.headers[0]
-	if h.Get("Accept") != "image/png,image/jpeg,image/webp,image/gif;q=0.9" || h.Get("User-Agent") != "BetterDesk-Console/avatar" {
+	if h.Get("Accept") != "image/png,image/jpeg,image/webp,image/gif;q=0.9" || h.Get("User-Agent") != "NeoDesk-Console/avatar" {
 		t.Errorf("request headers: %v", h)
 	}
 	if h.Get("Accept-Encoding") != "" || h.Get("Connection") != "close" {

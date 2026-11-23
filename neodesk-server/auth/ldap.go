@@ -1,9 +1,9 @@
-// Package auth — LDAP authentication provider for BetterDesk server.
+// Package auth — LDAP authentication provider for NeoDesk server.
 //
 // Supports LDAP and Active Directory with:
 //   - Bind + search authentication (service account binds, searches for user, then binds as user)
 //   - Direct bind (user DN template, no service account needed)
-//   - Group → role mapping (configurable AD/LDAP group → BetterDesk role)
+//   - Group → role mapping (configurable AD/LDAP group → NeoDesk role)
 //   - StartTLS and LDAPS
 //   - Connection pooling with health checks
 //   - Auto-provisioning of local user accounts on first LDAP login
@@ -334,7 +334,7 @@ func (p *LDAPProvider) fetchUserAttributes(conn *ldapv3.Conn, cfg *LDAPConfig, d
 	}
 }
 
-// resolveGroups maps LDAP groups to a BetterDesk role using the group_role_map.
+// resolveGroups maps LDAP groups to a NeoDesk role using the group_role_map.
 // If no group mapping matches, the default role is used.
 // If group_filter is set and groups are empty, performs a group search.
 func (p *LDAPProvider) resolveGroups(conn *ldapv3.Conn, cfg *LDAPConfig, result *LDAPResult) {

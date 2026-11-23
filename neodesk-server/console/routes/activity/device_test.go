@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // refusedSteps are the steps of the device recordings that a bug fix of
@@ -16,18 +16,18 @@ import (
 // ID mismatch"}, with the bug. The names are the same in both recordings.
 var refusedSteps = map[string]string{
 	// A device_id that cannot be text names no device.
-	"46 POST /api/bd/activity":                           "DV3",
-	"47 POST /api/bd/activity":                           "DV3",
-	"54 POST /api/bd/activity?device_id%5BtoString%5D=x": "DV3",
+	"46 POST /api/nd/activity":                           "DV3",
+	"47 POST /api/nd/activity":                           "DV3",
+	"54 POST /api/nd/activity?device_id%5BtoString%5D=x": "DV3",
 	// Only text names a device: a number, true or false, a list in the body
 	// or in the query is refused, where Node compared the text String()
 	// made of it.
-	"35 POST /api/bd/activity":                          "DV4",
-	"36 POST /api/bd/activity":                          "DV4",
-	"40 POST /api/bd/activity":                          "DV4",
-	"41 POST /api/bd/activity":                          "DV4",
-	"48 POST /api/bd/activity":                          "DV4",
-	"53 POST /api/bd/activity?device_id%5B%5D=device-a": "DV4",
+	"35 POST /api/nd/activity":                          "DV4",
+	"36 POST /api/nd/activity":                          "DV4",
+	"40 POST /api/nd/activity":                          "DV4",
+	"41 POST /api/nd/activity":                          "DV4",
+	"48 POST /api/nd/activity":                          "DV4",
+	"53 POST /api/nd/activity?device_id%5B%5D=device-a": "DV4",
 }
 
 // storedSteps are the reports of the device recordings that Node refused
@@ -39,30 +39,30 @@ var storedSteps = map[string][2]string{
 	// in the query or in X-Device-Id, or nowhere, is stored.
 	"26 POST /api/activity/activity":              {"AI17", "AI17"},
 	"30 POST /api/activity/activity":              {"AI17", "AI17"},
-	"32 POST /api/bd/activity":                    {"AI17", "AI17"},
-	"33 POST /api/bd/activity":                    {"AI17", "AI17"},
-	"34 POST /api/bd/activity":                    {"AI17", "AI17"},
-	"51 POST /api/bd/activity?device_id=device-a": {"AI17", "AI17"},
-	"57 POST /api/bd/activity":                    {"AI17", "AI17"},
-	"59 POST /api/bd/activity":                    {"AI17", "AI17"},
+	"32 POST /api/nd/activity":                    {"AI17", "AI17"},
+	"33 POST /api/nd/activity":                    {"AI17", "AI17"},
+	"34 POST /api/nd/activity":                    {"AI17", "AI17"},
+	"51 POST /api/nd/activity?device_id=device-a": {"AI17", "AI17"},
+	"57 POST /api/nd/activity":                    {"AI17", "AI17"},
+	"59 POST /api/nd/activity":                    {"AI17", "AI17"},
 	// A session that is null is skipped; a duration that is no number
 	// counts 0, also in a session that is not stored; the log line counts
 	// the stored sessions.
-	"75 POST /api/bd/activity": {"AI16", "AI16"},
-	"76 POST /api/bd/activity": {"AI16", "AI16"},
-	"79 POST /api/bd/activity": {"AI16", "AI16"},
-	"80 POST /api/bd/activity": {"AI16", "AI16"},
-	"82 POST /api/bd/activity": {"AI16", "AI16"},
-	"83 POST /api/bd/activity": {"AI16", "AI16"},
+	"75 POST /api/nd/activity": {"AI16", "AI16"},
+	"76 POST /api/nd/activity": {"AI16", "AI16"},
+	"79 POST /api/nd/activity": {"AI16", "AI16"},
+	"80 POST /api/nd/activity": {"AI16", "AI16"},
+	"82 POST /api/nd/activity": {"AI16", "AI16"},
+	"83 POST /api/nd/activity": {"AI16", "AI16"},
 	// PostgreSQL took the total "0 7 30" for no number
-	"207 POST /api/bd/activity": {"", "AI16"},
+	"207 POST /api/nd/activity": {"", "AI16"},
 }
 
 // invalidReports are the steps of the device recordings whose body is no
 // JSON object, which the route refuses as no report since it takes the
 // device from the token (BUGS AI17), where Node asked for the body's
 // device_id.
-var invalidReports = map[string]string{"257 POST /api/bd/activity": "AI17"}
+var invalidReports = map[string]string{"257 POST /api/nd/activity": "AI17"}
 
 // TestNodeDeviceAnswers replays what the Node console's device route
 // answered with its real database adapter, device guards and alert rules
@@ -178,9 +178,9 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 			status           int
 			answer           string
 		}{
-			{"at /api/bd without a session", "", "/api/bd/activity", 200, stored},
+			{"at /api/nd without a session", "", "/api/nd/activity", 200, stored},
 			{"at /api/activity without a session", "", "/api/activity/activity", 200, stored},
-			{"at /api/bd with a session", "operator", "/api/bd/activity", 403, refused},
+			{"at /api/nd with a session", "operator", "/api/nd/activity", 403, refused},
 			{"at /api/activity with a session", "admin", "/api/activity/activity", 403, refused},
 		} {
 			got := w.Do(replay.Request{Role: c.role, Method: "POST", Path: c.path, Body: report, Headers: deviceA, NoCSRF: true})
@@ -196,8 +196,8 @@ func TestTheCSRFGateAtEachMount(t *testing.T) {
 			if passes && (got.Status != 200 || got.Body != stored) || !passes && (got.Status != 403 || got.Body != guarded) {
 				t.Errorf("POST /api/activity/activity as %q with the CSRF token: %d %s, the guard lets it pass: %v", role, got.Status, got.Body, passes)
 			}
-			if got := w.Do(replay.Request{Role: role, Method: "POST", Path: "/api/bd/activity", Body: report, Headers: deviceA}); got.Status != 200 || got.Body != stored {
-				t.Errorf("POST /api/bd/activity as %q with the CSRF token: %d %s", role, got.Status, got.Body)
+			if got := w.Do(replay.Request{Role: role, Method: "POST", Path: "/api/nd/activity", Body: report, Headers: deviceA}); got.Status != 200 || got.Body != stored {
+				t.Errorf("POST /api/nd/activity as %q with the CSRF token: %d %s", role, got.Status, got.Body)
 			}
 		}
 	})
@@ -217,7 +217,7 @@ func TestDeviceRouteFailures(t *testing.T) {
 		// the second session's app no value SQLite takes
 		bad := `{"started_at":"2011-03-04T09:02:00.000Z","ended_at":"2011-03-04T09:02:30.000Z","duration_secs":"half","app_name":true}`
 		body := `{"device_id":"device-a","sessions":[` + session("01", "30") + `,` + bad + `],"timestamp":"2011-03-04T10:00:00.000Z"}`
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/activity", Body: replay.Text(body), Headers: deviceA}); got.Status != 500 || got.Body != failed {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/nd/activity", Body: replay.Text(body), Headers: deviceA}); got.Status != 500 || got.Body != failed {
 			t.Errorf("a report with a session the database refuses: %d %s, want 500 %s", got.Status, got.Body, failed)
 		}
 		if got := w.Rows("SELECT COUNT(*) AS n FROM activity_sessions", nil) + w.Rows("SELECT COUNT(*) AS n FROM activity_summaries", nil); got != `[{"n":0}][{"n":0}]` {
@@ -225,7 +225,7 @@ func TestDeviceRouteFailures(t *testing.T) {
 		}
 		w.Exec("DROP TABLE activity_summaries", nil)
 		body = `{"device_id":"device-a","sessions":[` + session("03", "30") + `],"timestamp":"2011-03-04T10:00:00.000Z"}`
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/activity", Body: replay.Text(body), Headers: deviceA}); got.Status != 500 || got.Body != failed {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/nd/activity", Body: replay.Text(body), Headers: deviceA}); got.Status != 500 || got.Body != failed {
 			t.Errorf("a report without the summary table: %d %s, want 500 %s", got.Status, got.Body, failed)
 		}
 		// The sessions were stored before the summary failed
@@ -266,7 +266,7 @@ func TestTheSummaryCountsWhatIsStored(t *testing.T) {
 		} {
 			w.Exec("DELETE FROM activity_summaries", nil)
 			body := `{"device_id":"device-a","sessions":` + c.sessions + `,"idle_seconds":5,"timestamp":"2011-03-04T10:00:00.000Z"}`
-			if got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/activity", Body: replay.Text(body), Headers: deviceA}); got.Status != 200 || got.Body != `{"success":true}` {
+			if got := w.Do(replay.Request{Method: "POST", Path: "/api/nd/activity", Body: replay.Text(body), Headers: deviceA}); got.Status != 200 || got.Body != `{"success":true}` {
 				t.Errorf("%s: %d %s, want it stored", c.name, got.Status, got.Body)
 			}
 			want := fmt.Sprintf(`[{"session_count":%d,"total_active_secs":%d}]`, c.count, c.total)
@@ -294,11 +294,11 @@ func TestTheReportTakesTheTokensDevice(t *testing.T) {
 			name, path, timestamp, deviceID string
 			headers                         map[string]string
 		}{
-			{"only in the query", "/api/bd/activity?device_id=device-a", "2011-03-04T10:01:00.000Z", "", deviceA},
-			{"only in X-Device-Id", "/api/bd/activity", "2011-03-04T10:02:00.000Z", "", map[string]string{"Authorization": "Bearer tok-device-a", "X-Device-Id": "device-a"}},
+			{"only in the query", "/api/nd/activity?device_id=device-a", "2011-03-04T10:01:00.000Z", "", deviceA},
+			{"only in X-Device-Id", "/api/nd/activity", "2011-03-04T10:02:00.000Z", "", map[string]string{"Authorization": "Bearer tok-device-a", "X-Device-Id": "device-a"}},
 			{"nowhere", "/api/activity/activity", "2011-03-04T10:03:00.000Z", "", deviceA},
-			{"as empty text", "/api/bd/activity", "2011-03-04T10:04:00.000Z", `"device_id":"",`, deviceA},
-			{"as null", "/api/bd/activity", "2011-03-04T10:05:00.000Z", `"device_id":null,`, deviceA},
+			{"as empty text", "/api/nd/activity", "2011-03-04T10:04:00.000Z", `"device_id":"",`, deviceA},
+			{"as null", "/api/nd/activity", "2011-03-04T10:05:00.000Z", `"device_id":null,`, deviceA},
 		} {
 			got := w.Do(replay.Request{Method: "POST", Path: c.path, Body: report(c.deviceID, c.timestamp), Headers: c.headers})
 			if got.Status != 200 || got.Body != `{"success":true}` {
@@ -306,7 +306,7 @@ func TestTheReportTakesTheTokensDevice(t *testing.T) {
 			}
 		}
 		for _, deviceID := range []string{`"device_id":["device-a"],`, `"device_id":5,`, `"device_id":"device-b",`, `"device_id":{"toString":1},`} {
-			got := w.Do(replay.Request{Method: "POST", Path: "/api/bd/activity", Body: report(deviceID, "2011-03-04T11:00:00.000Z"), Headers: deviceA})
+			got := w.Do(replay.Request{Method: "POST", Path: "/api/nd/activity", Body: report(deviceID, "2011-03-04T11:00:00.000Z"), Headers: deviceA})
 			if got.Status != 403 || got.Body != `{"error":"Device ID mismatch"}` {
 				t.Errorf("a report with %s: %d %s, want the guard's 403", deviceID, got.Status, got.Body)
 			}

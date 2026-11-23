@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // multipartPaths are the API routes that take a file as
@@ -182,9 +182,9 @@ func sandboxed(w http.ResponseWriter, _ string, _ fs.FileInfo) {
 // file server: the server makes file names of it as of a folder on disk,
 // and staticTree turns them back.
 func staticRoot(dir string) string {
-	root, err := filepath.Abs(filepath.FromSlash("/betterdesk-static/" + dir))
+	root, err := filepath.Abs(filepath.FromSlash("/neodesk-static/" + dir))
 	if err != nil {
-		return filepath.FromSlash("/betterdesk-static/" + dir)
+		return filepath.FromSlash("/neodesk-static/" + dir)
 	}
 	return root
 }

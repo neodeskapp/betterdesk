@@ -29,10 +29,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // The recording listen/testdata/node_listeners.json holds what the Node
@@ -720,7 +720,7 @@ var knownClientAPI = map[string]func(t *testing.T, got []reply, closed bool) str
 // JSON as in local mode, where Node's port read none and refused every
 // registration (BUGS I1), so they answer as Node's port did in local mode.
 var proxyRegistration = []string{
-	"size 1025 POST /api/bd/register-request", "registration request", "registration request again", "registration status",
+	"size 1025 POST /api/nd/register-request", "registration request", "registration request again", "registration status",
 	"registration request malformed", "registration request ip from x-real-ip", "registration status 2",
 }
 
@@ -838,7 +838,7 @@ func TestClientAPIProxyModeTakesRegistrations(t *testing.T) {
 	}
 	post := func(body string) (int, string) {
 		t.Helper()
-		res, err := http.Post("http://"+g.ports["api"]+"/api/bd/register-request", "application/json", strings.NewReader(body))
+		res, err := http.Post("http://"+g.ports["api"]+"/api/nd/register-request", "application/json", strings.NewReader(body))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -880,15 +880,15 @@ func TestClientAPILocalModeAgainstNode(t *testing.T) {
 }
 
 // TestClientAPILive replays the recording's proxy mode against the client
-// API port of a running test instance (BD_CLIENT_API_ADDR; an instance
+// API port of a running test instance (ND_CLIENT_API_ADDR; an instance
 // started with STACK_CLIENT_API=1 TRUST_PROXY=true): every request goes,
 // and the answers the port decides itself are compared, with those of the
 // registration routes. Answers of the real API server are not the recording's echo and are
 // left out.
 func TestClientAPILive(t *testing.T) {
-	addr := os.Getenv("BD_CLIENT_API_ADDR")
+	addr := os.Getenv("ND_CLIENT_API_ADDR")
 	if addr == "" {
-		t.Skip("BD_CLIENT_API_ADDR is not set")
+		t.Skip("ND_CLIENT_API_ADDR is not set")
 	}
 	scenario := oracleScenarioNamed(t, "proxy")
 	known := knownProxyMode(t)

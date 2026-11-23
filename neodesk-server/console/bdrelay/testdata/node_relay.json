@@ -8,7 +8,7 @@
     {
      "step": {
       "open": "a",
-      "path": "/ws/bd-signal"
+      "path": "/ws/nd-signal"
      },
      "events": [
       {
@@ -29,7 +29,7 @@
     {
      "step": {
       "open": "b",
-      "path": "/ws/bd-signal?device_id=dev1"
+      "path": "/ws/nd-signal?device_id=dev1"
      },
      "events": [
       {
@@ -50,7 +50,7 @@
     {
      "step": {
       "open": "c",
-      "path": "/ws/bd-signal?device_id=&token=x"
+      "path": "/ws/nd-signal?device_id=&token=x"
      },
      "events": [
       {
@@ -71,7 +71,7 @@
     {
      "step": {
       "open": "d",
-      "path": "/ws/bd-signal?device_id=dev1&token="
+      "path": "/ws/nd-signal?device_id=dev1&token="
      },
      "events": [
       {
@@ -92,7 +92,7 @@
     {
      "step": {
       "open": "e",
-      "path": "/ws/bd-signal?device_id=ab&token=tok-ab-good"
+      "path": "/ws/nd-signal?device_id=ab&token=tok-ab-good"
      },
      "events": [
       {
@@ -113,7 +113,7 @@
     {
      "step": {
       "open": "f",
-      "path": "/ws/bd-signal?device_id=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&token=x"
+      "path": "/ws/nd-signal?device_id=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&token=x"
      },
      "events": [
       {
@@ -134,7 +134,7 @@
     {
      "step": {
       "open": "g",
-      "path": "/ws/bd-signal?device_id=a+b1&token=tok-a%20b1-good"
+      "path": "/ws/nd-signal?device_id=a+b1&token=tok-a%20b1-good"
      },
      "events": [
       {
@@ -155,7 +155,7 @@
     {
      "step": {
       "open": "h",
-      "path": "/ws/bd-signal?device_id=%64ev1&token=tok-dev1-good"
+      "path": "/ws/nd-signal?device_id=%64ev1&token=tok-dev1-good"
      },
      "events": [
       {
@@ -171,7 +171,7 @@
     {
      "step": {
       "open": "i",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev2-good"
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-dev2-good"
      },
      "events": [
       {
@@ -192,7 +192,7 @@
     {
      "step": {
       "open": "j",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-throw"
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-throw"
      },
      "events": [
       {
@@ -213,7 +213,7 @@
     {
      "step": {
       "open": "k",
-      "path": "/ws/bd-signal?device_id=dev1&device_id=dev2&token=tok-dev1-good"
+      "path": "/ws/nd-signal?device_id=dev1&device_id=dev2&token=tok-dev1-good"
      },
      "events": [
       {
@@ -238,7 +238,7 @@
     {
      "step": {
       "open": "l",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good",
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-dev1-good",
       "headers": {
        "Origin": "https://evil.example"
       }
@@ -257,9 +257,9 @@
     {
      "step": {
       "open": "m",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good",
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-dev1-good",
       "headers": {
-       "Cookie": "bd.sid=x"
+       "Cookie": "nd.sid=x"
       }
      },
      "events": [
@@ -276,7 +276,7 @@
     {
      "step": {
       "open": "n",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good",
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-dev1-good",
       "headers": {
        "Origin": "http://console.test"
       }
@@ -319,7 +319,7 @@
     {
      "step": {
       "open": "a",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-dev1-good"
      },
      "events": [
       {
@@ -489,7 +489,7 @@
     {
      "step": {
       "open": "a",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-dev1-good"
      },
      "events": [
       {
@@ -505,7 +505,7 @@
     {
      "step": {
       "open": "b",
-      "path": "/ws/bd-signal?device_id=dev2&token=tok-dev2-good"
+      "path": "/ws/nd-signal?device_id=dev2&token=tok-dev2-good"
      },
      "events": [
       {
@@ -521,7 +521,7 @@
     {
      "step": {
       "open": "c",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-dev1-good"
      },
      "events": [
       {
@@ -582,7 +582,7 @@
     {
      "step": {
       "open": "d",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-dev1-good"
      },
      "events": [
       {
@@ -624,7 +624,7 @@
     {
      "step": {
       "open": "a",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-dev1-good"
      },
      "events": [
       {
@@ -664,7 +664,7 @@
     {
      "step": {
       "open": "b",
-      "path": "/ws/bd-signal?device_id=dev2&token=tok-dev2-good"
+      "path": "/ws/nd-signal?device_id=dev2&token=tok-dev2-good"
      },
      "events": [
       {
@@ -703,7 +703,7 @@
     {
      "step": {
       "open": "s1",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good",
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-dev1-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.1"
       }
@@ -722,7 +722,7 @@
     {
      "step": {
       "open": "s2",
-      "path": "/ws/bd-signal?device_id=dev2&token=tok-dev2-good",
+      "path": "/ws/nd-signal?device_id=dev2&token=tok-dev2-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.1"
       }
@@ -741,7 +741,7 @@
     {
      "step": {
       "open": "s3",
-      "path": "/ws/bd-signal?device_id=dev3&token=tok-dev3-good",
+      "path": "/ws/nd-signal?device_id=dev3&token=tok-dev3-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.1"
       }
@@ -760,7 +760,7 @@
     {
      "step": {
       "open": "s4",
-      "path": "/ws/bd-signal?device_id=dev4&token=tok-dev4-good",
+      "path": "/ws/nd-signal?device_id=dev4&token=tok-dev4-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.1"
       }
@@ -779,7 +779,7 @@
     {
      "step": {
       "open": "s5",
-      "path": "/ws/bd-signal?device_id=dev5&token=tok-dev5-good",
+      "path": "/ws/nd-signal?device_id=dev5&token=tok-dev5-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.1"
       }
@@ -798,7 +798,7 @@
     {
      "step": {
       "open": "s6",
-      "path": "/ws/bd-signal?device_id=dev6&token=tok-dev6-good",
+      "path": "/ws/nd-signal?device_id=dev6&token=tok-dev6-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.1"
       }
@@ -817,7 +817,7 @@
     {
      "step": {
       "open": "s7",
-      "path": "/ws/bd-signal?device_id=dev7&token=tok-dev7-good",
+      "path": "/ws/nd-signal?device_id=dev7&token=tok-dev7-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.1"
       }
@@ -836,7 +836,7 @@
     {
      "step": {
       "open": "s8",
-      "path": "/ws/bd-signal?device_id=dev8&token=tok-dev8-good",
+      "path": "/ws/nd-signal?device_id=dev8&token=tok-dev8-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.1"
       }
@@ -855,7 +855,7 @@
     {
      "step": {
       "open": "s9",
-      "path": "/ws/bd-signal?device_id=dev9&token=tok-dev9-good",
+      "path": "/ws/nd-signal?device_id=dev9&token=tok-dev9-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.1"
       }
@@ -874,7 +874,7 @@
     {
      "step": {
       "open": "s10",
-      "path": "/ws/bd-signal?device_id=dev10&token=tok-dev10-good",
+      "path": "/ws/nd-signal?device_id=dev10&token=tok-dev10-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.1"
       }
@@ -893,7 +893,7 @@
     {
      "step": {
       "open": "over",
-      "path": "/ws/bd-signal?device_id=dev11&token=tok-dev11-good",
+      "path": "/ws/nd-signal?device_id=dev11&token=tok-dev11-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.1"
       }
@@ -917,7 +917,7 @@
     {
      "step": {
       "open": "other",
-      "path": "/ws/bd-signal?device_id=dev12&token=tok-dev12-good",
+      "path": "/ws/nd-signal?device_id=dev12&token=tok-dev12-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.2"
       }
@@ -936,7 +936,7 @@
     {
      "step": {
       "open": "list",
-      "path": "/ws/bd-signal?device_id=dev13&token=tok-dev13-good",
+      "path": "/ws/nd-signal?device_id=dev13&token=tok-dev13-good",
       "headers": {
        "X-Forwarded-For": " 10.0.0.1 , 10.0.0.9"
       }
@@ -977,7 +977,7 @@
     {
      "step": {
       "open": "again",
-      "path": "/ws/bd-signal?device_id=dev14&token=tok-dev14-good",
+      "path": "/ws/nd-signal?device_id=dev14&token=tok-dev14-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.1"
       }
@@ -996,7 +996,7 @@
     {
      "step": {
       "open": "again2",
-      "path": "/ws/bd-signal?device_id=dev15&token=tok-dev15-good",
+      "path": "/ws/nd-signal?device_id=dev15&token=tok-dev15-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.1"
       }
@@ -1026,7 +1026,7 @@
     {
      "step": {
       "open": "s1",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good",
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-dev1-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.3"
       }
@@ -1045,7 +1045,7 @@
     {
      "step": {
       "open": "s2",
-      "path": "/ws/bd-signal?device_id=dev2&token=tok-dev2-good",
+      "path": "/ws/nd-signal?device_id=dev2&token=tok-dev2-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.3"
       }
@@ -1064,7 +1064,7 @@
     {
      "step": {
       "open": "s3",
-      "path": "/ws/bd-signal?device_id=dev3&token=tok-dev3-good",
+      "path": "/ws/nd-signal?device_id=dev3&token=tok-dev3-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.3"
       }
@@ -1083,7 +1083,7 @@
     {
      "step": {
       "open": "s4",
-      "path": "/ws/bd-signal?device_id=dev4&token=tok-dev4-good",
+      "path": "/ws/nd-signal?device_id=dev4&token=tok-dev4-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.3"
       }
@@ -1102,7 +1102,7 @@
     {
      "step": {
       "open": "s5",
-      "path": "/ws/bd-signal?device_id=dev5&token=tok-dev5-good",
+      "path": "/ws/nd-signal?device_id=dev5&token=tok-dev5-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.3"
       }
@@ -1121,7 +1121,7 @@
     {
      "step": {
       "open": "s6",
-      "path": "/ws/bd-signal?device_id=dev6&token=tok-dev6-good",
+      "path": "/ws/nd-signal?device_id=dev6&token=tok-dev6-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.3"
       }
@@ -1140,7 +1140,7 @@
     {
      "step": {
       "open": "s7",
-      "path": "/ws/bd-signal?device_id=dev7&token=tok-dev7-good",
+      "path": "/ws/nd-signal?device_id=dev7&token=tok-dev7-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.3"
       }
@@ -1159,7 +1159,7 @@
     {
      "step": {
       "open": "s8",
-      "path": "/ws/bd-signal?device_id=dev8&token=tok-dev8-good",
+      "path": "/ws/nd-signal?device_id=dev8&token=tok-dev8-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.3"
       }
@@ -1178,7 +1178,7 @@
     {
      "step": {
       "open": "s9",
-      "path": "/ws/bd-signal?device_id=dev9&token=tok-dev9-good",
+      "path": "/ws/nd-signal?device_id=dev9&token=tok-dev9-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.3"
       }
@@ -1197,7 +1197,7 @@
     {
      "step": {
       "open": "s10",
-      "path": "/ws/bd-signal?device_id=dev10&token=tok-dev10-good",
+      "path": "/ws/nd-signal?device_id=dev10&token=tok-dev10-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.3"
       }
@@ -1233,7 +1233,7 @@
     {
      "step": {
       "open": "x1",
-      "path": "/ws/bd-signal?device_id=dev21&token=tok-dev21-good",
+      "path": "/ws/nd-signal?device_id=dev21&token=tok-dev21-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.3"
       }
@@ -1252,7 +1252,7 @@
     {
      "step": {
       "open": "x2",
-      "path": "/ws/bd-signal?device_id=dev22&token=tok-dev22-good",
+      "path": "/ws/nd-signal?device_id=dev22&token=tok-dev22-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.3"
       }
@@ -1271,7 +1271,7 @@
     {
      "step": {
       "open": "x3",
-      "path": "/ws/bd-signal?device_id=dev23&token=tok-dev23-good",
+      "path": "/ws/nd-signal?device_id=dev23&token=tok-dev23-good",
       "headers": {
        "X-Forwarded-For": "10.0.0.3"
       }
@@ -1301,7 +1301,7 @@
     {
      "step": {
       "open": "a",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-dev1-good"
      },
      "events": [
       {
@@ -1945,7 +1945,7 @@
     {
      "step": {
       "open": "tsig",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-dev1-good"
      },
      "events": [
       {
@@ -2055,7 +2055,7 @@
     {
      "step": {
       "open": "init",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -2074,7 +2074,7 @@
     {
      "step": {
       "open": "tgt",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.targetToken}&role=target"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.targetToken}&role=target"
      },
      "events": [
       {
@@ -2151,7 +2151,7 @@
     {
      "step": {
       "open": "again",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -2230,7 +2230,7 @@
     {
      "step": {
       "open": "a",
-      "path": "/ws/bd-relay"
+      "path": "/ws/nd-relay"
      },
      "events": [
       {
@@ -2251,7 +2251,7 @@
     {
      "step": {
       "open": "b",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token=x&role=viewer"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token=x&role=viewer"
      },
      "events": [
       {
@@ -2272,7 +2272,7 @@
     {
      "step": {
       "open": "c",
-      "path": "/ws/bd-relay?session=none&token=x&role=initiator"
+      "path": "/ws/nd-relay?session=none&token=x&role=initiator"
      },
      "events": [
       {
@@ -2293,7 +2293,7 @@
     {
      "step": {
       "open": "d",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token=0000000000000000000000000000000000000000000000000000000000000000&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token=0000000000000000000000000000000000000000000000000000000000000000&role=initiator"
      },
      "events": [
       {
@@ -2314,7 +2314,7 @@
     {
      "step": {
       "open": "e",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=target"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=target"
      },
      "events": [
       {
@@ -2335,7 +2335,7 @@
     {
      "step": {
       "open": "f",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator",
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator",
       "headers": {
        "Origin": "https://evil.example"
       }
@@ -2354,7 +2354,7 @@
     {
      "step": {
       "open": "g",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -2366,7 +2366,7 @@
     {
      "step": {
       "open": "h",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -2415,7 +2415,7 @@
     {
      "step": {
       "open": "late",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -2462,7 +2462,7 @@
     {
      "step": {
       "open": "wait",
-      "path": "/ws/bd-relay?session={s2.sessionId}&token={s2.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s2.sessionId}&token={s2.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -2522,7 +2522,7 @@
     {
      "step": {
       "open": "i3",
-      "path": "/ws/bd-relay?session={s3.sessionId}&token={s3.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s3.sessionId}&token={s3.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -2534,7 +2534,7 @@
     {
      "step": {
       "open": "t3",
-      "path": "/ws/bd-relay?session={s3.sessionId}&token={s3.targetToken}&role=target"
+      "path": "/ws/nd-relay?session={s3.sessionId}&token={s3.targetToken}&role=target"
      },
      "events": [
       {
@@ -2672,7 +2672,7 @@
     {
      "step": {
       "open": "i2",
-      "path": "/ws/bd-relay?session={s2.sessionId}&token={s2.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s2.sessionId}&token={s2.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -2765,7 +2765,7 @@
     {
      "step": {
       "open": "tsig",
-      "path": "/ws/bd-signal?device_id=dev1&token=tok-dev1-good"
+      "path": "/ws/nd-signal?device_id=dev1&token=tok-dev1-good"
      },
      "events": [
       {
@@ -2781,7 +2781,7 @@
     {
      "step": {
       "open": "other",
-      "path": "/ws/bd-signal?device_id=dev3&token=tok-dev3-good"
+      "path": "/ws/nd-signal?device_id=dev3&token=tok-dev3-good"
      },
      "events": [
       {
@@ -2813,7 +2813,7 @@
     {
      "step": {
       "open": "init",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -2882,7 +2882,7 @@
     {
      "step": {
       "open": "i2",
-      "path": "/ws/bd-relay?session={s2.sessionId}&token={s2.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s2.sessionId}&token={s2.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -2894,7 +2894,7 @@
     {
      "step": {
       "open": "t2",
-      "path": "/ws/bd-relay?session={s2.sessionId}&token={s2.targetToken}&role=target"
+      "path": "/ws/nd-relay?session={s2.sessionId}&token={s2.targetToken}&role=target"
      },
      "events": [
       {
@@ -2986,7 +2986,7 @@
     {
      "step": {
       "open": "short",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token=x&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token=x&role=initiator"
      },
      "events": [
       {
@@ -3007,7 +3007,7 @@
     {
      "step": {
       "open": "plus",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token=+&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token=+&role=initiator"
      },
      "events": [
       {
@@ -3028,7 +3028,7 @@
     {
      "step": {
       "open": "one-less",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token=000000000000000000000000000000000000000000000000000000000000000&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token=000000000000000000000000000000000000000000000000000000000000000&role=initiator"
      },
      "events": [
       {
@@ -3049,7 +3049,7 @@
     {
      "step": {
       "open": "one-more",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}0&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.initiatorToken}0&role=initiator"
      },
      "events": [
       {
@@ -3070,7 +3070,7 @@
     {
      "step": {
       "open": "twice",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}{s1.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.initiatorToken}{s1.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -3091,7 +3091,7 @@
     {
      "step": {
       "open": "other-role",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.targetToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.targetToken}&role=initiator"
      },
      "events": [
       {
@@ -3112,7 +3112,7 @@
     {
      "step": {
       "open": "bytes",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token=%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9&role=target"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token=%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9%C3%A9&role=target"
      },
      "events": [
       {
@@ -3133,7 +3133,7 @@
     {
      "step": {
       "open": "broken",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token=%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF&role=target"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token=%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF%FF&role=target"
      },
      "events": [
       {
@@ -3154,7 +3154,7 @@
     {
      "step": {
       "open": "empty",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token=&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token=&role=initiator"
      },
      "events": [
       {
@@ -3175,7 +3175,7 @@
     {
      "step": {
       "open": "long",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token=\u0001RUN:4000:a\u0001&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token=\u0001RUN:4000:a\u0001&role=initiator"
      },
      "events": [
       {
@@ -3212,7 +3212,7 @@
     {
      "step": {
       "open": "init",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -3224,7 +3224,7 @@
     {
      "step": {
       "open": "tgt",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.targetToken}&role=target"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.targetToken}&role=target"
      },
      "events": [
       {
@@ -3284,7 +3284,7 @@
     {
      "step": {
       "open": "a",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -3321,7 +3321,7 @@
     {
      "step": {
       "open": "b",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -3333,7 +3333,7 @@
     {
      "step": {
       "open": "c",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.targetToken}&role=target"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.targetToken}&role=target"
      },
      "events": [
       {
@@ -3387,7 +3387,7 @@
     {
      "step": {
       "open": "init",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.initiatorToken}&role=initiator"
      },
      "events": [
       {
@@ -3399,7 +3399,7 @@
     {
      "step": {
       "open": "tgt",
-      "path": "/ws/bd-relay?session={s1.sessionId}&token={s1.targetToken}&role=target"
+      "path": "/ws/nd-relay?session={s1.sessionId}&token={s1.targetToken}&role=target"
      },
      "events": [
       {

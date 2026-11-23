@@ -8,7 +8,7 @@ purpose, its step goes into `policyFixes` or `deviceFixes` in
 
 | File | What it holds | Replayed by |
 |---|---|---|
-| `node_sqlite.json`, `node_postgres.json` | the policy and event routes of `routes/dataguard.routes.js` at `/api/dataguard` and `/api/bd` | `TestNodeAnswers` (`replay_test.go`) |
+| `node_sqlite.json`, `node_postgres.json` | the policy and event routes of `routes/dataguard.routes.js` at `/api/dataguard` and `/api/nd` | `TestNodeAnswers` (`replay_test.go`) |
 | `node_device_sqlite.json`, `node_device_postgres.json` | the two device routes, `GET dlp-policies` and `POST dlp-events`, at both mounts | `TestNodeDeviceAnswers` (`replay_test.go`) |
 
 ## What is recorded

@@ -2,7 +2,7 @@
  "id": "ws-bd-signal/no-token",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-signal?device_id=900100001",
+  "path": "/ws/nd-signal?device_id=900100001",
   "notes": [
    "websocket b, own origin",
    "websocket wait for the close"

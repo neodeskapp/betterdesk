@@ -7,8 +7,8 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // fromFiles is fixtureOptions with the four built-in files taken from
@@ -76,7 +76,7 @@ func TestBuiltinPathWinsOverFiles(t *testing.T) {
 		"config/theme-palettes.json": {Data: []byte(`{"dark":{"bgPrimary":"#010101"},"light":{}}`)},
 		"public/favicon.svg":         {Data: []byte(`<svg id="files"/>`)},
 		"config/supporters.json":     {Data: []byte(`{"honorary":[{"name":"From files"}]}`)},
-		"themes/only.json":           {Data: []byte(`{"type":"betterdesk-theme","displayName":"Only in files","branding":{"appName":"x"}}`)},
+		"themes/only.json":           {Data: []byte(`{"type":"neodesk-theme","displayName":"Only in files","branding":{"appName":"x"}}`)},
 	}
 	opts := fixtureOptions(t.TempDir())
 	opts.Files = tree

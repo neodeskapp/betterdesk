@@ -1,7 +1,7 @@
 /**
  * Enrollment requests (routes/registration.routes.js). Two queues share the
  * page:
- * - BetterDesk clients that found the server on the local network and ask
+ * - NeoDesk clients that found the server on the local network and ask
  *   for its settings: the console's own table (/api/registrations, numeric ids)
  * - RustDesk clients that asked to join while enrollment needed approval:
  *   the Go server's queue (/api/enrollment/*, device ids)

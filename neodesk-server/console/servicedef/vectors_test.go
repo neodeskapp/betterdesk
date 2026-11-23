@@ -151,8 +151,8 @@ func TestFlowVectors(t *testing.T) {
 		sc := flow.Script
 		s := New(Options{
 			Windows:        flow.Windows,
-			ServerService:  map[bool]string{true: "BetterDeskServer", false: "betterdesk-server"}[flow.Windows],
-			ConsoleService: map[bool]string{true: "BetterDeskConsole", false: "betterdesk-console"}[flow.Windows],
+			ServerService:  map[bool]string{true: "NeoDeskServer", false: "neodesk-server"}[flow.Windows],
+			ConsoleService: map[bool]string{true: "NeoDeskConsole", false: "neodesk-console"}[flow.Windows],
 			ConsoleEnvPath: "/opt/console/.env",
 			Shell: func(_ context.Context, command string) (string, error) {
 				log = append(log, logEntry{Shell: command})

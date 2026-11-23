@@ -2,7 +2,7 @@
  "id": "bd-api/session-without-token",
  "request": {
   "method": "GET",
-  "path": "/api/bd/session/{session}",
+  "path": "/api/nd/session/{session}",
   "notes": [
    "no CSRF token",
    "no cookies"

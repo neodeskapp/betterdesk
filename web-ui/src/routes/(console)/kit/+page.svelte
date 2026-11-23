@@ -264,7 +264,7 @@
 		openStacked: 'Open a dialog over the sheet',
 		sheetTitle: 'Add RDP/VNC target',
 		sheetSub:
-			'A computer without the BetterDesk client. People connect to it in the browser, through this server.',
+			'A computer without the NeoDesk client. People connect to it in the browser, through this server.',
 		displayName: 'Display name',
 		displayNameHint: 'How it appears in the device list.',
 		connection: 'Connection',
@@ -574,7 +574,7 @@
 		{
 			id: '900100017',
 			name: 'build-server',
-			type: 'BetterDesk',
+			type: 'NeoDesk',
 			os: 'Ubuntu 24.04',
 			seen: ago(11),
 			online: false,

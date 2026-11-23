@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/peer"
-	"github.com/unitronix/betterdesk-server/security"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/security"
 )
 
 const testAdminPassword = "test-admin-password"
@@ -69,7 +69,7 @@ func connectAdmin(t *testing.T, port int) net.Conn {
 	}
 	fmt.Fprintf(conn, "%s\r\n", testAdminPassword)
 	reader.ReadString('\n') // Authenticated.
-	reader.ReadString('\n') // BetterDesk Admin Console
+	reader.ReadString('\n') // NeoDesk Admin Console
 	reader.ReadString('\n') // Type 'help'...
 	reader.ReadString('\n') // blank line
 
@@ -109,7 +109,7 @@ func TestAdminStatusCommand(t *testing.T) {
 	conn := connectAdmin(t, port)
 
 	resp := sendCommand(conn, "status")
-	if !strings.Contains(resp, "BetterDesk") {
+	if !strings.Contains(resp, "NeoDesk") {
 		t.Errorf("status should contain server name, got: %s", resp)
 	}
 	if !strings.Contains(resp, "DB Peers") {

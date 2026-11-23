@@ -12,9 +12,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/managedconfig"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/managedconfig"
 )
 
 // exitDelay is how long an install, a repair or a restore waits after its
@@ -38,7 +38,7 @@ func Register(d *kit.Deps) {
 			getenv = func(string) string { return "" }
 		}
 		h.managed = managedconfig.New(managedconfig.Options{
-			ConsoleDir: d.Config.ConsoleDir, EnvFile: getenv("BETTERDESK_ENV_FILE"), Getenv: getenv,
+			ConsoleDir: d.Config.ConsoleDir, EnvFile: getenv("NEODESK_ENV_FILE"), Getenv: getenv,
 		})
 	} else {
 		h.managed = managedconfig.New(managedconfig.Options{})

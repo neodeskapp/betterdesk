@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The main process of a CI test instance (see up.sh): one BetterDesk
+# The main process of a CI test instance (see up.sh): one NeoDesk
 # install on fresh data, the Go server with its console on port 5000,
 # seeded with the demo data and one e2e account per role. It is set up as
 # the local test stack sets up its instances, because the contract suite's
@@ -24,19 +24,19 @@ apt-get install -y -qq --no-install-recommends sqlite3 curl ca-certificates >>"$
 
 export RUSTDESK_PATH=/opt/rustdesk DATA_DIR=/app/data
 export DB_PATH=/opt/rustdesk/db_v2.sqlite3 PUB_KEY_PATH=/opt/rustdesk/id_ed25519.pub API_KEY_PATH=/opt/rustdesk/.api_key
-export NODE_ENV=production DOCKER=true SERVER_BACKEND=betterdesk API_ENABLED=false
-export HBBS_API_URL=http://127.0.0.1:21121/api BETTERDESK_API_URL=http://127.0.0.1:21121/api
+export NODE_ENV=production DOCKER=true SERVER_BACKEND=neodesk API_ENABLED=false
+export HBBS_API_URL=http://127.0.0.1:21121/api NEODESK_API_URL=http://127.0.0.1:21121/api
 export ENCRYPTED_ONLY=1 SIGNAL_PORT=21116 SIGNAL_RATE_LIMIT_PER_IP=0 HOST=0.0.0.0 API_HOST=0.0.0.0
 export NTP_SERVERS=pool.ntp.org BILLING_MAX_CLOCK_SKEW_MS=2000 BILLING_REQUIRE_SYNCED_CLOCK=0 BILLING_TRUST_OS_NTP=Y
 export AGENT_BUILD_WORKER=off
 # No client release: the goldens of Add a computer expect none, and a
 # release of the client fork would otherwise reach the instance. GitHub
 # answers 404 for this tag, so the console says release_unavailable.
-export BETTERDESK_CLIENT_RELEASE_TAG=contract-no-release
+export NEODESK_CLIENT_RELEASE_TAG=contract-no-release
 # Test suites send everything from one address: no rate limit may stop them
 export RATE_LIMIT_MAX=1000000 PANEL_READ_RATE_LIMIT_MAX=1000000 WIDGET_RATE_LIMIT_MAX=1000000
 export LOGIN_RATE_LIMIT_MAX=1000000 UPLOAD_RATE_LIMIT_MAX=1000000 FILE_ACCESS_RATE_LIMIT_MAX=1000000
-export PANEL_PREFERENCE_RATE_LIMIT_MAX=1000000 RDCLIENT_PAGE_RATE_LIMIT_MAX=1000000 BD_REGISTER_RATE_LIMIT_MAX=1000000
+export PANEL_PREFERENCE_RATE_LIMIT_MAX=1000000 RDCLIENT_PAGE_RATE_LIMIT_MAX=1000000 ND_REGISTER_RATE_LIMIT_MAX=1000000
 export SESSION_MAX_PER_USER=1
 
 rand() { head -c 24 /dev/urandom | base64 | tr -d '/+=' | head -c 28; }
@@ -56,7 +56,7 @@ pids=()
 stop() { kill "${pids[@]}" 2>/dev/null || true; wait 2>/dev/null || true; exit 0; }
 trap stop TERM INT
 
-(cd /opt/rustdesk && CONSOLE_PORT=5000 exec /usr/local/bin/betterdesk-server -mode all -api-port 21121 -key-file /opt/rustdesk/id_ed25519) >"$LOGS/go.log" 2>&1 &
+(cd /opt/rustdesk && CONSOLE_PORT=5000 exec /usr/local/bin/neodesk-server -mode all -api-port 21121 -key-file /opt/rustdesk/id_ed25519) >"$LOGS/go.log" 2>&1 &
 pids+=($!)
 
 wait_http() {

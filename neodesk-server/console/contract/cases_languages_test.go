@@ -2,7 +2,7 @@
 
 package contract_test
 
-import "github.com/unitronix/betterdesk-server/console/contract"
+import "github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 
 // The language overview of the settings: every language file with its
 // coverage, the keys one lacks, and the switched-off automatic fix.

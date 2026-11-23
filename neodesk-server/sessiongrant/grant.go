@@ -16,7 +16,7 @@ import (
 
 const (
 	tokenVersion = "v1"
-	audience     = "betterdesk-support-agent"
+	audience     = "neodesk-support-agent"
 	maxTTL       = 10 * time.Minute
 )
 

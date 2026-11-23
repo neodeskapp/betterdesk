@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // FuzzNodeBase64: text in the standard alphabet, padded or not, reads as
@@ -43,7 +43,7 @@ func FuzzVerifyProof(f *testing.F) {
 	seed := ed25519.NewKeyFromSeed(make([]byte, ed25519.SeedSize))
 	public := base64.StdEncoding.EncodeToString(seed.Public().(ed25519.PublicKey))
 	now := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
-	payload := proofPayload("POST", "/api/bd/register", "DEV1", public, now, "n")
+	payload := proofPayload("POST", "/api/nd/register", "DEV1", public, now, "n")
 	good := base64.StdEncoding.EncodeToString(ed25519.Sign(seed, payload))
 	f.Add("DEV1", public, now, "n", good)
 	f.Add("DEV1", public, "yesterday", "n", good)
@@ -51,16 +51,16 @@ func FuzzVerifyProof(f *testing.F) {
 	f.Add("DEV1", "", "", "", "")
 	f.Fuzz(func(t *testing.T, device, key, timestamp, nonce, signature string) {
 		h := &handlers{nonces: newNonces(), now: time.Now}
-		r := httptest.NewRequest("POST", "/api/bd/register", nil)
-		r.Header.Set("X-BD-Enrollment-Timestamp", timestamp)
-		r.Header.Set("X-BD-Enrollment-Nonce", nonce)
-		r.Header.Set("X-BD-Enrollment-Signature", signature)
+		r := httptest.NewRequest("POST", "/api/nd/register", nil)
+		r.Header.Set("X-ND-Enrollment-Timestamp", timestamp)
+		r.Header.Set("X-ND-Enrollment-Nonce", nonce)
+		r.Header.Set("X-ND-Enrollment-Signature", signature)
 		if h.verifyProof(r, device, key) != "" {
 			return
 		}
 		canonical, _ := canonicalKey(key)
 		raw, _ := base64.StdEncoding.DecodeString(canonical)
-		p := proofPayload("POST", "/api/bd/register", device, canonical, trim(httpx.Latin1(timestamp)), trim(httpx.Latin1(nonce)))
+		p := proofPayload("POST", "/api/nd/register", device, canonical, trim(httpx.Latin1(timestamp)), trim(httpx.Latin1(nonce)))
 		if !ed25519.Verify(raw, p, nodeBase64(trim(httpx.Latin1(signature)))) {
 			t.Fatalf("a proof passed that does not verify: %q %q %q %q %q", device, key, timestamp, nonce, signature)
 		}

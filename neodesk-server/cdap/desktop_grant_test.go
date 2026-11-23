@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	servercrypto "github.com/unitronix/betterdesk-server/crypto"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/sessiongrant"
+	servercrypto "github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/sessiongrant"
 )
 
 func TestPassiveDesktopGrantBindsCDAPOperatorAndTarget(t *testing.T) {

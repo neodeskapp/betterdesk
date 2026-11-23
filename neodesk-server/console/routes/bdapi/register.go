@@ -3,11 +3,11 @@ package bdapi
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
-	"github.com/unitronix/betterdesk-server/internal/envvar"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
 )
 
 // Who may register (the audit of 2026-11-13, finding C1). A device id the
@@ -16,11 +16,11 @@ import (
 //  1. the operator approved a LAN registration request of the id
 //     (pending_registrations, status approved) and, when that request
 //     carried a key, the registration brings the same key;
-//  2. an enrollment token of an agent template (POST /api/bd/enroll), which
+//  2. an enrollment token of an agent template (POST /api/nd/enroll), which
 //     admits one device: the first one that redeems it;
 //  3. an Ed25519 proof of possession of the key it registers (proof.go).
 //
-// Without one the registration is refused, unless BD_REGISTER_ALLOW_OPEN
+// Without one the registration is refused, unless ND_REGISTER_ALLOW_OPEN
 // is true, 1 or yes. A banned or removed device is always refused. A known
 // device registers again freely while its key and uuid stay; changing
 // either needs a proof made with the key it has.
@@ -56,7 +56,7 @@ type renamed struct {
 	Message string `json:"message"`
 }
 
-// register answers POST /api/bd/register with the body {device_id, uuid,
+// register answers POST /api/nd/register with the body {device_id, uuid,
 // hostname, platform, version, public_key, enrollment_token}: the device
 // is written into the console's device table, online, with its info.
 func (h *handlers) register(w http.ResponseWriter, r *http.Request) {
@@ -270,12 +270,12 @@ func (h *handlers) redeemToken(r *http.Request, token, deviceID string) bool {
 	return bindTemplate(ctx, h.d.Store, clean, device)
 }
 
-// allowOpenRegister is the old escape hatch BD_REGISTER_ALLOW_OPEN, read
+// allowOpenRegister is the old escape hatch ND_REGISTER_ALLOW_OPEN, read
 // on each registration.
 func (h *handlers) allowOpenRegister() bool {
 	raw := ""
 	if h.d.Config != nil && h.d.Config.Getenv != nil {
-		raw = h.d.Config.Getenv("BD_REGISTER_ALLOW_OPEN")
+		raw = h.d.Config.Getenv("ND_REGISTER_ALLOW_OPEN")
 	}
 	return envvar.SwitchOr(raw, false)
 }

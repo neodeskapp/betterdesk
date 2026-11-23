@@ -2,7 +2,7 @@
  "id": "bd-api/chat-send-blank",
  "request": {
   "method": "POST",
-  "path": "/api/bd/chat/send",
+  "path": "/api/nd/chat/send",
   "body": {
    "content": " \t ",
    "device_id": "900100001"

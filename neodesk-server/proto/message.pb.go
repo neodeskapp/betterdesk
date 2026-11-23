@@ -1,4 +1,4 @@
-// BetterDesk Server — Message Protocol Definitions
+// NeoDesk Server — Message Protocol Definitions
 // Copyright (c) 2025-2026 UNITRONIX. Licensed under AGPL-3.0.
 //
 // These protocol definitions describe message formats for interoperability
@@ -9032,7 +9032,7 @@ const file_message_proto_rawDesc = "" +
 	"\x06NotSet\x10\x00\x12\a\n" +
 	"\x03Low\x10\x02\x12\f\n" +
 	"\bBalanced\x10\x03\x12\b\n" +
-	"\x04Best\x10\x04B.Z,github.com/unitronix/betterdesk-server/protob\x06proto3"
+	"\x04Best\x10\x04B4Z2github.com/neodeskapp/neodesk/neodesk-server/protob\x06proto3"
 
 var (
 	file_message_proto_rawDescOnce sync.Once

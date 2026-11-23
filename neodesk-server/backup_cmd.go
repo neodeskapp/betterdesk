@@ -13,11 +13,11 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/unitronix/betterdesk-server/console/backup"
-	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/routes/settingsbackup"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/internal/envvar"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
+	consoleconfig "github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/settingsbackup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
 )
 
 const backupUsage = "backup [--out DIR] [--db DSN]                 write the console's full backup, also while the server runs"
@@ -26,7 +26,7 @@ const backupUsage = "backup [--out DIR] [--db DSN]                 write the con
 // the files.
 const backupTimeout = 30 * time.Minute
 
-// runBackup is betterdesk-server backup: the archive the console's full
+// runBackup is neodesk-server backup: the archive the console's full
 // backup makes (settings, Backup), written into --out (default
 // scheduled-backups in DATA_DIR) with mode 0600, and its path printed on
 // standard output. The database is --db, else DATABASE_URL (DB_URL and
@@ -39,14 +39,14 @@ func runBackup(args []string, _ io.Reader, stdout, stderr io.Writer) int {
 	out := flags.String("out", "", "the folder the archive goes into (default: scheduled-backups in DATA_DIR)")
 	dsn := flags.String("db", "", "the server's database, a SQLite file or a postgres:// URL (default: DATABASE_URL, else DB_PATH)")
 	if err := flags.Parse(args); err != nil || flags.NArg() > 0 {
-		fmt.Fprintln(stderr, "Usage: betterdesk-server "+backupUsage)
+		fmt.Fprintln(stderr, "Usage: neodesk-server "+backupUsage)
 		return 2
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), backupTimeout)
 	defer cancel()
 	path, err := writeBackup(ctx, os.Getenv, *dsn, *out)
 	if err != nil {
-		fmt.Fprintf(stderr, "betterdesk-server backup: %v\n", err)
+		fmt.Fprintf(stderr, "neodesk-server backup: %v\n", err)
 		return 1
 	}
 	fmt.Fprintln(stdout, path)

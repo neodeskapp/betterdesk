@@ -18,9 +18,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // moveOptions are the flags of sqlite2pg and pg2sqlite.
@@ -33,7 +33,7 @@ type moveOptions struct {
 	skipLeftovers bool
 }
 
-// authImportMarker is the row of betterdesk_migrations that says an old
+// authImportMarker is the row of neodesk_migrations that says an old
 // console's auth.db has been moved into the SQLite file (console/authimport,
 // db.SQLiteAuthConsolidated).
 const authImportMarker = "sqlite_auth_consolidation_v1"
@@ -41,7 +41,7 @@ const authImportMarker = "sqlite_auth_consolidation_v1"
 // sqliteOnlyTables are tables a SQLite install has that have no place on
 // PostgreSQL, with the reason.
 var sqliteOnlyTables = map[string]string{
-	"betterdesk_migrations": "the marker of the auth.db import, which exists only next to SQLite",
+	"neodesk_migrations": "the marker of the auth.db import, which exists only next to SQLite",
 }
 
 // knownMissingColumns are source columns the destination's schema lacks by
@@ -57,7 +57,7 @@ var knownMissingColumns = map[string]map[string]string{
 // database dstDSN.
 func runSQLite2PG(srcPath, dstDSN string, opts moveOptions) error {
 	if srcPath == "" || dstDSN == "" || !isPG(dstDSN) {
-		return errors.New("usage: betterdesk-server migrate -mode sqlite2pg -src <sqlite-path> -dst <postgres://...> [-overwrite] [-skip-leftovers]")
+		return errors.New("usage: neodesk-server migrate -mode sqlite2pg -src <sqlite-path> -dst <postgres://...> [-overwrite] [-skip-leftovers]")
 	}
 	if err := requireFile(srcPath); err != nil {
 		return err
@@ -124,7 +124,7 @@ func runSQLite2PG(srcPath, dstDSN string, opts moveOptions) error {
 // at dstPath.
 func runPG2SQLite(srcDSN, dstPath string, opts moveOptions) error {
 	if srcDSN == "" || !isPG(srcDSN) || dstPath == "" {
-		return errors.New("usage: betterdesk-server migrate -mode pg2sqlite -src <postgres://...> -dst <sqlite-path> [-overwrite] [-skip-leftovers]")
+		return errors.New("usage: neodesk-server migrate -mode pg2sqlite -src <postgres://...> -dst <sqlite-path> [-overwrite] [-skip-leftovers]")
 	}
 	if err := checkSQLiteDst(dstPath, opts.overwrite); err != nil {
 		return err
@@ -379,14 +379,14 @@ func createSchema(ctx context.Context, target string, consoleFirst bool) error {
 // next start.
 func writeAuthImportMarker(ctx context.Context, tx *sql.Tx) error {
 	for _, stmt := range []string{
-		`CREATE TABLE IF NOT EXISTS betterdesk_migrations (
+		`CREATE TABLE IF NOT EXISTS neodesk_migrations (
 			name TEXT PRIMARY KEY,
 			status TEXT NOT NULL,
 			source_sha256 TEXT NOT NULL DEFAULT '',
 			completed_at TEXT NOT NULL DEFAULT (datetime('now')),
 			details TEXT NOT NULL DEFAULT ''
 		)`,
-		`INSERT OR REPLACE INTO betterdesk_migrations (name, status, details)
+		`INSERT OR REPLACE INTO neodesk_migrations (name, status, details)
 			VALUES ('` + authImportMarker + `', 'complete', '{"source":"migrate pg2sqlite"}')`,
 	} {
 		if _, err := tx.ExecContext(ctx, stmt); err != nil {

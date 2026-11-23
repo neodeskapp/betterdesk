@@ -7,10 +7,10 @@ import (
 	"sort"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
 // Help requests live on the API server. A device raises one here (newer
@@ -134,7 +134,7 @@ func (h *handlers) helpList(ctx context.Context, filter *goapi.Object) (items []
 	return items, true, nil
 }
 
-// helpRequest answers POST /api/bd/help-request {device_id, hostname,
+// helpRequest answers POST /api/nd/help-request {device_id, hostname,
 // message} from a device: the request goes to the API server, and the
 // console writes it into its audit log. The answer's request_id is the
 // API server's id, or a random UUID when the API server gave none.
@@ -201,7 +201,7 @@ func randomUUID(random io.Reader) string {
 	return string(out)
 }
 
-// helpRequests answers GET /api/bd/help-requests?status=&device_id= for an
+// helpRequests answers GET /api/nd/help-requests?status=&device_id= for an
 // operator: at most 200 requests of the API server, newest first. A list
 // the API server refused is empty.
 func (h *handlers) helpRequests(w http.ResponseWriter, r *http.Request) {
@@ -231,12 +231,12 @@ func (h *handlers) helpRequests(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "requests", out))
 }
 
-// acceptHelp answers POST /api/bd/help-requests/{id}/accept.
+// acceptHelp answers POST /api/nd/help-requests/{id}/accept.
 func (h *handlers) acceptHelp(w http.ResponseWriter, r *http.Request) {
 	h.helpAction(w, r, h.d.GoAPI.AcknowledgeHelpRequest, "help_request_accept", "Accepted help request ", "Failed to accept help request")
 }
 
-// resolveHelp answers POST /api/bd/help-requests/{id}/resolve.
+// resolveHelp answers POST /api/nd/help-requests/{id}/resolve.
 func (h *handlers) resolveHelp(w http.ResponseWriter, r *http.Request) {
 	h.helpAction(w, r, h.d.GoAPI.ResolveHelpRequest, "help_request_resolve", "Resolved help request ", "Failed to resolve help request")
 }
@@ -263,7 +263,7 @@ func (h *handlers) helpAction(w http.ResponseWriter, r *http.Request, call func(
 	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "request", result.Get("data")))
 }
 
-// deleteHelp answers DELETE /api/bd/help-requests/{id}. The API server
+// deleteHelp answers DELETE /api/nd/help-requests/{id}. The API server
 // cannot delete a help request; resolving it takes it off the active
 // list.
 func (h *handlers) deleteHelp(w http.ResponseWriter, r *http.Request) {

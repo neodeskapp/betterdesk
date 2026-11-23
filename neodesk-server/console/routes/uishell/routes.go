@@ -1,5 +1,5 @@
 // Package uishell keeps a browser's choice between the console's two
-// shells, UX 3.5 and the UX 3.6 beta, in the bd_ui_shell cookie.
+// shells, UX 3.5 and the UX 3.6 beta, in the nd_ui_shell cookie.
 package uishell
 
 import (
@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 )
 
 const (
-	shellCookie = "bd_ui_shell"
+	shellCookie = "nd_ui_shell"
 	cookieAge   = 365 * 24 * time.Hour
 	defaultName = "ux35"
 )

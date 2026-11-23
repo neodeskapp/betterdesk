@@ -1,12 +1,12 @@
 // Package agentreleases keeps local copies of the releases of the generic
-// BetterDesk Support Agent. The console never builds that client: it
+// NeoDesk Support Agent. The console never builds that client: it
 // imports a release from GitHub, checks the signed manifest and the
 // checksums of every file, stores it below the data folder and serves only
 // that checked copy (GET /downloads/generic-agent/{tag}/{name}, and the
 // installer list of the public portal).
 //
 // A release is a folder named after its tag in
-// <DATA_DIR>/modules/betterdesk-support-releases with the release's files
+// <DATA_DIR>/modules/neodesk-support-releases with the release's files
 // and its manifest.json, to which the import adds release_tag and
 // imported_at.
 package agentreleases
@@ -28,13 +28,13 @@ import (
 	"golang.org/x/text/collate"
 	"golang.org/x/text/language"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 const (
 	// DefaultRepo is the GitHub repository releases come from: the
 	// client fork, which the invites download from too.
-	DefaultRepo = "trybetterdesk/betterdesk-client"
+	DefaultRepo = "neodeskapp/neodesk-client"
 	// DefaultPublicKey is the public half of the key the release workflow
 	// signs manifests with, in base64.
 	DefaultPublicKey = "eXGPOvUvFfz1FGGbYogKfYEEWVWzeJEKpmI1ngAU490="
@@ -43,7 +43,7 @@ const (
 	maxReleaseBytes = 2 * 1024 * 1024 * 1024
 	// idleTimeout ends a request to GitHub that has been silent this long.
 	idleTimeout = 30 * time.Second
-	userAgent   = "BetterDesk-Console-Support-Releases"
+	userAgent   = "NeoDesk-Console-Support-Releases"
 )
 
 // githubHosts are the hosts a request may be redirected to: the API, the
@@ -77,12 +77,12 @@ func GithubHosts() []string {
 // Options are the settings of a Service.
 type Options struct {
 	// DataDir is the console's data folder (DATA_DIR). Releases are kept
-	// in DataDir/modules/betterdesk-support-releases.
+	// in DataDir/modules/neodesk-support-releases.
 	DataDir string
-	// Repo is BETTERDESK_SUPPORT_RELEASE_REPO as set: empty means
+	// Repo is NEODESK_SUPPORT_RELEASE_REPO as set: empty means
 	// DefaultRepo, anything else is trimmed.
 	Repo string
-	// PublicKey is BETTERDESK_SUPPORT_RELEASE_PUBLIC_KEY as set: empty
+	// PublicKey is NEODESK_SUPPORT_RELEASE_PUBLIC_KEY as set: empty
 	// means DefaultPublicKey, anything else is trimmed.
 	PublicKey string
 	// HTTP sends the requests to GitHub. Nil means a direct HTTPS
@@ -122,7 +122,7 @@ func New(opts Options) *Service {
 	if opts.PID == 0 {
 		opts.PID = os.Getpid()
 	}
-	return &Service{opts: opts, root: filepath.Join(opts.DataDir, "modules", "betterdesk-support-releases")}
+	return &Service{opts: opts, root: filepath.Join(opts.DataDir, "modules", "neodesk-support-releases")}
 }
 
 // listTar runs tar -tzf - on data.

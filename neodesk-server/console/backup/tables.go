@@ -10,8 +10,8 @@ import (
 
 	"modernc.org/sqlite"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // ImportResult is what ImportAllTables did: the tables it replaced, the

@@ -20,11 +20,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // A seed made up for these tests.
@@ -75,9 +75,9 @@ func templateTree(t *testing.T, root string) {
 		dir := filepath.Join(root, name)
 		must(t, os.MkdirAll(dir, 0o755))
 		must(t, os.WriteFile(filepath.Join(dir, ".custom-txt-here"), []byte("marker\n"), 0o644))
-		binary := "betterdesk"
+		binary := "neodesk"
 		if strings.HasPrefix(name, "windows") {
-			binary = "betterdesk.exe"
+			binary = "neodesk.exe"
 		}
 		must(t, os.WriteFile(filepath.Join(dir, binary), bytes.Repeat([]byte{1}, 110*1024), 0o755))
 		must(t, os.WriteFile(filepath.Join(root, name+".tar.gz"), []byte("archive"), 0o644))
@@ -183,8 +183,8 @@ func TestTemplateBuilds(t *testing.T) {
 				platform = "macos"
 			}
 			install, uninstall := UnixInstallerScripts(platform, InstallerOptions{InstallService: true})
-			gotInstall, _ := os.ReadFile(filepath.Join(stage, "install-betterdesk-support.sh"))
-			gotUninstall, _ := os.ReadFile(filepath.Join(stage, "uninstall-betterdesk-support.sh"))
+			gotInstall, _ := os.ReadFile(filepath.Join(stage, "install-neodesk-support.sh"))
+			gotUninstall, _ := os.ReadFile(filepath.Join(stage, "uninstall-neodesk-support.sh"))
 			if string(gotInstall) != install || string(gotUninstall) != uninstall {
 				t.Errorf("%s: installer scripts differ", stage)
 			}
@@ -194,7 +194,7 @@ func TestTemplateBuilds(t *testing.T) {
 		for i := 0; i < 6; i++ {
 			s.Tick(ctx)
 		}
-		if len(stages) != 4 || !strings.HasSuffix(stages[0], "betterdesk-support-linux-x64") {
+		if len(stages) != 4 || !strings.HasSuffix(stages[0], "neodesk-support-linux-x64") {
 			t.Fatalf("tar ran for %v, the host's build first", stages)
 		}
 		builds := buildsByKey(t, s, bundle.BrandingHash)
@@ -207,7 +207,7 @@ func TestTemplateBuilds(t *testing.T) {
 			if p.Platform == "windows" {
 				ext = "zip"
 			}
-			name := "betterdesk-support-" + bundle.BrandingHash[:12] + "-" + p.Platform + "-" + p.Arch + "." + ext
+			name := "neodesk-support-" + bundle.BrandingHash[:12] + "-" + p.Platform + "-" + p.Arch + "." + ext
 			if b == nil || b.Status != "ready" || filepath.Base(b.ArtifactPath) != name || filepath.Dir(b.ArtifactPath) != s.ArtifactDir() {
 				t.Fatalf("%s: %+v", p.Key(), b)
 			}
@@ -224,8 +224,8 @@ func TestTemplateBuilds(t *testing.T) {
 				for _, f := range zr.File {
 					names[f.Name] = true
 				}
-				root := "betterdesk-support-windows-" + p.Arch + "/"
-				for _, want := range []string{"custom.txt", "betterdesk.exe", "Install-BetterDesk.ps1", "Uninstall-BetterDesk.ps1"} {
+				root := "neodesk-support-windows-" + p.Arch + "/"
+				for _, want := range []string{"custom.txt", "neodesk.exe", "Install-NeoDesk.ps1", "Uninstall-NeoDesk.ps1"} {
 					if !names[root+want] {
 						t.Errorf("%s: no %s in the zip: %v", p.Key(), want, names)
 					}
@@ -273,9 +273,9 @@ func mustRaw(t *testing.T, b *Build) []byte {
 // that builds the given targets.
 func readyBuilder(t *testing.T, s *Service, commit string) {
 	t.Helper()
-	must(t, os.MkdirAll(filepath.Join(s.SourceDir(), "res", "betterdesk"), 0o755))
+	must(t, os.MkdirAll(filepath.Join(s.SourceDir(), "res", "neodesk"), 0o755))
 	must(t, os.WriteFile(filepath.Join(s.SourceDir(), "Cargo.toml"), []byte("[package]\n"), 0o644))
-	must(t, os.WriteFile(filepath.Join(s.SourceDir(), "res", "betterdesk", "custom-client-signing.pub"), []byte("old\n"), 0o644))
+	must(t, os.WriteFile(filepath.Join(s.SourceDir(), "res", "neodesk", "custom-client-signing.pub"), []byte("old\n"), 0o644))
 	must(t, os.WriteFile(s.builderStatePath(), []byte(`{"termsAccepted":true,"installedCommit":"`+commit+`","status":"ready"}`), 0o600))
 }
 
@@ -291,9 +291,9 @@ func TestEmbeddedBuild(t *testing.T) {
 		commit := strings.Repeat("ab", 20)
 		runner := &fakeRunner{}
 		env := []string{
-			"BETTERDESK_CLIENT_BUILD_COMMAND=/opt/provider",
-			`BETTERDESK_CLIENT_PROVIDER_TARGETS_JSON=[{"platform":"linux","arch":"x64"},{"platform":"windows","arch":"x64"}]`,
-			"BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED=" + testSeed,
+			"NEODESK_CLIENT_BUILD_COMMAND=/opt/provider",
+			`NEODESK_CLIENT_PROVIDER_TARGETS_JSON=[{"platform":"linux","arch":"x64"},{"platform":"windows","arch":"x64"}]`,
+			"NEODESK_CUSTOM_CLIENT_SIGNING_SEED=" + testSeed,
 		}
 		s := New(Options{DB: db, ServerInfo: fakeServerInfo{}, DataDir: t.TempDir(), Embedded: true, Run: runner, Env: func() []string { return env }, GOOS: "linux", GOARCH: "amd64"})
 		readyBuilder(t, s, commit)
@@ -310,7 +310,7 @@ func TestEmbeddedBuild(t *testing.T) {
 		fail := false
 		runner.handle = func(c Command) (Result, error) {
 			if c.Name == "tar" && c.Args[0] == "-tzf" {
-				return Result{Stdout: "betterdesk-support/\nbetterdesk-support/betterdesk\n"}, nil
+				return Result{Stdout: "neodesk-support/\nneodesk-support/neodesk\n"}, nil
 			}
 			if c.Name != "/opt/provider" || len(c.Args) != 1 || c.Dir != s.SourceDir() {
 				return Result{}, errors.New("unexpected command " + c.Name)
@@ -320,7 +320,7 @@ func TestEmbeddedBuild(t *testing.T) {
 				k, v, _ := strings.Cut(kv, "=")
 				envOf[k] = v
 			}
-			if envOf["BETTERDESK_CLIENT_BUILD_REQUEST"] != c.Args[0] || envOf["BETTERDESK_CLIENT_SOURCE_DIR"] != s.SourceDir() {
+			if envOf["NEODESK_CLIENT_BUILD_REQUEST"] != c.Args[0] || envOf["NEODESK_CLIENT_SOURCE_DIR"] != s.SourceDir() {
 				t.Errorf("provider environment: %v", envOf)
 			}
 			raw, err := os.ReadFile(c.Args[0])
@@ -334,15 +334,15 @@ func TestEmbeddedBuild(t *testing.T) {
 			if fail {
 				return Result{Code: 1, Stderr: "compile error"}, nil
 			}
-			_, _ = c.Stdout.Write([]byte("BETTERDESK_BUILD_PROGRESS|40|compiling\n"))
-			out := envOf["BETTERDESK_CLIENT_OUTPUT_DIR"]
+			_, _ = c.Stdout.Write([]byte("NEODESK_BUILD_PROGRESS|40|compiling\n"))
+			out := envOf["NEODESK_CLIENT_OUTPUT_DIR"]
 			var assets []any
 			for _, a := range []struct{ name, platform, content string }{{"s-lin.tar.gz", "linux", "linux bytes"}, {"s-win.zip", "windows", ""}} {
 				content := []byte(a.content)
 				if a.platform == "windows" {
 					var buf bytes.Buffer
 					zw := zip.NewWriter(&buf)
-					f, _ := zw.Create("betterdesk-support/betterdesk.exe")
+					f, _ := zw.Create("neodesk-support/neodesk.exe")
 					_, _ = f.Write([]byte("exe"))
 					must(t, zw.Close())
 					content = buf.Bytes()
@@ -369,7 +369,7 @@ func TestEmbeddedBuild(t *testing.T) {
 		if row.ActiveGenerationHash.String != bundle.BrandingHash {
 			t.Errorf("generation not promoted: %q", row.ActiveGenerationHash.String)
 		}
-		pub, _ := os.ReadFile(filepath.Join(s.SourceDir(), "res", "betterdesk", "custom-client-signing.pub"))
+		pub, _ := os.ReadFile(filepath.Join(s.SourceDir(), "res", "neodesk", "custom-client-signing.pub"))
 		if strings.TrimSpace(string(pub)) != wantKey {
 			t.Errorf("the source has public key %q", pub)
 		}
@@ -380,7 +380,7 @@ func TestEmbeddedBuild(t *testing.T) {
 		s.Tick(ctx)
 		failed := 0
 		for _, b := range buildsByKey(t, s, bundle.BrandingHash) {
-			if b.Status == "failed" && strings.Contains(string(mustRaw(t, b)), `"error_message":"betterdesk_client_build_failed:1:compile error"`) {
+			if b.Status == "failed" && strings.Contains(string(mustRaw(t, b)), `"error_message":"neodesk_client_build_failed:1:compile error"`) {
 				failed++
 			}
 		}
@@ -461,7 +461,7 @@ func TestInstallFromGitHub(t *testing.T) {
 	sum := sha256.Sum256(archive)
 	release := func(digest string) []byte {
 		return []byte(`{"tag_name":"v1.2.3","assets":[{"name":"generator-templates-1.2.3.tar.gz","digest":"` + digest +
-			`","browser_download_url":"https://github.com/trybetterdesk/betterdesk-client/releases/download/v1.2.3/generator-templates-1.2.3.tar.gz"}]}`)
+			`","browser_download_url":"https://github.com/neodeskapp/neodesk-client/releases/download/v1.2.3/generator-templates-1.2.3.tar.gz"}]}`)
 	}
 	for _, c := range []struct {
 		name     string
@@ -477,7 +477,7 @@ func TestInstallFromGitHub(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			gh := &fakeGitHub{answer: func(r *http.Request) *http.Response {
 				switch {
-				case r.URL.Host == "api.github.com" && r.URL.Opaque == "//api.github.com/repos/trybetterdesk/betterdesk-client/releases/latest":
+				case r.URL.Host == "api.github.com" && r.URL.Opaque == "//api.github.com/repos/neodeskapp/neodesk-client/releases/latest":
 					return reply(200, release(c.digest))
 				case r.URL.Host == "github.com":
 					return reply(302, nil, "Location", c.location)
@@ -486,7 +486,7 @@ func TestInstallFromGitHub(t *testing.T) {
 				}
 				return nil
 			}}
-			env := []string{"BETTERDESK_GITHUB_TOKEN=made-up-token", "PATH=" + os.Getenv("PATH")}
+			env := []string{"NEODESK_GITHUB_TOKEN=made-up-token", "PATH=" + os.Getenv("PATH")}
 			s := New(Options{DataDir: t.TempDir(), HTTP: gh, Env: func() []string { return env }})
 			must(t, os.WriteFile(filepath.Join(s.opts.DataDir, signingSeedName), []byte(testSeed), 0o600))
 			if _, err := s.AcceptModuleTerms(); err != nil {
@@ -512,7 +512,7 @@ func TestInstallFromGitHub(t *testing.T) {
 				if r.URL.Host == "api.github.com" {
 					token = "Bearer made-up-token"
 				}
-				if r.URL.Scheme != "https" || r.Header.Get("User-Agent") != "BetterDesk-Console-Generator" || r.Header.Get("X-GitHub-Api-Version") != "2022-11-28" ||
+				if r.URL.Scheme != "https" || r.Header.Get("User-Agent") != "NeoDesk-Console-Generator" || r.Header.Get("X-GitHub-Api-Version") != "2022-11-28" ||
 					r.Header.Get("Authorization") != token || r.Header.Get("Accept-Encoding") != "" {
 					t.Errorf("request %s: %v", r.URL, r.Header)
 				}
@@ -547,7 +547,7 @@ func TestInstallNeedsTerms(t *testing.T) {
 func TestSyncSource(t *testing.T) {
 	commit := strings.Repeat("c", 40)
 	gh := &fakeGitHub{answer: func(r *http.Request) *http.Response {
-		if r.URL.Opaque == "//api.github.com/repos/trybetterdesk/betterdesk-client/commits/master" {
+		if r.URL.Opaque == "//api.github.com/repos/neodeskapp/neodesk-client/commits/master" {
 			return reply(200, []byte(`{"sha":"`+commit+`"}`))
 		}
 		return nil
@@ -576,7 +576,7 @@ func TestSyncSource(t *testing.T) {
 		t.Fatalf("sync: %+v %v", result, err)
 	}
 	want := [][]string{
-		{"clone", "--filter=blob:none", "--no-tags", "--no-checkout", "https://github.com/trybetterdesk/betterdesk-client.git"},
+		{"clone", "--filter=blob:none", "--no-tags", "--no-checkout", "https://github.com/neodeskapp/neodesk-client.git"},
 		{"-C", "", "checkout", "--detach", commit},
 		{"-C", "", "submodule", "update", "--init", "--recursive"},
 	}
@@ -599,7 +599,7 @@ func TestSyncSource(t *testing.T) {
 		t.Fatalf("second sync: %+v %v", result, err)
 	}
 	failSubmodules = true
-	if _, err := s.SyncSource(context.Background(), nil, nil, true); err == nil || !strings.HasPrefix(err.Error(), "betterdesk_client_submodule_failed:network down") {
+	if _, err := s.SyncSource(context.Background(), nil, nil, true); err == nil || !strings.HasPrefix(err.Error(), "neodesk_client_submodule_failed:network down") {
 		t.Fatalf("failed sync: %v", err)
 	}
 	state, _ = s.BuilderState()
@@ -610,8 +610,8 @@ func TestSyncSource(t *testing.T) {
 
 // TestMissingTool words a tool that is not installed as Node did.
 func TestMissingTool(t *testing.T) {
-	_, err := ExecRunner{}.Run(context.Background(), Command{Name: "betterdesk-no-such-tool"})
-	if err == nil || err.Error() != "spawn betterdesk-no-such-tool ENOENT" || ErrorCode(err) != "ENOENT" {
+	_, err := ExecRunner{}.Run(context.Background(), Command{Name: "neodesk-no-such-tool"})
+	if err == nil || err.Error() != "spawn neodesk-no-such-tool ENOENT" || ErrorCode(err) != "ENOENT" {
 		t.Fatalf("got %v", err)
 	}
 }

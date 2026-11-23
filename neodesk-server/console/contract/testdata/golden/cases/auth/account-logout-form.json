@@ -20,8 +20,8 @@
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.sid=; Path=/; Expires=<past>",
-     "betterdesk.sid=; Path=/; Expires=<past>"
+     "nd.sid=; Path=/; Expires=<past>",
+     "neodesk.sid=; Path=/; Expires=<past>"
     ],
     "vary": "Accept",
     "x-content-type-options": "nosniff",

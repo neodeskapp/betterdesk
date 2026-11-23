@@ -6,7 +6,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // consoleRoleMap is the role map console requests were answered with: the

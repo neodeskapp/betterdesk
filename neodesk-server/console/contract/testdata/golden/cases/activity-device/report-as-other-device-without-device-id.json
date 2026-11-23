@@ -2,7 +2,7 @@
  "id": "activity-device/report-as-other-device-without-device-id",
  "request": {
   "method": "POST",
-  "path": "/api/bd/activity",
+  "path": "/api/nd/activity",
   "body": {
    "idle_seconds": 120,
    "sessions": [

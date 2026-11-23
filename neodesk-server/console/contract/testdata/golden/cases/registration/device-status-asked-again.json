@@ -2,7 +2,7 @@
  "id": "registration/device-status-asked-again",
  "request": {
   "method": "GET",
-  "path": "/api/bd/register-status?device_id=contract-reject",
+  "path": "/api/nd/register-status?device_id=contract-reject",
   "notes": [
    "no CSRF token",
    "no cookies",

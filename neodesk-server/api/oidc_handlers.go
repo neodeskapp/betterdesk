@@ -1,4 +1,4 @@
-// OIDC/OAuth2 configuration and callback API handlers for the BetterDesk server.
+// OIDC/OAuth2 configuration and callback API handlers for the NeoDesk server.
 // Endpoints for managing OIDC provider settings and handling the authorization code flow.
 package api
 
@@ -10,8 +10,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // loadOIDCConfigFromDB reads OIDC configuration from the server_config table.
@@ -308,7 +308,7 @@ func (s *Server) handleOIDCLoginStatus(w http.ResponseWriter, r *http.Request) {
 // GET /api/auth/sso/status
 // Public endpoint — Node.js console queries this (cached) so it can delegate
 // unknown-user logins to the Go server's LDAP/OIDC flow without requiring the
-// admin to set BETTERDESK_AUTH_AUTOCREATE manually (#148).
+// admin to set NEODESK_AUTH_AUTOCREATE manually (#148).
 func (s *Server) handleSSOStatus(w http.ResponseWriter, r *http.Request) {
 	ldapEnabled := s.ldapProvider != nil && s.ldapProvider.IsEnabled()
 	oidcEnabled := s.oidcProvider != nil && s.oidcProvider.IsEnabled()

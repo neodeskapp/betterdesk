@@ -3,9 +3,9 @@ package automation_test
 import (
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // An id beyond 2147483647, the largest an id column holds on PostgreSQL,
@@ -34,7 +34,7 @@ func TestIDsBeyondTheColumnAreNotFound(t *testing.T) {
 				{replay.Request{Method: "DELETE", Path: "/api/automation/rules/" + id}, "Rule not found"},
 				{replay.Request{Method: "POST", Path: "/api/automation/alerts/" + id + "/ack", Body: replay.Text(`{}`)}, "Alert not found"},
 				{replay.Request{Path: "/api/automation/commands/" + id}, "Command not found"},
-				{replay.Request{Method: "POST", Path: "/api/bd/commands/" + id + "/result", Body: replay.Text(`{"status":"completed"}`), Headers: device}, "Command not found"},
+				{replay.Request{Method: "POST", Path: "/api/nd/commands/" + id + "/result", Body: replay.Text(`{"status":"completed"}`), Headers: device}, "Command not found"},
 			} {
 				if req.Headers == nil {
 					req.Role = "admin"

@@ -1,7 +1,7 @@
-"""BetterDesk CDAP Python SDK — bridge framework for IoT and automation devices."""
+"""NeoDesk CDAP Python SDK — bridge framework for IoT and automation devices."""
 
-from betterdesk_cdap.bridge import CDAPBridge
-from betterdesk_cdap.widgets import (
+from neodesk_cdap.bridge import CDAPBridge
+from neodesk_cdap.widgets import (
     Widget,
     gauge,
     toggle,

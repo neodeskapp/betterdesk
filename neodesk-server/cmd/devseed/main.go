@@ -1,4 +1,4 @@
-// Command devseed fills a local BetterDesk console with fake data so UI
+// Command devseed fills a local NeoDesk console with fake data so UI
 // work and test runs have something to show. It is a development tool and
 // not part of the server binary. Never run it against a real server.
 //
@@ -18,11 +18,11 @@
 // a live database. demo asks it of a separate auth.db as well. For
 // a console in Docker, build it for Linux and copy it into the container:
 //
-//	cd betterdesk-server
+//	cd neodesk-server
 //	CGO_ENABLED=0 GOOS=linux go build -o devseed ./cmd/devseed
-//	docker cp devseed betterdesk:/tmp/devseed
-//	docker compose exec -u betterdesk betterdesk /tmp/devseed demo --admin-password <password>
-//	docker compose exec -d -u betterdesk betterdesk /tmp/devseed heartbeats
+//	docker cp devseed neodesk:/tmp/devseed
+//	docker compose exec -u neodesk neodesk /tmp/devseed demo --admin-password <password>
+//	docker compose exec -d -u neodesk neodesk /tmp/devseed heartbeats
 //
 // The database is the one the server uses: --go-db (a file or a
 // postgres:// address), else DB_URL or DATABASE_URL when DB_TYPE is
@@ -90,7 +90,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 func main() {

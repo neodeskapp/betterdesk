@@ -530,32 +530,32 @@
  },
  "steps": [
   {
-   "name": "1 GET /api/bd/branding",
+   "name": "1 GET /api/nd/branding",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/branding",
+   "path": "/api/nd/branding",
    "status": 200,
-   "answer": "{\"company_name\":\"BetterDesk\",\"accent_color\":\"#3b82f6\",\"support_contact\":\"\",\"appearance\":{\"version\":\"2.0\",\"revision\":\"0\",\"product\":\"betterdesk-appearance\",\"identity\":{\"appName\":\"BetterDesk\",\"appDescription\":\"BetterDesk Server Management\",\"logoType\":\"default\",\"logoIcon\":\"dns\",\"logoUrl\":\"\",\"logoText\":\"\",\"logoTextAccent\":\"\"},\"palette\":{\"mode\":\"system\",\"primary\":\"#58a6ff\",\"primaryHover\":\"#79c0ff\",\"background\":\"#0d1117\",\"surface\":\"#161b22\",\"surfaceRaised\":\"#21262d\",\"text\":\"#e6edf3\",\"muted\":\"#8b949e\",\"border\":\"#30363d\",\"danger\":\"#f85149\",\"warning\":\"#d29922\",\"success\":\"#2ea44f\"},\"surfaces\":{\"glassEnabled\":false,\"glassBlur\":\"16\",\"glassOpacity\":\"55\"},\"background\":{\"type\":\"none\",\"color\":\"\",\"gradient\":\"\",\"imageUrl\":\"\",\"overlay\":\"\",\"size\":\"cover\"},\"readability\":{\"ok\":true,\"issues\":[]}}}",
+   "answer": "{\"company_name\":\"NeoDesk\",\"accent_color\":\"#3b82f6\",\"support_contact\":\"\",\"appearance\":{\"version\":\"2.0\",\"revision\":\"0\",\"product\":\"neodesk-appearance\",\"identity\":{\"appName\":\"NeoDesk\",\"appDescription\":\"NeoDesk Server Management\",\"logoType\":\"default\",\"logoIcon\":\"dns\",\"logoUrl\":\"\",\"logoText\":\"\",\"logoTextAccent\":\"\"},\"palette\":{\"mode\":\"system\",\"primary\":\"#58a6ff\",\"primaryHover\":\"#79c0ff\",\"background\":\"#0d1117\",\"surface\":\"#161b22\",\"surfaceRaised\":\"#21262d\",\"text\":\"#e6edf3\",\"muted\":\"#8b949e\",\"border\":\"#30363d\",\"danger\":\"#f85149\",\"warning\":\"#d29922\",\"success\":\"#2ea44f\"},\"surfaces\":{\"glassEnabled\":false,\"glassBlur\":\"16\",\"glassOpacity\":\"55\"},\"background\":{\"type\":\"none\",\"color\":\"\",\"gradient\":\"\",\"imageUrl\":\"\",\"overlay\":\"\",\"size\":\"cover\"},\"readability\":{\"ok\":true,\"issues\":[]}}}",
    "header": {},
    "calls": []
   },
   {
-   "name": "2 GET /api/bd/appearance",
+   "name": "2 GET /api/nd/appearance",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/appearance",
+   "path": "/api/nd/appearance",
    "status": 200,
-   "answer": "{\"success\":true,\"data\":{\"version\":\"2.0\",\"revision\":\"0\",\"product\":\"betterdesk-appearance\",\"identity\":{\"appName\":\"BetterDesk\",\"appDescription\":\"BetterDesk Server Management\",\"logoType\":\"default\",\"logoIcon\":\"dns\",\"logoUrl\":\"\",\"logoText\":\"\",\"logoTextAccent\":\"\"},\"palette\":{\"mode\":\"system\",\"primary\":\"#58a6ff\",\"primaryHover\":\"#79c0ff\",\"background\":\"#0d1117\",\"surface\":\"#161b22\",\"surfaceRaised\":\"#21262d\",\"text\":\"#e6edf3\",\"muted\":\"#8b949e\",\"border\":\"#30363d\",\"danger\":\"#f85149\",\"warning\":\"#d29922\",\"success\":\"#2ea44f\"},\"surfaces\":{\"glassEnabled\":false,\"glassBlur\":\"16\",\"glassOpacity\":\"55\"},\"background\":{\"type\":\"none\",\"color\":\"\",\"gradient\":\"\",\"imageUrl\":\"\",\"overlay\":\"\",\"size\":\"cover\"},\"readability\":{\"ok\":true,\"issues\":[]}}}",
+   "answer": "{\"success\":true,\"data\":{\"version\":\"2.0\",\"revision\":\"0\",\"product\":\"neodesk-appearance\",\"identity\":{\"appName\":\"NeoDesk\",\"appDescription\":\"NeoDesk Server Management\",\"logoType\":\"default\",\"logoIcon\":\"dns\",\"logoUrl\":\"\",\"logoText\":\"\",\"logoTextAccent\":\"\"},\"palette\":{\"mode\":\"system\",\"primary\":\"#58a6ff\",\"primaryHover\":\"#79c0ff\",\"background\":\"#0d1117\",\"surface\":\"#161b22\",\"surfaceRaised\":\"#21262d\",\"text\":\"#e6edf3\",\"muted\":\"#8b949e\",\"border\":\"#30363d\",\"danger\":\"#f85149\",\"warning\":\"#d29922\",\"success\":\"#2ea44f\"},\"surfaces\":{\"glassEnabled\":false,\"glassBlur\":\"16\",\"glassOpacity\":\"55\"},\"background\":{\"type\":\"none\",\"color\":\"\",\"gradient\":\"\",\"imageUrl\":\"\",\"overlay\":\"\",\"size\":\"cover\"},\"readability\":{\"ok\":true,\"issues\":[]}}}",
    "header": {
     "cache-control": "no-store, no-cache, must-revalidate, private"
    },
    "calls": []
   },
   {
-   "name": "3 no identification POST /api/bd/register",
+   "name": "3 no identification POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"DEVX\"}",
    "status": 401,
    "answer": "{\"error\":\"Missing device identification\"}",
@@ -565,10 +565,10 @@
    "calls": []
   },
   {
-   "name": "4 header too short POST /api/bd/register",
+   "name": "4 header too short POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "X-Device-Id": "ab"
@@ -581,10 +581,10 @@
    "calls": []
   },
   {
-   "name": "5 header too long POST /api/bd/register",
+   "name": "5 header too long POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "X-Device-Id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -597,10 +597,10 @@
    "calls": []
   },
   {
-   "name": "6 header twice POST /api/bd/register",
+   "name": "6 header twice POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "X-Device-Id": [
@@ -616,10 +616,10 @@
    "calls": []
   },
   {
-   "name": "7 unbound token POST /api/bd/register",
+   "name": "7 unbound token POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "Authorization": "Bearer tok-unbound-0123456789"
@@ -632,10 +632,10 @@
    "calls": []
   },
   {
-   "name": "8 token of no device id POST /api/bd/register",
+   "name": "8 token of no device id POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "Authorization": "Bearer tok-odd-0123456789"
@@ -648,10 +648,10 @@
    "calls": []
   },
   {
-   "name": "9 expired token POST /api/bd/register",
+   "name": "9 expired token POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "Authorization": "Bearer tok-expired-0123456789"
@@ -664,10 +664,10 @@
    "calls": []
   },
   {
-   "name": "10 revoked token POST /api/bd/register",
+   "name": "10 revoked token POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "Authorization": "Bearer tok-revoked-0123456789"
@@ -680,10 +680,10 @@
    "calls": []
   },
   {
-   "name": "11 blank token POST /api/bd/register",
+   "name": "11 blank token POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "Authorization": "Bearer    "
@@ -696,10 +696,10 @@
    "calls": []
   },
   {
-   "name": "12 lower-case bearer POST /api/bd/register",
+   "name": "12 lower-case bearer POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "Authorization": "bearer tok-dev1-0123456789"
@@ -712,10 +712,10 @@
    "calls": []
   },
   {
-   "name": "13 token with spaces POST /api/bd/register",
+   "name": "13 token with spaces POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"DEV1\",\"uuid\":\"uuid-1\"}",
    "headers": {
     "Authorization": "Bearer  tok-dev1-0123456789  "
@@ -728,10 +728,10 @@
    "calls": []
   },
   {
-   "name": "14 unbound token and header POST /api/bd/register",
+   "name": "14 unbound token and header POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"uuid\":\"uuid-1\"}",
    "headers": {
     "Authorization": "Bearer tok-unbound-0123456789",
@@ -745,10 +745,10 @@
    "calls": []
   },
   {
-   "name": "15 token for another device POST /api/bd/register",
+   "name": "15 token for another device POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"DEV2\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -761,10 +761,10 @@
    "calls": []
   },
   {
-   "name": "16 header for another device POST /api/bd/register",
+   "name": "16 header for another device POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"DEV2\"}",
    "headers": {
     "X-Device-Id": "DEV1"
@@ -777,10 +777,10 @@
    "calls": []
   },
   {
-   "name": "17 claim with spaces POST /api/bd/register",
+   "name": "17 claim with spaces POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"  DEV1  \",\"uuid\":\"uuid-1\"}",
    "headers": {
     "X-Device-Id": "DEV1"
@@ -793,10 +793,10 @@
    "calls": []
   },
   {
-   "name": "18 claim a number POST /api/bd/register",
+   "name": "18 claim a number POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":7}",
    "headers": {
     "X-Device-Id": "DEV1"
@@ -809,10 +809,10 @@
    "calls": []
   },
   {
-   "name": "19 refresh POST /api/bd/register",
+   "name": "19 refresh POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"DEV1\",\"uuid\":\"uuid-1\",\"hostname\":\"pc-1b\",\"platform\":\"Windows 11\",\"version\":\"1.4\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -825,10 +825,10 @@
    "calls": []
   },
   {
-   "name": "20 refresh by header alone POST /api/bd/register",
+   "name": "20 refresh by header alone POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"DEV2\"}",
    "headers": {
     "X-Device-Id": "DEV2"
@@ -841,10 +841,10 @@
    "calls": []
   },
   {
-   "name": "21 uuid change, no stored key POST /api/bd/register",
+   "name": "21 uuid change, no stored key POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"DEV1\",\"uuid\":\"other\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -857,10 +857,10 @@
    "calls": []
   },
   {
-   "name": "22 same uuid with spaces POST /api/bd/register",
+   "name": "22 same uuid with spaces POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"DEV1\",\"uuid\":\"  uuid-1  \"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -873,10 +873,10 @@
    "calls": []
   },
   {
-   "name": "23 key where none was POST /api/bd/register",
+   "name": "23 key where none was POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"DEV3\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
    "headers": {
     "Authorization": "Bearer tok-dev3-0123456789"
@@ -889,10 +889,10 @@
    "calls": []
   },
   {
-   "name": "24 banned POST /api/bd/register",
+   "name": "24 banned POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"BANNED1\"}",
    "headers": {
     "X-Device-Id": "BANNED1"
@@ -905,10 +905,10 @@
    "calls": []
   },
   {
-   "name": "25 removed, with a token POST /api/bd/register",
+   "name": "25 removed, with a token POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"GONE1\",\"enrollment_token\":\"enroll-fresh\"}",
    "headers": {
     "X-Device-Id": "GONE1"
@@ -921,10 +921,10 @@
    "calls": []
   },
   {
-   "name": "26 same key POST /api/bd/register",
+   "name": "26 same key POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"KEYDEV\",\"uuid\":\"uuid-k\",\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
    "headers": {
     "X-Device-Id": "KEYDEV"
@@ -937,10 +937,10 @@
    "calls": []
   },
   {
-   "name": "27 key swap without proof POST /api/bd/register",
+   "name": "27 key swap without proof POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
    "headers": {
     "X-Device-Id": "KEYDEV"
@@ -953,10 +953,10 @@
    "calls": []
   },
   {
-   "name": "28 key swap, proof by another key POST /api/bd/register",
+   "name": "28 key swap, proof by another key POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
    "headers": {
     "X-Device-Id": "KEYDEV"
@@ -976,10 +976,10 @@
    "calls": []
   },
   {
-   "name": "29 key swap, proof too old POST /api/bd/register",
+   "name": "29 key swap, proof too old POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
    "headers": {
     "X-Device-Id": "KEYDEV"
@@ -998,10 +998,10 @@
    "calls": []
   },
   {
-   "name": "30 key swap, proof from the future POST /api/bd/register",
+   "name": "30 key swap, proof from the future POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
    "headers": {
     "X-Device-Id": "KEYDEV"
@@ -1020,10 +1020,10 @@
    "calls": []
   },
   {
-   "name": "31 key swap, unreadable time POST /api/bd/register",
+   "name": "31 key swap, unreadable time POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
    "headers": {
     "X-Device-Id": "KEYDEV"
@@ -1042,10 +1042,10 @@
    "calls": []
   },
   {
-   "name": "32 key swap, nonce too long POST /api/bd/register",
+   "name": "32 key swap, nonce too long POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
    "headers": {
     "X-Device-Id": "KEYDEV"
@@ -1063,10 +1063,10 @@
    "calls": []
   },
   {
-   "name": "33 key swap, signature too short POST /api/bd/register",
+   "name": "33 key swap, signature too short POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
    "headers": {
     "X-Device-Id": "KEYDEV"
@@ -1085,10 +1085,10 @@
    "calls": []
   },
   {
-   "name": "34 key swap, signature of another path POST /api/bd/register",
+   "name": "34 key swap, signature of another path POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
    "headers": {
     "X-Device-Id": "KEYDEV"
@@ -1097,7 +1097,7 @@
     "device": "KEYDEV",
     "key": "a",
     "nonce": "n-33",
-    "path": "/api/bd/heartbeat"
+    "path": "/api/nd/heartbeat"
    },
    "status": 200,
    "answer": "{\"success\":true,\"device_id\":\"KEYDEV\",\"server_time\":1795023682552,\"heartbeat_interval\":15}",
@@ -1107,10 +1107,10 @@
    "calls": []
   },
   {
-   "name": "35 key swap, uuid change with proof POST /api/bd/register",
+   "name": "35 key swap, uuid change with proof POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"KEYDEV\",\"uuid\":\"uuid-k2\"}",
    "headers": {
     "X-Device-Id": "KEYDEV"
@@ -1128,10 +1128,10 @@
    "calls": []
   },
   {
-   "name": "36 the same proof again POST /api/bd/register",
+   "name": "36 the same proof again POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"KEYDEV\",\"uuid\":\"uuid-k3\"}",
    "headers": {
     "X-Device-Id": "KEYDEV"
@@ -1149,10 +1149,10 @@
    "calls": []
   },
   {
-   "name": "37 key swap with proof POST /api/bd/register",
+   "name": "37 key swap with proof POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"KEYDEV\",\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
    "headers": {
     "X-Device-Id": "KEYDEV"
@@ -1182,10 +1182,10 @@
    "rows": "[{\"id\":\"DEV1\",\"uuid\":\"  uuid-1  \",\"pk\":null,\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false},{\"id\":\"DEV2\",\"uuid\":\"\",\"pk\":null,\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false},{\"id\":\"DEV3\",\"uuid\":\"uuid-3\",\"pk\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\",\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false},{\"id\":\"GONE1\",\"uuid\":\"uuid-g\",\"pk\":null,\"info\":{},\"ip\":\"\",\"status_online\":false,\"is_deleted\":true},{\"id\":\"KEYDEV\",\"uuid\":\"uuid-k\",\"pk\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\",\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false}]"
   },
   {
-   "name": "39 renamed, other uuid POST /api/bd/register",
+   "name": "39 renamed, other uuid POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"OLDID1\",\"uuid\":\"uuid-x\"}",
    "headers": {
     "Authorization": "Bearer tok-renamed-0123456789"
@@ -1198,10 +1198,10 @@
    "calls": []
   },
   {
-   "name": "40 renamed, same uuid in capitals POST /api/bd/register",
+   "name": "40 renamed, same uuid in capitals POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"device_id\":\"OLDID1\",\"uuid\":\"UUID-N\"}",
    "headers": {
     "Authorization": "Bearer tok-renamed-0123456789"
@@ -1214,10 +1214,10 @@
    "calls": []
   },
   {
-   "name": "41 renamed, same address POST /api/bd/register",
+   "name": "41 renamed, same address POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "X-Device-Id": "OLDID1",
@@ -1231,10 +1231,10 @@
    "calls": []
   },
   {
-   "name": "42 renamed, other address POST /api/bd/register",
+   "name": "42 renamed, other address POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "X-Device-Id": "OLDID1",
@@ -1248,10 +1248,10 @@
    "calls": []
   },
   {
-   "name": "43 renamed, same key POST /api/bd/register",
+   "name": "43 renamed, same key POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"public_key\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\"}",
    "headers": {
     "X-Device-Id": "OLDID2"
@@ -1264,10 +1264,10 @@
    "calls": []
   },
   {
-   "name": "44 renamed, other key POST /api/bd/register",
+   "name": "44 renamed, other key POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"public_key\":\"other\"}",
    "headers": {
     "X-Device-Id": "OLDID2"
@@ -1280,10 +1280,10 @@
    "calls": []
   },
   {
-   "name": "45 renamed to an id nobody has POST /api/bd/register",
+   "name": "45 renamed to an id nobody has POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "X-Device-Id": "OLDID3"
@@ -1308,10 +1308,10 @@
    "rows": "[{\"id\":\"NEWID1\",\"uuid\":\"uuid-n\",\"pk\":null,\"info\":{},\"ip\":\"203.0.113.9\",\"status_online\":false,\"is_deleted\":false},{\"id\":\"NEWID2\",\"uuid\":\"uuid-n2\",\"pk\":\"gTl3Dqh9F19Wo1Rmw0x+zMuNipG07jeiXfYPW4/Js5Q=\",\"info\":{},\"ip\":\"\",\"status_online\":false,\"is_deleted\":false}]"
   },
   {
-   "name": "47 approved POST /api/bd/register",
+   "name": "47 approved POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"hostname\":\"ap\"}",
    "headers": {
     "X-Device-Id": "APPROVED1"
@@ -1324,10 +1324,10 @@
    "calls": []
   },
   {
-   "name": "48 approved with another key POST /api/bd/register",
+   "name": "48 approved with another key POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"public_key\":\"7UkoxijRwsbq6QM4kFmVYSlZJzpcY/k2NsFGFKyHN9E=\"}",
    "headers": {
     "X-Device-Id": "APPROVED2"
@@ -1340,10 +1340,10 @@
    "calls": []
   },
   {
-   "name": "49 approved, no key sent POST /api/bd/register",
+   "name": "49 approved, no key sent POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "X-Device-Id": "APPROVED2"
@@ -1356,10 +1356,10 @@
    "calls": []
   },
   {
-   "name": "50 only pending POST /api/bd/register",
+   "name": "50 only pending POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "X-Device-Id": "PENDING1"
@@ -1372,10 +1372,10 @@
    "calls": []
   },
   {
-   "name": "51 rejected POST /api/bd/register",
+   "name": "51 rejected POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "X-Device-Id": "REJECTED1"
@@ -1388,10 +1388,10 @@
    "calls": []
   },
   {
-   "name": "52 token of another device POST /api/bd/register",
+   "name": "52 token of another device POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"enrollment_token\":\"enroll-taken\"}",
    "headers": {
     "X-Device-Id": "TOKDEV1"
@@ -1404,10 +1404,10 @@
    "calls": []
   },
   {
-   "name": "53 unknown token POST /api/bd/register",
+   "name": "53 unknown token POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"enrollment_token\":\"enroll-nope\"}",
    "headers": {
     "X-Device-Id": "TOKDEV1"
@@ -1420,10 +1420,10 @@
    "calls": []
   },
   {
-   "name": "54 fresh token POST /api/bd/register",
+   "name": "54 fresh token POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"enrollment_token\":\"  enroll-fresh  \"}",
    "headers": {
     "X-Device-Id": "TOKDEV1"
@@ -1436,10 +1436,10 @@
    "calls": []
   },
   {
-   "name": "55 the fresh token again POST /api/bd/register",
+   "name": "55 the fresh token again POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"enrollment_token\":\"enroll-fresh\"}",
    "headers": {
     "X-Device-Id": "TOKDEV2"
@@ -1452,10 +1452,10 @@
    "calls": []
   },
   {
-   "name": "56 token bound to this device POST /api/bd/register",
+   "name": "56 token bound to this device POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"enrollment_token\":\"enroll-mine\"}",
    "headers": {
     "X-Device-Id": "TOKDEV3"
@@ -1468,10 +1468,10 @@
    "calls": []
   },
   {
-   "name": "57 token bound to nobody POST /api/bd/register",
+   "name": "57 token bound to nobody POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"enrollment_token\":\"enroll-empty\"}",
    "headers": {
     "X-Device-Id": "TOKDEV4"
@@ -1484,10 +1484,10 @@
    "calls": []
   },
   {
-   "name": "58 token a number POST /api/bd/register",
+   "name": "58 token a number POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"enrollment_token\":7}",
    "headers": {
     "X-Device-Id": "TOKDEV5"
@@ -1500,10 +1500,10 @@
    "calls": []
   },
   {
-   "name": "59 token without text POST /api/bd/register",
+   "name": "59 token without text POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"enrollment_token\":{\"toString\":\"x\"}}",
    "headers": {
     "X-Device-Id": "TOKDEV5"
@@ -1522,10 +1522,10 @@
    "rows": "[{\"name\":\"fresh\",\"enrolled_device_id\":\"TOKDEV1\"},{\"name\":\"empty\",\"enrolled_device_id\":\"TOKDEV4\"},{\"name\":\"taken\",\"enrolled_device_id\":\"OTHERDEV\"},{\"name\":\"mine\",\"enrolled_device_id\":\"TOKDEV3\"}]"
   },
   {
-   "name": "61 proof POST /api/bd/register",
+   "name": "61 proof POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
    "headers": {
     "X-Device-Id": "PROOF1"
@@ -1543,10 +1543,10 @@
    "calls": []
   },
   {
-   "name": "62 same nonce, another device POST /api/bd/register",
+   "name": "62 same nonce, another device POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
    "headers": {
     "X-Device-Id": "PROOF2"
@@ -1564,10 +1564,10 @@
    "calls": []
   },
   {
-   "name": "63 proof replayed POST /api/bd/register",
+   "name": "63 proof replayed POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
    "headers": {
     "X-Device-Id": "PROOF3"
@@ -1585,10 +1585,10 @@
    "calls": []
   },
   {
-   "name": "64 proof replayed (2) POST /api/bd/register",
+   "name": "64 proof replayed (2) POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
    "headers": {
     "X-Device-Id": "PROOF3"
@@ -1606,10 +1606,10 @@
    "calls": []
   },
   {
-   "name": "65 proof for another device POST /api/bd/register",
+   "name": "65 proof for another device POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
    "headers": {
     "X-Device-Id": "PROOF4"
@@ -1627,10 +1627,10 @@
    "calls": []
   },
   {
-   "name": "66 proof with a lower-case method POST /api/bd/register",
+   "name": "66 proof with a lower-case method POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
    "headers": {
     "X-Device-Id": "PROOF5"
@@ -1649,10 +1649,10 @@
    "calls": []
   },
   {
-   "name": "67 proof without a key POST /api/bd/register",
+   "name": "67 proof without a key POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{}",
    "headers": {
     "X-Device-Id": "PROOF6"
@@ -1670,10 +1670,10 @@
    "calls": []
   },
   {
-   "name": "68 proof, key unreadable POST /api/bd/register",
+   "name": "68 proof, key unreadable POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"public_key\":\"not base64 !!\"}",
    "headers": {
     "X-Device-Id": "PROOF7"
@@ -1691,10 +1691,10 @@
    "calls": []
   },
   {
-   "name": "69 proof, key in the URL alphabet POST /api/bd/register",
+   "name": "69 proof, key in the URL alphabet POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"public_key\":\" iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w \"}",
    "headers": {
     "X-Device-Id": "PROOF8"
@@ -1712,10 +1712,10 @@
    "calls": []
   },
   {
-   "name": "70 proof, path spelled otherwise POST /API/BD/Register/",
+   "name": "70 proof, path spelled otherwise POST /API/ND/Register/",
    "role": "",
    "method": "POST",
-   "path": "/API/BD/Register/",
+   "path": "/API/ND/Register/",
    "body": "{\"public_key\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\"}",
    "headers": {
     "X-Device-Id": "PROOF10"
@@ -1733,10 +1733,10 @@
    "calls": []
   },
   {
-   "name": "71 a list for a body POST /api/bd/register",
+   "name": "71 a list for a body POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "[\"DEV1\"]",
    "headers": {
     "X-Device-Id": "NEW2"
@@ -1749,10 +1749,10 @@
    "calls": []
   },
   {
-   "name": "72 a form POST /api/bd/register",
+   "name": "72 a form POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "device_id=FORM1&uuid=u",
    "type": "application/x-www-form-urlencoded",
    "headers": {
@@ -1784,10 +1784,10 @@
    "rows": "[{\"id\":\"APPROVED1\",\"uuid\":\"\",\"pk\":null,\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"ap\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false},{\"id\":\"APPROVED2\",\"uuid\":\"\",\"pk\":null,\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false},{\"id\":\"PROOF1\",\"uuid\":\"\",\"pk\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\",\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false},{\"id\":\"PROOF10\",\"uuid\":\"\",\"pk\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\",\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false},{\"id\":\"PROOF2\",\"uuid\":\"\",\"pk\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\",\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false},{\"id\":\"PROOF3\",\"uuid\":\"\",\"pk\":\"iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w=\",\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false},{\"id\":\"PROOF8\",\"uuid\":\"\",\"pk\":\" iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w \",\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false},{\"id\":\"TOKDEV1\",\"uuid\":\"\",\"pk\":null,\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false},{\"id\":\"TOKDEV3\",\"uuid\":\"\",\"pk\":null,\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false},{\"id\":\"TOKDEV4\",\"uuid\":\"\",\"pk\":null,\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false}]"
   },
   {
-   "name": "74 without a claim POST /api/bd/heartbeat",
+   "name": "74 without a claim POST /api/nd/heartbeat",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/heartbeat",
+   "path": "/api/nd/heartbeat",
    "body": "{}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -1798,10 +1798,10 @@
    "calls": []
   },
   {
-   "name": "75 POST /api/bd/heartbeat",
+   "name": "75 POST /api/nd/heartbeat",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/heartbeat",
+   "path": "/api/nd/heartbeat",
    "body": "{\"device_id\":\"DEV1\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -1812,10 +1812,10 @@
    "calls": []
   },
   {
-   "name": "76 another device POST /api/bd/heartbeat",
+   "name": "76 another device POST /api/nd/heartbeat",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/heartbeat",
+   "path": "/api/nd/heartbeat",
    "body": "{\"device_id\":\"DEV2\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -1826,10 +1826,10 @@
    "calls": []
   },
   {
-   "name": "77 claim in a list POST /api/bd/heartbeat",
+   "name": "77 claim in a list POST /api/nd/heartbeat",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/heartbeat",
+   "path": "/api/nd/heartbeat",
    "body": "{\"device_id\":[\"DEV1\"]}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -1840,10 +1840,10 @@
    "calls": []
   },
   {
-   "name": "78 number for a device POST /api/bd/heartbeat",
+   "name": "78 number for a device POST /api/nd/heartbeat",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/heartbeat",
+   "path": "/api/nd/heartbeat",
    "body": "{\"device_id\":900100001}",
    "headers": {
     "Authorization": "Bearer tok-odd-0123456789"
@@ -1854,10 +1854,10 @@
    "calls": []
   },
   {
-   "name": "79 unbound token POST /api/bd/heartbeat",
+   "name": "79 unbound token POST /api/nd/heartbeat",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/heartbeat",
+   "path": "/api/nd/heartbeat",
    "body": "{}",
    "headers": {
     "Authorization": "Bearer tok-unbound-0123456789"
@@ -1868,10 +1868,10 @@
    "calls": []
   },
   {
-   "name": "80 basic POST /api/bd/heartbeat",
+   "name": "80 basic POST /api/nd/heartbeat",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/heartbeat",
+   "path": "/api/nd/heartbeat",
    "body": "{}",
    "headers": {
     "Authorization": "Basic eDp5"
@@ -1882,10 +1882,10 @@
    "calls": []
   },
   {
-   "name": "81 no target POST /api/bd/connect",
+   "name": "81 no target POST /api/nd/connect",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/connect",
+   "path": "/api/nd/connect",
    "body": "{}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -1896,10 +1896,10 @@
    "calls": []
   },
   {
-   "name": "82 unbound token POST /api/bd/connect",
+   "name": "82 unbound token POST /api/nd/connect",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/connect",
+   "path": "/api/nd/connect",
    "body": "{\"target_id\":\"DEV2\"}",
    "headers": {
     "Authorization": "Bearer tok-unbound-0123456789"
@@ -1910,10 +1910,10 @@
    "calls": []
   },
   {
-   "name": "83 initiator mismatch POST /api/bd/connect",
+   "name": "83 initiator mismatch POST /api/nd/connect",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/connect",
+   "path": "/api/nd/connect",
    "body": "{\"target_id\":\"DEV2\",\"initiator_id\":\"DEV3\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -1924,10 +1924,10 @@
    "calls": []
   },
   {
-   "name": "84 initiator in a list POST /api/bd/connect",
+   "name": "84 initiator in a list POST /api/nd/connect",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/connect",
+   "path": "/api/nd/connect",
    "body": "{\"target_id\":\"DEV2\",\"initiator_id\":[\"DEV1\"]}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -1938,10 +1938,10 @@
    "calls": []
   },
   {
-   "name": "85 unknown target POST /api/bd/connect",
+   "name": "85 unknown target POST /api/nd/connect",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/connect",
+   "path": "/api/nd/connect",
    "body": "{\"target_id\":\"NOPE\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -1952,10 +1952,10 @@
    "calls": []
   },
   {
-   "name": "86 removed target POST /api/bd/connect",
+   "name": "86 removed target POST /api/nd/connect",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/connect",
+   "path": "/api/nd/connect",
    "body": "{\"target_id\":\"GONE1\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -1966,38 +1966,38 @@
    "calls": []
   },
   {
-   "name": "87 banned target POST /api/bd/connect",
+   "name": "87 banned target POST /api/nd/connect",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/connect",
+   "path": "/api/nd/connect",
    "body": "{\"target_id\":\"BANNED1\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
    },
    "status": 200,
-   "answer": "{\"success\":true,\"session_id\":\"7f8893a7-2a83-44a4-9a93-537f3a2615bf\",\"token\":\"ea5ac440575be000d65d02411237f6f1a8c6f13ace8df52ad798b1d286a62c43\",\"target_online\":false,\"relay_url\":\"/ws/bd-relay?session=7f8893a7-2a83-44a4-9a93-537f3a2615bf&token=ea5ac440575be000d65d02411237f6f1a8c6f13ace8df52ad798b1d286a62c43&role=initiator\"}",
+   "answer": "{\"success\":true,\"session_id\":\"7f8893a7-2a83-44a4-9a93-537f3a2615bf\",\"token\":\"ea5ac440575be000d65d02411237f6f1a8c6f13ace8df52ad798b1d286a62c43\",\"target_online\":false,\"relay_url\":\"/ws/nd-relay?session=7f8893a7-2a83-44a4-9a93-537f3a2615bf&token=ea5ac440575be000d65d02411237f6f1a8c6f13ace8df52ad798b1d286a62c43&role=initiator\"}",
    "header": {},
    "calls": []
   },
   {
-   "name": "88 target a number POST /api/bd/connect",
+   "name": "88 target a number POST /api/nd/connect",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/connect",
+   "path": "/api/nd/connect",
    "body": "{\"target_id\":900100001}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
    },
    "status": 200,
-   "answer": "{\"success\":true,\"session_id\":\"225ab326-193d-48e4-a210-9b833a233365\",\"token\":\"8aa10834696bae3bea5aa8df9904348369a0bab3c969cc0007c67bb7d7e22550\",\"target_online\":false,\"relay_url\":\"/ws/bd-relay?session=225ab326-193d-48e4-a210-9b833a233365&token=8aa10834696bae3bea5aa8df9904348369a0bab3c969cc0007c67bb7d7e22550&role=initiator\"}",
+   "answer": "{\"success\":true,\"session_id\":\"225ab326-193d-48e4-a210-9b833a233365\",\"token\":\"8aa10834696bae3bea5aa8df9904348369a0bab3c969cc0007c67bb7d7e22550\",\"target_online\":false,\"relay_url\":\"/ws/nd-relay?session=225ab326-193d-48e4-a210-9b833a233365&token=8aa10834696bae3bea5aa8df9904348369a0bab3c969cc0007c67bb7d7e22550&role=initiator\"}",
    "header": {},
    "calls": []
   },
   {
-   "name": "89 POST /api/bd/connect",
+   "name": "89 POST /api/nd/connect",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/connect",
+   "path": "/api/nd/connect",
    "body": "{\"target_id\":\"DEV2\",\"initiator_id\":\"DEV1\",\"public_key\":\"pk\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -2006,29 +2006,29 @@
     "sess": "session_id"
    },
    "status": 200,
-   "answer": "{\"success\":true,\"session_id\":\"35e91045-55e9-469c-afd4-71f17ee58fb1\",\"token\":\"1abe95ab71447b29de8959fe5a27214fdc30f8716dd933babda49b11c415ce3a\",\"target_online\":false,\"relay_url\":\"/ws/bd-relay?session=35e91045-55e9-469c-afd4-71f17ee58fb1&token=1abe95ab71447b29de8959fe5a27214fdc30f8716dd933babda49b11c415ce3a&role=initiator\"}",
+   "answer": "{\"success\":true,\"session_id\":\"35e91045-55e9-469c-afd4-71f17ee58fb1\",\"token\":\"1abe95ab71447b29de8959fe5a27214fdc30f8716dd933babda49b11c415ce3a\",\"target_online\":false,\"relay_url\":\"/ws/nd-relay?session=35e91045-55e9-469c-afd4-71f17ee58fb1&token=1abe95ab71447b29de8959fe5a27214fdc30f8716dd933babda49b11c415ce3a&role=initiator\"}",
    "header": {},
    "calls": []
   },
   {
-   "name": "90 token of a viewer POST /api/bd/connect",
+   "name": "90 token of a viewer POST /api/nd/connect",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/connect",
+   "path": "/api/nd/connect",
    "body": "{\"target_id\":\"DEV1\"}",
    "headers": {
     "Authorization": "Bearer tok-viewer-0123456789"
    },
    "status": 200,
-   "answer": "{\"success\":true,\"session_id\":\"cc422537-4880-4ee3-81e6-9f5b4a8febd1\",\"token\":\"e515f1214638a0b201074b80c126ddfbfd061990a6b5733686bd905b8556b475\",\"target_online\":false,\"relay_url\":\"/ws/bd-relay?session=cc422537-4880-4ee3-81e6-9f5b4a8febd1&token=e515f1214638a0b201074b80c126ddfbfd061990a6b5733686bd905b8556b475&role=initiator\"}",
+   "answer": "{\"success\":true,\"session_id\":\"cc422537-4880-4ee3-81e6-9f5b4a8febd1\",\"token\":\"e515f1214638a0b201074b80c126ddfbfd061990a6b5733686bd905b8556b475\",\"target_online\":false,\"relay_url\":\"/ws/nd-relay?session=cc422537-4880-4ee3-81e6-9f5b4a8febd1&token=e515f1214638a0b201074b80c126ddfbfd061990a6b5733686bd905b8556b475&role=initiator\"}",
    "header": {},
    "calls": []
   },
   {
-   "name": "91 target sees it POST /api/bd/heartbeat",
+   "name": "91 target sees it POST /api/nd/heartbeat",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/heartbeat",
+   "path": "/api/nd/heartbeat",
    "body": "{\"device_id\":\"DEV2\"}",
    "headers": {
     "Authorization": "Bearer tok-dev2-0123456789"
@@ -2039,10 +2039,10 @@
    "calls": []
   },
   {
-   "name": "92 initiator GET /api/bd/session/{sess}",
+   "name": "92 initiator GET /api/nd/session/{sess}",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/session/{sess}",
+   "path": "/api/nd/session/{sess}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
    },
@@ -2052,10 +2052,10 @@
    "calls": []
   },
   {
-   "name": "93 target GET /api/bd/session/{sess}",
+   "name": "93 target GET /api/nd/session/{sess}",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/session/{sess}",
+   "path": "/api/nd/session/{sess}",
    "headers": {
     "Authorization": "Bearer tok-dev2-0123456789"
    },
@@ -2065,10 +2065,10 @@
    "calls": []
   },
   {
-   "name": "94 somebody else GET /api/bd/session/{sess}",
+   "name": "94 somebody else GET /api/nd/session/{sess}",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/session/{sess}",
+   "path": "/api/nd/session/{sess}",
    "headers": {
     "Authorization": "Bearer tok-dev3-0123456789"
    },
@@ -2078,10 +2078,10 @@
    "calls": []
   },
   {
-   "name": "95 unknown GET /api/bd/session/nope",
+   "name": "95 unknown GET /api/nd/session/nope",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/session/nope",
+   "path": "/api/nd/session/nope",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
    },
@@ -2091,10 +2091,10 @@
    "calls": []
   },
   {
-   "name": "96 somebody else DELETE /api/bd/session/{sess}",
+   "name": "96 somebody else DELETE /api/nd/session/{sess}",
    "role": "",
    "method": "DELETE",
-   "path": "/api/bd/session/{sess}",
+   "path": "/api/nd/session/{sess}",
    "headers": {
     "Authorization": "Bearer tok-dev3-0123456789"
    },
@@ -2104,10 +2104,10 @@
    "calls": []
   },
   {
-   "name": "97 the target DELETE /api/bd/session/{sess}",
+   "name": "97 the target DELETE /api/nd/session/{sess}",
    "role": "",
    "method": "DELETE",
-   "path": "/api/bd/session/{sess}",
+   "path": "/api/nd/session/{sess}",
    "headers": {
     "Authorization": "Bearer tok-dev2-0123456789"
    },
@@ -2117,10 +2117,10 @@
    "calls": []
   },
   {
-   "name": "98 again DELETE /api/bd/session/{sess}",
+   "name": "98 again DELETE /api/nd/session/{sess}",
    "role": "",
    "method": "DELETE",
-   "path": "/api/bd/session/{sess}",
+   "path": "/api/nd/session/{sess}",
    "headers": {
     "Authorization": "Bearer tok-dev2-0123456789"
    },
@@ -2130,10 +2130,10 @@
    "calls": []
   },
   {
-   "name": "99 GET /api/bd/peers",
+   "name": "99 GET /api/nd/peers",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/peers",
+   "path": "/api/nd/peers",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
    },
@@ -2143,10 +2143,10 @@
    "calls": []
   },
   {
-   "name": "100 GET /api/bd/peer/DEV1",
+   "name": "100 GET /api/nd/peer/DEV1",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/peer/DEV1",
+   "path": "/api/nd/peer/DEV1",
    "headers": {
     "Authorization": "Bearer tok-dev2-0123456789"
    },
@@ -2156,10 +2156,10 @@
    "calls": []
   },
   {
-   "name": "101 GET /api/bd/peer/BANNED1",
+   "name": "101 GET /api/nd/peer/BANNED1",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/peer/BANNED1",
+   "path": "/api/nd/peer/BANNED1",
    "headers": {
     "Authorization": "Bearer tok-dev2-0123456789"
    },
@@ -2169,10 +2169,10 @@
    "calls": []
   },
   {
-   "name": "102 GET /api/bd/peer/GONE1",
+   "name": "102 GET /api/nd/peer/GONE1",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/peer/GONE1",
+   "path": "/api/nd/peer/GONE1",
    "headers": {
     "Authorization": "Bearer tok-dev2-0123456789"
    },
@@ -2182,10 +2182,10 @@
    "calls": []
   },
   {
-   "name": "103 escaped GET /api/bd/peer/%44EV1",
+   "name": "103 escaped GET /api/nd/peer/%44EV1",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/peer/%44EV1",
+   "path": "/api/nd/peer/%44EV1",
    "headers": {
     "Authorization": "Bearer tok-dev2-0123456789"
    },
@@ -2195,10 +2195,10 @@
    "calls": []
   },
   {
-   "name": "104 GET /api/bd/peer/NOPE",
+   "name": "104 GET /api/nd/peer/NOPE",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/peer/NOPE",
+   "path": "/api/nd/peer/NOPE",
    "headers": {
     "Authorization": "Bearer tok-dev2-0123456789"
    },
@@ -2208,10 +2208,10 @@
    "calls": []
   },
   {
-   "name": "105 API has no route POST /api/bd/help-request",
+   "name": "105 API has no route POST /api/nd/help-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/help-request",
+   "path": "/api/nd/help-request",
    "body": "{\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"help\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -2228,10 +2228,10 @@
    ]
   },
   {
-   "name": "106 API gives an id POST /api/bd/help-request",
+   "name": "106 API gives an id POST /api/nd/help-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/help-request",
+   "path": "/api/nd/help-request",
    "body": "{\"device_id\":\"DEV1\",\"message\":\"mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm\",\"hostname\":{\"x\":1}}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -2255,10 +2255,10 @@
    ]
   },
   {
-   "name": "107 API gives a request id POST /api/bd/help-request",
+   "name": "107 API gives a request id POST /api/nd/help-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/help-request",
+   "path": "/api/nd/help-request",
    "body": "{\"device_id\":\"DEV1\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -2282,10 +2282,10 @@
    ]
   },
   {
-   "name": "108 API gives a list POST /api/bd/help-request",
+   "name": "108 API gives a list POST /api/nd/help-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/help-request",
+   "path": "/api/nd/help-request",
    "body": "{\"device_id\":\"DEV1\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -2309,10 +2309,10 @@
    ]
   },
   {
-   "name": "109 long id POST /api/bd/help-request",
+   "name": "109 long id POST /api/nd/help-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/help-request",
+   "path": "/api/nd/help-request",
    "body": "{\"device_id\":\"DEV1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}",
    "headers": {
     "Authorization": "Bearer tok-odd-0123456789"
@@ -2323,10 +2323,10 @@
    "calls": []
   },
   {
-   "name": "110 id in a list POST /api/bd/help-request",
+   "name": "110 id in a list POST /api/nd/help-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/help-request",
+   "path": "/api/nd/help-request",
    "body": "{\"device_id\":[\"DEV1\"]}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -2337,10 +2337,10 @@
    "calls": []
   },
   {
-   "name": "111 message without text POST /api/bd/help-request",
+   "name": "111 message without text POST /api/nd/help-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/help-request",
+   "path": "/api/nd/help-request",
    "body": "{\"device_id\":\"DEV1\",\"message\":{\"toString\":1}}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -2351,10 +2351,10 @@
    "calls": []
   },
   {
-   "name": "112 no id POST /api/bd/help-request",
+   "name": "112 no id POST /api/nd/help-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/help-request",
+   "path": "/api/nd/help-request",
    "body": "{}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -2371,10 +2371,10 @@
    "rows": "[{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: help\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: \",\"ip_address\":\"127.0.0.1\"},{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: \",\"ip_address\":\"127.0.0.1\"}]"
   },
   {
-   "name": "114 POST /api/bd/chat/send",
+   "name": "114 POST /api/nd/chat/send",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/chat/send",
+   "path": "/api/nd/chat/send",
    "body": "{\"device_id\":\"DEV1\",\"content\":\"hi\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -2385,10 +2385,10 @@
    "calls": []
   },
   {
-   "name": "115 blank POST /api/bd/chat/send",
+   "name": "115 blank POST /api/nd/chat/send",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/chat/send",
+   "path": "/api/nd/chat/send",
    "body": "{\"device_id\":\"DEV1\",\"content\":\" \"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -2399,10 +2399,10 @@
    "calls": []
   },
   {
-   "name": "116 content a number POST /api/bd/chat/send",
+   "name": "116 content a number POST /api/nd/chat/send",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/chat/send",
+   "path": "/api/nd/chat/send",
    "body": "{\"device_id\":\"DEV1\",\"content\":5}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -2413,10 +2413,10 @@
    "calls": []
   },
   {
-   "name": "117 content of 4098 units POST /api/bd/chat/send",
+   "name": "117 content of 4098 units POST /api/nd/chat/send",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/chat/send",
+   "path": "/api/nd/chat/send",
    "body": "{\"device_id\":\"DEV1\",\"content\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -2427,10 +2427,10 @@
    "calls": []
   },
   {
-   "name": "118 content of 4096 units POST /api/bd/chat/send",
+   "name": "118 content of 4096 units POST /api/nd/chat/send",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/chat/send",
+   "path": "/api/nd/chat/send",
    "body": "{\"device_id\":\"DEV1\",\"content\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -2441,10 +2441,10 @@
    "calls": []
   },
   {
-   "name": "119 without a device GET /api/bd/chat/history",
+   "name": "119 without a device GET /api/nd/chat/history",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/chat/history",
+   "path": "/api/nd/chat/history",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
    },
@@ -2454,10 +2454,10 @@
    "calls": []
   },
   {
-   "name": "120 empty device GET /api/bd/chat/history?device_id=",
+   "name": "120 empty device GET /api/nd/chat/history?device_id=",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/chat/history?device_id=",
+   "path": "/api/nd/chat/history?device_id=",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
    },
@@ -2467,10 +2467,10 @@
    "calls": []
   },
   {
-   "name": "121 another device GET /api/bd/chat/history?device_id=DEV2",
+   "name": "121 another device GET /api/nd/chat/history?device_id=DEV2",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/chat/history?device_id=DEV2",
+   "path": "/api/nd/chat/history?device_id=DEV2",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
    },
@@ -2480,10 +2480,10 @@
    "calls": []
   },
   {
-   "name": "122 values of every type POST /api/bd/register",
+   "name": "122 values of every type POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"uuid\":7,\"hostname\":{\"a\":[1,\"é\"]},\"platform\":0,\"version\":null}",
    "headers": {
     "X-Device-Id": "DEV2"
@@ -2496,10 +2496,10 @@
    "calls": []
   },
   {
-   "name": "123 key true POST /api/bd/register",
+   "name": "123 key true POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"uuid\":\"\",\"public_key\":true}",
    "headers": {
     "X-Device-Id": "DEV2"
@@ -2512,10 +2512,10 @@
    "calls": []
   },
   {
-   "name": "124 key an object POST /api/bd/register",
+   "name": "124 key an object POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"public_key\":{\"k\":1}}",
    "headers": {
     "X-Device-Id": "DEV2"
@@ -2528,10 +2528,10 @@
    "calls": []
   },
   {
-   "name": "125 key a number POST /api/bd/register",
+   "name": "125 key a number POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"public_key\":12}",
    "headers": {
     "X-Device-Id": "DEV3"
@@ -2544,10 +2544,10 @@
    "calls": []
   },
   {
-   "name": "126 uuid a list POST /api/bd/register",
+   "name": "126 uuid a list POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"uuid\":[1,2]}",
    "headers": {
     "X-Device-Id": "DEV2"
@@ -2560,10 +2560,10 @@
    "calls": []
   },
   {
-   "name": "127 uuid without text POST /api/bd/register",
+   "name": "127 uuid without text POST /api/nd/register",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register",
+   "path": "/api/nd/register",
    "body": "{\"uuid\":{\"toString\":1}}",
    "headers": {
     "X-Device-Id": "DEV2"
@@ -2585,10 +2585,10 @@
    "rows": "[{\"id\":\"DEV2\",\"uuid\":\"7\",\"pk\":\"{\\\"k\\\":1}\",\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false},{\"id\":\"DEV3\",\"uuid\":\"uuid-3\",\"pk\":\"12\",\"info\":{\"ip\":\"127.0.0.1\",\"os\":\"\",\"version\":\"\",\"hostname\":\"\"},\"ip\":\"127.0.0.1\",\"status_online\":true,\"is_deleted\":false}]"
   },
   {
-   "name": "129 empty POST /api/bd/operator/login",
+   "name": "129 empty POST /api/nd/operator/login",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/operator/login",
+   "path": "/api/nd/operator/login",
    "body": "{}",
    "status": 400,
    "answer": "{\"error\":\"Username and password are required\"}",
@@ -2596,10 +2596,10 @@
    "calls": []
   },
   {
-   "name": "130 password a list POST /api/bd/operator/login",
+   "name": "130 password a list POST /api/nd/operator/login",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/operator/login",
+   "path": "/api/nd/operator/login",
    "body": "{\"username\":\"e2e_operator\",\"password\":[\"x\"]}",
    "status": 400,
    "answer": "{\"error\":\"Username and password are required\"}",
@@ -2607,10 +2607,10 @@
    "calls": []
   },
   {
-   "name": "131 POST /api/bd/operator/login",
+   "name": "131 POST /api/nd/operator/login",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/operator/login",
+   "path": "/api/nd/operator/login",
    "body": "{\"username\":\"e2e_operator\",\"password\":\"wrong\",\"device_id\":\"OPDESK\"}",
    "status": 429,
    "answer": "{\"error\":\"Too many failed attempts. Try again later.\"}",
@@ -2618,10 +2618,10 @@
    "calls": []
   },
   {
-   "name": "132 GET /api/bd/operator/devices",
+   "name": "132 GET /api/nd/operator/devices",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/operator/devices",
+   "path": "/api/nd/operator/devices",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -2631,10 +2631,10 @@
    "calls": []
   },
   {
-   "name": "133 viewer GET /api/bd/operator/devices",
+   "name": "133 viewer GET /api/nd/operator/devices",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/operator/devices",
+   "path": "/api/nd/operator/devices",
    "headers": {
     "Authorization": "Bearer tok-viewer-0123456789"
    },
@@ -2644,10 +2644,10 @@
    "calls": []
   },
   {
-   "name": "134 expired token GET /api/bd/operator/devices",
+   "name": "134 expired token GET /api/nd/operator/devices",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/operator/devices",
+   "path": "/api/nd/operator/devices",
    "headers": {
     "Authorization": "Bearer tok-expired-0123456789"
    },
@@ -2657,10 +2657,10 @@
    "calls": []
   },
   {
-   "name": "135 token with spaces GET /api/bd/operator/devices",
+   "name": "135 token with spaces GET /api/nd/operator/devices",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/operator/devices",
+   "path": "/api/nd/operator/devices",
    "headers": {
     "Authorization": "Bearer  tok-operator-0123456789 "
    },
@@ -2670,20 +2670,20 @@
    "calls": []
   },
   {
-   "name": "136 no token GET /api/bd/operator/devices",
+   "name": "136 no token GET /api/nd/operator/devices",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/operator/devices",
+   "path": "/api/nd/operator/devices",
    "status": 401,
    "answer": "{\"error\":\"Missing or invalid Bearer access token\"}",
    "header": {},
    "calls": []
   },
   {
-   "name": "137 GET /api/bd/help-requests",
+   "name": "137 GET /api/nd/help-requests",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/help-requests",
+   "path": "/api/nd/help-requests",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -2699,10 +2699,10 @@
    ]
   },
   {
-   "name": "138 filtered GET /api/bd/help-requests?status=pending&device_id=DEV1",
+   "name": "138 filtered GET /api/nd/help-requests?status=pending&device_id=DEV1",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/help-requests?status=pending&device_id=DEV1",
+   "path": "/api/nd/help-requests?status=pending&device_id=DEV1",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -2718,10 +2718,10 @@
    ]
   },
   {
-   "name": "139 status twice GET /api/bd/help-requests?status[]=a&status[]=b",
+   "name": "139 status twice GET /api/nd/help-requests?status[]=a&status[]=b",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/help-requests?status[]=a&status[]=b",
+   "path": "/api/nd/help-requests?status[]=a&status[]=b",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -2737,10 +2737,10 @@
    ]
   },
   {
-   "name": "140 API fails GET /api/bd/help-requests",
+   "name": "140 API fails GET /api/nd/help-requests",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/help-requests",
+   "path": "/api/nd/help-requests",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -2763,10 +2763,10 @@
    ]
   },
   {
-   "name": "141 API gives an object GET /api/bd/help-requests",
+   "name": "141 API gives an object GET /api/nd/help-requests",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/help-requests",
+   "path": "/api/nd/help-requests",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -2789,10 +2789,10 @@
    ]
   },
   {
-   "name": "142 API gives an id without text GET /api/bd/help-requests",
+   "name": "142 API gives an id without text GET /api/nd/help-requests",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/help-requests",
+   "path": "/api/nd/help-requests",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -2815,10 +2815,10 @@
    ]
   },
   {
-   "name": "143 viewer GET /api/bd/help-requests",
+   "name": "143 viewer GET /api/nd/help-requests",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/help-requests",
+   "path": "/api/nd/help-requests",
    "headers": {
     "Authorization": "Bearer tok-viewer-0123456789"
    },
@@ -2828,10 +2828,10 @@
    "calls": []
   },
   {
-   "name": "144 POST /api/bd/help-requests/21/accept",
+   "name": "144 POST /api/nd/help-requests/21/accept",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/help-requests/21/accept",
+   "path": "/api/nd/help-requests/21/accept",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -2847,10 +2847,10 @@
    ]
   },
   {
-   "name": "145 admin token POST /api/bd/help-requests/21/resolve",
+   "name": "145 admin token POST /api/nd/help-requests/21/resolve",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/help-requests/21/resolve",
+   "path": "/api/nd/help-requests/21/resolve",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
    },
@@ -2866,10 +2866,10 @@
    ]
   },
   {
-   "name": "146 unknown POST /api/bd/help-requests/99/accept",
+   "name": "146 unknown POST /api/nd/help-requests/99/accept",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/help-requests/99/accept",
+   "path": "/api/nd/help-requests/99/accept",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -2885,10 +2885,10 @@
    ]
   },
   {
-   "name": "147 unknown POST /api/bd/help-requests/99/resolve",
+   "name": "147 unknown POST /api/nd/help-requests/99/resolve",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/help-requests/99/resolve",
+   "path": "/api/nd/help-requests/99/resolve",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -2904,10 +2904,10 @@
    ]
   },
   {
-   "name": "148 DELETE /api/bd/help-requests/22",
+   "name": "148 DELETE /api/nd/help-requests/22",
    "role": "",
    "method": "DELETE",
-   "path": "/api/bd/help-requests/22",
+   "path": "/api/nd/help-requests/22",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -2923,10 +2923,10 @@
    ]
   },
   {
-   "name": "149 unknown DELETE /api/bd/help-requests/99",
+   "name": "149 unknown DELETE /api/nd/help-requests/99",
    "role": "",
    "method": "DELETE",
-   "path": "/api/bd/help-requests/99",
+   "path": "/api/nd/help-requests/99",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -2948,10 +2948,10 @@
    "rows": "[{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: help\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: \",\"ip_address\":\"127.0.0.1\"},{\"user_id\":null,\"action\":\"help_request\",\"details\":\"Help requested by DEV1: \",\"ip_address\":\"127.0.0.1\"},{\"user_id\":5,\"action\":\"help_request_accept\",\"details\":\"Accepted help request 21\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":1,\"action\":\"help_request_resolve\",\"details\":\"Resolved help request 21\",\"ip_address\":\"127.0.0.1\"}]"
   },
   {
-   "name": "151 POST /api/bd/operator/sessions",
+   "name": "151 POST /api/nd/operator/sessions",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/operator/sessions",
+   "path": "/api/nd/operator/sessions",
    "body": "{\"action\":\" Start \",\"device_id\":\" DEV1 \",\"hostname\":\" pc-1 \",\"session_id\":\" s-9 \"}",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
@@ -2962,10 +2962,10 @@
    "calls": []
   },
   {
-   "name": "152 POST /api/bd/operator/sessions",
+   "name": "152 POST /api/nd/operator/sessions",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/operator/sessions",
+   "path": "/api/nd/operator/sessions",
    "body": "{\"action\":\"end\",\"device_id\":\"DEV1\",\"session_id\":\"s-9\"}",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
@@ -2976,10 +2976,10 @@
    "calls": []
   },
   {
-   "name": "153 without a session id POST /api/bd/operator/sessions",
+   "name": "153 without a session id POST /api/nd/operator/sessions",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/operator/sessions",
+   "path": "/api/nd/operator/sessions",
    "body": "{\"action\":\"session_start\",\"device_id\":\"DEV2\"}",
    "headers": {
     "Authorization": "Bearer tok-dev1-0123456789"
@@ -2990,10 +2990,10 @@
    "calls": []
   },
   {
-   "name": "154 bad action POST /api/bd/operator/sessions",
+   "name": "154 bad action POST /api/nd/operator/sessions",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/operator/sessions",
+   "path": "/api/nd/operator/sessions",
    "body": "{\"action\":\"pause\",\"device_id\":\"DEV1\"}",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
@@ -3004,10 +3004,10 @@
    "calls": []
   },
   {
-   "name": "155 bad device POST /api/bd/operator/sessions",
+   "name": "155 bad device POST /api/nd/operator/sessions",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/operator/sessions",
+   "path": "/api/nd/operator/sessions",
    "body": "{\"action\":\"start\",\"device_id\":\"D\"}",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
@@ -3018,10 +3018,10 @@
    "calls": []
   },
   {
-   "name": "156 device without text POST /api/bd/operator/sessions",
+   "name": "156 device without text POST /api/nd/operator/sessions",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/operator/sessions",
+   "path": "/api/nd/operator/sessions",
    "body": "{\"action\":\"start\",\"device_id\":{\"toString\":1}}",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
@@ -3032,10 +3032,10 @@
    "calls": []
   },
   {
-   "name": "157 long fields POST /api/bd/operator/sessions",
+   "name": "157 long fields POST /api/nd/operator/sessions",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/operator/sessions",
+   "path": "/api/nd/operator/sessions",
    "body": "{\"action\":\"start\",\"device_id\":\"DEV1\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"session_id\":\"ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss\"}",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
@@ -3052,10 +3052,10 @@
    "rows": "[{\"host_id\":\"e2e_operator\",\"host_uuid\":\"OPDESK\",\"peer_id\":\"DEV1\",\"peer_name\":\"pc-1\",\"action\":\"session_start\",\"conn_type\":1,\"session_id\":\"s-9\",\"ip\":\"127.0.0.1\"},{\"host_id\":\"e2e_operator\",\"host_uuid\":\"OPDESK\",\"peer_id\":\"DEV1\",\"peer_name\":\"\",\"action\":\"session_end\",\"conn_type\":1,\"session_id\":\"s-9\",\"ip\":\"127.0.0.1\"}]"
   },
   {
-   "name": "159 GET /api/bd/operator/sessions",
+   "name": "159 GET /api/nd/operator/sessions",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/operator/sessions",
+   "path": "/api/nd/operator/sessions",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -3065,10 +3065,10 @@
    "calls": []
   },
   {
-   "name": "160 GET /api/bd/operator/sessions?limit=1",
+   "name": "160 GET /api/nd/operator/sessions?limit=1",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/operator/sessions?limit=1",
+   "path": "/api/nd/operator/sessions?limit=1",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -3078,10 +3078,10 @@
    "calls": []
   },
   {
-   "name": "161 GET /api/bd/operator/sessions?limit=0",
+   "name": "161 GET /api/nd/operator/sessions?limit=0",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/operator/sessions?limit=0",
+   "path": "/api/nd/operator/sessions?limit=0",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -3091,10 +3091,10 @@
    "calls": []
   },
   {
-   "name": "162 GET /api/bd/operator/sessions?limit=abc",
+   "name": "162 GET /api/nd/operator/sessions?limit=abc",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/operator/sessions?limit=abc",
+   "path": "/api/nd/operator/sessions?limit=abc",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -3104,10 +3104,10 @@
    "calls": []
   },
   {
-   "name": "163 GET /api/bd/operator/sessions?limit=500",
+   "name": "163 GET /api/nd/operator/sessions?limit=500",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/operator/sessions?limit=500",
+   "path": "/api/nd/operator/sessions?limit=500",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -3117,10 +3117,10 @@
    "calls": []
   },
   {
-   "name": "164 GET /api/bd/operator/sessions?limit[]=2",
+   "name": "164 GET /api/nd/operator/sessions?limit[]=2",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/operator/sessions?limit[]=2",
+   "path": "/api/nd/operator/sessions?limit[]=2",
    "headers": {
     "Authorization": "Bearer tok-operator-0123456789"
    },
@@ -3130,30 +3130,30 @@
    "calls": []
   },
   {
-   "name": "165 GET /api/bd/notifications",
+   "name": "165 GET /api/nd/notifications",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/notifications",
+   "path": "/api/nd/notifications",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}",
    "header": {},
    "calls": []
   },
   {
-   "name": "166 GET /api/bd/notifications",
+   "name": "166 GET /api/nd/notifications",
    "role": "pro",
    "method": "GET",
-   "path": "/api/bd/notifications",
+   "path": "/api/nd/notifications",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Pro accounts can only access the RustDesk desktop client API\"}",
    "header": {},
    "calls": []
   },
   {
-   "name": "167 GET /api/bd/notifications",
+   "name": "167 GET /api/nd/notifications",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/notifications",
+   "path": "/api/nd/notifications",
    "status": 200,
    "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"}],\"unread_count\":5}",
    "header": {},
@@ -3166,10 +3166,10 @@
    ]
   },
   {
-   "name": "168 GET /api/bd/notifications",
+   "name": "168 GET /api/nd/notifications",
    "role": "server_admin",
    "method": "GET",
-   "path": "/api/bd/notifications",
+   "path": "/api/nd/notifications",
    "status": 200,
    "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"}],\"unread_count\":5}",
    "header": {},
@@ -3182,10 +3182,10 @@
    ]
   },
   {
-   "name": "169 GET /api/bd/notifications",
+   "name": "169 GET /api/nd/notifications",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/notifications",
+   "path": "/api/nd/notifications",
    "status": 200,
    "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
    "header": {},
@@ -3203,10 +3203,10 @@
    ]
   },
   {
-   "name": "170 GET /api/bd/notifications?limit=1",
+   "name": "170 GET /api/nd/notifications?limit=1",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/notifications?limit=1",
+   "path": "/api/nd/notifications?limit=1",
    "status": 200,
    "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"}],\"unread_count\":6}",
    "header": {},
@@ -3224,10 +3224,10 @@
    ]
   },
   {
-   "name": "171 GET /api/bd/notifications?limit=0",
+   "name": "171 GET /api/nd/notifications?limit=0",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/notifications?limit=0",
+   "path": "/api/nd/notifications?limit=0",
    "status": 200,
    "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"}],\"unread_count\":6}",
    "header": {},
@@ -3245,10 +3245,10 @@
    ]
   },
   {
-   "name": "172 GET /api/bd/notifications?limit=99",
+   "name": "172 GET /api/nd/notifications?limit=99",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/notifications?limit=99",
+   "path": "/api/nd/notifications?limit=99",
    "status": 200,
    "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
    "header": {},
@@ -3266,10 +3266,10 @@
    ]
   },
   {
-   "name": "173 GET /api/bd/notifications?limit=x",
+   "name": "173 GET /api/nd/notifications?limit=x",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/notifications?limit=x",
+   "path": "/api/nd/notifications?limit=x",
    "status": 200,
    "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
    "header": {},
@@ -3287,10 +3287,10 @@
    ]
   },
   {
-   "name": "174 GET /api/bd/notifications?unread_only=TRUE",
+   "name": "174 GET /api/nd/notifications?unread_only=TRUE",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/notifications?unread_only=TRUE",
+   "path": "/api/nd/notifications?unread_only=TRUE",
    "status": 200,
    "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
    "header": {},
@@ -3308,10 +3308,10 @@
    ]
   },
   {
-   "name": "175 GET /api/bd/notifications?unread_only=1",
+   "name": "175 GET /api/nd/notifications?unread_only=1",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/notifications?unread_only=1",
+   "path": "/api/nd/notifications?unread_only=1",
    "status": 200,
    "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":6}",
    "header": {},
@@ -3329,10 +3329,10 @@
    ]
   },
   {
-   "name": "176 GET /api/bd/notifications?unread_only=true&limit=2",
+   "name": "176 GET /api/nd/notifications?unread_only=true&limit=2",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/notifications?unread_only=true&limit=2",
+   "path": "/api/nd/notifications?unread_only=true&limit=2",
    "status": 200,
    "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":false,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"}],\"unread_count\":6}",
    "header": {},
@@ -3350,10 +3350,10 @@
    ]
   },
   {
-   "name": "177 API fails GET /api/bd/notifications",
+   "name": "177 API fails GET /api/nd/notifications",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/notifications",
+   "path": "/api/nd/notifications",
    "api": {
     "GET /api/help/requests": {
      "status": 500,
@@ -3378,10 +3378,10 @@
    ]
   },
   {
-   "name": "178 API gives text GET /api/bd/notifications",
+   "name": "178 API gives text GET /api/nd/notifications",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/notifications",
+   "path": "/api/nd/notifications",
    "api": {
     "GET /api/help/requests": {
      "status": 200,
@@ -3406,40 +3406,40 @@
    ]
   },
   {
-   "name": "179 POST /api/bd/notifications/22/read",
+   "name": "179 POST /api/nd/notifications/22/read",
    "role": "viewer",
    "method": "POST",
-   "path": "/api/bd/notifications/22/read",
+   "path": "/api/nd/notifications/22/read",
    "status": 200,
    "answer": "{\"success\":true}",
    "header": {},
    "calls": []
   },
   {
-   "name": "180 long id POST /api/bd/notifications/nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn/read",
+   "name": "180 long id POST /api/nd/notifications/nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn/read",
    "role": "viewer",
    "method": "POST",
-   "path": "/api/bd/notifications/nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn/read",
+   "path": "/api/nd/notifications/nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn/read",
    "status": 200,
    "answer": "{\"success\":true}",
    "header": {},
    "calls": []
   },
   {
-   "name": "181 signed out POST /api/bd/notifications/22/read",
+   "name": "181 signed out POST /api/nd/notifications/22/read",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/notifications/22/read",
+   "path": "/api/nd/notifications/22/read",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}",
    "header": {},
    "calls": []
   },
   {
-   "name": "182 GET /api/bd/notifications",
+   "name": "182 GET /api/nd/notifications",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/notifications",
+   "path": "/api/nd/notifications",
    "status": 200,
    "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":false,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"}],\"unread_count\":4}",
    "header": {},
@@ -3452,10 +3452,10 @@
    ]
   },
   {
-   "name": "183 POST /api/bd/notifications/read-all",
+   "name": "183 POST /api/nd/notifications/read-all",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/notifications/read-all",
+   "path": "/api/nd/notifications/read-all",
    "status": 200,
    "answer": "{\"success\":true}",
    "header": {},
@@ -3473,10 +3473,10 @@
    ]
   },
   {
-   "name": "184 GET /api/bd/notifications",
+   "name": "184 GET /api/nd/notifications",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/notifications",
+   "path": "/api/nd/notifications",
    "status": 200,
    "answer": "{\"success\":true,\"items\":[{\"id\":\"22\",\"title\":\"DEV2\",\"message\":\"vpn\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-02T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV2\",\"hostname\":\"\",\"status\":\"accepted\"},{\"id\":\"registration:enrollment:E1\",\"title\":\"enr-1\",\"message\":\"E1 · Windows · 10.1.0.1\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":true,\"created_at\":\"2001-03-01T12:00:00.000Z\",\"kind\":\"registration\",\"source\":\"enrollment\",\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"status\":\"pending\"},{\"id\":\"21\",\"title\":\"pc-1\",\"message\":\"printer\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-03-01T00:00:30.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"status\":\"pending\"},{\"id\":\"23\",\"title\":\"DEV3\",\"message\":\"font\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-02-01T00:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"status\":\"resolved\"},{\"id\":\"25\",\"title\":\"\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-01-01T22:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"\",\"hostname\":\"\",\"status\":{}},{\"id\":\"24\",\"title\":\"DEV4\",\"message\":\"\",\"icon\":\"support_agent\",\"link\":\"/help-requests\",\"read\":true,\"created_at\":\"2001-01-01T10:00:00.000Z\",\"kind\":\"help_request\",\"device_id\":\"DEV4\",\"hostname\":\"\"},{\"id\":\"registration:lan:3\",\"title\":\"pe-1\",\"message\":\"PENDING1 · macOS · 10.0.0.7\",\"icon\":\"how_to_reg\",\"link\":\"/registrations\",\"read\":true,\"created_at\":\"2001-01-01T00:03:00.000Z\",\"kind\":\"registration\",\"source\":\"lan\",\"device_id\":\"PENDING1\",\"hostname\":\"pe-1\",\"platform\":\"macOS\",\"ip\":\"10.0.0.7\",\"status\":\"pending\"}],\"unread_count\":0}",
    "header": {},
@@ -3494,10 +3494,10 @@
    ]
   },
   {
-   "name": "185 API gives an object POST /api/bd/notifications/read-all",
+   "name": "185 API gives an object POST /api/nd/notifications/read-all",
    "role": "operator",
    "method": "POST",
-   "path": "/api/bd/notifications/read-all",
+   "path": "/api/nd/notifications/read-all",
    "api": {
     "GET /api/help/requests": {
      "status": 200,

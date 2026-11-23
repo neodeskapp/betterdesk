@@ -49,7 +49,7 @@ func (f *fakeConsole) handler() http.Handler {
 		return "token-for-c1"
 	}
 	signedIn := func(r *http.Request) bool {
-		c, err := r.Cookie("bd.sid")
+		c, err := r.Cookie("nd.sid")
 		return err == nil && strings.HasPrefix(c.Value, "session-of-")
 	}
 	writeJSON := func(w http.ResponseWriter, status int, v any) {
@@ -86,12 +86,12 @@ func (f *fakeConsole) handler() http.Handler {
 		case body.Username == "e2e_pro":
 			writeJSON(w, 403, map[string]any{"success": false, "error": "pro only"})
 		default:
-			http.SetCookie(w, &http.Cookie{Name: "bd.sid", Value: "session-of-" + body.Username, Path: "/", HttpOnly: true})
+			http.SetCookie(w, &http.Cookie{Name: "nd.sid", Value: "session-of-" + body.Username, Path: "/", HttpOnly: true})
 			writeJSON(w, 200, map[string]any{"success": true, "user": map[string]any{"username": body.Username}})
 		}
 	})
 	mux.HandleFunc("POST /api/auth/logout", func(w http.ResponseWriter, r *http.Request) {
-		http.SetCookie(w, &http.Cookie{Name: "bd.sid", Value: "", Path: "/", Expires: time.Unix(0, 0)})
+		http.SetCookie(w, &http.Cookie{Name: "nd.sid", Value: "", Path: "/", Expires: time.Unix(0, 0)})
 		writeJSON(w, 200, map[string]any{"success": true})
 	})
 	mux.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
@@ -219,7 +219,7 @@ func TestSignInTheWayTheWebAppDoes(t *testing.T) {
 	if got := strings.Join(order, ", "); got != want {
 		t.Errorf("requests: %s\n    want: %s", got, want)
 	}
-	if got := answer.Headers["set-cookie"]; len(got) != 1 || got[0] != "bd.sid=<value>; Path=/; HttpOnly" {
+	if got := answer.Headers["set-cookie"]; len(got) != 1 || got[0] != "nd.sid=<value>; Path=/; HttpOnly" {
 		t.Errorf("the sign-in answer holds the cookie as %q, want it without its value", got)
 	}
 	if !sess.Alive() {
@@ -227,7 +227,7 @@ func TestSignInTheWayTheWebAppDoes(t *testing.T) {
 	}
 
 	got := echo(t, sess.Do(Request{Method: "POST", Path: "/echo?a=1", Body: []byte(`{"x":1}`), ContentType: "application/json"}))
-	if got["cookie"] != "__csrf_h=c1; bd.sid=session-of-e2e_admin" || got["csrf"] != "token-for-c1" {
+	if got["cookie"] != "__csrf_h=c1; nd.sid=session-of-e2e_admin" || got["csrf"] != "token-for-c1" {
 		t.Errorf("a write went out with cookie %q and token %q", got["cookie"], got["csrf"])
 	}
 	if got["body"] != `{"x":1}` || got["contentType"] != "application/json" || got["query"] != "a=1" || got["method"] != "POST" {
@@ -319,7 +319,7 @@ func TestSessionFollowsTheCookiesOfTheConsole(t *testing.T) {
 	}
 
 	answer := sess.Do(Request{Method: "POST", Path: "/api/auth/logout"})
-	if got := answer.Headers["set-cookie"]; len(got) != 1 || got[0] != "bd.sid=; Path=/; Expires=<past>" {
+	if got := answer.Headers["set-cookie"]; len(got) != 1 || got[0] != "nd.sid=; Path=/; Expires=<past>" {
 		t.Errorf("logout cookie = %q", got)
 	}
 	if sess.cookie(sessionCookies) != "" || sess.Alive() {

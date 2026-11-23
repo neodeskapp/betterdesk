@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/connect-again",
  "request": {
   "method": "POST",
-  "path": "/api/bd/connect",
+  "path": "/api/nd/connect",
   "body": {
    "target_id": "900100001"
   },

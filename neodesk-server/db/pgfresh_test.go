@@ -13,12 +13,12 @@ import (
 
 // pgTestDSN returns the DSN of the test PostgreSQL with the database
 // replaced by dbname (when not empty) and the runtime parameters added,
-// or skips the test when BETTERDESK_TEST_POSTGRES_DSN is not set.
+// or skips the test when NEODESK_TEST_POSTGRES_DSN is not set.
 func pgTestDSN(t *testing.T, dbname string, params map[string]string) string {
 	t.Helper()
-	dsn := os.Getenv("BETTERDESK_TEST_POSTGRES_DSN")
+	dsn := os.Getenv("NEODESK_TEST_POSTGRES_DSN")
 	if dsn == "" {
-		t.Skip("BETTERDESK_TEST_POSTGRES_DSN is not set")
+		t.Skip("NEODESK_TEST_POSTGRES_DSN is not set")
 	}
 	u, err := url.Parse(dsn)
 	if err != nil {
@@ -81,7 +81,7 @@ func openTestPostgres(t *testing.T, dsn string) *PostgresDB {
 }
 
 // freshStores runs a test on a new SQLite database and, when
-// BETTERDESK_TEST_POSTGRES_DSN names a server, on a new PostgreSQL
+// NEODESK_TEST_POSTGRES_DSN names a server, on a new PostgreSQL
 // database: both hold only what Migrate creates.
 func freshStores(t *testing.T, test func(t *testing.T, store Database)) {
 	t.Run("sqlite", func(t *testing.T) { test(t, newTestDB(t)) })

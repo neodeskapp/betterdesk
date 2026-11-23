@@ -64,18 +64,18 @@ func TestLDAPAccountNameComesFromTheEntry(t *testing.T) {
 // the same CN in another container; a mapping written as a bare name or as
 // CN=<name> fits the group's CN anywhere (RV119).
 func TestLDAPGroupMatches(t *testing.T) {
-	const admins = "CN=BetterDesk-Admins,OU=Security,DC=corp,DC=example"
+	const admins = "CN=NeoDesk-Admins,OU=Security,DC=corp,DC=example"
 	for _, tc := range []struct {
 		key, group string
 		want       bool
 	}{
 		{admins, admins, true},
-		{admins, "cn=betterdesk-admins, ou=security, dc=corp, dc=example", true},
-		{admins, "CN=BetterDesk-Admins,OU=Self-Service,OU=Students,DC=corp,DC=example", false},
-		{admins, "CN=BetterDesk-Admins", false},
-		{"BetterDesk-Admins", "CN=BetterDesk-Admins,OU=Self-Service,DC=corp,DC=example", true},
-		{"CN=BetterDesk-Admins", "CN=BetterDesk-Admins,OU=Self-Service,DC=corp,DC=example", true},
-		{"cn=betterdesk-admins", admins, true},
+		{admins, "cn=neodesk-admins, ou=security, dc=corp, dc=example", true},
+		{admins, "CN=NeoDesk-Admins,OU=Self-Service,OU=Students,DC=corp,DC=example", false},
+		{admins, "CN=NeoDesk-Admins", false},
+		{"NeoDesk-Admins", "CN=NeoDesk-Admins,OU=Self-Service,DC=corp,DC=example", true},
+		{"CN=NeoDesk-Admins", "CN=NeoDesk-Admins,OU=Self-Service,DC=corp,DC=example", true},
+		{"cn=neodesk-admins", admins, true},
 		{"Other", admins, false},
 		// An escaped comma is part of the CN
 		{"Admins, Berlin", `CN=Admins\, Berlin,OU=Groups,DC=corp,DC=example`, true},

@@ -9,7 +9,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/safepath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/safepath"
 )
 
 // FuzzFilePaths sends any path to the list and the read of a tree with
@@ -36,7 +36,7 @@ func FuzzFilePaths(f *testing.F) {
 			f.Fatal(err)
 		}
 	}
-	env := map[string]string{"BETTERDESK_PATH": server, "BETTERDESK_CONSOLE_PATH": console, "HOME": home, "TMPDIR": home}
+	env := map[string]string{"NEODESK_PATH": server, "NEODESK_CONSOLE_PATH": console, "HOME": home, "TMPDIR": home}
 	s := New(Options{Getenv: func(k string) string { return env[k] }, WorkDir: console, GOOS: "linux", LogDir: home, TempDirs: []string{home}})
 	inside := func(p string, roots []string) bool {
 		for _, r := range roots {
@@ -70,7 +70,7 @@ func FuzzFilePaths(f *testing.F) {
 // 1 MiB, wmic's have a size, and listed services are on the allow list.
 func FuzzCommandOutput(f *testing.F) {
 	f.Add("Mounted on Type 1B-blocks Used Avail\n/ ext4 100000000000 2 3\n")
-	f.Add("betterdesk-server.service loaded active running x\n\"BetterDeskServer\",\"Running\",\"x\"")
+	f.Add("neodesk-server.service loaded active running x\n\"NeoDeskServer\",\"Running\",\"x\"")
 	f.Add("SwapTotal: 5 kB\nSwapFree: 9 kB\nMemTotal: 3 kB\n")
 	f.Fuzz(func(t *testing.T, text string) {
 		// wmic's sizes pass as long as they are numbers other than 0, a

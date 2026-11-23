@@ -6,12 +6,12 @@ import (
 	"testing"
 )
 
-var rules = ManifestRules{Owner: "UNITRONIX", Repo: "BetterDesk", Branch: "main"}
+var rules = ManifestRules{Owner: "neodeskapp", Repo: "neodesk", Branch: "main"}
 
 func manifestJSON(mutate func(m map[string]any)) []byte {
 	m := map[string]any{
-		"schema_version": 1, "product": "betterdesk-server", "version": "3.6.0", "channel": "stable",
-		"created": "2026-11-18T10:00:00Z", "owner": "UNITRONIX", "repo": "BetterDesk", "branch": "main", "sha": newCommit,
+		"schema_version": 1, "product": "neodesk-server", "version": "3.6.0", "channel": "stable",
+		"created": "2026-11-18T10:00:00Z", "owner": "neodeskapp", "repo": "neodesk", "branch": "main", "sha": newCommit,
 		"files": []any{map[string]any{"path": asset, "sha256": strings.Repeat("a", 64), "size": 10}},
 	}
 	if mutate != nil {
@@ -26,7 +26,7 @@ func TestParseManifest(t *testing.T) {
 	if err != nil || m.Version != "3.6.0" || m.File(asset) == nil || m.File("x") != nil {
 		t.Fatalf("%+v %v", m, err)
 	}
-	if _, err := ParseManifest(manifestJSON(func(m map[string]any) { m["owner"] = "unitronix" }), rules); err != nil {
+	if _, err := ParseManifest(manifestJSON(func(m map[string]any) { m["owner"] = "NeoDeskApp" }), rules); err != nil {
 		t.Errorf("owner in another case: %v", err)
 	}
 	for name, mutate := range map[string]func(map[string]any){
@@ -43,10 +43,10 @@ func TestParseManifest(t *testing.T) {
 		"channel":             func(m map[string]any) { m["channel"] = "development" },
 		"no files":            func(m map[string]any) { m["files"] = []any{} },
 		"file outside": func(m map[string]any) {
-			m["files"] = []any{map[string]any{"path": "../betterdesk-server-linux-amd64", "sha256": strings.Repeat("a", 64)}}
+			m["files"] = []any{map[string]any{"path": "../neodesk-server-linux-amd64", "sha256": strings.Repeat("a", 64)}}
 		},
 		"file name with a slash": func(m map[string]any) {
-			m["files"] = []any{map[string]any{"path": "betterdesk-server-linux/amd64", "sha256": strings.Repeat("a", 64)}}
+			m["files"] = []any{map[string]any{"path": "neodesk-server-linux/amd64", "sha256": strings.Repeat("a", 64)}}
 		},
 		"other file": func(m map[string]any) {
 			m["files"] = []any{map[string]any{"path": "install.sh", "sha256": strings.Repeat("a", 64)}}

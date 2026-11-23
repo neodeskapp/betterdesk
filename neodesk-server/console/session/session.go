@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // Session is the session of one request. It is safe for concurrent use.
@@ -390,7 +390,7 @@ func (s *Session) expiresAt(nowMs int64) int64 {
 // touchActivity checks a signed-in session against the absolute and the
 // idle limit and, for a request that counts as activity, moves the last
 // activity and the cookie's lifetime. A request with the header
-// X-BD-Background: 1 is checked and does not count.
+// X-ND-Background: 1 is checked and does not count.
 func (s *Session) touchActivity(r *http.Request) (ok bool, reason string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -414,7 +414,7 @@ func (s *Session) touchActivity(r *http.Request) (ok bool, reason string) {
 	if nowMs-last > policy.IdleTimeoutMs {
 		return false, ReasonIdle
 	}
-	if strings.Join(r.Header.Values("X-BD-Background"), ", ") == "1" {
+	if strings.Join(r.Header.Values("X-ND-Background"), ", ") == "1" {
 		return true, ""
 	}
 	s.data.set("lastActivityAt", mustJSON(nowMs))

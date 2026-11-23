@@ -7,9 +7,9 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	pb "github.com/unitronix/betterdesk-server/proto"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
 )
 
 // TestOnlyTheWebClientsMessagesPass: on /ws/rendezvous a guest and an

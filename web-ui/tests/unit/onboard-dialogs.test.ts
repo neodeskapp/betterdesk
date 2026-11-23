@@ -143,7 +143,7 @@ describe('Add a computer', () => {
 				code: 'ABCD2345',
 				display_code: 'ABCD-2345',
 				link: 'https://desk.example.com/join/ABCD2345',
-				deep_link: 'betterdesk://join/desk.example.com/ABCD2345',
+				deep_link: 'neodesk://join/desk.example.com/ABCD2345',
 				mailed: false
 			}
 		});
@@ -174,7 +174,7 @@ describe('Quick support', () => {
 				code: 'ABCD2345',
 				display_code: 'ABCD-2345',
 				link: 'https://desk.example.com/s/ABCD2345',
-				deep_link: 'betterdesk://support/desk.example.com/ABCD2345',
+				deep_link: 'neodesk://support/desk.example.com/ABCD2345',
 				mailed: false
 			}
 		});

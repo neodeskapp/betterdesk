@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-// A restart of the console's own service (betterdesk-server on Linux,
-// BetterDeskServer on Windows) is the process's exit when RestartSelf says
+// A restart of the console's own service (neodesk-server on Linux,
+// NeoDeskServer on Windows) is the process's exit when RestartSelf says
 // so; nothing runs then. Any other action, any other service, and a
 // console without a supervisor run the command.
 func TestRestartSelf(t *testing.T) {
@@ -23,15 +23,15 @@ func TestRestartSelf(t *testing.T) {
 		name, action string
 		exit         bool
 	}{
-		{linux, "betterdesk-server", "restart", true},
-		{linux, "betterdesk-server.service", "restart", true},
-		{windows, "BetterDeskServer", "restart", true},
-		{linux, "betterdesk-server", "stop", false},
-		{linux, "betterdesk-server", "status", false},
-		{linux, "betterdesk-console", "restart", false},
-		{linux, "BetterDeskServer", "restart", false},
-		{windows, "BetterDeskConsole", "restart", false},
-		{windows, "BetterDeskServer", "stop", false},
+		{linux, "neodesk-server", "restart", true},
+		{linux, "neodesk-server.service", "restart", true},
+		{windows, "NeoDeskServer", "restart", true},
+		{linux, "neodesk-server", "stop", false},
+		{linux, "neodesk-server", "status", false},
+		{linux, "neodesk-console", "restart", false},
+		{linux, "NeoDeskServer", "restart", false},
+		{windows, "NeoDeskConsole", "restart", false},
+		{windows, "NeoDeskServer", "stop", false},
 	} {
 		before, ran := exits, len(f.calls)
 		res, err := tc.s.ControlService(context.Background(), tc.name, tc.action)
@@ -46,7 +46,7 @@ func TestRestartSelf(t *testing.T) {
 		}
 	}
 	none := New(Options{GOOS: "linux", Run: f.run, RestartSelf: func() bool { return false }})
-	if _, err := none.ControlService(context.Background(), "betterdesk-server", "restart"); err != nil || !strings.HasPrefix(f.calls[len(f.calls)-1], "systemctl restart betterdesk-server") {
+	if _, err := none.ControlService(context.Background(), "neodesk-server", "restart"); err != nil || !strings.HasPrefix(f.calls[len(f.calls)-1], "systemctl restart neodesk-server") {
 		t.Errorf("without a supervisor: %v %q", err, f.calls)
 	}
 }

@@ -16,7 +16,7 @@ export type UpdateState = 'idle' | 'checking' | 'uptodate' | 'available' | 'base
 
 /** owner/repo the channel's releases come from; the project's repository when the server names none */
 export function channelRepo(channel: Pick<Channel, 'owner' | 'repo'>): string {
-	return `${channel.owner || 'neodeskapp'}/${channel.repo || 'betterdesk'}`;
+	return `${channel.owner || 'neodeskapp'}/${channel.repo || 'neodesk'}`;
 }
 
 /**
@@ -61,7 +61,7 @@ export interface ComponentRow {
 	files: number;
 }
 
-/** The changed files per part of BetterDesk, parts without changes left out */
+/** The changed files per part of NeoDesk, parts without changes left out */
 export function componentRows(grouped: Changes['grouped'] | undefined): ComponentRow[] {
 	return Object.entries(grouped ?? {})
 		.filter(([, files]) => Array.isArray(files) && files.length > 0)

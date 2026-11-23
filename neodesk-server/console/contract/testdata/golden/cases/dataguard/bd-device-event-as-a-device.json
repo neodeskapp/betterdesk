@@ -2,7 +2,7 @@
  "id": "dataguard/bd-device-event-as-a-device",
  "request": {
   "method": "POST",
-  "path": "/api/bd/dlp-events",
+  "path": "/api/nd/dlp-events",
   "body": {
    "details": {
     "path": "E:\\"

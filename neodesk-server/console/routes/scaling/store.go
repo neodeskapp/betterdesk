@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // The settings rows of the two lists.

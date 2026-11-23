@@ -3,7 +3,7 @@ package jsjson
 import (
 	"math"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
 // MarshalJSON is JSON.stringify(v): no white space, numbers as

@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/api"
-	"github.com/unitronix/betterdesk-server/console/auditlog"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/api"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // WithClientAddress returns ctx naming the address a sign-in comes from
@@ -529,7 +529,7 @@ func (s *Service) authenticateUnknown(ctx context.Context, username, password st
 			reason := "OIDC enabled on Go server"
 			switch {
 			case s.set.AutoCreate:
-				reason = "BETTERDESK_AUTH_AUTOCREATE=true"
+				reason = "NEODESK_AUTH_AUTOCREATE=true"
 			case sso.ldap && sso.oidc:
 				reason = "LDAP+OIDC enabled on Go server"
 			case sso.ldap:

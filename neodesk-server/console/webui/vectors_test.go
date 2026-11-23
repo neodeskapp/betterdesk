@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // testdata/vectors.json.gz and routes_vectors.json.gz hold inputs with what

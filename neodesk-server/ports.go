@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/unitronix/betterdesk-server/config"
-	consoleconfig "github.com/unitronix/betterdesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	consoleconfig "github.com/neodeskapp/neodesk/neodesk-server/console/config"
 )
 
 // listener is a TCP port the start opens and the setting that names it.

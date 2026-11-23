@@ -4,8 +4,8 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
 )
 
 // Network is where the run finds the server's websocket listeners: the
@@ -15,7 +15,7 @@ type Network struct {
 	// SignalHostEnv and RelayHostEnv are WS_HBBS_HOST and WS_HBBR_HOST as
 	// set, "" when they are not.
 	SignalHostEnv, RelayHostEnv string
-	// APIURL is the API server's address (BETTERDESK_API_URL, else
+	// APIURL is the API server's address (NEODESK_API_URL, else
 	// HBBS_API_URL); its host is a candidate.
 	APIURL string
 	// ProxySignalHost is the signal host of the websocket proxy

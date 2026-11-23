@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/peer-online",
  "request": {
   "method": "GET",
-  "path": "/api/bd/peer/900100001",
+  "path": "/api/nd/peer/900100001",
   "notes": [
    "header Authorization: Bearer {secret:device_token_other}",
    "no cookies"

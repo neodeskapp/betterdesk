@@ -6,7 +6,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // resolveRegistrationPeerID maps a registration ID to the effective peer ID.

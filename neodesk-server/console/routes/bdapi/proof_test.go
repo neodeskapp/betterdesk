@@ -82,8 +82,8 @@ func TestNonces(t *testing.T) {
 // The payload a device signs: the version, the method in capitals, the
 // path, the device, the key, the time and the nonce, one per line.
 func TestProofPayload(t *testing.T) {
-	got := string(proofPayload("post", "/api/bd/register", "DEV1", "KEY", "2026-01-01T00:00:00Z", "n1"))
-	want := "bd-enrollment-v1\nPOST\n/api/bd/register\nDEV1\nKEY\n2026-01-01T00:00:00Z\nn1"
+	got := string(proofPayload("post", "/api/nd/register", "DEV1", "KEY", "2026-01-01T00:00:00Z", "n1"))
+	want := "nd-enrollment-v1\nPOST\n/api/nd/register\nDEV1\nKEY\n2026-01-01T00:00:00Z\nn1"
 	if got != want {
 		t.Errorf("payload %q", got)
 	}

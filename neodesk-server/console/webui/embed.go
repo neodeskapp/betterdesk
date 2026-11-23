@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/embedfs"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/embedfs"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // dist is the build of the web app the binary carries: cmd/embed-webui

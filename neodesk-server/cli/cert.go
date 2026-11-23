@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-const certUsage = "Usage: betterdesk-server cert --out DIR [--host NAME]... [--days N] [--force]"
+const certUsage = "Usage: neodesk-server cert --out DIR [--host NAME]... [--days N] [--force]"
 
 // certDays is how long a certificate of "cert" is valid, on every install.
 const certDays = 3650
@@ -35,7 +35,7 @@ func (h *hostList) Set(v string) error {
 // Cert is "cert --out DIR [--host NAME]... [--days N] [--force]": the
 // self-signed certificate of an install, for the console's HTTPS and for
 // TLS on the signal and relay ports, so neither installer needs OpenSSL
-// (DECISIONS A107). It writes DIR/betterdesk.crt and DIR/betterdesk.key
+// (DECISIONS A107). It writes DIR/neodesk.crt and DIR/neodesk.key
 // (RSA 2048, the key readable by its owner only), valid for the hosts
 // given and for localhost and 127.0.0.1, the first host as its common
 // name. An existing pair is kept unless --force is given. Exit status: 0
@@ -43,7 +43,7 @@ func (h *hostList) Set(v string) error {
 func Cert(args []string, env Env) int {
 	fs := flag.NewFlagSet("cert", flag.ContinueOnError)
 	fs.SetOutput(env.Stderr)
-	out := fs.String("out", "", "folder for betterdesk.crt and betterdesk.key")
+	out := fs.String("out", "", "folder for neodesk.crt and neodesk.key")
 	days := fs.Int("days", certDays, "days the certificate is valid")
 	force := fs.Bool("force", false, "replace an existing pair")
 	var hosts hostList
@@ -52,30 +52,30 @@ func Cert(args []string, env Env) int {
 		fmt.Fprintln(env.Stderr, certUsage)
 		return 2
 	}
-	crt, key := filepath.Join(*out, "betterdesk.crt"), filepath.Join(*out, "betterdesk.key")
+	crt, key := filepath.Join(*out, "neodesk.crt"), filepath.Join(*out, "neodesk.key")
 	if !*force {
 		for _, p := range []string{crt, key} {
 			if _, err := os.Stat(p); err == nil {
-				fmt.Fprintf(env.Stderr, "betterdesk-server cert: %s exists; --force replaces it\n", p)
+				fmt.Fprintf(env.Stderr, "neodesk-server cert: %s exists; --force replaces it\n", p)
 				return 1
 			}
 		}
 	}
 	certPEM, keyPEM, notAfter, err := selfSigned(hosts, env.Now(), *days)
 	if err != nil {
-		fmt.Fprintf(env.Stderr, "betterdesk-server cert: %v\n", err)
+		fmt.Fprintf(env.Stderr, "neodesk-server cert: %v\n", err)
 		return 1
 	}
 	if err := os.MkdirAll(*out, 0o750); err != nil {
-		fmt.Fprintf(env.Stderr, "betterdesk-server cert: %v\n", err)
+		fmt.Fprintf(env.Stderr, "neodesk-server cert: %v\n", err)
 		return 1
 	}
 	if err := writeFileAtomic(key, keyPEM, 0o600); err != nil {
-		fmt.Fprintf(env.Stderr, "betterdesk-server cert: %v\n", err)
+		fmt.Fprintf(env.Stderr, "neodesk-server cert: %v\n", err)
 		return 1
 	}
 	if err := writeFileAtomic(crt, certPEM, 0o644); err != nil {
-		fmt.Fprintf(env.Stderr, "betterdesk-server cert: %v\n", err)
+		fmt.Fprintf(env.Stderr, "neodesk-server cert: %v\n", err)
 		return 1
 	}
 	fmt.Fprintf(env.Stdout, "wrote %s and %s, valid until %s\n", crt, key, notAfter.Format("2006-01-02"))
@@ -95,7 +95,7 @@ func selfSigned(hosts []string, now time.Time, days int) (certPEM, keyPEM []byte
 	all := append(slices.Clone(hosts), "localhost", "127.0.0.1")
 	tmpl := &x509.Certificate{
 		SerialNumber:          serial,
-		Subject:               pkix.Name{CommonName: all[0], Organization: []string{"BetterDesk"}},
+		Subject:               pkix.Name{CommonName: all[0], Organization: []string{"NeoDesk"}},
 		NotBefore:             now.Add(-time.Hour),
 		NotAfter:              now.AddDate(0, 0, days),
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,

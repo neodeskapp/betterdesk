@@ -1,5 +1,5 @@
 -- One SQLite file used by both: Node console initialised first, then the Go server started on the same file.
--- Worktree betterdesk-go, dumped 2026-11-19 on 3f4ffd70 plus the change that adds agent_templates to store.Migrate (upstream 3.5.264 merged).
+-- Worktree neodesk-go, dumped 2026-11-19 on 3f4ffd70 plus the change that adds agent_templates to store.Migrate (upstream 3.5.264 merged).
 -- sqlite3 <file> .schema  (SQLite 3 CLI of the dev image, statements in creation order, text as stored in sqlite_master)
 -- Do not edit: regenerate (see data.md, section "How the schema dumps were produced").
 -- users.credentials_changed_at and the trigger users_credentials_changed (with its function on PostgreSQL) added on 2026-11-21 in the text the signal server's Migrate creates since RV181, at the place a regenerated dump has them; the Node console's part is unchanged.
@@ -288,7 +288,7 @@ CREATE TABLE agent_bundles (
                 client_commit TEXT DEFAULT NULL,
                 active_generation_hash TEXT DEFAULT NULL,
                 created_by INTEGER DEFAULT NULL,
-                product_type TEXT NOT NULL DEFAULT 'betterdesk-support',
+                product_type TEXT NOT NULL DEFAULT 'neodesk-support',
                 revoked INTEGER NOT NULL DEFAULT 0,
                 download_count INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),

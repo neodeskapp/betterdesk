@@ -3,11 +3,11 @@ package bdapi
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/bdrelay"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/bdrelay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
 // The relay between two devices: a device asks to connect to another,
@@ -21,7 +21,7 @@ type heartbeatAnswer struct {
 	PendingConnections []bdrelay.Pending `json:"pending_connections"`
 }
 
-// heartbeat answers POST /api/bd/heartbeat {device_id}: the device is
+// heartbeat answers POST /api/nd/heartbeat {device_id}: the device is
 // online, with the sessions that wait for it. The device is the body's
 // device_id when that is truthy, which the match guard compared by its
 // text (so 900100001 and ["900100001"] pass for that device), else the
@@ -49,7 +49,7 @@ type connectAnswer struct {
 	RelayURL     string `json:"relay_url"`
 }
 
-// connect answers POST /api/bd/connect {target_id, initiator_id,
+// connect answers POST /api/nd/connect {target_id, initiator_id,
 // public_key}: a relay session from the token's device to the target. The
 // token must be a device token, and initiator_id, when given, must be that
 // device. The target must be a device the console knows that is not
@@ -107,7 +107,7 @@ func (h *handlers) connect(w http.ResponseWriter, r *http.Request) {
 	}
 	kit.JSON(w, r, http.StatusOK, connectAnswer{
 		Success: true, SessionID: sessionID, Token: initiatorToken, TargetOnline: notified,
-		RelayURL: "/ws/bd-relay?session=" + sessionID + "&token=" + initiatorToken + "&role=initiator",
+		RelayURL: "/ws/nd-relay?session=" + sessionID + "&token=" + initiatorToken + "&role=initiator",
 	})
 }
 
@@ -116,7 +116,7 @@ type sessionAnswer struct {
 	Session *bdrelay.SessionInfo `json:"session"`
 }
 
-// session answers GET /api/bd/session/{id} for the two devices of the
+// session answers GET /api/nd/session/{id} for the two devices of the
 // session.
 func (h *handlers) session(w http.ResponseWriter, r *http.Request) {
 	info := h.d.Relay.GetRelaySession(r.PathValue("id"))
@@ -132,7 +132,7 @@ func (h *handlers) session(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, sessionAnswer{Success: true, Session: info})
 }
 
-// endSession answers DELETE /api/bd/session/{id}: one of the two devices
+// endSession answers DELETE /api/nd/session/{id}: one of the two devices
 // drops the session. Its sockets stay open.
 func (h *handlers) endSession(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
@@ -162,7 +162,7 @@ type peersAnswer struct {
 	Peers   []onlinePeer `json:"peers"`
 }
 
-// peers answers GET /api/bd/peers: the devices with an open signal socket
+// peers answers GET /api/nd/peers: the devices with an open signal socket
 // that the console knows and has not banned.
 func (h *handlers) peers(w http.ResponseWriter, r *http.Request) {
 	out := []onlinePeer{}
@@ -192,7 +192,7 @@ type peerAnswer struct {
 	Peer    peerAnswerInfo `json:"peer"`
 }
 
-// peer answers GET /api/bd/peer/{id}.
+// peer answers GET /api/nd/peer/{id}.
 func (h *handlers) peer(w http.ResponseWriter, r *http.Request) {
 	found, err := h.deviceByID(r.Context(), jsbind.String(r.PathValue("id")))
 	if err != nil {

@@ -3,7 +3,7 @@ package devices_test
 import (
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
 )
 
 // L83: GET /api/remote-targets/readiness passes on what the server says

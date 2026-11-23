@@ -1,5 +1,5 @@
 /**
- * Settings changes that need a BetterDesk service restart
+ * Settings changes that need a NeoDesk service restart
  * (services/restartCoordinator.js, routes/settings.routes.js). A save that
  * needs one answers with `restartRequired`; the person then restarts or
  * cancels, which puts the previous values back. Everything but the status

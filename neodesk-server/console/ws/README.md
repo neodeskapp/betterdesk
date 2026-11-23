@@ -8,7 +8,7 @@ to the Node console while it runs behind this one. Sockets that live here:
 
 | Path | Package | Old service |
 |---|---|---|
-| `/ws/bd-relay`, `/ws/bd-signal` | `console/bdrelay` | `services/bdRelay.js` |
+| `/ws/nd-relay`, `/ws/nd-signal` | `console/bdrelay` | `services/bdRelay.js` |
 | `/ws/chat/<id>`, `/ws/chat-operator/<id>` | `console/routes/chat` (`relay.go`) | `services/chatRelay.js` |
 | `/api/cdap/devices/<id>/terminal`, `desktop`, `video`, `files`, `audio` | `console/cdapproxy` | `services/cdapTerminalProxy.js`, `services/cdapMediaProxy.js` |
 | `/agent.ashx`, `/meshrelay.ashx`, `/control.ashx` | `console/meshproxy` | `services/meshAshxProxy.js` |

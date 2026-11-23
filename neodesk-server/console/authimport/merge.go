@@ -482,7 +482,7 @@ func normalName(s string) string {
 // writeMarker records that the import is complete, with its report.
 func (c *conn) writeMarker(ctx context.Context) error {
 	if _, err := c.exec(ctx, `
-		CREATE TABLE IF NOT EXISTS betterdesk_migrations (
+		CREATE TABLE IF NOT EXISTS neodesk_migrations (
 			name TEXT PRIMARY KEY,
 			status TEXT NOT NULL,
 			source_sha256 TEXT NOT NULL DEFAULT '',
@@ -496,7 +496,7 @@ func (c *conn) writeMarker(ctx context.Context) error {
 		return err
 	}
 	_, err = c.exec(ctx, `
-		INSERT INTO betterdesk_migrations (name, status, source_sha256, details)
+		INSERT INTO neodesk_migrations (name, status, source_sha256, details)
 		VALUES (?, 'complete', ?, ?)
 		ON CONFLICT(name) DO UPDATE SET status = 'complete', source_sha256 = excluded.source_sha256,
 			completed_at = datetime('now'), details = excluded.details`,

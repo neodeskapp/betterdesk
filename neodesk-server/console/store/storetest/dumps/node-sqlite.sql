@@ -1,5 +1,5 @@
 -- Node console schema on an empty SQLite file (fresh install: one file, db_v2.sqlite3, no auth.db).
--- Worktree betterdesk-go, dumped 2026-11-19 on 3f4ffd70 plus the change that adds agent_templates to store.Migrate (upstream 3.5.264 merged).
+-- Worktree neodesk-go, dumped 2026-11-19 on 3f4ffd70 plus the change that adds agent_templates to store.Migrate (upstream 3.5.264 merged).
 -- Produced by adapter.init() of web-nodejs/services/dbAdapter.js plus the DatabaseSessionStore, then: sqlite3 <file> .schema  (SQLite 3 CLI of the dev image, statements in creation order, text as stored in sqlite_master)
 -- Do not edit: regenerate (see data.md, section "How the schema dumps were produced").
 
@@ -286,7 +286,7 @@ CREATE TABLE agent_bundles (
                 client_commit TEXT DEFAULT NULL,
                 active_generation_hash TEXT DEFAULT NULL,
                 created_by INTEGER DEFAULT NULL,
-                product_type TEXT NOT NULL DEFAULT 'betterdesk-support',
+                product_type TEXT NOT NULL DEFAULT 'neodesk-support',
                 revoked INTEGER NOT NULL DEFAULT 0,
                 download_count INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),

@@ -1,4 +1,4 @@
-"""Offline tests for the BetterDesk CDAP Python SDK."""
+"""Offline tests for the NeoDesk CDAP Python SDK."""
 
 from __future__ import annotations
 
@@ -10,8 +10,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from betterdesk_cdap import CDAPBridge, gauge, toggle  # noqa: E402
-from betterdesk_cdap.protocol import (  # noqa: E402
+from neodesk_cdap import CDAPBridge, gauge, toggle  # noqa: E402
+from neodesk_cdap.protocol import (  # noqa: E402
     Message,
     auth_payload_api_key,
     auth_payload_device_token,

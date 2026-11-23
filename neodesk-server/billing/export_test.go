@@ -72,7 +72,7 @@ func TestSessionsCSVKeepsFormulasAsText(t *testing.T) {
 }
 
 func TestSimpleTextPDF(t *testing.T) {
-	pdf := simpleTextPDF([]string{"BetterDesk billing report", "Line 2"})
+	pdf := simpleTextPDF([]string{"NeoDesk billing report", "Line 2"})
 	if len(pdf) < 100 || pdf[0] != '%' {
 		t.Fatal("invalid pdf header")
 	}

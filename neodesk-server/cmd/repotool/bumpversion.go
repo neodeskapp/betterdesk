@@ -59,27 +59,27 @@ var (
 	reShellVersion      = regexp.MustCompile(`(?m)^VERSION="([^"]+)"`)
 	rePowerShellVersion = regexp.MustCompile(`(?m)^\$script:VERSION = "([^"]+)"`)
 	reLabelVersion      = regexp.MustCompile(`LABEL version="([^"]+)"`)
-	reInstallVersion    = regexp.MustCompile(`BETTERDESK_VERSION="\$\{BETTERDESK_VERSION:-([^}]+)\}"`)
+	reInstallVersion    = regexp.MustCompile(`NEODESK_VERSION="\$\{NEODESK_VERSION:-([^}]+)\}"`)
 	reInstallBaseline   = regexp.MustCompile(`(Docker image tag / release baseline \(default: )[^)]+(\))`)
-	reImageVersion      = regexp.MustCompile(`\$\{BETTERDESK_IMAGE_VERSION:-([^}]+)\}`)
+	reImageVersion      = regexp.MustCompile(`\$\{NEODESK_IMAGE_VERSION:-([^}]+)\}`)
 )
 
 // versionRules are the files besides VERSION that name the version.
 // README.md is not one of them: its version badge is a picture
 // (docs/assets/badges/*/version.svg) that is redrawn by hand for a
 // release. Nor are the quick-start compose files, whose image tag is
-// "latest" unless BETTERDESK_IMAGE_TAG pins a release.
+// "latest" unless NEODESK_IMAGE_TAG pins a release.
 var versionRules = []versionRule{
 	{path: "VERSION", extract: jsTrim, apply: wholeFile},
-	{path: "betterdesk.sh", extract: firstGroup(reShellVersion), apply: managerVersion(reShellVersion, `VERSION="%s"`)},
-	{path: "betterdesk.ps1", extract: firstGroup(rePowerShellVersion), apply: managerVersion(rePowerShellVersion, `$script:VERSION = "%s"`)},
-	{path: "betterdesk-docker.sh", extract: firstGroup(reShellVersion), apply: managerVersion(reShellVersion, `VERSION="%s"`)},
+	{path: "neodesk.sh", extract: firstGroup(reShellVersion), apply: managerVersion(reShellVersion, `VERSION="%s"`)},
+	{path: "neodesk.ps1", extract: firstGroup(rePowerShellVersion), apply: managerVersion(rePowerShellVersion, `$script:VERSION = "%s"`)},
+	{path: "neodesk-docker.sh", extract: firstGroup(reShellVersion), apply: managerVersion(reShellVersion, `VERSION="%s"`)},
 	{path: "Dockerfile", extract: firstGroup(reLabelVersion), apply: replaceFirstOf(reLabelVersion, `LABEL version="%s"`)},
 	{path: "Dockerfile.server", extract: firstGroup(reLabelVersion), apply: replaceFirstOf(reLabelVersion, `LABEL version="%s"`)},
 	{path: "install.sh", extract: firstGroup(reInstallVersion), apply: installVersion},
-	{path: "docker/entrypoint.sh", extract: firstGroup(reImageVersion), apply: replaceFirstOf(reImageVersion, `${BETTERDESK_IMAGE_VERSION:-%s}`)},
-	{path: "betterdesk-server/VERSION", extract: jsTrim, apply: wholeFile},
-	{path: "betterdesk-server/internal/productversion/VERSION", extract: jsTrim, apply: wholeFile},
+	{path: "docker/entrypoint.sh", extract: firstGroup(reImageVersion), apply: replaceFirstOf(reImageVersion, `${NEODESK_IMAGE_VERSION:-%s}`)},
+	{path: "neodesk-server/VERSION", extract: jsTrim, apply: wholeFile},
+	{path: "neodesk-server/internal/productversion/VERSION", extract: jsTrim, apply: wholeFile},
 }
 
 const changelogPath = "CHANGELOG.md"
@@ -96,7 +96,7 @@ func firstGroup(re *regexp.Regexp) func(string) string {
 }
 
 // managerVersion is the rule of the manager scripts: every copy of the
-// version line and of the banner "BetterDesk Console Manager vX" changes.
+// version line and of the banner "NeoDesk Console Manager vX" changes.
 func managerVersion(re *regexp.Regexp, line string) func(string, string) string {
 	return func(content, version string) string {
 		old := firstGroup(re)(content)
@@ -105,7 +105,7 @@ func managerVersion(re *regexp.Regexp, line string) func(string, string) string 
 		}
 		for _, pair := range [][2]string{
 			{fmt.Sprintf(line, old), fmt.Sprintf(line, version)},
-			{"BetterDesk Console Manager v" + old, "BetterDesk Console Manager v" + version},
+			{"NeoDesk Console Manager v" + old, "NeoDesk Console Manager v" + version},
 		} {
 			content = strings.ReplaceAll(content, pair[0], pair[1])
 		}
@@ -129,7 +129,7 @@ func replaceFirstOf(re *regexp.Regexp, text string) func(string, string) string 
 // names, whatever they were.
 func installVersion(content, version string) string {
 	if loc := reInstallVersion.FindStringIndex(content); loc != nil {
-		content = content[:loc[0]] + `BETTERDESK_VERSION="${BETTERDESK_VERSION:-` + version + `}"` + content[loc[1]:]
+		content = content[:loc[0]] + `NEODESK_VERSION="${NEODESK_VERSION:-` + version + `}"` + content[loc[1]:]
 	}
 	if m := reInstallBaseline.FindStringSubmatchIndex(content); m != nil {
 		content = content[:m[0]] + content[m[2]:m[3]] + version + content[m[4]:m[5]] + content[m[1]:]
@@ -364,7 +364,7 @@ func (b versionBump) updateChangelog(old, next string, dryRun bool) (bool, error
 	// The compare link points at the repository the workflow runs in
 	repository := b.getenv("GITHUB_REPOSITORY")
 	if repository == "" {
-		repository = "trybetterdesk/betterdesk"
+		repository = "neodeskapp/neodesk"
 	}
 	if !strings.Contains(content, "["+next+"]:") {
 		content = strings.TrimRightFunc(content, isJSSpace) + "\n[" + next + "]: https://github.com/" + repository + "/compare/v" + old + "...v" + next + "\n"

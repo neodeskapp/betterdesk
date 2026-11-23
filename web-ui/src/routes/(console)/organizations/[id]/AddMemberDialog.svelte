@@ -1,7 +1,7 @@
 <!--
   Add someone to the organization: a new account that exists only here
   (username, password of at least 8 characters, the server's rule), a
-  sign-in for the BetterDesk client; or an existing server account. Two
+  sign-in for the NeoDesk client; or an existing server account. Two
   ways, picked with tabs at the top of the dialog.
 -->
 <script lang="ts">

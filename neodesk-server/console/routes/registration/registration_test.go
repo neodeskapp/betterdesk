@@ -10,14 +10,14 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/unitronix/betterdesk-server/console/config"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/routetest"
-	"github.com/unitronix/betterdesk-server/console/routes/registration"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/registration"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // The intent of web-nodejs/tests/registration.routes.test.js: the pending
@@ -161,7 +161,7 @@ func TestHelpRequestsShowTheConsolesNames(t *testing.T) {
 }
 
 // Both mounts share one memory of the names, as the old router's one map
-// did: a name the root mount learnt answers at /api/bd after its audit
+// did: a name the root mount learnt answers at /api/nd after its audit
 // entry is gone, and a console of its own does not know it.
 func TestBothMountsShareTheHelpNames(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
@@ -172,9 +172,9 @@ func TestBothMountsShareTheHelpNames(t *testing.T) {
 		if _, err := db.Exec(context.Background(), "DELETE FROM audit_log"); err != nil {
 			t.Fatal(err)
 		}
-		names := acceptedBy(t, w.As("viewer").Do(http.MethodGet, "/api/bd/api/help/requests", "").Body)
+		names := acceptedBy(t, w.As("viewer").Do(http.MethodGet, "/api/nd/api/help/requests", "").Body)
 		if names["501"] != "e2e_operator|" {
-			t.Fatalf("at /api/bd: %q", names["501"])
+			t.Fatalf("at /api/nd: %q", names["501"])
 		}
 		other := routetest.New(t, routetest.Options{API: helpAPI()})
 		if names := acceptedBy(t, other.As("viewer").Do(http.MethodGet, "/api/help/requests", "").Body); names["501"] != "|" {
@@ -183,14 +183,14 @@ func TestBothMountsShareTheHelpNames(t *testing.T) {
 	})
 }
 
-// The device routes take no session and, below /api/bd, no CSRF token;
+// The device routes take no session and, below /api/nd, no CSRF token;
 // at the root mount the CSRF gate answers first.
 func TestDeviceRoutesAtBothMounts(t *testing.T) {
 	w := routetest.New(t, routetest.Options{})
 	device := w.SignedOut()
-	got := device.Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"dev-1"}`, "X-CSRF-Token", "")
+	got := device.Do(http.MethodPost, "/api/nd/register-request", `{"device_id":"dev-1"}`, "X-CSRF-Token", "")
 	if got.Status != http.StatusOK || got.Body != `{"success":true,"status":"pending","id":1}` {
-		t.Fatalf("at /api/bd: %d %s", got.Status, got.Body)
+		t.Fatalf("at /api/nd: %d %s", got.Status, got.Body)
 	}
 	got = device.Do(http.MethodPost, "/register-request", `{"device_id":"dev-2"}`, "X-CSRF-Token", "")
 	if got.Status != http.StatusForbidden || !strings.Contains(got.Body, "Invalid CSRF token") {
@@ -211,7 +211,7 @@ func TestDeviceRoutesAtBothMounts(t *testing.T) {
 // (BUGS RG4), a field that is truthy but no text fails, the fields are
 // cut to their length.
 func TestRegisterRequestChecks(t *testing.T) {
-	w := routetest.New(t, routetest.Options{Env: map[string]string{"BD_REGISTER_RATE_LIMIT_MAX": "1000"}})
+	w := routetest.New(t, routetest.Options{Env: map[string]string{"ND_REGISTER_RATE_LIMIT_MAX": "1000"}})
 	device := w.SignedOut()
 	row := func(id string) map[string]any {
 		t.Helper()
@@ -247,20 +247,20 @@ func TestRegisterRequestChecks(t *testing.T) {
 		{`{"device_id":"abc","public_key":{}}`, `500 {"success":false,"error":"Internal server error"}`},
 		{`{"device_id":"abc","uuid":1}`, `500 {"success":false,"error":"Internal server error"}`},
 	} {
-		got := device.Do(http.MethodPost, "/api/bd/register-request", c.body)
+		got := device.Do(http.MethodPost, "/api/nd/register-request", c.body)
 		if have := strconv.Itoa(got.Status) + " " + got.Body; have != c.want {
 			t.Errorf("%s: %s, want %s", c.body, have, c.want)
 		}
 	}
 	// A no-break space before, a byte order mark after: JavaScript white space
-	if got := device.Do(http.MethodPost, "/api/bd/register-request", `{"device_id":" `+string(rune(0xa0))+`a_b-1`+string(rune(0xfeff))+` ","hostname":0,"platform":false,"version":null}`); got.Status != http.StatusOK {
+	if got := device.Do(http.MethodPost, "/api/nd/register-request", `{"device_id":" `+string(rune(0xa0))+`a_b-1`+string(rune(0xfeff))+` ","hostname":0,"platform":false,"version":null}`); got.Status != http.StatusOK {
 		t.Errorf("white space around: %d %s", got.Status, got.Body)
 	}
 	if r := row("a_b-1"); r["hostname"] != "" || r["platform"] != "" || r["version"] != "" {
 		t.Errorf("falsy fields: %v", r)
 	}
 	long := `{"device_id":"cut","hostname":"` + strings.Repeat("h", 300) + `","platform":"` + strings.Repeat("😀", 40) + `","version":"` + strings.Repeat("v", 40) + `","public_key":"` + strings.Repeat("k", 600) + `","uuid":"` + strings.Repeat("u", 70) + `"}`
-	if got := device.Do(http.MethodPost, "/api/bd/register-request", long); got.Status != http.StatusOK {
+	if got := device.Do(http.MethodPost, "/api/nd/register-request", long); got.Status != http.StatusOK {
 		t.Fatalf("long fields: %d %s", got.Status, got.Body)
 	}
 	r := row("cut")
@@ -270,7 +270,7 @@ func TestRegisterRequestChecks(t *testing.T) {
 	}
 	// A pair cut in half is stored as U+FFFD
 	odd := `{"device_id":"half","platform":"` + strings.Repeat("a", 63) + `😀"}`
-	if got := device.Do(http.MethodPost, "/api/bd/register-request", odd); got.Status != http.StatusOK {
+	if got := device.Do(http.MethodPost, "/api/nd/register-request", odd); got.Status != http.StatusOK {
 		t.Fatalf("half a pair: %d %s", got.Status, got.Body)
 	}
 	if r := row("half"); r["platform"] != strings.Repeat("a", 63)+string(utf8.RuneError) {
@@ -287,7 +287,7 @@ func TestRecordsTheTrustedAddress(t *testing.T) {
 			cfg.TrustProxy, _ = httpx.ParseTrustProxy(c.trust)
 		}})
 		forwarded := []string{"X-Forwarded-For", "203.0.113.5", "X-Real-IP", "192.0.2.1"}
-		if got := w.SignedOut().Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"addr-1"}`, forwarded...); got.Status != http.StatusOK {
+		if got := w.SignedOut().Do(http.MethodPost, "/api/nd/register-request", `{"device_id":"addr-1"}`, forwarded...); got.Status != http.StatusOK {
 			t.Fatalf("TRUST_PROXY=%q: request %d %s", c.trust, got.Status, got.Body)
 		}
 		var ip string
@@ -337,7 +337,7 @@ func TestRegisterStatus(t *testing.T) {
 		"?device_id[]=rej&device_id[]=pend": `200 {"success":true,"status":"rejected","id":4,"reason":"not ours"}`,
 		"?device_id[x]=pend":                `400 {"success":false,"error":"Missing device_id"}`,
 	} {
-		got := device.Do(http.MethodGet, "/api/bd/register-status"+query, "")
+		got := device.Do(http.MethodGet, "/api/nd/register-status"+query, "")
 		if have := strconv.Itoa(got.Status) + " " + got.Body; have != want {
 			t.Errorf("%q: %s, want %s", query, have, want)
 		}
@@ -367,7 +367,7 @@ func clientAPIHandler(db *store.DB, local bool) http.Handler {
 	return h
 }
 
-// On the client API port the two routes answer below /api/bd only. In
+// On the client API port the two routes answer below /api/nd only. In
 // proxy mode no parser reads the body, so a request is refused whatever
 // it says (BUGS I1); in local mode the port's parser gives the route the
 // body.
@@ -381,11 +381,11 @@ func TestClientAPIPort(t *testing.T) {
 		return rec.Code, rec.Body.String()
 	}
 	proxy, _ := clientAPI(t, false)
-	if status, body := post(proxy, "/api/bd/register-request", `{"device_id":"port-dev"}`); status != http.StatusBadRequest || body != `{"success":false,"error":"Invalid device_id"}` {
+	if status, body := post(proxy, "/api/nd/register-request", `{"device_id":"port-dev"}`); status != http.StatusBadRequest || body != `{"success":false,"error":"Invalid device_id"}` {
 		t.Fatalf("proxy mode: %d %s", status, body)
 	}
 	local, db := clientAPI(t, true)
-	if status, body := post(local, "/api/bd/register-request", `{"device_id":"port-dev"}`); status != http.StatusOK || body != `{"success":true,"status":"pending","id":1}` {
+	if status, body := post(local, "/api/nd/register-request", `{"device_id":"port-dev"}`); status != http.StatusOK || body != `{"success":true,"status":"pending","id":1}` {
 		t.Fatalf("local mode: %d %s", status, body)
 	}
 	// The connection's address: the port trusts no proxy here
@@ -396,10 +396,10 @@ func TestClientAPIPort(t *testing.T) {
 	if status, _ := post(local, "/register-request", `{"device_id":"port-dev"}`); status != http.StatusNotFound {
 		t.Fatalf("root mount on the port: %d", status)
 	}
-	if status, _ := post(local, "/api/bd/api/registrations", `{}`); status != http.StatusNotFound {
+	if status, _ := post(local, "/api/nd/api/registrations", `{}`); status != http.StatusNotFound {
 		t.Fatalf("an admin route on the port: %d", status)
 	}
-	req := httptest.NewRequest(http.MethodGet, "/api/bd/register-status?device_id=port-dev", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/nd/register-status?device_id=port-dev", nil)
 	rec := httptest.NewRecorder()
 	local.ServeHTTP(rec, req)
 	if rec.Code != http.StatusOK || rec.Body.String() != `{"success":true,"status":"pending","id":1}` || rec.Header().Get("ETag") == "" {
@@ -467,13 +467,13 @@ func TestApprovalDeviceGroups(t *testing.T) {
 				t.Fatalf("%s: %d %s", target, got.Status, got.Body)
 			}
 		}
-		if got := operator.Do(http.MethodPut, "/api/bd/api/registrations/1/approve", `{"group_guids":["dg-open"]}`); got.Status != http.StatusForbidden {
+		if got := operator.Do(http.MethodPut, "/api/nd/api/registrations/1/approve", `{"group_guids":["dg-open"]}`); got.Status != http.StatusForbidden {
 			t.Fatalf("a device the operator may not see: %d %s", got.Status, got.Body)
 		}
 		if got := members(); got != "dg-closed:DEV-HID dg-closed:DEV-SEE dg-mine:DEV-SEE odd guid:DEV-ADM" {
 			t.Fatalf("a device the operator may not see: %s", got)
 		}
-		approve(operator, "/api/bd/api/registrations/2/approve", `{"group_guids":["dg-open"],"confirm_existing_device":true}`)
+		approve(operator, "/api/nd/api/registrations/2/approve", `{"group_guids":["dg-open"],"confirm_existing_device":true}`)
 		if got := members(); got != "dg-closed:DEV-HID dg-closed:DEV-SEE dg-open:DEV-SEE odd guid:DEV-ADM" {
 			t.Fatalf("a device the operator may see: %s", got)
 		}
@@ -503,7 +503,7 @@ func TestRejectWithoutAReason(t *testing.T) {
 		w := routetest.New(t, routetest.Options{DB: db})
 		for i, body := range []string{`{"reason":null}`, `{}`, `{"reason":false}`, `{"reason":0}`, `[]`} {
 			id := "nobody-" + strconv.Itoa(i)
-			if got := w.SignedOut().Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"`+id+`"}`); got.Status != http.StatusOK {
+			if got := w.SignedOut().Do(http.MethodPost, "/api/nd/register-request", `{"device_id":"`+id+`"}`); got.Status != http.StatusOK {
 				t.Fatalf("request %s: %d %s", id, got.Status, got.Body)
 			}
 			got := w.As("admin").Do(http.MethodPut, "/api/registrations/"+strconv.Itoa(i+1)+"/reject", body)
@@ -521,7 +521,7 @@ func TestRejectWithoutAReason(t *testing.T) {
 func TestApprovalChecksTheBodyFirst(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := routetest.New(t, routetest.Options{DB: db})
-		if got := w.SignedOut().Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"odd-body"}`); got.Status != http.StatusOK {
+		if got := w.SignedOut().Do(http.MethodPost, "/api/nd/register-request", `{"device_id":"odd-body"}`); got.Status != http.StatusOK {
 			t.Fatalf("request: %d %s", got.Status, got.Body)
 		}
 		for body, want := range map[string]string{
@@ -586,7 +586,7 @@ func TestEnrollmentApprovalChecksTheBodyFirst(t *testing.T) {
 func TestRegistrationIDs(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := routetest.New(t, routetest.Options{DB: db})
-		if got := w.SignedOut().Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"id-dev"}`); got.Status != http.StatusOK {
+		if got := w.SignedOut().Do(http.MethodPost, "/api/nd/register-request", `{"device_id":"id-dev"}`); got.Status != http.StatusOK {
 			t.Fatalf("request: %d %s", got.Status, got.Body)
 		}
 		admin := w.As("admin")
@@ -615,7 +615,7 @@ func TestRegistrationIDs(t *testing.T) {
 func TestLostRaceIsRefused(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := routetest.New(t, routetest.Options{DB: db})
-		if got := w.SignedOut().Do(http.MethodPost, "/api/bd/register-request", `{"device_id":"race-dev"}`); got.Status != http.StatusOK {
+		if got := w.SignedOut().Do(http.MethodPost, "/api/nd/register-request", `{"device_id":"race-dev"}`); got.Status != http.StatusOK {
 			t.Fatalf("request: %d %s", got.Status, got.Body)
 		}
 		ctx := context.Background()
@@ -667,7 +667,7 @@ func TestHelpActionOfAnUnknownRequest(t *testing.T) {
 			status     int
 		}{
 			{"/api/help/requests/999999999/accept", `{"success":false,"error":"not found"}`, 404},
-			{"/api/bd/api/help/requests/999999999/resolve", `{"success":false,"error":"not found"}`, 404},
+			{"/api/nd/api/help/requests/999999999/resolve", `{"success":false,"error":"not found"}`, 404},
 			{"/api/help/requests/0/accept", `{"success":false,"error":"invalid id"}`, 400},
 			{"/api/help/requests/x%20y/resolve", `{"success":false,"error":"Invalid requestId"}`, 400},
 			{"/api/help/requests/7/resolve", `{"success":false,"error":"internal"}`, 502},

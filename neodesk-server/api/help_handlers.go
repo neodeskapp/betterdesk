@@ -20,8 +20,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
 )
 
 // handleListHelpRequests returns help requests, scoped to the caller's org.

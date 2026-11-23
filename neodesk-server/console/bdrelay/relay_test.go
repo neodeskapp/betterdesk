@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
 )
 
 func newRelay(t *testing.T) (*Service, string) {
@@ -38,7 +38,7 @@ func newRelay(t *testing.T) (*Service, string) {
 // code.
 func openSignal(t *testing.T, addr, device string, header http.Header) (c *wstest.Client, welcomed bool, code int) {
 	t.Helper()
-	c, _, err := wstest.Dial(addr, "/ws/bd-signal?device_id="+device+"&token=tok-"+device+"-good", header)
+	c, _, err := wstest.Dial(addr, "/ws/nd-signal?device_id="+device+"&token=tok-"+device+"-good", header)
 	if err != nil || c == nil {
 		t.Fatalf("dial: %v", err)
 	}
@@ -98,7 +98,7 @@ func TestAddressLimitCountsTheTrustedAddress(t *testing.T) {
 			if ok != c.otherGets {
 				t.Errorf("a socket that says it is 10.0.0.2: welcomed %v (closed with %d), want %v", ok, code, c.otherGets)
 			}
-			relay, _, err := wstest.Dial(addr, "/ws/bd-relay?session=none&token=x&role=initiator", from("10.0.0.2"))
+			relay, _, err := wstest.Dial(addr, "/ws/nd-relay?session=none&token=x&role=initiator", from("10.0.0.2"))
 			if err != nil || relay == nil {
 				t.Fatalf("dial: %v", err)
 			}
@@ -124,7 +124,7 @@ func TestTokenOfAnotherLength(t *testing.T) {
 	id, initiatorToken, _ := svc.CreateRelaySession("dev2", "dev1")
 	for _, token := range []string{"x", initiatorToken[:63], initiatorToken + "0", initiatorToken + initiatorToken, strings.Repeat("é", 32)} {
 		q := url.Values{"session": {id}, "token": {token}, "role": {"initiator"}}
-		c, _, err := wstest.Dial(addr, "/ws/bd-relay?"+q.Encode(), nil)
+		c, _, err := wstest.Dial(addr, "/ws/nd-relay?"+q.Encode(), nil)
 		if err != nil || c == nil {
 			t.Fatalf("dial: %v", err)
 		}
@@ -140,7 +140,7 @@ func TestTokenOfAnotherLength(t *testing.T) {
 		t.Fatal("the session is gone")
 	}
 	q := url.Values{"session": {id}, "token": {initiatorToken}, "role": {"initiator"}}
-	good, _, err := wstest.Dial(addr, "/ws/bd-relay?"+q.Encode(), nil)
+	good, _, err := wstest.Dial(addr, "/ws/nd-relay?"+q.Encode(), nil)
 	if err != nil || good == nil {
 		t.Fatalf("dial: %v", err)
 	}
@@ -186,7 +186,7 @@ func TestSlotTakenIsNotCounted(t *testing.T) {
 	id, initiatorToken, targetToken := svc.CreateRelaySession("dev2", "dev1")
 	join := func(role, token string) *wstest.Client {
 		q := url.Values{"session": {id}, "token": {token}, "role": {role}}
-		c, _, err := wstest.Dial(addr, "/ws/bd-relay?"+q.Encode(), nil)
+		c, _, err := wstest.Dial(addr, "/ws/nd-relay?"+q.Encode(), nil)
 		if err != nil || c == nil {
 			t.Fatalf("dial: %v", err)
 		}
@@ -222,7 +222,7 @@ func TestSlotTakenIsNotCounted(t *testing.T) {
 // the request stays listed until its timeout, as in Node.
 func TestRequestEndsWithItsCaller(t *testing.T) {
 	svc, addr := newRelay(t)
-	agent, _, err := wstest.Dial(addr, "/ws/bd-signal?device_id=dev1&token=tok-dev1-good", nil)
+	agent, _, err := wstest.Dial(addr, "/ws/nd-signal?device_id=dev1&token=tok-dev1-good", nil)
 	if err != nil || agent == nil {
 		t.Fatalf("dial: %v", err)
 	}
@@ -274,7 +274,7 @@ func TestNothingIsTakenBeforeTheTokenCheck(t *testing.T) {
 	})
 	addr := strings.TrimPrefix(srv.URL, "http://")
 
-	agent, _, err := wstest.Dial(addr, "/ws/bd-signal?device_id=dev1&token=tok-dev1-good", nil)
+	agent, _, err := wstest.Dial(addr, "/ws/nd-signal?device_id=dev1&token=tok-dev1-good", nil)
 	if err != nil || agent == nil {
 		t.Fatalf("dial: %v", err)
 	}
@@ -297,7 +297,7 @@ func TestNothingIsTakenBeforeTheTokenCheck(t *testing.T) {
 	}
 	requestID, _ := request.(*goapi.Object).Get("request_id").(string)
 
-	other, _, err := wstest.Dial(addr, "/ws/bd-signal?device_id=dev1&token=slow-bad", nil)
+	other, _, err := wstest.Dial(addr, "/ws/nd-signal?device_id=dev1&token=slow-bad", nil)
 	if err != nil || other == nil {
 		t.Fatalf("dial: %v", err)
 	}
@@ -444,7 +444,7 @@ func TestAnErrorCountsDownOnce(t *testing.T) {
 		id, initiatorToken, targetToken := svc.CreateRelaySession("dev2", "dev1")
 		join := func(role, token string) *wstest.Client {
 			q := url.Values{"session": {id}, "token": {token}, "role": {role}}
-			c, _, err := wstest.Dial(addr, "/ws/bd-relay?"+q.Encode(), nil)
+			c, _, err := wstest.Dial(addr, "/ws/nd-relay?"+q.Encode(), nil)
 			if err != nil || c == nil {
 				t.Fatalf("dial: %v", err)
 			}
@@ -503,7 +503,7 @@ func TestSignalEndedDuringTheCheckIsNotCounted(t *testing.T) {
 	}
 	defer first.Close(1000)
 	for i := range MaxRelayPerIP {
-		c, _, err := wstest.Dial(addr, fmt.Sprintf("/ws/bd-signal?device_id=dev%d&token=slow", i), nil)
+		c, _, err := wstest.Dial(addr, fmt.Sprintf("/ws/nd-signal?device_id=dev%d&token=slow", i), nil)
 		if err != nil || c == nil {
 			t.Fatalf("dial: %v", err)
 		}
@@ -533,7 +533,7 @@ func TestSignalEndedDuringTheCheckIsNotCounted(t *testing.T) {
 }
 
 // TestDeleteSessionClosesTheJoinedSides: deleting a session (DELETE
-// /api/bd/session/<id>) ends it: a side that already joined is closed with
+// /api/nd/session/<id>) ends it: a side that already joined is closed with
 // 1000 "Session deleted" instead of waiting with nothing to end it, and its
 // address is counted down.
 func TestDeleteSessionClosesTheJoinedSides(t *testing.T) {
@@ -541,7 +541,7 @@ func TestDeleteSessionClosesTheJoinedSides(t *testing.T) {
 	svc, addr := newRelay(t)
 	join := func(id, role, token string) *wstest.Client {
 		q := url.Values{"session": {id}, "token": {token}, "role": {role}}
-		c, _, err := wstest.Dial(addr, "/ws/bd-relay?"+q.Encode(), nil)
+		c, _, err := wstest.Dial(addr, "/ws/nd-relay?"+q.Encode(), nil)
 		if err != nil || c == nil {
 			t.Fatalf("dial: %v", err)
 		}
@@ -660,7 +660,7 @@ func TestAgentThatStopsAnsweringIsDropped(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer conn.Close()
-	_, _ = io.WriteString(conn, "GET /ws/bd-signal?device_id=dev1&token=tok-dev1-good HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\n"+
+	_, _ = io.WriteString(conn, "GET /ws/nd-signal?device_id=dev1&token=tok-dev1-good HTTP/1.1\r\nHost: x\r\nUpgrade: websocket\r\n"+
 		"Connection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n")
 	if head, err := bufio.NewReader(conn).ReadString('\n'); err != nil || !strings.HasPrefix(head, "HTTP/1.1 101") {
 		t.Fatalf("%q %v", head, err)

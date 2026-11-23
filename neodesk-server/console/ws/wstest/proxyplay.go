@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
 )
 
 // ProxyRecording is what the oracles of the proxies to the API server

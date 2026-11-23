@@ -8,15 +8,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/policies"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath/proxytest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/policies"
 )
 
 // register mounts the group the way console/routes.go does.
 func register(d *kit.Deps) {
 	policies.Register(d)
-	policies.Register(d.At("/api/bd"))
+	policies.Register(d.At("/api/nd"))
 }
 
 // fixes are the vectors of vectors.json whose answer a bug fix of
@@ -92,13 +92,13 @@ func TestRegisteredRoutes(t *testing.T) {
 		"GET /api/panel/policies/{orgId}/audit",
 		"GET /api/panel/attestation",
 		"GET /api/panel/attestation/{deviceId}",
-		"GET /api/bd/device-policy",
-		"POST /api/bd/attestation",
+		"GET /api/nd/device-policy",
+		"POST /api/nd/attestation",
 	}
 	var want []string
 	for _, route := range routes {
 		method, pattern, _ := strings.Cut(route, " ")
-		want = append(want, route, method+" /api/bd"+pattern)
+		want = append(want, route, method+" /api/nd"+pattern)
 	}
 	sort.Strings(want)
 	if strings.Join(got, "\n") != strings.Join(want, "\n") {
@@ -165,7 +165,7 @@ func TestBadIDsAre400(t *testing.T) {
 		{"GET", "/api/panel/policies/bad%20id/effective/bad%20id", "Invalid deviceId"},
 		{"PUT", "/api/panel/policies/bad%20id/connection", "Invalid orgId"},
 		{"PUT", "/api/panel/policies/%2E%2E/security", "Invalid orgId"},
-		{"GET", "/api/bd/api/panel/policies/bad%20id", "Invalid orgId"},
+		{"GET", "/api/nd/api/panel/policies/bad%20id", "Invalid orgId"},
 	} {
 		req := proxytest.Request{Method: c.method, Path: c.path, Session: adminSession()}
 		if c.method == "PUT" {
@@ -234,7 +234,7 @@ func TestPolicyWritesNeedASession(t *testing.T) {
 	pro := &proxytest.Account{UserID: 8}
 	pro.User.Username, pro.User.Role = "e2e_pro", "pro"
 	for _, category := range []string{"connection", "features", "security", "network", "update"} {
-		for _, prefix := range []string{"", "/api/bd"} {
+		for _, prefix := range []string{"", "/api/nd"} {
 			path := prefix + "/api/panel/policies/org-1/" + category
 			rec, calls := w.Do(proxytest.Request{Method: "PUT", Path: path, Type: "application/json", Body: &body}, ok)
 			if rec.Code != 401 || rec.Body.String() != `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}` || len(calls) != 0 {

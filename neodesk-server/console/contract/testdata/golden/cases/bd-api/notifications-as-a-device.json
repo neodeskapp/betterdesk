@@ -2,7 +2,7 @@
  "id": "bd-api/notifications-as-a-device",
  "request": {
   "method": "GET",
-  "path": "/api/bd/notifications",
+  "path": "/api/nd/notifications",
   "notes": [
    "header Authorization: Bearer {secret:device_token}",
    "no CSRF token",

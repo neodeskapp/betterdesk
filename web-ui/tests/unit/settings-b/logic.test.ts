@@ -125,7 +125,7 @@ describe('time zones', () => {
 
 describe('backup', () => {
 	test('file kinds', () => {
-		expect(fileKind('betterdesk-backup.tar.gz')).toBe('archive');
+		expect(fileKind('neodesk-backup.tar.gz')).toBe('archive');
 		expect(fileKind('OLD.JSON')).toBe('json');
 		expect(fileKind('notes.txt')).toBe('invalid');
 		expect(fileKind(undefined)).toBe('');
@@ -216,7 +216,7 @@ describe('updates', () => {
 	});
 
 	test('the repository of the channel, the project when the server names none', () => {
-		expect(channelRepo({ owner: '', repo: '' })).toBe('neodeskapp/betterdesk');
+		expect(channelRepo({ owner: '', repo: '' })).toBe('neodeskapp/neodesk');
 		expect(channelRepo({ owner: 'acme', repo: 'desk' })).toBe('acme/desk');
 	});
 
@@ -227,7 +227,7 @@ describe('updates', () => {
 		);
 		// The repository has only main: "branch dev" named a branch that
 		// does not exist, and stable releases come from tags
-		const dir = path.resolve(__dirname, '../../../../betterdesk-server/console/static/files/lang');
+		const dir = path.resolve(__dirname, '../../../../neodesk-server/console/static/files/lang');
 		for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.json'))) {
 			const tab = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')).settings.updates_tab;
 			for (const key of ['channel_source_stable', 'channel_source_development']) {

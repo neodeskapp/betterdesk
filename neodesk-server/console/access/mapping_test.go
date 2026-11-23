@@ -72,12 +72,12 @@ func TestClosedSectionsCloseTheirAPI(t *testing.T) {
 	for _, c := range []struct{ method, path, section string }{
 		{"GET", "/api/panel/org", "organizations"}, {"GET", "/api/panel/org/1/peer-credentials", "organizations"},
 		{"POST", "/api/panel/org/1/devices", "organizations"},
-		{"GET", "/api/panel/scaling/relays", "scaling"}, {"GET", "/api/bd/api/panel/scaling/relays", "scaling"},
+		{"GET", "/api/panel/scaling/relays", "scaling"}, {"GET", "/api/nd/api/panel/scaling/relays", "scaling"},
 		{"GET", "/api/panel/cross-platform/distribution", "cross-platform"},
 		{"GET", "/api/panel/languages", "languages"}, {"POST", "/api/panel/languages/de/fix", "languages"},
 		{"GET", "/api/panel/resource-control/devices", "resource-control"},
-		{"GET", "/api/bd/api/panel/resource-control/devices", "resource-control"},
-		{"GET", "/api/panel/fleet/tasks", "fleet"}, {"GET", "/api/bd/api/panel/fleet/tasks", "fleet"},
+		{"GET", "/api/nd/api/panel/resource-control/devices", "resource-control"},
+		{"GET", "/api/panel/fleet/tasks", "fleet"}, {"GET", "/api/nd/api/panel/fleet/tasks", "fleet"},
 		{"POST", "/api/chat/upload", "chat"}, {"GET", "/api/chat/search", "chat"},
 	} {
 		c2 := &Context{UserID: 1, HasUser: true, Role: "super_admin", Policy: policyWith(c.section, LevelNone)}
@@ -87,7 +87,7 @@ func TestClosedSectionsCloseTheirAPI(t *testing.T) {
 	}
 }
 
-// PA15: the registration routes answer at /api/bd/api/registrations too
+// PA15: the registration routes answer at /api/nd/api/registrations too
 // (I3). A policy that closes the registrations section closes them there
 // as at /api/registrations, and every default role gets the same answer
 // at both mounts.
@@ -99,7 +99,7 @@ func TestRegistrationsAreGuardedAtBothMounts(t *testing.T) {
 		{"DELETE", "/5", "enrollment.manage"},
 	}
 	for _, r := range routes {
-		path := "/api/bd/api/registrations" + r.path
+		path := "/api/nd/api/registrations" + r.path
 		closed := &Context{UserID: 1, HasUser: true, Role: "super_admin", Policy: policyWith("registrations", LevelNone)}
 		if got := closed.Guard(r.method, path); got.Verdict != VerdictDenied || got.Section != "registrations" {
 			t.Errorf("%s %s with registrations at none: %+v", r.method, path, got)
@@ -319,9 +319,9 @@ func TestDataGuardReadsAsItsRoutesSay(t *testing.T) {
 		{"GET", "/api/dataguard/policies/1", "device.view", [5]string{"ok", "ok", "ok", "ok", "ok"}},
 		{"GET", "/api/dataguard/events", "audit.view", [5]string{"ok", "ok", "route", "ok", "ok"}},
 		{"GET", "/api/dataguard/stats", "audit.view", [5]string{"ok", "ok", "route", "ok", "ok"}},
-		{"GET", "/api/bd/stats", "audit.view", [5]string{"ok", "ok", "route", "ok", "ok"}},
+		{"GET", "/api/nd/stats", "audit.view", [5]string{"ok", "ok", "route", "ok", "ok"}},
 		{"POST", "/api/dataguard/policies", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
-		{"PATCH", "/api/bd/policies/1", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
+		{"PATCH", "/api/nd/policies/1", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
 		{"DELETE", "/api/dataguard/policies/1", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
 	})
 }

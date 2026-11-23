@@ -3,14 +3,14 @@ package console
 import (
 	"context"
 
-	"github.com/unitronix/betterdesk-server/console/cdapproxy"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/meshproxy"
-	"github.com/unitronix/betterdesk-server/console/remotetarget"
-	"github.com/unitronix/betterdesk-server/console/routes/chat"
-	"github.com/unitronix/betterdesk-server/console/statuspush"
-	"github.com/unitronix/betterdesk-server/console/wsrelay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/cdapproxy"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/meshproxy"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/remotetarget"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/chat"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/statuspush"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/wsrelay"
 )
 
 // registerSockets adds the websockets, in the order web-nodejs/server.js
@@ -35,7 +35,7 @@ func registerSockets(d *kit.Deps, signalProof func(userID int64) []byte) {
 	})
 	d.GuestAccess.OnRevoke(webClient.InvalidateGuestGrant)
 	webClient.Register(d.Sockets)
-	d.Relay.Register(d.Sockets) // services/bdRelay.js: /ws/bd-relay, /ws/bd-signal
+	d.Relay.Register(d.Sockets) // services/bdRelay.js: /ws/nd-relay, /ws/nd-signal
 	// services/chatRelay.js: /ws/chat/<id>, /ws/chat-operator/<id>
 	chat.NewRelay(chat.RelayOptions{API: d.GoAPI, VerifyDevice: d.Authn.VerifyDeviceWSAuth, Scope: chat.ScopeOf(d), FilesDir: chat.FilesDir(d.Config)}).Register(d.Sockets)
 	d.RemoteRelay.Register(d.Sockets) // services/remoteRelay.js: /ws/remote-agent/<id>, /ws/remote-viewer/<id>

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	engine "github.com/unitronix/betterdesk-server/console/reports"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	engine "github.com/neodeskapp/neodesk/neodesk-server/console/reports"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // The saved-report methods of services/dbAdapter.js. The rows come back

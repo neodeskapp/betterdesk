@@ -12,7 +12,7 @@ function page(over: Partial<LoginPage> = {}, branding: Partial<LoginPage['brandi
 	return {
 		success: true,
 		csrfToken: 'tok',
-		appName: 'BetterDesk',
+		appName: 'NeoDesk',
 		appVersion: '3.5.0',
 		desktopMode: false,
 		signedIn: false,

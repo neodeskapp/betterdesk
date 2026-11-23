@@ -7,7 +7,7 @@
 // server's db_v2.sqlite3. The Go console reads only the main file, so at
 // its first start it copies what auth.db holds into it, after taking a
 // snapshot of both files, and then writes the marker the old console and
-// the server already look for (betterdesk_migrations row
+// the server already look for (neodesk_migrations row
 // sqlite_auth_consolidation_v1 with status complete). With the marker in
 // place an old version started after a rollback uses the main file too.
 // auth.db itself is only read.
@@ -31,11 +31,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
-// MarkerName is the row of betterdesk_migrations that says auth.db has
+// MarkerName is the row of neodesk_migrations that says auth.db has
 // been moved into the main file.
 const MarkerName = "sqlite_auth_consolidation_v1"
 
@@ -179,13 +179,13 @@ func Run(ctx context.Context, db *store.DB, opts Options) (*Report, error) {
 // markerComplete reports whether the main file says auth.db was moved.
 func markerComplete(ctx context.Context, db *store.DB) (bool, error) {
 	var n int
-	if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'betterdesk_migrations'`).Scan(&n); err != nil {
+	if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'neodesk_migrations'`).Scan(&n); err != nil {
 		return false, fmt.Errorf("look for the consolidation marker: %w", err)
 	}
 	if n == 0 {
 		return false, nil
 	}
-	if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM betterdesk_migrations WHERE name = ? AND status = 'complete'`, MarkerName).Scan(&n); err != nil {
+	if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM neodesk_migrations WHERE name = ? AND status = 'complete'`, MarkerName).Scan(&n); err != nil {
 		return false, fmt.Errorf("read the consolidation marker: %w", err)
 	}
 	return n > 0, nil

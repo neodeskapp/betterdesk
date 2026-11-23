@@ -2,7 +2,7 @@
  "id": "ws-panel-events/register-request",
  "request": {
   "method": "POST",
-  "path": "/api/bd/register-request",
+  "path": "/api/nd/register-request",
   "body": {
    "device_id": "contract-ws-lan",
    "hostname": "lan-box",

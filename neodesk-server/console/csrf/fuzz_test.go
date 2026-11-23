@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/session/cookie"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session/cookie"
 )
 
 // FuzzCSRFToken: whatever a client puts into the cookie, the header and the

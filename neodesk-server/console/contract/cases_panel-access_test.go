@@ -2,7 +2,7 @@
 
 package contract_test
 
-import "github.com/unitronix/betterdesk-server/console/contract"
+import "github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 
 // Panel access policies. The account policy is written for the seeded
 // account demo_viewer (id 3), which no role of the suite signs in as, and

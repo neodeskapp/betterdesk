@@ -25,10 +25,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // MaxPayload is the largest message either side may send.
@@ -41,7 +41,7 @@ const SessionCheck = 10 * time.Second
 // Options configure the gateway.
 type Options struct {
 	// RemoteTarget looks a target up at the API server
-	// (betterdeskApi.getRemoteTarget; goapi.Client.GetRemoteTarget); nil
+	// (neodeskApi.getRemoteTarget; goapi.Client.GetRemoteTarget); nil
 	// is no target.
 	RemoteTarget func(ctx context.Context, id string) *goapi.Object
 	// CanAccess is the account's device scope

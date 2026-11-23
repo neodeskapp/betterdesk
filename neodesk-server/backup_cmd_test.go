@@ -9,12 +9,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/backup"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
-// betterdesk-server backup writes the archive the console's full backup
+// neodesk-server backup writes the archive the console's full backup
 // makes, from the server's database on SQLite and PostgreSQL, with the
 // console's files and the server's keys, into the folder --out names, and
 // prints its path (L73).
@@ -58,7 +58,7 @@ func TestBackupCommand(t *testing.T) {
 			t.Fatalf("backup: %d %q %q", code, stdout.String(), stderr.String())
 		}
 		path := strings.TrimSpace(stdout.String())
-		if filepath.Dir(path) != out || !strings.HasPrefix(filepath.Base(path), "betterdesk-backup-") || !strings.HasSuffix(path, ".tar.gz") {
+		if filepath.Dir(path) != out || !strings.HasPrefix(filepath.Base(path), "neodesk-backup-") || !strings.HasSuffix(path, ".tar.gz") {
 			t.Fatalf("archive path %q", path)
 		}
 		if info, err := os.Stat(path); err != nil || (runtime.GOOS != "windows" && info.Mode().Perm() != 0o600) {
@@ -76,7 +76,7 @@ func TestBackupCommand(t *testing.T) {
 		dump, _ := files.Get("console/data.json")
 		env, _ := files.Get("console/.env")
 		pub, _ := files.Get("goserver/id_ed25519.pub")
-		if !bytes.Contains(manifest, []byte(`"_format": "betterdesk-full-backup"`)) || !bytes.Contains(dump, []byte("backup_probe")) ||
+		if !bytes.Contains(manifest, []byte(`"_format": "neodesk-full-backup"`)) || !bytes.Contains(dump, []byte("backup_probe")) ||
 			string(env) != "PORT=5000\n" || string(pub) != "PUBKEY" {
 			t.Errorf("archive holds %v; manifest %s", files.Names(), manifest)
 		}

@@ -27,7 +27,7 @@
 	import States from '#lib/ui/States.svelte';
 
 	/** The product name after "Powered by", not translated */
-	const PRODUCT = 'BetterDesk';
+	const PRODUCT = 'NeoDesk';
 	const publicId = page.params.publicId ?? '';
 	const mine = detectComputer(navigator.userAgent, true);
 

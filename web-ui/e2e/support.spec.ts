@@ -167,7 +167,7 @@ for (const role of ROLES) {
 			// A hash runs on the server and comes back
 			await page.getByRole('tab', { name: 'Passwords and hashes' }).click();
 			await page.locator('#tool-hash summary').click();
-			await page.getByRole('textbox', { name: 'Text' }).first().fill('betterdesk');
+			await page.getByRole('textbox', { name: 'Text' }).first().fill('neodesk');
 			await page.locator('#tool-hash').getByRole('button', { name: 'Calculate hash' }).click();
 			await expect(page.locator('#tool-hash .code-block')).toHaveText(/^[0-9a-f]{64}$/);
 			await expectNoAxeViolations(page);

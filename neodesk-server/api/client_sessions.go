@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/events"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/events"
 )
 
 const (
@@ -139,7 +139,7 @@ func (s *Server) issueClientSession(user *db.User, clientID, clientUUID, clientI
 			return "", fmt.Errorf("create client session: %w", retryErr)
 		}
 	}
-	// Map this RustDesk client device to the BetterDesk account (inventory/audit).
+	// Map this RustDesk client device to the NeoDesk account (inventory/audit).
 	// No connection blocking — ownership only. If the peer row does not exist yet,
 	// heartbeat / RegisterPk will apply the binding via ApplyActiveSessionOwner.
 	db.BindPeerOwner(s.db, clientID, clientUUID, user.Username)

@@ -14,13 +14,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/managedconfig"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/managedconfig"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // DataBackup makes the full backup of the console's data before an
 // install. console/backup's Service has this method (CreateFullBackup:
-// the archive and its file name betterdesk-backup-<time>.tar.gz).
+// the archive and its file name neodesk-backup-<time>.tar.gz).
 type DataBackup interface {
 	CreateFullBackup(ctx context.Context) ([]byte, string, error)
 }
@@ -40,7 +40,7 @@ type Options struct {
 	DataDir string
 	// ConsoleDir is the console's folder (CONSOLE_DIR).
 	ConsoleDir string
-	// EnvFile is BETTERDESK_ENV_FILE. The channel is saved in it, else in
+	// EnvFile is NEODESK_ENV_FILE. The channel is saved in it, else in
 	// the .env of the console's folder; the capability report checks it,
 	// else the env file managedconfig finds, as the config routes do.
 	EnvFile string
@@ -49,12 +49,12 @@ type Options struct {
 	Version, Commit string
 	// Docker is set inside a container (DOCKER=true or /.dockerenv).
 	Docker bool
-	// Getenv reads UPDATE_GITHUB_OWNER (trybetterdesk), UPDATE_GITHUB_REPO
-	// (betterdesk), UPDATE_GITHUB_BRANCH (main), UPDATE_GITHUB_TOKEN or
+	// Getenv reads UPDATE_GITHUB_OWNER (neodeskapp), UPDATE_GITHUB_REPO
+	// (neodesk), UPDATE_GITHUB_BRANCH (main), UPDATE_GITHUB_TOKEN or
 	// GITHUB_TOKEN, UPDATE_GITHUB_CACHE_MS (120000), UPDATE_MIN_FREE_MB
 	// (512), UPDATE_MANIFEST_PUBLIC_KEY, UPDATE_REQUIRE_SIGNED_MANIFEST,
-	// BETTERDESK_SUPERVISOR, BETTERDESK_UPDATE_MODE, BETTERDESK_IMAGE_TAG,
-	// BETTERDESK_DOCKER_LAYOUT and BACKUP_RETENTION_COUNT. Nil reads
+	// NEODESK_SUPERVISOR, NEODESK_UPDATE_MODE, NEODESK_IMAGE_TAG,
+	// NEODESK_DOCKER_LAYOUT and BACKUP_RETENTION_COUNT. Nil reads
 	// nothing.
 	Getenv func(string) string
 	// Keys are the release public keys compiled in. Nil means
@@ -150,9 +150,9 @@ func New(opts Options) *Service {
 		opts.Transport = defaultTransport()
 	}
 	// The capability report looks at the env file the management config
-	// routes save to: BETTERDESK_ENV_FILE, else the one managedconfig finds
-	// from BETTERDESK_CONSOLE_PATH. The channel is saved in the console
-	// folder's .env without BETTERDESK_ENV_FILE.
+	// routes save to: NEODESK_ENV_FILE, else the one managedconfig finds
+	// from NEODESK_CONSOLE_PATH. The channel is saved in the console
+	// folder's .env without NEODESK_ENV_FILE.
 	managed := managedconfig.New(managedconfig.Options{ConsoleDir: opts.ConsoleDir, EnvFile: opts.EnvFile, Getenv: opts.Getenv})
 	if opts.EnvFile == "" {
 		opts.EnvFile = filepath.Join(opts.ConsoleDir, ".env")
@@ -161,7 +161,7 @@ func New(opts Options) *Service {
 	s := &Service{opts: opts, files: dataFiles{dir: opts.DataDir, now: opts.Now}, log: opts.Logger, managed: managed, channelEnv: channelEnv}
 	s.gh = &githubClient{
 		transport: opts.Transport,
-		userAgent: "BetterDesk-Console/" + opts.Version,
+		userAgent: "NeoDesk-Console/" + opts.Version,
 		token:     firstNonEmpty(opts.Getenv("UPDATE_GITHUB_TOKEN"), opts.Getenv("GITHUB_TOKEN")),
 		cacheTTL:  cacheTTL(opts.Getenv("UPDATE_GITHUB_CACHE_MS")),
 		now:       opts.Now,
@@ -215,11 +215,11 @@ func firstNonEmpty(values ...string) string {
 
 // Owner and Repo are the repository releases come from.
 func (s *Service) Owner() string {
-	return firstNonEmpty(s.getenv("UPDATE_GITHUB_OWNER"), "trybetterdesk")
+	return firstNonEmpty(s.getenv("UPDATE_GITHUB_OWNER"), "neodeskapp")
 }
 
 // Repo is the repository's name.
-func (s *Service) Repo() string { return firstNonEmpty(s.getenv("UPDATE_GITHUB_REPO"), "betterdesk") }
+func (s *Service) Repo() string { return firstNonEmpty(s.getenv("UPDATE_GITHUB_REPO"), "neodesk") }
 
 // Branch is the branch of the update channel: what the channel was last
 // switched to in this process, else UPDATE_GITHUB_BRANCH, else main.
@@ -237,13 +237,13 @@ func (s *Service) Branch() string {
 }
 
 // Supervised reports that an installer said a supervisor starts the
-// process again after it ended (BETTERDESK_SUPERVISOR).
+// process again after it ended (NEODESK_SUPERVISOR).
 func (s *Service) Supervised() bool { return Supervisor(s.getenv) != "" }
 
-// Supervisor is the supervisor BETTERDESK_SUPERVISOR names, "" when none:
+// Supervisor is the supervisor NEODESK_SUPERVISOR names, "" when none:
 // empty, "0", "false", "no", "none" and "off" mean none.
 func Supervisor(getenv func(string) string) string {
-	value := strings.TrimSpace(getenv("BETTERDESK_SUPERVISOR"))
+	value := strings.TrimSpace(getenv("NEODESK_SUPERVISOR"))
 	switch strings.ToLower(value) {
 	case "", "0", "false", "no", "none", "off":
 		return ""
@@ -253,19 +253,19 @@ func Supervisor(getenv func(string) string) string {
 
 // ImageMode reports a Docker install that updates by pulling an image
 // (isImageBasedDockerDeployment): in a container, with
-// BETTERDESK_UPDATE_MODE=image, or without "source" there and without the
+// NEODESK_UPDATE_MODE=image, or without "source" there and without the
 // server's sources beside the console.
 func (s *Service) ImageMode() bool {
 	if !s.opts.Docker {
 		return false
 	}
-	switch strings.ToLower(strings.TrimSpace(s.getenv("BETTERDESK_UPDATE_MODE"))) {
+	switch strings.ToLower(strings.TrimSpace(s.getenv("NEODESK_UPDATE_MODE"))) {
 	case "source":
 		return false
 	case "image":
 		return true
 	}
-	return !exists(filepath.Join(s.opts.ConsoleDir, "..", "betterdesk-server", "go.mod"))
+	return !exists(filepath.Join(s.opts.ConsoleDir, "..", "neodesk-server", "go.mod"))
 }
 
 // DockerUpdate is how a Docker install updates
@@ -284,19 +284,19 @@ type DockerUpdate struct {
 
 // DockerInstructions are the commands and the image for a Docker install.
 // A Docker install with the console runs the one image
-// ghcr.io/<owner>/betterdesk, whatever BETTERDESK_DOCKER_LAYOUT says: the
+// ghcr.io/<owner>/neodesk, whatever NEODESK_DOCKER_LAYOUT says: the
 // split images are not published.
 func (s *Service) DockerInstructions() DockerUpdate {
-	tag := firstNonEmpty(strings.TrimSpace(s.getenv("BETTERDESK_IMAGE_TAG")), "latest")
+	tag := firstNonEmpty(strings.TrimSpace(s.getenv("NEODESK_IMAGE_TAG")), "latest")
 	owner := strings.ToLower(s.Owner())
 	return DockerUpdate{
-		ChannelNote:   "Panel “Update channel” does not change GHCR images. Use BETTERDESK_IMAGE_TAG=latest (stable) or BETTERDESK_IMAGE_TAG=dev (development), then pull/recreate.",
+		ChannelNote:   "Panel “Update channel” does not change GHCR images. Use NEODESK_IMAGE_TAG=latest (stable) or NEODESK_IMAGE_TAG=dev (development), then pull/recreate.",
 		SuggestedTags: map[string]string{"stable": "latest", "development": "dev"},
 		CurrentTag:    tag,
 		UpdateChannel: ChannelOf(s.Branch()),
 		Summary:       "Pull and recreate the official all-in-one container image.",
 		Commands:      []string{"docker compose pull", "docker compose up -d"},
-		Images:        []string{"ghcr.io/" + owner + "/betterdesk:" + tag},
+		Images:        []string{"ghcr.io/" + owner + "/neodesk:" + tag},
 		ComposeHint:   "docker-compose.quick.single.yml",
 		Layout:        "single",
 	}
@@ -356,7 +356,7 @@ func (s *Service) SetChannel(channel string) (ChannelSwitched, error) {
 			tag = "dev"
 		}
 		return ChannelSwitched{}, &ErrDockerChannel{Message: "Docker image deployments cannot switch update channel from the panel. " +
-			"Set BETTERDESK_IMAGE_TAG=" + tag + " (or a release version) in compose/.env, then run: docker compose pull && docker compose up -d"}
+			"Set NEODESK_IMAGE_TAG=" + tag + " (or a release version) in compose/.env, then run: docker compose pull && docker compose up -d"}
 	}
 	previous := s.Branch()
 	if _, err := s.channelEnv.Apply([]managedconfig.Setting{{Key: "UPDATE_GITHUB_BRANCH", Value: branch}}); err != nil {

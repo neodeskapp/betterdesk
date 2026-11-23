@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/codec"
-	pb "github.com/unitronix/betterdesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/codec"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 	"golang.org/x/crypto/nacl/box"
 	"golang.org/x/crypto/nacl/secretbox"
 	"google.golang.org/protobuf/proto"

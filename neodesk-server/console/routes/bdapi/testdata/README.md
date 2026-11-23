@@ -10,7 +10,7 @@ in `replay_test.go`).
 
 | File | What it holds | Replayed by |
 |---|---|---|
-| `node_sqlite.json`, `node_postgres.json` | 186 steps per database of `routes/bd-api.routes.js` at `/api/bd` | `TestNodeAnswers` (`replay_test.go`) |
+| `node_sqlite.json`, `node_postgres.json` | 186 steps per database of `routes/bd-api.routes.js` at `/api/nd` | `TestNodeAnswers` (`replay_test.go`) |
 | `fixed_sqlite.json`, `fixed_postgres.json` | the Go console's answers for the steps a bug fix changed | `TestNodeAnswers` |
 
 ## What is recorded
@@ -58,6 +58,6 @@ Proofs were made at send time from the fixed key seeds in the recording
 The recordings were made with `TZ=UTC`, and `TestNodeAnswers` refuses to
 run in another zone.
 
-`GET /api/bd/chat/history` past its checks ended the Node process (BUGS
+`GET /api/nd/chat/history` past its checks ended the Node process (BUGS
 BD1) and is not recorded; `TestChatGoesThroughTheAPIServer` pins the Go
 side.

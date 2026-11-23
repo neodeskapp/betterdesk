@@ -1,6 +1,6 @@
 // Package generator is the support client generator of the console: the
 // profiles of support bundles and their records, the template module
-// downloaded from the BetterDesk-Client releases, the client builder that
+// downloaded from the NeoDesk-Client releases, the client builder that
 // compiles the client from source in embedded mode, and the build queue
 // with its worker. It does what services/agentBundleService.js,
 // agentBundleConnection.js (through package serverinfo),
@@ -21,7 +21,7 @@
 //     custom.txt, the signed configuration (customtxt.go), and the
 //     installer scripts (installers.go), packed as a zip for Windows and a
 //     tar.gz otherwise, named
-//     betterdesk-support-<first 12 of the hash>-<platform>-<arch>.<ext>.
+//     neodesk-support-<first 12 of the hash>-<platform>-<arch>.<ext>.
 //   - embedded mode: what the build provider made with the signed
 //     configuration compiled in, checked against its manifest and copied
 //     under the same names.

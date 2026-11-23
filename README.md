@@ -1,8 +1,8 @@
 <p align="center">
-  <a href="https://betterde.sk">
+  <a href="https://neode.sk">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/hero-dark.png">
-      <img src="docs/assets/readme/hero-light.png" alt="BetterDesk: your own remote desktop server. Self-hosted, and it works with the RustDesk client you already have." width="100%">
+      <img src="docs/assets/readme/hero-light.png" alt="NeoDesk: your own remote desktop server. Self-hosted, and it works with the RustDesk client you already have." width="100%">
     </picture>
   </a>
 </p>
@@ -10,20 +10,21 @@
 <p align="center">
   <a href="CHANGELOG.md"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/version.svg"><img alt="Version: latest" src="docs/assets/badges/light/version.svg"></picture></a>
   <a href="LICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/license.svg"><img alt="License: AGPL-3.0" src="docs/assets/badges/light/license.svg"></picture></a>
-  <a href="betterdesk-server"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/go.svg"><img alt="Go 1.26" src="docs/assets/badges/light/go.svg"></picture></a>
+  <a href="neodesk-server"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/go.svg"><img alt="Go 1.26" src="docs/assets/badges/light/go.svg"></picture></a>
   <a href="web-ui"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/svelte.svg"><img alt="Svelte 5" src="docs/assets/badges/light/svelte.svg"></picture></a>
   <a href="#connect-a-rustdesk-client"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/badges/dark/rustdesk.svg"><img alt="RustDesk compatible" src="docs/assets/badges/light/rustdesk.svg"></picture></a>
 </p>
 
-BetterDesk is a remote desktop server you run yourself. It speaks the RustDesk
+NeoDesk is a remote desktop server you run yourself. It speaks the RustDesk
 protocol, so the normal RustDesk client connects to it, and it comes with a web
 console for the devices you look after. Your data stays on your server: the
 project sends no analytics, crash reports or usage data anywhere
-([Privacy](https://betterde.sk/docs/project/privacy)).
+([Privacy](https://neode.sk/docs/project/privacy)).
 
-This repository is a fork of [UNITRONIX/BetterDesk](https://github.com/UNITRONIX/BetterDesk).
-It replaces the Node.js console with one written in Svelte that the Go server
-serves itself, so a running install is a single program.
+NeoDesk started as a fork of [BetterDesk](https://github.com/UNITRONIX/BetterDesk)
+by UNITRONIX and is developed on its own now. It replaces the Node.js console
+with one written in Svelte that the Go server serves itself, so a running
+install is a single program.
 
 ## One binary on your server
 
@@ -32,7 +33,7 @@ serves itself, so a running install is a single program.
   <img src="docs/assets/readme/server-light.png" alt="One binary on your server. The install commands for Docker are in the Install section below." width="100%">
 </picture>
 
-RustDesk's own server is two programs, hbbs and hbbr. BetterDesk does both jobs
+RustDesk's own server is two programs, hbbs and hbbr. NeoDesk does both jobs
 in one Go binary, and the same binary answers the client API and serves the web
 console. It stores its data in SQLite, or in PostgreSQL if you prefer.
 
@@ -76,53 +77,53 @@ there. Around that, the console has what a team needs to share a server:
 
 ## Install
 
-The [documentation](https://betterde.sk/docs) has each way step by step.
+The [documentation](https://neode.sk/docs) has each way step by step.
 
 ### Docker
 
 One container runs the server and the web console from the published image
-`ghcr.io/neodeskapp/betterdesk`. The script sets it up in
-`/opt/betterdesk/docker`, installs Docker when it is missing, and prints the
+`ghcr.io/neodeskapp/neodesk`. The script sets it up in
+`/opt/neodesk/docker`, installs Docker when it is missing, and prints the
 admin password at the end:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install.sh | sudo bash
 ```
 
 Or with the compose file by hand:
 
 ```bash
-mkdir betterdesk && cd betterdesk
-curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+mkdir neodesk && cd neodesk
+curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/docker-compose.quick.single.yml -o docker-compose.yml
 docker compose up -d
-docker compose exec betterdesk betterdesk-show-admin-credentials
+docker compose exec neodesk neodesk-show-admin-credentials
 ```
 
 The console is then at `http://your-server:5000`, which is plain HTTP. See
-[Install with Docker](https://betterde.sk/docs/getting-started/docker).
+[Install with Docker](https://neode.sk/docs/getting-started/docker).
 
 ### Linux
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/neodeskapp/betterdesk/main/betterdesk.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/neodesk.sh | sudo bash
 ```
 
-This installs the newest release as the service `betterdesk-server` with the
+This installs the newest release as the service `neodesk-server` with the
 default settings and shows the admin password. To answer the installer's
-questions instead, download `betterdesk.sh` and run it with `sudo bash`. See
-[Install on Linux](https://betterde.sk/docs/getting-started/linux).
+questions instead, download `neodesk.sh` and run it with `sudo bash`. See
+[Install on Linux](https://neode.sk/docs/getting-started/linux).
 
 ### Windows
 
 In PowerShell as Administrator:
 
 ```powershell
-Invoke-WebRequest https://raw.githubusercontent.com/neodeskapp/betterdesk/main/betterdesk.ps1 -OutFile betterdesk.ps1 -UseBasicParsing
-.\betterdesk.ps1
+Invoke-WebRequest https://raw.githubusercontent.com/neodeskapp/neodesk/main/neodesk.ps1 -OutFile neodesk.ps1 -UseBasicParsing
+.\neodesk.ps1
 ```
 
 Add `-Auto` to install with the default settings. See
-[Install on Windows](https://betterde.sk/docs/getting-started/windows).
+[Install on Windows](https://neode.sk/docs/getting-started/windows).
 
 ## Connect a RustDesk client
 
@@ -135,7 +136,7 @@ Add `-Auto` to install with the default settings. See
 
 The device then waits under **Enrollment requests** until someone approves
 it, as every new install starts in the Managed enrollment mode. See
-[Connect a RustDesk client](https://betterde.sk/docs/getting-started/connect-a-client).
+[Connect a RustDesk client](https://neode.sk/docs/getting-started/connect-a-client).
 
 ## Ports
 
@@ -152,8 +153,8 @@ it, as every new install starts in the Managed enrollment mode. See
 Open 21115 to 21117 and 21121 to the networks your devices connect from, and
 21118, 21119 and 21122 only for clients and agents that use them. Keep 5000
 behind a reverse proxy with TLS if the console is reachable from the internet.
-[Ports and firewall](https://betterde.sk/docs/operations/ports) and
-[Reverse proxy and TLS](https://betterde.sk/docs/operations/reverse-proxy-tls)
+[Ports and firewall](https://neode.sk/docs/operations/ports) and
+[Reverse proxy and TLS](https://neode.sk/docs/operations/reverse-proxy-tls)
 have the details.
 
 ## More of the console
@@ -171,26 +172,27 @@ Demo data, in both themes.
 
 ## Documentation
 
-Everything is on [betterde.sk/docs](https://betterde.sk/docs):
+Everything is on [neode.sk/docs](https://neode.sk/docs):
 
 | Topic | Guides |
 |-------|--------|
-| Getting started | [Docker](https://betterde.sk/docs/getting-started/docker), [Linux](https://betterde.sk/docs/getting-started/linux), [Windows](https://betterde.sk/docs/getting-started/windows), [first sign-in](https://betterde.sk/docs/getting-started/first-sign-in), [moving from a RustDesk server](https://betterde.sk/docs/getting-started/migrate-from-rustdesk) |
-| Using the console | [The device list](https://betterde.sk/docs/console/devices), [enrollment](https://betterde.sk/docs/console/enrollment), [remote desktop in the browser](https://betterde.sk/docs/console/remote-in-browser) |
-| People and sign-in | [Users and roles](https://betterde.sk/docs/people/users-and-roles), [two-factor sign-in](https://betterde.sk/docs/people/two-factor), [LDAP](https://betterde.sk/docs/people/ldap), [OIDC](https://betterde.sk/docs/people/oidc) |
-| Running the server | [Configuration](https://betterde.sk/docs/operations/configuration), [hardening](https://betterde.sk/docs/operations/security), [updating](https://betterde.sk/docs/operations/updating), [backup](https://betterde.sk/docs/operations/backup), [troubleshooting](https://betterde.sk/docs/operations/troubleshooting) |
-| Development | [Contributing](https://betterde.sk/docs/development/contributing), [building from source](https://betterde.sk/docs/development/building), [architecture](https://betterde.sk/docs/development/architecture), [the HTTP API](https://betterde.sk/docs/development/api) |
+| Getting started | [Docker](https://neode.sk/docs/getting-started/docker), [Linux](https://neode.sk/docs/getting-started/linux), [Windows](https://neode.sk/docs/getting-started/windows), [first sign-in](https://neode.sk/docs/getting-started/first-sign-in), [moving from a RustDesk server](https://neode.sk/docs/getting-started/migrate-from-rustdesk) |
+| Using the console | [The device list](https://neode.sk/docs/console/devices), [enrollment](https://neode.sk/docs/console/enrollment), [remote desktop in the browser](https://neode.sk/docs/console/remote-in-browser) |
+| People and sign-in | [Users and roles](https://neode.sk/docs/people/users-and-roles), [two-factor sign-in](https://neode.sk/docs/people/two-factor), [LDAP](https://neode.sk/docs/people/ldap), [OIDC](https://neode.sk/docs/people/oidc) |
+| Running the server | [Configuration](https://neode.sk/docs/operations/configuration), [hardening](https://neode.sk/docs/operations/security), [updating](https://neode.sk/docs/operations/updating), [backup](https://neode.sk/docs/operations/backup), [troubleshooting](https://neode.sk/docs/operations/troubleshooting) |
+| Development | [Contributing](https://neode.sk/docs/development/contributing), [building from source](https://neode.sk/docs/development/building), [architecture](https://neode.sk/docs/development/architecture), [the HTTP API](https://neode.sk/docs/development/api) |
 
 ## Credits
 
-BetterDesk was created by [UNITRONIX](https://github.com/UNITRONIX), and most
-of the server in this repository is that project's work. If BetterDesk is
-useful to you, [Sponsors and credits](https://betterde.sk/docs/project/sponsors)
-lists how to support it and who already does.
+NeoDesk is based on [BetterDesk](https://github.com/UNITRONIX/BetterDesk),
+created by [UNITRONIX](https://github.com/UNITRONIX), and most of the server
+in this repository is that project's work. If BetterDesk is useful to you,
+[Sponsors and credits](https://neode.sk/docs/project/sponsors) lists how to
+support it and who already does.
 
-BetterDesk is created and maintained with the assistance of AI tools.
+NeoDesk is created and maintained with the assistance of AI tools.
 
 ## License
 
 [AGPL-3.0](LICENSE). There is an optional Commercial Grant for eligible
-sponsors, described in [License](https://betterde.sk/docs/project/license#commercial-grant).
+sponsors, described in [License](https://neode.sk/docs/project/license#commercial-grant).

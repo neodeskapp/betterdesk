@@ -2,7 +2,7 @@
  "id": "inventory-device/read-device-id-alone",
  "request": {
   "method": "GET",
-  "path": "/api/bd/inventory/900100001",
+  "path": "/api/nd/inventory/900100001",
   "notes": [
    "header X-Device-Id: 900100001",
    "no CSRF token",

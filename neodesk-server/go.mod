@@ -1,4 +1,4 @@
-module github.com/unitronix/betterdesk-server
+module github.com/neodeskapp/neodesk/neodesk-server
 
 go 1.26.0
 

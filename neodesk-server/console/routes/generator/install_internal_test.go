@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	gen "github.com/unitronix/betterdesk-server/console/generator"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	gen "github.com/neodeskapp/neodesk/neodesk-server/console/generator"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // contextProbe answers every request to GitHub with 404 and records
@@ -46,7 +46,7 @@ func TestInstallOutlivesTheRequest(t *testing.T) {
 	for _, embedded := range []bool{false, true} {
 		probe := &contextProbe{}
 		data := t.TempDir()
-		env := []string{"BETTERDESK_CUSTOM_CLIENT_SIGNING_SEED=" + seed}
+		env := []string{"NEODESK_CUSTOM_CLIENT_SIGNING_SEED=" + seed}
 		service := gen.New(gen.Options{DataDir: data, Embedded: embedded, HTTP: probe, Env: func() []string { return env }})
 		if !embedded {
 			if err := os.WriteFile(filepath.Join(data, "custom-client-signing.seed"), []byte(seed), 0o600); err != nil {

@@ -3,8 +3,8 @@ package inventory
 import (
 	"math"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsjson"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsjson"
 )
 
 // A report is whatever JSON a device sent. The list reads each member it

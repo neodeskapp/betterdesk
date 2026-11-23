@@ -2,7 +2,7 @@
  "id": "bd-api/operator-sessions",
  "request": {
   "method": "GET",
-  "path": "/api/bd/operator/sessions?limit=5",
+  "path": "/api/nd/operator/sessions?limit=5",
   "notes": [
    "header Authorization: Bearer {secret:operator_token}",
    "no CSRF token",

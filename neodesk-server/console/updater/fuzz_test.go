@@ -42,7 +42,7 @@ func FuzzParseManifest(f *testing.F) {
 // Whatever the executable's name, the paths the updater writes stay in
 // its folder.
 func FuzzBinaryPaths(f *testing.F) {
-	for _, name := range []string{"betterdesk-server", "betterdesk-server.exe", "x y", "..", ".hidden", "a\nb"} {
+	for _, name := range []string{"neodesk-server", "neodesk-server.exe", "x y", "..", ".hidden", "a\nb"} {
 		f.Add(name)
 	}
 	dir := f.TempDir()
@@ -97,17 +97,17 @@ func FuzzBackupName(f *testing.F) {
 
 // Only addresses of the release's file on github.com pass the check.
 func FuzzReleaseFileAddress(f *testing.F) {
-	f.Add("https://github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0/manifest.json")
-	f.Add("https://github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0/x/../manifest.json")
-	f.Add("https://github.com/UNITRONIX/BetterDesk/releases/download/v1.0.0%2F..%2Fmanifest.json")
-	want := releaseFile{owner: "UNITRONIX", repo: "BetterDesk", tag: "v1.0.0", name: "manifest.json"}
+	f.Add("https://github.com/neodeskapp/NeoDesk/releases/download/v1.0.0/manifest.json")
+	f.Add("https://github.com/neodeskapp/NeoDesk/releases/download/v1.0.0/x/../manifest.json")
+	f.Add("https://github.com/neodeskapp/NeoDesk/releases/download/v1.0.0%2F..%2Fmanifest.json")
+	want := releaseFile{owner: "neodeskapp", repo: "NeoDesk", tag: "v1.0.0", name: "manifest.json"}
 	f.Fuzz(func(t *testing.T, address string) {
 		u, err := url.Parse(address)
 		if err != nil || !plainHTTPS(u) || !strings.EqualFold(u.Host, githubSite) || u.RawQuery != "" || u.Fragment != "" || !want.matches(u.EscapedPath()) {
 			return
 		}
 		path, err := url.PathUnescape(u.EscapedPath())
-		if err != nil || !strings.EqualFold(path, "/UNITRONIX/BetterDesk/releases/download/v1.0.0/manifest.json") {
+		if err != nil || !strings.EqualFold(path, "/neodeskapp/NeoDesk/releases/download/v1.0.0/manifest.json") {
 			t.Fatalf("%q passed with the path %q", address, path)
 		}
 	})

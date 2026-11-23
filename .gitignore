@@ -1,5 +1,5 @@
 # ============================================================
-# BetterDesk Console — .gitignore
+# NeoDesk Console — .gitignore
 # Organized by category, no duplicate patterns
 # ============================================================
 
@@ -21,7 +21,7 @@ eggs/
 .eggs/
 # Python distutils 'lib/' build output (root-level only — must NOT match
 # Tauri/SolidJS client src/lib directories like
-# betterdesk-agent-client/src/lib or betterdesk-mgmt/src/lib).
+# neodesk-agent-client/src/lib or neodesk-mgmt/src/lib).
 /lib/
 /lib64/
 parts/
@@ -159,55 +159,55 @@ test_api.sh
 build_windows.sh
 _write_readme.py
 
-# --- BetterDesk desktop clients / agents (legacy local trees — not shipped via panel) ---
+# --- NeoDesk desktop clients / agents (legacy local trees — not shipped via panel) ---
 # Active sources may live only on disk as *_old after local renames; keep out of git.
-betterdesk-mgmt/
-betterdesk-mgmt_old/
-betterdesk-agent/
-betterdesk-agent_old/
-betterdesk-agent-client/
-betterdesk-agent-client_old/
-betterdesk-desktop/
-betterdesk-desktop_old/
+neodesk-mgmt/
+neodesk-mgmt_old/
+neodesk-agent/
+neodesk-agent_old/
+neodesk-agent-client/
+neodesk-agent-client_old/
+neodesk-desktop/
+neodesk-desktop_old/
 rdclient-desktop/
 rdclient-desktop_old/
-# betterdesk-agent-client/ binaries (if tree is restored later)
-betterdesk-agent-client/src-tauri/binaries/**
-!betterdesk-agent-client/src-tauri/binaries/.gitkeep
-betterdesk-agent-client_old/src-tauri/binaries/**
-!betterdesk-agent-client_old/src-tauri/binaries/.gitkeep
+# neodesk-agent-client/ binaries (if tree is restored later)
+neodesk-agent-client/src-tauri/binaries/**
+!neodesk-agent-client/src-tauri/binaries/.gitkeep
+neodesk-agent-client_old/src-tauri/binaries/**
+!neodesk-agent-client_old/src-tauri/binaries/.gitkeep
 
-# --- BetterDesk Agent binaries & config (compiled locally) ---
-betterdesk-agent/betterdesk-agent
-betterdesk-agent/betterdesk-agent-*
-betterdesk-agent/*.exe
-betterdesk-agent/deploy-config.json
-betterdesk-agent/*.json
-betterdesk-agent/create_key.py
-betterdesk-agent/fix_devid.py
-betterdesk-agent/fix_type.py
-betterdesk-agent/update_config.py
-!betterdesk-agent/package.json
-betterdesk-agent_old/betterdesk-agent
-betterdesk-agent_old/betterdesk-agent-*
-betterdesk-agent_old/*.exe
-betterdesk-agent_old/*.json
-!betterdesk-agent_old/package.json
+# --- NeoDesk Agent binaries & config (compiled locally) ---
+neodesk-agent/neodesk-agent
+neodesk-agent/neodesk-agent-*
+neodesk-agent/*.exe
+neodesk-agent/deploy-config.json
+neodesk-agent/*.json
+neodesk-agent/create_key.py
+neodesk-agent/fix_devid.py
+neodesk-agent/fix_type.py
+neodesk-agent/update_config.py
+!neodesk-agent/package.json
+neodesk-agent_old/neodesk-agent
+neodesk-agent_old/neodesk-agent-*
+neodesk-agent_old/*.exe
+neodesk-agent_old/*.json
+!neodesk-agent_old/package.json
 
-# --- BetterDesk Go server binaries (compiled locally) ---
-betterdesk-server/betterdesk-server
-betterdesk-server/betterdesk-server-*
-betterdesk-server/*.exe
-betterdesk-server/*.key
-betterdesk-server/*.pem
-betterdesk-server/id_ed25519*
-betterdesk-server/test_*.go
-betterdesk-server/_test_*
+# --- NeoDesk Go server binaries (compiled locally) ---
+neodesk-server/neodesk-server
+neodesk-server/neodesk-server-*
+neodesk-server/*.exe
+neodesk-server/*.key
+neodesk-server/*.pem
+neodesk-server/id_ed25519*
+neodesk-server/test_*.go
+neodesk-server/_test_*
 
-# --- Root-level image duplicates (the console's own are in betterdesk-server/console/static/files/public/img/) ---
-/betterdesk.png
-/betterdesk_icon.png
-/betterdesk_wallpaper.png
+# --- Root-level image duplicates (the console's own are in neodesk-server/console/static/files/public/img/) ---
+/neodesk.png
+/neodesk_icon.png
+/neodesk_wallpaper.png
 
 # --- Screenshots ---
 screenshots/*.png
@@ -221,7 +221,7 @@ deploy_console.tar.gz
 
 # --- Operator-only runbooks (copy from *.example.md into docs/private/) ---
 docs/private/
-docs/important/betterdesk-server-deploy-paths.md
+docs/important/neodesk-server-deploy-paths.md
 
 # --- Internal dev/analysis documents (not for public repo) ---
 .github/audyt_bezpieczenstwa.md

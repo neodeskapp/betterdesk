@@ -608,50 +608,50 @@
    "events": []
   },
   {
-   "name": "16 GET /api/bd/api/registrations",
+   "name": "16 GET /api/nd/api/registrations",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/api/registrations",
+   "path": "/api/nd/api/registrations",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "17 GET /api/bd/api/registrations/count",
+   "name": "17 GET /api/nd/api/registrations/count",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/api/registrations/count",
+   "path": "/api/nd/api/registrations/count",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "18 GET /api/bd/api/registrations/enrollment-ui",
+   "name": "18 GET /api/nd/api/registrations/enrollment-ui",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/api/registrations/enrollment-ui",
+   "path": "/api/nd/api/registrations/enrollment-ui",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "19 GET /api/bd/api/registrations/1",
+   "name": "19 GET /api/nd/api/registrations/1",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/api/registrations/1",
+   "path": "/api/nd/api/registrations/1",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "20 PUT /api/bd/api/registrations/999/approve",
+   "name": "20 PUT /api/nd/api/registrations/999/approve",
    "role": "",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/approve",
+   "path": "/api/nd/api/registrations/999/approve",
    "body": "{}",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
@@ -659,10 +659,10 @@
    "events": []
   },
   {
-   "name": "21 PUT /api/bd/api/registrations/999/reject",
+   "name": "21 PUT /api/nd/api/registrations/999/reject",
    "role": "",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/reject",
+   "path": "/api/nd/api/registrations/999/reject",
    "body": "{}",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
@@ -670,40 +670,40 @@
    "events": []
   },
   {
-   "name": "22 DELETE /api/bd/api/registrations/999",
+   "name": "22 DELETE /api/nd/api/registrations/999",
    "role": "",
    "method": "DELETE",
-   "path": "/api/bd/api/registrations/999",
+   "path": "/api/nd/api/registrations/999",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "23 GET /api/bd/api/enrollment/pending",
+   "name": "23 GET /api/nd/api/enrollment/pending",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/pending",
+   "path": "/api/nd/api/enrollment/pending",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "24 GET /api/bd/api/enrollment/history",
+   "name": "24 GET /api/nd/api/enrollment/history",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/history",
+   "path": "/api/nd/api/enrollment/history",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "25 POST /api/bd/api/enrollment/approve/X9",
+   "name": "25 POST /api/nd/api/enrollment/approve/X9",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/approve/X9",
+   "path": "/api/nd/api/enrollment/approve/X9",
    "body": "{}",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
@@ -711,10 +711,10 @@
    "events": []
   },
   {
-   "name": "26 POST /api/bd/api/enrollment/reject/X9",
+   "name": "26 POST /api/nd/api/enrollment/reject/X9",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/reject/X9",
+   "path": "/api/nd/api/enrollment/reject/X9",
    "body": "{}",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
@@ -722,10 +722,10 @@
    "events": []
   },
   {
-   "name": "27 POST /api/bd/api/enrollment/clear-rejection/X9",
+   "name": "27 POST /api/nd/api/enrollment/clear-rejection/X9",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/clear-rejection/X9",
+   "path": "/api/nd/api/enrollment/clear-rejection/X9",
    "body": "{}",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
@@ -733,20 +733,20 @@
    "events": []
   },
   {
-   "name": "28 GET /api/bd/api/help/requests",
+   "name": "28 GET /api/nd/api/help/requests",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/api/help/requests",
+   "path": "/api/nd/api/help/requests",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "29 POST /api/bd/api/help/requests/999/accept",
+   "name": "29 POST /api/nd/api/help/requests/999/accept",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/accept",
+   "path": "/api/nd/api/help/requests/999/accept",
    "body": "{}",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
@@ -754,10 +754,10 @@
    "events": []
   },
   {
-   "name": "30 POST /api/bd/api/help/requests/999/resolve",
+   "name": "30 POST /api/nd/api/help/requests/999/resolve",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/resolve",
+   "path": "/api/nd/api/help/requests/999/resolve",
    "body": "{}",
    "status": 401,
    "answer": "{\"success\":false,\"error\":\"Unauthorized\"}",
@@ -765,10 +765,10 @@
    "events": []
   },
   {
-   "name": "31 POST /api/bd/register-request",
+   "name": "31 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -776,10 +776,10 @@
    "events": []
   },
   {
-   "name": "32 GET /api/bd/register-status",
+   "name": "32 GET /api/nd/register-status",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status",
+   "path": "/api/nd/register-status",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}",
    "calls": [],
@@ -964,50 +964,50 @@
    "events": []
   },
   {
-   "name": "50 GET /api/bd/api/registrations",
+   "name": "50 GET /api/nd/api/registrations",
    "role": "pro",
    "method": "GET",
-   "path": "/api/bd/api/registrations",
+   "path": "/api/nd/api/registrations",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "51 GET /api/bd/api/registrations/count",
+   "name": "51 GET /api/nd/api/registrations/count",
    "role": "pro",
    "method": "GET",
-   "path": "/api/bd/api/registrations/count",
+   "path": "/api/nd/api/registrations/count",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "52 GET /api/bd/api/registrations/enrollment-ui",
+   "name": "52 GET /api/nd/api/registrations/enrollment-ui",
    "role": "pro",
    "method": "GET",
-   "path": "/api/bd/api/registrations/enrollment-ui",
+   "path": "/api/nd/api/registrations/enrollment-ui",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "53 GET /api/bd/api/registrations/1",
+   "name": "53 GET /api/nd/api/registrations/1",
    "role": "pro",
    "method": "GET",
-   "path": "/api/bd/api/registrations/1",
+   "path": "/api/nd/api/registrations/1",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "54 PUT /api/bd/api/registrations/999/approve",
+   "name": "54 PUT /api/nd/api/registrations/999/approve",
    "role": "pro",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/approve",
+   "path": "/api/nd/api/registrations/999/approve",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1015,10 +1015,10 @@
    "events": []
   },
   {
-   "name": "55 PUT /api/bd/api/registrations/999/reject",
+   "name": "55 PUT /api/nd/api/registrations/999/reject",
    "role": "pro",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/reject",
+   "path": "/api/nd/api/registrations/999/reject",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1026,40 +1026,40 @@
    "events": []
   },
   {
-   "name": "56 DELETE /api/bd/api/registrations/999",
+   "name": "56 DELETE /api/nd/api/registrations/999",
    "role": "pro",
    "method": "DELETE",
-   "path": "/api/bd/api/registrations/999",
+   "path": "/api/nd/api/registrations/999",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.manage\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "57 GET /api/bd/api/enrollment/pending",
+   "name": "57 GET /api/nd/api/enrollment/pending",
    "role": "pro",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/pending",
+   "path": "/api/nd/api/enrollment/pending",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "58 GET /api/bd/api/enrollment/history",
+   "name": "58 GET /api/nd/api/enrollment/history",
    "role": "pro",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/history",
+   "path": "/api/nd/api/enrollment/history",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "59 POST /api/bd/api/enrollment/approve/X9",
+   "name": "59 POST /api/nd/api/enrollment/approve/X9",
    "role": "pro",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/approve/X9",
+   "path": "/api/nd/api/enrollment/approve/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1067,10 +1067,10 @@
    "events": []
   },
   {
-   "name": "60 POST /api/bd/api/enrollment/reject/X9",
+   "name": "60 POST /api/nd/api/enrollment/reject/X9",
    "role": "pro",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/reject/X9",
+   "path": "/api/nd/api/enrollment/reject/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1078,10 +1078,10 @@
    "events": []
   },
   {
-   "name": "61 POST /api/bd/api/enrollment/clear-rejection/X9",
+   "name": "61 POST /api/nd/api/enrollment/clear-rejection/X9",
    "role": "pro",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/clear-rejection/X9",
+   "path": "/api/nd/api/enrollment/clear-rejection/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1089,31 +1089,20 @@
    "events": []
   },
   {
-   "name": "62 GET /api/bd/api/help/requests",
+   "name": "62 GET /api/nd/api/help/requests",
    "role": "pro",
    "method": "GET",
-   "path": "/api/bd/api/help/requests",
+   "path": "/api/nd/api/help/requests",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: chat.access\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "63 POST /api/bd/api/help/requests/999/accept",
+   "name": "63 POST /api/nd/api/help/requests/999/accept",
    "role": "pro",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/accept",
-   "body": "{}",
-   "status": 403,
-   "answer": "{\"success\":false,\"error\":\"Permission denied: chat.access\"}",
-   "calls": [],
-   "events": []
-  },
-  {
-   "name": "64 POST /api/bd/api/help/requests/999/resolve",
-   "role": "pro",
-   "method": "POST",
-   "path": "/api/bd/api/help/requests/999/resolve",
+   "path": "/api/nd/api/help/requests/999/accept",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: chat.access\"}",
@@ -1121,10 +1110,21 @@
    "events": []
   },
   {
-   "name": "65 POST /api/bd/register-request",
+   "name": "64 POST /api/nd/api/help/requests/999/resolve",
    "role": "pro",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/api/help/requests/999/resolve",
+   "body": "{}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"Permission denied: chat.access\"}",
+   "calls": [],
+   "events": []
+  },
+  {
+   "name": "65 POST /api/nd/register-request",
+   "role": "pro",
+   "method": "POST",
+   "path": "/api/nd/register-request",
    "body": "{}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -1132,10 +1132,10 @@
    "events": []
   },
   {
-   "name": "66 GET /api/bd/register-status",
+   "name": "66 GET /api/nd/register-status",
    "role": "pro",
    "method": "GET",
-   "path": "/api/bd/register-status",
+   "path": "/api/nd/register-status",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}",
    "calls": [],
@@ -1320,50 +1320,50 @@
    "events": []
   },
   {
-   "name": "84 GET /api/bd/api/registrations",
+   "name": "84 GET /api/nd/api/registrations",
    "role": "guest_issuer",
    "method": "GET",
-   "path": "/api/bd/api/registrations",
+   "path": "/api/nd/api/registrations",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "85 GET /api/bd/api/registrations/count",
+   "name": "85 GET /api/nd/api/registrations/count",
    "role": "guest_issuer",
    "method": "GET",
-   "path": "/api/bd/api/registrations/count",
+   "path": "/api/nd/api/registrations/count",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "86 GET /api/bd/api/registrations/enrollment-ui",
+   "name": "86 GET /api/nd/api/registrations/enrollment-ui",
    "role": "guest_issuer",
    "method": "GET",
-   "path": "/api/bd/api/registrations/enrollment-ui",
+   "path": "/api/nd/api/registrations/enrollment-ui",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "87 GET /api/bd/api/registrations/1",
+   "name": "87 GET /api/nd/api/registrations/1",
    "role": "guest_issuer",
    "method": "GET",
-   "path": "/api/bd/api/registrations/1",
+   "path": "/api/nd/api/registrations/1",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "88 PUT /api/bd/api/registrations/999/approve",
+   "name": "88 PUT /api/nd/api/registrations/999/approve",
    "role": "guest_issuer",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/approve",
+   "path": "/api/nd/api/registrations/999/approve",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1371,10 +1371,10 @@
    "events": []
   },
   {
-   "name": "89 PUT /api/bd/api/registrations/999/reject",
+   "name": "89 PUT /api/nd/api/registrations/999/reject",
    "role": "guest_issuer",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/reject",
+   "path": "/api/nd/api/registrations/999/reject",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1382,40 +1382,40 @@
    "events": []
   },
   {
-   "name": "90 DELETE /api/bd/api/registrations/999",
+   "name": "90 DELETE /api/nd/api/registrations/999",
    "role": "guest_issuer",
    "method": "DELETE",
-   "path": "/api/bd/api/registrations/999",
+   "path": "/api/nd/api/registrations/999",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.manage\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "91 GET /api/bd/api/enrollment/pending",
+   "name": "91 GET /api/nd/api/enrollment/pending",
    "role": "guest_issuer",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/pending",
+   "path": "/api/nd/api/enrollment/pending",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "92 GET /api/bd/api/enrollment/history",
+   "name": "92 GET /api/nd/api/enrollment/history",
    "role": "guest_issuer",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/history",
+   "path": "/api/nd/api/enrollment/history",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "93 POST /api/bd/api/enrollment/approve/X9",
+   "name": "93 POST /api/nd/api/enrollment/approve/X9",
    "role": "guest_issuer",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/approve/X9",
+   "path": "/api/nd/api/enrollment/approve/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1423,10 +1423,10 @@
    "events": []
   },
   {
-   "name": "94 POST /api/bd/api/enrollment/reject/X9",
+   "name": "94 POST /api/nd/api/enrollment/reject/X9",
    "role": "guest_issuer",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/reject/X9",
+   "path": "/api/nd/api/enrollment/reject/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1434,10 +1434,10 @@
    "events": []
   },
   {
-   "name": "95 POST /api/bd/api/enrollment/clear-rejection/X9",
+   "name": "95 POST /api/nd/api/enrollment/clear-rejection/X9",
    "role": "guest_issuer",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/clear-rejection/X9",
+   "path": "/api/nd/api/enrollment/clear-rejection/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1445,31 +1445,20 @@
    "events": []
   },
   {
-   "name": "96 GET /api/bd/api/help/requests",
+   "name": "96 GET /api/nd/api/help/requests",
    "role": "guest_issuer",
    "method": "GET",
-   "path": "/api/bd/api/help/requests",
+   "path": "/api/nd/api/help/requests",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: chat.access\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "97 POST /api/bd/api/help/requests/999/accept",
+   "name": "97 POST /api/nd/api/help/requests/999/accept",
    "role": "guest_issuer",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/accept",
-   "body": "{}",
-   "status": 403,
-   "answer": "{\"success\":false,\"error\":\"Permission denied: chat.access\"}",
-   "calls": [],
-   "events": []
-  },
-  {
-   "name": "98 POST /api/bd/api/help/requests/999/resolve",
-   "role": "guest_issuer",
-   "method": "POST",
-   "path": "/api/bd/api/help/requests/999/resolve",
+   "path": "/api/nd/api/help/requests/999/accept",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: chat.access\"}",
@@ -1477,10 +1466,21 @@
    "events": []
   },
   {
-   "name": "99 POST /api/bd/register-request",
+   "name": "98 POST /api/nd/api/help/requests/999/resolve",
    "role": "guest_issuer",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/api/help/requests/999/resolve",
+   "body": "{}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"Permission denied: chat.access\"}",
+   "calls": [],
+   "events": []
+  },
+  {
+   "name": "99 POST /api/nd/register-request",
+   "role": "guest_issuer",
+   "method": "POST",
+   "path": "/api/nd/register-request",
    "body": "{}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -1488,10 +1488,10 @@
    "events": []
   },
   {
-   "name": "100 GET /api/bd/register-status",
+   "name": "100 GET /api/nd/register-status",
    "role": "guest_issuer",
    "method": "GET",
-   "path": "/api/bd/register-status",
+   "path": "/api/nd/register-status",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}",
    "calls": [],
@@ -1694,50 +1694,50 @@
    "events": []
   },
   {
-   "name": "118 GET /api/bd/api/registrations",
+   "name": "118 GET /api/nd/api/registrations",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/api/registrations",
+   "path": "/api/nd/api/registrations",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "119 GET /api/bd/api/registrations/count",
+   "name": "119 GET /api/nd/api/registrations/count",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/api/registrations/count",
+   "path": "/api/nd/api/registrations/count",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "120 GET /api/bd/api/registrations/enrollment-ui",
+   "name": "120 GET /api/nd/api/registrations/enrollment-ui",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/api/registrations/enrollment-ui",
+   "path": "/api/nd/api/registrations/enrollment-ui",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "121 GET /api/bd/api/registrations/1",
+   "name": "121 GET /api/nd/api/registrations/1",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/api/registrations/1",
+   "path": "/api/nd/api/registrations/1",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "122 PUT /api/bd/api/registrations/999/approve",
+   "name": "122 PUT /api/nd/api/registrations/999/approve",
    "role": "viewer",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/approve",
+   "path": "/api/nd/api/registrations/999/approve",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1745,10 +1745,10 @@
    "events": []
   },
   {
-   "name": "123 PUT /api/bd/api/registrations/999/reject",
+   "name": "123 PUT /api/nd/api/registrations/999/reject",
    "role": "viewer",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/reject",
+   "path": "/api/nd/api/registrations/999/reject",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1756,40 +1756,40 @@
    "events": []
   },
   {
-   "name": "124 DELETE /api/bd/api/registrations/999",
+   "name": "124 DELETE /api/nd/api/registrations/999",
    "role": "viewer",
    "method": "DELETE",
-   "path": "/api/bd/api/registrations/999",
+   "path": "/api/nd/api/registrations/999",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.manage\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "125 GET /api/bd/api/enrollment/pending",
+   "name": "125 GET /api/nd/api/enrollment/pending",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/pending",
+   "path": "/api/nd/api/enrollment/pending",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "126 GET /api/bd/api/enrollment/history",
+   "name": "126 GET /api/nd/api/enrollment/history",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/history",
+   "path": "/api/nd/api/enrollment/history",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "127 POST /api/bd/api/enrollment/approve/X9",
+   "name": "127 POST /api/nd/api/enrollment/approve/X9",
    "role": "viewer",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/approve/X9",
+   "path": "/api/nd/api/enrollment/approve/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1797,10 +1797,10 @@
    "events": []
   },
   {
-   "name": "128 POST /api/bd/api/enrollment/reject/X9",
+   "name": "128 POST /api/nd/api/enrollment/reject/X9",
    "role": "viewer",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/reject/X9",
+   "path": "/api/nd/api/enrollment/reject/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1808,10 +1808,10 @@
    "events": []
   },
   {
-   "name": "129 POST /api/bd/api/enrollment/clear-rejection/X9",
+   "name": "129 POST /api/nd/api/enrollment/clear-rejection/X9",
    "role": "viewer",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/clear-rejection/X9",
+   "path": "/api/nd/api/enrollment/clear-rejection/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -1819,10 +1819,10 @@
    "events": []
   },
   {
-   "name": "130 GET /api/bd/api/help/requests",
+   "name": "130 GET /api/nd/api/help/requests",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/api/help/requests",
+   "path": "/api/nd/api/help/requests",
    "status": 200,
    "answer": "{\"success\":true,\"requests\":[{\"id\":\"26\",\"device_id\":\"DEV6\",\"hostname\":\"\",\"message\":\"\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"demo_helpdesk\",\"created_at\":1795015528778,\"updated_at\":null},{\"id\":\"27\",\"device_id\":\"DEV7\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":1795015528778,\"updated_at\":null},{\"id\":\"21\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"printer\",\"status\":\"accepted\",\"accepted_by\":\"e2e_viewer\",\"resolved_by\":\"\",\"created_at\":983404830000,\"updated_at\":983405100000},{\"id\":\"22\",\"device_id\":\"DEV2\",\"hostname\":\"pc-2\",\"message\":\"vpn\",\"status\":\"accepted\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":983404830000,\"updated_at\":null},{\"id\":\"23\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"message\":\"font\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":980985600000,\"updated_at\":981072000500},{\"id\":\"25\",\"device_id\":\"DEV5\",\"hostname\":\"\",\"message\":\"\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978688800000,\"updated_at\":null},{\"id\":\"24\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"e2e_operator\",\"resolved_by\":\"\",\"created_at\":978300000000,\"updated_at\":null}]}",
    "calls": [
@@ -1835,10 +1835,10 @@
    "events": []
   },
   {
-   "name": "131 POST /api/bd/api/help/requests/999/accept",
+   "name": "131 POST /api/nd/api/help/requests/999/accept",
    "role": "viewer",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/accept",
+   "path": "/api/nd/api/help/requests/999/accept",
    "body": "{}",
    "status": 502,
    "answer": "{\"success\":false,\"error\":\"not found\"}",
@@ -1852,10 +1852,10 @@
    "events": []
   },
   {
-   "name": "132 POST /api/bd/api/help/requests/999/resolve",
+   "name": "132 POST /api/nd/api/help/requests/999/resolve",
    "role": "viewer",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/resolve",
+   "path": "/api/nd/api/help/requests/999/resolve",
    "body": "{}",
    "status": 502,
    "answer": "{\"success\":false,\"error\":\"not found\"}",
@@ -1869,10 +1869,10 @@
    "events": []
   },
   {
-   "name": "133 POST /api/bd/register-request",
+   "name": "133 POST /api/nd/register-request",
    "role": "viewer",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -1880,10 +1880,10 @@
    "events": []
   },
   {
-   "name": "134 GET /api/bd/register-status",
+   "name": "134 GET /api/nd/register-status",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/register-status",
+   "path": "/api/nd/register-status",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}",
    "calls": [],
@@ -2086,50 +2086,50 @@
    "events": []
   },
   {
-   "name": "152 GET /api/bd/api/registrations",
+   "name": "152 GET /api/nd/api/registrations",
    "role": "operator",
    "method": "GET",
-   "path": "/api/bd/api/registrations",
+   "path": "/api/nd/api/registrations",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "153 GET /api/bd/api/registrations/count",
+   "name": "153 GET /api/nd/api/registrations/count",
    "role": "operator",
    "method": "GET",
-   "path": "/api/bd/api/registrations/count",
+   "path": "/api/nd/api/registrations/count",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "154 GET /api/bd/api/registrations/enrollment-ui",
+   "name": "154 GET /api/nd/api/registrations/enrollment-ui",
    "role": "operator",
    "method": "GET",
-   "path": "/api/bd/api/registrations/enrollment-ui",
+   "path": "/api/nd/api/registrations/enrollment-ui",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "155 GET /api/bd/api/registrations/1",
+   "name": "155 GET /api/nd/api/registrations/1",
    "role": "operator",
    "method": "GET",
-   "path": "/api/bd/api/registrations/1",
+   "path": "/api/nd/api/registrations/1",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "156 PUT /api/bd/api/registrations/999/approve",
+   "name": "156 PUT /api/nd/api/registrations/999/approve",
    "role": "operator",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/approve",
+   "path": "/api/nd/api/registrations/999/approve",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -2137,10 +2137,10 @@
    "events": []
   },
   {
-   "name": "157 PUT /api/bd/api/registrations/999/reject",
+   "name": "157 PUT /api/nd/api/registrations/999/reject",
    "role": "operator",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/reject",
+   "path": "/api/nd/api/registrations/999/reject",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -2148,40 +2148,40 @@
    "events": []
   },
   {
-   "name": "158 DELETE /api/bd/api/registrations/999",
+   "name": "158 DELETE /api/nd/api/registrations/999",
    "role": "operator",
    "method": "DELETE",
-   "path": "/api/bd/api/registrations/999",
+   "path": "/api/nd/api/registrations/999",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.manage\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "159 GET /api/bd/api/enrollment/pending",
+   "name": "159 GET /api/nd/api/enrollment/pending",
    "role": "operator",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/pending",
+   "path": "/api/nd/api/enrollment/pending",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "160 GET /api/bd/api/enrollment/history",
+   "name": "160 GET /api/nd/api/enrollment/history",
    "role": "operator",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/history",
+   "path": "/api/nd/api/enrollment/history",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "161 POST /api/bd/api/enrollment/approve/X9",
+   "name": "161 POST /api/nd/api/enrollment/approve/X9",
    "role": "operator",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/approve/X9",
+   "path": "/api/nd/api/enrollment/approve/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -2189,10 +2189,10 @@
    "events": []
   },
   {
-   "name": "162 POST /api/bd/api/enrollment/reject/X9",
+   "name": "162 POST /api/nd/api/enrollment/reject/X9",
    "role": "operator",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/reject/X9",
+   "path": "/api/nd/api/enrollment/reject/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -2200,10 +2200,10 @@
    "events": []
   },
   {
-   "name": "163 POST /api/bd/api/enrollment/clear-rejection/X9",
+   "name": "163 POST /api/nd/api/enrollment/clear-rejection/X9",
    "role": "operator",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/clear-rejection/X9",
+   "path": "/api/nd/api/enrollment/clear-rejection/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -2211,10 +2211,10 @@
    "events": []
   },
   {
-   "name": "164 GET /api/bd/api/help/requests",
+   "name": "164 GET /api/nd/api/help/requests",
    "role": "operator",
    "method": "GET",
-   "path": "/api/bd/api/help/requests",
+   "path": "/api/nd/api/help/requests",
    "status": 200,
    "answer": "{\"success\":true,\"requests\":[{\"id\":\"26\",\"device_id\":\"DEV6\",\"hostname\":\"\",\"message\":\"\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"demo_helpdesk\",\"created_at\":1795015529618,\"updated_at\":null},{\"id\":\"27\",\"device_id\":\"DEV7\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":1795015529618,\"updated_at\":null},{\"id\":\"21\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"printer\",\"status\":\"accepted\",\"accepted_by\":\"e2e_viewer\",\"resolved_by\":\"\",\"created_at\":983404830000,\"updated_at\":983405100000},{\"id\":\"22\",\"device_id\":\"DEV2\",\"hostname\":\"pc-2\",\"message\":\"vpn\",\"status\":\"accepted\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":983404830000,\"updated_at\":null},{\"id\":\"23\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"message\":\"font\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":980985600000,\"updated_at\":981072000500},{\"id\":\"25\",\"device_id\":\"DEV5\",\"hostname\":\"\",\"message\":\"\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978688800000,\"updated_at\":null},{\"id\":\"24\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"e2e_operator\",\"resolved_by\":\"\",\"created_at\":978300000000,\"updated_at\":null}]}",
    "calls": [
@@ -2227,10 +2227,10 @@
    "events": []
   },
   {
-   "name": "165 POST /api/bd/api/help/requests/999/accept",
+   "name": "165 POST /api/nd/api/help/requests/999/accept",
    "role": "operator",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/accept",
+   "path": "/api/nd/api/help/requests/999/accept",
    "body": "{}",
    "status": 502,
    "answer": "{\"success\":false,\"error\":\"not found\"}",
@@ -2244,10 +2244,10 @@
    "events": []
   },
   {
-   "name": "166 POST /api/bd/api/help/requests/999/resolve",
+   "name": "166 POST /api/nd/api/help/requests/999/resolve",
    "role": "operator",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/resolve",
+   "path": "/api/nd/api/help/requests/999/resolve",
    "body": "{}",
    "status": 502,
    "answer": "{\"success\":false,\"error\":\"not found\"}",
@@ -2261,10 +2261,10 @@
    "events": []
   },
   {
-   "name": "167 POST /api/bd/register-request",
+   "name": "167 POST /api/nd/register-request",
    "role": "operator",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -2272,10 +2272,10 @@
    "events": []
   },
   {
-   "name": "168 GET /api/bd/register-status",
+   "name": "168 GET /api/nd/register-status",
    "role": "operator",
    "method": "GET",
-   "path": "/api/bd/register-status",
+   "path": "/api/nd/register-status",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}",
    "calls": [],
@@ -2520,20 +2520,20 @@
    "events": []
   },
   {
-   "name": "186 GET /api/bd/api/registrations",
+   "name": "186 GET /api/nd/api/registrations",
    "role": "global_admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations",
+   "path": "/api/nd/api/registrations",
    "status": 200,
    "answer": "{\"success\":true,\"data\":[{\"id\":8,\"device_id\":\"DEV8\",\"hostname\":\"rejected-bare\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"rejected\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":null,\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:08:00\",\"updated_at\":\"2001-01-01 00:08:00\"},{\"id\":7,\"device_id\":\"DEV7\",\"hostname\":\"approved-bare\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:07:00\",\"updated_at\":\"2001-01-01 00:07:00\"},{\"id\":6,\"device_id\":\"DEV6\",\"hostname\":null,\"platform\":null,\"version\":null,\"ip_address\":null,\"public_key\":null,\"uuid\":null,\"status\":null,\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":null,\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:06:00\",\"updated_at\":\"2001-01-01 00:06:00\"},{\"id\":5,\"device_id\":\"DEV5\",\"hostname\":\"École-PC\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"192.168.1.5\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:05:00\",\"updated_at\":\"2001-01-01 00:05:00\"},{\"id\":4,\"device_id\":\"DEV4\",\"hostname\":\"rejected-pc\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.4\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"rejected\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"no\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:04:00\",\"updated_at\":\"2001-01-01 00:04:00\"},{\"id\":3,\"device_id\":\"DEV3\",\"hostname\":\"approved-pc\",\"platform\":\"macOS\",\"version\":\"1.2\",\"ip_address\":\"10.0.0.3\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2001-01-01 00:03:30\",\"rejected_reason\":\"\",\"access_token\":\"tok-3\",\"console_url\":\"http://h:5000\",\"server_address\":\"h:21116\",\"server_key\":\"key-3\",\"created_at\":\"2001-01-01 00:03:00\",\"updated_at\":\"2001-01-01 00:03:30\"},{\"id\":2,\"device_id\":\"DEV2\",\"hostname\":\"Laptop 100%_off\",\"platform\":\"Linux\",\"version\":\"1.1\",\"ip_address\":\"10.0.0.2\",\"public_key\":\"key-2\",\"uuid\":\"uuid-2\",\"status\":\"pending\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:02:00\",\"updated_at\":\"2001-01-01 00:02:00\"},{\"id\":1,\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:01:00\",\"updated_at\":\"2001-01-01 00:01:00\"}],\"total\":8}",
    "calls": [],
    "events": []
   },
   {
-   "name": "187 GET /api/bd/api/registrations/count",
+   "name": "187 GET /api/nd/api/registrations/count",
    "role": "global_admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations/count",
+   "path": "/api/nd/api/registrations/count",
    "status": 200,
    "answer": "{\"success\":true,\"count\":5}",
    "calls": [
@@ -2546,10 +2546,10 @@
    "events": []
   },
   {
-   "name": "188 GET /api/bd/api/registrations/enrollment-ui",
+   "name": "188 GET /api/nd/api/registrations/enrollment-ui",
    "role": "global_admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations/enrollment-ui",
+   "path": "/api/nd/api/registrations/enrollment-ui",
    "status": 200,
    "answer": "{\"success\":true,\"data\":{\"mode\":\"approval\",\"rich_approve\":true,\"tag_picker\":true}}",
    "calls": [
@@ -2562,20 +2562,20 @@
    "events": []
   },
   {
-   "name": "189 GET /api/bd/api/registrations/1",
+   "name": "189 GET /api/nd/api/registrations/1",
    "role": "global_admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations/1",
+   "path": "/api/nd/api/registrations/1",
    "status": 200,
    "answer": "{\"success\":true,\"data\":{\"id\":1,\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:01:00\",\"updated_at\":\"2001-01-01 00:01:00\"}}",
    "calls": [],
    "events": []
   },
   {
-   "name": "190 PUT /api/bd/api/registrations/999/approve",
+   "name": "190 PUT /api/nd/api/registrations/999/approve",
    "role": "global_admin",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/approve",
+   "path": "/api/nd/api/registrations/999/approve",
    "body": "{}",
    "status": 404,
    "answer": "{\"success\":false,\"error\":\"Registration not found\"}",
@@ -2583,10 +2583,10 @@
    "events": []
   },
   {
-   "name": "191 PUT /api/bd/api/registrations/999/reject",
+   "name": "191 PUT /api/nd/api/registrations/999/reject",
    "role": "global_admin",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/reject",
+   "path": "/api/nd/api/registrations/999/reject",
    "body": "{}",
    "status": 404,
    "answer": "{\"success\":false,\"error\":\"Registration not found\"}",
@@ -2594,20 +2594,20 @@
    "events": []
   },
   {
-   "name": "192 DELETE /api/bd/api/registrations/999",
+   "name": "192 DELETE /api/nd/api/registrations/999",
    "role": "global_admin",
    "method": "DELETE",
-   "path": "/api/bd/api/registrations/999",
+   "path": "/api/nd/api/registrations/999",
    "status": 404,
    "answer": "{\"success\":false,\"error\":\"Registration not found\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "193 GET /api/bd/api/enrollment/pending",
+   "name": "193 GET /api/nd/api/enrollment/pending",
    "role": "global_admin",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/pending",
+   "path": "/api/nd/api/enrollment/pending",
    "status": 200,
    "answer": "{\"success\":true,\"data\":[{\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"created_at\":\"2001-04-01T00:00:00Z\"},{\"device_id\":\"E2\",\"platform\":\"Linux\",\"created_at\":\"2001-04-02T00:00:00Z\"}],\"count\":2}",
    "calls": [
@@ -2620,10 +2620,10 @@
    "events": []
   },
   {
-   "name": "194 GET /api/bd/api/enrollment/history",
+   "name": "194 GET /api/nd/api/enrollment/history",
    "role": "global_admin",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/history",
+   "path": "/api/nd/api/enrollment/history",
    "status": 200,
    "answer": "{\"success\":true,\"data\":[{\"device_id\":\"H1\",\"status\":\"rejected\"}],\"count\":1}",
    "calls": [
@@ -2636,10 +2636,10 @@
    "events": []
   },
   {
-   "name": "195 POST /api/bd/api/enrollment/approve/X9",
+   "name": "195 POST /api/nd/api/enrollment/approve/X9",
    "role": "global_admin",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/approve/X9",
+   "path": "/api/nd/api/enrollment/approve/X9",
    "body": "{}",
    "status": 200,
    "answer": "{\"success\":false,\"error\":\"Request failed with status code 404\"}",
@@ -2653,10 +2653,10 @@
    "events": []
   },
   {
-   "name": "196 POST /api/bd/api/enrollment/reject/X9",
+   "name": "196 POST /api/nd/api/enrollment/reject/X9",
    "role": "global_admin",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/reject/X9",
+   "path": "/api/nd/api/enrollment/reject/X9",
    "body": "{}",
    "status": 200,
    "answer": "{\"success\":false,\"error\":\"Request failed with status code 404\"}",
@@ -2670,10 +2670,10 @@
    "events": []
   },
   {
-   "name": "197 POST /api/bd/api/enrollment/clear-rejection/X9",
+   "name": "197 POST /api/nd/api/enrollment/clear-rejection/X9",
    "role": "global_admin",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/clear-rejection/X9",
+   "path": "/api/nd/api/enrollment/clear-rejection/X9",
    "body": "{}",
    "status": 200,
    "answer": "{\"success\":false,\"error\":\"Request failed with status code 404\"}",
@@ -2687,10 +2687,10 @@
    "events": []
   },
   {
-   "name": "198 GET /api/bd/api/help/requests",
+   "name": "198 GET /api/nd/api/help/requests",
    "role": "global_admin",
    "method": "GET",
-   "path": "/api/bd/api/help/requests",
+   "path": "/api/nd/api/help/requests",
    "status": 200,
    "answer": "{\"success\":true,\"requests\":[{\"id\":\"26\",\"device_id\":\"DEV6\",\"hostname\":\"\",\"message\":\"\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"demo_helpdesk\",\"created_at\":1795015530473,\"updated_at\":null},{\"id\":\"27\",\"device_id\":\"DEV7\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":1795015530473,\"updated_at\":null},{\"id\":\"21\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"printer\",\"status\":\"accepted\",\"accepted_by\":\"e2e_viewer\",\"resolved_by\":\"\",\"created_at\":983404830000,\"updated_at\":983405100000},{\"id\":\"22\",\"device_id\":\"DEV2\",\"hostname\":\"pc-2\",\"message\":\"vpn\",\"status\":\"accepted\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":983404830000,\"updated_at\":null},{\"id\":\"23\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"message\":\"font\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":980985600000,\"updated_at\":981072000500},{\"id\":\"25\",\"device_id\":\"DEV5\",\"hostname\":\"\",\"message\":\"\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978688800000,\"updated_at\":null},{\"id\":\"24\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"e2e_operator\",\"resolved_by\":\"\",\"created_at\":978300000000,\"updated_at\":null}]}",
    "calls": [
@@ -2703,10 +2703,10 @@
    "events": []
   },
   {
-   "name": "199 POST /api/bd/api/help/requests/999/accept",
+   "name": "199 POST /api/nd/api/help/requests/999/accept",
    "role": "global_admin",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/accept",
+   "path": "/api/nd/api/help/requests/999/accept",
    "body": "{}",
    "status": 502,
    "answer": "{\"success\":false,\"error\":\"not found\"}",
@@ -2720,10 +2720,10 @@
    "events": []
   },
   {
-   "name": "200 POST /api/bd/api/help/requests/999/resolve",
+   "name": "200 POST /api/nd/api/help/requests/999/resolve",
    "role": "global_admin",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/resolve",
+   "path": "/api/nd/api/help/requests/999/resolve",
    "body": "{}",
    "status": 502,
    "answer": "{\"success\":false,\"error\":\"not found\"}",
@@ -2737,10 +2737,10 @@
    "events": []
   },
   {
-   "name": "201 POST /api/bd/register-request",
+   "name": "201 POST /api/nd/register-request",
    "role": "global_admin",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -2748,10 +2748,10 @@
    "events": []
   },
   {
-   "name": "202 GET /api/bd/register-status",
+   "name": "202 GET /api/nd/register-status",
    "role": "global_admin",
    "method": "GET",
-   "path": "/api/bd/register-status",
+   "path": "/api/nd/register-status",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}",
    "calls": [],
@@ -2936,50 +2936,50 @@
    "events": []
   },
   {
-   "name": "220 GET /api/bd/api/registrations",
+   "name": "220 GET /api/nd/api/registrations",
    "role": "server_admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations",
+   "path": "/api/nd/api/registrations",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "221 GET /api/bd/api/registrations/count",
+   "name": "221 GET /api/nd/api/registrations/count",
    "role": "server_admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations/count",
+   "path": "/api/nd/api/registrations/count",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "222 GET /api/bd/api/registrations/enrollment-ui",
+   "name": "222 GET /api/nd/api/registrations/enrollment-ui",
    "role": "server_admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations/enrollment-ui",
+   "path": "/api/nd/api/registrations/enrollment-ui",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "223 GET /api/bd/api/registrations/1",
+   "name": "223 GET /api/nd/api/registrations/1",
    "role": "server_admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations/1",
+   "path": "/api/nd/api/registrations/1",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "224 PUT /api/bd/api/registrations/999/approve",
+   "name": "224 PUT /api/nd/api/registrations/999/approve",
    "role": "server_admin",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/approve",
+   "path": "/api/nd/api/registrations/999/approve",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -2987,10 +2987,10 @@
    "events": []
   },
   {
-   "name": "225 PUT /api/bd/api/registrations/999/reject",
+   "name": "225 PUT /api/nd/api/registrations/999/reject",
    "role": "server_admin",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/reject",
+   "path": "/api/nd/api/registrations/999/reject",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -2998,40 +2998,40 @@
    "events": []
   },
   {
-   "name": "226 DELETE /api/bd/api/registrations/999",
+   "name": "226 DELETE /api/nd/api/registrations/999",
    "role": "server_admin",
    "method": "DELETE",
-   "path": "/api/bd/api/registrations/999",
+   "path": "/api/nd/api/registrations/999",
    "status": 404,
    "answer": "{\"success\":false,\"error\":\"Registration not found\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "227 GET /api/bd/api/enrollment/pending",
+   "name": "227 GET /api/nd/api/enrollment/pending",
    "role": "server_admin",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/pending",
+   "path": "/api/nd/api/enrollment/pending",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "228 GET /api/bd/api/enrollment/history",
+   "name": "228 GET /api/nd/api/enrollment/history",
    "role": "server_admin",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/history",
+   "path": "/api/nd/api/enrollment/history",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "229 POST /api/bd/api/enrollment/approve/X9",
+   "name": "229 POST /api/nd/api/enrollment/approve/X9",
    "role": "server_admin",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/approve/X9",
+   "path": "/api/nd/api/enrollment/approve/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -3039,10 +3039,10 @@
    "events": []
   },
   {
-   "name": "230 POST /api/bd/api/enrollment/reject/X9",
+   "name": "230 POST /api/nd/api/enrollment/reject/X9",
    "role": "server_admin",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/reject/X9",
+   "path": "/api/nd/api/enrollment/reject/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -3050,10 +3050,10 @@
    "events": []
   },
   {
-   "name": "231 POST /api/bd/api/enrollment/clear-rejection/X9",
+   "name": "231 POST /api/nd/api/enrollment/clear-rejection/X9",
    "role": "server_admin",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/clear-rejection/X9",
+   "path": "/api/nd/api/enrollment/clear-rejection/X9",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: enrollment.approve\"}",
@@ -3061,31 +3061,20 @@
    "events": []
   },
   {
-   "name": "232 GET /api/bd/api/help/requests",
+   "name": "232 GET /api/nd/api/help/requests",
    "role": "server_admin",
    "method": "GET",
-   "path": "/api/bd/api/help/requests",
+   "path": "/api/nd/api/help/requests",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: chat.access\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "233 POST /api/bd/api/help/requests/999/accept",
+   "name": "233 POST /api/nd/api/help/requests/999/accept",
    "role": "server_admin",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/accept",
-   "body": "{}",
-   "status": 403,
-   "answer": "{\"success\":false,\"error\":\"Permission denied: chat.access\"}",
-   "calls": [],
-   "events": []
-  },
-  {
-   "name": "234 POST /api/bd/api/help/requests/999/resolve",
-   "role": "server_admin",
-   "method": "POST",
-   "path": "/api/bd/api/help/requests/999/resolve",
+   "path": "/api/nd/api/help/requests/999/accept",
    "body": "{}",
    "status": 403,
    "answer": "{\"success\":false,\"error\":\"Permission denied: chat.access\"}",
@@ -3093,10 +3082,21 @@
    "events": []
   },
   {
-   "name": "235 POST /api/bd/register-request",
+   "name": "234 POST /api/nd/api/help/requests/999/resolve",
    "role": "server_admin",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/api/help/requests/999/resolve",
+   "body": "{}",
+   "status": 403,
+   "answer": "{\"success\":false,\"error\":\"Permission denied: chat.access\"}",
+   "calls": [],
+   "events": []
+  },
+  {
+   "name": "235 POST /api/nd/register-request",
+   "role": "server_admin",
+   "method": "POST",
+   "path": "/api/nd/register-request",
    "body": "{}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -3104,10 +3104,10 @@
    "events": []
   },
   {
-   "name": "236 GET /api/bd/register-status",
+   "name": "236 GET /api/nd/register-status",
    "role": "server_admin",
    "method": "GET",
-   "path": "/api/bd/register-status",
+   "path": "/api/nd/register-status",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}",
    "calls": [],
@@ -3352,20 +3352,20 @@
    "events": []
   },
   {
-   "name": "254 GET /api/bd/api/registrations",
+   "name": "254 GET /api/nd/api/registrations",
    "role": "super_admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations",
+   "path": "/api/nd/api/registrations",
    "status": 200,
    "answer": "{\"success\":true,\"data\":[{\"id\":8,\"device_id\":\"DEV8\",\"hostname\":\"rejected-bare\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"rejected\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":null,\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:08:00\",\"updated_at\":\"2001-01-01 00:08:00\"},{\"id\":7,\"device_id\":\"DEV7\",\"hostname\":\"approved-bare\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:07:00\",\"updated_at\":\"2001-01-01 00:07:00\"},{\"id\":6,\"device_id\":\"DEV6\",\"hostname\":null,\"platform\":null,\"version\":null,\"ip_address\":null,\"public_key\":null,\"uuid\":null,\"status\":null,\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":null,\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:06:00\",\"updated_at\":\"2001-01-01 00:06:00\"},{\"id\":5,\"device_id\":\"DEV5\",\"hostname\":\"École-PC\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"192.168.1.5\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:05:00\",\"updated_at\":\"2001-01-01 00:05:00\"},{\"id\":4,\"device_id\":\"DEV4\",\"hostname\":\"rejected-pc\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.4\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"rejected\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"no\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:04:00\",\"updated_at\":\"2001-01-01 00:04:00\"},{\"id\":3,\"device_id\":\"DEV3\",\"hostname\":\"approved-pc\",\"platform\":\"macOS\",\"version\":\"1.2\",\"ip_address\":\"10.0.0.3\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2001-01-01 00:03:30\",\"rejected_reason\":\"\",\"access_token\":\"tok-3\",\"console_url\":\"http://h:5000\",\"server_address\":\"h:21116\",\"server_key\":\"key-3\",\"created_at\":\"2001-01-01 00:03:00\",\"updated_at\":\"2001-01-01 00:03:30\"},{\"id\":2,\"device_id\":\"DEV2\",\"hostname\":\"Laptop 100%_off\",\"platform\":\"Linux\",\"version\":\"1.1\",\"ip_address\":\"10.0.0.2\",\"public_key\":\"key-2\",\"uuid\":\"uuid-2\",\"status\":\"pending\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:02:00\",\"updated_at\":\"2001-01-01 00:02:00\"},{\"id\":1,\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:01:00\",\"updated_at\":\"2001-01-01 00:01:00\"}],\"total\":8}",
    "calls": [],
    "events": []
   },
   {
-   "name": "255 GET /api/bd/api/registrations/count",
+   "name": "255 GET /api/nd/api/registrations/count",
    "role": "super_admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations/count",
+   "path": "/api/nd/api/registrations/count",
    "status": 200,
    "answer": "{\"success\":true,\"count\":5}",
    "calls": [
@@ -3378,10 +3378,10 @@
    "events": []
   },
   {
-   "name": "256 GET /api/bd/api/registrations/enrollment-ui",
+   "name": "256 GET /api/nd/api/registrations/enrollment-ui",
    "role": "super_admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations/enrollment-ui",
+   "path": "/api/nd/api/registrations/enrollment-ui",
    "status": 200,
    "answer": "{\"success\":true,\"data\":{\"mode\":\"approval\",\"rich_approve\":true,\"tag_picker\":true}}",
    "calls": [
@@ -3394,20 +3394,20 @@
    "events": []
   },
   {
-   "name": "257 GET /api/bd/api/registrations/1",
+   "name": "257 GET /api/nd/api/registrations/1",
    "role": "super_admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations/1",
+   "path": "/api/nd/api/registrations/1",
    "status": 200,
    "answer": "{\"success\":true,\"data\":{\"id\":1,\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:01:00\",\"updated_at\":\"2001-01-01 00:01:00\"}}",
    "calls": [],
    "events": []
   },
   {
-   "name": "258 PUT /api/bd/api/registrations/999/approve",
+   "name": "258 PUT /api/nd/api/registrations/999/approve",
    "role": "super_admin",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/approve",
+   "path": "/api/nd/api/registrations/999/approve",
    "body": "{}",
    "status": 404,
    "answer": "{\"success\":false,\"error\":\"Registration not found\"}",
@@ -3415,10 +3415,10 @@
    "events": []
   },
   {
-   "name": "259 PUT /api/bd/api/registrations/999/reject",
+   "name": "259 PUT /api/nd/api/registrations/999/reject",
    "role": "super_admin",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/reject",
+   "path": "/api/nd/api/registrations/999/reject",
    "body": "{}",
    "status": 404,
    "answer": "{\"success\":false,\"error\":\"Registration not found\"}",
@@ -3426,20 +3426,20 @@
    "events": []
   },
   {
-   "name": "260 DELETE /api/bd/api/registrations/999",
+   "name": "260 DELETE /api/nd/api/registrations/999",
    "role": "super_admin",
    "method": "DELETE",
-   "path": "/api/bd/api/registrations/999",
+   "path": "/api/nd/api/registrations/999",
    "status": 404,
    "answer": "{\"success\":false,\"error\":\"Registration not found\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "261 GET /api/bd/api/enrollment/pending",
+   "name": "261 GET /api/nd/api/enrollment/pending",
    "role": "super_admin",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/pending",
+   "path": "/api/nd/api/enrollment/pending",
    "status": 200,
    "answer": "{\"success\":true,\"data\":[{\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"created_at\":\"2001-04-01T00:00:00Z\"},{\"device_id\":\"E2\",\"platform\":\"Linux\",\"created_at\":\"2001-04-02T00:00:00Z\"}],\"count\":2}",
    "calls": [
@@ -3452,10 +3452,10 @@
    "events": []
   },
   {
-   "name": "262 GET /api/bd/api/enrollment/history",
+   "name": "262 GET /api/nd/api/enrollment/history",
    "role": "super_admin",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/history",
+   "path": "/api/nd/api/enrollment/history",
    "status": 200,
    "answer": "{\"success\":true,\"data\":[{\"device_id\":\"H1\",\"status\":\"rejected\"}],\"count\":1}",
    "calls": [
@@ -3468,10 +3468,10 @@
    "events": []
   },
   {
-   "name": "263 POST /api/bd/api/enrollment/approve/X9",
+   "name": "263 POST /api/nd/api/enrollment/approve/X9",
    "role": "super_admin",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/approve/X9",
+   "path": "/api/nd/api/enrollment/approve/X9",
    "body": "{}",
    "status": 200,
    "answer": "{\"success\":false,\"error\":\"Request failed with status code 404\"}",
@@ -3485,10 +3485,10 @@
    "events": []
   },
   {
-   "name": "264 POST /api/bd/api/enrollment/reject/X9",
+   "name": "264 POST /api/nd/api/enrollment/reject/X9",
    "role": "super_admin",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/reject/X9",
+   "path": "/api/nd/api/enrollment/reject/X9",
    "body": "{}",
    "status": 200,
    "answer": "{\"success\":false,\"error\":\"Request failed with status code 404\"}",
@@ -3502,10 +3502,10 @@
    "events": []
   },
   {
-   "name": "265 POST /api/bd/api/enrollment/clear-rejection/X9",
+   "name": "265 POST /api/nd/api/enrollment/clear-rejection/X9",
    "role": "super_admin",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/clear-rejection/X9",
+   "path": "/api/nd/api/enrollment/clear-rejection/X9",
    "body": "{}",
    "status": 200,
    "answer": "{\"success\":false,\"error\":\"Request failed with status code 404\"}",
@@ -3519,10 +3519,10 @@
    "events": []
   },
   {
-   "name": "266 GET /api/bd/api/help/requests",
+   "name": "266 GET /api/nd/api/help/requests",
    "role": "super_admin",
    "method": "GET",
-   "path": "/api/bd/api/help/requests",
+   "path": "/api/nd/api/help/requests",
    "status": 200,
    "answer": "{\"success\":true,\"requests\":[{\"id\":\"26\",\"device_id\":\"DEV6\",\"hostname\":\"\",\"message\":\"\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"demo_helpdesk\",\"created_at\":1795015532149,\"updated_at\":null},{\"id\":\"27\",\"device_id\":\"DEV7\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":1795015532149,\"updated_at\":null},{\"id\":\"21\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"printer\",\"status\":\"accepted\",\"accepted_by\":\"e2e_viewer\",\"resolved_by\":\"\",\"created_at\":983404830000,\"updated_at\":983405100000},{\"id\":\"22\",\"device_id\":\"DEV2\",\"hostname\":\"pc-2\",\"message\":\"vpn\",\"status\":\"accepted\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":983404830000,\"updated_at\":null},{\"id\":\"23\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"message\":\"font\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":980985600000,\"updated_at\":981072000500},{\"id\":\"25\",\"device_id\":\"DEV5\",\"hostname\":\"\",\"message\":\"\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978688800000,\"updated_at\":null},{\"id\":\"24\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"e2e_operator\",\"resolved_by\":\"\",\"created_at\":978300000000,\"updated_at\":null}]}",
    "calls": [
@@ -3535,10 +3535,10 @@
    "events": []
   },
   {
-   "name": "267 POST /api/bd/api/help/requests/999/accept",
+   "name": "267 POST /api/nd/api/help/requests/999/accept",
    "role": "super_admin",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/accept",
+   "path": "/api/nd/api/help/requests/999/accept",
    "body": "{}",
    "status": 502,
    "answer": "{\"success\":false,\"error\":\"not found\"}",
@@ -3552,10 +3552,10 @@
    "events": []
   },
   {
-   "name": "268 POST /api/bd/api/help/requests/999/resolve",
+   "name": "268 POST /api/nd/api/help/requests/999/resolve",
    "role": "super_admin",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/resolve",
+   "path": "/api/nd/api/help/requests/999/resolve",
    "body": "{}",
    "status": 502,
    "answer": "{\"success\":false,\"error\":\"not found\"}",
@@ -3569,10 +3569,10 @@
    "events": []
   },
   {
-   "name": "269 POST /api/bd/register-request",
+   "name": "269 POST /api/nd/register-request",
    "role": "super_admin",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -3580,10 +3580,10 @@
    "events": []
   },
   {
-   "name": "270 GET /api/bd/register-status",
+   "name": "270 GET /api/nd/register-status",
    "role": "super_admin",
    "method": "GET",
-   "path": "/api/bd/register-status",
+   "path": "/api/nd/register-status",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}",
    "calls": [],
@@ -3828,20 +3828,20 @@
    "events": []
   },
   {
-   "name": "288 GET /api/bd/api/registrations",
+   "name": "288 GET /api/nd/api/registrations",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations",
+   "path": "/api/nd/api/registrations",
    "status": 200,
    "answer": "{\"success\":true,\"data\":[{\"id\":8,\"device_id\":\"DEV8\",\"hostname\":\"rejected-bare\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"rejected\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":null,\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:08:00\",\"updated_at\":\"2001-01-01 00:08:00\"},{\"id\":7,\"device_id\":\"DEV7\",\"hostname\":\"approved-bare\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:07:00\",\"updated_at\":\"2001-01-01 00:07:00\"},{\"id\":6,\"device_id\":\"DEV6\",\"hostname\":null,\"platform\":null,\"version\":null,\"ip_address\":null,\"public_key\":null,\"uuid\":null,\"status\":null,\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":null,\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:06:00\",\"updated_at\":\"2001-01-01 00:06:00\"},{\"id\":5,\"device_id\":\"DEV5\",\"hostname\":\"École-PC\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"192.168.1.5\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:05:00\",\"updated_at\":\"2001-01-01 00:05:00\"},{\"id\":4,\"device_id\":\"DEV4\",\"hostname\":\"rejected-pc\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.4\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"rejected\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"no\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:04:00\",\"updated_at\":\"2001-01-01 00:04:00\"},{\"id\":3,\"device_id\":\"DEV3\",\"hostname\":\"approved-pc\",\"platform\":\"macOS\",\"version\":\"1.2\",\"ip_address\":\"10.0.0.3\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"approved_at\":\"2001-01-01 00:03:30\",\"rejected_reason\":\"\",\"access_token\":\"tok-3\",\"console_url\":\"http://h:5000\",\"server_address\":\"h:21116\",\"server_key\":\"key-3\",\"created_at\":\"2001-01-01 00:03:00\",\"updated_at\":\"2001-01-01 00:03:30\"},{\"id\":2,\"device_id\":\"DEV2\",\"hostname\":\"Laptop 100%_off\",\"platform\":\"Linux\",\"version\":\"1.1\",\"ip_address\":\"10.0.0.2\",\"public_key\":\"key-2\",\"uuid\":\"uuid-2\",\"status\":\"pending\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:02:00\",\"updated_at\":\"2001-01-01 00:02:00\"},{\"id\":1,\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:01:00\",\"updated_at\":\"2001-01-01 00:01:00\"}],\"total\":8}",
    "calls": [],
    "events": []
   },
   {
-   "name": "289 GET /api/bd/api/registrations/count",
+   "name": "289 GET /api/nd/api/registrations/count",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations/count",
+   "path": "/api/nd/api/registrations/count",
    "status": 200,
    "answer": "{\"success\":true,\"count\":5}",
    "calls": [
@@ -3854,10 +3854,10 @@
    "events": []
   },
   {
-   "name": "290 GET /api/bd/api/registrations/enrollment-ui",
+   "name": "290 GET /api/nd/api/registrations/enrollment-ui",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations/enrollment-ui",
+   "path": "/api/nd/api/registrations/enrollment-ui",
    "status": 200,
    "answer": "{\"success\":true,\"data\":{\"mode\":\"approval\",\"rich_approve\":true,\"tag_picker\":true}}",
    "calls": [
@@ -3870,20 +3870,20 @@
    "events": []
   },
   {
-   "name": "291 GET /api/bd/api/registrations/1",
+   "name": "291 GET /api/nd/api/registrations/1",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/api/registrations/1",
+   "path": "/api/nd/api/registrations/1",
    "status": 200,
    "answer": "{\"success\":true,\"data\":{\"id\":1,\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"approved_at\":null,\"rejected_reason\":\"\",\"access_token\":null,\"console_url\":null,\"server_address\":null,\"server_key\":null,\"created_at\":\"2001-01-01 00:01:00\",\"updated_at\":\"2001-01-01 00:01:00\"}}",
    "calls": [],
    "events": []
   },
   {
-   "name": "292 PUT /api/bd/api/registrations/999/approve",
+   "name": "292 PUT /api/nd/api/registrations/999/approve",
    "role": "admin",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/approve",
+   "path": "/api/nd/api/registrations/999/approve",
    "body": "{}",
    "status": 404,
    "answer": "{\"success\":false,\"error\":\"Registration not found\"}",
@@ -3891,10 +3891,10 @@
    "events": []
   },
   {
-   "name": "293 PUT /api/bd/api/registrations/999/reject",
+   "name": "293 PUT /api/nd/api/registrations/999/reject",
    "role": "admin",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/999/reject",
+   "path": "/api/nd/api/registrations/999/reject",
    "body": "{}",
    "status": 404,
    "answer": "{\"success\":false,\"error\":\"Registration not found\"}",
@@ -3902,20 +3902,20 @@
    "events": []
   },
   {
-   "name": "294 DELETE /api/bd/api/registrations/999",
+   "name": "294 DELETE /api/nd/api/registrations/999",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/api/registrations/999",
+   "path": "/api/nd/api/registrations/999",
    "status": 404,
    "answer": "{\"success\":false,\"error\":\"Registration not found\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "295 GET /api/bd/api/enrollment/pending",
+   "name": "295 GET /api/nd/api/enrollment/pending",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/pending",
+   "path": "/api/nd/api/enrollment/pending",
    "status": 200,
    "answer": "{\"success\":true,\"data\":[{\"device_id\":\"E1\",\"hostname\":\"enr-1\",\"platform\":\"Windows\",\"ip\":\"10.1.0.1\",\"created_at\":\"2001-04-01T00:00:00Z\"},{\"device_id\":\"E2\",\"platform\":\"Linux\",\"created_at\":\"2001-04-02T00:00:00Z\"}],\"count\":2}",
    "calls": [
@@ -3928,10 +3928,10 @@
    "events": []
   },
   {
-   "name": "296 GET /api/bd/api/enrollment/history",
+   "name": "296 GET /api/nd/api/enrollment/history",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/api/enrollment/history",
+   "path": "/api/nd/api/enrollment/history",
    "status": 200,
    "answer": "{\"success\":true,\"data\":[{\"device_id\":\"H1\",\"status\":\"rejected\"}],\"count\":1}",
    "calls": [
@@ -3944,10 +3944,10 @@
    "events": []
   },
   {
-   "name": "297 POST /api/bd/api/enrollment/approve/X9",
+   "name": "297 POST /api/nd/api/enrollment/approve/X9",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/approve/X9",
+   "path": "/api/nd/api/enrollment/approve/X9",
    "body": "{}",
    "status": 200,
    "answer": "{\"success\":false,\"error\":\"Request failed with status code 404\"}",
@@ -3961,10 +3961,10 @@
    "events": []
   },
   {
-   "name": "298 POST /api/bd/api/enrollment/reject/X9",
+   "name": "298 POST /api/nd/api/enrollment/reject/X9",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/reject/X9",
+   "path": "/api/nd/api/enrollment/reject/X9",
    "body": "{}",
    "status": 200,
    "answer": "{\"success\":false,\"error\":\"Request failed with status code 404\"}",
@@ -3978,10 +3978,10 @@
    "events": []
   },
   {
-   "name": "299 POST /api/bd/api/enrollment/clear-rejection/X9",
+   "name": "299 POST /api/nd/api/enrollment/clear-rejection/X9",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/clear-rejection/X9",
+   "path": "/api/nd/api/enrollment/clear-rejection/X9",
    "body": "{}",
    "status": 200,
    "answer": "{\"success\":false,\"error\":\"Request failed with status code 404\"}",
@@ -3995,10 +3995,10 @@
    "events": []
   },
   {
-   "name": "300 GET /api/bd/api/help/requests",
+   "name": "300 GET /api/nd/api/help/requests",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/api/help/requests",
+   "path": "/api/nd/api/help/requests",
    "status": 200,
    "answer": "{\"success\":true,\"requests\":[{\"id\":\"26\",\"device_id\":\"DEV6\",\"hostname\":\"\",\"message\":\"\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"demo_helpdesk\",\"created_at\":1795015533028,\"updated_at\":null},{\"id\":\"27\",\"device_id\":\"DEV7\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":1795015533028,\"updated_at\":null},{\"id\":\"21\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"printer\",\"status\":\"accepted\",\"accepted_by\":\"e2e_viewer\",\"resolved_by\":\"\",\"created_at\":983404830000,\"updated_at\":983405100000},{\"id\":\"22\",\"device_id\":\"DEV2\",\"hostname\":\"pc-2\",\"message\":\"vpn\",\"status\":\"accepted\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":983404830000,\"updated_at\":null},{\"id\":\"23\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"message\":\"font\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":980985600000,\"updated_at\":981072000500},{\"id\":\"25\",\"device_id\":\"DEV5\",\"hostname\":\"\",\"message\":\"\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978688800000,\"updated_at\":null},{\"id\":\"24\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"e2e_operator\",\"resolved_by\":\"\",\"created_at\":978300000000,\"updated_at\":null}]}",
    "calls": [
@@ -4011,10 +4011,10 @@
    "events": []
   },
   {
-   "name": "301 POST /api/bd/api/help/requests/999/accept",
+   "name": "301 POST /api/nd/api/help/requests/999/accept",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/accept",
+   "path": "/api/nd/api/help/requests/999/accept",
    "body": "{}",
    "status": 502,
    "answer": "{\"success\":false,\"error\":\"not found\"}",
@@ -4028,10 +4028,10 @@
    "events": []
   },
   {
-   "name": "302 POST /api/bd/api/help/requests/999/resolve",
+   "name": "302 POST /api/nd/api/help/requests/999/resolve",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/999/resolve",
+   "path": "/api/nd/api/help/requests/999/resolve",
    "body": "{}",
    "status": 502,
    "answer": "{\"success\":false,\"error\":\"not found\"}",
@@ -4045,10 +4045,10 @@
    "events": []
   },
   {
-   "name": "303 POST /api/bd/register-request",
+   "name": "303 POST /api/nd/register-request",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -4056,10 +4056,10 @@
    "events": []
   },
   {
-   "name": "304 GET /api/bd/register-status",
+   "name": "304 GET /api/nd/register-status",
    "role": "admin",
    "method": "GET",
-   "path": "/api/bd/register-status",
+   "path": "/api/nd/register-status",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}",
    "calls": [],
@@ -4097,10 +4097,10 @@
    "events": []
   },
   {
-   "name": "308 letter case of the mount GET /api/BD/register-status?device_id=DEV3",
+   "name": "308 letter case of the mount GET /api/ND/register-status?device_id=DEV3",
    "role": "admin",
    "method": "GET",
-   "path": "/api/BD/register-status?device_id=DEV3",
+   "path": "/api/ND/register-status?device_id=DEV3",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"approved\",\"id\":3,\"config\":{\"console_url\":\"http://h:5000\",\"server_address\":\"h:21116\",\"server_key\":\"key-3\",\"access_token\":\"tok-3\"}}",
    "calls": [],
@@ -4117,10 +4117,10 @@
    "events": []
   },
   {
-   "name": "310 POST /api/bd/register-request",
+   "name": "310 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -4128,10 +4128,10 @@
    "events": []
   },
   {
-   "name": "311 POST /api/bd/register-request",
+   "name": "311 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":null}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -4139,10 +4139,10 @@
    "events": []
   },
   {
-   "name": "312 POST /api/bd/register-request",
+   "name": "312 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"\"}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -4150,10 +4150,10 @@
    "events": []
   },
   {
-   "name": "313 POST /api/bd/register-request",
+   "name": "313 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"ab\"}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -4161,10 +4161,10 @@
    "events": []
   },
   {
-   "name": "314 POST /api/bd/register-request",
+   "name": "314 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"abc\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":9}",
@@ -4174,10 +4174,10 @@
    ]
   },
   {
-   "name": "315 POST /api/bd/register-request",
+   "name": "315 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\" ab\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":10}",
@@ -4187,10 +4187,10 @@
    ]
   },
   {
-   "name": "316 POST /api/bd/register-request",
+   "name": "316 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"   \"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":11}",
@@ -4200,10 +4200,10 @@
    ]
   },
   {
-   "name": "317 POST /api/bd/register-request",
+   "name": "317 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"   \"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":11}",
@@ -4213,10 +4213,10 @@
    ]
   },
   {
-   "name": "318 POST /api/bd/register-request",
+   "name": "318 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"﻿ab\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":10}",
@@ -4226,10 +4226,10 @@
    ]
   },
   {
-   "name": "319 POST /api/bd/register-request",
+   "name": "319 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"😀a\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":12}",
@@ -4239,10 +4239,10 @@
    ]
   },
   {
-   "name": "320 POST /api/bd/register-request",
+   "name": "320 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"é\"}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -4250,10 +4250,10 @@
    "events": []
   },
   {
-   "name": "321 POST /api/bd/register-request",
+   "name": "321 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":13}",
@@ -4263,10 +4263,10 @@
    ]
   },
   {
-   "name": "322 POST /api/bd/register-request",
+   "name": "322 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":123456}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -4274,10 +4274,10 @@
    "events": []
   },
   {
-   "name": "323 POST /api/bd/register-request",
+   "name": "323 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":true}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -4285,10 +4285,10 @@
    "events": []
   },
   {
-   "name": "324 POST /api/bd/register-request",
+   "name": "324 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":[]}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -4296,10 +4296,10 @@
    "events": []
   },
   {
-   "name": "325 POST /api/bd/register-request",
+   "name": "325 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":[\"abcd\"]}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -4307,10 +4307,10 @@
    "events": []
   },
   {
-   "name": "326 POST /api/bd/register-request",
+   "name": "326 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":{}}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -4318,10 +4318,10 @@
    "events": []
   },
   {
-   "name": "327 POST /api/bd/register-request",
+   "name": "327 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":{\"toString\":\"x\"}}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -4329,10 +4329,10 @@
    "events": []
   },
   {
-   "name": "328 POST /api/bd/register-request",
+   "name": "328 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW1\",\"hostname\":\"h\",\"platform\":\"p\",\"version\":\"v\",\"public_key\":\"k\",\"uuid\":\"u\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":14}",
@@ -4342,10 +4342,10 @@
    ]
   },
   {
-   "name": "329 POST /api/bd/register-request",
+   "name": "329 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW2\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"platform\":\"pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\",\"version\":\"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\",\"public_key\":\"kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\",\"uuid\":\"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":15}",
@@ -4355,10 +4355,10 @@
    ]
   },
   {
-   "name": "330 POST /api/bd/register-request",
+   "name": "330 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW3\",\"hostname\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"platform\":\"éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé\",\"public_key\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"uuid\":\"x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":16}",
@@ -4368,10 +4368,10 @@
    ]
   },
   {
-   "name": "331 POST /api/bd/register-request",
+   "name": "331 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW4\",\"hostname\":0,\"platform\":false,\"version\":null,\"public_key\":\"\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":17}",
@@ -4381,10 +4381,10 @@
    ]
   },
   {
-   "name": "332 POST /api/bd/register-request",
+   "name": "332 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW5\",\"hostname\":5}",
    "status": 500,
    "answer": "{\"success\":false,\"error\":\"Internal server error\"}",
@@ -4392,10 +4392,10 @@
    "events": []
   },
   {
-   "name": "333 POST /api/bd/register-request",
+   "name": "333 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW6\",\"platform\":true}",
    "status": 500,
    "answer": "{\"success\":false,\"error\":\"Internal server error\"}",
@@ -4403,10 +4403,10 @@
    "events": []
   },
   {
-   "name": "334 POST /api/bd/register-request",
+   "name": "334 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW7\",\"version\":[\"1\"]}",
    "status": 500,
    "answer": "{\"success\":false,\"error\":\"Internal server error\"}",
@@ -4414,10 +4414,10 @@
    "events": []
   },
   {
-   "name": "335 POST /api/bd/register-request",
+   "name": "335 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW8\",\"public_key\":{\"a\":1}}",
    "status": 500,
    "answer": "{\"success\":false,\"error\":\"Internal server error\"}",
@@ -4425,10 +4425,10 @@
    "events": []
   },
   {
-   "name": "336 POST /api/bd/register-request",
+   "name": "336 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW9\",\"uuid\":7}",
    "status": 500,
    "answer": "{\"success\":false,\"error\":\"Internal server error\"}",
@@ -4436,10 +4436,10 @@
    "events": []
   },
   {
-   "name": "337 POST /api/bd/register-request",
+   "name": "337 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW10\",\"hostname\":\"ok\",\"uuid\":[]}",
    "status": 500,
    "answer": "{\"success\":false,\"error\":\"Internal server error\"}",
@@ -4447,10 +4447,10 @@
    "events": []
   },
   {
-   "name": "338 POST /api/bd/register-request",
+   "name": "338 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"  NEW11  \",\"hostname\":\"trimmed id\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":18}",
@@ -4460,10 +4460,10 @@
    ]
   },
   {
-   "name": "339 POST /api/bd/register-request",
+   "name": "339 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW12\",\"hostname\":\"line\\nbreak sep\",\"platform\":\"<b>&</b>\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":19}",
@@ -4473,10 +4473,10 @@
    ]
   },
   {
-   "name": "340 raw POST /api/bd/register-request",
+   "name": "340 raw POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "null",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Internal Server Error\"}",
@@ -4484,10 +4484,10 @@
    "events": []
   },
   {
-   "name": "341 raw POST /api/bd/register-request",
+   "name": "341 raw POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "[]",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -4495,10 +4495,10 @@
    "events": []
   },
   {
-   "name": "342 raw POST /api/bd/register-request",
+   "name": "342 raw POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "[\"abc\"]",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Invalid device_id\"}",
@@ -4506,10 +4506,10 @@
    "events": []
   },
   {
-   "name": "343 raw POST /api/bd/register-request",
+   "name": "343 raw POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "\"abc\"",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Internal Server Error\"}",
@@ -4517,10 +4517,10 @@
    "events": []
   },
   {
-   "name": "344 raw POST /api/bd/register-request",
+   "name": "344 raw POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "5",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Internal Server Error\"}",
@@ -4528,10 +4528,10 @@
    "events": []
   },
   {
-   "name": "345 raw POST /api/bd/register-request",
+   "name": "345 raw POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "true",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Internal Server Error\"}",
@@ -4539,10 +4539,10 @@
    "events": []
   },
   {
-   "name": "346 raw POST /api/bd/register-request",
+   "name": "346 raw POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW14\",\"device_id\":\"NEW15\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":20}",
@@ -4552,10 +4552,10 @@
    ]
   },
   {
-   "name": "347 raw POST /api/bd/register-request",
+   "name": "347 raw POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW16\"",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Internal Server Error\"}",
@@ -4563,10 +4563,10 @@
    "events": []
   },
   {
-   "name": "348 raw POST /api/bd/register-request",
+   "name": "348 raw POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW13\",\"__proto__\":{\"device_id\":\"x\"},\"hostname\":\"proto\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":21}",
@@ -4576,10 +4576,10 @@
    ]
   },
   {
-   "name": "349 raw POST /api/bd/register-request",
+   "name": "349 raw POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW22\",\"hostname\":\"\\ud83d\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":22}",
@@ -4589,10 +4589,10 @@
    ]
   },
   {
-   "name": "350 form at /api/bd POST /api/bd/register-request",
+   "name": "350 form at /api/nd POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "device_id=NEW17",
    "type": "application/x-www-form-urlencoded",
    "status": 415,
@@ -4625,10 +4625,10 @@
    "events": []
   },
   {
-   "name": "353 POST /api/bd/register-request",
+   "name": "353 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"NEW21\"}",
    "type": "application/json; charset=utf-8",
    "status": 200,
@@ -4645,10 +4645,10 @@
    "rows": "[{\"id\":1,\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":2,\"device_id\":\"DEV2\",\"hostname\":\"Laptop 100%_off\",\"platform\":\"Linux\",\"version\":\"1.1\",\"ip_address\":\"10.0.0.2\",\"public_key\":\"key-2\",\"uuid\":\"uuid-2\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":3,\"device_id\":\"DEV3\",\"hostname\":\"approved-pc\",\"platform\":\"macOS\",\"version\":\"1.2\",\"ip_address\":\"10.0.0.3\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"rejected_reason\":\"\",\"token\":\"5\",\"console_url\":\"http://h:5000\",\"server_address\":\"h:21116\",\"server_key\":\"key-3\"},{\"id\":4,\"device_id\":\"DEV4\",\"hostname\":\"rejected-pc\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.4\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"rejected\",\"approved_by\":null,\"rejected_reason\":\"no\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":5,\"device_id\":\"DEV5\",\"hostname\":\"École-PC\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"192.168.1.5\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":6,\"device_id\":\"DEV6\",\"hostname\":null,\"platform\":null,\"version\":null,\"ip_address\":null,\"public_key\":null,\"uuid\":null,\"status\":null,\"approved_by\":null,\"rejected_reason\":null,\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":7,\"device_id\":\"DEV7\",\"hostname\":\"approved-bare\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":8,\"device_id\":\"DEV8\",\"hostname\":\"rejected-bare\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"rejected\",\"approved_by\":null,\"rejected_reason\":null,\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":9,\"device_id\":\"abc\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":10,\"device_id\":\"ab\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":11,\"device_id\":\"\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":12,\"device_id\":\"😀a\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":13,\"device_id\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":14,\"device_id\":\"NEW1\",\"hostname\":\"h\",\"platform\":\"p\",\"version\":\"v\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"k\",\"uuid\":\"u\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":15,\"device_id\":\"NEW2\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"platform\":\"pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\",\"version\":\"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\",\"uuid\":\"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":16,\"device_id\":\"NEW3\",\"hostname\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀�\",\"platform\":\"éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"uuid\":\"x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":17,\"device_id\":\"NEW4\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":18,\"device_id\":\"NEW11\",\"hostname\":\"trimmed id\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":19,\"device_id\":\"NEW12\",\"hostname\":\"line\\nbreak sep\",\"platform\":\"<b>&</b>\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":20,\"device_id\":\"NEW15\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":21,\"device_id\":\"NEW13\",\"hostname\":\"proto\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":22,\"device_id\":\"NEW22\",\"hostname\":\"�\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":23,\"device_id\":\"NEW21\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null}]"
   },
   {
-   "name": "355 address POST /api/bd/register-request",
+   "name": "355 address POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"ADDR0\"}",
    "headers": {
     "X-Forwarded-For": "203.0.113.5, 10.0.0.1"
@@ -4661,10 +4661,10 @@
    ]
   },
   {
-   "name": "356 address POST /api/bd/register-request",
+   "name": "356 address POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"ADDR1\"}",
    "headers": {
     "X-Forwarded-For": "  198.51.100.7  "
@@ -4677,10 +4677,10 @@
    ]
   },
   {
-   "name": "357 address POST /api/bd/register-request",
+   "name": "357 address POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"ADDR2\"}",
    "headers": {
     "X-Forwarded-For": ""
@@ -4693,10 +4693,10 @@
    ]
   },
   {
-   "name": "358 address POST /api/bd/register-request",
+   "name": "358 address POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"ADDR3\"}",
    "headers": {
     "X-Forwarded-For": ",10.0.0.2"
@@ -4709,10 +4709,10 @@
    ]
   },
   {
-   "name": "359 address POST /api/bd/register-request",
+   "name": "359 address POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"ADDR4\"}",
    "headers": {
     "X-Forwarded-For": " , 10.0.0.3",
@@ -4726,10 +4726,10 @@
    ]
   },
   {
-   "name": "360 address POST /api/bd/register-request",
+   "name": "360 address POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"ADDR5\"}",
    "headers": {
     "X-Real-IP": "192.0.2.9"
@@ -4742,10 +4742,10 @@
    ]
   },
   {
-   "name": "361 address POST /api/bd/register-request",
+   "name": "361 address POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"ADDR6\"}",
    "headers": {
     "X-Real-IP": "  spaced  "
@@ -4758,10 +4758,10 @@
    ]
   },
   {
-   "name": "362 address POST /api/bd/register-request",
+   "name": "362 address POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"ADDR7\"}",
    "headers": {
     "X-Forwarded-For": "not an address"
@@ -4774,10 +4774,10 @@
    ]
   },
   {
-   "name": "363 address POST /api/bd/register-request",
+   "name": "363 address POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"ADDR8\"}",
    "headers": {
     "X-Forwarded-For": " 198.51.100.8 "
@@ -4790,10 +4790,10 @@
    ]
   },
   {
-   "name": "364 address POST /api/bd/register-request",
+   "name": "364 address POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"ADDR9\"}",
    "headers": {
     "X-Forwarded-For": "2001:db8::1"
@@ -4806,10 +4806,10 @@
    ]
   },
   {
-   "name": "365 address POST /api/bd/register-request",
+   "name": "365 address POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"ADDR10\"}",
    "headers": {},
    "status": 200,
@@ -4826,10 +4826,10 @@
    "rows": "[{\"device_id\":\"ADDR0\",\"ip_address\":\"203.0.113.5\"},{\"device_id\":\"ADDR1\",\"ip_address\":\"198.51.100.7\"},{\"device_id\":\"ADDR2\",\"ip_address\":\"127.0.0.1\"},{\"device_id\":\"ADDR3\",\"ip_address\":\"127.0.0.1\"},{\"device_id\":\"ADDR4\",\"ip_address\":\"192.0.2.4\"},{\"device_id\":\"ADDR5\",\"ip_address\":\"192.0.2.9\"},{\"device_id\":\"ADDR6\",\"ip_address\":\"spaced\"},{\"device_id\":\"ADDR7\",\"ip_address\":\"not an address\"},{\"device_id\":\"ADDR8\",\"ip_address\":\"198.51.100.8\"},{\"device_id\":\"ADDR9\",\"ip_address\":\"2001:db8::1\"},{\"device_id\":\"ADDR10\",\"ip_address\":\"127.0.0.1\"}]"
   },
   {
-   "name": "367 POST /api/bd/register-request",
+   "name": "367 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"DEV2\",\"hostname\":\"renamed\",\"platform\":\"Linux\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":2}",
@@ -4839,10 +4839,10 @@
    ]
   },
   {
-   "name": "368 POST /api/bd/register-request",
+   "name": "368 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"DEV3\",\"hostname\":\"ignored\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"approved\",\"id\":3}",
@@ -4850,10 +4850,10 @@
    "events": []
   },
   {
-   "name": "369 POST /api/bd/register-request",
+   "name": "369 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"DEV4\",\"hostname\":\"again\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":4}",
@@ -4863,10 +4863,10 @@
    ]
   },
   {
-   "name": "370 POST /api/bd/register-request",
+   "name": "370 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"DEV6\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":6}",
@@ -4876,10 +4876,10 @@
    ]
   },
   {
-   "name": "371 POST /api/bd/register-request",
+   "name": "371 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"DEV7\",\"public_key\":\"new-key\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"approved\",\"id\":7}",
@@ -4887,10 +4887,10 @@
    "events": []
   },
   {
-   "name": "372 POST /api/bd/register-request",
+   "name": "372 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"DEV8\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":8}",
@@ -4906,210 +4906,210 @@
    "rows": "[{\"id\":1,\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"10.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":2,\"device_id\":\"DEV2\",\"hostname\":\"renamed\",\"platform\":\"Linux\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":3,\"device_id\":\"DEV3\",\"hostname\":\"approved-pc\",\"platform\":\"macOS\",\"version\":\"1.2\",\"ip_address\":\"10.0.0.3\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":\"e2e_admin\",\"rejected_reason\":\"\",\"token\":\"5\",\"console_url\":\"http://h:5000\",\"server_address\":\"h:21116\",\"server_key\":\"key-3\"},{\"id\":4,\"device_id\":\"DEV4\",\"hostname\":\"again\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":5,\"device_id\":\"DEV5\",\"hostname\":\"École-PC\",\"platform\":\"Windows\",\"version\":\"1.0\",\"ip_address\":\"192.168.1.5\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":6,\"device_id\":\"DEV6\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":7,\"device_id\":\"DEV7\",\"hostname\":\"approved-bare\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"approved\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":8,\"device_id\":\"DEV8\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":9,\"device_id\":\"abc\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":10,\"device_id\":\"ab\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":11,\"device_id\":\"\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":12,\"device_id\":\"😀a\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":13,\"device_id\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":14,\"device_id\":\"NEW1\",\"hostname\":\"h\",\"platform\":\"p\",\"version\":\"v\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"k\",\"uuid\":\"u\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":15,\"device_id\":\"NEW2\",\"hostname\":\"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\",\"platform\":\"pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp\",\"version\":\"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk\",\"uuid\":\"uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":16,\"device_id\":\"NEW3\",\"hostname\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀�\",\"platform\":\"éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"uuid\":\"x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x😀x\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":17,\"device_id\":\"NEW4\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":18,\"device_id\":\"NEW11\",\"hostname\":\"trimmed id\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":19,\"device_id\":\"NEW12\",\"hostname\":\"line\\nbreak sep\",\"platform\":\"<b>&</b>\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":20,\"device_id\":\"NEW15\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":21,\"device_id\":\"NEW13\",\"hostname\":\"proto\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":22,\"device_id\":\"NEW22\",\"hostname\":\"�\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":23,\"device_id\":\"NEW21\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":24,\"device_id\":\"ADDR0\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"203.0.113.5\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":25,\"device_id\":\"ADDR1\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"198.51.100.7\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":26,\"device_id\":\"ADDR2\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":27,\"device_id\":\"ADDR3\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":28,\"device_id\":\"ADDR4\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"192.0.2.4\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":29,\"device_id\":\"ADDR5\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"192.0.2.9\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":30,\"device_id\":\"ADDR6\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"spaced\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":31,\"device_id\":\"ADDR7\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"not an address\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":32,\"device_id\":\"ADDR8\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"198.51.100.8\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":33,\"device_id\":\"ADDR9\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"2001:db8::1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null},{\"id\":34,\"device_id\":\"ADDR10\",\"hostname\":\"\",\"platform\":\"\",\"version\":\"\",\"ip_address\":\"127.0.0.1\",\"public_key\":\"\",\"uuid\":\"\",\"status\":\"pending\",\"approved_by\":null,\"rejected_reason\":\"\",\"token\":\"null\",\"console_url\":null,\"server_address\":null,\"server_key\":null}]"
   },
   {
-   "name": "374 GET /api/bd/register-status",
+   "name": "374 GET /api/nd/register-status",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status",
+   "path": "/api/nd/register-status",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "375 GET /api/bd/register-status?device_id=",
+   "name": "375 GET /api/nd/register-status?device_id=",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=",
+   "path": "/api/nd/register-status?device_id=",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "376 GET /api/bd/register-status?device_id=DEV1",
+   "name": "376 GET /api/nd/register-status?device_id=DEV1",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=DEV1",
+   "path": "/api/nd/register-status?device_id=DEV1",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":1}",
    "calls": [],
    "events": []
   },
   {
-   "name": "377 GET /api/bd/register-status?device_id=DEV3",
+   "name": "377 GET /api/nd/register-status?device_id=DEV3",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=DEV3",
+   "path": "/api/nd/register-status?device_id=DEV3",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"approved\",\"id\":3,\"config\":{\"console_url\":\"http://h:5000\",\"server_address\":\"h:21116\",\"server_key\":\"key-3\",\"access_token\":\"tok-3\"}}",
    "calls": [],
    "events": []
   },
   {
-   "name": "378 GET /api/bd/register-status?device_id=DEV4",
+   "name": "378 GET /api/nd/register-status?device_id=DEV4",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=DEV4",
+   "path": "/api/nd/register-status?device_id=DEV4",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":4}",
    "calls": [],
    "events": []
   },
   {
-   "name": "379 GET /api/bd/register-status?device_id=DEV7",
+   "name": "379 GET /api/nd/register-status?device_id=DEV7",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=DEV7",
+   "path": "/api/nd/register-status?device_id=DEV7",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"approved\",\"id\":7,\"config\":{\"console_url\":\"\",\"server_address\":\"\",\"server_key\":\"\",\"access_token\":\"\"}}",
    "calls": [],
    "events": []
   },
   {
-   "name": "380 GET /api/bd/register-status?device_id=DEV8",
+   "name": "380 GET /api/nd/register-status?device_id=DEV8",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=DEV8",
+   "path": "/api/nd/register-status?device_id=DEV8",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":8}",
    "calls": [],
    "events": []
   },
   {
-   "name": "381 GET /api/bd/register-status?device_id=nope",
+   "name": "381 GET /api/nd/register-status?device_id=nope",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=nope",
+   "path": "/api/nd/register-status?device_id=nope",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"not_found\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "382 GET /api/bd/register-status?device_id=DEV1&device_id=DEV2",
+   "name": "382 GET /api/nd/register-status?device_id=DEV1&device_id=DEV2",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=DEV1&device_id=DEV2",
+   "path": "/api/nd/register-status?device_id=DEV1&device_id=DEV2",
    "status": 500,
    "answer": "{\"success\":false,\"error\":\"Internal server error\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "383 GET /api/bd/register-status?device_id[]=DEV1",
+   "name": "383 GET /api/nd/register-status?device_id[]=DEV1",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id[]=DEV1",
+   "path": "/api/nd/register-status?device_id[]=DEV1",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":1}",
    "calls": [],
    "events": []
   },
   {
-   "name": "384 GET /api/bd/register-status?device_id[]=DEV1&device_id[]=DEV2",
+   "name": "384 GET /api/nd/register-status?device_id[]=DEV1&device_id[]=DEV2",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id[]=DEV1&device_id[]=DEV2",
+   "path": "/api/nd/register-status?device_id[]=DEV1&device_id[]=DEV2",
    "status": 500,
    "answer": "{\"success\":false,\"error\":\"Internal server error\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "385 GET /api/bd/register-status?device_id[x]=DEV1",
+   "name": "385 GET /api/nd/register-status?device_id[x]=DEV1",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id[x]=DEV1",
+   "path": "/api/nd/register-status?device_id[x]=DEV1",
    "status": 500,
    "answer": "{\"success\":false,\"error\":\"Internal server error\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "386 GET /api/bd/register-status?device_id=%20DEV1",
+   "name": "386 GET /api/nd/register-status?device_id=%20DEV1",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=%20DEV1",
+   "path": "/api/nd/register-status?device_id=%20DEV1",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"not_found\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "387 GET /api/bd/register-status?device_id=dev1",
+   "name": "387 GET /api/nd/register-status?device_id=dev1",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=dev1",
+   "path": "/api/nd/register-status?device_id=dev1",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"not_found\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "388 GET /api/bd/register-status?device_id=NEW11",
+   "name": "388 GET /api/nd/register-status?device_id=NEW11",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=NEW11",
+   "path": "/api/nd/register-status?device_id=NEW11",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":18}",
    "calls": [],
    "events": []
   },
   {
-   "name": "389 GET /api/bd/register-status?device_id=%F0%9F%98%80a",
+   "name": "389 GET /api/nd/register-status?device_id=%F0%9F%98%80a",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=%F0%9F%98%80a",
+   "path": "/api/nd/register-status?device_id=%F0%9F%98%80a",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":12}",
    "calls": [],
    "events": []
   },
   {
-   "name": "390 GET /api/bd/register-status?device_id=%E0%A4%A",
+   "name": "390 GET /api/nd/register-status?device_id=%E0%A4%A",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=%E0%A4%A",
+   "path": "/api/nd/register-status?device_id=%E0%A4%A",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"not_found\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "391 GET /api/bd/register-status?DEVICE_ID=DEV1",
+   "name": "391 GET /api/nd/register-status?DEVICE_ID=DEV1",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?DEVICE_ID=DEV1",
+   "path": "/api/nd/register-status?DEVICE_ID=DEV1",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Missing device_id\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "392 GET /api/bd/register-status?device_id=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   "name": "392 GET /api/nd/register-status?device_id=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+   "path": "/api/nd/register-status?device_id=zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"not_found\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "393 GET /api/bd/register-status?device_id=0",
+   "name": "393 GET /api/nd/register-status?device_id=0",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=0",
+   "path": "/api/nd/register-status?device_id=0",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"not_found\"}",
    "calls": [],
    "events": []
   },
   {
-   "name": "394 GET /api/bd/register-status?device_id[0]=DEV3",
+   "name": "394 GET /api/nd/register-status?device_id[0]=DEV3",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id[0]=DEV3",
+   "path": "/api/nd/register-status?device_id[0]=DEV3",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"approved\",\"id\":3,\"config\":{\"console_url\":\"http://h:5000\",\"server_address\":\"h:21116\",\"server_key\":\"key-3\",\"access_token\":\"tok-3\"}}",
    "calls": [],
@@ -6455,10 +6455,10 @@
    "events": []
   },
   {
-   "name": "494 POST /api/bd/register-request",
+   "name": "494 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"DEV2\",\"hostname\":\"pc-2\"}",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"pending\",\"id\":2}",
@@ -6551,10 +6551,10 @@
    "rows": "[{\"guid\":\"dg-a\",\"peer_id\":\"DEV1\"},{\"guid\":\"dg-b\",\"peer_id\":\"DEV1\"},{\"guid\":\"dg-b\",\"peer_id\":\"DEV2\"},{\"guid\":\"dg-c\",\"peer_id\":\"DEV5\"}]"
   },
   {
-   "name": "500 POST /api/bd/register-request",
+   "name": "500 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"APPR0\",\"hostname\":\"approve-0\"}",
    "capture": {
     "a": "id"
@@ -6587,10 +6587,10 @@
    ]
   },
   {
-   "name": "502 POST /api/bd/register-request",
+   "name": "502 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"APPR1\",\"hostname\":\"approve-1\"}",
    "capture": {
     "a": "id"
@@ -6622,10 +6622,10 @@
    ]
   },
   {
-   "name": "504 POST /api/bd/register-request",
+   "name": "504 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"APPR2\",\"hostname\":\"approve-2\"}",
    "capture": {
     "a": "id"
@@ -6657,10 +6657,10 @@
    ]
   },
   {
-   "name": "506 POST /api/bd/register-request",
+   "name": "506 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"APPR3\",\"hostname\":\"approve-3\"}",
    "capture": {
     "a": "id"
@@ -6692,10 +6692,10 @@
    ]
   },
   {
-   "name": "508 POST /api/bd/register-request",
+   "name": "508 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"APPR4\",\"hostname\":\"approve-4\"}",
    "capture": {
     "a": "id"
@@ -6727,10 +6727,10 @@
    ]
   },
   {
-   "name": "510 POST /api/bd/register-request",
+   "name": "510 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"APPR5\",\"hostname\":\"approve-5\"}",
    "capture": {
     "a": "id"
@@ -6762,10 +6762,10 @@
    ]
   },
   {
-   "name": "512 POST /api/bd/register-request",
+   "name": "512 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"APPR6\",\"hostname\":\"approve-6\"}",
    "capture": {
     "a": "id"
@@ -6802,10 +6802,10 @@
    ]
   },
   {
-   "name": "514 POST /api/bd/register-request",
+   "name": "514 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"APPR7\",\"hostname\":\"approve-7\"}",
    "capture": {
     "a": "id"
@@ -6837,10 +6837,10 @@
    ]
   },
   {
-   "name": "516 POST /api/bd/register-request",
+   "name": "516 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"APPR8\",\"hostname\":\"approve-8\"}",
    "capture": {
     "a": "id"
@@ -6864,10 +6864,10 @@
    "events": []
   },
   {
-   "name": "518 POST /api/bd/register-request",
+   "name": "518 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"APPR9\",\"hostname\":\"approve-9\"}",
    "capture": {
     "a": "id"
@@ -6891,10 +6891,10 @@
    "events": []
   },
   {
-   "name": "520 POST /api/bd/register-request",
+   "name": "520 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"APPR10\",\"hostname\":\"approve-10\"}",
    "capture": {
     "a": "id"
@@ -6926,10 +6926,10 @@
    ]
   },
   {
-   "name": "522 POST /api/bd/register-request",
+   "name": "522 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"APPR-form\"}",
    "capture": {
     "a": "id"
@@ -6994,10 +6994,10 @@
    "rows": "[{\"user_id\":\"6\",\"action\":\"help_request_accepted\",\"details\":\"Help request 21 accepted\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":\"6\",\"action\":\"help_request_accepted\",\"details\":\"Help request 22 accepted\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":null,\"action\":\"help_request_resolved\",\"details\":\"Help request 23 resolved\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":\"5\",\"action\":\"help_request_accepted\",\"details\":\"Help request 24 accepted by the night shift\",\"ip_address\":\"10.9.9.9\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device DEV1 (pc-1)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device DEV4 (again)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"4\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device DEV2 (pc-2)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device DEV5 (École-PC)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR0 (approve-0)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR1 (approve-1)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR2 (approve-2)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR3 (approve-3)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR4 (approve-4)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR5 (approve-5)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR6 (approve-6)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR7 (approve-7)\",\"ip_address\":\"127.0.0.1\"},{\"user_id\":\"1\",\"action\":\"registration_approved\",\"details\":\"Approved registration for device APPR10 (approve-10)\",\"ip_address\":\"127.0.0.1\"}]"
   },
   {
-   "name": "530 POST /api/bd/register-request",
+   "name": "530 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"REJ1\"}",
    "capture": {
     "r": "id"
@@ -7087,10 +7087,10 @@
    "events": []
   },
   {
-   "name": "538 approved PUT /api/bd/api/registrations/3/reject",
+   "name": "538 approved PUT /api/nd/api/registrations/3/reject",
    "role": "admin",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/3/reject",
+   "path": "/api/nd/api/registrations/3/reject",
    "body": "{}",
    "status": 400,
    "answer": "{\"success\":false,\"error\":\"Cannot reject: status is approved\"}",
@@ -7098,10 +7098,10 @@
    "events": []
   },
   {
-   "name": "539 missing with a bad reason PUT /api/bd/api/registrations/998/reject",
+   "name": "539 missing with a bad reason PUT /api/nd/api/registrations/998/reject",
    "role": "admin",
    "method": "PUT",
-   "path": "/api/bd/api/registrations/998/reject",
+   "path": "/api/nd/api/registrations/998/reject",
    "body": "{\"reason\":5}",
    "status": 500,
    "answer": "{\"success\":false,\"error\":\"Server error\"}",
@@ -7109,10 +7109,10 @@
    "events": []
   },
   {
-   "name": "540 POST /api/bd/register-request",
+   "name": "540 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"REJ2\"}",
    "capture": {
     "r": "id"
@@ -7136,10 +7136,10 @@
    "events": []
   },
   {
-   "name": "542 POST /api/bd/register-request",
+   "name": "542 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"REJ2\"}",
    "capture": {
     "r": "id"
@@ -7163,10 +7163,10 @@
    "events": []
   },
   {
-   "name": "544 POST /api/bd/register-request",
+   "name": "544 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"REJ2\"}",
    "capture": {
     "r": "id"
@@ -7190,10 +7190,10 @@
    "events": []
   },
   {
-   "name": "546 POST /api/bd/register-request",
+   "name": "546 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"REJ2\"}",
    "capture": {
     "r": "id"
@@ -7217,10 +7217,10 @@
    "events": []
   },
   {
-   "name": "548 POST /api/bd/register-request",
+   "name": "548 POST /api/nd/register-request",
    "role": "",
    "method": "POST",
-   "path": "/api/bd/register-request",
+   "path": "/api/nd/register-request",
    "body": "{\"device_id\":\"REJ2\"}",
    "capture": {
     "r": "id"
@@ -7244,10 +7244,10 @@
    "events": []
   },
   {
-   "name": "550 GET /api/bd/register-status?device_id=REJ2",
+   "name": "550 GET /api/nd/register-status?device_id=REJ2",
    "role": "",
    "method": "GET",
-   "path": "/api/bd/register-status?device_id=REJ2",
+   "path": "/api/nd/register-status?device_id=REJ2",
    "status": 200,
    "answer": "{\"success\":true,\"status\":\"rejected\",\"id\":48,\"reason\":\"\"}",
    "calls": [],
@@ -7296,10 +7296,10 @@
    "events": []
   },
   {
-   "name": "556 DELETE /api/bd/api/registrations/x",
+   "name": "556 DELETE /api/nd/api/registrations/x",
    "role": "admin",
    "method": "DELETE",
-   "path": "/api/bd/api/registrations/x",
+   "path": "/api/nd/api/registrations/x",
    "status": 404,
    "answer": "{\"success\":false,\"error\":\"Registration not found\"}",
    "calls": [],
@@ -7940,10 +7940,10 @@
    "events": []
   },
   {
-   "name": "600 POST /api/bd/api/enrollment/approve/DEV1",
+   "name": "600 POST /api/nd/api/enrollment/approve/DEV1",
    "role": "global_admin",
    "method": "POST",
-   "path": "/api/bd/api/enrollment/approve/DEV1",
+   "path": "/api/nd/api/enrollment/approve/DEV1",
    "body": "{\"group_guids\":[\"dg-b\"]}",
    "status": 200,
    "answer": "{\"success\":true,\"data\":{\"success\":true,\"device_id\":\"DEV1\"}}",
@@ -8361,10 +8361,10 @@
    "events": []
   },
   {
-   "name": "625 the name of the accept at the other mount GET /api/bd/api/help/requests",
+   "name": "625 the name of the accept at the other mount GET /api/nd/api/help/requests",
    "role": "viewer",
    "method": "GET",
-   "path": "/api/bd/api/help/requests",
+   "path": "/api/nd/api/help/requests",
    "status": 200,
    "answer": "{\"success\":true,\"requests\":[{\"id\":\"26\",\"device_id\":\"DEV6\",\"hostname\":\"\",\"message\":\"\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"demo_helpdesk\",\"created_at\":1795015540018,\"updated_at\":null},{\"id\":\"27\",\"device_id\":\"DEV7\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":1795015540018,\"updated_at\":null},{\"id\":\"21\",\"device_id\":\"DEV1\",\"hostname\":\"pc-1\",\"message\":\"printer\",\"status\":\"accepted\",\"accepted_by\":\"e2e_operator\",\"resolved_by\":\"\",\"created_at\":983404830000,\"updated_at\":983405100000},{\"id\":\"22\",\"device_id\":\"DEV2\",\"hostname\":\"pc-2\",\"message\":\"vpn\",\"status\":\"accepted\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":983404830000,\"updated_at\":null},{\"id\":\"23\",\"device_id\":\"DEV3\",\"hostname\":\"\",\"message\":\"font\",\"status\":\"resolved\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":980985600000,\"updated_at\":981072000500},{\"id\":\"25\",\"device_id\":\"DEV5\",\"hostname\":\"\",\"message\":\"\",\"status\":\"pending\",\"accepted_by\":\"\",\"resolved_by\":\"\",\"created_at\":978688800000,\"updated_at\":null},{\"id\":\"24\",\"device_id\":\"DEV4\",\"hostname\":\"\",\"message\":\"\",\"status\":\"accepted\",\"accepted_by\":\"e2e_operator\",\"resolved_by\":\"\",\"created_at\":978300000000,\"updated_at\":null}]}",
    "calls": [
@@ -8377,10 +8377,10 @@
    "events": []
   },
   {
-   "name": "626 POST /api/bd/api/help/requests/21/resolve",
+   "name": "626 POST /api/nd/api/help/requests/21/resolve",
    "role": "admin",
    "method": "POST",
-   "path": "/api/bd/api/help/requests/21/resolve",
+   "path": "/api/nd/api/help/requests/21/resolve",
    "body": "{}",
    "status": 200,
    "answer": "{\"success\":true,\"request\":{\"id\":21,\"status\":\"resolved\",\"handled_by\":\"apikey:console-bridge\"}}",

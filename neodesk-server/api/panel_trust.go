@@ -36,12 +36,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 const (
 	// PanelTrustHeader carries the signed panel identity.
-	PanelTrustHeader = "X-BetterDesk-Panel"
+	PanelTrustHeader = "X-NeoDesk-Panel"
 	// PanelTrustSecretEnv names the shared secret in the environment.
 	PanelTrustSecretEnv = "PANEL_TRUST_SECRET"
 	// panelTrustVersion prefixes every statement so a future format can be

@@ -98,8 +98,8 @@
 
 	/** Examples in empty fields: names, addresses and code, the same in every language */
 	const EX = {
-		appName: 'BetterDesk',
-		appDescription: 'BetterDesk Server Management',
+		appName: 'NeoDesk',
+		appDescription: 'NeoDesk Server Management',
 		logoText: 'insolve',
 		logoAccent: 'Core Server',
 		logoIcon: 'dns',
@@ -201,7 +201,7 @@
 		const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
 		if (icon) icon.setAttribute('href', `${(icon.getAttribute('href') ?? '').split('?')[0]}?v=${rev}`);
 		const raw = session.raw;
-		const name = String(p.appName || 'BetterDesk');
+		const name = String(p.appName || 'NeoDesk');
 		session.appName = name;
 		if (raw) {
 			session.raw = {
@@ -636,7 +636,7 @@
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement('a');
 			a.href = url;
-			a.download = 'betterdesk-theme.json';
+			a.download = 'neodesk-theme.json';
 			a.click();
 			setTimeout(() => URL.revokeObjectURL(url), 1000);
 			ieStatus = { message: t('branding.exported'), tone: 'ok' };

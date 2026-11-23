@@ -10,8 +10,8 @@ import (
 // connection reader and the database handle's opener.
 func TestCountGoroutinesLeavesOutTheDatabaseDriver(t *testing.T) {
 	stacks := []byte(`goroutine 25765 [running]:
-github.com/unitronix/betterdesk-server/console/ws/wstest.Goroutines.func1()
-	/repo/betterdesk-server/console/ws/wstest/wstest.go:187 +0x51
+github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest.Goroutines.func1()
+	/repo/neodesk-server/console/ws/wstest/wstest.go:187 +0x51
 created by testing.(*T).Run in goroutine 25157
 
 goroutine 25967 [IO wait]:

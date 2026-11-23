@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/authimport"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authimport"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // splitInstall builds the old console's split layout from the SQL text
@@ -202,7 +202,7 @@ func TestImportMergesASplitInstall(t *testing.T) {
 		{"others", `SELECT (SELECT COUNT(*) FROM login_attempts), (SELECT COUNT(*) FROM account_lockouts), (SELECT value FROM branding_config WHERE key = 'appName'),
 			(SELECT COUNT(*) FROM branding_profiles), (SELECT COUNT(*) FROM email_notification_log), (SELECT hostname FROM peer_sysinfo), (SELECT COUNT(*) FROM remote_commands)`,
 			"1|1|ACME Desk|1|1|pc-1|1"},
-		{"marker", `SELECT name, status, source_sha256 <> '' FROM betterdesk_migrations`, authimport.MarkerName + "|complete|1"},
+		{"marker", `SELECT name, status, source_sha256 <> '' FROM neodesk_migrations`, authimport.MarkerName + "|complete|1"},
 	}
 	created := query(t, sdb, `SELECT created_at FROM users WHERE id = 4`)
 	for _, c := range checks {
@@ -270,7 +270,7 @@ func TestImportIsAllOrNothing(t *testing.T) {
 	if query(t, sdb, `SELECT * FROM users ORDER BY id`) != beforeUsers || query(t, sdb, `SELECT * FROM user_groups ORDER BY id`) != beforeGroups {
 		t.Error("a failed import left changes")
 	}
-	if got := query(t, sdb, `SELECT COUNT(*) FROM sqlite_master WHERE name = 'betterdesk_migrations'`); got != "0" {
+	if got := query(t, sdb, `SELECT COUNT(*) FROM sqlite_master WHERE name = 'neodesk_migrations'`); got != "0" {
 		t.Error("a failed import left the marker table")
 	}
 	if _, err := sdb.Exec(ctx, `DELETE FROM access_tokens`); err != nil {
@@ -315,13 +315,13 @@ func TestImportOnlyWhenNeeded(t *testing.T) {
 			t.Errorf("%+v: imported (%v)", opts, err)
 		}
 	}
-	if got := query(t, sdb, `SELECT COUNT(*) FROM sqlite_master WHERE name = 'betterdesk_migrations'`); got != "0" {
+	if got := query(t, sdb, `SELECT COUNT(*) FROM sqlite_master WHERE name = 'neodesk_migrations'`); got != "0" {
 		t.Error("marker written without an import")
 	}
-	if _, err := sdb.Exec(ctx, `CREATE TABLE betterdesk_migrations (name TEXT PRIMARY KEY, status TEXT NOT NULL, source_sha256 TEXT NOT NULL DEFAULT '', completed_at TEXT NOT NULL DEFAULT (datetime('now')), details TEXT NOT NULL DEFAULT '')`); err != nil {
+	if _, err := sdb.Exec(ctx, `CREATE TABLE neodesk_migrations (name TEXT PRIMARY KEY, status TEXT NOT NULL, source_sha256 TEXT NOT NULL DEFAULT '', completed_at TEXT NOT NULL DEFAULT (datetime('now')), details TEXT NOT NULL DEFAULT '')`); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := sdb.Exec(ctx, `INSERT INTO betterdesk_migrations (name, status) VALUES (?, 'complete')`, authimport.MarkerName); err != nil {
+	if _, err := sdb.Exec(ctx, `INSERT INTO neodesk_migrations (name, status) VALUES (?, 'complete')`, authimport.MarkerName); err != nil {
 		t.Fatal(err)
 	}
 	if report, err := authimport.Run(ctx, sdb, options(authPath)); report != nil || err != nil {

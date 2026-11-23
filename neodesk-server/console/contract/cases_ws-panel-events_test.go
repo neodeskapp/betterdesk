@@ -3,7 +3,7 @@
 package contract_test
 
 import (
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The socket /ws/panel-events: after the origin check, a session with
@@ -26,19 +26,19 @@ func init() {
 	contract.Group("ws-panel-events",
 		contract.Case{Name: "open", Path: "/ws/panel-events", Socket: &contract.Socket{Name: "panel"}},
 		contract.Case{
-			Name: "register-request", Method: "POST", Path: "/api/bd/register-request", As: "signed-out",
+			Name: "register-request", Method: "POST", Path: "/api/nd/register-request", As: "signed-out",
 			Body:     map[string]any{"device_id": "contract-ws-lan", "hostname": "lan-box", "platform": "linux", "version": "1.0.0"},
 			Capture:  map[string]string{"registration": "id"},
 			Volatile: []string{"~id"},
 		},
 		contract.Case{Name: "registration-pending", Path: "/ws/panel-events", Socket: &contract.Socket{Name: "panel", Expect: 1, Filter: pending}, Volatile: messageID},
 		contract.Case{
-			Name: "registration-approve", Method: "PUT", Path: "/api/bd/api/registrations/{registration}/approve", As: "admin",
+			Name: "registration-approve", Method: "PUT", Path: "/api/nd/api/registrations/{registration}/approve", As: "admin",
 			Body:     map[string]any{},
 			Volatile: []string{"~data.id", "~data.console_url"},
 		},
 		contract.Case{Name: "registration-changed", Path: "/ws/panel-events", Socket: &contract.Socket{Name: "panel", Expect: 1, Filter: changed}, Volatile: messageID},
-		contract.Case{Name: "registration-delete", Method: "DELETE", Path: "/api/bd/api/registrations/{registration}", As: "admin"},
+		contract.Case{Name: "registration-delete", Method: "DELETE", Path: "/api/nd/api/registrations/{registration}", As: "admin"},
 		contract.Case{Name: "nothing-else", Path: "/ws/panel-events", Socket: &contract.Socket{Name: "panel", Filter: pending, Close: true}},
 		contract.Case{Name: "foreign-origin", Path: "/ws/panel-events", Socket: &contract.Socket{Name: "foreign", Origin: "https://evil.example", Close: true}},
 		contract.Case{Name: "no-session", Path: "/ws/panel-events", NoSession: true, Socket: &contract.Socket{Name: "nosession"}},

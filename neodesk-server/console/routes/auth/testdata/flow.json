@@ -18,8 +18,8 @@
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -66,7 +66,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -102,7 +102,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -137,7 +137,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -186,7 +186,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -223,7 +223,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -259,7 +259,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -311,7 +311,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -347,7 +347,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -383,8 +383,8 @@
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.sid=; Path=/; Expires=\u003cpast\u003e",
-     "betterdesk.sid=; Path=/; Expires=\u003cpast\u003e",
+     "nd.sid=; Path=/; Expires=\u003cpast\u003e",
+     "neodesk.sid=; Path=/; Expires=\u003cpast\u003e",
      "undefined=; Path=/; Expires=\u003cpast\u003e"
     ],
     "x-content-type-options": "nosniff",
@@ -420,7 +420,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -457,7 +457,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -494,7 +494,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -529,7 +529,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -565,8 +565,8 @@
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -613,7 +613,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -691,7 +691,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -728,7 +728,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -821,8 +821,8 @@
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.sid=; Path=/; Expires=\u003cpast\u003e",
-     "betterdesk.sid=; Path=/; Expires=\u003cpast\u003e",
+     "nd.sid=; Path=/; Expires=\u003cpast\u003e",
+     "neodesk.sid=; Path=/; Expires=\u003cpast\u003e",
      "undefined=; Path=/; Expires=\u003cpast\u003e"
     ],
     "x-content-type-options": "nosniff",
@@ -858,7 +858,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -893,7 +893,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -929,8 +929,8 @@
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -976,8 +976,8 @@
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.sid=; Path=/; Expires=\u003cpast\u003e",
-     "betterdesk.sid=; Path=/; Expires=\u003cpast\u003e",
+     "nd.sid=; Path=/; Expires=\u003cpast\u003e",
+     "neodesk.sid=; Path=/; Expires=\u003cpast\u003e",
      "undefined=; Path=/; Expires=\u003cpast\u003e"
     ],
     "x-content-type-options": "nosniff",
@@ -1013,7 +1013,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -1048,7 +1048,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -1084,8 +1084,8 @@
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -1130,7 +1130,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -1165,7 +1165,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -1201,7 +1201,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -1237,7 +1237,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -1272,7 +1272,7 @@
     "ratelimit-remaining": "\u003cn\u003e",
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -1304,7 +1304,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -1342,7 +1342,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -1417,8 +1417,8 @@
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.sid=; Path=/; Expires=\u003cpast\u003e",
-     "betterdesk.sid=; Path=/; Expires=\u003cpast\u003e"
+     "nd.sid=; Path=/; Expires=\u003cpast\u003e",
+     "neodesk.sid=; Path=/; Expires=\u003cpast\u003e"
     ],
     "vary": "Accept",
     "x-content-type-options": "nosniff",
@@ -1526,8 +1526,8 @@
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -1573,8 +1573,8 @@
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.guest=; Path=/; Expires=\u003cpast\u003e; HttpOnly; SameSite=Lax",
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -1658,7 +1658,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=\u003cvalue\u003e; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
+     "nd.sid=\u003cvalue\u003e; Path=/; Expires=\u003cdate\u003e; HttpOnly; SameSite=Lax"
     ],
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
@@ -1808,8 +1808,8 @@
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.sid=; Path=/; Expires=\u003cpast\u003e",
-     "betterdesk.sid=; Path=/; Expires=\u003cpast\u003e",
+     "nd.sid=; Path=/; Expires=\u003cpast\u003e",
+     "neodesk.sid=; Path=/; Expires=\u003cpast\u003e",
      "undefined=; Path=/; Expires=\u003cpast\u003e"
     ],
     "x-content-type-options": "nosniff",
@@ -2003,8 +2003,8 @@
     "ratelimit-reset": "\u003cn\u003e",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
-     "bd.sid=; Path=/; Expires=\u003cpast\u003e",
-     "betterdesk.sid=; Path=/; Expires=\u003cpast\u003e",
+     "nd.sid=; Path=/; Expires=\u003cpast\u003e",
+     "neodesk.sid=; Path=/; Expires=\u003cpast\u003e",
      "undefined=; Path=/; Expires=\u003cpast\u003e"
     ],
     "x-content-type-options": "nosniff",

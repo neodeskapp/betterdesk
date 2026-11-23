@@ -19,14 +19,14 @@ web-nodejs/
 .github/
 
 # Go build artifacts (binary is built inside Docker)
-betterdesk-server/betterdesk-server
-betterdesk-server/betterdesk-server-*
-betterdesk-server/*.exe
-betterdesk-server/db_v2.sqlite3
-betterdesk-server/id_ed25519
-betterdesk-server/id_ed25519.pub
-betterdesk-server/test_*.go
-betterdesk-server/_test_*
+neodesk-server/neodesk-server
+neodesk-server/neodesk-server-*
+neodesk-server/*.exe
+neodesk-server/db_v2.sqlite3
+neodesk-server/id_ed25519
+neodesk-server/id_ed25519.pub
+neodesk-server/test_*.go
+neodesk-server/_test_*
 
 # Archive (old/deprecated files)
 archive/
@@ -42,12 +42,12 @@ screenshots/
 # Development & testing
 dev_modules/
 TESTING.local.md
-betterdesk-client/
-betterdesk-desktop/
-betterdesk-agent-client/
-betterdesk-agent/
+neodesk-client/
+neodesk-desktop/
+neodesk-agent-client/
+neodesk-agent/
 rdclient-desktop/
-betterdesk-mgmt/
+neodesk-mgmt/
 
 # Sensitive files
 *.key

@@ -11,8 +11,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // The schema the Node console created on an empty database, dumped from a
@@ -142,7 +142,7 @@ func openGoServer(t *testing.T, sdb *store.DB) db.Database {
 }
 
 // DSN is the address of the test database for another program, such as
-// a command of betterdesk-server: the file path on SQLite, the server's
+// a command of neodesk-server: the file path on SQLite, the server's
 // address with the test's schema as search path on PostgreSQL.
 func DSN(t *testing.T, sdb *store.DB) string {
 	t.Helper()

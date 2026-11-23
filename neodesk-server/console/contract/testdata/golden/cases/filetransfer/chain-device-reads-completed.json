@@ -2,7 +2,7 @@
  "id": "filetransfer/chain-device-reads-completed",
  "request": {
   "method": "GET",
-  "path": "/api/bd/file-transfer/{chain}",
+  "path": "/api/nd/file-transfer/{chain}",
   "notes": [
    "header Authorization: Bearer {secret:device_token}",
    "no CSRF token",

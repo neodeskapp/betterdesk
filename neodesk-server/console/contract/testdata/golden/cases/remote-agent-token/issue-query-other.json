@@ -2,7 +2,7 @@
  "id": "remote-agent-token/issue-query-other",
  "request": {
   "method": "POST",
-  "path": "/api/bd/remote-agent-token?device_id=900100002",
+  "path": "/api/nd/remote-agent-token?device_id=900100002",
   "body": {},
   "notes": [
    "header Authorization: Bearer {secret:device_token}",

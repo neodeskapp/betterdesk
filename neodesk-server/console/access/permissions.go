@@ -1,7 +1,7 @@
 package access
 
 import (
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 const rolePro = auth.RolePro

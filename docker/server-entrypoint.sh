@@ -1,11 +1,11 @@
 #!/bin/sh
-# BetterDesk Server — Docker Entrypoint
+# NeoDesk Server — Docker Entrypoint
 # Fixes volume file permissions before dropping to non-root user
 set -e
 
 # shellcheck source=/dev/null
 . /ensure-app-user.sh
-ensure_betterdesk_user
+ensure_neodesk_user
 
 DATA_DIR="/opt/rustdesk"
 
@@ -26,10 +26,10 @@ fi
 
 # Fix ownership before bootstrap writes .admin_credentials (issue #385).
 if [ "$(id -u)" = "0" ]; then
-    chown -R betterdesk:betterdesk "$DATA_DIR" 2>/dev/null || true
+    chown -R neodesk:neodesk "$DATA_DIR" 2>/dev/null || true
     if [ -f "$DATA_DIR/id_ed25519" ]; then
         chmod 600 "$DATA_DIR/id_ed25519"
-        chown betterdesk:betterdesk "$DATA_DIR/id_ed25519"
+        chown neodesk:neodesk "$DATA_DIR/id_ed25519"
     fi
 fi
 
@@ -49,22 +49,22 @@ panel_auth_db_ready() {
     if [ -z "$auth_path" ]; then
         return 0
     fi
-    if ! file_exists_as_betterdesk "$auth_path" && [ "${SQLITE_AUTH_DB_MODE:-}" != "legacy" ]; then
+    if ! file_exists_as_neodesk "$auth_path" && [ "${SQLITE_AUTH_DB_MODE:-}" != "legacy" ]; then
         echo "Panel auth.db not present — using the primary SQLite database"
         return 0
     fi
-    if file_exists_as_betterdesk "$auth_path"; then
+    if file_exists_as_neodesk "$auth_path"; then
         echo "Panel auth.db ready: $auth_path"
         return 0
     fi
     echo "Waiting for panel auth.db at $auth_path (console container)..."
     retries=0
     max_retries=90
-    while ! file_exists_as_betterdesk "$auth_path" && [ "$retries" -lt "$max_retries" ]; do
+    while ! file_exists_as_neodesk "$auth_path" && [ "$retries" -lt "$max_retries" ]; do
         sleep 2
         retries=$((retries + 1))
     done
-    if ! file_exists_as_betterdesk "$auth_path"; then
+    if ! file_exists_as_neodesk "$auth_path"; then
         echo "WARN: panel auth.db not found after ${max_retries} attempts — RustDesk folders/groups may be unavailable"
         return 0
     fi
@@ -83,9 +83,9 @@ panel_auth_db_ready
 # (ENROLLMENT_MODE_ENV_OVERRIDE=Y forces it at every start).
 if [ -z "${ENROLLMENT_MODE:-}" ]; then
     ENROLLMENT_SENTINEL="$DATA_DIR/.enrollment_initialized"
-    if ! file_exists_as_betterdesk "$ENROLLMENT_SENTINEL"; then
-        if file_exists_as_betterdesk "$DATA_DIR/db_v2.sqlite3" \
-            || file_exists_as_betterdesk "$DATA_DIR/id_ed25519"; then
+    if ! file_exists_as_neodesk "$ENROLLMENT_SENTINEL"; then
+        if file_exists_as_neodesk "$DATA_DIR/db_v2.sqlite3" \
+            || file_exists_as_neodesk "$DATA_DIR/id_ed25519"; then
             : # pre-existing volume — keep current enrollment policy
         else
             export ENROLLMENT_MODE="managed"
@@ -97,7 +97,7 @@ fi
 
 # Drop privileges and re-exec
 if [ "$(id -u)" = "0" ]; then
-    exec su-exec betterdesk "$@"
+    exec su-exec neodesk "$@"
 else
     exec "$@"
 fi

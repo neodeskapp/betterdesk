@@ -3,7 +3,7 @@ package message
 import (
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/mail/addressparser"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/addressparser"
 )
 
 // normalizeAddress brings an address into the form that goes into the

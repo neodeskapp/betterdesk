@@ -2,7 +2,7 @@
  "id": "bd-api/help-request-without-device-id",
  "request": {
   "method": "POST",
-  "path": "/api/bd/help-request",
+  "path": "/api/nd/help-request",
   "body": {
    "message": "x"
   },

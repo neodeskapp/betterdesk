@@ -2,7 +2,7 @@
  "id": "bd-api/heartbeat-without-claim",
  "request": {
   "method": "POST",
-  "path": "/api/bd/heartbeat",
+  "path": "/api/nd/heartbeat",
   "body": {},
   "notes": [
    "header Authorization: Bearer {secret:device_token_other}",

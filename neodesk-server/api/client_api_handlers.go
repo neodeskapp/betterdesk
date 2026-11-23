@@ -26,9 +26,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/auth"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // tfaSession holds temporary state for a two-factor auth flow in progress.
@@ -43,41 +43,41 @@ type tfaSession struct {
 }
 
 type clientHeartbeatRequest struct {
-	ID                 string          `json:"id"`
-	UUID               string          `json:"uuid"`
-	CPU                float64         `json:"cpu"`
-	Memory             float64         `json:"memory"`
-	Disk               float64         `json:"disk"`
-	ModifiedAt         int64           `json:"modified_at"`
-	TelemetrySchema    int             `json:"telemetry_schema"`
-	ProductSKU         string          `json:"product_sku"`
-	ConnMode           string          `json:"conn_mode"`
-	Capabilities       []string        `json:"capabilities"`
-	EffectiveConnMode  string          `json:"effective_conn_mode"`
-	PolicyRevision     int64           `json:"policy_revision"`
-	PolicyStatus       string          `json:"policy_status"`
-	LastCommandID      string          `json:"last_command_id"`
-	PolicyError        string          `json:"policy_error"`
-	Telemetry          json.RawMessage `json:"telemetry"`
-	TelemetryEnvelope  json.RawMessage `json:"telemetry_envelope"`
-	BetterDeskEnvelope json.RawMessage `json:"betterdesk_envelope"`
+	ID                string          `json:"id"`
+	UUID              string          `json:"uuid"`
+	CPU               float64         `json:"cpu"`
+	Memory            float64         `json:"memory"`
+	Disk              float64         `json:"disk"`
+	ModifiedAt        int64           `json:"modified_at"`
+	TelemetrySchema   int             `json:"telemetry_schema"`
+	ProductSKU        string          `json:"product_sku"`
+	ConnMode          string          `json:"conn_mode"`
+	Capabilities      []string        `json:"capabilities"`
+	EffectiveConnMode string          `json:"effective_conn_mode"`
+	PolicyRevision    int64           `json:"policy_revision"`
+	PolicyStatus      string          `json:"policy_status"`
+	LastCommandID     string          `json:"last_command_id"`
+	PolicyError       string          `json:"policy_error"`
+	Telemetry         json.RawMessage `json:"telemetry"`
+	TelemetryEnvelope json.RawMessage `json:"telemetry_envelope"`
+	NeoDeskEnvelope   json.RawMessage `json:"neodesk_envelope"`
 }
 
-func classifyBetterDeskDevice(productSKU, connMode string) string {
+func classifyNeoDeskDevice(productSKU, connMode string) string {
 	switch productSKU {
-	case "betterdesk-support":
-		return "betterdesk-support"
-	case "betterdesk-desktop":
+	case "neodesk-support":
+		return "neodesk-support"
+	case "neodesk-desktop":
 		// Incoming-only is a reversible desktop policy, not a Support Agent.
-		return "betterdesk"
+		return "neodesk"
 	}
 	if connMode == "incoming-only" {
-		return "betterdesk-support"
+		return "neodesk-support"
 	}
 	if productSKU == "" {
 		return ""
 	}
-	return "betterdesk"
+	return "neodesk"
 }
 
 // tfaSessionStore is a concurrency-safe in-memory store for pending 2FA sessions.
@@ -949,7 +949,7 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 	// A heartbeat in the device's signed envelope proves more: it is
 	// answered as for an unknown device when the envelope does not open,
 	// and told that the device is banned only after it opened.
-	if len(body.BetterDeskEnvelope) == 0 && !sameRegisteredUUID(peer.UUID, body.UUID) {
+	if len(body.NeoDeskEnvelope) == 0 && !sameRegisteredUUID(peer.UUID, body.UUID) {
 		writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
 		return
 	}
@@ -959,21 +959,21 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 		}
 		return peer.Banned
 	}
-	if len(body.BetterDeskEnvelope) == 0 && banned() {
+	if len(body.NeoDeskEnvelope) == 0 && banned() {
 		return
 	}
 	var responsePublicKey *[32]byte
 	envelopeVerified := false
-	if len(body.BetterDeskEnvelope) > 0 {
-		opened, err := s.openTelemetryEnvelope(deviceID, body.BetterDeskEnvelope)
+	if len(body.NeoDeskEnvelope) > 0 {
+		opened, err := s.openTelemetryEnvelope(deviceID, body.NeoDeskEnvelope)
 		if err != nil {
-			log.Printf("[api] BetterDesk heartbeat envelope rejected for %s: %v", deviceID, err)
+			log.Printf("[api] NeoDesk heartbeat envelope rejected for %s: %v", deviceID, err)
 			writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
 			return
 		}
 		var inner clientHeartbeatRequest
 		if err := json.Unmarshal(opened.Payload, &inner); err != nil || (inner.ID != "" && inner.ID != deviceID) {
-			log.Printf("[api] BetterDesk heartbeat payload rejected for %s", deviceID)
+			log.Printf("[api] NeoDesk heartbeat payload rejected for %s", deviceID)
 			writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
 			return
 		}
@@ -1008,7 +1008,7 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 	}
 	// Update peer status to ONLINE
 	_ = s.db.UpdatePeerStatus(deviceID, "ONLINE", clientIP, "heartbeat")
-	// HTTP heartbeats are also a liveness signal for BetterDesk clients that
+	// HTTP heartbeats are also a liveness signal for NeoDesk clients that
 	// do not maintain a UDP/WebSocket signal connection. Refresh the in-memory
 	// peer map so the signal heartbeat cleaner does not mark them offline again.
 	s.peers.TouchHeartbeat(deviceID)
@@ -1043,7 +1043,7 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 		resp["sysinfo"] = true
 	}
 
-	// Support Agent branding is fetched through BetterDesk's richer API. Do not
+	// Support Agent branding is fetched through NeoDesk's richer API. Do not
 	// push generic RustDesk config_options to an incoming-only client: those
 	// options can contain connection or lockdown settings that conflict with
 	// its signed profile. Connection mode itself is never placed here.

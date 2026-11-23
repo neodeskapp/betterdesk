@@ -2,7 +2,7 @@
  "id": "automation-device/fetch-names-other-device",
  "request": {
   "method": "GET",
-  "path": "/api/bd/commands?device_id=900100001",
+  "path": "/api/nd/commands?device_id=900100001",
   "notes": [
    "header Authorization: Bearer {secret:device_token_other}",
    "no CSRF token",

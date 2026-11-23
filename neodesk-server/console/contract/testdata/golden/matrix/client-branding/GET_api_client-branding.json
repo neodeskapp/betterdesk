@@ -63,7 +63,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -99,7 +99,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -113,9 +113,9 @@
     "json": {
      "data": {
       "accent_color": "#4f6ef7",
-      "company_name": "BetterDesk",
+      "company_name": "NeoDesk",
       "profiles": {
-       "betterdesk": {
+       "neodesk": {
         "apply": [
          "company_name",
          "phone",
@@ -172,7 +172,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -192,9 +192,9 @@
     "json": {
      "data": {
       "accent_color": "#4f6ef7",
-      "company_name": "BetterDesk",
+      "company_name": "NeoDesk",
       "profiles": {
-       "betterdesk": {
+       "neodesk": {
         "apply": [
          "company_name",
          "phone",

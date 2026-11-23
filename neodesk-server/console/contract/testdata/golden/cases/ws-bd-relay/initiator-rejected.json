@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/initiator-rejected",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-relay",
+  "path": "/ws/nd-relay",
   "notes": [
    "websocket init3, own origin",
    "websocket wait for the close"

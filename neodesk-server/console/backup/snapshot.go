@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/unitronix/betterdesk-server/console/branding"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // The settings snapshot: the older backup format, one JSON file with the
@@ -66,7 +66,7 @@ func (s *Service) CreateBackup(ctx context.Context) (*goapi.Object, error) {
 		"_version", float64(FormatVersion),
 		"_created", timestamp,
 		"_console_version", s.o.AppVersion,
-		"_backend", "betterdesk",
+		"_backend", "neodesk",
 		"console", goapi.NewObject(
 			"settings", settings,
 			"branding", brand,

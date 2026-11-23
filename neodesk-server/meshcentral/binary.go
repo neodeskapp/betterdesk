@@ -1,5 +1,5 @@
 // Package meshcentral implements the MeshCentral wire-protocol compatibility layer
-// for BetterDesk (AGPL). Enables unmodified MeshAgent binaries to register and
+// for NeoDesk (AGPL). Enables unmodified MeshAgent binaries to register and
 // receive remote desktop / terminal / file sessions via /agent.ashx endpoints.
 package meshcentral
 

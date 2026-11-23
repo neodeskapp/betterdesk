@@ -1,5 +1,5 @@
 // Package clientbranding holds the routes of Main, Client Branding: the
-// branding that BetterDesk desktop clients and RustDesk clients get from
+// branding that NeoDesk desktop clients and RustDesk clients get from
 // the API server (GET /api/branding there), which the API server keeps in
 // its server_config. It is not the console's own appearance, which is in
 // console/branding (see its storage.md).
@@ -8,9 +8,9 @@ package clientbranding
 import (
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/jsreq"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
 type handlers struct {
@@ -40,7 +40,7 @@ func failed(w http.ResponseWriter, r *http.Request, result *goapi.Object, fallba
 func (h *handlers) get(w http.ResponseWriter, r *http.Request) {
 	result := h.api.GetBranding(r.Context())
 	if !goapi.Truthy(result.Get("success")) {
-		failed(w, r, result, "Failed to load branding from BetterDesk server")
+		failed(w, r, result, "Failed to load branding from NeoDesk server")
 		return
 	}
 	kit.JSON(w, r, http.StatusOK, goapi.NewObject("success", true, "data", result.Get("data")))
@@ -69,7 +69,7 @@ func (h *handlers) save(w http.ResponseWriter, r *http.Request) {
 	}
 	result := h.api.SaveBranding(r.Context(), payload)
 	if !goapi.Truthy(result.Get("success")) {
-		failed(w, r, result, "Failed to save branding on BetterDesk server")
+		failed(w, r, result, "Failed to save branding on NeoDesk server")
 		return
 	}
 	// revision: result.data?.revision || result.revision, left out when

@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/browser-without-origin",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-relay",
+  "path": "/ws/nd-relay",
   "notes": [
    "websocket bare, no Origin",
    "websocket wait for the close"

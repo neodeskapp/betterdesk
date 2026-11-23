@@ -1,5 +1,5 @@
 /**
- * BetterDesk Web Remote Client - Video Decoder
+ * NeoDesk Web Remote Client - Video Decoder
  * Uses WebCodecs API for hardware-accelerated video decoding (preferred).
  * Falls back to JMuxer (H.264 via MSE) when WebCodecs is unavailable
  * (e.g., insecure HTTP context on non-localhost).
@@ -203,7 +203,7 @@ export class RDVideo {
 	/** Tauri RdClient desktop shell (WebKitGTK on Linux, WKWebView on macOS, WebView2 on Windows). */
 	static isRdClientDesktop(): boolean {
 		const w = page();
-		return w.__BETTERDESK_RDCLIENT_DESKTOP__ === true || !!(w.__TAURI__ && w.__TAURI__.core);
+		return w.__NEODESK_RDCLIENT_DESKTOP__ === true || !!(w.__TAURI__ && w.__TAURI__.core);
 	}
 
 	/** Linux WebKitGTK — WebCodecs AV1 is advertised but fails at decode time. */
@@ -680,7 +680,7 @@ export class RDVideo {
 
 			// Periodic diagnostics (every 5 seconds, debug only)
 			const now = performance.now();
-			if (typeof window !== 'undefined' && page().BetterDesk?.debugRelay === true) {
+			if (typeof window !== 'undefined' && page().NeoDesk?.debugRelay === true) {
 				if (!this._lastDiagTime || now - this._lastDiagTime > 5000) {
 					this._lastDiagTime = now;
 					let bufInfo = 'none';

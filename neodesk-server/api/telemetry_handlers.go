@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 const (
@@ -270,7 +270,7 @@ func (s *Server) queueTelemetryCommand(w http.ResponseWriter, r *http.Request, c
 			ProductSKU string `json:"product_sku"`
 		}
 		if json.Unmarshal([]byte(snapshot.Payload), &identity) == nil &&
-			identity.ProductSKU == "betterdesk-support" && command != "collect.metrics" {
+			identity.ProductSKU == "neodesk-support" && command != "collect.metrics" {
 			writeJSON(w, http.StatusForbidden, map[string]any{"error": "support_agent_restricted"})
 			return
 		}

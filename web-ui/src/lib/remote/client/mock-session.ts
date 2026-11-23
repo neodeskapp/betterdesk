@@ -1,7 +1,7 @@
 /**
  * The dev mock device: a stand-in for RDClient with the same events and
  * methods and no network. The viewer loads it only when its data says the
- * server has the mock on (BD_DEV_MOCK_REMOTE=1, then ?mock=1 or a seeded
+ * server has the mock on (ND_DEV_MOCK_REMOTE=1, then ?mock=1 or a seeded
  * demo device; ../rdclient.ts). It goes through the connecting steps with
  * short delays, then draws a made-up desktop into the viewer's own canvas
  * through the real RDRenderer, so scaling, full screen, recording and
@@ -438,7 +438,7 @@ class MockDesktop {
 	z = ['files', 'term', 'web'];
 	focusId = 'term';
 	term = [
-		'Welcome to the BetterDesk review desktop. Nothing here is real.',
+		'Welcome to the NeoDesk review desktop. Nothing here is real.',
 		'Type "help" for the few commands this terminal knows.',
 		'',
 		'demo@build-server:~$ uptime',

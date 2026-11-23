@@ -9,12 +9,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/internal/envvar"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
 )
 
-const upgradeEnvUsage = "Usage: betterdesk-server upgrade-env --from FILE [--write] [--supervisor systemd|nssm|docker]"
+const upgradeEnvUsage = "Usage: neodesk-server upgrade-env --from FILE [--write] [--supervisor systemd|nssm|docker]"
 
 // The groups of spec updater-installers.md 4.3 ("Env keys carried into the
 // Go server") that upgrade-env changes. Every other key is carried as it
@@ -26,7 +26,7 @@ var (
 	// and build workers read (group D).
 	commentedKeys = map[string]string{
 		"WEB_UI_DIR":                    "the web app is built into the server; this would serve an old build from disk",
-		"BETTERDESK_GOTOOLCHAIN":        "only the old console's updater built the server from source",
+		"NEODESK_GOTOOLCHAIN":           "only the old console's updater built the server from source",
 		"GOTOOLCHAIN":                   "only the old console's updater built the server from source",
 		"GOCACHE":                       "only the old console's updater built the server from source",
 		"GOMODCACHE":                    "only the old console's updater built the server from source",
@@ -94,7 +94,7 @@ var errNotAPort = errors.New("not a port")
 // (serverinfo.ParseEnvLines, line by line).
 //
 // envFile is the file's absolute path: it is CONSOLE_DIR's folder and
-// BETTERDESK_ENV_FILE's value. supervisor is BETTERDESK_SUPERVISOR's.
+// NEODESK_ENV_FILE's value. supervisor is NEODESK_SUPERVISOR's.
 func planUpgrade(text, envFile, supervisor string) (upgradePlan, error) {
 	var plan upgradePlan
 	bom := ""
@@ -151,7 +151,7 @@ func planUpgrade(text, envFile, supervisor string) (upgradePlan, error) {
 			if noteEnd == "" {
 				noteEnd = lineEnd
 			}
-			out.WriteString("# Commented out by betterdesk-server upgrade-env: " + why + noteEnd)
+			out.WriteString("# Commented out by neodesk-server upgrade-env: " + why + noteEnd)
 			out.WriteString("# " + line + ending)
 			continue
 		}
@@ -184,8 +184,8 @@ func planUpgrade(text, envFile, supervisor string) (upgradePlan, error) {
 	add("RELAY_PORT", "21117")
 	add("GO_API_PORT", "21114")
 	add("CONSOLE_DIR", filepath.Dir(envFile))
-	add("BETTERDESK_ENV_FILE", envFile)
-	add("BETTERDESK_SUPERVISOR", supervisor)
+	add("NEODESK_ENV_FILE", envFile)
+	add("NEODESK_SUPERVISOR", supervisor)
 
 	if len(plan.Added) > 0 {
 		// After the old lines, ended, and a blank line
@@ -195,7 +195,7 @@ func planUpgrade(text, envFile, supervisor string) (upgradePlan, error) {
 			}
 			out.WriteString(lineEnd)
 		}
-		out.WriteString("# Added by betterdesk-server upgrade-env: the console runs inside the server" + lineEnd)
+		out.WriteString("# Added by neodesk-server upgrade-env: the console runs inside the server" + lineEnd)
 		for _, s := range plan.Added {
 			out.WriteString(s.Key + "=" + s.Value + lineEnd)
 		}
@@ -253,7 +253,7 @@ func UpgradeEnv(args []string, env Env) int {
 		path = from
 	}
 	fail := func(format string, a ...any) int {
-		fmt.Fprintf(env.Stderr, "betterdesk-server upgrade-env: "+format+"\n", a...)
+		fmt.Fprintf(env.Stderr, "neodesk-server upgrade-env: "+format+"\n", a...)
 		return 1
 	}
 	raw, err := os.ReadFile(path)

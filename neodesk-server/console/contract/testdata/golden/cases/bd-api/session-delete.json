@@ -2,7 +2,7 @@
  "id": "bd-api/session-delete",
  "request": {
   "method": "DELETE",
-  "path": "/api/bd/session/{session}",
+  "path": "/api/nd/session/{session}",
   "notes": [
    "header Authorization: Bearer {secret:device_token}",
    "no CSRF token",

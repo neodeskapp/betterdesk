@@ -23,10 +23,10 @@ type ruleFix struct {
 }
 
 var ruleFixes = []ruleFix{
-	// The routes for people of the file transfer group answer at /api/bd
+	// The routes for people of the file transfer group answer at /api/nd
 	// too.
-	{bug: "FT8", add: Rule{Prefix: "/api/bd/transfer", Section: "files"}},
-	{bug: "FT8", add: Rule{Prefix: "/api/bd/transfers", Section: "files"}},
+	{bug: "FT8", add: Rule{Prefix: "/api/nd/transfer", Section: "files"}},
+	{bug: "FT8", add: Rule{Prefix: "/api/nd/transfers", Section: "files"}},
 
 	// The API rules of these sections named prefixes no route has.
 	{bug: "PA4, G16", remove: Rule{Prefix: "/api/organizations", Section: "organizations"}, add: Rule{Prefix: "/api/panel/org", Section: "organizations"}},
@@ -39,9 +39,9 @@ var ruleFixes = []ruleFix{
 	{bug: "PA4", add: Rule{Prefix: "/api/panel/fleet", Section: "fleet"}},
 	{bug: "PA4", add: Rule{Prefix: "/api/chat", Section: "chat"}},
 	// The second address of the fleet, scaling and resource control routes.
-	{bug: "PA4, I3", add: Rule{Prefix: "/api/bd/api/panel/fleet", Section: "fleet"}},
-	{bug: "PA4, I3", add: Rule{Prefix: "/api/bd/api/panel/scaling", Section: "scaling"}},
-	{bug: "PA4, I3", add: Rule{Prefix: "/api/bd/api/panel/resource-control", Section: "resource-control"}},
+	{bug: "PA4, I3", add: Rule{Prefix: "/api/nd/api/panel/fleet", Section: "fleet"}},
+	{bug: "PA4, I3", add: Rule{Prefix: "/api/nd/api/panel/scaling", Section: "scaling"}},
+	{bug: "PA4, I3", add: Rule{Prefix: "/api/nd/api/panel/resource-control", Section: "resource-control"}},
 
 	// The Settings page is for every account, Client setup for every role;
 	// Tokens, Policies and Client branding ask other permissions than
@@ -89,12 +89,12 @@ var ruleFixes = []ruleFix{
 	// /attestation is the device identity page; the server attestation
 	// page had no rule.
 	{bug: "PA5 (F9)", remove: Rule{Prefix: "/attestation", Section: "server-attestation"}, add: Rule{Prefix: "/server-attestation", Section: "server-attestation"}},
-	// The data guard's routes for people answer at /api/bd too.
-	{bug: "DG6", add: Rule{Prefix: "/api/bd/policies", Section: "dataguard"}},
-	{bug: "DG6", add: Rule{Prefix: "/api/bd/events", Section: "dataguard"}},
-	{bug: "DG6", add: Rule{Prefix: "/api/bd/stats", Section: "dataguard"}},
-	// The registration routes for people answer at /api/bd too (I3).
-	{bug: "PA15", add: Rule{Prefix: "/api/bd/api/registrations", Section: "registrations"}},
+	// The data guard's routes for people answer at /api/nd too.
+	{bug: "DG6", add: Rule{Prefix: "/api/nd/policies", Section: "dataguard"}},
+	{bug: "DG6", add: Rule{Prefix: "/api/nd/events", Section: "dataguard"}},
+	{bug: "DG6", add: Rule{Prefix: "/api/nd/stats", Section: "dataguard"}},
+	// The registration routes for people answer at /api/nd too (I3).
+	{bug: "PA15", add: Rule{Prefix: "/api/nd/api/registrations", Section: "registrations"}},
 }
 
 // sectionFix is a catalog section whose permissions differ from Node's.

@@ -9,8 +9,8 @@ import (
 	"time"
 	_ "time/tzdata" // the vectors were recorded in Europe/Berlin
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // notificationVectors is testdata/notifications.json, recorded from

@@ -18,8 +18,8 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
-	"github.com/unitronix/betterdesk-server/audit"
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // The SDKs in sdks/ and the reference bridges in bridges/ run here against
@@ -47,7 +47,7 @@ func sdkRepoRoot(t *testing.T) string {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(filepath.Join(root, "sdks")); err != nil {
-		t.Skip("no sdks folder next to betterdesk-server")
+		t.Skip("no sdks folder next to neodesk-server")
 	}
 	return root
 }

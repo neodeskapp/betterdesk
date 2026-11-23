@@ -398,15 +398,15 @@ func TestNodeOnlyRecordsEveryAnswer(t *testing.T) {
 // not go with CONTRACT_REQUIRE_GO.
 func TestNodeOnlySettings(t *testing.T) {
 	env := func(m map[string]string) func(string) string { return func(k string) string { return m[k] } }
-	s, err := LoadSettings(env(map[string]string{"BD_URL": "http://x", "CONTRACT_NODE_ONLY": "1", "CONTRACT_GOLDEN": "/spec/golden"}))
+	s, err := LoadSettings(env(map[string]string{"ND_URL": "http://x", "CONTRACT_NODE_ONLY": "1", "CONTRACT_GOLDEN": "/spec/golden"}))
 	if err != nil || !s.NodeOnly || s.GoldenDir != "/spec/golden" {
 		t.Fatalf("LoadSettings = %+v, %v", s, err)
 	}
 	for _, bad := range []map[string]string{
-		{"BD_URL": "http://x", "CONTRACT_NODE_ONLY": "1"},
-		{"BD_URL": "http://x", "CONTRACT_NODE_ONLY": "1", "CONTRACT_GOLDEN": "testdata/golden/"},
-		{"BD_URL": "http://x", "CONTRACT_NODE_ONLY": "1", "CONTRACT_GOLDEN": "/g", "CONTRACT_REQUIRE_GO": "1"},
-		{"BD_URL": "http://x", "CONTRACT_NODE_ONLY": "yes", "CONTRACT_GOLDEN": "/g"},
+		{"ND_URL": "http://x", "CONTRACT_NODE_ONLY": "1"},
+		{"ND_URL": "http://x", "CONTRACT_NODE_ONLY": "1", "CONTRACT_GOLDEN": "testdata/golden/"},
+		{"ND_URL": "http://x", "CONTRACT_NODE_ONLY": "1", "CONTRACT_GOLDEN": "/g", "CONTRACT_REQUIRE_GO": "1"},
+		{"ND_URL": "http://x", "CONTRACT_NODE_ONLY": "yes", "CONTRACT_GOLDEN": "/g"},
 	} {
 		if _, err := LoadSettings(env(bad)); err == nil {
 			t.Errorf("LoadSettings(%v) accepted a bad value", bad)

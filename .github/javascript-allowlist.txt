@@ -1,6 +1,6 @@
 # Tracked JavaScript files (.js, .mjs, .cjs, in any case) the repository
 # keeps. Code of the repository is Go or TypeScript; "go run ./cmd/repotool
-# check-js" in betterdesk-server fails on any other JavaScript file.
+# check-js" in neodesk-server fails on any other JavaScript file.
 #
 # One path or glob per line, from the repository root, matched as written;
 # * matches within a folder, ** any number of folders. Each entry has a
@@ -9,13 +9,13 @@
 
 # Runs inside the MeshCentral agent's own JavaScript engine, not in Node or
 # a browser, so it has to be JavaScript.
-betterdesk-server/meshcentral/assets/bettercore.js
+neodesk-server/meshcentral/assets/bettercore.js
 
 # Files of a built web app that the embedding and file serving tests read:
 # a build of the web app is JavaScript.
-betterdesk-server/console/embedfs/testdata/tree/_x/b.js
-betterdesk-server/console/webui/testdata/site/_ui/immutable/chunks/.hidden.js
-betterdesk-server/console/webui/testdata/site/_ui/immutable/chunks/raw.t3st.js
-betterdesk-server/console/webui/testdata/site/_ui/immutable/chunks/UPPER.JS
-betterdesk-server/console/webui/testdata/site/_ui/immutable/entry/start.t3st.js
-betterdesk-server/console/webui/testdata/site/_ui/immutable/nodes/0.t3st.js
+neodesk-server/console/embedfs/testdata/tree/_x/b.js
+neodesk-server/console/webui/testdata/site/_ui/immutable/chunks/.hidden.js
+neodesk-server/console/webui/testdata/site/_ui/immutable/chunks/raw.t3st.js
+neodesk-server/console/webui/testdata/site/_ui/immutable/chunks/UPPER.JS
+neodesk-server/console/webui/testdata/site/_ui/immutable/entry/start.t3st.js
+neodesk-server/console/webui/testdata/site/_ui/immutable/nodes/0.t3st.js

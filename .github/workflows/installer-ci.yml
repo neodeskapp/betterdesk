@@ -6,22 +6,22 @@ on:
     paths:
       - '*.sh'
       - 'install.sh'
-      - 'betterdesk.sh'
-      - 'betterdesk.ps1'
-      - 'betterdesk-docker.sh'
+      - 'neodesk.sh'
+      - 'neodesk.ps1'
+      - 'neodesk-docker.sh'
       - 'scripts/test-go-installer.sh'
       - 'scripts/test-docker-installer.sh'
       - 'scripts/check-supervisor-env.sh'
       - 'scripts/test-windows-installer.ps1'
       - 'scripts/check-go-toolchain-pins.sh'
-      - 'betterdesk-server/go.mod'
+      - 'neodesk-server/go.mod'
       - 'scripts/test-postgresql-hba.sh'
       - 'scripts/test-docker-hardening.sh'
       - 'scripts/docker-latest.sh'
       - 'scripts/test-docker-latest.sh'
-      - 'betterdesk-server/cli/**'
-      - 'betterdesk-server/console/safepath/**'
-      - 'betterdesk-server/console/updater/**'
+      - 'neodesk-server/cli/**'
+      - 'neodesk-server/console/safepath/**'
+      - 'neodesk-server/console/updater/**'
       - 'Dockerfile*'
       - '.dockerignore'
       - 'docker-compose*.yml'
@@ -32,22 +32,22 @@ on:
     paths:
       - '*.sh'
       - 'install.sh'
-      - 'betterdesk.sh'
-      - 'betterdesk.ps1'
-      - 'betterdesk-docker.sh'
+      - 'neodesk.sh'
+      - 'neodesk.ps1'
+      - 'neodesk-docker.sh'
       - 'scripts/test-go-installer.sh'
       - 'scripts/test-docker-installer.sh'
       - 'scripts/check-supervisor-env.sh'
       - 'scripts/test-windows-installer.ps1'
       - 'scripts/check-go-toolchain-pins.sh'
-      - 'betterdesk-server/go.mod'
+      - 'neodesk-server/go.mod'
       - 'scripts/test-postgresql-hba.sh'
       - 'scripts/test-docker-hardening.sh'
       - 'scripts/docker-latest.sh'
       - 'scripts/test-docker-latest.sh'
-      - 'betterdesk-server/cli/**'
-      - 'betterdesk-server/console/safepath/**'
-      - 'betterdesk-server/console/updater/**'
+      - 'neodesk-server/cli/**'
+      - 'neodesk-server/console/safepath/**'
+      - 'neodesk-server/console/updater/**'
       - 'Dockerfile*'
       - '.dockerignore'
       - 'docker-compose*.yml'
@@ -92,8 +92,8 @@ jobs:
             bash -n "$file"
           done < <(printf '%s\n' \
             install.sh \
-            betterdesk.sh \
-            betterdesk-docker.sh \
+            neodesk.sh \
+            neodesk-docker.sh \
             scripts/test-native-installer.sh \
             scripts/test-go-installer.sh \
             scripts/test-docker-installer.sh \
@@ -107,8 +107,8 @@ jobs:
         run: |
           shellcheck --severity=error \
             install.sh \
-            betterdesk.sh \
-            betterdesk-docker.sh \
+            neodesk.sh \
+            neodesk-docker.sh \
             scripts/test-native-installer.sh \
             scripts/test-go-installer.sh \
             scripts/test-docker-installer.sh \
@@ -146,7 +146,7 @@ jobs:
         shell: pwsh
         run: |
           $files = @(
-            "betterdesk.ps1",
+            "neodesk.ps1",
             "scripts/test-windows-installer.ps1"
           )
           foreach ($file in $files) {
@@ -169,13 +169,13 @@ jobs:
     timeout-minutes: 20
     defaults:
       run:
-        working-directory: betterdesk-server
+        working-directory: neodesk-server
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
         with:
-          go-version-file: betterdesk-server/go.mod
-          cache-dependency-path: betterdesk-server/go.sum
+          go-version-file: neodesk-server/go.mod
+          cache-dependency-path: neodesk-server/go.sum
       # The subcommands the installers call (check, env merge, config,
       # reset-password), the path checks and the updater
       - name: Run installer-focused tests
@@ -191,8 +191,8 @@ jobs:
         run: |
           set -euo pipefail
           bash install.sh --help >/dev/null
-          bash betterdesk.sh --help >/dev/null
-          bash betterdesk-docker.sh --help >/dev/null
+          bash neodesk.sh --help >/dev/null
+          bash neodesk-docker.sh --help >/dev/null
 
   compose-static:
     name: Docker Compose validation
@@ -219,7 +219,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      BETTERDESK_IMAGE_TAG: ${{ inputs.image_tag || 'latest' }}
+      NEODESK_IMAGE_TAG: ${{ inputs.image_tag || 'latest' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Verify hardened bind mounts and restart behavior
@@ -231,7 +231,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      BETTERDESK_IMAGE_TAG: ${{ inputs.image_tag || 'latest' }}
+      NEODESK_IMAGE_TAG: ${{ inputs.image_tag || 'latest' }}
       ADMIN_PASSWORD: InstallerSmoke-ChangeMe-9
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -247,8 +247,8 @@ jobs:
             http://127.0.0.1:21121/api/health
           curl --fail --retry 30 --retry-delay 2 --retry-connrefused \
             http://127.0.0.1:5000/health
-          docker compose -f docker-compose.quick.single.yml exec -T -u betterdesk betterdesk \
-            /usr/local/bin/betterdesk-server check \
+          docker compose -f docker-compose.quick.single.yml exec -T -u neodesk neodesk \
+            /usr/local/bin/neodesk-server check \
             --api http://127.0.0.1:21121/api/health \
             --panel http://127.0.0.1:5000/health \
             --port 127.0.0.1:21121

@@ -1,64 +1,64 @@
 package console
 
 import (
-	"github.com/unitronix/betterdesk-server/console/backup"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/activity"
-	authroutes "github.com/unitronix/betterdesk-server/console/routes/auth"
-	"github.com/unitronix/betterdesk-server/console/routes/automation"
-	"github.com/unitronix/betterdesk-server/console/routes/avatars"
-	"github.com/unitronix/betterdesk-server/console/routes/bdapi"
-	"github.com/unitronix/betterdesk-server/console/routes/cdap"
-	"github.com/unitronix/betterdesk-server/console/routes/cdapstudio"
-	"github.com/unitronix/betterdesk-server/console/routes/chat"
-	"github.com/unitronix/betterdesk-server/console/routes/clientbranding"
-	"github.com/unitronix/betterdesk-server/console/routes/commercialization"
-	consoleroutes "github.com/unitronix/betterdesk-server/console/routes/console"
-	"github.com/unitronix/betterdesk-server/console/routes/crossplatform"
-	"github.com/unitronix/betterdesk-server/console/routes/dashboard"
-	"github.com/unitronix/betterdesk-server/console/routes/dataguard"
-	"github.com/unitronix/betterdesk-server/console/routes/desktop"
-	"github.com/unitronix/betterdesk-server/console/routes/devices"
-	"github.com/unitronix/betterdesk-server/console/routes/filetransfer"
-	"github.com/unitronix/betterdesk-server/console/routes/fleet"
-	"github.com/unitronix/betterdesk-server/console/routes/folders"
-	"github.com/unitronix/betterdesk-server/console/routes/generator"
-	"github.com/unitronix/betterdesk-server/console/routes/guest"
-	"github.com/unitronix/betterdesk-server/console/routes/health"
-	i18nroutes "github.com/unitronix/betterdesk-server/console/routes/i18n"
-	"github.com/unitronix/betterdesk-server/console/routes/inventory"
-	"github.com/unitronix/betterdesk-server/console/routes/keys"
-	"github.com/unitronix/betterdesk-server/console/routes/languages"
-	"github.com/unitronix/betterdesk-server/console/routes/meshcentral"
-	"github.com/unitronix/betterdesk-server/console/routes/network"
-	"github.com/unitronix/betterdesk-server/console/routes/onboard"
-	"github.com/unitronix/betterdesk-server/console/routes/organizations"
-	"github.com/unitronix/betterdesk-server/console/routes/pages"
-	"github.com/unitronix/betterdesk-server/console/routes/pairing"
-	"github.com/unitronix/betterdesk-server/console/routes/panelaccess"
-	"github.com/unitronix/betterdesk-server/console/routes/permissions"
-	"github.com/unitronix/betterdesk-server/console/routes/phase45"
-	"github.com/unitronix/betterdesk-server/console/routes/policies"
-	"github.com/unitronix/betterdesk-server/console/routes/registration"
-	"github.com/unitronix/betterdesk-server/console/routes/remote"
-	"github.com/unitronix/betterdesk-server/console/routes/reports"
-	"github.com/unitronix/betterdesk-server/console/routes/resourcecontrol"
-	"github.com/unitronix/betterdesk-server/console/routes/rustdeskapi"
-	"github.com/unitronix/betterdesk-server/console/routes/scaling"
-	"github.com/unitronix/betterdesk-server/console/routes/securityaudit"
-	"github.com/unitronix/betterdesk-server/console/routes/serverattestation"
-	"github.com/unitronix/betterdesk-server/console/routes/servermanagement"
-	"github.com/unitronix/betterdesk-server/console/routes/settings"
-	"github.com/unitronix/betterdesk-server/console/routes/settingsbackup"
-	"github.com/unitronix/betterdesk-server/console/routes/settingsupdates"
-	"github.com/unitronix/betterdesk-server/console/routes/system"
-	"github.com/unitronix/betterdesk-server/console/routes/tenants"
-	"github.com/unitronix/betterdesk-server/console/routes/tickets"
-	"github.com/unitronix/betterdesk-server/console/routes/tokens"
-	"github.com/unitronix/betterdesk-server/console/routes/toolkit"
-	"github.com/unitronix/betterdesk-server/console/routes/trends"
-	"github.com/unitronix/betterdesk-server/console/routes/uishell"
-	"github.com/unitronix/betterdesk-server/console/routes/users"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/activity"
+	authroutes "github.com/neodeskapp/neodesk/neodesk-server/console/routes/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/automation"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/avatars"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/bdapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/cdap"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/cdapstudio"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/chat"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/clientbranding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/commercialization"
+	consoleroutes "github.com/neodeskapp/neodesk/neodesk-server/console/routes/console"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/crossplatform"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/dashboard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/dataguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/desktop"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/devices"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/filetransfer"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/fleet"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/folders"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/generator"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/guest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/health"
+	i18nroutes "github.com/neodeskapp/neodesk/neodesk-server/console/routes/i18n"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/inventory"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/keys"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/languages"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/meshcentral"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/network"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/onboard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/organizations"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/pages"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/pairing"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/panelaccess"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/permissions"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/phase45"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/policies"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/registration"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/remote"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/reports"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/resourcecontrol"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/rustdeskapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/scaling"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/securityaudit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/serverattestation"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/servermanagement"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/settings"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/settingsbackup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/settingsupdates"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/system"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/tenants"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/tickets"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/tokens"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/toolkit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/trends"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/uishell"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/users"
 )
 
 // The route groups of the client API port (API_PORT), on a router of its
@@ -70,7 +70,7 @@ var (
 		rustdeskapi.Register, // routes/rustdesk-api.routes.js (server.js startRustDeskApiServer)
 	}
 	clientAPISharedRoutes = []func(d *kit.Deps){
-		registration.ClientAPI, // routes/registration.routes.js at /api/bd (server.js startRustDeskApiServer)
+		registration.ClientAPI, // routes/registration.routes.js at /api/nd (server.js startRustDeskApiServer)
 	}
 )
 
@@ -80,12 +80,12 @@ var (
 // groups decides between two routes for one address.
 //
 // Groups of the early stage (routes/rustdesk-api.routes.js, then
-// routes/bd-api.routes.js at /api/bd) register on d.Early and go first.
+// routes/bd-api.routes.js at /api/nd) register on d.Early and go first.
 // backups is the console's backup service, which the updater uses too.
 func registerRoutes(d *kit.Deps, backups *backup.Service) {
 	rustdeskapi.Register(d)         // routes/rustdesk-api.routes.js (server.js), early stage
-	bdapi.Register(d.At("/api/bd")) // routes/bd-api.routes.js at /api/bd (server.js), early stage
-	remote.RegisterAgentToken(d)    // routes/bd-api.routes.js at /api/bd (server.js): POST /remote-agent-token, early stage
+	bdapi.Register(d.At("/api/nd")) // routes/bd-api.routes.js at /api/nd (server.js), early stage
+	remote.RegisterAgentToken(d)    // routes/bd-api.routes.js at /api/nd (server.js): POST /remote-agent-token, early stage
 	health.Register(d)              // routes/index.js: GET /health
 	authroutes.Register(d)          // routes/auth.routes.js
 	consoleroutes.Register(d)       // routes/console.routes.js
@@ -107,36 +107,36 @@ func registerRoutes(d *kit.Deps, backups *backup.Service) {
 	remote.Register(d)         // routes/remote.routes.js, with the dev mock of lib/devMockRemote
 	guest.Register(d)          // routes/guest.routes.js
 	i18nroutes.Register(d)     // routes/i18n.routes.js at /api/i18n
-	// routes/dataguard.routes.js at /api/dataguard and at /api/bd
-	// routes/inventory.routes.js at /api/bd (the device routes inventory, telemetry and inventory/:id; the read routes step aside there) and at /api/inventory
-	inventory.Register(d.At("/api/bd"))
+	// routes/dataguard.routes.js at /api/dataguard and at /api/nd
+	// routes/inventory.routes.js at /api/nd (the device routes inventory, telemetry and inventory/:id; the read routes step aside there) and at /api/inventory
+	inventory.Register(d.At("/api/nd"))
 	inventory.Register(d.At("/api/inventory"))
 	// routes/tickets.routes.js at /api/tickets
 	tickets.Register(d.At("/api/tickets"))
-	// routes/activity.routes.js at /api/bd (the device route activity; the read routes step aside there) and at /api/activity
-	activity.Register(d.At("/api/bd"))
+	// routes/activity.routes.js at /api/nd (the device route activity; the read routes step aside there) and at /api/activity
+	activity.Register(d.At("/api/nd"))
 	activity.Register(d.At("/api/activity"))
-	// routes/automation.routes.js at /api/automation and at /api/bd (the device routes commands and commands/:id/result; the panel routes step aside there)
+	// routes/automation.routes.js at /api/automation and at /api/nd (the device routes commands and commands/:id/result; the panel routes step aside there)
 	automation.Register(d.At("/api/automation"))
-	automation.Register(d.At("/api/bd"))
-	// routes/fileTransfer.routes.js at /api/files and at /api/bd, with the device routes file-transfer
+	automation.Register(d.At("/api/nd"))
+	// routes/fileTransfer.routes.js at /api/files and at /api/nd, with the device routes file-transfer
 	filetransfer.Register(d.At("/api/files"))
-	filetransfer.Register(d.At("/api/bd"))
+	filetransfer.Register(d.At("/api/nd"))
 	// routes/network.routes.js at /api/network
 	network.Register(d.At("/api/network"))
-	// routes/dataguard.routes.js at /api/dataguard and at /api/bd, without the device routes dlp-policies and dlp-events
+	// routes/dataguard.routes.js at /api/dataguard and at /api/nd, without the device routes dlp-policies and dlp-events
 	dataguard.Register(d.At("/api/dataguard"))
-	dataguard.Register(d.At("/api/bd"))
+	dataguard.Register(d.At("/api/nd"))
 	trends.Register(d) // routes/trends.routes.js, in front of the reports group
 	// routes/reports.routes.js at /api/reports
 	reports.Register(d.At("/api/reports"))
 	// routes/tenants.routes.js at /api/tenants
 	tenants.Register(d.At("/api/tenants"))
-	// routes/registration.routes.js at the root and at /api/bd: one value for
+	// routes/registration.routes.js at the root and at /api/nd: one value for
 	// both mounts, which share the names of who handled a help request
 	registrationRoutes := registration.New()
 	registrationRoutes.Register(d)
-	registrationRoutes.Register(d.At("/api/bd"))
+	registrationRoutes.Register(d.At("/api/nd"))
 	pages.Register(d)                         // routes/pages.routes.js
 	cdap.Register(d)                          // routes/cdap.routes.js
 	meshcentral.Register(d)                   // routes/meshcentral.routes.js
@@ -145,18 +145,18 @@ func registerRoutes(d *kit.Deps, backups *backup.Service) {
 	desktop.Register(d.At("/api/desktop"))    // routes/desktop.routes.js at /api/desktop
 	organizations.Register(d)                 // routes/organizations.routes.js
 	policies.Register(d)                      // routes/policies.routes.js
-	policies.Register(d.At("/api/bd"))        // its second mount: /api/bd/api/panel/policies/...
+	policies.Register(d.At("/api/nd"))        // its second mount: /api/nd/api/panel/policies/...
 	fleet.Register(d)                         // routes/fleet.routes.js
 	commercialization.Register(d)             // routes/commercialization.routes.js
-	fleet.Register(d.At("/api/bd"))           // its second mount: /api/bd/api/panel/fleet/...
+	fleet.Register(d.At("/api/nd"))           // its second mount: /api/nd/api/panel/fleet/...
 	scaling.Register(d)                       // routes/scaling.routes.js
-	scaling.Register(d.At("/api/bd"))         // routes/scaling.routes.js at /api/bd
+	scaling.Register(d.At("/api/nd"))         // routes/scaling.routes.js at /api/nd
 	crossplatform.Register(d)                 // routes/cross-platform.routes.js
 	toolkit.Register(d)                       // routes/toolkit.routes.js
 	securityaudit.Register(d)                 // routes/security-audit.routes.js
 	languages.Register(d)                     // routes/languages.routes.js
 	resourcecontrol.Register(d)               // routes/resource-control.routes.js
-	resourcecontrol.Register(d.At("/api/bd")) // its second mount: /api/bd/api/panel/resource-control/...
+	resourcecontrol.Register(d.At("/api/nd")) // its second mount: /api/nd/api/panel/resource-control/...
 	system.Register(d)                        // routes/system.routes.js
 	cdapstudio.Register(d)                    // routes/cdap-studio.routes.js
 	permissions.Register(d)                   // routes/permissions.routes.js

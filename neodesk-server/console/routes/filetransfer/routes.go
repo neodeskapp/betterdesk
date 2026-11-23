@@ -3,7 +3,7 @@
 // cancel it, and download the file of a completed one; a device, with its
 // token instead of a session, announces a transfer, sends its chunks and
 // reads how far its transfer is (device.go). The old console mounted the
-// group at /api/files and at /api/bd; both are kept.
+// group at /api/files and at /api/nd; both are kept.
 //
 // The transfers themselves are in package console/filetransfer, one
 // registry for both sides.
@@ -16,12 +16,12 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/unitronix/betterdesk-server/console/filetransfer"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/routes/internal/reqquery"
-	"github.com/unitronix/betterdesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/filetransfer"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/reqquery"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 )
 
 type handlers struct {

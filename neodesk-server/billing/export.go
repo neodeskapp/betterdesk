@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 // ReportExportRow is a flattened work report for export.

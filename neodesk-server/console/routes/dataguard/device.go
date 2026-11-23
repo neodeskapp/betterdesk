@@ -4,8 +4,8 @@ import (
 	"math"
 	"net/http"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // The two routes of the desktop agent, which takes its device token

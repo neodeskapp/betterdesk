@@ -17,7 +17,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/updater"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/updater"
 )
 
 const (
@@ -28,7 +28,7 @@ const (
 // fakeBinary is a binary that "prints" its -version line (fakeVersion
 // reads it back).
 func fakeBinary(version, commit string) []byte {
-	return []byte("#!/bin/sh\necho 'betterdesk-server " + version + " (built 2026-11-18, commit " + commit + ")'\n")
+	return []byte("#!/bin/sh\necho 'neodesk-server " + version + " (built 2026-11-18, commit " + commit + ")'\n")
 }
 
 var reFakeVersion = regexp.MustCompile(`echo '([^']*)'`)
@@ -65,13 +65,13 @@ func newReleaseFiles(t *testing.T) releaseFiles {
 	sum := sha256.Sum256(binary)
 	manifest, err := json.Marshal(updater.Manifest{
 		SchemaVersion: 1, Product: updater.Product, Version: "3.6.0", Channel: updater.ChannelOf(updater.BranchStable),
-		Created: "2026-11-18T10:00:00Z", Owner: "trybetterdesk", Repo: "betterdesk", Branch: updater.BranchStable, SHA: releaseCommit,
+		Created: "2026-11-18T10:00:00Z", Owner: "neodeskapp", Repo: "neodesk", Branch: updater.BranchStable, SHA: releaseCommit,
 		Files: []updater.ManifestFile{{Path: asset, SHA256: hex.EncodeToString(sum[:]), Size: int64(len(binary))}},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	const download = "github.com/trybetterdesk/betterdesk/releases/download/v3.6.0/"
+	const download = "github.com/neodeskapp/neodesk/releases/download/v3.6.0/"
 	files := releaseFiles{download + "manifest.json": manifest, download + asset: binary}
 	type ghAsset struct {
 		Name string `json:"name"`
@@ -83,13 +83,13 @@ func newReleaseFiles(t *testing.T) releaseFiles {
 		assets = append(assets, ghAsset{Name: name, Size: len(files[download+name]), URL: "https://" + download + name})
 	}
 	release, err := json.Marshal(map[string]any{
-		"tag_name": "v3.6.0", "name": "BetterDesk 3.6.0", "draft": false, "prerelease": false,
-		"published_at": "2026-11-18T10:00:00Z", "author": map[string]string{"login": "unitronix"}, "assets": assets,
+		"tag_name": "v3.6.0", "name": "NeoDesk 3.6.0", "draft": false, "prerelease": false,
+		"published_at": "2026-11-18T10:00:00Z", "author": map[string]string{"login": "neodeskapp"}, "assets": assets,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	files["api.github.com/repos/trybetterdesk/betterdesk/releases/latest"] = release
+	files["api.github.com/repos/neodeskapp/neodesk/releases/latest"] = release
 	return files
 }
 
@@ -99,7 +99,7 @@ func newReleaseFiles(t *testing.T) releaseFiles {
 // by Options.ServerDB.
 func TestUpdateKeepsTheDataBackup(t *testing.T) {
 	root := t.TempDir()
-	binary := filepath.Join(root, "bin", "betterdesk-server")
+	binary := filepath.Join(root, "bin", "neodesk-server")
 	if err := os.MkdirAll(filepath.Dir(binary), 0o755); err != nil {
 		t.Fatal(err)
 	}

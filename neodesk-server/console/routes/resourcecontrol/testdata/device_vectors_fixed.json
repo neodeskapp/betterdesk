@@ -2,7 +2,7 @@
  {
   "vector": 11,
   "bug": "DV1",
-  "request": "GET /api/bd/resource-policy?device_id=device-a",
+  "request": "GET /api/nd/resource-policy?device_id=device-a",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -18,7 +18,7 @@
  {
   "vector": 12,
   "bug": "DV1",
-  "request": "GET /api/bd/resource-policy?device_id=device-a",
+  "request": "GET /api/nd/resource-policy?device_id=device-a",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -34,7 +34,7 @@
  {
   "vector": 14,
   "bug": "DV1",
-  "request": "GET /api/bd/resource-policy?device_id=device-a",
+  "request": "GET /api/nd/resource-policy?device_id=device-a",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -50,7 +50,7 @@
  {
   "vector": 15,
   "bug": "DV1",
-  "request": "GET /api/bd/resource-policy?device_id=device-a",
+  "request": "GET /api/nd/resource-policy?device_id=device-a",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -66,7 +66,7 @@
  {
   "vector": 16,
   "bug": "DV1",
-  "request": "GET /api/bd/resource-policy?device_id=device-c",
+  "request": "GET /api/nd/resource-policy?device_id=device-c",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -82,7 +82,7 @@
  {
   "vector": 17,
   "bug": "DV1",
-  "request": "GET /api/bd/resource-policy?device_id[]=device-c",
+  "request": "GET /api/nd/resource-policy?device_id[]=device-c",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -98,7 +98,7 @@
  {
   "vector": 18,
   "bug": "DV1",
-  "request": "GET /api/bd/resource-policy?device_id[]=a&device_id[]=b",
+  "request": "GET /api/nd/resource-policy?device_id[]=a&device_id[]=b",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -114,7 +114,7 @@
  {
   "vector": 19,
   "bug": "DV1",
-  "request": "GET /api/bd/resource-policy?device_id[x]=device-c",
+  "request": "GET /api/nd/resource-policy?device_id[x]=device-c",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -130,7 +130,7 @@
  {
   "vector": 20,
   "bug": "DV1",
-  "request": "GET /api/bd/resource-policy?device_id[toString]=x",
+  "request": "GET /api/nd/resource-policy?device_id[toString]=x",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -146,7 +146,7 @@
  {
   "vector": 21,
   "bug": "DV1",
-  "request": "GET /api/bd/resource-policy?device_id=%2E%2E",
+  "request": "GET /api/nd/resource-policy?device_id=%2E%2E",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -162,7 +162,7 @@
  {
   "vector": 22,
   "bug": "DV1",
-  "request": "GET /api/bd/resource-policy?device_id=ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "request": "GET /api/nd/resource-policy?device_id=ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -178,7 +178,7 @@
  {
   "vector": 34,
   "bug": "DV1",
-  "request": "GET /api/bd/api/bd/resource-policy?device_id=device-a",
+  "request": "GET /api/nd/api/nd/resource-policy?device_id=device-a",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -194,7 +194,7 @@
  {
   "vector": 35,
   "bug": "DV1",
-  "request": "GET /api/bd/api/bd/resource-policy?device_id=device-a",
+  "request": "GET /api/nd/api/nd/resource-policy?device_id=device-a",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -210,7 +210,7 @@
  {
   "vector": 37,
   "bug": "DV1",
-  "request": "GET /api/bd/api/bd/resource-policy?device_id=device-a",
+  "request": "GET /api/nd/api/nd/resource-policy?device_id=device-a",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -226,7 +226,7 @@
  {
   "vector": 38,
   "bug": "DV1",
-  "request": "GET /api/bd/api/bd/resource-policy?device_id=device-a",
+  "request": "GET /api/nd/api/nd/resource-policy?device_id=device-a",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -242,7 +242,7 @@
  {
   "vector": 39,
   "bug": "DV1",
-  "request": "GET /api/bd/api/bd/resource-policy?device_id=device-c",
+  "request": "GET /api/nd/api/nd/resource-policy?device_id=device-c",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -258,7 +258,7 @@
  {
   "vector": 40,
   "bug": "DV1",
-  "request": "GET /api/bd/api/bd/resource-policy?device_id[]=device-c",
+  "request": "GET /api/nd/api/nd/resource-policy?device_id[]=device-c",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -274,7 +274,7 @@
  {
   "vector": 41,
   "bug": "DV1",
-  "request": "GET /api/bd/api/bd/resource-policy?device_id[]=a&device_id[]=b",
+  "request": "GET /api/nd/api/nd/resource-policy?device_id[]=a&device_id[]=b",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -290,7 +290,7 @@
  {
   "vector": 42,
   "bug": "DV1",
-  "request": "GET /api/bd/api/bd/resource-policy?device_id[x]=device-c",
+  "request": "GET /api/nd/api/nd/resource-policy?device_id[x]=device-c",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -306,7 +306,7 @@
  {
   "vector": 43,
   "bug": "DV1",
-  "request": "GET /api/bd/api/bd/resource-policy?device_id[toString]=x",
+  "request": "GET /api/nd/api/nd/resource-policy?device_id[toString]=x",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -322,7 +322,7 @@
  {
   "vector": 44,
   "bug": "DV1",
-  "request": "GET /api/bd/api/bd/resource-policy?device_id=%2E%2E",
+  "request": "GET /api/nd/api/nd/resource-policy?device_id=%2E%2E",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",
@@ -338,7 +338,7 @@
  {
   "vector": 45,
   "bug": "DV1",
-  "request": "GET /api/bd/api/bd/resource-policy?device_id=ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "request": "GET /api/nd/api/nd/resource-policy?device_id=ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
   "status": 200,
   "type": "application/json; charset=utf-8",
   "body": "{\"usb\":{\"mode\":\"block\"},\"quotas\":[]}",

@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // The flow test speaks the RustDesk client API the way a desktop client
@@ -33,7 +33,7 @@ import (
 // header and no request body goes into it. It runs against a fresh test
 // instance:
 //
-//	BD_URL=http://bdgo-rd2:5000 RDFLOW_DB=sqlite go test -tags rdflow -count=1 -run TestClientAPIFlow ./console/routes/rustdeskapi/
+//	ND_URL=http://bdgo-rd2:5000 RDFLOW_DB=sqlite go test -tags rdflow -count=1 -run TestClientAPIFlow ./console/routes/rustdeskapi/
 //
 // RDAPI_RECORD_FIXED=1 writes the answers of the steps a bug fix changed
 // (differences_test.go) instead of comparing, and CONTRACT_REQUIRE_GO=1

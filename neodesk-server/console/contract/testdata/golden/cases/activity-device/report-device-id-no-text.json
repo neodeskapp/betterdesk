@@ -2,7 +2,7 @@
  "id": "activity-device/report-device-id-no-text",
  "request": {
   "method": "POST",
-  "path": "/api/bd/activity",
+  "path": "/api/nd/activity",
   "body": {
    "device_id": {
     "toString": 1

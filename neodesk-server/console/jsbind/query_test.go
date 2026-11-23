@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // TestQueryAsTheOldParserReadIt replays testdata/query.json: what qs made

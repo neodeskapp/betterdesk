@@ -5,9 +5,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/config"
-	"github.com/unitronix/betterdesk-server/db"
-	pb "github.com/unitronix/betterdesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
 )
 
 // The tests below write a live peer from a connection's goroutine while

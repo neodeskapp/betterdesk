@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
 )
 
 // guardedDial connects the font download to a host the outbound guard

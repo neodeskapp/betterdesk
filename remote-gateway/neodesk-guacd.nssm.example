@@ -3,7 +3,7 @@
 ; the installer. Never expose this service beyond loopback.
 Application=guacd.exe
 AppParameters=-b 127.0.0.1 -p 4822 -f
-AppDirectory=%ProgramData%\BetterDesk\remote-gateway
+AppDirectory=%ProgramData%\NeoDesk\remote-gateway
 AppEnvironmentExtra=GUACD_ADDRESS=127.0.0.1:4822
 Start=SERVICE_AUTO_START
 ObjectName=NT AUTHORITY\NetworkService

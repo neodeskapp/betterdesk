@@ -13,16 +13,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/auditlog"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/limits"
-	"github.com/unitronix/betterdesk-server/console/middleware"
-	"github.com/unitronix/betterdesk-server/console/servermgmt"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/servermgmt"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 var roleIDs = map[string]int64{"admin": 1, "super_admin": 2, "server_admin": 3, "global_admin": 4, "operator": 5, "viewer": 6, "guest_issuer": 7, "pro": 8}
@@ -74,7 +74,7 @@ func newSite(t *testing.T, db *store.DB) *site {
 		}
 	}
 	env := map[string]string{
-		"BETTERDESK_PATH": root + "/server", "BETTERDESK_CONSOLE_PATH": root + "/console", "HOME": root + "/home", "TMPDIR": root + "/tmp",
+		"NEODESK_PATH": root + "/server", "NEODESK_CONSOLE_PATH": root + "/console", "HOME": root + "/home", "TMPDIR": root + "/tmp",
 	}
 	run := &fakeRun{}
 	health := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -135,7 +135,7 @@ func (s *site) call(cookie, method, target, body string, header ...string) *http
 func (s *site) signIn(role string) string {
 	s.t.Helper()
 	pair, _, _ := strings.Cut(s.call("", "GET", "/signin/"+role, "").Header().Get("Set-Cookie"), ";")
-	if !strings.HasPrefix(pair, "bd.sid=") {
+	if !strings.HasPrefix(pair, "nd.sid=") {
 		s.t.Fatalf("sign in as %s set the cookie %q", role, pair)
 	}
 	return pair
@@ -304,9 +304,9 @@ func TestServiceRoutes(t *testing.T) {
 		t.Error("a command that could not start wrote an audit entry")
 	}
 
-	s.run.stdout, s.run.code, s.run.err = "betterdesk-server.service loaded active running BetterDesk\nsshd.service loaded active running SSH\nhbbs.service loaded inactive dead\n", 0, nil
+	s.run.stdout, s.run.code, s.run.err = "neodesk-server.service loaded active running NeoDesk\nsshd.service loaded active running SSH\nhbbs.service loaded inactive dead\n", 0, nil
 	rec = s.call(admin, "GET", "/api/server-management/services", "")
-	want := `{"success":true,"platform":"linux","services":[{"name":"betterdesk-server.service","load":"loaded","active":"active","sub":"running","description":"BetterDesk","state":"active","status":"running"},{"name":"hbbs.service","load":"loaded","active":"inactive","sub":"dead","description":"","state":"inactive","status":"dead"}]}`
+	want := `{"success":true,"platform":"linux","services":[{"name":"neodesk-server.service","load":"loaded","active":"active","sub":"running","description":"NeoDesk","state":"active","status":"running"},{"name":"hbbs.service","load":"loaded","active":"inactive","sub":"dead","description":"","state":"inactive","status":"dead"}]}`
 	if strings.TrimSpace(rec.Body.String()) != want {
 		t.Errorf("services %s", rec.Body.String())
 	}
@@ -319,26 +319,26 @@ func TestRestartSelf(t *testing.T) {
 	s := newSite(t, db)
 	exits := 0
 	svc := servermgmt.New(servermgmt.Options{GOOS: "linux", Run: s.run.run, RestartSelf: func() bool { exits++; return true }})
-	for _, name := range []string{"betterdesk-server", "betterdesk-server.service"} {
+	for _, name := range []string{"neodesk-server", "neodesk-server.service"} {
 		res, err := svc.ControlService(context.Background(), name, "restart")
 		if err != nil || res.ExitCode != 0 || res.Stdout != "" {
 			t.Errorf("%s: %+v %v", name, res, err)
 		}
 	}
-	for _, other := range [][2]string{{"betterdesk-server", "stop"}, {"betterdesk-console", "restart"}, {"hbbs", "restart"}} {
+	for _, other := range [][2]string{{"neodesk-server", "stop"}, {"neodesk-console", "restart"}, {"hbbs", "restart"}} {
 		if _, err := svc.ControlService(context.Background(), other[0], other[1]); err != nil {
 			t.Error(err)
 		}
 	}
 	windows := servermgmt.New(servermgmt.Options{GOOS: "windows", Run: s.run.run, RestartSelf: func() bool { exits++; return true }})
-	if _, err := windows.ControlService(context.Background(), "BetterDeskServer", "restart"); err != nil {
+	if _, err := windows.ControlService(context.Background(), "NeoDeskServer", "restart"); err != nil {
 		t.Error(err)
 	}
 	if exits != 3 || len(s.run.calls) != 3 {
 		t.Errorf("exits %d, commands %q", exits, s.run.calls)
 	}
 	none := servermgmt.New(servermgmt.Options{GOOS: "linux", Run: s.run.run, RestartSelf: func() bool { return false }})
-	if _, err := none.ControlService(context.Background(), "betterdesk-server", "restart"); err != nil || len(s.run.calls) != 4 {
+	if _, err := none.ControlService(context.Background(), "neodesk-server", "restart"); err != nil || len(s.run.calls) != 4 {
 		t.Errorf("without a supervisor the restart runs systemctl: %v %q", err, s.run.calls)
 	}
 }
@@ -369,9 +369,9 @@ func TestInfo(t *testing.T) {
 	}
 
 	// The server's folder as the update routes name it: RUSTDESK_PATH, as
-	// the Docker image sets it, else /opt/betterdesk.
-	delete(s.env, "BETTERDESK_PATH")
-	for value, folder := range map[string]string{s.root + "/rd": s.root + "/rd", "": "/opt/betterdesk"} {
+	// the Docker image sets it, else /opt/neodesk.
+	delete(s.env, "NEODESK_PATH")
+	for value, folder := range map[string]string{s.root + "/rd": s.root + "/rd", "": "/opt/neodesk"} {
 		s.env["RUSTDESK_PATH"] = value
 		got := decode(t, s.call(s.signIn("admin"), "GET", "/api/server-management/info", "").Body.String())
 		if read := got["fileRoots"].([]any); read[0] != folder {

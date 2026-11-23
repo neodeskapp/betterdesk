@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 )
 
 // A backup before an install is a folder DATA_DIR/backups/pre-update-<time>
@@ -23,7 +23,7 @@ import (
 // beside it, named in the manifest's dataBackup.
 
 // backupKind marks a manifest this updater wrote.
-const backupKind = "betterdesk-server-binary"
+const backupKind = "neodesk-server-binary"
 
 // BackupManifest is manifest.json of a backup this updater wrote. The
 // first five fields are those of the old console's manifests, so the list
@@ -305,7 +305,7 @@ func (s *Service) createBackup(ctx context.Context, paths BinaryPaths, minRollba
 	return dir, backedUp, nil
 }
 
-var reDataBackupName = regexp.MustCompile(`^betterdesk-backup-[0-9-]+\.tar\.gz$`)
+var reDataBackupName = regexp.MustCompile(`^neodesk-backup-[0-9-]+\.tar\.gz$`)
 
 // errNodeBackup is the refusal of a backup of the old console (DECISIONS
 // A29).

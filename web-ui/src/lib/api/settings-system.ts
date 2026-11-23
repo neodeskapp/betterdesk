@@ -154,7 +154,7 @@ export async function downloadBackup(): Promise<{ blob: Blob; filename: string }
 	}
 	const blob = await res.blob();
 	const match = (res.headers.get('Content-Disposition') ?? '').match(/filename="?([^";]+)"?/i);
-	const filename = match?.[1] || `betterdesk-backup-${new Date().toISOString().slice(0, 10)}.tar.gz`;
+	const filename = match?.[1] || `neodesk-backup-${new Date().toISOString().slice(0, 10)}.tar.gz`;
 	return { blob, filename };
 }
 

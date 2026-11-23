@@ -17,10 +17,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 )
 
-const checkUsage = "Usage: betterdesk-server check [--api URL] [--panel URL] [--proxy URL] [--port HOST:PORT] [--timeout-ms MS] [--insecure]"
+const checkUsage = "Usage: neodesk-server check [--api URL] [--panel URL] [--proxy URL] [--port HOST:PORT] [--timeout-ms MS] [--insecure]"
 
 // checkOptions are what the protocol check reads besides Env. Tests
 // replace them.
@@ -252,7 +252,7 @@ func checkEndpoint(raw string, cfg checkConfig, opts checkOptions) (checkResult,
 		result.err = err.Error()
 		return result, nil
 	}
-	req.Header.Set("User-Agent", "BetterDesk-Installer-Protocol-Check/1")
+	req.Header.Set("User-Agent", "NeoDesk-Installer-Protocol-Check/1")
 	res, err := client.Do(req)
 	if err == nil {
 		_, err = io.Copy(io.Discard, res.Body)

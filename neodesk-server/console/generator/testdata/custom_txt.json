@@ -14,7 +14,7 @@
  },
  {
   "opts": "{\"host\":\"h\",\"api\":\"http://h:21114\",\"key\":\"k\"}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"h\",\"relay-server\":\"h:21117\",\"api-server\":\"http://h:21114\",\"key\":\"k\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"h\",\"relay-server\":\"h:21117\",\"api-server\":\"http://h:21114\",\"key\":\"k\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6IlkiLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiaHR0cDovL2g6MjExMTQiLCJjdXN0b20tcmVuZGV6dm91cy1zZXJ2ZXIiOiJoIiwiaGlkZS1oZWxwLWNhcmRzIjoiWSIsImhpZGUtc2VydmVyLXNldHRpbmdzIjoiWSIsImtleSI6ImsiLCJyZWxheS1zZXJ2ZXIiOiJoOjIxMTE3In19",
   "seed": "TI71qvagUNJZft0N+L2oaGvJjmiZywxOujvTA6xg8QI=",
   "signed": {
@@ -27,7 +27,7 @@
  },
  {
   "opts": "{\"host\":\" h \",\"relay\":\"\",\"api\":5,\"key\":null,\"disableSettings\":\"y\",\"appName\":\"  \"}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"h\",\"relay-server\":\"h:21117\",\"api-server\":\"5\",\"key\":\"\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"h\",\"relay-server\":\"h:21117\",\"api-server\":\"5\",\"key\":\"\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6IlkiLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiNSIsImN1c3RvbS1yZW5kZXp2b3VzLXNlcnZlciI6ImgiLCJoaWRlLWhlbHAtY2FyZHMiOiJZIiwiaGlkZS1zZXJ2ZXItc2V0dGluZ3MiOiJZIiwia2V5IjoiIiwicmVsYXktc2VydmVyIjoiaDoyMTExNyJ9fQ==",
   "seed": "TI71qvagUNJZft0N+L2oaGvJjmiZywxOujvTA6xg8QI",
   "signed": {
@@ -40,7 +40,7 @@
  },
  {
   "opts": "{\"host\":\"h\",\"disableSettings\":\"N\"}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"h\",\"relay-server\":\"h:21117\",\"api-server\":\"\",\"key\":\"\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"h\",\"relay-server\":\"h:21117\",\"api-server\":\"\",\"key\":\"\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6Ik4iLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiIiwiY3VzdG9tLXJlbmRlenZvdXMtc2VydmVyIjoiaCIsImhpZGUtaGVscC1jYXJkcyI6IlkiLCJoaWRlLXNlcnZlci1zZXR0aW5ncyI6IlkiLCJrZXkiOiIiLCJyZWxheS1zZXJ2ZXIiOiJoOjIxMTE3In19",
   "seed": " TI71qvagUNJZft0N+L2oaGvJjmiZywxOujvTA6xg8QI=\n",
   "signed": {
@@ -53,7 +53,7 @@
  },
  {
   "opts": "{\"host\":\"h\",\"disableSettings\":false}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"h\",\"relay-server\":\"h:21117\",\"api-server\":\"\",\"key\":\"\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"h\",\"relay-server\":\"h:21117\",\"api-server\":\"\",\"key\":\"\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6Ik4iLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiIiwiY3VzdG9tLXJlbmRlenZvdXMtc2VydmVyIjoiaCIsImhpZGUtaGVscC1jYXJkcyI6IlkiLCJoaWRlLXNlcnZlci1zZXR0aW5ncyI6IlkiLCJrZXkiOiIiLCJyZWxheS1zZXJ2ZXIiOiJoOjIxMTE3In19",
   "seed": "TI71qvagUNJZft0N-L2oaGvJjmiZywxOujvTA6xg8QI=",
   "signed": {
@@ -66,7 +66,7 @@
  },
  {
   "opts": "{\"host\":\"h\",\"disableSettings\":\"Y\"}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"h\",\"relay-server\":\"h:21117\",\"api-server\":\"\",\"key\":\"\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"h\",\"relay-server\":\"h:21117\",\"api-server\":\"\",\"key\":\"\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6IlkiLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiIiwiY3VzdG9tLXJlbmRlenZvdXMtc2VydmVyIjoiaCIsImhpZGUtaGVscC1jYXJkcyI6IlkiLCJoaWRlLXNlcnZlci1zZXR0aW5ncyI6IlkiLCJrZXkiOiIiLCJyZWxheS1zZXJ2ZXIiOiJoOjIxMTE3In19",
   "seed": "TI71qvagUNJZft0N+L2o aGvJjmiZywxOujvTA6xg8QI=",
   "signed": {
@@ -209,7 +209,7 @@
  },
  {
   "opts": "{\"appName\":0,\"host\":\"a\\udc00b\",\"relay\":\"<b>html</b>&\",\"api\":52865,\"key\":{\"apiServer\":\"data:text/plain;base64,AAAA\",\"public_key\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"companyName\":\"de\"},\"disableSettings\":\"N\"}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"a\\udc00b\",\"relay-server\":\"<b>html<:21117\",\"api-server\":\"52865\",\"key\":\"[object Object]\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"a\\udc00b\",\"relay-server\":\"<b>html<:21117\",\"api-server\":\"52865\",\"key\":\"[object Object]\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6Ik4iLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiNTI4NjUiLCJjdXN0b20tcmVuZGV6dm91cy1zZXJ2ZXIiOiJhXHVkYzAwYiIsImhpZGUtaGVscC1jYXJkcyI6IlkiLCJoaWRlLXNlcnZlci1zZXR0aW5ncyI6IlkiLCJrZXkiOiJbb2JqZWN0IE9iamVjdF0iLCJyZWxheS1zZXJ2ZXIiOiI8Yj5odG1sPDoyMTExNyJ9fQ==",
   "seed": "1/Y6JHOCH+b/Y8xKHfTX7fRdFcBpWh2qD1bzXJdklH8",
   "signed": {
@@ -313,7 +313,7 @@
  },
  {
   "opts": "{\"appName\":\"\",\"host\":{\"shortText\":\"http://exa mple.com\"},\"relay\":\"UPPER.example\",\"api\":\"de\",\"key\":0.5,\"disableSettings\":false}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"[object Object]\",\"relay-server\":\"UPPER.example:21117\",\"api-server\":\"de\",\"key\":\"0.5\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"[object Object]\",\"relay-server\":\"UPPER.example:21117\",\"api-server\":\"de\",\"key\":\"0.5\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6Ik4iLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiZGUiLCJjdXN0b20tcmVuZGV6dm91cy1zZXJ2ZXIiOiJbb2JqZWN0IE9iamVjdF0iLCJoaWRlLWhlbHAtY2FyZHMiOiJZIiwiaGlkZS1zZXJ2ZXItc2V0dGluZ3MiOiJZIiwia2V5IjoiMC41IiwicmVsYXktc2VydmVyIjoiVVBQRVIuZXhhbXBsZToyMTExNyJ9fQ==",
   "seed": " Kj5imSqrgMDI9uXpZn93jRCrClTQuoabBiF0qGy5DyE=\n",
   "signed": {
@@ -898,7 +898,7 @@
  },
  {
   "opts": "{\"appName\":[],\"host\":\"https://Desk.Example.com:8443/path\",\"relay\":476,\"api\":\"https://Desk.Example.com:8443/path\",\"key\":[\"example.com/help\",\" Acme \"],\"disableSettings\":1}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"https://Desk.Example.com:8443/path\",\"relay-server\":\"476:21117\",\"api-server\":\"https://Desk.Example.com:8443/path\",\"key\":\"example.com/help, Acme\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"https://Desk.Example.com:8443/path\",\"relay-server\":\"476:21117\",\"api-server\":\"https://Desk.Example.com:8443/path\",\"key\":\"example.com/help, Acme\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6Ik4iLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiaHR0cHM6Ly9EZXNrLkV4YW1wbGUuY29tOjg0NDMvcGF0aCIsImN1c3RvbS1yZW5kZXp2b3VzLXNlcnZlciI6Imh0dHBzOi8vRGVzay5FeGFtcGxlLmNvbTo4NDQzL3BhdGgiLCJoaWRlLWhlbHAtY2FyZHMiOiJZIiwiaGlkZS1zZXJ2ZXItc2V0dGluZ3MiOiJZIiwia2V5IjoiZXhhbXBsZS5jb20vaGVscCwgQWNtZSIsInJlbGF5LXNlcnZlciI6IjQ3NjoyMTExNyJ9fQ==",
   "seed": "N7IkH5FfqXynCRd+O3y8ZrDP9voWJynXIpUqlMRM/uw===",
   "signed": {
@@ -924,7 +924,7 @@
  },
  {
   "opts": "{\"appName\":\"\",\"host\":\"﻿bom\",\"relay\":\"https://\",\"api\":\"de\",\"key\":\"http://exa mple.com\",\"disableSettings\":false}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"bom\",\"relay-server\":\":21117\",\"api-server\":\"de\",\"key\":\"http://exa mple.com\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"bom\",\"relay-server\":\":21117\",\"api-server\":\"de\",\"key\":\"http://exa mple.com\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6Ik4iLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiZGUiLCJjdXN0b20tcmVuZGV6dm91cy1zZXJ2ZXIiOiJib20iLCJoaWRlLWhlbHAtY2FyZHMiOiJZIiwiaGlkZS1zZXJ2ZXItc2V0dGluZ3MiOiJZIiwia2V5IjoiaHR0cDovL2V4YSBtcGxlLmNvbSIsInJlbGF5LXNlcnZlciI6IjoyMTExNyJ9fQ==",
   "seed": "vxu3+ZgSG3OJpOQ9rv7zo8G+/2xpjQx3gk58lmntCv8=",
   "signed": {
@@ -1561,7 +1561,7 @@
  },
  {
   "opts": "{\"appName\":\" \",\"host\":\"red\",\"relay\":{\"autoStart\":21114,\"contact_email\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"installService\":\"https://example.com/x?y=1#z\",\"apiServer\":\"\\ud83d\",\"hide_product_type\":\"data:image/png;base64,AAAA\",\"enrollment_token\":\" Acme \",\"accentColor\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀\"},\"api\":\"data:image/svg+xml;base64,PHN2Zz4=\",\"key\":\"Žluťoučký kůň\",\"disableSettings\":\"y\"}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"red\",\"relay-server\":\"[object Object]:21117\",\"api-server\":\"data:image/svg+xml;base64,PHN2Zz4=\",\"key\":\"Žluťoučký kůň\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"red\",\"relay-server\":\"[object Object]:21117\",\"api-server\":\"data:image/svg+xml;base64,PHN2Zz4=\",\"key\":\"Žluťoučký kůň\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6IlkiLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWno0PSIsImN1c3RvbS1yZW5kZXp2b3VzLXNlcnZlciI6InJlZCIsImhpZGUtaGVscC1jYXJkcyI6IlkiLCJoaWRlLXNlcnZlci1zZXR0aW5ncyI6IlkiLCJrZXkiOiLFvWx1xaVvdcSNa8O9IGvFr8WIIiwicmVsYXktc2VydmVyIjoiW29iamVjdCBPYmplY3RdOjIxMTE3In19",
   "seed": "tfYNClUma0cFQBlVS1U+PUuushL3v5u9r5mqOuYblE4=",
   "signed": {
@@ -1639,14 +1639,14 @@
  },
  {
   "opts": "{\"appName\":false,\"host\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"relay\":[{\"short_text\":{\"a\":1},\"disableSettings\":97493,\"default_lang\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀\"},\"quote\\\"back\\\\slash\"],\"api\":\"Acme Support\",\"key\":\"Žluťoučký kůň\",\"disableSettings\":\"__undefined__\"}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"relay-server\":\"[object Object],quote\\\"back\\\\slash:21117\",\"api-server\":\"Acme Support\",\"key\":\"Žluťoučký kůň\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"relay-server\":\"[object Object],quote\\\"back\\\\slash:21117\",\"api-server\":\"Acme Support\",\"key\":\"Žluťoučký kůň\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6IlkiLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiQWNtZSBTdXBwb3J0IiwiY3VzdG9tLXJlbmRlenZvdXMtc2VydmVyIjoi8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iA8J+YgPCfmIDwn5iAIiwiaGlkZS1oZWxwLWNhcmRzIjoiWSIsImhpZGUtc2VydmVyLXNldHRpbmdzIjoiWSIsImtleSI6IsW9bHXFpW91xI1rw70ga8WvxYgiLCJyZWxheS1zZXJ2ZXIiOiJbb2JqZWN0IE9iamVjdF0scXVvdGVcImJhY2tcXHNsYXNoOjIxMTE3In19",
   "seed": "tfYNClUma0cFQBlVS1U+PUuushL3v5u9r5mqOuYb",
   "signed": {
    "threw": "custom_client_signing_seed_invalid"
   },
   "sign": {
-   "content": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"api-server\":\"Acme Support\",\"custom-rendezvous-server\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"hide-help-cards\":\"Y\",\"hide-server-settings\":\"Y\",\"key\":\"Žluťoučký kůň\",\"relay-server\":\"[object Object],quote\\\"back\\\\slash:21117\"}}",
+   "content": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"api-server\":\"Acme Support\",\"custom-rendezvous-server\":\"😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀\",\"hide-help-cards\":\"Y\",\"hide-server-settings\":\"Y\",\"key\":\"Žluťoučký kůň\",\"relay-server\":\"[object Object],quote\\\"back\\\\slash:21117\"}}",
    "signed": false
   }
  },
@@ -1899,7 +1899,7 @@
  },
  {
   "opts": "{\"appName\":0,\"host\":\"a\\udc00b\",\"relay\":\"Straße\",\"api\":\"xx\",\"key\":\"http://[::1]:80\",\"disableSettings\":true}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"a\\udc00b\",\"relay-server\":\"Straße:21117\",\"api-server\":\"xx\",\"key\":\"http://[::1]:80\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"a\\udc00b\",\"relay-server\":\"Straße:21117\",\"api-server\":\"xx\",\"key\":\"http://[::1]:80\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6IlkiLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoieHgiLCJjdXN0b20tcmVuZGV6dm91cy1zZXJ2ZXIiOiJhXHVkYzAwYiIsImhpZGUtaGVscC1jYXJkcyI6IlkiLCJoaWRlLXNlcnZlci1zZXR0aW5ncyI6IlkiLCJrZXkiOiJodHRwOi8vWzo6MV06ODAiLCJyZWxheS1zZXJ2ZXIiOiJTdHJhw59lOjIxMTE3In19",
   "seed": "97b5+g1JIQDwgc6ZsUu8wDrPQZVKrrMM/khGMIYDWlE===",
   "signed": {
@@ -2224,7 +2224,7 @@
  },
  {
   "opts": "{\"appName\":\" \",\"host\":\"http://[::1]:80\",\"relay\":{\"primary_color\":\"https://Desk.Example.com:8443/path\",\"useHttps\":\"xn--bcher-kva.example\",\"company_name\":\"tab\\there\",\"default_lang\":15762},\"api\":\" Acme \",\"key\":\"de\",\"disableSettings\":\"Y\"}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"http://[::1]:80\",\"relay-server\":\"[object Object]:21117\",\"api-server\":\"Acme\",\"key\":\"de\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"http://[::1]:80\",\"relay-server\":\"[object Object]:21117\",\"api-server\":\"Acme\",\"key\":\"de\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6IlkiLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiQWNtZSIsImN1c3RvbS1yZW5kZXp2b3VzLXNlcnZlciI6Imh0dHA6Ly9bOjoxXTo4MCIsImhpZGUtaGVscC1jYXJkcyI6IlkiLCJoaWRlLXNlcnZlci1zZXR0aW5ncyI6IlkiLCJrZXkiOiJkZSIsInJlbGF5LXNlcnZlciI6IltvYmplY3QgT2JqZWN0XToyMTExNyJ9fQ==",
   "seed": " kV0aMDTU4nYBKcsLUEjAofKX+yWsBikjmjH3jnnMuMI=\n",
   "signed": {
@@ -2328,7 +2328,7 @@
  },
  {
   "opts": "{\"appName\":\"__undefined__\",\"host\":\"de\",\"relay\":\"Łódź & Warszawa\",\"api\":{\"0\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀\",\"server_host\":\"example.com/help\",\"contact_phone\":\"xn--bcher-kva.example\",\"installService\":625,\"contact_email\":6470},\"key\":\"#12345\",\"disableSettings\":\"N\"}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"de\",\"relay-server\":\"Łódź & Warszawa:21117\",\"api-server\":\"[object Object]\",\"key\":\"#12345\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"de\",\"relay-server\":\"Łódź & Warszawa:21117\",\"api-server\":\"[object Object]\",\"key\":\"#12345\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6Ik4iLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiW29iamVjdCBPYmplY3RdIiwiY3VzdG9tLXJlbmRlenZvdXMtc2VydmVyIjoiZGUiLCJoaWRlLWhlbHAtY2FyZHMiOiJZIiwiaGlkZS1zZXJ2ZXItc2V0dGluZ3MiOiJZIiwia2V5IjoiIzEyMzQ1IiwicmVsYXktc2VydmVyIjoixYHDs2TFuiAmIFdhcnN6YXdhOjIxMTE3In19",
   "seed": "2O7wH87ASEihvvbhVA_hXp_wyNynCNzjPkcqnYE2QJE=",
   "signed": {
@@ -2341,7 +2341,7 @@
  },
  {
   "opts": "{\"appName\":\"\",\"host\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"relay\":9027.714285714286,\"api\":\"data:image/png,raw\",\"key\":\"﻿bom\",\"disableSettings\":\"N\"}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"relay-server\":\"9027.714285714286:21117\",\"api-server\":\"data:image/png,raw\",\"key\":\"bom\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"N\",\"override-settings\":{\"custom-rendezvous-server\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"relay-server\":\"9027.714285714286:21117\",\"api-server\":\"data:image/png,raw\",\"key\":\"bom\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6Ik4iLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiZGF0YTppbWFnZS9wbmcscmF3IiwiY3VzdG9tLXJlbmRlenZvdXMtc2VydmVyIjoiYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWEiLCJoaWRlLWhlbHAtY2FyZHMiOiJZIiwiaGlkZS1zZXJ2ZXItc2V0dGluZ3MiOiJZIiwia2V5IjoiYm9tIiwicmVsYXktc2VydmVyIjoiOTAyNy43MTQyODU3MTQyODY6MjExMTcifX0=",
   "seed": "2O7wH87ASEihvvbhVA/h Xp/wyNynCNzjPkcqnYE2QJE=",
   "signed": {
@@ -3498,7 +3498,7 @@
  },
  {
   "opts": "{\"appName\":\"\",\"host\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀\",\"relay\":\"-leading\",\"api\":\"UPPER.example\",\"key\":\"https://\",\"disableSettings\":\"__undefined__\"}",
-  "json": "{\"app-name\":\"BetterDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀\",\"relay-server\":\"-leading:21117\",\"api-server\":\"UPPER.example\",\"key\":\"https://\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
+  "json": "{\"app-name\":\"NeoDesk Support Agent\",\"conn-type\":\"incoming\",\"disable-settings\":\"Y\",\"override-settings\":{\"custom-rendezvous-server\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx😀\",\"relay-server\":\"-leading:21117\",\"api-server\":\"UPPER.example\",\"key\":\"https://\",\"hide-server-settings\":\"Y\",\"hide-help-cards\":\"Y\"}}",
   "message": "eyJhcHAtbmFtZSI6IkJldHRlckRlc2sgU3VwcG9ydCBBZ2VudCIsImNvbm4tdHlwZSI6ImluY29taW5nIiwiZGlzYWJsZS1zZXR0aW5ncyI6IlkiLCJvdmVycmlkZS1zZXR0aW5ncyI6eyJhcGktc2VydmVyIjoiVVBQRVIuZXhhbXBsZSIsImN1c3RvbS1yZW5kZXp2b3VzLXNlcnZlciI6Inh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHjwn5iAIiwiaGlkZS1oZWxwLWNhcmRzIjoiWSIsImhpZGUtc2VydmVyLXNldHRpbmdzIjoiWSIsImtleSI6Imh0dHBzOi8vIiwicmVsYXktc2VydmVyIjoiLWxlYWRpbmc6MjExMTcifX0=",
   "seed": " 5Okow86ZisY272l0i55i9QyMRtvJb9l9ZqnLMKeJpKA=\n",
   "signed": {

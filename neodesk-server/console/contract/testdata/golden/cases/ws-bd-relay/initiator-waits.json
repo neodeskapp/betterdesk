@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/initiator-waits",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-relay?role=initiator&session=%7Brelay2%7D&token=%7Bsecret%3Ainitiator_token2%7D",
+  "path": "/ws/nd-relay?role=initiator&session=%7Brelay2%7D&token=%7Bsecret%3Ainitiator_token2%7D",
   "notes": [
    "websocket init3, own origin"
   ]

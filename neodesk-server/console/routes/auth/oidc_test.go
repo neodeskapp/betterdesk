@@ -87,7 +87,7 @@ func (w *world) provider(user string) *provider {
 // holdsCode gives the agent the cookie that ties a single sign-on to the
 // browser, as the callback sets it for the one-time code.
 func (a *agent) holdsCode(code string) *agent {
-	a.cookies["bd.oidc"] = code
+	a.cookies["nd.oidc"] = code
 	return a
 }
 
@@ -141,7 +141,7 @@ func TestSingleSignOn(t *testing.T) {
 		if res.status != http.StatusFound || res.header.Get("Location") != "/devices?tab=1" {
 			t.Fatalf("session: %d %q %s", res.status, res.header.Get("Location"), res.body)
 		}
-		if res.cookie("bd.guest") != clearedGuest || !strings.HasPrefix(res.cookie("bd.sid"), "bd.sid=s%3A") {
+		if res.cookie("nd.guest") != clearedGuest || !strings.HasPrefix(res.cookie("nd.sid"), "nd.sid=s%3A") {
 			t.Errorf("cookies of the session route: %q", res.cookies())
 		}
 		if a.sessionID() == before {
@@ -330,7 +330,7 @@ func TestSingleSignOnRefusals(t *testing.T) {
 // oidcCookieLine is the Set-Cookie line that ties a single sign-on to the
 // browser.
 func oidcCookieLine(value string) string {
-	return "bd.oidc=" + value + "; Max-Age=600; Path=/api; HttpOnly; SameSite=Lax"
+	return "nd.oidc=" + value + "; Max-Age=600; Path=/api; HttpOnly; SameSite=Lax"
 }
 
 // A single sign-on counts only in the browser that started it: authorize
@@ -344,7 +344,7 @@ func TestSingleSignOnNeedsTheBrowserThatStartedIt(t *testing.T) {
 		res := attacker.get("/api/auth/oidc/authorize")
 		location, _ := url.Parse(res.header.Get("Location"))
 		state := location.Query().Get("state")
-		if got := res.cookie("bd.oidc"); got != oidcCookieLine(state) {
+		if got := res.cookie("nd.oidc"); got != oidcCookieLine(state) {
 			t.Errorf("the cookie of authorize: %q", got)
 		}
 		// The attacker's callback address opened in another browser
@@ -356,18 +356,18 @@ func TestSingleSignOnNeedsTheBrowserThatStartedIt(t *testing.T) {
 		res = attacker.get("/api/auth/oidc/authorize")
 		location, _ = url.Parse(res.header.Get("Location"))
 		state = location.Query().Get("state")
-		victim.cookies["bd.oidc"] = "state-of-another-sign-in"
+		victim.cookies["nd.oidc"] = "state-of-another-sign-in"
 		if res = victim.get("/api/auth/oidc/callback?code=p&state=" + state); res.header.Get("Location") != "/login?error=oidc_invalid" {
 			t.Errorf("callback with the cookie of another state: %d %q", res.status, res.header.Get("Location"))
 		}
-		delete(victim.cookies, "bd.oidc")
+		delete(victim.cookies, "nd.oidc")
 		// The attacker passes the callback and sends the session address on
 		res = attacker.get("/api/auth/oidc/authorize")
 		location, _ = url.Parse(res.header.Get("Location"))
 		res = attacker.get("/api/auth/oidc/callback?code=p&state=" + location.Query().Get("state"))
 		session := res.header.Get("Location")
 		code := strings.TrimPrefix(session, "/api/auth/oidc/session?code=")
-		if res.status != http.StatusFound || code == session || res.cookie("bd.oidc") != oidcCookieLine(code) {
+		if res.status != http.StatusFound || code == session || res.cookie("nd.oidc") != oidcCookieLine(code) {
 			t.Fatalf("callback in the attacker's browser: %d %q %q", res.status, session, res.cookies())
 		}
 		exchanges := len(w.api.seen("POST /api/auth/oidc/exchange"))
@@ -387,7 +387,7 @@ func TestSingleSignOnNeedsTheBrowserThatStartedIt(t *testing.T) {
 		if res.status != http.StatusFound || res.header.Get("Location") != "/" {
 			t.Errorf("session in the right browser: %d %q", res.status, res.header.Get("Location"))
 		}
-		if got := res.cookie("bd.oidc"); got != "bd.oidc=; Path=/api; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax" {
+		if got := res.cookie("nd.oidc"); got != "nd.oidc=; Path=/api; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax" {
 			t.Errorf("the session route left the cookie: %q", got)
 		}
 
@@ -395,12 +395,12 @@ func TestSingleSignOnNeedsTheBrowserThatStartedIt(t *testing.T) {
 		// callback, and the exchange names the state the browser holds
 		w.api.json("POST /api/auth/oidc/exchange", 200, `{"token":"t","username":"mallory","state":"state-x"}`)
 		direct := w.agent()
-		direct.cookies["bd.oidc"] = "state-x"
+		direct.cookies["nd.oidc"] = "state-x"
 		if res := direct.get("/api/auth/oidc/session?code=c"); res.header.Get("Location") != "/" {
 			t.Errorf("the state of the exchange: %d %q", res.status, res.header.Get("Location"))
 		}
 		other := w.agent()
-		other.cookies["bd.oidc"] = "state-y"
+		other.cookies["nd.oidc"] = "state-y"
 		if res := other.get("/api/auth/oidc/session?code=c"); res.header.Get("Location") != "/login?error=oidc_invalid" {
 			t.Errorf("another state than the exchange's: %d %q", res.status, res.header.Get("Location"))
 		}

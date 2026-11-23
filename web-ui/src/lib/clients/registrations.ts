@@ -13,7 +13,7 @@ import type {
 } from '#lib/api/registrations.ts';
 import { parseDate } from '#lib/i18n/format.ts';
 
-/** The console's own queue: BetterDesk clients on the local network */
+/** The console's own queue: NeoDesk clients on the local network */
 export const SOURCE_LAN = 'registration';
 /** The Go server's queue: RustDesk clients and mesh agents */
 export const SOURCE_ENROLLMENT = 'enrollment';

@@ -3,8 +3,8 @@ package signal
 import (
 	"log"
 
-	"github.com/unitronix/betterdesk-server/db"
-	"github.com/unitronix/betterdesk-server/relay"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/relay"
 )
 
 // revokeBannedPeerAccess removes the access state that this package can revoke

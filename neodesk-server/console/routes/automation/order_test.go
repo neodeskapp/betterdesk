@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // Rules and commands made in the same second keep an order in their lists
@@ -38,7 +38,7 @@ func TestListsOfTheSameSecondKeepTheirOrder(t *testing.T) {
 		}{
 			{replay.Request{Role: "admin", Path: "/api/automation/rules"}, "3,2,1"},
 			{replay.Request{Role: "admin", Path: "/api/automation/commands"}, "3,2,1"},
-			{replay.Request{Path: "/api/bd/commands", Headers: map[string]string{"Authorization": "Bearer tok-device-a"}}, "1,2,3"},
+			{replay.Request{Path: "/api/nd/commands", Headers: map[string]string{"Authorization": "Bearer tok-device-a"}}, "1,2,3"},
 		} {
 			got := w.Do(list.req)
 			if got.Status != 200 || order(got.Body) != list.want {

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "module": "betterdesk-rdp-vnc-gateway",
+  "module": "neodesk-rdp-vnc-gateway",
   "status": "pinned-source-license-review",
   "update_policy": "ci-verified-pr-only",
   "runtime_enabled": false,
@@ -49,11 +49,11 @@
     },
     "vnc": {
       "status": "blocked",
-      "reason": "The LibVNCServer dependency is GPL-2.0 and does not satisfy the BetterDesk permissive-license policy."
+      "reason": "The LibVNCServer dependency is GPL-2.0 and does not satisfy the NeoDesk permissive-license policy."
     }
   },
   "runtime_artifact": {
-    "source": "Pinned upstream build produced by BetterDesk CI",
+    "source": "Pinned upstream build produced by NeoDesk CI",
     "version": "",
     "sha256": "",
     "sbom": "",

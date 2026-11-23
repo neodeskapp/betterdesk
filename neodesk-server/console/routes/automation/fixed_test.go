@@ -1,7 +1,7 @@
 package automation_test
 
 import (
-	"github.com/unitronix/betterdesk-server/console/routes/internal/replay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/replay"
 )
 
 // panelFixes are the steps of testdata/node_*.json that the bug fixes
@@ -10,12 +10,12 @@ var panelFixes, deviceFixes replay.Fixes
 
 // AU14: another device's command is not found.
 var _ = deviceFixes.Add("AU14", map[string]replay.Fix{
-	` POST /api/bd/commands/5/result {"status":"completed"}`: {NodeStatus: 403, Status: 404, Answer: `{"error":"Command not found"}`},
-	` POST /api/bd/commands/5/result {"status":"failed"}`:    {NodeStatus: 403, Status: 404, Answer: `{"error":"Command not found"}`},
-	` POST /api/bd/commands/5/result {"status":"running"}`:   {NodeStatus: 403, Status: 404, Answer: `{"error":"Command not found"}`},
-	` POST /api/bd/commands/6/result {"status":"running"}`:   {NodeStatus: 403, Status: 404, Answer: `{"error":"Command not found"}`},
-	` POST /api/bd/commands/7/result {"status":"running"}`:   {NodeStatus: 403, Status: 404, Answer: `{"error":"Command not found"}`},
-	` POST /api/bd/commands/8/result {"status":"running"}`:   {NodeStatus: 403, Status: 404, Answer: `{"error":"Command not found"}`},
+	` POST /api/nd/commands/5/result {"status":"completed"}`: {NodeStatus: 403, Status: 404, Answer: `{"error":"Command not found"}`},
+	` POST /api/nd/commands/5/result {"status":"failed"}`:    {NodeStatus: 403, Status: 404, Answer: `{"error":"Command not found"}`},
+	` POST /api/nd/commands/5/result {"status":"running"}`:   {NodeStatus: 403, Status: 404, Answer: `{"error":"Command not found"}`},
+	` POST /api/nd/commands/6/result {"status":"running"}`:   {NodeStatus: 403, Status: 404, Answer: `{"error":"Command not found"}`},
+	` POST /api/nd/commands/7/result {"status":"running"}`:   {NodeStatus: 403, Status: 404, Answer: `{"error":"Command not found"}`},
+	` POST /api/nd/commands/8/result {"status":"running"}`:   {NodeStatus: 403, Status: 404, Answer: `{"error":"Command not found"}`},
 })
 
 // AU6: a filter of the alert history and the command list is one text, acknowledged is true or
@@ -1053,10 +1053,10 @@ var _ = panelFixes.Add("AU9", map[string]replay.Fix{
 })
 
 var _ = deviceFixes.Add("AU9", map[string]replay.Fix{
-	` POST /api/bd/commands/2147483648/result {"status":"running"}`:           {Dialect: "postgres", Status: 404, Answer: `{"error":"Command not found"}`},
-	` POST /api/bd/commands/9007199254740993/result {"status":"running"}`:     {Dialect: "postgres", Status: 404, Answer: `{"error":"Command not found"}`},
-	` POST /api/bd/commands/99999999999999999999/result {"status":"running"}`: {Dialect: "postgres", Status: 404, Answer: `{"error":"Command not found"}`},
-	` POST /api/bd/commands/10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000/result {"status":"running"}`: {Dialect: "postgres", Status: 404, Answer: `{"error":"Command not found"}`},
+	` POST /api/nd/commands/2147483648/result {"status":"running"}`:           {Dialect: "postgres", Status: 404, Answer: `{"error":"Command not found"}`},
+	` POST /api/nd/commands/9007199254740993/result {"status":"running"}`:     {Dialect: "postgres", Status: 404, Answer: `{"error":"Command not found"}`},
+	` POST /api/nd/commands/99999999999999999999/result {"status":"running"}`: {Dialect: "postgres", Status: 404, Answer: `{"error":"Command not found"}`},
+	` POST /api/nd/commands/10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000/result {"status":"running"}`: {Dialect: "postgres", Status: 404, Answer: `{"error":"Command not found"}`},
 })
 
 // AU13: an agent reports on its command only while it waits or runs, and a result that is no
@@ -1064,8 +1064,8 @@ var _ = deviceFixes.Add("AU9", map[string]replay.Fix{
 // stored String() of the result, so a member named toString failed with 500 and left the row
 // as it was. After writes what Node's request left.
 var _ = deviceFixes.Add("AU13", map[string]replay.Fix{
-	` POST /api/bd/commands/2/result {"status":"running","result":{"toString":1}}`:   {Status: 200, Answer: `{"success":true}`, After: replay.Write("UPDATE remote_commands SET result = '[object Object]' WHERE id = 2")},
-	` POST /api/bd/commands/2/result {"status":"running","result":[{"toString":1}]}`: {Status: 200, Answer: `{"success":true}`, After: replay.Write("UPDATE remote_commands SET result = '[object Object]' WHERE id = 2")},
+	` POST /api/nd/commands/2/result {"status":"running","result":{"toString":1}}`:   {Status: 200, Answer: `{"success":true}`, After: replay.Write("UPDATE remote_commands SET result = '[object Object]' WHERE id = 2")},
+	` POST /api/nd/commands/2/result {"status":"running","result":[{"toString":1}]}`: {Status: 200, Answer: `{"success":true}`, After: replay.Write("UPDATE remote_commands SET result = '[object Object]' WHERE id = 2")},
 })
 
 // EM14: a rule's notify_emails is plain addresses separated by commas; a line break, a group, a

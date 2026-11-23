@@ -8,7 +8,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/unitronix/betterdesk-server/console/safepath"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/safepath"
 )
 
 // uploadNameAllowed checks a name below a folder of an archive

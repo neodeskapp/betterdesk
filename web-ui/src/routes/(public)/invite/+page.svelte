@@ -7,7 +7,7 @@
   The server says which organization the code is for, or that it cannot
   be used (unknown, used, expired or revoked look the same). A usable one
   gets a form: username, password, password again. Redeeming makes a
-  sign-in for the BetterDesk client that exists only in that organization:
+  sign-in for the NeoDesk client that exists only in that organization:
   the client then shows the organization's shared address book; it cannot
   sign in to the console. Someone signed in to the console is told that
   the new sign-in is separate from their console account. Without a code
@@ -40,7 +40,7 @@
 	import { createForm, FormError } from '#lib/ui/form.svelte.ts';
 
 	/** The code survives a reload of this tab; it is gone with the tab */
-	const KEY = 'bd.invitation';
+	const KEY = 'nd.invitation';
 	const USERNAME = /^[A-Za-z0-9._@-]{3,64}$/;
 
 	type Phase = 'loading' | 'ask' | 'form' | 'invalid' | 'failed' | 'done';

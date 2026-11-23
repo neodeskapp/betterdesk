@@ -5,11 +5,11 @@ package contract_test
 import (
 	"net/url"
 
-	"github.com/unitronix/betterdesk-server/console/contract"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 )
 
 // Data guard: the policy and event routes people use, at both addresses
-// the group is mounted at, /api/dataguard and /api/bd, and at the end of
+// the group is mounted at, /api/dataguard and /api/nd, and at the end of
 // each the two device routes (dlp-policies, dlp-events). These take a
 // device token, which the suite has none of: the headers of a case are
 // written into its golden. So their cases show what comes before the
@@ -22,7 +22,7 @@ func init() {
 	var cases []contract.Case
 	event := map[string]any{"event_source": "usb", "event_type": "violation", "details": map[string]any{"path": "E:\\"}}
 	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
-	for _, mount := range []struct{ name, path string }{{"dataguard", "/api/dataguard"}, {"bd", "/api/bd"}} {
+	for _, mount := range []struct{ name, path string }{{"dataguard", "/api/dataguard"}, {"bd", "/api/nd"}} {
 		policy := "policy_" + mount.name
 		second := "second_" + mount.name
 		third := "third_" + mount.name
@@ -106,7 +106,7 @@ func init() {
 			contract.Case{Name: at("list-after-deletes"), Path: mount.path + "/policies"},
 
 			// The device routes. The CSRF gate lets a write without a session
-			// through below /api/bd/ and checks every other write.
+			// through below /api/nd/ and checks every other write.
 			contract.Case{Name: at("device-policies-without-token"), Path: mount.path + "/dlp-policies"},
 			contract.Case{Name: at("device-policies-unknown-token"), Path: mount.path + "/dlp-policies", Headers: unknown},
 			contract.Case{Name: at("device-policies-device-id-alone"), Path: mount.path + "/dlp-policies", Headers: map[string]string{"X-Device-Id": "900100001"}},

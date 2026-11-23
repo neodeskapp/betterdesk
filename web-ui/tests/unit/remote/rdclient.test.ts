@@ -2,7 +2,7 @@
  * The edge between the viewer and the remote client: the client's modules
  * load once per page, the dev mock device's module loads only when the
  * viewer data has the mock on (the server sets it only with
- * BD_DEV_MOCK_REMOTE=1 and ?mock=1), and the transport picks the client.
+ * ND_DEV_MOCK_REMOTE=1 and ?mock=1), and the transport picks the client.
  * The client modules are stand-ins that record what was made.
  */
 import { beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';

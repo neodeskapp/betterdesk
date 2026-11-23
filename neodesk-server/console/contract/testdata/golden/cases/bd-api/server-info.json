@@ -2,7 +2,7 @@
  "id": "bd-api/server-info",
  "request": {
   "method": "GET",
-  "path": "/api/bd/server-info"
+  "path": "/api/nd/server-info"
  },
  "recordings": 2,
  "answers": [
@@ -42,13 +42,13 @@
     "kind": "json",
     "json": {
      "appearance_contract": {
-      "endpoint": "/api/bd/appearance",
+      "endpoint": "/api/nd/appearance",
       "revision": "<volatile>",
       "version": "2.0"
      },
      "ok": true,
-     "panel_name": "BetterDesk",
-     "product": "betterdesk-panel",
+     "panel_name": "NeoDesk",
+     "product": "neodesk-panel",
      "version": "<version>"
     }
    }
@@ -78,7 +78,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
@@ -97,13 +97,13 @@
     "kind": "json",
     "json": {
      "appearance_contract": {
-      "endpoint": "/api/bd/appearance",
+      "endpoint": "/api/nd/appearance",
       "revision": "<volatile>",
       "version": "2.0"
      },
      "ok": true,
-     "panel_name": "BetterDesk",
-     "product": "betterdesk-panel",
+     "panel_name": "NeoDesk",
+     "product": "neodesk-panel",
      "version": "<version>"
     }
    }

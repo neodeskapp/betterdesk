@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 const (
@@ -45,7 +45,7 @@ func enrollmentProofAlreadyVerified(r *http.Request, deviceID string) bool {
 // device token, and vice versa.
 func enrollmentProofPayload(method, path, deviceID, publicKey, timestamp, nonce string) []byte {
 	return fmt.Appendf(nil,
-		"bd-enrollment-v1\n%s\n%s\n%s\n%s\n%s\n%s",
+		"nd-enrollment-v1\n%s\n%s\n%s\n%s\n%s\n%s",
 		method, path, deviceID, publicKey, timestamp, nonce,
 	)
 }
@@ -56,9 +56,9 @@ func enrollmentProofPayload(method, path, deviceID, publicKey, timestamp, nonce 
 // possession of the public_key it is binding, which is sufficient in open mode
 // where admission itself is intentionally unrestricted.
 func (s *Server) verifyEnrollmentDeviceProof(r *http.Request, deviceID, incomingPublicKey string) error {
-	timestamp := strings.TrimSpace(r.Header.Get("X-BD-Enrollment-Timestamp"))
-	nonce := strings.TrimSpace(r.Header.Get("X-BD-Enrollment-Nonce"))
-	signature := strings.TrimSpace(r.Header.Get("X-BD-Enrollment-Signature"))
+	timestamp := strings.TrimSpace(r.Header.Get("X-ND-Enrollment-Timestamp"))
+	nonce := strings.TrimSpace(r.Header.Get("X-ND-Enrollment-Nonce"))
+	signature := strings.TrimSpace(r.Header.Get("X-ND-Enrollment-Signature"))
 	if timestamp == "" || nonce == "" || signature == "" {
 		return fmt.Errorf("missing enrollment proof headers")
 	}
@@ -201,9 +201,9 @@ func enrollmentProofProvided(r *http.Request) bool {
 	if r == nil {
 		return false
 	}
-	return strings.TrimSpace(r.Header.Get("X-BD-Enrollment-Timestamp")) != "" ||
-		strings.TrimSpace(r.Header.Get("X-BD-Enrollment-Nonce")) != "" ||
-		strings.TrimSpace(r.Header.Get("X-BD-Enrollment-Signature")) != ""
+	return strings.TrimSpace(r.Header.Get("X-ND-Enrollment-Timestamp")) != "" ||
+		strings.TrimSpace(r.Header.Get("X-ND-Enrollment-Nonce")) != "" ||
+		strings.TrimSpace(r.Header.Get("X-ND-Enrollment-Signature")) != ""
 }
 
 // hasEnrollmentCredential accepts a valid device/enrollment token only when

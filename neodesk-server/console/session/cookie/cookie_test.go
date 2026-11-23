@@ -132,12 +132,12 @@ func TestFormat(t *testing.T) {
 func TestSetAndClear(t *testing.T) {
 	w := httptest.NewRecorder()
 	Set(w, "a", "1", Attributes{Path: "/"})
-	Clear(w, "bd.sid", Attributes{})
+	Clear(w, "nd.sid", Attributes{})
 	Clear(w, "__csrf", Attributes{Path: "/", HTTPOnly: true, Secure: true, SameSite: "lax"})
 	got := w.Header().Values("Set-Cookie")
 	want := []string{
 		"a=1; Path=/",
-		"bd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+		"nd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
 		"__csrf=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=Lax",
 	}
 	if len(got) != len(want) {

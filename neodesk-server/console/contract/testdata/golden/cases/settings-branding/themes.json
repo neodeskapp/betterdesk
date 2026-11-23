@@ -67,7 +67,7 @@
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
-     "bd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],
     "vary": "Accept-Encoding",
     "x-content-type-options": "nosniff",
@@ -107,9 +107,9 @@
         "textPrimary": "#e6edf3",
         "textSecondary": "#8b949e"
        },
-       "description": "BetterDesk Server Management",
+       "description": "NeoDesk Server Management",
        "id": "default",
-       "name": "BetterDesk Dark"
+       "name": "NeoDesk Dark"
       },
       {
        "colors": {
@@ -167,9 +167,9 @@
         "textPrimary": "#1f2328",
         "textSecondary": "#656d76"
        },
-       "description": "BetterDesk Server Management",
+       "description": "NeoDesk Server Management",
        "id": "light",
-       "name": "BetterDesk Light"
+       "name": "NeoDesk Light"
       }
      ],
      "success": true

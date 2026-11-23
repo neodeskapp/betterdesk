@@ -7,9 +7,9 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/console/ssrfguard"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ssrfguard"
 )
 
 // What the generator routes do to a profile around ValidateBranding, and
@@ -122,9 +122,9 @@ func (s *Service) FinalizeSupportBranding(ctx context.Context, input any) *goapi
 	branding.Set("use_https", useHTTPS)
 	branding.Set("public_key", pubKey)
 	branding.Set("server_key", pubKey)
-	appName := jsTrim(jsString(or(or(branding.Get("app_name"), branding.Get("company_name")), "BetterDesk Support Agent")))
+	appName := jsTrim(jsString(or(or(branding.Get("app_name"), branding.Get("company_name")), "NeoDesk Support Agent")))
 	if appName == "" {
-		appName = "BetterDesk Support Agent"
+		appName = "NeoDesk Support Agent"
 	}
 	branding.Set("app_name", appName)
 	branding.Set("company_name", jsTrim(jsString(or(branding.Get("company_name"), appName))))

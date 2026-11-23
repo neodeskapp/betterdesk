@@ -2,7 +2,7 @@
  "id": "ws-bd-relay/target-told",
  "request": {
   "method": "GET",
-  "path": "/ws/bd-relay",
+  "path": "/ws/nd-relay",
   "notes": [
    "websocket tgt, own origin",
    "websocket wait for the close"

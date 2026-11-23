@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/crypto/peervault"
-	"github.com/unitronix/betterdesk-server/db"
+	"github.com/neodeskapp/neodesk/neodesk-server/crypto/peervault"
+	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
 func TestStripSecretsFromOrgAddressBook(t *testing.T) {

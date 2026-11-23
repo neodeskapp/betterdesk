@@ -293,11 +293,11 @@ func TestLoginRedirectURL(t *testing.T) {
 		{"a first visit gets the way back but no expired notice",
 			requestFor("GET", "/devices?open=1", nil), nil, "/login?return=%2Fdevices%3Fopen%3D1"},
 		{"a browser that still sends a session cookie was signed out",
-			requestFor("GET", "/devices?open=1", map[string]string{"Cookie": "theme=x; bd.sid=s%3Aabc.def"}), nil,
+			requestFor("GET", "/devices?open=1", map[string]string{"Cookie": "theme=x; nd.sid=s%3Aabc.def"}), nil,
 			"/login?expired=1&return=%2Fdevices%3Fopen%3D1"},
 		{"HEAD keeps the way back", requestFor("HEAD", "/devices", nil), nil, "/login?return=%2Fdevices"},
 		{"a form post gets no return", requestFor("POST", "/devices?open=1", nil), nil, "/login"},
-		{"a form post with an ended session", requestFor("POST", "/form", map[string]string{"Cookie": "betterdesk.sid=x"}), nil, "/login?expired=1"},
+		{"a form post with an ended session", requestFor("POST", "/form", map[string]string{"Cookie": "neodesk.sid=x"}), nil, "/login?expired=1"},
 		{"an unsafe path gets no return", requestFor("GET", "/x", nil), &evil, "/login"},
 		{"an explicit return path wins over the request URL", requestFor("GET", "/devices?open=1", nil), &app, "/login?return=%2Fapp"},
 		{"an explicit return path also counts for a post", requestFor("POST", "/devices", nil), &app, "/login?return=%2Fapp"},
@@ -318,15 +318,15 @@ func TestLoginRedirectURL(t *testing.T) {
 
 func TestHadSessionCookie(t *testing.T) {
 	cases := map[string]bool{
-		"theme=x; bd.sid=s%3Aabc.def": true,
-		"betterdesk.sid=s%3Aabc":      true,
-		"bd.sid":                      true,
-		" \tbd.sid =x":                true,
-		"a=1;bd.sid=2":                true,
-		"xbd.sid=1":                   false,
-		"bd.sidx=1":                   false,
-		"a=bd.sid":                    false,
-		"BD.SID=1":                    false,
+		"theme=x; nd.sid=s%3Aabc.def": true,
+		"neodesk.sid=s%3Aabc":         true,
+		"nd.sid":                      true,
+		" \tnd.sid =x":                true,
+		"a=1;nd.sid=2":                true,
+		"xnd.sid=1":                   false,
+		"nd.sidx=1":                   false,
+		"a=nd.sid":                    false,
+		"ND.SID=1":                    false,
 		"":                            false,
 	}
 	for cookie, want := range cases {
@@ -337,7 +337,7 @@ func TestHadSessionCookie(t *testing.T) {
 	}
 	two := requestFor("GET", "/", nil)
 	two.Header.Add("Cookie", "a=1")
-	two.Header.Add("Cookie", "bd.sid=2")
+	two.Header.Add("Cookie", "nd.sid=2")
 	if !HadSessionCookie(two) {
 		t.Error("a session cookie in a second Cookie header is not seen")
 	}

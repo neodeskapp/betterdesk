@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 // The vectors are fixed recordings of the Node console (see
@@ -338,7 +338,7 @@ func newVectorService(t *testing.T, linux bool, envPath string, api http.Handler
 		EnvPath: envPath,
 		Docker:  docker,
 		Getenv: func(name string) string {
-			if name == "BETTERDESK_DOCKER_LAYOUT" {
+			if name == "NEODESK_DOCKER_LAYOUT" {
 				return "split"
 			}
 			return ""

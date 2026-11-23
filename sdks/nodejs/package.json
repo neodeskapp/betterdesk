@@ -1,7 +1,7 @@
 {
-  "name": "betterdesk-cdap",
+  "name": "neodesk-cdap",
   "version": "1.0.0",
-  "description": "Node.js SDK for BetterDesk CDAP (Connected Device Automation Protocol)",
+  "description": "Node.js SDK for NeoDesk CDAP (Connected Device Automation Protocol)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -24,7 +24,7 @@
     "prepack": "npm run build",
     "test": "npm run build && tsc -p tsconfig.test.json && node --test test/sdk.test.mts"
   },
-  "keywords": ["betterdesk", "cdap", "iot", "scada", "bridge", "remote-management"],
+  "keywords": ["neodesk", "cdap", "iot", "scada", "bridge", "remote-management"],
   "license": "AGPL-3.0",
   "dependencies": {
     "ws": "^8.18.0"

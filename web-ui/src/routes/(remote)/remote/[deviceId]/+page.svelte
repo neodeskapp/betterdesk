@@ -5,8 +5,8 @@
   for rt_ targets), a guest link (?guest= / ?t= or its cookie) or a mesh
   share (?mesh_share=); GET /api/remote/viewer/<id> decides and gives the
   page its data. Keeps ?transport=, ?panel=files, #add=<id>, the
-  BroadcastChannel "betterdesk-remote" and, in development with
-  BD_DEV_MOCK_REMOTE=1, ?mock=1&scenario=.
+  BroadcastChannel "neodesk-remote" and, in development with
+  ND_DEV_MOCK_REMOTE=1, ?mock=1&scenario=.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';

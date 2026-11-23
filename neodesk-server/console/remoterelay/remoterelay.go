@@ -1,8 +1,8 @@
-// Package remoterelay is the remote desktop relay between the BetterDesk
+// Package remoterelay is the remote desktop relay between the NeoDesk
 // agent and the viewer in the browser (services/remoteRelay.js of the old
 // console): the agent's socket /ws/remote-agent/<id> sends screen frames,
 // the viewers' sockets /ws/remote-viewer/<id> get them and send input.
-// It also keeps the single-use tokens POST /api/bd/remote-agent-token
+// It also keeps the single-use tokens POST /api/nd/remote-agent-token
 // gives out for the agent's socket. Sessions and tokens live in this
 // process only, as they did in Node. A session goes once it has neither
 // an agent nor a viewer, a token when its time is up and another is
@@ -25,11 +25,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 // The limits of the old relay.

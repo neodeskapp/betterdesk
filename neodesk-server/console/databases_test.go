@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // What the wiring writes to the database, on SQLite and on PostgreSQL:
@@ -47,7 +47,7 @@ func TestPipelineOnBothDatabases(t *testing.T) {
 		if err := db.QueryRow(ctx, "SELECT preferred_language FROM users WHERE id = ?", roleIDs["viewer"]).Scan(&lang); err != nil || lang.String != "pl" {
 			t.Errorf("users.preferred_language = %q (%v), want pl", lang.String, err)
 		}
-		delete(viewer.cookies, "betterdesk_lang")
+		delete(viewer.cookies, "neodesk_lang")
 		if res := viewer.get("/api/probe", "Accept-Language", "de"); res.json(t)["lang"] != "pl" {
 			t.Errorf("the stored session does not carry the choice: %s", res.body)
 		}

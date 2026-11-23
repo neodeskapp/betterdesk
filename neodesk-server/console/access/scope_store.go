@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // DeviceGroup is a device group with its access lists.

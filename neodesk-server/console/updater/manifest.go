@@ -13,7 +13,7 @@ import (
 )
 
 // Product is the product name a manifest and the binary's -version name.
-const Product = "betterdesk-server"
+const Product = "neodesk-server"
 
 // maxManifestBytes and maxSignatureBytes cap what a download of the two
 // small release files may be.
@@ -47,7 +47,7 @@ type Manifest struct {
 
 // ManifestFile is one binary of a release.
 type ManifestFile struct {
-	// Path is the asset's file name, betterdesk-server-<os>-<arch>[.exe].
+	// Path is the asset's file name, neodesk-server-<os>-<arch>[.exe].
 	Path   string `json:"path"`
 	SHA256 string `json:"sha256"`
 	// Size, OS and Arch are not signed: Size only limits the download.
@@ -60,7 +60,7 @@ var (
 	reVersion   = regexp.MustCompile(`^[0-9]{1,6}\.[0-9]{1,6}\.[0-9]{1,6}(-[0-9A-Za-z][0-9A-Za-z.-]{0,63})?$`)
 	reCommit    = regexp.MustCompile(`^[0-9a-f]{40}$`)
 	reSHA256    = regexp.MustCompile(`^[0-9a-f]{64}$`)
-	reAssetName = regexp.MustCompile(`^betterdesk-server-[a-z0-9]{1,16}-[a-z0-9]{1,16}(\.exe)?$`)
+	reAssetName = regexp.MustCompile(`^neodesk-server-[a-z0-9]{1,16}-[a-z0-9]{1,16}(\.exe)?$`)
 	reOwnerRepo = regexp.MustCompile(`^[A-Za-z0-9_.-]{1,100}$`)
 )
 
@@ -167,10 +167,14 @@ func (m *Manifest) Signed() SignedFields {
 	return SignedFields{Owner: m.Owner, Repo: m.Repo, Branch: m.Branch, SHA: m.SHA, Files: files}
 }
 
-// CanonicalPayload is the text the signature is made over, byte for byte
-// what upstream's canonicalPayload builds:
+// manifestDomain is the first line of the signed text, so that a
+// signature made for something else never passes as a release signature.
+const manifestDomain = "neodesk-update-manifest-v1"
+
+// CanonicalPayload is the text the signature is made over, built the way
+// upstream's canonicalPayload builds it, with NeoDesk's first line:
 //
-//	betterdesk-update-manifest-v1
+//	neodesk-update-manifest-v1
 //	owner=<owner>
 //	repo=<repo>
 //	branch=<branch>
@@ -185,6 +189,11 @@ func (m *Manifest) Signed() SignedFields {
 // (by UTF-16 code units), files with equal paths in their given order.
 // The file lines have the form sha256sum writes.
 func CanonicalPayload(f SignedFields) []byte {
+	return canonicalPayload(manifestDomain, f)
+}
+
+// canonicalPayload is CanonicalPayload with the first line given.
+func canonicalPayload(domain string, f SignedFields) []byte {
 	type line struct{ path, sum string }
 	files := make([]line, 0, len(f.Files))
 	for _, file := range f.Files {
@@ -195,7 +204,7 @@ func CanonicalPayload(f SignedFields) []byte {
 	}
 	sort.SliceStable(files, func(i, j int) bool { return lessUTF16(files[i].path, files[j].path) })
 	var b strings.Builder
-	b.WriteString("betterdesk-update-manifest-v1\n")
+	b.WriteString(domain + "\n")
 	b.WriteString("owner=" + f.Owner + "\n")
 	b.WriteString("repo=" + f.Repo + "\n")
 	b.WriteString("branch=" + f.Branch + "\n")

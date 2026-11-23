@@ -2,7 +2,7 @@
  "id": "inventory-device/telemetry-only-device-id",
  "request": {
   "method": "POST",
-  "path": "/api/bd/telemetry",
+  "path": "/api/nd/telemetry",
   "body": {
    "device_id": "900100001",
    "timestamp": "2011-03-04T10:06:00.000Z"

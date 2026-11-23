@@ -3,7 +3,7 @@
   lists and every action need org.manage_users (the members list also
   user.view); without, the tab says the role cannot see them. An account
   that exists only in the organization (no server account behind it) is
-  a sign-in for the BetterDesk client and carries a tag that says so.
+  a sign-in for the NeoDesk client and carries a tag that says so.
   An invitation makes such a sign-in: the dialog shows its link once, the
   list shows when it ends and when it was used, and an open one can be
   revoked.

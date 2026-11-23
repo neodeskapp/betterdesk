@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 func write(key string, value any) func(http.ResponseWriter, *http.Request) {
@@ -305,8 +305,8 @@ func TestDestroyAndClearCookies(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 		})
 		want := []string{
-			"betterdesk.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
-			"bd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+			"neodesk.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+			"nd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
 		}
 		if got := setCookies(rec); strings.Join(got, "\n") != strings.Join(want, "\n") {
 			t.Fatalf("Set-Cookie:\n got %q\nwant %q", got, want)
@@ -330,8 +330,8 @@ func TestClearCookies(t *testing.T) {
 		w.WriteHeader(http.StatusFound)
 	})
 	want := []string{
-		"betterdesk.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
-		"bd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+		"neodesk.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+		"nd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
 	}
 	if got := setCookies(rec); strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Fatalf("Set-Cookie:\n got %q\nwant %q", got, want)
@@ -363,7 +363,7 @@ func TestFallbackCookieIsSecureOnlyOverHTTPS(t *testing.T) {
 			secure bool
 		}{{"plain", get("/"), false}, {"through a proxy over HTTPS", proxied, true}} {
 			cookies := setCookies(f.serve(c.r, write("x", 1)))
-			if len(cookies) != 1 || !strings.HasPrefix(cookies[0], "betterdesk.sid=") || strings.HasSuffix(cookies[0], "; HttpOnly; Secure; SameSite=Lax") != c.secure {
+			if len(cookies) != 1 || !strings.HasPrefix(cookies[0], "neodesk.sid=") || strings.HasSuffix(cookies[0], "; HttpOnly; Secure; SameSite=Lax") != c.secure {
 				t.Errorf("%s: Set-Cookie %q, Secure %v", c.name, cookies, c.secure)
 			}
 		}
@@ -399,7 +399,7 @@ func TestHTTPModeCookieIsSecureBehindATrustedTLSProxy(t *testing.T) {
 				t.Errorf("%s: SecureCookie %v, want %v", c.name, got, c.secure)
 			}
 			cookies := setCookies(f.serve(c.r(), write("x", 1)))
-			if len(cookies) != 1 || !strings.HasPrefix(cookies[0], "bd.sid=") || strings.HasSuffix(cookies[0], "; HttpOnly; Secure; SameSite=Lax") != c.secure {
+			if len(cookies) != 1 || !strings.HasPrefix(cookies[0], "nd.sid=") || strings.HasSuffix(cookies[0], "; HttpOnly; Secure; SameSite=Lax") != c.secure {
 				t.Errorf("%s: Set-Cookie %q, want Secure %v", c.name, cookies, c.secure)
 			}
 		}
@@ -446,17 +446,17 @@ func TestSecureCookieOverHTTPS(t *testing.T) {
 			t.Fatalf("Set-Cookie %q, want one", cookies)
 		}
 		wantTail := "; Path=/; Expires=" + f.clock.Now().Add(30*time.Minute).UTC().Format(http.TimeFormat) + "; HttpOnly; Secure; SameSite=Lax"
-		if !strings.HasPrefix(cookies[0], "betterdesk.sid=s%3A") || !strings.HasSuffix(cookies[0], wantTail) {
-			t.Fatalf("cookie %q, want betterdesk.sid=s%%3A...%s", cookies[0], wantTail)
+		if !strings.HasPrefix(cookies[0], "neodesk.sid=s%3A") || !strings.HasSuffix(cookies[0], wantTail) {
+			t.Fatalf("cookie %q, want neodesk.sid=s%%3A...%s", cookies[0], wantTail)
 		}
 		// The HTTP name is not read in HTTPS mode
 		pair, _, _ := strings.Cut(cookies[0], ";")
 		var x int
-		f.serve(behindProxy(get("/", strings.Replace(pair, "betterdesk.sid=", "bd.sid=", 1))), func(w http.ResponseWriter, r *http.Request) {
+		f.serve(behindProxy(get("/", strings.Replace(pair, "neodesk.sid=", "nd.sid=", 1))), func(w http.ResponseWriter, r *http.Request) {
 			From(r).Get("x", &x)
 		})
 		if x != 0 {
-			t.Fatal("a session was read from bd.sid in HTTPS mode")
+			t.Fatal("a session was read from nd.sid in HTTPS mode")
 		}
 	})
 }
@@ -473,13 +473,13 @@ func TestSetCookieText(t *testing.T) {
 				json:      fmt.Sprintf(`{"cookie":{"originalMaxAge":1800000,"expires":"2026-11-10T01:00:00.000Z","secure":false,"httpOnly":true,"path":"/","sameSite":"lax"},"n":%d}`, i),
 				expiresAt: now + 1000, createdAt: now, lastActivityAt: now,
 			})
-			rec := f.serve(get("/", "bd.sid="+v.wire), nil)
-			want := "bd.sid=" + v.wire + "; Path=/; Expires=Tue, 10 Nov 2026 01:33:06 GMT; HttpOnly; SameSite=Lax"
+			rec := f.serve(get("/", "nd.sid="+v.wire), nil)
+			want := "nd.sid=" + v.wire + "; Path=/; Expires=Tue, 10 Nov 2026 01:33:06 GMT; HttpOnly; SameSite=Lax"
 			if got := setCookies(rec); len(got) != 1 || got[0] != want {
 				t.Fatalf("Set-Cookie:\n got %q\nwant %q", got, want)
 			}
 			// The raw, unencoded value is accepted too
-			if got := setCookies(f.serve(get("/", "bd.sid="+v.signed), nil)); len(got) != 1 || got[0] != want {
+			if got := setCookies(f.serve(get("/", "nd.sid="+v.signed), nil)); len(got) != 1 || got[0] != want {
 				t.Fatalf("Set-Cookie for the raw value:\n got %q\nwant %q", got, want)
 			}
 		}
@@ -501,8 +501,8 @@ func TestCookieAttributesComeFromTheStoredSession(t *testing.T) {
 	for _, tc := range cases {
 		f.exec(`DELETE FROM panel_sessions`)
 		f.mustSet(sid, record{json: `{"cookie":` + tc.cookie + `}`, expiresAt: now + 60_000, createdAt: now, lastActivityAt: now})
-		got := setCookies(f.serve(get("/", "bd.sid="+signVectors[0].wire), nil))
-		if want := "bd.sid=" + signVectors[0].wire + tc.wantTail; len(got) != 1 || got[0] != want {
+		got := setCookies(f.serve(get("/", "nd.sid="+signVectors[0].wire), nil))
+		if want := "nd.sid=" + signVectors[0].wire + tc.wantTail; len(got) != 1 || got[0] != want {
 			t.Errorf("cookie %s:\n got %q\nwant %q", tc.cookie, got, want)
 		}
 	}
@@ -745,7 +745,7 @@ func TestActivityMovesTheSession(t *testing.T) {
 }
 
 func background(r *http.Request) *http.Request {
-	r.Header.Set("X-BD-Background", "1")
+	r.Header.Set("X-ND-Background", "1")
 	return r
 }
 
@@ -775,16 +775,16 @@ func TestBackgroundRequestDoesNotCount(t *testing.T) {
 		// Only exactly "1" marks a background request
 		for _, value := range []string{"true", "0", "1 1"} {
 			r := get("/api/poll", pair)
-			r.Header.Set("X-BD-Background", value)
+			r.Header.Set("X-ND-Background", value)
 			f.serve(r, nil)
 			if got := f.row(sid).lastActivityAt.Int64; got != f.clock.Now().UnixMilli() {
-				t.Fatalf("X-BD-Background: %s did not count as activity", value)
+				t.Fatalf("X-ND-Background: %s did not count as activity", value)
 			}
 			f.clock.Advance(time.Second)
 		}
 		r := get("/api/poll", pair)
-		r.Header.Add("X-BD-Background", "1")
-		r.Header.Add("X-BD-Background", "1")
+		r.Header.Add("X-ND-Background", "1")
+		r.Header.Add("X-ND-Background", "1")
 		f.serve(r, nil)
 		if got := f.row(sid).lastActivityAt.Int64; got != f.clock.Now().UnixMilli() {
 			t.Fatal("the header sent twice is not the value 1 and counts as activity")
@@ -926,9 +926,9 @@ func TestExpiredAnswerForTheAPI(t *testing.T) {
 					t.Fatalf("Content-Type %q", ct)
 				}
 				wantCookies := []string{
-					"bd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
-					"betterdesk.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
-					"bd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+					"nd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+					"neodesk.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+					"nd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
 				}
 				if got := setCookies(rec); strings.Join(got, "\n") != strings.Join(wantCookies, "\n") {
 					t.Fatalf("Set-Cookie:\n got %q\nwant %q", got, wantCookies)
@@ -990,9 +990,9 @@ func TestExpiredAnswerForAPage(t *testing.T) {
 				t.Errorf("Accept %q: type %q, body %q, headers %v", tc.accept, rec.Header().Get("Content-Type"), rec.Body.String(), rec.Header())
 			}
 			wantCookies := []string{
-				"betterdesk.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
-				"betterdesk.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
-				"bd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+				"neodesk.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+				"neodesk.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+				"nd.sid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
 			}
 			if got := setCookies(rec); strings.Join(got, "\n") != strings.Join(wantCookies, "\n") {
 				t.Errorf("Accept %q: Set-Cookie %q", tc.accept, got)

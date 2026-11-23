@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/config"
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
 )
 
 // TestOriginNoticesSayWhatTheSocketsAccept: without an allow list the

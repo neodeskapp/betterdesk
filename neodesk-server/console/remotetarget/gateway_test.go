@@ -11,8 +11,8 @@ import (
 
 	"github.com/coder/websocket"
 
-	"github.com/unitronix/betterdesk-server/console/ws"
-	"github.com/unitronix/betterdesk-server/console/ws/wstest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
 )
 
 // gateway is a gateway on the oracle's world.
@@ -177,7 +177,7 @@ func TestTunnelHandshake(t *testing.T) {
 		})
 	})
 	header := operator.Clone()
-	header.Set("Cookie", "bd.sid=s%3Asecret")
+	header.Set("Cookie", "nd.sid=s%3Asecret")
 	header.Set("Origin", "http://"+addr)
 	c, _, err := wstest.Dial(addr, "/ws/remote-target/rt_echo-0001", header)
 	if err != nil || c == nil {

@@ -1,11 +1,11 @@
 package api
 
-// BetterDesk Desktop Client Management WebSocket
+// NeoDesk Desktop Client Management WebSocket
 //
-// Endpoint: GET /ws/bd-mgmt/{device_id}
+// Endpoint: GET /ws/nd-mgmt/{device_id}
 //
 // This WebSocket channel replaces CDAP for desktop clients. It provides:
-//   - Device identification (the server marks the peer as betterdesk_desktop)
+//   - Device identification (the server marks the peer as neodesk_desktop)
 //   - Real-time management commands (remote-start, config-push, revoke)
 //   - Heartbeat keep-alive (the WS connection itself proves liveness)
 //
@@ -26,7 +26,7 @@ import (
 
 	"github.com/coder/websocket"
 	"github.com/coder/websocket/wsjson"
-	"github.com/unitronix/betterdesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 )
 
 const (
@@ -43,7 +43,7 @@ type bdMgmtMessage struct {
 	Payload   json.RawMessage `json:"payload,omitempty"`
 }
 
-// bdMgmtSession tracks a single connected BetterDesk desktop client.
+// bdMgmtSession tracks a single connected NeoDesk desktop client.
 type bdMgmtSession struct {
 	DeviceID  string
 	Conn      *websocket.Conn
@@ -53,7 +53,7 @@ type bdMgmtSession struct {
 	CreatedAt time.Time
 }
 
-// bdMgmtHub manages all active BetterDesk desktop management sessions.
+// bdMgmtHub manages all active NeoDesk desktop management sessions.
 type bdMgmtHub struct {
 	mu       sync.RWMutex
 	sessions map[string]*bdMgmtSession // device_id -> session
@@ -86,7 +86,7 @@ func (c *bdMgmtNonceCache) markUsed(key string, now time.Time) bool {
 }
 
 func bdMgmtSignaturePayload(deviceID, ts, nonce string) []byte {
-	return fmt.Appendf(nil, "bd-mgmt-v1\n%s\n%s\n%s", deviceID, ts, nonce)
+	return fmt.Appendf(nil, "nd-mgmt-v1\n%s\n%s\n%s", deviceID, ts, nonce)
 }
 
 func canonicalizeDevicePublicKey(encoded string) (string, error) {
@@ -137,9 +137,9 @@ func (s *Server) loadBdMgmtPublicKey(deviceID string) ([]byte, error) {
 }
 
 func (s *Server) verifyBdMgmtRequest(r *http.Request, deviceID string) error {
-	tsHeader := r.Header.Get("X-BD-Timestamp")
-	nonce := r.Header.Get("X-BD-Nonce")
-	sigHeader := r.Header.Get("X-BD-Signature")
+	tsHeader := r.Header.Get("X-ND-Timestamp")
+	nonce := r.Header.Get("X-ND-Nonce")
+	sigHeader := r.Header.Get("X-ND-Signature")
 	if tsHeader == "" || nonce == "" || sigHeader == "" {
 		return errors.New("missing signed device headers")
 	}
@@ -214,7 +214,7 @@ func (h *bdMgmtHub) Remove(s *bdMgmtSession) {
 	}
 }
 
-// IsConnected checks if a BetterDesk desktop client is connected.
+// IsConnected checks if a NeoDesk desktop client is connected.
 func (h *bdMgmtHub) IsConnected(deviceID string) bool {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
@@ -255,14 +255,14 @@ func (h *bdMgmtHub) ConnectedDevices() []string {
 // ---------------------------------------------------------------------------
 
 // handleBdMgmt upgrades to WebSocket and runs the management session.
-// Route: GET /ws/bd-mgmt/{device_id}
+// Route: GET /ws/nd-mgmt/{device_id}
 //
 // Auth: Requires proof-of-possession using the device's bound Ed25519 key.
 // The client must send signed headers before the WS upgrade is attempted:
 //
-//	X-BD-Timestamp: RFC3339 UTC timestamp
-//	X-BD-Nonce:     unique per-connection nonce
-//	X-BD-Signature: base64(Ed25519Sign("bd-mgmt-v1\n<device_id>\n<ts>\n<nonce>"))
+//	X-ND-Timestamp: RFC3339 UTC timestamp
+//	X-ND-Nonce:     unique per-connection nonce
+//	X-ND-Signature: base64(Ed25519Sign("nd-mgmt-v1\n<device_id>\n<ts>\n<nonce>"))
 func (s *Server) handleBdMgmt(w http.ResponseWriter, r *http.Request) {
 	deviceID := r.PathValue("device_id")
 	if deviceID == "" || len(deviceID) < 3 || len(deviceID) > 32 {
@@ -283,25 +283,25 @@ func (s *Server) handleBdMgmt(w http.ResponseWriter, r *http.Request) {
 
 	// Verify the device exists, is not banned, and is not deleted.
 	if banned, _ := s.db.IsPeerBanned(deviceID); banned {
-		log.Printf("[bd-mgmt] Rejected connection from %s — device %s is banned", clientIP, deviceID)
+		log.Printf("[nd-mgmt] Rejected connection from %s — device %s is banned", clientIP, deviceID)
 		http.Error(w, "device banned", http.StatusForbidden)
 		return
 	}
 	if deleted, _ := s.db.IsPeerSoftDeleted(deviceID); deleted {
-		log.Printf("[bd-mgmt] Rejected connection from %s — device %s is deleted", clientIP, deviceID)
+		log.Printf("[nd-mgmt] Rejected connection from %s — device %s is deleted", clientIP, deviceID)
 		http.Error(w, "device deleted", http.StatusForbidden)
 		return
 	}
 
 	if err := s.verifyBdMgmtRequest(r, deviceID); err != nil {
-		log.Printf("[bd-mgmt] Rejected connection from %s for %s: %v", clientIP, deviceID, err)
+		log.Printf("[nd-mgmt] Rejected connection from %s for %s: %v", clientIP, deviceID, err)
 		http.Error(w, "device authentication failed", http.StatusUnauthorized)
 		return
 	}
 
 	conn, err := websocket.Accept(w, r, nil)
 	if err != nil {
-		log.Printf("[bd-mgmt] WebSocket accept error for %s: %v", deviceID, err)
+		log.Printf("[nd-mgmt] WebSocket accept error for %s: %v", deviceID, err)
 		return
 	}
 	// SECURITY (audit fix I-02, 2026-04-10): cap inbound WebSocket frames at
@@ -321,16 +321,16 @@ func (s *Server) handleBdMgmt(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mgmtHub.Put(session)
-	log.Printf("[bd-mgmt] Device %s connected (proof-of-possession, ip: %s)", deviceID, clientIP)
+	log.Printf("[nd-mgmt] Device %s connected (proof-of-possession, ip: %s)", deviceID, clientIP)
 
 	if s.auditLog != nil {
 		s.auditLog.Log(audit.ActionPeerUpdated, clientIP, deviceID,
 			map[string]string{"event": "bd_mgmt_connect", "auth": "device_signature"})
 	}
 
-	// Mark device as betterdesk_desktop in the database
+	// Mark device as neodesk_desktop in the database
 	_ = s.db.UpdatePeerFields(deviceID, map[string]string{
-		"device_type": "betterdesk_desktop",
+		"device_type": "neodesk_desktop",
 	})
 
 	// Send welcome message
@@ -349,7 +349,7 @@ func (s *Server) handleBdMgmt(w http.ResponseWriter, r *http.Request) {
 	mgmtHub.Remove(session)
 	cancel()
 	conn.Close(websocket.StatusNormalClosure, "session ended")
-	log.Printf("[bd-mgmt] Device %s disconnected", deviceID)
+	log.Printf("[nd-mgmt] Device %s disconnected", deviceID)
 
 	if s.auditLog != nil {
 		s.auditLog.Log(audit.ActionPeerUpdated, clientIP, deviceID,
@@ -366,7 +366,7 @@ func (s *bdMgmtSession) readLoop(srv *Server) {
 			if s.Ctx.Err() != nil {
 				return // context cancelled
 			}
-			log.Printf("[bd-mgmt] Read error from %s: %v", s.DeviceID, err)
+			log.Printf("[nd-mgmt] Read error from %s: %v", s.DeviceID, err)
 			return
 		}
 
@@ -387,10 +387,10 @@ func (s *bdMgmtSession) readLoop(srv *Server) {
 
 		case "status":
 			// Device status update — log and store
-			log.Printf("[bd-mgmt] Status from %s: %s", s.DeviceID, logExcerpt(msg.Payload))
+			log.Printf("[nd-mgmt] Status from %s: %s", s.DeviceID, logExcerpt(msg.Payload))
 
 		default:
-			log.Printf("[bd-mgmt] Unknown message type from %s: %q", s.DeviceID, msg.Type)
+			log.Printf("[nd-mgmt] Unknown message type from %s: %q", s.DeviceID, msg.Type)
 		}
 	}
 }
@@ -431,7 +431,7 @@ func (s *bdMgmtSession) writeLoop() {
 // ---------------------------------------------------------------------------
 
 // handleBdMgmtStatus returns the management channel status for a device.
-// Route: GET /api/bd/mgmt/{device_id}/status
+// Route: GET /api/nd/mgmt/{device_id}/status
 func (s *Server) handleBdMgmtStatus(w http.ResponseWriter, r *http.Request) {
 	deviceID := r.PathValue("device_id")
 	connected := mgmtHub.IsConnected(deviceID)
@@ -442,7 +442,7 @@ func (s *Server) handleBdMgmtStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleBdMgmtSend sends a management command to a connected device.
-// Route: POST /api/bd/mgmt/{device_id}/send
+// Route: POST /api/nd/mgmt/{device_id}/send
 func (s *Server) handleBdMgmtSend(w http.ResponseWriter, r *http.Request) {
 	deviceID := r.PathValue("device_id")
 
@@ -460,8 +460,8 @@ func (s *Server) handleBdMgmtSend(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleBdMgmtConnected returns all connected BetterDesk desktop clients.
-// Route: GET /api/bd/mgmt/connected
+// handleBdMgmtConnected returns all connected NeoDesk desktop clients.
+// Route: GET /api/nd/mgmt/connected
 func (s *Server) handleBdMgmtConnected(w http.ResponseWriter, r *http.Request) {
 	ids := mgmtHub.ConnectedDevices()
 	writeJSON(w, http.StatusOK, map[string]any{

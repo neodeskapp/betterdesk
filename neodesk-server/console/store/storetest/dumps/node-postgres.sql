@@ -1,5 +1,5 @@
 -- Node console schema on an empty PostgreSQL database (Go server never ran against it).
--- Worktree betterdesk-go, dumped 2026-11-19 on 3f4ffd70 plus the change that adds agent_templates to store.Migrate (upstream 3.5.264 merged).
+-- Worktree neodesk-go, dumped 2026-11-19 on 3f4ffd70 plus the change that adds agent_templates to store.Migrate (upstream 3.5.264 merged).
 -- Produced by adapter.init() of web-nodejs/services/dbAdapter.js plus the DatabaseSessionStore, then: pg_dump --schema-only --no-owner --no-privileges --no-comments  (PostgreSQL 16)
 -- Do not edit: regenerate (see data.md, section "How the schema dumps were produced").
 
@@ -245,7 +245,7 @@ CREATE TABLE public.agent_bundles (
     client_commit text,
     active_generation_hash text,
     created_by integer,
-    product_type text DEFAULT 'betterdesk-support'::text NOT NULL,
+    product_type text DEFAULT 'neodesk-support'::text NOT NULL,
     revoked boolean DEFAULT false NOT NULL,
     download_count integer DEFAULT 0 NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,

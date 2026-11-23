@@ -7,10 +7,10 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/authn"
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/goapipath/proxytest"
-	"github.com/unitronix/betterdesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath/proxytest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 )
 
 // withDevices mounts the group as register does, with the device token
@@ -71,13 +71,13 @@ func TestDevicePolicyIsTheTokensDevice(t *testing.T) {
 	policy := &proxytest.Answer{Status: 200, Type: "application/json", Body: `{"rules":{}}`}
 	own := `{"device_id":"device-a"}`
 	for _, req := range []proxytest.Request{
-		{Path: "/api/bd/device-policy?device_id=device-b", Body: &own},
-		{Path: "/api/bd/device-policy", Headers: map[string]string{"X-Device-Id": "device-b"}, Body: &own},
-		{Path: "/api/bd/device-policy?device_id=device-c", Headers: map[string]string{"X-Device-Id": "device-b"}, Body: &own},
-		{Path: "/api/bd/device-policy?device_id[]=device-c", Body: &own},
-		{Path: "/api/bd/device-policy?device_id[toString]=x", Body: &own},
-		{Path: "/api/bd/device-policy?device_id=bad%20id", Body: &own},
-		{Path: "/api/bd/api/bd/device-policy?device_id=device-b", Body: &own},
+		{Path: "/api/nd/device-policy?device_id=device-b", Body: &own},
+		{Path: "/api/nd/device-policy", Headers: map[string]string{"X-Device-Id": "device-b"}, Body: &own},
+		{Path: "/api/nd/device-policy?device_id=device-c", Headers: map[string]string{"X-Device-Id": "device-b"}, Body: &own},
+		{Path: "/api/nd/device-policy?device_id[]=device-c", Body: &own},
+		{Path: "/api/nd/device-policy?device_id[toString]=x", Body: &own},
+		{Path: "/api/nd/device-policy?device_id=bad%20id", Body: &own},
+		{Path: "/api/nd/api/nd/device-policy?device_id=device-b", Body: &own},
 	} {
 		req.Type = "application/json"
 		req.Headers = withToken(req.Headers, "tok-device-a")

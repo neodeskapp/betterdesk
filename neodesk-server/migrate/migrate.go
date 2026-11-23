@@ -1,23 +1,23 @@
 // Package migrate is the server's database migration tool, the command
-// betterdesk-server migrate (Main).
+// neodesk-server migrate (Main).
 //
 // Supports multiple migration modes:
 //
-//	rust2go   — Rust hbbs-patch-v2 SQLite → BetterDesk Go schema (SQLite or PG)
+//	rust2go   — Rust hbbs-patch-v2 SQLite → NeoDesk Go schema (SQLite or PG)
 //	sqlite2pg — move a whole install (server and console) from SQLite to PostgreSQL
 //	pg2sqlite — move a whole install from PostgreSQL to SQLite
-//	nodejs2go — Node.js console SQLite → BetterDesk Go schema (SQLite or PG)
+//	nodejs2go — Node.js console SQLite → NeoDesk Go schema (SQLite or PG)
 //	backup    — Create timestamped backup of a SQLite file
 //
 // Usage:
 //
-//	betterdesk-server migrate -mode rust2go   -src /opt/rustdesk/db_v2.sqlite3
-//	betterdesk-server migrate -mode rust2go   -src db_v2.sqlite3 -dst postgres://user:pass@host/db
-//	betterdesk-server migrate -mode sqlite2pg -src ./db_v2.sqlite3 -dst postgres://user:pass@host/db
-//	betterdesk-server migrate -mode pg2sqlite -src postgres://user:pass@host/db -dst ./db_v2.sqlite3
-//	betterdesk-server migrate -mode nodejs2go -src /opt/betterdesk/data/db_v2.sqlite3 -node-auth /opt/betterdesk/data/auth.sqlite3
-//	betterdesk-server migrate -mode nodejs2go -src db_v2.sqlite3 -node-auth auth.sqlite3 -dst postgres://user:pass@host/db
-//	betterdesk-server migrate -mode backup    -src db_v2.sqlite3
+//	neodesk-server migrate -mode rust2go   -src /opt/rustdesk/db_v2.sqlite3
+//	neodesk-server migrate -mode rust2go   -src db_v2.sqlite3 -dst postgres://user:pass@host/db
+//	neodesk-server migrate -mode sqlite2pg -src ./db_v2.sqlite3 -dst postgres://user:pass@host/db
+//	neodesk-server migrate -mode pg2sqlite -src postgres://user:pass@host/db -dst ./db_v2.sqlite3
+//	neodesk-server migrate -mode nodejs2go -src /opt/neodesk/data/db_v2.sqlite3 -node-auth /opt/neodesk/data/auth.sqlite3
+//	neodesk-server migrate -mode nodejs2go -src db_v2.sqlite3 -node-auth auth.sqlite3 -dst postgres://user:pass@host/db
+//	neodesk-server migrate -mode backup    -src db_v2.sqlite3
 //
 // An existing SQLite file at -dst is replaced only with -overwrite, and
 // never when it is one of the sources. sqlite2pg writes into a PostgreSQL
@@ -42,7 +42,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "modernc.org/sqlite"
 
-	"github.com/unitronix/betterdesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // ── Types ─────────────────────────────────────────────────────────────
@@ -81,7 +81,7 @@ type peerInfo struct {
 // read. The usage goes to stdout, flag errors to stderr, and what the
 // modes do to the log.
 func Main(args []string, stdout, stderr io.Writer) int {
-	flags := flag.NewFlagSet("betterdesk-server migrate", flag.ContinueOnError)
+	flags := flag.NewFlagSet("neodesk-server migrate", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	flags.Usage = func() { printUsage(stdout) }
 	mode := flags.String("mode", "", "Migration mode: rust2go, sqlite2pg, pg2sqlite, nodejs2go, backup")
@@ -119,7 +119,7 @@ func Main(args []string, stdout, stderr io.Writer) int {
 		err = runNodeJS2Go(*src, *nodeAuth, *dst, *overwrite)
 	case "backup":
 		if *src == "" {
-			err = errors.New("usage: betterdesk-server migrate -mode backup -src <path>")
+			err = errors.New("usage: neodesk-server migrate -mode backup -src <path>")
 			break
 		}
 		var bp string
@@ -138,15 +138,15 @@ func Main(args []string, stdout, stderr io.Writer) int {
 }
 
 func printUsage(w io.Writer) {
-	fmt.Fprintln(w, "BetterDesk Database Migration Tool")
+	fmt.Fprintln(w, "NeoDesk Database Migration Tool")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Usage: betterdesk-server migrate -mode <mode> -src <source> [-dst <dest>] [-overwrite] [-skip-leftovers] [options]")
+	fmt.Fprintln(w, "Usage: neodesk-server migrate -mode <mode> -src <source> [-dst <dest>] [-overwrite] [-skip-leftovers] [options]")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Modes:")
-	fmt.Fprintln(w, "  rust2go   - Migrate Rust hbbs-patch-v2 → BetterDesk Go schema")
+	fmt.Fprintln(w, "  rust2go   - Migrate Rust hbbs-patch-v2 → NeoDesk Go schema")
 	fmt.Fprintln(w, "  sqlite2pg - Move the whole install (every table of the server and the console) from SQLite to PostgreSQL")
 	fmt.Fprintln(w, "  pg2sqlite - Move the whole install from PostgreSQL to SQLite")
-	fmt.Fprintln(w, "  nodejs2go - Migrate Node.js console → BetterDesk Go schema")
+	fmt.Fprintln(w, "  nodejs2go - Migrate Node.js console → NeoDesk Go schema")
 	fmt.Fprintln(w, "  backup    - Create timestamped backup of a SQLite file")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "A SQLite destination is written to a temporary file and renamed at the end.")
@@ -155,11 +155,11 @@ func printUsage(w io.Writer) {
 	fmt.Fprintln(w, "and both moves stop on tables or columns the server's schema lacks unless -skip-leftovers.")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Examples:")
-	fmt.Fprintln(w, "  betterdesk-server migrate -mode rust2go   -src /opt/rustdesk/db_v2.sqlite3")
-	fmt.Fprintln(w, "  betterdesk-server migrate -mode sqlite2pg -src ./db_v2.sqlite3 -dst postgres://user:pass@host/betterdesk")
-	fmt.Fprintln(w, "  betterdesk-server migrate -mode pg2sqlite -src postgres://user:pass@host/betterdesk -dst ./db_v2.sqlite3")
-	fmt.Fprintln(w, "  betterdesk-server migrate -mode nodejs2go -src db_v2.sqlite3 -node-auth auth.sqlite3 -dst postgres://...")
-	fmt.Fprintln(w, "  betterdesk-server migrate -mode backup    -src db_v2.sqlite3")
+	fmt.Fprintln(w, "  neodesk-server migrate -mode rust2go   -src /opt/rustdesk/db_v2.sqlite3")
+	fmt.Fprintln(w, "  neodesk-server migrate -mode sqlite2pg -src ./db_v2.sqlite3 -dst postgres://user:pass@host/neodesk")
+	fmt.Fprintln(w, "  neodesk-server migrate -mode pg2sqlite -src postgres://user:pass@host/neodesk -dst ./db_v2.sqlite3")
+	fmt.Fprintln(w, "  neodesk-server migrate -mode nodejs2go -src db_v2.sqlite3 -node-auth auth.sqlite3 -dst postgres://...")
+	fmt.Fprintln(w, "  neodesk-server migrate -mode backup    -src db_v2.sqlite3")
 }
 
 // isPG returns true if the DSN looks like a PostgreSQL connection string.
@@ -172,13 +172,13 @@ func isPG(dsn string) bool {
 
 func runRust2Go(srcPath, dstPath string, overwrite bool) error {
 	if srcPath == "" {
-		return errors.New("usage: betterdesk-server migrate -mode rust2go -src <rust-db-path> [-dst <dest>] [-overwrite]")
+		return errors.New("usage: neodesk-server migrate -mode rust2go -src <rust-db-path> [-dst <dest>] [-overwrite]")
 	}
 	if err := requireFile(srcPath); err != nil {
 		return err
 	}
 	if dstPath == "" {
-		dstPath = filepath.Join(filepath.Dir(srcPath), "betterdesk.sqlite3")
+		dstPath = filepath.Join(filepath.Dir(srcPath), "neodesk.sqlite3")
 	}
 	if !isPG(dstPath) {
 		if err := checkSQLiteDst(dstPath, overwrite, srcPath); err != nil {
@@ -285,7 +285,7 @@ func readRustDB(path string) ([]rustPeer, error) {
 	return peers, rows.Err()
 }
 
-// writeRustPeersSQLite writes Rust peers to a new BetterDesk Go SQLite
+// writeRustPeersSQLite writes Rust peers to a new NeoDesk Go SQLite
 // database at path.
 func writeRustPeersSQLite(path string, overwrite bool, peers []rustPeer) (int, error) {
 	return writeSQLiteFile(path, overwrite, func(tmp string) (int, error) {
@@ -349,7 +349,7 @@ func (c *insertCount) add(o insertCount) {
 // read is how many rows were counted.
 func (c insertCount) read() int { return c.copied + c.existed }
 
-// writeRustPeersPG writes Rust peers to a BetterDesk Go PostgreSQL database.
+// writeRustPeersPG writes Rust peers to a NeoDesk Go PostgreSQL database.
 func writeRustPeersPG(dsn string, peers []rustPeer) (insertCount, error) {
 	ctx := context.Background()
 	pool, err := pgxpool.New(ctx, dsn)
@@ -415,7 +415,7 @@ func convertRustPeer(p rustPeer) (info peerInfo, uuid, status, user, lastOnline,
 
 func runNodeJS2Go(srcPeerPath, srcAuthPath, dstPath string, overwrite bool) error {
 	if srcPeerPath == "" {
-		return errors.New("usage: betterdesk-server migrate -mode nodejs2go -src <peer-db> [-node-auth <auth-db>] [-dst <dest>] [-overwrite]")
+		return errors.New("usage: neodesk-server migrate -mode nodejs2go -src <peer-db> [-node-auth <auth-db>] [-dst <dest>] [-overwrite]")
 	}
 	if err := requireFile(srcPeerPath); err != nil {
 		return err
@@ -426,7 +426,7 @@ func runNodeJS2Go(srcPeerPath, srcAuthPath, dstPath string, overwrite bool) erro
 		}
 	}
 	if dstPath == "" {
-		dstPath = filepath.Join(filepath.Dir(srcPeerPath), "betterdesk.sqlite3")
+		dstPath = filepath.Join(filepath.Dir(srcPeerPath), "neodesk.sqlite3")
 	}
 	if !isPG(dstPath) {
 		sources := []string{srcPeerPath}
@@ -940,7 +940,7 @@ func copyNodeUsers2PG(ctx context.Context, src *sql.DB, dst *pgxpool.Pool) (inse
 
 // ── Schema Definitions ────────────────────────────────────────────────
 
-// pgSchemaStatements returns PostgreSQL DDL for all BetterDesk Go tables.
+// pgSchemaStatements returns PostgreSQL DDL for all NeoDesk Go tables.
 func pgSchemaStatements() []string {
 	return []string{
 		`CREATE TABLE IF NOT EXISTS peers (
@@ -1009,7 +1009,7 @@ func pgSchemaStatements() []string {
 	}
 }
 
-// sqliteSchemaStatements returns SQLite DDL for all BetterDesk Go tables.
+// sqliteSchemaStatements returns SQLite DDL for all NeoDesk Go tables.
 func sqliteSchemaStatements() []string {
 	return []string{
 		`CREATE TABLE IF NOT EXISTS peers (

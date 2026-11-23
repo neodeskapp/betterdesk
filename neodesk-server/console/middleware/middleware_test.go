@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 )
 
 func okHandler(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) }
@@ -401,7 +401,7 @@ func TestMarkAPICompression(t *testing.T) {
 			httpx.WriteJSON(w, r, 200, big)
 		}
 	})
-	h := MarkAPICompression(func(r *http.Request) bool { return strings.HasPrefix(httpx.RawPath(r), "/api/bd/") })(routes)
+	h := MarkAPICompression(func(r *http.Request) bool { return strings.HasPrefix(httpx.RawPath(r), "/api/nd/") })(routes)
 	get := func(target, acceptEncoding string) *httptest.ResponseRecorder {
 		req := httptest.NewRequest("GET", target, nil)
 		if acceptEncoding != "" {
@@ -448,23 +448,23 @@ func TestMarkAPICompression(t *testing.T) {
 		t.Errorf("revalidation: status %d, %d bytes, ETag %q", again.Code, again.Body.Len(), first.Header().Get("ETag"))
 	}
 	// Outside /api/, and for the routers that answer before the compression step
-	for _, target := range []string{"/big", "/apix/big", "/api/bd/devices"} {
+	for _, target := range []string{"/big", "/apix/big", "/api/nd/devices"} {
 		if rec := get(target, "gzip"); rec.Header().Get("Content-Encoding") != "" {
 			t.Errorf("%s was compressed", target)
 		}
 	}
-	for _, target := range []string{"/API/big", "/api/bd", "/api/bdx/y"} {
+	for _, target := range []string{"/API/big", "/api/nd", "/api/ndx/y"} {
 		if rec := get(target, "gzip"); rec.Header().Get("Content-Encoding") != "gzip" {
 			t.Errorf("%s was not compressed", target)
 		}
 	}
 	// nil exempts nothing
 	if rec := serve(MarkAPICompression(nil)(routes), func() *http.Request {
-		r := httptest.NewRequest("GET", "/api/bd/devices", nil)
+		r := httptest.NewRequest("GET", "/api/nd/devices", nil)
 		r.Header.Set("Accept-Encoding", "gzip")
 		return r
 	}()); rec.Header().Get("Content-Encoding") != "gzip" {
-		t.Error("without an exemption /api/bd is compressed like the rest")
+		t.Error("without an exemption /api/nd is compressed like the rest")
 	}
 }
 

@@ -13,14 +13,14 @@ import (
 	"strings"
 	"testing"
 
-	avatarsvc "github.com/unitronix/betterdesk-server/console/avatars"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/limits"
-	"github.com/unitronix/betterdesk-server/console/routes/avatars"
-	"github.com/unitronix/betterdesk-server/console/session"
-	"github.com/unitronix/betterdesk-server/console/store"
-	"github.com/unitronix/betterdesk-server/console/store/storetest"
+	avatarsvc "github.com/neodeskapp/neodesk/neodesk-server/console/avatars"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/avatars"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // world is the avatars group on a console database, with the session of
@@ -82,7 +82,7 @@ func newWorld(t *testing.T, db *store.DB, env map[string]string) *world {
 func (w *world) signIn(id int64) {
 	w.t.Helper()
 	pair, _, _ := strings.Cut(w.send("", http.MethodGet, fmt.Sprintf("/signin/%d", id), nil).Header().Get("Set-Cookie"), ";")
-	if !strings.HasPrefix(pair, "bd.sid=") {
+	if !strings.HasPrefix(pair, "nd.sid=") {
 		w.t.Fatalf("sign in set the cookie %q", pair)
 	}
 	w.cookie = pair

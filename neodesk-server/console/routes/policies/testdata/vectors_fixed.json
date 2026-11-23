@@ -29,7 +29,7 @@
  {
   "vector": 24,
   "bug": "FL9",
-  "request": "PUT /api/bd/api/panel/policies/org-1/connection",
+  "request": "PUT /api/nd/api/panel/policies/org-1/connection",
   "status": 401,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}",
@@ -38,7 +38,7 @@
  {
   "vector": 25,
   "bug": "FL9",
-  "request": "PUT /api/bd/api/panel/policies/org-1/connection",
+  "request": "PUT /api/nd/api/panel/policies/org-1/connection",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Pro accounts can only access the RustDesk desktop client API\"}",
@@ -47,7 +47,7 @@
  {
   "vector": 28,
   "bug": "RV68",
-  "request": "PUT /api/bd/api/panel/policies/org-1/connection",
+  "request": "PUT /api/nd/api/panel/policies/org-1/connection",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",
@@ -83,7 +83,7 @@
  {
   "vector": 40,
   "bug": "FL9",
-  "request": "PUT /api/bd/api/panel/policies/org-1/features",
+  "request": "PUT /api/nd/api/panel/policies/org-1/features",
   "status": 401,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}",
@@ -92,7 +92,7 @@
  {
   "vector": 41,
   "bug": "FL9",
-  "request": "PUT /api/bd/api/panel/policies/org-1/features",
+  "request": "PUT /api/nd/api/panel/policies/org-1/features",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Pro accounts can only access the RustDesk desktop client API\"}",
@@ -101,7 +101,7 @@
  {
   "vector": 44,
   "bug": "RV68",
-  "request": "PUT /api/bd/api/panel/policies/org-1/features",
+  "request": "PUT /api/nd/api/panel/policies/org-1/features",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",
@@ -137,7 +137,7 @@
  {
   "vector": 56,
   "bug": "FL9",
-  "request": "PUT /api/bd/api/panel/policies/org-1/security",
+  "request": "PUT /api/nd/api/panel/policies/org-1/security",
   "status": 401,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}",
@@ -146,7 +146,7 @@
  {
   "vector": 57,
   "bug": "FL9",
-  "request": "PUT /api/bd/api/panel/policies/org-1/security",
+  "request": "PUT /api/nd/api/panel/policies/org-1/security",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Pro accounts can only access the RustDesk desktop client API\"}",
@@ -155,7 +155,7 @@
  {
   "vector": 60,
   "bug": "RV68",
-  "request": "PUT /api/bd/api/panel/policies/org-1/security",
+  "request": "PUT /api/nd/api/panel/policies/org-1/security",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",
@@ -191,7 +191,7 @@
  {
   "vector": 72,
   "bug": "FL9",
-  "request": "PUT /api/bd/api/panel/policies/org-1/network",
+  "request": "PUT /api/nd/api/panel/policies/org-1/network",
   "status": 401,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}",
@@ -200,7 +200,7 @@
  {
   "vector": 73,
   "bug": "FL9",
-  "request": "PUT /api/bd/api/panel/policies/org-1/network",
+  "request": "PUT /api/nd/api/panel/policies/org-1/network",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Pro accounts can only access the RustDesk desktop client API\"}",
@@ -209,7 +209,7 @@
  {
   "vector": 76,
   "bug": "RV68",
-  "request": "PUT /api/bd/api/panel/policies/org-1/network",
+  "request": "PUT /api/nd/api/panel/policies/org-1/network",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",
@@ -245,7 +245,7 @@
  {
   "vector": 88,
   "bug": "FL9",
-  "request": "PUT /api/bd/api/panel/policies/org-1/update",
+  "request": "PUT /api/nd/api/panel/policies/org-1/update",
   "status": 401,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Unauthorized. Please log in.\",\"code\":\"session_required\"}",
@@ -254,7 +254,7 @@
  {
   "vector": 89,
   "bug": "FL9",
-  "request": "PUT /api/bd/api/panel/policies/org-1/update",
+  "request": "PUT /api/nd/api/panel/policies/org-1/update",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Pro accounts can only access the RustDesk desktop client API\"}",
@@ -263,7 +263,7 @@
  {
   "vector": 92,
   "bug": "RV68",
-  "request": "PUT /api/bd/api/panel/policies/org-1/update",
+  "request": "PUT /api/nd/api/panel/policies/org-1/update",
   "status": 403,
   "type": "application/json; charset=utf-8",
   "body": "{\"success\":false,\"error\":\"Permission denied: org.edit\"}",

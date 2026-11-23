@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"sort"
 
-	"github.com/unitronix/betterdesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // panelSection is one entry of the console's navigation contract.

@@ -200,7 +200,7 @@ export async function getRecordings(signal?: AbortSignal): Promise<Recording[]> 
 
 /** The .msh file for a group (MeshAgent install); name goes into the file */
 export function meshDownloadHref(name: string, meshId?: string): string {
-	let href = `/api/mesh/download.msh?name=${enc(name.trim() || 'BetterDesk Mesh')}`;
+	let href = `/api/mesh/download.msh?name=${enc(name.trim() || 'NeoDesk Mesh')}`;
 	if (meshId?.trim()) href += `&mesh_id=${enc(meshId.trim())}`;
 	return href;
 }
@@ -472,7 +472,7 @@ export function resetBranding() {
 	return api(Ok, '/api/settings/branding/reset', { method: 'POST' });
 }
 
-/** The appearance as a theme file (betterdesk-theme.json) */
+/** The appearance as a theme file (neodesk-theme.json) */
 export function exportBranding(): Promise<unknown> {
 	return request('/api/settings/branding/export');
 }

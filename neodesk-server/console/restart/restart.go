@@ -54,10 +54,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/unitronix/betterdesk-server/console/goapi"
-	"github.com/unitronix/betterdesk-server/console/httpx"
-	"github.com/unitronix/betterdesk-server/console/serverinfo"
-	"github.com/unitronix/betterdesk-server/logging"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/logging"
 )
 
 const (
@@ -111,7 +111,7 @@ type Options struct {
 	// supervisor to start it again (DECISIONS A30): ExitDelay after a
 	// confirmed restart, and through ExitLater after an installed update
 	// or a restore. The console sets it only when an installer named a
-	// supervisor (BETTERDESK_SUPERVISOR). Nil ends nothing: the routes
+	// supervisor (NEODESK_SUPERVISOR). Nil ends nothing: the routes
 	// then answer as they do where no restart is possible.
 	Exit func()
 	// After runs f once d has passed. Nil means time.AfterFunc.

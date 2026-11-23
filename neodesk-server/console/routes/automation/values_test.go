@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/unitronix/betterdesk-server/console/jsbind"
-	"github.com/unitronix/betterdesk-server/console/kit"
-	"github.com/unitronix/betterdesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 )
 
 // bodyOf is req.body for a JSON object.
@@ -57,20 +57,20 @@ func TestResultText(t *testing.T) {
 	}
 }
 
-// The group is mounted at /api/bd too, for the routes of the device
+// The group is mounted at /api/nd too, for the routes of the device
 // agents. There the thirteen panel routes step aside, so that GET
-// /api/bd/commands reaches the device route after them (the console
+// /api/nd/commands reaches the device route after them (the console
 // tests show that one answering).
 func TestTheRoutesStepAsideAtTheDeviceMount(t *testing.T) {
 	router := kit.NewRouter()
-	Register((&kit.Deps{Router: router, Log: kit.NewLogger("silent", true)}).At("/api/bd"))
+	Register((&kit.Deps{Router: router, Log: kit.NewLogger("silent", true)}).At("/api/nd"))
 	if len(router.Routes()) != 15 {
 		t.Fatalf("%d routes registered, want the thirteen panel routes and the two device routes", len(router.Routes()))
 	}
 	for _, target := range []string{
-		"GET /api/bd/rules", "POST /api/bd/rules", "GET /api/bd/rules/1", "PATCH /api/bd/rules/1", "DELETE /api/bd/rules/1",
-		"GET /api/bd/alerts", "POST /api/bd/alerts/1/ack", "POST /api/bd/commands", "GET /api/bd/commands/1",
-		"GET /api/bd/smtp", "PUT /api/bd/smtp", "POST /api/bd/smtp/test",
+		"GET /api/nd/rules", "POST /api/nd/rules", "GET /api/nd/rules/1", "PATCH /api/nd/rules/1", "DELETE /api/nd/rules/1",
+		"GET /api/nd/alerts", "POST /api/nd/alerts/1/ack", "POST /api/nd/commands", "GET /api/nd/commands/1",
+		"GET /api/nd/smtp", "PUT /api/nd/smtp", "POST /api/nd/smtp/test",
 	} {
 		method, path, _ := strings.Cut(target, " ")
 		rec := httptest.NewRecorder()

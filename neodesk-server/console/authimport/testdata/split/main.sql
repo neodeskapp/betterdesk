@@ -194,14 +194,14 @@ CREATE TABLE agent_bundles (
                 client_commit TEXT DEFAULT NULL,
                 active_generation_hash TEXT DEFAULT NULL,
                 created_by INTEGER DEFAULT NULL,
-                product_type TEXT NOT NULL DEFAULT 'betterdesk-support',
+                product_type TEXT NOT NULL DEFAULT 'neodesk-support',
                 revoked INTEGER NOT NULL DEFAULT 0,
                 download_count INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
-INSERT INTO agent_bundles VALUES(1,'b-1','bundle','Bundle','{}','','',NULL,NULL,2,'betterdesk-support',0,0,'2026-11-18 14:37:15','2026-11-18 14:37:15');
-INSERT INTO agent_bundles VALUES(2,'b-2','old','Old','{}','','',NULL,NULL,4,'betterdesk-support',0,0,'2026-11-18 14:37:15','2026-11-18 14:37:15');
+INSERT INTO agent_bundles VALUES(1,'b-1','bundle','Bundle','{}','','',NULL,NULL,2,'neodesk-support',0,0,'2026-11-18 14:37:15','2026-11-18 14:37:15');
+INSERT INTO agent_bundles VALUES(2,'b-2','old','Old','{}','','',NULL,NULL,4,'neodesk-support',0,0,'2026-11-18 14:37:15','2026-11-18 14:37:15');
 CREATE TABLE agent_bundle_builds (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 branding_hash TEXT NOT NULL,

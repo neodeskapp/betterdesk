@@ -5,5 +5,5 @@
   ],
   "blocklist": {"success": true, "data": {"entries": null, "count": 0}},
   "auditEvents": {"success": true, "data": [{"id": 1, "action": "login", "time": "2026-11-10 01:02:03", "1": "index key", "b": 2}]},
-  "serverHealth": {"status": "running", "backend": "betterdesk", "uptime": "1h0m5s", "version": "3.5.224"}
+  "serverHealth": {"status": "running", "backend": "neodesk", "uptime": "1h0m5s", "version": "3.5.224"}
 }

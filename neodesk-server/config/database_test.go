@@ -5,7 +5,7 @@ import "testing"
 // L70: the server opens the database DATABASE_URL names, the type from its
 // scheme; DB_URL and DB_TYPE are read for older installs.
 func TestLoadEnv_DatabaseURLNamesTheDatabase(t *testing.T) {
-	const pg = "postgres://bd@db:5432/betterdesk"
+	const pg = "postgres://bd@db:5432/neodesk"
 	for _, c := range []struct {
 		name string
 		env  map[string]string

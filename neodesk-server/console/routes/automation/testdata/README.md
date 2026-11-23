@@ -18,7 +18,7 @@ database: 2,976 steps on SQLite and 2,973 on PostgreSQL.
 
 - every route for every role that can sign in, and for nobody, with writes
   that change nothing, then writes that go through as admin and super_admin
-- the addresses under `/api/bd`, where none of the ten answers, and the
+- the addresses under `/api/nd`, where none of the ten answers, and the
   addresses in other spellings: letter case, slashes, escapes, other methods
 - the alert history with `device_id`, `severity` and `acknowledged` in every
   form a query string can give them (text, empty, given twice, in brackets,
@@ -61,7 +61,7 @@ times are fixed and lie in 2001 or in March 2019.
 
 The device routes ran behind the real `requireDeviceToken` of
 `middleware/deviceAuth.js` with the real adapter, the router mounted at
-`/api/automation` and `/api/bd` as `routes/index.js` had it: 226 steps per
+`/api/automation` and `/api/nd` as `routes/index.js` had it: 226 steps per
 database.
 
 - tokens in every state at both mounts

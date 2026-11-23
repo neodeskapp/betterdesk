@@ -21,7 +21,7 @@ recordings were made with `TZ=UTC`, which the Go test checks.
 ## What is recorded
 
 The recorder ran the Node console's registration routes
-(`routes/registration.routes.js`, mounted at the root and at `/api/bd`)
+(`routes/registration.routes.js`, mounted at the root and at `/api/nd`)
 with the real `services/dbAdapter.js`, the real permission loading, panel
 access policy and guard, translations, JSON content-type rule, API client,
 device layer (`services/serverBackend.js`), device group service and key
