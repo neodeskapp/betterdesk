@@ -3017,6 +3017,7 @@
     "key_request_title": "Ny nyckel",
     "key_request_line": "{hostname} försökte ansluta igen från {ip} den {date} med en ny nyckel ({fingerprint}). En ominstallation eller återställning skapar en ny nyckel.",
     "key_request_what": "Ta bort enheten eller godkänn den nya nyckeln.",
+    "key_refused_line": "Den här datorn kom tillbaka med en ny nyckel, så servern godtar den inte och ingen session når den. En ominstallation eller återställning skapar en ny nyckel. Skicka en inbjudan och godkänn den nya nyckeln här, eller ta bort enheten.",
     "approve_key": "Godkänn ny nyckel",
     "approve_key_title": "Godkänna ny nyckel?",
     "approve_key_effect": "{device} kan sedan ansluta igen med sin inbjudan. Dess gamla enhetstoken och sessioner avslutas. Godkänn bara en nyckel du väntar dig, till exempel efter en ominstallation.",

@@ -3090,6 +3090,7 @@
         "key_request_title": "New key",
         "key_request_line": "{hostname} tried to rejoin from {ip} on {date} with a new key ({fingerprint}). A reinstall or a reset makes a new key.",
         "key_request_what": "Delete the device or approve the new key.",
+        "key_refused_line": "This computer came back with a new key, so the server does not accept it and no session reaches it. A reinstall or a reset makes a new key. Send it an invite and approve the new key here, or delete the device.",
         "approve_key": "Approve new key",
         "approve_key_title": "Approve new key?",
         "approve_key_effect": "{device} can then rejoin with its invite. Its old device tokens and sessions end. Approve only a key you expect, such as after a reinstall.",

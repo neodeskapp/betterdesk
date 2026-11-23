@@ -3011,6 +3011,7 @@
     "key_request_title": "新密钥",
     "key_request_line": "{hostname} 于 {date} 从 {ip} 使用新密钥 ({fingerprint}) 尝试重新加入。重新安装或重置会生成新密钥。",
     "key_request_what": "请删除设备或批准新密钥。",
+    "key_refused_line": "这台计算机带着新密钥回来，因此服务器不接受它，任何会话都无法连接到它。重新安装或重置会生成新密钥。请发送邀请并在此批准新密钥，或删除设备。",
     "approve_key": "批准新密钥",
     "approve_key_title": "要批准新密钥吗？",
     "approve_key_effect": "之后 {device} 可以使用其邀请重新加入。其旧的设备令牌和会话将结束。只批准您预期的密钥，例如重新安装之后。",

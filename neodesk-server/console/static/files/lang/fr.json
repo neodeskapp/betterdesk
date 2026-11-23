@@ -3033,6 +3033,7 @@
     "key_request_title": "Nouvelle clé",
     "key_request_line": "{hostname} a tenté de se réinscrire depuis {ip} le {date} avec une nouvelle clé ({fingerprint}). Une réinstallation ou une réinitialisation crée une nouvelle clé.",
     "key_request_what": "Supprimez l'appareil ou approuvez la nouvelle clé.",
+    "key_refused_line": "Cet ordinateur est revenu avec une nouvelle clé : le serveur ne l'accepte donc pas et aucune session ne l'atteint. Une réinstallation ou une réinitialisation crée une nouvelle clé. Envoyez-lui une invitation et approuvez ici la nouvelle clé, ou supprimez l'appareil.",
     "approve_key": "Approuver la nouvelle clé",
     "approve_key_title": "Approuver la nouvelle clé ?",
     "approve_key_effect": "{device} pourra alors se réinscrire avec son invitation. Ses anciens jetons d'appareil et ses sessions prennent fin. N'approuvez qu'une clé que vous attendez, par exemple après une réinstallation.",

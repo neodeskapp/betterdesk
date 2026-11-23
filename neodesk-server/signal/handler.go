@@ -604,6 +604,12 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 			s.sendUDP(registerPeerResponse(true), raddr)
 			return
 		}
+		// The server refused its key: the heartbeat does not count, and the
+		// peer is asked for its key again
+		if s.peers.KeyRefused(id) {
+			s.sendUDP(registerPeerResponse(true), raddr)
+			return
+		}
 
 		// Update heartbeat
 		s.peers.UpdateHeartbeat(id, raddr, msg.Serial)
@@ -702,8 +708,15 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 			entry.UUID = peerUUIDFromDB(dbPeer.UUID)
 		}
 	}
+	// A key refused before a restart or before the entry expired stays
+	// refused until the peer registers with the stored key
+	entry.KeyRefused = len(entry.PK) > 0 && s.keyRefusedStored(id)
 
 	s.peers.Put(entry)
+	if entry.KeyRefused {
+		s.sendUDP(registerPeerResponse(true), raddr)
+		return
+	}
 
 	// Only request PK if we don't have it from database
 	requestPk := len(entry.PK) == 0
@@ -884,9 +897,11 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 		}
 		if len(storedPK) > 0 && !bytes.Equal(storedPK, msg.Pk) {
 			log.Printf("[signal] PK mismatch for %s", id)
+			s.refuseKey(id, addrStr)
 			return registerPkResponse(pb.RegisterPkResponse_NOT_SUPPORT)
 		}
 	}
+	s.acceptKey(id)
 
 	uuidBytes, pk := storedUUID, storedPK
 	if len(msg.Uuid) > 0 {
@@ -1082,7 +1097,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 	target := s.peers.Get(targetID)
 
 	// Target not found or offline
-	if target == nil || target.IsExpired(config.RegTimeout) {
+	if target == nil || !target.Reachable(config.RegTimeout) {
 		if target == nil {
 			log.Printf("[signal] PunchHole: target %s not found in peer map", targetID)
 		} else {
@@ -1308,7 +1323,7 @@ func (s *Server) punchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAdd
 	permissions := policy.permissions
 
 	target := s.peers.Get(targetID)
-	if target == nil || target.IsExpired(config.RegTimeout) {
+	if target == nil || !target.Reachable(config.RegTimeout) {
 		if target == nil {
 			log.Printf("[signal] PunchHole (TCP): target %s not found in peer map", targetID)
 		} else {
@@ -1697,7 +1712,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 
 	target := s.peers.Get(targetID)
 
-	if target == nil || target.IsExpired(config.RegTimeout) {
+	if target == nil || !target.Reachable(config.RegTimeout) {
 		// Target offline — send relay response with failure
 		resp := &pb.RendezvousMessage{
 			Union: &pb.RendezvousMessage_RelayResponse{
@@ -1856,7 +1871,7 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 
 	target := s.peers.Get(targetID)
 
-	if target == nil || target.IsExpired(config.RegTimeout) {
+	if target == nil || !target.Reachable(config.RegTimeout) {
 		log.Printf("[signal] RequestRelay (TCP): target %s offline", targetID)
 		return &pb.RendezvousMessage{
 			Union: &pb.RendezvousMessage_RelayResponse{
@@ -2335,7 +2350,7 @@ func (s *Server) handleIceCandidate(msg *pb.IceCandidate, senderAddr *net.UDPAdd
 		return
 	}
 	target := s.peers.Get(targetID)
-	if target == nil || target.IsExpired(config.RegTimeout) {
+	if target == nil || !target.Reachable(config.RegTimeout) {
 		return
 	}
 	fwd := &pb.RendezvousMessage{
@@ -3643,4 +3658,45 @@ func (s *Server) recordPendingEnrollment(peerID, clientIP string, meta pendingEn
 			},
 		})
 	}
+}
+
+// keyRefusedConfigPrefix holds, per ID, the address whose RegisterPk the
+// server refused for its key (refuseKey): a peer whose key is refused is
+// not online, also after a restart or after its entry expired.
+const keyRefusedConfigPrefix = "device_key_refused_"
+
+// refuseKey notes that a RegisterPk from addr carried another key than the
+// one stored for id. Only a RegisterPk from the peer's own address counts
+// (peer.Map.RefuseKey): the peer then takes no session and is not online
+// until it registers with the stored key or an administrator approves the
+// new one.
+func (s *Server) refuseKey(id, addr string) {
+	ip := net.ParseIP(hostFromAddrString(addr))
+	if s.peers.KeyRefused(id) || !s.peers.RefuseKey(id, ip) {
+		return
+	}
+	log.Printf("[signal] %s is not online while its key is refused", id)
+	if err := s.db.SetConfig(keyRefusedConfigPrefix+id, ip.String()); err != nil {
+		log.Printf("[signal] Failed to note the refused key of %s: %v", id, err)
+	}
+}
+
+// acceptKey forgets a refused key of id once a RegisterPk with the stored
+// key (or a first one) was accepted.
+func (s *Server) acceptKey(id string) {
+	if !s.keyRefusedStored(id) {
+		return
+	}
+	if err := s.db.DeleteConfig(keyRefusedConfigPrefix + id); err != nil {
+		log.Printf("[signal] Failed to forget the refused key of %s: %v", id, err)
+	}
+}
+
+// keyRefusedStored reports whether the server noted a refused key for id.
+func (s *Server) keyRefusedStored(id string) bool {
+	if s.db == nil {
+		return false
+	}
+	v, err := s.db.GetConfig(keyRefusedConfigPrefix + id)
+	return err == nil && v != ""
 }

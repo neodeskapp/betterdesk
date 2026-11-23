@@ -189,6 +189,15 @@
 			>
 		{/if}
 	</Notice>
+{:else if device.key_refused}
+	<Notice tone="warning" title={tf('device_detail.key_request_title', 'New key')} role="note">
+		<p>
+			{tf(
+				'device_detail.key_refused_line',
+				'This computer came back with a new key, so the server does not accept it and no session reaches it. A reinstall or a reset makes a new key. Send it an invite and approve the new key here, or delete the device.'
+			)}
+		</p>
+	</Notice>
 {/if}
 
 {#if load}

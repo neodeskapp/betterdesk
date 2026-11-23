@@ -185,6 +185,8 @@ func (s *Server) replaceDeviceKey(deviceID, key string) error {
 	if s.peers != nil {
 		s.peers.SetKeys(deviceID, nil, pk)
 	}
+	// The signal server's note of the key it refused (signal: refuseKey)
+	_ = s.db.DeleteConfig("device_key_refused_" + deviceID)
 	if err := s.db.EndDeviceTokensExcept(deviceID, 0); err != nil {
 		return err
 	}

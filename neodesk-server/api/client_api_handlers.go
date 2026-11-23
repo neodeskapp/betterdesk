@@ -1009,12 +1009,15 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 	if !telemetryVerified {
 		body.Telemetry = nil
 	}
-	// Update peer status to ONLINE
-	_ = s.db.UpdatePeerStatus(deviceID, "ONLINE", clientIP, "heartbeat")
-	// HTTP heartbeats are also a liveness signal for NeoDesk clients that
-	// do not maintain a UDP/WebSocket signal connection. Refresh the in-memory
-	// peer map so the signal heartbeat cleaner does not mark them offline again.
-	s.peers.TouchHeartbeat(deviceID)
+	// Update peer status to ONLINE, unless the signal server refuses the
+	// device's key: it takes no session then, so it is not online
+	if !s.peers.KeyRefused(deviceID) {
+		_ = s.db.UpdatePeerStatus(deviceID, "ONLINE", clientIP, "heartbeat")
+		// HTTP heartbeats are also a liveness signal for NeoDesk clients that
+		// do not maintain a UDP/WebSocket signal connection. Refresh the in-memory
+		// peer map so the signal heartbeat cleaner does not mark them offline again.
+		s.peers.TouchHeartbeat(deviceID)
+	}
 
 	// If the user logged in before the peer row existed, bind owner now.
 	db.ApplyActiveSessionOwner(s.db, deviceID, body.UUID)

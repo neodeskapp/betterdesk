@@ -3017,6 +3017,7 @@
     "key_request_title": "Cheie nouă",
     "key_request_line": "{hostname} a încercat să se reconecteze de la {ip} pe {date} cu o cheie nouă ({fingerprint}). O reinstalare sau o resetare creează o cheie nouă.",
     "key_request_what": "Ștergeți dispozitivul sau aprobați cheia nouă.",
+    "key_refused_line": "Acest computer a revenit cu o cheie nouă, așa că serverul nu îl acceptă și nicio sesiune nu ajunge la el. O reinstalare sau o resetare creează o cheie nouă. Trimiteți-i o invitație și aprobați aici cheia nouă, sau ștergeți dispozitivul.",
     "approve_key": "Aprobați cheia nouă",
     "approve_key_title": "Aprobați cheia nouă?",
     "approve_key_effect": "{device} se va putea apoi reconecta cu invitația sa. Tokenurile de dispozitiv și sesiunile vechi se încheie. Aprobați doar o cheie pe care o așteptați, de exemplu după o reinstalare.",

@@ -3017,6 +3017,7 @@
     "key_request_title": "Új kulcs",
     "key_request_line": "{hostname} {date} időpontban a(z) {ip} címről új kulccsal ({fingerprint}) próbált újra csatlakozni. Újratelepítés vagy visszaállítás új kulcsot hoz létre.",
     "key_request_what": "Törölje az eszközt, vagy hagyja jóvá az új kulcsot.",
+    "key_refused_line": "Ez a számítógép új kulccsal tért vissza, ezért a szerver nem fogadja el, és egyetlen munkamenet sem éri el. Újratelepítés vagy visszaállítás új kulcsot hoz létre. Küldjön neki meghívót, és itt hagyja jóvá az új kulcsot, vagy törölje az eszközt.",
     "approve_key": "Új kulcs jóváhagyása",
     "approve_key_title": "Jóváhagyja az új kulcsot?",
     "approve_key_effect": "A(z) {device} ezután a meghívójával újra csatlakozhat. A régi eszköztokenjei és munkamenetei megszűnnek. Csak olyan kulcsot hagyjon jóvá, amelyre számít, például újratelepítés után.",

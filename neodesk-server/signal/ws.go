@@ -548,6 +548,9 @@ func (s *Server) handleRegisterPeerWS(msg *pb.RegisterPeer, remoteAddr string) (
 			log.Printf("[signal] WS heartbeat for %s from new address %s: asking for its key before moving it", id, remoteAddr)
 			return registerPeerResponse(true), false
 		}
+		if s.peers.KeyRefused(id) {
+			return registerPeerResponse(true), false
+		}
 
 		// Update heartbeat (WS has no real UDP addr)
 		hasPK, ok := s.peers.WSHeartbeat(id, msg.Serial, remoteAddr)

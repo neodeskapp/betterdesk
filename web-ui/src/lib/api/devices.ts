@@ -143,7 +143,9 @@ export const DeviceDetail = v.looseObject({
 	telemetry: v.optional(v.nullable(v.looseObject({}))),
 	connection_mode: v.optional(v.nullable(v.looseObject({}))),
 	banned_by: Str,
-	key_request: v.optional(v.nullable(KeyRequest))
+	key_request: v.optional(v.nullable(KeyRequest)),
+	/** It came back with another key, which the server refuses: no session reaches it */
+	key_refused: v.optional(v.boolean(), false)
 });
 export type DeviceDetail = v.InferOutput<typeof DeviceDetail>;
 

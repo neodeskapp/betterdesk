@@ -3011,6 +3011,7 @@
     "key_request_title": "Neuer Schlüssel",
     "key_request_line": "{hostname} hat am {date} von {ip} aus versucht, mit einem neuen Schlüssel ({fingerprint}) wieder beizutreten. Eine Neuinstallation oder ein Zurücksetzen erzeugt einen neuen Schlüssel.",
     "key_request_what": "Löschen Sie das Gerät oder genehmigen Sie den neuen Schlüssel.",
+    "key_refused_line": "Dieser Computer hat sich mit einem neuen Schlüssel zurückgemeldet. Der Server nimmt ihn deshalb nicht an, und keine Sitzung erreicht ihn. Eine Neuinstallation oder ein Zurücksetzen erzeugt einen neuen Schlüssel. Schicken Sie ihm eine Einladung und genehmigen Sie hier den neuen Schlüssel, oder löschen Sie das Gerät.",
     "approve_key": "Neuen Schlüssel genehmigen",
     "approve_key_title": "Neuen Schlüssel genehmigen?",
     "approve_key_effect": "{device} kann dann mit seiner Einladung wieder beitreten. Seine alten Geräte-Tokens und Sitzungen enden. Genehmigen Sie nur einen Schlüssel, den Sie erwarten, etwa nach einer Neuinstallation.",

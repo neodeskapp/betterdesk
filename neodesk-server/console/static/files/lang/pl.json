@@ -3029,6 +3029,7 @@
     "key_request_title": "Nowy klucz",
     "key_request_line": "{hostname} próbował dołączyć ponownie z {ip} dnia {date} z nowym kluczem ({fingerprint}). Ponowna instalacja lub reset tworzy nowy klucz.",
     "key_request_what": "Usuń urządzenie albo zatwierdź nowy klucz.",
+    "key_refused_line": "Ten komputer wrócił z nowym kluczem, więc serwer go nie przyjmuje i żadna sesja do niego nie dociera. Ponowna instalacja lub reset tworzy nowy klucz. Wyślij mu zaproszenie i zatwierdź tutaj nowy klucz albo usuń urządzenie.",
     "approve_key": "Zatwierdź nowy klucz",
     "approve_key_title": "Zatwierdzić nowy klucz?",
     "approve_key_effect": "{device} będzie mógł wtedy dołączyć ponownie ze swoim zaproszeniem. Jego stare tokeny urządzenia i sesje wygasną. Zatwierdzaj tylko klucz, którego się spodziewasz, np. po ponownej instalacji.",

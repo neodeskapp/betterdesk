@@ -3033,6 +3033,7 @@
     "key_request_title": "新金鑰",
     "key_request_line": "{hostname} 於 {date} 從 {ip} 以新金鑰 ({fingerprint}) 嘗試重新加入。重新安裝或重設會產生新金鑰。",
     "key_request_what": "請刪除裝置或核准新金鑰。",
+    "key_refused_line": "這台電腦帶著新金鑰回來，因此伺服器不接受它，任何工作階段都無法連到它。重新安裝或重設會產生新金鑰。請傳送邀請並在此核准新金鑰，或刪除裝置。",
     "approve_key": "核准新金鑰",
     "approve_key_title": "要核准新金鑰嗎？",
     "approve_key_effect": "之後 {device} 可以用其邀請重新加入。其舊的裝置權杖和工作階段會結束。只核准您預期的金鑰，例如重新安裝之後。",

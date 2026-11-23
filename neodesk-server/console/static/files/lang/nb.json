@@ -3017,6 +3017,7 @@
     "key_request_title": "Ny nøkkel",
     "key_request_line": "{hostname} prøvde å bli med igjen fra {ip} {date} med en ny nøkkel ({fingerprint}). En ny installasjon eller tilbakestilling lager en ny nøkkel.",
     "key_request_what": "Slett enheten eller godkjenn den nye nøkkelen.",
+    "key_refused_line": "Denne datamaskinen kom tilbake med en ny nøkkel, så serveren godtar den ikke, og ingen økt når den. En ny installasjon eller tilbakestilling lager en ny nøkkel. Send den en invitasjon og godkjenn den nye nøkkelen her, eller slett enheten.",
     "approve_key": "Godkjenn ny nøkkel",
     "approve_key_title": "Godkjenne ny nøkkel?",
     "approve_key_effect": "{device} kan da bli med igjen med invitasjonen sin. De gamle enhetstokenene og øktene avsluttes. Godkjenn bare en nøkkel du venter, for eksempel etter en ny installasjon.",

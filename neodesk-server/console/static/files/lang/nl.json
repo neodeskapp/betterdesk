@@ -3011,6 +3011,7 @@
     "key_request_title": "Nieuwe sleutel",
     "key_request_line": "{hostname} probeerde op {date} vanaf {ip} opnieuw lid te worden met een nieuwe sleutel ({fingerprint}). Een herinstallatie of reset maakt een nieuwe sleutel.",
     "key_request_what": "Verwijder het apparaat of keur de nieuwe sleutel goed.",
+    "key_refused_line": "Deze computer kwam terug met een nieuwe sleutel, dus de server accepteert hem niet en geen sessie bereikt hem. Een herinstallatie of reset maakt een nieuwe sleutel. Stuur hem een uitnodiging en keur hier de nieuwe sleutel goed, of verwijder het apparaat.",
     "approve_key": "Nieuwe sleutel goedkeuren",
     "approve_key_title": "Nieuwe sleutel goedkeuren?",
     "approve_key_effect": "{device} kan dan opnieuw lid worden met zijn uitnodiging. De oude apparaattokens en sessies eindigen. Keur alleen een sleutel goed die u verwacht, bijvoorbeeld na een herinstallatie.",

@@ -3017,6 +3017,7 @@
     "key_request_title": "Kunci baru",
     "key_request_line": "{hostname} mencoba bergabung lagi dari {ip} pada {date} dengan kunci baru ({fingerprint}). Instal ulang atau reset membuat kunci baru.",
     "key_request_what": "Hapus perangkat atau setujui kunci baru.",
+    "key_refused_line": "Komputer ini kembali dengan kunci baru, jadi server tidak menerimanya dan tidak ada sesi yang sampai ke sana. Instal ulang atau reset membuat kunci baru. Kirimkan undangan lalu setujui kunci baru di sini, atau hapus perangkat.",
     "approve_key": "Setujui kunci baru",
     "approve_key_title": "Setujui kunci baru?",
     "approve_key_effect": "{device} lalu dapat bergabung lagi dengan undangannya. Token perangkat dan sesi lamanya berakhir. Setujui hanya kunci yang Anda harapkan, misalnya setelah instal ulang.",

@@ -50,21 +50,27 @@ const (
 
 // Entry represents a single connected peer in the signal server's memory.
 type Entry struct {
-	ID        string       // RustDesk device ID (e.g., "ABC123456")
-	UUID      []byte       // Device installation UUID
-	PK        []byte       // Ed25519 public key (32 bytes)
-	IP        string       // Last known IP:port
-	NATType   int32        // 0=unknown, 1=asymmetric, 2=symmetric
-	Serial    int32        // Registration serial number
-	ConnType  ConnType     // UDP, TCP, or WS
-	UDPAddr   *net.UDPAddr // For UDP peers — used to send messages back
-	TCPConn   net.Conn     // For TCP peers — persistent connection
-	WSConn    interface{}  // For WS peers — typed during WebSocket implementation
-	LastReg   time.Time    // Last RegisterPeer timestamp (heartbeat)
-	Disabled  bool         // Peer is disabled (won't appear online)
-	Banned    bool         // Peer is banned (reject connections)
-	LocalAddr string       // Peer's self-reported local address
-	Version   string       // Client version string
+	ID       string       // RustDesk device ID (e.g., "ABC123456")
+	UUID     []byte       // Device installation UUID
+	PK       []byte       // Ed25519 public key (32 bytes)
+	IP       string       // Last known IP:port
+	NATType  int32        // 0=unknown, 1=asymmetric, 2=symmetric
+	Serial   int32        // Registration serial number
+	ConnType ConnType     // UDP, TCP, or WS
+	UDPAddr  *net.UDPAddr // For UDP peers — used to send messages back
+	TCPConn  net.Conn     // For TCP peers — persistent connection
+	WSConn   interface{}  // For WS peers — typed during WebSocket implementation
+	LastReg  time.Time    // Last RegisterPeer timestamp (heartbeat)
+	Disabled bool         // Peer is disabled (won't appear online)
+	Banned   bool         // Peer is banned (reject connections)
+	// KeyRefused: the peer's last RegisterPk from its own address carried
+	// another key than the one stored for its ID (RefuseKey). It takes no
+	// session, so it is not online, and its heartbeats do not count, until
+	// it registers with the stored key or an administrator approves the new
+	// one (SetKeys).
+	KeyRefused bool
+	LocalAddr  string // Peer's self-reported local address
+	Version    string // Client version string
 
 	// RelayServer is the relay endpoint this peer itself advertised (from
 	// PunchHoleSent). Recent RustDesk clients validate an incoming relay
@@ -86,6 +92,12 @@ type Entry struct {
 // IsExpired returns true if the peer hasn't sent a heartbeat within timeout.
 func (e *Entry) IsExpired(timeout time.Duration) bool {
 	return time.Since(e.LastReg) > timeout
+}
+
+// Reachable reports whether the peer can take a session: it sent a
+// heartbeat within timeout and the server accepts its key.
+func (e *Entry) Reachable(timeout time.Duration) bool {
+	return !e.IsExpired(timeout) && !e.KeyRefused
 }
 
 // CloseConnections closes any open TCP or WebSocket connections held by this entry.
@@ -387,6 +399,30 @@ func setKeys(e *Entry, uuid, pk []byte) {
 		e.UUID = append([]byte(nil), uuid...)
 	}
 	e.PK = append([]byte(nil), pk...)
+	e.KeyRefused = false
+}
+
+// RefuseKey marks the live peer whose RegisterPk from ip carried another
+// key than the stored one (Entry.KeyRefused). A RegisterPk from another
+// address than the peer's own marks nothing: anyone can send one for any
+// ID. It reports whether the peer was marked.
+func (m *Map) RefuseKey(id string, ip net.IP) bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	e, ok := m.entries[id]
+	if !ok || ip == nil || !peerEntryMatchesIP(e, ip) {
+		return false
+	}
+	e.KeyRefused = true
+	return true
+}
+
+// KeyRefused reports whether the live peer's key is refused (RefuseKey).
+func (m *Map) KeyRefused(id string) bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	e, ok := m.entries[id]
+	return ok && e.KeyRefused
 }
 
 // RecordRegisterPk stores the keys of an accepted RegisterPk and binds the
@@ -523,6 +559,9 @@ func (m *Map) TouchHeartbeat(id string) bool {
 	defer m.mu.Unlock()
 	e, ok := m.entries[id]
 	if !ok {
+		return false
+	}
+	if e.KeyRefused {
 		return false
 	}
 	e.LastReg = time.Now()
@@ -678,7 +717,8 @@ func (m *Map) CleanExpired(timeout time.Duration) []string {
 	return expired
 }
 
-// IsOnline returns true if a peer is in the map and not expired.
+// IsOnline returns true if a peer is in the map, not expired and its key
+// is not refused (Entry.Reachable).
 func (m *Map) IsOnline(id string, timeout time.Duration) bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -686,7 +726,7 @@ func (m *Map) IsOnline(id string, timeout time.Duration) bool {
 	if !ok {
 		return false
 	}
-	return !e.IsExpired(timeout)
+	return e.Reachable(timeout)
 }
 
 // OnlineStates returns a bitmask of online states for the given peer IDs.
@@ -701,7 +741,7 @@ func (m *Map) OnlineStates(ids []string, timeout time.Duration) []byte {
 
 	for i, id := range ids {
 		e, ok := m.entries[id]
-		if ok && !e.IsExpired(timeout) {
+		if ok && e.Reachable(timeout) {
 			statesIdx := i / 8
 			bitIdx := uint(7 - i%8)
 			states[statesIdx] |= 0x01 << bitIdx

@@ -1108,6 +1108,9 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 		CDAPConnected bool        `json:"cdap_connected"`
 		MeshConnected bool        `json:"mesh_connected"`
 		MeshNodeID    string      `json:"mesh_node_id,omitempty"`
+		// KeyRefused: the device came back with another key, which the
+		// signal server refuses; it takes no session and is not online.
+		KeyRefused bool `json:"key_refused,omitempty"`
 	}
 
 	result := make([]peerResponse, len(peers))
@@ -1115,13 +1118,14 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 		liveOnline := s.peers.IsOnline(p.ID, config.RegTimeout)
 		signalReady := liveOnline
 		liveStatus := peer.StatusOffline
-		if snap, ok := s.peers.GetSnapshot(p.ID, config.DegradedThreshold, config.CriticalThreshold); ok {
+		keyRefused := s.peers.KeyRefused(p.ID)
+		if snap, ok := s.peers.GetSnapshot(p.ID, config.DegradedThreshold, config.CriticalThreshold); ok && !keyRefused {
 			liveStatus = snap.Status
 		}
 		// NeoDesk clients may be reachable through the HTTP heartbeat API
 		// without a UDP/WebSocket signal entry. Use the recent DB heartbeat as
 		// the liveness source in that case.
-		if !liveOnline && !p.LastOnline.IsZero() && time.Since(p.LastOnline) <= config.RegTimeout {
+		if !liveOnline && !keyRefused && !p.LastOnline.IsZero() && time.Since(p.LastOnline) <= config.RegTimeout {
 			liveOnline = true
 			liveStatus = peer.StatusOnline
 		}
@@ -1158,6 +1162,7 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 			CDAPConnected: cdapConnected,
 			MeshConnected: meshConnected,
 			MeshNodeID:    meshNodeID,
+			KeyRefused:    keyRefused,
 		}
 	}
 
@@ -1233,10 +1238,11 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 	// Enrich with live status from memory map (same as handleListPeers)
 	liveOnline := s.peers.IsOnline(p.ID, config.RegTimeout)
 	liveStatus := peer.StatusOffline
-	if snap, ok := s.peers.GetSnapshot(p.ID, config.DegradedThreshold, config.CriticalThreshold); ok {
+	keyRefused := s.peers.KeyRefused(p.ID)
+	if snap, ok := s.peers.GetSnapshot(p.ID, config.DegradedThreshold, config.CriticalThreshold); ok && !keyRefused {
 		liveStatus = snap.Status
 	}
-	if !liveOnline && !p.LastOnline.IsZero() && time.Since(p.LastOnline) <= config.RegTimeout {
+	if !liveOnline && !keyRefused && !p.LastOnline.IsZero() && time.Since(p.LastOnline) <= config.RegTimeout {
 		liveOnline = true
 		liveStatus = peer.StatusOnline
 	}
@@ -1268,6 +1274,7 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 		CDAPConnected bool        `json:"cdap_connected"`
 		MeshConnected bool        `json:"mesh_connected"`
 		MeshNodeID    string      `json:"mesh_node_id,omitempty"`
+		KeyRefused    bool        `json:"key_refused,omitempty"`
 		// KeyRequest is a new key the device brought to an invite,
 		// which an administrator approves (device_key.go)
 		KeyRequest map[string]any `json:"key_request,omitempty"`
@@ -1290,6 +1297,7 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 		CDAPConnected: cdapConnected,
 		MeshConnected: meshConnected,
 		MeshNodeID:    meshNodeID,
+		KeyRefused:    keyRefused,
 		KeyRequest:    s.keyRequestOf(p.ID),
 	})
 }

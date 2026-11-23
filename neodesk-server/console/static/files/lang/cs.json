@@ -3011,6 +3011,7 @@
     "key_request_title": "Nový klíč",
     "key_request_line": "{hostname} se {date} pokusil znovu připojit z {ip} s novým klíčem ({fingerprint}). Nový klíč vznikne při přeinstalaci nebo obnovení.",
     "key_request_what": "Zařízení odstraňte, nebo nový klíč schvalte.",
+    "key_refused_line": "Tento počítač se vrátil s novým klíčem, proto ho server nepřijímá a žádná relace se k němu nedostane. Nový klíč vznikne při přeinstalaci nebo obnovení. Pošlete mu pozvánku a nový klíč zde schvalte, nebo zařízení odstraňte.",
     "approve_key": "Schválit nový klíč",
     "approve_key_title": "Schválit nový klíč?",
     "approve_key_effect": "{device} se pak může znovu připojit se svou pozvánkou. Jeho staré tokeny zařízení a relace skončí. Schvalte jen klíč, který očekáváte, například po přeinstalaci.",

@@ -3017,6 +3017,7 @@
     "key_request_title": "Ny nøgle",
     "key_request_line": "{hostname} forsøgte at blive tilknyttet igen fra {ip} den {date} med en ny nøgle ({fingerprint}). En geninstallation eller nulstilling laver en ny nøgle.",
     "key_request_what": "Slet enheden, eller godkend den nye nøgle.",
+    "key_refused_line": "Denne computer kom tilbage med en ny nøgle, så serveren accepterer den ikke, og ingen session når frem til den. En geninstallation eller nulstilling laver en ny nøgle. Send den en invitation, og godkend den nye nøgle her, eller slet enheden.",
     "approve_key": "Godkend ny nøgle",
     "approve_key_title": "Godkend ny nøgle?",
     "approve_key_effect": "{device} kan derefter blive tilknyttet igen med sin invitation. Dens gamle enhedstokens og sessioner ophører. Godkend kun en nøgle, du forventer, fx efter en geninstallation.",

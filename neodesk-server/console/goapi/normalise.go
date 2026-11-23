@@ -119,6 +119,10 @@ func normalisePeer(peer any, now time.Time) *Object {
 		"mesh_node_id", text("mesh_node_id"),
 		"linked_peer_id", text("linked_peer_id"),
 	)
+	// The device came back with another key, which the server refuses
+	if Truthy(p("key_refused")) {
+		out.Set("key_refused", true)
+	}
 	// A new key it brought to an invite, which an administrator approves
 	if req, ok := p("key_request").(*Object); ok {
 		out.Set("key_request", req)

@@ -3017,6 +3017,7 @@
     "key_request_title": "Yeni anahtar",
     "key_request_line": "{hostname}, {date} tarihinde {ip} adresinden yeni bir anahtarla ({fingerprint}) yeniden katılmayı denedi. Yeniden kurulum veya sıfırlama yeni bir anahtar oluşturur.",
     "key_request_what": "Cihazı silin veya yeni anahtarı onaylayın.",
+    "key_refused_line": "Bu bilgisayar yeni bir anahtarla geri döndü, bu yüzden sunucu onu kabul etmiyor ve hiçbir oturum ona ulaşmıyor. Yeniden kurulum veya sıfırlama yeni bir anahtar oluşturur. Ona bir davet gönderip yeni anahtarı burada onaylayın ya da cihazı silin.",
     "approve_key": "Yeni anahtarı onayla",
     "approve_key_title": "Yeni anahtar onaylansın mı?",
     "approve_key_effect": "{device} daha sonra davetiyle yeniden katılabilir. Eski cihaz belirteçleri ve oturumları sona erer. Yalnızca beklediğiniz bir anahtarı onaylayın, örneğin yeniden kurulumdan sonra.",

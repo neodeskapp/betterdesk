@@ -3017,6 +3017,7 @@
     "key_request_title": "Uusi avain",
     "key_request_line": "{hostname} yritti liittyä uudelleen osoitteesta {ip} {date} uudella avaimella ({fingerprint}). Uudelleenasennus tai palautus luo uuden avaimen.",
     "key_request_what": "Poista laite tai hyväksy uusi avain.",
+    "key_refused_line": "Tämä tietokone palasi uudella avaimella, joten palvelin ei hyväksy sitä eikä mikään istunto tavoita sitä. Uudelleenasennus tai palautus luo uuden avaimen. Lähetä sille kutsu ja hyväksy uusi avain täällä, tai poista laite.",
     "approve_key": "Hyväksy uusi avain",
     "approve_key_title": "Hyväksytäänkö uusi avain?",
     "approve_key_effect": "{device} voi sen jälkeen liittyä uudelleen kutsullaan. Sen vanhat laitetunnukset ja istunnot päättyvät. Hyväksy vain avain, jota odotat, esimerkiksi uudelleenasennuksen jälkeen.",

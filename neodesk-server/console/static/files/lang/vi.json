@@ -3017,6 +3017,7 @@
     "key_request_title": "Khóa mới",
     "key_request_line": "{hostname} đã thử tham gia lại từ {ip} vào {date} với khóa mới ({fingerprint}). Cài đặt lại hoặc đặt lại sẽ tạo khóa mới.",
     "key_request_what": "Xóa thiết bị hoặc phê duyệt khóa mới.",
+    "key_refused_line": "Máy tính này quay lại với khóa mới nên máy chủ không chấp nhận và không phiên nào tới được nó. Cài đặt lại hoặc đặt lại sẽ tạo khóa mới. Hãy gửi lời mời rồi phê duyệt khóa mới tại đây, hoặc xóa thiết bị.",
     "approve_key": "Phê duyệt khóa mới",
     "approve_key_title": "Phê duyệt khóa mới?",
     "approve_key_effect": "Sau đó {device} có thể tham gia lại bằng lời mời của mình. Các token thiết bị và phiên cũ sẽ kết thúc. Chỉ phê duyệt khóa mà bạn đang chờ, chẳng hạn sau khi cài đặt lại.",

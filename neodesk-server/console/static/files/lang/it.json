@@ -3011,6 +3011,7 @@
     "key_request_title": "Nuova chiave",
     "key_request_line": "{hostname} ha provato a ricollegarsi da {ip} il {date} con una nuova chiave ({fingerprint}). Una reinstallazione o un ripristino crea una nuova chiave.",
     "key_request_what": "Elimina il dispositivo o approva la nuova chiave.",
+    "key_refused_line": "Questo computer è tornato con una nuova chiave, quindi il server non lo accetta e nessuna sessione lo raggiunge. Una reinstallazione o un ripristino crea una nuova chiave. Mandagli un invito e approva qui la nuova chiave, oppure elimina il dispositivo.",
     "approve_key": "Approva nuova chiave",
     "approve_key_title": "Approvare la nuova chiave?",
     "approve_key_effect": "{device} potrà poi ricollegarsi con il suo invito. I vecchi token del dispositivo e le sessioni terminano. Approva solo una chiave che ti aspetti, ad esempio dopo una reinstallazione.",
