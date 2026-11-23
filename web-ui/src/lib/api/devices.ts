@@ -126,13 +126,24 @@ export async function listDevices(q: ListQuery = {}, signal?: AbortSignal): Prom
 	return out.devices;
 }
 
+/** A new key an enrolled computer brought to an invite (a reinstall or a reset makes one) */
+export const KeyRequest = v.object({
+	hostname: Str,
+	platform: Str,
+	ip: Str,
+	requested_at: Str,
+	fingerprint: Str
+});
+export type KeyRequest = v.InferOutput<typeof KeyRequest>;
+
 export const DeviceDetail = v.looseObject({
 	...Device.entries,
 	sysinfo: v.optional(v.nullable(v.looseObject({}))),
 	metrics: v.optional(v.nullable(v.looseObject({}))),
 	telemetry: v.optional(v.nullable(v.looseObject({}))),
 	connection_mode: v.optional(v.nullable(v.looseObject({}))),
-	banned_by: Str
+	banned_by: Str,
+	key_request: v.optional(v.nullable(KeyRequest))
 });
 export type DeviceDetail = v.InferOutput<typeof DeviceDetail>;
 
@@ -179,6 +190,11 @@ export function bulkDeleteDevices(ids: string[]) {
 
 export function changeDeviceId(id: string, newId: string) {
 	return api(Ok, `/api/devices/${encodeURIComponent(id)}/change-id`, { method: 'POST', body: { newId } });
+}
+
+/** The computer's new key becomes its key; it rejoins with its invite, its old tokens end */
+export function approveDeviceKey(id: string) {
+	return api(Ok, `/api/onboard/devices/${encodeURIComponent(id)}/approve-key`, { method: 'POST' });
 }
 
 /** Ends every device token of the device; it gets a new one the next time it checks in */

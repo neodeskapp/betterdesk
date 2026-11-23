@@ -1798,7 +1798,9 @@
     "field_status": "status",
     "value_queued_managed": "menunggu persetujuan (mode terkelola)",
     "value_idle": "tidak aktif",
-    "value_support": "dukungan"
+    "value_support": "dukungan",
+    "action_device_key_replaced": "Kunci perangkat diganti",
+    "action_device_key_approved": "Kunci perangkat baru disetujui"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3011,7 +3013,14 @@
     "action_port_desc": "Jangkau port di perangkat atau di jaringannya",
     "agent_cached": "Perangkat sedang offline. Ini yang terakhir dikirimnya:",
     "file_downloaded": "{name} telah diunduh.",
-    "user_hint": "Ditampilkan di daftar. Perangkat menggantinya saat melaporkan siapa yang masuk."
+    "user_hint": "Ditampilkan di daftar. Perangkat menggantinya saat melaporkan siapa yang masuk.",
+    "key_request_title": "Kunci baru",
+    "key_request_line": "{hostname} mencoba bergabung lagi dari {ip} pada {date} dengan kunci baru ({fingerprint}). Instal ulang atau reset membuat kunci baru.",
+    "key_request_what": "Hapus perangkat atau setujui kunci baru.",
+    "approve_key": "Setujui kunci baru",
+    "approve_key_title": "Setujui kunci baru?",
+    "approve_key_effect": "{device} lalu dapat bergabung lagi dengan undangannya. Token perangkat dan sesi lamanya berakhir. Setujui hanya kunci yang Anda harapkan, misalnya setelah instal ulang.",
+    "approve_key_done": "Kunci baru disetujui. Komputer kini dapat bergabung lagi dengan undangannya."
   },
   "inventory": {
     "title": "Inventory",

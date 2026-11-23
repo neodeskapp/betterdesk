@@ -1796,7 +1796,9 @@
     "field_status": "statut",
     "value_queued_managed": "en attente d'approbation (mode géré)",
     "value_idle": "inactivité",
-    "value_support": "assistance"
+    "value_support": "assistance",
+    "action_device_key_replaced": "Clé de l'appareil remplacée",
+    "action_device_key_approved": "Nouvelle clé de l'appareil approuvée"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3027,7 +3029,14 @@
     "action_port_desc": "Atteindre un port de l'appareil ou de son réseau",
     "agent_cached": "L'appareil est hors ligne. Voici ce qu'il a envoyé en dernier :",
     "file_downloaded": "{name} téléchargé.",
-    "user_hint": "Affiché dans la liste. L'appareil le remplace lorsqu'il signale qui est connecté."
+    "user_hint": "Affiché dans la liste. L'appareil le remplace lorsqu'il signale qui est connecté.",
+    "key_request_title": "Nouvelle clé",
+    "key_request_line": "{hostname} a tenté de se réinscrire depuis {ip} le {date} avec une nouvelle clé ({fingerprint}). Une réinstallation ou une réinitialisation crée une nouvelle clé.",
+    "key_request_what": "Supprimez l'appareil ou approuvez la nouvelle clé.",
+    "approve_key": "Approuver la nouvelle clé",
+    "approve_key_title": "Approuver la nouvelle clé ?",
+    "approve_key_effect": "{device} pourra alors se réinscrire avec son invitation. Ses anciens jetons d'appareil et ses sessions prennent fin. N'approuvez qu'une clé que vous attendez, par exemple après une réinstallation.",
+    "approve_key_done": "Nouvelle clé approuvée. L'ordinateur peut maintenant se réinscrire avec son invitation."
   },
   "inventory": {
     "title": "Inventaire",

@@ -1798,7 +1798,9 @@
     "field_status": "status",
     "value_queued_managed": "köad för godkännande (hanterat läge)",
     "value_idle": "inaktivitet",
-    "value_support": "support"
+    "value_support": "support",
+    "action_device_key_replaced": "Enhetsnyckel ersatt",
+    "action_device_key_approved": "Ny enhetsnyckel godkänd"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3011,7 +3013,14 @@
     "action_port_desc": "Nå en port på enheten eller i dess nätverk",
     "agent_cached": "Enheten är offline. Det här skickade den senast:",
     "file_downloaded": "{name} har laddats ned.",
-    "user_hint": "Visas i listan. Enheten ersätter den när den rapporterar vem som är inloggad."
+    "user_hint": "Visas i listan. Enheten ersätter den när den rapporterar vem som är inloggad.",
+    "key_request_title": "Ny nyckel",
+    "key_request_line": "{hostname} försökte ansluta igen från {ip} den {date} med en ny nyckel ({fingerprint}). En ominstallation eller återställning skapar en ny nyckel.",
+    "key_request_what": "Ta bort enheten eller godkänn den nya nyckeln.",
+    "approve_key": "Godkänn ny nyckel",
+    "approve_key_title": "Godkänna ny nyckel?",
+    "approve_key_effect": "{device} kan sedan ansluta igen med sin inbjudan. Dess gamla enhetstoken och sessioner avslutas. Godkänn bara en nyckel du väntar dig, till exempel efter en ominstallation.",
+    "approve_key_done": "Ny nyckel godkänd. Datorn kan nu ansluta igen med sin inbjudan."
   },
   "inventory": {
     "title": "Inventory",

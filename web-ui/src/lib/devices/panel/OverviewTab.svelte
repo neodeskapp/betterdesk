@@ -7,9 +7,10 @@
 	import type { Snippet } from 'svelte';
 	import type { Folder } from '#lib/api/devices.ts';
 	import { formatDate } from '#lib/i18n/format.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import BooleanStatus from '#lib/ui/BooleanStatus.svelte';
+	import Button from '#lib/ui/Button.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
 	import Facts, { type Fact } from '#lib/ui/Facts.svelte';
 	import Meter from '#lib/ui/Meter.svelte';
@@ -21,6 +22,7 @@
 	import User from '#lib/ui/User.svelte';
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import Version from '#lib/ui/Version.svelte';
+	import { approveNewKey } from '../actions.svelte.ts';
 	import { banLine, connectionModeOf, currentLoad, identityOf, type PanelDevice } from '../panel-logic.ts';
 	import ConnectionMode from './ConnectionMode.svelte';
 	import PanelSection from './PanelSection.svelte';
@@ -162,6 +164,30 @@
 				? t('device_detail.ban_reason_line', { reason: device.ban_reason })
 				: t('device_detail.no_reason')}
 		</p>
+	</Notice>
+{/if}
+
+{#if device.key_request}
+	{@const req = device.key_request}
+	<Notice tone="warning" title={tf('device_detail.key_request_title', 'New key')} role="note">
+		<p>
+			{tf(
+				'device_detail.key_request_line',
+				'{hostname} tried to rejoin from {ip} on {date} with a new key ({fingerprint}). A reinstall or a reset makes a new key.',
+				{
+					hostname: req.hostname || device.id,
+					ip: req.ip ?? '',
+					date: req.requested_at ? formatDate(req.requested_at) : '',
+					fingerprint: req.fingerprint ?? ''
+				}
+			)}
+		</p>
+		<p>{tf('device_detail.key_request_what', 'Delete the device or approve the new key.')}</p>
+		{#if can('enrollment.approve')}
+			<Button size="sm" onclick={() => void approveNewKey(device)}
+				>{tf('device_detail.approve_key', 'Approve new key')}</Button
+			>
+		{/if}
 	</Notice>
 {/if}
 

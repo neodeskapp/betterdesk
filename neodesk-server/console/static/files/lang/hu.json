@@ -1798,7 +1798,9 @@
     "field_status": "állapot",
     "value_queued_managed": "jóváhagyásra vár (felügyelt mód)",
     "value_idle": "tétlenség",
-    "value_support": "támogatás"
+    "value_support": "támogatás",
+    "action_device_key_replaced": "Eszközkulcs lecserélve",
+    "action_device_key_approved": "Új eszközkulcs jóváhagyva"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3011,7 +3013,14 @@
     "action_port_desc": "Egy port elérése az eszközön vagy annak hálózatában",
     "agent_cached": "Az eszköz offline. Ezt küldte utoljára:",
     "file_downloaded": "{name} letöltve.",
-    "user_hint": "A listában jelenik meg. Az eszköz lecseréli, amikor jelenti, ki van bejelentkezve."
+    "user_hint": "A listában jelenik meg. Az eszköz lecseréli, amikor jelenti, ki van bejelentkezve.",
+    "key_request_title": "Új kulcs",
+    "key_request_line": "{hostname} {date} időpontban a(z) {ip} címről új kulccsal ({fingerprint}) próbált újra csatlakozni. Újratelepítés vagy visszaállítás új kulcsot hoz létre.",
+    "key_request_what": "Törölje az eszközt, vagy hagyja jóvá az új kulcsot.",
+    "approve_key": "Új kulcs jóváhagyása",
+    "approve_key_title": "Jóváhagyja az új kulcsot?",
+    "approve_key_effect": "A(z) {device} ezután a meghívójával újra csatlakozhat. A régi eszköztokenjei és munkamenetei megszűnnek. Csak olyan kulcsot hagyjon jóvá, amelyre számít, például újratelepítés után.",
+    "approve_key_done": "Az új kulcs jóváhagyva. A számítógép most újra csatlakozhat a meghívójával."
   },
   "inventory": {
     "title": "Inventory",

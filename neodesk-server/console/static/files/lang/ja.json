@@ -1792,7 +1792,9 @@
     "field_status": "状態",
     "value_queued_managed": "承認待ち (管理モード)",
     "value_idle": "アイドル",
-    "value_support": "サポート"
+    "value_support": "サポート",
+    "action_device_key_replaced": "デバイスキーを置き換え",
+    "action_device_key_approved": "新しいデバイスキーを承認"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3005,7 +3007,14 @@
     "action_port_desc": "デバイスまたはそのネットワーク上のポートに接続します",
     "agent_cached": "デバイスはオフラインです。最後に送信された内容:",
     "file_downloaded": "{name} をダウンロードしました。",
-    "user_hint": "一覧に表示されます。デバイスがサインイン中のユーザーを報告すると置き換えられます。"
+    "user_hint": "一覧に表示されます。デバイスがサインイン中のユーザーを報告すると置き換えられます。",
+    "key_request_title": "新しいキー",
+    "key_request_line": "{hostname} が {date} に {ip} から新しいキー ({fingerprint}) で再参加しようとしました。再インストールやリセットを行うと新しいキーが作られます。",
+    "key_request_what": "デバイスを削除するか、新しいキーを承認してください。",
+    "approve_key": "新しいキーを承認",
+    "approve_key_title": "新しいキーを承認しますか？",
+    "approve_key_effect": "{device} は招待で再参加できるようになります。古いデバイストークンとセッションは終了します。再インストール後など、想定しているキーだけを承認してください。",
+    "approve_key_done": "新しいキーを承認しました。コンピューターは招待で再参加できます。"
   },
   "inventory": {
     "title": "Inventory",

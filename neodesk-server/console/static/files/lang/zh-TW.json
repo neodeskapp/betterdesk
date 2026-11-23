@@ -1796,7 +1796,9 @@
     "field_status": "狀態",
     "value_queued_managed": "排隊等待核准（受管理模式）",
     "value_idle": "閒置",
-    "value_support": "支援"
+    "value_support": "支援",
+    "action_device_key_replaced": "已取代裝置金鑰",
+    "action_device_key_approved": "已核准新裝置金鑰"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3027,7 +3029,14 @@
     "action_port_desc": "連線到裝置或其網路中的連接埠",
     "agent_cached": "裝置已離線。這是它最後傳送的內容：",
     "file_downloaded": "已下載 {name}。",
-    "user_hint": "顯示在清單中。裝置回報登入的使用者時會取代此值。"
+    "user_hint": "顯示在清單中。裝置回報登入的使用者時會取代此值。",
+    "key_request_title": "新金鑰",
+    "key_request_line": "{hostname} 於 {date} 從 {ip} 以新金鑰 ({fingerprint}) 嘗試重新加入。重新安裝或重設會產生新金鑰。",
+    "key_request_what": "請刪除裝置或核准新金鑰。",
+    "approve_key": "核准新金鑰",
+    "approve_key_title": "要核准新金鑰嗎？",
+    "approve_key_effect": "之後 {device} 可以用其邀請重新加入。其舊的裝置權杖和工作階段會結束。只核准您預期的金鑰，例如重新安裝之後。",
+    "approve_key_done": "已核准新金鑰。電腦現在可以用其邀請重新加入。"
   },
   "inventory": {
     "title": "資產清單",

@@ -1792,7 +1792,9 @@
     "field_status": "stato",
     "value_queued_managed": "in attesa di approvazione (modalità gestita)",
     "value_idle": "inattività",
-    "value_support": "assistenza"
+    "value_support": "assistenza",
+    "action_device_key_replaced": "Chiave del dispositivo sostituita",
+    "action_device_key_approved": "Nuova chiave del dispositivo approvata"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3005,7 +3007,14 @@
     "action_port_desc": "Raggiungi una porta sul dispositivo o nella sua rete",
     "agent_cached": "Il dispositivo è offline. Questo è l'ultimo invio:",
     "file_downloaded": "{name} scaricato.",
-    "user_hint": "Mostrato nell'elenco. Il dispositivo lo sostituisce quando segnala chi ha effettuato l'accesso."
+    "user_hint": "Mostrato nell'elenco. Il dispositivo lo sostituisce quando segnala chi ha effettuato l'accesso.",
+    "key_request_title": "Nuova chiave",
+    "key_request_line": "{hostname} ha provato a ricollegarsi da {ip} il {date} con una nuova chiave ({fingerprint}). Una reinstallazione o un ripristino crea una nuova chiave.",
+    "key_request_what": "Elimina il dispositivo o approva la nuova chiave.",
+    "approve_key": "Approva nuova chiave",
+    "approve_key_title": "Approvare la nuova chiave?",
+    "approve_key_effect": "{device} potrà poi ricollegarsi con il suo invito. I vecchi token del dispositivo e le sessioni terminano. Approva solo una chiave che ti aspetti, ad esempio dopo una reinstallazione.",
+    "approve_key_done": "Nuova chiave approvata. Ora il computer può ricollegarsi con il suo invito."
   },
   "inventory": {
     "title": "Inventario",

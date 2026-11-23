@@ -1792,7 +1792,9 @@
     "field_status": "stav",
     "value_queued_managed": "čeká na schválení (spravovaný režim)",
     "value_idle": "nečinnost",
-    "value_support": "podpora"
+    "value_support": "podpora",
+    "action_device_key_replaced": "Klíč zařízení nahrazen",
+    "action_device_key_approved": "Nový klíč zařízení schválen"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3005,7 +3007,14 @@
     "action_port_desc": "Připojit se k portu na zařízení nebo v jeho síti",
     "agent_cached": "Zařízení je offline. Toto naposledy odeslalo:",
     "file_downloaded": "Soubor {name} byl stažen.",
-    "user_hint": "Zobrazuje se v seznamu. Zařízení hodnotu nahradí, jakmile ohlásí, kdo je přihlášen."
+    "user_hint": "Zobrazuje se v seznamu. Zařízení hodnotu nahradí, jakmile ohlásí, kdo je přihlášen.",
+    "key_request_title": "Nový klíč",
+    "key_request_line": "{hostname} se {date} pokusil znovu připojit z {ip} s novým klíčem ({fingerprint}). Nový klíč vznikne při přeinstalaci nebo obnovení.",
+    "key_request_what": "Zařízení odstraňte, nebo nový klíč schvalte.",
+    "approve_key": "Schválit nový klíč",
+    "approve_key_title": "Schválit nový klíč?",
+    "approve_key_effect": "{device} se pak může znovu připojit se svou pozvánkou. Jeho staré tokeny zařízení a relace skončí. Schvalte jen klíč, který očekáváte, například po přeinstalaci.",
+    "approve_key_done": "Nový klíč je schválen. Počítač se teď může znovu připojit se svou pozvánkou."
   },
   "inventory": {
     "title": "Inventář",

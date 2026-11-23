@@ -1798,7 +1798,9 @@
     "field_status": "trạng thái",
     "value_queued_managed": "đang chờ phê duyệt (chế độ được quản lý)",
     "value_idle": "không hoạt động",
-    "value_support": "hỗ trợ"
+    "value_support": "hỗ trợ",
+    "action_device_key_replaced": "Đã thay khóa thiết bị",
+    "action_device_key_approved": "Đã phê duyệt khóa thiết bị mới"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3011,7 +3013,14 @@
     "action_port_desc": "Kết nối tới một cổng trên thiết bị hoặc trong mạng của thiết bị",
     "agent_cached": "Thiết bị đang ngoại tuyến. Đây là dữ liệu gửi gần nhất:",
     "file_downloaded": "Đã tải xuống {name}.",
-    "user_hint": "Hiển thị trong danh sách. Thiết bị sẽ thay thế khi báo cáo ai đang đăng nhập."
+    "user_hint": "Hiển thị trong danh sách. Thiết bị sẽ thay thế khi báo cáo ai đang đăng nhập.",
+    "key_request_title": "Khóa mới",
+    "key_request_line": "{hostname} đã thử tham gia lại từ {ip} vào {date} với khóa mới ({fingerprint}). Cài đặt lại hoặc đặt lại sẽ tạo khóa mới.",
+    "key_request_what": "Xóa thiết bị hoặc phê duyệt khóa mới.",
+    "approve_key": "Phê duyệt khóa mới",
+    "approve_key_title": "Phê duyệt khóa mới?",
+    "approve_key_effect": "Sau đó {device} có thể tham gia lại bằng lời mời của mình. Các token thiết bị và phiên cũ sẽ kết thúc. Chỉ phê duyệt khóa mà bạn đang chờ, chẳng hạn sau khi cài đặt lại.",
+    "approve_key_done": "Đã phê duyệt khóa mới. Máy tính giờ có thể tham gia lại bằng lời mời của mình."
   },
   "inventory": {
     "title": "Inventory",

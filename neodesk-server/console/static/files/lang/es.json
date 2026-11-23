@@ -1792,7 +1792,9 @@
     "field_status": "estado",
     "value_queued_managed": "en espera de aprobación (modo gestionado)",
     "value_idle": "inactividad",
-    "value_support": "soporte"
+    "value_support": "soporte",
+    "action_device_key_replaced": "Clave del dispositivo sustituida",
+    "action_device_key_approved": "Clave nueva del dispositivo aprobada"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3005,7 +3007,14 @@
     "action_port_desc": "Acceder a un puerto del dispositivo o de su red",
     "agent_cached": "El dispositivo está desconectado. Esto es lo último que envió:",
     "file_downloaded": "Se descargó {name}.",
-    "user_hint": "Se muestra en la lista. El dispositivo lo sustituye cuando informa de quién ha iniciado sesión."
+    "user_hint": "Se muestra en la lista. El dispositivo lo sustituye cuando informa de quién ha iniciado sesión.",
+    "key_request_title": "Clave nueva",
+    "key_request_line": "{hostname} intentó volver a unirse desde {ip} el {date} con una clave nueva ({fingerprint}). Una reinstalación o un restablecimiento crea una clave nueva.",
+    "key_request_what": "Elimine el dispositivo o apruebe la clave nueva.",
+    "approve_key": "Aprobar clave nueva",
+    "approve_key_title": "¿Aprobar la clave nueva?",
+    "approve_key_effect": "{device} podrá volver a unirse con su invitación. Sus tokens de dispositivo y sesiones antiguos terminan. Apruebe solo una clave que espere, por ejemplo tras una reinstalación.",
+    "approve_key_done": "Clave nueva aprobada. El equipo ya puede volver a unirse con su invitación."
   },
   "inventory": {
     "title": "Panel",

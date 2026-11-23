@@ -1792,7 +1792,9 @@
     "field_status": "status",
     "value_queued_managed": "wacht op goedkeuring (beheerde modus)",
     "value_idle": "inactiviteit",
-    "value_support": "ondersteuning"
+    "value_support": "ondersteuning",
+    "action_device_key_replaced": "Apparaatsleutel vervangen",
+    "action_device_key_approved": "Nieuwe apparaatsleutel goedgekeurd"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3005,7 +3007,14 @@
     "action_port_desc": "Een poort op het apparaat of in het netwerk bereiken",
     "agent_cached": "Het apparaat is offline. Dit stuurde het als laatste:",
     "file_downloaded": "{name} gedownload.",
-    "user_hint": "Wordt in de lijst getoond. Het apparaat vervangt het zodra het meldt wie er is aangemeld."
+    "user_hint": "Wordt in de lijst getoond. Het apparaat vervangt het zodra het meldt wie er is aangemeld.",
+    "key_request_title": "Nieuwe sleutel",
+    "key_request_line": "{hostname} probeerde op {date} vanaf {ip} opnieuw lid te worden met een nieuwe sleutel ({fingerprint}). Een herinstallatie of reset maakt een nieuwe sleutel.",
+    "key_request_what": "Verwijder het apparaat of keur de nieuwe sleutel goed.",
+    "approve_key": "Nieuwe sleutel goedkeuren",
+    "approve_key_title": "Nieuwe sleutel goedkeuren?",
+    "approve_key_effect": "{device} kan dan opnieuw lid worden met zijn uitnodiging. De oude apparaattokens en sessies eindigen. Keur alleen een sleutel goed die u verwacht, bijvoorbeeld na een herinstallatie.",
+    "approve_key_done": "Nieuwe sleutel goedgekeurd. De computer kan nu opnieuw lid worden met zijn uitnodiging."
   },
   "inventory": {
     "title": "Inventaris",

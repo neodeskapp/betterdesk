@@ -58,6 +58,8 @@ func (s *Server) onboardRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/onboard/codes/prune", s.inProcessOnly(s.handleOnboardPrune))
 	mux.HandleFunc("POST /api/onboard/devices", s.inProcessOnly(s.handleOnboardAdmit))
 	mux.HandleFunc("DELETE /api/onboard/devices/{id}", s.inProcessOnly(s.handleOnboardRemoveDevice))
+	mux.HandleFunc("GET /api/onboard/devices/{id}/key-request", s.inProcessOnly(s.handleDeviceKeyRequest))
+	mux.HandleFunc("POST /api/onboard/devices/{id}/key-request/approve", s.inProcessOnly(s.handleApproveDeviceKey))
 	s.onboardSessionRoutes(mux)
 }
 
@@ -340,7 +342,7 @@ func (d *onboardDevice) enrollment() *EnrollmentRequest {
 
 // admissionRefusal answers why the enrollment rules keep a device out, ""
 // when they let it in. A device the server knows must have the same uuid
-// and, when it bound a key, the same key.
+// and, when it bound a key, the same key (keyChangedRefusal, device_key.go).
 func (s *Server) admissionRefusal(req *EnrollmentRequest) string {
 	if banned, _ := s.db.IsPeerBanned(req.DeviceID); banned {
 		return "Device is banned"
@@ -361,7 +363,7 @@ func (s *Server) admissionRefusal(req *EnrollmentRequest) string {
 	if req.PublicKey != "" {
 		if incoming, err := canonicalizeDevicePublicKey(req.PublicKey); err == nil {
 			if bound, err := s.loadBdMgmtPublicKey(req.DeviceID); err == nil && base64.StdEncoding.EncodeToString(bound) != incoming {
-				return "public_key does not match enrolled device identity"
+				return keyChangedRefusal
 			}
 		}
 	}
@@ -377,6 +379,9 @@ func (s *Server) admissionRefusal(req *EnrollmentRequest) string {
 func (s *Server) admitOnboardDevice(r *http.Request, dev *onboardDevice) (created bool, err error) {
 	req := dev.enrollment()
 	if reason := s.admissionRefusal(req); reason != "" {
+		if reason == keyChangedRefusal {
+			s.storeDeviceKeyRequest(req, s.signInIP(r))
+		}
 		return false, fmt.Errorf("%w: %s", errOnboardRefused, reason)
 	}
 	existing, _ := s.db.GetPeer(req.DeviceID)
@@ -403,6 +408,8 @@ func (s *Server) admitOnboardDevice(r *http.Request, dev *onboardDevice) (create
 		_ = s.db.UpdatePeerFields(req.DeviceID, map[string]string{"display_name": name, "note": name})
 	}
 	_ = s.db.DeleteConfig(pendingDevicePrefix + req.DeviceID)
+	// It came in with the key the server knows
+	_ = s.db.DeleteConfig(deviceKeyRequestPrefix + req.DeviceID)
 	if s.auditLog != nil && created {
 		mode := "join_code"
 		if dev.Temporary {

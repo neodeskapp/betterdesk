@@ -11,6 +11,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/devicegroups"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
@@ -427,4 +428,29 @@ func flatten(vars map[string]any) []any {
 		out = append(out, k, v)
 	}
 	return out
+}
+
+// approveKey answers POST /api/onboard/devices/{id}/approve-key: the new
+// key an enrolled computer brought to an invite becomes its key (a
+// reinstall or reset makes a new key). The computer then rejoins with the
+// same invite; its old tokens and sessions end.
+func (h *handlers) approveKey(w http.ResponseWriter, r *http.Request) {
+	id := strings.TrimSpace(r.PathValue("id"))
+	if !authn.IsDeviceID(id) {
+		fail(w, r, http.StatusNotFound, onboard.ErrNoKeyRequest.Error())
+		return
+	}
+	actor := ""
+	if u := kit.User(r); u != nil {
+		actor = u.Username
+	}
+	if err := h.codes.ApproveKey(r.Context(), id, actor); errors.Is(err, onboard.ErrNoKeyRequest) {
+		fail(w, r, http.StatusNotFound, onboard.ErrNoKeyRequest.Error())
+		return
+	} else if err != nil {
+		h.serverError(w, r, "Approve device key:", err)
+		return
+	}
+	h.audit(r, "device_key_approved", "Approved the new key of device "+id)
+	kit.JSON(w, r, http.StatusOK, map[string]bool{"success": true})
 }

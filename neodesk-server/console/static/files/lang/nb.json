@@ -1798,7 +1798,9 @@
     "field_status": "status",
     "value_queued_managed": "i kø for godkjenning (administrert modus)",
     "value_idle": "inaktivitet",
-    "value_support": "støtte"
+    "value_support": "støtte",
+    "action_device_key_replaced": "Enhetsnøkkel erstattet",
+    "action_device_key_approved": "Ny enhetsnøkkel godkjent"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3011,7 +3013,14 @@
     "action_port_desc": "Nå en port på enheten eller i nettverket",
     "agent_cached": "Enheten er frakoblet. Dette sendte den sist:",
     "file_downloaded": "{name} er lastet ned.",
-    "user_hint": "Vises i listen. Enheten erstatter den når den melder hvem som er pålogget."
+    "user_hint": "Vises i listen. Enheten erstatter den når den melder hvem som er pålogget.",
+    "key_request_title": "Ny nøkkel",
+    "key_request_line": "{hostname} prøvde å bli med igjen fra {ip} {date} med en ny nøkkel ({fingerprint}). En ny installasjon eller tilbakestilling lager en ny nøkkel.",
+    "key_request_what": "Slett enheten eller godkjenn den nye nøkkelen.",
+    "approve_key": "Godkjenn ny nøkkel",
+    "approve_key_title": "Godkjenne ny nøkkel?",
+    "approve_key_effect": "{device} kan da bli med igjen med invitasjonen sin. De gamle enhetstokenene og øktene avsluttes. Godkjenn bare en nøkkel du venter, for eksempel etter en ny installasjon.",
+    "approve_key_done": "Ny nøkkel godkjent. Datamaskinen kan nå bli med igjen med invitasjonen sin."
   },
   "inventory": {
     "title": "Inventory",

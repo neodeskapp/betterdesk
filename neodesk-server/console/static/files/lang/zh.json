@@ -1792,7 +1792,9 @@
     "field_status": "状态",
     "value_queued_managed": "排队等待批准（托管模式）",
     "value_idle": "空闲",
-    "value_support": "支持"
+    "value_support": "支持",
+    "action_device_key_replaced": "已替换设备密钥",
+    "action_device_key_approved": "已批准新设备密钥"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3005,7 +3007,14 @@
     "action_port_desc": "连接到设备或其网络中的端口",
     "agent_cached": "设备已离线。这是它最后发送的内容：",
     "file_downloaded": "已下载 {name}。",
-    "user_hint": "显示在列表中。设备报告已登录的用户时会替换此值。"
+    "user_hint": "显示在列表中。设备报告已登录的用户时会替换此值。",
+    "key_request_title": "新密钥",
+    "key_request_line": "{hostname} 于 {date} 从 {ip} 使用新密钥 ({fingerprint}) 尝试重新加入。重新安装或重置会生成新密钥。",
+    "key_request_what": "请删除设备或批准新密钥。",
+    "approve_key": "批准新密钥",
+    "approve_key_title": "要批准新密钥吗？",
+    "approve_key_effect": "之后 {device} 可以使用其邀请重新加入。其旧的设备令牌和会话将结束。只批准您预期的密钥，例如重新安装之后。",
+    "approve_key_done": "已批准新密钥。计算机现在可以使用其邀请重新加入。"
   },
   "inventory": {
     "title": "资产清单",

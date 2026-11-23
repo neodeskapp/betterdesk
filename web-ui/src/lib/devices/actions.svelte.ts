@@ -492,6 +492,34 @@ export function toggleBan(d: DeviceLike): Promise<boolean> {
 }
 
 /**
+ * The new key a reinstalled or reset computer brought to an invite becomes
+ * its key: it can rejoin with the invite, its old tokens and sessions end.
+ */
+export async function approveNewKey(d: DeviceLike): Promise<boolean> {
+	if (!can('enrollment.approve')) return false;
+	const ok = await confirm({
+		title: tf('device_detail.approve_key_title', 'Approve new key?'),
+		message: tf(
+			'device_detail.approve_key_effect',
+			'{device} can then rejoin with its invite. Its old device tokens and sessions end. Approve only a key you expect, such as after a reinstall.',
+			{ device: deviceLabel(d) }
+		),
+		confirmLabel: tf('device_detail.approve_key', 'Approve new key')
+	});
+	if (!ok) return false;
+	try {
+		await devicesApi.approveDeviceKey(d.id);
+		toast.success(
+			tf('device_detail.approve_key_done', 'New key approved. The computer can rejoin with its invite now.')
+		);
+		devicesChanged(d.id);
+		return true;
+	} catch (err) {
+		return fail(err, 'errors.server_error');
+	}
+}
+
+/**
  * Delete one device. A device that is already deleted is deleted for good
  * (it only shows with Show deleted on). The dialog unlocks Delete after
  * 3 seconds and offers releasing the ID (hard) and revoking the device.

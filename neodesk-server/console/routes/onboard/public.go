@@ -241,7 +241,8 @@ func (h *handlers) join(w http.ResponseWriter, r *http.Request) {
 		appFail(w, r, http.StatusBadRequest, "invalid_device", "invalid device_id")
 		return
 	}
-	ctx := r.Context()
+	// The server keeps the client's address with a key it refuses
+	ctx := authn.WithClientAddress(r.Context(), kit.ClientIP(r))
 	rec, _, err := h.codes.Redeem(ctx, body.Code, onboard.KindJoin, &onboard.Device{
 		DeviceID: deviceID, UUID: body.UUID, Hostname: body.Hostname, Platform: body.Platform,
 		Version: body.Version, PublicKey: body.PublicKey,

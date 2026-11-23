@@ -1792,7 +1792,9 @@
     "field_status": "stan",
     "value_queued_managed": "czeka na zatwierdzenie (tryb zarządzany)",
     "value_idle": "bezczynność",
-    "value_support": "wsparcie"
+    "value_support": "wsparcie",
+    "action_device_key_replaced": "Klucz urządzenia zastąpiony",
+    "action_device_key_approved": "Nowy klucz urządzenia zatwierdzony"
   },
   "generator": {
     "title": "Generator NeoDesk Support",
@@ -3023,7 +3025,14 @@
     "action_port_desc": "Połącz się z portem na urządzeniu lub w jego sieci",
     "agent_cached": "Urządzenie jest offline. Oto co wysłało ostatnio:",
     "file_downloaded": "Pobrano {name}.",
-    "user_hint": "Widoczne na liście. Urządzenie zastępuje tę wartość, gdy zgłosi, kto jest zalogowany."
+    "user_hint": "Widoczne na liście. Urządzenie zastępuje tę wartość, gdy zgłosi, kto jest zalogowany.",
+    "key_request_title": "Nowy klucz",
+    "key_request_line": "{hostname} próbował dołączyć ponownie z {ip} dnia {date} z nowym kluczem ({fingerprint}). Ponowna instalacja lub reset tworzy nowy klucz.",
+    "key_request_what": "Usuń urządzenie albo zatwierdź nowy klucz.",
+    "approve_key": "Zatwierdź nowy klucz",
+    "approve_key_title": "Zatwierdzić nowy klucz?",
+    "approve_key_effect": "{device} będzie mógł wtedy dołączyć ponownie ze swoim zaproszeniem. Jego stare tokeny urządzenia i sesje wygasną. Zatwierdzaj tylko klucz, którego się spodziewasz, np. po ponownej instalacji.",
+    "approve_key_done": "Nowy klucz zatwierdzony. Komputer może teraz dołączyć ponownie ze swoim zaproszeniem."
   },
   "inventory": {
     "title": "Inwentaryzacja",

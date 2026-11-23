@@ -1798,7 +1798,9 @@
     "field_status": "durum",
     "value_queued_managed": "onay için sırada (yönetilen mod)",
     "value_idle": "boşta kalma",
-    "value_support": "destek"
+    "value_support": "destek",
+    "action_device_key_replaced": "Cihaz anahtarı değiştirildi",
+    "action_device_key_approved": "Yeni cihaz anahtarı onaylandı"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3011,7 +3013,14 @@
     "action_port_desc": "Cihazdaki veya ağındaki bir bağlantı noktasına eriş",
     "agent_cached": "Cihaz çevrimdışı. En son bunu gönderdi:",
     "file_downloaded": "{name} indirildi.",
-    "user_hint": "Listede gösterilir. Cihaz, kimin oturum açtığını bildirdiğinde bunu değiştirir."
+    "user_hint": "Listede gösterilir. Cihaz, kimin oturum açtığını bildirdiğinde bunu değiştirir.",
+    "key_request_title": "Yeni anahtar",
+    "key_request_line": "{hostname}, {date} tarihinde {ip} adresinden yeni bir anahtarla ({fingerprint}) yeniden katılmayı denedi. Yeniden kurulum veya sıfırlama yeni bir anahtar oluşturur.",
+    "key_request_what": "Cihazı silin veya yeni anahtarı onaylayın.",
+    "approve_key": "Yeni anahtarı onayla",
+    "approve_key_title": "Yeni anahtar onaylansın mı?",
+    "approve_key_effect": "{device} daha sonra davetiyle yeniden katılabilir. Eski cihaz belirteçleri ve oturumları sona erer. Yalnızca beklediğiniz bir anahtarı onaylayın, örneğin yeniden kurulumdan sonra.",
+    "approve_key_done": "Yeni anahtar onaylandı. Bilgisayar artık davetiyle yeniden katılabilir."
   },
   "inventory": {
     "title": "Inventory",

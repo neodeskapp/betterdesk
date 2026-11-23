@@ -86,7 +86,7 @@ func normalisePeer(peer any, now time.Time) *Object {
 		}
 	}
 
-	return NewObject(
+	out := NewObject(
 		"id", text("id"),
 		"hostname", text("hostname"),
 		"display_name", text("display_name"),
@@ -119,6 +119,11 @@ func normalisePeer(peer any, now time.Time) *Object {
 		"mesh_node_id", text("mesh_node_id"),
 		"linked_peer_id", text("linked_peer_id"),
 	)
+	// A new key it brought to an invite, which an administrator approves
+	if req, ok := p("key_request").(*Object); ok {
+		out.Set("key_request", req)
+	}
+	return out
 }
 
 // normalisePeers maps a list of peers. A null entry stays null.

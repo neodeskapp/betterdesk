@@ -1792,7 +1792,9 @@
     "field_status": "상태",
     "value_queued_managed": "승인 대기 중 (관리 모드)",
     "value_idle": "유휴",
-    "value_support": "지원"
+    "value_support": "지원",
+    "action_device_key_replaced": "기기 키 교체됨",
+    "action_device_key_approved": "새 기기 키 승인됨"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3005,7 +3007,14 @@
     "action_port_desc": "장치 또는 장치 네트워크의 포트에 연결",
     "agent_cached": "장치가 오프라인입니다. 마지막으로 보낸 내용:",
     "file_downloaded": "{name}을(를) 다운로드했습니다.",
-    "user_hint": "목록에 표시됩니다. 장치가 로그인한 사용자를 보고하면 이 값이 바뀝니다."
+    "user_hint": "목록에 표시됩니다. 장치가 로그인한 사용자를 보고하면 이 값이 바뀝니다.",
+    "key_request_title": "새 키",
+    "key_request_line": "{hostname}이(가) {date}에 {ip}에서 새 키({fingerprint})로 다시 가입하려고 했습니다. 다시 설치하거나 초기화하면 새 키가 만들어집니다.",
+    "key_request_what": "기기를 삭제하거나 새 키를 승인하세요.",
+    "approve_key": "새 키 승인",
+    "approve_key_title": "새 키를 승인할까요?",
+    "approve_key_effect": "그러면 {device}이(가) 초대로 다시 가입할 수 있습니다. 이전 기기 토큰과 세션은 종료됩니다. 다시 설치한 뒤처럼 예상한 키만 승인하세요.",
+    "approve_key_done": "새 키를 승인했습니다. 이제 컴퓨터가 초대로 다시 가입할 수 있습니다."
   },
   "inventory": {
     "title": "Inventory",

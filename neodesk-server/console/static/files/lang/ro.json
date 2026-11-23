@@ -1798,7 +1798,9 @@
     "field_status": "stare",
     "value_queued_managed": "în așteptarea aprobării (mod gestionat)",
     "value_idle": "inactivitate",
-    "value_support": "asistență"
+    "value_support": "asistență",
+    "action_device_key_replaced": "Cheia dispozitivului înlocuită",
+    "action_device_key_approved": "Cheie nouă a dispozitivului aprobată"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3011,7 +3013,14 @@
     "action_port_desc": "Accesează un port pe dispozitiv sau în rețeaua sa",
     "agent_cached": "Dispozitivul este offline. Iată ce a trimis ultima dată:",
     "file_downloaded": "{name} a fost descărcat.",
-    "user_hint": "Apare în listă. Dispozitivul îl înlocuiește când raportează cine este autentificat."
+    "user_hint": "Apare în listă. Dispozitivul îl înlocuiește când raportează cine este autentificat.",
+    "key_request_title": "Cheie nouă",
+    "key_request_line": "{hostname} a încercat să se reconecteze de la {ip} pe {date} cu o cheie nouă ({fingerprint}). O reinstalare sau o resetare creează o cheie nouă.",
+    "key_request_what": "Ștergeți dispozitivul sau aprobați cheia nouă.",
+    "approve_key": "Aprobați cheia nouă",
+    "approve_key_title": "Aprobați cheia nouă?",
+    "approve_key_effect": "{device} se va putea apoi reconecta cu invitația sa. Tokenurile de dispozitiv și sesiunile vechi se încheie. Aprobați doar o cheie pe care o așteptați, de exemplu după o reinstalare.",
+    "approve_key_done": "Cheia nouă a fost aprobată. Computerul se poate reconecta acum cu invitația sa."
   },
   "inventory": {
     "title": "Inventory",

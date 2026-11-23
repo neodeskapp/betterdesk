@@ -1798,7 +1798,9 @@
     "field_status": "status",
     "value_queued_managed": "venter på godkendelse (administreret tilstand)",
     "value_idle": "inaktivitet",
-    "value_support": "support"
+    "value_support": "support",
+    "action_device_key_replaced": "Enhedsnøgle erstattet",
+    "action_device_key_approved": "Ny enhedsnøgle godkendt"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3011,7 +3013,14 @@
     "action_port_desc": "Nå en port på enheden eller i dens netværk",
     "agent_cached": "Enheden er offline. Det her sendte den sidst:",
     "file_downloaded": "{name} er hentet.",
-    "user_hint": "Vises i listen. Enheden erstatter den, når den melder, hvem der er logget ind."
+    "user_hint": "Vises i listen. Enheden erstatter den, når den melder, hvem der er logget ind.",
+    "key_request_title": "Ny nøgle",
+    "key_request_line": "{hostname} forsøgte at blive tilknyttet igen fra {ip} den {date} med en ny nøgle ({fingerprint}). En geninstallation eller nulstilling laver en ny nøgle.",
+    "key_request_what": "Slet enheden, eller godkend den nye nøgle.",
+    "approve_key": "Godkend ny nøgle",
+    "approve_key_title": "Godkend ny nøgle?",
+    "approve_key_effect": "{device} kan derefter blive tilknyttet igen med sin invitation. Dens gamle enhedstokens og sessioner ophører. Godkend kun en nøgle, du forventer, fx efter en geninstallation.",
+    "approve_key_done": "Ny nøgle godkendt. Computeren kan nu blive tilknyttet igen med sin invitation."
   },
   "inventory": {
     "title": "Inventory",

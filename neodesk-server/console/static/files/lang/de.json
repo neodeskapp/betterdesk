@@ -1792,7 +1792,9 @@
     "field_status": "Status",
     "value_queued_managed": "wartet auf Freigabe (verwalteter Modus)",
     "value_idle": "Inaktivität",
-    "value_support": "Support"
+    "value_support": "Support",
+    "action_device_key_replaced": "Geräteschlüssel ersetzt",
+    "action_device_key_approved": "Neuer Geräteschlüssel genehmigt"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3005,7 +3007,14 @@
     "action_port_desc": "Einen Port auf dem Gerät oder in seinem Netzwerk erreichen",
     "agent_cached": "Das Gerät ist offline. Das hat es zuletzt gesendet:",
     "file_downloaded": "{name} wurde heruntergeladen.",
-    "user_hint": "Wird in der Liste angezeigt. Das Gerät ersetzt den Wert, sobald es meldet, wer angemeldet ist."
+    "user_hint": "Wird in der Liste angezeigt. Das Gerät ersetzt den Wert, sobald es meldet, wer angemeldet ist.",
+    "key_request_title": "Neuer Schlüssel",
+    "key_request_line": "{hostname} hat am {date} von {ip} aus versucht, mit einem neuen Schlüssel ({fingerprint}) wieder beizutreten. Eine Neuinstallation oder ein Zurücksetzen erzeugt einen neuen Schlüssel.",
+    "key_request_what": "Löschen Sie das Gerät oder genehmigen Sie den neuen Schlüssel.",
+    "approve_key": "Neuen Schlüssel genehmigen",
+    "approve_key_title": "Neuen Schlüssel genehmigen?",
+    "approve_key_effect": "{device} kann dann mit seiner Einladung wieder beitreten. Seine alten Geräte-Tokens und Sitzungen enden. Genehmigen Sie nur einen Schlüssel, den Sie erwarten, etwa nach einer Neuinstallation.",
+    "approve_key_done": "Neuer Schlüssel genehmigt. Der Computer kann jetzt mit seiner Einladung wieder beitreten."
   },
   "inventory": {
     "title": "Dashboard",

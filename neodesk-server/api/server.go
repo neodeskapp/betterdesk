@@ -1268,6 +1268,9 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 		CDAPConnected bool        `json:"cdap_connected"`
 		MeshConnected bool        `json:"mesh_connected"`
 		MeshNodeID    string      `json:"mesh_node_id,omitempty"`
+		// KeyRequest is a new key the device brought to an invite,
+		// which an administrator approves (device_key.go)
+		KeyRequest map[string]any `json:"key_request,omitempty"`
 	}
 
 	statusInt := 1
@@ -1287,6 +1290,7 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 		CDAPConnected: cdapConnected,
 		MeshConnected: meshConnected,
 		MeshNodeID:    meshNodeID,
+		KeyRequest:    s.keyRequestOf(p.ID),
 	})
 }
 

@@ -1798,7 +1798,9 @@
     "field_status": "status",
     "value_queued_managed": "odottaa hyväksyntää (hallittu tila)",
     "value_idle": "toimettomuus",
-    "value_support": "tuki"
+    "value_support": "tuki",
+    "action_device_key_replaced": "Laitteen avain vaihdettu",
+    "action_device_key_approved": "Laitteen uusi avain hyväksytty"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -3011,7 +3013,14 @@
     "action_port_desc": "Yhdistä porttiin laitteella tai sen verkossa",
     "agent_cached": "Laite on offline-tilassa. Tämän se lähetti viimeksi:",
     "file_downloaded": "{name} ladattiin.",
-    "user_hint": "Näkyy luettelossa. Laite korvaa sen, kun se ilmoittaa, kuka on kirjautunut."
+    "user_hint": "Näkyy luettelossa. Laite korvaa sen, kun se ilmoittaa, kuka on kirjautunut.",
+    "key_request_title": "Uusi avain",
+    "key_request_line": "{hostname} yritti liittyä uudelleen osoitteesta {ip} {date} uudella avaimella ({fingerprint}). Uudelleenasennus tai palautus luo uuden avaimen.",
+    "key_request_what": "Poista laite tai hyväksy uusi avain.",
+    "approve_key": "Hyväksy uusi avain",
+    "approve_key_title": "Hyväksytäänkö uusi avain?",
+    "approve_key_effect": "{device} voi sen jälkeen liittyä uudelleen kutsullaan. Sen vanhat laitetunnukset ja istunnot päättyvät. Hyväksy vain avain, jota odotat, esimerkiksi uudelleenasennuksen jälkeen.",
+    "approve_key_done": "Uusi avain hyväksytty. Tietokone voi nyt liittyä uudelleen kutsullaan."
   },
   "inventory": {
     "title": "Inventory",

@@ -1800,7 +1800,9 @@
         "field_status": "status",
         "value_queued_managed": "queued for approval (managed mode)",
         "value_idle": "idle",
-        "value_support": "support"
+        "value_support": "support",
+        "action_device_key_replaced": "Device key replaced",
+        "action_device_key_approved": "New device key approved"
     },
     "generator": {
         "title": "NeoDesk Support Generator",
@@ -3084,7 +3086,14 @@
         "action_port_desc": "Reach a port on the device or in its network",
         "agent_cached": "The device is offline. This is what it sent last:",
         "file_downloaded": "Downloaded {name}.",
-        "user_hint": "Shown in the list. The device replaces it when it reports who is signed in."
+        "user_hint": "Shown in the list. The device replaces it when it reports who is signed in.",
+        "key_request_title": "New key",
+        "key_request_line": "{hostname} tried to rejoin from {ip} on {date} with a new key ({fingerprint}). A reinstall or a reset makes a new key.",
+        "key_request_what": "Delete the device or approve the new key.",
+        "approve_key": "Approve new key",
+        "approve_key_title": "Approve new key?",
+        "approve_key_effect": "{device} can then rejoin with its invite. Its old device tokens and sessions end. Approve only a key you expect, such as after a reinstall.",
+        "approve_key_done": "New key approved. The computer can rejoin with its invite now."
     },
     "inventory": {
         "title": "Inventory",
