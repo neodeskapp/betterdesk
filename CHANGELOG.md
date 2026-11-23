@@ -5,7 +5,9 @@
 
 ---
 
-## [3.6.3] — 2026-11-23
+## [3.6.0-rc.2] — 2026-11-23
+
+Second release candidate, and the first as NeoDesk.
 
 ### Changed
 - The project is now called NeoDesk and is developed on its own. It
@@ -43,19 +45,12 @@
   BetterDesk install's services, folders, volumes or settings. Install
   NeoDesk fresh.
 
----
-
-## [3.6.2] — 2026-11-22
-
-### Changed
-- _(none yet)_
-
----
-
-## [3.6.1] — 2026-11-22
-
-### Changed
-- _(none yet)_
+### Fixed
+- The console's socket origin check still looked for the old session
+  cookie name, so a socket upgrade with a session cookie and no Origin
+  header was accepted.
+- Support clients are built from the client repository's main branch and
+  checked against its signing key.
 
 ---
 
@@ -5535,6 +5530,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.5.279]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.278...v3.5.279
 [3.5.280]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.279...v3.5.280
 [3.6.0-rc.1]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.280...v3.6.0-rc.1
-[3.6.1]: https://github.com/neodeskapp/betterdesk/compare/v3.6.0-rc.1...v3.6.1
-[3.6.2]: https://github.com/neodeskapp/betterdesk/compare/v3.6.1...v3.6.2
-[3.6.3]: https://github.com/neodeskapp/neodesk/compare/v3.6.2...v3.6.3
+[3.6.0-rc.2]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.1...v3.6.0-rc.2
