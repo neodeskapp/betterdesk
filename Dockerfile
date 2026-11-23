@@ -87,6 +87,8 @@ RUN addgroup -g 10001 -S neodesk && \
     chown -R neodesk:neodesk /opt/rustdesk /app/data
 
 COPY --from=go-builder /neodesk-server /usr/local/bin/neodesk-server
+# The same binary is the command line when called neodesk
+RUN ln -s neodesk-server /usr/local/bin/neodesk
 
 ARG NEODESK_IMAGE_VERSION=unknown
 ENV NEODESK_IMAGE_VERSION=${NEODESK_IMAGE_VERSION}

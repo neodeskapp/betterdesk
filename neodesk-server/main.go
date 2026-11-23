@@ -183,6 +183,10 @@ func init() {
 }
 
 func main() {
+	// Started as neodesk: the command line, not the server
+	if code, handled := startedAsCLI(); handled {
+		os.Exit(code)
+	}
 	// NEODESK_ENV_FILE first: the flags and every setting read the
 	// environment it fills
 	loadEnvFileFromOS()

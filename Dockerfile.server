@@ -78,7 +78,8 @@ RUN apk add --no-cache \
     && adduser -u 10001 -S -G neodesk neodesk
 
 COPY --from=builder /neodesk-server /usr/local/bin/neodesk-server
-RUN chmod +x /usr/local/bin/neodesk-server
+RUN chmod +x /usr/local/bin/neodesk-server \
+    && ln -s neodesk-server /usr/local/bin/neodesk
 
 # Create data directory before writing build metadata into it
 RUN mkdir -p /opt/rustdesk && chown neodesk:neodesk /opt/rustdesk
