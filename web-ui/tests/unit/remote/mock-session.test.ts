@@ -56,9 +56,26 @@ describe('mock device scenarios', () => {
 		await vi.advanceTimersByTimeAsync(5000);
 		expect(events).toEqual(['session_start']);
 		expect(states).toEqual(['connecting', 'waiting_password', 'streaming']);
-		expect(s.getMonitors().map((d) => d.name)).toEqual(['Display 1', 'Display 2']);
+		expect(s.getMonitors().map((d) => d.name)).toEqual(['Display 1', 'Display 2', 'Display 3']);
+		// Display 3 sits left of the primary one; the device streams the three together
+		expect(s.getDisplays()[2]).toMatchObject({ x: -1600, y: 180, width: 1600, height: 900 });
+		expect(s.canShowDisplaysTogether()).toBe(true);
 		s.disconnect();
 		expect(s.state).toBe('disconnected');
+	});
+
+	test('one-at-a-time: an older device switches its displays, it shows none on its own', async () => {
+		const m = await loadMock('one-at-a-time');
+		const { s } = session(m);
+		void s.connect();
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(s.canShowDisplaysTogether()).toBe(false);
+		s.showDisplay(1, document.createElement('canvas'));
+		expect(s.displays.views.size).toBe(0);
+		s.switchMonitor(2);
+		expect(s.getMonitors().find((d) => d.current)?.idx).toBe(2);
+		expect(Reflect.get(window, '__ndMockDevice')).toMatchObject({ streaming: [2] });
+		s.disconnect();
 	});
 
 	test('password: only "demo" signs in', async () => {

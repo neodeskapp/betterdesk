@@ -9,8 +9,17 @@
  *
  * Scenarios (?mock=1&scenario=...): ok, slow, password (accepts "demo"),
  * 2fa (password "demo", code 123456), fail-relay, refused, offline,
- * timeout, ended, dropped. The scenario applies to the first device of the
- * page; tabs opened later with "New connection" connect normally.
+ * timeout, ended, dropped, one-at-a-time (a device older than RustDesk
+ * 1.2.4: its three displays switch one at a time). The scenario applies to
+ * the first device of the page; tabs opened later with "New connection"
+ * connect normally.
+ *
+ * The device has three displays: Display 3 sits left of the primary one, at
+ * a negative origin. Displays shown together go through the real
+ * display-streams.ts and RDRenderer, each display's picture through its own
+ * pass-through decoder, so layouts, windows of their own, paused and slow
+ * background displays and the per-display numbers can be reviewed. What the
+ * device last received is in window.__ndMockDevice for the end-to-end tests.
  */
 import type {
 	ClientOptions,
@@ -27,8 +36,19 @@ import {
 	type FileSheetUpload
 } from './file-modal.ts';
 import { LocalFiles, type LocalEntry, type LocalWalk, type NativeUploadFile } from './local-files.ts';
+import { displayAt, type DisplayZoom } from './display-layout.ts';
+import {
+	RDDisplayStreams,
+	type BackgroundMode,
+	type RDDisplayDecoder,
+	type RDDisplayTraffic
+} from './display-streams.ts';
+import type { RDDisplay } from './displays.ts';
+import type { ICursorData, MessageInit } from './generated/protos.ts';
+import { RDInput } from './input.ts';
 import { page } from './page.ts';
 import { RDRenderer, type RDRendererStats } from './renderer.ts';
+import type { RDDecodedFrame, RDVideoChunk } from './video.ts';
 
 /** The page's mock settings and first device, read once when the mock loads */
 const settings = page().__mockRemote ?? null;
@@ -376,6 +396,9 @@ function pad2(n: number): string {
 
 interface MockMonitor {
 	name: string;
+	/** Place on the desktop */
+	x: number;
+	y: number;
 	width: number;
 	height: number;
 	primary?: boolean;
@@ -407,8 +430,25 @@ interface TrayInfo {
 
 class MockDesktop {
 	monitors: MockMonitor[] = [
-		{ name: 'Display 1', width: 1920, height: 1080, primary: true, wall: ['#123a46', '#0d2530'] },
-		{ name: 'Display 2', width: 1280, height: 1024, primary: false, wall: ['#2d2a46', '#1b1930'] }
+		{ name: 'Display 1', x: 0, y: 0, width: 1920, height: 1080, primary: true, wall: ['#123a46', '#0d2530'] },
+		{
+			name: 'Display 2',
+			x: 1920,
+			y: 0,
+			width: 1280,
+			height: 1024,
+			primary: false,
+			wall: ['#2d2a46', '#1b1930']
+		},
+		{
+			name: 'Display 3',
+			x: -1600,
+			y: 180,
+			width: 1600,
+			height: 900,
+			primary: false,
+			wall: ['#3a2f1d', '#241c10']
+		}
 	];
 	virtual: MockMonitor[] = [];
 	current = 0;
@@ -433,9 +473,19 @@ class MockDesktop {
 			y: 70,
 			w: 1080,
 			h: 780
+		},
+		{
+			id: 'notes',
+			title: 'Files - /home/demo/Documents',
+			kind: 'files',
+			monitor: 2,
+			x: 90,
+			y: 80,
+			w: 900,
+			h: 560
 		}
 	];
-	z = ['files', 'term', 'web'];
+	z = ['files', 'term', 'web', 'notes'];
 	focusId = 'term';
 	term = [
 		'Welcome to the NeoDesk review desktop. Nothing here is real.',
@@ -454,8 +504,8 @@ class MockDesktop {
 		return this.monitors.concat(this.virtual);
 	}
 
-	monitor(): MockMonitor {
-		return this.allMonitors()[this.current] ?? (this.monitors[0] as MockMonitor);
+	monitor(idx = this.current): MockMonitor {
+		return this.allMonitors()[idx] ?? (this.monitors[0] as MockMonitor);
 	}
 
 	note(text: string): void {
@@ -469,8 +519,8 @@ class MockDesktop {
 			.filter((w): w is MockWindow => !!w && w.monitor === m);
 	}
 
-	hit(x: number, y: number): { win: MockWindow; title: boolean } | null {
-		const list = this.windowsOn(this.current);
+	hit(x: number, y: number, m = this.current): { win: MockWindow; title: boolean } | null {
+		const list = this.windowsOn(m);
 		for (let i = list.length - 1; i >= 0; i--) {
 			const w = list[i] as MockWindow;
 			if (x >= w.x && x <= w.x + w.w && y >= w.y && y <= w.y + w.h) {
@@ -544,8 +594,8 @@ class MockDesktop {
 		if (this.term.length > 200) this.term.splice(0, this.term.length - 200);
 	}
 
-	draw(ctx: CanvasRenderingContext2D, w: number, h: number, tray: TrayInfo): void {
-		const m = this.monitor();
+	draw(ctx: CanvasRenderingContext2D, w: number, h: number, tray: TrayInfo, idx = this.current): void {
+		const m = this.monitor(idx);
 		const now = new Date();
 		// Wallpaper: two tones and a few soft shapes
 		const g = ctx.createLinearGradient(0, 0, w, h);
@@ -571,10 +621,10 @@ class MockDesktop {
 			return;
 		}
 
-		for (const win of this.windowsOn(this.current)) this.drawWindow(ctx, win, now);
-		this.drawTaskbar(ctx, w, h, now, tray);
+		for (const win of this.windowsOn(idx)) this.drawWindow(ctx, win, now);
+		this.drawTaskbar(ctx, w, h, now, tray, idx);
 		this.drawBanners(ctx, w);
-		this.drawNotes(ctx, w, h);
+		if (idx === this.current) this.drawNotes(ctx, w, h);
 		if (this.overlay === 'cad') this.drawCad(ctx, w, h);
 	}
 
@@ -728,7 +778,14 @@ class MockDesktop {
 			ctx.fillRect(x + 40, y + 470 + i * 28, (w - 120) * (0.5 + ((i * 37) % 50) / 100), 12);
 	}
 
-	drawTaskbar(ctx: CanvasRenderingContext2D, w: number, h: number, now: Date, tray: TrayInfo): void {
+	drawTaskbar(
+		ctx: CanvasRenderingContext2D,
+		w: number,
+		h: number,
+		now: Date,
+		tray: TrayInfo,
+		idx: number
+	): void {
 		const y = h - TASKBAR_H;
 		ctx.fillStyle = 'rgba(16,20,20,0.92)';
 		ctx.fillRect(0, y, w, TASKBAR_H);
@@ -737,7 +794,7 @@ class MockDesktop {
 		ctx.fillText('Apps', 22, y + 30);
 		let x = 100;
 		for (const win of this.windows) {
-			const on = win.monitor === this.current;
+			const on = win.monitor === idx;
 			ctx.fillStyle = this.focusId === win.id ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)';
 			ctx.fillRect(x, y + 8, 200, TASKBAR_H - 16);
 			ctx.fillStyle = on ? '#e8ecec' : '#9aa4a8';
@@ -829,6 +886,69 @@ type MockStats = ClientStats & {
 	diagnostics: Record<string, never>;
 };
 
+/** A drawn picture handed through the display streams in place of encoded video */
+interface MockChunk extends RDVideoChunk {
+	frame: RDDecodedFrame;
+}
+
+/** Stands in for RDVideo: hands each picture on, counts pictures per second */
+class MockDecoder implements RDDisplayDecoder {
+	initialized = true;
+	currentCodec: string | null = 'vp9';
+	frameCount = 0;
+	_needKeyframe = false;
+	onFrame: ((frame: RDDecodedFrame) => void) | null = null;
+	_times: number[] = [];
+
+	async init(): Promise<void> {}
+
+	async decode(chunk: RDVideoChunk): Promise<void> {
+		this.frameCount++;
+		this._needKeyframe = false;
+		this._times.push(performance.now());
+		this.onFrame?.((chunk as MockChunk).frame);
+	}
+
+	setBackgroundMode(): void {}
+
+	getStats(): { videoFps: number } {
+		const now = performance.now();
+		this._times = this._times.filter((t) => t > now - 1000);
+		return { videoFps: this._times.length };
+	}
+
+	close(): void {
+		this.onFrame = null;
+	}
+}
+
+/** A display shown on its own in the mock: its screen, mouse and keys */
+interface MockViewParts {
+	renderer: RDRenderer;
+	input: RDInput;
+	onKey: (e: KeyboardEvent) => void;
+}
+
+/** What the device last received, for the end-to-end tests */
+interface MockDeviceState {
+	/** The displays the device streams */
+	streaming: number[];
+	/** The last press of a mouse button: the desktop point and the display under it */
+	press: { x: number; y: number; display: number } | null;
+}
+
+function deviceState(): MockDeviceState {
+	let state = Reflect.get(window, '__ndMockDevice') as MockDeviceState | undefined;
+	if (!state) {
+		state = { streaming: [], press: null };
+		Reflect.set(window, '__ndMockDevice', state);
+	}
+	return state;
+}
+
+/** Picture bytes a real stream would take per frame, for the per-display numbers */
+const BYTES_PER_PIXEL = 0.008;
+
 export class MockRemoteSession implements RemoteClient {
 	deviceId: string;
 	opts: ClientOptions;
@@ -840,7 +960,12 @@ export class MockRemoteSession implements RemoteClient {
 	_state = 'idle';
 	_listeners = new Map<string, Listener[]>();
 	_timers: ReturnType<typeof setTimeout>[] = [];
-	_peerInfo: { platform: string; displays: Monitor[] } | null = null;
+	_peerInfo: { platform: string; version: string; displays: Monitor[] } | null = null;
+	/** Displays shown together: the same routing and capture set as RDClient */
+	displays: RDDisplayStreams<MockViewParts>;
+	_mainDecoder: MockDecoder;
+	/** One picture canvas per display: a screen keeps its last picture for redraws */
+	_pictures = new Map<number, { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D | null }>();
 	_viewOnly = false;
 	_active = true;
 	_quality: string;
@@ -851,18 +976,14 @@ export class MockRemoteSession implements RemoteClient {
 	_needsPassword: boolean;
 	_muted = false;
 	_sid = 1;
-	_frameCanvas: HTMLCanvasElement;
-	_frameCtx: CanvasRenderingContext2D | null;
 	_lastFrame = 0;
 	_raf = 0;
 	_bound = false;
 	_sessionStartedAt: number | null = null;
 	_latencyTimer: ReturnType<typeof setInterval> | null = null;
-	_onMove: ((e: MouseEvent) => void) | null = null;
-	_onDown: ((e: MouseEvent) => void) | null = null;
-	_onUp: (() => void) | null = null;
+	/** The mouse on the session's own canvas (RDInput, as RDClient has it) */
+	_mainInput: RDInput | null = null;
 	_onKey: ((e: KeyboardEvent) => void) | null = null;
-	_onContext: ((e: MouseEvent) => void) | null = null;
 
 	constructor(canvas: HTMLCanvasElement, opts: ClientOptions) {
 		this.deviceId = opts.deviceId;
@@ -877,8 +998,15 @@ export class MockRemoteSession implements RemoteClient {
 		this._fpsMode = opts.fpsMode || 'adaptive';
 		this._codec = opts.preferCodec && opts.preferCodec !== 'Auto' ? opts.preferCodec : 'VP9';
 		this._needsPassword = this.scenario === 'password' || this.scenario === '2fa';
-		this._frameCanvas = document.createElement('canvas');
-		this._frameCtx = this._frameCanvas.getContext('2d');
+		this._mainDecoder = new MockDecoder();
+		this._mainDecoder.onFrame = (frame) => this.renderer.pushFrame(frame);
+		this.displays = new RDDisplayStreams<MockViewParts>({
+			main: this._mainDecoder,
+			capture: (set) => {
+				deviceState().streaming = set.slice();
+			},
+			refresh: () => {}
+		});
 		this.renderer.onCursorReady = (ready) => {
 			this.canvas.parentElement?.classList.toggle('has-remote-cursor', !!ready);
 		};
@@ -1049,7 +1177,12 @@ export class MockRemoteSession implements RemoteClient {
 	}
 
 	_startSession(): void {
-		this._peerInfo = { platform: '', displays: this.getMonitors() };
+		// RustDesk 1.2.4 and later stream several displays at once; one-at-a-time is an older device
+		const version = this.scenario === 'one-at-a-time' ? '1.2.3' : '1.5.3';
+		this._peerInfo = { platform: '', version, displays: this.getMonitors() };
+		this.displays.setTogether(this.scenario !== 'one-at-a-time', this.desktop.current);
+		deviceState().streaming = [this.desktop.current];
+		this._placeScreens();
 		this._emit('peer_info', this._peerInfo);
 		this._after(this.scenario === 'slow' ? 1500 : 300, () => {
 			this._sessionStartedAt = Date.now();
@@ -1109,6 +1242,7 @@ export class MockRemoteSession implements RemoteClient {
 		this.renderer.stopRenderLoop();
 		this.fileTransfer.stopAll();
 		this._unbindInput();
+		for (const view of this.displays.close()) this._closeView(view.extra);
 	}
 
 	disconnect(): void {
@@ -1137,41 +1271,79 @@ export class MockRemoteSession implements RemoteClient {
 		this._raf = requestAnimationFrame(tick);
 	}
 
+	/** The displays the device streams now */
+	_streamed(): number[] {
+		if (!this.displays.together) return [this.desktop.current];
+		return this.displays._streaming ?? [this.desktop.current];
+	}
+
+	/** Draw each streamed display and hand its picture to the screen that shows it */
 	_pushFrame(): void {
-		const m = this.desktop.monitor();
 		const scale = QUALITY_SCALE[this._quality] || 1;
-		const fw = Math.round(m.width * scale);
-		const fh = Math.round(m.height * scale);
-		const c = this._frameCanvas;
-		if (c.width !== fw || c.height !== fh) {
-			c.width = fw;
-			c.height = fh;
-		}
-		const ctx = this._frameCtx;
-		if (!ctx) return;
-		ctx.setTransform(scale, 0, 0, scale, 0, 0);
 		const quality = QUALITY_NAME[this._quality] || this._quality;
 		const fps = this._fpsMode === 'adaptive' ? 'adaptive' : this._fpsMode + ' fps';
-		this.desktop.draw(ctx, m.width, m.height, { codec: this._codec, quality, fps });
-		ctx.setTransform(1, 0, 0, 1, 0, 0);
-		this.renderer.pushFrame({
-			displayWidth: m.width,
-			displayHeight: m.height,
-			_source: c,
-			_isNew: true,
-			close: () => {}
-		});
+		const all = this.desktop.allMonitors();
+		for (const idx of this._streamed()) {
+			const m = all[idx];
+			if (!m) continue;
+			const fw = Math.round(m.width * scale);
+			const fh = Math.round(m.height * scale);
+			let pic = this._pictures.get(idx);
+			if (!pic) {
+				const canvas = document.createElement('canvas');
+				pic = { canvas, ctx: canvas.getContext('2d') };
+				this._pictures.set(idx, pic);
+			}
+			const c = pic.canvas;
+			if (c.width !== fw || c.height !== fh) {
+				c.width = fw;
+				c.height = fh;
+			}
+			const ctx = pic.ctx;
+			if (!ctx) continue;
+			ctx.setTransform(scale, 0, 0, scale, 0, 0);
+			this.desktop.draw(ctx, m.width, m.height, { codec: this._codec, quality, fps }, idx);
+			ctx.setTransform(1, 0, 0, 1, 0, 0);
+			const decoder = this.displays.decoderFor(idx, Math.round(fw * fh * BYTES_PER_PIXEL));
+			const frame: RDDecodedFrame = {
+				displayWidth: m.width,
+				displayHeight: m.height,
+				_source: c,
+				_isNew: true,
+				close: () => {}
+			};
+			void decoder?.decode({ data: new Uint8Array(0), frame } as MockChunk);
+		}
+	}
+
+	/** Every screen: the session's own canvas and each display shown on its own */
+	_screens(): RDRenderer[] {
+		return [this.renderer, ...[...this.displays.views.values()].map((v) => v.extra.renderer)];
+	}
+
+	/** Each screen learns where its display sits on the desktop */
+	_placeScreens(): void {
+		const all = this.desktop.allMonitors();
+		const mainIdx = this.displays.together
+			? (this.displays.mainDisplay ?? this.desktop.current)
+			: this.desktop.current;
+		const main = all[mainIdx];
+		if (main) this.renderer.setPlace(main);
+		for (const v of this.displays.views.values()) {
+			const m = all[v.idx];
+			if (m) v.extra.renderer.setPlace(m);
+		}
 	}
 
 	/** A plain arrow, drawn once, sent as the remote cursor */
-	_installCursor(): void {
+	_cursorData(): ICursorData | null {
 		const cw = 18;
 		const ch = 26;
 		const cc = document.createElement('canvas');
 		cc.width = cw;
 		cc.height = ch;
 		const x = cc.getContext('2d');
-		if (!x) return;
+		if (!x) return null;
 		x.fillStyle = '#ffffff';
 		x.strokeStyle = '#000000';
 		x.lineWidth = 1.5;
@@ -1187,101 +1359,124 @@ export class MockRemoteSession implements RemoteClient {
 		x.fill();
 		x.stroke();
 		const data = x.getImageData(0, 0, cw, ch).data;
-		void this.renderer.updateCursor({
-			colors: new Uint8Array(data.buffer.slice(0)),
-			width: cw,
-			height: ch,
-			hotx: 1,
-			hoty: 1
-		});
+		return { colors: new Uint8Array(data.buffer.slice(0)), width: cw, height: ch, hotx: 1, hoty: 1 };
+	}
+
+	_installCursor(): void {
+		const data = this._cursorData();
+		if (!data) return;
+		for (const r of this._screens()) void r.updateCursor(data);
 		const m = this.desktop.monitor();
-		this.renderer.updateCursorPosition({ x: Math.round(m.width / 2), y: Math.round(m.height / 2) });
+		this._cursorAt(m.x + Math.round(m.width / 2), m.y + Math.round(m.height / 2));
+	}
+
+	/** The device's cursor moved to a desktop point: every screen hears it */
+	_cursorAt(x: number, y: number): void {
+		for (const r of this._screens()) r.updateCursorPosition({ x, y });
 	}
 
 	/* ── Input: mouse moves the remote cursor and drags windows, keys go to the terminal ── */
-
-	_pos(e: MouseEvent): { x: number; y: number } {
-		const rect = this.canvas.getBoundingClientRect();
-		return this.renderer.canvasToRemote(e.clientX - rect.left, e.clientY - rect.top);
-	}
 
 	_inputAllowed(): boolean {
 		return this._state === 'streaming' && this._active && !this._viewOnly;
 	}
 
+	/** The mouse events RDInput sends, as the device would take them: desktop points */
+	_deviceInput(msg: MessageInit): void {
+		const e = msg.mouseEvent;
+		if (!e || !this._inputAllowed()) return;
+		const type = (e.mask ?? 0) & 7;
+		const button = (e.mask ?? 0) >> 3;
+		const d = this.desktop;
+		const gx = e.x ?? 0;
+		const gy = e.y ?? 0;
+		if (type === 3) return;
+		if (type === 2) {
+			d.drag = null;
+			return;
+		}
+		const all = d.allMonitors();
+		const geometry = all.map((m, idx) => ({ ...m, idx, scale: 1, primary: !!m.primary }));
+		const idx = displayAt(geometry, gx, gy);
+		if (type === 0) {
+			this._cursorAt(gx, gy);
+			if (d.drag) {
+				const m = d.monitor(d.drag.win.monitor);
+				d.drag.win.x = Math.max(-d.drag.win.w + 80, Math.min(m.width - 80, gx - m.x - d.drag.dx));
+				d.drag.win.y = Math.max(0, Math.min(m.height - TASKBAR_H - TITLE_H, gy - m.y - d.drag.dy));
+			}
+			return;
+		}
+		if (type !== 1 || button !== 1 || idx < 0) return;
+		deviceState().press = { x: gx, y: gy, display: idx };
+		if (d.overlay) {
+			if (d.overlay === 'lock') d.note('Signed in again');
+			d.overlay = null;
+			return;
+		}
+		d.current = idx;
+		const m = d.monitor(idx);
+		const p = { x: gx - m.x, y: gy - m.y };
+		if (p.y >= m.height - TASKBAR_H) {
+			const task = d.windows.find((w) => w._task && p.x >= w._task.x && p.x <= w._task.x + w._task.w);
+			if (task) {
+				d.raise(task);
+				if (task.monitor !== idx) {
+					d.note((task.title.split(' - ')[0] ?? task.title) + ' is on Display ' + (task.monitor + 1));
+				}
+			}
+			return;
+		}
+		const hit = d.hit(p.x, p.y, idx);
+		if (!hit) return;
+		d.raise(hit.win);
+		if (hit.title) d.drag = { win: hit.win, dx: p.x - hit.win.x, dy: p.y - hit.win.y };
+	}
+
+	/** Keys typed on a screen go to the terminal */
+	_typed(e: KeyboardEvent): void {
+		if (!this._inputAllowed()) return;
+		// F8 and F11 stay with the viewer
+		if (/^F\d+$/.test(e.key)) return;
+		if (e.ctrlKey || e.metaKey || e.altKey) return;
+		e.preventDefault();
+		this.desktop.typeKey(e.key);
+	}
+
 	_bindInput(): void {
 		if (this._bound) return;
-		const d = this.desktop;
-		const onMove = (e: MouseEvent) => {
-			if (!this._inputAllowed()) return;
-			const p = this._pos(e);
-			this.renderer.updateCursorPosition(p);
-			if (d.drag) {
-				const m = d.monitor();
-				d.drag.win.x = Math.max(-d.drag.win.w + 80, Math.min(m.width - 80, p.x - d.drag.dx));
-				d.drag.win.y = Math.max(0, Math.min(m.height - TASKBAR_H - TITLE_H, p.y - d.drag.dy));
-			}
-		};
-		const onDown = (e: MouseEvent) => {
-			if (!this._inputAllowed()) return;
-			e.preventDefault();
-			this.canvas.focus();
-			if (e.button !== 0) return;
-			const p = this._pos(e);
-			if (d.overlay) {
-				if (d.overlay === 'lock') d.note('Signed in again');
-				d.overlay = null;
-				return;
-			}
-			const m = d.monitor();
-			if (p.y >= m.height - TASKBAR_H) {
-				const task = d.windows.find((w) => w._task && p.x >= w._task.x && p.x <= w._task.x + w._task.w);
-				if (task) {
-					d.raise(task);
-					if (task.monitor !== d.current) {
-						d.note((task.title.split(' - ')[0] ?? task.title) + ' is on Display ' + (task.monitor + 1));
-					}
-				}
-				return;
-			}
-			const hit = d.hit(p.x, p.y);
-			if (!hit) return;
-			d.raise(hit.win);
-			if (hit.title) d.drag = { win: hit.win, dx: p.x - hit.win.x, dy: p.y - hit.win.y };
-		};
-		const onUp = () => {
-			d.drag = null;
-		};
-		const onKey = (e: KeyboardEvent) => {
-			if (!this._inputAllowed()) return;
-			// F8 and F11 stay with the viewer
-			if (/^F\d+$/.test(e.key)) return;
-			if (e.ctrlKey || e.metaKey || e.altKey) return;
-			e.preventDefault();
-			d.typeKey(e.key);
-		};
-		const onContext = (e: MouseEvent) => e.preventDefault();
-		this.canvas.addEventListener('mousemove', onMove);
-		this.canvas.addEventListener('mousedown', onDown);
-		window.addEventListener('mouseup', onUp);
+		this._mainInput ??= new RDInput(this.canvas, this.renderer, (m) => this._deviceInput(m), {
+			keyboard: false
+		});
+		const onKey = (e: KeyboardEvent) => this._typed(e);
 		this.canvas.addEventListener('keydown', onKey);
-		this.canvas.addEventListener('contextmenu', onContext);
-		this._onMove = onMove;
-		this._onDown = onDown;
-		this._onUp = onUp;
 		this._onKey = onKey;
-		this._onContext = onContext;
 		this._bound = true;
+		this._syncInput();
 	}
 
 	_unbindInput(): void {
 		if (!this._bound) return;
-		if (this._onMove) this.canvas.removeEventListener('mousemove', this._onMove);
-		if (this._onDown) this.canvas.removeEventListener('mousedown', this._onDown);
-		if (this._onUp) window.removeEventListener('mouseup', this._onUp);
 		if (this._onKey) this.canvas.removeEventListener('keydown', this._onKey);
-		if (this._onContext) this.canvas.removeEventListener('contextmenu', this._onContext);
 		this._bound = false;
+		this._syncInput();
+	}
+
+	/** Mouse input on every screen while the session streams, is the active tab and not view only */
+	_syncInput(): void {
+		const on = this._bound && this._inputAllowed();
+		const inputs = [this._mainInput, ...[...this.displays.views.values()].map((v) => v.extra.input)];
+		for (const input of inputs) {
+			if (!input) continue;
+			if (on) input.start();
+			else input.stop();
+		}
+	}
+
+	_closeView(parts: MockViewParts): void {
+		parts.input.stop();
+		parts.renderer.canvas.removeEventListener('keydown', parts.onKey);
+		parts.renderer.close();
 	}
 
 	/* ── The controls the viewer calls ── */
@@ -1349,12 +1544,13 @@ export class MockRemoteSession implements RemoteClient {
 	}
 
 	setShowRemoteCursor(on: boolean): void {
-		this.renderer.showCursor = !!on;
+		for (const r of this._screens()) r.showCursor = !!on;
 	}
 
 	setViewOnly(on: boolean): void {
 		this._viewOnly = !!on;
 		this.desktop.banners.view = on ? 'View only: your mouse and keyboard are not sent' : null;
+		this._syncInput();
 		this._emit('view_only', this._viewOnly);
 	}
 
@@ -1397,6 +1593,7 @@ export class MockRemoteSession implements RemoteClient {
 
 	setSessionActive(active: boolean): void {
 		this._active = !!active;
+		this._syncInput();
 	}
 
 	syncCliprdrFiles(): void {}
@@ -1412,7 +1609,9 @@ export class MockRemoteSession implements RemoteClient {
 	disconnectFileConnection(): void {}
 
 	getMonitors(): Monitor[] {
-		const cur = this.desktop.current;
+		const cur = this.displays.together
+			? (this.displays.mainDisplay ?? this.desktop.current)
+			: this.desktop.current;
 		return this.desktop.allMonitors().map((m, i) => ({
 			idx: i,
 			name: m.name,
@@ -1430,7 +1629,96 @@ export class MockRemoteSession implements RemoteClient {
 	switchMonitor(idx: number): void {
 		this.desktop.current = Math.max(0, Math.min(this.desktop.allMonitors().length - 1, Number(idx) || 0));
 		this.desktop.drag = null;
+		if (this.displays.together) this.displays.setMainDisplay(this.desktop.current);
+		else deviceState().streaming = [this.desktop.current];
+		this._placeScreens();
 		this._emit('display_switched', this.desktop.current);
+	}
+
+	/* ── Several displays at once: the same calls as RDClient ── */
+
+	getDisplays(): RDDisplay[] {
+		return this.desktop.allMonitors().map((m, idx) => ({
+			idx,
+			name: m.name,
+			x: m.x,
+			y: m.y,
+			width: m.width,
+			height: m.height,
+			scale: 1,
+			primary: m.x === 0 && m.y === 0
+		}));
+	}
+
+	canShowDisplaysTogether(): boolean {
+		return this.displays.together;
+	}
+
+	showDisplay(idx: number, canvas: HTMLCanvasElement, opts: { zoom?: DisplayZoom; win?: Window } = {}): void {
+		if (!this.displays.together) return;
+		this.hideDisplay(idx);
+		const renderer = new RDRenderer(canvas, opts.win ? { win: opts.win } : {});
+		renderer.setScaleMode(opts.zoom ?? 'fit');
+		renderer.showCursor = this.renderer.showCursor;
+		renderer.onCursorReady = (ready) => canvas.parentElement?.classList.toggle('has-remote-cursor', !!ready);
+		const input = new RDInput(canvas, renderer, (m) => this._deviceInput(m), { keyboard: false });
+		const onKey = (e: KeyboardEvent) => this._typed(e);
+		canvas.addEventListener('keydown', onKey);
+		this.displays.attach(idx, new MockDecoder(), renderer, { renderer, input, onKey });
+		this._placeScreens();
+		const cursor = this._cursorData();
+		if (cursor) void renderer.updateCursor(cursor);
+		renderer.updateCursorPosition(this.renderer.cursorPos);
+		renderer.resize();
+		renderer.startRenderLoop();
+		this._syncInput();
+	}
+
+	hideDisplay(idx: number): void {
+		const view = this.displays.detach(idx);
+		if (view) this._closeView(view.extra);
+	}
+
+	setDisplayZoom(idx: number, zoom: DisplayZoom): void {
+		this.displays.views.get(idx)?.extra.renderer.setScaleMode(zoom);
+	}
+
+	setDisplayVisible(idx: number, visible: boolean): void {
+		this.displays.setVisible(idx, visible);
+	}
+
+	setDisplayBackground(idx: number, background: boolean): void {
+		this.displays.setBackground(idx, background);
+	}
+
+	setBackgroundDisplays(mode: BackgroundMode): void {
+		this.displays.setBackgroundMode(mode);
+	}
+
+	setMainDisplay(idx: number | null): void {
+		if (!this.displays.together) return;
+		this.displays.setMainDisplay(idx);
+		if (idx !== null) this.desktop.current = idx;
+		this._placeScreens();
+	}
+
+	setMainVisible(visible: boolean): void {
+		this.displays.setMainVisible(visible);
+	}
+
+	resizeDisplays(): void {
+		for (const v of this.displays.views.values()) v.extra.renderer.resize();
+	}
+
+	getDisplayTraffic(): RDDisplayTraffic[] {
+		return this.displays.traffic(this.desktop.allMonitors().length);
+	}
+
+	displayCanvas(idx: number): HTMLCanvasElement | null {
+		const view = this.displays.views.get(idx);
+		if (view) return view.extra.renderer.canvas;
+		const main = this.displays.together ? this.displays.mainDisplay : this.desktop.current;
+		return idx === main ? this.canvas : null;
 	}
 
 	getVirtualDisplaySupport(): VirtualDisplaySupport {
@@ -1448,11 +1736,19 @@ export class MockRemoteSession implements RemoteClient {
 			d.virtual.push({
 				vIndex: index,
 				name: 'Virtual display ' + index,
+				x: 0,
+				y: 0,
 				width: 1600,
 				height: 900,
 				wall: ['#2a3a2a', '#182418']
 			});
 		} else if (!on) d.virtual = d.virtual.filter((v) => v.vIndex !== index);
+		// Virtual displays go right of the others
+		let right = Math.max(...d.monitors.map((m) => m.x + m.width));
+		for (const v of d.virtual) {
+			v.x = right;
+			right += v.width;
+		}
 		if (d.current >= d.allMonitors().length) d.current = 0;
 		this._emit('virtual_display_toggled', { index, on: !!on });
 	}
