@@ -21,18 +21,18 @@ const (
 )
 
 type fixture struct {
-	t        *testing.T
-	p        *Protector
-	signedIn bool
-	refused  int
+	t          *testing.T
+	p          *Protector
+	cookieAuth bool
+	refused    int
 }
 
 func newFixture(t *testing.T, change ...func(*Options)) *fixture {
 	t.Helper()
 	f := &fixture{t: t}
 	opts := Options{
-		Secret:   testSecret,
-		SignedIn: func(*http.Request) bool { return f.signedIn },
+		Secret:     testSecret,
+		CookieAuth: func(*http.Request) bool { return f.cookieAuth },
 		OnError: func(w http.ResponseWriter, _ *http.Request) {
 			f.refused++
 			http.Error(w, "refused", http.StatusForbidden)
@@ -366,28 +366,28 @@ func TestGate(t *testing.T) {
 	if f.refused != 0 {
 		t.Fatalf("OnError ran %d times", f.refused)
 	}
-	for _, signedIn := range []bool{false, true} {
-		f.signedIn = signedIn
+	for _, cookieAuth := range []bool{false, true} {
+		f.cookieAuth = cookieAuth
 		before := f.refused
 		if f.gate(req("POST", "/api/devices/1/ban", "", "")) {
-			t.Fatalf("signed in %v: a write without the token passed", signedIn)
+			t.Fatalf("cookie session %v: a write without the token passed", cookieAuth)
 		}
 		if f.gate(req("PUT", "/settings", vectorPair, "")) {
-			t.Fatalf("signed in %v: a write outside /api passed without the token", signedIn)
+			t.Fatalf("cookie session %v: a write outside /api passed without the token", cookieAuth)
 		}
 		if f.refused != before+2 {
 			t.Fatalf("OnError ran %d times for two refusals", f.refused-before)
 		}
 		if !f.gate(req("GET", "/api/devices", "", "")) || !f.gate(req("OPTIONS", "/api/devices", "", "")) || !f.gate(req("HEAD", "/", "__csrf_h=broken", "")) {
-			t.Fatalf("signed in %v: a read was refused", signedIn)
+			t.Fatalf("cookie session %v: a read was refused", cookieAuth)
 		}
 	}
 }
 
 func TestGateDeviceAPIException(t *testing.T) {
 	f := newFixture(t)
-	// A device agent: no session, a bearer token, no CSRF token
-	f.signedIn = false
+	// A device agent: no cookie, a bearer token, no CSRF token
+	f.cookieAuth = false
 	for _, path := range []string{"/api/nd/commands", "/api/nd/", "/api/nd/a/b?x=1"} {
 		if !f.gate(req("POST", path, "", "")) {
 			t.Errorf("%s without a session was checked", path)
@@ -398,25 +398,25 @@ func TestGateDeviceAPIException(t *testing.T) {
 			t.Errorf("%s without a session passed unchecked", path)
 		}
 	}
-	// A signed-in browser on the same paths is checked
-	f.signedIn = true
+	// A browser with a session cookie on the same paths is checked
+	f.cookieAuth = true
 	if f.gate(req("POST", "/api/nd/commands", "", "")) {
-		t.Fatal("a signed-in browser posted to /api/nd/ without the token")
+		t.Fatal("a browser with a session posted to /api/nd/ without the token")
 	}
 	if f.gate(req("POST", "/api/nd/commands", vectorPair, "wrong")) {
-		t.Fatal("a signed-in browser posted to /api/nd/ with a wrong token")
+		t.Fatal("a browser with a session posted to /api/nd/ with a wrong token")
 	}
 	if !f.gate(req("POST", "/api/nd/commands", vectorPair, vectorToken)) {
-		t.Fatal("a signed-in browser with the token was refused")
+		t.Fatal("a browser with a session and the token was refused")
 	}
 }
 
 // TestABearerWriteWithoutASessionPasses: a write with a bearer token in
-// its Authorization header and no session passes without a CSRF token on
-// any path, so a device reaches its routes outside /api/nd/ and in any
-// spelling of it. A browser cannot send that header to another site
-// without asking first, and without a session there is nothing to forge.
-// With a session the write is checked (BUGS DV2, DV9).
+// its Authorization header and no cookie that authenticates it passes
+// without a CSRF token on any path, so a device reaches its routes outside
+// /api/nd/ and in any spelling of it. Without a cookie there is nothing to
+// forge. With one the write is checked, whatever the bearer header holds
+// (BUGS DV2, DV9, L430).
 func TestABearerWriteWithoutASessionPasses(t *testing.T) {
 	f := newFixture(t)
 	bearer := func(path, authorization, cookie, token string) *http.Request {
@@ -426,7 +426,7 @@ func TestABearerWriteWithoutASessionPasses(t *testing.T) {
 		}
 		return r
 	}
-	f.signedIn = false
+	f.cookieAuth = false
 	for _, path := range []string{"/api/tickets/nd", "/api/dataguard/dlp-events", "/api/activity/activity", "/API/ND/Activity/", "/api/nd", "/api/devices"} {
 		if !f.gate(bearer(path, "Bearer tok-device-a", "", "")) {
 			t.Errorf("%s with a bearer token and no session was checked", path)
@@ -437,12 +437,16 @@ func TestABearerWriteWithoutASessionPasses(t *testing.T) {
 			t.Errorf("/api/tickets/nd with Authorization %q and no session passed unchecked", authorization)
 		}
 	}
-	f.signedIn = true
-	if f.gate(bearer("/api/tickets/nd", "Bearer tok-device-a", "", "")) {
-		t.Error("a signed-in browser with a bearer token wrote without the CSRF token")
+	f.cookieAuth = true
+	for _, authorization := range []string{"Bearer tok-device-a", "Bearer dummy", "Bearer"} {
+		for _, path := range []string{"/api/tickets/nd", "/api/devices/1/ban", "/api/nd/commands"} {
+			if f.gate(bearer(path, authorization, "", "")) {
+				t.Errorf("%s: a browser with a session cookie and %q wrote without the CSRF token", path, authorization)
+			}
+		}
 	}
 	if !f.gate(bearer("/api/tickets/nd", "Bearer tok-device-a", vectorPair, vectorToken)) {
-		t.Error("a signed-in browser with a bearer token and the CSRF token was refused")
+		t.Error("a browser with a session cookie, a bearer token and the CSRF token was refused")
 	}
 }
 
@@ -464,14 +468,14 @@ func TestProviderThenGate(t *testing.T) {
 }
 
 func TestNewRefusesBadOptions(t *testing.T) {
-	signedIn := func(*http.Request) bool { return false }
-	if _, err := New(Options{SignedIn: signedIn}); err == nil {
+	cookieAuth := func(*http.Request) bool { return false }
+	if _, err := New(Options{CookieAuth: cookieAuth}); err == nil {
 		t.Error("New took an empty secret")
 	}
 	if _, err := New(Options{Secret: "x"}); err == nil {
-		t.Error("New took no SignedIn")
+		t.Error("New took no CookieAuth")
 	}
-	p, err := New(Options{Secret: "x", SignedIn: signedIn})
+	p, err := New(Options{Secret: "x", CookieAuth: cookieAuth})
 	if err != nil {
 		t.Fatal(err)
 	}

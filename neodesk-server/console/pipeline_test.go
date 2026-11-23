@@ -72,7 +72,7 @@ func TestStep3CORSAnswersPreflightsBeforeAnythingElse(t *testing.T) {
 	if res.status != 204 || res.body != "" {
 		t.Fatalf("status %d body %q, want 204 without a body", res.status, res.body)
 	}
-	if res.header.Get("Access-Control-Allow-Origin") != "tauri://localhost" || res.header.Get("Access-Control-Allow-Credentials") != "true" ||
+	if res.header.Get("Access-Control-Allow-Origin") != "tauri://localhost" || res.header.Values("Access-Control-Allow-Credentials") != nil ||
 		res.header.Get("Access-Control-Allow-Headers") != "Content-Type, Authorization, X-API-Key, X-CSRF-Token" {
 		t.Errorf("CORS headers = %v", res.header)
 	}
@@ -87,6 +87,20 @@ func TestStep3CORSAnswersPreflightsBeforeAnythingElse(t *testing.T) {
 	res = w.agent().get("/api/probe", "Origin", "https://tauri.localhost")
 	if res.status != 200 || res.header.Get("Access-Control-Allow-Origin") != "https://tauri.localhost" {
 		t.Errorf("status %d, Allow-Origin %q", res.status, res.header.Get("Access-Control-Allow-Origin"))
+	}
+	// No origin gets credentials, and the old development origin of the
+	// desktop client gets no CORS at all, also with a session (BUGS L430)
+	signedIn := w.agent().signIn("admin")
+	for _, origin := range []string{"http://localhost:1420", "tauri://localhost", "https://tauri.localhost"} {
+		for _, method := range []string{"OPTIONS", "GET", "POST"} {
+			res := signedIn.do(method, "/api/probe", "{}", "Origin", origin, "Content-Type", "application/json")
+			if got := res.header.Values("Access-Control-Allow-Credentials"); got != nil {
+				t.Errorf("%s from %s: Access-Control-Allow-Credentials %q", method, origin, got)
+			}
+			if got := res.header.Get("Access-Control-Allow-Origin"); origin == "http://localhost:1420" && got != "" {
+				t.Errorf("%s from %s: Access-Control-Allow-Origin %q", method, origin, got)
+			}
+		}
 	}
 	if res := w.agent().get("/api/probe", "Origin", "https://evil.example"); res.header.Get("Access-Control-Allow-Origin") != "" {
 		t.Error("a foreign origin was allowed")
@@ -583,6 +597,58 @@ func TestStep16CSRFGate(t *testing.T) {
 	if res.status != 403 || !strings.HasPrefix(res.body, "Invalid or missing CSRF token. Please refresh the page and try again.") ||
 		!strings.HasPrefix(res.header.Get("Content-Type"), "text/plain") {
 		t.Errorf("page write without a token: %d %q %q", res.status, res.header.Get("Content-Type"), res.body)
+	}
+}
+
+// TestStep16BearerHeaderDoesNotExemptACookie: a write that a cookie
+// authenticates needs the CSRF token whatever else it carries. A bearer
+// header, made up or real, lets a write pass without the token only when
+// no cookie speaks for it, as a device agent's: not for a signed-in
+// session, not for one waiting for its second factor, not with a guest
+// link's cookie (BUGS L430).
+func TestStep16BearerHeaderDoesNotExemptACookie(t *testing.T) {
+	w := goOnly(t, setup{})
+	// A session that holds a sign-in in progress and no account, as the
+	// password step leaves it for the second factor
+	w.s.Router().Get("/__test/pending", func(rw http.ResponseWriter, r *http.Request) {
+		kit.Session(r).Set("pendingTotpUserId", roleIDs["admin"])
+		kit.OK(rw, r, nil)
+	})
+	const refusal = `{"success":false,"error":"Invalid CSRF token. Please refresh the page and try again. If you recently disabled SSL, clear your browser cookies for this site and reload."}`
+	write := func(a *agent, header ...string) answer {
+		t.Helper()
+		return a.do("POST", "/api/probe", `{}`, append([]string{"Content-Type", "application/json", "Authorization", "Bearer dummy"}, header...)...)
+	}
+
+	signedIn := w.agent().signIn("admin")
+	if res := write(signedIn); res.status != 403 || res.body != refusal {
+		t.Errorf("signed in, a bearer header, no CSRF token: %d %s", res.status, res.body)
+	}
+	if res := write(signedIn, "X-CSRF-Token", signedIn.csrf()); res.status != 200 || !strings.Contains(res.body, `"user":1}`) {
+		t.Errorf("signed in, a bearer header and the CSRF token: %d %s", res.status, res.body)
+	}
+
+	pending := w.agent()
+	if res := pending.get("/__test/pending"); res.status != 200 || pending.cookies["nd.sid"] == "" {
+		t.Fatalf("pending sign-in: %d, cookies %v", res.status, pending.cookies)
+	}
+	if res := write(pending); res.status != 403 || res.body != refusal {
+		t.Errorf("waiting for the second factor, a bearer header, no CSRF token: %d %s", res.status, res.body)
+	}
+	if res := write(pending, "X-CSRF-Token", pending.csrf()); res.status != 200 {
+		t.Errorf("waiting for the second factor, a bearer header and the CSRF token: %d %s", res.status, res.body)
+	}
+
+	if res := write(w.agent(), "Cookie", "nd.guest=a-guest-link"); res.status != 403 || res.body != refusal {
+		t.Errorf("a guest link's cookie, a bearer header, no CSRF token: %d %s", res.status, res.body)
+	}
+
+	// No cookie, or a session cookie that names no stored session: a
+	// device's write, which passes
+	for _, cookies := range [][]string{nil, {"Cookie", "nd.sid=s%3Anot-a-session.x"}, {"Cookie", "__csrf_h=x; nd.lang=de"}} {
+		if res := write(w.agent(), cookies...); res.status != 200 || !strings.Contains(res.body, `"user":0}`) {
+			t.Errorf("bearer header with cookies %v: %d %s", cookies, res.status, res.body)
+		}
 	}
 }
 

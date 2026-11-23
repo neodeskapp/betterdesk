@@ -30,7 +30,7 @@ func FuzzCSRFToken(f *testing.F) {
 	f.Add(vectorPair, "", "a=1&_csrf="+vectorToken)
 	f.Add("__csrf_h=|e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "", "_csrf=")
 	f.Add("__csrf_h=j:5", "5", "")
-	p, err := New(Options{Secret: testSecret, SignedIn: func(*http.Request) bool { return true }})
+	p, err := New(Options{Secret: testSecret, CookieAuth: func(*http.Request) bool { return true }})
 	if err != nil {
 		f.Fatal(err)
 	}

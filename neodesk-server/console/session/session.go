@@ -138,6 +138,16 @@ func (s *Session) ID() string {
 	return s.id
 }
 
+// FromCookie reports whether the request brought this session along: its
+// cookie named a session the store holds, signed in or not (one waiting
+// for its second factor, say). A request without the cookie, or whose
+// cookie names no stored session, got a new, empty one.
+func (s *Session) FromCookie() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.cookieID != "" && s.cookieID == s.originalID
+}
+
 // UserID is the id of the signed-in account, and 0 when nobody is signed
 // in.
 func (s *Session) UserID() int64 {

@@ -195,9 +195,10 @@
 //
 // kit.DeviceIDHeader(r) is req.headers['x-device-id'] for a handler that
 // reads the header itself. The CSRF gate in front of Router lets a write
-// through without a token when nobody is signed in and its path starts
-// with /api/nd/ or it carries a bearer token, so a device reaches its
-// routes mounted elsewhere too (/api/tickets/nd, /api/dataguard/dlp-events).
+// through without a token when no cookie authenticates it (no stored
+// session, no guest link) and its path starts with /api/nd/ or it carries
+// a bearer token, so a device reaches its routes mounted elsewhere too
+// (/api/tickets/nd, /api/dataguard/dlp-events).
 //
 // # Websockets
 //

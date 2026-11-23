@@ -84,8 +84,10 @@ func SecurityHeaders(opts SecurityOptions) func(http.Handler) http.Handler {
 	}
 }
 
-var corsOrigins = map[string]bool{
-	"http://localhost:1420":   true,
+// desktopOrigins are the origins of the desktop client's webview:
+// tauri://localhost on macOS and Linux, https://tauri.localhost on
+// Windows. No other origin gets CORS.
+var desktopOrigins = map[string]bool{
 	"tauri://localhost":       true,
 	"https://tauri.localhost": true,
 }
@@ -95,9 +97,18 @@ var corsOrigins = map[string]bool{
 const noContentTag = `W/"a-bAsFyilMr4Ra1hIU5PyoyFRunpI"`
 
 // CORS lets the desktop client's webview call the API: for a request under
-// /api/ whose Origin is one of its three origins it adds the
-// Access-Control headers. Every OPTIONS request under /api/ ends here with
-// 204, whatever its origin.
+// /api/ whose Origin is one of desktopOrigins it adds the Access-Control
+// headers. Every OPTIONS request under /api/ ends here with 204, whatever
+// its origin.
+//
+// No origin gets Access-Control-Allow-Credentials, so no page of another
+// origin reads an answer to a request that carried the console's cookies,
+// or sends such a request when it needs a preflight. The webview calls
+// the API without cookies (with a bearer token or nothing). There
+// is no setting for a development origin either, since none is needed:
+// the console serves the web app itself, and the web app's development
+// server forwards the API to the console (web-ui/vite.config.ts), so the
+// page and the API share an origin in both.
 func CORS() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -106,11 +117,10 @@ func CORS() func(http.Handler) http.Handler {
 				return
 			}
 			h := w.Header()
-			if origin := strings.Join(r.Header.Values("Origin"), ", "); corsOrigins[origin] {
+			if origin := strings.Join(r.Header.Values("Origin"), ", "); desktopOrigins[origin] {
 				h.Set("Access-Control-Allow-Origin", origin)
 				h.Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 				h.Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key, X-CSRF-Token")
-				h.Set("Access-Control-Allow-Credentials", "true")
 				h.Set("Access-Control-Max-Age", "86400")
 			}
 			if r.Method == http.MethodOptions {

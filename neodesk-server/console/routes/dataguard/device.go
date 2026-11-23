@@ -10,8 +10,8 @@ import (
 
 // The two routes of the desktop agent, which takes its device token
 // instead of a session. At both mounts a write with the device token
-// passes the CSRF gate without a CSRF token when no one is signed in; with
-// a session it needs one like any other write.
+// passes the CSRF gate without a CSRF token when it carries no session;
+// with a session it needs one like any other write.
 
 // activePolicies answers GET dlp-policies: the policies that are on and
 // apply to the token's device, each as {id, name, policy_type, action,

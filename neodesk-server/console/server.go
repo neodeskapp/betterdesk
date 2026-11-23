@@ -215,7 +215,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		HTTPS:         cfg.HTTPS,
 		Secure:        secure,
 		SecureRequest: sessions.SecureCookie,
-		SignedIn:      func(r *http.Request) bool { return kit.UserID(r) != 0 },
+		CookieAuth:    s.cookieAuth,
 		BodyToken:     csrfBodyToken,
 		OnError:       host.CSRFError,
 	})

@@ -177,17 +177,19 @@ func TestSecurityCacheControlByPath(t *testing.T) {
 	}
 }
 
-// spec/auth-sessions.md 8.3 and tests/security/05-csrf-cors-ssrf.test.js.
+// spec/auth-sessions.md 8.3 and tests/security/05-csrf-cors-ssrf.test.js,
+// less the development origin http://localhost:1420 and the credentials
+// (BUGS L430).
 func TestCORS(t *testing.T) {
 	reached := false
 	h := CORS()(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { reached = true }))
 	allow := map[string]string{
 		"Access-Control-Allow-Methods":     "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 		"Access-Control-Allow-Headers":     "Content-Type, Authorization, X-API-Key, X-CSRF-Token",
-		"Access-Control-Allow-Credentials": "true",
+		"Access-Control-Allow-Credentials": "",
 		"Access-Control-Max-Age":           "86400",
 	}
-	for _, origin := range []string{"http://localhost:1420", "tauri://localhost", "https://tauri.localhost"} {
+	for _, origin := range []string{"tauri://localhost", "https://tauri.localhost"} {
 		for _, method := range []string{"GET", "OPTIONS"} {
 			req := httptest.NewRequest(method, "/api/devices", nil)
 			req.Header.Set("Origin", origin)
@@ -212,7 +214,7 @@ func TestCORS(t *testing.T) {
 			}
 		}
 	}
-	for _, origin := range []string{"https://evil.example", "http://localhost:1421", "HTTP://LOCALHOST:1420", "http://localhost:1420/", "null", ""} {
+	for _, origin := range []string{"http://localhost:1420", "https://evil.example", "http://localhost:1421", "HTTP://LOCALHOST:1420", "http://localhost:1420/", "http://tauri.localhost", "null", ""} {
 		req := httptest.NewRequest("OPTIONS", "/api/devices", nil)
 		if origin != "" {
 			req.Header.Set("Origin", origin)

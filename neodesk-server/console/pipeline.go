@@ -9,6 +9,8 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session/cookie"
 )
 
 // step is one step of the request pipeline.
@@ -176,6 +178,23 @@ func (s *Server) end(w http.ResponseWriter, r *http.Request) {
 // from csrfBodyToken.
 func (s *Server) csrfGate(next http.Handler) http.Handler {
 	return s.deps.CSRF.Gate(next)
+}
+
+// cookieAuth reports whether a cookie authenticates a request, for the
+// CSRF gate: the session cookie named a stored session (signed in or
+// waiting for its second factor), or a guest link's cookie came along.
+// The gate checks such a request whatever else it carries; only a request
+// no cookie speaks for may pass on a bearer header or the device prefix.
+func (s *Server) cookieAuth(r *http.Request) bool {
+	if sess := session.From(r); sess != nil && sess.FromCookie() {
+		return true
+	}
+	if guests := s.deps.GuestAccess; guests != nil {
+		if _, found := cookie.Get(r, guests.CookieName()); found {
+			return true
+		}
+	}
+	return false
 }
 
 // csrfBodyToken is the _csrf field of the body the body step has read, for

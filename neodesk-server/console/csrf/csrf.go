@@ -73,9 +73,11 @@ type Options struct {
 	// it says came over HTTPS (through a proxy the console trusts), as the
 	// session cookie is. Pass the session manager's SecureCookie.
 	SecureRequest func(r *http.Request) bool
-	// SignedIn reports whether a request carries a signed-in session. Gate
-	// asks it for requests under /api/nd/ and requests with a bearer token.
-	SignedIn func(r *http.Request) bool
+	// CookieAuth reports whether a cookie authenticates a request: the
+	// session cookie names a stored session, signed in or not, or another
+	// cookie that grants access comes along. Gate asks it for requests
+	// under /api/nd/ and requests with a bearer token.
+	CookieAuth func(r *http.Request) bool
 	// BodyToken returns the _csrf field of a request's body, "" when the
 	// body has none. Set it where something in front of the protector has
 	// read the body. nil makes the protector read the field from r.Body
@@ -92,7 +94,7 @@ type Protector struct {
 	cookieName string
 	secure     bool
 	secureReq  func(r *http.Request) bool
-	signedIn   func(r *http.Request) bool
+	cookieAuth func(r *http.Request) bool
 	bodyToken  func(r *http.Request) string
 	onError    func(w http.ResponseWriter, r *http.Request)
 }
@@ -102,15 +104,15 @@ func New(opts Options) (*Protector, error) {
 	if opts.Secret == "" {
 		return nil, errors.New("csrf: the secret is empty")
 	}
-	if opts.SignedIn == nil {
-		return nil, errors.New("csrf: SignedIn is not set")
+	if opts.CookieAuth == nil {
+		return nil, errors.New("csrf: CookieAuth is not set")
 	}
 	p := &Protector{
 		secret:     opts.Secret,
 		cookieName: cookieNameHTTP,
 		secure:     opts.Secure,
 		secureReq:  opts.SecureRequest,
-		signedIn:   opts.SignedIn,
+		cookieAuth: opts.CookieAuth,
 		bodyToken:  opts.BodyToken,
 		onError:    opts.OnError,
 	}
@@ -168,16 +170,17 @@ func (p *Protector) Provider(next http.Handler) http.Handler {
 	})
 }
 
-// Gate refuses writes without a good token through OnError. A request
-// without a signed-in session passes unchecked when its path starts with
+// Gate refuses writes without a good token through OnError. A request that
+// no cookie authenticates passes unchecked when its path starts with
 // /api/nd/, where device agents call in, or when it carries a bearer token
-// in its Authorization header, on any path: device agents send one, a
-// browser cannot send it to another site without asking first, and
-// without a session there is nothing to forge. With a session a request is
-// a browser and is checked like any other.
+// in its Authorization header, on any path: device agents send one, and
+// without a cookie there is nothing to forge. A request that a cookie
+// authenticates (CookieAuth) is a browser's and is checked like any
+// other, whatever its headers say: a bearer header, real or made up,
+// never switches the check off for a cookie, signed in or not.
 func (p *Protector) Gate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if (strings.HasPrefix(r.URL.EscapedPath(), devicePrefix) || bearer(r)) && !p.signedIn(r) {
+		if (strings.HasPrefix(r.URL.EscapedPath(), devicePrefix) || bearer(r)) && !p.cookieAuth(r) {
 			next.ServeHTTP(w, r)
 			return
 		}

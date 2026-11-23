@@ -504,6 +504,16 @@ func startPipeline(t testing.TB, file vectorFile) (*pipeline, *httptest.Server) 
 	return p, server
 }
 
+// requestOrigin is the Origin a vector's request sent, "" for none.
+func requestOrigin(v vector) string {
+	for _, h := range v.Headers {
+		if strings.EqualFold(h[0], "Origin") {
+			return h[1]
+		}
+	}
+	return ""
+}
+
 func headerMap(pairs [][2]string) map[string]string {
 	out := map[string]string{}
 	for _, h := range pairs {
@@ -705,7 +715,7 @@ func replay(t *testing.T, mode string, minimum int) {
 	p, server := startPipeline(t, file)
 	addr := server.Listener.Addr().String()
 	skipped := map[string]int{}
-	aborts, fileErrors, fixedHeaders, sandboxed := 0, 0, 0, 0
+	aborts, fileErrors, fixedHeaders, sandboxed, uncredentialed := 0, 0, 0, 0, 0
 	for _, v := range file.Vectors {
 		name := v.ID + " " + v.Name
 		resp, body := exchange(t, addr, v.requestBytes(t), v.Method, v.AbortAfter)
@@ -762,6 +772,19 @@ func replay(t *testing.T, mode string, minimum int) {
 			// BR18: a file of the uploads folder is sandboxed
 			wantHeaders["content-security-policy"] += ";sandbox"
 			sandboxed++
+		}
+		if _, cors := wantHeaders["access-control-allow-origin"]; cors {
+			// L430: no origin gets credentials, and the development origin
+			// http://localhost:1420 gets no CORS at all
+			delete(wantHeaders, "access-control-allow-credentials")
+			if requestOrigin(v) == "http://localhost:1420" {
+				for name := range wantHeaders {
+					if strings.HasPrefix(name, "access-control-") {
+						delete(wantHeaders, name)
+					}
+				}
+			}
+			uncredentialed++
 		}
 		var skipHeaders []string
 		if _, has := wantHeaders["content-length"]; !has {
@@ -825,6 +848,9 @@ func replay(t *testing.T, mode string, minimum int) {
 	t.Logf("%d file answers compared with the folder's Cache-Control in place of Node's (S15)", fixedHeaders)
 	if sandboxed == 0 {
 		t.Error("no answer of the uploads folder compared with its sandbox (BR18)")
+	}
+	if uncredentialed == 0 {
+		t.Error("no CORS answer compared without credentials (L430)")
 	}
 	// A difference a bug fix makes on purpose names its bug first; those are
 	// counted apart from what Go cannot answer as Node did
