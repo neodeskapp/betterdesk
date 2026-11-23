@@ -11,6 +11,7 @@
   Keys go to the device from any tile, as from the single screen; F8 leaves.
 -->
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
 	import { layoutTiles } from '#lib/remote/client/display-layout.ts';
 	import type { Viewer, ViewerSession } from '#lib/remote/viewer.svelte.ts';
@@ -52,11 +53,15 @@
 		return () => cancelAnimationFrame(id);
 	});
 
-	/** The tile's canvas is in the page: its display draws there until the tile goes */
+	/**
+	 * The tile's canvas is in the page: its display draws there until the
+	 * tile goes. Untracked: the display worked on or its zoom changing must
+	 * not make a new screen (it would be blank until the next picture).
+	 */
 	function screen(idx: number) {
 		return (canvas: HTMLCanvasElement) => {
-			viewer.attachTile(s, idx, canvas);
-			return () => viewer.detachTile(s, idx);
+			untrack(() => viewer.attachTile(s, idx, canvas));
+			return () => untrack(() => viewer.detachTile(s, idx));
 		};
 	}
 

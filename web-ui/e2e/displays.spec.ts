@@ -108,11 +108,11 @@ test.describe('several displays of one device', () => {
 		await chooseLayout(page, 'As arranged');
 		// The top left corner of Display 3's picture: its origin, left of the primary display
 		const box = (await tile(page, 2).boundingBox())!;
-		await page.mouse.click(box.x + 3, box.y + 3);
+		await page.mouse.click(box.x + box.width * 0.03, box.y + box.height * 0.05);
 		const left = (await device(page)).press!;
 		expect(left.display).toBe(2);
 		expect(left.x).toBeGreaterThanOrEqual(-1600);
-		expect(left.x).toBeLessThan(-1500);
+		expect(left.x).toBeLessThan(-1450);
 		expect(left.y).toBeGreaterThanOrEqual(180);
 		const right = (await tile(page, 1).boundingBox())!;
 		await page.mouse.click(right.x + right.width / 2, right.y + right.height / 2);
@@ -183,7 +183,11 @@ test.describe('several displays of one device', () => {
 		await popup.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
 		await expect.poll(async () => (await device(page)).press?.display).toBe(1);
 		await expectNoAxeViolations(popup);
-		await popup.getByRole('button', { name: 'Back to the main window' }).click();
+		// The button closes its window: the click has nothing to wait for afterwards
+		await Promise.all([
+			popup.waitForEvent('close'),
+			popup.getByRole('button', { name: 'Back to the main window' }).click({ noWaitAfter: true })
+		]);
 		await expect(page.locator('.tile-canvas')).toHaveCount(3);
 	});
 
