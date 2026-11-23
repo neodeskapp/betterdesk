@@ -7,10 +7,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 	"github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 	"github.com/neodeskapp/neodesk/neodesk-server/peer"
@@ -145,6 +147,49 @@ func TestBdMgmtWebSocketRequiresProof(t *testing.T) {
 		t.Fatalf("expected signed websocket to connect, got status %d: %v", status, err)
 	}
 	_ = conn.Close(websocket.StatusNormalClosure, "done")
+}
+
+// A management socket is in the audit log as nd_mgmt_connect when it
+// opens and as nd_mgmt_disconnect when it closes (L301).
+func TestBdMgmtAuditEventsSayNd(t *testing.T) {
+	f := newInternalFixture(t)
+	pub, priv, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.db.UpsertPeer(&db.Peer{ID: "BDML301", PK: pub, Status: "ONLINE"}); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	conn, _, err := websocket.Dial(ctx, "ws://"+f.host+"/ws/nd-mgmt/BDML301", &websocket.DialOptions{
+		HTTPHeader: signedBdMgmtHeaders(t, priv, "BDML301"),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := conn.Read(ctx); err != nil { // welcome
+		t.Fatal(err)
+	}
+	_ = conn.Close(websocket.StatusNormalClosure, "done")
+
+	// The events of the device, oldest first, once the socket's cleanup ran
+	var got []string
+	for deadline := time.Now().Add(3 * time.Second); time.Now().Before(deadline); time.Sleep(20 * time.Millisecond) {
+		got = got[:0]
+		events := f.srv.auditLog.RecentByAction(audit.ActionPeerUpdated, 50)
+		for i := len(events) - 1; i >= 0; i-- {
+			if e := events[i]; e.Target == "BDML301" {
+				got = append(got, e.Details["event"]+" "+e.Details["auth"])
+			}
+		}
+		if len(got) >= 2 {
+			break
+		}
+	}
+	if want := []string{"nd_mgmt_connect device_signature", "nd_mgmt_disconnect device_signature"}; strings.Join(got, ", ") != strings.Join(want, ", ") {
+		t.Errorf("audit events of the socket: %q, want %q", got, want)
+	}
 }
 
 // TestBdMgmtReconnectStaysConnected: when a desktop client opens a second

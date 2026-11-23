@@ -325,7 +325,7 @@ func (s *Server) handleBdMgmt(w http.ResponseWriter, r *http.Request) {
 
 	if s.auditLog != nil {
 		s.auditLog.Log(audit.ActionPeerUpdated, clientIP, deviceID,
-			map[string]string{"event": "bd_mgmt_connect", "auth": "device_signature"})
+			map[string]string{"event": "nd_mgmt_connect", "auth": "device_signature"})
 	}
 
 	// Mark device as neodesk_desktop in the database
@@ -353,7 +353,7 @@ func (s *Server) handleBdMgmt(w http.ResponseWriter, r *http.Request) {
 
 	if s.auditLog != nil {
 		s.auditLog.Log(audit.ActionPeerUpdated, clientIP, deviceID,
-			map[string]string{"event": "bd_mgmt_disconnect", "auth": "device_signature"})
+			map[string]string{"event": "nd_mgmt_disconnect", "auth": "device_signature"})
 	}
 }
 

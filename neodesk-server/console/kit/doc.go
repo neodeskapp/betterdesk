@@ -197,7 +197,7 @@
 // reads the header itself. The CSRF gate in front of Router lets a write
 // through without a token when nobody is signed in and its path starts
 // with /api/nd/ or it carries a bearer token, so a device reaches its
-// routes mounted elsewhere too (/api/tickets/bd, /api/dataguard/dlp-events).
+// routes mounted elsewhere too (/api/tickets/nd, /api/dataguard/dlp-events).
 //
 // # Websockets
 //

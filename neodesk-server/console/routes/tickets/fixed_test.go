@@ -91,20 +91,20 @@ var _ = ticketFixes.Add("TK2", map[string]replay.Fix{
 
 // DV5: the title and the description of a device's ticket are text.
 var _ = deviceFixes.Add("DV5", map[string]replay.Fix{
-	` POST /api/tickets/bd {"title":5}`:     {Status: 400, Answer: titleRequired},
-	` POST /api/tickets/bd {"title":true}`:  {Status: 400, Answer: titleRequired},
-	` POST /api/tickets/bd {"title":[]}`:    {Status: 400, Answer: titleRequired},
-	` POST /api/tickets/bd {"title":["a"]}`: {Status: 400, Answer: titleRequired},
-	` POST /api/tickets/bd {"title":{}}`:    {Status: 400, Answer: titleRequired},
-	` POST /api/tickets/bd {"title":"Description number","description":7}`: {Status: 400, Answer: `{"error":"Invalid description"}`,
+	` POST /api/tickets/nd {"title":5}`:     {Status: 400, Answer: titleRequired},
+	` POST /api/tickets/nd {"title":true}`:  {Status: 400, Answer: titleRequired},
+	` POST /api/tickets/nd {"title":[]}`:    {Status: 400, Answer: titleRequired},
+	` POST /api/tickets/nd {"title":["a"]}`: {Status: 400, Answer: titleRequired},
+	` POST /api/tickets/nd {"title":{}}`:    {Status: 400, Answer: titleRequired},
+	` POST /api/tickets/nd {"title":"Description number","description":7}`: {Status: 400, Answer: `{"error":"Invalid description"}`,
 		After: replay.ResendBy(`{"title":"Description number","description":"7.0"}`, `{"title":"Description number","description":"7"}`)},
-	` POST /api/tickets/bd {"title":"Description zero","description":0}`:      {Status: 400, Answer: `{"error":"Invalid description"}`, After: replay.Resend(`{"title":"Description zero"}`)},
-	` POST /api/tickets/bd {"title":"Description false","description":false}`: {Status: 400, Answer: `{"error":"Invalid description"}`, After: replay.Resend(`{"title":"Description false"}`)},
-	` POST /api/tickets/bd {"title":"Description list","description":["a","b"]}`: {Status: 400, Answer: `{"error":"Invalid description"}`,
+	` POST /api/tickets/nd {"title":"Description zero","description":0}`:      {Status: 400, Answer: `{"error":"Invalid description"}`, After: replay.Resend(`{"title":"Description zero"}`)},
+	` POST /api/tickets/nd {"title":"Description false","description":false}`: {Status: 400, Answer: `{"error":"Invalid description"}`, After: replay.Resend(`{"title":"Description false"}`)},
+	` POST /api/tickets/nd {"title":"Description list","description":["a","b"]}`: {Status: 400, Answer: `{"error":"Invalid description"}`,
 		After: replay.ResendBy("", `{"title":"Description list","description":"{\"a\",\"b\"}"}`)},
-	` POST /api/tickets/bd {"title":"Description object","description":{"a":1}}`: {Status: 400, Answer: `{"error":"Invalid description"}`,
+	` POST /api/tickets/nd {"title":"Description object","description":{"a":1}}`: {Status: 400, Answer: `{"error":"Invalid description"}`,
 		After: replay.ResendBy("", `{"title":"Description object","description":"{\"a\":1}"}`)},
-	` POST /api/tickets/bd {"title":"Description true","description":true}`: {Status: 400, Answer: `{"error":"Invalid description"}`,
+	` POST /api/tickets/nd {"title":"Description true","description":true}`: {Status: 400, Answer: `{"error":"Invalid description"}`,
 		After: replay.ResendBy("", `{"title":"Description true","description":"true"}`)},
 })
 

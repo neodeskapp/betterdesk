@@ -124,7 +124,7 @@ func download(t *testing.T, step replay.Step, got replay.Answer) {
 }
 
 // TestNodeDeviceAnswers replays what the device routes of the Node file
-// (POST and GET /api/tickets/bd) answered with its real database adapter,
+// (POST and GET /api/tickets/nd) answered with its real database adapter,
 // on SQLite and on PostgreSQL (testdata/node_device_sqlite.json,
 // testdata/node_device_postgres.json): tokens in every state, the list of
 // a device, tickets created with values of every JSON type, the rows they
@@ -156,20 +156,20 @@ func TestAgentTicketWithANumberTitleIs400(t *testing.T) {
 			`{"title":"x","description":["a"]}`:   `{"error":"Invalid description"}`,
 			`{"title":"x","description":{"a":1}}`: `{"error":"Invalid description"}`,
 		} {
-			if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(body), Headers: device}); got.Status != 400 || got.Body != want {
+			if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/nd", Body: replay.Text(body), Headers: device}); got.Status != 400 || got.Body != want {
 				t.Errorf("%s: %d %s, want 400 %s", body, got.Status, got.Body, want)
 			}
 		}
 		if rows := w.Rows("SELECT COUNT(*) AS n FROM tickets", nil); rows != `[{"n":0}]` {
 			t.Errorf("tickets stored: %s", rows)
 		}
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(`{"title":"x","description":null}`), Headers: device}); got.Status != 201 {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/nd", Body: replay.Text(`{"title":"x","description":null}`), Headers: device}); got.Status != 201 {
 			t.Errorf("a description of null: %d %s", got.Status, got.Body)
 		}
 	})
 }
 
-// A device that writes to /api/tickets/bd with its token and no session
+// A device that writes to /api/tickets/nd with its token and no session
 // needs no CSRF token, as below /api/nd/ (BUGS DV2). A signed-in browser
 // needs it there like anywhere.
 func TestADeviceWriteNeedsNoCSRFToken(t *testing.T) {
@@ -179,20 +179,20 @@ func TestADeviceWriteNeedsNoCSRFToken(t *testing.T) {
 			[]any{"tok-device-a", "a70dc32ded6e642ec955672a88edb7cc9d6d9e2abb6bf78146a63491adb24155"})
 		device := map[string]string{"Authorization": "Bearer tok-device-a"}
 		refused := `{"success":false,"error":"Invalid CSRF token. Please refresh the page and try again. If you recently disabled SSL, clear your browser cookies for this site and reload."}`
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(`{"title":"x"}`), Headers: device, NoCSRF: true}); got.Status != 201 || got.Body != `{"success":true,"ticket_id":1}` {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/nd", Body: replay.Text(`{"title":"x"}`), Headers: device, NoCSRF: true}); got.Status != 201 || got.Body != `{"success":true,"ticket_id":1}` {
 			t.Errorf("without the CSRF token: %d %s", got.Status, got.Body)
 		}
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(`{"title":"x"}`), Headers: map[string]string{"Authorization": "Bearer nope"}, NoCSRF: true}); got.Status != 401 {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/nd", Body: replay.Text(`{"title":"x"}`), Headers: map[string]string{"Authorization": "Bearer nope"}, NoCSRF: true}); got.Status != 401 {
 			t.Errorf("with an unknown device token: %d %s", got.Status, got.Body)
 		}
-		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(`{"title":"x"}`), Headers: device, NoCSRF: true}); got.Status != 403 || got.Body != refused {
+		if got := w.Do(replay.Request{Role: "admin", Method: "POST", Path: "/api/tickets/nd", Body: replay.Text(`{"title":"x"}`), Headers: device, NoCSRF: true}); got.Status != 403 || got.Body != refused {
 			t.Errorf("with a session and without the CSRF token: %d %s", got.Status, got.Body)
 		}
-		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/bd", Body: replay.Text(`{"title":"x"}`), Headers: device}); got.Status != 201 || got.Body != `{"success":true,"ticket_id":2}` {
+		if got := w.Do(replay.Request{Method: "POST", Path: "/api/tickets/nd", Body: replay.Text(`{"title":"x"}`), Headers: device}); got.Status != 201 || got.Body != `{"success":true,"ticket_id":2}` {
 			t.Errorf("with both tokens: %d %s", got.Status, got.Body)
 		}
 		// A read needs none
-		if got := w.Do(replay.Request{Path: "/api/tickets/bd", Headers: device}); got.Status != 200 || !strings.Contains(got.Body, `"total":2`) {
+		if got := w.Do(replay.Request{Path: "/api/tickets/nd", Headers: device}); got.Status != 200 || !strings.Contains(got.Body, `"total":2`) {
 			t.Errorf("the list: %d %s", got.Status, got.Body)
 		}
 	})

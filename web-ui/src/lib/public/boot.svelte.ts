@@ -47,7 +47,7 @@ async function loadStrings(boot: PublicBoot | undefined, lang: string): Promise<
 
 /** Load the strings and follow the theme; `publicPage.failed` when the strings didn't come */
 export async function startPublic(): Promise<void> {
-	const boot = (window as unknown as { __BD_BOOT__?: PublicBoot }).__BD_BOOT__;
+	const boot = (window as unknown as { __ND_BOOT__?: PublicBoot }).__ND_BOOT__;
 	const root = document.documentElement;
 	const lang = boot?.lang ?? root.lang ?? 'en';
 	const dir = boot?.dir ?? (root.dir === 'rtl' ? 'rtl' : 'ltr');
@@ -71,7 +71,7 @@ export async function startPublic(): Promise<void> {
  * signed in) reads and drops that answer, so the request ends.
  */
 export function dropEarlySession(): void {
-	const boot = (window as unknown as { __BD_BOOT__?: PublicBoot }).__BD_BOOT__;
+	const boot = (window as unknown as { __ND_BOOT__?: PublicBoot }).__ND_BOOT__;
 	const early = boot?.session;
 	if (!boot || !early) return;
 	boot.session = undefined;

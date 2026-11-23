@@ -2,7 +2,7 @@
  "id": "tickets/device-token-create-without-title",
  "request": {
   "method": "POST",
-  "path": "/api/tickets/bd",
+  "path": "/api/tickets/nd",
   "body": {
    "title": "   "
   },

@@ -2,7 +2,7 @@
  "id": "tickets/device-token-create",
  "request": {
   "method": "POST",
-  "path": "/api/tickets/bd",
+  "path": "/api/tickets/nd",
   "body": {
    "category": "network",
    "priority": "high",

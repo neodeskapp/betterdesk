@@ -128,7 +128,7 @@ function localiseClientMessages(): void {
 }
 
 interface BootWindow {
-	__BD_BOOT__?: {
+	__ND_BOOT__?: {
 		lang: string;
 		dir: 'ltr' | 'rtl';
 		stringsUrl: string;
@@ -158,7 +158,7 @@ async function json(
  * Throws ApiError(401) when nobody is signed in.
  */
 export async function startSession(): Promise<void> {
-	const boot = (window as unknown as BootWindow).__BD_BOOT__;
+	const boot = (window as unknown as BootWindow).__ND_BOOT__;
 	const fallbackLang = document.documentElement.lang || 'en';
 	// A response body can be read once: take the early requests, so a second
 	// start (Try again) asks the server again

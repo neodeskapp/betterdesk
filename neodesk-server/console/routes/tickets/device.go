@@ -17,7 +17,7 @@ type agentCreated struct {
 	TicketID jsbind.Cell `json:"ticket_id"`
 }
 
-// createFromAgent answers POST /api/tickets/bd with the body {title,
+// createFromAgent answers POST /api/tickets/nd with the body {title,
 // description?, priority?, category?}: a ticket about the token's device,
 // made by "agent:<device id>" and assigned to nobody. Title and
 // description are text. A priority or a category that is not one of the
@@ -60,7 +60,7 @@ func (h *handlers) createFromAgent(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusCreated, agentCreated{Success: true, TicketID: id})
 }
 
-// listForAgent answers GET /api/tickets/bd: the tickets about the token's
+// listForAgent answers GET /api/tickets/nd: the tickets about the token's
 // device, newest first.
 func (h *handlers) listForAgent(w http.ResponseWriter, r *http.Request) {
 	filters := []filter{{"device_id", jsbind.String(kit.Device(r).DeviceID)}}

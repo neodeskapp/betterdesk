@@ -126,13 +126,13 @@ const bootScriptHead = `(function (boot) {
     // Sidebar width (same key and 200-320 px range as the shell), so the layout does not jump on load
     var sw = parseInt(get('nd_ux35_sidebar_width') || '', 10);
     if (sw > 0) root.style.setProperty('--sidebar-w', Math.min(320, Math.max(200, sw)) + 'px');
-    window.__BD_BOOT__ = boot;
+    window.__ND_BOOT__ = boot;
     // Start both requests now, before the app's modules load
     var opts = { credentials: 'same-origin', headers: { Accept: 'application/json' } };
-    window.__BD_BOOT__.strings = fetch(boot.stringsUrl, opts);
+    window.__ND_BOOT__.strings = fetch(boot.stringsUrl, opts);
     // Public pages (login, portal, downloads) have no session to ask for
     var path = location.pathname || '/';
     var isPublic = false;
     for (var i = 0; i < boot.publicPaths.length; i++) { if (path === boot.publicPaths[i] || path.indexOf(boot.publicPaths[i] + '/') === 0) isPublic = true; }
-    if (!isPublic) window.__BD_BOOT__.session = fetch('/api/console/bootstrap', opts);
+    if (!isPublic) window.__ND_BOOT__.session = fetch('/api/console/bootstrap', opts);
 })(`

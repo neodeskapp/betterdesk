@@ -2,7 +2,7 @@
  "id": "tickets/device-token-list",
  "request": {
   "method": "GET",
-  "path": "/api/tickets/bd",
+  "path": "/api/tickets/nd",
   "notes": [
    "header Authorization: Bearer {secret:device_token}"
   ]

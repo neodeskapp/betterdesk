@@ -43,10 +43,10 @@ const boot = {
 
 const ok = (body: unknown) => new Response(JSON.stringify(body), { status: 200 });
 
-type BootWindow = { __BD_BOOT__?: Record<string, unknown> };
+type BootWindow = { __ND_BOOT__?: Record<string, unknown> };
 
 afterEach(() => {
-	delete (window as unknown as BootWindow).__BD_BOOT__;
+	delete (window as unknown as BootWindow).__ND_BOOT__;
 	clearSession();
 });
 
@@ -54,7 +54,7 @@ describe('startSession', () => {
 	test('uses the requests the boot script started, and asks again on a second start', async () => {
 		const fetchMock = vi.fn((url: string) => Promise.resolve(ok(url.includes('strings') ? {} : boot)));
 		vi.stubGlobal('fetch', fetchMock);
-		(window as unknown as BootWindow).__BD_BOOT__ = {
+		(window as unknown as BootWindow).__ND_BOOT__ = {
 			lang: 'en',
 			dir: 'ltr',
 			stringsUrl: '/api/console/strings/en?v=1',

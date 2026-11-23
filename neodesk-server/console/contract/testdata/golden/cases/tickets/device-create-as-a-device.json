@@ -2,7 +2,7 @@
  "id": "tickets/device-create-as-a-device",
  "request": {
   "method": "POST",
-  "path": "/api/tickets/bd",
+  "path": "/api/tickets/nd",
   "body": {
    "priority": "high",
    "title": "From the agent"

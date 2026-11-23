@@ -12,7 +12,7 @@ import (
 )
 
 // Tickets: the routes people use, and at the end the two device routes
-// under /api/tickets/bd (ticketsDeviceCases).
+// under /api/tickets/nd (ticketsDeviceCases).
 //
 // In every role's turn admin sets up one ticket, assigned to the viewer
 // account, with a public and an internal comment and an attachment. The
@@ -206,7 +206,7 @@ func init() {
 }
 
 // ticketsDeviceCases are the two routes of the desktop agent,
-// /api/tickets/bd. First what comes before the route: no token, a token
+// /api/tickets/nd. First what comes before the route: no token, a token
 // nobody issued, and the CSRF gate, which checks every write here, also
 // one without a session (the mount is not below /api/nd/), with the panel
 // access guard in front of it for the roles without device.edit. Then the
@@ -236,32 +236,32 @@ func ticketsDeviceCases() []contract.Case {
 	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
 	other := map[string]string{"Authorization": "Bearer {secret:device_token_other}"}
 	return []contract.Case{
-		{Name: "device-create-without-token", Method: "POST", Path: "/api/tickets/bd", Body: ticket},
-		{Name: "device-create-unknown-token", Method: "POST", Path: "/api/tickets/bd", Body: ticket, Headers: unknown},
-		{Name: "device-create-without-csrf-token", Method: "POST", Path: "/api/tickets/bd", Body: ticket, Headers: unknown, NoCSRF: true},
+		{Name: "device-create-without-token", Method: "POST", Path: "/api/tickets/nd", Body: ticket},
+		{Name: "device-create-unknown-token", Method: "POST", Path: "/api/tickets/nd", Body: ticket, Headers: unknown},
+		{Name: "device-create-without-csrf-token", Method: "POST", Path: "/api/tickets/nd", Body: ticket, Headers: unknown, NoCSRF: true},
 		{
-			Name: "device-create-as-a-device", Method: "POST", Path: "/api/tickets/bd", Body: ticket, Headers: unknown,
+			Name: "device-create-as-a-device", Method: "POST", Path: "/api/tickets/nd", Body: ticket, Headers: unknown,
 			NoCSRF: true, NoCookies: true, Roles: contract.Roles("signed-out"),
 		},
 
 		// The instance's device
 		{
-			Name: "device-token-create-as-a-device", Method: "POST", Path: "/api/tickets/bd", Body: ticket, Headers: device,
+			Name: "device-token-create-as-a-device", Method: "POST", Path: "/api/tickets/nd", Body: ticket, Headers: device,
 			NoCSRF: true, NoCookies: true, Roles: contract.Roles("signed-out"),
 		},
 		{
-			Name: "device-token-create-without-title", Method: "POST", Path: "/api/tickets/bd", Headers: device,
+			Name: "device-token-create-without-title", Method: "POST", Path: "/api/tickets/nd", Headers: device,
 			Body: map[string]any{"title": "   "}, Roles: contract.Roles("signed-out", "admin"),
 		},
 		{
-			Name: "device-token-create", Method: "POST", Path: "/api/tickets/bd", Headers: device,
+			Name: "device-token-create", Method: "POST", Path: "/api/tickets/nd", Headers: device,
 			Body:    map[string]any{"title": "Priority high", "priority": "high", "category": "network"},
 			Capture: map[string]string{"agentTicket": "ticket_id"},
 			Roles:   contract.Roles("guest_issuer", "viewer", "server_admin", "admin"),
 		},
-		{Name: "device-token-list", Path: "/api/tickets/bd", Headers: device},
-		{Name: "device-token-list-other-device", Path: "/api/tickets/bd", Headers: other},
-		{Name: "device-token-list-without-token", Path: "/api/tickets/bd", Roles: contract.Roles("signed-out", "admin")},
+		{Name: "device-token-list", Path: "/api/tickets/nd", Headers: device},
+		{Name: "device-token-list-other-device", Path: "/api/tickets/nd", Headers: other},
+		{Name: "device-token-list-without-token", Path: "/api/tickets/nd", Roles: contract.Roles("signed-out", "admin")},
 		{Name: "device-token-cleanup", Method: "DELETE", Path: "/api/tickets/{agentTicket}", As: "admin", Roles: contract.Roles("admin")},
 	}
 }

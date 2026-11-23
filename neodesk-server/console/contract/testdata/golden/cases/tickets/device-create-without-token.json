@@ -2,7 +2,7 @@
  "id": "tickets/device-create-without-token",
  "request": {
   "method": "POST",
-  "path": "/api/tickets/bd",
+  "path": "/api/tickets/nd",
   "body": {
    "priority": "high",
    "title": "From the agent"

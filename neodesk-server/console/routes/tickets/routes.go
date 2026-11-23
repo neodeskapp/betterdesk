@@ -8,7 +8,7 @@
 // comments and attachments. Internal comments are for accounts with
 // device.edit.
 //
-// The two routes for devices, POST and GET /api/tickets/bd, take a device
+// The two routes for devices, POST and GET /api/tickets/nd, take a device
 // token instead of a session (device.go).
 package tickets
 
@@ -65,8 +65,8 @@ func register(d *kit.Deps, h *handlers) {
 	r.Get("/{id}/attachments", h.attachments, id, files, requireAuth, canRead)
 	r.Get("/attachments/{aid}", h.download, aid, files, requireAuth, canRead)
 
-	r.Post("/bd", h.createFromAgent, d.RequireDeviceToken)
-	r.Get("/bd", h.listForAgent, d.RequireDeviceToken)
+	r.Post("/nd", h.createFromAgent, d.RequireDeviceToken)
+	r.Get("/nd", h.listForAgent, d.RequireDeviceToken)
 }
 
 // failure is the group's error answer: {"error":"..."}.

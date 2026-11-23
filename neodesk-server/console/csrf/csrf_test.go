@@ -427,21 +427,21 @@ func TestABearerWriteWithoutASessionPasses(t *testing.T) {
 		return r
 	}
 	f.signedIn = false
-	for _, path := range []string{"/api/tickets/bd", "/api/dataguard/dlp-events", "/api/activity/activity", "/API/ND/Activity/", "/api/nd", "/api/devices"} {
+	for _, path := range []string{"/api/tickets/nd", "/api/dataguard/dlp-events", "/api/activity/activity", "/API/ND/Activity/", "/api/nd", "/api/devices"} {
 		if !f.gate(bearer(path, "Bearer tok-device-a", "", "")) {
 			t.Errorf("%s with a bearer token and no session was checked", path)
 		}
 	}
 	for _, authorization := range []string{"", "Basic dG9rOng=", "bearer tok-device-a", "Token Bearer x"} {
-		if f.gate(bearer("/api/tickets/bd", authorization, "", "")) {
-			t.Errorf("/api/tickets/bd with Authorization %q and no session passed unchecked", authorization)
+		if f.gate(bearer("/api/tickets/nd", authorization, "", "")) {
+			t.Errorf("/api/tickets/nd with Authorization %q and no session passed unchecked", authorization)
 		}
 	}
 	f.signedIn = true
-	if f.gate(bearer("/api/tickets/bd", "Bearer tok-device-a", "", "")) {
+	if f.gate(bearer("/api/tickets/nd", "Bearer tok-device-a", "", "")) {
 		t.Error("a signed-in browser with a bearer token wrote without the CSRF token")
 	}
-	if !f.gate(bearer("/api/tickets/bd", "Bearer tok-device-a", vectorPair, vectorToken)) {
+	if !f.gate(bearer("/api/tickets/nd", "Bearer tok-device-a", vectorPair, vectorToken)) {
 		t.Error("a signed-in browser with a bearer token and the CSRF token was refused")
 	}
 }

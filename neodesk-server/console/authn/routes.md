@@ -290,7 +290,7 @@ The 41 routes with `requireDeviceToken`, 19 of them also with
 | `fleet.routes.js` | `POST /api/nd/fleet/task-result` +match, `POST /api/nd/fleet/software` +match, and both under `/api/nd/api/nd/fleet` |
 | `policies.routes.js` | `GET /api/nd/device-policy` +match, `POST /api/nd/attestation` +match, and both under `/api/nd/api/nd` |
 | `resource-control.routes.js` | `GET /api/nd/resource-policy` +match, and under `/api/nd/api/nd` |
-| `tickets.routes.js` | `POST /api/tickets/bd`, `GET /api/tickets/bd` |
+| `tickets.routes.js` | `POST /api/tickets/nd`, `GET /api/tickets/nd` |
 | `inventory.routes.js` | `POST /api/nd/inventory`, `POST /api/nd/telemetry`, `GET /api/nd/inventory/:id`, and the three under `/api/inventory` |
 
 `inventory.routes.js` (35-90) has its own copies, which differ: the token

@@ -1,8 +1,8 @@
 {
- "id": "GET /api/tickets/bd",
+ "id": "GET /api/tickets/nd",
  "request": {
   "method": "GET",
-  "path": "/api/tickets/bd"
+  "path": "/api/tickets/nd"
  },
  "recordings": 2,
  "answers": [

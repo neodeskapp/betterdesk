@@ -10,7 +10,7 @@ import { i18n, setStrings, type Language } from '#lib/i18n/i18n.svelte.ts';
 import { initTheme } from '#lib/state/theme.svelte.ts';
 
 interface BootWindow {
-	__BD_BOOT__?: {
+	__ND_BOOT__?: {
 		lang: string;
 		dir: 'ltr' | 'rtl';
 		themeMode?: string;
@@ -23,7 +23,7 @@ interface BootWindow {
 type Strings = Parameters<typeof setStrings>[2];
 
 export async function startRemotePage(): Promise<void> {
-	const boot = (window as unknown as BootWindow).__BD_BOOT__;
+	const boot = (window as unknown as BootWindow).__ND_BOOT__;
 	const lang = boot?.lang || document.documentElement.lang || 'en';
 	const dir = boot?.dir || (document.documentElement.dir === 'rtl' ? 'rtl' : 'ltr');
 	// A response body can be read once: take the early request, so a retry asks again

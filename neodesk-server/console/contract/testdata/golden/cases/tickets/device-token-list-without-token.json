@@ -2,7 +2,7 @@
  "id": "tickets/device-token-list-without-token",
  "request": {
   "method": "GET",
-  "path": "/api/tickets/bd"
+  "path": "/api/tickets/nd"
  },
  "recordings": 2,
  "answers": [

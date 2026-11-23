@@ -9,7 +9,7 @@ purpose, its step goes into `ticketFixes` or `deviceFixes`
 | File | What it holds | Replayed by |
 |---|---|---|
 | `node_sqlite.json`, `node_postgres.json` | 606 steps per database on the ticket routes | `TestNodeAnswers` (`replay_test.go`) |
-| `node_device_sqlite.json`, `node_device_postgres.json` | the two device routes (`POST` and `GET /api/tickets/bd`) | `TestNodeDeviceAnswers` (`replay_test.go`) |
+| `node_device_sqlite.json`, `node_device_postgres.json` | the two device routes (`POST` and `GET /api/tickets/nd`) | `TestNodeDeviceAnswers` (`replay_test.go`) |
 
 The Go tests replay the requests on the same rows and must get the same
 status and the same body, byte for byte, and for downloads the same bytes

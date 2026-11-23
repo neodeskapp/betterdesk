@@ -156,13 +156,13 @@ func TestTheDeviceRoutesComeLast(t *testing.T) {
 	}
 	want := "GET /api/tickets, GET /api/tickets/stats, POST /api/tickets, GET /api/tickets/{id}, PATCH /api/tickets/{id}, DELETE /api/tickets/{id}, " +
 		"POST /api/tickets/{id}/comments, GET /api/tickets/{id}/comments, POST /api/tickets/{id}/attachments, GET /api/tickets/{id}/attachments, GET /api/tickets/attachments/{aid}, " +
-		"POST /api/tickets/bd, GET /api/tickets/bd"
+		"POST /api/tickets/nd, GET /api/tickets/nd"
 	if got := strings.Join(paths, ", "); got != want {
 		t.Errorf("routes: %s\nwant:   %s", got, want)
 	}
 	// A session is no device token
 	for _, method := range []string{"GET", "POST"} {
-		g.want(g.do("admin", method, "/api/tickets/bd", `{"title":"x"}`), 401, `{"error":"Bearer access token required"}`)
+		g.want(g.do("admin", method, "/api/tickets/nd", `{"title":"x"}`), 401, `{"error":"Bearer access token required"}`)
 	}
 	// An id that is no number is passed on
 	for _, target := range []string{"/api/tickets/abc", "/api/tickets/1x/comments", "/api/tickets/attachments/x"} {
