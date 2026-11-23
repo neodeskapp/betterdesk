@@ -109,7 +109,8 @@ func TestTargetValuesOfTheWrongType(t *testing.T) {
 				t.Errorf("update %s: %d %s, want 400 %s", body, status, answer, want)
 			}
 		}
-		status, answer = send("PATCH", target, `{"name":"Printer 2","host":null,"port":null,"timeout_ms":2500,"interval_ms":0,"enabled":true}`)
+		// A target keeps a host or a url (L418): the host goes, a url comes
+		status, answer = send("PATCH", target, `{"name":"Printer 2","host":null,"url":"http://10.1.2.3/","port":null,"timeout_ms":2500,"interval_ms":0,"enabled":true}`)
 		var updated struct {
 			Name       string          `json:"name"`
 			Host       *string         `json:"host"`

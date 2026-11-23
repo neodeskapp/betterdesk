@@ -24,6 +24,7 @@ const (
 // refusal names the member (BUGS.md NM1).
 const (
 	nameNotText     = "name must be text"
+	nameEmpty       = "name must not be empty"
 	hostNotText     = "host must be text"
 	urlNotText      = "url must be text"
 	portNotInRange  = "port must be a whole number from 1 to 65535"
@@ -266,6 +267,9 @@ func targetChanges(body middleware.JSONObject) (netmonitor.TargetChanges, string
 		if !isString {
 			return changes, nameNotText
 		}
+		if strings.TrimSpace(name) == "" {
+			return changes, nameEmpty
+		}
 		p := netmonitor.Text(name)
 		changes.Name = &p
 	}
@@ -361,6 +365,29 @@ func (h *handlers) updateTarget(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		fail(w, r, http.StatusNotFound, targetNotFound)
 		return
+	}
+	// A target keeps a host or a URL, as a new one needs
+	if changes.Host != nil || changes.URL != nil {
+		existing, err := netmonitor.GetTarget(r.Context(), h.db, id)
+		if err != nil {
+			fail(w, r, http.StatusInternalServerError, netmonitor.DriverMessage(err))
+			return
+		}
+		if existing == nil {
+			fail(w, r, http.StatusNotFound, targetNotFound)
+			return
+		}
+		host, url := existing.Host.String, existing.URL.String
+		if changes.Host != nil {
+			host = changes.Host.TextOrEmpty()
+		}
+		if changes.URL != nil {
+			url = changes.URL.TextOrEmpty()
+		}
+		if strings.TrimSpace(host) == "" && strings.TrimSpace(url) == "" {
+			fail(w, r, http.StatusBadRequest, "host or url is required")
+			return
+		}
 	}
 	target, err := netmonitor.UpdateTarget(detached(r), h.db, id, changes)
 	if err != nil {

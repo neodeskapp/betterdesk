@@ -53,6 +53,14 @@ func Num(n Number) Param { return Param{kind: paramNumber, num: float64(n)} }
 // Text is a string.
 func Text(s string) Param { return Param{kind: paramText, text: s} }
 
+// TextOrEmpty is the text of a string parameter, "" for any other.
+func (p Param) TextOrEmpty() string {
+	if p.kind == paramText {
+		return p.text
+	}
+	return ""
+}
+
 // Bool is true or false.
 func Bool(b bool) Param {
 	p := Param{kind: paramBool}

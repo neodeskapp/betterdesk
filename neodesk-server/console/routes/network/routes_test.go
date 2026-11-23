@@ -394,6 +394,11 @@ const (
 // held, its answer is the row; the replay stores that row as well, so the
 // steps after it see the targets Node had.
 var refusedTargets = map[string]string{
+	// An edit can't leave a target without a name or an address (L418);
+	// Node stored it, and the steps after it read what it stored.
+	"update: name empty":                              nameEmpty,
+	"prepare check: http without host":                "host or url is required",
+	"prepare check: http with an empty host":          "host or url is required",
 	"create odd: enabled as text":                     enabledNotFlag,
 	"create odd: enabled null":                        enabledNotFlag,
 	"create odd: host as a list of one":               hostNotText,
