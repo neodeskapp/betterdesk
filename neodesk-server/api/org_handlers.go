@@ -31,10 +31,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/mail"
+	"net/url"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 
@@ -44,6 +47,42 @@ import (
 )
 
 var slugRegexp = regexp.MustCompile(`^[a-z0-9][a-z0-9\-]{1,62}[a-z0-9]$`)
+
+// orgNameMax is the longest organization name, as the console's form
+// takes it.
+const orgNameMax = 120
+
+// checkOrgName says what is wrong with an organization's name, "" when
+// nothing is.
+func checkOrgName(name string) string {
+	switch {
+	case name == "":
+		return "name is required"
+	case utf8.RuneCountInString(name) > orgNameMax:
+		return "name must be 120 characters or fewer"
+	}
+	return ""
+}
+
+// checkOrgLogoURL says what is wrong with a logo address: empty, or an
+// http:// or https:// address with a host. Clients show the picture from
+// it, so nothing else is taken.
+func checkOrgLogoURL(raw string) string {
+	if raw == "" {
+		return ""
+	}
+	u, err := url.Parse(raw)
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" || strings.ContainsAny(raw, " \t\r\n") {
+		return "logo_url must be an http:// or https:// address"
+	}
+	return ""
+}
+
+// validEmail reports whether text is one plain email address.
+func validEmail(text string) bool {
+	addr, err := mail.ParseAddress(text)
+	return err == nil && addr.Address == text && addr.Name == ""
+}
 
 type orgIDInput string
 
@@ -92,8 +131,13 @@ func (s *Server) handleCreateOrg(w http.ResponseWriter, r *http.Request) {
 	body.Name = strings.TrimSpace(body.Name)
 	body.Slug = strings.TrimSpace(strings.ToLower(body.Slug))
 
-	if body.Name == "" {
-		http.Error(w, `{"error":"name is required"}`, http.StatusBadRequest)
+	if problem := checkOrgName(body.Name); problem != "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": problem})
+		return
+	}
+	body.LogoURL = strings.TrimSpace(body.LogoURL)
+	if problem := checkOrgLogoURL(body.LogoURL); problem != "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": problem})
 		return
 	}
 	if !slugRegexp.MatchString(body.Slug) {
@@ -221,7 +265,20 @@ func (s *Server) handleUpdateOrg(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if body.Name != nil {
-		org.Name = strings.TrimSpace(*body.Name)
+		name := strings.TrimSpace(*body.Name)
+		if problem := checkOrgName(name); problem != "" {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": problem})
+			return
+		}
+		org.Name = name
+	}
+	if body.LogoURL != nil {
+		logo := strings.TrimSpace(*body.LogoURL)
+		if problem := checkOrgLogoURL(logo); problem != "" {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": problem})
+			return
+		}
+		body.LogoURL = &logo
 	}
 	if body.Slug != nil {
 		slug := strings.TrimSpace(strings.ToLower(*body.Slug))
@@ -308,6 +365,11 @@ func (s *Server) handleCreateOrgUser(w http.ResponseWriter, r *http.Request) {
 	body.Username = strings.TrimSpace(body.Username)
 	if body.Username == "" || body.Password == "" {
 		http.Error(w, `{"error":"username and password are required"}`, http.StatusBadRequest)
+		return
+	}
+	// The same rule as a username picked through an invitation
+	if !orgUsernamePattern.MatchString(body.Username) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "A username has 3 to 64 characters: letters, numbers and . _ @ - only."})
 		return
 	}
 	if err := auth.CheckNewPassword(body.Password); err != nil {
@@ -474,8 +536,18 @@ func (s *Server) handleAssignOrgDevice(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
+	body.DeviceID = strings.TrimSpace(body.DeviceID)
 	if body.DeviceID == "" {
 		http.Error(w, `{"error":"device_id is required"}`, http.StatusBadRequest)
+		return
+	}
+	// Only a device the server has can be assigned
+	if state, err := s.db.GetPeerIDState(body.DeviceID); err != nil {
+		log.Printf("[org] GetPeerIDState error: %v", err)
+		http.Error(w, `{"error":"internal"}`, http.StatusInternalServerError)
+		return
+	} else if state != db.PeerIDActive {
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "device not found: no device has this ID on the server"})
 		return
 	}
 
@@ -552,6 +624,11 @@ func (s *Server) handleCreateOrgInvitation(w http.ResponseWriter, r *http.Reques
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
+		return
+	}
+	body.Email = strings.TrimSpace(body.Email)
+	if body.Email != "" && !validEmail(body.Email) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "email is not an email address"})
 		return
 	}
 	if body.ExpiresIn == 0 {

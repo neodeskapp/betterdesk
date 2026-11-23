@@ -17,6 +17,7 @@
 	import Tabs from '#lib/ui/Tabs.svelte';
 	import { createForm } from '#lib/ui/form.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
+	import { orgUsernameOk } from '#lib/people/orgs.ts';
 
 	let { orgId, onclose, onsaved }: { orgId: string; onclose: () => void; onsaved: () => void } = $props();
 
@@ -46,8 +47,13 @@
 		validate: (v) => {
 			if (mode === 'create') {
 				const missing = t('organizations.username_password_required');
+				const username = v.username.trim();
 				return {
-					username: v.username.trim() ? undefined : missing,
+					username: !username
+						? missing
+						: orgUsernameOk(username)
+							? undefined
+							: t('organizations.username_invalid'),
 					password: !v.password ? missing : v.password.length < 8 ? t('users.password_too_short') : undefined
 				};
 			}

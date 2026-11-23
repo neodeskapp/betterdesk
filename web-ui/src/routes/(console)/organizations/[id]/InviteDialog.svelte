@@ -8,7 +8,7 @@
 <script lang="ts">
 	import { createInvitation } from '#lib/api/orgs.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import { invitationLink } from '#lib/people/orgs.ts';
+	import { emailOk, invitationLink } from '#lib/people/orgs.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Field from '#lib/ui/Field.svelte';
@@ -27,7 +27,9 @@
 		initial: { email: '', hours: 72 as number | string },
 		validate: (v) => {
 			const n = Number(v.hours);
+			const email = v.email.trim();
 			return {
+				email: !email || emailOk(email) ? undefined : t('organizations.email_invalid'),
 				hours: Number.isInteger(n) && n >= 1 && n <= 720 ? undefined : t('organizations.expires_hours_hint')
 			};
 		},
@@ -57,7 +59,7 @@
 		</div>
 	{:else}
 		<form id={form.id} onsubmit={form.onsubmit} novalidate>
-			<Field label={t('organizations.email')} hint={t('organizations.optional')}>
+			<Field label={t('organizations.email')} hint={t('organizations.optional')} error={form.errors.email}>
 				{#snippet children(f)}
 					<Input {...f} type="email" width="host" autocomplete="off" bind:value={form.values.email} />
 				{/snippet}

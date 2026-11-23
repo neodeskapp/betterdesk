@@ -3,6 +3,7 @@
   (three fields, a centred dialog).
 -->
 <script lang="ts">
+	import { ApiError } from '#lib/api/client.ts';
 	import { assignOrgDevice } from '#lib/api/orgs.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
@@ -10,7 +11,7 @@
 	import Field from '#lib/ui/Field.svelte';
 	import FormStatus from '#lib/ui/FormStatus.svelte';
 	import Input from '#lib/ui/Input.svelte';
-	import { createForm } from '#lib/ui/form.svelte.ts';
+	import { FormError, createForm } from '#lib/ui/form.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 
 	let { orgId, onclose, onsaved }: { orgId: string; onclose: () => void; onsaved: () => void } = $props();
@@ -28,11 +29,18 @@
 			};
 		},
 		submit: async (v) => {
-			await assignOrgDevice(orgId, {
-				device_id: v.deviceId.trim(),
-				department: v.department.trim(),
-				building: v.building.trim()
-			});
+			try {
+				await assignOrgDevice(orgId, {
+					device_id: v.deviceId.trim(),
+					department: v.department.trim(),
+					building: v.building.trim()
+				});
+			} catch (err) {
+				// The server has no device with this ID
+				if (err instanceof ApiError && err.status === 404)
+					throw new FormError(t('organizations.device_not_found'), 'deviceId');
+				throw err;
+			}
 			toast.success(t('organizations.device_assigned'));
 			onsaved();
 		}

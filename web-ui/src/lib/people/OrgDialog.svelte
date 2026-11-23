@@ -14,7 +14,7 @@
 	import Input from '#lib/ui/Input.svelte';
 	import { createForm } from '#lib/ui/form.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
-	import { slugify } from './orgs.ts';
+	import { logoUrlOk, slugify } from './orgs.ts';
 
 	interface Props {
 		org: Organization | null;
@@ -32,7 +32,8 @@
 			const missing = t('organizations.name_slug_required');
 			return {
 				name: v.name.trim() ? undefined : missing,
-				slug: v.slug.trim() ? undefined : missing
+				slug: v.slug.trim() ? undefined : missing,
+				logo: logoUrlOk(v.logo.trim()) ? undefined : t('organizations.logo_url_invalid')
 			};
 		},
 		submit: async (v) => {
@@ -82,7 +83,11 @@
 				/>
 			{/snippet}
 		</Field>
-		<Field label={t('organizations.logo_url')} hint={t('organizations.logo_url_hint')}>
+		<Field
+			label={t('organizations.logo_url')}
+			hint={t('organizations.logo_url_hint')}
+			error={form.errors.logo}
+		>
 			{#snippet children(f)}
 				<Input
 					{...f}

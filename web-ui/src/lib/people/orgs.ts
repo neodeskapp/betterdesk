@@ -16,6 +16,30 @@ export function slugify(name: string): string {
 		.substring(0, 64);
 }
 
+/* ── What the server takes (api/org_handlers.go) ── */
+
+/** A logo address: empty, or an http:// or https:// address with a host */
+export function logoUrlOk(text: string): boolean {
+	if (!text) return true;
+	if (/\s/.test(text)) return false;
+	try {
+		const u = new URL(text);
+		return (u.protocol === 'http:' || u.protocol === 'https:') && !!u.hostname;
+	} catch {
+		return false;
+	}
+}
+
+/** An organization account's username: 3 to 64 letters, numbers and . _ @ - */
+export function orgUsernameOk(text: string): boolean {
+	return /^[A-Za-z0-9._@-]{3,64}$/.test(text);
+}
+
+/** One plain email address */
+export function emailOk(text: string): boolean {
+	return /^[^\s@<>(),;:"[\]]+@[^\s@<>(),;:"[\]]+\.[^\s@<>(),;:"[\]]+$/.test(text);
+}
+
 /* ── Invitations ── */
 
 export type InvitationState = 'open' | 'used' | 'expired';

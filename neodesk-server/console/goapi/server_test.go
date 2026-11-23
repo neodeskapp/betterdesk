@@ -419,9 +419,10 @@ func TestAgainstAPIServer(t *testing.T) {
 		if err != nil || toJSON(t, Dig(resp.Data(), "organizations", 0, "id")) != `"`+orgID+`"` {
 			t.Errorf("GET /org: %s, %v", resp.Text(), err)
 		}
-		// An error the API server sends as JSON with a text content type.
+		// A refusal of the API server as JSON (BUGS L398: it was JSON text
+		// with a text content type)
 		resp, err = c.Post(ctx, "/org", Body(NewObject("name", "", "slug", "x")))
-		if e := AsError(err); e == nil || resp.Header.Get("Content-Type") != "text/plain; charset=utf-8" || toJSON(t, e.Data()) != `{"error":"name is required"}` {
+		if e := AsError(err); e == nil || resp.Header.Get("Content-Type") != "application/json" || toJSON(t, e.Data()) != `{"error":"name is required"}` {
 			t.Errorf("POST /org without a name: %+v (%s)", e, resp.Header.Get("Content-Type"))
 		}
 
