@@ -333,6 +333,13 @@ check_docker_compose() {
     return 1
 }
 
+# ufw_active: ufw is installed and on. "ufw status" prints "Status:
+# active" or "Status: inactive" (in English with LC_ALL=C); rules added to
+# an inactive ufw go live with the next "ufw enable".
+ufw_active() {
+    command -v ufw >/dev/null 2>&1 && LC_ALL=C ufw status 2>/dev/null | grep -q '^Status: active'
+}
+
 configure_firewall() {
     [ "$SKIP_FIREWALL" = true ] && { log "Skipping firewall configuration"; return 0; }
 
@@ -341,7 +348,7 @@ configure_firewall() {
 
     log "Configuring firewall (if active)..."
 
-    if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -qi "active"; then
+    if ufw_active; then
         for port in $docker_ports; do
             if [ "$port" = "21116" ]; then
                 ufw allow 21116/tcp comment "NeoDesk signal TCP" >/dev/null 2>&1 && created=$((created + 1)) || true

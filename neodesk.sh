@@ -6630,13 +6630,20 @@ firewall_ports() {
     return 0
 }
 
+# ufw_active: ufw is installed and on. "ufw status" prints "Status:
+# active" or "Status: inactive" (in English with LC_ALL=C); rules added to
+# an inactive ufw go live with the next "ufw enable".
+ufw_active() {
+    command -v ufw &>/dev/null && LC_ALL=C ufw status 2>/dev/null | grep -q '^Status: active'
+}
+
 # configure_firewall_rules: opens firewall_ports in ufw or firewalld when
 # one of them is active, else with iptables, and names the ports a
 # firewall outside this machine needs.
 configure_firewall_rules() {
     local entries entry created=0
     mapfile -t entries < <(firewall_ports)
-    if command -v ufw &>/dev/null && ufw status 2>/dev/null | grep -q "Status: active"; then
+    if ufw_active; then
         print_info "Opening the NeoDesk ports in ufw..."
         for entry in "${entries[@]}"; do
             ufw allow "$entry" comment "NeoDesk" >/dev/null 2>&1 && created=$((created + 1))
@@ -6674,7 +6681,7 @@ close_console_firewall_ports() {
     port=$(resolve_panel_http_port)
     [ "$port" != 0 ] && entries+=("$port/tcp")
     entries+=("$(resolve_panel_https_port)/tcp")
-    if command -v ufw &>/dev/null && ufw status 2>/dev/null | grep -q "Status: active"; then
+    if ufw_active; then
         for entry in "${entries[@]}"; do
             ufw delete allow "$entry" >/dev/null 2>&1 || true
         done
@@ -6857,7 +6864,7 @@ do_diagnostics() {
     local missing_rules=0
     local required_ports="${GO_API_PORT:-21114} ${CLIENT_API_PORT:-21121} 21115 21116 21117 5000"
     
-    if command -v ufw &>/dev/null && ufw status 2>/dev/null | grep -q "active"; then
+    if ufw_active; then
         fw_type="ufw"
         echo -e "  Firewall: ${YELLOW}UFW (active)${NC}"
         echo ""

@@ -938,6 +938,38 @@ test_reverse_proxy_closes_the_console_ports() (
     rm -rf "$TEST_DIR"
 )
 
+# L307: an installed ufw that is off is no active firewall: neodesk.sh
+# writes no rules into it (they would go live with the next "ufw enable")
+# and its diagnostics do not report it as active
+test_inactive_ufw_is_left_alone() (
+    load
+    printf 'CONSOLE_PORT=5000\nHTTPS_ENABLED=false\n' > "$CONSOLE_PATH/.env"
+    ufw() { printf '%s\n' "$*" >> "$TEST_DIR/ufw"; [ "$1" != status ] || echo "Status: inactive"; }
+    systemctl() { return 3; }
+    # iptables has no rules: -C and -D find none
+    iptables() { case "$1" in -C|-D) return 1 ;; esac; }
+    print_success() { :; }
+    configure_firewall_rules > /dev/null 2>&1 || fail "the firewall step failed"
+    close_console_firewall_ports > /dev/null 2>&1 || fail "closing the console's ports failed"
+    if grep -v '^status' "$TEST_DIR/ufw" | grep -q .; then
+        fail "neodesk.sh changed an inactive ufw: $(tr '\n' ';' < "$TEST_DIR/ufw")"
+    fi
+    print_header() { :; }
+    print_status() { :; }
+    journalctl() { :; }
+    ss() { :; }
+    netstat() { :; }
+    curl() { return 7; }
+    menu_choose() { MENU_CHOICE=0; }
+    DB_PATH="$TEST_DIR/missing.sqlite3"
+    do_diagnostics > "$TEST_DIR/out" 2>&1 || fail "the diagnostics failed: $(cat "$TEST_DIR/out")"
+    if grep -q 'UFW (active)' "$TEST_DIR/out"; then
+        fail "the diagnostics call an inactive ufw active: $(grep -A3 'Firewall:' "$TEST_DIR/out")"
+    fi
+    grep -q 'No active firewall detected' "$TEST_DIR/out" || fail "the diagnostics name no firewall state: $(cat "$TEST_DIR/out")"
+    rm -rf "$TEST_DIR"
+)
+
 # L225: --pg-uri (or POSTGRESQL_URI with PostgreSQL chosen) is the
 # database as given: the install asks no database question and sets up no
 # PostgreSQL of its own, which made a new address and dropped the given
@@ -1251,6 +1283,7 @@ test_uninstall_says_what_stays
 test_update_asks_the_fork
 test_firewall_ports
 test_reverse_proxy_closes_the_console_ports
+test_inactive_ufw_is_left_alone
 test_pg_uri_is_used_as_given
 test_self_signed_keeps_the_client_api_on_http
 test_port_taken_by_another_program

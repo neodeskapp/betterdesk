@@ -490,6 +490,25 @@ test_install_sh_opens_the_published_ports() (
     rm -rf "$dir"
 )
 
+# L307: an installed ufw that is off gets no rules from install.sh: they
+# would go live with the next "ufw enable"
+test_install_sh_leaves_an_inactive_ufw_alone() (
+    local dir
+    dir=$(mktemp -d)
+    (
+        # shellcheck disable=SC1091
+        source "$SCRIPT_ROOT/install.sh"
+        ufw() { printf '%s\n' "$*" >> "$dir/ufw"; [ "$1" != status ] || echo "Status: inactive"; }
+        systemctl() { return 3; }
+        configure_firewall
+    ) > "$dir/out" 2>&1 || fail "install.sh's firewall step failed: $(cat "$dir/out")"
+    if grep -v '^status' "$dir/ufw" | grep -q .; then
+        fail "install.sh changed an inactive ufw: $(tr '\n' ';' < "$dir/ufw")"
+    fi
+    grep -q 'No active UFW/firewalld' "$dir/out" || fail "install.sh does not say it skips the firewall: $(cat "$dir/out")"
+    rm -rf "$dir"
+)
+
 test_fresh_install
 test_no_release_image_runs_dev
 test_update_goes_back_when_unhealthy
@@ -507,5 +526,6 @@ test_failed_first_install_resumes
 test_rerun_without_changes_keeps_the_container
 test_install_sh_runs_the_manager
 test_install_sh_opens_the_published_ports
+test_install_sh_leaves_an_inactive_ufw_alone
 echo "Docker installer checks passed"
 bash "$SCRIPT_ROOT/scripts/test-docker-entrypoint.sh"
