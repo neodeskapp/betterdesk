@@ -52,9 +52,19 @@ func TestResolveAllowedGithubHost(t *testing.T) {
 
 func TestSigningKey(t *testing.T) {
 	s := New(Options{})
-	// The fingerprint the Node console reported for its built-in key
-	if got := s.SigningKeyFingerprint(); got != "ea2b916f457871f0" || s.KeyFromEnvironment() {
+	// The built-in key is the public half of the client fork's signing
+	// key for support releases (L294), 32 bytes in base64
+	if key, err := base64.StdEncoding.DecodeString(DefaultPublicKey); err != nil || len(key) != ed25519.PublicKeySize {
+		t.Errorf("built-in key %q: %d bytes, %v", DefaultPublicKey, len(key), err)
+	}
+	if got := s.SigningKeyFingerprint(); got != "d64da0b234b8c4e6" || s.KeyFromEnvironment() {
 		t.Errorf("built-in key: %q, from the environment %v", got, s.KeyFromEnvironment())
+	}
+	// Upstream's key, set as the configured key, gives the fingerprint the
+	// Node console reported for it
+	s = New(Options{PublicKey: "eXGPOvUvFfz1FGGbYogKfYEEWVWzeJEKpmI1ngAU490="})
+	if got := s.SigningKeyFingerprint(); got != "ea2b916f457871f0" || !s.KeyFromEnvironment() {
+		t.Errorf("upstream's key: %q, from the environment %v", got, s.KeyFromEnvironment())
 	}
 	s = New(Options{PublicKey: "  abc  "})
 	sum := sha256.Sum256([]byte("abc"))

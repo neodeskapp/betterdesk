@@ -85,6 +85,15 @@ func TestNodeAnswers(t *testing.T) {
 				}
 				return true
 			}
+			// L294: the built-in key is the client fork's; Node's was
+			// upstream's, with the fingerprint ea2b916f457871f0
+			if step.Method == http.MethodGet && step.Path == "/api/agent-releases/signing-status" {
+				want := strings.Replace(step.Answer, `"fingerprint":"ea2b916f457871f0"`, `"fingerprint":"d64da0b234b8c4e6"`, 1)
+				if want == step.Answer || got.Status != step.Status || got.Body != want {
+					t.Errorf("step %q (L294): %d %s, want %d %s", step.Name, got.Status, got.Body, step.Status, want)
+				}
+				return true
+			}
 			raw, ok := step.Extra["headers"]
 			if !ok {
 				return false

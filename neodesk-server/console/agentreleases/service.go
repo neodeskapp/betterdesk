@@ -35,9 +35,9 @@ const (
 	// DefaultRepo is the GitHub repository releases come from: the
 	// client fork, which the invites download from too.
 	DefaultRepo = "neodeskapp/neodesk-client"
-	// DefaultPublicKey is the public half of the key the release workflow
-	// signs manifests with, in base64.
-	DefaultPublicKey = "eXGPOvUvFfz1FGGbYogKfYEEWVWzeJEKpmI1ngAU490="
+	// DefaultPublicKey is the public half of the key the client fork's
+	// release workflow signs manifests with, in base64.
+	DefaultPublicKey = "q/rt2VD4w5uQuSMp4C02Q+dHKfICxbEvsDPHYFPqV34="
 
 	releasePrefix   = "support-v"
 	maxReleaseBytes = 2 * 1024 * 1024 * 1024
