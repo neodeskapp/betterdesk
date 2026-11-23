@@ -67,9 +67,11 @@ func (h *handlers) failed(w http.ResponseWriter, r *http.Request, what string, e
 	kit.Fail(w, r, http.StatusInternalServerError, message)
 }
 
-// mayAccess reports whether the account may see and change the flow.
-func mayAccess(user *session.User, f *flow) bool {
-	return user != nil && (access.IsSuperAdminRole(user.Role) || string(f.CreatedBy) == user.Username)
+// mayAccess reports whether the account may see and change the flow: a
+// super admin any (an API token only when it carries all of the account's
+// permissions), everyone else their own.
+func mayAccess(r *http.Request, user *session.User, f *flow) bool {
+	return user != nil && (access.IsSuperAdminRole(user.Role) && kit.RoleTrusted(r) || string(f.CreatedBy) == user.Username)
 }
 
 // flowOfAccount loads the flow of the address for an account that may see
@@ -81,7 +83,7 @@ func (h *handlers) flowOfAccount(w http.ResponseWriter, r *http.Request) (*flow,
 	if err != nil {
 		return nil, err
 	}
-	if f == nil || !mayAccess(kit.User(r), f) {
+	if f == nil || !mayAccess(r, kit.User(r), f) {
 		kit.Fail(w, r, http.StatusNotFound, notFound)
 		return nil, nil
 	}
@@ -188,7 +190,7 @@ func (h *handlers) store(w http.ResponseWriter, r *http.Request, name, descripti
 // all of them for a super admin and the account's own for everyone else.
 func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	var owner *string
-	if user := kit.User(r); user != nil && !access.IsSuperAdminRole(user.Role) {
+	if user := kit.User(r); user != nil && !(access.IsSuperAdminRole(user.Role) && kit.RoleTrusted(r)) {
 		owner = &user.Username
 	}
 	flows, err := listFlows(r.Context(), h.db, owner)

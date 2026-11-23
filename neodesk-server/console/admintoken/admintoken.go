@@ -80,6 +80,11 @@ const (
 	secretAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 )
 
+// ServerConfig is the permission a token gets only together with all of
+// its creator's (Create; the pipeline drops it at use from a token that
+// is not full).
+const ServerConfig = "server.config"
+
 // Limits of what a token may hold.
 const (
 	MaxNameLength = 80
@@ -378,6 +383,15 @@ func cleanPermissions(asked, known []string, holds func(string) bool) ([]string,
 	if len(out) == 0 {
 		return nil, inputError("permissions", "Choose at least one permission.")
 	}
+	// server.config reaches the server's files and secrets: a token gets
+	// it only with every other permission of its creator
+	if seen[ServerConfig] {
+		for _, p := range known {
+			if holds(p) && !seen[p] {
+				return nil, inputError("permissions", "A token gets server.config only together with all of your permissions: it reaches the server's files and secrets. Pick them all, or leave server.config out.")
+			}
+		}
+	}
 	sort.Strings(out)
 	return out, nil
 }
@@ -540,13 +554,9 @@ func (r *Refusal) Error() string { return "token refused: " + r.Reason }
 // limits. It answers the row, or a *Refusal. The creator's account is
 // the caller's to check.
 func (s *Service) Authenticate(ctx context.Context, value, ip string) (*Token, error) {
-	if wait := s.failures.blocked(ip); wait > 0 {
-		return nil, &Refusal{Reason: RefusedLimited, RetryAfter: wait}
-	}
 	id, ok := Parse(value)
 	if !ok {
-		s.failures.add(ip)
-		return nil, &Refusal{Reason: RefusedMalformed}
+		return nil, s.fail(ip, &Refusal{Reason: RefusedMalformed})
 	}
 	tok, hash, err := s.load(ctx, id)
 	if err != nil {
@@ -559,25 +569,31 @@ func (s *Service) Authenticate(ctx context.Context, value, ip string) (*Token, e
 	matches := subtle.ConstantTimeCompare([]byte(hashToken(value)), []byte(want)) == 1
 	switch {
 	case tok == nil:
-		s.failures.add(ip)
-		return nil, &Refusal{Reason: RefusedUnknown}
+		return nil, s.fail(ip, &Refusal{Reason: RefusedUnknown})
 	case !matches:
-		s.failures.add(ip)
-		return nil, &Refusal{Reason: RefusedSecret, Token: tok}
+		return nil, s.fail(ip, &Refusal{Reason: RefusedSecret, Token: tok})
 	case !tok.RevokedAt.IsZero():
-		s.failures.add(ip)
-		return nil, &Refusal{Reason: RefusedRevoked, Token: tok}
+		return nil, s.fail(ip, &Refusal{Reason: RefusedRevoked, Token: tok})
 	case !s.now().Before(tok.ExpiresAt):
-		s.failures.add(ip)
-		return nil, &Refusal{Reason: RefusedExpired, Token: tok}
+		return nil, s.fail(ip, &Refusal{Reason: RefusedExpired, Token: tok})
 	case !tok.Allows(ip):
-		s.failures.add(ip)
-		return nil, &Refusal{Reason: RefusedAddress, Token: tok}
+		return nil, s.fail(ip, &Refusal{Reason: RefusedAddress, Token: tok})
 	}
 	if wait := s.requests.hit(tok.ID); wait > 0 {
 		return nil, &Refusal{Reason: RefusedLimited, Token: tok, RetryAfter: wait}
 	}
 	return tok, nil
+}
+
+// fail counts a failed attempt of the address and answers the refusal,
+// or the rate limit once the address made too many: then the answer no
+// longer says which kind of failure it was.
+func (s *Service) fail(ip string, refusal *Refusal) *Refusal {
+	if wait := s.failures.blocked(ip); wait > 0 {
+		return &Refusal{Reason: RefusedLimited, Token: refusal.Token, RetryAfter: wait}
+	}
+	s.failures.add(ip)
+	return refusal
 }
 
 // NoteFailure counts a refusal the caller made after Authenticate (the

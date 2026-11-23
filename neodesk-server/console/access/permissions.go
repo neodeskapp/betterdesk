@@ -114,7 +114,9 @@ func (c *Context) Token() bool { return c.Cap != nil }
 // out whether the token is full: whether it carries every permission of
 // known the account holds. Call it after Load.
 func (c *Context) LimitToToken(permissions []string, known []string) {
-	full := true
+	// When the role's permissions could not be loaded nothing says the
+	// token is full
+	full := !c.permissionLookupFailed()
 	for _, p := range known {
 		if c.HasPermission(p) && !containsString(permissions, p) {
 			full = false
@@ -123,6 +125,13 @@ func (c *Context) LimitToToken(permissions []string, known []string) {
 	}
 	c.Cap = newPermissionSet(permissions)
 	c.CapFull = full
+}
+
+// DropFromCap takes a permission out of the token's cap.
+func (c *Context) DropFromCap(permission string) {
+	if c.Cap != nil {
+		delete(c.Cap, permission)
+	}
 }
 
 func containsString(list []string, s string) bool {

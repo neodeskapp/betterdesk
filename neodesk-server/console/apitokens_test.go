@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -150,10 +151,21 @@ func TestATokenGetsOnlyItsCreatorsPermissions(t *testing.T) {
 			t.Errorf("%s: %d %s, want 400 on %s", body, res.status, res.body, field)
 		}
 	}
-	if res := a.post("/api/panel/api-tokens", `{"name":"ok","permissions":["audit.view","server.config"],"expires_in_days":1}`); res.status != 201 {
+	if res := a.post("/api/panel/api-tokens", `{"name":"ok","permissions":["audit.view","server.keys"],"expires_in_days":1}`); res.status != 201 {
 		t.Errorf("permissions it holds: %d %s", res.status, res.body)
 	}
+	// server.config reaches the server's files and secrets: only together
+	// with every other permission of the creator
+	res := a.post("/api/panel/api-tokens", `{"name":"cfg","permissions":["audit.view","server.config"],"expires_in_days":1}`)
+	if res.status != 400 || !strings.Contains(res.body, "server.config only together with all of your permissions") {
+		t.Errorf("server.config without the rest: %d %s", res.status, res.body)
+	}
+	if res := a.post("/api/panel/api-tokens", `{"name":"all","permissions":`+serverAdminAll+`,"expires_in_days":1}`); res.status != 201 {
+		t.Errorf("server.config with all of them: %d %s", res.status, res.body)
+	}
 }
+
+const serverAdminAll = `["audit.view","blocklist.edit","device.view","enrollment.manage","metrics.view","remote_target.view","server.attestation","server.config","server.keys","user.view"]`
 
 // A token is read only as a Bearer header: not from the address, a cookie
 // or the API key header.
@@ -336,21 +348,138 @@ func TestOnlyAFullTokenPassesRoleChecksAndChangesAccounts(t *testing.T) {
 			t.Errorf("capped token POST %s: %d %s", path, res.status, res.body)
 		}
 	}
-	// The full backup holds every secret: a token with server.config alone
-	// reaches the settings section but not the backup
-	config, _ := w.makeToken("super_admin", `{"name":"cfg","permissions":["server.config"],"read_only":false,"expires_in_days":1}`)
-	for _, c := range []struct{ method, path string }{{"GET", "/api/settings/backup"}, {"POST", "/api/settings/restore"}} {
-		if res := w.bearer(config).do(c.method, c.path, "{}", "Content-Type", "application/json"); res.status != 403 || code(t, res) != "token_not_full" {
+	// Sign-in and access settings are account changes too
+	for _, c := range []struct{ method, path string }{{"PUT", "/api/settings/two-factor"}, {"POST", "/api/settings/device-scope"}, {"PUT", "/api/settings/client-sessions"}, {"PUT", "/api/settings/enrollment"}} {
+		if res := w.bearer(capped).do(c.method, c.path, "{}", "Content-Type", "application/json"); res.status != 403 || code(t, res) != "token_not_full" {
 			t.Errorf("capped token %s %s: %d %s", c.method, c.path, res.status, res.body)
 		}
+	}
+	// Role checks inside the handlers: tenants, and every account's tokens
+	if res := w.bearer(capped).postJSON("/api/tenants", `{"name":"evil"}`); res.status != 403 {
+		t.Errorf("capped super admin token makes a tenant: %d %s", res.status, res.body)
+	}
+	if res := w.bearer(capped).get("/api/panel/api-tokens?all=true"); res.status != 403 {
+		t.Errorf("capped token lists every account's tokens: %d %s", res.status, res.body)
+	}
+	_, other := w.makeToken("global_admin", `{"name":"other","permissions":["audit.view"],"expires_in_days":1}`)
+	if res := w.bearer(capped).do("DELETE", "/api/panel/api-tokens/"+other, ""); res.status != 404 {
+		t.Errorf("capped token revokes another account's token: %d %s", res.status, res.body)
+	}
+	if res := w.bearer(full).get("/api/panel/api-tokens?all=true"); res.status != 200 || !strings.Contains(res.body, other) {
+		t.Errorf("full super admin token lists every account's tokens: %d %s", res.status, res.body)
+	}
+	// All but server.config: past the reports section, not full
+	most, _ := w.makeToken("super_admin", `{"name":"m","permissions":`+strings.Replace(allAdmin, `"server.config",`, "", 1)+`,"read_only":false,"expires_in_days":1}`)
+	if res := w.bearer(most).postJSON("/api/reports/save", `{}`); res.status != 403 {
+		t.Errorf("capped super admin token saves a report: %d %s", res.status, res.body)
+	}
+	if res := w.bearer(full).postJSON("/api/reports/save", `{}`); res.status == 403 {
+		t.Errorf("full super admin token saves a report: %d %s", res.status, res.body)
+	}
+	// A super admin sees every account's CDAP Studio flows; a capped token
+	// only its own account's
+	if _, err := w.db.Exec(context.Background(),
+		"INSERT INTO studio_flows (id, name, description, flow_json, status, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		"zz-flow", "Someone else's flow", "", "{}", "draft", "someone-else", "2026-11-23T00:00:00.000Z", "2026-11-23T00:00:00.000Z"); err != nil {
+		t.Fatal(err)
+	}
+	if res := w.bearer(capped).get("/api/cdap-studio/flows"); strings.Contains(res.body, "zz-flow") {
+		t.Errorf("capped super admin token lists another account's flow: %d %s", res.status, res.body)
+	}
+	if res := w.bearer(capped).get("/api/cdap-studio/flows/zz-flow"); res.status != 404 {
+		t.Errorf("capped super admin token reads another account's flow: %d %s", res.status, res.body)
+	}
+	if res := w.bearer(full).get("/api/cdap-studio/flows"); !strings.Contains(res.body, "zz-flow") {
+		t.Errorf("full super admin token lists every flow: %d %s", res.status, res.body)
 	}
 	if res := w.bearer(full).postJSON("/api/users/zz-probe", "{}"); res.status != 200 {
 		t.Errorf("full token changes accounts: %d %s", res.status, res.body)
 	}
 	// A server admin's full token is its own permissions, not a super admin's
-	serverFull, _ := w.makeToken("server_admin", `{"name":"s","permissions":["audit.view","blocklist.edit","device.view","enrollment.manage","metrics.view","remote_target.view","server.attestation","server.config","server.keys","user.view"],"read_only":false,"expires_in_days":1}`)
+	serverFull, _ := w.makeToken("server_admin", `{"name":"s","permissions":`+serverAdminAll+`,"read_only":false,"expires_in_days":1}`)
 	if res := w.bearer(serverFull).get("/api/zz/admin"); res.status != 200 {
 		t.Errorf("server admin's full token, admin route: %d %s", res.status, res.body)
+	}
+}
+
+// The server's secrets (the full backup and restore, the file browser,
+// the advanced settings files, where scheduled backups go) need a
+// read-write token that carries every permission of its account, also to
+// read; server.config itself goes from a token that stopped being full.
+func TestTheServersSecretsNeedAFullReadWriteToken(t *testing.T) {
+	w := tokenWorld(t)
+	fullWrite, _ := w.makeToken("super_admin", `{"name":"fw","permissions":`+allAdmin+`,"read_only":false,"expires_in_days":1}`)
+	fullRead, _ := w.makeToken("super_admin", `{"name":"fr","permissions":`+allAdmin+`,"expires_in_days":1}`)
+	server, _ := w.makeToken("server_admin", `{"name":"s","permissions":`+serverAdminAll+`,"read_only":false,"expires_in_days":1}`)
+	secrets := []struct{ method, path string }{
+		{"GET", "/api/settings/backup"}, {"POST", "/api/settings/restore"},
+		{"GET", "/api/server-management/files?path=/"}, {"GET", "/api/server-management/files/read?path=/etc/hostname"},
+		{"GET", "/api/settings/advanced/files"}, {"GET", "/api/settings/advanced/files/console-session-secret"},
+		{"PUT", "/api/settings/advanced/files/console-env"},
+		{"PUT", "/api/settings/backup/schedule"}, {"POST", "/api/settings/backup/schedule/run"}, {"POST", "/api/settings/backup/destination/test"},
+	}
+	for _, c := range secrets {
+		if c.method == "GET" {
+			if res := w.bearer(fullRead).get(c.path); res.status != 403 || code(t, res) != "token_not_full" {
+				t.Errorf("full read-only token %s %s: %d %s", c.method, c.path, res.status, res.body)
+			}
+		}
+		if res := w.bearer(fullWrite).do(c.method, c.path, "{}", "Content-Type", "application/json"); res.status == 403 && strings.Contains(res.body, "token") {
+			t.Errorf("full read-write token %s %s: %d %s", c.method, c.path, res.status, res.body)
+		}
+	}
+	// Reading the schedule is no secret
+	if res := w.bearer(fullRead).get("/api/settings/backup/schedule"); res.status == 403 {
+		t.Errorf("full read-only token reads the schedule: %d %s", res.status, res.body)
+	}
+	// The server admin gains permissions: its token is no longer full,
+	// loses server.config and with it the settings and the secrets
+	if res := w.bearer(server).get("/api/settings/backup/schedule"); res.status != 200 {
+		t.Fatalf("before: %d %s", res.status, res.body)
+	}
+	if _, err := w.db.Exec(context.Background(), "UPDATE users SET role = 'super_admin' WHERE id = ?", roleIDs["server_admin"]); err != nil {
+		t.Fatal(err)
+	}
+	if res := w.bearer(server).get("/api/settings/backup/schedule"); res.status != 403 {
+		t.Errorf("settings without server.config: %d %s", res.status, res.body)
+	}
+	if res := w.bearer(server).get("/api/server-management/files/read?path=/etc/hostname"); res.status != 403 || code(t, res) != "token_not_full" {
+		t.Errorf("file browser: %d %s", res.status, res.body)
+	}
+	audit := strings.Join(w.auditRows(), "\n")
+	if !strings.Contains(audit, "api_token_refused|") || !strings.Contains(audit, "the server's secrets") {
+		t.Errorf("no refusal in the audit log:\n%s", audit)
+	}
+}
+
+// A token never changes its own account, also not through the account
+// routes by its id: a stolen token must not lock its owner out.
+func TestATokenNeverChangesItsOwnAccount(t *testing.T) {
+	w := tokenWorld(t)
+	full, _ := w.makeToken("super_admin", `{"name":"f","permissions":`+allAdmin+`,"read_only":false,"expires_in_days":1}`)
+	own := strconv.FormatInt(roleIDs["super_admin"], 10)
+	for _, c := range []struct{ method, path string }{
+		{"PATCH", "/api/users/" + own}, {"POST", "/api/users/" + own + "/reset-password"}, {"DELETE", "/api/users/" + own},
+	} {
+		if res := w.bearer(full).do(c.method, c.path, `{"newPassword":"Other-pass-123"}`, "Content-Type", "application/json"); res.status != 403 || code(t, res) != "token_not_allowed" {
+			t.Errorf("%s %s: %d %s", c.method, c.path, res.status, res.body)
+		}
+	}
+	// Another account goes on to the route (which then decides)
+	if res := w.bearer(full).postJSON("/api/users/"+strconv.FormatInt(roleIDs["viewer"], 10)+"/reset-password", `{}`); code(t, res) == "token_not_allowed" {
+		t.Errorf("another account: %d %s", res.status, res.body)
+	}
+}
+
+// A read-only token that tries to write leaves an audit entry.
+func TestRefusalsOfAValidTokenAreAudited(t *testing.T) {
+	w := tokenWorld(t)
+	value, id := w.makeToken("super_admin", `{"name":"r","permissions":["device.view"],"expires_in_days":1}`)
+	w.bearer(value).postJSON("/api/tags/zz/probe", "{}")
+	w.bearer(value).get("/api/zz/audit-view")
+	audit := strings.Join(w.auditRows(), "\n")
+	if !strings.Contains(audit, "api_token_refused|ndt_"+id+"_… refused: read-only token, POST /api/tags/zz/probe") {
+		t.Errorf("no audit entry for the refused write:\n%s", audit)
 	}
 }
 
@@ -408,7 +537,8 @@ func TestTokenFailuresAreRateLimited(t *testing.T) {
 	if res := w.bearer(value).get("/api/zz/audit-view"); res.status != 429 || res.header.Get("Retry-After") == "" || code(t, res) != "token_rate_limited" {
 		t.Errorf("request over the token's limit: %d %s", res.status, res.body)
 	}
-	// Failures per address: then even a good token is refused
+	// Failures per address: then the address's bad tokens get 429, but a
+	// good token still works (another client cannot lock it out)
 	w.s.tokens, _ = admintoken.New(context.Background(), admintoken.Options{DB: w.db, FailureLimit: 3})
 	bad := value[:len(value)-1] + "x"
 	if bad == value {
@@ -419,7 +549,10 @@ func TestTokenFailuresAreRateLimited(t *testing.T) {
 			t.Fatalf("bad token %d: %d %s", i, res.status, res.body)
 		}
 	}
-	if res := w.bearer(value).get("/api/zz/audit-view"); res.status != 429 {
+	if res := w.bearer(bad).get("/api/zz/audit-view"); res.status != 429 || code(t, res) != "token_rate_limited" {
+		t.Errorf("bad token after the address's failures: %d %s", res.status, res.body)
+	}
+	if res := w.bearer(value).get("/api/zz/audit-view"); res.status != 200 {
 		t.Errorf("good token after the address's failures: %d %s", res.status, res.body)
 	}
 }

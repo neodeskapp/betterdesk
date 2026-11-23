@@ -99,6 +99,15 @@ func Access(r *http.Request) *access.Context {
 	return c
 }
 
+// RoleTrusted reports whether a check by role may trust the account's
+// role: always for a browser session, for an API token only when it
+// carries every permission of its account (access.Context.CapFull).
+// Handlers that decide by the role themselves ask it.
+func RoleTrusted(r *http.Request) bool {
+	c := Access(r)
+	return !c.Token() || c.CapFull
+}
+
 // HasPermission reports whether the request's account has the permission.
 func HasPermission(r *http.Request, permission string) bool {
 	return Access(r).HasPermission(permission)

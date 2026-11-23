@@ -76,7 +76,7 @@ func requireAdmin(next http.Handler) http.Handler {
 		if user := kit.User(r); user != nil {
 			role = user.Role
 		}
-		if access.IsSuperAdminRole(role) || role == "global_admin" {
+		if (access.IsSuperAdminRole(role) || role == "global_admin") && kit.RoleTrusted(r) {
 			next.ServeHTTP(w, r)
 			return
 		}

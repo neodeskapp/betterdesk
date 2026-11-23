@@ -104,13 +104,18 @@ type listData struct {
 }
 
 // list answers GET /api/panel/api-tokens: the caller's tokens, newest
-// first; with ?all=true a super admin gets every account's.
+// first; with ?all=true a super admin gets every account's (an API token
+// only when it carries all of its account's permissions).
 func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	user := kit.User(r)
 	owner := user.ID
 	if r.URL.Query().Get("all") == "true" {
 		if !access.IsSuperAdminRole(user.Role) {
 			kit.Fail(w, r, http.StatusForbidden, "Only super admins can list every account's tokens")
+			return
+		}
+		if !kit.RoleTrusted(r) {
+			kit.Fail(w, r, http.StatusForbidden, access.MsgTokenNotFull)
 			return
 		}
 		owner = 0
@@ -302,7 +307,9 @@ func (h *handlers) revoke(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusInternalServerError, "Failed to revoke the API token")
 		return
 	}
-	if tok == nil || (tok.UserID != user.ID && !access.IsSuperAdminRole(user.Role)) {
+	// Another account's token: super admins, and an API token of one only
+	// when it carries all of the account's permissions
+	if tok == nil || (tok.UserID != user.ID && !(access.IsSuperAdminRole(user.Role) && kit.RoleTrusted(r))) {
 		kit.Fail(w, r, http.StatusNotFound, "API token not found")
 		return
 	}

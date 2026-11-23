@@ -34,6 +34,8 @@ type tokenRefusal struct {
 	Code    string `json:"code"`
 }
 
+const msgSecrets = "This hands out or replaces the server's secrets: it needs a read-write API token that carries all of its account's permissions"
+
 const msgTokenInvalid = "The API token is not valid: it is unknown, expired or revoked, its account is disabled, or this address may not use it"
 
 // tokenOrSession is step 6: the session, or for a request with an API
@@ -68,10 +70,12 @@ func (s *Server) tokenOrSession(next http.Handler) http.Handler {
 			return
 		}
 		if tok.ReadOnly && !safeMethod(r.Method) {
+			s.auditRefusal(r, tok, ip, "read-only token, "+r.Method+" "+httpx.RawPath(r))
 			httpx.WriteJSON(w, r, http.StatusForbidden, tokenRefusal{Error: "This API token is read-only: it can only read", Code: "token_read_only"})
 			return
 		}
-		if reason := deniedToTokens(r); reason != "" {
+		if reason := deniedToTokens(r, int64(user.ID.V)); reason != "" {
+			s.auditRefusal(r, tok, ip, "never open to tokens, "+r.Method+" "+httpx.RawPath(r))
 			httpx.WriteJSON(w, r, http.StatusForbidden, tokenRefusal{Error: reason, Code: "token_not_allowed"})
 			return
 		}
@@ -87,17 +91,33 @@ func (s *Server) tokenOrSession(next http.Handler) http.Handler {
 		r = s.deps.Sessions.Ephemeral(r, session.User{
 			ID: int64(user.ID.V), Username: user.Username, Role: role, PreferredLanguage: user.PreferredLanguage.String,
 		})
-		if safeMethod(r.Method) {
-			next.ServeHTTP(w, r)
-			return
-		}
 		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(rec, r)
-		details := fmt.Sprintf("%s %s %s -> %d", tok.Hint(), r.Method, httpx.RawPath(r), rec.status)
+		where := r.Method + " " + httpx.RawPath(r)
+		if rec.status == http.StatusForbidden {
+			// A refusal of what the token or its account may not do: a
+			// stolen token that probes shows in the audit log
+			s.auditRefusal(r, tok, ip, "403, "+where)
+		}
+		if safeMethod(r.Method) {
+			return
+		}
+		details := fmt.Sprintf("%s %s -> %d", tok.Hint(), where, rec.status)
 		if err := s.deps.Audit.Write(context.WithoutCancel(r.Context()), tok.UserID, "api_token_write", details, ip); err != nil {
 			logging.Logf("console", "WARN: audit of an API token write: %v", err)
 		}
 	})
+}
+
+// auditRefusal records that a valid token was refused something, once a
+// minute per token.
+func (s *Server) auditRefusal(r *http.Request, tok *admintoken.Token, ip, what string) {
+	if !s.tokenRefusals.due(tok.ID + " refused") {
+		return
+	}
+	if err := s.deps.Audit.Write(context.WithoutCancel(r.Context()), tok.UserID, "api_token_refused", tok.Hint()+" refused: "+what, ip); err != nil {
+		logging.Logf("console", "WARN: audit of an API token refusal: %v", err)
+	}
 }
 
 // refuseToken answers a token that was not accepted, and records the
@@ -128,12 +148,20 @@ func safeMethod(method string) bool {
 	return method == http.MethodGet || method == http.MethodHead || method == http.MethodOptions
 }
 
+// ownAccount matches the console's routes that change one account by its
+// id: /api/users/{id} and below.
+var ownAccount = regexp.MustCompile(`^/api/users/([0-9]+)(/.*)?$`)
+
 // deniedToTokens says why a route is never open to an API token, "" when
 // it is open: the account's own sign-in, password, second factor,
-// sessions and profile, and the console's API key in full (the key no
-// token rule limits).
-func deniedToTokens(r *http.Request) string {
+// sessions and profile, also through the account routes by its id (a
+// stolen token must not lock its owner out), and the console's API key in
+// full (the key no token rule limits). creator is the token's account.
+func deniedToTokens(r *http.Request, creator int64) string {
 	path := strings.ToLower(strings.TrimSuffix(httpx.RawPath(r), "/"))
+	if m := ownAccount.FindStringSubmatch(path); m != nil && !safeMethod(r.Method) && m[1] == strconv.FormatInt(creator, 10) {
+		return "API tokens cannot change their own account: its password, name, role or second factor"
+	}
 	switch {
 	case path == "/api/auth/verify" && safeMethod(r.Method):
 		return ""
@@ -162,13 +190,25 @@ func showsWholeKey(r *http.Request) bool {
 // access or how people sign in. A token reaches them only when it is
 // full: a token with fewer permissions than its account could otherwise
 // make an account with more than the token holds and sign in as it.
-var accountChanges = regexp.MustCompile(`^(/api/nd)?/api/(users(/.*)?|panel/(user-groups|access|role-permissions)(/.*)?|panel/org/[^/]+/(users|members|invite|invitations)(/.*)?|tenants/[^/]+/users(/.*)?|settings/(ldap|oidc)(/.*)?)$`)
+var accountChanges = regexp.MustCompile(`^(/api/nd)?/api/(users(/.*)?|panel/(user-groups|access|role-permissions)(/.*)?|panel/org/[^/]+/(users|members|invite|invitations)(/.*)?|tenants/[^/]+/users(/.*)?|settings/(ldap|oidc|two-factor|device-scope|client-sessions|enrollment)(/.*)?)$`)
 
-// fullOnly are the routes that read or replace every secret of the
-// server: the full backup holds the password hashes, the keys and the
-// session secret, and a restore replaces the accounts. A token reaches
-// them only when it is full, also to read.
-var fullOnly = regexp.MustCompile(`^/api/settings/(backup|restore)$`)
+// secretRoutes read or replace the server's secrets: the full backup
+// holds the password hashes, the keys and the session secret, a restore
+// replaces the accounts, the file browser reaches the key files and the
+// database, the advanced settings files hold the session secret and the
+// .env, and the backup schedule picks where a full backup is written. A
+// token reaches them only when it is full and may write, also to read:
+// what they hand out is worth more than any write.
+var secretRoutes = regexp.MustCompile(`^/api/(settings/(backup|restore)|settings/backup/(schedule|schedule/run|destination/test)|server-management/files(/.*)?|settings/advanced/files(/.*)?)$`)
+
+// secretRequest reports whether secretRoutes guard the request: every
+// method, but for the backup schedule only the writes.
+func secretRequest(method, path string) bool {
+	if !secretRoutes.MatchString(path) {
+		return false
+	}
+	return !strings.HasPrefix(path, "/api/settings/backup/") || !safeMethod(method)
+}
 
 // tokenAccess is the part of step 10 for API tokens: the account's
 // permissions capped to the token's, and the account changes only for a
@@ -180,8 +220,20 @@ func (s *Server) tokenAccess(w http.ResponseWriter, r *http.Request, loaded *acc
 	}
 	loaded.LimitToToken(use.Token.Permissions, auth.AllPermissions)
 	use.Full = loaded.CapFull
+	// server.config reaches the server's files, its sign-in settings and
+	// what restarts run: a token has it only together with every other
+	// permission of its account
+	if !use.Full {
+		loaded.DropFromCap(auth.PermServerConfig)
+	}
 	path := strings.ToLower(strings.TrimSuffix(httpx.RawPath(r), "/"))
-	if !use.Full && (fullOnly.MatchString(path) || !safeMethod(r.Method) && accountChanges.MatchString(path)) {
+	if secretRequest(r.Method, path) && (!use.Full || use.Token.ReadOnly) {
+		s.auditRefusal(r, use.Token, kit.ClientIP(r), "the server's secrets, "+r.Method+" "+httpx.RawPath(r))
+		httpx.WriteJSON(w, r, http.StatusForbidden, tokenRefusal{Error: msgSecrets, Code: access.CodeTokenNotFull})
+		return false
+	}
+	if !use.Full && !safeMethod(r.Method) && accountChanges.MatchString(path) {
+		s.auditRefusal(r, use.Token, kit.ClientIP(r), "not full, "+r.Method+" "+httpx.RawPath(r))
 		httpx.WriteJSON(w, r, http.StatusForbidden, tokenRefusal{Error: access.MsgTokenNotFull, Code: access.CodeTokenNotFull})
 		return false
 	}

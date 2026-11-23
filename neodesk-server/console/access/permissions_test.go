@@ -230,3 +230,37 @@ func TestReadLevelPassesReadsInOnePermissionSections(t *testing.T) {
 		t.Fatalf("only %d sections with one permission for both", checked)
 	}
 }
+
+// A token is full when it carries every permission the account holds; a
+// failed lookup of the role's permissions never makes it full.
+func TestLimitToTokenFullness(t *testing.T) {
+	viewer := consoleRoleMap["viewer"]
+	cases := []struct {
+		name  string
+		ctx   Context
+		token []string
+		full  bool
+	}{
+		{"all of the role's permissions", Context{Role: "viewer", Loaded: true}, viewer, true},
+		{"one missing", Context{Role: "viewer", Loaded: true}, viewer[1:], false},
+		{"super admin with one missing", Context{Role: "super_admin", Loaded: true}, auth.AllPermissions[1:], false},
+		{"super admin with all", Context{Role: "super_admin", Loaded: true}, auth.AllPermissions, true},
+		{"failed lookup", Context{Role: "viewer", Loaded: true, PermissionErr: errors.New("boom")}, viewer, false},
+	}
+	for _, c := range cases {
+		ctx := c.ctx
+		ctx.LimitToToken(c.token, auth.AllPermissions)
+		if ctx.CapFull != c.full {
+			t.Errorf("%s: full %v, want %v", c.name, ctx.CapFull, c.full)
+		}
+		if !ctx.Token() || ctx.HasPermission("server.config") && !containsString(c.token, "server.config") {
+			t.Errorf("%s: not capped", c.name)
+		}
+	}
+	ctx := Context{Role: "super_admin", Loaded: true}
+	ctx.LimitToToken(auth.AllPermissions, auth.AllPermissions)
+	ctx.DropFromCap("server.config")
+	if ctx.HasPermission("server.config") || !ctx.HasPermission("audit.view") {
+		t.Error("DropFromCap took the wrong permission")
+	}
+}
