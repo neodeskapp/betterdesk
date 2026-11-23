@@ -408,8 +408,13 @@ func TestConnectionModeAndPublicEndpoints(t *testing.T) {
 	// answers status and version only (BUGS UM1)
 	s.API.On("GET /api/health", http.StatusOK, `{"status":"ok","version":"1"}`)
 	s.API.On("GET /api/health/detail", http.StatusOK, `{"status":"ok","connection":{"p2p_first":false}}`)
+	// Without a systemd unit or a compose file (a container, a Windows
+	// service) the settings are what the server runs with, and they are
+	// saved through it (L375, L376)
+	s.API.On("GET /api/connection/config", http.StatusOK, `{"mode":"relay_only","p2p_fallback_ms":5000,"same_nat_relay":true,`+
+		`"allow_shared_nat_initiator":false,"logged_in_only_initiator":true,"operator_only_outbound":false}`)
 	res := admin.Do("GET", "/api/settings/connection-mode", "")
-	if res.Body != `{"success":true,"data":{"mode":"p2p_first","p2p_fallback_ms":2000,"same_nat_relay":true,"allow_shared_nat_initiator":false,"logged_in_only_initiator":false,"operator_only_outbound":false,"source":"defaults","writable":false,"deployment":"defaults","runtime":{"p2p_first":false}}}` {
+	if res.Body != `{"success":true,"data":{"mode":"relay_only","p2p_fallback_ms":5000,"same_nat_relay":true,"allow_shared_nat_initiator":false,"logged_in_only_initiator":true,"operator_only_outbound":false,"source":"go-api","writable":true,"deployment":"defaults","runtime":{"p2p_first":false}}}` {
 		t.Errorf("get: %s", res.Body)
 	}
 	s.API.On("GET /api/health/detail", http.StatusOK, `{"status":"ok","connection":""}`)
@@ -420,10 +425,21 @@ func TestConnectionModeAndPublicEndpoints(t *testing.T) {
 	if res := admin.Do("GET", "/api/settings/connection-mode", ""); !strings.HasSuffix(res.Body, `"runtime":null}}`) {
 		t.Errorf("get without the detail: %s", res.Body)
 	}
-	before := len(s.AuditRows())
-	res = admin.Do("PUT", "/api/settings/connection-mode", `{"mode":"relay_only"}`)
-	if res.Status != http.StatusBadRequest || res.Body != `{"success":false,"error":"settings.connection_mode_not_configurable"}` || len(s.AuditRows()) != before {
-		t.Errorf("save without a place for it: %d %s", res.Status, res.Body)
+	s.API.On("PUT /api/connection/config", http.StatusOK, `{"config":{"mode":"relay_only","p2p_fallback_ms":3000,"same_nat_relay":true,`+
+		`"allow_shared_nat_initiator":false,"logged_in_only_initiator":true,"operator_only_outbound":false}}`)
+	s.API.Calls()
+	res = admin.Do("PUT", "/api/settings/connection-mode", `{"mode":"relay_only","p2p_fallback_ms":3000,"logged_in_only_initiator":true}`)
+	if res.Status != http.StatusOK || !strings.Contains(res.Body, `"source":"go-api"`) || !strings.Contains(res.Body, `"restartRequired":null`) {
+		t.Errorf("save through the server: %d %s", res.Status, res.Body)
+	}
+	if calls := s.API.Calls(); len(calls) != 2 || !strings.HasPrefix(calls[1], `PUT /api/connection/config {"mode":"relay_only","p2p_fallback_ms":3000,`) {
+		t.Errorf("save through the server: calls %v", calls)
+	}
+	// When the server doesn't answer the page says so instead of showing
+	// defaults as what it runs with (L376)
+	s.API.On("GET /api/connection/config", http.StatusBadGateway, `{"error":"down"}`)
+	if res := admin.Do("GET", "/api/settings/connection-mode", ""); res.Status != http.StatusInternalServerError {
+		t.Errorf("get without the server: %d %s", res.Status, res.Body)
 	}
 
 	if res := admin.Do("GET", "/api/settings/public-endpoints", ""); res.Body != `{"success":true,"data":{"public_server_id":"","public_relay_server":"","public_api_url":"","env_override_active":false}}` {

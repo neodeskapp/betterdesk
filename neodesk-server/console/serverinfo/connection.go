@@ -579,6 +579,20 @@ func (s *Service) IsDockerSplitDeployment() bool {
 	return s.opts.IsDocker && lowerASCII(jsTrim(s.env("NEODESK_DOCKER_LAYOUT"))) == "split"
 }
 
+// SavesThroughServer reports whether the connection settings are read
+// from and saved through the server's API, which keeps them in its
+// database, applies them at once and restores them at its next start.
+// That is so wherever the console runs in a container, whose compose
+// file on the host and env file in the image are not the console's to
+// write, and wherever there is neither a systemd unit nor a compose file
+// to keep them in (a Windows service, a bare binary).
+func (s *Service) SavesThroughServer() bool {
+	if s.opts.IsDocker {
+		return true
+	}
+	return s.opts.GoAPI != nil && s.DetectDeploymentSource() == ConnectionSourceDefaults
+}
+
 // DetectDeploymentSource says where the connection mode is stored:
 // "systemd" for a unit outside a container, "docker" for a compose file
 // (in a container, or where there is no unit), else "systemd" when there
@@ -633,17 +647,17 @@ func apiConfig(data any) any {
 }
 
 // GetConnectionMode reads the connection settings from where they are
-// stored. With two containers that is the server's API; when it does not
-// answer, the defaults come back marked as not writable. Without a unit
-// and a compose file the defaults come back with the source "defaults".
-// An error means the unit or the compose file is there and cannot be
-// read.
+// stored. Where they are saved through the server (SavesThroughServer)
+// they are what the running server uses, and an error when it does not
+// answer: defaults would show settings the server may not run with.
+// Without a unit and a compose file the defaults come back with the
+// source "defaults". An error means the unit or the compose file is there
+// and cannot be read.
 func (s *Service) GetConnectionMode(ctx context.Context) (ConnectionSettings, error) {
-	if s.IsDockerSplitDeployment() {
+	if s.SavesThroughServer() {
 		resp, err := s.goAPIGet(ctx, "/connection/config")
 		if err != nil {
-			s.log.Error("Failed to read split-Docker connection settings:", err.Error())
-			return ConnectionSettings{ConnectionMode: DefaultConnectionMode(), Source: ConnectionSourceGoAPI}, nil
+			return ConnectionSettings{}, err
 		}
 		return SettingsFromAPI(apiConfig(resp.Data())), nil
 	}
@@ -715,8 +729,9 @@ func (w *ConnectionWrite) Object() *goapi.Object {
 	return goapi.NewObject("path", w.Path, "vars", w.Vars, "source", w.Source, "settings", w.Settings)
 }
 
-// SetConnectionMode stores the connection settings. With two containers it
-// sends them to the server's API, which applies them at once. Otherwise it
+// SetConnectionMode stores the connection settings. Where they are saved
+// through the server (SavesThroughServer) it sends them to the server's
+// API, which keeps them in its database and applies them at once. Otherwise it
 // writes the server's variables to the systemd drop-in through the
 // privileged helper, to the systemd unit itself when there is no helper,
 // or to the compose file; the server reads them at its next start.
@@ -728,7 +743,7 @@ func (w *ConnectionWrite) Object() *goapi.Object {
 func (s *Service) SetConnectionMode(ctx context.Context, in ConnectionInput) (*ConnectionWrite, error) {
 	normalized := NormalizeConnectionMode(in)
 
-	if s.IsDockerSplitDeployment() {
+	if s.SavesThroughServer() {
 		if s.opts.GoAPI == nil {
 			return nil, errNoGoAPI
 		}

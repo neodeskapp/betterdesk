@@ -82,6 +82,15 @@ func (s *Service) IsDockerSplitDeployment() bool {
 	return s.opts.Docker && strings.ToLower(jsTrim(s.opts.Getenv("NEODESK_DOCKER_LAYOUT"))) == "split"
 }
 
+// SavesThroughServer reports whether the settings are read from and saved
+// through the server's API, which keeps them in its database and applies
+// them at once: whenever the console runs in a container, one or two of
+// them. A container's .env file is not what the server reads, and on the
+// documented install the console may not write it.
+func (s *Service) SavesThroughServer() bool {
+	return s.opts.Docker
+}
+
 // DetectOSTimezone is the machine's time zone when Intl takes it, else
 // the TZ variable when Intl takes that, else "UTC".
 func (s *Service) DetectOSTimezone() string {
@@ -200,14 +209,14 @@ func (s *Service) GetClockSettings() (Settings, error) {
 }
 
 // GetRuntimeClockSettings is the settings in effect: those of the .env
-// file, and in the layout with two containers those the server reports,
+// file, and in a container (SavesThroughServer) those the server reports,
 // with the file's time zone when the server has none.
 func (s *Service) GetRuntimeClockSettings(ctx context.Context) (Settings, error) {
 	local, err := s.GetClockSettings()
 	if err != nil {
 		return Settings{}, err
 	}
-	if !s.IsDockerSplitDeployment() {
+	if !s.SavesThroughServer() {
 		return local, nil
 	}
 	resp, err := s.opts.GoAPI.Get(ctx, apiConfigPath)
@@ -285,7 +294,7 @@ type SaveResult struct {
 }
 
 // SaveClockSettings validates the settings in raw (a request body) and
-// saves them. In the layout with two containers the server takes them
+// saves them. In a container (SavesThroughServer) the server takes them
 // through its API, and they are also written into the .env file where
 // that works; an answer with an error refuses the save with that text.
 // Otherwise they go into the .env file and the server's service
@@ -296,7 +305,7 @@ func (s *Service) SaveClockSettings(ctx context.Context, raw any) (SaveResult, e
 	if err != nil {
 		return SaveResult{}, err
 	}
-	if s.IsDockerSplitDeployment() {
+	if s.SavesThroughServer() {
 		resp, err := s.opts.GoAPI.Put(ctx, apiConfigPath, goapi.Body(settings.Object()))
 		if err != nil {
 			return SaveResult{}, err

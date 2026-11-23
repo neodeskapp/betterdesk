@@ -376,6 +376,12 @@ func stageConnection(t testing.TB, root string, state serviceState) *connectionS
 func (st *connectionStage) checkOutcome(t testing.TB, m *mismatches, label string, got any, err error, want outcome) {
 	t.Helper()
 	switch {
+	case want.Err == nil && strings.Contains(string(want.Out), `"source":"go-api","writable":false`):
+		// Node showed the defaults when the server did not answer; the
+		// console says the server did not answer instead (L376)
+		if err == nil {
+			m.errorf("%s: answer %s, want an error where Node showed the defaults", label, jsonText(t, got))
+		}
 	case want.Err != nil:
 		if err == nil || st.scrub(err.Error()) != *want.Err {
 			m.errorf("%s: error %v, Node throws %q", label, err, *want.Err)
@@ -400,6 +406,7 @@ func TestConnectionServiceAgainstNode(t *testing.T) {
 	ctx := context.Background()
 	m := &mismatches{t: t}
 	sources, setKinds, restartKinds := map[string]int{}, map[string]int{}, map[string]int{}
+	throughServer := 0
 	all := m
 	for i, c := range v.Service {
 		label := "case " + strconv.Itoa(i)
@@ -408,6 +415,13 @@ func TestConnectionServiceAgainstNode(t *testing.T) {
 		st := stageConnection(t, root, c.State)
 		if got := st.service.IsDockerSplitDeployment(); got != c.SplitDeployment {
 			m.errorf("%s: IsDockerSplitDeployment = %v, Node answers %v", label, got, c.SplitDeployment)
+		}
+		if st.service.SavesThroughServer() != c.SplitDeployment {
+			// Node saved through the server only with two containers; the
+			// console saves there in any container and wherever it has no
+			// unit or compose file (L375, TestConnectionModeSavedThroughServer)
+			throughServer++
+			continue
 		}
 		if got := st.service.DetectDeploymentSource(); got != c.Source {
 			m.errorf("%s: DetectDeploymentSource = %q, Node answers %q", label, got, c.Source)
@@ -496,7 +510,10 @@ func TestConnectionServiceAgainstNode(t *testing.T) {
 			m.errorf("%s restart: shell calls %q, Node made %q", label, st.shellCalls, wantShell)
 		}
 	}
-	for _, source := range []string{ConnectionSourceSystemd, ConnectionSourceDocker, ConnectionSourceDefaults} {
+	if throughServer != 52 {
+		t.Errorf("%d cases now saved through the server, want the 50 without a unit or compose file and 2 in a container", throughServer)
+	}
+	for _, source := range []string{ConnectionSourceSystemd, ConnectionSourceDocker} {
 		if sources[source] < 20 {
 			t.Errorf("only %d cases with source %q", sources[source], source)
 		}
@@ -773,18 +790,72 @@ func TestConnectionModeSplitDocker(t *testing.T) {
 		t.Errorf("answer\n%s\nwant\n%s", got, want)
 	}
 
-	// Without an answer from the server the defaults come back, not
-	// writable.
+	// Without an answer from the server the read fails: defaults would
+	// show settings the server may not run with (L376)
 	api.set("GET", &apiAnswer{Fail: true, Status: 502})
-	log := &recordingLogger{}
-	s.log = log
 	current, err = s.GetConnectionMode(ctx)
-	wantSettings := ConnectionSettings{ConnectionMode: DefaultConnectionMode(), Source: ConnectionSourceGoAPI}
-	if err != nil || current != wantSettings {
+	if err == nil || err.Error() != "Request failed with status code 502" {
 		t.Errorf("read without the server %+v, %v", current, err)
 	}
-	if lines := log.all(); len(lines) != 1 || lines[0] != "error: Failed to read split-Docker connection settings: Request failed with status code 502" {
-		t.Errorf("logged %q", lines)
+}
+
+// The documented Docker install runs the console and the server in one
+// container, without NEODESK_DOCKER_LAYOUT, and a Windows service or a
+// bare binary has neither a systemd unit nor a compose file. In both the
+// settings are what the running server reports, and a save goes to the
+// server, which keeps it in its database and applies it at once; no file
+// is read or written (L375, L376).
+func TestConnectionModeSavedThroughServer(t *testing.T) {
+	for _, name := range []string{"one container", "no unit or compose file"} {
+		t.Run(name, func(t *testing.T) {
+			dir := t.TempDir()
+			compose := filepath.Join(dir, "docker-compose.yml")
+			if err := os.WriteFile(compose, []byte(sampleCompose), 0o444); err != nil {
+				t.Fatal(err)
+			}
+			api := &stubAPI{}
+			// What the server runs with, here set through its .env: relay only,
+			// 5000 ms, signed-in apps only
+			api.set("GET", &apiAnswer{Data: json.RawMessage(`{"mode":"relay_only","p2p_fallback_ms":5000,"same_nat_relay":true,` +
+				`"allow_shared_nat_initiator":false,"logged_in_only_initiator":true,"operator_only_outbound":false,` +
+				`"p2p_first":false,"always_use_relay":true}`)})
+			opts := Options{GoAPI: api.client(), Getenv: envMap(nil), DockerEnvFile: filepath.Join(dir, "none"),
+				SystemdUnit: filepath.Join(dir, "none"), ComposePath: filepath.Join(dir, "none")}
+			if name == "one container" {
+				opts.IsDocker, opts.ComposePath = true, compose
+			}
+			s := New(opts)
+			if !s.SavesThroughServer() {
+				t.Fatal("the settings are not saved through the server")
+			}
+			ctx := context.Background()
+			current, err := s.GetConnectionMode(ctx)
+			if err != nil || current.Source != ConnectionSourceGoAPI || !current.Writable || current.Mode != ModeRelayOnly ||
+				current.P2PFallbackMs != 5000 || !current.LoggedInOnlyInitiator {
+				t.Fatalf("read %+v, %v; want what the server runs, writable", current, err)
+			}
+
+			api.set("PUT", &apiAnswer{Data: json.RawMessage(`{"config":{"mode":"p2p_first","p2p_fallback_ms":3000,"same_nat_relay":true,` +
+				`"allow_shared_nat_initiator":false,"logged_in_only_initiator":false,"operator_only_outbound":true}}`)})
+			write, err := s.SetConnectionMode(ctx, ConnectionInput{Mode: "p2p_first", P2PFallbackMs: 3000.0, SameNATRelay: true,
+				AllowSharedNATInitiator: false, LoggedInOnlyInitiator: false, OperatorOnlyOutbound: true})
+			if err != nil {
+				t.Fatalf("save: %v", err)
+			}
+			calls := api.seen()
+			if len(calls) != 1 || calls[0].Method != "PUT" || calls[0].Path != "/api/connection/config" {
+				t.Fatalf("calls %+v", calls)
+			}
+			if write.Source != ConnectionSourceGoAPI || !write.Settings.OperatorOnlyOutbound || write.Settings.P2PFallbackMs != 3000 {
+				t.Errorf("write %+v", write)
+			}
+			if !write.Object().Bool("dockerMode") || write.Object().Get("restartRequired") != nil {
+				t.Errorf("answer %s asks for a restart", jsonText(t, write.Object()))
+			}
+			if text, _ := os.ReadFile(compose); string(text) != sampleCompose {
+				t.Errorf("the compose file changed:\n%s", text)
+			}
+		})
 	}
 }
 

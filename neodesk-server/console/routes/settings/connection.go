@@ -44,8 +44,8 @@ func (g *general) getConnectionMode(w http.ResponseWriter, r *http.Request) {
 }
 
 // setConnectionMode answers PUT /api/settings/connection-mode. Where the
-// server takes the settings at once (a split Docker deployment) they go
-// to it. Otherwise the change goes into the caller's restart transaction
+// server takes the settings at once (serverinfo SavesThroughServer: in a
+// container, or without a unit or compose file) they go to it. Otherwise the change goes into the caller's restart transaction
 // with the settings before it as the way back, and the compose file or
 // the systemd unit is written only once the transaction takes the change:
 // while another operator's change waits the answer is 409 and nothing is
@@ -69,7 +69,7 @@ func (g *general) setConnectionMode(w http.ResponseWriter, r *http.Request) {
 	}
 	switch {
 	case err != nil:
-	case g.d.ServerInfo.IsDockerSplitDeployment():
+	case g.d.ServerInfo.SavesThroughServer():
 		write, err = g.d.ServerInfo.SetConnectionMode(r.Context(), input)
 	default:
 		pending, err = g.d.Restart.RegisterChangeAfter(kit.UserID(r), "connection-mode", func() (restart.Change, error) {

@@ -37,7 +37,7 @@ func (h *handlers) clockSettings(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, http.StatusInternalServerError, err)
 		return
 	}
-	kit.JSON(w, r, http.StatusOK, clockAnswer{Success: true, Settings: settings, DockerMode: h.clock.IsDockerSplitDeployment()})
+	kit.JSON(w, r, http.StatusOK, clockAnswer{Success: true, Settings: settings, DockerMode: h.clock.SavesThroughServer()})
 }
 
 type savedClock struct {
@@ -77,7 +77,7 @@ func (h *handlers) saveClockSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	var result billingclock.SaveResult
 	var pending *restart.Public
-	if h.clock.IsDockerSplitDeployment() {
+	if h.clock.SavesThroughServer() {
 		if result, err = h.clock.SaveClockSettings(r.Context(), body); err == nil {
 			_, err = h.d.Restart.DismissFailed(kit.UserID(r), "billing-clock")
 		}
