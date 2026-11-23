@@ -99,6 +99,9 @@ func lessUTF16(a, b string) bool {
 	return len(ua) < len(ub)
 }
 
+// nodeFontUserAgent is the user agent Node sent to Google Fonts.
+const nodeFontUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+
 // fakeGoogle answers font downloads from a table and records what was
 // asked.
 type fakeGoogle struct {
@@ -108,7 +111,12 @@ type fakeGoogle struct {
 
 func (f *fakeGoogle) RoundTrip(req *http.Request) (*http.Response, error) {
 	url := req.URL.String()
-	f.requests = append(f.requests, object("url", url, "protocol", req.URL.Scheme, "userAgent", req.Header.Get("User-Agent")))
+	agent := req.Header.Get("User-Agent")
+	if agent == fontUserAgent {
+		// the console names a whole browser (BUGS L362, fontdownload_test.go)
+		agent = nodeFontUserAgent
+	}
+	f.requests = append(f.requests, object("url", url, "protocol", req.URL.Scheme, "userAgent", agent))
 	if req.Header.Get("Accept-Encoding") != "" {
 		return nil, errors.New("the font download must not ask for compression")
 	}

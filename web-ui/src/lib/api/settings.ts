@@ -563,8 +563,15 @@ export function listLocalFonts(signal?: AbortSignal): Promise<{ family: string }
 	return api(wrapped(v.array(LocalFont)), '/api/settings/fonts/local', { signal });
 }
 
-export function downloadFont(family: string) {
-	return api(Ok, '/api/settings/fonts/download', { method: 'POST', body: { family } });
+const FontDownload = v.looseObject({ success: v.optional(v.boolean()) });
+
+/** POST /api/settings/fonts/download: true when the font's files are on the server now */
+export async function downloadFont(family: string): Promise<boolean> {
+	const out = await api(wrapped(FontDownload), '/api/settings/fonts/download', {
+		method: 'POST',
+		body: { family }
+	});
+	return out.success === true;
 }
 
 export function deleteFont(family: string) {

@@ -1334,6 +1334,7 @@
       "font_source": "Phông chữ để tìm",
       "font_category": "Kiểu phông chữ",
       "font_none": "Không có phông chữ nào khớp.",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "Phông chữ được lưu trên máy chủ ngay khi bạn chọn tệp. Chọn phông chữ ở trên để sử dụng.",
       "console_background": "Nền bảng điều khiển",
       "background_type": "Nền",

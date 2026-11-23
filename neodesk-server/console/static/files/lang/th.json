@@ -1334,6 +1334,7 @@
       "font_source": "ฟอนต์ที่จะค้นหา",
       "font_category": "รูปแบบฟอนต์",
       "font_none": "ไม่มีฟอนต์ที่ตรงกัน",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "ฟอนต์จะถูกเก็บไว้บนเซิร์ฟเวอร์ทันทีที่คุณเลือกไฟล์ เลือกฟอนต์ด้านบนเพื่อใช้งาน",
       "console_background": "พื้นหลังของคอนโซล",
       "background_type": "พื้นหลัง",

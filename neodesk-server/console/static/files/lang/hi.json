@@ -1334,6 +1334,7 @@
       "font_source": "खोजे जाने वाले फ़ॉन्ट",
       "font_category": "फ़ॉन्ट शैली",
       "font_none": "कोई फ़ॉन्ट मेल नहीं खाता।",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "फ़ाइल चुनते ही फ़ॉन्ट सर्वर पर सहेज लिया जाता है। इसका उपयोग करने के लिए इसे ऊपर चुनें।",
       "console_background": "कंसोल का बैकग्राउंड",
       "background_type": "बैकग्राउंड",

@@ -17,7 +17,7 @@ vi.mock('#lib/api/settings.ts', async (orig) => ({
 			downloaded: false
 		}))
 	),
-	downloadFont: vi.fn(async () => ({}))
+	downloadFont: vi.fn(async () => true)
 }));
 
 import FontPicker from '../../../src/lib/settings/FontPicker.svelte';
@@ -29,7 +29,7 @@ describe('font picker with the keyboard', () => {
 		const user = userEvent.setup();
 		const after = document.createElement('button');
 		after.textContent = 'Next control';
-		render(FontPicker, { slot: 'heading', value: '', google: true, category: '', canEdit: true });
+		render(FontPicker, { slot: 'heading', value: '', source: 'google', category: '', canEdit: true });
 		document.body.appendChild(after);
 
 		await user.tab();

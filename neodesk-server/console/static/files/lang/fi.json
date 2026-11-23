@@ -1334,6 +1334,7 @@
       "font_source": "Haettavat fontit",
       "font_category": "Fontin tyyli",
       "font_none": "Yksikään fontti ei vastaa hakua.",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "Fontti tallennetaan palvelimelle heti, kun valitset tiedoston. Ota se käyttöön valitsemalla se yllä.",
       "console_background": "Konsolin tausta",
       "background_type": "Tausta",

@@ -1334,6 +1334,7 @@
       "font_source": "Teckensnitt att söka i",
       "font_category": "Teckenstil",
       "font_none": "Inget teckensnitt matchar.",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "Teckensnittet sparas på servern så snart du väljer filen. Välj det ovan för att använda det.",
       "console_background": "Konsolbakgrund",
       "background_type": "Bakgrund",

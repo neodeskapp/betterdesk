@@ -1332,6 +1332,7 @@
       "font_source": "Polices à rechercher",
       "font_category": "Style de police",
       "font_none": "Aucune police ne correspond.",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "La police est enregistrée sur le serveur dès que vous choisissez le fichier. Sélectionnez-la ci-dessus pour l'utiliser.",
       "console_background": "Arrière-plan de la console",
       "background_type": "Arrière-plan",

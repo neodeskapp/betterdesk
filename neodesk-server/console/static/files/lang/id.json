@@ -1334,6 +1334,7 @@
       "font_source": "Font yang dicari",
       "font_category": "Gaya font",
       "font_none": "Tidak ada font yang cocok.",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "Font disimpan di server segera setelah Anda memilih file. Pilih font di atas untuk menggunakannya.",
       "console_background": "Latar belakang konsol",
       "background_type": "Latar belakang",

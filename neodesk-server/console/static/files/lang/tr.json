@@ -1334,6 +1334,7 @@
       "font_source": "Aranacak yazı tipleri",
       "font_category": "Yazı tipi stili",
       "font_none": "Eşleşen yazı tipi yok.",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "Yazı tipi, dosyayı seçtiğiniz anda sunucuda depolanır. Kullanmak için yukarıdan seçin.",
       "console_background": "Konsol arka planı",
       "background_type": "Arka plan",

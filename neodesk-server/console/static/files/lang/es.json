@@ -1328,6 +1328,7 @@
       "font_source": "Fuentes en las que buscar",
       "font_category": "Estilo de fuente",
       "font_none": "Ninguna fuente coincide.",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "La fuente se guarda en el servidor en cuanto elige el archivo. Selecciónela arriba para usarla.",
       "console_background": "Fondo de la consola",
       "background_type": "Fondo",

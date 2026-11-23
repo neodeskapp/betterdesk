@@ -1334,6 +1334,7 @@
       "font_source": "Keresendő betűtípusok",
       "font_category": "Betűstílus",
       "font_none": "Nincs megfelelő betűtípus.",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "A betűtípus a fájl kiválasztásakor azonnal a szerverre kerül. A használatához válassza ki fent.",
       "console_background": "Konzol háttere",
       "background_type": "Háttér",

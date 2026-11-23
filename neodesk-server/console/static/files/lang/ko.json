@@ -1328,6 +1328,7 @@
       "font_source": "검색할 글꼴",
       "font_category": "글꼴 스타일",
       "font_none": "일치하는 글꼴이 없습니다.",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "파일을 선택하면 바로 글꼴이 서버에 저장됩니다. 사용하려면 위에서 선택하세요.",
       "console_background": "콘솔 배경",
       "background_type": "배경",

@@ -1328,6 +1328,7 @@
       "font_source": "要搜索的字体",
       "font_category": "字体样式",
       "font_none": "没有匹配的字体。",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "选择文件后，字体会立即存储在服务器上。在上方选择即可使用。",
       "console_background": "控制台背景",
       "background_type": "背景",

@@ -1334,6 +1334,7 @@
       "font_source": "Fonturi în care se caută",
       "font_category": "Stilul fontului",
       "font_none": "Niciun font nu corespunde.",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "Fontul este stocat pe server imediat ce alegeți fișierul. Selectați-l mai sus pentru a-l folosi.",
       "console_background": "Fundalul consolei",
       "background_type": "Fundal",

@@ -1,15 +1,17 @@
 <!--
   One font choice on the Appearance tab (heading or text): the font in use
   ("Now: Inter", Use default), and a search field with a list of matching
-  fonts under it. Picking a Google font that is not on the server yet
-  downloads it first (people who can change the appearance); it still
-  works from Google when that fails. Arrow down moves into the list (the
-  fonts are not Tab stops, so Tab goes on to the next control), Escape
-  closes it, and so do a click outside and focus leaving the picker; only
-  one list is open at a time (openPopup).
+  fonts under it: Google Fonts and the built-in list (source google), or
+  the fonts on the server, downloaded or uploaded (source local). Picking a
+  Google font that is not on the server yet downloads it first; the
+  console loads fonts only from itself, so a font that could not be
+  downloaded is not used and the field says why. Arrow down moves into the
+  list (the fonts are not Tab stops, so Tab goes on to the next control),
+  Escape closes it, and so do a click outside and focus leaving the picker;
+  only one list is open at a time (openPopup).
 -->
 <script lang="ts">
-	import { searchFonts, downloadFont, type FontInfo } from '#lib/api/settings.ts';
+	import { searchFonts, downloadFont, listLocalFonts, type FontInfo } from '#lib/api/settings.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Input from '#lib/ui/Input.svelte';
@@ -18,7 +20,8 @@
 	interface Props {
 		slot: 'heading' | 'body';
 		value: string;
-		google: boolean;
+		/** google: Google Fonts and the built-in list; local: the fonts on the server */
+		source: 'google' | 'local';
 		category: string;
 		canEdit: boolean;
 		disabled?: boolean;
@@ -29,7 +32,7 @@
 	let {
 		slot,
 		value = $bindable(),
-		google,
+		source,
 		category,
 		canEdit,
 		disabled = false,
@@ -44,6 +47,8 @@
 	let fonts = $state.raw<FontInfo[] | null>(null);
 	let problem = $state('');
 	let picking = $state<string | null>(null);
+	/** Why the font picked last is not used */
+	let pickProblem = $state('');
 	let root = $state<HTMLElement | null>(null);
 	let input = $state<HTMLInputElement | null>(null);
 	let list = $state<HTMLElement | null>(null);
@@ -68,7 +73,13 @@
 		const c = new AbortController();
 		ctrl = c;
 		try {
-			const out = await searchFonts(query.trim(), category, google, c.signal);
+			const q = query.trim().toLowerCase();
+			const out =
+				source === 'local'
+					? (await listLocalFonts(c.signal))
+							.filter((f) => !q || f.family.toLowerCase().includes(q))
+							.map((f) => ({ family: f.family, category: '', downloaded: true }))
+					: await searchFonts(query.trim(), category, true, c.signal);
 			if (ctrl !== c) return;
 			fonts = out;
 			problem = '';
@@ -93,7 +104,7 @@
 	// Another category or source: search again while the list is open
 	$effect(() => {
 		void category;
-		void google;
+		void source;
 		if (open) void search();
 	});
 
@@ -131,15 +142,25 @@
 	}
 
 	async function pick(font: FontInfo) {
-		if (!font.downloaded && canEdit) {
+		pickProblem = '';
+		if (!font.downloaded) {
+			if (!canEdit) return;
 			picking = font.family;
+			let stored: boolean;
 			try {
-				await downloadFont(font.family);
-				ondownload?.();
+				stored = await downloadFont(font.family);
 			} catch {
-				// The font still works from Google when the download fails
+				stored = false;
 			}
 			picking = null;
+			if (!stored) {
+				// The console loads fonts only from itself: a font not on the server would not show
+				pickProblem = t('settings.appearance.font_download_failed', { family: font.family });
+				hide();
+				input?.focus();
+				return;
+			}
+			ondownload?.();
 		}
 		value = font.family;
 		hide();
@@ -184,6 +205,7 @@
 			>
 		{/if}
 	</p>
+	{#if pickProblem}<p class="form-hint form-error" id="font-{slot}-problem">{pickProblem}</p>{/if}
 	<div class="font-search">
 		<Input
 			bind:element={input}
@@ -193,7 +215,8 @@
 			aria-expanded={open}
 			aria-controls={listId}
 			aria-autocomplete="list"
-			describedby="{id}-hint"
+			describedby={pickProblem ? `${id}-hint font-${slot}-problem` : `${id}-hint`}
+			invalid={!!pickProblem}
 			autocomplete="off"
 			placeholder={t('branding.font_search_placeholder')}
 			{disabled}
@@ -252,6 +275,9 @@
 		margin: 0;
 		color: var(--text-muted);
 		font-size: var(--text-sm);
+	}
+	.form-error {
+		color: var(--danger);
 	}
 	.font-current-line {
 		display: flex;

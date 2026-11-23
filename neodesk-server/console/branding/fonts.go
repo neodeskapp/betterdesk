@@ -15,8 +15,12 @@ import (
 
 const (
 	googleFontsCSSURL = "https://fonts.googleapis.com/css2"
-	fontUserAgent     = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-	fontFetchTimeout  = 15 * time.Second
+	// fontUserAgent names a browser Google Fonts serves WOFF2 files in
+	// blocks marked by subset to (/* latin */). Node's was cut after
+	// AppleWebKit, which Google answers with TrueType links and no subsets,
+	// so nothing was downloaded (BUGS L362).
+	fontUserAgent    = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+	fontFetchTimeout = 15 * time.Second
 )
 
 var (

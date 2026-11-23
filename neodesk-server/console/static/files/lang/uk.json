@@ -1334,6 +1334,7 @@
       "font_source": "Шрифти для пошуку",
       "font_category": "Стиль шрифту",
       "font_none": "Немає відповідних шрифтів.",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "Шрифт зберігається на сервері, щойно ви виберете файл. Щоб використати його, виберіть його вище.",
       "console_background": "Фон консолі",
       "background_type": "Фон",

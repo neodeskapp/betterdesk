@@ -1328,6 +1328,7 @@
       "font_source": "Písma k prohledání",
       "font_category": "Styl písma",
       "font_none": "Žádné písmo neodpovídá.",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "Písmo se uloží na server, jakmile vyberete soubor. Chcete-li ho použít, vyberte ho výše.",
       "console_background": "Pozadí konzole",
       "background_type": "Pozadí",

@@ -1089,7 +1089,7 @@
 						<FontPicker
 							slot="heading"
 							bind:value={form.values.fontHeading}
-							google={fontSource === 'google'}
+							source={fontSource === 'google' ? 'google' : 'local'}
 							category={fontCategory === 'all' ? '' : fontCategory}
 							{canEdit}
 							disabled={!canEdit}
@@ -1098,7 +1098,7 @@
 						<FontPicker
 							slot="body"
 							bind:value={form.values.fontBody}
-							google={fontSource === 'google'}
+							source={fontSource === 'google' ? 'google' : 'local'}
 							category={fontCategory === 'all' ? '' : fontCategory}
 							{canEdit}
 							disabled={!canEdit}

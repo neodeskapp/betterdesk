@@ -1328,6 +1328,7 @@
       "font_source": "Tipos de letra a pesquisar",
       "font_category": "Estilo do tipo de letra",
       "font_none": "Nenhum tipo de letra corresponde.",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "O tipo de letra é guardado no servidor assim que escolher o ficheiro. Selecione-o acima para o utilizar.",
       "console_background": "Fundo da consola",
       "background_type": "Fundo",

@@ -1328,6 +1328,7 @@
       "font_source": "Czcionki do przeszukania",
       "font_category": "Styl czcionki",
       "font_none": "Brak pasujących czcionek.",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "Czcionka jest zapisywana na serwerze zaraz po wybraniu pliku. Aby jej użyć, należy ją wybrać powyżej.",
       "console_background": "Tło konsoli",
       "background_type": "Tło",

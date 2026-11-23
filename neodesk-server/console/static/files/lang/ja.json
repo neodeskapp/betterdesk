@@ -1328,6 +1328,7 @@
       "font_source": "検索するフォント",
       "font_category": "フォントのスタイル",
       "font_none": "一致するフォントはありません。",
+      "font_download_failed": "{family} could not be downloaded to this server, so it is not used. Check that the server can reach fonts.googleapis.com, or upload the font under Upload custom.",
       "font_upload_effect": "ファイルを選択するとすぐにフォントがサーバーに保存されます。使うには上で選択してください。",
       "console_background": "コンソールの背景",
       "background_type": "背景",
