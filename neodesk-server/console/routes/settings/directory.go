@@ -51,6 +51,25 @@ func tested(w http.ResponseWriter, r *http.Request, result *goapi.Object, fallba
 	kit.JSON(w, r, http.StatusOK, result.Get("data"))
 }
 
+// directoryCall runs a save or a test of the server's directory or single
+// sign-on settings. It returns {success: true, data} or {success: false,
+// error} with the reason the server gave for a refusal ("LDAP host is
+// required"), not only the status of the call.
+func (g *general) directoryCall(r *http.Request, method, path string, body any) *goapi.Object {
+	resp, err := g.d.GoAPI.Request(r.Context(), method, path, goapi.Body(body))
+	if err != nil {
+		if reason, ok := goapi.Dig(goapi.AsError(err).Data(), "error").(string); ok && reason != "" {
+			return goapi.NewObject("success", false, "error", reason)
+		}
+		return goapi.NewObject("success", false, "error", err.Error())
+	}
+	data := resp.Data()
+	if o, ok := data.(*goapi.Object); ok && o != nil && o.Has("error") {
+		return goapi.NewObject("success", false, "error", o.Get("error"))
+	}
+	return goapi.NewObject("success", true, "data", data)
+}
+
 // getLDAP answers GET /api/settings/ldap.
 func (g *general) getLDAP(w http.ResponseWriter, r *http.Request) {
 	passOn(w, r, g.d.GoAPI.GetLDAPConfig(r.Context()), "Failed to load LDAP config")
@@ -95,14 +114,14 @@ func (g *general) saveLDAP(w http.ResponseWriter, r *http.Request) {
 	if refuseNothingToSave(w, r, jsreq.Body(r), ldapFields...) {
 		return
 	}
-	result := g.d.GoAPI.SaveLDAPConfig(r.Context(), jsreq.Body(r))
+	result := g.directoryCall(r, http.MethodPut, "/auth/ldap/config", jsreq.Body(r))
 	g.saved(w, r, result, "Failed to save LDAP config", "ldap_config_updated", "Updated LDAP configuration", "Save LDAP config error")
 }
 
 // testLDAP answers POST /api/settings/ldap/test: the server tries to
 // connect with the settings of the body.
 func (g *general) testLDAP(w http.ResponseWriter, r *http.Request) {
-	tested(w, r, g.d.GoAPI.TestLDAPConnection(r.Context(), jsreq.Body(r)), "Connection test failed")
+	tested(w, r, g.directoryCall(r, http.MethodPost, "/auth/ldap/test", jsreq.Body(r)), "Connection test failed")
 }
 
 // getOIDC answers GET /api/settings/oidc.
@@ -125,12 +144,12 @@ func (g *general) saveOIDC(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	result := g.d.GoAPI.SaveOIDCConfig(r.Context(), body)
+	result := g.directoryCall(r, http.MethodPut, "/auth/oidc/config", body)
 	g.saved(w, r, result, "Failed to save OIDC config", "oidc_config_updated", "Updated OIDC configuration", "Save OIDC config error")
 }
 
 // testOIDC answers POST /api/settings/oidc/test: the server fetches the
 // discovery document of the issuer in the body.
 func (g *general) testOIDC(w http.ResponseWriter, r *http.Request) {
-	tested(w, r, g.d.GoAPI.TestOIDCDiscovery(r.Context(), jsreq.Body(r)), "Discovery test failed")
+	tested(w, r, g.directoryCall(r, http.MethodPost, "/auth/oidc/test", jsreq.Body(r)), "Discovery test failed")
 }

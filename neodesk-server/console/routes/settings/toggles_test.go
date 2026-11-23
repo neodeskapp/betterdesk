@@ -261,7 +261,8 @@ func TestDirectoryAndSingleSignOn(t *testing.T) {
 		t.Errorf("audit %s", row)
 	}
 	s.API.On("PUT /api/auth/ldap/config", http.StatusBadRequest, `{"error":"LDAP host is required"}`)
-	if res := admin.Do("PUT", "/api/settings/ldap", `{"enabled":true}`); res.Status != 400 || res.Body != `{"success":false,"error":"Request failed with status code 400"}` {
+	// the server's reason, not the status of the call (L346)
+	if res := admin.Do("PUT", "/api/settings/ldap", `{"enabled":true}`); res.Status != 400 || res.Body != `{"success":false,"error":"LDAP host is required"}` {
 		t.Errorf("ldap refused: %d %s", res.Status, res.Body)
 	}
 	s.API.On("POST /api/auth/ldap/test", http.StatusOK, `{"success":false,"error":"dial tcp: refused"}`)
@@ -273,8 +274,18 @@ func TestDirectoryAndSingleSignOn(t *testing.T) {
 		t.Errorf("ldap test: %s", res.Body)
 	}
 	s.API.On("POST /api/auth/oidc/test", http.StatusBadRequest, `{"error":"Issuer URL is required"}`)
-	if res := admin.Do("POST", "/api/settings/oidc/test", `{}`); res.Status != 200 || res.Body != `{"success":false,"error":"Request failed with status code 400"}` {
+	if res := admin.Do("POST", "/api/settings/oidc/test", `{}`); res.Status != 200 || res.Body != `{"success":false,"error":"Issuer URL is required"}` {
 		t.Errorf("oidc test: %d %s", res.Status, res.Body)
+	}
+	s.API.Calls()
+
+	s.API.On("PUT /api/auth/oidc/config", http.StatusBadRequest, `{"error":"Client ID is required when OIDC is enabled"}`)
+	if res := admin.Do("PUT", "/api/settings/oidc", `{"enabled":false}`); res.Status != 400 || res.Body != `{"success":false,"error":"Client ID is required when OIDC is enabled"}` {
+		t.Errorf("oidc refused: %d %s", res.Status, res.Body)
+	}
+	s.API.On("POST /api/auth/ldap/test", http.StatusBadRequest, `{"error":"LDAP host is required"}`)
+	if res := admin.Do("POST", "/api/settings/ldap/test", `{}`); res.Status != 200 || res.Body != `{"success":false,"error":"LDAP host is required"}` {
+		t.Errorf("ldap test refused: %d %s", res.Status, res.Body)
 	}
 	s.API.Calls()
 
