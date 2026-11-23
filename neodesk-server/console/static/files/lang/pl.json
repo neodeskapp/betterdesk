@@ -1439,6 +1439,7 @@
     "backup_tab": {
       "create_title": "Utwórz kopię zapasową",
       "create_note": "Jeden plik .tar.gz z danymi konsoli, kluczami serwera, plikiem środowiska, przesłanymi obrazami i bazą danych serwera. Można go przywrócić na tym lub nowym serwerze.",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "Pobrano {name}.",
       "retention_hint": "Starsze kopie są usuwane po utworzeniu każdej nowej.",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

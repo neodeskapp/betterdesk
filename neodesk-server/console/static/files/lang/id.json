@@ -1445,6 +1445,7 @@
     "backup_tab": {
       "create_title": "Buat cadangan",
       "create_note": "Satu file .tar.gz berisi data konsol, kunci server, file lingkungan, gambar yang diunggah, dan basis data server. Anda dapat memulihkannya di server ini atau server baru.",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "{name} telah diunduh.",
       "retention_hint": "Cadangan lama dihapus setelah setiap cadangan baru.",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

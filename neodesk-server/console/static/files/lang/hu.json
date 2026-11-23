@@ -1445,6 +1445,7 @@
     "backup_tab": {
       "create_title": "Biztonsági mentés készítése",
       "create_note": "Egyetlen .tar.gz fájl a konzol adataival, a szerverkulcsokkal, a környezeti fájllal, a feltöltött képekkel és a szerver adatbázisával. Visszaállíthatja ezen vagy egy új szerveren.",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "Letöltve: {name}.",
       "retention_hint": "A régebbi biztonsági mentések minden új mentés után törlődnek.",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

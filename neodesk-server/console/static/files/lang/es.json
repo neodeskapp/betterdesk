@@ -1439,6 +1439,7 @@
     "backup_tab": {
       "create_title": "Crear una copia de seguridad",
       "create_note": "Un único archivo .tar.gz con los datos de la consola, las claves del servidor, el archivo de entorno, las imágenes subidas y la base de datos del servidor. Puede restaurarlo en este servidor o en uno nuevo.",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "Se ha descargado {name}.",
       "retention_hint": "Las copias más antiguas se eliminan tras cada copia nueva.",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

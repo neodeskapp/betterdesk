@@ -1445,6 +1445,7 @@
     "backup_tab": {
       "create_title": "สร้างข้อมูลสำรอง",
       "create_note": "ไฟล์ .tar.gz ไฟล์เดียวที่มีข้อมูลคอนโซล คีย์เซิร์ฟเวอร์ ไฟล์สภาพแวดล้อม รูปภาพที่อัปโหลด และฐานข้อมูลเซิร์ฟเวอร์ คุณกู้คืนได้บนเซิร์ฟเวอร์นี้หรือเซิร์ฟเวอร์ใหม่",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "ดาวน์โหลด {name} แล้ว",
       "retention_hint": "ข้อมูลสำรองที่เก่ากว่าจะถูกลบหลังจากสร้างข้อมูลสำรองใหม่แต่ละครั้ง",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

@@ -1445,6 +1445,7 @@
     "backup_tab": {
       "create_title": "Tạo bản sao lưu",
       "create_note": "Một tệp .tar.gz chứa dữ liệu bảng điều khiển, khóa máy chủ, tệp môi trường, ảnh đã tải lên và cơ sở dữ liệu máy chủ. Bạn có thể khôi phục trên máy chủ này hoặc máy chủ mới.",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "Đã tải xuống {name}.",
       "retention_hint": "Các bản sao lưu cũ hơn sẽ bị xóa sau mỗi bản mới.",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

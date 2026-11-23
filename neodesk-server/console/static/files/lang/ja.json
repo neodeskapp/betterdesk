@@ -1439,6 +1439,7 @@
     "backup_tab": {
       "create_title": "バックアップを作成",
       "create_note": "コンソールのデータ、サーバーの鍵、環境ファイル、アップロードした画像、サーバーのデータベースを含む 1 つの .tar.gz ファイルです。このサーバーまたは新しいサーバーで復元できます。",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "{name} をダウンロードしました。",
       "retention_hint": "新しいバックアップを作成するたびに古いバックアップは削除されます。",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

@@ -1445,6 +1445,7 @@
     "backup_tab": {
       "create_title": "Creați o copie de rezervă",
       "create_note": "Un singur fișier .tar.gz cu datele consolei, cheile serverului, fișierul de mediu, imaginile încărcate și baza de date a serverului. Îl puteți restaura pe acest server sau pe unul nou.",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "S-a descărcat {name}.",
       "retention_hint": "Copiile mai vechi sunt șterse după fiecare copie nouă.",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

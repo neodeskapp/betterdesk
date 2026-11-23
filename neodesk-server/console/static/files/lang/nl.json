@@ -1439,6 +1439,7 @@
     "backup_tab": {
       "create_title": "Een back-up maken",
       "create_note": "Eén .tar.gz-bestand met de consolegegevens, serversleutels, het omgevingsbestand, geüploade afbeeldingen en de serverdatabase. U kunt het terugzetten op deze of een nieuwe server.",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "{name} gedownload.",
       "retention_hint": "Oudere back-ups worden na elke nieuwe verwijderd.",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

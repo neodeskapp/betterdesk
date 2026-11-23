@@ -1439,6 +1439,7 @@
     "backup_tab": {
       "create_title": "백업 만들기",
       "create_note": "콘솔 데이터, 서버 키, 환경 파일, 업로드한 이미지, 서버 데이터베이스가 담긴 .tar.gz 파일 하나입니다. 이 서버나 새 서버에서 복원할 수 있습니다.",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "{name}을(를) 다운로드했습니다.",
       "retention_hint": "새 백업을 만들 때마다 오래된 백업이 삭제됩니다.",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

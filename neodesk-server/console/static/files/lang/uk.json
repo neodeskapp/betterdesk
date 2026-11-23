@@ -1445,6 +1445,7 @@
     "backup_tab": {
       "create_title": "Створити резервну копію",
       "create_note": "Один файл .tar.gz із даними консолі, ключами сервера, файлом середовища, завантаженими зображеннями та базою даних сервера. Його можна відновити на цьому або новому сервері.",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "Завантажено {name}.",
       "retention_hint": "Старіші резервні копії видаляються після кожної нової.",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

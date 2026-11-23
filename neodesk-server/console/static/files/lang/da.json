@@ -1445,6 +1445,7 @@
     "backup_tab": {
       "create_title": "Opret en sikkerhedskopi",
       "create_note": "Én .tar.gz-fil med konsoldata, servernøgler, miljøfil, uploadede billeder og serverdatabasen. Du kan gendanne den på denne eller en ny server.",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "{name} er downloadet.",
       "retention_hint": "Ældre sikkerhedskopier slettes efter hver ny.",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

@@ -1445,6 +1445,7 @@
     "backup_tab": {
       "create_title": "Luo varmuuskopio",
       "create_note": "Yksi .tar.gz-tiedosto, jossa ovat konsolin tiedot, palvelimen avaimet, ympäristötiedosto, ladatut kuvat ja palvelimen tietokanta. Voit palauttaa sen tälle tai uudelle palvelimelle.",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "{name} ladattu.",
       "retention_hint": "Vanhemmat varmuuskopiot poistetaan jokaisen uuden jälkeen.",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

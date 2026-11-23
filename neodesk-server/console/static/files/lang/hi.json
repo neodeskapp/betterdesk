@@ -1445,6 +1445,7 @@
     "backup_tab": {
       "create_title": "बैकअप बनाएँ",
       "create_note": "एक .tar.gz फ़ाइल जिसमें कंसोल डेटा, सर्वर कुंजियाँ, एनवायरनमेंट फ़ाइल, अपलोड की गई तस्वीरें और सर्वर डेटाबेस होते हैं। आप इसे इसी या किसी नए सर्वर पर रीस्टोर कर सकते हैं।",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "{name} डाउनलोड हो गई।",
       "retention_hint": "हर नए बैकअप के बाद पुराने बैकअप हटा दिए जाते हैं।",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

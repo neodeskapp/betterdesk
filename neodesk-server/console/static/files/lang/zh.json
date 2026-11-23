@@ -1439,6 +1439,7 @@
     "backup_tab": {
       "create_title": "创建备份",
       "create_note": "一个 .tar.gz 文件，包含控制台数据、服务器密钥、环境文件、上传的图片和服务器数据库。可在此服务器或新服务器上恢复。",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "已下载 {name}。",
       "retention_hint": "每次创建新备份后，会删除较旧的备份。",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

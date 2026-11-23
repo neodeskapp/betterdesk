@@ -1439,6 +1439,7 @@
     "backup_tab": {
       "create_title": "Sicherung erstellen",
       "create_note": "Eine .tar.gz-Datei mit den Konsolendaten, Serverschlüsseln, der Umgebungsdatei, hochgeladenen Bildern und der Serverdatenbank. Sie können sie auf diesem oder einem neuen Server wiederherstellen.",
+      "super_admin_only": "Nur ein Super-Admin kann vollständige Sicherungen herunterladen, planen oder wiederherstellen, weil eine Sicherung alle Geheimnisse des Servers enthält.",
       "downloaded": "{name} heruntergeladen.",
       "retention_hint": "Ältere Sicherungen werden nach jeder neuen gelöscht.",
       "retention_error": "Geben Sie eine ganze Zahl von 1 bis 365 Archiven ein.",

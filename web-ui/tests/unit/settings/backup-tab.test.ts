@@ -64,4 +64,16 @@ describe('Backup tab', () => {
 		expect(screen.queryByLabelText('backup.smb_host')).toBeNull();
 		expect(requests.filter((url) => url.includes('/backup/smb'))).toEqual([]);
 	});
+
+	test('a server admin with server.config sees why the full backup actions are missing', async () => {
+		// The server lets only super admins download, schedule or restore full backups (L387)
+		session.isSuperAdmin = false;
+		session.permissions = ['server.config'];
+		render(BackupTab);
+		expect(await screen.findByText('settings.backup_tab.super_admin_only')).toBeTruthy();
+		expect(document.getElementById('backup-download-btn')).toBeNull();
+		expect(document.getElementById('scheduled-backup-panel')).toBeNull();
+		expect(document.getElementById('backup-restore')).toBeNull();
+		session.permissions = [];
+	});
 });

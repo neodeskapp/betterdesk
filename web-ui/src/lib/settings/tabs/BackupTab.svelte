@@ -37,7 +37,7 @@
 	} from '#lib/settings-b/backup.ts';
 	import TabCols from '#lib/settings-b/TabCols.svelte';
 	import { onRefresh } from '#lib/shell/page.svelte.ts';
-	import { can } from '#lib/state/session.svelte.ts';
+	import { can, session } from '#lib/state/session.svelte.ts';
 	import BooleanStatus from '#lib/ui/BooleanStatus.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
@@ -62,6 +62,8 @@
 	import { wholeInRange } from '../numbers.ts';
 
 	const allowed = can('server.config');
+	/** Full backups hold every secret of the server: only super admins download, schedule or restore them */
+	const fullBackups = $derived(session.isSuperAdmin);
 
 	/** Sample values in empty fields (paths and host names, the same in every language) */
 	const SAMPLE = { path: '/mnt/backups' } as const;
@@ -373,8 +375,10 @@
 			<nav class="settings-toc" aria-label={t('settings.page.on_this_page')}>
 				<ul class="toc">
 					<li><a href="#backup-create">{t('settings.backup_tab.create_title')}</a></li>
-					<li><a href="#scheduled-backup-panel">{t('backup.schedule_title')}</a></li>
-					<li><a href="#backup-restore">{t('settings.backup_tab.restore_title')}</a></li>
+					{#if fullBackups}
+						<li><a href="#scheduled-backup-panel">{t('backup.schedule_title')}</a></li>
+						<li><a href="#backup-restore">{t('settings.backup_tab.restore_title')}</a></li>
+					{/if}
 				</ul>
 			</nav>
 
@@ -383,188 +387,199 @@
 					<h2 id="backup-create-title">{t('settings.backup_tab.create_title')}</h2>
 					<p class="section-note">{t('settings.backup_tab.create_note')}</p>
 					<Notice tone="warning" message={t('backup.security_warning')} />
-					<div class="settings-inline-controls">
-						<Button
-							id="backup-download-btn"
-							variant={anyDirty ? 'secondary' : 'primary'}
-							icon="download"
-							busy={downloading}
-							onclick={download}>{downloading ? t('backup.creating') : t('backup.download')}</Button
-						>
-						<FormStatus message={downloadLine.message} tone={downloadLine.tone} />
-					</div>
+					{#if !fullBackups}
+						<Notice id="backup-super-admin-only" message={t('settings.backup_tab.super_admin_only')} />
+					{:else}
+						<div class="settings-inline-controls">
+							<Button
+								id="backup-download-btn"
+								variant={anyDirty ? 'secondary' : 'primary'}
+								icon="download"
+								busy={downloading}
+								onclick={download}>{downloading ? t('backup.creating') : t('backup.download')}</Button
+							>
+							<FormStatus message={downloadLine.message} tone={downloadLine.tone} />
+						</div>
+					{/if}
 				</section>
 
-				<div class="settings-stack">
-					<section class="section" id="scheduled-backup-panel" aria-labelledby="scheduled-backup-title">
-						<h2 id="scheduled-backup-title">{t('backup.schedule_title')}</h2>
-						<p class="section-note">{t('settings.backup_tab.schedule_note')}</p>
-						<form class="form-column" id={schedule.id} onsubmit={schedule.onsubmit} novalidate>
-							<Switch
-								id="scheduled-backup-enabled"
-								label={t('backup.schedule_enabled')}
-								hint={t('settings.backup_tab.schedule_enabled_hint')}
-								bind:checked={schedule.values.enabled}
-								{...showWhenControl('scheduled-backup-details', schedule.values.enabled)}
-							/>
-							<ShowWhen
-								id="scheduled-backup-details"
-								when={schedule.values.enabled}
-								class="settings-subfields"
-							>
-								<Field id="scheduled-backup-interval" label={t('backup.schedule_interval')} width="medium">
-									{#snippet children(f)}
-										<Select {...f} options={intervalOptions} bind:value={schedule.values.intervalHours} />
-									{/snippet}
-								</Field>
-								<Field
-									id="scheduled-backup-retention"
-									label={t('backup.schedule_retention')}
-									hint={t('settings.backup_tab.retention_hint')}
-									error={schedule.errors.retentionCount}
-									width="short"
+				{#if fullBackups}
+					<div class="settings-stack">
+						<section class="section" id="scheduled-backup-panel" aria-labelledby="scheduled-backup-title">
+							<h2 id="scheduled-backup-title">{t('backup.schedule_title')}</h2>
+							<p class="section-note">{t('settings.backup_tab.schedule_note')}</p>
+							<form class="form-column" id={schedule.id} onsubmit={schedule.onsubmit} novalidate>
+								<Switch
+									id="scheduled-backup-enabled"
+									label={t('backup.schedule_enabled')}
+									hint={t('settings.backup_tab.schedule_enabled_hint')}
+									bind:checked={schedule.values.enabled}
+									{...showWhenControl('scheduled-backup-details', schedule.values.enabled)}
+								/>
+								<ShowWhen
+									id="scheduled-backup-details"
+									when={schedule.values.enabled}
+									class="settings-subfields"
 								>
-									{#snippet children(f)}
-										<Input
-											{...f}
-											type="number"
-											min="1"
-											max="365"
-											bind:value={schedule.values.retentionCount}
-										/>
-									{/snippet}
-								</Field>
-								<Field id="scheduled-backup-destination-type" label={t('backup.schedule_destination')}>
-									{#snippet children(f)}
-										<Select
-											{...f}
-											options={destinationOptions}
-											bind:value={schedule.values.destinationType}
-											aria-controls="scheduled-backup-path-group"
-										/>
-									{/snippet}
-								</Field>
-								<ShowWhen id="scheduled-backup-path-group" when={schedule.values.destinationType === 'path'}>
+									<Field id="scheduled-backup-interval" label={t('backup.schedule_interval')} width="medium">
+										{#snippet children(f)}
+											<Select {...f} options={intervalOptions} bind:value={schedule.values.intervalHours} />
+										{/snippet}
+									</Field>
 									<Field
-										id="scheduled-backup-path"
-										label={t('backup.schedule_destination_path_label')}
-										hint={t('backup.schedule_destination_path_hint')}
-										width="host"
+										id="scheduled-backup-retention"
+										label={t('backup.schedule_retention')}
+										hint={t('settings.backup_tab.retention_hint')}
+										error={schedule.errors.retentionCount}
+										width="short"
 									>
 										{#snippet children(f)}
 											<Input
 												{...f}
-												class="mono"
-												placeholder={SAMPLE.path}
-												spellcheck="false"
-												bind:value={schedule.values.destinationPath}
+												type="number"
+												min="1"
+												max="365"
+												bind:value={schedule.values.retentionCount}
 											/>
 										{/snippet}
 									</Field>
+									<Field id="scheduled-backup-destination-type" label={t('backup.schedule_destination')}>
+										{#snippet children(f)}
+											<Select
+												{...f}
+												options={destinationOptions}
+												bind:value={schedule.values.destinationType}
+												aria-controls="scheduled-backup-path-group"
+											/>
+										{/snippet}
+									</Field>
+									<ShowWhen
+										id="scheduled-backup-path-group"
+										when={schedule.values.destinationType === 'path'}
+									>
+										<Field
+											id="scheduled-backup-path"
+											label={t('backup.schedule_destination_path_label')}
+											hint={t('backup.schedule_destination_path_hint')}
+											width="host"
+										>
+											{#snippet children(f)}
+												<Input
+													{...f}
+													class="mono"
+													placeholder={SAMPLE.path}
+													spellcheck="false"
+													bind:value={schedule.values.destinationPath}
+												/>
+											{/snippet}
+										</Field>
+									</ShowWhen>
 								</ShowWhen>
-							</ShowWhen>
-							<FormStatus message={scheduleLine.message} tone={scheduleLine.tone} />
-							<p class="field-effect">{t('settings.backup_tab.schedule_effect')}</p>
-							<SaveBar form={schedule} label={t('backup.schedule_save')}>
-								{#if schedule.values.enabled}
-									<Button busy={testing} onclick={testDestination}
-										>{t('backup.schedule_test_destination')}</Button
-									>
-									<Button busy={running} onclick={runNow}
-										>{running ? t('backup.creating') : t('settings.backup_tab.run_now')}</Button
-									>
-								{/if}
-							</SaveBar>
-						</form>
-					</section>
-				</div>
+								<FormStatus message={scheduleLine.message} tone={scheduleLine.tone} />
+								<p class="field-effect">{t('settings.backup_tab.schedule_effect')}</p>
+								<SaveBar form={schedule} label={t('backup.schedule_save')}>
+									{#if schedule.values.enabled}
+										<Button busy={testing} onclick={testDestination}
+											>{t('backup.schedule_test_destination')}</Button
+										>
+										<Button busy={running} onclick={runNow}
+											>{running ? t('backup.creating') : t('settings.backup_tab.run_now')}</Button
+										>
+									{/if}
+								</SaveBar>
+							</form>
+						</section>
+					</div>
+				{/if}
 			</div>
 
-			<section class="danger-zone" id="backup-restore" aria-labelledby="backup-restore-title">
-				<h2 id="backup-restore-title">{t('settings.backup_tab.restore_title')}</h2>
-				<p class="section-note">{t('settings.backup_tab.restore_note')}</p>
-				<div class="form-column restore">
-					<Field
-						id="restore-file-input"
-						label={t('settings.backup_tab.restore_file')}
-						hint={t('settings.backup_tab.restore_file_hint')}
-					>
-						{#snippet children(f)}
-							<FilePicker
-								{...f}
-								accept=".gz,.tar.gz,.json"
-								aria-controls="restore-options"
-								bind:files
-								onchange={fileChosen}
-							/>
-						{/snippet}
-					</Field>
-					{#if hint}
-						<p class="restore-hint" role="status">{t(hint)}</p>
-					{/if}
-					<fieldset id="restore-options" class="restore-options" hidden={kind !== 'archive'}>
-						<legend>{t('settings.backup_tab.restore_what')}</legend>
-						{#each RESTORE_PARTS as part (part.field)}
-							<Checkbox
-								id={part.id}
-								label={t(part.label)}
-								hint={t(part.desc)}
-								checked={picked.has(part.field)}
-								onchange={(e) => togglePart(part.field, e.currentTarget.checked)}
-							/>
-						{/each}
-					</fieldset>
-					{#if kind === 'json'}
-						<Notice message={t('settings.backup_tab.restore_json_note')} />
-					{/if}
-					{#if kind}
-						<div class="settings-inline-controls">
-							<Button
-								id="restore-start-btn"
-								variant="danger-quiet"
-								disabled={!startable}
-								busy={restoring}
-								onclick={() => (confirming = true)}
-								>{restoring
-									? t('settings.backup_tab.restoring')
-									: t('settings.backup_tab.restore_button')}</Button
-							>
-							<FormStatus
-								message={fileError || restoreLine.message}
-								tone={fileError ? 'error' : restoreLine.tone}
-							/>
-						</div>
-					{/if}
-					{#if result}
-						<div class="restore-result">
-							{#if result.restored.length || result.skipped.length || result.backupDate}
-								<dl class="facts">
-									{#if result.restored.length}
-										<dt>{t('backup.restored')}</dt>
-										<dd>{result.restored.map((p) => restoredPartLabel(p, t)).join(', ')}</dd>
-									{/if}
-									{#if result.skipped.length}
-										<dt>{t('backup.skipped')}</dt>
-										<dd>{result.skipped.map((p) => restoredPartLabel(p, t)).join(', ')}</dd>
-									{/if}
-									{#if result.backupDate}
-										<dt>{t('backup.backup_date')}</dt>
-										<dd><Time value={result.backupDate} relative={false} /></dd>
-									{/if}
-								</dl>
-							{/if}
-							{#if result.warnings.length}
-								<Notice tone="warning">
-									{#each result.warnings as w, i (i)}<p>{w}</p>{/each}
-								</Notice>
-							{/if}
-							{#if result.requiresRestart}
-								<Notice tone="warning" message={t('backup.restart_required')} />
-							{/if}
-						</div>
-					{/if}
-				</div>
-			</section>
+			{#if fullBackups}
+				<section class="danger-zone" id="backup-restore" aria-labelledby="backup-restore-title">
+					<h2 id="backup-restore-title">{t('settings.backup_tab.restore_title')}</h2>
+					<p class="section-note">{t('settings.backup_tab.restore_note')}</p>
+					<div class="form-column restore">
+						<Field
+							id="restore-file-input"
+							label={t('settings.backup_tab.restore_file')}
+							hint={t('settings.backup_tab.restore_file_hint')}
+						>
+							{#snippet children(f)}
+								<FilePicker
+									{...f}
+									accept=".gz,.tar.gz,.json"
+									aria-controls="restore-options"
+									bind:files
+									onchange={fileChosen}
+								/>
+							{/snippet}
+						</Field>
+						{#if hint}
+							<p class="restore-hint" role="status">{t(hint)}</p>
+						{/if}
+						<fieldset id="restore-options" class="restore-options" hidden={kind !== 'archive'}>
+							<legend>{t('settings.backup_tab.restore_what')}</legend>
+							{#each RESTORE_PARTS as part (part.field)}
+								<Checkbox
+									id={part.id}
+									label={t(part.label)}
+									hint={t(part.desc)}
+									checked={picked.has(part.field)}
+									onchange={(e) => togglePart(part.field, e.currentTarget.checked)}
+								/>
+							{/each}
+						</fieldset>
+						{#if kind === 'json'}
+							<Notice message={t('settings.backup_tab.restore_json_note')} />
+						{/if}
+						{#if kind}
+							<div class="settings-inline-controls">
+								<Button
+									id="restore-start-btn"
+									variant="danger-quiet"
+									disabled={!startable}
+									busy={restoring}
+									onclick={() => (confirming = true)}
+									>{restoring
+										? t('settings.backup_tab.restoring')
+										: t('settings.backup_tab.restore_button')}</Button
+								>
+								<FormStatus
+									message={fileError || restoreLine.message}
+									tone={fileError ? 'error' : restoreLine.tone}
+								/>
+							</div>
+						{/if}
+						{#if result}
+							<div class="restore-result">
+								{#if result.restored.length || result.skipped.length || result.backupDate}
+									<dl class="facts">
+										{#if result.restored.length}
+											<dt>{t('backup.restored')}</dt>
+											<dd>{result.restored.map((p) => restoredPartLabel(p, t)).join(', ')}</dd>
+										{/if}
+										{#if result.skipped.length}
+											<dt>{t('backup.skipped')}</dt>
+											<dd>{result.skipped.map((p) => restoredPartLabel(p, t)).join(', ')}</dd>
+										{/if}
+										{#if result.backupDate}
+											<dt>{t('backup.backup_date')}</dt>
+											<dd><Time value={result.backupDate} relative={false} /></dd>
+										{/if}
+									</dl>
+								{/if}
+								{#if result.warnings.length}
+									<Notice tone="warning">
+										{#each result.warnings as w, i (i)}<p>{w}</p>{/each}
+									</Notice>
+								{/if}
+								{#if result.requiresRestart}
+									<Notice tone="warning" message={t('backup.restart_required')} />
+								{/if}
+							</div>
+						{/if}
+					</div>
+				</section>
+			{/if}
 		{/snippet}
 
 		{#snippet side()}

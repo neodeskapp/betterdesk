@@ -1445,6 +1445,7 @@
     "backup_tab": {
       "create_title": "Yedek oluştur",
       "create_note": "Konsol verilerini, sunucu anahtarlarını, ortam dosyasını, yüklenen resimleri ve sunucu veritabanını içeren tek bir .tar.gz dosyası. Bunu bu sunucuda veya yeni bir sunucuda geri yükleyebilirsiniz.",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "{name} indirildi.",
       "retention_hint": "Her yeni yedekten sonra eski yedekler silinir.",
       "retention_error": "Enter a whole number of archives from 1 to 365.",

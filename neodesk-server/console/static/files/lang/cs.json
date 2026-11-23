@@ -1439,6 +1439,7 @@
     "backup_tab": {
       "create_title": "Vytvořit zálohu",
       "create_note": "Jeden soubor .tar.gz s daty konzole, klíči serveru, souborem prostředí, nahranými obrázky a databází serveru. Můžete ho obnovit na tomto nebo na novém serveru.",
+      "super_admin_only": "Only a super admin can download, schedule or restore full backups, because a backup holds every secret of the server.",
       "downloaded": "Staženo: {name}.",
       "retention_hint": "Starší zálohy se po každé nové záloze smažou.",
       "retention_error": "Enter a whole number of archives from 1 to 365.",
