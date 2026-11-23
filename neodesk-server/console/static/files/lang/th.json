@@ -1264,6 +1264,7 @@
       "mesh_group_add_title": "เพิ่มกลุ่ม mesh",
       "mesh_group_name_hint": "ชื่อที่ผู้คนเห็นสำหรับกลุ่มนี้",
       "mesh_group_id_hint": "ชื่อสั้นที่ไม่มีช่องว่าง เช่น office เปลี่ยนภายหลังไม่ได้",
+      "mesh_group_id_invalid": "Use letters, digits, dots, hyphens and underscores, without spaces.",
       "mesh_group_exists": "มีกลุ่มที่ใช้ ID นี้อยู่แล้ว",
       "mesh_group_added": "เพิ่มกลุ่ม mesh แล้ว",
       "mesh_install_title": "ติดตั้ง MeshAgent บนอุปกรณ์",

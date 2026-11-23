@@ -1264,6 +1264,7 @@
       "mesh_group_add_title": "Tambah grup mesh",
       "mesh_group_name_hint": "Nama yang dilihat orang untuk grup ini.",
       "mesh_group_id_hint": "Nama pendek tanpa spasi, misalnya kantor. Tidak dapat diubah nanti.",
+      "mesh_group_id_invalid": "Use letters, digits, dots, hyphens and underscores, without spaces.",
       "mesh_group_exists": "Grup dengan ID ini sudah ada.",
       "mesh_group_added": "Grup mesh ditambahkan.",
       "mesh_install_title": "Pasang MeshAgent di perangkat",

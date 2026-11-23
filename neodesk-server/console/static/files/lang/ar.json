@@ -1265,6 +1265,7 @@
       "mesh_group_add_title": "إضافة مجموعة mesh",
       "mesh_group_name_hint": "الاسم الذي يراه الناس لهذه المجموعة.",
       "mesh_group_id_hint": "اسم قصير بدون مسافات، مثل office. لا يمكن تغييره لاحقًا.",
+      "mesh_group_id_invalid": "Use letters, digits, dots, hyphens and underscores, without spaces.",
       "mesh_group_exists": "توجد مجموعة بهذا المعرّف بالفعل.",
       "mesh_group_added": "أُضيفت مجموعة mesh.",
       "mesh_install_title": "تثبيت MeshAgent على جهاز",

@@ -1258,6 +1258,7 @@
       "mesh_group_add_title": "mesh グループを追加",
       "mesh_group_name_hint": "このグループに表示される名前です。",
       "mesh_group_id_hint": "スペースなしの短い名前です (例: office)。後から変更できません。",
+      "mesh_group_id_invalid": "Use letters, digits, dots, hyphens and underscores, without spaces.",
       "mesh_group_exists": "この ID のグループは既にあります。",
       "mesh_group_added": "mesh グループを追加しました。",
       "mesh_install_title": "デバイスに MeshAgent をインストール",

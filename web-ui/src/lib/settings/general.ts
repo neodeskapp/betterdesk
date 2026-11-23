@@ -47,6 +47,11 @@ export function connectionFacts(d: ConnectionMode): ConnectionFacts {
 	};
 }
 
+/** A mesh group ID as the hint asks for it: a short name without spaces (BUGS L384) */
+export function meshGroupIdValid(id: string): boolean {
+	return /^[A-Za-z0-9._-]{1,64}$/.test(id);
+}
+
 /** "host:port", "[v6]:port" or a URL to { host, port } */
 export function splitHostPort(value: string, fallbackPort: number): { host: string; port: number } {
 	const v = String(value || '')

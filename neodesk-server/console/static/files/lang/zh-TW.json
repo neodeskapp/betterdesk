@@ -1262,6 +1262,7 @@
       "mesh_group_add_title": "新增 mesh 群組",
       "mesh_group_name_hint": "此群組顯示的名稱。",
       "mesh_group_id_hint": "不含空格的簡短名稱，例如 office。之後無法變更。",
+      "mesh_group_id_invalid": "Use letters, digits, dots, hyphens and underscores, without spaces.",
       "mesh_group_exists": "已有使用此 ID 的群組。",
       "mesh_group_added": "已新增 mesh 群組。",
       "mesh_install_title": "在裝置上安裝 MeshAgent",

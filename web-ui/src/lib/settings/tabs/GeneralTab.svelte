@@ -79,6 +79,7 @@
 		GENERAL_PARTS,
 		connectionFacts,
 		endpointSourceLabel,
+		meshGroupIdValid,
 		savedLine,
 		splitHostPort,
 		type GeneralPart
@@ -445,6 +446,11 @@
 			(name ? addIdEl : addNameEl)?.focus();
 			return;
 		}
+		if (!meshGroupIdValid(id)) {
+			addStatus = { message: t('settings.general.mesh_group_id_invalid'), tone: 'error' };
+			addIdEl?.focus();
+			return;
+		}
 		if (groups.some((g) => g.id === id)) {
 			addStatus = { message: t('settings.general.mesh_group_exists'), tone: 'error' };
 			addIdEl?.focus();
@@ -555,10 +561,13 @@
 		<MenuItem icon="rename" onselect={() => void renameGroup(g)}
 			>{t('settings.general.mesh_group_rename')}</MenuItem
 		>
-		<MenuDivider />
-		<MenuItem icon="delete" danger onselect={() => void removeGroup(g)}
-			>{t('settings.general.mesh_group_remove')}</MenuItem
-		>
+		<!-- The default group stays: .msh files handed out name it (BUGS L384) -->
+		{#if g.id !== 'default'}
+			<MenuDivider />
+			<MenuItem icon="delete" danger onselect={() => void removeGroup(g)}
+				>{t('settings.general.mesh_group_remove')}</MenuItem
+			>
+		{/if}
 	</MenuButton>
 {/snippet}
 

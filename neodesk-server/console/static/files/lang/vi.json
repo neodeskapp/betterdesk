@@ -1264,6 +1264,7 @@
       "mesh_group_add_title": "Thêm nhóm mesh",
       "mesh_group_name_hint": "Tên mọi người thấy cho nhóm này.",
       "mesh_group_id_hint": "Tên ngắn không có khoảng trắng, ví dụ office. Không thể đổi sau này.",
+      "mesh_group_id_invalid": "Use letters, digits, dots, hyphens and underscores, without spaces.",
       "mesh_group_exists": "Đã có nhóm với ID này.",
       "mesh_group_added": "Đã thêm nhóm mesh.",
       "mesh_install_title": "Cài MeshAgent trên thiết bị",

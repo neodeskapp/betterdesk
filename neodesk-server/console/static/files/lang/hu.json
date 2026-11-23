@@ -1264,6 +1264,7 @@
       "mesh_group_add_title": "Mesh-csoport hozzáadása",
       "mesh_group_name_hint": "A név, amelyet mások látnak ennél a csoportnál.",
       "mesh_group_id_hint": "Rövid név szóköz nélkül, például iroda. Később nem módosítható.",
+      "mesh_group_id_invalid": "Use letters, digits, dots, hyphens and underscores, without spaces.",
       "mesh_group_exists": "Már létezik csoport ezzel az azonosítóval.",
       "mesh_group_added": "Mesh-csoport hozzáadva.",
       "mesh_install_title": "MeshAgent telepítése eszközre",

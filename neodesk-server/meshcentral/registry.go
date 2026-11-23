@@ -133,6 +133,17 @@ func (g *Gateway) persistGroups(groups []MeshGroup) error {
 }
 
 func (g *Gateway) SaveGroups(groups []MeshGroup) error {
+	// A group saved again without its MeshID keeps the one it has: a new
+	// one would orphan every .msh file handed out for it
+	stored := map[string]string{}
+	for _, gr := range g.ListGroups() {
+		stored[gr.ID] = gr.MeshID
+	}
+	for i, gr := range groups {
+		if !IsValidMeshIDHex(gr.MeshID) && IsValidMeshIDHex(stored[gr.ID]) {
+			groups[i].MeshID = stored[gr.ID]
+		}
+	}
 	groups, _, err := ensureGroupMeshIDs(groups)
 	if err != nil {
 		return err

@@ -19,7 +19,7 @@ import {
 	paletteColors,
 	textOn
 } from '#lib/settings/appearance.ts';
-import { connectionFacts, savedLine, splitHostPort } from '#lib/settings/general.ts';
+import { connectionFacts, meshGroupIdValid, savedLine, splitHostPort } from '#lib/settings/general.ts';
 import { wholeInRange } from '#lib/settings/numbers.ts';
 import {
 	ldapFromServer,
@@ -33,6 +33,11 @@ import {
 
 describe('General', () => {
 	const conn = (o: Record<string, unknown>) => connectionFacts(v.parse(ConnectionMode, o));
+
+	test('a mesh group ID is a short name without spaces (L384)', () => {
+		for (const ok of ['office', 'lab-2.x_y', 'A1']) expect(meshGroupIdValid(ok)).toBe(true);
+		for (const bad of ['', 'lab group', 'lab/ä?', 'x'.repeat(65)]) expect(meshGroupIdValid(bad)).toBe(false);
+	});
 
 	test('numbers outside their range are refused, not turned into the default or the limit (L418)', () => {
 		expect(wholeInRange(2000, 0, 30000)).toBe(2000);

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/audit"
@@ -63,12 +64,31 @@ func (s *Server) handleMeshGroupsSave(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
+	// The default group stays: without it the server made a new one with
+	// a new MeshID, so .msh files handed out named a group that was gone.
+	// A group ID is a short name without spaces, as the console's hint
+	// says (BUGS L384).
+	hasDefault := false
+	for _, g := range body.Groups {
+		if !meshGroupIDPattern.MatchString(g.ID) {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid group ID: use letters, digits, dots, hyphens and underscores, without spaces"})
+			return
+		}
+		hasDefault = hasDefault || g.ID == "default"
+	}
+	if !hasDefault {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "The default group can't be removed"})
+		return
+	}
 	if err := s.meshGw.SaveGroups(body.Groups); err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
+
+// meshGroupIDPattern is a group ID: a short name without spaces.
+var meshGroupIDPattern = regexp.MustCompile(`^[A-Za-z0-9._-]{1,64}$`)
 
 func (s *Server) handleMeshDownloadMSH(w http.ResponseWriter, r *http.Request) {
 	if s.meshGw == nil {

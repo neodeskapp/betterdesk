@@ -1264,6 +1264,7 @@
       "mesh_group_add_title": "Adaugă grup mesh",
       "mesh_group_name_hint": "Numele pe care îl văd oamenii pentru acest grup.",
       "mesh_group_id_hint": "Un nume scurt fără spații, de exemplu birou. Nu poate fi schimbat mai târziu.",
+      "mesh_group_id_invalid": "Use letters, digits, dots, hyphens and underscores, without spaces.",
       "mesh_group_exists": "Există deja un grup cu acest ID.",
       "mesh_group_added": "Grupul mesh a fost adăugat.",
       "mesh_install_title": "Instalați MeshAgent pe un dispozitiv",

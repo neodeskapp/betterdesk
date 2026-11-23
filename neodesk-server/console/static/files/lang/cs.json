@@ -1258,6 +1258,7 @@
       "mesh_group_add_title": "Přidat skupinu mesh",
       "mesh_group_name_hint": "Název, který lidé u této skupiny uvidí.",
       "mesh_group_id_hint": "Krátký název bez mezer, například kancelar. Později ho nelze změnit.",
+      "mesh_group_id_invalid": "Use letters, digits, dots, hyphens and underscores, without spaces.",
       "mesh_group_exists": "Skupina s tímto ID už existuje.",
       "mesh_group_added": "Skupina mesh přidána.",
       "mesh_install_title": "Instalace MeshAgenta na zařízení",

@@ -1258,6 +1258,7 @@
       "mesh_group_add_title": "Mesh-groep toevoegen",
       "mesh_group_name_hint": "De naam die mensen voor deze groep zien.",
       "mesh_group_id_hint": "Een korte naam zonder spaties, bijvoorbeeld kantoor. Deze kan later niet worden gewijzigd.",
+      "mesh_group_id_invalid": "Use letters, digits, dots, hyphens and underscores, without spaces.",
       "mesh_group_exists": "Er bestaat al een groep met deze ID.",
       "mesh_group_added": "Mesh-groep toegevoegd.",
       "mesh_install_title": "MeshAgent op een apparaat installeren",

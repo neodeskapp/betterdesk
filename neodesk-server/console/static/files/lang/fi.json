@@ -1264,6 +1264,7 @@
       "mesh_group_add_title": "Lisää mesh-ryhmä",
       "mesh_group_name_hint": "Nimi, jonka muut näkevät tälle ryhmälle.",
       "mesh_group_id_hint": "Lyhyt nimi ilman välilyöntejä, esimerkiksi toimisto. Sitä ei voi muuttaa myöhemmin.",
+      "mesh_group_id_invalid": "Use letters, digits, dots, hyphens and underscores, without spaces.",
       "mesh_group_exists": "Tällä tunnuksella on jo ryhmä.",
       "mesh_group_added": "Mesh-ryhmä lisättiin.",
       "mesh_install_title": "Asenna MeshAgent laitteeseen",

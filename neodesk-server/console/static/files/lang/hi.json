@@ -1264,6 +1264,7 @@
       "mesh_group_add_title": "mesh समूह जोड़ें",
       "mesh_group_name_hint": "वह नाम जो लोग इस समूह के लिए देखते हैं।",
       "mesh_group_id_hint": "बिना स्पेस का छोटा नाम, जैसे office. इसे बाद में बदला नहीं जा सकता।",
+      "mesh_group_id_invalid": "Use letters, digits, dots, hyphens and underscores, without spaces.",
       "mesh_group_exists": "इस ID वाला समूह पहले से है।",
       "mesh_group_added": "mesh समूह जोड़ा गया।",
       "mesh_install_title": "किसी डिवाइस पर MeshAgent इंस्टॉल करें",

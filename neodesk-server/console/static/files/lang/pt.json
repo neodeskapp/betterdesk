@@ -1258,6 +1258,7 @@
       "mesh_group_add_title": "Adicionar grupo mesh",
       "mesh_group_name_hint": "O nome que as pessoas veem para este grupo.",
       "mesh_group_id_hint": "Um nome curto sem espaços, por exemplo escritorio. Não pode ser alterado depois.",
+      "mesh_group_id_invalid": "Use letters, digits, dots, hyphens and underscores, without spaces.",
       "mesh_group_exists": "Já existe um grupo com este ID.",
       "mesh_group_added": "Grupo mesh adicionado.",
       "mesh_install_title": "Instalar o MeshAgent num dispositivo",
