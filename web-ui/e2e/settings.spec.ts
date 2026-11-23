@@ -104,6 +104,33 @@ for (const role of ROLES) {
 	});
 }
 
+test.describe('settings forms (super admin)', () => {
+	test.use({ role: 'super_admin' });
+
+	// A submit button whose form attribute names no form submits nothing
+	// (BUGS L325: Save of "Require two-factor sign-in" did nothing)
+	test('every Save button on every tab belongs to a form', async ({ page }) => {
+		const tabs = ['general', 'branding', 'auth', 'backup', 'updates', 'email', 'time', 'advanced'];
+		const lost: string[] = [];
+		for (const tab of tabs) {
+			await page.goto(`${UI}/settings?tab=${tab}`);
+			await expect(h1(page)).toBeVisible();
+			await page.waitForLoadState('networkidle');
+			const here = await page.evaluate(() =>
+				[...document.querySelectorAll<HTMLButtonElement | HTMLInputElement>('button, input[type="submit"]')]
+					.filter((b) => {
+						const named = b.getAttribute('form');
+						if (named !== null) return !(document.getElementById(named) instanceof HTMLFormElement);
+						return b.type === 'submit' && !b.form;
+					})
+					.map((b) => `"${(b.textContent || b.value || '').trim()}" form=${b.getAttribute('form')}`)
+			);
+			lost.push(...here.map((b) => `${tab}: ${b}`));
+		}
+		expect(lost, 'submit buttons that belong to no form').toEqual([]);
+	});
+});
+
 test.describe('settings links and search (admin)', () => {
 	test.use({ role: 'admin' });
 

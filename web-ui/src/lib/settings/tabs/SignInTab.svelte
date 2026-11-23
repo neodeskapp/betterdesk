@@ -332,6 +332,7 @@
 	/* ── Mandatory two-factor sign-in ── */
 
 	const twoFactor = createForm({
+		id: 'two-factor-policy-form',
 		initial: { required: false },
 		submit: async (v) => {
 			await saveTwoFactorPolicy(v.required);
@@ -921,7 +922,7 @@
 					</form>
 
 					<form
-						id="two-factor-policy-form"
+						id={twoFactor.id}
 						class="form-column settings-subgroup"
 						onsubmit={twoFactor.onsubmit}
 						novalidate
