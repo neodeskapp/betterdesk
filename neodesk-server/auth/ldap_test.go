@@ -1,6 +1,11 @@
 package auth
 
-import "testing"
+import (
+	"net"
+	"sync"
+	"testing"
+	"time"
+)
 
 // aliceEntry is alice in the test directory, password "secret".
 var aliceEntry = fakeEntry{
@@ -116,5 +121,70 @@ func TestLDAPDirectBindEscapesTheName(t *testing.T) {
 	}
 	if result, err := p.Authenticate("alice", "secret"); err != nil || result == nil || !result.Authenticated {
 		t.Errorf("alice: %+v, %v", result, err)
+	}
+}
+
+// silentServer accepts connections and never answers, like a directory
+// that hangs or a TLS port that never finishes its handshake.
+func silentServer(t *testing.T) int {
+	t.Helper()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var mu sync.Mutex
+	var conns []net.Conn
+	go func() {
+		for {
+			c, err := ln.Accept()
+			if err != nil {
+				return
+			}
+			mu.Lock()
+			conns = append(conns, c)
+			mu.Unlock()
+		}
+	}()
+	t.Cleanup(func() {
+		_ = ln.Close()
+		mu.Lock()
+		defer mu.Unlock()
+		for _, c := range conns {
+			_ = c.Close()
+		}
+	})
+	return ln.Addr().(*net.TCPAddr).Port
+}
+
+// Connection timeout covers connecting: the TLS handshake of LDAPS and the
+// StartTLS request give up after the configured seconds, not after go-ldap's
+// 60 seconds or never (L347).
+func TestLDAPConnectionTimeoutCoversConnecting(t *testing.T) {
+	for name, tweak := range map[string]func(*LDAPConfig){
+		"ldaps":    func(c *LDAPConfig) { c.UseTLS = true },
+		"starttls": func(c *LDAPConfig) { c.StartTLS = true },
+	} {
+		t.Run(name, func(t *testing.T) {
+			cfg := &LDAPConfig{Enabled: true, Host: "127.0.0.1", Port: silentServer(t), ConnTimeoutSec: 1, DirectBind: true,
+				DirectBindDN: "uid={{username}},dc=corp,dc=example"}
+			tweak(cfg)
+			done := make(chan error, 1)
+			start := time.Now()
+			go func() {
+				_, err := NewLDAPProvider(cfg).Authenticate("alice", "secret")
+				done <- err
+			}()
+			select {
+			case err := <-done:
+				if err == nil {
+					t.Fatal("a directory that never answers signed someone in")
+				}
+				if took := time.Since(start); took > 4*time.Second {
+					t.Errorf("gave up after %s, want about 1s", took)
+				}
+			case <-time.After(8 * time.Second):
+				t.Fatal("still waiting after 8s with a timeout of 1s")
+			}
+		})
 	}
 }

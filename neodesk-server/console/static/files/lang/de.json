@@ -802,7 +802,7 @@
     "ldap_start_tls": "StartTLS",
     "ldap_skip_verify": "TLS-Prüfung überspringen",
     "ldap_timeout": "Verbindungs-Timeout (s)",
-    "ldap_timeout_hint": "Sekunden, die auf eine Antwort des LDAP-Servers gewartet wird",
+    "ldap_timeout_hint": "Sekunden, die beim Verbinden und auf jede Antwort des Verzeichnisses gewartet wird",
     "ldap_bind_mode": "Wie Benutzer gefunden werden",
     "ldap_direct_bind": "Direkter Bind",
     "ldap_direct_bind_hint": "Direkt mit einer DN-Vorlage binden, statt ein Dienstkonto für die Suche zu verwenden.",

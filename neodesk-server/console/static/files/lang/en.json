@@ -886,7 +886,7 @@
         "ldap_start_tls": "StartTLS",
         "ldap_skip_verify": "Skip TLS verify",
         "ldap_timeout": "Connection timeout (s)",
-        "ldap_timeout_hint": "Seconds to wait for LDAP server response",
+        "ldap_timeout_hint": "Seconds to wait for the directory, when connecting and for each answer",
         "ldap_bind_mode": "How to find users",
         "ldap_direct_bind": "Direct bind",
         "ldap_direct_bind_hint": "Bind directly with a DN template instead of using a service account to search.",
