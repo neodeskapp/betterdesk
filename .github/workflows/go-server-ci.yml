@@ -3,6 +3,8 @@
 name: Go Server CI
 
 on:
+  # By hand on any branch: gh workflow run <file> --ref <branch>
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
