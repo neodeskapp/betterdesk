@@ -259,3 +259,35 @@ test.describe('the copied toast', () => {
 		});
 	}
 });
+
+test.describe('empty tables at 360', () => {
+	test.use({ viewport: { width: 360, height: 640 } });
+
+	// BUGS L319: the sentence sat in a cell as wide as the table, mostly off the screen
+	test('the empty-table sentence wraps inside the visible part of the table', async ({ page }) => {
+		const cut: string[] = [];
+		let seen = 0;
+		for (const path of [
+			'/automation',
+			'/commercialization?tab=packages',
+			'/dataguard',
+			'/fleet',
+			'/activity'
+		]) {
+			await open(page, path, 'en');
+			const cells = await page.evaluate(() =>
+				[...document.querySelectorAll<HTMLElement>('.table-scroll td.state-cell')].map((td) => {
+					const box = td.closest('.table-scroll')!.getBoundingClientRect();
+					const text = document.createRange();
+					text.selectNodeContents(td);
+					const r = text.getBoundingClientRect();
+					return { text: td.textContent!.trim(), past: Math.round(r.right - box.right) };
+				})
+			);
+			seen += cells.length;
+			cut.push(...cells.filter((c) => c.past > 0).map((c) => `${path}: "${c.text}" ${c.past} px`));
+		}
+		expect(seen, 'empty tables on these pages').toBeGreaterThan(0);
+		expect(cut, 'empty-table sentences past the visible part of their table').toEqual([]);
+	});
+});

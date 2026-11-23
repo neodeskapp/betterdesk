@@ -120,11 +120,15 @@
 	   scroll it), also when nothing in the table can take focus: while it
 	   scrolls it is a focusable region named by the caption. */
 	let scrolls = $state(false);
+	/* The visible width of the box: the loading, empty and error sentence
+	   wraps within it, also when the columns make the table wider */
+	let boxWidth = $state(0);
 	$effect(() => {
 		const el = box;
 		if (!el || typeof ResizeObserver === 'undefined') return;
 		const check = () => {
 			scrolls = el.scrollWidth > el.clientWidth + 1 || (!!height && el.scrollHeight > el.clientHeight + 1);
+			boxWidth = el.clientWidth;
 		};
 		check();
 		const ro = new ResizeObserver(check);
@@ -446,7 +450,7 @@
 			{#if error}
 				<tr class="state-row">
 					<td class="state-cell is-error" {colspan}>
-						<span class="state">
+						<span class="state" style:--table-box={boxWidth ? `${boxWidth}px` : undefined}>
 							<span>{error}</span>
 							{#if onretry}
 								<Button size="sm" icon="refresh" onclick={onretry}>{t('actions.retry')}</Button>
@@ -457,7 +461,11 @@
 			{:else if sorted.length === 0}
 				{#if loading || emptyText}
 					<tr class="state-row">
-						<td class="state-cell" {colspan}>{loading ? (loadingText ?? t('common.loading')) : emptyText}</td>
+						<td class="state-cell" {colspan}
+							><span class="state" style:--table-box={boxWidth ? `${boxWidth}px` : undefined}
+								>{loading ? (loadingText ?? t('common.loading')) : emptyText}</span
+							></td
+						>
 					</tr>
 				{/if}
 			{:else}
@@ -734,11 +742,17 @@
 	.data-table td.state-cell.is-error {
 		color: var(--danger);
 	}
+	/* The sentence stays in the visible part of a table that scrolls
+	   sideways: as wide as the box, and held at its start edge */
 	.state {
+		position: sticky;
+		inset-inline-start: var(--row-pad-x);
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--space-2) var(--space-3);
+		box-sizing: border-box;
+		max-width: calc(var(--table-box, 100%) - 2 * var(--row-pad-x));
 	}
 
 	/* Cell helpers the page's snippets use */
