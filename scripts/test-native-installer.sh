@@ -70,7 +70,7 @@ blue_or_magenta() {
 }
 
 # check_header NAME OUT TITLE: OUT is NAME's header drawn in a terminal:
-# the logo in 15 lines of half blocks with TITLE on its 12th, under the
+# the logo in 15 lines of half blocks with TITLE on its 13th, under the
 # wordmark, no box characters, no blue or magenta, no line wider than 119 columns or
 # ending in spaces
 check_header() {
@@ -80,7 +80,7 @@ check_header() {
         case "$text" in *"$box"*) fail "$name's header draws a box: $text" ;; esac
     done
     [ "$(printf '%s\n' "$text" | grep -cF -e ▀ -e ▄ -e █)" = 15 ] || fail "$name's header has no logo of 15 lines: $text"
-    [ "$(printf '%s\n' "$text" | grep -F -e ▀ -e ▄ -e █ | sed -n 12p | sed 's/^[▀▄█]* *//')" = "$title" ] \
+    [ "$(printf '%s\n' "$text" | grep -F -e ▀ -e ▄ -e █ | sed -n 13p | sed 's/^[▀▄█]* *//')" = "$title" ] \
         || fail "$name's header does not have $title beside the mark under the wordmark: $text"
     while IFS= read -r line; do
         [ "${#line}" -le 119 ] || fail "$name's header has a line of ${#line} columns: $line"

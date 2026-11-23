@@ -142,9 +142,9 @@ ND_LOGO_LINES=(
 ND_LOGO_24=('38;2;163;230;53' '38;2;228;231;231' '38;2;88;166;255' '38;2;63;208;196' '38;2;163;230;53;48;2;63;208;196' '38;2;63;208;196;48;2;88;166;255')
 ND_LOGO_16=('92' '39' '96' '36' '92;46' '36;106')
 
-# draw_logo TITLE: the NeoDesk logo, with TITLE on the line under the
-# wordmark, starting where the wordmark starts. A terminal narrower than
-# the logo gets the name and TITLE on one line.
+# draw_logo TITLE: the NeoDesk logo, with TITLE beside the mark on the
+# second line under the wordmark, starting under the foot of the n. A
+# terminal narrower than the logo gets the name and TITLE on one line.
 draw_logo() {
     local cols=${COLUMNS:-} codes line i n
     [ -n "$cols" ] || cols=$(tput cols 2>/dev/null) || cols=''
@@ -160,7 +160,7 @@ draw_logo() {
             line=${line//"{$n}"/$'\033[0m\033['"${codes[n]}m"}
         done
         line+=$'\033[0m'
-        if [ "$i" = 11 ]; then line+="            $1"; fi
+        if [ "$i" = 12 ]; then line+="              $1"; fi
         printf '%s\n' "$line"
     done
 }

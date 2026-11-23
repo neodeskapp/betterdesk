@@ -1040,7 +1040,7 @@ function Get-Contrast([int]$R, [int]$G, [int]$B) {
 }
 
 # The header: in a console of 120 columns the NeoDesk logo in 15 lines of
-# half blocks, with the title on its 12th, beside the mark under the
+# half blocks, with the title on its 13th, beside the mark under the
 # wordmark; "NeoDesk <title>" on one line in a console narrower than the
 # logo; one plain line when the output goes to a file or a pipe or
 # NO_COLOR is set, and no escape codes then. No box characters, no line
@@ -1096,7 +1096,7 @@ function Test-HeaderAndColours {
         $logoLines = @($text | Where-Object { $_ -match $halfBlocks })
         if ($logoLines.Count -ne 15) {
             Fail "the $mode header has $($logoLines.Count) lines of the logo, not 15"
-        } elseif (($logoLines[11] -replace "^$halfBlocks* *", '') -ne $title) {
+        } elseif (($logoLines[12] -replace "^$halfBlocks* *", '') -ne $title) {
             Fail "the $mode header does not have $title beside the mark under the wordmark: $($text -join ' | ')"
         }
         foreach ($line in $text) {
