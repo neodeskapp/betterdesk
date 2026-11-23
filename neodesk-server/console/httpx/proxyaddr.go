@@ -152,6 +152,12 @@ func (tp TrustProxy) Scheme(r *http.Request) string {
 	return "http"
 }
 
+// TrustsSocket reports whether the hop the request came from directly is
+// a proxy the console trusts.
+func (tp TrustProxy) TrustsSocket(r *http.Request) bool {
+	return tp.Enabled() && tp.trusts(SocketIP(r), 0)
+}
+
 // Host is the host the client asked for: X-Forwarded-Host from a trusted
 // proxy, the Host header otherwise.
 func (tp TrustProxy) Host(r *http.Request) string {

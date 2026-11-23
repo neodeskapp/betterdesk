@@ -32,7 +32,14 @@ func infoOf(r *http.Request) *requestInfo {
 // Begin prepares a request for the accessors of this package. The
 // pipeline calls it once, before its first step; tests of a route group
 // call it to stand in for the pipeline.
+//
+// An X-Forwarded-Host that no trusted proxy sent is dropped here: what
+// reads it (the client addresses, the config string, install scripts)
+// would otherwise take any host a request names (BUGS L377).
 func Begin(r *http.Request, trust httpx.TrustProxy, bundle *i18n.Bundle) *http.Request {
+	if r.Header.Get("X-Forwarded-Host") != "" && !trust.TrustsSocket(r) {
+		r.Header.Del("X-Forwarded-Host")
+	}
 	info := &requestInfo{trust: trust, bundle: bundle}
 	return r.WithContext(context.WithValue(r.Context(), requestKey{}, info))
 }

@@ -174,8 +174,9 @@ type RequestHost struct {
 	Host string
 }
 
-// RequestHostOf reads the two headers from a request. The forwarded host
-// is taken as sent, whether or not the console trusts the proxy.
+// RequestHostOf reads the two headers from a request. The console's
+// pipeline drops an X-Forwarded-Host that no trusted proxy sent
+// (kit.Begin).
 func RequestHostOf(r *http.Request) *RequestHost {
 	if r == nil {
 		return nil
