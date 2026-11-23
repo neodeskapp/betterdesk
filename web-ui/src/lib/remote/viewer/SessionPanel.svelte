@@ -4,6 +4,11 @@
   height from the top, so switching states or opening Details only grows
   the block downward (usability/remote-viewer.md). The letterbox around the
   picture stays black in both themes; the states use the page background.
+
+  The screen keeps every key, Tab included: its description says that F8
+  leaves it, and that line shows over the top of the screen for a few
+  seconds each time the screen takes focus other than by a click or a tap
+  (from Tab, or from the viewer as the picture starts).
 -->
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
@@ -30,6 +35,35 @@
 	let reconnectBtn = $state<HTMLElement | null>(null);
 	let summaryInput = $state<HTMLTextAreaElement | null>(null);
 	let detailsOpen = $state(false);
+	let keysHint = $state(false);
+	let keysHintTimer: ReturnType<typeof setTimeout> | undefined;
+
+	/* A press on the screen gives it focus in the same task; the flag lives
+	   only that long, so a later Tab or the viewer's own focus still counts */
+	let pressed = false;
+	function onCanvasPress() {
+		pressed = true;
+		setTimeout(() => (pressed = false), 0);
+	}
+
+	/**
+	 * The way out, shown for a few seconds when the screen takes focus from
+	 * the keyboard or from the viewer as the picture starts. Not after a
+	 * click or a tap, which can leave the screen the same way.
+	 */
+	function showKeysHint() {
+		if (pressed) return;
+		keysHint = true;
+		clearTimeout(keysHintTimer);
+		keysHintTimer = setTimeout(() => (keysHint = false), 5000);
+	}
+
+	function hideKeysHint() {
+		clearTimeout(keysHintTimer);
+		keysHint = false;
+	}
+
+	$effect(() => () => clearTimeout(keysHintTimer));
 
 	const name = $derived(s.label);
 	const view = $derived<View>(s.view);
@@ -115,7 +149,14 @@
 		class="session-canvas"
 		tabindex={view === 'streaming' ? 0 : -1}
 		aria-label={tf('remote_viewer.screen_label', 'Screen of {name}', { name })}
+		aria-describedby="{uid}-keys"
+		onpointerdown={onCanvasPress}
+		onfocus={showKeysHint}
+		onblur={hideKeysHint}
 	></canvas>
+	<p id="{uid}-keys" class={['screen-keys', keysHint && view === 'streaming' && 'is-shown']}>
+		{tf('remote_viewer.screen_keys', 'Keys go to the device, Tab too. Press F8 to leave the screen.')}
+	</p>
 
 	{#if overState}
 		<div class={['viewer-overlay', view === 'failed' && 'is-failed', view === 'ended' && 'is-ended']}>
@@ -383,6 +424,29 @@
 	}
 	.streaming .session-canvas {
 		cursor: crosshair;
+	}
+	/* The way out of the screen: read with the screen's name, shown over its
+	   top edge for a few seconds after it takes focus */
+	.screen-keys {
+		position: absolute;
+		top: var(--space-3);
+		left: 50%;
+		z-index: 2;
+		max-width: calc(100% - 2 * var(--space-4));
+		margin: 0;
+		padding: var(--space-2) var(--space-3);
+		border-radius: var(--radius);
+		background: rgba(0, 0, 0, 0.78);
+		color: #ffffff;
+		font-size: var(--text-sm);
+		text-align: center;
+		opacity: 0;
+		pointer-events: none;
+		transform: translateX(-50%);
+		transition: opacity var(--motion);
+	}
+	.screen-keys.is-shown {
+		opacity: 1;
 	}
 	.viewer-overlay {
 		position: absolute;

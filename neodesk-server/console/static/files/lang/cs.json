@@ -7944,7 +7944,8 @@
     "fail_generic": "Nelze se připojit k zařízení {name}.",
     "try_generic": "Připojte se znovu. Pokud to stále nejde, zkopírujte níže uvedené podrobnosti a pošlete je správci.",
     "fail_insecure": "Připojení k {name} bylo zastaveno, protože ho nebylo možné zabezpečit.",
-    "try_insecure": "Žádné heslo nebylo odesláno. Mezi tímto prohlížečem a zařízením může někdo odposlouchávat, nebo není nastaven klíč serveru. Požádejte správce o kontrolu serveru."
+    "try_insecure": "Žádné heslo nebylo odesláno. Mezi tímto prohlížečem a zařízením může někdo odposlouchávat, nebo není nastaven klíč serveru. Požádejte správce o kontrolu serveru.",
+    "screen_keys": "Klávesy se posílají do zařízení, včetně Tab. Obrazovku opustíte klávesou F8."
   },
   "diagram": {
     "your_computer": "Váš počítač",

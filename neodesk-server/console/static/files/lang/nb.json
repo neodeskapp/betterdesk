@@ -7950,7 +7950,8 @@
     "fail_generic": "Kunne ikke koble til {name}.",
     "try_generic": "Koble til igjen. Hvis det fortsatt ikke virker, kopier detaljene nedenfor og send dem til administratoren din.",
     "fail_insecure": "Tilkoblingen til {name} ble stoppet fordi den ikke kunne sikres.",
-    "try_insecure": "Ingen passord ble sendt. Noen mellom denne nettleseren og enheten kan lytte, eller servernøkkelen er ikke satt opp. Be en administrator om å sjekke serveren."
+    "try_insecure": "Ingen passord ble sendt. Noen mellom denne nettleseren og enheten kan lytte, eller servernøkkelen er ikke satt opp. Be en administrator om å sjekke serveren.",
+    "screen_keys": "Tastene går til enheten, også Tab. Trykk F8 for å forlate skjermen."
   },
   "diagram": {
     "your_computer": "Din datamaskin",

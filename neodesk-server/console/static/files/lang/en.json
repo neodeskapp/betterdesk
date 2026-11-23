@@ -7944,7 +7944,8 @@
         "fail_generic": "Could not connect to {name}.",
         "try_generic": "Reconnect. If it keeps failing, copy the details below and send them to your administrator.",
         "fail_insecure": "The connection to {name} was stopped because it could not be secured.",
-        "try_insecure": "No password was sent. Someone between this browser and the device may be listening in, or the server key is not set up. Ask an administrator to check the server."
+        "try_insecure": "No password was sent. Someone between this browser and the device may be listening in, or the server key is not set up. Ask an administrator to check the server.",
+        "screen_keys": "Keys go to the device, Tab too. Press F8 to leave the screen."
     },
     "diagram": {
         "your_computer": "Your computer",

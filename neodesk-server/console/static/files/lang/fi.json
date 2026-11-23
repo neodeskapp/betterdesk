@@ -7950,7 +7950,8 @@
     "fail_generic": "Yhteys laitteeseen {name} ei onnistunut.",
     "try_generic": "Yhdistä uudelleen. Jos yhteys epäonnistuu edelleen, kopioi alla olevat tiedot ja lähetä ne ylläpitäjälle.",
     "fail_insecure": "Yhteys kohteeseen {name} katkaistiin, koska sitä ei voitu suojata.",
-    "try_insecure": "Salasanaa ei lähetetty. Joku tämän selaimen ja laitteen välissä saattaa kuunnella, tai palvelimen avainta ei ole määritetty. Pyydä ylläpitäjää tarkistamaan palvelin."
+    "try_insecure": "Salasanaa ei lähetetty. Joku tämän selaimen ja laitteen välissä saattaa kuunnella, tai palvelimen avainta ei ole määritetty. Pyydä ylläpitäjää tarkistamaan palvelin.",
+    "screen_keys": "Näppäimet menevät laitteelle, myös Tab. Poistu näytöltä painamalla F8."
   },
   "diagram": {
     "your_computer": "Tietokoneesi",

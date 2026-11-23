@@ -7950,7 +7950,8 @@
     "fail_generic": "{name} cihazına bağlanılamadı.",
     "try_generic": "Yeniden bağlanın. Sorun devam ederse aşağıdaki ayrıntıları kopyalayıp yöneticinize gönderin.",
     "fail_insecure": "{name} bağlantısı güvenli hale getirilemediği için durduruldu.",
-    "try_insecure": "Hiçbir parola gönderilmedi. Bu tarayıcı ile cihaz arasında biri dinliyor olabilir veya sunucu anahtarı ayarlanmamış olabilir. Bir yöneticiden sunucuyu kontrol etmesini isteyin."
+    "try_insecure": "Hiçbir parola gönderilmedi. Bu tarayıcı ile cihaz arasında biri dinliyor olabilir veya sunucu anahtarı ayarlanmamış olabilir. Bir yöneticiden sunucuyu kontrol etmesini isteyin.",
+    "screen_keys": "Tuşlar cihaza gider, Tab da. Ekrandan çıkmak için F8'e basın."
   },
   "diagram": {
     "your_computer": "Bilgisayarınız",

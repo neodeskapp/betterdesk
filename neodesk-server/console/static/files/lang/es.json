@@ -7944,7 +7944,8 @@
     "fail_generic": "No se pudo conectar con {name}.",
     "try_generic": "Vuelva a conectar. Si sigue fallando, copie los detalles de abajo y envíelos a su administrador.",
     "fail_insecure": "La conexión con {name} se detuvo porque no se pudo proteger.",
-    "try_insecure": "No se envió ninguna contraseña. Alguien entre este navegador y el dispositivo podría estar escuchando, o la clave del servidor no está configurada. Pide a un administrador que revise el servidor."
+    "try_insecure": "No se envió ninguna contraseña. Alguien entre este navegador y el dispositivo podría estar escuchando, o la clave del servidor no está configurada. Pide a un administrador que revise el servidor.",
+    "screen_keys": "Las teclas van al dispositivo, también Tab. Pulse F8 para salir de la pantalla."
   },
   "diagram": {
     "your_computer": "Su equipo",

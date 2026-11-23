@@ -7950,7 +7950,8 @@
     "fail_generic": "Nem sikerült csatlakozni a(z) {name} eszközhöz.",
     "try_generic": "Csatlakozzon újra. Ha továbbra sem sikerül, másolja ki az alábbi részleteket, és küldje el a rendszergazdának.",
     "fail_insecure": "A(z) {name} felé irányuló kapcsolat leállt, mert nem sikerült biztonságossá tenni.",
-    "try_insecure": "Nem lett jelszó elküldve. Lehet, hogy valaki lehallgatja a forgalmat a böngésző és az eszköz között, vagy nincs beállítva a szerver kulcsa. Kérje meg a rendszergazdát, hogy ellenőrizze a szervert."
+    "try_insecure": "Nem lett jelszó elküldve. Lehet, hogy valaki lehallgatja a forgalmat a böngésző és az eszköz között, vagy nincs beállítva a szerver kulcsa. Kérje meg a rendszergazdát, hogy ellenőrizze a szervert.",
+    "screen_keys": "A billentyűk az eszközre jutnak, a Tab is. A képernyő elhagyásához nyomja meg az F8 billentyűt."
   },
   "diagram": {
     "your_computer": "Az Ön gépe",
