@@ -291,3 +291,40 @@ test.describe('empty tables at 360', () => {
 		expect(cut, 'empty-table sentences past the visible part of their table').toEqual([]);
 	});
 });
+
+for (const size of [
+	{ width: 768, height: 1024 },
+	{ width: 1024, height: 768 }
+]) {
+	test.describe(`device table at ${size.width}`, () => {
+		test.use({ viewport: size });
+
+		// BUGS L320: a long display name ran out of its column over Platform
+		test('a long device name stays in its column', async ({ page }) => {
+			await page.route(/\/api\/devices(\?|$)/, async (route) => {
+				const response = await route.fetch();
+				const body = await response.json();
+				const list = (body.devices ?? body.data?.devices) as Record<string, unknown>[];
+				Object.assign(list[0]!, {
+					display_name: 'CEO MacBook Pro 16 inch with a long display name',
+					platform: 'Windows 10 Enterprise'
+				});
+				await route.fulfill({ response, json: body });
+			});
+			await open(page, '/devices', 'en');
+			await expect(page.getByText('CEO MacBook Pro 16 inch with a long display name')).toBeVisible();
+			const spill = await page.evaluate(() =>
+				[...document.querySelectorAll<HTMLElement>('.devices-table tbody tr[data-key]')].flatMap((tr) => {
+					const cell = tr.querySelector<HTMLElement>('.col-name');
+					const name = cell?.querySelector<HTMLElement>('.device-name');
+					if (!cell || !name) return [];
+					const text = document.createRange();
+					text.selectNodeContents(name);
+					const past = text.getBoundingClientRect().right - cell.getBoundingClientRect().right;
+					return past > 1 ? [`${name.textContent} ${Math.round(past)} px`] : [];
+				})
+			);
+			expect(spill, 'names past the end of their column').toEqual([]);
+		});
+	});
+}

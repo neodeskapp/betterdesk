@@ -984,6 +984,16 @@
 		.devices-table :global(:is(th, td).col-name) {
 			white-space: nowrap;
 		}
+		/* A long name wraps inside its column (a long list keeps one line, cut
+		   with "…"): the column is as wide as the name up to 280 px, less on a
+		   narrow list so Platform keeps room for "Windows 10" on one line */
+		.devices-table:not(.is-long) :global(tbody th.col-name .device-name) {
+			display: inline-block;
+			width: max-content;
+			max-width: min(280px, 26cqi);
+			white-space: normal;
+			overflow-wrap: break-word;
+		}
 		.devices-table.has-tags :global(:is(th, td).col-name) {
 			width: 1%;
 		}
@@ -1084,6 +1094,7 @@
 	}
 	.devices-table.is-long :global(td.col-platform .platform),
 	.devices-table.is-long :global(tbody th.col-name .row-open) {
+		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}

@@ -653,8 +653,12 @@
 		}
 	}
 
-	/* The primary cell's button: the row's name, opens the row */
+	/* The primary cell's button: the row's name, opens the row. A button
+	   with a percentage max-width would let its column shrink below its
+	   text (the name then ran over the next column); min-width keeps the
+	   column at least as wide as the name's longest unbreakable part */
 	.row-open {
+		min-width: min-content;
 		max-width: 100%;
 		padding: 0;
 		border: 0;
