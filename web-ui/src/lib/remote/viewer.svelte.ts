@@ -26,6 +26,7 @@ import {
 	type ViewerData
 } from '#lib/api/remote.ts';
 import { getDevice } from '#lib/api/devices.ts';
+import { link } from '#lib/nav.ts';
 import { takeDevicePassword } from '#lib/api/onboard.ts';
 import { isGuestMode, isRemoteTarget, isViewOnlyGuest, peerAllowed, transportOf } from './access.ts';
 import { isMobileViewer } from './capabilities.ts';
@@ -38,10 +39,21 @@ import {
 	type Monitor,
 	type RemoteClient,
 	type TouchInput,
+	type BackgroundMode,
+	type DisplayLayout,
+	type DisplayZoom,
+	type RDDisplay,
 	type TouchRenderer,
 	type VirtualDisplaySupport,
 	type WindowsSessions
 } from './rdclient.ts';
+import { DISPLAY_LAYOUTS, planSpread, type Rect } from './client/display-layout.ts';
+import {
+	DEFAULT_DISPLAY_PREFS,
+	loadDisplayPrefs,
+	saveDisplayPrefs,
+	type DisplayPrefs
+} from './display-prefs.ts';
 import { CODECS, fpsForMode, loadPrefs, presetForQuality, savePrefs, type ViewerPrefs } from './prefs.ts';
 import { secureStore } from './secure-store.ts';
 import {
@@ -175,6 +187,19 @@ export class ViewerSession {
 	chat = $state.raw<ChatLine[]>([]);
 	latency = $state(0);
 	monitors = $state.raw<Monitor[]>([]);
+	/** The device's displays with their places, and whether it streams several at once */
+	displays = $state.raw<RDDisplay[]>([]);
+	together = $state(false);
+	/** How the displays show: layout, zoom, background (display-prefs.ts, per device) */
+	display = $state.raw<DisplayPrefs>({ ...DEFAULT_DISPLAY_PREFS });
+	/** The display worked on in the arranged and grid layouts */
+	activeDisplay = $state(0);
+	/** Displays in windows of their own */
+	popouts = $state.raw<number[]>([]);
+	/** Their windows (not state: other windows of the page) */
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- windows, nothing renders from them
+	windows = new Map<number, Window>();
+	displayPrefsLoaded = false;
 	virtualDisplays = $state.raw<VirtualDisplaySupport>({ supported: false });
 	windowsSessions = $state.raw<WindowsSessions>({ sessions: [], currentSid: 0 });
 	prefs = $state<ViewerPrefs>(loadPrefs(null));
@@ -216,6 +241,36 @@ export class ViewerSession {
 	}
 }
 
+/** Narrower windows and touch tablets show one display at a time */
+export const TILES_MIN_WIDTH = 900;
+
+/** Messages between the viewer and a display's own window (postMessage, same origin) */
+export type DisplayWindowMessage =
+	| { type: 'nd-display-ready'; deviceId: string; display: number }
+	| { type: 'nd-display-attached'; label: string; device: string; zoom: DisplayZoom }
+	| { type: 'nd-display-visible'; visible: boolean }
+	| { type: 'nd-display-zoom'; zoom: DisplayZoom }
+	| { type: 'nd-display-closed' }
+	| { type: 'nd-display-bye' };
+
+/** The display's own window: as large as fits most of the screen, in the display's shape */
+function windowFeatures(d: RDDisplay | undefined, onScreen: Rect | null): string {
+	if (onScreen) {
+		return `popup=yes,left=${onScreen.x},top=${onScreen.y},width=${onScreen.w},height=${onScreen.h}`;
+	}
+	const maxW = Math.round((window.screen?.availWidth || 1280) * 0.6);
+	const maxH = Math.round((window.screen?.availHeight || 800) * 0.6);
+	const ratio = d && d.width && d.height ? d.width / d.height : 16 / 9;
+	const w = Math.min(maxW, Math.round(maxH * ratio));
+	const h = Math.round(w / ratio) + 48;
+	return `popup=yes,width=${w},height=${h}`;
+}
+
+interface ScreenDetailsLike {
+	screens: { availLeft: number; availTop: number; availWidth: number; availHeight: number }[];
+	currentScreen: unknown;
+}
+
 export interface ViewerOptions {
 	data: ViewerData;
 	/** Leave the viewer (no sessions left, or Back) */
@@ -231,6 +286,8 @@ export class Viewer {
 	pickerOpen = $state(false);
 	fullscreen = $state(false);
 	httpWarning = $state(false);
+	/** The window is wide enough for the arranged and grid layouts (not on touch tablets) */
+	wide = $state(true);
 	billingCheck = $state.raw<BillingCheck | null>(null);
 	mobileMode = $state<'direct' | 'touchpad'>('direct');
 
@@ -301,6 +358,7 @@ export class Viewer {
 		}
 		if (opts.filesOnConnect) this.openFilesOnConnect = true;
 		const s = new ViewerSession(deviceId, name, platform, loadPrefs(this.userId));
+		s.display = loadDisplayPrefs(this.userId, deviceId);
 		if (!videoDecodingSupported()) {
 			const insecure =
 				location.protocol === 'http:' &&
@@ -394,6 +452,7 @@ export class Viewer {
 			}
 		}
 		s.touch?.stop();
+		this.closeDisplayWindows(s);
 		const index = this.sessions.indexOf(s);
 		this.sessions = this.sessions.filter((x) => x !== s);
 		if (this.activeId === deviceId) {
@@ -414,6 +473,7 @@ export class Viewer {
 	/** Disconnect every session when the page goes away (not into the back-forward cache) */
 	teardown(): void {
 		for (const s of this.sessions) {
+			this.closeDisplayWindows(s);
 			try {
 				s.client?.disconnect();
 			} catch {
@@ -646,10 +706,8 @@ export class Viewer {
 			this.resize();
 			if (this.isActive(s)) this.applyPrefs(s);
 			this.syncMediaCapture();
-			if (this.isActive(s)) {
-				void tick().then(() => s.focus?.canvas());
-				this.refreshMonitors(s);
-			}
+			if (this.isActive(s)) void tick().then(() => s.focus?.canvas());
+			this.refreshMonitors(s);
 			if (c.video)
 				c.video.onAutoplayBlocked = () => {
 					if (this.isActive(s)) s.autoplayBlocked = true;
@@ -1123,8 +1181,10 @@ export class Viewer {
 			return;
 		}
 		try {
-			if (!s.canvas) return;
-			const stream = s.canvas.captureStream(30);
+			// In the arranged and grid layouts, the display worked on
+			const canvas = (this.tilesShown(s) ? s.client?.displayCanvas?.(s.activeDisplay) : null) ?? s.canvas;
+			if (!canvas) return;
+			const stream = canvas.captureStream(30);
 			s.recordedChunks = [];
 			const mime = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'].find((m) =>
 				MediaRecorder.isTypeSupported(m)
@@ -1172,14 +1232,358 @@ export class Viewer {
 		} catch {
 			s.windowsSessions = { sessions: [], currentSid: 0 };
 		}
+		s.displays = c.getDisplays?.() ?? [];
+		s.together = !!c.canShowDisplaysTogether?.() && s.displays.length > 1;
+		if (!s.displayPrefsLoaded && s.together && s.view === 'streaming') {
+			s.displayPrefsLoaded = true;
+			this.restoreDisplays(s);
+		}
 	}
 
+	/** Show a display in the single layout (in the arranged and grid layouts: work on it) */
 	switchMonitor(idx: number): void {
 		const s = this.active;
 		if (!s?.client) return;
+		if (s.popouts.includes(idx)) {
+			s.windows.get(idx)?.focus();
+			return;
+		}
+		if (this.tilesShown(s)) {
+			this.focusDisplay(s, idx);
+			return;
+		}
 		s.client.switchMonitor?.(idx);
 		this.refreshMonitors(s);
 		s.monitors = s.monitors.map((m) => ({ ...m, current: m.idx === idx }));
+		s.activeDisplay = idx;
+		if (s.together) this.saveDisplays(s, { display: idx });
+	}
+
+	/* ── Several displays at once (RustDesk 1.2.4 and later, the mock) ── */
+
+	/** The layout in use: the arranged and grid layouts need a device that streams several displays and a wide window */
+	layoutOf(s: ViewerSession): DisplayLayout {
+		return s.together && this.wide ? s.display.layout : 'single';
+	}
+
+	/** The displays show as tiles (arranged or grid) */
+	tilesShown(s: ViewerSession): boolean {
+		return s.view === 'streaming' && this.layoutOf(s) !== 'single';
+	}
+
+	/** The display the single layout shows */
+	singleDisplay(s: ViewerSession): number {
+		const shown = s.monitors.find((m) => m.current)?.idx ?? 0;
+		const want = s.display.display ?? shown;
+		const free = (i: number) => !s.popouts.includes(i) && i < Math.max(1, s.displays.length);
+		if (free(want)) return want;
+		return s.displays.find((d) => free(d.idx))?.idx ?? want;
+	}
+
+	private saveDisplays(s: ViewerSession, change: Partial<DisplayPrefs>): void {
+		s.display = saveDisplayPrefs(this.userId, s.deviceId, { ...s.display, ...change });
+	}
+
+	/** The session streams: bring back the layout, the display and the background setting used last */
+	private restoreDisplays(s: ViewerSession): void {
+		s.client?.setBackgroundDisplays?.(s.display.background);
+		const current = s.monitors.find((m) => m.current)?.idx ?? 0;
+		s.activeDisplay = s.display.display ?? current;
+		this.syncLayout(s);
+	}
+
+	/** Tell the client what the session's own canvas shows (nothing while the displays show as tiles) */
+	private syncLayout(s: ViewerSession): void {
+		const c = s.client;
+		if (!c || !s.together) return;
+		if (this.layoutOf(s) !== 'single') {
+			c.setMainDisplay?.(null);
+			if (!s.displays.some((d) => d.idx === s.activeDisplay && !s.popouts.includes(d.idx))) {
+				s.activeDisplay = s.displays.find((d) => !s.popouts.includes(d.idx))?.idx ?? 0;
+			}
+			for (const d of s.displays) c.setDisplayBackground?.(d.idx, d.idx !== s.activeDisplay);
+			return;
+		}
+		const idx = this.singleDisplay(s);
+		const shown = s.monitors.find((m) => m.current)?.idx;
+		c.setMainDisplay?.(idx);
+		if (shown !== idx) {
+			c.switchMonitor?.(idx);
+			this.refreshMonitors(s);
+			s.monitors = s.monitors.map((m) => ({ ...m, current: m.idx === idx }));
+		}
+		s.activeDisplay = idx;
+	}
+
+	setLayout(layout: DisplayLayout): void {
+		const s = this.active;
+		if (!s?.together || !DISPLAY_LAYOUTS.includes(layout)) return;
+		this.saveDisplays(s, { layout });
+		this.syncLayout(s);
+		this.resize();
+	}
+
+	/** The next layout (Ctrl+Alt+Shift+L) */
+	nextLayout(): void {
+		const s = this.active;
+		if (!s?.together || !this.wide) return;
+		const i = DISPLAY_LAYOUTS.indexOf(s.display.layout);
+		this.setLayout(DISPLAY_LAYOUTS[(i + 1) % DISPLAY_LAYOUTS.length] ?? 'single');
+	}
+
+	/** The window became wide enough for tiles, or too narrow */
+	setWide(wide: boolean): void {
+		if (this.wide === wide) return;
+		this.wide = wide;
+		for (const s of this.sessions) if (s.view === 'streaming') this.syncLayout(s);
+	}
+
+	/** A tile's canvas is in the page: the display shows there */
+	attachTile(s: ViewerSession, idx: number, canvas: HTMLCanvasElement): void {
+		const c = s.client;
+		if (!c?.showDisplay) return;
+		c.showDisplay(idx, canvas, { zoom: s.display.zoom[idx] ?? 'fit' });
+		c.setDisplayBackground?.(idx, idx !== s.activeDisplay);
+		c.setDisplayVisible?.(idx, document.visibilityState !== 'hidden');
+	}
+
+	detachTile(s: ViewerSession, idx: number): void {
+		if (!s.popouts.includes(idx)) s.client?.hideDisplay?.(idx);
+	}
+
+	/** Work on a display: it streams live, the other tiles follow the background setting */
+	focusDisplay(s: ViewerSession, idx: number): void {
+		if (s.activeDisplay === idx) return;
+		s.activeDisplay = idx;
+		if (!this.tilesShown(s)) return;
+		for (const d of s.displays) {
+			if (!s.popouts.includes(d.idx)) s.client?.setDisplayBackground?.(d.idx, d.idx !== idx);
+		}
+	}
+
+	setDisplayZoom(s: ViewerSession, idx: number, zoom: DisplayZoom): void {
+		this.saveDisplays(s, { zoom: { ...s.display.zoom, [idx]: zoom } });
+		s.client?.setDisplayZoom?.(idx, zoom);
+		s.windows
+			.get(idx)
+			?.postMessage({ type: 'nd-display-zoom', zoom } satisfies DisplayWindowMessage, location.origin);
+	}
+
+	/** Fitted or at its own size, for the display worked on (Ctrl+Alt+Shift+Z) */
+	toggleZoom(): void {
+		const s = this.active;
+		if (!s || !this.tilesShown(s)) return;
+		const idx = s.activeDisplay;
+		this.setDisplayZoom(s, idx, (s.display.zoom[idx] ?? 'fit') === 'fit' ? '1:1' : 'fit');
+	}
+
+	setBackgroundDisplays(mode: BackgroundMode): void {
+		const s = this.active;
+		if (!s) return;
+		this.saveDisplays(s, { background: mode });
+		s.client?.setBackgroundDisplays?.(mode);
+	}
+
+	/** The page was hidden (minimised, another tab) or shows again: its displays pause meanwhile */
+	setPageVisible(visible: boolean): void {
+		for (const s of this.sessions) {
+			const c = s.client;
+			if (!c || !s.together) continue;
+			// A recording keeps its picture coming
+			c.setMainVisible?.(visible || s.recording);
+			for (const d of s.displays) {
+				if (!s.popouts.includes(d.idx)) c.setDisplayVisible?.(d.idx, visible || s.recording);
+			}
+		}
+	}
+
+	/** Checks for display windows closed without a word, while there are any */
+	private windowTimer: ReturnType<typeof setInterval> | null = null;
+
+	/**
+	 * Open a display in a window of its own. The window loads the viewer page
+	 * in its display mode and says when its canvas is ready; this window keeps
+	 * the connection and draws the display's pictures into that canvas.
+	 * False when the browser blocked the window.
+	 */
+	popOut(s: ViewerSession, idx: number, onScreen: Rect | null = null): boolean {
+		if (!s.together || !s.client?.showDisplay) return false;
+		const open = s.windows.get(idx);
+		if (open && !open.closed) {
+			open.focus();
+			return true;
+		}
+		const url = link(`/remote/${encodeURIComponent(s.deviceId)}?popout=${idx}`);
+		const name = `nd-display-${s.deviceId}-${idx}`;
+		const w = window.open(url, name, windowFeatures(s.displays[idx], onScreen));
+		if (!w) return false;
+		s.windows.set(idx, w);
+		s.popouts = [...s.popouts, idx];
+		s.client.hideDisplay?.(idx);
+		this.syncLayout(s);
+		this.windowTimer ??= setInterval(() => this.checkWindows(), 1000);
+		return true;
+	}
+
+	/** Pop out the display worked on (Ctrl+Alt+Shift+P) */
+	popOutActive(): void {
+		const s = this.active;
+		if (!s?.together) return;
+		const idx = this.tilesShown(s) ? s.activeDisplay : this.singleDisplay(s);
+		if (!this.popOut(s, idx)) this.windowBlocked();
+	}
+
+	windowBlocked(): void {
+		toast.warning(
+			tf(
+				'remote_viewer.window_blocked',
+				'The browser blocked the new window. Allow pop-ups for this site, then try again.'
+			)
+		);
+	}
+
+	/** A display's window closed: the display comes back to this window */
+	returnDisplay(s: ViewerSession, idx: number): void {
+		if (!s.popouts.includes(idx)) return;
+		s.windows.delete(idx);
+		s.popouts = s.popouts.filter((i) => i !== idx);
+		s.client?.hideDisplay?.(idx);
+		this.syncLayout(s);
+		if (!this.sessions.some((x) => x.windows.size) && this.windowTimer) {
+			clearInterval(this.windowTimer);
+			this.windowTimer = null;
+		}
+	}
+
+	/** Close every display window and bring the displays back */
+	returnAllDisplays(s: ViewerSession): void {
+		for (const [idx, w] of [...s.windows]) {
+			try {
+				w.close();
+			} catch {
+				/* gone */
+			}
+			this.returnDisplay(s, idx);
+		}
+	}
+
+	private closeDisplayWindows(s: ViewerSession): void {
+		for (const w of s.windows.values()) {
+			try {
+				w.postMessage({ type: 'nd-display-bye' } satisfies DisplayWindowMessage, location.origin);
+				w.close();
+			} catch {
+				/* gone */
+			}
+		}
+		s.windows.clear();
+		s.popouts = [];
+	}
+
+	/** Windows closed without saying so (the browser ended them) */
+	private checkWindows(): void {
+		for (const s of this.sessions) {
+			for (const [idx, w] of [...s.windows]) if (w.closed) this.returnDisplay(s, idx);
+		}
+	}
+
+	/** A message from a display's window: ready, shown or hidden, zoom, closed */
+	onWindowMessage(ev: MessageEvent<unknown>): void {
+		if (ev.origin !== location.origin || !ev.data || typeof ev.data !== 'object') return;
+		const msg = ev.data as DisplayWindowMessage;
+		for (const s of this.sessions) {
+			for (const [idx, w] of s.windows) {
+				if (w !== ev.source) continue;
+				if (msg.type === 'nd-display-ready') this.attachWindow(s, idx, w);
+				else if (msg.type === 'nd-display-visible') s.client?.setDisplayVisible?.(idx, !!msg.visible);
+				else if (msg.type === 'nd-display-zoom' && (msg.zoom === 'fit' || msg.zoom === '1:1')) {
+					this.saveDisplays(s, { zoom: { ...s.display.zoom, [idx]: msg.zoom } });
+					s.client?.setDisplayZoom?.(idx, msg.zoom);
+				} else if (msg.type === 'nd-display-closed') this.returnDisplay(s, idx);
+				return;
+			}
+		}
+	}
+
+	/** The display's window has its canvas: draw the display there */
+	private attachWindow(s: ViewerSession, idx: number, w: Window): void {
+		let canvas: HTMLCanvasElement | null;
+		try {
+			canvas = w.document.getElementById('nd-popout-canvas') as HTMLCanvasElement | null;
+		} catch {
+			// The window navigated away from this origin
+			canvas = null;
+		}
+		if (!canvas || !s.client?.showDisplay) return;
+		const zoom = s.display.zoom[idx] ?? 'fit';
+		s.client.showDisplay(idx, canvas, { win: w, keyboard: true, zoom });
+		s.client.setDisplayVisible?.(idx, w.document.visibilityState !== 'hidden');
+		const d = s.displays[idx];
+		const label = tf('remote_viewer.display_n', 'Display {n}', { n: idx + 1 });
+		w.postMessage(
+			{
+				type: 'nd-display-attached',
+				label: d?.name && d.name !== label ? `${label} (${d.name})` : label,
+				device: s.label,
+				zoom
+			} satisfies DisplayWindowMessage,
+			location.origin
+		);
+	}
+
+	/** This browser has more than one screen (Window Management API) */
+	get screensExtended(): boolean {
+		return (window.screen as Screen & { isExtended?: boolean }).isExtended === true;
+	}
+
+	/**
+	 * One remote display on each local screen (Window Management API): this
+	 * window keeps the display of its own screen, each other screen gets a
+	 * window of its own. Without the API, each display but one opens in a
+	 * window the user can move.
+	 */
+	async spreadDisplays(): Promise<void> {
+		const s = this.active;
+		if (!s?.together) return;
+		const wm = window as Window & { getScreenDetails?: () => Promise<ScreenDetailsLike> };
+		let details: ScreenDetailsLike | null = null;
+		if (wm.getScreenDetails) {
+			try {
+				details = await wm.getScreenDetails();
+			} catch {
+				details = null;
+			}
+		}
+		const free = s.displays.filter((d) => !s.popouts.includes(d.idx));
+		if (!details || details.screens.length < 2) {
+			// Each display but the one shown here in a window of its own
+			const keep = this.tilesShown(s) ? s.activeDisplay : this.singleDisplay(s);
+			for (const d of free) {
+				if (d.idx !== keep && !this.popOut(s, d.idx)) {
+					this.windowBlocked();
+					return;
+				}
+			}
+			return;
+		}
+		const screens = details.screens.map((sc) => ({
+			x: sc.availLeft,
+			y: sc.availTop,
+			w: sc.availWidth,
+			h: sc.availHeight
+		}));
+		const current = details.screens.findIndex((sc) => sc === details.currentScreen);
+		const plan = planSpread(free, screens, current);
+		for (const { display, screen } of plan.windows) {
+			if (!this.popOut(s, display, screens[screen] ?? null)) {
+				this.windowBlocked();
+				return;
+			}
+		}
+		if (plan.main >= 0) {
+			this.saveDisplays(s, { display: plan.main, layout: plan.left.length ? s.display.layout : 'single' });
+			this.syncLayout(s);
+		}
 	}
 
 	toggleVirtualDisplay(index: number, on: boolean): void {
@@ -1264,6 +1668,7 @@ export class Viewer {
 		requestAnimationFrame(() => {
 			try {
 				s.client?.renderer?.resize();
+				s.client?.resizeDisplays?.();
 			} catch {
 				/* not ready */
 			}

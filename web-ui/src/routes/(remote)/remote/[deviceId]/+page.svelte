@@ -6,7 +6,9 @@
   share (?mesh_share=); GET /api/remote/viewer/<id> decides and gives the
   page its data. Keeps ?transport=, ?panel=files, #add=<id>, the
   BroadcastChannel "neodesk-remote" and, in development with
-  ND_DEV_MOCK_REMOTE=1, ?mock=1&scenario=.
+  ND_DEV_MOCK_REMOTE=1, ?mock=1&scenario=. With ?popout=<display> it is a
+  display's window of its own: the viewer that opened it draws into it and
+  keeps the connection, so this page asks the server for nothing.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -17,12 +19,18 @@
 	import { base, link } from '#lib/nav.ts';
 	import { loadRdClient } from '#lib/remote/rdclient.ts';
 	import { isDeviceId } from '#lib/remote/access.ts';
+	import DisplayWindow from '#lib/remote/viewer/DisplayWindow.svelte';
 	import RemoteViewer from '#lib/remote/viewer/RemoteViewer.svelte';
 	import Button from '#lib/ui/Button.svelte';
 
 	type Problem = { title: string; message: string; home?: boolean };
 
 	const deviceId = $derived(page.params.deviceId ?? '');
+	/** A display's own window: the display's index, or -1 for the viewer */
+	const popout = $derived.by(() => {
+		const v = page.url.searchParams.get('popout');
+		return v !== null && /^\d{1,2}$/.test(v) ? Number(v) : -1;
+	});
 	let data = $state.raw<ViewerData | null>(null);
 	let problem = $state.raw<Problem | null>(null);
 	let busy = $state(false);
@@ -91,14 +99,18 @@
 		}
 	}
 
-	onMount(() => void load());
+	onMount(() => {
+		if (popout < 0) void load();
+	});
 </script>
 
 <svelte:head>
-	<title>{tf('remote.title', 'Remote Desktop')} - {deviceId}</title>
+	{#if popout < 0}<title>{tf('remote.title', 'Remote Desktop')} - {deviceId}</title>{/if}
 </svelte:head>
 
-{#if data}
+{#if popout >= 0 && isDeviceId(deviceId)}
+	<DisplayWindow {deviceId} display={popout} />
+{:else if data}
 	<RemoteViewer {data} />
 {:else if problem}
 	<main class="viewer-problem">

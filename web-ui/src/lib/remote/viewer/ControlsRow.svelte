@@ -16,6 +16,7 @@
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import { openPopup } from '#lib/ui/popups.svelte.ts';
+	import DisplayMenu from './DisplayMenu.svelte';
 	import MenuChoice from './MenuChoice.svelte';
 	import ToolMenu from './ToolMenu.svelte';
 
@@ -25,8 +26,10 @@
 	const s = $derived(viewer.active);
 	const monitors = $derived(s?.monitors ?? []);
 	const vd = $derived(s?.virtualDisplays ?? { supported: false });
-	const useStrip = $derived(monitors.length >= 2 && monitors.length <= 4);
-	const screensMenu = $derived((monitors.length > 1 && !useStrip) || !!vd.supported);
+	// A device that streams several displays at once gets the Displays menu; older ones switch here
+	const together = $derived(!!s?.together);
+	const useStrip = $derived(!together && monitors.length >= 2 && monitors.length <= 4);
+	const screensMenu = $derived(!together && ((monitors.length > 1 && !useStrip) || !!vd.supported));
 	const winSessions = $derived(s?.windowsSessions ?? { sessions: [], currentSid: 0 });
 	const check = $derived(viewer.billingCheck);
 	const hasPackage = $derived(
@@ -312,6 +315,10 @@
 					</div>
 				</div>
 			</ToolMenu>
+
+			{#if together && s}
+				<DisplayMenu {viewer} session={s} />
+			{/if}
 
 			{#if useStrip}
 				<div class="monitor-strip" role="group" aria-label={tf('remote.select_monitor', 'Select monitor')}>

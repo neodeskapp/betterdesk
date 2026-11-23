@@ -10,6 +10,9 @@
   current tab while there is no picture). F11 toggles full screen. On the
   tabs, arrows, Home and End move and open, Delete closes. Escape closes an
   open sheet; elsewhere it opens Controls while a picture shows.
+  Ctrl+Alt+Shift with 1 to 9 picks a display of the device, L changes the
+  layout, Z the zoom of the display worked on, P opens it in a window of
+  its own (DisplayMenu.svelte).
 -->
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
@@ -19,7 +22,7 @@
 	import { addFromHash, guestTokenFromSearch, isDeviceId } from '#lib/remote/access.ts';
 	import { isMobileViewer, isPhone } from '#lib/remote/capabilities.ts';
 	import { tabStatus } from '#lib/remote/states.ts';
-	import { SHEET_BUTTONS, Viewer } from '#lib/remote/viewer.svelte.ts';
+	import { SHEET_BUTTONS, TILES_MIN_WIDTH, Viewer } from '#lib/remote/viewer.svelte.ts';
 	import AddressBook from '#lib/remote/AddressBook.svelte';
 	import LinkButton from '#lib/remote/LinkButton.svelte';
 	import QuickConnect from '#lib/remote/QuickConnect.svelte';
@@ -206,7 +209,26 @@
 	function evaluatePhone() {
 		phone = isPhone();
 		mobile = isMobileViewer();
+		// Tiles need room and a mouse: narrower windows and touch tablets show one display at a time
+		viewer.setWide(window.innerWidth >= TILES_MIN_WIDTH && !mobile);
 		if (!phone) start();
+	}
+
+	/** Ctrl+Alt+Shift and 1 to 9, L, Z or P: the device's displays; true when it was one of them */
+	function displayShortcut(e: KeyboardEvent): boolean {
+		if (!e.ctrlKey || !e.altKey || !e.shiftKey || e.metaKey) return false;
+		const s = viewer.active;
+		if (!s || s.view !== 'streaming') return false;
+		const digit = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+		if (digit) {
+			const idx = Number(digit[1]) - 1;
+			if (idx < Math.max(s.monitors.length, s.displays.length)) viewer.switchMonitor(idx);
+		} else if (e.code === 'KeyL') viewer.nextLayout();
+		else if (e.code === 'KeyZ') viewer.toggleZoom();
+		else if (e.code === 'KeyP') viewer.popOutActive();
+		else return false;
+		void tick().then(() => s.focus?.canvas());
+		return true;
 	}
 
 	onMount(() => {
@@ -223,6 +245,11 @@
 
 		// F8 leaves the remote screen (capture phase: the screen keeps every other key)
 		const onF8 = (e: KeyboardEvent) => {
+			if (displayShortcut(e)) {
+				e.preventDefault();
+				e.stopPropagation();
+				return;
+			}
 			if (e.key !== 'F8' || e.ctrlKey || e.altKey || e.metaKey) return;
 			e.preventDefault();
 			e.stopPropagation();
@@ -258,6 +285,11 @@
 		const onPageHide = (e: PageTransitionEvent) => {
 			if (!e.persisted) viewer.teardown();
 		};
+		// Displays in windows of their own talk to this window; a hidden page pauses its displays
+		const onMessage = (e: MessageEvent<unknown>) => viewer.onWindowMessage(e);
+		const onVisibility = () => viewer.setPageVisible(document.visibilityState !== 'hidden');
+		window.addEventListener('message', onMessage);
+		document.addEventListener('visibilitychange', onVisibility);
 		window.addEventListener('keydown', onF8, true);
 		document.addEventListener('keydown', onKey);
 		document.addEventListener('fullscreenchange', onFullscreen);
@@ -295,6 +327,8 @@
 			window.removeEventListener('focus', onFocus);
 			document.removeEventListener('rd-file-sheet-closed', onFilesClosed);
 			window.removeEventListener('pagehide', onPageHide, { capture: true });
+			window.removeEventListener('message', onMessage);
+			document.removeEventListener('visibilitychange', onVisibility);
 			bc?.close();
 			viewer.teardown();
 		};

@@ -17,6 +17,9 @@ import { setCsrfToken } from '#lib/api/client.ts';
 import { t } from '#lib/i18n/i18n.svelte.ts';
 import { installCapabilities } from './capabilities.ts';
 import type { ViewerCapabilities } from './access.ts';
+import type { DisplayZoom } from './client/display-layout.ts';
+import type { BackgroundMode, RDDisplayTraffic } from './client/display-streams.ts';
+import type { RDDisplay } from './client/displays.ts';
 import type { MessageInit } from './client/generated/protos.ts';
 import type { RDInputRenderer } from './client/input.ts';
 import type { Transport } from './states.ts';
@@ -31,6 +34,19 @@ export interface Monitor {
 	primary: boolean;
 	/** Not reported by CDAP sessions */
 	current?: boolean;
+}
+
+export type { DisplayLayout, DisplayZoom } from './client/display-layout.ts';
+export type { BackgroundMode, RDDisplayTraffic } from './client/display-streams.ts';
+export type { RDDisplay } from './client/displays.ts';
+
+/** How a display shown on its own is drawn (RDShowDisplayOptions in client.ts) */
+export interface ShowDisplayOptions {
+	zoom?: DisplayZoom;
+	/** The window the canvas is in, when it is another one than the viewer's */
+	win?: Window;
+	/** Its input takes its window's keyboard (a window of its own) */
+	keyboard?: boolean;
 }
 
 export interface VirtualDisplaySupport {
@@ -110,6 +126,24 @@ export interface RemoteClient {
 	setSessionActive?(active: boolean): void;
 	getMonitors?(): Monitor[];
 	switchMonitor?(idx: number): void;
+	/*
+	 * Several displays at once (RDClient with RustDesk 1.2.4 or later, and the
+	 * mock): a display shown on its own canvas has its own decoder, screen and
+	 * mouse; the device streams exactly the displays shown (display-streams.ts)
+	 */
+	getDisplays?(): RDDisplay[];
+	canShowDisplaysTogether?(): boolean;
+	showDisplay?(idx: number, canvas: HTMLCanvasElement, opts?: ShowDisplayOptions): void;
+	hideDisplay?(idx: number): void;
+	setDisplayZoom?(idx: number, zoom: DisplayZoom): void;
+	setDisplayVisible?(idx: number, visible: boolean): void;
+	setDisplayBackground?(idx: number, background: boolean): void;
+	setBackgroundDisplays?(mode: BackgroundMode): void;
+	setMainDisplay?(idx: number | null): void;
+	setMainVisible?(visible: boolean): void;
+	resizeDisplays?(): void;
+	getDisplayTraffic?(): RDDisplayTraffic[];
+	displayCanvas?(idx: number): HTMLCanvasElement | null;
 	getVirtualDisplaySupport?(): VirtualDisplaySupport;
 	toggleVirtualDisplay?(index: number, on: boolean): void;
 	getWindowsSessions?(): WindowsSessions;

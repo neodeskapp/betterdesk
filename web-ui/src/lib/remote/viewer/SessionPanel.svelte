@@ -25,6 +25,7 @@
 	import { copyText } from '#lib/ui/clipboard.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import type { Viewer, ViewerSession } from '#lib/remote/viewer.svelte.ts';
+	import DisplayStage from './DisplayStage.svelte';
 
 	let { viewer, session: s, active }: { viewer: Viewer; session: ViewerSession; active: boolean } = $props();
 
@@ -67,6 +68,9 @@
 
 	const name = $derived(s.label);
 	const view = $derived<View>(s.view);
+	/** The displays show as tiles: the single screen steps aside */
+	const tiles = $derived(viewer.tilesShown(s));
+	let panel = $state<HTMLElement | null>(null);
 	const overState = $derived(view === 'connecting' || view === 'failed' || view === 'ended');
 	const result = $derived(view === 'failed' || view === 'ended');
 	const steps = $derived(stepRows(s.stepId, view === 'failed', name, viewer.transport));
@@ -84,7 +88,12 @@
 
 	onMount(() => {
 		s.focus = {
-			canvas: () => canvas?.focus({ preventScroll: true }),
+			canvas: () => {
+				const tile = tiles
+					? panel?.querySelector<HTMLCanvasElement>(`.tile-canvas[data-display="${s.activeDisplay}"]`)
+					: null;
+				(tile ?? canvas)?.focus({ preventScroll: true });
+			},
 			password: () => passwordInput?.focus(),
 			tfa: () => tfaInput?.focus(),
 			reconnect: () => reconnectBtn?.focus({ preventScroll: true }),
@@ -143,17 +152,29 @@
 	role="tabpanel"
 	aria-labelledby="rd-tab-{s.deviceId}"
 	hidden={!active}
+	bind:this={panel}
 >
 	<canvas
 		bind:this={canvas}
 		class="session-canvas"
-		tabindex={view === 'streaming' ? 0 : -1}
+		hidden={tiles}
+		tabindex={view === 'streaming' && !tiles ? 0 : -1}
 		aria-label={tf('remote_viewer.screen_label', 'Screen of {name}', { name })}
 		aria-describedby="{uid}-keys"
 		onpointerdown={onCanvasPress}
 		onfocus={showKeysHint}
 		onblur={hideKeysHint}
 	></canvas>
+	{#if tiles}
+		<DisplayStage
+			{viewer}
+			session={s}
+			describedby="{uid}-keys"
+			onscreenfocus={showKeysHint}
+			onscreenblur={hideKeysHint}
+			onscreenpress={onCanvasPress}
+		/>
+	{/if}
 	<p id="{uid}-keys" class={['screen-keys', keysHint && view === 'streaming' && 'is-shown']}>
 		{tf('remote_viewer.screen_keys', 'Keys go to the device, Tab too. Press F8 to leave the screen.')}
 	</p>
@@ -421,6 +442,9 @@
 		height: 100%;
 		outline: none;
 		cursor: default;
+	}
+	.session-canvas[hidden] {
+		display: none;
 	}
 	/* Keyboard focus on the remote screen shows as an inset ring */
 	.session-canvas:focus-visible {
