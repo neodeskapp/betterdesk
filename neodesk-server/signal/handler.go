@@ -718,16 +718,12 @@ func (s *Server) handleRegisterPeer(msg *pb.RegisterPeer, raddr *net.UDPAddr) {
 		return
 	}
 
-	// Only request PK if we don't have it from database
-	requestPk := len(entry.PK) == 0
-	resp := &pb.RendezvousMessage{
-		Union: &pb.RendezvousMessage_RegisterPeerResponse{
-			RegisterPeerResponse: &pb.RegisterPeerResponse{
-				RequestPk: requestPk,
-			},
-		},
-	}
-	s.sendUDP(resp, raddr)
+	// The stored key signs relay answers at once, but the peer is asked for
+	// its key all the same, as hbbs and the WebSocket path do: a computer
+	// that comes back after a restart or a reboot with another key is then
+	// refused (processRegisterPk) instead of passing as online while every
+	// session fails its handshake (L438).
+	s.sendUDP(registerPeerResponse(true), raddr)
 
 	log.Printf("[signal] New peer registered: %s from %s (pk_loaded=%v)", id, raddr, len(entry.PK) > 0)
 	s.db.UpdatePeerStatus(id, "ONLINE", raddr.IP.String(), "signal")
