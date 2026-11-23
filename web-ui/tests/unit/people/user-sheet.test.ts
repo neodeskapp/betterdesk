@@ -47,4 +47,29 @@ describe('user sheet', () => {
 		await user.type(field, name);
 		expect(field).toHaveValue(name);
 	});
+
+	test('a Direct devices entry that is no device ID is refused at the field and nothing is sent (BUGS L397)', async () => {
+		const user = userEvent.setup();
+		const writes: string[] = [];
+		vi.stubGlobal('fetch', async (input: string, init: RequestInit = {}) => {
+			if ((init.method ?? 'GET') !== 'GET')
+				writes.push(`${init.method} ${new URL(input, location.origin).pathname}`);
+			return new Response('{"success":true,"data":{}}', { headers: { 'Content-Type': 'application/json' } });
+		});
+		render(UserSheet, {
+			user: null,
+			groups: [],
+			roleLabel: (r: string) => r,
+			providerLabel: (p: string) => p,
+			onclose: () => {},
+			onsaved: () => {}
+		});
+		await user.type(screen.getByLabelText('users.username'), 'helpdesk1');
+		await user.type(screen.getByLabelText('users.password'), 'Strong-Pass-1!');
+		const direct = screen.getByLabelText('users.user_direct_devices');
+		await user.type(direct, '900100001, <script>');
+		await user.click(screen.getByRole('button', { name: /users.create|users.add_user|actions.save/ }));
+		await vi.waitFor(() => expect(direct).toHaveAccessibleDescription(/users.invalid_device_id/));
+		expect(writes).toEqual([]);
+	});
 });

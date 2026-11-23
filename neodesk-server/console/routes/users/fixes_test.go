@@ -58,15 +58,6 @@ func replaced(old, new string) func(string) string {
 	}
 }
 
-// guidList is "g<from>",...,"g<to>" as a JSON list writes it.
-func guidList(from, to int) string {
-	parts := make([]string, 0, to-from+1)
-	for i := from; i <= to; i++ {
-		parts = append(parts, `"g`+strconv.Itoa(i)+`"`)
-	}
-	return strings.Join(parts, ",")
-}
-
 // totpFlag is the last field of an account as the list and an update send
 // it in the recordings.
 var totpFlag = regexp.MustCompile(`("totp_enabled":(?:true|false))`)
@@ -90,7 +81,52 @@ const (
 	emailTooLong     = `{"success":false,"error":"An email address has at most 200 characters."}`
 	// The recordings' language file has no text for the key
 	passwordTooShort = `{"success":false,"error":"users.password_too_short"}`
+	// Refusals of values that were stored or dropped (L397)
+	unknownUserGroup = `{"success":false,"error":"A chosen user group doesn't exist any more. Reload the page and choose again."}`
+	unknownFolder    = `{"success":false,"error":"A chosen folder doesn't exist any more. Reload the page and choose again."}`
+	strategyNotFound = `{"success":false,"error":"This RustDesk Pro strategy doesn't exist any more. Reload the page and choose again."}`
 )
+
+// refusedCreate is a new account the Go console refuses for a value Node
+// stored or dropped without a word (BUGS L397): a user group or folder
+// that doesn't exist, a role the server doesn't know. Node made the
+// account with what it could read; its answer names the id, the user
+// groups and the folders, which are written so the steps after it find
+// the rows the recording's did.
+func refusedCreate(answer string) fix {
+	return fix{bug: "L397", status: http.StatusBadRequest, answer: is(answer), node: func(n *nodeWrites) {
+		n.p.t.Helper()
+		var node struct {
+			Data struct {
+				ID         json.Number `json:"id"`
+				Username   string      `json:"username"`
+				UserGroups []string    `json:"user_groups"`
+				FolderIDs  []float64   `json:"folder_ids"`
+			} `json:"data"`
+		}
+		if err := json.Unmarshal([]byte(n.step.Answer), &node); err != nil {
+			n.p.t.Fatalf("step %q: the recorded answer: %v", n.step.Name, err)
+		}
+		id, err := node.Data.ID.Int64()
+		if err != nil {
+			n.p.t.Fatalf("step %q: the recorded id: %v", n.step.Name, err)
+		}
+		n.createdAccount(id, node.Data.Username, node.Data.Username)
+		d := n.p.world.Server.Deps()
+		if _, err := d.DeviceGroups.SetUserGroupMemberships(context.Background(), id, node.Data.UserGroups); err != nil {
+			n.p.t.Fatal(err)
+		}
+		if len(node.Data.FolderIDs) > 0 {
+			folders := make([]any, len(node.Data.FolderIDs))
+			for i, f := range node.Data.FolderIDs {
+				folders[i] = f
+			}
+			if _, err := d.Access.SyncUserFolderAccess(context.Background(), node.Data.Username, folders); err != nil {
+				n.p.t.Fatal(err)
+			}
+		}
+	}}
+}
 
 // fixFor is the fix of a step: the one for the recording's shape
 // ("sqlite-go: 509 PATCH ..."), or the one for every shape.
@@ -130,6 +166,20 @@ var deletedGroup = fix{
 // recording) are the same on every database shape; later ones carry the
 // shape in front.
 var fixes = map[string]fix{
+	// A rename answers the group's members, which Node counted as 0
+	// (L397)
+	"151 PATCH /api/panel/user-groups/%20ug-beta%20": {bug: "L397", answer: replaced(`"member_count":0`, `"member_count":1`)},
+	// Values the account routes stored or dropped without a word (L397)
+	"199 POST /api/users":                           refusedCreate(unknownUserGroup),
+	"204 POST /api/users":                           refusedCreate(unknownUserGroup),
+	"209 POST /api/users":                           refusedCreate(unknownUserGroup),
+	"233 POST /api/users":                           refusedCreate(unknownFolder),
+	"257 POST /api/users":                           refusedCreate(invalidRole),
+	"259 POST /api/users":                           refusedCreate(invalidRole),
+	"269 POST /api/users":                           refusedCreate(invalidRole),
+	"271 POST /api/users":                           refusedCreate(invalidRole),
+	"281 POST /api/users":                           refusedCreate(invalidRole),
+	"283 POST /api/users":                           refusedCreate(invalidRole),
 	"161 DELETE /api/panel/user-groups/{patched}":   deletedGroup,
 	"162 DELETE /api/panel/user-groups/{patched}":   deletedGroup,
 	"163 DELETE /api/panel/user-groups/{byGlobal}":  deletedGroup,
@@ -197,9 +247,6 @@ var fixes = map[string]fix{
 
 	// The answer to a new account: Node listed the user group guids as
 	// they were sent, and no email for null.
-	"199 POST /api/users": {bug: "US7", answer: replaced(`"user_groups":["ug-alpha","ug-beta","missing"]`, `"user_groups":["ug-alpha","ug-beta"]`)},
-	"204 POST /api/users": {bug: "US7", answer: replaced(`"user_groups":["5"]`, `"user_groups":[]`)},
-	"209 POST /api/users": {bug: "US7", answer: replaced(`"user_groups":["g0",`+guidList(1, 99)+`]`, `"user_groups":[]`)},
 	"226 POST /api/users": {bug: "US7", answer: replaced(`"role":"viewer","user_groups"`, `"role":"viewer","email":"","user_groups"`)},
 
 	// Checks after writes: Node created the account, then refused its
@@ -209,7 +256,8 @@ var fixes = map[string]fix{
 	"229 POST /api/users": {bug: "US4", answer: is(invalidEmail), node: func(n *nodeWrites) { n.account(n.id(42, 43), "mail_num") }},
 	"230 POST /api/users": {bug: "US4", node: func(n *nodeWrites) { n.account(n.id(43, 44), "mail_tostr") }},
 	"231 POST /api/users": {bug: "US4", answer: is(invalidEmail), node: func(n *nodeWrites) { n.account(n.id(44, 45), "mail_true") }},
-	"239 POST /api/users": {bug: "US4", node: func(n *nodeWrites) {
+	// An unknown strategy is 400, not 500 (L397)
+	"239 POST /api/users": {bug: "US4, L397", status: http.StatusBadRequest, answer: is(strategyNotFound), node: func(n *nodeWrites) {
 		id := n.id(52, 53)
 		n.account(id, "scope_missing")
 		n.guid(id)
@@ -217,7 +265,7 @@ var fixes = map[string]fix{
 	// Node wrote the role before the weak password, the folders before the
 	// unknown strategy, the user groups before the invalid email
 	"366 PATCH /api/users/13": {bug: "US4, L94", answer: is(passwordTooShort), node: func(n *nodeWrites) { n.exec(`UPDATE users SET role = 'viewer' WHERE id = 13`) }},
-	"378 PATCH /api/users/13": {bug: "US4", node: func(n *nodeWrites) {
+	"378 PATCH /api/users/13": {bug: "US4, L397", status: http.StatusBadRequest, answer: is(strategyNotFound), node: func(n *nodeWrites) {
 		if _, err := n.p.world.Server.Deps().Access.SyncUserFolderAccess(context.Background(), "target_op", []any{1.0}); err != nil {
 			n.p.t.Fatal(err)
 		}

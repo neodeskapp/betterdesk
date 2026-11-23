@@ -13,7 +13,14 @@
 	import { createUser, updateUser, type ConsoleUser, type UserGroupRow } from '#lib/api/users.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import PasswordField from '#lib/people/PasswordField.svelte';
-	import { passwordProblem, providerOf, roleChoices, splitIds, usernameProblem } from '#lib/people/users.ts';
+	import {
+		deviceIdsOk,
+		passwordProblem,
+		providerOf,
+		roleChoices,
+		splitIds,
+		usernameProblem
+	} from '#lib/people/users.ts';
 	import { can, session } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
@@ -85,7 +92,11 @@
 		validate: (v) => {
 			const name = editing ? null : usernameProblem(v.username.trim());
 			const pw = editing && !isLocal ? null : passwordProblem(v.password, !editing);
-			return { username: name ? t(name) : undefined, password: pw ? t(pw) : undefined };
+			return {
+				username: name ? t(name) : undefined,
+				password: pw ? t(pw) : undefined,
+				direct: deviceIdsOk(splitIds(v.direct)) ? undefined : t('users.invalid_device_id')
+			};
 		},
 		submit: async (v) => {
 			const common = {
@@ -240,7 +251,11 @@
 				{/if}
 				<p class="note" id="{uid}-folders-hint">{t('users.user_folders_hint')}</p>
 			</fieldset>
-			<Field label={t('users.user_direct_devices')} hint={t('users.user_direct_devices_hint')}>
+			<Field
+				label={t('users.user_direct_devices')}
+				hint={t('users.user_direct_devices_hint')}
+				error={form.errors.direct}
+			>
 				{#snippet children(f)}
 					<Input {...f} width="host" spellcheck="false" autocomplete="off" bind:value={form.values.direct} />
 				{/snippet}

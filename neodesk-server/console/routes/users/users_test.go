@@ -432,6 +432,8 @@ func TestRefusedChangesWriteNothing(t *testing.T) {
 			invalidEmail = `{"success":false,"error":"Enter a valid email address."}`
 			emailTooLong = `{"success":false,"error":"An email address has at most 200 characters."}`
 			serverError  = `{"success":false,"error":"Server error"}`
+			// An unknown strategy is refused, no longer a server error (L397)
+			strategyMissing = `{"success":false,"error":"This RustDesk Pro strategy doesn't exist any more. Reload the page and choose again."}`
 		)
 		long := strings.Repeat("a", 195) + "@b.cde"
 		admin := w.As("admin")
@@ -443,12 +445,12 @@ func TestRefusedChangesWriteNothing(t *testing.T) {
 			{"POST", "/api/users", `{"username":"mail_bad","password":"Strong-Pass-1!","groupGuids":["g1"],"email":"not-a-mail"}`, 400, invalidEmail},
 			{"POST", "/api/users", `{"username":"mail_long","password":"Strong-Pass-1!","groupGuids":["g1"],"email":"` + long + `"}`, 400, emailTooLong},
 			{"POST", "/api/users", `{"username":"mail_number","password":"Strong-Pass-1!","email":5}`, 400, invalidEmail},
-			{"POST", "/api/users", `{"username":"no_strategy","password":"Strong-Pass-1!","groupGuids":["g1"],"folderIds":[1],"strategyGuid":"missing"}`, 500, serverError},
+			{"POST", "/api/users", `{"username":"no_strategy","password":"Strong-Pass-1!","groupGuids":["g1"],"folderIds":[1],"strategyGuid":"missing"}`, 400, strategyMissing},
 			{"PATCH", "/api/users/5", `{"role":"viewer","password":"weak"}`, 400, ""},
 			{"PATCH", "/api/users/5", `{"role":"viewer","password":"Strong-Pass-1!","groupGuids":["bad guid"]}`, 400, `{"success":false,"error":"Invalid user group identifier"}`},
 			{"PATCH", "/api/users/5", `{"role":"viewer","password":"Strong-Pass-1!","groupGuids":["g1"],"folderIds":[1],"email":"bad"}`, 400, invalidEmail},
 			{"PATCH", "/api/users/5", `{"groupGuids":["g1"],"email":"` + long + `"}`, 400, emailTooLong},
-			{"PATCH", "/api/users/5", `{"role":"viewer","folderIds":[1],"strategyGuid":"missing"}`, 500, serverError},
+			{"PATCH", "/api/users/5", `{"role":"viewer","folderIds":[1],"strategyGuid":"missing"}`, 400, strategyMissing},
 			// A password that is no text breaks the password rule (L94)
 			{"PATCH", "/api/users/5", `{"role":"viewer","password":["Abcdefgh1!"]}`, 400, `{"success":false,"error":"users.password_too_short"}`},
 			{"PATCH", "/api/users/5", `{"username":"renamed_op","role":"nonsense"}`, 400, `{"success":false,"error":"Invalid role"}`},
@@ -538,7 +540,7 @@ func TestNewPasswordsFitTheSignIn(t *testing.T) {
 
 // The answer to a new account lists the user groups it became a member
 // of, not the guids as they were sent, and an email of null is "" (BUGS
-// US7).
+// US7). An unknown group is refused (L397, TestUsersRefuseBadValues).
 func TestCreateAnswersStoredGroups(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		w := world(t, storetest.Prepare(t, db, storetest.GoServerFirst), routetest.Options{})
@@ -555,7 +557,7 @@ func TestCreateAnswersStoredGroups(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		got := w.As("admin").Do("POST", "/api/users", `{"username":"grouped","password":"Strong-Pass-1!","groupGuids":["g-b"," g-a ","missing"],"email":null}`, "X-Forwarded-For", "10.6.0.1")
+		got := w.As("admin").Do("POST", "/api/users", `{"username":"grouped","password":"Strong-Pass-1!","groupGuids":["g-b"," g-a ","g-b"],"email":null}`, "X-Forwarded-For", "10.6.0.1")
 		want := `"username":"grouped","role":"viewer","email":"","user_groups":["g-a","g-b"],"folder_ids":[],"peer_grants":[]}}`
 		if got.Status != http.StatusOK || !strings.HasSuffix(got.Body, want) {
 			t.Errorf("create: %d %s, want the answer to end with %s", got.Status, got.Body, want)

@@ -327,8 +327,12 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 		return nil, err
 	}
 	assigned := "viewer"
-	if validRole(role) {
+	switch {
+	case validRole(role):
 		assigned = role.Str()
+	case role.Truthy():
+		// A role the server doesn't know is refused, not made a viewer
+		return nil, sayKey(r, http.StatusBadRequest, "users.invalid_role")
 	}
 	if ok, err := h.canAssignRole(r, assigned); err != nil || !ok {
 		return nil, refusedOr(err)

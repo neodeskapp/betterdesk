@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"regexp"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/devicegroups"
@@ -34,6 +35,9 @@ func (h *handlers) checkScope(ctx context.Context, body middleware.JSONObject) (
 	if body.Has("peerIds") && hidesToString(member(body, "peerIds")) {
 		return "", errNotPrimitive
 	}
+	if err := h.checkKnown(ctx, body); err != nil {
+		return "", err
+	}
 	if !body.Has("strategyGuid") {
 		return "", nil
 	}
@@ -49,6 +53,56 @@ func (h *handlers) checkScope(ctx context.Context, body middleware.JSONObject) (
 		return "", errStrategyNotFound
 	}
 	return strategy, nil
+}
+
+// devicePattern is the form of a device ID a direct grant may name.
+var devicePattern = regexp.MustCompile(`^[A-Za-z0-9._:@-]{1,64}$`)
+
+// checkKnown refuses what used to be stored or dropped without a word:
+// a user group or a folder that doesn't exist, and a direct grant whose
+// device ID is no ID. A well-formed ID of a device that hasn't joined yet
+// is taken, as before.
+func (h *handlers) checkKnown(ctx context.Context, body middleware.JSONObject) error {
+	guids, _, err := groupGUIDsOf(body)
+	if err != nil {
+		return err
+	}
+	for _, guid := range guids {
+		known, err := userGroupExists(ctx, h.d.Store, guid)
+		if err != nil {
+			return err
+		}
+		if !known {
+			return badRequestKey("users.unknown_user_group")
+		}
+	}
+	if ids, isList := plainMember(body, "folderIds").([]any); body.Has("folderIds") && isList {
+		folders, err := h.d.Access.AllFolders(ctx)
+		if err != nil {
+			return err
+		}
+		existing := make(map[int64]bool, len(folders))
+		for _, folder := range folders {
+			existing[folder.ID] = true
+		}
+		normalized := access.NormalizeFolderIDs(ids)
+		if len(normalized) != len(ids) {
+			return badRequestKey("users.unknown_folder")
+		}
+		for _, id := range normalized {
+			if !existing[id] {
+				return badRequestKey("users.unknown_folder")
+			}
+		}
+	}
+	if body.Has("peerIds") {
+		for _, id := range access.NormalizePeerIDs(plainMember(body, "peerIds")) {
+			if !devicePattern.MatchString(id) {
+				return badRequestKey("users.invalid_device_id")
+			}
+		}
+	}
+	return nil
 }
 
 // applyScope is applyUserScopeFromBody after checkScope: the folders of

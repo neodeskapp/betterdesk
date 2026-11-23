@@ -393,8 +393,21 @@ func strategyOf(ctx context.Context, db *store.DB, id int64) (string, error) {
 // threw.
 var (
 	errUserNotFound     = errors.New("user not found")
-	errStrategyNotFound = errors.New("strategy not found")
+	errStrategyNotFound = badRequestKey("users.strategy_not_found")
 )
+
+// userGroupExists reports whether a user group has the guid.
+func userGroupExists(ctx context.Context, db *store.DB, guid string) (bool, error) {
+	var one int
+	err := db.QueryRow(ctx, `SELECT 1 FROM user_groups WHERE guid = ?`, guid).Scan(&one)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("load user group %q: %w", guid, err)
+	}
+	return true, nil
+}
 
 // strategyExists reports whether a strategy has the guid.
 func strategyExists(ctx context.Context, db *store.DB, guid string) (bool, error) {

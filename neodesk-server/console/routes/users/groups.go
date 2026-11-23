@@ -1,6 +1,7 @@
 package users
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
@@ -168,9 +169,20 @@ func (h *handlers) updateUserGroup(w http.ResponseWriter, r *http.Request) {
 		h.groupFailure(w, r, "Update user group error:", err)
 		return
 	}
+	// A note or team the body leaves out stays as it is
+	body := kit.Body(r)
+	if !body.Has("note") {
+		payload.Note = jsbind.Undefined
+	}
+	if !body.Has("team_id") {
+		payload.TeamID = jsbind.Undefined
+	}
 	group, err := h.d.DeviceGroups.UpdateUserGroup(ctx, guid, payload)
 	if err == nil && group == nil {
 		err = errNoRow
+	}
+	if err == nil {
+		err = h.countMembers(ctx, group)
 	}
 	if err == nil {
 		err = h.d.LogAction(r, "user_group_updated", "Updated user group: "+rowText(group.Get("name")))
@@ -180,6 +192,21 @@ func (h *handlers) updateUserGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	answer(w, r, http.StatusOK, groupAnswer{Success: true, Data: groupAnswerData{Group: serializeUserGroup(group)}})
+}
+
+// countMembers sets a group row's member_count, which a row read after a
+// write doesn't have.
+func (h *handlers) countMembers(ctx context.Context, group *goapi.Object) error {
+	all, err := h.d.DeviceGroups.AllUserGroups(ctx)
+	if err != nil {
+		return err
+	}
+	for _, g := range all {
+		if rowText(g.Get("guid")) == rowText(group.Get("guid")) {
+			group.Set("member_count", g.Get("member_count"))
+		}
+	}
+	return nil
 }
 
 // deleteUserGroup answers DELETE /api/panel/user-groups/{guid}, for a

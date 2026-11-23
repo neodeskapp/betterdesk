@@ -141,6 +141,11 @@ export function splitIds(text: string): string[] {
 		.filter(Boolean);
 }
 
+/** Every ID is a device ID as the server takes it: letters, numbers and . _ - : @ */
+export function deviceIdsOk(ids: readonly string[]): boolean {
+	return ids.every((id) => /^[A-Za-z0-9._:@-]{1,64}$/.test(id));
+}
+
 /** Users whose username, email or role name contains every word of the search */
 export function filterUsers(
 	users: readonly ConsoleUser[],
