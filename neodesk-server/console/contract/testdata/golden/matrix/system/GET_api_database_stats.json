@@ -158,6 +158,10 @@
       },
       {
        "count": 0,
+       "name": "admin_tokens"
+      },
+      {
+       "count": 0,
        "name": "agent_bundle_builds"
       },
       {
