@@ -342,11 +342,8 @@
     {
      "name": "all",
      "in": "query",
-     "type": "string",
-     "help": "every account's tokens (super admins): true",
-     "enum": [
-      "true"
-     ]
+     "type": "bool",
+     "help": "every account's tokens (super admins)"
     }
    ],
    "rows": "data.tokens",
@@ -361,7 +358,7 @@
    ],
    "examples": [
     "neodesk api-tokens list",
-    "neodesk api-tokens list --all true"
+    "neodesk api-tokens list --all"
    ]
   },
   {
@@ -447,6 +444,7 @@
   {
    "name": "audit list",
    "summary": "Show the audit log, newest first: who did what, when and from where.",
+   "description": "The table cuts long details; --json shows them in full. Times are UTC.",
    "route": "GET /api/settings/audit",
    "permission": "audit.view",
    "flags": [
@@ -459,6 +457,7 @@
    ],
    "rows": "data.logs",
    "columns": [
+    "id",
     "created_at",
     "username",
     "action",
@@ -654,9 +653,9 @@
   },
   {
    "name": "backups download",
-   "summary": "Download a full backup of the server (use --output). Holds every secret: keep it safe.",
+   "summary": "Download a full backup of the server (use --output). It holds the password hashes and the API key: keep it safe.",
    "route": "GET /api/settings/backup",
-   "description": "The archive holds the database with password hashes, keys and settings. API tokens can download it only when they carry all of their account's permissions.",
+   "description": "The archive holds the databases with the accounts, their password hashes and the settings, the console's API key and the server's public key. API tokens can download it only when they carry all of their account's permissions and may write.",
    "secrets": true,
    "examples": [
     "neodesk backups download --output neodesk-backup.tar.gz"
@@ -2162,11 +2161,8 @@
     {
      "name": "include-revoked",
      "in": "query",
-     "type": "string",
-     "help": "true lists revoked ones too",
-     "enum": [
-      "true"
-     ],
+     "type": "bool",
+     "help": "list revoked tokens too",
      "field": "include_revoked"
     }
    ]
@@ -2531,11 +2527,8 @@
     {
      "name": "include-deleted",
      "in": "query",
-     "type": "string",
-     "help": "true lists deleted devices too",
-     "enum": [
-      "true"
-     ],
+     "type": "bool",
+     "help": "list deleted devices too",
      "field": "includeDeleted"
     }
    ],
@@ -3486,7 +3479,7 @@
      "name": "hours",
      "in": "body",
      "type": "int",
-     "help": "how long it works (default 72)",
+     "help": "how long it works, in hours (default 168, at most 720)",
      "field": "lifetime_hours"
     },
     {
@@ -3564,7 +3557,8 @@
   },
   {
    "name": "invites status",
-   "summary": "Show whether invites work here: client packages and addresses.",
+   "summary": "Show what invites use here: the address in their links, whether mail can be sent, and the client release.",
+   "description": "console.base is the address the links point to: another computer must reach it, so set the console's public address when it is localhost. mail says whether invites can be mailed. release is the client release the join page offers for download.",
    "route": "GET /api/onboard/status"
   },
   {
@@ -5210,7 +5204,7 @@
   },
   {
    "name": "roles list",
-   "summary": "List the roles with their permissions.",
+   "summary": "List the roles with their levels. roles permissions <role> shows what a role may do.",
    "route": "GET /api/panel/roles",
    "permission": "user.view"
   },
@@ -5633,23 +5627,27 @@
   {
    "name": "settings availability-history-set",
    "summary": "Set whether online history is kept and for how long.",
+   "description": "Every call sets both values: without --enabled the history is switched off, and without --days it is kept 30 days.",
    "route": "POST /api/settings/availability-history",
    "flags": [
     {
      "name": "enabled",
      "in": "body",
      "type": "bool",
-     "help": "keep it"
+     "help": "keep it (leave out to switch it off)"
     },
     {
      "name": "days",
      "in": "body",
      "type": "int",
-     "help": "how many days (default 30)",
+     "help": "how many days, 1 to 3650 (default 30)",
      "field": "retention_days"
     }
    ],
-   "permission": "server.config"
+   "permission": "server.config",
+   "examples": [
+    "neodesk settings availability-history-set --enabled --days 90"
+   ]
   },
   {
    "name": "settings capabilities",
@@ -7147,7 +7145,7 @@
     }
    ],
    "permission": "user.create",
-   "description": "The password must be at least 8 characters and follow the server's password rule. You can only give a role whose permissions you have yourself.",
+   "description": "The password takes 8 to 128 characters; nothing else about it is checked. You can only give a role whose permissions you have yourself.",
    "examples": [
     "printf '%s\\n' \"$PASSWORD\" | neodesk users create --username anna --role operator --password-stdin",
     "neodesk users create --username bob --role viewer --email bob@example.com --password-stdin < pw.txt"

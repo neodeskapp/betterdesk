@@ -184,7 +184,9 @@ func render(w io.Writer, body any, rowsPath string, columns []string) {
 		table(w, x, columns)
 		return
 	case map[string]any:
-		if key, list := onlyList(x); key != "" {
+		// A record (it has an id) with a list field is no list
+		_, record := x["id"]
+		if key, list := onlyList(x); key != "" && !record {
 			for _, k := range sortedKeys(x) {
 				if k != key {
 					fmt.Fprintf(w, "%s: %s\n", visible(k), cell(x[k], 200))

@@ -593,3 +593,35 @@ func TestTheSavedConfigPassesTheCheck(t *testing.T) {
 		t.Errorf("%s as the config: %v", other, err)
 	}
 }
+
+// What the agent test found: the secret flags' -stdin form is in the
+// flags list and the usage, every command of the command line itself
+// takes --help, a record with an empty list is no empty table, and a
+// true-only query flag is a switch.
+func TestHelpAndOutputFromTheAgentTest(t *testing.T) {
+	_, out, _ := runCLI(t, nil, "", "users", "create", "--help")
+	if !strings.Contains(out, "(--password-stdin | --password PASSWORD)") || !strings.Contains(out, "\n  --password-stdin ") || !strings.Contains(out, "8 to 128 characters") {
+		t.Errorf("users create --help:\n%s", out)
+	}
+	for _, meta := range []string{"version", "whoami", "config", "login", "mcp", "describe", "completion"} {
+		code, out, _ := runCLI(t, nil, "", meta, "--help")
+		if code != 0 || !strings.Contains(out, "Usage:") {
+			t.Errorf("%s --help: %d %q", meta, code, out)
+		}
+	}
+	f := newFake(t)
+	f.answer = func(r *http.Request) (int, string) {
+		if r.Method == "DELETE" {
+			return 200, `{"success":true,"data":{"id":"abcdefghijkm","name":"old-ci","allow_list":[],"state":"revoked"}}`
+		}
+		return 200, `{"success":true,"data":{"devices":[],"total":0}}`
+	}
+	env := map[string]string{"NEODESK_URL": f.srv.URL, "NEODESK_TOKEN": testToken}
+	_, out, _ = runCLI(t, env, "", "api-tokens", "revoke", "abcdefghijkm", "--yes")
+	if strings.Contains(out, "No results.") || !strings.Contains(out, "state: revoked") {
+		t.Errorf("a record with an empty list:\n%s", out)
+	}
+	if code, out, stderr := runCLI(t, env, "", "devices", "list", "--include-deleted"); code != 0 || !strings.Contains(out, "No results.") || f.reqs[len(f.reqs)-1].URL.Query().Get("includeDeleted") != "true" {
+		t.Errorf("--include-deleted: %d %s %s", code, out, stderr)
+	}
+}

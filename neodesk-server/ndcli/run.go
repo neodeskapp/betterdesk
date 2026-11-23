@@ -266,6 +266,11 @@ func run(t *Table, args []string, env *Env) int {
 		if len(words) == 2 {
 			margs = append([]string{words[1]}, rest...)
 		}
+		// local hands its arguments to the server binary's commands
+		if words[0] != "local" && words[0] != "__complete" && (contains(margs, "--help") || contains(margs, "-h")) {
+			writeMetaHelp(env.Stdout, words[0])
+			return ExitOK
+		}
 		return meta.run(t, margs, env)
 	}
 	group := words[0]
@@ -371,7 +376,7 @@ func init() {
 		"mcp":        {"Serve the commands as tools to an AI agent over MCP (stdio); read only unless --allow-writes", runMCP},
 		"completion": {"Print a shell completion script: bash, zsh, fish or powershell", runCompletion},
 		"local":      {"Run a command of the server binary on this machine (backup, migrate, ...)", runLocal},
-		"version":    {"Print the version", runVersion},
+		"version":    {"Print this command line's version (the server's: neodesk server info)", runVersion},
 		"help":       {"Show help for a group or command: neodesk help devices list", runHelp},
 		"__complete": {"", runComplete},
 	}

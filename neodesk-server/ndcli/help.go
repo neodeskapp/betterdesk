@@ -84,7 +84,10 @@ func usageLine(c *Command) string {
 		parts = append(parts, "<"+a.Name+">")
 	}
 	for _, f := range c.Flags {
-		if f.Required {
+		switch {
+		case f.Required && f.Secret:
+			parts = append(parts, "(--"+f.Name+"-stdin | --"+f.Name+" "+flagPlaceholder(f)+")")
+		case f.Required:
 			parts = append(parts, "--"+f.Name+" "+flagPlaceholder(f))
 		}
 	}
@@ -112,6 +115,17 @@ func flagPlaceholder(f Flag) string {
 	return strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))
 }
 
+// flagHelp is a flag's help with whether it is required.
+func flagHelp(f Flag) string {
+	switch {
+	case f.Required && f.Secret:
+		return strings.TrimSpace(f.Help + " (this or --" + f.Name + "-stdin is required)")
+	case f.Required:
+		return strings.TrimSpace(f.Help + " (required)")
+	}
+	return f.Help
+}
+
 // writeCommandHelp is `neodesk <group> <action> --help`.
 func writeCommandHelp(w io.Writer, c *Command) {
 	fmt.Fprintln(w, c.Summary)
@@ -128,17 +142,28 @@ func writeCommandHelp(w io.Writer, c *Command) {
 	}
 	if len(c.Flags) > 0 || c.Upload != "" {
 		fmt.Fprintln(w, "\nFlags:")
+		// The help column starts after the longest label up to 28
+		// characters; a longer label (a long list of choices) gets its help
+		// on the next line
 		width := 0
 		for _, f := range c.Flags {
-			width = max(width, len(f.Name)+len(flagPlaceholder(f))+1)
+			if n := len(f.Name) + len(flagPlaceholder(f)) + 1; n <= 28 {
+				width = max(width, n)
+			}
+			if f.Secret {
+				width = max(width, len(f.Name)+len("-stdin"))
+			}
 		}
 		for _, f := range c.Flags {
-			label := strings.TrimSpace(f.Name + " " + flagPlaceholder(f))
-			help := f.Help
-			if f.Required {
-				help = strings.TrimSpace(help + " (required)")
+			if f.Secret {
+				fmt.Fprintf(w, "  --%-*s  %s\n", width, f.Name+"-stdin", "read the "+strings.ReplaceAll(f.Name, "-", " ")+" from standard input (its first line), so it stays out of the command line")
 			}
-			fmt.Fprintf(w, "  --%-*s  %s\n", width, label, help)
+			label := strings.TrimSpace(f.Name + " " + flagPlaceholder(f))
+			if len(label) > width {
+				fmt.Fprintf(w, "  --%s\n%*s%s\n", label, width+6, "", flagHelp(f))
+				continue
+			}
+			fmt.Fprintf(w, "  --%-*s  %s\n", width, label, flagHelp(f))
 		}
 		if c.Upload != "" {
 			fmt.Fprintf(w, "  --%-*s  %s\n", width, "file PATH", "the file to upload")
@@ -148,7 +173,7 @@ func writeCommandHelp(w io.Writer, c *Command) {
 	if c.Permission != "" {
 		fmt.Fprintf(w, "Needs: %s.\n", c.Permission)
 	} else {
-		fmt.Fprintln(w, "Needs: a signed-in account (the panel section's level still applies).")
+		fmt.Fprintln(w, "Needs: an account that may use this part of the console (see neodesk account access).")
 	}
 	if c.ReadOnly() {
 		fmt.Fprintln(w, "Only reads: works with a read-only token.")
@@ -171,7 +196,7 @@ func writeCommandHelp(w io.Writer, c *Command) {
 			fmt.Fprintf(w, "  %s\n", e)
 		}
 	}
-	fmt.Fprintln(w, "\nAdd --json for the server's whole answer; -q, -f and -F add other query or body fields.")
+	fmt.Fprintln(w, "\nTables cut long values (…); --json prints the server's whole answer. -q, -f and -F add other query or body fields.")
 }
 
 // writeMetaHelp is the help of the command line's own commands.
@@ -183,6 +208,8 @@ func writeMetaHelp(w io.Writer, name string) {
 			"", "The token is read from standard input: pipe it in, or paste it when asked (it is not shown).",
 			"Make it in the console: account menu, API tokens.",
 			"The address and token go into the config file (mode 600) and are used only together.",
+			"Plain http:// works only for this machine (localhost) unless you add --allow-http.",
+			"--insecure is not saved: give it to each command, or trust the console's certificate with --ca-cert FILE.",
 			"", "Examples:", "  neodesk login --url https://desk.example.com",
 			"  neodesk login --url https://desk.example.com < token.txt")
 	case "logout":
@@ -221,7 +248,7 @@ func writeMetaHelp(w io.Writer, name string) {
 		writeLines(w, "Run a command of the server binary on this machine. These read the server's own files and need no token.",
 			"", "Usage:", "  neodesk local <command> [arguments]", "", "Run neodesk local for the list.")
 	case "version":
-		writeLines(w, "Print the version.", "", "Usage:", "  neodesk version")
+		writeLines(w, "Print this command line's version. The server's version: neodesk server info.", "", "Usage:", "  neodesk version")
 	case "help":
 		writeLines(w, "Show help.", "", "Usage:", "  neodesk help [group] [action]")
 	}

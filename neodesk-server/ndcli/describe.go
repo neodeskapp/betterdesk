@@ -289,14 +289,10 @@ func WriteGroupMarkdown(w io.Writer, g GroupDesc) {
 		if len(c.Flags) > 0 || c.Upload != "" {
 			fmt.Fprintf(w, "\n| Flag | What it is |\n|---|---|\n")
 			for _, f := range c.Flags {
-				help := f.Help
-				if f.Required {
-					help += " (required)"
-				}
 				if f.Secret {
-					help += "; --" + f.Name + "-stdin reads it from standard input"
+					fmt.Fprintf(w, "| `--%s-stdin` | read the %s from standard input (its first line), so it stays out of the command line |\n", f.Name, strings.ReplaceAll(f.Name, "-", " "))
 				}
-				fmt.Fprintf(w, "| `--%s` | %s |\n", strings.TrimSpace(f.Name+" "+flagPlaceholder(f)), md(help))
+				fmt.Fprintf(w, "| `--%s` | %s |\n", strings.TrimSpace(f.Name+" "+flagPlaceholder(f)), md(flagHelp(f)))
 			}
 			if c.Upload != "" {
 				fmt.Fprintf(w, "| `--file PATH` | the file to upload |\n")

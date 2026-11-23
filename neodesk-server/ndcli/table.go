@@ -54,7 +54,7 @@ type Command struct {
 	Flags []Flag `json:"flags,omitempty"`
 	// Permission is what the account and the token need, in words: a
 	// permission name, "an admin role", or "" when a signed-in account is
-	// enough (the panel section's level still applies).
+	// enough (the console section's access level still applies).
 	Permission string `json:"permission,omitempty"`
 	// Rows is where the list to show as a table is in the answer
 	// ("data.devices"); empty finds the first list of objects.
