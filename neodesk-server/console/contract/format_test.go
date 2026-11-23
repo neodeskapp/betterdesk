@@ -241,6 +241,36 @@ func TestCompareVolatileChecksTheFormat(t *testing.T) {
 	}
 }
 
+// A product version with a suffix has the format of the same version
+// without it, so a volatile value made from it, such as the cache version
+// of restart-status, fits its golden on a release candidate too, and a
+// recording there gives the format of a release (L302).
+func TestAVersionSuffixKeepsTheFormat(t *testing.T) {
+	saved := productVersion
+	productVersion = func() string { return "3.6.0-rc.2" }
+	defer func() { productVersion = saved }()
+
+	want := newGoldenAnswer(jsonAnswer(200, `{"data": {"cacheVersion": "<volatile>"}}`),
+		[]VolatileMark{{Path: "data.cacheVersion", Format: "9.9.9.9999999999999"}}, nil)
+	if diffs := CompareAnswers(want, jsonAnswer(200, `{"data": {"cacheVersion": "3.6.0-rc.2.1795409105554"}}`)); len(diffs) > 0 {
+		t.Errorf("the cache version of a release candidate: %q", diffStrings(diffs))
+	}
+	// Another version keeps its suffix, and the rest of the value is still checked
+	for _, other := range []string{"3.6.1-rc.2.1795409105554", "13.6.0-rc.2.1795409105554", "3.6.0-rc.21.1795409105554", "3.6.0-rc.2.17954091055x4"} {
+		if diffs := CompareAnswers(want, jsonAnswer(200, `{"data": {"cacheVersion": "`+other+`"}}`)); len(diffs) != 1 {
+			t.Errorf("%s fits the format of the product version: %q", other, diffStrings(diffs))
+		}
+	}
+	if format, pattern := deriveFormat([]string{"3.6.0-rc.2.1795409105554", "3.6.0-rc.2.1795409105912"}); format != "9.9.9.9999999999999" || pattern != "" {
+		t.Errorf("format recorded on a release candidate: %q, %q", format, pattern)
+	}
+
+	productVersion = func() string { return "3.6.1" }
+	if diffs := CompareAnswers(want, jsonAnswer(200, `{"data": {"cacheVersion": "3.6.1.1795409105554"}}`)); len(diffs) > 0 {
+		t.Errorf("the cache version of a release: %q", diffStrings(diffs))
+	}
+}
+
 func TestMessagesDoNotShowSecrets(t *testing.T) {
 	for _, text := range []string{"data.csrfToken", "data.api_key", "user.Password", "data.clientSecret", "data.cookies[0].value", "sessions[2].sid", `data["API-KEY"]`} {
 		p, err := parsePath(text)

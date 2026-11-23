@@ -142,6 +142,21 @@ func formatClass(s string) string {
 	return b.String()
 }
 
+// withoutVersionSuffix writes the product version as the version without
+// its suffix where it has one ("3.6.0-rc.2" as "3.6.0"), so a value made
+// from it has the same class on a release candidate as on a release: the
+// cache version "3.6.0-rc.2.1795409105554" of restart-status (L302). A
+// version inside a longer one is left alone.
+func withoutVersionSuffix(s string) string {
+	version := productVersion()
+	cut := strings.IndexAny(version, "-+")
+	if cut <= 0 || !strings.Contains(s, version) {
+		return s
+	}
+	pattern := regexp.MustCompile(`(^|[^0-9.])` + regexp.QuoteMeta(version) + `($|[^0-9A-Za-z])`)
+	return replaceAddress(s, pattern, version[:cut])
+}
+
 // classRun is a piece of a class: a run of 9, a or A, or one other character.
 type classRun struct {
 	char   rune
@@ -229,9 +244,11 @@ func isInteger(n json.Number) bool {
 // [9aA+/_=-]+ otherwise. A UUID gives ^[9aA+/_=-]{36}$, a 32-byte key in
 // base64 ^[9aA+/_=-]{44}$.
 func deriveFormat(values []string) (format, pattern string) {
+	values = append([]string(nil), values...)
 	classes := make([]string, len(values))
 	for i, value := range values {
-		classes[i] = formatClass(value)
+		values[i] = withoutVersionSuffix(value)
+		classes[i] = formatClass(values[i])
 	}
 	format, pattern = generalizeClasses(classes)
 	if format == "" && pattern == "" {
@@ -453,7 +470,7 @@ func collect(value any, p path) []any {
 func formatProblem(mark *VolatileMark, value any) (expected string, ok bool) {
 	switch v := value.(type) {
 	case string:
-		class := formatClass(v)
+		class := formatClass(withoutVersionSuffix(v))
 		switch {
 		case mark.Format != "":
 			return "format " + mark.Format, class == mark.Format
