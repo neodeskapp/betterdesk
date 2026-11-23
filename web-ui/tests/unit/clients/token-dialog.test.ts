@@ -52,6 +52,21 @@ describe('token dialog', () => {
 		expect(bodies).toEqual([{ name: 'Bundle 2', max_uses: 0, note: 'keep me' }]);
 	});
 
+	test('Uses allowed below 0, a fraction or nothing is refused next to the field and nothing is sent (BUGS L380)', async () => {
+		const user = userEvent.setup();
+		const onsaved = vi.fn();
+		render(TokenDialog, { token: token({ max_uses: 5 }), onclose: () => {}, onsaved });
+		const uses = screen.getByLabelText('tokens.max_uses');
+		for (const typed of ['-3', '2.5', '']) {
+			await user.clear(uses);
+			if (typed) await user.type(uses, typed);
+			await user.click(screen.getByRole('button', { name: 'tokens.save' }));
+			await vi.waitFor(() => expect(uses).toHaveAccessibleDescription(/tokens.max_uses_invalid/));
+		}
+		expect(bodies).toEqual([]);
+		expect(onsaved).not.toHaveBeenCalled();
+	});
+
 	test('a token with a limit keeps its number', () => {
 		render(TokenDialog, { token: token({ max_uses: 5 }), onclose: () => {}, onsaved: () => {} });
 		expect(screen.getByLabelText('tokens.max_uses')).toHaveValue(5);

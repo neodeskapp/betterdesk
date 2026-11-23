@@ -119,6 +119,10 @@ func (s *Server) handleListDeviceTokens(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
+// errNegativeUses refuses a Uses allowed below 0: 0 is no limit, a
+// negative limit means nothing.
+const errNegativeUses = "Uses allowed must be a whole number of 0 or more"
+
 // handleCreateDeviceToken creates a new device enrollment token.
 // POST /api/tokens
 func (s *Server) handleCreateDeviceToken(w http.ResponseWriter, r *http.Request) {
@@ -130,6 +134,10 @@ func (s *Server) handleCreateDeviceToken(w http.ResponseWriter, r *http.Request)
 
 	// MaxUses: 0 = unlimited (bundle enrollment tokens). Ad-hoc admin tokens
 	// should pass max_uses explicitly (typically 1 for single-use invites).
+	if req.MaxUses < 0 {
+		http.Error(w, errNegativeUses, http.StatusBadRequest)
+		return
+	}
 
 	// Generate secure token (32 chars)
 	plainToken, err := generateSecureToken(32)
@@ -243,7 +251,11 @@ func (s *Server) handleUpdateDeviceToken(w http.ResponseWriter, r *http.Request)
 	if req.Name != "" {
 		token.Name = req.Name
 	}
-	if req.MaxUses != nil && *req.MaxUses >= 0 {
+	if req.MaxUses != nil && *req.MaxUses < 0 {
+		http.Error(w, errNegativeUses, http.StatusBadRequest)
+		return
+	}
+	if req.MaxUses != nil {
 		token.MaxUses = *req.MaxUses
 	}
 	if req.Note != nil {
@@ -325,6 +337,10 @@ func (s *Server) handleBulkGenerateTokens(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	if req.MaxUses < 0 {
+		http.Error(w, errNegativeUses, http.StatusBadRequest)
+		return
+	}
 	if req.MaxUses == 0 {
 		req.MaxUses = 1
 	}

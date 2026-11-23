@@ -81,17 +81,20 @@ export const EXPIRY_LABELS: Record<number, string> = {
 	2592000: 'expires_30d'
 };
 
-/** "Uses allowed": 0 means no limit; only an empty or invalid field falls back to 1 */
-export function usesValue(raw: string | number | null | undefined): number {
-	const n = typeof raw === 'number' ? raw : parseInt(String(raw ?? ''), 10);
-	if (!Number.isFinite(n) || n < 0) return 1;
-	return Math.floor(n);
+/** "Uses allowed" as typed: a whole number of 0 or more (0 means no limit) */
+export function usesOk(raw: string | number | null | undefined): boolean {
+	const text = String(raw ?? '').trim();
+	return /^\d+$/.test(text) && Number(text) <= Number.MAX_SAFE_INTEGER;
 }
 
-/** Bulk "Uses allowed": at least 1 */
-export function bulkUsesValue(raw: string | number | null | undefined): number {
-	const n = usesValue(raw);
-	return n > 0 ? n : 1;
+/** Bulk "Uses allowed": a whole number of 1 or more */
+export function bulkUsesOk(raw: string | number | null | undefined): boolean {
+	return usesOk(raw) && usesValue(raw) >= 1;
+}
+
+/** The number of a field usesOk accepted */
+export function usesValue(raw: string | number | null | undefined): number {
+	return parseInt(String(raw ?? '').trim(), 10);
 }
 
 /** Bulk: between 1 and 100 tokens */

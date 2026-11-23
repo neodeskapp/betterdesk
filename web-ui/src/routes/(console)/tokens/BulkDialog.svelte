@@ -4,7 +4,7 @@
 -->
 <script lang="ts">
 	import { createTokens, type NewToken } from '#lib/api/tokens.ts';
-	import { EXPIRY_CHOICES, EXPIRY_LABELS, bulkCountOk, bulkUsesValue } from '#lib/clients/tokens.ts';
+	import { EXPIRY_CHOICES, EXPIRY_LABELS, bulkCountOk, bulkUsesOk, usesValue } from '#lib/clients/tokens.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
@@ -18,14 +18,17 @@
 
 	const form = createForm({
 		initial: { count: '5', prefix: 'Device', max_uses: '1', expires_in: 604800 as number },
-		validate: (v) => ({ count: bulkCountOk(v.count) ? undefined : t('tokens.count_range') }),
+		validate: (v) => ({
+			count: bulkCountOk(v.count) ? undefined : t('tokens.count_range'),
+			max_uses: bulkUsesOk(v.max_uses) ? undefined : t('tokens.bulk_max_uses_invalid')
+		}),
 		submit: async (v) => {
 			try {
 				onsaved(
 					await createTokens({
 						count: parseInt(v.count, 10),
 						name_prefix: v.prefix.trim() || 'Device',
-						max_uses: bulkUsesValue(v.max_uses),
+						max_uses: usesValue(v.max_uses),
 						expires_in: Number(v.expires_in) || 0
 					})
 				);
@@ -52,9 +55,14 @@
 				<Input {...f} maxlength={100} autocomplete="off" bind:value={form.values.prefix} />
 			{/snippet}
 		</Field>
-		<Field label={t('tokens.max_uses')} width="short">
+		<Field
+			label={t('tokens.max_uses')}
+			hint={t('tokens.bulk_max_uses_hint')}
+			error={form.errors.max_uses}
+			width="short"
+		>
 			{#snippet children(f)}
-				<Input {...f} type="number" min={1} inputmode="numeric" bind:value={form.values.max_uses} />
+				<Input {...f} type="number" min={1} step={1} inputmode="numeric" bind:value={form.values.max_uses} />
 			{/snippet}
 		</Field>
 		<Field label={t('tokens.expires_in')}>

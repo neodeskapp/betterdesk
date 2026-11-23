@@ -31,12 +31,13 @@ import { codeExpired, endsAt, remaining } from '#lib/clients/pairing.ts';
 import { around } from '#lib/clients/text.ts';
 import {
 	bulkCountOk,
-	bulkUsesValue,
+	bulkUsesOk,
 	copyAllText,
 	countTokens,
 	filterTokens,
 	tokenMenu,
 	tokenStatus,
+	usesOk,
 	usesValue
 } from '#lib/clients/tokens.ts';
 
@@ -153,14 +154,15 @@ describe('device tokens', () => {
 		expect(tokenMenu(token({ status: 'revoked' }))).toBe(false);
 	});
 
-	test('uses allowed: 0 is no limit, only an empty or invalid field is 1; bulk needs 1 or more', () => {
+	test('uses allowed: a whole number, 0 is no limit; bulk needs 1 or more; anything else is refused (BUGS L380)', () => {
 		expect(usesValue('0')).toBe(0);
 		expect(usesValue('5')).toBe(5);
-		expect(usesValue('')).toBe(1);
-		expect(usesValue('-3')).toBe(1);
-		expect(usesValue('abc')).toBe(1);
-		expect(bulkUsesValue('0')).toBe(1);
-		expect(bulkUsesValue('4')).toBe(4);
+		expect(usesOk('0')).toBe(true);
+		expect(usesOk('12')).toBe(true);
+		for (const bad of ['', '-3', '2.5', 'abc', ' ']) expect(usesOk(bad)).toBe(false);
+		expect(bulkUsesOk('1')).toBe(true);
+		expect(bulkUsesOk('0')).toBe(false);
+		expect(bulkUsesOk('-1')).toBe(false);
 	});
 
 	test('bulk count between 1 and 100; Copy all puts one token per line', () => {

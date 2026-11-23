@@ -6,7 +6,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { createToken, updateToken, type DeviceToken, type NewToken } from '#lib/api/tokens.ts';
-	import { EXPIRY_CHOICES, EXPIRY_LABELS, usesValue } from '#lib/clients/tokens.ts';
+	import { EXPIRY_CHOICES, EXPIRY_LABELS, usesOk, usesValue } from '#lib/clients/tokens.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
@@ -38,7 +38,10 @@
 			expires_in: 0 as number,
 			note: token?.note ?? ''
 		})),
-		validate: (v) => ({ name: v.name.trim() ? undefined : t('common.name_required') }),
+		validate: (v) => ({
+			name: v.name.trim() ? undefined : t('common.name_required'),
+			max_uses: usesOk(v.max_uses) ? undefined : t('tokens.max_uses_invalid')
+		}),
 		submit: async (v) => {
 			const body = { name: v.name.trim(), max_uses: usesValue(v.max_uses), note: v.note.trim() };
 			try {
@@ -76,16 +79,11 @@
 		<Field
 			label={t('tokens.max_uses')}
 			hint={editing && !unlimited ? t('tokens.max_uses_edit_hint') : t('tokens.max_uses_hint')}
+			error={form.errors.max_uses}
 			width="short"
 		>
 			{#snippet children(f)}
-				<Input
-					{...f}
-					type="number"
-					min={editing && !unlimited ? 1 : 0}
-					inputmode="numeric"
-					bind:value={form.values.max_uses}
-				/>
+				<Input {...f} type="number" min={0} step={1} inputmode="numeric" bind:value={form.values.max_uses} />
 			{/snippet}
 		</Field>
 		{#if !editing}

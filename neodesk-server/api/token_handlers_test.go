@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -118,5 +119,42 @@ func TestEnrollmentModeForcedByTheEnvironment(t *testing.T) {
 	srv.cfg.EnrollmentModeEnvOverride = false
 	if status, body = asConsole(t, srv, http.MethodPut, "/api/enrollment/mode", `{"mode":"open"}`); status != http.StatusOK {
 		t.Errorf("change without the override: %d %s", status, body)
+	}
+}
+
+// TestDeviceTokenRefusesNegativeUses: Uses allowed below 0 is refused with
+// a reason on create, edit and bulk create, and nothing is stored; an edit
+// keeps the limit it had (BUGS L380).
+func TestDeviceTokenRefusesNegativeUses(t *testing.T) {
+	srv, _ := newInternalServer(t, nil)
+	const reason = "Uses allowed must be a whole number of 0 or more"
+	status, body := asConsole(t, srv, http.MethodPost, "/api/tokens", `{"name":"bad","max_uses":-2}`)
+	if status != http.StatusBadRequest || !strings.Contains(body, reason) {
+		t.Errorf("create with -2: %d %s, want 400 %q", status, body, reason)
+	}
+	status, body = asConsole(t, srv, http.MethodPost, "/api/tokens/generate-bulk", `{"count":2,"max_uses":-3}`)
+	if status != http.StatusBadRequest || !strings.Contains(body, reason) {
+		t.Errorf("bulk with -3: %d %s, want 400 %q", status, body, reason)
+	}
+	_, body = asConsole(t, srv, http.MethodGet, "/api/tokens", "")
+	if strings.Contains(body, `"bad"`) || strings.Contains(body, `"max_uses":-`) {
+		t.Errorf("a refused token was stored: %s", body)
+	}
+
+	status, body = asConsole(t, srv, http.MethodPost, "/api/tokens", `{"name":"good","max_uses":2}`)
+	var created struct {
+		ID int64 `json:"id"`
+	}
+	if err := json.Unmarshal([]byte(body), &created); status != http.StatusCreated || err != nil {
+		t.Fatalf("create: %d %s", status, body)
+	}
+	path := "/api/tokens/" + strconv.FormatInt(created.ID, 10)
+	status, body = asConsole(t, srv, http.MethodPut, path, `{"max_uses":-1}`)
+	if status != http.StatusBadRequest || !strings.Contains(body, reason) {
+		t.Errorf("edit with -1: %d %s, want 400 %q", status, body, reason)
+	}
+	_, body = asConsole(t, srv, http.MethodGet, path, "")
+	if !strings.Contains(body, `"max_uses":2`) {
+		t.Errorf("after a refused edit: %s, want max_uses 2", body)
 	}
 }
