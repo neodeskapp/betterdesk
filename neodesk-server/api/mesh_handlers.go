@@ -79,8 +79,15 @@ func (s *Server) handleMeshDownloadMSH(w http.ResponseWriter, r *http.Request) {
 	if meshName == "" {
 		meshName = "NeoDesk Mesh"
 	}
-	// Prefer explicit mesh_id (64 or 96 hex); otherwise use stable per-group SHA-384.
-	meshID := s.meshGw.ResolveMeshIDHex(r.URL.Query().Get("mesh_id"))
+	// Prefer explicit mesh_id (64 or 96 hex); otherwise use stable per-group
+	// SHA-384. A mesh_id that is given and no mesh id is refused, not taken
+	// for the default group (L383).
+	explicit := r.URL.Query().Get("mesh_id")
+	if explicit != "" && !meshcentral.IsValidMeshIDHex(meshcentral.NormalizeMeshIDHex(explicit)) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid mesh_id: 64 or 96 hexadecimal characters"})
+		return
+	}
+	meshID := s.meshGw.ResolveMeshIDHex(explicit)
 	if meshID == "" {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "mesh id unavailable"})
 		return

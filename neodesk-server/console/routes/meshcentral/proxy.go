@@ -147,15 +147,15 @@ func (h *handlers) saveGroups(w http.ResponseWriter, r *http.Request) {
 
 // download answers GET /api/mesh/download.msh: the settings file a mesh
 // agent is installed with. The parameters the API server reads (name,
-// mesh_id, mesh_server) go on, each one text; others are left out. A
-// request without a mesh_server gets the console's public address
-// (agentServer). Whatever type the API server names, the file goes out
-// as application/octet-stream under the name meshagents.msh.
+// mesh_id) go on, each one text; others are left out. The server the file
+// names is always the console's public address (agentServer): a
+// mesh_server in the link is not taken, since a link an admin clicks
+// carries the session cookie and could send agents elsewhere (L383).
+// Whatever type the API server names, the file goes out as
+// application/octet-stream under the name meshagents.msh.
 func (h *handlers) download(w http.ResponseWriter, r *http.Request) {
 	q := requestQuery(r)
-	if server := q.get("mesh_server"); server == nil || server == "" {
-		q.set("mesh_server", h.agentServer(r))
-	}
+	q.set("mesh_server", h.agentServer(r))
 	search, bad := q.only("name", "mesh_id", "mesh_server")
 	if bad != "" {
 		badParameter(w, r, bad)

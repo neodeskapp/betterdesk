@@ -182,7 +182,20 @@ func (g *Gateway) AssignDeviceGroup(peerID, groupID string) error {
 	return nil
 }
 
+// mshValue is a value of one line of the .msh file: it ends at its first
+// control character, a line break among them, so no value adds a line
+// (L383).
+func mshValue(v string) string {
+	if i := strings.IndexFunc(v, func(r rune) bool {
+		return r < 0x20 || r == 0x7f || r == 0x2028 || r == 0x2029
+	}); i >= 0 {
+		return v[:i]
+	}
+	return v
+}
+
 func (g *Gateway) BuildMSH(meshName, meshIDHex, meshServerURL string) string {
+	meshName, meshServerURL = mshValue(meshName), mshValue(meshServerURL)
 	meshID := NormalizeMeshIDHex(meshIDHex)
 	if !IsValidMeshIDHex(meshID) {
 		meshID = g.ResolveMeshIDHex("")

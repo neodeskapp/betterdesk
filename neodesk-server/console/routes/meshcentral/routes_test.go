@@ -393,8 +393,11 @@ func TestDownload(t *testing.T) {
 
 	// The parameters the API server reads go on as the old console wrote
 	// them out
+	// A mesh_server in the link is not taken: the file names this
+	// console, whatever a link someone clicks says (L383)
 	queries := []struct{ query, sent string }{
-		{"name=Contract%20Mesh&mesh_server=wss://example.test/agent.ashx", "?name=Contract+Mesh&mesh_server=wss%3A%2F%2Fexample.test%2Fagent.ashx"},
+		{"name=Contract%20Mesh&mesh_server=wss://example.test/agent.ashx", "?name=Contract+Mesh&mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx"},
+		{"mesh_server=wss://evil.example/agent.ashx", "?mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx"},
 		{"name=a~*", "?name=a%7E*&mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx"},
 		{"name=", "?name=&mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx"},
 		{"=x&&", "?mesh_server=wss%3A%2F%2Fexample.com%2Fagent.ashx"},

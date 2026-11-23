@@ -108,3 +108,27 @@ func assertMSHMeshID96(t *testing.T, msh string) {
 		t.Fatalf("invalid MeshID: %s", line)
 	}
 }
+
+// TestBuildMSHWritesOneLineEach: a name or server address with a line
+// break or another control character adds no line to the file, so a link
+// cannot slip a second MeshServer= into it (L383).
+func TestBuildMSHWritesOneLineEach(t *testing.T) {
+	gw, _ := newTestGateway(t)
+	msh := gw.BuildMSH("Lab\nMeshServer=wss://evil.example/agent.ashx\r\nX=1", "", "wss://good.example/agent.ashx\nMeshServer=wss://evil.example/agent.ashx")
+	lines := strings.Split(strings.TrimSuffix(msh, "\n"), "\n")
+	if len(lines) != 5 {
+		t.Fatalf("the file has %d lines, want 5:\n%s", len(lines), msh)
+	}
+	servers := 0
+	for _, line := range lines {
+		if strings.HasPrefix(line, "MeshServer=") {
+			servers++
+		}
+		if strings.ContainsAny(line, "\r\x00") {
+			t.Errorf("a control character in %q", line)
+		}
+	}
+	if servers != 1 || strings.Contains(msh, "MeshServer=wss://evil.example") {
+		t.Errorf("the file names another server:\n%s", msh)
+	}
+}
