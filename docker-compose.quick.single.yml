@@ -177,13 +177,26 @@ services:
   # guacd for RDP and VNC targets in the browser (the profile "guacd": put
   # COMPOSE_PROFILES=guacd into .env, or postgres,guacd with PostgreSQL). It
   # shares the neodesk container's network, because the server talks to
-  # guacd only on loopback (GUACD_ADDRESS, 127.0.0.1:4822).
+  # guacd only on loopback (GUACD_ADDRESS, 127.0.0.1:4822). When the neodesk
+  # container restarts (Restart services, an update, docker restart) it
+  # gets a new network and guacd would stay in the old one, where the
+  # server can't reach it: guacd then ends and Docker starts it again in
+  # the new one.
   guacd:
     image: guacamole/guacd:1.5.5
     container_name: neodesk-guacd
     profiles:
       - guacd
     network_mode: "service:neodesk"
+    command:
+      - /bin/sh
+      - -c
+      - |
+        /opt/guacamole/sbin/guacd -b 127.0.0.1 -L "$${GUACD_LOG_LEVEL:-info}" -f &
+        while sleep 5; do
+          kill -0 $$! 2>/dev/null || exit 1
+          ls /sys/class/net | grep -qvx lo || exit 1
+        done
     depends_on:
       - neodesk
     restart: unless-stopped
