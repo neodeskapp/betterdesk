@@ -213,6 +213,12 @@ func TestATokenRequestCarriesNoHeaderOrCookieOn(t *testing.T) {
 	if res.header.Get("Set-Cookie") != "" {
 		t.Errorf("a token's answer sets cookies: %v", res.header.Values("Set-Cookie"))
 	}
+	// A token that is not valid never falls back to the cookie that came
+	// along: the request is refused, not run as the cookie's account
+	admin.always = []string{"Authorization", "Bearer ndt_abcdefghijkm_" + strings.Repeat("Q", 40)}
+	if res := admin.do("POST", "/api/zz/seen", "{}", "Content-Type", "application/json"); res.status != 401 || code(t, res) != "token_invalid" {
+		t.Errorf("a bad token with a super admin's cookie: %d %s", res.status, res.body)
+	}
 }
 
 func TestATokenIsCappedToItsPermissionsAndSections(t *testing.T) {
