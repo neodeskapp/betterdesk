@@ -3,9 +3,10 @@
   ("Now: Inter", Use default), and a search field with a list of matching
   fonts under it. Picking a Google font that is not on the server yet
   downloads it first (people who can change the appearance); it still
-  works from Google when that fails. Arrow down moves into the list,
-  Escape closes it, a click outside closes it; only one list is open at a
-  time (openPopup).
+  works from Google when that fails. Arrow down moves into the list (the
+  fonts are not Tab stops, so Tab goes on to the next control), Escape
+  closes it, and so do a click outside and focus leaving the picker; only
+  one list is open at a time (openPopup).
 -->
 <script lang="ts">
 	import { searchFonts, downloadFont, type FontInfo } from '#lib/api/settings.ts';
@@ -154,6 +155,16 @@
 		return () => document.removeEventListener('click', away);
 	});
 
+	/**
+	 * Focus went to a control outside the picker: the list must not cover
+	 * it. (No next element is a click, which the click handler above checks:
+	 * Safari does not focus a font button when it is clicked.)
+	 */
+	function onfocusout(e: FocusEvent) {
+		const next = e.relatedTarget;
+		if (open && root && next instanceof Node && !root.contains(next)) hide();
+	}
+
 	$effect(() => () => {
 		clearTimeout(timer);
 		ctrl?.abort();
@@ -161,7 +172,7 @@
 	});
 </script>
 
-<div class="form-group font-slot" id="font-{slot}-slot" bind:this={root}>
+<div class="form-group font-slot" id="font-{slot}-slot" bind:this={root} {onfocusout}>
 	<label class="form-label" for={id}>{t(`branding.font_${slot}`)}</label>
 	<p class="form-hint" id="{id}-hint">{t(`branding.font_${slot}_hint`)}</p>
 	<p class="font-current-line">
@@ -207,7 +218,13 @@
 				<p class="state">{t('settings.appearance.font_none')}</p>
 			{:else if fonts}
 				{#each fonts as font (font.family)}
-					<button type="button" class="font-item" disabled={picking !== null} onclick={() => void pick(font)}>
+					<button
+						type="button"
+						class="font-item"
+						tabindex="-1"
+						disabled={picking !== null}
+						onclick={() => void pick(font)}
+					>
 						<span>{font.family}</span>
 						<span class="font-meta"
 							>{[font.category, font.downloaded ? t('branding.font_local') : '']
