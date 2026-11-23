@@ -1,11 +1,14 @@
 package devices_test
 
 import (
+	"context"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
@@ -65,13 +68,16 @@ const agentBody = `{"path":"/tmp/x","data":"x","from":"/tmp/a","to":"/tmp/b","co
 // TestEveryAgentRouteNamesItsPermission walks the console's route table:
 // every route that reaches a NeoDesk agent (the agent is asked, or a
 // command is queued for it) must be one of wantAgentTools, and no account
-// gets there without the permission that table names. global_admin, which
-// holds them all, loses one permission at a time (L388).
+// gets there without the permission and the client feature that table
+// names. global_admin, which holds them all, loses one permission or one
+// feature at a time (L388, L389).
 func TestEveryAgentRouteNamesItsPermission(t *testing.T) {
 	roles := routetest.Overrides{"global_admin": {}}
 	w, _ := world(t, storetest.Migrated(t), roles, nil)
 	d := w.Server.Deps()
+	ctx := context.Background()
 	const caller = "global_admin"
+	callerID := routetest.RoleIDs[caller]
 
 	browser := w.As(caller)
 	serve := func(method, path, body string) routetest.Answer {
@@ -141,4 +147,14 @@ func TestEveryAgentRouteNamesItsPermission(t *testing.T) {
 		d.Access.ClearRoleCache()
 	}
 
+	user := strconv.FormatInt(callerID, 10)
+	for _, feature := range []string{"terminal", "file_transfer", "remote_control", "clipboard"} {
+		if _, err := d.Access.SavePolicy(ctx, access.SubjectUser, user, []any{}, []any{map[string]any{"feature_key": feature, "enabled": false}}); err != nil {
+			t.Fatal(err)
+		}
+		walk("with "+feature+" turned off", func(tool agentTool) bool { return tool.feature == feature })
+		if _, err := d.Access.SavePolicy(ctx, access.SubjectUser, user, []any{}, []any{}); err != nil {
+			t.Fatal(err)
+		}
+	}
 }
