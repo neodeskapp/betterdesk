@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/mail"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -271,6 +273,35 @@ func sameDeviceUUID(stored, incoming string) bool {
 	return false
 }
 
+// brandingEmail is the Email of the client branding as it is stored:
+// trimmed, empty or one address without a display name.
+func brandingEmail(v string) (string, error) {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return "", nil
+	}
+	addr, err := mail.ParseAddress(v)
+	if err != nil || addr.Name != "" || addr.Address != v || utf8.RuneCountInString(v) > brandingMaxFieldLen {
+		return "", errors.New("Email must be one address, such as support@example.com")
+	}
+	return v, nil
+}
+
+// brandingWebsite is the Website of the client branding as it is stored:
+// trimmed, empty or an absolute http or https address with a host.
+func brandingWebsite(v string) (string, error) {
+	v = strings.TrimSpace(v)
+	if v == "" {
+		return "", nil
+	}
+	u, err := url.Parse(v)
+	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" || u.User != nil ||
+		strings.ContainsAny(v, " <>\"\x00") || utf8.RuneCountInString(v) > brandingMaxWebsiteLen {
+		return "", errors.New("Website must be an http or https address, such as https://example.com")
+	}
+	return v, nil
+}
+
 func clipBrandingField(s string, max int) string {
 	s = stripHTMLLike(s)
 	if utf8.RuneCountInString(s) <= max {
@@ -327,6 +358,25 @@ func (s *Server) handleSaveBranding(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+	}
+	// Every client reads these on the public GET /api/branding: an email
+	// that is an address, a website that is an http or https address, or
+	// nothing (L385)
+	if req.Email != nil {
+		email, err := brandingEmail(*req.Email)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		req.Email = &email
+	}
+	if req.Website != nil {
+		website, err := brandingWebsite(*req.Website)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+			return
+		}
+		req.Website = &website
 	}
 
 	if req.CompanyName != nil {
