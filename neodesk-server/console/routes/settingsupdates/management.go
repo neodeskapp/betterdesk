@@ -84,7 +84,7 @@ type savedData struct {
 func (h *handlers) putConfig(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	changes, isObject := changesOf(body.Get("changes"))
-	settings, err := h.managed.Validate(changes, isObject)
+	settings, err := h.managed.ValidateFromConsole(changes, isObject)
 	if err != nil {
 		h.configFailure(w, r, err)
 		return

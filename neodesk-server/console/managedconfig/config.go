@@ -241,6 +241,18 @@ type Setting struct {
 	Value string
 }
 
+// ValidateFromConsole is Validate for a change the web console asks for:
+// a host-only key (HostOnlyKeys) is refused first. The command line, which
+// runs on the host, uses Validate.
+func (c *Config) ValidateFromConsole(changes []Change, isObject bool) ([]Setting, error) {
+	for _, change := range changes {
+		if HostOnlyKeys[change.Key] {
+			return nil, invalid("%s is set on the server's host only, not in the console", change.Key)
+		}
+	}
+	return c.Validate(changes, isObject)
+}
+
 // Validate checks every change in order and returns them as text
 // (validateEnvChanges). The first change that fails ends the check with
 // its message. Changes is nil for a body that had no object there.
@@ -256,9 +268,6 @@ func (c *Config) Validate(changes []Change, isObject bool) ([]Setting, error) {
 				name = "(empty)"
 			}
 			return nil, invalid("Environment key is not allowlisted: %s", name)
-		}
-		if HostOnlyKeys[change.Key] {
-			return nil, invalid("%s is set on the server's host only, not in the console", change.Key)
 		}
 		value, err := c.validateValue(change.Key, change.Value)
 		if err != nil {
