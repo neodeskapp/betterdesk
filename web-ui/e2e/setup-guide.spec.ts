@@ -106,6 +106,9 @@ async function viaStep(page: Page, id: string, path: RegExp, fn: () => Promise<v
 	const back = page.getByRole('link', { name: 'Back to the setup guide' });
 	await expect(back).toBeVisible();
 	await fn();
+	// A save is through once its form is no longer marked unsaved: leaving
+	// earlier asks whether to discard the changes
+	await expect(page.locator('.save-bar.is-dirty')).toHaveCount(0);
 	await back.click();
 	await expect(guide(page)).toBeVisible();
 	await expectDone(page, id);
