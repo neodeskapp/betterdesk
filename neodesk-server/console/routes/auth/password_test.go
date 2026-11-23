@@ -169,3 +169,16 @@ func TestPasswordChangeRefusesWhatTheSignInRefuses(t *testing.T) {
 		}
 	})
 }
+
+// The refusals of a password change come in the person's language (L419).
+func TestPasswordChangeRefusalsInTheirLanguage(t *testing.T) {
+	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+		w.addUser(user{name: "greta"})
+		a := w.agent()
+		a.signIn("greta")
+		want(t, "wrong current password", a.post("/api/auth/password", change("not-the-password", otherPassword, otherPassword), "Accept-Language", "de"),
+			http.StatusBadRequest, `{"success":false,"error":"Das aktuelle Passwort ist falsch."}`)
+		want(t, "new password of 7", a.post("/api/auth/password", change(password, "Short-7", "Short-7"), "Accept-Language", "de"),
+			http.StatusBadRequest, `{"success":false,"error":"Das Passwort muss mindestens 8 Zeichen lang sein."}`)
+	})
+}

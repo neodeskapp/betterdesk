@@ -9,9 +9,24 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 )
 
-// refuse answers 400 with the text of a refusal of the sign-in service,
-// which is in English whatever the request language.
+// refusalKeys are the texts of the sign-in service's refusals in the
+// language files; their English is the refusal's own text.
+var refusalKeys = map[authn.Refusal]string{
+	authn.ErrUserNotFound:     "users.not_found",
+	authn.ErrWrongPassword:    "auth.current_password_wrong",
+	authn.ErrPasswordTooShort: "auth.password_min_length",
+	authn.ErrPasswordTooLong:  "auth.password_max_length",
+	authn.ErrTOTPNotSetUp:     "auth.totp_not_set_up",
+	authn.ErrInvalidTOTPCode:  "auth.totp_code_invalid",
+}
+
+// refuse answers 400 with the text of a refusal of the sign-in service in
+// the request's language.
 func refuse(w http.ResponseWriter, r *http.Request, refusal authn.Refusal) {
+	if key, ok := refusalKeys[refusal]; ok {
+		kit.Fail(w, r, http.StatusBadRequest, kit.T(r, key, nil))
+		return
+	}
 	kit.Fail(w, r, http.StatusBadRequest, string(refusal))
 }
 
