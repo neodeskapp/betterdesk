@@ -625,3 +625,16 @@ func TestSingleSignOnProfilePicture(t *testing.T) {
 		}
 	})
 }
+
+// TestSingleSignOnNamesTheBrowsersAddress: the console hands the identity
+// provider's callback to the API server with the browser's address as the
+// sign-in's address, so the server's audit entry of the sign-in names the
+// browser, as an LDAP sign-in does, not 127.0.0.1 (L357).
+func TestSingleSignOnNamesTheBrowsersAddress(t *testing.T) {
+	w := newWorld(t, nil, setup{trustProxy: "loopback"})
+	w.provider(`"username":"oadm","role":"admin"`)
+	singleSignOn(t, w.agentFrom("203.0.113.7"), "")
+	if calls := w.api.seen("GET /api/auth/oidc/callback"); len(calls) != 1 || calls[0].Addr != "203.0.113.7" {
+		t.Errorf("the API server got the callback with the address %+v, want the browser's 203.0.113.7", calls)
+	}
+}

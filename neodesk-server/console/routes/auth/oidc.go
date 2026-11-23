@@ -214,7 +214,9 @@ func exchangeText(v any) string {
 // one-time code; any other browser goes back to the sign-in page. Other
 // answers, such as the desktop client's result page, go to any browser.
 func (h *handlers) oidcCallback(w http.ResponseWriter, r *http.Request) {
-	answer := h.d.GoAPI.ProxyOIDCCallback(r.Context(), callbackQuery(r))
+	// The browser's address goes with the call, so the server's audit
+	// entry of the sign-in names the browser, not 127.0.0.1 (L357)
+	answer := h.d.GoAPI.ProxyOIDCCallback(authn.WithClientAddress(r.Context(), kit.ClientIP(r)), callbackQuery(r))
 	if code := sessionCode(answer.Location); code != "" {
 		held, _ := cookie.Get(r, oidcCookie)
 		state, _ := queryText(r, "state")

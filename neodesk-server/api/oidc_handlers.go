@@ -421,7 +421,9 @@ func (s *Server) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 
 	// Audit log
 	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionAuthLogin, s.eventActor(r), user.Username, map[string]string{"method": "oidc"})
+		// The browser's address: the console names it for its in-process
+		// call (WithSignInAddress), else the request's (L357)
+		s.auditLog.Log(audit.ActionAuthLogin, s.signInIP(r), user.Username, map[string]string{"method": "oidc"})
 	}
 
 	_ = s.db.UpdateUserLogin(user.ID)
