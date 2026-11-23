@@ -23,7 +23,7 @@ func failMessage(w http.ResponseWriter, r *http.Request, status int, err error, 
 	if message == "" {
 		message = fallback
 	}
-	kit.Fail(w, r, status, message)
+	kit.Fail(w, r, status, inCallersLanguage(r, message))
 }
 
 // saveBranding answers POST /api/settings/branding: the settings in the
@@ -164,7 +164,7 @@ func (h *handlers) importBranding(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !ok {
-		kit.Fail(w, r, http.StatusBadRequest, "Invalid theme preset file")
+		kit.Fail(w, r, http.StatusBadRequest, inCallersLanguage(r, "Invalid theme preset file"))
 		return
 	}
 	_ = h.d.LogAction(r, "branding_import", "Imported branding preset")

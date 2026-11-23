@@ -57,9 +57,9 @@ func (h *handlers) profileError(w http.ResponseWriter, r *http.Request, what str
 	var refusal *branding.Error
 	switch {
 	case errors.Is(err, branding.ErrProfileNameTaken):
-		kit.Fail(w, r, http.StatusConflict, branding.Message(err))
+		kit.Fail(w, r, http.StatusConflict, inCallersLanguage(r, branding.Message(err)))
 	case errors.As(err, &refusal) && refusal.Err == nil:
-		kit.Fail(w, r, http.StatusBadRequest, refusal.Message)
+		kit.Fail(w, r, http.StatusBadRequest, inCallersLanguage(r, refusal.Message))
 	default:
 		h.log.Error(what+" error:", err)
 		kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
@@ -105,7 +105,7 @@ func (h *handlers) createProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if name == "" {
-		kit.Fail(w, r, http.StatusBadRequest, "Profile name is required")
+		kit.Fail(w, r, http.StatusBadRequest, inCallersLanguage(r, "Profile name is required"))
 		return
 	}
 	var preset any

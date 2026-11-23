@@ -703,7 +703,13 @@
 		const file = importFiles?.[0];
 		if (!file) return;
 		try {
-			const preset: unknown = JSON.parse(await file.text());
+			let preset: unknown;
+			try {
+				preset = JSON.parse(await file.text());
+			} catch {
+				// Not the parser's own words: a file that is no JSON is no appearance file
+				throw new Error(t('settings.appearance.refused_theme_file'));
+			}
 			await importBranding(preset);
 			await reloadFromServer();
 			ieStatus = { message: t('branding.imported'), tone: 'ok' };

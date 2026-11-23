@@ -36,7 +36,7 @@ func readUpload(w http.ResponseWriter, r *http.Request, field string, limit int6
 		if message == "" {
 			message = "Upload failed"
 		}
-		kit.Fail(w, r, http.StatusBadRequest, message)
+		kit.Fail(w, r, http.StatusBadRequest, inCallersLanguage(r, message))
 		return nil, false
 	}
 	if up.File == nil {

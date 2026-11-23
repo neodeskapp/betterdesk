@@ -182,3 +182,16 @@ describe('the Appearance form', () => {
 		expect(screen.getByText('settings.appearance.refused_summary')).toBeTruthy();
 	}, 20_000);
 });
+
+describe('import', () => {
+	test('a file that is no JSON is refused in plain words, not with the parser message (L419)', async () => {
+		render(AppearanceTab);
+		await screen.findByLabelText('branding.app_name');
+		const picker = document.getElementById('branding-import-input') as HTMLInputElement;
+		const file = new File(['not json {'], 'theme.json', { type: 'application/json' });
+		Object.defineProperty(picker, 'files', { value: [file], writable: true, configurable: true });
+		await fireEvent.change(picker);
+		await vi.waitFor(() => expect(screen.getByText('settings.appearance.refused_theme_file')).toBeTruthy());
+		expect(document.body.textContent).not.toMatch(/JSON|Unexpected token/);
+	}, 20_000);
+});
