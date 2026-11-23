@@ -83,24 +83,6 @@ case "$COLOR_DEPTH" in
         ;;
 esac
 
-# The NeoDesk mark: the logo's square (b), circle (g) and their overlap
-# (t) on a 12 x 12 grid, sampled from its geometry. Two rows make one line
-# of half blocks.
-ND_MARK_ROWS=(
-    '......gggg..'
-    '....ggggggg.'
-    '....gggggggg'
-    '..bttttggggg'
-    'bbbtttttgggg'
-    'bbbttttttggg'
-    'bbbbtttttgg.'
-    'bbbbbttttgg.'
-    'bbbbbbttt...'
-    'bbbbbbbbb...'
-    'bbbbbbbb....'
-    '.bbbbbbb....'
-)
-
 say() { printf '%s\n' "$*"; }
 step() { printf '%s==>%s %s\n' "$CYAN" "$NC" "$*"; }
 ok() { printf '%sOK%s  %s\n' "$GREEN" "$NC" "$*"; }
@@ -114,66 +96,61 @@ die() {
     exit 1
 }
 
-# mark_colour PART LAYER: in REPLY, the escape code that makes PART of the
-# mark (b, g, t) the text (38) or background (48) colour: the logo's own
-# colours in 24-bit, else bright cyan, bright green and cyan
-mark_colour() {
-    local rgb code
-    case $1 in
-        b) rgb='88;166;255' code=96 ;;
-        g) rgb='163;230;53' code=92 ;;
-        *) rgb='63;208;196' code=36 ;;
-    esac
-    if [ "$COLOR_DEPTH" = 24bit ]; then
-        REPLY=$'\033'"[$2;2;${rgb}m"
-    else
-        if [ "$2" = 48 ]; then code=$((code + 10)); fi
-        REPLY=$'\033'"[${code}m"
-    fi
-}
+# The NeoDesk logo, drawn in quarter and half blocks: nine lines with
+# colour tokens {N}; ND_LOGO_24[N] and ND_LOGO_16[N] are the token's codes
+# in 24-bit and in the 16 colours. The wordmark is the terminal's own
+# text colour (39).
+ND_LOGO_LINES=(
+    '         {0}▄{1}▄{2}█{1}█{3}██{1}█{3}▄{4}▖'
+    '       {0}▗{1}▟█████████▙'
+    '    {5}▄▄{6}▄{7}▀{8}▀▀▀{9}▀{10}▀{11}▜{1}█████▙                                 {12}▐{12}█▌               █{12}█'
+    '  {5}▗███{13}█{14}██████{15}█{16}▀{1}█████     {12}▄▄ {12}▄{12}▄▄▄{12}▖ {12}▗{12}▄{12}▄▄▄{12}▖  ▄{12}▄▄▄▄  {12}▗{12}▄▄{12}▄{12}▟█▌  {12}▄{12}▄▄▄{12}▖  {12}▄{12}▄▄▄{12}▖ {12}██ {12}▗{12}▄▄'
+    '  {5}█████{17}▜{14}██████{18}█{19}█{1}███{20}▌     {12}▝{12}██{12}▀ ▀{12}██{12}▗{12}█{12}█{12}▄▄█{12}█{12}▖{12}██{12}▘ {12}▝{12}██{12}▗{12}█{12}▛  ▜{12}█▌ ██{12}▄▄▟{12}█{12}▌{12}▐█{12}▄{12}▄{12}▛{12}▀ ██{12}▟{12}█{12}▀'
+    '  {5}██████{21}▀{22}▜{14}█████{23}█{1}█{0}█{1}▘       {12}█{12}█   ██{12}▝█{12}█{12}▀▀{12}▜█{12}▌{12}█{12}█   {12}██{12}▐{12}█{12}▙  ▐{12}█▌{12}▝{12}██{12}▀▀▜{12}█▌▄{12}▟▀{12}▀{12}▜█{12}▖{12}██{12}▀{12}▜{12}█▖'
+    '  {5}████████{24}▀{25}▀{26}▀{27}▀{28}▀{29}▀          {12}█{12}█   {12}█{12}█ {12}▝{12}▜{12}██▛▀ ▝▀{12}█{12}██{12}▀{12}▘ {12}▀{12}▜{12}█{12}█▀▜█▌▝▀{12}█{12}█{12}█▀ {12}▝{12}▜{12}█{12}█{12}█{12}▀ {12}█▛  ▀█▌'
+    '  {30}▜{5}███████████▛'
+    '   {5}▀█████████▀'
+)
+ND_LOGO_24=('38;2;162;230;52' '38;2;163;230;53' '38;2;163;230;52' '38;2;162;230;53' '38;2;163;229;53' '38;2;88;166;255' '38;2;88;168;253' '38;2;150;226;74;48;2;64;208;196' '38;2;153;228;67;48;2;63;208;196' '38;2;157;228;62;48;2;63;208;196' '38;2;163;230;53;48;2;84;212;166' '38;2;161;230;56;48;2;122;221;111' '39' '38;2;87;169;251' '38;2;63;208;196' '38;2;64;208;194' '38;2;141;225;86;48;2;86;213;162' '38;2;69;199;208;48;2;87;168;252' '38;2;64;208;195' '38;2;158;229;60' '38;2;162;229;52' '38;2;70;197;210;48;2;86;168;251' '38;2;64;207;197;48;2;75;190;221' '38;2;157;228;62' '38;2;79;182;232;48;2;88;166;255' '38;2;69;200;208;48;2;88;166;255' '38;2;64;208;196;48;2;88;167;252' '38;2;63;208;196;48;2;86;170;249' '38;2;64;207;197;48;2;88;167;254' '38;2;156;228;63' '38;2;88;165;255')
+ND_LOGO_16=('92' '92' '92' '92' '92' '96' '96' '92;46' '92;46' '92;46' '92;46' '92;102' '39' '96' '36' '36' '92;46' '36;106' '36' '92' '92' '36;106' '36;46' '92' '96;106' '36;106' '36;106' '36;106' '36;106' '92' '96')
 
-# mark_line TOP BOTTOM [LABEL]: in REPLY, one line of half blocks from two
-# rows of the mark, with LABEL beside it
-mark_line() {
-    local top=$1 bottom=$2 label=${3:-} line='  ' width=${#1} i t b glyph fg bg
-    if [ -z "$label" ]; then
-        while [ "$width" -gt 0 ] && [ "${top:width-1:1}" = . ] && [ "${bottom:width-1:1}" = . ]; do
-            width=$((width - 1))
+# draw_logo TITLE: the NeoDesk logo, with TITLE under the wordmark on its
+# last line. A terminal narrower than the logo gets the name and TITLE on
+# one line.
+draw_logo() {
+    local cols=${COLUMNS:-} codes line i n
+    [ -n "$cols" ] || cols=$(tput cols 2>/dev/null) || cols=''
+    case $cols in '' | *[!0-9]* | 0) cols=80 ;; esac
+    if [ "$cols" -lt 78 ]; then
+        printf '\033[1mNeoDesk\033[0m %s\n' "$1"
+        return 0
+    fi
+    if [ "$COLOR_DEPTH" = 24bit ]; then codes=("${ND_LOGO_24[@]}"); else codes=("${ND_LOGO_16[@]}"); fi
+    for ((i = 0; i < ${#ND_LOGO_LINES[@]}; i++)); do
+        line=${ND_LOGO_LINES[i]}
+        for ((n = 0; n < ${#codes[@]}; n++)); do
+            line=${line//"{$n}"/$'\033[0m\033['"${codes[n]}m"}
         done
-    fi
-    for ((i = 0; i < width; i++)); do
-        t=${top:i:1} b=${bottom:i:1} glyph=' ' fg='' bg=''
-        if [ "$t" = "$b" ] && [ "$t" != . ]; then glyph='█' fg=$t
-        elif [ "$b" = . ] && [ "$t" != . ]; then glyph='▀' fg=$t
-        elif [ "$t" = . ] && [ "$b" != . ]; then glyph='▄' fg=$b
-        elif [ "$t" != . ]; then glyph='▀' fg=$t bg=$b
-        fi
-        if [ -z "$fg" ]; then line+=' '; continue; fi
-        mark_colour "$fg" 38
-        line+=$REPLY
-        if [ -n "$bg" ]; then mark_colour "$bg" 48; line+=$REPLY; fi
-        line+="$glyph"$'\033[0m'
+        line+=$'\033[0m'
+        # The title starts under the wordmark
+        if [ "$i" -eq $((${#ND_LOGO_LINES[@]} - 1)) ]; then line+="           $1"; fi
+        printf '%s\n' "$line"
     done
-    REPLY="$line${label:+   $label}"
 }
 
-# print_header: the NeoDesk mark beside the name, what this script is
+# print_header: the NeoDesk logo with what this script is
 # and its version; one plain line without colour (no terminal, NO_COLOR).
 # install.sh shows its own before it runs this script
 # (NEODESK_HEADER_SHOWN=1), and this one stays out then.
 print_header() {
-    local title="Docker installer ${VERSION}" line
+    local title="Docker installer ${VERSION}"
     [ "${NEODESK_HEADER_SHOWN:-}" != 1 ] || return 0
     if [ -z "$COLOR_DEPTH" ]; then
         say "NeoDesk $title"
         return 0
     fi
-    local labels=('' '' "${BOLD}NeoDesk${NC}" "$title" '' '')
     say ""
-    for ((line = 0; line < 6; line++)); do
-        mark_line "${ND_MARK_ROWS[line * 2]}" "${ND_MARK_ROWS[line * 2 + 1]}" "${labels[line]}"
-        say "$REPLY"
-    done
+    draw_logo "$title"
     say ""
 }
 

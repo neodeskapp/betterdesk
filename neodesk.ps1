@@ -352,72 +352,66 @@ function Write-Status {
     }
 }
 
-# Write-Mark LABELS: the NeoDesk mark in half blocks, six lines high,
-# with LABELS[i] beside line i. The rows are the logo's square (b), circle
-# (g) and their overlap (t) on a 12 x 12 grid, sampled from its geometry;
-# two rows make one line.
-function Write-Mark {
-    param([string[]]$Labels)
-    $rows = @(
-        '......gggg..',
-        '....ggggggg.',
-        '....gggggggg',
-        '..bttttggggg',
-        'bbbtttttgggg',
-        'bbbttttttggg',
-        'bbbbtttttgg.',
-        'bbbbbttttgg.',
-        'bbbbbbttt...',
-        'bbbbbbbbb...',
-        'bbbbbbbb....',
-        '.bbbbbbb....'
+# Get-ConsoleWidth: the console's width in columns, 80 when the host
+# can't say
+function Get-ConsoleWidth {
+    try { return $Host.UI.RawUI.WindowSize.Width } catch { return 80 }
+}
+
+# Write-Logo TITLE: the NeoDesk logo, drawn in quarter and half blocks,
+# with TITLE under the wordmark on its last line. The lines carry colour
+# tokens {N}: $vt[N] is the code in 24-bit, $fg[N] and $bg[N] the
+# console colours. The wordmark is the console's own text colour. A
+# console narrower than the logo gets the name and TITLE on one line.
+function Write-Logo {
+    param([string]$Title)
+    $lines = @(
+        '         {0}▄{1}▄{2}█{1}█{3}██{1}█{3}▄{4}▖',
+        '       {0}▗{1}▟█████████▙',
+        '    {5}▄▄{6}▄{7}▀{8}▀▀▀{9}▀{10}▀{11}▜{1}█████▙                                 {12}▐{12}█▌               █{12}█',
+        '  {5}▗███{13}█{14}██████{15}█{16}▀{1}█████     {12}▄▄ {12}▄{12}▄▄▄{12}▖ {12}▗{12}▄{12}▄▄▄{12}▖  ▄{12}▄▄▄▄  {12}▗{12}▄▄{12}▄{12}▟█▌  {12}▄{12}▄▄▄{12}▖  {12}▄{12}▄▄▄{12}▖ {12}██ {12}▗{12}▄▄',
+        '  {5}█████{17}▜{14}██████{18}█{19}█{1}███{20}▌     {12}▝{12}██{12}▀ ▀{12}██{12}▗{12}█{12}█{12}▄▄█{12}█{12}▖{12}██{12}▘ {12}▝{12}██{12}▗{12}█{12}▛  ▜{12}█▌ ██{12}▄▄▟{12}█{12}▌{12}▐█{12}▄{12}▄{12}▛{12}▀ ██{12}▟{12}█{12}▀',
+        '  {5}██████{21}▀{22}▜{14}█████{23}█{1}█{0}█{1}▘       {12}█{12}█   ██{12}▝█{12}█{12}▀▀{12}▜█{12}▌{12}█{12}█   {12}██{12}▐{12}█{12}▙  ▐{12}█▌{12}▝{12}██{12}▀▀▜{12}█▌▄{12}▟▀{12}▀{12}▜█{12}▖{12}██{12}▀{12}▜{12}█▖',
+        '  {5}████████{24}▀{25}▀{26}▀{27}▀{28}▀{29}▀          {12}█{12}█   {12}█{12}█ {12}▝{12}▜{12}██▛▀ ▝▀{12}█{12}██{12}▀{12}▘ {12}▀{12}▜{12}█{12}█▀▜█▌▝▀{12}█{12}█{12}█▀ {12}▝{12}▜{12}█{12}█{12}█{12}▀ {12}█▛  ▀█▌',
+        '  {30}▜{5}███████████▛',
+        '   {5}▀█████████▀'
     )
+    $vtCodes = @('38;2;162;230;52', '38;2;163;230;53', '38;2;163;230;52', '38;2;162;230;53', '38;2;163;229;53', '38;2;88;166;255', '38;2;88;168;253', '38;2;150;226;74;48;2;64;208;196', '38;2;153;228;67;48;2;63;208;196', '38;2;157;228;62;48;2;63;208;196', '38;2;163;230;53;48;2;84;212;166', '38;2;161;230;56;48;2;122;221;111', '39', '38;2;87;169;251', '38;2;63;208;196', '38;2;64;208;194', '38;2;141;225;86;48;2;86;213;162', '38;2;69;199;208;48;2;87;168;252', '38;2;64;208;195', '38;2;158;229;60', '38;2;162;229;52', '38;2;70;197;210;48;2;86;168;251', '38;2;64;207;197;48;2;75;190;221', '38;2;157;228;62', '38;2;79;182;232;48;2;88;166;255', '38;2;69;200;208;48;2;88;166;255', '38;2;64;208;196;48;2;88;167;252', '38;2;63;208;196;48;2;86;170;249', '38;2;64;207;197;48;2;88;167;254', '38;2;156;228;63', '38;2;88;165;255')
+    $fgNames = @('Green', 'Green', 'Green', 'Green', 'Green', 'Cyan', 'Cyan', 'Green', 'Green', 'Green', 'Green', 'Green', '', 'Cyan', 'DarkCyan', 'DarkCyan', 'Green', 'DarkCyan', 'DarkCyan', 'Green', 'Green', 'DarkCyan', 'DarkCyan', 'Green', 'Cyan', 'DarkCyan', 'DarkCyan', 'DarkCyan', 'DarkCyan', 'Green', 'Cyan')
+    $bgNames = @('', '', '', '', '', '', '', 'DarkCyan', 'DarkCyan', 'DarkCyan', 'DarkCyan', 'Green', '', '', '', '', 'DarkCyan', 'Cyan', '', '', '', 'Cyan', 'DarkCyan', '', 'Cyan', 'Cyan', 'Cyan', 'Cyan', 'Cyan', '', '')
+    $columns = Get-ConsoleWidth
+    if ($columns -gt 0 -and $columns -lt 78) {
+        Write-Host "NeoDesk $Title"
+        return
+    }
     $vt = (Get-ColorMode) -eq 'vt'
     $esc = [char]27
-    $rgb = @{ b = '88;166;255'; g = '163;230;53'; t = '63;208;196' }
-    $console = @{ b = 'Cyan'; g = 'Green'; t = 'DarkCyan' }
-    $upper = [string][char]0x2580
-    $lower = [string][char]0x2584
-    $full = [string][char]0x2588
-    for ($line = 0; $line -lt 6; $line++) {
-        $top = $rows[2 * $line]
-        $bottom = $rows[2 * $line + 1]
-        $label = if ($line -lt $Labels.Count) { $Labels[$line] } else { '' }
-        # Up to the last cell with a part of the mark, all of them before a label
-        $width = $top.Length
-        if (-not $label) {
-            while ($width -gt 0 -and $top[$width - 1] -eq '.' -and $bottom[$width - 1] -eq '.') { $width-- }
-        }
-        $text = '  '
-        if (-not $vt) { Write-Host '  ' -NoNewline }
-        for ($i = 0; $i -lt $width; $i++) {
-            $t = [string]$top[$i]
-            $b = [string]$bottom[$i]
-            $glyph, $fg, $bg = ' ', '', ''
-            if ($t -eq $b -and $t -ne '.') { $glyph, $fg = $full, $t }
-            elseif ($b -eq '.' -and $t -ne '.') { $glyph, $fg = $upper, $t }
-            elseif ($t -eq '.' -and $b -ne '.') { $glyph, $fg = $lower, $b }
-            elseif ($t -ne '.') { $glyph, $fg, $bg = $upper, $t, $b }
-            if ($vt) {
-                if (-not $fg) { $text += ' '; continue }
-                $text += "$esc[38;2;$($rgb[$fg])m"
-                if ($bg) { $text += "$esc[48;2;$($rgb[$bg])m" }
-                $text += "$glyph$esc[0m"
-            } elseif (-not $fg) {
-                Write-Host ' ' -NoNewline
-            } elseif ($bg) {
-                Write-Host $glyph -ForegroundColor $console[$fg] -BackgroundColor $console[$bg] -NoNewline
-            } else {
-                Write-Host $glyph -ForegroundColor $console[$fg] -NoNewline
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $after = if ($i -eq $lines.Count - 1) { '           ' + $Title } else { '' }
+        # Text and token numbers take turns: text, number, text, ...
+        $parts = [regex]::Split($lines[$i], '\{(\d+)\}')
+        if ($vt) {
+            $text = $parts[0]
+            for ($p = 1; $p -lt $parts.Count; $p += 2) {
+                $text += "$esc[0m$esc[$($vtCodes[[int]$parts[$p]])m" + $parts[$p + 1]
             }
+            Write-Host "$text$esc[0m$after"
+            continue
         }
-        $after = if ($label) { "   $label" } else { '' }
-        if ($vt) { Write-Host "$text$after" } else { Write-Host $after }
+        Write-Host $parts[0] -NoNewline
+        for ($p = 1; $p -lt $parts.Count; $p += 2) {
+            $n = [int]$parts[$p]
+            $colours = @{}
+            if ($fgNames[$n]) { $colours.ForegroundColor = $fgNames[$n] }
+            if ($bgNames[$n]) { $colours.BackgroundColor = $bgNames[$n] }
+            Write-Host $parts[$p + 1] -NoNewline @colours
+        }
+        Write-Host $after
     }
 }
 
-# Print-Header: clears the console and shows the NeoDesk mark beside
-# the name, what this script is and its version. Without colour (a file,
+# Print-Header: clears the console and shows the NeoDesk logo with
+# what this script is and its version. Without colour (a file,
 # a pipe, NO_COLOR) it is one plain line.
 function Print-Header {
     $title = "Server installer $($script:VERSION)"
@@ -426,7 +420,7 @@ function Print-Header {
     } else {
         Clear-Host
         Write-Host ''
-        Write-Mark @('', '', 'NeoDesk', $title)
+        Write-Logo $title
         Write-Host ''
     }
     Write-Status '[!]' warning 'Windows support is experimental.'

@@ -70,19 +70,20 @@ blue_or_magenta() {
 }
 
 # check_header NAME OUT TITLE: OUT is NAME's header drawn in a terminal:
-# six lines of the mark with NeoDesk and TITLE beside it, no box
-# characters, no blue or magenta, no line wider than 60 columns or ending
+# the logo in nine lines of half blocks with TITLE on the last, no box
+# characters, no blue or magenta, no line wider than 80 columns or ending
 # in spaces
 check_header() {
     local name=$1 out=$2 title=$3 text line box LC_ALL=C.UTF-8
     text=$(printf '%s\n' "$out" | sed $'s/\033\\[[0-9;?]*[A-Za-z]//g')
-    case "$text" in *NeoDesk*"$title"*) ;; *) fail "$name's header does not say NeoDesk and $title: $text" ;; esac
     for box in ═ ║ ╔ ╗ ╚ ╝ ─ │ ┌ ┐ └ ┘ ╭ ╮ ╯ ╰; do
         case "$text" in *"$box"*) fail "$name's header draws a box: $text" ;; esac
     done
-    [ "$(printf '%s\n' "$text" | grep -cF -e ▀ -e ▄ -e █)" = 6 ] || fail "$name's header has no mark of six lines: $text"
+    [ "$(printf '%s\n' "$text" | grep -cF -e ▀ -e ▄ -e █)" = 9 ] || fail "$name's header has no logo of nine lines: $text"
+    [ "$(printf '%s\n' "$text" | grep -F -e ▀ -e ▄ -e █ | tail -1 | sed 's/^[ ▀▄█]*   //')" = "$title" ] \
+        || fail "$name's header does not end the logo with $title: $text"
     while IFS= read -r line; do
-        [ "${#line}" -le 60 ] || fail "$name's header has a line of ${#line} columns: $line"
+        [ "${#line}" -le 80 ] || fail "$name's header has a line of ${#line} columns: $line"
         case "$line" in *' ') fail "$name's header has a line that ends in spaces: '$line'" ;; esac
     done <<< "$text"
     if printf '%s\n' "$out" | sgr_colours | blue_or_magenta; then
@@ -91,9 +92,9 @@ check_header() {
 }
 
 # check_output NAME TITLE HELPERS [NAME=value...]: NAME's header is the
-# mark beside NeoDesk and TITLE in a terminal, and one plain line
-# "NeoDesk TITLE" without a terminal or with NO_COLOR, with no escape
-# codes at all then. The status helpers (HELPERS, code that calls each)
+# logo with TITLE in a terminal, "NeoDesk TITLE" on one line in a terminal
+# narrower than the logo, and one plain line "NeoDesk TITLE" without a
+# terminal or with NO_COLOR, with no escape codes at all then. The status helpers (HELPERS, code that calls each)
 # use no blue or magenta, and their 24-bit colours keep 3.5:1 on black,
 # on PowerShell's blue and on white.
 check_output() {
@@ -116,6 +117,9 @@ check_output() {
     out=$(in_terminal "$file" print_header COLORTERM=truecolor "$@")
     check_header "$name" "$out" "$title"
     case "$out" in *$'\033[38;2;88;166;255m'*) ;; *) fail "$name's mark is not in its 24-bit colours: $(printf '%q' "$out")" ;; esac
+    out=$(in_terminal "$file" print_header COLUMNS=60 "$@")
+    [ "$(printf '%s\n' "$out" | sed $'s/\033\\[[0-9;?]*[A-Za-z]//g' | grep -v '^$')" = "NeoDesk $title" ] \
+        || fail "in a terminal of 60 columns $name's header is not one line: $(printf '%q' "$out")"
     out=$(in_terminal "$file" "$helpers" COLORTERM=truecolor "$@")
     colours=$(printf '%s\n' "$out" | sgr_colours)
     [ "$(printf '%s\n' "$colours" | grep -c '^rgb ')" -ge 4 ] || fail "the status helpers of $name have no 24-bit colours: $(printf '%q' "$out")"
