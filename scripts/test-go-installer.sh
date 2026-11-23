@@ -970,6 +970,43 @@ test_inactive_ufw_is_left_alone() (
     rm -rf "$TEST_DIR"
 )
 
+# L343: a ufw or firewalld that is installed but switched off is left
+# alone, also by the iptables fallback: no ACCEPT rules, nothing saved to
+# rules.v4. iptables gets the rules only on a machine without either tool,
+# where it is the firewall.
+test_switched_off_firewall_gets_no_iptables_rules() (
+    load
+    printf 'CONSOLE_PORT=5000
+HTTPS_ENABLED=false
+' > "$CONSOLE_PATH/.env"
+    systemctl() { return 3; }
+    iptables() { printf '%s
+' "$*" >> "$TEST_DIR/iptables"; case "$1" in -C|-D) return 1 ;; esac; }
+    iptables-save() { echo saved >> "$TEST_DIR/iptables"; }
+    print_success() { :; }
+    ufw() { [ "$1" != status ] || echo "Status: inactive"; }
+    configure_firewall_rules > /dev/null 2>&1 || fail "the firewall step failed"
+    close_console_firewall_ports > /dev/null 2>&1 || fail "closing the console's ports failed"
+    if [ -s "$TEST_DIR/iptables" ]; then
+        fail "with ufw switched off, neodesk.sh wrote iptables rules: $(tr '
+' ';' < "$TEST_DIR/iptables")"
+    fi
+    unset -f ufw
+    firewall-cmd() { :; }
+    configure_firewall_rules > /dev/null 2>&1 || fail "the firewall step failed"
+    if [ -s "$TEST_DIR/iptables" ]; then
+        fail "with firewalld switched off, neodesk.sh wrote iptables rules: $(tr '
+' ';' < "$TEST_DIR/iptables")"
+    fi
+    unset -f firewall-cmd
+    if ! command -v ufw >/dev/null 2>&1 && ! command -v firewall-cmd >/dev/null 2>&1; then
+        configure_firewall_rules > /dev/null 2>&1 || fail "the firewall step failed"
+        grep -q -- '-A INPUT -p tcp --dport 21116 -j ACCEPT' "$TEST_DIR/iptables"             || fail "without ufw and firewalld, iptables got no rules: $(tr '
+' ';' < "$TEST_DIR/iptables" 2>/dev/null)"
+    fi
+    rm -rf "$TEST_DIR"
+)
+
 # L225: --pg-uri (or POSTGRESQL_URI with PostgreSQL chosen) is the
 # database as given: the install asks no database question and sets up no
 # PostgreSQL of its own, which made a new address and dropped the given
@@ -1284,6 +1321,7 @@ test_update_asks_the_fork
 test_firewall_ports
 test_reverse_proxy_closes_the_console_ports
 test_inactive_ufw_is_left_alone
+test_switched_off_firewall_gets_no_iptables_rules
 test_pg_uri_is_used_as_given
 test_self_signed_keeps_the_client_api_on_http
 test_port_taken_by_another_program

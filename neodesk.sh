@@ -6637,9 +6637,18 @@ ufw_active() {
     command -v ufw &>/dev/null && LC_ALL=C ufw status 2>/dev/null | grep -q '^Status: active'
 }
 
+# iptables_is_the_firewall: neither ufw nor firewalld is installed, so
+# iptables rules are how this machine filters. A ufw or firewalld that is
+# installed but switched off was switched off by its admin: no rules then,
+# not even iptables ones.
+iptables_is_the_firewall() {
+    ! command -v ufw &>/dev/null && ! command -v firewall-cmd &>/dev/null && command -v iptables &>/dev/null
+}
+
 # configure_firewall_rules: opens firewall_ports in ufw or firewalld when
-# one of them is active, else with iptables, and names the ports a
-# firewall outside this machine needs.
+# one of them is active, with iptables when neither is installed
+# (iptables_is_the_firewall), and names the ports a firewall outside this
+# machine needs.
 configure_firewall_rules() {
     local entries entry created=0
     mapfile -t entries < <(firewall_ports)
@@ -6654,7 +6663,7 @@ configure_firewall_rules() {
             firewall-cmd --permanent --add-port="$entry" >/dev/null 2>&1 && created=$((created + 1))
         done
         firewall-cmd --reload >/dev/null 2>&1 || true
-    elif command -v iptables &>/dev/null; then
+    elif iptables_is_the_firewall; then
         print_info "Opening the NeoDesk ports with iptables..."
         for entry in "${entries[@]}"; do
             iptables -C INPUT -p "${entry#*/}" --dport "${entry%/*}" -j ACCEPT 2>/dev/null \
@@ -6690,7 +6699,7 @@ close_console_firewall_ports() {
             firewall-cmd --permanent --remove-port="$entry" >/dev/null 2>&1 || true
         done
         firewall-cmd --reload >/dev/null 2>&1 || true
-    elif command -v iptables &>/dev/null; then
+    elif iptables_is_the_firewall; then
         for entry in "${entries[@]}"; do
             while iptables -D INPUT -p "${entry#*/}" --dport "${entry%/*}" -j ACCEPT 2>/dev/null; do :; done
         done
