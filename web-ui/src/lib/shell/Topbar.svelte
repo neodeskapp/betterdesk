@@ -10,7 +10,8 @@
   and their one line, the breadcrumb takes the room that is left, and the
   search field gives way first (down to its icon). A short breadcrumb shows
   only the current page. On phones Quick support and search show only their
-  icon; their names stay for screen readers.
+  icon, and below 420 px the breadcrumb is gone from view; their names stay
+  for screen readers.
 -->
 <script lang="ts">
 	import { i18n, t } from '#lib/i18n/i18n.svelte.ts';
@@ -463,6 +464,22 @@
 		}
 		.action-list.is-open {
 			display: flex;
+		}
+	}
+	/* Narrow phones: no room for a page name worth reading (the page's own
+	   heading says it); screen readers still hear it */
+	@media (max-width: 419px) {
+		.topbar-logo + .shell-breadcrumb {
+			padding-inline-start: 0;
+			border-inline-start: 0;
+		}
+		.crumb.current {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0, 0, 0, 0);
+			white-space: nowrap;
 		}
 	}
 	@media (pointer: coarse) {

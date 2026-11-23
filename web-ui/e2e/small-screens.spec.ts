@@ -405,3 +405,19 @@ test.describe('skip link', () => {
 		expect(reach, 'lowest point of the skip link and its shadow').toBeLessThanOrEqual(0);
 	});
 });
+
+test.describe('top bar on a narrow phone', () => {
+	test.use({ viewport: { width: 360, height: 640 } });
+
+	// Small-screen pass, usability 1: the breadcrumb was cut to one letter ("U...")
+	test('shows no cut page name; screen readers still have it', async ({ page }) => {
+		await open(page, '/users', 'en');
+		const crumb = page.locator('.shell-breadcrumb [aria-current="page"]');
+		await expect(crumb).toHaveText('Users');
+		const width = await crumb.evaluate((el) => el.getBoundingClientRect().width);
+		expect(width, 'visible width of the page name').toBeLessThanOrEqual(1);
+		await page.setViewportSize({ width: 768, height: 1024 });
+		await expect(crumb).toBeVisible();
+		expect(await crumb.evaluate((el) => el.getBoundingClientRect().width)).toBeGreaterThan(20);
+	});
+});
