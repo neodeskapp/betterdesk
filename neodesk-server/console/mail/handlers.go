@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"math"
 	"net/http"
+	netmail "net/mail"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -51,6 +52,21 @@ func (r rawJSON) MarshalJSON() ([]byte, error) { return []byte(r), nil }
 type errorBody struct {
 	Error string `json:"error"`
 }
+
+// Refusal is the reason of a refused request (status 400), "" for any
+// other answer.
+func (a Answer) Refusal() string {
+	if body, ok := a.Body.(errorBody); ok && a.Status == http.StatusBadRequest {
+		return body.Error
+	}
+	return ""
+}
+
+// The refusals of a password kept for another account.
+const (
+	RefusalPasswordRequired           = passwordRequired
+	RefusalPasswordRequiredUnverified = passwordRequiredUnverified
+)
 
 func serverError(what string, err error) Answer {
 	return Answer{
@@ -125,7 +141,9 @@ func bodyValue(body middleware.JSONObject, name string) value {
 //	             the password stored so far when host, port and user
 //	             are the stored ones and the certificate check stays on
 //	             or was off, else ""
-//	from         text that is not blank, of at most 998 characters
+//	from         one address, alone or with a name ("NeoDesk
+//	             <neodesk@example.org>"), of at most 998 characters;
+//	             else "Invalid from"
 //	alert_email  plain addresses separated by commas (PlainAddressList),
 //	             without the white space around them; "" when missing or
 //	             null
@@ -202,6 +220,11 @@ func nextConfig(body middleware.JSONObject, existing value, defaultVerify bool) 
 	}
 	if utf8.RuneCountInString(texts["from"]) > maxFromLength {
 		return undefined, "SMTP sender is too long"
+	}
+	// A sender that is no address was saved, and mails then went out
+	// without a From line (BUGS L406)
+	if _, err := netmail.ParseAddress(jsbind.Trim(texts["from"])); err != nil {
+		return undefined, "Invalid from"
 	}
 	// The password stays what it was for the mask or no password member at
 	// all, but only for the server and the account it was given for, with

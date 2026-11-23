@@ -104,7 +104,31 @@ describe('port', () => {
 		await user.clear(port);
 		await user.type(port, '0');
 		await user.click(screen.getByRole('button', { name: 'settings.email.smtp_save' }));
-		await vi.waitFor(() => expect(screen.getAllByText('settings.email.port_error').length).toBeGreaterThan(0));
+		await vi.waitFor(() =>
+			expect(screen.getAllByText('settings.email.port_error').length).toBeGreaterThan(0)
+		);
 		expect(api.saveSmtp).not.toHaveBeenCalled();
+	});
+});
+
+/** The server's refusal shows at the field it names (BUGS L406, L419) */
+describe('refusals', () => {
+	test('a sender that is no address is refused at the From field', async () => {
+		const { ApiError } = await import('../../../src/lib/api/client.ts');
+		vi.mocked(api.saveSmtp).mockRejectedValueOnce(
+			new ApiError('Enter one email address', 400, {
+				data: { error: 'Enter one email address', field: 'from' }
+			})
+		);
+		const user = await setup();
+		const from = screen.getByLabelText('settings.email.smtp_from');
+		await user.clear(from);
+		await user.type(from, 'not an address');
+		await user.click(screen.getByRole('button', { name: 'settings.email.smtp_save' }));
+		await vi.waitFor(() =>
+			expect(document.getElementById('email-smtp-from-error')?.textContent).toContain(
+				'Enter one email address'
+			)
+		);
 	});
 });

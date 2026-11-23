@@ -169,6 +169,29 @@ func TestPutNeedsAHost(t *testing.T) {
 	}
 }
 
+// A sender that is no address was saved, and the next mail went out
+// without a From line (BUGS L406)
+func TestPutRefusesASenderThatIsNoAddress(t *testing.T) {
+	db := storetest.Migrated(t)
+	s, _, _ := newTestService(db, nil, Options{})
+	for _, from := range []string{"not an address", "neodesk@", "@example.org", "NeoDesk <neodesk>", "a@b, c@d"} {
+		body := `{"host":"smtp.example.org","from":` + marshal(t, from) + `}`
+		answer := s.PutSMTPSettings(context.Background(), bodyOf(body))
+		if answer.Status != 400 || marshal(t, answer.Body) != `{"error":"Invalid from"}` {
+			t.Errorf("%q: %d %s", from, answer.Status, marshal(t, answer.Body))
+		}
+	}
+	if stored(t, db) != "" {
+		t.Fatalf("a refused request stored %q", stored(t, db))
+	}
+	for _, from := range []string{"neodesk@example.org", "NeoDesk <neodesk@example.org>", "neodesk@localhost"} {
+		body := `{"host":"smtp.example.org","from":` + marshal(t, from) + `}`
+		if answer := s.PutSMTPSettings(context.Background(), bodyOf(body)); answer.Status != 200 {
+			t.Errorf("%q: %d %s", from, answer.Status, marshal(t, answer.Body))
+		}
+	}
+}
+
 func TestConnectionTestAnswers(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		ctx := context.Background()

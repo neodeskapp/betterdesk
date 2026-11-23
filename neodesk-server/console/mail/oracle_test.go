@@ -9,6 +9,7 @@ import (
 	"math"
 	"net/http"
 	"net/http/httptest"
+	netmail "net/mail"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -387,7 +388,12 @@ func refusedForCause(request, message string) bool {
 		return ok && string(raw) != "true" && string(raw) != "false"
 	case "Invalid user", "Invalid pass", "Invalid from":
 		name := strings.TrimPrefix(message, "Invalid ")
-		_, isText := text(name)
+		value, isText := text(name)
+		if name == "from" && isText {
+			// BUGS L406: a sender that is no address
+			_, err := netmail.ParseAddress(jsbind.Trim(value))
+			return jsbind.Trim(value) != "" && err != nil
+		}
 		return !missing(name) && !isText
 	case "Invalid alert_email":
 		emails, isText := text("alert_email")
@@ -909,10 +915,13 @@ func (r *replay) run(i int, step oracleStep) {
 			if err := json.Unmarshal([]byte(refused), &reason); err != nil || step.Request == nil || !refusedForCause(*step.Request, reason.Error) {
 				t.Fatalf("step %d put %s: refused with %s", i, show(step.Request), refused)
 			}
-			switch reason.Error {
-			case "SMTP sender is required":
+			from, _ := parseJSON(*step.Request)
+			switch {
+			case reason.Error == "Invalid from" && from.member("from").kind == kindString:
+				r.counts["L406: a sender that is no address"]++
+			case reason.Error == "SMTP sender is required":
 				r.counts["EM9: a save without a sender"]++
-			case "SMTP sender is too long":
+			case reason.Error == "SMTP sender is too long":
 				r.counts["RV36: a sender of more than 998 characters"]++
 			default:
 				r.counts["EM5: a save with a member of the wrong type"]++

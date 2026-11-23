@@ -32,9 +32,35 @@ func (h *handlers) getSMTP(w http.ResponseWriter, r *http.Request) {
 
 // saveSMTP answers PUT /api/settings/email/smtp with the body {host, port,
 // secure, user, pass, from, alert_email, tlsVerify}. Only the host is
-// required. An empty or masked password keeps the stored one.
+// required. An empty or masked password keeps the stored one. A refusal
+// is answered in the console's language with the field it is about:
+// {"error", "field"} (BUGS L419).
 func (h *handlers) saveSMTP(w http.ResponseWriter, r *http.Request) {
-	h.smtpAnswer(w, r, h.d.Mail.PutSMTPSettings(r.Context(), kit.Body(r)))
+	answer := h.d.Mail.PutSMTPSettings(r.Context(), kit.Body(r))
+	if refusal, ok := smtpRefusals[answer.Refusal()]; ok {
+		kit.JSON(w, r, answer.Status, smtpRefused{Error: kit.T(r, refusal.key, nil), Field: refusal.field})
+		return
+	}
+	h.smtpAnswer(w, r, answer)
+}
+
+type smtpRefused struct {
+	Error string `json:"error"`
+	Field string `json:"field"`
+}
+
+// smtpRefusals are the mail service's refusals of a save: the text key and
+// the form field of each.
+var smtpRefusals = map[string]struct{ key, field string }{
+	"SMTP host is required":                {"settings.email.err_host_required", "host"},
+	"Invalid host":                         {"settings.email.err_host_required", "host"},
+	"Invalid port":                         {"settings.email.port_error", "port"},
+	"SMTP sender is required":              {"settings.email.err_from_required", "from"},
+	"SMTP sender is too long":              {"settings.email.err_from_long", "from"},
+	"Invalid from":                         {"settings.email.err_from_invalid", "from"},
+	"Invalid alert_email":                  {"settings.email.err_alert_email", "alert_email"},
+	mail.RefusalPasswordRequired:           {"settings.email.err_pass_required", "pass"},
+	mail.RefusalPasswordRequiredUnverified: {"settings.email.err_pass_unverified", "pass"},
 }
 
 // testSMTP answers POST /api/settings/email/smtp/test: it connects to the

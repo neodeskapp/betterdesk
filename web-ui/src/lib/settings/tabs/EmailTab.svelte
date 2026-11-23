@@ -24,7 +24,8 @@
 	import Status from '#lib/ui/Status.svelte';
 	import Switch from '#lib/ui/Switch.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
-	import { createForm } from '#lib/ui/form.svelte.ts';
+	import { FormError, createForm } from '#lib/ui/form.svelte.ts';
+	import { ApiError } from '#lib/api/client.ts';
 	import { trackDirty } from '#lib/settings/dirty.ts';
 	import { wholeInRange } from '#lib/settings/numbers.ts';
 
@@ -69,6 +70,9 @@
 	let testing = $state(false);
 	let testResult = $state<{ ok: boolean; message: string } | null>(null);
 
+	/** The fields a refusal of the server can name */
+	const FIELDS: readonly string[] = ['host', 'port', 'pass', 'from', 'alert_email'];
+
 	const form = createForm<Values>({
 		id: 'email-smtp-form',
 		initial: toValues(null),
@@ -79,16 +83,25 @@
 			// Without a sign-in an empty user name goes out, which the server reads as "no sign-in".
 			// The certificate check has no switch here: the saved one goes back as it was.
 			const tlsVerify = config?.tlsVerify;
-			await saveSmtp({
-				host: v.host.trim(),
-				port: Number(v.port),
-				secure: v.secure,
-				user: v.auth ? v.user.trim() : '',
-				pass: v.auth ? v.pass : '',
-				from: v.from.trim(),
-				alert_email: v.alert_email.trim(),
-				...(tlsVerify === undefined ? {} : { tlsVerify })
-			});
+			try {
+				await saveSmtp({
+					host: v.host.trim(),
+					port: Number(v.port),
+					secure: v.secure,
+					user: v.auth ? v.user.trim() : '',
+					pass: v.auth ? v.pass : '',
+					from: v.from.trim(),
+					alert_email: v.alert_email.trim(),
+					...(tlsVerify === undefined ? {} : { tlsVerify })
+				});
+			} catch (err) {
+				// The server names the field a refusal is about
+				if (err instanceof ApiError) {
+					const field = (err.data as { field?: unknown } | null)?.field;
+					if (typeof field === 'string' && FIELDS.includes(field)) throw new FormError(err.message, field);
+				}
+				throw err;
+			}
 			config = await getSmtp();
 			testResult = null;
 			return toValues(config);
@@ -170,7 +183,12 @@
 				<h2 id="email-title">{t('settings.email.server_title')}</h2>
 				<p class="section-note">{t('settings.email.server_note')}</p>
 				<form class="form-column" id={form.id} {onsubmit} novalidate>
-					<Field id="email-smtp-host" label={t('settings.email.host_label')} width="host">
+					<Field
+						id="email-smtp-host"
+						label={t('settings.email.host_label')}
+						error={form.errors.host}
+						width="host"
+					>
 						{#snippet children(f)}
 							<Input
 								{...f}
@@ -220,6 +238,7 @@
 								'settings.email.pass_hint_masked',
 								'A saved password shows as dots. Type a new one to change it.'
 							)}
+							error={form.errors.pass}
 							width="host"
 						>
 							{#snippet children(f)}
@@ -231,6 +250,7 @@
 						id="email-smtp-from"
 						label={t('settings.email.smtp_from')}
 						hint={t('settings.email.from_hint')}
+						error={form.errors.from}
 						width="host"
 					>
 						{#snippet children(f)}
@@ -241,6 +261,7 @@
 						id="email-smtp-alert"
 						label={t('settings.email.alert_email')}
 						hint={t('settings.email.alert_email_hint')}
+						error={form.errors.alert_email}
 						width="host"
 					>
 						{#snippet children(f)}

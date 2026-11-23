@@ -103,7 +103,12 @@ func TestSMTPSettings(t *testing.T) {
 				`{"host":"127.0.0.1","port":2,"user":"contract","from":"console@example.com"}`,
 				`{"host":"127.0.0.1","port":1,"user":"other","pass":"********","from":"console@example.com"}`,
 			} {
-				expect(do("admin", "PUT", path, body), 400, `{"error":"SMTP password is required when the host, port or user changes"}`, "save for another account at "+path)
+				want := `{"error":"SMTP password is required when the host, port or user changes"}`
+				if path == "/api/settings/email/smtp" {
+					// the Email tab's route says it in the console's language, at the field (BUGS L419)
+					want = `{"error":"Enter the password again. The saved password is only sent to the server and user name it was saved for.","field":"pass"}`
+				}
+				expect(do("admin", "PUT", path, body), 400, want, "save for another account at "+path)
 			}
 		}
 		expect(do("admin", "GET", "/api/automation/smtp", ""), 200, masked, "read back after saves for another account")

@@ -32,8 +32,17 @@ func TestSMTPSettings(t *testing.T) {
 		if res := admin.Do("GET", path, ""); res.Status != http.StatusOK || res.Body != `{"configured":false}` {
 			t.Errorf("first read: %d %s", res.Status, res.Body)
 		}
-		if res := admin.Do("PUT", path, `{"port":1}`, json...); res.Status != http.StatusBadRequest || res.Body != `{"error":"SMTP host is required"}` {
-			t.Errorf("save without host: %d %s", res.Status, res.Body)
+		// A refusal is in the console's language and names its field (BUGS L419)
+		for _, c := range [][2]string{
+			{`{"port":1}`, `{"error":"settings.email.err_host_required","field":"host"}`},
+			{`{"host":"smtp.example.org","port":0,"from":"a@example.org"}`, `{"error":"settings.email.port_error","field":"port"}`},
+			{`{"host":"smtp.example.org","from":""}`, `{"error":"settings.email.err_from_required","field":"from"}`},
+			{`{"host":"smtp.example.org","from":"not an address"}`, `{"error":"settings.email.err_from_invalid","field":"from"}`},
+			{`{"host":"smtp.example.org","from":"a@example.org","alert_email":"nope"}`, `{"error":"settings.email.err_alert_email","field":"alert_email"}`},
+		} {
+			if res := admin.Do("PUT", path, c[0], json...); res.Status != http.StatusBadRequest || res.Body != c[1] {
+				t.Errorf("save %s: %d %s", c[0], res.Status, res.Body)
+			}
 		}
 		save := `{"host":" 127.0.0.1 ","port":"1","user":"contract","pass":"smtp-test-pass","from":"console@example.com","alert_email":" ops@example.com ","tlsVerify":false}`
 		if res := admin.Do("PUT", path, save, json...); res.Status != http.StatusOK || res.Body != `{"success":true}` {
