@@ -160,8 +160,14 @@ func (s *Server) visibleSnapshotIDs(r *http.Request, snapshots []peer.Snapshot) 
 // scopedDevice runs handler only for a device in the caller's scope (see
 // deviceInScope); the device is the path value {id}.
 func (s *Server) scopedDevice(handler http.HandlerFunc) http.HandlerFunc {
+	return s.scopedDeviceAt("id", handler)
+}
+
+// scopedDeviceAt is scopedDevice for a route whose device is the path
+// value name.
+func (s *Server) scopedDeviceAt(name string, handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if !s.deviceInScope(w, r, strings.TrimSpace(r.PathValue("id"))) {
+		if !s.deviceInScope(w, r, strings.TrimSpace(r.PathValue(name))) {
 			return
 		}
 		handler(w, r)

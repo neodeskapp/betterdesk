@@ -48,7 +48,8 @@
 
 	const current = $derived(views.includes(view) ? view : (views[0] ?? 'services'));
 	const st = $derived(data.views[current]);
-	const editable = $derived(!device.soft_deleted && can('device.edit'));
+	// Starting and stopping services and ending processes is remote control
+	const editable = $derived(!device.soft_deleted && can('device.connect'));
 	let busy = $state<string | null>(null);
 
 	// The device as the panel loads it again: a view waiting for the device

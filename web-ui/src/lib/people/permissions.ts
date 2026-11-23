@@ -44,7 +44,8 @@ export const CATEGORIES: readonly { id: string; permissions: readonly string[] }
 	{ id: 'branding', permissions: ['branding.edit'] },
 	{ id: 'billing', permissions: ['billing.view', 'billing.manage', 'billing.reports', 'billing.export'] },
 	{ id: 'cdap', permissions: ['cdap.view', 'cdap.command', 'cdap.terminal', 'cdap.files'] },
-	{ id: 'mesh', permissions: ['mesh.terminal', 'mesh.files', 'mesh.power'] }
+	{ id: 'mesh', permissions: ['mesh.terminal', 'mesh.files', 'mesh.power'] },
+	{ id: 'agent', permissions: ['agent.terminal', 'agent.files'] }
 ];
 
 /** The groups to show for the permissions the server knows (all of them when it lists none) */

@@ -759,9 +759,11 @@ func (s *Server) routes() *http.ServeMux {
 
 	// NeoDesk desktop client management WebSocket (no API key — device auth)
 	mux.HandleFunc("GET /ws/nd-mgmt/{device_id}", s.handleBdMgmt)
-	// Management REST endpoints: status asks device.view, send device.connect
+	// Management REST endpoints: status asks device.view. Send hands the
+	// agent any message, so it asks the agent's strongest tool, its
+	// terminal, and the device must be in the caller's scope (L388).
 	mux.HandleFunc("GET /api/nd/mgmt/{device_id}/status", s.requirePermission(auth.PermDeviceView, s.handleBdMgmtStatus))
-	mux.HandleFunc("POST /api/nd/mgmt/{device_id}/send", s.requirePermission(auth.PermDeviceConnect, s.handleBdMgmtSend))
+	mux.HandleFunc("POST /api/nd/mgmt/{device_id}/send", s.requirePermission(auth.PermAgentTerminal, s.scopedDeviceAt("device_id", s.handleBdMgmtSend)))
 	mux.HandleFunc("GET /api/nd/mgmt/connected", s.requirePermission(auth.PermDeviceView, s.handleBdMgmtConnected))
 
 	// Prometheus metrics. Gated via H-03 — see handleMetrics for the actual

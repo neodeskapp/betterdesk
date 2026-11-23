@@ -235,22 +235,21 @@ func TestPermissions(t *testing.T) {
 	}
 }
 
-// TestScreenshotNeedsDeviceEdit asks for a device's screenshot as each
-// built-in role, past the panel access guard, which refuses every role
-// without device.edit for it: the route's own check refuses the roles
-// that see devices but may not change them, as the guard does (BUGS PA3,
-// analysis F13), and lets the others through to the agent, which is not
-// connected.
-func TestScreenshotNeedsDeviceEdit(t *testing.T) {
+// TestScreenshotNeedsDeviceConnect asks for a device's screenshot as each
+// built-in role, past the panel access guard: the screen is remote
+// control, so the route's own check refuses the roles that may not
+// connect to devices (BUGS PA3, analysis F13, L388) and lets the others
+// through to the agent, which is not connected.
+func TestScreenshotNeedsDeviceConnect(t *testing.T) {
 	w, _ := world(t, storetest.Migrated(t), nil, nil)
 	d := w.Server.Deps()
 	for _, c := range []struct {
 		role, want string
 		status     int
 	}{
-		{"viewer", `{"success":false,"error":"Permission denied: device.edit"}`, http.StatusForbidden},
-		{"guest_issuer", `{"success":false,"error":"Permission denied: device.edit"}`, http.StatusForbidden},
-		{"server_admin", `{"success":false,"error":"Permission denied: device.edit"}`, http.StatusForbidden},
+		{"viewer", `{"success":false,"error":"Permission denied: device.connect"}`, http.StatusForbidden},
+		{"guest_issuer", `{"success":false,"error":"Permission denied: device.connect"}`, http.StatusForbidden},
+		{"server_admin", `{"success":false,"error":"Permission denied: device.connect"}`, http.StatusForbidden},
 		{"operator", `{"success":false,"error":"agent_offline"}`, http.StatusServiceUnavailable},
 		{"global_admin", `{"success":false,"error":"agent_offline"}`, http.StatusServiceUnavailable},
 		{"admin", `{"success":false,"error":"agent_offline"}`, http.StatusServiceUnavailable},

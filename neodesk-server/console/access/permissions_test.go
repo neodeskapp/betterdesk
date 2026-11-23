@@ -25,6 +25,7 @@ var consoleRoleMap = map[string][]string{
 		"remote_target.view", "remote_target.connect", "remote_target.edit", "remote_target.delete", "remote_target.test",
 		"guest.create", "device.ban", "device.change_id", "device.connection_mode", "audit.view", "metrics.view",
 		"cdap.view", "cdap.command", "cdap.terminal", "cdap.files", "mesh.terminal", "mesh.files", "mesh.power",
+		"agent.terminal", "agent.files",
 		"chat.access", "enrollment.manage", "enrollment.approve", "branding.edit",
 		"billing.view", "billing.manage", "billing.reports", "billing.export",
 	},
@@ -42,8 +43,9 @@ var consoleRoleMap = map[string][]string{
 // Jest: rolePermissions.goParity.test.js. Every default role against every
 // permission name the server knows.
 func TestRoleHasPermissionForEveryRoleAndPermission(t *testing.T) {
-	if len(auth.AllPermissions) != 43 {
-		t.Fatalf("the server knows %d permissions, the console's contract was written for 43", len(auth.AllPermissions))
+	// 43 of the Node console and the NeoDesk agent's terminal and files (L388)
+	if len(auth.AllPermissions) != 45 {
+		t.Fatalf("the server knows %d permissions, the console's contract was written for 45", len(auth.AllPermissions))
 	}
 	for role, granted := range consoleRoleMap {
 		want := newPermissionSet(granted)

@@ -6,9 +6,9 @@
  *   saveEdit(d, before, after)   the edit form in one save, sending only what changed
  *                                (device.edit; also the user field, which saveDetails lacks)
  *   refreshHardware(d)           ask the device to send its hardware details again (device.edit)
- *   controlService(d, name, action)   start or stop a service through the agent (device.edit)
- *   endProcess(d, process)       ends a process after a confirm (device.edit)
- *   downloadFile(d, path)        up to 1 MiB of a file from the agent (device.edit)
+ *   controlService(d, name, action)   start or stop a service through the agent (device.connect)
+ *   endProcess(d, process)       ends a process after a confirm (device.connect)
+ *   downloadFile(d, path)        up to 1 MiB of a file from the agent (agent.files)
  *
  * Like actions.svelte.ts, every action checks its permission first and
  * resolves true when it was done. Results go in the panel's status line
@@ -41,6 +41,9 @@ function failed(err: unknown, fallbackKey = 'errors.server_error'): false {
 }
 
 const mayEdit = (d: PanelDevice) => !d.soft_deleted && can('device.edit');
+/** Services and processes are remote control on the device */
+const mayControl = (d: PanelDevice) => !d.soft_deleted && can('device.connect');
+const mayReadFiles = (d: PanelDevice) => !d.soft_deleted && can('agent.files');
 
 /**
  * Save the edit form. Only what differs from `before` is sent: the changed
@@ -80,7 +83,7 @@ export async function controlService(
 	name: string,
 	action: 'start' | 'stop'
 ): Promise<boolean> {
-	if (!mayEdit(d) || !name) return false;
+	if (!mayControl(d) || !name) return false;
 	try {
 		const queued = await agentApi.sendAgentCommand(d.id, {
 			command: 'service.control',
@@ -94,7 +97,7 @@ export async function controlService(
 }
 
 export async function endProcess(d: PanelDevice, p: Pick<Process, 'pid' | 'name'>): Promise<boolean> {
-	if (!mayEdit(d) || p.pid === null) return false;
+	if (!mayControl(d) || p.pid === null) return false;
 	const ok = await confirm({
 		title: t('device_detail.process_end_title'),
 		message: t('device_detail.process_end_confirm', { name: p.name || '-', pid: p.pid }),
@@ -114,7 +117,7 @@ export async function endProcess(d: PanelDevice, p: Pick<Process, 'pid' | 'name'
 
 /** Saves the file through a download link; the agent sends at most 1 MiB */
 export async function downloadFile(d: PanelDevice, path: string): Promise<boolean> {
-	if (!mayEdit(d) || !path) return false;
+	if (!mayReadFiles(d) || !path) return false;
 	try {
 		const reply = await agentApi.readFile(d.id, path);
 		if (reply.pending) {

@@ -74,6 +74,18 @@ var fixedSteps = []fixedStep{
 	// A viewer's read of an offline agent queues no collection: a viewer
 	// may not send the device commands (device.edit). Still 503
 	// agent_offline, without the call that queued one.
+	// A command the console does not know is refused before it reaches
+	// the server, with the server's own answer to it: each known command
+	// needs its tool's permission (L388).
+	{"node", `87 POST /api/devices/A1001/telemetry/command {"command":5,"args":"x"} as admin`, "L388"},
+	{"node", `88 POST /api/devices/A1001/telemetry/command {"args":[1]} as admin`, "L388"},
+	{"node", `89 POST /api/devices/A1001/telemetry/command {"command":"x","args":null} as admin`, "L388"},
+	{"node", `90 POST /api/devices/C1003/telemetry/command {"command":"format"} as admin`, "L388"},
+	// The NeoDesk agent's terminal needs agent.terminal, which the
+	// operator does not hold: refused before the agent is asked, and the
+	// command is not audited (L388).
+	{"node_agent", `131 POST /api/devices/A1001/terminal/execute {"command":"id"} as operator agent {"ok":false,"error":"denied"}`, "L388"},
+	{"node_agent", "156 audit", "L388"},
 	{"node_agent", "36 GET /api/devices/C1003/services as viewer", "L310"},
 	{"node_agent", "151 GET /api/devices/C1003/processes as viewer", "L310"},
 	{"node_agent", "152 GET /api/devices/C1003/events as viewer", "L310"},

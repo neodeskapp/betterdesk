@@ -315,6 +315,17 @@ func (h *handlers) telemetryCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	command, _ := value(r, "command").(string)
+	// A command is one of the agent's tools: it needs that tool's
+	// permission and client feature, and one the console does not know is
+	// not sent (telemetryTools)
+	tool, known := telemetryTools[command]
+	if !known {
+		answer(w, r, http.StatusBadRequest, goapi.NewObject("success", false, "error", "command_not_allowed"))
+		return
+	}
+	if !h.mayUse(w, r, tool) {
+		return
+	}
 	var args any = goapi.NewObject()
 	switch a := value(r, "args").(type) {
 	case *goapi.Object, []any:

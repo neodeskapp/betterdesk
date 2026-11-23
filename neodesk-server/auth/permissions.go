@@ -58,6 +58,12 @@ const (
 	PermMeshFiles    = "mesh.files"
 	PermMeshPower    = "mesh.power"
 
+	// NeoDesk agent console tools: the terminal and the files. The screen,
+	// the input and the clipboard are remote control (device.connect), the
+	// lists of services, processes and events device.view.
+	PermAgentTerminal = "agent.terminal"
+	PermAgentFiles    = "agent.files"
+
 	// Enrollment
 	PermEnrollmentManage  = "enrollment.manage"
 	PermEnrollmentApprove = "enrollment.approve"
@@ -87,6 +93,7 @@ var AllPermissions = []string{
 	PermAuditView, PermMetricsView, PermBlocklistEdit,
 	PermCDAPView, PermCDAPCommand, PermCDAPTerminal, PermCDAPFiles,
 	PermMeshTerminal, PermMeshFiles, PermMeshPower,
+	PermAgentTerminal, PermAgentFiles,
 	PermEnrollmentManage, PermEnrollmentApprove,
 	PermChatAccess,
 	PermBrandingEdit,
@@ -134,6 +141,7 @@ var DefaultRolePermissions = map[string]map[string]bool{
 		PermAuditView, PermMetricsView,
 		PermCDAPView, PermCDAPCommand, PermCDAPTerminal, PermCDAPFiles,
 		PermMeshTerminal, PermMeshFiles, PermMeshPower,
+		PermAgentTerminal, PermAgentFiles,
 		PermChatAccess,
 		PermEnrollmentManage, PermEnrollmentApprove,
 		PermBrandingEdit,

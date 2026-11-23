@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/audit"
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
@@ -254,10 +255,20 @@ func (s *Server) handleQueuePeerTelemetryCommand(w http.ResponseWriter, r *http.
 	s.queueTelemetryCommand(w, r, body.Command, body.Args)
 }
 
+// telemetryCommandNeeds is the permission a queued command needs on top
+// of the route's: the files are the agent's file tool (L388).
+var telemetryCommandNeeds = map[string]string{
+	"files.browse": auth.PermAgentFiles,
+	"files.read":   auth.PermAgentFiles,
+}
+
 func (s *Server) queueTelemetryCommand(w http.ResponseWriter, r *http.Request, command string, args json.RawMessage) {
 	deviceID := r.PathValue("id")
 	if !allowedTelemetryCommands[command] {
 		writeJSON(w, http.StatusBadRequest, map[string]any{"error": "command_not_allowed"})
+		return
+	}
+	if perm := telemetryCommandNeeds[command]; perm != "" && !s.permitted(w, r, perm) {
 		return
 	}
 	peer, err := s.db.GetPeer(deviceID)

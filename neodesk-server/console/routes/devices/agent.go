@@ -22,9 +22,10 @@ import (
 // that is not connected gets the snapshot the server keeps, when there is
 // one for the request, else a collection queued for when it comes back,
 // else 503 agent_offline. A collection is a command to the device, so only
-// an account that may send it commands queues one (device.edit, which POST
-// /api/devices/{id}/telemetry/command asks); a read-only account gets the
-// snapshot or agent_offline. An agent that does not answer in time is 504
+// an account that may send it that command queues one (telemetryTools: a
+// collection needs device.edit, as a refresh does, the files the agent's
+// file tool); a read-only account gets the snapshot or agent_offline. Each
+// request type needs its tool's permission and client feature (agentTools). An agent that does not answer in time is 504
 // agent_timeout, one that answers with an error 502 and its error, also
 // when the agent's error reads agent_offline or agent_timeout.
 
@@ -52,6 +53,16 @@ var snapshotFor = map[string]string{
 // agentRequest is proxyAgentRequest: the device of the path must exist and
 // be in the account's scope, then the agent is asked.
 func (h *handlers) agentRequest(w http.ResponseWriter, r *http.Request, typ string, payload any, timeout time.Duration) {
+	// Nothing reaches an agent without the tool's permission and client
+	// feature, whatever guard the route has (agentTools)
+	tool, known := agentTools[typ]
+	if !known {
+		answer(w, r, http.StatusForbidden, failure{Error: "agent_request_not_allowed"})
+		return
+	}
+	if !h.mayUse(w, r, tool) {
+		return
+	}
 	ctx := r.Context()
 	id := r.PathValue("id")
 	device := h.backend.GetDeviceByID(ctx, id, false)
@@ -96,7 +107,7 @@ func (h *handlers) agentRequest(w http.ResponseWriter, r *http.Request, typ stri
 				return
 			}
 		}
-		if command, ok := commandFor[typ]; ok && kit.HasPermission(r, "device.edit") {
+		if command, ok := commandFor[typ]; ok && h.allowed(r, telemetryTools[command]) {
 			args := payload
 			if !goapi.Truthy(args) {
 				args = goapi.NewObject()

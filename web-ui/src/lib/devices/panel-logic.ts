@@ -113,12 +113,12 @@ export type LiveView = 'services' | 'processes' | 'events' | 'activity' | 'files
 /**
  * The agent's views. None for the support agent, RDP/VNC targets (no
  * agent) and deleted devices (the server no longer answers for them);
- * Files needs device.edit (its route does).
+ * Files needs agent.files, Files on NeoDesk agents (its route does).
  */
 export function liveViews(d: PanelDevice, can: Can): LiveView[] {
 	if (d.remote_target || d.soft_deleted || isSupportAgent(identityOf(d))) return [];
 	const views: LiveView[] = ['services', 'processes', 'events', 'activity'];
-	if (can('device.edit')) views.push('files');
+	if (can('agent.files')) views.push('files');
 	return views;
 }
 

@@ -1171,6 +1171,36 @@
    ]
   }
  },
+ "87 POST /api/devices/A1001/telemetry/command {\"command\":5,\"args\":\"x\"} as admin": {
+  "bug": "L388",
+  "answer": {
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"command_not_allowed\"}",
+   "calls": [
+    "GET /api/peers/A1001"
+   ]
+  }
+ },
+ "88 POST /api/devices/A1001/telemetry/command {\"args\":[1]} as admin": {
+  "bug": "L388",
+  "answer": {
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"command_not_allowed\"}",
+   "calls": [
+    "GET /api/peers/A1001"
+   ]
+  }
+ },
+ "89 POST /api/devices/A1001/telemetry/command {\"command\":\"x\",\"args\":null} as admin": {
+  "bug": "L388",
+  "answer": {
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"command_not_allowed\"}",
+   "calls": [
+    "GET /api/peers/A1001"
+   ]
+  }
+ },
  "9 GET /api/devices?search[]=x as admin": {
   "bug": "DE4, RV25",
   "answer": {
@@ -1179,6 +1209,16 @@
    "calls": [
     "GET /api/peers",
     "GET /api/remote-targets?org_id=&include_disabled=true"
+   ]
+  }
+ },
+ "90 POST /api/devices/C1003/telemetry/command {\"command\":\"format\"} as admin": {
+  "bug": "L388",
+  "answer": {
+   "status": 400,
+   "answer": "{\"success\":false,\"error\":\"command_not_allowed\"}",
+   "calls": [
+    "GET /api/peers/C1003"
    ]
   }
  }

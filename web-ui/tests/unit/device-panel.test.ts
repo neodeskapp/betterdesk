@@ -68,10 +68,13 @@ describe('permission gates per role', () => {
 		expect(footerSlots(device(), can)).toEqual({ edit: false, editTarget: false, connect: false });
 	});
 
-	test('operator: edit and connect, but no change ID, ban or delete', () => {
+	test('operator: edit and connect, but no change ID, ban or delete, and no Files', () => {
 		const can = canFor('operator');
 		expect(panelTabs(device(), can)).toContain('actions');
-		expect(liveViews(device(), can)).toContain('files');
+		// Files on NeoDesk agents is a permission of its own, not part of Edit devices (L388)
+		expect(liveViews(device(), can)).not.toContain('files');
+		expect(liveViews(device(), (p) => p === 'agent.files')).toContain('files');
+		expect(liveViews(device(), (p) => p === 'device.edit')).not.toContain('files');
 		expect(footerSlots(device(), can)).toEqual({ edit: true, editTarget: false, connect: true });
 		const a = panelActions(device(), can);
 		expect(a.connect).toEqual(['connect-web', 'connect-desktop', 'cdap-viewer', 'guest-access']);
