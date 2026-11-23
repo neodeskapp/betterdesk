@@ -12,6 +12,7 @@ package setupguide
 import (
 	"net/http"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	guide "github.com/neodeskapp/neodesk/neodesk-server/console/setupguide"
 )
@@ -33,9 +34,10 @@ func Register(d *kit.Deps) {
 
 func viewer(r *http.Request) guide.Viewer {
 	return guide.Viewer{
-		UserID: kit.UserID(r),
-		Can:    func(permission string) bool { return kit.HasPermission(r, permission) },
-		Secure: kit.Secure(r),
+		UserID:     kit.UserID(r),
+		Can:        func(permission string) bool { return kit.HasPermission(r, permission) },
+		Secure:     kit.Secure(r),
+		SuperAdmin: access.IsSuperAdminRole(kit.Access(r).Role),
 	}
 }
 

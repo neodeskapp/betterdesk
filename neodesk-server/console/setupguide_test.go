@@ -69,6 +69,12 @@ func TestStartOpensTheSetupGuideOnANewInstall(t *testing.T) {
 	if readGuide(t, second.get("/api/setup-guide")).Data.Visible {
 		t.Error("a second admin sees the guide without asking")
 	}
+	// A server admin has server.config but may not make a full backup (L387)
+	for _, step := range readGuide(t, w.agent().signIn("server_admin").get("/api/setup-guide")).Data.Steps {
+		if step.ID == "backup" || step.ID == "computer" || step.ID == "people" {
+			t.Errorf("a server admin gets the step %s", step.ID)
+		}
+	}
 	for _, role := range []string{"viewer", "operator", "global_admin"} {
 		a := w.agent().signIn(role)
 		got := a.get("/api/setup-guide")

@@ -90,11 +90,11 @@ func TestNewInstallOpensTheGuideForTheFirstAdminOnly(t *testing.T) {
 		}
 		addUser(t, db, 2, "second", "super_admin")
 		addUser(t, db, 3, "helper", "operator")
-		if !status(t, s, Viewer{UserID: 1, Can: all}).Visible {
+		if !status(t, s, Viewer{UserID: 1, Can: all, SuperAdmin: true}).Visible {
 			t.Error("the first admin does not see the guide")
 		}
 		for _, id := range []int64{2, 3} {
-			if status(t, s, Viewer{UserID: id, Can: all}).Visible {
+			if status(t, s, Viewer{UserID: id, Can: all, SuperAdmin: true}).Visible {
 				t.Errorf("account %d sees the guide without asking", id)
 			}
 		}
@@ -104,7 +104,7 @@ func TestNewInstallOpensTheGuideForTheFirstAdminOnly(t *testing.T) {
 		if err := s.Begin(ctx); err != nil {
 			t.Fatal(err)
 		}
-		if status(t, s, Viewer{UserID: 1, Can: all}).Visible {
+		if status(t, s, Viewer{UserID: 1, Can: all, SuperAdmin: true}).Visible {
 			t.Error("a second Begin opened the guide the admin hid")
 		}
 	})
@@ -123,7 +123,7 @@ func TestBeginPicksTheFirstAdmin(t *testing.T) {
 		t.Fatal(err)
 	}
 	for id, want := range map[int64]bool{1: false, 2: false, 3: true} {
-		if got := status(t, s, Viewer{UserID: id, Can: all}).Visible; got != want {
+		if got := status(t, s, Viewer{UserID: id, Can: all, SuperAdmin: true}).Visible; got != want {
 			t.Errorf("account %d: visible %v, want %v", id, got, want)
 		}
 	}
@@ -143,7 +143,7 @@ func TestExistingInstallOpensNothing(t *testing.T) {
 		if err := s.Begin(ctx); err != nil {
 			t.Fatal(err)
 		}
-		if status(t, s, Viewer{UserID: 1, Can: all}).Visible {
+		if status(t, s, Viewer{UserID: 1, Can: all, SuperAdmin: true}).Visible {
 			t.Error("an update opened the guide")
 		}
 		var rows int
@@ -158,7 +158,7 @@ func TestExistingInstallOpensNothing(t *testing.T) {
 		if err := s.Begin(context.Background()); err != nil {
 			t.Fatal(err)
 		}
-		if status(t, s, Viewer{UserID: 1, Can: all}).Visible {
+		if status(t, s, Viewer{UserID: 1, Can: all, SuperAdmin: true}).Visible {
 			t.Error("a database of the Node console opened the guide")
 		}
 	})
@@ -182,7 +182,7 @@ func TestHideAndBringBack(t *testing.T) {
 		if err := s.SetOpen(ctx, c.id, c.open); err != nil {
 			t.Fatal(err)
 		}
-		if got := status(t, s, Viewer{UserID: c.id, Can: all}).Visible; got != c.open {
+		if got := status(t, s, Viewer{UserID: c.id, Can: all, SuperAdmin: true}).Visible; got != c.open {
 			t.Errorf("account %d after SetOpen(%v): visible %v", c.id, c.open, got)
 		}
 	}
@@ -199,7 +199,7 @@ func TestStepsTickFromTheServer(t *testing.T) {
 		if err := s.Begin(ctx); err != nil {
 			t.Fatal(err)
 		}
-		admin := Viewer{UserID: 1, Can: all}
+		admin := Viewer{UserID: 1, Can: all, SuperAdmin: true}
 		want := "password=no two_factor=no address=no https=no computer=no session=no people=no backup=no"
 		if got := steps(status(t, s, admin)); got != want {
 			t.Fatalf("fresh install:\n got %s\nwant %s", got, want)
@@ -234,7 +234,7 @@ func TestStepsTickFromTheServer(t *testing.T) {
 			}
 		}
 
-		if !done(t, status(t, s, Viewer{UserID: 1, Can: all, Secure: true}), StepHTTPS) {
+		if !done(t, status(t, s, Viewer{UserID: 1, Can: all, SuperAdmin: true, Secure: true}), StepHTTPS) {
 			t.Error("a request over HTTPS does not tick")
 		}
 		f.https = true
@@ -285,7 +285,7 @@ func TestScheduledBackupTicks(t *testing.T) {
 	db := storetest.Migrated(t)
 	addUser(t, db, 1, "admin", "admin")
 	s := newService(db, &fake{})
-	admin := Viewer{UserID: 1, Can: all}
+	admin := Viewer{UserID: 1, Can: all, SuperAdmin: true}
 	exec(t, db, `INSERT INTO settings (key, value) VALUES ('scheduled_backup_status', '{"lastAttemptAt":"2026-11-23T08:00:00.000Z","lastSuccessAt":null,"lastError":"disk full"}')`)
 	if done(t, status(t, s, admin), StepBackup) {
 		t.Error("a failed scheduled backup ticks")
@@ -298,8 +298,9 @@ func TestScheduledBackupTicks(t *testing.T) {
 
 // The guide lists only the steps an account can act on: an account
 // without the right to add computers, connect or add people does not get
-// those steps, and one that signs in through a directory gets no password
-// or two-factor step. The password step belongs to the account the guide
+// those steps, one that is no super admin gets no backup step (only super
+// admins may make a full backup), and one that signs in through a
+// directory gets no password or two-factor step. The password step belongs to the account the guide
 // opened for, which holds the install's first password.
 func TestStepsFollowTheAccount(t *testing.T) {
 	db := storetest.Migrated(t)
@@ -317,9 +318,9 @@ func TestStepsFollowTheAccount(t *testing.T) {
 		v    Viewer
 		want string
 	}{
-		{Viewer{UserID: 2, Can: serverOnly}, "two_factor=no address=no https=no backup=no"},
-		{Viewer{UserID: 3, Can: all}, "address=no https=no computer=no session=no people=yes backup=no"},
-		{Viewer{UserID: 99, Can: all}, ""},
+		{Viewer{UserID: 2, Can: serverOnly}, "two_factor=no address=no https=no"},
+		{Viewer{UserID: 3, Can: all, SuperAdmin: true}, "address=no https=no computer=no session=no people=yes backup=no"},
+		{Viewer{UserID: 99, Can: all, SuperAdmin: true}, ""},
 	} {
 		if got := steps(status(t, s, c.v)); got != c.want {
 			t.Errorf("account %d:\n got %s\nwant %s", c.v.UserID, got, c.want)

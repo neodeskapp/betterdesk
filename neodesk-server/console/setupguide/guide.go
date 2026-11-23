@@ -10,7 +10,8 @@
 // Each step is done by what the server sees, never by a click: the first
 // password replaced, two-factor sign-in on, an address clients can reach,
 // HTTPS in front of the console, a computer added, a remote session
-// opened, a second account or directory sign-in, a backup made. What
+// opened, a second account or directory sign-in, a backup made. An
+// account gets only the steps it may do itself. What
 // happened once (a session, a backup, the password changed) is noted when
 // it is first seen, so it stays done when its trace ages out of the logs.
 //
@@ -99,6 +100,9 @@ type Viewer struct {
 	Can func(permission string) bool
 	// Secure says the request came over HTTPS.
 	Secure bool
+	// SuperAdmin says the account's role holds every permission: only
+	// such an account may download or schedule a full backup.
+	SuperAdmin bool
 }
 
 // Step is one line of the checklist.
@@ -213,11 +217,13 @@ func (s *Service) Status(ctx context.Context, v Viewer) (Status, error) {
 		}
 		add(StepPeople, done)
 	}
-	done, err := s.seen(ctx, seenBackupKey, s.backupSeen)
-	if err != nil {
-		return Status{}, err
+	if v.SuperAdmin {
+		done, err := s.seen(ctx, seenBackupKey, s.backupSeen)
+		if err != nil {
+			return Status{}, err
+		}
+		add(StepBackup, done)
 	}
-	add(StepBackup, done)
 	return Status{Visible: found && state.Open, Steps: steps}, nil
 }
 
