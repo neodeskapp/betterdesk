@@ -261,6 +261,8 @@
 <DevicePanelHost />
 
 <style>
+	/* Above the screen until it has focus; its shadow only then, since the
+	   shadow of the hidden link would still reach into the top edge */
 	.skip-link {
 		position: fixed;
 		top: var(--space-2);
@@ -269,12 +271,12 @@
 		padding: var(--space-2) var(--space-3);
 		border-radius: var(--radius);
 		background: var(--bg-float);
-		box-shadow: var(--shadow-float);
 		color: var(--accent);
 		transform: translateY(calc(-100% - var(--space-4)));
 	}
 	.skip-link:focus-visible,
 	.skip-link:focus {
+		box-shadow: var(--shadow-float);
 		transform: none;
 	}
 	.emergency-banner {

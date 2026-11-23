@@ -383,3 +383,25 @@ test.describe('security checks in German at 360', () => {
 		expect(scroll, 'width of the checks table in its box').toBeLessThanOrEqual(client);
 	});
 });
+
+test.describe('skip link', () => {
+	// BUGS L324: the hidden link's shadow showed as a gray smudge at the top edge
+	test('neither the hidden link nor its shadow reaches into the screen', async ({ page }) => {
+		await open(page, '/', 'en');
+		const reach = await page.locator('.skip-link').evaluate((el) => {
+			const r = el.getBoundingClientRect();
+			// Each shadow: x, y, blur and spread in px; the lowest point it paints
+			const shadows = getComputedStyle(el).boxShadow;
+			let below = 0;
+			if (shadows !== 'none') {
+				for (const s of shadows.split(/,(?![^(]*\))/)) {
+					const px = (s.replace(/rgba?\([^)]*\)/, '').match(/-?[\d.]+px/g) ?? []).map(parseFloat);
+					const [, y = 0, blur = 0, spread = 0] = px;
+					below = Math.max(below, y + blur + spread);
+				}
+			}
+			return r.bottom + below;
+		});
+		expect(reach, 'lowest point of the skip link and its shadow').toBeLessThanOrEqual(0);
+	});
+});
