@@ -3,6 +3,10 @@
  * audit log's filters and search, labels for action codes, the device a
  * log line is about, event details as text, the browser a session used,
  * and the server events per day for the chart.
+ *
+ * The server writes details and the Hardening checks in English. The
+ * formats it writes most are shown in the console language (detailsText,
+ * formatDetails, hardeningText); any other text shows as written.
  */
 
 import type { AuditRow } from '#lib/api/audit.ts';
@@ -51,7 +55,10 @@ export interface AuditEntry {
 	action: string;
 	label: string;
 	device: string;
+	/** In the console language where the format is known (detailsText) */
 	details: string;
+	/** As the server wrote it */
+	raw: string;
 	ip: string;
 }
 
@@ -69,6 +76,88 @@ export function actionLabel(action: string, t: T): string {
 	return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
+/**
+ * The start of a detail line the server writes, in words of the console
+ * language. Named groups fill the string's {placeholders}.
+ */
+const DETAIL_PHRASES: readonly [RegExp, string][] = [
+	[/^User logged in$/, 'audit.detail_logged_in'],
+	[/^User logged in \(2FA: (?<method>[^)]+)\)$/, 'audit.detail_logged_in_2fa'],
+	[/^User logged in via OIDC$/, 'audit.detail_logged_in_oidc'],
+	[/^User logged in \(2FA set up at sign-in\)$/, 'audit.detail_logged_in_2fa_setup'],
+	[/^User logged out$/, 'audit.detail_logged_out'],
+	[/^Username: (?<user>.*)$/, 'audit.detail_username'],
+	[/^New login replaced (?<count>\d+) prior session\(s\)$/, 'audit.detail_sessions_replaced'],
+	[/^Created user: (?<user>.+) \((?<role>[^()]+)\)$/, 'audit.detail_user_created'],
+	[
+		/^Approved enrollment for device (?<device>\S+) \(mode: (?<mode>[^)]+)\)$/,
+		'audit.detail_enrollment_approved'
+	],
+	[/^Device (?<device>\S+) tags set to \[(?<tags>.*)\]$/, 'audit.detail_tags_set'],
+	[/^Device (?<device>\S+) groups set to \[(?<groups>.*)\]$/, 'audit.detail_groups_set'],
+	[/^Created quick support session (?<id>\S+)$/, 'audit.detail_quick_support_created'],
+	[/^Ended quick support session (?<id>\S+)$/, 'audit.detail_quick_support_ended'],
+	[/^Connected to (?<device>\S+)$/, 'audit.detail_connected_to'],
+	[/^Banned (?<device>\S+) \((?<reason>.*)\)$/, 'audit.detail_banned'],
+	[/^Deleted (?<device>\S+)$/, 'audit.detail_deleted'],
+	[/^Created folder:? (?<name>.+)$/, 'audit.detail_folder_created'],
+	[/^Created user group: (?<name>.+)$/, 'audit.detail_user_group_created'],
+	[/^Device group (?<name>.+) saved$/, 'audit.detail_device_group_saved']
+];
+
+/** A translation, or null when the language has no string for the key */
+function known(t: T, key: string, params?: Record<string, string | number>): string | null {
+	const text = t(key, params);
+	return text && text !== key ? text : null;
+}
+
+/** "ip" to "Adresse": the name of a key=value part, or the name itself */
+function fieldName(name: string, t: T): string {
+	return known(t, `audit.field_${name}`) ?? name;
+}
+
+/** Values the server writes in English, keyed by their text */
+const VALUES: Readonly<Record<string, string>> = {
+	'queued for approval (managed mode)': 'audit.value_queued_managed',
+	idle: 'audit.value_idle',
+	support: 'audit.value_support'
+};
+
+function fieldValue(value: string, t: T): string {
+	const key = VALUES[value];
+	return (key && known(t, key)) || value;
+}
+
+const FIELD = /^[A-Za-z]+=/;
+
+/**
+ * An audit detail line in the console language: "User logged in; ip=10.0.0.5"
+ * becomes "Angemeldet; Adresse: 10.0.0.5". The phrase at the start is
+ * translated when it is one the server writes often, and each "key=value"
+ * part gets its key's name; a line in any other form stays as written.
+ */
+export function detailsText(details: string, t: T): string {
+	const parts = String(details ?? '').split('; ');
+	const head = parts[0] ?? '';
+	const tail = parts.slice(1);
+	if (!tail.every((p) => FIELD.test(p))) return details;
+	const fields = FIELD.test(head) ? parts : tail;
+	let first: string | null = FIELD.test(head) ? null : head;
+	if (first !== null) {
+		for (const [re, key] of DETAIL_PHRASES) {
+			const m = re.exec(first);
+			if (!m) continue;
+			first = known(t, key, { ...m.groups }) ?? first;
+			break;
+		}
+	}
+	const named = fields.map((p) => {
+		const at = p.indexOf('=');
+		return `${fieldName(p.slice(0, at), t)}: ${fieldValue(p.slice(at + 1), t)}`;
+	});
+	return [...(first === null ? [] : [first]), ...named].join('; ');
+}
+
 export function toAuditEntries(rows: readonly AuditRow[], t: T): AuditEntry[] {
 	return rows.map((r, i) => {
 		const m = r.details.match(DEVICE_RE);
@@ -82,7 +171,8 @@ export function toAuditEntries(rows: readonly AuditRow[], t: T): AuditEntry[] {
 			action: r.action,
 			label: actionLabel(r.action, t),
 			device: m?.[1] ?? '',
-			details: r.details,
+			details: detailsText(r.details, t),
+			raw: r.details,
 			ip: r.ip_address
 		};
 	});
@@ -99,7 +189,7 @@ export function filterAudit(
 	return entries.filter((e) => {
 		if (test && !test(e.action.toLowerCase())) return false;
 		if (!q) return true;
-		return [e.who, e.action, e.label, e.device, e.details, e.ip].join(' ').toLowerCase().includes(q);
+		return [e.who, e.action, e.label, e.device, e.details, e.raw, e.ip].join(' ').toLowerCase().includes(q);
 	});
 }
 
@@ -116,14 +206,52 @@ export const EVENT_FILTERS = [
 	'key_created'
 ] as const;
 
-/** Event details as one line: "mode: all, version: 3.5" */
-export function formatDetails(details: unknown): string {
+/**
+ * Event details as one line: "mode: all, version: 3.5". With `t` the names,
+ * and the values the server writes in English, are in the console language.
+ */
+export function formatDetails(details: unknown, t?: T): string {
 	if (details === null || details === undefined || details === '') return '';
 	if (typeof details !== 'object') return String(details);
 	return Object.entries(details as Record<string, unknown>)
 		.filter(([, v]) => v !== '' && v !== null && v !== undefined)
-		.map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`)
+		.map(([k, v]) => {
+			const value = typeof v === 'object' ? JSON.stringify(v) : String(v);
+			return t ? `${fieldName(k, t)}: ${fieldValue(value, t)}` : `${k}: ${value}`;
+		})
 		.join(', ');
+}
+
+/* ── Hardening ── */
+
+/**
+ * A Hardening check in the console language. The server sends its two
+ * checks in English, with the numbers in the description; those are read
+ * back out. Another check, or a description in another form, stays as sent.
+ */
+export function hardeningText(
+	item: { id?: string; name: string; description: string },
+	t: T
+): { name: string; description: string } {
+	const id = item.id ?? '';
+	const name = (id && known(t, `security_audit.hardening_${id}`)) || item.name;
+	let description: string | null = null;
+	if (id === 'session_timeout') {
+		const m = /after (\d+) minutes without a request and (\d+) minutes after sign-in/.exec(item.description);
+		if (m)
+			description = known(t, 'security_audit.hardening_session_timeout_desc', {
+				idle: m[1] ?? '',
+				max: m[2] ?? ''
+			});
+	} else if (id === 'single_session') {
+		const m = /\(currently (\w+)\)/.exec(item.description);
+		if (m) {
+			const value = m[1] ?? '';
+			const limit = value === 'unlimited' ? (known(t, 'security_audit.hardening_unlimited') ?? value) : value;
+			description = known(t, 'security_audit.hardening_single_session_desc', { limit });
+		}
+	}
+	return { name, description: description ?? item.description };
 }
 
 /** Long details are cut after two lines; shorter ones never get "Show all" */

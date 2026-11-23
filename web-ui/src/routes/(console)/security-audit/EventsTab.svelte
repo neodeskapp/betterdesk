@@ -154,7 +154,7 @@
 {#snippet actionCell(e: ServerEvent)}{#if e.action}<Tag label={actionLabel(e.action, t)} />{/if}{/snippet}
 {#snippet actorCell(e: ServerEvent)}<User user={e.actor || e.user} />{/snippet}
 {#snippet targetCell(e: ServerEvent)}<ValueCopy value={e.target || e.resource} />{/snippet}
-{#snippet detailsCell(e: ServerEvent)}<DetailsText text={formatDetails(e.details)} />{/snippet}
+{#snippet detailsCell(e: ServerEvent)}<DetailsText text={formatDetails(e.details, t)} />{/snippet}
 
 <section class="section" aria-labelledby="{uid}-title">
 	<h2 id="{uid}-title" class="sr-only">{t('security_audit.tab_server_events')}</h2>

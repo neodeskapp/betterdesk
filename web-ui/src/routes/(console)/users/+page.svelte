@@ -47,6 +47,7 @@
 		DESCRIBED_ROLES,
 		eachLimited,
 		filterUsers,
+		groupNote,
 		mayChangeUser,
 		mayDisableUser,
 		providerOf,
@@ -596,7 +597,7 @@
 										</MenuButton>{/snippet}
 									<ListRow
 										title={g.name || g.guid}
-										sub={g.note ? `${members}, ${g.note}` : members}
+										sub={g.note ? `${members}, ${groupNote(g.note, t)}` : members}
 										actions={groupMenu}
 									/>
 								{/each}

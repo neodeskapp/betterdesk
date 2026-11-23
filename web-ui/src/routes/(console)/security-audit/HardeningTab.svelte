@@ -7,6 +7,7 @@
 	import { untrack } from 'svelte';
 	import { listHardening, type HardeningItem } from '#lib/api/audit.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { hardeningText } from '#lib/people/audit.ts';
 	import BooleanStatus from '#lib/ui/BooleanStatus.svelte';
 	import ListRow from '#lib/ui/ListRow.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
@@ -59,7 +60,8 @@
 		<RowList>
 			{#each items as h (h.id || h.name)}
 				{@const sev = String(h.severity || 'medium').toLowerCase()}
-				{#snippet sub()}<span class="desc">{h.description}</span><span class="meta"
+				{@const text = hardeningText(h, t)}
+				{#snippet sub()}<span class="desc">{text.description}</span><span class="meta"
 						><span class="sr-only"
 							>{t('security_audit.hardening_meta', {
 								severity: severity(sev),
@@ -72,7 +74,7 @@
 						></span
 					>{/snippet}
 				{#snippet state()}<BooleanStatus value={h.implemented} />{/snippet}
-				<ListRow title={h.name} {sub} end={state} />
+				<ListRow title={text.name} {sub} end={state} />
 			{/each}
 		</RowList>
 	{/if}

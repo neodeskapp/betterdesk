@@ -182,3 +182,17 @@ export async function eachLimited<T>(
 	};
 	await Promise.all(Array.from({ length: Math.min(limit, queue.length) }, worker));
 }
+
+/** Notes the server gives its built-in groups, in English, and their keys */
+const GROUP_NOTES: Readonly<Record<string, string>> = {
+	'Default user group': 'users.note_default_user_group',
+	'Default device group': 'users.note_default_device_group',
+	'Default group created with organization (commercialization)': 'users.note_org_default_group'
+};
+
+/** A group's note: a built-in group's in the console language, anyone else's as written */
+export function groupNote(note: string, t: (key: string) => string): string {
+	const key = GROUP_NOTES[note];
+	const text = key ? t(key) : '';
+	return text && text !== key ? text : note;
+}

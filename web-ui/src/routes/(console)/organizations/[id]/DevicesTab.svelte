@@ -17,6 +17,7 @@
 	import { formatNumber } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
+	import { groupNote } from '#lib/people/users.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
@@ -185,7 +186,7 @@
 	</MenuButton>{/snippet}
 
 {#snippet groupNameCell(g: OrgDeviceGroup)}<strong>{g.name || g.guid}</strong>{#if g.note}<span
-			class="cell-sub">{g.note}</span
+			class="cell-sub">{groupNote(g.note, t)}</span
 		>{/if}{/snippet}
 {#snippet groupTypeCell(g: OrgDeviceGroup)}<Tag
 		label={(g.source_type || 'manual') === 'tag' && g.tag_filter
@@ -200,7 +201,7 @@
 			.join(', ')
 	)}{/snippet}
 {#snippet userGroupNameCell(g: OrgUserGroup)}<strong>{g.name || g.guid}</strong>{#if g.note}<span
-			class="cell-sub">{g.note}</span
+			class="cell-sub">{groupNote(g.note, t)}</span
 		>{/if}{/snippet}
 {#snippet userGroupCountCell(g: OrgUserGroup)}{formatNumber(g.member_count)}{/snippet}
 
