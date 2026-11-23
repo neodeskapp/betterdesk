@@ -309,6 +309,23 @@ func TestInitialAdminPasswordKeepsThePasswordRule(t *testing.T) {
 	}
 }
 
+// TestTheMadeUpFirstPasswordIsNotCalledTheAdminsOwn: the Docker image
+// makes the first password up and hands it over in INIT_ADMIN_PASS; the
+// start log then names the file that holds it, not a password the admin
+// chose (L340).
+func TestTheMadeUpFirstPasswordIsNotCalledTheAdminsOwn(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".admin_credentials"), []byte("Admin Username: admin\nAdmin Password: 3f9c2a7e1b\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if line := givenAdminPasswordLine(dir, "3f9c2a7e1b"); !strings.Contains(line, "made up at the first start, in "+filepath.Join(dir, ".admin_credentials")) {
+		t.Errorf("made-up password: %q", line)
+	}
+	if line := givenAdminPasswordLine(dir, "Chosen-Pass-1"); strings.Contains(line, ".admin_credentials") || !strings.Contains(line, "INIT_ADMIN_PASS") {
+		t.Errorf("chosen password: %q", line)
+	}
+}
+
 // TestServerEventsOutliveARestart: the event log main starts with keeps
 // its events in the database, so the next start reads them (L91).
 func TestServerEventsOutliveARestart(t *testing.T) {

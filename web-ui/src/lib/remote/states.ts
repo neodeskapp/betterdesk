@@ -241,7 +241,10 @@ export function classifyEnd(
 		return pick(
 			'password',
 			tf('remote_viewer.fail_password', 'The password was not accepted.'),
-			tf('remote_viewer.try_password', 'Reconnect and enter the password set in RustDesk on the device.')
+			tf(
+				'remote_viewer.try_password',
+				'Reconnect and enter the password set on the device in NeoDesk or RustDesk.'
+			)
 		);
 	}
 	if (

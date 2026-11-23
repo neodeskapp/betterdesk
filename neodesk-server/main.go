@@ -456,7 +456,7 @@ func main() {
 		} else if adminPasswordFromFile {
 			log.Printf("  Password: loaded from existing bootstrap credentials file")
 		} else {
-			log.Printf("  Password: *** (user-provided, not logged)")
+			log.Print(givenAdminPasswordLine(bootstrapCredentialsDir(cfg.DBPath, cfg.KeyFile), adminPass))
 		}
 		adminPass = ""
 		log.Printf("  (change this password immediately!)")
@@ -848,6 +848,19 @@ func openBlocklist(file string, database db.Database) (*security.Blocklist, erro
 // INIT_ADMIN_PASS: the given one when it keeps the password rule
 // (auth.CheckNewPassword), else "" with an error line, and the account
 // gets a made-up password as when none is given.
+// givenAdminPasswordLine is the log line on where the first account's
+// password is when INIT_ADMIN_PASS gave it. The Docker image makes the
+// first password up itself, writes it to .admin_credentials and hands it
+// over in INIT_ADMIN_PASS: a given password that file in dir holds is that
+// made-up one, not one the admin chose.
+func givenAdminPasswordLine(dir, given string) string {
+	if given != "" && readBootstrapAdminPassword(dir) == given {
+		return "  Password: made up at the first start, in " + filepath.Join(dir, ".admin_credentials") +
+			" (neodesk-show-admin-credentials prints it)"
+	}
+	return "  Password: the one INIT_ADMIN_PASS sets (not logged)"
+}
+
 func initialAdminPassword(given string) string {
 	if given == "" {
 		return ""

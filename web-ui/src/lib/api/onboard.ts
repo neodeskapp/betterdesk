@@ -215,7 +215,8 @@ export const PublicCode = v.object({
 	code: Text,
 	display_code: Text,
 	expires_at: Text,
-	server: v.object({ name: Text, host: Text, https: Bool }),
+	/** address: the console's address a client joins with a code alone (http://10.0.0.5:5000) */
+	server: v.object({ name: Text, host: Text, https: Bool, address: Text }),
 	publisher: Text,
 	supporter: Text,
 	company: Text,

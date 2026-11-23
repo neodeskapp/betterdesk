@@ -241,6 +241,10 @@ func TestJoinFlow(t *testing.T) {
 		if str(p, "kind") != "join" || !strings.Contains(str(p, "install_command"), "/join/"+code+"/install.sh") || str(p, "publisher") != "Rath & Blume GbR" {
 			t.Fatalf("public %v", p)
 		}
+		// The address a client asks for with the code alone (L340)
+		if str(p, "server", "address") != w.front.URL {
+			t.Errorf("server address %q, want %q", str(p, "server", "address"), w.front.URL)
+		}
 		downloads, _ := p["downloads"].([]any)
 		if len(downloads) != 2 {
 			t.Fatalf("downloads %v", downloads)

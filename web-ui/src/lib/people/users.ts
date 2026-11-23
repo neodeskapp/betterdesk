@@ -93,6 +93,15 @@ export function providerOf(user: Pick<ConsoleUser, 'auth_provider'>): string {
 	return String(user.auth_provider || 'local').toLowerCase();
 }
 
+/**
+ * What Delete says it does: a directory or single sign-on account comes
+ * back at its next sign-in while Auto-create users is on, so its text says
+ * so and offers Disable instead
+ */
+export function deleteConfirmKey(user: Pick<ConsoleUser, 'auth_provider'>): string {
+	return providerOf(user) === 'local' ? 'users.delete_confirm' : 'users.delete_confirm_external';
+}
+
 export type Strength = 'weak' | 'medium' | 'strong';
 
 /** A rough strength for the line under the field; the server refuses none for it */

@@ -177,6 +177,11 @@
 				<div class="short-code">
 					<p>{t(`onboard.public.code_hint_${data.kind}`)}</p>
 					<p class="code" dir="ltr">{data.display_code}</p>
+					{#if data.kind === 'join' && data.server.address}
+						<p class="server-address">
+							{t('onboard.public.server_address', { address: data.server.address })}
+						</p>
+					{/if}
 				</div>
 			{/if}
 
@@ -256,5 +261,8 @@
 		font-size: 1.75rem;
 		font-weight: 600;
 		letter-spacing: 0.12em;
+	}
+	.short-code .server-address {
+		overflow-wrap: anywhere;
 	}
 </style>

@@ -13,11 +13,14 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/onboard"
 )
 
-// publicServer is the console as the public page names it.
+// publicServer is the console as the public page names it. Address is
+// the console's address with its scheme and port, which a client asks for
+// when it joins with the code alone.
 type publicServer struct {
-	Name  string `json:"name"`
-	Host  string `json:"host"`
-	HTTPS bool   `json:"https"`
+	Name    string `json:"name"`
+	Host    string `json:"host"`
+	HTTPS   bool   `json:"https"`
+	Address string `json:"address"`
 }
 
 // publicDownload is one package the page offers.
@@ -79,7 +82,7 @@ func (h *handlers) publicCode(w http.ResponseWriter, r *http.Request) {
 	c := h.consoleOf(r)
 	out := publicAnswer{
 		Success: true, Kind: rec.Kind, Code: code, DisplayCode: onboard.Display(code), ExpiresAt: rec.ExpiresAt,
-		Server:    publicServer{Name: h.serverName(), Host: c.Host, HTTPS: c.HTTPS},
+		Server:    publicServer{Name: h.serverName(), Host: c.Host, HTTPS: c.HTTPS, Address: c.Base()},
 		Publisher: clientrelease.Publisher, Downloads: []publicDownload{},
 		DeepLink: c.DeepLink(rec.Kind, code),
 	}

@@ -306,7 +306,7 @@
 					<p class="rd-state-text">
 						{tf(
 							'remote_viewer.password_intro',
-							'{name} asks for a password. Use the one set in RustDesk on that device.',
+							'{name} asks for a password. Use the password set on that device in NeoDesk or RustDesk.',
 							{ name }
 						)}
 					</p>

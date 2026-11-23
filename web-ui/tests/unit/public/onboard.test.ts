@@ -41,7 +41,7 @@ function code(over: Partial<PublicCode> = {}): PublicCode {
 		code: 'ABCD2345',
 		display_code: 'ABCD-2345',
 		expires_at: '2026-11-29T12:00:00Z',
-		server: { name: 'Acme Desk', host: 'desk.example.com', https: true },
+		server: { name: 'Acme Desk', host: 'desk.example.com', https: true, address: 'https://desk.example.com' },
 		publisher: 'Rath & Blume GbR',
 		supporter: '',
 		company: '',
@@ -105,7 +105,9 @@ describe('the main action for this computer', () => {
 	test('plain HTTP is insecure, on the server or in the address bar', () => {
 		expect(isInsecure(code(), 'https:')).toBe(false);
 		expect(isInsecure(code(), 'http:')).toBe(true);
-		expect(isInsecure(code({ server: { name: 'x', host: 'x', https: false } }), 'https:')).toBe(true);
+		expect(
+			isInsecure(code({ server: { name: 'x', host: 'x', https: false, address: 'http://x' } }), 'https:')
+		).toBe(true);
 	});
 
 	test('the steps follow the kind and the system', () => {
@@ -168,9 +170,23 @@ describe('the invite page', () => {
 	});
 
 	test('a console on plain HTTP warns', async () => {
-		answer.body = { success: true, ...code({ server: { name: 'Acme', host: 'desk.lan', https: false } }) };
+		answer.body = {
+			success: true,
+			...code({ server: { name: 'Acme', host: 'desk.lan', https: false, address: 'http://desk.lan:5000' } })
+		};
 		render(CodePage, { code: 'ABCD2345', kind: 'join' });
 		await waitFor(() => expect(document.querySelector('.insecure')).not.toBeNull());
+	});
+
+	test('the code comes with the server address a client asks for with a code alone (L340)', async () => {
+		answer.body = {
+			success: true,
+			...code({
+				server: { name: 'Lab', host: '10.10.10.74', https: false, address: 'http://10.10.10.74:5000' }
+			})
+		};
+		render(CodePage, { code: 'ABCD2345', kind: 'join' });
+		expect(await screen.findByText('onboard.public.server_address')).toBeInTheDocument();
 	});
 
 	test('a code that cannot be used shows one plain message', async () => {

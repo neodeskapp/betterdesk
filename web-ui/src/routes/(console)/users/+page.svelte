@@ -44,6 +44,7 @@
 	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import {
 		assignableRoles,
+		deleteConfirmKey,
 		DESCRIBED_ROLES,
 		eachLimited,
 		filterUsers,
@@ -238,7 +239,7 @@
 	async function removeUser(u: ConsoleUser) {
 		const ok = await confirm({
 			title: t('users.delete_title'),
-			message: t('users.delete_confirm', { username: u.username }),
+			message: t(deleteConfirmKey(u), { username: u.username }),
 			confirmLabel: t('users.delete_title'),
 			confirmIcon: ICONS.delete,
 			danger: true
