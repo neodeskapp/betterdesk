@@ -184,7 +184,7 @@ func needsNoCredential(method, path string) bool {
 	switch path {
 	case "/api/branding":
 		return method == http.MethodGet
-	case "/api/audit/conn", "/api/audit/file", "/api/audit/alarm":
+	case "/api/audit/conn", "/api/audit/file", "/api/audit/alarm", "/api/pairing/redeem", "/api/pairing/config":
 		return method == http.MethodPost
 	}
 	return false

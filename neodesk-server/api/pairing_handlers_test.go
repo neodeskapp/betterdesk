@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -318,8 +319,12 @@ func TestPairingRejectsMalformedCodeWithoutTouchingStore(t *testing.T) {
 	}
 }
 
+// A device redeems its code before it has any credential, so both pairing
+// routes must pass the API's sign-in check on the listening server. A
+// valid code got 401 "Invalid or missing credentials" on the Docker
+// install, the same answer as a wrong code from the handler (BUGS L379),
+// so the test redeems a valid one and wants 200.
 func TestPairingRedeemRouteIsPublic(t *testing.T) {
-	// Guards against a rename that leaves the route unreachable while handlers compile.
 	cfg := config.DefaultConfig()
 	database := testSetupDB(t)
 	defer database.Close()
@@ -330,17 +335,21 @@ func TestPairingRedeemRouteIsPublic(t *testing.T) {
 	}
 	defer srv.Stop()
 	time.Sleep(80 * time.Millisecond)
+	code := mintCode(t, srv, "public")
 
 	base := fmt.Sprintf("http://127.0.0.1:%d/api", cfg.APIPort)
-	resp, err := http.Post(base+"/pairing/redeem", "application/json",
-		strings.NewReader(`{"code":"ABC234","device_id":"1"}`))
-	if err != nil {
-		t.Fatalf("POST /pairing/redeem: %v", err)
-	}
-	defer resp.Body.Close()
-	// 401 (bad code) proves the route exists and is reachable without credentials;
-	// 404/405 would mean it is not registered.
-	if resp.StatusCode != http.StatusUnauthorized {
-		t.Fatalf("expected 401 from public redeem, got %d", resp.StatusCode)
+	for _, c := range []struct{ path, body string }{
+		{"/pairing/config", `{"code":"` + code + `"}`},
+		{"/pairing/redeem", `{"code":"` + code + `","device_id":"100200390"}`},
+	} {
+		resp, err := http.Post(base+c.path, "application/json", strings.NewReader(c.body))
+		if err != nil {
+			t.Fatalf("POST %s: %v", c.path, err)
+		}
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("POST %s with a valid code: %d %s", c.path, resp.StatusCode, body)
+		}
 	}
 }

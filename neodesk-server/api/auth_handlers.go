@@ -1611,7 +1611,10 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 			path == "/api/devices/self/access-policy" || path == "/api/devices/self/help-request" ||
 			path == "/api/devices/self/totp" ||
 			path == "/api/guest/access-links/validate" ||
-			path == "/api/guest/access-links/peers" {
+			path == "/api/guest/access-links/peers" ||
+			// a device redeems its pairing code before it has a credential;
+			// the routes have their own rate limit (BUGS L379)
+			(path == "/api/pairing/redeem" || path == "/api/pairing/config") && r.Method == http.MethodPost {
 			next.ServeHTTP(w, r)
 			return
 		}
