@@ -73,6 +73,8 @@
 		tags: string[] | null;
 		/** The server wants a tag picker instead of a text field */
 		tagPicker: boolean;
+		/** Full approval form (Settings > Sign-in): name, folder, tags and groups are asked */
+		richApprove?: boolean;
 		/** Folders, groups and tags have arrived */
 		ready: boolean;
 		onclose: () => void;
@@ -90,6 +92,7 @@
 		groups,
 		tags,
 		tagPicker,
+		richApprove = true,
 		ready,
 		onclose,
 		onapproved,
@@ -277,93 +280,99 @@
 
 	{#if pending && canApprove && !blocked}
 		<form id={form.id} class="approve-form" onsubmit={form.onsubmit} novalidate aria-busy={!ready}>
-			<Field label={t('registrations.field_name')} hint={t('registrations.field_name_hint')}>
-				{#snippet children(f)}
-					<Input
-						{...f}
-						width="medium"
-						maxlength={120}
-						autocomplete="off"
-						data-autofocus
-						onfocus={selectOnce}
-						bind:value={form.values.display_name}
-					/>
-				{/snippet}
-			</Field>
-			<Field label={t('registrations.field_folder')}>
-				{#snippet children(f)}
-					<Select {...f} width="medium" options={folderOptions} bind:value={form.values.folder_id} />
-				{/snippet}
-			</Field>
+			{#if richApprove}
+				<Field label={t('registrations.field_name')} hint={t('registrations.field_name_hint')}>
+					{#snippet children(f)}
+						<Input
+							{...f}
+							width="medium"
+							maxlength={120}
+							autocomplete="off"
+							data-autofocus
+							onfocus={selectOnce}
+							bind:value={form.values.display_name}
+						/>
+					{/snippet}
+				</Field>
+				<Field label={t('registrations.field_folder')}>
+					{#snippet children(f)}
+						<Select {...f} width="medium" options={folderOptions} bind:value={form.values.folder_id} />
+					{/snippet}
+				</Field>
 
-			{#if tagPicker}
-				<FormSection title={t('registrations.field_tags')} class="approve-choices">
-					{#if tagChoices.length}
-						<ul class="pick" aria-label={t('registrations.field_tags')}>
-							{#each tagChoices as tag (tag)}
+				{#if tagPicker}
+					<FormSection title={t('registrations.field_tags')} class="approve-choices">
+						{#if tagChoices.length}
+							<ul class="pick" aria-label={t('registrations.field_tags')}>
+								{#each tagChoices as tag (tag)}
+									<li>
+										<Checkbox
+											label={tag}
+											checked={form.values.picked.includes(tag)}
+											onchange={(e) => toggle('picked', tag, (e.currentTarget as HTMLInputElement).checked)}
+										/>
+									</li>
+								{/each}
+							</ul>
+						{:else if ready}
+							<p class="hint">{t('registrations.no_tags_yet')}</p>
+						{/if}
+						<Field
+							label={t('registrations.field_tag_add_placeholder')}
+							hint={tf('registrations.field_tag_add_hint', 'Adds it to the list above, ticked.')}
+						>
+							{#snippet children(f)}
+								<div class="add-row">
+									<Input
+										{...f}
+										width="medium"
+										autocomplete="off"
+										bind:value={newTag}
+										onkeydown={(e) => {
+											if (e.key === 'Enter') {
+												e.preventDefault();
+												addTag();
+											}
+										}}
+									/>
+									<Button class="add-tag" onclick={addTag}>{t('registrations.field_tag_add_btn')}</Button>
+								</div>
+							{/snippet}
+						</Field>
+					</FormSection>
+				{:else}
+					<Field label={t('registrations.field_tags')} hint={t('registrations.field_tags_hint')}>
+						{#snippet children(f)}
+							<Input {...f} autocomplete="off" bind:value={form.values.tagText} />
+						{/snippet}
+					</Field>
+				{/if}
+
+				{#if manualGroups.length}
+					<FormSection title={t('registrations.field_groups')} class="approve-choices">
+						<ul
+							class="pick"
+							aria-label={t('registrations.field_groups')}
+							aria-describedby="{uid}-groups-hint"
+						>
+							{#each manualGroups as g (g.guid)}
 								<li>
 									<Checkbox
-										label={tag}
-										checked={form.values.picked.includes(tag)}
-										onchange={(e) => toggle('picked', tag, (e.currentTarget as HTMLInputElement).checked)}
+										label={g.name}
+										checked={form.values.groups.includes(g.guid)}
+										onchange={(e) => toggle('groups', g.guid, (e.currentTarget as HTMLInputElement).checked)}
 									/>
 								</li>
 							{/each}
 						</ul>
-					{:else if ready}
-						<p class="hint">{t('registrations.no_tags_yet')}</p>
-					{/if}
-					<Field
-						label={t('registrations.field_tag_add_placeholder')}
-						hint={tf('registrations.field_tag_add_hint', 'Adds it to the list above, ticked.')}
-					>
-						{#snippet children(f)}
-							<div class="add-row">
-								<Input
-									{...f}
-									width="medium"
-									autocomplete="off"
-									bind:value={newTag}
-									onkeydown={(e) => {
-										if (e.key === 'Enter') {
-											e.preventDefault();
-											addTag();
-										}
-									}}
-								/>
-								<Button class="add-tag" onclick={addTag}>{t('registrations.field_tag_add_btn')}</Button>
-							</div>
-						{/snippet}
-					</Field>
-				</FormSection>
-			{:else}
-				<Field label={t('registrations.field_tags')} hint={t('registrations.field_tags_hint')}>
-					{#snippet children(f)}
-						<Input {...f} autocomplete="off" bind:value={form.values.tagText} />
-					{/snippet}
-				</Field>
-			{/if}
-
-			{#if manualGroups.length}
-				<FormSection title={t('registrations.field_groups')} class="approve-choices">
-					<ul class="pick" aria-label={t('registrations.field_groups')} aria-describedby="{uid}-groups-hint">
-						{#each manualGroups as g (g.guid)}
-							<li>
-								<Checkbox
-									label={g.name}
-									checked={form.values.groups.includes(g.guid)}
-									onchange={(e) => toggle('groups', g.guid, (e.currentTarget as HTMLInputElement).checked)}
-								/>
-							</li>
-						{/each}
-					</ul>
-					<p class="hint" id="{uid}-groups-hint">
-						{tf(
-							'registrations.field_groups_hint',
-							'Optional. A group decides who can see the device and which access rules apply to it.'
-						)}
-					</p>
-				</FormSection>
+						<p class="hint" id="{uid}-groups-hint">
+							{tf(
+								'registrations.field_groups_hint',
+								'Optional. A group decides who can see the device and which access rules apply to it.'
+							)}
+						</p>
+					</FormSection>
+				{/if}
 			{/if}
 
 			{#if isGo}

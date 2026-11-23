@@ -59,14 +59,15 @@ const row = (existing: ExistingDevice | null) =>
 
 const device: ExistingDevice = { id: '900100004', name: 'Front desk', deleted: false, in_scope: true };
 
-function open(existing: ExistingDevice | null, onapproved = vi.fn()) {
+function open(existing: ExistingDevice | null, onapproved = vi.fn(), richApprove = true) {
 	render(RequestSheet, {
 		row: row(existing),
 		decidedHere: false,
-		folders: [],
+		folders: [{ id: 4, name: 'Office' } as never],
 		groups: [],
 		tags: [],
 		tagPicker: false,
+		richApprove,
 		ready: true,
 		onclose: () => {},
 		onapproved,
@@ -144,5 +145,25 @@ describe('approving a request whose ID is already a device', () => {
 		expect(document.querySelector('.existing')?.textContent).toContain('registrations.existing_hidden');
 		expect(screen.queryByRole('button', { name: 'registrations.approve_btn' })).toBeNull();
 		expect(screen.getByRole('button', { name: /registrations.reject_btn/ })).toBeInTheDocument();
+	});
+});
+
+describe('Full approval form (Settings > Sign-in, BUGS L381)', () => {
+	test('on: name, folder and tags are asked', () => {
+		open(null);
+		expect(screen.getByRole('textbox', { name: 'registrations.field_name' })).toBeInTheDocument();
+		expect(screen.getByRole('combobox', { name: 'registrations.field_folder' })).toBeInTheDocument();
+		expect(screen.getByRole('textbox', { name: 'registrations.field_tags' })).toBeInTheDocument();
+	});
+
+	test('off: Approve alone, with the device name it asked with and nothing else', async () => {
+		const user = userEvent.setup();
+		const onapproved = open(null, vi.fn(), false);
+		expect(screen.queryByRole('textbox', { name: 'registrations.field_name' })).toBeNull();
+		expect(screen.queryByRole('combobox', { name: 'registrations.field_folder' })).toBeNull();
+		expect(screen.queryByRole('textbox', { name: 'registrations.field_tags' })).toBeNull();
+		await user.click(screen.getByRole('button', { name: 'registrations.approve_btn' }));
+		await vi.waitFor(() => expect(onapproved).toHaveBeenCalledWith('new-pc'));
+		expect(bodies).toEqual([{ display_name: 'new-pc', tags: '', folder_id: 0, group_guids: [] }]);
 	});
 });

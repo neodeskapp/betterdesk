@@ -107,6 +107,7 @@
 	/** The mode request has answered, either way */
 	let modeSettled = $state(false);
 	let tagPicker = $state(true);
+	let richApprove = $state(true);
 
 	let loading = false;
 	let again = false;
@@ -151,6 +152,7 @@
 			const ui = await getEnrollmentUi();
 			mode = enrollmentMode(ui.mode);
 			tagPicker = ui.tag_picker;
+			richApprove = ui.rich_approve;
 			modeKnown = true;
 		} catch {
 			/* the mode section stays hidden, the approve form keeps the tag picker */
@@ -600,6 +602,7 @@
 		{groups}
 		{tags}
 		{tagPicker}
+		{richApprove}
 		ready={formDataReady}
 		onclose={() => (sheetFor = null)}
 		onapproved={(name) => approved(row, name)}
