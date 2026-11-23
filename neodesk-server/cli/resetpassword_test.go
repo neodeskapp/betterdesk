@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -817,5 +818,144 @@ func TestResetPasswordHashesAsTheAPIServer(t *testing.T) {
 	}
 	if want := fmt.Sprintf("Hash type: pbkdf2-sha256, length: %d\n", resetHashLength); !strings.Contains(out, want) {
 		t.Errorf("output %q, want %q in it", out, want)
+	}
+}
+
+// rootedFiles are the real files below root; every other path does not
+// exist, so a test never touches the machine's own credentials files.
+// refuse makes every removal fail as one without the permission does,
+// refuseRead every read.
+type rootedFiles struct {
+	root       string
+	refuse     bool
+	refuseRead bool
+}
+
+func (f rootedFiles) inside(name string) bool {
+	rel, err := filepath.Rel(f.root, name)
+	return err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+}
+
+func (f rootedFiles) Exists(name string) bool {
+	if !f.inside(name) {
+		return false
+	}
+	_, err := os.Stat(name)
+	return err == nil
+}
+
+func (f rootedFiles) ReadFile(name string) ([]byte, error) {
+	if !f.inside(name) {
+		return nil, &fs.PathError{Op: "open", Path: name, Err: fs.ErrNotExist}
+	}
+	if f.refuseRead {
+		if _, err := os.Stat(name); err == nil {
+			return nil, &fs.PathError{Op: "open", Path: name, Err: fs.ErrPermission}
+		}
+	}
+	return os.ReadFile(name)
+}
+
+func (f rootedFiles) WriteFile(name string, data []byte, perm fs.FileMode) error {
+	if !f.inside(name) {
+		return &fs.PathError{Op: "open", Path: name, Err: fs.ErrPermission}
+	}
+	return os.WriteFile(name, data, perm)
+}
+
+func (f rootedFiles) Chmod(name string, mode fs.FileMode) error {
+	if !f.inside(name) {
+		return &fs.PathError{Op: "chmod", Path: name, Err: fs.ErrPermission}
+	}
+	return os.Chmod(name, mode)
+}
+
+func (f rootedFiles) Remove(name string) error {
+	if !f.inside(name) || f.refuse {
+		return &fs.PathError{Op: "remove", Path: name, Err: fs.ErrPermission}
+	}
+	return os.Remove(name)
+}
+
+// L308: reset-password removes the first password of the account it sets,
+// as the console's password change does: the credentials file goes, a note
+// without the password takes its place, and the output names the file.
+// Another account's file stays. A file it may not remove is named on
+// standard error with the command that removes it, and the password is
+// set all the same.
+func TestResetPasswordRemovesTheFirstPassword(t *testing.T) {
+	root := t.TempDir()
+	keys, data := filepath.Join(root, "keys"), filepath.Join(root, "data")
+	for _, dir := range []string{keys, data} {
+		if err := os.MkdirAll(dir, 0o700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	const firstPassword = "first-pass-0123456789"
+	creds, others := filepath.Join(keys, ".admin_credentials"), filepath.Join(data, ".admin_credentials")
+	writeFirst := func() {
+		t.Helper()
+		if err := os.WriteFile(creds, []byte("Admin Username: admin\nAdmin Password: "+firstPassword+"\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	writeFirst()
+	if err := os.WriteFile(others, []byte("Admin Username: operator1\nAdmin Password: other-pass-0123\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	env := map[string]string{"DB_PATH": filepath.Join(keys, "db_v2.sqlite3"), "CONSOLE_DIR": root, "KEYS_PATH": keys, "DATA_DIR": data}
+	run := func(files authn.FS) (int, string, string) {
+		var out, errOut bytes.Buffer
+		e := Env{Stdin: strings.NewReader("Neu-Passw0rd\n"), Stdout: &out, Stderr: &errOut, GOOS: "linux",
+			Getenv: func(k string) string { return env[k] }}
+		status := resetPassword([]string{"admin"}, e, resetOptions{random: rand.Reader, terminal: func(io.Reader) bool { return false },
+			exists: func(p string) bool { _, err := os.Stat(p); return err == nil }, cwd: root, files: files})
+		return status, out.String(), errOut.String()
+	}
+
+	status, out, errOut := run(rootedFiles{root: root})
+	if status != 0 {
+		t.Fatalf("%d %q %q", status, out, errOut)
+	}
+	if _, err := os.Stat(creds); err == nil {
+		t.Errorf("the first password of admin is still in %s after the reset", creds)
+	}
+	note, err := os.ReadFile(filepath.Join(keys, ".admin_credentials.removed"))
+	if err != nil || strings.Contains(string(note), firstPassword) || !strings.Contains(string(note), "after a password reset") {
+		t.Errorf("the note in %s: %q %v", keys, note, err)
+	}
+	if _, err := os.Stat(others); err != nil {
+		t.Errorf("the reset of admin removed operator1's first password: %v", err)
+	}
+	if want := "Removed the first password of admin: " + creds + "\n"; !strings.Contains(out, want) || errOut != "" {
+		t.Errorf("output %q, errors %q, want %q in the output", out, errOut, want)
+	}
+
+	// A file the command may not remove: it says so and names the command
+	for _, c := range []struct{ docker, command string }{
+		{"", "sudo rm " + creds},
+		{"true", "docker compose exec -u neodesk neodesk rm " + creds},
+	} {
+		writeFirst()
+		env["DOCKER"] = c.docker
+		status, out, errOut := run(rootedFiles{root: root, refuse: true})
+		if status != 0 || !strings.Contains(out, "Password updated for user: admin") {
+			t.Errorf("DOCKER=%q: the password was not set: %d %q %q", c.docker, status, out, errOut)
+		}
+		if !strings.Contains(errOut, creds) || !strings.Contains(errOut, "permission denied") || !strings.Contains(errOut, c.command) {
+			t.Errorf("DOCKER=%q: errors %q, want the file, permission denied and %q", c.docker, errOut, c.command)
+		}
+		if _, err := os.Stat(creds); err != nil {
+			t.Errorf("DOCKER=%q: the refused file is gone", c.docker)
+		}
+	}
+
+	// A file it may not read: it may hold the first password, so it is
+	// named with the command too
+	delete(env, "DOCKER")
+	status, out, errOut = run(rootedFiles{root: root, refuseRead: true})
+	if status != 0 || !strings.Contains(errOut, "Could not read "+creds) || !strings.Contains(errOut, "permission denied") ||
+		!strings.Contains(errOut, "sudo rm "+creds) {
+		t.Errorf("an unreadable file: %d %q, errors %q", status, out, errOut)
 	}
 }

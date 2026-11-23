@@ -1113,17 +1113,11 @@ do_reset_password() {
     container_running || die "NeoDesk is not running." "Start it: cd $NEODESK_DIR && docker compose up -d"
     local password
     password=$(new_secret 12)
+    # reset-password also removes the first password in the volume, which
+    # signs nobody in any more
     printf '%s\n' "$password" | docker exec -i -u neodesk "$CONTAINER" \
         /usr/local/bin/neodesk-server reset-password "$RESET_USER" >/dev/null \
         || die "The password of $RESET_USER was not changed (does the account exist?)."
-    # The first password in the volume signs nobody in any more
-    docker exec -u neodesk "$CONTAINER" sh -c '
-        for d in /opt/rustdesk /app/data; do
-            if [ -f "$d/.admin_credentials" ] && grep -q "^Admin Username: $1\$" "$d/.admin_credentials"; then
-                rm -f "$d/.admin_credentials"
-                echo "The first password of $1 was removed on $(date -u +%Y-%m-%dT%H:%M:%SZ) after a password reset." > "$d/.admin_credentials.removed"
-            fi
-        done' sh "$RESET_USER" >/dev/null 2>&1 || true
     say "New password of ${RESET_USER}: ${BOLD}${password}${NC}"
     say "(shown this once; sign in and change it)"
 }

@@ -52,6 +52,9 @@ type FS interface {
 
 type osFS struct{}
 
+// OSFS is the real files.
+var OSFS FS = osFS{}
+
 func (osFS) Exists(name string) bool {
 	_, err := os.Stat(name)
 	return err == nil

@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/stdlib"
@@ -41,6 +42,9 @@ type resetOptions struct {
 	exists func(string) bool
 	// cwd is the working folder.
 	cwd string
+	// files are the credentials files of the first password and
+	// /.dockerenv; nil means the real files.
+	files authn.FS
 }
 
 // ResetPassword is "reset-password [username]", what reset-password.js
@@ -64,7 +68,10 @@ type resetOptions struct {
 // both sign-ins take it and neither replaces the hash.
 //
 // It prints what the script printed, with the hash's type and length, and
-// exits with 0 when the password was set and 1 otherwise.
+// exits with 0 when the password was set and 1 otherwise. Once the
+// password is set, the credentials file with the account's first password
+// is removed as the console's password change removes it
+// (removeFirstPassword), and the output names it.
 func ResetPassword(args []string, env Env) int {
 	cwd, _ := os.Getwd()
 	return resetPassword(args, env, resetOptions{
@@ -225,8 +232,63 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 		fmt.Fprintf(e, "Error: %s\n", sqliteMessage(err))
 		return 1
 	}
+	removeFirstPassword(env, getenv, opts, username)
 	fmt.Fprintln(o, "Done")
 	return 0
+}
+
+// removeFirstPassword removes the first password of the account whose
+// password was just set, where the console looks for it and as its
+// password change does (authn.RemoveFirstPassword): the password in the
+// file signs nobody in any more. A file it may not remove is named on
+// standard error with the command that removes it; the password is set
+// all the same.
+func removeFirstPassword(env Env, getenv func(string) string, opts resetOptions, username string) {
+	files := opts.files
+	if files == nil {
+		files = authn.OSFS
+	}
+	dataDir, keysPath := getenv("DATA_DIR"), getenv("KEYS_PATH")
+	if cfg, err := consoleconfig.Load(getenv); err == nil {
+		dataDir, keysPath = cfg.DataDir, cfg.KeysPath
+	}
+	now := time.Now
+	if env.Now != nil {
+		now = env.Now
+	}
+	set := authn.SettingsFromEnv(getenv, dataDir, keysPath)
+	docker := envvar.SwitchOr(getenv("DOCKER"), false) || files.Exists("/.dockerenv")
+	for _, f := range authn.RemoveFirstPassword(files, set, username, now(), "after a password reset") {
+		switch {
+		case f.Unread:
+			fmt.Fprintf(env.Stderr, "Could not read %s, which may hold the first password of %s: %v\n", f.Path, username, f.Err)
+			fmt.Fprintln(env.Stderr, "That password no longer signs in. "+removeCommand(f.Path, env.GOOS, docker))
+			continue
+		case f.Err != nil:
+			fmt.Fprintf(env.Stderr, "The first password of %s in %s no longer signs in, but it could not be removed: %v\n",
+				username, f.Path, f.Err)
+			fmt.Fprintln(env.Stderr, removeCommand(f.Path, env.GOOS, docker))
+			continue
+		}
+		fmt.Fprintf(env.Stdout, "Removed the first password of %s: %s\n", username, f.Path)
+		if f.NoteErr != nil {
+			fmt.Fprintf(env.Stderr, "Could not leave a note in %s: %v\n", filepath.Dir(f.Path), f.NoteErr)
+		}
+	}
+}
+
+// removeCommand names the command that removes path: in the container as
+// the user neodesk, which owns the data, on Windows from an administrator's
+// PowerShell, else with sudo.
+func removeCommand(path, goos string, docker bool) string {
+	switch {
+	case docker:
+		return "Remove it on the Docker host, as the user neodesk: docker compose exec -u neodesk neodesk rm " + path
+	case goos == "windows":
+		return "Remove it from a PowerShell run as administrator: Remove-Item -LiteralPath '" + path + "'"
+	default:
+		return "Remove it as root: sudo rm " + path
+	}
 }
 
 // consoleEnv reads the environment and, for what it does not set, the

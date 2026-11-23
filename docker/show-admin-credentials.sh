@@ -21,8 +21,8 @@ for creds_file in /opt/rustdesk/.admin_credentials /app/data/.admin_credentials;
     fi
 done
 
-# The console removes the first password once the admin changed it and
-# leaves this note without the password.
+# The console's password change and the reset-password command remove the
+# first password and leave this note without the password.
 for note in /opt/rustdesk/.admin_credentials.removed /app/data/.admin_credentials.removed; do
     if [ -f "$note" ] && [ -r "$note" ]; then
         cat "$note" >&2

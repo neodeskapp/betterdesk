@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"slices"
 	"strings"
 	"time"
@@ -56,26 +58,30 @@ var adminPasswordLine = regexp.MustCompile(
 // credentialDirs lists the folders to look for .admin_credentials in, in
 // order and without repeats.
 func (s *Service) credentialDirs() []string {
+	return credentialDirsFor(s.fs, s.set, s.windows)
+}
+
+func credentialDirsFor(fsys FS, set Settings, windows bool) []string {
 	var dirs []string
 	add := func(dir string) {
 		if dir != "" && !slices.Contains(dirs, dir) {
 			dirs = append(dirs, dir)
 		}
 	}
-	add(s.set.KeysPath)
+	add(set.KeysPath)
 	add("/opt/rustdesk")
-	add(filepath.Join(s.set.KeysPath, "data"))
-	add(s.set.DataDir)
+	add(filepath.Join(set.KeysPath, "data"))
+	add(set.DataDir)
 	add("/opt/neodesk")
 	add("/opt/neodesk/data")
 	add("/opt/rustdesk/data")
-	if s.windows {
+	if windows {
 		add(`C:\NeoDesk`)
 		add(`C:\NeoDesk\data`)
 		add(`C:\RustDesk`)
 		add(`C:\RustDesk\data`)
 	}
-	if s.fs.Exists("/.dockerenv") || s.set.Docker == "true" {
+	if fsys.Exists("/.dockerenv") || set.Docker == "true" {
 		add("/app/data")
 	}
 	return dirs
@@ -334,18 +340,66 @@ func (s *Service) reviewExistingAdmin(ctx context.Context, username, password st
 // file.
 var adminUserLine = regexp.MustCompile(`(?m)^Admin Username:[ \t]*(\S+)`)
 
-// removeFirstPassword removes the credentials files that hold the first
-// password of the account username, after its password changed: the
-// password in them signs nobody in any more. A file without a user name
-// line is the admin's. A note without the password takes each file's place,
-// so the credentials command can say what happened. Failures are logged.
+// removeFirstPassword removes the first password of the account username
+// after the account changed its password (removeFirstPasswordIn). Failures
+// are logged.
 func (s *Service) removeFirstPassword(username string) {
-	for _, dir := range s.credentialDirs() {
-		path := filepath.Join(dir, credentialsFile)
-		if !s.fs.Exists(path) {
+	for _, f := range removeFirstPasswordIn(s.fs, s.credentialDirs(), username, s.now(), "after the account changed it") {
+		if f.Unread {
 			continue
 		}
-		content, err := s.fs.ReadFile(path)
+		if f.Err != nil {
+			s.log.Warn(fmt.Sprintf("[AUTH] Could not remove the first password in %s: %s", f.Path, f.Err.Error()))
+			continue
+		}
+		if f.NoteErr != nil {
+			s.log.Warn(fmt.Sprintf("[AUTH] Could not leave a note in %s: %s", filepath.Dir(f.Path), f.NoteErr.Error()))
+		}
+		s.log.Info("[AUTH] Removed the first password in " + f.Path + " after " + username + " changed it")
+	}
+}
+
+// FirstPasswordFile is a credentials file that held the first password of
+// an account whose password was set again, or one that may hold it.
+type FirstPasswordFile struct {
+	// Path is the file.
+	Path string
+	// Err is why the file is still there; nil when it was removed.
+	Err error
+	// Unread says the file could not be read for lack of permission (Err
+	// says so), so whose first password it holds is not known.
+	Unread bool
+	// NoteErr is why no note took the file's place; nil when one did.
+	NoteErr error
+}
+
+// RemoveFirstPassword removes the credentials files that hold the first
+// password of the account username, after its password was set again
+// (the reset-password command): the password in them signs nobody in any
+// more. It looks where the console looks (the folders of set, from
+// SettingsFromEnv, and the install folders) and does what the console does
+// after a password change. why ends the note ("after a password reset").
+func RemoveFirstPassword(fsys FS, set Settings, username string, now time.Time, why string) []FirstPasswordFile {
+	return removeFirstPasswordIn(fsys, credentialDirsFor(fsys, set, runtime.GOOS == "windows"), username, now, why)
+}
+
+// removeFirstPasswordIn removes the credentials files in dirs that hold
+// the first password of the account username. A file without a user name
+// line is the admin's. A note without the password takes each file's
+// place, so the credentials command can say what happened; why ends it.
+// It returns the files it found for the account, removed or not, and the
+// ones it was not allowed to read.
+func removeFirstPasswordIn(fsys FS, dirs []string, username string, now time.Time, why string) []FirstPasswordFile {
+	var found []FirstPasswordFile
+	for _, dir := range dirs {
+		path := filepath.Join(dir, credentialsFile)
+		// Read without asking whether the file exists first: in a folder the
+		// process may not search, it does not seem to
+		content, err := fsys.ReadFile(path)
+		if errors.Is(err, fs.ErrPermission) {
+			found = append(found, FirstPasswordFile{Path: path, Err: err, Unread: true})
+			continue
+		}
 		if err != nil {
 			continue
 		}
@@ -356,17 +410,14 @@ func (s *Service) removeFirstPassword(username string) {
 		if owner != username {
 			continue
 		}
-		if err := s.fs.Remove(path); err != nil {
-			s.log.Warn(fmt.Sprintf("[AUTH] Could not remove the first password in %s: %s", path, err.Error()))
-			continue
+		f := FirstPasswordFile{Path: path}
+		if f.Err = fsys.Remove(path); f.Err == nil {
+			note := "The first password of " + username + " was removed on " + store.ISOTime(now) + " " + why + ".\n"
+			f.NoteErr = fsys.WriteFile(filepath.Join(dir, credentialsRemovedFile), []byte(note), 0o600)
 		}
-		note := "The first password of " + username + " was removed on " + store.ISOTime(s.now()) +
-			" after the account changed it.\n"
-		if err := s.fs.WriteFile(filepath.Join(dir, credentialsRemovedFile), []byte(note), 0o600); err != nil {
-			s.log.Warn(fmt.Sprintf("[AUTH] Could not leave a note in %s: %s", dir, err.Error()))
-		}
-		s.log.Info("[AUTH] Removed the first password in " + path + " after " + username + " changed it")
+		found = append(found, f)
 	}
+	return found
 }
 
 // keepingRule is password when it keeps the password rule
