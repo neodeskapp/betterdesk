@@ -358,44 +358,49 @@ function Get-ConsoleWidth {
     try { return $Host.UI.RawUI.WindowSize.Width } catch { return 80 }
 }
 
-# Write-Logo TITLE: the NeoDesk logo, drawn in quarter and half blocks,
-# with TITLE under the wordmark on its last line. The lines carry colour
-# tokens {N}: $vt[N] is the code in 24-bit, $fg[N] and $bg[N] the
-# console colours. The wordmark is the console's own text colour. A
-# console narrower than the logo gets the name and TITLE on one line.
+# Write-Logo TITLE: the NeoDesk logo, drawn in half blocks, with TITLE
+# under it, starting under the wordmark. The lines carry colour tokens
+# {N}: $vtCodes[N] is the code in 24-bit, $fgNames[N] and $bgNames[N]
+# the console colours. A console narrower than the logo gets the name
+# and TITLE on one line.
 function Write-Logo {
     param([string]$Title)
     $lines = @(
-        '         {0}▄{1}▄{2}█{1}█{3}██{1}█{3}▄{4}▖',
-        '       {0}▗{1}▟█████████▙',
-        '    {5}▄▄{6}▄{7}▀{8}▀▀▀{9}▀{10}▀{11}▜{1}█████▙                                 {12}▐{12}█▌               █{12}█',
-        '  {5}▗███{13}█{14}██████{15}█{16}▀{1}█████     {12}▄▄ {12}▄{12}▄▄▄{12}▖ {12}▗{12}▄{12}▄▄▄{12}▖  ▄{12}▄▄▄▄  {12}▗{12}▄▄{12}▄{12}▟█▌  {12}▄{12}▄▄▄{12}▖  {12}▄{12}▄▄▄{12}▖ {12}██ {12}▗{12}▄▄',
-        '  {5}█████{17}▜{14}██████{18}█{19}█{1}███{20}▌     {12}▝{12}██{12}▀ ▀{12}██{12}▗{12}█{12}█{12}▄▄█{12}█{12}▖{12}██{12}▘ {12}▝{12}██{12}▗{12}█{12}▛  ▜{12}█▌ ██{12}▄▄▟{12}█{12}▌{12}▐█{12}▄{12}▄{12}▛{12}▀ ██{12}▟{12}█{12}▀',
-        '  {5}██████{21}▀{22}▜{14}█████{23}█{1}█{0}█{1}▘       {12}█{12}█   ██{12}▝█{12}█{12}▀▀{12}▜█{12}▌{12}█{12}█   {12}██{12}▐{12}█{12}▙  ▐{12}█▌{12}▝{12}██{12}▀▀▜{12}█▌▄{12}▟▀{12}▀{12}▜█{12}▖{12}██{12}▀{12}▜{12}█▖',
-        '  {5}████████{24}▀{25}▀{26}▀{27}▀{28}▀{29}▀          {12}█{12}█   {12}█{12}█ {12}▝{12}▜{12}██▛▀ ▝▀{12}█{12}██{12}▀{12}▘ {12}▀{12}▜{12}█{12}█▀▜█▌▝▀{12}█{12}█{12}█▀ {12}▝{12}▜{12}█{12}█{12}█{12}▀ {12}█▛  ▀█▌',
-        '  {30}▜{5}███████████▛',
-        '   {5}▀█████████▀'
+        '             {0}▄▄███████▄▄',
+        '           {0}▄█████████████▄',
+        '         {0}▄█████████████████▄',
+        '        {0}▄███████████████████▄                                                  {1}▄▄▄                          ▄▄▄',
+        '  {2}▄▄████{3}█████████{4}▀▀{0}██████████                                                  {1}███                          ███',
+        ' {2}███████{3}████████████{0}█████████    {1}▄▄▄▄▄ ▄▄▄▄▄     ▄▄▄▄▄▄▄     ▄▄▄▄▄▄▄     ▄▄▄▄▄▄███     ▄▄▄▄▄▄▄    ▄▄▄▄▄▄▄▄  ███    ▄▄▄▄',
+        '{2}████████{3}█████████████{0}████████    {1}██████▀▀▀███▄ ▄███▀▀▀███▄ ▄███▀▀▀███▄ ▄███▀▀▀████   ▄███▀▀▀███▄ ███▀▀▀▀███ ███  ▄███▀',
+        '{2}█████████{3}████████████{0}███████       {1}███     ███ ███▄▄▄▄▄███ ███     ███ ███     ███   ███▄▄▄▄▄███ ███▄▄▄▄▄▄  ███▄███▀',
+        '{2}██████████{5}▀{3}██████████{0}█████▀        {1}███     ███ ███▀▀▀▀▀▀▀▀ ███     ███ ███     ███   ███▀▀▀▀▀▀▀▀ ▀█████████ ███▀▀███▄',
+        '{2}████████████{5}▀{3}████████{0}███▀          {1}███     ███ ███▄   ▄▄▄▄ ███▄   ▄███ ███▄   ▄███▄▄ ███▄   ▄▄▄▄ ▄▄▄    ███ ███  ▀███▄',
+        '{2}███████████████{5}▀▀▀▀▀▀{0}▀             {1}███     ███  ▀███████▀   ▀███████▀   ▀█████▀█████  ▀███████▀  ▀████████▀ ███   ▀███▄',
+        '{2}█████████████████████',
+        '{2}▀███████████████████▀',
+        ' {2}▀█████████████████▀',
+        '    {2}▀▀▀▀▀▀▀▀▀▀▀▀▀'
     )
-    $vtCodes = @('38;2;162;230;52', '38;2;163;230;53', '38;2;163;230;52', '38;2;162;230;53', '38;2;163;229;53', '38;2;88;166;255', '38;2;88;168;253', '38;2;150;226;74;48;2;64;208;196', '38;2;153;228;67;48;2;63;208;196', '38;2;157;228;62;48;2;63;208;196', '38;2;163;230;53;48;2;84;212;166', '38;2;161;230;56;48;2;122;221;111', '39', '38;2;87;169;251', '38;2;63;208;196', '38;2;64;208;194', '38;2;141;225;86;48;2;86;213;162', '38;2;69;199;208;48;2;87;168;252', '38;2;64;208;195', '38;2;158;229;60', '38;2;162;229;52', '38;2;70;197;210;48;2;86;168;251', '38;2;64;207;197;48;2;75;190;221', '38;2;157;228;62', '38;2;79;182;232;48;2;88;166;255', '38;2;69;200;208;48;2;88;166;255', '38;2;64;208;196;48;2;88;167;252', '38;2;63;208;196;48;2;86;170;249', '38;2;64;207;197;48;2;88;167;254', '38;2;156;228;63', '38;2;88;165;255')
-    $fgNames = @('Green', 'Green', 'Green', 'Green', 'Green', 'Cyan', 'Cyan', 'Green', 'Green', 'Green', 'Green', 'Green', '', 'Cyan', 'DarkCyan', 'DarkCyan', 'Green', 'DarkCyan', 'DarkCyan', 'Green', 'Green', 'DarkCyan', 'DarkCyan', 'Green', 'Cyan', 'DarkCyan', 'DarkCyan', 'DarkCyan', 'DarkCyan', 'Green', 'Cyan')
-    $bgNames = @('', '', '', '', '', '', '', 'DarkCyan', 'DarkCyan', 'DarkCyan', 'DarkCyan', 'Green', '', '', '', '', 'DarkCyan', 'Cyan', '', '', '', 'Cyan', 'DarkCyan', '', 'Cyan', 'Cyan', 'Cyan', 'Cyan', 'Cyan', '', '')
+    $vtCodes = @('38;2;163;230;53', '38;2;228;231;231', '38;2;88;166;255', '38;2;63;208;196', '38;2;163;230;53;48;2;63;208;196', '38;2;63;208;196;48;2;88;166;255')
+    $fgNames = @('Green', '', 'Cyan', 'DarkCyan', 'Green', 'DarkCyan')
+    $bgNames = @('', '', '', '', 'DarkCyan', 'Cyan')
     $columns = Get-ConsoleWidth
-    if ($columns -gt 0 -and $columns -lt 78) {
+    if ($columns -gt 0 -and $columns -lt 119) {
         Write-Host "NeoDesk $Title"
         return
     }
     $vt = (Get-ColorMode) -eq 'vt'
     $esc = [char]27
-    for ($i = 0; $i -lt $lines.Count; $i++) {
-        $after = if ($i -eq $lines.Count - 1) { '           ' + $Title } else { '' }
+    foreach ($line in $lines) {
         # Text and token numbers take turns: text, number, text, ...
-        $parts = [regex]::Split($lines[$i], '\{(\d+)\}')
+        $parts = [regex]::Split($line, '\{(\d+)\}')
         if ($vt) {
             $text = $parts[0]
             for ($p = 1; $p -lt $parts.Count; $p += 2) {
                 $text += "$esc[0m$esc[$($vtCodes[[int]$parts[$p]])m" + $parts[$p + 1]
             }
-            Write-Host "$text$esc[0m$after"
+            Write-Host "$text$esc[0m"
             continue
         }
         Write-Host $parts[0] -NoNewline
@@ -406,8 +411,9 @@ function Write-Logo {
             if ($bgNames[$n]) { $colours.BackgroundColor = $bgNames[$n] }
             Write-Host $parts[$p + 1] -NoNewline @colours
         }
-        Write-Host $after
+        Write-Host ''
     }
+    Write-Host ((' ' * 33) + $Title)
 }
 
 # Print-Header: clears the console and shows the NeoDesk logo with

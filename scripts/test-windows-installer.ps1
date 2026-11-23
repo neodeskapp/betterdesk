@@ -1039,13 +1039,13 @@ function Get-Contrast([int]$R, [int]$G, [int]$B) {
     return $min
 }
 
-# The header: in a console of 80 columns the NeoDesk logo in nine lines
-# of half blocks, with the title on the last; "NeoDesk <title>" on one
-# line in a console narrower than the logo; one plain line when the
-# output goes to a file or a pipe or NO_COLOR is set, and no escape codes
-# then. No box characters, no line wider than 80 columns. The status
-# helpers use no blue or magenta, and their 24-bit colours keep 3.5:1 on
-# black, PowerShell's blue and white.
+# The header: in a console of 120 columns the NeoDesk logo in 15 lines of
+# half blocks, with the title on the line under
+# it; "NeoDesk <title>" on one line in a console narrower than the
+# logo; one plain line when the output goes to a file or a pipe or
+# NO_COLOR is set, and no escape codes then. No box characters, no line
+# wider than 119 columns. The status helpers use no blue or magenta, and
+# their 24-bit colours keep 3.5:1 on black, PowerShell's blue and white.
 function Test-HeaderAndColours {
     function Clear-Host { }
     function Get-ConsoleWidth { $script:consoleWidth }
@@ -1089,28 +1089,28 @@ function Test-HeaderAndColours {
 
     foreach ($mode in 'vt', 'console') {
         $script:COLOR_MODE = $mode
-        $script:consoleWidth = 80
+        $script:consoleWidth = 120
         $got = Get-HostLines { Print-Header }
         $text = @($got.Lines | ForEach-Object { $_ -replace "$esc\[[0-9;]*m", '' })
         if (($text -join "`n") -match $boxChars) { Fail "the $mode header draws a box: $($text -join ' | ')" }
         $logoLines = @($text | Where-Object { $_ -match $halfBlocks })
-        if ($logoLines.Count -ne 9) {
-            Fail "the $mode header has $($logoLines.Count) lines of the logo, not 9"
-        } elseif (($logoLines[-1] -replace "^(?:$halfBlocks| )*   ", '') -ne $title) {
-            Fail "the $mode header does not end the logo with ${title}: $($text -join ' | ')"
+        if ($logoLines.Count -ne 15) {
+            Fail "the $mode header has $($logoLines.Count) lines of the logo, not 15"
+        } elseif (($text[[array]::LastIndexOf($text, $logoLines[-1]) + 1] -replace '^ *', '') -ne $title) {
+            Fail "the $mode header does not have $title under the logo: $($text -join ' | ')"
         }
         foreach ($line in $text) {
-            if ($line.Length -gt 80) { Fail "the $mode header has a line of $($line.Length) columns: $line" }
+            if ($line.Length -gt 119) { Fail "the $mode header has a line of $($line.Length) columns: $line" }
             if ($line -match '\s$') { Fail "the $mode header has a line that ends in spaces: '$line'" }
         }
         if ($text -notcontains '[!] Windows support is experimental.') { Fail "the $mode header does not say that Windows support is experimental" }
         if ($mode -eq 'vt' -and ($got.Lines -join '') -notmatch '38;2;88;166;255') { Fail 'the vt header does not draw the mark in its 24-bit colours' }
         foreach ($c in $got.Colors) { if ($banned -contains $c) { Fail "the $mode header uses $c" } }
 
-        $script:consoleWidth = 60
+        $script:consoleWidth = 118
         $got = Get-HostLines { Print-Header }
         $text = @($got.Lines | ForEach-Object { $_ -replace "$esc\[[0-9;]*m", '' } | Where-Object { $_ })
-        if ($text[0] -ne $plain -or ($text -join "`n") -match $halfBlocks) { Fail "in a console of 60 columns the $mode header is not one line: $($text -join ' | ')" }
+        if ($text[0] -ne $plain -or ($text -join "`n") -match $halfBlocks) { Fail "in a console of 118 columns the $mode header is not one line: $($text -join ' | ')" }
 
         $got = Get-HostLines $helpers
         foreach ($c in $got.Colors) { if ($banned -contains $c) { Fail "a status helper uses $c" } }
