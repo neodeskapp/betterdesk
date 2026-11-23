@@ -196,7 +196,7 @@ func TestAdvancedFileChain(t *testing.T) {
 		s := newSite(t, db, nil, nil)
 		admin := s.As("admin")
 		secret := filepath.Join(s.DataDir, ".session_secret")
-		res := admin.Do("PUT", "/api/settings/advanced/files/console-session-secret", `{"content":"first\n"}`)
+		res := admin.Do("PUT", "/api/settings/advanced/files/console-session-secret", `{"content":"first-secret-0123456789abcdef0123\n"}`)
 		got := decode(t, res.Body)
 		data, _ := got["data"].(map[string]any)
 		if res.Status != http.StatusOK || data["created"] != true || data["backupPath"] != nil || got["message"] != "settings.advanced_saved" {
@@ -224,11 +224,11 @@ func TestAdvancedFileChain(t *testing.T) {
 
 		// Another operator may not change the file into this transaction:
 		// the answer is 409 and the file stays as it is (BUGS SE2)
-		res = s.As("super_admin").Do("PUT", "/api/settings/advanced/files/console-session-secret", `{"content":"other\n"}`)
+		res = s.As("super_admin").Do("PUT", "/api/settings/advanced/files/console-session-secret", `{"content":"other-secret-0123456789abcdef0123\n"}`)
 		if res.Status != http.StatusConflict || res.Body != `{"success":false,"error":"restart_transaction_owned"}` {
 			t.Errorf("other operator: %d %s", res.Status, res.Body)
 		}
-		if content, _ := os.ReadFile(secret); string(content) != "first\n" {
+		if content, _ := os.ReadFile(secret); string(content) != "first-secret-0123456789abcdef0123\n" {
 			t.Errorf("content after the other operator: %q", content)
 		}
 		if entries, _ := os.ReadDir(s.DataDir); strings.Contains(fmt.Sprint(entries), ".session_secret.bak.") {
@@ -247,10 +247,10 @@ func TestAdvancedFileChain(t *testing.T) {
 			t.Errorf("pending after the cancel: %q %s", res.Header.Get("Cache-Control"), res.Body)
 		}
 
-		if err := os.WriteFile(secret, []byte("other\n"), 0o600); err != nil {
+		if err := os.WriteFile(secret, []byte("other-secret-0123456789abcdef0123\n"), 0o600); err != nil {
 			t.Fatal(err)
 		}
-		res = admin.Do("PUT", "/api/settings/advanced/files/console-session-secret", `{"content":"second\n"}`)
+		res = admin.Do("PUT", "/api/settings/advanced/files/console-session-secret", `{"content":"second-secret-0123456789abcdef0123\n"}`)
 		got = decode(t, res.Body)
 		backup, _ := got["data"].(map[string]any)["backupPath"].(string)
 		if !strings.HasPrefix(backup, secret+".bak.") {
@@ -267,7 +267,7 @@ func TestAdvancedFileChain(t *testing.T) {
 		if row := lastAudit(t, s.World); row != "settings_restart_canceled|Canceled restart transaction "+tx+"|127.0.0.1|1" {
 			t.Errorf("audit %s", row)
 		}
-		if content, _ := os.ReadFile(secret); string(content) != "other\n" {
+		if content, _ := os.ReadFile(secret); string(content) != "other-secret-0123456789abcdef0123\n" {
 			t.Errorf("content after the cancel: %q", content)
 		}
 		if res := admin.Do("GET", "/api/settings/restart/pending", ""); res.Body != `{"success":true,"data":null}` {
