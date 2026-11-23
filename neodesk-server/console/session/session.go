@@ -46,6 +46,9 @@ type Session struct {
 	savedID   string
 	saved     string
 	sentID    string
+	// ephemeral marks the session of a request an API token signed in
+	// (Manager.Ephemeral): nothing of it reaches the store or a cookie.
+	ephemeral bool
 }
 
 // User is the account a session belongs to, as copied at sign-in.
@@ -250,6 +253,9 @@ func (s *Session) Destroy() error {
 	}
 	s.destroyed = true
 	s.data = newFields()
+	if s.ephemeral {
+		return nil
+	}
 	ctx, cancel := s.ctx()
 	defer cancel()
 	return s.m.table.destroy(ctx, s.id)
@@ -263,6 +269,9 @@ func (s *Session) Destroy() error {
 func (s *Session) Regenerate() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.ephemeral {
+		return ErrEphemeral
+	}
 	id, err := newID()
 	if err != nil {
 		return err
@@ -286,6 +295,9 @@ func (s *Session) Regenerate() error {
 func (s *Session) Establish(user User, meta Meta) (replaced int, err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.ephemeral {
+		return 0, ErrEphemeral
+	}
 	if s.destroyed {
 		return 0, errors.New("session: Establish on a destroyed session")
 	}
@@ -332,8 +344,11 @@ func orUnknown(s string) string {
 // after it. A failure is logged and not returned, so sign-out goes on.
 func (s *Session) End(reason string) {
 	s.mu.Lock()
-	id := s.id
+	id, ephemeral := s.id, s.ephemeral
 	s.mu.Unlock()
+	if ephemeral {
+		return
+	}
 	ctx, cancel := s.ctx()
 	defer cancel()
 	if err := s.m.table.end(ctx, id, reason); err != nil {
@@ -521,7 +536,7 @@ func (s *Session) finish(w http.ResponseWriter) {
 	s.commit(w)
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.destroyed || (s.id == s.savedID && s.data.encode(false) == s.saved) {
+	if s.ephemeral || s.destroyed || (s.id == s.savedID && s.data.encode(false) == s.saved) {
 		return
 	}
 	if s.cookieID != s.id && s.sentID != s.id {

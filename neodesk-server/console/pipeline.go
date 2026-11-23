@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
@@ -41,8 +42,8 @@ func (s *Server) steps() []step {
 		{1, "security headers", s.securityHeaders()},
 		{3, "CORS", middleware.CORS()},
 		{4, "bodies", middleware.Bodies(middleware.BodyOptions{RouteBodies: true, OnError: onError})},
-		{6, "session", d.Sessions.Middleware},
-		{8, "CSRF token", d.CSRF.Provider},
+		{6, "session", s.tokenOrSession},
+		{8, "CSRF token", s.csrfProvider},
 		{9, "static folders", middleware.StaticFolders(middleware.StaticFoldersOptions{PublicDir: cfg.PublicDir, FontsDir: cfg.FontsDir, ProtosDir: cfg.ProtosDir, UploadsDir: cfg.UploadsDir, WallpapersDir: cfg.WallpapersDir, Static: cfg.Static, Production: cfg.Production, OnError: onError})},
 		{10, "permissions and panel access", s.loadAccess},
 		{11, "rate limiters", d.Limits.AppLevel()},
@@ -125,6 +126,9 @@ func (s *Server) loadAccess(next http.Handler) http.Handler {
 		}
 		loaded := s.deps.Access.Load(r.Context(), who)
 		kit.SetAccess(r, loaded)
+		if !s.tokenAccess(w, r, loaded) {
+			return
+		}
 		if verdict := loaded.GuardRoute(r.Method, httpx.RawPath(r), s.routeSection(r)); !verdict.Decision.Passed() {
 			s.deps.Refuse(w, r, verdict.Decision)
 			return
@@ -175,9 +179,31 @@ func (s *Server) end(w http.ResponseWriter, r *http.Request) {
 
 // csrfGate is step 16. The gate takes the token from the X-CSRF-Token
 // header or, without one, from the _csrf field of the body, which it gets
-// from csrfBodyToken.
+// from csrfBodyToken. A request an API token signed in passes: it carries
+// no cookie, and a browser cannot send the token's header to another
+// site without asking first.
 func (s *Server) csrfGate(next http.Handler) http.Handler {
-	return s.deps.CSRF.Gate(next)
+	gate := s.deps.CSRF.Gate(next)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if admintoken.FromRequest(r) != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+		gate.ServeHTTP(w, r)
+	})
+}
+
+// csrfProvider is step 8: the CSRF cookie and token for the page, but
+// none for a request an API token signed in.
+func (s *Server) csrfProvider(next http.Handler) http.Handler {
+	provider := s.deps.CSRF.Provider(next)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if admintoken.FromRequest(r) != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+		provider.ServeHTTP(w, r)
+	})
 }
 
 // cookieAuth reports whether a cookie authenticates a request, for the

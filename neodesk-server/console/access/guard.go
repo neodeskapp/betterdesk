@@ -196,6 +196,12 @@ func findRuleIn(rules []Rule, path string) (Rule, bool) {
 	return best, found
 }
 
+// MsgTokenSection is the refusal of a panel section whose level the
+// request's API token does not reach with its permissions.
+func MsgTokenSection(section string, level Level) string {
+	return "Panel access denied: " + section + " needs " + string(level) + " access, which this API token's permissions do not give"
+}
+
 // RequiredLevel is the level a request needs in its section: read for GET,
 // HEAD and OPTIONS, write for everything else.
 func RequiredLevel(method string) Level {
@@ -309,6 +315,17 @@ func (c *Context) GuardRoute(method, path string, declared *RouteSection) GuardR
 			d = refuseJSON(statusUnavailable, MsgPolicyUnavailable, CodePolicyUnavailable)
 		}
 		return GuardResult{Verdict: VerdictUnavailable, Section: section, Decision: d}
+	}
+	if c.Cap != nil && rank(LegacySectionCeiling(section, c.Cap.Has, false)) < rank(level) {
+		d := Decision{
+			Answer: AnswerErrorPage,
+			Status: statusForbidden,
+			Page:   ErrorPage{Kind: errorPageForbidden, Message: MsgPanelSectionDenied, Text: MsgPanelSectionDenied},
+		}
+		if api {
+			d = refuseJSON(statusForbidden, MsgTokenSection(section, level), CodeTokenPermission)
+		}
+		return GuardResult{Verdict: VerdictDenied, Section: section, Decision: d}
 	}
 	if AccessAllows(c.Policy, section, level) {
 		return GuardResult{Verdict: VerdictAllowed, Section: section, Decision: pass()}

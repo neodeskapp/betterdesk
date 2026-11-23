@@ -40,3 +40,11 @@ id = "neodesk-operator-ssh"
 description = "SSH user@internal IP pattern from operator runbooks"
 regex = '''unitronix@192\.168'''
 tags = ["neodesk", "infrastructure"]
+
+# API tokens of the console (console/admintoken). A match is a live
+# credential: revoke it under API tokens in the console.
+[[rules]]
+id = "neodesk-api-token"
+description = "NeoDesk API token (ndt_): revoke it in the console under API tokens"
+regex = '''\bndt_[a-km-z2-9]{12}_[A-Za-z0-9]{40}\b'''
+tags = ["neodesk", "token"]

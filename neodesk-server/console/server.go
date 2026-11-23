@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/alerts"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authimport"
@@ -127,6 +128,10 @@ type Server struct {
 	authImport authimport.Options
 	// apiListener is Options.APIListener, for the client API port
 	apiListener http.Handler
+	// tokens are the API tokens (package admintoken); tokenRefusals keeps
+	// the audit log of refused tokens to one entry a minute per token
+	tokens        *admintoken.Service
+	tokenRefusals *onceAMinute
 }
 
 // clientAPIPort is the client API port while the console listens on it
@@ -403,6 +408,13 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("sign-in service: %w", err)
 	}
+
+	s.tokens, err = admintoken.New(ctx, admintoken.Options{DB: opts.Store})
+	if err != nil {
+		return nil, fmt.Errorf("API tokens: %w", err)
+	}
+	s.tokenRefusals = newOnceAMinute()
+	s.deps.AdminTokens = s.tokens
 
 	s.jobs.Add("session cleanup", sessions.RunCleanup)
 	s.deps.Sockets = ws.New(ws.Options{

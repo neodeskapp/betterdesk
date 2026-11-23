@@ -151,13 +151,36 @@ func (c *Context) RequireRole(role, originalURL string) Decision {
 	if c.UserID == 0 {
 		return c.unauthorized(originalURL)
 	}
-	if IsSuperAdminRole(c.Role) || c.Role == role {
+	if (IsSuperAdminRole(c.Role) || c.Role == role) && c.tokenMayUseRole() {
 		return pass()
+	}
+	if c.Token() {
+		return c.refuseNotFull(originalURL)
 	}
 	if IsAPIRequest(originalURL) {
 		return refuseJSON(statusForbidden, MsgForbidden, "")
 	}
 	return refusePage(statusForbidden, "")
+}
+
+// tokenMayUseRole reports whether a check by role may pass: always for a
+// browser session, for an API token only when it carries every
+// permission of its account (a role stands for all of them).
+func (c *Context) tokenMayUseRole() bool { return c.Cap == nil || c.CapFull }
+
+// MsgTokenNotFull is the refusal of a check by role, or of a change to
+// accounts and access, to an API token that does not carry every
+// permission of its account.
+const MsgTokenNotFull = "This API token does not carry all of its account's permissions, so it cannot do this"
+
+// CodeTokenNotFull goes with MsgTokenNotFull.
+const CodeTokenNotFull = "token_not_full"
+
+func (c *Context) refuseNotFull(originalURL string) Decision {
+	if IsAPIRequest(originalURL) {
+		return refuseJSON(statusForbidden, MsgTokenNotFull, CodeTokenNotFull)
+	}
+	return refusePage(statusForbidden, MsgTokenNotFull)
 }
 
 // RequireAdmin lets the four admin roles through: super_admin, admin,
@@ -166,8 +189,11 @@ func (c *Context) RequireAdmin(originalURL string) Decision {
 	if c.UserID == 0 {
 		return c.unauthorized(originalURL)
 	}
-	if IsAdminRole(c.Role) {
+	if IsAdminRole(c.Role) && c.tokenMayUseRole() {
 		return pass()
+	}
+	if c.Token() && IsAdminRole(c.Role) {
+		return c.refuseNotFull(originalURL)
 	}
 	if IsAPIRequest(originalURL) {
 		return refuseJSON(statusForbidden, MsgAdminRequired, "")
@@ -190,12 +216,25 @@ func (c *Context) RequirePermission(permission, originalURL string) Decision {
 	}
 	if !c.HasPermission(permission) {
 		if IsAPIRequest(originalURL) {
+			if c.TokenLacks(permission) {
+				return refuseJSON(statusForbidden, MsgTokenLacks(permission), CodeTokenPermission)
+			}
 			return refuseJSON(statusForbidden, MsgPermissionDenied(permission), "")
 		}
 		return refusePage(statusForbidden, "")
 	}
 	return pass()
 }
+
+// MsgTokenLacks is the refusal of a permission the account holds but the
+// request's API token was not given.
+func MsgTokenLacks(permission string) string {
+	return "Permission denied: " + permission + " is not one of this API token's permissions"
+}
+
+// CodeTokenPermission goes with MsgTokenLacks and the token's section
+// refusal.
+const CodeTokenPermission = "token_permission"
 
 // RequireAnyPermission lets the request through when the account has one of
 // the permissions. It answers JSON on every path and does not look at the
@@ -207,6 +246,13 @@ func (c *Context) RequireAnyPermission(permissions ...string) Decision {
 	for _, permission := range permissions {
 		if c.HasPermission(permission) {
 			return pass()
+		}
+	}
+	if c.Token() {
+		for _, permission := range permissions {
+			if c.TokenLacks(permission) {
+				return refuseJSON(statusForbidden, MsgTokenLacks(strings.Join(permissions, " or ")), CodeTokenPermission)
+			}
 		}
 	}
 	return refuseJSON(statusForbidden, MsgPermissionDenied(permissions...), "")
@@ -233,6 +279,9 @@ func (c *Context) RequireRdClientAuth(permission, originalURL, returnQuery strin
 	}
 	if permission != "" && !c.HasPermission(permission) {
 		if IsAPIRequest(originalURL) {
+			if c.TokenLacks(permission) {
+				return refuseJSON(statusForbidden, MsgTokenLacks(permission), CodeTokenPermission)
+			}
 			return refuseJSON(statusForbidden, MsgPermissionDenied(permission), "")
 		}
 		return refusePage(statusForbidden, "")

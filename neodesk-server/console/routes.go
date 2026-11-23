@@ -4,6 +4,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/activity"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/apitokens"
 	authroutes "github.com/neodeskapp/neodesk/neodesk-server/console/routes/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/automation"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/avatars"
@@ -165,4 +166,5 @@ func registerRoutes(d *kit.Deps, backups *backup.Service) {
 	phase45.Register(d)                       // routes/phase4_5.routes.js
 	pairing.Register(d)                       // routes/pairing.routes.js
 	onboard.Register(d)                       // Add a computer and Quick support: invites, sessions, client packages
+	apitokens.Register(d)                     // API tokens for scripts, the command line and its MCP server
 }

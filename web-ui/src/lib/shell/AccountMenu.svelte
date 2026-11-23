@@ -1,8 +1,8 @@
 <!--
   Account menu (views/partials/user-menu.ejs, public/js/app.js): the
   signed-in person with picture or initials and their status dot, then My
-  status (online, away, busy), Change password, Two-factor sign-in and
-  Sign out.
+  status (online, away, busy), Change password, Two-factor sign-in, API
+  tokens (admins) and Sign out.
 
   place "sidebar": the sidebar footer button (avatar, name, role); the
   menu opens upwards there. place "topbar": the top bar button below
@@ -11,6 +11,7 @@
 <script lang="ts">
 	import { t, tf, has } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
+	import { mayMakeTokens } from '#lib/people/apiTokens.ts';
 	import { session, clearSession } from '#lib/state/session.svelte.ts';
 	import { myPresence, setPresence, PRESENCE_VALUES } from '#lib/state/presence.svelte.ts';
 	import Avatar from '#lib/ui/Avatar.svelte';
@@ -148,6 +149,10 @@
 		<MenuItem icon="verified_user" href={link('/settings?tab=auth#auth-panel-totp')}
 			>{t('nav.account_2fa')}</MenuItem
 		>
+		{#if mayMakeTokens(user?.role)}
+			<MenuItem icon="api" href={link('/api-tokens')} class="act-api-tokens">{t('api_tokens.title')}</MenuItem
+			>
+		{/if}
 		<MenuDivider />
 		<MenuItem icon="logout" onselect={signOut}>{t('user_menu.sign_out')}</MenuItem>
 	</Menu>

@@ -95,6 +95,56 @@ type Context struct {
 	// Section is the panel section of the request's path, "" when no guard
 	// rule matches or nobody is signed in.
 	Section string
+
+	// Cap is the permission set of the API token that signed the request
+	// in, nil for a browser session. A permission counts only when the
+	// role holds it and the token was given it, and a panel section's
+	// level is at most what the token's permissions reach there
+	// (LegacySectionCeiling). See package admintoken.
+	Cap PermissionSet
+	// CapFull says the token carries every permission the account holds
+	// now. Checks by role pass a token only when it is full.
+	CapFull bool
+}
+
+// Token reports whether an API token signed the request in.
+func (c *Context) Token() bool { return c.Cap != nil }
+
+// LimitToToken caps the context to an API token's permissions and works
+// out whether the token is full: whether it carries every permission of
+// known the account holds. Call it after Load.
+func (c *Context) LimitToToken(permissions []string, known []string) {
+	full := true
+	for _, p := range known {
+		if c.HasPermission(p) && !containsString(permissions, p) {
+			full = false
+			break
+		}
+	}
+	c.Cap = newPermissionSet(permissions)
+	c.CapFull = full
+}
+
+func containsString(list []string, s string) bool {
+	for _, item := range list {
+		if item == s {
+			return true
+		}
+	}
+	return false
+}
+
+// TokenLacks reports whether the role holds the permission but the
+// request's API token was not given it.
+func (c *Context) TokenLacks(permission string) bool {
+	return c.Cap != nil && !c.Cap.Has(permission) && c.roleOrSuperHolds(permission)
+}
+
+func (c *Context) roleOrSuperHolds(permission string) bool {
+	if ProRoleBlocksPermission(c.Role, permission) {
+		return false
+	}
+	return IsSuperAdminRole(c.Role) || c.roleHolds(permission)
 }
 
 // permissionLookupFailed reports whether the role's permissions were looked
@@ -118,6 +168,9 @@ func (c *Context) permissionLookupFailed() bool {
 //     same the permission needs read; the guard asks write for writes.
 func (c *Context) HasPermission(permission string) bool {
 	if ProRoleBlocksPermission(c.Role, permission) {
+		return false
+	}
+	if c.Cap != nil && !c.Cap.Has(permission) {
 		return false
 	}
 	if IsSuperAdminRole(c.Role) {

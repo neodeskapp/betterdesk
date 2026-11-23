@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/alerts"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
@@ -149,6 +150,9 @@ type Deps struct {
 	// read by the server attestation), the file browser and the system
 	// services (services/serverManagement.js).
 	ServerMgmt *servermgmt.Service
+	// AdminTokens keeps the API tokens for scripts and the command line;
+	// admintoken.FromRequest(r) is the token a request came with.
+	AdminTokens *admintoken.Service
 }
 
 // At returns the same Deps with both route tables mounted at prefix, for
