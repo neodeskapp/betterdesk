@@ -7,7 +7,7 @@
  * admin creates a package and deletes it again.
  */
 import type { Page } from '@playwright/test';
-import { test, expect, expectNoAxeViolations } from './fixtures.ts';
+import { test, expect, expectNoAxeViolations, type Problems } from './fixtures.ts';
 import { UI, type Role } from './roles.ts';
 
 const ROLES: Role[] = ['admin', 'super_admin', 'server_admin', 'global_admin', 'operator', 'viewer'];
@@ -20,11 +20,45 @@ async function perms(page: Page): Promise<(p: string) => boolean> {
 	return (p) => boot.isSuperAdmin || boot.permissions.includes(p);
 }
 
+/**
+ * The admin run creates a package and deletes it again while the other
+ * runs (the other roles, the other browser) load the same list. A page
+ * that listed that package asks for its month after it is gone, and the
+ * server rightly answers 404 (Chromium logs the failed load too). Those
+ * answers are allowed for the e2e packages of other runs, by their IDs
+ * from the list: a 404 for any other package, or for this run's own,
+ * still fails the test.
+ */
+function allowGonePackages(page: Page, problems: Problems, own: () => string): void {
+	page.on('response', async (r) => {
+		if (
+			r.request().method() !== 'GET' ||
+			!r.ok() ||
+			!new URL(r.url()).pathname.endsWith('/api/panel/billing/packages')
+		) {
+			return;
+		}
+		const body = (await r.json().catch(() => null)) as {
+			packages?: { id?: unknown; name?: unknown }[];
+		} | null;
+		for (const p of body?.packages ?? []) {
+			if (typeof p.name !== 'string' || !p.name.startsWith('e2e package ') || p.name === own()) continue;
+			const id = String(p.id).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+			problems.allow.push(
+				new RegExp(`^http 404: GET \\S+/api/panel/billing/packages/${id}/preview(\\?|$)`),
+				/^console: Failed to load resource: the server responded with a status of 404 \(Not Found\)$/
+			);
+		}
+	});
+}
+
 for (const role of ROLES) {
 	test.describe(`billing as ${role}`, () => {
 		test.use({ role });
 
-		test('packages follow billing.view and billing.manage', async ({ page }) => {
+		test('packages follow billing.view and billing.manage', async ({ page, problems }) => {
+			let own = '';
+			allowGonePackages(page, problems, () => own);
 			await page.goto(`${UI}/commercialization?tab=packages`);
 			// The console's start (session, strings) can take more than 5 s on a busy server
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 20_000 });
@@ -68,7 +102,7 @@ for (const role of ROLES) {
 
 			if (role !== 'admin') return;
 			await page.evaluate(() => window.scrollTo(0, 0));
-			const name = `e2e package ${Date.now()}`;
+			const name = (own = `e2e package ${Date.now()}`);
 			await page.locator('.package-new').click();
 			await expect(sheet).toBeVisible();
 			await expectNoAxeViolations(page);

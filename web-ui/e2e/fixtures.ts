@@ -8,7 +8,7 @@ import { authFile, type Role } from './roles.ts';
  * violation, a failed request or an HTTP error response, unless the test
  * lists it in `allowProblems` (for tests that mock failures on purpose).
  */
-type Problems = { list: string[]; allow: RegExp[] };
+export type Problems = { list: string[]; allow: RegExp[] };
 
 export const test = base.extend<{ problems: Problems; role: Role; allowProblems: RegExp[] }>({
 	role: ['admin', { option: true }],
