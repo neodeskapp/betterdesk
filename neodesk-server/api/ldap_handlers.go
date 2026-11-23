@@ -301,9 +301,11 @@ func (s *Server) handleSaveLDAPConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update the in-memory LDAP provider
+	// The provider takes the settings as a restart loads them, with the
+	// defaults for empty fields: an empty Group filter is the default
+	// filter now and after a restart alike
 	if s.ldapProvider != nil {
-		s.ldapProvider.UpdateConfig(&cfg)
+		s.ldapProvider.UpdateConfig(s.loadLDAPConfigFromDB())
 	}
 
 	log.Printf("[LDAP] Configuration saved (enabled=%v, host=%s, port=%d)", cfg.Enabled, cfg.Host, cfg.Port)
