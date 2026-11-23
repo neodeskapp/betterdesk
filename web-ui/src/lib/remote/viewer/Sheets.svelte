@@ -68,6 +68,41 @@
 			: ''
 	);
 	const codec = $derived(stats?.video?.codec || stats?.video?.currentCodec || '');
+	/** Each display's pictures and video over the last second, while several stream at once */
+	const traffic = $derived.by(() => {
+		void now;
+		void s?.statsTick;
+		if (!s?.together) return [];
+		try {
+			return s.client?.getDisplayTraffic?.() ?? [];
+		} catch {
+			return [];
+		}
+	});
+
+	function bitrate(kbps: number): string {
+		return kbps >= 1000
+			? `${formatNumber(kbps / 1000, { maximumFractionDigits: 1 })} Mbit/s`
+			: `${formatNumber(kbps)} kbit/s`;
+	}
+
+	function displayFacts(t: {
+		idx: number;
+		fps: number;
+		kbps: number;
+		streaming: boolean;
+		shown: string;
+	}): string {
+		if (!s) return '';
+		if (s.popouts.includes(t.idx) && !t.streaming) return tf('remote_viewer.display_paused', 'Paused');
+		if (!t.streaming)
+			return t.shown === 'none'
+				? tf('remote_viewer.display_not_shown', 'Not shown')
+				: tf('remote_viewer.display_paused', 'Paused');
+		const parts = [`${formatNumber(t.fps)} fps`, bitrate(t.kbps)];
+		if (s.popouts.includes(t.idx)) parts.push(tf('remote_viewer.in_own_window', 'in its own window'));
+		return parts.join(', ');
+	}
 
 	function send() {
 		if (s && viewer.sendChat(s, chatText)) chatText = '';
@@ -133,11 +168,19 @@
 						<dt>{tf('remote_viewer.info_latency', 'Round trip')}</dt>
 						<dd class="tabular">{`${formatNumber(Math.round(s.latency))} ms`}</dd>
 					{/if}
-					{#if stats?.renderer?.fps !== undefined}
+					{#if stats?.renderer?.fps !== undefined && !traffic.length}
 						<dt>{tf('remote_viewer.info_fps', 'Frame rate')}</dt>
 						<dd class="tabular">{`${stats.renderer.fps} fps`}</dd>
 					{/if}
-					{#if stats?.renderer?.remoteWidth}
+					{#each traffic as t (t.idx)}
+						<dt>{tf('remote_viewer.display_n', 'Display {n}', { n: t.idx + 1 })}</dt>
+						<dd class="tabular" data-display={t.idx}>{displayFacts(t)}</dd>
+					{/each}
+					{#if traffic.length}
+						<dt>{tf('remote_viewer.info_video_total', 'Video, all displays')}</dt>
+						<dd class="tabular">{bitrate(traffic.reduce((n, t) => n + t.kbps, 0))}</dd>
+					{/if}
+					{#if stats?.renderer?.remoteWidth && !traffic.length}
 						<dt>{tf('remote_viewer.info_resolution', 'Screen size')}</dt>
 						<dd class="tabular">{stats.renderer.remoteWidth} × {stats.renderer.remoteHeight}</dd>
 					{/if}
