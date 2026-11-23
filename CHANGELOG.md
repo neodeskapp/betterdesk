@@ -1,6 +1,13 @@
 ## [Unreleased]
 
 ### Changed
+- _(none yet)_
+
+---
+
+## [3.6.3] — 2026-11-23
+
+### Changed
 - The project is now called NeoDesk and is developed on its own. It
   started as a fork of BetterDesk by UNITRONIX
   (github.com/UNITRONIX/BetterDesk). The repository is
@@ -5530,3 +5537,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.6.0-rc.1]: https://github.com/trybetterdesk/betterdesk/compare/v3.5.280...v3.6.0-rc.1
 [3.6.1]: https://github.com/neodeskapp/betterdesk/compare/v3.6.0-rc.1...v3.6.1
 [3.6.2]: https://github.com/neodeskapp/betterdesk/compare/v3.6.1...v3.6.2
+[3.6.3]: https://github.com/neodeskapp/neodesk/compare/v3.6.2...v3.6.3
