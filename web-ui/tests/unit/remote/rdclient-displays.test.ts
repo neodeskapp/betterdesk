@@ -170,3 +170,22 @@ describe('an older device: one display at a time', () => {
 		c.disconnect();
 	});
 });
+
+describe('the device changes its displays during the session', () => {
+	test('a later peer info brings only the displays: version, platform and the display shown stay', async () => {
+		const { c } = await session('1.5.3', 'Mac OS');
+		c.switchMonitor(1);
+		// RustDesk's display service: the displays, nothing else, and current_display 0
+		const wire = c.proto.serializeMessage({
+			peerInfo: { displays: [...DISPLAYS, { x: 3200, y: 0, width: 1600, height: 900, name: 'Display 4' }] }
+		});
+		c._dispatchMessage(c.proto.decodeMessage(wire));
+		expect(c.canShowDisplaysTogether()).toBe(true);
+		expect(c.getDisplays()).toHaveLength(4);
+		expect(c.getCurrentDisplay()).toBe(1);
+		expect(c.peerInfo?.platform).toBe('Mac OS');
+		expect(c.peerInfo?.version).toBe('1.5.3');
+		expect(c.renderer.origin).toEqual({ x: 1920, y: 0 });
+		c.disconnect();
+	});
+});

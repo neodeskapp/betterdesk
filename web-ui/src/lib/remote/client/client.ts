@@ -1338,6 +1338,18 @@ export class RDClient {
 	}
 
 	_handlePeerInfo(info: PeerInfo): void {
+		const known = this._peerInfo;
+		if (known) {
+			// After the sign-in a device sends its peer info again when its displays
+			// change, with the displays and platform additions only (RustDesk's display
+			// service; current_display is 0 there): the rest stays as it was, as the
+			// desktop client keeps it
+			known.displays = info.displays ?? [];
+			if (info.platformAdditions) known.platformAdditions = info.platformAdditions;
+			this._processPeerInfo(known, true);
+			this._emit('peer_info', known);
+			return;
+		}
 		this._peerInfo = info;
 		this._processPeerInfo(info);
 		this._emit('peer_info', info);
@@ -2339,9 +2351,10 @@ export class RDClient {
 	 * Parse peer info into cached current-display and virtual-display state.
 	 * @param info PeerInfo from login response or peer_info message
 	 */
-	_processPeerInfo(info: PeerInfo | null): void {
+	/** `displaysOnly`: a later peer info of changed displays; the display shown stays */
+	_processPeerInfo(info: PeerInfo | null, displaysOnly = false): void {
 		if (!info) return;
-		if (typeof info.currentDisplay === 'number') {
+		if (typeof info.currentDisplay === 'number' && !displaysOnly) {
 			this._currentDisplay = info.currentDisplay;
 		} else if (typeof this._currentDisplay !== 'number') {
 			this._currentDisplay = 0;
