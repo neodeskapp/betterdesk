@@ -6,7 +6,8 @@
 
   The connection is either `connect` (a TerminalConnect from terminal.ts) or
   `url` plus `adapter` (socketConnect builds the TerminalConnect). See
-  terminal.ts for the three adapters the console uses.
+  terminal.ts for the adapters of the console's two terminals: an IoT
+  device's and a MeshAgent's shell.
 
   Keyboard: the terminal is one Tab stop. Inside it every key goes to the
   shell, Tab and Escape too. Escape then Tab (or Shift+Tab) moves focus on;
@@ -34,7 +35,7 @@
 	} from './terminal.ts';
 
 	interface Props {
-		/** Accessible name of the terminal region ("Shell on the console host") */
+		/** Accessible name of the terminal region ("Shell on the device") */
 		label: string;
 		connect?: TerminalConnect;
 		/** A same-origin path, a ws(s) URL, or a function that finds one */

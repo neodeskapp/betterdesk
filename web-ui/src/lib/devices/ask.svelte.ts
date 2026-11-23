@@ -108,9 +108,20 @@ let hosted = false;
 
 let loading: Promise<typeof import('./DeviceDialogs.svelte')> | null = null;
 
-/** Fetch the dialogs' code ahead of the first use (the device list does this once it shows) */
+/**
+ * Fetch the dialogs' code ahead of the first use (the device list does this
+ * once it shows). Leaving the page cuts the fetch off, and Firefox then
+ * fails the stylesheets it was loading ("Unable to preload CSS"). Nothing
+ * waits for a preload, so that is no error: the code is forgotten, and the
+ * first dialog fetches it again.
+ */
 export function preloadDialogs(): void {
-	if (typeof document !== 'undefined') loading ??= import('./DeviceDialogs.svelte');
+	if (typeof document === 'undefined' || loading) return;
+	const pending = import('./DeviceDialogs.svelte');
+	loading = pending;
+	pending.catch(() => {
+		if (loading === pending) loading = null;
+	});
 }
 
 async function ensureHost(): Promise<void> {
