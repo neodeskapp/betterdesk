@@ -330,12 +330,15 @@ for (const size of VIEWS) {
 					expect(box).toBeGreaterThanOrEqual(44);
 				await expectNoAxeViolations(page);
 
-				// A step's page offers the way back in the same language
-				await step(page, 'backup').getByRole('link').click();
+				// A step's page offers the way back in the same language. The page opens
+				// scrolled down to the step's setting; on a phone the way back stays on the screen
+				await step(page, 'two_factor').getByRole('link').click();
 				const back = page.getByRole('link', {
 					name: german ? 'Zurück zur Einrichtungsanleitung' : 'Back to the setup guide'
 				});
 				await expect(back).toBeVisible();
+				await expect(page.locator('#auth-panel-totp')).toBeInViewport();
+				if (size.width < 768) await expect(back).toBeInViewport();
 				expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
 					size.width
 				);

@@ -1,7 +1,9 @@
 <!--
   The way back to the setup guide, on a page a guide step led to
   (?guide=<step>): one line above the page with a link to the overview and
-  the step it came for. It scrolls with the page and covers nothing.
+  the step it came for. On wide screens it scrolls with the page. On
+  phones the page opens scrolled to the step's setting, so the line stays
+  under the top bar, where the thumb finds it.
 -->
 <script lang="ts">
 	import { page } from '$app/state';
@@ -45,5 +47,16 @@
 	}
 	.guide-return-step {
 		color: var(--text-muted);
+	}
+	@media (max-width: 767px) {
+		.guide-return {
+			position: sticky;
+			top: var(--topbar-h);
+			z-index: calc(var(--layer-topbar) - 1);
+			margin-inline: calc(-1 * var(--page-pad));
+			padding: var(--space-2) var(--page-pad);
+			border-bottom: 1px solid var(--rule);
+			background: var(--bg);
+		}
 	}
 </style>
