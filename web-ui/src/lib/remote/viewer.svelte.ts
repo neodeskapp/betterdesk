@@ -902,6 +902,9 @@ export class Viewer {
 	private showResult(s: ViewerSession, info: Outcome): void {
 		this.clearStepTimer(s);
 		this.showView(s, info.ended ? 'ended' : 'failed');
+		// The windows of its displays have nothing more to show; a reconnect brings the layout back
+		this.closeDisplayWindows(s);
+		s.displayPrefsLoaded = false;
 		s.statusText = info.text;
 		s.tryText = info.tryText;
 		s.outcomeKind = info.kind;

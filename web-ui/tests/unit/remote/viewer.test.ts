@@ -391,3 +391,70 @@ describe('remote target or device', () => {
 		expect(v.remoteTarget).toBe(true);
 	});
 });
+
+describe('several displays of one device', () => {
+	const DISPLAYS = [
+		{ idx: 0, name: 'Display 1', x: 0, y: 0, width: 1920, height: 1080, scale: 1, primary: true },
+		{ idx: 1, name: 'Display 2', x: 1920, y: 0, width: 1280, height: 1024, scale: 1, primary: false },
+		{ idx: 2, name: 'Display 3', x: -1600, y: 180, width: 1600, height: 900, scale: 1, primary: false }
+	];
+
+	/** A client of a device with three displays; `together` says whether it streams them at once */
+	function streaming(together: boolean) {
+		localStorage.setItem('neodesk_remote_displays_1', JSON.stringify({ '900100012': { layout: 'grid' } }));
+		const t = setup();
+		const c = Object.assign(t.c, {
+			getMonitors: () => DISPLAYS.map((d) => ({ ...d, current: d.idx === 0 })),
+			getDisplays: () => DISPLAYS,
+			canShowDisplaysTogether: () => together,
+			setMainDisplay: vi.fn(),
+			setBackgroundDisplays: vi.fn(),
+			setDisplayBackground: vi.fn(),
+			hideDisplay: vi.fn(),
+			showDisplay: vi.fn()
+		});
+		c.emit('state', 'streaming');
+		c.emit('session_start');
+		return { ...t, c };
+	}
+
+	afterEach(() => localStorage.clear());
+
+	test('the layout used last for the device comes back: the session canvas gives way to tiles', () => {
+		const { v, s, c } = streaming(true);
+		expect(s.together).toBe(true);
+		expect(v.tilesShown(s)).toBe(true);
+		expect(c.setMainDisplay).toHaveBeenLastCalledWith(null);
+		expect(c.setBackgroundDisplays).toHaveBeenCalledWith('live');
+		// Display 1 is worked on, the others are in the background
+		expect(c.setDisplayBackground).toHaveBeenCalledWith(1, true);
+		expect(c.setDisplayBackground).toHaveBeenCalledWith(0, false);
+	});
+
+	test('a narrow window shows one display at a time, and the layout returns when it is wide again', () => {
+		const { v, s, c } = streaming(true);
+		v.setWide(false);
+		expect(v.tilesShown(s)).toBe(false);
+		expect(c.setMainDisplay).toHaveBeenLastCalledWith(0);
+		v.setWide(true);
+		expect(v.tilesShown(s)).toBe(true);
+	});
+
+	test('an older device switches one display at a time, whatever the layout saved', () => {
+		const { v, s } = streaming(false);
+		expect(s.together).toBe(false);
+		v.setLayout('arranged');
+		expect(v.tilesShown(s)).toBe(false);
+	});
+
+	test('when the session ends, the windows of its displays close', () => {
+		const { s, c } = streaming(true);
+		const win = { close: vi.fn(), postMessage: vi.fn(), closed: false, focus: vi.fn() };
+		s.windows.set(1, win as unknown as Window);
+		s.popouts = [1];
+		c.emit('disconnected', 'Relay connection closed (WebSocket 1006)', { closeCode: 1006 });
+		expect(win.close).toHaveBeenCalled();
+		expect(s.popouts).toEqual([]);
+		expect(s.windows.size).toBe(0);
+	});
+});
