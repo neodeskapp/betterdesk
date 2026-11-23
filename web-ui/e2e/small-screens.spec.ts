@@ -1,7 +1,8 @@
 /**
  * The console on phones and tablets (touch, as the small-screen pass of
  * 3.6.0-rc.2 ran it), in English and German: nothing is wider than the
- * screen, so no page pans sideways.
+ * screen, so no page pans sideways; menus, toasts and the rows around them
+ * don't cover each other; text stays in its column, row or table.
  *
  * Firefox has no mobile viewport (isMobile); it runs the same sizes with
  * touch only.
@@ -103,4 +104,45 @@ for (const lang of LANGS) {
 			});
 		});
 	}
+}
+
+/**
+ * Whether a click on each item of the open menu lands on the menu: its
+ * start, middle and end, on the item's middle line
+ */
+async function menuCovered(page: Page): Promise<string[]> {
+	const menu = page.getByRole('menu');
+	await expect(menu).toBeVisible();
+	return menu.evaluate((m) => {
+		const hidden: string[] = [];
+		for (const item of m.querySelectorAll<HTMLElement>('[role="menuitem"]')) {
+			const r = item.getBoundingClientRect();
+			for (const x of [r.left + 4, r.left + r.width / 2, r.right - 4]) {
+				const hit = document.elementFromPoint(x, r.top + r.height / 2);
+				if (!hit || !m.contains(hit))
+					hidden.push(
+						`${item.textContent?.trim()} at ${Math.round(x - r.left)} px: ${hit?.className ?? 'nothing'}`
+					);
+			}
+		}
+		return hidden;
+	});
+}
+
+for (const size of [
+	{ width: 360, height: 640 },
+	{ width: 1440, height: 900 }
+]) {
+	test.describe(`users at ${size.width}`, () => {
+		test.use({ viewport: size });
+
+		// BUGS L317: the sticky action cells of the rows below drew over the open menu
+		test('a row menu is above the rows below it', async ({ page }) => {
+			await open(page, '/users', 'en');
+			const kebabs = page.locator('td.actions button[aria-haspopup="menu"]');
+			await expect(kebabs.nth(2)).toBeVisible();
+			await kebabs.first().click();
+			expect(await menuCovered(page), 'menu items covered by other rows').toEqual([]);
+		});
+	});
 }

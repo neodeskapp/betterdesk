@@ -718,6 +718,13 @@
 	.data-table td.actions > :global(* + *) {
 		margin-inline-start: var(--space-2);
 	}
+	/* A row menu stays in its cell. When a page pins the actions column
+	   (position: sticky), each cell is a layer of its own and the cells of
+	   the rows below would paint over the open menu: the cell with the open
+	   menu goes above them (and above the sticky header) */
+	.data-table :is(td, th):has(:global(.menu-anchor > [aria-expanded='true'])) {
+		z-index: calc(var(--layer-sticky) + 1);
+	}
 
 	/* Loading, empty and error: one sentence, optional action */
 	.data-table td.state-cell {
