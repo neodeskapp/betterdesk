@@ -1526,6 +1526,7 @@
         "action_login_failed": "Sign-in failed",
         "action_logout": "Signed out",
         "action_session_replaced": "Session replaced by a new sign-in",
+        "action_session_secret_replaced": "Session secret replaced",
         "action_session_expired": "Session expired",
         "action_session_ip_change": "Address changed during session",
         "action_password_change": "Password Changed",

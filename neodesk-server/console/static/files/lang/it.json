@@ -1535,6 +1535,7 @@
     "action_conn_end": "Connection ended",
     "action_User_logged_in": "User logged in",
     "action_session_replaced": "Sessione sostituita da un nuovo accesso",
+    "action_session_secret_replaced": "Session secret replaced",
     "action_session_expired": "Sessione scaduta",
     "action_session_ip_change": "Indirizzo cambiato durante la sessione",
     "action_device_banned": "Dispositivo bloccato",

@@ -1541,6 +1541,7 @@
     "action_conn_end": "Connection ended",
     "action_User_logged_in": "User logged in",
     "action_session_replaced": "Сеанс замінено новим входом",
+    "action_session_secret_replaced": "Session secret replaced",
     "action_session_expired": "Сеанс завершився",
     "action_session_ip_change": "Адресу змінено під час сеансу",
     "action_device_banned": "Пристрій заблоковано",
