@@ -371,6 +371,7 @@ func main() {
 	}
 
 	// Initialize security modules
+	cfg.BlocklistFile = blocklistFile(cfg)
 	blocklist, err := openBlocklist(cfg.BlocklistFile, database)
 	if err != nil {
 		logging.Fatalf("Blocklist: %v", err)
@@ -801,6 +802,18 @@ func openAuditLog(file string, database db.Database) *audit.Logger {
 	l := audit.NewLogger(file)
 	l.UseStore(database)
 	return l
+}
+
+// blocklistFile is the blocklist file the server reads: BLOCKLIST_FILE
+// (or -blocklist) when it is set, else blocklist.txt next to the key file,
+// the file the console's Advanced tab saves. Without the second, a Docker
+// install, which sets no BLOCKLIST_FILE, loaded no entry of the editor
+// (L403).
+func blocklistFile(cfg *config.Config) string {
+	if strings.TrimSpace(cfg.BlocklistFile) != "" {
+		return cfg.BlocklistFile
+	}
+	return filepath.Join(filepath.Dir(cfg.KeyFile), "blocklist.txt")
 }
 
 // openBlocklist is the blocklist of the start: the entries of the file,

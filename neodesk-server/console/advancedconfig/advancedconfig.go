@@ -128,7 +128,7 @@ var catalog = []definition{
 	{id: "console-session-secret", category: "console", requiresRestart: "console", canCreate: true,
 		path: func(s *Service) string { return filepath.Join(s.opts.DataDir, ".session_secret") }},
 	{id: "go-blocklist", category: "goserver", requiresRestart: "goserver", canCreate: true,
-		path: func(s *Service) string { return filepath.Join(s.opts.KeysPath, "blocklist.txt") }},
+		path: (*Service).blocklistPath},
 	{id: "go-audit-log", category: "goserver", requiresRestart: "goserver", canCreate: true,
 		path: (*Service).auditLogPath},
 	{id: "systemd-console", category: "system", requiresRestart: "systemd", linuxOnly: true,
@@ -146,6 +146,16 @@ var catalog = []definition{
 		path: func(s *Service) string { return filepath.Join(s.opts.ConsoleDir, "..", "docker", "supervisord.conf") }},
 	{id: "docker-compose", category: "console", requiresRestart: "console",
 		path: func(s *Service) string { return filepath.Join(s.opts.ConsoleDir, "..", "docker-compose.yml") }},
+}
+
+// blocklistPath is the file the server loads its blocklist from:
+// BLOCKLIST_FILE when it is set, else blocklist.txt in the key folder, as
+// the server finds it (L403).
+func (s *Service) blocklistPath() string {
+	if p := strings.TrimSpace(s.opts.Getenv("BLOCKLIST_FILE")); p != "" {
+		return p
+	}
+	return filepath.Join(s.opts.KeysPath, "blocklist.txt")
 }
 
 const defaultAuditLog = "/var/log/neodesk/audit.jsonl"

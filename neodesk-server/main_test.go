@@ -265,6 +265,39 @@ func TestBlocklistOfTheStartHoldsTheStoredBans(t *testing.T) {
 	}
 }
 
+// TestBlocklistOfTheStartReadsTheEditorsFile: without BLOCKLIST_FILE the
+// server reads blocklist.txt in its key folder, the file the console's
+// Advanced tab writes, so the addresses saved there are blocked after the
+// restart; BLOCKLIST_FILE still names another file (L403).
+func TestBlocklistOfTheStartReadsTheEditorsFile(t *testing.T) {
+	database, err := db.OpenSQLite(filepath.Join(t.TempDir(), "db_v2.sqlite3"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	if err := database.Migrate(); err != nil {
+		t.Fatal(err)
+	}
+	keys := t.TempDir()
+	if err := os.WriteFile(filepath.Join(keys, "blocklist.txt"), []byte("# saved in the console\n203.0.113.9\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cfg := config.DefaultConfig()
+	cfg.KeyFile = filepath.Join(keys, "id_ed25519")
+	blocklist, err := openBlocklist(blocklistFile(cfg), database)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !blocklist.IsIPBlocked("203.0.113.9") {
+		t.Errorf("the address saved in the key folder's blocklist.txt is not blocked (file %q)", blocklistFile(cfg))
+	}
+	other := filepath.Join(t.TempDir(), "mine.txt")
+	cfg.BlocklistFile = other
+	if got := blocklistFile(cfg); got != other {
+		t.Errorf("with BLOCKLIST_FILE the server reads %q, want %q", got, other)
+	}
+}
+
 // TestInitialAdminPasswordKeepsThePasswordRule: an INIT_ADMIN_PASS under
 // 8 characters is not given to the first account (L94).
 func TestInitialAdminPasswordKeepsThePasswordRule(t *testing.T) {

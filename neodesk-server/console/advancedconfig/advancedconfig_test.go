@@ -427,3 +427,27 @@ func TestWritesKeepTheFiveNewestBackups(t *testing.T) {
 		t.Errorf("the last write's backup: %v", last.BackupPath)
 	}
 }
+
+// TestBlocklistIsTheFileTheServerReads: the Server blocklist entry is the
+// file the server loads at its start: BLOCKLIST_FILE when it is set, else
+// blocklist.txt in the key folder (L403).
+func TestBlocklistIsTheFileTheServerReads(t *testing.T) {
+	path := func(s *Service) string {
+		for _, f := range s.ListFiles() {
+			if f.ID == "go-blocklist" {
+				return f.Path
+			}
+		}
+		t.Fatal("no go-blocklist entry")
+		return ""
+	}
+	s, root := testService(t, nil)
+	if got, want := path(s), filepath.Join(root, "keys", "blocklist.txt"); got != want {
+		t.Errorf("without BLOCKLIST_FILE: %s, want %s", got, want)
+	}
+	other := filepath.Join(root, "etc", "blocked.txt")
+	s, _ = testService(t, map[string]string{"BLOCKLIST_FILE": other})
+	if got := path(s); got != other {
+		t.Errorf("with BLOCKLIST_FILE: %s, want %s", got, other)
+	}
+}
