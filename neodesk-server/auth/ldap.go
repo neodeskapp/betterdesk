@@ -61,6 +61,9 @@ type LDAPResult struct {
 	Role          string   // mapped role from group membership
 	DN            string   // full distinguished name
 	Groups        []string // list of group DNs the user belongs to
+	// GroupNames are the values of the Group name attribute of the groups
+	// the group search found; role map lines can name a group by them
+	GroupNames []string
 }
 
 // LDAPProvider manages LDAP authentication.
@@ -433,21 +436,34 @@ func (p *LDAPProvider) resolveGroups(conn *ldapv3.Conn, cfg *LDAPConfig, result 
 		} else {
 			for _, entry := range sr.Entries {
 				result.Groups = append(result.Groups, entry.DN)
+				for _, name := range entry.GetEqualFoldAttributeValues(attrGroupName) {
+					if name = strings.TrimSpace(name); name != "" {
+						result.GroupNames = append(result.GroupNames, name)
+					}
+				}
 			}
 		}
 	}
 
-	// Map groups to roles — highest-privilege match wins
+	// Map groups to roles — highest-privilege match wins. A line names a
+	// group by its DN or CN, or by the value of the Group name attribute
+	// of a group the search found
 	bestLevel := -1
-	for _, groupDN := range result.Groups {
-		for mapDN, mapRole := range roleMap {
-			if !ldapGroupMatches(mapDN, groupDN) {
-				continue
+	take := func(mapRole string) {
+		if level := RoleLevel(mapRole); level > bestLevel {
+			bestLevel = level
+			result.Role = mapRole
+		}
+	}
+	for mapKey, mapRole := range roleMap {
+		for _, groupDN := range result.Groups {
+			if ldapGroupMatches(mapKey, groupDN) {
+				take(mapRole)
 			}
-			level := RoleLevel(mapRole)
-			if level > bestLevel {
-				bestLevel = level
-				result.Role = mapRole
+		}
+		for _, name := range result.GroupNames {
+			if strings.EqualFold(strings.TrimSpace(mapKey), name) {
+				take(mapRole)
 			}
 		}
 	}

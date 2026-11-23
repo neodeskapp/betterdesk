@@ -824,6 +824,7 @@
     "ldap_group_base_dn_hint": "기본 기본 DN을 사용하려면 비워 두세요.",
     "ldap_group_filter": "그룹 필터",
     "ldap_group_attr_name": "그룹 이름 속성",
+    "ldap_group_attr_name_hint": "Role map lines can name a group by this attribute, besides its DN or CN. It applies to the groups the group filter finds; groups listed in memberOf are matched by DN or CN.",
     "ldap_allow_signup": "사용자 자동 생성",
     "ldap_allow_signup_hint": "디렉터리가 승인한 사람은 처음 로그인할 때 계정을 받습니다. 끄면: 이미 계정이 있는 사람만 디렉터리로 로그인할 수 있습니다.",
     "ldap_default_role": "기본 역할",

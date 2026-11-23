@@ -830,6 +830,7 @@
     "ldap_group_base_dn_hint": "La stå tomt for å bruke hovedbase-DN",
     "ldap_group_filter": "Gruppefilter",
     "ldap_group_attr_name": "Gruppenavnattributt",
+    "ldap_group_attr_name_hint": "Role map lines can name a group by this attribute, besides its DN or CN. It applies to the groups the group filter finds; groups listed in memberOf are matched by DN or CN.",
     "ldap_allow_signup": "Opprett brukere automatisk",
     "ldap_allow_signup_hint": "En person som katalogen godtar, får en konto ved første pålogging. Av: bare personer som allerede har en konto, kan logge på via katalogen.",
     "ldap_default_role": "Standardrolle",

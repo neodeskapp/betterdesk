@@ -830,6 +830,7 @@
     "ldap_group_base_dn_hint": "Để trống để sử dụng Base DN chính",
     "ldap_group_filter": "Bộ lọc nhóm",
     "ldap_group_attr_name": "Thuộc tính tên nhóm",
+    "ldap_group_attr_name_hint": "Role map lines can name a group by this attribute, besides its DN or CN. It applies to the groups the group filter finds; groups listed in memberOf are matched by DN or CN.",
     "ldap_allow_signup": "Tự động tạo người dùng",
     "ldap_allow_signup_hint": "Người được thư mục chấp nhận sẽ có tài khoản ở lần đăng nhập đầu tiên. Tắt: chỉ những người đã có tài khoản mới đăng nhập được qua thư mục.",
     "ldap_default_role": "Vai trò mặc định",

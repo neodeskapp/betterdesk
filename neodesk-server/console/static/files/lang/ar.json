@@ -831,6 +831,7 @@
     "ldap_group_base_dn_hint": "اتركه فارغًا لاستخدام الاسم المميز الأساسي",
     "ldap_group_filter": "مرشح المجموعة",
     "ldap_group_attr_name": "سمة اسم المجموعة",
+    "ldap_group_attr_name_hint": "Role map lines can name a group by this attribute, besides its DN or CN. It applies to the groups the group filter finds; groups listed in memberOf are matched by DN or CN.",
     "ldap_allow_signup": "إنشاء المستخدمين تلقائيًا",
     "ldap_allow_signup_hint": "يحصل الشخص الذي يقبله الدليل على حساب عند أول تسجيل دخول. عند الإيقاف: يمكن فقط لمن لديهم حساب بالفعل تسجيل الدخول عبر الدليل.",
     "ldap_default_role": "الدور الافتراضي",

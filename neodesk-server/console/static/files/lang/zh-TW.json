@@ -834,6 +834,7 @@
     "ldap_group_base_dn_hint": "留空則使用主基礎 DN",
     "ldap_group_filter": "組過濾器",
     "ldap_group_attr_name": "組名屬性",
+    "ldap_group_attr_name_hint": "Role map lines can name a group by this attribute, besides its DN or CN. It applies to the groups the group filter finds; groups listed in memberOf are matched by DN or CN.",
     "ldap_allow_signup": "自動建立使用者",
     "ldap_allow_signup_hint": "目錄接受的人在首次登入時取得帳戶。關閉：只有已有帳戶的人才能透過目錄登入。",
     "ldap_default_role": "默認角色",

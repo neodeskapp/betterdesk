@@ -830,6 +830,7 @@
     "ldap_group_base_dn_hint": "मुख्य बेस डीएन का उपयोग करने के लिए इसे खाली छोड़ दें",
     "ldap_group_filter": "समूह फ़िल्टर",
     "ldap_group_attr_name": "समूह का नाम गुण",
+    "ldap_group_attr_name_hint": "Role map lines can name a group by this attribute, besides its DN or CN. It applies to the groups the group filter finds; groups listed in memberOf are matched by DN or CN.",
     "ldap_allow_signup": "उपयोगकर्ता अपने आप बनाएँ",
     "ldap_allow_signup_hint": "डायरेक्टरी जिस व्यक्ति को स्वीकार करती है, उसे पहली बार साइन इन करने पर खाता मिलता है। बंद: केवल वे लोग डायरेक्टरी से साइन इन कर सकते हैं जिनका खाता पहले से है।",
     "ldap_default_role": "डिफ़ॉल्ट भूमिका",

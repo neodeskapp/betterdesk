@@ -824,6 +824,7 @@
     "ldap_group_base_dn_hint": "Ponechte prázdné, pokud chcete použít hlavní základní DN",
     "ldap_group_filter": "Filtr skupin",
     "ldap_group_attr_name": "Atribut názvu skupiny",
+    "ldap_group_attr_name_hint": "Role map lines can name a group by this attribute, besides its DN or CN. It applies to the groups the group filter finds; groups listed in memberOf are matched by DN or CN.",
     "ldap_allow_signup": "Automaticky vytvářet uživatele",
     "ldap_allow_signup_hint": "Osoba, kterou adresář přijme, dostane účet při prvním přihlášení. Vypnuto: přes adresář se mohou přihlásit jen ti, kdo už účet mají.",
     "ldap_default_role": "Výchozí role",

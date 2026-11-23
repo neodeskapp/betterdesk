@@ -223,3 +223,36 @@ func TestLDAPGroupSearchRunsAsTheServiceAccount(t *testing.T) {
 		t.Errorf("role %q with groups %v, want admin", result.Role, result.Groups)
 	}
 }
+
+// Group name attribute names the attribute of a group entry that the role
+// map's names are compared with, for the groups the group search finds
+// (L349).
+func TestLDAPGroupNameAttributeIsUsedByTheRoleMap(t *testing.T) {
+	admins := fakeEntry{
+		dn:    "cn=neodesk-admins," + groupsBase,
+		attrs: map[string][]string{"cn": {"neodesk-admins"}, "description": {"nd-admin-desc"}, "member": {aliceEntry.dn}},
+	}
+	dir := newFakeDirectory(t, aliceEntry, admins)
+	cfg := dir.config()
+	cfg.DirectBind = true
+	cfg.DirectBindDN = "uid={{username}},ou=people,dc=corp,dc=example"
+	cfg.UserAttrID = "uid"
+	cfg.GroupBaseDN = groupsBase
+	cfg.GroupFilter = "(member={{dn}})"
+	cfg.GroupAttrName = "description"
+	for mapping, want := range map[string]string{
+		"nd-admin-desc=admin":  RoleAdmin,
+		"ND-Admin-Desc=admin":  RoleAdmin,
+		"neodesk-admins=admin": RoleAdmin, // the CN still matches
+		"other-desc=admin":     RoleViewer,
+	} {
+		cfg.GroupRoleMap = mapping
+		result, err := NewLDAPProvider(cfg).Authenticate("alice", "secret")
+		if err != nil || result == nil || !result.Authenticated {
+			t.Fatalf("%s: %+v, %v", mapping, result, err)
+		}
+		if result.Role != want {
+			t.Errorf("%s: role %q, want %q", mapping, result.Role, want)
+		}
+	}
+}

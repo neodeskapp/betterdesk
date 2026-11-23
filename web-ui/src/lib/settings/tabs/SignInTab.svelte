@@ -1144,7 +1144,12 @@
 										bind:value={ldap.values.group_filter}
 									/>{/snippet}
 							</Field>
-							<Field id="ldap-group-attr-name" label={t('settings.ldap_group_attr_name')} width="medium">
+							<Field
+								id="ldap-group-attr-name"
+								label={t('settings.ldap_group_attr_name')}
+								hint={t('settings.ldap_group_attr_name_hint')}
+								width="medium"
+							>
 								{#snippet children(f)}<Input
 										{...f}
 										placeholder={EX.groupAttr}

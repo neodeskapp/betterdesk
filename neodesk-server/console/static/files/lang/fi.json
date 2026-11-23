@@ -830,6 +830,7 @@
     "ldap_group_base_dn_hint": "Jätä tyhjäksi, jos haluat käyttää Base DN:ää",
     "ldap_group_filter": "Ryhmäsuodatin",
     "ldap_group_attr_name": "Ryhmän nimen attribuutti",
+    "ldap_group_attr_name_hint": "Role map lines can name a group by this attribute, besides its DN or CN. It applies to the groups the group filter finds; groups listed in memberOf are matched by DN or CN.",
     "ldap_allow_signup": "Luo käyttäjät automaattisesti",
     "ldap_allow_signup_hint": "Henkilö, jonka hakemisto hyväksyy, saa tilin ensimmäisellä kirjautumisella. Pois: vain henkilöt, joilla on jo tili, voivat kirjautua hakemiston kautta.",
     "ldap_default_role": "Oletusrooli",

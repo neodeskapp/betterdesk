@@ -830,6 +830,7 @@
     "ldap_group_base_dn_hint": "Lăsați gol pentru a utiliza DN-ul de bază principal",
     "ldap_group_filter": "Filtru de grup",
     "ldap_group_attr_name": "Atribut Nume Grup",
+    "ldap_group_attr_name_hint": "Role map lines can name a group by this attribute, besides its DN or CN. It applies to the groups the group filter finds; groups listed in memberOf are matched by DN or CN.",
     "ldap_allow_signup": "Creează utilizatori automat",
     "ldap_allow_signup_hint": "O persoană acceptată de director primește un cont la prima autentificare. Dezactivat: doar persoanele care au deja un cont se pot autentifica prin director.",
     "ldap_default_role": "Rol implicit",

@@ -830,6 +830,7 @@
     "ldap_group_base_dn_hint": "Ana Base DN'yi kullanmak için boş bırakın",
     "ldap_group_filter": "Grup Filtresi",
     "ldap_group_attr_name": "Grup Adı Özelliği",
+    "ldap_group_attr_name_hint": "Role map lines can name a group by this attribute, besides its DN or CN. It applies to the groups the group filter finds; groups listed in memberOf are matched by DN or CN.",
     "ldap_allow_signup": "Kullanıcıları otomatik oluştur",
     "ldap_allow_signup_hint": "Dizinin kabul ettiği bir kişi ilk oturum açışında hesap alır. Kapalı: dizin üzerinden yalnızca zaten hesabı olanlar oturum açabilir.",
     "ldap_default_role": "Varsayılan Rol",

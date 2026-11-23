@@ -824,6 +824,7 @@
     "ldap_group_base_dn_hint": "Déjalo vacío para usar el DN base principal",
     "ldap_group_filter": "Filtro de grupos",
     "ldap_group_attr_name": "Atributo de nombre de grupo",
+    "ldap_group_attr_name_hint": "Role map lines can name a group by this attribute, besides its DN or CN. It applies to the groups the group filter finds; groups listed in memberOf are matched by DN or CN.",
     "ldap_allow_signup": "Crear usuarios automáticamente",
     "ldap_allow_signup_hint": "Una persona que el directorio acepta obtiene una cuenta en su primer inicio de sesión. Desactivado: solo quienes ya tienen una cuenta pueden iniciar sesión mediante el directorio.",
     "ldap_default_role": "Rol predeterminado",

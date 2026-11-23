@@ -824,6 +824,7 @@
     "ldap_group_base_dn_hint": "Laat leeg om de hoofd-basis-DN te gebruiken",
     "ldap_group_filter": "Groepsfilter",
     "ldap_group_attr_name": "Groepsnaam-attribuut",
+    "ldap_group_attr_name_hint": "Role map lines can name a group by this attribute, besides its DN or CN. It applies to the groups the group filter finds; groups listed in memberOf are matched by DN or CN.",
     "ldap_allow_signup": "Gebruikers automatisch aanmaken",
     "ldap_allow_signup_hint": "Iemand die de directory accepteert, krijgt bij de eerste aanmelding een account. Uit: alleen wie al een account heeft, kan zich via de directory aanmelden.",
     "ldap_default_role": "Standaardrol",

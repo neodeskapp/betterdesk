@@ -824,6 +824,7 @@
     "ldap_group_base_dn_hint": "Leer lassen, um die Haupt-Basis-DN zu verwenden",
     "ldap_group_filter": "Gruppenfilter",
     "ldap_group_attr_name": "Gruppennamen-Attribut",
+    "ldap_group_attr_name_hint": "Zeilen der Rollenzuordnung können eine Gruppe über dieses Attribut benennen, neben DN oder CN. Das gilt für Gruppen, die der Gruppenfilter findet; Gruppen aus memberOf werden über DN oder CN zugeordnet.",
     "ldap_allow_signup": "Benutzer automatisch anlegen",
     "ldap_allow_signup_hint": "Eine Person, die das Verzeichnis akzeptiert, erhält bei der ersten Anmeldung ein Konto. Aus: Nur Personen, die bereits ein Konto haben, können sich über das Verzeichnis anmelden.",
     "ldap_default_role": "Standardrolle",

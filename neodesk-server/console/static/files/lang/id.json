@@ -830,6 +830,7 @@
     "ldap_group_base_dn_hint": "Biarkan kosong untuk menggunakan Base DN utama",
     "ldap_group_filter": "Filter Grup",
     "ldap_group_attr_name": "Atribut Nama Grup",
+    "ldap_group_attr_name_hint": "Role map lines can name a group by this attribute, besides its DN or CN. It applies to the groups the group filter finds; groups listed in memberOf are matched by DN or CN.",
     "ldap_allow_signup": "Buat pengguna secara otomatis",
     "ldap_allow_signup_hint": "Orang yang diterima direktori mendapat akun saat pertama kali masuk. Mati: hanya orang yang sudah punya akun yang dapat masuk melalui direktori.",
     "ldap_default_role": "Peran Default",
