@@ -524,6 +524,39 @@ func resultOfGo(t *testing.T, dialect, result string) string {
 	return branding.Stringify(o)
 }
 
+// withServerPart is a result of Node's restore as the Go console gives it
+// with Server device database chosen too: the server's tables restored
+// from the dump are not in the database count but listed as goserver-db,
+// which is then no longer skipped.
+func withServerPart(t *testing.T, result string, server int) string {
+	t.Helper()
+	v, err := branding.ParseJSON([]byte(result))
+	if err != nil {
+		t.Fatal(err)
+	}
+	o := v.(*branding.Object)
+	restored, _ := o.Get("restored")
+	list := restored.([]any)
+	var n int
+	if _, err := fmt.Sscanf(list[0].(string), "database (%d tables)", &n); err == nil && server > 0 {
+		list = append([]any{fmt.Sprintf("database (%d tables)", n-server), "goserver-db"}, list[1:]...)
+		o.Set("restored", list)
+		skipped, _ := o.Get("skipped")
+		var kept []any
+		for _, p := range skipped.([]any) {
+			if p != "goserver-db" {
+				kept = append(kept, p)
+			}
+		}
+		if kept == nil {
+			kept = []any{}
+		}
+		o.Set("skipped", kept)
+		o.Set("requiresRestart", true)
+	}
+	return branding.Stringify(o)
+}
+
 // fixtureRestoreTime is the clock of the restores of the Node archives.
 var fixtureRestoreTime = time.Unix(1795000000, 0)
 
@@ -588,11 +621,22 @@ func TestNodeArchiveFixtures(t *testing.T) {
 			dst := newInstall(t, dialect)
 			svc := dst.service(t, "0.0.0")
 			svc.o.Now = func() time.Time { return fixtureRestoreTime }
-			r, err := svc.RestoreFullBackup(context.Background(), archive, allParts)
+			// Node's Console data put back every table; the server's own come
+			// back with Server device database now (BUGS L401), so both are
+			// chosen and the server's tables are counted apart
+			parts := allParts
+			parts.GoDB = true
+			r, err := svc.RestoreFullBackup(context.Background(), archive, parts)
 			if err != nil {
 				t.Fatal(err)
 			}
-			wantResult := resultOfGo(t, dialect, canonJSON(t, want.Result))
+			server := 0
+			for table := range want.Tables {
+				if serverTables[table] {
+					server++
+				}
+			}
+			wantResult := withServerPart(t, resultOfGo(t, dialect, canonJSON(t, want.Result)), server)
 			if got := restoreResultJSON(r); got != wantResult {
 				t.Errorf("result %s, want %s", got, wantResult)
 			}

@@ -1406,7 +1406,7 @@
             "opt_env": "Environment file (.env)",
             "opt_env_desc": "Replaces the console's ports, database connection, API key and session secret. Needs a service restart.",
             "opt_godb": "Server device database",
-            "opt_godb_desc": "Replaces the NeoDesk server's own database with the registered devices (SQLite only). Needs a service restart.",
+            "opt_godb_desc": "Registered devices, device tokens, organizations, billing, chat, RDP and VNC targets, changed role permissions and the server's own settings. Accounts and the rest of the console data stay as they are. Needs a service restart.",
             "restore_json_note": "This is an older settings file. It restores console settings, appearance, device folders, groups and address books. The choices above do not apply to it.",
             "restore_button": "Restore…",
             "restoring": "Restoring…",

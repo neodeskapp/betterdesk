@@ -591,22 +591,28 @@ func (e *ErrInvalidArchive) Error() string {
 // changes nothing. Then, in this order and each part on its own, so that
 // a part that fails leaves a warning and the next one still runs:
 //
-//  1. the logical dump, table by table (ImportAllTables); the branding
-//     cache is loaded again when branding_config came back, the list of
-//     who has a picture is dropped when users or user_avatars did; the
-//     chat files, the ticket attachments and the public endpoints file go
-//     with the dump, when it is chosen,
+//  1. the logical dump, table by table (ImportAllTables): with Database
+//     the console's tables, with GoDB the server's own (serverTables), so
+//     that one part leaves the other's tables as they are on SQLite and
+//     PostgreSQL alike; the branding cache is loaded again when
+//     branding_config came back, the list of who has a picture is
+//     dropped when users or user_avatars did; the chat files, the ticket
+//     attachments and the public endpoints file go with the console's
+//     data, when it is chosen,
 //  2. the uploads, below DATA_DIR/uploads, and the installed fonts,
 //  3. the secrets, each to its own path, with the console's TLS files,
 //  4. the .env,
-//  5. the server's SQLite file, when the server has one (serverDBFile):
-//     checked (SQLite's header, PRAGMA integrity_check) and written next
-//     to it as that path + RestoredSuffix, never over the open file: the
-//     next start puts it in place (SwapInRestoredDatabase). A file that
-//     fails the check is a warning and is not written.
+//  5. for an archive whose dump has none of the server's tables (an older
+//     install's), the server's SQLite file, when the server has one
+//     (serverDBFile): checked (SQLite's header, PRAGMA integrity_check)
+//     and written next to it as that path + RestoredSuffix, never over
+//     the open file: the next start puts it in place
+//     (SwapInRestoredDatabase). A file that fails the check is a warning
+//     and is not written.
 //
-// Parts 3 to 5 take effect at the next start. A file is written over the
-// old one in place; a new file gets the mode of its part.
+// The server's tables and parts 3 to 5 take effect at the next start. A
+// file is written over the old one in place; a new file gets the mode of
+// its part.
 func (s *Service) RestoreFullBackup(ctx context.Context, buf []byte, o RestoreOptions) (RestoreResult, error) {
 	res := RestoreResult{Restored: []string{}, Skipped: []string{}, Warnings: []string{}}
 	v := s.ValidateFullBackup(buf)
@@ -616,11 +622,32 @@ func (s *Service) RestoreFullBackup(ctx context.Context, buf []byte, o RestoreOp
 	files := v.Files
 	p := s.paths()
 
-	if dumpRaw, ok := files.Get("console/data.json"); o.Database && ok {
-		if err := s.importDump(ctx, dumpRaw, &res); err != nil {
+	// The dump holds every table. Console data is its tables but the
+	// server's own; the server's own come back with Server device database
+	// (BUGS L401). An archive whose dump has none of them (an older
+	// install's) brings the server's tables back with its SQLite file.
+	dumpRaw, hasDump := files.Get("console/data.json")
+	var dump any
+	var dumpErr error
+	if hasDump && (o.Database || o.GoDB) {
+		dump, dumpErr = branding.ParseJSON(dumpRaw)
+	}
+	serverFromDump := o.GoDB && dumpErr == nil && dumpHasServerTables(dump)
+	switch {
+	case dumpErr != nil && o.Database:
+		res.Warnings = append(res.Warnings, "Database restore failed: "+driverMessage(dumpErr))
+	case hasDump && (o.Database || serverFromDump):
+		keep := func(table string) bool {
+			if serverTables[table] {
+				return serverFromDump
+			}
+			return o.Database
+		}
+		if err := s.importDump(ctx, dump, keep, &res); err != nil {
 			res.Warnings = append(res.Warnings, "Database restore failed: "+driverMessage(err))
 		}
-	} else {
+	}
+	if !o.Database || !hasDump {
 		res.Skipped = append(res.Skipped, "database")
 	}
 	if o.Database {
@@ -691,7 +718,9 @@ func (s *Service) RestoreFullBackup(ctx context.Context, buf []byte, o RestoreOp
 		res.Skipped = append(res.Skipped, ".env")
 	}
 
-	if data, ok := files.Get("goserver/db_v2.sqlite3"); o.GoDB && ok && p.goDB != "" {
+	if serverFromDump {
+		// restored with the dump above
+	} else if data, ok := files.Get("goserver/db_v2.sqlite3"); o.GoDB && ok && p.goDB != "" {
 		if err := stageServerDatabase(ctx, p.goDB+RestoredSuffix, data); err != nil {
 			res.Warnings = append(res.Warnings, "Go server DB restore failed: "+err.Error())
 		} else {
@@ -704,14 +733,21 @@ func (s *Service) RestoreFullBackup(ctx context.Context, buf []byte, o RestoreOp
 	return res, nil
 }
 
-func (s *Service) importDump(ctx context.Context, raw []byte, res *RestoreResult) error {
-	dump, err := branding.ParseJSON(raw)
+// importDump puts back the tables of the dump that keep takes. The
+// console's tables are listed as "database (<n> tables)", the server's
+// own as "goserver-db", which takes effect at the next start.
+func (s *Service) importDump(ctx context.Context, dump any, keep func(string) bool, res *RestoreResult) error {
+	r, err := importAllTables(ctx, s.o.Store, dump, s.o.Now, keep)
 	if err != nil {
 		return err
 	}
-	r, err := importAllTables(ctx, s.o.Store, dump, s.o.Now)
-	if err != nil {
-		return err
+	consoleTables, server := 0, false
+	for _, table := range r.Restored {
+		if serverTables[table] {
+			server = true
+		} else {
+			consoleTables++
+		}
 	}
 	if s.o.Branding != nil && slices.Contains(r.Restored, "branding_config") {
 		s.o.Branding.LoadBranding(ctx)
@@ -719,9 +755,44 @@ func (s *Service) importDump(ctx context.Context, raw []byte, res *RestoreResult
 	if slices.Contains(r.Restored, "users") || slices.Contains(r.Restored, "user_avatars") {
 		s.forgetPictures()
 	}
-	res.Restored = append(res.Restored, fmt.Sprintf("database (%d tables)", len(r.Restored)))
+	if consoleTables > 0 || !server {
+		res.Restored = append(res.Restored, fmt.Sprintf("database (%d tables)", consoleTables))
+	}
+	if server {
+		res.Restored = append(res.Restored, "goserver-db")
+		res.RequiresRestart = true
+	}
 	res.Warnings = append(res.Warnings, r.Warnings...)
 	return nil
+}
+
+// serverTables are the server's own tables: what the signal server
+// creates (package db) and the console's schema does not
+// (TestServerTablesAreTheSignalServersOwn). The restore part Server
+// device database puts back these, Console data every other table of the
+// dump: accounts, folders, groups and the rest the console keeps.
+var serverTables = map[string]bool{
+	"access_policies": true, "api_keys": true, "billing_contracts": true, "billing_currencies": true,
+	"billing_packages": true, "billing_period_totals": true, "billing_session_ledger": true,
+	"billing_sessions": true, "billing_work_reports": true, "blocklist_entries": true, "chat_groups": true,
+	"chat_messages": true, "client_sessions": true, "device_connection_mode_commands": true,
+	"device_connection_policies": true, "device_telemetry_commands": true, "device_telemetry_snapshots": true,
+	"device_tokens": true, "help_requests": true, "id_change_history": true, "org_address_books": true,
+	"org_devices": true, "org_invitations": true, "org_peer_credentials": true, "org_settings": true,
+	"org_users": true, "organizations": true, "peer_availability_events": true, "peer_connection_sessions": true,
+	"peers": true, "remote_targets": true, "role_permissions": true, "server_config": true, "server_events": true,
+}
+
+// dumpHasServerTables reports whether a dump holds any of the server's own
+// tables, as every dump of a 3.6 install does.
+func dumpHasServerTables(dump any) bool {
+	tables := prop(dump, "tables")
+	for _, e := range entriesOf(tables) {
+		if serverTables[e.key] {
+			return true
+		}
+	}
+	return false
 }
 
 // The folders of an archive.

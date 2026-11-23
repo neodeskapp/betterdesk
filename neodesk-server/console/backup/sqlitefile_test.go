@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"maps"
 	"os"
 	"path/filepath"
@@ -64,6 +65,7 @@ func TestRestoredDatabaseFileWaitsForTheStart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	archive = olderArchive(t, archive)
 	files, err := ExtractTarGz(archive, Limits{})
 	if err != nil {
 		t.Fatal(err)
@@ -225,6 +227,44 @@ func withServerDatabase(t *testing.T, archive, data []byte) []byte {
 	return out
 }
 
+// olderArchive is the archive as an install before 3.6 wrote it: its dump
+// has none of the server's own tables, which come back with the server's
+// SQLite file at the next start.
+func olderArchive(t *testing.T, archive []byte) []byte {
+	t.Helper()
+	files, err := ExtractTarGz(archive, Limits{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var entries []Entry
+	for _, name := range files.Names() {
+		content, _ := files.Get(name)
+		if name == "console/data.json" {
+			dec := json.NewDecoder(bytes.NewReader(content))
+			dec.UseNumber()
+			var dump map[string]any
+			if err := dec.Decode(&dump); err != nil {
+				t.Fatal(err)
+			}
+			tables, _ := dump["tables"].(map[string]any)
+			for table := range tables {
+				if serverTables[table] {
+					delete(tables, table)
+				}
+			}
+			if content, err = json.Marshal(dump); err != nil {
+				t.Fatal(err)
+			}
+		}
+		entries = append(entries, Entry{Name: name, Data: content, Mode: 0o600})
+	}
+	out, err := CreateTarGz(entries, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
 // indexOutOfStep is a SQLite file that opens and reads, and whose index
 // holds other values than its schema names: PRAGMA integrity_check lists
 // the rows missing from it.
@@ -268,6 +308,7 @@ func TestRestoreRefusesAServerDatabaseThatFailsTheCheck(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	archive = olderArchive(t, archive)
 	files, err := ExtractTarGz(archive, Limits{})
 	if err != nil {
 		t.Fatal(err)
@@ -323,6 +364,7 @@ func TestRestoreFollowsTheServersDatabase(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	archive = olderArchive(t, archive)
 	opts := RestoreOptions{GoDB: true}
 
 	dst := newInstall(t, "sqlite")

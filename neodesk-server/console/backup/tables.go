@@ -42,10 +42,12 @@ type ImportResult struct {
 // An error is returned when the run stops before the end; on SQLite the
 // tables up to that point are replaced, on PostgreSQL none is.
 func ImportAllTables(ctx context.Context, db *store.DB, dump any) (ImportResult, error) {
-	return importAllTables(ctx, db, dump, time.Now)
+	return importAllTables(ctx, db, dump, time.Now, nil)
 }
 
-func importAllTables(ctx context.Context, db *store.DB, dump any, now func() time.Time) (ImportResult, error) {
+// importAllTables puts back the tables of the dump that keep takes, every
+// table for a nil keep; the others are left as they are and not listed.
+func importAllTables(ctx context.Context, db *store.DB, dump any, now func() time.Time, keep func(table string) bool) (ImportResult, error) {
 	res := ImportResult{Restored: []string{}, Skipped: []string{}, Warnings: []string{}}
 	var tables any = branding.NewObject()
 	if truthy(dump) {
@@ -69,6 +71,9 @@ func importAllTables(ctx context.Context, db *store.DB, dump any, now func() tim
 
 	var jobs []*tableJob
 	for _, e := range entriesOf(tables) {
+		if keep != nil && !keep(e.key) {
+			continue
+		}
 		rows, isList := e.value.([]any)
 		if !isSafeIdent(e.key) || !live[e.key] || !isList {
 			res.Skipped = append(res.Skipped, e.key)

@@ -138,13 +138,14 @@ func TestSnapshotRestoreEndsTheTokensOfReplacedCredentials(t *testing.T) {
 	})
 }
 
-// RV181: the server's SQLite file of an archive goes in place at the next
-// start with the token times set against the database it replaces, at
-// the time of the swap; with the dump restored as well, the times the
-// dump's restore set stay.
+// RV181: the server's SQLite file of an older install's archive (its dump
+// without the server's tables) goes in place at the next start with the
+// token times set against the database it replaces, at the time of the
+// swap; with the dump restored as well, the times the dump's restore set
+// stay.
 func TestSwappedDatabaseEndsTheTokensOfReplacedCredentials(t *testing.T) {
 	ctx := context.Background()
-	archive := archiveOfAccounts(t, "sqlite")
+	archive := olderArchive(t, archiveOfAccounts(t, "sqlite"))
 	for _, tc := range []struct {
 		name     string
 		database bool

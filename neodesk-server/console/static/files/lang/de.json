@@ -1398,7 +1398,7 @@
       "opt_env": "Umgebungsdatei (.env)",
       "opt_env_desc": "Ersetzt Ports, Datenbankverbindung, API-Schlüssel und Sitzungsgeheimnis der Konsole. Erfordert einen Neustart der Dienste.",
       "opt_godb": "Gerätedatenbank des Servers",
-      "opt_godb_desc": "Ersetzt die eigene Datenbank des NeoDesk-Servers mit den registrierten Geräten (nur SQLite). Erfordert einen Neustart der Dienste.",
+      "opt_godb_desc": "Registrierte Geräte, Gerätetokens, Organisationen, Abrechnung, Chat, RDP- und VNC-Ziele, geänderte Rollenberechtigungen und die eigenen Einstellungen des Servers. Konten und die übrigen Konsolendaten bleiben, wie sie sind. Erfordert einen Neustart der Dienste.",
       "restore_json_note": "Dies ist eine ältere Einstellungsdatei. Sie stellt Konsoleneinstellungen, Erscheinungsbild, Geräteordner, Gruppen und Adressbücher wieder her. Die Auswahl oben gilt dafür nicht.",
       "restore_button": "Wiederherstellen…",
       "restoring": "Wird wiederhergestellt…",
