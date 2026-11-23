@@ -183,11 +183,13 @@ test.describe('several displays of one device', () => {
 		await popup.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
 		await expect.poll(async () => (await device(page)).press?.display).toBe(1);
 		await expectNoAxeViolations(popup);
-		// The button closes its window: the click has nothing to wait for afterwards
-		await Promise.all([
-			popup.waitForEvent('close'),
-			popup.getByRole('button', { name: 'Back to the main window' }).click({ noWaitAfter: true })
-		]);
+		// The button closes its window: Firefox ends the click with "page closed", which is the point
+		const closed = popup.waitForEvent('close');
+		await popup
+			.getByRole('button', { name: 'Back to the main window' })
+			.click()
+			.catch(() => undefined);
+		await closed;
 		await expect(page.locator('.tile-canvas')).toHaveCount(3);
 	});
 
@@ -223,7 +225,7 @@ test.describe('an older device', () => {
 		await page.getByRole('button', { name: /^Controls/ }).click();
 		const controls = page.getByRole('group', { name: 'Session controls' });
 		await expect(controls.getByRole('button', { name: 'Displays', exact: true })).toHaveCount(0);
-		const strip = controls.getByRole('group', { name: 'Select monitor' });
+		const strip = controls.getByRole('group', { name: 'Choose a monitor' });
 		await expect(strip.getByRole('button')).toHaveCount(3);
 		await strip.getByRole('button', { name: /^Screen 3/ }).click();
 		await expect(strip.getByRole('button', { name: /^Screen 3/ })).toHaveAttribute('aria-pressed', 'true');
