@@ -7478,6 +7478,56 @@
       "uptime": "Uptime",
       "version": "Version"
      },
+     "setup_guide": {
+      "all_done": "Alle Schritte sind erledigt. Sie können die Anleitung jetzt ausblenden.",
+      "back": "Zurück zur Einrichtungsanleitung",
+      "back_step": "Schritt: {step}",
+      "hidden": "Die Einrichtungsanleitung ist ausgeblendet. Unter Hilfe und in den Einstellungen holen Sie sie zurück.",
+      "hide": "Anleitung ausblenden",
+      "hide_failed": "Die Anleitung konnte nicht ausgeblendet werden. Versuchen Sie es noch einmal.",
+      "link_button": "Einrichtungsanleitung anzeigen",
+      "link_note": "Die ersten Schritte für diesen Server, als Checkliste auf der Übersicht.",
+      "link_title": "Einrichtungsanleitung",
+      "progress": "{done} von {total} erledigt. Ein Schritt hakt sich selbst ab, sobald der Server ihn erledigt sieht.",
+      "show_failed": "Die Einrichtungsanleitung konnte nicht angezeigt werden. Versuchen Sie es noch einmal.",
+      "state_done": "Erledigt",
+      "state_todo": "Noch offen",
+      "steps": {
+       "address": {
+        "hint": "Unter diesem Namen oder dieser IP-Adresse erreichen Computer den Server. Einladungslinks und Installationsskripte enthalten sie.",
+        "title": "Adresse für Clients festlegen"
+       },
+       "backup": {
+        "hint": "Sie enthält den Schlüssel des Servers. Ohne ihn muss jeder Computer neu eingerichtet werden.",
+        "title": "Sicherung erstellen"
+       },
+       "computer": {
+        "hint": "Ein Einladungslink installiert NeoDesk darauf, und der Computer tritt diesem Server bei.",
+        "title": "Ersten Computer hinzufügen"
+       },
+       "https": {
+        "hint": "Fernzugriff im Browser braucht HTTPS, und Einladungslinks warnen dann nicht mehr.",
+        "title": "HTTPS vor die Konsole setzen"
+       },
+       "password": {
+        "hint": "Die Installation hat es erzeugt und aufgeschrieben. Wählen Sie eines, das nur Sie kennen.",
+        "title": "Erstes Passwort ändern"
+       },
+       "people": {
+        "hint": "Geben Sie jeder Person ein eigenes Konto mit einer Rolle, oder schalten Sie Single Sign-on oder LDAP ein.",
+        "title": "Weitere Personen hinzufügen"
+       },
+       "session": {
+        "hint": "Wählen Sie in der Geräteliste einen Computer und verbinden Sie sich, im Browser oder mit der NeoDesk-App.",
+        "title": "Eine Fernsitzung öffnen"
+       },
+       "two_factor": {
+        "hint": "Die Konsole fragt dann nach einem Code aus einer App auf Ihrem Handy.",
+        "title": "Zwei-Faktor-Anmeldung einschalten"
+       }
+      },
+      "title": "Diesen Server einrichten"
+     },
      "shell": {
       "skip_to_content": "Zum Hauptinhalt springen",
       "start_failed": "Die Konsole konnte nicht starten."
