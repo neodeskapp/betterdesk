@@ -9,6 +9,7 @@ import (
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/setupguide"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
@@ -210,7 +211,9 @@ type SnapshotOptions struct {
 //
 //   - settings: every key is written as it is in the snapshot, the mail
 //     settings with the stored password when they bring none; an older
-//     snapshot's network share login (shareLoginSetting) is left out;
+//     snapshot's network share login (shareLoginSetting) and the setup
+//     guide's rows (setupguide.OwnsSetting), which belong to the install
+//     the file came from, are left out;
 //   - branding: through the branding service, which cleans the values;
 //   - users (only when asked, and only a non-empty list): every account is
 //     replaced (restoreUsers), the sign-in tokens of the accounts whose
@@ -230,7 +233,7 @@ func (s *Service) RestoreBackup(ctx context.Context, data any, o SnapshotOptions
 	if settings := prop(cons, "settings"); o.Settings && truthy(settings) {
 		err := func() error {
 			for _, e := range settingEntries(settings) {
-				if e.key == shareLoginSetting {
+				if e.key == shareLoginSetting || setupguide.OwnsSetting(e.key) {
 					continue
 				}
 				value, err := keepPassword(ctx, db, e.key, e.value)

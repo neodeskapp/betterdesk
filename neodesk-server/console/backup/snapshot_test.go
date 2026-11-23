@@ -220,3 +220,31 @@ func TestOlderShareLoginIsLeftOut(t *testing.T) {
 		}
 	})
 }
+
+// The setup guide's rows say which account of the install the file came
+// from saw the guide and what that install has done; a settings file
+// restored here leaves this install's own rows as they are and brings
+// none of the other's.
+func TestSnapshotLeavesTheSetupGuideOut(t *testing.T) {
+	dialects(t, func(t *testing.T, dialect string) {
+		ctx := context.Background()
+		in := newInstall(t, dialect)
+		setValue(t, in, "setup_guide.user.1", `{"open":false}`)
+		other := `{"_format":"neodesk-backup","_version":1,"console":{"settings":{` +
+			`"setup_guide":"{\"first_admin\":7}","setup_guide.user.1":"{\"open\":true}","setup_guide.seen.backup":"2026-11-01T00:00:00.000Z",` +
+			`"setup_guidance":"kept","backup_retention_count":"5"}}}`
+		if res := restoreSettings(t, in.snapshotService(t), other); len(res.Warnings) != 0 || !slices.Contains(res.Restored, "settings") {
+			t.Fatalf("restore: %+v", res)
+		}
+		if got := storedValue(t, in, "setup_guide.user.1"); got != `{"open":false}` {
+			t.Errorf("this install's guide row: %q", got)
+		}
+		var n int
+		if err := in.db.QueryRow(ctx, `SELECT COUNT(*) FROM settings WHERE key IN ('setup_guide', 'setup_guide.seen.backup')`).Scan(&n); err != nil || n != 0 {
+			t.Errorf("%d guide rows of the other install came along (%v)", n, err)
+		}
+		if storedValue(t, in, "backup_retention_count") != "5" || storedValue(t, in, "setup_guidance") != "kept" {
+			t.Error("the other settings were not restored")
+		}
+	})
+}
