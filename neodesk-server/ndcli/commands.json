@@ -193,6 +193,10 @@
    "summary": "Server settings: mail, sign-in, addresses, enrollment, sessions"
   },
   {
+   "name": "setup-guide",
+   "summary": "The setup guide a new install shows its first admin on the overview"
+  },
+  {
    "name": "strategies",
    "summary": "Strategies: settings pushed to desktop clients"
   },
@@ -5986,6 +5990,42 @@
      "type": "string",
      "help": "who gets it"
     }
+   ]
+  },
+  {
+   "name": "setup-guide hide",
+   "summary": "Hide the setup guide on the overview for your account.",
+   "route": "POST /api/setup-guide/hide",
+   "description": "setup-guide show brings it back. The answer is the guide's status, as setup-guide status shows it.",
+   "permission": "server.config",
+   "examples": [
+    "neodesk setup-guide hide"
+   ]
+  },
+  {
+   "name": "setup-guide show",
+   "summary": "Show the setup guide on the overview for your account again.",
+   "route": "POST /api/setup-guide/show",
+   "description": "The answer is the guide's status, as setup-guide status shows it.",
+   "permission": "server.config",
+   "examples": [
+    "neodesk setup-guide show"
+   ]
+  },
+  {
+   "name": "setup-guide status",
+   "summary": "Show the setup guide's steps and which of them the server sees done.",
+   "route": "GET /api/setup-guide",
+   "description": "visible says whether the overview shows the guide to your account. A step is done when the server sees it done, not when someone ticks it, and an account gets only the steps it may do itself.",
+   "permission": "server.config",
+   "rows": "data.steps",
+   "columns": [
+    "id",
+    "done"
+   ],
+   "examples": [
+    "neodesk setup-guide status",
+    "neodesk setup-guide status --json"
    ]
   },
   {
