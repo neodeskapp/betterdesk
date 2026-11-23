@@ -108,7 +108,7 @@ func (h *handlers) redeemSupport(w http.ResponseWriter, r *http.Request) {
 		appFail(w, r, http.StatusInternalServerError, "server_error", "")
 		return
 	}
-	h.auditAs(r, sess.CreatedByID, "quick_support_opened", "The quick support app opened session "+sess.ID)
+	h.auditAs(r, 0, "quick_support_opened", "The quick support app opened session "+sess.ID+" of "+sess.CreatedBy)
 	kit.JSON(w, r, http.StatusOK, redeemAnswer{
 		Success: true, SessionToken: token, Session: appAnswerOf(sess).Session,
 		Supporter: h.personName(r.Context(), sess.CreatedByID, sess.CreatedBy), Company: h.serverName(),
@@ -116,8 +116,9 @@ func (h *handlers) redeemSupport(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// auditAs writes an audit entry in the name of the account that made the
-// session, for what the app does.
+// auditAs writes an audit entry in the name of the account userID; 0 is
+// none, for what a device or the quick support app did, which no account
+// did. The details name the supporter.
 func (h *handlers) auditAs(r *http.Request, userID int64, action, details string) {
 	if h.d.Audit == nil {
 		return
@@ -193,7 +194,7 @@ func (h *handlers) appDevice(w http.ResponseWriter, r *http.Request) {
 		appFail(w, r, http.StatusInternalServerError, "server_error", "")
 		return
 	}
-	h.auditAs(r, sess.CreatedByID, "quick_support_device", "Quick support session "+sess.ID+" runs on device "+dev.DeviceID)
+	h.auditAs(r, 0, "quick_support_device", "Quick support session "+sess.ID+" of "+sess.CreatedBy+" runs on device "+dev.DeviceID)
 	kit.JSON(w, r, http.StatusOK, appAnswerOf(updated))
 }
 
@@ -226,7 +227,7 @@ func (h *handlers) appConsent(w http.ResponseWriter, r *http.Request) {
 	if !*body.Allowed {
 		action = "quick_support_declined"
 	}
-	h.auditAs(r, sess.CreatedByID, action, "Quick support session "+sess.ID+" on device "+sess.DeviceID)
+	h.auditAs(r, 0, action, "Quick support session "+sess.ID+" of "+sess.CreatedBy+" on device "+sess.DeviceID)
 	kit.JSON(w, r, http.StatusOK, appAnswerOf(updated))
 }
 
@@ -262,6 +263,6 @@ func (h *handlers) appEnd(w http.ResponseWriter, r *http.Request) {
 		appFail(w, r, http.StatusInternalServerError, "server_error", "")
 		return
 	}
-	h.auditAs(r, sess.CreatedByID, "quick_support_ended", "The quick support app ended session "+sess.ID)
+	h.auditAs(r, 0, "quick_support_ended", "The quick support app on device "+sess.DeviceID+" ended session "+sess.ID+" of "+sess.CreatedBy)
 	kit.JSON(w, r, http.StatusOK, map[string]bool{"success": true})
 }

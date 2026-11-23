@@ -1302,14 +1302,20 @@ func (s *Server) handleApproveDevice(w http.ResponseWriter, r *http.Request) {
 		pending.DeviceID = deviceID
 	}
 
-	// Create the peer
+	// Create the peer. A request without a device type only the signal
+	// server queued: a stock RustDesk client, which sends no enrollment of
+	// its own (a NeoDesk client names its type).
+	deviceType := pending.DeviceType
+	if strings.TrimSpace(deviceType) == "" {
+		deviceType = "rustdesk"
+	}
 	enrollment := &EnrollmentRequest{
 		DeviceID:   pending.DeviceID,
 		UUID:       pending.UUID,
 		Hostname:   pending.Hostname,
 		Platform:   pending.Platform,
 		Version:    pending.Version,
-		DeviceType: pending.DeviceType,
+		DeviceType: deviceType,
 		BundleID:   pending.BundleID,
 		Tags:       pending.Tags,
 		PublicKey:  pending.PublicKey,

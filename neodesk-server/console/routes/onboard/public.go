@@ -298,7 +298,7 @@ func (h *handlers) join(w http.ResponseWriter, r *http.Request) {
 		appFail(w, r, http.StatusInternalServerError, "server_error", "")
 		return
 	}
-	h.auditAs(r, creator, "invite_redeemed", "Device "+deviceID+" joined with invite "+rec.ID)
+	h.auditAs(r, 0, "invite_redeemed", "Device "+deviceID+" joined with invite "+rec.ID+" of "+rec.CreatedBy)
 	kit.JSON(w, r, http.StatusOK, joinAnswer{
 		Success: true, Server: h.serverOf(r), DeviceToken: token, Device: device, Console: h.consoleOf(r).Base(),
 	})
