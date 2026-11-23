@@ -17,6 +17,29 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// relayPort is a free port for a test relay whose WebSocket port, two
+// above it (WSRelayPort), is free as well. The relay opens that one in the
+// background and only logs when it cannot, so with another process on it
+// the test's dial would reach that process.
+func relayPort(t *testing.T) int {
+	t.Helper()
+	for range 100 {
+		ln, err := net.Listen("tcp", ":0")
+		if err != nil {
+			t.Fatalf("listen: %v", err)
+		}
+		port := ln.Addr().(*net.TCPAddr).Port
+		ws, err := net.Listen("tcp", fmt.Sprintf(":%d", port+2))
+		ln.Close()
+		if err == nil {
+			ws.Close()
+			return port
+		}
+	}
+	t.Fatal("no free port whose WebSocket port is free too")
+	return 0
+}
+
 func TestWSRelayHealthCheck(t *testing.T) {
 	cfg := config.DefaultConfig()
 	cfg.RelayPort = 29400
@@ -116,13 +139,7 @@ func TestWSRelayPairing(t *testing.T) {
 
 func TestWSRelayRejectsUnknownUUID(t *testing.T) {
 	cfg := config.DefaultConfig()
-	ln, err := net.Listen("tcp", ":0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	port := ln.Addr().(*net.TCPAddr).Port
-	ln.Close()
-	cfg.RelayPort = port
+	cfg.RelayPort = relayPort(t)
 
 	srv := New(cfg)
 	ctx := t.Context()
@@ -161,14 +178,7 @@ func TestWSRelayRejectsUnknownUUID(t *testing.T) {
 // buffer (~32 KiB) stay as a single WebSocket message after relay (#293).
 func TestWSRelayLargeMessagePreserved(t *testing.T) {
 	cfg := config.DefaultConfig()
-	ln, err := net.Listen("tcp", ":0")
-	if err != nil {
-		t.Fatalf("listen: %v", err)
-	}
-	port := ln.Addr().(*net.TCPAddr).Port
-	ln.Close()
-
-	cfg.RelayPort = port
+	cfg.RelayPort = relayPort(t)
 	srv := New(cfg)
 	ctx := t.Context()
 	if err := srv.Start(ctx); err != nil {
@@ -250,14 +260,7 @@ func TestRelayBridgesMixedTCPAndWS(t *testing.T) {
 	// #397: panel Web Remote (TCP :21117) + WS Mode peer (:21119) must pair
 	// via BytesCodec↔WS translation — not reject (#290 crash path).
 	cfg := config.DefaultConfig()
-	ln, err := net.Listen("tcp", ":0")
-	if err != nil {
-		t.Fatalf("listen: %v", err)
-	}
-	port := ln.Addr().(*net.TCPAddr).Port
-	ln.Close()
-
-	cfg.RelayPort = port
+	cfg.RelayPort = relayPort(t)
 	srv := New(cfg)
 	ctx := t.Context()
 	if err := srv.Start(ctx); err != nil {
@@ -288,7 +291,7 @@ func TestRelayBridgesMixedTCPAndWS(t *testing.T) {
 	}
 	time.Sleep(50 * time.Millisecond)
 
-	conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", port), 5*time.Second)
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", cfg.RelayPort), 5*time.Second)
 	if err != nil {
 		t.Fatalf("TCP dial: %v", err)
 	}
