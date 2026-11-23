@@ -1,7 +1,7 @@
 #!/bin/bash
 #===============================================================================
 #
-#   NeoDesk Console Manager v3.6.4 (Docker)
+#   NeoDesk Console Manager v3.6.5 (Docker)
 #
 #   Installs, updates and removes NeoDesk on Docker: one container that
 #   runs the published image ghcr.io/neodeskapp/neodesk (signal,
@@ -20,7 +20,7 @@ fi
 
 set -Eeuo pipefail
 
-VERSION="3.6.4"
+VERSION="3.6.5"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || pwd)"
 
 # Settings: flags win over these variables, which win over the defaults

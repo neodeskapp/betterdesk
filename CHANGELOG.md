@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Changed
+- _(none yet)_
+
+---
+
+## [3.6.5] — 2026-11-23
+
 ### Added
 - Docker: HTTPS for the web console with Let's Encrypt. `--domain` and
   `--email` (`--letsencrypt-email` in install.sh) put a small Traefik
@@ -5572,3 +5579,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 [3.6.2]: https://github.com/neodeskapp/neodesk/compare/v3.6.1...v3.6.2
 [3.6.3]: https://github.com/neodeskapp/neodesk/compare/v3.6.2...v3.6.3
 [3.6.4]: https://github.com/neodeskapp/neodesk/compare/v3.6.3...v3.6.4
+[3.6.5]: https://github.com/neodeskapp/neodesk/compare/v3.6.4...v3.6.5
