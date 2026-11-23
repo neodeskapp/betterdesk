@@ -71,6 +71,17 @@ wait_http http://127.0.0.1:21121/api/health
 wait_http http://127.0.0.1:5000/health
 echo "[instance] the server is up"
 
+# STACK_SEED=0: a new install as its first admin finds it, no demo data
+# and no role accounts (the setup guide's walk)
+if [ "${STACK_SEED:-1}" = "0" ]; then
+    touch /stack/ready
+    echo "[instance] ready, without the seed"
+    wait -n "${pids[@]}" || true
+    echo "[instance] a process ended"
+    tail -n 40 "$LOGS"/*.log
+    exit 1
+fi
+
 # devseed writes only into a database with this marker, which no real
 # install has
 sqlite3 -cmd ".timeout 5000" "$DB_PATH" \

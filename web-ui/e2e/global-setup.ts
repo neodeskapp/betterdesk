@@ -8,6 +8,12 @@ import { ROLES, authFile, type Role } from './roles.ts';
  * Accounts missing on the server are skipped; tests for that role skip too.
  */
 export default async function globalSetup(config: FullConfig): Promise<void> {
+	// A new install (ND_FRESH=1, the setup guide's walk) has none of the e2e accounts
+	if (process.env.ND_FRESH === '1') {
+		fs.mkdirSync('e2e/.auth', { recursive: true });
+		fs.writeFileSync('e2e/.auth/available.json', '[]');
+		return;
+	}
 	// A file keeps the password out of a container's settings (docker inspect shows environment variables)
 	const file = process.env.E2E_PASSWORD_FILE;
 	const password = process.env.E2E_PASSWORD || (file ? fs.readFileSync(file, 'utf8').trim() : '');
