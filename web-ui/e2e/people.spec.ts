@@ -385,6 +385,8 @@ for (const role of ROLES) {
 				return;
 			}
 			await expect(page.getByRole('heading', { level: 1, name: 'Reports' })).toBeVisible();
+			// Generating changes nothing: no "you can only view this page" over the Generate buttons
+			await expect(page.getByText('You can view this page but not change it.')).toHaveCount(0);
 			await page.getByRole('button', { name: 'Generate' }).first().click();
 			const preview = page.locator('.preview');
 			await expect(preview).toBeVisible();

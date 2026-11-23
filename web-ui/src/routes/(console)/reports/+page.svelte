@@ -3,7 +3,9 @@
   reports, read it as tables, download it (JSON, or the main table as CSV)
   and save a copy. Saved copies in the side column open again; super_admin,
   admin and global_admin save and delete them (the server's role check).
-  Trends of the last 14 days under the report.
+  Trends of the last 14 days under the report. There is no "you can only
+  view this page" line: generating a report changes nothing, so everyone
+  who opens the page can do its main task.
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
@@ -40,7 +42,6 @@
 	import ListRow from '#lib/ui/ListRow.svelte';
 	import MenuButton from '#lib/ui/MenuButton.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
-	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Tag from '#lib/ui/Tag.svelte';
@@ -235,7 +236,6 @@
 			<h1>{t('reports.title')}</h1>
 			<p class="page-description">{t('reports.page_description')}</p>
 		</div>
-		<ReadOnlyHint writable={canManage} />
 
 		<div class="page-cols">
 			<div class="page-main">
