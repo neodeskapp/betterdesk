@@ -153,7 +153,12 @@
 	const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 	const partDirty = (p: GeneralPart) => !same($state.snapshot(values[p]), baseline[p]);
 	const dirty = $derived(loaded && GENERAL_PARTS.some((p) => partDirty(p)));
-	$effect(() => trackDirty(() => dirty));
+	$effect(() =>
+		trackDirty(
+			() => dirty,
+			() => busy
+		)
+	);
 
 	/**
 	 * What the server has now for one part. A part the person already changed

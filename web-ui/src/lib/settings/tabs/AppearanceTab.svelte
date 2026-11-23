@@ -214,7 +214,12 @@
 	});
 	const v = $derived(form.values);
 	const dirty = $derived(form.dirty || !!pendingLogo);
-	$effect(() => trackDirty(() => dirty));
+	$effect(() =>
+		trackDirty(
+			() => dirty,
+			() => form.busy
+		)
+	);
 
 	function fill(next: BrandingValues) {
 		saved = next;

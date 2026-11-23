@@ -161,7 +161,12 @@
 		return onRefresh(() => void load());
 	});
 
-	$effect(() => trackDirty(() => form.dirty));
+	$effect(() =>
+		trackDirty(
+			() => form.dirty,
+			() => form.busy
+		)
+	);
 
 	const configured = $derived(!!config?.configured);
 	const facts = $derived([

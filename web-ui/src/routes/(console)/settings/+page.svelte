@@ -12,7 +12,8 @@
 
   Each tab is its own component in lib/settings/tabs/, loaded when it is
   opened; it loads its own data. Leaving a tab with unsaved changes asks
-  first (lib/settings/dirty.ts).
+  first (lib/settings/dirty.ts); a save that runs then is waited for, and
+  what it saved is not asked about.
 -->
 <script lang="ts">
 	import type { Component } from 'svelte';
@@ -31,7 +32,7 @@
 	import States from '#lib/ui/States.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { warnOnLeave } from '#lib/ui/form.svelte.ts';
-	import { anyDirty } from '#lib/settings/dirty.ts';
+	import { anyDirty, mayLeave } from '#lib/settings/dirty.ts';
 	import {
 		clearAllReveals,
 		findTarget,
@@ -196,21 +197,33 @@
 	$effect(() => warnOnLeave(anyDirty));
 
 	let leaving = false;
+	/** Where the page goes once it may be left; set while that is being decided */
+	let leaveTo: URL | null = null;
 	beforeNavigate((nav) => {
 		if (leaving || nav.willUnload || !nav.to || !anyDirty()) return;
 		const to = nav.to.url;
 		// Only the #id changes: nothing is lost
 		if (to.pathname === page.url.pathname && parseTab(to.searchParams.get('tab')) === tab) return;
 		nav.cancel();
-		void confirm({
-			title: tf('settings.page.discard_title', 'Discard unsaved changes?'),
-			message: tf('settings.page.discard_message', 'The changes on this page are not saved yet.'),
-			confirmLabel: tf('settings.page.discard_confirm', 'Discard changes'),
-			danger: true
-		}).then((ok) => {
-			if (!ok) return;
+		// Already deciding: the latest link wins
+		if (leaveTo) {
+			leaveTo = to;
+			return;
+		}
+		leaveTo = to;
+		void mayLeave(() =>
+			confirm({
+				title: tf('settings.page.discard_title', 'Discard unsaved changes?'),
+				message: tf('settings.page.discard_message', 'The changes on this page are not saved yet.'),
+				confirmLabel: tf('settings.page.discard_confirm', 'Discard changes'),
+				danger: true
+			})
+		).then((ok) => {
+			const target = leaveTo;
+			leaveTo = null;
+			if (!ok || !target) return;
 			leaving = true;
-			void go2(to.pathname + to.search + to.hash).finally(() => (leaving = false));
+			void go2(target.pathname + target.search + target.hash).finally(() => (leaving = false));
 		});
 	});
 </script>

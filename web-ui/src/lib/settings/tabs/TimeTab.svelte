@@ -245,7 +245,12 @@
 		};
 	});
 
-	$effect(() => trackDirty(() => form.dirty));
+	$effect(() =>
+		trackDirty(
+			() => form.dirty,
+			() => form.busy
+		)
+	);
 
 	const zone = $derived(chosenZone(form.values.custom, form.values.zone));
 	const now = $derived(zoneNow(zone, i18n.locale, new Date(minuteNow())));

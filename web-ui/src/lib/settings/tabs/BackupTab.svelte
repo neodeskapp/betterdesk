@@ -326,7 +326,12 @@
 		{ value: 'path' as const, label: t('backup.schedule_destination_path') }
 	]);
 	// Leaving the tab with unsaved changes asks first (the settings page)
-	$effect(() => trackDirty(() => schedule.dirty));
+	$effect(() =>
+		trackDirty(
+			() => schedule.dirty,
+			() => schedule.busy
+		)
+	);
 
 	// One primary on the page: Download, unless a form has unsaved changes
 	const anyDirty = $derived(schedule.dirty);

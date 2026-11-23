@@ -199,7 +199,12 @@
 	});
 
 	// Leaving the tab or the page with unsaved changes asks first (the settings page)
-	$effect(() => trackDirty(() => dirty));
+	$effect(() =>
+		trackDirty(
+			() => dirty,
+			() => saving
+		)
+	);
 
 	function statusParts(f: { size: number }): [string, string] {
 		const s = t('settings.advanced_tab.status_file', { size: formatBytes(f.size) });

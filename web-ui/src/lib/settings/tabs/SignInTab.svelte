@@ -576,7 +576,8 @@
 	$effect(() =>
 		trackDirty(
 			() =>
-				password.dirty || enrollment.dirty || sessions.dirty || twoFactor.dirty || ldap.dirty || oidc.dirty
+				password.dirty || enrollment.dirty || sessions.dirty || twoFactor.dirty || ldap.dirty || oidc.dirty,
+			() => password.busy || enrollment.busy || sessions.busy || twoFactor.busy || ldap.busy || oidc.busy
 		)
 	);
 
