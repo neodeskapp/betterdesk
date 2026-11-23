@@ -2,10 +2,14 @@
 // checklist a new admin finds on the overview after the first sign-in on
 // a fresh install.
 //
-// Who sees it: on a new install (store.DB.NewInstall) Begin opens the
-// guide for the first admin account, once. Nobody else gets it by
-// itself, and neither does anyone on an install that was set up before,
-// so an update never brings it. Anyone may hide it and bring it back.
+// Who sees it: on a new install Begin opens the guide for the first admin
+// account, once. An install is new when this start set the console's
+// tables up (store.DB.NewInstall), or when nobody has used it yet: no
+// account has ever signed in and it has no device (a command such as
+// reset-password may have set the tables up before the first start).
+// Nobody else gets the guide by itself, and neither does anyone on an
+// install that was used before, so an update never brings it. Anyone may
+// hide it and bring it back.
 //
 // Each step is done by what the server sees, never by a click: the first
 // password replaced, two-factor sign-in on, an address clients can reach,
@@ -136,14 +140,20 @@ func fingerprint(hash string) string {
 }
 
 // Begin opens the guide for the first admin of a new install. It runs at
-// every start and does something only on the start that set the console
-// up, and only once: an install that has the guide's row keeps it.
+// every start and does something only once: an install that has the
+// guide's row keeps it.
 func (s *Service) Begin(ctx context.Context) error {
-	if s.o.DB == nil || !s.o.DB.NewInstall() {
+	if s.o.DB == nil {
 		return nil
 	}
 	if _, found, err := s.read(ctx, installKey); err != nil || found {
 		return err
+	}
+	if !s.o.DB.NewInstall() {
+		unused, err := s.unused(ctx)
+		if err != nil || !unused {
+			return err
+		}
 	}
 	id, hash, err := firstAdmin(ctx, s.o.DB)
 	if err != nil || id == 0 {
@@ -154,6 +164,16 @@ func (s *Service) Begin(ctx context.Context) error {
 		return err
 	}
 	return s.write(ctx, userKey(id), userState{Open: true, Password: fingerprint(hash)})
+}
+
+// unused reports whether nobody has used the install yet: no account has
+// signed in and the server has no device.
+func (s *Service) unused(ctx context.Context) (bool, error) {
+	signedIn, err := exists(ctx, s.o.DB, `SELECT 1 FROM users WHERE last_login IS NOT NULL AND CAST(last_login AS TEXT) <> '' LIMIT 1`)
+	if err != nil {
+		return false, fmt.Errorf("look for a sign-in: %w", err)
+	}
+	return !signedIn && s.devices(ctx) == 0, nil
 }
 
 // SetOpen shows the guide to the account or hides it. What the guide
@@ -335,6 +355,13 @@ func (s *Service) people(ctx context.Context, self int64) (bool, error) {
 }
 
 func userKey(id int64) string { return fmt.Sprintf("%s%d", userKeyPrefix, id) }
+
+// OwnsSetting reports whether a settings row belongs to the guide. Its
+// rows name accounts by id and say what this install has seen, so a
+// settings file from another install must not bring them along.
+func OwnsSetting(key string) bool {
+	return key == installKey || strings.HasPrefix(key, installKey+".")
+}
 
 // user reads the account's state; found is false when the guide never
 // opened for it.

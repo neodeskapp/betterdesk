@@ -103,14 +103,17 @@ func TestStartOpensTheSetupGuideOnANewInstall(t *testing.T) {
 	}
 }
 
-// A database the console set up before (here: migrated once more, as an
-// update does) opens the guide for nobody.
+// A database the console set up and someone used before (here: migrated
+// once more, as an update does) opens the guide for nobody.
 func TestStartOpensNoSetupGuideAfterAnUpdate(t *testing.T) {
 	db := storetest.Migrated(t)
 	if err := db.Migrate(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 	w := newWorld(t, setup{db: db})
+	if _, err := db.Exec(context.Background(), `UPDATE users SET last_login = datetime('now')`); err != nil {
+		t.Fatal(err)
+	}
 	if err := w.s.Start(context.Background()); err != nil {
 		t.Fatal(err)
 	}

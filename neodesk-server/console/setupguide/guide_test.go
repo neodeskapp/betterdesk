@@ -129,13 +129,14 @@ func TestBeginPicksTheFirstAdmin(t *testing.T) {
 	}
 }
 
-// An install the console ran on before (here: the start after the first
-// one, as after an update) opens the guide for nobody, and neither does a
+// An install that was used before (someone signed in), started again as
+// after an update, opens the guide for nobody, and neither does a used
 // database the Node console set up.
 func TestExistingInstallOpensNothing(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		ctx := context.Background()
 		addUser(t, db, 1, "admin", "admin")
+		exec(t, db, `UPDATE users SET last_login = `+store.NowSQL(db.Dialect())+` WHERE id = 1`)
 		if err := db.Migrate(ctx); err != nil {
 			t.Fatal(err)
 		}
@@ -154,12 +155,61 @@ func TestExistingInstallOpensNothing(t *testing.T) {
 	t.Run("node-first", func(t *testing.T) {
 		db := storetest.Prepare(t, storetest.SQLite(t), storetest.NodeFirst)
 		addUser(t, db, 1, "admin", "admin")
+		exec(t, db, `UPDATE users SET last_login = datetime('now') WHERE id = 1`)
 		s := newService(db, &fake{})
 		if err := s.Begin(context.Background()); err != nil {
 			t.Fatal(err)
 		}
 		if status(t, s, Viewer{UserID: 1, Can: all, SuperAdmin: true}).Visible {
 			t.Error("a database of the Node console opened the guide")
+		}
+	})
+}
+
+// When something set the tables up before the first start (the
+// reset-password command migrates the database), the first start still
+// opens the guide: nobody has signed in and there is no device. A start
+// that finds a device, or an account that signed in, does not.
+func TestFirstStartAfterACommandOpensTheGuide(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		addUser(t, db, 1, "admin", "admin")
+		exec(t, db, `UPDATE users SET password_hash = 'pbkdf2-sha256$reset' WHERE id = 1`)
+		if err := db.Migrate(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if db.NewInstall() {
+			t.Fatal("the second Migrate reports a new install")
+		}
+		f := &fake{devices: 1}
+		s := newService(db, f)
+		if err := s.Begin(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if status(t, s, Viewer{UserID: 1, Can: all, SuperAdmin: true}).Visible {
+			t.Error("an install with a device opened the guide")
+		}
+		f.devices = 0
+		if err := s.Begin(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if !status(t, s, Viewer{UserID: 1, Can: all, SuperAdmin: true}).Visible {
+			t.Error("the first start after the command did not open the guide")
+		}
+	})
+	t.Run("signed-in", func(t *testing.T) {
+		db := storetest.Migrated(t)
+		addUser(t, db, 1, "admin", "admin")
+		exec(t, db, `UPDATE users SET last_login = '2026-11-01 10:00:00' WHERE id = 1`)
+		if err := db.Migrate(context.Background()); err != nil {
+			t.Fatal(err)
+		}
+		s := newService(db, &fake{})
+		if err := s.Begin(context.Background()); err != nil {
+			t.Fatal(err)
+		}
+		if status(t, s, Viewer{UserID: 1, Can: all, SuperAdmin: true}).Visible {
+			t.Error("an install someone signed in to opened the guide")
 		}
 	})
 }
