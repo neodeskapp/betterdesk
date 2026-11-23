@@ -28,7 +28,7 @@ import (
 // (NEODESK_CLIENT_BUILD_COMMAND) or a GitHub Actions workflow.
 
 const (
-	defaultBuilderRef = "master"
+	defaultBuilderRef = "main"
 )
 
 var providerTargetKeys = map[string]bool{
@@ -79,7 +79,7 @@ func (s *Service) NormalizeRepo(value any) (string, error) {
 	return "", codeError("neodesk_client_repo_not_allowed")
 }
 
-// ClientRef checks a git ref (NEODESK_CLIENT_REF, default master): not
+// ClientRef checks a git ref (NEODESK_CLIENT_REF, default main): not
 // empty, at most 200 characters, no NUL or line break.
 func (s *Service) ClientRef(value any) (string, error) {
 	ref := jsTrim(jsString(or(or(value, s.getenv("NEODESK_CLIENT_REF")), defaultBuilderRef)))

@@ -547,7 +547,7 @@ func TestInstallNeedsTerms(t *testing.T) {
 func TestSyncSource(t *testing.T) {
 	commit := strings.Repeat("c", 40)
 	gh := &fakeGitHub{answer: func(r *http.Request) *http.Response {
-		if r.URL.Opaque == "//api.github.com/repos/neodeskapp/neodesk-client/commits/master" {
+		if r.URL.Opaque == "//api.github.com/repos/neodeskapp/neodesk-client/commits/main" {
 			return reply(200, []byte(`{"sha":"`+commit+`"}`))
 		}
 		return nil
@@ -605,6 +605,32 @@ func TestSyncSource(t *testing.T) {
 	state, _ = s.BuilderState()
 	if prop(state, "status") != "error" || !exists(filepath.Join(s.SourceDir(), "Cargo.toml")) {
 		t.Fatalf("after a failed sync: %s", stringify(state))
+	}
+}
+
+// TestGithubActionsBuildDispatchesMain asks the client fork's workflow
+// to build from main when the builder names no ref: the fork has no
+// master branch (L290).
+func TestGithubActionsBuildDispatchesMain(t *testing.T) {
+	var dispatched []byte
+	gh := &fakeGitHub{answer: func(r *http.Request) *http.Response {
+		if r.Method == http.MethodPost && strings.HasSuffix(r.URL.String(), "/repos/neodeskapp/neodesk-client/actions/workflows/support-build.yml/dispatches") {
+			dispatched, _ = io.ReadAll(r.Body)
+			return reply(204, nil)
+		}
+		return reply(500, nil)
+	}}
+	s := New(Options{DataDir: t.TempDir(), HTTP: gh, Env: func() []string { return nil }})
+	_, _ = s.runGithubActionsBuild(context.Background(), goapi.NewObject(), "", t.TempDir())
+	if dispatched == nil {
+		t.Fatalf("no workflow dispatch among %d requests", len(gh.requests))
+	}
+	body, err := parseJSON(string(dispatched))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ref := prop(body, "ref"); ref != "main" {
+		t.Errorf("dispatched ref %v, want main", ref)
 	}
 }
 
