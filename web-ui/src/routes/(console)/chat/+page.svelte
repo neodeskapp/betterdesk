@@ -466,7 +466,7 @@
 	</span>
 {/snippet}
 
-<div class="page page-wide chat-page">
+<div class={['page page-wide chat-page', chat.active !== null && 'is-reading']}>
 	<div class="page-head">
 		<h1>{t('nav.chat')}</h1>
 		<p class="page-description">{t('chat.page_description')}</p>
@@ -1052,6 +1052,12 @@
 				100dvh - var(--topbar-h) - var(--page-pad) - var(--space-7) - 56px - env(safe-area-inset-bottom, 0px)
 			);
 			min-height: 460px;
+		}
+		/* The list alone: it takes the page's height (the page scrolls)
+		   instead of a short box under the page head */
+		.chat-page:not(.is-reading) {
+			height: auto;
+			min-height: 0;
 		}
 		.chat-conv-header :global(.chat-back) {
 			display: inline-flex;

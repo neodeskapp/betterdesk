@@ -436,3 +436,19 @@ test.describe('tab strips on a phone', () => {
 		expect(t!.x + t!.width, 'end of the open tab').toBeLessThanOrEqual(s!.x + s!.width);
 	});
 });
+
+test.describe('chat on a small phone', () => {
+	test.use({ viewport: { width: 360, height: 640 } });
+
+	// Small-screen pass, usability 5: the contact list showed two or three rows in a short box
+	test('the contact list takes the page height instead of a short box', async ({ page }) => {
+		await open(page, '/chat', 'en');
+		const panel = page.locator('.chat-tabs [role="tabpanel"]');
+		await expect(panel.locator('li').nth(3)).toBeAttached();
+		const { scroll, client } = await panel.evaluate((el) => ({
+			scroll: el.scrollHeight,
+			client: el.clientHeight
+		}));
+		expect(scroll, 'height of the contacts in their box').toBeLessThanOrEqual(client + 1);
+	});
+});
