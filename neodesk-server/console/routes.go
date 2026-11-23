@@ -52,6 +52,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/settings"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/settingsbackup"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/settingsupdates"
+	setupguideroutes "github.com/neodeskapp/neodesk/neodesk-server/console/routes/setupguide"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/system"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/tenants"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/tickets"
@@ -167,4 +168,5 @@ func registerRoutes(d *kit.Deps, backups *backup.Service) {
 	pairing.Register(d)                       // routes/pairing.routes.js
 	onboard.Register(d)                       // Add a computer and Quick support: invites, sessions, client packages
 	apitokens.Register(d)                     // API tokens for scripts, the command line and its MCP server
+	setupguideroutes.Register(d)              // the first-install guide on the overview
 }

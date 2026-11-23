@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -84,6 +85,7 @@ func (d *DB) Migrate(ctx context.Context) error {
 	if len(m.created) > 0 {
 		logging.Logf(logComponent, "Migration: created %d tables: %s", len(m.created), strings.Join(m.created, ", "))
 	}
+	d.newInstall.Store(slices.Contains(m.created, "settings"))
 
 	shape, err := inspect(ctx, conn, d.dialect)
 	if err != nil {
@@ -92,6 +94,13 @@ func (d *DB) Migrate(ctx context.Context) error {
 	d.setShape(shape)
 	return nil
 }
+
+// NewInstall reports whether the last Migrate of this handle set the
+// console up on a database that had never had it: the settings table,
+// which only the console makes, was not there before. A database an
+// earlier version of the console used, or a copy of one, has it, so after
+// an update this is false.
+func (d *DB) NewInstall() bool { return d.newInstall.Load() }
 
 // lockSchema takes the advisory lock on conn and returns the function that
 // releases it. A connection whose lock cannot be released is closed for

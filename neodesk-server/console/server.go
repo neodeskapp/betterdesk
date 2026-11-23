@@ -338,6 +338,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	})
 	s.deps.DeviceGroups = devicegroups.New(devicegroups.Options{DB: opts.Store, Access: s.deps.Access})
 	s.deps.Backend = goapi.NewBackend(api, devicegroups.DeviceStore{Groups: s.deps.DeviceGroups})
+	s.deps.SetupGuide = s.newSetupGuide(opts.Store, api)
 	// One backup service for the backup routes and the data backup the
 	// updater keeps before an install
 	backups := settingsbackup.NewBackups(s.deps, opts.ServerDB)
@@ -527,16 +528,24 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Before it listens it imports the old console's auth.db when there is
 // one that was never imported (package authimport), loads the branding
 // settings into their cache and looks after the first account (see
-// authn.Service.EnsureDefaultAdmin).
+// authn.Service.EnsureDefaultAdmin). On a new install it then opens the
+// setup guide for that account; an install whose accounts came from
+// auth.db is not new.
 func (s *Server) Start(ctx context.Context) error {
-	if _, err := authimport.Run(ctx, s.deps.Store, s.authImport); err != nil {
+	imported, err := authimport.Run(ctx, s.deps.Store, s.authImport)
+	if err != nil {
 		return fmt.Errorf("auth.db import: %w", err)
 	}
 	s.deps.Branding.LoadBranding(ctx)
 	if _, err := s.deps.Authn.EnsureDefaultAdmin(ctx); err != nil {
 		return fmt.Errorf("first account: %w", err)
 	}
-	err := s.openListeners(ctx)
+	if imported == nil {
+		if err := s.deps.SetupGuide.Begin(ctx); err != nil {
+			logging.Logf("console", "WARN: the setup guide could not be opened for the first admin: %v", err)
+		}
+	}
+	err = s.openListeners(ctx)
 	if err == nil {
 		err = s.startClientAPI(ctx)
 	}

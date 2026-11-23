@@ -44,6 +44,8 @@ type DB struct {
 	dialect Dialect
 	// shape is what the tables looked like at the last Migrate or Inspect
 	shape atomic.Pointer[Shape]
+	// newInstall says the last Migrate created the settings table
+	newInstall atomic.Bool
 }
 
 // sqliteReaders is the number of read-only connections on SQLite.
