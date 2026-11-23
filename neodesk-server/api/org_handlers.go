@@ -905,6 +905,10 @@ func (s *Server) handleSetOrgPolicy(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
 		return
 	}
+	if problem := checkOrgPolicy(category, body); problem != "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": problem})
+		return
+	}
 
 	// Serialize back to string for storage
 	encoded, err := json.Marshal(body)

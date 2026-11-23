@@ -5385,6 +5385,8 @@
     "save_button": "Richtlinien speichern",
     "no_changes": "Es wurde nichts geändert.",
     "invalid_number": "{field}: Geben Sie eine ganze Zahl von {min} bis {max} ein.",
+    "invalid_ip_range": "{entry} ist keine IP-Adresse und kein Bereich. Schreiben Sie einen pro Zeile, zum Beispiel 10.0.0.0/8.",
+    "invalid_relay": "{entry} ist keine Serveradresse. Schreiben Sie eine pro Zeile als Hostname oder Adresse, bei Bedarf mit Port, zum Beispiel relay1.example.com:21117.",
     "discard_title": "Ungespeicherte Änderungen verwerfen?",
     "discard_message": "Die Änderungen an den Richtlinien dieser Organisation sind noch nicht gespeichert.",
     "discard_confirm": "Änderungen verwerfen",

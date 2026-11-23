@@ -5392,6 +5392,8 @@
     "save_button": "حفظ السياسات",
     "no_changes": "لم يتغير شيء.",
     "invalid_number": "{field}: أدخل عددًا صحيحًا من {min} إلى {max}.",
+    "invalid_ip_range": "{entry} is not an IP address or range. Write one per line, for example 10.0.0.0/8.",
+    "invalid_relay": "{entry} is not a server address. Write one per line as a host name or address, with a port if needed, for example relay1.example.com:21117.",
     "discard_title": "هل تريد تجاهل التغييرات غير المحفوظة؟",
     "discard_message": "لم تُحفظ بعد التغييرات على سياسات هذه المؤسسة.",
     "discard_confirm": "تجاهل التغييرات",

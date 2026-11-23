@@ -3,7 +3,10 @@ import {
 	auditSection,
 	bodyFor,
 	changedSections,
+	invalidLists,
 	invalidNumbers,
+	isAddressRange,
+	isRelayAddress,
 	isSet,
 	setCount,
 	valuesFrom
@@ -137,5 +140,41 @@ describe('group states and the change log', () => {
 		expect(auditSection({ ...base, details: { category: 'network' } })).toBe('network');
 		expect(auditSection({ ...base, details: null, section: 'update' })).toBe('update');
 		expect(auditSection({ ...base, details: null })).toBe('');
+	});
+});
+
+describe('list fields (BUGS L395)', () => {
+	test('IP ranges: an address or a CIDR range, IPv4 or IPv6', () => {
+		for (const ok of ['192.168.1.0/24', '10.0.0.5', '0.0.0.0/0', '2001:db8::/32', '::1'])
+			expect(isAddressRange(ok), ok).toBe(true);
+		for (const bad of ['not-a-cidr', '999.1.1.1/77', '10.0.0.0/33', '10.0.0', '2001:db8::/129', '1.2.3.4/'])
+			expect(isAddressRange(bad), bad).toBe(false);
+	});
+
+	test('relay servers: a host name or an address, with a port or without', () => {
+		for (const ok of [
+			'relay1.example.com:21117',
+			'relay2.example.com',
+			'10.0.0.1',
+			'10.0.0.1:21117',
+			'[2001:db8::1]:21117'
+		])
+			expect(isRelayAddress(ok), ok).toBe(true);
+		for (const bad of [
+			'relay one.example.com',
+			'relay.example.com:99999',
+			'relay.example.com:',
+			'https://relay.example.com',
+			'-x'
+		])
+			expect(isRelayAddress(bad), bad).toBe(false);
+	});
+
+	test('invalidLists names the first wrong line of each changed list', () => {
+		const v = valuesFrom({});
+		v.network.ip_allowlist = '10.0.0.0/8\nnot-a-cidr\nbad2';
+		v.network.allowed_relay_servers = 'relay.example.com';
+		expect(invalidLists(v, ['network'])).toEqual([{ field: 'network.ip_allowlist', entry: 'not-a-cidr' }]);
+		expect(invalidLists(v, ['security'])).toEqual([]);
 	});
 });

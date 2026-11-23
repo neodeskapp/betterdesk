@@ -40,6 +40,7 @@
 		auditTime,
 		bodyFor,
 		changedSections,
+		invalidLists,
 		invalidNumbers,
 		isSet,
 		NUMBER_LIMITS,
@@ -47,6 +48,7 @@
 		SECTIONS,
 		setCount,
 		valuesFrom,
+		type ListField,
 		type NumberField,
 		type PolicyValues,
 		type Section
@@ -291,7 +293,22 @@
 		'security.password_min_length': 'policies.password_min_length',
 		'security.password_max_age_days': 'policies.password_max_age'
 	};
-	const fieldId = (field: NumberField) => 'pol-' + field.replace(/[._]/g, '-');
+	const fieldId = (field: NumberField | ListField) => 'pol-' + field.replace(/[._]/g, '-');
+
+	// One entry per line: the first line that is wrong is named next to its field
+	let listErrors = $state<Partial<Record<ListField, { message: string; value: unknown }>>>({});
+	function listOf(field: ListField): unknown {
+		const [s, k] = field.split('.') as [Section, string];
+		return (values[s] as Record<string, unknown>)[k];
+	}
+	function listErrorOf(field: ListField): string | undefined {
+		const e = listErrors[field];
+		return e && Object.is(e.value, listOf(field)) ? e.message : undefined;
+	}
+	const LIST_MESSAGE: Readonly<Record<ListField, string>> = {
+		'network.allowed_relay_servers': 'policies.invalid_relay',
+		'network.ip_allowlist': 'policies.invalid_ip_range'
+	};
 
 	async function save(e: SubmitEvent) {
 		e.preventDefault();
@@ -303,7 +320,8 @@
 		}
 		// Check everything first, so a typo doesn't leave the save half done
 		const bad = invalidNumbers(values, sections);
-		if (bad.length) {
+		const badLists = invalidLists(values, sections);
+		if (bad.length || badLists.length) {
 			const next: typeof errors = {};
 			for (const f of bad) {
 				const [min, max] = NUMBER_LIMITS[f];
@@ -312,12 +330,24 @@
 					value: numberOf(f)
 				};
 			}
+			const nextLists: typeof listErrors = {};
+			for (const { field, entry } of badLists) {
+				nextLists[field] = { message: t(LIST_MESSAGE[field], { entry }), value: listOf(field) };
+			}
 			errors = next;
-			status = { state: 'error', message: next[bad[0] as NumberField]?.message ?? '' };
-			document.getElementById(fieldId(bad[0] as NumberField))?.focus();
+			listErrors = nextLists;
+			const first = bad[0] ?? badLists[0]?.field;
+			const message = bad[0]
+				? next[bad[0]]?.message
+				: badLists[0]
+					? nextLists[badLists[0].field]?.message
+					: '';
+			status = { state: 'error', message: message ?? '' };
+			if (first) document.getElementById(fieldId(first))?.focus();
 			return;
 		}
 		errors = {};
+		listErrors = {};
 		saving = true;
 		status = { state: 'saving', message: t('ui_form.saving') };
 		const id = org.id;
@@ -651,9 +681,11 @@
 											bind:checked={values.network.block_direct_p2p}
 										/>
 										<Field
+											id={fieldId('network.allowed_relay_servers')}
 											label={t('policies.allowed_relays')}
 											hint={t('policies.allowed_relays_hint')}
 											effect={t('policies.effect_server')}
+											error={listErrorOf('network.allowed_relay_servers')}
 										>
 											{#snippet children(f)}<Textarea
 													{...f}
@@ -666,9 +698,11 @@
 												/>{/snippet}
 										</Field>
 										<Field
+											id={fieldId('network.ip_allowlist')}
 											label={t('policies.ip_allowlist')}
 											hint={t('policies.ip_allowlist_hint')}
 											effect={t('policies.effect_device')}
+											error={listErrorOf('network.ip_allowlist')}
 										>
 											{#snippet children(f)}<Textarea
 													{...f}

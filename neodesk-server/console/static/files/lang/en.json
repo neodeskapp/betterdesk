@@ -5592,6 +5592,8 @@
         "save_button": "Save policies",
         "no_changes": "Nothing has changed.",
         "invalid_number": "{field}: enter a whole number from {min} to {max}.",
+        "invalid_ip_range": "{entry} is not an IP address or range. Write one per line, for example 10.0.0.0/8.",
+        "invalid_relay": "{entry} is not a server address. Write one per line as a host name or address, with a port if needed, for example relay1.example.com:21117.",
         "discard_title": "Discard unsaved changes?",
         "discard_message": "The changes to this organization's policies are not saved yet.",
         "discard_confirm": "Discard changes",

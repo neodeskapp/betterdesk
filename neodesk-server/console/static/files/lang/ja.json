@@ -5385,6 +5385,8 @@
     "save_button": "ポリシーを保存",
     "no_changes": "変更はありません。",
     "invalid_number": "{field}: {min}～{max} の整数を入力してください。",
+    "invalid_ip_range": "{entry} is not an IP address or range. Write one per line, for example 10.0.0.0/8.",
+    "invalid_relay": "{entry} is not a server address. Write one per line as a host name or address, with a port if needed, for example relay1.example.com:21117.",
     "discard_title": "保存していない変更を破棄しますか？",
     "discard_message": "この組織のポリシーへの変更はまだ保存されていません。",
     "discard_confirm": "変更を破棄",

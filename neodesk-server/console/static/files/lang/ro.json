@@ -5391,6 +5391,8 @@
     "save_button": "Salvați politicile",
     "no_changes": "Nu s-a schimbat nimic.",
     "invalid_number": "{field}: introduceți un număr întreg de la {min} la {max}.",
+    "invalid_ip_range": "{entry} is not an IP address or range. Write one per line, for example 10.0.0.0/8.",
+    "invalid_relay": "{entry} is not a server address. Write one per line as a host name or address, with a port if needed, for example relay1.example.com:21117.",
     "discard_title": "Renunțați la modificările nesalvate?",
     "discard_message": "Modificările politicilor acestei organizații nu sunt încă salvate.",
     "discard_confirm": "Renunțați la modificări",

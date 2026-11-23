@@ -5523,6 +5523,8 @@
     "save_button": "Enregistrer les politiques",
     "no_changes": "Rien n'a changé.",
     "invalid_number": "{field} : saisissez un nombre entier de {min} à {max}.",
+    "invalid_ip_range": "{entry} is not an IP address or range. Write one per line, for example 10.0.0.0/8.",
+    "invalid_relay": "{entry} is not a server address. Write one per line as a host name or address, with a port if needed, for example relay1.example.com:21117.",
     "discard_title": "Abandonner les modifications non enregistrées ?",
     "discard_message": "Les modifications des politiques de cette organisation ne sont pas encore enregistrées.",
     "discard_confirm": "Abandonner les modifications",

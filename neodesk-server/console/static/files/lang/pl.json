@@ -5519,6 +5519,8 @@
     "save_button": "Zapisz zasady",
     "no_changes": "Nic się nie zmieniło.",
     "invalid_number": "{field}: wpisz liczbę całkowitą od {min} do {max}.",
+    "invalid_ip_range": "{entry} is not an IP address or range. Write one per line, for example 10.0.0.0/8.",
+    "invalid_relay": "{entry} is not a server address. Write one per line as a host name or address, with a port if needed, for example relay1.example.com:21117.",
     "discard_title": "Odrzucić niezapisane zmiany?",
     "discard_message": "Zmiany w zasadach tej organizacji nie zostały jeszcze zapisane.",
     "discard_confirm": "Odrzuć zmiany",

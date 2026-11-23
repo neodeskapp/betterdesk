@@ -5385,6 +5385,8 @@
     "save_button": "Salvar políticas",
     "no_changes": "Nada mudou.",
     "invalid_number": "{field}: insira um número inteiro de {min} a {max}.",
+    "invalid_ip_range": "{entry} is not an IP address or range. Write one per line, for example 10.0.0.0/8.",
+    "invalid_relay": "{entry} is not a server address. Write one per line as a host name or address, with a port if needed, for example relay1.example.com:21117.",
     "discard_title": "Descartar alterações não salvas?",
     "discard_message": "As alterações nas políticas desta organização ainda não foram salvas.",
     "discard_confirm": "Descartar alterações",

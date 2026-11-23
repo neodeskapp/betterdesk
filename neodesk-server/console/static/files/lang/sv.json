@@ -5391,6 +5391,8 @@
     "save_button": "Spara policyer",
     "no_changes": "Inget har ändrats.",
     "invalid_number": "{field}: ange ett heltal från {min} till {max}.",
+    "invalid_ip_range": "{entry} is not an IP address or range. Write one per line, for example 10.0.0.0/8.",
+    "invalid_relay": "{entry} is not a server address. Write one per line as a host name or address, with a port if needed, for example relay1.example.com:21117.",
     "discard_title": "Kasta osparade ändringar?",
     "discard_message": "Ändringarna i den här organisationens policyer är inte sparade än.",
     "discard_confirm": "Kasta ändringar",

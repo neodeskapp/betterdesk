@@ -5391,6 +5391,8 @@
     "save_button": "Szabályzatok mentése",
     "no_changes": "Semmi nem változott.",
     "invalid_number": "{field}: adjon meg egy egész számot {min} és {max} között.",
+    "invalid_ip_range": "{entry} is not an IP address or range. Write one per line, for example 10.0.0.0/8.",
+    "invalid_relay": "{entry} is not a server address. Write one per line as a host name or address, with a port if needed, for example relay1.example.com:21117.",
     "discard_title": "Elveti a nem mentett módosításokat?",
     "discard_message": "A szervezet szabályzatain végzett módosítások még nincsenek mentve.",
     "discard_confirm": "Módosítások elvetése",

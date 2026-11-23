@@ -5385,6 +5385,8 @@
     "save_button": "Beleid opslaan",
     "no_changes": "Er is niets gewijzigd.",
     "invalid_number": "{field}: voer een geheel getal van {min} tot {max} in.",
+    "invalid_ip_range": "{entry} is not an IP address or range. Write one per line, for example 10.0.0.0/8.",
+    "invalid_relay": "{entry} is not a server address. Write one per line as a host name or address, with a port if needed, for example relay1.example.com:21117.",
     "discard_title": "Niet-opgeslagen wijzigingen verwerpen?",
     "discard_message": "De wijzigingen in het beleid van deze organisatie zijn nog niet opgeslagen.",
     "discard_confirm": "Wijzigingen verwerpen",

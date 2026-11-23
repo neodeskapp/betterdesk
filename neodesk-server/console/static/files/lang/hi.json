@@ -5391,6 +5391,8 @@
     "save_button": "नीतियाँ सहेजें",
     "no_changes": "कुछ नहीं बदला।",
     "invalid_number": "{field}: {min} से {max} तक की पूर्ण संख्या दर्ज करें।",
+    "invalid_ip_range": "{entry} is not an IP address or range. Write one per line, for example 10.0.0.0/8.",
+    "invalid_relay": "{entry} is not a server address. Write one per line as a host name or address, with a port if needed, for example relay1.example.com:21117.",
     "discard_title": "बिना सहेजे बदलाव छोड़ दें?",
     "discard_message": "इस संगठन की नीतियों में किए गए बदलाव अभी सहेजे नहीं गए हैं।",
     "discard_confirm": "बदलाव छोड़ें",

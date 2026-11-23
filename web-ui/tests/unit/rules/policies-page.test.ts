@@ -5,6 +5,7 @@
  * page says so, and no write goes out.
  */
 import { cleanup, render, screen } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const pageState = vi.hoisted(() => ({
@@ -80,5 +81,29 @@ describe('policies page', () => {
 		expect(screen.getByRole('button', { name: 'policies.save_button' })).toBeInTheDocument();
 		expect(screen.queryByText('You can view this page but not change it.')).toBeNull();
 		expect(screen.getByLabelText('policies.connection_mode')).toBeEnabled();
+	});
+
+	test('a line that is no IP range or no server address is refused next to its field, and nothing is saved (BUGS L395)', async () => {
+		signIn('global_admin', ['org.edit', 'org.manage_users', 'user.view', 'device.view']);
+		const user = userEvent.setup();
+		await openPage();
+		const ranges = screen.getByLabelText('policies.ip_allowlist');
+		await user.type(ranges, '10.0.0.0/8{Enter}not-a-cidr');
+		await user.click(screen.getByRole('button', { name: 'policies.save_button' }));
+		await vi.waitFor(() => expect(ranges).toHaveAccessibleDescription(/policies.invalid_ip_range/));
+		expect(writes).toEqual([]);
+
+		await user.clear(ranges);
+		await user.type(ranges, '10.0.0.0/8');
+		const relays = screen.getByLabelText('policies.allowed_relays');
+		await user.type(relays, 'relay one.example.com');
+		await user.click(screen.getByRole('button', { name: 'policies.save_button' }));
+		await vi.waitFor(() => expect(relays).toHaveAccessibleDescription(/policies.invalid_relay/));
+		expect(writes).toEqual([]);
+
+		await user.clear(relays);
+		await user.type(relays, 'relay1.example.com:21117');
+		await user.click(screen.getByRole('button', { name: 'policies.save_button' }));
+		await vi.waitFor(() => expect(writes).toEqual(['PUT /api/panel/policies/org-1/network']));
 	});
 });

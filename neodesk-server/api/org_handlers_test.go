@@ -81,10 +81,10 @@ func TestOrgPolicyAndInviteOfAnUnknownOrgAre404(t *testing.T) {
 		method, path, body string
 		want               int
 	}{
-		{http.MethodPut, "/api/org/no-such-org/policy/connection", `{"x":1}`, http.StatusNotFound},
+		{http.MethodPut, "/api/org/no-such-org/policy/connection", `{"mode":"attended"}`, http.StatusNotFound},
 		{http.MethodPost, "/api/org/no-such-org/invite", `{"email":"a@example.org"}`, http.StatusNotFound},
-		{http.MethodPut, "/api/org/no-such-org/policy/nonsense", `{"x":1}`, http.StatusBadRequest},
-		{http.MethodPut, "/api/org/org-a/policy/connection", `{"x":1}`, http.StatusOK},
+		{http.MethodPut, "/api/org/no-such-org/policy/nonsense", `{"mode":"attended"}`, http.StatusBadRequest},
+		{http.MethodPut, "/api/org/org-a/policy/connection", `{"mode":"attended"}`, http.StatusOK},
 		{http.MethodPost, "/api/org/org-a/invite", `{"email":"a@example.org"}`, http.StatusCreated},
 	} {
 		if status, body := asConsole(t, srv, c.method, c.path, c.body); status != c.want {
