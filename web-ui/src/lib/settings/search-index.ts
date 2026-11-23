@@ -482,7 +482,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		[],
 		''
 	],
-	['branding', 'bg-color-picker', 'branding.bg_color', 'settings.appearance.console_background', [], ''],
+	['branding', 'bg-color', 'branding.bg_color', 'settings.appearance.console_background', [], ''],
 	[
 		'branding',
 		'bg-gradient',
@@ -546,7 +546,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		[],
 		''
 	],
-	['branding', 'login-bg-color-picker', 'branding.bg_color', 'settings.appearance.login_background', [], ''],
+	['branding', 'login-bg-color', 'branding.bg_color', 'settings.appearance.login_background', [], ''],
 	['branding', 'login-bg-gradient', 'branding.bg_gradient', 'settings.appearance.login_background', [], ''],
 	[
 		'branding',
@@ -567,7 +567,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		''
 	],
 	['branding', 'branding-agent', 'settings.appearance.background_type', 'branding.agent_title', [], ''],
-	['branding', 'agent-bg-color-picker', 'branding.bg_color', 'branding.agent_title', [], ''],
+	['branding', 'agent-bg-color', 'branding.bg_color', 'branding.agent_title', [], ''],
 	['branding', 'agent-bg-gradient', 'branding.bg_gradient', 'branding.agent_title', [], ''],
 	[
 		'branding',
@@ -602,7 +602,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		[],
 		''
 	],
-	['branding', 'rdclient-bg-color-picker', 'branding.bg_color', 'settings.appearance.rdclient', [], ''],
+	['branding', 'rdclient-bg-color', 'branding.bg_color', 'settings.appearance.rdclient', [], ''],
 	['branding', 'rdclient-bg-gradient', 'branding.bg_gradient', 'settings.appearance.rdclient', [], ''],
 	[
 		'branding',
