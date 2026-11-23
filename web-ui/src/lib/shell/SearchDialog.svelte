@@ -8,7 +8,9 @@
 
   A modal dialog: combobox field with a listbox of results in groups.
   ArrowUp and ArrowDown move, Enter opens, Escape closes and returns
-  focus, Tab stays in the field; a click on the dimmed page closes.
+  focus, Tab stays in the field; a click on the dimmed page closes. On
+  phones and touch screens, which have no Escape key, Cancel next to the
+  field closes it too.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -195,6 +197,7 @@
 					oninput={() => (active = 0)}
 					{onkeydown}
 				/>
+				<button type="button" class="search-cancel" onclick={close}>{t('common.cancel')}</button>
 			</div>
 			<div class="search-results" id={`${uid}-results`} role="listbox" aria-label={t('search.results')}>
 				{#each groups as g (g.kind)}
@@ -266,6 +269,9 @@
 	}
 	.search-field {
 		position: relative;
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
 		padding: var(--space-3);
 		border-bottom: 1px solid var(--rule);
 	}
@@ -279,8 +285,10 @@
 		pointer-events: none;
 	}
 	.search-field input {
+		flex: 1;
 		box-sizing: border-box;
 		width: 100%;
+		min-width: 0;
 		min-height: 44px;
 		padding-block: 0;
 		padding-inline: calc(var(--space-2) + 20px + var(--space-2)) var(--control-pad-x-sm);
@@ -299,6 +307,29 @@
 		border-color: var(--focus);
 		outline: 2px solid var(--focus);
 		outline-offset: -1px;
+	}
+	/* Only where there is no Escape key to press */
+	.search-cancel {
+		display: none;
+		flex: none;
+		min-height: 44px;
+		padding: 0 var(--space-2);
+		border: 0;
+		border-radius: var(--radius);
+		background: transparent;
+		color: var(--accent);
+		font: inherit;
+		font-weight: var(--control-weight);
+		cursor: pointer;
+	}
+	.search-cancel:hover {
+		background: var(--hover);
+	}
+	@media (max-width: 767px), (pointer: coarse) {
+		.search-cancel {
+			display: inline-flex;
+			align-items: center;
+		}
 	}
 	.search-results {
 		flex: 1;

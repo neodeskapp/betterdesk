@@ -189,6 +189,14 @@ describe('SearchDialog', () => {
 		expect(document.activeElement).toBe(box);
 	});
 
+	test('Cancel next to the field closes it (phones have no Escape key)', async () => {
+		const { user, view, opener } = await setup();
+		await user.click(screen.getByRole('button', { name: 'common.cancel', hidden: true }));
+		expect(screen.queryByRole('dialog')).toBeNull();
+		expect(document.activeElement).toBe(opener);
+		void view;
+	});
+
 	test('says what to type, how many results there are, or that nothing matched', async () => {
 		const { user } = await setup();
 		expect(screen.getByText('search.hint')).toBeInTheDocument();
