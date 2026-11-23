@@ -2520,7 +2520,7 @@
       "title": "장치 선택",
       "already_connected": "이미 연결됨"
     },
-    "http_warning": "HTTP 모드: H.264 소프트웨어 디코딩으로 제한 (~15 FPS). 최고 성능을 위해 HTTPS를 사용하세요 (WebCodecs, VP9, 60 FPS).",
+    "http_warning": "일반 HTTP에서는 이 브라우저가 H.264 영상만 재생합니다. H.264 인코더가 없는 기기는 표시할 수 없습니다. 모든 기기를 보려면 HTTPS로 콘솔을 여세요.",
     "file_transfer": "파일 전송",
     "file_upload": "업로드",
     "file_download": "다운로드",
@@ -8172,6 +8172,9 @@
     "try_notfound": "ID를 확인하세요. 기기가 삭제되었거나 새 ID로 다시 등록되었을 수 있습니다.",
     "fail_offline": "{name}은(는) 오프라인입니다.",
     "try_offline": "최근에 서버에 접속하지 않았습니다. 기기를 켜거나 절전 모드를 해제한 후 다시 연결하세요.",
+    "fail_https": "{name}은(는) 일반 HTTP에서 표시할 수 없습니다.",
+    "try_https": "이 기기에는 H.264 인코더가 없고, HTTP에서는 브라우저가 H.264만 재생합니다. 화면을 보려면 HTTPS로 콘솔을 여세요.",
+    "https_help": "HTTPS 설정 방법",
     "fail_limit": "지금은 서버에서 이 연결을 허용하지 않습니다.",
     "try_limit": "라이선스 또는 연결 수가 한도에 도달했습니다. 관리자에게 문의하세요.",
     "fail_relay": "릴레이 서버에 연결할 수 없습니다.",

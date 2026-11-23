@@ -198,6 +198,11 @@
 								bind:element={reconnectBtn}
 								onclick={() => viewer.reconnect(s)}>{tf('remote.reconnect', 'Reconnect')}</Button
 							>
+							{#if s.helpUrl}
+								<LinkButton icon="open_in_new" href={s.helpUrl} target="_blank" rel="noopener noreferrer"
+									>{tf('remote_viewer.https_help', 'How to set up HTTPS')}</LinkButton
+								>
+							{/if}
 							{#if s.cdapFallback}
 								<LinkButton
 									href={link(`/remote/${encodeURIComponent(s.deviceId)}?transport=cdap`)}

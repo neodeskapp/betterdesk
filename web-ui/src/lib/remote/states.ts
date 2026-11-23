@@ -145,7 +145,12 @@ export interface Outcome {
 	tryText: string;
 	/** An end rather than a failure */
 	ended?: boolean;
+	/** A page of the docs that explains what to do */
+	helpUrl?: string;
 }
+
+/** The docs page on putting the console behind HTTPS */
+export const HTTPS_DOCS_URL = 'https://neode.sk/docs/operations/reverse-proxy-tls';
 
 export interface CloseMeta {
 	closeCode?: number | string;
@@ -180,6 +185,21 @@ export function classifyEnd(
 				"An administrator can turn it on in your account's client features."
 			)
 		);
+	}
+	// The device sends video this browser plays only in a secure context
+	// (client.ts HTTPS_REQUIRED): without HTTPS it would stay black
+	if (/^https required/.test(m)) {
+		return {
+			...pick(
+				'https',
+				tf('remote_viewer.fail_https', "{name} can't be shown over plain HTTP.", p),
+				tf(
+					'remote_viewer.try_https',
+					'This device has no H.264 encoder, and over HTTP the browser plays only H.264. Open the console over HTTPS to see its screen.'
+				)
+			),
+			helpUrl: HTTPS_DOCS_URL
+		};
 	}
 	// The client stopped before signing in: the device's identity or the encryption did not check out
 	if (/^handshake failed/.test(m)) {

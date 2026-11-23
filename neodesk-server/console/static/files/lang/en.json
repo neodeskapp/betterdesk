@@ -2559,7 +2559,7 @@
             "title": "Choose device",
             "already_connected": "Already connected"
         },
-        "http_warning": "HTTP mode: limited to H.264 software decode (~15 FPS). Use HTTPS for full performance (WebCodecs, VP9, 60 FPS).",
+        "http_warning": "Over plain HTTP this browser plays only H.264 video. Devices without an H.264 encoder can't be shown. Open the console over HTTPS to see every device.",
         "file_transfer": "File transfer",
         "file_upload": "Upload",
         "file_download": "Download",
@@ -8172,6 +8172,9 @@
         "try_notfound": "Check the ID. The device may have been removed or registered again under a new ID.",
         "fail_offline": "{name} is offline.",
         "try_offline": "It has not checked in with the server recently. Turn it on or wake it up, then reconnect.",
+        "fail_https": "{name} can't be shown over plain HTTP.",
+        "try_https": "This device has no H.264 encoder, and over HTTP the browser plays only H.264. Open the console over HTTPS to see its screen.",
+        "https_help": "How to set up HTTPS",
         "fail_limit": "The server does not allow this connection right now.",
         "try_limit": "The licence or the number of connections is at its limit. Ask an administrator.",
         "fail_relay": "The relay server could not be reached.",

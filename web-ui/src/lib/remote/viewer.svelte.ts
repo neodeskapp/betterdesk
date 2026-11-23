@@ -42,7 +42,7 @@ import {
 	type VirtualDisplaySupport,
 	type WindowsSessions
 } from './rdclient.ts';
-import { fpsForMode, loadPrefs, presetForQuality, savePrefs, type ViewerPrefs } from './prefs.ts';
+import { CODECS, fpsForMode, loadPrefs, presetForQuality, savePrefs, type ViewerPrefs } from './prefs.ts';
 import { secureStore } from './secure-store.ts';
 import {
 	classifyEnd,
@@ -145,6 +145,8 @@ export class ViewerSession {
 	statusText = $state('');
 	tryText = $state('');
 	outcomeKind = $state('');
+	/** A docs page the result points to, '' for none */
+	helpUrl = $state('');
 	endInfo = $state.raw<EndInfo | null>(null);
 	endedBy = $state<'' | 'user' | 'cancel'>('');
 	everStreamed = $state(false);
@@ -265,6 +267,15 @@ export class Viewer {
 
 	get controlsShown(): boolean {
 		return this.chromeVisible && (this.controlsOpen || this.keepOpen);
+	}
+
+	/**
+	 * The codecs the Display menu offers: without WebCodecs (plain HTTP) a
+	 * RustDesk session plays only H.264, so it offers no codec it cannot play
+	 */
+	get codecChoices(): readonly string[] {
+		if (this.transport !== 'rd' || videoDecodingSupported()) return CODECS;
+		return CODECS.filter((c) => c === 'Auto' || c === 'H264');
 	}
 
 	isActive(s: ViewerSession): boolean {
@@ -795,6 +806,7 @@ export class Viewer {
 		if (view === 'connecting') {
 			s.tryText = '';
 			s.outcomeKind = '';
+			s.helpUrl = '';
 		}
 		if (view !== 'streaming' && this.isActive(s)) {
 			if (!this.keepOpen) this.controlsOpen = false;
@@ -835,6 +847,7 @@ export class Viewer {
 		s.statusText = info.text;
 		s.tryText = info.tryText;
 		s.outcomeKind = info.kind;
+		s.helpUrl = info.helpUrl ?? '';
 		this.syncMediaCapture();
 		// Keyboard users land on Reconnect; focus elsewhere in the page stays put
 		const focused = document.activeElement;

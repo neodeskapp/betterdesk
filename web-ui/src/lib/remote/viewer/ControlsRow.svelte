@@ -9,7 +9,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
-	import { CODECS, FPS_MODES, KEYBOARD_MODES, QUALITIES, SCALES } from '#lib/remote/prefs.ts';
+	import { FPS_MODES, KEYBOARD_MODES, QUALITIES, SCALES } from '#lib/remote/prefs.ts';
 	import { SHEET_BUTTONS, type Viewer } from '#lib/remote/viewer.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
@@ -276,7 +276,7 @@
 					</div>
 					<div role="group" aria-labelledby="{uid}-codec">
 						<div class="menu-label" id="{uid}-codec">{tf('remote.codec', 'Codec')}</div>
-						{#each CODECS as c (c)}
+						{#each viewer.codecChoices as c (c)}
 							<MenuChoice checked={s?.prefs.codec === c} onselect={() => viewer.setPref('codec', c)}
 								>{#if c === 'Auto'}{tf('remote.codec_auto', 'Auto')}{:else}<span translate="no">{c}</span
 									>{/if}</MenuChoice

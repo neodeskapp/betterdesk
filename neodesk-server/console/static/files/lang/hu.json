@@ -2526,7 +2526,7 @@
       "title": "Eszköz kiválasztása",
       "already_connected": "Már csatlakoztatva"
     },
-    "http_warning": "HTTP mód: H.264 szoftveres dekódolásra korlátozva (~15 FPS). Használja a HTTPS-t a teljes teljesítmény érdekében (WebCodecs, VP9, 60 FPS).",
+    "http_warning": "Egyszerű HTTP-n ez a böngésző csak H.264-videót játszik le. A H.264-kódoló nélküli eszközök nem jeleníthetők meg. Nyissa meg a konzolt HTTPS-en, hogy minden eszközt lásson.",
     "file_transfer": "Fájlátvitel",
     "file_upload": "Upload",
     "file_download": "Download",
@@ -8178,6 +8178,9 @@
     "try_notfound": "Ellenőrizze az ID-t. Lehet, hogy az eszközt eltávolították, vagy új ID-val regisztrálták újra.",
     "fail_offline": "A(z) {name} eszköz offline.",
     "try_offline": "Az utóbbi időben nem jelentkezett be a szerverre. Kapcsolja be vagy ébressze fel, majd csatlakozzon újra.",
+    "fail_https": "A(z) {name} eszköz egyszerű HTTP-n nem jeleníthető meg.",
+    "try_https": "Ebben az eszközben nincs H.264-kódoló, HTTP-n pedig a böngésző csak H.264-et játszik le. Nyissa meg a konzolt HTTPS-en, hogy lássa a képernyőjét.",
+    "https_help": "A HTTPS beállítása",
     "fail_limit": "A szerver most nem engedélyezi ezt a kapcsolatot.",
     "try_limit": "A licenc vagy a kapcsolatok száma elérte a korlátot. Forduljon egy rendszergazdához.",
     "fail_relay": "A továbbító szerver nem érhető el.",

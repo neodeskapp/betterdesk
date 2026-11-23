@@ -51,6 +51,12 @@ import type {
 /** An event listener; each event has its own arguments (see the _emit calls) */
 export type RDClientListener = (...args: never[]) => void;
 
+/**
+ * The start of the error of a session whose video this browser can only
+ * play in a secure context (HTTPS): the viewer shows it as such (states.ts)
+ */
+export const HTTPS_REQUIRED = 'HTTPS required';
+
 export type RDClientState =
 	| 'idle'
 	| 'connecting'
@@ -1287,6 +1293,16 @@ export class RDClient {
 		this._emit('log', 'Login successful');
 		this._emit('login_success', resp);
 		if (this._peerInfo) this._emit('peer_info', this._peerInfo);
+		// A device without an H.264 encoder sends VP9, which this browser
+		// cannot play without a secure context: end here, not on a black screen
+		if (!RDVideo.isSupported() && this._peerInfo?.encoding && !this._peerInfo.encoding.h264) {
+			this._handleError(
+				new Error(
+					`${HTTPS_REQUIRED}: the device has no H.264 encoder, and over HTTP this browser plays only H.264`
+				)
+			);
+			return;
+		}
 		this._startSession();
 	}
 
@@ -1318,6 +1334,18 @@ export class RDClient {
 
 		const codec = this.proto.detectVideoCodec(videoFrame);
 		if (!codec || codec === 'rgb' || codec === 'yuv') return;
+		if (this._state === 'error') return;
+
+		// Without WebCodecs (no secure context) only H.264 plays. A device
+		// sends VP9 when it has no H.264 encoder, whatever the viewer asked for
+		if (!RDVideo.isSupported() && codec !== 'h264') {
+			this._handleError(
+				new Error(
+					`${HTTPS_REQUIRED}: the device sends ${codec.toUpperCase()} video, and over HTTP this browser plays only H.264`
+				)
+			);
+			return;
+		}
 
 		// Initialize video decoder if needed
 		if (!this.video.initialized || this.video.currentCodec !== codec) {

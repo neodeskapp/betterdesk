@@ -2548,7 +2548,7 @@
       "title": "Choisir un appareil",
       "already_connected": "Déjà connecté"
     },
-    "http_warning": "Mode HTTP : limité au décodage logiciel H.264 (~15 FPS). Utilisez HTTPS pour des performances optimales (WebCodecs, VP9, 60 FPS).",
+    "http_warning": "En HTTP simple, ce navigateur ne lit que la vidéo H.264. Les appareils sans encodeur H.264 ne peuvent pas être affichés. Ouvrez la console en HTTPS pour voir tous les appareils.",
     "file_transfer": "Transfert de fichiers",
     "file_upload": "Téléverser",
     "file_download": "Télécharger",
@@ -8176,6 +8176,9 @@
     "try_notfound": "Vérifiez l'ID. L'appareil a peut-être été supprimé ou réenregistré sous un nouvel ID.",
     "fail_offline": "{name} est hors ligne.",
     "try_offline": "Il ne s'est pas manifesté auprès du serveur récemment. Allumez-le ou réveillez-le, puis reconnectez-vous.",
+    "fail_https": "{name} ne peut pas être affiché en HTTP simple.",
+    "try_https": "Cet appareil n'a pas d'encodeur H.264, et en HTTP le navigateur ne lit que le H.264. Ouvrez la console en HTTPS pour voir son écran.",
+    "https_help": "Configurer HTTPS",
     "fail_limit": "Le serveur n'autorise pas cette connexion pour le moment.",
     "try_limit": "La licence ou le nombre de connexions a atteint sa limite. Contactez un administrateur.",
     "fail_relay": "Le serveur relais est injoignable.",

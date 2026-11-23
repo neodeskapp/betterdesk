@@ -523,7 +523,7 @@
 		<span
 			>{tf(
 				'remote.http_warning',
-				'HTTP mode: limited to H.264 software decode (~15 FPS). Use HTTPS for full performance (WebCodecs, VP9, 60 FPS).'
+				"Over plain HTTP this browser plays only H.264 video. Devices without an H.264 encoder can't be shown. Open the console over HTTPS to see every device."
 			)}</span
 		>
 		<IconButton

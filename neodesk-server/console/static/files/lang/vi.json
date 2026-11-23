@@ -2526,7 +2526,7 @@
       "title": "Chọn thiết bị",
       "already_connected": "Đã kết nối"
     },
-    "http_warning": "Chế độ HTTP: giới hạn ở giải mã phần mềm H.264 (~15 FPS). Sử dụng HTTPS để có hiệu suất tối đa (WebCodecs, VP9, 60 FPS).",
+    "http_warning": "Qua HTTP thường, trình duyệt này chỉ phát được video H.264. Không thể hiển thị thiết bị không có bộ mã hóa H.264. Hãy mở bảng điều khiển qua HTTPS để xem mọi thiết bị.",
     "file_transfer": "Truyền tệp",
     "file_upload": "Upload",
     "file_download": "Download",
@@ -8178,6 +8178,9 @@
     "try_notfound": "Hãy kiểm tra ID. Thiết bị có thể đã bị xóa hoặc đã đăng ký lại với ID mới.",
     "fail_offline": "{name} đang ngoại tuyến.",
     "try_offline": "Thiết bị gần đây không kết nối với máy chủ. Hãy bật hoặc đánh thức thiết bị, rồi kết nối lại.",
+    "fail_https": "Không thể hiển thị {name} qua HTTP thường.",
+    "try_https": "Thiết bị này không có bộ mã hóa H.264, và qua HTTP trình duyệt chỉ phát được H.264. Hãy mở bảng điều khiển qua HTTPS để xem màn hình của thiết bị.",
+    "https_help": "Cách thiết lập HTTPS",
     "fail_limit": "Máy chủ hiện không cho phép kết nối này.",
     "try_limit": "Giấy phép hoặc số lượng kết nối đã đạt giới hạn. Hãy liên hệ quản trị viên.",
     "fail_relay": "Không thể truy cập máy chủ chuyển tiếp.",

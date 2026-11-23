@@ -2526,7 +2526,7 @@
       "title": "Cihaz seç",
       "already_connected": "Zaten bağlı"
     },
-    "http_warning": "HTTP modu: H.264 yazılım kod çözme (~15 FPS) ile sınırlıdır. Tam performans için HTTPS kullanın (WebCodecs, VP9, 60 FPS).",
+    "http_warning": "Düz HTTP üzerinden bu tarayıcı yalnızca H.264 video oynatır. H.264 kodlayıcısı olmayan cihazlar gösterilemez. Tüm cihazları görmek için konsolu HTTPS üzerinden açın.",
     "file_transfer": "Dosya Aktarımı",
     "file_upload": "Upload",
     "file_download": "Download",
@@ -8178,6 +8178,9 @@
     "try_notfound": "ID'yi kontrol edin. Cihaz kaldırılmış veya yeni bir ID ile yeniden kaydedilmiş olabilir.",
     "fail_offline": "{name} cihazı çevrimdışı.",
     "try_offline": "Son zamanlarda sunucuya bağlanmadı. Cihazı açın veya uyandırın, ardından yeniden bağlanın.",
+    "fail_https": "{name} düz HTTP üzerinden gösterilemez.",
+    "try_https": "Bu cihazda H.264 kodlayıcı yok ve HTTP üzerinden tarayıcı yalnızca H.264 oynatır. Ekranını görmek için konsolu HTTPS üzerinden açın.",
+    "https_help": "HTTPS nasıl kurulur",
     "fail_limit": "Sunucu şu anda bu bağlantıya izin vermiyor.",
     "try_limit": "Lisans veya bağlantı sayısı sınıra ulaştı. Bir yöneticiye başvurun.",
     "fail_relay": "Aktarma sunucusuna ulaşılamadı.",

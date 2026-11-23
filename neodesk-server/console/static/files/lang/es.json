@@ -2520,7 +2520,7 @@
       "title": "Elegir dispositivo",
       "already_connected": "Ya conectado"
     },
-    "http_warning": "Modo HTTP: limitado a decodificación H.264 por software (~15 FPS). Use HTTPS para máximo rendimiento (WebCodecs, VP9, 60 FPS).",
+    "http_warning": "Con HTTP sin cifrar, este navegador solo reproduce vídeo H.264. Los dispositivos sin codificador H.264 no se pueden mostrar. Abra la consola por HTTPS para ver todos los dispositivos.",
     "file_transfer": "Transferencia de archivos",
     "file_upload": "Subir",
     "file_download": "Descargar",
@@ -8172,6 +8172,9 @@
     "try_notfound": "Compruebe el ID. Puede que el dispositivo se haya eliminado o registrado de nuevo con otro ID.",
     "fail_offline": "{name} está sin conexión.",
     "try_offline": "No se ha comunicado con el servidor recientemente. Enciéndalo o actívelo y vuelva a conectar.",
+    "fail_https": "{name} no se puede mostrar con HTTP sin cifrar.",
+    "try_https": "Este dispositivo no tiene codificador H.264 y, por HTTP, el navegador solo reproduce H.264. Abra la consola por HTTPS para ver su pantalla.",
+    "https_help": "Cómo configurar HTTPS",
     "fail_limit": "El servidor no permite esta conexión en este momento.",
     "try_limit": "La licencia o el número de conexiones ha llegado a su límite. Consulte a un administrador.",
     "fail_relay": "No se pudo llegar al servidor relay.",

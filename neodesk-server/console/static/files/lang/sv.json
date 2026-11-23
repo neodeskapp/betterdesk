@@ -2526,7 +2526,7 @@
       "title": "Välj enhet",
       "already_connected": "Redan ansluten"
     },
-    "http_warning": "HTTP-läge: begränsat till H.264 mjukvaruavkodning (~15 FPS). Använd HTTPS för full prestanda (WebCodecs, VP9, 60 FPS).",
+    "http_warning": "Över vanlig HTTP spelar den här webbläsaren bara upp H.264-video. Enheter utan H.264-kodare kan inte visas. Öppna konsolen över HTTPS för att se alla enheter.",
     "file_transfer": "Filöverföring",
     "file_upload": "Upload",
     "file_download": "Download",
@@ -8178,6 +8178,9 @@
     "try_notfound": "Kontrollera ID:t. Enheten kan ha tagits bort eller registrerats igen med ett nytt ID.",
     "fail_offline": "{name} är offline.",
     "try_offline": "Den har inte hört av sig till servern på sistone. Slå på den eller väck den och anslut sedan igen.",
+    "fail_https": "{name} kan inte visas över vanlig HTTP.",
+    "try_https": "Den här enheten har ingen H.264-kodare, och över HTTP spelar webbläsaren bara upp H.264. Öppna konsolen över HTTPS för att se dess skärm.",
+    "https_help": "Så konfigurerar du HTTPS",
     "fail_limit": "Servern tillåter inte den här anslutningen just nu.",
     "try_limit": "Licensen eller antalet anslutningar har nått gränsen. Fråga en administratör.",
     "fail_relay": "Det gick inte att nå reläservern.",

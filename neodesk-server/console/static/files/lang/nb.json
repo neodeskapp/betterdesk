@@ -2526,7 +2526,7 @@
       "title": "Velg enhet",
       "already_connected": "Allerede tilkoblet"
     },
-    "http_warning": "HTTP-modus: begrenset til H.264 programvaredekoding (~15 FPS). Bruk HTTPS for full ytelse (WebCodecs, VP9, 60 FPS).",
+    "http_warning": "Over vanlig HTTP spiller denne nettleseren bare av H.264-video. Enheter uten H.264-koder kan ikke vises. Åpne konsollen over HTTPS for å se alle enheter.",
     "file_transfer": "Filoverføring",
     "file_upload": "Upload",
     "file_download": "Download",
@@ -8178,6 +8178,9 @@
     "try_notfound": "Sjekk ID-en. Enheten kan ha blitt fjernet eller registrert på nytt med en ny ID.",
     "fail_offline": "{name} er frakoblet.",
     "try_offline": "Den har ikke meldt seg hos serveren i det siste. Slå den på eller vekk den, og koble deretter til igjen.",
+    "fail_https": "{name} kan ikke vises over vanlig HTTP.",
+    "try_https": "Denne enheten har ingen H.264-koder, og over HTTP spiller nettleseren bare av H.264. Åpne konsollen over HTTPS for å se skjermen.",
+    "https_help": "Slik setter du opp HTTPS",
     "fail_limit": "Serveren tillater ikke denne tilkoblingen akkurat nå.",
     "try_limit": "Lisensen eller antall tilkoblinger har nådd grensen. Spør en administrator.",
     "fail_relay": "Fikk ikke kontakt med reléserveren.",

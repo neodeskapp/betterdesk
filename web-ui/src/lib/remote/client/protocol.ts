@@ -480,20 +480,35 @@ export class RDProtocol {
 
 	/**
 	 * Build a SupportedDecoding object advertising decode abilities + preferred codec.
+	 * The preference is only ever a codec the abilities include: a device
+	 * takes a VP9 preference without looking at the abilities, so a VP9
+	 * choice saved over HTTPS would give a viewer without WebCodecs video it
+	 * cannot play. Another codec falls back to Auto, or H.264 without
+	 * WebCodecs.
 	 */
 	buildSupportedDecoding(o: RDSupportedDecodingOptions = {}): hbb.SupportedDecodingInit {
 		const hasWebCodecs = o.hasWebCodecs !== undefined ? o.hasWebCodecs : typeof VideoDecoder !== 'undefined';
 		const hasJMuxer = o.hasJMuxer !== undefined ? o.hasJMuxer : typeof JMuxer === 'function';
 		const a = o.abilities || null;
 		const can = (key: keyof RDCodecAbilities, fallback: boolean) => (a ? (a[key] ? 1 : 0) : fallback ? 1 : 0);
-		return {
+		const decoding = {
 			abilityVp9: can('vp9', hasWebCodecs),
 			abilityH264: can('h264', hasWebCodecs || hasJMuxer),
 			abilityH265: can('h265', hasWebCodecs),
 			abilityAv1: can('av1', hasWebCodecs),
-			abilityVp8: can('vp8', hasWebCodecs),
-			prefer: this.preferCodecValue(o.prefer || (hasWebCodecs ? 'Auto' : 'H264'))
+			abilityVp8: can('vp8', hasWebCodecs)
 		};
+		const fallback = hasWebCodecs ? 'Auto' : 'H264';
+		const wanted = o.prefer || fallback;
+		const ability: Record<string, number | undefined> = {
+			VP9: decoding.abilityVp9,
+			H264: decoding.abilityH264,
+			H265: decoding.abilityH265,
+			AV1: decoding.abilityAv1,
+			VP8: decoding.abilityVp8
+		};
+		const playable = wanted === 'Auto' || ability[wanted.toUpperCase()] === 1;
+		return { ...decoding, prefer: this.preferCodecValue(playable ? wanted : fallback) };
 	}
 
 	/**

@@ -2526,7 +2526,7 @@
       "title": "Valitse laite",
       "already_connected": "Jo yhdistetty"
     },
-    "http_warning": "HTTP-tila: rajoitettu H.264-ohjelmiston dekoodaukseen (~15 FPS). Käytä HTTPS:tä täyden suorituskyvyn saavuttamiseksi (WebCodecs, VP9, 60 FPS).",
+    "http_warning": "Tavallisen HTTP:n kautta tämä selain toistaa vain H.264-videota. Laitteita, joissa ei ole H.264-kooderia, ei voi näyttää. Avaa konsoli HTTPS:n kautta nähdäksesi kaikki laitteet.",
     "file_transfer": "Tiedoston siirto",
     "file_upload": "Upload",
     "file_download": "Download",
@@ -8178,6 +8178,9 @@
     "try_notfound": "Tarkista ID. Laite on ehkä poistettu tai rekisteröity uudelleen uudella ID:llä.",
     "fail_offline": "{name} on offline-tilassa.",
     "try_offline": "Se ei ole ollut yhteydessä palvelimeen viime aikoina. Käynnistä tai herätä se ja yhdistä sitten uudelleen.",
+    "fail_https": "Laitetta {name} ei voi näyttää tavallisen HTTP:n kautta.",
+    "try_https": "Tässä laitteessa ei ole H.264-kooderia, ja HTTP:n kautta selain toistaa vain H.264:ää. Avaa konsoli HTTPS:n kautta nähdäksesi sen näytön.",
+    "https_help": "Näin otat HTTPS:n käyttöön",
     "fail_limit": "Palvelin ei salli tätä yhteyttä juuri nyt.",
     "try_limit": "Lisenssi tai yhteyksien määrä on rajassaan. Kysy ylläpitäjältä.",
     "fail_relay": "Välityspalvelimeen ei saatu yhteyttä.",

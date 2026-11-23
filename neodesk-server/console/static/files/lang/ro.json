@@ -2526,7 +2526,7 @@
       "title": "Alege dispozitivul",
       "already_connected": "Deja conectat"
     },
-    "http_warning": "Modul HTTP: limitat la decodare software H.264 (~15 FPS). Utilizați HTTPS pentru performanță maximă (WebCodecs, VP9, 60 FPS).",
+    "http_warning": "Prin HTTP simplu, acest browser redă doar video H.264. Dispozitivele fără codificator H.264 nu pot fi afișate. Deschideți consola prin HTTPS pentru a vedea toate dispozitivele.",
     "file_transfer": "Transfer de fișiere",
     "file_upload": "Upload",
     "file_download": "Download",
@@ -8178,6 +8178,9 @@
     "try_notfound": "Verificați ID-ul. Este posibil ca dispozitivul să fi fost eliminat sau înregistrat din nou cu un ID nou.",
     "fail_offline": "{name} este offline.",
     "try_offline": "Nu a mai comunicat recent cu serverul. Porniți-l sau treziți-l, apoi reconectați-vă.",
+    "fail_https": "{name} nu poate fi afișat prin HTTP simplu.",
+    "try_https": "Acest dispozitiv nu are codificator H.264, iar prin HTTP browserul redă doar H.264. Deschideți consola prin HTTPS pentru a-i vedea ecranul.",
+    "https_help": "Cum configurați HTTPS",
     "fail_limit": "Serverul nu permite această conexiune acum.",
     "try_limit": "Licența sau numărul de conexiuni a atins limita. Contactați un administrator.",
     "fail_relay": "Serverul de releu nu a putut fi accesat.",

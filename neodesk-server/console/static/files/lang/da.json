@@ -2526,7 +2526,7 @@
       "title": "Vælg enhed",
       "already_connected": "Allerede tilsluttet"
     },
-    "http_warning": "HTTP-tilstand: begrænset til H.264-softwareafkodning (~15 FPS). Brug HTTPS for fuld ydeevne (WebCodecs, VP9, 60 FPS).",
+    "http_warning": "Over almindelig HTTP afspiller denne browser kun H.264-video. Enheder uden H.264-koder kan ikke vises. Åbn konsollen over HTTPS for at se alle enheder.",
     "file_transfer": "Filoverførsel",
     "file_upload": "Upload",
     "file_download": "Download",
@@ -8178,6 +8178,9 @@
     "try_notfound": "Tjek ID'et. Enheden kan være fjernet eller registreret igen under et nyt ID.",
     "fail_offline": "{name} er offline.",
     "try_offline": "Den har ikke meldt sig hos serveren for nylig. Tænd den eller væk den, og forbind så igen.",
+    "fail_https": "{name} kan ikke vises over almindelig HTTP.",
+    "try_https": "Denne enhed har ingen H.264-koder, og over HTTP afspiller browseren kun H.264. Åbn konsollen over HTTPS for at se dens skærm.",
+    "https_help": "Sådan sætter du HTTPS op",
     "fail_limit": "Serveren tillader ikke denne forbindelse lige nu.",
     "try_limit": "Licensen eller antallet af forbindelser har nået grænsen. Spørg en administrator.",
     "fail_relay": "Relayserveren kunne ikke nås.",

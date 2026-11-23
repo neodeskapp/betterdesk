@@ -2544,7 +2544,7 @@
       "title": "Wybierz urządzenie",
       "already_connected": "Już połączono"
     },
-    "http_warning": "Tryb HTTP: ograniczony do dekodowania H.264 programowego (~15 FPS). Użyj HTTPS dla pełnej wydajności (WebCodecs, VP9, 60 FPS).",
+    "http_warning": "Przez zwykłe HTTP ta przeglądarka odtwarza tylko wideo H.264. Urządzeń bez kodera H.264 nie da się wyświetlić. Otwórz konsolę przez HTTPS, aby widzieć każde urządzenie.",
     "file_transfer": "Transfer plików",
     "file_upload": "Wyślij",
     "file_download": "Pobierz",
@@ -8172,6 +8172,9 @@
     "try_notfound": "Sprawdź ID. Urządzenie mogło zostać usunięte lub ponownie zarejestrowane z nowym ID.",
     "fail_offline": "Urządzenie {name} jest offline.",
     "try_offline": "Nie łączyło się ostatnio z serwerem. Włącz je lub wybudź, a potem połącz ponownie.",
+    "fail_https": "Urządzenia {name} nie da się wyświetlić przez zwykłe HTTP.",
+    "try_https": "To urządzenie nie ma kodera H.264, a przez HTTP przeglądarka odtwarza tylko H.264. Otwórz konsolę przez HTTPS, aby zobaczyć jego ekran.",
+    "https_help": "Jak skonfigurować HTTPS",
     "fail_limit": "Serwer nie pozwala teraz na to połączenie.",
     "try_limit": "Osiągnięto limit licencji lub liczby połączeń. Skontaktuj się z administratorem.",
     "fail_relay": "Nie można połączyć się z serwerem przekaźnikowym.",

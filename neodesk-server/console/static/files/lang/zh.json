@@ -2522,7 +2522,7 @@
       "title": "选择设备",
       "already_connected": "已连接"
     },
-    "http_warning": "HTTP模式：仅支持H.264软件解码 (~15 FPS)。使用HTTPS可获得完整性能 (WebCodecs, VP9, 60 FPS)。",
+    "http_warning": "通过普通 HTTP，此浏览器只能播放 H.264 视频。没有 H.264 编码器的设备无法显示。请通过 HTTPS 打开控制台，以查看所有设备。",
     "file_transfer": "文件传输",
     "file_upload": "上传",
     "file_download": "下载",
@@ -8172,6 +8172,9 @@
     "try_notfound": "请检查 ID。该设备可能已被移除，或已用新 ID 重新注册。",
     "fail_offline": "{name} 处于离线状态。",
     "try_offline": "该设备最近没有连接过服务器。请开机或唤醒设备，然后重新连接。",
+    "fail_https": "无法通过普通 HTTP 显示 {name}。",
+    "try_https": "此设备没有 H.264 编码器，而通过 HTTP 时浏览器只能播放 H.264。请通过 HTTPS 打开控制台以查看其屏幕。",
+    "https_help": "如何设置 HTTPS",
     "fail_limit": "服务器目前不允许此连接。",
     "try_limit": "许可证或连接数已达到上限。请联系管理员。",
     "fail_relay": "无法访问中继服务器。",

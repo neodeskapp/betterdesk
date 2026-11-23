@@ -2548,7 +2548,7 @@
       "title": "選擇裝置",
       "already_connected": "已連線"
     },
-    "http_warning": "HTTP模式：僅支持H.264軟件解碼 (~15 FPS)。使用HTTPS可獲得完整性能 (WebCodecs, VP9, 60 FPS)。",
+    "http_warning": "透過一般 HTTP，此瀏覽器只能播放 H.264 影像。沒有 H.264 編碼器的裝置無法顯示。請透過 HTTPS 開啟主控台，以查看所有裝置。",
     "file_transfer": "文件傳輸",
     "file_upload": "上傳",
     "file_download": "下載",
@@ -8176,6 +8176,9 @@
     "try_notfound": "請檢查 ID。該裝置可能已被移除，或已用新的 ID 重新註冊。",
     "fail_offline": "{name} 目前離線。",
     "try_offline": "該裝置最近沒有連線到伺服器。請開機或喚醒裝置，然後重新連線。",
+    "fail_https": "無法透過一般 HTTP 顯示 {name}。",
+    "try_https": "此裝置沒有 H.264 編碼器，而透過 HTTP 時瀏覽器只能播放 H.264。請透過 HTTPS 開啟主控台以查看其畫面。",
+    "https_help": "如何設定 HTTPS",
     "fail_limit": "伺服器目前不允許此連線。",
     "try_limit": "授權或連線數已達上限。請聯絡管理員。",
     "fail_relay": "無法連到中繼伺服器。",

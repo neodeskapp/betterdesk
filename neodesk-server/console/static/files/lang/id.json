@@ -2526,7 +2526,7 @@
       "title": "Pilih perangkat",
       "already_connected": "Sudah terhubung"
     },
-    "http_warning": "Mode HTTP: terbatas pada dekode perangkat lunak H.264 (~15 FPS). Gunakan HTTPS untuk performa penuh (WebCodecs, VP9, 60 FPS).",
+    "http_warning": "Melalui HTTP biasa, browser ini hanya memutar video H.264. Perangkat tanpa encoder H.264 tidak dapat ditampilkan. Buka konsol melalui HTTPS untuk melihat semua perangkat.",
     "file_transfer": "Pemindahan Berkas",
     "file_upload": "Upload",
     "file_download": "Download",
@@ -8178,6 +8178,9 @@
     "try_notfound": "Periksa ID. Perangkat mungkin telah dihapus atau didaftarkan ulang dengan ID baru.",
     "fail_offline": "{name} sedang offline.",
     "try_offline": "Perangkat ini belum menghubungi server akhir-akhir ini. Nyalakan atau bangunkan, lalu hubungkan ulang.",
+    "fail_https": "{name} tidak dapat ditampilkan melalui HTTP biasa.",
+    "try_https": "Perangkat ini tidak memiliki encoder H.264, dan melalui HTTP browser hanya memutar H.264. Buka konsol melalui HTTPS untuk melihat layarnya.",
+    "https_help": "Cara menyiapkan HTTPS",
     "fail_limit": "Server tidak mengizinkan koneksi ini saat ini.",
     "try_limit": "Lisensi atau jumlah koneksi sudah mencapai batas. Hubungi administrator.",
     "fail_relay": "Server relay tidak dapat dijangkau.",

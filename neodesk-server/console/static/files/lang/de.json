@@ -2520,7 +2520,7 @@
       "title": "Gerät auswählen",
       "already_connected": "Bereits verbunden"
     },
-    "http_warning": "HTTP-Modus: begrenzt auf H.264 Software-Dekodierung (~15 FPS). HTTPS für volle Leistung verwenden (WebCodecs, VP9, 60 FPS).",
+    "http_warning": "Über einfaches HTTP spielt dieser Browser nur H.264-Video ab. Geräte ohne H.264-Encoder können nicht angezeigt werden. Öffnen Sie die Konsole über HTTPS, um jedes Gerät zu sehen.",
     "file_transfer": "Dateiübertragung",
     "file_upload": "Hochladen",
     "file_download": "Herunterladen",
@@ -8172,6 +8172,9 @@
     "try_notfound": "Prüfen Sie die ID. Das Gerät wurde vielleicht entfernt oder unter einer neuen ID neu registriert.",
     "fail_offline": "{name} ist offline.",
     "try_offline": "Es hat sich in letzter Zeit nicht beim Server gemeldet. Schalten Sie es ein oder wecken Sie es auf, und verbinden Sie sich dann erneut.",
+    "fail_https": "{name} kann über einfaches HTTP nicht angezeigt werden.",
+    "try_https": "Dieses Gerät hat keinen H.264-Encoder, und über HTTP spielt der Browser nur H.264 ab. Öffnen Sie die Konsole über HTTPS, um seinen Bildschirm zu sehen.",
+    "https_help": "So richten Sie HTTPS ein",
     "fail_limit": "Der Server lässt diese Verbindung gerade nicht zu.",
     "try_limit": "Die Lizenz oder die Zahl der Verbindungen ist ausgeschöpft. Wenden Sie sich an einen Administrator.",
     "fail_relay": "Der Relay-Server war nicht erreichbar.",
