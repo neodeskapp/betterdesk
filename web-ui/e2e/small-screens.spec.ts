@@ -211,3 +211,51 @@ test.describe('email settings in German at 360', () => {
 		expect(await cutStatuses(page)).toEqual([]);
 	});
 });
+
+test.describe('the copied toast', () => {
+	test.beforeEach(async ({ context, browserName }) => {
+		if (browserName === 'chromium') await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+	});
+
+	// BUGS L329: "Copied to clipboard" covered the menu opened after it, and the sheet's Close button
+	test('at 360 a menu opened while it shows is above it', async ({ page }) => {
+		await page.setViewportSize({ width: 360, height: 640 });
+		await open(page, '/', 'en');
+		await page.locator('main').getByRole('button', { name: 'Copy all' }).click();
+		await expect(page.locator('.toast')).toBeVisible();
+		// Where the small-screen pass had it: low on the screen, so the menu opens towards the toast
+		const more = page.locator('main').getByRole('button', { name: 'More', exact: true });
+		await more.evaluate((b) => window.scrollBy(0, b.getBoundingClientRect().top - 430));
+		await more.click();
+		expect(await menuCovered(page), 'menu items covered by the toast').toEqual([]);
+	});
+
+	for (const size of [
+		{ width: 768, height: 1024 },
+		{ width: 1024, height: 768 }
+	]) {
+		test(`at ${size.width} it does not cover the sheet it was copied from`, async ({ page }) => {
+			await page.setViewportSize(size);
+			await open(page, '/', 'en');
+			await page.locator('main').getByRole('button', { name: 'More', exact: true }).click();
+			await page.getByRole('menuitem', { name: /Windows install script/ }).click();
+			const sheet = page.getByRole('dialog');
+			await sheet.getByRole('button', { name: 'Copy' }).click();
+			await expect(page.locator('.toast')).toHaveCount(1);
+			const close = sheet.getByRole('button', { name: 'Close' }).last();
+			const covered = await close.evaluate((b) => {
+				const r = b.getBoundingClientRect();
+				const points = [
+					[r.left + 4, r.top + 4],
+					[r.left + r.width / 2, r.top + r.height / 2],
+					[r.right - 4, r.bottom - 4]
+				];
+				return points.filter(([x, y]) => {
+					const hit = document.elementFromPoint(x!, y!);
+					return !hit || !b.contains(hit);
+				}).length;
+			});
+			expect(covered, 'points of the Close button that something else covers').toBe(0);
+		});
+	}
+});

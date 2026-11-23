@@ -9,17 +9,28 @@ type Closer = () => void;
 
 let current: { id: symbol; close: Closer } | null = null;
 
+/**
+ * What is open over the page: a popup, and how many dialogs and sheets
+ * (layers.ts counts those). Toasts go below them while any is open
+ * (ToastHost), so a toast never covers what the person opened.
+ */
+export const overlays = $state({ popup: false, layers: 0 });
+
 /** Call when a popup opens. Returns the function to call when it closes. */
 export function openPopup(close: Closer): () => void {
 	const id = Symbol('popup');
 	if (current) {
 		const prev = current;
 		current = null;
+		overlays.popup = false;
 		prev.close();
 	}
 	current = { id, close };
+	overlays.popup = true;
 	return () => {
-		if (current?.id === id) current = null;
+		if (current?.id !== id) return;
+		current = null;
+		overlays.popup = false;
 	};
 }
 
@@ -28,5 +39,6 @@ export function closePopups(): void {
 	if (!current) return;
 	const prev = current;
 	current = null;
+	overlays.popup = false;
 	prev.close();
 }

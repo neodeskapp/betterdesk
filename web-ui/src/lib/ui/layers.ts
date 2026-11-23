@@ -9,7 +9,7 @@
  * Dialog.svelte and Sheet.svelte register here; pages don't.
  */
 
-import { closePopups } from './popups.svelte.ts';
+import { closePopups, overlays } from './popups.svelte.ts';
 
 export type LayerKind = 'dialog' | 'sheet';
 
@@ -61,6 +61,7 @@ export function openLayer(options: LayerOptions): () => void {
 	const layer: Layer = { ...options, opener };
 	if (!stack.length) document.addEventListener('keydown', onKeydown);
 	stack.push(layer);
+	overlays.layers = stack.length;
 
 	return function closed() {
 		const index = stack.indexOf(layer);
@@ -68,6 +69,7 @@ export function openLayer(options: LayerOptions): () => void {
 			const above = stack.splice(index);
 			for (const l of above.slice(1).reverse()) l.replace();
 		}
+		overlays.layers = stack.length;
 		if (!stack.length) document.removeEventListener('keydown', onKeydown);
 		// Only take focus back when it went nowhere (the layer's markup is gone)
 		// or is still inside it; not when another layer has taken it

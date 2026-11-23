@@ -4,16 +4,23 @@
   once. Two live regions in one stack: errors are announced right away
   (role alert), the rest politely (role status). Both exist before any
   toast, so screen readers hear the first one too.
+
+  While a menu, dialog or sheet is open the stack goes below it, so a
+  toast never covers what the person opened ("Copied" from a sheet then
+  shows as the tick on its button; screen readers still hear the toast).
+  An error stays on top.
 -->
 <script lang="ts">
 	import Toast from './Toast.svelte';
+	import { overlays } from './popups.svelte.ts';
 	import { toasts } from './toasts.svelte.ts';
 
 	const polite = $derived(toasts.items.filter((t) => t.type !== 'error'));
 	const errors = $derived(toasts.items.filter((t) => t.type === 'error'));
+	const under = $derived((overlays.popup || overlays.layers > 0) && errors.length === 0);
 </script>
 
-<div class="toast-container">
+<div class={['toast-container', under && 'is-under']}>
 	<div class="toast-region" role="status" aria-live="polite" aria-atomic="false">
 		{#each polite as t (t.id)}<Toast toast={t} />{/each}
 	</div>
@@ -32,6 +39,9 @@
 		flex-direction: column;
 		gap: var(--space-2);
 		pointer-events: none;
+	}
+	.toast-container.is-under {
+		z-index: 0;
 	}
 	.toast-region {
 		display: flex;
