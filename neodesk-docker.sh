@@ -34,6 +34,14 @@ RELAY_MODE="${RELAY_MODE:-auto}"
 CONSOLE_PORT_SET="${NEODESK_CONSOLE_PORT:-}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-}"
 USE_POSTGRES="${NEODESK_POSTGRES:-false}"
+# HTTPS with Let's Encrypt: Traefik in front of the console (the compose
+# file's profile "traefik"). A domain given turns it on, --no-traefik off.
+DOMAIN_SET="${NEODESK_DOMAIN:-}"
+LETSENCRYPT_EMAIL_SET="${LETSENCRYPT_EMAIL:-}"
+LETSENCRYPT_STAGING="${LETSENCRYPT_STAGING:-false}"
+TRAEFIK_ACTION=""
+LETSENCRYPT_STAGING_CA="https://acme-staging-v02.api.letsencrypt.org/directory"
+CERT_TIMEOUT="${NEODESK_CERT_TIMEOUT:-120}"
 
 COMMAND=""
 ASSUME_YES=false
@@ -49,9 +57,11 @@ MANAGED_CONFIG_CHANGES=()
 
 CONTAINER="neodesk"
 PG_CONTAINER="neodesk-postgres"
+TRAEFIK_CONTAINER="neodesk-traefik"
 DATA_VOLUME="neodesk-data"
 CONSOLE_VOLUME="neodesk-console-data"
 PG_VOLUME="neodesk-postgres-data"
+TRAEFIK_VOLUME="neodesk-traefik-letsencrypt"
 OLD_CONTAINERS=(neodesk neodesk-server neodesk-console)
 HEALTH_TIMEOUT="${NEODESK_HEALTH_TIMEOUT:-180}"
 KEEP_BACKUPS=5
@@ -190,6 +200,16 @@ Options:
                          5000)
   --postgres             A new install on PostgreSQL instead of SQLite
                          (NEODESK_POSTGRES=true)
+  --domain NAME          HTTPS for the console at this DNS name (NEODESK_DOMAIN):
+                         a Traefik container gets a Let's Encrypt certificate
+                         and renews it by itself. The name must point at this
+                         server, and ports 80 and 443 must reach it.
+  --email ADDRESS        Let's Encrypt's contact for expiry notices
+                         (LETSENCRYPT_EMAIL); needed with --domain
+  --letsencrypt-staging  Certificates from Let's Encrypt's staging server
+                         (not trusted by browsers; for tests)
+  --no-traefik           Remove Traefik again; the console answers on its
+                         own port as before
   --no-move              postgres: do not move the data; the install stays on
                          SQLite and nothing changes
   --overwrite-postgres   postgres: delete the PostgreSQL volume of an earlier
@@ -223,8 +243,9 @@ Repair and checks:
 Files: <folder>/docker-compose.yml (replaced on update; put your own changes
 into docker-compose.override.yml next to it), <folder>/.env (the settings,
 every KEY=value reaches the server), <folder>/backups.
-HTTPS for the console: a reverse proxy with TLS in front (TRUST_PROXY=1 in
-.env), or HTTPS_ENABLED=true with SSL_CERT_PATH and SSL_KEY_PATH naming
+HTTPS for the console: --domain and --email (Traefik with Let's Encrypt), a
+reverse proxy of your own with TLS in front (TRUST_PROXY=1 in .env), or
+HTTPS_ENABLED=true with SSL_CERT_PATH and SSL_KEY_PATH naming
 files in the data volume (/opt/rustdesk/...); the console then answers on
 port 5443.
 Logs: cd <folder> && docker compose logs -f neodesk
@@ -250,6 +271,12 @@ parse_args() {
             --user) [ $# -ge 2 ] || die "--user needs an account name"; RESET_USER="$2"; shift ;;
             --user=*) RESET_USER="${1#*=}" ;;
             --postgres) USE_POSTGRES=true ;;
+            --domain) [ $# -ge 2 ] || die "--domain needs a DNS name"; DOMAIN_SET="$2"; shift ;;
+            --domain=*) DOMAIN_SET="${1#*=}" ;;
+            --email) [ $# -ge 2 ] || die "--email needs an e-mail address"; LETSENCRYPT_EMAIL_SET="$2"; shift ;;
+            --email=*) LETSENCRYPT_EMAIL_SET="${1#*=}" ;;
+            --letsencrypt-staging) LETSENCRYPT_STAGING=true ;;
+            --no-traefik) TRAEFIK_ACTION=off ;;
             --no-move) MOVE_DATA=no ;;
             --overwrite-postgres) OVERWRITE_POSTGRES=true ;;
             --purge) PURGE=true ;;
@@ -282,7 +309,32 @@ parse_args() {
         1|y|yes|true|on) USE_POSTGRES=true ;;
         *) USE_POSTGRES=false ;;
     esac
+    case "${LETSENCRYPT_STAGING,,}" in
+        1|y|yes|true|on) LETSENCRYPT_STAGING=true ;;
+        *) LETSENCRYPT_STAGING=false ;;
+    esac
+    DOMAIN_SET="${DOMAIN_SET,,}"
+    if [ -n "$DOMAIN_SET" ]; then
+        [ "$TRAEFIK_ACTION" != off ] || die "--domain and --no-traefik contradict each other" "Give one of them."
+        valid_domain "$DOMAIN_SET" || die "--domain must be a DNS name such as console.example.com, not $DOMAIN_SET" \
+            "Let's Encrypt gives no certificate for an IP address or a name without a dot."
+        TRAEFIK_ACTION=on
+    fi
+    if [ -n "$LETSENCRYPT_EMAIL_SET" ] && ! valid_email "$LETSENCRYPT_EMAIL_SET"; then
+        die "--email must be an e-mail address, not $LETSENCRYPT_EMAIL_SET"
+    fi
+    if [ "$TRAEFIK_ACTION" = on ] && [ -z "$LETSENCRYPT_EMAIL_SET" ] && [ -z "$(env_get LETSENCRYPT_EMAIL)" ]; then
+        die "--domain needs --email: Let's Encrypt's contact for expiry notices." \
+            "sudo bash neodesk-docker.sh --domain $DOMAIN_SET --email admin@example.com"
+    fi
 }
+
+# valid_domain NAME: a DNS name with at least one dot, no IP address
+valid_domain() {
+    [[ "$1" =~ ^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]([a-z0-9-]{0,61}[a-z0-9])?$ ]] && [ "${#1}" -le 253 ]
+}
+
+valid_email() { [[ "$1" =~ ^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$ ]]; }
 
 # confirm QUESTION DEFAULT(y|n): yes or no; --yes says yes, and without a
 # terminal the default is taken
@@ -412,6 +464,25 @@ on_postgres() {
         postgres://*|postgresql://*) return 0 ;;
     esac
     return 1
+}
+
+# traefik_on: the install runs Traefik in front of the console: it is
+# being turned on now, or .env has the profile and it is not being turned off
+traefik_on() {
+    case "$TRAEFIK_ACTION" in
+        on) return 0 ;;
+        off) return 1 ;;
+    esac
+    case ",$(env_get COMPOSE_PROFILES)," in
+        *,traefik,*) return 0 ;;
+    esac
+    return 1
+}
+
+# console_domain: the console's DNS name under Traefik, empty without
+console_domain() {
+    traefik_on || return 0
+    printf '%s\n' "${DOMAIN_SET:-$(env_get NEODESK_DOMAIN)}"
 }
 
 sha_of() { sha256sum "$1" 2>/dev/null | cut -d' ' -f1; }
@@ -553,8 +624,9 @@ port_user() {
 }
 
 check_ports() {
-    local port user taken=()
-    for port in "$(console_port)" "$(console_https_port)" "${DOCKER_PORTS_TCP[@]}"; do
+    local port user taken=() tcp=("$(console_port)" "$(console_https_port)" "${DOCKER_PORTS_TCP[@]}")
+    ! traefik_on || tcp+=(80 443)
+    for port in "${tcp[@]}"; do
         user=$(port_user tcp "$port")
         [ -z "$user" ] || taken+=("TCP $port: $user")
     done
@@ -573,7 +645,25 @@ check_ports() {
     if [ "${#taken[@]}" -eq 1 ] && [[ "${taken[0]}" == "TCP $(console_https_port):"* ]]; then
         hint="Stop it, or give the console's HTTPS another port: NEODESK_CONSOLE_HTTPS_PORT=5444 in $(env_file)"
     fi
+    if printf '%s\n' "${taken[@]}" | grep -qE '^TCP (80|443):'; then
+        hint="Traefik needs ports 80 and 443 for the certificate and HTTPS: stop the web server that has them (or run without --domain and put NeoDesk behind it)."
+    fi
     die "Ports NeoDesk needs are in use:" "${taken[@]}" "$hint"
+}
+
+# check_traefik_ports: 80 and 443 are free for a Traefik that does not run
+# yet (an install that turns it on)
+check_traefik_ports() {
+    traefik_on || return 0
+    [ "$(docker container inspect -f '{{.State.Running}}' "$TRAEFIK_CONTAINER" 2>/dev/null || true)" != true ] || return 0
+    local port user taken=()
+    for port in 80 443; do
+        user=$(port_user tcp "$port")
+        [ -z "$user" ] || taken+=("TCP $port: $user")
+    done
+    [ "${#taken[@]}" -eq 0 ] && return 0
+    die "Traefik needs ports 80 and 443, but they are in use; nothing was changed:" "${taken[@]}" \
+        "Stop the web server that has them, or run without --domain and put NeoDesk behind it (TRUST_PROXY=1)."
 }
 
 check_internet() {
@@ -670,6 +760,9 @@ pull_image() {
     fi
     if on_postgres; then
         compose pull --quiet postgres >/dev/null 2>&1 || true
+    fi
+    if traefik_on; then
+        compose pull --quiet traefik >/dev/null 2>&1 || true
     fi
 }
 
@@ -809,6 +902,98 @@ write_settings() {
     elif [ -z "$(env_get RELAY_SERVERS)" ]; then
         env_set RELAY_SERVERS "$(detect_relay_address)"
     fi
+    case "$TRAEFIK_ACTION" in
+        on) traefik_settings ;;
+        off) no_traefik_settings ;;
+    esac
+}
+
+# traefik_settings: Traefik with Let's Encrypt in front of the console:
+# the profile, the domain and the contact, the console's own port on this
+# host only, the client's address from Traefik and the address in mails
+traefik_settings() {
+    local email old_domain
+    email="${LETSENCRYPT_EMAIL_SET:-$(env_get LETSENCRYPT_EMAIL)}"
+    [ -n "$email" ] || die "--domain needs --email: Let's Encrypt's contact for expiry notices." \
+        "sudo bash neodesk-docker.sh --domain $DOMAIN_SET --email admin@example.com"
+    old_domain=$(env_get NEODESK_DOMAIN)
+    check_domain_dns "$DOMAIN_SET"
+    env_set NEODESK_DOMAIN "$DOMAIN_SET"
+    env_set LETSENCRYPT_EMAIL "$email"
+    if [ "$LETSENCRYPT_STAGING" = true ]; then
+        env_set LETSENCRYPT_CA_SERVER "$LETSENCRYPT_STAGING_CA"
+    else
+        env_unset LETSENCRYPT_CA_SERVER
+    fi
+    env_set NEODESK_CONSOLE_BIND 127.0.0.1
+    env_set TRUST_PROXY 1
+    # A mail address of the console set by hand stays, one this script set
+    # for an older domain follows the new one
+    case "$(env_get PANEL_PUBLIC_URL)" in
+        ""|"https://$old_domain") env_set PANEL_PUBLIC_URL "https://$DOMAIN_SET" ;;
+    esac
+    profile_on traefik
+}
+
+# no_traefik_settings: the settings traefik_settings made go again, and
+# the Traefik container with them; its certificate volume stays
+no_traefik_settings() {
+    local domain
+    domain=$(env_get NEODESK_DOMAIN)
+    case ",$(env_get COMPOSE_PROFILES)," in
+        *,traefik,*) ;;
+        *) [ -n "$domain" ] || return 0 ;;
+    esac
+    step "Removing Traefik; the console answers on port $(console_port) again"
+    compose --profile traefik rm -sf traefik >/dev/null 2>&1 || true
+    profile_off traefik
+    [ "$(env_get PANEL_PUBLIC_URL)" != "https://$domain" ] || env_unset PANEL_PUBLIC_URL
+    [ "$(env_get NEODESK_CONSOLE_BIND)" != 127.0.0.1 ] || env_unset NEODESK_CONSOLE_BIND
+    env_unset TRUST_PROXY
+    env_unset NEODESK_DOMAIN
+    env_unset LETSENCRYPT_CA_SERVER
+}
+
+# check_domain_dns NAME: warns when NAME does not point at this server's
+# public address; Let's Encrypt checks the name over it
+check_domain_dns() {
+    local addrs relay
+    command -v getent >/dev/null 2>&1 || return 0
+    addrs=$(getent ahosts "$1" 2>/dev/null | awk '{print $1}' | sort -u | tr '\n' ' ' || true)
+    if [ -z "$addrs" ]; then
+        warn "$1 does not resolve yet. Let's Encrypt gives the certificate once it points at this server;"
+        warn "Traefik keeps trying. Its log: cd $NEODESK_DIR && docker compose logs -f traefik"
+        return 0
+    fi
+    relay="${RELAY_SERVERS_SET:-$(env_get RELAY_SERVERS)}"
+    relay="${relay%%:*}"
+    if [[ "$relay" =~ ^[0-9.]+$ ]] && [[ " $addrs" != *" $relay "* ]]; then
+        warn "$1 points at ${addrs% }, not at this server's address $relay."
+        warn "Let's Encrypt reaches the name over ports 80 and 443; check the DNS record (or ignore this behind NAT)."
+    fi
+}
+
+# wait_certificate: the console answers over HTTPS at its domain with a
+# certificate this machine trusts (any certificate with the staging
+# server) within CERT_TIMEOUT seconds; a warning only when not, as
+# Traefik keeps trying
+wait_certificate() {
+    local domain waited=0 insecure=()
+    domain=$(console_domain)
+    [ -n "$domain" ] || return 0
+    [ "$(env_get LETSENCRYPT_CA_SERVER)" != "$LETSENCRYPT_STAGING_CA" ] || insecure=(-k)
+    step "Waiting for the Let's Encrypt certificate of $domain"
+    while [ "$waited" -lt "$CERT_TIMEOUT" ]; do
+        if curl -fsS "${insecure[@]}" --max-time 5 -o /dev/null \
+            --resolve "$domain:443:127.0.0.1" "https://$domain/health" 2>/dev/null; then
+            ok "HTTPS: https://$domain has its certificate (Traefik renews it by itself)"
+            return 0
+        fi
+        sleep 3
+        waited=$((waited + 3))
+    done
+    warn "https://$domain has no valid certificate yet. Let's Encrypt needs $domain to point at this server"
+    warn "and ports 80 and 443 to reach it; Traefik keeps trying. Its log: cd $NEODESK_DIR && docker compose logs traefik"
 }
 
 new_secret() {
@@ -886,6 +1071,7 @@ do_install() {
     fi
     remember_applied
     ok "NeoDesk runs ($((SECONDS - started))s)"
+    wait_certificate
     print_summary first
 }
 
@@ -898,6 +1084,7 @@ do_update() {
         *) die "There is no install in $NEODESK_DIR to update." "Install it: sudo bash neodesk-docker.sh" ;;
     esac
     check_internet
+    check_traefik_ports
     write_settings
     write_compose_file
     local old_image new_image applied backup log
@@ -921,6 +1108,7 @@ do_update() {
     if wait_healthy; then
         remember_applied
         ok "Updated: $(server_version)"
+        [ "$TRAEFIK_ACTION" != on ] || wait_certificate
         print_summary
         return 0
     fi
@@ -964,7 +1152,8 @@ public_key() {
 # password only right after the first install), the client settings and
 # where the logs are
 print_summary() {
-    local addr port key password tag
+    local addr port key password tag domain
+    domain=$(console_domain)
     addr=$(env_get RELAY_SERVERS)
     addr="${addr%%:*}"
     addr="${addr:-<this server>}"
@@ -979,7 +1168,11 @@ print_summary() {
         say "Image:           $(image_ref) (pinned; the newest release: --tag latest)"
     fi
     say ""
-    say "Web console:     http://${addr}:${port}   (on this machine: http://127.0.0.1:${port})"
+    if [ -n "$domain" ]; then
+        say "Web console:     https://${domain}   (Let's Encrypt, renewed by Traefik; on this machine: http://127.0.0.1:${port})"
+    else
+        say "Web console:     http://${addr}:${port}   (on this machine: http://127.0.0.1:${port})"
+    fi
     if [ "${1:-}" = first ]; then
         if [ -n "$ADMIN_PASSWORD" ]; then
             say "Sign in:         user admin, the password you set in ADMIN_PASSWORD"
@@ -1002,7 +1195,11 @@ print_summary() {
     say "  API server:    http://${addr}:21121"
     say "  Key:           ${key:-not made yet; later: docker exec neodesk cat /opt/rustdesk/id_ed25519.pub}"
     say ""
-    say "Ports to open in a firewall in front of this machine: TCP ${port}, 21115-21119, 21121, 21122 and UDP 21116"
+    if [ -n "$domain" ]; then
+        say "Ports to open in a firewall in front of this machine: TCP 80, 443, 21115-21119, 21121, 21122 and UDP 21116"
+    else
+        say "Ports to open in a firewall in front of this machine: TCP ${port}, 21115-21119, 21121, 21122 and UDP 21116"
+    fi
     say "Logs:            cd $NEODESK_DIR && docker compose logs -f neodesk"
     say "Update:          sudo bash neodesk-docker.sh   (or: cd $NEODESK_DIR && docker compose pull && docker compose up -d)"
     say "Settings:        $(env_file)   (then: cd $NEODESK_DIR && docker compose up -d)"
@@ -1136,15 +1333,21 @@ do_uninstall() {
         compose stop -t 30 neodesk >/dev/null 2>&1 || true
         file=$(backup_volumes)
         ok "Backup: $file"
-        compose_quiet --profile postgres --profile guacd down -v --remove-orphans
-        docker volume rm "$DATA_VOLUME" "$CONSOLE_VOLUME" "$PG_VOLUME" >/dev/null 2>&1 || true
+        compose_quiet --profile postgres --profile guacd --profile traefik down -v --remove-orphans
+        docker volume rm "$DATA_VOLUME" "$CONSOLE_VOLUME" "$PG_VOLUME" "$TRAEFIK_VOLUME" >/dev/null 2>&1 || true
         ok "NeoDesk's containers and volumes are removed."
     else
-        compose_quiet --profile postgres --profile guacd down --remove-orphans
+        compose_quiet --profile postgres --profile guacd --profile traefik down --remove-orphans
         ok "NeoDesk's containers are removed."
         say "Left on this machine:"
-        say "  volumes:  $DATA_VOLUME (database, server key), $CONSOLE_VOLUME$(docker volume inspect "$PG_VOLUME" >/dev/null 2>&1 && printf ', %s' "$PG_VOLUME" || true)"
-        say "            an install uses them again; delete them: docker volume rm $DATA_VOLUME $CONSOLE_VOLUME$(docker volume inspect "$PG_VOLUME" >/dev/null 2>&1 && printf ' %s' "$PG_VOLUME" || true)"
+        local listed="" removable="" v
+        for v in "$PG_VOLUME" "$TRAEFIK_VOLUME"; do
+            docker volume inspect "$v" >/dev/null 2>&1 || continue
+            listed+=", $v"
+            removable+=" $v"
+        done
+        say "  volumes:  $DATA_VOLUME (database, server key), $CONSOLE_VOLUME$listed"
+        say "            an install uses them again; delete them: docker volume rm $DATA_VOLUME $CONSOLE_VOLUME$removable"
     fi
     say "  image:    $(image_ref)   (delete: docker image rm $(image_ref))"
     say "  folder:   $NEODESK_DIR with .env and the backups   (delete: sudo rm -rf $NEODESK_DIR)"

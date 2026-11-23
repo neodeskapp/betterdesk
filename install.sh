@@ -24,6 +24,11 @@
 #   --relay-mode auto|local|public Relay auto-detection strategy
 #   --relay-servers IP[:port]      Fixed relay address (overrides --relay-mode)
 #   --admin-password PASS          Set admin password (Docker: ADMIN_PASSWORD env)
+#   --domain NAME                  Docker: HTTPS for the console at this DNS name with a
+#                                  Let's Encrypt certificate that Traefik renews by itself
+#                                  (the name must point at this server; ports 80 and 443)
+#   --letsencrypt-email ADDRESS    Docker: Let's Encrypt's contact (needed with --domain)
+#   --letsencrypt-staging          Docker: certificates from Let's Encrypt's staging server
 #   --skip-docker-install          Do not install Docker when missing
 #   --skip-firewall                Skip UFW/firewalld/iptables configuration
 #   --rescue                       Safe repair: permissions, restart, health checks
@@ -37,7 +42,8 @@
 #
 # Environment overrides (same names as flags where applicable):
 #   NEODESK_REPO, NEODESK_BRANCH, NEODESK_VERSION, INSTALL_DIR,
-#   RELAY_MODE, RELAY_SERVERS, ADMIN_PASSWORD, NEODESK_RAW_BASE
+#   RELAY_MODE, RELAY_SERVERS, ADMIN_PASSWORD, NEODESK_RAW_BASE,
+#   NEODESK_DOMAIN, LETSENCRYPT_EMAIL
 # =============================================================================
 
 set -euo pipefail
@@ -64,6 +70,9 @@ MIGRATE_SPLIT=false
 RELAY_MODE="${RELAY_MODE:-auto}"
 RELAY_SERVERS="${RELAY_SERVERS:-}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-}"
+NEODESK_DOMAIN="${NEODESK_DOMAIN:-}"
+LETSENCRYPT_EMAIL="${LETSENCRYPT_EMAIL:-}"
+LETSENCRYPT_STAGING=false
 SKIP_DOCKER_INSTALL=false
 SKIP_FIREWALL=false
 DO_UNINSTALL=false
@@ -75,6 +84,9 @@ MANAGED_CONFIG_CHANGES=()
 
 # Docker ports: web console 5000 and 5443, API 21121, CDAP 21122, signal and relay
 DOCKER_PORTS="21115 21116 21117 21118 21119 21121 21122 5000 5443"
+# With --domain: Traefik's HTTP (certificate, redirect) and HTTPS instead
+# of the console's own ports, which then answer on this host only
+DOCKER_PORTS_TRAEFIK="21115 21116 21117 21118 21119 21121 21122 80 443"
 
 # ── Output helpers ────────────────────────────────────────────────────────────
 
@@ -206,6 +218,9 @@ while [ $# -gt 0 ]; do
         --relay-mode) RELAY_MODE="$2"; shift 2 ;;
         --relay-servers) RELAY_SERVERS="$2"; shift 2 ;;
         --admin-password) ADMIN_PASSWORD="$2"; shift 2 ;;
+        --domain) NEODESK_DOMAIN="$2"; shift 2 ;;
+        --letsencrypt-email) LETSENCRYPT_EMAIL="$2"; shift 2 ;;
+        --letsencrypt-staging) LETSENCRYPT_STAGING=true; shift ;;
         --skip-docker-install) SKIP_DOCKER_INSTALL=true; shift ;;
         --skip-firewall) SKIP_FIREWALL=true; shift ;;
         --rescue) DO_RESCUE=true; RESCUE_ACTION="rescue"; shift ;;
@@ -427,6 +442,12 @@ install_docker_mode() {
     fi
     [ -z "$NEODESK_VERSION_GIVEN" ] || args+=(--tag "$NEODESK_VERSION_GIVEN")
     [ "$SKIP_DOCKER_INSTALL" != true ] || args+=(--no-install-docker)
+    if [ -n "$NEODESK_DOMAIN" ]; then
+        args+=(--domain "$NEODESK_DOMAIN")
+        DOCKER_PORTS="$DOCKER_PORTS_TRAEFIK"
+    fi
+    [ -z "$LETSENCRYPT_EMAIL" ] || args+=(--email "$LETSENCRYPT_EMAIL")
+    [ "$LETSENCRYPT_STAGING" != true ] || args+=(--letsencrypt-staging)
 
     fetch_docker_manager "$manager"
     ok "Docker manager: $manager"

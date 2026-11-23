@@ -102,6 +102,19 @@ docker compose exec neodesk neodesk-show-admin-credentials
 The console is then at `http://your-server:5000`, which is plain HTTP. See
 [Install with Docker](https://neode.sk/docs/getting-started/docker).
 
+For HTTPS with a certificate that renews by itself, give a DNS name that
+points at the server. A small Traefik container then gets a Let's Encrypt
+certificate and serves the console on ports 80 and 443:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install.sh | sudo bash -s -- \
+  --domain console.example.com --letsencrypt-email admin@example.com
+```
+
+`neodesk-docker.sh --domain ... --email ...` does the same for an existing
+install, and `--no-traefik` turns it off again. Add `--letsencrypt-staging`
+to test with Let's Encrypt's staging server first.
+
 ### Linux
 
 ```bash

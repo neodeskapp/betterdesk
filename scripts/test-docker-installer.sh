@@ -509,6 +509,109 @@ test_install_sh_leaves_an_inactive_ufw_alone() (
     rm -rf "$dir"
 )
 
+# --domain with --email: Traefik in front of the console with Let's
+# Encrypt. .env gets the profile, the domain, the contact, the console's
+# port on this host only and the proxy trust; the summary names the HTTPS
+# address and ports 80 and 443. --no-traefik takes all of it back and
+# removes the Traefik container.
+test_traefik_with_letsencrypt() (
+    load
+    local out
+    out=$(mgr 'getent() { return 2; }
+               DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=admin@example.com; TRAEFIK_ACTION=on
+               COMMAND=install; do_install' 2>&1) || fail "an install with --domain failed: $out"
+    local line
+    for line in COMPOSE_PROFILES=traefik NEODESK_DOMAIN=console.example.com LETSENCRYPT_EMAIL=admin@example.com \
+        NEODESK_CONSOLE_BIND=127.0.0.1 TRUST_PROXY=1 PANEL_PUBLIC_URL=https://console.example.com; do
+        grep -qx "$line" "$NEODESK_DIR/.env" || fail ".env has no $line: $(cat "$NEODESK_DIR/.env")"
+    done
+    if grep -q '^LETSENCRYPT_CA_SERVER=' "$NEODESK_DIR/.env"; then fail "a production install uses another CA server"; fi
+    printf '%s' "$out" | grep -q 'Web console: *https://console.example.com' || fail "no HTTPS console address in: $out"
+    printf '%s' "$out" | grep -q 'TCP 80, 443, 21115' || fail "the firewall line does not name 80 and 443: $out"
+    printf '%s' "$out" | grep -q 'has its certificate' || fail "the certificate was not checked: $out"
+    printf '%s' "$out" | grep -q 'does not resolve' || fail "a name that does not resolve gives no warning: $out"
+
+    out=$(mgr 'DOMAIN_SET=console.example.com; LETSENCRYPT_STAGING=true; TRAEFIK_ACTION=on; getent() { return 2; }
+               COMMAND=update; do_install' 2>&1) || fail "the switch to the staging server failed: $out"
+    grep -qx 'LETSENCRYPT_CA_SERVER=https://acme-staging-v02.api.letsencrypt.org/directory' "$NEODESK_DIR/.env" \
+        || fail ".env has not the staging server: $(cat "$NEODESK_DIR/.env")"
+    grep -qx 'LETSENCRYPT_EMAIL=admin@example.com' "$NEODESK_DIR/.env" || fail "the contact of the first run was lost"
+
+    : > "$CALLS"
+    out=$(mgr 'TRAEFIK_ACTION=off; COMMAND=update; do_install' 2>&1) || fail "--no-traefik failed: $out"
+    grep -q 'rm -sf traefik' "$CALLS" || fail "--no-traefik left the Traefik container: $(cat "$CALLS")"
+    for line in COMPOSE_PROFILES NEODESK_DOMAIN NEODESK_CONSOLE_BIND TRUST_PROXY PANEL_PUBLIC_URL LETSENCRYPT_CA_SERVER; do
+        if grep -q "^$line=" "$NEODESK_DIR/.env"; then fail "--no-traefik left $line: $(cat "$NEODESK_DIR/.env")"; fi
+    done
+    printf '%s' "$out" | grep -q 'Web console: *http://203.0.113.10:5000' || fail "no plain console address after --no-traefik: $out"
+    rm -rf "$TEST_DIR"
+)
+
+# --domain needs a DNS name and --email; ports 80 and 443 must be free
+# for Traefik, and the error says what to do.
+test_traefik_errors_say_what_to_do() (
+    load
+    local out
+    if out=$(mgr 'parse_args --domain console.example.com' 2>&1); then fail "--domain without --email went on"; fi
+    printf '%s' "$out" | grep -q -- '--email' || fail "the error does not name --email: $out"
+    if out=$(mgr 'parse_args --domain 203.0.113.10 --email admin@example.com' 2>&1); then fail "an IP address passed as --domain"; fi
+    printf '%s' "$out" | grep -q 'DNS name' || fail "the --domain error does not say what it needs: $out"
+    if out=$(mgr 'parse_args --domain console.example.com --email nobody' 2>&1); then fail "a bad e-mail address passed"; fi
+    if out=$(mgr 'parse_args --domain console.example.com --email a@example.com --no-traefik' 2>&1); then
+        fail "--domain with --no-traefik went on"
+    fi
+    out=$(mgr 'parse_args --domain Console.Example.com --email a@example.com; printf "%s %s\n" "$DOMAIN_SET" "$TRAEFIK_ACTION"' 2>&1) \
+        || fail "a valid --domain was refused: $out"
+    [ "$out" = "console.example.com on" ] || fail "--domain was read as: $out"
+
+    printf 'apache2\n' > "$TEST_DIR/taken-80"
+    if out=$(mgr 'DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=a@example.com; TRAEFIK_ACTION=on
+                  COMMAND=install; do_install' 2>&1); then fail "an install with port 80 taken went on"; fi
+    printf '%s' "$out" | grep -q 'TCP 80: apache2' || fail "the port error does not name the program: $out"
+    printf '%s' "$out" | grep -q 'Traefik needs ports 80 and 443' || fail "the port error does not say why: $out"
+    rm -f "$TEST_DIR/taken-80"
+
+    mgr 'COMMAND=install; do_install' > /dev/null 2>&1 || fail "the plain install failed"
+    printf 'nginx\n' > "$TEST_DIR/taken-443"
+    if out=$(mgr 'DOMAIN_SET=console.example.com; LETSENCRYPT_EMAIL_SET=a@example.com; TRAEFIK_ACTION=on
+                  COMMAND=update; do_install' 2>&1); then fail "turning Traefik on with port 443 taken went on"; fi
+    printf '%s' "$out" | grep -q 'TCP 443: nginx' || fail "the update's port error does not name the program: $out"
+    if grep -q '^NEODESK_DOMAIN=' "$NEODESK_DIR/.env"; then fail "the refused switch changed .env"; fi
+    rm -rf "$TEST_DIR"
+)
+
+# install.sh passes --domain, --letsencrypt-email and
+# --letsencrypt-staging to the manager, and its firewall opens 80 and 443
+# instead of the console's own ports then.
+test_install_sh_passes_the_domain() (
+    local dir
+    dir=$(mktemp -d)
+    (
+        INSTALL_DIR="$dir/opt"
+        # shellcheck disable=SC1091
+        source "$SCRIPT_ROOT/install.sh" --domain console.example.com --letsencrypt-email admin@example.com --letsencrypt-staging
+        require_root() { :; }
+        configure_firewall() { printf '%s\n' "$DOCKER_PORTS" > "$dir/ports"; }
+        fetch_url_to_file() {
+            printf '#!/bin/sh\n# NEODESK_DOCKER_SOURCED stand-in\nprintf "%%s\\n" "$*" > "%s/manager-args"\n' "$dir" > "$2"
+        }
+        main
+    ) > "$dir/out" 2>&1 || fail "install.sh with --domain failed: $(cat "$dir/out")"
+    [ "$(cat "$dir/manager-args")" = "install --dir $dir/opt/docker --yes --relay-mode auto --domain console.example.com --email admin@example.com --letsencrypt-staging" ] \
+        || fail "the manager ran with the domain as: $(cat "$dir/manager-args")"
+    local port
+    for port in 80 443; do
+        case " $(cat "$dir/ports") " in
+            *" $port "*) ;;
+            *) fail "install.sh's firewall does not open $port: $(cat "$dir/ports")" ;;
+        esac
+    done
+    case " $(cat "$dir/ports") " in
+        *" 5000 "*|*" 5443 "*) fail "install.sh's firewall opens the console's own ports behind Traefik: $(cat "$dir/ports")" ;;
+    esac
+    rm -rf "$dir"
+)
+
 test_fresh_install
 test_no_release_image_runs_dev
 test_update_goes_back_when_unhealthy
@@ -527,5 +630,8 @@ test_rerun_without_changes_keeps_the_container
 test_install_sh_runs_the_manager
 test_install_sh_opens_the_published_ports
 test_install_sh_leaves_an_inactive_ufw_alone
+test_traefik_with_letsencrypt
+test_traefik_errors_say_what_to_do
+test_install_sh_passes_the_domain
 echo "Docker installer checks passed"
 bash "$SCRIPT_ROOT/scripts/test-docker-entrypoint.sh"
