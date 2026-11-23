@@ -3464,6 +3464,22 @@
    "route": "GET /api/inventory"
   },
   {
+   "name": "invites approve-key",
+   "summary": "Accept the new key of a computer that joined with an invite and was reinstalled.",
+   "route": "POST /api/onboard/devices/{id}/approve-key",
+   "description": "The computer then rejoins with the same invite. Its old tokens and sessions end.",
+   "args": [
+    {
+     "name": "id",
+     "help": "The device's ID"
+    }
+   ],
+   "permission": "enrollment.approve",
+   "examples": [
+    "neodesk invites approve-key 123456789"
+   ]
+  },
+  {
    "name": "invites create",
    "summary": "Make an invite: a link and a code to add a computer to this server.",
    "route": "POST /api/onboard/invites",
@@ -3508,6 +3524,7 @@
      "field": "send_email"
     }
    ],
+   "permission": "enrollment.approve",
    "examples": [
     "neodesk invites create --name \"Reception PC\"",
     "neodesk invites create --name Laptops --uses 5 --hours 24"
@@ -3517,6 +3534,7 @@
    "name": "invites list",
    "summary": "List the open invites to add a computer.",
    "route": "GET /api/onboard/invites",
+   "permission": "enrollment.approve",
    "rows": "invites",
    "columns": [
     "id",
@@ -3553,7 +3571,8 @@
      "help": "the address",
      "required": true
     }
-   ]
+   ],
+   "permission": "enrollment.approve"
   },
   {
    "name": "invites revoke",
@@ -3565,13 +3584,15 @@
      "help": "The invite ID (see invites list)"
     }
    ],
+   "permission": "enrollment.approve",
    "destructive": true
   },
   {
    "name": "invites status",
    "summary": "Show what invites use here: the address in their links, whether mail can be sent, and the client release.",
    "description": "console.base is the address the links point to: another computer must reach it, so set the console's public address when it is localhost. mail says whether invites can be mailed. release is the client release the join page offers for download.",
-   "route": "GET /api/onboard/status"
+   "route": "GET /api/onboard/status",
+   "permission": "enrollment.approve or device.connect"
   },
   {
    "name": "keys api",
