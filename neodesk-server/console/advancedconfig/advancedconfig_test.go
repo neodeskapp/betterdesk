@@ -148,7 +148,7 @@ func TestWriteKeepsTheModeOfAFileAndCreatesNewOnesPrivate(t *testing.T) {
 			t.Errorf("%s: %v %v", path, info.Mode(), err)
 		}
 	}
-	created, err := s.WriteFile("console-session-secret", "x")
+	created, err := s.WriteFile("console-session-secret", strings.Repeat("x", MinSecretLength))
 	if err != nil || !created.Created || created.BackupPath != nil {
 		t.Fatalf("create: %+v %v", created, err)
 	}
@@ -335,16 +335,17 @@ func FuzzWriteRead(f *testing.F) {
 			}
 			return
 		}
-		if err != nil || written.Size != int64(len(content)) {
-			t.Fatalf("write: %+v %v", written, err)
-		}
-		read, err := s.ReadFile("go-blocklist")
+		// A NUL byte is refused before it is written (L399)
 		if strings.ContainsRune(content, 0) {
 			if !errors.Is(err, ErrBinary) {
 				t.Fatalf("NUL: %v", err)
 			}
 			return
 		}
+		if err != nil || written.Size != int64(len(content)) {
+			t.Fatalf("write: %+v %v", written, err)
+		}
+		read, err := s.ReadFile("go-blocklist")
 		if err != nil || string(read.Content) != DecodeUTF8([]byte(content)) {
 			t.Fatalf("read: %+v %v", read, err)
 		}
@@ -449,5 +450,28 @@ func TestBlocklistIsTheFileTheServerReads(t *testing.T) {
 	s, _ = testService(t, map[string]string{"BLOCKLIST_FILE": other})
 	if got := path(s); got != other {
 		t.Errorf("with BLOCKLIST_FILE: %s, want %s", got, other)
+	}
+}
+
+// TestNoFileIsSavedThatStopsTheServer: the editor saves no session secret
+// that is empty, shorter than 32 characters or holds white space, and no
+// file with a NUL byte, which it could not open again; a good secret is
+// saved (L399).
+func TestNoFileIsSavedThatStopsTheServer(t *testing.T) {
+	s, root := testService(t, nil)
+	secret := filepath.Join(root, "data", ".session_secret")
+	for _, bad := range []string{"", "   ", "short", strings.Repeat("a", 31), strings.Repeat("a", 20) + " " + strings.Repeat("b", 20)} {
+		if _, err := s.WriteFile("console-session-secret", bad); !errors.Is(err, ErrWeakSecret) {
+			t.Errorf("session secret %q: %v, want ErrWeakSecret", bad, err)
+		}
+		if _, err := os.Stat(secret); err == nil {
+			t.Fatalf("session secret %q was written", bad)
+		}
+	}
+	if _, err := s.WriteFile("console-session-secret", strings.Repeat("0123456789abcdef", 4)+"\n"); err != nil {
+		t.Errorf("a good session secret: %v", err)
+	}
+	if _, err := s.WriteFile("go-blocklist", "203.0.113.9\x00\n"); !errors.Is(err, ErrBinary) {
+		t.Errorf("a blocklist with a NUL byte: %v, want ErrBinary", err)
 	}
 }

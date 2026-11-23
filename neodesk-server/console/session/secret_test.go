@@ -174,13 +174,45 @@ func TestLoadSecretUnreadableFile(t *testing.T) {
 	}
 }
 
-func TestLoadSecretEmptyFile(t *testing.T) {
+// TestABadSecretFileDoesNotStopTheConsole: a .session_secret that holds
+// no secret (empty, or with a NUL or other control character, as the
+// Advanced tab could save one) no longer stops the console and with it the
+// whole server: the console starts with the last secret that worked, else
+// a new one, writes it back to the file and says so (L399).
+func TestABadSecretFileDoesNotStopTheConsole(t *testing.T) {
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, secretFile), []byte(" \n"), 0o600); err != nil {
+	path := filepath.Join(dir, secretFile)
+	const good = "a-good-secret-0123456789abcdef0123456789"
+	if err := os.WriteFile(path, []byte(good), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	got, err := LoadSecret(env(), dir)
-	if err != nil || got != "" {
-		t.Fatalf("got %q, %v; an empty file is an empty secret, which New refuses", got, err)
+	if got, err := LoadSecret(env(), dir); err != nil || got != good {
+		t.Fatalf("a good file: %q, %v", got, err)
+	}
+	for _, bad := range []string{"", " \n", "\x00", "abc\x01def0123456789abcdef0123456789"} {
+		if err := os.WriteFile(path, []byte(bad), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		got, notice, err := LoadSecretNotice(env(), dir)
+		if err != nil || got != good || notice == "" {
+			t.Errorf("file %q: %q, notice %q, %v; want the last good secret and a notice", bad, got, notice, err)
+		}
+		if content, _ := os.ReadFile(path); string(content) != good {
+			t.Errorf("file %q: the file holds %q afterwards, want the secret it started with", bad, content)
+		}
+	}
+	// Without a last good one, a new secret
+	if err := os.Remove(filepath.Join(dir, lastGoodFile)); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	got, notice, err := LoadSecretNotice(env(), dir)
+	if err != nil || !regexp.MustCompile(`^[0-9a-f]{64}$`).MatchString(got) || notice == "" {
+		t.Fatalf("no last good secret: %q, notice %q, %v; want a new secret and a notice", got, notice, err)
+	}
+	if content, _ := os.ReadFile(path); string(content) != got {
+		t.Errorf("the file holds %q, want the new secret", content)
 	}
 }

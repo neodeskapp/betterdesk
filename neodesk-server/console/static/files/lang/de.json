@@ -931,6 +931,7 @@
     "advanced_error_binary": "Binärdateien können nicht im Panel bearbeitet werden",
     "advanced_error_invalid": "Ungültiger Dateiinhalt",
     "advanced_error_not_writable": "Datei ist nicht vom Konsolenprozess beschreibbar",
+    "advanced_error_weak_secret": "Der Sitzungsschlüssel muss mindestens 32 Zeichen lang sein und darf keine Leerzeichen enthalten. Ein leerer oder kurzer Schlüssel würde die Konsole beim nächsten Neustart anhalten.",
     "advanced_file_console-env": "Konsolenumgebung (.env)",
     "advanced_file_console-env-local": "Konsolen-Überschreibungen (.env.local)",
     "advanced_file_go-blocklist": "Sperrliste des Servers (blocklist.txt)",

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -248,7 +249,7 @@ func truthy(v any) bool {
 
 func TestNodeVectors(t *testing.T) {
 	scenarios := loadVectors(t)
-	steps, fixed, pruned := 0, 0, 0
+	steps, fixed, pruned, refused := 0, 0, 0, 0
 	for _, sc := range scenarios {
 		t.Run(sc.Name, func(t *testing.T) {
 			root := t.TempDir()
@@ -272,9 +273,35 @@ func TestNodeVectors(t *testing.T) {
 					return time.Date(2026, 1, 1, 0, 0, tick-1, 0, time.UTC)
 				},
 			})
+			s.noContentChecks = true
+			steps += len(sc.Steps)
 			for i, step := range sc.Steps {
-				steps++
 				name := fmt.Sprintf("step %d %v", i, step.Step)
+				// A session secret the console cannot start with, or a
+				// NUL byte, is refused now where Node saved it (L399). A
+				// service with the checks on refuses the step on a copy of
+				// the files and changes nothing; the replay goes on as
+				// Node did, to check the rest of the steps.
+				if refusedSince399(step.Step) {
+					copied := t.TempDir()
+					copyTree(t, root, copied)
+					checked := New(Options{
+						ConsoleDir: filepath.Join(copied, "web-nodejs"),
+						DataDir:    filepath.Join(copied, "data"),
+						KeysPath:   filepath.Join(copied, "keys"),
+						Getenv:     func(k string) string { return strings.ReplaceAll(env[k], root, copied) },
+						Platform:   "linux",
+					})
+					before := treeOf(t, copied)
+					_, err := checked.WriteFile(step.Step[1].(string), step.Step[2])
+					if !errors.Is(err, ErrWeakSecret) && !errors.Is(err, ErrBinary) {
+						t.Errorf("%s: %v, want the refusal of L399", name, err)
+					}
+					if after := treeOf(t, copied); !reflect.DeepEqual(after, before) {
+						t.Errorf("%s: the refused write changed the files", name)
+					}
+					refused++
+				}
 				var result any
 				var err error
 				op := step.Step[0].(string)
@@ -356,6 +383,23 @@ func TestNodeVectors(t *testing.T) {
 	if fixed == 0 {
 		t.Error("no restore of the vectors failed in its copy (BUGS SE3)")
 	}
+	if refused == 0 {
+		t.Error("no step of the vectors writes what the editor refuses since L399")
+	}
+}
+
+// refusedSince399 reports whether a step writes what the editor refuses
+// since L399: a session secret that is not strong, or a NUL byte.
+func refusedSince399(step []any) bool {
+	if len(step) < 3 || step[0] != "write" {
+		return false
+	}
+	id, isText := step[1].(string)
+	content, contentIsText := step[2].(string)
+	if !isText || !contentIsText {
+		return false
+	}
+	return strings.IndexByte(content, 0) >= 0 || id == "console-session-secret" && !strongSecret(content)
 }
 
 // listAsNonRoot turns a file list that Node recorded as root into the one
@@ -442,4 +486,33 @@ func failedCopyKeepsTheFile(t *testing.T, root string, step vectorStep, before [
 		}
 	}
 	return true
+}
+
+// copyTree copies the regular files and folders below from into to.
+func copyTree(t *testing.T, from, to string) {
+	t.Helper()
+	err := filepath.WalkDir(from, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(from, path)
+		if err != nil {
+			return err
+		}
+		target := filepath.Join(to, rel)
+		if d.IsDir() {
+			return os.MkdirAll(target, 0o777)
+		}
+		if !d.Type().IsRegular() {
+			return nil
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return nil
+		}
+		return os.WriteFile(target, data, 0o600)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 }

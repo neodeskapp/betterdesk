@@ -10,7 +10,7 @@
 //	console-env              <console>/.env
 //	console-env-local        <console>/.env.local                      may be created
 //	console-session-secret   <data>/.session_secret                    may be created
-//	go-blocklist             <keys>/blocklist.txt                      may be created
+//	go-blocklist             BLOCKLIST_FILE, else <keys>/blocklist.txt may be created
 //	go-audit-log             AUDIT_LOG_FILE when absolute, else the    may be created
 //	                         first of /var/log/neodesk/audit.jsonl
 //	                         and <keys>/audit.jsonl that exists, else
@@ -39,6 +39,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/managedconfig"
@@ -58,6 +59,7 @@ var (
 	ErrInvalidContent = errors.New("invalid_content")
 	ErrNotWritable    = errors.New("not_writable")
 	ErrInvalidBackup  = errors.New("invalid_backup")
+	ErrWeakSecret     = errors.New("weak_secret")
 )
 
 // Options are the settings of a Service.
@@ -85,7 +87,11 @@ type Options struct {
 // Service reads and writes the files of the catalog. It is safe for
 // concurrent use; one write or restore runs at a time.
 type Service struct {
-	opts Options
+	// noContentChecks lets a write through that the content checks of
+	// L399 refuse: the replay of the old console's vectors, which saved
+	// such content, turns it on to check the rest of their steps.
+	noContentChecks bool
+	opts            Options
 	// writable is fs.access(path, W_OK); tests replace it, because a test
 	// that runs as root may write everything.
 	writable func(path string) bool
@@ -146,6 +152,25 @@ var catalog = []definition{
 		path: func(s *Service) string { return filepath.Join(s.opts.ConsoleDir, "..", "docker", "supervisord.conf") }},
 	{id: "docker-compose", category: "console", requiresRestart: "console",
 		path: func(s *Service) string { return filepath.Join(s.opts.ConsoleDir, "..", "docker-compose.yml") }},
+}
+
+// MinSecretLength is the shortest session secret the editor saves.
+const MinSecretLength = 32
+
+// strongSecret reports whether text, without the white space around it,
+// is a session secret the editor saves: at least MinSecretLength
+// characters and no white space or control character inside.
+func strongSecret(text string) bool {
+	secret := strings.TrimSpace(text)
+	if utf8.RuneCountInString(secret) < MinSecretLength {
+		return false
+	}
+	for _, r := range secret {
+		if r <= 0x20 || r == 0x7f {
+			return false
+		}
+	}
+	return true
 }
 
 // blocklistPath is the file the server loads its blocklist from:
@@ -367,6 +392,16 @@ func (s *Service) WriteFile(id string, content any) (*Written, error) {
 	data := []byte(text)
 	if len(data) > MaxBytes {
 		return nil, ErrTooLarge
+	}
+	// A file the editor could not open again, or a session secret the
+	// console cannot start with, is not saved (L399)
+	if !s.noContentChecks {
+		if strings.IndexByte(text, 0) >= 0 {
+			return nil, ErrBinary
+		}
+		if def.id == "console-session-secret" && !strongSecret(text) {
+			return nil, ErrWeakSecret
+		}
 	}
 
 	s.mu.Lock()

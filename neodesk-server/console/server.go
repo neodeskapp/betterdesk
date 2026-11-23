@@ -154,7 +154,10 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	if err := s.loadCertificates(); err != nil {
 		return nil, err
 	}
-	secret, err := session.LoadSecret(getenv, cfg.DataDir)
+	// A session secret file that holds no usable secret does not stop the
+	// console: it starts with the last good secret or a new one, and the
+	// notice goes into the log and the console's activity log (L399)
+	secret, secretNotice, err := session.LoadSecretNotice(getenv, cfg.DataDir)
 	if err != nil {
 		return nil, fmt.Errorf("session secret: %w", err)
 	}
@@ -165,6 +168,11 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	secure := cfg.HTTPS && s.net.cert != nil
 
 	audit := auditlog.New(opts.Store)
+	if secretNotice != "" {
+		if err := audit.Write(ctx, 0, "session_secret_replaced", secretNotice, ""); err != nil {
+			logging.Logf("console", "WARN: %v", err)
+		}
+	}
 	if cfg.WebUIDir == "" && !webui.HasEmbeddedBuild() {
 		logging.Logf("console", "WARN: this binary was built without the web app (go run ./cmd/embed-webui before go build) and WEB_UI_DIR is not set: the console answers no pages")
 	}

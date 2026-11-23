@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -328,5 +329,21 @@ func TestServerEventsOutliveARestart(t *testing.T) {
 	defer next.Close()
 	if events := next.Recent(5); len(events) != 1 || events[0].Target != "alice" {
 		t.Fatalf("after a restart: %+v", events)
+	}
+}
+
+// TestAConsoleThatCannotStartStopsNothingElse: when the console does not
+// start, the server logs it and goes on with the ID server, relay and API
+// instead of exiting (L399).
+func TestAConsoleThatCannotStartStopsNothingElse(t *testing.T) {
+	stop := withoutConsoleOnError(nil, errors.New("session store: session: the secret is empty"))
+	if stop == nil {
+		t.Fatal("no stop function: the caller would crash on defer")
+	}
+	stop()
+	stopped := false
+	withoutConsoleOnError(func() { stopped = true }, nil)()
+	if !stopped {
+		t.Error("a console that started is not stopped")
 	}
 }

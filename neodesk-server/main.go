@@ -705,10 +705,7 @@ func main() {
 		// HttpProxyRequest from clients without an API server setting: the
 		// API port's handler, the console's client API port when it runs
 		sig.SetAPIProxy(apiSrv.ListenerHandler())
-		stopConsole, err := startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), sig.PanelProofFor, sig.SetControllerFeatures, sig.SetAPIProxy, requestRestart)
-		if err != nil {
-			logging.Fatalf("Failed to start console: %v", err)
-		}
+		stopConsole := withoutConsoleOnError(startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), sig.PanelProofFor, sig.SetControllerFeatures, sig.SetAPIProxy, requestRestart))
 		defer stopConsole()
 
 	default:
@@ -802,6 +799,20 @@ func openAuditLog(file string, database db.Database) *audit.Logger {
 	l := audit.NewLogger(file)
 	l.UseStore(database)
 	return l
+}
+
+// withoutConsoleOnError is the console's stop function, or, when the
+// console did not start, a stop that does nothing: a console that cannot
+// start (a bad file in its settings, for one) is logged and the ID server,
+// relay and API go on without it, instead of the whole server stopping
+// (L399).
+func withoutConsoleOnError(stop func(), err error) func() {
+	if err == nil {
+		return stop
+	}
+	log.Printf("ERROR: Failed to start console: %v", err)
+	log.Printf("ERROR: the ID server, relay and API keep running without the console. Fix the console's settings and restart the server")
+	return func() {}
 }
 
 // blocklistFile is the blocklist file the server reads: BLOCKLIST_FILE
