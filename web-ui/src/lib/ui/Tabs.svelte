@@ -9,6 +9,10 @@
   Home and End go to the first and last. The `children` snippet gets the
   open tab's id and renders inside the tab panel; without it, the page
   places the content itself.
+
+  On a narrow screen the strip scrolls sideways; the open tab is kept in
+  view (also when the page opens on a later tab), with part of the tab
+  next to it showing so the strip reads as one that scrolls.
 -->
 <script module lang="ts">
 	export interface TabItem {
@@ -39,6 +43,29 @@
 	const current = $derived(value ?? tabs.find((t) => !t.disabled)?.id ?? '');
 	const currentIndex = $derived(tabs.findIndex((t) => t.id === current));
 	let list = $state<HTMLElement | null>(null);
+
+	/* Keep the open tab in the visible part of the strip, with PEEK px of
+	   its neighbour showing (physical scrollLeft: the same in RTL) */
+	const PEEK = 32;
+	$effect(() => {
+		const el = list;
+		const tab = currentIndex >= 0 ? el?.querySelectorAll<HTMLElement>('[role="tab"]')[currentIndex] : null;
+		if (!el || !tab) return;
+		const keep = () => {
+			if (el.scrollWidth <= el.clientWidth) return;
+			const box = el.getBoundingClientRect();
+			const r = tab.getBoundingClientRect();
+			if (r.left < box.left + PEEK) el.scrollLeft -= box.left + PEEK - r.left;
+			else if (r.right > box.right - PEEK) el.scrollLeft += r.right - (box.right - PEEK);
+		};
+		keep();
+		// Again when the tab or the strip changes size (the web font arriving, a turned phone)
+		if (typeof ResizeObserver === 'undefined') return;
+		const ro = new ResizeObserver(keep);
+		ro.observe(el);
+		ro.observe(tab);
+		return () => ro.disconnect();
+	});
 
 	function pick(id: string) {
 		if (id === current) return;
