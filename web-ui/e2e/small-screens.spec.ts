@@ -146,3 +146,68 @@ for (const size of [
 		});
 	});
 }
+
+/** Status lines cut by a box around them or by the screen edge */
+async function cutStatuses(page: Page): Promise<string[]> {
+	return page.evaluate(() => {
+		const vw = document.documentElement.clientWidth;
+		const cut: string[] = [];
+		for (const s of document.querySelectorAll<HTMLElement>('.status')) {
+			const r = s.getBoundingClientRect();
+			if (!r.width) continue;
+			let right = vw;
+			for (let p = s.parentElement; p && p !== document.body; p = p.parentElement) {
+				if (getComputedStyle(p).overflowX !== 'visible')
+					right = Math.min(right, p.getBoundingClientRect().right);
+			}
+			if (r.right > right + 1) cut.push(`${s.textContent?.trim()} (${Math.round(r.right - right)} px)`);
+		}
+		return cut;
+	});
+}
+
+test.describe('quick support on phones', () => {
+	test.use({ viewport: { width: 360, height: 640 } });
+
+	// BUGS L318: the waiting line never wrapped; the dialog grew to 627 px and the row to 628 px
+	test('the waiting line wraps: the dialog and the Help requests row fit the screen', async ({ page }) => {
+		for (const size of [
+			{ width: 360, height: 640 },
+			{ width: 390, height: 844 }
+		]) {
+			await page.setViewportSize(size);
+			await open(page, '/help-requests', 'en');
+			await page.locator('.shell-topbar').getByRole('button', { name: 'Quick support' }).click();
+			const dialog = page.getByRole('dialog');
+			await expect(dialog.locator('.status').filter({ hasText: 'Waiting for the person' })).toBeVisible();
+			expect(await pastTheEdge(page), `Quick support dialog at ${size.width}`).toEqual({
+				over: 0,
+				elements: []
+			});
+			expect(await cutStatuses(page)).toEqual([]);
+			await dialog.getByRole('button', { name: 'Close', exact: true }).last().click();
+			await expect(dialog).toBeHidden();
+			const row = page.locator('.qs-sessions .list-row').first();
+			await expect(row).toBeVisible();
+			// The person's name keeps its line instead of one word per line
+			const name = await row.locator('.row-main').evaluate((m) => m.getBoundingClientRect().width);
+			expect(name, 'width of the name').toBeGreaterThan(150);
+			expect(await pastTheEdge(page), `Help requests at ${size.width}`).toEqual({ over: 0, elements: [] });
+			expect(await cutStatuses(page)).toEqual([]);
+			await row.getByRole('button', { name: 'End session' }).click();
+			await expect(page.locator('.qs-sessions')).toHaveCount(0);
+		}
+	});
+});
+
+test.describe('email settings in German at 360', () => {
+	test.use({ viewport: { width: 360, height: 640 } });
+
+	// BUGS L318: "Nicht eingerichtet. Die Konsole versendet keine E-M" was cut at the edge
+	test('the current state line is not cut', async ({ page, baseURL }) => {
+		await useLanguage(page, 'de', baseURL);
+		await open(page, '/settings?tab=email', 'de');
+		await expect(page.locator('.status').first()).toBeVisible();
+		expect(await cutStatuses(page)).toEqual([]);
+	});
+});

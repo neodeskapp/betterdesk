@@ -3,6 +3,9 @@
   waiting, neutral, warning, danger) or a status word that maps to one
   ("pending" → waiting). Each tone has its own shape, so colour is never
   the only cue. `title`: a longer explanation on hover.
+
+  A long label wraps, with the mark on its first line; in a table cell it
+  stays on one line (the table scrolls sideways instead).
 -->
 <script lang="ts">
 	import { statusTone } from '#lib/util/display.ts';
@@ -14,10 +17,15 @@
 <span class="status is-{t}" {title}>{label}</span>
 
 <style>
+	/* The mark sits on the text's baseline, so it stays on the first line when the label wraps */
 	.status {
 		display: inline-flex;
-		align-items: center;
+		align-items: baseline;
 		gap: var(--space-2);
+		max-width: 100%;
+		overflow-wrap: break-word;
+	}
+	:global(.data-table) .status {
 		white-space: nowrap;
 	}
 	.status::before {

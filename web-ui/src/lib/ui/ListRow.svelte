@@ -11,6 +11,10 @@
   text at the end inside the target (a time, a status). actions: buttons
   or a row menu. chevron: defaults to on for href. current: the open item
   in a Split list (aria-current). empty: a muted "nothing here" row.
+
+  When the row is too narrow for the title (at least 12rem) and the end
+  part side by side, the end part moves to a line of its own under the
+  title, at the end side, instead of squeezing the title.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -118,8 +122,9 @@
 	}
 	.list-row {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
-		gap: var(--space-3);
+		gap: var(--space-2) var(--space-3);
 		min-height: var(--row-h);
 		padding: var(--row-pad-y) var(--row-pad-x);
 		border-bottom: 1px solid var(--rule);
@@ -145,7 +150,7 @@
 		color: var(--text);
 	}
 	.row-main {
-		flex: 1;
+		flex: 1 1 12rem;
 		min-width: 0;
 	}
 	.row-title {
@@ -158,9 +163,16 @@
 	}
 	.row-end {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
+		justify-content: flex-end;
 		gap: var(--space-2);
+		min-width: 0;
 		color: var(--text-muted);
+	}
+	/* On a line of its own, the end part keeps to the end side */
+	.row-main + :is(.row-end, .row-actions) {
+		margin-inline-start: auto;
 	}
 	.list-row :global(.row-chevron) {
 		color: var(--text-muted);
@@ -225,7 +237,9 @@
 		position: relative;
 		z-index: 1;
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
+		justify-content: flex-end;
 		gap: var(--space-1);
 	}
 </style>
