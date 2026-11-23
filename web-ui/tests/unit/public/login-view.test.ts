@@ -23,6 +23,7 @@ function page(over: Partial<LoginPage> = {}, branding: Partial<LoginPage['brandi
 			logoUrl: '',
 			logoText: '',
 			logoTextAccent: '',
+			logoIcon: '',
 			loginTitle: '',
 			loginSubtitle: '',
 			loginPromoMode: 'classic',
@@ -267,7 +268,8 @@ describe('notices, branding and the compact sign-in', () => {
 		expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Acme support');
 		expect(screen.getByText('Staff only')).toBeInTheDocument();
 		expect(screen.getByText('(c) Acme')).toBeInTheDocument();
-		expect(screen.getByText('NeoDesk 3.5.0')).toBeInTheDocument();
+		// the attribution names NeoDesk and its version (L372)
+		expect(document.querySelector('.login-version')).toHaveTextContent('branding.powered_by NeoDesk 3.5.0');
 		expect(document.body).toHaveClass('login-page', 'login-layout-classic');
 	});
 

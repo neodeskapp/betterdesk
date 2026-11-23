@@ -1554,7 +1554,7 @@ func TestSignInAndBootstrapBranding(t *testing.T) {
 			if loaded {
 				s.LoadBranding(ctx)
 			}
-			if got := Stringify(s.SignInBranding()); got != `{"logoType":"default","logoSvg":"","logoUrl":"","logoText":"","logoTextAccent":"","loginTitle":"","loginSubtitle":"","loginPromoMode":"classic","loginSlides":[],"footerText":"","showPoweredBy":true}` {
+			if got := Stringify(s.SignInBranding()); got != `{"logoType":"default","logoIcon":"dns","logoSvg":"","logoUrl":"","logoText":"","logoTextAccent":"","loginTitle":"","loginSubtitle":"","loginPromoMode":"classic","loginSlides":[],"footerText":"","showPoweredBy":true}` {
 				t.Errorf("sign-in branding of an untouched console (loaded %v): %s", loaded, got)
 			}
 			want := `{"appName":"NeoDesk","appDescription":"NeoDesk Server Management","themeMode":"system","logoType":"default","logoIcon":"dns","logoSvg":"","logoUrl":"","logoText":"","logoTextAccent":"","footerText":"","showPoweredBy":true,"revision":"` + s.Revision() + `"}`
@@ -1581,7 +1581,7 @@ func TestSignInAndBootstrapBranding(t *testing.T) {
 		if err := s.SaveBranding(ctx, updates); err != nil {
 			t.Fatal(err)
 		}
-		wantSignIn := `{"logoType":"text","logoSvg":"<svg><rect/></svg>","logoUrl":"/uploads/logo-1.png","logoText":"Acme","logoTextAccent":"Remote","loginTitle":"Welcome","loginSubtitle":"Sign in","loginPromoMode":"slides",` +
+		wantSignIn := `{"logoType":"text","logoIcon":"","logoSvg":"<svg><rect/></svg>","logoUrl":"/uploads/logo-1.png","logoText":"Acme","logoTextAccent":"Remote","loginTitle":"Welcome","loginSubtitle":"Sign in","loginPromoMode":"slides",` +
 			`"loginSlides":[{"id":"one","slideKey":"free","imageUrl":"/uploads/bg-1.jpg","title":"T","body":"B","overlay":12.5},{"id":"slide-2","slideKey":"","imageUrl":"https://example.com/a.jpg","title":"","body":"","overlay":0}],` +
 			`"footerText":"(c) Acme","showPoweredBy":false}`
 		if got := Stringify(s.SignInBranding()); got != wantSignIn {

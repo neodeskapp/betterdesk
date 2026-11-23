@@ -267,8 +267,8 @@
 		{#if !OTHER_LOGOS.has(logoType)}
 			<BrandLogo name={appName} />
 		{:else if logoType === 'text' && branding?.logoText}
-			<span class="logo-text"
-				>{branding.logoText}{#if branding.logoTextAccent}<span class="logo-text-accent"
+			<span class={['logo-text', branding.logoTextAccent && 'has-second-line']}
+				><span>{branding.logoText}</span>{#if branding.logoTextAccent}<span class="logo-text-accent"
 						>{branding.logoTextAccent}</span
 					>{/if}</span
 			>
@@ -430,6 +430,16 @@
 	}
 	.logo-text-accent {
 		color: var(--accent);
+	}
+	/* The second line of a text logo goes under the first (Appearance, Second line) */
+	.logo-text.has-second-line {
+		display: inline-flex;
+		flex-direction: column;
+		line-height: 1.15;
+	}
+	.has-second-line .logo-text-accent {
+		font-size: var(--text-sm);
+		font-weight: 600;
 	}
 
 	.sidebar-nav {

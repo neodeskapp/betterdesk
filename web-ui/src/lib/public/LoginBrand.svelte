@@ -1,11 +1,12 @@
 <!--
   The logo above the sign-in form (views/login.ejs): the NeoDesk logo,
-  the admin's text logo, an SVG or image logo with the name next to it, or
-  the name alone. An admin's SVG is shown as a picture (data URL), where it
+  the admin's text logo (its second line under the first), an icon, SVG or
+  image logo with the name next to it, or the name alone. An admin's SVG is shown as a picture (data URL), where it
   can't run anything; image addresses must be on this server or http(s).
 -->
 <script lang="ts">
 	import BrandLogo from '#lib/shell/BrandLogo.svelte';
+	import Icon from '#lib/ui/Icon.svelte';
 	import type { LoginBranding } from '#lib/api/signin.ts';
 
 	let { branding, appName }: { branding: LoginBranding; appName: string } = $props();
@@ -22,11 +23,13 @@
 	{#if branding.logoType === 'default'}
 		<BrandLogo name={appName} />
 	{:else if branding.logoType === 'text' && branding.logoText}
-		<span class="brand-text-logo"
-			>{branding.logoText}{#if branding.logoTextAccent}<span class="brand-text-accent"
+		<span class={['brand-text-logo', branding.logoTextAccent && 'has-second-line']}
+			><span>{branding.logoText}</span>{#if branding.logoTextAccent}<span class="brand-text-accent"
 					>{branding.logoTextAccent}</span
 				>{/if}</span
 		>
+	{:else if branding.logoType === 'icon'}
+		<Icon name={branding.logoIcon || 'dns'} /><span class="login-logo-text">{appName}</span>
 	{:else if branding.logoType === 'svg' && svgSrc}
 		<img class="login-logo-img" src={svgSrc} alt="" /><span class="login-logo-text">{appName}</span>
 	{:else if branding.logoType === 'image' && imgSrc}
@@ -59,7 +62,19 @@
 		width: auto;
 		height: 28px;
 	}
+	.brand-text-logo.has-second-line {
+		display: inline-flex;
+		flex-direction: column;
+		line-height: 1.15;
+	}
 	.brand-text-accent {
+		color: var(--accent);
+	}
+	.has-second-line .brand-text-accent {
+		font-size: var(--text-sm);
+		font-weight: 600;
+	}
+	.login-brand > :global(.material-icons) {
 		color: var(--accent);
 	}
 </style>

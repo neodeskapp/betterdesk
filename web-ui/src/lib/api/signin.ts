@@ -33,6 +33,7 @@ export const LoginPage = v.object({
 		logoUrl: v.string(),
 		logoText: v.string(),
 		logoTextAccent: v.string(),
+		logoIcon: v.optional(v.string(), ''),
 		loginTitle: v.string(),
 		loginSubtitle: v.string(),
 		loginPromoMode: v.picklist(['classic', 'single', 'slides']),

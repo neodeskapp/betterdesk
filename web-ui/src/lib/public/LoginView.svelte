@@ -510,7 +510,12 @@
 			<div class="login-footer-row">
 				<!-- The top bar's language menu, opening above when there is no room below -->
 				<LanguageMenu trigger="label" align="start" onchoose={changeLanguage} />
-				{#if compact || page.branding.showPoweredBy}
+				{#if page.branding.showPoweredBy}
+					<p class="login-version">
+						{t('branding.powered_by')} <span translate="no">NeoDesk</span>
+						{page.appVersion}
+					</p>
+				{:else if compact}
 					<p class="login-version">{page.appName} {page.appVersion}</p>
 				{/if}
 			</div>

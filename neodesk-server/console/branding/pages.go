@@ -57,6 +57,8 @@ func (s *Service) SignInBranding() *Object {
 	}
 	return object(
 		"logoType", or(property(b, "logoType"), "default"),
+		// the icon of the icon logo, which the sign-in page draws too (BUGS L370)
+		"logoIcon", orEmpty(b, "logoIcon"),
 		"logoSvg", orEmpty(b, "logoSvg"),
 		"logoUrl", orEmpty(b, "logoUrl"),
 		"logoText", orEmpty(b, "logoText"),

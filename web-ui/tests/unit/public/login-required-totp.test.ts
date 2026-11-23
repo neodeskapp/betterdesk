@@ -22,6 +22,7 @@ function page(over: Partial<LoginPage> = {}, branding: Partial<LoginPage['brandi
 			logoUrl: '',
 			logoText: '',
 			logoTextAccent: '',
+			logoIcon: '',
 			loginTitle: '',
 			loginSubtitle: '',
 			loginPromoMode: 'classic',
