@@ -1,6 +1,7 @@
 package settings_test
 
 import (
+	"context"
 	"testing"
 
 	apiserver "github.com/neodeskapp/neodesk/neodesk-server/api"
@@ -25,7 +26,7 @@ func TestSessionDurationOutlivesARestart(t *testing.T) {
 		}
 		srv := apiserver.New(serverconfig.DefaultConfig(), gdb, peer.NewMap(), nil, "test")
 		w := routetest.New(t, routetest.Options{DB: sdb, API: srv.InternalHandler(), Env: map[string]string{"API_TOKEN_EXPIRY_DAYS": "7"}})
-		if got := w.Server.Deps().Authn.TokenExpiryDays(); got != 3 {
+		if got := w.Server.Deps().Authn.TokenLifetimeDays(context.Background()); got != 3 {
 			t.Errorf("a console started on a server that keeps 3 days issues %d-day tokens, want 3", got)
 		}
 	})

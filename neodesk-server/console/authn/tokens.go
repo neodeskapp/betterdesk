@@ -91,11 +91,30 @@ func ValidTokenExpiryDays(text string) bool {
 	return err == nil && n >= 1 && n <= 365
 }
 
+// SessionDurationKey is the server setting the Session duration of the
+// Sign-in tab is saved in.
+const SessionDurationKey = "client_session_expiry_days"
+
+// TokenLifetimeDays is how many days a token issued now lasts: the Session
+// duration saved on the Sign-in tab, read from the server's settings at
+// each issue, as the API port reads it; TokenExpiryDays
+// (API_TOKEN_EXPIRY_DAYS, or the last save) only while nothing valid is
+// saved. Reading it at the start alone left the console's client API at
+// its environment's 7 days after a restart (L354).
+func (s *Service) TokenLifetimeDays(ctx context.Context) int {
+	var value string
+	if err := s.db.QueryRow(ctx, `SELECT value FROM server_config WHERE key = ?`, SessionDurationKey).Scan(&value); err == nil && ValidTokenExpiryDays(value) {
+		n, _ := strconv.Atoi(strings.TrimSpace(value))
+		return n
+	}
+	return s.TokenExpiryDays()
+}
+
 // IssueAccessToken issues an account's token for a sign-in and revokes
 // none. It is for a sign-in whose request names no client UUID at all:
 // nothing is revoked, and the token is stored with an empty UUID.
 func (s *Service) IssueAccessToken(ctx context.Context, userID int64, clientID, clientUUID, ip string) (string, error) {
-	expires := s.now().Add(time.Duration(s.tokenDays.Load()) * 24 * time.Hour)
+	expires := s.now().Add(time.Duration(s.TokenLifetimeDays(ctx)) * 24 * time.Hour)
 	return s.issue(ctx, TokenKindAccount, userID, clientID, clientUUID, ip, expires)
 }
 
