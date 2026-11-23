@@ -3,6 +3,8 @@ package authn
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
@@ -80,6 +82,13 @@ func (s *Service) TokenExpiryDays() int { return int(s.tokenDays.Load()) }
 // or 7 when it has none or the number is 0.
 func (s *Service) SetTokenExpiryDays(text string) {
 	s.tokenDays.Store(int64(intOr(text, 7)))
+}
+
+// ValidTokenExpiryDays reports whether text is a Session duration the
+// Sign-in tab saves: a whole number of days from 1 to 365.
+func ValidTokenExpiryDays(text string) bool {
+	n, err := strconv.Atoi(strings.TrimSpace(text))
+	return err == nil && n >= 1 && n <= 365
 }
 
 // IssueAccessToken issues an account's token for a sign-in and revokes

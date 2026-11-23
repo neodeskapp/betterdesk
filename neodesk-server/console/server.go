@@ -395,6 +395,14 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("sign-in service: %w", err)
 	}
+	// The Session duration saved on the Sign-in tab lives in the server's
+	// settings and wins over API_TOKEN_EXPIRY_DAYS, also after a restart
+	// and on an install without a writable .env (L354)
+	if saved := api.GetConfig(ctx, "client_session_expiry_days"); goapi.Truthy(saved.Get("success")) {
+		if days, ok := goapi.Dig(saved, "data", "value").(string); ok && authn.ValidTokenExpiryDays(days) {
+			s.deps.Authn.SetTokenExpiryDays(days)
+		}
+	}
 
 	s.jobs.Add("session cleanup", sessions.RunCleanup)
 	s.deps.Sockets = ws.New(ws.Options{
