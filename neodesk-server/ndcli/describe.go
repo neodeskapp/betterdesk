@@ -58,6 +58,9 @@ type CommandDesc struct {
 	Permission  string   `json:"permission"`
 	ReadOnly    bool     `json:"read_only"`
 	Destructive bool     `json:"destructive"`
+	Exec        bool     `json:"exec"`
+	Secrets     bool     `json:"secrets"`
+	AsksFirst   bool     `json:"asks_first"`
 	Upload      string   `json:"upload,omitempty"`
 	Examples    []string `json:"examples"`
 }
@@ -127,7 +130,8 @@ func describeCommand(c *Command) CommandDesc {
 		Name: c.Name, Action: c.Action(), Summary: c.Summary, Description: c.Description,
 		Usage: usageLine(c), Method: c.Method(), Path: c.Path(),
 		Args: c.Args, Flags: c.Flags, Permission: c.Permission,
-		ReadOnly: c.ReadOnly(), Destructive: c.Destructive, Upload: c.Upload, Examples: c.Examples,
+		ReadOnly: c.ReadOnly(), Destructive: c.Destructive, Exec: c.Exec, Secrets: c.Secrets, AsksFirst: c.AsksFirst(),
+		Upload: c.Upload, Examples: c.Examples,
 	}
 	if cd.Args == nil {
 		cd.Args = []Arg{}
@@ -222,6 +226,7 @@ func WriteIndexMarkdown(w io.Writer, d Description, link string) {
 	fmt.Fprintln(w, "The command line is the server binary: called `neodesk` (the Docker images have that name), or `neodesk-server cli`. "+
 		"Sign in once with an API token. Make one in the console: account menu, API tokens. "+
 		"A token can do only what its permissions and its account allow, and a read-only token only reads.")
+	fmt.Fprint(w, tokenRulesMarkdown)
 	fmt.Fprintf(w, "\n## Groups\n\n| Group | What it is for | Commands |\n|---|---|---|\n")
 	for _, g := range d.Groups {
 		target := g.Name + ".md"
@@ -247,6 +252,24 @@ func WriteIndexMarkdown(w io.Writer, d Description, link string) {
 		fmt.Fprintf(w, "| %d | %s |\n", e.Code, md(e.Meaning))
 	}
 }
+
+// tokenRulesMarkdown is what the docs say about API tokens (the rules are
+// in package console/admintoken and console/apitokens.go).
+const tokenRulesMarkdown = `
+## API tokens
+
+Make a token in the console: account menu, API tokens. The console shows it once. A token:
+
+- holds at most the permissions of the account that made it, now and later: when the account loses a permission or is disabled, the token loses it too
+- can be read only, expires after at most a year, and can be limited to some addresses or networks
+- never signs in, changes its own account or shows the console's API key
+- passes checks by role, changes accounts and access, and keeps server.config only when it carries every permission of its account
+- reaches the server's secrets (the full backup and restore, the server's files, the advanced settings files, where scheduled backups go) only when it carries every permission of its account and may write
+
+The address list checks the address the console sees. Behind a reverse proxy, set TRUST_PROXY to the proxy's address rather than true, and keep the console's port closed to everyone else. Otherwise a client can name any address in X-Forwarded-For.
+
+For an AI agent, ` + "`neodesk mcp`" + ` serves the commands as MCP tools: read only, without the commands that show secrets or run something, unless you allow them. Give the agent a token of its own with only the permissions it needs.
+`
 
 // WriteGroupMarkdown writes one group with every command.
 func WriteGroupMarkdown(w io.Writer, g GroupDesc) {
@@ -286,6 +309,12 @@ func WriteGroupMarkdown(w io.Writer, g GroupDesc) {
 		fmt.Fprintf(w, "\nNeeds %s; %s", c.Permission, access)
 		if c.Destructive {
 			fmt.Fprint(w, "; deletes or ends something for good, so it asks first unless --yes is given")
+		}
+		if c.Exec {
+			fmt.Fprint(w, "; runs something on a device or the server")
+		}
+		if c.Secrets {
+			fmt.Fprint(w, "; the answer holds secrets or private content")
 		}
 		fmt.Fprintf(w, ". Calls `%s %s`.\n", c.Method, c.Path)
 		if len(c.Examples) > 0 {

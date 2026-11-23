@@ -531,7 +531,8 @@
      "type": "json",
      "help": "its data"
     }
-   ]
+   ],
+   "exec": true
   },
   {
    "name": "automation commands",
@@ -656,6 +657,7 @@
    "summary": "Download a full backup of the server (use --output). Holds every secret: keep it safe.",
    "route": "GET /api/settings/backup",
    "description": "The archive holds the database with password hashes, keys and settings. API tokens can download it only when they carry all of their account's permissions.",
+   "secrets": true,
    "examples": [
     "neodesk backups download --output neodesk-backup.tar.gz"
    ]
@@ -1256,7 +1258,8 @@
      "type": "string"
     }
    ],
-   "permission": "cdap.command"
+   "permission": "cdap.command",
+   "exec": true
   },
   {
    "name": "cdap get",
@@ -1470,7 +1473,8 @@
      "help": "The file id"
     }
    ],
-   "permission": "chat.access"
+   "permission": "chat.access",
+   "secrets": true
   },
   {
    "name": "chat search",
@@ -1657,7 +1661,8 @@
      "help": "The device ID (see devices list)"
     }
    ],
-   "permission": "device.connect"
+   "permission": "device.connect",
+   "secrets": true
   },
   {
    "name": "device-control clipboard-set",
@@ -1677,7 +1682,8 @@
      "help": "the text",
      "required": true
     }
-   ]
+   ],
+   "exec": true
   },
   {
    "name": "device-control key",
@@ -1708,7 +1714,8 @@
       "up"
      ]
     }
-   ]
+   ],
+   "exec": true
   },
   {
    "name": "device-control mouse",
@@ -1752,7 +1759,8 @@
      "help": "wheel steps down (negative: up)",
      "field": "wheel_dy"
     }
-   ]
+   ],
+   "exec": true
   },
   {
    "name": "device-control run",
@@ -1773,6 +1781,7 @@
      "required": true
     }
    ],
+   "exec": true,
    "examples": [
     "neodesk device-control run 123456789 --command \"ipconfig /all\""
    ]
@@ -1787,6 +1796,7 @@
      "help": "The device ID (see devices list)"
     }
    ],
+   "secrets": true,
    "examples": [
     "neodesk device-control screenshot 123456789 --json"
    ],
@@ -1810,7 +1820,8 @@
      "help": "the text, at most 4096 characters",
      "required": true
     }
-   ]
+   ],
+   "exec": true
   },
   {
    "name": "device-files delete",
@@ -1837,7 +1848,8 @@
      "help": "a folder with everything in it"
     }
    ],
-   "destructive": true
+   "destructive": true,
+   "exec": true
   },
   {
    "name": "device-files list",
@@ -1893,7 +1905,8 @@
      "type": "bool",
      "help": "make the folders above too"
     }
-   ]
+   ],
+   "exec": true
   },
   {
    "name": "device-files read",
@@ -1925,7 +1938,8 @@
      "type": "int",
      "help": "how many bytes (default 64 KiB)"
     }
-   ]
+   ],
+   "secrets": true
   },
   {
    "name": "device-files rename",
@@ -1952,7 +1966,8 @@
      "help": "the new path",
      "required": true
     }
-   ]
+   ],
+   "exec": true
   },
   {
    "name": "device-files write",
@@ -1991,7 +2006,8 @@
       "create"
      ]
     }
-   ]
+   ],
+   "exec": true
   },
   {
    "name": "device-groups delete",
@@ -2097,7 +2113,8 @@
      "type": "string",
      "help": "a note"
     }
-   ]
+   ],
+   "secrets": true
   },
   {
    "name": "device-tokens create-many",
@@ -2133,7 +2150,8 @@
      "help": "seconds each lasts",
      "field": "expires_in"
     }
-   ]
+   ],
+   "secrets": true
   },
   {
    "name": "device-tokens list",
@@ -2336,7 +2354,8 @@
      "help": "The device ID (see devices list)"
     }
    ],
-   "permission": "device.connect"
+   "permission": "device.connect",
+   "secrets": true
   },
   {
    "name": "devices connection-mode",
@@ -2392,7 +2411,8 @@
      "help": "The device ID (see devices list)"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "secrets": true
   },
   {
    "name": "devices events",
@@ -2658,7 +2678,8 @@
      "type": "json",
      "help": "its arguments"
     }
-   ]
+   ],
+   "exec": true
   },
   {
    "name": "devices telemetry-refresh",
@@ -3046,7 +3067,8 @@
      "help": "The workflow id"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "exec": true
   },
   {
    "name": "fleet workflow-set",
@@ -3276,7 +3298,8 @@
    "name": "generator install-local",
    "summary": "Install the generator module from a local file.",
    "route": "POST /api/generator/module/install-local",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "exec": true
   },
   {
    "name": "generator platforms",
@@ -3365,7 +3388,8 @@
      "field": "max_uses"
     }
    ],
-   "permission": "guest.create"
+   "permission": "guest.create",
+   "secrets": true
   },
   {
    "name": "guest-links list",
@@ -3703,7 +3727,8 @@
     }
    ],
    "permission": "mesh.terminal",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "exec": true
   },
   {
    "name": "mesh files",
@@ -3716,7 +3741,8 @@
     }
    ],
    "permission": "mesh.files",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "exec": true
   },
   {
    "name": "mesh group-create",
@@ -3755,7 +3781,8 @@
     }
    ],
    "permission": "mesh.power",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "exec": true
   },
   {
    "name": "mesh recording",
@@ -3767,7 +3794,8 @@
      "help": "The ID"
     }
    ],
-   "permission": "device.connect"
+   "permission": "device.connect",
+   "secrets": true
   },
   {
    "name": "mesh recordings",
@@ -3798,7 +3826,8 @@
     }
    ],
    "permission": "device.connect",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "secrets": true
   },
   {
    "name": "mesh status",
@@ -3816,7 +3845,8 @@
     }
    ],
    "permission": "device.connect",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "exec": true
   },
   {
    "name": "mesh terminal",
@@ -3829,7 +3859,8 @@
     }
    ],
    "permission": "mesh.terminal",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "exec": true
   },
   {
    "name": "mesh udp",
@@ -3842,7 +3873,8 @@
     }
    ],
    "permission": "device.connect",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "exec": true
   },
   {
    "name": "network http",
@@ -4171,7 +4203,8 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "secrets": true
   },
   {
    "name": "organizations delete",
@@ -4795,7 +4828,8 @@
      "help": "The ID"
     }
    ],
-   "permission": "remote_target.view"
+   "permission": "remote_target.view",
+   "secrets": true
   },
   {
    "name": "remote-targets credentials-delete",
@@ -5452,7 +5486,8 @@
      "help": "the command: uptime, df, free and the like",
      "required": true
     }
-   ]
+   ],
+   "exec": true
   },
   {
    "name": "server file",
@@ -5465,7 +5500,8 @@
      "type": "string",
      "help": "the file"
     }
-   ]
+   ],
+   "secrets": true
   },
   {
    "name": "server files",
@@ -5527,7 +5563,8 @@
      "help": "start, stop or restart"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "exec": true
   },
   {
    "name": "server services",
@@ -5734,7 +5771,8 @@
      "help": "The file (see settings files)"
     }
    ],
-   "permission": "server.config"
+   "permission": "server.config",
+   "secrets": true
   },
   {
    "name": "settings file-set",
@@ -5755,7 +5793,8 @@
      "required": true
     }
    ],
-   "permission": "server.config"
+   "permission": "server.config",
+   "exec": true
   },
   {
    "name": "settings files",
@@ -6050,7 +6089,8 @@
      "help": "The device ID (see devices list)"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "secrets": true
   },
   {
    "name": "support end",
@@ -6118,7 +6158,8 @@
      "help": "The session ID (see support list)"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "secrets": true
   },
   {
    "name": "tags delete",
@@ -6744,7 +6785,8 @@
      "help": "The ID"
     }
    ],
-   "permission": "device.connect"
+   "permission": "device.connect",
+   "secrets": true
   },
   {
    "name": "transfers get",
@@ -6797,7 +6839,8 @@
      "field": "mime_type"
     }
    ],
-   "permission": "device.connect"
+   "permission": "device.connect",
+   "exec": true
   },
   {
    "name": "updates backup-delete",

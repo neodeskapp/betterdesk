@@ -41,7 +41,10 @@ func (e *connError) Error() string { return e.msg }
 // connect works out the address and the token: flags first, then the
 // environment (NEODESK_URL, NEODESK_TOKEN), then the config file. A token
 // from the config file is used only with the address it was saved for, so
-// another address (a flag, the environment) never gets it.
+// another address (a flag, the environment) never gets it; and a token
+// from a flag or the environment only with an address from a flag or the
+// environment, so a config file (--config, NEODESK_CONFIG) never sends it
+// elsewhere.
 func connect(o *options, env *Env, needToken bool) (*conn, error) {
 	path, err := env.configPath(o.config)
 	if err != nil {
@@ -80,13 +83,16 @@ func connect(o *options, env *Env, needToken bool) (*conn, error) {
 		}
 		token, source = cfg.Token, "the config file"
 	}
+	if token != "" && source != "the config file" && urlFromConfig {
+		return nil, &connError{ExitUsage, fmt.Sprintf("the token comes from %s but the address from the config file: give the address too, with --url or NEODESK_URL", source)}
+	}
 	if needToken && token == "" {
 		return nil, &connError{ExitAuth, "no API token: run neodesk login, or set NEODESK_TOKEN. Make a token in the console under your account menu, API tokens"}
 	}
 	if token != "" && !strings.HasPrefix(token, "ndt_") {
 		return nil, &connError{ExitAuth, "that is no NeoDesk API token (they start with ndt_)"}
 	}
-	insecure := o.insecure || (urlFromConfig && cfg.Insecure)
+	insecure := o.insecure
 	caCert := o.caCert
 	if caCert == "" {
 		caCert = env.Getenv("NEODESK_CA_CERT")
@@ -98,7 +104,9 @@ func connect(o *options, env *Env, needToken bool) (*conn, error) {
 	if strings.HasPrefix(address, "http://") && token != "" && !allowHTTP && !loopback(address) {
 		return nil, &connError{ExitUsage, fmt.Sprintf("%s is plain HTTP: the token would cross the network unencrypted. Use https, or pass --allow-http if this network is yours", address)}
 	}
-	client, err := httpClient(env, insecure, caCert, o.timeout)
+	// A proxy would see the token when the connection is not checked
+	direct := insecure || strings.HasPrefix(address, "http://")
+	client, err := httpClient(env, insecure, direct, caCert, o.timeout)
 	if err != nil {
 		return nil, &connError{ExitConfig, err.Error()}
 	}
@@ -112,7 +120,9 @@ func connect(o *options, env *Env, needToken bool) (*conn, error) {
 	return c, nil
 }
 
-func httpClient(env *Env, insecure bool, caCert string, timeout time.Duration) (*http.Client, error) {
+// httpClient makes the client for the console. direct leaves out any
+// proxy from the environment (HTTPS_PROXY, HTTP_PROXY).
+func httpClient(env *Env, insecure, direct bool, caCert string, timeout time.Duration) (*http.Client, error) {
 	transport := env.Transport
 	if transport == nil {
 		base := http.DefaultTransport.(*http.Transport).Clone()
@@ -131,8 +141,11 @@ func httpClient(env *Env, insecure bool, caCert string, timeout time.Duration) (
 		if insecure {
 			base.TLSClientConfig.InsecureSkipVerify = true
 		}
-		// The token goes to the console only: no proxy from the environment
-		// unless HTTPS_PROXY is set on purpose, which the default honours
+		// A proxy from the environment sees only an encrypted, checked
+		// connection; plain HTTP and --insecure go direct
+		if direct {
+			base.Proxy = nil
+		}
 		transport = base
 	}
 	return &http.Client{

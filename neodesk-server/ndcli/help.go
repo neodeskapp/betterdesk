@@ -158,6 +158,12 @@ func writeCommandHelp(w io.Writer, c *Command) {
 	if c.Destructive {
 		fmt.Fprintln(w, "Deletes or ends something for good: asks first, or pass --yes.")
 	}
+	if c.Exec {
+		fmt.Fprintln(w, "Runs something on a device or the server (neodesk mcp offers it only with --allow-exec).")
+	}
+	if c.Secrets {
+		fmt.Fprintln(w, "The answer holds secrets or private content: keep it safe (neodesk mcp offers it only with --allow-secrets).")
+	}
 	fmt.Fprintf(w, "Calls: %s\n", c.Route)
 	if len(c.Examples) > 0 {
 		fmt.Fprintln(w, "\nExamples:")
@@ -198,10 +204,14 @@ func writeMetaHelp(w io.Writer, name string) {
 			"", "JSON is the default. The Markdown form is the command reference of the docs.")
 	case "mcp":
 		writeLines(w, "Serve the commands as MCP tools over standard input and output, for AI agents.",
-			"", "Usage:", "  neodesk mcp [--allow-writes] [--groups devices,users]",
-			"", "It uses the saved address and token (or --url, NEODESK_URL, NEODESK_TOKEN).",
+			"", "Usage:", "  neodesk mcp [--allow-writes [--allow-exec]] [--allow-secrets] [--groups devices,users] [--compact]",
+			"", "It uses the saved address and token (or --url and NEODESK_URL with NEODESK_TOKEN).",
 			"Without --allow-writes only commands that read are offered.",
-			"Tools that delete or end something are marked destructive.",
+			"--allow-exec adds the commands that run something on a device or the server.",
+			"--allow-secrets adds the commands whose answer holds secrets or private content.",
+			"--compact offers two tools, one to look commands up and one to run them.",
+			"Tools that delete or end something, run something or change who may do what need confirm: true.",
+			"That only makes the agent ask: give the agent a token with only the permissions it needs.",
 			"The token's own permissions and read-only setting still apply on the server.")
 	case "completion":
 		writeLines(w, "Print a completion script for your shell.", "", "Usage:", "  neodesk completion bash|zsh|fish|powershell",

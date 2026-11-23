@@ -3,6 +3,8 @@ package ndcli
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -451,5 +453,143 @@ func TestLocalRunsTheServerCommands(t *testing.T) {
 	}
 	if code := Main([]string{"local", "nope"}, e); code != ExitUsage {
 		t.Errorf("unknown local command: %d", code)
+	}
+}
+
+// Server text never steers the terminal: control characters in a device
+// name or an error message are replaced, in tables, lines and JSON.
+func TestControlCharactersNeverReachTheTerminal(t *testing.T) {
+	f := newFake(t)
+	evil := `evil\u001b]0;owned\u0007\u001b[2J\u009b31m\u007fname`
+	// JSON may also carry DEL and the C1 controls raw
+	raw := "evil\u009b31m\u007fname"
+	f.answer = func(r *http.Request) (int, string) {
+		switch r.URL.Path {
+		case "/api/devices":
+			return 200, `{"success":true,"data":{"devices":[{"id":"1","hostname":"` + evil + `"}]}}`
+		case "/api/stats":
+			return 200, `{"success":true,"data":{"note":"` + evil + `","raw":"` + raw + `","` + evil + `":1}}`
+		}
+		return 403, `{"success":false,"error":"` + evil + `","code":"x\u001b[1m"}`
+	}
+	env := map[string]string{"NEODESK_URL": f.srv.URL, "NEODESK_TOKEN": testToken}
+	clean := func(what, s string) {
+		t.Helper()
+		if strings.ContainsAny(s, "\x1b\x07\u009b\x7f") {
+			t.Errorf("%s holds control characters: %q", what, s)
+		}
+		if !strings.Contains(s, "evil") {
+			t.Errorf("%s lost the text: %q", what, s)
+		}
+	}
+	_, out, _ := runCLI(t, env, "", "devices", "list")
+	clean("table", out)
+	_, out, _ = runCLI(t, env, "", "dashboard", "stats")
+	clean("lines", out)
+	_, out, _ = runCLI(t, env, "", "--json", "dashboard", "stats")
+	clean("JSON", out)
+	var v map[string]any
+	if err := json.Unmarshal([]byte(out), &v); err != nil {
+		t.Errorf("--json is no longer JSON: %v", err)
+	} else if data, _ := v["data"].(map[string]any); data["raw"] != raw || !strings.Contains(fmt.Sprint(data["note"]), "\u009b") {
+		t.Errorf("--json changed the values: %q %q", data["raw"], data["note"])
+	}
+	_, _, stderr := runCLI(t, env, "", "devices", "get", "1")
+	clean("error", stderr)
+}
+
+// "." and ".." are no arguments: a proxy that cleans paths would send
+// the request to another route.
+func TestDotArgumentsAreRefused(t *testing.T) {
+	f := newFake(t)
+	env := map[string]string{"NEODESK_URL": f.srv.URL, "NEODESK_TOKEN": testToken}
+	for _, bad := range []string{".", "..", "x/../y"} {
+		if code, _, stderr := runCLI(t, env, "", "devices", "get", bad); code != ExitUsage || !strings.Contains(stderr, "cannot be") {
+			t.Errorf("%q: %d %s", bad, code, stderr)
+		}
+	}
+	if len(f.reqs) != 0 {
+		t.Errorf("%d requests sent", len(f.reqs))
+	}
+	if code, _, _ := runCLI(t, env, "", "devices", "get", "a.b"); code != 0 || len(f.reqs) != 1 || f.reqs[0].URL.Path != "/api/devices/a.b" {
+		t.Errorf("a dot inside an ID: %d", code)
+	}
+}
+
+// A token from the environment or a flag goes only to an address from the
+// environment or a flag: a config file (perhaps one someone else wrote)
+// cannot send it elsewhere.
+func TestATokenFromTheEnvironmentNeedsItsAddressToo(t *testing.T) {
+	f := newFake(t)
+	cfg := filepath.Join(t.TempDir(), "config.json")
+	if err := saveConfig(cfg, &Config{URL: f.srv.URL}); err != nil {
+		t.Fatal(err)
+	}
+	tokenFile := filepath.Join(t.TempDir(), "token")
+	os.WriteFile(tokenFile, []byte(testToken), 0o600)
+	env := map[string]string{"NEODESK_CONFIG": cfg, "NEODESK_TOKEN": testToken}
+	if code, _, stderr := runCLI(t, env, "", "devices", "list"); code != ExitUsage || !strings.Contains(stderr, "NEODESK_URL") {
+		t.Errorf("NEODESK_TOKEN with the config's address: %d %s", code, stderr)
+	}
+	if code, _, _ := runCLI(t, map[string]string{"NEODESK_CONFIG": cfg}, "", "--token-file", tokenFile, "devices", "list"); code != ExitUsage {
+		t.Errorf("--token-file with the config's address: %d", code)
+	}
+	if len(f.reqs) != 0 {
+		t.Errorf("the config's console got %d requests", len(f.reqs))
+	}
+	env["NEODESK_URL"] = f.srv.URL
+	if code, _, stderr := runCLI(t, env, "", "devices", "list"); code != 0 {
+		t.Errorf("both from the environment: %d %s", code, stderr)
+	}
+}
+
+// --insecure is never saved, and a connection that is not checked goes
+// past any proxy.
+func TestInsecureIsNotSavedAndSkipsTheProxy(t *testing.T) {
+	f := newFake(t)
+	f.answer = func(r *http.Request) (int, string) {
+		return 200, `{"success":true,"data":{"api_token":{"id":"abcdefghijkm","name":"ci","hint":"ndt_abcdefghijkm_…"},"account":{"username":"ann","role":"admin"},"permissions":[],"full":true}}`
+	}
+	cfg := filepath.Join(t.TempDir(), "config.json")
+	code, _, stderr := runCLI(t, map[string]string{"NEODESK_CONFIG": cfg}, testToken+"\n", "login", "--url", f.srv.URL, "--insecure")
+	if code != 0 || !strings.Contains(stderr, "not saved") {
+		t.Fatalf("login --insecure: %d %s", code, stderr)
+	}
+	if b, _ := os.ReadFile(cfg); strings.Contains(string(b), "insecure") {
+		t.Errorf("--insecure was saved: %s", b)
+	}
+	env := &Env{}
+	for _, c := range []struct {
+		direct bool
+		proxy  bool
+	}{{true, false}, {false, true}} {
+		client, err := httpClient(env, false, c.direct, "", 0)
+		if err != nil {
+			t.Fatal(err)
+		}
+		tr, _ := client.Transport.(*http.Transport)
+		if tr == nil || (tr.Proxy != nil) != c.proxy {
+			t.Errorf("direct %v: proxy set %v", c.direct, tr != nil && tr.Proxy != nil)
+		}
+	}
+}
+
+// The config file the command line writes passes its own check, on every
+// system (on Windows the owner check).
+func TestTheSavedConfigPassesTheCheck(t *testing.T) {
+	cfg := filepath.Join(t.TempDir(), "config.json")
+	if err := saveConfig(cfg, &Config{URL: "https://desk.example.com", Token: testToken}); err != nil {
+		t.Fatal(err)
+	}
+	if c, err := loadConfig(cfg); err != nil || c.Token != testToken {
+		t.Errorf("own config: %+v %v", c, err)
+	}
+	// A file of another account (and open to everyone) is refused
+	other := "/etc/passwd"
+	if runtime.GOOS == "windows" {
+		other = filepath.Join(os.Getenv("SystemRoot"), "System32", "kernel32.dll")
+	}
+	if _, err := loadConfig(other); !errors.Is(err, ErrConfigOpen) {
+		t.Errorf("%s as the config: %v", other, err)
 	}
 }

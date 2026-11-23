@@ -64,6 +64,14 @@ type Command struct {
 	// Destructive marks a command that deletes or ends something for good;
 	// it asks for confirmation unless --yes is given.
 	Destructive bool `json:"destructive,omitempty"`
+	// Exec marks a command that runs something on a device or the server:
+	// a command, a terminal, input, files, power or a service. The MCP
+	// server offers it only with --allow-exec.
+	Exec bool `json:"exec,omitempty"`
+	// Secrets marks a command whose answer holds passwords, keys, tokens
+	// or private content (a file, the clipboard, the screen). The MCP
+	// server offers it only with --allow-secrets.
+	Secrets bool `json:"secrets,omitempty"`
 	// Upload is the form field a file goes in (--file); empty for JSON.
 	Upload   string   `json:"upload,omitempty"`
 	Examples []string `json:"examples,omitempty"`
@@ -121,6 +129,18 @@ func (c *Command) Path() string { _, p, _ := strings.Cut(c.Route, " "); return p
 // ReadOnly reports whether the command only reads (GET).
 func (c *Command) ReadOnly() bool { return c.Method() == "GET" }
 
+// changesAccess matches the routes whose writes change who may do what:
+// accounts, roles, panel access, organization and tenant members, the
+// sign-in settings and guest links.
+var changesAccess = regexp.MustCompile(`^/api/(users|panel/(user-groups|access|role-permissions|roles)|panel/org/[^/]+/(users|members|invite|invitations)|tenants/[^/]+/users|settings/(ldap|oidc|two-factor|device-scope|client-sessions|enrollment)|guest/access-links)(/|$)`)
+
+// AsksFirst reports whether an AI agent needs the person's yes before
+// the command runs (confirm: true in MCP): it deletes or ends something,
+// runs something on a device or the server, or changes who may do what.
+func (c *Command) AsksFirst() bool {
+	return c.Destructive || c.Exec || !c.ReadOnly() && changesAccess.MatchString(c.Path())
+}
+
 var (
 	tableOnce sync.Once
 	loaded    *Table
@@ -174,6 +194,8 @@ func Parse(data []byte) (*Table, error) {
 			return nil, fmt.Errorf("command table: %s: route %q", c.Name, c.Route)
 		case strings.TrimSpace(c.Summary) == "":
 			return nil, fmt.Errorf("command table: %s has no summary", c.Name)
+		case c.Exec && c.ReadOnly():
+			return nil, fmt.Errorf("command table: %s only reads, so it runs nothing", c.Name)
 		}
 		names[c.Name] = true
 		params := pathParams(c.Path())

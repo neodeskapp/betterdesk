@@ -106,15 +106,18 @@ func runLogin(_ *Table, args []string, env *Env) int {
 		fmt.Fprintln(env.Stderr, "neodesk:", err)
 		return ExitConfig
 	}
-	cfg := &Config{URL: c.url, Token: token, Insecure: o.insecure, CACert: o.caCert, AllowHTTP: o.allowHTTP}
+	cfg := &Config{URL: c.url, Token: token, CACert: o.caCert, AllowHTTP: o.allowHTTP}
+	if o.insecure {
+		fmt.Fprintln(env.Stderr, "neodesk: --insecure is not saved: pass it to each command, or save the console's certificate and use --ca-cert FILE")
+	}
 	if err := saveConfig(path, cfg); err != nil {
 		fmt.Fprintln(env.Stderr, "neodesk: save the config:", err)
 		return ExitConfig
 	}
 	tok, _ := info["api_token"].(map[string]any)
 	acct, _ := info["account"].(map[string]any)
-	fmt.Fprintf(env.Stdout, "Signed in to %s as %v (%v) with the token %q (%v).\nSaved in %s.\n",
-		c.url, acct["username"], acct["role"], tok["name"], tok["hint"], path)
+	fmt.Fprintf(env.Stdout, "Signed in to %s as %s (%s) with the token %q (%s).\nSaved in %s.\n",
+		c.url, cell(acct["username"], 0), cell(acct["role"], 0), cell(tok["name"], 0), cell(tok["hint"], 0), path)
 	return ExitOK
 }
 
@@ -168,7 +171,7 @@ func runLogout(_ *Table, args []string, env *Env) int {
 		if !res.ok() {
 			return show(env, nil, &options{}, res)
 		}
-		fmt.Fprintf(env.Stdout, "Revoked the token %q on %s.\n", tok["name"], c.url)
+		fmt.Fprintf(env.Stdout, "Revoked the token %q on %s.\n", cell(tok["name"], 0), c.url)
 	}
 	cfg.Token = ""
 	if err := saveConfig(path, cfg); err != nil {
@@ -207,12 +210,12 @@ func runWhoami(_ *Table, args []string, env *Env) int {
 	if ro, _ := tok["read_only"].(bool); ro {
 		access = "read only"
 	}
-	full := "no: role checks and changes to accounts are refused"
+	full := "no: role checks, changes to accounts, server.config and the server's secrets are refused"
 	if f, _ := info["full"].(bool); f {
 		full = "yes"
 	}
-	fmt.Fprintf(env.Stdout, "Console:     %s\nAccount:     %v (%v)\nToken:       %v (%v), from %s\nAccess:      %s\nExpires:     %v\nPermissions: %s\nAll of the account's permissions: %s\n",
-		c.url, acct["username"], acct["role"], tok["name"], tok["hint"], c.tokenSource, access, tok["expires_at"], joinAny(perms), full)
+	fmt.Fprintf(env.Stdout, "Console:     %s\nAccount:     %s (%s)\nToken:       %s (%s), from %s\nAccess:      %s\nExpires:     %s\nPermissions: %s\nAll of the account's permissions: %s\n",
+		c.url, cell(acct["username"], 0), cell(acct["role"], 0), cell(tok["name"], 0), cell(tok["hint"], 0), c.tokenSource, access, cell(tok["expires_at"], 0), joinAny(perms), full)
 	if list, _ := tok["allow_list"].([]any); len(list) > 0 {
 		fmt.Fprintf(env.Stdout, "Only from:   %s\n", joinAny(list))
 	}
@@ -285,7 +288,7 @@ func runConfig(_ *Table, args []string, env *Env) int {
 	}
 	sort.Strings(keys)
 	for _, k := range keys {
-		fmt.Fprintf(env.Stdout, "%s: %v\n", k, out[k])
+		fmt.Fprintf(env.Stdout, "%s: %s\n", k, cell(out[k], 0))
 	}
 	if loadErr != nil {
 		return ExitConfig

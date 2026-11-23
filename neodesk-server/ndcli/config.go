@@ -14,10 +14,12 @@ import (
 // Config is what `neodesk login` saves: the console's address, the token
 // for it and how to reach it. It lives in the user's own config folder
 // (never the working folder), readable by its owner only.
+//
+// --insecure is never saved: a console with a certificate of its own is
+// trusted with --ca-cert, which is.
 type Config struct {
 	URL       string `json:"url"`
 	Token     string `json:"token,omitempty"`
-	Insecure  bool   `json:"insecure,omitempty"`
 	CACert    string `json:"ca_cert,omitempty"`
 	AllowHTTP bool   `json:"allow_http,omitempty"`
 }

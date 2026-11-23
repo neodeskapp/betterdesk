@@ -59,8 +59,9 @@ func resultText(a map[string]any) (string, bool) {
 
 const initialize = `{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}`
 
-// Read only by default: only the commands that read are tools, no tool
-// uploads, and each says what it needs.
+// Read only by default: only the commands that read are tools, but not
+// those whose answer holds secrets; no tool uploads, and each says what
+// it needs.
 func TestMCPReadsOnlyByDefault(t *testing.T) {
 	tab, _ := Load()
 	f := newFake(t)
@@ -80,7 +81,7 @@ func TestMCPReadsOnlyByDefault(t *testing.T) {
 	reads := 0
 	for _, c := range tab.Commands {
 		tool, offered := list[toolName(c)]
-		if c.ReadOnly() && c.Upload == "" {
+		if c.ReadOnly() && c.Upload == "" && !c.Secrets {
 			reads++
 			if !offered {
 				t.Errorf("%s is not offered", c.Name)
@@ -91,7 +92,7 @@ func TestMCPReadsOnlyByDefault(t *testing.T) {
 				t.Errorf("%s: %v", c.Name, tool)
 			}
 		} else if offered {
-			t.Errorf("%s writes but is offered without --allow-writes", c.Name)
+			t.Errorf("%s writes or shows secrets but is offered without --allow-writes or --allow-secrets", c.Name)
 		}
 	}
 	if len(list) != reads {
@@ -194,5 +195,84 @@ func TestMCPNeedsAToken(t *testing.T) {
 	}
 	if code, _, _ := runCLI(t, map[string]string{"NEODESK_URL": "https://desk.example.com", "NEODESK_TOKEN": testToken}, "", "mcp", "--groups", "nope"); code != ExitUsage {
 		t.Errorf("unknown group: %d", code)
+	}
+}
+
+// Commands that run something on a device or the server need
+// --allow-exec on top of --allow-writes, those whose answer holds secrets
+// --allow-secrets; and everything that runs something or changes who may
+// do what needs confirm: true like a delete.
+func TestMCPExecAndSecretsNeedTheirOwnFlags(t *testing.T) {
+	tab, _ := Load()
+	f := newFake(t)
+	env := map[string]string{"NEODESK_URL": f.srv.URL, "NEODESK_TOKEN": testToken}
+	list := func(flags ...string) map[string]map[string]any {
+		answers, _ := mcpSession(t, env, flags, `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`)
+		return tools(answers["1"])
+	}
+	writes, exec, secrets := list("--allow-writes"), list("--allow-writes", "--allow-exec"), list("--allow-secrets")
+	execs, secretCmds := 0, 0
+	for _, c := range tab.Commands {
+		name := toolName(c)
+		if c.Exec {
+			execs++
+			if _, ok := writes[name]; ok {
+				t.Errorf("%s runs something but is offered without --allow-exec", name)
+			}
+			tool, ok := exec[name]
+			if !ok && !c.Secrets && c.Upload == "" {
+				t.Errorf("%s is not offered with --allow-exec", name)
+			}
+			if ok {
+				ann, _ := tool["annotations"].(map[string]any)
+				schema, _ := tool["inputSchema"].(map[string]any)
+				if ann["destructiveHint"] != true || !strings.Contains(fmt.Sprint(schema["required"]), "confirm") {
+					t.Errorf("%s: not marked to ask first: %v", name, tool)
+				}
+			}
+		}
+		if c.Secrets {
+			secretCmds++
+			if _, ok := writes[name]; ok {
+				t.Errorf("%s shows secrets but is offered without --allow-secrets", name)
+			}
+			if _, ok := secrets[name]; c.ReadOnly() && c.Upload == "" && !ok {
+				t.Errorf("%s is not offered with --allow-secrets", name)
+			}
+		}
+	}
+	for _, want := range []string{"device-control run", "mesh exec", "mesh terminal", "server exec", "settings file-set", "fleet workflow-run"} {
+		if c := tab.Find(strings.Fields(want)[0], strings.Fields(want)[1]); c == nil || !c.Exec {
+			t.Errorf("%s is not marked exec", want)
+		}
+	}
+	for _, want := range []string{"devices connect-password", "remote-targets credentials", "settings file", "server file", "backups download", "device-control clipboard"} {
+		if c := tab.Find(strings.Fields(want)[0], strings.Fields(want)[1]); c == nil || !c.Secrets {
+			t.Errorf("%s is not marked secrets", want)
+		}
+	}
+	if execs < 20 || secretCmds < 15 {
+		t.Errorf("%d exec and %d secret commands", execs, secretCmds)
+	}
+	if code, _, stderr := runCLI(t, env, "", "mcp", "--allow-exec"); code != ExitUsage || !strings.Contains(stderr, "--allow-writes") {
+		t.Errorf("--allow-exec alone: %d %s", code, stderr)
+	}
+	// Changing who may do what asks first; an ordinary write does not
+	answers, _ := mcpSession(t, env, []string{"--allow-writes", "--allow-exec"},
+		call(1, "users_create", `{"username":"eve","role":"admin","password":"x"}`),
+		call(2, "device-control_run", `{"id":"x1","command":"whoami"}`),
+		call(3, "devices_rename", `{"id":"x1","name":"front"}`),
+		call(4, "users_create", `{"username":"eve","role":"admin","password":"x","confirm":true}`))
+	for _, id := range []string{"1", "2"} {
+		if text, isErr := resultText(answers[id]); !isErr || !strings.Contains(text, "confirm: true") {
+			t.Errorf("call %s without confirm: %q", id, text)
+		}
+	}
+	var seen []string
+	for _, r := range f.reqs {
+		seen = append(seen, r.Method+" "+r.URL.Path)
+	}
+	if strings.Join(seen, ",") != "POST /api/devices/x1/rename,POST /api/users" {
+		t.Errorf("requests %v", seen)
 	}
 }

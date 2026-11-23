@@ -17,9 +17,9 @@ import (
 func show(env *Env, cmd *Command, o *options, res *response) int {
 	if !res.ok() {
 		e := res.failure()
-		line := "neodesk: " + e.msg + " (HTTP " + strconv.Itoa(e.status)
+		line := "neodesk: " + visible(e.msg) + " (HTTP " + strconv.Itoa(e.status)
 		if e.code != "" {
-			line += ", " + e.code
+			line += ", " + visible(e.code)
 		}
 		line += ")"
 		fmt.Fprintln(env.Stderr, line)
@@ -44,7 +44,11 @@ func show(env *Env, cmd *Command, o *options, res *response) int {
 			fmt.Fprintf(env.Stderr, "neodesk: the answer is a file (%s, %d bytes); save it with --output FILE\n", res.contentType, len(res.body))
 			return ExitUsage
 		}
-		env.Stdout.Write(res.body)
+		if env.Terminal != nil && env.Terminal(env.Stdout) {
+			io.WriteString(env.Stdout, visibleText(string(res.body)))
+		} else {
+			env.Stdout.Write(res.body)
+		}
 		if len(res.body) > 0 && res.body[len(res.body)-1] != '\n' && utf8.Valid(res.body) {
 			fmt.Fprintln(env.Stdout)
 		}
@@ -58,7 +62,7 @@ func show(env *Env, cmd *Command, o *options, res *response) int {
 	dec := json.NewDecoder(bytes.NewReader(res.body))
 	dec.UseNumber()
 	if err := dec.Decode(&body); err != nil {
-		env.Stdout.Write(res.body)
+		io.WriteString(env.Stdout, visibleText(string(res.body)))
 		return ExitOK
 	}
 	var rows, columns = "", []string(nil)
@@ -69,15 +73,63 @@ func show(env *Env, cmd *Command, o *options, res *response) int {
 	return ExitOK
 }
 
-// writeJSON prints JSON with two spaces of indentation.
+// writeJSON prints JSON with two spaces of indentation. JSON escapes the
+// control characters below space; DEL and the C1 controls, which it may
+// carry raw, are escaped here too (inside strings, the only place valid
+// JSON has them), so no answer steers the terminal.
 func writeJSON(w io.Writer, raw []byte) {
 	var out bytes.Buffer
 	if err := json.Indent(&out, raw, "", "  "); err != nil {
-		w.Write(raw)
+		io.WriteString(w, visibleText(string(raw)))
 		return
 	}
 	out.WriteByte('\n')
-	w.Write(out.Bytes())
+	s := out.String()
+	if strings.IndexFunc(s, isC1) < 0 {
+		w.Write(out.Bytes())
+		return
+	}
+	var b strings.Builder
+	for _, r := range s {
+		if isC1(r) {
+			fmt.Fprintf(&b, "\\u%04x", r)
+			continue
+		}
+		b.WriteRune(r)
+	}
+	io.WriteString(w, b.String())
+}
+
+// isC1 reports DEL and the C1 control characters.
+func isC1(r rune) bool { return r >= 0x7f && r <= 0x9f }
+
+// visible makes server text safe for one line of a terminal: line breaks
+// and tabs become spaces, other control characters (C0, DEL, C1) U+FFFD,
+// so a device name or a ticket title cannot send escape sequences.
+func visible(s string) string {
+	return strings.Map(func(r rune) rune {
+		switch {
+		case r == '\t' || r == '\n' || r == '\r':
+			return ' '
+		case r < 0x20 || isC1(r):
+			return '\uFFFD'
+		}
+		return r
+	}, s)
+}
+
+// visibleText is visible for text of several lines: it keeps line breaks
+// and tabs.
+func visibleText(s string) string {
+	return strings.Map(func(r rune) rune {
+		switch {
+		case r == '\t' || r == '\n':
+			return r
+		case r < 0x20 || isC1(r):
+			return '\uFFFD'
+		}
+		return r
+	}, s)
 }
 
 // unwrap takes the data out of {"success": true, "data": ...}.
@@ -135,7 +187,7 @@ func render(w io.Writer, body any, rowsPath string, columns []string) {
 		if key, list := onlyList(x); key != "" {
 			for _, k := range sortedKeys(x) {
 				if k != key {
-					fmt.Fprintf(w, "%s: %s\n", k, cell(x[k], 200))
+					fmt.Fprintf(w, "%s: %s\n", visible(k), cell(x[k], 200))
 				}
 			}
 			table(w, list, columns)
@@ -183,7 +235,7 @@ func lines(w io.Writer, obj map[string]any, prefix string) {
 			lines(w, inner, prefix+k+".")
 			continue
 		}
-		fmt.Fprintf(w, "%s%s: %s\n", prefix, k, cell(v, 0))
+		fmt.Fprintf(w, "%s: %s\n", visible(prefix+k), cell(v, 0))
 	}
 }
 
@@ -218,7 +270,7 @@ func table(w io.Writer, rows []any, columns []string) {
 	cells := make([][]string, 0, len(rows)+1)
 	head := make([]string, len(columns))
 	for i, c := range columns {
-		head[i] = strings.ToUpper(c)
+		head[i] = visible(strings.ToUpper(c))
 	}
 	cells = append(cells, head)
 	for _, r := range rows {
@@ -320,7 +372,7 @@ func cell(v any, limit int) string {
 	default:
 		s = fmt.Sprint(x)
 	}
-	s = strings.ReplaceAll(strings.ReplaceAll(s, "\r", " "), "\n", " ")
+	s = visible(s)
 	if limit > 0 && utf8.RuneCountInString(s) > limit {
 		r := []rune(s)
 		s = string(r[:limit-1]) + "…"

@@ -38,6 +38,12 @@ func buildRequest(cmd *Command, o *options, stdin io.Reader) (request, error) {
 		if value == "" {
 			return req, usagef("<%s> is empty", name)
 		}
+		// A proxy that cleans paths would turn x/.. into another route
+		for _, part := range strings.Split(value, "/") {
+			if part == "." || part == ".." {
+				return req, usagef("<%s> cannot be or hold %q", name, part)
+			}
+		}
 		escaped := url.PathEscape(value)
 		if strings.HasSuffix(paramAt(path, i), "...}") {
 			escaped = strings.ReplaceAll(url.PathEscape(value), "%2F", "/")
