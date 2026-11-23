@@ -359,6 +359,27 @@ func (s *Service) removeFirstPassword(username string) {
 	}
 }
 
+// FirstPasswordReset removes the first password of the account username
+// after an administrator set its password in the console (the Users
+// page): the password in the file signs nobody in any more. It looks
+// where the account's own password change looks and leaves the same note.
+// Failures are logged; the new password stays.
+func (s *Service) FirstPasswordReset(username string) {
+	for _, f := range removeFirstPasswordIn(s.fs, s.credentialDirs(), username, s.now(), "after a password reset") {
+		if f.Unread {
+			continue
+		}
+		if f.Err != nil {
+			s.log.Warn(fmt.Sprintf("[AUTH] Could not remove the first password in %s: %s", f.Path, f.Err.Error()))
+			continue
+		}
+		if f.NoteErr != nil {
+			s.log.Warn(fmt.Sprintf("[AUTH] Could not leave a note in %s: %s", filepath.Dir(f.Path), f.NoteErr.Error()))
+		}
+		s.log.Info("[AUTH] Removed the first password in " + f.Path + " after a password reset of " + username)
+	}
+}
+
 // FirstPasswordFile is a credentials file that held the first password of
 // an account whose password was set again, or one that may hold it.
 type FirstPasswordFile struct {

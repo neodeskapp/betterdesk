@@ -538,6 +538,7 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		if err := updatePasswordHash(ctx, h.d.Store, id, hash); err != nil {
 			return nil, err
 		}
+		h.d.Authn.FirstPasswordReset(user.username())
 	}
 	if given {
 		if _, err := h.d.DeviceGroups.SetUserGroupMemberships(ctx, id, groups); err != nil {
@@ -823,6 +824,8 @@ func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 		err = updatePasswordHash(ctx, h.d.Store, user.ID.V, hash)
 	}
 	if err == nil {
+		// The first-run password signs nobody in any more
+		h.d.Authn.FirstPasswordReset(user.username())
 		err = h.endSessions(r, user.ID.V, true)
 	}
 	if err == nil {
