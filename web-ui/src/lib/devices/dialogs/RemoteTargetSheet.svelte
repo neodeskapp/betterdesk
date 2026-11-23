@@ -96,7 +96,11 @@
 		};
 	}
 
-	const portOk = (p: string) => /^\d+$/.test(p.trim()) && Number(p) >= 1 && Number(p) <= 65535;
+	/** A number field binds a number once typed into (null when empty), so the port is read as text */
+	const portOk = (p: string | number | null) => {
+		const text = String(p ?? '').trim();
+		return /^\d+$/.test(text) && Number(text) >= 1 && Number(text) <= 65535;
+	};
 
 	const form = createForm({
 		initial: start,
@@ -134,7 +138,7 @@
 
 	let lastProtocol: RemoteProtocol = start.protocol;
 	function onProtocol() {
-		const p = form.values.port.trim();
+		const p = String(form.values.port ?? '').trim();
 		if (!p || Number(p) === PORTS[lastProtocol]) form.values.port = String(PORTS[form.values.protocol]);
 		lastProtocol = form.values.protocol;
 	}

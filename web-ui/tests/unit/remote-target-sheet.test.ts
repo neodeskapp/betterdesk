@@ -62,4 +62,37 @@ describe('remote target sheet', () => {
 		expect(screen.queryByText(guacdWarning)).toBeNull();
 		expect(screen.queryByText(vaultWarning)).toBeNull();
 	});
+
+	test('a typed port is saved, and a port out of range is refused next to the field (BUGS L411)', async () => {
+		const user = userEvent.setup();
+		const save = vi.fn(async (_target: unknown, _password: string) => {});
+		const settle = vi.fn();
+		render(RemoteTargetSheet, {
+			device: null,
+			save,
+			test: async () => '',
+			canTest: false,
+			readiness: async () => ({ vault: true, guacd: true }),
+			settle
+		});
+		await user.type(screen.getByRole('textbox', { name: /devices.remote_name|Display name/ }), 'Lab box');
+		await user.type(screen.getByRole('textbox', { name: /devices.remote_host|Host or IP/ }), '10.0.0.9');
+		const port = screen.getByRole('spinbutton', { name: /devices.remote_port|Port/ });
+		await user.clear(port);
+		await user.type(port, '70000');
+		await user.click(screen.getByRole('button', { name: 'actions.save' }));
+		await vi.waitFor(() => expect(port).toHaveAccessibleDescription(/mesh.port_invalid/));
+		expect(save).not.toHaveBeenCalled();
+		await user.clear(port);
+		await user.type(port, '8080');
+		// switching the technology keeps a port typed by hand
+		const technology = screen
+			.getAllByRole('combobox')
+			.find((s) => [...(s as HTMLSelectElement).options].some((o) => o.value === 'vnc'))!;
+		await user.selectOptions(technology, 'vnc');
+		expect(port).toHaveValue(8080);
+		await user.click(screen.getByRole('button', { name: 'actions.save' }));
+		await vi.waitFor(() => expect(save).toHaveBeenCalled());
+		expect(save.mock.calls[0]?.[0]).toMatchObject({ host: '10.0.0.9', port: 8080 });
+	});
 });
