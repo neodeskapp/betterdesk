@@ -97,7 +97,6 @@
 	<Button
 		bind:element={button}
 		class="toolbar-menu-btn"
-		aria-haspopup="true"
 		aria-expanded={open}
 		aria-controls={popupId}
 		onclick={toggle}

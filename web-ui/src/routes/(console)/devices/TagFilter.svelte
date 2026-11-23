@@ -88,7 +88,6 @@
 	<Button
 		bind:element={button}
 		class={selected.length > 0 ? 'toolbar-menu-btn is-on' : 'toolbar-menu-btn'}
-		aria-haspopup="true"
 		aria-expanded={open}
 		aria-controls={popupId}
 		onclick={() => (open ? close() : void show())}
