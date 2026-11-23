@@ -37,19 +37,22 @@ type handlers struct {
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
 	h := &handlers{api: d.GoAPI, restart: d.Restart, log: d.Log.Child("CDAP"), deps: d}
+	// Reading needs View CDAP devices, as on the API server, which the
+	// console asks with its own rights
+	view := d.RequirePermission("cdap.view")
 	command := d.RequirePermission("cdap.command")
 	scope := d.RequireDeviceInScope
 
 	r := d.Router
-	r.Get("/api/cdap/status", h.status, d.RequireAuth)
-	r.Get("/api/cdap/devices", h.devices, d.RequireAuth)
-	r.Get("/api/cdap/devices/{id}", h.device, d.RequireAuth, scope)
-	r.Get("/api/cdap/devices/{id}/manifest", h.manifest, d.RequireAuth, scope)
-	r.Get("/api/cdap/devices/{id}/state", h.state, d.RequireAuth, scope)
+	r.Get("/api/cdap/status", h.status, d.RequireAuth, view)
+	r.Get("/api/cdap/devices", h.devices, d.RequireAuth, view)
+	r.Get("/api/cdap/devices/{id}", h.device, d.RequireAuth, view, scope)
+	r.Get("/api/cdap/devices/{id}/manifest", h.manifest, d.RequireAuth, view, scope)
+	r.Get("/api/cdap/devices/{id}/state", h.state, d.RequireAuth, view, scope)
 	r.Post("/api/cdap/devices/{id}/command", h.command, d.RequireAuth, command, scope)
 	r.Post("/api/cdap/toggle", h.toggle, d.RequireAuth, d.RequirePermission("server.config"))
-	r.Get("/api/cdap/alerts", h.alerts, d.RequireAuth)
-	r.Get("/api/cdap/devices/{id}/linked", h.linked, d.RequireAuth, scope)
+	r.Get("/api/cdap/alerts", h.alerts, d.RequireAuth, view)
+	r.Get("/api/cdap/devices/{id}/linked", h.linked, d.RequireAuth, view, scope)
 	r.Post("/api/cdap/devices/{id}/link", h.link, d.RequireAuth, command, scope)
 }
 

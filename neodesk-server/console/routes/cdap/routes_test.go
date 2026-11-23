@@ -186,6 +186,17 @@ var fixes = map[string]func(v *vector) bool{
 	// The way back of the gateway switch is the setting's value when the
 	// API server named it as text, else "N", never its whole answer.
 	"RC5": returnsToText,
+	// Reading the gateway needs View CDAP devices, as on the API server:
+	// a server admin's read that Node let through is refused with the
+	// permission's 403 before the API server is asked.
+	"L393": func(v *vector) bool {
+		session := v.Request.Session
+		if session == nil || session.User.Role != "server_admin" || v.Request.Method != "GET" || v.Status != 200 {
+			return false
+		}
+		v.Status, v.Type, v.Body, v.Calls = 403, "application/json; charset=utf-8", `{"success":false,"error":"Permission denied: cdap.view"}`, nil
+		return true
+	},
 }
 
 // scopeRefuses reports whether the console refuses a vector for the
