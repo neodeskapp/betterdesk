@@ -10,6 +10,7 @@ import {
 	isSearchShortcut,
 	norm,
 	searchAll,
+	shortcutHint,
 	type SearchDevice
 } from '../../../src/lib/shell/search.ts';
 
@@ -194,4 +195,10 @@ describe('SearchDialog', () => {
 		await user.keyboard('zzzz-nothing');
 		expect(screen.getByText('search.no_results')).toBeInTheDocument();
 	});
+});
+
+test('the shortcut in the search field uses the key name of the console language', () => {
+	expect(shortcutHint('en', false)).toBe('Ctrl K');
+	expect(shortcutHint('de', false)).toBe('Strg K');
+	expect(shortcutHint('de', true)).toBe('⌘ K');
 });

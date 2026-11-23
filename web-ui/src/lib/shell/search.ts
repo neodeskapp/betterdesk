@@ -156,3 +156,13 @@ export function isSearchShortcut(
 	const el = e.target instanceof Element ? e.target : null;
 	return !el?.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]');
 }
+
+/**
+ * The shortcut shown in the search field: "⌘ K" on a Mac, else Ctrl as the
+ * keyboard of the console language names it ("Strg K" in German, as the
+ * German texts of the flow builder write it)
+ */
+export function shortcutHint(lang: string, mac: boolean): string {
+	if (mac) return '⌘ K';
+	return `${lang === 'de' ? 'Strg' : 'Ctrl'} K`;
+}

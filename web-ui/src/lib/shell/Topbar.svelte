@@ -13,7 +13,7 @@
   icon; their names stay for screen readers.
 -->
 <script lang="ts">
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { i18n, t } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import { closeQuickSupport, openQuickSupport, quickSupport } from '#lib/onboard/open.svelte.ts';
 	import QuickSupportDialog from '#lib/onboard/QuickSupportDialog.svelte';
@@ -28,6 +28,7 @@
 	import NotificationsMenu from './NotificationsMenu.svelte';
 	import { a11y, isDefault } from './a11y.svelte.ts';
 	import { requestRefresh } from './page.svelte.ts';
+	import { shortcutHint } from './search.ts';
 
 	interface Props {
 		crumbs: string[];
@@ -78,7 +79,7 @@
 	const a11yOn = $derived(!isDefault(a11y.settings));
 	const isMac =
 		typeof navigator !== 'undefined' && /Mac|iP(hone|ad|od)/.test(navigator.platform || navigator.userAgent);
-	const kbd = isMac ? '⌘ K' : 'Ctrl K';
+	const kbd = $derived(shortcutHint(i18n.lang, isMac));
 
 	function refresh() {
 		requestRefresh();
