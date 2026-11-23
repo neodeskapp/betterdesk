@@ -9,8 +9,8 @@
   text (/api/dashboard/client-config, with the overview's client address
   override for this tab). The enrollment mode (enrollment.manage) and the
   connection mode for the diagram (server.config) only when the role may
-  read them. The server API key loads when "For scripts" opens; the whole
-  key needs server.keys.
+  read them. The server API key loads when "For scripts" opens; only a
+  super admin sees the whole key, because it acts on the server's API.
 
   Every signed-in role can open the page and read the values (the route
   and its calls need only a session).
@@ -32,7 +32,7 @@
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import { onRefresh } from '#lib/shell/page.svelte.ts';
-	import { can } from '#lib/state/session.svelte.ts';
+	import { can, session } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import ConnectionDiagram from '#lib/ui/ConnectionDiagram.svelte';
 	import Disclosure from '#lib/ui/Disclosure.svelte';
@@ -143,7 +143,7 @@
 	});
 	let fullKey = $state<string | null>(null);
 	let showingKey = $state(false);
-	const canSeeKey = $derived(can('server.keys'));
+	const canSeeKey = $derived(session.isSuperAdmin);
 
 	async function loadApiKey(): Promise<void> {
 		apiKeyLoaded = true;

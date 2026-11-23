@@ -26,9 +26,58 @@ type contextKey string
 const (
 	ctxKeyRole     contextKey = "role"
 	ctxKeyUsername contextKey = "username"
-	ctxKeyUser     contextKey = "user"   // Full db.User object
-	ctxKeyOrgID    contextKey = "org_id" // Organization ID (empty for global users)
+	ctxKeyUser     contextKey = "user"    // Full db.User object
+	ctxKeyOrgID    contextKey = "org_id"  // Organization ID (empty for global users)
+	ctxKeyAPIKey   contextKey = "api_key" // set when an API key, not a person, signed the request
 )
+
+// viaAPIKey reports whether the request's credential was an API key on the
+// listener. The console's calls in this process are not: the console checks
+// the signed-in person before it calls.
+func viaAPIKey(r *http.Request) bool {
+	byKey, _ := r.Context().Value(ctxKeyAPIKey).(bool)
+	return byKey
+}
+
+// requirePerson refuses an API key: accounts, role permissions, API keys
+// and second factors change only for a signed-in person, whom the routes
+// then hold to the role rules (mayGiveRole). A key has no person who could
+// be held to them, and the console's own key would otherwise let anyone
+// who read it make a super admin (L387).
+func (s *Server) requirePerson(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if viaAPIKey(r) {
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": "An API key cannot change accounts, role permissions or API keys. Sign in as a person to do this."})
+			return
+		}
+		handler(w, r)
+	}
+}
+
+// mayGiveRole reports whether the caller may give an account or an API key
+// the role target: the role boundary of auth.CanAssignRole, and every
+// permission target holds in effect, overrides included, the caller holds
+// too. No account gives more than it has.
+func (s *Server) mayGiveRole(r *http.Request, target string) bool {
+	caller := getRoleFromCtx(r)
+	if !auth.CanAssignRole(caller, target) {
+		return false
+	}
+	if auth.IsSuperAdminRole(caller) {
+		return true
+	}
+	for _, p := range auth.AllPermissions {
+		held, err := s.RoleHasPermission(target, p)
+		if err != nil {
+			log.Printf("api: permission lookup failed for role %q permission %q: %v", target, p, err)
+			return false
+		}
+		if held && !s.roleHolds(caller, p) {
+			return false
+		}
+	}
+	return true
+}
 
 // getRoleFromCtx returns the authenticated user's role from the request context.
 func getRoleFromCtx(r *http.Request) string {
@@ -789,9 +838,9 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Role boundary: use CanAssignRole for branched hierarchy support.
-	callerRole := getRoleFromCtx(r)
-	if !auth.CanAssignRole(callerRole, body.Role) {
+	// Role boundary: the branched hierarchy, and no permission the caller
+	// does not hold itself.
+	if !s.mayGiveRole(r, body.Role) {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Cannot assign a role higher than your own"})
 		return
 	}
@@ -823,12 +872,12 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // mayChangeAccount reports whether the caller may change or delete the
-// account: its own, or one whose role the caller could give.
-func mayChangeAccount(r *http.Request, target *db.User) bool {
+// account: its own, or one whose role the caller could give (mayGiveRole).
+func (s *Server) mayChangeAccount(r *http.Request, target *db.User) bool {
 	if caller, ok := r.Context().Value(ctxKeyUser).(*db.User); ok && caller != nil && caller.ID == target.ID {
 		return true
 	}
-	return auth.CanAssignRole(getRoleFromCtx(r), target.Role)
+	return s.mayGiveRole(r, target.Role)
 }
 
 // handleUpdateUser updates a user's password and/or role.
@@ -845,7 +894,7 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "User not found"})
 		return
 	}
-	if !mayChangeAccount(r, user) {
+	if !s.mayChangeAccount(r, user) {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Cannot change an account with a role higher than your own"})
 		return
 	}
@@ -928,7 +977,6 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		}
 
 		callerUsername := getUsernameFromCtx(r)
-		callerRole := getRoleFromCtx(r)
 
 		// Prevent self-demotion (admin cannot lower their own role).
 		if user.Username == callerUsername && auth.RoleLevel(body.Role) < auth.RoleLevel(user.Role) {
@@ -936,8 +984,9 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Role boundary: use CanAssignRole for branched hierarchy.
-		if !auth.CanAssignRole(callerRole, body.Role) {
+		// Role boundary: the branched hierarchy, and no permission the
+		// caller does not hold itself.
+		if !s.mayGiveRole(r, body.Role) {
 			writeJSON(w, http.StatusForbidden, map[string]string{"error": "Cannot assign a role higher than your own"})
 			return
 		}
@@ -1001,7 +1050,7 @@ func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "User not found"})
 		return
 	}
-	if !mayChangeAccount(r, user) {
+	if !s.mayChangeAccount(r, user) {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Cannot delete an account with a role higher than your own"})
 		return
 	}
@@ -1260,7 +1309,7 @@ func (s *Server) handleCreateAPIKey(w http.ResponseWriter, r *http.Request) {
 	}
 	// A key acts with its role, so it takes only a role the caller could
 	// give an account.
-	if !auth.CanAssignRole(getRoleFromCtx(r), body.Role) {
+	if !s.mayGiveRole(r, body.Role) {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Cannot create a key with this role"})
 		return
 	}
@@ -1392,6 +1441,48 @@ func issuedBeforeCredentialsChanged(claims *auth.Claims, user *db.User) bool {
 // organization token.
 // Auth order: Bearer JWT → X-API-Key (scoped DB lookup).
 func (s *Server) authenticateRequest(r *http.Request) (username, role, orgID string, ok bool) {
+	username, role, orgID, _, ok = s.authenticate(r)
+	return username, role, orgID, ok
+}
+
+// authenticate is authenticateRequest that also says whether the
+// credential was an API key rather than a person's sign-in.
+func (s *Server) authenticate(r *http.Request) (username, role, orgID string, byKey, ok bool) {
+	username, role, orgID, ok = s.authenticatePerson(r)
+	if ok || r.Header.Get("X-API-Key") == "" {
+		return username, role, orgID, false, ok
+	}
+	if r.Header.Get(PanelTrustHeader) != "" && s.panelTrustEnabled() && s.panelTrustPeerAllowed(r) {
+		// A panel trust statement that failed is no reason to try the key
+		return "", "", "", false, false
+	}
+	if bearer := r.Header.Get("Authorization"); len(bearer) > 7 && strings.EqualFold(bearer[:7], "Bearer ") && isOpaqueClientToken(strings.TrimSpace(bearer[7:])) {
+		return "", "", "", false, false
+	}
+	username, role, ok = s.apiKeyPrincipal(r.Header.Get("X-API-Key"))
+	return username, role, "", ok, ok
+}
+
+// apiKeyPrincipal resolves an X-API-Key value to the key's name and role.
+func (s *Server) apiKeyPrincipal(apiKey string) (username, role string, ok bool) {
+	keyHash := hashAPIKey(apiKey)
+	k, err := s.db.GetAPIKeyByHash(keyHash)
+	if err != nil || k == nil {
+		return "", "", false
+	}
+	if k.ExpiresAt != "" {
+		if exp, err := time.Parse("2006-01-02 15:04:05", k.ExpiresAt); err == nil && exp.Before(time.Now()) {
+			return "", "", false
+		}
+	}
+	// Update last_used in background
+	go func() { _ = s.db.TouchAPIKey(k.ID) }()
+	return "apikey:" + k.Name, k.Role, true
+}
+
+// authenticatePerson checks the credentials that stand for a person or a
+// client: the panel trust statement and a bearer token.
+func (s *Server) authenticatePerson(r *http.Request) (username, role, orgID string, ok bool) {
 	// 0. Panel trust bridge — a statement signed by the Node console for a
 	//    signed-in operator. Only accepted on the loopback hop (unless the
 	//    operator explicitly allows remote panel hosts) and only when the
@@ -1432,23 +1523,8 @@ func (s *Server) authenticateRequest(r *http.Request) (username, role, orgID str
 		}
 	}
 
-	// 2. X-API-Key header (query param removed — BD-2026-005: query transport leaks keys in logs/proxies)
-	apiKey := r.Header.Get("X-API-Key")
-	if apiKey != "" {
-		keyHash := hashAPIKey(apiKey)
-		if k, err := s.db.GetAPIKeyByHash(keyHash); err == nil && k != nil {
-			// Check expiry
-			if k.ExpiresAt != "" {
-				if exp, err := time.Parse("2006-01-02 15:04:05", k.ExpiresAt); err == nil && exp.Before(time.Now()) {
-					return "", "", "", false
-				}
-			}
-			// Update last_used in background
-			go func() { _ = s.db.TouchAPIKey(k.ID) }()
-			return "apikey:" + k.Name, k.Role, "", true
-		}
-	}
-
+	// 2. The X-API-Key header follows in authenticate (query param removed —
+	// BD-2026-005: query transport leaks keys in logs/proxies)
 	return "", "", "", false
 }
 
@@ -1545,7 +1621,7 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 			}
 		}
 
-		username, role, orgID, ok := s.authenticateRequest(r)
+		username, role, orgID, byKey, ok := s.authenticate(r)
 		if !ok {
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "Invalid or missing credentials"})
 			return
@@ -1563,6 +1639,9 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 
 		if orgID != "" {
 			ctx = context.WithValue(ctx, ctxKeyOrgID, orgID)
+		}
+		if byKey {
+			ctx = context.WithValue(ctx, ctxKeyAPIKey, true)
 		}
 
 		// Load the server account for handlers that need it. An

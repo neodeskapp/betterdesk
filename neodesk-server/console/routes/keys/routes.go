@@ -6,6 +6,7 @@ package keys
 import (
 	"net/http"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
@@ -97,11 +98,13 @@ type apiKeyData struct {
 
 // apiKey answers GET /api/keys/api: the API key with its middle masked.
 // ?show=true asks for the whole key, which acts as an administrator on
-// the server, so it needs the permission server.keys.
+// the server's API, so only the roles that already hold every permission
+// see it whole: a key that does more than the account reading it would
+// lift the account above its role (L387).
 func (h *handlers) apiKey(w http.ResponseWriter, r *http.Request) {
 	show := serverinfo.QueryString(r, "show") == "true"
-	if show && !kit.HasPermission(r, "server.keys") {
-		kit.Fail(w, r, http.StatusForbidden, "Permission denied: server.keys")
+	if show && !mayReadWholeKey(r) {
+		kit.Fail(w, r, http.StatusForbidden, "Permission denied: only a super admin can see the whole API key")
 		return
 	}
 	key, _ := h.info.GetAPIKey(!show)
@@ -110,6 +113,12 @@ func (h *handlers) apiKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	kit.OK(w, r, apiKeyData{Key: key, Masked: !show})
+}
+
+// mayReadWholeKey reports whether the signed-in account holds every
+// permission: super_admin or the older admin.
+func mayReadWholeKey(r *http.Request) bool {
+	return access.IsSuperAdminRole(kit.Access(r).Role)
 }
 
 type serverInfoData struct {

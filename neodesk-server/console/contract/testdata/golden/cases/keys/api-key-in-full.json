@@ -46,7 +46,8 @@
     "guest_issuer",
     "viewer",
     "operator",
-    "global_admin"
+    "global_admin",
+    "server_admin"
    ],
    "status": 403,
    "headers": {
@@ -75,14 +76,13 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Permission denied: server.keys",
+     "error": "Permission denied: only a super admin can see the whole API key",
      "success": false
     }
    }
   },
   {
    "roles": [
-    "server_admin",
     "super_admin",
     "admin"
    ],

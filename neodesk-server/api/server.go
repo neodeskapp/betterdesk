@@ -551,16 +551,18 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/audit", s.requirePermission(auth.PermAuditView, s.handleClientAuditSummary))
 	mux.HandleFunc("GET /api/peer-key/{id}", s.handlePeerKey)
 
-	// User management (permission-based)
+	// User management (permission-based). Accounts, role permissions, API
+	// keys and second factors change only for a signed-in person
+	// (requirePerson), never for an API key (L387).
 	// Issue #138: RustDesk client calls GET /api/users?accessible&pageSize=100
 	// with operator tokens. The _getUsers() result gates the entire group pull —
 	// if it fails (403), _getPeers() is never called and the Available Devices
 	// tab stays empty. Use a wrapper that detects client requests and returns
 	// only the current user before the permission check.
 	mux.HandleFunc("GET /api/users", s.handleUsersWithClientFallback)
-	mux.HandleFunc("POST /api/users", s.requirePermission(auth.PermUserCreate, s.handleCreateUser))
-	mux.HandleFunc("PUT /api/users/{id}", s.requirePermission(auth.PermUserEdit, s.handleUpdateUser))
-	mux.HandleFunc("DELETE /api/users/{id}", s.requirePermission(auth.PermUserDelete, s.handleDeleteUser))
+	mux.HandleFunc("POST /api/users", s.requirePerson(s.requirePermission(auth.PermUserCreate, s.handleCreateUser)))
+	mux.HandleFunc("PUT /api/users/{id}", s.requirePerson(s.requirePermission(auth.PermUserEdit, s.handleUpdateUser)))
+	mux.HandleFunc("DELETE /api/users/{id}", s.requirePerson(s.requirePermission(auth.PermUserDelete, s.handleDeleteUser)))
 	mux.HandleFunc("GET /api/users/{id}/organizations", s.requirePermission(auth.PermUserView, s.handleListUserOrganizations))
 	mux.HandleFunc("POST /api/users/{id}/organizations", s.requirePermission(auth.PermOrgManageUsers, s.handleAssignUserToOrg))
 
@@ -568,18 +570,18 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/roles", s.requirePermission(auth.PermUserView, s.handleListRoles))
 	mux.HandleFunc("GET /api/roles/{role}/permissions", s.requirePermission(auth.PermUserView, s.handleGetRolePermissions))
 	mux.HandleFunc("GET /api/role-permissions", s.requirePermission(auth.PermServerConfig, s.handleListRolePermissionOverrides))
-	mux.HandleFunc("POST /api/role-permissions", s.requirePermission(auth.PermServerConfig, s.handleSetRolePermission))
-	mux.HandleFunc("DELETE /api/role-permissions/{role}/{permission}", s.requirePermission(auth.PermServerConfig, s.handleDeleteRolePermission))
+	mux.HandleFunc("POST /api/role-permissions", s.requirePerson(s.requirePermission(auth.PermServerConfig, s.handleSetRolePermission)))
+	mux.HandleFunc("DELETE /api/role-permissions/{role}/{permission}", s.requirePerson(s.requirePermission(auth.PermServerConfig, s.handleDeleteRolePermission)))
 
 	// TOTP management (admin only)
-	mux.HandleFunc("POST /api/users/{id}/totp/setup", s.requireRole(auth.RoleAdmin, s.handleSetupTOTP))
-	mux.HandleFunc("POST /api/users/{id}/totp/confirm", s.requireRole(auth.RoleAdmin, s.handleConfirmTOTP))
-	mux.HandleFunc("DELETE /api/users/{id}/totp", s.requireRole(auth.RoleAdmin, s.handleDisableTOTP))
+	mux.HandleFunc("POST /api/users/{id}/totp/setup", s.requirePerson(s.requireRole(auth.RoleAdmin, s.handleSetupTOTP)))
+	mux.HandleFunc("POST /api/users/{id}/totp/confirm", s.requirePerson(s.requireRole(auth.RoleAdmin, s.handleConfirmTOTP)))
+	mux.HandleFunc("DELETE /api/users/{id}/totp", s.requirePerson(s.requireRole(auth.RoleAdmin, s.handleDisableTOTP)))
 
 	// API key management (server.keys permission)
 	mux.HandleFunc("GET /api/keys", s.requirePermission(auth.PermServerKeys, s.handleListAPIKeys))
-	mux.HandleFunc("POST /api/keys", s.requirePermission(auth.PermServerKeys, s.handleCreateAPIKey))
-	mux.HandleFunc("DELETE /api/keys/{id}", s.requirePermission(auth.PermServerKeys, s.handleDeleteAPIKey))
+	mux.HandleFunc("POST /api/keys", s.requirePerson(s.requirePermission(auth.PermServerKeys, s.handleCreateAPIKey)))
+	mux.HandleFunc("DELETE /api/keys/{id}", s.requirePerson(s.requirePermission(auth.PermServerKeys, s.handleDeleteAPIKey)))
 
 	// Device token management (Dual Key System - admin only)
 	mux.HandleFunc("GET /api/tokens", s.requireRole(auth.RoleAdmin, s.handleListDeviceTokens))

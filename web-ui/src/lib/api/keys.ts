@@ -56,7 +56,7 @@ export async function getMaskedApiKey(signal?: AbortSignal): Promise<string> {
 	return out.data.api_key_masked;
 }
 
-/** The whole server API key: needs server.keys */
+/** The whole server API key: super admins only */
 export async function getFullApiKey(): Promise<string> {
 	return (await api(ApiKey, '/api/keys/api', { query: { show: 'true' } })).data.key;
 }

@@ -88,8 +88,7 @@ func TestAPIKeyRoleNeedsAssignRight(t *testing.T) {
 // read (L51).
 func TestServerAdminListsAndDeletesKeysButCreatesNone(t *testing.T) {
 	srv, database := newInternalServer(t, nil)
-	addTestAPIKey(t, database, testServerAdminKey, "srvadmin-key", auth.RoleServerAdmin)
-	serverAdmin := map[string]string{"X-API-Key": testServerAdminKey}
+	serverAdmin := signedIn(t, srv, database)[auth.RoleServerAdmin]
 	const refusal = `{"error":"This role can list and delete API keys but not create them"}`
 	for _, body := range []string{`{}`, `not json`, `{"name":"k-viewer","role":"viewer"}`} {
 		if status, answer := listenerCall(t, srv, http.MethodPost, "/api/keys", body, serverAdmin); status != http.StatusForbidden || answer != refusal {

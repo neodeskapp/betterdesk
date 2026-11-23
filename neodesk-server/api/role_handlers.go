@@ -175,9 +175,10 @@ func (s *Server) handleListRolePermissionOverrides(w http.ResponseWriter, r *htt
 }
 
 // requireSuperAdminForOverrides answers 403 unless the caller is a super
-// admin (or legacy admin, which includes the console's API key). The routes
-// need server.config, which server_admin holds; without this a server_admin
-// could grant its own role any permission.
+// admin (or legacy admin, which includes the console calling in this
+// process; an API key on the listener is refused before, by requirePerson).
+// The routes need server.config, which server_admin holds; without this a
+// server_admin could grant its own role any permission.
 func requireSuperAdminForOverrides(w http.ResponseWriter, r *http.Request) bool {
 	if auth.IsSuperAdminRole(getRoleFromCtx(r)) {
 		return true

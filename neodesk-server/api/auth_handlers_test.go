@@ -95,12 +95,28 @@ func TestUserViewOverrideBlocksPanelAndClientDirectory(t *testing.T) {
 	}
 }
 
-func testDeleteUserRequest(port int, userID int64) (*http.Response, error) {
+// testDeleteUserRequest deletes an account as the person whose sign-in
+// token is token: accounts change only for a person, not an API key.
+func testDeleteUserRequest(port int, userID int64, token string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("http://127.0.0.1:%d/api/users/%d", port, userID), nil)
 	if err != nil {
 		return nil, err
 	}
-	return http.DefaultClient.Do(testAuthReq(req))
+	req.Header.Set("Authorization", "Bearer "+token)
+	return http.DefaultClient.Do(req)
+}
+
+// testSignIn gives srv a token manager and returns a sign-in token of the
+// account named username, which must exist with role.
+func testSignIn(t *testing.T, srv *Server, username, role string) string {
+	t.Helper()
+	jm := auth.NewJWTManager("auth-handlers-test-secret-0123456789", time.Hour)
+	srv.SetJWTManager(jm)
+	token, err := jm.Generate(username, role)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return token
 }
 
 func TestDeleteUserBlocksLastSuperAdmin(t *testing.T) {
@@ -125,13 +141,14 @@ func TestDeleteUserBlocksLastSuperAdmin(t *testing.T) {
 	peerMap := peer.NewMap()
 	cfg.APIPort = 19890
 	srv := New(cfg, database, peerMap, nil, "1.0.0-test")
+	token := testSignIn(t, srv, admin.Username, admin.Role)
 	if err := srv.Start(t.Context()); err != nil {
 		t.Fatal(err)
 	}
 	defer srv.Stop()
 	time.Sleep(100 * time.Millisecond)
 
-	resp, err := testDeleteUserRequest(cfg.APIPort, admin.ID)
+	resp, err := testDeleteUserRequest(cfg.APIPort, admin.ID, token)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -173,13 +190,14 @@ func TestDeleteUserAllowsWhenAnotherSuperAdminExists(t *testing.T) {
 	peerMap := peer.NewMap()
 	cfg.APIPort = 19891
 	srv := New(cfg, database, peerMap, nil, "1.0.0-test")
+	token := testSignIn(t, srv, first.Username, first.Role)
 	if err := srv.Start(t.Context()); err != nil {
 		t.Fatal(err)
 	}
 	defer srv.Stop()
 	time.Sleep(100 * time.Millisecond)
 
-	resp, err := testDeleteUserRequest(cfg.APIPort, second.ID)
+	resp, err := testDeleteUserRequest(cfg.APIPort, second.ID, token)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -231,6 +249,7 @@ func TestDeleteUserSucceedsWithNullLastLoginSibling(t *testing.T) {
 	peerMap := peer.NewMap()
 	cfg.APIPort = 19892
 	srv := New(cfg, database, peerMap, nil, "1.0.0-test")
+	token := testSignIn(t, srv, admin.Username, admin.Role)
 	if err := srv.Start(t.Context()); err != nil {
 		t.Fatal(err)
 	}
@@ -247,7 +266,7 @@ func TestDeleteUserSucceedsWithNullLastLoginSibling(t *testing.T) {
 		t.Fatalf("GET /api/users with NULL last_login: status %d, want 200", listResp.StatusCode)
 	}
 
-	resp, err := testDeleteUserRequest(cfg.APIPort, target.ID)
+	resp, err := testDeleteUserRequest(cfg.APIPort, target.ID, token)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -296,6 +315,7 @@ func TestDemoteUserSucceedsWithNullLastLoginSibling(t *testing.T) {
 	peerMap := peer.NewMap()
 	cfg.APIPort = 19893
 	srv := New(cfg, database, peerMap, nil, "1.0.0-test")
+	token := testSignIn(t, srv, admin.Username, admin.Role)
 	if err := srv.Start(t.Context()); err != nil {
 		t.Fatal(err)
 	}
@@ -310,7 +330,8 @@ func TestDemoteUserSucceedsWithNullLastLoginSibling(t *testing.T) {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(testAuthReq(req))
+	req.Header.Set("Authorization", "Bearer "+token)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}

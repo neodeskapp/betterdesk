@@ -26,19 +26,20 @@ var assignableRoles = map[string]bool{
 // validRole is VALID_USER_ROLES.has(role).
 func validRole(v jsbind.Value) bool { return v.IsString() && assignableRoles[v.Str()] }
 
-// canAssignRole is canAssignUserRole: whether the caller may change an
-// account of the target role (access.MayChangeAccount). The super admin
+// canAssignRole is canAssignUserRole: whether the caller may give an
+// account the target role (access.Service.MayGiveRole). The super admin
 // roles may give any role, global_admin operator, viewer, pro and
-// guest_issuer, nobody else any.
-func canAssignRole(caller, target string) bool {
-	return access.MayChangeAccount(0, caller, access.PolicyUser{Role: target})
+// guest_issuer, nobody else any; and no role is given that holds a
+// permission the caller does not hold (L387).
+func (h *handlers) canAssignRole(r *http.Request, target string) (bool, error) {
+	return h.d.Access.MayGiveRole(r.Context(), callerRole(r), target)
 }
 
 // mayChange reports whether the caller may change, reset or delete an
-// account, its user groups included (access.MayChangeAccount): its own,
-// or one whose role the caller could give.
-func mayChange(r *http.Request, target *account) bool {
-	return access.MayChangeAccount(kit.UserID(r), callerRole(r), access.PolicyUser{ID: target.ID.V, Role: target.role()})
+// account, its user groups included (access.Service.MayChangeAccount):
+// its own, or one whose role the caller could give.
+func (h *handlers) mayChange(r *http.Request, target *account) (bool, error) {
+	return h.d.Access.MayChangeAccount(r.Context(), kit.UserID(r), callerRole(r), access.PolicyUser{ID: target.ID.V, Role: target.role()})
 }
 
 // callerRole is req.session.user.role.
@@ -59,6 +60,14 @@ func isSessionAccount(r *http.Request, id int64) bool {
 
 // errRoleAboveOwn is the reply to a role the caller may not give.
 var errRoleAboveOwn = say(http.StatusForbidden, "Cannot assign a role higher than your own")
+
+// refusedOr is err when a role check failed, else errRoleAboveOwn.
+func refusedOr(err error) error {
+	if err != nil {
+		return err
+	}
+	return errRoleAboveOwn
+}
 
 // errPasswordTooLong is the reply to a password the sign-in would refuse.
 var errPasswordTooLong = say(http.StatusBadRequest, auth.ErrPasswordTooLong.Error())
@@ -289,8 +298,8 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 	if validRole(role) {
 		assigned = role.Str()
 	}
-	if !canAssignRole(callerRole(r), assigned) {
-		return nil, errRoleAboveOwn
+	if ok, err := h.canAssignRole(r, assigned); err != nil || !ok {
+		return nil, refusedOr(err)
 	}
 	hash, err := h.hash(ctx, password)
 	if err != nil {
@@ -409,8 +418,8 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	if user == nil {
 		return nil, sayKey(r, http.StatusNotFound, "users.not_found")
 	}
-	if !mayChange(r, user) {
-		return nil, errRoleAboveOwn
+	if ok, err := h.mayChange(r, user); err != nil || !ok {
+		return nil, refusedOr(err)
 	}
 	provider, err := providerOf(user)
 	if err != nil {
@@ -433,8 +442,8 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		if !validRole(role) {
 			return nil, sayKey(r, http.StatusBadRequest, "users.invalid_role")
 		}
-		if !canAssignRole(callerRole(r), role.Str()) {
-			return nil, errRoleAboveOwn
+		if ok, err := h.canAssignRole(r, role.Str()); err != nil || !ok {
+			return nil, refusedOr(err)
 		}
 		if access.IsSuperAdminRole(user.role()) && !access.IsSuperAdminRole(role.Str()) {
 			admins, err := countAdmins(ctx, h.d.Store)
@@ -699,7 +708,10 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 		failKey(w, r, http.StatusBadRequest, "users.cannot_delete_self")
 		return
 	}
-	if !mayChange(r, user) {
+	if ok, err := h.mayChange(r, user); err != nil {
+		h.serverError(w, r, "Delete user error:", err)
+		return
+	} else if !ok {
 		sent(w, r, errRoleAboveOwn)
 		return
 	}
@@ -756,7 +768,10 @@ func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 		failKey(w, r, http.StatusNotFound, "users.not_found")
 		return
 	}
-	if !mayChange(r, user) {
+	if ok, err := h.mayChange(r, user); err != nil {
+		h.serverError(w, r, "Reset password error:", err)
+		return
+	} else if !ok {
 		sent(w, r, errRoleAboveOwn)
 		return
 	}

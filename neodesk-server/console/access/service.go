@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
@@ -104,6 +105,47 @@ func (s *Service) RoleHasEffectivePermission(ctx context.Context, role, permissi
 		return false, err
 	}
 	return permissions.Has(permission), nil
+}
+
+// MayGiveRole reports whether an account of the role caller may give an
+// account the role target: the role boundary of auth.CanAssignRole, and
+// every permission target holds in effect is one caller holds in effect,
+// overrides included. No account gives more than it has. A failed lookup
+// is an error; the caller refuses.
+func (s *Service) MayGiveRole(ctx context.Context, caller, target string) (bool, error) {
+	if !auth.CanAssignRole(caller, target) {
+		return false, nil
+	}
+	if IsSuperAdminRole(caller) {
+		return true, nil
+	}
+	for _, p := range auth.AllPermissions {
+		theirs, err := s.RoleHasEffectivePermission(ctx, target, p)
+		if err != nil {
+			return false, err
+		}
+		if !theirs {
+			continue
+		}
+		mine, err := s.RoleHasEffectivePermission(ctx, caller, p)
+		if err != nil {
+			return false, err
+		}
+		if !mine {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+// MayChangeAccount is the package's MayChangeAccount with MayGiveRole for
+// the target's role: the caller's own account, or one whose role the
+// caller may give.
+func (s *Service) MayChangeAccount(ctx context.Context, callerID int64, callerRole string, target PolicyUser) (bool, error) {
+	if callerID != 0 && callerID == target.ID {
+		return true, nil
+	}
+	return s.MayGiveRole(ctx, callerRole, target.Role)
 }
 
 // Session is what the access checks need to know about a request's session.

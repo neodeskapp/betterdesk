@@ -85,7 +85,8 @@ for (const role of ROLES) {
 
 			await page.locator('.keys-scripts summary').click();
 			await expect(page.locator('.keys-scripts .api-key')).not.toHaveText('…');
-			await expect(page.locator('.show-api-key')).toHaveCount(has(perms, 'server.keys') ? 1 : 0);
+			// Only a super admin sees the whole key: it acts on the server's API (L387)
+			await expect(page.locator('.show-api-key')).toHaveCount(perms.includes('*') ? 1 : 0);
 			// Next steps: each link needs its page's permission
 			const next = page.locator('[aria-labelledby="keys-next-title"]');
 			await expect(next.getByRole('link', { name: 'Device tokens' })).toHaveCount(

@@ -216,16 +216,18 @@ func TestAPIKey(t *testing.T) {
 	w := newWorld(t, map[string]string{".api_key": apiKey + "\n"}, nil)
 	masked := `{"success":true,"data":{"key":"0123****cdef","masked":true}}`
 	full := `{"success":true,"data":{"key":"` + apiKey + `","masked":false}}`
-	denied := `{"success":false,"error":"Permission denied: server.keys"}`
+	denied := `{"success":false,"error":"Permission denied: only a super admin can see the whole API key"}`
 
 	for _, role := range []string{"guest_issuer", "viewer", "operator", "global_admin", "server_admin", "super_admin", "admin"} {
 		want(t, role+" masked", w.get(role, "/api/keys/api"), 200, masked)
 	}
-	// server.keys: the roles that run the server
-	for _, role := range []string{"server_admin", "super_admin", "admin"} {
+	// The whole key acts as an administrator on the API: only the roles
+	// that hold every permission see it. server_admin holds server.keys
+	// and still sees it masked (L387).
+	for _, role := range []string{"super_admin", "admin"} {
 		want(t, role+" full", w.get(role, "/api/keys/api?show=true"), 200, full)
 	}
-	for _, role := range []string{"guest_issuer", "viewer", "operator", "global_admin"} {
+	for _, role := range []string{"guest_issuer", "viewer", "operator", "global_admin", "server_admin"} {
 		want(t, role+" full", w.get(role, "/api/keys/api?show=true"), 403, denied)
 	}
 
@@ -244,7 +246,7 @@ func TestAPIKeyThatIsMissingOrEmpty(t *testing.T) {
 	want(t, "no file", w.get("admin", "/api/keys/api"), 404, notFound)
 	want(t, "no file, full", w.get("admin", "/api/keys/api?show=true"), 404, notFound)
 	// The permission is checked before the file is read
-	want(t, "no file, full, viewer", w.get("viewer", "/api/keys/api?show=true"), 403, `{"success":false,"error":"Permission denied: server.keys"}`)
+	want(t, "no file, full, viewer", w.get("viewer", "/api/keys/api?show=true"), 403, `{"success":false,"error":"Permission denied: only a super admin can see the whole API key"}`)
 
 	w = newWorld(t, map[string]string{".api_key": " \n"}, nil)
 	want(t, "empty file", w.get("admin", "/api/keys/api"), 404, notFound)

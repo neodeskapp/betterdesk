@@ -9,16 +9,14 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
-const testGlobalAdminKey = "globaladm-api-key-12345"
-
 // TestUserRoutesCheckTheAccountsRole: the user routes change or delete an
 // account only when the caller could give it the role it has now; a
 // global_admin can no longer take over or remove a super admin, and still
 // manages an operator (RV174).
 func TestUserRoutesCheckTheAccountsRole(t *testing.T) {
 	srv, database := newInternalServer(t, nil)
-	addTestAPIKey(t, database, testGlobalAdminKey, "globaladm-key", auth.RoleGlobalAdmin)
-	key := map[string]string{"X-API-Key": testGlobalAdminKey}
+	// A signed-in global_admin: an API key changes no account at all (L387)
+	key := signedIn(t, srv, database)[auth.RoleGlobalAdmin]
 	accounts := map[string]*db.User{}
 	for _, u := range []*db.User{
 		{Username: "root1", PasswordHash: "old-hash-1", Role: auth.RoleSuperAdmin},
