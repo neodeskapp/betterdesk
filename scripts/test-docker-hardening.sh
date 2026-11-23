@@ -57,6 +57,12 @@ cleanup() {
     docker compose -p "$PROJECT" \
         -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
         -f "$OVERRIDE_FILE" down -v --remove-orphans >/dev/null 2>&1 || true
+    # The server's folders belong to uid 10001 with mode 700, so only root
+    # in a container can remove them
+    if [[ -n "$DOCKER_BIN" ]] && [[ -d "$TEST_DIR/rustdesk" ]]; then
+        docker run --rm --entrypoint sh -v "$TEST_DIR:/cleanup" "$IMAGE" \
+            -c 'rm -rf /cleanup/rustdesk /cleanup/console' >/dev/null 2>&1 || true
+    fi
     rm -rf "$TEST_DIR"
 }
 trap cleanup EXIT
