@@ -204,11 +204,6 @@ neodesk-server/id_ed25519*
 neodesk-server/test_*.go
 neodesk-server/_test_*
 
-# --- Root-level image duplicates (the console's own are in neodesk-server/console/static/files/public/img/) ---
-/neodesk.png
-/neodesk_icon.png
-/neodesk_wallpaper.png
-
 # --- Screenshots ---
 screenshots/*.png
 !screenshots/.gitkeep
