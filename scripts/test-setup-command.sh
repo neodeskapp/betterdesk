@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 # The installer's commands on a real install (L431): neodesk-setup is the
-# installer's manager, and neodesk is the command line, a link to the
-# server binary that hands the installer's options to neodesk-setup. A
-# fresh install with the server built from this checkout, the installer's
-# options and a bare `sudo neodesk` through the new name, an update by
-# neodesk-setup, the update of an install whose /usr/local/sbin/neodesk is
-# the old manager (3.6.0-rc.4), an update whose binary does not start (it
-# goes back to the binary from before), and the uninstall. The backups go to
+# installer's manager, and neodesk is the command line, a copy of the
+# server binary that is root's own and that every user may run (the
+# server folder stays closed), and that hands the installer's options to
+# neodesk-setup. A fresh install with the server built from this checkout,
+# the command line as a normal user (its help, a list of devices with an
+# API token, and what --update says), the installer's options and a bare
+# `sudo neodesk` through the new name, an update by neodesk-setup of an
+# install whose neodesk is still the link of an earlier build, the update
+# of an install whose /usr/local/sbin/neodesk is the old manager
+# (3.6.0-rc.4), an update whose binary does not start (it goes back to the
+# binary from before), and the uninstall. The backups go to
 # /opt/neodesk-backups, and the old manager's backups in
 # /opt/rustdesk-backups move there, with nothing left at the old place
 # (L446).
@@ -30,6 +34,8 @@ BIN=/opt/neodesk/neodesk-server
 BACKUPS=/opt/neodesk-backups
 OLD_BACKUPS=/opt/rustdesk-backups
 OLD_MANAGER_URL=https://raw.githubusercontent.com/neodeskapp/neodesk/v3.6.0-rc.4/neodesk.sh
+# A user without root, for the command line
+TEST_USER=neodesk-cli-test
 
 fail() {
     printf 'FAIL: %s\n' "$*" >&2
@@ -92,6 +98,40 @@ EOF
 chmod 755 "$WORK/stub/curl"
 export PATH="$WORK/stub:$PATH"
 
+# console_address: the console's address on this machine, HTTPS or HTTP
+console_address() {
+    local a
+    for a in https://127.0.0.1:5443 http://127.0.0.1:5000; do
+        if curl -ksf -o /dev/null --max-time 5 "$a/health"; then
+            printf '%s\n' "$a"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# make_token CONSOLE: prints a new API token that may list devices. The
+# admin gets a password of the test's own (--reset-password), signs in to
+# the console and makes the token there. Neither shows in an output.
+make_token() {
+    local console=$1 pw jar csrf
+    pw=$(openssl rand -hex 16)
+    ADMIN_PASSWORD="$pw" neodesk --reset-password < /dev/null > /dev/null 2>&1 || { echo "the password reset failed" >&2; return 1; }
+    jar="$WORK/cookies"
+    rm -f "$jar"
+    curl -ksf -c "$jar" -b "$jar" -o /dev/null "$console/api/auth/login-page" || { echo "no login page" >&2; return 1; }
+    csrf=$(awk '$6 ~ /^__csrf/ { print $7 }' "$jar" | head -n 1 | sed 's/%7C.*//; s/|.*//')
+    printf '{"username":"admin","password":"%s"}' "$pw" > "$WORK/login.json"
+    curl -ksf -c "$jar" -b "$jar" -H "X-CSRF-Token: $csrf" -H 'Content-Type: application/json' \
+        --data @"$WORK/login.json" -o /dev/null "$console/api/auth/login" || { echo "the admin could not sign in" >&2; return 1; }
+    rm -f "$WORK/login.json"
+    curl -ksf -c "$jar" -b "$jar" -H "X-CSRF-Token: $csrf" -H 'Content-Type: application/json' \
+        --data '{"name":"installer test","permissions":["device.view"],"expires_in_days":1}' \
+        -o "$WORK/token.json" "$console/api/panel/api-tokens" || { echo "the console made no token" >&2; return 1; }
+    sed -n 's/.*"token":"\([^"]*\)".*/\1/p' "$WORK/token.json"
+    rm -f "$WORK/token.json" "$jar"
+}
+
 # ran_cleanly NAME LOG: LOG has no sign of a script that broke while it ran
 ran_cleanly() {
     if grep -nE 'syntax error|unexpected end of file|command not found|line [0-9]+: .*: No such file' "$2"; then
@@ -99,12 +139,15 @@ ran_cleanly() {
     fi
 }
 
-# new_layout WHEN NEWEST: neodesk-setup is NEWEST, neodesk is the link to
-# the server binary, and nothing is at /usr/local/sbin/neodesk
+# new_layout WHEN NEWEST: neodesk-setup is NEWEST, neodesk is a copy of
+# the server binary, 0755 and root's own, and nothing is at
+# /usr/local/sbin/neodesk
 new_layout() {
     [ -x "$SETUP" ] || fail "$1: no $SETUP"
     cmp -s "$SETUP" "$2" || fail "$1: $SETUP is not $2"
-    [ "$(readlink "$CLI")" = "$BIN" ] || fail "$1: $CLI is not a link to $BIN: $(ls -l "$CLI" 2>&1)"
+    [ -f "$CLI" ] && [ ! -L "$CLI" ] || fail "$1: $CLI is no file of its own: $(ls -l "$CLI" 2>&1)"
+    [ "$(stat -c '%U:%G %a' "$CLI")" = "root:root 755" ] || fail "$1: $CLI is $(stat -c '%U:%G %a' "$CLI")"
+    cmp -s "$CLI" "$BIN" || fail "$1: $CLI is not the server binary $BIN"
     [ ! -e "$OLD" ] || fail "$1: $OLD is still there: $(head -c 300 "$OLD")"
     [ "$(command -v neodesk)" = "$CLI" ] || fail "$1: neodesk is $(command -v neodesk)"
 }
@@ -115,6 +158,27 @@ RELAY_SERVERS=127.0.0.1 bash "$SCRIPT_ROOT/neodesk.sh" --auto --binary "$WORK/ne
 ran_cleanly "the install" "$WORK/install.log"
 hash -r
 new_layout "after a fresh install" "$SCRIPT_ROOT/neodesk.sh"
+
+echo "== the command line for every user"
+# The server folder stays closed; the command line is outside it
+[ "$(stat -c '%a' "$(dirname "$BIN")")" = 2770 ] || fail "the server folder has mode $(stat -c '%a' "$(dirname "$BIN")")"
+id "$TEST_USER" >/dev/null 2>&1 || useradd -m "$TEST_USER" || fail "could not add the user $TEST_USER"
+as_user() { runuser -u "$TEST_USER" -- env HOME="/home/$TEST_USER" PATH=/usr/local/bin:/usr/bin:/bin "$@"; }
+out=$(as_user neodesk --help 2>&1) || fail "neodesk --help as a normal user: $out"
+case "$out" in *"neodesk devices list"*) ;; *) fail "neodesk --help as a normal user is not the command line's: $out" ;; esac
+code=0
+out=$(as_user neodesk --update < /dev/null 2>&1) || code=$?
+[ "$code" != 0 ] || fail "neodesk --update as a normal user reported success: $out"
+case "$out" in *"sudo neodesk --update"*) ;; *) fail "neodesk --update as a normal user does not say to run it with sudo: $out" ;; esac
+# An API token, made as the console makes them, signed in with a password
+console=$(console_address) || fail "the console answers neither on https://127.0.0.1:5443 nor on http://127.0.0.1:5000"
+make_token "$console" > "$WORK/token" || fail "no API token"
+install -o "$TEST_USER" -m 600 "$WORK/token" "/home/$TEST_USER/token"
+code=0
+out=$(as_user neodesk --url "$console" --insecure --token-file "/home/$TEST_USER/token" devices list 2>&1) || code=$?
+[ "$code" = 0 ] || fail "neodesk devices list as a normal user with a token: exit $code: $out"
+if grep -qF -f "$WORK/token" <<< "$out"; then fail "neodesk devices list printed the token"; fi
+rm -f "$WORK/token" "/home/$TEST_USER/token"
 
 echo "== the command line and the installer's options through neodesk"
 out=$(neodesk --version 2>&1) || fail "neodesk --version: $out"
@@ -132,14 +196,20 @@ case "$code $out" in "2 "*"neodesk-setup"*) ;; *) fail "a bare neodesk without a
 out=$(printf '0\n' | NEODESK_CLASSIC_MENU=1 script -qec neodesk /dev/null 2>&1 | tr -d '\r') || true
 case "$out" in *"MAIN MENU"*"Goodbye"*) ;; *) fail "a bare sudo neodesk on a terminal did not open the menu: $out" ;; esac
 
-echo "== update by neodesk-setup"
+echo "== update by neodesk-setup, from the link of an earlier build"
+# neodesk as the link into the server folder that builds before
+# 3.6.0-rc.5 placed, and a newer binary: the update copies it to neodesk
+ln -sfn "$BIN" "$CLI"
+cp "$WORK/neodesk-server" "$WORK/neodesk-server-next"
+printf 'the next release\n' >> "$WORK/neodesk-server-next"
 inode=$(stat -c %i "$SETUP")
-neodesk --update --binary "$WORK/neodesk-server" < /dev/null > "$WORK/update.log" 2>&1 \
+neodesk --update --binary "$WORK/neodesk-server-next" < /dev/null > "$WORK/update.log" 2>&1 \
     || fail "neodesk --update failed: $(tail -n 40 "$WORK/update.log")"
 ran_cleanly "neodesk --update" "$WORK/update.log"
 grep -qE 'neodesk-server is up to date|Updated to' "$WORK/update.log" || fail "the update did not finish: $(tail -n 20 "$WORK/update.log")"
 [ "$(stat -c %i "$SETUP")" != "$inode" ] || fail "neodesk-setup was written over while it ran"
 new_layout "after neodesk --update" "$WORK/newest.sh"
+cmp -s "$CLI" "$WORK/neodesk-server-next" || fail "the update did not copy the new binary to $CLI"
 ls "$BACKUPS"/neodesk_backup_*.tar.gz >/dev/null 2>&1 || fail "the update left no backup in $BACKUPS"
 [ ! -e "$OLD_BACKUPS" ] || fail "$OLD_BACKUPS is there after a fresh install and an update"
 
@@ -161,7 +231,7 @@ neodesk --update --binary "$WORK/broken-server" < /dev/null > "$WORK/broken-upda
 ran_cleanly "the update to a binary that does not start" "$WORK/broken-update.log"
 [ "$code" != 0 ] || fail "an update to a binary that does not start reported success"
 grep -q 'putting the previous one back' "$WORK/broken-update.log" || fail "the failed update did not go back: $(tail -n 20 "$WORK/broken-update.log")"
-cmp -s "$BIN" "$WORK/neodesk-server" || fail "the binary from before is not back"
+cmp -s "$BIN" "$WORK/neodesk-server-next" || fail "the binary from before is not back"
 systemctl is-active --quiet neodesk-server || fail "the server does not run after the way back"
 out=$(neodesk --version 2>&1) || fail "neodesk --version after the way back: $out"
 
@@ -199,6 +269,7 @@ ran_cleanly "the uninstall" "$WORK/uninstall.log"
 for f in "$SETUP" "$CLI" "$OLD" "$BIN"; do
     [ ! -e "$f" ] && [ ! -L "$f" ] || fail "the uninstall left $f"
 done
+userdel -r "$TEST_USER" >/dev/null 2>&1 || true
 
 rm -rf "$WORK"
 echo "PASS: the installer's commands on a real install"

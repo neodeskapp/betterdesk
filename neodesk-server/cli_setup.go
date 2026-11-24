@@ -16,9 +16,9 @@ import (
 )
 
 // On Linux hosts the installer neodesk.sh installs itself as
-// neodesk-setup, its manager, and neodesk is the command line. Until
-// 3.6.1 the manager was called neodesk, so the command line hands it what
-// was the manager's: a call whose first argument is one of the
+// neodesk-setup, its manager, and neodesk is the command line. Up to
+// 3.6.0-rc.4 the manager was called neodesk, so the command line hands it
+// what was the manager's: a call whose first argument is one of the
 // installer's options, and a bare `sudo neodesk` on a terminal, which
 // opened the manager's menu.
 
@@ -132,9 +132,11 @@ func findSetup() (string, bool) {
 }
 
 // runSetup runs neodesk-setup in place of this process, so its terminal,
-// signals and exit status are the user's own.
+// signals and exit status are the user's own. NEODESK_SETUP_CALLED_AS
+// tells it the call was neodesk's, so it names that call when it needs
+// root.
 func runSetup(path string, args []string) int {
-	err := syscall.Exec(path, append([]string{path}, args...), os.Environ())
+	err := syscall.Exec(path, append([]string{path}, args...), append(os.Environ(), "NEODESK_SETUP_CALLED_AS=neodesk"))
 	// Only a failed exec comes back
 	fmt.Fprintf(os.Stderr, "neodesk: could not start %s: %v\n", path, err)
 	return ndcli.ExitFailed

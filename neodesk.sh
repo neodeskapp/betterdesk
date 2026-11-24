@@ -49,10 +49,11 @@ NEODESK_SELF="${BASH_SOURCE[0]:-}"
 NEODESK_ORIG_ARGV=("$@")
 
 # This installer as a command, for updates and the uninstall later:
-# neodesk-setup. neodesk is the command line, a link to the server binary,
-# which hands the installer's options (neodesk --update, ...) and a bare
-# `sudo neodesk` on a terminal to neodesk-setup. Until 3.6.1 the installer
-# itself was /usr/local/sbin/neodesk.
+# neodesk-setup. neodesk is the command line, a copy of the server binary
+# that is root's own and that every user may run (the server folder stays
+# closed), which hands the installer's options (neodesk --update, ...) and
+# a bare `sudo neodesk` on a terminal to neodesk-setup. Up to 3.6.0-rc.4
+# the installer itself was /usr/local/sbin/neodesk.
 MANAGER_COMMAND="/usr/local/sbin/neodesk-setup"
 OLD_MANAGER_COMMAND="/usr/local/sbin/neodesk"
 CLI_COMMAND="/usr/local/bin/neodesk"
@@ -69,9 +70,31 @@ is_old_manager() {
     [ -f "$1" ] && [ ! -L "$1" ] && grep -q '^NEODESK_SH_REVISION=' "$1" 2>/dev/null
 }
 
-# is_cli_link FILE: FILE is the command line's link to a neodesk-server
-is_cli_link() {
-    [ -L "$1" ] && [ "$(basename "$(readlink "$1")")" = neodesk-server ]
+# is_our_cli FILE: FILE is the command line this installer placed: a copy
+# of the server binary (it names neodesk-setup), or the link to a
+# neodesk-server that builds before 3.6.0-rc.5 placed
+is_our_cli() {
+    if [ -L "$1" ]; then
+        [ "$(basename "$(readlink "$1")")" = neodesk-server ]
+        return
+    fi
+    [ -f "$1" ] && binary_hands_over "$1" && ! grep -q '^NEODESK_SH_REVISION=' "$1" 2>/dev/null
+}
+
+# place_cli BIN: the command line neodesk as a copy of BIN, mode 755 and
+# root's own, by a rename in its folder: any user may run it, while the
+# server folder stays closed and only root changes the copy
+place_cli() {
+    local dir tmp
+    dir=$(dirname "$CLI_COMMAND")
+    mkdir -p "$dir" || return 1
+    tmp=$(mktemp "$dir/.$(basename "$CLI_COMMAND").XXXXXX") || return 1
+    if cp "$1" "$tmp" && chmod 755 "$tmp" && { [ "$(id -u)" != 0 ] || chown 0:0 "$tmp"; } \
+        && mv -f "$tmp" "$CLI_COMMAND"; then
+        return 0
+    fi
+    rm -f "$tmp"
+    return 1
 }
 
 # replace_file SRC DEST: DEST becomes a copy of SRC (mode 755) by a rename
@@ -90,7 +113,7 @@ replace_file() {
 }
 
 # place_manager_commands SRC BIN: the installer SRC as neodesk-setup, the
-# command line neodesk as a link to the server binary BIN, and the old
+# command line neodesk as a copy of the server binary BIN, and the old
 # manager at /usr/local/sbin/neodesk gone, since it comes first in root's
 # PATH. Returns 0 for that, 1 when neodesk-setup could not be written, 2
 # when BIN does not hand the installer's options over yet and 3 when
@@ -101,10 +124,10 @@ place_manager_commands() {
     replace_file "$src" "$MANAGER_COMMAND" || return 1
     if ! binary_hands_over "$bin"; then
         rc=2
-    elif { [ -e "$CLI_COMMAND" ] || [ -L "$CLI_COMMAND" ]; } && ! is_cli_link "$CLI_COMMAND"; then
+    elif { [ -e "$CLI_COMMAND" ] || [ -L "$CLI_COMMAND" ]; } && ! is_our_cli "$CLI_COMMAND"; then
         rc=3
-    elif ! { mkdir -p "$(dirname "$CLI_COMMAND")" && ln -sfn "$bin" "$CLI_COMMAND"; }; then
-        rc=3
+    elif ! place_cli "$bin"; then
+        rc=4
     fi
     if is_old_manager "$OLD_MANAGER_COMMAND"; then
         if [ "$rc" = 0 ]; then
@@ -124,8 +147,8 @@ installed_server_binary() {
     printf '%s\n' "${bin:-/opt/neodesk/neodesk-server}"
 }
 
-# Run from the manager's old place: an update by an older copy (3.6.1 and
-# before) saved this installer as /usr/local/sbin/neodesk. As root, it
+# Run from the manager's old place: an update by an older copy (3.6.0-rc.4
+# or older) saved this installer as /usr/local/sbin/neodesk. As root, it
 # finishes the move before anything else and hands this call to neodesk,
 # which gives the installer's options back to neodesk-setup. The file it
 # runs from is unlinked, never written over.
@@ -726,6 +749,7 @@ install_manager_command() {
         0) print_info "Manage this install with: sudo $(basename "$MANAGER_COMMAND"); the command line: neodesk --help" ;;
         2) print_info "Manage this install with: sudo $(basename "$MANAGER_COMMAND") (the command line neodesk comes with the next server update)" ;;
         3) print_warning "$CLI_COMMAND is another program, so it stays; the command line is $(server_binary_path) cli" ;;
+        4) print_warning "Could not copy the server binary to $CLI_COMMAND; the command line is $(server_binary_path) cli (as root)" ;;
         *) print_warning "Could not save the neodesk-setup command; run this installer again for updates" ;;
     esac
     return 0
@@ -6786,11 +6810,11 @@ do_uninstall() {
         print_info "Preserved console data: $CONSOLE_PATH"
     fi
     
-    # The commands: neodesk-setup, neodesk when it is the command line's
-    # link, and the manager at its old place
+    # The commands: neodesk-setup, neodesk when it is the command line
+    # this installer placed, and the manager at its old place
     if [ "$PURGE_MODE" = true ]; then
         rm -f "$MANAGER_COMMAND"
-        if is_cli_link "$CLI_COMMAND"; then rm -f "$CLI_COMMAND"; fi
+        if is_our_cli "$CLI_COMMAND"; then rm -f "$CLI_COMMAND"; fi
         if is_old_manager "$OLD_MANAGER_COMMAND"; then rm -f "$OLD_MANAGER_COMMAND"; fi
     fi
 
@@ -6803,7 +6827,7 @@ do_uninstall() {
     [ "$USE_POSTGRESQL" = true ] && left+=("the PostgreSQL database and PostgreSQL itself")
     left+=("the firewall rules for the NeoDesk ports")
     [ -x "$MANAGER_COMMAND" ] && left+=("the command $MANAGER_COMMAND, to install again")
-    is_cli_link "$CLI_COMMAND" && left+=("the command line $CLI_COMMAND")
+    is_our_cli "$CLI_COMMAND" && left+=("the command line $CLI_COMMAND")
     is_old_manager "$OLD_MANAGER_COMMAND" && left+=("the installer's older copy $OLD_MANAGER_COMMAND")
     echo ""
     echo "Left on this machine:"
@@ -7877,7 +7901,12 @@ main() {
     # Check root
     if [ "$EUID" -ne 0 ]; then
         echo -e "${RED}This script requires root privileges!${NC}"
-        echo "Run: sudo $0"
+        # neodesk hands the installer's options over and says so
+        if [ "${NEODESK_SETUP_CALLED_AS:-}" = neodesk ]; then
+            echo "Run: sudo neodesk ${NEODESK_ORIG_ARGV[*]}"
+        else
+            echo "Run: sudo $0"
+        fi
         exit 1
     fi
     move_backup_folder || print_warning "The backups in $OLD_BACKUP_DIR could not move to $BACKUP_DIR"

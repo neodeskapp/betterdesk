@@ -586,9 +586,10 @@ test_one_command_install() (
 )
 
 # L431: the installer's manager is neodesk-setup, and neodesk is the
-# command line: a link to the server binary, which hands the installer's
-# options to neodesk-setup. Nothing stays at the manager's old place,
-# where it would come first in root's PATH.
+# command line: a copy of the server binary (mode 755, root's own), which
+# any user may run while the server folder stays closed, and which hands
+# the installer's options to neodesk-setup. Nothing stays at the manager's
+# old place, where it would come first in root's PATH.
 test_install_places_neodesk_setup_and_the_command_line() (
     load
     [ "$MANAGER_COMMAND" = /usr/local/sbin/neodesk-setup ] || fail "the manager is installed as $MANAGER_COMMAND"
@@ -599,8 +600,9 @@ test_install_places_neodesk_setup_and_the_command_line() (
     install_manager_command >/dev/null
     [ -x "$MANAGER_COMMAND" ] || fail "no neodesk-setup"
     cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/neodesk.sh" || fail "neodesk-setup is not this installer"
-    [ "$(readlink "$CLI_COMMAND")" = "$RUSTDESK_PATH/neodesk-server" ] \
-        || fail "neodesk is not a link to the server binary: $(ls -l "$CLI_COMMAND" 2>&1)"
+    [ -f "$CLI_COMMAND" ] && [ ! -L "$CLI_COMMAND" ] && cmp -s "$CLI_COMMAND" "$RUSTDESK_PATH/neodesk-server" \
+        || fail "neodesk is not a copy of the server binary: $(ls -l "$CLI_COMMAND" 2>&1)"
+    [ "$(stat -c %a "$CLI_COMMAND")" = 755 ] || fail "neodesk has mode $(stat -c %a "$CLI_COMMAND")"
     [ ! -e "$OLD_MANAGER_COMMAND" ] || fail "something is at the manager's old place"
     local out
     out=$(print_install_summary 2>&1)
@@ -610,8 +612,11 @@ test_install_places_neodesk_setup_and_the_command_line() (
     rm -rf "$TEST_DIR"
 )
 
-# L431: an install whose /usr/local/sbin/neodesk is the old manager (3.6.1
-# and before) moves to neodesk-setup and the neodesk link at its update.
+# L431: an install whose /usr/local/sbin/neodesk is the old manager
+# (3.6.0-rc.4 or older) moves to neodesk-setup and the command line neodesk
+# at its update, and so does one whose neodesk is the link into the server
+# folder that builds before 3.6.0-rc.5 placed. Each update copies the new
+# binary to neodesk.
 # Until the server binary hands the installer's options over, neodesk
 # stays the manager; a neodesk of someone else stays, and so does the old
 # manager then. neodesk-setup is replaced by a new file, never written
@@ -629,8 +634,16 @@ test_update_moves_the_old_manager() (
 
     fake_handing_binary
     install_manager_command >/dev/null 2>&1
-    [ "$(readlink "$CLI_COMMAND")" = "$RUSTDESK_PATH/neodesk-server" ] || fail "the update placed no neodesk link"
+    [ ! -L "$CLI_COMMAND" ] && cmp -s "$CLI_COMMAND" "$RUSTDESK_PATH/neodesk-server" || fail "the update placed no copy of the binary as neodesk"
     [ ! -e "$OLD_MANAGER_COMMAND" ] || fail "the old manager is still at /usr/local/sbin/neodesk"
+    printf '# the next release\n' >> "$RUSTDESK_PATH/neodesk-server"
+    install_manager_command >/dev/null 2>&1
+    cmp -s "$CLI_COMMAND" "$RUSTDESK_PATH/neodesk-server" || fail "the update did not copy the new binary to neodesk"
+    rm -f "$CLI_COMMAND"
+    ln -s "$RUSTDESK_PATH/neodesk-server" "$CLI_COMMAND"
+    install_manager_command >/dev/null 2>&1
+    [ ! -L "$CLI_COMMAND" ] && cmp -s "$CLI_COMMAND" "$RUSTDESK_PATH/neodesk-server" \
+        || fail "the link of an earlier build did not become the copy: $(ls -l "$CLI_COMMAND" 2>&1)"
     local inode
     inode=$(stat -c %i "$MANAGER_COMMAND")
     install_manager_command >/dev/null 2>&1
@@ -1029,8 +1042,8 @@ test_install_summary() (
 
 # L149: the uninstall says what it leaves on the machine, and --purge
 # removes the data and the commands too: neodesk-setup, and neodesk when
-# it is the link to the server binary (L431), but not a neodesk of
-# someone else.
+# it is the copy of the server binary or an earlier build's link to it
+# (L431), but not a neodesk of someone else.
 test_uninstall_says_what_stays() (
     load
     systemctl() { :; }
@@ -1041,7 +1054,7 @@ test_uninstall_says_what_stays() (
     commands_in_test_dir
     mkdir -p "$TEST_DIR/sbin" "$TEST_DIR/bin" && printf '#!/bin/sh\n' > "$MANAGER_COMMAND" && chmod +x "$MANAGER_COMMAND"
     fake_handing_binary
-    ln -s "$RUSTDESK_PATH/neodesk-server" "$CLI_COMMAND"
+    cp "$RUSTDESK_PATH/neodesk-server" "$CLI_COMMAND"
     printf 'DB_TYPE=sqlite\n' > "$CONSOLE_PATH/.env"
     local out
     out=$(do_uninstall 2>&1)
@@ -1052,7 +1065,7 @@ test_uninstall_says_what_stays() (
     [ -d "$RUSTDESK_PATH" ] && [ -d "$CONSOLE_PATH" ] || fail "the uninstall without --purge removed the data"
     PURGE_MODE=true
     do_uninstall >/dev/null 2>&1
-    [ ! -e "$RUSTDESK_PATH" ] && [ ! -e "$CONSOLE_PATH" ] && [ ! -e "$MANAGER_COMMAND" ] && [ ! -L "$CLI_COMMAND" ] \
+    [ ! -e "$RUSTDESK_PATH" ] && [ ! -e "$CONSOLE_PATH" ] && [ ! -e "$MANAGER_COMMAND" ] && [ ! -e "$CLI_COMMAND" ] \
         || fail "--purge left $(ls -d "$RUSTDESK_PATH" "$CONSOLE_PATH" "$MANAGER_COMMAND" "$CLI_COMMAND" 2>/dev/null | tr '\n' ' ')"
     mkdir -p "$RUSTDESK_PATH" "$CONSOLE_PATH"
     printf '#!/bin/sh\necho mine\n' > "$CLI_COMMAND"

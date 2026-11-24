@@ -9,8 +9,9 @@ import (
 )
 
 // The command line (package ndcli) lives in the server binary. It runs
-// when the binary is called neodesk (the installers and the image add
-// that name as a link), or as `neodesk-server cli ...` with any name.
+// when the binary is called neodesk (neodesk.sh adds that name as a copy
+// of the binary, neodesk.ps1 and the image as a link), or as
+// `neodesk-server cli ...` with any name.
 // Called neodesk, it hands the installer's options to neodesk-setup
 // (cli_setup.go).
 
