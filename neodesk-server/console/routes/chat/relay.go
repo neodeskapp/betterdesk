@@ -378,9 +378,23 @@ func (rm *room) hasOperator(c *ws.Conn) bool {
 // room. The scope is checked outside the relay's lock.
 func (r *Relay) toPanel(ctx context.Context, subject string, except *ws.Conn, rm *room, texts ...string) {
 	r.mu.Lock()
+	// A direct message ("operator:<name>") is for its recipient and the
+	// sender's other sockets only (L492)
+	recipient, direct := strings.CutPrefix(subject, "operator:")
+	sender := ""
+	if direct {
+		for _, op := range r.panel {
+			if op.conn == except {
+				sender = op.operator
+			}
+		}
+	}
 	var targets []*client
 	for _, op := range r.panel {
 		if op.conn == except || (rm != nil && rm.hasOperator(op.conn)) {
+			continue
+		}
+		if direct && op.operator != recipient && (sender == "" || op.operator != sender) {
 			continue
 		}
 		targets = append(targets, op)

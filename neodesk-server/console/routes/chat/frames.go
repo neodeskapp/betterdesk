@@ -357,7 +357,11 @@ func (r *Relay) operatorFrame(c *client, frame jsjson.Value) error {
 		c.later(func(ctx context.Context) {
 			data, ok := loadHistory(ctx, r.opts.API, conversation)
 			if ok && data.Truthy() && data.Get("messages").Truthy() {
-				c.send(newObject().str("type", "history").val("conversation_id", asked).raw("messages", r.operatorView(ctx, c).messages(data.Get("messages"))))
+				messages := data.Get("messages")
+				if recipient, direct := strings.CutPrefix(subject(conversation), "operator:"); direct && recipient != c.operator {
+					messages = sentBy(messages, c.operator)
+				}
+				c.send(newObject().str("type", "history").val("conversation_id", asked).raw("messages", r.operatorView(ctx, c).messages(messages)))
 				return
 			}
 			if asked.Kind() == jsjson.String && asked.Str() == c.id {
