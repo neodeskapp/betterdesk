@@ -2060,7 +2060,9 @@
       "cdap.files",
       "mesh.terminal",
       "mesh.power",
-      "mesh.files"
+      "mesh.files",
+      "device.signin_use",
+      "device.signin_manage"
      ],
      "sessionPolicy": {
       "idleTimeoutMs": 1800000,
