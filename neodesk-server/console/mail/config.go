@@ -16,6 +16,9 @@ const settingKey = "smtp_config"
 // routes. A save that sends it back keeps the stored password.
 const MaskedPass = "********"
 
+// defaultFrom is the sender when the configuration names none.
+const defaultFrom = "neodesk@localhost"
+
 // Config is an SMTP configuration: the stored one, or the one made from
 // the environment. Its members are JavaScript values, as the console had
 // them.
@@ -107,7 +110,7 @@ func (s *Service) LoadSMTPConfig(ctx context.Context) *Config {
 		"secure", boolValue(envvar.SwitchOr(s.getenv("SMTP_SECURE"), false)),
 		"user", stringValue(s.getenv("SMTP_USER")),
 		"pass", stringValue(s.getenv("SMTP_PASS")),
-		"from", stringValue(orDefault("SMTP_FROM", s.defaultFrom())),
+		"from", stringValue(orDefault("SMTP_FROM", defaultFrom)),
 		"alert_email", stringValue(s.getenv("SMTP_ALERT_EMAIL")),
 		"tlsVerify", boolValue(s.opts.TLSVerify),
 	)}

@@ -21,16 +21,11 @@ import (
 // wait stays under an hour, and answers to queries for them. At stop the
 // records go out once more with a lifetime of 0.
 
-// mdnsNames are the service's instance name and its service type.
-type mdnsNames struct {
-	instance, kind string
-}
-
-// neodeskNames are the names the console announces.
-var neodeskNames = mdnsNames{instance: "NeoDesk Console", kind: "_neodesk._tcp"}
-
 const (
-	tld = ".local"
+	// instanceName is the service's name (the old console's appName).
+	instanceName = "NeoDesk Console"
+	serviceType  = "_neodesk._tcp"
+	tld          = ".local"
 
 	probeInterval   = 250 * time.Millisecond
 	probeCount      = 3
@@ -59,7 +54,6 @@ type mdnsSocket interface {
 
 // service is the published service.
 type service struct {
-	names mdnsNames
 	// name is the service's instance name, fqdn its name in the service
 	// type
 	name string
@@ -69,21 +63,21 @@ type service struct {
 	txt  [][]byte
 }
 
-// newService is the service under the names.
-func newService(names mdnsNames) *service {
-	s := &service{names: names}
-	s.setName(names.instance)
+// newService is the service of the instance name.
+func newService(name string) *service {
+	s := &service{}
+	s.setName(name)
 	return s
 }
 
 func (s *service) setName(name string) {
 	s.name = name
-	s.fqdn = strings.ReplaceAll(name, ".", "-") + "." + s.names.kind + tld
+	s.fqdn = strings.ReplaceAll(name, ".", "-") + "." + serviceType + tld
 }
 
-// rename gives the service the attempt-th name: the instance name (n).
+// rename gives the service the attempt-th name: instanceName (n).
 func (s *service) rename(attempt int) {
-	s.setName(s.names.instance + " (" + strconv.Itoa(attempt) + ")")
+	s.setName(instanceName + " (" + strconv.Itoa(attempt) + ")")
 }
 
 // records are the service's records: the pointer to it, its SRV and TXT
@@ -92,10 +86,10 @@ func (s *service) rename(attempt int) {
 // hardware address.
 func (s *service) records(ifaces []Interface) []dnsRecord {
 	out := []dnsRecord{
-		{Name: s.names.kind + tld, Type: "PTR", TTL: 28800, Data: s.fqdn},
+		{Name: serviceType + tld, Type: "PTR", TTL: 28800, Data: s.fqdn},
 		{Name: s.fqdn, Type: "SRV", TTL: 120, Data: srvData{Port: s.port, Target: s.host}},
 		{Name: s.fqdn, Type: "TXT", TTL: 4500, Data: s.txt},
-		{Name: "_services._dns-sd._udp" + tld, Type: "PTR", TTL: 120, Data: s.names.kind + tld},
+		{Name: "_services._dns-sd._udp" + tld, Type: "PTR", TTL: 120, Data: serviceType + tld},
 	}
 	for _, iface := range ifaces {
 		for _, addr := range iface.Entries {
@@ -276,7 +270,6 @@ func (r *registry) respond(datagram []byte) [][]byte {
 // MDNS is the mDNS announcement.
 type MDNS struct {
 	settings Settings
-	names    mdnsNames
 	logf     func(format string, args ...any)
 	random   func() float64
 	after    func(d time.Duration) <-chan time.Time
@@ -291,7 +284,6 @@ type MDNS struct {
 func NewMDNS(settings Settings) *MDNS {
 	return &MDNS{
 		settings: settings,
-		names:    neodeskNames,
 		logf:     func(format string, args ...any) { logging.Logf("console", format, args...) },
 		random:   rand.Float64,
 		after:    time.After,
@@ -352,14 +344,14 @@ func (m *MDNS) prepare() (*service, bool) {
 	// The host goes out as the first label of the machine's name with
 	// .local, the name mDNS resolves
 	label, _, _ := strings.Cut(strings.Trim(decodeUTF8([]byte(host)), "."), ".")
-	svc := newService(m.names)
+	svc := newService(instanceName)
 	svc.host = label + tld
 	svc.port = uint16(port)
 	svc.txt = [][]byte{
 		[]byte("url=" + strings.TrimSuffix(panelURL, "/")),
 		[]byte("version=" + m.settings.Version),
 	}
-	m.logf("  mDNS discovery published %s port %d (%s)", m.names.kind, svc.port, panelURL)
+	m.logf("  mDNS discovery published _neodesk._tcp port %d (%s)", svc.port, panelURL)
 	return svc, true
 }
 

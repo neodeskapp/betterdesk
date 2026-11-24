@@ -9,19 +9,15 @@ const probeType = "neodesk-discover"
 // (the last "type" member counts). Nothing else gets an answer.
 //
 // The grammar is that of JSON.parse, with no limit on nesting.
-func IsProbe(msg []byte) bool { return isProbeOf(msg, probeType) }
-
-// isProbeOf is IsProbe for probes whose "type" is kind.
-func isProbeOf(msg []byte, kind string) bool {
-	p := probeParser{s: decodeUTF8(msg), kind: kind}
+func IsProbe(msg []byte) bool {
+	p := probeParser{s: decodeUTF8(msg)}
 	return p.probe()
 }
 
 // probeParser checks JSON text without building values.
 type probeParser struct {
-	s    string
-	kind string
-	pos  int
+	s   string
+	pos int
 }
 
 func (p *probeParser) skipSpace() {
@@ -112,7 +108,7 @@ func (p *probeParser) value() (matches, ok bool) {
 		if !p.str() {
 			return false, false
 		}
-		return p.decodedEquals(start, p.kind), true
+		return p.decodedEquals(start, probeType), true
 	case '{', '[':
 		return false, p.container()
 	}

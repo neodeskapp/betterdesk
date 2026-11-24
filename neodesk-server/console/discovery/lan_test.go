@@ -81,10 +81,6 @@ func TestLANTypesAreNeoDesks(t *testing.T) {
 	if IsProbe([]byte(`{"type":"betterdesk-discover","version":1}`)) {
 		t.Error("the old console's probe gets an answer")
 	}
-	lan := NewLAN(Settings{})
-	if lan.probeKind != "neodesk-discover" || lan.announceKind != "neodesk-announce" {
-		t.Errorf("responder types %q, %q", lan.probeKind, lan.announceKind)
-	}
 	settings := Settings{
 		Hostname:   func() (string, error) { return "h", nil },
 		Interfaces: func() ([]Interface, error) { return nil, nil },

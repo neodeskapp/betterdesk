@@ -189,11 +189,6 @@ const manifestDomain = "neodesk-update-manifest-v1"
 // (by UTF-16 code units), files with equal paths in their given order.
 // The file lines have the form sha256sum writes.
 func CanonicalPayload(f SignedFields) []byte {
-	return canonicalPayload(manifestDomain, f)
-}
-
-// canonicalPayload is CanonicalPayload with the first line given.
-func canonicalPayload(domain string, f SignedFields) []byte {
 	type line struct{ path, sum string }
 	files := make([]line, 0, len(f.Files))
 	for _, file := range f.Files {
@@ -204,7 +199,7 @@ func canonicalPayload(domain string, f SignedFields) []byte {
 	}
 	sort.SliceStable(files, func(i, j int) bool { return lessUTF16(files[i].path, files[j].path) })
 	var b strings.Builder
-	b.WriteString(domain + "\n")
+	b.WriteString(manifestDomain + "\n")
 	b.WriteString("owner=" + f.Owner + "\n")
 	b.WriteString("repo=" + f.Repo + "\n")
 	b.WriteString("branch=" + f.Branch + "\n")

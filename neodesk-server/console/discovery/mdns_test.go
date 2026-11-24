@@ -646,7 +646,7 @@ func TestMDNSConflictAgainstNode(t *testing.T) {
 	m := NewMDNS(settings)
 	m.logf = func(string, ...any) {}
 	svc, _ := m.prepare()
-	svc.fqdn = "NeoDesk Console (2)." + neodeskNames.kind + tld
+	svc.fqdn = "NeoDesk Console (2)." + serviceType + tld
 	ifaces, _ := settings.interfaces()
 	want := [][]byte{encodeQuery(svc.fqdn), encodeQuery(svc.fqdn), encodeQuery(svc.fqdn), encodeResponse(svc.records(ifaces), nil)}
 	if len(sent) < 1+len(want) {
@@ -674,7 +674,7 @@ func TestMDNSConflictAgainstNode(t *testing.T) {
 	h.sock.mu.Lock()
 	last := h.sock.sent[len(h.sock.sent)-2].bytes
 	h.sock.mu.Unlock()
-	svc.fqdn = "NeoDesk Console (3)." + neodeskNames.kind + tld
+	svc.fqdn = "NeoDesk Console (3)." + serviceType + tld
 	if string(last) != string(encodeResponse(svc.records(ifaces), nil)) {
 		t.Errorf("after two conflicts: announced %x", last)
 	}
@@ -836,7 +836,7 @@ func TestMDNSAnswersWhileRunning(t *testing.T) {
 	}
 	// 3 queries and the first announcement are out; a question about the
 	// service type gets one answer
-	h.sock.packets <- encodeQuery(neodeskNames.kind + tld)
+	h.sock.packets <- encodeQuery(serviceType + tld)
 	<-h.sock.enough
 	h.clock.ticks <- time.Time{}
 	h.stop(t, false)
@@ -850,7 +850,7 @@ func TestMDNSAnswersWhileRunning(t *testing.T) {
 	svc, _ := NewMDNS(settings).prepare()
 	ifaces, _ := settings.interfaces()
 	answer.register(svc.records(ifaces))
-	if want := answer.respond(encodeQuery(neodeskNames.kind + tld)); len(want) != 1 || string(h.sock.sent[4].bytes) != string(want[0]) {
+	if want := answer.respond(encodeQuery(serviceType + tld)); len(want) != 1 || string(h.sock.sent[4].bytes) != string(want[0]) {
 		t.Errorf("answer %x, want %x", h.sock.sent[4].bytes, want)
 	}
 	// The membership goroutine may still be at its tick when Run ends;

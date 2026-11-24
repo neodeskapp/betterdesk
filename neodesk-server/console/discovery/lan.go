@@ -178,13 +178,7 @@ func addresses(ifaces []Interface) []string {
 // loopback, the discovery port and the console's address. Hostname,
 // interfaces and key are read anew for each answer. Without an address
 // to announce it is ErrNoAddress.
-func (s Settings) Announcement() ([]byte, error) { return s.announcement(announceType) }
-
-// announceType is the "type" of the announcement.
-const announceType = "neodesk-announce"
-
-// announcement is the announcement with the "type" kind.
-func (s Settings) announcement(kind string) ([]byte, error) {
+func (s Settings) Announcement() ([]byte, error) {
 	publicKey := ""
 	if raw, err := os.ReadFile(s.PubKeyPath); err == nil {
 		publicKey = jsTrim(decodeUTF8(raw))
@@ -202,9 +196,7 @@ func (s Settings) announcement(kind string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	out := []byte(`{"type":`)
-	out = appendJSONString(out, kind)
-	out = append(out, `,"version":`+strconv.Itoa(protocolVersion)+`,"server":{"name":`...)
+	out := []byte(`{"type":"neodesk-announce","version":` + strconv.Itoa(protocolVersion) + `,"server":{"name":`)
 	out = appendJSONString(out, decodeUTF8([]byte(name)))
 	out = append(out, `,"version":`...)
 	out = appendJSONString(out, s.Version)
@@ -251,10 +243,6 @@ type LAN struct {
 	listen   func(ctx context.Context, address string) (net.PacketConn, error)
 	now      func() time.Time
 
-	// probeKind and announceKind are the types of the probes it answers
-	// and of its answer
-	probeKind, announceKind string
-
 	// second is the second the counts in answered belong to
 	second   time.Time
 	answered map[string]int
@@ -273,10 +261,8 @@ func NewLAN(settings Settings) *LAN {
 			lc := net.ListenConfig{Control: reuseAddress}
 			return lc.ListenPacket(ctx, "udp4", address)
 		},
-		now:          time.Now,
-		answered:     map[string]int{},
-		probeKind:    probeType,
-		announceKind: announceType,
+		now:      time.Now,
+		answered: map[string]int{},
 	}
 }
 
@@ -328,14 +314,14 @@ func (l *LAN) Run(ctx context.Context) {
 // stranger wrote into a probe. Anything that goes wrong on the way is
 // dropped silently, as Node did, except a failed send.
 func (l *LAN) answer(conn net.PacketConn, msg []byte, from net.Addr) {
-	if !isProbeOf(msg, l.probeKind) {
+	if !IsProbe(msg) {
 		return
 	}
 	udp, ok := from.(*net.UDPAddr)
 	if !ok || !l.local(udp.IP) || !l.allow(udp.IP) {
 		return
 	}
-	reply, err := l.settings.announcement(l.announceKind)
+	reply, err := l.settings.Announcement()
 	if err != nil {
 		return
 	}

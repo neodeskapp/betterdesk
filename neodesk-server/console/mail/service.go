@@ -110,11 +110,6 @@ type Options struct {
 	// Logger takes what the service logs. Nil logs through the logging
 	// package under "Email".
 	Logger Logger
-	// Product is the product's name in the mails the service writes: the
-	// subject and heading of an alert, the link of a help request and, in
-	// lower case, the sender product@localhost when the configuration
-	// names none. Empty means NeoDesk.
-	Product string
 }
 
 // ParseFlag reads a true-or-false setting as the console's config did:
@@ -125,20 +120,6 @@ func ParseFlag(value, fallback string) bool {
 		value = fallback
 	}
 	return strings.EqualFold(value, "true")
-}
-
-// product is Options.Product, NeoDesk when it is empty.
-func (s *Service) product() string {
-	if s.opts.Product == "" {
-		return "NeoDesk"
-	}
-	return s.opts.Product
-}
-
-// defaultFrom is the sender when the configuration names none:
-// neodesk@localhost.
-func (s *Service) defaultFrom() string {
-	return strings.ToLower(s.product()) + "@localhost"
 }
 
 // Service is the mail service of one console. It is safe for concurrent
