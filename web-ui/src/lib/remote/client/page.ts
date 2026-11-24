@@ -39,8 +39,6 @@ export interface PageGlobals {
 	DeviceCapabilities?: { isTouch(): boolean; isPhone(): boolean };
 	/** A shared clipboard of several viewers (none in this console) */
 	rdClipboardHub?: { setFromRemote(entry: unknown, deviceId: string): void };
-	/** A zstd decoder for browsers whose DecompressionStream has no zstd (none in this console) */
-	_zstdDecoder?: { decode(bytes: Uint8Array, maxBytes: number): Uint8Array };
 	webkitAudioContext?: typeof AudioContext;
 	/** The file transfer sheet; file-modal.ts creates it when it loads (null when that failed) */
 	__fileTransferModal?: FileTransferModal | null;

@@ -2,7 +2,7 @@
  * NeoDesk Web Remote Client - zstd compression helpers
  * Shared by file transfer and clipboard sync (RustDesk wire format).
  */
-import { page } from './page.ts';
+import { ZstdTooLarge, zstdDecompress } from './zstd.ts';
 
 /** What normalizeBytes turns into bytes (anything else is empty) */
 export type RDBytesLike = Uint8Array | ArrayBuffer | number[] | string | null | undefined;
@@ -105,18 +105,16 @@ export const RDCompress = {
 			if (stream) return RDCompress._readCapped(stream, maxBytes);
 		}
 
-		const decoder = typeof window !== 'undefined' ? page()._zstdDecoder : undefined;
-		if (decoder && typeof decoder.decode === 'function') {
-			try {
-				const max = Math.min(Math.max(bytes.length * 30, 1024 * 1024), maxBytes);
-				return decoder.decode(bytes, max);
-			} catch {
-				// Fall through to one controlled error below. Returning the
-				// compressed bytes would silently corrupt clipboard/file data.
-			}
+		// No browser has a zstd stream yet: the viewer's own decoder (zstd.ts)
+		try {
+			return zstdDecompress(bytes, maxBytes);
+		} catch (err) {
+			if (err instanceof ZstdTooLarge) throw err;
+			// One controlled error: returning the compressed bytes would corrupt clipboard and file data
+			throw new Error('Zstandard data could not be read: ' + String(errorMessage(err) ?? err), {
+				cause: err
+			});
 		}
-
-		throw new Error('Zstandard decompression is unavailable in this browser');
 	},
 
 	/**
