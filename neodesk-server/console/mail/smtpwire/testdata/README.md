@@ -79,7 +79,8 @@ Made by calling `sendEmail`, `sendAlertEmail`, `sendHelpRequestEmail` and
 adapter was replaced by a stub whose `getSetting('smtp_config')` returned
 the session's setting; everything else was the real code, with the
 environment in `env` (no `SMTP_*`, `PANEL_PUBLIC_URL` or `PUBLIC_URL`
-variables).
+variables). The service ran from a copy of the old console in which the old
+project's names were replaced by NeoDesk's, so the mails name NeoDesk.
 
 Top level: `nodemailer` (version), `env`, `panelBaseUrl` (what
 `getPanelBaseUrl()` returned), `sessions`. Each session:
