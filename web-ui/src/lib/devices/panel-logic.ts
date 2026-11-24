@@ -778,6 +778,9 @@ export interface UsageSample {
 	cpu: number | null;
 	memory: number | null;
 	disk: number | null;
+	/** Bytes per second received and sent; only NeoDesk clients send them */
+	netRx: number | null;
+	netTx: number | null;
 }
 
 export function usageSamples(history: unknown): UsageSample[] {
@@ -785,11 +788,22 @@ export function usageSamples(history: unknown): UsageSample[] {
 		.map((x) => {
 			const s = obj(x);
 			const at = parseDate(s.time);
-			return at ? { t: at.getTime(), cpu: num(s.cpu), memory: num(s.memory), disk: num(s.disk) } : null;
+			return at
+				? {
+						t: at.getTime(),
+						cpu: num(s.cpu),
+						memory: num(s.memory),
+						disk: num(s.disk),
+						netRx: num(s.net_rx),
+						netTx: num(s.net_tx)
+					}
+				: null;
 		})
 		.filter((s): s is UsageSample => s !== null)
 		.sort((a, b) => a.t - b.t);
 }
+
+type Range = [number, number] | null;
 
 export interface UsageChart {
 	/** Sample times; null where a gap breaks the lines */
@@ -797,14 +811,20 @@ export interface UsageChart {
 	cpu: (number | null)[];
 	memory: (number | null)[];
 	disk: (number | null)[];
-	range: { cpu: [number, number] | null; memory: [number, number] | null; disk: [number, number] | null };
+	netRx: (number | null)[];
+	netTx: (number | null)[];
+	range: { cpu: Range; memory: Range; disk: Range; netRx: Range; netTx: Range };
+	/** Some sample has a network rate: the network chart shows */
+	hasNetwork: boolean;
 	crossesDay: boolean;
 }
 
-function range(values: (number | null)[]): [number, number] | null {
+function range(values: (number | null)[]): Range {
 	const v = values.filter((x): x is number => x !== null);
 	return v.length ? [Math.min(...v), Math.max(...v)] : null;
 }
+
+const SERIES = ['cpu', 'memory', 'disk', 'netRx', 'netTx'] as const;
 
 /** A sample much later than the usual interval starts a new line: one empty position breaks it */
 export function usageChart(samples: readonly UsageSample[]): UsageChart {
@@ -816,22 +836,28 @@ export function usageChart(samples: readonly UsageSample[]): UsageChart {
 		cpu: [],
 		memory: [],
 		disk: [],
-		range: { cpu: null, memory: null, disk: null },
+		netRx: [],
+		netTx: [],
+		range: { cpu: null, memory: null, disk: null, netRx: null, netTx: null },
+		hasNetwork: false,
 		crossesDay: false
 	};
 	samples.forEach((s, i) => {
 		if (i > 0 && usual > 0 && (diffs[i - 1] ?? 0) > usual * 3) {
 			out.times.push(null);
-			out.cpu.push(null);
-			out.memory.push(null);
-			out.disk.push(null);
+			for (const k of SERIES) out[k].push(null);
 		}
 		out.times.push(s.t);
-		out.cpu.push(s.cpu);
-		out.memory.push(s.memory);
-		out.disk.push(s.disk);
+		for (const k of SERIES) out[k].push(s[k]);
 	});
-	out.range = { cpu: range(out.cpu), memory: range(out.memory), disk: range(out.disk) };
+	out.range = {
+		cpu: range(out.cpu),
+		memory: range(out.memory),
+		disk: range(out.disk),
+		netRx: range(out.netRx),
+		netTx: range(out.netTx)
+	};
+	out.hasNetwork = out.range.netRx !== null || out.range.netTx !== null;
 	const first = samples[0];
 	const last = samples.at(-1);
 	out.crossesDay = !!first && !!last && new Date(first.t).toDateString() !== new Date(last.t).toDateString();
@@ -844,30 +870,88 @@ export interface Load {
 	cpu: number | null;
 	memory: number | null;
 	disk: number | null;
+	/** Bytes per second received and sent, when the client sends rates */
+	netRx: number | null;
+	netTx: number | null;
+	/**
+	 * The client sent a CPU value without the time it covers: clients up to
+	 * 1.5.0-rc.7 read a single refresh (100 % on Windows, 0 % on Linux
+	 * whatever the load), so there is no CPU value to show
+	 */
+	cpuUnmeasured: boolean;
 	updatedAt: string;
 }
 
-/** The latest heartbeat values, or the metrics snapshot; null when there are none */
+/** The time of a value, 0 when there is none */
+const timeOf = (v: string) => parseDate(v)?.getTime() ?? 0;
+
+/** The telemetry snapshot's values; null without any */
+function snapshotLoad(d: PanelDevice): Load | null {
+	const snap = snapshot(d, 'metrics');
+	if (!snap || (snap.status && snap.status !== 'ok') || !Object.keys(snap.data).length) return null;
+	const data = snap.data;
+	const measured = (num(data.cpu_window_seconds) ?? 0) > 0;
+	const network = obj(data.network);
+	return {
+		cpu: measured ? num(data.cpu_percent) : null,
+		memory: num(data.memory_percent),
+		disk: num(data.disk_percent),
+		netRx: num(network.received_per_second),
+		netTx: num(network.transmitted_per_second),
+		cpuUnmeasured: !measured && num(data.cpu_percent) !== null,
+		updatedAt: snap.collectedAt
+	};
+}
+
+/** The newer of the latest heartbeat to the console and the telemetry snapshot; null when there is neither */
 export function currentLoad(d: PanelDevice): Load | null {
 	const m = obj(d.metrics);
-	if (d.metrics && Object.keys(m).length) {
-		return {
-			cpu: num(m.cpu_usage),
-			memory: num(m.memory_usage),
-			disk: num(m.disk_usage),
-			updatedAt: str(m.updated_at)
-		};
-	}
+	const heartbeat: Load | null =
+		d.metrics && Object.keys(m).length
+			? {
+					cpu: num(m.cpu_usage),
+					memory: num(m.memory_usage),
+					disk: num(m.disk_usage),
+					netRx: null,
+					netTx: null,
+					cpuUnmeasured: false,
+					updatedAt: str(m.updated_at)
+				}
+			: null;
+	const telemetry = snapshotLoad(d);
+	if (heartbeat && telemetry)
+		return timeOf(telemetry.updatedAt) > timeOf(heartbeat.updatedAt) ? telemetry : heartbeat;
+	return heartbeat ?? telemetry;
+}
+
+/**
+ * Where the device's usage comes from: 'reports' (values or samples are
+ * there), 'waiting' (a NeoDesk client that has not sent any yet), 'off'
+ * (the client says it can't or may not collect them) or 'none' (a client
+ * without telemetry, such as stock RustDesk).
+ */
+export type UsageSource = 'reports' | 'waiting' | 'off' | 'none';
+
+/** What the page says where usage would show, by its source */
+export const USAGE_SOURCE_TEXT: Record<UsageSource, string> = {
+	reports: 'device_detail.usage_empty',
+	waiting: 'device_detail.usage_empty',
+	off: 'device_detail.usage_off',
+	none: 'device_detail.usage_none'
+};
+
+export function usageSource(d: PanelDevice): UsageSource {
 	const snap = snapshot(d, 'metrics');
-	if (snap && Object.keys(snap.data).length) {
-		return {
-			cpu: num(snap.data.cpu_percent),
-			memory: num(snap.data.memory_percent),
-			disk: num(snap.data.disk_percent),
-			updatedAt: snap.collectedAt
-		};
-	}
-	return null;
+	if (snap?.status && snap.status !== 'ok') return 'off';
+	if (currentLoad(d) || usageSamples(d.metrics_history).length) return 'reports';
+	const identity = identityOf(d);
+	const caps = Array.isArray(identity.capabilities) ? identity.capabilities : [];
+	const neodesk =
+		/neodesk/i.test(str(d.client_type)) ||
+		/neodesk/i.test(str(d.device_type)) ||
+		/^neodesk/i.test(str(identity.product_sku)) ||
+		caps.includes('telemetry.metrics');
+	return neodesk ? 'waiting' : 'none';
 }
 
 /* ── Connection mode ── */

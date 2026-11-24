@@ -6,7 +6,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import type { Folder } from '#lib/api/devices.ts';
-	import { formatDate } from '#lib/i18n/format.ts';
+	import { formatBytes, formatDate } from '#lib/i18n/format.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import BooleanStatus from '#lib/ui/BooleanStatus.svelte';
@@ -23,7 +23,15 @@
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import Version from '#lib/ui/Version.svelte';
 	import { approveNewKey } from '../actions.svelte.ts';
-	import { banLine, connectionModeOf, currentLoad, identityOf, type PanelDevice } from '../panel-logic.ts';
+	import {
+		banLine,
+		connectionModeOf,
+		currentLoad,
+		identityOf,
+		USAGE_SOURCE_TEXT,
+		usageSource,
+		type PanelDevice
+	} from '../panel-logic.ts';
 	import ConnectionMode from './ConnectionMode.svelte';
 	import PanelSection from './PanelSection.svelte';
 
@@ -73,12 +81,25 @@
 		return k ? t(k) : text(v);
 	};
 
+	const source = $derived(usageSource(device));
+	const rate = (v: number | null) => (v === null ? '–' : formatBytes(v) || '0');
 	const loadFacts = $derived<Fact[]>(
 		load
 			? [
 					{ label: t('device_detail.metric_cpu'), value: cpuMeter },
 					{ label: t('device_detail.metric_memory'), value: memoryMeter },
-					{ label: t('device_detail.metric_disk'), value: diskMeter }
+					{ label: t('device_detail.metric_disk'), value: diskMeter },
+					...(load.netRx !== null || load.netTx !== null
+						? [
+								{
+									label: t('device_detail.metric_network'),
+									value: t('device_detail.network_rates', {
+										received: rate(load.netRx),
+										sent: rate(load.netTx)
+									})
+								}
+							]
+						: [])
 				]
 			: []
 	);
@@ -203,9 +224,16 @@
 {#if load}
 	<PanelSection title={t('device_detail.section_live_metrics')}>
 		<Facts items={loadFacts} />
+		{#if load.cpuUnmeasured}
+			<p class="dp-muted">{t('device_detail.cpu_unmeasured')}</p>
+		{/if}
 		{#if load.updatedAt}
 			<p class="dp-muted">{t('device_detail.metrics_updated')} <Time value={load.updatedAt} /></p>
 		{/if}
+	</PanelSection>
+{:else if !device.remote_target && !device.soft_deleted && source !== 'reports'}
+	<PanelSection title={t('device_detail.section_live_metrics')}>
+		<p class="dp-muted" data-usage-source={source}>{t(USAGE_SOURCE_TEXT[source])}</p>
 	</PanelSection>
 {/if}
 

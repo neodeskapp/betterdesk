@@ -6,7 +6,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import type { AvailabilityEvent, ConnectionSession } from '#lib/api/device-agent.ts';
-	import { formatDate, formatDuration, formatNumber, formatPercent } from '#lib/i18n/format.ts';
+	import { formatBytes, formatDate, formatDuration, formatNumber, formatPercent } from '#lib/i18n/format.ts';
 	import { i18n, t } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Chart from '#lib/ui/Chart.svelte';
@@ -21,13 +21,16 @@
 	import type { PanelData } from '../panel-data.svelte.ts';
 	import {
 		currentAvailState,
+		currentLoad,
 		dayDate,
 		effectiveMode,
 		localDay,
 		panelStatus,
 		shiftDay,
+		USAGE_SOURCE_TEXT,
 		usageChart,
 		usageSamples,
+		usageSource,
 		type PanelDevice
 	} from '../panel-logic.ts';
 	import AvailabilityStrip from './AvailabilityStrip.svelte';
@@ -99,6 +102,20 @@
 			memory_max: pctText(r.memory?.[1]),
 			disk_min: pctText(r.disk?.[0]),
 			disk_max: pctText(r.disk?.[1])
+		});
+	});
+	const source = $derived(usageSource(device));
+	/** The client sends CPU values that measure nothing (up to 1.5.0-rc.7) */
+	const cpuUnmeasured = $derived(currentLoad(device)?.cpuUnmeasured ?? false);
+	const perSecond = (v: number) => `${formatBytes(v)}/s`;
+	const rateText = (v: number | null | undefined) => (v === null || v === undefined ? '–' : perSecond(v));
+	const networkSummary = $derived.by(() => {
+		const r = chart.range;
+		return t('device_detail.usage_network_summary', {
+			rx_min: rateText(r.netRx?.[0]),
+			rx_max: rateText(r.netRx?.[1]),
+			tx_min: rateText(r.netTx?.[0]),
+			tx_max: rateText(r.netTx?.[1])
 		});
 	});
 	const oneSample = $derived.by(() => {
@@ -248,7 +265,7 @@
 
 <PanelSection title={t('device_detail.section_usage_history')} note={t('device_detail.usage_note')}>
 	{#if !samples.length}
-		<p class="dp-muted">{t('device_detail.usage_empty')}</p>
+		<p class="dp-muted" data-usage-source={source}>{t(USAGE_SOURCE_TEXT[source])}</p>
 	{:else if samples.length < 2}
 		<p>{oneSample}</p>
 	{:else}
@@ -266,6 +283,23 @@
 			format="percent"
 			xHeading={t('device_detail.availability_col_time')}
 		/>
+		{#if chart.hasNetwork}
+			<Chart
+				kind="line"
+				label={t('device_detail.usage_network_label')}
+				summary={networkSummary}
+				labels={chartLabels}
+				series={[
+					{ name: t('device_detail.metric_received'), values: chart.netRx },
+					{ name: t('device_detail.metric_sent'), values: chart.netTx }
+				]}
+				format={perSecond}
+				xHeading={t('device_detail.availability_col_time')}
+			/>
+		{/if}
+	{/if}
+	{#if cpuUnmeasured}
+		<p class="dp-muted">{t('device_detail.cpu_unmeasured')}</p>
 	{/if}
 </PanelSection>
 

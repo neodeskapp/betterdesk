@@ -308,7 +308,9 @@ describe('device data', () => {
 
 	test('usage: a long pause breaks the lines', () => {
 		const t0 = Date.UTC(2026, 10, 9, 0);
-		const c = usageChart([0, 1, 2, 30].map((m) => ({ t: t0 + m * 60_000, cpu: 1, memory: 2, disk: 3 })));
+		const c = usageChart(
+			[0, 1, 2, 30].map((m) => ({ t: t0 + m * 60_000, cpu: 1, memory: 2, disk: 3, netRx: null, netTx: null }))
+		);
 		expect(c.times.filter((x) => x === null)).toHaveLength(1);
 		expect(c.cpu).toHaveLength(5);
 	});
