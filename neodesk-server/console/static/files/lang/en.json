@@ -2750,7 +2750,8 @@
         "feature_off": "This is turned off for your account on this server.",
         "certificate_title": "Untrusted certificate",
         "certificate_confirm": "The certificate of {name} is not trusted. Trust the certificate with the fingerprint {fingerprint}?",
-        "certificate_trust": "Trust certificate"
+        "certificate_trust": "Trust certificate",
+        "org_password_refused": "The device password saved for your organisation was not accepted. Enter the password."
     },
     "remote_dashboard": {
         "title": "Remote Desktop Client",

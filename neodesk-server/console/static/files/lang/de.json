@@ -2724,7 +2724,8 @@
     "feature_off": "Das ist für Ihr Konto auf diesem Server ausgeschaltet.",
     "certificate_title": "Nicht vertrauenswürdiges Zertifikat",
     "certificate_confirm": "Das Zertifikat von {name} ist nicht vertrauenswürdig. Möchten Sie dem Zertifikat mit dem Fingerabdruck {fingerprint} vertrauen?",
-    "certificate_trust": "Zertifikat vertrauen"
+    "certificate_trust": "Zertifikat vertrauen",
+    "org_password_refused": "Das für Ihre Organisation gespeicherte Gerätepasswort wurde nicht angenommen. Geben Sie das Passwort ein."
   },
   "branding": {
     "identity_title": "Markenidentität",

@@ -2730,7 +2730,8 @@
     "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Chứng chỉ không đáng tin cậy",
     "certificate_confirm": "Chứng chỉ của {name} không đáng tin cậy. Tin cậy chứng chỉ có dấu vân tay {fingerprint}?",
-    "certificate_trust": "Tin cậy chứng chỉ"
+    "certificate_trust": "Tin cậy chứng chỉ",
+    "org_password_refused": "The device password saved for your organisation was not accepted. Enter the password."
   },
   "branding": {
     "identity_title": "Nhận diện thương hiệu",

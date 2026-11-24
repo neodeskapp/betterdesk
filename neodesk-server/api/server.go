@@ -689,6 +689,7 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("DELETE /api/pairing/codes/{id}", s.requirePermission(auth.PermEnrollmentApprove, s.handleDeletePairingCode))
 	// Join and support codes, for the console in this process only.
 	s.onboardRoutes(mux)
+	s.connectAnswerRoutes(mux)
 
 	// CDAP device management (requires CDAP gateway to be enabled)
 	mux.HandleFunc("GET /api/cdap/status", s.requirePermission(auth.PermCDAPView, s.handleCDAPStatus))

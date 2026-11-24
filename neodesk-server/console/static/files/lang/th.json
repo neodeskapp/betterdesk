@@ -2730,7 +2730,8 @@
     "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "ใบรับรองที่ไม่น่าเชื่อถือ",
     "certificate_confirm": "ใบรับรองของ {name} ไม่น่าเชื่อถือ เชื่อถือใบรับรองที่มีลายนิ้วมือ {fingerprint} หรือไม่",
-    "certificate_trust": "เชื่อถือใบรับรอง"
+    "certificate_trust": "เชื่อถือใบรับรอง",
+    "org_password_refused": "The device password saved for your organisation was not accepted. Enter the password."
   },
   "branding": {
     "identity_title": "เอกลักษณ์ของแบรนด์",

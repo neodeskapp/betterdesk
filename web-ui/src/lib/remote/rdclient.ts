@@ -17,6 +17,7 @@ import { setCsrfToken } from '#lib/api/client.ts';
 import { t } from '#lib/i18n/i18n.svelte.ts';
 import { installCapabilities } from './capabilities.ts';
 import type { ViewerCapabilities } from './access.ts';
+import type { LoginAnswer } from './client/crypto.ts';
 import type { DisplayZoom } from './client/display-layout.ts';
 import type { BackgroundMode, RDDisplayTraffic } from './client/display-streams.ts';
 import type { RDDisplay } from './client/displays.ts';
@@ -103,6 +104,8 @@ export interface RemoteClient {
 	submit2FA?(code: string): void;
 	sendChat?(text: string): void;
 	sendCtrlAltDel?(): void;
+	/** RDClient: sign in with the server's answer to the device's question; the page holds no password (L454) */
+	authenticateWith?(answer: LoginAnswer): Promise<boolean>;
 	sendLockScreen?(): void;
 	sendRestartRemoteDevice?(): void;
 	sendRefreshScreen?(): void;

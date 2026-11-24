@@ -2724,7 +2724,8 @@
     "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Certificato non attendibile",
     "certificate_confirm": "Il certificato di {name} non è attendibile. Considerare attendibile il certificato con l'impronta {fingerprint}?",
-    "certificate_trust": "Considera attendibile"
+    "certificate_trust": "Considera attendibile",
+    "org_password_refused": "The device password saved for your organisation was not accepted. Enter the password."
   },
   "branding": {
     "identity_title": "Identità del marchio",

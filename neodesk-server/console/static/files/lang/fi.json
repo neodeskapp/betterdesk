@@ -2730,7 +2730,8 @@
     "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Ei-luotettu varmenne",
     "certificate_confirm": "Laitteen {name} varmenteeseen ei luoteta. Luotetaanko varmenteeseen, jonka sormenjälki on {fingerprint}?",
-    "certificate_trust": "Luota varmenteeseen"
+    "certificate_trust": "Luota varmenteeseen",
+    "org_password_refused": "The device password saved for your organisation was not accepted. Enter the password."
   },
   "branding": {
     "identity_title": "Brändin identiteetti",

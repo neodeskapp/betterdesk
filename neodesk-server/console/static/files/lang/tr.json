@@ -2730,7 +2730,8 @@
     "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Güvenilmeyen sertifika",
     "certificate_confirm": "{name} sertifikasına güvenilmiyor. Parmak izi {fingerprint} olan sertifikaya güvenilsin mi?",
-    "certificate_trust": "Sertifikaya güven"
+    "certificate_trust": "Sertifikaya güven",
+    "org_password_refused": "The device password saved for your organisation was not accepted. Enter the password."
   },
   "branding": {
     "identity_title": "Marka Kimliği",

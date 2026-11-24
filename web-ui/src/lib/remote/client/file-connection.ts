@@ -4,7 +4,7 @@
  */
 import { RDConnection } from './connection.ts';
 import { RDConnectionParams } from './connection-params.ts';
-import { RDCrypto } from './crypto.ts';
+import { RDCrypto, type LoginAnswer } from './crypto.ts';
 import { RDProtocol } from './protocol.ts';
 import { RDPunchHoleResponse } from './punchhole-response.ts';
 import type { LoginResponse, Message, MessageInit, SignedId } from './generated/protos.ts';
@@ -62,7 +62,7 @@ export class RDFileConnection {
 	_peerSignedPk: Uint8Array | null;
 	_rendezvousTimeoutMs: number;
 	_signalRelayTimeoutMs: number;
-	_pendingPassword?: string;
+	_pendingPassword?: string | LoginAnswer;
 
 	constructor(opts: RDFileConnectionOptions = { deviceId: '' }) {
 		if (!opts.deviceId) throw new Error('deviceId required');
@@ -152,7 +152,7 @@ export class RDFileConnection {
 	/**
 	 * Open FILE_TRANSFER relay and authenticate (reuse desktop session password).
 	 */
-	connect(password?: string): Promise<void> {
+	connect(password?: string | LoginAnswer): Promise<void> {
 		if (this._state === 'ready') return Promise.resolve();
 		if (this._connectPromise) return this._connectPromise;
 
@@ -162,7 +162,7 @@ export class RDFileConnection {
 		return this._connectPromise;
 	}
 
-	async _doConnect(password: string): Promise<void> {
+	async _doConnect(password: string | LoginAnswer): Promise<void> {
 		try {
 			if (this.conn) {
 				try {
@@ -249,7 +249,7 @@ export class RDFileConnection {
 		}
 	}
 
-	_waitForLogin(password: string): Promise<void> {
+	_waitForLogin(password: string | LoginAnswer): Promise<void> {
 		return new Promise((resolve, reject) => {
 			const done = () => {
 				this._stopLoginTimeout();
@@ -284,11 +284,18 @@ export class RDFileConnection {
 		this._loginTimer = null;
 	}
 
-	async _authenticate(password: string): Promise<void> {
+	async _authenticate(password: string | LoginAnswer): Promise<void> {
 		// The password hash never goes out unencrypted
 		if (!this._keyExchangeDone) throw new Error('Handshake failed: the connection is not encrypted');
 		this._setState('authenticating');
-		const hash = await this.crypto.hashPassword(password, this._loginSalt || '', this._loginChallenge || '');
+		const salt = this._loginSalt || '';
+		const challenge = this._loginChallenge || '';
+		// A session that signed in with an answer asks it again for this question
+		const hash =
+			typeof password === 'function'
+				? await password(salt, challenge)
+				: await this.crypto.hashPassword(password, salt, challenge);
+		if (!hash) throw new Error('The device password could not be answered');
 		const loginReq = this.proto.buildFileTransferLoginRequest(hash, {
 			username: this.deviceId,
 			myId: 'neodesk-web-ft-' + Date.now().toString(36),

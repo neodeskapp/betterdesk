@@ -17,7 +17,7 @@ import { RDClipboard } from './clipboard.ts';
 import { RDCliprdr } from './cliprdr.ts';
 import { RDConnection } from './connection.ts';
 import { RDConnectionParams, type RDConnectionSettings } from './connection-params.ts';
-import { RDCrypto } from './crypto.ts';
+import { RDCrypto, type LoginAnswer } from './crypto.ts';
 import type { DisplayZoom } from './display-layout.ts';
 import { RDDisplayStreams, type BackgroundMode, type RDDisplayTraffic } from './display-streams.ts';
 import { canShowDisplaysTogether, displaysOf, pointScale, type RDDisplay } from './displays.ts';
@@ -53,6 +53,8 @@ import type {
 
 /** An event listener; each event has its own arguments (see the _emit calls) */
 export type RDClientListener = (...args: never[]) => void;
+
+export type { LoginAnswer };
 
 /**
  * The start of the error of a session whose video this browser can only
@@ -224,6 +226,8 @@ export class RDClient {
 	input: RDInput;
 	_fileConnection: RDFileConnection | null;
 	_sessionPassword: string;
+	/** The answer a session signed in with instead of a password; the file transfer session asks it again */
+	_sessionAnswer: LoginAnswer | null;
 	fileTransfer: RDFileTransfer;
 	_state: RDClientState;
 	_listeners: Record<string, RDClientListener[]>;
@@ -306,6 +310,7 @@ export class RDClient {
 		});
 		this._fileConnection = null;
 		this._sessionPassword = '';
+		this._sessionAnswer = null;
 		this.fileTransfer = new RDFileTransfer({
 			proto: this.proto,
 			sendMessage: (msg) => this._sendFileTransferMessage(msg),
@@ -669,7 +674,7 @@ export class RDClient {
 		}
 		if (this._fileConnection.state === 'ready') return;
 		try {
-			await this._fileConnection.connect(this._sessionPassword || '');
+			await this._fileConnection.connect(this._sessionAnswer ?? (this._sessionPassword || ''));
 		} catch (err) {
 			this.disconnectFileConnection();
 			throw err;
@@ -710,6 +715,7 @@ export class RDClient {
 			this._setState('authenticating');
 			this._emit('log', 'Authenticating...');
 			this._sessionPassword = password != null ? String(password) : '';
+			this._sessionAnswer = null;
 
 			// Hash the password
 			const challenge = this._loginChallenge || '';
@@ -724,55 +730,84 @@ export class RDClient {
 			);
 
 			const hash = await this.crypto.hashPassword(password, salt, challenge);
-			this._debugRelay(
-				'[RDClient] Auth: hash=' +
-					Array.from(hash.slice(0, 8))
-						.map((b) => b.toString(16).padStart(2, '0'))
-						.join('') +
-					'... (' +
-					hash.length +
-					' bytes)'
-			);
-
-			// Probe which codecs this browser's VideoDecoder can actually decode so we
-			// only advertise real abilities (avoids the peer sending a codec we can't decode).
-			if (!this._codecAbilities) {
-				try {
-					this._codecAbilities = await RDVideo.getSupportedCodecs();
-				} catch {
-					this._codecAbilities = null;
-				}
-			}
-
-			// Build and send LoginRequest
-			// username must be set to target device ID (RustDesk validates: is_ip || is_domain_port || == Config::get_id())
-			const loginReq = this.proto.buildLoginRequest(hash, {
-				username: this.deviceId,
-				myId: 'neodesk-web-' + Date.now().toString(36),
-				myName: this.opts.myName || this.opts.myName || 'NeoDesk Web',
-				disableAudio: this.opts.disableAudio || false,
-				fps: this._getInitialStreamFps(),
-				imageQuality: this.opts.imageQuality || 'Best',
-				codecAbilities: this._codecAbilities,
-				preferCodec: this._preferCodec,
-				disableKeyboard: this._viewOnlyLocked
-			});
-
-			this._debugRelay(
-				'[RDClient] Auth: sending LoginRequest, crypto.enabled=' +
-					this.crypto.enabled +
-					' sendSeq=' +
-					this.crypto._sendSeq +
-					' relayWsState=' +
-					this.conn.relayWs?.readyState
-			);
-			this._sendPeerMessage(loginReq);
-			this._debugRelay('[RDClient] Auth: LoginRequest sent, sendSeq now=' + this.crypto._sendSeq);
-
-			// The response will be handled in _handleRelayMessage
+			await this._sendLogin(hash);
 		} catch (err) {
 			this._handleError(err);
 		}
+	}
+
+	/**
+	 * Sign in with an answer instead of a password (LoginAnswer): the page
+	 * never holds the password. false when the answer had nothing to give,
+	 * and nothing was sent; the device's question stays open for a password.
+	 */
+	async authenticateWith(answer: LoginAnswer): Promise<boolean> {
+		try {
+			if (!this._keyExchangeDone) {
+				throw new Error('Handshake failed: the connection is not encrypted');
+			}
+			const hash = await answer(this._loginSalt || '', this._loginChallenge || '');
+			if (!hash || hash.length !== 32 || this._state !== 'waiting_password') return false;
+			this._setState('authenticating');
+			this._emit('log', 'Authenticating...');
+			this._sessionPassword = '';
+			this._sessionAnswer = answer;
+			await this._sendLogin(hash);
+			return true;
+		} catch (err) {
+			this._handleError(err);
+			return false;
+		}
+	}
+
+	/** The LoginRequest with the password's hash, after the codec probe */
+	async _sendLogin(hash: Uint8Array): Promise<void> {
+		this._debugRelay(
+			'[RDClient] Auth: hash=' +
+				Array.from(hash.slice(0, 8))
+					.map((b) => b.toString(16).padStart(2, '0'))
+					.join('') +
+				'... (' +
+				hash.length +
+				' bytes)'
+		);
+
+		// Probe which codecs this browser's VideoDecoder can actually decode so we
+		// only advertise real abilities (avoids the peer sending a codec we can't decode).
+		if (!this._codecAbilities) {
+			try {
+				this._codecAbilities = await RDVideo.getSupportedCodecs();
+			} catch {
+				this._codecAbilities = null;
+			}
+		}
+
+		// Build and send LoginRequest
+		// username must be set to target device ID (RustDesk validates: is_ip || is_domain_port || == Config::get_id())
+		const loginReq = this.proto.buildLoginRequest(hash, {
+			username: this.deviceId,
+			myId: 'neodesk-web-' + Date.now().toString(36),
+			myName: this.opts.myName || this.opts.myName || 'NeoDesk Web',
+			disableAudio: this.opts.disableAudio || false,
+			fps: this._getInitialStreamFps(),
+			imageQuality: this.opts.imageQuality || 'Best',
+			codecAbilities: this._codecAbilities,
+			preferCodec: this._preferCodec,
+			disableKeyboard: this._viewOnlyLocked
+		});
+
+		this._debugRelay(
+			'[RDClient] Auth: sending LoginRequest, crypto.enabled=' +
+				this.crypto.enabled +
+				' sendSeq=' +
+				this.crypto._sendSeq +
+				' relayWsState=' +
+				this.conn.relayWs?.readyState
+		);
+		this._sendPeerMessage(loginReq);
+		this._debugRelay('[RDClient] Auth: LoginRequest sent, sendSeq now=' + this.crypto._sendSeq);
+
+		// The response will be handled in _handleRelayMessage
 	}
 
 	/**
@@ -1895,6 +1930,7 @@ export class RDClient {
 		this.fileTransfer.disable();
 		this.disconnectFileConnection();
 		this._sessionPassword = '';
+		this._sessionAnswer = null;
 		this.conn.close();
 		this._codecFallbackDone = false;
 		if (this._rendezvousDecoder) {

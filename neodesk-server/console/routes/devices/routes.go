@@ -99,6 +99,7 @@ func Register(d *kit.Deps) {
 	r.Put("/api/devices/{id}/access-policy", h.saveAccessPolicy, d.RequireAuth, edit)
 	r.Delete("/api/devices/{id}/access-policy", h.deleteAccessPolicy, d.RequireAuth, edit)
 	r.Get("/api/devices/{id}/connect-password", h.connectPassword, d.RequireAuth, d.RequirePermission("device.connect"))
+	r.Post("/api/devices/{id}/connect-password/answer", h.connectPasswordAnswer, d.RequireAuth, d.RequirePermission("device.connect"))
 
 	// The agent's console tools: each asks its tool's permission and client
 	// feature (agentTools), and agentRequest asks them again

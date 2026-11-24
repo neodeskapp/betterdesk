@@ -2730,7 +2730,8 @@
     "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Sertifikat tidak tepercaya",
     "certificate_confirm": "Sertifikat {name} tidak tepercaya. Percayai sertifikat dengan sidik jari {fingerprint}?",
-    "certificate_trust": "Percayai sertifikat"
+    "certificate_trust": "Percayai sertifikat",
+    "org_password_refused": "The device password saved for your organisation was not accepted. Enter the password."
   },
   "branding": {
     "identity_title": "Identitas Merek",

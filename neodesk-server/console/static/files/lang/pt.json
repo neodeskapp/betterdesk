@@ -2724,7 +2724,8 @@
     "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Certificado não confiável",
     "certificate_confirm": "O certificado de {name} não é confiável. Confiar no certificado com a impressão digital {fingerprint}?",
-    "certificate_trust": "Confiar no certificado"
+    "certificate_trust": "Confiar no certificado",
+    "org_password_refused": "The device password saved for your organisation was not accepted. Enter the password."
   },
   "branding": {
     "identity_title": "Identidade da marca",

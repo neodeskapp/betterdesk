@@ -156,16 +156,15 @@ describe('remote viewer sessions', () => {
 		expect(c.setSessionActive).toHaveBeenLastCalledWith(true);
 	});
 
-	test("the organisation's connection password wins over a remembered one and is not stored in the browser", async () => {
+	test("the organisation's device password is never read into the page (L454; its answer: viewer-signin.test.ts)", async () => {
 		remembered.clear();
 		remembered.set('900100012', 'old-pw');
 		vi.mocked(remoteApi.getConnectPassword).mockResolvedValueOnce('org-pw');
 		const { s, c } = setup();
 		c.emit('password_required');
-		await vi.waitFor(() => expect(s.password).toBe('org-pw'));
-		expect(s.remember).toBe(false);
-		c.emit('login_success');
-		await vi.waitFor(() => expect(remembered.has('900100012')).toBe(false));
+		await vi.waitFor(() => expect(s.password).toBe('old-pw'));
+		expect(remoteApi.getConnectPassword).not.toHaveBeenCalled();
+		vi.mocked(remoteApi.getConnectPassword).mockReset();
 	});
 
 	test("a quick support session's password is sent at once and never stored in the browser", async () => {

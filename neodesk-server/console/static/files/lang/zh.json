@@ -2724,7 +2724,8 @@
     "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "不受信任的证书",
     "certificate_confirm": "{name} 的证书不受信任。要信任指纹为 {fingerprint} 的证书吗？",
-    "certificate_trust": "信任证书"
+    "certificate_trust": "信任证书",
+    "org_password_refused": "The device password saved for your organisation was not accepted. Enter the password."
   },
   "branding": {
     "identity_title": "品牌标识",

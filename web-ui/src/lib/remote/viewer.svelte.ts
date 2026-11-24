@@ -18,7 +18,6 @@ import { confirm } from '#lib/ui/dialogs.svelte.ts';
 import {
 	acceptCertificate,
 	getBillingCheck,
-	getConnectPassword,
 	getPendingBillingSession,
 	submitWorkReport,
 	type BillingCheck,
@@ -28,6 +27,7 @@ import {
 import { getDevice } from '#lib/api/devices.ts';
 import { link } from '#lib/nav.ts';
 import { takeDevicePassword } from '#lib/api/onboard.ts';
+import { answerConnectPassword } from '#lib/api/connectAnswer.ts';
 import { isGuestMode, isRemoteTarget, isViewOnlyGuest, peerAllowed, transportOf } from './access.ts';
 import { isMobileViewer } from './capabilities.ts';
 import {
@@ -173,6 +173,14 @@ export class ViewerSession {
 	/** The password filled in from this browser's store, and the one last sent to the device */
 	rememberedPassword = '';
 	submittedPassword = '';
+	/**
+	 * The device password an organisation stored was tried on this
+	 * connection: the server answered the device's question, the page never
+	 * held the password (L454). Once per connection, never again after a refusal.
+	 */
+	orgAnswerTried = false;
+	/** This connection's sign-in was that answer (a refusal says so) */
+	usingOrgAnswer = false;
 	tfaCode = $state('');
 	cdapFallback = $state(false);
 	autoplayBlocked = $state(false);
@@ -559,6 +567,9 @@ export class Viewer {
 		// The device of the new session says again what it turns off
 		s.allowed = { ...ALL_ALLOWED };
 		s.viewOnlyBeforeKeyboardOff = null;
+		// A new connection: its own password question
+		s.orgAnswerTried = false;
+		s.usingOrgAnswer = false;
 		if (!s.canvas) return;
 		s.client = createClient(s.canvas, this.clientOptions(s), this.transport);
 		s.client.setBackgroundFps?.(s.prefs.backgroundFps || 1);
@@ -626,11 +637,10 @@ export class Viewer {
 			const local = secureStore()
 				.loadPeerPassword(s.deviceId)
 				.catch(() => '');
-			const org = this.data.mockRemote ? Promise.resolve('') : getConnectPassword(s.deviceId);
 			// Only a signed-in account can have a quick support session to take a password from
 			const handed =
 				this.data.mockRemote || !this.data.user ? Promise.resolve('') : takeDevicePassword(s.deviceId);
-			void Promise.all([local, org, handed]).then(([mine, theirs, support]) => {
+			void Promise.all([local, handed]).then(async ([mine, support]) => {
 				// A quick support session's password, which the person's app handed to this
 				// supporter, is sent at once and never stored in this browser
 				if (support) {
@@ -640,12 +650,11 @@ export class Viewer {
 					this.authenticate(s);
 					return;
 				}
-				// The organisation's password wins and stays out of this browser unless Remember is ticked
-				if (theirs) {
-					s.password = theirs;
-					s.remember = false;
-					s.rememberedPassword = '';
-				} else if (mine) {
+				// The device password an organisation stored comes next, once per connection:
+				// the server answers the device's question, the password never reaches this page
+				if (await this.signInWithOrgPassword(s, c)) return;
+				if (s.client !== c || s.closed) return;
+				if (mine) {
 					s.password = mine;
 					s.remember = true;
 					s.rememberedPassword = mine;
@@ -670,6 +679,14 @@ export class Viewer {
 			}
 			this.showView(s, 'password');
 			s.loginError = loginErrorText(error);
+			// The organisation's stored password was refused: say so, and ask (no second try)
+			if (s.usingOrgAnswer) {
+				s.usingOrgAnswer = false;
+				s.loginError = tf(
+					'remote.org_password_refused',
+					'The device password saved for your organisation was not accepted. Enter the password.'
+				);
+			}
 			s.password = '';
 			if (this.isActive(s)) void tick().then(() => s.focus?.password());
 		});
@@ -940,6 +957,27 @@ export class Viewer {
 		s.loginError = '';
 		s.submittedPassword = s.password;
 		void s.client?.authenticate(s.password);
+	}
+
+	/**
+	 * Signs in with the device password an organisation stored, when there
+	 * is one this account may use: the client asks the server for the answer
+	 * to the device's question (L454). Once per connection. true when the
+	 * answer went out (login_success or login_error follows).
+	 */
+	private async signInWithOrgPassword(s: ViewerSession, c: RemoteClient): Promise<boolean> {
+		if (s.orgAnswerTried || this.data.mockRemote || this.guest || this.transport !== 'rd') return false;
+		if (typeof c.authenticateWith !== 'function' || s.client !== c || s.closed) return false;
+		s.orgAnswerTried = true;
+		const sent = await c.authenticateWith((salt, challenge) =>
+			answerConnectPassword(s.deviceId, salt, challenge)
+		);
+		if (!sent || s.client !== c) return false;
+		s.usingOrgAnswer = true;
+		s.remember = false;
+		s.rememberedPassword = '';
+		s.loginError = '';
+		return true;
 	}
 
 	verifyCode(s: ViewerSession): void {

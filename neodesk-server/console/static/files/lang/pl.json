@@ -2742,7 +2742,8 @@
     "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Niezaufany certyfikat",
     "certificate_confirm": "Certyfikat urządzenia {name} nie jest zaufany. Zaufać certyfikatowi o odcisku {fingerprint}?",
-    "certificate_trust": "Zaufaj certyfikatowi"
+    "certificate_trust": "Zaufaj certyfikatowi",
+    "org_password_refused": "The device password saved for your organisation was not accepted. Enter the password."
   },
   "branding": {
     "identity_title": "Identyfikacja marki",

@@ -2724,7 +2724,8 @@
     "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Nedůvěryhodný certifikát",
     "certificate_confirm": "Certifikát zařízení {name} není důvěryhodný. Důvěřovat certifikátu s otiskem {fingerprint}?",
-    "certificate_trust": "Důvěřovat certifikátu"
+    "certificate_trust": "Důvěřovat certifikátu",
+    "org_password_refused": "The device password saved for your organisation was not accepted. Enter the password."
   },
   "branding": {
     "identity_title": "Identita značky",

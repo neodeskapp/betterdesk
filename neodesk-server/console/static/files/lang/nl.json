@@ -2724,7 +2724,8 @@
     "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Niet-vertrouwd certificaat",
     "certificate_confirm": "Het certificaat van {name} wordt niet vertrouwd. Het certificaat met vingerafdruk {fingerprint} vertrouwen?",
-    "certificate_trust": "Certificaat vertrouwen"
+    "certificate_trust": "Certificaat vertrouwen",
+    "org_password_refused": "The device password saved for your organisation was not accepted. Enter the password."
   },
   "branding": {
     "identity_title": "Merkidentiteit",

@@ -2730,7 +2730,8 @@
     "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Certificat neîncrezut",
     "certificate_confirm": "Certificatul pentru {name} nu este de încredere. Aveți încredere în certificatul cu amprenta {fingerprint}?",
-    "certificate_trust": "Acordă încredere certificatului"
+    "certificate_trust": "Acordă încredere certificatului",
+    "org_password_refused": "The device password saved for your organisation was not accepted. Enter the password."
   },
   "branding": {
     "identity_title": "Identitatea de marcă",

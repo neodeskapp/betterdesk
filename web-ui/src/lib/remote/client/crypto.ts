@@ -54,6 +54,15 @@ function errorMessage(err: unknown): unknown {
 	return typeof err === 'object' && err !== null && 'message' in err ? err.message : undefined;
 }
 
+/**
+ * The answer to a device's password question (RustDesk's LoginRequest
+ * password: sha256(sha256(password + salt) + challenge)) from salt and
+ * challenge, or null when there is none. It stands in for a password the
+ * page never holds: the server makes the answer from a password it keeps
+ * (the organisation's stored device password, BUGS L454).
+ */
+export type LoginAnswer = (salt: string, challenge: string) => Promise<Uint8Array | null>;
+
 export class RDCrypto {
 	/** Symmetric encryption key (32 bytes, XSalsa20-Poly1305) */
 	secretKey: Uint8Array | null;

@@ -2730,7 +2730,8 @@
     "feature_off": "This is turned off for your account on this server.",
     "certificate_title": "Nem megbízható tanúsítvány",
     "certificate_confirm": "A(z) {name} tanúsítványa nem megbízható. Megbízik a(z) {fingerprint} ujjlenyomatú tanúsítványban?",
-    "certificate_trust": "Tanúsítvány elfogadása"
+    "certificate_trust": "Tanúsítvány elfogadása",
+    "org_password_refused": "The device password saved for your organisation was not accepted. Enter the password."
   },
   "branding": {
     "identity_title": "Márkaidentitás",
