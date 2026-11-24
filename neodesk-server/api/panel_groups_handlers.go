@@ -71,6 +71,10 @@ type panelGroupView struct {
 	AllowedGroups []string `json:"allowed_groups"`
 }
 
+// handlePanelDeviceGroupsList lists the groups with their access lists
+// and member counts. An account that sees only part of the devices gets
+// the groups open to it and counts only the members it sees, as the
+// console lists them (L425).
 func (s *Server) handlePanelDeviceGroupsList(w http.ResponseWriter, r *http.Request) {
 	store, ok := s.requirePanelGroupStore(w)
 	if !ok {
@@ -81,8 +85,22 @@ func (s *Server) handlePanelDeviceGroupsList(w http.ResponseWriter, r *http.Requ
 		writeInternalError(w, err, "ListDeviceGroups")
 		return
 	}
+	visible, err := s.visibleDeviceIDs(r)
+	if err != nil {
+		writeInternalError(w, err, "device scope")
+		return
+	}
+	user, role := s.panelCaller(r)
+	var userGroups map[string]bool
+	if visible != nil {
+		userGroups = s.consoleUserGroupGUIDs(user.ID)
+	}
 	out := make([]panelGroupView, 0, len(groups))
 	for _, g := range groups {
+		acl, aclErr := store.GetDeviceGroupACL(g.GUID)
+		if visible != nil && aclErr == nil && acl != nil && !panelAccessAllowed(user, role, userGroups, acl.AllowedUsers, acl.AllowedUserGroups) {
+			continue
+		}
 		view := panelGroupView{
 			GUID:          g.GUID,
 			Name:          g.Name,
@@ -94,9 +112,9 @@ func (s *Server) handlePanelDeviceGroupsList(w http.ResponseWriter, r *http.Requ
 			AllowedGroups: []string{},
 		}
 		if peers, err := store.ListDeviceGroupPeerIDs(g.GUID); err == nil {
-			view.MemberCount = len(peers)
+			view.MemberCount = len(onlyVisible(peers, visible))
 		}
-		if acl, err := store.GetDeviceGroupACL(g.GUID); err == nil && acl != nil {
+		if aclErr == nil && acl != nil {
 			view.AllowedUsers = acl.AllowedUsers
 			view.AllowedGroups = acl.AllowedUserGroups
 		}
@@ -176,8 +194,12 @@ func (s *Server) handlePanelDeviceGroupsSave(w http.ResponseWriter, r *http.Requ
 	var created bool
 	if body.GUID == "" {
 		// Who may see the group's devices is the access list: setting one
-		// asks user.edit, a group without one asks device.edit only.
-		if (len(accessNames(users)) > 0 || len(accessNames(groups)) > 0) && !s.permitted(w, r, auth.PermUserEdit) {
+		// asks user.edit and a scope without a limit, a group without one
+		// asks device.edit only.
+		if (len(accessNames(users)) > 0 || len(accessNames(groups)) > 0) && !s.mayChangeAccessLists(w, r) {
+			return
+		}
+		if sourceType == "tag" && !s.mayMakeTagGroup(w, r) {
 			return
 		}
 		g := &db.DeviceGroup{
@@ -228,8 +250,12 @@ func (s *Server) handlePanelDeviceGroupsSave(w http.ResponseWriter, r *http.Requ
 			groups = storedGroups
 		}
 		// Renaming keeps device.edit; changing the access list asks
-		// user.edit, also when the form sends the lists unchanged along.
-		if (!sameAccessNames(users, storedUsers) || !sameAccessNames(groups, storedGroups)) && !s.permitted(w, r, auth.PermUserEdit) {
+		// user.edit and a scope without a limit, also when the form sends
+		// the lists unchanged along.
+		if (!sameAccessNames(users, storedUsers) || !sameAccessNames(groups, storedGroups)) && !s.mayChangeAccessLists(w, r) {
+			return
+		}
+		if sourceType == "tag" && (existing.SourceType != "tag" || existing.TagFilter != tagFilter) && !s.mayMakeTagGroup(w, r) {
 			return
 		}
 		update := &db.DeviceGroup{
@@ -311,14 +337,20 @@ func (s *Server) handlePanelDeviceGroupPeersGet(w http.ResponseWriter, r *http.R
 		return
 	}
 	guid := strings.TrimSpace(r.PathValue("guid"))
+	if !s.panelGroupOpenTo(w, r, guid) {
+		return
+	}
 	peers, err := store.ListDeviceGroupPeerIDs(guid)
 	if err != nil {
 		writeInternalError(w, err, "ListDeviceGroupPeerIDs")
 		return
 	}
-	if peers == nil {
-		peers = []string{}
+	visible, err := s.visibleDeviceIDs(r)
+	if err != nil {
+		writeInternalError(w, err, "device scope")
+		return
 	}
+	peers = onlyVisible(peers, visible)
 	writeJSON(w, http.StatusOK, map[string]any{"guid": guid, "peers": peers, "total": len(peers)})
 }
 
@@ -344,6 +376,12 @@ func (s *Server) handlePanelDeviceGroupPeersPut(w http.ResponseWriter, r *http.R
 	}
 	if !s.panelGroupOpenTo(w, r, guid) {
 		return
+	}
+	// A device joins the group's scope: only devices the caller sees go in
+	for _, id := range body.Peers {
+		if id = strings.TrimSpace(id); id != "" && !s.deviceInScope(w, r, id) {
+			return
+		}
 	}
 	if err := store.SetDeviceGroupPeers(guid, body.Peers); err != nil {
 		writeInternalError(w, err, "SetDeviceGroupPeers")
@@ -403,6 +441,9 @@ func (s *Server) handlePanelDeviceGroupACLGet(w http.ResponseWriter, r *http.Req
 		return
 	}
 	guid := strings.TrimSpace(r.PathValue("guid"))
+	if !s.panelGroupOpenTo(w, r, guid) {
+		return
+	}
 	acl, err := store.GetDeviceGroupACL(guid)
 	if err != nil {
 		writeInternalError(w, err, "GetDeviceGroupACL")
@@ -433,7 +474,7 @@ func (s *Server) handlePanelDeviceGroupACLPut(w http.ResponseWriter, r *http.Req
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "group not found"})
 		return
 	}
-	if !s.panelGroupOpenTo(w, r, guid) {
+	if !s.panelGroupOpenTo(w, r, guid) || !s.mayChangeAccessLists(w, r) {
 		return
 	}
 	if err := store.SetDeviceGroupACL(guid, &body); err != nil {
@@ -467,6 +508,17 @@ func (s *Server) handlePanelFoldersList(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		writeInternalError(w, err, "ListPanelDeviceFolderAssignments")
 		return
+	}
+	// The folder of a device the caller can't see is not its business (L425)
+	visible, err := s.visibleDeviceIDs(r)
+	if err != nil {
+		writeInternalError(w, err, "device scope")
+		return
+	}
+	for id := range assignments {
+		if visible != nil && !visible[id] {
+			delete(assignments, id)
+		}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"folders":     folders,
@@ -716,10 +768,10 @@ func (s *Server) panelFolderOpenTo(w http.ResponseWriter, r *http.Request, folde
 }
 
 // mayDropAccessList reports whether the caller may delete the device group
-// guid (a folder's is folder_<id>): a group with an access list asks
-// user.edit, because its devices open to everyone when the list goes, and
-// is refused with 403. A group without a list, or a database without
-// access lists, passes.
+// guid (a folder's is folder_<id>): a group with an access list asks what
+// changing the list asks (mayChangeAccessLists), because its devices open
+// to everyone when the list goes, and is refused with 403. A group without
+// a list, or a database without access lists, passes.
 func (s *Server) mayDropAccessList(w http.ResponseWriter, r *http.Request, guid string) bool {
 	store, err := s.panelGroupStore()
 	if err != nil {
@@ -733,7 +785,85 @@ func (s *Server) mayDropAccessList(w http.ResponseWriter, r *http.Request, guid 
 	if acl == nil || len(accessNames(acl.AllowedUsers)) == 0 && len(accessNames(acl.AllowedUserGroups)) == 0 {
 		return true
 	}
-	return s.permitted(w, r, auth.PermUserEdit)
+	return s.mayChangeAccessLists(w, r)
+}
+
+// visibleDeviceIDs returns the ids of the devices the caller sees, or nil
+// when it sees every device.
+func (s *Server) visibleDeviceIDs(r *http.Request) (map[string]bool, error) {
+	limited, err := s.scopeLimited(r)
+	if err != nil || !limited {
+		return nil, err
+	}
+	peers, err := s.db.ListPeers(false)
+	if err != nil {
+		return nil, fmt.Errorf("list devices: %w", err)
+	}
+	visible, err := s.visiblePeerSet(r, peers)
+	if err == nil && visible == nil {
+		visible = map[string]bool{}
+	}
+	return visible, err
+}
+
+// onlyVisible keeps the ids of ids that are in visible; all of them when
+// visible is nil. It never returns nil.
+func onlyVisible(ids []string, visible map[string]bool) []string {
+	out := make([]string, 0, len(ids))
+	for _, id := range ids {
+		if visible == nil || visible[id] {
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
+// scopeLimited reports whether the caller sees only part of the devices
+// (visiblePeerSet). Super admins, global and server admins and the
+// console's own identity in this process see every device.
+func (s *Server) scopeLimited(r *http.Request) (bool, error) {
+	visible, err := s.visiblePeerSet(r, nil)
+	return visible != nil, err
+}
+
+// mayChangeAccessLists reports whether the caller may change who sees a
+// device group's devices: user.edit and a scope without a limit, as the
+// console decides it (access.GroupRightsForUser). An access list opens
+// devices to accounts and closes them to others, so an account that sees
+// only part of the devices would widen its own access with it (L390,
+// L425). When the caller may not, the refusal has been written.
+func (s *Server) mayChangeAccessLists(w http.ResponseWriter, r *http.Request) bool {
+	if !s.permitted(w, r, auth.PermUserEdit) {
+		return false
+	}
+	limited, err := s.scopeLimited(r)
+	if err != nil {
+		writeInternalError(w, err, "device scope")
+		return false
+	}
+	if limited {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Only an account that sees every device changes who sees a device group"})
+		return false
+	}
+	return true
+}
+
+// mayMakeTagGroup reports whether the caller may make a tag group, or turn
+// a group into one or change its tag: a tag group takes in every device
+// with the tag, so an account that sees only part of the devices makes
+// none, as in the console (L425). When it may not, the refusal has been
+// written.
+func (s *Server) mayMakeTagGroup(w http.ResponseWriter, r *http.Request) bool {
+	limited, err := s.scopeLimited(r)
+	if err != nil {
+		writeInternalError(w, err, "device scope")
+		return false
+	}
+	if limited {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "Only an account that sees every device makes a tag group"})
+		return false
+	}
+	return true
 }
 
 // panelCaller is the caller as the device group access lists name it.
@@ -757,7 +887,9 @@ func parsePanelID(w http.ResponseWriter, raw string) (int64, bool) {
 // access lists, which decide who sees a group's or folder's devices: the
 // ACL route, the lists in a group save, and deleting a group or folder
 // that has a list); reads need device.view or user.view, so a viewer can
-// see the folders but not change them.
+// see the folders but not change them. An account that sees only part of
+// the devices also changes no access list, makes no tag group and puts
+// only devices it sees into a group (mayChangeAccessLists, mayMakeTagGroup).
 func (s *Server) registerPanelGroupRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/panel/device-groups",
 		s.requirePermission(auth.PermDeviceView, s.handlePanelDeviceGroupsList))

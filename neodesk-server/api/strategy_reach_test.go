@@ -105,3 +105,51 @@ func TestAccessRulesReachGroupsAndUsers(t *testing.T) {
 		}
 	}
 }
+
+// TestAccessRulesReachTagGroups: a tag group's members are the devices
+// with its tag, stored as members or not, so a rule assigned to a tag group
+// or naming it in its Where field applies to them like to the members of a
+// manual group (L425).
+func TestAccessRulesReachTagGroups(t *testing.T) {
+	database := testSetupDB(t)
+	t.Cleanup(func() { database.Close() })
+	for _, p := range []*db.Peer{
+		{ID: "PEERAAA1", Tags: "office, Kiosk"},
+		{ID: "PEERBBB2", Tags: "office"},
+		{ID: "PEERCCC3"},
+	} {
+		if err := database.UpsertPeer(p); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, s := range []*db.Strategy{
+		{GUID: "s-kiosk", Name: "Kiosk", Enabled: true, Permissions: `{"enable-file-transfer":"N"}`},
+		{GUID: "s-office", Name: "Office", Enabled: true, Permissions: `{"enable-audio":"N"}`, DeviceGroupGUID: "dg-office"},
+	} {
+		if err := database.CreateStrategy(s); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := database.AssignStrategy("s-kiosk", nil, nil, []string{"dg-kiosk"}); err != nil {
+		t.Fatal(err)
+	}
+	srv := New(config.DefaultConfig(), database, peer.NewMap(), nil, "test")
+	srv.SetPanelStore(&groupedPanelStore{
+		mockPanelACLStore: mockPanelACLStore{groups: []db.PanelDeviceGroup{
+			{ID: 1, GUID: "dg-kiosk", Name: "Kiosks", SourceType: "tag", TagFilter: "kiosk"},
+			{ID: 2, GUID: "dg-office", Name: "Office", SourceType: "tag", TagFilter: "Office"},
+		}},
+	})
+	for _, c := range []struct {
+		device string
+		want   map[string]string
+	}{
+		{"PEERAAA1", map[string]string{"enable-file-transfer": "N", "enable-audio": "N"}},
+		{"PEERBBB2", map[string]string{"enable-audio": "N"}},
+		{"PEERCCC3", map[string]string{}},
+	} {
+		if got := srv.clientStrategyConfigOptions(c.device); !reflect.DeepEqual(got, c.want) {
+			t.Errorf("%s gets %v, want %v", c.device, got, c.want)
+		}
+	}
+}

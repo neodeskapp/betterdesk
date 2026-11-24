@@ -1175,8 +1175,10 @@ func (s *Server) clientStrategyConfigOptions(deviceID string) map[string]string 
 }
 
 // strategyTargetsOf is what an access rule can name a device by besides
-// its own key: the device groups it is a member of, the assignment key of
-// the account signed in on it, and that account's user groups.
+// its own key: the device groups it is a member of (stored members of a
+// group, and the tag groups of its tags, as panelGroupPeerIDs counts them),
+// the assignment key of the account signed in on it, and that account's
+// user groups.
 func (s *Server) strategyTargetsOf(deviceID string) (deviceGroups map[string]bool, userKey string, userGroups map[string]bool) {
 	deviceGroups, userGroups = map[string]bool{}, map[string]bool{}
 	if s.panelStore != nil {
@@ -1187,6 +1189,15 @@ func (s *Server) strategyTargetsOf(deviceID string) (deviceGroups map[string]boo
 		}
 	}
 	p, err := s.db.GetPeer(deviceID)
+	if err == nil && p != nil && s.panelStore != nil && strings.TrimSpace(p.Tags) != "" {
+		if groups, err := s.panelStore.ListPanelDeviceGroups(); err == nil {
+			for _, g := range groups {
+				if filter := strings.TrimSpace(g.TagFilter); g.SourceType == "tag" && filter != "" && peerHasTag(p, filter) {
+					deviceGroups[g.GUID] = true
+				}
+			}
+		}
+	}
 	if err != nil || p == nil || strings.TrimSpace(p.User) == "" {
 		return deviceGroups, "", userGroups
 	}
