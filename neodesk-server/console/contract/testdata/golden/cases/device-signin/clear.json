@@ -139,6 +139,7 @@
      "available": true,
      "cleared": true,
      "form": "password",
+     "sealed_signin": false,
      "set": false,
      "updated_at": "",
      "updated_by": "",
