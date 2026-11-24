@@ -156,7 +156,7 @@ func (s *Service) checkSystemd(ctx context.Context, result *Result) error {
 	if text, changed := EnsureGoServerSignalRelayPorts(clean); changed {
 		clean = text
 		result.NeedsRestart = true
-		result.Changes = append(result.Changes, "set SIGNAL_PORT=21116 / RELAY_PORT=21117 / GO_API_PORT=21114 on neodesk-server systemd unit (#219)")
+		result.Changes = append(result.Changes, "set SIGNAL_PORT=21116 / RELAY_PORT=21117 / GO_API_PORT=21114 on neodesk-server systemd unit")
 	}
 
 	if clean == original {

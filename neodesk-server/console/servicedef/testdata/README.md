@@ -17,3 +17,7 @@ The functions ran on their own, taken out of the updater, with the system
 around them stubbed: the shell, nssm, the files and the privileged daemon
 reload answered what each vector scripts, and every command and write was
 recorded.
+
+The functions came from a copy of the old console in which the old
+project's names were replaced by NeoDesk's, and the change message about
+the signal, relay and API ports names no issue number of the old project.
