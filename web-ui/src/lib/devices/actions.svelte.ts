@@ -32,6 +32,8 @@
  *   moveToFolder(devices, id)    folder id, or null/0 for no folder (no dialog)
  *   chooseFolder(devices)        dialog to pick the folder, then moveToFolder
  *   manageGroups(d)              dialog: the device's manual groups
+ *   editSignin(d)                sheet: the saved sign-in the viewer types at the lock screen
+ *                                (device.signin_manage; the password is never shown)
  *   editAccessPolicy(d)          sheet: unattended access, password, schedule, operators
  *                                (not offered while OFFER_ACCESS_POLICY is off)
  *   setConnectionMode(d, mode, reason)   (device.connection_mode)
@@ -82,6 +84,7 @@ import { toast } from '#lib/ui/toasts.svelte.ts';
 import { appLink, APP_NAMES, type DesktopApp } from '#lib/util/app-links.ts';
 import { ICONS } from '#lib/util/display.ts';
 import { ask } from './ask.svelte.ts';
+import * as signinApi from '#lib/api/savedSignin.ts';
 import { OFFER_ACCESS_POLICY, deviceLabel, deviceName, isMesh, watchable, type DeviceLike } from './model.ts';
 
 export type { DeviceLike } from './model.ts';
@@ -131,7 +134,9 @@ export const may = {
 	changeId: (d: DeviceLike) => !d.soft_deleted && !d.remote_target && can('device.change_id'),
 	/** RDP/VNC targets have no device token */
 	issueToken: (d: DeviceLike) => !d.soft_deleted && !d.banned && !d.remote_target && can('device.edit'),
-	connectionMode: (d: DeviceLike) => !d.soft_deleted && !d.banned && can('device.connection_mode')
+	connectionMode: (d: DeviceLike) => !d.soft_deleted && !d.banned && can('device.connection_mode'),
+	/** Saved sign-in: the computers the viewer connects to, not RDP/VNC targets */
+	signin: (d: DeviceLike) => !d.soft_deleted && !d.remote_target && can('device.signin_manage')
 };
 
 /* ── Opening and connecting ── */
@@ -412,6 +417,40 @@ export async function manageGroups(d: DeviceLike): Promise<boolean> {
 			await devicesApi.setDeviceGroups(d.id, guids);
 			toast.success(t('devices.groups_saved'));
 			devicesChanged(d.id);
+		}
+	});
+	return done === true;
+}
+
+export async function editSignin(d: DeviceLike): Promise<boolean> {
+	if (!may.signin(d)) return false;
+	const done = await ask('signin', {
+		device: d,
+		load: () => signinApi.getSignin(d.id),
+		save: async (input) => {
+			await signinApi.setSignin(d.id, input);
+			toast.success(t('devices.signin_saved_toast'));
+		},
+		change: async (input) => {
+			await signinApi.changeSignin(d.id, input);
+			toast.success(t('devices.signin_saved_toast'));
+		},
+		clear: async () => {
+			const ok = await confirm({
+				title: t('devices.signin_clear'),
+				message: t('devices.signin_clear_confirm', { id: d.id }),
+				confirmLabel: t('devices.signin_clear'),
+				confirmIcon: ICONS.delete,
+				danger: true
+			});
+			if (!ok) return false;
+			try {
+				await signinApi.clearSignin(d.id);
+			} catch (err) {
+				return fail(err, 'devices.signin_save_failed');
+			}
+			toast.success(t('devices.signin_cleared_toast'));
+			return true;
 		}
 	});
 	return done === true;
@@ -1025,6 +1064,8 @@ export function deviceMenu(d: DeviceLike, opts: { knownTags?: readonly string[] 
 				item('access-policy', t('devices.access_policy'), ICONS.access_policy, () => editAccessPolicy(d))
 			);
 	}
+	if (may.signin(d))
+		manage.push(item('signin', t('devices.signin_action'), ICONS.password, () => editSignin(d)));
 	if (can('device.change_id'))
 		manage.push(item('change-id', t('devices.change_id'), ICONS.rename, () => changeId(d)));
 	if (may.issueToken(d))

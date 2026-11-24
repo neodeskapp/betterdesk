@@ -65,6 +65,7 @@ for (const role of ROLES) {
 			expect(await offers('edit')).toBe(permissions.includes('device.edit'));
 			expect(await offers('change-id')).toBe(permissions.includes('device.change_id'));
 			expect(await offers('web-remote')).toBe(permissions.includes('device.connect'));
+			expect(await offers('signin')).toBe(permissions.includes('device.signin_manage'));
 			await expectNoAxeViolations(page);
 			await page.keyboard.press('Escape');
 			await expect(menu).toBeHidden();
@@ -85,6 +86,55 @@ for (const role of ROLES) {
 		});
 	});
 }
+
+test.describe('saved sign-in', () => {
+	test.use({ role: 'super_admin' });
+
+	test('set from the panel, the password never shown again, then cleared (L469)', async ({ page }) => {
+		await page.goto(`${UI}/devices`);
+		const { deviceId } = await context(page);
+		await page.goto(`${UI}/devices?open=${deviceId}`);
+		const panel = page.getByRole('dialog');
+		await expect(panel.getByRole('tablist')).toBeVisible();
+		await panel.getByRole('tab', { name: 'Actions' }).click();
+		await panel.locator('[data-action-key="signin"]').click();
+		const sheet = page.getByRole('dialog', { name: `Saved sign-in for ${deviceId}` });
+		await expect(sheet).toBeVisible();
+		await expect(sheet.getByText('Not saved')).toBeVisible();
+		// The switch is off until someone turns it on
+		const auto = sheet.getByLabel('Sign in automatically when a session opens on the lock screen');
+		await expect(auto).not.toBeChecked();
+		await expectNoAxeViolations(page);
+
+		await sheet.getByLabel('Account name').fill(String.raw`LAB\e2e-admin`);
+		await sheet.getByLabel('Password', { exact: true }).fill('E2e-Made-Up-Pass-1');
+		await sheet.getByRole('button', { name: 'Save' }).click();
+		await expect(sheet).toBeHidden();
+
+		// Opened again: the account and who saved it, the password field empty and nothing that holds it
+		await panel.locator('[data-action-key="signin"]').click();
+		await expect(sheet.getByText('Saved', { exact: true })).toBeVisible();
+		await expect(sheet.getByLabel('Account name')).toHaveValue(String.raw`LAB\e2e-admin`);
+		await expect(sheet.getByLabel('New password')).toHaveValue('');
+		expect(await sheet.innerHTML()).not.toContain('E2e-Made-Up-Pass-1');
+		const status = await page.evaluate(async (id) => {
+			const r = await fetch(`/api/devices/${encodeURIComponent(id)}/signin`, {
+				credentials: 'same-origin',
+				headers: { Accept: 'application/json' }
+			});
+			return r.text();
+		}, deviceId);
+		expect(status).toContain('"set":true');
+		expect(status).not.toContain('E2e-Made-Up-Pass-1');
+
+		await sheet.getByRole('button', { name: 'Clear saved sign-in' }).click();
+		await page.getByRole('dialog').last().getByRole('button', { name: 'Clear saved sign-in' }).click();
+		await expect(sheet).toBeHidden();
+		await panel.locator('[data-action-key="signin"]').click();
+		await expect(sheet.getByText('Not saved')).toBeVisible();
+		await page.keyboard.press('Escape');
+	});
+});
 
 test.describe('devices links', () => {
 	test.use({ role: 'operator' });

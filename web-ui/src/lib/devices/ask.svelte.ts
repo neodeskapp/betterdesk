@@ -19,6 +19,7 @@ import { lazy } from '#lib/util/lazy.ts';
 import type { AccessPolicy, AccessPolicyInput, DeviceGroup, Folder } from '#lib/api/devices.ts';
 import type { RemoteTargetInput, RemoteTargetReadiness } from '#lib/api/remoteTargets.ts';
 import type { GuestLinkInput } from '#lib/api/guest.ts';
+import type { SigninForm, SigninInput, SigninStatus } from '#lib/api/savedSignin.ts';
 import type { DeviceLike } from './model.ts';
 
 export interface Memberships {
@@ -64,6 +65,18 @@ export interface AskMap {
 			device: DeviceLike;
 			load: () => Promise<AccessPolicy>;
 			save: (input: AccessPolicyInput) => Promise<void>;
+		};
+		result: true;
+	};
+	/** Saved sign-in: account name, password (write-only), the screen's form and the switch */
+	signin: {
+		props: {
+			device: DeviceLike;
+			load: () => Promise<SigninStatus>;
+			save: (input: SigninInput) => Promise<void>;
+			change: (input: { auto: boolean; form: SigninForm }) => Promise<void>;
+			/** true when the details are gone */
+			clear: () => Promise<boolean>;
 		};
 		result: true;
 	};

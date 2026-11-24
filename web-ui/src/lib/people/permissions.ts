@@ -19,7 +19,9 @@ export const CATEGORIES: readonly { id: string; permissions: readonly string[] }
 			'device.delete',
 			'device.ban',
 			'device.change_id',
-			'device.connection_mode'
+			'device.connection_mode',
+			'device.signin_use',
+			'device.signin_manage'
 		]
 	},
 	{

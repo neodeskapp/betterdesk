@@ -91,9 +91,20 @@ describe('permission gates per role', () => {
 	test('admin: every action, ban turns into unban on a banned device', () => {
 		const can = canFor('admin');
 		const a = panelActions(device(), can);
-		expect(a.manage).toEqual(['edit', 'groups', 'change-id', 'issue-token', 'ban']);
+		expect(a.manage).toEqual(['edit', 'groups', 'signin', 'change-id', 'issue-token', 'ban']);
 		expect(a.danger).toEqual(['delete']);
 		expect(panelActions(device({ banned: true }), can).manage).toContain('unban');
+	});
+
+	test('Saved sign-in needs Manage saved sign-in and is not offered for an RDP/VNC target (L469)', () => {
+		const admin = canFor('admin');
+		expect(panelActions(device(), canFor('operator')).manage).not.toContain('signin');
+		expect(panelActions(device(), (p) => admin(p) && p !== 'device.signin_manage').manage).not.toContain(
+			'signin'
+		);
+		expect(panelActions(device(), (p) => p === 'device.signin_manage').manage).toEqual(['signin']);
+		const target = device({ id: 'rt_1', remote_target: true, device_type: 'rdp' });
+		expect(panelActions(target, admin).manage).not.toContain('signin');
 	});
 
 	test('no Access policy action while the server does not enforce the policy (L221)', () => {
@@ -109,6 +120,7 @@ describe('permission gates per role', () => {
 		expect(panelActions(device({ banned: true }), admin).manage).toEqual([
 			'edit',
 			'groups',
+			'signin',
 			'change-id',
 			'unban'
 		]);

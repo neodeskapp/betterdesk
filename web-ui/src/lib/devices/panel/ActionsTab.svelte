@@ -155,6 +155,12 @@
 			icon: ICONS.access_policy,
 			go: () => actions.editAccessPolicy(d)
 		},
+		signin: {
+			label: t('devices.signin_action'),
+			desc: t('devices.signin_action_desc'),
+			icon: ICONS.password,
+			go: () => actions.editSignin(d)
+		},
 		'change-id': {
 			label: t('devices.change_id'),
 			desc: t('device_detail.action_change_id_desc'),

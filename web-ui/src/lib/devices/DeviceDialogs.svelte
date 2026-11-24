@@ -15,6 +15,7 @@
 	import MoveFolderDialog from './dialogs/MoveFolderDialog.svelte';
 	import TagsDialog from './dialogs/TagsDialog.svelte';
 	import AccessPolicySheet from './dialogs/AccessPolicySheet.svelte';
+	import SigninSheet from './dialogs/SigninSheet.svelte';
 	import RemoteTargetSheet from './dialogs/RemoteTargetSheet.svelte';
 	import MeshTerminalSheet from './dialogs/MeshTerminalSheet.svelte';
 	import PortRelaySheet from './dialogs/PortRelaySheet.svelte';
@@ -43,6 +44,8 @@
 		<TagsDialog {...r.props} settle={r.settle} />
 	{:else if r.kind === 'access-policy'}
 		<AccessPolicySheet {...r.props} settle={r.settle} />
+	{:else if r.kind === 'signin'}
+		<SigninSheet {...r.props} settle={r.settle} />
 	{:else if r.kind === 'remote-target'}
 		<RemoteTargetSheet {...r.props} settle={r.settle} />
 	{:else if r.kind === 'mesh-terminal'}
