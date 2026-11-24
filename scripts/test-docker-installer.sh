@@ -209,6 +209,61 @@ test_update_goes_back_when_unhealthy() (
     rm -rf "$TEST_DIR"
 )
 
+# L460: an update's backup holds .env and docker-compose.yml as they were
+# before the update, not the files it writes. When the new container does
+# not get healthy, the way back puts those files back and gives the
+# previous image its own tag again, not the new release's.
+test_update_backs_up_the_files_from_before() (
+    load
+    mgr 'NEODESK_IMAGE_TAG_SET=3.6.0-rc.3; COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install failed"
+    # The compose file of the release before, as its manager wrote it
+    printf '# the compose file of 3.6.0-rc.3\n' >> "$NEODESK_DIR/docker-compose.yml"
+    sha256sum "$NEODESK_DIR/docker-compose.yml" | cut -d' ' -f1 > "$NEODESK_DIR/.compose.sha256"
+    cp "$NEODESK_DIR/.env" "$TEST_DIR/env-before"
+    cp "$NEODESK_DIR/docker-compose.yml" "$TEST_DIR/compose-before"
+    # docker: the pull brings sha256:new; the container runs 3.6.0-rc.3
+    local update='docker() {
+            case "$1 ${2:-}" in
+                "compose pull")
+                    printf "%s\n" "$*" >> "$CALLS"
+                    printf "sha256:new\n" > "$TEST_DIR/pulled"
+                    return 0 ;;
+                "container inspect")
+                    case "$*" in *Config.Image*) printf "ghcr.io/neodeskapp/neodesk:3.6.0-rc.3\n"; return 0 ;; esac ;;
+            esac
+            command_docker "$@"
+        }
+        NEODESK_IMAGE_TAG_SET=3.6.0-rc.4; COMMAND=update; do_update'
+    : > "$CALLS"
+    local out backup
+    if out=$(mgr "$update" 2>&1); then fail "an update to an unhealthy image reported success: $out"; fi
+    backup=$(ls "$NEODESK_DIR"/backups/neodesk-*.env 2>/dev/null | head -n 1)
+    [ -n "$backup" ] || fail "the backup has no .env"
+    cmp -s "$backup" "$TEST_DIR/env-before" \
+        || fail "the backup's .env is not the one from before the update: $(grep IMAGE_TAG "$backup")"
+    cmp -s "${backup%.env}.docker-compose.yml" "$TEST_DIR/compose-before" \
+        || fail "the backup's docker-compose.yml is not the one from before the update"
+    grep -qx 'tag sha256:old ghcr.io/neodeskapp/neodesk:3.6.0-rc.3' "$CALLS" \
+        || fail "the previous image did not get its own tag back: $(grep '^tag' "$CALLS")"
+    if grep -q '^tag .*3\.6\.0-rc\.4' "$CALLS"; then fail "the previous image was tagged as the new release: $(grep '^tag' "$CALLS")"; fi
+    cmp -s "$NEODESK_DIR/.env" "$TEST_DIR/env-before" \
+        || fail "the way back did not put .env back: $(grep IMAGE_TAG "$NEODESK_DIR/.env")"
+    cmp -s "$NEODESK_DIR/docker-compose.yml" "$TEST_DIR/compose-before" || fail "the way back did not put docker-compose.yml back"
+    printf '%s' "$out" | grep -q 'runs the previous version again' || fail "no word of the way back: $out"
+
+    # A good update keeps the files from before in its backup too
+    rm -f "$NEODESK_DIR"/backups/neodesk-*
+    printf 'sha256:new\n' > "$TEST_DIR/good-image"
+    out=$(mgr "$update" 2>&1) || fail "the update failed: $out"
+    backup=$(ls "$NEODESK_DIR"/backups/neodesk-*.env 2>/dev/null | head -n 1)
+    [ -n "$backup" ] && cmp -s "$backup" "$TEST_DIR/env-before" \
+        || fail "the backup of a good update has another .env: $(grep IMAGE_TAG "$backup")"
+    cmp -s "${backup%.env}.docker-compose.yml" "$TEST_DIR/compose-before" \
+        || fail "the backup of a good update has another docker-compose.yml"
+    grep -qx 'NEODESK_IMAGE_TAG=3.6.0-rc.4' "$NEODESK_DIR/.env" || fail "the update did not keep the new tag: $(cat "$NEODESK_DIR/.env")"
+    rm -rf "$TEST_DIR"
+)
+
 # L125: a compose file changed by hand stays on update; the release's file
 # goes next to it.
 test_update_keeps_compose_edits() (
@@ -615,6 +670,7 @@ test_install_sh_passes_the_domain() (
 test_fresh_install
 test_no_release_image_runs_dev
 test_update_goes_back_when_unhealthy
+test_update_backs_up_the_files_from_before
 test_update_keeps_compose_edits
 test_fresh_install_on_postgres
 test_foreign_install_is_left_alone

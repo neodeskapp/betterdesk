@@ -828,10 +828,12 @@ server_version() {
 
 backup_dir() { printf '%s\n' "$NEODESK_DIR/backups"; }
 
-# backup_volumes: a tar.gz of the data volumes (and a dump of PostgreSQL),
-# taken while the container is stopped. Prints the file.
+# backup_volumes [FOLDER]: a tar.gz of the data volumes (and a dump of
+# PostgreSQL), taken while the container is stopped, with .env and
+# docker-compose.yml from FOLDER (an update's copies from before it) or
+# the install folder. Prints the file.
 backup_volumes() {
-    local dir name image old
+    local dir name image old from="${1:-$NEODESK_DIR}"
     dir=$(backup_dir)
     mkdir -p "$dir"
     chmod 700 "$dir"
@@ -842,8 +844,8 @@ backup_volumes() {
         -v "$DATA_VOLUME:/backup/rustdesk:ro" -v "$CONSOLE_VOLUME:/backup/console:ro" -v "$dir:/out" \
         "$image" czf "/out/$name.tar.gz" -C /backup rustdesk console >/dev/null \
         || die "The backup of the volumes failed; nothing was changed." "Is there free disk space? df -h $dir"
-    cp -p "$(compose_file)" "$dir/$name.docker-compose.yml" 2>/dev/null || true
-    cp -p "$(env_file)" "$dir/$name.env" 2>/dev/null || true
+    cp -p "$from/docker-compose.yml" "$dir/$name.docker-compose.yml" 2>/dev/null || true
+    cp -p "$from/.env" "$dir/$name.env" 2>/dev/null || true
     if on_postgres && container_exists "$PG_CONTAINER"; then
         compose exec -T postgres pg_dump -U neodesk neodesk 2>/dev/null | gzip > "$dir/$name.postgres.sql.gz" \
             || warn "The PostgreSQL dump failed; the volume backup is there."
@@ -854,6 +856,33 @@ backup_volumes() {
         rm -f "$old" "${old%.tar.gz}".*
     done
     printf '%s\n' "$dir/$name.tar.gz"
+}
+
+# keep_settings: copies of .env, docker-compose.yml and its record as they
+# are before an update writes new ones, in a folder of the install folder
+# that only its owner reads. The update's backup takes these, and a failed
+# update puts them back. Prints the folder.
+keep_settings() {
+    local dir="$NEODESK_DIR/.before-update" f
+    rm -rf "$dir"
+    (umask 077 && mkdir -p "$dir")
+    for f in "$(env_file)" "$(compose_file)" "$NEODESK_DIR/.compose.sha256"; do
+        [ ! -f "$f" ] || cp -p "$f" "$dir/"
+    done
+    printf '%s\n' "$dir"
+}
+
+# put_settings_back FOLDER: .env, docker-compose.yml and its record as
+# keep_settings kept them in FOLDER; one that was not there goes
+put_settings_back() {
+    local f
+    for f in .env docker-compose.yml .compose.sha256; do
+        if [ -f "$1/$f" ]; then
+            cp -p "$1/$f" "$NEODESK_DIR/$f"
+        else
+            rm -f "${NEODESK_DIR:?}/$f"
+        fi
+    done
 }
 
 # restore_volumes FILE: the volumes as the backup has them
@@ -1085,15 +1114,20 @@ do_update() {
     esac
     check_internet
     check_traefik_ports
+    local old_image old_ref new_image applied backup log before
+    # The settings, the compose file and the image from before the update:
+    # the backup takes these, and the way back puts them back
+    before=$(keep_settings)
+    old_image=$(container_image_id)
+    old_ref=$(docker container inspect -f '{{.Config.Image}}' "$CONTAINER" 2>/dev/null || true)
     write_settings
     write_compose_file
-    local old_image new_image applied backup log
-    old_image=$(container_image_id)
     pull_image
     new_image=$(image_id "$(image_ref)")
     applied=$(cat "$NEODESK_DIR/.applied.sha256" 2>/dev/null || true)
     if [ -n "$old_image" ] && [ "$old_image" = "$new_image" ] && [ "$applied" = "$(settings_fingerprint)" ] \
         && container_running && wait_healthy; then
+        rm -rf "$before"
         ok "NeoDesk is up to date: $(server_version)"
         print_summary
         return 0
@@ -1101,11 +1135,12 @@ do_update() {
 
     step "Stopping NeoDesk for the backup"
     compose stop -t 30 neodesk >/dev/null 2>&1 || true
-    backup=$(backup_volumes)
+    backup=$(backup_volumes "$before")
     ok "Backup: $backup"
     step "Starting $(image_ref)"
     compose_quiet up -d --remove-orphans || true
     if wait_healthy; then
+        rm -rf "$before"
         remember_applied
         ok "Updated: $(server_version)"
         [ "$TRAEFIK_ACTION" != on ] || wait_certificate
@@ -1115,9 +1150,20 @@ do_update() {
 
     log=$(save_failed_log)
     warn "The new container did not get healthy within ${HEALTH_TIMEOUT}s; its log is in $log"
+    # The way back: .env and docker-compose.yml from before the update, so
+    # Compose names the previous image again; neither --tag nor
+    # NEODESK_IMAGE_TAG of this run counts any more
+    put_settings_back "$before"
+    rm -rf "$before"
+    NEODESK_IMAGE_TAG_SET=""
+    unset NEODESK_IMAGE_TAG
     if [ -n "$old_image" ] && [ "$old_image" != "$new_image" ]; then
         step "Going back to the previous image"
-        docker tag "$old_image" "$(image_ref)"
+        # Under its own name: the pull may have moved that tag (latest) to
+        # the new image
+        if [ -n "$old_ref" ] && [ "${old_ref#sha256:}" = "$old_ref" ]; then
+            docker tag "$old_image" "$old_ref" || warn "Could not name the previous image $old_ref again"
+        fi
         compose_quiet up -d --force-recreate neodesk || true
         if wait_healthy; then
             die "The update failed; NeoDesk runs the previous version again: $(server_version)" \
