@@ -11,6 +11,7 @@ import (
 	"modernc.org/sqlite"
 	sqlite3 "modernc.org/sqlite/lib"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
@@ -36,14 +37,32 @@ type templateListFailure struct {
 }
 
 // templates answers GET /api/agent-templates: every template, the newest
-// first. A failed read answers 500 with the database's message.
+// first. A failed read answers 500 with the database's message. A
+// read-only API token gets each enrollment token as its first eight
+// characters and "…": the token admits a device, which a token that may
+// only read must not be able to do.
 func (h *handlers) templates(w http.ResponseWriter, r *http.Request) {
 	rows, err := listTemplates(r.Context(), h.d.Store)
 	if err != nil {
 		kit.JSON(w, r, http.StatusInternalServerError, templateListFailure{Error: jsbind.Message(err), Templates: []any{}})
 		return
 	}
+	if use := admintoken.FromRequest(r); use != nil && use.Token.ReadOnly {
+		for i := range rows {
+			if v := rows[i].EnrollmentToken.Value(); v.IsString() {
+				rows[i].EnrollmentToken = jsbind.CellOf(hint(v.Str()))
+			}
+		}
+	}
 	kit.JSON(w, r, http.StatusOK, templateList{Success: true, Templates: rows})
+}
+
+// hint is the first eight characters of a token and "…".
+func hint(token string) string {
+	if len(token) <= 8 {
+		return "…"
+	}
+	return token[:8] + "…"
 }
 
 type templateCreated struct {

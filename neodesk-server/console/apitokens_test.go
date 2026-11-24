@@ -585,3 +585,29 @@ func TestCurrentTellsTheTokenAndWhatItMayDo(t *testing.T) {
 		t.Errorf("current in a browser: %d %s", res.status, res.body)
 	}
 }
+
+// A read-only token lists the agent templates without their enrollment
+// tokens: a template's token admits a device, which a token that may only
+// read must not be able to do. A token that may write, and a browser,
+// still get the whole token (L473 has the revoke for templates).
+func TestAReadOnlyTokenListsAgentTemplatesWithoutTheirTokens(t *testing.T) {
+	w := tokenWorld(t)
+	secret := strings.Repeat("ab", 24)
+	if _, err := w.db.Exec(context.Background(), `INSERT INTO agent_templates (name, description, config_json, enrollment_token, created_by) VALUES ('office', '', '{}', ?, 2)`, secret); err != nil {
+		t.Fatal(err)
+	}
+	reader, _ := w.makeToken("super_admin", `{"name":"r","permissions":["enrollment.manage"],"expires_in_days":1}`)
+	writer, _ := w.makeToken("super_admin", `{"name":"w","permissions":["enrollment.manage"],"read_only":false,"expires_in_days":1}`)
+	res := w.bearer(reader).get("/api/agent-templates")
+	if res.status != 200 || !strings.Contains(res.body, `"name":"office"`) || strings.Contains(res.body, secret) {
+		t.Errorf("a read-only token's list: %d %s", res.status, res.body)
+	}
+	if !strings.Contains(res.body, `"enrollment_token":"`+secret[:8]+`…"`) {
+		t.Errorf("the read-only list does not show the token's start: %s", res.body)
+	}
+	for who, a := range map[string]*agent{"a read-write token": w.bearer(writer), "a browser": w.agent().signIn("super_admin")} {
+		if res := a.get("/api/agent-templates"); res.status != 200 || !strings.Contains(res.body, secret) {
+			t.Errorf("%s does not get the whole token: %d %s", who, res.status, res.body)
+		}
+	}
+}
