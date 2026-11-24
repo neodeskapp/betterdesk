@@ -5,31 +5,41 @@
 
 ---
 
-## [3.6.4] — 2026-11-24
+## [3.6.0-rc.4] — 2026-11-24
+
+Fourth release candidate of 3.6.0.
+
+### Added
+- API tokens for scripts, made under API tokens in the account menu. A
+  token acts as its account with only the permissions picked for it, read
+  only or read and write, for at most a year and optionally from some
+  addresses only, and can be revoked. It never gets the server's secrets.
+- The `neodesk` command line for everything the console's API does
+  (`neodesk-server cli` on Linux hosts), made from one table of commands.
+  `neodesk describe` prints them as JSON or Markdown, and `neodesk mcp`
+  serves them as MCP tools, read only unless writes are allowed.
+- A setup guide for the first admin of a new install, on the overview.
+  Each of its eight steps leads to its place and back, the server ticks
+  the steps it sees done, and Help and Settings bring the guide back.
 
 ### Changed
-- _(none yet)_
+- Leaving the settings while a save runs waits for the save instead of
+  asking whether to discard what it saves.
+- The core script for MeshCentral agents is served at `/neocore.js`;
+  `/meshcore.js` still answers.
+- The class names of the accessibility helpers and the attestation badge
+  start with `nd-`.
 
----
+### Removed
+- The supporters list in Help, `GET /api/console/supporters` and the
+  theme preset of a former sponsor.
 
-## [3.6.3] — 2026-11-23
-
-### Changed
-- _(none yet)_
-
----
-
-## [3.6.2] — 2026-11-23
-
-### Changed
-- _(none yet)_
-
----
-
-## [3.6.1] — 2026-11-23
-
-### Changed
-- _(none yet)_
+### Fixed
+- A computer that registers again is asked for its key, so a changed key
+  is refused and the computer shows offline instead of online while every
+  session to it fails. Running its invite again offers Approve new key.
+- Leaving a page while part of it still loads no longer raises a page
+  error, and a part that failed to load loads again.
 
 ---
 
@@ -208,7 +218,4 @@ Second release candidate, and the first as NeoDesk.
 
 [3.6.0-rc.2]: https://github.com/neodeskapp/neodesk/releases/tag/v3.6.0-rc.2
 [3.6.0-rc.3]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.2...v3.6.0-rc.3
-[3.6.1]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.3...v3.6.1
-[3.6.2]: https://github.com/neodeskapp/neodesk/compare/v3.6.1...v3.6.2
-[3.6.3]: https://github.com/neodeskapp/neodesk/compare/v3.6.2...v3.6.3
-[3.6.4]: https://github.com/neodeskapp/neodesk/compare/v3.6.3...v3.6.4
+[3.6.0-rc.4]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.3...v3.6.0-rc.4
