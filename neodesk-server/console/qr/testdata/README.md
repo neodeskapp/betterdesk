@@ -13,7 +13,9 @@ difference with the row id.
 | `images.jsonl.gz` | a few hundred PNG images from the call the console made (`QRCode.toDataURL`) for several widths and margins | `TestSamePixelsAsNpmPackage` (`oracle_test.go`) |
 
 The tests compare module by module and pixel by pixel. The texts came
-from a seeded random generator.
+from a seeded random generator, in a copy of the old console's recorder in
+which the old project's names were replaced by NeoDesk's, so the
+two-factor addresses name NeoDesk.
 
 ## File format
 
