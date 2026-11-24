@@ -31,13 +31,17 @@ import { answerConnectPassword } from '#lib/api/connectAnswer.ts';
 import {
 	getSignin,
 	refusalCode,
+	useSealedSignin,
 	useSignin,
 	type SigninDetails,
 	type SigninStatus
 } from '#lib/api/savedSignin.ts';
 import {
 	isWindows,
+	logonStateFromMessage,
+	signinAdditions,
 	signinOffer,
+	signinResultOf,
 	signinSteps,
 	typeSignin,
 	type PeerFacts,
@@ -170,8 +174,46 @@ function signinRefusalText(code: string): string {
 			);
 		case 'vault_unavailable':
 			return tf('remote.signin_unavailable', "This server can't use saved sign-in details right now.");
+		case 'sealed_required':
+			return tf(
+				'remote.signin_sealed_required',
+				"NeoDesk on this computer signed in by itself before but doesn't offer it in this session, so the server hands out no readable details. Update NeoDesk on the computer, or clear the saved sign-in and save it again."
+			);
+		case 'no_device_key':
+			return tf(
+				'remote.signin_no_device_key',
+				"The server has no key of this computer, so it can't seal the sign-in for it."
+			);
 		default:
 			return tf('remote.signin_failed', 'Sign in did not work. Sign in by hand.');
+	}
+}
+
+/** How long the viewer waits for the computer's NeoDesk to answer a sealed sign-in */
+const SEALED_ANSWER_MS = 15000;
+
+/** What the computer's NeoDesk answered to a sealed sign-in, in the viewer's words */
+function sealedResultText(result: string): string {
+	switch (result) {
+		case 'typed':
+			return tf(
+				'remote.signin_sealed_typed',
+				'NeoDesk on the computer typed the saved details. If Windows shows an error, sign in by hand: they are not tried again in this session.'
+			);
+		case 'not_at_lock_screen':
+			return tf(
+				'remote.signin_not_at_lock_screen',
+				"NeoDesk on the computer typed nothing: it isn't at the lock or sign-in screen."
+			);
+		case 'expired':
+			return tf(
+				'remote.signin_expired',
+				"The sign-in request had expired when it reached the computer. Check the computer's clock."
+			);
+		case 'bad_blob':
+			return tf('remote.signin_bad_blob', "NeoDesk on the computer couldn't open the sign-in request.");
+		default:
+			return tf('remote.signin_no_answer', "NeoDesk on the computer didn't answer the sign-in request.");
 	}
 }
 
@@ -235,6 +277,9 @@ export class ViewerSession {
 	/** What the bar over the screen says after an attempt */
 	signinNote = $state('');
 	signinDismissed = $state(false);
+	/** The nonce of the sealed sign-in sent to the computer, until it answers */
+	signinPending = '';
+	signinTimer: ReturnType<typeof setTimeout> | null = null;
 	tfaCode = $state('');
 	cdapFallback = $state(false);
 	autoplayBlocked = $state(false);
@@ -501,6 +546,7 @@ export class Viewer {
 		s.closed = true;
 		this.clearStepTimer(s);
 		if (s.endTimer) clearTimeout(s.endTimer);
+		if (s.signinTimer) clearTimeout(s.signinTimer);
 		try {
 			s.client?.disconnect();
 		} catch {
@@ -633,6 +679,9 @@ export class Viewer {
 		s.signinBusy = false;
 		s.signinNote = '';
 		s.signinDismissed = false;
+		s.signinPending = '';
+		if (s.signinTimer) clearTimeout(s.signinTimer);
+		s.signinTimer = null;
 		if (!s.canvas) return;
 		s.client = createClient(s.canvas, this.clientOptions(s), this.transport);
 		s.client.setBackgroundFps?.(s.prefs.backgroundFps || 1);
@@ -813,17 +862,44 @@ export class Viewer {
 		on('permission', (info: unknown) => this.applyPermission(s, c, info));
 		// CDAP: the agent lists its monitors; RustDesk: peer_info after sign-in
 		on('monitors', () => this.refreshMonitors(s));
-		on('peer_info', (info?: { platform?: string; os?: string; username?: string; sasEnabled?: boolean }) => {
-			if (info && !s.platform && (info.platform || info.os)) s.platform = String(info.platform || info.os);
-			// The sign-in's PeerInfo says who is signed in; a later one (displays) leaves it as it was
-			if (info && !s.peerFacts) {
-				s.peerFacts = {
-					platform: String(info.platform || info.os || ''),
-					username: String(info.username ?? ''),
-					sasEnabled: info.sasEnabled === true
-				};
+		on(
+			'peer_info',
+			(info?: {
+				platform?: string;
+				os?: string;
+				username?: string;
+				sasEnabled?: boolean;
+				platformAdditions?: string;
+			}) => {
+				if (info && !s.platform && (info.platform || info.os)) s.platform = String(info.platform || info.os);
+				// The sign-in's PeerInfo says who is signed in; a later one (displays) leaves it as it was
+				if (info && !s.peerFacts) {
+					s.peerFacts = {
+						platform: String(info.platform || info.os || ''),
+						username: String(info.username ?? ''),
+						sasEnabled: info.sasEnabled === true,
+						...signinAdditions(info.platformAdditions)
+					};
+				}
+				this.refreshMonitors(s);
 			}
-			this.refreshMonitors(s);
+		);
+		// NeoDesk's lock screen state as it changes, and its answer to a sealed sign-in
+		on('plugin_request', (id: unknown, content: unknown) => {
+			const bytes = ArrayBuffer.isView(content)
+				? new Uint8Array(content.buffer, content.byteOffset, content.byteLength)
+				: new Uint8Array(0);
+			if (id === 'nd.logon_state' && s.peerFacts) {
+				const logonState = logonStateFromMessage(bytes);
+				if (logonState && logonState !== s.peerFacts.logonState) {
+					s.peerFacts = { ...s.peerFacts, logonState };
+					void this.refreshSignin(s, { atStart: false });
+				}
+			} else if (id === 'nd.signin_result') {
+				const answer = signinResultOf(bytes);
+				if (!answer || !s.signinPending || (answer.nonce && answer.nonce !== s.signinPending)) return;
+				this.finishSealed(s, answer.result);
+			}
 		});
 		on('display_switched', () => this.refreshMonitors(s));
 		on('virtual_display_toggled', () => this.refreshMonitors(s));
@@ -1059,13 +1135,13 @@ export class Viewer {
 	 * server's status (loaded once per tab) and what the device said at the
 	 * sign-in; with the switch on and nobody signed in, it signs in by itself.
 	 */
-	private async refreshSignin(s: ViewerSession): Promise<void> {
+	private async refreshSignin(s: ViewerSession, opts: { atStart?: boolean } = {}): Promise<void> {
 		if (this.transport !== 'rd' || this.guest || this.remoteTarget || this.data.mockRemote || !this.data.user)
 			return;
 		const c = s.client;
 		// Only over a session encrypted end to end with the device: the relay never sees what is typed
-		if (!c || !s.encrypted || !s.peerFacts || s.view !== 'streaming' || !isWindows(s.peerFacts.platform))
-			return;
+		if (!c || !s.encrypted || !s.peerFacts || s.view !== 'streaming') return;
+		if (!s.peerFacts.sealed && !isWindows(s.peerFacts.platform)) return;
 		if (!s.signinLoaded) {
 			s.signinLoaded = true;
 			try {
@@ -1077,7 +1153,8 @@ export class Viewer {
 		if (s.client !== c || s.closed) return;
 		const offer = signinOffer(s.peerFacts, s.signin, {
 			tried: s.signinTried,
-			autoDone: this.autoSignedIn.has(s.deviceId)
+			autoDone: this.autoSignedIn.has(s.deviceId),
+			atStart: opts.atStart !== false
 		});
 		s.signinOffer = offer;
 		if (offer.kind === 'auto') {
@@ -1097,9 +1174,12 @@ export class Viewer {
 		const c = s.client;
 		if (!c || !s.encrypted || s.signinTried || s.view !== 'streaming' || s.viewOnly || !s.allowed.keyboard)
 			return;
-		if (!c.relayUUID || !c.sendCtrlAltDel || !c.sendText || !c.sendKeyPress) return;
 		const offer = s.signinOffer;
-		if (!opts.auto && offer.kind === 'button' && offer.signedIn) {
+		if (offer.kind !== 'button' && offer.kind !== 'auto') return;
+		if (!c.relayUUID) return;
+		if (offer.path === 'sealed' ? !c.sendPluginRequest : !c.sendCtrlAltDel || !c.sendText || !c.sendKeyPress)
+			return;
+		if (!opts.auto && offer.kind === 'button' && offer.confirm) {
 			const ok = await confirm({
 				title: tf('remote.signin_confirm_title', 'Sign in at the lock screen?'),
 				message: tf(
@@ -1116,6 +1196,10 @@ export class Viewer {
 		s.signinDismissed = false;
 		s.signinOffer = { kind: 'none' };
 		s.signinNote = tf('remote.signin_busy', 'Signing in with the saved details…');
+		if (offer.path === 'sealed') {
+			await this.signInSealed(s, c);
+			return;
+		}
 		// The details live in this call only: typed, then dropped with it
 		let details: SigninDetails;
 		try {
@@ -1143,6 +1227,43 @@ export class Viewer {
 					'The saved details were typed. If Windows shows an error, sign in by hand: they are not tried again in this session.'
 				)
 			: tf('remote.signin_stopped', 'The session ended before the saved details were typed.');
+		if (this.isActive(s)) s.focus?.canvas();
+	}
+
+	/**
+	 * The sealed way: the server seals the details for the computer's own
+	 * NeoDesk, the page forwards the bytes (Misc.plugin_request "nd.signin")
+	 * and shows the computer's answer. The password never reaches the page.
+	 */
+	private async signInSealed(s: ViewerSession, c: RemoteClient): Promise<void> {
+		let nonce = '';
+		try {
+			const sealed = await useSealedSignin(s.deviceId, c.relayUUID ?? '');
+			if (s.client !== c || s.closed || !c.sendPluginRequest?.('nd.signin', sealed.packet)) {
+				s.signinBusy = false;
+				s.signinNote = tf('remote.signin_stopped', 'The session ended before the saved details were typed.');
+				return;
+			}
+			nonce = sealed.nonce || 'sent';
+		} catch (err) {
+			s.signinBusy = false;
+			s.signinNote = signinRefusalText(refusalCode(err));
+			return;
+		}
+		s.signinPending = nonce;
+		s.signinNote = tf('remote.signin_sealed_sent', 'Sent to NeoDesk on the computer…');
+		s.signinTimer = setTimeout(() => {
+			if (s.signinPending === nonce) this.finishSealed(s, '');
+		}, SEALED_ANSWER_MS);
+	}
+
+	private finishSealed(s: ViewerSession, result: string): void {
+		if (s.signinTimer) clearTimeout(s.signinTimer);
+		s.signinTimer = null;
+		s.signinPending = '';
+		s.signinBusy = false;
+		s.signinDismissed = false;
+		s.signinNote = sealedResultText(result);
 		if (this.isActive(s)) s.focus?.canvas();
 	}
 

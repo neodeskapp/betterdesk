@@ -111,7 +111,14 @@ export interface RemoteClient {
 	/** RDClient: the relay session's id, which the server knows as this viewer's open session */
 	readonly relayUUID?: string;
 	/** RDClient: what the device said about itself at the sign-in (PeerInfo) */
-	readonly peerInfo?: { platform?: string; username?: string; sasEnabled?: boolean } | null;
+	readonly peerInfo?: {
+		platform?: string;
+		username?: string;
+		sasEnabled?: boolean;
+		platformAdditions?: string;
+	} | null;
+	/** RDClient: a NeoDesk request to the device (the sealed sign-in) */
+	sendPluginRequest?(id: string, content: Uint8Array): boolean;
 	sendLockScreen?(): void;
 	sendRestartRemoteDevice?(): void;
 	sendRefreshScreen?(): void;

@@ -1531,6 +1531,14 @@ export class RDClient {
 			});
 			return;
 		}
+		if (misc.pluginRequest) {
+			// NeoDesk's lock screen state and sealed sign-in result (crypto/devicevault/sealed.go)
+			this._emit(
+				'plugin_request',
+				misc.pluginRequest.id || '',
+				misc.pluginRequest.content ?? new Uint8Array(0)
+			);
+		}
 		if (misc.chatMessage) {
 			this._emit('chat', misc.chatMessage.text || '');
 			return;
@@ -2046,6 +2054,16 @@ export class RDClient {
 		this._sendPeerMessage({
 			keyEvent: { controlKey: 'CtrlAltDel', down: true, press: true, modifiers: [], mode: 'Legacy' }
 		});
+	}
+
+	/**
+	 * Send a NeoDesk request to the device (Misc.plugin_request): the
+	 * sealed sign-in, which only the device's NeoDesk opens
+	 */
+	sendPluginRequest(id: string, content: Uint8Array): boolean {
+		if (this._state !== 'streaming') return false;
+		this._sendPeerMessage({ misc: { pluginRequest: { id, content } } });
+		return true;
 	}
 
 	/**

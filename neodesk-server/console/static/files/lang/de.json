@@ -689,7 +689,9 @@
     "signin_error_new_name": "Geben Sie das Passwort für diesen Kontonamen ein.",
     "signin_error_too_long": "Verwenden Sie höchstens 256 Zeichen.",
     "signin_error_control": "Tabulatoren und Zeilenumbrüche lassen sich am Anmeldebildschirm nicht eingeben.",
-    "signin_error_not_typeable": "Hier ist ein Zeichen enthalten, das sich am Anmeldebildschirm nicht eingeben lässt, etwa ein Emoji."
+    "signin_error_not_typeable": "Hier ist ein Zeichen enthalten, das sich am Anmeldebildschirm nicht eingeben lässt, etwa ein Emoji.",
+    "signin_path_sealed": "NeoDesk auf diesem Computer meldet sich selbst an: Das Passwort erreicht den Browser nie.",
+    "signin_path_typed": "Solange NeoDesk auf diesem Computer sich nicht selbst anmelden kann, gibt der Browser-Viewer die Daten ein."
   },
   "keys": {
     "title": "Dashboard",
@@ -2782,7 +2784,17 @@
     "signin_not_set": "Für diesen Computer sind keine Anmeldedaten mehr gespeichert.",
     "signin_cannot_open": "Die gespeicherten Daten lassen sich mit dem Schlüssel dieses Servers nicht lesen. Speichern Sie sie neu.",
     "signin_unavailable": "Dieser Server kann gespeicherte Anmeldedaten gerade nicht verwenden.",
-    "signin_failed": "Die Anmeldung hat nicht funktioniert. Melden Sie sich von Hand an."
+    "signin_failed": "Die Anmeldung hat nicht funktioniert. Melden Sie sich von Hand an.",
+    "signin_sealed_required": "NeoDesk auf diesem Computer hat sich früher selbst angemeldet, bietet das in dieser Sitzung aber nicht an, deshalb gibt der Server keine lesbaren Daten heraus. Aktualisieren Sie NeoDesk auf dem Computer, oder löschen Sie die gespeicherte Anmeldung und speichern Sie sie neu.",
+    "signin_no_device_key": "Der Server hat keinen Schlüssel dieses Computers und kann die Anmeldung deshalb nicht für ihn versiegeln.",
+    "signin_sealed_typed": "NeoDesk auf dem Computer hat die gespeicherten Daten eingegeben. Zeigt Windows einen Fehler, melden Sie sich von Hand an: In dieser Sitzung werden sie nicht noch einmal versucht.",
+    "signin_not_at_lock_screen": "NeoDesk auf dem Computer hat nichts eingegeben: Er zeigt weder den Sperr- noch den Anmeldebildschirm.",
+    "signin_expired": "Die Anmeldeanfrage war abgelaufen, als sie den Computer erreichte. Prüfen Sie die Uhr des Computers.",
+    "signin_bad_blob": "NeoDesk auf dem Computer konnte die Anmeldeanfrage nicht öffnen.",
+    "signin_no_answer": "NeoDesk auf dem Computer hat auf die Anmeldeanfrage nicht geantwortet.",
+    "signin_sealed_sent": "An NeoDesk auf dem Computer gesendet…",
+    "signin_path_sealed": "NeoDesk auf dem Computer gibt sie ein: Das Passwort erreicht diesen Browser nie.",
+    "signin_path_typed": "Dieser Browser gibt sie ein."
   },
   "branding": {
     "identity_title": "Markenidentität",

@@ -102,6 +102,17 @@
 			);
 		return tf('remote.signin_bar', 'A sign-in is saved for this computer.');
 	});
+	/** Which way the sign-in goes: the computer's NeoDesk, or this browser */
+	const signinPathText = $derived.by(() => {
+		const o = signinOffer;
+		if (s.signinNote || (o.kind !== 'button' && o.kind !== 'auto')) return '';
+		return o.path === 'sealed'
+			? tf(
+					'remote.signin_path_sealed',
+					'NeoDesk on the computer types it: the password never reaches this browser.'
+				)
+			: tf('remote.signin_path_typed', 'This browser types it.');
+	});
 	const title = $derived(
 		view === 'failed'
 			? tf('remote_viewer.title_failed', 'Could not connect')
@@ -434,7 +445,9 @@
 	{#if view === 'streaming' && !s.signinDismissed && (signinOffer.kind === 'button' || signinOffer.kind === 'unsupported' || s.signinNote)}
 		<!-- Saved sign-in (L469): the offer, why there is none, or what the attempt did -->
 		<div class="signin-bar" role="status">
-			<p class="signin-text">{signinText}</p>
+			<p class="signin-text">
+				{signinText}{#if signinPathText}<span class="signin-path"> {signinPathText}</span>{/if}
+			</p>
 			{#if signinOffer.kind === 'button'}
 				<Button size="sm" variant="primary" icon="login" onclick={() => void viewer.signIn(s)}
 					>{tf('remote.signin', 'Sign in')}</Button

@@ -6,7 +6,10 @@
  */
 import { describe, expect, test, vi } from 'vitest';
 import {
+	logonStateFromMessage,
+	signinAdditions,
 	signinOffer,
+	signinResultOf,
 	signinSteps,
 	typeSignin,
 	SAS_WAIT_MS,
@@ -23,10 +26,17 @@ const saved = (extra: Partial<SigninStatus> = {}): SigninStatus => ({
 	updated_by: 'boss',
 	updated_at: '2026-11-24T10:00:00Z',
 	may_use: true,
+	sealed_signin: false,
 	...extra
 });
-const atSignInScreen: PeerFacts = { platform: 'Windows', username: '', sasEnabled: true };
-const someoneSignedIn: PeerFacts = { platform: 'Windows', username: 'alice', sasEnabled: true };
+const atSignInScreen: PeerFacts = {
+	platform: 'Windows',
+	username: '',
+	sasEnabled: true,
+	logonState: '',
+	sealed: false
+};
+const someoneSignedIn: PeerFacts = { ...atSignInScreen, username: 'alice' };
 const fresh = { tried: false, autoDone: false };
 
 describe('when saved sign-in is offered', () => {
@@ -41,20 +51,28 @@ describe('when saved sign-in is offered', () => {
 		expect(signinOffer(atSignInScreen, saved(), fresh)).toEqual({
 			kind: 'button',
 			signedIn: false,
-			noLockSignal: false
+			noLockSignal: false,
+			confirm: false,
+			path: 'typed'
 		});
 	});
 
 	test('with the switch on it signs in by itself only when nobody is signed in', () => {
-		expect(signinOffer(atSignInScreen, saved({ auto: true }), fresh)).toEqual({ kind: 'auto' });
+		expect(signinOffer(atSignInScreen, saved({ auto: true }), fresh)).toEqual({
+			kind: 'auto',
+			path: 'typed'
+		});
 		expect(signinOffer({ ...atSignInScreen, username: 'SYSTEM' }, saved({ auto: true }), fresh)).toEqual({
-			kind: 'auto'
+			kind: 'auto',
+			path: 'typed'
 		});
 		// Someone is signed in: locked or not, the device does not say; the button and why
 		expect(signinOffer(someoneSignedIn, saved({ auto: true }), fresh)).toEqual({
 			kind: 'button',
 			signedIn: true,
-			noLockSignal: true
+			noLockSignal: true,
+			confirm: true,
+			path: 'typed'
 		});
 	});
 
@@ -65,7 +83,9 @@ describe('when saved sign-in is offered', () => {
 		expect(signinOffer(atSignInScreen, saved({ auto: true }), { tried: false, autoDone: true })).toEqual({
 			kind: 'button',
 			signedIn: false,
-			noLockSignal: false
+			noLockSignal: false,
+			confirm: false,
+			path: 'typed'
 		});
 	});
 
@@ -81,6 +101,72 @@ describe('when saved sign-in is offered', () => {
 		expect(signinOffer({ ...atSignInScreen, sasEnabled: false }, saved({ auto: true }), fresh)).toEqual({
 			kind: 'unsupported',
 			why: 'service'
+		});
+	});
+});
+
+describe('with the lock screen state of a NeoDesk client', () => {
+	const at = (logonState: PeerFacts['logonState'], extra: Partial<PeerFacts> = {}): PeerFacts => ({
+		...someoneSignedIn,
+		logonState,
+		...extra
+	});
+
+	test('platform_additions name the state and the sealed sign-in; anything else is no signal', () => {
+		expect(signinAdditions('{"logon_state":"locked","nd_signin":1,"is_installed":true}')).toEqual({
+			logonState: 'locked',
+			sealed: true
+		});
+		expect(signinAdditions('{"logon_state":"asleep","nd_signin":0}')).toEqual({
+			logonState: '',
+			sealed: false
+		});
+		expect(signinAdditions('not json')).toEqual({ logonState: '', sealed: false });
+		expect(signinAdditions(undefined)).toEqual({ logonState: '', sealed: false });
+		const bytes = (text: string) => new TextEncoder().encode(text);
+		expect(logonStateFromMessage(bytes('{"logon_state":"desktop"}'))).toBe('desktop');
+		expect(logonStateFromMessage(bytes('nonsense'))).toBe('');
+		expect(signinResultOf(bytes('{"result":"typed","nonce":"n1"}'))).toEqual({
+			result: 'typed',
+			nonce: 'n1'
+		});
+		expect(signinResultOf(bytes('{"result":"done"}'))).toBeNull();
+	});
+
+	test('by itself only on the lock or sign-in screen with the switch on, also when someone is signed in', () => {
+		for (const state of ['locked', 'prelogin'] as const) {
+			expect(signinOffer(at(state), saved({ auto: true }), fresh)).toEqual({ kind: 'auto', path: 'typed' });
+		}
+		expect(signinOffer(at('logon_ui'), saved({ auto: true }), fresh)).toEqual({
+			kind: 'button',
+			signedIn: false,
+			noLockSignal: false,
+			confirm: false,
+			path: 'typed'
+		});
+	});
+
+	test('never on an open desktop', () => {
+		expect(signinOffer(at('desktop'), saved({ auto: true }), fresh).kind).toBe('none');
+		expect(signinOffer(at('desktop'), saved(), fresh).kind).toBe('none');
+	});
+
+	test('the button asks nothing on a reported lock screen; a state that changes later gets no sign-in by itself', () => {
+		expect(signinOffer(at('locked'), saved(), fresh)).toMatchObject({ kind: 'button', confirm: false });
+		expect(signinOffer(at('locked'), saved({ auto: true }), { ...fresh, atStart: false })).toMatchObject({
+			kind: 'button',
+			confirm: false
+		});
+	});
+
+	test('a client that opens sealed packets takes the sealed way, also without its service flag', () => {
+		expect(signinOffer(at('locked', { sealed: true }), saved({ auto: true }), fresh)).toEqual({
+			kind: 'auto',
+			path: 'sealed'
+		});
+		expect(signinOffer(at('locked', { sealed: true, sasEnabled: false }), saved(), fresh)).toMatchObject({
+			kind: 'button',
+			path: 'sealed'
 		});
 	});
 });

@@ -61,7 +61,6 @@ vi.mock('../../../src/lib/api/devices.ts', () => ({ getDevice: vi.fn(async () =>
 vi.mock('../../../src/lib/api/remote.ts', () => ({
 	acceptCertificate: vi.fn(),
 	getBillingCheck: vi.fn(async () => null),
-	getConnectPassword: vi.fn(async () => ''),
 	getPendingBillingSession: vi.fn(async () => null),
 	submitWorkReport: vi.fn()
 }));
@@ -77,7 +76,6 @@ vi.mock('../../../src/lib/remote/secure-store.ts', () => ({
 }));
 
 const { Viewer } = await import('../../../src/lib/remote/viewer.svelte.ts');
-const remoteApi = await import('../../../src/lib/api/remote.ts');
 const devicesApi = await import('../../../src/lib/api/devices.ts');
 const onboardApi = await import('../../../src/lib/api/onboard.ts');
 type ViewerData = ConstructorParameters<typeof Viewer>[0]['data'];
@@ -156,21 +154,9 @@ describe('remote viewer sessions', () => {
 		expect(c.setSessionActive).toHaveBeenLastCalledWith(true);
 	});
 
-	test("the organisation's device password is never read into the page (L454; its answer: viewer-signin.test.ts)", async () => {
-		remembered.clear();
-		remembered.set('900100012', 'old-pw');
-		vi.mocked(remoteApi.getConnectPassword).mockResolvedValueOnce('org-pw');
-		const { s, c } = setup();
-		c.emit('password_required');
-		await vi.waitFor(() => expect(s.password).toBe('old-pw'));
-		expect(remoteApi.getConnectPassword).not.toHaveBeenCalled();
-		vi.mocked(remoteApi.getConnectPassword).mockReset();
-	});
-
 	test("a quick support session's password is sent at once and never stored in the browser", async () => {
 		remembered.clear();
 		remembered.set('900100012', 'old-pw');
-		vi.mocked(remoteApi.getConnectPassword).mockResolvedValueOnce('org-pw');
 		vi.mocked(onboardApi.takeDevicePassword).mockResolvedValueOnce('qs-pw');
 		const { s, c } = setup();
 		c.emit('password_required');

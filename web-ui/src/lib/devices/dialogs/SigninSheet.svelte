@@ -137,6 +137,9 @@
 			<FormSection title={t('devices.signin_action')}>
 				<p class="note">{t('devices.signin_intro')}</p>
 				<p class="note">{t('devices.signin_windows_only')}</p>
+				<p class="note">
+					{status.sealed_signin ? t('devices.signin_path_sealed') : t('devices.signin_path_typed')}
+				</p>
 				<p class="state-line">
 					{#if status.set}
 						<Status tone="good" label={t('devices.signin_saved')} />

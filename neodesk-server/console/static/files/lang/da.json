@@ -695,7 +695,9 @@
     "signin_error_new_name": "Enter the password for this account name.",
     "signin_error_too_long": "Use at most 256 characters.",
     "signin_error_control": "Tabs and line breaks can't be typed at a sign-in screen.",
-    "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji."
+    "signin_error_not_typeable": "This has a character that can't be typed at a sign-in screen, such as an emoji.",
+    "signin_path_sealed": "NeoDesk on this computer signs in by itself: the password never reaches the browser.",
+    "signin_path_typed": "Until NeoDesk on this computer can sign in by itself, the browser viewer types the details."
   },
   "keys": {
     "title": "Servernøgler",
@@ -2788,7 +2790,17 @@
     "signin_not_set": "No sign-in details are saved for this computer any more.",
     "signin_cannot_open": "The saved details can't be read with this server's key. Save them again.",
     "signin_unavailable": "This server can't use saved sign-in details right now.",
-    "signin_failed": "Sign in did not work. Sign in by hand."
+    "signin_failed": "Sign in did not work. Sign in by hand.",
+    "signin_sealed_required": "NeoDesk on this computer signed in by itself before but doesn't offer it in this session, so the server hands out no readable details. Update NeoDesk on the computer, or clear the saved sign-in and save it again.",
+    "signin_no_device_key": "The server has no key of this computer, so it can't seal the sign-in for it.",
+    "signin_sealed_typed": "NeoDesk on the computer typed the saved details. If Windows shows an error, sign in by hand: they are not tried again in this session.",
+    "signin_not_at_lock_screen": "NeoDesk on the computer typed nothing: it isn't at the lock or sign-in screen.",
+    "signin_expired": "The sign-in request had expired when it reached the computer. Check the computer's clock.",
+    "signin_bad_blob": "NeoDesk on the computer couldn't open the sign-in request.",
+    "signin_no_answer": "NeoDesk on the computer didn't answer the sign-in request.",
+    "signin_sealed_sent": "Sent to NeoDesk on the computer…",
+    "signin_path_sealed": "NeoDesk on the computer types it: the password never reaches this browser.",
+    "signin_path_typed": "This browser types it."
   },
   "branding": {
     "identity_title": "Brand Identitet",

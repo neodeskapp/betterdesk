@@ -715,6 +715,13 @@ message ScreenshotResponse {
   bytes data = 3;
 }
 
+// The id names what the content is ("nd.logon_state", "nd.signin",
+// "nd.signin_result"); the content is that message's bytes
+message PluginRequest {
+  string id = 1;
+  bytes content = 2;
+}
+
 message Misc {
   oneof union {
     ChatMessage chat_message = 4;
@@ -748,6 +755,9 @@ message Misc {
     DisplayResolution change_display_resolution = 36;
     MessageQuery message_query = 37;
     int32 follow_current_display = 38;
+    // NeoDesk: the computer's lock screen state and sealed sign-in
+    // (crypto/devicevault/sealed.go has the wire format)
+    PluginRequest plugin_request = 25;
   }
 }
 

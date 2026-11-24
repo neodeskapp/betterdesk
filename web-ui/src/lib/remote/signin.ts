@@ -7,14 +7,23 @@
  * PeerInfo with its platform, the user of its console session (empty, or
  * SYSTEM, while nobody is signed in) and sas_enabled (NeoDesk runs as the
  * Windows service and can send Ctrl+Alt+Del and type at the secure
- * desktop). Nothing tells whether a signed-in desktop is locked, and
- * nothing is sent when the screen changes during the session. So the
- * viewer signs in by itself only when nobody is signed in, and offers a
- * button otherwise.
+ * desktop). A NeoDesk client that knows sealed sign-in also names, in
+ * platform_additions, its lock screen state ("logon_state") and that it
+ * opens sealed packets ("nd_signin"), and sends the state again when it
+ * changes (wire format: neodesk-server/crypto/devicevault/sealed.go).
  *
- * What is typed: Ctrl+Alt+Del, a wait for the sign-in screen, then the
- * text as characters (KeyEvent.seq: the device types each character as
- * Unicode, whatever its keyboard layout) and Tab and Enter as keys.
+ * With the state, the viewer signs in by itself only on the lock or
+ * sign-in screen (locked, prelogin) with the switch on, at the session's
+ * start, and never on an open desktop; a Sign in button needs no
+ * confirmation there. Without it, the viewer signs in by itself only when
+ * nobody is signed in, and asks first when someone is.
+ *
+ * Two ways: a client that opens sealed packets gets the server's packet
+ * and types at its own lock screen (the password never reaches this
+ * page); for any other the viewer types: Ctrl+Alt+Del, a wait for the
+ * sign-in screen, then the text as characters (KeyEvent.seq: the device
+ * types each character as Unicode, whatever its keyboard layout) and Tab
+ * and Enter as keys.
  */
 
 import type { SigninForm, SigninStatus } from '#lib/api/savedSignin.ts';
@@ -22,27 +31,84 @@ import type { SigninForm, SigninStatus } from '#lib/api/savedSignin.ts';
 /** How long the sign-in screen takes to come up after Ctrl+Alt+Del */
 export const SAS_WAIT_MS = 1500;
 
-/** What the device said about itself (PeerInfo) */
+/** The lock screen state a NeoDesk client reports; '' when it reports none */
+export type LogonState = '' | 'prelogin' | 'locked' | 'logon_ui' | 'desktop';
+
+const LOGON_STATES: readonly LogonState[] = ['prelogin', 'locked', 'logon_ui', 'desktop'];
+
+/** What the device said about itself (PeerInfo, and NeoDesk's state messages) */
 export interface PeerFacts {
 	platform: string;
 	/** The user of the device's console session; '' or SYSTEM while nobody is signed in */
 	username: string;
 	/** NeoDesk runs as its service: Ctrl+Alt+Del works and input reaches the secure desktop */
 	sasEnabled: boolean;
+	/** The lock screen state; '' when the client reports none */
+	logonState: LogonState;
+	/** The client opens sealed sign-in packets (format 1) */
+	sealed: boolean;
 }
+
+/** A lock screen state from a client's text; '' for anything else */
+export function logonStateOf(value: unknown): LogonState {
+	return LOGON_STATES.includes(value as LogonState) ? (value as LogonState) : '';
+}
+
+/** What PeerInfo.platform_additions (a JSON object as text) says about sign-in */
+export function signinAdditions(json: string | undefined | null): Pick<PeerFacts, 'logonState' | 'sealed'> {
+	try {
+		const o = JSON.parse(json || '{}') as Record<string, unknown>;
+		return { logonState: logonStateOf(o.logon_state), sealed: Number(o.nd_signin) >= 1 };
+	} catch {
+		return { logonState: '', sealed: false };
+	}
+}
+
+/** The content of an "nd.logon_state" message, '' when it names none */
+export function logonStateFromMessage(content: Uint8Array): LogonState {
+	try {
+		const o = JSON.parse(new TextDecoder().decode(content)) as Record<string, unknown>;
+		return logonStateOf(o.logon_state);
+	} catch {
+		return '';
+	}
+}
+
+export type SigninResult = 'typed' | 'not_at_lock_screen' | 'expired' | 'bad_blob';
+
+/** The content of an "nd.signin_result" message; null when it is not one */
+export function signinResultOf(content: Uint8Array): { result: SigninResult; nonce: string } | null {
+	try {
+		const o = JSON.parse(new TextDecoder().decode(content)) as Record<string, unknown>;
+		const result = o.result;
+		if (
+			result !== 'typed' &&
+			result !== 'not_at_lock_screen' &&
+			result !== 'expired' &&
+			result !== 'bad_blob'
+		)
+			return null;
+		return { result, nonce: typeof o.nonce === 'string' ? o.nonce : '' };
+	} catch {
+		return null;
+	}
+}
+
+/** sealed: the computer's NeoDesk opens a sealed packet; typed: the viewer types */
+export type SigninPath = 'sealed' | 'typed';
 
 export type SigninOffer =
 	| { kind: 'none' }
 	/** Details are saved, but this computer can't be signed in this way */
 	| { kind: 'unsupported'; why: 'platform' | 'service' }
 	/**
-	 * A Sign in button. signedIn: the device reports a signed-in user (ask
-	 * first); noLockSignal: the switch is on, but the device can't say
-	 * whether that desktop is locked
+	 * A Sign in button. signedIn: the device reports a signed-in user and no
+	 * lock state, so the viewer asks first (confirm); noLockSignal: the
+	 * switch is on, but the device can't say whether that desktop is locked
 	 */
-	| { kind: 'button'; signedIn: boolean; noLockSignal: boolean }
+	| { kind: 'button'; signedIn: boolean; noLockSignal: boolean; confirm: boolean; path: SigninPath }
 	/** Sign in now, by itself */
-	| { kind: 'auto' };
+	| { kind: 'auto'; path: SigninPath };
 
 export function isWindows(platform: string): boolean {
 	return /windows/i.test(platform);
@@ -57,19 +123,32 @@ export function nobodySignedIn(peer: PeerFacts): boolean {
 /**
  * What the viewer offers for a session. tried: this session used its one
  * attempt; autoDone: the viewer already signed in by itself on this device
- * since the page opened (a reconnect does not sign in by itself again).
+ * since the page opened (a reconnect does not sign in by itself again);
+ * atStart: this is the screen the session opened on (a state that changes
+ * later gets the button, never the sign-in by itself).
  */
 export function signinOffer(
 	peer: PeerFacts | null,
 	status: SigninStatus | null,
-	state: { tried: boolean; autoDone: boolean }
+	state: { tried: boolean; autoDone: boolean; atStart?: boolean }
 ): SigninOffer {
 	if (!status?.set || !status.may_use || !peer || state.tried) return { kind: 'none' };
-	if (!isWindows(peer.platform)) return { kind: 'unsupported', why: 'platform' };
-	if (!peer.sasEnabled) return { kind: 'unsupported', why: 'service' };
+	const path: SigninPath = peer.sealed ? 'sealed' : 'typed';
+	if (path === 'typed') {
+		if (!isWindows(peer.platform)) return { kind: 'unsupported', why: 'platform' };
+		if (!peer.sasEnabled) return { kind: 'unsupported', why: 'service' };
+	}
+	const atStart = state.atStart !== false;
+	if (peer.logonState) {
+		// The computer says where it is: never on an open desktop
+		if (peer.logonState === 'desktop') return { kind: 'none' };
+		const lockScreen = peer.logonState === 'locked' || peer.logonState === 'prelogin';
+		if (status.auto && lockScreen && atStart && !state.autoDone) return { kind: 'auto', path };
+		return { kind: 'button', signedIn: false, noLockSignal: false, confirm: false, path };
+	}
 	const nobody = nobodySignedIn(peer);
-	if (status.auto && nobody && !state.autoDone) return { kind: 'auto' };
-	return { kind: 'button', signedIn: !nobody, noLockSignal: status.auto && !nobody };
+	if (status.auto && nobody && atStart && !state.autoDone) return { kind: 'auto', path };
+	return { kind: 'button', signedIn: !nobody, noLockSignal: status.auto && !nobody, confirm: !nobody, path };
 }
 
 export type SigninStep =
