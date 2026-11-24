@@ -1090,8 +1090,9 @@ func (pg *PostgresDB) DeletePeer(id string) error {
 
 // HardDeletePeer permanently removes a peer from the database, revokes its
 // device tokens, releases any id_change_history reservations for that
-// ID and removes its data loss prevention events (the console's
-// dlp_events, when the console made the table).
+// ID, removes what the server keeps of the install (hard_delete.go) and
+// its data loss prevention events (the console's dlp_events, when the
+// console made the table).
 func (pg *PostgresDB) HardDeletePeer(id string) error {
 	tx, err := pg.pool.Begin(pg.ctx)
 	if err != nil {
@@ -1109,9 +1110,17 @@ func (pg *PostgresDB) HardDeletePeer(id string) error {
 		`DELETE FROM id_change_history WHERE old_id = $1 OR new_id = $1`, id); err != nil {
 		return err
 	}
-	if _, err := tx.Exec(pg.ctx,
-		`DELETE FROM server_config WHERE key = $1`, "telemetry_seq_"+id); err != nil {
+	keys := make([]string, 0, len(deviceConfigPrefixes))
+	for _, key := range deviceConfigKeys(id) {
+		keys = append(keys, key.(string))
+	}
+	if _, err := tx.Exec(pg.ctx, `DELETE FROM server_config WHERE key = ANY($1)`, keys); err != nil {
 		return err
+	}
+	for _, t := range deviceRowTables {
+		if err := pgExecInSavepoint(pg.ctx, tx, `DELETE FROM `+t.table+` WHERE `+t.column+` = $1`, id); err != nil && !isMissingTable(err) {
+			return err
+		}
 	}
 	if err := pgExecInSavepoint(pg.ctx, tx, `DELETE FROM dlp_events WHERE device_id = $1`, id); err != nil && !isMissingTable(err) {
 		return err

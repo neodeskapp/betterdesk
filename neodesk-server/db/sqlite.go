@@ -1232,8 +1232,9 @@ func (s *SQLiteDB) DeletePeer(id string) error {
 
 // HardDeletePeer permanently removes a peer from the database, revokes its
 // device tokens, releases any id_change_history reservations for that
-// ID and removes its data loss prevention events (the console's
-// dlp_events, when the console made the table).
+// ID, removes what the server keeps of the install (hard_delete.go) and
+// its data loss prevention events (the console's dlp_events, when the
+// console made the table).
 func (s *SQLiteDB) HardDeletePeer(id string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -1254,9 +1255,14 @@ func (s *SQLiteDB) HardDeletePeer(id string) error {
 		`DELETE FROM id_change_history WHERE old_id = ? OR new_id = ?`, id, id); err != nil {
 		return err
 	}
-	if _, err := tx.Exec(
-		`DELETE FROM server_config WHERE key = ?`, "telemetry_seq_"+id); err != nil {
+	keys := deviceConfigKeys(id)
+	if _, err := tx.Exec(`DELETE FROM server_config WHERE key IN (?`+strings.Repeat(", ?", len(keys)-1)+`)`, keys...); err != nil {
 		return err
+	}
+	for _, t := range deviceRowTables {
+		if _, err := tx.Exec(`DELETE FROM `+t.table+` WHERE `+t.column+` = ?`, id); err != nil && !isMissingTable(err) {
+			return err
+		}
 	}
 	if _, err := tx.Exec(`DELETE FROM dlp_events WHERE device_id = ?`, id); err != nil && !isMissingTable(err) {
 		return err
