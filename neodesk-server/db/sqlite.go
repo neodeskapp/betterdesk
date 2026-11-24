@@ -764,6 +764,9 @@ func (s *SQLiteDB) migrateSchema() error {
 		// made with, so that the end of the token ends it
 		{"device_tokens", "created_by_token", `ALTER TABLE device_tokens ADD COLUMN created_by_token TEXT NOT NULL DEFAULT ''`},
 		{"org_invitations", "created_by_token", `ALTER TABLE org_invitations ADD COLUMN created_by_token TEXT NOT NULL DEFAULT ''`},
+		// peer_metrics: network rates of NeoDesk telemetry (L480)
+		{"peer_metrics", "net_rx_bps", `ALTER TABLE peer_metrics ADD COLUMN net_rx_bps REAL DEFAULT NULL`},
+		{"peer_metrics", "net_tx_bps", `ALTER TABLE peer_metrics ADD COLUMN net_tx_bps REAL DEFAULT NULL`},
 	}
 
 	for _, m := range columnMigrations {
@@ -2878,14 +2881,36 @@ func (s *SQLiteDB) SavePeerMetric(peerID string, cpu, memory, disk float64) erro
 	return err
 }
 
+// nullFloat is the value of a nullable REAL column; NULL is nil.
+func nullFloat(v sql.NullFloat64) *float64 {
+	if !v.Valid {
+		return nil
+	}
+	f := v.Float64
+	return &f
+}
+
+// SavePeerUsage inserts a usage sample of a device's telemetry; a value
+// the device did not send stays NULL.
+func (s *SQLiteDB) SavePeerUsage(peerID string, u PeerUsage) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	_, err := s.db.Exec(
+		`INSERT INTO peer_metrics (peer_id, cpu_usage, memory_usage, disk_usage, net_rx_bps, net_tx_bps, created_at)
+		 VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+		peerID, u.CPU, u.Memory, u.Disk, u.NetRx, u.NetTx)
+	return err
+}
+
 // GetPeerMetrics returns the most recent metric data points for a peer.
 func (s *SQLiteDB) GetPeerMetrics(peerID string, limit int) ([]*PeerMetric, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(
-		`SELECT id, peer_id, cpu_usage, memory_usage, disk_usage, created_at
-		 FROM peer_metrics WHERE peer_id = ? ORDER BY created_at DESC LIMIT ?`,
+		`SELECT id, peer_id, cpu_usage, memory_usage, disk_usage, net_rx_bps, net_tx_bps, created_at
+		 FROM peer_metrics WHERE peer_id = ? ORDER BY created_at DESC, id DESC LIMIT ?`,
 		peerID, limit)
 	if err != nil {
 		return nil, err
@@ -2896,9 +2921,12 @@ func (s *SQLiteDB) GetPeerMetrics(peerID string, limit int) ([]*PeerMetric, erro
 	for rows.Next() {
 		var m PeerMetric
 		var createdAt string
-		if err := rows.Scan(&m.ID, &m.PeerID, &m.CPU, &m.Memory, &m.Disk, &createdAt); err != nil {
+		var cpu, memory, disk, rx, tx sql.NullFloat64
+		if err := rows.Scan(&m.ID, &m.PeerID, &cpu, &memory, &disk, &rx, &tx, &createdAt); err != nil {
 			return nil, err
 		}
+		m.CPU, m.Memory, m.Disk = nullFloat(cpu), nullFloat(memory), nullFloat(disk)
+		m.NetRx, m.NetTx = nullFloat(rx), nullFloat(tx)
 		m.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAt)
 		metrics = append(metrics, &m)
 	}

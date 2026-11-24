@@ -41,3 +41,36 @@ func TestPeerMetricsSendShortFloats(t *testing.T) {
 		}
 	})
 }
+
+// TestPeerUsageKeepsUnknownValuesAndNetworkRates: a usage sample stores a
+// value the device did not measure as NULL (null in JSON, not 0) and the
+// network rates next to CPU, memory and disk (L480).
+func TestPeerUsageKeepsUnknownValuesAndNetworkRates(t *testing.T) {
+	panelGroupStores(t, func(t *testing.T, database Database) {
+		peerID := "L480-" + strings.ReplaceAll(t.Name(), "/", "-")
+		if pg, ok := database.(*PostgresDB); ok {
+			clean := func() { _, _ = pg.pool.Exec(pg.ctx, `DELETE FROM peer_metrics WHERE peer_id = $1`, peerID) }
+			clean()
+			t.Cleanup(clean)
+		}
+		f := func(v float64) *float64 { return &v }
+		if err := database.SavePeerUsage(peerID, PeerUsage{CPU: f(37.5), Memory: f(41.25), Disk: f(22.5), NetRx: f(1100), NetTx: f(30)}); err != nil {
+			t.Fatal(err)
+		}
+		if err := database.SavePeerUsage(peerID, PeerUsage{Memory: f(30)}); err != nil {
+			t.Fatal(err)
+		}
+		metrics, err := database.GetPeerMetrics(peerID, 10)
+		if err != nil || len(metrics) != 2 {
+			t.Fatalf("GetPeerMetrics: %v %v", metrics, err)
+		}
+		newest, _ := json.Marshal(metrics[0])
+		oldest, _ := json.Marshal(metrics[1])
+		if want := `"cpu_usage":null,"memory_usage":30,"disk_usage":null,"created_at"`; !strings.Contains(string(newest), want) {
+			t.Errorf("newest %s, want it to hold %s", newest, want)
+		}
+		if want := `"cpu_usage":37.5,"memory_usage":41.25,"disk_usage":22.5,"net_rx_bps":1100,"net_tx_bps":30,`; !strings.Contains(string(oldest), want) {
+			t.Errorf("oldest %s, want it to hold %s", oldest, want)
+		}
+	})
+}

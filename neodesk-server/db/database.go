@@ -172,14 +172,30 @@ var (
 	ErrInvalidUsername = errors.New("db: invalid username")
 )
 
-// PeerMetric represents a single heartbeat metric data point.
+// PeerMetric represents a single heartbeat metric data point. A value
+// the device did not measure is nil (null in JSON). The network rates are
+// bytes per second over the time the sample covers; only NeoDesk clients
+// send them.
 type PeerMetric struct {
 	ID        int64     `json:"id"`
 	PeerID    string    `json:"peer_id"`
-	CPU       float64   `json:"cpu_usage"`
-	Memory    float64   `json:"memory_usage"`
-	Disk      float64   `json:"disk_usage"`
+	CPU       *float64  `json:"cpu_usage"`
+	Memory    *float64  `json:"memory_usage"`
+	Disk      *float64  `json:"disk_usage"`
+	NetRx     *float64  `json:"net_rx_bps,omitempty"`
+	NetTx     *float64  `json:"net_tx_bps,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+// PeerUsage is one usage sample of a device's telemetry; nil is a value
+// the device did not send.
+type PeerUsage struct {
+	CPU, Memory, Disk, NetRx, NetTx *float64
+}
+
+// Empty is true when the sample holds no value at all.
+func (u PeerUsage) Empty() bool {
+	return u.CPU == nil && u.Memory == nil && u.Disk == nil && u.NetRx == nil && u.NetTx == nil
 }
 
 // TelemetrySnapshot is the latest bounded snapshot reported by a device.
@@ -696,6 +712,7 @@ type Database interface {
 
 	// Peer Metrics (heartbeat CPU/memory/disk)
 	SavePeerMetric(peerID string, cpu, memory, disk float64) error
+	SavePeerUsage(peerID string, usage PeerUsage) error
 	GetPeerMetrics(peerID string, limit int) ([]*PeerMetric, error)
 	GetLatestPeerMetric(peerID string) (*PeerMetric, error)
 	CleanupOldMetrics(maxAge time.Duration) (int64, error) // Delete metrics older than maxAge

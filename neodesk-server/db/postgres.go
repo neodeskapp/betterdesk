@@ -793,6 +793,13 @@ func (pg *PostgresDB) Migrate() error {
 		// made with, so that the end of the token ends it
 		`ALTER TABLE device_tokens ADD COLUMN IF NOT EXISTS created_by_token TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE org_invitations ADD COLUMN IF NOT EXISTS created_by_token TEXT NOT NULL DEFAULT ''`,
+		// peer_metrics: network rates of NeoDesk telemetry, and a value
+		// the device did not measure stays NULL (L480)
+		`ALTER TABLE peer_metrics ADD COLUMN IF NOT EXISTS net_rx_bps REAL`,
+		`ALTER TABLE peer_metrics ADD COLUMN IF NOT EXISTS net_tx_bps REAL`,
+		`ALTER TABLE peer_metrics ALTER COLUMN cpu_usage DROP NOT NULL`,
+		`ALTER TABLE peer_metrics ALTER COLUMN memory_usage DROP NOT NULL`,
+		`ALTER TABLE peer_metrics ALTER COLUMN disk_usage DROP NOT NULL`,
 	}
 
 	for _, ddl := range columnMigrations {
@@ -2485,14 +2492,24 @@ func (pg *PostgresDB) SavePeerMetric(peerID string, cpu, memory, disk float64) e
 	return err
 }
 
+// SavePeerUsage inserts a usage sample of a device's telemetry; a value
+// the device did not send stays NULL.
+func (pg *PostgresDB) SavePeerUsage(peerID string, u PeerUsage) error {
+	_, err := pg.pool.Exec(pg.ctx,
+		`INSERT INTO peer_metrics (peer_id, cpu_usage, memory_usage, disk_usage, net_rx_bps, net_tx_bps)
+		 VALUES ($1, $2, $3, $4, $5, $6)`,
+		peerID, u.CPU, u.Memory, u.Disk, u.NetRx, u.NetTx)
+	return err
+}
+
 // GetPeerMetrics retrieves the most recent N metric records for a peer.
 func (pg *PostgresDB) GetPeerMetrics(peerID string, limit int) ([]*PeerMetric, error) {
 	if limit <= 0 {
 		limit = 100
 	}
 	rows, err := pg.pool.Query(pg.ctx,
-		`SELECT id, peer_id, cpu_usage, memory_usage, disk_usage, created_at
-		 FROM peer_metrics WHERE peer_id = $1 ORDER BY created_at DESC LIMIT $2`,
+		`SELECT id, peer_id, cpu_usage, memory_usage, disk_usage, net_rx_bps, net_tx_bps, created_at
+		 FROM peer_metrics WHERE peer_id = $1 ORDER BY created_at DESC, id DESC LIMIT $2`,
 		peerID, limit)
 	if err != nil {
 		return nil, err
@@ -2504,11 +2521,12 @@ func (pg *PostgresDB) GetPeerMetrics(peerID string, limit int) ([]*PeerMetric, e
 		m := &PeerMetric{}
 		// The columns are REAL: four-byte floats, taken as the shortest
 		// decimal that names them (12.3, not 12.300000190734863)
-		var cpu, memory, disk float32
-		if err := rows.Scan(&m.ID, &m.PeerID, &cpu, &memory, &disk, &m.CreatedAt); err != nil {
+		var cpu, memory, disk, rx, tx *float32
+		if err := rows.Scan(&m.ID, &m.PeerID, &cpu, &memory, &disk, &rx, &tx, &m.CreatedAt); err != nil {
 			return nil, err
 		}
-		m.CPU, m.Memory, m.Disk = shortFloat(cpu), shortFloat(memory), shortFloat(disk)
+		m.CPU, m.Memory, m.Disk = shortFloatPtr(cpu), shortFloatPtr(memory), shortFloatPtr(disk)
+		m.NetRx, m.NetTx = shortFloatPtr(rx), shortFloatPtr(tx)
 		metrics = append(metrics, m)
 	}
 	return metrics, rows.Err()
@@ -2518,6 +2536,15 @@ func (pg *PostgresDB) GetPeerMetrics(peerID string, limit int) ([]*PeerMetric, e
 func shortFloat(f float32) float64 {
 	v, _ := strconv.ParseFloat(strconv.FormatFloat(float64(f), 'g', -1, 32), 64)
 	return v
+}
+
+// shortFloatPtr is shortFloat of a nullable column; NULL stays nil.
+func shortFloatPtr(f *float32) *float64 {
+	if f == nil {
+		return nil
+	}
+	v := shortFloat(*f)
+	return &v
 }
 
 // GetLatestPeerMetric returns the single most recent metric for a peer.

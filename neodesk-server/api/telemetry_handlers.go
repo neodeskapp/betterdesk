@@ -3,6 +3,8 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -118,6 +120,7 @@ func (s *Server) saveClientTelemetry(deviceID string, raw json.RawMessage) {
 	if len(envelope.Metrics) > 0 {
 		s.saveTelemetrySnapshot(deviceID, "metrics", envelope.SampleID, envelope.Status["metrics"],
 			envelope.CollectedAt, envelope.Metrics)
+		s.savePeerUsage(deviceID, envelope.Status["metrics"], envelope.Metrics)
 	}
 	for _, snapshot := range envelope.Snapshots {
 		s.saveDeviceSnapshot(deviceID, snapshot)
@@ -152,6 +155,63 @@ func (s *Server) saveClientTelemetry(deviceID string, raw json.RawMessage) {
 			s.auditLog.Log(audit.ActionTelemetryCommandResult, deviceID, fmt.Sprint(result.ID),
 				map[string]string{"error": err.Error()})
 		}
+	}
+}
+
+// telemetryMetrics is the metrics object of a NeoDesk client's telemetry.
+type telemetryMetrics struct {
+	CPU       *float64 `json:"cpu_percent"`
+	CPUWindow *float64 `json:"cpu_window_seconds"`
+	Memory    *float64 `json:"memory_percent"`
+	Disk      *float64 `json:"disk_percent"`
+	Network   *struct {
+		Received    *float64 `json:"received_per_second"`
+		Transmitted *float64 `json:"transmitted_per_second"`
+	} `json:"network"`
+}
+
+// percent is a share between 0 and 100, or nil.
+func percent(v *float64) *float64 {
+	if v == nil || math.IsNaN(*v) || math.IsInf(*v, 0) {
+		return nil
+	}
+	p := math.Min(100, math.Max(0, *v))
+	return &p
+}
+
+// rate is a non-negative rate, or nil.
+func rate(v *float64) *float64 {
+	if v == nil || math.IsNaN(*v) || math.IsInf(*v, 0) || *v < 0 {
+		return nil
+	}
+	return v
+}
+
+// savePeerUsage adds the metrics of a telemetry heartbeat to the device's
+// usage history (peer_metrics), which the device page draws. The CPU value
+// counts only with the time it covers: clients up to 1.5.0-rc.7 sent the
+// reading of a single refresh, 100 on Windows and 0 on Linux whatever the
+// load (L480).
+func (s *Server) savePeerUsage(deviceID, status string, raw json.RawMessage) {
+	if status != "" && status != "ok" {
+		return
+	}
+	var m telemetryMetrics
+	if json.Unmarshal(raw, &m) != nil {
+		return
+	}
+	usage := db.PeerUsage{Memory: percent(m.Memory), Disk: percent(m.Disk)}
+	if m.CPUWindow != nil && *m.CPUWindow > 0 {
+		usage.CPU = percent(m.CPU)
+	}
+	if m.Network != nil {
+		usage.NetRx, usage.NetTx = rate(m.Network.Received), rate(m.Network.Transmitted)
+	}
+	if usage.Empty() {
+		return
+	}
+	if err := s.db.SavePeerUsage(deviceID, usage); err != nil {
+		log.Printf("[api] Failed to save the usage sample of %s: %v", deviceID, err)
 	}
 }
 
