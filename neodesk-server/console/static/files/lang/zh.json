@@ -1882,7 +1882,13 @@
     "action_api_token_created": "已创建 API 令牌",
     "action_api_token_revoked": "已吊销 API 令牌",
     "action_api_token_write": "通过 API 令牌修改",
-    "action_api_token_refused": "已拒绝 API 令牌"
+    "action_api_token_refused": "已拒绝 API 令牌",
+    "action_signin_set": "Saved sign-in set",
+    "action_signin_replace": "Saved sign-in replaced",
+    "action_signin_change": "Saved sign-in changed",
+    "action_signin_clear": "Saved sign-in cleared",
+    "action_signin_use": "Saved sign-in used",
+    "action_signin_refused": "Saved sign-in refused"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -4761,7 +4767,9 @@
     "perm_billing_view": "查看计费",
     "perm_billing_manage": "管理计费套餐和合同",
     "perm_billing_reports": "撰写工作报告",
-    "perm_billing_export": "导出计费数据"
+    "perm_billing_export": "导出计费数据",
+    "perm_device_signin_use": "Use saved sign-in",
+    "perm_device_signin_manage": "Manage saved sign-in"
   },
   "tokens": {
     "title": "设备令牌",

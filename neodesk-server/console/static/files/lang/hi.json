@@ -1888,7 +1888,13 @@
     "action_api_token_created": "API टोकन बनाया गया",
     "action_api_token_revoked": "API टोकन रद्द किया गया",
     "action_api_token_write": "API टोकन से बदलाव",
-    "action_api_token_refused": "API टोकन अस्वीकार किया गया"
+    "action_api_token_refused": "API टोकन अस्वीकार किया गया",
+    "action_signin_set": "Saved sign-in set",
+    "action_signin_replace": "Saved sign-in replaced",
+    "action_signin_change": "Saved sign-in changed",
+    "action_signin_clear": "Saved sign-in cleared",
+    "action_signin_use": "Saved sign-in used",
+    "action_signin_refused": "Saved sign-in refused"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -6995,7 +7001,9 @@
     "perm_billing_view": "बिलिंग देखें",
     "perm_billing_manage": "बिलिंग पैकेज और अनुबंध प्रबंधित करें",
     "perm_billing_reports": "कार्य रिपोर्ट लिखें",
-    "perm_billing_export": "बिलिंग डेटा निर्यात करें"
+    "perm_billing_export": "बिलिंग डेटा निर्यात करें",
+    "perm_device_signin_use": "Use saved sign-in",
+    "perm_device_signin_manage": "Manage saved sign-in"
   },
   "notifications": {
     "title": "सूचनाएं",

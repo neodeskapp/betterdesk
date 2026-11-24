@@ -2639,7 +2639,9 @@ func (s *Server) admitSession(relayUUID, initiatorID, targetID string, account i
 			return refuseBillingBlocked
 		}
 	}
-	if !relay.AuthorizeRelayPair(relayUUID, initiatorID, targetID) {
+	// The account rides along so the live session names who opened it
+	// (saved sign-in binds its use to that account's own session)
+	if !relay.AuthorizeRelayPairFor(relayUUID, initiatorID, targetID, max(account, 0)) {
 		log.Printf("[signal] Rejected relay authorization (uuid=%q initiator=%q target=%q)",
 			relayUUID, initiatorID, targetID)
 		return refuseRelayTicketRejected

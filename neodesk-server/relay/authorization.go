@@ -18,14 +18,35 @@ type AuthorizationRegistry struct {
 	used    map[string]time.Time
 	now     func() time.Time
 	waiters map[string]chan struct{} // one notification channel per UUID
+	// live holds the sessions whose ticket both sides claimed, until the
+	// relay ends them (End) or liveMaxAge passes
+	live map[string]livePair
 }
 
 type relayAuthorization struct {
 	initiatorID string
 	targetID    string
+	account     int64
 	expiresAt   time.Time
 	claims      uint8
 }
+
+// LivePair is a relay session that runs: who started it, to which device,
+// and the console account signal named for it (0 for none).
+type LivePair struct {
+	Initiator string
+	Target    string
+	Account   int64
+}
+
+type livePair struct {
+	LivePair
+	since time.Time
+}
+
+// liveMaxAge is how long a live entry is kept when the relay never
+// reported the session's end.
+const liveMaxAge = 7 * 24 * time.Hour
 
 // NewAuthorizationRegistry creates an in-memory authorization store. Tickets
 // are deliberately process-local: signal and relay run together in NeoDesk's
@@ -36,6 +57,7 @@ func NewAuthorizationRegistry() *AuthorizationRegistry {
 		used:    make(map[string]time.Time),
 		now:     time.Now,
 		waiters: make(map[string]chan struct{}),
+		live:    make(map[string]livePair),
 	}
 }
 
@@ -51,6 +73,12 @@ func AuthorizeRelayPair(uuid, initiatorID, targetID string) bool {
 	return defaultAuthorizationRegistry.Authorize(uuid, initiatorID, targetID)
 }
 
+// AuthorizeRelayPairFor is AuthorizeRelayPair for a session that a console
+// account starts (0 for none): the live session names the account.
+func AuthorizeRelayPairFor(uuid, initiatorID, targetID string, account int64) bool {
+	return defaultAuthorizationRegistry.AuthorizeFor(uuid, initiatorID, targetID, account)
+}
+
 // ClaimRelayPair reserves one of the two connections for a signal-authorized
 // UUID on the shared all-in-one registry (same store Claim uses in hbbr).
 func ClaimRelayPair(uuid string) bool {
@@ -63,6 +91,12 @@ func RevokeRelayPairsForPeer(peerID string) {
 }
 
 func (r *AuthorizationRegistry) Authorize(uuid, initiatorID, targetID string) bool {
+	return r.AuthorizeFor(uuid, initiatorID, targetID, 0)
+}
+
+// AuthorizeFor is Authorize with the console account behind the session.
+// A retry of an active ticket must name the same pair and account.
+func (r *AuthorizationRegistry) AuthorizeFor(uuid, initiatorID, targetID string, account int64) bool {
 	if uuid == "" || initiatorID == "" || targetID == "" {
 		return false
 	}
@@ -76,11 +110,12 @@ func (r *AuthorizationRegistry) Authorize(uuid, initiatorID, targetID string) bo
 		return false
 	}
 	if ticket, exists := r.tickets[uuid]; exists {
-		return ticket.initiatorID == initiatorID && ticket.targetID == targetID
+		return ticket.initiatorID == initiatorID && ticket.targetID == targetID && ticket.account == account
 	}
 	r.tickets[uuid] = &relayAuthorization{
 		initiatorID: initiatorID,
 		targetID:    targetID,
+		account:     account,
 		expiresAt:   now.Add(config.RelayPairTimeout),
 	}
 	r.signalWaitersLocked(uuid)
@@ -150,8 +185,36 @@ func (r *AuthorizationRegistry) Claim(uuid string) bool {
 	if ticket.claims == 2 {
 		delete(r.tickets, uuid)
 		r.used[uuid] = ticket.expiresAt
+		if r.live == nil {
+			r.live = make(map[string]livePair)
+		}
+		r.live[uuid] = livePair{
+			LivePair: LivePair{Initiator: ticket.initiatorID, Target: ticket.targetID, Account: ticket.account},
+			since:    now,
+		}
 	}
 	return true
+}
+
+// Live returns the session of uuid while it runs: from the second claim
+// of its ticket until End.
+func (r *AuthorizationRegistry) Live(uuid string) (LivePair, bool) {
+	if uuid == "" {
+		return LivePair{}, false
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.pruneLocked(r.now())
+	pair, ok := r.live[uuid]
+	return pair.LivePair, ok
+}
+
+// End forgets the live session of uuid; the relay calls it when the
+// session's two sides part.
+func (r *AuthorizationRegistry) End(uuid string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	delete(r.live, uuid)
 }
 
 // Release returns a first claim to the ticket when its pending relay
@@ -215,6 +278,11 @@ func (r *AuthorizationRegistry) pruneLocked(now time.Time) {
 	for uuid, expiresAt := range r.used {
 		if !expiresAt.After(now) {
 			delete(r.used, uuid)
+		}
+	}
+	for uuid, pair := range r.live {
+		if now.Sub(pair.since) > liveMaxAge {
+			delete(r.live, uuid)
 		}
 	}
 }

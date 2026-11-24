@@ -25,6 +25,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/crypto"
 	"github.com/neodeskapp/neodesk/neodesk-server/crypto/peervault"
+	"github.com/neodeskapp/neodesk/neodesk-server/crypto/signinvault"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 	eventsModule "github.com/neodeskapp/neodesk/neodesk-server/events"
 	"github.com/neodeskapp/neodesk/neodesk-server/meshcentral"
@@ -129,11 +130,18 @@ type Server struct {
 	billing           *billing.Service
 	peerVault         *peervault.Vault // AES-GCM for org peer credentials
 	remoteTargetVault *peervault.Vault // Dedicated AES-GCM vault for RDP/VNC credentials
-	httpSrv           *http.Server
-	mux               sharedMux // the route table, built once (internal_handler.go)
-	wg                sync.WaitGroup
-	version           string
-	now               func() time.Time // the clock of the export file names
+	// signinVault seals saved sign-in details (device_signin.go); nil when
+	// its key could not be loaded
+	signinVault *signinvault.Vault
+	// signinUses are the sessions that used their saved sign-in
+	signinUses signinUses
+	// signinLiveFn stands in for the relay's live sessions in tests
+	signinLiveFn func(uuid string) (relay.LivePair, bool)
+	httpSrv      *http.Server
+	mux          sharedMux // the route table, built once (internal_handler.go)
+	wg           sync.WaitGroup
+	version      string
+	now          func() time.Time // the clock of the export file names
 }
 
 // SetPanelStore attaches the panel data source for RustDesk group/folder sync.
@@ -690,6 +698,7 @@ func (s *Server) routes() *http.ServeMux {
 	// Join and support codes, for the console in this process only.
 	s.onboardRoutes(mux)
 	s.connectAnswerRoutes(mux)
+	s.signinRoutes(mux)
 
 	// CDAP device management (requires CDAP gateway to be enabled)
 	mux.HandleFunc("GET /api/cdap/status", s.requirePermission(auth.PermCDAPView, s.handleCDAPStatus))

@@ -1888,7 +1888,13 @@
     "action_api_token_created": "Токен API створено",
     "action_api_token_revoked": "Токен API відкликано",
     "action_api_token_write": "Зміна через токен API",
-    "action_api_token_refused": "Токен API відхилено"
+    "action_api_token_refused": "Токен API відхилено",
+    "action_signin_set": "Saved sign-in set",
+    "action_signin_replace": "Saved sign-in replaced",
+    "action_signin_change": "Saved sign-in changed",
+    "action_signin_clear": "Saved sign-in cleared",
+    "action_signin_use": "Saved sign-in used",
+    "action_signin_refused": "Saved sign-in refused"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -6995,7 +7001,9 @@
     "perm_billing_view": "Переглядати рахунки",
     "perm_billing_manage": "Керувати пакетами рахунків і договорами",
     "perm_billing_reports": "Писати звіти про роботу",
-    "perm_billing_export": "Експортувати дані рахунків"
+    "perm_billing_export": "Експортувати дані рахунків",
+    "perm_device_signin_use": "Use saved sign-in",
+    "perm_device_signin_manage": "Manage saved sign-in"
   },
   "notifications": {
     "title": "Сповіщення",

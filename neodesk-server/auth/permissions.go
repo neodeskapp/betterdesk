@@ -18,11 +18,16 @@ const (
 	PermDeviceBan            = "device.ban"    // ban/unban
 	PermDeviceChangeID       = "device.change_id"
 	PermDeviceConnectionMode = "device.connection_mode" // normal <-> incoming-only
-	PermRemoteTargetView     = "remote_target.view"
-	PermRemoteTargetConnect  = "remote_target.connect"
-	PermRemoteTargetEdit     = "remote_target.edit"
-	PermRemoteTargetDelete   = "remote_target.delete"
-	PermRemoteTargetTest     = "remote_target.test"
+	// Saved sign-in (L469): use the account name and password saved for a
+	// device to sign in at its lock screen, and set, replace or clear them.
+	// Only the super admins hold them unless a role is given them.
+	PermDeviceSigninUse     = "device.signin_use"
+	PermDeviceSigninManage  = "device.signin_manage"
+	PermRemoteTargetView    = "remote_target.view"
+	PermRemoteTargetConnect = "remote_target.connect"
+	PermRemoteTargetEdit    = "remote_target.edit"
+	PermRemoteTargetDelete  = "remote_target.delete"
+	PermRemoteTargetTest    = "remote_target.test"
 
 	// User management permissions
 	PermUserView   = "user.view"
@@ -85,6 +90,7 @@ const (
 var AllPermissions = []string{
 	PermDeviceView, PermDeviceConnect, PermGuestCreate, PermDeviceEdit, PermDeviceDelete,
 	PermDeviceBan, PermDeviceChangeID, PermDeviceConnectionMode,
+	PermDeviceSigninUse, PermDeviceSigninManage,
 	PermRemoteTargetView, PermRemoteTargetConnect, PermRemoteTargetEdit,
 	PermRemoteTargetDelete, PermRemoteTargetTest,
 	PermUserView, PermUserCreate, PermUserEdit, PermUserDelete,

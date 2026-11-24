@@ -1882,7 +1882,13 @@
     "action_api_token_created": "API-Token erstellt",
     "action_api_token_revoked": "API-Token widerrufen",
     "action_api_token_write": "Änderung über ein API-Token",
-    "action_api_token_refused": "API-Token abgelehnt"
+    "action_api_token_refused": "API-Token abgelehnt",
+    "action_signin_set": "Gespeicherte Anmeldung gesetzt",
+    "action_signin_replace": "Gespeicherte Anmeldung ersetzt",
+    "action_signin_change": "Gespeicherte Anmeldung geändert",
+    "action_signin_clear": "Gespeicherte Anmeldung gelöscht",
+    "action_signin_use": "Gespeicherte Anmeldung verwendet",
+    "action_signin_refused": "Gespeicherte Anmeldung abgelehnt"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -6989,7 +6995,9 @@
     "perm_billing_view": "Abrechnung ansehen",
     "perm_billing_manage": "Abrechnungspakete und Verträge verwalten",
     "perm_billing_reports": "Arbeitsberichte schreiben",
-    "perm_billing_export": "Abrechnungsdaten exportieren"
+    "perm_billing_export": "Abrechnungsdaten exportieren",
+    "perm_device_signin_use": "Gespeicherte Anmeldung verwenden",
+    "perm_device_signin_manage": "Gespeicherte Anmeldung verwalten"
   },
   "notifications": {
     "title": "Benachrichtigungen",

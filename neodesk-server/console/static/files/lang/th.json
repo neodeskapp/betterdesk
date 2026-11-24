@@ -1888,7 +1888,13 @@
     "action_api_token_created": "สร้างโทเค็น API แล้ว",
     "action_api_token_revoked": "เพิกถอนโทเค็น API แล้ว",
     "action_api_token_write": "การเปลี่ยนแปลงผ่านโทเค็น API",
-    "action_api_token_refused": "ปฏิเสธโทเค็น API"
+    "action_api_token_refused": "ปฏิเสธโทเค็น API",
+    "action_signin_set": "Saved sign-in set",
+    "action_signin_replace": "Saved sign-in replaced",
+    "action_signin_change": "Saved sign-in changed",
+    "action_signin_clear": "Saved sign-in cleared",
+    "action_signin_use": "Saved sign-in used",
+    "action_signin_refused": "Saved sign-in refused"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -6995,7 +7001,9 @@
     "perm_billing_view": "ดูการเรียกเก็บเงิน",
     "perm_billing_manage": "จัดการแพ็กเกจการเรียกเก็บเงินและสัญญา",
     "perm_billing_reports": "เขียนรายงานการทำงาน",
-    "perm_billing_export": "ส่งออกข้อมูลการเรียกเก็บเงิน"
+    "perm_billing_export": "ส่งออกข้อมูลการเรียกเก็บเงิน",
+    "perm_device_signin_use": "Use saved sign-in",
+    "perm_device_signin_manage": "Manage saved sign-in"
   },
   "notifications": {
     "title": "การแจ้งเตือน",

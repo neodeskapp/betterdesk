@@ -1888,7 +1888,13 @@
     "action_api_token_created": "API-token oprettet",
     "action_api_token_revoked": "API-token tilbagekaldt",
     "action_api_token_write": "Ændring via et API-token",
-    "action_api_token_refused": "API-token afvist"
+    "action_api_token_refused": "API-token afvist",
+    "action_signin_set": "Saved sign-in set",
+    "action_signin_replace": "Saved sign-in replaced",
+    "action_signin_change": "Saved sign-in changed",
+    "action_signin_clear": "Saved sign-in cleared",
+    "action_signin_use": "Saved sign-in used",
+    "action_signin_refused": "Saved sign-in refused"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -6995,7 +7001,9 @@
     "perm_billing_view": "Se fakturering",
     "perm_billing_manage": "Administrer faktureringspakker og kontrakter",
     "perm_billing_reports": "Skrive arbejdsrapporter",
-    "perm_billing_export": "Eksportér faktureringsdata"
+    "perm_billing_export": "Eksportér faktureringsdata",
+    "perm_device_signin_use": "Use saved sign-in",
+    "perm_device_signin_manage": "Manage saved sign-in"
   },
   "notifications": {
     "title": "Meddelelser",

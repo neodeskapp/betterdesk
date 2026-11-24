@@ -22,7 +22,8 @@ func TestRolesNameTheTicksTheCodeFixes(t *testing.T) {
 	api.On("GET /api/roles", 200, `{"roles":[{"name":"super_admin"},{"name":"global_admin"},{"name":"operator"},{"name":"guest_issuer"},{"name":"pro"},{"name":"nobody"},"odd"],"all_permissions":[]}`)
 	got := routetest.New(t, routetest.Options{API: api}).As("admin").Do("GET", "/api/panel/roles", "")
 	pro := `"device.view":"pro_devices","device.connect":"pro_devices","device.edit":"pro_devices","device.delete":"pro_devices","device.ban":"pro_devices",` +
-		`"device.change_id":"pro_devices","device.connection_mode":"pro_devices","remote_target.view":"pro_devices","remote_target.connect":"pro_devices",` +
+		`"device.change_id":"pro_devices","device.connection_mode":"pro_devices","device.signin_use":"pro_devices","device.signin_manage":"pro_devices",` +
+		`"remote_target.view":"pro_devices","remote_target.connect":"pro_devices",` +
 		`"remote_target.edit":"pro_devices","remote_target.delete":"pro_devices","remote_target.test":"pro_devices",` +
 		`"user.create":"assigns_no_role","user.delete":"assigns_no_role","org.manage_devices":"pro_devices"`
 	noRole := `{"user.create":"assigns_no_role","user.delete":"assigns_no_role"}`

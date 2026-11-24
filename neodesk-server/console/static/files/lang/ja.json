@@ -1882,7 +1882,13 @@
     "action_api_token_created": "API トークンを作成",
     "action_api_token_revoked": "API トークンを取り消し",
     "action_api_token_write": "API トークンによる変更",
-    "action_api_token_refused": "API トークンを拒否"
+    "action_api_token_refused": "API トークンを拒否",
+    "action_signin_set": "Saved sign-in set",
+    "action_signin_replace": "Saved sign-in replaced",
+    "action_signin_change": "Saved sign-in changed",
+    "action_signin_clear": "Saved sign-in cleared",
+    "action_signin_use": "Saved sign-in used",
+    "action_signin_refused": "Saved sign-in refused"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -6989,7 +6995,9 @@
     "perm_billing_view": "請求を表示",
     "perm_billing_manage": "請求パッケージと契約を管理",
     "perm_billing_reports": "作業レポートを書く",
-    "perm_billing_export": "請求データをエクスポート"
+    "perm_billing_export": "請求データをエクスポート",
+    "perm_device_signin_use": "Use saved sign-in",
+    "perm_device_signin_manage": "Manage saved sign-in"
   },
   "notifications": {
     "title": "通知",

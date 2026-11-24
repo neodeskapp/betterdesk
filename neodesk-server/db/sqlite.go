@@ -426,6 +426,20 @@ func (s *SQLiteDB) migrateSchema() error {
 			updated_by TEXT NOT NULL DEFAULT '',
 			PRIMARY KEY(org_id, peer_id)
 		)`,
+		// Saved sign-in details of a device's operating system account,
+		// sealed with crypto/signinvault (the key is not in the database)
+		`CREATE TABLE IF NOT EXISTS device_signin (
+			device_id TEXT PRIMARY KEY,
+			user_nonce TEXT NOT NULL,
+			user_cipher TEXT NOT NULL,
+			pass_nonce TEXT NOT NULL,
+			pass_cipher TEXT NOT NULL,
+			key_id TEXT NOT NULL,
+			form TEXT NOT NULL DEFAULT 'password',
+			auto_signin INTEGER NOT NULL DEFAULT 0,
+			updated_at TEXT NOT NULL DEFAULT '',
+			updated_by TEXT NOT NULL DEFAULT ''
+		)`,
 		`CREATE TABLE IF NOT EXISTS access_policies (
 			peer_id TEXT PRIMARY KEY,
 			unattended_enabled INTEGER DEFAULT 0,
@@ -1236,6 +1250,9 @@ func (s *SQLiteDB) HardDeletePeer(id string) error {
 	if _, err := tx.Exec(`DELETE FROM dlp_events WHERE device_id = ?`, id); err != nil && !isMissingTable(err) {
 		return err
 	}
+	if _, err := tx.Exec(`DELETE FROM device_signin WHERE device_id = ?`, id); err != nil {
+		return err
+	}
 	return tx.Commit()
 }
 
@@ -1877,6 +1894,9 @@ func (s *SQLiteDB) cascadePeerIDInTx(tx *sql.Tx, oldID, newID string) error {
 		{`DELETE FROM access_policies WHERE peer_id = ? AND EXISTS
 			(SELECT 1 FROM access_policies WHERE peer_id = ?)`, []any{newID, oldID}},
 		{`UPDATE access_policies SET peer_id = ? WHERE peer_id = ?`, []any{newID, oldID}},
+		// The saved sign-in is sealed for the device's ID: it does not open
+		// under another one, so it goes, and so does one the new ID left
+		{`DELETE FROM device_signin WHERE device_id = ? OR device_id = ?`, []any{oldID, newID}},
 		{`UPDATE device_telemetry_snapshots SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_commands SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_connection_policies SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},

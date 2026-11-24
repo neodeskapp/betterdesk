@@ -254,6 +254,14 @@ func relayUUIDLogID(uuid string) string {
 	return uuid[:8]
 }
 
+// Live returns the relay session of uuid while it runs (AuthorizationRegistry.Live).
+func (s *Server) Live(uuid string) (LivePair, bool) {
+	if s == nil || s.authorizations == nil {
+		return LivePair{}, false
+	}
+	return s.authorizations.Live(uuid)
+}
+
 // SetBillingCallbacks registers hooks when relay sessions start/end (commercialization).
 func (s *Server) SetBillingCallbacks(onStart, onEnd func(uuid string)) {
 	s.onRelayStart = onStart
@@ -411,6 +419,8 @@ func (s *Server) handleConn(conn net.Conn) {
 // translation so Web Remote (TCP proxy) can reach WebSocket Mode peers.
 func (s *Server) pairIncomingConn(pc *pendingConn, uuid string) {
 	if val, loaded := s.pending.LoadOrStore(uuid, pc); loaded {
+		// The session is live from the second claim until its sides part
+		defer s.authorizations.End(uuid)
 		existing := val.(*pendingConn)
 		s.pending.Delete(uuid)
 		close(existing.done)

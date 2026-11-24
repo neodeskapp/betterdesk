@@ -375,6 +375,25 @@ type OrgSetting struct {
 	Value string `json:"value"`
 }
 
+// DeviceSignin is a device's saved sign-in: the account name and password
+// of its operating system account, each sealed for the device with
+// crypto/signinvault, and how the viewer uses them. UpdatedAt is RFC 3339
+// in UTC.
+type DeviceSignin struct {
+	DeviceID   string
+	UserNonce  string
+	UserCipher string
+	PassNonce  string
+	PassCipher string
+	KeyID      string
+	// Form is what the device's sign-in screen asks for: "password" (the
+	// account is shown, only its password is typed) or "name_password"
+	Form      string
+	Auto      bool
+	UpdatedAt string
+	UpdatedBy string
+}
+
 // OrgPeerCredential is metadata for an encrypted peer password row.
 // Ciphertext/nonce are never exposed via JSON APIs that list credentials.
 type OrgPeerCredential struct {
@@ -764,6 +783,12 @@ type Database interface {
 	SaveOrgAddressBook(orgID, abType, data, updatedBy string) error
 
 	// Org peer credentials — AES-GCM ciphertext in main DB
+	// Saved sign-in of a device (DeviceSignin): nil when there is none;
+	// Save writes every field; Delete reports whether there was one
+	GetDeviceSignin(deviceID string) (*DeviceSignin, error)
+	SaveDeviceSignin(d *DeviceSignin) error
+	DeleteDeviceSignin(deviceID string) (bool, error)
+
 	GetOrgPeerCredential(orgID, peerID string) (*OrgPeerCredential, error)
 	ListOrgPeerCredentialFlags(orgID string) ([]*OrgPeerCredential, error)
 	SaveOrgPeerCredential(c *OrgPeerCredential) error

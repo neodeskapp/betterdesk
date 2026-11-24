@@ -622,6 +622,11 @@ func main() {
 		} else {
 			log.Printf("Org peer credential vault ready (AES-GCM)")
 		}
+		// Saved sign-in details: their own key file next to the key pair,
+		// never in the database or the backup
+		if err := apiSrv.InitSigninVault(filepath.Dir(cfg.KeyFile)); err != nil {
+			log.Printf("[warn] saved sign-in disabled: %v", err)
+		}
 		if cfg.RemoteTargetVaultKey == "" {
 			log.Printf("[warn] remote target credential vault disabled: REMOTE_TARGET_VAULT_KEY is not configured")
 		} else if err := apiSrv.InitRemoteTargetCredentialVault(cfg.RemoteTargetVaultKey); err != nil {

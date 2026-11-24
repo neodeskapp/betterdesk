@@ -1882,7 +1882,13 @@
     "action_api_token_created": "Token API vytvořen",
     "action_api_token_revoked": "Token API odvolán",
     "action_api_token_write": "Změna přes token API",
-    "action_api_token_refused": "Token API odmítnut"
+    "action_api_token_refused": "Token API odmítnut",
+    "action_signin_set": "Saved sign-in set",
+    "action_signin_replace": "Saved sign-in replaced",
+    "action_signin_change": "Saved sign-in changed",
+    "action_signin_clear": "Saved sign-in cleared",
+    "action_signin_use": "Saved sign-in used",
+    "action_signin_refused": "Saved sign-in refused"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -6989,7 +6995,9 @@
     "perm_billing_view": "Zobrazit fakturaci",
     "perm_billing_manage": "Spravovat fakturační balíčky a smlouvy",
     "perm_billing_reports": "Psát pracovní zprávy",
-    "perm_billing_export": "Exportovat fakturační data"
+    "perm_billing_export": "Exportovat fakturační data",
+    "perm_device_signin_use": "Use saved sign-in",
+    "perm_device_signin_manage": "Manage saved sign-in"
   },
   "notifications": {
     "title": "Oznámení",

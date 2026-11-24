@@ -2641,6 +2641,100 @@
    ]
   },
   {
+   "name": "devices signin",
+   "summary": "Show whether sign-in details are saved for a device, for which account, and who saved them (never the password).",
+   "route": "GET /api/devices/{id}/signin",
+   "args": [
+    {
+     "name": "id",
+     "help": "The device ID (see devices list)"
+    }
+   ],
+   "permission": "device.signin_manage"
+  },
+  {
+   "name": "devices signin-auto",
+   "summary": "Turn automatic sign-in at the device's lock screen on or off, or set what its sign-in screen asks for.",
+   "route": "PATCH /api/devices/{id}/signin",
+   "args": [
+    {
+     "name": "id",
+     "help": "The device ID (see devices list)"
+    }
+   ],
+   "flags": [
+    {
+     "name": "auto",
+     "in": "body",
+     "type": "bool",
+     "help": "sign in by itself when a session opens on the lock screen"
+    },
+    {
+     "name": "form",
+     "in": "body",
+     "type": "string",
+     "enum": [
+      "password",
+      "name_password"
+     ],
+     "help": "password: the screen shows the account and asks for its password; name_password: it asks for both"
+    }
+   ],
+   "permission": "device.signin_manage"
+  },
+  {
+   "name": "devices signin-clear",
+   "summary": "Delete the sign-in details saved for a device.",
+   "route": "DELETE /api/devices/{id}/signin",
+   "args": [
+    {
+     "name": "id",
+     "help": "The device ID (see devices list)"
+    }
+   ],
+   "permission": "device.signin_manage",
+   "destructive": true
+  },
+  {
+   "name": "devices signin-set",
+   "summary": "Save or replace the account name and password the browser viewer types at a device's lock screen (stored encrypted, never shown again).",
+   "route": "PUT /api/devices/{id}/signin",
+   "args": [
+    {
+     "name": "id",
+     "help": "The device ID (see devices list)"
+    }
+   ],
+   "flags": [
+    {
+     "name": "username",
+     "in": "body",
+     "type": "string",
+     "required": true,
+     "help": "the account: name, DOMAIN\\name or name@domain"
+    },
+    {
+     "name": "password",
+     "in": "body",
+     "type": "string",
+     "required": true,
+     "secret": true,
+     "help": "the account's password; prefer --password-stdin"
+    },
+    {
+     "name": "form",
+     "in": "body",
+     "type": "string",
+     "enum": [
+      "password",
+      "name_password"
+     ],
+     "help": "what the sign-in screen asks for (default password)"
+    }
+   ],
+   "permission": "device.signin_manage"
+  },
+  {
    "name": "devices tags-set",
    "summary": "Replace a device's tags.",
    "route": "PUT /api/devices/{id}/tags",
@@ -8110,6 +8204,10 @@
   {
    "route": "POST /api/devices/{id}/connect-password/answer",
    "reason": "The browser viewer's answer to a device's password question; it needs the device's question from an open session."
+  },
+  {
+   "route": "POST /api/devices/{id}/signin/use",
+   "reason": "Saved sign-in is used by a person in the browser viewer for the session it holds; the console refuses API tokens there."
   },
   {
    "route": "POST /api/files/file-transfer",

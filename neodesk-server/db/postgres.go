@@ -463,6 +463,20 @@ func (pg *PostgresDB) Migrate() error {
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_role_permissions_role ON role_permissions(role)`,
 
+		// Saved sign-in details of a device's operating system account,
+		// sealed with crypto/signinvault (the key is not in the database)
+		`CREATE TABLE IF NOT EXISTS device_signin (
+			device_id   TEXT PRIMARY KEY,
+			user_nonce  TEXT NOT NULL,
+			user_cipher TEXT NOT NULL,
+			pass_nonce  TEXT NOT NULL,
+			pass_cipher TEXT NOT NULL,
+			key_id      TEXT NOT NULL,
+			form        TEXT NOT NULL DEFAULT 'password',
+			auto_signin BOOLEAN NOT NULL DEFAULT FALSE,
+			updated_at  TEXT NOT NULL DEFAULT '',
+			updated_by  TEXT NOT NULL DEFAULT ''
+		)`,
 		`CREATE TABLE IF NOT EXISTS access_policies (
 			peer_id TEXT PRIMARY KEY,
 			unattended_enabled BOOLEAN NOT NULL DEFAULT FALSE,
@@ -1091,6 +1105,9 @@ func (pg *PostgresDB) HardDeletePeer(id string) error {
 	if err := pgExecInSavepoint(pg.ctx, tx, `DELETE FROM dlp_events WHERE device_id = $1`, id); err != nil && !isMissingTable(err) {
 		return err
 	}
+	if _, err := tx.Exec(pg.ctx, `DELETE FROM device_signin WHERE device_id = $1`, id); err != nil {
+		return err
+	}
 	return tx.Commit(pg.ctx)
 }
 
@@ -1598,6 +1615,9 @@ func (pg *PostgresDB) cascadePeerIDInTx(ctx context.Context, tx pgx.Tx, oldID, n
 		{`DELETE FROM access_policies WHERE peer_id = $1 AND EXISTS
 			(SELECT 1 FROM access_policies WHERE peer_id = $2)`, []any{newID, oldID}},
 		{`UPDATE access_policies SET peer_id = $1 WHERE peer_id = $2`, []any{newID, oldID}},
+		// The saved sign-in is sealed for the device's ID: it does not open
+		// under another one, so it goes, and so does one the new ID left
+		{`DELETE FROM device_signin WHERE device_id = $1 OR device_id = $2`, []any{oldID, newID}},
 		{`UPDATE device_telemetry_snapshots SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_commands SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_connection_policies SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},

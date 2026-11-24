@@ -262,7 +262,7 @@ func TestWebClientSessionsCarryTheAccountsFeatures(t *testing.T) {
 		t.Fatalf("account's web client: control_permissions = %#x, want %#x", got.GetPermissions(), want)
 	}
 
-	if rr, err := relayRequestOverTCP(t, addr, srv.PanelProof(), "WEBFEAT01"); err != nil || rr.RefuseReason != "" {
+	if rr, err := relayRequestOverTCPWithUUID(t, addr, srv.PanelProof(), "WEBFEAT01", "panel-proof-guest-WEBFEAT01"); err != nil || rr.RefuseReason != "" {
 		t.Fatalf("guest's web client: %+v, %v", rr, err)
 	}
 	if got := permissionsAtTarget(t, recv); got != nil {

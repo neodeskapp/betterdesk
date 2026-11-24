@@ -45,6 +45,15 @@ func serveTCPOnLoopback(t *testing.T, srv *Server) string {
 // read's error when the server closed the connection.
 func relayRequestOverTCP(t *testing.T, addr string, first []byte, target string) (*pb.RelayResponse, error) {
 	t.Helper()
+	return relayRequestOverTCPWithUUID(t, addr, first, target, "panel-proof-"+target)
+}
+
+// relayRequestOverTCPWithUUID is relayRequestOverTCP with the request's
+// relay uuid: a ticket is bound to the account that asked for it first,
+// so another account's session needs a uuid of its own, as the browser
+// makes one per session.
+func relayRequestOverTCPWithUUID(t *testing.T, addr string, first []byte, target, uuid string) (*pb.RelayResponse, error) {
+	t.Helper()
 	conn, err := net.DialTimeout("tcp", addr, 3*time.Second)
 	if err != nil {
 		t.Fatalf("dial: %v", err)
@@ -59,7 +68,7 @@ func relayRequestOverTCP(t *testing.T, addr string, first []byte, target string)
 		}
 	}
 	if err := codec.WriteRawProto(conn, &pb.RendezvousMessage{Union: &pb.RendezvousMessage_RequestRelay{
-		RequestRelay: &pb.RequestRelay{Id: target, Uuid: "panel-proof-" + target},
+		RequestRelay: &pb.RequestRelay{Id: target, Uuid: uuid},
 	}}); err != nil {
 		t.Fatalf("write RequestRelay: %v", err)
 	}

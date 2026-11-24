@@ -1888,7 +1888,13 @@
     "action_api_token_created": "Token API dibuat",
     "action_api_token_revoked": "Token API dicabut",
     "action_api_token_write": "Perubahan melalui token API",
-    "action_api_token_refused": "Token API ditolak"
+    "action_api_token_refused": "Token API ditolak",
+    "action_signin_set": "Saved sign-in set",
+    "action_signin_replace": "Saved sign-in replaced",
+    "action_signin_change": "Saved sign-in changed",
+    "action_signin_clear": "Saved sign-in cleared",
+    "action_signin_use": "Saved sign-in used",
+    "action_signin_refused": "Saved sign-in refused"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -6995,7 +7001,9 @@
     "perm_billing_view": "Lihat penagihan",
     "perm_billing_manage": "Kelola paket penagihan dan kontrak",
     "perm_billing_reports": "Menulis laporan kerja",
-    "perm_billing_export": "Ekspor data penagihan"
+    "perm_billing_export": "Ekspor data penagihan",
+    "perm_device_signin_use": "Use saved sign-in",
+    "perm_device_signin_manage": "Manage saved sign-in"
   },
   "notifications": {
     "title": "Pemberitahuan",

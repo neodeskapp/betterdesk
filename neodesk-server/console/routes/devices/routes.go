@@ -101,6 +101,14 @@ func Register(d *kit.Deps) {
 	r.Get("/api/devices/{id}/connect-password", h.connectPassword, d.RequireAuth, d.RequirePermission("device.connect"))
 	r.Post("/api/devices/{id}/connect-password/answer", h.connectPasswordAnswer, d.RequireAuth, d.RequirePermission("device.connect"))
 
+	// Saved sign-in (signin.go): the handlers check the permissions, and the
+	// writes and the use the scope, so their refusals reach the audit log
+	r.Get("/api/devices/{id}/signin", h.signinStatus, d.RequireAuth)
+	r.Put("/api/devices/{id}/signin", h.signinSet, d.RequireAuth)
+	r.Patch("/api/devices/{id}/signin", h.signinChange, d.RequireAuth)
+	r.Delete("/api/devices/{id}/signin", h.signinClear, d.RequireAuth)
+	r.Post("/api/devices/{id}/signin/use", h.signinUseAnswer, d.RequireAuth)
+
 	// The agent's console tools: each asks its tool's permission and client
 	// feature (agentTools), and agentRequest asks them again
 	r.Get("/api/devices/{id}/services", h.services, d.RequireAuth, h.needs("services.list"))
@@ -136,11 +144,17 @@ func Register(d *kit.Deps) {
 // the addresses below /api/devices/{id}, except for POST
 // /api/devices/bulk-delete (in any letter case, with or without a slash at
 // its end): there bulk-delete names no device, and the route checks each
-// device of its list itself.
+// device of its list itself; and except for the writes and the use of a
+// saved sign-in (signinPath), whose handlers check the scope themselves so
+// a refusal reaches the audit log.
 func (h *handlers) deviceInScope(next http.Handler) http.Handler {
 	checked := h.d.RequireDeviceInScope(next)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost && strings.EqualFold(strings.TrimSuffix(kit.RoutePath(r), "/"), "/api/devices/bulk-delete") {
+			next.ServeHTTP(w, r)
+			return
+		}
+		if signinPath(r) {
 			next.ServeHTTP(w, r)
 			return
 		}

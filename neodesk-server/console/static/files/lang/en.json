@@ -1890,7 +1890,13 @@
         "action_api_token_created": "API token made",
         "action_api_token_revoked": "API token revoked",
         "action_api_token_write": "Change through an API token",
-        "action_api_token_refused": "API token refused"
+        "action_api_token_refused": "API token refused",
+        "action_signin_set": "Saved sign-in set",
+        "action_signin_replace": "Saved sign-in replaced",
+        "action_signin_change": "Saved sign-in changed",
+        "action_signin_clear": "Saved sign-in cleared",
+        "action_signin_use": "Saved sign-in used",
+        "action_signin_refused": "Saved sign-in refused"
     },
     "generator": {
         "title": "NeoDesk Support Generator",
@@ -4840,7 +4846,9 @@
         "perm_billing_view": "View billing",
         "perm_billing_manage": "Manage billing packages and contracts",
         "perm_billing_reports": "Write work reports",
-        "perm_billing_export": "Export billing data"
+        "perm_billing_export": "Export billing data",
+        "perm_device_signin_use": "Use saved sign-in",
+        "perm_device_signin_manage": "Manage saved sign-in"
     },
     "tokens": {
         "title": "Device Tokens",

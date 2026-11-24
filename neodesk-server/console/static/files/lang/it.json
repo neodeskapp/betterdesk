@@ -1882,7 +1882,13 @@
     "action_api_token_created": "Token API creato",
     "action_api_token_revoked": "Token API revocato",
     "action_api_token_write": "Modifica tramite un token API",
-    "action_api_token_refused": "Token API rifiutato"
+    "action_api_token_refused": "Token API rifiutato",
+    "action_signin_set": "Saved sign-in set",
+    "action_signin_replace": "Saved sign-in replaced",
+    "action_signin_change": "Saved sign-in changed",
+    "action_signin_clear": "Saved sign-in cleared",
+    "action_signin_use": "Saved sign-in used",
+    "action_signin_refused": "Saved sign-in refused"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -6989,7 +6995,9 @@
     "perm_billing_view": "Vedere la fatturazione",
     "perm_billing_manage": "Gestire pacchetti di fatturazione e contratti",
     "perm_billing_reports": "Scrivere report di lavoro",
-    "perm_billing_export": "Esportare i dati di fatturazione"
+    "perm_billing_export": "Esportare i dati di fatturazione",
+    "perm_device_signin_use": "Use saved sign-in",
+    "perm_device_signin_manage": "Manage saved sign-in"
   },
   "notifications": {
     "title": "Notifiche",

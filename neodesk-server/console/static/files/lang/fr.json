@@ -1886,7 +1886,13 @@
     "action_api_token_created": "Jeton d'API créé",
     "action_api_token_revoked": "Jeton d'API révoqué",
     "action_api_token_write": "Modification par un jeton d'API",
-    "action_api_token_refused": "Jeton d'API refusé"
+    "action_api_token_refused": "Jeton d'API refusé",
+    "action_signin_set": "Saved sign-in set",
+    "action_signin_replace": "Saved sign-in replaced",
+    "action_signin_change": "Saved sign-in changed",
+    "action_signin_clear": "Saved sign-in cleared",
+    "action_signin_use": "Saved sign-in used",
+    "action_signin_refused": "Saved sign-in refused"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -4783,7 +4789,9 @@
     "perm_billing_view": "Voir la facturation",
     "perm_billing_manage": "Gérer les forfaits de facturation et les contrats",
     "perm_billing_reports": "Rédiger des rapports de travail",
-    "perm_billing_export": "Exporter les données de facturation"
+    "perm_billing_export": "Exporter les données de facturation",
+    "perm_device_signin_use": "Use saved sign-in",
+    "perm_device_signin_manage": "Manage saved sign-in"
   },
   "tokens": {
     "title": "Jetons d'appareil",

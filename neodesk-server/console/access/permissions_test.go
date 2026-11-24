@@ -43,9 +43,10 @@ var consoleRoleMap = map[string][]string{
 // Jest: rolePermissions.goParity.test.js. Every default role against every
 // permission name the server knows.
 func TestRoleHasPermissionForEveryRoleAndPermission(t *testing.T) {
-	// 43 of the Node console and the NeoDesk agent's terminal and files (L388)
-	if len(auth.AllPermissions) != 45 {
-		t.Fatalf("the server knows %d permissions, the console's contract was written for 45", len(auth.AllPermissions))
+	// 43 of the Node console, the NeoDesk agent's terminal and files (L388)
+	// and the two of saved sign-in, which no role but the super admins has (L469)
+	if len(auth.AllPermissions) != 47 {
+		t.Fatalf("the server knows %d permissions, the console's contract was written for 47", len(auth.AllPermissions))
 	}
 	for role, granted := range consoleRoleMap {
 		want := newPermissionSet(granted)
