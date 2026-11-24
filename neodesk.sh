@@ -1360,8 +1360,7 @@ show_service_logs() {
 graceful_stop_services() {
     print_step "Stopping services gracefully..."
     
-    # New Go services (primary)
-    local services=("neodesk-console" "neodesk-server")
+    local services=("neodesk-server")
     # Legacy services (for migration)
     local legacy_services=("neodesk" "rustdesksignal" "rustdeskrelay" "neodesk-api" "neodesk-go")
     
@@ -1437,38 +1436,6 @@ set_panel_http_port() {
     if is_go_only_install || grep -q '^CONSOLE_PORT=' "$env_file" 2>/dev/null; then
         _upsert_env_line "$env_file" CONSOLE_PORT "$1"
     fi
-}
-
-# Keep neodesk-console.service Environment=PORT/HTTPS_PORT aligned with .env.
-_sync_console_panel_ports_to_systemd() {
-    local svc_file="/etc/systemd/system/neodesk-console.service"
-    local env_file="${CONSOLE_PATH}/.env"
-    local http_port https_port changed=0
-
-    is_go_only_install && return 1
-    [ -f "$svc_file" ] || return 1
-
-    http_port=$(grep -m1 '^PORT=' "$env_file" 2>/dev/null | cut -d= -f2- | tr -d '[:space:]')
-    https_port=$(grep -m1 '^HTTPS_PORT=' "$env_file" 2>/dev/null | cut -d= -f2- | tr -d '[:space:]')
-    [ -n "$http_port" ] || http_port="5000"
-    [ -n "$https_port" ] || https_port="5443"
-
-    if ! grep -qE "^Environment=PORT=${http_port}$" "$svc_file" 2>/dev/null; then
-        _upsert_systemd_env "$svc_file" PORT "$http_port"
-        changed=1
-    fi
-    if [ "$(read_effective_console_setting HTTPS_ENABLED false | tr '[:upper:]' '[:lower:]')" = "true" ]; then
-        if ! grep -qE "^Environment=HTTPS_PORT=${https_port}$" "$svc_file" 2>/dev/null; then
-            _upsert_systemd_env "$svc_file" HTTPS_PORT "$https_port"
-            changed=1
-        fi
-    fi
-
-    if [ "$changed" -eq 1 ]; then
-        systemctl daemon-reload 2>/dev/null || true
-        return 0
-    fi
-    return 1
 }
 
 _upsert_env_line() {
@@ -1773,9 +1740,7 @@ maybe_repair_le_ssl_symlinks() {
 # When HTTPS uses standard port 443, align HTTP redirect listener to :80.
 _ensure_standard_https_redirect_ports() {
     local env_file="${CONSOLE_PATH}/.env"
-    local svc_file="/etc/systemd/system/neodesk-console.service"
     local https_port http_port https_enabled changed=0
-    local svc_port svc_https
 
     https_enabled=$(read_effective_console_setting HTTPS_ENABLED false)
     if [ "$(echo "$https_enabled" | tr '[:upper:]' '[:lower:]')" != "true" ]; then
@@ -1791,19 +1756,9 @@ _ensure_standard_https_redirect_ports() {
         _upsert_env_line "$env_file" HTTP_REDIRECT_HTTPS true
         changed=1
     fi
-    if is_go_only_install; then
-        # Ports below 1024 need CAP_NET_BIND_SERVICE in the unit
-        [ "$changed" -eq 1 ] && maybe_update_services >/dev/null
-    elif [ -f "$svc_file" ]; then
-        svc_port=$(grep -E '^Environment=PORT=' "$svc_file" 2>/dev/null | tail -1 | sed 's/^Environment=PORT=//')
-        svc_https=$(grep -E '^Environment=HTTPS_PORT=' "$svc_file" 2>/dev/null | tail -1 | sed 's/^Environment=HTTPS_PORT=//')
-        if [ "$svc_port" != "80" ] || [ "$svc_https" != "443" ]; then
-            _upsert_systemd_env "$svc_file" HTTPS_PORT 443
-            _upsert_systemd_env "$svc_file" PORT 80
-            _upsert_systemd_env "$svc_file" HTTP_REDIRECT_HTTPS true
-            systemctl daemon-reload 2>/dev/null || true
-            changed=1
-        fi
+    # Ports below 1024 need CAP_NET_BIND_SERVICE in the unit
+    if [ "$changed" -eq 1 ] && is_go_only_install; then
+        maybe_update_services >/dev/null
     fi
     if [ "$changed" -eq 1 ]; then
         ensure_service_user >/dev/null
@@ -1836,9 +1791,6 @@ repair_https_stuck_state() {
         if _ensure_standard_https_redirect_ports; then
             changed=1
         fi
-        if _sync_console_panel_ports_to_systemd; then
-            changed=1
-        fi
     fi
 
     if [ "$changed" -eq 1 ] && [ "$quiet" != "yes" ]; then
@@ -1847,19 +1799,13 @@ repair_https_stuck_state() {
     return 0
 }
 
-# Ensure copied TLS files under $RUSTDESK_PATH/ssl/ are referenced in .env + systemd.
+# Ensure copied TLS files under $RUSTDESK_PATH/ssl/ are referenced in .env.
 _sync_deployed_ssl_paths_to_env() {
     local ssl_dir="$RUSTDESK_PATH/ssl"
     local env_file="${CONSOLE_PATH}/.env"
-    local svc_file="/etc/systemd/system/neodesk-console.service"
 
     _upsert_env_line "$env_file" SSL_CERT_PATH "$ssl_dir/neodesk.crt"
     _upsert_env_line "$env_file" SSL_KEY_PATH "$ssl_dir/neodesk.key"
-    if [ -f "$svc_file" ]; then
-        _upsert_systemd_env "$svc_file" SSL_CERT_PATH "$ssl_dir/neodesk.crt"
-        _upsert_systemd_env "$svc_file" SSL_KEY_PATH "$ssl_dir/neodesk.key"
-        systemctl daemon-reload 2>/dev/null || true
-    fi
 }
 
 # When HTTPS is enabled, ensure the console user can read the TLS private key.
@@ -1937,7 +1883,7 @@ _wait_for_http_code() {
     return 1
 }
 
-# Sync .env + neodesk-console.service for HTTP or HTTPS panel mode.
+# Sync .env for HTTP or HTTPS panel mode.
 apply_console_protocol_mode() {
     local mode="$1"
     local cert_crt="${2:-}"
@@ -1945,7 +1891,6 @@ apply_console_protocol_mode() {
     local api_tls="${4:-false}"
     local allow_self_signed="${5:-true}"
     local env_file="${CONSOLE_PATH}/.env"
-    local svc_file="/etc/systemd/system/neodesk-console.service"
     local go_port="${GO_API_PORT:-21114}"
 
     if [ "$mode" = "http" ]; then
@@ -1958,18 +1903,6 @@ apply_console_protocol_mode() {
         _upsert_env_line "$env_file" NEODESK_API_URL "http://localhost:${go_port}/api"
         _remove_env_line "$env_file" NODE_EXTRA_CA_CERTS
         _remove_env_line "$env_file" ENTERPRISE_TLS
-
-        if [ -f "$svc_file" ]; then
-            _upsert_systemd_env "$svc_file" HTTPS_ENABLED false
-            _upsert_systemd_env "$svc_file" RUSTDESK_API_TLS false
-            _upsert_systemd_env "$svc_file" ALLOW_SELF_SIGNED_CERTS false
-            _upsert_systemd_env "$svc_file" HTTP_REDIRECT_HTTPS false
-            _upsert_systemd_env "$svc_file" TRUST_PROXY false
-            sed -i "s|Environment=HBBS_API_URL=https://localhost|Environment=HBBS_API_URL=http://localhost|" "$svc_file"
-            sed -i "s|Environment=NEODESK_API_URL=https://localhost|Environment=NEODESK_API_URL=http://localhost|" "$svc_file"
-            _remove_systemd_env "$svc_file" NODE_EXTRA_CA_CERTS
-            _remove_systemd_env "$svc_file" ENTERPRISE_TLS
-        fi
         sync_go_server_trust_proxy no
     elif [ "$mode" = "https" ]; then
         _upsert_env_line "$env_file" HTTPS_ENABLED true
@@ -1986,23 +1919,6 @@ apply_console_protocol_mode() {
         _upsert_env_line "$env_file" NEODESK_API_URL "http://localhost:${go_port}/api"
         # Only the Node.js console read NODE_EXTRA_CA_CERTS
         _remove_env_line "$env_file" NODE_EXTRA_CA_CERTS
-
-        if [ -f "$svc_file" ]; then
-            _upsert_systemd_env "$svc_file" HTTPS_ENABLED true
-            _upsert_systemd_env "$svc_file" SSL_CERT_PATH "$cert_crt"
-            _upsert_systemd_env "$svc_file" SSL_KEY_PATH "$cert_key"
-            _upsert_systemd_env "$svc_file" HTTP_REDIRECT_HTTPS true
-            _upsert_systemd_env "$svc_file" RUSTDESK_API_TLS "$api_tls"
-            _upsert_systemd_env "$svc_file" ALLOW_SELF_SIGNED_CERTS "$allow_self_signed"
-            _upsert_systemd_env "$svc_file" TRUST_PROXY false
-            sed -i "s|Environment=HBBS_API_URL=https://localhost|Environment=HBBS_API_URL=http://localhost|" "$svc_file"
-            sed -i "s|Environment=NEODESK_API_URL=https://localhost|Environment=NEODESK_API_URL=http://localhost|" "$svc_file"
-            if [ "$allow_self_signed" = "true" ]; then
-                _upsert_systemd_env "$svc_file" NODE_EXTRA_CA_CERTS "$cert_crt"
-            else
-                _remove_systemd_env "$svc_file" NODE_EXTRA_CA_CERTS
-            fi
-        fi
         sync_go_server_trust_proxy no
     else
         print_error "apply_console_protocol_mode: unknown mode '$mode'"
@@ -2079,7 +1995,6 @@ apply_console_reverse_proxy_mode() {
     local ws_origins="${3:-}"
     local panel_bind="${4:-127.0.0.1}"
     local env_file="${CONSOLE_PATH}/.env"
-    local svc_file="/etc/systemd/system/neodesk-console.service"
     local go_port="${GO_API_PORT:-21114}"
 
     apply_console_protocol_mode http
@@ -2112,14 +2027,6 @@ apply_console_reverse_proxy_mode() {
         _upsert_env_line "$env_file" WS_ALLOWED_ORIGINS "$ws_origins"
     elif [ -n "$panel_host" ]; then
         _upsert_env_line "$env_file" WS_ALLOWED_ORIGINS "https://${panel_host}"
-    fi
-
-    if [ -f "$svc_file" ]; then
-        _upsert_systemd_env "$svc_file" HOST "$panel_bind"
-        _upsert_systemd_env "$svc_file" TRUST_PROXY Y
-        _upsert_systemd_env "$svc_file" HTTPS_ENABLED false
-        _upsert_systemd_env "$svc_file" HTTP_REDIRECT_HTTPS false
-        _upsert_systemd_env "$svc_file" RUSTDESK_API_TLS false
     fi
 
     sync_go_server_trust_proxy yes "$trusted_cidrs"
@@ -2475,7 +2382,6 @@ resolve_panel_https_port() {
 # Offer native HTTPS on standard port 443 after enabling TLS.
 maybe_offer_standard_https_port() {
     local env_file="${CONSOLE_PATH}/.env"
-    local svc_file="/etc/systemd/system/neodesk-console.service"
     local current_https_port
 
     current_https_port=$(read_effective_console_setting HTTPS_PORT 5443)
@@ -2487,14 +2393,9 @@ maybe_offer_standard_https_port() {
         _upsert_env_line "$env_file" HTTPS_PORT 443
         set_panel_http_port 80
         _upsert_env_line "$env_file" HTTP_REDIRECT_HTTPS true
+        # Ports below 1024 need CAP_NET_BIND_SERVICE in the unit
         if is_go_only_install; then
-            # Ports below 1024 need CAP_NET_BIND_SERVICE in the unit
             maybe_update_services >/dev/null
-        elif [ -f "$svc_file" ]; then
-            _upsert_systemd_env "$svc_file" HTTPS_PORT 443
-            _upsert_systemd_env "$svc_file" PORT 80
-            _upsert_systemd_env "$svc_file" HTTP_REDIRECT_HTTPS true
-            systemctl daemon-reload 2>/dev/null || true
         fi
         ensure_service_user >/dev/null
         print_success "Standard ports configured: HTTPS :443, HTTP redirect :80"
@@ -5798,7 +5699,7 @@ do_validate() {
     else
         echo -n "  neodesk-console (Node.js): "
         if systemctl is-active --quiet "$LEGACY_CONSOLE_SERVICE" 2>/dev/null; then
-            echo -e "${GREEN}● Active${NC} (Update moves the console into neodesk-server)"
+            echo -e "${GREEN}● Active${NC} (the old console, which this installer does not upgrade)"
         elif systemctl is-enabled --quiet "$LEGACY_CONSOLE_SERVICE" 2>/dev/null; then
             echo -e "${YELLOW}○ Enabled but inactive${NC}"
             warnings=$((warnings + 1))
@@ -6695,10 +6596,7 @@ do_diagnostics() {
     if [ "$api_use_tls" = true ]; then
         local console_api_url=""
         # Check what URL the console is configured to use
-        if [ -f /etc/systemd/system/neodesk-console.service ]; then
-            console_api_url=$(grep 'NEODESK_API_URL=' /etc/systemd/system/neodesk-console.service 2>/dev/null | tail -1 | sed 's/.*NEODESK_API_URL=//')
-        fi
-        if [ -z "$console_api_url" ] && [ -f "$CONSOLE_PATH/.env" ]; then
+        if [ -f "$CONSOLE_PATH/.env" ]; then
             console_api_url=$(grep -m1 '^NEODESK_API_URL=' "$CONSOLE_PATH/.env" 2>/dev/null | cut -d= -f2-)
         fi
         
@@ -6857,7 +6755,6 @@ do_configure_ssl() {
 
     local ssl_dir="$RUSTDESK_PATH/ssl"
     local env_file="$CONSOLE_PATH/.env"
-    local svc_file="/etc/systemd/system/neodesk-console.service"
     local ssl_tls_active="no"
 
     local _menu_items=(
@@ -7048,9 +6945,6 @@ do_configure_ssl() {
 
             apply_console_protocol_mode https "$ssl_dir/neodesk.crt" "$ssl_dir/neodesk.key" true true
             _upsert_env_line "$env_file" ENTERPRISE_TLS true
-            if [ -f "$svc_file" ]; then
-                _upsert_systemd_env "$svc_file" ENTERPRISE_TLS true
-            fi
             ssl_tls_active="yes"
 
             print_success "Enterprise TLS configured successfully!"
@@ -7404,7 +7298,6 @@ do_toggle_protocol() {
     echo ""
 
     local env_file="$CONSOLE_PATH/.env"
-    local svc_file="/etc/systemd/system/neodesk-console.service"
     local go_svc_file="$SERVER_UNIT"
     local ssl_dir="$RUSTDESK_PATH/ssl"
 

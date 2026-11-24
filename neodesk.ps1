@@ -4623,27 +4623,8 @@ function Do-ConfigureSSL {
         $envContent = $envContent -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
         $envContent = $envContent -replace 'NEODESK_API_URL=https://localhost', 'NEODESK_API_URL=http://localhost'
         
-        # Ensure NSSM service has ALLOW_SELF_SIGNED_CERTS
         $nssm = Get-Command nssm -ErrorAction SilentlyContinue
         if ($nssm) {
-            $svcName = $script:CONSOLE_SERVICE
-            try {
-                $currentEnv = & nssm get $svcName AppEnvironmentExtra 2>$null
-                if ($currentEnv) {
-                    if ($currentEnv -notmatch 'ALLOW_SELF_SIGNED_CERTS=') {
-                        $currentEnv = "$currentEnv`nALLOW_SELF_SIGNED_CERTS=true"
-                    }
-                    if ($currentEnv -match 'RUSTDESK_API_TLS=') {
-                        $currentEnv = $currentEnv -replace 'RUSTDESK_API_TLS=.*', 'RUSTDESK_API_TLS=true'
-                    } else {
-                        $currentEnv = "$currentEnv`nRUSTDESK_API_TLS=true"
-                    }
-                    $currentEnv = $currentEnv -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
-                    $currentEnv = $currentEnv -replace 'NEODESK_API_URL=https://localhost', 'NEODESK_API_URL=http://localhost'
-                    & nssm set $svcName AppEnvironmentExtra $currentEnv 2>$null
-                }
-            } catch { }
-
             $goSvcName = $script:SERVER_SERVICE
             try {
                 $goArgs = & nssm get $goSvcName AppParameters 2>$null
@@ -4660,37 +4641,11 @@ function Do-ConfigureSSL {
         $envContent = $envContent -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
         $envContent = $envContent -replace 'NEODESK_API_URL=https://localhost', 'NEODESK_API_URL=http://localhost'
         
-        # For self-signed certs, Node.js needs NODE_EXTRA_CA_CERTS to trust the CA
-        $sslCertValue = [regex]::Match($envContent, 'SSL_CERT_PATH=(.+)').Groups[1].Value.Trim()
-        if ($sslCertValue -and (Test-Path $sslCertValue -ErrorAction SilentlyContinue)) {
-            if ($envContent -match 'NODE_EXTRA_CA_CERTS=') {
-                $envContent = $envContent -replace 'NODE_EXTRA_CA_CERTS=.*', "NODE_EXTRA_CA_CERTS=$sslCertValue"
-            } else {
-                $envContent = $envContent.TrimEnd() + "`nNODE_EXTRA_CA_CERTS=$sslCertValue`n"
-            }
-            Print-Info "NODE_EXTRA_CA_CERTS set to $sslCertValue"
-        }
-        
-        # Also update NSSM service environment if available
+        # Only the Node.js console read NODE_EXTRA_CA_CERTS
+        $envContent = $envContent -replace '(?m)^NODE_EXTRA_CA_CERTS=.*\r?\n?', ''
+
         $nssm = Get-Command nssm -ErrorAction SilentlyContinue
         if ($nssm) {
-            $svcName = $script:CONSOLE_SERVICE
-            try {
-                $currentEnv = & nssm get $svcName AppEnvironmentExtra 2>$null
-                if ($currentEnv) {
-                    # Ensure API URLs stay HTTP in NSSM service
-                    $currentEnv = $currentEnv -replace 'HBBS_API_URL=https://localhost', 'HBBS_API_URL=http://localhost'
-                    $currentEnv = $currentEnv -replace 'NEODESK_API_URL=https://localhost', 'NEODESK_API_URL=http://localhost'
-                    $apiTlsMode = if ($sslChoice -eq "3") { 'false' } else { 'true' }
-                    if ($currentEnv -match 'RUSTDESK_API_TLS=') {
-                        $currentEnv = $currentEnv -replace 'RUSTDESK_API_TLS=.*', "RUSTDESK_API_TLS=$apiTlsMode"
-                    } else {
-                        $currentEnv = "$currentEnv`nRUSTDESK_API_TLS=$apiTlsMode"
-                    }
-                    & nssm set $svcName AppEnvironmentExtra $currentEnv 2>$null
-                }
-            } catch { }
-            
             # Remove -tls-api from Go server service (standard SSL doesn't use API TLS)
             $goSvcName = $script:SERVER_SERVICE
             try {
@@ -4715,19 +4670,6 @@ function Do-ConfigureSSL {
         # Remove ALL TLS args from Go server service
         $nssm = Get-Command nssm -ErrorAction SilentlyContinue
         if ($nssm) {
-            $svcName = $script:CONSOLE_SERVICE
-            try {
-                $currentEnv = & nssm get $svcName AppEnvironmentExtra 2>$null
-                if ($currentEnv) {
-                    if ($currentEnv -match 'RUSTDESK_API_TLS=') {
-                        $currentEnv = $currentEnv -replace 'RUSTDESK_API_TLS=.*', 'RUSTDESK_API_TLS=false'
-                    } else {
-                        $currentEnv = "$currentEnv`nRUSTDESK_API_TLS=false"
-                    }
-                    & nssm set $svcName AppEnvironmentExtra $currentEnv 2>$null
-                }
-            } catch { }
-
             $goSvcName = $script:SERVER_SERVICE
             try {
                 $goArgs = & nssm get $goSvcName AppParameters 2>$null
@@ -4751,12 +4693,8 @@ function Do-ConfigureSSL {
     Write-Host ""
     if (Confirm-Action "Restart NeoDesk to apply changes?") {
         $serverService = $script:SERVER_SERVICE
-        $consoleService = $script:CONSOLE_SERVICE
         if (Get-Service -Name $serverService -ErrorAction SilentlyContinue) {
             Restart-Service -Name $serverService -Force -ErrorAction SilentlyContinue
-        }
-        if (-not (Test-GoOnlyInstall) -and (Get-Service -Name $consoleService -ErrorAction SilentlyContinue)) {
-            Restart-Service -Name $consoleService -Force -ErrorAction SilentlyContinue
         }
         Print-Success "NeoDesk services restarted"
     }
@@ -4778,7 +4716,8 @@ function Do-ToggleProtocol {
 
     # Detect current mode from NSSM or .env
     $currentMode = "HTTP"
-    $nssmConsole = if (Test-GoOnlyInstall) { $script:SERVER_SERVICE } else { "NeoDeskConsole" }
+    # The console runs in the server, under the server's service
+    $nssmConsole = $script:SERVER_SERVICE
     try {
         $nssmEnv = (nssm get $nssmConsole AppEnvironmentExtra 2>$null) -join "`n"
         if ($nssmEnv -match "HTTPS_ENABLED=true") {

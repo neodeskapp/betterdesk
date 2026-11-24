@@ -711,6 +711,21 @@ test_backups_move_to_the_neodesk_folder() (
     rm -rf "$TEST_DIR"
 )
 
+# The installers write no settings into the service of the old Node.js
+# console (neodesk-console.service, NeoDeskConsole on Windows): no install
+# makes it, and an install that still has it is not upgraded. Its unit is
+# only read to recognise such an install and removed at the uninstall.
+test_no_settings_go_to_the_old_console_service() {
+    local hits
+    hits=$(grep -nE '_(upsert|remove)_systemd_env "\$svc_file"|grep .*NEODESK_API_URL=.*neodesk-console\.service|local svc_file="/etc/systemd/system/neodesk-console\.service"' \
+        "$SCRIPT_ROOT/neodesk.sh" || true)
+    [ -z "$hits" ] || fail "neodesk.sh still writes or reads settings of neodesk-console.service:
+$hits"
+    hits=$(grep -nE '\$svcName = \$script:CONSOLE_SERVICE|"NeoDeskConsole" \}' "$SCRIPT_ROOT/neodesk.ps1" || true)
+    [ -z "$hits" ] || fail "neodesk.ps1 still writes settings into the NeoDeskConsole service:
+$hits"
+}
+
 # L201: a run without a terminal or TERM (cloud-init, CI, ssh host cmd)
 # gets past the header instead of stopping at clear under set -e.
 test_runs_without_term() (
@@ -1505,6 +1520,7 @@ test_one_command_install
 test_install_places_neodesk_setup_and_the_command_line
 test_update_moves_the_old_manager
 test_backups_move_to_the_neodesk_folder
+test_no_settings_go_to_the_old_console_service
 test_runs_without_term
 test_apt_source_failure_goes_on
 test_backup_uses_the_servers_backup
