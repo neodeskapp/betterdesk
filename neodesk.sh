@@ -4985,6 +4985,9 @@ update_go_install() {
             print_error "The new binary did not come up; putting the previous one back"
             systemctl stop "$SERVER_SERVICE" 2>/dev/null || true
             cp -a "$bin.prev" "$bin"
+            # systemd stops restarting a unit that failed too often in a
+            # row (StartLimitBurst), as the new binary may have
+            systemctl reset-failed "$SERVER_SERVICE" 2>/dev/null || true
             systemctl start "$SERVER_SERVICE" || true
             verify_go_install 60 || true
         fi
