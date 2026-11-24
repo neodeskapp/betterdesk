@@ -16,6 +16,11 @@ bundle service on a scratch database, last on upstream 3.5.264 (relay
 addresses with a port). The test compares status and body byte for byte,
 and for downloads the headers too.
 
+The console ran from a copy in which the old project's names and vendor
+id were replaced by NeoDesk's, so the recordings hold NeoDesk's names. In
+that copy the default client repository is the client fork,
+`neodeskapp/neodesk-client`, as in the Go console (L238).
+
 The recordings hold the module installed from an uploaded template archive
 (made by the recorder: six portable templates with stub binaries), bundles
 created, listed, changed, rebuilt, revoked and deleted, every validation

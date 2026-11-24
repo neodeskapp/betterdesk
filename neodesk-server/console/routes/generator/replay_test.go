@@ -121,7 +121,6 @@ func TestNodeAnswers(t *testing.T) {
 			scrub = func(s string) string { return buildIDs.ReplaceAllString(plain(s), `"id":<id>,"branding_hash"`) }
 		}
 		failed := 0
-		hashes := brandingHashes{}
 		for i, step := range rec.Steps {
 			if step.SQL != "" {
 				if strings.HasPrefix(step.SQL, "SELECT") {
@@ -149,8 +148,7 @@ func TestNodeAnswers(t *testing.T) {
 				}
 				continue
 			}
-			hashes.learn(t, step.Answer)
-			status, want, have := step.Status, hashes.translate(clientRepoFix.Replace(scrub(step.Answer))), scrub(got.Body)
+			status, want, have := step.Status, scrub(step.Answer), scrub(got.Body)
 			if f, fixed := fixes[step.Name]; fixed {
 				status, want = f.status, f.answer
 			}

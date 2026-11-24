@@ -13,7 +13,6 @@ import (
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
-	"github.com/neodeskapp/neodesk/neodesk-server/internal/upstreamname"
 )
 
 // The vectors in testdata are fixed recordings of the real Node modules
@@ -90,7 +89,6 @@ func TestValidateBrandingMatchesNode(t *testing.T) {
 			t.Errorf("case %d %s: go failed with %v", i, deref(c.Input), err)
 			continue
 		}
-		c.Hash = neoDeskBrandingHash(t, i, c.Normalized, c.Hash)
 		if host, fixed := ipv6HostVectors[i]; fixed {
 			c.Normalized, c.Errors, c.Hash = withIPv6Host(t, c.Normalized, c.Errors, host)
 			c.Valid = len(c.Errors) == 0
@@ -261,24 +259,12 @@ func TestCustomTxtMatchesNode(t *testing.T) {
 			continue
 		}
 		message := StableJSONBytes(json)
-		// Node signed the default app name with upstream's names
-		// (upstream_test.go); the same message with them must give Node's
-		// bytes and Node's signature. Unsigned, the content is the text
-		// itself, which the recording has with NeoDesk's names.
-		nodeMessage := []byte(upstreamname.Names(string(message)))
-		if base64.StdEncoding.EncodeToString(nodeMessage) != c.Message {
+		if base64.StdEncoding.EncodeToString(message) != c.Message {
 			t.Errorf("case %d message differs", i)
 		}
-		sign := SignCustomTxt(nodeMessage, c.Seed)
-		if !sign.Signed {
-			sign = SignCustomTxt(message, c.Seed)
-		}
+		sign := SignCustomTxt(message, c.Seed)
 		if sign.Content != c.Sign.Content || sign.Signed != c.Sign.Signed {
 			t.Errorf("case %d sign with seed %q: node %v %.40s, go %v %.40s", i, c.Seed, c.Sign.Signed, c.Sign.Content, sign.Signed, sign.Content)
-		}
-		want := c.Signed.Content
-		if string(nodeMessage) != string(message) {
-			want = SignCustomTxt(message, c.Seed).Content
 		}
 		got, _, err := BuildAndSignSupportCustomTxt(o, c.Seed)
 		switch {
@@ -286,8 +272,8 @@ func TestCustomTxtMatchesNode(t *testing.T) {
 			if err == nil || err.Error() != c.Signed.Threw {
 				t.Errorf("case %d: node threw %q, go %v", i, c.Signed.Threw, err)
 			}
-		case err != nil || got.Content != want:
-			t.Errorf("case %d: node %.40s, go %.40s %v", i, want, got.Content, err)
+		case err != nil || got.Content != c.Signed.Content:
+			t.Errorf("case %d: node %.40s, go %.40s %v", i, c.Signed.Content, got.Content, err)
 		default:
 			signedCount++
 		}

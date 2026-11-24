@@ -5,7 +5,9 @@ support client generator returned, made while they still existed. They
 can't be recorded again. The Go tests replay every vector and compare byte
 for byte; they need no Node. Don't edit them: when a fix changes a result
 on purpose, the test lists that vector as an intended difference with the
-row id. Every seed in them is made up for the test.
+row id. Every seed in them is made up for the test. The services ran from
+a copy of the old console in which the old project's names and vendor id
+were replaced by NeoDesk's, so the vectors hold NeoDesk's names.
 
 | File | What it holds | Replayed by |
 |---|---|---|

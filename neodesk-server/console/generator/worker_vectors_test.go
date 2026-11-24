@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
-	"github.com/neodeskapp/neodesk/neodesk-server/internal/upstreamname"
 )
 
 // The vectors of the generator worker (testdata/README.md).
@@ -21,9 +20,7 @@ import (
 // TestFolderZipMatchesAdmZip packs the fixture the oracle packed with
 // adm-zip and compares every entry as a program that unpacks it sees it:
 // name, order, attributes, method, DOS time, CRC, size, "made by",
-// version, flags and content. The order follows the names, so the
-// fixture is packed with upstream's names, as adm-zip packed it
-// (upstream_test.go).
+// version, flags and content.
 func TestFolderZipMatchesAdmZip(t *testing.T) {
 	var z struct {
 		Fixture []struct {
@@ -47,10 +44,7 @@ func TestFolderZipMatchesAdmZip(t *testing.T) {
 		} `json:"entries"`
 	}
 	load(t, "zip", &z)
-	stage := filepath.Join(t.TempDir(), upstreamname.Names("neodesk-support-windows-x64"))
-	for i := range z.Fixture {
-		z.Fixture[i].Path = upstreamname.Names(z.Fixture[i].Path)
-	}
+	stage := filepath.Join(t.TempDir(), "neodesk-support-windows-x64")
 	for _, f := range z.Fixture {
 		if f.Dir != "" {
 			if err := os.MkdirAll(filepath.Join(stage, f.Dir), 0o755); err != nil {
@@ -94,7 +88,6 @@ func TestFolderZipMatchesAdmZip(t *testing.T) {
 	for i, f := range zr.File {
 		want := z.Entries[i]
 		dos := uint32(f.ModifiedDate)<<16 | uint32(f.ModifiedTime)
-		want.Name = upstreamname.Names(want.Name)
 		if f.Name != want.Name || f.ExternalAttrs != want.Attr || f.Method != want.Method || dos != want.Time ||
 			f.CRC32 != want.CRC || f.UncompressedSize64 != want.Size || f.CreatorVersion != want.Made ||
 			f.ReaderVersion != want.Version || f.Flags != want.Flags {
