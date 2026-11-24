@@ -260,6 +260,44 @@ describe('saved sign-in (L469)', () => {
 		expect(c.keys).toEqual(['sas', 'text:made-up-pass', 'key:Return']);
 	});
 
+	test('nothing on the sign-in screen of an unlocked session, and the button goes when that screen comes up', async () => {
+		signinApi.getSignin.mockResolvedValueOnce({ ...(await signinApi.getSignin()), auto: true });
+		const first = setup();
+		stream(first.c, { username: 'alice', platformAdditions: '{"logon_state":"logon_ui","nd_signin":1}' });
+		await new Promise((r) => setTimeout(r, 900));
+		expect(first.s.signinOffer.kind).toBe('none');
+		await first.v.signIn(first.s);
+		expect(signinApi.useSealedSignin).not.toHaveBeenCalled();
+		expect(first.c.plugins).toEqual([]);
+
+		const { v, s, c } = setup();
+		stream(c, { username: 'alice', platformAdditions: '{"logon_state":"locked","nd_signin":1}' });
+		await vi.waitFor(() => expect(s.signinOffer).toMatchObject({ kind: 'button', path: 'sealed' }));
+		c.emit('plugin_request', 'nd.logon_state', new TextEncoder().encode('{"logon_state":"logon_ui"}'));
+		await vi.waitFor(() => expect(s.signinOffer.kind).toBe('none'));
+		await v.signIn(s);
+		expect(signinApi.useSealedSignin).not.toHaveBeenCalled();
+		expect(signinApi.useSignin).not.toHaveBeenCalled();
+		expect(c.plugins).toEqual([]);
+		expect(c.keys).toEqual([]);
+	});
+
+	test('a computer on the sealed way, in a session whose client lacks it: no readable details asked, the bar says why', async () => {
+		signinApi.getSignin.mockResolvedValueOnce({
+			...(await signinApi.getSignin()),
+			auto: true,
+			sealed_signin: true
+		} as Awaited<ReturnType<typeof signinApi.getSignin>>);
+		const { v, s, c } = setup();
+		stream(c);
+		await vi.waitFor(() => expect(s.signinOffer).toEqual({ kind: 'unsupported', why: 'sealed' }));
+		await new Promise((r) => setTimeout(r, 900));
+		await v.signIn(s);
+		expect(signinApi.useSignin).not.toHaveBeenCalled();
+		expect(signinApi.useSealedSignin).not.toHaveBeenCalled();
+		expect(c.keys).toEqual([]);
+	});
+
 	test('a computer whose NeoDesk opens sealed sign-ins gets the sealed packet; the page never asks for the password', async () => {
 		signinApi.getSignin.mockResolvedValueOnce({ ...(await signinApi.getSignin()), auto: true });
 		const { s, c } = setup();

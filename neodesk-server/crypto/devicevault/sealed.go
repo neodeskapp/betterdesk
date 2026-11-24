@@ -27,6 +27,9 @@ import (
 //	                        screen), desktop (none of these); absent: unknown.
 //	                        Checked in that order.
 //
+// Saved sign-in acts only on prelogin and locked: the viewer offers
+// nothing on logon_ui and desktop, and the client refuses them.
+//
 // The client also names "nd_signin": 1 in a "platform_additions" object
 // at the top level of its system information upload (POST /api/sysinfo
 // JSON body, next to "id" and "uuid"); a JSON number of 1 or more counts,
@@ -65,11 +68,11 @@ import (
 // packet does not open, the JSON is bad, v is not 1, device_id is not its
 // own, session is not this connection's relay session, or the nonce was
 // seen before while still within its not_after: "bad_blob"; its clock is
-// past not_after: "expired"; logon_state is not prelogin, locked or
-// logon_ui: "not_at_lock_screen". Otherwise its service sends the secure
-// attention sequence for prelogin and locked, waits for the credential
-// field (about 1.5 s), types the text as Unicode characters and Tab and
-// Return as virtual keys, and answers "typed". The answer, client to
+// past not_after: "expired"; logon_state is not prelogin or locked:
+// "not_at_lock_screen". Otherwise its service sends the secure attention
+// sequence (Ctrl+Alt+Del, always), waits for the credential field (about
+// 1.5 s), types the text as Unicode characters and Tab and Return as
+// virtual keys, and answers "typed". The answer, client to
 // viewer: Misc.plugin_request with id "nd.signin_result" and content the
 // UTF-8 JSON {"result":"typed"|"not_at_lock_screen"|"expired"|"bad_blob",
 // "nonce":"<the request's nonce, \"\" when the packet did not open>"}.

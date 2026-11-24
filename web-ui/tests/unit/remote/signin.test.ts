@@ -137,18 +137,16 @@ describe('with the lock screen state of a NeoDesk client', () => {
 		for (const state of ['locked', 'prelogin'] as const) {
 			expect(signinOffer(at(state), saved({ auto: true }), fresh)).toEqual({ kind: 'auto', path: 'typed' });
 		}
-		expect(signinOffer(at('logon_ui'), saved({ auto: true }), fresh)).toEqual({
-			kind: 'button',
-			signedIn: false,
-			noLockSignal: false,
-			confirm: false,
-			path: 'typed'
-		});
 	});
 
-	test('never on an open desktop', () => {
-		expect(signinOffer(at('desktop'), saved({ auto: true }), fresh).kind).toBe('none');
-		expect(signinOffer(at('desktop'), saved(), fresh).kind).toBe('none');
+	test('never on an open desktop, nor on a sign-in screen of an unlocked session (Ctrl+Alt+Del options)', () => {
+		for (const state of ['desktop', 'logon_ui'] as const) {
+			for (const peer of [at(state), at(state, { sealed: true })]) {
+				expect(signinOffer(peer, saved({ auto: true }), fresh).kind).toBe('none');
+				expect(signinOffer(peer, saved(), fresh).kind).toBe('none');
+				expect(signinOffer(peer, saved({ auto: true }), { ...fresh, atStart: false }).kind).toBe('none');
+			}
+		}
 	});
 
 	test('the button asks nothing on a reported lock screen; a state that changes later gets no sign-in by itself', () => {
@@ -166,6 +164,17 @@ describe('with the lock screen state of a NeoDesk client', () => {
 		});
 		expect(signinOffer(at('locked', { sealed: true, sasEnabled: false }), saved(), fresh)).toMatchObject({
 			kind: 'button',
+			path: 'sealed'
+		});
+	});
+
+	test('a computer on the sealed way gets no typing from a client that lacks it: it says why instead', () => {
+		const onSealedWay = saved({ auto: true, sealed_signin: true });
+		for (const peer of [atSignInScreen, someoneSignedIn, at('locked')]) {
+			expect(signinOffer(peer, onSealedWay, fresh)).toEqual({ kind: 'unsupported', why: 'sealed' });
+		}
+		expect(signinOffer(at('locked', { sealed: true }), onSealedWay, fresh)).toEqual({
+			kind: 'auto',
 			path: 'sealed'
 		});
 	});

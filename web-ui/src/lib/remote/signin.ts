@@ -12,18 +12,21 @@
  * opens sealed packets ("nd_signin"), and sends the state again when it
  * changes (wire format: neodesk-server/crypto/devicevault/sealed.go).
  *
- * With the state, the viewer signs in by itself only on the lock or
- * sign-in screen (locked, prelogin) with the switch on, at the session's
- * start, and never on an open desktop; a Sign in button needs no
- * confirmation there. Without it, the viewer signs in by itself only when
- * nobody is signed in, and asks first when someone is.
+ * With the state, saved sign-in acts only on the lock or sign-in screen
+ * (locked, prelogin): by itself with the switch on at the session's start,
+ * else a Sign in button that needs no confirmation. On an open desktop and
+ * on the sign-in screens of an unlocked session (logon_ui, such as the
+ * Ctrl+Alt+Del options) nothing is offered. Without the state, the viewer
+ * signs in by itself only when nobody is signed in, and asks first when
+ * someone is.
  *
  * Two ways: a client that opens sealed packets gets the server's packet
  * and types at its own lock screen (the password never reaches this
  * page); for any other the viewer types: Ctrl+Alt+Del, a wait for the
  * sign-in screen, then the text as characters (KeyEvent.seq: the device
  * types each character as Unicode, whatever its keyboard layout) and Tab
- * and Enter as keys.
+ * and Enter as keys. A computer the server knows on the sealed way
+ * (sealed_signin) gets no typing from a client that lacks it.
  */
 
 import type { SigninForm, SigninStatus } from '#lib/api/savedSignin.ts';
@@ -99,8 +102,12 @@ export type SigninPath = 'sealed' | 'typed';
 
 export type SigninOffer =
 	| { kind: 'none' }
-	/** Details are saved, but this computer can't be signed in this way */
-	| { kind: 'unsupported'; why: 'platform' | 'service' }
+	/**
+	 * Details are saved, but this computer can't be signed in this way;
+	 * sealed: the server knows the computer on the sealed way, and the
+	 * client in this session lacks it
+	 */
+	| { kind: 'unsupported'; why: 'platform' | 'service' | 'sealed' }
 	/**
 	 * A Sign in button. signedIn: the device reports a signed-in user and no
 	 * lock state, so the viewer asks first (confirm); noLockSignal: the
@@ -135,15 +142,17 @@ export function signinOffer(
 	if (!status?.set || !status.may_use || !peer || state.tried) return { kind: 'none' };
 	const path: SigninPath = peer.sealed ? 'sealed' : 'typed';
 	if (path === 'typed') {
+		// The server hands out no readable details for it: say why
+		if (status.sealed_signin) return { kind: 'unsupported', why: 'sealed' };
 		if (!isWindows(peer.platform)) return { kind: 'unsupported', why: 'platform' };
 		if (!peer.sasEnabled) return { kind: 'unsupported', why: 'service' };
 	}
 	const atStart = state.atStart !== false;
 	if (peer.logonState) {
-		// The computer says where it is: never on an open desktop
-		if (peer.logonState === 'desktop') return { kind: 'none' };
-		const lockScreen = peer.logonState === 'locked' || peer.logonState === 'prelogin';
-		if (status.auto && lockScreen && atStart && !state.autoDone) return { kind: 'auto', path };
+		// The computer says where it is: only its lock or sign-in screen,
+		// never an open desktop or a screen of an unlocked session
+		if (peer.logonState !== 'locked' && peer.logonState !== 'prelogin') return { kind: 'none' };
+		if (status.auto && atStart && !state.autoDone) return { kind: 'auto', path };
 		return { kind: 'button', signedIn: false, noLockSignal: false, confirm: false, path };
 	}
 	const nobody = nobodySignedIn(peer);

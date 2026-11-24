@@ -83,13 +83,19 @@
 	const signinText = $derived.by(() => {
 		if (s.signinNote) return s.signinNote;
 		const o = signinOffer;
-		if (o.kind === 'unsupported')
+		if (o.kind === 'unsupported') {
+			if (o.why === 'sealed')
+				return tf(
+					'remote.signin_sealed_required',
+					'NeoDesk on this computer signs in by itself, but not in this session, so the server hands out no readable details. Update NeoDesk on the computer.'
+				);
 			return o.why === 'platform'
 				? tf('remote.signin_unsupported_platform', 'Saved sign-in works on Windows computers only.')
 				: tf(
 						'remote.signin_unsupported_service',
 						"NeoDesk on this computer runs without its service, so it can't type at the lock screen."
 					);
+		}
 		if (o.kind === 'button' && o.noLockSignal)
 			return tf(
 				'remote.signin_no_lock_signal',

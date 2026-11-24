@@ -177,7 +177,7 @@ function signinRefusalText(code: string): string {
 		case 'sealed_required':
 			return tf(
 				'remote.signin_sealed_required',
-				"NeoDesk on this computer signed in by itself before but doesn't offer it in this session, so the server hands out no readable details. Update NeoDesk on the computer, or clear the saved sign-in and save it again."
+				'NeoDesk on this computer signs in by itself, but not in this session, so the server hands out no readable details. Update NeoDesk on the computer.'
 			);
 		case 'no_device_key':
 			return tf(
