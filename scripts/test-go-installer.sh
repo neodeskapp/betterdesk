@@ -650,9 +650,8 @@ test_update_moves_the_old_manager() (
 
 # L446: the installer's backups go to /opt/neodesk-backups. The backups of
 # an install from before (in /opt/rustdesk-backups) move there at the
-# installer's next run, and the old place becomes a link to the new one,
-# for an admin's own scripts that name it. A BACKUP_DIR given stays as it
-# is.
+# installer's next run, and nothing is left at the old place, also not the
+# link an earlier build left there. A BACKUP_DIR given stays as it is.
 test_backups_move_to_the_neodesk_folder() (
     load
     [ "$BACKUP_DIR" = /opt/neodesk-backups ] || fail "the backups go to $BACKUP_DIR"
@@ -665,19 +664,29 @@ test_backups_move_to_the_neodesk_folder() (
     move_backup_folder >/dev/null
     [ "$(cat "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz" 2>/dev/null)" = old ] || fail "the old backup did not move"
     [ -d "$BACKUP_DIR/pre-go-20260101-000000/units" ] || fail "the upgrade's backup did not move"
-    [ "$(readlink "$OLD_BACKUP_DIR")" = "$BACKUP_DIR" ] || fail "the old place is no link to the new one: $(ls -ld "$OLD_BACKUP_DIR" 2>&1)"
+    [ ! -e "$OLD_BACKUP_DIR" ] && [ ! -L "$OLD_BACKUP_DIR" ] || fail "something is left at the old place: $(ls -ld "$OLD_BACKUP_DIR" 2>&1)"
     [ "$(stat -c %a "$BACKUP_DIR")" = 700 ] || fail "the new folder has mode $(stat -c %a "$BACKUP_DIR"), the old one had 700"
     move_backup_folder >/dev/null || fail "a second run failed"
-    [ "$(readlink "$OLD_BACKUP_DIR")" = "$BACKUP_DIR" ] || fail "a second run changed the link"
+    [ ! -e "$OLD_BACKUP_DIR" ] && [ ! -L "$OLD_BACKUP_DIR" ] || fail "a second run left something at the old place"
+
+    # The link an earlier build left at the old place goes; another link stays
+    ln -s "$BACKUP_DIR" "$OLD_BACKUP_DIR"
+    move_backup_folder >/dev/null || fail "a run with the earlier build's link failed"
+    [ ! -L "$OLD_BACKUP_DIR" ] || fail "the earlier build's link at the old place stayed"
+    [ -f "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz" ] || fail "the backups went with the link"
+    ln -s "$TEST_DIR/elsewhere" "$OLD_BACKUP_DIR"
+    move_backup_folder >/dev/null || fail "a run with a link of someone else failed"
+    [ "$(readlink "$OLD_BACKUP_DIR")" = "$TEST_DIR/elsewhere" ] || fail "a link that leads elsewhere was removed"
+    rm -f "$OLD_BACKUP_DIR"
 
     # Both folders there: the old one's backups join the new ones, a name
     # in both stays in the old folder
-    rm -f "$OLD_BACKUP_DIR"
     mkdir -p "$OLD_BACKUP_DIR"
     printf 'second\n' > "$OLD_BACKUP_DIR/neodesk_backup_20260202_000000.tar.gz"
     printf 'clash\n' > "$OLD_BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz"
     move_backup_folder >/dev/null 2>&1
     [ -f "$BACKUP_DIR/neodesk_backup_20260202_000000.tar.gz" ] || fail "a backup of the old folder did not join the new one"
+    [ ! -L "$OLD_BACKUP_DIR" ] || fail "the old folder became a link"
     [ "$(cat "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz")" = old ] || fail "a backup of the new folder was written over"
     [ "$(cat "$OLD_BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz" 2>/dev/null)" = clash ] || fail "a backup whose name is taken is gone"
 

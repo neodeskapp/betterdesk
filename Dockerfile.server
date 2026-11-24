@@ -82,12 +82,8 @@ RUN chmod +x /usr/local/bin/neodesk-server \
     && ln -s neodesk-server /usr/local/bin/neodesk
 
 # Create data directory before writing build metadata into it
-# The data volume is mounted at /opt/neodesk/data. /opt/rustdesk, where
-# images up to 3.6.0-rc.4 kept it, is a link to it: compose files, settings
-# and paths saved before the rename still reach the same files, and Docker
-# follows the link when an older compose file mounts the volume there.
-RUN mkdir -p /opt/neodesk/data && chown neodesk:neodesk /opt/neodesk/data \
-    && ln -s /opt/neodesk/data /opt/rustdesk
+# The data volume is mounted at /opt/neodesk/data (docker/data-path.sh)
+RUN mkdir -p /opt/neodesk/data && chown neodesk:neodesk /opt/neodesk/data
 
 ARG NEODESK_COMMIT_SHA=unknown
 ARG NEODESK_IMAGE_VERSION=unknown
@@ -98,6 +94,7 @@ RUN printf '%s\n' "${NEODESK_COMMIT_SHA}" > /opt/neodesk/data/.image-commit
 # Entrypoint script: fixes volume permissions, then drops to neodesk user
 COPY docker/ensure-app-user.sh /ensure-app-user.sh
 COPY docker/server-entrypoint.sh /server-entrypoint.sh
+COPY docker/data-path.sh /docker/data-path.sh
 COPY docker/bootstrap-admin-credentials.sh /docker/bootstrap-admin-credentials.sh
 COPY docker/show-admin-credentials.sh /usr/local/bin/neodesk-show-admin-credentials
 COPY docker/healthcheck.sh /usr/local/bin/neodesk-healthcheck

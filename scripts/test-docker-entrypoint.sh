@@ -139,24 +139,64 @@ STUB
     done
 )
 
-# L446: the images keep their data in /opt/neodesk/data, and /opt/rustdesk
-# is a link to it, so compose files, settings and stored paths from before
-# the rename still reach the data. The entrypoints and the image's helper
-# scripts use the new folder.
+# L446: the images keep their data in /opt/neodesk/data and have nothing at
+# /opt/rustdesk, no link either. The entrypoints and the image's helper
+# scripts use the new folder; only docker/data-path.sh names the old one,
+# for a compose file of 3.6.0-rc.4 or older that still mounts the data
+# volume there (the start keeps the data where it is mounted).
 test_images_keep_their_data_in_the_neodesk_folder() (
     local df f
     for df in Dockerfile Dockerfile.server; do
-        grep -q 'ln -s /opt/neodesk/data /opt/rustdesk' "$SCRIPT_ROOT/$df" || fail "$df has no link from /opt/rustdesk to /opt/neodesk/data"
+        if grep -nE '^[^#]*/opt/rustdesk' "$SCRIPT_ROOT/$df"; then fail "$df uses /opt/rustdesk"; fi
         grep -qx 'WORKDIR /opt/neodesk/data' "$SCRIPT_ROOT/$df" || fail "$df does not work in /opt/neodesk/data"
         grep -qF '"-key-file", "/opt/neodesk/data/id_ed25519"' "$SCRIPT_ROOT/$df" || fail "$df's server reads its key elsewhere"
-        if grep -nE '^[^#]*/opt/rustdesk' "$SCRIPT_ROOT/$df" | grep -v 'ln -s /opt/neodesk/data /opt/rustdesk'; then
-            fail "$df uses /opt/rustdesk"
-        fi
+        grep -qx 'COPY docker/data-path.sh /docker/data-path.sh' "$SCRIPT_ROOT/$df" || fail "$df lacks docker/data-path.sh"
     done
     grep -q '^    RUSTDESK_PATH=/opt/neodesk/data \\$' "$SCRIPT_ROOT/Dockerfile" || fail "the image's RUSTDESK_PATH is not /opt/neodesk/data"
     for f in docker/entrypoint.sh docker/server-entrypoint.sh docker/bootstrap-admin-credentials.sh docker/show-admin-credentials.sh; do
         if grep -nE '^[^#]*/opt/rustdesk' "$SCRIPT_ROOT/$f"; then fail "$f uses /opt/rustdesk"; fi
     done
+    for f in docker/entrypoint.sh docker/server-entrypoint.sh; do
+        grep -q '^\. /docker/data-path\.sh$' "$SCRIPT_ROOT/$f" || fail "$f does not load docker/data-path.sh"
+        grep -q '^choose_data_path$' "$SCRIPT_ROOT/$f" || fail "$f does not choose the data path"
+    done
+)
+
+# L446: a compose file of 3.6.0-rc.4 or older mounts the data volume at
+# /opt/rustdesk, which the image does not have. The start then keeps the
+# data there: the paths into /opt/neodesk/data (settings, the server's
+# -key-file) lead to the old mount, and the log says how to move it. With
+# the volume at /opt/neodesk/data, or data there already, nothing changes.
+test_old_data_mount_is_used_where_it_is() (
+    local dir out
+    dir=$(mktemp -d)
+    out=$(sh -c '
+        . "$1"
+        NEW_DATA_PATH="$2/new" OLD_DATA_PATH="$2/old"
+        mkdir -p "$NEW_DATA_PATH"
+        RUSTDESK_PATH="$NEW_DATA_PATH" DB_PATH="$NEW_DATA_PATH/db_v2.sqlite3"
+        choose_data_path
+        echo "new: $DATA_PATH $DB_PATH $(on_data_path "$NEW_DATA_PATH/id_ed25519")"
+        mkdir -p "$OLD_DATA_PATH"
+        choose_data_path
+        echo "old: $DATA_PATH $RUSTDESK_PATH $DB_PATH $(on_data_path "$NEW_DATA_PATH/id_ed25519") $(on_data_path -mode)"
+        DB_PATH=/elsewhere/db.sqlite3
+        choose_data_path
+        echo "given: $DB_PATH"
+        RUSTDESK_PATH="$NEW_DATA_PATH" DB_PATH="$NEW_DATA_PATH/db_v2.sqlite3"
+        : > "$NEW_DATA_PATH/id_ed25519"
+        choose_data_path
+        echo "both: $DATA_PATH $DB_PATH"
+    ' sh "$SCRIPT_ROOT/docker/data-path.sh" "$dir" 2>&1)
+    printf '%s\n' "$out" | grep -qx "new: $dir/new $dir/new/db_v2.sqlite3 $dir/new/id_ed25519" \
+        || fail "without an old mount the data path moved: $out"
+    printf '%s\n' "$out" | grep -qx "old: $dir/old $dir/old $dir/old/db_v2.sqlite3 $dir/old/id_ed25519 -mode" \
+        || fail "a volume at the old path is not used where it is: $out"
+    printf '%s\n' "$out" | grep -q "mounted at $dir/old" || fail "the start does not say the volume is at the old path: $out"
+    printf '%s\n' "$out" | grep -qx "given: /elsewhere/db.sqlite3" || fail "a path set elsewhere was changed: $out"
+    printf '%s\n' "$out" | grep -qx "both: $dir/new $dir/new/db_v2.sqlite3" \
+        || fail "data at /opt/neodesk/data was left for the old path: $out"
+    rm -rf "$dir"
 )
 
 # L82: the images' binary knows its version, build date and commit: the
@@ -205,7 +245,7 @@ test_bootstrap_keeps_a_replaced_first_password_away() (
 test_remote_targets_work_out_of_the_box() (
     local ep="$SCRIPT_ROOT/docker/entrypoint.sh" quick="$SCRIPT_ROOT/docker-compose.quick.single.yml"
     grep -q 'VAULT_KEY_FILE="$DATA_PATH/.remote_target_vault_key"' "$ep" || fail "the entrypoint keeps no vault key in the volume"
-    grep -q '^DATA_PATH=/opt/neodesk/data$' "$ep" || fail "the entrypoint's data volume is not /opt/neodesk/data"
+    grep -q '^NEW_DATA_PATH=/opt/neodesk/data$' "$SCRIPT_ROOT/docker/data-path.sh" || fail "the entrypoint's data volume is not /opt/neodesk/data"
     grep -q 'export REMOTE_TARGET_VAULT_KEY' "$ep" || fail "the entrypoint does not pass the vault key to the server"
     if grep -nE '^[^#]*echo.*\$\{?REMOTE_TARGET_VAULT_KEY' "$ep"; then fail "the entrypoint prints the vault key"; fi
     sed -n '/^  guacd:/,/^  [a-z]/p' "$quick" | grep -q 'network_mode: "service:neodesk"' || fail "guacd does not share the container's network"
@@ -255,6 +295,7 @@ test_compose_reads_env_file
 test_healthcheck_follows_tls
 test_image_binary_knows_its_build
 test_images_keep_their_data_in_the_neodesk_folder
+test_old_data_mount_is_used_where_it_is
 test_credentials_hint_names_the_service
 test_bootstrap_keeps_a_replaced_first_password_away
 test_remote_targets_work_out_of_the_box

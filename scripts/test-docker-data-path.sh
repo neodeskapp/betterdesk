@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # The Docker image's data folder on a real Docker (L446): an image of this
-# checkout keeps its data in /opt/neodesk/data, and /opt/rustdesk is a link
-# to it. An install of 3.6.0-rc.4 (its data volume at /opt/rustdesk, with
-# data in it) is updated with this checkout's neodesk-docker.sh to the
-# image of this checkout and keeps its key, its keys files, its database
-# and its files; a backup that rc.4's manager took before the update goes
-# back into the volumes afterwards.
+# checkout keeps its data in /opt/neodesk/data and has nothing at
+# /opt/rustdesk. An install of 3.6.0-rc.4 (its data volume at /opt/rustdesk,
+# with data in it) keeps its key, its key files, its database and its files
+# when its own compose file starts the image of this checkout (a plain
+# `docker compose pull && docker compose up -d`), and when this checkout's
+# neodesk-docker.sh updates it, which mounts the volume at
+# /opt/neodesk/data. A backup that rc.4's manager took before the update
+# goes back into the volumes afterwards, and so does one made after it.
 #
 # It installs NeoDesk with Docker on this machine and removes it again, so
 # it runs on a machine that can be thrown away (CI, a sandbox), as root or
@@ -50,8 +52,41 @@ data_mount() {
     docker container inspect -f '{{range .Mounts}}{{if eq .Name "neodesk-data"}}{{.Destination}}{{end}}{{end}}' neodesk
 }
 
+# restore BACKUP: the manager's restore of BACKUP into the volumes of the
+# install, with the container stopped, and the start after it
+restore() {
+    (
+        # The manager's own functions, in the install folder (the variables
+        # are the manager's)
+        # shellcheck disable=SC2034
+        NEODESK_DOCKER_SOURCED=1
+        # shellcheck source=/dev/null
+        source "$SCRIPT_ROOT/neodesk-docker.sh"
+        # shellcheck disable=SC2034
+        NEODESK_DIR="$DIR"
+        # shellcheck disable=SC2034
+        NEODESK_IMAGE_TAG_SET=""
+        compose stop -t 30 neodesk >/dev/null 2>&1
+        restore_volumes "$1"
+        compose_quiet up -d neodesk
+        wait_healthy
+    )
+}
+
+# wait_up: the container answers on the API's health URL
+wait_up() {
+    local i
+    for i in $(seq 1 120); do
+        curl -fs -o /dev/null http://127.0.0.1:21121/api/health && return 0
+        sleep 2
+    done
+    return 1
+}
+
 echo "== the image of this checkout ($IMAGE:local)"
 bash "$SCRIPT_ROOT/scripts/build-test-image.sh" local >/dev/null
+docker run --rm --entrypoint sh "$IMAGE:local" -c 'test ! -e /opt/rustdesk && test ! -L /opt/rustdesk' \
+    || fail "the image of this checkout has something at /opt/rustdesk: $(docker run --rm --entrypoint ls "$IMAGE:local" -ld /opt/rustdesk 2>&1)"
 
 echo "== an install of $OLD_TAG with data"
 curl -fsSL --retry 3 -o "$WORK/old-docker.sh" "$OLD_MANAGER_URL" || fail "could not download $OLD_MANAGER_URL"
@@ -68,11 +103,28 @@ bash "$WORK/old-docker.sh" backup --dir "$DIR" > "$WORK/old-backup.log" 2>&1 \
 old_backup=$(ls -1t "$DIR"/backups/neodesk-*.tar.gz | head -n 1)
 [ -f "$old_backup" ] || fail "$OLD_TAG's manager left no backup"
 
+echo "== $OLD_TAG's compose file starts the image of this checkout"
+cp "$DIR/.env" "$WORK/env-rc4"
+sed -i 's/^NEODESK_IMAGE_TAG=.*/NEODESK_IMAGE_TAG=local/' "$DIR/.env"
+(cd "$DIR" && docker compose up -d --pull never) > "$WORK/compose-up.log" 2>&1 \
+    || fail "$OLD_TAG's compose file did not start the image of this checkout: $(tail -n 20 "$WORK/compose-up.log")"
+wait_up || fail "the image of this checkout under $OLD_TAG's compose file did not come up: $(docker logs --tail 40 neodesk 2>&1)"
+[ "$(data_mount)" = /opt/rustdesk ] || fail "$OLD_TAG's compose file mounts the data at $(data_mount)"
+[ "$(in_container 'cat /opt/rustdesk/id_ed25519.pub')" = "$key" ] || fail "the image under $OLD_TAG's compose file has another key"
+[ "$(in_container 'cd /opt/rustdesk && sha256sum id_ed25519 .api_key .remote_target_vault_key db_v2.sqlite3 | cut -c1-64')" = "$files" ] \
+    || fail "under $OLD_TAG's compose file the key, the API key, the vault key or the database changed"
+if in_container 'test -e /opt/neodesk/data/id_ed25519 || test -e /opt/neodesk/data/db_v2.sqlite3'; then
+    fail "under $OLD_TAG's compose file the server made a key or database outside the data volume"
+fi
+docker logs neodesk > "$WORK/start.log" 2>&1
+grep -q 'mounted at /opt/rustdesk' "$WORK/start.log" || fail "the start does not say the data volume is at the old path: $(head -n 20 "$WORK/start.log")"
+cp "$WORK/env-rc4" "$DIR/.env"
+
 echo "== the update with this checkout's manager"
 bash "$SCRIPT_ROOT/neodesk-docker.sh" update --dir "$DIR" --tag local --no-pull --yes \
     > "$WORK/update.log" 2>&1 || fail "the update failed: $(tail -n 40 "$WORK/update.log")"
 [ "$(data_mount)" = /opt/neodesk/data ] || fail "after the update the data volume is mounted at $(data_mount)"
-[ "$(in_container 'readlink /opt/rustdesk')" = /opt/neodesk/data ] || fail "the image has no link from /opt/rustdesk"
+if in_container 'test -e /opt/rustdesk || test -L /opt/rustdesk'; then fail "after the update the container has something at /opt/rustdesk"; fi
 [ "$(in_container 'cat /opt/neodesk/data/id_ed25519.pub')" = "$key" ] || fail "the update changed the server's key"
 [ "$(in_container 'cd /opt/neodesk/data && sha256sum id_ed25519 .api_key .remote_target_vault_key db_v2.sqlite3 | cut -c1-64')" = "$files" ] \
     || fail "the key, the API key, the vault key or the database changed at the update"
@@ -82,25 +134,24 @@ if grep -q '^NEODESK_DATA_PATH=' "$DIR/.env"; then fail "the image of this check
 
 echo "== the backup from before the update goes back"
 in_container 'echo after > /opt/neodesk/data/marker-after'
-(
-    # The manager's own functions, in the install folder (the variables are
-    # the manager's)
-    # shellcheck disable=SC2034
-    NEODESK_DOCKER_SOURCED=1
-    # shellcheck source=/dev/null
-    source "$SCRIPT_ROOT/neodesk-docker.sh"
-    # shellcheck disable=SC2034
-    NEODESK_DIR="$DIR"
-    # shellcheck disable=SC2034
-    NEODESK_IMAGE_TAG_SET=""
-    compose stop -t 30 neodesk >/dev/null 2>&1
-    restore_volumes "$old_backup"
-    compose_quiet up -d neodesk
-    wait_healthy
-) > "$WORK/restore.log" 2>&1 || fail "the restore of $OLD_TAG's backup failed: $(tail -n 20 "$WORK/restore.log")"
+restore "$old_backup" > "$WORK/restore.log" 2>&1 || fail "the restore of $OLD_TAG's backup failed: $(tail -n 20 "$WORK/restore.log")"
 [ "$(in_container 'cat /opt/neodesk/data/marker')" = before ] || fail "the restore did not bring the backup's files back"
 if in_container 'test -e /opt/neodesk/data/marker-after'; then fail "the restore kept a file made after the backup"; fi
 [ "$(in_container 'cat /opt/neodesk/data/id_ed25519.pub')" = "$key" ] || fail "the restore changed the server's key"
+
+echo "== a backup made after the update goes back"
+in_container 'echo second > /opt/neodesk/data/marker'
+bash "$SCRIPT_ROOT/neodesk-docker.sh" backup --dir "$DIR" > "$WORK/backup.log" 2>&1 \
+    || fail "the backup after the update failed: $(tail -n 20 "$WORK/backup.log")"
+new_backup=$(ls -1t "$DIR"/backups/neodesk-*.tar.gz | head -n 1)
+[ "$new_backup" != "$old_backup" ] || fail "the backup after the update made no new file"
+tar -tzf "$new_backup" | grep -qx 'neodesk/marker' || fail "the backup after the update has no folder neodesk: $(tar -tzf "$new_backup" | head -n 5)"
+if tar -tzf "$new_backup" | grep -q '^rustdesk/'; then fail "the backup after the update has a folder rustdesk"; fi
+in_container 'echo third > /opt/neodesk/data/marker && echo after > /opt/neodesk/data/marker-after'
+restore "$new_backup" > "$WORK/restore-new.log" 2>&1 || fail "the restore of the new backup failed: $(tail -n 20 "$WORK/restore-new.log")"
+[ "$(in_container 'cat /opt/neodesk/data/marker')" = second ] || fail "the restore of the new backup did not bring its files back"
+if in_container 'test -e /opt/neodesk/data/marker-after'; then fail "the restore of the new backup kept a file made after it"; fi
+[ "$(in_container 'cat /opt/neodesk/data/id_ed25519.pub')" = "$key" ] || fail "the restore of the new backup changed the server's key"
 
 echo "== uninstall"
 bash "$SCRIPT_ROOT/neodesk-docker.sh" uninstall --dir "$DIR" --purge --yes > "$WORK/uninstall.log" 2>&1 \

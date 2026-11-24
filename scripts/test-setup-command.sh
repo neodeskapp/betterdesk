@@ -8,7 +8,8 @@
 # the old manager (3.6.0-rc.4), an update whose binary does not start (it
 # goes back to the binary from before), and the uninstall. The backups go to
 # /opt/neodesk-backups, and the old manager's backups in
-# /opt/rustdesk-backups move there (L446).
+# /opt/rustdesk-backups move there, with nothing left at the old place
+# (L446).
 #
 # It installs NeoDesk on this machine and removes it again, so it runs as
 # root on a machine that can be thrown away (CI, a sandbox), with systemd
@@ -183,10 +184,10 @@ out=$(neodesk --check-permissions < /dev/null 2>&1) || fail "neodesk --check-per
 case "$out" in *"management capabilities are ready"*) ;; *) fail "the first call after the old manager's update: $out" ;; esac
 hash -r
 new_layout "after the first call" "$WORK/newest.sh"
-# The old manager's backups moved, and their old path still reads
-[ "$(readlink "$OLD_BACKUPS")" = "$BACKUPS" ] || fail "$OLD_BACKUPS is no link to $BACKUPS: $(ls -ld "$OLD_BACKUPS" 2>&1)"
+# The old manager's backups moved, and nothing is left at the old place
+[ ! -e "$OLD_BACKUPS" ] && [ ! -L "$OLD_BACKUPS" ] || fail "$OLD_BACKUPS is still there: $(ls -ld "$OLD_BACKUPS" 2>&1)"
 [ -f "$BACKUPS/$(basename "$old_backup")" ] || fail "the old manager's backup did not move to $BACKUPS"
-tar -tzf "$old_backup" >/dev/null || fail "the old manager's backup cannot be read at its old path"
+tar -tzf "$BACKUPS/$(basename "$old_backup")" >/dev/null || fail "the old manager's backup cannot be read at $BACKUPS"
 # The command line's own calls work from then on
 out=$(neodesk --version 2>&1) || fail "neodesk --version after the move: $out"
 case "$out" in "neodesk "*) ;; *) fail "neodesk --version after the move: $out" ;; esac

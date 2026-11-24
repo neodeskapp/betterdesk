@@ -5818,15 +5818,19 @@ do_validate() {
 # Backup Functions
 #===============================================================================
 
-# move_backup_folder: the backups of an install from before (up to 3.6.0-rc.4
-# in /opt/rustdesk-backups) go to BACKUP_DIR, and the old place becomes a
-# link to it, for an admin's own scripts that name the old path. A backup
-# whose name BACKUP_DIR has already stays where it is, and so does the
-# folder. A BACKUP_DIR given to the installer is left alone.
+# move_backup_folder: the backups of an install of 3.6.0-rc.4 or older (in
+# /opt/rustdesk-backups) go to BACKUP_DIR, and nothing is left at the old
+# place; a link to BACKUP_DIR that an earlier build left there goes too. A
+# backup whose name BACKUP_DIR has already stays where it is, and so does
+# the folder. A BACKUP_DIR given to the installer is left alone.
 move_backup_folder() {
     local old="$OLD_BACKUP_DIR" item left=0
     [ -z "${BACKUP_DIR_GIVEN:-}" ] || return 0
-    { [ -d "$old" ] && [ ! -L "$old" ]; } || return 0
+    if [ -L "$old" ]; then
+        [ "$(readlink "$old")" != "$BACKUP_DIR" ] || rm -f "$old" || return 1
+        return 0
+    fi
+    [ -d "$old" ] || return 0
     if [ ! -e "$BACKUP_DIR" ] && [ ! -L "$BACKUP_DIR" ]; then
         { mkdir -p "$(dirname "$BACKUP_DIR")" && mv "$old" "$BACKUP_DIR"; } || return 1
     else
@@ -5842,8 +5846,7 @@ move_backup_folder() {
         fi
         rmdir "$old" || return 1
     fi
-    ln -s "$BACKUP_DIR" "$old" || return 1
-    print_info "The backups are in $BACKUP_DIR now; $old leads there"
+    print_info "The backups moved from $old to $BACKUP_DIR"
 }
 
 do_backup() {
@@ -6793,7 +6796,6 @@ do_uninstall() {
     [ -d "$RUSTDESK_PATH" ] && left+=("$RUSTDESK_PATH: the database, the server's keys and certificates")
     [ -d "$CONSOLE_PATH" ] && left+=("$CONSOLE_PATH: the settings (.env) and the console's data")
     [ -d "$BACKUP_DIR" ] && left+=("$BACKUP_DIR: the backups")
-    [ -L "$OLD_BACKUP_DIR" ] && left+=("$OLD_BACKUP_DIR: a link to $BACKUP_DIR")
     id "$SERVICE_USER" &>/dev/null && left+=("the system user $SERVICE_USER (sudo userdel $SERVICE_USER)")
     [ "$USE_POSTGRESQL" = true ] && left+=("the PostgreSQL database and PostgreSQL itself")
     left+=("the firewall rules for the NeoDesk ports")

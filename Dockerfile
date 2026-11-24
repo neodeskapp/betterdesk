@@ -81,15 +81,11 @@ RUN apk add --no-cache ca-certificates curl sqlite tini su-exec shadow openssl \
     || { sleep 2 && apk add --no-cache ca-certificates curl sqlite tini su-exec shadow openssl; }
 
 # Create neodesk user and directories
-# The data volume is mounted at /opt/neodesk/data. /opt/rustdesk, where
-# images up to 3.6.0-rc.4 kept it, is a link to it: compose files, settings
-# and paths saved before the rename still reach the same files, and Docker
-# follows the link when an older compose file mounts the volume there.
+# The data volume is mounted at /opt/neodesk/data (docker/data-path.sh)
 RUN addgroup -g 10001 -S neodesk && \
     adduser -u 10001 -S -G neodesk neodesk && \
     mkdir -p /opt/neodesk/data /app/data && \
-    chown -R neodesk:neodesk /opt/neodesk/data /app/data && \
-    ln -s /opt/neodesk/data /opt/rustdesk
+    chown -R neodesk:neodesk /opt/neodesk/data /app/data
 
 COPY --from=go-builder /neodesk-server /usr/local/bin/neodesk-server
 # The same binary is the command line when called neodesk
@@ -101,6 +97,7 @@ ENV NEODESK_IMAGE_VERSION=${NEODESK_IMAGE_VERSION}
 COPY docker/ensure-app-user.sh /ensure-app-user.sh
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/dsn.sh /docker/dsn.sh
+COPY docker/data-path.sh /docker/data-path.sh
 COPY docker/healthcheck.sh /usr/local/bin/neodesk-healthcheck
 COPY docker/bootstrap-admin-credentials.sh /docker/bootstrap-admin-credentials.sh
 COPY docker/show-admin-credentials.sh /usr/local/bin/neodesk-show-admin-credentials

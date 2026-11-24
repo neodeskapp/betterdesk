@@ -33,8 +33,15 @@ echo "  DATA_DIR:     ${DATA_DIR:-/app/data}"
 echo ""
 
 # The data volume: the server's keys, its SQLite database and the files
-# below. /opt/rustdesk, its place up to 3.6.0-rc.4, is a link to it.
-DATA_PATH=/opt/neodesk/data
+# below, at /opt/neodesk/data (DATA_PATH), or where a compose file of
+# 3.6.0-rc.4 or older still mounts it; the server's arguments follow
+# shellcheck source=docker/data-path.sh
+. /docker/data-path.sh
+choose_data_path
+for arg do
+    shift
+    set -- "$@" "$(on_data_path "$arg")"
+done
 
 # Ensure data directories exist and have correct permissions
 mkdir -p "$DATA_PATH" /app/data 2>/dev/null || true
@@ -222,4 +229,10 @@ echo ""
 
 # One process as neodesk. tini passes its exit on; status 3 is a restart
 # request and the restart policy starts the container again.
+# The server writes files of its own (mesh_agent_server.pem) in its
+# folder, the image's working folder; in an older place of the data volume
+# it changes there as neodesk (with cap_drop: ALL root may not)
+if [ "$DATA_PATH" != "$NEW_DATA_PATH" ]; then
+    exec su-exec neodesk sh -c 'cd "$0" && exec "$@"' "$DATA_PATH" "$@"
+fi
 exec su-exec neodesk "$@"

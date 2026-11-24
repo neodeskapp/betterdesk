@@ -766,20 +766,49 @@ pull_image() {
     fi
 }
 
+# The data volume's place in images up to 3.6.0-rc.4. Images since
+# 3.6.0-rc.5 have nothing there.
+OLD_DATA_PATH=/opt/rustdesk
+
 # set_data_path: where the compose file mounts the data volume for the
 # image to run. An image of this release keeps its data in
-# /opt/neodesk/data, the compose file's default; one from before the
-# rename keeps it in /opt/rustdesk (its RUSTDESK_PATH), and .env says so
+# /opt/neodesk/data, the compose file's default, and the install's files
+# that still name the old place move with it (move_old_data_path). One from
+# before keeps it in /opt/rustdesk (its RUSTDESK_PATH), and .env says so
 # with NEODESK_DATA_PATH.
 set_data_path() {
     local path
     path=$(docker image inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$(image_ref)" 2>/dev/null \
         | sed -n 's/^RUSTDESK_PATH=//p' | head -n 1)
-    if [ "$path" = /opt/rustdesk ]; then
-        env_set NEODESK_DATA_PATH /opt/rustdesk
+    if [ "$path" = "$OLD_DATA_PATH" ]; then
+        env_set NEODESK_DATA_PATH "$OLD_DATA_PATH"
     else
         env_unset NEODESK_DATA_PATH
+        move_old_data_path
     fi
+}
+
+# move_old_data_path: .env, a compose file changed by hand and
+# docker-compose.override.yml get /opt/neodesk/data where they name the
+# old place of the data volume (the compose files the data path of the
+# release's compose file, so NEODESK_DATA_PATH counts there as well).
+# Comments stay as they are. An update has the files as they were in its
+# backup (keep_settings).
+move_old_data_path() {
+    local f new moved=()
+    local old="$OLD_DATA_PATH([/\"':[:space:]]|\$)"
+    for f in "$(env_file)" "$(compose_file)" "$NEODESK_DIR/docker-compose.override.yml"; do
+        [ -f "$f" ] && grep -qE "^[^#]*$old" "$f" || continue
+        if [ "$f" = "$(env_file)" ]; then
+            new=/opt/neodesk/data
+        else
+            new='${NEODESK_DATA_PATH:-/opt/neodesk/data}'
+        fi
+        sed -i -E "/^[[:space:]]*#/!s#$old#$new\\1#g" "$f" || die "Could not rewrite $f"
+        moved+=("$(basename "$f")")
+    done
+    [ "${#moved[@]}" -eq 0 ] \
+        || say "Changed $OLD_DATA_PATH to /opt/neodesk/data, the data volume's place since 3.6.0-rc.5, in: ${moved[*]}"
 }
 
 build_image() {
@@ -844,10 +873,11 @@ server_version() {
 
 backup_dir() { printf '%s\n' "$NEODESK_DIR/backups"; }
 
-# backup_volumes [FOLDER]: a tar.gz of the data volumes (and a dump of
-# PostgreSQL), taken while the container is stopped, with .env and
-# docker-compose.yml from FOLDER (an update's copies from before it) or
-# the install folder. Prints the file.
+# backup_volumes [FOLDER]: a tar.gz of the data volumes, the folders
+# neodesk (the data volume) and console (and a dump of PostgreSQL), taken
+# while the container is stopped, with .env, docker-compose.yml and
+# docker-compose.override.yml from FOLDER (an update's copies from before
+# it) or the install folder. Prints the file.
 backup_volumes() {
     local dir name image old from="${1:-$NEODESK_DIR}"
     dir=$(backup_dir)
@@ -857,10 +887,11 @@ backup_volumes() {
     image=$(docker container inspect -f '{{.Config.Image}}' "$CONTAINER" 2>/dev/null || true)
     if [ -z "$image" ] || ! docker image inspect "$image" >/dev/null 2>&1; then image=$(image_ref); fi
     docker run --rm --entrypoint tar --user 0 \
-        -v "$DATA_VOLUME:/backup/rustdesk:ro" -v "$CONSOLE_VOLUME:/backup/console:ro" -v "$dir:/out" \
-        "$image" czf "/out/$name.tar.gz" -C /backup rustdesk console >/dev/null \
+        -v "$DATA_VOLUME:/backup/neodesk:ro" -v "$CONSOLE_VOLUME:/backup/console:ro" -v "$dir:/out" \
+        "$image" czf "/out/$name.tar.gz" -C /backup neodesk console >/dev/null \
         || die "The backup of the volumes failed; nothing was changed." "Is there free disk space? df -h $dir"
     cp -p "$from/docker-compose.yml" "$dir/$name.docker-compose.yml" 2>/dev/null || true
+    cp -p "$from/docker-compose.override.yml" "$dir/$name.docker-compose.override.yml" 2>/dev/null || true
     cp -p "$from/.env" "$dir/$name.env" 2>/dev/null || true
     if on_postgres && container_exists "$PG_CONTAINER"; then
         compose exec -T postgres pg_dump -U neodesk neodesk 2>/dev/null | gzip > "$dir/$name.postgres.sql.gz" \
@@ -874,25 +905,26 @@ backup_volumes() {
     printf '%s\n' "$dir/$name.tar.gz"
 }
 
-# keep_settings: copies of .env, docker-compose.yml and its record as they
-# are before an update writes new ones, in a folder of the install folder
-# that only its owner reads. The update's backup takes these, and a failed
-# update puts them back. Prints the folder.
+# keep_settings: copies of .env, docker-compose.yml, its record and
+# docker-compose.override.yml as they are before an update writes new ones,
+# in a folder of the install folder that only its owner reads. The update's
+# backup takes these, and a failed update puts them back. Prints the folder.
 keep_settings() {
     local dir="$NEODESK_DIR/.before-update" f
     rm -rf "$dir"
     (umask 077 && mkdir -p "$dir")
-    for f in "$(env_file)" "$(compose_file)" "$NEODESK_DIR/.compose.sha256"; do
+    for f in "$(env_file)" "$(compose_file)" "$NEODESK_DIR/.compose.sha256" "$NEODESK_DIR/docker-compose.override.yml"; do
         [ ! -f "$f" ] || cp -p "$f" "$dir/"
     done
     printf '%s\n' "$dir"
 }
 
-# put_settings_back FOLDER: .env, docker-compose.yml and its record as
-# keep_settings kept them in FOLDER; one that was not there goes
+# put_settings_back FOLDER: .env, docker-compose.yml, its record and
+# docker-compose.override.yml as keep_settings kept them in FOLDER; one
+# that was not there goes
 put_settings_back() {
     local f
-    for f in .env docker-compose.yml .compose.sha256; do
+    for f in .env docker-compose.yml .compose.sha256 docker-compose.override.yml; do
         if [ -f "$1/$f" ]; then
             cp -p "$1/$f" "$NEODESK_DIR/$f"
         else
@@ -901,11 +933,14 @@ put_settings_back() {
     done
 }
 
-# restore_volumes FILE: the volumes as the backup has them
+# restore_volumes FILE: the volumes as the backup has them. The data volume
+# is the archive's folder neodesk, or rustdesk in a backup of 3.6.0-rc.4 or
+# older: it is mounted under both names.
 restore_volumes() {
     docker run --rm --entrypoint sh --user 0 \
-        -v "$DATA_VOLUME:/backup/rustdesk" -v "$CONSOLE_VOLUME:/backup/console" -v "$(dirname "$1"):/in:ro" \
-        "$(image_ref)" -c 'find /backup/rustdesk /backup/console -mindepth 1 -delete && tar xzf "/in/$1" -C /backup' \
+        -v "$DATA_VOLUME:/backup/neodesk" -v "$CONSOLE_VOLUME:/backup/console" \
+        -v "$DATA_VOLUME:/backup/rustdesk" -v "$(dirname "$1"):/in:ro" \
+        "$(image_ref)" -c 'find /backup/neodesk /backup/console -mindepth 1 -delete && tar xzf "/in/$1" -C /backup' \
         sh "$(basename "$1")"
 }
 
@@ -1321,9 +1356,9 @@ adopt_old_install() {
         fi
         docker stop -t 30 "$c" >/dev/null 2>&1 || true
         # The data at /opt/neodesk/data, or at /opt/rustdesk in a container
-        # of an image from before the rename
+        # of an image of 3.6.0-rc.4 or older
         copy_mount "$c" /opt/neodesk/data "$DATA_VOLUME"
-        copy_mount "$c" /opt/rustdesk "$DATA_VOLUME"
+        copy_mount "$c" "$OLD_DATA_PATH" "$DATA_VOLUME"
         copy_mount "$c" /app/data "$CONSOLE_VOLUME"
         docker rename "$c" "$c-old-$stamp" >/dev/null
         docker update --restart=no "$c-old-$stamp" >/dev/null 2>&1 || true

@@ -7,7 +7,16 @@ set -e
 . /ensure-app-user.sh
 ensure_neodesk_user
 
-DATA_DIR="/opt/neodesk/data"
+# The data volume, at /opt/neodesk/data, or where a compose file of
+# 3.6.0-rc.4 or older still mounts it; the server's arguments follow
+# shellcheck source=docker/data-path.sh
+. /docker/data-path.sh
+choose_data_path
+for arg do
+    shift
+    set -- "$@" "$(on_data_path "$arg")"
+done
+DATA_DIR="$DATA_PATH"
 
 # Normalize the Go database path before credential bootstrap and startup.
 # Split Compose files should set DB_URL explicitly, but custom deployments may
@@ -95,7 +104,11 @@ if [ -z "${ENROLLMENT_MODE:-}" ]; then
     fi
 fi
 
-# Drop privileges and re-exec
+# Drop privileges and re-exec, in an older place of the data volume from
+# there (the image works in /opt/neodesk/data)
+if [ "$DATA_PATH" != "$NEW_DATA_PATH" ]; then
+    set -- sh -c 'cd "$0" && exec "$@"' "$DATA_PATH" "$@"
+fi
 if [ "$(id -u)" = "0" ]; then
     exec su-exec neodesk "$@"
 else

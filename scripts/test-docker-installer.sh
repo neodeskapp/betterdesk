@@ -285,12 +285,15 @@ test_data_volume_at_the_neodesk_path() (
 )
 
 # L446: an update of an install from before (3.6.0-rc.4: the data volume
-# at /opt/rustdesk, a setting that names a file in it) gets the release's
-# compose file, with the same volume at /opt/neodesk/data; the setting
-# stays as it is, since the image keeps /opt/rustdesk as a link to its
-# data. An image pinned from before keeps its data path
-# (NEODESK_DATA_PATH=/opt/rustdesk), and an image of this release takes it
-# away again.
+# at /opt/rustdesk) gets the release's compose file, with the same volume
+# at /opt/neodesk/data. The image has nothing at /opt/rustdesk any more, so
+# the update rewrites the old path where the install names it: in .env, in
+# a compose file changed by hand (which stays, with the user's changes) and
+# in docker-compose.override.yml, where it becomes the data path the
+# release's compose file mounts at. The files as they were are in the
+# update's backup, and a failed update puts them back. An image pinned from
+# before keeps its data path (NEODESK_DATA_PATH=/opt/rustdesk) and its
+# files, and an image of this release takes the setting away again.
 test_update_from_the_old_data_path() (
     load
     mgr 'NEODESK_IMAGE_TAG_SET=3.6.0-rc.4; COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install failed"
@@ -299,20 +302,64 @@ test_update_from_the_old_data_path() (
         > "$NEODESK_DIR/docker-compose.yml"
     sha256sum "$NEODESK_DIR/docker-compose.yml" | cut -d' ' -f1 > "$NEODESK_DIR/.compose.sha256"
     printf 'SSL_CERT_PATH=/opt/rustdesk/ssl/console.pem\n' >> "$NEODESK_DIR/.env"
+    printf 'services:\n  neodesk:\n    volumes:\n      - /srv/neodesk:/opt/rustdesk\n' > "$NEODESK_DIR/docker-compose.override.yml"
+    cp "$NEODESK_DIR/.env" "$TEST_DIR/env-before"
+    cp "$NEODESK_DIR/docker-compose.override.yml" "$TEST_DIR/override-before"
     printf 'sha256:new\n' > "$TEST_DIR/good-image"
     local pull='docker() {
             if [ "$1 ${2:-}" = "compose pull" ]; then printf "sha256:new\n" > "$TEST_DIR/pulled"; return 0; fi
             command_docker "$@"
         }'
-    local out
+    local out backup
     out=$(mgr "$pull; NEODESK_IMAGE_TAG_SET=latest; COMMAND=update; do_update" 2>&1) || fail "the update failed: $out"
     cmp -s "$NEODESK_DIR/docker-compose.yml" "$SCRIPT_ROOT/docker-compose.quick.single.yml" || fail "the update kept the old compose file"
-    grep -qF -- '- neodesk-data:${NEODESK_DATA_PATH:-/opt/neodesk/data}' "$NEODESK_DIR/docker-compose.yml" \
-        || fail "after the update the data volume is mounted at: $(grep 'neodesk-data:' "$NEODESK_DIR/docker-compose.yml")"
-    grep -qx 'SSL_CERT_PATH=/opt/rustdesk/ssl/console.pem' "$NEODESK_DIR/.env" || fail "the update changed a setting: $(cat "$NEODESK_DIR/.env")"
+    grep -qx 'SSL_CERT_PATH=/opt/neodesk/data/ssl/console.pem' "$NEODESK_DIR/.env" \
+        || fail "a setting that names the old path was not rewritten: $(grep SSL_CERT_PATH "$NEODESK_DIR/.env")"
+    grep -qxF '      - /srv/neodesk:${NEODESK_DATA_PATH:-/opt/neodesk/data}' "$NEODESK_DIR/docker-compose.override.yml" \
+        || fail "docker-compose.override.yml still mounts at the old path: $(cat "$NEODESK_DIR/docker-compose.override.yml")"
     if grep -q '^NEODESK_DATA_PATH=' "$NEODESK_DIR/.env"; then fail "an image of this release got NEODESK_DATA_PATH"; fi
+    printf '%s' "$out" | grep -q '/opt/neodesk/data' || fail "the update does not say it rewrote the old path: $out"
+    backup=$(ls -1t "$NEODESK_DIR"/backups/neodesk-*.env 2>/dev/null | head -n 1)
+    cmp -s "$backup" "$TEST_DIR/env-before" || fail "the update's backup does not hold .env as it was"
+    cmp -s "${backup%.env}.docker-compose.override.yml" "$TEST_DIR/override-before" \
+        || fail "the update's backup does not hold docker-compose.override.yml as it was"
+
+    # A compose file of 3.6.0-rc.4 changed by hand: the user's change stays,
+    # the old path goes
+    sed -e 's|${NEODESK_DATA_PATH:-/opt/neodesk/data}|/opt/rustdesk|g' "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+        > "$NEODESK_DIR/docker-compose.yml"
+    printf '# my change\n' >> "$NEODESK_DIR/docker-compose.yml"
+    cp "$NEODESK_DIR/docker-compose.yml" "$TEST_DIR/compose-before"
+    printf 'sha256:newer\n' > "$TEST_DIR/good-image"
+    out=$(mgr 'docker() {
+            if [ "$1 ${2:-}" = "compose pull" ]; then printf "sha256:newer\n" > "$TEST_DIR/pulled"; return 0; fi
+            command_docker "$@"
+        }
+        NEODESK_IMAGE_TAG_SET=latest; COMMAND=update; do_update' 2>&1) || fail "the update of a changed compose file failed: $out"
+    grep -q '^# my change' "$NEODESK_DIR/docker-compose.yml" || fail "the update dropped the change by hand"
+    if grep -nE '^[^#]*/opt/rustdesk' "$NEODESK_DIR/docker-compose.yml"; then fail "the compose file changed by hand still uses the old path"; fi
+    grep -qF -- '- neodesk-data:${NEODESK_DATA_PATH:-/opt/neodesk/data}' "$NEODESK_DIR/docker-compose.yml" \
+        || fail "the compose file changed by hand mounts the data volume at: $(grep 'neodesk-data:' "$NEODESK_DIR/docker-compose.yml")"
+    backup=$(ls -1t "$NEODESK_DIR"/backups/neodesk-*.docker-compose.yml 2>/dev/null | head -n 1)
+    cmp -s "$backup" "$TEST_DIR/compose-before" || fail "the update's backup does not hold the changed compose file as it was"
+
+    # A failed update puts the files with the old path back, for the image
+    # from before
+    cp "$TEST_DIR/compose-before" "$NEODESK_DIR/docker-compose.yml"
+    cp "$TEST_DIR/env-before" "$NEODESK_DIR/.env"
+    cp "$TEST_DIR/override-before" "$NEODESK_DIR/docker-compose.override.yml"
+    if out=$(mgr 'docker() {
+            if [ "$1 ${2:-}" = "compose pull" ]; then printf "sha256:broken\n" > "$TEST_DIR/pulled"; return 0; fi
+            command_docker "$@"
+        }
+        NEODESK_IMAGE_TAG_SET=latest; COMMAND=update; do_update' 2>&1); then fail "an update to an unhealthy image reported success: $out"; fi
+    cmp -s "$NEODESK_DIR/.env" "$TEST_DIR/env-before" || fail "the way back did not put .env back"
+    cmp -s "$NEODESK_DIR/docker-compose.yml" "$TEST_DIR/compose-before" || fail "the way back did not put docker-compose.yml back"
+    cmp -s "$NEODESK_DIR/docker-compose.override.yml" "$TEST_DIR/override-before" \
+        || fail "the way back did not put docker-compose.override.yml back"
 
     # An image pinned from before the rename keeps its data where it looks
+    rm -f "$NEODESK_DIR/docker-compose.override.yml"
     printf 'PATH=/usr/bin\nRUSTDESK_PATH=/opt/rustdesk\n' > "$TEST_DIR/image-env"
     printf 'sha256:old\n' > "$TEST_DIR/good-image"
     out=$(mgr 'docker() {
@@ -322,6 +369,8 @@ test_update_from_the_old_data_path() (
         NEODESK_IMAGE_TAG_SET=3.6.0-rc.4; COMMAND=update; do_update' 2>&1) || fail "the update to a pinned older image failed: $out"
     grep -qx 'NEODESK_DATA_PATH=/opt/rustdesk' "$NEODESK_DIR/.env" \
         || fail "an older image's data path is not in .env: $(cat "$NEODESK_DIR/.env")"
+    grep -qx 'SSL_CERT_PATH=/opt/rustdesk/ssl/console.pem' "$NEODESK_DIR/.env" \
+        || fail "a setting for an older image was rewritten: $(grep SSL_CERT_PATH "$NEODESK_DIR/.env")"
     rm -f "$TEST_DIR/image-env"
     printf 'sha256:new\n' > "$TEST_DIR/good-image"
     out=$(mgr "$pull; NEODESK_IMAGE_TAG_SET=latest; COMMAND=update; do_update" 2>&1) || fail "the update back to this release failed: $out"
@@ -329,19 +378,22 @@ test_update_from_the_old_data_path() (
     rm -rf "$TEST_DIR"
 )
 
-# L446: a backup from before the rename (its archive holds the folders
-# rustdesk and console) goes back into the same volumes: the archive's
-# folders are the volumes, whatever path the container mounts them at.
+# L446: a backup holds the folders neodesk (the data volume) and console;
+# one from before the rename (rustdesk and console) goes back into the same
+# volumes.
 test_old_backup_restores() (
     load
     mgr 'COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install failed"
     : > "$CALLS"
-    mgr "restore_volumes '$NEODESK_DIR/backups/neodesk-20260101-000000.tar.gz'" > /dev/null 2>&1 || fail "the restore failed"
-    grep -q '^run .*-v neodesk-data:/backup/rustdesk -v neodesk-console-data:/backup/console .*tar xzf' "$CALLS" \
-        || fail "the restore does not put the archive's folders into the volumes: $(cat "$CALLS")"
     mgr 'backup_volumes' > /dev/null 2>&1 || fail "the backup failed"
-    grep -q '^run .*czf /out/neodesk-[0-9-]*\.tar\.gz -C /backup rustdesk console' "$CALLS" \
-        || fail "a backup has other folders than one from before: $(grep '^run' "$CALLS")"
+    grep -q '^run .*-v neodesk-data:/backup/neodesk:ro .*czf /out/neodesk-[0-9-]*\.tar\.gz -C /backup neodesk console' "$CALLS" \
+        || fail "a backup does not hold the folders neodesk and console: $(grep '^run' "$CALLS")"
+    : > "$CALLS"
+    mgr "restore_volumes '$NEODESK_DIR/backups/neodesk-20260101-000000.tar.gz'" > /dev/null 2>&1 || fail "the restore failed"
+    grep -q '^run .*-v neodesk-data:/backup/neodesk .*-v neodesk-console-data:/backup/console .*tar xzf' "$CALLS" \
+        || fail "the restore does not put a backup's folder neodesk into the data volume: $(cat "$CALLS")"
+    grep -q '^run .*-v neodesk-data:/backup/rustdesk .*tar xzf' "$CALLS" \
+        || fail "the restore does not put an older backup's folder rustdesk into the data volume: $(cat "$CALLS")"
     rm -rf "$TEST_DIR"
 )
 
