@@ -117,10 +117,13 @@ func (s *Server) handleClearOrgPeerCredential(w http.ResponseWriter, r *http.Req
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
 
-// GET /api/peers/{id}/connect-password — decrypt once for authorized Web Remote operators.
+// GET /api/peers/{id}/connect-password: whether the device's organization
+// stored a connect password, and which organization; never the password.
+// The browser viewer signs in with the server's answer to the device's
+// question (connect_password_answer.go), and RustDesk desktop clients get
+// the password with the shared address book (org_peer_vault_ab.go).
 func (s *Server) handleGetPeerConnectPassword(w http.ResponseWriter, r *http.Request) {
 	peerID := strings.TrimSpace(r.PathValue("id"))
-	username := getUsernameFromCtx(r)
 	role := getRoleFromCtx(r)
 	if !peerIDRegexp.MatchString(peerID) {
 		http.Error(w, `{"error":"invalid peer id"}`, http.StatusBadRequest)
@@ -168,22 +171,8 @@ func (s *Server) handleGetPeerConnectPassword(w http.ResponseWriter, r *http.Req
 		writeJSON(w, http.StatusNotFound, map[string]any{"password_set": false})
 		return
 	}
-	plain, err := s.peerVault.Open(row.Nonce, row.Ciphertext, row.KeyID)
-	if err != nil {
-		log.Printf("[org] peer vault open error: %v", err)
-		http.Error(w, `{"error":"failed to decrypt credential"}`, http.StatusInternalServerError)
-		return
-	}
-	if s.auditLog != nil {
-		s.auditLog.Log(audit.ActionOrgPeerCredentialFetch, s.eventActor(r), peerID, map[string]string{
-			"org_id": orgID,
-			"actor":  username,
-			"action": "fetch",
-		})
-	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"password_set": true,
-		"password":     plain,
 		"org_id":       orgID,
 	})
 }

@@ -246,7 +246,7 @@ func TestMCPExecAndSecretsNeedTheirOwnFlags(t *testing.T) {
 			t.Errorf("%s is not marked exec", want)
 		}
 	}
-	for _, want := range []string{"devices connect-password", "remote-targets credentials", "settings file", "server file", "backups download", "device-control clipboard"} {
+	for _, want := range []string{"remote-targets credentials", "settings file", "server file", "backups download", "device-control clipboard"} {
 		if c := tab.Find(strings.Fields(want)[0], strings.Fields(want)[1]); c == nil || !c.Secrets {
 			t.Errorf("%s is not marked secrets", want)
 		}

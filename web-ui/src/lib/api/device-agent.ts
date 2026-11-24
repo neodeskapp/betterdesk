@@ -179,10 +179,10 @@ export async function sendAgentCommand(id: string, cmd: AgentCommand): Promise<b
 
 /* ── Agent calls the panel doesn't offer yet (kept with their routes) ── */
 
-/** Whether the device has a connect password, and the password for device.connect */
+/** Whether the device's organisation stored a connect password (never the password) */
 export const ConnectPassword = v.looseObject({
 	password_set: BoolLike,
-	password: v.optional(v.nullable(v.string()))
+	org_id: v.optional(v.nullable(v.string()))
 });
 
 export function getConnectPassword(id: string, signal?: AbortSignal) {

@@ -1,9 +1,8 @@
 /**
  * The remote client's endpoints (routes/remote.routes.js and friends):
- * the viewer's data, the remote sign-in and guest pages, the device
- * password the organisation set, remote target certificates, the work
- * report after a billed session, and the console sign-in calls the
- * remote sign-in page uses.
+ * the viewer's data, the remote sign-in and guest pages, remote target
+ * certificates, the work report after a billed session, and the console
+ * sign-in calls the remote sign-in page uses.
  */
 
 import * as v from 'valibot';
@@ -176,20 +175,6 @@ export async function verifyTotp(code: string): Promise<LoginAnswer> {
 }
 
 /* ── In the viewer ── */
-
-/** The connection password the organisation set for a device, '' when none (or not allowed) */
-export async function getConnectPassword(deviceId: string): Promise<string> {
-	try {
-		const out = await api(
-			v.looseObject({ password: v.optional(v.nullable(v.string())) }),
-			`/api/devices/${encodeURIComponent(deviceId)}/connect-password`,
-			{ allowAnonymous: true }
-		);
-		return out.password ? String(out.password) : '';
-	} catch {
-		return '';
-	}
-}
 
 /** Trust a remote target's certificate fingerprint (RDP/VNC gateway) */
 export function acceptCertificate(targetId: string, fingerprint: string): Promise<unknown> {

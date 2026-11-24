@@ -9,8 +9,8 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
-// The unattended access policy of a device and the connect password the
-// web remote fills in, both kept by the server.
+// The unattended access policy of a device and whether its organization
+// stored a connect password, both kept by the server.
 
 // accessPolicy answers GET /api/devices/{id}/access-policy with what the
 // server answered, always with 200.
@@ -39,11 +39,12 @@ func (h *handlers) deleteAccessPolicy(w http.ResponseWriter, r *http.Request) {
 }
 
 // connectPassword answers GET /api/devices/{id}/connect-password with the
-// server's answer, whose password the web remote fills in; it is never
-// logged. The call goes to the server as the signed-in account, not as the
-// console's API key, so the server hands out a password stored for an
-// organization only to its members and to the roles that see every
-// organization. A device without a stored password is
+// server's answer: whether the device's organization stored a connect
+// password, never the password (the viewer signs in with the server's
+// answer to the device's question, answer.go). The call goes to the server
+// as the signed-in account, not as the console's API key, so the server
+// tells it only to the organization's members and to the roles that see
+// every organization. A device without a stored password is
 // {"password_set":false} with 200, and the server's 403 is
 // {"error":"forbidden"}.
 func (h *handlers) connectPassword(w http.ResponseWriter, r *http.Request) {

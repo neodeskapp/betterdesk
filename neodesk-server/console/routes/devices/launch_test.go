@@ -65,11 +65,14 @@ func TestDeleteTagClearsTheGroupsThatFilterOnIt(t *testing.T) {
 	}
 }
 
-// TestConnectPasswordNeedsTheDevicesOrganization: the stored connect
-// password of a device in an organization goes only to an account that is
-// a member of that organization, or to a role that sees every
+// TestConnectPasswordNeedsTheDevicesOrganization: whether a device in an
+// organization has a stored connect password is told only to an account
+// that is a member of that organization, or to a role that sees every
 // organization. The console asks the API server as the signed-in account,
-// so the server's membership check decides (BUGS L216).
+// so the server's membership check decides (BUGS L216). The password
+// itself is never in the answer: the viewer signs in with the server's
+// answer to the device's question (BUGS L454, owner's answer to the
+// nd-signin report).
 func TestConnectPasswordNeedsTheDevicesOrganization(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, sdb *store.DB) {
 		gdb := storetest.GoServer(t, sdb)
@@ -103,16 +106,16 @@ func TestConnectPasswordNeedsTheDevicesOrganization(t *testing.T) {
 			t.Errorf("operator outside the organization: %d %s, want 403 without the password", got.Status, got.Body)
 		}
 		for _, role := range []string{"super_admin", "admin", "global_admin"} {
-			if got := get(role); got.Status != http.StatusOK || !strings.Contains(got.Body, `"password":"l216-stored-pw"`) {
-				t.Errorf("%s outside the organization: %d %s, want 200 with the password", role, got.Status, got.Body)
+			if got := get(role); got.Status != http.StatusOK || !strings.Contains(got.Body, `"password_set":true`) || strings.Contains(got.Body, "l216-stored-pw") {
+				t.Errorf("%s outside the organization: %d %s, want 200 with password_set and without the password", role, got.Status, got.Body)
 			}
 		}
 
 		if err := gdb.CreateOrgUser(&db.OrgUser{ID: "ou-operator", OrgID: "org-a", ServerUserID: routetest.RoleIDs["operator"], Username: "e2e_operator", Role: "user"}); err != nil {
 			t.Fatal(err)
 		}
-		if got := get("operator"); got.Status != http.StatusOK || !strings.Contains(got.Body, `"password":"l216-stored-pw"`) {
-			t.Errorf("operator in the organization: %d %s, want 200 with the password", got.Status, got.Body)
+		if got := get("operator"); got.Status != http.StatusOK || !strings.Contains(got.Body, `"password_set":true`) || strings.Contains(got.Body, "l216-stored-pw") {
+			t.Errorf("operator in the organization: %d %s, want 200 with password_set and without the password", got.Status, got.Body)
 		}
 	})
 }

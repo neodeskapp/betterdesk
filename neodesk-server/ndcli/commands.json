@@ -2358,7 +2358,7 @@
   },
   {
    "name": "devices connect-password",
-   "summary": "Show the one-time password to connect to a device.",
+   "summary": "Show whether the device's organisation stored a device password (never the password).",
    "route": "GET /api/devices/{id}/connect-password",
    "args": [
     {
@@ -2366,8 +2366,7 @@
      "help": "The device ID (see devices list)"
     }
    ],
-   "permission": "device.connect",
-   "secrets": true
+   "permission": "device.connect"
   },
   {
    "name": "devices connection-mode",

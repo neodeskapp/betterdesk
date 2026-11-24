@@ -43,6 +43,11 @@ func TestSavedSigninCommandsNeverUseOrShowThePassword(t *testing.T) {
 			t.Errorf("%s uses the saved sign-in (%s)", c.Name, c.Route)
 		}
 	}
+	// The organisation's device password is not shown either (owner, on the
+	// nd-signin report): the command tells only whether one is stored
+	if c := tab.Find("devices", "connect-password"); c == nil || c.Secrets {
+		t.Errorf("devices connect-password: %+v, want a command that shows no secret", c)
+	}
 	excluded := false
 	for _, e := range tab.Excluded {
 		if e.Route == "POST /api/devices/{id}/signin/use" {
