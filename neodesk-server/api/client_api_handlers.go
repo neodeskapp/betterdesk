@@ -1304,6 +1304,9 @@ func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
 		Version    string `json:"version"`
 		ProductSKU string `json:"product_sku"`
 		ConnMode   string `json:"conn_mode"`
+		// PlatformAdditions: "nd_signin": 1 says the device's NeoDesk opens
+		// sealed sign-ins (noteSealedSigninReport)
+		PlatformAdditions json.RawMessage `json:"platform_additions"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		w.Header().Set("Content-Type", "text/plain")
@@ -1362,6 +1365,7 @@ func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
 		"os":       osVal,
 		"version":  version,
 	})
+	s.noteSealedSigninReport(deviceID, body.PlatformAdditions)
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte("SYSINFO_UPDATED")) //nolint:errcheck

@@ -776,7 +776,7 @@ var serverTables = map[string]bool{
 	"billing_packages": true, "billing_period_totals": true, "billing_session_ledger": true,
 	"billing_sessions": true, "billing_work_reports": true, "blocklist_entries": true, "chat_groups": true,
 	"chat_messages": true, "client_sessions": true, "device_connection_mode_commands": true,
-	"device_connection_policies": true, "device_signin": true, "device_telemetry_commands": true, "device_telemetry_snapshots": true,
+	"device_connection_policies": true, "device_sealed_signin": true, "device_signin": true, "device_telemetry_commands": true, "device_telemetry_snapshots": true,
 	"device_tokens": true, "help_requests": true, "id_change_history": true, "org_address_books": true,
 	"org_devices": true, "org_invitations": true, "org_peer_credentials": true, "org_settings": true,
 	"org_users": true, "organizations": true, "peer_availability_events": true, "peer_connection_sessions": true,

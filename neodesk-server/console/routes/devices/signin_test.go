@@ -254,6 +254,29 @@ func TestSavedSigninSealedThroughTheConsole(t *testing.T) {
 		if got := admin.Do(http.MethodPost, "/api/devices/SIGNC1/signin/use", `{"session":"`+other+`","mode":"typed"}`); got.Status != http.StatusConflict || strings.Contains(got.Body, signinPassword) {
 			t.Errorf("readable details after a sealed use: %d %s", got.Status, got.Body)
 		}
+
+		// A device whose NeoDesk reported sealed sign-in shows the sealed
+		// way before any details are saved, and gets no readable details
+		// from the first use on
+		if err := gdb.UpsertPeer(&db.Peer{ID: "SIGNC2", PK: ed25519.NewKeyFromSeed(seed).Public().(ed25519.PublicKey)}); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := gdb.MarkDeviceSealedSignin("SIGNC2", "sysinfo", "2026-11-24T10:00:00Z"); err != nil {
+			t.Fatal(err)
+		}
+		if got := admin.Do(http.MethodGet, "/api/devices/SIGNC2/signin", ""); !strings.Contains(got.Body, `"set":false`) || !strings.Contains(got.Body, `"sealed_signin":true`) {
+			t.Errorf("status of a reporting device: %d %s", got.Status, got.Body)
+		}
+		if got := admin.Do(http.MethodPut, "/api/devices/SIGNC2/signin", `{"username":"admin","password":"`+signinPassword+`"}`); got.Status != http.StatusOK {
+			t.Fatalf("set: %d %s", got.Status, got.Body)
+		}
+		first := liveSession(t, "61111111-2222-4333-8444-555555555555", "SIGNC2", routetest.RoleIDs["super_admin"])
+		if got := admin.Do(http.MethodPost, "/api/devices/SIGNC2/signin/use", `{"session":"`+first+`","mode":"typed"}`); got.Status != http.StatusConflict || !strings.Contains(got.Body, "sealed_required") || strings.Contains(got.Body, signinPassword) {
+			t.Errorf("first readable use of a reporting device: %d %s", got.Status, got.Body)
+		}
+		if !auditHas(w.AuditRows(), "signin.refused", "sealed_required") {
+			t.Errorf("no audit entry of the refused readable use: %v", w.AuditRows())
+		}
 	})
 }
 

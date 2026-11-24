@@ -474,9 +474,15 @@ func (pg *PostgresDB) Migrate() error {
 			key_id      TEXT NOT NULL,
 			form        TEXT NOT NULL DEFAULT 'password',
 			auto_signin BOOLEAN NOT NULL DEFAULT FALSE,
-			sealed_only BOOLEAN NOT NULL DEFAULT FALSE,
 			updated_at  TEXT NOT NULL DEFAULT '',
 			updated_by  TEXT NOT NULL DEFAULT ''
+		)`,
+		// Devices whose NeoDesk opens sealed sign-ins: they get no readable
+		// saved sign-in. source: sysinfo (the client reported it) or use
+		`CREATE TABLE IF NOT EXISTS device_sealed_signin (
+			device_id TEXT PRIMARY KEY,
+			source    TEXT NOT NULL DEFAULT '',
+			since     TEXT NOT NULL DEFAULT ''
 		)`,
 		`CREATE TABLE IF NOT EXISTS access_policies (
 			peer_id TEXT PRIMARY KEY,
@@ -1109,6 +1115,9 @@ func (pg *PostgresDB) HardDeletePeer(id string) error {
 	if _, err := tx.Exec(pg.ctx, `DELETE FROM device_signin WHERE device_id = $1`, id); err != nil {
 		return err
 	}
+	if _, err := tx.Exec(pg.ctx, `DELETE FROM device_sealed_signin WHERE device_id = $1`, id); err != nil {
+		return err
+	}
 	return tx.Commit(pg.ctx)
 }
 
@@ -1619,6 +1628,10 @@ func (pg *PostgresDB) cascadePeerIDInTx(ctx context.Context, tx pgx.Tx, oldID, n
 		// The saved sign-in is sealed for the device's ID: it does not open
 		// under another one, so it goes, and so does one the new ID left
 		{`DELETE FROM device_signin WHERE device_id = $1 OR device_id = $2`, []any{oldID, newID}},
+		// Whether its NeoDesk opens sealed sign-ins stays with the device
+		{`DELETE FROM device_sealed_signin WHERE device_id = $1 AND EXISTS
+			(SELECT 1 FROM device_sealed_signin WHERE device_id = $2)`, []any{newID, oldID}},
+		{`UPDATE device_sealed_signin SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_snapshots SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_commands SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},
 		{`UPDATE device_connection_policies SET device_id = $1 WHERE device_id = $2`, []any{newID, oldID}},

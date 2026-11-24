@@ -382,8 +382,31 @@ func (h *handlers) sysinfo(w http.ResponseWriter, r *http.Request) {
 		plainText(w, r, "ERROR")
 		return
 	}
+	if reportsSealedSignin(additions) {
+		added, err := h.store.markSealedSignin(ctx, id)
+		switch {
+		case err != nil:
+			h.log.Warn("[API:SYSINFO] Failed to mark the device as signing in sealed:", err.Error())
+		case added:
+			h.log.Info(fmt.Sprintf("[API:SYSINFO] %s reports that its NeoDesk opens sealed sign-ins: no readable saved sign-in for it from now on", id))
+		}
+	}
 	h.log.Info(fmt.Sprintf("[API:SYSINFO] PRO activated for %s: %s (%s) CPU: %s RAM: %sGB", id, si.hostname, si.platform, si.cpuName, strOr(si.memoryGB)))
 	plainText(w, r, "SYSINFO_UPDATED")
+}
+
+// reportsSealedSignin reports whether a system information upload's
+// platform_additions name "nd_signin" as a number of 1 or more: the
+// device's NeoDesk opens sealed sign-ins (wire format in
+// crypto/devicevault). As the API server's check: an object only, and a
+// number only.
+func reportsSealedSignin(additions any) bool {
+	o, ok := additions.(*goapi.Object)
+	if !ok || o == nil {
+		return false
+	}
+	version, ok := number(o.Get("nd_signin"))
+	return ok && version >= 1
 }
 
 // sysinfoVersion answers POST /api/sysinfo_ver with the version of the

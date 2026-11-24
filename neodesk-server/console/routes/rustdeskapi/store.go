@@ -942,6 +942,20 @@ func (s *clientStore) insertMetric(ctx context.Context, id string, cpu, memory, 
 	return err
 }
 
+// markSealedSignin marks the device as one whose NeoDesk opens sealed
+// sign-ins, in the server's table (db.MarkDeviceSealedSignin, source
+// sysinfo): the API server hands out no readable saved sign-in for it from
+// then on. added is false when it was marked already.
+func (s *clientStore) markSealedSignin(ctx context.Context, id string) (added bool, err error) {
+	res, err := s.db.Exec(ctx, `INSERT INTO device_sealed_signin (device_id, source, since) VALUES (?, 'sysinfo', ?)
+		ON CONFLICT (device_id) DO NOTHING`, id, time.Now().UTC().Format(time.RFC3339))
+	if err != nil {
+		return false, err
+	}
+	n, err := res.RowsAffected()
+	return n > 0, err
+}
+
 // markOnline is updatePeerOnlineStatus.
 func (s *clientStore) markOnline(ctx context.Context, id string) error {
 	_, err := s.db.Exec(ctx, s.db.Pick(

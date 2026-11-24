@@ -286,6 +286,36 @@ func TestClientReportsAreBounded(t *testing.T) {
 	})
 }
 
+// TestSysinfoReportOfSealedSignin: system information whose
+// platform_additions name "nd_signin": 1 marks the device as one whose
+// NeoDesk opens sealed sign-ins (the server then hands out no readable
+// saved sign-in for it); another value, or an upload with another uuid,
+// marks nothing (L469).
+func TestSysinfoReportOfSealedSignin(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		db = storetest.Prepare(t, db, storetest.GoServerFirst)
+		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"RATE_LIMIT_MAX": "1000"}})
+		ctx := context.Background()
+		mustExec(t, db, `INSERT INTO peers (id, uuid) VALUES ('900300011', 'u-1'), ('900300012', 'u-1'), ('900300013', 'u-1')`)
+		mustExec(t, db, `INSERT INTO peer (id, uuid, info) VALUES ('900300011', 'u-1', '{}'), ('900300012', 'u-1', '{}'), ('900300013', 'u-1', '{}')`)
+		for _, body := range []string{
+			`{"id":"900300011","uuid":"u-1","hostname":"h","platform_additions":{"nd_signin":1}}`,
+			`{"id":"900300011","uuid":"u-1","hostname":"h","platform_additions":{"nd_signin":1}}`,
+			`{"id":"900300012","uuid":"u-1","hostname":"h","platform_additions":{"nd_signin":"1"}}`,
+			`{"id":"900300012","uuid":"u-1","hostname":"h","platform_additions":{"nd_signin":true}}`,
+			`{"id":"900300013","uuid":"u-2","hostname":"h","platform_additions":{"nd_signin":1}}`,
+		} {
+			w.SignedOut().Do("POST", "/api/sysinfo", body)
+		}
+		for id, want := range map[string]int{"900300011": 1, "900300012": 0, "900300013": 0} {
+			var n int
+			if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM device_sealed_signin WHERE device_id = ?`, id).Scan(&n); err != nil || n != want {
+				t.Errorf("%s: %d marks (%v), want %d", id, n, err, want)
+			}
+		}
+	})
+}
+
 // The sign-in tells whether a device is banned only after the password:
 // a wrong password with a banned device's id is the plain refusal, counts
 // as a failed attempt and writes no entry about the device; the right

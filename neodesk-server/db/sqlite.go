@@ -437,9 +437,15 @@ func (s *SQLiteDB) migrateSchema() error {
 			key_id TEXT NOT NULL,
 			form TEXT NOT NULL DEFAULT 'password',
 			auto_signin INTEGER NOT NULL DEFAULT 0,
-			sealed_only INTEGER NOT NULL DEFAULT 0,
 			updated_at TEXT NOT NULL DEFAULT '',
 			updated_by TEXT NOT NULL DEFAULT ''
+		)`,
+		// Devices whose NeoDesk opens sealed sign-ins: they get no readable
+		// saved sign-in. source: sysinfo (the client reported it) or use
+		`CREATE TABLE IF NOT EXISTS device_sealed_signin (
+			device_id TEXT PRIMARY KEY,
+			source TEXT NOT NULL DEFAULT '',
+			since TEXT NOT NULL DEFAULT ''
 		)`,
 		`CREATE TABLE IF NOT EXISTS access_policies (
 			peer_id TEXT PRIMARY KEY,
@@ -1254,6 +1260,9 @@ func (s *SQLiteDB) HardDeletePeer(id string) error {
 	if _, err := tx.Exec(`DELETE FROM device_signin WHERE device_id = ?`, id); err != nil {
 		return err
 	}
+	if _, err := tx.Exec(`DELETE FROM device_sealed_signin WHERE device_id = ?`, id); err != nil {
+		return err
+	}
 	return tx.Commit()
 }
 
@@ -1898,6 +1907,10 @@ func (s *SQLiteDB) cascadePeerIDInTx(tx *sql.Tx, oldID, newID string) error {
 		// The saved sign-in is sealed for the device's ID: it does not open
 		// under another one, so it goes, and so does one the new ID left
 		{`DELETE FROM device_signin WHERE device_id = ? OR device_id = ?`, []any{oldID, newID}},
+		// Whether its NeoDesk opens sealed sign-ins stays with the device
+		{`DELETE FROM device_sealed_signin WHERE device_id = ? AND EXISTS
+			(SELECT 1 FROM device_sealed_signin WHERE device_id = ?)`, []any{newID, oldID}},
+		{`UPDATE device_sealed_signin SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_snapshots SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_telemetry_commands SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},
 		{`UPDATE device_connection_policies SET device_id = ? WHERE device_id = ?`, []any{newID, oldID}},

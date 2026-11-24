@@ -27,6 +27,13 @@ import (
 //	                        screen), desktop (none of these); absent: unknown.
 //	                        Checked in that order.
 //
+// The client also names "nd_signin": 1 in a "platform_additions" object
+// at the top level of its system information upload (POST /api/sysinfo
+// JSON body, next to "id" and "uuid"); a JSON number of 1 or more counts,
+// nothing else. Once a device has, the server hands out no readable saved
+// sign-in for it ("sealed_required"), from the first use on and also when
+// a later upload leaves the key out.
+//
 // A change of the state during the session: Misc.plugin_request (Misc
 // field 25, PluginRequest {string id = 1; bytes content = 2}) with id
 // "nd.logon_state" and content the UTF-8 JSON {"logon_state":"locked"},
