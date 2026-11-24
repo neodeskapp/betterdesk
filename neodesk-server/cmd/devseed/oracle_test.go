@@ -19,7 +19,6 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
-	"github.com/neodeskapp/neodesk/neodesk-server/internal/upstreamname"
 )
 
 // testdata/rows.json.gz holds the rows the Node seed wrote straight into
@@ -467,12 +466,7 @@ func TestBuildersMatchTheNodeSeedAtManyTimes(t *testing.T) {
 	for _, fp := range data.Fingerprints {
 		got := builderRows(t, newDemo(time.UnixMilli(int64(fp.Now))))
 		for table, want := range fp.Sums {
-			// The Node seed named the demo software with upstream's names
-			rows := mustStringify(got[table])
-			if upstreamname.Holds(rows) {
-				t.Errorf("%s: %s names upstream: %.300s", isoText(fp.Now), table, rows)
-			}
-			sum := sha256.Sum256([]byte(upstreamname.Names(rows)))
+			sum := sha256.Sum256([]byte(mustStringify(got[table])))
 			if hex.EncodeToString(sum[:]) != want {
 				if failed < 10 {
 					t.Errorf("%s: %s differs from the Node seed's", isoText(fp.Now), table)

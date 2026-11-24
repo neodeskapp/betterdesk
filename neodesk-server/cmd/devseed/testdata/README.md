@@ -13,7 +13,9 @@ id.
 
 ## What is recorded
 
-The seed script ran unchanged on a recording stand-in for better-sqlite3.
+The seed script ran unchanged on a recording stand-in for better-sqlite3,
+from a copy of the old console in which the old project's names were
+replaced by NeoDesk's, so the rows hold NeoDesk's names.
 
 - Six cases at fixed times, two of them with the demo accounts already
   there: every INSERT as `{table, row}` and the UPDATE of the contract
