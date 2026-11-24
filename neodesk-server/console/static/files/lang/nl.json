@@ -2844,7 +2844,9 @@
     "clipboard_text_too_large": "De gekopieerde tekst is groter dan {limit} en is niet verstuurd.",
     "clipboard_remote_too_large": "De externe computer kopieerde meer dan {limit}. Het is niet hierheen gekopieerd.",
     "clipboard_image_unsupported": "De gekopieerde afbeelding kan niet worden verstuurd. Alleen de tekst is overgekomen.",
-    "clipboard_send_failed": "Het klembord kon niet naar de externe computer worden verstuurd."
+    "clipboard_send_failed": "Het klembord kon niet naar de externe computer worden verstuurd.",
+    "session_title": "Externe sessie: {name}",
+    "sign_out_ends_sessions": "Uw open externe sessies stoppen ook ({count})."
   },
   "branding": {
     "identity_title": "Merkidentiteit",
@@ -8788,7 +8790,11 @@
     "zoom": "Grootte",
     "back_to_main": "Terug naar het hoofdvenster",
     "window_without_viewer": "Dit venster toont een scherm van een externe sessie. Open het vanuit de viewer met Openen in een eigen venster.",
-    "info_video_total": "Video, alle schermen"
+    "info_video_total": "Video, alle schermen",
+    "hide_sidebar": "Zijbalk verbergen",
+    "show_sidebar": "Zijbalk tonen",
+    "open_in_new_tab": "Openen in nieuw tabblad",
+    "open_in_new_tab_hint": "Deze sessie naar een eigen tabblad verplaatsen: daar maakt ze opnieuw verbinding en hier stopt ze"
   },
   "diagram": {
     "your_computer": "Uw computer",

@@ -5,6 +5,12 @@
   accessibility panel, the idle warning, the dialog, toast and device
   panel hosts. Inside a Desktop Mode window (?embed=1) only the page.
 
+  Remote sessions opened in the console live here, above the pages
+  (ConsoleViewer.svelte): on their page (/remote/session/<id>) the viewer
+  fills the main area, the sidebar folds away when the person chose so,
+  and in full screen the console's bars step aside; on the other pages the
+  sessions stay connected and a strip under the top bar leads back.
+
   On every navigation: dialogs from code, menus and the drawer close. When the page itself changes (not just its query),
   focus moves to the page's heading, so keyboard and screen reader users
   start there.
@@ -17,6 +23,10 @@
 	import ChatHost from '#lib/chat/ChatHost.svelte';
 	import { chat } from '#lib/chat/client.svelte.ts';
 	import DevicePanelHost from '#lib/devices/DevicePanelHost.svelte';
+	import { consoleSessions } from '#lib/remote/console-sessions.svelte.ts';
+	import { fromRemoteScreen } from '#lib/remote/screen-focus.ts';
+	import ConsoleViewer from '#lib/remote/viewer/ConsoleViewer.svelte';
+	import SessionStrip from '#lib/remote/viewer/SessionStrip.svelte';
 	import GuideReturn from '#lib/guide/GuideReturn.svelte';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { appPath } from '#lib/nav.ts';
@@ -53,7 +63,14 @@
 	const DRAWER_QUERY = '(max-width: 1099px)';
 	const restartPrompt = lazy(() => import('#lib/settings/RestartPrompt.svelte'));
 
-	let drawer = $state(typeof window !== 'undefined' && window.matchMedia(DRAWER_QUERY).matches);
+	const cs = consoleSessions;
+	/** Below 1100 px the sidebar is a drawer */
+	let narrow = $state(typeof window !== 'undefined' && window.matchMedia(DRAWER_QUERY).matches);
+	/** The page of a remote session: the viewer fills the main area */
+	const SESSION_ROUTE = '/(console)/remote/session/[deviceId]';
+	const sessionPage = $derived(page.route.id === SESSION_ROUTE);
+	// The sidebar folded away on a session's page (the person's choice) and in full screen opens as a drawer
+	const drawer = $derived(narrow || cs.immersive || (sessionPage && cs.collapsed));
 	let drawerOpen = $state(false);
 	let helpOpen = $state(false);
 	let searchOpen = $state(false);
@@ -103,6 +120,10 @@
 		};
 	});
 
+	$effect(() => {
+		if (!drawer) drawerOpen = false;
+	});
+
 	/* ── Navigation ── */
 
 	beforeNavigate(({ from, to }) => {
@@ -115,6 +136,8 @@
 		drawerOpen = false;
 		navigation++;
 		if (type === 'enter' || !from || !to || from.url.pathname === to.url.pathname) return;
+		// A remote session's page: the viewer gives its screen the keyboard itself
+		if (to.route.id === SESSION_ROUTE) return;
 		void tick().then(() => {
 			// A sheet or dialog the new page opened (a device from ?open=) keeps the focus
 			if (openLayers() > 0) return;
@@ -136,8 +159,7 @@
 	onMount(() => {
 		const mq = window.matchMedia(DRAWER_QUERY);
 		const onMq = () => {
-			drawer = mq.matches;
-			if (!drawer) drawerOpen = false;
+			narrow = mq.matches;
 		};
 		mq.addEventListener('change', onMq);
 
@@ -175,7 +197,8 @@
 	/* ── Keys and gestures ── */
 
 	function onkeydown(e: KeyboardEvent) {
-		if (embedded || !isSearchShortcut(e)) return;
+		// Keys on the remote screen go to the remote computer
+		if (embedded || fromRemoteScreen(e) || !isSearchShortcut(e)) return;
 		e.preventDefault();
 		searchOpen = true;
 	}
@@ -212,7 +235,7 @@
 	{#if session.emergencyMode}
 		<div class="emergency-banner" role="alert">{t('auth.emergency_mode_banner')}</div>
 	{/if}
-	<div class="shell">
+	<div class={['shell', sessionPage && 'is-session']}>
 		<Sidebar
 			bind:element={sidebar}
 			id={sidebarId}
@@ -232,27 +255,36 @@
 			<div class="drawer-overlay" aria-hidden="true" onclick={closeDrawer}></div>
 		{/if}
 		<div class="shell-main" inert={drawer && drawerOpen}>
-			<Topbar
-				{crumbs}
-				{drawer}
-				{drawerOpen}
-				{sidebarId}
-				{helpOpen}
-				{helpId}
-				bind:helpButton
-				ondrawer={() => (drawerOpen ? closeDrawer() : openDrawer())}
-				onsearch={() => (searchOpen = true)}
-				onhelp={() => (helpOpen = !helpOpen)}
-			/>
+			{#if !cs.immersive}
+				<Topbar
+					{crumbs}
+					{drawer}
+					{drawerOpen}
+					{sidebarId}
+					{helpOpen}
+					{helpId}
+					bind:helpButton
+					ondrawer={() => (drawerOpen ? closeDrawer() : openDrawer())}
+					onsearch={() => (searchOpen = true)}
+					onhelp={() => (helpOpen = !helpOpen)}
+				/>
+				{#if !sessionPage}<SessionStrip />{/if}
+			{/if}
 			<div class="shell-body">
-				<main bind:this={main} id="main-content" class="main-content" tabindex="-1">
+				<main
+					bind:this={main}
+					id="main-content"
+					class={['main-content', sessionPage && 'is-session']}
+					tabindex="-1"
+				>
 					<GuideReturn />
+					{#if cs.count}<ConsoleViewer />{/if}
 					{@render children()}
 				</main>
 				<HelpPanel bind:open={helpOpen} docked={!drawer} id={helpId} opener={helpButton} />
 			</div>
 		</div>
-		<BottomNav items={bottom} drawerId={sidebarId} {drawerOpen} onmore={openDrawer} />
+		{#if !sessionPage}<BottomNav items={bottom} drawerId={sidebarId} {drawerOpen} onmore={openDrawer} />{/if}
 	</div>
 	<SearchDialog bind:open={searchOpen} />
 	<A11yPanel bind:open={a11y.open} />
@@ -300,6 +332,12 @@
 		background: var(--bg);
 		color: var(--text);
 	}
+	/* A session's page is as high as the window: the viewer fills it, nothing scrolls */
+	.shell.is-session {
+		height: 100vh;
+		height: 100dvh;
+		overflow: hidden;
+	}
 	.shell-main {
 		display: flex;
 		flex: 1;
@@ -320,6 +358,13 @@
 	.main-content:focus {
 		outline: none;
 	}
+	.main-content.is-session {
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		padding: 0;
+		overflow: hidden;
+	}
 	/* The heading takes focus after a page change only to start reading there; it is not a control */
 	.main-content :global(h1[tabindex='-1']:focus) {
 		outline: none;
@@ -337,6 +382,9 @@
 	@media (max-width: 767px) {
 		.main-content {
 			padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+		}
+		.main-content.is-session {
+			padding-bottom: env(safe-area-inset-bottom, 0px);
 		}
 	}
 </style>

@@ -2844,7 +2844,9 @@
     "clipboard_text_too_large": "コピーしたテキストが {limit} を超えているため送信しませんでした。",
     "clipboard_remote_too_large": "リモートコンピューターが {limit} を超える内容をコピーしました。ここにはコピーしていません。",
     "clipboard_image_unsupported": "コピーした画像は送信できません。テキストだけを送りました。",
-    "clipboard_send_failed": "クリップボードをリモートコンピューターに送信できませんでした。"
+    "clipboard_send_failed": "クリップボードをリモートコンピューターに送信できませんでした。",
+    "session_title": "リモートセッション: {name}",
+    "sign_out_ends_sessions": "開いているリモートセッションも終了します（{count}）。"
   },
   "branding": {
     "identity_title": "ブランドアイデンティティ",
@@ -8788,7 +8790,11 @@
     "zoom": "サイズ",
     "back_to_main": "メインウィンドウに戻る",
     "window_without_viewer": "このウィンドウはリモートセッションのディスプレイを表示します。ビューアーの「専用ウィンドウで開く」から開いてください。",
-    "info_video_total": "ビデオ (全ディスプレイ)"
+    "info_video_total": "ビデオ (全ディスプレイ)",
+    "hide_sidebar": "サイドバーを隠す",
+    "show_sidebar": "サイドバーを表示",
+    "open_in_new_tab": "新しいタブで開く",
+    "open_in_new_tab_hint": "このセッションを専用のタブに移します: そちらで再接続し、ここでは終了します"
   },
   "diagram": {
     "your_computer": "あなたのコンピューター",

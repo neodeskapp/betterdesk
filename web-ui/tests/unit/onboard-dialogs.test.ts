@@ -63,7 +63,8 @@ describe('session states', () => {
 		expect(desktopLink('123456789', 'pw', 'rustdesk')).toBe(
 			'rustdesk://connection/new/123456789?password=pw'
 		);
-		expect(viewerPath('123456789')).toBe('/remote/123456789');
+		// Quick support keeps the standalone viewer in its own tab, not the console's
+		expect(viewerPath('123456789')).toBe('/remote/123456789?standalone=1');
 	});
 });
 
@@ -213,7 +214,7 @@ describe('Quick support', () => {
 			{ timeout: 5000 }
 		);
 		await user.click(connect);
-		expect(opened).toEqual(['/remote/423456789']);
+		expect(opened).toEqual(['/remote/423456789?standalone=1']);
 		expect(calls.some((c) => c.path.endsWith('/password'))).toBe(false);
 
 		// The desktop app: NeoDesk by its own scheme, RustDesk by rustdesk:// (L423);

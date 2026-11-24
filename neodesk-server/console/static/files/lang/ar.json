@@ -2851,7 +2851,9 @@
     "clipboard_text_too_large": "النص المنسوخ أكبر من {limit} ولم يُرسل.",
     "clipboard_remote_too_large": "نسخ الكمبيوتر البعيد أكثر من {limit}. لم يُنسخ إلى هنا.",
     "clipboard_image_unsupported": "تعذّر إرسال الصورة المنسوخة. أُرسل النص فقط.",
-    "clipboard_send_failed": "تعذّر إرسال الحافظة إلى الكمبيوتر البعيد."
+    "clipboard_send_failed": "تعذّر إرسال الحافظة إلى الكمبيوتر البعيد.",
+    "session_title": "جلسة عن بُعد: {name}",
+    "sign_out_ends_sessions": "تنتهي أيضًا جلساتك المفتوحة عن بُعد ({count})."
   },
   "branding": {
     "identity_title": "هوية العلامة التجارية",
@@ -8795,7 +8797,11 @@
     "zoom": "الحجم",
     "back_to_main": "العودة إلى النافذة الرئيسية",
     "window_without_viewer": "تعرض هذه النافذة شاشة من جلسة عن بعد. افتحها من العارض بالأمر «فتح في نافذة خاصة بها».",
-    "info_video_total": "الفيديو، كل الشاشات"
+    "info_video_total": "الفيديو، كل الشاشات",
+    "hide_sidebar": "إخفاء الشريط الجانبي",
+    "show_sidebar": "إظهار الشريط الجانبي",
+    "open_in_new_tab": "فتح في علامة تبويب جديدة",
+    "open_in_new_tab_hint": "انقل هذه الجلسة إلى علامة تبويب خاصة بها: تتصل من جديد هناك وتنتهي هنا"
   },
   "diagram": {
     "your_computer": "حاسوبك",

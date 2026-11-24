@@ -2850,7 +2850,9 @@
     "clipboard_text_too_large": "A másolt szöveg nagyobb, mint {limit}, ezért nem lett elküldve.",
     "clipboard_remote_too_large": "A távoli számítógép több mint {limit} adatot másolt. Ide nem került át.",
     "clipboard_image_unsupported": "A másolt képet nem lehet elküldeni. Csak a szöveg ment át.",
-    "clipboard_send_failed": "A vágólapot nem sikerült elküldeni a távoli számítógépre."
+    "clipboard_send_failed": "A vágólapot nem sikerült elküldeni a távoli számítógépre.",
+    "session_title": "Távoli munkamenet: {name}",
+    "sign_out_ends_sessions": "A nyitott távoli munkamenetei is véget érnek ({count})."
   },
   "branding": {
     "identity_title": "Márkaidentitás",
@@ -8794,7 +8796,11 @@
     "zoom": "Méret",
     "back_to_main": "Vissza a főablakhoz",
     "window_without_viewer": "Ez az ablak egy távoli munkamenet képernyőjét mutatja. Nyissa meg a megjelenítőből a „Megnyitás saját ablakban” paranccsal.",
-    "info_video_total": "Videó, összes képernyő"
+    "info_video_total": "Videó, összes képernyő",
+    "hide_sidebar": "Oldalsáv elrejtése",
+    "show_sidebar": "Oldalsáv megjelenítése",
+    "open_in_new_tab": "Megnyitás új lapon",
+    "open_in_new_tab_hint": "A munkamenet áthelyezése saját lapra: ott újra csatlakozik, itt pedig véget ér"
   },
   "diagram": {
     "your_computer": "Az Ön gépe",

@@ -2850,7 +2850,9 @@
     "clipboard_text_too_large": "Kopyalanan metin {limit} boyutundan büyük ve gönderilmedi.",
     "clipboard_remote_too_large": "Uzak bilgisayar {limit} boyutundan fazlasını kopyaladı. Buraya kopyalanmadı.",
     "clipboard_image_unsupported": "Kopyalanan görsel gönderilemiyor. Yalnızca metin aktarıldı.",
-    "clipboard_send_failed": "Pano uzak bilgisayara gönderilemedi."
+    "clipboard_send_failed": "Pano uzak bilgisayara gönderilemedi.",
+    "session_title": "Uzak oturum: {name}",
+    "sign_out_ends_sessions": "Açık uzak oturumlarınız da sona erer ({count})."
   },
   "branding": {
     "identity_title": "Marka Kimliği",
@@ -8794,7 +8796,11 @@
     "zoom": "Boyut",
     "back_to_main": "Ana pencereye dön",
     "window_without_viewer": "Bu pencere bir uzak oturumun ekranını gösterir. Görüntüleyicide Kendi penceresinde aç ile açın.",
-    "info_video_total": "Video, tüm ekranlar"
+    "info_video_total": "Video, tüm ekranlar",
+    "hide_sidebar": "Kenar çubuğunu gizle",
+    "show_sidebar": "Kenar çubuğunu göster",
+    "open_in_new_tab": "Yeni sekmede aç",
+    "open_in_new_tab_hint": "Bu oturumu kendi sekmesine taşı: orada yeniden bağlanır, burada sona erer"
   },
   "diagram": {
     "your_computer": "Bilgisayarınız",

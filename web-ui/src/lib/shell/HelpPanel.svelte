@@ -8,6 +8,7 @@
 -->
 <script lang="ts">
 	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { fromRemoteScreen } from '#lib/remote/screen-focus.ts';
 	import IconButton from '#lib/ui/IconButton.svelte';
 	import Sheet from '#lib/ui/Sheet.svelte';
 	import { openLayers } from '#lib/ui/layers.ts';
@@ -38,7 +39,7 @@
 		if (!open || !docked) return;
 		closeBtn?.focus({ preventScroll: true });
 		const key = (e: KeyboardEvent) => {
-			if (e.key !== 'Escape' || e.defaultPrevented || openLayers() > 0) return;
+			if (e.key !== 'Escape' || e.defaultPrevented || openLayers() > 0 || fromRemoteScreen(e)) return;
 			e.preventDefault();
 			close();
 		};

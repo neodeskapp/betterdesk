@@ -2850,7 +2850,9 @@
     "clipboard_text_too_large": "Văn bản đã sao chép lớn hơn {limit} nên không được gửi.",
     "clipboard_remote_too_large": "Máy tính từ xa đã sao chép hơn {limit}. Nội dung không được sao chép về đây.",
     "clipboard_image_unsupported": "Không gửi được hình ảnh đã sao chép. Chỉ văn bản được gửi.",
-    "clipboard_send_failed": "Không thể gửi bộ nhớ tạm tới máy tính từ xa."
+    "clipboard_send_failed": "Không thể gửi bộ nhớ tạm tới máy tính từ xa.",
+    "session_title": "Phiên từ xa: {name}",
+    "sign_out_ends_sessions": "Các phiên từ xa đang mở của bạn cũng kết thúc ({count})."
   },
   "branding": {
     "identity_title": "Nhận diện thương hiệu",
@@ -8794,7 +8796,11 @@
     "zoom": "Kích thước",
     "back_to_main": "Quay lại cửa sổ chính",
     "window_without_viewer": "Cửa sổ này hiển thị một màn hình của phiên từ xa. Hãy mở nó từ trình xem bằng Mở trong cửa sổ riêng.",
-    "info_video_total": "Video, tất cả màn hình"
+    "info_video_total": "Video, tất cả màn hình",
+    "hide_sidebar": "Ẩn thanh bên",
+    "show_sidebar": "Hiện thanh bên",
+    "open_in_new_tab": "Mở trong thẻ mới",
+    "open_in_new_tab_hint": "Chuyển phiên này sang thẻ riêng: phiên sẽ kết nối lại ở đó và kết thúc ở đây"
   },
   "diagram": {
     "your_computer": "Máy tính của bạn",

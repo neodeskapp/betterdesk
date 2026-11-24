@@ -2844,7 +2844,9 @@
     "clipboard_text_too_large": "복사한 텍스트가 {limit}보다 커서 보내지 않았습니다.",
     "clipboard_remote_too_large": "원격 컴퓨터가 {limit}보다 많이 복사했습니다. 여기로 복사하지 않았습니다.",
     "clipboard_image_unsupported": "복사한 이미지는 보낼 수 없습니다. 텍스트만 보냈습니다.",
-    "clipboard_send_failed": "클립보드를 원격 컴퓨터로 보내지 못했습니다."
+    "clipboard_send_failed": "클립보드를 원격 컴퓨터로 보내지 못했습니다.",
+    "session_title": "원격 세션: {name}",
+    "sign_out_ends_sessions": "열려 있는 원격 세션도 종료됩니다({count})."
   },
   "branding": {
     "identity_title": "브랜드 아이덴티티",
@@ -8788,7 +8790,11 @@
     "zoom": "크기",
     "back_to_main": "기본 창으로 돌아가기",
     "window_without_viewer": "이 창은 원격 세션의 디스플레이를 보여 줍니다. 뷰어에서 '별도 창에서 열기'로 여세요.",
-    "info_video_total": "비디오, 모든 디스플레이"
+    "info_video_total": "비디오, 모든 디스플레이",
+    "hide_sidebar": "사이드바 숨기기",
+    "show_sidebar": "사이드바 표시",
+    "open_in_new_tab": "새 탭에서 열기",
+    "open_in_new_tab_hint": "이 세션을 별도 탭으로 옮깁니다: 그곳에서 다시 연결되고 여기서는 끝납니다"
   },
   "diagram": {
     "your_computer": "내 컴퓨터",

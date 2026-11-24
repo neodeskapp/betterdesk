@@ -2870,7 +2870,9 @@
         "clipboard_text_too_large": "The copied text is larger than {limit} and was not sent.",
         "clipboard_remote_too_large": "The remote computer copied more than {limit}. It was not copied here.",
         "clipboard_image_unsupported": "The copied image can't be sent. Only the text went over.",
-        "clipboard_send_failed": "The clipboard could not be sent to the remote computer."
+        "clipboard_send_failed": "The clipboard could not be sent to the remote computer.",
+        "session_title": "Remote session: {name}",
+        "sign_out_ends_sessions": "Your open remote sessions end too ({count})."
     },
     "remote_dashboard": {
         "title": "Remote Desktop Client",
@@ -8788,7 +8790,11 @@
         "zoom": "Zoom",
         "back_to_main": "Back to the main window",
         "window_without_viewer": "This window shows a display of a remote session. Open it from the viewer with Open in a window of its own.",
-        "info_video_total": "Video, all displays"
+        "info_video_total": "Video, all displays",
+        "hide_sidebar": "Hide the sidebar",
+        "show_sidebar": "Show the sidebar",
+        "open_in_new_tab": "Open in new tab",
+        "open_in_new_tab_hint": "Move this session to a tab of its own: it connects again there and ends here"
     },
     "diagram": {
         "your_computer": "Your computer",

@@ -2844,7 +2844,9 @@
     "clipboard_text_too_large": "Der kopierte Text ist größer als {limit} und wurde nicht gesendet.",
     "clipboard_remote_too_large": "Der entfernte Computer hat mehr als {limit} kopiert. Es wurde nicht hierher kopiert.",
     "clipboard_image_unsupported": "Das kopierte Bild lässt sich nicht senden. Nur der Text wurde übertragen.",
-    "clipboard_send_failed": "Die Zwischenablage konnte nicht an den entfernten Computer gesendet werden."
+    "clipboard_send_failed": "Die Zwischenablage konnte nicht an den entfernten Computer gesendet werden.",
+    "session_title": "Fernsitzung: {name}",
+    "sign_out_ends_sessions": "Ihre offenen Fernsitzungen enden ebenfalls ({count})."
   },
   "branding": {
     "identity_title": "Markenidentität",
@@ -8788,7 +8790,11 @@
     "zoom": "Größe",
     "back_to_main": "Zurück zum Hauptfenster",
     "window_without_viewer": "Dieses Fenster zeigt einen Bildschirm einer Fernsitzung. Öffnen Sie es in der Fernansicht mit „In eigenem Fenster öffnen“.",
-    "info_video_total": "Video, alle Bildschirme"
+    "info_video_total": "Video, alle Bildschirme",
+    "hide_sidebar": "Seitenleiste ausblenden",
+    "show_sidebar": "Seitenleiste einblenden",
+    "open_in_new_tab": "In neuem Tab öffnen",
+    "open_in_new_tab_hint": "Diese Sitzung in einen eigenen Tab verschieben: Sie verbindet sich dort neu und endet hier"
   },
   "diagram": {
     "your_computer": "Ihr Computer",

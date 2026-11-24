@@ -2850,7 +2850,9 @@
     "clipboard_text_too_large": "Den kopierade texten är större än {limit} och skickades inte.",
     "clipboard_remote_too_large": "Fjärrdatorn kopierade mer än {limit}. Det kopierades inte hit.",
     "clipboard_image_unsupported": "Den kopierade bilden kan inte skickas. Bara texten kom över.",
-    "clipboard_send_failed": "Urklipp kunde inte skickas till fjärrdatorn."
+    "clipboard_send_failed": "Urklipp kunde inte skickas till fjärrdatorn.",
+    "session_title": "Fjärrsession: {name}",
+    "sign_out_ends_sessions": "Dina öppna fjärrsessioner avslutas också ({count})."
   },
   "branding": {
     "identity_title": "Varumärkesidentitet",
@@ -8794,7 +8796,11 @@
     "zoom": "Storlek",
     "back_to_main": "Tillbaka till huvudfönstret",
     "window_without_viewer": "Det här fönstret visar en skärm från en fjärrsession. Öppna det från visningen med Öppna i eget fönster.",
-    "info_video_total": "Video, alla skärmar"
+    "info_video_total": "Video, alla skärmar",
+    "hide_sidebar": "Dölj sidofältet",
+    "show_sidebar": "Visa sidofältet",
+    "open_in_new_tab": "Öppna i ny flik",
+    "open_in_new_tab_hint": "Flytta sessionen till en egen flik: den ansluter igen där och avslutas här"
   },
   "diagram": {
     "your_computer": "Din dator",

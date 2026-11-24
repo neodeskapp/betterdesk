@@ -12,7 +12,13 @@
   open sheet; elsewhere it opens Controls while a picture shows.
   Ctrl+Alt+Shift with 1 to 9 picks a display of the device, L changes the
   layout, Z the zoom of the display worked on, P opens it in a window of
-  its own (DisplayMenu.svelte).
+  its own (DisplayMenu.svelte). A middle click on a tab closes it.
+
+  Inside the console (embedded) the console owns the viewer and its
+  sessions (console-sessions.svelte.ts): no Back, New connection goes
+  through the console's address, the bar has Open in new tab and the
+  sidebar switch, and while the console shows another page (shown false)
+  the keys and the clipboard are left alone.
 -->
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
@@ -37,12 +43,39 @@
 	import SessionPanel from './SessionPanel.svelte';
 	import Sheets from './Sheets.svelte';
 
-	let { data }: { data: ViewerData } = $props();
+	interface Props {
+		data: ViewerData;
+		/** The console's viewer; without it the page builds its own */
+		viewer?: Viewer;
+		/** Inside the console's shell */
+		embedded?: boolean;
+		/** On screen: the console keeps the viewer mounted, hidden, on its other pages */
+		shown?: boolean;
+		/** The console's sidebar is folded away (embedded) */
+		sidebarCollapsed?: boolean;
+		ontogglesidebar?: () => void;
+		/** Open a device's session (embedded: through the console's address) */
+		onopen?: (deviceId: string) => void;
+		onopennewtab?: (deviceId: string) => void;
+		onfullscreen?: (on: boolean) => void;
+	}
+
+	let {
+		data,
+		viewer: given,
+		embedded = false,
+		shown = true,
+		sidebarCollapsed = false,
+		ontogglesidebar,
+		onopen,
+		onopennewtab,
+		onfullscreen
+	}: Props = $props();
 
 	const uid = $props.id();
-	// The page builds one viewer per load; its data does not change afterwards
+	// The page builds one viewer per load, or the console hands its own; neither changes afterwards
 	// svelte-ignore state_referenced_locally
-	const viewer = new Viewer({ data, onleave: () => returnToDevices() });
+	const viewer = given ?? new Viewer({ data, onleave: () => returnToDevices() });
 
 	let phone = $state(false);
 	let mobile = $state(false);
@@ -204,7 +237,15 @@
 
 	function connectFromPicker(id: string, name = '') {
 		viewer.pickerOpen = false;
-		viewer.open(id, name && name !== id ? name : '');
+		if (onopen) onopen(id);
+		else viewer.open(id, name && name !== id ? name : '');
+	}
+
+	/** A middle click closes a tab, as in the browser */
+	function onTabAuxClick(e: MouseEvent, id: string) {
+		if (e.button !== 1) return;
+		e.preventDefault();
+		viewer.close(id);
 	}
 
 	/* ── Start ── */
@@ -227,7 +268,8 @@
 		mobile = isMobileViewer();
 		// Tiles need room and a mouse: narrower windows and touch tablets show one display at a time
 		viewer.setWide(window.innerWidth >= TILES_MIN_WIDTH && !mobile);
-		if (!phone) start();
+		// The console opens its sessions itself
+		if (!phone && !embedded) start();
 	}
 
 	/** Ctrl+Alt+Shift and 1 to 9, L, Z or P: the device's displays; true when it was one of them */
@@ -261,6 +303,7 @@
 
 		// F8 leaves the remote screen (capture phase: the screen keeps every other key)
 		const onF8 = (e: KeyboardEvent) => {
+			if (!shown) return;
 			if (displayShortcut(e)) {
 				e.preventDefault();
 				e.stopPropagation();
@@ -275,6 +318,7 @@
 			} else if (viewer.activeId) focusTab(viewer.activeId);
 		};
 		const onKey = (e: KeyboardEvent) => {
+			if (!shown) return;
 			if (e.key === 'F11') {
 				e.preventDefault();
 				void toggleFullscreen();
@@ -293,9 +337,12 @@
 		};
 		const onFullscreen = () => {
 			viewer.fullscreen = !!document.fullscreenElement;
+			onfullscreen?.(viewer.fullscreen);
 			setTimeout(() => viewer.resize(), 100);
 		};
-		const onFocus = () => void viewer.syncClipboard();
+		const onFocus = () => {
+			if (shown) void viewer.syncClipboard();
+		};
 		const onFilesClosed = () => viewer.onFileSheetClosed();
 		// Leaving the page ends the sessions (not when it goes into the back-forward cache)
 		const onPageHide = (e: PageTransitionEvent) => {
@@ -312,7 +359,10 @@
 		window.addEventListener('focus', onFocus);
 		document.addEventListener('rd-file-sheet-closed', onFilesClosed);
 		window.addEventListener('pagehide', onPageHide, { capture: true });
-		const detachClipboard = attachClipboardKeys(viewer, { root: () => shellEl, shown: () => !phone });
+		const detachClipboard = attachClipboardKeys(viewer, {
+			root: () => shellEl,
+			shown: () => shown && !phone
+		});
 		if (viewer.clipboard.insecure) {
 			try {
 				clipboardHttpNote = localStorage.getItem(CLIPBOARD_HTTP_SEEN) !== '1';
@@ -321,9 +371,10 @@
 			}
 		}
 
-		// Other console tabs add a session here instead of opening another viewer tab
+		// Other console tabs add a session here instead of opening another viewer tab (the console opens its own)
 		let bc: BroadcastChannel | null = null;
 		try {
+			if (embedded) throw new Error('the console opens its sessions in place');
 			bc = new BroadcastChannel('neodesk-remote');
 			bc.onmessage = (ev: MessageEvent<unknown>) => {
 				const msg = ev.data as { type?: string; deviceId?: string; deviceName?: string } | null;
@@ -355,7 +406,8 @@
 			document.removeEventListener('visibilitychange', onVisibility);
 			bc?.close();
 			detachClipboard();
-			viewer.teardown();
+			// The console's viewer outlives this component's page; the console ends its sessions
+			if (!given) viewer.teardown();
 		};
 	});
 
@@ -383,7 +435,7 @@
 				<LinkButton variant="primary" href={appLink(data.deviceId, 'rustdesk')}
 					>{tf('remote_viewer.open_in_app', 'Open in RustDesk app')}</LinkButton
 				>
-				<LinkButton href={link('/remote')}
+				<LinkButton href={link(embedded ? '/devices' : '/remote')}
 					>{tf('remote_viewer.back_to_list', 'Back to device list')}</LinkButton
 				>
 			</div>
@@ -392,20 +444,46 @@
 {/if}
 <!-- Hidden, not removed, under the phone page: running sessions keep their screens -->
 <div
-	class={['rd-viewer-shell', viewer.sheet && 'has-sheet', mobile && 'is-mobile']}
+	class={['rd-viewer-shell', viewer.sheet && 'has-sheet', mobile && 'is-mobile', embedded && 'is-embedded']}
 	id="rd-viewer-shell"
 	bind:this={shellEl}
 	hidden={phone}
 >
 	<div class="session-bar">
-		<Button variant="ghost" icon="arrow_back" class="bar-btn bar-back" title={backLabel} onclick={back}
-			><span class="bar-label">{backLabel}</span></Button
-		>
+		{#if embedded && ontogglesidebar}
+			<Button
+				variant="ghost"
+				icon="menu"
+				class="bar-btn bar-sidebar"
+				title={sidebarCollapsed
+					? tf('remote_viewer.show_sidebar', 'Show the sidebar')
+					: tf('remote_viewer.hide_sidebar', 'Hide the sidebar')}
+				aria-pressed={!sidebarCollapsed}
+				onclick={ontogglesidebar}
+				><span class="bar-label"
+					>{sidebarCollapsed
+						? tf('remote_viewer.show_sidebar', 'Show the sidebar')
+						: tf('remote_viewer.hide_sidebar', 'Hide the sidebar')}</span
+				></Button
+			>
+		{:else if !embedded}
+			<Button variant="ghost" icon="arrow_back" class="bar-btn bar-back" title={backLabel} onclick={back}
+				><span class="bar-label">{backLabel}</span></Button
+			>
+		{/if}
 		<div class="session-tabs" role="tablist" aria-label={tf('remote_viewer.open_sessions', 'Open sessions')}>
 			{#each viewer.sessions as s, i (s.deviceId)}
 				{@const st = tabStatus(s.view)}
 				{@const isActive = s.deviceId === viewer.activeId}
-				<div class={['session-tab', isActive && 'active']}>
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div
+					class={['session-tab', isActive && 'active']}
+					onauxclick={(e) => onTabAuxClick(e, s.deviceId)}
+					onmousedown={(e) => {
+						// A middle press would start the browser's scrolling
+						if (e.button === 1) e.preventDefault();
+					}}
+				>
 					<button
 						type="button"
 						class="tab-select"
@@ -445,6 +523,18 @@
 				aria-haspopup="dialog"
 				onclick={openPicker}
 				><span class="bar-label">{tf('remote.new_connection', 'New connection')}</span></Button
+			>
+		{/if}
+		{#if embedded && onopennewtab && active}
+			<Button
+				icon="open_in_new"
+				class="bar-btn"
+				title={tf(
+					'remote_viewer.open_in_new_tab_hint',
+					'Move this session to a tab of its own: it connects again there and ends here'
+				)}
+				onclick={() => active && onopennewtab(active.deviceId)}
+				><span class="bar-label">{tf('remote_viewer.open_in_new_tab', 'Open in new tab')}</span></Button
 			>
 		{/if}
 		{#if viewer.chromeVisible && !mobile}
@@ -579,33 +669,36 @@
 	/>
 {/if}
 
-{#if viewer.httpWarning}
-	<div class="http-warning" role="status">
-		<span
-			>{tf(
-				'remote.http_warning',
-				"Over plain HTTP this browser plays only H.264 video. Devices without an H.264 encoder can't be shown. Open the console over HTTPS to see every device."
-			)}</span
-		>
-		<IconButton
-			icon="close"
-			label={tf('actions.dismiss', 'Dismiss')}
-			onclick={() => (viewer.httpWarning = false)}
-		/>
-	</div>
-{/if}
+<!-- The notes stack at the bottom, one above the other -->
+<div class="viewer-notes">
+	{#if viewer.httpWarning}
+		<div class="http-warning" role="status">
+			<span
+				>{tf(
+					'remote.http_warning',
+					"Over plain HTTP this browser plays only H.264 video. Devices without an H.264 encoder can't be shown. Open the console over HTTPS to see every device."
+				)}</span
+			>
+			<IconButton
+				icon="close"
+				label={tf('actions.dismiss', 'Dismiss')}
+				onclick={() => (viewer.httpWarning = false)}
+			/>
+		</div>
+	{/if}
 
-{#if clipboardHttpNote && viewer.chromeVisible}
-	<div class="http-warning clipboard-note" role="status">
-		<span
-			>{tf(
-				'remote.clipboard_http_note',
-				"This page is plain HTTP, so the browser gives it no clipboard access. Ctrl+V in the remote screen still sends text and images. Text copied on the remote computer reaches this computer with your next key press or click in the remote screen; images can't."
-			)}</span
-		>
-		<IconButton icon="close" label={tf('actions.dismiss', 'Dismiss')} onclick={dismissClipboardNote} />
-	</div>
-{/if}
+	{#if clipboardHttpNote && viewer.chromeVisible}
+		<div class="http-warning clipboard-note" role="status">
+			<span
+				>{tf(
+					'remote.clipboard_http_note',
+					"This page is plain HTTP, so the browser gives it no clipboard access. Ctrl+V in the remote screen still sends text and images. Text copied on the remote computer reaches this computer with your next key press or click in the remote screen; images can't."
+				)}</span
+			>
+			<IconButton icon="close" label={tf('actions.dismiss', 'Dismiss')} onclick={dismissClipboardNote} />
+		</div>
+	{/if}
+</div>
 
 {#if !viewer.guest}
 	<Dialog
@@ -637,7 +730,21 @@
 	.rd-viewer-shell[hidden] {
 		display: none;
 	}
+	/* Inside the console: as high as the main area */
+	.rd-viewer-shell.is-embedded {
+		flex: 1;
+		height: auto;
+		min-height: 0;
+	}
+	/* Below 1100 px the console's sidebar is a drawer already */
+	@media (max-width: 1099px) {
+		.session-bar :global(.bar-sidebar) {
+			display: none;
+		}
+	}
 	.rd-viewer-shell {
+		/* The bar's words give way by the viewer's own width: inside the console the sidebar takes room */
+		container: viewer / inline-size;
 		display: flex;
 		flex-direction: column;
 		width: 100%;
@@ -807,9 +914,9 @@
 		flex: none;
 		min-height: 0;
 	}
-	/* Narrower windows: the bar keeps its icons, the words move into the
+	/* Narrower viewers: the bar keeps its icons, the words move into the
 	   tooltip and the accessible name (visually hidden, not removed) */
-	@media (max-width: 1100px) {
+	@container viewer (max-width: 1240px) {
 		.session-bar :global(.bar-label) {
 			position: absolute;
 			width: 1px;
@@ -1369,15 +1476,25 @@
 		opacity: 0;
 		pointer-events: none;
 	}
-	.http-warning {
+	.viewer-notes {
 		position: fixed;
 		bottom: var(--space-4);
 		left: 50%;
 		z-index: 210;
 		display: flex;
+		flex-direction: column-reverse;
+		gap: var(--space-2);
+		width: max-content;
+		max-width: min(540px, calc(100vw - 2 * var(--space-4)));
+		transform: translateX(-50%);
+	}
+	.viewer-notes:empty {
+		display: none;
+	}
+	.http-warning {
+		display: flex;
 		align-items: flex-start;
 		gap: var(--space-2);
-		max-width: min(540px, calc(100vw - 2 * var(--space-4)));
 		padding: var(--space-2) var(--space-1) var(--space-2) var(--space-3);
 		border: 1px solid var(--rule);
 		border-inline-start: 3px solid var(--warning);
@@ -1385,11 +1502,6 @@
 		background: var(--bg-float);
 		box-shadow: var(--shadow-float);
 		color: var(--text);
-		transform: translateX(-50%);
-	}
-	/* Above the H.264 note when both show */
-	.clipboard-note {
-		bottom: calc(var(--space-4) + 96px);
 	}
 	.picker {
 		display: flex;

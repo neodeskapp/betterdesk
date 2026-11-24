@@ -2844,7 +2844,9 @@
     "clipboard_text_too_large": "复制的文本超过 {limit}，未发送。",
     "clipboard_remote_too_large": "远程计算机复制的内容超过 {limit}，未复制到这里。",
     "clipboard_image_unsupported": "无法发送复制的图片，只发送了文本。",
-    "clipboard_send_failed": "无法将剪贴板发送到远程计算机。"
+    "clipboard_send_failed": "无法将剪贴板发送到远程计算机。",
+    "session_title": "远程会话：{name}",
+    "sign_out_ends_sessions": "你打开的远程会话也会结束（{count}）。"
   },
   "branding": {
     "identity_title": "品牌标识",
@@ -8788,7 +8790,11 @@
     "zoom": "大小",
     "back_to_main": "返回主窗口",
     "window_without_viewer": "此窗口显示远程会话的一个显示器。请在查看器中用“在单独窗口中打开”打开它。",
-    "info_video_total": "视频，所有显示器"
+    "info_video_total": "视频，所有显示器",
+    "hide_sidebar": "隐藏侧边栏",
+    "show_sidebar": "显示侧边栏",
+    "open_in_new_tab": "在新标签页中打开",
+    "open_in_new_tab_hint": "将此会话移到单独的标签页：会在那里重新连接，并在这里结束"
   },
   "diagram": {
     "your_computer": "您的电脑",

@@ -9,16 +9,24 @@
   ND_DEV_MOCK_REMOTE=1, ?mock=1&scenario=. With ?popout=<display> it is a
   display's window of its own: the viewer that opened it draws into it and
   keeps the connection, so this page asks the server for nothing.
+
+  A signed-in console user's session opens inside the console instead
+  (/remote/session/<id>, console-sessions.svelte.ts); this page stays the
+  viewer for guest links, mesh shares, RDP and VNC targets, the other
+  transports, the desktop app's window and ?standalone=1 (Open in new tab,
+  quick support).
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { ApiError } from '#lib/api/client.ts';
 	import { getViewerData, type ViewerData } from '#lib/api/remote.ts';
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
 	import { base, link } from '#lib/nav.ts';
 	import { loadRdClient } from '#lib/remote/rdclient.ts';
-	import { isDeviceId } from '#lib/remote/access.ts';
+	import { isDeviceId, isGuestMode, isRemoteTarget, transportOf } from '#lib/remote/access.ts';
+	import { sessionPath } from '#lib/remote/console-sessions.svelte.ts';
 	import DisplayWindow from '#lib/remote/viewer/DisplayWindow.svelte';
 	import RemoteViewer from '#lib/remote/viewer/RemoteViewer.svelte';
 	import Button from '#lib/ui/Button.svelte';
@@ -35,6 +43,16 @@
 	let problem = $state.raw<Problem | null>(null);
 	let busy = $state(false);
 
+	/** The console holds this session: a signed-in account on the RustDesk transport, no guest or share link */
+	function insideConsole(d: ViewerData): boolean {
+		const q = new URLSearchParams(location.search);
+		if (q.get('standalone') === '1' || q.has('guest') || q.has('t') || q.has('mesh_share')) return false;
+		const w = window as unknown as { __TAURI__?: unknown; __NEODESK_RDCLIENT_DESKTOP__?: boolean };
+		if (w.__TAURI__ || w.__NEODESK_RDCLIENT_DESKTOP__) return false;
+		const caps = d.capabilities;
+		return !!d.user && !isGuestMode(caps) && !isRemoteTarget(caps) && transportOf(caps) === 'rd';
+	}
+
 	function signInUrl(): string {
 		const here = location.pathname + location.search + location.hash;
 		return `${base}/remote/login?return=${encodeURIComponent(here)}`;
@@ -50,6 +68,11 @@
 		}
 		try {
 			const d = await getViewerData(id, location.search);
+			if (insideConsole(d)) {
+				// eslint-disable-next-line svelte/no-navigation-without-resolve -- link() adds the base
+				void goto(link(sessionPath(id)) + location.search + location.hash, { replaceState: true });
+				return;
+			}
 			await loadRdClient({
 				deviceId: d.deviceId,
 				capabilities: d.capabilities,

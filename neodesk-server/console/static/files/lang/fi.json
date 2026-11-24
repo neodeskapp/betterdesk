@@ -2850,7 +2850,9 @@
     "clipboard_text_too_large": "Kopioitu teksti on suurempi kuin {limit}, eikä sitä lähetetty.",
     "clipboard_remote_too_large": "Etätietokone kopioi enemmän kuin {limit}. Sitä ei kopioitu tänne.",
     "clipboard_image_unsupported": "Kopioitua kuvaa ei voi lähettää. Vain teksti siirtyi.",
-    "clipboard_send_failed": "Leikepöytää ei voitu lähettää etätietokoneelle."
+    "clipboard_send_failed": "Leikepöytää ei voitu lähettää etätietokoneelle.",
+    "session_title": "Etäistunto: {name}",
+    "sign_out_ends_sessions": "Myös avoimet etäistuntosi päättyvät ({count})."
   },
   "branding": {
     "identity_title": "Brändin identiteetti",
@@ -8794,7 +8796,11 @@
     "zoom": "Koko",
     "back_to_main": "Takaisin pääikkunaan",
     "window_without_viewer": "Tämä ikkuna näyttää etäistunnon näytön. Avaa se katseluohjelmasta valinnalla Avaa omassa ikkunassaan.",
-    "info_video_total": "Video, kaikki näytöt"
+    "info_video_total": "Video, kaikki näytöt",
+    "hide_sidebar": "Piilota sivupalkki",
+    "show_sidebar": "Näytä sivupalkki",
+    "open_in_new_tab": "Avaa uudessa välilehdessä",
+    "open_in_new_tab_hint": "Siirrä tämä istunto omaan välilehteensä: se yhdistää siellä uudelleen ja päättyy täällä"
   },
   "diagram": {
     "your_computer": "Tietokoneesi",

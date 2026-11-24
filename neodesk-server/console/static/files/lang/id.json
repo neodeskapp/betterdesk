@@ -2850,7 +2850,9 @@
     "clipboard_text_too_large": "Teks yang disalin lebih besar dari {limit} dan tidak dikirim.",
     "clipboard_remote_too_large": "Komputer jarak jauh menyalin lebih dari {limit}. Tidak disalin ke sini.",
     "clipboard_image_unsupported": "Gambar yang disalin tidak bisa dikirim. Hanya teksnya yang terkirim.",
-    "clipboard_send_failed": "Papan klip tidak dapat dikirim ke komputer jarak jauh."
+    "clipboard_send_failed": "Papan klip tidak dapat dikirim ke komputer jarak jauh.",
+    "session_title": "Sesi jarak jauh: {name}",
+    "sign_out_ends_sessions": "Sesi jarak jauh Anda yang terbuka juga berakhir ({count})."
   },
   "branding": {
     "identity_title": "Identitas Merek",
@@ -8794,7 +8796,11 @@
     "zoom": "Ukuran",
     "back_to_main": "Kembali ke jendela utama",
     "window_without_viewer": "Jendela ini menampilkan layar dari sesi jarak jauh. Buka dari penampil dengan Buka di jendela tersendiri.",
-    "info_video_total": "Video, semua layar"
+    "info_video_total": "Video, semua layar",
+    "hide_sidebar": "Sembunyikan bilah sisi",
+    "show_sidebar": "Tampilkan bilah sisi",
+    "open_in_new_tab": "Buka di tab baru",
+    "open_in_new_tab_hint": "Pindahkan sesi ini ke tab tersendiri: sesi tersambung lagi di sana dan berakhir di sini"
   },
   "diagram": {
     "your_computer": "Komputer Anda",

@@ -2844,7 +2844,9 @@
     "clipboard_text_too_large": "Il testo copiato supera {limit} e non è stato inviato.",
     "clipboard_remote_too_large": "Il computer remoto ha copiato più di {limit}. Non è stato copiato qui.",
     "clipboard_image_unsupported": "L'immagine copiata non può essere inviata. È passato solo il testo.",
-    "clipboard_send_failed": "Non è stato possibile inviare gli appunti al computer remoto."
+    "clipboard_send_failed": "Non è stato possibile inviare gli appunti al computer remoto.",
+    "session_title": "Sessione remota: {name}",
+    "sign_out_ends_sessions": "Terminano anche le tue sessioni remote aperte ({count})."
   },
   "branding": {
     "identity_title": "Identità del marchio",
@@ -8788,7 +8790,11 @@
     "zoom": "Dimensione",
     "back_to_main": "Torna alla finestra principale",
     "window_without_viewer": "Questa finestra mostra uno schermo di una sessione remota. Aprila dal visualizzatore con «Apri in una finestra separata».",
-    "info_video_total": "Video, tutti gli schermi"
+    "info_video_total": "Video, tutti gli schermi",
+    "hide_sidebar": "Nascondi la barra laterale",
+    "show_sidebar": "Mostra la barra laterale",
+    "open_in_new_tab": "Apri in una nuova scheda",
+    "open_in_new_tab_hint": "Sposta questa sessione in una scheda propria: lì si ricollega e qui termina"
   },
   "diagram": {
     "your_computer": "Il suo computer",

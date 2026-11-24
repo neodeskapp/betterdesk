@@ -2850,7 +2850,9 @@
     "clipboard_text_too_large": "Textul copiat depășește {limit} și nu a fost trimis.",
     "clipboard_remote_too_large": "Computerul la distanță a copiat mai mult de {limit}. Nu s-a copiat aici.",
     "clipboard_image_unsupported": "Imaginea copiată nu poate fi trimisă. S-a transmis doar textul.",
-    "clipboard_send_failed": "Clipboardul nu a putut fi trimis la computerul la distanță."
+    "clipboard_send_failed": "Clipboardul nu a putut fi trimis la computerul la distanță.",
+    "session_title": "Sesiune la distanță: {name}",
+    "sign_out_ends_sessions": "Se încheie și sesiunile la distanță deschise ({count})."
   },
   "branding": {
     "identity_title": "Identitatea de marcă",
@@ -8794,7 +8796,11 @@
     "zoom": "Dimensiune",
     "back_to_main": "Înapoi la fereastra principală",
     "window_without_viewer": "Această fereastră arată un ecran dintr-o sesiune la distanță. Deschideți-o din vizualizator cu „Deschide în propria fereastră”.",
-    "info_video_total": "Video, toate ecranele"
+    "info_video_total": "Video, toate ecranele",
+    "hide_sidebar": "Ascunde bara laterală",
+    "show_sidebar": "Afișează bara laterală",
+    "open_in_new_tab": "Deschide într-o filă nouă",
+    "open_in_new_tab_hint": "Mută această sesiune într-o filă proprie: acolo se reconectează, aici se încheie"
   },
   "diagram": {
     "your_computer": "Computerul dvs.",

@@ -15,7 +15,7 @@
  * device_type, mesh_connected, linked_peer_id, tags, folder_id).
  *
  * Opening and connecting
- *   connectInBrowser(d)          web viewer: reuses an open viewer tab, asks first on a phone
+ *   connectInBrowser(d)          web viewer inside the console (RDP and VNC targets in a new tab), asks first on a phone
  *                                (device.connect; RDP/VNC targets remote_target.connect)
  *   connectInApp(d, app?)        neodesk://<id>, or rustdesk://<id> for stock RustDesk (device.connect)
  *   openSnapshotViewer(d)        CDAP snapshot viewer in a new tab (device.connect)
@@ -76,7 +76,10 @@ import * as targetsApi from '#lib/api/remoteTargets.ts';
 import * as meshApi from '#lib/api/mesh.ts';
 import * as guestApi from '#lib/api/guest.ts';
 import type { RemoteTargetInput } from '#lib/api/remoteTargets.ts';
+import { goto } from '$app/navigation';
 import { t, tf } from '#lib/i18n/i18n.svelte.ts';
+import { link } from '#lib/nav.ts';
+import { sessionPath, standalonePath } from '#lib/remote/console-sessions.svelte.ts';
 import { can } from '#lib/state/session.svelte.ts';
 import { closeDevice, devicePanel, openDevice, refreshDevice } from '#lib/state/devicePanel.svelte.ts';
 import { confirm, prompt } from '#lib/ui/dialogs.svelte.ts';
@@ -85,7 +88,7 @@ import { appLink, APP_NAMES, type DesktopApp } from '#lib/util/app-links.ts';
 import { ICONS } from '#lib/util/display.ts';
 import { ask } from './ask.svelte.ts';
 import * as signinApi from '#lib/api/savedSignin.ts';
-import { OFFER_ACCESS_POLICY, deviceLabel, deviceName, isMesh, watchable, type DeviceLike } from './model.ts';
+import { OFFER_ACCESS_POLICY, deviceLabel, isMesh, watchable, type DeviceLike } from './model.ts';
 
 export type { DeviceLike } from './model.ts';
 
@@ -147,47 +150,33 @@ function isPhone(): boolean {
 	return !window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 }
 
+/** RDP and VNC targets open in the standalone viewer, in a tab of their own */
 function openViewer(id: string) {
-	window.open(`/remote/${encodeURIComponent(id)}`, '_blank');
+	window.open(link(standalonePath(id)), '_blank');
+}
+
+/** A device's session opens inside the console, in place of the page */
+function openHere(id: string) {
+	// eslint-disable-next-line svelte/no-navigation-without-resolve -- link() adds the base
+	void goto(link(sessionPath(id)));
 }
 
 /**
- * The web viewer. An RDClient tab that is already open gets the device as a
- * new session (BroadcastChannel 'neodesk-remote', 300 ms to answer);
- * otherwise a new tab opens. A phone asks first: the viewer needs a wider
- * screen, so it offers the RustDesk app instead (phones have no NeoDesk app).
+ * The web viewer: the session opens inside the console (an open one is
+ * picked); RDP and VNC targets keep the standalone viewer in a new tab. A
+ * phone asks first: the viewer needs a wider screen, so it offers the
+ * RustDesk app instead (phones have no NeoDesk app).
  */
 export async function connectInBrowser(d: DeviceLike): Promise<boolean> {
 	if (!may.connect(d)) return false;
+	const open = d.remote_target ? openViewer : openHere;
 	if (isPhone()) {
 		const choice = await ask('connect-choice', { device: d, app: !d.remote_target });
 		if (choice === 'app') window.location.href = appLink(d.id, 'rustdesk');
-		else if (choice === 'web') openViewer(d.id);
+		else if (choice === 'web') open(d.id);
 		return choice !== null;
 	}
-	if (typeof BroadcastChannel === 'undefined') {
-		openViewer(d.id);
-		return true;
-	}
-	const bc = new BroadcastChannel('neodesk-remote');
-	let handled = false;
-	bc.onmessage = (ev: MessageEvent) => {
-		const type = (ev.data as { type?: string } | null)?.type;
-		if (type === 'pong') {
-			handled = true;
-			bc.postMessage({ type: 'add-session', deviceId: d.id, deviceName: deviceName(d) });
-			bc.close();
-		} else if (type === 'session-added') {
-			handled = true;
-			bc.close();
-		}
-	};
-	bc.postMessage({ type: 'ping' });
-	setTimeout(() => {
-		if (handled) return;
-		bc.close();
-		openViewer(d.id);
-	}, 300);
+	open(d.id);
 	return true;
 }
 

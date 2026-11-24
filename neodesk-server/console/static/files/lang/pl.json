@@ -2862,7 +2862,9 @@
     "clipboard_text_too_large": "Skopiowany tekst jest większy niż {limit} i nie został wysłany.",
     "clipboard_remote_too_large": "Komputer zdalny skopiował więcej niż {limit}. Nie skopiowano tego tutaj.",
     "clipboard_image_unsupported": "Skopiowanego obrazu nie można wysłać. Przesłano tylko tekst.",
-    "clipboard_send_failed": "Nie udało się wysłać schowka na komputer zdalny."
+    "clipboard_send_failed": "Nie udało się wysłać schowka na komputer zdalny.",
+    "session_title": "Sesja zdalna: {name}",
+    "sign_out_ends_sessions": "Twoje otwarte sesje zdalne też się zakończą ({count})."
   },
   "branding": {
     "identity_title": "Identyfikacja marki",
@@ -8788,7 +8790,11 @@
     "zoom": "Powiększenie",
     "back_to_main": "Wróć do głównego okna",
     "window_without_viewer": "To okno pokazuje ekran sesji zdalnej. Otwórz je z przeglądarki zdalnej poleceniem „Otwórz we własnym oknie”.",
-    "info_video_total": "Wideo, wszystkie ekrany"
+    "info_video_total": "Wideo, wszystkie ekrany",
+    "hide_sidebar": "Ukryj pasek boczny",
+    "show_sidebar": "Pokaż pasek boczny",
+    "open_in_new_tab": "Otwórz w nowej karcie",
+    "open_in_new_tab_hint": "Przenieś tę sesję do osobnej karty: tam połączy się ponownie, a tutaj się zakończy"
   },
   "diagram": {
     "your_computer": "Twój komputer",

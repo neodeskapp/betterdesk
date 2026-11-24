@@ -2844,7 +2844,9 @@
     "clipboard_text_too_large": "Zkopírovaný text je větší než {limit} a nebyl odeslán.",
     "clipboard_remote_too_large": "Vzdálený počítač zkopíroval víc než {limit}. Sem se to nezkopírovalo.",
     "clipboard_image_unsupported": "Zkopírovaný obrázek nelze odeslat. Přenesl se jen text.",
-    "clipboard_send_failed": "Schránku se nepodařilo odeslat do vzdáleného počítače."
+    "clipboard_send_failed": "Schránku se nepodařilo odeslat do vzdáleného počítače.",
+    "session_title": "Vzdálená relace: {name}",
+    "sign_out_ends_sessions": "Ukončí se i vaše otevřené vzdálené relace ({count})."
   },
   "branding": {
     "identity_title": "Identita značky",
@@ -8788,7 +8790,11 @@
     "zoom": "Velikost",
     "back_to_main": "Zpět do hlavního okna",
     "window_without_viewer": "Toto okno zobrazuje obrazovku vzdálené relace. Otevřete ho z prohlížeče příkazem „Otevřít ve vlastním okně“.",
-    "info_video_total": "Video, všechny obrazovky"
+    "info_video_total": "Video, všechny obrazovky",
+    "hide_sidebar": "Skrýt postranní panel",
+    "show_sidebar": "Zobrazit postranní panel",
+    "open_in_new_tab": "Otevřít na nové kartě",
+    "open_in_new_tab_hint": "Přesunout tuto relaci na vlastní kartu: tam se připojí znovu a zde skončí"
   },
   "diagram": {
     "your_computer": "Váš počítač",

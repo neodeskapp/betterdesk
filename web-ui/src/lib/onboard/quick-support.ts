@@ -61,9 +61,9 @@ export function desktopLink(deviceId: string, password: string, app: DesktopApp 
 	return appSessionLink(deviceId, password, app);
 }
 
-/** The browser viewer's address; the viewer asks the server for the password itself */
+/** The browser viewer's address, standalone in its own tab; the viewer asks the server for the password itself */
 export function viewerPath(deviceId: string): string {
-	return '/remote/' + encodeURIComponent(deviceId);
+	return '/remote/' + encodeURIComponent(deviceId) + '?standalone=1';
 }
 
 /** Where Connect goes: a new tab for the viewer, this tab for the desktop app's link */

@@ -2850,7 +2850,9 @@
     "clipboard_text_too_large": "Den kopierte teksten er større enn {limit} og ble ikke sendt.",
     "clipboard_remote_too_large": "Den eksterne datamaskinen kopierte mer enn {limit}. Det ble ikke kopiert hit.",
     "clipboard_image_unsupported": "Det kopierte bildet kan ikke sendes. Bare teksten ble overført.",
-    "clipboard_send_failed": "Utklippstavlen kunne ikke sendes til den eksterne datamaskinen."
+    "clipboard_send_failed": "Utklippstavlen kunne ikke sendes til den eksterne datamaskinen.",
+    "session_title": "Ekstern økt: {name}",
+    "sign_out_ends_sessions": "De åpne eksterne øktene dine avsluttes også ({count})."
   },
   "branding": {
     "identity_title": "Merkeidentitet",
@@ -8794,7 +8796,11 @@
     "zoom": "Størrelse",
     "back_to_main": "Tilbake til hovedvinduet",
     "window_without_viewer": "Dette vinduet viser en skjerm fra en fjernøkt. Åpne det fra visningen med Åpne i eget vindu.",
-    "info_video_total": "Video, alle skjermer"
+    "info_video_total": "Video, alle skjermer",
+    "hide_sidebar": "Skjul sidepanelet",
+    "show_sidebar": "Vis sidepanelet",
+    "open_in_new_tab": "Åpne i ny fane",
+    "open_in_new_tab_hint": "Flytt denne økten til en egen fane: den kobler til på nytt der og avsluttes her"
   },
   "diagram": {
     "your_computer": "Din datamaskin",

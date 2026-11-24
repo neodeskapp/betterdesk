@@ -2866,7 +2866,9 @@
     "clipboard_text_too_large": "Le texte copié dépasse {limit} et n'a pas été envoyé.",
     "clipboard_remote_too_large": "L'ordinateur distant a copié plus de {limit}. Rien n'a été copié ici.",
     "clipboard_image_unsupported": "L'image copiée ne peut pas être envoyée. Seul le texte est passé.",
-    "clipboard_send_failed": "Le presse-papiers n'a pas pu être envoyé à l'ordinateur distant."
+    "clipboard_send_failed": "Le presse-papiers n'a pas pu être envoyé à l'ordinateur distant.",
+    "session_title": "Session à distance : {name}",
+    "sign_out_ends_sessions": "Vos sessions à distance ouvertes se terminent aussi ({count})."
   },
   "branding": {
     "identity_title": "Identité de marque",
@@ -8792,7 +8794,11 @@
     "zoom": "Taille",
     "back_to_main": "Revenir à la fenêtre principale",
     "window_without_viewer": "Cette fenêtre affiche un écran d’une session à distance. Ouvrez-la depuis la visionneuse avec « Ouvrir dans sa propre fenêtre ».",
-    "info_video_total": "Vidéo, tous les écrans"
+    "info_video_total": "Vidéo, tous les écrans",
+    "hide_sidebar": "Masquer la barre latérale",
+    "show_sidebar": "Afficher la barre latérale",
+    "open_in_new_tab": "Ouvrir dans un nouvel onglet",
+    "open_in_new_tab_hint": "Déplacer cette session dans son propre onglet : elle s'y reconnecte et se termine ici"
   },
   "diagram": {
     "your_computer": "Votre ordinateur",

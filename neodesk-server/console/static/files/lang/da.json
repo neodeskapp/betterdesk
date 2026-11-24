@@ -2850,7 +2850,9 @@
     "clipboard_text_too_large": "Den kopierede tekst er større end {limit} og blev ikke sendt.",
     "clipboard_remote_too_large": "Fjerncomputeren kopierede mere end {limit}. Det blev ikke kopieret hertil.",
     "clipboard_image_unsupported": "Det kopierede billede kan ikke sendes. Kun teksten kom over.",
-    "clipboard_send_failed": "Udklipsholderen kunne ikke sendes til fjerncomputeren."
+    "clipboard_send_failed": "Udklipsholderen kunne ikke sendes til fjerncomputeren.",
+    "session_title": "Fjernsession: {name}",
+    "sign_out_ends_sessions": "Dine åbne fjernsessioner slutter også ({count})."
   },
   "branding": {
     "identity_title": "Brand Identitet",
@@ -8794,7 +8796,11 @@
     "zoom": "Størrelse",
     "back_to_main": "Tilbage til hovedvinduet",
     "window_without_viewer": "Dette vindue viser en skærm fra en fjernsession. Åbn det fra fremviseren med Åbn i sit eget vindue.",
-    "info_video_total": "Video, alle skærme"
+    "info_video_total": "Video, alle skærme",
+    "hide_sidebar": "Skjul sidepanelet",
+    "show_sidebar": "Vis sidepanelet",
+    "open_in_new_tab": "Åbn i ny fane",
+    "open_in_new_tab_hint": "Flyt denne session til sin egen fane: den forbinder igen dér og slutter her"
   },
   "diagram": {
     "your_computer": "Din computer",

@@ -2866,7 +2866,9 @@
     "clipboard_text_too_large": "複製的文字超過 {limit}，未傳送。",
     "clipboard_remote_too_large": "遠端電腦複製的內容超過 {limit}，未複製到這裡。",
     "clipboard_image_unsupported": "無法傳送複製的圖片，只傳送了文字。",
-    "clipboard_send_failed": "無法將剪貼簿傳送到遠端電腦。"
+    "clipboard_send_failed": "無法將剪貼簿傳送到遠端電腦。",
+    "session_title": "遠端工作階段：{name}",
+    "sign_out_ends_sessions": "你開啟的遠端工作階段也會結束（{count}）。"
   },
   "branding": {
     "identity_title": "品牌標識",
@@ -8792,7 +8794,11 @@
     "zoom": "大小",
     "back_to_main": "返回主視窗",
     "window_without_viewer": "此視窗顯示遠端工作階段的一個顯示器。請在檢視器中以「在獨立視窗中開啟」開啟它。",
-    "info_video_total": "影片，所有顯示器"
+    "info_video_total": "影片，所有顯示器",
+    "hide_sidebar": "隱藏側邊欄",
+    "show_sidebar": "顯示側邊欄",
+    "open_in_new_tab": "在新分頁中開啟",
+    "open_in_new_tab_hint": "將此工作階段移到單獨的分頁：會在那裡重新連線，並在這裡結束"
   },
   "diagram": {
     "your_computer": "您的電腦",
