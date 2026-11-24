@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 )
 
-//go:embed assets/bettercore.js
+//go:embed assets/neocore.js
 var embeddedAssets embed.FS
 
-// CoreAssets holds BetterCore (AGPL) pushed to MeshAgent after handshake.
+// CoreAssets holds NeoCore (AGPL) pushed to MeshAgent after handshake.
 type CoreAssets struct {
 	CoreModule     []byte
 	CoreModuleHash []byte // 48-byte SHA-384
@@ -20,8 +20,8 @@ type CoreAssets struct {
 
 // LoadCoreAssets reads meshcore from disk override or embedded bundle.
 func LoadCoreAssets(version string, assetsDir string) (*CoreAssets, error) {
-	corePath := filepath.Join(assetsDir, "bettercore.js")
-	core, err := readAsset(corePath, "assets/bettercore.js")
+	corePath := filepath.Join(assetsDir, "neocore.js")
+	core, err := readAsset(corePath, "assets/neocore.js")
 	if err != nil {
 		return nil, fmt.Errorf("meshcore: %w", err)
 	}

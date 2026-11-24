@@ -1,16 +1,16 @@
 /**
- * The mesh desktop viewer (src/lib/remote/client/betterviewer.ts, MNG_KVM
+ * The mesh desktop viewer (src/lib/remote/client/neoviewer.ts, MNG_KVM
  * over the mesh relay, wrapped by mesh-adapter.ts) fed by a fake agent: binary
  * messages go straight into its stream parser, and the remote viewer runs
  * the real mesh client over a fake relay socket. No relay or agent runs.
  */
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { BetterViewer } from '../../../src/lib/remote/client/betterviewer.ts';
+import { NeoViewer } from '../../../src/lib/remote/client/neoviewer.ts';
 import { FileTransferModal } from '../../../src/lib/remote/client/file-modal.ts';
 import { MeshFileTransfer } from '../../../src/lib/remote/client/mesh-files.ts';
 import { MeshSession, type MeshSessionOptions } from '../../../src/lib/remote/client/mesh-adapter.ts';
 
-const g = { BetterViewer, MeshSession };
+const g = { NeoViewer, MeshSession };
 
 vi.mock('../../../src/lib/remote/rdclient.ts', async () => {
 	const mesh = await import('../../../src/lib/remote/client/mesh-adapter.ts');
@@ -41,7 +41,7 @@ afterEach(() => {
 /** A viewer whose relay said ready, with no socket */
 function viewer() {
 	vi.useFakeTimers();
-	const v = new g.BetterViewer(document.createElement('canvas'), {});
+	const v = new g.NeoViewer(document.createElement('canvas'), {});
 	v._relayReady = true;
 	v._state = 3;
 	return v;
@@ -269,14 +269,14 @@ describe('remote viewer with a mesh session', () => {
 
 	test('a listener that throws does not stop the mesh client or the desktop viewer', () => {
 		const err = vi.spyOn(console, 'error').mockImplementation(() => {});
-		const bv = new g.BetterViewer(document.createElement('canvas'), {});
-		bv.on('session_start', () => {
+		const nv = new g.NeoViewer(document.createElement('canvas'), {});
+		nv.on('session_start', () => {
 			throw new Error('listener broke');
 		});
-		bv._onRelayReady();
-		expect(bv._inputGrabbed).toBe(true);
-		expect(bv._statsTimer).not.toBeNull();
-		bv.disconnect();
+		nv._onRelayReady();
+		expect(nv._inputGrabbed).toBe(true);
+		expect(nv._statsTimer).not.toBeNull();
+		nv.disconnect();
 
 		const ms = new g.MeshSession(document.createElement('canvas'), { deviceId: 'mesh01' });
 		const after = vi.fn();

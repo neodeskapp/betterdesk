@@ -5,7 +5,7 @@
 // stand for a web app's build output.
 
 /*
- * BetterCore — NeoDesk MeshAgent module (AGPL-3.0).
+ * NeoCore, the NeoDesk MeshAgent module (AGPL-3.0).
  * SPDX-License-Identifier: AGPL-3.0-only
  * Copyright (c) BetterDesk contributors
  *
@@ -16,7 +16,7 @@
 
 process.on('uncaughtException', function (ex) {
     try {
-        require('MeshAgent').SendCommand({ action: 'msg', type: 'console', value: 'BetterCore: ' + ex });
+        require('MeshAgent').SendCommand({ action: 'msg', type: 'console', value: 'NeoCore: ' + ex });
     } catch (e) { /* ignore */ }
 });
 
@@ -52,7 +52,7 @@ try { rtcModule = require('ILibWebRTC'); } catch (ex1) {
 
 var meshCoreObj = {
     action: 'coreinfo',
-    value: 'BetterCore',
+    value: 'NeoCore',
     caps: 14,
     root: false
 };
@@ -174,7 +174,7 @@ function onTunnelUpgrade(response, s) {
     s.httprequest = this;
     s.tunnel = this;
     s.end = onTunnelClosed;
-    s.descriptorMetadata = 'BetterCore_relayTunnel';
+    s.descriptorMetadata = 'NeoCore_relayTunnel';
 
     if (mesh.idleTimeout != null) {
         s.setTimeout(mesh.idleTimeout * 1000);
@@ -719,7 +719,7 @@ function handleServerCommand(data) {
 
 function handleServerConnection(state) {
     if (state !== 0) {
-        meshCoreObj.value = 'BetterCore';
+        meshCoreObj.value = 'NeoCore';
         meshCoreObjChanged();
     }
 }

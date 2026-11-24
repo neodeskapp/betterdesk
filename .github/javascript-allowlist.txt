@@ -9,7 +9,7 @@
 
 # Runs inside the MeshCentral agent's own JavaScript engine, not in Node or
 # a browser, so it has to be JavaScript.
-neodesk-server/meshcentral/assets/bettercore.js
+neodesk-server/meshcentral/assets/neocore.js
 
 # Files of a built web app that the embedding and file serving tests read:
 # a build of the web app is JavaScript.

@@ -1,6 +1,8 @@
 NeoDesk MeshCentral compatibility assets (AGPL-3.0)
 
-- bettercore.js — BetterCore (consent, WebRTC, KVM/terminal/files, PowerShell)
-- betterviewer.js — BetterViewer browser MNG_KVM client (panel static)
+- neocore.js: NeoCore, the core module MeshAgent runs (consent, WebRTC, KVM/terminal/files, PowerShell)
+
+The browser's MNG_KVM client, NeoViewer, is part of the web app:
+web-ui/src/lib/remote/client/neoviewer.ts.
 
 See the repository root LICENSE (AGPL-3.0).

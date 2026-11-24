@@ -184,11 +184,11 @@ func (g *Gateway) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/agent.ashx", g.handleAgentWS)
 	mux.HandleFunc("/meshrelay.ashx", g.handleRelayWS)
 	mux.HandleFunc("/control.ashx", g.handleControlWS)
-	mux.HandleFunc("/bettercore.js", g.handleBetterCoreJS)
-	mux.HandleFunc("/meshcore.js", g.handleBetterCoreJS) // legacy alias
+	mux.HandleFunc("/neocore.js", g.handleNeoCoreJS)
+	mux.HandleFunc("/meshcore.js", g.handleNeoCoreJS) // legacy alias
 }
 
-func (g *Gateway) handleBetterCoreJS(w http.ResponseWriter, r *http.Request) {
+func (g *Gateway) handleNeoCoreJS(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/javascript")
 	w.Write(g.assets.CoreModule)
 }

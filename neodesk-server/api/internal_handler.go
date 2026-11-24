@@ -137,7 +137,7 @@ func (s *Server) InternalHandler() http.Handler {
 var noCredentialPaths = map[string]bool{
 	"/agent.ashx":                        true,
 	"/meshrelay.ashx":                    true,
-	"/bettercore.js":                     true,
+	"/neocore.js":                        true,
 	"/meshcore.js":                       true,
 	"/control.ashx":                      true,
 	"/api/health":                        true,

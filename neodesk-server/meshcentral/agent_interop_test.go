@@ -144,7 +144,7 @@ func readWSBinaryCmdAny(ctx context.Context, conn *websocket.Conn, cmds []uint16
 	}
 }
 
-// TestAgentHandshakeInterop simulates MeshAgent binary auth and BetterCore delivery.
+// TestAgentHandshakeInterop simulates MeshAgent binary auth and NeoCore delivery.
 func TestAgentHandshakeInterop(t *testing.T) {
 	gw, srv := newTestGateway(t)
 	agentKey, agentCert, nodeID := generateAgentKeyAndCert(t)
@@ -222,7 +222,7 @@ func TestAgentHandshakeInterop(t *testing.T) {
 		t.Fatalf("node id mismatch: got %s want %s", gw.MeshNodeID(peerID), nodeID)
 	}
 
-	// Agent reports core hash — server should push BetterCore or CoreOk.
+	// Agent reports core hash — server should push NeoCore or CoreOk.
 	coreHashPkt := make([]byte, 4+sha384Size)
 	binary.BigEndian.PutUint16(coreHashPkt[0:2], cmdCoreModuleHash)
 	binary.BigEndian.PutUint16(coreHashPkt[2:4], 0)
@@ -268,17 +268,17 @@ func copyFile(src, dst string) error {
 	return os.WriteFile(dst, data, 0700)
 }
 
-// TestBetterCoreAssetEmbedded ensures BetterCore ships in the binary.
-func TestBetterCoreAssetEmbedded(t *testing.T) {
+// TestNeoCoreAssetEmbedded ensures NeoCore ships in the binary.
+func TestNeoCoreAssetEmbedded(t *testing.T) {
 	assets, err := LoadCoreAssets("1.2.0", "")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(assets.CoreModule) < 100 {
-		t.Fatal("bettercore asset too small")
+		t.Fatal("neocore asset too small")
 	}
-	if !strings.Contains(string(assets.CoreModule), "BetterCore") {
-		t.Fatal("bettercore asset missing marker")
+	if !strings.Contains(string(assets.CoreModule), "NeoCore") {
+		t.Fatal("neocore asset missing marker")
 	}
 	if len(assets.CoreModuleHash) != sha384Size {
 		t.Fatalf("hash len %d", len(assets.CoreModuleHash))

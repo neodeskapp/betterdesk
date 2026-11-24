@@ -778,7 +778,7 @@ func TestNoCredentialPathsMatchAuthMiddleware(t *testing.T) {
 	if len(paths) < 200 {
 		t.Fatalf("found %d route paths in server.go, expected over 200: the pattern no longer matches", len(paths))
 	}
-	for _, extra := range []string{"/agent.ashx", "/meshrelay.ashx", "/control.ashx", "/bettercore.js", "/meshcore.js", "/ws/nd-mgmt/DEV1/extra", "/api/unknown"} {
+	for _, extra := range []string{"/agent.ashx", "/meshrelay.ashx", "/control.ashx", "/neocore.js", "/meshcore.js", "/ws/nd-mgmt/DEV1/extra", "/api/unknown"} {
 		paths[extra] = true
 	}
 	for path := range noCredentialPaths {

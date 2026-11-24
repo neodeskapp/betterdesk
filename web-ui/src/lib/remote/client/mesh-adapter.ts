@@ -1,13 +1,13 @@
 /**
  * NeoDesk Web Remote Client — MeshCentral transport adapter.
- * Uses BetterViewer (MNG_KVM) over meshrelay.
+ * Uses NeoViewer (MNG_KVM) over meshrelay.
  */
 import type { ViewerCapabilities } from '../access.ts';
-import { BetterViewer, type BetterViewerOptions } from './betterviewer.ts';
+import { NeoViewer, type NeoViewerOptions } from './neoviewer.ts';
 import { MeshFileTransfer } from './mesh-files.ts';
 import { page } from './page.ts';
 
-export interface MeshSessionOptions extends BetterViewerOptions {
+export interface MeshSessionOptions extends NeoViewerOptions {
 	deviceId?: string;
 	/** Ask the server to record the session */
 	serverRecord?: boolean;
@@ -27,7 +27,7 @@ export class MeshSession {
 	_handlers: Record<string, MeshSessionListener[]>;
 	_state: string;
 	_ws: WebSocket | null;
-	_desktop: BetterViewer | null;
+	_desktop: NeoViewer | null;
 	_deviceId: string;
 	_active: boolean;
 	/** disconnect() is closing the desktop viewer: its own close events are not passed on */
@@ -63,7 +63,7 @@ export class MeshSession {
 		}
 	}
 
-	_bindDesktop(desktop: BetterViewer): void {
+	_bindDesktop(desktop: NeoViewer): void {
 		desktop.on('state', (s: string) => {
 			if (this._closing) return;
 			this._state = s;
@@ -148,7 +148,7 @@ export class MeshSession {
 		this._ws = ws;
 		ws.binaryType = 'arraybuffer';
 
-		const desktop = new BetterViewer(this.canvas, this.opts);
+		const desktop = new NeoViewer(this.canvas, this.opts);
 		this._desktop = desktop;
 		desktop.setActive(this._active);
 		this._bindDesktop(desktop);

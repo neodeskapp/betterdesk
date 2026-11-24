@@ -4,7 +4,7 @@ name: NeoDesk CodeQL
 paths-ignore:
   - neodesk-mgmt
   # MeshAgent tunnel TLS pin (checkServerIdentity); not default chain validation.
-  - neodesk-server/meshcentral/assets/bettercore.js
+  - neodesk-server/meshcentral/assets/neocore.js
   # Vendored wry cookie read helpers (copy Secure from platform cookies).
   - rdclient-desktop/vendor/wry/**
 
@@ -25,7 +25,7 @@ query-filters:
   - exclude:
       id: js/disabling-certificate-validation
       paths:
-        - neodesk-server/meshcentral/assets/bettercore.js
+        - neodesk-server/meshcentral/assets/neocore.js
 
   # --- Legacy / protocol-required hashing (documented; not password storage) ---
   - exclude:

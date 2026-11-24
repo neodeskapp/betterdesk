@@ -3,6 +3,6 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../assets" && pwd)"
 echo "NeoDesk mesh assets live in: $ROOT"
-echo "  - bettercore.js (BetterCore — embedded in neodesk-server)"
-echo "  - BetterViewer, the panel's mesh desktop viewer: web-ui/src/lib/remote/client/betterviewer.ts"
-ls -la "$ROOT/bettercore.js" 2>/dev/null || true
+echo "  - neocore.js (NeoCore, embedded in neodesk-server)"
+echo "  - NeoViewer, the panel's mesh desktop viewer: web-ui/src/lib/remote/client/neoviewer.ts"
+ls -la "$ROOT/neocore.js" 2>/dev/null || true

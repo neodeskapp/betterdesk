@@ -53,7 +53,7 @@ const (
 	PermCDAPTerminal = "cdap.terminal"
 	PermCDAPFiles    = "cdap.files"
 
-	// MeshCentral compatibility (BetterCore / MeshAgent)
+	// MeshCentral compatibility (NeoCore / MeshAgent)
 	PermMeshTerminal = "mesh.terminal"
 	PermMeshFiles    = "mesh.files"
 	PermMeshPower    = "mesh.power"

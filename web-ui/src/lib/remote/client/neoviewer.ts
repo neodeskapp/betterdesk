@@ -1,5 +1,5 @@
 /**
- * BetterViewer — NeoDesk browser remote desktop (MNG_KVM protocol, AGPL-3.0).
+ * NeoViewer, the NeoDesk browser remote desktop (MNG_KVM protocol, AGPL-3.0).
  * SPDX-License-Identifier: AGPL-3.0-only
  * Copyright (c) BetterDesk contributors
  */
@@ -33,15 +33,15 @@ export function shortToBytes(v: number): number[] {
 	return [(v >> 8) & 0xff, v & 0xff];
 }
 
-export interface BetterViewerOptions {
+export interface NeoViewerOptions {
 	/** Send no keyboard or mouse input */
 	viewOnly?: boolean;
 }
 
 /** An event listener; each event has its own data (see the _emit calls) */
-export type BetterViewerListener = (...args: never[]) => void;
+export type NeoViewerListener = (...args: never[]) => void;
 
-export interface BetterViewerStats {
+export interface NeoViewerStats {
 	fps: number;
 	/** Bits per second */
 	bitrate: number;
@@ -62,10 +62,10 @@ interface PendingTile {
 /** An input listener grabInput added: target, type, listener, options */
 type InputListener = [EventTarget, string, EventListener, AddEventListenerOptions | undefined];
 
-export class BetterViewer {
+export class NeoViewer {
 	canvas: HTMLCanvasElement;
 	ctx: CanvasRenderingContext2D | null;
-	opts: BetterViewerOptions;
+	opts: NeoViewerOptions;
 	_ws: WebSocket | null;
 	_relayReady: boolean;
 	_protocolSent: boolean;
@@ -83,8 +83,8 @@ export class BetterViewer {
 	_compression: number;
 	_scaling: number;
 	_frameTimer: number;
-	_handlers: Record<string, BetterViewerListener[]>;
-	_stats: BetterViewerStats;
+	_handlers: Record<string, NeoViewerListener[]>;
+	_stats: NeoViewerStats;
 	_statsTimer: ReturnType<typeof setInterval> | null;
 	_lastStats: number;
 	_inputGrabbed: boolean;
@@ -94,7 +94,7 @@ export class BetterViewer {
 	_pressedKeys: number[];
 	_viewOnly: boolean;
 
-	constructor(canvas: HTMLCanvasElement, opts?: BetterViewerOptions | null) {
+	constructor(canvas: HTMLCanvasElement, opts?: NeoViewerOptions | null) {
 		this.canvas = canvas;
 		this.ctx = canvas.getContext('2d');
 		this.opts = opts || {};
@@ -125,7 +125,7 @@ export class BetterViewer {
 		this._viewOnly = !!(opts && opts.viewOnly);
 	}
 
-	on(event: string, fn: BetterViewerListener): void {
+	on(event: string, fn: NeoViewerListener): void {
 		if (!this._handlers[event]) this._handlers[event] = [];
 		this._handlers[event].push(fn);
 	}

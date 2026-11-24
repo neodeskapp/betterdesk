@@ -1592,7 +1592,7 @@ func (s *Server) authMiddleware(next http.Handler) http.Handler {
 
 		// MeshCentral compatibility — binary agent auth on the WebSocket itself (no JWT).
 		if path == "/agent.ashx" || path == "/meshrelay.ashx" ||
-			path == "/bettercore.js" || path == "/meshcore.js" {
+			path == "/neocore.js" || path == "/meshcore.js" {
 			next.ServeHTTP(w, r)
 			return
 		}
