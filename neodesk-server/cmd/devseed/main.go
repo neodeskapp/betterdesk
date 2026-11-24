@@ -6,6 +6,7 @@
 //	go run ./cmd/devseed many-devices --count 5000
 //	go run ./cmd/devseed heartbeats
 //	go run ./cmd/devseed accounts <file with the password>
+//	go run ./cmd/devseed ntp
 //
 // It runs where the console runs: it writes into the console's database
 // (the SQLite file, or PostgreSQL) and signs in to the console's API.
@@ -71,6 +72,11 @@
 // an operator. Accounts and token files that exist are left alone; a token
 // is never printed. With --device-tokens-only it makes the tokens only.
 // --now sets the time the tokens count from.
+//
+// ntp: the test stack's stand-in NTP server. The stack points the
+// server's NTP name at the instance and runs it, so the time check never
+// needs an NTP server on the internet. --listen sets the address (default
+// 127.0.0.1:123).
 package main
 
 import (
@@ -108,6 +114,7 @@ const usage = `usage: devseed <command> [flags]
   many-devices   devices for performance checks (--count n, --remove)
   heartbeats     keep the demo's online devices online
   accounts       one account per role and two device tokens
+  ntp            the test stack's stand-in NTP server (--listen, default 127.0.0.1:123)
 
 "go doc ./cmd/devseed" describes each command and its flags.`
 
@@ -126,6 +133,8 @@ func run(ctx context.Context, args []string, getenv func(string) string, out, er
 		return runHeartbeats(ctx, rest, getenv, out)
 	case "accounts":
 		return runAccounts(ctx, rest, getenv, out)
+	case "ntp":
+		return runNTP(ctx, rest, out)
 	case "help", "-h", "--help":
 		fmt.Fprintln(out, usage)
 		return nil

@@ -56,6 +56,13 @@ pids=()
 stop() { kill "${pids[@]}" 2>/dev/null || true; wait 2>/dev/null || true; exit 0; }
 trap stop TERM INT
 
+# The server's NTP name points at this instance, where devseed answers with
+# the instance's clock: the time check, and the answers the goldens hold,
+# never depend on reaching an NTP server on the internet (L441)
+echo "127.0.0.1 pool.ntp.org" >> /etc/hosts
+/usr/local/bin/devseed ntp >"$LOGS/ntp.log" 2>&1 &
+pids+=($!)
+
 (cd /opt/rustdesk && CONSOLE_PORT=5000 exec /usr/local/bin/neodesk-server -mode all -api-port 21121 -key-file /opt/rustdesk/id_ed25519) >"$LOGS/go.log" 2>&1 &
 pids+=($!)
 
