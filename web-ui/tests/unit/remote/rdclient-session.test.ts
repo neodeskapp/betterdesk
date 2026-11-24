@@ -325,10 +325,10 @@ describe('sign-in version', () => {
 		const seen: string[] = [];
 		for (const ev of ['approval_wait', 'login_error', 'login_success']) c.on(ev, () => seen.push(ev));
 		c._state = 'authenticating';
-		c._handleLoginResponse({ error: 'No Password Access' });
+		c._handleLoginResponse(LoginResponse.fromObject({ error: 'No Password Access' }));
 		expect(seen).toEqual(['approval_wait']);
 		expect(c._state).toBe('authenticating');
-		c._handleLoginResponse({ error: 'Wrong Password' });
+		c._handleLoginResponse(LoginResponse.fromObject({ error: 'Wrong Password' }));
 		expect(seen).toEqual(['approval_wait', 'login_error']);
 	});
 });
