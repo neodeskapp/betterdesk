@@ -290,6 +290,10 @@
       },
       {
        "count": 0,
+       "name": "device_signin"
+      },
+      {
+       "count": 0,
        "name": "device_telemetry"
       },
       {
