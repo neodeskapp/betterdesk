@@ -12,3 +12,8 @@ difference with the row id.
 | `manifest_signature_vectors.json` | manifests, the canonical text upstream built from each, the signature of that text by a fixed test key, and what upstream's verifier answered for good, foreign, changed and malformed signatures and keys | `TestCanonicalPayloadAndSignatureMatchUpstream`, `TestVerifySignatureMatchesUpstream`, `TestEvaluateTrustMatchesUpstream` (`signature_test.go`) |
 
 The test key was made for these vectors and signs nothing else.
+
+The module ran from a copy of the old console in which the old project's
+names were replaced by NeoDesk's, so the canonical texts start with
+NeoDesk's first line. In that copy the recorder's made-up manifests name
+the repository owner `neodeskapp`.

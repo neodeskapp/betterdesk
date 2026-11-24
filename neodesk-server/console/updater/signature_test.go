@@ -58,12 +58,6 @@ func loadVectors(t *testing.T) vectorFile {
 	return v
 }
 
-// upstreamDomain is the first line of upstream's canonical text, which
-// the recorded vectors were built and signed with. NeoDesk's text starts
-// with manifestDomain instead (TestCanonicalPayloadRules); the rest is
-// built the same way.
-const upstreamDomain = "betterdesk-update-manifest-v1"
-
 func signedFields(v vectorFile, i int) SignedFields {
 	m := v.Manifests[i].Manifest
 	f := SignedFields{Owner: m.Owner, Repo: m.Repo, Branch: m.Branch, SHA: m.SHA}
@@ -87,7 +81,7 @@ func TestCanonicalPayloadAndSignatureMatchUpstream(t *testing.T) {
 	}
 	for i, vec := range v.Manifests {
 		want, _ := base64.StdEncoding.DecodeString(vec.Payload)
-		got := canonicalPayload(upstreamDomain, signedFields(v, i))
+		got := CanonicalPayload(signedFields(v, i))
 		if !bytes.Equal(got, want) {
 			t.Fatalf("manifest %d: payload\n%q\nupstream\n%q", i, got, want)
 		}
@@ -105,7 +99,7 @@ func TestCanonicalPayloadAndSignatureMatchUpstream(t *testing.T) {
 func TestVerifySignatureMatchesUpstream(t *testing.T) {
 	v := loadVectors(t)
 	for _, vec := range v.Verify {
-		payload := canonicalPayload(upstreamDomain, signedFields(v, vec.Index))
+		payload := CanonicalPayload(signedFields(v, vec.Index))
 		if got := VerifySignature(payload, []byte(vec.Signature), ParseKeys(vec.Key)); got != vec.OK {
 			t.Errorf("manifest %d, signature %q, key %q: %v, upstream %v", vec.Index, vec.Signature, vec.Key, got, vec.OK)
 		}
@@ -118,7 +112,7 @@ func TestVerifySignatureMatchesUpstream(t *testing.T) {
 // A28 refuses it.
 func TestEvaluateTrustMatchesUpstream(t *testing.T) {
 	v := loadVectors(t)
-	payload := canonicalPayload(upstreamDomain, signedFields(v, 0))
+	payload := CanonicalPayload(signedFields(v, 0))
 	differ := 0
 	for _, vec := range v.Trust {
 		var sig []byte
