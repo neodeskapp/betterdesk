@@ -34,14 +34,14 @@ fake_current_binary() {
 }
 
 # fake_handing_binary: an installed binary whose command line hands the
-# installer's options to neodesk-setup (it names it), as 3.6.2's does.
+# installer's options to neodesk-setup (it names it), as 3.6.0-rc.5's does.
 fake_handing_binary() {
     printf '#!/bin/sh\n# verify-release --manifest FILE; the options of neodesk-setup\nexit 0\n' > "$RUSTDESK_PATH/neodesk-server"
     chmod +x "$RUSTDESK_PATH/neodesk-server"
 }
 
 # commands_in_test_dir: the installer's manager (neodesk-setup), its old
-# place (/usr/local/sbin/neodesk until 3.6.1) and the command line
+# place (/usr/local/sbin/neodesk up to 3.6.0-rc.4) and the command line
 # (neodesk) in the temporary folder.
 commands_in_test_dir() {
     MANAGER_COMMAND="$TEST_DIR/sbin/neodesk-setup"
