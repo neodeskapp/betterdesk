@@ -3,6 +3,7 @@ package kit
 import (
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -180,10 +181,10 @@ func TestRouterRoutes(t *testing.T) {
 	if len(routes) != 9 {
 		t.Fatalf("got %d routes, want 9", len(routes))
 	}
-	if routes[3] != (Route{Method: "GET", Path: "/api/devices/{id}"}) {
+	if !reflect.DeepEqual(routes[3], Route{Method: "GET", Path: "/api/devices/{id}"}) {
 		t.Errorf("fourth route = %+v", routes[3])
 	}
-	if routes[8] != (Route{Method: "GET", Path: "/api/nd/x", Mount: "/api/nd"}) {
+	if !reflect.DeepEqual(routes[8], Route{Method: "GET", Path: "/api/nd/x", Mount: "/api/nd"}) {
 		t.Errorf("mounted route = %+v", routes[8])
 	}
 }

@@ -31,6 +31,11 @@ type Route struct {
 	// (Router.Section, NoSection), nil for a route that leaves it to the
 	// panel access guard's path rules.
 	Section *access.RouteSection
+	// Permissions are what the route's permission guards ask for
+	// (RequirePermission, RequireAnyPermission, RequireRdClientAuth), in
+	// their order: a permission, or "a or b" for any of several. Checks a
+	// handler makes itself are not here.
+	Permissions []string
 }
 
 type route struct {
@@ -151,10 +156,15 @@ func (rt *Router) Prefix() string { return rt.prefix }
 // Handle adds a route. The middleware runs in the order given, before h.
 // method is "" for every method.
 func (rt *Router) Handle(method, pattern string, h http.Handler, mw ...Middleware) {
+	var needs []string
 	for i := len(mw) - 1; i >= 0; i-- {
 		h = mw[i](h)
+		if g, ok := h.(*permissionGuard); ok && g.need != "" {
+			needs = append([]string{g.need}, needs...)
+		}
 	}
 	rt.add(method, pattern, h, false)
+	rt.table.routes[len(rt.table.routes)-1].Permissions = needs
 }
 
 // Use adds mw at this place of the table, for every method and every path

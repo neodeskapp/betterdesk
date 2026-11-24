@@ -60,9 +60,9 @@ func (d *Deps) RequireRole(role string) Middleware {
 //	not allowed     403 {"success":false,"error":"Permission denied: <permission>"}, or the 403 page
 func (d *Deps) RequirePermission(permission string) Middleware {
 	return func(next http.Handler) http.Handler {
-		return d.guard(next, func(r *http.Request) access.Decision {
+		return &permissionGuard{need: permission, Handler: d.guard(next, func(r *http.Request) access.Decision {
 			return Access(r).RequirePermission(permission, httpx.OriginalURL(r))
-		})
+		})}
 	}
 }
 
@@ -71,9 +71,9 @@ func (d *Deps) RequirePermission(permission string) Middleware {
 // session, so RequireAuth goes in front of it.
 func (d *Deps) RequireAnyPermission(permissions ...string) Middleware {
 	return func(next http.Handler) http.Handler {
-		return d.guard(next, func(r *http.Request) access.Decision {
+		return &permissionGuard{need: strings.Join(permissions, " or "), Handler: d.guard(next, func(r *http.Request) access.Decision {
 			return Access(r).RequireAnyPermission(permissions...)
-		})
+		})}
 	}
 }
 
@@ -82,10 +82,19 @@ func (d *Deps) RequireAnyPermission(permissions ...string) Middleware {
 // permission is checked when one is named ("" for none).
 func (d *Deps) RequireRdClientAuth(permission string) Middleware {
 	return func(next http.Handler) http.Handler {
-		return d.guard(next, func(r *http.Request) access.Decision {
+		return &permissionGuard{need: permission, Handler: d.guard(next, func(r *http.Request) access.Decision {
 			return Access(r).RequireRdClientAuth(permission, httpx.OriginalURL(r), singleQueryValue(r.URL.RawQuery, "return"))
-		})
+		})}
 	}
+}
+
+// permissionGuard is what RequirePermission, RequireAnyPermission and
+// RequireRdClientAuth put in front of a route: the guard, with the
+// permission it asks for ("a or b" for any of several, "" for none),
+// which the route table keeps (Route.Permissions).
+type permissionGuard struct {
+	http.Handler
+	need string
 }
 
 func (d *Deps) guard(next http.Handler, decide func(r *http.Request) access.Decision) http.Handler {

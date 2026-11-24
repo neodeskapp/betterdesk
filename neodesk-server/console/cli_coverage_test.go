@@ -2,8 +2,11 @@ package console
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
+	"sort"
 	"strings"
 	"testing"
 
@@ -98,5 +101,102 @@ func TestTheContractListHoldsOnlyServedRoutes(t *testing.T) {
 		if route := r.Method + " " + r.Path; !live[ndcli.RouteKey(route)] && !live[ndcli.RouteKey("ALL "+r.Path)] {
 			t.Errorf("the contract list holds %s, which the console does not serve", route)
 		}
+	}
+}
+
+// permissionGaps lists the commands whose route's guards ask for a
+// permission the command's permission text does not name. routes are the
+// live routes; where several fit a command's route (the RustDesk client's
+// GET /api/devices passes the console's requests on to the console's),
+// every one's guards count.
+func permissionGaps(tab *ndcli.Table, routes []kit.Route) []string {
+	needs := map[string][]string{}
+	for _, r := range routes {
+		method := r.Method
+		if method == "" {
+			method = "ALL"
+		}
+		key := ndcli.RouteKey(method + " " + r.Path)
+		for _, need := range r.Permissions {
+			if !slices.Contains(needs[key], need) {
+				needs[key] = append(needs[key], need)
+			}
+		}
+	}
+	names := func(text, permission string) bool {
+		for _, word := range strings.FieldsFunc(text, func(r rune) bool {
+			return !(r >= 'a' && r <= 'z' || r >= '0' && r <= '9' || r == '_' || r == '.')
+		}) {
+			if strings.TrimSuffix(word, ".") == permission {
+				return true
+			}
+		}
+		return false
+	}
+	var gaps []string
+	for _, c := range tab.Commands {
+		_, path, _ := strings.Cut(c.Route, " ")
+		for _, need := range append(needs[ndcli.RouteKey(c.Route)], needs[ndcli.RouteKey("ALL "+path)]...) {
+			for _, permission := range strings.Split(need, " or ") {
+				if !names(c.Permission, permission) {
+					gaps = append(gaps, fmt.Sprintf("%s (%s) needs %s; the table says %q", c.Name, c.Route, need, c.Permission))
+					break
+				}
+			}
+		}
+	}
+	sort.Strings(gaps)
+	return gaps
+}
+
+// Every command names the permission its route's guards ask for, so its
+// help, the reference and `neodesk describe` say what an account and a
+// token need: a command whose route needs a permission can't be in the
+// table without it (L447: devices list said a signed-in account was
+// enough).
+func TestEveryCommandNamesThePermissionItsRouteNeeds(t *testing.T) {
+	w := newWorld(t, setup{})
+	tab, err := ndcli.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var routes []kit.Route
+	for _, table := range []*kit.Router{w.s.Early(), w.s.Router()} {
+		routes = append(routes, table.Routes()...)
+	}
+	guarded := 0
+	for _, r := range routes {
+		if len(r.Permissions) > 0 {
+			guarded++
+		}
+	}
+	if guarded < 300 {
+		t.Fatalf("only %d routes name a permission: the route table no longer records its guards", guarded)
+	}
+	if gaps := permissionGaps(tab, routes); len(gaps) > 0 {
+		t.Errorf("%d commands don't name the permission their route needs (ndcli/commands.json \"permission\"):\n  %s", len(gaps), strings.Join(gaps, "\n  "))
+	}
+
+	// A guarded route whose command names no permission, or another one,
+	// is found; one that names it, alone or among others, is not
+	d := w.s.Deps()
+	w.s.Router().Get("/api/zz-guarded", probe)
+	w.s.Router().Get("/api/zz-guarded", probe, d.RequireAuth, d.RequirePermission("audit.view"))
+	w.s.Router().Post("/api/zz-either", probe, d.RequireAuth, d.RequireAnyPermission("device.edit", "device.view"))
+	probes := &ndcli.Table{Commands: []*ndcli.Command{
+		{Name: "zz none", Route: "GET /api/zz-guarded"},
+		{Name: "zz other", Route: "GET /api/zz-guarded", Permission: "audit.export"},
+		{Name: "zz named", Route: "GET /api/zz-guarded", Permission: "audit.view"},
+		{Name: "zz half", Route: "POST /api/zz-either", Permission: "device.edit"},
+		{Name: "zz both", Route: "POST /api/zz-either", Permission: "device.edit or device.view"},
+	}}
+	gaps := permissionGaps(probes, w.s.Router().Routes())
+	want := []string{
+		`zz half (POST /api/zz-either) needs device.edit or device.view; the table says "device.edit"`,
+		`zz none (GET /api/zz-guarded) needs audit.view; the table says ""`,
+		`zz other (GET /api/zz-guarded) needs audit.view; the table says "audit.export"`,
+	}
+	if strings.Join(gaps, "\n") != strings.Join(want, "\n") {
+		t.Errorf("the probes:\n  %s\nwant\n  %s", strings.Join(gaps, "\n  "), strings.Join(want, "\n  "))
 	}
 }

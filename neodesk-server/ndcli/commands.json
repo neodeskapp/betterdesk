@@ -271,7 +271,8 @@
   {
    "name": "activity list",
    "summary": "List the activity agents reported, per device.",
-   "route": "GET /api/activity"
+   "route": "GET /api/activity",
+   "permission": "audit.view"
   },
   {
    "name": "activity top",
@@ -293,24 +294,28 @@
   {
    "name": "agents release-signing",
    "summary": "Show whether agent releases are signed and checked.",
-   "route": "GET /api/agent-releases/signing-status"
+   "route": "GET /api/agent-releases/signing-status",
+   "permission": "enrollment.manage"
   },
   {
    "name": "agents releases",
    "summary": "List the NeoDesk agent releases this server keeps.",
-   "route": "GET /api/agent-releases"
+   "route": "GET /api/agent-releases",
+   "permission": "enrollment.manage"
   },
   {
    "name": "agents releases-sync",
    "summary": "Fetch the newest agent release from GitHub.",
    "route": "POST /api/agent-releases/sync",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "enrollment.manage"
   },
   {
    "name": "agents template-create",
    "summary": "Make an agent template: settings new agents start with.",
    "route": "POST /api/agent-templates",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "enrollment.manage"
   },
   {
    "name": "agents template-delete",
@@ -322,12 +327,14 @@
      "help": "The ID"
     }
    ],
+   "permission": "enrollment.manage",
    "destructive": true
   },
   {
    "name": "agents templates",
    "summary": "List agent templates.",
-   "route": "GET /api/agent-templates"
+   "route": "GET /api/agent-templates",
+   "permission": "enrollment.manage"
   },
   {
    "name": "api-tokens current",
@@ -390,35 +397,41 @@
    "name": "attestation abort",
    "summary": "Stop the running performance test.",
    "route": "POST /api/server-attestation/abort",
+   "permission": "server.attestation",
    "destructive": true,
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
   },
   {
    "name": "attestation badge",
    "summary": "Show the settings of the performance badge.",
-   "route": "GET /api/server-attestation/badge-config"
+   "route": "GET /api/server-attestation/badge-config",
+   "permission": "server.attestation"
   },
   {
    "name": "attestation badge-set",
    "summary": "Change the settings of the performance badge.",
    "route": "PUT /api/server-attestation/badge-config",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.attestation"
   },
   {
    "name": "attestation result",
    "summary": "Show the result of the last performance test.",
-   "route": "GET /api/server-attestation/result"
+   "route": "GET /api/server-attestation/result",
+   "permission": "server.attestation"
   },
   {
    "name": "attestation run",
    "summary": "Run the performance test of this server.",
    "route": "POST /api/server-attestation/run",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.attestation"
   },
   {
    "name": "attestation status",
    "summary": "Show how far the running performance test got.",
-   "route": "GET /api/server-attestation/status"
+   "route": "GET /api/server-attestation/status",
+   "permission": "server.attestation"
   },
   {
    "name": "audit events",
@@ -490,12 +503,14 @@
      "help": "The alert ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.config"
   },
   {
    "name": "automation alerts",
    "summary": "List alerts. Filter with -q, like -q severity=critical.",
-   "route": "GET /api/automation/alerts"
+   "route": "GET /api/automation/alerts",
+   "permission": "server.config"
   },
   {
    "name": "automation command",
@@ -506,7 +521,8 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "device.connect and server.config"
   },
   {
    "name": "automation command-create",
@@ -536,12 +552,14 @@
      "help": "its data"
     }
    ],
+   "permission": "device.connect and server.config",
    "exec": true
   },
   {
    "name": "automation commands",
    "summary": "List commands queued for devices.",
-   "route": "GET /api/automation/commands"
+   "route": "GET /api/automation/commands",
+   "permission": "device.connect and server.config"
   },
   {
    "name": "automation rule",
@@ -552,12 +570,14 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "server.config"
   },
   {
    "name": "automation rule-create",
    "summary": "Create an alert rule. Give it as --data JSON, shaped like the rules automation rules lists.",
    "route": "POST /api/automation/rules",
+   "permission": "server.config",
    "examples": [
     "neodesk automation rule-create --data @rule.json"
    ],
@@ -573,6 +593,7 @@
      "help": "The ID"
     }
    ],
+   "permission": "server.config",
    "destructive": true
   },
   {
@@ -585,17 +606,20 @@
      "help": "The ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.config"
   },
   {
    "name": "automation rules",
    "summary": "List alert rules.",
-   "route": "GET /api/automation/rules"
+   "route": "GET /api/automation/rules",
+   "permission": "server.config"
   },
   {
    "name": "automation smtp",
    "summary": "Show the mail settings for alerts.",
-   "route": "GET /api/automation/smtp"
+   "route": "GET /api/automation/smtp",
+   "permission": "server.config"
   },
   {
    "name": "automation smtp-set",
@@ -642,25 +666,29 @@
      "help": "where alerts go",
      "field": "alert_email"
     }
-   ]
+   ],
+   "permission": "server.config"
   },
   {
    "name": "automation smtp-test",
    "summary": "Send a test alert mail.",
    "route": "POST /api/automation/smtp/test",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.config"
   },
   {
    "name": "backups destination-test",
    "summary": "Check that the backup destination can be written.",
    "route": "POST /api/settings/backup/destination/test",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.config"
   },
   {
    "name": "backups download",
    "summary": "Download a full backup of the server (use --output). It holds the password hashes and the API key: keep it safe.",
    "route": "GET /api/settings/backup",
    "description": "The archive holds the databases with the accounts, their password hashes and the settings, the console's API key and the server's public key. API tokens can download it only when they carry all of their account's permissions and may write.",
+   "permission": "server.config",
    "secrets": true,
    "examples": [
     "neodesk backups download --output neodesk-backup.tar.gz"
@@ -670,6 +698,7 @@
    "name": "backups restore",
    "summary": "Restore a backup file. Replaces the current data.",
    "route": "POST /api/settings/restore",
+   "permission": "server.config",
    "destructive": true,
    "examples": [
     "neodesk backups restore --file neodesk-backup.tar.gz --yes"
@@ -679,7 +708,8 @@
   {
    "name": "backups retention",
    "summary": "Show how many update backups are kept.",
-   "route": "GET /api/settings/backup/retention"
+   "route": "GET /api/settings/backup/retention",
+   "permission": "server.config"
   },
   {
    "name": "backups retention-set",
@@ -694,12 +724,14 @@
      "required": true,
      "field": "count"
     }
-   ]
+   ],
+   "permission": "server.config"
   },
   {
    "name": "backups run",
    "summary": "Make a backup now, to the scheduled destination.",
    "route": "POST /api/settings/backup/schedule/run",
+   "permission": "server.config",
    "examples": [
     "neodesk backups run",
     "neodesk backups schedule-status"
@@ -709,7 +741,8 @@
   {
    "name": "backups schedule",
    "summary": "Show the backup schedule and destination.",
-   "route": "GET /api/settings/backup/schedule"
+   "route": "GET /api/settings/backup/schedule",
+   "permission": "server.config"
   },
   {
    "name": "backups schedule-set",
@@ -750,17 +783,20 @@
      "help": "how many backups to keep",
      "field": "retentionCount"
     }
-   ]
+   ],
+   "permission": "server.config"
   },
   {
    "name": "backups schedule-status",
    "summary": "Show the last and next scheduled backup.",
-   "route": "GET /api/settings/backup/schedule/status"
+   "route": "GET /api/settings/backup/schedule/status",
+   "permission": "server.config"
   },
   {
    "name": "backups stats",
    "summary": "Show what a full backup would hold and how big it is.",
-   "route": "GET /api/settings/backup/stats"
+   "route": "GET /api/settings/backup/stats",
+   "permission": "server.config"
   },
   {
    "name": "billing check",
@@ -1227,7 +1263,8 @@
   {
    "name": "cdap alerts",
    "summary": "List CDAP alerts.",
-   "route": "GET /api/cdap/alerts"
+   "route": "GET /api/cdap/alerts",
+   "permission": "cdap.view"
   },
   {
    "name": "cdap command",
@@ -1274,7 +1311,8 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "cdap.view"
   },
   {
    "name": "cdap link",
@@ -1305,12 +1343,14 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "cdap.view"
   },
   {
    "name": "cdap list",
    "summary": "List CDAP devices.",
-   "route": "GET /api/cdap/devices"
+   "route": "GET /api/cdap/devices",
+   "permission": "cdap.view"
   },
   {
    "name": "cdap manifest",
@@ -1321,7 +1361,8 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "cdap.view"
   },
   {
    "name": "cdap state",
@@ -1332,12 +1373,14 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "cdap.view"
   },
   {
    "name": "cdap status",
    "summary": "Show whether the CDAP gateway runs.",
-   "route": "GET /api/cdap/status"
+   "route": "GET /api/cdap/status",
+   "permission": "cdap.view"
   },
   {
    "name": "cdap toggle",
@@ -2035,12 +2078,14 @@
      "help": "The group's GUID"
     }
    ],
+   "permission": "device.edit",
    "destructive": true
   },
   {
    "name": "device-groups list",
    "summary": "List device groups.",
-   "route": "GET /api/device-groups"
+   "route": "GET /api/device-groups",
+   "permission": "device.view"
   },
   {
    "name": "device-groups save",
@@ -2072,7 +2117,8 @@
      "help": "devices with this tag join by themselves",
      "field": "tag_filter"
     }
-   ]
+   ],
+   "permission": "device.edit"
   },
   {
    "name": "device-tokens bind",
@@ -2239,7 +2285,8 @@
      "name": "id",
      "help": "The device ID (see devices list)"
     }
-   ]
+   ],
+   "permission": "device.view"
   },
   {
    "name": "devices access-policy-delete",
@@ -2251,6 +2298,7 @@
      "help": "The device ID (see devices list)"
     }
    ],
+   "permission": "device.edit",
    "destructive": true
   },
   {
@@ -2263,7 +2311,8 @@
      "help": "The device ID (see devices list)"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "device.edit"
   },
   {
    "name": "devices activity",
@@ -2293,7 +2342,8 @@
      "type": "string",
      "help": "the day, like 2026-11-23 (default today)"
     }
-   ]
+   ],
+   "permission": "device.view"
   },
   {
    "name": "devices ban",
@@ -2424,6 +2474,7 @@
     }
    ],
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "device.edit",
    "secrets": true
   },
   {
@@ -2455,6 +2506,7 @@
      "help": "The device ID (see devices list)"
     }
    ],
+   "permission": "device.view",
    "examples": [
     "neodesk devices get 123456789"
    ]
@@ -2468,7 +2520,8 @@
      "name": "id",
      "help": "The device ID (see devices list)"
     }
-   ]
+   ],
+   "permission": "device.view"
   },
   {
    "name": "devices groups-set",
@@ -2489,7 +2542,8 @@
      "required": true,
      "field": "groupGuids"
     }
-   ]
+   ],
+   "permission": "device.edit"
   },
   {
    "name": "devices list",
@@ -2548,6 +2602,7 @@
      "field": "includeDeleted"
     }
    ],
+   "permission": "device.view",
    "rows": "data.devices",
    "columns": [
     "id",
@@ -2594,7 +2649,8 @@
      "required": true,
      "field": "display_name"
     }
-   ]
+   ],
+   "permission": "device.edit"
   },
   {
    "name": "devices restore",
@@ -2638,7 +2694,8 @@
      "type": "int",
      "help": "how many, 1 to 200 (default 50)"
     }
-   ]
+   ],
+   "permission": "device.view"
   },
   {
    "name": "devices signin",
@@ -2753,6 +2810,7 @@
      "required": true
     }
    ],
+   "permission": "device.edit",
    "examples": [
     "neodesk devices tags-set 123456789 --tags office,printer"
    ]
@@ -2782,6 +2840,7 @@
      "help": "its arguments"
     }
    ],
+   "permission": "device.edit",
    "exec": true
   },
   {
@@ -2794,7 +2853,8 @@
      "help": "The device ID (see devices list)"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "device.edit"
   },
   {
    "name": "devices unban",
@@ -2840,6 +2900,7 @@
      "help": "the user name"
     }
    ],
+   "permission": "device.edit",
    "examples": [
     "neodesk devices update 123456789 --note \"Front desk\""
    ]
@@ -2954,12 +3015,14 @@
   {
    "name": "fleet availability",
    "summary": "Show whether the fleet tools are on.",
-   "route": "GET /api/panel/fleet/availability"
+   "route": "GET /api/panel/fleet/availability",
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet compliance",
    "summary": "List the compliance state of devices.",
-   "route": "GET /api/panel/fleet/compliance"
+   "route": "GET /api/panel/fleet/compliance",
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet compliance-device",
@@ -2970,7 +3033,8 @@
      "name": "deviceId",
      "help": "The device ID"
     }
-   ]
+   ],
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet remediate",
@@ -2982,7 +3046,8 @@
      "help": "The device ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet resource-create",
@@ -2994,7 +3059,8 @@
      "help": "The organization ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet resource-delete",
@@ -3010,6 +3076,7 @@
      "help": "The resource id"
     }
    ],
+   "permission": "org.manage_devices",
    "destructive": true
   },
   {
@@ -3026,7 +3093,8 @@
      "help": "The resource id"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet resources",
@@ -3037,7 +3105,8 @@
      "name": "orgId",
      "help": "The organization ID"
     }
-   ]
+   ],
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet scan",
@@ -3049,7 +3118,8 @@
      "help": "The device ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet task",
@@ -3060,13 +3130,15 @@
      "name": "taskId",
      "help": "The task id"
     }
-   ]
+   ],
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet task-create",
    "summary": "Make a fleet task.",
    "route": "POST /api/panel/fleet/tasks",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet task-delete",
@@ -3078,6 +3150,7 @@
      "help": "The task id"
     }
    ],
+   "permission": "org.manage_devices",
    "destructive": true
   },
   {
@@ -3089,7 +3162,8 @@
      "name": "taskId",
      "help": "The task id"
     }
-   ]
+   ],
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet task-retry",
@@ -3101,7 +3175,8 @@
      "help": "The task id"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet task-set",
@@ -3113,12 +3188,14 @@
      "help": "The task id"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet tasks",
    "summary": "List fleet tasks.",
-   "route": "GET /api/panel/fleet/tasks"
+   "route": "GET /api/panel/fleet/tasks",
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet workflow",
@@ -3129,13 +3206,15 @@
      "name": "workflowId",
      "help": "The workflow id"
     }
-   ]
+   ],
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet workflow-create",
    "summary": "Make a workflow.",
    "route": "POST /api/panel/fleet/workflows",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet workflow-delete",
@@ -3147,6 +3226,7 @@
      "help": "The workflow id"
     }
    ],
+   "permission": "org.manage_devices",
    "destructive": true
   },
   {
@@ -3158,7 +3238,8 @@
      "name": "workflowId",
      "help": "The workflow id"
     }
-   ]
+   ],
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet workflow-run",
@@ -3171,6 +3252,7 @@
     }
    ],
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.manage_devices",
    "exec": true
   },
   {
@@ -3183,12 +3265,14 @@
      "help": "The workflow id"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.manage_devices"
   },
   {
    "name": "fleet workflows",
    "summary": "List workflows.",
-   "route": "GET /api/panel/fleet/workflows"
+   "route": "GET /api/panel/fleet/workflows",
+   "permission": "org.manage_devices"
   },
   {
    "name": "folders add-devices",
@@ -3554,12 +3638,14 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "device.view"
   },
   {
    "name": "inventory list",
    "summary": "List the inventory of every device.",
-   "route": "GET /api/inventory"
+   "route": "GET /api/inventory",
+   "permission": "device.view"
   },
   {
    "name": "invites approve-key",
@@ -4095,7 +4181,7 @@
    "name": "network stats",
    "summary": "Show uptime and response times of the targets.",
    "route": "GET /api/network/stats",
-   "permission": "audit.view"
+   "permission": "device.view"
   },
   {
    "name": "network target",
@@ -4256,7 +4342,8 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "user.view"
   },
   {
    "name": "organizations address-book-set",
@@ -4268,7 +4355,8 @@
      "help": "The ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.edit"
   },
   {
    "name": "organizations available-users",
@@ -4279,13 +4367,15 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "org.manage_users"
   },
   {
    "name": "organizations create",
    "summary": "Make an organization.",
    "route": "POST /api/panel/org",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.create"
   },
   {
    "name": "organizations credential-delete",
@@ -4301,6 +4391,7 @@
      "help": "The peer id"
     }
    ],
+   "permission": "org.edit",
    "destructive": true
   },
   {
@@ -4317,7 +4408,8 @@
      "help": "The peer id"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.edit"
   },
   {
    "name": "organizations credentials",
@@ -4329,6 +4421,7 @@
      "help": "The ID"
     }
    ],
+   "permission": "org.manage_devices",
    "secrets": true
   },
   {
@@ -4341,6 +4434,7 @@
      "help": "The ID"
     }
    ],
+   "permission": "org.delete",
    "destructive": true
   },
   {
@@ -4360,7 +4454,8 @@
      "type": "string",
      "field": "device_id"
     }
-   ]
+   ],
+   "permission": "org.manage_devices"
   },
   {
    "name": "organizations device-groups",
@@ -4371,7 +4466,8 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "user.view"
   },
   {
    "name": "organizations device-remove",
@@ -4387,6 +4483,7 @@
      "help": "The did"
     }
    ],
+   "permission": "org.manage_devices",
    "destructive": true
   },
   {
@@ -4398,7 +4495,8 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "user.view"
   },
   {
    "name": "organizations get",
@@ -4409,7 +4507,8 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "user.view"
   },
   {
    "name": "organizations invitation-delete",
@@ -4425,6 +4524,7 @@
      "help": "The inv id"
     }
    ],
+   "permission": "org.manage_users",
    "destructive": true
   },
   {
@@ -4436,7 +4536,8 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "org.manage_users"
   },
   {
    "name": "organizations invite",
@@ -4448,12 +4549,14 @@
      "help": "The ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.manage_users"
   },
   {
    "name": "organizations list",
    "summary": "List organizations.",
-   "route": "GET /api/panel/org"
+   "route": "GET /api/panel/org",
+   "permission": "user.view"
   },
   {
    "name": "organizations member-add",
@@ -4465,7 +4568,8 @@
      "help": "The ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.manage_users"
   },
   {
    "name": "organizations member-remove",
@@ -4481,6 +4585,7 @@
      "help": "The user id"
     }
    ],
+   "permission": "org.manage_users",
    "destructive": true
   },
   {
@@ -4492,7 +4597,8 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "user.view"
   },
   {
    "name": "organizations settings-set",
@@ -4504,7 +4610,8 @@
      "help": "The ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.edit"
   },
   {
    "name": "organizations update",
@@ -4516,7 +4623,8 @@
      "help": "The ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.edit"
   },
   {
    "name": "organizations user-create",
@@ -4528,7 +4636,8 @@
      "help": "The ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.manage_users"
   },
   {
    "name": "organizations user-delete",
@@ -4544,6 +4653,7 @@
      "help": "The uid"
     }
    ],
+   "permission": "org.manage_users",
    "destructive": true
   },
   {
@@ -4560,7 +4670,8 @@
      "help": "The uid"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.manage_users"
   },
   {
    "name": "organizations users",
@@ -4571,13 +4682,15 @@
      "name": "id",
      "help": "The ID"
     }
-   ]
+   ],
+   "permission": "org.manage_users and user.view"
   },
   {
    "name": "pairing activate",
    "summary": "Approve a waiting agent under a name.",
    "route": "POST /api/agent-pairing/activate",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "enrollment.approve"
   },
   {
    "name": "pairing create",
@@ -4621,7 +4734,8 @@
   {
    "name": "panel-access catalog",
    "summary": "List the console sections and client features access rules can name.",
-   "route": "GET /api/panel/access/catalog"
+   "route": "GET /api/panel/access/catalog",
+   "permission": "user.view"
   },
   {
    "name": "panel-access group",
@@ -4632,7 +4746,8 @@
      "name": "guid",
      "help": "The user group's GUID"
     }
-   ]
+   ],
+   "permission": "user.view"
   },
   {
    "name": "panel-access group-set",
@@ -4657,7 +4772,8 @@
      "type": "json",
      "help": "client feature to on or off, like {\"terminal\":false}"
     }
-   ]
+   ],
+   "permission": "user.edit"
   },
   {
    "name": "panel-access user",
@@ -4668,7 +4784,8 @@
      "name": "id",
      "help": "The account ID"
     }
-   ]
+   ],
+   "permission": "user.view"
   },
   {
    "name": "panel-access user-set",
@@ -4693,7 +4810,8 @@
      "type": "json",
      "help": "client feature to on or off, like {\"terminal\":false}"
     }
-   ]
+   ],
+   "permission": "user.edit"
   },
   {
    "name": "policies attestation",
@@ -4735,7 +4853,8 @@
      "help": "The organization ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.edit"
   },
   {
    "name": "policies effective",
@@ -4763,7 +4882,8 @@
      "help": "The organization ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.edit"
   },
   {
    "name": "policies get",
@@ -4787,7 +4907,8 @@
      "help": "The organization ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.edit"
   },
   {
    "name": "policies security-set",
@@ -4799,7 +4920,8 @@
      "help": "The organization ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.edit"
   },
   {
    "name": "policies update-set",
@@ -4811,7 +4933,8 @@
      "help": "The organization ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "org.edit"
   },
   {
    "name": "registrations approve",
@@ -5027,7 +5150,8 @@
   {
    "name": "remote-targets readiness",
    "summary": "Show whether remote targets can be reached from here.",
-   "route": "GET /api/remote-targets/readiness"
+   "route": "GET /api/remote-targets/readiness",
+   "permission": "remote_target.view"
   },
   {
    "name": "remote-targets test",
@@ -5175,23 +5299,27 @@
   {
    "name": "resource-control compliance",
    "summary": "Show which devices follow their resource policy.",
-   "route": "GET /api/panel/resource-control/compliance"
+   "route": "GET /api/panel/resource-control/compliance",
+   "permission": "server.config"
   },
   {
    "name": "resource-control default",
    "summary": "Show the default resource policy.",
-   "route": "GET /api/panel/resource-control/org-policy"
+   "route": "GET /api/panel/resource-control/org-policy",
+   "permission": "server.config"
   },
   {
    "name": "resource-control default-set",
    "summary": "Change the default resource policy.",
    "route": "PUT /api/panel/resource-control/org-policy",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.config"
   },
   {
    "name": "resource-control devices",
    "summary": "List devices with their resource policy.",
-   "route": "GET /api/panel/resource-control/devices"
+   "route": "GET /api/panel/resource-control/devices",
+   "permission": "server.config"
   },
   {
    "name": "resource-control disks-set",
@@ -5203,7 +5331,8 @@
      "help": "The device ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.config"
   },
   {
    "name": "resource-control monitors-set",
@@ -5215,7 +5344,8 @@
      "help": "The device ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.config"
   },
   {
    "name": "resource-control optical-set",
@@ -5227,7 +5357,8 @@
      "help": "The device ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.config"
   },
   {
    "name": "resource-control policy",
@@ -5238,7 +5369,8 @@
      "name": "deviceId",
      "help": "The device ID"
     }
-   ]
+   ],
+   "permission": "server.config"
   },
   {
    "name": "resource-control quotas-set",
@@ -5250,7 +5382,8 @@
      "help": "The device ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.config"
   },
   {
    "name": "resource-control usb-set",
@@ -5262,7 +5395,8 @@
      "help": "The device ID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.config"
   },
   {
    "name": "restart advanced",
@@ -5412,7 +5546,8 @@
   {
    "name": "scaling capacity",
    "summary": "Show how many sessions the relays can take.",
-   "route": "GET /api/panel/scaling/capacity"
+   "route": "GET /api/panel/scaling/capacity",
+   "permission": "server.config"
   },
   {
    "name": "scaling relay",
@@ -5423,7 +5558,8 @@
      "name": "nodeId",
      "help": "The node id"
     }
-   ]
+   ],
+   "permission": "server.config"
   },
   {
    "name": "scaling relay-create",
@@ -5457,7 +5593,8 @@
      "type": "string",
      "field": "max_bandwidth_mbps"
     }
-   ]
+   ],
+   "permission": "server.config"
   },
   {
    "name": "scaling relay-delete",
@@ -5469,6 +5606,7 @@
      "help": "The node id"
     }
    ],
+   "permission": "server.config",
    "destructive": true
   },
   {
@@ -5480,7 +5618,8 @@
      "name": "nodeId",
      "help": "The node id"
     }
-   ]
+   ],
+   "permission": "server.config"
   },
   {
    "name": "scaling relay-metrics",
@@ -5491,7 +5630,8 @@
      "name": "nodeId",
      "help": "The node id"
     }
-   ]
+   ],
+   "permission": "server.config"
   },
   {
    "name": "scaling relay-set",
@@ -5503,12 +5643,14 @@
      "help": "The node id"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.config"
   },
   {
    "name": "scaling relays",
    "summary": "List relay servers.",
-   "route": "GET /api/panel/scaling/relays"
+   "route": "GET /api/panel/scaling/relays",
+   "permission": "server.config"
   },
   {
    "name": "scaling rule-create",
@@ -5553,7 +5695,8 @@
      "in": "body",
      "type": "bool"
     }
-   ]
+   ],
+   "permission": "server.config"
   },
   {
    "name": "scaling rule-delete",
@@ -5565,6 +5708,7 @@
      "help": "The rule id"
     }
    ],
+   "permission": "server.config",
    "destructive": true
   },
   {
@@ -5577,12 +5721,14 @@
      "help": "The rule id"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.config"
   },
   {
    "name": "scaling rules",
    "summary": "List relay rules.",
-   "route": "GET /api/panel/scaling/rules"
+   "route": "GET /api/panel/scaling/rules",
+   "permission": "server.config"
   },
   {
    "name": "server addresses",
@@ -5592,12 +5738,14 @@
   {
    "name": "server containers",
    "summary": "List the Docker containers on the machine.",
-   "route": "GET /api/docker/containers"
+   "route": "GET /api/docker/containers",
+   "permission": "server.config"
   },
   {
    "name": "server database",
    "summary": "Show the database: size and rows per table.",
-   "route": "GET /api/database/stats"
+   "route": "GET /api/database/stats",
+   "permission": "server.config"
   },
   {
    "name": "server exec",
@@ -5612,6 +5760,7 @@
      "required": true
     }
    ],
+   "permission": "server.config",
    "exec": true
   },
   {
@@ -5626,6 +5775,7 @@
      "help": "the file"
     }
    ],
+   "permission": "server.config",
    "secrets": true
   },
   {
@@ -5639,7 +5789,8 @@
      "type": "string",
      "help": "the folder"
     }
-   ]
+   ],
+   "permission": "server.config"
   },
   {
    "name": "server health",
@@ -5662,17 +5813,20 @@
      "type": "int",
      "help": "how many lines (default 50)"
     }
-   ]
+   ],
+   "permission": "server.config"
   },
   {
    "name": "server machine",
    "summary": "Show the machine the server runs on.",
-   "route": "GET /api/server-management/info"
+   "route": "GET /api/server-management/info",
+   "permission": "server.config"
   },
   {
    "name": "server resources",
    "summary": "Show CPU, memory and disk use.",
-   "route": "GET /api/server-management/resources"
+   "route": "GET /api/server-management/resources",
+   "permission": "server.config"
   },
   {
    "name": "server service",
@@ -5689,12 +5843,14 @@
     }
    ],
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "server.config",
    "exec": true
   },
   {
    "name": "server services",
    "summary": "List the system services NeoDesk uses.",
-   "route": "GET /api/server-management/services"
+   "route": "GET /api/server-management/services",
+   "permission": "server.config"
   },
   {
    "name": "server speed-test",
@@ -5707,12 +5863,14 @@
      "type": "int",
      "help": "megabytes (default 1)"
     }
-   ]
+   ],
+   "permission": "metrics.view"
   },
   {
    "name": "server system",
    "summary": "Show the machine: system, memory, disks, processes.",
-   "route": "GET /api/system/info"
+   "route": "GET /api/system/info",
+   "permission": "metrics.view"
   },
   {
    "name": "settings addresses",
@@ -5888,7 +6046,7 @@
      ]
     }
    ],
-   "permission": "enrollment.manage"
+   "permission": "server.config and enrollment.manage"
   },
   {
    "name": "settings file",
@@ -6148,13 +6306,15 @@
      "in": "body",
      "type": "string"
     }
-   ]
+   ],
+   "permission": "device.edit"
   },
   {
    "name": "strategies create",
    "summary": "Make a strategy: settings pushed to desktop clients.",
    "route": "POST /api/panel/strategies",
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "device.edit"
   },
   {
    "name": "strategies delete",
@@ -6166,6 +6326,7 @@
      "help": "The group's GUID"
     }
    ],
+   "permission": "device.edit",
    "destructive": true
   },
   {
@@ -6177,12 +6338,14 @@
      "name": "guid",
      "help": "The group's GUID"
     }
-   ]
+   ],
+   "permission": "device.view"
   },
   {
    "name": "strategies list",
    "summary": "List strategies.",
-   "route": "GET /api/panel/strategies"
+   "route": "GET /api/panel/strategies",
+   "permission": "device.view"
   },
   {
    "name": "strategies unassign",
@@ -6204,7 +6367,8 @@
      "in": "body",
      "type": "string"
     }
-   ]
+   ],
+   "permission": "device.edit"
   },
   {
    "name": "strategies update",
@@ -6216,7 +6380,8 @@
      "help": "The group's GUID"
     }
    ],
-   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "device.edit"
   },
   {
    "name": "support create",
@@ -6242,7 +6407,8 @@
      "help": "mail it",
      "field": "send_email"
     }
-   ]
+   ],
+   "permission": "device.connect"
   },
   {
    "name": "support device-password",
@@ -6255,6 +6421,7 @@
     }
    ],
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "device.connect",
    "secrets": true
   },
   {
@@ -6267,6 +6434,7 @@
      "help": "The session ID (see support list)"
     }
    ],
+   "permission": "device.connect",
    "destructive": true
   },
   {
@@ -6278,12 +6446,14 @@
      "name": "id",
      "help": "The session ID (see support list)"
     }
-   ]
+   ],
+   "permission": "device.connect"
   },
   {
    "name": "support list",
    "summary": "List quick support sessions.",
-   "route": "GET /api/support/sessions"
+   "route": "GET /api/support/sessions",
+   "permission": "device.connect"
   },
   {
    "name": "support mail",
@@ -6311,7 +6481,8 @@
      "help": "the address",
      "required": true
     }
-   ]
+   ],
+   "permission": "device.connect"
   },
   {
    "name": "support password",
@@ -6324,6 +6495,7 @@
     }
    ],
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing.",
+   "permission": "device.connect",
    "secrets": true
   },
   {
@@ -6339,12 +6511,14 @@
      "required": true
     }
    ],
+   "permission": "device.edit",
    "destructive": true
   },
   {
    "name": "tags list",
    "summary": "List the tags in use, with how many devices have each.",
-   "route": "GET /api/tags"
+   "route": "GET /api/tags",
+   "permission": "device.view"
   },
   {
    "name": "tags rename",
@@ -6365,7 +6539,8 @@
      "help": "the new tag",
      "required": true
     }
-   ]
+   ],
+   "permission": "device.edit"
   },
   {
    "name": "tenants create",
@@ -6662,7 +6837,8 @@
      "help": "the user name of who handles it",
      "field": "assigned_to"
     }
-   ]
+   ],
+   "permission": "device.edit"
   },
   {
    "name": "tickets delete",
@@ -6674,7 +6850,7 @@
      "help": "The ticket number (see tickets list)"
     }
    ],
-   "permission": "server.config",
+   "permission": "device.edit",
    "destructive": true
   },
   {
@@ -6687,18 +6863,19 @@
      "help": "The ticket number (see tickets list)"
     }
    ],
-   "permission": "audit.view"
+   "permission": "device.view"
   },
   {
    "name": "tickets list",
    "summary": "List tickets. Filter with -q, like -q status=open.",
-   "route": "GET /api/tickets"
+   "route": "GET /api/tickets",
+   "permission": "device.view"
   },
   {
    "name": "tickets stats",
    "summary": "Count tickets by status and priority.",
    "route": "GET /api/tickets/stats",
-   "permission": "audit.view"
+   "permission": "device.view"
   },
   {
    "name": "tickets update",
@@ -6755,7 +6932,8 @@
      "help": "the device it is about",
      "field": "device_id"
     }
-   ]
+   ],
+   "permission": "device.edit"
   },
   {
    "name": "toolkit base64",
@@ -7338,6 +7516,7 @@
    "name": "users list",
    "summary": "List console accounts with their role and status.",
    "route": "GET /api/users",
+   "permission": "user.view",
    "rows": "data.users",
    "columns": [
     "id",
