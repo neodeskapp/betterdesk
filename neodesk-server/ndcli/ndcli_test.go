@@ -594,6 +594,17 @@ func TestTheSavedConfigPassesTheCheck(t *testing.T) {
 	}
 }
 
+// L431: neodesk --help says where the installer's menu and options went:
+// neodesk-setup, which sudo neodesk and the old options still reach.
+func TestTheHelpNamesTheInstallersManager(t *testing.T) {
+	for _, args := range [][]string{{"--help"}, {}} {
+		_, out, _ := runCLI(t, nil, "", args...)
+		if !strings.Contains(out, "neodesk-setup") || !strings.Contains(out, "sudo neodesk") || !strings.Contains(out, "--update") {
+			t.Errorf("neodesk %v does not name neodesk-setup:\n%s", args, out)
+		}
+	}
+}
+
 // What the agent test found: the secret flags' -stdin form is in the
 // flags list and the usage, every command of the command line itself
 // takes --help, a record with an empty list is no empty table, and a

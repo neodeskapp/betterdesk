@@ -10,6 +10,9 @@ on:
       - 'neodesk.ps1'
       - 'neodesk-docker.sh'
       - 'scripts/test-go-installer.sh'
+      - 'scripts/test-setup-command.sh'
+      - 'neodesk-server/cli_cmd.go'
+      - 'neodesk-server/cli_setup*.go'
       - 'release-notes/**'
       - '.github/workflows/release-go.yml'
       - 'scripts/test-docker-installer.sh'
@@ -38,6 +41,9 @@ on:
       - 'neodesk.ps1'
       - 'neodesk-docker.sh'
       - 'scripts/test-go-installer.sh'
+      - 'scripts/test-setup-command.sh'
+      - 'neodesk-server/cli_cmd.go'
+      - 'neodesk-server/cli_setup*.go'
       - 'release-notes/**'
       - '.github/workflows/release-go.yml'
       - 'scripts/test-docker-installer.sh'
@@ -100,6 +106,7 @@ jobs:
             neodesk-docker.sh \
             scripts/test-native-installer.sh \
             scripts/test-go-installer.sh \
+            scripts/test-setup-command.sh \
             scripts/test-docker-installer.sh \
             scripts/check-supervisor-env.sh \
             scripts/check-go-toolchain-pins.sh \
@@ -115,6 +122,7 @@ jobs:
             neodesk-docker.sh \
             scripts/test-native-installer.sh \
             scripts/test-go-installer.sh \
+            scripts/test-setup-command.sh \
             scripts/test-docker-installer.sh \
             scripts/check-supervisor-env.sh \
             scripts/check-go-toolchain-pins.sh \
@@ -184,6 +192,29 @@ jobs:
       # reset-password), the path checks and the updater
       - name: Run installer-focused tests
         run: go test -count=1 ./cli/... ./console/safepath/... ./console/updater/...
+      # neodesk hands neodesk.sh's options to neodesk-setup: the list in Go
+      # against the installer's argument loop, and the hand-over itself
+      - name: Test the hand-over of the installer's options
+        run: go test -count=1 -run 'Setup|InstallersFlags|OtherCallsStay|BareSudo' .
+
+  setup-command:
+    name: Installer commands on a real install
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: neodesk-server/go.mod
+          cache-dependency-path: neodesk-server/go.sum
+      - name: Build the server
+        working-directory: neodesk-server
+        run: CGO_ENABLED=0 go build -o "$RUNNER_TEMP/neodesk-server" .
+      # A fresh install, the installer's options through neodesk, an update
+      # by neodesk-setup and one by the old manager of 3.6.0-rc.4, and the
+      # uninstall
+      - name: Install, update and uninstall on this runner
+        run: sudo NEODESK_TEST_BINARY="$RUNNER_TEMP/neodesk-server" bash scripts/test-setup-command.sh
 
   installer-dry-run:
     name: Installer non-mutating CLI checks

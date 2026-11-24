@@ -11,6 +11,8 @@ import (
 // The command line (package ndcli) lives in the server binary. It runs
 // when the binary is called neodesk (the installers and the image add
 // that name as a link), or as `neodesk-server cli ...` with any name.
+// Called neodesk, it hands the installer's options to neodesk-setup
+// (cli_setup.go).
 
 // cliName reports whether the program was started as neodesk.
 func cliName(arg0 string) bool {
@@ -20,10 +22,14 @@ func cliName(arg0 string) bool {
 	return name == "neodesk"
 }
 
-// runCLI runs the command line. `neodesk local ...` reads the server's
-// env file first, as the server's own commands do; the other commands
-// talk to a console and leave it alone.
+// runCLI runs the command line, or neodesk-setup for the installer's
+// options. `neodesk local ...` reads the server's env file first, as the
+// server's own commands do; the other commands talk to a console and
+// leave it alone.
 func runCLI(args []string) int {
+	if code, handled := handToSetup(args, osSetupCall()); handled {
+		return code
+	}
 	if len(args) > 0 && args[0] == "local" {
 		loadEnvFileFromOS()
 	}

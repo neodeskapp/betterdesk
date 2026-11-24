@@ -44,12 +44,101 @@ set -e
 # Version
 VERSION="3.6.2"
 # Bump when installer control-flow changes must apply mid-session after Update.
-NEODESK_SH_REVISION="20260725-console-start-306"
+NEODESK_SH_REVISION="20261124-neodesk-setup-307"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # This file; empty when the script is piped into bash
 NEODESK_SELF="${BASH_SOURCE[0]:-}"
 # Preserve argv before shift — used to re-exec after installer self-update.
 NEODESK_ORIG_ARGV=("$@")
+
+# This installer as a command, for updates and the uninstall later:
+# neodesk-setup. neodesk is the command line, a link to the server binary,
+# which hands the installer's options (neodesk --update, ...) and a bare
+# `sudo neodesk` on a terminal to neodesk-setup. Until 3.6.1 the installer
+# itself was /usr/local/sbin/neodesk.
+MANAGER_COMMAND="/usr/local/sbin/neodesk-setup"
+OLD_MANAGER_COMMAND="/usr/local/sbin/neodesk"
+CLI_COMMAND="/usr/local/bin/neodesk"
+
+# binary_hands_over BIN: BIN is a server binary whose command line hands
+# the installer's options to neodesk-setup (it names it). An older one
+# would take neodesk --update for a command of its own.
+binary_hands_over() {
+    [ -x "$1" ] && grep -a -q -F 'neodesk-setup' "$1" 2>/dev/null
+}
+
+# is_old_manager FILE: FILE is a copy of this installer, not a link
+is_old_manager() {
+    [ -f "$1" ] && [ ! -L "$1" ] && grep -q '^NEODESK_SH_REVISION=' "$1" 2>/dev/null
+}
+
+# is_cli_link FILE: FILE is the command line's link to a neodesk-server
+is_cli_link() {
+    [ -L "$1" ] && [ "$(basename "$(readlink "$1")")" = neodesk-server ]
+}
+
+# replace_file SRC DEST: DEST becomes a copy of SRC (mode 755) by a rename
+# in DEST's folder, never by writing over it: bash reads a script while it
+# runs, and a copy that runs from DEST reads on from the file it opened.
+replace_file() {
+    local dir tmp
+    dir=$(dirname "$2")
+    mkdir -p "$dir" || return 1
+    tmp=$(mktemp "$dir/.$(basename "$2").XXXXXX") || return 1
+    if cp "$1" "$tmp" && chmod 755 "$tmp" && mv -f "$tmp" "$2"; then
+        return 0
+    fi
+    rm -f "$tmp"
+    return 1
+}
+
+# place_manager_commands SRC BIN: the installer SRC as neodesk-setup, the
+# command line neodesk as a link to the server binary BIN, and the old
+# manager at /usr/local/sbin/neodesk gone, since it comes first in root's
+# PATH. Returns 0 for that, 1 when neodesk-setup could not be written, 2
+# when BIN does not hand the installer's options over yet and 3 when
+# another program has neodesk's place. With 2 and 3 an old manager stays,
+# as the newest installer, so sudo neodesk keeps working.
+place_manager_commands() {
+    local src=$1 bin=$2 rc=0
+    replace_file "$src" "$MANAGER_COMMAND" || return 1
+    if ! binary_hands_over "$bin"; then
+        rc=2
+    elif { [ -e "$CLI_COMMAND" ] || [ -L "$CLI_COMMAND" ]; } && ! is_cli_link "$CLI_COMMAND"; then
+        rc=3
+    elif ! { mkdir -p "$(dirname "$CLI_COMMAND")" && ln -sfn "$bin" "$CLI_COMMAND"; }; then
+        rc=3
+    fi
+    if is_old_manager "$OLD_MANAGER_COMMAND"; then
+        if [ "$rc" = 0 ]; then
+            rm -f "$OLD_MANAGER_COMMAND"
+        elif [ "$(readlink -f "$src")" != "$(readlink -f "$OLD_MANAGER_COMMAND")" ]; then
+            replace_file "$src" "$OLD_MANAGER_COMMAND" || true
+        fi
+    fi
+    return "$rc"
+}
+
+# installed_server_binary: the binary the service runs (the ExecStart of
+# its unit), else the default place
+installed_server_binary() {
+    local unit="${SERVER_UNIT:-/etc/systemd/system/neodesk-server.service}" bin=""
+    [ ! -f "$unit" ] || bin=$(sed -n 's/^ExecStart=\([^ ]*\).*/\1/p' "$unit" | head -n 1)
+    printf '%s\n' "${bin:-/opt/neodesk/neodesk-server}"
+}
+
+# Run from the manager's old place: an update by an older copy (3.6.1 and
+# before) saved this installer as /usr/local/sbin/neodesk. As root, it
+# finishes the move before anything else and hands this call to neodesk,
+# which gives the installer's options back to neodesk-setup. The file it
+# runs from is unlinked, never written over.
+if [ -n "$NEODESK_SELF" ] && [ "$EUID" -eq 0 ] \
+    && [ "$(readlink -f "$NEODESK_SELF" 2>/dev/null)" = "$(readlink -f "$OLD_MANAGER_COMMAND" 2>/dev/null)" ]; then
+    if place_manager_commands "$NEODESK_SELF" "$(installed_server_binary)"; then
+        echo "The installer's manager is neodesk-setup now, and neodesk is the command line (neodesk --help)." >&2
+        exec "$CLI_COMMAND" "$@"
+    fi
+fi
 
 # Auto mode flag
 AUTO_MODE=false
@@ -197,7 +286,7 @@ while [[ $# -gt 0 ]]; do
         --help|-h)
             echo "NeoDesk Console Manager v$VERSION"
             echo ""
-            echo "Usage: sudo ./neodesk.sh [OPTIONS]"
+            echo "Usage: sudo neodesk-setup [OPTIONS]   (from a checkout: sudo ./neodesk.sh [OPTIONS])"
             echo ""
             echo "Options:"
             echo "  --auto, -a       Run in automatic mode (non-interactive); on an install"
@@ -218,7 +307,8 @@ while [[ $# -gt 0 ]]; do
             echo "                   Node.js unless web-ui/build exists)"
             echo "  --uninstall      Stop and remove the service, after a backup; the data stays,"
             echo "                   and the end lists what is left on the machine"
-            echo "  --purge          With --uninstall, also remove the data, keys and the neodesk command"
+            echo "  --purge          With --uninstall, also remove the data, keys and the commands"
+            echo "                   neodesk-setup and neodesk"
             echo "  --check-permissions  Report panel/update/config/restart capabilities"
             echo "  --repair-permissions Repair NeoDesk ownership and service access"
             echo "  --set-config K=V Apply an allowlisted .env setting (repeatable)"
@@ -254,7 +344,8 @@ while [[ $# -gt 0 ]]; do
             echo "  SIGNAL_RATE_LIMIT_PER_IP=20  Signal registrations per address and minute (0: no limit)"
             echo ""
             echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/neodesk.sh | sudo bash"
-            echo "Later:                     sudo neodesk (menu), sudo neodesk --update, sudo neodesk --uninstall"
+            echo "Later:                     sudo neodesk-setup (menu), sudo neodesk-setup --update, sudo neodesk-setup --uninstall"
+            echo "The command line:          neodesk --help (sudo neodesk and these options reach neodesk-setup too)"
             exit 0
             ;;
         *)
@@ -306,8 +397,6 @@ STORE_ADMIN_CREDENTIALS="${STORE_ADMIN_CREDENTIALS:-false}"
 # binary by rename and keeps the old one as neodesk-server.prev.
 SERVER_SERVICE="neodesk-server"
 SERVER_UNIT="/etc/systemd/system/neodesk-server.service"
-# This installer as a command, for updates and the uninstall later.
-MANAGER_COMMAND="/usr/local/sbin/neodesk"
 SERVICE_USER="neodesk"
 # What the installs with the Node.js console had besides the server: the
 # console's unit (disabled and kept for one release after the upgrade), the
@@ -631,25 +720,37 @@ default_to_auto_without_terminal() {
     fi
 }
 
-# install_manager_command: this installer as the command neodesk, for
-# updates, repairs and the uninstall later. Run from the command itself
-# (an update), it takes the newest one of INSTALLER_REF; piped from curl,
+# install_manager_command: this installer as the command neodesk-setup,
+# for updates, repairs and the uninstall later, and neodesk as the command
+# line (place_manager_commands). Run from an installed copy (an update),
+# it takes the newest one of INSTALLER_REF, else itself; piped from curl,
 # it fetches itself from the same place.
 install_manager_command() {
-    local self="$NEODESK_SELF" tmp
+    local self="$NEODESK_SELF" tmp real rc=0
     tmp=$(mktemp) || return 0
-    if [ -n "$self" ] && [ -f "$self" ] && [ "$(readlink -f "$self")" != "$(readlink -f "$MANAGER_COMMAND" 2>/dev/null)" ]; then
+    real=$(readlink -f "$self" 2>/dev/null || true)
+    if [ -n "$self" ] && [ -f "$self" ] && [ "$real" != "$(readlink -f "$MANAGER_COMMAND" 2>/dev/null)" ] \
+        && [ "$real" != "$(readlink -f "$OLD_MANAGER_COMMAND" 2>/dev/null)" ]; then
         cp "$self" "$tmp"
     elif ! curl -fsSL --retry 2 --connect-timeout 20 -o "$tmp" \
         "https://raw.githubusercontent.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/${INSTALLER_REF}/neodesk.sh" \
         || ! grep -q '^NEODESK_SH_REVISION=' "$tmp"; then
-        rm -f "$tmp"
-        [ -x "$MANAGER_COMMAND" ] || print_warning "Could not save the neodesk command; run this installer again for updates"
-        return 0
+        if [ -n "$self" ] && [ -f "$self" ]; then
+            cp "$self" "$tmp"
+        else
+            rm -f "$tmp"
+            [ -x "$MANAGER_COMMAND" ] || print_warning "Could not save the neodesk-setup command; run this installer again for updates"
+            return 0
+        fi
     fi
-    mkdir -p "$(dirname "$MANAGER_COMMAND")"
-    install -m 0755 "$tmp" "$MANAGER_COMMAND" && print_info "Manage this install with: sudo $(basename "$MANAGER_COMMAND")"
+    place_manager_commands "$tmp" "$(server_binary_path)" || rc=$?
     rm -f "$tmp"
+    case "$rc" in
+        0) print_info "Manage this install with: sudo $(basename "$MANAGER_COMMAND"); the command line: neodesk --help" ;;
+        2) print_info "Manage this install with: sudo $(basename "$MANAGER_COMMAND") (the command line neodesk comes with the next server update)" ;;
+        3) print_warning "$CLI_COMMAND is another program, so it stays; the command line is $(server_binary_path) cli" ;;
+        *) print_warning "Could not save the neodesk-setup command; run this installer again for updates" ;;
+    esac
     return 0
 }
 
@@ -5442,6 +5543,9 @@ print_install_summary() {
     echo "  Settings:      $env_file (then: sudo systemctl restart neodesk-server)"
     echo "  Update:        sudo $cmd --update"
     echo "  Uninstall:     sudo $cmd --uninstall"
+    if binary_hands_over "$(server_binary_path)"; then
+        echo "  Command line:  sudo neodesk --help"
+    fi
     echo ""
 }
 
@@ -5595,7 +5699,7 @@ UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-neodesk}"
 # channel's id, main for stable and dev for development, not a git branch.
 UPDATE_GITHUB_BRANCH_GIVEN="${UPDATE_GITHUB_BRANCH:-}"
 UPDATE_GITHUB_BRANCH="${UPDATE_GITHUB_BRANCH:-main}"
-# The branch the installer itself comes from for the neodesk command:
+# The branch the installer itself comes from for the neodesk-setup command:
 # the repository's branch, main. The release channel above is separate.
 INSTALLER_REF="${INSTALLER_REF:-main}"
 
@@ -7092,8 +7196,12 @@ do_uninstall() {
         print_info "Preserved console data: $CONSOLE_PATH"
     fi
     
+    # The commands: neodesk-setup, neodesk when it is the command line's
+    # link, and the manager at its old place
     if [ "$PURGE_MODE" = true ]; then
         rm -f "$MANAGER_COMMAND"
+        if is_cli_link "$CLI_COMMAND"; then rm -f "$CLI_COMMAND"; fi
+        if is_old_manager "$OLD_MANAGER_COMMAND"; then rm -f "$OLD_MANAGER_COMMAND"; fi
     fi
 
     print_success "NeoDesk has been uninstalled"
@@ -7105,6 +7213,8 @@ do_uninstall() {
     [ "$USE_POSTGRESQL" = true ] && left+=("the PostgreSQL database and PostgreSQL itself")
     left+=("the firewall rules for the NeoDesk ports")
     [ -x "$MANAGER_COMMAND" ] && left+=("the command $MANAGER_COMMAND, to install again")
+    is_cli_link "$CLI_COMMAND" && left+=("the command line $CLI_COMMAND")
+    is_old_manager "$OLD_MANAGER_COMMAND" && left+=("the installer's older copy $OLD_MANAGER_COMMAND")
     echo ""
     echo "Left on this machine:"
     printf '  %s\n' "${left[@]}"

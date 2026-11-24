@@ -38,6 +38,10 @@ function Get-Service { param($Name, $ErrorAction) $null }
 # GitHub's API gives no answer unless a test stands in for it, so no check
 # reaches the network
 function Invoke-RestMethod { throw [System.Net.WebException]::new('The remote name could not be resolved: api.github.com') }
+# The machine's Path, kept here instead of in the registry
+$script:machinePath = 'C:\Windows\system32;C:\Windows'
+function Get-MachinePath { $script:machinePath }
+function Set-MachinePath([string]$Value) { $script:machinePath = $Value }
 
 function New-TestInstall {
     $dir = Join-Path ([System.IO.Path]::GetTempPath()) ("nd-ps1-" + [guid]::NewGuid().ToString('N'))
@@ -579,6 +583,39 @@ function Test-WindowsFirstHour {
         if (-not $out.Contains($want)) { Fail "the summary does not name $want" }
     }
     $script:FRESH_CONSOLE_ENV = $false
+    Remove-Item -Recurse -Force $dir
+}
+
+# L431: neodesk, the command line, is on the Path after an install and an
+# update: bin\neodesk.exe, a link to the server binary (the binary is the
+# command line under that name), and the bin folder in the machine's Path
+# once. A neodesk.exe of someone else stays; the uninstall takes the link
+# and the folder out of the Path again.
+function Test-CommandLineOnThePath {
+    $dir = New-TestInstall
+    $exe = Join-Path $script:RUSTDESK_PATH 'neodesk-server.exe'
+    Set-Content -Path $exe -Value 'exe'
+    $before = $script:machinePath
+    Install-CommandLine 6> $null
+    Install-CommandLine 6> $null
+    $bin = Join-Path $script:RUSTDESK_PATH 'bin'
+    $link = Get-Item -LiteralPath (Join-Path $bin 'neodesk.exe') -Force -ErrorAction SilentlyContinue
+    if (-not $link -or $link.LinkType -ne 'SymbolicLink' -or "$($link.Target)" -ne $exe) {
+        Fail "bin\neodesk.exe is not a link to the server binary: $($link.LinkType) $($link.Target)"
+    }
+    $found = @($script:machinePath -split ';' | Where-Object { $_ -eq $bin })
+    if ($found.Count -ne 1) { Fail "the machine's Path has the command line's folder $($found.Count) times: $script:machinePath" }
+    Set-Content -Path (Join-Path $script:RUSTDESK_PATH 'id_ed25519.pub') -Value 'KEY='
+    $out = (Show-InstallSummary 6>&1 | Out-String)
+    if (-not $out.Contains('neodesk --help')) { Fail "the summary does not name the command line: $out" }
+    Remove-CommandLine 6> $null
+    if ($script:machinePath -ne $before) { Fail "the uninstall left the Path as $script:machinePath" }
+    if (Test-Path (Join-Path $bin 'neodesk.exe')) { Fail 'the uninstall left bin\neodesk.exe' }
+    New-Item -ItemType Directory -Path $bin -Force | Out-Null
+    Set-Content -Path (Join-Path $bin 'neodesk.exe') -Value 'mine'
+    Install-CommandLine 6> $null 3> $null
+    if ((Get-Content (Join-Path $bin 'neodesk.exe') -Raw).Trim() -ne 'mine') { Fail 'the install replaced a neodesk.exe of someone else' }
+    $script:machinePath = $before
     Remove-Item -Recurse -Force $dir
 }
 
@@ -1156,6 +1193,7 @@ Test-UpdateKeepsTheAdminsPorts
 Test-ChannelAndDownloadErrors
 Test-PanelPublicHost
 Test-WindowsFirstHour
+Test-CommandLineOnThePath
 Test-UpdateAsksTheFork
 Test-FirewallPorts
 Test-CertificateFromTheBinary

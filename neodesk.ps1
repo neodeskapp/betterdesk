@@ -1964,6 +1964,7 @@ function Update-GoInstall {
     }
     Remove-FirstAdminPassword
     Install-ManagerScript
+    Install-CommandLine
     Print-Success "neodesk-server: $(& $serverExe -version 2>$null | Select-Object -First 1)"
     return $true
 }
@@ -2474,6 +2475,52 @@ function Install-ManagerScript {
     }
 }
 
+# The machine's Path, from the registry: the folders every new terminal
+# finds commands in.
+function Get-MachinePath { [Environment]::GetEnvironmentVariable("Path", "Machine") }
+function Set-MachinePath([string]$Value) { [Environment]::SetEnvironmentVariable("Path", $Value, "Machine") }
+
+# neodesk, the command line, on the Path: bin\neodesk.exe in the server's
+# folder, a link to neodesk-server.exe (the binary is the command line
+# when it is called neodesk), and that bin folder in the machine's Path.
+# The link names the binary's path, so it follows the console's own
+# updates, which put a new binary there.
+function Install-CommandLine {
+    $serverExe = Join-Path $script:RUSTDESK_PATH "neodesk-server.exe"
+    $binDir = Join-Path $script:RUSTDESK_PATH "bin"
+    $link = Join-Path $binDir "neodesk.exe"
+    if (-not (Test-Path $serverExe)) { return }
+    try {
+        New-Item -ItemType Directory -Path $binDir -Force | Out-Null
+        $item = Get-Item -LiteralPath $link -Force -ErrorAction SilentlyContinue
+        if ($item -and $item.LinkType -ne "SymbolicLink") {
+            Print-Warning "$link is another program, so it stays; the command line runs as: & '$serverExe' cli"
+            return
+        }
+        if ($item) { Remove-Item -LiteralPath $link -Force -ErrorAction Stop }
+        New-Item -ItemType SymbolicLink -Path $link -Target $serverExe -ErrorAction Stop | Out-Null
+    } catch {
+        Print-Warning "Could not make the command line ${link}: $($_.Exception.Message). It runs as: & '$serverExe' cli"
+        return
+    }
+    $entries = @((Get-MachinePath) -split ';' | Where-Object { $_ })
+    if ($entries -notcontains $binDir) { Set-MachinePath (($entries + $binDir) -join ';') }
+    if (@($env:Path -split ';') -notcontains $binDir) { $env:Path = "$env:Path;$binDir" }
+    Print-Info "The command line: neodesk --help (in a new terminal)"
+}
+
+# Remove-CommandLine: the link bin\neodesk.exe and its folder in the
+# machine's Path go (the uninstall).
+function Remove-CommandLine {
+    $binDir = Join-Path $script:RUSTDESK_PATH "bin"
+    $link = Join-Path $binDir "neodesk.exe"
+    $item = Get-Item -LiteralPath $link -Force -ErrorAction SilentlyContinue
+    if ($item -and $item.LinkType -eq "SymbolicLink") { Remove-Item -LiteralPath $link -Force -ErrorAction SilentlyContinue }
+    $entries = @((Get-MachinePath) -split ';' | Where-Object { $_ })
+    if ($entries -contains $binDir) { Set-MachinePath (@($entries | Where-Object { $_ -ne $binDir }) -join ';') }
+    $env:Path = (@($env:Path -split ';' | Where-Object { $_ -and $_ -ne $binDir }) -join ';')
+}
+
 # What the admin needs after an install, and no password: the console's
 # address, the first sign-in, what RustDesk clients are given, the log,
 # the settings file and the commands for later.
@@ -2512,6 +2559,7 @@ function Show-InstallSummary {
     Write-Host "  Settings:      $envFile (then: Restart-Service $($script:SERVER_SERVICE))"
     Write-Host "  Update:        & '$manager' -Update"
     Write-Host "  Uninstall:     & '$manager' -Uninstall"
+    Write-Host "  Command line:  neodesk --help (in a new terminal)"
     Write-Host ""
 }
 
@@ -3404,6 +3452,7 @@ function Do-Install {
     if ($installOk) {
         Remove-FirstAdminPassword
         Install-ManagerScript
+        Install-CommandLine
     }
 
     Write-Host ""
@@ -4269,6 +4318,7 @@ function Do-Uninstall {
     Unregister-ScheduledTask -TaskName $script:CONSOLE_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
     
     if ($script:PURGE_MODE -or (-not $script:AUTO_MODE -and (Confirm-Action "Remove installation files ($script:RUSTDESK_PATH)?"))) {
+        Remove-CommandLine
         Remove-Item -Path $script:RUSTDESK_PATH -Recurse -Force -ErrorAction SilentlyContinue
         Print-Info "Removed: $script:RUSTDESK_PATH"
     } else {

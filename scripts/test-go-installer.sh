@@ -34,6 +34,22 @@ fake_current_binary() {
     chmod +x "$RUSTDESK_PATH/neodesk-server"
 }
 
+# fake_handing_binary: an installed binary whose command line hands the
+# installer's options to neodesk-setup (it names it), as 3.6.2's does.
+fake_handing_binary() {
+    printf '#!/bin/sh\n# verify-release --manifest FILE; the options of neodesk-setup\nexit 0\n' > "$RUSTDESK_PATH/neodesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
+}
+
+# commands_in_test_dir: the installer's manager (neodesk-setup), its old
+# place (/usr/local/sbin/neodesk until 3.6.1) and the command line
+# (neodesk) in the temporary folder.
+commands_in_test_dir() {
+    MANAGER_COMMAND="$TEST_DIR/sbin/neodesk-setup"
+    OLD_MANAGER_COMMAND="$TEST_DIR/sbin/neodesk"
+    CLI_COMMAND="$TEST_DIR/bin/neodesk"
+}
+
 # The units an install with the Node.js console has (neodesk.sh 3.5.221).
 write_node_era_units() {
     cat > "$SERVER_UNIT" <<'UNIT'
@@ -502,10 +518,10 @@ test_one_command_install() (
         *no) ;;
         *) fail "without a terminal a question did not take its default: $out" ;;
     esac
-    MANAGER_COMMAND="$TEST_DIR/sbin/neodesk"
+    commands_in_test_dir
     install_manager_command >/dev/null
-    [ -x "$MANAGER_COMMAND" ] || fail "no neodesk command was left behind"
-    cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/neodesk.sh" || fail "the neodesk command is not this installer"
+    [ -x "$MANAGER_COMMAND" ] || fail "no neodesk-setup command was left behind"
+    cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/neodesk.sh" || fail "the neodesk-setup command is not this installer"
     # Piped from curl, it fetches itself from the repository's branch,
     # main, whatever the release channel: the development channel's id is
     # dev, and there is no dev branch
@@ -520,8 +536,71 @@ test_one_command_install() (
     }
     install_manager_command >/dev/null
     [ "$(cat "$TEST_DIR/fetched")" = "https://raw.githubusercontent.com/neodeskapp/neodesk/main/neodesk.sh" ] \
-        || fail "the neodesk command came from $(cat "$TEST_DIR/fetched")"
+        || fail "the neodesk-setup command came from $(cat "$TEST_DIR/fetched")"
     unset -f curl
+    rm -rf "$TEST_DIR"
+)
+
+# L431: the installer's manager is neodesk-setup, and neodesk is the
+# command line: a link to the server binary, which hands the installer's
+# options to neodesk-setup. Nothing stays at the manager's old place,
+# where it would come first in root's PATH.
+test_install_places_neodesk_setup_and_the_command_line() (
+    load
+    [ "$MANAGER_COMMAND" = /usr/local/sbin/neodesk-setup ] || fail "the manager is installed as $MANAGER_COMMAND"
+    [ "${CLI_COMMAND:-}" = /usr/local/bin/neodesk ] || fail "the command line is not /usr/local/bin/neodesk: ${CLI_COMMAND:-none}"
+    [ "${OLD_MANAGER_COMMAND:-}" = /usr/local/sbin/neodesk ] || fail "the manager's old place is ${OLD_MANAGER_COMMAND:-unknown}"
+    commands_in_test_dir
+    fake_handing_binary
+    install_manager_command >/dev/null
+    [ -x "$MANAGER_COMMAND" ] || fail "no neodesk-setup"
+    cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/neodesk.sh" || fail "neodesk-setup is not this installer"
+    [ "$(readlink "$CLI_COMMAND")" = "$RUSTDESK_PATH/neodesk-server" ] \
+        || fail "neodesk is not a link to the server binary: $(ls -l "$CLI_COMMAND" 2>&1)"
+    [ ! -e "$OLD_MANAGER_COMMAND" ] || fail "something is at the manager's old place"
+    local out
+    out=$(print_install_summary 2>&1)
+    for want in "sudo neodesk-setup --update" "sudo neodesk-setup --uninstall" "neodesk --help"; do
+        case "$out" in *"$want"*) ;; *) fail "the summary does not name $want: $out" ;; esac
+    done
+    rm -rf "$TEST_DIR"
+)
+
+# L431: an install whose /usr/local/sbin/neodesk is the old manager (3.6.1
+# and before) moves to neodesk-setup and the neodesk link at its update.
+# Until the server binary hands the installer's options over, neodesk
+# stays the manager; a neodesk of someone else stays, and so does the old
+# manager then. neodesk-setup is replaced by a new file, never written
+# over: a copy that runs reads on from the file it opened.
+test_update_moves_the_old_manager() (
+    load
+    commands_in_test_dir
+    mkdir -p "$TEST_DIR/sbin"
+    install -m 0755 "$SCRIPT_ROOT/neodesk.sh" "$OLD_MANAGER_COMMAND"
+    fake_current_binary
+    install_manager_command >/dev/null 2>&1
+    [ -x "$MANAGER_COMMAND" ] || fail "no neodesk-setup next to an older binary"
+    [ -x "$OLD_MANAGER_COMMAND" ] || fail "next to an older binary, neodesk is no longer the manager"
+    [ ! -e "$CLI_COMMAND" ] && [ ! -L "$CLI_COMMAND" ] || fail "neodesk links to a binary that takes --update for a command of its own"
+
+    fake_handing_binary
+    install_manager_command >/dev/null 2>&1
+    [ "$(readlink "$CLI_COMMAND")" = "$RUSTDESK_PATH/neodesk-server" ] || fail "the update placed no neodesk link"
+    [ ! -e "$OLD_MANAGER_COMMAND" ] || fail "the old manager is still at /usr/local/sbin/neodesk"
+    local inode
+    inode=$(stat -c %i "$MANAGER_COMMAND")
+    install_manager_command >/dev/null 2>&1
+    [ "$(stat -c %i "$MANAGER_COMMAND")" != "$inode" ] || fail "neodesk-setup was written over in place"
+
+    rm -f "$CLI_COMMAND"
+    printf '#!/bin/sh\necho mine\n' > "$CLI_COMMAND"
+    chmod 755 "$CLI_COMMAND"
+    install -m 0755 "$SCRIPT_ROOT/neodesk.sh" "$OLD_MANAGER_COMMAND"
+    local out
+    out=$(install_manager_command 2>&1)
+    grep -qx 'echo mine' "$CLI_COMMAND" || fail "a neodesk of someone else was replaced"
+    [ -x "$OLD_MANAGER_COMMAND" ] || fail "the old manager went although neodesk is not the command line"
+    case "$out" in *"$CLI_COMMAND"*) ;; *) fail "no word about the neodesk that stays: $out" ;; esac
     rm -rf "$TEST_DIR"
 )
 
@@ -847,7 +926,7 @@ test_install_summary() (
     case "$out" in *"API server:    "*"http://desk.example.org:21121"*) ;; *) fail "the summary gives clients another API address: $out" ;; esac
     for want in "https://desk.example.org:5443" "admin" "ID server" "desk.example.org" \
         "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ=" "journalctl -u neodesk-server" "$CONSOLE_PATH/.env" \
-        "neodesk --update" "neodesk --uninstall"; do
+        "neodesk-setup --update" "neodesk-setup --uninstall"; do
         case "$out" in *"$want"*) ;; *) fail "the summary does not name $want: $out" ;; esac
     done
     case "$out" in *Summary-Pass-1*) fail "the summary shows the password" ;; esac
@@ -855,7 +934,9 @@ test_install_summary() (
 )
 
 # L149: the uninstall says what it leaves on the machine, and --purge
-# removes the data and the neodesk command too.
+# removes the data and the commands too: neodesk-setup, and neodesk when
+# it is the link to the server binary (L431), but not a neodesk of
+# someone else.
 test_uninstall_says_what_stays() (
     load
     systemctl() { :; }
@@ -863,19 +944,26 @@ test_uninstall_says_what_stays() (
     print_header() { :; }
     AUTO_MODE=true
     UNINSTALL_MODE=true
-    MANAGER_COMMAND="$TEST_DIR/sbin/neodesk"
-    mkdir -p "$TEST_DIR/sbin" && printf '#!/bin/sh\n' > "$MANAGER_COMMAND" && chmod +x "$MANAGER_COMMAND"
+    commands_in_test_dir
+    mkdir -p "$TEST_DIR/sbin" "$TEST_DIR/bin" && printf '#!/bin/sh\n' > "$MANAGER_COMMAND" && chmod +x "$MANAGER_COMMAND"
+    fake_handing_binary
+    ln -s "$RUSTDESK_PATH/neodesk-server" "$CLI_COMMAND"
     printf 'DB_TYPE=sqlite\n' > "$CONSOLE_PATH/.env"
     local out
     out=$(do_uninstall 2>&1)
-    for want in "Left on this machine" "$RUSTDESK_PATH" "$CONSOLE_PATH" "--purge" "$MANAGER_COMMAND"; do
+    for want in "Left on this machine" "$RUSTDESK_PATH" "$CONSOLE_PATH" "--purge" "$MANAGER_COMMAND" "$CLI_COMMAND" \
+        "neodesk-setup --uninstall --purge"; do
         case "$out" in *"$want"*) ;; *) fail "the uninstall does not name $want: $out" ;; esac
     done
     [ -d "$RUSTDESK_PATH" ] && [ -d "$CONSOLE_PATH" ] || fail "the uninstall without --purge removed the data"
     PURGE_MODE=true
     do_uninstall >/dev/null 2>&1
-    [ ! -e "$RUSTDESK_PATH" ] && [ ! -e "$CONSOLE_PATH" ] && [ ! -e "$MANAGER_COMMAND" ] \
-        || fail "--purge left $(ls -d "$RUSTDESK_PATH" "$CONSOLE_PATH" "$MANAGER_COMMAND" 2>/dev/null | tr '\n' ' ')"
+    [ ! -e "$RUSTDESK_PATH" ] && [ ! -e "$CONSOLE_PATH" ] && [ ! -e "$MANAGER_COMMAND" ] && [ ! -L "$CLI_COMMAND" ] \
+        || fail "--purge left $(ls -d "$RUSTDESK_PATH" "$CONSOLE_PATH" "$MANAGER_COMMAND" "$CLI_COMMAND" 2>/dev/null | tr '\n' ' ')"
+    mkdir -p "$RUSTDESK_PATH" "$CONSOLE_PATH"
+    printf '#!/bin/sh\necho mine\n' > "$CLI_COMMAND"
+    do_uninstall >/dev/null 2>&1
+    grep -qx 'echo mine' "$CLI_COMMAND" || fail "--purge removed a neodesk of someone else"
     rm -rf "$TEST_DIR"
 )
 
@@ -1306,6 +1394,8 @@ test_releases_come_from_the_fork
 test_update_keeps_the_admins_ports
 test_channel_and_download_errors
 test_one_command_install
+test_install_places_neodesk_setup_and_the_command_line
+test_update_moves_the_old_manager
 test_runs_without_term
 test_apt_source_failure_goes_on
 test_backup_uses_the_servers_backup
