@@ -41,7 +41,7 @@ func pgTestDSN(t *testing.T, dbname string, params map[string]string) string {
 func pgFreshDatabase(t *testing.T) string {
 	t.Helper()
 	admin := pgTestDSN(t, "", nil)
-	name := fmt.Sprintf("bdgo_fresh_%d", time.Now().UnixNano())
+	name := fmt.Sprintf("ndgo_fresh_%d", time.Now().UnixNano())
 	ctx := context.Background()
 	conn, err := pgx.Connect(ctx, admin)
 	if err != nil {

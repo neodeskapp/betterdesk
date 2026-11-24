@@ -16,9 +16,9 @@ Dependencies live in a Docker volume, not on the host. From the repo root:
 
 ```sh
 # install (once, or after package.json changes)
-docker run --rm -v "$PWD/web-ui:/w" -v bd-webui-nm:/w/node_modules -w /w node:22-bookworm npx -y npm@11.6.2 ci
+docker run --rm -v "$PWD/web-ui:/w" -v nd-webui-nm:/w/node_modules -w /w node:22-bookworm npx -y npm@11.6.2 ci
 # any script
-docker run --rm -v "$PWD/web-ui:/w" -v bd-webui-nm:/w/node_modules -w /w node:22-bookworm npm run <script>
+docker run --rm -v "$PWD/web-ui:/w" -v nd-webui-nm:/w/node_modules -w /w node:22-bookworm npm run <script>
 ```
 
 Scripts: `build`, `check` (svelte-check, fails on warnings), `lint`

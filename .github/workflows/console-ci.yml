@@ -177,9 +177,9 @@ jobs:
       - name: Check ${{ matrix.part.name }}
         working-directory: neodesk-server/console/contract
         run: |
-          export ND_URL="http://bdgo-$INSTANCE:5000"
-          export ND_PASSWORD_FILE="$RUNNER_TEMP/bdgo-$INSTANCE/secrets/e2e_password"
-          export ND_SECRETS_DIR="$RUNNER_TEMP/bdgo-$INSTANCE/secrets"
+          export ND_URL="http://ndgo-$INSTANCE:5000"
+          export ND_PASSWORD_FILE="$RUNNER_TEMP/ndgo-$INSTANCE/secrets/e2e_password"
+          export ND_SECRETS_DIR="$RUNNER_TEMP/ndgo-$INSTANCE/secrets"
           args=(-run "$RUN")
           [ -z "$SKIP" ] || args+=(-skip "$SKIP")
           go test -tags contract -count=1 -timeout 25m "${args[@]}"
@@ -259,8 +259,8 @@ jobs:
         env:
           SHARD: ${{ matrix.shard }}
         run: |
-          export ND_URL=http://bdgo-e2e:5000
-          export E2E_PASSWORD_FILE="$RUNNER_TEMP/bdgo-e2e/secrets/e2e_password"
+          export ND_URL=http://ndgo-e2e:5000
+          export E2E_PASSWORD_FILE="$RUNNER_TEMP/ndgo-e2e/secrets/e2e_password"
           npx playwright test --shard="$SHARD/6"
 
       - name: Logs of the test instance
@@ -322,8 +322,8 @@ jobs:
         env:
           BROWSER: ${{ matrix.browser }}
         run: |
-          export ND_URL=http://bdgo-fresh:5000 ND_FRESH=1
-          export ADMIN_PASSWORD_FILE="$RUNNER_TEMP/bdgo-fresh/secrets/admin_password"
+          export ND_URL=http://ndgo-fresh:5000 ND_FRESH=1
+          export ADMIN_PASSWORD_FILE="$RUNNER_TEMP/ndgo-fresh/secrets/admin_password"
           npx playwright test --project="$BROWSER" e2e/setup-guide.spec.ts
 
       - name: Logs of the test instance

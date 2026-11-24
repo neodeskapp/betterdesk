@@ -34,7 +34,7 @@ func eachDatabase(t *testing.T, test func(t *testing.T, database db.Database)) {
 			t.Skip("NEODESK_TEST_POSTGRES_DSN is not set")
 		}
 		ctx := context.Background()
-		name := fmt.Sprintf("bdgo_billing_%d", time.Now().UnixNano())
+		name := fmt.Sprintf("ndgo_billing_%d", time.Now().UnixNano())
 		admin, err := pgx.Connect(ctx, dsn)
 		if err != nil {
 			t.Fatal(err)
