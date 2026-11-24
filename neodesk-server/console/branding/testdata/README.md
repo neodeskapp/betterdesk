@@ -29,6 +29,9 @@ Each recording worked on a copy of the console's code in a temporary
 folder, because the font service and the upload routes write below their
 own folder. For the file recording the database was a table in memory and
 `https.get` answered from a list. The generators were seeded.
+`pure.json.gz` and the two store recordings were made from a copy of the
+old console in which the old project's names were replaced by NeoDesk's,
+so their texts and hashes hold NeoDesk's names.
 
 A call is `{a: [arguments], r: "<JSON text of the answer>"}`, with
 `{u: true}` for undefined and `{e: message, n: error name}` for a throw.

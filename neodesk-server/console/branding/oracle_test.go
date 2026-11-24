@@ -12,8 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/neodeskapp/neodesk/neodesk-server/internal/upstreamname"
 )
 
 // The tests in this file replay vectors recorded from the console's Node
@@ -119,20 +117,9 @@ func sha256Hex(text string) string {
 func sameOutcome(got string, vector any) (want string, same bool) {
 	want, hashed := expected(vector)
 	if hashed {
-		return "sha256 " + want, sameHash(got, want)
+		return "sha256 " + want, sha256Hex(got) == want
 	}
 	return want, got == want
-}
-
-// sameHash reports whether got is the answer Node hashed to want. Node
-// hashed the answers that hold the product's name with upstream's names
-// (internal/upstreamname); Go's own answer must then name nothing of
-// upstream.
-func sameHash(got, want string) bool {
-	if sha256Hex(got) == want {
-		return true
-	}
-	return !upstreamname.Holds(got) && sha256Hex(upstreamname.Names(got)) == want
 }
 
 func clip(s string) string {

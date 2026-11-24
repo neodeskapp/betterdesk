@@ -15,7 +15,6 @@ import (
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
-	"github.com/neodeskapp/neodesk/neodesk-server/internal/upstreamname"
 )
 
 // The scenario recorded in testdata/store_*.json.gz is replayed step
@@ -69,7 +68,7 @@ func sameText(got string, recorded any) (want string, same bool) {
 	case string:
 		return r, got == r
 	case *Object:
-		return "sha256 " + r.Text("sha256"), sameHash(got, r.Text("sha256"))
+		return "sha256 " + r.Text("sha256"), sha256Hex(got) == r.Text("sha256")
 	}
 	return "<nothing recorded>", false
 }
@@ -252,7 +251,7 @@ func TestOracleStore(t *testing.T) {
 			}, "\n")
 			switch recorded := property(state, "derived").(type) {
 			case string:
-				if !sameHash(derived, recorded) {
+				if sha256Hex(derived) != recorded {
 					differ("derived (appearance, readability, public, export, favicon)", derived, "sha256 "+recorded)
 				}
 			case []any:
@@ -357,13 +356,8 @@ func profileRows(t testing.TB, ctx context.Context, db *store.DB, skip map[int64
 			}
 		}
 		var storedData any = maskRevision(data)
-		// Node recorded a long profile by its length and hash, with
-		// upstream's names (sameHash)
-		if upstream := upstreamname.Names(maskRevision(data)); len(units(upstream)) > 200 {
-			if upstreamname.Holds(data) {
-				t.Errorf("profile %d names upstream: %.200s", id, data)
-			}
-			storedData = object("len", float64(len(units(upstream))), "sha256", sha256Hex(upstream))
+		if len(units(storedData.(string))) > 200 {
+			storedData = object("len", float64(len(units(maskRevision(data)))), "sha256", sha256Hex(maskRevision(data)))
 		}
 		out = append(out, object(
 			"id", float64(id), "name", name, "description", description, "is_active", active,
