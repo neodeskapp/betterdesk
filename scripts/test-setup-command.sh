@@ -5,7 +5,9 @@
 # fresh install with the server built from this checkout, the installer's
 # options and a bare `sudo neodesk` through the new name, an update by
 # neodesk-setup, the update of an install whose /usr/local/sbin/neodesk is
-# the old manager (3.6.0-rc.4), and the uninstall.
+# the old manager (3.6.0-rc.4), and the uninstall. The backups go to
+# /opt/neodesk-backups, and the old manager's backups in
+# /opt/rustdesk-backups move there (L446).
 #
 # It installs NeoDesk on this machine and removes it again, so it runs as
 # root on a machine that can be thrown away (CI, a sandbox), with systemd
@@ -23,6 +25,8 @@ SETUP=/usr/local/sbin/neodesk-setup
 CLI=/usr/local/bin/neodesk
 OLD=/usr/local/sbin/neodesk
 BIN=/opt/neodesk/neodesk-server
+BACKUPS=/opt/neodesk-backups
+OLD_BACKUPS=/opt/rustdesk-backups
 OLD_MANAGER_URL=https://raw.githubusercontent.com/neodeskapp/neodesk/v3.6.0-rc.4/neodesk.sh
 
 fail() {
@@ -32,7 +36,7 @@ fail() {
 
 [ "$(id -u)" = 0 ] || fail "run this as root, on a machine that can be thrown away"
 [ -d /run/systemd/system ] || fail "this needs systemd"
-if [ -e "$BIN" ] || [ -e "$SETUP" ] || [ -e "$OLD" ]; then
+if [ -e "$BIN" ] || [ -e "$SETUP" ] || [ -e "$OLD" ] || [ -e "$BACKUPS" ] || [ -e "$OLD_BACKUPS" ]; then
     fail "NeoDesk is installed here already; this test needs a machine without it"
 fi
 
@@ -134,6 +138,8 @@ ran_cleanly "neodesk --update" "$WORK/update.log"
 grep -qE 'neodesk-server is up to date|Updated to' "$WORK/update.log" || fail "the update did not finish: $(tail -n 20 "$WORK/update.log")"
 [ "$(stat -c %i "$SETUP")" != "$inode" ] || fail "neodesk-setup was written over while it ran"
 new_layout "after neodesk --update" "$WORK/newest.sh"
+ls "$BACKUPS"/neodesk_backup_*.tar.gz >/dev/null 2>&1 || fail "the update left no backup in $BACKUPS"
+[ ! -e "$OLD_BACKUPS" ] || fail "$OLD_BACKUPS is there after a fresh install and an update"
 
 echo "== update of an install with the old manager (3.6.0-rc.4)"
 rm -f "$SETUP" "$CLI"
@@ -145,6 +151,8 @@ neodesk --update --binary "$WORK/neodesk-server" < /dev/null > "$WORK/old-update
 ran_cleanly "the old manager's update" "$WORK/old-update.log"
 grep -qE 'neodesk-server is up to date|Updated to' "$WORK/old-update.log" || fail "the old manager's update did not finish"
 cmp -s "$OLD" "$WORK/newest.sh" || fail "the old manager did not save the newest installer"
+old_backup=$(ls -1t "$OLD_BACKUPS"/neodesk_backup_*.tar.gz 2>/dev/null | head -n 1)
+[ -n "$old_backup" ] || fail "the old manager made no backup in $OLD_BACKUPS"
 # The newest installer at the old place moves itself at its first run and
 # hands the call on: the installer's option to neodesk-setup
 hash -r
@@ -152,6 +160,10 @@ out=$(neodesk --check-permissions < /dev/null 2>&1) || fail "neodesk --check-per
 case "$out" in *"management capabilities are ready"*) ;; *) fail "the first call after the old manager's update: $out" ;; esac
 hash -r
 new_layout "after the first call" "$WORK/newest.sh"
+# The old manager's backups moved, and their old path still reads
+[ "$(readlink "$OLD_BACKUPS")" = "$BACKUPS" ] || fail "$OLD_BACKUPS is no link to $BACKUPS: $(ls -ld "$OLD_BACKUPS" 2>&1)"
+[ -f "$BACKUPS/$(basename "$old_backup")" ] || fail "the old manager's backup did not move to $BACKUPS"
+tar -tzf "$old_backup" >/dev/null || fail "the old manager's backup cannot be read at its old path"
 # The command line's own calls work from then on
 out=$(neodesk --version 2>&1) || fail "neodesk --version after the move: $out"
 case "$out" in "neodesk "*) ;; *) fail "neodesk --version after the move: $out" ;; esac

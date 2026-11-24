@@ -32,9 +32,13 @@ echo "  Web console:  port ${CONSOLE_PORT:-5000}"
 echo "  DATA_DIR:     ${DATA_DIR:-/app/data}"
 echo ""
 
+# The data volume: the server's keys, its SQLite database and the files
+# below. /opt/rustdesk, its place up to 3.6.0-rc.4, is a link to it.
+DATA_PATH=/opt/neodesk/data
+
 # Ensure data directories exist and have correct permissions
-mkdir -p /opt/rustdesk /app/data 2>/dev/null || true
-chown -R neodesk:neodesk /opt/rustdesk /app/data 2>/dev/null || true
+mkdir -p "$DATA_PATH" /app/data 2>/dev/null || true
+chown -R neodesk:neodesk "$DATA_PATH" /app/data 2>/dev/null || true
 
 # Shared bootstrap password of the admin account.
 # shellcheck source=/docker/bootstrap-admin-credentials.sh
@@ -50,7 +54,7 @@ write_as_neodesk() {
 }
 
 # API key of the server's API
-API_KEY_FILE="/opt/rustdesk/.api_key"
+API_KEY_FILE="$DATA_PATH/.api_key"
 if [ -z "${API_KEY:-}" ] && ! file_exists_as_neodesk "$API_KEY_FILE"; then
     API_KEY=$(openssl rand -hex 32)
     write_as_neodesk "$API_KEY_FILE" "$API_KEY"
@@ -63,7 +67,7 @@ fi
 # Key of the vault that holds the passwords of RDP and VNC targets: made at
 # the first start and kept in the data volume, unless REMOTE_TARGET_VAULT_KEY
 # is set
-VAULT_KEY_FILE="/opt/rustdesk/.remote_target_vault_key"
+VAULT_KEY_FILE="$DATA_PATH/.remote_target_vault_key"
 if [ -z "${REMOTE_TARGET_VAULT_KEY:-}" ]; then
     if ! file_exists_as_neodesk "$VAULT_KEY_FILE"; then
         write_as_neodesk "$VAULT_KEY_FILE" "$(openssl rand -hex 32)"
@@ -83,10 +87,10 @@ export REMOTE_TARGET_VAULT_KEY
 # and persisted in the database). A volume that already contains a server key
 # or SQLite database is treated as pre-existing.
 if [ -z "${ENROLLMENT_MODE:-}" ]; then
-    ENROLLMENT_SENTINEL="/opt/rustdesk/.enrollment_initialized"
+    ENROLLMENT_SENTINEL="$DATA_PATH/.enrollment_initialized"
     if ! file_exists_as_neodesk "$ENROLLMENT_SENTINEL"; then
-        if file_exists_as_neodesk /opt/rustdesk/db_v2.sqlite3 \
-            || file_exists_as_neodesk /opt/rustdesk/id_ed25519; then
+        if file_exists_as_neodesk "$DATA_PATH/db_v2.sqlite3" \
+            || file_exists_as_neodesk "$DATA_PATH/id_ed25519"; then
             echo "Enrollment:   preserving existing policy (pre-existing volume)"
         else
             export ENROLLMENT_MODE="managed"
@@ -99,20 +103,20 @@ fi
 # Verify write access — SQLite WAL mode requires writable directory
 _app_uid="${PUID:-10001}"
 _app_gid="${PGID:-10001}"
-if ! su-exec neodesk touch /opt/rustdesk/.write_test 2>/dev/null; then
+if ! su-exec neodesk touch "$DATA_PATH/.write_test" 2>/dev/null; then
     echo ""
-    echo "ERROR: /opt/rustdesk is NOT writable by the neodesk user (UID ${_app_uid})."
+    echo "ERROR: $DATA_PATH is NOT writable by the neodesk user (UID ${_app_uid})."
     echo "  SQLite WAL mode requires write access to the database directory."
     echo "  If using bind mounts, either set PUID/PGID to the host owner, or run:"
     echo "    chown -R ${_app_uid}:${_app_gid} /path/to/your/data"
     echo "  Or use Docker named volumes instead of bind mounts."
     echo ""
 fi
-rm -f /opt/rustdesk/.write_test 2>/dev/null || true
+rm -f "$DATA_PATH/.write_test" 2>/dev/null || true
 # Fix private key permissions (volume mounts may preserve wrong UID/mode)
-if file_exists_as_neodesk /opt/rustdesk/id_ed25519; then
-    chmod 600 /opt/rustdesk/id_ed25519 2>/dev/null || true
-    chown neodesk:neodesk /opt/rustdesk/id_ed25519 2>/dev/null || true
+if file_exists_as_neodesk "$DATA_PATH/id_ed25519"; then
+    chmod 600 "$DATA_PATH/id_ed25519" 2>/dev/null || true
+    chown neodesk:neodesk "$DATA_PATH/id_ed25519" 2>/dev/null || true
 fi
 
 # Warn about weak default secrets
@@ -137,10 +141,10 @@ if [ "${DB_TYPE:-}" = "postgres" ] || [ "${DB_TYPE:-}" = "postgresql" ]; then
         echo "Database:     PostgreSQL ($(dsn_for_log "$DATABASE_URL"))"
     else
         echo "WARNING: DB_TYPE=postgres but DATABASE_URL not set — falling back to SQLite"
-        export DB_URL="/opt/rustdesk/db_v2.sqlite3"
+        export DB_URL="$DATA_PATH/db_v2.sqlite3"
     fi
 else
-    export DB_URL="${DB_PATH:-/opt/rustdesk/db_v2.sqlite3}"
+    export DB_URL="${DB_PATH:-$DATA_PATH/db_v2.sqlite3}"
     export AUTH_DB_PATH="${AUTH_DB_PATH:-/app/data/auth.db}"
     echo "Database:     SQLite ($(dsn_for_log "$DB_URL"))"
 fi

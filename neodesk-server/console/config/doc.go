@@ -68,8 +68,8 @@
 //	RUSTDESK_API_TLS         auto                  Off or http: the client API port stays on plain HTTP. Any other
 //	                                               value: TLS when the certificate loads, whatever HTTPS_ENABLED says.
 //	KEYS_PATH                (searched)            Folder the server writes its keys to. Else RUSTDESK_DIR, else
-//	(or RUSTDESK_DIR,                              RUSTDESK_PATH, else /opt/rustdesk in a container, else the first of
-//	RUSTDESK_PATH)                                 /opt/neodesk and /opt/rustdesk that has id_ed25519 (C:\NeoDesk
+//	(or RUSTDESK_DIR,                              RUSTDESK_PATH, else /opt/neodesk/data in a container, else the first
+//	RUSTDESK_PATH)                                 of /opt/neodesk and /opt/rustdesk that has id_ed25519 (C:\NeoDesk
 //	                                               and C:\RustDesk on Windows), else the first of the two.
 //	PUB_KEY_PATH             KEYS_PATH/id_ed25519.pub  The server's public key file.
 //	API_KEY_PATH             KEYS_PATH/.api_key    The API key file.

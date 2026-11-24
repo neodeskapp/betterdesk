@@ -82,13 +82,18 @@ RUN chmod +x /usr/local/bin/neodesk-server \
     && ln -s neodesk-server /usr/local/bin/neodesk
 
 # Create data directory before writing build metadata into it
-RUN mkdir -p /opt/rustdesk && chown neodesk:neodesk /opt/rustdesk
+# The data volume is mounted at /opt/neodesk/data. /opt/rustdesk, where
+# images up to 3.6.0-rc.4 kept it, is a link to it: compose files, settings
+# and paths saved before the rename still reach the same files, and Docker
+# follows the link when an older compose file mounts the volume there.
+RUN mkdir -p /opt/neodesk/data && chown neodesk:neodesk /opt/neodesk/data \
+    && ln -s /opt/neodesk/data /opt/rustdesk
 
 ARG NEODESK_COMMIT_SHA=unknown
 ARG NEODESK_IMAGE_VERSION=unknown
 ENV NEODESK_IMAGE_SHA=${NEODESK_COMMIT_SHA}
 ENV NEODESK_IMAGE_VERSION=${NEODESK_IMAGE_VERSION}
-RUN printf '%s\n' "${NEODESK_COMMIT_SHA}" > /opt/rustdesk/.image-commit
+RUN printf '%s\n' "${NEODESK_COMMIT_SHA}" > /opt/neodesk/data/.image-commit
 
 # Entrypoint script: fixes volume permissions, then drops to neodesk user
 COPY docker/ensure-app-user.sh /ensure-app-user.sh
@@ -98,7 +103,7 @@ COPY docker/show-admin-credentials.sh /usr/local/bin/neodesk-show-admin-credenti
 COPY docker/healthcheck.sh /usr/local/bin/neodesk-healthcheck
 RUN chmod +x /ensure-app-user.sh /server-entrypoint.sh /docker/bootstrap-admin-credentials.sh /usr/local/bin/neodesk-show-admin-credentials /usr/local/bin/neodesk-healthcheck
 
-WORKDIR /opt/rustdesk
+WORKDIR /opt/neodesk/data
 
 # Server only: the console in this binary is on by default (DECISIONS A27)
 # and stays off in this image; the neodesk image runs both in one process
@@ -122,4 +127,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
 # server-entrypoint.sh drops to neodesk user via su-exec before running the server.
 
 ENTRYPOINT ["/sbin/tini", "--", "/server-entrypoint.sh"]
-CMD ["/usr/local/bin/neodesk-server", "-mode", "all", "-api-port", "21121", "-key-file", "/opt/rustdesk/id_ed25519"]
+CMD ["/usr/local/bin/neodesk-server", "-mode", "all", "-api-port", "21121", "-key-file", "/opt/neodesk/data/id_ed25519"]

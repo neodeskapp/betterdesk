@@ -246,7 +246,7 @@ every KEY=value reaches the server), <folder>/backups.
 HTTPS for the console: --domain and --email (Traefik with Let's Encrypt), a
 reverse proxy of your own with TLS in front (TRUST_PROXY=1 in .env), or
 HTTPS_ENABLED=true with SSL_CERT_PATH and SSL_KEY_PATH naming
-files in the data volume (/opt/rustdesk/...); the console then answers on
+files in the data volume (/opt/neodesk/data/...); the console then answers on
 port 5443.
 Logs: cd <folder> && docker compose logs -f neodesk
 EOF
@@ -766,6 +766,22 @@ pull_image() {
     fi
 }
 
+# set_data_path: where the compose file mounts the data volume for the
+# image to run. An image of this release keeps its data in
+# /opt/neodesk/data, the compose file's default; one from before the
+# rename keeps it in /opt/rustdesk (its RUSTDESK_PATH), and .env says so
+# with NEODESK_DATA_PATH.
+set_data_path() {
+    local path
+    path=$(docker image inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "$(image_ref)" 2>/dev/null \
+        | sed -n 's/^RUSTDESK_PATH=//p' | head -n 1)
+    if [ "$path" = /opt/rustdesk ]; then
+        env_set NEODESK_DATA_PATH /opt/rustdesk
+    else
+        env_unset NEODESK_DATA_PATH
+    fi
+}
+
 build_image() {
     [ -f "$SCRIPT_DIR/Dockerfile" ] && [ -d "$SCRIPT_DIR/neodesk-server" ] \
         || die "--build needs a checkout of the repository next to this script." \
@@ -1085,6 +1101,7 @@ do_install() {
     fi
     write_compose_file
     pull_image
+    set_data_path
     if [ "$state" = foreign ]; then
         adopt_old_install
     fi
@@ -1123,6 +1140,7 @@ do_update() {
     write_settings
     write_compose_file
     pull_image
+    set_data_path
     new_image=$(image_id "$(image_ref)")
     applied=$(cat "$NEODESK_DIR/.applied.sha256" 2>/dev/null || true)
     if [ -n "$old_image" ] && [ "$old_image" = "$new_image" ] && [ "$applied" = "$(settings_fingerprint)" ] \
@@ -1186,12 +1204,12 @@ do_update() {
 # first_password: the admin's generated first password from the volume,
 # empty when there is none
 first_password() {
-    docker exec -u neodesk "$CONTAINER" sh -c 'cat /opt/rustdesk/.admin_credentials 2>/dev/null' 2>/dev/null \
+    docker exec -u neodesk "$CONTAINER" sh -c 'cat "${RUSTDESK_PATH:-/opt/neodesk/data}/.admin_credentials" 2>/dev/null' 2>/dev/null \
         | sed -n 's/^Admin Password:[[:space:]]*//p' | head -n 1 || true
 }
 
 public_key() {
-    docker exec "$CONTAINER" sh -c 'cat /opt/rustdesk/id_ed25519.pub 2>/dev/null' 2>/dev/null | tr -d '\r\n' || true
+    docker exec "$CONTAINER" sh -c 'cat "${RUSTDESK_PATH:-/opt/neodesk/data}/id_ed25519.pub" 2>/dev/null' 2>/dev/null | tr -d '\r\n' || true
 }
 
 # print_summary [first]: where the console is, how to sign in (the first
@@ -1239,7 +1257,7 @@ print_summary() {
     say "  ID server:     ${addr}"
     say "  Relay server:  ${addr}"
     say "  API server:    http://${addr}:21121"
-    say "  Key:           ${key:-not made yet; later: docker exec neodesk cat /opt/rustdesk/id_ed25519.pub}"
+    say "  Key:           ${key:-not made yet; later: docker exec neodesk cat /opt/neodesk/data/id_ed25519.pub}"
     say ""
     if [ -n "$domain" ]; then
         say "Ports to open in a firewall in front of this machine: TCP 80, 443, 21115-21119, 21121, 21122 and UDP 21116"
@@ -1302,6 +1320,9 @@ adopt_old_install() {
             [ -z "$relay" ] || env_set RELAY_SERVERS "$relay"
         fi
         docker stop -t 30 "$c" >/dev/null 2>&1 || true
+        # The data at /opt/neodesk/data, or at /opt/rustdesk in a container
+        # of an image from before the rename
+        copy_mount "$c" /opt/neodesk/data "$DATA_VOLUME"
         copy_mount "$c" /opt/rustdesk "$DATA_VOLUME"
         copy_mount "$c" /app/data "$CONSOLE_VOLUME"
         docker rename "$c" "$c-old-$stamp" >/dev/null
@@ -1583,7 +1604,7 @@ do_postgres() {
     # The address reaches the tool through the container's environment,
     # not its arguments on this machine
     if ! out=$(DATABASE_URL="$(postgres_url "$pass")" compose run --rm --no-deps -T --user "${uid:-10001}:${gid:-10001}" \
-        --entrypoint sh neodesk -c "exec $MIGRATE_TOOL -mode sqlite2pg -src /opt/rustdesk/db_v2.sqlite3 -dst \"\$DATABASE_URL\"" 2>&1); then
+        --entrypoint sh neodesk -c "exec $MIGRATE_TOOL -mode sqlite2pg -src \"\$DB_PATH\" -dst \"\$DATABASE_URL\"" 2>&1); then
         printf '%s\n' "$out" >&2
         back_to_sqlite "The move failed (output above); the install stays on SQLite and nothing of it changed." \
             "Run it again after the cause is fixed: sudo bash neodesk-docker.sh postgres --overwrite-postgres"

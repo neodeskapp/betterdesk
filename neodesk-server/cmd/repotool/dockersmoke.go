@@ -188,9 +188,9 @@ func (s *smoke) run(o smokeOptions) (err error) {
 		"SERVER_BACKEND=neodesk",
 		"NEODESK_API_URL=http://127.0.0.1:21121/api",
 		"HBBS_API_URL=http://127.0.0.1:21121/api",
-		"RUSTDESK_PATH=/opt/rustdesk",
+		"RUSTDESK_PATH=/opt/neodesk/data",
 		"DATA_DIR=/app/data",
-		"DB_PATH=/opt/rustdesk/db_v2.sqlite3",
+		"DB_PATH=/opt/neodesk/data/db_v2.sqlite3",
 		"AUTH_DB_PATH=/app/data/auth.db",
 		"ADMIN_PASSWORD=" + smokePassword,
 		"INIT_ADMIN_USER=admin",
@@ -235,7 +235,7 @@ func (s *smoke) run(o smokeOptions) (err error) {
 		"--label", "com.neodesk.local-gate=true",
 		"--publish", "127.0.0.1::5000",
 		"--publish", "127.0.0.1::21121",
-		"--volume", dataVolume + ":/opt/rustdesk",
+		"--volume", dataVolume + ":/opt/neodesk/data",
 		"--volume", consoleVolume + ":/app/data",
 		"--add-host", "host.docker.internal:host-gateway",
 	}
@@ -306,7 +306,7 @@ func (s *smoke) run(o smokeOptions) (err error) {
 }
 
 func (s *smoke) apiKey(container string) (string, error) {
-	r, err := s.mustDocker("exec", container, "sh", "-c", "cat /opt/rustdesk/.api_key")
+	r, err := s.mustDocker("exec", container, "sh", "-c", "cat /opt/neodesk/data/.api_key")
 	return strings.TrimSpace(r.stdout), err
 }
 

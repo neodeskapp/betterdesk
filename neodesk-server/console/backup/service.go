@@ -515,7 +515,7 @@ func recoveryReadme(m Manifest) string {
 		"     goserver/.api_key       -> <keysPath>/.api_key",
 		"     goserver/mesh_agent_server.pem -> <keysPath>/mesh_agent_server.pem",
 		"     goserver/db_v2.sqlite3  -> DB_PATH (SQLite only)",
-		"On Docker <dataDir> and <keysPath> are /app/data and /opt/rustdesk.",
+		"On Docker <dataDir> and <keysPath> are /app/data and /opt/neodesk/data.",
 		"With PostgreSQL the dump in console/data.json goes back only through",
 		"the console's Restore.",
 		"",

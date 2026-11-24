@@ -139,6 +139,26 @@ STUB
     done
 )
 
+# L446: the images keep their data in /opt/neodesk/data, and /opt/rustdesk
+# is a link to it, so compose files, settings and stored paths from before
+# the rename still reach the data. The entrypoints and the image's helper
+# scripts use the new folder.
+test_images_keep_their_data_in_the_neodesk_folder() (
+    local df f
+    for df in Dockerfile Dockerfile.server; do
+        grep -q 'ln -s /opt/neodesk/data /opt/rustdesk' "$SCRIPT_ROOT/$df" || fail "$df has no link from /opt/rustdesk to /opt/neodesk/data"
+        grep -qx 'WORKDIR /opt/neodesk/data' "$SCRIPT_ROOT/$df" || fail "$df does not work in /opt/neodesk/data"
+        grep -qF '"-key-file", "/opt/neodesk/data/id_ed25519"' "$SCRIPT_ROOT/$df" || fail "$df's server reads its key elsewhere"
+        if grep -nE '^[^#]*/opt/rustdesk' "$SCRIPT_ROOT/$df" | grep -v 'ln -s /opt/neodesk/data /opt/rustdesk'; then
+            fail "$df uses /opt/rustdesk"
+        fi
+    done
+    grep -q '^    RUSTDESK_PATH=/opt/neodesk/data \\$' "$SCRIPT_ROOT/Dockerfile" || fail "the image's RUSTDESK_PATH is not /opt/neodesk/data"
+    for f in docker/entrypoint.sh docker/server-entrypoint.sh docker/bootstrap-admin-credentials.sh docker/show-admin-credentials.sh; do
+        if grep -nE '^[^#]*/opt/rustdesk' "$SCRIPT_ROOT/$f"; then fail "$f uses /opt/rustdesk"; fi
+    done
+)
+
 # L82: the images' binary knows its version, build date and commit: the
 # Dockerfiles pass all three to the linker (the version from VERSION and
 # the date of the build when no build argument names them), and the compose
@@ -184,7 +204,8 @@ test_bootstrap_keeps_a_replaced_first_password_away() (
 # container's own network (the server only talks to guacd on loopback).
 test_remote_targets_work_out_of_the_box() (
     local ep="$SCRIPT_ROOT/docker/entrypoint.sh" quick="$SCRIPT_ROOT/docker-compose.quick.single.yml"
-    grep -q 'VAULT_KEY_FILE="/opt/rustdesk/.remote_target_vault_key"' "$ep" || fail "the entrypoint keeps no vault key in the volume"
+    grep -q 'VAULT_KEY_FILE="$DATA_PATH/.remote_target_vault_key"' "$ep" || fail "the entrypoint keeps no vault key in the volume"
+    grep -q '^DATA_PATH=/opt/neodesk/data$' "$ep" || fail "the entrypoint's data volume is not /opt/neodesk/data"
     grep -q 'export REMOTE_TARGET_VAULT_KEY' "$ep" || fail "the entrypoint does not pass the vault key to the server"
     if grep -nE '^[^#]*echo.*\$\{?REMOTE_TARGET_VAULT_KEY' "$ep"; then fail "the entrypoint prints the vault key"; fi
     sed -n '/^  guacd:/,/^  [a-z]/p' "$quick" | grep -q 'network_mode: "service:neodesk"' || fail "guacd does not share the container's network"
@@ -233,6 +254,7 @@ test_cdap_port_is_published
 test_compose_reads_env_file
 test_healthcheck_follows_tls
 test_image_binary_knows_its_build
+test_images_keep_their_data_in_the_neodesk_folder
 test_credentials_hint_names_the_service
 test_bootstrap_keeps_a_replaced_first_password_away
 test_remote_targets_work_out_of_the_box

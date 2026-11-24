@@ -7,7 +7,7 @@ set -e
 . /ensure-app-user.sh
 ensure_neodesk_user
 
-DATA_DIR="/opt/rustdesk"
+DATA_DIR="/opt/neodesk/data"
 
 # Normalize the Go database path before credential bootstrap and startup.
 # Split Compose files should set DB_URL explicitly, but custom deployments may

@@ -32,7 +32,9 @@
 #
 # Image: ghcr.io/neodeskapp/neodesk with the tag "latest", the newest
 # release. Update: docker compose pull && docker compose up -d
-# Pin a release: NEODESK_IMAGE_TAG=<version> in .env.
+# Pin a release: NEODESK_IMAGE_TAG=<version> in .env. An image of
+# 3.6.0-rc.4 or older keeps its data in /opt/rustdesk: pinned to one, also
+# NEODESK_DATA_PATH=/opt/rustdesk in .env.
 # =============================================================================
 
 services:
@@ -41,7 +43,7 @@ services:
     container_name: neodesk
     hostname: neodesk
     volumes:
-      - neodesk-data:/opt/rustdesk
+      - neodesk-data:${NEODESK_DATA_PATH:-/opt/neodesk/data}
       - console-data:/app/data
     # Every KEY=value of .env next to this file reaches the server; the
     # entries under environment below win over it.
@@ -60,7 +62,7 @@ services:
       - SERVER_BACKEND=neodesk
       - HBBS_API_URL=http://127.0.0.1:21121/api
       - NEODESK_API_URL=http://127.0.0.1:21121/api
-      - RUSTDESK_PATH=/opt/rustdesk
+      - RUSTDESK_PATH=${NEODESK_DATA_PATH:-/opt/neodesk/data}
       - DATA_DIR=/app/data
       - NEODESK_CLIENT_REPO=${NEODESK_CLIENT_REPO:-neodeskapp/neodesk-client}
       - NEODESK_CLIENT_RELEASE_TAG=${NEODESK_CLIENT_RELEASE_TAG:-}
@@ -70,9 +72,9 @@ services:
       - AGENT_BUILD_WORKER=${AGENT_BUILD_WORKER:-on}
       - AGENT_BUILD_POLL_MS=${AGENT_BUILD_POLL_MS:-5000}
       - AGENT_BUILD_COOLDOWN_MS=${AGENT_BUILD_COOLDOWN_MS:-1000}
-      - DB_PATH=/opt/rustdesk/db_v2.sqlite3
-      - PUB_KEY_PATH=/opt/rustdesk/id_ed25519.pub
-      - API_KEY_PATH=/opt/rustdesk/.api_key
+      - DB_PATH=${NEODESK_DATA_PATH:-/opt/neodesk/data}/db_v2.sqlite3
+      - PUB_KEY_PATH=${NEODESK_DATA_PATH:-/opt/neodesk/data}/id_ed25519.pub
+      - API_KEY_PATH=${NEODESK_DATA_PATH:-/opt/neodesk/data}/.api_key
       - DOCKER=true
       # Optional: map neodesk to host bind-mount owner (Synology etc.). Default 10001.
       - PUID=${PUID:-10001}

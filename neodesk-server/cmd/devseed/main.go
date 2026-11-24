@@ -28,7 +28,7 @@
 // The database is the one the server uses: --go-db (a file or a
 // postgres:// address), else DB_URL or DATABASE_URL when DB_TYPE is
 // postgres (or DATABASE_URL is a PostgreSQL address and DB_TYPE is unset),
-// else DB_PATH, else /opt/rustdesk/db_v2.sqlite3.
+// else DB_PATH, else /opt/neodesk/data/db_v2.sqlite3.
 //
 // demo: devices, help requests, pending enrollments, tickets, chat,
 // inventory, activity, billing sessions and device history go straight
@@ -229,7 +229,7 @@ func databaseFrom(flag string, getenv func(string) string) string {
 	if p := getenv("DB_PATH"); p != "" {
 		return p
 	}
-	return "/opt/rustdesk/db_v2.sqlite3"
+	return "/opt/neodesk/data/db_v2.sqlite3"
 }
 
 // database is an open console database.

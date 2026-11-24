@@ -363,6 +363,7 @@ func findDataDir(getenv func(string) string, opts resetOptions) string {
 		`C:\NeoDesk\NeoDeskConsole\data`,
 		`C:\NeoDesk\data`,
 		"/opt/NeoDeskConsole/data",
+		"/opt/neodesk/data",
 		"/opt/rustdesk",
 		"/var/lib/rustdesk",
 		`C:\RustDesk`,

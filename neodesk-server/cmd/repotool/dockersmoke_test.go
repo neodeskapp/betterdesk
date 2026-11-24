@@ -108,7 +108,7 @@ func (d *fakeDocker) run(args ...string) dockerResult {
 	switch {
 	case args[0] == "port":
 		return dockerResult{stdout: "127.0.0.1:" + d.port + "\n"}
-	case strings.HasSuffix(call, "cat /opt/rustdesk/.api_key"):
+	case strings.HasSuffix(call, "cat /opt/neodesk/data/.api_key"):
 		key := d.keys[0]
 		d.keys = d.keys[1:]
 		return dockerResult{stdout: key + "\n"}
@@ -167,12 +167,12 @@ func TestDockerSmokeRun(t *testing.T) {
 		"run ...",
 		"port neodesk-local-gate-1-2 5000/tcp",
 		"port neodesk-local-gate-1-2 21121/tcp",
-		"exec neodesk-local-gate-1-2 sh -c cat /opt/rustdesk/.api_key",
+		"exec neodesk-local-gate-1-2 sh -c cat /opt/neodesk/data/.api_key",
 		"exec -u neodesk neodesk-local-gate-1-2 /usr/local/bin/neodesk-server check --api http://127.0.0.1:21121/api/health --panel http://127.0.0.1:5000/health --port 127.0.0.1:21121",
 		"restart neodesk-local-gate-1-2",
 		"port neodesk-local-gate-1-2 5000/tcp",
 		"port neodesk-local-gate-1-2 21121/tcp",
-		"exec neodesk-local-gate-1-2 sh -c cat /opt/rustdesk/.api_key",
+		"exec neodesk-local-gate-1-2 sh -c cat /opt/neodesk/data/.api_key",
 		"inspect --format {{.State.Health.Status}} neodesk-local-gate-1-2",
 		"inspect --format {{.State.Health.Status}} neodesk-local-gate-1-2",
 		"rm --force neodesk-local-gate-1-2",
@@ -183,7 +183,7 @@ func TestDockerSmokeRun(t *testing.T) {
 		t.Errorf("docker calls:\n%s\nwant:\n%s", strings.Join(calls, "\n"), strings.Join(want, "\n"))
 	}
 	for _, part := range []string{
-		"run --detach --name neodesk-local-gate-1-2 --label com.neodesk.local-gate=true --publish 127.0.0.1::5000 --publish 127.0.0.1::21121 --volume neodesk-local-gate-data-1-2:/opt/rustdesk --volume neodesk-local-gate-console-1-2:/app/data --add-host host.docker.internal:host-gateway --env NODE_ENV=production",
+		"run --detach --name neodesk-local-gate-1-2 --label com.neodesk.local-gate=true --publish 127.0.0.1::5000 --publish 127.0.0.1::21121 --volume neodesk-local-gate-data-1-2:/opt/neodesk/data --volume neodesk-local-gate-console-1-2:/app/data --add-host host.docker.internal:host-gateway --env NODE_ENV=production",
 		"--env ADMIN_PASSWORD=" + smokePassword,
 		"--env ENROLLMENT_MODE=managed --env DB_TYPE=sqlite neodesk:local",
 	} {

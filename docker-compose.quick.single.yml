@@ -26,7 +26,9 @@
 # release. Update to the newest release:
 #   docker compose pull && docker compose up -d
 # Pin a release instead: put NEODESK_IMAGE_TAG=<version> (for example
-# 3.5.270) into .env next to this file.
+# 3.5.270) into .env next to this file. An image of 3.6.0-rc.4 or older keeps
+# its data in /opt/rustdesk: pinned to one, also put
+# NEODESK_DATA_PATH=/opt/rustdesk there (neodesk-docker.sh does it).
 #
 # Settings go into .env next to this file, one KEY=value per line; every
 # key reaches the server (Docker Compose 2.24 or newer reads it):
@@ -75,7 +77,7 @@ services:
       - "21121:21121"           # HTTP API (RustDesk client + REST)
       - "21122:21122"           # CDAP gateway (custom devices and agents)
     volumes:
-      - neodesk-data:/opt/rustdesk
+      - neodesk-data:${NEODESK_DATA_PATH:-/opt/neodesk/data}
       - console-data:/app/data
     # Every KEY=value of .env next to this file reaches the server; the
     # entries under environment below win over it.
@@ -94,7 +96,7 @@ services:
       - SERVER_BACKEND=neodesk
       - HBBS_API_URL=http://127.0.0.1:21121/api
       - NEODESK_API_URL=http://127.0.0.1:21121/api
-      - RUSTDESK_PATH=/opt/rustdesk
+      - RUSTDESK_PATH=${NEODESK_DATA_PATH:-/opt/neodesk/data}
       - DATA_DIR=/app/data
       - NEODESK_CLIENT_REPO=${NEODESK_CLIENT_REPO:-neodeskapp/neodesk-client}
       - NEODESK_CLIENT_RELEASE_TAG=${NEODESK_CLIENT_RELEASE_TAG:-}
@@ -104,15 +106,15 @@ services:
       - AGENT_BUILD_WORKER=${AGENT_BUILD_WORKER:-on}
       - AGENT_BUILD_POLL_MS=${AGENT_BUILD_POLL_MS:-5000}
       - AGENT_BUILD_COOLDOWN_MS=${AGENT_BUILD_COOLDOWN_MS:-1000}
-      - DB_PATH=/opt/rustdesk/db_v2.sqlite3
+      - DB_PATH=${NEODESK_DATA_PATH:-/opt/neodesk/data}/db_v2.sqlite3
       # Optional public client endpoints (IaC). Non-empty values override
       # /app/data/public-endpoints.env from Settings UI. Leave unset to use the panel.
       # Do not set empty PUBLIC_*= keys.
       # - PUBLIC_SERVER_ID=gateway.example.net
       # - PUBLIC_RELAY_SERVER=gateway.example.net
       # - PUBLIC_API_URL=https://api.example.net:21121
-      - PUB_KEY_PATH=/opt/rustdesk/id_ed25519.pub
-      - API_KEY_PATH=/opt/rustdesk/.api_key
+      - PUB_KEY_PATH=${NEODESK_DATA_PATH:-/opt/neodesk/data}/id_ed25519.pub
+      - API_KEY_PATH=${NEODESK_DATA_PATH:-/opt/neodesk/data}/.api_key
       - SESSION_SECRET=${SESSION_SECRET:-}
       # Panel session policy (empty = built-in defaults)
       - SESSION_IDLE_TIMEOUT=${SESSION_IDLE_TIMEOUT:-}

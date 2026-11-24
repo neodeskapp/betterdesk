@@ -604,6 +604,67 @@ test_update_moves_the_old_manager() (
     rm -rf "$TEST_DIR"
 )
 
+# L446: the installer's backups go to /opt/neodesk-backups. The backups of
+# an install from before (in /opt/rustdesk-backups) move there at the
+# installer's next run, and the old place becomes a link to the new one,
+# for what names it: the record of an upgrade from the Node.js console,
+# an admin's own scripts. A BACKUP_DIR given stays as it is.
+test_backups_move_to_the_neodesk_folder() (
+    load
+    [ "$BACKUP_DIR" = /opt/neodesk-backups ] || fail "the backups go to $BACKUP_DIR"
+    [ "${OLD_BACKUP_DIR:-}" = /opt/rustdesk-backups ] || fail "the old backup folder is ${OLD_BACKUP_DIR:-unknown}"
+    BACKUP_DIR="$TEST_DIR/neodesk-backups"
+    OLD_BACKUP_DIR="$TEST_DIR/rustdesk-backups"
+    mkdir -p "$OLD_BACKUP_DIR/pre-go-20260101-000000/units"
+    printf 'old\n' > "$OLD_BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz"
+    chmod 700 "$OLD_BACKUP_DIR"
+    move_backup_folder >/dev/null
+    [ "$(cat "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz" 2>/dev/null)" = old ] || fail "the old backup did not move"
+    [ -d "$BACKUP_DIR/pre-go-20260101-000000/units" ] || fail "the upgrade's backup did not move"
+    [ "$(readlink "$OLD_BACKUP_DIR")" = "$BACKUP_DIR" ] || fail "the old place is no link to the new one: $(ls -ld "$OLD_BACKUP_DIR" 2>&1)"
+    [ "$(stat -c %a "$BACKUP_DIR")" = 700 ] || fail "the new folder has mode $(stat -c %a "$BACKUP_DIR"), the old one had 700"
+    move_backup_folder >/dev/null || fail "a second run failed"
+    [ "$(readlink "$OLD_BACKUP_DIR")" = "$BACKUP_DIR" ] || fail "a second run changed the link"
+
+    # Both folders there: the old one's backups join the new ones, a name
+    # in both stays in the old folder
+    rm -f "$OLD_BACKUP_DIR"
+    mkdir -p "$OLD_BACKUP_DIR"
+    printf 'second\n' > "$OLD_BACKUP_DIR/neodesk_backup_20260202_000000.tar.gz"
+    printf 'clash\n' > "$OLD_BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz"
+    move_backup_folder >/dev/null 2>&1
+    [ -f "$BACKUP_DIR/neodesk_backup_20260202_000000.tar.gz" ] || fail "a backup of the old folder did not join the new one"
+    [ "$(cat "$BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz")" = old ] || fail "a backup of the new folder was written over"
+    [ "$(cat "$OLD_BACKUP_DIR/neodesk_backup_20260101_000000.tar.gz" 2>/dev/null)" = clash ] || fail "a backup whose name is taken is gone"
+
+    # A BACKUP_DIR given to the installer is used as it is
+    local given="$TEST_DIR/given"
+    rm -rf "$OLD_BACKUP_DIR" && mkdir -p "$OLD_BACKUP_DIR"
+    BACKUP_DIR_GIVEN="$given" BACKUP_DIR="$given" move_backup_folder >/dev/null
+    [ -d "$OLD_BACKUP_DIR" ] && [ ! -L "$OLD_BACKUP_DIR" ] && [ ! -e "$given" ] || fail "a given BACKUP_DIR moved the old folder"
+    rm -rf "$TEST_DIR"
+)
+
+# L446: a rollback of the upgrade from the Node.js console finds its
+# backup when the record names the old folder (/opt/rustdesk-backups),
+# after the move, also without the link.
+test_rollback_finds_a_backup_of_the_old_folder() (
+    load
+    BACKUP_DIR="$TEST_DIR/neodesk-backups"
+    OLD_BACKUP_DIR="$TEST_DIR/rustdesk-backups"
+    mkdir -p "$BACKUP_DIR/pre-go-20260101-000000/units" "$BACKUP_DIR/pre-go-20260303-000000/units"
+    : > "$BACKUP_DIR/pre-go-20260101-000000/units/neodesk-server.service"
+    : > "$BACKUP_DIR/pre-go-20260303-000000/units/neodesk-server.service"
+    local got
+    got=$(upgrade_backup_folder "$OLD_BACKUP_DIR/pre-go-20260101-000000")
+    [ "$got" = "$BACKUP_DIR/pre-go-20260101-000000" ] || fail "the recorded backup in the old folder gave '$got'"
+    got=$(upgrade_backup_folder "")
+    [ "$got" = "$BACKUP_DIR/pre-go-20260303-000000" ] || fail "without a record the newest backup is '$got'"
+    got=$(upgrade_backup_folder "$BACKUP_DIR/pre-go-20260101-000000")
+    [ "$got" = "$BACKUP_DIR/pre-go-20260101-000000" ] || fail "a recorded backup in the new folder gave '$got'"
+    rm -rf "$TEST_DIR"
+)
+
 # L201: a run without a terminal or TERM (cloud-init, CI, ssh host cmd)
 # gets past the header instead of stopping at clear under set -e.
 test_runs_without_term() (
@@ -1396,6 +1457,8 @@ test_channel_and_download_errors
 test_one_command_install
 test_install_places_neodesk_setup_and_the_command_line
 test_update_moves_the_old_manager
+test_backups_move_to_the_neodesk_folder
+test_rollback_finds_a_backup_of_the_old_folder
 test_runs_without_term
 test_apt_source_failure_goes_on
 test_backup_uses_the_servers_backup

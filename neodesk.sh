@@ -339,7 +339,7 @@ while [[ $# -gt 0 ]]; do
             echo "                          manifest.sig and the binaries)"
             echo "  SSL_DOMAIN=...          Host name for the self-signed certificate and the console's address"
             echo "  RUSTDESK_PATH=... / CONSOLE_PATH=... / BACKUP_DIR=...  Install folders"
-            echo "                          (default /opt/neodesk, /opt/NeoDeskConsole, /opt/rustdesk-backups)"
+            echo "                          (default /opt/neodesk, /opt/NeoDeskConsole, /opt/neodesk-backups)"
             echo "  GO_API_PORT=21114 / CLIENT_API_PORT=21121  The server's own API port and the client API port"
             echo "  SIGNAL_RATE_LIMIT_PER_IP=20  Signal registrations per address and minute (0: no limit)"
             echo ""
@@ -382,7 +382,12 @@ NEODESK_GOTOOLCHAIN="${NEODESK_GOTOOLCHAIN:-local}"
 RUSTDESK_PATH="${RUSTDESK_PATH:-}"
 CONSOLE_PATH="${CONSOLE_PATH:-}"
 CONSOLE_TYPE="none"  # none, go (the console in neodesk-server), nodejs (the old console)
-BACKUP_DIR="${BACKUP_DIR:-/opt/rustdesk-backups}"
+# The installer's backups. Up to 3.6.0-rc.4 they went to /opt/rustdesk-backups;
+# the next run as root moves them here (move_backup_folder). A BACKUP_DIR
+# given to the installer is used as it is.
+BACKUP_DIR_GIVEN="${BACKUP_DIR:-}"
+BACKUP_DIR="${BACKUP_DIR:-/opt/neodesk-backups}"
+OLD_BACKUP_DIR="/opt/rustdesk-backups"
 
 # API: the server's own API on GO_API_PORT (21114). The web console inside the
 # server listens on CONSOLE_PORT (5000), and on CLIENT_API_PORT (21121) for
@@ -1678,7 +1683,7 @@ EOF
 set -euo pipefail
 CONF="/etc/letsencrypt/renewal-hooks/deploy/neodesk-reload.conf"
 [ -f "$CONF" ] && . "$CONF"
-RUSTDESK_PATH="${RUSTDESK_PATH:-/opt/rustdesk}"
+RUSTDESK_PATH="${RUSTDESK_PATH:-/opt/neodesk}"
 CONSOLE_PATH="${CONSOLE_PATH:-/opt/neodesk}"
 ENV_FILE="$CONSOLE_PATH/.env"
 SSL_DIR="$RUSTDESK_PATH/ssl"
@@ -2918,7 +2923,7 @@ configure_paths() {
             ;;
         2)
             echo ""
-            echo -n "Enter RustDesk server path (e.g., /opt/rustdesk): "
+            echo -n "Enter RustDesk server path (e.g., /opt/neodesk): "
             read -r new_path
             if [ -n "$new_path" ]; then
                 if [ -d "$new_path" ]; then
@@ -5253,6 +5258,21 @@ upgrade_node_install_to_go() {
     print_info "The next successful update removes the Node.js console's code (or: sudo ./neodesk.sh --cleanup-node)"
 }
 
+# upgrade_backup_folder [RECORDED]: the folder of the backup from before the
+# upgrade to the server with its console: RECORDED (the record names it),
+# else the folder of that name in BACKUP_DIR (a record from before the
+# backups moved there, L446), else the newest pre-go-* in BACKUP_DIR
+upgrade_backup_folder() {
+    local recorded="${1:-}"
+    if [ -z "$recorded" ]; then
+        find "$BACKUP_DIR" -maxdepth 1 -type d -name 'pre-go-*' 2>/dev/null | sort | tail -1
+    elif [ ! -d "$recorded" ] && [ -d "$BACKUP_DIR/$(basename "$recorded")" ]; then
+        printf '%s\n' "$BACKUP_DIR/$(basename "$recorded")"
+    else
+        printf '%s\n' "$recorded"
+    fi
+}
+
 # rollback_go_upgrade [BACKUP]: puts the binaries, units, .env, sudoers rule,
 # root helper and file ownership from before the upgrade back and starts
 # neodesk-server and neodesk-console. The database stays as it is (the
@@ -5263,9 +5283,7 @@ rollback_go_upgrade() {
     if [ -z "$backup" ] && [ -f "$record" ]; then
         backup=$(record_field "$record" backup)
     fi
-    if [ -z "$backup" ]; then
-        backup=$(find "$BACKUP_DIR" -maxdepth 1 -type d -name 'pre-go-*' 2>/dev/null | sort | tail -1)
-    fi
+    backup=$(upgrade_backup_folder "$backup")
     if [ -z "$backup" ] || [ ! -f "$backup/units/neodesk-server.service" ]; then
         print_error "No backup from an upgrade to roll back to (looked for $BACKUP_DIR/pre-go-*)"
         return 1
@@ -6262,6 +6280,35 @@ do_validate() {
 # Backup Functions
 #===============================================================================
 
+# move_backup_folder: the backups of an install from before (up to 3.6.0-rc.4
+# in /opt/rustdesk-backups) go to BACKUP_DIR, and the old place becomes a
+# link to it: the record of an upgrade from the Node.js console names its
+# backup by the old path, and so may an admin's own scripts. A backup whose
+# name BACKUP_DIR has already stays where it is, and so does the folder. A
+# BACKUP_DIR given to the installer is left alone.
+move_backup_folder() {
+    local old="$OLD_BACKUP_DIR" item left=0
+    [ -z "${BACKUP_DIR_GIVEN:-}" ] || return 0
+    { [ -d "$old" ] && [ ! -L "$old" ]; } || return 0
+    if [ ! -e "$BACKUP_DIR" ] && [ ! -L "$BACKUP_DIR" ]; then
+        { mkdir -p "$(dirname "$BACKUP_DIR")" && mv "$old" "$BACKUP_DIR"; } || return 1
+    else
+        for item in "$old"/* "$old"/.[!.]*; do
+            { [ -e "$item" ] || [ -L "$item" ]; } || continue
+            if [ -e "$BACKUP_DIR/${item##*/}" ] || [ -L "$BACKUP_DIR/${item##*/}" ] || ! mv "$item" "$BACKUP_DIR/"; then
+                left=$((left + 1))
+            fi
+        done
+        if [ "$left" -gt 0 ]; then
+            print_warning "$left backup(s) stay in $old: $BACKUP_DIR has some of the same name"
+            return 0
+        fi
+        rmdir "$old" || return 1
+    fi
+    ln -s "$BACKUP_DIR" "$old" || return 1
+    print_info "The backups are in $BACKUP_DIR now; $old leads there"
+}
+
 do_backup() {
     print_header
     echo -e "${WHITE}${BOLD}══════════ BACKUP ══════════${NC}"
@@ -7209,6 +7256,7 @@ do_uninstall() {
     [ -d "$RUSTDESK_PATH" ] && left+=("$RUSTDESK_PATH: the database, the server's keys and certificates")
     [ -d "$CONSOLE_PATH" ] && left+=("$CONSOLE_PATH: the settings (.env) and the console's data")
     [ -d "$BACKUP_DIR" ] && left+=("$BACKUP_DIR: the backups")
+    [ -L "$OLD_BACKUP_DIR" ] && left+=("$OLD_BACKUP_DIR: a link to $BACKUP_DIR")
     id "$SERVICE_USER" &>/dev/null && left+=("the system user $SERVICE_USER (sudo userdel $SERVICE_USER)")
     [ "$USE_POSTGRESQL" = true ] && left+=("the PostgreSQL database and PostgreSQL itself")
     left+=("the firewall rules for the NeoDesk ports")
@@ -8323,6 +8371,7 @@ main() {
         echo "Run: sudo $0"
         exit 1
     fi
+    move_backup_folder || print_warning "The backups in $OLD_BACKUP_DIR could not move to $BACKUP_DIR"
     
     # Auto-detect paths on startup
     echo -e "${CYAN}Detecting installation...${NC}"

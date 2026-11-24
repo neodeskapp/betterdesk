@@ -14,7 +14,7 @@ if [ "$(id -u)" = "0" ]; then
     exec su -s /bin/sh neodesk -c 'exec "$0" "$@"' -- "$0" "$@"
 fi
 
-for creds_file in /opt/rustdesk/.admin_credentials /app/data/.admin_credentials; do
+for creds_file in /opt/neodesk/data/.admin_credentials /app/data/.admin_credentials; do
     if [ -f "$creds_file" ] && [ -r "$creds_file" ]; then
         cat "$creds_file"
         exit 0
@@ -23,7 +23,7 @@ done
 
 # The console's password change and the reset-password command remove the
 # first password and leave this note without the password.
-for note in /opt/rustdesk/.admin_credentials.removed /app/data/.admin_credentials.removed; do
+for note in /opt/neodesk/data/.admin_credentials.removed /app/data/.admin_credentials.removed; do
     if [ -f "$note" ] && [ -r "$note" ]; then
         cat "$note" >&2
         echo "To set a new password for admin, on the Docker host:" >&2
@@ -34,6 +34,6 @@ for note in /opt/rustdesk/.admin_credentials.removed /app/data/.admin_credential
 done
 
 echo "No readable admin credentials file found." >&2
-echo "  Checked: /opt/rustdesk/.admin_credentials, /app/data/.admin_credentials" >&2
+echo "  Checked: /opt/neodesk/data/.admin_credentials, /app/data/.admin_credentials" >&2
 echo "  Wait for the first start to finish, then retry. Its log: docker compose logs neodesk" >&2
 exit 1

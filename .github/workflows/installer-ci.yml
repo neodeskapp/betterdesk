@@ -11,6 +11,7 @@ on:
       - 'neodesk-docker.sh'
       - 'scripts/test-go-installer.sh'
       - 'scripts/test-setup-command.sh'
+      - 'scripts/test-docker-data-path.sh'
       - 'neodesk-server/cli_cmd.go'
       - 'neodesk-server/cli_setup*.go'
       - 'release-notes/**'
@@ -42,6 +43,7 @@ on:
       - 'neodesk-docker.sh'
       - 'scripts/test-go-installer.sh'
       - 'scripts/test-setup-command.sh'
+      - 'scripts/test-docker-data-path.sh'
       - 'neodesk-server/cli_cmd.go'
       - 'neodesk-server/cli_setup*.go'
       - 'release-notes/**'
@@ -106,7 +108,7 @@ jobs:
             neodesk-docker.sh \
             scripts/test-native-installer.sh \
             scripts/test-go-installer.sh \
-            scripts/test-setup-command.sh \
+            scripts/test-setup-command.sh             scripts/test-docker-data-path.sh \
             scripts/test-docker-installer.sh \
             scripts/check-supervisor-env.sh \
             scripts/check-go-toolchain-pins.sh \
@@ -122,7 +124,7 @@ jobs:
             neodesk-docker.sh \
             scripts/test-native-installer.sh \
             scripts/test-go-installer.sh \
-            scripts/test-setup-command.sh \
+            scripts/test-setup-command.sh             scripts/test-docker-data-path.sh \
             scripts/test-docker-installer.sh \
             scripts/check-supervisor-env.sh \
             scripts/check-go-toolchain-pins.sh \
@@ -215,6 +217,25 @@ jobs:
       # uninstall
       - name: Install, update and uninstall on this runner
         run: sudo NEODESK_TEST_BINARY="$RUNNER_TEMP/neodesk-server" bash scripts/test-setup-command.sh
+
+  docker-data-path:
+    name: Docker data folder on a real install
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        with:
+          go-version-file: neodesk-server/go.mod
+          cache-dependency-path: neodesk-server/go.sum
+      - name: Build the server
+        working-directory: neodesk-server
+        run: CGO_ENABLED=0 go build -o "$RUNNER_TEMP/neodesk-server" .
+      # An install of 3.6.0-rc.4 with data, updated to the image of this
+      # checkout (data volume at /opt/neodesk/data), and its backup from
+      # before the update put back
+      - name: Update an install of 3.6.0-rc.4 and restore its backup
+        run: NEODESK_TEST_BINARY="$RUNNER_TEMP/neodesk-server" bash scripts/test-docker-data-path.sh
 
   installer-dry-run:
     name: Installer non-mutating CLI checks

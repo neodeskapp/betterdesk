@@ -1,12 +1,12 @@
 #!/bin/sh
 # Pre-bootstrap shared admin credentials for Docker.
 # Go server and Node.js console must use the same password on first start.
-# Writes /opt/rustdesk/.admin_credentials and exports INIT_ADMIN_* / DEFAULT_ADMIN_*.
+# Writes /opt/neodesk/data/.admin_credentials and exports INIT_ADMIN_* / DEFAULT_ADMIN_*.
 # Split images source this script concurrently, so creation is serialized on
 # the shared volume.
 set -e
 
-CREDS_DIR="${RUSTDESK_PATH:-/opt/rustdesk}"
+CREDS_DIR="${RUSTDESK_PATH:-/opt/neodesk/data}"
 CREDS_FILE="${CREDS_DIR}/.admin_credentials"
 LOCK_DIR="${CREDS_FILE}.lock"
 ADMIN_USER="${INIT_ADMIN_USER:-${DEFAULT_ADMIN_USERNAME:-${ADMIN_USERNAME:-admin}}}"

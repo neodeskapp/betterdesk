@@ -81,10 +81,15 @@ RUN apk add --no-cache ca-certificates curl sqlite tini su-exec shadow openssl \
     || { sleep 2 && apk add --no-cache ca-certificates curl sqlite tini su-exec shadow openssl; }
 
 # Create neodesk user and directories
+# The data volume is mounted at /opt/neodesk/data. /opt/rustdesk, where
+# images up to 3.6.0-rc.4 kept it, is a link to it: compose files, settings
+# and paths saved before the rename still reach the same files, and Docker
+# follows the link when an older compose file mounts the volume there.
 RUN addgroup -g 10001 -S neodesk && \
     adduser -u 10001 -S -G neodesk neodesk && \
-    mkdir -p /opt/rustdesk /app/data && \
-    chown -R neodesk:neodesk /opt/rustdesk /app/data
+    mkdir -p /opt/neodesk/data /app/data && \
+    chown -R neodesk:neodesk /opt/neodesk/data /app/data && \
+    ln -s /opt/neodesk/data /opt/rustdesk
 
 COPY --from=go-builder /neodesk-server /usr/local/bin/neodesk-server
 # The same binary is the command line when called neodesk
@@ -115,11 +120,11 @@ ENV NODE_ENV=production \
     DOCKER=true \
     CONSOLE_DIR=/app \
     DATA_DIR=/app/data \
-    RUSTDESK_PATH=/opt/rustdesk \
-    KEYS_PATH=/opt/rustdesk \
-    DB_PATH=/opt/rustdesk/db_v2.sqlite3 \
-    PUB_KEY_PATH=/opt/rustdesk/id_ed25519.pub \
-    API_KEY_PATH=/opt/rustdesk/.api_key \
+    RUSTDESK_PATH=/opt/neodesk/data \
+    KEYS_PATH=/opt/neodesk/data \
+    DB_PATH=/opt/neodesk/data/db_v2.sqlite3 \
+    PUB_KEY_PATH=/opt/neodesk/data/id_ed25519.pub \
+    API_KEY_PATH=/opt/neodesk/data/.api_key \
     HBBS_API_URL=http://127.0.0.1:21121/api \
     NEODESK_API_URL=http://127.0.0.1:21121/api \
     SERVER_BACKEND=neodesk \
@@ -135,7 +140,7 @@ ENV NODE_ENV=production \
 EXPOSE 5000 5443 21115 21116/tcp 21116/udp 21117 21118 21119 21121 21122
 
 # The server writes files of its own (mesh_agent_server.pem) in its folder
-WORKDIR /opt/rustdesk
+WORKDIR /opt/neodesk/data
 
 # The API and the web console of the one process, over HTTPS where they
 # serve it (TLS_API, HTTPS_ENABLED)
@@ -143,4 +148,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD /usr/local/bin/neodesk-healthcheck
 
 ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]
-CMD ["/usr/local/bin/neodesk-server", "-mode", "all", "-api-port", "21121", "-key-file", "/opt/rustdesk/id_ed25519"]
+CMD ["/usr/local/bin/neodesk-server", "-mode", "all", "-api-port", "21121", "-key-file", "/opt/neodesk/data/id_ed25519"]

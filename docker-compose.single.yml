@@ -58,7 +58,7 @@ services:
       - "21121:21121"           # HTTP API (RustDesk client + REST, WAN-facing)
       - "21122:21122"           # CDAP gateway (custom devices and agents)
     volumes:
-      - neodesk-data:/opt/rustdesk
+      - neodesk-data:/opt/neodesk/data
       - console-data:/app/data
     # Every KEY=value of .env next to this file reaches the server; the
     # entries under environment below win over it.
@@ -77,7 +77,7 @@ services:
       - SERVER_BACKEND=neodesk
       - HBBS_API_URL=http://127.0.0.1:21121/api
       - NEODESK_API_URL=http://127.0.0.1:21121/api
-      - RUSTDESK_PATH=/opt/rustdesk
+      - RUSTDESK_PATH=/opt/neodesk/data
       - DATA_DIR=/app/data
       - NEODESK_CLIENT_REPO=${NEODESK_CLIENT_REPO:-neodeskapp/neodesk-client}
       - NEODESK_CLIENT_RELEASE_TAG=${NEODESK_CLIENT_RELEASE_TAG:-}
@@ -87,9 +87,9 @@ services:
       - AGENT_BUILD_WORKER=${AGENT_BUILD_WORKER:-on}
       - AGENT_BUILD_POLL_MS=${AGENT_BUILD_POLL_MS:-5000}
       - AGENT_BUILD_COOLDOWN_MS=${AGENT_BUILD_COOLDOWN_MS:-1000}
-      - DB_PATH=/opt/rustdesk/db_v2.sqlite3
-      - PUB_KEY_PATH=/opt/rustdesk/id_ed25519.pub
-      - API_KEY_PATH=/opt/rustdesk/.api_key
+      - DB_PATH=/opt/neodesk/data/db_v2.sqlite3
+      - PUB_KEY_PATH=/opt/neodesk/data/id_ed25519.pub
+      - API_KEY_PATH=/opt/neodesk/data/.api_key
       - SESSION_SECRET=${SESSION_SECRET:-}
       # Panel session policy (empty = built-in defaults)
       - SESSION_IDLE_TIMEOUT=${SESSION_IDLE_TIMEOUT:-}

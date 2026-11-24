@@ -508,9 +508,10 @@ const (
 )
 
 // keysPath finds the folder the server keeps its keys in: KEYS_PATH, else
-// RUSTDESK_DIR, else RUSTDESK_PATH, else /opt/rustdesk in a container,
-// else the first of the usual two folders that has the private key
-// (id_ed25519), else the newer of the two.
+// RUSTDESK_DIR, else RUSTDESK_PATH, else /opt/neodesk/data in a container
+// (images up to 3.6.0-rc.4 had /opt/rustdesk, now a link to it), else the
+// first of the usual two folders that has the private key (id_ed25519),
+// else the newer of the two.
 func keysPath(getenv func(string) string, p probe, docker bool) string {
 	for _, name := range []string{"KEYS_PATH", "RUSTDESK_DIR", "RUSTDESK_PATH"} {
 		if dir := getenv(name); dir != "" {
@@ -518,7 +519,7 @@ func keysPath(getenv func(string) string, p probe, docker bool) string {
 		}
 	}
 	if docker {
-		return "/opt/rustdesk"
+		return "/opt/neodesk/data"
 	}
 	places, separator := []string{"/opt/neodesk", "/opt/rustdesk"}, "/"
 	if p.windows {

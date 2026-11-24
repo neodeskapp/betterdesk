@@ -95,7 +95,12 @@ docker() {
             return 0 ;;
         image)
             [ "$2" = inspect ] || return 0
-            [ -z "$format" ] || cat "$TEST_DIR/pulled"
+            # image-env: the image's environment (one of this release
+            # keeps its data in /opt/neodesk/data)
+            case "$format" in
+                *Config.Env*) cat "$TEST_DIR/image-env" 2>/dev/null || printf 'RUSTDESK_PATH=/opt/neodesk/data\n' ;;
+                ?*) cat "$TEST_DIR/pulled" ;;
+            esac
             return 0 ;;
         exec)
             case "$*" in
@@ -264,6 +269,82 @@ test_update_backs_up_the_files_from_before() (
     rm -rf "$TEST_DIR"
 )
 
+# L446: the data volume is mounted at /opt/neodesk/data, where the image
+# keeps its data; no line of the compose files uses /opt/rustdesk.
+test_data_volume_at_the_neodesk_path() (
+    load
+    mgr 'COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install failed"
+    grep -qF -- '- neodesk-data:${NEODESK_DATA_PATH:-/opt/neodesk/data}' "$NEODESK_DIR/docker-compose.yml" \
+        || fail "the compose file mounts the data volume elsewhere: $(grep 'neodesk-data:' "$NEODESK_DIR/docker-compose.yml")"
+    local f
+    for f in docker-compose.quick.single.yml docker-compose.quick.single.macvlan.yml docker-compose.single.yml; do
+        if grep -nE '^[^#]*/opt/rustdesk' "$SCRIPT_ROOT/$f"; then fail "$f uses /opt/rustdesk"; fi
+    done
+    if grep -q '^NEODESK_DATA_PATH=' "$NEODESK_DIR/.env"; then fail "an image of this release got NEODESK_DATA_PATH"; fi
+    rm -rf "$TEST_DIR"
+)
+
+# L446: an update of an install from before (3.6.0-rc.4: the data volume
+# at /opt/rustdesk, a setting that names a file in it) gets the release's
+# compose file, with the same volume at /opt/neodesk/data; the setting
+# stays as it is, since the image keeps /opt/rustdesk as a link to its
+# data. An image pinned from before keeps its data path
+# (NEODESK_DATA_PATH=/opt/rustdesk), and an image of this release takes it
+# away again.
+test_update_from_the_old_data_path() (
+    load
+    mgr 'NEODESK_IMAGE_TAG_SET=3.6.0-rc.4; COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install failed"
+    # The compose file of 3.6.0-rc.4, as its manager wrote it
+    sed -e 's|${NEODESK_DATA_PATH:-/opt/neodesk/data}|/opt/rustdesk|g' "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+        > "$NEODESK_DIR/docker-compose.yml"
+    sha256sum "$NEODESK_DIR/docker-compose.yml" | cut -d' ' -f1 > "$NEODESK_DIR/.compose.sha256"
+    printf 'SSL_CERT_PATH=/opt/rustdesk/ssl/console.pem\n' >> "$NEODESK_DIR/.env"
+    printf 'sha256:new\n' > "$TEST_DIR/good-image"
+    local pull='docker() {
+            if [ "$1 ${2:-}" = "compose pull" ]; then printf "sha256:new\n" > "$TEST_DIR/pulled"; return 0; fi
+            command_docker "$@"
+        }'
+    local out
+    out=$(mgr "$pull; NEODESK_IMAGE_TAG_SET=latest; COMMAND=update; do_update" 2>&1) || fail "the update failed: $out"
+    cmp -s "$NEODESK_DIR/docker-compose.yml" "$SCRIPT_ROOT/docker-compose.quick.single.yml" || fail "the update kept the old compose file"
+    grep -qF -- '- neodesk-data:${NEODESK_DATA_PATH:-/opt/neodesk/data}' "$NEODESK_DIR/docker-compose.yml" \
+        || fail "after the update the data volume is mounted at: $(grep 'neodesk-data:' "$NEODESK_DIR/docker-compose.yml")"
+    grep -qx 'SSL_CERT_PATH=/opt/rustdesk/ssl/console.pem' "$NEODESK_DIR/.env" || fail "the update changed a setting: $(cat "$NEODESK_DIR/.env")"
+    if grep -q '^NEODESK_DATA_PATH=' "$NEODESK_DIR/.env"; then fail "an image of this release got NEODESK_DATA_PATH"; fi
+
+    # An image pinned from before the rename keeps its data where it looks
+    printf 'PATH=/usr/bin\nRUSTDESK_PATH=/opt/rustdesk\n' > "$TEST_DIR/image-env"
+    printf 'sha256:old\n' > "$TEST_DIR/good-image"
+    out=$(mgr 'docker() {
+            if [ "$1 ${2:-}" = "compose pull" ]; then printf "sha256:old\n" > "$TEST_DIR/pulled"; return 0; fi
+            command_docker "$@"
+        }
+        NEODESK_IMAGE_TAG_SET=3.6.0-rc.4; COMMAND=update; do_update' 2>&1) || fail "the update to a pinned older image failed: $out"
+    grep -qx 'NEODESK_DATA_PATH=/opt/rustdesk' "$NEODESK_DIR/.env" \
+        || fail "an older image's data path is not in .env: $(cat "$NEODESK_DIR/.env")"
+    rm -f "$TEST_DIR/image-env"
+    printf 'sha256:new\n' > "$TEST_DIR/good-image"
+    out=$(mgr "$pull; NEODESK_IMAGE_TAG_SET=latest; COMMAND=update; do_update" 2>&1) || fail "the update back to this release failed: $out"
+    if grep -q '^NEODESK_DATA_PATH=' "$NEODESK_DIR/.env"; then fail "NEODESK_DATA_PATH stayed with an image of this release"; fi
+    rm -rf "$TEST_DIR"
+)
+
+# L446: a backup from before the rename (its archive holds the folders
+# rustdesk and console) goes back into the same volumes: the archive's
+# folders are the volumes, whatever path the container mounts them at.
+test_old_backup_restores() (
+    load
+    mgr 'COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install failed"
+    : > "$CALLS"
+    mgr "restore_volumes '$NEODESK_DIR/backups/neodesk-20260101-000000.tar.gz'" > /dev/null 2>&1 || fail "the restore failed"
+    grep -q '^run .*-v neodesk-data:/backup/rustdesk -v neodesk-console-data:/backup/console .*tar xzf' "$CALLS" \
+        || fail "the restore does not put the archive's folders into the volumes: $(cat "$CALLS")"
+    mgr 'backup_volumes' > /dev/null 2>&1 || fail "the backup failed"
+    grep -q '^run .*czf /out/neodesk-[0-9-]*\.tar\.gz -C /backup rustdesk console' "$CALLS" \
+        || fail "a backup has other folders than one from before: $(grep '^run' "$CALLS")"
+    rm -rf "$TEST_DIR"
+)
+
 # L125: a compose file changed by hand stays on update; the release's file
 # goes next to it.
 test_update_keeps_compose_edits() (
@@ -411,7 +492,8 @@ test_postgres_switch_moves_the_data() (
     [ "$(env_get DATABASE_URL)" = "postgres://neodesk:${pass}@postgres:5432/neodesk?sslmode=disable" ] \
         || fail "DATABASE_URL after the switch: $(env_get DATABASE_URL)"
     [ "$(env_get COMPOSE_PROFILES)" = guacd,postgres ] || fail "COMPOSE_PROFILES after the switch: $(env_get COMPOSE_PROFILES)"
-    grep -q 'compose run --rm --no-deps -T --user 10001:10001 --entrypoint sh neodesk -c exec /usr/local/bin/neodesk-server migrate -mode sqlite2pg -src /opt/rustdesk/db_v2.sqlite3' "$CALLS" \
+    # L446: the SQLite file where the image keeps it (DB_PATH)
+    grep -qF 'compose run --rm --no-deps -T --user 10001:10001 --entrypoint sh neodesk -c exec /usr/local/bin/neodesk-server migrate -mode sqlite2pg -src "$DB_PATH"' "$CALLS" \
         || fail "the data was not moved with sqlite2pg: $(cat "$CALLS")"
     [ "$(cat "$TEST_DIR/run-env")" = "$(env_get DATABASE_URL)" ] || fail "the tool did not get the address in its environment"
     if grep -qF "$pass" "$CALLS"; then fail "the PostgreSQL password is on a command line"; fi
@@ -671,6 +753,9 @@ test_fresh_install
 test_no_release_image_runs_dev
 test_update_goes_back_when_unhealthy
 test_update_backs_up_the_files_from_before
+test_data_volume_at_the_neodesk_path
+test_update_from_the_old_data_path
+test_old_backup_restores
 test_update_keeps_compose_edits
 test_fresh_install_on_postgres
 test_foreign_install_is_left_alone

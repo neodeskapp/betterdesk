@@ -426,6 +426,13 @@ func TestSettingsAsTheOldConsoleReadThem(t *testing.T) {
 			continue
 		}
 		want := c.Config
+		// L446: a container keeps its data in /opt/neodesk/data, where
+		// the old console's image had /opt/rustdesk
+		for _, p := range []*string{&want.KeysPath, &want.DBPath, &want.PubKeyPath, &want.APIKeyPath} {
+			if rest, ok := strings.CutPrefix(*p, "/opt/rustdesk"); ok {
+				*p = "/opt/neodesk/data" + rest
+			}
+		}
 		if enabled, ok := intendedAPIEnabled[c.Env["API_ENABLED"]]; ok {
 			intended++
 			want.APIEnabled = enabled
@@ -476,7 +483,7 @@ func TestKeysPathSearch(t *testing.T) {
 		{"the newer folder has the key", nil, machine("/opt/neodesk/id_ed25519", "/opt/rustdesk/id_ed25519"), "/opt/neodesk"},
 		{"only the older folder has the key", nil, machine("/opt/rustdesk/id_ed25519"), "/opt/rustdesk"},
 		{"the public key alone does not count", nil, machine("/opt/rustdesk/id_ed25519.pub"), "/opt/neodesk"},
-		{"a container", nil, machine("/.dockerenv", "/opt/neodesk/id_ed25519"), "/opt/rustdesk"},
+		{"a container", nil, machine("/.dockerenv", "/opt/neodesk/id_ed25519"), "/opt/neodesk/data"},
 		{"KEYS_PATH first", map[string]string{"KEYS_PATH": "/k", "RUSTDESK_DIR": "/d", "RUSTDESK_PATH": "/p"}, machine("/.dockerenv"), "/k"},
 		{"then RUSTDESK_DIR", map[string]string{"RUSTDESK_DIR": "/d", "RUSTDESK_PATH": "/p"}, machine(), "/d"},
 		{"then RUSTDESK_PATH", map[string]string{"RUSTDESK_PATH": "/p"}, machine("/opt/rustdesk/id_ed25519"), "/p"},
