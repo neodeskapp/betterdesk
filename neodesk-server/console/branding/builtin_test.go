@@ -11,19 +11,19 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
-// fromFiles is fixtureOptions with the four built-in files taken from
+// fromFiles is fixtureOptions with the three built-in files taken from
 // Files instead of from their paths: the same files, as the console's
 // tree in the binary holds them.
 func fromFiles(dir string) Options {
 	opts := fixtureOptions(dir)
 	opts.Files = os.DirFS(filepath.Join("testdata", "console"))
-	opts.ThemesDir, opts.PalettesFile, opts.FaviconFile, opts.SupportersFile = "", "", "", ""
+	opts.ThemesDir, opts.PalettesFile, opts.FaviconFile = "", "", ""
 	return opts
 }
 
 // The built-in files read from Files give what the same files on disk
-// give: the palettes, the theme list, each theme applied, the favicon
-// and the supporters.
+// give: the palettes, the theme list, each theme applied and the
+// favicon.
 func TestBuiltinFilesFromFilesAsFromDisk(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		ctx := context.Background()
@@ -51,7 +51,7 @@ func TestBuiltinFilesFromFilesAsFromDisk(t *testing.T) {
 		if got, want := Stringify(listFiles), Stringify(listDisk); got != want || len(listFiles) != 3 {
 			t.Errorf("themes from Files: %s, from disk: %s", got, want)
 		}
-		for _, id := range []string{"light", "insolve", "default", "missing", "../light", "light.json", ""} {
+		for _, id := range []string{"light", "example", "default", "missing", "../light", "light.json", ""} {
 			resultFiles, errFiles := files.ApplyTheme(ctx, id)
 			brandingFiles := Stringify(files.GetBranding())
 			resultDisk, errDisk := disk.ApplyTheme(ctx, id)
@@ -63,9 +63,6 @@ func TestBuiltinFilesFromFilesAsFromDisk(t *testing.T) {
 		if got, want := files.GenerateFavicon(), disk.GenerateFavicon(); got != want || got == defaultFaviconFallback {
 			t.Errorf("favicon from Files: %.80q, from disk: %.80q", got, want)
 		}
-		if got, want := Stringify(files.LoadSupporters()), Stringify(disk.LoadSupporters()); got != want {
-			t.Errorf("supporters from Files: %s, from disk: %s", got, want)
-		}
 	})
 }
 
@@ -75,7 +72,6 @@ func TestBuiltinPathWinsOverFiles(t *testing.T) {
 	tree := fstest.MapFS{
 		"config/theme-palettes.json": {Data: []byte(`{"dark":{"bgPrimary":"#010101"},"light":{}}`)},
 		"public/favicon.svg":         {Data: []byte(`<svg id="files"/>`)},
-		"config/supporters.json":     {Data: []byte(`{"honorary":[{"name":"From files"}]}`)},
 		"themes/only.json":           {Data: []byte(`{"type":"neodesk-theme","displayName":"Only in files","branding":{"appName":"x"}}`)},
 	}
 	opts := fixtureOptions(t.TempDir())
@@ -95,7 +91,7 @@ func TestBuiltinPathWinsOverFiles(t *testing.T) {
 	}
 
 	opts = fixtureOptions(t.TempDir())
-	opts.ThemesDir, opts.PalettesFile, opts.FaviconFile, opts.SupportersFile = "", "", "", ""
+	opts.ThemesDir, opts.PalettesFile, opts.FaviconFile = "", "", ""
 	opts.Files = tree
 	if s, err = New(opts); err != nil {
 		t.Fatal(err)
@@ -108,10 +104,6 @@ func TestBuiltinPathWinsOverFiles(t *testing.T) {
 	}
 	if list, _ := s.ListThemes(); len(list) != 1 || list[0].(*Object).Text("name") != "Only in files" {
 		t.Errorf("themes from Files: %s", Stringify(list))
-	}
-	honorary, _ := s.LoadSupporters().Get("honorary")
-	if Stringify(honorary) != `[{"name":"From files"}]` {
-		t.Errorf("supporters from Files: %s", Stringify(honorary))
 	}
 
 	opts.Files = fstest.MapFS{}

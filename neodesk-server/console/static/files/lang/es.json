@@ -7882,17 +7882,9 @@
   },
   "help": {
     "panel": {
-      "title": "Ayuda y patrocinadores",
-      "thanks": "NeoDesk es gratuito y de código abierto gracias a personas y organizaciones que creen en la gestión remota autoalojada. Gracias.",
-      "honorary": "Patrocinadores honorarios",
-      "backers": "Patrocinadores individuales",
-      "sponsor_cta": "Apoyar el proyecto",
       "links": "Enlaces útiles",
-      "link_sponsors": "GitHub Sponsors",
-      "link_bmc": "Buy Me a Coffee",
       "link_repo": "Repositorio de GitHub",
       "link_issues": "Issues y comentarios",
-      "link_sponsors_md": "Lista completa de patrocinadores",
       "close": "Cerrar"
     }
   },

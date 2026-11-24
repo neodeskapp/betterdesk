@@ -52,8 +52,6 @@ jobs:
 
           Automated watch of rustdesk/rustdesk and rustdesk/rustdesk-server
           stable releases. Review Issues use label Next Updates.
-
-          Thanks: INSOLVE (Honorary); Marco Jakobs (@jacotec); MyNameisStitch (@MyNameisStitch); Redspin (@playerumpknow); muopc (@muopc)
           EOF
           )"
           git push origin HEAD:refs/heads/main

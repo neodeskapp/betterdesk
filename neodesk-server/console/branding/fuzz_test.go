@@ -690,10 +690,10 @@ func cssStructureOfFontFace(css string) error {
 }
 
 // FuzzConfigFiles feeds arbitrary text to everything that reads a file
-// someone can edit: the supporters list, the font cache, a theme, the
-// meta file of a font, and JSON as such.
+// someone can edit: the font cache, a theme, the meta file of a font,
+// and JSON as such.
 func FuzzConfigFiles(f *testing.F) {
-	for _, seed := range []string{``, `{`, `null`, `[]`, `{"honorary":[1],"links":["a"]}`, `[{"family":"Zeta","category":"serif"},null,{"family":5}]`,
+	for _, seed := range []string{``, `{`, `null`, `[]`, `[{"family":"Zeta","category":"serif"},null,{"family":5}]`,
 		`{"type":"neodesk-theme","branding":{"appName":"T","colors":"red"}}`, `{"type":"neodesk-theme","displayName":0,"branding":{"colors":{"bgPrimary":{"toString":1}}}}`,
 		`{"family":["x"],"category":{}}`, "\uFEFF[]", strings.Repeat("[", 6000)} {
 		f.Add([]byte(seed))
@@ -705,8 +705,7 @@ func FuzzConfigFiles(f *testing.F) {
 		dir := t.TempDir()
 		opts := fixtureOptions(dir)
 		opts.ThemesDir = filepath.Join(dir, "themes")
-		opts.SupportersFile = filepath.Join(dir, "supporters.json")
-		for _, file := range []string{opts.SupportersFile, opts.FontCacheFile, filepath.Join(opts.ThemesDir, "fuzz.json"), filepath.Join(opts.FontsDir, "fuzz", "meta.json")} {
+		for _, file := range []string{opts.FontCacheFile, filepath.Join(opts.ThemesDir, "fuzz.json"), filepath.Join(opts.FontsDir, "fuzz", "meta.json")} {
 			if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {
 				t.Fatal(err)
 			}
@@ -725,15 +724,6 @@ func FuzzConfigFiles(f *testing.F) {
 		s, err := New(opts)
 		if err != nil {
 			t.Fatal(err)
-		}
-		supporters := s.LoadSupporters()
-		if keyList(supporters) != `["honorary","individuals","links"]` {
-			t.Fatalf("supporters: %s", Stringify(supporters))
-		}
-		for _, key := range []string{"honorary", "individuals"} {
-			if _, ok := property(supporters, key).([]any); !ok {
-				t.Fatalf("supporters.%s is no list", key)
-			}
 		}
 		for _, call := range []func() (any, error){
 			func() (any, error) { return s.SearchGoogleFonts("", "all") },

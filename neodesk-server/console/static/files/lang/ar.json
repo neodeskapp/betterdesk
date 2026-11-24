@@ -7889,17 +7889,9 @@
   },
   "help": {
     "panel": {
-      "title": "المساعدة والداعمون",
-      "thanks": "NeoDesk مجاني ومفتوح المصدر بفضل الأشخاص والمؤسسات الذين يؤمنون بالإدارة عن بُعد المستضافة ذاتيًا. شكرًا لكم.",
-      "honorary": "داعمون فخريون",
-      "backers": "داعمون أفراد",
-      "sponsor_cta": "ادعم المشروع",
       "links": "روابط مفيدة",
-      "link_sponsors": "GitHub Sponsors",
-      "link_bmc": "Buy Me a Coffee",
       "link_repo": "مستودع GitHub",
       "link_issues": "المشكلات والملاحظات",
-      "link_sponsors_md": "قائمة الرعاة الكاملة",
       "close": "إغلاق"
     }
   },

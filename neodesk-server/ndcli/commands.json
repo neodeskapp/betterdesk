@@ -7508,10 +7508,6 @@
    "reason": "What the web console loads for its own pages and layout."
   },
   {
-   "route": "GET /api/console/supporters",
-   "reason": "What the web console loads for its own pages and layout."
-  },
-  {
    "route": "GET /api/d/{publicId}/download/{platform}/{arch}/{format}",
    "reason": "Used by the person who got a link or the device that joins with it, not by an admin."
   },

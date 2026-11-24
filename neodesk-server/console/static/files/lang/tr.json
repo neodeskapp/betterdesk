@@ -7888,17 +7888,9 @@
   },
   "help": {
     "panel": {
-      "title": "Yardım ve destekçiler",
-      "thanks": "NeoDesk, kendi barındırılan uzaktan yönetime inanan kişi ve kuruluşlar sayesinde ücretsiz ve açık kaynaktır. Teşekkürler.",
-      "honorary": "Onur destekçileri",
-      "backers": "Bireysel destekçiler",
-      "sponsor_cta": "Projeyi destekle",
       "links": "Faydalı bağlantılar",
-      "link_sponsors": "GitHub Sponsors",
-      "link_bmc": "Buy Me a Coffee",
       "link_repo": "GitHub deposu",
       "link_issues": "Issues ve geri bildirim",
-      "link_sponsors_md": "Tam sponsor listesi",
       "close": "Kapat"
     }
   },

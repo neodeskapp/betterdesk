@@ -7886,17 +7886,9 @@
   },
   "help": {
     "panel": {
-      "title": "說明與支持者",
-      "thanks": "NeoDesk 能維持免費開源，多虧相信自行託管遠端管理的人們與組織。感謝你們。",
-      "honorary": "榮譽支持者",
-      "backers": "個人支持者",
-      "sponsor_cta": "支持本專案",
       "links": "實用連結",
-      "link_sponsors": "GitHub Sponsors",
-      "link_bmc": "Buy Me a Coffee",
       "link_repo": "GitHub 儲存庫",
       "link_issues": "Issues 與回饋",
-      "link_sponsors_md": "完整贊助者清單",
       "close": "關閉"
     }
   },

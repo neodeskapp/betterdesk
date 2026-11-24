@@ -7888,17 +7888,9 @@
   },
   "help": {
     "panel": {
-      "title": "Hjælp og støtter",
-      "thanks": "NeoDesk er gratis og open source takket være mennesker og organisationer, der tror på selvhostet fjernstyring. Tak.",
-      "honorary": "Æresstøtter",
-      "backers": "Individuelle støtter",
-      "sponsor_cta": "Støt projektet",
       "links": "Nyttige links",
-      "link_sponsors": "GitHub Sponsors",
-      "link_bmc": "Buy Me a Coffee",
       "link_repo": "GitHub-repository",
       "link_issues": "Issues og feedback",
-      "link_sponsors_md": "Fuld sponsorliste",
       "close": "Luk"
     }
   },

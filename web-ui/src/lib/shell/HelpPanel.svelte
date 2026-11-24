@@ -7,7 +7,6 @@
 -->
 <script lang="ts">
 	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import Icon from '#lib/ui/Icon.svelte';
 	import IconButton from '#lib/ui/IconButton.svelte';
 	import Sheet from '#lib/ui/Sheet.svelte';
 	import { openLayers } from '#lib/ui/layers.ts';
@@ -50,13 +49,13 @@
 {#if open && docked}
 	<aside bind:this={panel} {id} class="help-panel" aria-labelledby={`${uid}-title`}>
 		<div class="help-head">
-			<h2 class="help-title" id={`${uid}-title`}><Icon name="favorite" />{t('help.panel.title')}</h2>
+			<h2 class="help-title" id={`${uid}-title`}>{t('nav.help')}</h2>
 			<IconButton bind:element={closeBtn} icon="close" label={t('help.panel.close')} onclick={close} />
 		</div>
 		<div class="help-body"><HelpContent onguide={close} /></div>
 	</aside>
 {:else if open}
-	<Sheet bind:open title={t('help.panel.title')}>
+	<Sheet bind:open title={t('nav.help')}>
 		<HelpContent onguide={() => (open = false)} />
 	</Sheet>
 {/if}
@@ -85,14 +84,7 @@
 		border-bottom: 1px solid var(--rule);
 	}
 	.help-title {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
 		font-size: var(--text-md);
-	}
-	.help-title > :global(.material-icons) {
-		color: var(--accent);
-		font-size: 20px;
 	}
 	.help-body {
 		flex: 1;

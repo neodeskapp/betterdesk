@@ -377,7 +377,7 @@ func TestStampRecordsTheTimesInPlace(t *testing.T) {
 		"public/fonts/.gitkeep":  time.Date(2023, 6, 7, 8, 9, 10, 0, time.UTC),
 		"_x/b.txt":               time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
 		"config/theme.json":      time.Date(2021, 5, 6, 7, 8, 9, 999000000, time.UTC),
-		"themes/sub/insolve.txt": time.Date(2020, 2, 3, 4, 5, 6, 0, time.UTC),
+		"themes/sub/example.txt": time.Date(2020, 2, 3, 4, 5, 6, 0, time.UTC),
 	}
 	dir := makeTree(t, source)
 	writeFile(t, filepath.Join(dir, Placeholder), "")

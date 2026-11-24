@@ -7888,17 +7888,9 @@
   },
   "help": {
     "panel": {
-      "title": "सहायता और समर्थक",
-      "thanks": "NeoDesk उन लोगों और संगठनों की बदौलत मुफ़्त और ओपन सोर्स है जो स्व-होस्टेड रिमोट प्रबंधन में विश्वास करते हैं। धन्यवाद।",
-      "honorary": "मानद समर्थक",
-      "backers": "व्यक्तिगत समर्थक",
-      "sponsor_cta": "परियोजना का समर्थन करें",
       "links": "उपयोगी लिंक",
-      "link_sponsors": "GitHub Sponsors",
-      "link_bmc": "Buy Me a Coffee",
       "link_repo": "GitHub रिपॉज़िटरी",
       "link_issues": "Issues और प्रतिक्रिया",
-      "link_sponsors_md": "पूर्ण प्रायोजक सूची",
       "close": "बंद करें"
     }
   },

@@ -100,7 +100,6 @@ the collation of the database on PostgreSQL.
 | Built-in themes | `<console>/themes/*.json` | `ThemesDir` |
 | Built-in palettes | `<console>/config/theme-palettes.json` | `PalettesFile` |
 | Default favicon | `<console>/public/favicon.svg` | `FaviconFile` |
-| Supporters list | `<console>/config/supporters.json` | `SupportersFile` |
 
 `<console>` is the folder of the Node console (`web-nodejs`). Fonts and
 the temporary folder sit in the program's folder, not in the data

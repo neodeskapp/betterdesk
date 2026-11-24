@@ -9,9 +9,8 @@ import (
 )
 
 // What the web app loads before it renders: the boot script that runs in
-// the page's head, the bootstrap with the account, its permissions, panel
-// access, navigation, languages and branding, and the supporters list of
-// the Help panel.
+// the page's head, and the bootstrap with the account, its permissions,
+// panel access, navigation, languages and branding.
 //
 // A bootstrap under an account policy is pinned by the tests of
 // console/routes/console: writing the policy is a route of the Go console,
@@ -61,12 +60,5 @@ func init() {
 		},
 		contract.Case{Name: "bootstrap-with-a-query", Path: "/api/console/bootstrap", Query: url.Values{"page": {"devices"}}, Roles: some},
 		contract.Case{Name: "bootstrap-other-spelling", Path: "/API/Console/Bootstrap/", Roles: some},
-
-		contract.Case{Name: "supporters", Path: "/api/console/supporters"},
-		contract.Case{Name: "supporters-head", Method: "HEAD", Path: "/api/console/supporters", Roles: some},
-		contract.Case{
-			Name: "supporters-not-modified", Path: "/api/console/supporters",
-			Headers: map[string]string{"If-None-Match": "*"}, Roles: some,
-		},
 	)
 }

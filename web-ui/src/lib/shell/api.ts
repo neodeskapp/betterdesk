@@ -1,9 +1,9 @@
 /**
  * Endpoints the shell calls (the old shell's scripts called the same):
  * notifications (notif-center.js), the registration count (app.js),
- * sign-out and session check (app.js, session-guard.js), people for the
- * global search (ui-search.js), and the supporters the old layout rendered
- * on the server. The branding details come with the bootstrap.
+ * sign-out and session check (app.js, session-guard.js) and people for
+ * the global search (ui-search.js). The branding details come with the
+ * bootstrap.
  */
 
 import * as v from 'valibot';
@@ -172,31 +172,4 @@ export function brandingExtras(b: Bootstrap['branding']): BrandingExtras {
 		footerText: b.footerText,
 		showPoweredBy: b.showPoweredBy
 	};
-}
-
-/* ── Help panel: project supporters and links (config/supporters.json) ── */
-
-const Url = v.optional(v.nullable(v.string()), '');
-
-export const Supporters = v.looseObject({
-	honorary: v.optional(
-		v.array(v.looseObject({ name: Text, role: Text, url: Url, logo: Url, blurb: Text })),
-		[]
-	),
-	individuals: v.optional(v.array(v.looseObject({ name: Text, github: Text, githubUrl: Url })), []),
-	links: v.optional(
-		v.looseObject({
-			repo: Url,
-			issues: Url,
-			sponsors: Url,
-			buyMeACoffee: Url,
-			sponsorsMd: Url
-		}),
-		{}
-	)
-});
-export type Supporters = v.InferOutput<typeof Supporters>;
-
-export function getSupporters(signal?: AbortSignal): Promise<Supporters> {
-	return api(Supporters, '/api/console/supporters', { signal });
 }

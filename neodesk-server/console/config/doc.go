@@ -123,7 +123,7 @@
 // The console's own files ship in the binary (package static), or come
 // from CONSOLE_STATIC_DIR: the language files, public/ (favicon.svg and
 // img/, served at the root), protos/ (served as /protos/), the built-in
-// themes, config/theme-palettes.json and config/supporters.json.
+// themes and config/theme-palettes.json.
 // CONSOLE_DIR/wallpapers, served as /wallpapers/, holds no files that
 // ship; it stays on disk.
 //

@@ -1,18 +1,23 @@
 # Recordings of the old console for console/branding
 
 The gzipped files here are fixed records of what the Node console's
-branding, font and supporters code answered, made while it still existed.
+branding and font code answered, made while it still existed.
 They can't be recorded again. The Go tests replay every record and must
 answer the same, byte for byte; they need no Node. Don't edit them: when a
 fix changes an answer on purpose, the test lists that record as an
 intended difference with the row id. The copies of the console's own files
 in `console` belong to the recordings and stay as they are too.
 
+`files.json.gz` differs from the recording in two places, both edited by
+hand: it has no supporters list (the console has none), and the branded
+theme it applies is the made-up `console/themes/example.json`, whose names
+replace the recorded theme's in the theme steps.
+
 | File | What it holds | Replayed by |
 |---|---|---|
 | `pure.json.gz` | about 35,000 calls of the functions of `services/brandingService.js` and `services/fontService.js` that need no database: `sanitizeSvg`, `validateBrandingUrl`, `sanitizeCssColorValue`, `sanitizeCustomCss`, `buildBackgroundValue`, the normalisers, `sanitizeLoginSlides`, `flattenAppearanceInput`, `resolveThemeColors`, `hexToMutedRgba`, `usesDefaultLogo`, `getAppearanceModel`, `assessAppearanceReadability`, `sanitizeFontName`, `escapeCssString`, and the exported constants | `TestOraclePure`, `TestOracleConstants` |
 | `store_sqlite.json.gz`, `store_postgres.json.gz` | a scenario of about 3,300 steps on the real `services/database` and `brandingService`: generated settings saved, resets, theme imports, rows written straight into `branding_config`, and the profile functions; after every step the stored rows, the cached settings, the stylesheet, and one hash over appearance model, readability, public appearance, export and favicon | `TestOracleStore` |
-| `files.json.gz` | the font service step by step with the fonts folder after each step (search, download with the requests it sent, upload, list, delete, the font CSS, the cache file); uploads of logos, backgrounds and fonts through `routes/settings.routes.js`; the background list; the themes list and apply; the supporters list for a dozen file contents; the font files the uploads used | `TestOracleFiles`, and `TestUploadsLikeNode` in `console/routes/settings` |
+| `files.json.gz` | the font service step by step with the fonts folder after each step (search, download with the requests it sent, upload, list, delete, the font CSS, the cache file); uploads of logos, backgrounds and fonts through `routes/settings.routes.js`; the background list; the themes list and apply; the font files the uploads used | `TestOracleFiles`, and `TestUploadsLikeNode` in `console/routes/settings` |
 | `idna.json.gz` | what Node's `URL` made of every code point in a host name (the table), and 20,000 URLs with hosts made of interesting characters | `TestOracleHosts` |
 
 The Go source file `../idna_table.go` was generated from Node's tables by

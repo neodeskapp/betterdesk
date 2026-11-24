@@ -7888,17 +7888,9 @@
   },
   "help": {
     "panel": {
-      "title": "Trợ giúp & nhà tài trợ",
-      "thanks": "NeoDesk miễn phí và mã nguồn mở nhờ những người và tổ chức tin vào quản lý từ xa tự lưu trữ. Cảm ơn bạn.",
-      "honorary": "Nhà tài trợ danh dự",
-      "backers": "Nhà tài trợ cá nhân",
-      "sponsor_cta": "Hỗ trợ dự án",
       "links": "Liên kết hữu ích",
-      "link_sponsors": "GitHub Sponsors",
-      "link_bmc": "Buy Me a Coffee",
       "link_repo": "Kho GitHub",
       "link_issues": "Issues & phản hồi",
-      "link_sponsors_md": "Danh sách nhà tài trợ đầy đủ",
       "close": "Đóng"
     }
   },

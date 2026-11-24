@@ -52,7 +52,6 @@ func worldWithLanguages(t *testing.T, db *store.DB, langDir string) *routetest.W
 		cfg.LangDir = langDir
 		cfg.Version = "9.8.7"
 		cfg.PalettesFile = filepath.Join(fixtures, "config", "theme-palettes.json")
-		cfg.SupportersFile = filepath.Join(fixtures, "config", "supporters.json")
 		cfg.FaviconFile = filepath.Join(fixtures, "public", "favicon.svg")
 		cfg.ThemesDir = filepath.Join(fixtures, "themes")
 	}})
@@ -350,16 +349,9 @@ func tailOf(s string) string {
 	return s
 }
 
-func TestSupportersAndBootScript(t *testing.T) {
+func TestBootScriptAnswer(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := world(t, db)
-		if res := w.SignedOut().Do("GET", "/api/console/supporters", ""); res.Status != http.StatusUnauthorized {
-			t.Errorf("supporters signed out: %d", res.Status)
-		}
-		res := w.As("viewer").Do("GET", "/api/console/supporters", "")
-		if res.Status != http.StatusOK || keyOrder(t, res.Body) != "success,honorary,individuals,links" || !strings.HasPrefix(res.Body, `{"success":true,`) {
-			t.Errorf("supporters: %d %s", res.Status, res.Body)
-		}
 		boot := w.SignedOut().Do("GET", "/console-boot.js", "", "Accept-Language", "ar")
 		if boot.Status != http.StatusOK || boot.Header.Get("Content-Type") != "application/javascript; charset=utf-8" ||
 			boot.Header.Get("Cache-Control") != "no-store" || boot.Header.Get("ETag") == "" {

@@ -7882,17 +7882,9 @@
   },
   "help": {
     "panel": {
-      "title": "Nápověda a podporovatelé",
-      "thanks": "NeoDesk je zdarma a open source díky lidem a organizacím, které věří v self-hostovanou vzdálenou správu. Děkujeme.",
-      "honorary": "Čestní podporovatelé",
-      "backers": "Individuální podporovatelé",
-      "sponsor_cta": "Podpořit projekt",
       "links": "Užitečné odkazy",
-      "link_sponsors": "GitHub Sponsors",
-      "link_bmc": "Buy Me a Coffee",
       "link_repo": "Repozitář GitHub",
       "link_issues": "Issues a zpětná vazba",
-      "link_sponsors_md": "Úplný seznam sponzorů",
       "close": "Zavřít"
     }
   },

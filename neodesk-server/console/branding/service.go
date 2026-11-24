@@ -49,13 +49,9 @@ type Options struct {
 	// FaviconFile is the default favicon. Node: <console>/public/favicon.svg.
 	// A built-in mark is used when it cannot be read.
 	FaviconFile string
-	// SupportersFile is the list of supporters for the Help panel. Node:
-	// <console>/config/supporters.json.
-	SupportersFile string
 	// Files is the tree of the console's own files (package static). Each
-	// of the four built-in files above whose option is empty is read from
-	// it: themes, config/theme-palettes.json, public/favicon.svg and
-	// config/supporters.json.
+	// of the three built-in files above whose option is empty is read from
+	// it: themes, config/theme-palettes.json and public/favicon.svg.
 	Files fs.FS
 
 	// HTTP sends the requests of a font download to fonts.googleapis.com
@@ -79,9 +75,8 @@ type Options struct {
 }
 
 // Service is the console's branding: the appearance settings with their
-// cache, the stylesheet made from them, saved profiles, themes, fonts,
-// uploaded pictures and the supporters list. It is safe for concurrent
-// use.
+// cache, the stylesheet made from them, saved profiles, themes, fonts and
+// uploaded pictures. It is safe for concurrent use.
 //
 // The cache is the one copy every reader uses. The writes (save, reset,
 // import, a profile or a theme applied, a background applied) reload it
@@ -99,9 +94,6 @@ type Service struct {
 
 	faviconOnce sync.Once
 	favicon     string
-
-	supportersMu sync.Mutex
-	supporters   *Object
 }
 
 // New creates the service, reads the built-in palettes and creates

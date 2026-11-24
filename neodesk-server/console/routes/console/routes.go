@@ -1,7 +1,6 @@
 // Package console holds the endpoints the web app itself needs before it
 // renders: the boot script that runs in the page's head, the bootstrap of
-// a signed-in account, the strings of a language and the supporters list
-// of the Help panel.
+// a signed-in account and the strings of a language.
 package console
 
 import "github.com/neodeskapp/neodesk/neodesk-server/console/kit"
@@ -26,5 +25,4 @@ func Register(d *kit.Deps) {
 	r.Get("/console-boot.js", h.bootScript)
 	r.Get("/api/console/strings/{code}", d.I18n.Strings)
 	r.Get("/api/console/bootstrap", h.bootstrap, d.RequireAuth)
-	r.Get("/api/console/supporters", h.supporters, d.RequireAuth)
 }

@@ -5,7 +5,7 @@
 //	public/     what the console serves at its root: favicon.svg, img/
 //	protos/     the protocol files, served at /protos
 //	themes/     the built-in theme presets
-//	config/     theme-palettes.json and supporters.json
+//	config/     theme-palettes.json
 //
 // The files are embedded where they are, so the source tree and the
 // binary hold the same bytes. cmd/embed-webui records their modification

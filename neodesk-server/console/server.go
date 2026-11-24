@@ -307,7 +307,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	s.deps.Branding, err = branding.New(branding.Options{
 		DB: opts.Store, UploadsDir: cfg.UploadsDir, FontsDir: cfg.FontsDir, FontCacheFile: cfg.FontCacheFile,
 		TempDir: cfg.TempDir, ThemesDir: cfg.ThemesDir, PalettesFile: cfg.PalettesFile, FaviconFile: cfg.FaviconFile,
-		SupportersFile: cfg.SupportersFile, Files: cfg.Static,
+		Files: cfg.Static,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("branding: %w", err)

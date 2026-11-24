@@ -24,9 +24,8 @@ import (
 
 // testdata/files.json.gz recorded everything that touches files:
 // the font service on a scratch folder, uploads through the Node routes,
-// the background list, the built-in themes and the supporters list. The
-// tests here do the same with this package and compare answers and
-// folders.
+// the background list and the built-in themes. The tests here do the
+// same with this package and compare answers and folders.
 
 var (
 	reRandomName = regexp.MustCompile(`\b(logo|bg)-[0-9a-f]{16}`)
@@ -224,7 +223,6 @@ func newFilesReplay(t *testing.T) *filesReplay {
 	if err := os.Mkdir(filepath.Join(opts.ThemesDir, "folder.json"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	opts.SupportersFile = filepath.Join(r.dir, "config", "supporters.json")
 	s, err := New(opts)
 	if err != nil {
 		t.Fatal(err)
@@ -674,47 +672,6 @@ func (r *filesReplay) themes() {
 	}
 }
 
-// forkLinks turns the built-in project links of Node's answers, which
-// pointed at upstream, into the fork's that the console has instead
-// (BUGS L32). A file that names its own links keeps them.
-var forkLinks = strings.NewReplacer(
-	`"https://github.com/UNITRONIX/BetterDesk"`, `"https://github.com/neodeskapp/neodesk"`,
-	`"https://github.com/UNITRONIX/BetterDesk/issues"`, `"https://github.com/neodeskapp/neodesk/issues"`,
-	`"https://github.com/UNITRONIX/BetterDesk/blob/main/SPONSORS.md"`, `"https://neode.sk/docs/project/sponsors"`,
-)
-
-func (r *filesReplay) supporters() {
-	t, s := r.t, r.s
-	steps, _ := property(r.data, "supporters").([]any)
-	if len(steps) < 10 {
-		t.Errorf("%d supporter files recorded, expected more than 10", len(steps))
-	}
-	file := s.opts.SupportersFile
-	for i, step := range steps {
-		if text, ok := property(step, "text").(string); ok {
-			r.write(file, []byte(text))
-		} else if err := os.Remove(file); err != nil {
-			t.Fatal(err)
-		}
-		s.ResetSupportersCache()
-		first := Stringify(s.LoadSupporters())
-		want := toString(property(step, "r"))
-		if text, _ := property(step, "text").(string); !strings.Contains(text, "github.com/UNITRONIX/BetterDesk") {
-			want = forkLinks.Replace(want)
-		}
-		if first != want {
-			t.Errorf("supporters file %d %s\n got  %s\n want %s", i, clip(Stringify(property(step, "text"))), clip(first), clip(want))
-		}
-		// the answer is kept until the cache is reset
-		if _, ok := property(step, "text").(string); ok {
-			r.write(file, []byte(`{"honorary":[{"name":"changed"}]}`))
-		}
-		if again := Stringify(s.LoadSupporters()); again != first || property(step, "cached") != true {
-			t.Errorf("supporters file %d: a second call answered %s after %s", i, clip(again), clip(first))
-		}
-	}
-}
-
 func TestOracleFiles(t *testing.T) {
 	r := newFilesReplay(t)
 	t.Run("fonts", func(t *testing.T) {
@@ -748,5 +705,4 @@ func TestOracleFiles(t *testing.T) {
 		}
 	})
 	t.Run("themes", func(t *testing.T) { r.t = t; r.themes() })
-	t.Run("supporters", func(t *testing.T) { r.t = t; r.supporters() })
 }

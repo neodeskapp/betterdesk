@@ -200,7 +200,6 @@ func init() {
 		// Built-in themes
 		contract.Case{Name: "theme-apply", Method: "POST", Path: "/api/settings/themes/light/apply", Body: map[string]any{}, Roles: editors},
 		contract.Case{Name: "export-after-theme", Path: export, Roles: admin},
-		contract.Case{Name: "theme-apply-insolve", Method: "POST", Path: "/api/settings/themes/insolve/apply", Body: map[string]any{}, Roles: admin},
 		contract.Case{Name: "theme-apply-bad-id", Method: "POST", Path: "/api/settings/themes/bad.id/apply", Body: map[string]any{}, Roles: admin},
 		contract.Case{Name: "theme-apply-missing", Method: "POST", Path: "/api/settings/themes/nothing-here/apply", Body: map[string]any{}, Roles: admin},
 		contract.Case{Name: "reset-after-themes", Method: "POST", Path: reset, Body: map[string]any{}, As: "admin", Roles: editors},

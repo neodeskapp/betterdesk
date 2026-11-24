@@ -182,13 +182,13 @@ func TestApplyTheme(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := world(t, db)
 		admin := w.As("admin")
-		if res := admin.Do("POST", "/api/settings/themes/insolve/apply", "{}"); res.Body != `{"success":true,"message":"Theme \"insolve\" applied"}` {
+		if res := admin.Do("POST", "/api/settings/themes/example/apply", "{}"); res.Body != `{"success":true,"message":"Theme \"example\" applied"}` {
 			t.Errorf("apply: %d %s", res.Status, res.Body)
 		}
-		if got := lastAudit(t, w); got != "theme_apply|Applied theme: insolve|127.0.0.1|1" {
+		if got := lastAudit(t, w); got != "theme_apply|Applied theme: example|127.0.0.1|1" {
 			t.Errorf("audit: %s", got)
 		}
-		if got := w.Server.Deps().Branding.GetBranding().Text("appName"); got != "insolve Core Server" {
+		if got := w.Server.Deps().Branding.GetBranding().Text("appName"); got != "example Core Server" {
 			t.Errorf("after the theme: %s", got)
 		}
 		before := len(w.AuditRows())
@@ -304,7 +304,7 @@ func TestEveryWriteReachesTheReaders(t *testing.T) {
 		steps := []struct{ method, path, body, want string }{
 			{"POST", "/api/settings/branding/import", `{"type":"neodesk-theme","branding":{"appName":"Imported"}}`, "Imported"},
 			{"POST", "/api/settings/branding/profiles/" + strconv.Itoa(int(profile)) + "/apply", "{}", "From profile"},
-			{"POST", "/api/settings/themes/insolve/apply", "{}", "insolve Core Server"},
+			{"POST", "/api/settings/themes/example/apply", "{}", "example Core Server"},
 			{"POST", "/api/settings/branding/reset", "{}", "NeoDesk"},
 		}
 		for _, s := range steps {

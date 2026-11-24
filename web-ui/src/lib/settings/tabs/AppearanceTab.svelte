@@ -103,8 +103,8 @@
 	/** Examples in empty fields: names, addresses and code, the same in every language */
 	const EX = {
 		appName: 'NeoDesk',
-		logoText: 'insolve',
-		logoAccent: 'Core Server',
+		logoText: 'Example',
+		logoAccent: 'Remote Support',
 		logoIcon: 'dns',
 		svg: '<svg>…</svg>',
 		logoUrl: '/uploads/logo.png',

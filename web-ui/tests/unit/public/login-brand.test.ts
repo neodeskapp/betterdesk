@@ -79,11 +79,11 @@ describe('logo', () => {
 
 	test('the second line of a text logo is a line of its own, on the sign-in page and in the sidebar', () => {
 		render(LoginBrand, {
-			branding: branding({ logoType: 'text', logoText: 'insolve', logoTextAccent: 'Core Server' }),
+			branding: branding({ logoType: 'text', logoText: 'Example', logoTextAccent: 'Core Server' }),
 			appName: 'x'
 		});
 		const login = document.querySelector('.brand-text-logo')!;
-		expect([...login.children].map((c) => c.textContent)).toEqual(['insolve', 'Core Server']);
+		expect([...login.children].map((c) => c.textContent)).toEqual(['Example', 'Core Server']);
 		expect(login.classList.contains('has-second-line')).toBe(true);
 		cleanup();
 
@@ -94,7 +94,7 @@ describe('logo', () => {
 			navigation: 0,
 			branding: {
 				logoType: 'text',
-				logoText: 'insolve',
+				logoText: 'Example',
 				logoTextAccent: 'Core Server',
 				logoIcon: '',
 				logoSvg: '',
@@ -104,7 +104,7 @@ describe('logo', () => {
 			}
 		});
 		const side = document.querySelector('.logo-text')!;
-		expect([...side.children].map((c) => c.textContent)).toEqual(['insolve', 'Core Server']);
+		expect([...side.children].map((c) => c.textContent)).toEqual(['Example', 'Core Server']);
 		expect(side.classList.contains('has-second-line')).toBe(true);
 	});
 });

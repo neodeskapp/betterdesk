@@ -1,6 +1,6 @@
 <!--
 Routes that call this package. From inventory.json: every route whose
-calls.services names brandingService, fontService or supportersService.
+calls.services names brandingService or fontService.
 Method, path, file and line of the Node route.
 
 GET    /api/nd/server-info                               routes/bd-api.routes.js:161
@@ -9,7 +9,6 @@ GET    /api/nd/appearance                                routes/bd-api.routes.js
 GET    /api/auth/login-page                              routes/auth.routes.js:91
 GET    /console-boot.js                                  routes/console.routes.js:187
 GET    /api/console/bootstrap                            routes/console.routes.js:245
-GET    /api/console/supporters                           routes/console.routes.js:315
 GET    /api/settings/branding                            routes/settings.routes.js:319
 GET    /api/settings/appearance                          routes/settings.routes.js:338
 POST   /api/settings/branding                            routes/settings.routes.js:357
@@ -82,7 +81,6 @@ of a full backup). The writes are in `console/routes/settings`
 | `GET /api/auth/login-page` | auth.routes.js:91 | `appName`: `s.AppName(config app name)`, and "NeoDesk" when that is empty too. `branding`: `s.SignInBranding()`, the whole object as the route sent it. The capacity badge (`attestationSummary`, auth.routes.js:51) takes `s.GetBranding().Text("appName")` as the brand name |
 | `GET /console-boot.js` | console.routes.js:94 (`publicBoot`), :187 | `themeMode`: `s.ThemeMode()`, `palettes`: `s.BootPalettes()`, `brandingRevision`: `s.Revision()` |
 | `GET /api/console/bootstrap` | :245 | `branding`: `s.BootstrapBranding(config app name)`, `palettes`: `s.BootPalettes()` |
-| `GET /api/console/supporters` | :315 | `{success: true}` plus the three keys of `s.LoadSupporters()` (honorary, individuals, links) |
 | `GET /api/d/:publicId/page` | generator.routes.js:754 | `b` (appName, logoType, logoUrl, agentShowPoweredBy), `branding.BuildBackgroundValue(agentBgType, agentBgColor, agentBgGradient, agentBgImageUrl)` |
 | `GET /api/remote/login-info`, `guest-info` | remote.routes.js:191, :208 | `b`: appName, logoType, logoIcon, logoSvg, logoUrl, logoText, logoTextAccent |
 | `/api/server-attestation/badge-config` (GET, PUT), `GET /api/public/server-attestation` | server-attestation.routes.js:68, :81, :107 | `b.Text("appName")` as the brand name |

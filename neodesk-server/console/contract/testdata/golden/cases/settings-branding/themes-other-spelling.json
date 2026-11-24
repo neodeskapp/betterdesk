@@ -102,36 +102,6 @@
       },
       {
        "colors": {
-        "accentBlue": "#ffd600",
-        "accentBlueHover": "#ffe040",
-        "accentBlueMuted": "#c8a800",
-        "accentGreen": "#2ea44f",
-        "accentGreenHover": "#3fb950",
-        "accentGreenMuted": "#2ea44f",
-        "accentPurple": "#a371f7",
-        "accentPurpleHover": "#bc8cff",
-        "accentPurpleMuted": "#a371f7",
-        "accentRed": "#f85149",
-        "accentRedHover": "#ff6b6b",
-        "accentRedMuted": "#f85149",
-        "accentYellow": "#ffd600",
-        "accentYellowHover": "#ffe040",
-        "accentYellowMuted": "#c8a800",
-        "bgElevated": "#252b38",
-        "bgPrimary": "#0c0f14",
-        "bgSecondary": "#12161e",
-        "bgTertiary": "#1a1f2b",
-        "borderPrimary": "#6e7481",
-        "borderSecondary": "#1a1f2b",
-        "textPrimary": "#e8ecf1",
-        "textSecondary": "#8a94a6"
-       },
-       "description": "Insolve Device Management",
-       "id": "insolve",
-       "name": "insolve Core Server"
-      },
-      {
-       "colors": {
         "accentBlue": "#1b62cf",
         "accentBlueHover": "#1854b3",
         "accentBlueMuted": "rgba(27, 98, 207, 0.15)",

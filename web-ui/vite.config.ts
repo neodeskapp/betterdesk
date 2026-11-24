@@ -19,7 +19,7 @@ const backend = process.env.ND_BACKEND ?? 'http://localhost:5000';
 const serverPaths =
 	'^/(?:api|ws|health|logout|register-status|downloads|dev|generator|tenants|remote-dashboard|remote-cdap|remote-desktop' +
 	'|css|branding|uploads|wallpapers|protos|console-boot[.]js|favicon[.]svg|img/neodesk_icon[.]png)(?=[/?]|$)' +
-	'|^/img/(?:login-slides|supporters)/|^/fonts/[^/?]+/';
+	'|^/img/login-slides/|^/fonts/[^/?]+/';
 // The proxy keeps its connections to the server open and reuses them.
 // Without an agent it opens a new connection for every request, and from a
 // container through host.docker.internal some of those connects stall for

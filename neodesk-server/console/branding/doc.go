@@ -1,8 +1,8 @@
 // Package branding is the console's own look: the appearance settings and
 // their defaults, the rules that clean every value before it is stored,
 // the stylesheet /css/branding.css made from the settings, saved profiles
-// and built-in themes, custom fonts, uploaded logo and background
-// pictures, and the supporters list of the Help panel.
+// and built-in themes, custom fonts, and uploaded logo and background
+// pictures.
 //
 // The settings live in the table branding_config, one row per setting,
 // and are served from a cache that LoadBranding fills at start and after

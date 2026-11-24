@@ -23,7 +23,7 @@ func folders(cfg *Config) map[string]string {
 		"UploadsDir": cfg.UploadsDir, "TransfersDir": cfg.TransfersDir, "FontsDir": cfg.FontsDir, "OldFontsDir": cfg.OldFontsDir,
 		"FontCacheFile": cfg.FontCacheFile, "TempDir": cfg.TempDir, "StaticDir": cfg.StaticDir, "LangDir": cfg.LangDir,
 		"PublicDir": cfg.PublicDir, "ProtosDir": cfg.ProtosDir, "ThemesDir": cfg.ThemesDir, "PalettesFile": cfg.PalettesFile,
-		"FaviconFile": cfg.FaviconFile, "SupportersFile": cfg.SupportersFile,
+		"FaviconFile": cfg.FaviconFile,
 	}
 }
 
@@ -61,7 +61,7 @@ func TestLoadDefaults(t *testing.T) {
 		"OldFontsDir":   filepath.Join(console, "public", "fonts"),
 		// The console's own files come from the binary
 		"StaticDir": "", "LangDir": "", "PublicDir": "", "ProtosDir": "",
-		"ThemesDir": "", "PalettesFile": "", "FaviconFile": "", "SupportersFile": "",
+		"ThemesDir": "", "PalettesFile": "", "FaviconFile": "",
 	}
 	got := folders(cfg)
 	for name, dir := range want {
@@ -75,7 +75,7 @@ func TestLoadDefaults(t *testing.T) {
 	for _, name := range []string{
 		"lang/en.json", "lang/pl.json", "lang/zh-TW.json", "public/favicon.svg", "public/img/neodesk_icon.png",
 		"public/img/login-slides/free.jpg", "protos/rendezvous.proto", "protos/message.proto", "themes/default.json",
-		"config/theme-palettes.json", "config/supporters.json",
+		"config/theme-palettes.json",
 	} {
 		if info, err := fs.Stat(cfg.Static, name); err != nil || info.Size() == 0 {
 			t.Errorf("%s in the binary: %v", name, err)
@@ -157,7 +157,7 @@ func TestLoadValues(t *testing.T) {
 		// The language files come from CONSOLE_LANG_DIR, the other
 		// files of the console from the binary
 		"LangDir": "/langs", "StaticDir": "", "PublicDir": "", "ProtosDir": "",
-		"ThemesDir": "", "PalettesFile": "", "FaviconFile": "", "SupportersFile": "",
+		"ThemesDir": "", "PalettesFile": "", "FaviconFile": "",
 	}
 	got := folders(cfg)
 	for name, dir := range want {
@@ -178,14 +178,13 @@ func TestStaticDir(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := map[string]string{
-		"StaticDir":      "/src/static",
-		"LangDir":        filepath.Join("/src/static", "lang"),
-		"PublicDir":      filepath.Join("/src/static", "public"),
-		"ProtosDir":      filepath.Join("/src/static", "protos"),
-		"ThemesDir":      filepath.Join("/src/static", "themes"),
-		"PalettesFile":   filepath.Join("/src/static", "config", "theme-palettes.json"),
-		"FaviconFile":    filepath.Join("/src/static", "public", "favicon.svg"),
-		"SupportersFile": filepath.Join("/src/static", "config", "supporters.json"),
+		"StaticDir":    "/src/static",
+		"LangDir":      filepath.Join("/src/static", "lang"),
+		"PublicDir":    filepath.Join("/src/static", "public"),
+		"ProtosDir":    filepath.Join("/src/static", "protos"),
+		"ThemesDir":    filepath.Join("/src/static", "themes"),
+		"PalettesFile": filepath.Join("/src/static", "config", "theme-palettes.json"),
+		"FaviconFile":  filepath.Join("/src/static", "public", "favicon.svg"),
 		// State stays where it was
 		"ConsoleDir": "/console", "DataDir": filepath.Join("/console", "data"),
 		"FontsDir": filepath.Join("/console", "data", "fonts"), "WallpapersDir": filepath.Join("/console", "wallpapers"),

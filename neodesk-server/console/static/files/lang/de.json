@@ -7882,17 +7882,9 @@
   },
   "help": {
     "panel": {
-      "title": "Hilfe & Unterstützer",
-      "thanks": "NeoDesk ist kostenlos und Open Source dank Menschen und Organisationen, die an selbst hostbare Fernverwaltung glauben. Danke.",
-      "honorary": "Ehrenunterstützer",
-      "backers": "Einzelne Unterstützer",
-      "sponsor_cta": "Projekt unterstützen",
       "links": "Nützliche Links",
-      "link_sponsors": "GitHub Sponsors",
-      "link_bmc": "Buy Me a Coffee",
       "link_repo": "GitHub-Repository",
       "link_issues": "Issues & Feedback",
-      "link_sponsors_md": "Vollständige Sponsorenliste",
       "close": "Schließen"
     }
   },

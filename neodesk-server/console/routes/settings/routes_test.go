@@ -150,7 +150,7 @@ func TestProfilesThemesFontsBackgrounds(t *testing.T) {
 			t.Errorf("profiles not by name without regard to case: %s", res.Body)
 		}
 		themes := admin.Do("GET", "/api/settings/themes", "").Body
-		for _, id := range []string{`"id":"default"`, `"id":"insolve"`, `"id":"light"`} {
+		for _, id := range []string{`"id":"default"`, `"id":"example"`, `"id":"light"`} {
 			if !strings.Contains(themes, id) {
 				t.Errorf("themes lack %s: %s", id, themes)
 			}

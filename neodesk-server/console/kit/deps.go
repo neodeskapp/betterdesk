@@ -105,10 +105,9 @@ type Deps struct {
 	// console's tables add to them (services/serverBackend.js).
 	Backend *goapi.Backend
 	// Branding is the console's own look: the appearance settings, the
-	// stylesheet made from them, profiles, themes, fonts and the supporters
-	// list (services/brandingService.js, fontService.js,
-	// supportersService.js). Its cache is what every route reads; the
-	// writes reload it.
+	// stylesheet made from them, profiles, themes and fonts
+	// (services/brandingService.js, fontService.js). Its cache is what
+	// every route reads; the writes reload it.
 	Branding *branding.Service
 	// Mail is the mail service: the SMTP settings, the alert and help
 	// request mails, the log of notifications sent

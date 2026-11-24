@@ -137,7 +137,6 @@
   {"id":"GET /api/panel/commercialization/smtp-status","method":"GET","path":"/api/panel/commercialization/smtp-status","app":"console","group":"commercialization","csrf":"gate","file":"routes/commercialization.routes.js"},
   {"id":"GET /api/console/bootstrap","method":"GET","path":"/api/console/bootstrap","app":"console","group":"console","csrf":"gate","file":"routes/console.routes.js"},
   {"id":"GET /api/console/strings/:code","method":"GET","path":"/api/console/strings/:code","app":"console","group":"console","csrf":"gate","file":"routes/console.routes.js"},
-  {"id":"GET /api/console/supporters","method":"GET","path":"/api/console/supporters","app":"console","group":"console","csrf":"gate","file":"routes/console.routes.js"},
   {"id":"GET /console-boot.js","method":"GET","path":"/console-boot.js","app":"console","group":"console","csrf":"gate","file":"routes/console.routes.js"},
   {"id":"GET /api/panel/cross-platform/capabilities/:deviceId","method":"GET","path":"/api/panel/cross-platform/capabilities/:deviceId","app":"console","group":"cross-platform","csrf":"gate","file":"routes/cross-platform.routes.js"},
   {"id":"GET /api/panel/cross-platform/distribution","method":"GET","path":"/api/panel/cross-platform/distribution","app":"console","group":"cross-platform","csrf":"gate","file":"routes/cross-platform.routes.js"},

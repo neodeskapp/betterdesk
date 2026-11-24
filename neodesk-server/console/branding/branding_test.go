@@ -1327,7 +1327,7 @@ func TestThemes(t *testing.T) {
 			t.Errorf("keys of a theme: %s", got)
 		}
 	}
-	if names["default"] != "NeoDesk Dark" || names["light"] != "NeoDesk Light" || names["insolve"] != "insolve Core Server" {
+	if names["default"] != "NeoDesk Dark" || names["light"] != "NeoDesk Light" || names["example"] != "example Core Server" {
 		t.Errorf("built-in themes: %v", names)
 	}
 	if result, err := s.ApplyTheme(ctx, "light"); result != ThemeApplied || err != nil {
@@ -1347,36 +1347,6 @@ func TestThemes(t *testing.T) {
 	missing.opts.ThemesDir = filepath.Join(t.TempDir(), "none")
 	if list, err := missing.ListThemes(); err != nil || len(list) != 0 {
 		t.Errorf("themes without the folder: %v, %v", list, err)
-	}
-}
-
-func TestSupporters(t *testing.T) {
-	s := oracleService(t)
-	got := s.LoadSupporters()
-	if keyList(got) != `["honorary","individuals","links"]` {
-		t.Errorf("keys: %s", keyList(got))
-	}
-	honorary, _ := got.Get("honorary")
-	if list := honorary.([]any); len(list) == 0 || list[0].(*Object).Text("name") != "INSOLVE" {
-		t.Errorf("honorary supporters: %s", Stringify(honorary))
-	}
-	links, _ := got.Get("links")
-	if keyList(links.(*Object)) != `["repo","issues","sponsors","buyMeACoffee","sponsorsMd"]` {
-		t.Errorf("links: %s", Stringify(links))
-	}
-	if s.LoadSupporters() != got {
-		t.Errorf("a second call read the file again")
-	}
-	s.opts.SupportersFile = filepath.Join(t.TempDir(), "missing.json")
-	if s.LoadSupporters() != got {
-		t.Errorf("the kept answer was dropped without a reset")
-	}
-	var logged int
-	s.opts.Logf = func(string, ...any) { logged++ }
-	s.ResetSupportersCache()
-	empty := s.LoadSupporters()
-	if Stringify(empty) != `{"honorary":[],"individuals":[],"links":{"repo":"https://github.com/neodeskapp/neodesk","issues":"https://github.com/neodeskapp/neodesk/issues","sponsors":"https://github.com/sponsors/UNITRONIX","buyMeACoffee":"https://buymeacoffee.com/unitronix","sponsorsMd":"https://neode.sk/docs/project/sponsors"}}` || logged != 1 {
-		t.Errorf("supporters without the file: %s (%d log lines)", Stringify(empty), logged)
 	}
 }
 
@@ -1502,7 +1472,6 @@ func TestConcurrentUse(t *testing.T) {
 						_ = Stringify(preset)
 					}
 					_ = s.Revision()
-					_ = s.LoadSupporters()
 				}
 			}()
 		}

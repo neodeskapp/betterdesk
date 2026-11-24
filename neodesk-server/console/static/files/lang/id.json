@@ -7888,17 +7888,9 @@
   },
   "help": {
     "panel": {
-      "title": "Bantuan & pendukung",
-      "thanks": "NeoDesk gratis dan open source berkat orang serta organisasi yang percaya pada manajemen jarak jauh yang dihosting sendiri. Terima kasih.",
-      "honorary": "Pendukung kehormatan",
-      "backers": "Pendukung individu",
-      "sponsor_cta": "Dukung proyek",
       "links": "Tautan berguna",
-      "link_sponsors": "GitHub Sponsors",
-      "link_bmc": "Buy Me a Coffee",
       "link_repo": "Repositori GitHub",
       "link_issues": "Issues & masukan",
-      "link_sponsors_md": "Daftar sponsor lengkap",
       "close": "Tutup"
     }
   },

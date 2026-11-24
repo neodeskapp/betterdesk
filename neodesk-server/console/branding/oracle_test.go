@@ -158,15 +158,14 @@ func oracleService(t testing.TB) *Service {
 func fixtureOptions(dir string) Options {
 	console := filepath.Join("testdata", "console")
 	return Options{
-		UploadsDir:     filepath.Join(dir, "data", "uploads"),
-		FontsDir:       filepath.Join(dir, "public", "fonts"),
-		FontCacheFile:  filepath.Join(dir, "data", "google-fonts-cache.json"),
-		TempDir:        filepath.Join(dir, "data", "tmp"),
-		ThemesDir:      filepath.Join(console, "themes"),
-		PalettesFile:   filepath.Join(console, "config", "theme-palettes.json"),
-		FaviconFile:    filepath.Join(console, "public", "favicon.svg"),
-		SupportersFile: filepath.Join(console, "config", "supporters.json"),
-		Logf:           func(string, ...any) {},
+		UploadsDir:    filepath.Join(dir, "data", "uploads"),
+		FontsDir:      filepath.Join(dir, "public", "fonts"),
+		FontCacheFile: filepath.Join(dir, "data", "google-fonts-cache.json"),
+		TempDir:       filepath.Join(dir, "data", "tmp"),
+		ThemesDir:     filepath.Join(console, "themes"),
+		PalettesFile:  filepath.Join(console, "config", "theme-palettes.json"),
+		FaviconFile:   filepath.Join(console, "public", "favicon.svg"),
+		Logf:          func(string, ...any) {},
 	}
 }
 

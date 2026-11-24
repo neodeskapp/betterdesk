@@ -7882,17 +7882,9 @@
   },
   "help": {
     "panel": {
-      "title": "ヘルプとサポーター",
-      "thanks": "NeoDesk は、セルフホスト型のリモート管理を信じる人々と組織のおかげで無料のオープンソースです。ありがとうございます。",
-      "honorary": "名誉サポーター",
-      "backers": "個人サポーター",
-      "sponsor_cta": "プロジェクトを支援",
       "links": "便利なリンク",
-      "link_sponsors": "GitHub Sponsors",
-      "link_bmc": "Buy Me a Coffee",
       "link_repo": "GitHub リポジトリ",
       "link_issues": "Issues とフィードバック",
-      "link_sponsors_md": "スポンサー一覧",
       "close": "閉じる"
     }
   },

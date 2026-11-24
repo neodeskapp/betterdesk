@@ -11,13 +11,82 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
+// brandedTheme is a theme file of a brand, as an admin may add one to the
+// themes folder: its own theme mode, name, text logo, fonts and colours.
+const brandedTheme = `{
+  "version": "1.0",
+  "type": "neodesk-theme",
+  "displayName": "Example Core Server",
+  "branding": {
+    "themeMode": "custom",
+    "appName": "Example Core Server",
+    "appDescription": "Example Device Management",
+    "logoType": "text",
+    "logoText": "example",
+    "logoTextAccent": "Core Server",
+    "logoIcon": "",
+    "logoSvg": "",
+    "logoUrl": "",
+    "faviconSvg": "",
+    "fontHeading": "Space Grotesk",
+    "fontBody": "Inter",
+    "colors": {
+      "bgPrimary": "#0c0f14",
+      "bgSecondary": "#12161e",
+      "bgTertiary": "#1a1f2b",
+      "bgElevated": "#252b38",
+      "textPrimary": "#e8ecf1",
+      "textSecondary": "#8a94a6",
+      "accentBlue": "#ffd600",
+      "accentBlueHover": "#ffe040",
+      "accentBlueMuted": "#c8a800",
+      "accentGreen": "#2ea44f",
+      "accentGreenHover": "#3fb950",
+      "accentGreenMuted": "#2ea44f",
+      "accentRed": "#f85149",
+      "accentRedHover": "#ff6b6b",
+      "accentRedMuted": "#f85149",
+      "accentYellow": "#ffd600",
+      "accentYellowHover": "#ffe040",
+      "accentYellowMuted": "#c8a800",
+      "accentPurple": "#a371f7",
+      "accentPurpleHover": "#bc8cff",
+      "accentPurpleMuted": "#a371f7",
+      "borderPrimary": "#6e7481",
+      "borderSecondary": "#1a1f2b"
+    }
+  }
+}`
+
 // shippedThemes is a service on db with the theme files the console ships
-// (console/static/files/themes), not the recorded copies.
+// (console/static/files/themes), not the recorded copies, and brandedTheme
+// beside them as branded.json.
 func shippedThemes(t testing.TB, db *store.DB) *Service {
 	t.Helper()
-	opts := fixtureOptions(t.TempDir())
+	dir := t.TempDir()
+	opts := fixtureOptions(dir)
 	opts.DB = db
-	opts.ThemesDir = filepath.Join("..", "static", "files", "themes")
+	opts.ThemesDir = filepath.Join(dir, "themes")
+	if err := os.MkdirAll(opts.ThemesDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	shipped := filepath.Join("..", "static", "files", "themes")
+	entries, err := os.ReadDir(shipped)
+	if err != nil || len(entries) == 0 {
+		t.Fatalf("theme files: %v", err)
+	}
+	for _, entry := range entries {
+		raw, err := os.ReadFile(filepath.Join(shipped, entry.Name()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(opts.ThemesDir, entry.Name()), raw, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(opts.ThemesDir, "branded.json"), []byte(brandedTheme), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	s, err := New(opts)
 	if err != nil {
 		t.Fatal(err)
@@ -39,18 +108,17 @@ func applyShipped(t testing.TB, s *Service, id string) {
 func TestBuiltinThemesShowTheirColours(t *testing.T) {
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		s := shippedThemes(t, db)
-		entries, err := os.ReadDir(filepath.Join("..", "static", "files", "themes"))
-		if err != nil || len(entries) == 0 {
-			t.Fatalf("theme files: %v", err)
-		}
 
-		applyShipped(t, s, "insolve")
+		applyShipped(t, s, "branded")
 		b := s.GetBranding()
 		if got := b.Text("themeMode"); got != "custom" {
-			t.Errorf("after insolve the theme mode is %q, want custom", got)
+			t.Errorf("after the branded theme the theme mode is %q, want custom", got)
+		}
+		if got := b.Text("appName"); got != "Example Core Server" {
+			t.Errorf("after the branded theme the name is %q", got)
 		}
 		if css := mustCSS(t, s); !strings.Contains(stripConsoleRules(css), "--accent-blue: #ffd600;") {
-			t.Errorf("after insolve the accent is not the theme's yellow:\n%s", css)
+			t.Errorf("after the branded theme the accent is not the theme's yellow:\n%s", css)
 		}
 
 		applyShipped(t, s, "light")

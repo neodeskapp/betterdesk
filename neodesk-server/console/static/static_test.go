@@ -56,7 +56,7 @@ func TestFilesAreTheCommittedFolder(t *testing.T) {
 	if !slices.Equal(inBinary, onDisk) {
 		t.Errorf("files in the binary %v, committed %v", inBinary, onDisk)
 	}
-	for _, want := range []string{"lang/en.json", "public/favicon.svg", "protos/rendezvous.proto", "themes/default.json", "config/theme-palettes.json", "config/supporters.json"} {
+	for _, want := range []string{"lang/en.json", "public/favicon.svg", "protos/rendezvous.proto", "themes/default.json", "config/theme-palettes.json"} {
 		if !slices.Contains(inBinary, want) {
 			t.Errorf("%s is not in the binary", want)
 		}

@@ -7,15 +7,13 @@ import (
 	"path/filepath"
 )
 
-// The built-in files (the theme presets, the palettes, the favicon and
-// the supporters list) are read from disk where their option names a
-// path, and from Options.Files at their place in the console's tree
-// otherwise.
+// The built-in files (the theme presets, the palettes and the favicon)
+// are read from disk where their option names a path, and from
+// Options.Files at their place in the console's tree otherwise.
 const (
-	builtinThemes     = "themes"
-	builtinPalettes   = "config/theme-palettes.json"
-	builtinFavicon    = "public/favicon.svg"
-	builtinSupporters = "config/supporters.json"
+	builtinThemes   = "themes"
+	builtinPalettes = "config/theme-palettes.json"
+	builtinFavicon  = "public/favicon.svg"
 )
 
 // readBuiltin reads one built-in file: the file at file on disk, or name

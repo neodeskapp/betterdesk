@@ -77,13 +77,11 @@ type Config struct {
 	PublicDir string
 	ProtosDir string
 	// The branding's built-in files: the theme presets (themes), the
-	// palettes (config/theme-palettes.json), the default favicon
-	// (public/favicon.svg) and the supporters list
-	// (config/supporters.json), in StaticDir or, when empty, in Static.
-	ThemesDir      string
-	PalettesFile   string
-	FaviconFile    string
-	SupportersFile string
+	// palettes (config/theme-palettes.json) and the default favicon
+	// (public/favicon.svg), in StaticDir or, when empty, in Static.
+	ThemesDir    string
+	PalettesFile string
+	FaviconFile  string
 
 	// WebUIDir is a build of the web app on disk (WEB_UI_DIR), for
 	// development. Empty means the build in the binary.
@@ -316,7 +314,6 @@ func load(getenv func(string) string, p probe) (*Config, error) {
 		cfg.ThemesDir = filepath.Join(cfg.StaticDir, "themes")
 		cfg.PalettesFile = filepath.Join(cfg.StaticDir, "config", "theme-palettes.json")
 		cfg.FaviconFile = filepath.Join(cfg.StaticDir, "public", "favicon.svg")
-		cfg.SupportersFile = filepath.Join(cfg.StaticDir, "config", "supporters.json")
 	} else {
 		tree, err := static.Files()
 		if err != nil {

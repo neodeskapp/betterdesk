@@ -7888,17 +7888,9 @@
   },
   "help": {
     "panel": {
-      "title": "Ajutor și susținători",
-      "thanks": "NeoDesk este gratuit și open source datorită oamenilor și organizațiilor care cred în managementul remote self-hosted. Mulțumim.",
-      "honorary": "Susținători de onoare",
-      "backers": "Susținători individuali",
-      "sponsor_cta": "Susține proiectul",
       "links": "Linkuri utile",
-      "link_sponsors": "GitHub Sponsors",
-      "link_bmc": "Buy Me a Coffee",
       "link_repo": "Repository GitHub",
       "link_issues": "Issues și feedback",
-      "link_sponsors_md": "Lista completă de sponsori",
       "close": "Închide"
     }
   },

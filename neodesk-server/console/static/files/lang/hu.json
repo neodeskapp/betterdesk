@@ -7888,17 +7888,9 @@
   },
   "help": {
     "panel": {
-      "title": "Súgó és támogatók",
-      "thanks": "A NeoDesk ingyenes és nyílt forráskódú azoknak az embereknek és szervezeteknek köszönhetően, akik hisznek az önállóan üzemeltetett távoli kezelésben. Köszönjük.",
-      "honorary": "Tiszteletbeli támogatók",
-      "backers": "Egyéni támogatók",
-      "sponsor_cta": "Támogasd a projektet",
       "links": "Hasznos hivatkozások",
-      "link_sponsors": "GitHub Sponsors",
-      "link_bmc": "Buy Me a Coffee",
       "link_repo": "GitHub-tárhely",
       "link_issues": "Issues és visszajelzés",
-      "link_sponsors_md": "Teljes szponzorlista",
       "close": "Bezárás"
     }
   },
