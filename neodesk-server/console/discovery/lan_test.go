@@ -71,22 +71,14 @@ var (
 	lanErr  error
 )
 
-// upstreamProbe and upstreamAnnounce are the types of the old console's
-// probe and announcement. The recording in testdata was made with them,
-// so the tests that replay it use them; TestLANTypesAreNeoDesks checks
-// the console's own.
-const (
-	upstreamProbe    = "betterdesk-discover"
-	upstreamAnnounce = "betterdesk-announce"
-)
-
 // TestLANTypesAreNeoDesks: the responder answers neodesk-discover probes
-// only, with a neodesk-announce announcement.
+// only, not the probes of the console NeoDesk was forked from, with a
+// neodesk-announce announcement.
 func TestLANTypesAreNeoDesks(t *testing.T) {
 	if !IsProbe([]byte(`{"type":"neodesk-discover","version":1}`)) {
 		t.Error("a neodesk-discover probe gets no answer")
 	}
-	if IsProbe([]byte(`{"type":"` + upstreamProbe + `","version":1}`)) {
+	if IsProbe([]byte(`{"type":"betterdesk-discover","version":1}`)) {
 		t.Error("the old console's probe gets an answer")
 	}
 	lan := NewLAN(Settings{})
@@ -191,7 +183,7 @@ func TestAnnouncementsAgainstNode(t *testing.T) {
 		if settings.DiscoveryPort != c.Config.DiscoveryPort {
 			t.Errorf("case %d: discovery port %v, Node %v", i, settings.DiscoveryPort, c.Config.DiscoveryPort)
 		}
-		got, err := settings.announcement(upstreamAnnounce)
+		got, err := settings.Announcement()
 		want, silent := announcedAs(t, c.Env, decode64(t, c.Reply))
 		if silent {
 			silenced++
@@ -270,7 +262,7 @@ func TestProbesAgainstNode(t *testing.T) {
 	answered := 0
 	for i, c := range rec.Probes {
 		msg := decode64(t, c.Probe)
-		if got := isProbeOf(msg, upstreamProbe); got != c.Answered {
+		if got := IsProbe(msg); got != c.Answered {
 			shown := string(msg)
 			if len(shown) > 120 {
 				shown = shown[:120] + "..."

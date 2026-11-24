@@ -30,7 +30,7 @@ func floodRegistry(t *testing.T) (*registry, Settings) {
 	rec := loadMDNS(t)
 	s := rec.Scenarios[0]
 	settings := asPublished(mdnsSettings(s.Env, s.Config, toInterfaces(s.Interfaces), s.Hostname))
-	m := newRecordedMDNS(settings)
+	m := NewMDNS(settings)
 	m.logf = func(string, ...any) {}
 	svc, ok := m.prepare()
 	if !ok {
@@ -46,19 +46,19 @@ func floodRegistry(t *testing.T) (*registry, Settings) {
 // gets one response that holds each record once (BUGS.md RV101).
 func TestMDNSRespondsOncePerDatagram(t *testing.T) {
 	reg, _ := floodRegistry(t)
-	datagram := repeatedQuestions(upstreamNames.kind+tld, 10912)
+	datagram := repeatedQuestions(neodeskNames.kind+tld, 10912)
 	out := reg.respond(datagram)
 	if len(out) != 1 {
 		t.Fatalf("%d responses to one datagram", len(out))
 	}
-	single := reg.respond(repeatedQuestions(upstreamNames.kind+tld, 1))
+	single := reg.respond(repeatedQuestions(neodeskNames.kind+tld, 1))
 	if len(single) != 1 || string(out[0]) != string(single[0]) {
 		t.Errorf("the response to 10,912 questions is not the one to one question:\n got  %x\n want %x", out[0], single)
 	}
 	// Two questions with records in common: each record once
 	both := make([]byte, 12)
 	binary.BigEndian.PutUint16(both[4:], 2)
-	both = append(both, encodeQuery(upstreamNames.kind + tld)[12:]...)
+	both = append(both, encodeQuery(neodeskNames.kind + tld)[12:]...)
 	both = append(both, encodeQuery("_services._dns-sd._udp" + tld)[12:]...)
 	merged := reg.respond(both)
 	msg, err := decodeMessage(merged[0])
@@ -69,7 +69,7 @@ func TestMDNSRespondsOncePerDatagram(t *testing.T) {
 	for _, name := range append(msg.Answers, msg.Additionals...) {
 		seen[name] = true
 	}
-	if len(msg.Answers) != 2 || !seen[upstreamNames.kind+tld] || !seen["_services._dns-sd._udp"+tld] {
+	if len(msg.Answers) != 2 || !seen[neodeskNames.kind+tld] || !seen["_services._dns-sd._udp"+tld] {
 		t.Errorf("two questions: answers %q, additionals %q", msg.Answers, msg.Additionals)
 	}
 }
@@ -86,7 +86,7 @@ func TestMDNSAnswersAFewTimesASecond(t *testing.T) {
 	}
 	start := time.Now()
 	for i := 0; i < 20; i++ {
-		h.sock.packets <- encodeQuery(upstreamNames.kind + tld)
+		h.sock.packets <- encodeQuery(neodeskNames.kind + tld)
 	}
 	if time.Since(start) > 500*time.Millisecond {
 		t.Skip("the queries took longer than half a second to hand over")

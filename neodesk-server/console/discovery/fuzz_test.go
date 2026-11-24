@@ -32,7 +32,7 @@ func referenceProbe(msg []byte) (answer, usable bool) {
 	if err := json.Unmarshal(raw, &value); err != nil {
 		return false, true
 	}
-	return value == upstreamProbe, true
+	return value == probeType, true
 }
 
 // FuzzIsProbe checks the probe parser against encoding/json on any input.
@@ -43,9 +43,9 @@ func FuzzIsProbe(f *testing.F) {
 		}
 	}
 	f.Fuzz(func(t *testing.T, msg []byte) {
-		got := isProbeOf(msg, upstreamProbe)
+		got := IsProbe(msg)
 		if want, usable := referenceProbe(msg); usable && got != want {
-			t.Errorf("isProbeOf(%q) = %v, encoding/json says %v", msg, got, want)
+			t.Errorf("IsProbe(%q) = %v, encoding/json says %v", msg, got, want)
 		}
 	})
 }
@@ -70,7 +70,7 @@ func FuzzDecodeMessage(f *testing.F) {
 		Port:    5000,
 		Version: "1.0",
 	}
-	m := newRecordedMDNS(settings)
+	m := NewMDNS(settings)
 	m.logf = func(string, ...any) {}
 	svc, ok := m.prepare()
 	if !ok {

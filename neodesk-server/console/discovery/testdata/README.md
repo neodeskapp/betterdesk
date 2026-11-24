@@ -13,7 +13,10 @@ row id.
 | `mdns.json.gz` | `services/panelDiscovery.js` with the optional package `bonjour-service` 1.4.4 (over `multicast-dns` 7.2.5 and `dns-packet` 5.6.1): with the socket and the timers replaced, every datagram sent and when, for 16 settings (off, broken address, port 0, schemes, long and odd host names); the goodbye after a name conflict while probing; and for 10,646 arriving datagrams how `dns-packet` decodes them and what the service answers | `mdns_test.go` |
 
 The generators were seeded. `os.hostname()` and `os.networkInterfaces()`
-were replaced; the Go tests hand the same values in.
+were replaced; the Go tests hand the same values in. The recordings were
+made from a copy of the old console in which the old project's names were
+replaced by NeoDesk's, so the probes, announcements and mDNS names are
+NeoDesk's.
 
 ## What the Go tests leave out or change
 
