@@ -14,6 +14,7 @@ class FakeClient {
 	listeners = new Map<string, Listener[]>();
 	viewOnly = false;
 	renderer = { resize: vi.fn() };
+	encrypted = true;
 	relayUUID = 'relay-uuid-1';
 	keys: string[] = [];
 	constructor(
@@ -192,6 +193,18 @@ describe('saved sign-in (L469)', () => {
 		expect(s.signinNote).toMatch(/does not see this session as open/);
 		await v.signIn(s);
 		expect(signinApi.useSignin).toHaveBeenCalledTimes(1);
+		expect(c.keys).toEqual([]);
+	});
+
+	test('nothing over a session that is not encrypted end to end with the device', async () => {
+		signinApi.getSignin.mockResolvedValueOnce({ ...(await signinApi.getSignin()), auto: true });
+		const { v, s, c } = setup();
+		c.encrypted = false;
+		stream(c);
+		await new Promise((r) => setTimeout(r, 900));
+		expect(s.signinOffer.kind).toBe('none');
+		await v.signIn(s);
+		expect(signinApi.useSignin).not.toHaveBeenCalled();
 		expect(c.keys).toEqual([]);
 	});
 

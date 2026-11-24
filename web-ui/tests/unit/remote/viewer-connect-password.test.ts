@@ -12,6 +12,7 @@ class FakeClient {
 	listeners = new Map<string, Listener[]>();
 	viewOnly = false;
 	renderer = { resize: vi.fn() };
+	encrypted = true;
 	relayUUID = 'relay-uuid-1';
 	keys: string[] = [];
 	constructor(

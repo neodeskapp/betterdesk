@@ -1063,7 +1063,9 @@ export class Viewer {
 		if (this.transport !== 'rd' || this.guest || this.remoteTarget || this.data.mockRemote || !this.data.user)
 			return;
 		const c = s.client;
-		if (!c || !s.peerFacts || s.view !== 'streaming' || !isWindows(s.peerFacts.platform)) return;
+		// Only over a session encrypted end to end with the device: the relay never sees what is typed
+		if (!c || !s.encrypted || !s.peerFacts || s.view !== 'streaming' || !isWindows(s.peerFacts.platform))
+			return;
 		if (!s.signinLoaded) {
 			s.signinLoaded = true;
 			try {
@@ -1093,7 +1095,8 @@ export class Viewer {
 	 */
 	async signIn(s: ViewerSession, opts: { auto?: boolean } = {}): Promise<void> {
 		const c = s.client;
-		if (!c || s.signinTried || s.view !== 'streaming' || s.viewOnly || !s.allowed.keyboard) return;
+		if (!c || !s.encrypted || s.signinTried || s.view !== 'streaming' || s.viewOnly || !s.allowed.keyboard)
+			return;
 		if (!c.relayUUID || !c.sendCtrlAltDel || !c.sendText || !c.sendKeyPress) return;
 		const offer = s.signinOffer;
 		if (!opts.auto && offer.kind === 'button' && offer.signedIn) {
