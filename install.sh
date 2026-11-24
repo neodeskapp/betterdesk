@@ -62,7 +62,7 @@ RELEASE_CHANNEL=""
 # An image tag given (--version, NEODESK_VERSION) pins it; without one
 # the install runs latest, the newest release (DECISIONS A163)
 NEODESK_VERSION_GIVEN="${NEODESK_VERSION:-}"
-NEODESK_VERSION="${NEODESK_VERSION:-3.6.0-rc.4}"
+NEODESK_VERSION="${NEODESK_VERSION:-3.6.1}"
 NEODESK_RAW_BASE="${NEODESK_RAW_BASE:-https://raw.githubusercontent.com/${NEODESK_REPO}/${NEODESK_BRANCH}}"
 INSTALL_DIR="${INSTALL_DIR:-/opt/neodesk}"
 INSTALL_MODE="docker"
