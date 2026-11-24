@@ -32,7 +32,7 @@ func TestOrgDevicePasswordsMoveToTheKeyFile(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, sdb *store.DB) {
 		database := storetest.GoServer(t, sdb)
 		for _, org := range []string{"org-x", "org-y"} {
-			if err := database.CreateOrganization(&db.Organization{ID: org, Name: org, Slug: org, CreatedAt: time.Now().UTC()}); err != nil {
+			if err := database.CreateOrganization(&db.Organization{ID: org, Name: org, Slug: org, Settings: "{}", CreatedAt: time.Now().UTC()}); err != nil {
 				t.Fatal(err)
 			}
 		}
