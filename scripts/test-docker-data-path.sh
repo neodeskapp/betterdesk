@@ -145,8 +145,11 @@ bash "$SCRIPT_ROOT/neodesk-docker.sh" backup --dir "$DIR" > "$WORK/backup.log" 2
     || fail "the backup after the update failed: $(tail -n 20 "$WORK/backup.log")"
 new_backup=$(ls -1t "$DIR"/backups/neodesk-*.tar.gz | head -n 1)
 [ "$new_backup" != "$old_backup" ] || fail "the backup after the update made no new file"
-tar -tzf "$new_backup" | grep -qx 'neodesk/marker' || fail "the backup after the update has no folder neodesk: $(tar -tzf "$new_backup" | head -n 5)"
-if tar -tzf "$new_backup" | grep -q '^rustdesk/'; then fail "the backup after the update has a folder rustdesk"; fi
+# The listing goes to a file first: grep -q stops reading at its first
+# match, and with pipefail tar's broken pipe would fail the check
+tar -tzf "$new_backup" > "$WORK/new-backup.list" || fail "the backup after the update can't be listed"
+grep -qx 'neodesk/marker' "$WORK/new-backup.list" || fail "the backup after the update has no folder neodesk: $(head -n 5 "$WORK/new-backup.list")"
+if grep -q '^rustdesk/' "$WORK/new-backup.list"; then fail "the backup after the update has a folder rustdesk"; fi
 in_container 'echo third > /opt/neodesk/data/marker && echo after > /opt/neodesk/data/marker-after'
 restore "$new_backup" > "$WORK/restore-new.log" 2>&1 || fail "the restore of the new backup failed: $(tail -n 20 "$WORK/restore-new.log")"
 [ "$(in_container 'cat /opt/neodesk/data/marker')" = second ] || fail "the restore of the new backup did not bring its files back"

@@ -787,7 +787,10 @@ FAKE
     touch "$TEST_DIR/backup-fails"
     out=$(do_backup_silent 2>&1) || fail "the backup with a failing server backup failed: $out"
     case "$out" in *"neodesk-server backup failed"*) ;; *) fail "the failed server backup is not said: $out" ;; esac
-    tar -tzf "$BACKUP_DIR"/neodesk_backup_*.tar.gz | grep -q 'db_v2.sqlite3$' || fail "without the server's backup the database file is not in the backup"
+    # Listed to a file first: grep -q stops at its first match, and with
+    # pipefail tar's broken pipe would fail the check
+    tar -tzf "$BACKUP_DIR"/neodesk_backup_*.tar.gz > "$TEST_DIR/backup.list" || fail "the backup can't be listed"
+    grep -q 'db_v2.sqlite3$' "$TEST_DIR/backup.list" || fail "without the server's backup the database file is not in the backup"
     rm -rf "$TEST_DIR"
 )
 
