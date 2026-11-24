@@ -244,6 +244,28 @@ var UIPermissions = []string{
 	"mesh.terminal", "mesh.power", "mesh.files",
 }
 
+// LaterUIPermissions are the permissions the web console decides by that
+// came after the Node console, whose list UIPermissions keeps as it was.
+// The bootstrap lists them after UIPermissions (GrantedConsolePermissions).
+var LaterUIPermissions = []string{
+	// Saved sign-in (L469): the device panel offers its sheet and the
+	// viewer its Sign in button by them
+	"device.signin_use", "device.signin_manage",
+}
+
+// GrantedConsolePermissions returns GrantedUIPermissions and then the
+// permissions of LaterUIPermissions the account has, in that order: the
+// permissions of the console's bootstrap.
+func (c *Context) GrantedConsolePermissions() []string {
+	out := c.GrantedUIPermissions()
+	for _, p := range LaterUIPermissions {
+		if c.HasPermission(p) {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
 // GrantedUIPermissions returns the permissions of UIPermissions the account
 // has, in that order.
 func (c *Context) GrantedUIPermissions() []string {

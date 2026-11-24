@@ -3,6 +3,7 @@ package access
 import (
 	"errors"
 	"reflect"
+	"slices"
 	"sort"
 	"testing"
 
@@ -173,6 +174,32 @@ func TestHasPermissionRules(t *testing.T) {
 		}
 		if got := ctx.HasPermission(c.permission); got != c.want {
 			t.Errorf("%s: HasPermission(%q) = %v, want %v", c.name, c.permission, got, c.want)
+		}
+	}
+}
+
+// TestBootstrapListsSavedSigninForTheAccountsThatHoldIt: the console's
+// permissions name Use and Manage saved sign-in after Node's list, for
+// the super admins and for a role an override gives them, not for a role
+// without them (L469).
+func TestBootstrapListsSavedSigninForTheAccountsThatHoldIt(t *testing.T) {
+	admin := &Context{UserID: 1, HasUser: true, Role: "admin"}
+	if got := admin.GrantedConsolePermissions(); !reflect.DeepEqual(got, append(append([]string(nil), UIPermissions...), LaterUIPermissions...)) {
+		t.Errorf("admin: %v", got)
+	}
+	operator := &Context{UserID: 5, HasUser: true, Role: "operator", Loaded: true,
+		Permissions: newPermissionSet(append(consoleRoleMap["operator"], auth.PermDeviceSigninManage))}
+	got := operator.GrantedConsolePermissions()
+	if !slices.Contains(got, auth.PermDeviceSigninManage) || slices.Contains(got, auth.PermDeviceSigninUse) {
+		t.Errorf("operator with Manage saved sign-in: %v", got)
+	}
+	viewer := &Context{UserID: 4, HasUser: true, Role: "viewer"}
+	for _, p := range LaterUIPermissions {
+		if slices.Contains(viewer.GrantedConsolePermissions(), p) {
+			t.Errorf("viewer lists %s", p)
+		}
+		if !auth.ValidPermission(p) {
+			t.Errorf("%s is not a permission the server knows", p)
 		}
 	}
 }

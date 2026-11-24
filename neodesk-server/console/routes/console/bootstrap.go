@@ -83,7 +83,7 @@ func (h *handlers) bootstrap(w http.ResponseWriter, r *http.Request) {
 			Role:          user.Role,
 			AvatarVersion: h.d.Avatars.GetAvatarVersion(ctx, kit.UserID(r)),
 		},
-		Permissions:   c.GrantedUIPermissions(),
+		Permissions:   c.GrantedConsolePermissions(),
 		Access:        access.AccessFor(c.Policy),
 		IsSuperAdmin:  superAdmin,
 		EmergencyMode: sessionFlag(kit.Session(r), "emergencyMode"),

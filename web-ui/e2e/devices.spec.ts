@@ -106,7 +106,7 @@ test.describe('saved sign-in', () => {
 		await expect(auto).not.toBeChecked();
 		await expectNoAxeViolations(page);
 
-		await sheet.getByLabel('Account name').fill(String.raw`LAB\e2e-admin`);
+		await sheet.getByLabel('Account name', { exact: true }).fill(String.raw`LAB\e2e-admin`);
 		await sheet.getByLabel('Password', { exact: true }).fill('E2e-Made-Up-Pass-1');
 		await sheet.getByRole('button', { name: 'Save' }).click();
 		await expect(sheet).toBeHidden();
@@ -114,7 +114,7 @@ test.describe('saved sign-in', () => {
 		// Opened again: the account and who saved it, the password field empty and nothing that holds it
 		await panel.locator('[data-action-key="signin"]').click();
 		await expect(sheet.getByText('Saved', { exact: true })).toBeVisible();
-		await expect(sheet.getByLabel('Account name')).toHaveValue(String.raw`LAB\e2e-admin`);
+		await expect(sheet.getByLabel('Account name', { exact: true })).toHaveValue(String.raw`LAB\e2e-admin`);
 		await expect(sheet.getByLabel('New password')).toHaveValue('');
 		expect(await sheet.innerHTML()).not.toContain('E2e-Made-Up-Pass-1');
 		const status = await page.evaluate(async (id) => {
