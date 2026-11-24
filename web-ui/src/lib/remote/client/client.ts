@@ -228,6 +228,11 @@ export class RDClient {
 	_sessionPassword: string;
 	/** The answer a session signed in with instead of a password; the file transfer session asks it again */
 	_sessionAnswer: LoginAnswer | null;
+	/**
+	 * The relay session's id once the relay is set up: the server knows it
+	 * as this viewer's open session (saved sign-in is bound to it)
+	 */
+	relayUUID: string;
 	fileTransfer: RDFileTransfer;
 	_state: RDClientState;
 	_listeners: Record<string, RDClientListener[]>;
@@ -311,6 +316,7 @@ export class RDClient {
 		this._fileConnection = null;
 		this._sessionPassword = '';
 		this._sessionAnswer = null;
+		this.relayUUID = '';
 		this.fileTransfer = new RDFileTransfer({
 			proto: this.proto,
 			sendMessage: (msg) => this._sendFileTransferMessage(msg),
@@ -568,6 +574,8 @@ export class RDClient {
 					`[RDClient] RelayResponse confirmed: uuid=${relayUUID.substring(0, 8)}... relay=${relayServer}`
 				);
 			}
+
+			this.relayUUID = relayUUID;
 
 			// Step 10: Close rendezvous, connect to relay
 			this.conn.closeRendezvous();
@@ -1931,6 +1939,7 @@ export class RDClient {
 		this.disconnectFileConnection();
 		this._sessionPassword = '';
 		this._sessionAnswer = null;
+		this.relayUUID = '';
 		this.conn.close();
 		this._codecFallbackDone = false;
 		if (this._rendezvousDecoder) {
@@ -2037,6 +2046,18 @@ export class RDClient {
 		this._sendPeerMessage({
 			keyEvent: { controlKey: 'CtrlAltDel', down: true, press: true, modifiers: [], mode: 'Legacy' }
 		});
+	}
+
+	/**
+	 * Press one control key on the remote (Legacy mode, down and up): Tab
+	 * and Return of the saved sign-in, as virtual keys, not as characters
+	 */
+	sendKeyPress(controlKey: 'Tab' | 'Return'): boolean {
+		if (this._state !== 'streaming' || this._viewOnlyLocked || this._viewOnly) return false;
+		this._sendPeerMessage({
+			keyEvent: { controlKey, down: true, press: true, modifiers: [], mode: 'Legacy' }
+		});
+		return true;
 	}
 
 	/**

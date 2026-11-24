@@ -79,6 +79,25 @@ const answerApi = vi.hoisted(() => ({
 	answerConnectPassword: vi.fn(async (): Promise<Uint8Array | null> => null)
 }));
 vi.mock('../../../src/lib/api/connectAnswer.ts', () => answerApi);
+const signinApi = vi.hoisted(() => ({
+	getSignin: vi.fn(async () => ({
+		available: true,
+		set: true,
+		username: 'LAB\\admin',
+		form: 'password' as 'password' | 'name_password',
+		auto: false,
+		updated_by: 'boss',
+		updated_at: '',
+		may_use: true
+	})),
+	useSignin: vi.fn(async () => ({
+		username: 'LAB\\admin',
+		password: 'made-up-pass',
+		form: 'password' as const
+	})),
+	refusalCode: vi.fn((err: unknown) => (err as { code?: string }).code ?? '')
+}));
+vi.mock('../../../src/lib/api/savedSignin.ts', () => signinApi);
 
 const { Viewer } = await import('../../../src/lib/remote/viewer.svelte.ts');
 type ViewerData = ConstructorParameters<typeof Viewer>[0]['data'];
@@ -107,6 +126,7 @@ beforeEach(() => {
 	FakeClient.made = [];
 	remembered.clear();
 	confirm.mockClear();
+	for (const fn of Object.values(signinApi)) fn.mockClear();
 	answerApi.answerConnectPassword.mockClear();
 });
 afterEach(() => vi.useRealTimers());

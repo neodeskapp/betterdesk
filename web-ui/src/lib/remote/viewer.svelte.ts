@@ -28,6 +28,21 @@ import { getDevice } from '#lib/api/devices.ts';
 import { link } from '#lib/nav.ts';
 import { takeDevicePassword } from '#lib/api/onboard.ts';
 import { answerConnectPassword } from '#lib/api/connectAnswer.ts';
+import {
+	getSignin,
+	refusalCode,
+	useSignin,
+	type SigninDetails,
+	type SigninStatus
+} from '#lib/api/savedSignin.ts';
+import {
+	isWindows,
+	signinOffer,
+	signinSteps,
+	typeSignin,
+	type PeerFacts,
+	type SigninOffer
+} from './signin.ts';
 import { isGuestMode, isRemoteTarget, isViewOnlyGuest, peerAllowed, transportOf } from './access.ts';
 import { isMobileViewer } from './capabilities.ts';
 import {
@@ -133,6 +148,33 @@ const DEVICE_PERMISSIONS: Record<number, keyof DevicePermissions> = {
 	5: 'restart'
 };
 
+/** The wait before the viewer signs in by itself, so the first picture of the screen is there */
+const SIGNIN_AUTO_DELAY_MS = 800;
+
+/** What a refused use of the saved sign-in means, in the viewer's words */
+function signinRefusalText(code: string): string {
+	switch (code) {
+		case 'already_used':
+			return tf('remote.signin_already_used', 'Sign in was already used in this session.');
+		case 'session_not_open':
+			return tf(
+				'remote.signin_session_not_open',
+				'The server does not see this session as open. Reconnect and try again.'
+			);
+		case 'not_set':
+			return tf('remote.signin_not_set', 'No sign-in details are saved for this computer any more.');
+		case 'cannot_open':
+			return tf(
+				'remote.signin_cannot_open',
+				"The saved details can't be read with this server's key. Save them again."
+			);
+		case 'vault_unavailable':
+			return tf('remote.signin_unavailable', "This server can't use saved sign-in details right now.");
+		default:
+			return tf('remote.signin_failed', 'Sign in did not work. Sign in by hand.');
+	}
+}
+
 /** Hooks a session panel gives the viewer to move focus inside it */
 export interface PanelFocus {
 	canvas(): void;
@@ -181,6 +223,18 @@ export class ViewerSession {
 	orgAnswerTried = false;
 	/** This connection's sign-in was that answer (a refusal says so) */
 	usingOrgAnswer = false;
+	/** Saved sign-in (L469): what the server says about it, loaded once per tab */
+	signin = $state.raw<SigninStatus | null>(null);
+	signinLoaded = false;
+	/** What the device said about itself at this connection's sign-in */
+	peerFacts = $state.raw<PeerFacts | null>(null);
+	signinOffer = $state.raw<SigninOffer>({ kind: 'none' });
+	/** This connection used its one attempt */
+	signinTried = false;
+	signinBusy = $state(false);
+	/** What the bar over the screen says after an attempt */
+	signinNote = $state('');
+	signinDismissed = $state(false);
 	tfaCode = $state('');
 	cdapFallback = $state(false);
 	autoplayBlocked = $state(false);
@@ -310,6 +364,9 @@ export class Viewer {
 	private lastClipboard = '';
 	private clipboardGranted: boolean | null = null;
 	private openFilesOnConnect = false;
+	/** Devices the viewer signed in by itself since the page opened: a reconnect does not again */
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- nothing renders from it
+	private autoSignedIn = new Set<string>();
 
 	constructor(opts: ViewerOptions) {
 		this.data = opts.data;
@@ -567,9 +624,15 @@ export class Viewer {
 		// The device of the new session says again what it turns off
 		s.allowed = { ...ALL_ALLOWED };
 		s.viewOnlyBeforeKeyboardOff = null;
-		// A new connection: its own password question
+		// A new connection: its own password question and its own one sign-in attempt
 		s.orgAnswerTried = false;
 		s.usingOrgAnswer = false;
+		s.peerFacts = null;
+		s.signinOffer = { kind: 'none' };
+		s.signinTried = false;
+		s.signinBusy = false;
+		s.signinNote = '';
+		s.signinDismissed = false;
 		if (!s.canvas) return;
 		s.client = createClient(s.canvas, this.clientOptions(s), this.transport);
 		s.client.setBackgroundFps?.(s.prefs.backgroundFps || 1);
@@ -735,6 +798,7 @@ export class Viewer {
 				this.openFilesOnConnect = false;
 				void tick().then(() => this.openSheet('files'));
 			}
+			void this.refreshSignin(s);
 		});
 		on('stats', () => {
 			s.statsTick++;
@@ -749,8 +813,16 @@ export class Viewer {
 		on('permission', (info: unknown) => this.applyPermission(s, c, info));
 		// CDAP: the agent lists its monitors; RustDesk: peer_info after sign-in
 		on('monitors', () => this.refreshMonitors(s));
-		on('peer_info', (info?: { platform?: string; os?: string }) => {
+		on('peer_info', (info?: { platform?: string; os?: string; username?: string; sasEnabled?: boolean }) => {
 			if (info && !s.platform && (info.platform || info.os)) s.platform = String(info.platform || info.os);
+			// The sign-in's PeerInfo says who is signed in; a later one (displays) leaves it as it was
+			if (info && !s.peerFacts) {
+				s.peerFacts = {
+					platform: String(info.platform || info.os || ''),
+					username: String(info.username ?? ''),
+					sasEnabled: info.sasEnabled === true
+				};
+			}
 			this.refreshMonitors(s);
 		});
 		on('display_switched', () => this.refreshMonitors(s));
@@ -978,6 +1050,102 @@ export class Viewer {
 		s.rememberedPassword = '';
 		s.loginError = '';
 		return true;
+	}
+
+	/* ── Saved sign-in (L469) ── */
+
+	/**
+	 * What the viewer offers for the session's saved sign-in, from the
+	 * server's status (loaded once per tab) and what the device said at the
+	 * sign-in; with the switch on and nobody signed in, it signs in by itself.
+	 */
+	private async refreshSignin(s: ViewerSession): Promise<void> {
+		if (this.transport !== 'rd' || this.guest || this.remoteTarget || this.data.mockRemote || !this.data.user)
+			return;
+		const c = s.client;
+		if (!c || !s.peerFacts || s.view !== 'streaming' || !isWindows(s.peerFacts.platform)) return;
+		if (!s.signinLoaded) {
+			s.signinLoaded = true;
+			try {
+				s.signin = await getSignin(s.deviceId);
+			} catch {
+				s.signin = null;
+			}
+		}
+		if (s.client !== c || s.closed) return;
+		const offer = signinOffer(s.peerFacts, s.signin, {
+			tried: s.signinTried,
+			autoDone: this.autoSignedIn.has(s.deviceId)
+		});
+		s.signinOffer = offer;
+		if (offer.kind === 'auto') {
+			this.autoSignedIn.add(s.deviceId);
+			await new Promise((r) => setTimeout(r, SIGNIN_AUTO_DELAY_MS));
+			if (s.client === c && !s.closed) void this.signIn(s, { auto: true });
+		}
+	}
+
+	/**
+	 * Types the saved sign-in at the device's lock or sign-in screen: one
+	 * attempt per connection, also when it failed at the device, so a wrong
+	 * password can't lock the account. The details come from the server
+	 * for this session, go to the keys and are dropped; nothing keeps them.
+	 */
+	async signIn(s: ViewerSession, opts: { auto?: boolean } = {}): Promise<void> {
+		const c = s.client;
+		if (!c || s.signinTried || s.view !== 'streaming' || s.viewOnly || !s.allowed.keyboard) return;
+		if (!c.relayUUID || !c.sendCtrlAltDel || !c.sendText || !c.sendKeyPress) return;
+		const offer = s.signinOffer;
+		if (!opts.auto && offer.kind === 'button' && offer.signedIn) {
+			const ok = await confirm({
+				title: tf('remote.signin_confirm_title', 'Sign in at the lock screen?'),
+				message: tf(
+					'remote.signin_confirm',
+					'Someone is signed in on {name}. Use Sign in only while the screen shows the lock screen: on an open desktop the password would be typed into whatever has the focus.',
+					{ name: s.label }
+				),
+				confirmLabel: tf('remote.signin', 'Sign in')
+			});
+			if (!ok || s.client !== c || s.signinTried || s.view !== 'streaming') return;
+		}
+		s.signinTried = true;
+		s.signinBusy = true;
+		s.signinDismissed = false;
+		s.signinOffer = { kind: 'none' };
+		s.signinNote = tf('remote.signin_busy', 'Signing in with the saved details…');
+		// The details live in this call only: typed, then dropped with it
+		let details: SigninDetails;
+		try {
+			details = await useSignin(s.deviceId, c.relayUUID);
+		} catch (err) {
+			s.signinBusy = false;
+			s.signinNote = signinRefusalText(refusalCode(err));
+			return;
+		}
+		const live = () => s.client === c && !s.closed && s.view === 'streaming';
+		const typed = await typeSignin(
+			{
+				sendCtrlAltDel: () => c.sendCtrlAltDel?.(),
+				sendText: (text) => c.sendText?.(text),
+				sendKeyPress: (key) => c.sendKeyPress?.(key) ?? false
+			},
+			signinSteps(details.form),
+			details,
+			{ alive: live }
+		);
+		s.signinBusy = false;
+		s.signinNote = typed
+			? tf(
+					'remote.signin_typed',
+					'The saved details were typed. If Windows shows an error, sign in by hand: they are not tried again in this session.'
+				)
+			: tf('remote.signin_stopped', 'The session ended before the saved details were typed.');
+		if (this.isActive(s)) s.focus?.canvas();
+	}
+
+	dismissSignin(s: ViewerSession): void {
+		s.signinDismissed = true;
+		if (this.isActive(s)) s.focus?.canvas();
 	}
 
 	verifyCode(s: ViewerSession): void {

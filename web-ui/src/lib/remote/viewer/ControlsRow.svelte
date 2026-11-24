@@ -139,6 +139,11 @@
 					<MenuItem icon="lock" onselect={() => viewer.lockScreen()}
 						>{tf('remote.lock_screen', 'Lock screen')}</MenuItem
 					>
+					{#if s?.signinOffer.kind === 'button'}
+						<MenuItem icon="login" onselect={() => s && void viewer.signIn(s)}
+							>{tf('remote.signin_menu', 'Sign in with the saved details')}</MenuItem
+						>
+					{/if}
 					{#if s?.allowed.restart ?? true}
 						<MenuItem icon="restart_alt" onselect={() => void viewer.restartRemote()}
 							>{tf('remote.restart_remote', 'Restart remote device')}</MenuItem

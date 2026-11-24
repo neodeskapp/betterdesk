@@ -104,8 +104,14 @@ export interface RemoteClient {
 	submit2FA?(code: string): void;
 	sendChat?(text: string): void;
 	sendCtrlAltDel?(): void;
+	/** RDClient: one control key (the saved sign-in's Tab and Return) */
+	sendKeyPress?(key: 'Tab' | 'Return'): boolean;
 	/** RDClient: sign in with the server's answer to the device's question; the page holds no password (L454) */
 	authenticateWith?(answer: LoginAnswer): Promise<boolean>;
+	/** RDClient: the relay session's id, which the server knows as this viewer's open session */
+	readonly relayUUID?: string;
+	/** RDClient: what the device said about itself at the sign-in (PeerInfo) */
+	readonly peerInfo?: { platform?: string; username?: string; sasEnabled?: boolean } | null;
 	sendLockScreen?(): void;
 	sendRestartRemoteDevice?(): void;
 	sendRefreshScreen?(): void;

@@ -16,6 +16,7 @@
 	import { link } from '#lib/nav.ts';
 	import { showDetails, stepRows, type View } from '#lib/remote/states.ts';
 	import Button from '#lib/ui/Button.svelte';
+	import IconButton from '#lib/ui/IconButton.svelte';
 	import LinkButton from '#lib/remote/LinkButton.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Platform from '#lib/ui/Platform.svelte';
@@ -78,6 +79,29 @@
 	const hasMessage = $derived(!!(s.endInfo?.reason || s.lastError));
 	const detailsShown = $derived(showDetails(view, hasMessage, s.endedBy));
 	const openDevice = $derived(!viewer.guest && !viewer.remoteTarget);
+	const signinOffer = $derived(s.signinOffer);
+	const signinText = $derived.by(() => {
+		if (s.signinNote) return s.signinNote;
+		const o = signinOffer;
+		if (o.kind === 'unsupported')
+			return o.why === 'platform'
+				? tf('remote.signin_unsupported_platform', 'Saved sign-in works on Windows computers only.')
+				: tf(
+						'remote.signin_unsupported_service',
+						"NeoDesk on this computer runs without its service, so it can't type at the lock screen."
+					);
+		if (o.kind === 'button' && o.noLockSignal)
+			return tf(
+				'remote.signin_no_lock_signal',
+				"This computer doesn't report its lock screen. Use Sign in when you see it."
+			);
+		if (o.kind === 'button' && o.signedIn)
+			return tf(
+				'remote.signin_bar_signed_in',
+				'Someone is signed in on this computer. Use Sign in only while the screen shows the lock screen.'
+			);
+		return tf('remote.signin_bar', 'A sign-in is saved for this computer.');
+	});
 	const title = $derived(
 		view === 'failed'
 			? tf('remote_viewer.title_failed', 'Could not connect')
@@ -407,6 +431,25 @@
 		</div>
 	{/if}
 
+	{#if view === 'streaming' && !s.signinDismissed && (signinOffer.kind === 'button' || signinOffer.kind === 'unsupported' || s.signinNote)}
+		<!-- Saved sign-in (L469): the offer, why there is none, or what the attempt did -->
+		<div class="signin-bar" role="status">
+			<p class="signin-text">{signinText}</p>
+			{#if signinOffer.kind === 'button'}
+				<Button size="sm" variant="primary" icon="login" onclick={() => void viewer.signIn(s)}
+					>{tf('remote.signin', 'Sign in')}</Button
+				>
+			{/if}
+			<IconButton
+				class="signin-close"
+				icon="close"
+				label={tf('common.close', 'Close')}
+				disabled={s.signinBusy}
+				onclick={() => viewer.dismissSignin(s)}
+			/>
+		</div>
+	{/if}
+
 	{#if s.autoplayBlocked && view === 'streaming'}
 		<div class="viewer-overlay autoplay-overlay">
 			<div class="overlay-card">
@@ -487,6 +530,29 @@
 		overflow-y: auto;
 		background: var(--bg);
 		color: var(--text);
+	}
+	/* Saved sign-in: a small bar at the bottom of the screen, out of the way */
+	.signin-bar {
+		position: absolute;
+		bottom: var(--space-4);
+		left: 50%;
+		z-index: 3;
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		max-width: calc(100% - 2 * var(--space-4));
+		padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+		border-radius: var(--radius);
+		background: rgba(0, 0, 0, 0.82);
+		color: #ffffff;
+		font-size: var(--text-sm);
+		transform: translateX(-50%);
+	}
+	.signin-text {
+		margin: 0;
+	}
+	.signin-bar :global(.signin-close) {
+		color: #ffffff;
 	}
 	.autoplay-overlay {
 		z-index: 150;
