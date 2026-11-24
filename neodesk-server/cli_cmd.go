@@ -13,7 +13,8 @@ import (
 // of the binary, neodesk.ps1 and the image as a link), or as
 // `neodesk-server cli ...` with any name.
 // Called neodesk, it hands the installer's options to neodesk-setup
-// (cli_setup.go).
+// (cli_setup.go) and the desktop client's to /usr/bin/neodesk
+// (cli_client.go).
 
 // cliName reports whether the program was started as neodesk.
 func cliName(arg0 string) bool {
@@ -23,12 +24,15 @@ func cliName(arg0 string) bool {
 	return name == "neodesk"
 }
 
-// runCLI runs the command line, or neodesk-setup for the installer's
-// options. `neodesk local ...` reads the server's env file first, as the
+// runCLI runs the command line, neodesk-setup for the installer's options
+// or the desktop client for its own. `neodesk local ...` reads the server's env file first, as the
 // server's own commands do; the other commands talk to a console and
 // leave it alone.
 func runCLI(args []string) int {
 	if code, handled := handToSetup(args, osSetupCall()); handled {
+		return code
+	}
+	if code, handled := handToClient(args, osClientCall()); handled {
 		return code
 	}
 	if len(args) > 0 && args[0] == "local" {

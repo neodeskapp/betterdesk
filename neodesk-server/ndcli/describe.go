@@ -227,6 +227,7 @@ func WriteIndexMarkdown(w io.Writer, d Description, link string) {
 		"and the Docker images have it. `neodesk-server cli` works too. "+
 		"On Linux hosts the installer's menu and options are `neodesk-setup`; "+
 		"`sudo neodesk` without arguments and the installer's options, such as `neodesk --update`, reach it too. "+
+		"Where the NeoDesk desktop client is installed too, its options, such as `--join` and `--service`, go to it (`/usr/bin/neodesk`). "+
 		"Sign in once with an API token. Make one in the console: account menu, API tokens. "+
 		"A token can do only what its permissions and its account allow, and a read-only token only reads.")
 	fmt.Fprint(w, tokenRulesMarkdown)

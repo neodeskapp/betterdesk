@@ -15,6 +15,9 @@ on:
       - 'scripts/build-test-image.sh'
       - 'neodesk-server/cli_cmd.go'
       - 'neodesk-server/cli_setup*.go'
+      - 'neodesk-server/cli_client*.go'
+      - 'neodesk-server/testdata/client-options.txt'
+      - 'scripts/client-options.sh'
       - 'release-notes/**'
       - '.github/workflows/release-go.yml'
       - 'scripts/test-docker-installer.sh'
@@ -48,6 +51,9 @@ on:
       - 'scripts/build-test-image.sh'
       - 'neodesk-server/cli_cmd.go'
       - 'neodesk-server/cli_setup*.go'
+      - 'neodesk-server/cli_client*.go'
+      - 'neodesk-server/testdata/client-options.txt'
+      - 'scripts/client-options.sh'
       - 'release-notes/**'
       - '.github/workflows/release-go.yml'
       - 'scripts/test-docker-installer.sh'
@@ -200,10 +206,12 @@ jobs:
       # reset-password), the path checks and the updater
       - name: Run installer-focused tests
         run: go test -count=1 ./cli/... ./console/safepath/... ./console/updater/...
-      # neodesk hands neodesk.sh's options to neodesk-setup: the list in Go
-      # against the installer's argument loop, and the hand-over itself
-      - name: Test the hand-over of the installer's options
-        run: go test -count=1 -run 'Setup|InstallersFlags|OtherCallsStay|BareSudo' .
+      # neodesk hands neodesk.sh's options to neodesk-setup and the desktop
+      # client's to /usr/bin/neodesk: the lists in Go against the
+      # installer's argument loop and the client's (testdata), and the
+      # hand-overs themselves
+      - name: Test the hand-over of the installer's and the client's options
+        run: go test -count=1 -run 'Setup|InstallersFlags|OtherCallsStay|BareSudo|Client' .
 
   setup-command:
     name: Installer commands on a real install

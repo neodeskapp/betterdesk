@@ -40,6 +40,22 @@ var globalBool = map[string]string{
 	"yes": "yes", "y": "yes", "help": "help", "h": "help", "version": "version",
 }
 
+// GlobalFlags are the options every command takes, as they are written:
+// --name, or -n for a short form.
+func GlobalFlags() []string {
+	var out []string
+	for _, names := range []map[string]string{globalValue, globalBool} {
+		for name := range names {
+			if len(name) == 1 {
+				out = append(out, "-"+name)
+			} else {
+				out = append(out, "--"+name)
+			}
+		}
+	}
+	return out
+}
+
 // usageError is a mistake in the command line: exit 2.
 type usageError struct{ msg string }
 
