@@ -4,9 +4,10 @@
   once (one hour, one use) and shows it (CodeResult); then the dialog asks
   for the session's state every 2 s while it is open: waiting for the link,
   the app is open and asks the person, then Connect (browser viewer) and
-  Open in the desktop app. The browser viewer asks the server for the
-  session password itself when the device wants it; the desktop app gets
-  it in its link. Declined, ended or expired: say so and offer a new link.
+  Open in the desktop app (NeoDesk, or stock RustDesk). The browser viewer
+  asks the server for the session password itself when the device wants
+  it; the desktop app gets it in its link, fetched once and kept while the
+  dialog is open, so the other app can still get it. Declined, ended or expired: say so and offer a new link.
   Closing the dialog keeps the session; Help requests lists it.
 -->
 <script lang="ts">
@@ -29,9 +30,12 @@
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import FormStatus from '#lib/ui/FormStatus.svelte';
+	import MenuButton from '#lib/ui/MenuButton.svelte';
+	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Status from '#lib/ui/Status.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
+	import { APP_NAMES, DESKTOP_APPS, type DesktopApp } from '#lib/util/app-links.ts';
 	import { ICONS } from '#lib/util/display.ts';
 	import CodeResult from './CodeResult.svelte';
 	import {
@@ -110,18 +114,25 @@
 		go.tab(viewerPath(current.device_id));
 	}
 
-	async function connectApp() {
+	/** The session password once fetched, by session: the server hands it over only once */
+	let taken: { id: string; password: string } | null = null;
+
+	async function connectApp(app: DesktopApp) {
 		if (!current || connecting) return;
-		connecting = true;
-		let password = '';
-		try {
-			password = await takeSessionPassword(current.id);
-		} catch {
-			// Without it the app asks for the password on the person's screen
-		} finally {
-			connecting = false;
+		const { id, device_id } = current;
+		let password = taken?.id === id ? taken.password : '';
+		if (taken?.id !== id) {
+			connecting = true;
+			try {
+				password = await takeSessionPassword(id);
+				taken = { id, password };
+			} catch {
+				// Without it the app asks for the password on the person's screen
+			} finally {
+				connecting = false;
+			}
 		}
-		go.here(desktopLink(current.device_id, password));
+		go.here(desktopLink(device_id, password, app));
 	}
 
 	async function end() {
@@ -212,9 +223,16 @@
 			>
 		{/if}
 		{#if current && canConnect(current)}
-			<Button icon={ICONS.connect_app} class="connect-app" busy={connecting} onclick={() => void connectApp()}
-				>{t('onboard.support.connect_app')}</Button
+			<MenuButton
+				icon={ICONS.connect_app}
+				class="connect-app"
+				disabled={connecting}
+				label={t('onboard.support.connect_app')}
 			>
+				{#each DESKTOP_APPS as app (app)}
+					<MenuItem onselect={() => void connectApp(app)}>{APP_NAMES[app]}</MenuItem>
+				{/each}
+			</MenuButton>
 			<Button variant="primary" icon={ICONS.connect} class="connect-browser" onclick={connectBrowser}
 				>{t('onboard.support.connect_browser')}</Button
 			>

@@ -7,6 +7,7 @@
  */
 
 import type { SessionState, SupportSession } from '#lib/api/onboard.ts';
+import { appSessionLink, type DesktopApp } from '#lib/util/app-links.ts';
 
 /** How often the dialog asks for the session's state */
 export const POLL_MS = 2000;
@@ -52,12 +53,12 @@ export function stateTone(status: SessionState): string {
 
 /**
  * The desktop app's link to a device, with the session password when
- * there is one: rustdesk://connection/new/<id>?password=<password>. The
- * link goes to the app on this computer, not over the network.
+ * there is one: neodesk://connection/new/<id>?password=<password>, or the
+ * same with rustdesk:// for stock RustDesk. The link goes to the app on
+ * this computer, not over the network.
  */
-export function desktopLink(deviceId: string, password: string): string {
-	const base = 'rustdesk://connection/new/' + encodeURIComponent(deviceId);
-	return password ? `${base}?password=${encodeURIComponent(password)}` : base;
+export function desktopLink(deviceId: string, password: string, app: DesktopApp = 'neodesk'): string {
+	return appSessionLink(deviceId, password, app);
 }
 
 /** The browser viewer's address; the viewer asks the server for the password itself */

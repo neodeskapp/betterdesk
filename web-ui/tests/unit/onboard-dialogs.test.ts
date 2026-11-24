@@ -57,8 +57,12 @@ describe('session states', () => {
 	});
 
 	test('the desktop link carries the password, the viewer path never does', () => {
-		expect(desktopLink('123 456', 'a&b c')).toBe('rustdesk://connection/new/123%20456?password=a%26b%20c');
-		expect(desktopLink('123456789', '')).toBe('rustdesk://connection/new/123456789');
+		// NeoDesk's own scheme; rustdesk:// only when RustDesk is asked for (L423)
+		expect(desktopLink('123 456', 'a&b c')).toBe('neodesk://connection/new/123%20456?password=a%26b%20c');
+		expect(desktopLink('123456789', '')).toBe('neodesk://connection/new/123456789');
+		expect(desktopLink('123456789', 'pw', 'rustdesk')).toBe(
+			'rustdesk://connection/new/123456789?password=pw'
+		);
 		expect(viewerPath('123456789')).toBe('/remote/123456789');
 	});
 });
@@ -212,8 +216,19 @@ describe('Quick support', () => {
 		expect(opened).toEqual(['/remote/423456789']);
 		expect(calls.some((c) => c.path.endsWith('/password'))).toBe(false);
 
+		// The desktop app: NeoDesk by its own scheme, RustDesk by rustdesk:// (L423);
+		// the password is fetched once and goes with both
 		await user.click(screen.getByRole('button', { name: 'onboard.support.connect_app' }));
-		await waitFor(() => expect(hrefs).toEqual(['rustdesk://connection/new/423456789?password=pw%201%262']));
+		await user.click(await screen.findByRole('menuitem', { name: 'NeoDesk' }));
+		await waitFor(() => expect(hrefs).toEqual(['neodesk://connection/new/423456789?password=pw%201%262']));
+		await user.click(screen.getByRole('button', { name: 'onboard.support.connect_app' }));
+		await user.click(await screen.findByRole('menuitem', { name: 'RustDesk' }));
+		await waitFor(() =>
+			expect(hrefs).toEqual([
+				'neodesk://connection/new/423456789?password=pw%201%262',
+				'rustdesk://connection/new/423456789?password=pw%201%262'
+			])
+		);
 		expect(calls.filter((c) => c.path.endsWith('/password'))).toHaveLength(1);
 	}, 15000);
 

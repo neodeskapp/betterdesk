@@ -10,6 +10,7 @@
 	import { can } from '#lib/state/session.svelte.ts';
 	import Facts from '#lib/ui/Facts.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
+	import { APP_NAMES } from '#lib/util/app-links.ts';
 	import { ICONS } from '#lib/util/display.ts';
 	import * as actions from '../actions.svelte.ts';
 	import { panelActions, type ActionId, type PanelDevice } from '../panel-logic.ts';
@@ -43,10 +44,16 @@
 			go: () => actions.connectInBrowser(d)
 		},
 		'connect-desktop': {
-			label: t('device_detail.action_connect_desktop'),
-			desc: t('device_detail.action_connect_desktop_desc'),
+			label: t('device_detail.action_connect_desktop', { app: APP_NAMES.neodesk }),
+			desc: t('device_detail.action_connect_desktop_desc', { app: APP_NAMES.neodesk }),
 			icon: ICONS.connect_app,
 			go: () => actions.connectInApp(d)
+		},
+		'connect-rustdesk': {
+			label: t('device_detail.action_connect_desktop', { app: APP_NAMES.rustdesk }),
+			desc: t('device_detail.action_connect_desktop_desc', { app: APP_NAMES.rustdesk }),
+			icon: ICONS.connect_app,
+			go: () => actions.connectInApp(d, 'rustdesk')
 		},
 		'cdap-viewer': {
 			label: t('actions.cdap_viewer'),

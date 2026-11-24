@@ -3,7 +3,9 @@
   list with folders, groups and tags, refreshed every 30 seconds while the
   tab is visible. Connect adds a tab to an open viewer (BroadcastChannel
   "neodesk-remote") or opens one; on phones the RustDesk app opens
-  instead; in the desktop app (Tauri) the app opens the session. Needs a
+  instead (there is no NeoDesk app for phones); in the desktop app (Tauri)
+  the app opens the session. On a computer, Connect by ID also hands the
+  ID to NeoDesk or stock RustDesk. Needs a
   console session with device.connect (GET /api/remote/desk, which also
   drops a guest link's cookie, as GET /remote did).
 -->
@@ -25,6 +27,7 @@
 	import Button from '#lib/ui/Button.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
+	import { appLink, type DesktopApp } from '#lib/util/app-links.ts';
 	import { readPref, writePref } from '#lib/util/storage.ts';
 
 	const VIEW_KEY = 'rd-desk-view';
@@ -58,8 +61,9 @@
 		return !fine && window.screen?.width > 0 && window.screen.width <= 767 && viewportWidth() > 0;
 	}
 
-	function openInApp(id: string) {
-		location.href = `rustdesk://${encodeURIComponent(id)}`;
+	/** Phones: the RustDesk app; a computer: the app asked for */
+	function openInApp(id: string, app: DesktopApp = 'rustdesk') {
+		location.href = appLink(id, app);
 	}
 
 	function openViewerTab(id: string) {

@@ -17,7 +17,7 @@
  * Opening and connecting
  *   connectInBrowser(d)          web viewer: reuses an open viewer tab, asks first on a phone
  *                                (device.connect; RDP/VNC targets remote_target.connect)
- *   connectInApp(d)              rustdesk://<id> (device.connect)
+ *   connectInApp(d, app?)        neodesk://<id>, or rustdesk://<id> for stock RustDesk (device.connect)
  *   openSnapshotViewer(d)        CDAP snapshot viewer in a new tab (device.connect)
  *   createGuestLink(devices)     time-limited link without sign-in (guest.create)
  *   showDetails(d)               opens the device panel
@@ -79,6 +79,7 @@ import { can } from '#lib/state/session.svelte.ts';
 import { closeDevice, devicePanel, openDevice, refreshDevice } from '#lib/state/devicePanel.svelte.ts';
 import { confirm, prompt } from '#lib/ui/dialogs.svelte.ts';
 import { toast } from '#lib/ui/toasts.svelte.ts';
+import { appLink, APP_NAMES, type DesktopApp } from '#lib/util/app-links.ts';
 import { ICONS } from '#lib/util/display.ts';
 import { ask } from './ask.svelte.ts';
 import { OFFER_ACCESS_POLICY, deviceLabel, deviceName, isMesh, watchable, type DeviceLike } from './model.ts';
@@ -149,13 +150,13 @@ function openViewer(id: string) {
  * The web viewer. An RDClient tab that is already open gets the device as a
  * new session (BroadcastChannel 'neodesk-remote', 300 ms to answer);
  * otherwise a new tab opens. A phone asks first: the viewer needs a wider
- * screen, so it offers the RustDesk app instead.
+ * screen, so it offers the RustDesk app instead (phones have no NeoDesk app).
  */
 export async function connectInBrowser(d: DeviceLike): Promise<boolean> {
 	if (!may.connect(d)) return false;
 	if (isPhone()) {
 		const choice = await ask('connect-choice', { device: d, app: !d.remote_target });
-		if (choice === 'app') window.location.href = 'rustdesk://' + encodeURIComponent(d.id);
+		if (choice === 'app') window.location.href = appLink(d.id, 'rustdesk');
 		else if (choice === 'web') openViewer(d.id);
 		return choice !== null;
 	}
@@ -185,10 +186,10 @@ export async function connectInBrowser(d: DeviceLike): Promise<boolean> {
 	return true;
 }
 
-/** Hand the ID to the RustDesk desktop app */
-export function connectInApp(d: DeviceLike): boolean {
+/** Hand the ID to the desktop app on this computer: NeoDesk, or stock RustDesk when asked for */
+export function connectInApp(d: DeviceLike, app: DesktopApp = 'neodesk'): boolean {
 	if (!may.connectApp(d)) return false;
-	window.open('rustdesk://' + encodeURIComponent(d.id), '_blank');
+	window.open(appLink(d.id, app), '_blank');
 	return true;
 }
 
@@ -1003,8 +1004,10 @@ export function deviceMenu(d: DeviceLike, opts: { knownTags?: readonly string[] 
 	const viewers: MenuEntry[] = [];
 	if (canConnect) {
 		viewers.push(item('cdap-viewer', t('actions.cdap_viewer'), ICONS.snapshot, () => openSnapshotViewer(d)));
+		const open = (app: DesktopApp) => t('actions.open_in_app', { app: APP_NAMES[app] });
 		viewers.push(
-			item('connect-desktop', t('actions.connect_desktop'), ICONS.connect_app, () => connectInApp(d))
+			item('connect-desktop', open('neodesk'), ICONS.connect_app, () => connectInApp(d)),
+			item('connect-rustdesk', open('rustdesk'), ICONS.connect_app, () => connectInApp(d, 'rustdesk'))
 		);
 	}
 

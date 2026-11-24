@@ -1,17 +1,19 @@
 <!--
   Connect by ID: the field and Connect (and, on the dashboard, "Open in
-  RustDesk app"). An ID that is not 3 to 64 letters, digits, - or _ says
-  so under the field instead of connecting.
+  NeoDesk" and "Open in RustDesk"; on a phone only the RustDesk app,
+  since there is no NeoDesk app for phones). An ID that is not 3 to 64
+  letters, digits, - or _ says so under the field instead of connecting.
 -->
 <script lang="ts">
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
+	import { APP_NAMES, DESKTOP_APPS, type DesktopApp } from '#lib/util/app-links.ts';
 	import { readQuickId } from './address-book.ts';
 
 	interface Props {
 		onconnect: (id: string) => void;
-		/** "Open in RustDesk app" next to Connect (the dashboard) */
-		onapp?: ((id: string) => void) | null;
+		/** The desktop apps next to Connect (the dashboard): NeoDesk and RustDesk, on a phone RustDesk */
+		onapp?: ((id: string, app: DesktopApp) => void) | null;
 		/** Phones: the app is the one action and Enter opens it */
 		phone?: boolean;
 		hint?: string;
@@ -38,9 +40,9 @@
 		if (id) onconnect(id);
 	}
 
-	function app() {
+	function app(name: DesktopApp) {
 		const id = read();
-		if (id) onapp?.(id);
+		if (id) onapp?.(id, name);
 	}
 </script>
 
@@ -63,17 +65,23 @@
 			onkeydown={(e) => {
 				if (e.key !== 'Enter') return;
 				e.preventDefault();
-				if (phone && onapp) app();
+				if (phone && onapp) app('rustdesk');
 				else connect();
 			}}
 		/>
 		{#if !phone}
 			<Button variant="primary" onclick={connect}>{tf('remote_dashboard.connect', 'Connect')}</Button>
 		{/if}
-		{#if onapp}
-			<Button variant={phone ? 'primary' : 'secondary'} onclick={app}
+		{#if onapp && phone}
+			<Button variant="primary" onclick={() => app('rustdesk')}
 				>{tf('remote_viewer.open_in_app', 'Open in RustDesk app')}</Button
 			>
+		{:else if onapp}
+			{#each DESKTOP_APPS as name (name)}
+				<Button onclick={() => app(name)}
+					>{tf('actions.open_in_app', 'Open in {app}', { app: APP_NAMES[name] })}</Button
+				>
+			{/each}
 		{/if}
 	</div>
 	{#if error || hint}

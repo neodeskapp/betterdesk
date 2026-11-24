@@ -89,6 +89,32 @@ for (const role of ROLES) {
 test.describe('devices links', () => {
 	test.use({ role: 'operator' });
 
+	test('Open in NeoDesk and Open in RustDesk hand the ID to each app by its own scheme (L423)', async ({
+		page
+	}) => {
+		// The browser has neither app: keep what the console hands to window.open
+		await page.addInitScript(() => {
+			const w = window as unknown as { __opened: string[] };
+			w.__opened = [];
+			window.open = ((url?: string | URL) => {
+				w.__opened.push(String(url));
+				return null;
+			}) as typeof window.open;
+		});
+		await page.goto(`${UI}/devices`);
+		const { deviceId } = await context(page);
+		await page.getByRole('searchbox').first().fill(deviceId);
+		const row = rows(page).filter({ hasText: deviceId });
+		await expect(row).toHaveCount(1);
+		for (const name of ['Open in NeoDesk', 'Open in RustDesk']) {
+			await row.getByRole('button', { name: /^Actions:/ }).click();
+			await page.getByRole('menu').getByRole('menuitem', { name }).click();
+		}
+		const opened = await page.evaluate(() => (window as unknown as { __opened: string[] }).__opened);
+		const id = encodeURIComponent(deviceId);
+		expect(opened).toEqual([`neodesk://${id}`, `rustdesk://${id}`]);
+	});
+
 	test('a link with ?open= opens the device; Back closes it', async ({ page }) => {
 		await page.goto(`${UI}/devices`);
 		const { deviceId } = await context(page);

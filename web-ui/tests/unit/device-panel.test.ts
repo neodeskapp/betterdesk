@@ -77,7 +77,13 @@ describe('permission gates per role', () => {
 		expect(liveViews(device(), (p) => p === 'device.edit')).not.toContain('files');
 		expect(footerSlots(device(), can)).toEqual({ edit: true, editTarget: false, connect: true });
 		const a = panelActions(device(), can);
-		expect(a.connect).toEqual(['connect-web', 'connect-desktop', 'cdap-viewer', 'guest-access']);
+		expect(a.connect).toEqual([
+			'connect-web',
+			'connect-desktop',
+			'connect-rustdesk',
+			'cdap-viewer',
+			'guest-access'
+		]);
 		expect(a.manage).toEqual(['edit', 'groups', 'issue-token']);
 		expect(a.danger).toEqual([]);
 	});

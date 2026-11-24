@@ -45,6 +45,7 @@
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import type { Column } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
+	import { APP_NAMES, DESKTOP_APPS, type DesktopApp } from '#lib/util/app-links.ts';
 	import { ICONS } from '#lib/util/display.ts';
 	import { readPref, writePref } from '#lib/util/storage.ts';
 	import ShareFilter, { type ShareFilterPart } from '#lib/support/ShareFilter.svelte';
@@ -191,8 +192,9 @@
 		(row?.querySelector<HTMLElement>('.hr-connect .btn') ?? row?.querySelector<HTMLElement>('.btn'))?.focus();
 	}
 
-	function connectApp(r: HelpRequest) {
-		if (act.connectInApp({ id: r.device_id })) toast.info(t('help_request.app_opening'));
+	function connectApp(r: HelpRequest, app: DesktopApp) {
+		if (act.connectInApp({ id: r.device_id }, app))
+			toast.info(t('help_request.app_opening', { app: APP_NAMES[app] }));
 	}
 
 	function pickFilter(next: HelpFilter) {
@@ -359,12 +361,16 @@
 						<span class="hr-connect-desc">{t('help_request.connect_web_desc')}</span>
 					</span>
 				</MenuItem>
-				<MenuItem icon={ICONS.connect_app} onselect={() => connectApp(r)}>
-					<span class="hr-connect-text">
-						<span class="hr-connect-title">{t('help_request.connect_app')}</span>
-						<span class="hr-connect-desc">{t('help_request.connect_app_desc')}</span>
-					</span>
-				</MenuItem>
+				{#each DESKTOP_APPS as app (app)}
+					<MenuItem icon={ICONS.connect_app} onselect={() => connectApp(r, app)}>
+						<span class="hr-connect-text">
+							<span class="hr-connect-title">{t('help_request.connect_app', { app: APP_NAMES[app] })}</span>
+							<span class="hr-connect-desc"
+								>{t('help_request.connect_app_desc', { app: APP_NAMES[app] })}</span
+							>
+						</span>
+					</MenuItem>
+				{/each}
 			</MenuButton>
 		{/if}
 		{#if r.status !== 'resolved'}

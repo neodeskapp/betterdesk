@@ -140,6 +140,7 @@ export function panelTabs(d: PanelDevice, can: Can): PanelTab[] {
 export type ActionId =
 	| 'connect-web'
 	| 'connect-desktop'
+	| 'connect-rustdesk'
 	| 'cdap-viewer'
 	| 'guest-access'
 	| 'mesh-terminal'
@@ -201,7 +202,7 @@ export function panelActions(d: PanelDevice, can: Can): PanelActions {
 		return out;
 	}
 	const connect = can('device.connect');
-	if (connect) out.connect.push('connect-web', 'connect-desktop', 'cdap-viewer');
+	if (connect) out.connect.push('connect-web', 'connect-desktop', 'connect-rustdesk', 'cdap-viewer');
 	if (can('guest.create')) out.connect.push('guest-access');
 
 	if (isSupportAgent(identityOf(d))) {

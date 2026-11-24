@@ -30,6 +30,7 @@
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
 	import IconButton from '#lib/ui/IconButton.svelte';
+	import { appLink } from '#lib/util/app-links.ts';
 	import ControlsRow from './ControlsRow.svelte';
 	import SessionPanel from './SessionPanel.svelte';
 	import Sheets from './Sheets.svelte';
@@ -355,7 +356,7 @@
 			</p>
 			<p class="phone-id mono">{data.deviceId}</p>
 			<div class="phone-actions">
-				<LinkButton variant="primary" href="rustdesk://{encodeURIComponent(data.deviceId)}"
+				<LinkButton variant="primary" href={appLink(data.deviceId, 'rustdesk')}
 					>{tf('remote_viewer.open_in_app', 'Open in RustDesk app')}</LinkButton
 				>
 				<LinkButton href={link('/remote')}

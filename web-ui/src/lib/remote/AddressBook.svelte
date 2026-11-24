@@ -19,6 +19,7 @@
 	import TagSet from '#lib/ui/TagSet.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import type { Column } from '#lib/ui/table.ts';
+	import { appLink } from '#lib/util/app-links.ts';
 	import LinkButton from './LinkButton.svelte';
 	import {
 		ALL,
@@ -175,7 +176,7 @@
 	{:else if d.banned}
 		<!-- Banned devices cannot be reached; the status says why -->
 	{:else if phone}
-		<LinkButton size="sm" href="rustdesk://{encodeURIComponent(d.id)}"
+		<LinkButton size="sm" href={appLink(d.id, 'rustdesk')}
 			>{tf('remote_viewer.open_in_app', 'Open in RustDesk app')}</LinkButton
 		>
 	{:else}

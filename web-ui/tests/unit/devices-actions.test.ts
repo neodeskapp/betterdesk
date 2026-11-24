@@ -393,6 +393,27 @@ describe('what the actions send', () => {
 	});
 });
 
+describe('desktop app links (L423)', () => {
+	test('Open in NeoDesk hands the ID to neodesk://, Open in RustDesk to rustdesk://', () => {
+		as('device.view', 'device.connect');
+		const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+		const menu = act.deviceMenu(dev({ id: '123 456' })).flat();
+		menu.find((i) => i.id === 'connect-desktop')?.run();
+		menu.find((i) => i.id === 'connect-rustdesk')?.run();
+		expect(open.mock.calls.map((c) => c[0])).toEqual(['neodesk://123%20456', 'rustdesk://123%20456']);
+		open.mockRestore();
+	});
+
+	test('connectInApp opens NeoDesk unless RustDesk is asked for', () => {
+		as('device.view', 'device.connect');
+		const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+		expect(act.connectInApp(dev())).toBe(true);
+		expect(act.connectInApp(dev(), 'rustdesk')).toBe(true);
+		expect(open.mock.calls.map((c) => c[0])).toEqual(['neodesk://900100001', 'rustdesk://900100001']);
+		open.mockRestore();
+	});
+});
+
 describe('row menu', () => {
 	const ids = (d: act.DeviceLike) =>
 		act
@@ -412,6 +433,7 @@ describe('row menu', () => {
 			'guest-access',
 			'cdap-viewer',
 			'connect-desktop',
+			'connect-rustdesk',
 			'details',
 			'edit',
 			'manage-tags',
