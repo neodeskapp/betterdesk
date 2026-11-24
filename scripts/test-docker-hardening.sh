@@ -31,8 +31,8 @@ fail() {
         docker compose -p "$PROJECT" \
             -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
             -f "$OVERRIDE_FILE" exec -T -u neodesk neodesk \
-            sh -c 'ls -la /opt/rustdesk; sqlite3 /opt/rustdesk/db_v2.sqlite3 "SELECT COUNT(*) FROM users;"' >&2 || true
-        ls -la "$TEST_DIR/rustdesk" >&2 || true
+            sh -c 'ls -la /opt/neodesk/data; sqlite3 /opt/neodesk/data/db_v2.sqlite3 "SELECT COUNT(*) FROM users;"' >&2 || true
+        ls -la "$TEST_DIR/data" >&2 || true
     fi
     exit 1
 }
@@ -44,7 +44,7 @@ wait_for_bootstrap_admin() {
         users=$(docker compose -p "$PROJECT" \
             -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
             -f "$OVERRIDE_FILE" exec -T -u neodesk neodesk \
-            sqlite3 /opt/rustdesk/db_v2.sqlite3 "SELECT COUNT(*) FROM users;" 2>/dev/null | tr -d '\r\n' || true)
+            sqlite3 /opt/neodesk/data/db_v2.sqlite3 "SELECT COUNT(*) FROM users;" 2>/dev/null | tr -d '\r\n' || true)
         if [ -n "$users" ] && [ "$users" -gt 0 ] 2>/dev/null; then
             return 0
         fi
@@ -59,9 +59,9 @@ cleanup() {
         -f "$OVERRIDE_FILE" down -v --remove-orphans >/dev/null 2>&1 || true
     # The server's folders belong to uid 10001 with mode 700, so only root
     # in a container can remove them
-    if [[ -n "$DOCKER_BIN" ]] && [[ -d "$TEST_DIR/rustdesk" ]]; then
+    if [[ -n "$DOCKER_BIN" ]] && [[ -d "$TEST_DIR/data" ]]; then
         docker run --rm --entrypoint sh -v "$TEST_DIR:/cleanup" "$IMAGE" \
-            -c 'rm -rf /cleanup/rustdesk /cleanup/console' >/dev/null 2>&1 || true
+            -c 'rm -rf /cleanup/data /cleanup/console' >/dev/null 2>&1 || true
     fi
     rm -rf "$TEST_DIR"
 }
@@ -72,30 +72,32 @@ if [[ -z "$DOCKER_BIN" ]] || ! docker info >/dev/null 2>&1; then
     exit 0
 fi
 
-mkdir -p "$TEST_DIR/rustdesk" "$TEST_DIR/console"
+mkdir -p "$TEST_DIR/data" "$TEST_DIR/console"
 cat > "$OVERRIDE_FILE" <<EOF
 services:
   neodesk:
     image: ${IMAGE}
     volumes:
-      - "${DOCKER_TEST_DIR}/rustdesk:/opt/rustdesk"
+      - "${DOCKER_TEST_DIR}/data:/opt/neodesk/data"
       - "${DOCKER_TEST_DIR}/console:/app/data"
 EOF
 
-if [[ "$IMAGE" == ghcr.io/* ]]; then
+# A published image is pulled; one built here (scripts/build-test-image.sh)
+# is used as it is
+if [[ "$IMAGE" == ghcr.io/* ]] && ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
     docker compose -p "$PROJECT" \
         -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
         -f "$OVERRIDE_FILE" pull neodesk
 fi
 
-printf 'stable-test-api-key\n' > "$TEST_DIR/rustdesk/.api_key"
-chmod 600 "$TEST_DIR/rustdesk/.api_key"
+printf 'stable-test-api-key\n' > "$TEST_DIR/data/.api_key"
+chmod 600 "$TEST_DIR/data/.api_key"
 docker run --rm \
     --entrypoint sh \
-    -v "$TEST_DIR/rustdesk:/opt/rustdesk" \
+    -v "$TEST_DIR/data:/opt/neodesk/data" \
     -v "$TEST_DIR/console:/app/data" \
     "$IMAGE" \
-    -c 'chown -R 10001:10001 /opt/rustdesk /app/data && chmod 700 /opt/rustdesk /app/data'
+    -c 'chown -R 10001:10001 /opt/neodesk/data /app/data && chmod 700 /opt/neodesk/data /app/data'
 
 docker compose -p "$PROJECT" \
     -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
@@ -106,7 +108,7 @@ wait_for_bootstrap_admin
 first_key=$(docker compose -p "$PROJECT" \
     -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" exec -T -u neodesk neodesk \
-    sh -c 'cat /opt/rustdesk/.api_key' | tr -d '\r\n')
+    sh -c 'cat /opt/neodesk/data/.api_key' | tr -d '\r\n')
 [ "$first_key" = "stable-test-api-key" ] \
     || fail "existing API key was not preserved on first start"
 
@@ -120,15 +122,15 @@ docker compose -p "$PROJECT" \
 second_key=$(docker compose -p "$PROJECT" \
     -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" exec -T -u neodesk neodesk \
-    sh -c 'cat /opt/rustdesk/.api_key' | tr -d '\r\n')
+    sh -c 'cat /opt/neodesk/data/.api_key' | tr -d '\r\n')
 [ "$second_key" = "$first_key" ] \
     || fail "API key changed after a hardened-container restart"
 
 docker compose -p "$PROJECT" \
     -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" exec -T -u neodesk neodesk \
-    sh -c 'rm -f /opt/rustdesk/.admin_credentials'
-[ ! -e "$TEST_DIR/rustdesk/.admin_credentials" ] \
+    sh -c 'rm -f /opt/neodesk/data/.admin_credentials'
+[ ! -e "$TEST_DIR/data/.admin_credentials" ] \
     || fail "credentials file could not be removed from the bind mount"
 docker compose -p "$PROJECT" \
     -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
@@ -137,7 +139,7 @@ docker compose -p "$PROJECT" \
     -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" up -d --wait
 
-[ ! -e "$TEST_DIR/rustdesk/.admin_credentials" ] \
+[ ! -e "$TEST_DIR/data/.admin_credentials" ] \
     || fail "bootstrap recreated credentials for an existing database"
 # One process: neodesk-server as neodesk under tini, nothing else
 processes=$(docker compose -p "$PROJECT" \

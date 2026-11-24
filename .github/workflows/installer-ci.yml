@@ -12,6 +12,7 @@ on:
       - 'scripts/test-go-installer.sh'
       - 'scripts/test-setup-command.sh'
       - 'scripts/test-docker-data-path.sh'
+      - 'scripts/build-test-image.sh'
       - 'neodesk-server/cli_cmd.go'
       - 'neodesk-server/cli_setup*.go'
       - 'release-notes/**'
@@ -44,6 +45,7 @@ on:
       - 'scripts/test-go-installer.sh'
       - 'scripts/test-setup-command.sh'
       - 'scripts/test-docker-data-path.sh'
+      - 'scripts/build-test-image.sh'
       - 'neodesk-server/cli_cmd.go'
       - 'neodesk-server/cli_setup*.go'
       - 'release-notes/**'
@@ -68,9 +70,9 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: 'Published GHCR tag to smoke-test'
+        description: 'Published GHCR tag to smoke-test with the files of its own release; empty tests the image of this checkout'
         required: false
-        default: 'latest'
+        default: ''
         type: string
 
 permissions:
@@ -108,7 +110,9 @@ jobs:
             neodesk-docker.sh \
             scripts/test-native-installer.sh \
             scripts/test-go-installer.sh \
-            scripts/test-setup-command.sh             scripts/test-docker-data-path.sh \
+            scripts/test-setup-command.sh \
+            scripts/test-docker-data-path.sh \
+            scripts/build-test-image.sh \
             scripts/test-docker-installer.sh \
             scripts/check-supervisor-env.sh \
             scripts/check-go-toolchain-pins.sh \
@@ -124,7 +128,9 @@ jobs:
             neodesk-docker.sh \
             scripts/test-native-installer.sh \
             scripts/test-go-installer.sh \
-            scripts/test-setup-command.sh             scripts/test-docker-data-path.sh \
+            scripts/test-setup-command.sh \
+            scripts/test-docker-data-path.sh \
+            scripts/build-test-image.sh \
             scripts/test-docker-installer.sh \
             scripts/check-supervisor-env.sh \
             scripts/check-go-toolchain-pins.sh \
@@ -269,33 +275,76 @@ jobs:
             docker compose -f "$file" config --quiet
           done
 
+  # The smoke tests run the compose files with the image they belong to:
+  # the image of this checkout, or with image_tag a published image and the
+  # files of the release it was built from (a compose file of this checkout
+  # can name paths an older image does not have)
   docker-hardening-smoke:
     name: Docker hardened bind-mount smoke
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      NEODESK_IMAGE_TAG: ${{ inputs.image_tag || 'latest' }}
+      NEODESK_IMAGE_TAG: ${{ inputs.image_tag || 'local' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        if: ${{ !inputs.image_tag }}
+        with:
+          go-version-file: neodesk-server/go.mod
+          cache-dependency-path: neodesk-server/go.sum
+      - name: Build the image of this checkout
+        if: ${{ !inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          (cd neodesk-server && CGO_ENABLED=0 go build -o "$RUNNER_TEMP/neodesk-server" .)
+          NEODESK_TEST_BINARY="$RUNNER_TEMP/neodesk-server" bash scripts/build-test-image.sh "$NEODESK_IMAGE_TAG"
+      - name: Check out the release of the published image
+        if: ${{ inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          image="ghcr.io/neodeskapp/neodesk:$NEODESK_IMAGE_TAG"
+          docker pull -q "$image"
+          revision=$(docker image inspect -f '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$image")
+          [ -n "$revision" ] || { echo "$image names no revision"; exit 1; }
+          git fetch --depth=1 origin "$revision"
+          git checkout --detach FETCH_HEAD
       - name: Verify hardened bind mounts and restart behavior
         run: bash scripts/test-docker-hardening.sh
 
   docker-runtime-smoke:
     name: Docker runtime smoke
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      NEODESK_IMAGE_TAG: ${{ inputs.image_tag || 'latest' }}
+      NEODESK_IMAGE_TAG: ${{ inputs.image_tag || 'local' }}
       ADMIN_PASSWORD: InstallerSmoke-ChangeMe-9
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
+        if: ${{ !inputs.image_tag }}
+        with:
+          go-version-file: neodesk-server/go.mod
+          cache-dependency-path: neodesk-server/go.sum
+      - name: Build the image of this checkout
+        if: ${{ !inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          (cd neodesk-server && CGO_ENABLED=0 go build -o "$RUNNER_TEMP/neodesk-server" .)
+          NEODESK_TEST_BINARY="$RUNNER_TEMP/neodesk-server" bash scripts/build-test-image.sh "$NEODESK_IMAGE_TAG"
+      - name: Check out the release of the published image
+        if: ${{ inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          image="ghcr.io/neodeskapp/neodesk:$NEODESK_IMAGE_TAG"
+          docker pull -q "$image"
+          revision=$(docker image inspect -f '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$image")
+          [ -n "$revision" ] || { echo "$image names no revision"; exit 1; }
+          git fetch --depth=1 origin "$revision"
+          git checkout --detach FETCH_HEAD
       - name: Start official single-container stack
         run: |
           set -euo pipefail
-          docker compose -f docker-compose.quick.single.yml pull
-          docker compose -f docker-compose.quick.single.yml up -d --wait
+          docker compose -f docker-compose.quick.single.yml up -d --wait --pull never
       - name: Verify API and console health
         run: |
           set -euo pipefail

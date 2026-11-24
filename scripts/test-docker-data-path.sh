@@ -51,18 +51,7 @@ data_mount() {
 }
 
 echo "== the image of this checkout ($IMAGE:local)"
-if [ -n "${NEODESK_TEST_BINARY:-}" ]; then
-    mkdir -p "$WORK/context"
-    cp -a "$SCRIPT_ROOT/docker" "$WORK/context/"
-    cp "$NEODESK_TEST_BINARY" "$WORK/context/neodesk-server.bin"
-    sed -n '/^# ============= Runtime/,$p' "$SCRIPT_ROOT/Dockerfile" \
-        | sed 's|^COPY --from=go-builder /neodesk-server /usr/local/bin/neodesk-server$|COPY neodesk-server.bin /usr/local/bin/neodesk-server|' \
-        > "$WORK/context/Dockerfile"
-    grep -q '^COPY neodesk-server.bin ' "$WORK/context/Dockerfile" || fail "the Dockerfile's last stage has no binary to replace"
-    docker build -q -t "$IMAGE:local" "$WORK/context" >/dev/null || fail "the image did not build"
-else
-    docker build -q -t "$IMAGE:local" "$SCRIPT_ROOT" >/dev/null || fail "the image did not build"
-fi
+bash "$SCRIPT_ROOT/scripts/build-test-image.sh" local >/dev/null
 
 echo "== an install of $OLD_TAG with data"
 curl -fsSL --retry 3 -o "$WORK/old-docker.sh" "$OLD_MANAGER_URL" || fail "could not download $OLD_MANAGER_URL"
