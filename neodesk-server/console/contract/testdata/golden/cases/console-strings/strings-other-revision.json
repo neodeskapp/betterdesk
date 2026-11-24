@@ -3632,18 +3632,10 @@
      },
      "help": {
       "panel": {
-       "backers": "Einzelne Unterstützer",
        "close": "Schließen",
-       "honorary": "Ehrenunterstützer",
-       "link_bmc": "Buy Me a Coffee",
        "link_issues": "Issues & Feedback",
        "link_repo": "GitHub-Repository",
-       "link_sponsors": "GitHub Sponsors",
-       "link_sponsors_md": "Vollständige Sponsorenliste",
-       "links": "Nützliche Links",
-       "sponsor_cta": "Projekt unterstützen",
-       "thanks": "NeoDesk ist kostenlos und Open Source dank Menschen und Organisationen, die an selbst hostbare Fernverwaltung glauben. Danke.",
-       "title": "Hilfe & Unterstützer"
+       "links": "Nützliche Links"
       }
      },
      "help_request": {
@@ -8533,7 +8525,6 @@
       "active_shell": "Aktives Layout",
       "beta_badge": "BETA",
       "beta_hint": "Neues gruppiertes Layout, inspiriert vom Community-Redesign. UX 3.5 bleibt Standard, jederzeit umschaltbar.",
-      "credits": "Layout basiert auf dem Redesign von @rathlinus (Issue #493, PR #495).",
       "default_hint": "Standardlayout. Stabil, voller Funktionsumfang.",
       "settings_desc": "Wählen Sie das Konsolenlayout für diesen Browser.",
       "settings_title": "Konsolen-Oberfläche",
@@ -12175,18 +12166,10 @@
      },
      "help": {
       "panel": {
-       "backers": "Einzelne Unterstützer",
        "close": "Schließen",
-       "honorary": "Ehrenunterstützer",
-       "link_bmc": "Buy Me a Coffee",
        "link_issues": "Issues & Feedback",
        "link_repo": "GitHub-Repository",
-       "link_sponsors": "GitHub Sponsors",
-       "link_sponsors_md": "Vollständige Sponsorenliste",
-       "links": "Nützliche Links",
-       "sponsor_cta": "Projekt unterstützen",
-       "thanks": "NeoDesk ist kostenlos und Open Source dank Menschen und Organisationen, die an selbst hostbare Fernverwaltung glauben. Danke.",
-       "title": "Hilfe & Unterstützer"
+       "links": "Nützliche Links"
       }
      },
      "help_request": {
@@ -17076,7 +17059,6 @@
       "active_shell": "Aktives Layout",
       "beta_badge": "BETA",
       "beta_hint": "Neues gruppiertes Layout, inspiriert vom Community-Redesign. UX 3.5 bleibt Standard, jederzeit umschaltbar.",
-      "credits": "Layout basiert auf dem Redesign von @rathlinus (Issue #493, PR #495).",
       "default_hint": "Standardlayout. Stabil, voller Funktionsumfang.",
       "settings_desc": "Wählen Sie das Konsolenlayout für diesen Browser.",
       "settings_title": "Konsolen-Oberfläche",

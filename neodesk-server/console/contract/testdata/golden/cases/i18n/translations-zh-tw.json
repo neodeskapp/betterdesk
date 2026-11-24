@@ -3633,18 +3633,10 @@
       },
       "help": {
        "panel": {
-        "backers": "個人支持者",
         "close": "關閉",
-        "honorary": "榮譽支持者",
-        "link_bmc": "Buy Me a Coffee",
         "link_issues": "Issues 與回饋",
         "link_repo": "GitHub 儲存庫",
-        "link_sponsors": "GitHub Sponsors",
-        "link_sponsors_md": "完整贊助者清單",
-        "links": "實用連結",
-        "sponsor_cta": "支持本專案",
-        "thanks": "NeoDesk 能維持免費開源，多虧相信自行託管遠端管理的人們與組織。感謝你們。",
-        "title": "說明與支持者"
+        "links": "實用連結"
        }
       },
       "help_request": {
@@ -8538,7 +8530,6 @@
        "active_shell": "目前版面",
        "beta_badge": "BETA",
        "beta_hint": "受社群重新設計啟發的新分組版面。UX 3.5 仍為預設，可隨時切回。",
-       "credits": "版面依據 @rathlinus 的重新設計（issue #493，PR #495）。",
        "default_hint": "預設版面。穩定且功能完整。",
        "settings_desc": "為此瀏覽器選擇主控台版面。",
        "settings_title": "主控台介面",
@@ -12183,18 +12174,10 @@
       },
       "help": {
        "panel": {
-        "backers": "個人支持者",
         "close": "關閉",
-        "honorary": "榮譽支持者",
-        "link_bmc": "Buy Me a Coffee",
         "link_issues": "Issues 與回饋",
         "link_repo": "GitHub 儲存庫",
-        "link_sponsors": "GitHub Sponsors",
-        "link_sponsors_md": "完整贊助者清單",
-        "links": "實用連結",
-        "sponsor_cta": "支持本專案",
-        "thanks": "NeoDesk 能維持免費開源，多虧相信自行託管遠端管理的人們與組織。感謝你們。",
-        "title": "說明與支持者"
+        "links": "實用連結"
        }
       },
       "help_request": {
@@ -17088,7 +17071,6 @@
        "active_shell": "目前版面",
        "beta_badge": "BETA",
        "beta_hint": "受社群重新設計啟發的新分組版面。UX 3.5 仍為預設，可隨時切回。",
-       "credits": "版面依據 @rathlinus 的重新設計（issue #493，PR #495）。",
        "default_hint": "預設版面。穩定且功能完整。",
        "settings_desc": "為此瀏覽器選擇主控台版面。",
        "settings_title": "主控台介面",
