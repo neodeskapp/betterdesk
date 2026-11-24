@@ -1010,8 +1010,9 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 		body.Telemetry = nil
 	}
 	// Update peer status to ONLINE, unless the signal server refuses the
-	// device's key: it takes no session then, so it is not online
-	if !s.peers.KeyRefused(deviceID) {
+	// device's key: it takes no session then, so it is not online, also
+	// while it has no live entry (L452)
+	if !s.keyRefused(deviceID) {
 		_ = s.db.UpdatePeerStatus(deviceID, "ONLINE", clientIP, "heartbeat")
 		// HTTP heartbeats are also a liveness signal for NeoDesk clients that
 		// do not maintain a UDP/WebSocket signal connection. Refresh the in-memory
@@ -1328,7 +1329,10 @@ func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if peer.Banned {
+	// A banned device, and one whose key the signal server refuses (the
+	// machine that sends it may not be the device), is answered as unknown
+	// and nothing is stored (L452)
+	if peer.Banned || s.keyRefused(deviceID) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte("ID_NOT_FOUND")) //nolint:errcheck
 		return

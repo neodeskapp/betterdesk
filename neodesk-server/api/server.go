@@ -1141,6 +1141,11 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 			liveOnline = true
 			liveStatus = peer.StatusOnline
 		}
+		// Online by a recent heartbeat or an agent without a live signal
+		// entry: the signal server may still refuse its key (L452)
+		if liveOnline && !signalReady && s.keyRefused(p.ID) {
+			keyRefused, liveOnline, liveStatus = true, false, peer.StatusOffline
+		}
 		meshNodeID := ""
 		if s.meshGw != nil {
 			meshNodeID = s.meshGw.MeshNodeID(p.ID)
@@ -1257,6 +1262,11 @@ func (s *Server) handleGetPeer(w http.ResponseWriter, r *http.Request) {
 	if meshConnected && !liveOnline {
 		liveOnline = true
 		liveStatus = peer.StatusOnline
+	}
+	// Online without a live signal entry: the signal server may still
+	// refuse its key (L452)
+	if liveOnline && !s.peers.IsOnline(p.ID, config.RegTimeout) && s.keyRefused(p.ID) {
+		keyRefused, liveOnline, liveStatus = true, false, peer.StatusOffline
 	}
 	meshNodeID := ""
 	if s.meshGw != nil {

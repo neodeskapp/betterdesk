@@ -186,7 +186,7 @@ func (s *Server) replaceDeviceKey(deviceID, key string) error {
 		s.peers.SetKeys(deviceID, nil, pk)
 	}
 	// The signal server's note of the key it refused (signal: refuseKey)
-	_ = s.db.DeleteConfig("device_key_refused_" + deviceID)
+	_ = s.db.DeleteConfig(keyRefusedNote + deviceID)
 	if err := s.db.EndDeviceTokensExcept(deviceID, 0); err != nil {
 		return err
 	}
@@ -199,4 +199,32 @@ func (s *Server) replaceDeviceKey(deviceID, key string) error {
 		old.Conn.Close(websocket.StatusPolicyViolation, "device key replaced")
 	}
 	return nil
+}
+
+// keyRefusedNote is the prefix of the signal server's note of a key it
+// refused, by device id (signal: keyRefusedConfigPrefix). The note goes when
+// the device registers with its stored key or an administrator approves
+// the new one.
+const keyRefusedNote = "device_key_refused_"
+
+// keyRefused reports whether the signal server refuses the device's key:
+// its live entry says so, or, while the device has no live entry, the
+// signal server's note. The refused heartbeats of such a device do not
+// renew its entry, so the sweeper takes it out of the map until the next
+// heartbeat puts it back, and a restart empties the map; in between only
+// the note says the key is refused (L452).
+func (s *Server) keyRefused(id string) bool {
+	if s.peers != nil {
+		if s.peers.KeyRefused(id) {
+			return true
+		}
+		if s.peers.Get(id) != nil {
+			return false
+		}
+	}
+	if s.db == nil {
+		return false
+	}
+	note, err := s.db.GetConfig(keyRefusedNote + id)
+	return err == nil && note != ""
 }
