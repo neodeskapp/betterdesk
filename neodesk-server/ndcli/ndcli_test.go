@@ -625,3 +625,29 @@ func TestHelpAndOutputFromTheAgentTest(t *testing.T) {
 		t.Errorf("--include-deleted: %d %s %s", code, out, stderr)
 	}
 }
+
+// The server writes most times as "2006-01-02 15:04:05" in UTC, without a
+// zone: tables and records say UTC after them, so nobody reads them as
+// local time. Times with a zone and other text stay as they are (L431).
+func TestTimesWithoutAZoneSayUTC(t *testing.T) {
+	f := newFake(t)
+	f.answer = func(r *http.Request) (int, string) {
+		if r.URL.Path == "/api/devices" {
+			return 200, `{"success":true,"data":{"devices":[{"id":"111","hostname":"front","last_online":"2026-11-24 10:55:31"},{"id":"222","hostname":"back","last_online":"2026-11-24T09:00:00.000Z"}],"total":2}}`
+		}
+		return 200, `{"success":true,"data":{"created_at":"2026-11-23 08:01:02","note":"2026-11-23 08:01:02 was a Monday"}}`
+	}
+	env := map[string]string{"NEODESK_URL": f.srv.URL, "NEODESK_TOKEN": testToken}
+	_, out, _ := runCLI(t, env, "", "devices", "list")
+	if !strings.Contains(out, "2026-11-24 10:55:31 UTC") || !strings.Contains(out, "2026-11-24T09:00:00.000Z") || strings.Contains(out, "000Z UTC") {
+		t.Errorf("table:\n%s", out)
+	}
+	_, out, _ = runCLI(t, env, "", "dashboard", "stats")
+	if !strings.Contains(out, "created_at: 2026-11-23 08:01:02 UTC") || !strings.Contains(out, "note: 2026-11-23 08:01:02 was a Monday") {
+		t.Errorf("record:\n%s", out)
+	}
+	_, out, _ = runCLI(t, env, "", "--json", "dashboard", "stats")
+	if strings.Contains(out, "UTC") {
+		t.Errorf("--json changed a time: %s", out)
+	}
+}

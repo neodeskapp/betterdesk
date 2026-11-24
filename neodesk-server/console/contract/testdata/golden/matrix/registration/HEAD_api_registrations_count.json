@@ -1,9 +1,8 @@
 {
- "id": "PUT /api/settings/backup/smb",
+ "id": "HEAD /api/registrations/count",
  "request": {
-  "method": "PUT",
-  "path": "/api/settings/backup/smb",
-  "body": {}
+  "method": "HEAD",
+  "path": "/api/registrations/count"
  },
  "recordings": 2,
  "answers": [
@@ -12,7 +11,7 @@
     "signed-out",
     "pro"
    ],
-   "status": 404,
+   "status": 401,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -25,6 +24,7 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -33,11 +33,7 @@
     "x-xss-protection": "0"
    },
    "body": {
-    "kind": "json",
-    "json": {
-     "error": "Not Found",
-     "success": false
-    }
+    "kind": "empty"
    }
   },
   {
@@ -45,7 +41,7 @@
     "guest_issuer",
     "viewer",
     "operator",
-    "global_admin"
+    "server_admin"
    ],
    "status": 403,
    "headers": {
@@ -56,7 +52,10 @@
     "etag": "<present>",
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -65,21 +64,16 @@
     "x-xss-protection": "0"
    },
    "body": {
-    "kind": "json",
-    "json": {
-     "code": "panel_access_denied",
-     "error": "Panel access denied: settings",
-     "success": false
-    }
+    "kind": "empty"
    }
   },
   {
    "roles": [
-    "server_admin",
+    "global_admin",
     "super_admin",
     "admin"
    ],
-   "status": 404,
+   "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -92,7 +86,10 @@
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -101,11 +98,7 @@
     "x-xss-protection": "0"
    },
    "body": {
-    "kind": "json",
-    "json": {
-     "error": "Not Found",
-     "success": false
-    }
+    "kind": "empty"
    }
   }
  ]

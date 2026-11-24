@@ -1,8 +1,8 @@
 {
- "id": "HEAD /api/nd/api/panel/fleet/workflows",
+ "id": "HEAD /api/panel/org/:id/device-groups",
  "request": {
   "method": "HEAD",
-  "path": "/api/nd/api/panel/fleet/workflows"
+  "path": "/api/panel/org/999999999/device-groups"
  },
  "recordings": 2,
  "answers": [
@@ -39,8 +39,7 @@
   {
    "roles": [
     "guest_issuer",
-    "viewer",
-    "server_admin"
+    "viewer"
    ],
    "status": 403,
    "headers": {
@@ -70,10 +69,11 @@
    "roles": [
     "operator",
     "global_admin",
+    "server_admin",
     "super_admin",
     "admin"
    ],
-   "status": 404,
+   "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",

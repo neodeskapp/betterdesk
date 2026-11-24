@@ -90,7 +90,7 @@ func saveConfig(path string, c *Config) error {
 	}
 	name := tmp.Name()
 	defer os.Remove(name)
-	if err := tmp.Chmod(0o600); err != nil {
+	if err := makePrivate(tmp); err != nil {
 		tmp.Close()
 		return err
 	}

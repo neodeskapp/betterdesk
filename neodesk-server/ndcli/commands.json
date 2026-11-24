@@ -7441,7 +7441,7 @@
   },
   {
    "route": "GET /_ui/immutable/{rest...}",
-   "reason": "Listed in the contract suite but no longer served: the console answers 404."
+   "reason": "A page or file of the web console: open it in a browser."
   },
   {
    "route": "GET /api/ab",
@@ -7900,10 +7900,6 @@
    "reason": "What the web console loads for its own pages and layout."
   },
   {
-   "route": "GET /api/settings/backup/smb",
-   "reason": "Listed in the contract suite but no longer served: the console answers 404."
-  },
-  {
    "route": "GET /api/settings/themes",
    "reason": "What the web console loads for its own pages and layout."
   },
@@ -7953,11 +7949,11 @@
   },
   {
    "route": "GET /app",
-   "reason": "Listed in the contract suite but no longer served: the console answers 404."
+   "reason": "A page or file of the web console: open it in a browser."
   },
   {
    "route": "GET /app/{rest...}",
-   "reason": "Listed in the contract suite but no longer served: the console answers 404."
+   "reason": "A page or file of the web console: open it in a browser."
   },
   {
    "route": "GET /branding/favicon.svg",
@@ -7974,10 +7970,6 @@
   {
    "route": "GET /css/theme.css",
    "reason": "A page or file of the web console: open it in a browser."
-  },
-  {
-   "route": "GET /dev/mock-remote.js",
-   "reason": "A development helper of the web console."
   },
   {
    "route": "GET /downloads/generic-agent/{tag}/{name}",
@@ -8021,7 +8013,7 @@
   },
   {
    "route": "GET /{rest...}",
-   "reason": "Listed in the contract suite but no longer served: the console answers 404."
+   "reason": "A page or file of the web console: open it in a browser."
   },
   {
    "route": "PATCH /api/nd/policies/{id}",
@@ -8384,10 +8376,6 @@
    "reason": "Making API tokens needs a browser session: a token never makes another token."
   },
   {
-   "route": "POST /api/settings/backup/smb/test",
-   "reason": "Listed in the contract suite but no longer served: the console answers 404."
-  },
-  {
    "route": "POST /api/settings/branding/upload-background",
    "reason": "An upload for the web console's editor (pictures, fonts, chat files); use the console."
   },
@@ -8510,10 +8498,6 @@
   {
    "route": "PUT /api/nd/smtp",
    "reason": "Called by NeoDesk agents and clients with a device token, not by people."
-  },
-  {
-   "route": "PUT /api/settings/backup/smb",
-   "reason": "Listed in the contract suite but no longer served: the console answers 404."
   },
   {
    "route": "PUT /api/settings/two-factor",

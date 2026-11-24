@@ -8,6 +8,9 @@ import (
 	"syscall"
 )
 
+// makePrivate lets only its owner read and write the file.
+func makePrivate(f *os.File) error { return f.Chmod(0o600) }
+
 // checkPrivate refuses a file that group or others may read or write, or
 // that another user owns.
 func checkPrivate(path string, info os.FileInfo) error {

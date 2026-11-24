@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
@@ -110,13 +111,18 @@ func (s *Service) RoleHasEffectivePermission(ctx context.Context, role, permissi
 // MayGiveRole reports whether an account of the role caller may give an
 // account the role target: the role boundary of auth.CanAssignRole, and
 // every permission target holds in effect is one caller holds in effect,
-// overrides included. No account gives more than it has. A failed lookup
-// is an error; the caller refuses.
+// overrides included. No account gives more than it has. When an API token
+// that lacks some of its account's permissions signed the request in (ctx
+// carries its use, admintoken.FromContext), each of those permissions must
+// also be one the token was given: no token gives more than it holds
+// (L431). A failed lookup is an error; the caller refuses.
 func (s *Service) MayGiveRole(ctx context.Context, caller, target string) (bool, error) {
 	if !auth.CanAssignRole(caller, target) {
 		return false, nil
 	}
-	if IsSuperAdminRole(caller) {
+	use := admintoken.FromContext(ctx)
+	capped := use != nil && use.Token != nil && !use.Full
+	if IsSuperAdminRole(caller) && !capped {
 		return true, nil
 	}
 	for _, p := range auth.AllPermissions {
@@ -126,6 +132,10 @@ func (s *Service) MayGiveRole(ctx context.Context, caller, target string) (bool,
 		}
 		if !theirs {
 			continue
+		}
+		// The pipeline takes server.config from a token that is not full
+		if capped && (p == auth.PermServerConfig || !use.Token.Has(p)) {
+			return false, nil
 		}
 		mine, err := s.RoleHasEffectivePermission(ctx, caller, p)
 		if err != nil {

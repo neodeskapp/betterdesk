@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -340,7 +341,12 @@ func pickColumns(rows []any) []string {
 	return out
 }
 
-// cell is a value as text, cut to limit runes (0: no limit).
+// naiveTime is a time as the server writes most of them: in UTC, without
+// a zone.
+var naiveTime = regexp.MustCompile(`^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$`)
+
+// cell is a value as text, cut to limit runes (0: no limit). A time
+// without a zone says UTC after it (L431).
 func cell(v any, limit int) string {
 	var s string
 	switch x := v.(type) {
@@ -348,6 +354,9 @@ func cell(v any, limit int) string {
 		s = "-"
 	case string:
 		s = x
+		if naiveTime.MatchString(x) {
+			s += " UTC"
+		}
 	case json.Number:
 		s = x.String()
 	case bool:

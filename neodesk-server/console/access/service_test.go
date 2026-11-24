@@ -3,6 +3,8 @@ package access
 import (
 	"context"
 	"testing"
+
+	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
 )
 
 func TestLoad(t *testing.T) {
@@ -118,5 +120,35 @@ func TestLoad(t *testing.T) {
 	}
 	if got := c.Guard("POST", "/api/users"); got.Verdict != VerdictUnavailable {
 		t.Errorf("admin with unreadable rows: %+v", got)
+	}
+}
+
+// A request an API token signed in gives no role that holds a permission
+// the token lacks, whatever its account may give: the token's capped set
+// counts, not only the account's role. A browser session and a token with
+// every permission of its account give what the role allows (L431).
+func TestMayGiveRoleKeepsToTheTokensPermissions(t *testing.T) {
+	s := fakeService(&fakeData{}, &fakeRoles{permissions: map[string][]string{
+		"global_admin": {"user.view", "user.create", "user.edit", "device.view", "audit.view"},
+		"viewer":       {"device.view", "audit.view"},
+	}})
+	token := func(full bool, permissions ...string) context.Context {
+		return admintoken.WithUse(context.Background(), &admintoken.Use{Token: &admintoken.Token{Permissions: permissions}, Full: full})
+	}
+	for _, c := range []struct {
+		name, caller string
+		ctx          context.Context
+		want         bool
+	}{
+		{"a browser session", "global_admin", context.Background(), true},
+		{"a full token", "global_admin", token(true, "user.view", "user.create", "user.edit", "device.view", "audit.view"), true},
+		{"a token without audit.view", "global_admin", token(false, "user.view", "user.create", "user.edit", "device.view"), false},
+		{"a super admin's token without audit.view", "super_admin", token(false, "user.view", "user.create", "user.edit", "device.view"), false},
+		{"a token with what the role holds", "global_admin", token(false, "user.create", "device.view", "audit.view"), true},
+	} {
+		got, err := s.MayGiveRole(c.ctx, c.caller, "viewer")
+		if err != nil || got != c.want {
+			t.Errorf("%s gives viewer: %v %v, want %v", c.name, got, err, c.want)
+		}
 	}
 }

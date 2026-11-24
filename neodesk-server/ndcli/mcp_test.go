@@ -276,3 +276,41 @@ func TestMCPExecAndSecretsNeedTheirOwnFlags(t *testing.T) {
 		t.Errorf("requests %v", seen)
 	}
 }
+
+// A client that can ask the person (the MCP elicitation capability) is
+// asked before a tool that deletes, ends, runs or changes who may do what:
+// the agent's own confirm: true no longer suffices, and a decline sends
+// nothing. A client without it keeps the confirm argument (L431).
+func TestMCPAsksThePersonWhenTheClientCan(t *testing.T) {
+	f := newFake(t)
+	env := map[string]string{"NEODESK_URL": f.srv.URL, "NEODESK_TOKEN": testToken}
+	const askingClient = `{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{"elicitation":{}},"clientInfo":{"name":"test","version":"1"}}}`
+	answers, out := mcpSession(t, env, []string{"--allow-writes"}, askingClient,
+		call(1, "devices_delete", `{"id":"x1","confirm":true}`),
+		`{"jsonrpc":"2.0","id":"elicit-1","result":{"action":"decline"}}`,
+		call(2, "devices_delete", `{"id":"x2"}`),
+		`{"jsonrpc":"2.0","id":"elicit-2","result":{"action":"accept","content":{"confirm":true}}}`,
+		call(3, "devices_get", `{"id":"x3"}`),
+	)
+	ask, _ := answers["elicit-1"]
+	params, _ := ask["params"].(map[string]any)
+	if ask["method"] != "elicitation/create" || !strings.Contains(fmt.Sprint(params["message"]), "devices delete") {
+		t.Fatalf("no question to the person before the delete:\n%s", out)
+	}
+	if text, isErr := resultText(answers["1"]); !isErr || !strings.Contains(text, "declined") {
+		t.Errorf("a declined delete: %q %v", text, isErr)
+	}
+	if _, isErr := resultText(answers["2"]); isErr {
+		t.Errorf("an accepted delete: %v", answers["2"])
+	}
+	if _, asked := answers["elicit-3"]; asked {
+		t.Error("a read asked the person")
+	}
+	var seen []string
+	for _, r := range f.reqs {
+		seen = append(seen, r.Method+" "+r.URL.Path)
+	}
+	if strings.Join(seen, ",") != "DELETE /api/devices/x2,GET /api/devices/x3" {
+		t.Errorf("requests %v", seen)
+	}
+}

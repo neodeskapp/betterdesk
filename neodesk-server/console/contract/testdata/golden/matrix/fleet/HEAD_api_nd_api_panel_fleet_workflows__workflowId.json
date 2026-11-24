@@ -1,8 +1,8 @@
 {
- "id": "HEAD /api/panel/scaling/rules",
+ "id": "HEAD /api/nd/api/panel/fleet/workflows/:workflowId",
  "request": {
   "method": "HEAD",
-  "path": "/api/panel/scaling/rules"
+  "path": "/api/nd/api/panel/fleet/workflows/999999999"
  },
  "recordings": 2,
  "answers": [
@@ -40,8 +40,7 @@
    "roles": [
     "guest_issuer",
     "viewer",
-    "operator",
-    "global_admin"
+    "server_admin"
    ],
    "status": 403,
    "headers": {
@@ -69,11 +68,12 @@
   },
   {
    "roles": [
-    "server_admin",
+    "operator",
+    "global_admin",
     "super_admin",
     "admin"
    ],
-   "status": 200,
+   "status": 404,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",

@@ -1,6 +1,9 @@
 package console
 
 import (
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -61,5 +64,39 @@ func TestEveryLiveRouteHasACommandOrAReason(t *testing.T) {
 	w.s.Router().Post("/api/zz-new-route/{id}", probe)
 	if cov := tab.Cover(liveRoutes(w)); len(cov.Uncovered) != 1 || cov.Uncovered[0] != "POST /api/zz-new-route/{id}" {
 		t.Errorf("a new route: %v", cov.Uncovered)
+	}
+}
+
+// Every console route of the contract suite's list is one the console
+// serves: a route that went away leaves the list with its goldens, so no
+// check or command stands for an address that answers 404 (L431). The
+// web console's pages and files are the exception: the web host answers
+// them outside the route tables.
+func TestTheContractListHoldsOnlyServedRoutes(t *testing.T) {
+	w := newWorld(t, setup{})
+	data, err := os.ReadFile(filepath.Join("contract", "testdata", "routes.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var list struct {
+		Routes []struct {
+			Method, Path, App, Group, ShadowedBy string
+			Unreachable                          bool
+		} `json:"routes"`
+	}
+	if err := json.Unmarshal(data, &list); err != nil {
+		t.Fatal(err)
+	}
+	live := map[string]bool{}
+	for _, r := range liveRoutes(w) {
+		live[ndcli.RouteKey(r)] = true
+	}
+	for _, r := range list.Routes {
+		if r.App != "console" || r.Unreachable || r.ShadowedBy != "" || r.Group == "web-ui" {
+			continue
+		}
+		if route := r.Method + " " + r.Path; !live[ndcli.RouteKey(route)] && !live[ndcli.RouteKey("ALL "+r.Path)] {
+			t.Errorf("the contract list holds %s, which the console does not serve", route)
+		}
 	}
 }
