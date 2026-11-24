@@ -327,6 +327,15 @@ export class RDProtocol {
 	static CLIENT_VERSION = 'NeoDesk-Web/1.4.9';
 
 	/**
+	 * The version a session's sign-in names. A device reads it as a number
+	 * (hbb_common get_version_number): CLIENT_VERSION reads as 0 there, and a
+	 * device sends a client below 1.3.0 its clipboard as text only, never an
+	 * image. 1.3.0 is the first version it sends every format to; the file
+	 * transfer session keeps CLIENT_VERSION.
+	 */
+	static SESSION_VERSION = '1.3.0';
+
+	/**
 	 * Build PunchHoleRequest for connecting to a device
 	 * @param serverKey - Server public key (base64) for licence_key validation
 	 */
@@ -444,7 +453,7 @@ export class RDProtocol {
 				myId: opts.myId || 'web-client',
 				myName: opts.myName || 'NeoDesk Web',
 				myPlatform: 'Web',
-				version: RDProtocol.CLIENT_VERSION,
+				version: RDProtocol.SESSION_VERSION,
 				sessionId: Date.now(),
 				option: {
 					imageQuality:

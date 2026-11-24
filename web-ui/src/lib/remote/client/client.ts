@@ -1320,6 +1320,9 @@ export class RDClient {
 		return errLower.includes('wrong 2fa') || errLower.includes('invalid 2fa');
 	}
 
+	/** The device's answer when it takes no password and someone there accepts instead (LOGIN_MSG_NO_PASSWORD_ACCESS) */
+	static NO_PASSWORD_ACCESS = 'No Password Access';
+
 	_is2faRequiredError(error: string | null | undefined): boolean {
 		if (this._is2faWrongError(error)) return false;
 		const errLower = (error || '').toLowerCase();
@@ -1352,6 +1355,13 @@ export class RDClient {
 				this._debugRelay('[RDClient] 2FA required by peer');
 				this._setState('waiting_2fa');
 				this._emit('2fa_required');
+				return;
+			}
+			// A device that takes no password (accept by click) says so to clients of 1.2.0 and
+			// later, then waits for the person there: the sign-in answer follows when they accept
+			if (resp.error === RDClient.NO_PASSWORD_ACCESS) {
+				this._emit('log', 'Waiting for someone at the device to accept');
+				this._emit('approval_wait');
 				return;
 			}
 

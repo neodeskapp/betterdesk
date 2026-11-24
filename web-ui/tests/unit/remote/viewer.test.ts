@@ -506,3 +506,19 @@ describe('the clipboard of the active session', () => {
 		Reflect.deleteProperty(navigator, 'clipboard');
 	});
 });
+
+describe('a device that is accepted by click', () => {
+	test('waits on the accept step, keeps the remembered password and asks for no password', async () => {
+		remembered.set('900100012', 'kept');
+		const { s, c } = setup();
+		c.emit('state', 'waiting_password');
+		await vi.runAllTimersAsync();
+		c.emit('state', 'authenticating');
+		c.emit('approval_wait');
+		expect(s.view).toBe('connecting');
+		expect(s.stepId).toBe('accept');
+		expect(s.loginError).toBe('');
+		expect(remembered.get('900100012')).toBe('kept');
+		remembered.clear();
+	});
+});

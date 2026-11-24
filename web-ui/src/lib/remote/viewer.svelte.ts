@@ -740,6 +740,11 @@ export class Viewer {
 			if (this.isActive(s)) this.clipboard.fromRemote(entry);
 		});
 		on('clipboard_too_large', () => this.clipboardNotice({ kind: 'from_remote_too_large' }));
+		// The device takes no password: someone there accepts, the password prompt is not the way
+		on('approval_wait', () => {
+			if (s.view !== 'connecting') this.showView(s, 'connecting');
+			this.setStep(s, 'accept', true);
+		});
 		on('error', (msg: unknown, meta?: CloseMeta) => {
 			const text =
 				msg && typeof msg === 'object'
