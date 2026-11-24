@@ -27,7 +27,9 @@ The transport was an object that recorded `mail.message.getEnvelope()`,
 `mail.message.createReadStream()`, which is what nodemailer's SMTP
 transport takes from a mail. The clock and `crypto.randomBytes` were
 replaced, and every vector names the time and the random bytes it was
-built with.
+built with. The mails of `message.json.gz` were made from a copy of the
+old console in which the old project's names were replaced by NeoDesk's,
+so they name NeoDesk.
 
 The addresses went through nodemailer's address normalization
 (`MimeNode._normalizeAddress`, with Node's `url.domainToASCII` and
