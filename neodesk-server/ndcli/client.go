@@ -44,26 +44,14 @@ func (e *connError) Error() string { return e.msg }
 // another address (a flag, the environment) never gets it; and a token
 // from a flag or the environment only with an address from a flag or the
 // environment, so a config file (--config, NEODESK_CONFIG) never sends it
-// elsewhere.
+// elsewhere. The config file is read only when the address or the token
+// has to come from it: with both given, a config folder that can't be
+// found or read (XDG_CONFIG_HOME or HOME of another account after sudo)
+// is no reason to stop.
 func connect(o *options, env *Env, needToken bool) (*conn, error) {
-	path, err := env.configPath(o.config)
-	if err != nil {
-		return nil, &connError{ExitConfig, err.Error()}
-	}
-	cfg, err := loadConfig(path)
-	if err != nil {
-		return nil, &connError{ExitConfig, err.Error()}
-	}
 	rawURL, urlFromConfig := o.url, false
 	if rawURL == "" {
 		rawURL = env.Getenv("NEODESK_URL")
-	}
-	if rawURL == "" {
-		rawURL, urlFromConfig = cfg.URL, true
-	}
-	address, err := normalizeURL(rawURL)
-	if err != nil {
-		return nil, &connError{ExitUsage, err.Error()}
 	}
 	token, source := o.token, "--token"
 	if token == "" && o.tokenFile != "" {
@@ -75,6 +63,23 @@ func connect(o *options, env *Env, needToken bool) (*conn, error) {
 	}
 	if token == "" {
 		token, source = strings.TrimSpace(env.Getenv("NEODESK_TOKEN")), "NEODESK_TOKEN"
+	}
+	cfg := &Config{}
+	if rawURL == "" || token == "" {
+		path, err := env.configPath(o.config)
+		if err != nil {
+			return nil, &connError{ExitConfig, err.Error()}
+		}
+		if cfg, err = loadConfig(path); err != nil {
+			return nil, &connError{ExitConfig, err.Error()}
+		}
+	}
+	if rawURL == "" {
+		rawURL, urlFromConfig = cfg.URL, true
+	}
+	address, err := normalizeURL(rawURL)
+	if err != nil {
+		return nil, &connError{ExitUsage, err.Error()}
 	}
 	if token == "" && cfg.Token != "" {
 		saved, _ := normalizeURL(cfg.URL)

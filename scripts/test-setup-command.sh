@@ -163,7 +163,9 @@ echo "== the command line for every user"
 # The server folder stays closed; the command line is outside it
 [ "$(stat -c '%a' "$(dirname "$BIN")")" = 2770 ] || fail "the server folder has mode $(stat -c '%a' "$(dirname "$BIN")")"
 id "$TEST_USER" >/dev/null 2>&1 || useradd -m "$TEST_USER" || fail "could not add the user $TEST_USER"
-as_user() { runuser -u "$TEST_USER" -- env HOME="/home/$TEST_USER" PATH=/usr/local/bin:/usr/bin:/bin "$@"; }
+# The user's own HOME, without a config folder of the account that ran
+# this script (a runner keeps XDG_CONFIG_HOME through sudo and runuser)
+as_user() { runuser -u "$TEST_USER" -- env -u XDG_CONFIG_HOME HOME="/home/$TEST_USER" PATH=/usr/local/bin:/usr/bin:/bin "$@"; }
 out=$(as_user neodesk --help 2>&1) || fail "neodesk --help as a normal user: $out"
 case "$out" in *"neodesk devices list"*) ;; *) fail "neodesk --help as a normal user is not the command line's: $out" ;; esac
 code=0
@@ -178,6 +180,14 @@ code=0
 out=$(as_user neodesk --url "$console" --insecure --token-file "/home/$TEST_USER/token" devices list 2>&1) || code=$?
 [ "$code" = 0 ] || fail "neodesk devices list as a normal user with a token: exit $code: $out"
 if grep -qF -f "$WORK/token" <<< "$out"; then fail "neodesk devices list printed the token"; fi
+# The same when XDG_CONFIG_HOME still names a folder of another account
+# that the user can't read, as sudo and runuser leave it: the address and
+# the token are given, so no config file is needed
+mkdir -p "$WORK/closed-config" && chmod 700 "$WORK/closed-config"
+code=0
+out=$(runuser -u "$TEST_USER" -- env XDG_CONFIG_HOME="$WORK/closed-config" HOME="/home/$TEST_USER" PATH=/usr/local/bin:/usr/bin:/bin \
+    neodesk --url "$console" --insecure --token-file "/home/$TEST_USER/token" devices list 2>&1) || code=$?
+[ "$code" = 0 ] || fail "neodesk devices list as a normal user whose XDG_CONFIG_HOME it can't read: exit $code: $out"
 rm -f "$WORK/token" "/home/$TEST_USER/token"
 
 echo "== the command line and the installer's options through neodesk"
