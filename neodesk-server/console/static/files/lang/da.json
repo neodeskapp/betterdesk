@@ -8498,7 +8498,6 @@
     "settings_title": "Konsolgrænseflade",
     "settings_desc": "Vælg konsollayout til denne browser.",
     "active_shell": "Aktivt layout",
-    "credits": "Layoutet er baseret på redesignet af @rathlinus (issue #493, PR #495).",
     "switch_failed": "Konsollayoutet kunne ikke ændres. Prøv igen.",
     "switched_to_ux36": "UX 3.6 beta er aktiveret for denne browser.",
     "switched_to_ux35": "UX 3.5 er gendannet for denne browser.",

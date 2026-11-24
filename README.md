@@ -21,11 +21,6 @@ console for the devices you look after. Your data stays on your server: the
 project sends no analytics, crash reports or usage data anywhere
 ([Privacy](https://neode.sk/docs/project/privacy)).
 
-NeoDesk started as a fork of [BetterDesk](https://github.com/UNITRONIX/BetterDesk)
-by UNITRONIX and is developed on its own now. It replaces the Node.js console
-with one written in Svelte that the Go server serves itself, so a running
-install is a single program.
-
 ## One binary on your server
 
 <picture>
@@ -195,17 +190,8 @@ Everything is on [neode.sk/docs](https://neode.sk/docs):
 | Running the server | [Configuration](https://neode.sk/docs/operations/configuration), [hardening](https://neode.sk/docs/operations/security), [updating](https://neode.sk/docs/operations/updating), [backup](https://neode.sk/docs/operations/backup), [troubleshooting](https://neode.sk/docs/operations/troubleshooting) |
 | Development | [Contributing](https://neode.sk/docs/development/contributing), [building from source](https://neode.sk/docs/development/building), [architecture](https://neode.sk/docs/development/architecture), [the HTTP API](https://neode.sk/docs/development/api) |
 
-## Credits
-
-NeoDesk is based on [BetterDesk](https://github.com/UNITRONIX/BetterDesk),
-created by [UNITRONIX](https://github.com/UNITRONIX), and most of the server
-in this repository is that project's work. If BetterDesk is useful to you,
-[Sponsors and credits](https://neode.sk/docs/project/sponsors) lists how to
-support it and who already does.
-
-NeoDesk is created and maintained with the assistance of AI tools.
-
 ## License
 
-[AGPL-3.0](LICENSE). There is an optional Commercial Grant for eligible
-sponsors, described in [License](https://neode.sk/docs/project/license#commercial-grant).
+[AGPL-3.0](LICENSE).
+
+NeoDesk is created and maintained with the assistance of AI tools.

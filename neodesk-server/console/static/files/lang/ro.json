@@ -8498,7 +8498,6 @@
     "settings_title": "Interfața consolei",
     "settings_desc": "Alegeți aspectul consolei pentru acest browser.",
     "active_shell": "Aspect activ",
-    "credits": "Aspect bazat pe redesignul realizat de @rathlinus (issue #493, PR #495).",
     "switch_failed": "Aspectul consolei nu a putut fi modificat. Încercați din nou.",
     "switched_to_ux36": "UX 3.6 beta a fost activat pentru acest browser.",
     "switched_to_ux35": "UX 3.5 a fost restaurat pentru acest browser.",

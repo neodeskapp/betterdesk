@@ -8498,7 +8498,6 @@
     "settings_title": "Antarmuka konsol",
     "settings_desc": "Pilih tata letak konsol untuk peramban ini.",
     "active_shell": "Tata letak aktif",
-    "credits": "Tata letak berdasarkan redesain oleh @rathlinus (issue #493, PR #495).",
     "switch_failed": "Tata letak konsol tidak dapat diubah. Silakan coba lagi.",
     "switched_to_ux36": "UX 3.6 beta diaktifkan untuk peramban ini.",
     "switched_to_ux35": "UX 3.5 dipulihkan untuk peramban ini.",

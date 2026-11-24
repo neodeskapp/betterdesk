@@ -8492,7 +8492,6 @@
     "settings_title": "Interfaz de la consola",
     "settings_desc": "Elige el diseño de la consola para este navegador.",
     "active_shell": "Diseño activo",
-    "credits": "Diseño basado en el rediseño de @rathlinus (issue #493, PR #495).",
     "switch_failed": "No se pudo cambiar el diseño de la consola. Inténtalo de nuevo.",
     "switched_to_ux36": "UX 3.6 beta activada para este navegador.",
     "switched_to_ux35": "UX 3.5 restaurada para este navegador.",

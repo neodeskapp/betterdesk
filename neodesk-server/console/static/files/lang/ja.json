@@ -8492,7 +8492,6 @@
     "settings_title": "コンソールのインターフェース",
     "settings_desc": "このブラウザーのコンソールレイアウトを選択します。",
     "active_shell": "使用中のレイアウト",
-    "credits": "レイアウトは @rathlinus の再設計に基づいています（issue #493、PR #495）。",
     "switch_failed": "コンソールレイアウトを変更できませんでした。もう一度お試しください。",
     "switched_to_ux36": "このブラウザーで UX 3.6 ベータを有効にしました。",
     "switched_to_ux35": "このブラウザーで UX 3.5 に戻しました。",

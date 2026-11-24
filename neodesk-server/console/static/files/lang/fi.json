@@ -8498,7 +8498,6 @@
     "settings_title": "Konsolin käyttöliittymä",
     "settings_desc": "Valitse konsolin asettelu tälle selaimelle.",
     "active_shell": "Aktiivinen asettelu",
-    "credits": "Asettelu perustuu @rathlinusin uudistukseen (issue #493, PR #495).",
     "switch_failed": "Konsolin asettelua ei voitu vaihtaa. Yritä uudelleen.",
     "switched_to_ux36": "UX 3.6 beta on otettu käyttöön tässä selaimessa.",
     "switched_to_ux35": "UX 3.5 on palautettu tähän selaimeen.",

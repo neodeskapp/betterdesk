@@ -8492,7 +8492,6 @@
     "settings_title": "Konsolen-Oberfläche",
     "settings_desc": "Wählen Sie das Konsolenlayout für diesen Browser.",
     "active_shell": "Aktives Layout",
-    "credits": "Layout basiert auf dem Redesign von @rathlinus (Issue #493, PR #495).",
     "switch_failed": "Konsolenlayout konnte nicht geändert werden. Bitte erneut versuchen.",
     "switched_to_ux36": "UX 3.6 Beta ist für diesen Browser aktiviert.",
     "switched_to_ux35": "UX 3.5 wurde für diesen Browser wiederhergestellt.",

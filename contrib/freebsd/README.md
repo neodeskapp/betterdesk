@@ -2,8 +2,6 @@
 
 NeoDesk has **no official FreeBSD installer** (`neodesk.sh` is Linux + systemd). This directory has an example `rc.d` script and a manual build path for community / Tier 3 deployments.
 
-Related: [GitHub #310](https://github.com/UNITRONIX/BetterDesk/issues/310).
-
 ## Status
 
 | Component | Status |

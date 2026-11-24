@@ -8498,7 +8498,6 @@
     "settings_title": "Konzol felület",
     "settings_desc": "Válassza ki a konzol elrendezését ehhez a böngészőhöz.",
     "active_shell": "Aktív elrendezés",
-    "credits": "Az elrendezés @rathlinus újratervezésén alapul (issue #493, PR #495).",
     "switch_failed": "A konzol elrendezését nem sikerült módosítani. Próbálja újra.",
     "switched_to_ux36": "Az UX 3.6 béta engedélyezve ehhez a böngészőhöz.",
     "switched_to_ux35": "Az UX 3.5 visszaállítva ehhez a böngészőhöz.",

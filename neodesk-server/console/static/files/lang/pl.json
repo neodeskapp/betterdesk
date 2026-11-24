@@ -8492,7 +8492,6 @@
     "settings_title": "Interfejs konsoli",
     "settings_desc": "Wybierz układ konsoli dla tej przeglądarki.",
     "active_shell": "Aktywny układ",
-    "credits": "Układ oparty na redesignie @rathlinus (zgłoszenie #493, PR #495).",
     "switch_failed": "Nie udało się zmienić układu konsoli. Spróbuj ponownie.",
     "switched_to_ux36": "Włączono UX 3.6 beta dla tej przeglądarki.",
     "switched_to_ux35": "Przywrócono UX 3.5 dla tej przeglądarki.",

@@ -8492,7 +8492,6 @@
     "settings_title": "控制台界面",
     "settings_desc": "为此浏览器选择控制台布局。",
     "active_shell": "当前布局",
-    "credits": "布局基于 @rathlinus 的重设计（issue #493，PR #495）。",
     "switch_failed": "无法更改控制台布局，请重试。",
     "switched_to_ux36": "已为此浏览器启用 UX 3.6 测试版。",
     "switched_to_ux35": "已为此浏览器恢复 UX 3.5。",

@@ -8498,7 +8498,6 @@
     "settings_title": "Konsol arayüzü",
     "settings_desc": "Bu tarayıcı için konsol düzenini seçin.",
     "active_shell": "Etkin düzen",
-    "credits": "Düzen, @rathlinus tarafından yapılan yeniden tasarıma dayanır (issue #493, PR #495).",
     "switch_failed": "Konsol düzeni değiştirilemedi. Lütfen tekrar deneyin.",
     "switched_to_ux36": "Bu tarayıcı için UX 3.6 beta etkinleştirildi.",
     "switched_to_ux35": "Bu tarayıcı için UX 3.5 geri yüklendi.",

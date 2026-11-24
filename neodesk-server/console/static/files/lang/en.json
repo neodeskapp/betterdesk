@@ -8492,7 +8492,6 @@
         "settings_title": "Console interface",
         "settings_desc": "Choose the console layout for this browser.",
         "active_shell": "Active layout",
-        "credits": "Layout modelled on the redesign by @rathlinus (issue #493, PR #495).",
         "switch_failed": "Could not change the console layout. Please try again.",
         "switched_to_ux36": "UX 3.6 beta enabled for this browser.",
         "switched_to_ux35": "UX 3.5 restored for this browser.",

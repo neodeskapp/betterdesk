@@ -8498,7 +8498,6 @@
     "settings_title": "Giao diện bảng điều khiển",
     "settings_desc": "Chọn bố cục bảng điều khiển cho trình duyệt này.",
     "active_shell": "Bố cục đang dùng",
-    "credits": "Bố cục dựa trên thiết kế lại của @rathlinus (issue #493, PR #495).",
     "switch_failed": "Không thể thay đổi bố cục bảng điều khiển. Vui lòng thử lại.",
     "switched_to_ux36": "Đã bật UX 3.6 beta cho trình duyệt này.",
     "switched_to_ux35": "Đã khôi phục UX 3.5 cho trình duyệt này.",

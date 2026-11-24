@@ -1,5 +1,5 @@
-BetterDesk — Licensing Information
-===================================
+NeoDesk licensing information
+=============================
 
 Copyright (c) 2025-2026 UNITRONIX (Krzysztof Nienartowicz)
 
@@ -10,22 +10,24 @@ later version.
 
 ---
 
-## License status (development)
+## Legal notice
 
-BetterDesk is transitioning to **AGPL-3.0** across the entire project
-(server, web console, agents, clients, SDKs, and tooling).
+NeoDesk is a modified version of BetterDesk by UNITRONIX, published under the
+AGPL-3.0. The modifications started in November 2026.
 
-- **Development branch:** AGPL-3.0 applies to all commits on the active
-  development branch as of June 2026.
+---
+
+## License status
+
+NeoDesk is under the **AGPL-3.0** across the whole project (server, web
+console, SDKs, bridges and tooling). This repository also holds older commits
+and tags, which keep the license they were published under:
+
+- **Development branch:** AGPL-3.0 applies to all commits on the development
+  branch since June 2026.
 - **Stable releases:** **v3.4.0** is the first stable release under **AGPL-3.0**.
   Releases **v3.3.x and earlier** remain under **Apache License 2.0** as
   published in their release artifacts.
-- **Sponsor Commercial Grant (optional, low-admin):** GitHub Sponsors **Bronze
-  ($50/mo) and above**, plus Honorary Supporters — see
-  <https://betterde.sk/docs/project/license#commercial-grant>. $5 / $15 tiers and Buy
-  Me a Coffee do not include the grant.
-- **Paid commercial license:** May be added later for special cases; not required
-  for normal sponsor use.
 
 Third-party contributions previously merged under other terms have been
 withdrawn and recreated by the maintainer under AGPL-3.0 where applicable.
@@ -34,11 +36,11 @@ withdrawn and recreated by the maintainer under AGPL-3.0 where applicable.
 
 ## Clean-room implementation notice
 
-BetterDesk Server (`betterdesk-server/`) is an independent, clean-room
+NeoDesk Server (`neodesk-server/`) is an independent, clean-room
 implementation of the RustDesk rendezvous and relay protocol. It contains
 **no code derived from the RustDesk project**.
 
-The BetterDesk web console (`betterdesk-server/console/` and the web app in
+The NeoDesk web console (`neodesk-server/console/` and the web app in
 `web-ui/`) has no code-level dependency on RustDesk.
 
 Protocol definitions (`.proto` files) describe message formats for
@@ -57,7 +59,7 @@ licensing and are never included in releases, packages, or Docker images.
 
 ## Trademark notice
 
-"RustDesk" is a trademark of the RustDesk Team. BetterDesk is an independent
+"RustDesk" is a trademark of the RustDesk Team. NeoDesk is an independent
 project that implements the RustDesk protocol for client compatibility. Use of
 the name "RustDesk" in this project is purely descriptive and does not imply
 affiliation with or endorsement by the RustDesk Team.
@@ -68,8 +70,8 @@ affiliation with or endorsement by the RustDesk Team.
 
 | Component | License | Location |
 |-----------|---------|----------|
-| BetterDesk Server (Go) with its web console | AGPL-3.0 | `betterdesk-server/` |
-| BetterDesk web app (Svelte) | AGPL-3.0 | `web-ui/` |
+| NeoDesk Server (Go) with its web console | AGPL-3.0 | `neodesk-server/` |
+| NeoDesk web app (Svelte) | AGPL-3.0 | `web-ui/` |
 | CDAP SDKs | AGPL-3.0 | `sdks/` |
 | CDAP Bridges | AGPL-3.0 | `bridges/` |
 

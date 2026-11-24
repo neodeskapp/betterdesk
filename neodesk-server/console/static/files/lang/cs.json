@@ -8492,7 +8492,6 @@
     "settings_title": "Rozhraní konzole",
     "settings_desc": "Vyberte rozvržení konzole pro tento prohlížeč.",
     "active_shell": "Aktivní rozvržení",
-    "credits": "Rozvržení vychází z redesignu od @rathlinus (issue #493, PR #495).",
     "switch_failed": "Rozvržení konzole se nepodařilo změnit. Zkuste to znovu.",
     "switched_to_ux36": "UX 3.6 beta je pro tento prohlížeč zapnuto.",
     "switched_to_ux35": "UX 3.5 bylo pro tento prohlížeč obnoveno.",

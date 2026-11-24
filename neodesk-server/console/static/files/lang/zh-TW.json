@@ -8496,7 +8496,6 @@
     "settings_title": "主控台介面",
     "settings_desc": "為此瀏覽器選擇主控台版面。",
     "active_shell": "目前版面",
-    "credits": "版面依據 @rathlinus 的重新設計（issue #493，PR #495）。",
     "switch_failed": "無法變更主控台版面，請再試一次。",
     "switched_to_ux36": "已為此瀏覽器啟用 UX 3.6 測試版。",
     "switched_to_ux35": "已為此瀏覽器還原 UX 3.5。",

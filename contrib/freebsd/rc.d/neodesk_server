@@ -19,7 +19,6 @@
 #                                              # in neodesk_server_dir
 #
 # Example community rc.d unit for FreeBSD (Tier 3). See contrib/freebsd/README.md.
-# Refs: https://github.com/UNITRONIX/BetterDesk/issues/310
 
 . /etc/rc.subr
 

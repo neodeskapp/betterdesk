@@ -8498,7 +8498,6 @@
     "settings_title": "Konsollgrensesnitt",
     "settings_desc": "Velg konsollayout for denne nettleseren.",
     "active_shell": "Aktivt layout",
-    "credits": "Layoutet er basert på redesignet av @rathlinus (issue #493, PR #495).",
     "switch_failed": "Konsollayoutet kunne ikke endres. Prøv igjen.",
     "switched_to_ux36": "UX 3.6 beta er aktivert for denne nettleseren.",
     "switched_to_ux35": "UX 3.5 er gjenopprettet for denne nettleseren.",

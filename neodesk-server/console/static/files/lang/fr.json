@@ -8496,7 +8496,6 @@
     "settings_title": "Interface de la console",
     "settings_desc": "Choisissez la disposition de la console pour ce navigateur.",
     "active_shell": "Disposition active",
-    "credits": "Disposition basée sur la refonte de @rathlinus (issue #493, PR #495).",
     "switch_failed": "Impossible de changer la disposition de la console. Réessayez.",
     "switched_to_ux36": "UX 3.6 bêta activée pour ce navigateur.",
     "switched_to_ux35": "UX 3.5 restaurée pour ce navigateur.",

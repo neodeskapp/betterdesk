@@ -2,14 +2,8 @@
 
 This file is the release index for third-party material distributed with
 NeoDesk. It complements, but does not replace, the license text and notices
-required by each dependency.
-
-## Upstream project
-
-NeoDesk started as a fork of BetterDesk by UNITRONIX
-(<https://github.com/UNITRONIX/BetterDesk>), under AGPL-3.0. Most of the
-server code is BetterDesk's, and its copyright lines and the licensing
-information in `LICENSE` stay as UNITRONIX wrote them.
+required by each dependency. The copyright notice and the legal notice of the
+work NeoDesk is a modified version of are in `LICENSE`.
 
 ## Source manifests
 
