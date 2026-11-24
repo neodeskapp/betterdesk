@@ -10,7 +10,6 @@
 #     - Minimal installation (the same server with its web console off)
 #     - Update an installation (release binaries checked by SHA-256 and the
 #       release signature)
-#     - Upgrade an install with the Node.js console in place, and roll it back
 #     - Repair/fix issues (enhanced with graceful shutdown)
 #     - Validate installation
 #     - Backup & restore
@@ -34,8 +33,6 @@
 #     Auto mode:   sudo ./neodesk.sh --auto
 #     PostgreSQL:  sudo ./neodesk.sh --auto --postgresql
 #     Update:      sudo ./neodesk.sh --update
-#     Upgrade the Node.js console install: sudo ./neodesk.sh --update (or --auto)
-#     Roll that upgrade back: sudo ./neodesk.sh --rollback-go
 #
 #===============================================================================
 
@@ -150,9 +147,7 @@ CHECK_CAPABILITIES=false
 REPAIR_PERMISSIONS=false
 MANAGED_CONFIG_CHANGES=()
 UPDATE_MODE=false
-ROLLBACK_GO_MODE=false
 RESET_PASSWORD_MODE=false
-CLEANUP_NODE_MODE=false
 # Where the server binary comes from: a file (--binary), a build of this
 # checkout (--from-source), else the release of the update channel.
 SERVER_BINARY_FILE="${SERVER_BINARY_FILE:-}"
@@ -218,16 +213,8 @@ while [[ $# -gt 0 ]]; do
             UPDATE_MODE=true
             shift
             ;;
-        --rollback-go)
-            ROLLBACK_GO_MODE=true
-            shift
-            ;;
         --reset-password)
             RESET_PASSWORD_MODE=true
-            shift
-            ;;
-        --cleanup-node)
-            CLEANUP_NODE_MODE=true
             shift
             ;;
         --binary)
@@ -289,16 +276,11 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: sudo neodesk-setup [OPTIONS]   (from a checkout: sudo ./neodesk.sh [OPTIONS])"
             echo ""
             echo "Options:"
-            echo "  --auto, -a       Run in automatic mode (non-interactive); on an install"
-            echo "                   with the Node.js console this runs the upgrade (--update)"
-            echo "  --update         Update without questions; an install with the Node.js"
-            echo "                   console is upgraded in place to the server with its console"
+            echo "  --auto, -a       Run in automatic mode (non-interactive): install, or update"
+            echo "                   the install that is there"
+            echo "  --update         Update without questions"
             echo "  --reset-password Give the admin account a new password (ADMIN_PASSWORD, else"
             echo "                   a random one) and show it once"
-            echo "  --rollback-go    Put the Node.js console and the server from before the"
-            echo "                   upgrade back (binaries, services, .env); data stays"
-            echo "  --cleanup-node   Delete the Node.js console's code and its disabled service"
-            echo "                   after an upgrade"
             echo "  --binary FILE    Install this neodesk-server binary instead of the release"
             echo "  --channel C      Release channel: 'stable' (default, the newest release) or"
             echo "                   'dev' (the development build); kept for later updates. Without"
@@ -403,16 +385,10 @@ STORE_ADMIN_CREDENTIALS="${STORE_ADMIN_CREDENTIALS:-false}"
 SERVER_SERVICE="neodesk-server"
 SERVER_UNIT="/etc/systemd/system/neodesk-server.service"
 SERVICE_USER="neodesk"
-# What the installs with the Node.js console had besides the server: the
-# console's unit (disabled and kept for one release after the upgrade), the
-# sudoers rule and the root helper the console called.
+# The unit of the old Node.js console. An install that still runs it is
+# not upgraded (refuse_node_era_install).
 LEGACY_CONSOLE_SERVICE="neodesk-console"
 LEGACY_CONSOLE_UNIT="/etc/systemd/system/neodesk-console.service"
-LEGACY_SUDOERS_FILE="/etc/sudoers.d/neodesk-console-updates"
-LEGACY_BROKER_DIR="/usr/local/libexec/neodesk"
-# The record of an upgrade from the Node.js console, in the console's data
-# folder: {from, to, at, backup}. The rollback reads it.
-GO_UPGRADE_RECORD=".go-upgrade.json"
 
 # Database configuration
 USE_POSTGRESQL="${USE_POSTGRESQL:-false}"  # true = PostgreSQL, false = SQLite
@@ -614,10 +590,6 @@ server_cmd() {
 
 check_management_capabilities() {
     if ! binary_has_subcommands; then
-        if is_node_era_install; then
-            print_info "Management capabilities are checked after the upgrade to the server with its console"
-            return 0
-        fi
         print_error "Management capability check needs an installed neodesk-server"
         return 1
     fi
@@ -2476,17 +2448,6 @@ resolve_panel_https_port() {
     read_effective_console_setting HTTPS_PORT 5443
 }
 
-# Primary panel port for health checks: HTTPS_PORT when HTTPS enabled, else PORT.
-resolve_panel_health_port() {
-    local https_enabled
-    https_enabled=$(read_effective_console_setting HTTPS_ENABLED false)
-    if [ "$(echo "$https_enabled" | tr '[:upper:]' '[:lower:]')" = "true" ]; then
-        resolve_panel_https_port
-    else
-        resolve_panel_http_port
-    fi
-}
-
 # Offer native HTTPS on standard port 443 after enabling TLS.
 maybe_offer_standard_https_port() {
     local env_file="${CONSOLE_PATH}/.env"
@@ -3044,7 +3005,7 @@ print_status() {
     if [ -d "$CONSOLE_PATH" ]; then
         case "$CONSOLE_TYPE" in
             go) echo -e "  Web Console:  ${GREEN}✓ OK${NC} (inside neodesk-server)" ;;
-            nodejs) echo -e "  Web Console:  ${YELLOW}! Node.js${NC} (Update moves it into neodesk-server)" ;;
+            nodejs) echo -e "  Web Console:  ${YELLOW}! Node.js${NC} (this installer does not upgrade it)" ;;
             *) echo -e "  Web Console:  ${GREEN}✓ OK${NC}" ;;
         esac
     else
@@ -3923,49 +3884,11 @@ migrate_sqlite_to_postgresql() {
         return 0
     fi
     
-    # The installed binary's migrate command, else the separate tool of an
-    # older release
-    local migrate_bin=""
-    if binary_migrates; then
-        migrate_bin=server_migrate
-    elif [ -f "$SCRIPT_DIR/neodesk-server/tools/migrate/migrate-linux-amd64" ]; then
-        migrate_bin="$SCRIPT_DIR/neodesk-server/tools/migrate/migrate-linux-amd64"
-    elif [ -f "$SCRIPT_DIR/tools/migrate/migrate-linux-amd64" ]; then
-        migrate_bin="$SCRIPT_DIR/tools/migrate/migrate-linux-amd64"
-    elif [ -f "/opt/neodesk-go/migrate" ]; then
-        migrate_bin="/opt/neodesk-go/migrate"
-    fi
-    
-    # Try to compile migration tool from source if not found or outdated
-    if [ -z "$migrate_bin" ] && command -v go &>/dev/null; then
-        local migrate_src="$SCRIPT_DIR/neodesk-server/tools/migrate"
-        if [ -d "$migrate_src" ]; then
-            print_info "Compiling migration tool from source..."
-            if (cd "$SCRIPT_DIR/neodesk-server" && go build -o "tools/migrate/migrate-linux-amd64" ./tools/migrate/) 2>&1; then
-                migrate_bin="$migrate_src/migrate-linux-amd64"
-                print_success "Migration tool compiled successfully"
-            else
-                print_warning "Failed to compile migration tool"
-            fi
-        fi
-    fi
-    
-    if [ -z "$migrate_bin" ]; then
-        print_warning "Migration binary not found: the server keeps using $sqlite_db"
+    # The installed binary's migrate command
+    local migrate_bin=server_migrate
+    if ! binary_migrates; then
+        print_warning "$(server_binary_path) has no migrate command: the server keeps using $sqlite_db"
         print_info "Move it later with: M -> 3 (SQLite → PostgreSQL)"
-        keep_sqlite_install "$sqlite_db"
-        return 0
-    fi
-    
-    [ "$migrate_bin" = server_migrate ] || chmod +x "$migrate_bin"
-
-    # Verify binary supports -mode flag (in case of outdated binary). The
-    # help is read whole first: grep -q on a pipe can end the tool early
-    local migrate_help
-    migrate_help=$("$migrate_bin" -h 2>&1 || true)
-    if ! grep -q -- "-mode" <<< "$migrate_help"; then
-        print_warning "Migration binary is outdated (missing -mode flag): the server keeps using $sqlite_db"
-        print_info "Rebuild with: cd neodesk-server && go build -o tools/migrate/migrate-linux-amd64 ./tools/migrate/"
         keep_sqlite_install "$sqlite_db"
         return 0
     fi
@@ -4657,8 +4580,7 @@ env_database_type() {
 }
 
 # binary_migrates [BIN]: true when the binary carries the migrate command
-# (sqlite2pg, pg2sqlite, rust2go, nodejs2go and backup of a SQLite file),
-# which replaces the separate migrate tool of older releases.
+# (sqlite2pg, pg2sqlite, rust2go and backup of a SQLite file).
 binary_migrates() {
     local bin="${1:-$(server_binary_path)}"
     [ -x "$bin" ] && grep -a -q -F 'migrate -mode sqlite2pg' "$bin" 2>/dev/null
@@ -4704,11 +4626,6 @@ unit_environment() {
 # unit_env_value UNIT KEY: the value a unit's Environment= lines give KEY.
 unit_env_value() {
     unit_environment "$1" | awk -v key="$2" 'index($0, key "=") == 1 { value = substr($0, length(key) + 2) } END { if (value != "") print value }'
-}
-
-# unit_exec_binary UNIT: the program a unit's ExecStart runs.
-unit_exec_binary() {
-    grep -m1 '^ExecStart=' "$1" 2>/dev/null | sed -E 's/^ExecStart=[-@+!:]*//; s/[[:space:]].*//'
 }
 
 # unit_exec_flag_value UNIT FLAG: the value of a flag on a unit's ExecStart
@@ -4995,7 +4912,7 @@ verify_go_install() {
 }
 
 #===============================================================================
-# Upgrade of an install with the Node.js console, and its rollback
+# The install of the server with its console, and older ones
 #===============================================================================
 
 # True when the installed unit runs the server with the web console
@@ -5009,380 +4926,11 @@ is_node_era_install() {
     ! is_go_only_install && { [ -f "$LEGACY_CONSOLE_UNIT" ] || [ -f "$CONSOLE_PATH/server.js" ]; }
 }
 
-# Settings of the old units the server does not take over: the console port
-# the installer kept off while Node held it, what only Node read, and the
-# old binary's path (the updater uses the binary that runs).
-UPGRADE_SKIPPED_UNIT_KEYS=" CONSOLE_PORT NODE_EXTRA_CA_CERTS NODE_OPTIONS NEODESK_SERVER_BINARY "
-
-# carry_unit_environment UNIT ENV_FILE: appends to the env file the
-# settings of a unit's Environment= lines that the file does not set. Under
-# the old units a setting in the file won over the unit's (EnvironmentFile=
-# overrides Environment=); the server reads the file only for what its own
-# unit leaves unset, so the old units' other settings move into the file.
-carry_unit_environment() {
-    local unit="$1" env_file="$2" pair key header=false
-    [ -f "$unit" ] || return 0
-    while IFS= read -r pair; do
-        key="${pair%%=*}"
-        [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
-        case "$UPGRADE_SKIPPED_UNIT_KEYS" in *" $key "*) continue ;; esac
-        grep -q "^${key}=" "$env_file" 2>/dev/null && continue
-        if [ "$header" = false ]; then
-            [ -s "$env_file" ] && [ -n "$(tail -c1 "$env_file")" ] && echo >> "$env_file"
-            printf '\n# Carried from %s by neodesk.sh (upgrade to the server with its console)\n' "$(basename "$unit")" >> "$env_file"
-            header=true
-        fi
-        printf '%s\n' "$pair" >> "$env_file"
-        print_info "  carry    $key (from $(basename "$unit"))"
-    done < <(unit_environment "$unit")
-}
-
-# json_string TEXT: TEXT as a JSON string.
-json_string() {
-    printf '"%s"' "$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g')"
-}
-
-# record_field FILE NAME: a string field of the upgrade record.
-record_field() {
-    sed -n "s/.*\"$2\":[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p" "$1" 2>/dev/null | head -1
-}
-
-# upgrade_backup DIR: the binaries, units, .env, sudoers rule, root helper
-# and ownership of an install with the Node.js console, before the upgrade.
-upgrade_backup() {
-    local dir="$1" bin old_bin
-    mkdir -p "$dir/units" "$dir/bin"
-    chmod 700 "$dir"
-    cp -a "$SERVER_UNIT" "$dir/units/"
-    [ -f "$LEGACY_CONSOLE_UNIT" ] && cp -a "$LEGACY_CONSOLE_UNIT" "$dir/units/"
-    [ -d "$SERVER_UNIT.d" ] && cp -a "$SERVER_UNIT.d" "$dir/units/"
-    [ -d "$LEGACY_CONSOLE_UNIT.d" ] && cp -a "$LEGACY_CONSOLE_UNIT.d" "$dir/units/"
-    cp -a "$CONSOLE_PATH/.env" "$dir/console.env"
-    [ -f "$LEGACY_SUDOERS_FILE" ] && cp -a "$LEGACY_SUDOERS_FILE" "$dir/sudoers-neodesk-console-updates"
-    [ -d "$LEGACY_BROKER_DIR" ] && cp -a "$LEGACY_BROKER_DIR" "$dir/libexec-neodesk"
-
-    # Every copy of the old binary the old unit or the folder holds
-    old_bin=$(unit_exec_binary "$SERVER_UNIT")
-    : > "$dir/bin/paths"
-    local n=0
-    for bin in "$old_bin" "$(server_binary_path)"; do
-        [ -f "$bin" ] || continue
-        grep -q -F -x -- "$bin" <(cut -f2 "$dir/bin/paths") && continue
-        n=$((n + 1))
-        cp -a "$bin" "$dir/bin/$n"
-        printf '%s\t%s\n' "$n" "$bin" >> "$dir/bin/paths"
-    done
-
-    # Owner and mode of what the upgrade hands to the service account
-    {
-        find "$RUSTDESK_PATH" -path "$RUSTDESK_PATH/source" -prune -o -printf '%u:%g\t%m\t%p\n'
-        find "$CONSOLE_PATH" -maxdepth 2 -path "$CONSOLE_PATH/node_modules" -prune -o -printf '%u:%g\t%m\t%p\n'
-    } > "$dir/ownership.tsv" 2>/dev/null || true
-
-    {
-        echo "from=$(timeout 10 "${old_bin:-$(server_binary_path)}" -version 2>/dev/null || echo unknown)"
-        echo "rustdesk_path=$RUSTDESK_PATH"
-        echo "console_path=$CONSOLE_PATH"
-        echo "db_type=$(env_database_type "$CONSOLE_PATH/.env")"
-        echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    } > "$dir/manifest.txt"
-}
-
-# upgrade_snapshot_database DIR: a copy of the database while the services
-# are stopped: SQLite with .backup (and auth.db), PostgreSQL with pg_dump
-# when it is installed.
-upgrade_snapshot_database() {
-    local dir="$1" db_url
-    if [ "$(env_database_type "$CONSOLE_PATH/.env")" = "postgres" ]; then
-        db_url=$(env_database_url "$CONSOLE_PATH/.env")
-        if command -v pg_dump &>/dev/null && [ -n "$db_url" ]; then
-            if pg_dump -Fc -f "$dir/postgres.dump" "$db_url" 2>"$dir/pg_dump.log"; then
-                print_info "  PostgreSQL snapshot: $dir/postgres.dump"
-            else
-                print_warning "pg_dump failed (see $dir/pg_dump.log); there is no database snapshot"
-            fi
-        else
-            print_warning "pg_dump is not installed: there is no database snapshot"
-        fi
-    elif [ -f "$DB_PATH" ]; then
-        if command -v sqlite3 &>/dev/null; then
-            sqlite3 "$DB_PATH" ".backup '$dir/db_v2.sqlite3'"
-        else
-            cp -a "$DB_PATH" "$dir/db_v2.sqlite3"
-        fi
-        print_info "  SQLite snapshot: $dir/db_v2.sqlite3"
-    fi
-    if [ -f "$CONSOLE_PATH/data/auth.db" ]; then
-        if command -v sqlite3 &>/dev/null; then
-            sqlite3 "$CONSOLE_PATH/data/auth.db" ".backup '$dir/auth.db'"
-        else
-            cp -a "$CONSOLE_PATH/data/auth.db" "$dir/auth.db"
-        fi
-    fi
-}
-
-# upgrade_node_install_to_go: an install with the Node.js console becomes
-# one service, neodesk-server, that serves the web console itself. Data
-# stays where it is; the old binary, units and .env are kept, and the
-# console's unit stays disabled for one release, so --rollback-go can put
-# the old pair back. A failed start rolls back by itself.
-upgrade_node_install_to_go() {
-    echo -e "${WHITE}${BOLD}══════════ UPGRADE: WEB CONSOLE INTO THE SERVER ══════════${NC}"
-    echo ""
-    if [ ! -f "$SERVER_UNIT" ] || [ ! -f "$CONSOLE_PATH/.env" ]; then
-        print_error "No neodesk-server.service or $CONSOLE_PATH/.env: this is no install to upgrade"
-        return 1
-    fi
-    print_info "This upgrade moves the web console into neodesk-server:"
-    print_info "  - one service, neodesk-server, running as $SERVICE_USER, serves the panel on the same ports"
-    print_info "  - neodesk-console is stopped and disabled (kept for a rollback until the next update)"
-    print_info "  - data, keys and accounts stay where they are"
-    print_info "  - roll back with: sudo ./neodesk.sh --rollback-go"
-    if [ "$AUTO_MODE" != true ] && [ "$UPDATE_MODE" != true ] && ! confirm "Upgrade now?"; then
-        return 0
-    fi
-
-    # 1. Preflight: room for the binaries and a database copy
-    local need_kb free_kb db_kb=0
-    [ -f "$DB_PATH" ] && db_kb=$(du -k "$DB_PATH" | cut -f1)
-    need_kb=$((2 * 60 * 1024 + db_kb))
-    mkdir -p "$BACKUP_DIR"
-    free_kb=$(df -Pk "$BACKUP_DIR" | awk 'NR==2 { print $4 }')
-    if [ -n "$free_kb" ] && [ "$free_kb" -lt "$need_kb" ]; then
-        print_error "Not enough free space in $BACKUP_DIR: ${free_kb} KB free, about ${need_kb} KB needed"
-        return 1
-    fi
-
-    # 2. The new binary, before anything stops
-    print_step "[1/9] Getting the new server binary..."
-    obtain_server_binary || { rm -rf "${STAGED_SERVER_DIR:-}"; return 1; }
-
-    # 3. Backup
-    local ts backup
-    ts=$(date +%Y%m%d-%H%M%S)
-    backup="$BACKUP_DIR/pre-go-$ts"
-    print_step "[2/9] Backing up binaries, services and .env to $backup..."
-    upgrade_backup "$backup" || { print_error "Backup failed; nothing was changed"; rm -rf "$STAGED_SERVER_DIR"; return 1; }
-
-    # 4. Stop both, then the database copy
-    print_step "[3/9] Stopping neodesk-console and neodesk-server..."
-    systemctl stop "$LEGACY_CONSOLE_SERVICE" 2>/dev/null || true
-    systemctl stop "$SERVER_SERVICE" 2>/dev/null || true
-    wait_for_service_stop "$LEGACY_CONSOLE_SERVICE" 15 || true
-    wait_for_service_stop "$SERVER_SERVICE" 15 || true
-    upgrade_snapshot_database "$backup"
-
-    # 5. The console's unit stays, disabled
-    print_step "[4/9] Disabling neodesk-console (the unit stays for a rollback)..."
-    systemctl disable "$LEGACY_CONSOLE_SERVICE" 2>/dev/null || true
-
-    # 6. The binary; the old one stays as neodesk-server.pre-go
-    print_step "[5/9] Installing the new binary..."
-    local old_args db_flag init_pass
-    old_args=$(unit_exec_args "$SERVER_UNIT")
-    db_flag=$(unit_exec_flag_value "$SERVER_UNIT" -db)
-    init_pass=$(unit_exec_flag_value "$SERVER_UNIT" -init-admin-pass)
-    if ! install_staged_binary .pre-go; then
-        rm -rf "$STAGED_SERVER_DIR"
-        rollback_go_upgrade "$backup"
-        return 1
-    fi
-    rm -rf "$STAGED_SERVER_DIR"
-
-    # 7. The env file: the old units' settings it lacks, the database and
-    # the first admin password out of ExecStart, then upgrade-env
-    print_step "[6/9] Moving the settings into $CONSOLE_PATH/.env..."
-    local env_file="$CONSOLE_PATH/.env"
-    [ -f "$env_file.pre-go" ] || cp -p "$env_file" "$env_file.pre-go"
-    carry_unit_environment "$LEGACY_CONSOLE_UNIT" "$env_file"
-    carry_unit_environment "$SERVER_UNIT" "$env_file"
-    save_given_update_channel
-    if [ -n "$db_flag" ] && ! grep -q '^DB_URL=' "$env_file"; then
-        printf 'DB_URL=%s\n' "$db_flag" >> "$env_file"
-        print_info "  move     -db -> DB_URL"
-    fi
-    if [ -n "$init_pass" ] && ! grep -q '^INIT_ADMIN_PASS=' "$env_file"; then
-        printf 'INIT_ADMIN_PASS=%s\n' "$init_pass" >> "$env_file"
-        print_info "  move     -init-admin-pass -> INIT_ADMIN_PASS"
-    fi
-    local upgrade_output
-    if ! upgrade_output=$(NEODESK_ENV_FILE='' "$(server_binary_path)" upgrade-env --from "$env_file" --write --supervisor systemd 2>&1); then
-        printf '%s\n' "$upgrade_output"
-        print_error "upgrade-env failed; rolling back"
-        rollback_go_upgrade "$backup"
-        return 1
-    fi
-    # The plan without the keys it keeps as they are
-    printf '%s\n' "$upgrade_output" | grep -v '^  keep ' || true
-
-    # 8. Ownership: the server runs as the service account now
-    print_step "[7/9] Handing the server's files to $SERVICE_USER..."
-    ensure_service_user
-    set_server_folder_permissions
-    own_by_service_user "$CONSOLE_PATH"
-    chmod 600 "$env_file" "$env_file.pre-go"
-
-    # 9. The one unit, without the sudoers rule and root helper the Node
-    # console used (both are in the backup)
-    print_step "[8/9] Writing neodesk-server.service..."
-    local extra_env=""
-    [ -d "$SERVER_UNIT.d" ] && print_info "  The drop-ins in $SERVER_UNIT.d stay in effect"
-    write_server_unit "$old_args" "$extra_env"
-    rm -f "$LEGACY_SUDOERS_FILE"
-    rm -rf "$LEGACY_BROKER_DIR"
-    systemctl daemon-reload
-    systemctl enable "$SERVER_SERVICE" 2>/dev/null || true
-
-    # 10. Start and check; roll back when it does not come up
-    print_step "[9/9] Starting neodesk-server..."
-    systemctl reset-failed "$SERVER_SERVICE" 2>/dev/null || true
-    systemctl start "$SERVER_SERVICE" || true
-    if ! verify_go_install 90; then
-        print_error "The server with its web console did not come up; putting the old services back"
-        rollback_go_upgrade "$backup"
-        return 1
-    fi
-
-    {
-        printf '{"from":%s,' "$(json_string "$(sed -n 's/^from=//p' "$backup/manifest.txt")")"
-        printf '"to":%s,' "$(json_string "${STAGED_SERVER_VERSION:-}")"
-        printf '"at":%s,' "$(json_string "$(date -u +%Y-%m-%dT%H:%M:%SZ)")"
-        printf '"backup":%s}\n' "$(json_string "$backup")"
-    } > "$CONSOLE_PATH/data/$GO_UPGRADE_RECORD"
-    chown "$SERVICE_USER:$SERVICE_USER" "$CONSOLE_PATH/data/$GO_UPGRADE_RECORD"
-
-    echo ""
-    print_success "Upgrade done: neodesk-server serves the web console"
-    print_info "Backup: $backup"
-    print_info "Roll back: sudo ./neodesk.sh --rollback-go"
-    print_info "The next successful update removes the Node.js console's code (or: sudo ./neodesk.sh --cleanup-node)"
-}
-
-# upgrade_backup_folder [RECORDED]: the folder of the backup from before the
-# upgrade to the server with its console: RECORDED (the record names it),
-# else the folder of that name in BACKUP_DIR (a record from before the
-# backups moved there, L446), else the newest pre-go-* in BACKUP_DIR
-upgrade_backup_folder() {
-    local recorded="${1:-}"
-    if [ -z "$recorded" ]; then
-        find "$BACKUP_DIR" -maxdepth 1 -type d -name 'pre-go-*' 2>/dev/null | sort | tail -1
-    elif [ ! -d "$recorded" ] && [ -d "$BACKUP_DIR/$(basename "$recorded")" ]; then
-        printf '%s\n' "$BACKUP_DIR/$(basename "$recorded")"
-    else
-        printf '%s\n' "$recorded"
-    fi
-}
-
-# rollback_go_upgrade [BACKUP]: puts the binaries, units, .env, sudoers rule,
-# root helper and file ownership from before the upgrade back and starts
-# neodesk-server and neodesk-console. The database stays as it is (the
-# server keeps its schema readable by the old version); an interactive run
-# offers the snapshot from before the upgrade.
-rollback_go_upgrade() {
-    local backup="${1:-}" record="$CONSOLE_PATH/data/$GO_UPGRADE_RECORD"
-    if [ -z "$backup" ] && [ -f "$record" ]; then
-        backup=$(record_field "$record" backup)
-    fi
-    backup=$(upgrade_backup_folder "$backup")
-    if [ -z "$backup" ] || [ ! -f "$backup/units/neodesk-server.service" ]; then
-        print_error "No backup from an upgrade to roll back to (looked for $BACKUP_DIR/pre-go-*)"
-        return 1
-    fi
-    if [ -f "$backup/units/neodesk-console.service" ] && [ ! -f "$CONSOLE_PATH/server.js" ]; then
-        print_error "The Node.js console's code is gone from $CONSOLE_PATH (--cleanup-node); it cannot be started again"
-        return 1
-    fi
-    print_step "Rolling back to the services from before the upgrade ($backup)..."
-
-    systemctl stop "$SERVER_SERVICE" 2>/dev/null || true
-    wait_for_service_stop "$SERVER_SERVICE" 15 || true
-
-    local n path owner mode
-    while IFS=$'\t' read -r n path; do
-        [ -n "$n" ] && [ -f "$backup/bin/$n" ] && cp -a "$backup/bin/$n" "$path"
-    done < "$backup/bin/paths"
-    rm -f "$(server_binary_path).pre-go"
-
-    cp -a "$backup/units/neodesk-server.service" "$SERVER_UNIT"
-    if [ -f "$backup/units/neodesk-console.service" ]; then
-        cp -a "$backup/units/neodesk-console.service" "$LEGACY_CONSOLE_UNIT"
-    fi
-    rm -rf "$SERVER_UNIT.d"
-    [ -d "$backup/units/neodesk-server.service.d" ] && cp -a "$backup/units/neodesk-server.service.d" "$SERVER_UNIT.d"
-
-    cp -a "$backup/console.env" "$CONSOLE_PATH/.env"
-    rm -f "$CONSOLE_PATH/.env.pre-go"
-    if [ -f "$backup/sudoers-neodesk-console-updates" ]; then
-        cp -a "$backup/sudoers-neodesk-console-updates" "$LEGACY_SUDOERS_FILE"
-    fi
-    if [ -d "$backup/libexec-neodesk" ]; then
-        rm -rf "$LEGACY_BROKER_DIR"
-        cp -a "$backup/libexec-neodesk" "$LEGACY_BROKER_DIR"
-    fi
-    while IFS=$'\t' read -r owner mode path; do
-        [ -e "$path" ] || continue
-        chown -h "$owner" "$path" 2>/dev/null || true
-        [ -L "$path" ] || chmod "$mode" "$path" 2>/dev/null || true
-    done < "$backup/ownership.tsv"
-
-    if [ "$AUTO_MODE" != true ] && [ "$ROLLBACK_GO_MODE" != true ] \
-        && { [ -f "$backup/db_v2.sqlite3" ] || [ -f "$backup/postgres.dump" ]; } \
-        && confirm "Also restore the database from before the upgrade? What was saved since is lost."; then
-        if [ -f "$backup/db_v2.sqlite3" ]; then
-            rm -f "$DB_PATH-wal" "$DB_PATH-shm"
-            cp -a "$backup/db_v2.sqlite3" "$DB_PATH"
-            [ -f "$backup/auth.db" ] && cp -a "$backup/auth.db" "$CONSOLE_PATH/data/auth.db"
-        else
-            pg_restore --clean --if-exists -d "$(env_database_url "$CONSOLE_PATH/.env")" "$backup/postgres.dump" \
-                || print_warning "pg_restore reported errors"
-        fi
-        print_info "Database restored from $backup"
-    fi
-
-    systemctl daemon-reload
-    systemctl reset-failed "$SERVER_SERVICE" "$LEGACY_CONSOLE_SERVICE" 2>/dev/null || true
-    systemctl enable "$SERVER_SERVICE" "$LEGACY_CONSOLE_SERVICE" 2>/dev/null || true
-    systemctl start "$SERVER_SERVICE" || true
-    systemctl start "$LEGACY_CONSOLE_SERVICE" || true
-    [ -f "$record" ] && mv -f "$record" "$CONSOLE_PATH/data/.go-upgrade.rolled-back.json"
-
-    if verify_service_health "$SERVER_SERVICE" 21116 60 && verify_service_health "$LEGACY_CONSOLE_SERVICE" "$(resolve_panel_health_port)" 60; then
-        print_success "Rolled back: neodesk-server and neodesk-console run as before the upgrade"
-        return 0
-    fi
-    print_error "Rolled back, but a service did not come up; see the logs above"
-    return 1
-}
-
-# cleanup_node_leftovers: deletes the Node.js console's code from the console
-# folder and its disabled unit after an upgrade. The console's .env, data
-# and its language files, themes and images stay.
-cleanup_node_leftovers() {
-    if ! is_go_only_install; then
-        print_error "This install still runs the Node.js console; upgrade it first (--update)"
-        return 1
-    fi
-    print_step "Removing the Node.js console's code and its disabled service..."
-    local item removed=0
-    for item in server.js routes services lib middleware scripts node_modules web-ui vendor tests \
-                package.json package-lock.json .env.example README.md reset-password.js test-db.js; do
-        if [ -e "$CONSOLE_PATH/$item" ]; then
-            rm -rf "${CONSOLE_PATH:?}/$item"
-            removed=$((removed + 1))
-        fi
-    done
-    if [ -f "$LEGACY_CONSOLE_UNIT" ]; then
-        systemctl disable --now "$LEGACY_CONSOLE_SERVICE" 2>/dev/null || true
-        rm -f "$LEGACY_CONSOLE_UNIT"
-        rm -rf "$LEGACY_CONSOLE_UNIT.d"
-        systemctl daemon-reload
-        removed=$((removed + 1))
-    fi
-    rm -f "$(server_binary_path).pre-go"
-    print_success "Removed $removed leftovers of the Node.js console"
-    if command -v node &>/dev/null; then
-        print_info "NeoDesk no longer needs Node.js; remove it with your package manager if nothing else uses it"
-    fi
+# refuse_node_era_install: an install that still runs the Node.js console
+# is neither upgraded nor installed over; NeoDesk has no way from it.
+refuse_node_era_install() {
+    print_error "This server runs the old Node.js web console, which this installer does not upgrade."
+    print_info "Back up its data and install NeoDesk on a clean server."
 }
 
 # update_go_install: the newest release of the update channel (or --binary,
@@ -5443,11 +4991,6 @@ update_go_install() {
         return 1
     fi
 
-    # One release after the upgrade from the Node.js console, its code goes
-    if [ "$before" != "$after" ] && [ -f "$CONSOLE_PATH/data/$GO_UPGRADE_RECORD" ] \
-        && { [ -f "$LEGACY_CONSOLE_UNIT" ] || [ -f "$CONSOLE_PATH/server.js" ]; }; then
-        cleanup_node_leftovers || true
-    fi
     if [ "$before" = "$after" ]; then
         print_success "neodesk-server is up to date: $(timeout 10 "$bin" -version 2>/dev/null)"
     else
@@ -5604,13 +5147,10 @@ do_install() {
 
     detect_installation
 
-    # An install with the Node.js console is upgraded in place, never
-    # installed over
     if is_node_era_install; then
-        print_warning "This server runs the Node.js web console."
-        print_info "The upgrade moves it into neodesk-server and keeps all data."
-        upgrade_node_install_to_go
-        return
+        refuse_node_era_install
+        [ "$AUTO_MODE" = true ] || press_enter
+        return 1
     fi
 
     if [ "$INSTALL_STATUS" = "complete" ]; then
@@ -5828,7 +5368,12 @@ do_update() {
 
     detect_installation
 
-    if [ "$INSTALL_STATUS" = "none" ] && ! is_node_era_install; then
+    if is_node_era_install; then
+        refuse_node_era_install
+        [ "$AUTO_MODE" = true ] || [ "$UPDATE_MODE" = true ] || press_enter
+        return 1
+    fi
+    if [ "$INSTALL_STATUS" = "none" ]; then
         print_error "NeoDesk is not installed!"
         print_info "Use 'FRESH INSTALLATION' option"
         [ "$AUTO_MODE" = true ] || press_enter
@@ -5861,13 +5406,6 @@ do_update() {
     preserve_database_config
     read_update_github_branch_from_env
 
-    # The Node.js console moves into the server: one upgrade, in place
-    if is_node_era_install; then
-        local rc=0
-        upgrade_node_install_to_go || rc=$?
-        [ "$AUTO_MODE" = true ] || [ "$UPDATE_MODE" = true ] || press_enter
-        return "$rc"
-    fi
 
     print_info "Update channel: $UPDATE_GITHUB_BRANCH ($( [ "$UPDATE_GITHUB_BRANCH" = dev ] && echo development || echo stable))"
     if [ "${AUTO_MODE:-false}" != "true" ] && [ "$UPDATE_MODE" != true ]; then
@@ -5948,7 +5486,7 @@ do_repair() {
 repair_binaries() {
     print_step "Repairing neodesk-server..."
     if is_node_era_install; then
-        print_error "This install runs the Node.js console; use Update to upgrade it"
+        refuse_node_era_install
         return 1
     fi
     if ! obtain_server_binary; then
@@ -5996,7 +5534,7 @@ repair_services() {
     print_step "Repairing the systemd service..."
 
     if is_node_era_install; then
-        print_error "This install runs the Node.js console; use Update to upgrade it"
+        refuse_node_era_install
         return 1
     fi
     if [ ! -f "$(server_binary_path)" ]; then
@@ -6228,7 +5766,7 @@ do_validate() {
             errors=$((errors + 1))
         fi
         if [ -f "$LEGACY_CONSOLE_UNIT" ]; then
-            echo -e "  neodesk-console (Node.js): ${CYAN}kept disabled for a rollback${NC} (removed by the next update or --cleanup-node)"
+            echo -e "  neodesk-console (Node.js): ${CYAN}disabled${NC} (a leftover; sudo systemctl disable neodesk-console and remove its unit)"
         fi
     else
         echo -n "  neodesk-console (Node.js): "
@@ -6282,10 +5820,9 @@ do_validate() {
 
 # move_backup_folder: the backups of an install from before (up to 3.6.0-rc.4
 # in /opt/rustdesk-backups) go to BACKUP_DIR, and the old place becomes a
-# link to it: the record of an upgrade from the Node.js console names its
-# backup by the old path, and so may an admin's own scripts. A backup whose
-# name BACKUP_DIR has already stays where it is, and so does the folder. A
-# BACKUP_DIR given to the installer is left alone.
+# link to it, for an admin's own scripts that name the old path. A backup
+# whose name BACKUP_DIR has already stays where it is, and so does the
+# folder. A BACKUP_DIR given to the installer is left alone.
 move_backup_folder() {
     local old="$OLD_BACKUP_DIR" item left=0
     [ -z "${BACKUP_DIR_GIVEN:-}" ] || return 0
@@ -6389,7 +5926,7 @@ do_reset_password() {
         return 1
     fi
     if [ "$CONSOLE_TYPE" = "nodejs" ]; then
-        print_error "This install runs the Node.js console; use Update to move it into neodesk-server first"
+        refuse_node_era_install
         press_enter
         return 1
     fi
@@ -8117,48 +7654,16 @@ do_migrate_database() {
     echo -e "${WHITE}${BOLD}══════════ DATABASE MIGRATION ══════════${NC}"
     echo ""
 
-    # The installed binary's migrate command, else the separate tool of an
-    # older release
+    # The installed binary's migrate command
     local migrate_bin=""
-    local search_paths=(
-        "$SCRIPT_DIR/neodesk-server/tools/migrate/migrate-linux-amd64"
-        "$SCRIPT_DIR/tools/migrate/migrate-linux-amd64"
-        "$RUSTDESK_PATH/migrate"
-        "/usr/local/bin/neodesk-migrate"
-    )
-
     binary_migrates && migrate_bin=server_migrate
-    for p in "${search_paths[@]}"; do
-        [ -z "$migrate_bin" ] || break
-        if [ -f "$p" ] && [ -x "$p" ]; then
-            migrate_bin="$p"
-            break
-        fi
-    done
-
-    if [ -z "$migrate_bin" ]; then
-        # Try to find non-executable and make it executable
-        for p in "${search_paths[@]}"; do
-            if [ -f "$p" ]; then
-                chmod +x "$p"
-                migrate_bin="$p"
-                break
-            fi
-        done
-    fi
-
     if [ -z "$migrate_bin" ]; then
         print_error "No migration tool: $(server_binary_path) has no migrate command"
         print_info "Update first (sudo $(basename "$MANAGER_COMMAND") --update): the server's own migrate command moves the database"
         press_enter
         return
     fi
-
-    if [ "$migrate_bin" = server_migrate ]; then
-        print_info "Migration tool: $(server_binary_path) migrate"
-    else
-        print_info "Migration binary: $migrate_bin"
-    fi
+    print_info "Migration tool: $(server_binary_path) migrate"
     echo ""
     local _menu_items=(
         $'Rust -> Go\tMigrate legacy Rust hbbs database to the Go server'
@@ -8357,7 +7862,6 @@ show_menu() {
     echo "  B. 🧰 Build toolchain (optional/dev — not needed for production)"
     echo "  S. ⚙️  Settings (paths)"
     echo "  P. 🛡️  Management capabilities and server settings"
-    echo "  R. ↩️  Roll back the upgrade (Node.js console back)"
     echo "  0. ❌ Exit"
     echo ""
     echo -e "  ${DIM}Tip: this menu also supports arrow-key navigation (set NEODESK_CLASSIC_MENU=1 to force this list).${NC}"
@@ -8392,17 +7896,7 @@ main() {
         exit "$management_rc"
     fi
 
-    # Update, rollback and cleanup run without questions
-    if [ "$ROLLBACK_GO_MODE" = true ]; then
-        AUTO_MODE=true
-        rollback_go_upgrade
-        exit $?
-    fi
-    if [ "$CLEANUP_NODE_MODE" = true ]; then
-        AUTO_MODE=true
-        cleanup_node_leftovers
-        exit $?
-    fi
+    # An update runs without questions
     if [ "$UPDATE_MODE" = true ]; then
         AUTO_MODE=true
         do_update
@@ -8420,12 +7914,11 @@ main() {
     fi
 
     # Without questions: install, or update an install that is there (run
-    # again, the installer updates); an install with the Node.js console is
-    # upgraded in place
+    # again, the installer updates)
     if [ "$AUTO_MODE" = true ]; then
         case "$(auto_action)" in
             uninstall) do_uninstall ;;
-            upgrade|update)
+            update)
                 print_info "NeoDesk is installed here: updating it"
                 do_update
                 ;;
@@ -8439,7 +7932,7 @@ main() {
     # arrow-key TUI and the numeric fallback share the exact same handlers.
     local menu_labels=(
         $'Fresh installation\tFull install from scratch'
-        $'Update\tNewest release; a Node.js console install is upgraded in place'
+        $'Update\tNewest release of the update channel'
         $'Repair installation\tFix common problems'
         $'Validate installation\tCheck correctness'
         $'Backup\tCreate a backup'
@@ -8454,10 +7947,9 @@ main() {
         $'Build toolchain (optional/dev)\tLocal Flutter/Cargo — not needed for production'
         $'Settings (paths)\tConfigure install paths'
         $'Management capabilities\tCheck permissions and change allowlisted server settings'
-        $'Roll back the upgrade\tPut the Node.js console and old server back'
         $'Exit\tQuit the manager'
     )
-    local menu_actions=( 1 2 3 4 5 6 7 8 9 L C T M B S P R 0 )
+    local menu_actions=( 1 2 3 4 5 6 7 8 9 L C T M B S P 0 )
 
     while true; do
         local choice=""
@@ -8493,7 +7985,6 @@ main() {
             [Bb]) do_install_build_toolchain ;;
             [Ss]) configure_paths ;;
             [Pp]) configure_management ;;
-            [Rr]) rollback_go_upgrade; press_enter ;;
             0) 
                 echo ""
                 print_info "Goodbye!"
@@ -8508,14 +7999,13 @@ main() {
 }
 
 # auto_action: what a run without questions does here: install, update (an
-# install of the server with its console is there), upgrade (the Node.js
-# console is there), minimal or uninstall. --postgresql on an install that
-# runs on SQLite installs again, which moves it to PostgreSQL.
+# install of the server with its console is there), minimal or uninstall.
+# --postgresql on an install that runs on SQLite installs again, which
+# moves it to PostgreSQL. An install with the Node.js console gets install,
+# which refuses it.
 auto_action() {
     if [ "$UNINSTALL_MODE" = true ]; then
         echo uninstall
-    elif is_node_era_install; then
-        echo upgrade
     elif is_go_only_install && [ -x "$(server_binary_path)" ] && [ -f "$CONSOLE_PATH/.env" ] \
         && { [ "$USE_POSTGRESQL" != true ] || [ "$(env_database_type "$CONSOLE_PATH/.env")" = postgres ]; }; then
         echo update

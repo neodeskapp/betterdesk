@@ -128,13 +128,11 @@ var nonCriticalFailures = map[string]bool{
 }
 
 // splitFailures sorts the failures of a stored result into critical and
-// non-critical ones (splitUpdateFailures). consoleDir is the old console's
-// folder, where a failure about a file the old console never loaded is
-// recognised.
-func splitFailures(failed []any, consoleDir string) (critical, nonCritical []any) {
+// non-critical ones (splitUpdateFailures).
+func splitFailures(failed []any) (critical, nonCritical []any) {
 	critical, nonCritical = []any{}, []any{}
 	for _, entry := range failed {
-		if failureNonCritical(entry, consoleDir) {
+		if failureNonCritical(entry) {
 			nonCritical = append(nonCritical, entry)
 		} else {
 			critical = append(critical, entry)
@@ -143,7 +141,7 @@ func splitFailures(failed []any, consoleDir string) (critical, nonCritical []any
 	return critical, nonCritical
 }
 
-func failureNonCritical(entry any, consoleDir string) bool {
+func failureNonCritical(entry any) bool {
 	if !goapi.Truthy(entry) {
 		return false
 	}
@@ -151,32 +149,7 @@ func failureNonCritical(entry any, consoleDir string) bool {
 		return true
 	}
 	file, _ := goapi.Dig(entry, "file").(string)
-	if nonCriticalFailures[file] {
-		return true
-	}
-	if file == "npm install" && goapi.Truthy(goapi.Dig(entry, "nodeModulesOk")) {
-		return true
-	}
-	return phantomRepairFailure(file, consoleDir)
-}
-
-// phantomRepairFailure is isPhantomRepairFailure: a repair that asked for
-// a file the old console never loads.
-func phantomRepairFailure(file, consoleDir string) bool {
-	local := strings.TrimPrefix(file, "web-nodejs/")
-	if local == "" || consoleDir == "" {
-		return false
-	}
-	if local == "routes.js" {
-		return exists(filepath.Join(consoleDir, "routes", "index.js"))
-	}
-	if strings.HasPrefix(local, "scripts/scripts/") {
-		return true
-	}
-	if strings.HasSuffix(local, ".js") {
-		return exists(filepath.Join(consoleDir, strings.TrimSuffix(local, ".js"), "index.js"))
-	}
-	return false
+	return nonCriticalFailures[file]
 }
 
 func exists(path string) bool {
@@ -187,14 +160,14 @@ func exists(path string) bool {
 // resultForDisplay is resolveLastUpdateResultForDisplay: the stored
 // result when it still has something to show, else nil (and a result
 // that has nothing to show any more is removed).
-func (d dataFiles) resultForDisplay(localSHA, remoteSHA, consoleDir string) any {
+func (d dataFiles) resultForDisplay(localSHA, remoteSHA string) any {
 	record := d.readResult()
 	if record == nil {
 		return nil
 	}
 	recordSHA := jsText(goapi.Dig(record, "sha"))
 	failed, _ := goapi.Dig(record, "failed").([]any)
-	critical, nonCritical := splitFailures(failed, consoleDir)
+	critical, nonCritical := splitFailures(failed)
 	services, _ := goapi.Dig(record, "servicesFailed").([]any)
 	hasServiceFailures := len(services) > 0
 	hasRestartBlock := goapi.Truthy(goapi.Dig(record, "consoleRestartBlocked"))

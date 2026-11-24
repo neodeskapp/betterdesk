@@ -1004,7 +1004,7 @@ func (g *gate) runInstallerChecks(tools gateTools) {
 	g.runCheck("shellcheck", "Run ShellCheck on installers and wrappers", tools["shellcheck"], append([]string{"--severity=error"}, files...), runOptions{timeout: 2 * time.Minute})
 
 	for _, c := range [][3]string{
-		{"installer-go-upgrade", "scripts/test-go-installer.sh", "Test the upgrade to the server with its web console"},
+		{"installer-go-upgrade", "scripts/test-go-installer.sh", "Test the native installer's functions"},
 		{"installer-go-toolchain", "scripts/check-go-toolchain-pins.sh", "Check the Go pins of the installers against go.mod"},
 		{"installer-docker-update", "scripts/test-docker-installer.sh", "Test the Docker manager update and backup"},
 		{"installer-supervisor", "scripts/check-supervisor-env.sh", "Check that the systemd unit and the image name their supervisor"},

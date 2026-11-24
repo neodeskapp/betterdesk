@@ -454,7 +454,7 @@ func (s *Service) LastResult(ctx context.Context) any {
 	if rel, err := s.lookupRelease(ctx, "", false); err == nil {
 		remote = rel.Manifest.SHA
 	}
-	return s.files.resultForDisplay(s.opts.Commit, remote, s.opts.ConsoleDir)
+	return s.files.resultForDisplay(s.opts.Commit, remote)
 }
 
 // PublicKeysConfigured reports whether a manifest signature is checked.

@@ -175,7 +175,7 @@ function Test-MigrationMenusPassOverwrite {
         $script:answers = New-Object System.Collections.Queue
         foreach ($a in $Answers) { $script:answers.Enqueue($a) }
         Do-MigrateDatabase *> $null
-        return @($script:migrateCalls | Where-Object { $_ -match '-mode (rust2go|nodejs2go|pg2sqlite|sqlite2pg)' })
+        return @($script:migrateCalls | Where-Object { $_ -match '-mode (rust2go|pg2sqlite|sqlite2pg)' })
     }
 
     $src = Join-Path $script:RUSTDESK_PATH 'db_v2.sqlite3'
@@ -258,7 +258,7 @@ function Test-PostgreSQLSwitchMovesTheWholeInstall {
         $script:POSTGRESQL_URI = $uri
         $script:AUTO_MODE = $Auto
         Migrate-SQLiteToPostgreSQL *> $null
-        return @($script:migrateCalls | Where-Object { $_ -match '-mode (sqlite2pg|nodejs2go)' })
+        return @($script:migrateCalls | Where-Object { $_ -match '-mode sqlite2pg' })
     }
 
     $runs = Invoke-Switch 0 $true @()
@@ -583,6 +583,31 @@ function Test-WindowsFirstHour {
         if (-not $out.Contains($want)) { Fail "the summary does not name $want" }
     }
     $script:FRESH_CONSOLE_ENV = $false
+    Remove-Item -Recurse -Force $dir
+}
+
+# NeoDesk has no way from the old Node.js console: -RollbackGo and
+# -CleanupNode are gone, and an install or an update on a server that
+# still runs the Node.js console stops with what to do and changes nothing.
+function Test-NoUpgradeFromTheNodeConsole {
+    $params = @($ast.ParamBlock.Parameters | ForEach-Object { $_.Name.VariablePath.UserPath })
+    foreach ($gone in 'RollbackGo', 'CleanupNode') {
+        if ($params -contains $gone) { Fail "neodesk.ps1 still takes -$gone" }
+    }
+    $dir = New-TestInstall
+    Set-Content -Path (Join-Path $script:CONSOLE_PATH 'server.js') -Value 'node'
+    Set-Content -Path (Join-Path $script:CONSOLE_PATH '.env') -Value @('PORT=5000', 'SESSION_SECRET=kept')
+    $before = (Get-FileHash (Join-Path $script:CONSOLE_PATH '.env')).Hash
+    function Print-Header { }
+    function Press-Enter { }
+    function Detect-Installation { $script:INSTALL_STATUS = 'partial' }
+    foreach ($action in 'Do-Update', 'Do-Install') {
+        $out = (& $action 6>&1 | Out-String)
+        if ($out -notmatch 'does not upgrade' -or $out -notmatch 'install NeoDesk on a clean server') { Fail "$action on an install with the Node.js console does not say what to do: $out" }
+    }
+    if ((Get-FileHash (Join-Path $script:CONSOLE_PATH '.env')).Hash -ne $before) { Fail 'a refused install changed .env' }
+    if (Test-Path (Join-Path $script:CONSOLE_PATH '.env.pre-go')) { Fail 'a refused install started on the upgrade' }
+    if ((Get-AutoAction) -ne 'install') { Fail "a run without questions on it does $(Get-AutoAction)" }
     Remove-Item -Recurse -Force $dir
 }
 
@@ -1194,6 +1219,7 @@ Test-ChannelAndDownloadErrors
 Test-PanelPublicHost
 Test-WindowsFirstHour
 Test-CommandLineOnThePath
+Test-NoUpgradeFromTheNodeConsole
 Test-UpdateAsksTheFork
 Test-FirewallPorts
 Test-CertificateFromTheBinary

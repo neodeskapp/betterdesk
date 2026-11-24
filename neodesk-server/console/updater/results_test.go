@@ -39,58 +39,56 @@ func TestResultForDisplay(t *testing.T) {
 
 	// The target commit was reached some other way: the record goes.
 	writeRecord(t, d, `{"sha":"6d4d42b","failed":[{"file":"web-nodejs/services/dbAdapter.js"}]}`)
-	if d.resultForDisplay(full, "", "") != nil || d.readResult() != nil {
+	if d.resultForDisplay(full, "") != nil || d.readResult() != nil {
 		t.Error("a reached target is still shown")
 	}
 	// At the release's commit while the record targets an older one.
 	writeRecord(t, d, `{"sha":"aaaaaaa","failed":[{"file":"web-nodejs/x.js"}]}`)
-	if d.resultForDisplay(full, full, "") != nil || d.readResult() != nil {
+	if d.resultForDisplay(full, full) != nil || d.readResult() != nil {
 		t.Error("an old target is still shown")
 	}
 	// Non-critical failures only.
-	writeRecord(t, d, `{"sha":"bbbbbbb","failed":[{"file":"npm install"},{"file":"x","nonCritical":true}]}`)
-	if d.resultForDisplay(full, "", "") != nil || d.readResult() != nil {
+	writeRecord(t, d, `{"sha":"bbbbbbb","failed":[{"file":"neodesk-server-deploy"},{"file":"x","nonCritical":true}]}`)
+	if d.resultForDisplay(full, "") != nil || d.readResult() != nil {
 		t.Error("non-critical failures are shown")
 	}
 	// Critical ones stay, split from the others, keys in their order.
 	writeRecord(t, d, `{"savedAt":"t","sha":"bbbbbbb","failed":[{"file":"web-nodejs/services/dbAdapter.js","error":"e"},{"file":"neodesk-server-deploy"}],"servicesFailed":[]}`)
-	got := d.resultForDisplay(full, "", "")
+	got := d.resultForDisplay(full, "")
 	if s := mustJSON(t, got); s != `{"savedAt":"t","sha":"bbbbbbb","failed":[{"file":"web-nodejs/services/dbAdapter.js","error":"e"}],"servicesFailed":[],"nonCriticalFailures":[{"file":"neodesk-server-deploy"}]}` {
 		t.Errorf("display %s", s)
 	}
 	// A restart that could not happen is shown.
 	writeRecord(t, d, `{"sha":"bbbbbbb","failed":[],"consoleRestartBlocked":"Start the server again to finish the update"}`)
-	if d.resultForDisplay(full, "", "") == nil {
+	if d.resultForDisplay(full, "") == nil {
 		t.Error("a blocked restart is not shown")
 	}
 	if !d.clearResult() || d.readResult() != nil || d.clearResult() {
 		t.Error("clear")
 	}
 	writeRecord(t, d, `{broken`)
-	if d.resultForDisplay(full, "", "") != nil {
+	if d.resultForDisplay(full, "") != nil {
 		t.Error("a broken file is shown")
 	}
 }
 
+// The failures that never block an install, by name or marked so. The
+// old Node.js console's repairs of files it never loaded are failures like
+// any other.
 func TestSplitFailures(t *testing.T) {
-	root := t.TempDir()
-	_ = os.MkdirAll(filepath.Join(root, "routes"), 0o755)
-	_ = os.WriteFile(filepath.Join(root, "routes", "index.js"), nil, 0o644)
-	_ = os.MkdirAll(filepath.Join(root, "lib", "x"), 0o755)
-	_ = os.WriteFile(filepath.Join(root, "lib", "x", "index.js"), nil, 0o644)
 	for file, want := range map[string]bool{
-		"npm install": true, "neodesk-server.service": true, "support-agent-source-sync": true, "support-agent-rebuild-defer": true,
-		"web-nodejs/routes.js": true, "web-nodejs/scripts/scripts/foo.js": true, "web-nodejs/lib/x.js": true,
+		"neodesk-server.service": true, "support-agent-source-sync": true, "support-agent-rebuild-defer": true,
+		"web-nodejs/routes.js": false, "web-nodejs/scripts/scripts/foo.js": false,
 		"web-nodejs/services/dbAdapter.js": false, "neodesk-server-update": false,
 	} {
-		if got := failureNonCritical(goapi.NewObject("file", file), root); got != want {
+		if got := failureNonCritical(goapi.NewObject("file", file)); got != want {
 			t.Errorf("%s: non-critical %v", file, got)
 		}
 	}
 	critical, nonCritical := splitFailures([]any{
-		goapi.NewObject("file", "web-nodejs/services/dbAdapter.js"), goapi.NewObject("file", "npm install", "nodeModulesOk", true),
+		goapi.NewObject("file", "web-nodejs/services/dbAdapter.js"), goapi.NewObject("file", "neodesk-server-deploy"),
 		goapi.NewObject("file", "web-ui build"), nil,
-	}, root)
+	})
 	if len(critical) != 2 || len(nonCritical) != 2 {
 		t.Errorf("critical %d, non-critical %d", len(critical), len(nonCritical))
 	}

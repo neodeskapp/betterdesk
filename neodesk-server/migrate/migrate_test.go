@@ -1,6 +1,7 @@
 package migrate
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"database/sql"
@@ -71,14 +72,6 @@ const rustPeerTable = `CREATE TABLE peer (
 	guid BLOB PRIMARY KEY NOT NULL, id VARCHAR(100) NOT NULL, uuid BLOB NOT NULL,
 	pk BLOB NOT NULL, created_at DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
 	user BLOB, status TINYINT, note VARCHAR(300), info TEXT NOT NULL)`
-
-// nodePeerTable is the peer table with the columns the Node console added.
-const nodePeerTable = `CREATE TABLE peer (
-	guid BLOB PRIMARY KEY NOT NULL, id VARCHAR(100) NOT NULL, uuid BLOB NOT NULL,
-	pk BLOB NOT NULL, created_at DATETIME NOT NULL DEFAULT (CURRENT_TIMESTAMP),
-	user BLOB, status TINYINT, note VARCHAR(300), info TEXT NOT NULL,
-	status_online TINYINT, last_online DATETIME, is_deleted TINYINT,
-	is_banned TINYINT, banned_at DATETIME, banned_reason TEXT)`
 
 // oldDestination writes a database standing for one a user wants to keep:
 // table keep with one row.
@@ -231,33 +224,6 @@ func TestBackupFailsWhenTheSourceIsNoDatabase(t *testing.T) {
 	}
 }
 
-func TestNodeJS2GoRefusesASourceAsDestination(t *testing.T) {
-	for _, overwrite := range []bool{false, true} {
-		dir := t.TempDir()
-		peerDB := filepath.Join(dir, "db_v2.sqlite3")
-		authDB := filepath.Join(dir, "auth.sqlite3")
-		execSQLite(t, peerDB, nodePeerTable,
-			`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'01', '123456789', x'02', x'03', '{}')`)
-		execSQLite(t, authDB, "CREATE TABLE users (username TEXT, password_hash TEXT, role TEXT, created_at TEXT, last_login TEXT)",
-			"INSERT INTO users VALUES ('admin', 'hash', 'admin', NULL, NULL)")
-
-		if err := runNodeJS2Go(peerDB, "", peerDB, overwrite); err == nil {
-			t.Errorf("overwrite %v: -dst equal to -src was accepted", overwrite)
-		}
-		// The same file under another spelling.
-		authAgain := dir + "/./auth.sqlite3"
-		if err := runNodeJS2Go(peerDB, authDB, authAgain, overwrite); err == nil {
-			t.Errorf("overwrite %v: -dst equal to -node-auth was accepted", overwrite)
-		}
-		if !tableExistsIn(t, peerDB, "peer") || countRows(t, peerDB, "peer") != 1 {
-			t.Errorf("overwrite %v: the source lost its peer", overwrite)
-		}
-		if !tableExistsIn(t, authDB, "users") || countRows(t, authDB, "users") != 1 {
-			t.Errorf("overwrite %v: the auth database lost its user", overwrite)
-		}
-	}
-}
-
 func TestRust2GoReplacesAnExistingDestinationOnlyWithOverwrite(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "db_v2.sqlite3")
@@ -314,7 +280,7 @@ func TestFailedMigrationLeavesTheDestinationAlone(t *testing.T) {
 		"INSERT INTO peer VALUES ('123456789', 'u', x'00', '', '2026-01-01 00:00:00')")
 	oldDestination(t, dst)
 
-	if err := runNodeJS2Go(src, "", dst, true); err == nil {
+	if err := runRust2Go(src, dst, true); err == nil {
 		t.Fatal("the migration of a broken source succeeded")
 	}
 	if !tableExistsIn(t, dst, "keep") || countRows(t, dst, "keep") != 1 {
@@ -481,52 +447,6 @@ func countPG(t *testing.T, dsn, table string) int {
 		t.Fatalf("count %s: %v", table, err)
 	}
 	return n
-}
-
-func TestNodeJS2GoCopiesAPeerWithoutNote(t *testing.T) {
-	dir := t.TempDir()
-	src := filepath.Join(dir, "db_v2.sqlite3")
-	dst := filepath.Join(dir, "neodesk.sqlite3")
-	execSQLite(t, src, nodePeerTable,
-		`INSERT INTO peer (guid, id, uuid, pk, note, info) VALUES (x'01', '123456789', x'02', x'03', NULL, '{}')`)
-	if err := runNodeJS2Go(src, "", dst, false); err != nil {
-		t.Fatal(err)
-	}
-	if n := countRows(t, dst, "peers"); n != 1 {
-		t.Errorf("destination has %d peers, want the one without a note", n)
-	}
-}
-
-func TestNodeJS2GoFailsOnAPeerItCannotRead(t *testing.T) {
-	dir := t.TempDir()
-	src := filepath.Join(dir, "db_v2.sqlite3")
-	dst := filepath.Join(dir, "neodesk.sqlite3")
-	execSQLite(t, src, strings.Replace(nodePeerTable, "info TEXT NOT NULL", "info TEXT", 1),
-		`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'01', '111111111', x'02', x'03', '{}')`,
-		`INSERT INTO peer (guid, id, uuid, pk, info) VALUES (x'04', '222222222', x'05', x'06', NULL)`)
-	if err := runNodeJS2Go(src, "", dst, false); err == nil {
-		t.Error("a peer that could not be read was skipped and the migration succeeded")
-	}
-	if exists(dst) {
-		t.Error("the failed migration left a destination")
-	}
-}
-
-func TestNodeJS2GoFailsOnAUserItCannotWrite(t *testing.T) {
-	dir := t.TempDir()
-	src := filepath.Join(dir, "db_v2.sqlite3")
-	auth := filepath.Join(dir, "auth.sqlite3")
-	dst := filepath.Join(dir, "neodesk.sqlite3")
-	execSQLite(t, src, nodePeerTable)
-	execSQLite(t, auth, "CREATE TABLE users (username TEXT, password_hash TEXT, role TEXT, created_at TEXT, last_login TEXT)",
-		"INSERT INTO users VALUES ('admin', 'hash', 'admin', NULL, NULL)",
-		"INSERT INTO users VALUES ('broken', NULL, 'viewer', NULL, NULL)")
-	if err := runNodeJS2Go(src, auth, dst, false); err == nil {
-		t.Error("a user the destination refused was dropped and the migration succeeded")
-	}
-	if exists(dst) {
-		t.Error("the failed migration left a destination")
-	}
 }
 
 func TestRust2GoFailsOnAPeerItCannotRead(t *testing.T) {
@@ -765,5 +685,23 @@ func TestSQLite2PGReadsASourceInRollbackJournalMode(t *testing.T) {
 	}
 	if n := countPG(t, dsn, "peers"); n != 1 {
 		t.Errorf("PostgreSQL has %d peers, want 1", n)
+	}
+}
+
+// NeoDesk has no way from the old Node.js console: the migrate command
+// has no nodejs2go mode and no -node-auth flag any more, and its usage
+// does not offer them.
+func TestTheNodeJSConsoleModeIsGone(t *testing.T) {
+	var out, errOut bytes.Buffer
+	if code := Main([]string{"-mode", "nodejs2go", "-src", filepath.Join(t.TempDir(), "db_v2.sqlite3")}, &out, &errOut); code != 1 {
+		t.Errorf("-mode nodejs2go: exit %d, want the usage's 1", code)
+	}
+	if strings.Contains(out.String(), "nodejs2go") || !strings.Contains(out.String(), "sqlite2pg") {
+		t.Errorf("the usage after -mode nodejs2go:\n%s", out.String())
+	}
+	out.Reset()
+	errOut.Reset()
+	if code := Main([]string{"-mode", "rust2go", "-node-auth", "auth.sqlite3"}, &out, &errOut); code != 2 {
+		t.Errorf("-node-auth: exit %d, want 2 for a flag it does not know", code)
 	}
 }

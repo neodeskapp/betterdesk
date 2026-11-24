@@ -33,7 +33,7 @@ const setupCommand = "/usr/local/sbin/neodesk-setup"
 var setupFlags = []string{
 	"--auto", "-a", "--skip-verify", "--minimal", "--uninstall", "--purge",
 	"--check-permissions", "--check-capabilities", "--repair-permissions", "--set-config",
-	"--nodejs", "--flask", "--update", "--rollback-go", "--reset-password", "--cleanup-node",
+	"--nodejs", "--flask", "--update", "--reset-password",
 	"--binary", "--from-source", "--channel", "--postgresql", "--postgres",
 	"--relay-mode", "--relay-servers", "--relay", "--protocol", "--pg-uri",
 }

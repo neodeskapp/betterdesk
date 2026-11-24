@@ -96,30 +96,3 @@ jobs:
             ${{ env.SERVER_DIR }}/neodesk-server-${{ matrix.suffix }}
             ${{ env.SERVER_DIR }}/neodesk-server-${{ matrix.suffix }}.manifest.json
           if-no-files-found: error
-
-  # ---------------------------------------------------------------------------
-  # Migration tool
-  # ---------------------------------------------------------------------------
-  build-migrate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - name: Setup Go
-        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7
-        with:
-          go-version-file: ${{ env.SERVER_DIR }}/go.mod
-          cache-dependency-path: ${{ env.SERVER_DIR }}/go.sum
-
-      - name: Build migration tool (linux-amd64)
-        working-directory: ${{ env.SERVER_DIR }}/tools/migrate
-        env:
-          CGO_ENABLED: 1
-        run: go build -trimpath -ldflags="-s -w" -o migrate-linux-amd64 .
-
-      - name: Upload migration tool
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: migrate-linux-amd64
-          path: ${{ env.SERVER_DIR }}/tools/migrate/migrate-linux-amd64

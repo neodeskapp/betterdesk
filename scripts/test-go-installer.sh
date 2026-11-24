@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# Unit checks of neodesk.sh's upgrade to the server with its web console:
-# reading the old units, carrying their settings into .env and writing the
-# one unit. Runs without systemd: the functions work on files in a
-# temporary folder.
+# Unit checks of neodesk.sh: reading the units, writing the one unit, the
+# settings, the update and its way back, the commands it installs. Runs
+# without systemd: the functions work on files in a temporary folder.
 set -euo pipefail
 
 SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -100,30 +99,6 @@ test_exec_args() (
         || fail "unit_exec_args: $args"
     [ "$(unit_exec_flag_value "$SERVER_UNIT" -db)" = 'postgres://u:p$w%d@localhost:5432/bd' ] || fail "-db value"
     [ "$(unit_exec_flag_value "$SERVER_UNIT" -init-admin-pass)" = 'S3cr$t' ] || fail "-init-admin-pass value"
-    [ "$(unit_exec_binary "$SERVER_UNIT")" = /opt/neodesk/neodesk-server ] || fail "unit_exec_binary"
-    rm -rf "$TEST_DIR"
-)
-
-# Under the old units .env won over Environment=; only the units' other
-# settings move into .env, without what only Node read and without the
-# CONSOLE_PORT=0 the installer added.
-test_carry_unit_environment() (
-    load
-    write_node_era_units
-    local env_file="$CONSOLE_PATH/.env"
-    printf 'PORT=5000\nHOST=127.0.0.1\nSIGNAL_PORT=\n' > "$env_file"
-    carry_unit_environment "$LEGACY_CONSOLE_UNIT" "$env_file"
-    carry_unit_environment "$SERVER_UNIT" "$env_file"
-    grep -qx 'PORT=5000' "$env_file" || fail "PORT of .env was replaced"
-    [ "$(grep -c '^PORT=' "$env_file")" = 1 ] || fail "PORT carried although .env has it"
-    grep -qx 'HOST=127.0.0.1' "$env_file" || fail "HOST of .env was replaced"
-    grep -qx 'NODE_ENV=production' "$env_file" || fail "NODE_ENV not carried"
-    grep -qx 'P2P_FIRST=Y' "$env_file" || fail "P2P_FIRST not carried"
-    grep -qx 'SAME_NAT_RELAY=Y' "$env_file" || fail "SAME_NAT_RELAY not carried"
-    [ "$(grep -c '^SIGNAL_PORT=' "$env_file")" = 1 ] || fail "SIGNAL_PORT carried although .env sets it (empty)"
-    if grep -q '^CONSOLE_PORT=\|^NODE_EXTRA_CA_CERTS=\|^NEODESK_SERVER_BINARY=' "$env_file"; then
-        fail "a skipped key was carried: $(grep '^CONSOLE_PORT=\|^NODE_EXTRA_CA_CERTS=\|^NEODESK_SERVER_BINARY=' "$env_file")"
-    fi
     rm -rf "$TEST_DIR"
 )
 
@@ -186,6 +161,75 @@ test_node_era_detection() (
     write_node_era_units
     if is_go_only_install; then fail "a Node-era unit counts as the server with its console"; fi
     is_node_era_install || fail "is_node_era_install"
+    rm -rf "$TEST_DIR"
+)
+
+# NeoDesk has no way from the old Node.js console: the options of the
+# upgrade's rollback and clean-up are gone, and an install or an update on
+# a server that still runs the Node.js console stops with what to do and
+# changes nothing.
+test_no_upgrade_from_the_node_console() (
+    local opt out code
+    for opt in --rollback-go --cleanup-node; do
+        code=0
+        out=$(bash "$SCRIPT_ROOT/neodesk.sh" "$opt" 2>&1 < /dev/null) || code=$?
+        [ "$code" = 1 ] && [ "$out" = "Unknown option: $opt" ] || fail "$opt: exit $code: $out"
+    done
+    load
+    write_node_era_units
+    printf 'PORT=5000\nSESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    : > "$CONSOLE_PATH/server.js"
+    print_header() { :; }
+    print_error() { echo "$1"; }
+    print_info() { echo "$1"; }
+    detect_installation() { INSTALL_STATUS=partial; }
+    press_enter() { :; }
+    systemctl() { echo "systemctl $*" >> "$TEST_DIR/calls"; }
+    SERVER_BINARY_FILE="$TEST_DIR/no-binary"
+    local before
+    before=$(cat "$SERVER_UNIT" "$LEGACY_CONSOLE_UNIT" "$CONSOLE_PATH/.env" | sha256sum)
+    AUTO_MODE=true
+    UPDATE_MODE=true
+    for action in do_update do_install; do
+        code=0
+        out=$("$action" 2>&1) || code=$?
+        [ "$code" != 0 ] || fail "$action on an install with the Node.js console reported success: $out"
+        case "$out" in *"does not upgrade"*"install NeoDesk on a clean server"*) ;; *) fail "$action does not say what to do: $out" ;; esac
+    done
+    [ "$(cat "$SERVER_UNIT" "$LEGACY_CONSOLE_UNIT" "$CONSOLE_PATH/.env" | sha256sum)" = "$before" ] || fail "a refused install changed the units or .env"
+    [ ! -e "$CONSOLE_PATH/.env.pre-go" ] && [ ! -e "$TEST_DIR/calls" ] || fail "a refused install started on the upgrade: $(cat "$TEST_DIR/calls" 2>/dev/null)"
+    [ "$(auto_action)" = install ] || fail "a run without questions on it does $(auto_action)"
+    rm -rf "$TEST_DIR"
+)
+
+# The update's way back: a new binary that does not come up is replaced by
+# the one from before (kept as neodesk-server.prev), which starts again.
+test_failed_update_puts_the_previous_binary_back() (
+    load
+    printf '#!/bin/sh\n# upgrade-env --from FILE; verify-release (the release before)\necho before\n' > "$RUSTDESK_PATH/neodesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
+    printf '#!/bin/sh\n# upgrade-env --from FILE; verify-release (a release that does not start)\necho broken\n' > "$TEST_DIR/broken"
+    SERVER_BINARY_FILE="$TEST_DIR/broken"
+    print_step() { :; }
+    print_error() { echo "$1"; }
+    print_success() { :; }
+    print_warning() { :; }
+    do_backup_silent() { :; }
+    merge_console_env() { :; }
+    maybe_update_services() { :; }
+    set_server_folder_permissions() { :; }
+    wait_for_service_stop() { :; }
+    install_manager_command() { echo "the commands were installed" >> "$TEST_DIR/calls"; }
+    systemctl() { echo "systemctl $*" >> "$TEST_DIR/calls"; }
+    # The service comes up only with the binary from before
+    verify_go_install() { [ "$("$RUSTDESK_PATH/neodesk-server")" = before ]; }
+    local out code=0
+    out=$(update_go_install 2>&1) || code=$?
+    [ "$code" != 0 ] || fail "an update to a binary that does not come up reported success: $out"
+    [ "$("$RUSTDESK_PATH/neodesk-server")" = before ] || fail "the binary from before is not back: $("$RUSTDESK_PATH/neodesk-server")"
+    case "$out" in *"putting the previous one back"*) ;; *) fail "the update does not say it went back: $out" ;; esac
+    grep -q '^systemctl start neodesk-server' "$TEST_DIR/calls" || fail "the service was not started again: $(cat "$TEST_DIR/calls")"
+    if grep -q 'the commands were installed' "$TEST_DIR/calls"; then fail "a failed update replaced the installer's commands"; fi
     rm -rf "$TEST_DIR"
 )
 
@@ -607,8 +651,8 @@ test_update_moves_the_old_manager() (
 # L446: the installer's backups go to /opt/neodesk-backups. The backups of
 # an install from before (in /opt/rustdesk-backups) move there at the
 # installer's next run, and the old place becomes a link to the new one,
-# for what names it: the record of an upgrade from the Node.js console,
-# an admin's own scripts. A BACKUP_DIR given stays as it is.
+# for an admin's own scripts that name it. A BACKUP_DIR given stays as it
+# is.
 test_backups_move_to_the_neodesk_folder() (
     load
     [ "$BACKUP_DIR" = /opt/neodesk-backups ] || fail "the backups go to $BACKUP_DIR"
@@ -642,26 +686,6 @@ test_backups_move_to_the_neodesk_folder() (
     rm -rf "$OLD_BACKUP_DIR" && mkdir -p "$OLD_BACKUP_DIR"
     BACKUP_DIR_GIVEN="$given" BACKUP_DIR="$given" move_backup_folder >/dev/null
     [ -d "$OLD_BACKUP_DIR" ] && [ ! -L "$OLD_BACKUP_DIR" ] && [ ! -e "$given" ] || fail "a given BACKUP_DIR moved the old folder"
-    rm -rf "$TEST_DIR"
-)
-
-# L446: a rollback of the upgrade from the Node.js console finds its
-# backup when the record names the old folder (/opt/rustdesk-backups),
-# after the move, also without the link.
-test_rollback_finds_a_backup_of_the_old_folder() (
-    load
-    BACKUP_DIR="$TEST_DIR/neodesk-backups"
-    OLD_BACKUP_DIR="$TEST_DIR/rustdesk-backups"
-    mkdir -p "$BACKUP_DIR/pre-go-20260101-000000/units" "$BACKUP_DIR/pre-go-20260303-000000/units"
-    : > "$BACKUP_DIR/pre-go-20260101-000000/units/neodesk-server.service"
-    : > "$BACKUP_DIR/pre-go-20260303-000000/units/neodesk-server.service"
-    local got
-    got=$(upgrade_backup_folder "$OLD_BACKUP_DIR/pre-go-20260101-000000")
-    [ "$got" = "$BACKUP_DIR/pre-go-20260101-000000" ] || fail "the recorded backup in the old folder gave '$got'"
-    got=$(upgrade_backup_folder "")
-    [ "$got" = "$BACKUP_DIR/pre-go-20260303-000000" ] || fail "without a record the newest backup is '$got'"
-    got=$(upgrade_backup_folder "$BACKUP_DIR/pre-go-20260101-000000")
-    [ "$got" = "$BACKUP_DIR/pre-go-20260101-000000" ] || fail "a recorded backup in the new folder gave '$got'"
     rm -rf "$TEST_DIR"
 )
 
@@ -1440,9 +1464,10 @@ test_older_binary_updates_through_the_installer() (
 
 test_unit_environment
 test_exec_args
-test_carry_unit_environment
 test_write_server_unit
 test_node_era_detection
+test_no_upgrade_from_the_node_console
+test_failed_update_puts_the_previous_binary_back
 test_kill_stale_processes
 test_fresh_env_admin_password
 test_database_url_only
@@ -1458,7 +1483,6 @@ test_one_command_install
 test_install_places_neodesk_setup_and_the_command_line
 test_update_moves_the_old_manager
 test_backups_move_to_the_neodesk_folder
-test_rollback_finds_a_backup_of_the_old_folder
 test_runs_without_term
 test_apt_source_failure_goes_on
 test_backup_uses_the_servers_backup

@@ -66,7 +66,7 @@ func TestRollbackAfterThreeFailedStarts(t *testing.T) {
 			}
 			// The panel shows it: a failure that is not one of the old
 			// non-critical ones.
-			display := in.svc.files.resultForDisplay(oldCommit, newCommit, "")
+			display := in.svc.files.resultForDisplay(oldCommit, newCommit)
 			if display == nil {
 				t.Error("the rollback is not shown")
 			}
@@ -105,7 +105,7 @@ func TestReadyAfterAnUpdate(t *testing.T) {
 		t.Errorf("last result %+v", last)
 	}
 	// Shown no more: the running commit is the result's.
-	if in.svc.files.resultForDisplay(newCommit, "", "") != nil {
+	if in.svc.files.resultForDisplay(newCommit, "") != nil {
 		t.Error("a success is shown as a problem")
 	}
 	// Ready twice does nothing more.

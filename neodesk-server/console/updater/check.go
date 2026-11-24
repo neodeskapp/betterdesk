@@ -23,15 +23,15 @@ var componentMeta = map[string]struct {
 	prefix, label string
 	auto          bool
 }{
-	"console": {"web-nodejs/", "Web Console", true},
 	"webui":   {"web-ui/", "Web Console (web-ui)", true},
 	"server":  {"neodesk-server/", "Go Server", true},
-	"agent":   {"neodesk-agent/", "Agent library", false},
 	"scripts": {"", "Scripts & Docker", true},
 }
 
 // componentOrder is the order in which classifyFile tries the prefixes.
-var componentOrder = []string{"console", "webui", "server", "agent", "scripts"}
+// The folders of the old Node.js console (web-nodejs/) and agent library
+// (neodesk-agent/) are other files.
+var componentOrder = []string{"webui", "server", "scripts"}
 
 var scriptFiles = []string{
 	"install.sh", "neodesk.sh", "neodesk.ps1", "neodesk-docker.sh",
@@ -63,7 +63,7 @@ var excludePatterns = []*regexp.Regexp{
 	regexp.MustCompile(`^screenshots/`), regexp.MustCompile(`^dev_modules/`), regexp.MustCompile(`^tasks/`),
 	regexp.MustCompile(`^sdks/`), regexp.MustCompile(`^bridges/`), regexp.MustCompile(`node_modules/`),
 	regexp.MustCompile(`\.exe$`), regexp.MustCompile(`^neodesk-server/neodesk-server`),
-	regexp.MustCompile(`^web-nodejs/data/`), regexp.MustCompile(`(^|/)data/`),
+	regexp.MustCompile(`(^|/)data/`),
 	regexp.MustCompile(`\.sqlite3?$`), regexp.MustCompile(`\.sqlite3?-(shm|wal|journal)$`),
 	regexp.MustCompile(`\.db$`), regexp.MustCompile(`\.db-(shm|wal|journal)$`),
 	regexp.MustCompile(`(^|/)\.session_secret$`), regexp.MustCompile(`(^|/)\.update_sha$`),
@@ -200,7 +200,7 @@ func (s *Service) Check(ctx context.Context) (*CheckResult, error) {
 	case local == "":
 		out.CompareError = "This build does not know its commit (it was built without -X main.Commit), so it is not updated in the app"
 	case shaMatches(local, rel.Manifest.SHA):
-		_ = s.files.resultForDisplay(local, rel.Manifest.SHA, s.opts.ConsoleDir)
+		_ = s.files.resultForDisplay(local, rel.Manifest.SHA)
 	default:
 		cmp, err := s.compare(ctx, local, rel.Manifest.SHA)
 		if err != nil {
@@ -283,24 +283,18 @@ type CommitInfo struct {
 // Grouped are the changed files by component, in the old console's
 // order.
 type Grouped struct {
-	Console []GroupedFile `json:"console"`
 	WebUI   []GroupedFile `json:"webui"`
 	Server  []GroupedFile `json:"server"`
-	Agent   []GroupedFile `json:"agent"`
 	Scripts []GroupedFile `json:"scripts"`
 	Other   []GroupedFile `json:"other"`
 }
 
 func (g *Grouped) add(name string, f GroupedFile) {
 	switch name {
-	case "console":
-		g.Console = append(g.Console, f)
 	case "webui":
 		g.WebUI = append(g.WebUI, f)
 	case "server":
 		g.Server = append(g.Server, f)
-	case "agent":
-		g.Agent = append(g.Agent, f)
 	case "scripts":
 		g.Scripts = append(g.Scripts, f)
 	default:
@@ -345,7 +339,7 @@ func (s *Service) Changes(ctx context.Context, sha string) (*Changes, error) {
 		return nil, err
 	}
 	out := &Changes{Files: []ChangedFile{}, Commits: []CommitInfo{}}
-	out.Grouped = Grouped{Console: []GroupedFile{}, WebUI: []GroupedFile{}, Server: []GroupedFile{}, Agent: []GroupedFile{}, Scripts: []GroupedFile{}, Other: []GroupedFile{}}
+	out.Grouped = Grouped{WebUI: []GroupedFile{}, Server: []GroupedFile{}, Scripts: []GroupedFile{}, Other: []GroupedFile{}}
 	for _, f := range cmp.Files {
 		if isExcluded(f.Filename) {
 			continue
@@ -354,8 +348,6 @@ func (s *Service) Changes(ctx context.Context, sha string) (*Changes, error) {
 		status := firstNonEmpty(f.Status, "modified")
 		entry := GroupedFile{Path: f.Filename, Status: status, SHA: f.SHA, Component: name}
 		switch name {
-		case "console":
-			entry.LocalPath = strings.TrimPrefix(f.Filename, "web-nodejs/")
 		case "webui":
 			entry.LocalPath = strings.TrimPrefix(f.Filename, "web-ui/")
 			if prev, ok := strings.CutPrefix(f.PreviousFilename, "web-ui/"); ok {

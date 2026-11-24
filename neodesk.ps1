@@ -10,7 +10,6 @@
       - Minimal installation (the same server with its web console off)
       - Update an installation (release binaries checked by SHA-256 and,
         from the second install on, the release signature)
-      - Upgrade an install with the Node.js console in place, and roll it back
       - Repair/fix issues (enhanced with graceful shutdown)
       - Validate installation
       - Backup & restore
@@ -42,15 +41,7 @@
     Skip the SHA-256 and signature checks of a downloaded binary
 
 .PARAMETER Update
-    Update without questions. An install with the Node.js console is upgraded
-    in place to the server with its web console.
-
-.PARAMETER RollbackGo
-    Put the Node.js console and the server from before the upgrade back
-    (binary, services or tasks, .env); data stays.
-
-.PARAMETER CleanupNode
-    Delete the Node.js console's code and its disabled service after an upgrade.
+    Update without questions.
 
 .PARAMETER Binary
     Install this neodesk-server.exe instead of the release.
@@ -113,15 +104,11 @@
 
 .EXAMPLE
     .\neodesk.ps1 -Auto
-    Automatic installation with SQLite; an install with the Node.js console is upgraded
+    Automatic installation with SQLite, or an update of the install that is there
 
 .EXAMPLE
     .\neodesk.ps1 -Update
-    Update, or upgrade an install with the Node.js console
-
-.EXAMPLE
-    .\neodesk.ps1 -RollbackGo
-    Put the Node.js console back after an upgrade
+    Update the install
 
 .EXAMPLE
     .\neodesk.ps1 -Auto -PostgreSQL
@@ -148,8 +135,6 @@ param(
     [switch]$Minimal,
     [switch]$NodeJs,  # No longer needed: the web console is part of the server
     [switch]$Update,
-    [switch]$RollbackGo,
-    [switch]$CleanupNode,
     [string]$Binary = "",
     [ValidateSet('stable', 'dev', '')]
     [string]$Channel = "",
@@ -193,8 +178,6 @@ $script:CHECK_PERMISSIONS = $CheckPermissions
 $script:REPAIR_PERMISSIONS = $RepairPermissions
 $script:MANAGED_CONFIG_CHANGES = @($SetConfig)
 $script:UPDATE_MODE = $Update
-$script:ROLLBACK_GO_MODE = $RollbackGo
-$script:CLEANUP_NODE_MODE = $CleanupNode
 # Where the server binary comes from: a file (-Binary), a build of this
 # checkout (-FromSource), else the release of the update channel.
 $script:BINARY_FILE = if ($Binary) { (Resolve-Path $Binary -ErrorAction Stop).Path } else { "" }
@@ -202,9 +185,6 @@ $script:FROM_SOURCE = [bool]$FromSource
 $script:STAGED_SERVER_DIR = ""
 $script:STAGED_SERVER_BINARY = ""
 $script:STAGED_SERVER_VERSION = ""
-# The record of an upgrade from the Node.js console, in the console's data
-# folder: {from, to, at, backup}. The rollback reads it.
-$script:GO_UPGRADE_RECORD = ".go-upgrade.json"
 
 # Privilege separation (default). The installer needs Administrator, but the
 # services run under low-privilege per-service virtual accounts (NT SERVICE\...)
@@ -987,6 +967,14 @@ function Test-GoOnlyInstall {
     return ((Test-Path $launcher) -and [bool](Select-String -Path $launcher -Pattern 'NEODESK_SUPERVISOR=' -SimpleMatch -Quiet))
 }
 
+# Stop-NodeEraInstall says that an install which still runs the Node.js
+# console is neither upgraded nor installed over: NeoDesk has no way from
+# it.
+function Stop-NodeEraInstall {
+    Print-Error "This server runs the old Node.js web console, which this installer does not upgrade."
+    Print-Info "Back up its data and install NeoDesk on a clean server."
+}
+
 # True when the install still runs the Node.js console.
 function Test-NodeEraInstall {
     if (Test-GoOnlyInstall) { return $false }
@@ -1568,335 +1556,6 @@ function Stop-ServerService {
     Start-Sleep -Seconds 2
 }
 
-#===============================================================================
-# Upgrade of an install with the Node.js console, and its rollback
-#===============================================================================
-
-# Settings of the old services the server does not take over: the console
-# port the installer kept off while Node held it, what only Node read, and
-# the old binary's path.
-$script:UPGRADE_SKIPPED_KEYS = @("CONSOLE_PORT", "NODE_EXTRA_CA_CERTS", "NODE_OPTIONS", "NEODESK_SERVER_BINARY")
-
-# The NSSM settings the upgrade changes and the rollback puts back.
-$script:NSSM_SAVED_SETTINGS = @("Application", "AppParameters", "AppDirectory", "AppEnvironmentExtra", "ObjectName", "Start", "AppStdout", "AppStderr", "DisplayName", "AppExit", "AppRestartDelay")
-
-# Saves a service's NSSM settings into $Dir\nssm-<service>.json.
-function Save-NssmSettings {
-    param([string]$Nssm, [string]$Service, [string]$Dir)
-    if (-not (Get-Service -Name $Service -ErrorAction SilentlyContinue)) { return }
-    $saved = [ordered]@{}
-    foreach ($name in $script:NSSM_SAVED_SETTINGS) {
-        if ($name -eq "AppExit") {
-            $saved[$name] = @(& $Nssm get $Service AppExit Default 2>$null | ForEach-Object { "$_".Trim([char]0, ' ') } | Where-Object { $_ })
-        } else {
-            $saved[$name] = @(& $Nssm get $Service $name 2>$null | ForEach-Object { "$_".Trim([char]0, ' ') } | Where-Object { $_ })
-        }
-    }
-    $saved | ConvertTo-Json -Depth 4 | Set-Content -Path (Join-Path $Dir "nssm-$Service.json") -Encoding UTF8
-}
-
-function Restore-NssmSettings {
-    param([string]$Nssm, [string]$Service, [string]$Dir)
-    $file = Join-Path $Dir "nssm-$Service.json"
-    if (-not (Test-Path $file)) { return }
-    $saved = Get-Content $file -Raw | ConvertFrom-Json
-    foreach ($name in $script:NSSM_SAVED_SETTINGS) {
-        $values = @($saved.$name)
-        if ($values.Count -eq 0 -or -not $values[0]) {
-            if ($name -eq "AppEnvironmentExtra") { & $Nssm reset $Service AppEnvironmentExtra | Out-Null }
-            continue
-        }
-        switch ($name) {
-            "ObjectName" {
-                if ($values[0] -eq "LocalSystem") { & $Nssm set $Service ObjectName LocalSystem | Out-Null }
-                else { & $Nssm set $Service ObjectName $values[0] "" | Out-Null }
-            }
-            "AppExit" { & $Nssm set $Service AppExit Default $values[0] | Out-Null }
-            "AppEnvironmentExtra" { & $Nssm set $Service AppEnvironmentExtra $values | Out-Null }
-            default { & $Nssm set $Service $name $values[0] | Out-Null }
-        }
-    }
-}
-
-# The upgrade: an install with the Node.js console becomes one service,
-# NeoDeskServer, that serves the web console itself. Data stays where it
-# is; the old binary, the services' settings and .env are kept, and the
-# console's service stays disabled for one release, so -RollbackGo can put
-# the old pair back. A failed start rolls back by itself.
-function Invoke-GoUpgrade {
-    Print-Header
-    Write-Host "========== UPGRADE: WEB CONSOLE INTO THE SERVER ==========" -ForegroundColor White
-    Write-Host ""
-    $envFile = Join-Path $script:CONSOLE_PATH ".env"
-    if (-not (Test-Path $envFile)) {
-        Print-Error "No ${envFile}: this is no install to upgrade"
-        return $false
-    }
-    Print-Info "This upgrade moves the web console into NeoDeskServer:"
-    Print-Info "  - one service, $($script:SERVER_SERVICE), serves the panel on the same ports"
-    Print-Info "  - $($script:CONSOLE_SERVICE) is stopped and disabled (kept for a rollback until the next update)"
-    Print-Info "  - data, keys and accounts stay where they are"
-    Print-Info "  - roll back with: .\neodesk.ps1 -RollbackGo"
-    if (-not $script:AUTO_MODE -and -not (Confirm-Action "Upgrade now?")) { return $true }
-
-    $nssm = Get-NssmPath
-    $taskMode = -not $nssm -or -not (Get-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue)
-
-    # 1-2. The new binary, before anything stops
-    Print-Step "[1/8] Getting the new server binary..."
-    if (-not (Get-StagedServerBinary)) {
-        Remove-Item -Path $script:STAGED_SERVER_DIR -Recurse -Force -ErrorAction SilentlyContinue
-        return $false
-    }
-
-    # 3. Backup
-    $backup = Join-Path $script:BACKUP_DIR ("pre-go-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
-    Print-Step "[2/8] Backing up the binary, services and .env to $backup..."
-    New-Item -ItemType Directory -Path $backup -Force | Out-Null
-    $serverExe = Get-ServerBinaryPath
-    if (Test-Path $serverExe) { Copy-Item -Path $serverExe -Destination (Join-Path $backup "neodesk-server.exe") -Force }
-    Copy-Item -Path $envFile -Destination (Join-Path $backup "console.env") -Force
-    $launcher = Join-Path $script:RUSTDESK_PATH "start-neodesk-server.cmd"
-    if (Test-Path $launcher) { Copy-Item -Path $launcher -Destination (Join-Path $backup "start-neodesk-server.cmd") -Force }
-    if ($taskMode) {
-        foreach ($task in @($script:SERVER_SERVICE, $script:CONSOLE_SERVICE)) {
-            if (Get-ScheduledTask -TaskName $task -ErrorAction SilentlyContinue) {
-                Export-ScheduledTask -TaskName $task | Set-Content -Path (Join-Path $backup "task-$task.xml") -Encoding Unicode
-            }
-        }
-    } else {
-        Save-NssmSettings -Nssm $nssm -Service $script:SERVER_SERVICE -Dir $backup
-        Save-NssmSettings -Nssm $nssm -Service $script:CONSOLE_SERVICE -Dir $backup
-    }
-    $oldVersion = if (Test-Path $serverExe) { "$(& $serverExe -version 2>$null | Select-Object -First 1)" } else { "unknown" }
-    @{ from = $oldVersion; rustdesk_path = $script:RUSTDESK_PATH; console_path = $script:CONSOLE_PATH; task_mode = $taskMode } |
-        ConvertTo-Json | Set-Content -Path (Join-Path $backup "manifest.json") -Encoding UTF8
-
-    # 4. Stop both, then the database copy
-    Print-Step "[3/8] Stopping $($script:CONSOLE_SERVICE) and $($script:SERVER_SERVICE)..."
-    Stop-AllServices
-    $dbFile = Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"
-    if ((Get-EnvDatabaseType) -ne "postgres" -and (Test-Path $dbFile)) {
-        Copy-Item -Path $dbFile -Destination (Join-Path $backup "db_v2.sqlite3") -Force
-        foreach ($side in @("-wal", "-shm")) {
-            if (Test-Path "$dbFile$side") { Copy-Item -Path "$dbFile$side" -Destination (Join-Path $backup "db_v2.sqlite3$side") -Force }
-        }
-    } elseif ((Get-EnvDatabaseType) -eq "postgres") {
-        $pgDump = Get-Command pg_dump -ErrorAction SilentlyContinue
-        if ($pgDump) {
-            & $pgDump.Source -Fc -f (Join-Path $backup "postgres.dump") (Get-EnvDatabaseUrl) 2>$null
-        } else {
-            Print-Warning "pg_dump is not installed: there is no database snapshot"
-        }
-    }
-    $authDb = Join-Path $script:CONSOLE_PATH "data\auth.db"
-    if (Test-Path $authDb) { Copy-Item -Path $authDb -Destination (Join-Path $backup "auth.db") -Force }
-
-    # 5. The console's service stays, disabled
-    Print-Step "[4/8] Disabling $($script:CONSOLE_SERVICE) (kept for a rollback)..."
-    if ($taskMode) {
-        Disable-ScheduledTask -TaskName $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue | Out-Null
-    } else {
-        & $nssm set $script:CONSOLE_SERVICE Start SERVICE_DISABLED 2>$null | Out-Null
-    }
-
-    # 6. The binary; the old one stays as neodesk-server.exe.pre-go
-    Print-Step "[5/8] Installing the new binary..."
-    $installed = Install-StagedBinary -Suffix ".pre-go"
-    Remove-Item -Path $script:STAGED_SERVER_DIR -Recurse -Force -ErrorAction SilentlyContinue
-    if (-not $installed) {
-        Undo-GoUpgrade -Backup $backup | Out-Null
-        return $false
-    }
-
-    # 7. The env file: upgrade-env (it keeps .env.pre-go), then the Node
-    # console's service environment. Node filled only what its environment
-    # left unset, so those settings won over .env; they go into .env, where
-    # the panel and this installer change them. Its PORT becomes CONSOLE_PORT.
-    Print-Step "[6/8] Moving the settings into $envFile..."
-    $serverArgs = $null
-    $oldServerEnv = @()
-    $oldConsoleEnv = @()
-    if ($taskMode) {
-        $serverArgs = Get-LauncherArguments
-        $oldServerEnv = Get-LauncherEnvironment
-    } else {
-        $serverArgs = "$(& $nssm get $script:SERVER_SERVICE AppParameters 2>$null)".Trim([char]0, ' ')
-        $oldServerEnv = Get-NssmEnvironment -Nssm $nssm -Service $script:SERVER_SERVICE
-        $oldConsoleEnv = Get-NssmEnvironment -Nssm $nssm -Service $script:CONSOLE_SERVICE
-    }
-    $code = Invoke-ServerCommand -Arguments @("upgrade-env", "--from", $envFile, "--write", "--supervisor", $(if ($taskMode) { "task" } else { "nssm" }))
-    if ($code -ne 0) {
-        Print-Error "upgrade-env failed; rolling back"
-        Undo-GoUpgrade -Backup $backup | Out-Null
-        return $false
-    }
-    foreach ($pair in $oldConsoleEnv) {
-        $key, $value = $pair -split '=', 2
-        if ($script:UPGRADE_SKIPPED_KEYS -contains $key) { continue }
-        if ($key -eq "PORT") { Set-ConsoleEnvValue -Key "CONSOLE_PORT" -Value $value }
-        Set-ConsoleEnvValue -Key $key -Value $value
-        Print-Info "  carry    $key (from $($script:CONSOLE_SERVICE))"
-    }
-
-    # 8. The one service: the server's own settings without CONSOLE_PORT=0
-    Print-Step "[7/8] Writing $($script:SERVER_SERVICE)..."
-    if (-not $serverArgs) { $serverArgs = Get-ServerArguments -ServerIP (Resolve-RelayIp) }
-    $serverArgs = ($serverArgs -replace '\s-tls-api-port(=\S+)?', '' -replace '\s-tls-api(=\S+)?', '').Trim()
-    $carried = @($oldServerEnv | Where-Object {
-        $script:UPGRADE_SKIPPED_KEYS -notcontains ($_ -split '=', 2)[0]
-    })
-    $environment = Merge-EnvironmentLists -Lists @((Get-ServerBaseEnvironment -Supervisor "nssm"), $carried)
-    if ($taskMode) {
-        $launcherPath = Write-ServerLauncher -Arguments $serverArgs -Environment $environment
-        Register-ServerTask -Launcher $launcherPath
-    } else {
-        Set-NssmServerService -Nssm $nssm -Arguments $serverArgs -Environment $environment
-    }
-
-    # The console's folder: the server's account writes .env and data now
-    if (-not $script:RUN_AS_ROOT) {
-        & icacls $script:CONSOLE_PATH /grant "NT SERVICE\$($script:SERVER_SERVICE):(OI)(CI)M" /T /C /Q 2>$null | Out-Null
-        foreach ($f in @($envFile, (Join-Path $script:RUSTDESK_PATH ".api_key"), $dbFile)) {
-            if (Test-Path $f) { & icacls $f /grant "NT SERVICE\$($script:SERVER_SERVICE):M" 2>$null | Out-Null }
-        }
-    }
-
-    # 9. Start and check; roll back when it does not come up
-    Print-Step "[8/8] Starting $($script:SERVER_SERVICE)..."
-    Start-ServerService
-    if (-not (Test-GoInstall -TimeoutSeconds 90)) {
-        Print-Error "The server with its web console did not come up; putting the old services back"
-        Undo-GoUpgrade -Backup $backup | Out-Null
-        return $false
-    }
-
-    @{ from = $oldVersion; to = $script:STAGED_SERVER_VERSION; at = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ"); backup = $backup } |
-        ConvertTo-Json | Set-Content -Path (Join-Path $script:CONSOLE_PATH "data\$($script:GO_UPGRADE_RECORD)") -Encoding UTF8
-    Write-Host ""
-    Print-Success "Upgrade done: $($script:SERVER_SERVICE) serves the web console"
-    Print-Info "Backup: $backup"
-    Print-Info "Roll back: .\neodesk.ps1 -RollbackGo"
-    Print-Info "The next successful update removes the Node.js console's code (or: .\neodesk.ps1 -CleanupNode)"
-    return $true
-}
-
-# The rollback: puts the binary, the services' settings (or tasks) and .env
-# from before the upgrade back and starts both services. The database stays
-# as it is (the server keeps its schema readable by the old version); an
-# interactive run offers the snapshot from before the upgrade.
-function Undo-GoUpgrade {
-    param([string]$Backup = "")
-    $record = Join-Path $script:CONSOLE_PATH "data\$($script:GO_UPGRADE_RECORD)"
-    if (-not $Backup -and (Test-Path $record)) {
-        $Backup = (Get-Content $record -Raw | ConvertFrom-Json).backup
-    }
-    if (-not $Backup) {
-        $latest = Get-ChildItem -Path $script:BACKUP_DIR -Directory -Filter "pre-go-*" -ErrorAction SilentlyContinue | Sort-Object Name | Select-Object -Last 1
-        if ($latest) { $Backup = $latest.FullName }
-    }
-    if (-not $Backup -or -not (Test-Path (Join-Path $Backup "manifest.json"))) {
-        Print-Error "No backup from an upgrade to roll back to (looked for $($script:BACKUP_DIR)\pre-go-*)"
-        return $false
-    }
-    if (-not (Test-Path (Join-Path $script:CONSOLE_PATH "server.js"))) {
-        Print-Error "The Node.js console's code is gone from $($script:CONSOLE_PATH) (-CleanupNode); it cannot be started again"
-        return $false
-    }
-    Print-Step "Rolling back to the services from before the upgrade ($Backup)..."
-    $manifest = Get-Content (Join-Path $Backup "manifest.json") -Raw | ConvertFrom-Json
-    Stop-ServerService
-
-    $serverExe = Get-ServerBinaryPath
-    $savedExe = Join-Path $Backup "neodesk-server.exe"
-    if (Test-Path $savedExe) { Copy-Item -Path $savedExe -Destination $serverExe -Force }
-    Remove-Item -Path "$serverExe.pre-go" -Force -ErrorAction SilentlyContinue
-    Copy-Item -Path (Join-Path $Backup "console.env") -Destination (Join-Path $script:CONSOLE_PATH ".env") -Force
-    Remove-Item -Path (Join-Path $script:CONSOLE_PATH ".env.pre-go") -Force -ErrorAction SilentlyContinue
-    $savedLauncher = Join-Path $Backup "start-neodesk-server.cmd"
-    if (Test-Path $savedLauncher) { Copy-Item -Path $savedLauncher -Destination (Join-Path $script:RUSTDESK_PATH "start-neodesk-server.cmd") -Force }
-
-    if ($manifest.task_mode) {
-        foreach ($task in @($script:SERVER_SERVICE, $script:CONSOLE_SERVICE)) {
-            $xml = Join-Path $Backup "task-$task.xml"
-            if (Test-Path $xml) {
-                Unregister-ScheduledTask -TaskName $task -Confirm:$false -ErrorAction SilentlyContinue
-                Register-ScheduledTask -TaskName $task -Xml (Get-Content $xml -Raw) | Out-Null
-            }
-        }
-        Enable-ScheduledTask -TaskName $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue | Out-Null
-    } else {
-        $nssm = Get-NssmPath
-        Restore-NssmSettings -Nssm $nssm -Service $script:SERVER_SERVICE -Dir $Backup
-        Restore-NssmSettings -Nssm $nssm -Service $script:CONSOLE_SERVICE -Dir $Backup
-        & $nssm set $script:CONSOLE_SERVICE Start SERVICE_AUTO_START 2>$null | Out-Null
-    }
-
-    $snapshot = Join-Path $Backup "db_v2.sqlite3"
-    if (-not $script:AUTO_MODE -and (Test-Path $snapshot) -and
-        (Confirm-Action "Also restore the database from before the upgrade? What was saved since is lost.")) {
-        $dbFile = Join-Path $script:RUSTDESK_PATH "db_v2.sqlite3"
-        Remove-Item -Path "$dbFile-wal", "$dbFile-shm" -Force -ErrorAction SilentlyContinue
-        Copy-Item -Path $snapshot -Destination $dbFile -Force
-        Print-Info "Database restored from $Backup"
-    }
-
-    if ($manifest.task_mode) {
-        Start-ScheduledTask -TaskName $script:SERVER_SERVICE -ErrorAction SilentlyContinue
-        Start-ScheduledTask -TaskName $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
-    } else {
-        Start-Service -Name $script:SERVER_SERVICE -ErrorAction SilentlyContinue
-        Start-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue
-    }
-    if (Test-Path $record) { Move-Item -Path $record -Destination (Join-Path $script:CONSOLE_PATH "data\.go-upgrade.rolled-back.json") -Force }
-
-    $ok = (Test-ServiceHealth -ServiceName $script:SERVER_SERVICE -ExpectedPort 21116 -TimeoutSeconds 60) -and
-          (Test-HttpEndpoint -Url "http://127.0.0.1:$($script:GO_API_PORT)/api/health" -TimeoutSeconds 60)
-    if ($ok) {
-        Print-Success "Rolled back: $($script:SERVER_SERVICE) and $($script:CONSOLE_SERVICE) run as before the upgrade"
-    } else {
-        Print-Error "Rolled back, but a service did not come up; see $($script:RUSTDESK_PATH)\logs"
-    }
-    return $ok
-}
-
-# Deletes the Node.js console's code from the console folder and its
-# disabled service after an upgrade. The console's .env, data and its
-# language files, themes and images stay.
-function Remove-NodeLeftovers {
-    if (-not (Test-GoOnlyInstall)) {
-        Print-Error "This install still runs the Node.js console; upgrade it first (-Update)"
-        return $false
-    }
-    Print-Step "Removing the Node.js console's code and its disabled service..."
-    $removed = 0
-    foreach ($item in @("server.js", "routes", "services", "lib", "middleware", "scripts", "node_modules", "web-ui",
-                        "vendor", "tests", "package.json", "package-lock.json", ".env.example", "README.md",
-                        "reset-password.js", "test-db.js")) {
-        $path = Join-Path $script:CONSOLE_PATH $item
-        if (Test-Path $path) {
-            Remove-Item -Path $path -Recurse -Force -ErrorAction SilentlyContinue
-            $removed++
-        }
-    }
-    $nssm = Get-NssmPath
-    if ($nssm -and (Get-Service -Name $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue)) {
-        & $nssm stop $script:CONSOLE_SERVICE 2>$null | Out-Null
-        & $nssm remove $script:CONSOLE_SERVICE confirm 2>$null | Out-Null
-        $removed++
-    }
-    if (Get-ScheduledTask -TaskName $script:CONSOLE_SERVICE -ErrorAction SilentlyContinue) {
-        Unregister-ScheduledTask -TaskName $script:CONSOLE_SERVICE -Confirm:$false -ErrorAction SilentlyContinue
-        $removed++
-    }
-    Remove-Item -Path "$(Get-ServerBinaryPath).pre-go" -Force -ErrorAction SilentlyContinue
-    Print-Success "Removed $removed leftovers of the Node.js console"
-    if (Get-Command node -ErrorAction SilentlyContinue) {
-        Print-Info "NeoDesk no longer needs Node.js; uninstall it if nothing else uses it"
-    }
-    return $true
-}
-
 # The update of the server with its console: the newest release of the
 # update channel (or -Binary, -FromSource, RELEASE_BASE_URL), the service
 # settings written again, a restart and a check. A new binary that does not
@@ -1957,11 +1616,6 @@ function Update-GoInstall {
         return $false
     }
 
-    # One release after the upgrade from the Node.js console, its code goes
-    $record = Join-Path $script:CONSOLE_PATH "data\$($script:GO_UPGRADE_RECORD)"
-    if ($before -ne $after -and (Test-Path $record) -and (Test-Path (Join-Path $script:CONSOLE_PATH "server.js"))) {
-        Remove-NodeLeftovers | Out-Null
-    }
     Remove-FirstAdminPassword
     Install-ManagerScript
     Install-CommandLine
@@ -2001,10 +1655,6 @@ function Invoke-ManagementCli {
         [string[]]$Arguments = @()
     )
     if (-not (Test-BinaryHasSubcommands)) {
-        if (Test-NodeEraInstall) {
-            Print-Info "Management capabilities are checked after the upgrade to the server with its console"
-            return $true
-        }
         Print-Error "The management check needs an installed neodesk-server.exe"
         return $false
     }
@@ -2239,7 +1889,12 @@ function Do-Update {
 
     Detect-Installation
 
-    if ($script:INSTALL_STATUS -eq "none" -and -not (Test-NodeEraInstall)) {
+    if (Test-NodeEraInstall) {
+        Stop-NodeEraInstall
+        Press-Enter
+        return $false
+    }
+    if ($script:INSTALL_STATUS -eq "none") {
         Print-Error "NeoDesk is not installed!"
         Print-Info "Use 'FRESH INSTALLATION' option"
         Press-Enter
@@ -2262,12 +1917,6 @@ function Do-Update {
     Preserve-DatabaseConfig
     Read-UpdateGitHubBranchFromEnv
 
-    # The Node.js console moves into the server: one upgrade, in place
-    if (Test-NodeEraInstall) {
-        $ok = Invoke-GoUpgrade
-        Press-Enter
-        return $ok
-    }
 
     $channel = if ($script:UPDATE_GITHUB_BRANCH -eq "dev") { "development" } else { "stable" }
     Print-Info "Update channel: $($script:UPDATE_GITHUB_BRANCH) ($channel)"
@@ -2294,7 +1943,7 @@ function Do-Update {
 function Repair-Binaries {
     Print-Step "Repairing neodesk-server.exe..."
     if (Test-NodeEraInstall) {
-        Print-Error "This install runs the Node.js console; use Update to upgrade it"
+        Stop-NodeEraInstall
         return
     }
     if (-not (Get-StagedServerBinary)) {
@@ -2326,7 +1975,7 @@ function Repair-Database {
 function Repair-Services {
     Print-Step "Repairing the Windows service..."
     if (Test-NodeEraInstall) {
-        Print-Error "This install runs the Node.js console; use Update to upgrade it"
+        Stop-NodeEraInstall
         return
     }
     if (-not (Test-Path (Get-ServerBinaryPath))) {
@@ -2351,7 +2000,7 @@ function Do-ResetPassword {
     Auto-DetectPaths
     Detect-Installation
     if (Test-NodeEraInstall) {
-        Print-Error "This install runs the Node.js console; use Update to move it into the server first"
+        Stop-NodeEraInstall
         Press-Enter
         return
     }
@@ -3317,71 +2966,6 @@ function Test-PortAvailable {
     return $true
 }
 
-function Test-ServiceHealth {
-    param(
-        [string]$ServiceName,
-        [int]$ExpectedPort = 0,
-        [int]$TimeoutSeconds = 10
-    )
-    
-    # Check if process is running
-    $processName = if ($ServiceName -eq $script:SERVER_SERVICE) { "neodesk-server" }
-                   elseif ($ServiceName -match "Signal") { "hbbs" }
-                   elseif ($ServiceName -match "Relay") { "hbbr" }
-                   elseif ($ServiceName -eq $script:CONSOLE_SERVICE) { "node" }
-                   else { "neodesk-server" }
-    
-    $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
-    
-    if (-not $process) {
-        Print-Error "Process $processName is not running"
-        return $false
-    }
-    
-    # Check port if specified
-    if ($ExpectedPort -gt 0) {
-        $elapsed = 0
-        while ($elapsed -lt $TimeoutSeconds) {
-            $listener = Get-NetTCPConnection -LocalPort $ExpectedPort -State Listen -ErrorAction SilentlyContinue
-            if ($listener) {
-                return $true
-            }
-            Start-Sleep -Seconds 1
-            $elapsed++
-        }
-        Print-Error "Service not listening on port $ExpectedPort after ${TimeoutSeconds}s"
-        return $false
-    }
-    
-    return $true
-}
-
-function Test-HttpEndpoint {
-    param(
-        [Parameter(Mandatory = $true)][string]$Url,
-        [int]$TimeoutSeconds = 30
-    )
-
-    $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
-    do {
-        try {
-            $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 5 -MaximumRedirection 3
-            # A 3xx response is valid for a panel configured to redirect HTTP
-            # to HTTPS; the listener is reachable and the operator can use
-            # the protocol-specific check from the installer menu.
-            if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 400) {
-                return $true
-            }
-        } catch {
-            # The service may still be warming up; retry until the deadline.
-        }
-        Start-Sleep -Seconds 1
-    } while ((Get-Date) -lt $deadline)
-
-    Print-Error "HTTP health check failed: $Url"
-    return $false
-}
-
 #=============================================================================
 # Minimal Installation Function (Go server only, no web console)
 #===============================================================================
@@ -3397,12 +2981,9 @@ function Do-Install {
     
     Detect-Installation
 
-    # An install with the Node.js console is upgraded in place, never
-    # installed over
     if (Test-NodeEraInstall) {
-        Print-Warning "This server runs the Node.js web console."
-        Print-Info "The upgrade moves it into neodesk-server and keeps all data."
-        return (Invoke-GoUpgrade)
+        Stop-NodeEraInstall
+        return $false
     }
 
     if ($script:INSTALL_STATUS -eq "complete") {
@@ -5424,8 +5005,7 @@ function Do-ToggleProtocol {
 #===============================================================================
 
 # True when the binary carries the migrate command (sqlite2pg, pg2sqlite,
-# rust2go, nodejs2go and backup of a SQLite file), which replaces the
-# separate migrate tool of older releases.
+# rust2go and backup of a SQLite file).
 function Test-BinaryMigrates {
     param([string]$Path = (Get-ServerBinaryPath))
     if (-not $Path -or -not (Test-Path $Path)) { return $false }
@@ -5446,19 +5026,9 @@ function Invoke-ServerMigrate {
 }
 
 # Get-MigrateBin returns the migration tool: the installed binary's migrate
-# command (Invoke-ServerMigrate), else the path of the separate tool of an
-# older release, or $null.
+# command (Invoke-ServerMigrate), or $null when the binary has none.
 function Get-MigrateBin {
     if (Test-BinaryMigrates) { return "Invoke-ServerMigrate" }
-    $searchPaths = @(
-        (Join-Path $script:ScriptDir "neodesk-server\tools\migrate\migrate.exe"),
-        (Join-Path $script:ScriptDir "tools\migrate\migrate.exe"),
-        (Join-Path $script:RUSTDESK_PATH "migrate.exe"),
-        "C:\NeoDesk\migrate.exe"
-    )
-    foreach ($p in $searchPaths) {
-        if (Test-Path $p) { return $p }
-    }
     return $null
 }
 
@@ -5692,18 +5262,17 @@ function Show-Menu {
     Write-Host "  M. Database migration"
     Write-Host "  S. Settings (paths)"
     Write-Host "  P. Management capabilities and server settings"
-    Write-Host "  R. Roll back the upgrade (Node.js console back)"
     Write-Host "  0. Exit"
     Write-Host ""
 }
 
 # What a run without questions does here: install, update (an install of
-# the server with its console is there), upgrade (the Node.js console is
-# there), minimal or uninstall. -PostgreSQL on an install that runs on
-# SQLite installs again, which moves it to PostgreSQL.
+# the server with its console is there), minimal or uninstall. -PostgreSQL
+# on an install that runs on SQLite installs again, which moves it to
+# PostgreSQL. An install with the Node.js console gets install, which
+# refuses it.
 function Get-AutoAction {
     if ($script:UNINSTALL_MODE) { return "uninstall" }
-    if (Test-NodeEraInstall) { return "upgrade" }
     if ((Test-GoOnlyInstall) -and (Test-Path (Get-ServerBinaryPath)) -and (Test-Path (Join-Path $script:CONSOLE_PATH ".env")) -and
         (-not $script:USE_POSTGRESQL -or (Get-EnvDatabaseType) -eq "postgres")) { return "update" }
     if ($script:MINIMAL_MODE) { return "minimal" }
@@ -5732,28 +5301,19 @@ function Main {
         exit 0
     }
 
-    # Update, rollback and cleanup run without questions
-    if ($script:ROLLBACK_GO_MODE) {
-        $script:AUTO_MODE = $true
-        exit ([int](-not (Undo-GoUpgrade)))
-    }
-    if ($script:CLEANUP_NODE_MODE) {
-        $script:AUTO_MODE = $true
-        exit ([int](-not (Remove-NodeLeftovers)))
-    }
+    # An update runs without questions
     if ($script:UPDATE_MODE) {
         $script:AUTO_MODE = $true
         exit ([int](-not (Do-Update)))
     }
 
     # Without questions: install, or update an install that is there (run
-    # again, the installer updates); an install with the Node.js console is
-    # upgraded in place
+    # again, the installer updates)
     if ($script:AUTO_MODE) {
         $ok = $true
         switch (Get-AutoAction) {
             "uninstall" { Do-Uninstall }
-            { $_ -in "upgrade", "update" } { Print-Info "NeoDesk is installed here: updating it"; $ok = Do-Update }
+            "update" { Print-Info "NeoDesk is installed here: updating it"; $ok = Do-Update }
             "minimal" { $ok = Do-InstallMinimal }
             default { $ok = Do-Install }
         }
@@ -5763,7 +5323,7 @@ function Main {
     while ($true) {
         $menuLabels = @(
             "Fresh installation`tFull install from scratch",
-            "Update`tNewest release; a Node.js console install is upgraded in place",
+            "Update`tNewest release of the update channel",
             "Repair installation`tFix common problems",
             "Validate installation`tCheck correctness",
             "Backup`tCreate a backup",
@@ -5777,10 +5337,9 @@ function Main {
             "Database migration`tMigrate between backends",
             "Settings (paths)`tConfigure install paths",
             "Management capabilities`tCheck permissions and change allowlisted server settings",
-            "Roll back the upgrade`tPut the Node.js console and old server back",
             "Exit`tQuit the manager"
         )
-        $menuActions = @("1", "2", "3", "4", "5", "6", "7", "8", "9", "L", "C", "T", "M", "S", "P", "R", "0")
+        $menuActions = @("1", "2", "3", "4", "5", "6", "7", "8", "9", "L", "C", "T", "M", "S", "P", "0")
 
         $choice = ""
         if (Test-TuiAvailable) {
@@ -5807,8 +5366,6 @@ function Main {
             "9" { Do-Uninstall }
             "L" { Do-InstallMinimal | Out-Null }
             "l" { Do-InstallMinimal | Out-Null }
-            "R" { Undo-GoUpgrade | Out-Null; Press-Enter }
-            "r" { Undo-GoUpgrade | Out-Null; Press-Enter }
             "C" { Do-ConfigureSSL }
             "c" { Do-ConfigureSSL }
             "T" { Do-ToggleProtocol }

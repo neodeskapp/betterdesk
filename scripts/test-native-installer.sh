@@ -353,27 +353,26 @@ FAKE_GIT
     done
 )
 
-# RV83: the migrate tool replaces an existing SQLite destination only with
-# -overwrite. The menus pass it after the user agreed, and nothing when
-# the user declined; a file the tool wrote goes to the service account.
-# The check for an outdated binary asks for -h instead of backing up
-# /dev/null.
+# RV83: the migrate command replaces an existing SQLite destination only
+# with -overwrite. The menus pass it after the user agreed, and nothing
+# when the user declined; a file it wrote goes to the service account.
+# L71: the installed binary's migrate command is the tool; without one the
+# menu says to update first.
 test_migration_menus() (
     local temp_dir calls owned
     temp_dir=$(mktemp -d)
     trap 'rm -rf "$temp_dir"' EXIT
     calls="$temp_dir/calls"
     owned="$temp_dir/owned"
-    mkdir -p "$temp_dir/neodesk-server/tools/migrate" "$temp_dir/rustdesk"
-    cat > "$temp_dir/neodesk-server/tools/migrate/migrate-linux-amd64" <<FAKE_MIGRATE
+    mkdir -p "$temp_dir/rustdesk"
+    cat > "$temp_dir/rustdesk/neodesk-server" <<FAKE_SERVER
 #!/usr/bin/env bash
+# Stands in for the binary: migrate -mode sqlite2pg|pg2sqlite (its commands)
+[ "\${1:-}" = migrate ] && shift
 printf '%s\n' "\$*" >> "$calls"
-if [ "\${1:-}" = "-h" ]; then
-    printf 'Usage of migrate:\n  -mode string\n  -overwrite\n' >&2
-fi
 exit 0
-FAKE_MIGRATE
-    chmod +x "$temp_dir/neodesk-server/tools/migrate/migrate-linux-amd64"
+FAKE_SERVER
+    chmod +x "$temp_dir/rustdesk/neodesk-server"
 
     set --
     # shellcheck disable=SC1091
@@ -397,7 +396,7 @@ FAKE_MIGRATE
         : > "$owned"
         TEST_MENU_CHOICE="$1" do_migrate_database <<< "$2" > /dev/null 2>&1
     }
-    migrations() { grep -E -- '-mode (rust2go|nodejs2go|pg2sqlite|sqlite2pg)' "$calls" || true; }
+    migrations() { grep -E -- '-mode (rust2go|pg2sqlite|sqlite2pg)' "$calls" || true; }
 
     # RV81: sqlite2pg and pg2sqlite move the whole install, and the menu
     # says so. sqlite2pg replaces a PostgreSQL database with data in it
@@ -456,28 +455,11 @@ FAKE_MIGRATE
     [[ "$(migrations)" == *"-dst postgres://u@h/db" ]] || fail "rust2go to PostgreSQL ran as: $(migrations)"
     [ ! -s "$owned" ] || fail "a PostgreSQL destination was chowned: $(cat "$owned")"
 
-    # the check for an outdated binary
-    : > "$calls"
-    migrate_sqlite_to_postgresql < /dev/null > /dev/null 2>&1 || true
-    grep -qx -- "-h" "$calls" || fail "the binary check did not ask for -h: $(cat "$calls")"
-    if grep -q "/dev/null" "$calls"; then
-        fail "the binary check still backs up /dev/null"
-    fi
-
-    # L71: with the installed binary's migrate command the menu uses it
-    cat > "$RUSTDESK_PATH/neodesk-server" <<FAKE_SERVER
-#!/usr/bin/env bash
-# Stands in for the binary: migrate -mode sqlite2pg|pg2sqlite (its commands)
-printf 'server %s\n' "\$*" >> "$calls"
-exit 0
-FAKE_SERVER
-    chmod +x "$RUSTDESK_PATH/neodesk-server"
+    # without the migrate command (a binary older than it), nothing runs
+    printf '#!/bin/sh\nprintf "%%s\\n" "$*" >> "%s"\n' "$calls" > "$RUSTDESK_PATH/neodesk-server"
     printf 'old' > "$dst"
     run_menu 1 $'\n\ny'
-    grep -qxF -- "server migrate -mode rust2go -src $src -dst $dst -overwrite" "$calls" \
-        || fail "the menu did not use the server's migrate command: $(cat "$calls")"
-    if grep -q -- '^-mode' "$calls"; then fail "the menu ran the separate migrate tool beside the server's command"; fi
-    rm -f "$RUSTDESK_PATH/neodesk-server"
+    [ ! -s "$calls" ] || fail "a binary without the migrate command ran: $(cat "$calls")"
 )
 
 # RV81: the install's switch to PostgreSQL moves the whole SQLite install
@@ -489,17 +471,18 @@ test_postgresql_switch() (
     temp_dir=$(mktemp -d)
     trap 'rm -rf "$temp_dir"' EXIT
     calls="$temp_dir/calls"
-    mkdir -p "$temp_dir/neodesk-server/tools/migrate" "$temp_dir/rustdesk" "$temp_dir/console"
-    cat > "$temp_dir/neodesk-server/tools/migrate/migrate-linux-amd64" <<FAKE_MIGRATE
+    mkdir -p "$temp_dir/rustdesk" "$temp_dir/console"
+    cat > "$temp_dir/rustdesk/neodesk-server" <<FAKE_SERVER
 #!/usr/bin/env bash
+# Stands in for the binary: migrate -mode sqlite2pg|pg2sqlite (its commands)
+[ "\${1:-}" = migrate ] && shift
 printf '%s\n' "\$*" >> "$calls"
 case "\${1:-}\${2:-}" in
-    -h) printf 'Usage of migrate:\n  -mode string\n  -overwrite\n' >&2; exit 0 ;;
     -modesqlite2pg) exit "\$(cat "$temp_dir/exit")" ;;
 esac
 exit 0
-FAKE_MIGRATE
-    chmod +x "$temp_dir/neodesk-server/tools/migrate/migrate-linux-amd64"
+FAKE_SERVER
+    chmod +x "$temp_dir/rustdesk/neodesk-server"
 
     set --
     # shellcheck disable=SC1091
@@ -522,7 +505,7 @@ FAKE_MIGRATE
         USE_POSTGRESQL=true POSTGRESQL_URI="$uri" POSTGRESQL_DB_CREATED="$2" AUTO_MODE="$3"
         migrate_sqlite_to_postgresql <<< "$4" > /dev/null 2>&1
     }
-    moves() { grep -E -- '-mode (sqlite2pg|nodejs2go)' "$calls" || true; }
+    moves() { grep -E -- '-mode sqlite2pg' "$calls" || true; }
 
     # a database the install just created
     run_switch 0 true true ""
@@ -560,23 +543,12 @@ FAKE_MIGRATE
     grep -qxF "DB_URL=$src" "$env" && grep -qx "DB_TYPE=sqlite" "$env" && grep -qx "DATABASE_URL=" "$env" \
         || fail "after a failed move .env does not point at the SQLite file: $(cat "$env")"
 
-    # L71: the installed binary's migrate command moves the data; the
-    # separate tool of an older release is not used
-    cat > "$RUSTDESK_PATH/neodesk-server" <<FAKE_SERVER
-#!/usr/bin/env bash
-# Stands in for the binary: migrate -mode sqlite2pg|pg2sqlite (its commands)
-printf 'server %s\n' "\$*" >> "$calls"
-[ "\${2:-}" = -h ] && { printf 'Usage of migrate:\n  -mode string\n  -overwrite\n' >&2; exit 2; }
-exit 0
-FAKE_SERVER
-    chmod +x "$RUSTDESK_PATH/neodesk-server"
+    # L71: a binary without the migrate command moves nothing, and the
+    # install stays on SQLite
+    printf '#!/bin/sh\nprintf "%%s\\n" "$*" >> "%s"\n' "$calls" > "$RUSTDESK_PATH/neodesk-server"
     run_switch 0 true true ""
-    grep -qxF -- "server migrate -mode sqlite2pg -src $src -dst $uri -overwrite" "$calls" \
-        || fail "the switch did not move the data with the server's migrate command: $(cat "$calls")"
-    grep -qxF -- "server migrate -mode backup -src $src" "$calls" || fail "the switch made no backup with the migrate command: $(cat "$calls")"
-    if grep -q -- '^-mode' "$calls"; then fail "the separate migrate tool ran beside the server's command: $(cat "$calls")"; fi
-    [ "$USE_POSTGRESQL" = true ] || fail "after a move with the migrate command the install does not use PostgreSQL"
-    rm -f "$RUSTDESK_PATH/neodesk-server"
+    [ ! -s "$calls" ] || fail "a binary without the migrate command ran: $(cat "$calls")"
+    [ "$USE_POSTGRESQL" = false ] || fail "without the migrate command the install uses PostgreSQL"
 )
 
 # L31: the one-line installer clones and downloads from the fork.

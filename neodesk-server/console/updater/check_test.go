@@ -111,8 +111,8 @@ func TestCheckFindsTheRelease(t *testing.T) {
 		t.Errorf("check %+v", got)
 	}
 	// docs/ is not counted; the renamed web app file and the installer
-	// script are.
-	want := `{"console":{"changed":true,"fileCount":1,"label":"Web Console","autoUpdate":true},` +
+	// script are. A file of the old Node.js console's folder is other.
+	want := `{"other":{"changed":true,"fileCount":1,"label":"Other","autoUpdate":false},` +
 		`"scripts":{"changed":true,"fileCount":1,"label":"Scripts & Docker","autoUpdate":true},` +
 		`"server":{"changed":true,"fileCount":1,"label":"Go Server","autoUpdate":true},` +
 		`"webui":{"changed":true,"fileCount":1,"label":"Web Console (web-ui)","autoUpdate":true}}`
@@ -267,8 +267,11 @@ func TestChanges(t *testing.T) {
 	if s := mustJSON(t, got.Grouped.WebUI); s != `[{"path":"web-ui/src/app.ts","status":"renamed","sha":"","component":"webui","localPath":"src/app.ts","previousPath":"src/old.ts"}]` {
 		t.Errorf("webui %s", s)
 	}
-	if s := mustJSON(t, got.Grouped.Console); s != `[{"path":"web-nodejs/server.js","status":"removed","sha":"","component":"console","localPath":"server.js"}]` {
-		t.Errorf("console %s", s)
+	if s := mustJSON(t, got.Grouped.Other); s != `[{"path":"web-nodejs/server.js","status":"removed","sha":"","component":"other"}]` {
+		t.Errorf("other %s", s)
+	}
+	if s := mustJSON(t, got.Grouped); strings.Contains(s, `"console"`) || strings.Contains(s, `"agent"`) {
+		t.Errorf("the changes still have groups of the old console and agent: %s", s)
 	}
 	if s := mustJSON(t, got.Grouped.Scripts); s != `[{"path":"neodesk.sh","status":"modified","sha":"","component":"scripts","localPath":"neodesk.sh"}]` {
 		t.Errorf("scripts %s", s)
@@ -278,11 +281,12 @@ func TestChanges(t *testing.T) {
 	}
 }
 
-// The old updater's path rules, by the cases its tests name.
+// The old updater's path rules, by the cases its tests name. The folders
+// of the old Node.js console and agent library are other files.
 func TestClassifyAndExclude(t *testing.T) {
 	for path, want := range map[string]string{
-		"web-nodejs/server.js": "console", "web-ui/src/a.ts": "webui", "neodesk-server/main.go": "server",
-		"neodesk-agent/x": "agent", "docker/entrypoint.sh": "scripts", "Dockerfile": "scripts", "README.md": "other",
+		"web-nodejs/server.js": "other", "web-ui/src/a.ts": "webui", "neodesk-server/main.go": "server",
+		"neodesk-agent/x": "other", "docker/entrypoint.sh": "scripts", "Dockerfile": "scripts", "README.md": "other",
 	} {
 		if got := classifyFile(path); got != want {
 			t.Errorf("classifyFile(%q) = %q", path, got)

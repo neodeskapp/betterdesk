@@ -132,7 +132,7 @@ jobs:
             scripts/test-docker-hardening.sh \
             scripts/docker-latest.sh \
             scripts/test-docker-latest.sh
-      - name: Test the upgrade to the server with its web console
+      - name: Test the native installer's functions (update, the way back, the commands)
         run: bash scripts/test-go-installer.sh
       - name: Check the Go pins of the installers against go.mod
         run: bash scripts/check-go-toolchain-pins.sh

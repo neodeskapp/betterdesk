@@ -5,7 +5,8 @@
 # fresh install with the server built from this checkout, the installer's
 # options and a bare `sudo neodesk` through the new name, an update by
 # neodesk-setup, the update of an install whose /usr/local/sbin/neodesk is
-# the old manager (3.6.0-rc.4), and the uninstall. The backups go to
+# the old manager (3.6.0-rc.4), an update whose binary does not start (it
+# goes back to the binary from before), and the uninstall. The backups go to
 # /opt/neodesk-backups, and the old manager's backups in
 # /opt/rustdesk-backups move there (L446).
 #
@@ -140,6 +141,28 @@ grep -qE 'neodesk-server is up to date|Updated to' "$WORK/update.log" || fail "t
 new_layout "after neodesk --update" "$WORK/newest.sh"
 ls "$BACKUPS"/neodesk_backup_*.tar.gz >/dev/null 2>&1 || fail "the update left no backup in $BACKUPS"
 [ ! -e "$OLD_BACKUPS" ] || fail "$OLD_BACKUPS is there after a fresh install and an update"
+
+echo "== an update whose binary does not come up goes back"
+# A binary that answers -version and names the commands of a release, but
+# does not start a server
+{
+    printf '#!/bin/sh
+'
+    printf '# upgrade-env --from FILE; verify-release; neodesk-setup; migrate -mode sqlite2pg; backup [--out DIR]
+'
+    printf '[ "$1" = -version ] && { echo "neodesk-server 0.0.0 (does not start)"; exit 0; }
+exit 1
+'
+} > "$WORK/broken-server"
+chmod 755 "$WORK/broken-server"
+code=0
+neodesk --update --binary "$WORK/broken-server" < /dev/null > "$WORK/broken-update.log" 2>&1 || code=$?
+ran_cleanly "the update to a binary that does not start" "$WORK/broken-update.log"
+[ "$code" != 0 ] || fail "an update to a binary that does not start reported success"
+grep -q 'putting the previous one back' "$WORK/broken-update.log" || fail "the failed update did not go back: $(tail -n 20 "$WORK/broken-update.log")"
+cmp -s "$BIN" "$WORK/neodesk-server" || fail "the binary from before is not back"
+systemctl is-active --quiet neodesk-server || fail "the server does not run after the way back"
+out=$(neodesk --version 2>&1) || fail "neodesk --version after the way back: $out"
 
 echo "== update of an install with the old manager (3.6.0-rc.4)"
 rm -f "$SETUP" "$CLI"
