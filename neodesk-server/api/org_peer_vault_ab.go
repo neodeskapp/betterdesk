@@ -15,7 +15,7 @@ import (
 // caller that holds device.connect, which GET /api/peers/{id}/connect-password
 // asks for the same secret, gets them, and only for devices in its scope.
 func (s *Server) injectOrgPeerCredentialsIntoAB(r *http.Request, data string) string {
-	if s.peerVault == nil || s.db == nil || !s.roleHolds(getRoleFromCtx(r), auth.PermDeviceConnect) {
+	if (s.deviceVault == nil && s.peerVault == nil) || s.db == nil || !s.roleHolds(getRoleFromCtx(r), auth.PermDeviceConnect) {
 		return data
 	}
 	orgIDs := s.resolveUserOrgIDsForAB(r)
@@ -42,7 +42,7 @@ func (s *Server) injectOrgPeerCredentialsIntoAB(r *http.Request, data string) st
 			if err != nil || row == nil {
 				continue
 			}
-			plain, err := s.peerVault.Open(row.Nonce, row.Ciphertext, row.KeyID)
+			plain, err := s.openOrgPassword(row)
 			if err != nil {
 				log.Printf("[api] peer vault open for AB inject peer=%s: %v", f.PeerID, err)
 				continue

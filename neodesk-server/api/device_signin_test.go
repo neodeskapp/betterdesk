@@ -28,7 +28,7 @@ var (
 func signinServer(t *testing.T, database db.Database) *Server {
 	t.Helper()
 	srv := New(config.DefaultConfig(), database, peer.NewMap(), nil, "1.0.0-test")
-	if err := srv.InitSigninVault(t.TempDir()); err != nil {
+	if err := srv.InitDeviceVault(t.TempDir()); err != nil {
 		t.Fatal(err)
 	}
 	for _, u := range []*db.User{
@@ -126,7 +126,7 @@ func TestSavedSigninIsWriteOnly(t *testing.T) {
 // two broken keys) are refused, and nothing is stored.
 func TestSavedSigninRefusesWhatCannotBeTyped(t *testing.T) {
 	srv, database := newInternalServer(t, nil)
-	if err := srv.InitSigninVault(t.TempDir()); err != nil {
+	if err := srv.InitDeviceVault(t.TempDir()); err != nil {
 		t.Fatal(err)
 	}
 	for body, code := range map[string]string{
@@ -169,7 +169,7 @@ func TestSavedSigninNeedsItsPermissionsAndTheScope(t *testing.T) {
 	}
 
 	srv := scopedFixture(t)
-	if err := srv.InitSigninVault(t.TempDir()); err != nil {
+	if err := srv.InitDeviceVault(t.TempDir()); err != nil {
 		t.Fatal(err)
 	}
 	database := srv.db
@@ -237,7 +237,7 @@ func TestSavedSigninNeedsItsPermissionsAndTheScope(t *testing.T) {
 // the first attempt failed at the device; and not without saved details.
 func TestSavedSigninIsHandedOutOncePerLiveSession(t *testing.T) {
 	srv, database := newInternalServer(t, nil)
-	if err := srv.InitSigninVault(t.TempDir()); err != nil {
+	if err := srv.InitDeviceVault(t.TempDir()); err != nil {
 		t.Fatal(err)
 	}
 	srv.signinLiveFn = func(uuid string) (relay.LivePair, bool) {
@@ -297,7 +297,7 @@ func TestSavedSigninIsHandedOutOncePerLiveSession(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := srv.InitSigninVault(t.TempDir()); err != nil {
+	if err := srv.InitDeviceVault(t.TempDir()); err != nil {
 		t.Fatal(err)
 	}
 	srv.signinLiveFn = func(string) (relay.LivePair, bool) {

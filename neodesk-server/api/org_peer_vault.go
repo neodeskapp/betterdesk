@@ -39,7 +39,7 @@ func (s *Server) handleSetOrgPeerCredential(w http.ResponseWriter, r *http.Reque
 		http.Error(w, `{"error":"invalid peer id"}`, http.StatusBadRequest)
 		return
 	}
-	if s.peerVault == nil {
+	if !s.orgPasswordsAvailable() {
 		http.Error(w, `{"error":"peer credential vault not configured"}`, http.StatusServiceUnavailable)
 		return
 	}
@@ -61,7 +61,7 @@ func (s *Server) handleSetOrgPeerCredential(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	nonce, ciphertext, keyID, err := s.peerVault.Seal(password)
+	nonce, ciphertext, keyID, err := s.sealOrgPassword(orgID, peerID, password)
 	if err != nil {
 		log.Printf("[org] peer vault seal error: %v", err)
 		http.Error(w, `{"error":"failed to encrypt password"}`, http.StatusInternalServerError)
@@ -129,7 +129,7 @@ func (s *Server) handleGetPeerConnectPassword(w http.ResponseWriter, r *http.Req
 		http.Error(w, `{"error":"invalid peer id"}`, http.StatusBadRequest)
 		return
 	}
-	if s.peerVault == nil {
+	if !s.orgPasswordsAvailable() && s.peerVault == nil {
 		http.Error(w, `{"error":"peer credential vault not configured"}`, http.StatusServiceUnavailable)
 		return
 	}

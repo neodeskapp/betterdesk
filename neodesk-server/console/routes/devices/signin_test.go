@@ -31,7 +31,7 @@ func signinWorld(t *testing.T, sdb *store.DB, roles routetest.Overrides) (*route
 	t.Helper()
 	gdb := storetest.GoServer(t, sdb)
 	srv := apiserver.New(serverconfig.DefaultConfig(), gdb, peer.NewMap(), relay.New(nil), "test")
-	if err := srv.InitSigninVault(t.TempDir()); err != nil {
+	if err := srv.InitDeviceVault(t.TempDir()); err != nil {
 		t.Fatal(err)
 	}
 	opts := routetest.Options{DB: sdb, API: srv.InternalHandler(), Env: raisedLimits, Config: nodeLanguages}

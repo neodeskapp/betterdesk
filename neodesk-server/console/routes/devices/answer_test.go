@@ -31,6 +31,9 @@ func TestConnectPasswordAnswerKeepsThePasswordOnTheServer(t *testing.T) {
 		if err := srv.InitPeerCredentialVault("l454-vault-secret-0123456789abcdef"); err != nil {
 			t.Fatal(err)
 		}
+		if err := srv.InitDeviceVault(t.TempDir()); err != nil {
+			t.Fatal(err)
+		}
 		w := routetest.New(t, routetest.Options{DB: sdb, API: srv.InternalHandler(), Env: raisedLimits, Config: nodeLanguages})
 		if err := gdb.UpsertPeer(&db.Peer{ID: "BOOKPEER1", UUID: "u-bookpeer1"}); err != nil {
 			t.Fatal(err)

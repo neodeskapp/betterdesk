@@ -617,16 +617,23 @@ func main() {
 		if vaultKey == "" {
 			vaultKey = jwtSecret
 		}
+		// Device secrets (saved sign-in, organizations' device passwords):
+		// their own key file next to the key pair, never in the database or
+		// the full backup. ORG_PEER_VAULT_KEY (else the JWT secret) is the old
+		// key of organizations' device passwords: rows sealed with it move to
+		// the key file now, and it opens nothing else.
+		if err := apiSrv.InitDeviceVault(filepath.Dir(cfg.KeyFile)); err != nil {
+			log.Printf("[warn] device secrets disabled (saved sign-in, organizations' device passwords): %v", err)
+		}
 		if err := apiSrv.InitPeerCredentialVault(vaultKey); err != nil {
-			log.Printf("[warn] org peer credential vault disabled: %v", err)
-		} else {
-			log.Printf("Org peer credential vault ready (AES-GCM)")
+			log.Printf("[warn] the old key of organizations' device passwords is not usable: %v", err)
 		}
-		// Saved sign-in details: their own key file next to the key pair,
-		// never in the database or the backup
-		if err := apiSrv.InitSigninVault(filepath.Dir(cfg.KeyFile)); err != nil {
-			log.Printf("[warn] saved sign-in disabled: %v", err)
+		if moved, left, err := apiSrv.MigrateOrgPeerCredentials(); err != nil {
+			log.Printf("[warn] moving organizations' device passwords to the key file: %v", err)
+		} else if moved > 0 || left > 0 {
+			log.Printf("Organizations' device passwords: %d moved to the key file, %d could not be opened with the old key and stay as they were", moved, left)
 		}
+
 		if cfg.RemoteTargetVaultKey == "" {
 			log.Printf("[warn] remote target credential vault disabled: REMOTE_TARGET_VAULT_KEY is not configured")
 		} else if err := apiSrv.InitRemoteTargetCredentialVault(cfg.RemoteTargetVaultKey); err != nil {

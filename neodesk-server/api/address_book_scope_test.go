@@ -70,6 +70,9 @@ func TestAddressBookPasswordsNeedConnect(t *testing.T) {
 	if err := srv.InitPeerCredentialVault("address-book-vault-test-secret-0123456789"); err != nil {
 		t.Fatal(err)
 	}
+	if err := srv.InitDeviceVault(t.TempDir()); err != nil {
+		t.Fatal(err)
+	}
 	if err := database.CreateOrganization(&db.Organization{ID: "org-a", Name: "Acme", Slug: "acme", CreatedAt: time.Now().UTC()}); err != nil {
 		t.Fatal(err)
 	}

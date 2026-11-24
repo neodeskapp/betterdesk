@@ -23,6 +23,9 @@ func TestConnectPasswordAnswerKeepsThePasswordOnTheServer(t *testing.T) {
 	if err := srv.InitPeerCredentialVault("l454-vault-test-secret-0123456789abcdef"); err != nil {
 		t.Fatal(err)
 	}
+	if err := srv.InitDeviceVault(t.TempDir()); err != nil {
+		t.Fatal(err)
+	}
 	for _, org := range []string{"org-dev", "org-book"} {
 		if err := database.CreateOrganization(&db.Organization{ID: org, Name: org, Slug: org, CreatedAt: time.Now().UTC()}); err != nil {
 			t.Fatal(err)

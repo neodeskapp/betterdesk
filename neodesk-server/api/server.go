@@ -24,8 +24,8 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/cdap"
 	"github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/crypto"
+	"github.com/neodeskapp/neodesk/neodesk-server/crypto/devicevault"
 	"github.com/neodeskapp/neodesk/neodesk-server/crypto/peervault"
-	"github.com/neodeskapp/neodesk/neodesk-server/crypto/signinvault"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 	eventsModule "github.com/neodeskapp/neodesk/neodesk-server/events"
 	"github.com/neodeskapp/neodesk/neodesk-server/meshcentral"
@@ -128,11 +128,16 @@ type Server struct {
 	panelNonces       *panelNonceCache  // replay window for verified panel statements
 	timeSync          *timesync.Service
 	billing           *billing.Service
-	peerVault         *peervault.Vault // AES-GCM for org peer credentials
+	// peerVault is the old key of organizations' device passwords, derived
+	// from ORG_PEER_VAULT_KEY or the JWT secret: it only opens rows sealed
+	// before the key file (key id v1), which MigrateOrgPeerCredentials
+	// moves to deviceVault at start
+	peerVault         *peervault.Vault
 	remoteTargetVault *peervault.Vault // Dedicated AES-GCM vault for RDP/VNC credentials
-	// signinVault seals saved sign-in details (device_signin.go); nil when
-	// its key could not be loaded
-	signinVault *signinvault.Vault
+	// deviceVault seals saved sign-in details (device_signin.go) and the
+	// device passwords of organizations (org_peer_vault.go) with the key
+	// file next to the key pair; nil when that key could not be loaded
+	deviceVault *devicevault.Vault
 	// signinUses are the sessions that used their saved sign-in
 	signinUses signinUses
 	// signinLiveFn stands in for the relay's live sessions in tests

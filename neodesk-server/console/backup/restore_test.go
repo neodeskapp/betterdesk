@@ -17,6 +17,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/crypto/devicevault"
 )
 
 // Tests of what a restore writes, refuses and leaves behind. They need
@@ -733,6 +734,35 @@ func TestBackupFilesWithSecretsArePrivate(t *testing.T) {
 	for _, old := range []string{"web-nodejs", "neodesk.sh", "ALL-IN-ONE"} {
 		if strings.Contains(readme, old) {
 			t.Errorf("README.txt still names %s:\n%s", old, readme)
+		}
+	}
+}
+
+// TestFullBackupLeavesOutTheDeviceSecretsKey: the key file of the device
+// secrets (saved sign-in details, organizations' device passwords) next
+// to the key pair is not in the full backup, so the archive holds those
+// secrets only sealed, without the key that opens them.
+func TestFullBackupLeavesOutTheDeviceSecretsKey(t *testing.T) {
+	in := newInstall(t, "sqlite")
+	in.seed(t)
+	if _, err := devicevault.Load(in.keysPath); err != nil {
+		t.Fatal(err)
+	}
+	key, err := os.ReadFile(filepath.Join(in.keysPath, devicevault.KeyFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := in.service(t, "3.6.0")
+	archive, _, err := s.CreateFullBackup(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, e := range tarEntries(t, archive) {
+		if strings.Contains(e.name, devicevault.KeyFileName) {
+			t.Errorf("the backup holds %s", e.name)
+		}
+		if strings.Contains(string(e.data), strings.TrimSpace(string(key))) {
+			t.Errorf("%s holds the key", e.name)
 		}
 	}
 }

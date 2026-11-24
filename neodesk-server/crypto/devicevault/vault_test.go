@@ -1,4 +1,4 @@
-package signinvault
+package devicevault
 
 import (
 	"bytes"

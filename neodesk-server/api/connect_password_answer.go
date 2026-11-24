@@ -29,7 +29,7 @@ func (s *Server) connectAnswerRoutes(mux *http.ServeMux) {
 // every organization may use any organization's. It returns the password,
 // the organization and whether one was found.
 func (s *Server) orgConnectPassword(r *http.Request, peerID string) (string, string, bool, error) {
-	if s.peerVault == nil {
+	if s.deviceVault == nil && s.peerVault == nil {
 		return "", "", false, nil
 	}
 	serverLevel := auth.IsServerLevel(getRoleFromCtx(r))
@@ -69,7 +69,7 @@ func (s *Server) orgConnectPassword(r *http.Request, peerID string) (string, str
 		if row == nil || row.Ciphertext == "" {
 			continue
 		}
-		plain, err := s.peerVault.Open(row.Nonce, row.Ciphertext, row.KeyID)
+		plain, err := s.openOrgPassword(row)
 		if err != nil {
 			log.Printf("[org] peer vault open error: %v", err)
 			continue

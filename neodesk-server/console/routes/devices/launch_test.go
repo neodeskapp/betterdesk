@@ -80,6 +80,9 @@ func TestConnectPasswordNeedsTheDevicesOrganization(t *testing.T) {
 		if err := srv.InitPeerCredentialVault("l216-vault-secret-0123456789abcdef"); err != nil {
 			t.Fatal(err)
 		}
+		if err := srv.InitDeviceVault(t.TempDir()); err != nil {
+			t.Fatal(err)
+		}
 		w := routetest.New(t, routetest.Options{DB: sdb, API: srv.InternalHandler(), Env: raisedLimits, Config: nodeLanguages})
 
 		if err := gdb.UpsertPeer(&db.Peer{ID: "ORGPEER1", UUID: "u-orgpeer1"}); err != nil {

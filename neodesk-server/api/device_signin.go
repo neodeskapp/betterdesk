@@ -11,13 +11,13 @@ import (
 	"unicode/utf8"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
-	"github.com/neodeskapp/neodesk/neodesk-server/crypto/signinvault"
+	"github.com/neodeskapp/neodesk/neodesk-server/crypto/devicevault"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 	"github.com/neodeskapp/neodesk/neodesk-server/relay"
 )
 
 // Saved sign-in (BUGS L469): the account name and password of a device's
-// operating system account, sealed with crypto/signinvault, that the
+// operating system account, sealed with crypto/devicevault, that the
 // browser viewer types at the device's lock or sign-in screen.
 //
 // Every route here answers only the console in the same process
@@ -49,14 +49,15 @@ const signinMaxLen = 256
 // sign-in; a relay session ends long before.
 const signinUseTTL = 7 * 24 * time.Hour
 
-// InitSigninVault loads (or makes) the key of saved sign-in details in dir,
-// the folder of the server's key pair.
-func (s *Server) InitSigninVault(dir string) error {
-	v, err := signinvault.Load(dir)
+// InitDeviceVault loads (or makes) the key file of the device secrets
+// (saved sign-in details and organizations' device passwords) in dir, the
+// folder of the server's key pair.
+func (s *Server) InitDeviceVault(dir string) error {
+	v, err := devicevault.Load(dir)
 	if err != nil {
 		return err
 	}
-	s.signinVault = v
+	s.deviceVault = v
 	return nil
 }
 
@@ -107,14 +108,14 @@ type signinStatus struct {
 }
 
 func (s *Server) signinStatusOf(row *db.DeviceSignin) signinStatus {
-	st := signinStatus{Available: s.signinVault != nil, Form: signinFormPassword}
+	st := signinStatus{Available: s.deviceVault != nil, Form: signinFormPassword}
 	if row == nil {
 		return st
 	}
 	st.Set = true
 	st.Form, st.Auto, st.UpdatedBy, st.UpdatedAt = row.Form, row.Auto, row.UpdatedBy, row.UpdatedAt
-	if s.signinVault != nil {
-		if name, err := s.signinVault.Open(row.DeviceID, signinvault.FieldUsername, row.UserNonce, row.UserCipher, row.KeyID); err == nil {
+	if s.deviceVault != nil {
+		if name, err := s.deviceVault.Open(row.DeviceID, devicevault.FieldUsername, row.UserNonce, row.UserCipher, row.KeyID); err == nil {
 			st.Username = name
 		}
 	}
@@ -168,7 +169,7 @@ func signinBadRequest(w http.ResponseWriter, code string) {
 // replace. The switch keeps its setting on a replace.
 func (s *Server) handleSetSignin(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimSpace(r.PathValue("id"))
-	if s.signinVault == nil {
+	if s.deviceVault == nil {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "vault_unavailable"})
 		return
 	}
@@ -208,7 +209,7 @@ func (s *Server) handleSetSignin(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	row := &db.DeviceSignin{DeviceID: id, KeyID: signinvault.KeyID, Form: signinFormPassword}
+	row := &db.DeviceSignin{DeviceID: id, KeyID: devicevault.KeyID, Form: signinFormPassword}
 	if old != nil {
 		row.Form, row.Auto = old.Form, old.Auto
 	}
@@ -220,8 +221,8 @@ func (s *Server) handleSetSignin(w http.ResponseWriter, r *http.Request) {
 		row.Form = *body.Form
 	}
 	var err error
-	if row.UserNonce, row.UserCipher, err = s.signinVault.Seal(id, signinvault.FieldUsername, username); err == nil {
-		row.PassNonce, row.PassCipher, err = s.signinVault.Seal(id, signinvault.FieldPassword, body.Password)
+	if row.UserNonce, row.UserCipher, err = s.deviceVault.Seal(id, devicevault.FieldUsername, username); err == nil {
+		row.PassNonce, row.PassCipher, err = s.deviceVault.Seal(id, devicevault.FieldPassword, body.Password)
 	}
 	if err != nil {
 		log.Printf("[signin] seal the sign-in of %s: %v", id, err)
@@ -339,7 +340,7 @@ func (s *Server) handleUseSignin(w http.ResponseWriter, r *http.Request) {
 		refuse(http.StatusBadRequest, "session_required")
 		return
 	}
-	if s.signinVault == nil {
+	if s.deviceVault == nil {
 		refuse(http.StatusServiceUnavailable, "vault_unavailable")
 		return
 	}
@@ -360,10 +361,10 @@ func (s *Server) handleUseSignin(w http.ResponseWriter, r *http.Request) {
 		refuse(http.StatusConflict, "already_used")
 		return
 	}
-	username, err := s.signinVault.Open(id, signinvault.FieldUsername, row.UserNonce, row.UserCipher, row.KeyID)
+	username, err := s.deviceVault.Open(id, devicevault.FieldUsername, row.UserNonce, row.UserCipher, row.KeyID)
 	var password string
 	if err == nil {
-		password, err = s.signinVault.Open(id, signinvault.FieldPassword, row.PassNonce, row.PassCipher, row.KeyID)
+		password, err = s.deviceVault.Open(id, devicevault.FieldPassword, row.PassNonce, row.PassCipher, row.KeyID)
 	}
 	if err != nil {
 		// Another server's key (a restored backup) or a changed row

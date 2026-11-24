@@ -377,7 +377,7 @@ type OrgSetting struct {
 
 // DeviceSignin is a device's saved sign-in: the account name and password
 // of its operating system account, each sealed for the device with
-// crypto/signinvault, and how the viewer uses them. UpdatedAt is RFC 3339
+// crypto/devicevault, and how the viewer uses them. UpdatedAt is RFC 3339
 // in UTC.
 type DeviceSignin struct {
 	DeviceID   string
@@ -392,6 +392,13 @@ type DeviceSignin struct {
 	Auto      bool
 	UpdatedAt string
 	UpdatedBy string
+}
+
+// OrgPeerCredentialReseal moves one organization's device password from
+// OldKeyID to KeyID with a new nonce and ciphertext.
+type OrgPeerCredentialReseal struct {
+	OrgID, PeerID, OldKeyID  string
+	Nonce, Ciphertext, KeyID string
 }
 
 // OrgPeerCredential is metadata for an encrypted peer password row.
@@ -788,6 +795,13 @@ type Database interface {
 	GetDeviceSignin(deviceID string) (*DeviceSignin, error)
 	SaveDeviceSignin(d *DeviceSignin) error
 	DeleteDeviceSignin(deviceID string) (bool, error)
+
+	// Organizations' device passwords sealed with another key than keyID
+	// (full rows), and their move to keyID in one transaction: a row
+	// changes only while it still has its old key id; the count is the
+	// rows changed
+	ListOrgPeerCredentialsNotSealedWith(keyID string) ([]*OrgPeerCredential, error)
+	ResealOrgPeerCredentials(rows []OrgPeerCredentialReseal) (int, error)
 
 	GetOrgPeerCredential(orgID, peerID string) (*OrgPeerCredential, error)
 	ListOrgPeerCredentialFlags(orgID string) ([]*OrgPeerCredential, error)

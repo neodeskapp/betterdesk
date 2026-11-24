@@ -8,7 +8,7 @@ import (
 )
 
 // Saved sign-in details of devices (table device_signin). The values are
-// sealed by the caller (crypto/signinvault); this layer stores them as
+// sealed by the caller (crypto/devicevault); this layer stores them as
 // they come and never sees a readable password.
 
 const deviceSigninColumns = `device_id, user_nonce, user_cipher, pass_nonce, pass_cipher, key_id, form, auto_signin, updated_at, updated_by`
@@ -96,4 +96,106 @@ func (pg *PostgresDB) DeleteDeviceSignin(deviceID string) (bool, error) {
 		return false, err
 	}
 	return tag.RowsAffected() > 0, nil
+}
+
+// Organizations' device passwords: the rows not sealed with keyID, and
+// their move to the key file in one transaction (MigrateOrgPeerCredentials
+// in package api).
+
+func (s *SQLiteDB) ListOrgPeerCredentialsNotSealedWith(keyID string) ([]*OrgPeerCredential, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	rows, err := s.db.Query(
+		`SELECT org_id, peer_id, ciphertext, nonce, key_id, COALESCE(updated_at,''), COALESCE(updated_by,'')
+		 FROM org_peer_credentials WHERE key_id <> ? ORDER BY org_id, peer_id`, keyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*OrgPeerCredential
+	for rows.Next() {
+		var c OrgPeerCredential
+		if err := rows.Scan(&c.OrgID, &c.PeerID, &c.Ciphertext, &c.Nonce, &c.KeyID, &c.UpdatedAt, &c.UpdatedBy); err != nil {
+			return nil, err
+		}
+		c.PasswordSet = c.Ciphertext != ""
+		out = append(out, &c)
+	}
+	return out, rows.Err()
+}
+
+func (s *SQLiteDB) ResealOrgPeerCredentials(list []OrgPeerCredentialReseal) (int, error) {
+	if len(list) == 0 {
+		return 0, nil
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	tx, err := s.db.Begin()
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+	changed := 0
+	for _, r := range list {
+		res, err := tx.Exec(`UPDATE org_peer_credentials SET ciphertext = ?, nonce = ?, key_id = ?
+			WHERE org_id = ? AND peer_id = ? AND key_id = ?`,
+			r.Ciphertext, r.Nonce, r.KeyID, r.OrgID, r.PeerID, r.OldKeyID)
+		if err != nil {
+			return 0, err
+		}
+		n, err := res.RowsAffected()
+		if err != nil {
+			return 0, err
+		}
+		changed += int(n)
+	}
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+	return changed, nil
+}
+
+func (pg *PostgresDB) ListOrgPeerCredentialsNotSealedWith(keyID string) ([]*OrgPeerCredential, error) {
+	rows, err := pg.pool.Query(pg.ctx,
+		`SELECT org_id, peer_id, ciphertext, nonce, key_id, COALESCE(updated_at::text,''), COALESCE(updated_by,'')
+		 FROM org_peer_credentials WHERE key_id <> $1 ORDER BY org_id, peer_id`, keyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*OrgPeerCredential
+	for rows.Next() {
+		var c OrgPeerCredential
+		if err := rows.Scan(&c.OrgID, &c.PeerID, &c.Ciphertext, &c.Nonce, &c.KeyID, &c.UpdatedAt, &c.UpdatedBy); err != nil {
+			return nil, err
+		}
+		c.PasswordSet = c.Ciphertext != ""
+		out = append(out, &c)
+	}
+	return out, rows.Err()
+}
+
+func (pg *PostgresDB) ResealOrgPeerCredentials(list []OrgPeerCredentialReseal) (int, error) {
+	if len(list) == 0 {
+		return 0, nil
+	}
+	tx, err := pg.pool.Begin(pg.ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(pg.ctx)
+	changed := 0
+	for _, r := range list {
+		tag, err := tx.Exec(pg.ctx, `UPDATE org_peer_credentials SET ciphertext = $1, nonce = $2, key_id = $3
+			WHERE org_id = $4 AND peer_id = $5 AND key_id = $6`,
+			r.Ciphertext, r.Nonce, r.KeyID, r.OrgID, r.PeerID, r.OldKeyID)
+		if err != nil {
+			return 0, err
+		}
+		changed += int(tag.RowsAffected())
+	}
+	if err := tx.Commit(pg.ctx); err != nil {
+		return 0, err
+	}
+	return changed, nil
 }

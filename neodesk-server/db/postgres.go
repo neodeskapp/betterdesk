@@ -464,7 +464,7 @@ func (pg *PostgresDB) Migrate() error {
 		`CREATE INDEX IF NOT EXISTS idx_role_permissions_role ON role_permissions(role)`,
 
 		// Saved sign-in details of a device's operating system account,
-		// sealed with crypto/signinvault (the key is not in the database)
+		// sealed with crypto/devicevault (the key is not in the database)
 		`CREATE TABLE IF NOT EXISTS device_signin (
 			device_id   TEXT PRIMARY KEY,
 			user_nonce  TEXT NOT NULL,
