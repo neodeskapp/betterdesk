@@ -6,6 +6,8 @@
  * a code that cannot be used. The page runs at an https address here, so
  * only the server's flag can make it warn.
  */
+import fs from 'node:fs';
+import path from 'node:path';
 import { cleanup, render, screen, waitFor } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import type { PublicCode } from '../../../src/lib/api/onboard.ts';
@@ -119,6 +121,20 @@ describe('the main action for this computer', () => {
 		expect(stepKeys('support', 'macos')).toHaveLength(4);
 		expect(stepKeys('support', 'linux')).toEqual([]);
 		expect(stepKeys('join', null)).toEqual([]);
+	});
+
+	test("Windows' permission prompt is named as it shows: Windows Command Processor for the exe, the publisher only for the MSI (L443)", () => {
+		expect(stepKeys('join', 'windows', 'exe')[2]).toBe('onboard.public.join_steps_windows_3');
+		expect(stepKeys('join', 'windows', 'msi')[2]).toBe('onboard.public.join_steps_windows_msi_3');
+		const langDir = path.resolve(__dirname, '../../../../neodesk-server/console/static/files/lang');
+		for (const file of fs.readdirSync(langDir).filter((f) => f.endsWith('.json'))) {
+			const steps = JSON.parse(fs.readFileSync(path.join(langDir, file), 'utf8')).onboard.public;
+			expect(steps.join_steps_windows_3, file).not.toContain('{publisher}');
+			expect(steps.join_steps_windows_3, file).toContain('Microsoft Windows');
+			expect(steps.join_steps_windows_msi_3, file).toContain('{publisher}');
+		}
+		const en = JSON.parse(fs.readFileSync(path.join(langDir, 'en.json'), 'utf8')).onboard.public;
+		expect(en.join_steps_windows_3).toContain('Windows Command Processor');
 	});
 });
 

@@ -48,12 +48,23 @@ export function isInsecure(code: PublicCode, protocol: string): boolean {
 /**
  * The language keys of the steps for the kind and system (below
  * onboard.public): three on Windows, four on a Mac. Linux has its command
- * with one line, and a phone gets no steps.
+ * with one line, and a phone gets no steps. format is the download's: the
+ * Windows exe's permission prompt shows Windows Command Processor by
+ * Microsoft Windows, only the MSI's names the publisher, so an MSI gets
+ * the step that says to check for it.
  */
-export function stepKeys(kind: PublicCode['kind'], platform: ThisComputer['platform'] | null): string[] {
+export function stepKeys(
+	kind: PublicCode['kind'],
+	platform: ThisComputer['platform'] | null,
+	format?: string
+): string[] {
 	const count = platform === 'windows' ? 3 : platform === 'macos' ? 4 : 0;
 	const prefix = kind === 'join' ? 'onboard.public.join_steps_' : 'onboard.public.support_steps_';
-	return Array.from({ length: count }, (_, i) => `${prefix}${platform}_${i + 1}`);
+	return Array.from({ length: count }, (_, i) => {
+		if (kind === 'join' && platform === 'windows' && format === 'msi' && i === 2)
+			return `${prefix}windows_msi_3`;
+		return `${prefix}${platform}_${i + 1}`;
+	});
 }
 
 /** The label of the main download button */

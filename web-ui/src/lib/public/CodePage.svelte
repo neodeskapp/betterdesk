@@ -75,7 +75,9 @@
 	const server = $derived(data ? data.company || data.server.name : '');
 	const vars = $derived({ server, publisher: data?.publisher ?? '', supporter: data?.supporter || server });
 	const steps = $derived(
-		data && main.kind === 'download' ? stepKeys(data.kind, mine?.platform ?? null).map((k) => t(k, vars)) : []
+		data && main.kind === 'download'
+			? stepKeys(data.kind, mine?.platform ?? null, main.download.format).map((k) => t(k, vars))
+			: []
 	);
 	const archWords = $derived({ apple: t('onboard.public.mac_apple'), intel: t('onboard.public.mac_intel') });
 	const heading = $derived.by(() => {
