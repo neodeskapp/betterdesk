@@ -408,7 +408,7 @@ func TestQuickSupportFlow(t *testing.T) {
 		if res := admin.do(http.MethodPost, "/api/support/sessions/"+id+"/password", `{}`); res.status != http.StatusNotFound {
 			t.Fatalf("another account took the password: %d %s", res.status, res.body)
 		}
-		if res := admin.do(http.MethodPost, "/api/support/devices/423456789/password", `{}`); res.status != http.StatusConflict {
+		if res := admin.do(http.MethodPost, "/api/support/devices/423456789/password", `{}`); res.status != http.StatusOK || res.body != `{"success":true,"password":""}` {
 			t.Fatalf("another account took the password by device: %d %s", res.status, res.body)
 		}
 		if pw := operator.do(http.MethodPost, "/api/support/sessions/"+id+"/password", `{}`).json(t); str(pw, "password") != "Ab12-cd34" {
@@ -426,6 +426,19 @@ func TestQuickSupportFlow(t *testing.T) {
 			t.Fatalf("after the end: %v", s)
 		}
 	})
+}
+
+// TestDevicePasswordWithoutAHandedPasswordIsEmpty: the browser viewer asks
+// for a handed quick support password whenever a device asks for its
+// password; a device without one is the usual case, answered with an empty
+// password, not as an error (L429).
+func TestDevicePasswordWithoutAHandedPasswordIsEmpty(t *testing.T) {
+	w := newWorld(t, storetest.Migrated(t))
+	operator := w.browser("operator")
+	res := operator.do(http.MethodPost, "/api/support/devices/123456789/password", `{}`)
+	if res.status != http.StatusOK || res.body != `{"success":true,"password":""}` {
+		t.Fatalf("a device without a handed password: %d %s, want 200 with an empty password", res.status, res.body)
+	}
 }
 
 func TestSessionTokenOpensOnlyTheAppRoutes(t *testing.T) {

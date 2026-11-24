@@ -167,13 +167,14 @@ func (h *handlers) takePassword(w http.ResponseWriter, r *http.Request) {
 
 // devicePassword answers POST /api/support/devices/{id}/password: the
 // password of the account's allowed session on that device, once, for the
-// browser viewer when the device asks for one. 409 no_password when there
-// is none.
+// browser viewer when the device asks for one. The viewer asks at every
+// password prompt, and most devices have no quick support session, so none
+// is an empty password, not an error (L429).
 func (h *handlers) devicePassword(w http.ResponseWriter, r *http.Request) {
 	deviceID := strings.TrimSpace(r.PathValue("id"))
 	password, err := h.sessions.TakePasswordForDevice(r.Context(), deviceID, kit.UserID(r))
 	if errors.Is(err, onboard.ErrNoPassword) {
-		fail(w, r, http.StatusConflict, "no_password")
+		kit.JSON(w, r, http.StatusOK, passwordAnswer{Success: true})
 		return
 	}
 	if err != nil {

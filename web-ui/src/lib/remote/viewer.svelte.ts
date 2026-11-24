@@ -627,7 +627,9 @@ export class Viewer {
 				.loadPeerPassword(s.deviceId)
 				.catch(() => '');
 			const org = this.data.mockRemote ? Promise.resolve('') : getConnectPassword(s.deviceId);
-			const handed = this.data.mockRemote ? Promise.resolve('') : takeDevicePassword(s.deviceId);
+			// Only a signed-in account can have a quick support session to take a password from
+			const handed =
+				this.data.mockRemote || !this.data.user ? Promise.resolve('') : takeDevicePassword(s.deviceId);
 			void Promise.all([local, org, handed]).then(([mine, theirs, support]) => {
 				// A quick support session's password, which the person's app handed to this
 				// supporter, is sent at once and never stored in this browser

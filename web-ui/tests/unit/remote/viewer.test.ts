@@ -182,6 +182,16 @@ describe('remote viewer sessions', () => {
 		await vi.waitFor(() => expect(remembered.has('900100012')).toBe(false));
 	});
 
+	test('a guest has no quick support session, so the viewer asks for no handed password (L429)', async () => {
+		vi.mocked(onboardApi.takeDevicePassword).mockClear();
+		remembered.clear();
+		remembered.set('900100012', 'old-pw');
+		const { s, c } = setup(data({ user: null, guestToken: 'guest-token' }));
+		c.emit('password_required');
+		await vi.waitFor(() => expect(s.password).toBe('old-pw'));
+		expect(onboardApi.takeDevicePassword).not.toHaveBeenCalled();
+	});
+
 	test('a remembered password the device refuses is forgotten', async () => {
 		remembered.clear();
 		remembered.set('900100012', 'old-pw');
