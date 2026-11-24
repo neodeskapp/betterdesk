@@ -4877,6 +4877,7 @@
     "revoke_failed": "تعذّر إلغاء الرمز.",
     "ends_with_it": "وينتهي معه أيضًا ما أُنشئ به: {list}.",
     "revoked_ended": "تم إلغاء {name}. انتهى معه: {list}.",
+    "let_in": "تبقى أجهزة الكمبيوتر التي سُمح لها بالدخول به: {list}. تحقق منها في صفحة الأجهزة.",
     "made_guest_links_one": "{count} رابط ضيف",
     "made_guest_links_many": "روابط الضيف: {count}",
     "made_device_tokens_one": "{count} رمز جهاز",

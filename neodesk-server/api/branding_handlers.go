@@ -1347,6 +1347,7 @@ func (s *Server) handleApproveDevice(w http.ResponseWriter, r *http.Request) {
 	// Remove from pending and clear any prior rejection lock.
 	s.db.DeleteConfig(pendingDevicePrefix + deviceID)
 	s.db.DeleteConfig(rejectedDevicePrefix + deviceID)
+	s.noteTokenAdmission(tokenOf(r), deviceID, admittedByApproval)
 
 	actor := getUsernameFromCtx(r)
 	s.storeEnrollmentDecision(enrollmentDecision{

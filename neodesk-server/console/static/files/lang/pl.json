@@ -5006,6 +5006,7 @@
     "revoke_failed": "Nie udało się unieważnić tokenu.",
     "ends_with_it": "Kończy się też to, co nim utworzono: {list}.",
     "revoked_ended": "{name} jest unieważniony. Zakończono razem z nim: {list}.",
+    "let_in": "Komputery wpuszczone za jego pomocą zostają: {list}. Sprawdź je na stronie Urządzenia.",
     "made_guest_links_one": "{count} link gościa",
     "made_guest_links_many": "linki gościa: {count}",
     "made_device_tokens_one": "{count} token urządzenia",

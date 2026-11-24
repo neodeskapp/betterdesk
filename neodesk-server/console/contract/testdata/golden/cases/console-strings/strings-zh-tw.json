@@ -283,6 +283,7 @@
       "filter_active": "有效",
       "from_addresses": "僅限 {list}",
       "last_used": "上次使用",
+      "let_in": "用它接入的電腦會保留：{list}。請在「設備」頁面檢查它們。",
       "list_title": "你的權杖",
       "load_failed": "無法載入 API 權杖。",
       "loading": "正在載入 API 權杖…",

@@ -4876,6 +4876,7 @@
     "revoke_failed": "Không thu hồi được token.",
     "ends_with_it": "Những gì được tạo bằng nó cũng kết thúc: {list}.",
     "revoked_ended": "Đã thu hồi {name}. Kết thúc cùng nó: {list}.",
+    "let_in": "Các máy tính được cho vào bằng nó vẫn ở lại: {list}. Hãy kiểm tra chúng trên trang Thiết bị.",
     "made_guest_links_one": "{count} liên kết khách",
     "made_guest_links_many": "{count} liên kết khách",
     "made_device_tokens_one": "{count} token thiết bị",

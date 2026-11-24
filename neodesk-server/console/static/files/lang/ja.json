@@ -4870,6 +4870,7 @@
     "revoke_failed": "トークンを取り消せませんでした。",
     "ends_with_it": "これで作成したものも終了します: {list}。",
     "revoked_ended": "{name} を取り消しました。あわせて終了: {list}。",
+    "let_in": "これで受け入れたコンピューターは残ります: {list}。[デバイス] ページで確認してください。",
     "made_guest_links_one": "ゲストリンク {count} 件",
     "made_guest_links_many": "ゲストリンク {count} 件",
     "made_device_tokens_one": "デバイストークン {count} 件",

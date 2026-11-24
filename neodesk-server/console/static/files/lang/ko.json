@@ -4870,6 +4870,7 @@
     "revoke_failed": "토큰을 취소하지 못했습니다.",
     "ends_with_it": "이 토큰으로 만든 것도 함께 종료됩니다: {list}.",
     "revoked_ended": "{name}이(가) 취소되었습니다. 함께 종료됨: {list}.",
+    "let_in": "이 토큰으로 받아들인 컴퓨터는 그대로 남습니다: {list}. 장치 페이지에서 확인하세요.",
     "made_guest_links_one": "게스트 링크 {count}개",
     "made_guest_links_many": "게스트 링크 {count}개",
     "made_device_tokens_one": "장치 토큰 {count}개",

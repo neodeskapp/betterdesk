@@ -4876,6 +4876,7 @@
     "revoke_failed": "A tokent nem sikerült visszavonni.",
     "ends_with_it": "Vele együtt megszűnik az is, ami vele készült: {list}.",
     "revoked_ended": "{name} visszavonva. Vele együtt megszűnt: {list}.",
+    "let_in": "A vele beengedett számítógépek maradnak: {list}. Ellenőrizze őket az Eszközök oldalon.",
     "made_guest_links_one": "{count} vendéglink",
     "made_guest_links_many": "{count} vendéglink",
     "made_device_tokens_one": "{count} eszköztoken",

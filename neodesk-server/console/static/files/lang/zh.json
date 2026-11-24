@@ -4988,6 +4988,7 @@
     "revoke_failed": "无法吊销令牌。",
     "ends_with_it": "用它创建的内容也会一并结束：{list}。",
     "revoked_ended": "已吊销 {name}。一并结束：{list}。",
+    "let_in": "用它接入的电脑会保留：{list}。请在“设备”页面检查它们。",
     "made_guest_links_one": "{count} 个访客链接",
     "made_guest_links_many": "{count} 个访客链接",
     "made_device_tokens_one": "{count} 个设备令牌",

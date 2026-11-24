@@ -4876,6 +4876,7 @@
     "revoke_failed": "Token tidak dapat dicabut.",
     "ends_with_it": "Yang dibuat dengannya juga berakhir: {list}.",
     "revoked_ended": "{name} sudah dicabut. Ikut berakhir: {list}.",
+    "let_in": "Komputer yang diizinkan masuk dengannya tetap ada: {list}. Periksa di halaman Perangkat.",
     "made_guest_links_one": "{count} tautan tamu",
     "made_guest_links_many": "{count} tautan tamu",
     "made_device_tokens_one": "{count} token perangkat",

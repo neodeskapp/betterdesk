@@ -4876,6 +4876,7 @@
     "revoke_failed": "Belirteç iptal edilemedi.",
     "ends_with_it": "Onunla oluşturulanlar da sona erer: {list}.",
     "revoked_ended": "{name} iptal edildi. Onunla birlikte sona erenler: {list}.",
+    "let_in": "Onunla kabul edilen bilgisayarlar kalır: {list}. Bunları Cihazlar sayfasında kontrol edin.",
     "made_guest_links_one": "{count} misafir bağlantısı",
     "made_guest_links_many": "{count} misafir bağlantısı",
     "made_device_tokens_one": "{count} cihaz jetonu",

@@ -4876,6 +4876,7 @@
     "revoke_failed": "Tunnusta ei voitu perua.",
     "ends_with_it": "Samalla päättyy myös se, mitä sillä tehtiin: {list}.",
     "revoked_ended": "{name} on peruttu. Samalla päättyi: {list}.",
+    "let_in": "Sillä sisään päästetyt tietokoneet jäävät: {list}. Tarkista ne Laitteet-sivulla.",
     "made_guest_links_one": "{count} vieraslinkki",
     "made_guest_links_many": "{count} vieraslinkkiä",
     "made_device_tokens_one": "{count} laitetunnus",

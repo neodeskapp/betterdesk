@@ -5067,6 +5067,7 @@
         "revoke_failed": "The token could not be revoked.",
         "ends_with_it": "It also ends what was made with it: {list}.",
         "revoked_ended": "{name} is revoked. Ended with it: {list}.",
+        "let_in": "Computers let in with it stay: {list}. Check them on the Devices page.",
         "made_guest_links_one": "{count} guest link",
         "made_guest_links_many": "{count} guest links",
         "made_device_tokens_one": "{count} device token",

@@ -49,6 +49,7 @@ const token = (over: Partial<ApiToken>): ApiToken => ({
 	revoked_at: '',
 	revoked_by: '',
 	ends_with_it: none,
+	let_in: [],
 	...over
 });
 
@@ -72,6 +73,17 @@ describe('what ends with a token', () => {
 		);
 		expect(revokeMessage(token({}), t)).toBe(
 			"Revoke Backup? Scripts that use it stop working right away. This can't be undone."
+		);
+	});
+
+	test('the revoke dialog lists the computers the token let in, which stay', () => {
+		const letIn = [
+			{ device_id: '123456781', name: 'reception', how: 'invite', at: '2026-11-24T10:00:00Z' },
+			{ device_id: '123456783', name: '', how: 'approval', at: '2026-11-24T11:00:00Z' }
+		];
+		expect(revokeMessage(token({ let_in: letIn }), t)).toBe(
+			"Revoke Backup? Scripts that use it stop working right away. This can't be undone. " +
+				'Computers let in with it stay: reception (123456781), 123456783. Check them on the Devices page.'
 		);
 	});
 

@@ -473,6 +473,9 @@ func (s *Server) handleOnboardRedeem(w http.ResponseWriter, r *http.Request) {
 			onboardFail(w, http.StatusInternalServerError, "admit_failed")
 			return
 		}
+		if record.Kind == onboardKindJoin {
+			s.noteTokenAdmission(record.CreatedByToken, strings.TrimSpace(body.Device.DeviceID), admittedByInvite)
+		}
 	}
 	record.UsesLeft--
 	if record.UsesLeft <= 0 {

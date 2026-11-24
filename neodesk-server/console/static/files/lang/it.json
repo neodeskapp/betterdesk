@@ -4870,6 +4870,7 @@
     "revoke_failed": "Impossibile revocare il token.",
     "ends_with_it": "Termina anche ciò che è stato creato con esso: {list}.",
     "revoked_ended": "{name} è revocato. Terminati con esso: {list}.",
+    "let_in": "I computer ammessi con esso restano: {list}. Controllali nella pagina Dispositivi.",
     "made_guest_links_one": "{count} link ospite",
     "made_guest_links_many": "{count} link ospite",
     "made_device_tokens_one": "{count} token del dispositivo",

@@ -4876,6 +4876,7 @@
     "revoke_failed": "Tokenul nu a putut fi revocat.",
     "ends_with_it": "Se încheie și ce a fost creat cu el: {list}.",
     "revoked_ended": "{name} este revocat. Încheiate odată cu el: {list}.",
+    "let_in": "Computerele admise cu el rămân: {list}. Verificați-le pe pagina Dispozitive.",
     "made_guest_links_one": "{count} link pentru invitat",
     "made_guest_links_many": "{count} linkuri pentru invitați",
     "made_device_tokens_one": "{count} token de dispozitiv",

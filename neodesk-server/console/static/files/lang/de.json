@@ -4870,6 +4870,7 @@
     "revoke_failed": "Das Token konnte nicht widerrufen werden.",
     "ends_with_it": "Damit endet auch, was mit ihm erstellt wurde: {list}.",
     "revoked_ended": "{name} ist widerrufen. Damit beendet: {list}.",
+    "let_in": "Computer, die damit aufgenommen wurden, bleiben: {list}. Prüfen Sie sie auf der Seite Geräte.",
     "made_guest_links_one": "{count} Gastlink",
     "made_guest_links_many": "{count} Gastlinks",
     "made_device_tokens_one": "{count} Gerätetoken",

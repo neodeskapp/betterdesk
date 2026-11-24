@@ -145,6 +145,7 @@ func (s *Server) handleApproveDeviceKey(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	_ = s.db.DeleteConfig(deviceKeyRequestPrefix + id)
+	s.noteTokenAdmission(tokenOf(r), id, admittedByKeyApproval)
 	if s.auditLog != nil {
 		actor := strings.TrimSpace(body.Actor)
 		if actor == "" {

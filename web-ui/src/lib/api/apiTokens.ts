@@ -46,6 +46,15 @@ const NOTHING_MADE: Made = {
 	organization_invitations: 0
 };
 
+/** A computer a token let in: joined through its invite or pairing code, or approved with it */
+export const LetIn = v.object({
+	device_id: v.string(),
+	name: Text,
+	how: Text,
+	at: Text
+});
+export type LetIn = v.InferOutput<typeof LetIn>;
+
 export const ApiToken = v.object({
 	id: v.string(),
 	name: Text,
@@ -63,7 +72,15 @@ export const ApiToken = v.object({
 	revoked_at: Text,
 	revoked_by: Text,
 	/** What the token made that is still open and ends with it (the list only) */
-	ends_with_it: v.optional(Made, NOTHING_MADE)
+	ends_with_it: v.optional(Made, NOTHING_MADE),
+	/** The computers the token let in, which its end leaves in (the list only) */
+	let_in: v.optional(
+		v.pipe(
+			v.nullable(v.array(LetIn)),
+			v.transform((l) => l ?? [])
+		),
+		[]
+	)
 });
 export type ApiToken = v.InferOutput<typeof ApiToken>;
 

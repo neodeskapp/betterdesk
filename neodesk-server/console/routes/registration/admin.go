@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
@@ -301,6 +302,12 @@ func (h *handlers) approve(w http.ResponseWriter, r *http.Request) {
 	var unassigned []string
 	if deviceID := reg.Get("device_id"); goapi.Truthy(deviceID) {
 		device := jsreq.String(deviceID)
+		// Approved with an API token: its revoke dialog lists the computer
+		if use := admintoken.FromRequest(r); use != nil && h.d.AdminTokens != nil {
+			if err := h.d.AdminTokens.NoteAdmission(ctx, use.Token.ID, device, admintoken.AdmittedByApproval); err != nil {
+				h.log.Error("Note the approval with an API token:", err)
+			}
+		}
 		if err := h.assignFolder(r, device, jsreq.Prop(body, "folder_id")); err != nil {
 			h.log.Error("Assign folder on LAN approve:", err)
 			unassigned = append(unassigned, "folder")

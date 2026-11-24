@@ -540,6 +540,9 @@ func (s *Server) handlePairingRedeem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := s.enrollPairedDevice(r, enrollment)
+	if resp.Status == "approved" {
+		s.noteTokenAdmission(record.CreatedByToken, body.DeviceID, admittedByPairingCode)
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success":    resp.Status == "approved" || resp.Status == "pending",
 		"id":         record.ID,

@@ -5010,6 +5010,7 @@
     "revoke_failed": "Impossible de révoquer le jeton.",
     "ends_with_it": "Cela met aussi fin à ce qui a été créé avec lui : {list}.",
     "revoked_ended": "{name} est révoqué. Fin également de : {list}.",
+    "let_in": "Les ordinateurs admis avec lui restent : {list}. Vérifiez-les sur la page Appareils.",
     "made_guest_links_one": "{count} lien invité",
     "made_guest_links_many": "{count} liens invité",
     "made_device_tokens_one": "{count} jeton d'appareil",

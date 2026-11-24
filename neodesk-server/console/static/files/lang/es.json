@@ -4870,6 +4870,7 @@
     "revoke_failed": "No se pudo revocar el token.",
     "ends_with_it": "También termina lo que se creó con él: {list}.",
     "revoked_ended": "{name} está revocado. Terminado con él: {list}.",
+    "let_in": "Los equipos admitidos con él se quedan: {list}. Revísalos en la página Dispositivos.",
     "made_guest_links_one": "{count} enlace de invitado",
     "made_guest_links_many": "{count} enlaces de invitado",
     "made_device_tokens_one": "{count} token de dispositivo",

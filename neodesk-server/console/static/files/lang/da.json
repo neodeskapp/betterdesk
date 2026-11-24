@@ -4876,6 +4876,7 @@
     "revoke_failed": "Tokenet kunne ikke tilbagekaldes.",
     "ends_with_it": "Det afslutter også det, der blev lavet med det: {list}.",
     "revoked_ended": "{name} er tilbagekaldt. Afsluttet med det: {list}.",
+    "let_in": "Computere, der blev lukket ind med det, bliver: {list}. Tjek dem på siden Enheder.",
     "made_guest_links_one": "{count} gæstelink",
     "made_guest_links_many": "{count} gæstelinks",
     "made_device_tokens_one": "{count} enhedstoken",

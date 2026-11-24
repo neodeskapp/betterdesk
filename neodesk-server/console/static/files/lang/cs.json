@@ -4870,6 +4870,7 @@
     "revoke_failed": "Token se nepodařilo odvolat.",
     "ends_with_it": "Skončí s ním i to, co se s ním vytvořilo: {list}.",
     "revoked_ended": "{name} je odvolán. Skončilo s ním: {list}.",
+    "let_in": "Počítače, které s ním byly přijaty, zůstávají: {list}. Zkontrolujte je na stránce Zařízení.",
     "made_guest_links_one": "{count} odkaz pro hosta",
     "made_guest_links_many": "odkazy pro hosta: {count}",
     "made_device_tokens_one": "{count} token zařízení",

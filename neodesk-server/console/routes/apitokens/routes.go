@@ -78,6 +78,9 @@ type tokenJSON struct {
 	// EndsWithIt counts what the token made that is still open and ends
 	// with it; only the list has it.
 	EndsWithIt *admintoken.Made `json:"ends_with_it,omitempty"`
+	// LetIn are the computers the token let in, which its end leaves in;
+	// only the list has it.
+	LetIn []admintoken.Admission `json:"let_in,omitempty"`
 }
 
 func timeText(t time.Time) *string {
@@ -139,11 +142,17 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusInternalServerError, "Failed to list the API tokens")
 		return
 	}
+	letIn, err := h.tokens.Admissions(r.Context(), ids)
+	if err != nil {
+		kit.Fail(w, r, http.StatusInternalServerError, "Failed to list the API tokens")
+		return
+	}
 	out := listData{Tokens: make([]tokenJSON, 0, len(tokens))}
 	for _, t := range tokens {
 		item := h.toJSON(t)
 		made := open[t.ID]
 		item.EndsWithIt = &made
+		item.LetIn = letIn[t.ID]
 		out.Tokens = append(out.Tokens, item)
 	}
 	kit.OK(w, r, out)

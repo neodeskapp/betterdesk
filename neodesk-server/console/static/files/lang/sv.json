@@ -4876,6 +4876,7 @@
     "revoke_failed": "Tokenet kunde inte återkallas.",
     "ends_with_it": "Det avslutar också det som skapades med det: {list}.",
     "revoked_ended": "{name} är återkallat. Avslutat med det: {list}.",
+    "let_in": "Datorer som släpptes in med det finns kvar: {list}. Kontrollera dem på sidan Enheter.",
     "made_guest_links_one": "{count} gästlänk",
     "made_guest_links_many": "{count} gästlänkar",
     "made_device_tokens_one": "{count} enhetstoken",

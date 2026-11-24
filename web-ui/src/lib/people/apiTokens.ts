@@ -104,9 +104,18 @@ export function madeList(made: Made, t: Translate): string {
 		.join(', ');
 }
 
-/** The revoke dialog's text: what revoking does, and what ends with the token when it made something */
+/**
+ * The revoke dialog's text: what revoking does, what ends with the token
+ * when it made something, and the computers it let in, which stay, for
+ * the admin to check
+ */
 export function revokeMessage(tok: ApiToken, t: Translate): string {
-	const message = t('api_tokens.revoke_confirm', { name: tok.name });
+	const parts = [t('api_tokens.revoke_confirm', { name: tok.name })];
 	const list = madeList(tok.ends_with_it, t);
-	return list ? `${message} ${t('api_tokens.ends_with_it', { list })}` : message;
+	if (list) parts.push(t('api_tokens.ends_with_it', { list }));
+	if (tok.let_in.length) {
+		const computers = tok.let_in.map((c) => (c.name ? `${c.name} (${c.device_id})` : c.device_id)).join(', ');
+		parts.push(t('api_tokens.let_in', { list: computers }));
+	}
+	return parts.join(' ');
 }

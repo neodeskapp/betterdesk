@@ -4876,6 +4876,7 @@
     "revoke_failed": "टोकन रद्द नहीं हो सका।",
     "ends_with_it": "इससे बनाई गई चीज़ें भी साथ में खत्म होंगी: {list}।",
     "revoked_ended": "{name} रद्द हो गया। साथ में खत्म हुआ: {list}।",
+    "let_in": "इससे अंदर आने दिए गए कंप्यूटर बने रहेंगे: {list}। उन्हें डिवाइस पेज पर जाँचें।",
     "made_guest_links_one": "{count} गेस्ट लिंक",
     "made_guest_links_many": "{count} गेस्ट लिंक",
     "made_device_tokens_one": "{count} डिवाइस टोकन",

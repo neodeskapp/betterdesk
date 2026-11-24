@@ -4870,6 +4870,7 @@
     "revoke_failed": "Het token kon niet worden ingetrokken.",
     "ends_with_it": "Wat ermee is gemaakt, eindigt ook: {list}.",
     "revoked_ended": "{name} is ingetrokken. Daarmee beëindigd: {list}.",
+    "let_in": "Computers die ermee zijn toegelaten, blijven: {list}. Controleer ze op de pagina Apparaten.",
     "made_guest_links_one": "{count} gastlink",
     "made_guest_links_many": "{count} gastlinks",
     "made_device_tokens_one": "{count} apparaattoken",

@@ -5010,6 +5010,7 @@
     "revoke_failed": "無法撤銷權杖。",
     "ends_with_it": "用它建立的內容也會一併結束：{list}。",
     "revoked_ended": "已撤銷 {name}。一併結束：{list}。",
+    "let_in": "用它接入的電腦會保留：{list}。請在「設備」頁面檢查它們。",
     "made_guest_links_one": "{count} 個訪客連結",
     "made_guest_links_many": "{count} 個訪客連結",
     "made_device_tokens_one": "{count} 個設備權杖",
