@@ -171,6 +171,13 @@ describe('client values', () => {
 		expect(intuneScript(null)).toContain("$ServerHost = 'YOUR_SERVER_HOST'");
 	});
 
+	test('without an API address the install script uses the client API port clients use, not 21114 (L449)', () => {
+		const script = intuneScript({ ...config, server_id: 'desk.example.com', api_url: '' });
+		expect(script).toContain("$ApiUrl = 'http://desk.example.com:21121'");
+		expect(script).not.toContain('21114');
+		expect(intuneScript(null)).toContain("$ApiUrl = 'http://YOUR_SERVER_HOST:21121'");
+	});
+
 	test('the install script sets the relay of the deploy string, with its port (L220)', () => {
 		const script = intuneScript({ ...config, relay_server: "relay.example.com:21219'" });
 		expect(script).toContain("$RelayServer = 'relay.example.com:21219'''");

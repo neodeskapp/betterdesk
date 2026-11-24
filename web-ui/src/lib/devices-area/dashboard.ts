@@ -89,7 +89,9 @@ const psQuote = (s: string) => s.replace(/'/g, "''");
 export function intuneScript(config: ClientConfig | null): string {
 	const host = config?.server_id || config?.client_server_host || 'YOUR_SERVER_HOST';
 	const relay = config?.relay_server || host;
-	const apiUrl = config?.api_url || `http://${host}:21114`;
+	// The address clients use: the server sends it; without one it is the
+	// client API port (21121), never the server's own API port (21114)
+	const apiUrl = config?.api_url || `http://${host}:21121`;
 	const publicKey = config?.public_key || 'YOUR_PUBLIC_KEY';
 	return `# Run elevated after RustDesk MSI (PSADT post-install / Intune Win32)
 $RustDesk = Join-Path $env:ProgramFiles 'RustDesk\\rustdesk.exe'
