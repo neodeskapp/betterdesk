@@ -47,8 +47,8 @@ func TestSharedDatabaseStartOrders(t *testing.T) {
 				// precision (BUGS AE4); access_tokens has token_kind (BUGS
 				// RV1)
 				want := readCatalog(t, reference).without(sessionTable).wideConditionValue().withTokenKind(db.IsPostgres())
-				if n := len(want.tables()); n != 89 {
-					t.Fatalf("the shared dump has %d tables besides %s, want 89", n, sessionTable)
+				if n := len(want.tables()); n != 90 {
+					t.Fatalf("the shared dump has %d tables besides %s, want 90", n, sessionTable)
 				}
 				requireSameCatalog(t, "shared database against the dump", want, got)
 
