@@ -36,7 +36,7 @@
 	});
 </script>
 
-<svg class="bd-a11y-filter-defs" aria-hidden="true" focusable="false">
+<svg class="nd-a11y-filter-defs" aria-hidden="true" focusable="false">
 	<filter id="bd-a11y-protanopia" color-interpolation-filters="sRGB">
 		<feColorMatrix type="matrix" values="0.567 0.433 0 0 0 0.558 0.442 0 0 0 0 0.242 0.758 0 0 0 0 0 1 0" />
 	</filter>
@@ -54,7 +54,7 @@
 	</filter>
 </svg>
 {#if following}
-	<div class="bd-a11y-reading-guide" style:top="{Math.max(0, y - 2)}px"></div>
-	<div class="bd-a11y-reading-mask" style:top="0" style:height="{top}px"></div>
-	<div class="bd-a11y-reading-mask" style:top="{bottom}px" style:height="{Math.max(0, vh - bottom)}px"></div>
+	<div class="nd-a11y-reading-guide" style:top="{Math.max(0, y - 2)}px"></div>
+	<div class="nd-a11y-reading-mask" style:top="0" style:height="{top}px"></div>
+	<div class="nd-a11y-reading-mask" style:top="{bottom}px" style:height="{Math.max(0, vh - bottom)}px"></div>
 {/if}

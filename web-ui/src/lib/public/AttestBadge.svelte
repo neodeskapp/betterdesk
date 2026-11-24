@@ -20,9 +20,9 @@
 </script>
 
 <div class="login-attestation-badge">
-	<div class="bd-attest-badge bd-attest-tier-{tier}" {title}>
-		<div class="bd-attest-brand">{badge.brand || appName}</div>
-		<div class="bd-attest-tier">{label}</div>
+	<div class="nd-attest-badge nd-attest-tier-{tier}" {title}>
+		<div class="nd-attest-brand">{badge.brand || appName}</div>
+		<div class="nd-attest-tier">{label}</div>
 	</div>
 </div>
 
@@ -40,7 +40,7 @@
 			margin-top: var(--space-5);
 		}
 	}
-	.bd-attest-badge {
+	.nd-attest-badge {
 		display: inline-flex;
 		flex-direction: column;
 		align-items: flex-start;
@@ -76,19 +76,19 @@
 		line-height: 1.1;
 		user-select: none;
 	}
-	.bd-attest-brand,
-	.bd-attest-tier {
+	.nd-attest-brand,
+	.nd-attest-tier {
 		background-clip: text;
 		-webkit-background-clip: text;
 		color: transparent;
 		white-space: nowrap;
 	}
-	.bd-attest-brand {
+	.nd-attest-brand {
 		font-size: 17px;
 		font-weight: 600;
 		letter-spacing: 0.01em;
 	}
-	.bd-attest-tier {
+	.nd-attest-tier {
 		margin-top: 3px;
 		font-size: 20px;
 		font-weight: 300;
@@ -96,27 +96,27 @@
 		text-transform: uppercase;
 	}
 	/* Tier metal colours */
-	.bd-attest-tier-bronze :is(.bd-attest-brand, .bd-attest-tier) {
+	.nd-attest-tier-bronze :is(.nd-attest-brand, .nd-attest-tier) {
 		background-image: linear-gradient(180deg, #e8a857 0%, #cd7f32 45%, #a0622a 100%);
 	}
-	.bd-attest-tier-iron :is(.bd-attest-brand, .bd-attest-tier) {
+	.nd-attest-tier-iron :is(.nd-attest-brand, .nd-attest-tier) {
 		background-image: linear-gradient(180deg, #f2f2f2 0%, #c8c8c8 45%, #9a9a9a 100%);
 	}
-	.bd-attest-tier-titanium :is(.bd-attest-brand, .bd-attest-tier) {
+	.nd-attest-tier-titanium :is(.nd-attest-brand, .nd-attest-tier) {
 		background-image: linear-gradient(180deg, #ffffff 0%, #d8e0ea 40%, #a8b8c8 100%);
 	}
-	.bd-attest-tier-obsidian :is(.bd-attest-brand, .bd-attest-tier) {
+	.nd-attest-tier-obsidian :is(.nd-attest-brand, .nd-attest-tier) {
 		background-image: linear-gradient(180deg, #e8eeff 0%, #9aacff 35%, #5a6fd4 100%);
 	}
-	.bd-attest-tier-platinum :is(.bd-attest-brand, .bd-attest-tier) {
+	.nd-attest-tier-platinum :is(.nd-attest-brand, .nd-attest-tier) {
 		background-image: linear-gradient(180deg, #fff8e7 0%, #e8dcc0 35%, #d4af37 100%);
 	}
-	.bd-attest-tier-none :is(.bd-attest-brand, .bd-attest-tier) {
+	.nd-attest-tier-none :is(.nd-attest-brand, .nd-attest-tier) {
 		background-image: linear-gradient(180deg, #8899aa 0%, #556677 100%);
 	}
 	@media (forced-colors: active) {
-		.bd-attest-brand,
-		.bd-attest-tier {
+		.nd-attest-brand,
+		.nd-attest-tier {
 			color: CanvasText;
 			background: none;
 		}

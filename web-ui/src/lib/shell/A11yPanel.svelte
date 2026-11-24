@@ -211,7 +211,7 @@
 			'subtitle',
 			'Changes to text, color and motion apply right away and are saved in this browser.'
 		)}
-		class="bd-a11y-modal"
+		class="nd-a11y-modal"
 	>
 		<section class="a11y-section" aria-labelledby={`${uid}-h-profiles`}>
 			<h3 id={`${uid}-h-profiles`}>{tr('profiles', 'Quick profiles')}</h3>

@@ -314,8 +314,8 @@ describe('notices, branding and the compact sign-in', () => {
 			query: readLoginQuery(''),
 			go: vi.fn()
 		});
-		const badge = document.querySelector('.bd-attest-badge')!;
-		expect(badge).toHaveClass('bd-attest-tier-platinum');
+		const badge = document.querySelector('.nd-attest-badge')!;
+		expect(badge).toHaveClass('nd-attest-tier-platinum');
 		expect(badge).toHaveAttribute('title', 'Tested');
 		expect(badge).toHaveTextContent('Acme');
 	});
