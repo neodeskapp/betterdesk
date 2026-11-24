@@ -2852,7 +2852,8 @@
     "clipboard_image_unsupported": "Det kopierede billede kan ikke sendes. Kun teksten kom over.",
     "clipboard_send_failed": "Udklipsholderen kunne ikke sendes til fjerncomputeren.",
     "session_title": "Fjernsession: {name}",
-    "sign_out_ends_sessions": "Dine åbne fjernsessioner slutter også ({count})."
+    "sign_out_ends_sessions": "Dine åbne fjernsessioner slutter også ({count}).",
+    "send_windows_key": "Windows-tast"
   },
   "branding": {
     "identity_title": "Brand Identitet",
@@ -8800,7 +8801,9 @@
     "hide_sidebar": "Skjul sidepanelet",
     "show_sidebar": "Vis sidepanelet",
     "open_in_new_tab": "Åbn i ny fane",
-    "open_in_new_tab_hint": "Flyt denne session til sin egen fane: den forbinder igen dér og slutter her"
+    "open_in_new_tab_hint": "Flyt denne session til sin egen fane: den forbinder igen dér og slutter her",
+    "no_keyboard_lock": "Denne browser beholder nogle genveje selv, også i fuld skærm: Ctrl+W, Ctrl+T, Ctrl+N, Windows-tasten, og Esc forlader fuld skærm. Handlinger sender Windows-tasten, Alt+Tab og Ctrl+Alt+Del til fjerncomputeren.",
+    "no_screen_placement": "Denne browser kan ikke placere vinduer på dine andre skærme. Træk hver skærms vindue hen på den skærm, du vil have det på."
   },
   "diagram": {
     "your_computer": "Din computer",

@@ -2872,7 +2872,8 @@
         "clipboard_image_unsupported": "The copied image can't be sent. Only the text went over.",
         "clipboard_send_failed": "The clipboard could not be sent to the remote computer.",
         "session_title": "Remote session: {name}",
-        "sign_out_ends_sessions": "Your open remote sessions end too ({count})."
+        "sign_out_ends_sessions": "Your open remote sessions end too ({count}).",
+        "send_windows_key": "Windows key"
     },
     "remote_dashboard": {
         "title": "Remote Desktop Client",
@@ -8794,7 +8795,9 @@
         "hide_sidebar": "Hide the sidebar",
         "show_sidebar": "Show the sidebar",
         "open_in_new_tab": "Open in new tab",
-        "open_in_new_tab_hint": "Move this session to a tab of its own: it connects again there and ends here"
+        "open_in_new_tab_hint": "Move this session to a tab of its own: it connects again there and ends here",
+        "no_keyboard_lock": "This browser keeps some shortcuts for itself, also in full screen: Ctrl+W, Ctrl+T, Ctrl+N, the Windows key, and Esc leaves full screen. Actions sends the Windows key, Alt+Tab and Ctrl+Alt+Del to the remote computer.",
+        "no_screen_placement": "This browser can't put windows on your other screens. Drag each display's window to the screen you want it on."
     },
     "diagram": {
         "your_computer": "Your computer",

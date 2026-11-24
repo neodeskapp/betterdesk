@@ -36,6 +36,7 @@
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
 	import IconButton from '#lib/ui/IconButton.svelte';
+	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { appLink } from '#lib/util/app-links.ts';
 	import ClipboardStatus from './ClipboardStatus.svelte';
 	import ControlsRow from './ControlsRow.svelte';
@@ -198,12 +199,26 @@
 
 	/* ── Controls, full screen ── */
 
+	/** Said once per page: this browser keeps its own shortcuts in full screen */
+	let keyboardLockNoted = false;
+
 	async function toggleFullscreen() {
 		const root = document.documentElement;
 		const nav = navigator as Navigator & { keyboard?: { lock?: () => Promise<void>; unlock?: () => void } };
 		if (!document.fullscreenElement) {
 			await root.requestFullscreen().catch(() => {});
-			await nav.keyboard?.lock?.().catch(() => {});
+			// Keyboard Lock (Chromium in a secure context) hands the remote the shortcuts the browser
+			// would take; Firefox and Safari have none, and say so once
+			if (typeof nav.keyboard?.lock === 'function') await nav.keyboard.lock().catch(() => {});
+			else if (document.fullscreenElement && !keyboardLockNoted) {
+				keyboardLockNoted = true;
+				toast.info(
+					tf(
+						'remote_viewer.no_keyboard_lock',
+						'This browser keeps some shortcuts for itself, also in full screen: Ctrl+W, Ctrl+T, Ctrl+N, the Windows key, and Esc leaves full screen. Actions sends the Windows key, Alt+Tab and Ctrl+Alt+Del to the remote computer.'
+					)
+				);
+			}
 		} else {
 			nav.keyboard?.unlock?.();
 			await document.exitFullscreen().catch(() => {});

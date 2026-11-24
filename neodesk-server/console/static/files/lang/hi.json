@@ -2852,7 +2852,8 @@
     "clipboard_image_unsupported": "कॉपी किया गया चित्र भेजा नहीं जा सकता। केवल टेक्स्ट गया।",
     "clipboard_send_failed": "क्लिपबोर्ड रिमोट कंप्यूटर पर नहीं भेजा जा सका।",
     "session_title": "रिमोट सत्र: {name}",
-    "sign_out_ends_sessions": "आपके खुले रिमोट सत्र भी खत्म होंगे ({count})।"
+    "sign_out_ends_sessions": "आपके खुले रिमोट सत्र भी खत्म होंगे ({count})।",
+    "send_windows_key": "Windows कुंजी"
   },
   "branding": {
     "identity_title": "ब्रांड पहचान",
@@ -8800,7 +8801,9 @@
     "hide_sidebar": "साइडबार छिपाएँ",
     "show_sidebar": "साइडबार दिखाएँ",
     "open_in_new_tab": "नए टैब में खोलें",
-    "open_in_new_tab_hint": "इस सत्र को अपने अलग टैब में ले जाएँ: वहाँ यह फिर से जुड़ेगा और यहाँ खत्म होगा"
+    "open_in_new_tab_hint": "इस सत्र को अपने अलग टैब में ले जाएँ: वहाँ यह फिर से जुड़ेगा और यहाँ खत्म होगा",
+    "no_keyboard_lock": "यह ब्राउज़र कुछ शॉर्टकट अपने पास रखता है, फ़ुल स्क्रीन में भी: Ctrl+W, Ctrl+T, Ctrl+N, Windows कुंजी, और Esc फ़ुल स्क्रीन से बाहर ले जाता है। Actions से Windows कुंजी, Alt+Tab और Ctrl+Alt+Del रिमोट कंप्यूटर पर भेजे जाते हैं।",
+    "no_screen_placement": "यह ब्राउज़र आपकी दूसरी स्क्रीनों पर विंडो नहीं रख सकता। हर डिस्प्ले की विंडो को अपनी चाही स्क्रीन पर खींचें।"
   },
   "diagram": {
     "your_computer": "आपका कंप्यूटर",

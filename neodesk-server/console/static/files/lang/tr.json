@@ -2852,7 +2852,8 @@
     "clipboard_image_unsupported": "Kopyalanan görsel gönderilemiyor. Yalnızca metin aktarıldı.",
     "clipboard_send_failed": "Pano uzak bilgisayara gönderilemedi.",
     "session_title": "Uzak oturum: {name}",
-    "sign_out_ends_sessions": "Açık uzak oturumlarınız da sona erer ({count})."
+    "sign_out_ends_sessions": "Açık uzak oturumlarınız da sona erer ({count}).",
+    "send_windows_key": "Windows tuşu"
   },
   "branding": {
     "identity_title": "Marka Kimliği",
@@ -8800,7 +8801,9 @@
     "hide_sidebar": "Kenar çubuğunu gizle",
     "show_sidebar": "Kenar çubuğunu göster",
     "open_in_new_tab": "Yeni sekmede aç",
-    "open_in_new_tab_hint": "Bu oturumu kendi sekmesine taşı: orada yeniden bağlanır, burada sona erer"
+    "open_in_new_tab_hint": "Bu oturumu kendi sekmesine taşı: orada yeniden bağlanır, burada sona erer",
+    "no_keyboard_lock": "Bu tarayıcı bazı kısayolları tam ekranda da kendine saklar: Ctrl+W, Ctrl+T, Ctrl+N, Windows tuşu; Esc ise tam ekrandan çıkar. Eylemler, Windows tuşunu, Alt+Tab'ı ve Ctrl+Alt+Del'i uzak bilgisayara gönderir.",
+    "no_screen_placement": "Bu tarayıcı pencereleri diğer ekranlarınıza yerleştiremez. Her ekranın penceresini istediğiniz ekrana sürükleyin."
   },
   "diagram": {
     "your_computer": "Bilgisayarınız",

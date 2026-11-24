@@ -1932,6 +1932,14 @@ export class Viewer {
 			}
 		}
 		const free = s.displays.filter((d) => !s.popouts.includes(d.idx));
+		// Firefox and Safari can't place windows on other screens: the person moves them
+		if (!wm.getScreenDetails)
+			toast.info(
+				tf(
+					'remote_viewer.no_screen_placement',
+					"This browser can't put windows on your other screens. Drag each display's window to the screen you want it on."
+				)
+			);
 		if (!details || details.screens.length < 2) {
 			// Each display but the one shown here in a window of its own
 			const keep = this.tilesShown(s) ? s.activeDisplay : this.singleDisplay(s);

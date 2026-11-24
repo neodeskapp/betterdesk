@@ -2852,7 +2852,8 @@
     "clipboard_image_unsupported": "A másolt képet nem lehet elküldeni. Csak a szöveg ment át.",
     "clipboard_send_failed": "A vágólapot nem sikerült elküldeni a távoli számítógépre.",
     "session_title": "Távoli munkamenet: {name}",
-    "sign_out_ends_sessions": "A nyitott távoli munkamenetei is véget érnek ({count})."
+    "sign_out_ends_sessions": "A nyitott távoli munkamenetei is véget érnek ({count}).",
+    "send_windows_key": "Windows billentyű"
   },
   "branding": {
     "identity_title": "Márkaidentitás",
@@ -8800,7 +8801,9 @@
     "hide_sidebar": "Oldalsáv elrejtése",
     "show_sidebar": "Oldalsáv megjelenítése",
     "open_in_new_tab": "Megnyitás új lapon",
-    "open_in_new_tab_hint": "A munkamenet áthelyezése saját lapra: ott újra csatlakozik, itt pedig véget ér"
+    "open_in_new_tab_hint": "A munkamenet áthelyezése saját lapra: ott újra csatlakozik, itt pedig véget ér",
+    "no_keyboard_lock": "Ez a böngésző néhány billentyűparancsot megtart magának, teljes képernyőn is: Ctrl+W, Ctrl+T, Ctrl+N, a Windows billentyű, és az Esc kilép a teljes képernyőből. A Műveletek elküldi a Windows billentyűt, az Alt+Tabot és a Ctrl+Alt+Del-t a távoli számítógépre.",
+    "no_screen_placement": "Ez a böngésző nem tud ablakot tenni a többi képernyőjére. Húzza az egyes kijelzők ablakát a kívánt képernyőre."
   },
   "diagram": {
     "your_computer": "Az Ön gépe",

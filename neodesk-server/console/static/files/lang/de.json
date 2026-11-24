@@ -2846,7 +2846,8 @@
     "clipboard_image_unsupported": "Das kopierte Bild lässt sich nicht senden. Nur der Text wurde übertragen.",
     "clipboard_send_failed": "Die Zwischenablage konnte nicht an den entfernten Computer gesendet werden.",
     "session_title": "Fernsitzung: {name}",
-    "sign_out_ends_sessions": "Ihre offenen Fernsitzungen enden ebenfalls ({count})."
+    "sign_out_ends_sessions": "Ihre offenen Fernsitzungen enden ebenfalls ({count}).",
+    "send_windows_key": "Windows-Taste"
   },
   "branding": {
     "identity_title": "Markenidentität",
@@ -8794,7 +8795,9 @@
     "hide_sidebar": "Seitenleiste ausblenden",
     "show_sidebar": "Seitenleiste einblenden",
     "open_in_new_tab": "In neuem Tab öffnen",
-    "open_in_new_tab_hint": "Diese Sitzung in einen eigenen Tab verschieben: Sie verbindet sich dort neu und endet hier"
+    "open_in_new_tab_hint": "Diese Sitzung in einen eigenen Tab verschieben: Sie verbindet sich dort neu und endet hier",
+    "no_keyboard_lock": "Dieser Browser behält einige Tastenkürzel für sich, auch im Vollbild: Strg+W, Strg+T, Strg+N, die Windows-Taste, und Esc beendet das Vollbild. Aktionen sendet die Windows-Taste, Alt+Tab und Strg+Alt+Entf an den entfernten Computer.",
+    "no_screen_placement": "Dieser Browser kann keine Fenster auf Ihre anderen Bildschirme legen. Ziehen Sie das Fenster jeder Anzeige auf den gewünschten Bildschirm."
   },
   "diagram": {
     "your_computer": "Ihr Computer",

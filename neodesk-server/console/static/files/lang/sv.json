@@ -2852,7 +2852,8 @@
     "clipboard_image_unsupported": "Den kopierade bilden kan inte skickas. Bara texten kom över.",
     "clipboard_send_failed": "Urklipp kunde inte skickas till fjärrdatorn.",
     "session_title": "Fjärrsession: {name}",
-    "sign_out_ends_sessions": "Dina öppna fjärrsessioner avslutas också ({count})."
+    "sign_out_ends_sessions": "Dina öppna fjärrsessioner avslutas också ({count}).",
+    "send_windows_key": "Windows-tangent"
   },
   "branding": {
     "identity_title": "Varumärkesidentitet",
@@ -8800,7 +8801,9 @@
     "hide_sidebar": "Dölj sidofältet",
     "show_sidebar": "Visa sidofältet",
     "open_in_new_tab": "Öppna i ny flik",
-    "open_in_new_tab_hint": "Flytta sessionen till en egen flik: den ansluter igen där och avslutas här"
+    "open_in_new_tab_hint": "Flytta sessionen till en egen flik: den ansluter igen där och avslutas här",
+    "no_keyboard_lock": "Den här webbläsaren behåller vissa kortkommandon själv, även i helskärm: Ctrl+W, Ctrl+T, Ctrl+N, Windows-tangenten, och Esc lämnar helskärm. Åtgärder skickar Windows-tangenten, Alt+Tab och Ctrl+Alt+Del till fjärrdatorn.",
+    "no_screen_placement": "Den här webbläsaren kan inte lägga fönster på dina andra skärmar. Dra varje skärms fönster till den skärm du vill ha det på."
   },
   "diagram": {
     "your_computer": "Din dator",

@@ -159,6 +159,13 @@
 					<MenuItem icon="settings_backup_restore" onselect={() => viewer.resetKeyboard()}
 						>{tf('remote.reset_keyboard', 'Reset keyboard')}</MenuItem
 					>
+					<!-- Keys the browser keeps for itself (all of them in Firefox and Safari, which have no Keyboard Lock) -->
+					<MenuItem icon="keyboard" onselect={() => viewer.sendSpecialKey('Meta')}
+						>{tf('remote.send_windows_key', 'Windows key')}</MenuItem
+					>
+					<MenuItem icon="keyboard" onselect={() => viewer.sendSpecialKey('Alt+Tab')}
+						><span translate="no">Alt+Tab</span></MenuItem
+					>
 					<MenuDivider />
 					<MenuItem
 						type="checkbox"

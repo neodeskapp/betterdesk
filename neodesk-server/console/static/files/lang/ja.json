@@ -2846,7 +2846,8 @@
     "clipboard_image_unsupported": "コピーした画像は送信できません。テキストだけを送りました。",
     "clipboard_send_failed": "クリップボードをリモートコンピューターに送信できませんでした。",
     "session_title": "リモートセッション: {name}",
-    "sign_out_ends_sessions": "開いているリモートセッションも終了します（{count}）。"
+    "sign_out_ends_sessions": "開いているリモートセッションも終了します（{count}）。",
+    "send_windows_key": "Windows キー"
   },
   "branding": {
     "identity_title": "ブランドアイデンティティ",
@@ -8794,7 +8795,9 @@
     "hide_sidebar": "サイドバーを隠す",
     "show_sidebar": "サイドバーを表示",
     "open_in_new_tab": "新しいタブで開く",
-    "open_in_new_tab_hint": "このセッションを専用のタブに移します: そちらで再接続し、ここでは終了します"
+    "open_in_new_tab_hint": "このセッションを専用のタブに移します: そちらで再接続し、ここでは終了します",
+    "no_keyboard_lock": "このブラウザーは全画面でも一部のショートカットを自分で使います: Ctrl+W、Ctrl+T、Ctrl+N、Windows キー。Esc で全画面が終わります。Windows キー、Alt+Tab、Ctrl+Alt+Del は「操作」からリモートコンピューターに送れます。",
+    "no_screen_placement": "このブラウザーは他の画面にウィンドウを配置できません。各ディスプレイのウィンドウを目的の画面へドラッグしてください。"
   },
   "diagram": {
     "your_computer": "あなたのコンピューター",

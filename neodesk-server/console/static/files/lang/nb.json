@@ -2852,7 +2852,8 @@
     "clipboard_image_unsupported": "Det kopierte bildet kan ikke sendes. Bare teksten ble overført.",
     "clipboard_send_failed": "Utklippstavlen kunne ikke sendes til den eksterne datamaskinen.",
     "session_title": "Ekstern økt: {name}",
-    "sign_out_ends_sessions": "De åpne eksterne øktene dine avsluttes også ({count})."
+    "sign_out_ends_sessions": "De åpne eksterne øktene dine avsluttes også ({count}).",
+    "send_windows_key": "Windows-tast"
   },
   "branding": {
     "identity_title": "Merkeidentitet",
@@ -8800,7 +8801,9 @@
     "hide_sidebar": "Skjul sidepanelet",
     "show_sidebar": "Vis sidepanelet",
     "open_in_new_tab": "Åpne i ny fane",
-    "open_in_new_tab_hint": "Flytt denne økten til en egen fane: den kobler til på nytt der og avsluttes her"
+    "open_in_new_tab_hint": "Flytt denne økten til en egen fane: den kobler til på nytt der og avsluttes her",
+    "no_keyboard_lock": "Denne nettleseren beholder noen snarveier selv, også i fullskjerm: Ctrl+W, Ctrl+T, Ctrl+N, Windows-tasten, og Esc avslutter fullskjerm. Handlinger sender Windows-tasten, Alt+Tab og Ctrl+Alt+Del til den eksterne datamaskinen.",
+    "no_screen_placement": "Denne nettleseren kan ikke legge vinduer på de andre skjermene dine. Dra hver skjerms vindu til skjermen du vil ha det på."
   },
   "diagram": {
     "your_computer": "Din datamaskin",

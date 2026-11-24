@@ -2846,7 +2846,8 @@
     "clipboard_image_unsupported": "La imagen copiada no se puede enviar. Solo se envió el texto.",
     "clipboard_send_failed": "No se pudo enviar el portapapeles al equipo remoto.",
     "session_title": "Sesión remota: {name}",
-    "sign_out_ends_sessions": "También terminan tus sesiones remotas abiertas ({count})."
+    "sign_out_ends_sessions": "También terminan tus sesiones remotas abiertas ({count}).",
+    "send_windows_key": "Tecla Windows"
   },
   "branding": {
     "identity_title": "Identidad de marca",
@@ -8794,7 +8795,9 @@
     "hide_sidebar": "Ocultar la barra lateral",
     "show_sidebar": "Mostrar la barra lateral",
     "open_in_new_tab": "Abrir en una pestaña nueva",
-    "open_in_new_tab_hint": "Mover esta sesión a una pestaña propia: allí se vuelve a conectar y aquí termina"
+    "open_in_new_tab_hint": "Mover esta sesión a una pestaña propia: allí se vuelve a conectar y aquí termina",
+    "no_keyboard_lock": "Este navegador se queda con algunos atajos, también a pantalla completa: Ctrl+W, Ctrl+T, Ctrl+N, la tecla Windows, y Esc sale de la pantalla completa. Acciones envía la tecla Windows, Alt+Tab y Ctrl+Alt+Supr al equipo remoto.",
+    "no_screen_placement": "Este navegador no puede colocar ventanas en tus otras pantallas. Arrastra la ventana de cada pantalla a la que quieras."
   },
   "diagram": {
     "your_computer": "Su equipo",

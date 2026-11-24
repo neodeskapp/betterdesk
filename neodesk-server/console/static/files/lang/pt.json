@@ -2846,7 +2846,8 @@
     "clipboard_image_unsupported": "A imagem copiada não pode ser enviada. Só o texto passou.",
     "clipboard_send_failed": "Não foi possível enviar a área de transferência para o computador remoto.",
     "session_title": "Sessão remota: {name}",
-    "sign_out_ends_sessions": "As suas sessões remotas abertas também terminam ({count})."
+    "sign_out_ends_sessions": "As suas sessões remotas abertas também terminam ({count}).",
+    "send_windows_key": "Tecla Windows"
   },
   "branding": {
     "identity_title": "Identidade da marca",
@@ -8794,7 +8795,9 @@
     "hide_sidebar": "Ocultar a barra lateral",
     "show_sidebar": "Mostrar a barra lateral",
     "open_in_new_tab": "Abrir num novo separador",
-    "open_in_new_tab_hint": "Mover esta sessão para um separador próprio: aí volta a ligar-se e aqui termina"
+    "open_in_new_tab_hint": "Mover esta sessão para um separador próprio: aí volta a ligar-se e aqui termina",
+    "no_keyboard_lock": "Este navegador guarda alguns atalhos para si, também em ecrã inteiro: Ctrl+W, Ctrl+T, Ctrl+N, a tecla Windows, e Esc sai do ecrã inteiro. Ações envia a tecla Windows, Alt+Tab e Ctrl+Alt+Del para o computador remoto.",
+    "no_screen_placement": "Este navegador não consegue pôr janelas nos seus outros ecrãs. Arraste a janela de cada ecrã para onde a quiser."
   },
   "diagram": {
     "your_computer": "O seu computador",

@@ -2852,7 +2852,8 @@
     "clipboard_image_unsupported": "Không gửi được hình ảnh đã sao chép. Chỉ văn bản được gửi.",
     "clipboard_send_failed": "Không thể gửi bộ nhớ tạm tới máy tính từ xa.",
     "session_title": "Phiên từ xa: {name}",
-    "sign_out_ends_sessions": "Các phiên từ xa đang mở của bạn cũng kết thúc ({count})."
+    "sign_out_ends_sessions": "Các phiên từ xa đang mở của bạn cũng kết thúc ({count}).",
+    "send_windows_key": "Phím Windows"
   },
   "branding": {
     "identity_title": "Nhận diện thương hiệu",
@@ -8800,7 +8801,9 @@
     "hide_sidebar": "Ẩn thanh bên",
     "show_sidebar": "Hiện thanh bên",
     "open_in_new_tab": "Mở trong thẻ mới",
-    "open_in_new_tab_hint": "Chuyển phiên này sang thẻ riêng: phiên sẽ kết nối lại ở đó và kết thúc ở đây"
+    "open_in_new_tab_hint": "Chuyển phiên này sang thẻ riêng: phiên sẽ kết nối lại ở đó và kết thúc ở đây",
+    "no_keyboard_lock": "Trình duyệt này giữ lại một số phím tắt cho chính nó, kể cả khi toàn màn hình: Ctrl+W, Ctrl+T, Ctrl+N, phím Windows, và Esc thoát toàn màn hình. Thao tác gửi phím Windows, Alt+Tab và Ctrl+Alt+Del tới máy tính từ xa.",
+    "no_screen_placement": "Trình duyệt này không thể đặt cửa sổ lên các màn hình khác của bạn. Hãy kéo cửa sổ của từng màn hình tới màn hình bạn muốn."
   },
   "diagram": {
     "your_computer": "Máy tính của bạn",

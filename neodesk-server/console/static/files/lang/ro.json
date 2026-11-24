@@ -2852,7 +2852,8 @@
     "clipboard_image_unsupported": "Imaginea copiată nu poate fi trimisă. S-a transmis doar textul.",
     "clipboard_send_failed": "Clipboardul nu a putut fi trimis la computerul la distanță.",
     "session_title": "Sesiune la distanță: {name}",
-    "sign_out_ends_sessions": "Se încheie și sesiunile la distanță deschise ({count})."
+    "sign_out_ends_sessions": "Se încheie și sesiunile la distanță deschise ({count}).",
+    "send_windows_key": "Tasta Windows"
   },
   "branding": {
     "identity_title": "Identitatea de marcă",
@@ -8800,7 +8801,9 @@
     "hide_sidebar": "Ascunde bara laterală",
     "show_sidebar": "Afișează bara laterală",
     "open_in_new_tab": "Deschide într-o filă nouă",
-    "open_in_new_tab_hint": "Mută această sesiune într-o filă proprie: acolo se reconectează, aici se încheie"
+    "open_in_new_tab_hint": "Mută această sesiune într-o filă proprie: acolo se reconectează, aici se încheie",
+    "no_keyboard_lock": "Acest browser păstrează unele comenzi rapide pentru el, și pe ecran complet: Ctrl+W, Ctrl+T, Ctrl+N, tasta Windows, iar Esc iese din ecranul complet. Acțiuni trimite tasta Windows, Alt+Tab și Ctrl+Alt+Del la computerul la distanță.",
+    "no_screen_placement": "Acest browser nu poate pune ferestre pe celelalte ecrane. Trageți fereastra fiecărui afișaj pe ecranul dorit."
   },
   "diagram": {
     "your_computer": "Computerul dvs.",

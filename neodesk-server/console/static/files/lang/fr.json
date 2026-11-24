@@ -2868,7 +2868,8 @@
     "clipboard_image_unsupported": "L'image copiée ne peut pas être envoyée. Seul le texte est passé.",
     "clipboard_send_failed": "Le presse-papiers n'a pas pu être envoyé à l'ordinateur distant.",
     "session_title": "Session à distance : {name}",
-    "sign_out_ends_sessions": "Vos sessions à distance ouvertes se terminent aussi ({count})."
+    "sign_out_ends_sessions": "Vos sessions à distance ouvertes se terminent aussi ({count}).",
+    "send_windows_key": "Touche Windows"
   },
   "branding": {
     "identity_title": "Identité de marque",
@@ -8798,7 +8799,9 @@
     "hide_sidebar": "Masquer la barre latérale",
     "show_sidebar": "Afficher la barre latérale",
     "open_in_new_tab": "Ouvrir dans un nouvel onglet",
-    "open_in_new_tab_hint": "Déplacer cette session dans son propre onglet : elle s'y reconnecte et se termine ici"
+    "open_in_new_tab_hint": "Déplacer cette session dans son propre onglet : elle s'y reconnecte et se termine ici",
+    "no_keyboard_lock": "Ce navigateur garde certains raccourcis pour lui, même en plein écran : Ctrl+W, Ctrl+T, Ctrl+N, la touche Windows, et Échap quitte le plein écran. Actions envoie la touche Windows, Alt+Tab et Ctrl+Alt+Suppr à l'ordinateur distant.",
+    "no_screen_placement": "Ce navigateur ne peut pas placer les fenêtres sur vos autres écrans. Faites glisser la fenêtre de chaque affichage sur l'écran voulu."
   },
   "diagram": {
     "your_computer": "Votre ordinateur",

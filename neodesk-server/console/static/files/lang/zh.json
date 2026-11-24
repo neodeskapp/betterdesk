@@ -2846,7 +2846,8 @@
     "clipboard_image_unsupported": "无法发送复制的图片，只发送了文本。",
     "clipboard_send_failed": "无法将剪贴板发送到远程计算机。",
     "session_title": "远程会话：{name}",
-    "sign_out_ends_sessions": "你打开的远程会话也会结束（{count}）。"
+    "sign_out_ends_sessions": "你打开的远程会话也会结束（{count}）。",
+    "send_windows_key": "Windows 键"
   },
   "branding": {
     "identity_title": "品牌标识",
@@ -8794,7 +8795,9 @@
     "hide_sidebar": "隐藏侧边栏",
     "show_sidebar": "显示侧边栏",
     "open_in_new_tab": "在新标签页中打开",
-    "open_in_new_tab_hint": "将此会话移到单独的标签页：会在那里重新连接，并在这里结束"
+    "open_in_new_tab_hint": "将此会话移到单独的标签页：会在那里重新连接，并在这里结束",
+    "no_keyboard_lock": "此浏览器在全屏时也会保留一些快捷键：Ctrl+W、Ctrl+T、Ctrl+N、Windows 键，按 Esc 会退出全屏。可在“操作”中向远程计算机发送 Windows 键、Alt+Tab 和 Ctrl+Alt+Del。",
+    "no_screen_placement": "此浏览器无法把窗口放到你的其他屏幕上。请把每个显示器的窗口拖到想要的屏幕。"
   },
   "diagram": {
     "your_computer": "您的电脑",

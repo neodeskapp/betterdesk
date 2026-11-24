@@ -2852,7 +2852,8 @@
     "clipboard_image_unsupported": "Gambar yang disalin tidak bisa dikirim. Hanya teksnya yang terkirim.",
     "clipboard_send_failed": "Papan klip tidak dapat dikirim ke komputer jarak jauh.",
     "session_title": "Sesi jarak jauh: {name}",
-    "sign_out_ends_sessions": "Sesi jarak jauh Anda yang terbuka juga berakhir ({count})."
+    "sign_out_ends_sessions": "Sesi jarak jauh Anda yang terbuka juga berakhir ({count}).",
+    "send_windows_key": "Tombol Windows"
   },
   "branding": {
     "identity_title": "Identitas Merek",
@@ -8800,7 +8801,9 @@
     "hide_sidebar": "Sembunyikan bilah sisi",
     "show_sidebar": "Tampilkan bilah sisi",
     "open_in_new_tab": "Buka di tab baru",
-    "open_in_new_tab_hint": "Pindahkan sesi ini ke tab tersendiri: sesi tersambung lagi di sana dan berakhir di sini"
+    "open_in_new_tab_hint": "Pindahkan sesi ini ke tab tersendiri: sesi tersambung lagi di sana dan berakhir di sini",
+    "no_keyboard_lock": "Browser ini menyimpan beberapa pintasan untuk dirinya, juga di layar penuh: Ctrl+W, Ctrl+T, Ctrl+N, tombol Windows, dan Esc keluar dari layar penuh. Tindakan mengirim tombol Windows, Alt+Tab, dan Ctrl+Alt+Del ke komputer jarak jauh.",
+    "no_screen_placement": "Browser ini tidak bisa menaruh jendela di layar Anda yang lain. Seret jendela setiap tampilan ke layar yang Anda inginkan."
   },
   "diagram": {
     "your_computer": "Komputer Anda",

@@ -2846,7 +2846,8 @@
     "clipboard_image_unsupported": "L'immagine copiata non può essere inviata. È passato solo il testo.",
     "clipboard_send_failed": "Non è stato possibile inviare gli appunti al computer remoto.",
     "session_title": "Sessione remota: {name}",
-    "sign_out_ends_sessions": "Terminano anche le tue sessioni remote aperte ({count})."
+    "sign_out_ends_sessions": "Terminano anche le tue sessioni remote aperte ({count}).",
+    "send_windows_key": "Tasto Windows"
   },
   "branding": {
     "identity_title": "Identità del marchio",
@@ -8794,7 +8795,9 @@
     "hide_sidebar": "Nascondi la barra laterale",
     "show_sidebar": "Mostra la barra laterale",
     "open_in_new_tab": "Apri in una nuova scheda",
-    "open_in_new_tab_hint": "Sposta questa sessione in una scheda propria: lì si ricollega e qui termina"
+    "open_in_new_tab_hint": "Sposta questa sessione in una scheda propria: lì si ricollega e qui termina",
+    "no_keyboard_lock": "Questo browser tiene per sé alcune scorciatoie, anche a schermo intero: Ctrl+W, Ctrl+T, Ctrl+N, il tasto Windows, ed Esc esce dallo schermo intero. Azioni invia il tasto Windows, Alt+Tab e Ctrl+Alt+Canc al computer remoto.",
+    "no_screen_placement": "Questo browser non può mettere le finestre sugli altri schermi. Trascina la finestra di ogni display sullo schermo che vuoi."
   },
   "diagram": {
     "your_computer": "Il suo computer",
