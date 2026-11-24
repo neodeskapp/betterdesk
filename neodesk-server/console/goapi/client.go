@@ -51,6 +51,7 @@ type Client struct {
 	handler    http.Handler
 	identity   api.Identity
 	actor      func(ctx context.Context) string
+	token      func(ctx context.Context) string
 	host       string
 	remoteAddr string
 	timeout    time.Duration
@@ -118,6 +119,14 @@ func WithActor(actor func(ctx context.Context) string) Option {
 	return func(c *Client) { c.actor = actor }
 }
 
+// WithToken names the console API token a call came with: token gets the
+// call's context and returns the token's public id, "" for none. The API
+// server records it on the credentials the call makes
+// (api.Identity.Token), so that the end of the token ends them.
+func WithToken(token func(ctx context.Context) string) Option {
+	return func(c *Client) { c.token = token }
+}
+
 // WithEventBus gives the client the server's event bus for Events.
 func WithEventBus(bus *events.Bus) Option {
 	return func(c *Client) { c.bus = bus }
@@ -173,6 +182,9 @@ func (c *Client) identityFor(ctx context.Context) api.Identity {
 		id.Actor = account
 	} else if c.actor != nil {
 		id.Actor = c.actor(ctx)
+	}
+	if c.token != nil {
+		id.Token = c.token(ctx)
 	}
 	return id
 }

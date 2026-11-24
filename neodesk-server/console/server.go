@@ -251,7 +251,7 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		Logf: func(format string, args ...any) { logging.Logf("console", "ERROR: "+format, args...) },
 	}
 
-	api := goapi.New(opts.API, goapi.WithHost(cfg.APIHost), goapi.WithEventBus(opts.Events), goapi.WithActor(accountName))
+	api := goapi.New(opts.API, goapi.WithHost(cfg.APIHost), goapi.WithEventBus(opts.Events), goapi.WithActor(accountName), goapi.WithToken(tokenName))
 
 	s.deps = &kit.Deps{
 		Router:   s.router,
@@ -416,6 +416,29 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	}
 	s.tokenRefusals = newOnceAMinute()
 	s.deps.AdminTokens = s.tokens
+	// What a token made ends with it (admintoken/ends.go): the sessions
+	// that run on its guest links end with the links, and the sweep ends
+	// what expired and deleted tokens made, with an audit entry each
+	s.tokens.OnEnd(func(_ context.Context, e *admintoken.Ending) {
+		for _, id := range e.GuestLinks {
+			s.deps.GuestAccess.Revoke(id)
+		}
+	})
+	s.jobs.Add("API token ends", func(ctx context.Context) {
+		s.tokens.Run(ctx, func(e *admintoken.Ending, err error) {
+			if err != nil {
+				logging.Logf("console", "WARN: ending what ended API tokens made: %v", err)
+				return
+			}
+			var user int64
+			if e.Token != nil {
+				user = e.Token.UserID
+			}
+			if err := s.deps.Audit.Write(context.WithoutCancel(ctx), user, e.AuditAction(), e.AuditText(), ""); err != nil {
+				logging.Logf("console", "WARN: audit of an API token's end: %v", err)
+			}
+		})
+	})
 
 	s.jobs.Add("session cleanup", sessions.RunCleanup)
 	s.deps.Sockets = ws.New(ws.Options{
@@ -480,6 +503,17 @@ func accountName(ctx context.Context) string {
 		if user := s.User(); user != nil {
 			return user.Username
 		}
+	}
+	return ""
+}
+
+// tokenName is the public id of the API token the request ctx belongs to
+// came with, "" for a request without one: the API server records it on
+// the credentials a call makes, so that they end with the token
+// (goapi.WithToken).
+func tokenName(ctx context.Context) string {
+	if use := admintoken.FromContext(ctx); use != nil && use.Token != nil {
+		return use.Token.ID
 	}
 	return ""
 }

@@ -61,6 +61,9 @@ type pairingRecord struct {
 	FolderID    int64  `json:"folder_id,omitempty"`
 	Email       string `json:"email,omitempty"`
 	CreatedByID int64  `json:"created_by_id,omitempty"`
+	// CreatedByToken is the public id of the console API token the code
+	// was made with: the end of that token ends the code.
+	CreatedByToken string `json:"created_by_token,omitempty"`
 }
 
 // normalizePairingCode upper-cases and drops separators. The alphabet deliberately
@@ -335,6 +338,8 @@ func (s *Server) handleCreatePairingCode(w http.ResponseWriter, r *http.Request)
 		ExpiresAt: now.Add(pairingCodeTTL).Format(time.RFC3339),
 		CreatedBy: actorFromCtx(r),
 		UsesLeft:  pairingCodeMaxUses,
+
+		CreatedByToken: tokenOf(r),
 	}
 	if err := s.storePairingRecord(hash, record); err != nil {
 		http.Error(w, "failed to store pairing code", http.StatusInternalServerError)

@@ -2,18 +2,35 @@
  * API tokens without a DOM: who may make them, the expiry date, the allow
  * list as typed and the filter.
  */
-import { describe, expect, test } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
+import { beforeAll, describe, expect, test } from 'vitest';
 import type { ApiToken } from '../../../src/lib/api/apiTokens.ts';
+import { setStrings, t } from '../../../src/lib/i18n/i18n.svelte.ts';
 import {
 	badAllowEntries,
 	expiryDate,
 	filterApiTokens,
 	latestExpiry,
 	loginCommand,
+	madeList,
 	mayMakeTokens,
 	parseAllowList,
+	revokeMessage,
 	stateTone
 } from '../../../src/lib/people/apiTokens.ts';
+
+const langDir = path.resolve(__dirname, '../../../../neodesk-server/console/static/files/lang');
+const strings = (code: string) => JSON.parse(fs.readFileSync(path.join(langDir, `${code}.json`), 'utf8'));
+const none = {
+	guest_links: 0,
+	device_tokens: 0,
+	support_sessions: 0,
+	invites: 0,
+	pairing_codes: 0,
+	share_links: 0,
+	organization_invitations: 0
+};
 
 const token = (over: Partial<ApiToken>): ApiToken => ({
 	id: 'abcdefghijkm',
@@ -31,7 +48,38 @@ const token = (over: Partial<ApiToken>): ApiToken => ({
 	last_used_ip: '',
 	revoked_at: '',
 	revoked_by: '',
+	ends_with_it: none,
 	...over
+});
+
+describe('what ends with a token', () => {
+	beforeAll(() => setStrings('en', 'ltr', strings('en')));
+
+	test('the kinds it made that are still open, by count', () => {
+		expect(madeList({ ...none, guest_links: 2, device_tokens: 1, organization_invitations: 1 }, t)).toBe(
+			'2 guest links, 1 device token, 1 organization invitation'
+		);
+		expect(madeList({ ...none, support_sessions: 1, invites: 3, pairing_codes: 1, share_links: 2 }, t)).toBe(
+			'1 support session, 3 invites, 1 pairing code, 2 guest desktop links'
+		);
+		expect(madeList(none, t)).toBe('');
+	});
+
+	test('the revoke dialog says what ends with the token, and only when something does', () => {
+		expect(revokeMessage(token({ ends_with_it: { ...none, guest_links: 1, device_tokens: 2 } }), t)).toBe(
+			"Revoke Backup? Scripts that use it stop working right away. This can't be undone. " +
+				'It also ends what was made with it: 1 guest link, 2 device tokens.'
+		);
+		expect(revokeMessage(token({}), t)).toBe(
+			"Revoke Backup? Scripts that use it stop working right away. This can't be undone."
+		);
+	});
+
+	test('in German', () => {
+		setStrings('de', 'ltr', strings('de'));
+		expect(madeList({ ...none, guest_links: 1, invites: 2 }, t)).toBe('1 Gastlink, 2 Einladungen');
+		setStrings('en', 'ltr', strings('en'));
+	});
 });
 
 describe('who makes tokens', () => {

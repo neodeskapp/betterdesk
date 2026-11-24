@@ -35,15 +35,18 @@ type Grant struct {
 	// CreatedByID is the id of the account that made the link, 0 for
 	// none. The console holds a guest's sessions to that account's client
 	// features.
-	CreatedByID int64      `json:"created_by_id,omitempty"`
-	Label       string     `json:"label,omitempty"`
-	ViewOnly    bool       `json:"view_only"`
-	ExpiresAt   time.Time  `json:"expires_at"`
-	CreatedAt   time.Time  `json:"created_at"`
-	RevokedAt   *time.Time `json:"revoked_at,omitempty"`
-	MaxUses     int        `json:"max_uses,omitempty"`
-	UseCount    int        `json:"use_count,omitempty"`
-	TokenPrefix string     `json:"token_prefix,omitempty"`
+	CreatedByID int64 `json:"created_by_id,omitempty"`
+	// CreatedByToken is the public id of the console API token the link
+	// was made with, "" for none: the end of that token ends the link.
+	CreatedByToken string     `json:"created_by_token,omitempty"`
+	Label          string     `json:"label,omitempty"`
+	ViewOnly       bool       `json:"view_only"`
+	ExpiresAt      time.Time  `json:"expires_at"`
+	CreatedAt      time.Time  `json:"created_at"`
+	RevokedAt      *time.Time `json:"revoked_at,omitempty"`
+	MaxUses        int        `json:"max_uses,omitempty"`
+	UseCount       int        `json:"use_count,omitempty"`
+	TokenPrefix    string     `json:"token_prefix,omitempty"`
 }
 
 // PublicGrant is safe metadata returned by validate (no secrets).
@@ -118,8 +121,9 @@ func (s *Store) configKey(tokenHash string) string {
 }
 
 // Create issues a new guest access link for the account createdBy with
-// the id createdByID (0 for none). Returns the raw token once.
-func (s *Store) Create(peerIDs []string, createdBy string, createdByID int64, ttlMinutes int, viewOnly bool, label string, maxUses int) (rawToken string, grant *Grant, err error) {
+// the id createdByID (0 for none), made with the console API token
+// createdByToken ("" for none). Returns the raw token once.
+func (s *Store) Create(peerIDs []string, createdBy string, createdByID int64, ttlMinutes int, viewOnly bool, label string, maxUses int, createdByToken string) (rawToken string, grant *Grant, err error) {
 	if s == nil || s.DB == nil {
 		return "", nil, fmt.Errorf("guest access store not configured")
 	}
@@ -146,16 +150,17 @@ func (s *Store) Create(peerIDs []string, createdBy string, createdByID int64, tt
 	}
 	now := time.Now().UTC()
 	g := &Grant{
-		ID:          id,
-		PeerIDs:     peers,
-		CreatedBy:   createdBy,
-		CreatedByID: createdByID,
-		Label:       strings.TrimSpace(label),
-		ViewOnly:    viewOnly,
-		ExpiresAt:   now.Add(time.Duration(ttlMinutes) * time.Minute),
-		CreatedAt:   now,
-		MaxUses:     maxUses,
-		TokenPrefix: token[:8],
+		ID:             id,
+		PeerIDs:        peers,
+		CreatedBy:      createdBy,
+		CreatedByID:    createdByID,
+		CreatedByToken: createdByToken,
+		Label:          strings.TrimSpace(label),
+		ViewOnly:       viewOnly,
+		ExpiresAt:      now.Add(time.Duration(ttlMinutes) * time.Minute),
+		CreatedAt:      now,
+		MaxUses:        maxUses,
+		TokenPrefix:    token[:8],
 	}
 	b, err := json.Marshal(g)
 	if err != nil {

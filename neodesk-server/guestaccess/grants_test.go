@@ -26,7 +26,7 @@ func newStore(t *testing.T) *Store {
 
 func TestCreateValidateRevoke(t *testing.T) {
 	store := newStore(t)
-	token, grant, err := store.Create([]string{"DEV111", "DEV222"}, "alice", 0, 30, true, "vendor", 0)
+	token, grant, err := store.Create([]string{"DEV111", "DEV222"}, "alice", 0, 30, true, "vendor", 0, "")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
@@ -60,7 +60,7 @@ func TestCreateValidateRevoke(t *testing.T) {
 
 func TestExpiry(t *testing.T) {
 	store := newStore(t)
-	token, grant, err := store.Create([]string{"PEER01"}, "bob", 0, 1, false, "", 0)
+	token, grant, err := store.Create([]string{"PEER01"}, "bob", 0, 1, false, "", 0, "")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
@@ -79,7 +79,7 @@ func TestExpiry(t *testing.T) {
 
 func TestConsumeEnforcesPeerAndMaxUsesAtomically(t *testing.T) {
 	store := newStore(t)
-	token, grant, err := store.Create([]string{"PEER01"}, "alice", 0, 30, false, "", 2)
+	token, grant, err := store.Create([]string{"PEER01"}, "alice", 0, 30, false, "", 2, "")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}

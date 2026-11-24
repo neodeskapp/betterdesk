@@ -57,10 +57,13 @@ type Code struct {
 	Email       string `json:"email"`
 	CreatedBy   string `json:"created_by"`
 	CreatedByID int64  `json:"created_by_id"`
-	CreatedAt   string `json:"created_at"`
-	ExpiresAt   string `json:"expires_at"`
-	MaxUses     int    `json:"max_uses"`
-	UsesLeft    int    `json:"uses_left"`
+	// CreatedByToken is the console API token the code was made with, ""
+	// for none: the end of that token ends the code and its session.
+	CreatedByToken string `json:"created_by_token,omitempty"`
+	CreatedAt      string `json:"created_at"`
+	ExpiresAt      string `json:"expires_at"`
+	MaxUses        int    `json:"max_uses"`
+	UsesLeft       int    `json:"uses_left"`
 }
 
 // NewCode is what a code is made with.

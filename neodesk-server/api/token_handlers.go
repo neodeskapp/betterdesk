@@ -169,6 +169,8 @@ func (s *Server) handleCreateDeviceToken(w http.ResponseWriter, r *http.Request)
 		ExpiresAt: expiresAt,
 		CreatedBy: creator,
 		Note:      req.Note,
+
+		CreatedByToken: tokenOf(r),
 	}
 
 	if err := s.db.CreateDeviceToken(token); err != nil {
@@ -381,6 +383,8 @@ func (s *Server) handleBulkGenerateTokens(w http.ResponseWriter, r *http.Request
 			UseCount:  0,
 			ExpiresAt: expiresAt,
 			CreatedBy: creator,
+
+			CreatedByToken: tokenOf(r),
 		}
 
 		if err := s.db.CreateDeviceToken(token); err != nil {

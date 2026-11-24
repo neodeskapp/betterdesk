@@ -366,10 +366,10 @@ func (s *SQLiteDB) CreateOrgInvitation(inv *OrgInvitation) error {
 	defer s.mu.Unlock()
 
 	_, err := s.db.Exec(
-		`INSERT INTO org_invitations (id, org_id, token, email, role, expires_at)
-		 VALUES (?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO org_invitations (id, org_id, token, email, role, expires_at, created_by_token)
+		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		inv.ID, inv.OrgID, inv.Token, inv.Email, inv.Role,
-		inv.ExpiresAt.UTC().Format(time.RFC3339),
+		inv.ExpiresAt.UTC().Format(time.RFC3339), inv.CreatedByToken,
 	)
 	return err
 }

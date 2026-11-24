@@ -9,7 +9,9 @@
 //	DELETE /api/panel/api-tokens/{id}         revoke (one's own; super admins any)
 //
 // Making a token needs a browser session: a token never makes another,
-// so a stolen token cannot outlive its own revocation.
+// so a stolen token cannot outlive its own revocation. What a token made
+// that outlives a request ends with it (admintoken/ends.go): the list
+// counts it for each token (ends_with_it), the revoke says what ended.
 package apitokens
 
 import (
@@ -73,6 +75,9 @@ type tokenJSON struct {
 	LastUsedIP  *string  `json:"last_used_ip"`
 	RevokedAt   *string  `json:"revoked_at"`
 	RevokedBy   *string  `json:"revoked_by"`
+	// EndsWithIt counts what the token made that is still open and ends
+	// with it; only the list has it.
+	EndsWithIt *admintoken.Made `json:"ends_with_it,omitempty"`
 }
 
 func timeText(t time.Time) *string {
@@ -125,9 +130,21 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusInternalServerError, "Failed to list the API tokens")
 		return
 	}
+	ids := make([]string, 0, len(tokens))
+	for _, t := range tokens {
+		ids = append(ids, t.ID)
+	}
+	open, err := h.tokens.OpenMade(r.Context(), ids)
+	if err != nil {
+		kit.Fail(w, r, http.StatusInternalServerError, "Failed to list the API tokens")
+		return
+	}
 	out := listData{Tokens: make([]tokenJSON, 0, len(tokens))}
 	for _, t := range tokens {
-		out.Tokens = append(out.Tokens, h.toJSON(t))
+		item := h.toJSON(t)
+		made := open[t.ID]
+		item.EndsWithIt = &made
+		out.Tokens = append(out.Tokens, item)
 	}
 	kit.OK(w, r, out)
 }
@@ -293,8 +310,15 @@ func (h *handlers) current(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// revoked is the answer of a revoke: the token, and what ended with it.
+type revoked struct {
+	tokenJSON
+	Ended admintoken.Made `json:"ended"`
+}
+
 // revoke answers DELETE /api/panel/api-tokens/{id}: one's own token, or
-// any for a super admin.
+// any for a super admin. What the token made that is still open ends
+// with it, in the same transaction; the audit entry counts it.
 func (h *handlers) revoke(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimSpace(r.PathValue("id"))
 	if parsed, ok := admintoken.Parse(id); ok {
@@ -314,18 +338,23 @@ func (h *handlers) revoke(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !tok.RevokedAt.IsZero() {
-		kit.OK(w, r, h.toJSON(tok))
+		kit.OK(w, r, revoked{tokenJSON: h.toJSON(tok)})
 		return
 	}
-	if _, err := h.tokens.Revoke(r.Context(), tok.ID, user.Username); err != nil {
+	ending, err := h.tokens.Revoke(r.Context(), tok.ID, user.Username)
+	if err != nil {
 		kit.Fail(w, r, http.StatusInternalServerError, "Failed to revoke the API token")
 		return
 	}
-	_ = h.d.LogAction(r, "api_token_revoked", "API token "+tok.Name+" ("+tok.Hint()+") of "+tok.Username+" revoked")
-	tok, err = h.tokens.Get(r.Context(), tok.ID)
-	if err != nil || tok == nil {
-		kit.OK(w, r, nil)
+	if ending == nil || ending.Token == nil {
+		// Revoked by another request meanwhile
+		if tok, err = h.tokens.Get(r.Context(), tok.ID); err != nil || tok == nil {
+			kit.OK(w, r, nil)
+			return
+		}
+		kit.OK(w, r, revoked{tokenJSON: h.toJSON(tok)})
 		return
 	}
-	kit.OK(w, r, h.toJSON(tok))
+	_ = h.d.LogAction(r, ending.AuditAction(), ending.AuditText())
+	kit.OK(w, r, revoked{tokenJSON: h.toJSON(ending.Token), Ended: ending.Ended})
 }

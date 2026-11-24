@@ -64,6 +64,15 @@
        {
         "allow_list": [],
         "created_at": "<volatile>",
+        "ends_with_it": {
+         "device_tokens": 0,
+         "guest_links": 0,
+         "invites": 0,
+         "organization_invitations": 0,
+         "pairing_codes": 0,
+         "share_links": 0,
+         "support_sessions": 0
+        },
         "expires_at": "<volatile>",
         "hint": "<volatile>",
         "id": "<volatile>",
@@ -144,6 +153,15 @@
        {
         "allow_list": [],
         "created_at": "<volatile>",
+        "ends_with_it": {
+         "device_tokens": 0,
+         "guest_links": 0,
+         "invites": 0,
+         "organization_invitations": 0,
+         "pairing_codes": 0,
+         "share_links": 0,
+         "support_sessions": 0
+        },
         "expires_at": "<volatile>",
         "hint": "<volatile>",
         "id": "<volatile>",
@@ -224,6 +242,15 @@
        {
         "allow_list": [],
         "created_at": "<volatile>",
+        "ends_with_it": {
+         "device_tokens": 0,
+         "guest_links": 0,
+         "invites": 0,
+         "organization_invitations": 0,
+         "pairing_codes": 0,
+         "share_links": 0,
+         "support_sessions": 0
+        },
         "expires_at": "<volatile>",
         "hint": "<volatile>",
         "id": "<volatile>",
@@ -304,6 +331,15 @@
        {
         "allow_list": [],
         "created_at": "<volatile>",
+        "ends_with_it": {
+         "device_tokens": 0,
+         "guest_links": 0,
+         "invites": 0,
+         "organization_invitations": 0,
+         "pairing_codes": 0,
+         "share_links": 0,
+         "support_sessions": 0
+        },
         "expires_at": "<volatile>",
         "hint": "<volatile>",
         "id": "<volatile>",

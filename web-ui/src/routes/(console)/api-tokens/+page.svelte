@@ -13,7 +13,9 @@
 	import {
 		filterApiTokens,
 		loginCommand,
+		madeList,
 		mayMakeTokens,
+		revokeMessage,
 		stateTone,
 		type ApiTokenFilter
 	} from '#lib/people/apiTokens.ts';
@@ -82,17 +84,28 @@
 	let made = $state<{ token: string; name: string } | null>(null);
 
 	async function revoke(tok: ApiToken) {
+		// What the token made may have changed since the list was loaded
+		let current = tok;
+		try {
+			current = (await listApiTokens(everyone)).find((other) => other.id === tok.id) ?? tok;
+		} catch {
+			// The list as loaded
+		}
 		const ok = await confirm({
 			title: t('api_tokens.revoke_title'),
-			message: t('api_tokens.revoke_confirm', { name: tok.name }),
+			message: revokeMessage(current, t),
 			confirmLabel: t('api_tokens.revoke'),
 			confirmIcon: ICONS.revoke,
 			danger: true
 		});
 		if (!ok) return;
 		try {
-			await revokeApiToken(tok.id);
-			toast.success(t('api_tokens.revoked', { name: tok.name }));
+			const ended = madeList(await revokeApiToken(tok.id), t);
+			toast.success(
+				ended
+					? t('api_tokens.revoked_ended', { name: tok.name, list: ended })
+					: t('api_tokens.revoked', { name: tok.name })
+			);
 			void load();
 		} catch (err) {
 			toast.error(`${t('api_tokens.revoke_failed')} ${err instanceof Error ? err.message : ''}`.trim());

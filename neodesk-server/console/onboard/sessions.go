@@ -41,6 +41,9 @@ const (
 	EndedBySupporter = "supporter"
 	EndedByCustomer  = "customer"
 	EndedByTimeout   = "timeout"
+	// EndedByTokenEnd: the API token the session was made with was
+	// revoked, expired or deleted.
+	EndedByTokenEnd = "token_ended"
 )
 
 const (
@@ -68,13 +71,16 @@ var ErrNoPassword = errors.New("no_password")
 // Session is one quick support session. The token's hash is kept; the
 // token and the session password never are.
 type Session struct {
-	ID              string `json:"id"`
-	Status          string `json:"status"`
-	Name            string `json:"name"`
-	Email           string `json:"email"`
-	FolderID        int64  `json:"folder_id"`
-	CreatedBy       string `json:"created_by"`
-	CreatedByID     int64  `json:"created_by_id"`
+	ID          string `json:"id"`
+	Status      string `json:"status"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	FolderID    int64  `json:"folder_id"`
+	CreatedBy   string `json:"created_by"`
+	CreatedByID int64  `json:"created_by_id"`
+	// CreatedByToken is the console API token the session was made with,
+	// "" for none: the end of that token ends the session.
+	CreatedByToken  string `json:"created_by_token,omitempty"`
 	TokenHash       string `json:"token_hash,omitempty"`
 	DeviceID        string `json:"device_id"`
 	Hostname        string `json:"hostname"`
@@ -214,7 +220,8 @@ func (s *Sessions) Create(ctx context.Context, code Code) (Session, error) {
 	}
 	sess := Session{
 		ID: code.ID, Status: StatusWaiting, Name: code.Name, Email: code.Email, FolderID: code.FolderID,
-		CreatedBy: code.CreatedBy, CreatedByID: code.CreatedByID, CreatedAt: code.CreatedAt, ExpiresAt: code.ExpiresAt,
+		CreatedBy: code.CreatedBy, CreatedByID: code.CreatedByID, CreatedByToken: code.CreatedByToken,
+		CreatedAt: code.CreatedAt, ExpiresAt: code.ExpiresAt,
 	}
 	s.mu.Lock()
 	s.byID[sess.ID] = &sess
@@ -471,6 +478,37 @@ func (s *Sessions) End(ctx context.Context, id, by string) (Session, error) {
 		sess.EndedAt, sess.EndedBy = now, by
 		return nil
 	})
+}
+
+// EndMadeWith ends the open sessions made with the console API token
+// token, as the supporter's End does: the app's token stops working and
+// a password that waits is forgotten. It returns the ids it ended.
+func (s *Sessions) EndMadeWith(ctx context.Context, token string) ([]string, error) {
+	if token == "" {
+		return nil, nil
+	}
+	if err := s.load(ctx); err != nil {
+		return nil, err
+	}
+	var ids []string
+	s.mu.Lock()
+	for id, sess := range s.byID {
+		if sess.Open() && sess.CreatedByToken == token {
+			ids = append(ids, id)
+		}
+	}
+	s.mu.Unlock()
+	sort.Strings(ids)
+	var ended []string
+	var errs []error
+	for _, id := range ids {
+		if _, err := s.End(ctx, id, EndedByTokenEnd); err != nil && !errors.Is(err, ErrState) {
+			errs = append(errs, err)
+			continue
+		}
+		ended = append(ended, id)
+	}
+	return ended, errors.Join(errs...)
 }
 
 // Sweep ends what time ends: a waiting session whose link expired, an

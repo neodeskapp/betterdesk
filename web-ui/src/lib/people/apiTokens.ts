@@ -4,7 +4,8 @@
  * tests/unit/people/api-tokens.test.ts.
  */
 
-import type { ApiToken } from '#lib/api/apiTokens.ts';
+import type { ApiToken, Made } from '#lib/api/apiTokens.ts';
+import { plural } from '#lib/i18n/i18n.svelte.ts';
 
 /** The roles that make and revoke API tokens (the server's admin roles) */
 export const TOKEN_ROLES: readonly string[] = ['super_admin', 'admin', 'global_admin', 'server_admin'];
@@ -79,4 +80,33 @@ export function stateTone(state: ApiToken['state']): 'good' | 'neutral' {
 /** The commands that sign the command line in on this console, without the token */
 export function loginCommand(origin: string): string {
 	return `neodesk login --url ${origin}`;
+}
+
+type Translate = (key: string, params?: Record<string, string | number>) => string;
+
+/** The kinds of what a token makes, in the order the console names them */
+const MADE_KINDS: readonly (keyof Made)[] = [
+	'guest_links',
+	'device_tokens',
+	'support_sessions',
+	'invites',
+	'pairing_codes',
+	'share_links',
+	'organization_invitations'
+];
+
+/** What a token made, as "2 guest links, 1 device token"; "" for nothing */
+export function madeList(made: Made, t: Translate): string {
+	return MADE_KINDS.filter((kind) => made[kind] > 0)
+		.map((kind) =>
+			plural(made[kind], { one: t(`api_tokens.made_${kind}_one`), other: t(`api_tokens.made_${kind}_many`) })
+		)
+		.join(', ');
+}
+
+/** The revoke dialog's text: what revoking does, and what ends with the token when it made something */
+export function revokeMessage(tok: ApiToken, t: Translate): string {
+	const message = t('api_tokens.revoke_confirm', { name: tok.name });
+	const list = madeList(tok.ends_with_it, t);
+	return list ? `${message} ${t('api_tokens.ends_with_it', { list })}` : message;
 }

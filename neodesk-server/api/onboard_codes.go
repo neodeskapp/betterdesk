@@ -85,16 +85,19 @@ type onboardCode struct {
 	Email       string `json:"email"`
 	CreatedBy   string `json:"created_by"`
 	CreatedByID int64  `json:"created_by_id"`
-	CreatedAt   string `json:"created_at"`
-	ExpiresAt   string `json:"expires_at"`
-	MaxUses     int    `json:"max_uses"`
-	UsesLeft    int    `json:"uses_left"`
+	// CreatedByToken is the console API token the code was made with, ""
+	// for none.
+	CreatedByToken string `json:"created_by_token,omitempty"`
+	CreatedAt      string `json:"created_at"`
+	ExpiresAt      string `json:"expires_at"`
+	MaxUses        int    `json:"max_uses"`
+	UsesLeft       int    `json:"uses_left"`
 }
 
 func onboardView(r *pairingRecord) onboardCode {
 	return onboardCode{
 		ID: r.ID, Kind: r.Kind, Name: r.Name, FolderID: r.FolderID, Email: r.Email,
-		CreatedBy: r.CreatedBy, CreatedByID: r.CreatedByID,
+		CreatedBy: r.CreatedBy, CreatedByID: r.CreatedByID, CreatedByToken: r.CreatedByToken,
 		CreatedAt: r.CreatedAt, ExpiresAt: r.ExpiresAt, MaxUses: r.MaxUses, UsesLeft: r.UsesLeft,
 	}
 }
@@ -234,6 +237,8 @@ func (s *Server) handleOnboardCreate(w http.ResponseWriter, r *http.Request) {
 		CreatedByID: body.CreatedByID,
 		MaxUses:     body.MaxUses,
 		UsesLeft:    body.MaxUses,
+
+		CreatedByToken: tokenOf(r),
 	}
 	if err := s.storePairingRecord(hash, record); err != nil {
 		onboardFail(w, http.StatusInternalServerError, "store_failed")

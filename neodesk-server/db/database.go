@@ -227,6 +227,9 @@ type DeviceToken struct {
 	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
 	CreatedBy  string     `json:"created_by,omitempty"` // Admin who created the token
 	Note       string     `json:"note,omitempty"`
+	// CreatedByToken is the public id of the console API token the token
+	// was made with, "" for none: the end of that API token ends it.
+	CreatedByToken string `json:"-"`
 }
 
 // DeviceTokenStatus constants
@@ -366,6 +369,10 @@ type OrgInvitation struct {
 	Role      string     `json:"role"` // default: "user"
 	ExpiresAt time.Time  `json:"expires_at"`
 	UsedAt    *time.Time `json:"used_at,omitempty"`
+	// CreatedByToken is the public id of the console API token the
+	// invitation was made with, "" for none: the end of that API token
+	// ends an invitation nobody used yet.
+	CreatedByToken string `json:"-"`
 }
 
 // OrgSetting stores a single key-value pair scoped to an organization.

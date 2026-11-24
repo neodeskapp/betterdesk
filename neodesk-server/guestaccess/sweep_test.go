@@ -14,11 +14,11 @@ func TestListAndRevokeRemoveEndedLinks(t *testing.T) {
 	for _, via := range []string{"list", "revoke"} {
 		t.Run(via, func(t *testing.T) {
 			store := newStore(t)
-			_, live, err := store.Create([]string{"DEV111"}, "alice", 0, 30, false, "", 0)
+			_, live, err := store.Create([]string{"DEV111"}, "alice", 0, 30, false, "", 0, "")
 			if err != nil {
 				t.Fatal(err)
 			}
-			_, revoked, err := store.Create([]string{"DEV111"}, "alice", 0, 30, false, "", 0)
+			_, revoked, err := store.Create([]string{"DEV111"}, "alice", 0, 30, false, "", 0, "")
 			if err != nil {
 				t.Fatal(err)
 			}

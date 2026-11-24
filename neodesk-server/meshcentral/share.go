@@ -17,12 +17,16 @@ type MeshShareGrant struct {
 	CreatedBy string    `json:"created_by"`
 	ExpiresAt time.Time `json:"expires_at"`
 	ViewOnly  bool      `json:"view_only"`
+	// CreatedByToken is the public id of the console API token the link
+	// was made with, "" for none: the end of that token ends the link.
+	CreatedByToken string `json:"created_by_token,omitempty"`
 }
 
 const meshShareConfigPrefix = "mesh_share_"
 
-// CreateShareGrant issues a guest link token for mesh KVM (view-only optional).
-func (g *Gateway) CreateShareGrant(peerID, userID string, ttlMinutes int, viewOnly bool) (string, error) {
+// CreateShareGrant issues a guest link token for mesh KVM (view-only
+// optional), made with the console API token createdByToken ("" for none).
+func (g *Gateway) CreateShareGrant(peerID, userID string, ttlMinutes int, viewOnly bool, createdByToken string) (string, error) {
 	if ttlMinutes <= 0 {
 		ttlMinutes = 60
 	}
@@ -41,6 +45,8 @@ func (g *Gateway) CreateShareGrant(peerID, userID string, ttlMinutes int, viewOn
 		CreatedBy: userID,
 		ExpiresAt: time.Now().Add(time.Duration(ttlMinutes) * time.Minute),
 		ViewOnly:  viewOnly,
+
+		CreatedByToken: createdByToken,
 	}
 	b, err := json.Marshal(grant)
 	if err != nil {

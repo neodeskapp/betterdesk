@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/clientrelease"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
@@ -99,6 +100,16 @@ func RegisterWith(d *kit.Deps, opts Options) {
 		}).Middleware,
 		log: d.Log.Child("ONBOARD"),
 		now: opts.Now,
+	}
+	// A quick support session made with an API token ends with the token:
+	// its stored record ends in the token's transaction, the session the
+	// console keeps in memory right after it
+	if d.AdminTokens != nil {
+		d.AdminTokens.OnEnd(func(ctx context.Context, e *admintoken.Ending) {
+			if _, err := h.sessions.EndMadeWith(ctx, e.TokenID); err != nil {
+				h.log.Warn("End the quick support sessions of an ended API token:", err)
+			}
+		})
 	}
 	approve := d.RequirePermission("enrollment.approve")
 	connect := d.RequirePermission("device.connect")

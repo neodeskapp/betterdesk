@@ -279,9 +279,9 @@ func (pg *PostgresDB) UpdateOrgDevice(d *OrgDevice) error {
 
 func (pg *PostgresDB) CreateOrgInvitation(inv *OrgInvitation) error {
 	_, err := pg.pool.Exec(pg.ctx,
-		`INSERT INTO org_invitations (id, org_id, token, email, role, expires_at)
-		 VALUES ($1, $2, $3, $4, $5, $6)`,
-		inv.ID, inv.OrgID, inv.Token, inv.Email, inv.Role, inv.ExpiresAt.UTC(),
+		`INSERT INTO org_invitations (id, org_id, token, email, role, expires_at, created_by_token)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		inv.ID, inv.OrgID, inv.Token, inv.Email, inv.Role, inv.ExpiresAt.UTC(), inv.CreatedByToken,
 	)
 	return err
 }

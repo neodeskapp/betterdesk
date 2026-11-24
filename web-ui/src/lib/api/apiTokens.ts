@@ -5,7 +5,7 @@
  */
 
 import * as v from 'valibot';
-import { api, request } from './client.ts';
+import { api } from './client.ts';
 
 const Text = v.optional(
 	v.pipe(
@@ -22,6 +22,30 @@ const List = v.optional(
 	[]
 );
 
+const Count = v.optional(v.number(), 0);
+
+/** What a token made that outlives a request, by kind: still open (the list) or ended (a revoke) */
+export const Made = v.object({
+	guest_links: Count,
+	device_tokens: Count,
+	support_sessions: Count,
+	invites: Count,
+	pairing_codes: Count,
+	share_links: Count,
+	organization_invitations: Count
+});
+export type Made = v.InferOutput<typeof Made>;
+
+const NOTHING_MADE: Made = {
+	guest_links: 0,
+	device_tokens: 0,
+	support_sessions: 0,
+	invites: 0,
+	pairing_codes: 0,
+	share_links: 0,
+	organization_invitations: 0
+};
+
 export const ApiToken = v.object({
 	id: v.string(),
 	name: Text,
@@ -37,7 +61,9 @@ export const ApiToken = v.object({
 	last_used_at: Text,
 	last_used_ip: Text,
 	revoked_at: Text,
-	revoked_by: Text
+	revoked_by: Text,
+	/** What the token made that is still open and ends with it (the list only) */
+	ends_with_it: v.optional(Made, NOTHING_MADE)
 });
 export type ApiToken = v.InferOutput<typeof ApiToken>;
 
@@ -83,6 +109,12 @@ export async function createApiToken(body: ApiTokenInput): Promise<{ token: stri
 	return { token: out.data.token, info: out.data.api_token };
 }
 
-export async function revokeApiToken(id: string): Promise<void> {
-	await request(`/api/panel/api-tokens/${encodeURIComponent(id)}`, { method: 'DELETE' });
+/** Revokes a token; the answer counts what ended with it */
+export async function revokeApiToken(id: string): Promise<Made> {
+	const out = await api(
+		v.object({ data: v.optional(v.nullable(v.object({ ended: v.optional(Made, NOTHING_MADE) }))) }),
+		`/api/panel/api-tokens/${encodeURIComponent(id)}`,
+		{ method: 'DELETE' }
+	);
+	return out.data?.ended ?? NOTHING_MADE;
 }

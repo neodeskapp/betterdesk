@@ -37,7 +37,11 @@
 //     account's own password, second factor, sessions and profile, and
 //     showing the console's API key in full;
 //   - an optional allow list of addresses and networks;
-//   - an expiry of at most a year, and revocation.
+//   - an expiry of at most a year, and revocation;
+//   - what it made that outlives a request (guest links, device tokens,
+//     support sessions, codes, share links, organization invitations)
+//     ends with it: at a revoke, an expiry or the deletion of its row
+//     (ends.go).
 //
 // The routes, the pipeline and the access checks in console, console/kit
 // and console/access apply these rules; this package keeps the rows,
@@ -160,6 +164,10 @@ type Service struct {
 
 	mu      sync.Mutex
 	touched map[string]time.Time
+	// onEnd are called after a token's end is committed (OnEnd)
+	onEnd []func(context.Context, *Ending)
+	// wake tells Run that a token was made, whose expiry may come first
+	wake chan struct{}
 }
 
 // New returns a Service and creates its table when it is missing.
@@ -186,6 +194,7 @@ func New(ctx context.Context, opts Options) (*Service, error) {
 		failures: newWindow(opts.FailureLimit, opts.FailureWindow, now),
 		requests: newWindow(opts.RequestLimit, time.Minute, now),
 		touched:  map[string]time.Time{},
+		wake:     make(chan struct{}, 1),
 	}
 	if err := s.ensureSchema(ctx); err != nil {
 		return nil, err
@@ -209,7 +218,8 @@ func (s *Service) ensureSchema(ctx context.Context) error {
 			last_used_at INTEGER,
 			last_used_ip TEXT,
 			revoked_at INTEGER,
-			revoked_by TEXT
+			revoked_by TEXT,
+			ended_at INTEGER
 		)`,
 		`CREATE TABLE IF NOT EXISTS admin_tokens (
 			id BIGSERIAL PRIMARY KEY,
@@ -225,13 +235,31 @@ func (s *Service) ensureSchema(ctx context.Context) error {
 			last_used_at BIGINT,
 			last_used_ip TEXT,
 			revoked_at BIGINT,
-			revoked_by TEXT
+			revoked_by TEXT,
+			ended_at BIGINT
 		)`)
 	if _, err := s.db.Exec(ctx, create); err != nil {
 		return fmt.Errorf("create admin_tokens: %w", err)
 	}
 	if _, err := s.db.Exec(ctx, `CREATE INDEX IF NOT EXISTS idx_admin_tokens_user ON admin_tokens (user_id)`); err != nil {
 		return fmt.Errorf("index admin_tokens: %w", err)
+	}
+	// ended_at: when what the token made was ended (ends.go). A table
+	// from before it gets the column with the tokens that had ended
+	// marked: what they made was made before tokens were recorded on it.
+	has, err := hasColumn(ctx, s.db, "admin_tokens", "ended_at")
+	if err != nil {
+		return fmt.Errorf("read admin_tokens: %w", err)
+	}
+	if !has {
+		return s.db.InTx(ctx, func(tx *store.Tx) error {
+			if _, err := tx.Exec(ctx, tx.Pick(`ALTER TABLE admin_tokens ADD COLUMN ended_at INTEGER`, `ALTER TABLE admin_tokens ADD COLUMN IF NOT EXISTS ended_at BIGINT`)); err != nil {
+				return fmt.Errorf("add admin_tokens.ended_at: %w", err)
+			}
+			now := s.now().UnixMilli()
+			_, err := tx.Exec(ctx, `UPDATE admin_tokens SET ended_at = ? WHERE ended_at IS NULL AND (revoked_at IS NOT NULL OR expires_at <= ?)`, now, now)
+			return err
+		})
 	}
 	return nil
 }
@@ -321,6 +349,10 @@ func (s *Service) Create(ctx context.Context, creator Creator, in Input, known [
 		if err == nil {
 			tok := &Token{ID: id, Name: name, UserID: creator.ID, Username: creator.Username, Permissions: permissions,
 				ReadOnly: in.ReadOnly, AllowList: allow, CreatedAt: msTime(now.UnixMilli()), ExpiresAt: msTime(expires.UnixMilli())}
+			select {
+			case s.wake <- struct{}{}:
+			default:
+			}
 			return value, tok, nil
 		}
 		// A public id that is taken already: try another one
@@ -689,18 +721,6 @@ func (s *Service) List(ctx context.Context, userID int64) ([]*Token, error) {
 		out = append(out, tok)
 	}
 	return out, rows.Err()
-}
-
-// Revoke ends a token for good. It reports false when the token was not
-// there or was revoked already.
-func (s *Service) Revoke(ctx context.Context, id, by string) (bool, error) {
-	res, err := s.db.Exec(ctx, `UPDATE admin_tokens SET revoked_at = ?, revoked_by = ? WHERE public_id = ? AND revoked_at IS NULL`,
-		s.now().UnixMilli(), by, id)
-	if err != nil {
-		return false, fmt.Errorf("revoke token: %w", err)
-	}
-	n, err := res.RowsAffected()
-	return n > 0, err
 }
 
 // touchEvery is how often a token's last use is written: at most once a

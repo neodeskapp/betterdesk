@@ -657,6 +657,8 @@ func (s *Server) handleCreateOrgInvitation(w http.ResponseWriter, r *http.Reques
 		Email:     body.Email,
 		Role:      db.OrgRoleUser,
 		ExpiresAt: time.Now().UTC().Add(time.Duration(body.ExpiresIn) * time.Hour),
+
+		CreatedByToken: tokenOf(r),
 	}
 
 	if err := s.db.CreateOrgInvitation(inv); err != nil {

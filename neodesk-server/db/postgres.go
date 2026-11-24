@@ -789,6 +789,10 @@ func (pg *PostgresDB) Migrate() error {
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS credentials_changed_at BIGINT`,
 		// users: an account that may not sign in (the console adds it too)
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled BOOLEAN NOT NULL DEFAULT FALSE`,
+		// device_tokens, org_invitations: the console API token a row was
+		// made with, so that the end of the token ends it
+		`ALTER TABLE device_tokens ADD COLUMN IF NOT EXISTS created_by_token TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE org_invitations ADD COLUMN IF NOT EXISTS created_by_token TEXT NOT NULL DEFAULT ''`,
 	}
 
 	for _, ddl := range columnMigrations {
@@ -2279,10 +2283,10 @@ func (pg *PostgresDB) CreateDeviceToken(t *DeviceToken) error {
 	}
 
 	err := pg.pool.QueryRow(pg.ctx, `
-		INSERT INTO device_tokens (token_hash, token_prefix, name, peer_id, status, max_uses, use_count, expires_at, created_by, note)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		INSERT INTO device_tokens (token_hash, token_prefix, name, peer_id, status, max_uses, use_count, expires_at, created_by, note, created_by_token)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING id, created_at`,
-		t.TokenHash, t.Token[:8], t.Name, t.PeerID, t.Status, t.MaxUses, t.UseCount, expiresAt, t.CreatedBy, t.Note,
+		t.TokenHash, t.Token[:8], t.Name, t.PeerID, t.Status, t.MaxUses, t.UseCount, expiresAt, t.CreatedBy, t.Note, t.CreatedByToken,
 	).Scan(&t.ID, &t.CreatedAt)
 	return err
 }

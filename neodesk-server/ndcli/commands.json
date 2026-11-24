@@ -374,6 +374,7 @@
    "name": "api-tokens revoke",
    "summary": "Revoke an API token at once. Scripts that use it stop working.",
    "route": "DELETE /api/panel/api-tokens/{id}",
+   "description": "What was made with the token ends with it: guest links, device tokens, support sessions, invites, pairing codes, guest desktop links and organization invitations. The answer counts them under ended; api-tokens list shows what is still open under ends_with_it. The same happens when a token expires.",
    "args": [
     {
      "name": "id",

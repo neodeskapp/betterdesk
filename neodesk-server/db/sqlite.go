@@ -760,6 +760,10 @@ func (s *SQLiteDB) migrateSchema() error {
 		{"users", "credentials_changed_at", `ALTER TABLE users ADD COLUMN credentials_changed_at INTEGER DEFAULT NULL`},
 		// users: an account that may not sign in (the console adds it too)
 		{"users", "disabled", `ALTER TABLE users ADD COLUMN disabled INTEGER NOT NULL DEFAULT 0`},
+		// device_tokens, org_invitations: the console API token a row was
+		// made with, so that the end of the token ends it
+		{"device_tokens", "created_by_token", `ALTER TABLE device_tokens ADD COLUMN created_by_token TEXT NOT NULL DEFAULT ''`},
+		{"org_invitations", "created_by_token", `ALTER TABLE org_invitations ADD COLUMN created_by_token TEXT NOT NULL DEFAULT ''`},
 	}
 
 	for _, m := range columnMigrations {
@@ -2606,9 +2610,9 @@ func (s *SQLiteDB) CreateDeviceToken(t *DeviceToken) error {
 	}
 
 	res, err := s.db.Exec(`
-		INSERT INTO device_tokens (token_hash, token_prefix, name, peer_id, status, max_uses, use_count, expires_at, created_by, note)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		t.TokenHash, t.Token[:8], t.Name, t.PeerID, t.Status, t.MaxUses, t.UseCount, expiresAt, t.CreatedBy, t.Note)
+		INSERT INTO device_tokens (token_hash, token_prefix, name, peer_id, status, max_uses, use_count, expires_at, created_by, note, created_by_token)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		t.TokenHash, t.Token[:8], t.Name, t.PeerID, t.Status, t.MaxUses, t.UseCount, expiresAt, t.CreatedBy, t.Note, t.CreatedByToken)
 	if err != nil {
 		return fmt.Errorf("db: CreateDeviceToken: %w", err)
 	}

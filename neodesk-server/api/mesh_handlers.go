@@ -195,7 +195,7 @@ func (s *Server) handleMeshShareCreate(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid json"})
 		return
 	}
-	token, err := s.meshGw.CreateShareGrant(peerID, username, body.TTLMinutes, body.ViewOnly)
+	token, err := s.meshGw.CreateShareGrant(peerID, username, body.TTLMinutes, body.ViewOnly, tokenOf(r))
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return

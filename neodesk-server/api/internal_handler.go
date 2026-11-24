@@ -23,6 +23,12 @@ type Identity struct {
 	// billing work reports, CDAP commands and sessions). It decides
 	// nothing: role, permissions and delegations go by Username and Role.
 	Actor string
+	// Token is the public id of the console API token the person's request
+	// came with, "" for a request without one. The API server records it
+	// on the credentials the call makes (guest links, device tokens, join,
+	// support and pairing codes, share links, organization invitations),
+	// so that the end of the token ends them too.
+	Token string
 }
 
 type identityCtxKey struct{}
@@ -54,6 +60,16 @@ func actorOf(r *http.Request) string {
 	}
 	id, _ := IdentityFromContext(r.Context())
 	return id.Actor
+}
+
+// tokenOf is the console API token an in-process caller's request came
+// with, "" for any other request.
+func tokenOf(r *http.Request) string {
+	if !arrivedInternally(r) {
+		return ""
+	}
+	id, _ := IdentityFromContext(r.Context())
+	return id.Token
 }
 
 // actorFromCtx is who the request acts for, for what the API server

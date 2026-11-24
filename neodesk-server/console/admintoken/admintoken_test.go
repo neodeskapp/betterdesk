@@ -173,10 +173,10 @@ func TestAuthenticateRefusesWhatIsNotLive(t *testing.T) {
 		live := mint(Input{})
 		revoked := mint(Input{})
 		id, _ := Parse(revoked)
-		if done, err := s.Revoke(context.Background(), id, "ann"); err != nil || !done {
+		if done, err := s.Revoke(context.Background(), id, "ann"); err != nil || done == nil {
 			t.Fatalf("Revoke = %v, %v", done, err)
 		}
-		if done, _ := s.Revoke(context.Background(), id, "ann"); done {
+		if done, _ := s.Revoke(context.Background(), id, "ann"); done != nil {
 			t.Error("a second revoke reported a change")
 		}
 		soon := mint(Input{ExpiresAt: now.Add(time.Minute)})
