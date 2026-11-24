@@ -326,6 +326,19 @@ func TestLoginChecksTheTokenAndSavesIt(t *testing.T) {
 	}
 }
 
+// A server whose answer the command line does not know is told to need
+// the release that brought API tokens, 3.6.0-rc.4, not a version that
+// never existed (L444).
+func TestSignInToAnUnknownServerNamesTheRealRelease(t *testing.T) {
+	f := newFake(t)
+	f.answer = func(*http.Request) (int, string) { return 200, `<!doctype html><title>Sign in</title>` }
+	env := map[string]string{"NEODESK_CONFIG": filepath.Join(t.TempDir(), "config.json")}
+	code, _, stderr := runCLI(t, env, testToken+"\n", "login", "--url", f.srv.URL)
+	if code == 0 || !strings.Contains(stderr, "3.6.0-rc.4 or later") || strings.Contains(stderr, "3.6.6") {
+		t.Errorf("login to a server without API tokens: %d %s", code, stderr)
+	}
+}
+
 func TestSecretsComeFromStandardInput(t *testing.T) {
 	f := newFake(t)
 	env := map[string]string{"NEODESK_URL": f.srv.URL, "NEODESK_TOKEN": testToken}

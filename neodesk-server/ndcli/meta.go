@@ -40,7 +40,7 @@ func currentToken(c *conn) (map[string]any, *response, error) {
 		Data map[string]any `json:"data"`
 	}
 	if err := json.Unmarshal(res.body, &body); err != nil || body.Data == nil {
-		return nil, res, errors.New("the console sent an answer the command line does not know; is it a NeoDesk console with API tokens (3.6.6 or later)?")
+		return nil, res, errors.New("the console sent an answer the command line does not know; is it a NeoDesk console with API tokens (3.6.0-rc.4 or later)?")
 	}
 	return body.Data, res, nil
 }
