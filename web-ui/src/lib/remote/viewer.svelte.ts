@@ -407,6 +407,8 @@ export class Viewer {
 	wide = $state(true);
 	billingCheck = $state.raw<BillingCheck | null>(null);
 	mobileMode = $state<'direct' | 'touchpad'>('direct');
+	/** Off screen with its sessions connected (the console's other pages) */
+	parked = $state(false);
 
 	readonly data: ViewerData;
 	readonly transport: Transport;
@@ -2062,13 +2064,29 @@ export class Viewer {
 		}
 	}
 
-	/** Keyboard, mouse, inbound clipboard and audio only for the active streaming tab */
+	/** Keyboard, mouse, inbound clipboard and audio only for the active streaming tab, and not while parked */
 	syncMediaCapture(): void {
 		for (const s of this.sessions) {
-			s.client?.setSessionActive?.(s.deviceId === this.activeId && s.state === 'streaming');
+			s.client?.setSessionActive?.(s.deviceId === this.activeId && s.state === 'streaming' && !this.parked);
 		}
 	}
 
+	/**
+	 * The viewer leaves the screen while its sessions stay connected (the
+	 * console shows another page): no session takes the keyboard, the mouse,
+	 * the clipboard or plays sound, and all stream at the background rate.
+	 * Back on screen, the active one takes them again.
+	 */
+	setParked(parked: boolean): void {
+		if (this.parked === parked) return;
+		this.parked = parked;
+		this.syncMediaCapture();
+		this.syncTouch();
+		if (!parked) {
+			this.resize();
+			void tick().then(() => this.focusScreen());
+		}
+	}
 
 	/** Tablets: touch input on the screen (RustDesk transport only) */
 	private attachTouch(s: ViewerSession): void {
@@ -2087,7 +2105,7 @@ export class Viewer {
 	syncTouch(): void {
 		for (const s of this.sessions) {
 			if (!s.touch) continue;
-			if (s.deviceId === this.activeId && s.state === 'streaming' && !s.client?.viewOnly) {
+			if (s.deviceId === this.activeId && s.state === 'streaming' && !s.client?.viewOnly && !this.parked) {
 				s.touch.setMode(this.mobileMode);
 				s.touch.start();
 			} else s.touch.stop();
@@ -2129,7 +2147,7 @@ export class Viewer {
 	/** Why the active session takes no clipboard now, '' when it does */
 	clipboardOff(): ClipboardOffReason {
 		const s = this.active;
-		if (!s || s.view !== 'streaming' || !s.client) return 'not_streaming';
+		if (!s || s.view !== 'streaming' || !s.client || this.parked) return 'not_streaming';
 		if (this.viewOnlyGuest || s.viewOnly || !s.allowed.keyboard) return 'view_only';
 		if (!s.allowed.clipboard) return 'device';
 		if (s.toggles.disableClipboard) return 'toggle';
