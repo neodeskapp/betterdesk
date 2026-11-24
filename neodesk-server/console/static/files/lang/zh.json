@@ -2642,7 +2642,7 @@
     "2fa_invalid": "请输入有效的6位数代码",
     "verify": "验证",
     "use_cdap_fallback": "使用 CDAP 查看器",
-    "cdap_fallback_hint": "打开轻量的 JPEG 轮询查看器，它通过 bd-signal/CDAP 连接，而不是 RustDesk 中继。适用于设备在中继上离线、但可以通过代理管理通道访问的情况。",
+    "cdap_fallback_hint": "打开轻量的 JPEG 轮询查看器，它通过 nd-signal/CDAP 连接，而不是 RustDesk 中继。适用于设备在中继上离线、但可以通过代理管理通道访问的情况。",
     "codec": "视频编解码器",
     "codec_auto": "自动（推荐）",
     "remember_peer_password": "在此设备上记住设备密码",

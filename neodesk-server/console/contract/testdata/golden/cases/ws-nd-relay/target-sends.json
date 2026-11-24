@@ -1,0 +1,26 @@
+{
+ "id": "ws-nd-relay/target-sends",
+ "request": {
+  "method": "GET",
+  "path": "/ws/nd-relay",
+  "notes": [
+   "websocket tgt, own origin",
+   "websocket send {\"n\":1,\"type\":\"e2e\"}"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": []
+    }
+   }
+  }
+ ]
+}

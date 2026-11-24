@@ -2644,7 +2644,7 @@
     "2fa_invalid": "Nhập mã gồm 6 chữ số hợp lệ",
     "verify": "Xác minh",
     "use_cdap_fallback": "Sử dụng trình xem CDAP",
-    "cdap_fallback_hint": "Mở trình xem nhẹ lấy ảnh JPEG định kỳ qua bd-signal/CDAP thay cho máy chủ chuyển tiếp của RustDesk. Hữu ích khi thiết bị ngoại tuyến trên máy chủ chuyển tiếp nhưng vẫn truy cập được qua kênh quản lý của agent.",
+    "cdap_fallback_hint": "Mở trình xem nhẹ lấy ảnh JPEG định kỳ qua nd-signal/CDAP thay cho máy chủ chuyển tiếp của RustDesk. Hữu ích khi thiết bị ngoại tuyến trên máy chủ chuyển tiếp nhưng vẫn truy cập được qua kênh quản lý của agent.",
     "clipboard_empty": "Bảng tạm trống",
     "clipboard_denied": "Truy cập vào bảng nhớ tạm bị từ chối. HTTPS được yêu cầu hoặc quyền không được cấp.",
     "file_loading": "Đang tải...",

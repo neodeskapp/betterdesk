@@ -2644,7 +2644,7 @@
     "2fa_invalid": "Adjon meg egy érvényes 6 számjegyű kódot",
     "verify": "Ellenőrzés",
     "use_cdap_fallback": "Használja a CDAP megjelenítőt",
-    "cdap_fallback_hint": "Nyissa meg a könnyű JPEG-lekérdezési nézetot, amely bd-signal/CDAP-ot használ a RustDesk-relé helyett. Hasznos, ha a peer offline a reléen, de elérhető az agent-kezelési csatornán keresztül.",
+    "cdap_fallback_hint": "Nyissa meg a könnyű JPEG-lekérdezési nézetot, amely nd-signal/CDAP-ot használ a RustDesk-relé helyett. Hasznos, ha a peer offline a reléen, de elérhető az agent-kezelési csatornán keresztül.",
     "clipboard_empty": "A vágólap üres",
     "clipboard_denied": "A vágólaphoz való hozzáférés megtagadva. HTTPS szükséges, vagy engedélyt nem adtak meg.",
     "file_loading": "Betöltés...",

@@ -259,7 +259,7 @@ func newSecretSuite(t *testing.T, mode RecordMode, goldenDir, secretsDir string)
 			_ = json.NewEncoder(w).Encode(v)
 		}
 		switch {
-		case r.URL.Path == "/__bd/routing":
+		case r.URL.Path == "/__nd/routing":
 			answer(map[string]string{"handler": HandlerNode})
 		case r.URL.Path == "/api/echo":
 			body, _ := io.ReadAll(r.Body)

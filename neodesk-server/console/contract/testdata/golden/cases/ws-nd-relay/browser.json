@@ -1,0 +1,38 @@
+{
+ "id": "ws-nd-relay/browser",
+ "request": {
+  "method": "GET",
+  "path": "/ws/nd-relay",
+  "notes": [
+   "websocket browser, own origin",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro",
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin",
+    "server_admin",
+    "super_admin",
+    "admin"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 4400,
+      "reason": "Missing or invalid parameters"
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

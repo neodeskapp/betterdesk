@@ -2567,7 +2567,7 @@
     "connect": "連接",
     "reconnect": "重新連接",
     "use_cdap_fallback": "使用 CDAP 查看器",
-    "cdap_fallback_hint": "開啟輕量的 JPEG 輪詢查看器，它透過 bd-signal/CDAP 連線，而不是 RustDesk 中繼。適用於裝置在中繼上離線、但可以透過代理程式管理通道存取的情況。",
+    "cdap_fallback_hint": "開啟輕量的 JPEG 輪詢查看器，它透過 nd-signal/CDAP 連線，而不是 RustDesk 中繼。適用於裝置在中繼上離線、但可以透過代理程式管理通道存取的情況。",
     "disconnect": "斷開",
     "back_to_devices": "返回設備列表",
     "fullscreen": "全屏",

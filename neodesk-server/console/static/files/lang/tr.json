@@ -2644,7 +2644,7 @@
     "2fa_invalid": "6 haneli geçerli bir kod girin",
     "verify": "Doğrula",
     "use_cdap_fallback": "CDAP görüntüleyiciyi kullanın",
-    "cdap_fallback_hint": "RustDesk aktarma sunucusu yerine bd-signal/CDAP kullanan hafif JPEG yoklamalı görüntüleyiciyi açar. Cihaz aktarma sunucusunda çevrimdışı olduğunda ancak ajan yönetim kanalı üzerinden erişilebildiğinde işe yarar.",
+    "cdap_fallback_hint": "RustDesk aktarma sunucusu yerine nd-signal/CDAP kullanan hafif JPEG yoklamalı görüntüleyiciyi açar. Cihaz aktarma sunucusunda çevrimdışı olduğunda ancak ajan yönetim kanalı üzerinden erişilebildiğinde işe yarar.",
     "clipboard_empty": "Pano boş",
     "clipboard_denied": "Pano erişimi reddedildi. HTTPS gerekli veya izin verilmedi.",
     "file_loading": "Yükleniyor...",

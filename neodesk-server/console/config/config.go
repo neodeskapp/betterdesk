@@ -34,7 +34,7 @@ type Config struct {
 	// (TRUST_PROXY).
 	TrustProxy httpx.TrustProxy
 
-	// DebugRouting adds GET /__bd/routing, where the contract suite asks
+	// DebugRouting adds GET /__nd/routing, where the contract suite asks
 	// who answers a route (CONSOLE_DEBUG_ROUTING on). Test stacks set it;
 	// an install does not.
 	DebugRouting bool

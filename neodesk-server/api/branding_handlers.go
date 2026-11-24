@@ -632,7 +632,7 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 		var boundKeyErr error
 		if req.PublicKey != "" {
 			incomingCanonical, _ := canonicalizeDevicePublicKey(req.PublicKey)
-			if bound, err := s.loadBdMgmtPublicKey(req.DeviceID); err == nil {
+			if bound, err := s.loadNdMgmtPublicKey(req.DeviceID); err == nil {
 				boundCanonical := base64.StdEncoding.EncodeToString(bound)
 				if incomingCanonical != boundCanonical {
 					http.Error(w, "public_key does not match enrolled device identity", http.StatusForbidden)
@@ -642,7 +642,7 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 				boundKeyErr = err
 			}
 		} else {
-			_, boundKeyErr = s.loadBdMgmtPublicKey(req.DeviceID)
+			_, boundKeyErr = s.loadNdMgmtPublicKey(req.DeviceID)
 		}
 		if isSupportAgentEnrollment(&req) {
 			bundleID := normalizeEnrollmentBundleID(req.BundleID)
@@ -683,7 +683,7 @@ func (s *Server) handleDeviceRegister(w http.ResponseWriter, r *http.Request) {
 			// possession of a bound device token. Without that credential,
 			// accepting a new key here would let an attacker seize the identity.
 			if boundKeyErr != nil && req.PublicKey != "" {
-				if err := s.storeBdMgmtPublicKey(req.DeviceID, req.PublicKey); err != nil {
+				if err := s.storeNdMgmtPublicKey(req.DeviceID, req.PublicKey); err != nil {
 					log.Printf("[API] Failed to bind public key for %s: %v", req.DeviceID, err)
 				}
 			}
@@ -1091,7 +1091,7 @@ func (s *Server) removeEnrollmentRejectAuditPeer(deviceID string) error {
 	if s.peers != nil {
 		s.peers.Remove(deviceID)
 	}
-	_ = s.db.DeleteConfig(bdMgmtPublicKeyConfigPref + deviceID)
+	_ = s.db.DeleteConfig(ndMgmtPublicKeyConfigPref + deviceID)
 	_ = s.db.DeleteConfig(deviceBundleIDPrefix + deviceID)
 	if err := s.db.HardDeletePeer(deviceID); err != nil {
 		log.Printf("[API] removeEnrollmentRejectAuditPeer: HardDeletePeer %s: %v", deviceID, err)
@@ -1710,7 +1710,7 @@ func (s *Server) createPeerFromEnrollment(req *EnrollmentRequest, clientIP strin
 	}
 
 	if req.PublicKey != "" {
-		if err := s.storeBdMgmtPublicKey(req.DeviceID, req.PublicKey); err != nil {
+		if err := s.storeNdMgmtPublicKey(req.DeviceID, req.PublicKey); err != nil {
 			log.Printf("[API] Failed to persist enrollment public key for %s: %v", req.DeviceID, err)
 		}
 	}

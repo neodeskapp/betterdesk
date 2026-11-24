@@ -1,0 +1,40 @@
+{
+ "id": "ws-nd-relay/initiator-paired",
+ "request": {
+  "method": "GET",
+  "path": "/ws/nd-relay",
+  "notes": [
+   "websocket init, own origin",
+   "websocket expect 1 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.session",
+     "pattern": "^[9aA+/_=-]{36}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "session": "<volatile>",
+        "type": "paired"
+       },
+       "order": "type session"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

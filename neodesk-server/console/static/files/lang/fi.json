@@ -2644,7 +2644,7 @@
     "2fa_invalid": "Anna kelvollinen 6-numeroinen koodi",
     "verify": "Vahvista",
     "use_cdap_fallback": "Käytä CDAP-katseluohjelmaa",
-    "cdap_fallback_hint": "Avaa kevyt JPEG-pollauskatseluohjelma, joka käyttää bd-signal/CDAP:ia RustDesk-reléen sijaan. Hyödyllinen, kun vertaistaho on offline reléssä mutta saavutettavissa agentinhallintakanavan kautta.",
+    "cdap_fallback_hint": "Avaa kevyt JPEG-pollauskatseluohjelma, joka käyttää nd-signal/CDAP:ia RustDesk-reléen sijaan. Hyödyllinen, kun vertaistaho on offline reléssä mutta saavutettavissa agentinhallintakanavan kautta.",
     "clipboard_empty": "Leikepöytä on tyhjä",
     "clipboard_denied": "Leikepöydän käyttö estetty. HTTPS vaaditaan tai lupaa ei myönnetty.",
     "file_loading": "Ladataan...",

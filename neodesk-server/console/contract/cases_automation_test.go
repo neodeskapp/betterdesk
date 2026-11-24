@@ -423,7 +423,7 @@ func init() {
 // (testdata/node_sqlite.json: a command with a device and a payload as
 // text gets {"success":true,"command":{"id":...,"device_id":...,"status":"pending"}}).
 func init() {
-	const bd = "/api/nd"
+	const nd = "/api/nd"
 	const own = "/api/automation"
 	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
 	other := map[string]string{"Authorization": "Bearer {secret:device_token_other}"}
@@ -444,11 +444,11 @@ func init() {
 		if c.Body != nil {
 			c.Method = "POST"
 			if c.Path == "" {
-				c.Path = bd + "/commands/{command}/result"
+				c.Path = nd + "/commands/{command}/result"
 			}
 		}
 		if c.Path == "" {
-			c.Path = bd + "/commands"
+			c.Path = nd + "/commands"
 		}
 		return c
 	}
@@ -490,9 +490,9 @@ func init() {
 		result("result-status-pending", map[string]any{"status": "pending"}),
 		result("result-status-in-a-list", map[string]any{"status": []any{"completed"}}),
 		result("result-status-number", map[string]any{"status": 1}),
-		asDevice(contract.Case{Name: "result-missing-command", Path: bd + "/commands/999999999/result", Body: completed}),
-		asDevice(contract.Case{Name: "result-id-too-long", Path: bd + "/commands/99999999999999999999/result", Body: completed}),
-		asDevice(contract.Case{Name: "result-id-with-zeros", Path: bd + "/commands/00{command}/result", Body: map[string]any{"status": "running", "result": 5}}),
+		asDevice(contract.Case{Name: "result-missing-command", Path: nd + "/commands/999999999/result", Body: completed}),
+		asDevice(contract.Case{Name: "result-id-too-long", Path: nd + "/commands/99999999999999999999/result", Body: completed}),
+		asDevice(contract.Case{Name: "result-id-with-zeros", Path: nd + "/commands/00{command}/result", Body: map[string]any{"status": "running", "result": 5}}),
 		asDevice(contract.Case{Name: "fetch-after-running", Volatile: ids}),
 		result("result-no-text", map[string]any{"status": "completed", "result": map[string]any{"toString": 1}}),
 		result("result-object", map[string]any{"status": "failed", "result": map[string]any{"lines": 2}}),
@@ -503,11 +503,11 @@ func init() {
 
 		// A device's request with each role's browser: the session, its
 		// cookies and its CSRF token come along
-		contract.Case{Name: "result-with-session", Method: "POST", Path: bd + "/commands/999999999/result", Body: completed, Headers: other},
-		contract.Case{Name: "result-with-session-without-csrf-token", Method: "POST", Path: bd + "/commands/999999999/result", Body: completed, Headers: other, NoCSRF: true},
+		contract.Case{Name: "result-with-session", Method: "POST", Path: nd + "/commands/999999999/result", Body: completed, Headers: other},
+		contract.Case{Name: "result-with-session-without-csrf-token", Method: "POST", Path: nd + "/commands/999999999/result", Body: completed, Headers: other, NoCSRF: true},
 		contract.Case{Name: "result-at-automation-with-session", Method: "POST", Path: own + "/commands/999999999/result", Body: completed, Headers: other},
-		contract.Case{Name: "result-with-session-without-token", Method: "POST", Path: bd + "/commands/999999999/result", Body: completed},
-		contract.Case{Name: "fetch-with-session", Path: bd + "/commands", Headers: other, Volatile: ids},
-		contract.Case{Name: "fetch-with-session-without-token", Path: bd + "/commands"},
+		contract.Case{Name: "result-with-session-without-token", Method: "POST", Path: nd + "/commands/999999999/result", Body: completed},
+		contract.Case{Name: "fetch-with-session", Path: nd + "/commands", Headers: other, Volatile: ids},
+		contract.Case{Name: "fetch-with-session-without-token", Path: nd + "/commands"},
 	)
 }

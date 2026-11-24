@@ -25,7 +25,7 @@ afterEach(() => {
 const token = (over: Partial<DeviceToken>): DeviceToken => ({
 	id: '7',
 	name: 'Bundle',
-	token_prefix: 'bd_',
+	token_prefix: 'nd_',
 	status: 'active',
 	max_uses: 0,
 	use_count: 3,

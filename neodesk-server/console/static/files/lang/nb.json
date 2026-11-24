@@ -2644,7 +2644,7 @@
     "2fa_invalid": "Skriv inn en gyldig 6-sifret kode",
     "verify": "Bekreft",
     "use_cdap_fallback": "Bruk CDAP viewer",
-    "cdap_fallback_hint": "Åpne den lette JPEG-pollingvisningen som bruker bd-signal/CDAP i stedet for RustDesk-reléet. Nyttig når peer er offline på reléet, men nåbar via agentstyrekanalen.",
+    "cdap_fallback_hint": "Åpne den lette JPEG-pollingvisningen som bruker nd-signal/CDAP i stedet for RustDesk-reléet. Nyttig når peer er offline på reléet, men nåbar via agentstyrekanalen.",
     "clipboard_empty": "Utklippstavlen er tom",
     "clipboard_denied": "Utklippstavle tilgang nektet. HTTPS kreves eller tillatelse ikke gitt.",
     "file_loading": "Laster inn...",

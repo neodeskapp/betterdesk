@@ -129,7 +129,7 @@ func init() {
 // window the reports group asks for, and the sessions and summaries it
 // leaves are older than anything the activity cases above read.
 func init() {
-	const bd = "/api/nd"
+	const nd = "/api/nd"
 	const own = "/api/activity"
 	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
 	other := map[string]string{"Authorization": "Bearer {secret:device_token_other}"}
@@ -172,7 +172,7 @@ func init() {
 			c.Headers = device
 		}
 		if c.Path == "" {
-			c.Path = bd + "/activity"
+			c.Path = nd + "/activity"
 		}
 		return c
 	}
@@ -223,9 +223,9 @@ func init() {
 
 		// A device's report with each role's browser: the session, its
 		// cookies and its CSRF token come along
-		contract.Case{Name: "report-with-session", Method: "POST", Path: bd + "/activity", Body: report(nil), Headers: device},
-		contract.Case{Name: "report-with-session-without-csrf-token", Method: "POST", Path: bd + "/activity", Body: report(nil), Headers: device, NoCSRF: true},
+		contract.Case{Name: "report-with-session", Method: "POST", Path: nd + "/activity", Body: report(nil), Headers: device},
+		contract.Case{Name: "report-with-session-without-csrf-token", Method: "POST", Path: nd + "/activity", Body: report(nil), Headers: device, NoCSRF: true},
 		contract.Case{Name: "report-at-activity-with-session", Method: "POST", Path: own + "/activity", Body: report(nil), Headers: device},
-		contract.Case{Name: "report-with-session-without-token", Method: "POST", Path: bd + "/activity", Body: report(nil)},
+		contract.Case{Name: "report-with-session-without-token", Method: "POST", Path: nd + "/activity", Body: report(nil)},
 	)
 }

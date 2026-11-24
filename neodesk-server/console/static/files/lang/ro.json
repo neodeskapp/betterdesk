@@ -2644,7 +2644,7 @@
     "2fa_invalid": "Introduceți un cod valid din 6 cifre",
     "verify": "Verifică",
     "use_cdap_fallback": "Utilizați vizualizatorul CDAP",
-    "cdap_fallback_hint": "Deschideți vizualizatorul ușor de interogare JPEG care utilizează bd-signal/CDAP în loc de releul RustDesk. Util dacă peer-ul este offline pe releu dar accesibil prin canalul de management agent.",
+    "cdap_fallback_hint": "Deschideți vizualizatorul ușor de interogare JPEG care utilizează nd-signal/CDAP în loc de releul RustDesk. Util dacă peer-ul este offline pe releu dar accesibil prin canalul de management agent.",
     "clipboard_empty": "Clipboard-ul este gol",
     "clipboard_denied": "Accesul la clipboard a fost refuzat. HTTPS este necesar sau permisiunea nu a fost acordată.",
     "file_loading": "Se încarcă...",

@@ -1,0 +1,30 @@
+{
+ "id": "ws-nd-signal/no-parameters",
+ "request": {
+  "method": "GET",
+  "path": "/ws/nd-signal",
+  "notes": [
+   "websocket a, own origin",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 4400,
+      "reason": "Missing device_id or token"
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

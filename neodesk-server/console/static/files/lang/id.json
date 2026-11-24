@@ -2644,7 +2644,7 @@
     "2fa_invalid": "Masukkan kode 6 digit yang valid",
     "verify": "Verifikasi",
     "use_cdap_fallback": "Gunakan penampil CDAP",
-    "cdap_fallback_hint": "Membuka penampil ringan berbasis polling JPEG yang memakai bd-signal/CDAP, bukan relay RustDesk. Berguna jika perangkat offline di relay tetapi masih dapat dijangkau lewat kanal manajemen agen.",
+    "cdap_fallback_hint": "Membuka penampil ringan berbasis polling JPEG yang memakai nd-signal/CDAP, bukan relay RustDesk. Berguna jika perangkat offline di relay tetapi masih dapat dijangkau lewat kanal manajemen agen.",
     "clipboard_empty": "Papan klip kosong",
     "clipboard_denied": "Akses papan klip ditolak. HTTPS diperlukan atau izin tidak diberikan.",
     "file_loading": "Memuat...",

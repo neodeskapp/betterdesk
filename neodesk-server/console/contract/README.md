@@ -585,7 +585,7 @@ seconds.
 ## Who answered
 
 A Go console started with `CONSOLE_DEBUG_ROUTING=1` (the test stack sets
-it) answers `GET /__bd/routing?method=GET&path=/api/x` with
+it) answers `GET /__nd/routing?method=GET&path=/api/x` with
 `{"handler":"go"}`: it answers every request itself. The suite asks once
 per route and case. Without `CONTRACT_REQUIRE_GO` the summary
 only counts. For a socket case it adds `upgrade=websocket` and the answer

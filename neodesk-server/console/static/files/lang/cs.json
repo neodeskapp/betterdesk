@@ -2638,7 +2638,7 @@
     "2fa_invalid": "Zadejte platný 6místný kód",
     "verify": "Ověřit",
     "use_cdap_fallback": "Použít prohlížeč CDAP",
-    "cdap_fallback_hint": "Otevře odlehčený prohlížeč se snímky JPEG, který používá bd-signal/CDAP místo RustDesk relay. Užitečné, když je protějšek offline na relay, ale dostupný přes kanál správy agenta.",
+    "cdap_fallback_hint": "Otevře odlehčený prohlížeč se snímky JPEG, který používá nd-signal/CDAP místo RustDesk relay. Užitečné, když je protějšek offline na relay, ale dostupný přes kanál správy agenta.",
     "clipboard_empty": "Schránka je prázdná",
     "clipboard_denied": "Přístup ke schránce byl odepřen. Je vyžadováno HTTPS nebo nebylo uděleno oprávnění.",
     "file_loading": "Načítání...",

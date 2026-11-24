@@ -243,13 +243,13 @@ func TestMountedRoutes(t *testing.T) {
 		r.Get("/{id}", echo(name+"-one"), OnMount("/api/inventory"))
 		r.Get("/commands", echo(name+"-commands"), OnMount("/api/nd"))
 	}
-	register(rt.Mount("/api/nd"), "bd")
+	register(rt.Mount("/api/nd"), "nd")
 	register(rt.Mount("/api/inventory"), "inv")
 
 	cases := []struct{ target, route, mount, path string }{
-		{"/api/nd", "bd-root", "/api/nd", "/"},
-		{"/api/nd/", "bd-root", "/api/nd", "/"},
-		{"/API/ND/commands", "bd-commands", "/api/nd", "/commands"},
+		{"/api/nd", "nd-root", "/api/nd", "/"},
+		{"/api/nd/", "nd-root", "/api/nd", "/"},
+		{"/API/ND/commands", "nd-commands", "/api/nd", "/commands"},
 		{"/api/inventory", "inv-root", "/api/inventory", "/"},
 		{"/api/inventory/7", "inv-one", "/api/inventory", "/7"},
 		// On the device mount the {id} route steps aside, and nothing else fits

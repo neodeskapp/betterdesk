@@ -1,0 +1,30 @@
+{
+ "id": "ws-nd-relay/slot-taken",
+ "request": {
+  "method": "GET",
+  "path": "/ws/nd-relay?role=initiator&session=%7Brelay%7D&token=%7Bsecret%3Ainitiator_token%7D",
+  "notes": [
+   "websocket init2, own origin",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 4409,
+      "reason": "Slot already taken"
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

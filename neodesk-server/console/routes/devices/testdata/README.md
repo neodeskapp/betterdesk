@@ -72,7 +72,7 @@ queries are odd on purpose.
 Each step holds the answer, the calls to the API server, the requests the
 agent got (request id as `<id>`) and the audit rows. `TestNodeAgentAnswers`
 replays them through the whole console with a Go made-up agent
-(`console/bdrelay/fakeagent`) that has a real access token of A1001.
+(`console/ndrelay/fakeagent`) that has a real access token of A1001.
 
 The recorder's app had no panel access guard and ended with a stand-in
 error handler, so its steps stay within what the guard lets through, and

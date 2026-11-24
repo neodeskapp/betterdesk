@@ -2638,7 +2638,7 @@
     "2fa_invalid": "Código 2FA inválido",
     "verify": "Verificar",
     "use_cdap_fallback": "Usar visualizador CDAP",
-    "cdap_fallback_hint": "Abra o visualizador leve de polling JPEG que usa bd-signal/CDAP em vez do relay RustDesk. Útil quando o peer está offline no relay mas acessível via o canal de gestão do agente.",
+    "cdap_fallback_hint": "Abra o visualizador leve de polling JPEG que usa nd-signal/CDAP em vez do relay RustDesk. Útil quando o peer está offline no relay mas acessível via o canal de gestão do agente.",
     "clipboard_empty": "A área de transferência está vazia",
     "clipboard_denied": "Acesso à área de transferência negado. HTTPS é obrigatório ou a permissão não foi concedida.",
     "file_loading": "Carregando...",

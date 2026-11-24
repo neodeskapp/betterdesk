@@ -79,7 +79,7 @@ func TestDeriveFormat(t *testing.T) {
 		{"UUIDs", []string{"550e8400-e29b-41d4-a716-446655440000", "6ba7b810-9dad-11d1-80b4-00c04fd430c8"}, "", "^[9aA+/_=-]{36}$"},
 		// Two keys in base64 without + and /: the next one may have them.
 		{"base64", []string{"Qm9iQWxpY2VFdmUwMTIz=", "enl4d3Z1dHNycXBvbm1s="}, "", "^[9aA+/_=-]{21}$"},
-		{"prefixed keys", []string{"bd_live_a1b2c3", "bd_live_ffe019aa"}, "", "^[9aA+/_=-]+$"},
+		{"prefixed keys", []string{"nd_live_a1b2c3", "nd_live_ffe019aa"}, "", "^[9aA+/_=-]+$"},
 		{"words of another kind", []string{"ab-12", "12-ab"}, "", "^[9aA+/_=-]{5}$"},
 		{"another shape", []string{"2026-11-10", "10.11.2026 12:00"}, "", ""},
 		{"sentences of different length", []string{"User logged in", "Session replaced by a new login"}, "", ""},

@@ -22,7 +22,7 @@ func init() {
 	var cases []contract.Case
 	event := map[string]any{"event_source": "usb", "event_type": "violation", "details": map[string]any{"path": "E:\\"}}
 	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
-	for _, mount := range []struct{ name, path string }{{"dataguard", "/api/dataguard"}, {"bd", "/api/nd"}} {
+	for _, mount := range []struct{ name, path string }{{"dataguard", "/api/dataguard"}, {"nd", "/api/nd"}} {
 		policy := "policy_" + mount.name
 		second := "second_" + mount.name
 		third := "third_" + mount.name

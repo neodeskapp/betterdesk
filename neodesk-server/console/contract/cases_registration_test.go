@@ -30,7 +30,7 @@ import (
 // so the value depends on which process answers; the marks with ~ leave
 // only its type to compare.
 func init() {
-	const bd = "/api/nd"
+	const nd = "/api/nd"
 	device := func(c contract.Case) contract.Case {
 		c.NoCSRF, c.NoCookies, c.Roles = true, true, contract.Roles("signed-out")
 		return c
@@ -47,7 +47,7 @@ func init() {
 		}
 	}
 	status := func(name, id string) contract.Case {
-		return setupDevice(contract.Case{Name: name, Path: bd + "/register-status", Query: url.Values{"device_id": {id}}, Volatile: []string{"~config.console_url"}})
+		return setupDevice(contract.Case{Name: name, Path: nd + "/register-status", Query: url.Values{"device_id": {id}}, Volatile: []string{"~config.console_url"}})
 	}
 	pending := map[string]string{"type": "registration_pending"}
 	changed := map[string]string{"type": "registration_changed"}
@@ -55,30 +55,30 @@ func init() {
 
 	contract.Group("registration",
 		// The device routes: what they refuse, once, as a device
-		device(contract.Case{Name: "device-request-empty", Method: "POST", Path: bd + "/register-request", Body: map[string]any{}}),
-		device(contract.Case{Name: "device-request-short-id", Method: "POST", Path: bd + "/register-request", Body: map[string]any{"device_id": "ab"}}),
-		device(contract.Case{Name: "device-request-number-id", Method: "POST", Path: bd + "/register-request", Body: map[string]any{"device_id": 900100099}}),
-		device(contract.Case{Name: "device-request-list-id", Method: "POST", Path: bd + "/register-request", Body: map[string]any{"device_id": []any{"contract-list"}}}),
-		device(contract.Case{Name: "device-request-list-body", Method: "POST", Path: bd + "/register-request", RawBody: `["contract-list"]`, ContentType: "application/json"}),
-		device(contract.Case{Name: "device-request-malformed", Method: "POST", Path: bd + "/register-request", RawBody: `{"device_id":`, ContentType: "application/json"}),
+		device(contract.Case{Name: "device-request-empty", Method: "POST", Path: nd + "/register-request", Body: map[string]any{}}),
+		device(contract.Case{Name: "device-request-short-id", Method: "POST", Path: nd + "/register-request", Body: map[string]any{"device_id": "ab"}}),
+		device(contract.Case{Name: "device-request-number-id", Method: "POST", Path: nd + "/register-request", Body: map[string]any{"device_id": 900100099}}),
+		device(contract.Case{Name: "device-request-list-id", Method: "POST", Path: nd + "/register-request", Body: map[string]any{"device_id": []any{"contract-list"}}}),
+		device(contract.Case{Name: "device-request-list-body", Method: "POST", Path: nd + "/register-request", RawBody: `["contract-list"]`, ContentType: "application/json"}),
+		device(contract.Case{Name: "device-request-malformed", Method: "POST", Path: nd + "/register-request", RawBody: `{"device_id":`, ContentType: "application/json"}),
 		device(contract.Case{
-			Name: "device-request-number-hostname", Method: "POST", Path: bd + "/register-request",
+			Name: "device-request-number-hostname", Method: "POST", Path: nd + "/register-request",
 			Body: map[string]any{"device_id": "contract-odd", "hostname": 12},
 		}),
 		device(contract.Case{
-			Name: "device-request-text", Method: "POST", Path: bd + "/register-request",
+			Name: "device-request-text", Method: "POST", Path: nd + "/register-request",
 			RawBody: "device_id=contract-text", ContentType: "text/plain",
 		}),
 		device(contract.Case{
-			Name: "device-request-form", Method: "POST", Path: bd + "/register-request",
+			Name: "device-request-form", Method: "POST", Path: nd + "/register-request",
 			RawBody: "device_id=contract-form", ContentType: "application/x-www-form-urlencoded",
 		}),
-		device(contract.Case{Name: "device-status-without-id", Path: bd + "/register-status"}),
-		device(contract.Case{Name: "device-status-empty-id", Path: bd + "/register-status", Query: url.Values{"device_id": {""}}}),
-		device(contract.Case{Name: "device-status-unknown", Path: bd + "/register-status", Query: url.Values{"device_id": {"contract-none"}}}),
-		device(contract.Case{Name: "device-status-two-ids", Path: bd + "/register-status", Query: url.Values{"device_id": {"contract-a", "contract-b"}}}),
-		device(contract.Case{Name: "device-status-id-list", Path: bd + "/register-status", Query: url.Values{"device_id[]": {"contract-none"}}}),
-		device(contract.Case{Name: "device-status-seeded", Path: bd + "/register-status", Query: url.Values{"device_id": {"900300001"}}}),
+		device(contract.Case{Name: "device-status-without-id", Path: nd + "/register-status"}),
+		device(contract.Case{Name: "device-status-empty-id", Path: nd + "/register-status", Query: url.Values{"device_id": {""}}}),
+		device(contract.Case{Name: "device-status-unknown", Path: nd + "/register-status", Query: url.Values{"device_id": {"contract-none"}}}),
+		device(contract.Case{Name: "device-status-two-ids", Path: nd + "/register-status", Query: url.Values{"device_id": {"contract-a", "contract-b"}}}),
+		device(contract.Case{Name: "device-status-id-list", Path: nd + "/register-status", Query: url.Values{"device_id[]": {"contract-none"}}}),
+		device(contract.Case{Name: "device-status-seeded", Path: nd + "/register-status", Query: url.Values{"device_id": {"900300001"}}}),
 		device(contract.Case{Name: "root-request-without-csrf-token", Method: "POST", Path: "/register-request", Body: map[string]any{"device_id": "ab"}}),
 		device(contract.Case{Name: "root-status", Path: "/register-status", Query: url.Values{"device_id": {"contract-none"}}}),
 
@@ -86,15 +86,15 @@ func init() {
 		// the approval with a folder, a device group, a display name and tags
 		contract.Case{Name: "panel-open", Path: "/ws/panel-events", As: "admin", Socket: &contract.Socket{Name: "panel"}},
 		setupDevice(contract.Case{
-			Name: "device-request", Method: "POST", Path: bd + "/register-request",
+			Name: "device-request", Method: "POST", Path: nd + "/register-request",
 			Body: request("900100021", "contract-lan-kiosk"), Capture: map[string]string{"registration": "id"},
 		}),
 		contract.Case{Name: "panel-pending", Path: "/ws/panel-events", As: "admin", Socket: &contract.Socket{Name: "panel", Expect: 1, Filter: pending}},
-		setupDevice(contract.Case{Name: "device-request-again", Method: "POST", Path: bd + "/register-request", Body: request("900100021", "contract-lan-kiosk-renamed")}),
+		setupDevice(contract.Case{Name: "device-request-again", Method: "POST", Path: nd + "/register-request", Body: request("900100021", "contract-lan-kiosk-renamed")}),
 		contract.Case{Name: "panel-pending-again", Path: "/ws/panel-events", As: "admin", Socket: &contract.Socket{Name: "panel", Expect: 1, Filter: pending}},
 		status("device-status-pending", "900100021"),
 		contract.Case{Name: "list", Path: "/api/registrations"},
-		contract.Case{Name: "list-bd", Path: bd + "/api/registrations"},
+		contract.Case{Name: "list-nd", Path: nd + "/api/registrations"},
 		contract.Case{Name: "list-pending", Path: "/api/registrations", Query: url.Values{"status": {"pending"}}},
 		contract.Case{Name: "list-approved", Path: "/api/registrations", Query: url.Values{"status": {"approved"}}},
 		contract.Case{Name: "list-search-letter-case", Path: "/api/registrations", Query: url.Values{"search": {"LAN-KIOSK"}}},
@@ -102,11 +102,11 @@ func init() {
 		contract.Case{Name: "list-search-address", Path: "/api/registrations", Query: url.Values{"search": {"10.0.9.1"}}},
 		contract.Case{Name: "list-search-nothing", Path: "/api/registrations", Query: url.Values{"search": {"contract-nothing"}, "status": {"pending"}}},
 		contract.Case{Name: "count", Path: "/api/registrations/count"},
-		contract.Case{Name: "count-bd", Path: bd + "/api/registrations/count"},
+		contract.Case{Name: "count-nd", Path: nd + "/api/registrations/count"},
 		contract.Case{Name: "enrollment-ui", Path: "/api/registrations/enrollment-ui"},
-		contract.Case{Name: "enrollment-ui-bd", Path: bd + "/api/registrations/enrollment-ui"},
+		contract.Case{Name: "enrollment-ui-nd", Path: nd + "/api/registrations/enrollment-ui"},
 		contract.Case{Name: "one", Path: "/api/registrations/{registration}"},
-		contract.Case{Name: "one-bd", Path: bd + "/api/registrations/{registration}"},
+		contract.Case{Name: "one-nd", Path: nd + "/api/registrations/{registration}"},
 		contract.Case{Name: "one-missing", Path: "/api/registrations/999999999"},
 		contract.Case{Name: "one-not-a-number", Path: "/api/registrations/contract"},
 		contract.Case{Name: "one-number-then-text", Path: "/api/registrations/{registration}abc"},
@@ -159,11 +159,11 @@ func init() {
 		}(),
 		status("device-status-delivered", "900100021"),
 		setupDevice(contract.Case{
-			Name: "device-route-with-the-delivered-token", Path: bd + "/session/contract-none",
+			Name: "device-route-with-the-delivered-token", Path: nd + "/session/contract-none",
 			Headers: map[string]string{"Authorization": "Bearer {secret:lan_device_token}"},
 			Roles:   contract.Roles("global_admin", "super_admin", "admin"),
 		}),
-		setupDevice(contract.Case{Name: "device-request-after-approval", Method: "POST", Path: bd + "/register-request", Body: request("900100021", "contract-lan-kiosk-late")}),
+		setupDevice(contract.Case{Name: "device-request-after-approval", Method: "POST", Path: nd + "/register-request", Body: request("900100021", "contract-lan-kiosk-late")}),
 		contract.Case{Name: "approved-device", Path: "/api/devices/900100021", As: "admin", Volatile: []string{"data.folder_id", "data.groups[*].id"}},
 		contract.Case{
 			Name: "approved-device-groups", Path: "/api/devices/900100021/groups", As: "admin",
@@ -179,29 +179,29 @@ func init() {
 
 		// A rejection at /api/nd, and a rejected device asking again
 		setupDevice(contract.Case{
-			Name: "device-request-to-reject", Method: "POST", Path: bd + "/register-request",
+			Name: "device-request-to-reject", Method: "POST", Path: nd + "/register-request",
 			Body: request("contract-reject", "contract-reject-box"), Capture: map[string]string{"rejected": "id"},
 		}),
 		contract.Case{Name: "reject-without-csrf-token", Method: "PUT", Path: "/api/registrations/{rejected}/reject", Body: map[string]any{"reason": "x"}, NoCSRF: true},
-		contract.Case{Name: "reject-bd-without-csrf-token", Method: "PUT", Path: bd + "/api/registrations/{rejected}/reject", Body: map[string]any{"reason": "x"}, NoCSRF: true},
-		contract.Case{Name: "reject-number-reason", Method: "PUT", Path: bd + "/api/registrations/{rejected}/reject", Body: map[string]any{"reason": 5}},
-		contract.Case{Name: "reject-bd", Method: "PUT", Path: bd + "/api/registrations/{rejected}/reject", Body: map[string]any{"reason": "Not one of ours"}},
+		contract.Case{Name: "reject-nd-without-csrf-token", Method: "PUT", Path: nd + "/api/registrations/{rejected}/reject", Body: map[string]any{"reason": "x"}, NoCSRF: true},
+		contract.Case{Name: "reject-number-reason", Method: "PUT", Path: nd + "/api/registrations/{rejected}/reject", Body: map[string]any{"reason": 5}},
+		contract.Case{Name: "reject-nd", Method: "PUT", Path: nd + "/api/registrations/{rejected}/reject", Body: map[string]any{"reason": "Not one of ours"}},
 		contract.Case{Name: "reject-again", Method: "PUT", Path: "/api/registrations/{rejected}/reject", Body: map[string]any{}},
-		contract.Case{Name: "approve-rejected", Method: "PUT", Path: bd + "/api/registrations/{rejected}/approve", Body: map[string]any{}},
+		contract.Case{Name: "approve-rejected", Method: "PUT", Path: nd + "/api/registrations/{rejected}/approve", Body: map[string]any{}},
 		status("device-status-rejected", "contract-reject"),
-		setupDevice(contract.Case{Name: "device-request-after-rejection", Method: "POST", Path: bd + "/register-request", Body: request("contract-reject", "contract-reject-box")}),
+		setupDevice(contract.Case{Name: "device-request-after-rejection", Method: "POST", Path: nd + "/register-request", Body: request("contract-reject", "contract-reject-box")}),
 		status("device-status-asked-again", "contract-reject"),
 		contract.Case{Name: "reject-missing", Method: "PUT", Path: "/api/registrations/999999999/reject", Body: map[string]any{"reason": "x"}},
-		contract.Case{Name: "approve-missing", Method: "PUT", Path: bd + "/api/registrations/999999999/approve", Body: map[string]any{}},
-		contract.Case{Name: "cleanup-rejected", Method: "DELETE", Path: bd + "/api/registrations/{rejected}", As: "admin"},
+		contract.Case{Name: "approve-missing", Method: "PUT", Path: nd + "/api/registrations/999999999/approve", Body: map[string]any{}},
+		contract.Case{Name: "cleanup-rejected", Method: "DELETE", Path: nd + "/api/registrations/{rejected}", As: "admin"},
 
 		// Deleting
 		setupDevice(contract.Case{
-			Name: "device-request-to-delete", Method: "POST", Path: bd + "/register-request",
+			Name: "device-request-to-delete", Method: "POST", Path: nd + "/register-request",
 			Body: request("contract-delete", "contract-delete-box"), Capture: map[string]string{"doomed": "id"},
 		}),
 		contract.Case{Name: "delete", Method: "DELETE", Path: "/api/registrations/{doomed}"},
-		contract.Case{Name: "delete-again", Method: "DELETE", Path: bd + "/api/registrations/{doomed}"},
+		contract.Case{Name: "delete-again", Method: "DELETE", Path: nd + "/api/registrations/{doomed}"},
 		contract.Case{Name: "delete-missing", Method: "DELETE", Path: "/api/registrations/999999999"},
 		contract.Case{Name: "cleanup-doomed", Method: "DELETE", Path: "/api/registrations/{doomed}", As: "admin"},
 
@@ -218,27 +218,27 @@ func init() {
 			Capture: map[string]string{"formed": "id"},
 		},
 		contract.Case{Name: "cleanup-formed", Method: "DELETE", Path: "/api/registrations/{formed}", As: "admin"},
-		contract.Case{Name: "bd-request-without-csrf-token", Method: "POST", Path: bd + "/register-request", Body: map[string]any{"device_id": "ab"}, NoCSRF: true},
-		contract.Case{Name: "bd-status-with-session", Path: bd + "/register-status", Query: url.Values{"device_id": {"contract-none"}}},
+		contract.Case{Name: "nd-request-without-csrf-token", Method: "POST", Path: nd + "/register-request", Body: map[string]any{"device_id": "ab"}, NoCSRF: true},
+		contract.Case{Name: "nd-status-with-session", Path: nd + "/register-status", Query: url.Values{"device_id": {"contract-none"}}},
 
 		// The API server's enrollment queue
 		contract.Case{Name: "enrollment-pending", Path: "/api/enrollment/pending"},
-		contract.Case{Name: "enrollment-pending-bd", Path: bd + "/api/enrollment/pending"},
+		contract.Case{Name: "enrollment-pending-nd", Path: nd + "/api/enrollment/pending"},
 		contract.Case{Name: "enrollment-history", Path: "/api/enrollment/history"},
-		contract.Case{Name: "enrollment-history-rejected", Path: bd + "/api/enrollment/history", Query: url.Values{"status": {"rejected"}}},
+		contract.Case{Name: "enrollment-history-rejected", Path: nd + "/api/enrollment/history", Query: url.Values{"status": {"rejected"}}},
 		contract.Case{Name: "enrollment-history-bad-status", Path: "/api/enrollment/history", Query: url.Values{"status": {"maybe"}}},
 		contract.Case{Name: "enrollment-history-status-list", Path: "/api/enrollment/history", Query: url.Values{"status[]": {"rejected"}}},
 		contract.Case{
 			Name: "enrollment-approve-unknown", Method: "POST", Path: "/api/enrollment/approve/contract-enroll-none",
 			Body: map[string]any{"display_name": "Contract", "sync_mode": "standard", "tags": "a,b", "folder_id": 1, "group_guids": []any{"x"}},
 		},
-		contract.Case{Name: "enrollment-approve-unknown-bd", Method: "POST", Path: bd + "/api/enrollment/approve/contract-enroll-none", Body: map[string]any{}},
+		contract.Case{Name: "enrollment-approve-unknown-nd", Method: "POST", Path: nd + "/api/enrollment/approve/contract-enroll-none", Body: map[string]any{}},
 		contract.Case{Name: "enrollment-reject", Method: "POST", Path: "/api/enrollment/reject/contract-enroll-x", Body: map[string]any{"ban": false}},
 		contract.Case{Name: "enrollment-history-after-reject", Path: "/api/enrollment/history", Query: url.Values{"status": {"rejected"}}, Volatile: []string{"data[*].decided_at"}},
 		contract.Case{Name: "enrollment-clear-rejection", Method: "POST", Path: "/api/enrollment/clear-rejection/contract-enroll-x", Body: map[string]any{}},
 		contract.Case{Name: "enrollment-clear-rejection-again", Method: "POST", Path: "/api/enrollment/clear-rejection/contract-enroll-x", Body: map[string]any{}},
-		contract.Case{Name: "enrollment-reject-ban-bd", Method: "POST", Path: bd + "/api/enrollment/reject/contract-enroll-y", Body: map[string]any{"ban": "yes"}},
-		contract.Case{Name: "enrollment-clear-ban-bd", Method: "POST", Path: bd + "/api/enrollment/clear-rejection/contract-enroll-y", Body: map[string]any{}},
+		contract.Case{Name: "enrollment-reject-ban-nd", Method: "POST", Path: nd + "/api/enrollment/reject/contract-enroll-y", Body: map[string]any{"ban": "yes"}},
+		contract.Case{Name: "enrollment-clear-ban-nd", Method: "POST", Path: nd + "/api/enrollment/clear-rejection/contract-enroll-y", Body: map[string]any{}},
 		contract.Case{Name: "cleanup-enrollment-x", Method: "POST", Path: "/api/enrollment/clear-rejection/contract-enroll-x", As: "admin", Body: map[string]any{}},
 		contract.Case{Name: "cleanup-enrollment-y", Method: "POST", Path: "/api/enrollment/clear-rejection/contract-enroll-y", As: "admin", Body: map[string]any{}},
 		contract.Case{Name: "cleanup-check-devices", Path: "/api/devices", As: "admin", Query: url.Values{"search": {"contract-enroll"}, "includeDeleted": {"true"}}},
@@ -248,13 +248,13 @@ func init() {
 		// accepted and resolved in every turn of a role that may, at both
 		// mounts, so the names come from the one cache of both mounts
 		contract.Case{Name: "help-list", Path: "/api/help/requests"},
-		contract.Case{Name: "help-list-filtered", Path: bd + "/api/help/requests", Query: url.Values{"status": {"pending"}, "device_id": {"900100017"}}},
+		contract.Case{Name: "help-list-filtered", Path: nd + "/api/help/requests", Query: url.Values{"status": {"pending"}, "device_id": {"900100017"}}},
 		contract.Case{Name: "help-accept", Method: "POST", Path: "/api/help/requests/2/accept", Body: map[string]any{}},
 		contract.Case{Name: "help-list-accepted", Path: "/api/help/requests", Query: url.Values{"status": {"acknowledged"}}},
-		contract.Case{Name: "help-list-accepted-bd", Path: bd + "/api/help/requests", Query: url.Values{"status": {"acknowledged"}}},
-		contract.Case{Name: "help-resolve-bd", Method: "POST", Path: bd + "/api/help/requests/2/resolve", Body: map[string]any{}},
+		contract.Case{Name: "help-list-accepted-nd", Path: nd + "/api/help/requests", Query: url.Values{"status": {"acknowledged"}}},
+		contract.Case{Name: "help-resolve-nd", Method: "POST", Path: nd + "/api/help/requests/2/resolve", Body: map[string]any{}},
 		contract.Case{Name: "help-list-resolved", Path: "/api/help/requests", Query: url.Values{"status": {"resolved"}}},
-		contract.Case{Name: "help-accept-missing", Method: "POST", Path: bd + "/api/help/requests/999999999/accept", Body: map[string]any{}},
+		contract.Case{Name: "help-accept-missing", Method: "POST", Path: nd + "/api/help/requests/999999999/accept", Body: map[string]any{}},
 		contract.Case{Name: "help-accept-zero", Method: "POST", Path: "/api/help/requests/0/accept", Body: map[string]any{}},
 		contract.Case{Name: "help-resolve-bad-id", Method: "POST", Path: "/api/help/requests/x%20y/resolve", Body: map[string]any{}},
 	)

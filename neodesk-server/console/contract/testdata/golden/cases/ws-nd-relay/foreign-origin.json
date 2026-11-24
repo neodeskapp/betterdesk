@@ -1,0 +1,22 @@
+{
+ "id": "ws-nd-relay/foreign-origin",
+ "request": {
+  "method": "GET",
+  "path": "/ws/nd-relay?role=initiator&session=contract-none&token=t",
+  "notes": [
+   "websocket d, Origin https://evil.example"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 403,
+   "body": {
+    "kind": "empty"
+   }
+  }
+ ]
+}

@@ -21,7 +21,7 @@
 //
 // The routes that reach into a running agent (its services, processes,
 // event log, activity, files, clipboard, screen, keyboard, mouse and
-// terminal) ask it over its signal socket (console/bdrelay); agent.go.
+// terminal) ask it over its signal socket (console/ndrelay); agent.go.
 //
 // GET /api/devices shares its address with the RustDesk client API, which
 // answers a request with a bearer token. That API has not moved: the list

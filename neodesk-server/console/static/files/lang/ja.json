@@ -2638,7 +2638,7 @@
     "2fa_invalid": "有効な 6 桁のコードを入力してください",
     "verify": "確認",
     "use_cdap_fallback": "CDAP ビューアを使用する",
-    "cdap_fallback_hint": "RustDesk の中継サーバーの代わりに bd-signal/CDAP を使う、JPEG ポーリング方式の軽量ビューアを開きます。デバイスが中継サーバー上ではオフラインでも、エージェントの管理チャネル経由で到達できる場合に使います。",
+    "cdap_fallback_hint": "RustDesk の中継サーバーの代わりに nd-signal/CDAP を使う、JPEG ポーリング方式の軽量ビューアを開きます。デバイスが中継サーバー上ではオフラインでも、エージェントの管理チャネル経由で到達できる場合に使います。",
     "clipboard_empty": "クリップボードが空です",
     "clipboard_denied": "クリップボードへのアクセスが拒否されました。 HTTPS が必要か、許可が与えられていません。",
     "file_loading": "読み込み中...",

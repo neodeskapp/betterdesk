@@ -9,9 +9,9 @@ import (
 
 // routingPath is where the routing report answers when it is switched on
 // (CONSOLE_DEBUG_ROUTING=1).
-const routingPath = "/__bd/routing"
+const routingPath = "/__nd/routing"
 
-// routingReport answers GET /__bd/routing?method=GET&path=/api/x, the
+// routingReport answers GET /__nd/routing?method=GET&path=/api/x, the
 // contract suite's question who answers a request (console/contract
 // client.go). The console answers every request itself, so a question
 // with a method and a request path gets {"handler":"go"}, with

@@ -2638,7 +2638,7 @@
     "2fa_invalid": "Código 2FA no válido",
     "verify": "Verificar",
     "use_cdap_fallback": "Usar visor CDAP",
-    "cdap_fallback_hint": "Abre el visor JPEG ligero que usa bd-signal/CDAP en lugar del relay de RustDesk. Útil cuando el par está desconectado del relay pero es accesible a través del canal de gestión del agente.",
+    "cdap_fallback_hint": "Abre el visor JPEG ligero que usa nd-signal/CDAP en lugar del relay de RustDesk. Útil cuando el par está desconectado del relay pero es accesible a través del canal de gestión del agente.",
     "clipboard_empty": "El portapapeles está vacío",
     "clipboard_denied": "Acceso al portapapeles denegado. Se requiere HTTPS o no se concedió el permiso.",
     "file_loading": "Cargando...",

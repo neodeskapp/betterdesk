@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/neodeskapp/neodesk/neodesk-server/console/bdrelay/fakeagent"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ndrelay/fakeagent"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"

@@ -2563,7 +2563,7 @@
     "connect": "Połącz",
     "reconnect": "Połącz ponownie",
     "use_cdap_fallback": "Użyj podglądu CDAP",
-    "cdap_fallback_hint": "Otwiera lekki podgląd JPEG przez bd-signal/CDAP zamiast przekaźnika RustDesk. Przydatny, gdy urządzenie jest niedostępne przez relay, ale podłączone do kanału zarządzania.",
+    "cdap_fallback_hint": "Otwiera lekki podgląd JPEG przez nd-signal/CDAP zamiast przekaźnika RustDesk. Przydatny, gdy urządzenie jest niedostępne przez relay, ale podłączone do kanału zarządzania.",
     "disconnect": "Rozłącz",
     "back_to_devices": "Powrót do Urządzeń",
     "fullscreen": "Pełny ekran",

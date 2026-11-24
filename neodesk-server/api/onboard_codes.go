@@ -362,7 +362,7 @@ func (s *Server) admissionRefusal(req *EnrollmentRequest) string {
 	}
 	if req.PublicKey != "" {
 		if incoming, err := canonicalizeDevicePublicKey(req.PublicKey); err == nil {
-			if bound, err := s.loadBdMgmtPublicKey(req.DeviceID); err == nil && base64.StdEncoding.EncodeToString(bound) != incoming {
+			if bound, err := s.loadNdMgmtPublicKey(req.DeviceID); err == nil && base64.StdEncoding.EncodeToString(bound) != incoming {
 				return keyChangedRefusal
 			}
 		}

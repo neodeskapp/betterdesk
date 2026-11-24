@@ -575,7 +575,7 @@ func (s *Server) enrollPairedDevice(r *http.Request, req *EnrollmentRequest) Enr
 		// Never rotate the bound key through an unauthenticated pairing request.
 		if req.PublicKey != "" {
 			if incoming, err := canonicalizeDevicePublicKey(req.PublicKey); err == nil {
-				if bound, err := s.loadBdMgmtPublicKey(req.DeviceID); err == nil {
+				if bound, err := s.loadNdMgmtPublicKey(req.DeviceID); err == nil {
 					if base64.StdEncoding.EncodeToString(bound) != incoming {
 						return EnrollmentResponse{
 							Status: "rejected", DeviceID: req.DeviceID,

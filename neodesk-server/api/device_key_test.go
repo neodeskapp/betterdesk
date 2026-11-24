@@ -64,7 +64,7 @@ func TestAResetComputerRejoinsOnceTheNewKeyIsApproved(t *testing.T) {
 		if status, raw := asConsole(t, srv, http.MethodPost, "/api/onboard/devices/289485454/key-request/approve", `{"actor":"admin"}`); status != http.StatusOK {
 			t.Fatalf("approve: %d %s", status, raw)
 		}
-		if bound, err := srv.loadBdMgmtPublicKey("289485454"); err != nil || !bytes.Equal(bound, newPK) {
+		if bound, err := srv.loadNdMgmtPublicKey("289485454"); err != nil || !bytes.Equal(bound, newPK) {
 			t.Errorf("the bound key is not the new one: %v", err)
 		}
 		if p, _ := srv.db.GetPeer("289485454"); p == nil || !bytes.Equal(p.PK, newPK) {
@@ -108,7 +108,7 @@ func TestANewKeyNeedsAnInviteAndAnApproval(t *testing.T) {
 		if rec.Code != http.StatusForbidden {
 			t.Errorf("register with another key: %d %s", rec.Code, rec.Body.String())
 		}
-		if bound, _ := srv.loadBdMgmtPublicKey("289485454"); base64.StdEncoding.EncodeToString(bound) != oldKey {
+		if bound, _ := srv.loadNdMgmtPublicKey("289485454"); base64.StdEncoding.EncodeToString(bound) != oldKey {
 			t.Error("the bound key changed")
 		}
 	})

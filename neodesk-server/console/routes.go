@@ -8,7 +8,6 @@ import (
 	authroutes "github.com/neodeskapp/neodesk/neodesk-server/console/routes/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/automation"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/avatars"
-	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/bdapi"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/cdap"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/cdapstudio"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/chat"
@@ -31,6 +30,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/keys"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/languages"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/meshcentral"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/ndapi"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/network"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/onboard"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/organizations"
@@ -86,7 +86,7 @@ var (
 // backups is the console's backup service, which the updater uses too.
 func registerRoutes(d *kit.Deps, backups *backup.Service) {
 	rustdeskapi.Register(d)         // routes/rustdesk-api.routes.js (server.js), early stage
-	bdapi.Register(d.At("/api/nd")) // routes/bd-api.routes.js at /api/nd (server.js), early stage
+	ndapi.Register(d.At("/api/nd")) // routes/bd-api.routes.js at /api/nd (server.js), early stage
 	remote.RegisterAgentToken(d)    // routes/bd-api.routes.js at /api/nd (server.js): POST /remote-agent-token, early stage
 	health.Register(d)              // routes/index.js: GET /health
 	authroutes.Register(d)          // routes/auth.routes.js

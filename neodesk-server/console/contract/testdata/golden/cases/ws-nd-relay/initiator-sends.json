@@ -1,0 +1,27 @@
+{
+ "id": "ws-nd-relay/initiator-sends",
+ "request": {
+  "method": "GET",
+  "path": "/ws/nd-relay",
+  "notes": [
+   "websocket init, own origin",
+   "websocket send text \"hello target\"",
+   "websocket send 4 binary bytes"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": []
+    }
+   }
+  }
+ ]
+}

@@ -6,7 +6,7 @@
 //	Variable                 Default               Meaning
 //	CONSOLE_PORT             5000                  Port the Go console listens on. 0: the Go console does not start.
 //	HOST                     127.0.0.1             Address the console listens on.
-//	CONSOLE_DEBUG_ROUTING    (off)                 On adds GET /__bd/routing for the contract suite.
+//	CONSOLE_DEBUG_ROUTING    (off)                 On adds GET /__nd/routing for the contract suite.
 //	TRUST_PROXY              (off)                 Which proxies may speak for the client: off, on (one hop), a hop count,
 //	                                               loopback, linklocal, uniquelocal, addresses or ranges.
 //	NODE_ENV                 development           "production" hides error detail and reads the web app's files once.

@@ -2638,7 +2638,7 @@
     "2fa_invalid": "Ongeldige 2FA-code",
     "verify": "Verifiëren",
     "use_cdap_fallback": "CDAP-viewer gebruiken",
-    "cdap_fallback_hint": "Open de lichte JPEG-polling viewer die bd-signal/CDAP gebruikt in plaats van de RustDesk relay. Handig wanneer de peer offline is op de relay maar bereikbaar via het agentbeheerkanaal.",
+    "cdap_fallback_hint": "Open de lichte JPEG-polling viewer die nd-signal/CDAP gebruikt in plaats van de RustDesk relay. Handig wanneer de peer offline is op de relay maar bereikbaar via het agentbeheerkanaal.",
     "clipboard_empty": "Het klembord is leeg",
     "clipboard_denied": "Toegang tot klembord geweigerd. HTTPS is vereist of de machtiging is niet verleend.",
     "file_loading": "Laden...",

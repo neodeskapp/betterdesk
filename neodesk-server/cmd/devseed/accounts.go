@@ -40,7 +40,7 @@ var deviceTokens = []struct{ File, DeviceID string }{
 // same UUID.
 const (
 	operatorTokenFile = "operator_token"
-	operatorTokenUUID = "bd-stack-operator-token"
+	operatorTokenUUID = "nd-stack-operator-token"
 )
 
 func runAccounts(ctx context.Context, args []string, getenv func(string) string, out io.Writer) error {

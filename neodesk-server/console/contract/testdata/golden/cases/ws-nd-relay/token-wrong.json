@@ -1,0 +1,30 @@
+{
+ "id": "ws-nd-relay/token-wrong",
+ "request": {
+  "method": "GET",
+  "path": "/ws/nd-relay?role=initiator&session=%7Brelay%7D&token=0000000000000000000000000000000000000000000000000000000000000000",
+  "notes": [
+   "websocket wrong, own origin",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 4403,
+      "reason": "Invalid token"
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

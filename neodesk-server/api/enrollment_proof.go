@@ -20,7 +20,7 @@ const (
 
 type enrollmentProofVerifiedKey struct{}
 
-var enrollmentProofNonceCache = &bdMgmtNonceCache{items: make(map[string]time.Time)}
+var enrollmentProofNonceCache = &ndMgmtNonceCache{items: make(map[string]time.Time)}
 
 // withEnrollmentProofVerified marks that this request already consumed a valid
 // enrollment proof for deviceID. Later token-issue authorization must not
@@ -114,7 +114,7 @@ func (s *Server) enrollmentProofPublicKey(deviceID, incomingPublicKey string) (s
 		return "", nil, fmt.Errorf("load enrolled device: %w", err)
 	}
 	if peerInfo != nil {
-		publicKey, err := s.loadBdMgmtPublicKey(deviceID)
+		publicKey, err := s.loadNdMgmtPublicKey(deviceID)
 		if err != nil {
 			return "", nil, fmt.Errorf("no bound device identity: %w", err)
 		}

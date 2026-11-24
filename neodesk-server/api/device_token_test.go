@@ -31,7 +31,7 @@ func TestANewDeviceTokenEndsTheEarlierOne(t *testing.T) {
 		t.Fatal(err)
 	}
 	srv := New(config.DefaultConfig(), database, peer.NewMap(), nil, "test")
-	if err := srv.storeBdMgmtPublicKey("BD-REISSUE", base64.StdEncoding.EncodeToString(publicKey)); err != nil {
+	if err := srv.storeNdMgmtPublicKey("BD-REISSUE", base64.StdEncoding.EncodeToString(publicKey)); err != nil {
 		t.Fatal(err)
 	}
 	operator := &db.DeviceToken{Token: "operator-made-token", TokenHash: hashToken("operator-made-token"), PeerID: "BD-REISSUE",

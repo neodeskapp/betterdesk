@@ -28,7 +28,6 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authimport"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/avatars"
-	"github.com/neodeskapp/neodesk/neodesk-server/console/bdrelay"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/csrf"
@@ -46,6 +45,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/listen"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ndrelay"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/qr"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/remoterelay"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/restart"
@@ -430,8 +430,8 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	})
 	s.deps.StatusPush = statuspush.New(statuspush.Options{Events: api.Events, Cascade: s.deps.DeviceGroups.CascadePeerIDChange})
 	s.jobs.Add("device status push", s.deps.StatusPush.Run)
-	s.deps.Relay = bdrelay.New(bdrelay.Options{VerifyDevice: s.deps.Authn.VerifyDeviceWSAuth})
-	s.jobs.Add("bd-relay session cleanup", s.deps.Relay.Run)
+	s.deps.Relay = ndrelay.New(ndrelay.Options{VerifyDevice: s.deps.Authn.VerifyDeviceWSAuth})
+	s.jobs.Add("nd-relay session cleanup", s.deps.Relay.Run)
 	s.deps.RemoteRelay = remoterelay.New(remoterelay.Options{
 		VerifyDevice: s.deps.Authn.VerifyDeviceWSAuth,
 		DB:           opts.Store,

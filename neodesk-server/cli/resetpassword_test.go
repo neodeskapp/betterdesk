@@ -228,7 +228,7 @@ func newServerStart(t *testing.T, pgDSN string) serverStart {
 		t.Fatal(err)
 	}
 	if pgDSN != "" {
-		dsn, schema, drop := freshSchema(t, pgDSN, "bd_reset_start")
+		dsn, schema, drop := freshSchema(t, pgDSN, "nd_reset_start")
 		defer drop()
 		startServerSchema(t, dsn)
 		s.postgresColumns = postgresColumns(t, pgDSN, schema)
@@ -533,7 +533,7 @@ func replayPostgresReset(t *testing.T, c resetCase, dsn, pgUsers, oldHash string
 	}
 	admin := stdlib.OpenDB(*cfg)
 	defer admin.Close()
-	schema := fmt.Sprintf("bd_reset_go_%d", os.Getpid())
+	schema := fmt.Sprintf("nd_reset_go_%d", os.Getpid())
 	if _, err := admin.ExecContext(ctx, "DROP SCHEMA IF EXISTS "+schema+" CASCADE"); err != nil {
 		t.Fatal(err)
 	}
@@ -637,7 +637,7 @@ func TestResetPasswordMakesTheUsersTableOfAServerStart(t *testing.T) {
 		t.Logf("no %s: PostgreSQL is left out", storetest.PostgresEnv)
 		return
 	}
-	pgDSN, schema, drop := freshSchema(t, dsn, "bd_reset_table")
+	pgDSN, schema, drop := freshSchema(t, dsn, "nd_reset_table")
 	defer drop()
 	if status, out := runReset(t, map[string]string{"DB_TYPE": "postgres", "DATABASE_URL": pgDSN, "CONSOLE_DIR": root}, root); status != 0 {
 		t.Fatalf("PostgreSQL: %d %q", status, out)
@@ -688,7 +688,7 @@ func TestResetPasswordUsesTheServersDatabase(t *testing.T) {
 	}
 	// A postgres:// DATABASE_URL or DB_URL is PostgreSQL, without DB_TYPE
 	// and next to a DB_PATH
-	pgDSN, schema, drop := freshSchema(t, dsn, "bd_reset_url")
+	pgDSN, schema, drop := freshSchema(t, dsn, "nd_reset_url")
 	defer drop()
 	for _, env := range []map[string]string{
 		{"DATABASE_URL": pgDSN, "DB_URL": consoleFile},

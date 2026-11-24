@@ -164,7 +164,7 @@ func newTestClient(t *testing.T, routing bool) (*Client, *fakeConsole) {
 	if routing {
 		inner := h
 		h = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path != "/__bd/routing" {
+			if r.URL.Path != "/__nd/routing" {
 				inner.ServeHTTP(w, r)
 				return
 			}

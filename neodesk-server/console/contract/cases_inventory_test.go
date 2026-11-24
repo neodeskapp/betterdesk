@@ -99,7 +99,7 @@ func init() {
 // counts systems and memory. Times are in 2011, outside every window the
 // reports cases ask for.
 func init() {
-	const bd = "/api/nd"
+	const nd = "/api/nd"
 	const own = "/api/inventory"
 	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
 	other := map[string]string{"Authorization": "Bearer {secret:device_token_other}"}
@@ -152,11 +152,11 @@ func init() {
 		if c.Body != nil || c.RawBody != "" {
 			c.Method = "POST"
 			if c.Path == "" {
-				c.Path = bd + "/inventory"
+				c.Path = nd + "/inventory"
 			}
 		}
 		if c.Path == "" {
-			c.Path = bd + "/inventory/900100001"
+			c.Path = nd + "/inventory/900100001"
 		}
 		return c
 	}
@@ -165,7 +165,7 @@ func init() {
 	}
 	read := func(name string) contract.Case { return asDevice(contract.Case{Name: name}) }
 	measured := func(name string, changes map[string]any) contract.Case {
-		return asDevice(contract.Case{Name: name, Path: bd + "/telemetry", Body: telemetry(changes)})
+		return asDevice(contract.Case{Name: name, Path: nd + "/telemetry", Body: telemetry(changes)})
 	}
 	// null is a member that is null in the JSON body
 	null := json.RawMessage("null")
@@ -176,11 +176,11 @@ func init() {
 		read("read"),
 		asDevice(contract.Case{Name: "read-at-inventory", Path: own + "/inventory/900100001"}),
 		asDevice(contract.Case{Name: "read-other-spelling", Path: "/API/ND/Inventory/900100001/"}),
-		asDevice(contract.Case{Name: "read-other-device", Path: bd + "/inventory/900100002"}),
+		asDevice(contract.Case{Name: "read-other-device", Path: nd + "/inventory/900100002"}),
 		asDevice(contract.Case{Name: "read-as-other-device", Headers: other}),
 		// The seed dates the apps from the day it runs, as the detail cases
 		// of the inventory group know
-		asDevice(contract.Case{Name: "read-other-device-as-it", Path: bd + "/inventory/900100002", Headers: other,
+		asDevice(contract.Case{Name: "read-other-device-as-it", Path: nd + "/inventory/900100002", Headers: other,
 			Volatile: []string{"software.apps[*].installed_at"}}),
 		asDevice(contract.Case{Name: "read-without-token", Headers: none}),
 		asDevice(contract.Case{Name: "read-unknown-token", Headers: unknown}),
@@ -231,22 +231,22 @@ func init() {
 		measured("telemetry-without-device-id", map[string]any{"device_id": nil}),
 		measured("telemetry-device-id-number", map[string]any{"device_id": 900100001}),
 		measured("telemetry-other-device", map[string]any{"device_id": "900100002"}),
-		asDevice(contract.Case{Name: "telemetry-as-other-device", Path: bd + "/telemetry", Body: telemetry(nil), Headers: other}),
-		asDevice(contract.Case{Name: "telemetry-without-token", Path: bd + "/telemetry", Body: telemetry(nil), Headers: none}),
-		asDevice(contract.Case{Name: "telemetry-unknown-token", Path: bd + "/telemetry", Body: telemetry(nil), Headers: unknown}),
-		asDevice(contract.Case{Name: "telemetry-device-id-alone", Path: bd + "/telemetry", Body: telemetry(nil), Headers: named}),
+		asDevice(contract.Case{Name: "telemetry-as-other-device", Path: nd + "/telemetry", Body: telemetry(nil), Headers: other}),
+		asDevice(contract.Case{Name: "telemetry-without-token", Path: nd + "/telemetry", Body: telemetry(nil), Headers: none}),
+		asDevice(contract.Case{Name: "telemetry-unknown-token", Path: nd + "/telemetry", Body: telemetry(nil), Headers: unknown}),
+		asDevice(contract.Case{Name: "telemetry-device-id-alone", Path: nd + "/telemetry", Body: telemetry(nil), Headers: named}),
 		measured("telemetry-again", nil),
 
 		// A device's request with each role's browser: the session, its
 		// cookies and its CSRF token come along
-		contract.Case{Name: "upload-with-session", Method: "POST", Path: bd + "/inventory", Body: report(nil), Headers: device},
-		contract.Case{Name: "upload-with-session-without-csrf-token", Method: "POST", Path: bd + "/inventory", Body: report(nil), Headers: device, NoCSRF: true},
+		contract.Case{Name: "upload-with-session", Method: "POST", Path: nd + "/inventory", Body: report(nil), Headers: device},
+		contract.Case{Name: "upload-with-session-without-csrf-token", Method: "POST", Path: nd + "/inventory", Body: report(nil), Headers: device, NoCSRF: true},
 		contract.Case{Name: "upload-at-inventory-with-session", Method: "POST", Path: own + "/inventory", Body: report(nil), Headers: device},
-		contract.Case{Name: "telemetry-with-session", Method: "POST", Path: bd + "/telemetry", Body: telemetry(nil), Headers: device},
+		contract.Case{Name: "telemetry-with-session", Method: "POST", Path: nd + "/telemetry", Body: telemetry(nil), Headers: device},
 		contract.Case{Name: "telemetry-at-inventory-with-session", Method: "POST", Path: own + "/telemetry", Body: telemetry(nil), Headers: device},
-		contract.Case{Name: "read-with-session", Path: bd + "/inventory/900100001", Headers: device},
+		contract.Case{Name: "read-with-session", Path: nd + "/inventory/900100001", Headers: device},
 		contract.Case{Name: "read-at-inventory-with-session", Path: own + "/inventory/900100001", Headers: device},
-		contract.Case{Name: "read-with-session-without-token", Path: bd + "/inventory/900100001"},
-		contract.Case{Name: "upload-with-session-without-token", Method: "POST", Path: bd + "/inventory", Body: report(nil)},
+		contract.Case{Name: "read-with-session-without-token", Path: nd + "/inventory/900100001"},
+		contract.Case{Name: "upload-with-session-without-token", Method: "POST", Path: nd + "/inventory", Body: report(nil)},
 	)
 }

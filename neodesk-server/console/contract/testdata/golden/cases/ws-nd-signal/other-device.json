@@ -1,0 +1,39 @@
+{
+ "id": "ws-nd-signal/other-device",
+ "request": {
+  "method": "GET",
+  "path": "/ws/nd-signal?device_id=900100002&token=%7Bsecret%3Adevice_token_other%7D",
+  "notes": [
+   "websocket other, own origin",
+   "websocket expect 1 messages",
+   "websocket closed by the suite"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 1000,
+      "reason": ""
+     },
+     "messages": [
+      {
+       "json": {
+        "device_id": "900100002",
+        "type": "welcome"
+       },
+       "order": "type device_id"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

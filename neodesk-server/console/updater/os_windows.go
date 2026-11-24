@@ -40,7 +40,7 @@ func writable(path string) error {
 		}
 		return f.Close()
 	}
-	f, err := os.CreateTemp(path, ".bd-write-check-*")
+	f, err := os.CreateTemp(path, ".nd-write-check-*")
 	if err != nil {
 		return err
 	}

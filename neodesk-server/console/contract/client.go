@@ -432,7 +432,7 @@ func (c *Client) fetchJSON(s *Session, target string) (map[string]any, int, erro
 	return object, res.StatusCode, nil
 }
 
-// Routing answers of the console's routing report (GET /__bd/routing,
+// Routing answers of the console's routing report (GET /__nd/routing,
 // console/routing.go).
 const (
 	HandlerGo      = "go"
@@ -492,7 +492,7 @@ func (c *Client) askRouting(method, target string, upgrade ...bool) string {
 	if len(upgrade) > 0 && upgrade[0] {
 		q.Set("upgrade", "websocket")
 	}
-	object, status, err := c.fetchJSON(nil, "/__bd/routing?"+q.Encode())
+	object, status, err := c.fetchJSON(nil, "/__nd/routing?"+q.Encode())
 	if err != nil || status != http.StatusOK {
 		return HandlerUnknown
 	}

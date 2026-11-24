@@ -179,7 +179,7 @@ func (s *Server) replaceDeviceKey(deviceID, key string) error {
 	if err := s.db.UpsertPeer(p); err != nil {
 		return err
 	}
-	if err := s.storeBdMgmtPublicKey(deviceID, canonical); err != nil {
+	if err := s.storeNdMgmtPublicKey(deviceID, canonical); err != nil {
 		return err
 	}
 	if s.peers != nil {

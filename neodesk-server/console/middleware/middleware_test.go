@@ -1536,7 +1536,7 @@ func TestUploadCleanupIsConfined(t *testing.T) {
 	if os.TempDir() != tmpRoot {
 		t.Fatalf("the temporary folder is %q, want %q", os.TempDir(), tmpRoot)
 	}
-	tmp := filepath.Join(os.TempDir(), "bd-upload-test-file")
+	tmp := filepath.Join(os.TempDir(), "nd-upload-test-file")
 	if err := os.WriteFile(tmp, []byte("x"), 0o600); err != nil {
 		t.Fatal(err)
 	}

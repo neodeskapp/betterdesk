@@ -5147,7 +5147,7 @@
       "autoplay_blocked": "瀏覽器需要用戶交互才能開始播放視頻和音頻。",
       "back_to_devices": "返回設備列表",
       "block_input": "阻止輸入",
-      "cdap_fallback_hint": "開啟輕量的 JPEG 輪詢查看器，它透過 bd-signal/CDAP 連線，而不是 RustDesk 中繼。適用於裝置在中繼上離線、但可以透過代理程式管理通道存取的情況。",
+      "cdap_fallback_hint": "開啟輕量的 JPEG 輪詢查看器，它透過 nd-signal/CDAP 連線，而不是 RustDesk 中繼。適用於裝置在中繼上離線、但可以透過代理程式管理通道存取的情況。",
       "certificate_confirm": "{name} 的憑證不受信任。要信任指紋為 {fingerprint} 的憑證嗎？",
       "certificate_title": "不受信任的憑證",
       "certificate_trust": "信任憑證",

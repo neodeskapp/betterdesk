@@ -200,11 +200,11 @@ var (
 // write it (device.view without server.config, PA3 F5) get its refusal
 // of their writes there too. Their reads answer as the routes say, as at
 // /api/nd in the recording.
-var _ = policyFixes.Add("DG6", guardRefuses(bdSteps()...))
+var _ = policyFixes.Add("DG6", guardRefuses(ndSteps()...))
 
-// bdSteps are the writes of the recording at /api/nd that a role without
+// ndSteps are the writes of the recording at /api/nd that a role without
 // server.config sends.
-func bdSteps() []string {
+func ndSteps() []string {
 	var keys []string
 	for _, role := range []string{"global_admin", "operator", "viewer", "guest_issuer"} {
 		keys = append(keys,

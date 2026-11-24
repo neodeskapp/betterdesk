@@ -35,7 +35,7 @@ func TestAccountsMakesOneAccountPerRoleAndTheDeviceTokens(t *testing.T) {
 			`INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, ip_address, token_kind)
 				VALUES ('old-device', 'old-device', 1, '900100001', '', '2099-01-01 00:00:00.000', '', 'device')`,
 			`INSERT INTO access_tokens (token, token_hash, user_id, client_id, client_uuid, expires_at, ip_address, token_kind)
-				VALUES ('old-operator', 'old-operator', 1, '', 'bd-stack-operator-token', '2099-01-01 00:00:00.000', '', 'account')`,
+				VALUES ('old-operator', 'old-operator', 1, '', 'nd-stack-operator-token', '2099-01-01 00:00:00.000', '', 'account')`,
 		} {
 			if _, err := db.Exec(ctx, stmt); err != nil {
 				t.Fatal(err)

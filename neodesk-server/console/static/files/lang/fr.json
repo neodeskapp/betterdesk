@@ -2567,7 +2567,7 @@
     "connect": "Connecter",
     "reconnect": "Reconnecter",
     "use_cdap_fallback": "Utiliser le visualiseur CDAP",
-    "cdap_fallback_hint": "Ouvre le visualiseur léger par interrogation JPEG, qui passe par bd-signal/CDAP au lieu du relais RustDesk. Utile quand l'appareil est hors ligne sur le relais mais joignable par le canal de gestion de l'agent.",
+    "cdap_fallback_hint": "Ouvre le visualiseur léger par interrogation JPEG, qui passe par nd-signal/CDAP au lieu du relais RustDesk. Utile quand l'appareil est hors ligne sur le relais mais joignable par le canal de gestion de l'agent.",
     "disconnect": "Déconnecter",
     "back_to_devices": "Retour aux appareils",
     "fullscreen": "Plein écran",

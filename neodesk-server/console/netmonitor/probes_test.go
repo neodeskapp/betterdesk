@@ -726,10 +726,10 @@ func TestPingCommandMissing(t *testing.T) {
 	w := newWorld(t)
 	p := w.prober(false)
 	p.ping = func(ctx context.Context, name string, args ...string) ([]byte, int, error) {
-		return runCommand(ctx, "bd-no-such-ping-command", args...)
+		return runCommand(ctx, "nd-no-such-ping-command", args...)
 	}
 	res := p.pingHost(context.Background(), "10.1.2.3", 5000)
-	if res.Error == nil || *res.Error != "spawn bd-no-such-ping-command ENOENT" || res.Success || res.RTT != nil {
+	if res.Error == nil || *res.Error != "spawn nd-no-such-ping-command ENOENT" || res.Success || res.RTT != nil {
 		t.Errorf("result %+v", res)
 	}
 }

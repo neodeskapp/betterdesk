@@ -40,7 +40,7 @@ function Get-Service { param($Name, $ErrorAction) $null }
 function Invoke-RestMethod { throw [System.Net.WebException]::new('The remote name could not be resolved: api.github.com') }
 
 function New-TestInstall {
-    $dir = Join-Path ([System.IO.Path]::GetTempPath()) ("bd-ps1-" + [guid]::NewGuid().ToString('N'))
+    $dir = Join-Path ([System.IO.Path]::GetTempPath()) ("nd-ps1-" + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path (Join-Path $dir 'server'), (Join-Path $dir 'console') -Force | Out-Null
     $script:RUSTDESK_PATH = Join-Path $dir 'server'
     $script:CONSOLE_PATH = Join-Path $dir 'console'

@@ -2638,7 +2638,7 @@
     "2fa_invalid": "유효한 6자리 코드를 입력하세요.",
     "verify": "확인",
     "use_cdap_fallback": "CDAP 뷰어 사용",
-    "cdap_fallback_hint": "RustDesk 릴레이 대신 bd-signal/CDAP를 사용하는 가벼운 JPEG 폴링 뷰어를 엽니다. 장치가 릴레이에서는 오프라인이지만 에이전트 관리 채널로 연결할 수 있을 때 유용합니다.",
+    "cdap_fallback_hint": "RustDesk 릴레이 대신 nd-signal/CDAP를 사용하는 가벼운 JPEG 폴링 뷰어를 엽니다. 장치가 릴레이에서는 오프라인이지만 에이전트 관리 채널로 연결할 수 있을 때 유용합니다.",
     "clipboard_empty": "클립보드가 비어 있습니다.",
     "clipboard_denied": "클립보드 액세스가 거부되었습니다. HTTPS가 필요하거나 권한이 부여되지 않았습니다.",
     "file_loading": "로드 중...",

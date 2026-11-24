@@ -1,0 +1,41 @@
+{
+ "id": "ws-nd-signal/heartbeat",
+ "request": {
+  "method": "GET",
+  "path": "/ws/nd-signal?device_id=900100001&token=%7Bsecret%3Adevice_token%7D",
+  "notes": [
+   "websocket agent, own origin",
+   "websocket send {\"type\":\"heartbeat\"}",
+   "websocket expect 1 messages"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "volatile": [
+    {
+     "path": "messages[*].json.ts",
+     "integer": true
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "messages": [
+      {
+       "json": {
+        "ts": 0,
+        "type": "heartbeat_ack"
+       },
+       "order": "type ts"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

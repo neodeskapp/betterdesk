@@ -150,7 +150,7 @@ func TestDeviceRegisterSameUUIDReissues(t *testing.T) {
 	cfg := config.DefaultConfig()
 	cfg.EnrollmentMode = "open"
 	srv := New(cfg, database, peer.NewMap(), nil, "test")
-	if err := srv.storeBdMgmtPublicKey("BD-TEST2", base64.StdEncoding.EncodeToString(publicKey)); err != nil {
+	if err := srv.storeNdMgmtPublicKey("BD-TEST2", base64.StdEncoding.EncodeToString(publicKey)); err != nil {
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
@@ -199,7 +199,7 @@ func TestSupportAgentEnrollmentCannotChangeBoundBundle(t *testing.T) {
 		t.Fatal(err)
 	}
 	srv := New(config.DefaultConfig(), database, peer.NewMap(), nil, "test")
-	if err := srv.storeBdMgmtPublicKey(deviceID, base64.StdEncoding.EncodeToString(publicKey)); err != nil {
+	if err := srv.storeNdMgmtPublicKey(deviceID, base64.StdEncoding.EncodeToString(publicKey)); err != nil {
 		t.Fatal(err)
 	}
 	if err := database.SetConfig(deviceBundleIDPrefix+deviceID, "support-bundle-a"); err != nil {
@@ -238,7 +238,7 @@ func TestDeviceRegisterDoesNotReissueTokenWithoutIdentityProof(t *testing.T) {
 	}
 
 	srv := New(config.DefaultConfig(), database, peer.NewMap(), nil, "test")
-	if err := srv.storeBdMgmtPublicKey("BD-NOPROOF", base64.StdEncoding.EncodeToString(publicKey)); err != nil {
+	if err := srv.storeNdMgmtPublicKey("BD-NOPROOF", base64.StdEncoding.EncodeToString(publicKey)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -279,7 +279,7 @@ func TestDeviceRegisterStatusIssuesTokenOnlyAfterIdentityProof(t *testing.T) {
 	}
 
 	srv := New(config.DefaultConfig(), database, peer.NewMap(), nil, "test")
-	if err := srv.storeBdMgmtPublicKey("BD-STATUS", base64.StdEncoding.EncodeToString(publicKey)); err != nil {
+	if err := srv.storeNdMgmtPublicKey("BD-STATUS", base64.StdEncoding.EncodeToString(publicKey)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -338,7 +338,7 @@ func TestEnrollmentProofCannotBeReplayed(t *testing.T) {
 		t.Fatal(err)
 	}
 	srv := New(config.DefaultConfig(), database, peer.NewMap(), nil, "test")
-	if err := srv.storeBdMgmtPublicKey("BD-REPLAY", base64.StdEncoding.EncodeToString(publicKey)); err != nil {
+	if err := srv.storeNdMgmtPublicKey("BD-REPLAY", base64.StdEncoding.EncodeToString(publicKey)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -494,7 +494,7 @@ func TestEnrollmentProofReplayCannotUseBoundTokenFallback(t *testing.T) {
 	}
 
 	srv := New(config.DefaultConfig(), database, peer.NewMap(), nil, "test")
-	if err := srv.storeBdMgmtPublicKey(deviceID, base64.StdEncoding.EncodeToString(publicKey)); err != nil {
+	if err := srv.storeNdMgmtPublicKey(deviceID, base64.StdEncoding.EncodeToString(publicKey)); err != nil {
 		t.Fatal(err)
 	}
 	boundToken, err := srv.issueEnrollmentDeviceToken(deviceID)

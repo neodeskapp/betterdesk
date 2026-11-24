@@ -10,7 +10,6 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/auditlog"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/avatars"
-	"github.com/neodeskapp/neodesk/neodesk-server/console/bdrelay"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/csrf"
@@ -22,6 +21,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ndrelay"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/remoterelay"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/restart"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
@@ -141,7 +141,7 @@ type Deps struct {
 	StatusPush *statuspush.Service
 	// Relay is the agents' signal and relay sockets (services/bdRelay.js);
 	// d.Relay.RequestFromDevice asks a connected agent for something.
-	Relay *bdrelay.Service
+	Relay *ndrelay.Service
 	// RemoteRelay is the remote desktop relay between agents and viewers
 	// (services/remoteRelay.js): its sessions and the agents' single-use
 	// tokens.

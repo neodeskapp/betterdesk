@@ -7,17 +7,17 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/neodeskapp/neodesk/neodesk-server/console/bdrelay"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/ndrelay"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 )
 
 // The routes that reach into a running agent: its services, processes,
 // event log, activity, files, clipboard, screen, keyboard, mouse and
-// terminal. Each asks the agent over its signal socket (bdrelay) and
+// terminal. Each asks the agent over its signal socket (ndrelay) and
 // answers {"success":true,"data":...} with what the agent sent. An agent
 // that is not connected gets the snapshot the server keeps, when there is
 // one for the request, else a collection queued for when it comes back,
@@ -86,14 +86,14 @@ func (h *handlers) agentRequest(w http.ResponseWriter, r *http.Request, typ stri
 		return
 	}
 	msg := err.Error()
-	var agentErr *bdrelay.AgentError
+	var agentErr *ndrelay.AgentError
 	if errors.As(err, &agentErr) {
 		msg = agentErr.Message
 	}
 	if msg == "" {
 		msg = "agent_error"
 	}
-	offline := errors.Is(err, bdrelay.ErrAgentOffline)
+	offline := errors.Is(err, ndrelay.ErrAgentOffline)
 	if offline {
 		if name, ok := snapshotFor[typ]; ok {
 			telemetry := h.api.GetPeerTelemetry(ctx, id)
@@ -124,7 +124,7 @@ func (h *handlers) agentRequest(w http.ResponseWriter, r *http.Request, typ stri
 	switch {
 	case offline:
 		status = http.StatusServiceUnavailable
-	case errors.Is(err, bdrelay.ErrAgentTimeout):
+	case errors.Is(err, ndrelay.ErrAgentTimeout):
 		status = http.StatusGatewayTimeout
 	}
 	answer(w, r, status, failure{Error: msg})

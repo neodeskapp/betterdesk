@@ -1828,7 +1828,7 @@ export class RDClient {
 		this._debugRelay('[RDClient] Session error:', JSON.stringify(this._lastError));
 		this._emit('diagnostics', { type: 'error', ...this._lastError });
 		// Detect peer-offline scenarios where the agent is reachable through
-		// bd-signal/CDAP but not through the RustDesk relay (no peer registration).
+		// nd-signal/CDAP but not through the RustDesk relay (no peer registration).
 		// In that case, signal the UI that a CDAP fallback viewer is available.
 		const offlineHint = /target offline|relay refused|peer.*offline|not online|not registered/i.test(msg);
 		this._emit('error', msg, { cdapFallback: offlineHint });

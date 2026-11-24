@@ -1,0 +1,30 @@
+{
+ "id": "ws-nd-signal/token-short",
+ "request": {
+  "method": "GET",
+  "path": "/ws/nd-signal?device_id=900100001&token=short",
+  "notes": [
+   "websocket g, own origin",
+   "websocket wait for the close"
+  ]
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out"
+   ],
+   "status": 101,
+   "body": {
+    "kind": "json",
+    "json": {
+     "closed": {
+      "code": 4403,
+      "reason": "Invalid token"
+     },
+     "messages": []
+    }
+   }
+  }
+ ]
+}

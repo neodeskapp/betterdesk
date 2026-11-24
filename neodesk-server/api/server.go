@@ -58,7 +58,7 @@ func configKeyIsSecret(key string) bool {
 	case "jwt_secret", "api_key", telemetryPrivateKeyConfig:
 		return true
 	}
-	for _, prefix := range []string{"device_totp_secret_", bdMgmtPublicKeyConfigPref, pairingCodePrefix, supportSessionPrefix, "mesh_share_"} {
+	for _, prefix := range []string{"device_totp_secret_", ndMgmtPublicKeyConfigPref, pairingCodePrefix, supportSessionPrefix, "mesh_share_"} {
 		if strings.HasPrefix(k, prefix) {
 			return true
 		}
@@ -758,13 +758,13 @@ func (s *Server) routes() *http.ServeMux {
 	}
 
 	// NeoDesk desktop client management WebSocket (no API key — device auth)
-	mux.HandleFunc("GET /ws/nd-mgmt/{device_id}", s.handleBdMgmt)
+	mux.HandleFunc("GET /ws/nd-mgmt/{device_id}", s.handleNdMgmt)
 	// Management REST endpoints: status asks device.view. Send hands the
 	// agent any message, so it asks the agent's strongest tool, its
 	// terminal, and the device must be in the caller's scope (L388).
-	mux.HandleFunc("GET /api/nd/mgmt/{device_id}/status", s.requirePermission(auth.PermDeviceView, s.handleBdMgmtStatus))
-	mux.HandleFunc("POST /api/nd/mgmt/{device_id}/send", s.requirePermission(auth.PermAgentTerminal, s.scopedDeviceAt("device_id", s.handleBdMgmtSend)))
-	mux.HandleFunc("GET /api/nd/mgmt/connected", s.requirePermission(auth.PermDeviceView, s.handleBdMgmtConnected))
+	mux.HandleFunc("GET /api/nd/mgmt/{device_id}/status", s.requirePermission(auth.PermDeviceView, s.handleNdMgmtStatus))
+	mux.HandleFunc("POST /api/nd/mgmt/{device_id}/send", s.requirePermission(auth.PermAgentTerminal, s.scopedDeviceAt("device_id", s.handleNdMgmtSend)))
+	mux.HandleFunc("GET /api/nd/mgmt/connected", s.requirePermission(auth.PermDeviceView, s.handleNdMgmtConnected))
 
 	// Prometheus metrics. Gated via H-03 — see handleMetrics for the actual
 	// IP-allowlist / auth check. We register a wrapper here that enforces the

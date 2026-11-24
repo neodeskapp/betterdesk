@@ -81,7 +81,7 @@ export function licenseText(ids: Iterable<string>): { text: string; problems: st
 
 export function licenses(): Plugin {
 	return {
-		name: 'bd-licenses',
+		name: 'nd-licenses',
 		apply: 'build',
 		generateBundle(_options, bundle) {
 			if (this.environment.name !== 'client') return;

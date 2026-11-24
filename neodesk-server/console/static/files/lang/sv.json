@@ -2644,7 +2644,7 @@
     "2fa_invalid": "Ange en giltig 6-siffrig kod",
     "verify": "Verifiera",
     "use_cdap_fallback": "Använd CDAP viewer",
-    "cdap_fallback_hint": "Öppna den lättvikts JPEG-pollingvyn som använder bd-signal/CDAP istället för RustDesk-reläet. Användbart när peer är offline på reläet men nåbar via agenthanteringskanalen.",
+    "cdap_fallback_hint": "Öppna den lättvikts JPEG-pollingvyn som använder nd-signal/CDAP istället för RustDesk-reläet. Användbart när peer är offline på reläet men nåbar via agenthanteringskanalen.",
     "clipboard_empty": "Urklipp är tomt",
     "clipboard_denied": "Urklippsåtkomst nekad. HTTPS krävs eller tillstånd har inte beviljats.",
     "file_loading": "Laddar...",

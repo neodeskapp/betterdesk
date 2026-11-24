@@ -23,7 +23,7 @@ import (
 // transfers of another.
 func init() {
 	const files = "/api/files"
-	const bd = "/api/nd"
+	const nd = "/api/nd"
 	few := contract.Roles("signed-out", "viewer", "operator", "admin")
 	ends := contract.Roles("signed-out", "admin")
 	admin := contract.Roles("admin")
@@ -47,7 +47,7 @@ func init() {
 		{Name: "list-empty", Path: files + "/transfers", Query: pending},
 		{Name: "list-head", Method: "HEAD", Path: files + "/transfers", Query: pending, Roles: ends},
 		{Name: "list-other-spelling", Path: "/API/Files/Transfers/", Query: pending, Roles: few},
-		{Name: "bd-list-empty", Path: bd + "/transfers", Query: pending},
+		{Name: "nd-list-empty", Path: nd + "/transfers", Query: pending},
 
 		// What a transfer needs
 		start("start-without-device", map[string]any{"direction": "download", "filename": "a.txt"}),
@@ -78,9 +78,9 @@ func init() {
 		},
 		{Name: "progress", Path: files + "/transfers/{transfer}"},
 		{Name: "progress-head", Method: "HEAD", Path: files + "/transfers/{transfer}", Roles: ends},
-		{Name: "bd-progress", Path: bd + "/transfers/{transfer}"},
+		{Name: "nd-progress", Path: nd + "/transfers/{transfer}"},
 		{Name: "list-pending", Path: files + "/transfers", Query: pending},
-		{Name: "bd-list-pending", Path: bd + "/transfers", Query: pending, Roles: some},
+		{Name: "nd-list-pending", Path: nd + "/transfers", Query: pending, Roles: some},
 		{
 			Name: "list-of-the-device", Path: files + "/transfers",
 			Query: url.Values{"status": {"pending"}, "device_id": {"900100001"}, "direction": {"download"}}, Roles: some,
@@ -106,12 +106,12 @@ func init() {
 			Query: url.Values{"status": {"pending"}, "device_id": {""}, "direction": {""}}, Roles: admin,
 		},
 		{Name: "download-not-completed", Path: files + "/transfers/{transfer}/download"},
-		{Name: "bd-download-not-completed", Path: bd + "/transfers/{transfer}/download", Roles: some},
+		{Name: "nd-download-not-completed", Path: nd + "/transfers/{transfer}/download", Roles: some},
 		{Name: "cancel", Method: "POST", Path: files + "/transfers/{transfer}/cancel", Body: empty},
 		{Name: "cancel-as-admin", Method: "POST", Path: files + "/transfers/{transfer}/cancel", Body: empty, As: "admin"},
 		{Name: "progress-after-cancel", Path: files + "/transfers/{transfer}"},
 		{Name: "download-after-cancel", Path: files + "/transfers/{transfer}/download", Roles: some},
-		{Name: "bd-cancel-again", Method: "POST", Path: bd + "/transfers/{transfer}/cancel", Body: empty, Roles: some},
+		{Name: "nd-cancel-again", Method: "POST", Path: nd + "/transfers/{transfer}/cancel", Body: empty, Roles: some},
 		{Name: "list-after-cancel", Path: files + "/transfers", Query: pending, Roles: some},
 		{
 			Name: "list-cancelled-of-the-device", Path: files + "/transfers",
@@ -120,19 +120,19 @@ func init() {
 
 		// The same under /api/nd
 		{
-			Name: "bd-start", Method: "POST", Path: bd + "/transfer",
+			Name: "nd-start", Method: "POST", Path: nd + "/transfer",
 			Body:    map[string]any{"direction": "upload", "device_id": "900100002", "filename": "report.pdf", "size": "262145"},
 			Capture: map[string]string{"second": "id"},
 		},
-		{Name: "bd-start-progress", Path: files + "/transfers/{second}", Roles: some},
-		{Name: "bd-cancel", Method: "POST", Path: bd + "/transfers/{second}/cancel", Body: empty},
-		{Name: "bd-cancel-as-admin", Method: "POST", Path: bd + "/transfers/{second}/cancel", Body: empty, As: "admin"},
+		{Name: "nd-start-progress", Path: files + "/transfers/{second}", Roles: some},
+		{Name: "nd-cancel", Method: "POST", Path: nd + "/transfers/{second}/cancel", Body: empty},
+		{Name: "nd-cancel-as-admin", Method: "POST", Path: nd + "/transfers/{second}/cancel", Body: empty, As: "admin"},
 
 		// Without a transfer
 		{Name: "progress-unknown", Path: files + "/transfers/no-such-transfer"},
 		{Name: "cancel-unknown", Method: "POST", Path: files + "/transfers/no-such-transfer/cancel", Body: empty},
 		{Name: "download-unknown", Path: files + "/transfers/no-such-transfer/download"},
-		{Name: "bd-download-unknown", Path: bd + "/transfers/no-such-transfer/download", Roles: few},
+		{Name: "nd-download-unknown", Path: nd + "/transfers/no-such-transfer/download", Roles: few},
 		{Name: "cancel-without-body", Method: "POST", Path: files + "/transfers/no-such-transfer/cancel", Roles: few},
 		{Name: "cancel-without-csrf-token", Method: "POST", Path: files + "/transfers/no-such-transfer/cancel", Body: empty, NoCSRF: true, Roles: few},
 		{Name: "progress-id-bad-escape", Path: files + "/transfers/%ff", Roles: ends},
@@ -166,7 +166,7 @@ func init() {
 // a device's request.
 func fileTransferDeviceCases() []contract.Case {
 	const files = "/api/files"
-	const bd = "/api/nd"
+	const nd = "/api/nd"
 	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
 	other := map[string]string{"Authorization": "Bearer {secret:device_token_other}"}
 	unknown := map[string]string{"Authorization": "Bearer contract-no-such-token"}
@@ -181,7 +181,7 @@ func fileTransferDeviceCases() []contract.Case {
 		if c.Body != nil {
 			c.Method = "POST"
 			if c.Path == "" {
-				c.Path = bd + "/file-transfer"
+				c.Path = nd + "/file-transfer"
 			}
 		}
 		return c
@@ -195,18 +195,18 @@ func fileTransferDeviceCases() []contract.Case {
 			Name: "device-init", Body: map[string]any{"action": "init", "filename": "contract report.txt", "size": 11, "mime_type": "text/plain"},
 			Capture: map[string]string{"announced": "transfer_id"},
 		}),
-		asDevice(contract.Case{Name: "device-read", Path: bd + "/file-transfer/{announced}"}),
+		asDevice(contract.Case{Name: "device-read", Path: nd + "/file-transfer/{announced}"}),
 		asDevice(contract.Case{Name: "device-read-at-files", Path: files + "/file-transfer/{announced}"}),
-		asDevice(contract.Case{Name: "device-read-other-device", Path: bd + "/file-transfer/{announced}", Headers: other}),
-		asDevice(contract.Case{Name: "device-read-unknown-transfer", Path: bd + "/file-transfer/no-such-transfer"}),
-		asDevice(contract.Case{Name: "device-read-without-token", Path: bd + "/file-transfer/{announced}", Headers: none}),
-		asDevice(contract.Case{Name: "device-read-unknown-token", Path: bd + "/file-transfer/{announced}", Headers: unknown}),
+		asDevice(contract.Case{Name: "device-read-other-device", Path: nd + "/file-transfer/{announced}", Headers: other}),
+		asDevice(contract.Case{Name: "device-read-unknown-transfer", Path: nd + "/file-transfer/no-such-transfer"}),
+		asDevice(contract.Case{Name: "device-read-without-token", Path: nd + "/file-transfer/{announced}", Headers: none}),
+		asDevice(contract.Case{Name: "device-read-unknown-token", Path: nd + "/file-transfer/{announced}", Headers: unknown}),
 		asDevice(contract.Case{Name: "device-chunk", Body: chunk(0, "hello ")}),
 		asDevice(contract.Case{Name: "device-chunk-rest", Body: chunk(1, "world")}),
-		asDevice(contract.Case{Name: "device-read-completed", Path: bd + "/file-transfer/{announced}"}),
+		asDevice(contract.Case{Name: "device-read-completed", Path: nd + "/file-transfer/{announced}"}),
 		asDevice(contract.Case{Name: "other-device-writes", Body: chunk(2, "!"), Headers: other}),
 		asDevice(contract.Case{Name: "other-device-cancels", Body: map[string]any{"action": "cancel", "transfer_id": "{announced}"}, Headers: other}),
-		asDevice(contract.Case{Name: "device-read-cancelled", Path: bd + "/file-transfer/{announced}"}),
+		asDevice(contract.Case{Name: "device-read-cancelled", Path: nd + "/file-transfer/{announced}"}),
 		asDevice(contract.Case{Name: "device-chunk-after-cancel", Body: chunk(3, "late")}),
 		asDevice(contract.Case{Name: "device-browse", Body: browse}),
 		asDevice(contract.Case{Name: "device-unknown-action", Body: map[string]any{"action": "nope"}}),
@@ -215,15 +215,15 @@ func fileTransferDeviceCases() []contract.Case {
 		asDevice(contract.Case{Name: "device-message-without-token", Body: browse, Headers: none}),
 		asDevice(contract.Case{Name: "device-message-unknown-token", Body: browse, Headers: unknown}),
 		asDevice(contract.Case{Name: "device-message-at-files", Path: files + "/file-transfer", Body: browse}),
-		asDevice(contract.Case{Name: "device-message-form", RawBody: "action=browse", ContentType: "application/x-www-form-urlencoded", Method: "POST", Path: bd + "/file-transfer"}),
+		asDevice(contract.Case{Name: "device-message-form", RawBody: "action=browse", ContentType: "application/x-www-form-urlencoded", Method: "POST", Path: nd + "/file-transfer"}),
 
 		// A device's request with each role's browser: the session, its
 		// cookies and its CSRF token come along
-		{Name: "device-message-with-session", Method: "POST", Path: bd + "/file-transfer", Body: browse, Headers: device},
-		{Name: "device-message-with-session-without-csrf-token", Method: "POST", Path: bd + "/file-transfer", Body: browse, Headers: device, NoCSRF: true},
+		{Name: "device-message-with-session", Method: "POST", Path: nd + "/file-transfer", Body: browse, Headers: device},
+		{Name: "device-message-with-session-without-csrf-token", Method: "POST", Path: nd + "/file-transfer", Body: browse, Headers: device, NoCSRF: true},
 		{Name: "device-message-at-files-with-session", Method: "POST", Path: files + "/file-transfer", Body: browse, Headers: device},
 		{Name: "device-read-at-files-with-session", Path: files + "/file-transfer/no-such-transfer", Headers: device},
-		{Name: "device-read-with-session-without-token", Path: bd + "/file-transfer/no-such-transfer"},
+		{Name: "device-read-with-session-without-token", Path: nd + "/file-transfer/no-such-transfer"},
 	}
 }
 
@@ -245,7 +245,7 @@ func fileTransferDeviceCases() []contract.Case {
 // downloaded bytes.
 func fileTransferChainCases() []contract.Case {
 	const files = "/api/files"
-	const bd = "/api/nd"
+	const nd = "/api/nd"
 	device := map[string]string{"Authorization": "Bearer {secret:device_token}"}
 	once := contract.Roles("signed-out")
 	// asDevice sends a case the way a device does: no session, no cookies,
@@ -253,7 +253,7 @@ func fileTransferChainCases() []contract.Case {
 	asDevice := func(c contract.Case) contract.Case {
 		c.NoCSRF, c.NoCookies, c.Roles, c.Headers = true, true, once, device
 		if c.Body != nil {
-			c.Method, c.Path = "POST", bd+"/file-transfer"
+			c.Method, c.Path = "POST", nd+"/file-transfer"
 		}
 		return c
 	}
@@ -266,12 +266,12 @@ func fileTransferChainCases() []contract.Case {
 			Body:    map[string]any{"direction": "download", "device_id": "900100001", "filename": "log.txt", "size": 5},
 			Capture: map[string]string{"chain": "id"},
 		},
-		asDevice(contract.Case{Name: "chain-device-reads", Path: bd + "/file-transfer/{chain}"}),
+		asDevice(contract.Case{Name: "chain-device-reads", Path: nd + "/file-transfer/{chain}"}),
 		asDevice(contract.Case{Name: "chain-device-sends", Body: chunk("chain", 0, "hel")}),
 		{Name: "chain-progress", Path: files + "/transfers/{chain}", As: "admin", Roles: once},
 		asDevice(contract.Case{Name: "chain-device-sends-the-rest", Body: chunk("chain", 1, "lo")}),
-		asDevice(contract.Case{Name: "chain-device-reads-completed", Path: bd + "/file-transfer/{chain}"}),
-		{Name: "chain-progress-completed", Path: bd + "/transfers/{chain}", As: "admin", Roles: once},
+		asDevice(contract.Case{Name: "chain-device-reads-completed", Path: nd + "/file-transfer/{chain}"}),
+		{Name: "chain-progress-completed", Path: nd + "/transfers/{chain}", As: "admin", Roles: once},
 		{Name: "chain-download", Path: files + "/transfers/{chain}/download", As: "admin", Roles: once},
 		{
 			Name: "chain-list-completed", Path: files + "/transfers", As: "admin", Roles: once,

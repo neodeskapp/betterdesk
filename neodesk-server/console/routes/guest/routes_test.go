@@ -467,7 +467,7 @@ func TestCreateChecksTheTypes(t *testing.T) {
 func TestViewOnlyLinksOnlyForWatchableDevices(t *testing.T) {
 	devices := map[string]*goapi.Object{
 		"rd-1":   goapi.NewObject("id", "rd-1", "device_type", "rustdesk"),
-		"bd-1":   goapi.NewObject("id", "bd-1", "device_type", ""),
+		"nd-1":   goapi.NewObject("id", "nd-1", "device_type", ""),
 		"mesh-1": goapi.NewObject("id", "mesh-1", "device_type", "Mesh_Agent"),
 		"os-1":   goapi.NewObject("id", "os-1", "device_type", "os_agent"),
 		"iot-1":  goapi.NewObject("id", "iot-1", "device_type", "iot"),
@@ -489,7 +489,7 @@ func TestViewOnlyLinksOnlyForWatchableDevices(t *testing.T) {
 		return rec.Code, rec.Body.String(), len(calls)
 	}
 	const refused = `{"error":"View-only links work for mesh and CDAP devices only: a RustDesk device cannot be limited to watching"}`
-	for _, ids := range []string{`"rd-1"`, `"bd-1"`, `"nobody"`, `"mesh-1","rd-1"`} {
+	for _, ids := range []string{`"rd-1"`, `"nd-1"`, `"nobody"`, `"mesh-1","rd-1"`} {
 		if code, body, calls := post(`{"peer_ids":[` + ids + `],"view_only":true}`); code != 400 || body != refused || calls != 0 {
 			t.Errorf("view only for %s: %d %s after %d calls", ids, code, body, calls)
 		}

@@ -38,7 +38,7 @@ func newMovedSuite(t *testing.T, mode RecordMode, goldenDir string, handler func
 			_ = json.NewEncoder(w).Encode(v)
 		}
 		switch {
-		case r.URL.Path == "/__bd/routing":
+		case r.URL.Path == "/__nd/routing":
 			if console.handler == nil {
 				http.NotFound(w, r)
 				return

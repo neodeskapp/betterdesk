@@ -2638,7 +2638,7 @@
     "2fa_invalid": "Codice 2FA non valido",
     "verify": "Verifica",
     "use_cdap_fallback": "Usa visualizzatore CDAP",
-    "cdap_fallback_hint": "Apri il visualizzatore leggero JPEG-polling che usa bd-signal/CDAP invece del relay RustDesk. Utile quando il peer è offline sul relay ma raggiungibile tramite il canale di gestione dell'agente.",
+    "cdap_fallback_hint": "Apri il visualizzatore leggero JPEG-polling che usa nd-signal/CDAP invece del relay RustDesk. Utile quando il peer è offline sul relay ma raggiungibile tramite il canale di gestione dell'agente.",
     "clipboard_empty": "Gli appunti sono vuoti",
     "clipboard_denied": "Accesso agli appunti negato. È richiesto HTTPS oppure il permesso non è stato concesso.",
     "file_loading": "Caricamento...",

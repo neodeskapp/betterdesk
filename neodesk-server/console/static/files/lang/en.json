@@ -2571,7 +2571,7 @@
         "connect": "Connect",
         "reconnect": "Reconnect",
         "use_cdap_fallback": "Use CDAP viewer",
-        "cdap_fallback_hint": "Open the lightweight JPEG-polling viewer that uses bd-signal/CDAP instead of the RustDesk relay. Useful when the peer is offline on the relay but reachable via the agent management channel.",
+        "cdap_fallback_hint": "Open the lightweight JPEG-polling viewer that uses nd-signal/CDAP instead of the RustDesk relay. Useful when the peer is offline on the relay but reachable via the agent management channel.",
         "disconnect": "Disconnect",
         "back_to_devices": "Back to devices",
         "fullscreen": "Full screen",

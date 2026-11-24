@@ -7,7 +7,7 @@
 # with the console's folder /repo/web-nodejs beside it) and their settings.
 #
 # The server and devseed come prebuilt in /usr/local/bin. Inside the
-# instance: console on 5000 with GET /__bd/routing (CONSOLE_DEBUG_ROUTING),
+# instance: console on 5000 with GET /__nd/routing (CONSOLE_DEBUG_ROUTING),
 # Go API on 21121, secrets in /stack/secrets (admin_password,
 # e2e_password, the device tokens), logs in /stack/logs. /stack/ready
 # exists once the instance is seeded and the console knows which demo
