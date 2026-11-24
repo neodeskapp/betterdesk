@@ -27,7 +27,7 @@ func TestDeviceSigninKeepsRowsPerDevice(t *testing.T) {
 			t.Fatal(err)
 		}
 		replaced := row("SIGNDEV1", "second")
-		replaced.Auto, replaced.Form, replaced.UpdatedBy = true, "name_password", "other"
+		replaced.Auto, replaced.Form, replaced.UpdatedBy, replaced.SealedOnly = true, "name_password", "other", true
 		if err := database.SaveDeviceSignin(replaced); err != nil {
 			t.Fatal(err)
 		}

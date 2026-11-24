@@ -22,9 +22,12 @@ import (
 //	PUT    /api/devices/{id}/signin      {username, password, form}: set or replace (Manage)
 //	PATCH  /api/devices/{id}/signin      {auto, form}: the switch and the form (Manage)
 //	DELETE /api/devices/{id}/signin      clear (Manage)
-//	POST   /api/devices/{id}/signin/use  {session}: the details for the viewer's open
-//	                                     session, once (Use saved sign-in and Connect;
-//	                                     a person in the browser, never an API token)
+//	POST   /api/devices/{id}/signin/use  {session, mode}: for the viewer's open session,
+//	                                     once, a packet sealed for the device's NeoDesk
+//	                                     (mode "sealed") or the details for the browser
+//	                                     to type (mode "typed", clients that can't open
+//	                                     packets); Use saved sign-in and Connect; a
+//	                                     person in the browser, never an API token
 //
 // The API server keeps the details sealed and decides the session (the
 // relay session must run, to this device, opened by this account); this
@@ -228,6 +231,9 @@ func (h *handlers) signinUseAnswer(w http.ResponseWriter, r *http.Request) {
 	}
 	var body struct {
 		Session string `json:"session"`
+		// Mode is "sealed" for a device whose NeoDesk opens sealed
+		// sign-ins, else "typed"
+		Mode string `json:"mode"`
 	}
 	if err := kit.Bind(r, &body); err != nil {
 		answer(w, r, http.StatusBadRequest, failure{Error: "invalid_json"})
@@ -235,7 +241,7 @@ func (h *handlers) signinUseAnswer(w http.ResponseWriter, r *http.Request) {
 	}
 	session := strings.TrimSpace(body.Session)
 	a, err := h.askAsAccount(r, http.MethodPost, "/peers/"+url.PathEscape(r.PathValue("id"))+"/signin/use",
-		map[string]any{"session": session, "account": kit.UserID(r)})
+		map[string]any{"session": session, "account": kit.UserID(r), "mode": body.Mode})
 	if err != nil {
 		h.serverError(w, r, "Saved sign-in error:", err)
 		return
@@ -245,7 +251,11 @@ func (h *handlers) signinUseAnswer(w http.ResponseWriter, r *http.Request) {
 		passOn(w, r, a)
 		return
 	}
-	if err := h.d.LogAction(r, "signin.use", fmt.Sprintf("Saved sign-in handed to the viewer for %s, session %s", r.PathValue("id"), sessionLabel(session))); err != nil {
+	path := "readable, for the browser to type"
+	if body.Mode == "sealed" {
+		path = "sealed for the computer's NeoDesk"
+	}
+	if err := h.d.LogAction(r, "signin.use", fmt.Sprintf("Saved sign-in handed to the viewer for %s, session %s, %s", r.PathValue("id"), sessionLabel(session), path)); err != nil {
 		h.log.Error("Saved sign-in audit error:", err)
 		answer(w, r, http.StatusInternalServerError, failure{Error: "audit_failed"})
 		return

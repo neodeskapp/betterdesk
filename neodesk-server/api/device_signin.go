@@ -1,6 +1,8 @@
 package api
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -103,8 +105,11 @@ type signinStatus struct {
 	Username  string `json:"username"`
 	Form      string `json:"form"`
 	Auto      bool   `json:"auto"`
-	UpdatedBy string `json:"updated_by"`
-	UpdatedAt string `json:"updated_at"`
+	// SealedSignin: the device's NeoDesk signs in with a sealed packet,
+	// and no readable details are handed out for it
+	SealedSignin bool   `json:"sealed_signin"`
+	UpdatedBy    string `json:"updated_by"`
+	UpdatedAt    string `json:"updated_at"`
 }
 
 func (s *Server) signinStatusOf(row *db.DeviceSignin) signinStatus {
@@ -114,6 +119,7 @@ func (s *Server) signinStatusOf(row *db.DeviceSignin) signinStatus {
 	}
 	st.Set = true
 	st.Form, st.Auto, st.UpdatedBy, st.UpdatedAt = row.Form, row.Auto, row.UpdatedBy, row.UpdatedAt
+	st.SealedSignin = row.SealedOnly
 	if s.deviceVault != nil {
 		if name, err := s.deviceVault.Open(row.DeviceID, devicevault.FieldUsername, row.UserNonce, row.UserCipher, row.KeyID); err == nil {
 			st.Username = name
@@ -211,7 +217,7 @@ func (s *Server) handleSetSignin(w http.ResponseWriter, r *http.Request) {
 	}
 	row := &db.DeviceSignin{DeviceID: id, KeyID: devicevault.KeyID, Form: signinFormPassword}
 	if old != nil {
-		row.Form, row.Auto = old.Form, old.Auto
+		row.Form, row.Auto, row.SealedOnly = old.Form, old.Auto, old.SealedOnly
 	}
 	if body.Form != nil {
 		if *body.Form != signinFormPassword && *body.Form != signinFormNamePassword {
@@ -318,10 +324,15 @@ func (s *Server) signinNow() time.Time {
 	return time.Now()
 }
 
-// POST /api/peers/{id}/signin/use with {session, account}: the account
-// name and password, once per live session, for the console account
-// whose own viewer session to this device it is. account is the console
-// account's id; the console sets it, never the browser.
+// POST /api/peers/{id}/signin/use with {session, account, mode}: the
+// details once per live session, for the console account whose own viewer
+// session to this device it is (account is the console account's id; the
+// console sets it, never the browser). mode "sealed" answers a packet
+// sealed to the device's key (devicevault.SealSignin, wire format there)
+// that only the device's NeoDesk opens; from then on the device gets no
+// readable details ("sealed_required"). mode "typed" answers the account
+// name and password for the browser to type, for a client that can't open
+// sealed packets.
 func (s *Server) handleUseSignin(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimSpace(r.PathValue("id"))
 	refuse := func(status int, code string) {
@@ -330,9 +341,17 @@ func (s *Server) handleUseSignin(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Session string `json:"session"`
 		Account int64  `json:"account"`
+		// Mode is "sealed" (a packet only the device's NeoDesk opens) or
+		// "typed" (the details, for the browser to type); "" is typed
+		Mode string `json:"mode"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		refuse(http.StatusBadRequest, "invalid_json")
+		return
+	}
+	sealed := body.Mode == "sealed"
+	if body.Mode != "" && body.Mode != "sealed" && body.Mode != "typed" {
+		refuse(http.StatusBadRequest, "invalid_mode")
 		return
 	}
 	session := strings.TrimSpace(body.Session)
@@ -357,6 +376,30 @@ func (s *Server) handleUseSignin(w http.ResponseWriter, r *http.Request) {
 		refuse(http.StatusConflict, "session_not_open")
 		return
 	}
+	// A device whose NeoDesk opened a sealed sign-in gets no readable
+	// details any more: a browser can't ask for them instead
+	if !sealed && row.SealedOnly {
+		refuse(http.StatusConflict, "sealed_required")
+		return
+	}
+	var deviceKey []byte
+	if sealed {
+		p, err := s.db.GetPeer(id)
+		if err != nil {
+			log.Printf("[signin] read the key of %s: %v", id, err)
+			refuse(http.StatusInternalServerError, "internal")
+			return
+		}
+		if p == nil || len(p.PK) != 32 {
+			refuse(http.StatusConflict, "no_device_key")
+			return
+		}
+		if _, err := devicevault.X25519FromEd25519(p.PK); err != nil {
+			refuse(http.StatusConflict, "no_device_key")
+			return
+		}
+		deviceKey = p.PK
+	}
 	if !s.signinUses.claim(session, s.signinNow()) {
 		refuse(http.StatusConflict, "already_used")
 		return
@@ -373,5 +416,39 @@ func (s *Server) handleUseSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Cache-Control", "no-store")
-	writeJSON(w, http.StatusOK, map[string]string{"username": username, "password": password, "form": row.Form})
+	if !sealed {
+		writeJSON(w, http.StatusOK, map[string]string{"path": "typed", "username": username, "password": password, "form": row.Form})
+		return
+	}
+	nonce := make([]byte, 16)
+	if _, err := rand.Read(nonce); err != nil {
+		refuse(http.StatusInternalServerError, "internal")
+		return
+	}
+	packet := devicevault.SigninPacket{
+		V: devicevault.SigninFormat, DeviceID: id, Session: session,
+		Username: username, Password: password, Form: row.Form,
+		NotAfter: s.signinNow().Add(sealedSigninTTL).Unix(),
+		Nonce:    base64.RawURLEncoding.EncodeToString(nonce),
+	}
+	out, err := devicevault.SealSignin(deviceKey, packet, nil)
+	if err != nil {
+		log.Printf("[signin] seal the sign-in of %s: %v", id, err)
+		refuse(http.StatusInternalServerError, "internal")
+		return
+	}
+	if !row.SealedOnly {
+		if err := s.db.MarkDeviceSigninSealed(id); err != nil {
+			log.Printf("[signin] mark the sign-in of %s sealed: %v", id, err)
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"path":      "sealed",
+		"sealed":    base64.StdEncoding.EncodeToString(out),
+		"nonce":     packet.Nonce,
+		"not_after": packet.NotAfter,
+	})
 }
+
+// sealedSigninTTL is how long the device accepts a sealed sign-in.
+const sealedSigninTTL = 60 * time.Second

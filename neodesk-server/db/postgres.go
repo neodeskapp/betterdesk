@@ -474,6 +474,7 @@ func (pg *PostgresDB) Migrate() error {
 			key_id      TEXT NOT NULL,
 			form        TEXT NOT NULL DEFAULT 'password',
 			auto_signin BOOLEAN NOT NULL DEFAULT FALSE,
+			sealed_only BOOLEAN NOT NULL DEFAULT FALSE,
 			updated_at  TEXT NOT NULL DEFAULT '',
 			updated_by  TEXT NOT NULL DEFAULT ''
 		)`,

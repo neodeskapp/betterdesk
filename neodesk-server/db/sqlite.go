@@ -437,6 +437,7 @@ func (s *SQLiteDB) migrateSchema() error {
 			key_id TEXT NOT NULL,
 			form TEXT NOT NULL DEFAULT 'password',
 			auto_signin INTEGER NOT NULL DEFAULT 0,
+			sealed_only INTEGER NOT NULL DEFAULT 0,
 			updated_at TEXT NOT NULL DEFAULT '',
 			updated_by TEXT NOT NULL DEFAULT ''
 		)`,

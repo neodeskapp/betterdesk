@@ -2,6 +2,7 @@ package devices_test
 
 import (
 	"context"
+	"crypto/ed25519"
 	"fmt"
 	"net/http"
 	"strings"
@@ -221,6 +222,37 @@ func TestSavedSigninRefusesTokensAndAccountsWithoutIt(t *testing.T) {
 			if !auditHas(rows, "signin.refused", want) {
 				t.Errorf("no refusal entry %q in %v", want, rows)
 			}
+		}
+	})
+}
+
+// TestSavedSigninSealedThroughTheConsole: a viewer whose device opens
+// sealed sign-ins gets a packet and never the password, the audit entry
+// says it went sealed, and the device gets no readable details afterwards
+// (L469).
+func TestSavedSigninSealedThroughTheConsole(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, sdb *store.DB) {
+		w, gdb := signinWorld(t, sdb, nil)
+		seed := make([]byte, 32)
+		seed[0] = 7
+		if err := gdb.UpsertPeer(&db.Peer{ID: "SIGNC1", PK: ed25519.NewKeyFromSeed(seed).Public().(ed25519.PublicKey)}); err != nil {
+			t.Fatal(err)
+		}
+		admin := w.As("super_admin")
+		if got := admin.Do(http.MethodPut, "/api/devices/SIGNC1/signin", `{"username":"admin","password":"`+signinPassword+`"}`); got.Status != http.StatusOK {
+			t.Fatalf("set: %d %s", got.Status, got.Body)
+		}
+		session := liveSession(t, "41111111-2222-4333-8444-555555555555", "SIGNC1", routetest.RoleIDs["super_admin"])
+		got := admin.Do(http.MethodPost, "/api/devices/SIGNC1/signin/use", `{"session":"`+session+`","mode":"sealed"}`)
+		if got.Status != http.StatusOK || !strings.Contains(got.Body, `"path":"sealed"`) || strings.Contains(got.Body, signinPassword) || strings.Contains(got.Body, `"password"`) {
+			t.Fatalf("sealed use: %d %s", got.Status, got.Body)
+		}
+		if !auditHas(w.AuditRows(), "signin.use", "sealed for the computer's NeoDesk") {
+			t.Errorf("no audit entry of the sealed use: %v", w.AuditRows())
+		}
+		other := liveSession(t, "51111111-2222-4333-8444-555555555555", "SIGNC1", routetest.RoleIDs["super_admin"])
+		if got := admin.Do(http.MethodPost, "/api/devices/SIGNC1/signin/use", `{"session":"`+other+`","mode":"typed"}`); got.Status != http.StatusConflict || strings.Contains(got.Body, signinPassword) {
+			t.Errorf("readable details after a sealed use: %d %s", got.Status, got.Body)
 		}
 	})
 }

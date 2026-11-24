@@ -388,10 +388,13 @@ type DeviceSignin struct {
 	KeyID      string
 	// Form is what the device's sign-in screen asks for: "password" (the
 	// account is shown, only its password is typed) or "name_password"
-	Form      string
-	Auto      bool
-	UpdatedAt string
-	UpdatedBy string
+	Form string
+	Auto bool
+	// SealedOnly: the device's NeoDesk opened a sealed sign-in, so the
+	// server hands out no readable details for it any more
+	SealedOnly bool
+	UpdatedAt  string
+	UpdatedBy  string
 }
 
 // OrgPeerCredentialReseal moves one organization's device password from
@@ -795,6 +798,8 @@ type Database interface {
 	GetDeviceSignin(deviceID string) (*DeviceSignin, error)
 	SaveDeviceSignin(d *DeviceSignin) error
 	DeleteDeviceSignin(deviceID string) (bool, error)
+	// MarkDeviceSigninSealed sets SealedOnly and nothing else
+	MarkDeviceSigninSealed(deviceID string) error
 
 	// Organizations' device passwords sealed with another key than keyID
 	// (full rows), and their move to keyID in one transaction: a row
