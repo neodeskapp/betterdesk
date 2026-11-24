@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// clientSessionsSQLiteDDL creates the RustDesk client session table (#242 / #284).
+// clientSessionsSQLiteDDL creates the RustDesk client session table.
 const clientSessionsSQLiteDDL = `CREATE TABLE IF NOT EXISTS client_sessions (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			token_hash TEXT UNIQUE NOT NULL,

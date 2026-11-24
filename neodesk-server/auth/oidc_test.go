@@ -344,7 +344,7 @@ func TestParseJWTPayload(t *testing.T) {
 }
 
 // TestDiscoveryRetryAfterFailure verifies that auto-discovery retries when the
-// IdP is unreachable on the first attempt (#411).
+// IdP is unreachable on the first attempt.
 func TestDiscoveryRetryAfterFailure(t *testing.T) {
 	restoreInterval := setOIDCDiscoveryRetryIntervalForTest(40 * time.Millisecond)
 	t.Cleanup(restoreInterval)

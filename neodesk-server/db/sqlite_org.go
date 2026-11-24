@@ -559,7 +559,7 @@ func (s *SQLiteDB) ListOrgSettings(orgID string) ([]*OrgSetting, error) {
 }
 
 // ---------------------------------------------------------------------------
-//  User-Org Linking (Issue #106)
+//  User-Org Linking
 // ---------------------------------------------------------------------------
 
 // LinkUserToOrg links an existing server-level user to an organization.
@@ -742,7 +742,7 @@ func (s *SQLiteDB) SaveOrgAddressBook(orgID, abType, data, updatedBy string) err
 }
 
 // ---------------------------------------------------------------------------
-//  Org peer credentials (encrypted at rest, #367)
+//  Org peer credentials (encrypted at rest)
 // ---------------------------------------------------------------------------
 
 func (s *SQLiteDB) GetOrgPeerCredential(orgID, peerID string) (*OrgPeerCredential, error) {

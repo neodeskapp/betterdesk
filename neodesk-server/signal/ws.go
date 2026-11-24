@@ -24,8 +24,8 @@ import (
 var wsSignalKeepAliveIntervalNs = int64(time.Duration(config.HeartbeatSuggestion) * time.Second / 2)
 
 // Delayed empty keepalive for long-lived register sessions that idle after HTTP
-// 101 before RegisterPk (RustDesk desktop ~1s — issue #229). Must stay below
-// typical proxy idle cuts but above ephemeral RequestRelay RTT (issue #276).
+// 101 before RegisterPk (RustDesk desktop ~1s). Must stay below
+// typical proxy idle cuts but above ephemeral RequestRelay RTT.
 var wsSignalIdleKeepAliveDelayNs = int64(800 * time.Millisecond)
 
 func wsSignalKeepAliveInterval() time.Duration {
@@ -163,7 +163,7 @@ func (s *Server) handleWSUpgrade(w http.ResponseWriter, r *http.Request) {
 // socket's address otherwise. Forwarded values are parsed with
 // net.SplitHostPort / net.ParseIP so IP-only entries keep the proxy
 // connection port (never synthesise :0) and IP:port entries are not
-// double-wrapped into malformed [IP:port]:0 keys (issue #276).
+// double-wrapped into malformed [IP:port]:0 keys.
 func wsEffectiveRemoteAddr(r *http.Request, cfg *config.Config) string {
 	if r == nil {
 		return ""
@@ -392,10 +392,10 @@ func (s *Server) wsSignalLoop(wsc *codec.WSConn) {
 // wsSignalKeepAlive sends empty binary keepalive frames on long-lived register
 // sessions. It must NOT send an immediate empty frame after HTTP 101: ephemeral
 // WebSocket RequestRelay connections treat the first binary frame as a
-// RendezvousMessage and disconnect on union:None (issue #276 residual).
+// RendezvousMessage and disconnect on union:None.
 //
 // Keepalives start after RegisterPeer/RegisterPk, or after a short idle delay
-// when the client has not sent any frame yet (desktop RegisterPk delay, #229).
+// when the client has not sent any frame yet (desktop RegisterPk delay).
 func (s *Server) wsSignalKeepAlive(wsc *codec.WSConn, done <-chan struct{}, registered <-chan struct{}) {
 	interval := wsSignalKeepAliveInterval()
 	if interval <= 0 {
@@ -428,7 +428,7 @@ func (s *Server) wsSignalKeepAlive(wsc *codec.WSConn, done <-chan struct{}, regi
 				}
 				continue
 			}
-			// Still idle before register — one empty frame for proxies (#229).
+			// Still idle before register — one empty frame for proxies.
 			if err := wsc.WriteKeepAlive(); err != nil {
 				if !isNormalClose(err) {
 					log.Printf("[signal] WS idle keepalive write to %s: %v", wsc.RemoteAddr(), err)
@@ -628,7 +628,7 @@ func (s *Server) sendToWSPeer(id string, msg *pb.RendezvousMessage) error {
 
 // sendToPeer delivers a protobuf message on the best available transport.
 // WebSocket peers stay on WS. Native peers with a UDP heartbeat address are
-// sent UDP even when ConnType was stamped TCP by RegisterPk (#382). Returns
+// sent UDP even when ConnType was stamped TCP by RegisterPk. Returns
 // true if a transport accepted the message.
 func (s *Server) sendToPeer(id string, msg *pb.RendezvousMessage) bool {
 	entry, found := s.peers.Route(id)

@@ -9,7 +9,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
-// mockLDAPProvider implements ldapAuthProvider for unit tests (Issue #218).
+// mockLDAPProvider implements ldapAuthProvider for unit tests.
 type mockLDAPProvider struct {
 	enabled bool
 	fn      func(username, password string) (*auth.LDAPResult, error)

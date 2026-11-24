@@ -208,7 +208,7 @@ func TestDeleteUserAllowsWhenAnotherSuperAdminExists(t *testing.T) {
 	}
 }
 
-// Issue #292: delete/demote must succeed when another user has NULL last_login
+// Delete/demote must succeed when another user has NULL last_login
 // (previously ListUsers scanned NULL into string and returned 500).
 func TestDeleteUserSucceedsWithNullLastLoginSibling(t *testing.T) {
 	cfg := config.DefaultConfig()

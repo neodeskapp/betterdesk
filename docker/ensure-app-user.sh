@@ -1,5 +1,5 @@
 #!/bin/sh
-# Remap the neodesk user/group to PUID/PGID at container start (#376).
+# Remap the neodesk user/group to PUID/PGID at container start.
 # Sourced from entrypoints while running as root (before chown / su-exec).
 # Defaults match the image build identity (10001:10001).
 

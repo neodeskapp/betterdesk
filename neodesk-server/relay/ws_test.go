@@ -175,7 +175,7 @@ func TestWSRelayRejectsUnknownUUID(t *testing.T) {
 }
 
 // TestWSRelayLargeMessagePreserved ensures payloads larger than io.Copy's default
-// buffer (~32 KiB) stay as a single WebSocket message after relay (#293).
+// buffer (~32 KiB) stay as a single WebSocket message after relay.
 func TestWSRelayLargeMessagePreserved(t *testing.T) {
 	cfg := config.DefaultConfig()
 	cfg.RelayPort = relayPort(t)
@@ -257,8 +257,8 @@ func TestWSRelayLargeMessagePreserved(t *testing.T) {
 }
 
 func TestRelayBridgesMixedTCPAndWS(t *testing.T) {
-	// #397: panel Web Remote (TCP :21117) + WS Mode peer (:21119) must pair
-	// via BytesCodec↔WS translation — not reject (#290 crash path).
+	// Panel Web Remote (TCP :21117) + WS Mode peer (:21119) must pair
+	// via BytesCodec↔WS translation, not reject or crash.
 	cfg := config.DefaultConfig()
 	cfg.RelayPort = relayPort(t)
 	srv := New(cfg)

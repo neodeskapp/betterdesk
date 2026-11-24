@@ -9,7 +9,7 @@ package auth
 //	├── global_admin — all-org user/device management, no server access
 //	└── (legacy) admin/operator/viewer/pro — kept for backward compatibility
 const (
-	// New 6-tier roles (Discussion #99)
+	// New 6-tier roles
 	RoleSuperAdmin  = "super_admin"
 	RoleServerAdmin = "server_admin"
 	RoleGlobalAdmin = "global_admin"
@@ -64,7 +64,7 @@ func IsServerLevel(role string) bool {
 }
 
 // CanAssignRole checks whether a user with callerRole may assign targetRole.
-// Implements the role assignment boundary rules from Discussion #99.
+// Implements the role assignment boundary rules.
 func CanAssignRole(callerRole, targetRole string) bool {
 	switch {
 	// Super Admin (and legacy admin) can assign ANY role

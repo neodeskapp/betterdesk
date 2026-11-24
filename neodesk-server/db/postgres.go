@@ -236,7 +236,7 @@ func (pg *PostgresDB) Migrate() error {
 		`CREATE INDEX IF NOT EXISTS idx_peer_metrics_created_at ON peer_metrics(created_at)`,
 		`CREATE INDEX IF NOT EXISTS idx_peer_metrics_peer_created ON peer_metrics(peer_id, created_at DESC)`,
 
-		// Peer availability history (server-observed status transitions, #455)
+		// Peer availability history (server-observed status transitions)
 		`CREATE TABLE IF NOT EXISTS peer_availability_events (
 			id          BIGSERIAL PRIMARY KEY,
 			peer_id     TEXT NOT NULL,
@@ -367,7 +367,7 @@ func (pg *PostgresDB) Migrate() error {
 		`CREATE INDEX IF NOT EXISTS idx_help_requests_created ON help_requests(created_at)`,
 		`CREATE INDEX IF NOT EXISTS idx_help_requests_org ON help_requests(org_id)`,
 
-		// RustDesk client login sessions (Issue #242 / #284)
+		// RustDesk client login sessions
 		clientSessionsPostgresDDL,
 		`CREATE UNIQUE INDEX IF NOT EXISTS idx_client_sessions_hash ON client_sessions(token_hash)`,
 		`CREATE INDEX IF NOT EXISTS idx_client_sessions_user ON client_sessions(user_id)`,
@@ -433,7 +433,7 @@ func (pg *PostgresDB) Migrate() error {
 			PRIMARY KEY(org_id, key)
 		)`,
 
-		// Organization shared address books (Issue #187 / #190)
+		// Organization shared address books
 		`CREATE TABLE IF NOT EXISTS org_address_books (
 			org_id     TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 			ab_type    TEXT NOT NULL DEFAULT 'legacy',
@@ -442,7 +442,7 @@ func (pg *PostgresDB) Migrate() error {
 			updated_by TEXT NOT NULL DEFAULT '',
 			PRIMARY KEY(org_id, ab_type)
 		)`,
-		// Encrypted org peer passwords for shared AB / Web Remote (#367)
+		// Encrypted org peer passwords for shared AB / Web Remote
 		`CREATE TABLE IF NOT EXISTS org_peer_credentials (
 			org_id     TEXT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
 			peer_id    TEXT NOT NULL,
@@ -754,9 +754,9 @@ func (pg *PostgresDB) Migrate() error {
 		`ALTER TABLE peers ADD COLUMN IF NOT EXISTS display_name TEXT NOT NULL DEFAULT ''`,
 		// users: server admin flag (RBAC Phase 52)
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_server_admin BOOLEAN NOT NULL DEFAULT FALSE`,
-		// users: authentication provider (Issue #148)
+		// users: authentication provider
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS auth_provider TEXT NOT NULL DEFAULT 'local'`,
-		// org_users: server_user_id for linking existing users (Issue #106)
+		// org_users: server_user_id for linking existing users
 		`ALTER TABLE org_users ADD COLUMN IF NOT EXISTS server_user_id BIGINT NOT NULL DEFAULT 0`,
 		// peers/users: Pro strategy assignment GUIDs
 		`ALTER TABLE peers ADD COLUMN IF NOT EXISTS guid TEXT NOT NULL DEFAULT ''`,
@@ -1065,7 +1065,7 @@ func (pg *PostgresDB) DeletePeer(id string) error {
 
 // HardDeletePeer permanently removes a peer from the database, revokes its
 // device tokens, releases any id_change_history reservations for that
-// ID (#213) and removes its data loss prevention events (the console's
+// ID and removes its data loss prevention events (the console's
 // dlp_events, when the console made the table).
 func (pg *PostgresDB) HardDeletePeer(id string) error {
 	tx, err := pg.pool.Begin(pg.ctx)
@@ -1917,7 +1917,7 @@ func scanUser(row pgx.Row) (*User, error) {
 }
 
 // userSelectColsPG is the shared SELECT list for GetUser/GetUserByID/ListUsers.
-// COALESCE(totp_secret, ”) matches SQLite (Issue #292/#301): Node panel inserts
+// COALESCE(totp_secret, ”) matches SQLite: Node panel inserts
 // often leave totp_secret NULL; scanning NULL into Go string fails and breaks
 // GET /api/users, which in turn triggered mirrorCreate retry loops.
 const userSelectColsPG = `id, username, password_hash, role, COALESCE(totp_secret, ''), totp_enabled,
@@ -1985,7 +1985,7 @@ func (pg *PostgresDB) UpdateUser(u *User) error {
 }
 
 // RenameUser changes a username and cascades to the tables that key on it.
-// See the SQLite implementation for the rationale (issue #498, 2026-11-13).
+// See the SQLite implementation for the rationale.
 func (pg *PostgresDB) RenameUser(id int64, newUsername string) error {
 	newUsername = strings.TrimSpace(newUsername)
 	if !ValidUsername(newUsername) {

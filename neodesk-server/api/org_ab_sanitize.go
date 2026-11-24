@@ -5,7 +5,7 @@ import (
 )
 
 // stripSecretsFromOrgAddressBook removes password/hash fields before persisting
-// org shared AB JSON so secrets stay only in org_peer_credentials (#367).
+// org shared AB JSON so secrets stay only in org_peer_credentials.
 func stripSecretsFromOrgAddressBook(data string) string {
 	ab := parseAddressBookMap(data)
 	peers := toPeerSlice(ab["peers"])

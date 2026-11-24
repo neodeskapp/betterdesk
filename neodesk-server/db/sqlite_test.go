@@ -838,7 +838,7 @@ func TestUpdatePeerSysinfo(t *testing.T) {
 	}
 }
 
-// Issue #292: never-logged-in users may have NULL last_login / totp_secret.
+// Never-logged-in users may have NULL last_login / totp_secret.
 // Scans into string must not fail; delete must clear org_users links.
 func TestListUsersToleratesNullLastLogin(t *testing.T) {
 	db := newTestDB(t)

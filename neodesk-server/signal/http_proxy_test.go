@@ -160,7 +160,7 @@ func TestLogAndCheckKeepAliveHttpProxyAndPunch(t *testing.T) {
 		},
 	}
 	if !srv.logAndCheckKeepAlive(registerPkMsg, "203.0.113.10:52001", true) {
-		t.Fatal("RegisterPk must keep TCP connection alive for #327 session bind")
+		t.Fatal("RegisterPk must keep TCP connection alive for the session bind")
 	}
 }
 
@@ -202,7 +202,7 @@ func TestHandleEmptyOrUnknownUnion(t *testing.T) {
 }
 
 func TestHttpProxyRequestDecodesAfterSchemaSync(t *testing.T) {
-	// Regression for #296: field 27 must populate Union, not leave it nil.
+	// Field 27 must populate Union, not leave it nil.
 	msg := &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_HttpProxyRequest{
 			HttpProxyRequest: &pb.HttpProxyRequest{
@@ -341,7 +341,7 @@ func TestSecureTCPHttpProxyRoundTrip(t *testing.T) {
 	}
 	hr := resp.GetHttpProxyResponse()
 	if hr == nil {
-		t.Fatalf("expected HttpProxyResponse, got %T (would be nil Union before #296 fix)", resp.Union)
+		t.Fatalf("expected HttpProxyResponse, got %T (field 27 left Union nil)", resp.Union)
 	}
 	if hr.GetError() != "not supported" {
 		t.Fatalf("error = %q", hr.GetError())

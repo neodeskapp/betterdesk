@@ -72,7 +72,7 @@ type ServerConfig struct {
 // Authentication provider values for User.AuthProvider. Determines how an
 // account is allowed to authenticate. A user bound to a non-local provider
 // can ONLY authenticate via that provider — password login is rejected even
-// when a username collides with a local account (Issue #148).
+// when a username collides with a local account.
 const (
 	AuthProviderLocal = "local" // local password (PBKDF2/bcrypt)
 	AuthProviderLDAP  = "ldap"  // LDAP / Active Directory
@@ -85,7 +85,7 @@ type User struct {
 	PasswordHash      string `json:"-"`
 	Role              string `json:"role"`            // admin, operator, viewer
 	IsServerAdmin     bool   `json:"is_server_admin"` // Phase 3: separate server admin flag
-	AuthProvider      string `json:"auth_provider"`   // local, ldap, oidc (Issue #148)
+	AuthProvider      string `json:"auth_provider"`   // local, ldap, oidc
 	TOTPSecret        string `json:"-"`
 	TOTPEnabled       bool   `json:"totp_enabled"`
 	TOTPRecoveryCodes string `json:"-"` // JSON array of bcrypt-hashed recovery codes (H4)
@@ -375,7 +375,7 @@ type OrgSetting struct {
 	Value string `json:"value"`
 }
 
-// OrgPeerCredential is metadata for an encrypted peer password row (#367).
+// OrgPeerCredential is metadata for an encrypted peer password row.
 // Ciphertext/nonce are never exposed via JSON APIs that list credentials.
 type OrgPeerCredential struct {
 	OrgID       string `json:"org_id"`
@@ -544,7 +544,7 @@ type Database interface {
 	// does NOT write availability events (avoids restart downtime floods).
 	SetAllOffline() error
 
-	// Availability history (#455) — optional, gated by server_config.
+	// Availability history — optional, gated by server_config.
 	GetPeerAvailabilityEvents(peerID string, from, to time.Time) ([]*PeerAvailabilityEvent, error)
 	CleanupOldAvailabilityEvents(maxAge time.Duration) (int64, error)
 	IsAvailabilityHistoryEnabled() bool
@@ -728,7 +728,7 @@ type Database interface {
 	DeleteOrgUser(id string) error
 	UpdateOrgUserLogin(id string) error
 
-	// Org User Linking (Issue #106)
+	// Org User Linking
 	LinkUserToOrg(orgID string, userID int64, role string) (*OrgUser, error)
 	UnlinkUserFromOrg(orgID string, serverUserID int64) error
 	ListUsersNotInOrg(orgID string) ([]*User, error)
@@ -763,7 +763,7 @@ type Database interface {
 	GetOrgAddressBook(orgID, abType string) (string, error)
 	SaveOrgAddressBook(orgID, abType, data, updatedBy string) error
 
-	// Org peer credentials — AES-GCM ciphertext in main DB (#367)
+	// Org peer credentials — AES-GCM ciphertext in main DB
 	GetOrgPeerCredential(orgID, peerID string) (*OrgPeerCredential, error)
 	ListOrgPeerCredentialFlags(orgID string) ([]*OrgPeerCredential, error)
 	SaveOrgPeerCredential(c *OrgPeerCredential) error
@@ -865,7 +865,7 @@ type Database interface {
 	GetBillingWorkReportBySession(sessionID string) (*BillingWorkReport, error)
 	ListBillingWorkReports(orgID string, limit int) ([]*BillingWorkReport, error)
 
-	// RustDesk client sessions (Issue #242 — DB-backed opaque tokens with sliding expiry)
+	// RustDesk client sessions (DB-backed opaque tokens with sliding expiry)
 	EnsureClientSessionsSchema() error
 	CreateClientSession(sess *ClientSession) error
 	GetClientSessionByTokenHash(tokenHash string) (*ClientSession, error)

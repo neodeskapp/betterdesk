@@ -145,7 +145,7 @@ func (s *Server) issueClientSession(user *db.User, clientID, clientUUID, clientI
 	db.BindPeerOwner(s.db, clientID, clientUUID, user.Username)
 
 	// Viewer-only mobiles often never RegisterPeer/Pk; queue them at login so
-	// managed enrollment can approve outbound initiators (#375).
+	// managed enrollment can approve outbound initiators.
 	s.queueManagedViewerEnrollment(clientID, clientUUID, clientIP)
 
 	return plainToken, nil
@@ -154,7 +154,7 @@ func (s *Server) issueClientSession(user *db.User, clientID, clientUUID, clientI
 // queueManagedViewerEnrollment writes pending_device_<id> when enrollment is
 // managed and the logged-in client has no approved peer row. Locked mode does
 // not queue. Soft-deleted / explicitly rejected devices are skipped. Does not
-// auto-approve — PunchHole still requires an approved peers row (#302 / #375).
+// auto-approve — PunchHole still requires an approved peers row.
 func (s *Server) queueManagedViewerEnrollment(clientID, clientUUID, clientIP string) {
 	clientID = strings.TrimSpace(clientID)
 	if clientID == "" || s.db == nil || s.cfg == nil {
@@ -198,7 +198,7 @@ func (s *Server) queueManagedViewerEnrollment(clientID, clientUUID, clientIP str
 }
 
 // retryAfterMissingClientSessions re-creates the client_sessions table when a
-// post-update Go binary races an older DB that never ran the #242 migration,
+// post-update Go binary races an older DB that never created that table,
 // then retries the failed operation once.
 func (s *Server) retryAfterMissingClientSessions(orig error, retry func() error) error {
 	if !isMissingClientSessionsTable(orig) {

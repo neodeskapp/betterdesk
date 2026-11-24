@@ -38,10 +38,10 @@ const (
 	// in details carries the specific cause.
 	ActionPeerRegistrationRejected Action = "peer_registration_rejected"
 	// ActionConnectionDenied is logged when PunchHole/RequestRelay is refused
-	// because the initiator is not an authorized/enrolled peer (#302).
+	// because the initiator is not an authorized/enrolled peer.
 	ActionConnectionDenied Action = "connection_denied"
 	// ActionConnectionAllowed is logged when PunchHole/RequestRelay passes
-	// initiator authorization, including operator-only session checks (#425).
+	// initiator authorization, including operator-only session checks.
 	ActionConnectionAllowed      Action = "connection_allowed"
 	ActionBlocklistAdd           Action = "blocklist_add"
 	ActionBlocklistRemove        Action = "blocklist_remove"
@@ -67,7 +67,7 @@ const (
 	ActionHelpRequestCreated Action = "help_request_created"
 	ActionHelpRequestUpdated Action = "help_request_updated"
 	ActionChatMessage        Action = "chat_message"
-	// Org peer credential vault (#367) — never include password material in Details.
+	// Org peer credential vault — never include password material in Details.
 	ActionOrgPeerCredentialSet   Action = "org_peer_credential_set"
 	ActionOrgPeerCredentialClear Action = "org_peer_credential_clear"
 	ActionOrgPeerCredentialFetch Action = "org_peer_credential_fetch"

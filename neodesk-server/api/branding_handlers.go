@@ -1011,7 +1011,7 @@ const (
 )
 
 // enrollmentDecision is persisted under enrollment_decision_<id> so Approved /
-// Rejected filters can show Go enrollment history (#351).
+// Rejected filters can show Go enrollment history.
 type enrollmentDecision struct {
 	DeviceID   string `json:"device_id"`
 	UUID       string `json:"uuid,omitempty"`
@@ -1083,7 +1083,7 @@ func (s *Server) clearEnrollmentRejectionState(deviceID string) {
 // removeEnrollmentRejectAuditPeer permanently removes a peer that existed only
 // so Reject & Ban could show under Devices → Banned. Leaving the row after
 // clear/unban would make checkEnrollmentPermission treat the device as already
-// enrolled and bypass managed pending approval (#351).
+// enrolled and bypass managed pending approval.
 func (s *Server) removeEnrollmentRejectAuditPeer(deviceID string) error {
 	if deviceID == "" || s.db == nil {
 		return nil
@@ -1192,7 +1192,7 @@ func (s *Server) listEnrollmentHistory(statusFilter string) []enrollmentDecision
 	}
 
 	// Legacy builds stored rejected_device_* without enrollment_decision_*.
-	// Surface those orphans under Rejected (and All) so operators can Allow re-enroll (#351).
+	// Surface those orphans under Rejected (and All) so operators can Allow re-enroll.
 	if statusFilter == "" || statusFilter == "rejected" {
 		rejectedConfigs, rerr := s.db.ListConfigByPrefix(rejectedDevicePrefix)
 		if rerr != nil {
@@ -1344,7 +1344,7 @@ func (s *Server) handleApproveDevice(w http.ResponseWriter, r *http.Request) {
 		s.db.UpdatePeerFields(deviceID, map[string]string{"tags": tags})
 	}
 
-	// Remove from pending and clear any prior rejection lock (#351).
+	// Remove from pending and clear any prior rejection lock.
 	s.db.DeleteConfig(pendingDevicePrefix + deviceID)
 	s.db.DeleteConfig(rejectedDevicePrefix + deviceID)
 
@@ -1452,7 +1452,7 @@ func (s *Server) handleRejectDevice(w http.ResponseWriter, r *http.Request) {
 	})
 	s.db.SetConfig(rejectedDevicePrefix+deviceID, string(rejectedPayload))
 
-	// Optionally ban so Devices → Banned shows the device (#351).
+	// Optionally ban so Devices → Banned shows the device.
 	// Pending enrollments often have no peers row yet — create one first.
 	if req.Ban {
 		if existing == nil {

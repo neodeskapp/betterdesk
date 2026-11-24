@@ -1,5 +1,5 @@
 #!/bin/sh
-# Pre-bootstrap shared admin credentials for Docker (issue #385).
+# Pre-bootstrap shared admin credentials for Docker.
 # Go server and Node.js console must use the same password on first start.
 # Writes /opt/rustdesk/.admin_credentials and exports INIT_ADMIN_* / DEFAULT_ADMIN_*.
 # Split images source this script concurrently, so creation is serialized on
@@ -168,7 +168,7 @@ first_password_replaced() {
 
 # Already configured via env — keep Go and Node in sync, and still publish
 # .admin_credentials on a fresh volume so operators / show-admin-credentials
-# can read the same password (#385).
+# can read the same password.
 if [ -n "${INIT_ADMIN_PASS:-}" ] || [ -n "${DEFAULT_ADMIN_PASSWORD:-}" ]; then
     sync_exports
     _env_pass="${INIT_ADMIN_PASS:-$DEFAULT_ADMIN_PASSWORD}"
@@ -255,7 +255,8 @@ if run_as_neodesk mkdir "$LOCK_DIR" 2>/dev/null; then
 fi
 
 # Another split container owns the lock. Generating a fallback here would
-# recreate issue #385, so wait for its atomic publication.
+# give the split containers different admin passwords, so wait for its
+# atomic publication.
 if wait_for_bootstrap_credentials; then
     return 0 2>/dev/null || exit 0
 fi

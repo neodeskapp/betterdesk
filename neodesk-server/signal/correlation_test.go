@@ -135,7 +135,7 @@ func TestEmptyRelayResponseUUIDUsesMatchingInitiatorSession(t *testing.T) {
 }
 
 func TestRelayResponseForwardUsesPendingInitiatorOnSharedNAT(t *testing.T) {
-	// #399: multi-peer shared NAT must resolve initiator from pending store,
+	// Multi-peer shared NAT must resolve initiator from pending store,
 	// not CountByIP / FindByIP.
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
 	sharedIP := "203.0.113.88"

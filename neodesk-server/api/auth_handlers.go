@@ -706,7 +706,7 @@ func (s *Server) handleListUsers(w http.ResponseWriter, r *http.Request) {
 // handleClientUsersList returns users in the {total,data} envelope format
 // expected by the RustDesk Flutter client's group model (UserPayload format).
 //
-// Issue #138 (2.3): Only return users that have at least one device assigned
+// Only return users that have at least one device assigned
 // (peer.User matches username). Users without devices create misleading sidebar
 // entries that lead to empty device lists when clicked.
 func (s *Server) handleClientUsersList(w http.ResponseWriter, r *http.Request) {
@@ -731,7 +731,7 @@ func (s *Server) handleClientUsersList(w http.ResponseWriter, r *http.Request) {
 	result := make([]map[string]any, 0, len(users))
 	for _, u := range users {
 		// Skip users that have no devices assigned — they create empty
-		// sidebar entries in the RustDesk client (Issue #138 point 2.3)
+		// sidebar entries in the RustDesk client
 		if !usersWithDevices[u.Username] {
 			continue
 		}
@@ -764,7 +764,7 @@ func (s *Server) handleClientUsersList(w http.ResponseWriter, r *http.Request) {
 // user.view permission. This prevents the client's group pull from failing
 // for operator users. Admin panel requests fall through to the full
 // permission-protected list handler.
-// Issue #138: _getUsers() failure causes _getPeers() to never run.
+// _getUsers() failure causes _getPeers() to never run.
 func (s *Server) handleUsersWithClientFallback(w http.ResponseWriter, r *http.Request) {
 	// RustDesk client sends ?accessible=&status=1&pageSize=100
 	if r.URL.Query().Has("accessible") || r.URL.Query().Has("pageSize") {
@@ -795,7 +795,7 @@ func (s *Server) handleUsersWithClientFallback(w http.ResponseWriter, r *http.Re
 
 		// For operators without user.view: only include this user in the
 		// sidebar if they have at least one device assigned. Otherwise
-		// clicking the name shows an empty device list (Issue #138 point 2.3).
+		// clicking the name shows an empty device list.
 		// Returning {total:0, data:[]} still satisfies _getUsers() so _getPeers()
 		// is called and all devices are shown under groups.
 		allPeers, _ := s.db.ListPeers(false)
@@ -933,7 +933,7 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Username change (issue #498, 2026-11-13). Provider-managed accounts keep
+	// Username change. Provider-managed accounts keep
 	// the name the IdP/Directory issues, otherwise the next login would recreate
 	// the old identity. The rename cascades to address books, org membership and
 	// strategy assignments in one transaction.
@@ -973,7 +973,7 @@ func (s *Server) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if body.Password != "" {
-		// Issue #148: LDAP/OIDC accounts have no usable local password. Setting
+		// LDAP/OIDC accounts have no usable local password. Setting
 		// one here would re-open the dual-authentication hole, so reject it.
 		provider := user.AuthProvider
 		if provider == "" {
@@ -1079,7 +1079,7 @@ func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Prevent deleting the last super-admin/admin (Discussion #99).
+	// Prevent deleting the last super-admin/admin.
 	if auth.IsSuperAdminRole(user.Role) {
 		users, listErr := s.db.ListUsers()
 		if listErr != nil {
@@ -1547,8 +1547,8 @@ func (s *Server) authenticatePerson(r *http.Request) (username, role, orgID stri
 		}
 	}
 
-	// 2. The X-API-Key header follows in authenticate (query param removed —
-	// BD-2026-005: query transport leaks keys in logs/proxies)
+	// 2. The X-API-Key header follows in authenticate (query param removed:
+	// query transport leaks keys in logs/proxies)
 	return "", "", "", false
 }
 

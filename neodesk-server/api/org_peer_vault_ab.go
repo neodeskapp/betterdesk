@@ -11,7 +11,7 @@ import (
 
 // injectOrgPeerCredentialsIntoAB decrypts org vault passwords and injects the
 // RustDesk shared-AB "password" field into the in-memory GET /api/ab response only.
-// Secrets are never written back to org_address_books JSON (#367). Only a
+// Secrets are never written back to org_address_books JSON. Only a
 // caller that holds device.connect, which GET /api/peers/{id}/connect-password
 // asks for the same secret, gets them, and only for devices in its scope.
 func (s *Server) injectOrgPeerCredentialsIntoAB(r *http.Request, data string) string {

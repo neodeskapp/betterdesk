@@ -132,8 +132,8 @@ var (
 
 // relayTransport identifies how a peer reached the relay (framing differs).
 // TCP uses RustDesk BytesCodec; WebSocket uses one raw protobuf per binary frame.
-// Mixed pairs are bridged with message-aware translation (#397); naive io.Copy
-// between them corrupts the E2E handshake (#290).
+// Mixed pairs are bridged with message-aware translation; naive io.Copy
+// between them corrupts the E2E handshake.
 type relayTransport string
 
 const (
@@ -145,7 +145,7 @@ const (
 // Exactly one of conn (TCP) or ws (WebSocket) is set.
 type pendingConn struct {
 	conn      net.Conn
-	ws        *websocket.Conn // WebSocket peers — keep raw conn for message-preserving copy (#293)
+	ws        *websocket.Conn // WebSocket peers — keep raw conn for message-preserving copy
 	remote    string          // RemoteAddr string (WS upgrade remote)
 	transport relayTransport
 	created   time.Time
@@ -408,7 +408,7 @@ func (s *Server) handleConn(conn net.Conn) {
 // LoadOrStore avoids a race where simultaneous connections both miss LoadAndDelete
 // and overwrite each other in pending without ever pairing.
 // Homogeneous transports use byte/message copy; mixed TCP↔WS uses BytesCodec
-// translation (#397) so Web Remote (TCP proxy) can reach WebSocket Mode peers.
+// translation so Web Remote (TCP proxy) can reach WebSocket Mode peers.
 func (s *Server) pairIncomingConn(pc *pendingConn, uuid string) {
 	if val, loaded := s.pending.LoadOrStore(uuid, pc); loaded {
 		existing := val.(*pendingConn)

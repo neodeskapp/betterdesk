@@ -41,11 +41,11 @@ type tcpPunchConn struct {
 	secure    *crypto.SecureTCPConn // set when connection uses NaCl encryption
 	writeMu   sync.Mutex
 	createdAt time.Time // M2: track creation time for TTL eviction
-	peerID    string    // set after RegisterPk on this TCP session (#327)
+	peerID    string    // set after RegisterPk on this TCP session
 }
 
-// pendingUUID tracks a relay session correlation for RelayResponse forwarding
-// (#399). Some RustDesk clients omit the UUID in RelayResponse; others omit
+// pendingUUID tracks a relay session correlation for RelayResponse forwarding.
+// Some RustDesk clients omit the UUID in RelayResponse; others omit
 // initiator identity. We store both so the reverse path does not fall back to
 // unsafe FindByIP on shared NAT.
 type pendingUUID struct {
@@ -58,7 +58,7 @@ type pendingUUID struct {
 }
 
 // pendingPunch tracks a scheduled P2P-first fallback for an initiator that is
-// waiting for its target to complete hole punching (issue #157). When the
+// waiting for its target to complete hole punching. When the
 // target responds with PunchHoleSent in time, handlePunchHoleSent cancels the
 // fallback and the genuine PunchHoleResponse (carrying the target's punched
 // address) is delivered. Otherwise the fallback fires, delivering a
@@ -124,19 +124,19 @@ type Server struct {
 	tcpPunchConns sync.Map // map[string]*tcpPunchConn
 
 	// wsPunchConns maps normalizeAddrKey(ip:port) → *codec.WSConn for WebSocket
-	// initiators waiting for async PunchHole/RelayResponse (#276). Exact port
+	// initiators waiting for async PunchHole/RelayResponse. Exact port
 	// matching avoids delivering signed PKs to the wrong peer behind shared NAT.
 	wsPunchConns sync.Map // map[string]*codec.WSConn
 
 	// pendingRelayUUIDs tracks relay session correlation by target + initiator
-	// endpoint (#399). Key=targetID + initiator endpoint, Value=*pendingUUID.
+	// endpoint. Key=targetID + initiator endpoint, Value=*pendingUUID.
 	// Including the endpoint prevents parallel sessions to one target from
 	// borrowing each other's UUID / initiator identity.
 	pendingRelayUUIDs sync.Map // map[string]*pendingUUID
 
 	// pendingRelayByUUID indexes the same pendingUUID entries by relay UUID so
 	// RelayResponse can recover target/initiator when socket_addr correlation
-	// is incomplete (#399).
+	// is incomplete.
 	pendingRelayByUUID sync.Map // map[string]*pendingUUID
 
 	// pendingRelayByAdvertised indexes the address sent in RequestRelay.socket_addr
@@ -144,15 +144,15 @@ type Server struct {
 	// correlated after WebSocket mode stops advertising the proxy port.
 	pendingRelayByAdvertised sync.Map // map[targetID + "\x00" + advertisedAddr]*pendingUUID
 
-	// pendingPunches tracks P2P-first fallback timers per initiator address
-	// (issue #157). Key=normalizeAddrKey(initiatorAddr), Value=*pendingPunch.
+	// pendingPunches tracks P2P-first fallback timers per initiator address.
+	// Key=normalizeAddrKey(initiatorAddr), Value=*pendingPunch.
 	pendingPunches sync.Map // map[string]*pendingPunch
 
 	// pendingLANs tracks native LAN address exchanges independently from relay
 	// correlation and WAN P2P-first fallbacks. Key=target ID + initiator endpoint.
 	pendingLANs sync.Map // map[string]*pendingLAN
 
-	// lastSharedNATWarnUnixNano rate-limits SAME_NAT_RELAY=false warnings (#399).
+	// lastSharedNATWarnUnixNano rate-limits SAME_NAT_RELAY=false warnings.
 	lastSharedNATWarnUnixNano atomic.Int64
 
 	// localIP is the server's detected public IP address (via external service).
@@ -168,7 +168,7 @@ type Server struct {
 	// this address reaches the server through the gateway's NAT.
 	lanGateway atomic.Value // stores string
 
-	// lanNet is the optional LAN CIDR from MASK / -mask (issue #404). When nil,
+	// lanNet is the optional LAN CIDR from MASK / -mask. When nil,
 	// peer subnet checks fall back to the historic IPv4 /24 comparison.
 	lanNet *net.IPNet
 
@@ -575,7 +575,7 @@ func normalizeAddrKey(addr string) string {
 // handleTCPConn handles a single TCP signal connection.
 // Matches Rust hbbs behavior: reads framed protobuf in a loop.
 // PunchHoleRequest, RequestRelay, and RegisterPk keep the connection alive
-// (RegisterPk so #327 viewer-only PunchHole can use tcpSessionPeerID on the
+// (RegisterPk so viewer-only PunchHole can use tcpSessionPeerID on the
 // same session); other message types close after handling.
 //
 // When in keep-alive mode the connection is registered in tcpPunchConns so that
@@ -768,7 +768,7 @@ func (s *Server) handleEmptyOrUnknownUnion(msg *pb.RendezvousMessage, addrKey st
 	}
 	unknown := msg.ProtoReflect().GetUnknown()
 	if len(unknown) == 0 {
-		// Encrypted empty ping (or empty protobuf) — keep the connection (#296 / WS-style).
+		// Encrypted empty ping (or empty protobuf) — keep the connection (WS-style).
 		return true, false
 	}
 	nums := unknownProtobufFieldNumbers(unknown)
@@ -795,7 +795,7 @@ func (s *Server) logAndCheckKeepAlive(msg *pb.RendezvousMessage, addrKey string,
 	case msg.GetRegisterPk() != nil:
 		log.Printf("[signal] TCP msg from %s%s: RegisterPk (id=%q)", addrKey, tag, msg.GetRegisterPk().Id)
 		// Keep alive so bindTCPSessionPeer + a following PunchHole/RequestRelay
-		// on this connection can authorize without IP-only FindByIP (#302/#327).
+		// on this connection can authorize without IP-only FindByIP.
 		return true
 	case msg.GetFetchLocalAddr() != nil:
 		log.Printf("[signal] TCP msg from %s%s: FetchLocalAddr", addrKey, tag)
@@ -879,7 +879,7 @@ func (s *Server) forwardToTCPInitiator(initiatorAddr string, msg *pb.RendezvousM
 // forwardToInitiator delivers an async punch/relay message to the initiator
 // over TCP (tcpPunchConns) or WebSocket (wsPunchConns / unique-IP fallback).
 // Required for WSS clients behind reverse proxies which are never registered
-// in tcpPunchConns (#276).
+// in tcpPunchConns.
 func (s *Server) forwardToInitiator(initiatorAddr string, msg *pb.RendezvousMessage) bool {
 	if s.forwardToTCPInitiator(initiatorAddr, msg) {
 		return true
@@ -1162,7 +1162,7 @@ func (s *Server) cleanupTCPPunchConns() {
 
 			s.maybeWarnSharedNATRelayDisabled()
 
-			// Safety sweep for pendingPunches (issue #157). Entries normally
+			// Safety sweep for pendingPunches. Entries normally
 			// self-remove when the fallback fires or is cancelled; this only
 			// reclaims orphans left by abnormal shutdown paths.
 			punchEvicted := 0
@@ -1219,7 +1219,7 @@ func pendingRelayAdvertisedKey(targetID, advertisedAddr string) string {
 }
 
 // storePendingUUID stores relay session correlation for later RelayResponse
-// forwarding (#399). uuid may be empty when PunchHole has not minted a relay
+// forwarding. uuid may be empty when PunchHole has not minted a relay
 // ticket yet; initiatorID should still be recorded so the reverse path does
 // not resolve via FindByIP on shared NAT.
 func (s *Server) storePendingUUID(targetID string, initiatorAddr *net.UDPAddr, uuid, initiatorID string) {
@@ -1341,7 +1341,7 @@ func (s *Server) getPendingUUID(targetID string, initiatorAddr *net.UDPAddr) str
 	return ""
 }
 
-// getPendingRelayByUUID looks up a pending session by relay UUID (#399).
+// getPendingRelayByUUID looks up a pending session by relay UUID.
 func (s *Server) getPendingRelayByUUID(uuid string) *pendingUUID {
 	if uuid == "" {
 		return nil
@@ -1355,7 +1355,7 @@ func (s *Server) getPendingRelayByUUID(uuid string) *pendingUUID {
 }
 
 // maybeWarnSharedNATRelayDisabled logs when SAME_NAT_RELAY is off and several
-// live peers share one public IP — a silent failure mode for office NATs (#399).
+// live peers share one public IP — a silent failure mode for office NATs.
 func (s *Server) maybeWarnSharedNATRelayDisabled() {
 	if s == nil || s.cfg == nil || s.cfg.ConnectionSettings().SameNATRelay || s.peers == nil {
 		return
@@ -1393,13 +1393,13 @@ func (s *Server) maybeWarnSharedNATRelayDisabled() {
 		if !s.lastSharedNATWarnUnixNano.CompareAndSwap(last, now) {
 			return
 		}
-		log.Printf("[signal] WARNING: SAME_NAT_RELAY is disabled but %d live peers share public IP %s — same-site sessions often fail without hairpin NAT (issues #121/#399). Enable SAME_NAT_RELAY=Y or -same-nat-relay", n, ip)
+		log.Printf("[signal] WARNING: SAME_NAT_RELAY is disabled but %d live peers share public IP %s — same-site sessions often fail without hairpin NAT. Enable SAME_NAT_RELAY=Y or -same-nat-relay", n, ip)
 		return
 	}
 }
 
 // schedulePunchFallback registers a delayed P2P-first fallback for an
-// initiator (issue #157). After the configured grace period, fallback() runs
+// initiator. After the configured grace period, fallback() runs
 // unless cancelPunchFallback is called first (i.e. the target completed hole
 // punching and the genuine PunchHoleResponse was delivered). Any pre-existing
 // pending punch for the same initiator is replaced.

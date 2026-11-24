@@ -3,7 +3,7 @@
 # Docker quick-start: .admin_credentials is mode 0600 and owned by neodesk
 # (UID from PUID, default 10001). docker compose exec runs as root, but
 # cap_drop:ALL removes CAP_DAC_OVERRIDE, so root cannot read the file.
-# Re-exec as neodesk when invoked as root (issue #195).
+# Re-exec as neodesk when invoked as root.
 set -e
 
 if [ "$(id -u)" = "0" ]; then

@@ -132,7 +132,7 @@ func (c *WSConn) RemoteAddr() string {
 
 // FramesRead returns how many binary frames have been read on this connection.
 // Used by signal keepalive to avoid sending empty frames on ephemeral
-// RequestRelay sessions that already exchanged real protobuf (issue #276).
+// RequestRelay sessions that already exchanged real protobuf.
 func (c *WSConn) FramesRead() int {
 	return int(c.framesRead.Load())
 }

@@ -27,7 +27,7 @@ import (
 )
 
 // refuseRelayProtocolMismatch is returned when one peer uses WebSocket Mode
-// and the other uses native TCP/UDP — their relay framings are incompatible (#290).
+// and the other uses native TCP/UDP — their relay framings are incompatible.
 const refuseRelayProtocolMismatch = "Protocol mismatch: WebSocket and native TCP/UDP cannot share a relay session"
 
 // refuseInitiatorNotAuthorized is returned when PunchHole/RequestRelay comes from
@@ -36,12 +36,12 @@ const refuseInitiatorNotAuthorized = "Not authorized"
 
 // panelWebRemoteInitiatorID is the synthetic initiator id logged when PunchHole/
 // RequestRelay arrives from the console's web client bridge, on a connection
-// that sent the panel proof (#302 Web Remote).
+// that sent the panel proof (Web Remote).
 const panelWebRemoteInitiatorID = "panel-web-remote"
 
 // sharedNATInitiatorID is the synthetic initiator used when ALLOW_SHARED_NAT_INITIATOR
-// is enabled and multiple live peers share the initiator's public IP (#399).
-// It deliberately does not inherit any peer identity (#302) and is distinct from
+// is enabled and multiple live peers share the initiator's public IP.
+// It deliberately does not inherit any peer identity and is distinct from
 // panel-web-remote so audit logs stay attributable.
 const sharedNATInitiatorID = "shared-nat-initiator"
 
@@ -144,7 +144,7 @@ func relayAdvertisedAddr(s *Server, correlationAddr *net.UDPAddr, initiatorID st
 }
 
 // ensurePunchHoleSocketAddr rejects a success-shaped PunchHoleResponse that
-// still has an empty socket_addr (#405). Stock RustDesk only reads Failure when
+// still has an empty socket_addr. Stock RustDesk only reads Failure when
 // socket_addr is empty, and an unset Failure defaults to ID_NOT_EXIST — so a
 // peer that is online but lacks an encodable address would otherwise look like
 // a missing ID. OFFLINE is the honest signal for "cannot reach this peer".
@@ -152,7 +152,7 @@ func ensurePunchHoleSocketAddr(phr *pb.PunchHoleResponse, targetID, relayServer 
 	if phr != nil && len(phr.SocketAddr) > 0 {
 		return phr
 	}
-	log.Printf("[signal] PunchHole: empty compatibility socket_addr for target %s — returning OFFLINE instead of unset failure (#405)", targetID)
+	log.Printf("[signal] PunchHole: empty compatibility socket_addr for target %s — returning OFFLINE instead of unset failure", targetID)
 	return &pb.PunchHoleResponse{
 		Failure:     pb.PunchHoleResponse_OFFLINE,
 		RelayServer: relayServer,
@@ -907,7 +907,7 @@ func (s *Server) processRegisterPk(msg *pb.RegisterPk, addrStr string) *pb.Rende
 		pk = append([]byte(nil), msg.Pk...)
 	}
 	// Bind exact ip:port so FindByAddr can authorize TCP/WS-only RegisterPk
-	// (viewer-only outbound when the OS service is not sending UDP heartbeats, #327).
+	// (viewer-only outbound when the OS service is not sending UDP heartbeats).
 	// Prefer same-TCP-session bind (tcpSessionPeerID) when RegisterPk keep-alive
 	// leaves the connection open for a following PunchHole.
 	s.peers.RecordRegisterPk(id, uuidBytes, pk, addrStr)
@@ -975,7 +975,7 @@ func (s *Server) processIDChange(msg *pb.RegisterPk, addrStr string) *pb.Rendezv
 
 	// RustDesk 1.4.x change-ID sends RegisterPk without pk (see change_id_shared).
 	// A supplied pk must match; an omitted pk is only acceptable together with a
-	// matching UUID below (#213 + audit C2).
+	// matching UUID below (audit C2).
 	effectivePK := msg.Pk
 	if len(effectivePK) == 0 {
 		effectivePK = oldPeer.PK
@@ -1137,7 +1137,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		log.Printf("[signal] LAN detected: %s and %s on same network, relay=%s", raddr.IP, target.UDPAddr.IP, relayServer)
 	}
 	if hairpin {
-		log.Printf("[signal] PunchHole: shared public IP %s detected (issue #121 hairpin) → forcing relay for %s",
+		log.Printf("[signal] PunchHole: shared public IP %s detected (NAT hairpin) → forcing relay for %s",
 			raddr.IP, targetID)
 	}
 
@@ -1146,7 +1146,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 
 	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole", "")
 
-	// Correlate initiator identity for a later RelayResponse on shared NAT (#399).
+	// Correlate initiator identity for a later RelayResponse on shared NAT.
 	s.storePendingUUID(targetID, raddr, "", initiatorID)
 
 	// If force relay or always use relay
@@ -1244,7 +1244,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		},
 	}
 
-	// P2P-first (issue #157): when the peers are not on the same LAN, defer
+	// P2P-first: when the peers are not on the same LAN, defer
 	// this response and wait for the target's PunchHoleSent, which carries the
 	// target's actual punched address and lets direct P2P succeed. If the
 	// target stays silent past the grace period, the scheduled fallback sends
@@ -1352,7 +1352,7 @@ func (s *Server) punchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAdd
 		log.Printf("[signal] LAN detected (TCP): %s and %s on same network, relay=%s", raddr.IP, target.UDPAddr.IP, relayServer)
 	}
 	if hairpin {
-		log.Printf("[signal] PunchHole (TCP): shared public IP %s detected (issue #121 hairpin) → forcing relay for %s",
+		log.Printf("[signal] PunchHole (TCP): shared public IP %s detected (NAT hairpin) → forcing relay for %s",
 			raddr.IP, targetID)
 	}
 
@@ -1361,8 +1361,8 @@ func (s *Server) punchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAdd
 
 	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "punch_hole", "")
 
-	// Correlate initiator identity for a later RelayResponse on shared NAT
-	// (#399), and the address the target sees for a later PunchHoleSent.
+	// Correlate initiator identity for a later RelayResponse on shared NAT,
+	// and the address the target sees for a later PunchHoleSent.
 	s.storePendingRelay(targetID, raddr, relayAdvertisedAddr(s, raddr, initiatorID, initiatorHint), "", initiatorID)
 
 	// ForceRelay or AlwaysUseRelay: return PunchHoleResponse with SYMMETRIC NAT
@@ -1379,7 +1379,7 @@ func (s *Server) punchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAdd
 	// a RelayResponse received in response to PunchHoleRequest (they expect
 	// PunchHoleResponse), generate their own UUID, and connect to relay with it
 	// — while the target connects with the server's UUID. This broke relay
-	// pairing every time (Issue #66).
+	// pairing every time.
 	if msg.ForceRelay || connection.AlwaysUseRelay || hairpin ||
 		isLegacyOutboundInitiator(initiatorID) ||
 		s.shouldForceRelayForPeers(initiatorID, targetID) ||
@@ -1498,7 +1498,7 @@ func (s *Server) punchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAdd
 		},
 	}
 
-	// P2P-first (issue #157): for non-LAN peers, defer this response and wait
+	// P2P-first: for non-LAN peers, defer this response and wait
 	// for the target's PunchHoleSent, which carries the target's actual punched
 	// address and lets direct P2P succeed. The TCP connection is already kept
 	// alive (keepAlive via logAndCheckKeepAlive) and registered in
@@ -1598,14 +1598,14 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 	// Build PunchHoleResponse for the initiator.
 	// socket_addr = target's (sender's) address, pk = SIGNED target's public key.
 	// LAN detection: set is_local only for genuine LAN cases. Shared public IP
-	// peers keep the public relay to avoid NAT hairpin failures (#121).
+	// peers keep the public relay to avoid NAT hairpin failures.
 	relayServer := s.sanitizeClientRelayAddress(phs.RelayServer)
 	relayServer, sameNetwork, hairpin := s.selectPeerRelayServer(relayServer, senderAddr, initiatorAddr)
 	if sameNetwork {
 		log.Printf("[signal] PunchHoleSent LAN detected: %s and %s on same network, relay=%s", senderAddr.IP, initiatorAddr.IP, relayServer)
 	}
 	if hairpin {
-		log.Printf("[signal] PunchHoleSent shared public IP %s detected (issue #121 hairpin) → keeping public relay=%s", senderAddr.IP, relayServer)
+		log.Printf("[signal] PunchHoleSent shared public IP %s detected (NAT hairpin) → keeping public relay=%s", senderAddr.IP, relayServer)
 	}
 
 	// Remember the relay the peer itself advertised, verbatim.
@@ -1640,7 +1640,7 @@ func (s *Server) handlePunchHoleSent(phs *pb.PunchHoleSent, senderAddr *net.UDPA
 
 	addrStr := normalizeAddrKey(initiatorAddr.String())
 
-	// P2P-first (issue #157): the target completed hole punching, so cancel any
+	// P2P-first: the target completed hole punching, so cancel any
 	// scheduled relay fallback for this initiator before delivering the genuine
 	// PunchHoleResponse (which carries the target's real punched address).
 	if s.cancelPunchFallback(addrStr) {
@@ -1746,14 +1746,14 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 	}
 
 	// LAN detection: use server's LAN IP only for genuine LAN cases. Shared
-	// public IP peers keep the public relay to avoid NAT hairpin failures (#121).
+	// public IP peers keep the public relay to avoid NAT hairpin failures.
 	relayServer, sameNetwork, hairpin := s.selectPeerRelayServer(relayServer, raddr, target.UDPAddr)
 	relayServer = s.applyNetworkRelayPolicy(relayServer, initiatorID, targetID)
 	if sameNetwork {
 		log.Printf("[signal] RequestRelay LAN detected: %s and %s on same network, relay=%s", raddr.IP, target.UDPAddr.IP, relayServer)
 	}
 	if hairpin {
-		log.Printf("[signal] RequestRelay shared public IP %s detected (issue #121 hairpin) → keeping public relay=%s", raddr.IP, relayServer)
+		log.Printf("[signal] RequestRelay shared public IP %s detected (NAT hairpin) → keeping public relay=%s", raddr.IP, relayServer)
 	}
 
 	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "request_relay", relayUUID)
@@ -1896,7 +1896,7 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 		}
 	}
 
-	// The relay bridges mixed WebSocket/native framing (#397). Keep this
+	// The relay bridges mixed WebSocket/native framing. Keep this
 	// information for relay address selection and diagnostics, but do not
 	// refuse the pair here.
 	initiatorType := initiatorHint
@@ -1916,14 +1916,14 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 	s.recordConnectionSession(raddr, initiatorID, targetID, msg.GetToken(), "request_relay", relayUUID)
 
 	// LAN detection: use server's LAN IP only for genuine LAN cases. Shared
-	// public IP peers keep the public relay to avoid NAT hairpin failures (#121).
+	// public IP peers keep the public relay to avoid NAT hairpin failures.
 	// Only applicable when target has a known UDP address for comparison.
 	var sameNetwork, hairpin bool
 	relayServer, sameNetwork, hairpin = s.selectPeerRelayServer(relayServer, raddr, target.UDPAddr)
 	if sameNetwork {
 		log.Printf("[signal] RequestRelay (TCP) LAN detected: %s and %s on same network, relay=%s", raddr.IP, target.UDPAddr.IP, relayServer)
 	} else if hairpin {
-		log.Printf("[signal] RequestRelay (TCP) shared public IP %s detected (issue #121 hairpin) → keeping public relay=%s", raddr.IP, relayServer)
+		log.Printf("[signal] RequestRelay (TCP) shared public IP %s detected (NAT hairpin) → keeping public relay=%s", raddr.IP, relayServer)
 	} else {
 		// Debug: log why LAN detection failed
 		if target.UDPAddr == nil {
@@ -2046,7 +2046,7 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 		return
 	}
 
-	// Prefer pending-session correlation over FindByIP on shared NAT (#399).
+	// Prefer pending-session correlation over FindByIP on shared NAT.
 	var pending *pendingUUID
 	if rr.Uuid != "" {
 		pending = s.getPendingRelayByUUID(rr.Uuid)
@@ -2129,8 +2129,8 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 
 	// Resolve the initiator so we can mint a relay ticket before advertising the
 	// UUID. Without this, P2P→relay fallback forwards a RelayResponse that the
-	// hardened relay rejects as "Unauthorized relay UUID" (#356). Prefer pending
-	// / exact addr / panel proxy / shared-NAT flag — never multi-peer FindByIP (#399).
+	// hardened relay rejects as "Unauthorized relay UUID". Prefer pending
+	// / exact addr / panel proxy / shared-NAT flag — never multi-peer FindByIP.
 	initiatorID := ""
 	if pending != nil {
 		initiatorID = pending.initiatorID
@@ -2192,14 +2192,14 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 	rr.SocketAddrV6 = nil
 
 	// LAN detection: use LAN relay only for genuine LAN cases. Shared public IP
-	// peers keep the public relay to avoid NAT hairpin failures (#121).
+	// peers keep the public relay to avoid NAT hairpin failures.
 	relayServer := s.getRelayServer()
 	relayServer, sameNetwork, hairpin := s.selectPeerRelayServer(relayServer, senderAddr, initiatorAddr)
 	if sameNetwork {
 		log.Printf("[signal] RelayResponse LAN detected: %s and %s on same network, relay=%s", senderAddr.IP, initiatorAddr.IP, relayServer)
 	}
 	if hairpin && senderAddr != nil {
-		log.Printf("[signal] RelayResponse shared public IP %s detected (issue #121 hairpin) → keeping public relay=%s", senderAddr.IP, relayServer)
+		log.Printf("[signal] RelayResponse shared public IP %s detected (NAT hairpin) → keeping public relay=%s", senderAddr.IP, relayServer)
 	}
 	rr.RelayServer = relayServer
 
@@ -2212,7 +2212,7 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 		},
 	}
 
-	// Primary delivery: TCP punch map or WebSocket peer (#276).
+	// Primary delivery: TCP punch map or WebSocket peer.
 	forwardAddrStr := normalizeAddrKey(forwardAddr.String())
 	if s.forwardToInitiator(forwardAddrStr, initiatorResp) {
 		log.Printf("[signal] RelayResponse forwarded to %s (advertised=%s, uuid=%q, relay=%s, signedPk=%d bytes)",
@@ -2221,7 +2221,7 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 	}
 
 	// Safe UDP fallback: exact initiator endpoint, or the resolved initiator's
-	// registered UDP addr. Never FindByIP on shared NAT (#399 misdelivery).
+	// registered UDP addr. Never FindByIP on shared NAT: it could deliver to the wrong peer.
 	if forwardAddr != nil {
 		if s.sendUDP(initiatorResp, forwardAddr) {
 			log.Printf("[signal] RelayResponse forwarded to exact initiator %s via UDP (advertised=%s, uuid=%q, relay=%s, signedPk=%d bytes)",
@@ -2547,7 +2547,7 @@ func (s *Server) peerIDForAddr(raddr *net.UDPAddr) string {
 }
 
 // punchHoleUnauthorizedResponse refuses outbound PunchHole when the initiator
-// is not an authorized peer (#302).
+// is not an authorized peer.
 func (s *Server) punchHoleUnauthorizedResponse() *pb.RendezvousMessage {
 	return &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_PunchHoleResponse{
@@ -2559,7 +2559,7 @@ func (s *Server) punchHoleUnauthorizedResponse() *pb.RendezvousMessage {
 }
 
 // relayUnauthorizedResponse refuses outbound RequestRelay when the initiator
-// is not an authorized peer (#302).
+// is not an authorized peer.
 func (s *Server) relayUnauthorizedResponse(relayServer string) *pb.RendezvousMessage {
 	return &pb.RendezvousMessage{
 		Union: &pb.RendezvousMessage_RelayResponse{
@@ -2667,22 +2667,22 @@ func (s *Server) requireAuthorizedInitiator(raddr *net.UDPAddr, targetID, token 
 }
 
 // authorizeInitiator enforces that PunchHole/RequestRelay may only be
-// started by an authorized initiator (#302 / #327), or by the console's
+// started by an authorized initiator, or by the console's
 // bridge for the browser's web client: panel is true on its TCP connection,
 // which proved itself with the panel proof (see panel_proof.go). The
 // sender's address alone never makes a request the panel's.
 //
 // Authorization sources (first match wins):
-//  1. Same Secure TCP session that already completed RegisterPk (#327)
-//  2. Valid NeoDesk client login token on the punch/relay message (#327)
+//  1. Same Secure TCP session that already completed RegisterPk
+//  2. Valid NeoDesk client login token on the punch/relay message
 //  3. The panel's web client (panel)
 //  4. Live peer with exact ip:port match (FindByAddr)
 //  5. PunchHoleRequest.udp_port hint: stock clients advertise their NAT-mapped
 //     UDP port; when it uniquely matches a live peer at this public IP, authorize
-//     that peer (#399 CGNAT / multi-device same public IP)
+//     that peer (CGNAT / multi-device same public IP)
 //  6. Exactly one live peer at the same public IP (safe FindByIP fallback for
 //     stock clients that PunchHole on a new TCP port). Multiple live peers at
-//     that IP → initiator_ambiguous_same_nat (no identity inheritance, #302),
+//     that IP → initiator_ambiguous_same_nat (no identity inheritance),
 //     unless ALLOW_SHARED_NAT_INITIATOR authorizes synthetic shared-nat-initiator
 //  7. Anonymous controller-only compatibility identity when
 //     ALLOW_LEGACY_OUTBOUND is enabled in open enrollment mode
@@ -2711,7 +2711,7 @@ func (s *Server) authorizeInitiator(raddr *net.UDPAddr, targetID, token string, 
 		return panelWebRemoteInitiatorID, true
 	}
 
-	// 1. Same TCP session after RegisterPk (viewer-only / secure TCP, #327).
+	// 1. Same TCP session after RegisterPk (viewer-only / secure TCP).
 	if !loginOnly {
 		if id := s.tcpSessionPeerID(raddr); id != "" {
 			banned := false
@@ -2811,7 +2811,7 @@ func (s *Server) authorizeInitiator(raddr *net.UDPAddr, targetID, token string, 
 
 // authorizeViaUdpPortHint resolves the initiator when PunchHole carries the
 // client's NAT-mapped UDP port and exactly one live peer at raddr.IP is
-// registered on that port (#399). Returns (nil) when the hint is absent
+// registered on that port. Returns (nil) when the hint is absent
 // or ambiguous — never picks an arbitrary same-IP peer.
 func (s *Server) authorizeViaUdpPortHint(raddr *net.UDPAddr, udpPort int32) *peer.Entry {
 	if raddr == nil || s.peers == nil || udpPort <= 0 || udpPort > 65535 {
@@ -2886,7 +2886,7 @@ func hashOpaqueClientToken(token string) string {
 }
 
 // authorizeViaClientToken accepts PunchHole/RequestRelay when the stock RustDesk
-// client sends a NeoDesk opaque login token (service may be stopped, #327).
+// client sends a NeoDesk opaque login token (service may be stopped).
 func (s *Server) authorizeViaClientToken(token string, raddr *net.UDPAddr, targetID string, operatorOnly bool) (string, bool) {
 	token = strings.ToLower(strings.TrimSpace(token))
 	if token == "" || s.db == nil || !opaqueClientTokenRegexp.MatchString(token) {
@@ -2941,14 +2941,14 @@ func (s *Server) authorizeViaClientToken(token string, raddr *net.UDPAddr, targe
 		return "", false
 	}
 	// queueManagedClaim=true: account-bound login token may place the device in
-	// the managed enrollment queue (#375). IP/address paths must not.
+	// the managed enrollment queue. IP/address paths must not.
 	return s.finalizeAuthorizedInitiator(initiatorID, raddr, targetID, false, true)
 }
 
 // finalizeAuthorizedInitiator applies ban / soft-delete / enrollment checks shared
 // by live-peer and token-based authorization paths.
 //
-// queueManagedClaim may only be true for opaque client-login token auth (#375).
+// queueManagedClaim may only be true for opaque client-login token auth.
 // When true and enrollment is managed, an unknown initiator is written to
 // pending_device_* so viewer-only mobiles appear in /registrations — connection
 // is still denied until operator approval. Locked mode never queues. Address /
@@ -2974,7 +2974,7 @@ func (s *Server) finalizeAuthorizedInitiator(initiatorID string, raddr *net.UDPA
 			s.logUnauthorizedInitiator(raddr, initiatorID, targetID, "initiator_soft_deleted")
 			return "", false
 		}
-		// Defense in depth: still queued for approval must not initiate (#302 residual).
+		// Defense in depth: still queued for approval must not initiate.
 		if pending, _ := s.db.GetConfig("pending_device_" + initiatorID); pending != "" {
 			s.logUnauthorizedInitiator(raddr, initiatorID, targetID, "initiator_pending_enrollment")
 			return "", false
@@ -2993,7 +2993,7 @@ func (s *Server) finalizeAuthorizedInitiator(initiatorID string, raddr *net.UDPA
 		dbPeer, err := s.db.GetPeer(initiatorID)
 		if err != nil || dbPeer == nil {
 			// Viewer-only clients never RegisterPeer/Pk; queue only from trusted
-			// login-token claims so operators can approve them (#375).
+			// login-token claims so operators can approve them.
 			if mode == config.EnrollmentModeManaged && queueManagedClaim && initiatorID != "" {
 				clientIP := ""
 				if raddr != nil {
@@ -3246,8 +3246,8 @@ func (s *Server) getLANRelayServer(defaultRelay string, peers ...*net.UDPAddr) s
 
 	// For LAN peers, prefer the server's LAN IP only when it is actually in the
 	// peers' private subnet. NAT hairpin (LAN → public IP → LAN) is unreliable
-	// on many routers (#102), but Docker bridge IPs are not reachable from LAN
-	// clients and must not be advertised as relay addresses (#142).
+	// on many routers, but Docker bridge IPs are not reachable from LAN
+	// clients and must not be advertised as relay addresses.
 	if ip, ok := s.lanIP.Load().(string); ok && ip != "" {
 		lanIP := net.ParseIP(ip)
 		if !isLANRelayReachableFromPeers(lanIP, s.lanNet, peers...) {
@@ -3325,7 +3325,7 @@ func isLANRelayReachableFromPeers(lanIP net.IP, lanNet *net.IPNet, peers ...*net
 }
 
 // sameLANSubnet reports whether two IPs share the configured LAN CIDR, or —
-// when MASK is unset — the historic IPv4 /24 (first three octets) rule (#404).
+// when MASK is unset — the historic IPv4 /24 (first three octets) rule.
 func sameLANSubnet(a, b net.IP, lanNet *net.IPNet) bool {
 	if lanNet != nil {
 		return lanNet.Contains(a) && lanNet.Contains(b)
@@ -3420,7 +3420,7 @@ func isSameNetwork(a, b *net.UDPAddr, lanNet *net.IPNet) bool {
 // non-private IP address.  This is the classic "behind the same NAT gateway"
 // scenario: many consumer/cellular routers refuse hairpin NAT, so direct LAN
 // exchange between such peers silently times out.  When this returns true the
-// signal handler should force the relay path (issue #121).
+// signal handler should force the relay path.
 func isSamePublicIP(a, b *net.UDPAddr) bool {
 	if a == nil || b == nil {
 		return false
@@ -3559,7 +3559,7 @@ type pendingEnrollmentInfo struct {
 
 // pendingEnrollmentMeta carries optional display fields when available.
 // Stock RustDesk RegisterPeer/RegisterPk do not include these; a later HTTP
-// enrollment or enriching call may supply them (#351).
+// enrollment or enriching call may supply them.
 type pendingEnrollmentMeta struct {
 	Hostname string
 	Platform string

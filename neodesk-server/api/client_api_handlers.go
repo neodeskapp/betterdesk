@@ -124,7 +124,7 @@ func (s *tfaSessionStore) take(secret string) *tfaSession {
 
 // rustdeskUserPayload builds a user object in the format the RustDesk client expects.
 // RustDesk 1.4.x requires `info` (UserInfo) with no serde default — omitting it makes
-// auth-query success JSON fail to deserialize, so the client stays on "Waiting account auth" (#326).
+// auth-query success JSON fail to deserialize, so the client stays on "Waiting account auth".
 func rustdeskUserPayload(username, role string) map[string]any {
 	return map[string]any{
 		"name":         username,
@@ -454,7 +454,7 @@ func (s *Server) handleClientAddressBook(w http.ResponseWriter, r *http.Request)
 		data = s.mergeOrgAddressBooksIntoAB(r, data)
 		data = s.injectOrgPeerCredentialsIntoAB(r, data)
 		if !auth.IsProRole(role) {
-			// Merge admin-set tags from peers table into AB (#76 TAG sync)
+			// Merge admin-set tags from peers table into AB (tag sync)
 			data = s.mergeAdminTagsIntoAB(data)
 			// RustDesk legacy AB reads tags from GET /api/ab (not /api/ab/tags).
 			data = s.syncServerTagsIntoAddressBook(data, r, username, role)
@@ -648,7 +648,7 @@ func (s *Server) syncAddressBookTagsToPeers(r *http.Request, abType, data string
 // table with non-empty tags, the admin tags are added to the peer's tag list.
 // The global tags[] array is also extended with any new admin tags.
 // Peer hostname/platform/alias are enriched from the peers table if missing.
-// This implements TAG sync (Issue #76) and sysinfo enrichment (Issue #138).
+// This implements TAG sync and sysinfo enrichment.
 //
 // IMPORTANT: We use map[string]any for the top-level AB object to preserve
 // ALL fields (including tag_colors, rule, etc.) that the RustDesk client
@@ -714,7 +714,7 @@ func (s *Server) mergeAdminTagsIntoAB(data string) string {
 		if peer == nil {
 			continue
 		}
-		// Issue #138: track banned/deleted peers so they can be stripped from the AB
+		// Track banned/deleted peers so they can be stripped from the AB
 		if peer.Banned || peer.SoftDeleted {
 			bannedPeers[id] = true
 			continue
@@ -755,14 +755,14 @@ func (s *Server) mergeAdminTagsIntoAB(data string) string {
 			continue
 		}
 
-		// Issue #138: remove banned/deleted peers from the address book entirely
+		// Remove banned/deleted peers from the address book entirely
 		if bannedPeers[id] {
 			modified = true
 			continue
 		}
 		filtered = append(filtered, p)
 
-		// Enrich peer with sysinfo from peers table (Issue #138: OS icon/name not showing)
+		// Enrich peer with sysinfo from peers table, so the client shows the OS icon and name
 		if info, ok := peerInfo[id]; ok {
 			if _, hasHostname := p["hostname"]; !hasHostname || p["hostname"] == "" {
 				if info.Hostname != "" {
@@ -899,7 +899,7 @@ func (s *Server) handleClientGroupList(w http.ResponseWriter, r *http.Request) {
 //
 // GET /api/peers/list
 //
-// Compatibility shim suggested by progloto in PR #81, enhanced for Issue #138.
+// Compatibility shim suggested by progloto.
 func (s *Server) handleClientGroupPeers(w http.ResponseWriter, r *http.Request) {
 	if getUsernameFromCtx(r) == "" {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "Not authenticated"})
@@ -919,7 +919,7 @@ func (s *Server) handleClientGroupPeers(w http.ResponseWriter, r *http.Request) 
 // Request:  { "id": "DEVICE_ID", "uuid": "...", "modified_at": 0, ... }
 // Response: { "modified_at": <i64 ms>, "strategy"?: { "config_options": {...} }, "sysinfo"?: true }
 func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
-	// BD-2026-001: Rate-limit heartbeat requests per IP
+	// Rate-limit heartbeat requests per IP
 	clientIP := s.remoteIP(r)
 	if !s.heartbeatLimiter.Allow(clientIP) {
 		writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
@@ -1276,7 +1276,7 @@ func (s *Server) clientBrandingModifiedAt() int64 {
 //
 //	"ID_NOT_FOUND" (client retries), or "ERROR".
 func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
-	// BD-2026-001: Rate-limit sysinfo requests per IP
+	// Rate-limit sysinfo requests per IP
 	if !s.heartbeatLimiter.Allow(s.remoteIP(r)) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte("ID_NOT_FOUND")) //nolint:errcheck
@@ -1356,7 +1356,7 @@ func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
 // POST /api/sysinfo_ver
 // Returns a hash of existing sysinfo; empty response triggers full upload.
 func (s *Server) handleClientSysinfoVer(w http.ResponseWriter, r *http.Request) {
-	// BD-2026-001: Rate-limit sysinfo_ver requests per IP
+	// Rate-limit sysinfo_ver requests per IP
 	if !s.heartbeatLimiter.Allow(s.remoteIP(r)) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte("")) //nolint:errcheck

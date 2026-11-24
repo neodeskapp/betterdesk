@@ -232,7 +232,7 @@ func TestAddrMangleRejectsInvalidEndpoints(t *testing.T) {
 }
 
 func TestAddrMangleHistoricalWrongAddress(t *testing.T) {
-	// This is the old fixed tuple from issue #481. The stock decoder reads it
+	// This is the old fixed tuple. The stock decoder reads it
 	// as a different valid endpoint, demonstrating the interoperability failure
 	// without importing any client source.
 	got, err := DecodeAddr([]byte{192, 0, 2, 1, 0x52, 0x7c})

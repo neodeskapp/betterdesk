@@ -7,7 +7,7 @@
 #
 # After a successful bump push, explicitly dispatch docker-publish (tag=dev).
 # GITHUB_TOKEN branch pushes do not re-trigger other workflows, so relying on
-# the bump commit alone would never republish GHCR :dev (#401).
+# the bump commit alone would never republish GHCR :dev.
 # =============================================================================
 
 name: Version Bump

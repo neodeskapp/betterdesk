@@ -319,8 +319,8 @@ func (m *Map) UpdateHeartbeat(id string, addr *net.UDPAddr, serial int32) bool {
 		}
 		e.UDPAddr = addr
 		e.IP = newIP
-		// TCP RegisterPk can stamp ConnTCP before the OS service heartbeats
-		// (#327 / #382). A live UDP address means inbound PunchHole/RequestRelay
+		// TCP RegisterPk can stamp ConnTCP before the OS service heartbeats.
+		// A live UDP address means inbound PunchHole/RequestRelay
 		// must go over UDP — do not leave ConnType stuck on tcp.
 		if e.ConnType != ConnWS {
 			e.ConnType = ConnUDP
@@ -859,7 +859,7 @@ func normalizePeerAddr(addr string) string {
 // FindByAddr returns the peer whose registered endpoint matches addr exactly
 // (ip:port). Used for outbound PunchHole/RequestRelay initiator authorization
 // so a pending client behind the same public NAT cannot inherit another peer's
-// identity (#302 residual / audit H2).
+// identity (audit H2).
 func (m *Map) FindByAddr(addr *net.UDPAddr) *Entry {
 	if addr == nil || addr.IP == nil {
 		return nil
@@ -883,9 +883,9 @@ func (m *Map) FindByAddr(addr *net.UDPAddr) *Entry {
 // (WebSocket/TCP peers store "ip:port" without UDPAddr). Used when forwarding
 // PunchHole/RelayResponse from a decoded socket_addr. If multiple peers share
 // the same IP (behind NAT), only the first match is returned — prefer
-// exact ip:port maps (tcpPunchConns / wsPunchConns) for initiator delivery (#276).
+// exact ip:port maps (tcpPunchConns / wsPunchConns) for initiator delivery.
 // Do NOT use bare FindByIP for outbound initiator authorization when multiple
-// peers may share a NAT — use FindByAddr or FindAllByIP with a single-match rule (#302).
+// peers may share a NAT — use FindByAddr or FindAllByIP with a single-match rule.
 func (m *Map) FindByIP(ip net.IP) *Entry {
 	if ip == nil {
 		return nil

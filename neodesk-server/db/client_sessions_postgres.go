@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// clientSessionsPostgresDDL creates the RustDesk client session table (#242 / #284).
+// clientSessionsPostgresDDL creates the RustDesk client session table.
 const clientSessionsPostgresDDL = `CREATE TABLE IF NOT EXISTS client_sessions (
 			id          BIGSERIAL PRIMARY KEY,
 			token_hash  TEXT UNIQUE NOT NULL,
@@ -39,7 +39,7 @@ func (pg *PostgresDB) EnsureClientSessionsSchema() error {
 }
 
 // createClientSessionReturning formats TIMESTAMPTZ as text so pgx can scan into
-// ClientSession.CreatedAt (string). Raw created_at fails with OID 1184 (#300).
+// ClientSession.CreatedAt (string). Raw created_at fails with OID 1184.
 const createClientSessionReturning = `id, to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')`
 
 // CreateClientSession inserts a new RustDesk client session.
@@ -161,7 +161,7 @@ func (pg *PostgresDB) CleanupExpiredClientSessions() (int64, error) {
 }
 
 // DropClientSessionsTableForTest removes client_sessions so tests can verify
-// EnsureClientSessionsSchema / login recovery (#284).
+// EnsureClientSessionsSchema / login recovery.
 func DropClientSessionsTableForTest(database Database) error {
 	switch d := database.(type) {
 	case *SQLiteDB:

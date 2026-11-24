@@ -88,7 +88,7 @@ func ParseTrustedProxies(raw string) ([]*net.IPNet, error) {
 
 // RemoteAddrIsTrustedProxy reports whether the direct TCP peer (r.RemoteAddr)
 // is in TrustedProxies. Returns false when the allowlist is empty so
-// TRUST_PROXY=Y alone cannot honor spoofable X-Forwarded-* headers (#276).
+// TRUST_PROXY=Y alone cannot honor spoofable X-Forwarded-* headers.
 func (c *Config) RemoteAddrIsTrustedProxy(remoteAddr string) bool {
 	if c == nil || len(c.TrustedProxies) == 0 {
 		return false
@@ -136,6 +136,6 @@ func (c *Config) WarnProxyTrustMisconfig() {
 		return
 	}
 	if len(c.TrustedProxies) == 0 {
-		log.Printf("[config] TRUST_PROXY=Y but TRUSTED_PROXIES is empty — X-Forwarded-For/X-Real-IP headers will be IGNORED. Set TRUSTED_PROXIES to your reverse proxy CIDR(s), e.g. 127.0.0.1/32,10.0.0.0/8 (#276)")
+		log.Printf("[config] TRUST_PROXY=Y but TRUSTED_PROXIES is empty — X-Forwarded-For/X-Real-IP headers will be IGNORED. Set TRUSTED_PROXIES to your reverse proxy CIDR(s), e.g. 127.0.0.1/32,10.0.0.0/8")
 	}
 }

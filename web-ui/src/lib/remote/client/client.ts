@@ -865,7 +865,7 @@ export class RDClient {
 									natType: resp.natType
 								})
 							);
-							// Proto3 default failure=0 (ID_NOT_EXIST); #405 may set OFFLINE
+							// Proto3 default failure=0 (ID_NOT_EXIST); the server may set OFFLINE
 							// while still filling relay_server — honor explicit failures.
 							resolve(RDPunchHoleResponse.interpretPunchHoleResponse(resp));
 							return;

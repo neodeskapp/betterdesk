@@ -75,7 +75,7 @@ type Config struct {
 
 	// Security — Authentication
 	JWTSecret string // Secret key for JWT signing (auto-generated if empty)
-	// OrgPeerVaultKey encrypts recoverable org peer passwords at rest (#367).
+	// OrgPeerVaultKey encrypts recoverable org peer passwords at rest.
 	// Falls back to JWT secret when empty (installers should set a dedicated key).
 	OrgPeerVaultKey string
 	// RemoteTargetVaultKey encrypts RDP/VNC credentials. It is deliberately
@@ -92,7 +92,7 @@ type Config struct {
 	TrustProxy              bool   // Trust X-Forwarded-For / X-Real-IP headers from reverse proxy
 	// TrustedProxies is the CIDR allowlist of reverse proxies that may set
 	// X-Forwarded-For / X-Real-IP. Required when TrustProxy is true — empty
-	// means forwarded headers are ignored (security-first, issue #276).
+	// means forwarded headers are ignored (security-first).
 	TrustedProxies []*net.IPNet
 	// PanelSignalProxyCIDRs are the source addresses the console's bridge
 	// for the web client (/ws/rendezvous) may reach the signal server from.
@@ -106,7 +106,7 @@ type Config struct {
 	InitAdminPass         string // Initial admin password (auto-generated if empty)
 
 	// Signal rate limiting (registrations per IP per minute).
-	// Issue #122: large NAT deployments may need to raise or disable this
+	// Large NAT deployments may need to raise or disable this
 	// (set to 0 to disable rate limiting entirely).
 	SignalRateLimitPerIP int
 
@@ -120,14 +120,14 @@ type Config struct {
 	// same public IP (i.e. they sit behind the same NAT gateway).  Many
 	// consumer routers refuse hairpin NAT, so the LAN-address exchange that
 	// normally works in this case can silently fail and the connection
-	// times out (issue #121).  Default: enabled.
+	// times out.  Default: enabled.
 	SameNATRelay bool
 
 	// AllowSharedNATInitiator authorizes PunchHole/RequestRelay when multiple
 	// live peers share the initiator's public IP and no stronger identity
-	// (token, exact addr, udp_port) is available (#399). Uses synthetic
-	// initiator id "shared-nat-initiator" — does not inherit a peer identity
-	// (#302). Default: disabled.
+	// (token, exact addr, udp_port) is available. Uses synthetic
+	// initiator id "shared-nat-initiator" — does not inherit a peer identity.
+	// Default: disabled.
 	AllowSharedNATInitiator bool
 
 	// LoggedInOnlyInitiator requires a valid NeoDesk RustDesk client
@@ -143,8 +143,8 @@ type Config struct {
 	// of immediately answering the initiator with the target's (still
 	// un-punched) address, the server forwards PunchHole to the target and
 	// waits for its PunchHoleSent before delivering the genuine
-	// PunchHoleResponse. This gives direct P2P a real chance to succeed
-	// (issue #157). If the target does not complete hole punching within
+	// PunchHoleResponse. This gives direct P2P a real chance to succeed.
+	// If the target does not complete hole punching within
 	// P2PFallbackMs, a best-effort response is delivered so the client can
 	// fall back to relay instead of hanging. Default: enabled.
 	P2PFirst bool
@@ -318,11 +318,11 @@ func DefaultConfig() *Config {
 		MeshRateLimit:             30,
 		GuacdAddress:              "127.0.0.1:4822",
 		SignalRateLimitPerIP:      IPRateLimitRegistrations,
-		SameNATRelay:              true,  // issue #121: auto-fallback to relay on shared public IP
-		AllowSharedNATInitiator:   false, // issue #399: opt-in stock multi-NAT initiator
-		LoggedInOnlyInitiator:     false, // issue #414: require client login for stock initiators
-		OperatorOnlyOutbound:      false, // issue #425: restrict outbound initiation to connected operators
-		P2PFirst:                  true,  // issue #157: give direct P2P a real chance before relay
+		SameNATRelay:              true,  // auto-fallback to relay on shared public IP
+		AllowSharedNATInitiator:   false, // opt-in stock multi-NAT initiator
+		LoggedInOnlyInitiator:     false, // require client login for stock initiators
+		OperatorOnlyOutbound:      false, // restrict outbound initiation to connected operators
+		P2PFirst:                  true,  // give direct P2P a real chance before relay
 		P2PFallbackMs:             2000,  // grace period for target hole punch before relay fallback
 		LogLevel:                  "info",
 		BillingMaxClockSkewMS:     2000,
@@ -499,7 +499,7 @@ func (c *Config) LoadEnv() {
 			c.RelayMaxConnsIP = n
 		}
 	}
-	// Issue #122: allow tuning the per-IP signal/registration rate limit
+	// Allow tuning the per-IP signal/registration rate limit
 	// without recompiling. Useful for large NAT deployments where many
 	// devices share the same public IP. Set to 0 to disable entirely.
 	if v := os.Getenv("SIGNAL_RATE_LIMIT_PER_IP"); v != "" {
@@ -508,26 +508,27 @@ func (c *Config) LoadEnv() {
 		}
 	}
 	readSwitch("ALLOW_LEGACY_OUTBOUND", &c.AllowLegacyOutbound)
-	// Issue #121: when both peers share the same public IP, the LAN
+	// When both peers share the same public IP, the LAN
 	// hole-punch path requires NAT hairpinning, which many consumer
 	// routers (and most cellular gateways) silently drop.  Enabled by
 	// default; set SAME_NAT_RELAY=N to fall back to the legacy LAN-exchange
 	// behavior.
 	readSwitch("SAME_NAT_RELAY", &connection.SameNATRelay)
-	// Issue #399: allow PunchHole/RequestRelay from shared public IPs with
+	// Allow PunchHole/RequestRelay from shared public IPs with
 	// multiple live peers when stock clients cannot prove initiator identity
-	// (no token / udp_port). Default off — preserves #302 enrollment gate.
+	// (no token / udp_port). Default off, so pending devices still can't
+	// initiate.
 	readSwitch("ALLOW_SHARED_NAT_INITIATOR", &connection.AllowSharedNATInitiator)
-	// Issue #414: require a valid NeoDesk client login token for stock
+	// Require a valid NeoDesk client login token for stock
 	// PunchHole/RequestRelay initiators. The console's web client, which
 	// proves itself to the signal server, remains allowed.
 	readSwitch("LOGGED_IN_ONLY_INITIATOR", &connection.LoggedInOnlyInitiator)
-	// Issue #425: require a valid client session belonging to a user with
+	// Require a valid client session belonging to a user with
 	// device.connect permission for stock PunchHole/RequestRelay initiators.
 	// The console's web client, which proves itself to the signal server,
 	// remains the authenticated Web Remote exception.
 	readSwitch("OPERATOR_ONLY_OUTBOUND", &connection.OperatorOnlyOutbound)
-	// Issue #157: P2P-first hole punching. Enabled by default so direct
+	// P2P-first hole punching. Enabled by default so direct
 	// connections are attempted before relay. Set P2P_FIRST=N to restore the
 	// legacy behavior of answering the initiator immediately (always relay).
 	readSwitch("P2P_FIRST", &connection.P2PFirst)

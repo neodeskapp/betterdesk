@@ -593,8 +593,8 @@ func TestWSSignalImmediateKeepAlive(t *testing.T) {
 	}
 	defer ws.CloseNow()
 
-	// Idle register path (#229): empty keepalive after delay when client is silent.
-	// Must not be immediate after 101 (that breaks ephemeral RequestRelay — #276).
+	// Idle register path: empty keepalive after delay when client is silent.
+	// Must not be immediate after 101 (that breaks ephemeral RequestRelay).
 	readCtx, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
 	defer cancel()
 	start := time.Now()
@@ -661,8 +661,8 @@ func TestWSRequestRelayFirstFrameIsRelayResponse(t *testing.T) {
 		t.Fatalf("expected target RegisterPeerResponse, got: %v", resp)
 	}
 	// Pre-authorize the initiator by its exact address so RequestRelay can be
-	// the first WS frame (preserves #276 first-frame assertion) while
-	// satisfying #302. A loopback address alone authorizes nothing.
+	// the first WS frame (keeps the first-frame assertion) while
+	// keeping the enrollment gate. A loopback address alone authorizes nothing.
 	var local net.Addr
 	var dialer net.Dialer
 	ws, _, err := websocket.Dial(ctx, "ws://127.0.0.1:29192/ws/id", &websocket.DialOptions{
@@ -702,7 +702,7 @@ func TestWSRequestRelayFirstFrameIsRelayResponse(t *testing.T) {
 	}
 
 	// First non-empty server frame must be RelayResponse — not an empty keepalive
-	// that desktop parses as RendezvousMessage{union:None} (#276 residual).
+	// that desktop parses as RendezvousMessage{union:None}.
 	readCtx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 	typ, frame, err := ws.Read(readCtx)
@@ -878,7 +878,7 @@ func TestWSSignalXForwardedFor(t *testing.T) {
 		t.Fatalf("peer IP = %q, want prefix 203.0.113.50:", entry.IP)
 	}
 	if strings.HasSuffix(entry.IP, ":0") {
-		t.Fatalf("peer IP = %q must not use synthetic :0 (issue #276)", entry.IP)
+		t.Fatalf("peer IP = %q must not use synthetic :0", entry.IP)
 	}
 	_, err = net.ResolveUDPAddr("udp", entry.IP)
 	if err != nil {

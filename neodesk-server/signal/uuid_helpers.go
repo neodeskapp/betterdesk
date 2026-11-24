@@ -10,7 +10,7 @@ import (
 //
 // Enrollment stores machine UUIDs as lowercase hex (no dashes). RegisterPk
 // persists fmt.Sprintf("%x", msg.Uuid). Loading with []byte(dbPeer.UUID)
-// produced ASCII hex bytes and caused perpetual UUID_MISMATCH (#213).
+// produced ASCII hex bytes and caused perpetual UUID_MISMATCH.
 func peerUUIDFromDB(stored string) []byte {
 	if stored == "" {
 		return nil

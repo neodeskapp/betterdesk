@@ -1114,7 +1114,7 @@ func TestHandleRequestRelayTCPSamePublicIPIgnoresPrivateRelayHint(t *testing.T) 
 		LastReg:    time.Now(),
 		StatusTier: peer.StatusOnline,
 	})
-	// Same public IP as target — FindByIP resolves the registered peer (#302 gate).
+	// Same public IP as target — FindByIP resolves the registered peer (enrollment gate).
 	srv.peers.Put(&peer.Entry{
 		ID:         "INIT121",
 		UDPAddr:    udpAddr("203.0.113.44", 51000),
@@ -1201,7 +1201,7 @@ func TestHandleRequestRelayTCPMixedTransportIsRelayed(t *testing.T) {
 }
 
 func TestPanelWebRemoteCanRelayToWSTarget(t *testing.T) {
-	// #397: browser Web Remote arrives as TCP from loopback while the target
+	// Browser Web Remote arrives as TCP from loopback while the target
 	// may be WebSocket Mode — signal allows negotiation; hbbr mediates framing.
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
 	srv.localIP.Store("198.51.100.20")
@@ -1344,7 +1344,7 @@ func TestEnsurePunchHoleSocketAddrRejectsEmpty(t *testing.T) {
 }
 
 func TestPunchHoleUnparseableTargetAddrReturnsOffline(t *testing.T) {
-	// Online WS peer whose IP cannot be encoded must not surface as ID_NOT_EXIST (#405).
+	// Online WS peer whose IP cannot be encoded must not surface as ID_NOT_EXIST.
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
 	srv.peers.Put(&peer.Entry{
 		ID:         "BADINIT1",
@@ -1569,7 +1569,7 @@ func TestLegacyOutboundCompatibilityNeverBypassesManagedEnrollment(t *testing.T)
 func TestManagedPendingInitiatorCannotPunchHole(t *testing.T) {
 	srv, database := newTestSignalServer(t, config.EnrollmentModeManaged)
 	putOnlinePeer(srv, "TGTPEND1", "203.0.113.60", 52000, peer.ConnUDP)
-	// Simulate memory-only / pending peer (no approved DB row) — the #302 bypass case.
+	// Simulate memory-only / pending peer (no approved DB row) — the enrollment bypass case.
 	putOnlinePeer(srv, "PENDINIT1", "198.51.100.70", 51000, peer.ConnUDP)
 	if err := database.SetConfig("pending_device_PENDINIT1", `{"device_id":"PENDINIT1"}`); err != nil {
 		t.Fatalf("SetConfig: %v", err)
@@ -1878,7 +1878,7 @@ func TestPublicAnonymousInitiatorStillRejectedWithPanelAllowlist(t *testing.T) {
 }
 
 func TestManagedPendingStillRejectedDespitePanelAllowlist(t *testing.T) {
-	// Pending peer on a non-loopback IP must still be blocked (#302).
+	// Pending peer on a non-loopback IP must still be blocked.
 	srv, database := newTestSignalServer(t, config.EnrollmentModeManaged)
 	putOnlinePeer(srv, "TGTPEND3", "203.0.113.93", 52000, peer.ConnUDP)
 	putOnlinePeer(srv, "PENDINIT3", "198.51.100.73", 51000, peer.ConnUDP)
@@ -1893,7 +1893,7 @@ func TestManagedPendingStillRejectedDespitePanelAllowlist(t *testing.T) {
 }
 
 func TestTCPRegisterPkBindsIPForViewerOnlyPunch(t *testing.T) {
-	// #327: approved peer, no UDP heartbeat; TCP RegisterPk then PunchHole on same exact addr.
+	// Approved peer, no UDP heartbeat; TCP RegisterPk then PunchHole on same exact addr.
 	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
 	if err := database.UpsertPeer(&db.Peer{ID: "VIEWINIT1", Status: "OFFLINE", IP: "198.51.100.40"}); err != nil {
 		t.Fatalf("UpsertPeer: %v", err)
@@ -1922,7 +1922,7 @@ func TestTCPRegisterPkBindsIPForViewerOnlyPunch(t *testing.T) {
 }
 
 func TestManagedPendingSameNATAsApprovedInitiatorRejected(t *testing.T) {
-	// #302 residual: pending client shares public IP with an approved peer but
+	// Pending client shares public IP with an approved peer but
 	// uses a different source port — must not inherit the approved identity.
 	// Both peers must be live in the map so IP-only fallback sees ambiguity.
 	srv, database := newTestSignalServer(t, config.EnrollmentModeManaged)
@@ -2043,7 +2043,7 @@ func TestAllowSharedNATInitiatorAuthorizesSynthetic(t *testing.T) {
 }
 
 func TestUdpPortHintDisambiguatesSameNAT(t *testing.T) {
-	// #399: multiple live peers behind CGNAT — PunchHoleRequest.udp_port must
+	// Multiple live peers behind CGNAT — PunchHoleRequest.udp_port must
 	// uniquely select the initiator without IP inheritance.
 	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
 	if err := database.UpsertPeer(&db.Peer{ID: "CGNAT1", Status: "ONLINE", IP: "203.0.113.200"}); err != nil {
@@ -2320,7 +2320,7 @@ func TestOperatorOnlyOutboundKeepsPanelProxyAndAuditsAllowedConnection(t *testin
 }
 
 func TestTCPSessionPeerIDAuthorizesWithoutFindByAddr(t *testing.T) {
-	// #327: RegisterPk on the same Secure TCP session binds peerID even when
+	// RegisterPk on the same Secure TCP session binds peerID even when
 	// the peer map entry has a different registered port (no IP-only fallback).
 	srv, database := newTestSignalServer(t, config.EnrollmentModeOpen)
 	if err := database.UpsertPeer(&db.Peer{ID: "SESSINIT1", Status: "ONLINE", IP: "198.51.100.82"}); err != nil {
@@ -2342,7 +2342,7 @@ func TestTCPSessionPeerIDAuthorizesWithoutFindByAddr(t *testing.T) {
 }
 
 func TestManagedPendingWithDBRowStillRejected(t *testing.T) {
-	// #302 residual: peer somehow in DB while still pending_device_* must not punch.
+	// Peer somehow in DB while still pending_device_* must not punch.
 	srv, database := newTestSignalServer(t, config.EnrollmentModeManaged)
 	putOnlinePeer(srv, "TGTPEND4", "203.0.113.94", 52000, peer.ConnUDP)
 	putOnlinePeer(srv, "PENDINIT4", "198.51.100.74", 51000, peer.ConnUDP)
@@ -2387,7 +2387,7 @@ func TestClientTokenAuthorizesViewerOnlyPunch(t *testing.T) {
 		t.Fatalf("token auth = (%q, %v), want TOKINIT1", id, ok)
 	}
 
-	// Managed: token alone without approved DB peer must fail — but queue for approval (#375).
+	// Managed: token alone without approved DB peer must fail — but queue for approval.
 	srv.cfg.EnrollmentMode = config.EnrollmentModeManaged
 	id, ok = srv.requireAuthorizedInitiator(udpAddr("198.51.100.75", 51000), "TGTOK1", token, 0)
 	if ok {
@@ -2474,7 +2474,7 @@ func TestLockedTokenDoesNotQueueViewerOnlyInitiator(t *testing.T) {
 }
 
 func TestIPFallbackDoesNotQueueManagedPending(t *testing.T) {
-	// Address / IP identity must not invent enrollment queue entries (#375 security).
+	// Address / IP identity must not invent enrollment queue entries.
 	srv, database := newTestSignalServer(t, config.EnrollmentModeManaged)
 	putOnlinePeer(srv, "TGTIP375", "203.0.113.98", 52000, peer.ConnUDP)
 	// Memory-only peer (no DB row) at initiator IP — IP fallback would resolve this ID.
@@ -2494,7 +2494,7 @@ func TestIPFallbackDoesNotQueueManagedPending(t *testing.T) {
 }
 
 func TestHandleRelayResponseForwardAuthorizesRelayTicket(t *testing.T) {
-	// #356: P2P→RelayResponse forward must mint a relay ticket before the
+	// P2P→RelayResponse forward must mint a relay ticket before the
 	// initiator/target reach hbbr, otherwise Claim rejects with
 	// "Unauthorized relay UUID" and clients see Reset by the peer.
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)
@@ -2652,7 +2652,7 @@ func readUDPRendezvous(t *testing.T, conn *net.UDPConn) *pb.RendezvousMessage {
 }
 
 func TestHandlePunchHoleRequestTCPForwardsUDPWhenConnTCP(t *testing.T) {
-	// #382: TCP RegisterPk stamps ConnTCP, but the OS service still heartbeats
+	// TCP RegisterPk stamps ConnTCP, but the OS service still heartbeats
 	// on UDP. For different networks, PunchHole must reach the target UDP
 	// socket, not be replaced by the native LAN exchange.
 	srv, _ := newTestSignalServer(t, config.EnrollmentModeOpen)

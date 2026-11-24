@@ -36,14 +36,14 @@ echo ""
 mkdir -p /opt/rustdesk /app/data 2>/dev/null || true
 chown -R neodesk:neodesk /opt/rustdesk /app/data 2>/dev/null || true
 
-# Shared bootstrap password of the admin account (issue #385).
+# Shared bootstrap password of the admin account.
 # shellcheck source=/docker/bootstrap-admin-credentials.sh
 . /docker/bootstrap-admin-credentials.sh
 
 # Write a file as neodesk. Fresh named volumes inherit image ownership
 # (UID 10001 by default, or PUID after remap); with compose cap_drop:ALL root
 # has no CAP_DAC_OVERRIDE and cannot create files there (Permission denied on
-# .api_key, issue #299).
+# .api_key).
 write_as_neodesk() {
     # usage: write_as_neodesk <path> <content>
     printf '%s\n' "$2" | su-exec neodesk sh -c "umask 077; cat > \"$1\""
@@ -96,7 +96,7 @@ if [ -z "${ENROLLMENT_MODE:-}" ]; then
     fi
 fi
 
-# Verify write access — SQLite WAL mode requires writable directory (Issue #78)
+# Verify write access — SQLite WAL mode requires writable directory
 _app_uid="${PUID:-10001}"
 _app_gid="${PGID:-10001}"
 if ! su-exec neodesk touch /opt/rustdesk/.write_test 2>/dev/null; then
@@ -115,7 +115,7 @@ if file_exists_as_neodesk /opt/rustdesk/id_ed25519; then
     chown neodesk:neodesk /opt/rustdesk/id_ed25519 2>/dev/null || true
 fi
 
-# BD-2026-007: Warn about weak default secrets
+# Warn about weak default secrets
 if [ -n "${SESSION_SECRET}" ] && [ ${#SESSION_SECRET} -lt 32 ]; then
     echo "WARNING [SECURITY]: SESSION_SECRET is shorter than 32 characters — generate a stronger secret"
 fi

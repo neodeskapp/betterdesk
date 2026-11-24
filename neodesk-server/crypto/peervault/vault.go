@@ -1,5 +1,5 @@
 // Package peervault encrypts recoverable org peer passwords at rest (AES-256-GCM).
-// Used for centrally managed unattended presets (#367). Never log plaintext.
+// Used for centrally managed unattended presets. Never log plaintext.
 package peervault
 
 import (

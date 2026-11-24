@@ -205,7 +205,7 @@ func NewOIDCProvider(cfg *OIDCConfig) *OIDCProvider {
 		client:        &http.Client{Timeout: 15 * time.Second},
 		stop:          make(chan struct{}),
 	}
-	// Immediate discover + periodic retry while discovery remains nil (see #411).
+	// Immediate discover + periodic retry while discovery remains nil.
 	go p.discoveryRetryLoop()
 	// Start state cleanup goroutine
 	go p.cleanupStates()
@@ -271,7 +271,7 @@ func (p *OIDCProvider) needsDiscovery() bool {
 
 // discoveryRetryLoop attempts discovery immediately, then retries on an interval
 // until it succeeds (or OIDC / auto-discovery is disabled). Self-heals when the
-// IdP is unreachable at process start (#411). Exits when Close() is called.
+// IdP is unreachable at process start. Exits when Close() is called.
 func (p *OIDCProvider) discoveryRetryLoop() {
 	if p.needsDiscovery() {
 		p.discover()

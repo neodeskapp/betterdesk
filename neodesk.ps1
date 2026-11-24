@@ -744,8 +744,8 @@ function Generate-RandomPassword {
     return $out.ToString()
 }
 
-# Write or merge the console's .env from the template built into the server
-# (issue #158), then let upgrade-env add what the server needs (CONSOLE_PORT,
+# Write or merge the console's .env from the template built into the server,
+# then let upgrade-env add what the server needs (CONSOLE_PORT,
 # NEODESK_ENV_FILE, the pinned ports) and comment out what it does not.
 function Merge-ConsoleEnv {
     param(

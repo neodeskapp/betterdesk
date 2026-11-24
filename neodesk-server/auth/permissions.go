@@ -103,7 +103,7 @@ var AllPermissions = []string{
 // DefaultRolePermissions maps each built-in role to its default set of permissions.
 // Custom overrides from the DB take precedence.
 //
-// Role scoping (Discussion #99):
+// Role scoping:
 //
 //	super_admin  — all permissions, manages other super admins
 //	server_admin — server infrastructure only, read-only user list

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// Issue #498 (2026-11-13): renaming a user must cascade to every table that
+// Renaming a user must cascade to every table that
 // keys on the username, in one transaction, and must refuse collisions.
 func TestRenameUserCascadesAddressBookAndAssignments(t *testing.T) {
 	database := newTestDB(t)

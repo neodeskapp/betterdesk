@@ -43,12 +43,12 @@ set -e
 
 # Version
 VERSION="3.6.3"
-# Bump when installer control-flow changes must apply mid-session after Update (#219).
+# Bump when installer control-flow changes must apply mid-session after Update.
 NEODESK_SH_REVISION="20260725-console-start-306"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # This file; empty when the script is piped into bash
 NEODESK_SELF="${BASH_SOURCE[0]:-}"
-# Preserve argv before shift — used to re-exec after installer self-update (#219).
+# Preserve argv before shift — used to re-exec after installer self-update.
 NEODESK_ORIG_ARGV=("$@")
 
 # Auto mode flag
@@ -840,7 +840,7 @@ get_local_ip() {
     echo "127.0.0.1"
 }
 
-# Resolve P2P/relay connection strategy env vars for systemd/NSSM (issue #157).
+# Resolve P2P/relay connection strategy env vars for systemd/NSSM.
 resolve_connection_mode_env() {
     CONNECTION_MODE="${CONNECTION_MODE:-p2p_first}"
     if [ "$AUTO_MODE" = false ] && [ -z "$CONNECTION_MODE_SET" ]; then
@@ -1081,7 +1081,7 @@ wait_for_service_stop() {
 }
 
 # Kill any stale processes that might be holding files/ports
-# Free NeoDesk ports when systemd stop left orphan listeners (#219).
+# Free NeoDesk ports when systemd stop left orphan listeners.
 # port_listener_pids PORT: the processes listening on a TCP port.
 port_listener_pids() {
     ss -ltnpH "sport = :$1" 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u
@@ -1101,7 +1101,7 @@ is_neodesk_process() {
 }
 
 # kill_processes_holding_ports: NeoDesk's own processes left on its
-# ports are stopped (#219). A port another program holds is named in
+# ports are stopped. A port another program holds is named in
 # FOREIGN_PORT_HOLDERS and that program is left alone.
 kill_processes_holding_ports() {
     local port pid name
@@ -1110,7 +1110,7 @@ kill_processes_holding_ports() {
         [ "$port" = 0 ] && continue
         for pid in $(port_listener_pids "$port"); do
             if is_neodesk_process "$pid"; then
-                print_warning "Port ${port} is still held by an old NeoDesk process (pid $pid): stopping it (#219)"
+                print_warning "Port ${port} is still held by an old NeoDesk process (pid $pid): stopping it"
                 kill -TERM "$pid" 2>/dev/null || true
                 sleep 1
                 kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null
@@ -1179,13 +1179,13 @@ check_port_available() {
 _tcp_port_is_listening() {
     local port="$1"
     # Match :PORT followed by whitespace or end — covers ss/netstat layouts
-    # like "0.0.0.0:80", "*:80", "[::]:80" (#219).
+    # like "0.0.0.0:80", "*:80", "[::]:80".
     ss -tlnH 2>/dev/null | grep -qE ":${port}([[:space:]]|$)" || \
         ss -tln 2>/dev/null | grep -qE ":${port}([[:space:]]|$)" || \
         netstat -tln 2>/dev/null | grep -qE ":${port}([[:space:]]|$)"
 }
 
-# Hint when .env requests a privileged panel port but Node bound a fallback (#219).
+# Hint when .env requests a privileged panel port but Node bound a fallback.
 _hint_panel_privileged_port_mismatch() {
     local expected_port="$1"
     local https_enabled
@@ -1296,7 +1296,7 @@ graceful_stop_services() {
 # Read a console setting as the running console sees it. The server with its
 # console takes its unit's Environment= first and fills the rest from .env.
 # The Node.js console's unit had EnvironmentFile=, which overrides
-# Environment=, so there .env comes first (#219).
+# Environment=, so there .env comes first.
 read_effective_console_setting() {
     local key="$1"
     local default="${2:-}"
@@ -1337,7 +1337,7 @@ set_panel_http_port() {
     fi
 }
 
-# Keep neodesk-console.service Environment=PORT/HTTPS_PORT aligned with .env (#219).
+# Keep neodesk-console.service Environment=PORT/HTTPS_PORT aligned with .env.
 _sync_console_panel_ports_to_systemd() {
     local svc_file="/etc/systemd/system/neodesk-console.service"
     local env_file="${CONSOLE_PATH}/.env"
@@ -1413,7 +1413,7 @@ infer_tls_mode_from_cert() {
     fi
 }
 
-# Resolve Let's Encrypt live/ dir from .env, paths, symlinks, LE_CERT_DOMAIN, or cert SAN (#219).
+# Resolve Let's Encrypt live/ dir from .env, paths, symlinks, LE_CERT_DOMAIN, or cert SAN.
 resolve_le_cert_live_dir() {
     local env_file="${1:-${CONSOLE_PATH}/.env}"
     local cert_hint="${2:-$RUSTDESK_PATH/ssl/neodesk.crt}"
@@ -1450,9 +1450,9 @@ resolve_le_cert_live_dir() {
 
 # Copy a TLS file to dest as a real file (not a symlink).
 # - If dest is already the same real file as src (self-signed generated in place),
-#   do nothing — deleting dest would remove src and break cp (#325, discussion #322).
+#   do nothing — deleting dest would remove src and break cp.
 # - If dest is a symlink that resolves to src (LE live dir), remove the symlink
-#   and copy content so the console user can read it (#219).
+#   and copy content so the console user can read it.
 _safe_cp_tls_file() {
     local src="$1"
     local dest="$2"
@@ -1464,10 +1464,10 @@ _safe_cp_tls_file() {
         dest_real=$(readlink -f "$dest" 2>/dev/null || echo "$dest")
         if [ "$src_real" = "$dest_real" ]; then
             if [ -L "$dest" ]; then
-                # Symlink to src → replace with a real copy (#219)
+                # Symlink to src → replace with a real copy
                 rm -f "$dest"
             else
-                # Already a real file at dest (self-signed path) — no copy needed (#325)
+                # Already a real file at dest (self-signed path) — no copy needed
                 return 0
             fi
         fi
@@ -1479,7 +1479,7 @@ _safe_cp_tls_file() {
 }
 
 # The server reads PORT as its signal port when SIGNAL_PORT is missing, and
-# the console's .env sets PORT for the console (#219): .env names the
+# the console's .env sets PORT for the console: .env names the
 # signal and relay ports (the admin's values stay), and the API port stays
 # on the unit. While an install runs the Node.js console, the server's own
 # console stays off (CONSOLE_PORT=0): Node holds its port.
@@ -1521,7 +1521,7 @@ ensure_go_server_signal_ports() {
 }
 
 # Copy TLS material into $RUSTDESK_PATH/ssl/ as real files (not symlinks) so the
-# neodesk console user can read them. LE live dirs are root-only (#219).
+# neodesk console user can read them. LE live dirs are root-only.
 deploy_ssl_material_to_rustdesk_dir() {
     local cert_src="$1"
     local key_src="$2"
@@ -1659,7 +1659,7 @@ maybe_repair_le_ssl_symlinks() {
         return 1
     fi
 
-    print_info "Repairing LE certificate symlinks → copied files for console user (#219)"
+    print_info "Repairing LE certificate symlinks → copied files for console user"
     if ! deploy_ssl_material_to_rustdesk_dir "$le_live_dir/fullchain.pem" "$le_live_dir/privkey.pem" "$le_live_dir"; then
         print_error "LE redeploy failed for $le_live_dir — remove symlinks under $ssl_dir and retry"
         return 1
@@ -1668,7 +1668,7 @@ maybe_repair_le_ssl_symlinks() {
     return 0
 }
 
-# When HTTPS uses standard port 443, align HTTP redirect listener to :80 (#219).
+# When HTTPS uses standard port 443, align HTTP redirect listener to :80.
 _ensure_standard_https_redirect_ports() {
     local env_file="${CONSOLE_PATH}/.env"
     local svc_file="/etc/systemd/system/neodesk-console.service"
@@ -1705,13 +1705,13 @@ _ensure_standard_https_redirect_ports() {
     fi
     if [ "$changed" -eq 1 ]; then
         ensure_service_user >/dev/null
-        print_info "Standard HTTPS ports synced: HTTPS :443, HTTP redirect :80 (#219)"
+        print_info "Standard HTTPS ports synced: HTTPS :443, HTTP redirect :80"
         return 0
     fi
     return 1
 }
 
-# Repair HTTPS stuck state: Go signal port isolation + LE material redeploy (#219).
+# Repair HTTPS stuck state: Go signal port isolation + LE material redeploy.
 repair_https_stuck_state() {
     local quiet="${1:-}"
     local changed=0
@@ -1740,7 +1740,7 @@ repair_https_stuck_state() {
     fi
 
     if [ "$changed" -eq 1 ] && [ "$quiet" != "yes" ]; then
-        print_info "HTTPS/TLS configuration repaired (#219)"
+        print_info "HTTPS/TLS configuration repaired"
     fi
     return 0
 }
@@ -1760,7 +1760,7 @@ _sync_deployed_ssl_paths_to_env() {
     fi
 }
 
-# When HTTPS is enabled, ensure the console user can read the TLS private key (#219).
+# When HTTPS is enabled, ensure the console user can read the TLS private key.
 # Re-copies from LE_CERT_LIVE_DIR when symlinks, unreadable keys, or /etc/letsencrypt paths remain.
 ensure_console_tls_material_readable() {
     local https_enabled console_user="neodesk"
@@ -1794,7 +1794,7 @@ ensure_console_tls_material_readable() {
     fi
 
     if [ -n "$le_live_dir" ] && [ -f "$le_live_dir/fullchain.pem" ] && [ -f "$le_live_dir/privkey.pem" ]; then
-        print_info "Re-deploying Let's Encrypt certificate for console user (#219)"
+        print_info "Re-deploying Let's Encrypt certificate for console user"
         if deploy_ssl_material_to_rustdesk_dir "$le_live_dir/fullchain.pem" "$le_live_dir/privkey.pem" "$le_live_dir"; then
             _sync_deployed_ssl_paths_to_env
             if id "$console_user" &>/dev/null && runuser -u "$console_user" -- test -r "$ssl_dir/neodesk.key" 2>/dev/null; then
@@ -1835,7 +1835,7 @@ _wait_for_http_code() {
     return 1
 }
 
-# Sync .env + neodesk-console.service for HTTP or HTTPS panel mode (#219).
+# Sync .env + neodesk-console.service for HTTP or HTTPS panel mode.
 apply_console_protocol_mode() {
     local mode="$1"
     local cert_crt="${2:-}"
@@ -1910,7 +1910,7 @@ apply_console_protocol_mode() {
     systemctl daemon-reload 2>/dev/null || true
 }
 
-# Enable signal/relay TLS on neodesk-server using deployed panel cert (#219).
+# Enable signal/relay TLS on neodesk-server using deployed panel cert.
 sync_go_server_signal_relay_tls() {
     local ssl_dir="${1:-$RUSTDESK_PATH/ssl}"
     local go_svc_file="$SERVER_UNIT"
@@ -1926,7 +1926,7 @@ sync_go_server_signal_relay_tls() {
     systemctl daemon-reload 2>/dev/null || true
 }
 
-# Remove signal/relay TLS from neodesk-server (#219).
+# Remove signal/relay TLS from neodesk-server.
 clear_go_server_signal_relay_tls() {
     local go_svc_file="$SERVER_UNIT"
 
@@ -1940,7 +1940,7 @@ clear_go_server_signal_relay_tls() {
     systemctl daemon-reload 2>/dev/null || true
 }
 
-# Enable or disable Go server reverse-proxy trust (#267 / #276).
+# Enable or disable Go server reverse-proxy trust.
 # Optional 2nd arg: TRUSTED_PROXIES CIDR list. Omitted → loopback default.
 # Empty string → enable TRUST_PROXY but do not write TRUSTED_PROXIES (remote proxy).
 sync_go_server_trust_proxy() {
@@ -1970,7 +1970,7 @@ sync_go_server_trust_proxy() {
     systemctl daemon-reload 2>/dev/null || true
 }
 
-# Console + Go settings for TLS termination at an external reverse proxy (#267).
+# Console + Go settings for TLS termination at an external reverse proxy.
 apply_console_reverse_proxy_mode() {
     local panel_host="${1:-}"
     local server_id="${2:-}"
@@ -2024,7 +2024,7 @@ apply_console_reverse_proxy_mode() {
     systemctl daemon-reload 2>/dev/null || true
 }
 
-# Write Caddy/Nginx snippets and verify script under $RUSTDESK_PATH/reverse-proxy/ (#267).
+# Write Caddy/Nginx snippets and verify script under $RUSTDESK_PATH/reverse-proxy/.
 generate_reverse_proxy_config() {
     local panel_host="${1:-}"
     local proxy_type="${2:-caddy}"
@@ -2097,7 +2097,7 @@ generate_reverse_proxy_config() {
     [ "$panel_host" != "$server_id" ] && ws_origins="${ws_origins},https://${server_id}"
 
     cat > "$out_dir/neodesk.env.snippet" << EOF
-# NeoDesk reverse-proxy mode (#267) — merge into $CONSOLE_PATH/.env
+# NeoDesk reverse-proxy mode — merge into $CONSOLE_PATH/.env
 HOST=${panel_bind}
 HTTPS_ENABLED=false
 HTTP_REDIRECT_HTTPS=false
@@ -2113,7 +2113,7 @@ EOF
 
     if [ "$proxy_type" = "nginx" ]; then
         cat > "$out_dir/nginx.neodesk.conf.snippet" << EOF
-# NeoDesk reverse-proxy snippet (#267) — merge into your nginx site config.
+# NeoDesk reverse-proxy snippet — merge into your nginx site config.
 # TLS certificates: use certbot --nginx or your existing cert setup.
 
 map \$http_upgrade \$connection_upgrade {
@@ -2193,7 +2193,7 @@ EOF
         print_success "Nginx snippet: $out_dir/nginx.neodesk.conf.snippet"
     else
         cat > "$out_dir/caddy.Caddyfile.snippet" << EOF
-# NeoDesk reverse-proxy snippet (#267) — merge into /etc/caddy/Caddyfile
+# NeoDesk reverse-proxy snippet — merge into /etc/caddy/Caddyfile
 # Caddy obtains TLS automatically when this block is active.
 
 ${panel_host} {
@@ -2266,7 +2266,7 @@ EOF
 
     cat > "$out_dir/verify.sh" << 'VERIFYEOF'
 #!/usr/bin/env bash
-# NeoDesk reverse-proxy verification (#267)
+# NeoDesk reverse-proxy verification
 set -euo pipefail
 PANEL_HOST="${1:-}"
 if [ -z "$PANEL_HOST" ]; then
@@ -2309,7 +2309,7 @@ VERIFYEOF
     REVERSE_PROXY_UPSTREAM_ADDR="$upstream_addr"
 }
 
-# Interactive reverse-proxy wizard: apply NeoDesk settings + emit proxy snippets (#267).
+# Interactive reverse-proxy wizard: apply NeoDesk settings + emit proxy snippets.
 do_configure_reverse_proxy() {
     local panel_host server_id ws_origins panel_bind
 
@@ -2381,7 +2381,7 @@ resolve_panel_health_port() {
     fi
 }
 
-# Offer native HTTPS on standard port 443 after enabling TLS (#219 follow-up).
+# Offer native HTTPS on standard port 443 after enabling TLS.
 maybe_offer_standard_https_port() {
     local env_file="${CONSOLE_PATH}/.env"
     local svc_file="/etc/systemd/system/neodesk-console.service"
@@ -2442,7 +2442,7 @@ prepare_console_after_update() {
     return 0
 }
 
-# Start neodesk-server and check that it answers (#306).
+# Start neodesk-server and check that it answers.
 start_services_with_verification() {
     print_step "Starting neodesk-server with health verification..."
 
@@ -2579,8 +2579,8 @@ preserve_database_config() {
     fi
 }
 
-# Write or merge the console's .env from the template built into the server
-# (issue #158), then let upgrade-env add what the server needs (CONSOLE_PORT,
+# Write or merge the console's .env from the template built into the server,
+# then let upgrade-env add what the server needs (CONSOLE_PORT,
 # NEODESK_ENV_FILE, the pinned ports) and comment out what it does not.
 # Usage: merge_console_env true   — fresh install (full template)
 #        merge_console_env false  — update (append missing keys only)
@@ -3377,7 +3377,7 @@ _run_go_command_bounded() {
 }
 
 # Run go mod download with a hard bash deadline (primary guard).
-# GNU timeout alone was insufficient on some cloud VMs (#371).
+# GNU timeout alone was insufficient on some cloud VMs.
 _run_go_mod_download_bounded() {
     local deadline="${GO_MODULE_DOWNLOAD_TIMEOUT}"
     local kill_after=15
@@ -3389,7 +3389,7 @@ _run_go_mod_download_bounded() {
     _go_ipv4_force_begin
     _go_clear_stale_module_partials
 
-    # Prefer IPv4 for Go's resolver when the host has broken AAAA routes (#371).
+    # Prefer IPv4 for Go's resolver when the host has broken AAAA routes.
     export GODEBUG="${GODEBUG:+$GODEBUG,}netdns=go"
 
     # Heartbeat — no `local` inside non-function subshell (set -e).
@@ -3405,7 +3405,7 @@ _run_go_mod_download_bounded() {
 
     # Run go as a direct background child of this shell (same user/session).
     # Prior setsid/pidfile races could exit the waiter early, restore IPv6, and
-    # report success while go was still hung or already dead (#371 follow-up).
+    # report success while go was still hung or already dead.
     (
         echo "go mod download child starting" >&2
         exec go mod download -x
@@ -4455,7 +4455,7 @@ generate_ssl_certificates() {
         }
     fi
 
-    # Deploy with console-user-readable permissions (#219)
+    # Deploy with console-user-readable permissions
     if ! deploy_ssl_material_to_rustdesk_dir "$ssl_dir/neodesk.crt" "$ssl_dir/neodesk.key"; then
         print_error "Failed to set permissions on self-signed certificate"
         return 1
@@ -5680,7 +5680,7 @@ switch_update_channel() {
     press_enter
 }
 
-# If Update already wrote a newer neodesk.sh, re-exec before Repair/Toggle (#219).
+# If Update already wrote a newer neodesk.sh, re-exec before Repair/Toggle.
 maybe_reexec_if_installer_on_disk_is_newer() {
     if [ "${AUTO_MODE:-false}" = "true" ]; then
         return 0
@@ -5695,7 +5695,7 @@ maybe_reexec_if_installer_on_disk_is_newer() {
     if [ -z "$disk_rev" ] || [ "$disk_rev" = "${NEODESK_SH_REVISION:-}" ]; then
         return 0
     fi
-    print_info "Installer on disk is newer (revision $disk_rev) — reloading before this action (#219)"
+    print_info "Installer on disk is newer (revision $disk_rev) — reloading before this action"
     exec env NEODESK_REEXECED=1 bash "$self" "${NEODESK_ORIG_ARGV[@]}"
 }
 
@@ -5795,7 +5795,7 @@ do_repair() {
         $'Repair database\tAdd missing columns / run migrations'
         $'Repair services\tRegenerate systemd service units'
         $'Repair permissions\tFix file ownership and permissions'
-        $'Repair HTTPS / TLS\tFix LE certs, signal port :5000 conflict (#219)'
+        $'Repair HTTPS / TLS\tFix LE certs, signal port :5000 conflict'
         $'Full repair\tRun all repair steps above'
         $'Back\tReturn to the main menu'
     )
@@ -5931,7 +5931,7 @@ repair_permissions() {
 }
 
 repair_https_tls() {
-    print_step "Repairing HTTPS / TLS configuration (#219)..."
+    print_step "Repairing HTTPS / TLS configuration..."
 
     repair_https_stuck_state
 
@@ -7396,7 +7396,7 @@ run_protocol_tests() {
     else
         _test_fail "Go server service is NOT active (journalctl -u neodesk-server)"
         if journalctl -u neodesk-server --no-pager -n 40 2>/dev/null | grep -q 'listen tcp :5000'; then
-            echo -e "      ${DIM}Hint: Go tried signal on :5000 — panel PORT in .env leaked; run Repair → Repair HTTPS/TLS (#219)${NC}"
+            echo -e "      ${DIM}Hint: Go tried signal on :5000 — panel PORT in .env leaked; run Repair → Repair HTTPS/TLS${NC}"
         fi
     fi
     if systemctl is-active --quiet "$(console_service_name)" 2>/dev/null; then
@@ -7410,7 +7410,7 @@ run_protocol_tests() {
         if verify_service_health "neodesk-server" "21116" 15 >/dev/null 2>&1; then
             _test_ok "Go server listening on signal port :21116"
         elif journalctl -u neodesk-server --no-pager -n 40 2>/dev/null | grep -q 'listen tcp :5000'; then
-            _test_fail "Go server tried signal on :5000 (conflicts with panel redirect) — Repair → Repair HTTPS/TLS (#219)"
+            _test_fail "Go server tried signal on :5000 (conflicts with panel redirect) — Repair → Repair HTTPS/TLS"
         else
             _test_fail "Go server not listening on :21116 yet (journalctl -u neodesk-server)"
         fi
@@ -7452,7 +7452,7 @@ run_protocol_tests() {
             _test_ok "Go server trusts reverse-proxy headers (TRUST_PROXY / -trust-proxy)"
             if grep -qE 'Environment=TRUSTED_PROXIES=.+' "$go_svc_file" 2>/dev/null || \
                grep -qE '^TRUSTED_PROXIES=.+' "${CONSOLE_PATH}/.env" 2>/dev/null; then
-                _test_ok "TRUSTED_PROXIES allowlist configured (#276)"
+                _test_ok "TRUSTED_PROXIES allowlist configured"
             else
                 _test_warn "TRUSTED_PROXIES empty — Go ignores X-Forwarded-* until set (e.g. 127.0.0.1/32)"
             fi
@@ -7506,7 +7506,7 @@ run_protocol_tests() {
             if journalctl -u neodesk-server --no-pager -n 80 2>/dev/null | grep -qi 'Falling back to HTTP'; then
                 echo -e "      ${DIM}Hint: console logged HTTPS fallback — check TLS key permissions (runuser -u neodesk test -r key)${NC}"
             elif [ -n "$alt_panel_port" ]; then
-                echo -e "      ${DIM}Hint: configured HTTPS_PORT=443 but Node bound :5443 — Repair → Repair permissions, then restart (#219)${NC}"
+                echo -e "      ${DIM}Hint: configured HTTPS_PORT=443 but Node bound :5443 — Repair → Repair permissions, then restart${NC}"
             fi
         fi
     fi
@@ -7515,7 +7515,7 @@ run_protocol_tests() {
     if [ "$(echo "$https_enabled" | tr '[:upper:]' '[:lower:]')" = "true" ] \
         && [ "$(echo "$http_redirect" | tr '[:upper:]' '[:lower:]')" = "true" ]; then
         local redirect_hdr _r_elapsed=0 redirect_probe_port="$http_port"
-        # Standard HTTPS on :443 always redirects from :80 — never probe stale :5000 (#219).
+        # Standard HTTPS on :443 always redirects from :80 — never probe stale :5000.
         if [ "$https_port" = "443" ]; then
             redirect_probe_port="80"
         fi
@@ -7540,7 +7540,7 @@ run_protocol_tests() {
             else
                 _test_fail "HTTP redirect missing or wrong target on :${redirect_probe_port} (got: ${redirect_hdr:-none})"
                 if [ "$redirect_probe_port" = "80" ]; then
-                    echo -e "      ${DIM}Hint: set PORT=80 in .env, run Repair → Repair HTTPS/TLS, ensure CAP_NET_BIND_SERVICE (#219)${NC}"
+                    echo -e "      ${DIM}Hint: set PORT=80 in .env, run Repair → Repair HTTPS/TLS, ensure CAP_NET_BIND_SERVICE${NC}"
                 fi
             fi
         elif echo "$redirect_hdr" | grep -qi ":${https_port}"; then
@@ -7569,7 +7569,7 @@ run_protocol_tests() {
         _test_fail "Go API not responding over HTTP on :${go_api_port} (got $api_code)"
         if ! ss -tlnH 2>/dev/null | grep -q ":${go_api_port} "; then
             if ss -tlnpH 2>/dev/null | grep ":${client_api_port} " | grep -qiE 'neodesk-server|neodesk-serv'; then
-                echo -e "      ${DIM}Hint: Go API bound to :${client_api_port} — API_PORT from .env leaked; run Repair → Repair HTTPS/TLS or update (#219)${NC}"
+                echo -e "      ${DIM}Hint: Go API bound to :${client_api_port} — API_PORT from .env leaked; run Repair → Repair HTTPS/TLS or update${NC}"
             fi
         fi
     fi

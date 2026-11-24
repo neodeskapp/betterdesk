@@ -26,7 +26,7 @@ const (
 
 	// MaxPeerFrameSize is the maximum BytesCodec payload for peer relay data
 	// (video / clipboard). Matches relay MaxWSRelayMessage and support-agent
-	// MaxPeerFrameSize (16 MiB). Used by TCP↔WS mixed relay bridging (#397).
+	// MaxPeerFrameSize (16 MiB). Used by TCP↔WS mixed relay bridging.
 	MaxPeerFrameSize = 16 * 1024 * 1024
 
 	// HeaderSize is the size of the legacy TCP frame header (2 bytes).
@@ -159,7 +159,7 @@ func WriteRawBytes(conn net.Conn, data []byte) error {
 }
 
 // WriteRawBytesMax writes raw bytes with a variable-length header, enforcing maxLen.
-// Use MaxPeerFrameSize for mixed TCP↔WS peer relay bridging (#397).
+// Use MaxPeerFrameSize for mixed TCP↔WS peer relay bridging.
 func WriteRawBytesMax(conn net.Conn, data []byte, maxLen int) error {
 	if maxLen <= 0 {
 		maxLen = MaxFrameSize
@@ -182,7 +182,7 @@ func ReadRawBytes(conn net.Conn, timeout time.Duration) ([]byte, error) {
 }
 
 // ReadRawBytesMax reads a variable-length-framed raw byte payload, enforcing maxLen.
-// Use MaxPeerFrameSize for mixed TCP↔WS peer relay bridging (#397).
+// Use MaxPeerFrameSize for mixed TCP↔WS peer relay bridging.
 func ReadRawBytesMax(conn net.Conn, timeout time.Duration, maxLen int) ([]byte, error) {
 	if maxLen <= 0 {
 		maxLen = MaxFrameSize

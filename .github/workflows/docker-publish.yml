@@ -17,7 +17,7 @@
 # Pushes to main: build ONLY on CI version-bump subjects
 # (`chore: bump version … [version-bump]`) so the GHCR image VERSION matches
 # tip (auto-bump runs after the feature commit; building the feature SHA left
-# :dev one patch behind — #401). Feature commits skip. Tags and
+# :dev one patch behind). Feature commits skip. Tags and
 # workflow_dispatch always build. latest comes from a v* tag, never from
 # main.
 #
@@ -28,8 +28,8 @@
 # pushed more than three at a time.
 #
 # Phase 1 (amd64) then Phase 2 (native ubuntu-24.04-arm). AIO :dev is
-# multi-arch again (#476); ARM runs last so amd64 still publishes if ARM fails
-# (soft-merge). Native ARM avoids the old QEMU/npm 6h limit (#401).
+# multi-arch again; ARM runs last so amd64 still publishes if ARM fails
+# (soft-merge). Native ARM avoids the old QEMU/npm 6h limit.
 #
 # Triggers: push main (path-filtered), push of a v* tag, manual
 # =============================================================================
@@ -169,7 +169,7 @@ jobs:
 
   build-server:
     needs: [read-version, ghcr-preflight]
-    # Tags/dispatch always; branch pushes only on CI version-bump subjects (#401).
+    # Tags/dispatch always; branch pushes only on CI version-bump subjects.
     # Match subject markers (chore: bump/release … [version-bump]), not incidental
     # mentions of [version-bump] in a feature commit body.
     if: |
@@ -250,7 +250,7 @@ jobs:
 
   build-allinone:
     needs: [read-version, ghcr-preflight]
-    # Tags/dispatch always; branch pushes only on CI version-bump subjects (#401).
+    # Tags/dispatch always; branch pushes only on CI version-bump subjects.
     if: |
       github.event_name == 'workflow_dispatch' ||
       startsWith(github.ref, 'refs/tags/v') ||
@@ -335,7 +335,7 @@ jobs:
           if-no-files-found: error
 
   # Phase 2: ARM64 on native runners (after amd64). Soft-merge still
-  # publishes amd64 tags if this job fails (#476).
+  # publishes amd64 tags if this job fails.
   build-arm64:
     needs: [read-version, ghcr-preflight, build-server]
     if: |
@@ -467,7 +467,7 @@ jobs:
           path: /tmp/digests/neodesk
           if-no-files-found: error
 
-  # Soft-merge (#476): require amd64 success; include ARM digests when present.
+  # Soft-merge: require amd64 success; include ARM digests when present.
   # ARM failure still publishes amd64-only (or partial) tags so the channel stays live.
   merge-images:
     needs: [read-version, ghcr-preflight, build-server, build-allinone, build-arm64, build-aio-arm64]

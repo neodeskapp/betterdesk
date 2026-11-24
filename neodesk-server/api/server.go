@@ -93,7 +93,7 @@ type Server struct {
 	metrics          *metrics.Collector
 	jwtManager       *auth.JWTManager
 	loginLimiter     *ratelimit.IPLimiter
-	heartbeatLimiter *ratelimit.IPLimiter // BD-2026-001: rate-limit heartbeat/sysinfo
+	heartbeatLimiter *ratelimit.IPLimiter // rate-limit heartbeat/sysinfo
 	// SECURITY (audit fix M-07, 2026-04-10): rate-limit public enrollment and
 	// branding endpoints to deter device-ID enumeration and config probing.
 	enrollmentLimiter *ratelimit.IPLimiter
@@ -127,7 +127,7 @@ type Server struct {
 	panelNonces       *panelNonceCache  // replay window for verified panel statements
 	timeSync          *timesync.Service
 	billing           *billing.Service
-	peerVault         *peervault.Vault // AES-GCM for org peer credentials (#367)
+	peerVault         *peervault.Vault // AES-GCM for org peer credentials
 	remoteTargetVault *peervault.Vault // Dedicated AES-GCM vault for RDP/VNC credentials
 	httpSrv           *http.Server
 	mux               sharedMux // the route table, built once (internal_handler.go)
@@ -155,7 +155,7 @@ func New(cfg *config.Config, database db.Database, peerMap *peer.Map, relaySrv *
 		relay:             relaySrv,
 		version:           version,
 		loginLimiter:      ratelimit.NewIPLimiter(5, 5*time.Minute, 10*time.Minute),
-		heartbeatLimiter:  ratelimit.NewIPLimiter(20, 60*time.Second, 5*time.Minute), // BD-2026-001: 20 req/min per IP
+		heartbeatLimiter:  ratelimit.NewIPLimiter(20, 60*time.Second, 5*time.Minute), // 20 req/min per IP
 		enrollmentLimiter: ratelimit.NewIPLimiter(20, 1*time.Minute, 5*time.Minute),  // M-07: 20/min per IP, 5-min block
 		brandingLimiter:   ratelimit.NewIPLimiter(60, 1*time.Minute, 5*time.Minute),  // M-07: 60/min per IP
 		auditWriteLimiter: ratelimit.NewIPLimiter(60, 1*time.Minute, 5*time.Minute),  // M6: public audit writes
@@ -281,7 +281,7 @@ func (s *Server) SetJWTManager(jm *auth.JWTManager) {
 	s.jwtManager = jm
 }
 
-// InitPeerCredentialVault configures AES-GCM sealing for org peer passwords (#367).
+// InitPeerCredentialVault configures AES-GCM sealing for org peer passwords.
 // Prefer dedicated ORG_PEER_VAULT_KEY; callers typically fall back to the JWT secret.
 func (s *Server) InitPeerCredentialVault(secret string) error {
 	v, err := peervault.New(secret)
@@ -462,7 +462,7 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("GET /api/peers/{id}/connect-password", s.requirePermission(auth.PermDeviceConnect, s.scopedDevice(s.handleGetPeerConnectPassword)))
 	mux.HandleFunc("POST /api/org/login", s.handleOrgLogin) // public — no auth required
 
-	// User-Org Linking (Issue #106)
+	// User-Org Linking
 	mux.HandleFunc("GET /api/org/{id}/available-users", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleListAvailableUsers)))
 	mux.HandleFunc("POST /api/org/{id}/members", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleLinkUserToOrg)))
 	mux.HandleFunc("DELETE /api/org/{id}/members/{userId}", s.requirePermission(auth.PermOrgManageUsers, s.requireOrgMembership("id", s.handleUnlinkUserFromOrg)))
@@ -511,7 +511,7 @@ func (s *Server) routes() *http.ServeMux {
 	// RustDesk PRO group endpoint stubs — Flutter clients query these and expect
 	// the {total,data,msg} envelope; without them the device list never finishes
 	// loading.  We expose empty-but-valid responses so the UI gracefully falls
-	// back to address-book mode.  Idea credit: progloto (PR #81).
+	// back to address-book mode.  Idea credit: progloto.
 	mux.HandleFunc("GET /api/group", s.handleClientGroupList)
 	mux.HandleFunc("GET /api/group/get", s.handleClientGroupList)
 	mux.HandleFunc("POST /api/group/get", s.handleClientGroupList)
@@ -554,7 +554,7 @@ func (s *Server) routes() *http.ServeMux {
 	// User management (permission-based). Accounts, role permissions, API
 	// keys and second factors change only for a signed-in person
 	// (requirePerson), never for an API key (L387).
-	// Issue #138: RustDesk client calls GET /api/users?accessible&pageSize=100
+	// RustDesk client calls GET /api/users?accessible&pageSize=100
 	// with operator tokens. The _getUsers() result gates the entire group pull —
 	// if it fails (403), _getPeers() is never called and the Available Devices
 	// tab stays empty. Use a wrapper that detects client requests and returns
@@ -672,7 +672,7 @@ func (s *Server) routes() *http.ServeMux {
 
 	// Combined SSO status — public, used by Node.js console to detect
 	// whether LDAP or OIDC is enabled and auto-provision LDAP-authenticated
-	// users on first login (#148).
+	// users on first login.
 	mux.HandleFunc("GET /api/auth/sso/status", s.handleSSOStatus)
 
 	// Branding (GET is public for desktop clients, POST is admin)
@@ -774,7 +774,7 @@ func (s *Server) routes() *http.ServeMux {
 	// Catch-all: return JSON 404 for unmatched routes.
 	// Go's default ServeMux returns HTML which breaks RustDesk (Dart) client parsing.
 	// Logs every miss so missing client compatibility endpoints are easy to spot.
-	// Diagnostics suggestion credit: progloto (PR #81).
+	// Diagnostics suggestion credit: progloto.
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 		if ip == "" {
@@ -1013,7 +1013,7 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 	// Detect RustDesk client group model request: the Flutter client sends
 	// ?accessible=&status=1&pageSize=100 and expects {total,data} envelope
 	// with PeerPayload format (status as int, info as nested map).
-	// Issue #138: without this detection, the client gets status:"ONLINE"
+	// Without this detection, the client gets status:"ONLINE"
 	// (string) where it expects int, causing "type 'String' is not a subtype
 	// of type 'int?'" error.
 	if r.URL.Query().Has("accessible") || r.URL.Query().Has("pageSize") {
@@ -1094,7 +1094,7 @@ func (s *Server) handleListPeers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Enrich with live online status and status tier from memory map.
-	// Issue #138 hardening: override db.Peer.Status (string) with an int
+	// Override db.Peer.Status (string) with an int
 	// so any RustDesk client that reaches this handler without the
 	// ?accessible / ?pageSize detection still receives a valid int.
 	type peerResponse struct {
@@ -1207,8 +1207,8 @@ func parsePeerListPagination(r *http.Request) (limit, offset int, paginated bool
 //   - user: string (owner username)
 //   - user_name: string (display name)
 //
-// This fixes Issue #138: "type 'String' is not a subtype of type 'int?'"
-// which occurred because the admin API returned status as a string.
+// The client failed with "type 'String' is not a subtype of type 'int?'"
+// when the admin API returned status as a string.
 func (s *Server) handleClientPeersList(w http.ResponseWriter, r *http.Request) {
 	data, total := s.buildRustDeskPeerList(r)
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -1577,7 +1577,7 @@ func (s *Server) handleUnbanPeer(w http.ResponseWriter, r *http.Request) {
 		enrollmentRejectAuditPeer(peerRow, rejected, decision)
 
 	// Enrollment Reject & Ban created an audit-only peer. Unban must remove it
-	// so managed mode re-queues for approval instead of treating the ID as enrolled (#351).
+	// so managed mode re-queues for approval instead of treating the ID as enrolled.
 	if enrollmentRejectBan {
 		s.clearEnrollmentRejectionState(id)
 		if err := s.removeEnrollmentRejectAuditPeer(id); err != nil {
@@ -1601,7 +1601,7 @@ func (s *Server) handleUnbanPeer(w http.ResponseWriter, r *http.Request) {
 
 	s.peers.SetBanned(id, false)
 
-	// Also clear enrollment rejection lock so the device can re-queue (#351).
+	// Also clear enrollment rejection lock so the device can re-queue.
 	s.clearEnrollmentRejectionState(id)
 
 	if s.auditLog != nil {

@@ -11,7 +11,7 @@ package api
 //
 // All three are defined here, in the package that already owns permissions,
 // and served to the console. That removes the second copy of the role map the
-// community review pointed at (discussion #496): the panel may cache this, but
+// community review pointed at: the panel may cache this, but
 // it no longer decides it.
 //
 // Route: GET /api/panel/catalog — any signed-in principal, because every role

@@ -296,7 +296,7 @@ func (s *Server) handleOIDCLoginStatus(w http.ResponseWriter, r *http.Request) {
 // GET /api/auth/sso/status
 // Public endpoint — Node.js console queries this (cached) so it can delegate
 // unknown-user logins to the Go server's LDAP/OIDC flow without requiring the
-// admin to set NEODESK_AUTH_AUTOCREATE manually (#148).
+// admin to set NEODESK_AUTH_AUTOCREATE manually.
 func (s *Server) handleSSOStatus(w http.ResponseWriter, r *http.Request) {
 	ldapEnabled := s.ldapProvider != nil && s.ldapProvider.IsEnabled()
 	oidcEnabled := s.oidcProvider != nil && s.oidcProvider.IsEnabled()
@@ -444,7 +444,7 @@ func (s *Server) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect to Node.js session handler with ONLY the auth code.
 	// Use an absolute panel URL when configured so Docker / split-port
-	// deployments reach the console (port 5000), not the Go API port (#269).
+	// deployments reach the console (port 5000), not the Go API port.
 	panelBase := resolvePanelBaseURL(cfg)
 	callbackURL := auth.BuildOIDCSessionURL(panelBase, authCode)
 	if panelBase == "" {

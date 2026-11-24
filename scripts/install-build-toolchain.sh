@@ -129,7 +129,7 @@ esac
 
 # Resolve the SHA-256 for a Flutter release archive from Flutter's own release
 # manifest (releases_linux.json). Flutter does not publish per-archive .sha256
-# files, so this is the authoritative checksum source (#466).
+# files, so this is the authoritative checksum source.
 #
 # Order:
 #   1. FLUTTER_ARCHIVE_SHA256 override (explicit operator trust decision)
@@ -207,7 +207,7 @@ install_flutter() {
     curl --proto '=https' --tlsv1.2 -fsSL "$url" -o "$tmp/$archive"
 
     # Flutter does not publish a per-archive ${url}.sha256 file (that path
-    # 404s, see #466). The checksum lives in the release manifest, so resolve
+    # 404s). The checksum lives in the release manifest, so resolve
     # it there and keep verification instead of skipping it.
     local expected
     expected="$(release_manifest_sha256 "$archive")"

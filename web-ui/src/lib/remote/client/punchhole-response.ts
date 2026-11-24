@@ -2,7 +2,7 @@
  * PunchHoleResponse success/failure interpretation for RdClient web.
  *
  * Proto3 `failure` defaults to 0 (ID_NOT_EXIST) when unset, so success cannot
- * be inferred from failure alone. Server #405 may return Failure=OFFLINE with
+ * be inferred from failure alone. The server may return Failure=OFFLINE with
  * relay_server still set — explicit non-zero failure must win over hasRelay.
  */
 import type { IPunchHoleResponse } from './generated/protos.ts';
@@ -42,7 +42,7 @@ function interpretPunchHoleResponse(resp: IPunchHoleResponse | null | undefined)
 	const hasRelay = relayServer.length > 0;
 	const hasSocket = !!(socketAddr && socketAddr.length);
 
-	// Explicit non-zero Failure (#405 OFFLINE / license) — even with relay_server.
+	// Explicit non-zero Failure (OFFLINE / license) — even with relay_server.
 	if (
 		failureCode === FAILURE.OFFLINE ||
 		failureCode === FAILURE.LICENSE_MISMATCH ||

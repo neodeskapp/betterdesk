@@ -181,7 +181,7 @@ func TestFrameTooLarge(t *testing.T) {
 }
 
 func TestWriteReadRawBytesMaxPeerFrame(t *testing.T) {
-	// Peer relay frames may exceed MaxFrameSize (64 KiB) but stay under MaxPeerFrameSize (#397).
+	// Peer relay frames may exceed MaxFrameSize (64 KiB) but stay under MaxPeerFrameSize.
 	conn := newTestConn()
 	payload := make([]byte, MaxFrameSize+1024)
 	for i := range payload {

@@ -24,7 +24,7 @@ if [ -z "${DB_URL:-}" ]; then
     esac
 fi
 
-# Fix ownership before bootstrap writes .admin_credentials (issue #385).
+# Fix ownership before bootstrap writes .admin_credentials.
 if [ "$(id -u)" = "0" ]; then
     chown -R neodesk:neodesk "$DATA_DIR" 2>/dev/null || true
     if [ -f "$DATA_DIR/id_ed25519" ]; then

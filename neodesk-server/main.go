@@ -272,7 +272,7 @@ func main() {
 	if cfg.APITLSEnabled() {
 		log.Printf("  TLS API:    ENABLED")
 		log.Printf("  ⚠ WARNING:  TLS on API port breaks Node.js console (HTTP) and RustDesk client connections!")
-		log.Printf("              Only enable --tls-api if ALL consumers use HTTPS. See issue #104.")
+		log.Printf("              Only enable --tls-api if ALL consumers use HTTPS.")
 		log.Printf("              To fix: remove TLS_API=Y from env or -tls-api from flags.")
 	}
 	if cfg.HasTLSCert() {
@@ -315,7 +315,7 @@ func main() {
 	if err := database.Migrate(); err != nil {
 		logging.Fatalf("Failed to run migrations: %v", err)
 	}
-	// Defensive: ensure client_sessions exists even if an older binary skipped #242 DDL (#284).
+	// Defensive: ensure client_sessions exists even if an older binary never created it.
 	if err := database.EnsureClientSessionsSchema(); err != nil {
 		logging.Fatalf("Failed to ensure client_sessions schema: %v", err)
 	}
@@ -336,13 +336,13 @@ func main() {
 	loadAPIKey(cfg, database)
 
 	// Reset all peers to offline on startup (clean slate).
-	// Intentionally does NOT write availability_history events (#455) so a
+	// Intentionally does NOT write availability_history events so a
 	// restart does not flood every device as downtime.
 	if err := database.SetAllOffline(); err != nil {
 		log.Printf("WARN: Failed to reset peers to offline: %v", err)
 	}
 
-	// Periodic cleanup for optional availability history (#455).
+	// Periodic cleanup for optional availability history.
 	go runAvailabilityHistoryCleanup(database)
 	go runConnectionSessionCleanup(database)
 
@@ -877,7 +877,7 @@ func initialAdminPassword(given string) string {
 }
 
 // runAvailabilityHistoryCleanup deletes expired peer_availability_events when
-// the optional feature is enabled (#455).
+// the optional feature is enabled.
 func runAvailabilityHistoryCleanup(database db.Database) {
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
@@ -1338,12 +1338,12 @@ func configure(fs *flag.FlagSet, args []string) (cfg *config.Config, showVersion
 	switchVar(fs, &cfg.TrustProxy, "trust-proxy", "Trust X-Forwarded-For/X-Real-IP headers from reverse proxy (requires --trusted-proxies)")
 	trustedProxiesFlag := fs.String("trusted-proxies", "", "Comma-separated CIDR/IP allowlist of reverse proxies that may set X-Forwarded-* (required with --trust-proxy)")
 	fs.IntVar(&cfg.RelayMaxConnsIP, "relay-max-conns-ip", cfg.RelayMaxConnsIP, "Max relay connections per IP (0 = unlimited)")
-	fs.IntVar(&cfg.SignalRateLimitPerIP, "signal-rate-limit-per-ip", cfg.SignalRateLimitPerIP, "Max signal registrations per IP per minute (0 = unlimited; raise for large NAT deployments — issue #122)")
-	switchVar(fs, &cfg.SameNATRelay, "same-nat-relay", "Auto-fallback to relay when both peers share the same public IP (avoids NAT hairpin failures — issue #121)")
-	switchVar(fs, &cfg.AllowSharedNATInitiator, "allow-shared-nat-initiator", "Allow PunchHole/RequestRelay when multiple live peers share the initiator public IP without token/udp_port (synthetic shared-nat-initiator — issue #399; default off)")
-	switchVar(fs, &cfg.LoggedInOnlyInitiator, "logged-in-only-initiator", "Require a valid NeoDesk client login token for stock PunchHole/RequestRelay initiators (issue #414; default off)")
-	switchVar(fs, &cfg.OperatorOnlyOutbound, "operator-only-outbound", "Require a valid Admin/Operator client session for stock PunchHole/RequestRelay initiators (issue #425; default off)")
-	switchVar(fs, &cfg.P2PFirst, "p2p-first", "Wait for the target's hole punch before answering the initiator so direct P2P can succeed (issue #157; disable to always answer immediately)")
+	fs.IntVar(&cfg.SignalRateLimitPerIP, "signal-rate-limit-per-ip", cfg.SignalRateLimitPerIP, "Max signal registrations per IP per minute (0 = unlimited; raise for large NAT deployments)")
+	switchVar(fs, &cfg.SameNATRelay, "same-nat-relay", "Auto-fallback to relay when both peers share the same public IP (avoids NAT hairpin failures)")
+	switchVar(fs, &cfg.AllowSharedNATInitiator, "allow-shared-nat-initiator", "Allow PunchHole/RequestRelay when multiple live peers share the initiator public IP without token/udp_port (synthetic shared-nat-initiator; default off)")
+	switchVar(fs, &cfg.LoggedInOnlyInitiator, "logged-in-only-initiator", "Require a valid NeoDesk client login token for stock PunchHole/RequestRelay initiators (default off)")
+	switchVar(fs, &cfg.OperatorOnlyOutbound, "operator-only-outbound", "Require a valid Admin/Operator client session for stock PunchHole/RequestRelay initiators (default off)")
+	switchVar(fs, &cfg.P2PFirst, "p2p-first", "Wait for the target's hole punch before answering the initiator so direct P2P can succeed (disable to always answer immediately)")
 	fs.IntVar(&cfg.P2PFallbackMs, "p2p-fallback-ms", cfg.P2PFallbackMs, "Grace period (ms) to wait for the target's PunchHoleSent before sending the relay fallback response (only with --p2p-first)")
 	fs.StringVar(&cfg.InitAdminUser, "init-admin-user", cfg.InitAdminUser, "Initial admin username (default: admin)")
 	fs.StringVar(&cfg.InitAdminPass, "init-admin-pass", cfg.InitAdminPass, "Initial admin password (auto-generated if empty)")

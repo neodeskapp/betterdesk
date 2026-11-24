@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// server_config keys for optional peer availability history (#455).
+// server_config keys for optional peer availability history.
 const (
 	ConfigAvailabilityHistoryEnabled       = "availability_history_enabled"
 	ConfigAvailabilityHistoryRetentionDays = "availability_history_retention_days"

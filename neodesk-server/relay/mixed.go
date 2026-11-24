@@ -16,8 +16,8 @@ import (
 
 // startMixedRelay bridges a native TCP relay peer (BytesCodec frames) with a
 // WebSocket Mode peer (one raw payload per binary message). Used when panel
-// Web Remote proxies to :21117 while the target connects on :21119 (#397).
-// Naive byte copy between transports corrupts the E2E handshake (#290).
+// Web Remote proxies to :21117 while the target connects on :21119.
+// Naive byte copy between transports corrupts the E2E handshake.
 func (s *Server) startMixedRelay(tcpConn net.Conn, ws *websocket.Conn, tcpAddr, wsAddr, uuid string) {
 	if s.sessionLimiter != nil {
 		ips := make([]string, 0, 2)

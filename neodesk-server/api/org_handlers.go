@@ -1120,7 +1120,7 @@ func (s *Server) handleGetPeerPolicy(w http.ResponseWriter, r *http.Request) {
 }
 
 // ---------------------------------------------------------------------------
-//  User-Org Linking (Issue #106)
+//  User-Org Linking
 // ---------------------------------------------------------------------------
 
 // POST /api/org/{id}/members

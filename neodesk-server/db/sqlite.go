@@ -206,7 +206,7 @@ func (s *SQLiteDB) migrateSchema() error {
 		`CREATE INDEX IF NOT EXISTS idx_peer_metrics_peer ON peer_metrics(peer_id)`,
 		`CREATE INDEX IF NOT EXISTS idx_peer_metrics_created ON peer_metrics(created_at)`,
 
-		// Peer availability history (server-observed status transitions, #455)
+		// Peer availability history (server-observed status transitions)
 		`CREATE TABLE IF NOT EXISTS peer_availability_events (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			peer_id TEXT NOT NULL,
@@ -338,7 +338,7 @@ func (s *SQLiteDB) migrateSchema() error {
 		`CREATE INDEX IF NOT EXISTS idx_help_requests_created ON help_requests(created_at)`,
 		`CREATE INDEX IF NOT EXISTS idx_help_requests_org ON help_requests(org_id)`,
 
-		// RustDesk client login sessions (Issue #242 / #284)
+		// RustDesk client login sessions
 		clientSessionsSQLiteDDL,
 		`CREATE UNIQUE INDEX IF NOT EXISTS idx_client_sessions_hash ON client_sessions(token_hash)`,
 		`CREATE INDEX IF NOT EXISTS idx_client_sessions_user ON client_sessions(user_id)`,
@@ -406,7 +406,7 @@ func (s *SQLiteDB) migrateSchema() error {
 			PRIMARY KEY(org_id, key)
 		)`,
 
-		// Organization shared address books (Issue #187 / #190)
+		// Organization shared address books
 		`CREATE TABLE IF NOT EXISTS org_address_books (
 			org_id TEXT NOT NULL REFERENCES organizations(id),
 			ab_type TEXT NOT NULL DEFAULT 'legacy',
@@ -415,7 +415,7 @@ func (s *SQLiteDB) migrateSchema() error {
 			updated_by TEXT NOT NULL DEFAULT '',
 			PRIMARY KEY(org_id, ab_type)
 		)`,
-		// Encrypted org peer passwords for shared AB / Web Remote (#367)
+		// Encrypted org peer passwords for shared AB / Web Remote
 		`CREATE TABLE IF NOT EXISTS org_peer_credentials (
 			org_id TEXT NOT NULL REFERENCES organizations(id),
 			peer_id TEXT NOT NULL,
@@ -727,7 +727,7 @@ func (s *SQLiteDB) migrateSchema() error {
 		// users: is_server_admin flag (RBAC Phase 52)
 		{"users", "is_server_admin", `ALTER TABLE users ADD COLUMN is_server_admin INTEGER DEFAULT 0`},
 		{"users", "auth_provider", `ALTER TABLE users ADD COLUMN auth_provider TEXT NOT NULL DEFAULT 'local'`},
-		// org_users: server_user_id for linking existing users (Issue #106)
+		// org_users: server_user_id for linking existing users
 		{"org_users", "server_user_id", `ALTER TABLE org_users ADD COLUMN server_user_id INTEGER DEFAULT 0`},
 		// peers/users: Pro strategy assignment GUIDs
 		{"peers", "guid", `ALTER TABLE peers ADD COLUMN guid TEXT DEFAULT ''`},
@@ -780,7 +780,7 @@ func (s *SQLiteDB) migrateSchema() error {
 	}
 
 	// Users: never-logged-in / legacy rows may store NULL in text columns that
-	// Scan into string (Issue #292). Normalize so ListUsers/GetUser do not 500.
+	// Scan into string. Normalize so ListUsers/GetUser do not 500.
 	userNullBackfills := []string{
 		`UPDATE users SET last_login = '' WHERE last_login IS NULL`,
 		`UPDATE users SET totp_secret = '' WHERE totp_secret IS NULL`,
@@ -1207,7 +1207,7 @@ func (s *SQLiteDB) DeletePeer(id string) error {
 
 // HardDeletePeer permanently removes a peer from the database, revokes its
 // device tokens, releases any id_change_history reservations for that
-// ID (#213) and removes its data loss prevention events (the console's
+// ID and removes its data loss prevention events (the console's
 // dlp_events, when the console made the table).
 func (s *SQLiteDB) HardDeletePeer(id string) error {
 	s.mu.Lock()
@@ -2239,7 +2239,7 @@ func formatTime(t time.Time) string {
 // --- User Operations ---
 
 // userSelectCols is the shared SELECT list for GetUser/GetUserByID/ListUsers.
-// COALESCE guards against NULL text columns that Scan into string (Issue #292).
+// COALESCE guards against NULL text columns that Scan into string.
 const userSelectCols = `id, username, password_hash, role, COALESCE(is_server_admin, 0),
 		COALESCE(auth_provider, 'local'), COALESCE(totp_secret, ''), totp_enabled, COALESCE(totp_recovery_codes, ''),
 		COALESCE(created_at, datetime('now')), COALESCE(last_login, ''), COALESCE(credentials_changed_at, 0),
@@ -2326,7 +2326,7 @@ func (s *SQLiteDB) UpdateUser(u *User) error {
 
 // RenameUser changes a username and cascades to the tables that key on it.
 //
-// Issue #498 (2026-11-13): the panel could not change an administrator's login
+// The panel could not change an administrator's login
 // name. `username` is the primary key of `address_books` and a lookup key in
 // `org_users` and `strategy_assignments.target_key`, so the rename has to be one
 // transaction; a partial rename would orphan an address book or silently detach
@@ -2415,7 +2415,7 @@ func (s *SQLiteDB) RenameUser(id int64, newUsername string) error {
 	return nil
 }
 
-// DeleteUser removes a user by ID and clears org membership links (Issue #292).
+// DeleteUser removes a user by ID and clears org membership links.
 func (s *SQLiteDB) DeleteUser(id int64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -2470,7 +2470,7 @@ func (s *SQLiteDB) UpdateUserLogin(id int64) error {
 }
 
 // NullifyUserLoginFieldsForTest sets last_login/totp_secret to SQL NULL for
-// Issue #292 regression tests (never-logged-in / legacy rows).
+// the regression tests of never-logged-in and legacy rows.
 func (s *SQLiteDB) NullifyUserLoginFieldsForTest(id int64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

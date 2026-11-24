@@ -165,8 +165,8 @@ func (s *Server) refuseDisabled(user *db.User, clientIP, method string) password
 	return passwordLoginResult{Status: passwordLoginDisabled}
 }
 
-// passwordLoginResult holds the resolved user after provider-bound authentication
-// (Issue #148). Used by panel /api/auth/login and RustDesk client /api/login.
+// passwordLoginResult holds the resolved user after provider-bound authentication.
+// Used by panel /api/auth/login and RustDesk client /api/login.
 type passwordLoginResult struct {
 	User       *db.User
 	Status     passwordLoginStatus

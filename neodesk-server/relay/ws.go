@@ -74,7 +74,7 @@ func (s *Server) serveWS() {
 
 // handleWSRelayUpgrade upgrades to WebSocket and handles relay pairing.
 // After upgrade, the first binary frame must be a RequestRelay (with UUID).
-// The raw *websocket.Conn is kept for message-boundary-preserving relay (#293).
+// The raw *websocket.Conn is kept for message-boundary-preserving relay.
 func (s *Server) handleWSRelayUpgrade(w http.ResponseWriter, r *http.Request) {
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 	if ip == "" {
@@ -158,7 +158,7 @@ func (s *Server) handleWSRelayUpgrade(w http.ResponseWriter, r *http.Request) {
 	// Keep the raw WebSocket for message-preserving bidirectional copy.
 	// Do NOT wrap with websocket.NetConn + io.Copy: NetConn.Write creates a new
 	// WS message per Write, and io.Copy's ~32 KiB buffer splits large encrypted
-	// video frames — clients then fail with decryption error (#293).
+	// video frames — clients then fail with decryption error.
 	s.pairIncomingConn(&pendingConn{
 		ws:        ws,
 		remote:    remoteAddr,
@@ -221,7 +221,7 @@ func isLoopbackOrigin(origin string) bool {
 }
 
 // startWSRelay runs a message-boundary-preserving bidirectional pipe between
-// two WebSocket relay peers (#293).
+// two WebSocket relay peers.
 func (s *Server) startWSRelay(ws1, ws2 *websocket.Conn, addr1, addr2, uuid string) {
 	if s.sessionLimiter != nil {
 		ips := make([]string, 0, 2)
