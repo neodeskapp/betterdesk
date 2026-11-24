@@ -935,6 +935,13 @@ interface MockDeviceState {
 	streaming: number[];
 	/** The last press of a mouse button: the desktop point and the display under it */
 	press: { x: number; y: number; display: number } | null;
+	/** The device's clipboard: the last one the viewer sent (text, and a PNG's size) */
+	clipboard?: { text: string; image: number };
+	/** What each paste key on the device pasted (its clipboard text at the time) */
+	pasted?: string[];
+	/** Copies on the device: what Ctrl+C or Ctrl+X there puts on its clipboard (copy() sends any) */
+	copyText?: string;
+	copy?: (text: string, png?: Blob | null) => void;
 }
 
 function deviceState(): MockDeviceState {
@@ -1438,6 +1445,24 @@ export class MockRemoteSession implements RemoteClient {
 		if (!this._inputAllowed()) return;
 		// F8 and F11 stay with the viewer
 		if (/^F\d+$/.test(e.key)) return;
+		// Paste and copy on the device, as a desktop would do them
+		if (
+			(e.ctrlKey || e.metaKey) &&
+			!e.altKey &&
+			(e.code === 'KeyV' || e.code === 'KeyC' || e.code === 'KeyX')
+		) {
+			e.preventDefault();
+			const dev = deviceState();
+			if (e.code === 'KeyV') {
+				const text = dev.clipboard?.text ?? '';
+				dev.pasted = [...(dev.pasted ?? []), text];
+				this.desktop.note('Pasted: ' + text.replace(/\s+/g, ' ').slice(0, 36));
+			} else {
+				const text = dev.copyText ?? 'Copied on the demo device';
+				this._after(150, () => this._emit('clipboard_remote', { text, pngBlob: null }));
+			}
+			return;
+		}
 		if (e.ctrlKey || e.metaKey || e.altKey) return;
 		e.preventDefault();
 		this.desktop.typeKey(e.key);
@@ -1451,6 +1476,10 @@ export class MockRemoteSession implements RemoteClient {
 		const onKey = (e: KeyboardEvent) => this._typed(e);
 		this.canvas.addEventListener('keydown', onKey);
 		this._onKey = onKey;
+		// The end-to-end tests copy on the device with this
+		deviceState().copy = (text, png) => {
+			if (this._state === 'streaming') this._emit('clipboard_remote', { text, pngBlob: png ?? null });
+		};
 		this._bound = true;
 		this._syncInput();
 	}
@@ -1509,8 +1538,15 @@ export class MockRemoteSession implements RemoteClient {
 		this._keyboardMode = mode;
 	}
 
-	sendClipboard(text: string): void {
-		this.desktop.note('Clipboard: ' + String(text).replace(/\s+/g, ' ').slice(0, 36));
+	/** The viewer's clipboard: kept as the device's own, so the next paste key there pastes it */
+	async sendClipboard(value: string | { text?: string; pngBlob?: Blob | null }): Promise<boolean> {
+		const entry = typeof value === 'string' ? { text: value } : value;
+		const text = entry.text ?? '';
+		deviceState().clipboard = { text, image: entry.pngBlob?.size ?? 0 };
+		this.desktop.note(
+			entry.pngBlob ? 'Clipboard: an image' : 'Clipboard: ' + text.replace(/\s+/g, ' ').slice(0, 36)
+		);
+		return true;
 	}
 
 	sendText(text: string): boolean {

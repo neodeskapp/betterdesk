@@ -31,7 +31,9 @@
 	import Icon from '#lib/ui/Icon.svelte';
 	import IconButton from '#lib/ui/IconButton.svelte';
 	import { appLink } from '#lib/util/app-links.ts';
+	import ClipboardStatus from './ClipboardStatus.svelte';
 	import ControlsRow from './ControlsRow.svelte';
+	import { attachClipboardKeys } from './clipboard-keys.ts';
 	import SessionPanel from './SessionPanel.svelte';
 	import Sheets from './Sheets.svelte';
 
@@ -50,6 +52,10 @@
 	let bridge = $state<HTMLInputElement | null>(null);
 	let pickerReload = $state(0);
 	let quickInput = $state<HTMLInputElement | null>(null);
+	let shellEl = $state<HTMLElement | null>(null);
+	/** Plain HTTP: the page has no clipboard API; said once per browser */
+	let clipboardHttpNote = $state(false);
+	const CLIPBOARD_HTTP_SEEN = 'nd_viewer_clipboard_http_seen';
 
 	const active = $derived(viewer.active);
 	const guestToken = $derived(guestTokenFromSearch(location.search) || data.guestToken);
@@ -168,6 +174,15 @@
 		} else {
 			nav.keyboard?.unlock?.();
 			await document.exitFullscreen().catch(() => {});
+		}
+	}
+
+	function dismissClipboardNote() {
+		clipboardHttpNote = false;
+		try {
+			localStorage.setItem(CLIPBOARD_HTTP_SEEN, '1');
+		} catch {
+			/* storage blocked: shown again next time */
 		}
 	}
 
@@ -297,6 +312,14 @@
 		window.addEventListener('focus', onFocus);
 		document.addEventListener('rd-file-sheet-closed', onFilesClosed);
 		window.addEventListener('pagehide', onPageHide, { capture: true });
+		const detachClipboard = attachClipboardKeys(viewer, { root: () => shellEl, shown: () => !phone });
+		if (viewer.clipboard.insecure) {
+			try {
+				clipboardHttpNote = localStorage.getItem(CLIPBOARD_HTTP_SEEN) !== '1';
+			} catch {
+				clipboardHttpNote = true;
+			}
+		}
 
 		// Other console tabs add a session here instead of opening another viewer tab
 		let bc: BroadcastChannel | null = null;
@@ -331,6 +354,7 @@
 			window.removeEventListener('message', onMessage);
 			document.removeEventListener('visibilitychange', onVisibility);
 			bc?.close();
+			detachClipboard();
 			viewer.teardown();
 		};
 	});
@@ -370,6 +394,7 @@
 <div
 	class={['rd-viewer-shell', viewer.sheet && 'has-sheet', mobile && 'is-mobile']}
 	id="rd-viewer-shell"
+	bind:this={shellEl}
 	hidden={phone}
 >
 	<div class="session-bar">
@@ -424,6 +449,7 @@
 		{/if}
 		{#if viewer.chromeVisible && !mobile}
 			<div class="bar-controls">
+				<ClipboardStatus {viewer} />
 				<Button
 					icon="tune"
 					class="bar-btn"
@@ -566,6 +592,18 @@
 			label={tf('actions.dismiss', 'Dismiss')}
 			onclick={() => (viewer.httpWarning = false)}
 		/>
+	</div>
+{/if}
+
+{#if clipboardHttpNote && viewer.chromeVisible}
+	<div class="http-warning clipboard-note" role="status">
+		<span
+			>{tf(
+				'remote.clipboard_http_note',
+				"This page is plain HTTP, so the browser gives it no clipboard access. Ctrl+V in the remote screen still sends text and images. Text copied on the remote computer reaches this computer with your next key press or click in the remote screen; images can't."
+			)}</span
+		>
+		<IconButton icon="close" label={tf('actions.dismiss', 'Dismiss')} onclick={dismissClipboardNote} />
 	</div>
 {/if}
 
@@ -1348,6 +1386,10 @@
 		box-shadow: var(--shadow-float);
 		color: var(--text);
 		transform: translateX(-50%);
+	}
+	/* Above the H.264 note when both show */
+	.clipboard-note {
+		bottom: calc(var(--space-4) + 96px);
 	}
 	.picker {
 		display: flex;

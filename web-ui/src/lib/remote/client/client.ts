@@ -1465,13 +1465,21 @@ export class RDClient {
 		}
 	}
 
+	/**
+	 * The device's clipboard changed: decoded and handed to the viewer
+	 * ("clipboard_remote"), which writes it to this computer's clipboard as
+	 * far as the browser allows (clipboard-bridge.svelte.ts). An entry over
+	 * RDClipboard.MAX_BYTES is left out ("clipboard_too_large").
+	 */
 	async _applyRemoteClipboard(clipboards: IClipboard[] | null | undefined): Promise<void> {
 		// Decode only what will be written: the active tab, clipboard on
 		if (this._viewOnly || this._clipboardDisabled || !this._clipboardToLocalEnabled) return;
 		const list = clipboards || [];
 		if (!list.length) return;
 
-		const decoded = await RDClipboard.decodeEntries(list);
+		const report = { tooLarge: false };
+		const decoded = await RDClipboard.decodeEntries(list, report);
+		if (report.tooLarge) this._emit('clipboard_too_large');
 		const text = RDClipboard.pickBestText(decoded);
 		const entry = {
 			text,
@@ -1483,11 +1491,9 @@ export class RDClient {
 		if (text) {
 			this._emit('clipboard', text);
 		}
-
-		if (this._clipboardToLocalEnabled && !this._clipboardDisabled) {
-			const status = await RDClipboard.writeLocalRich(entry);
-			this._emit('clipboard_status', status, entry);
-		}
+		// Turned off or another tab while it decoded
+		if (!this._clipboardToLocalEnabled || this._clipboardDisabled) return;
+		if (text || entry.pngBlob) this._emit('clipboard_remote', { text, pngBlob: entry.pngBlob });
 	}
 
 	_handleClipboard(clipboard: Clipboard): void {
@@ -1964,20 +1970,23 @@ export class RDClient {
 	/**
 	 * Send clipboard text or a rich clipboard entry to remote
 	 */
-	sendClipboard(value: string | RDClientClipboardEntry): void {
-		if (this._state !== 'streaming') return;
-		if (this._viewOnly) return;
-		void this._sendClipboard(value);
+	sendClipboard(value: string | RDClientClipboardEntry): Promise<boolean> {
+		if (this._state !== 'streaming') return Promise.resolve(false);
+		if (this._viewOnly) return Promise.resolve(false);
+		return this._sendClipboard(value);
 	}
 
-	async _sendClipboard(value: string | RDClientClipboardEntry | null | undefined): Promise<void> {
+	/** Builds the message (zstd for large entries) and sends it; true when it went out */
+	async _sendClipboard(value: string | RDClientClipboardEntry | null | undefined): Promise<boolean> {
 		const entry: RDClientClipboardEntry = typeof value === 'string' ? { text: value } : value || {};
 		try {
 			const msg =
 				entry.html || entry.pngBlob
 					? await this.proto.buildMultiClipboards(entry)
 					: await this.proto.buildClipboard(entry.text || '');
+			if (this._state !== 'streaming') return false;
 			this._sendPeerMessage(msg);
+			return true;
 		} catch (err) {
 			const message = errorField(err, 'message');
 			this._emit(
@@ -1988,6 +1997,7 @@ export class RDClient {
 				},
 				entry
 			);
+			return false;
 		}
 	}
 

@@ -122,7 +122,8 @@ export interface RemoteClient {
 	sendLockScreen?(): void;
 	sendRestartRemoteDevice?(): void;
 	sendRefreshScreen?(): void;
-	sendClipboard?(text: string): void;
+	/** RDClient and the mock take text and a PNG image (false when it could not go); the others text only */
+	sendClipboard?(value: string | { text?: string; pngBlob?: Blob | null }): unknown;
 	sendText?(text: string): boolean | undefined;
 	resetKeyboard?(): void;
 	setBlockInput?(on: boolean): void;

@@ -46,8 +46,11 @@ function errorMessage(err: object): unknown {
 
 export const RDClipboard = {
 	OWNER_FORMAT: 'dyn.com.rustdesk.owner',
-	/** Largest clipboard entry taken from the device, after decompression */
-	MAX_BYTES: 16 * 1024 * 1024,
+	/**
+	 * Largest clipboard entry taken from the device, after decompression:
+	 * a 4K screenshot as RGBA (33 MB) fits, more is left out
+	 */
+	MAX_BYTES: 40 * 1024 * 1024,
 
 	FORMAT: {
 		Text: 0,
@@ -169,20 +172,28 @@ export const RDClipboard = {
 	/**
 	 * @param clipboard - protobuf Clipboard
 	 */
-	async decodeEntry(clipboard: IClipboard | null | undefined): Promise<RDClipboardDecoded | null> {
+	async decodeEntry(
+		clipboard: IClipboard | null | undefined,
+		report?: { tooLarge: boolean }
+	): Promise<RDClipboardDecoded | null> {
 		if (!clipboard || RDClipboard.shouldSkipEntry(clipboard)) return null;
 
 		let bytes = RDClipboard.normalizeContent(clipboard.content);
 		if (!bytes || !bytes.length) return null;
 
 		const needsDecompress = !!clipboard.compress || RDCompress.isZstdMagic(bytes);
+		if (!needsDecompress && bytes.length > RDClipboard.MAX_BYTES) {
+			if (report) report.tooLarge = true;
+			return null;
+		}
 		if (needsDecompress) {
 			try {
 				bytes = await RDCompress.decompressZstd(bytes, { force: true, maxBytes: RDClipboard.MAX_BYTES });
 			} catch (err) {
-				if (typeof err === 'object' && err !== null && 'tooLarge' in err && err.tooLarge)
+				if (typeof err === 'object' && err !== null && 'tooLarge' in err && err.tooLarge) {
 					console.warn('[RDClipboard] Skipped a clipboard entry from the device:', errorMessage(err));
-				else RDCompress.reportZstdUnavailable(err);
+					if (report) report.tooLarge = true;
+				} else RDCompress.reportZstdUnavailable(err);
 				return null;
 			}
 		}
@@ -327,12 +338,13 @@ export const RDClipboard = {
 	},
 
 	async decodeEntries(
-		clipboards: (IClipboard | null | undefined)[] | null | undefined
+		clipboards: (IClipboard | null | undefined)[] | null | undefined,
+		report?: { tooLarge: boolean }
 	): Promise<RDClipboardDecoded[]> {
 		const list = clipboards || [];
 		const out: RDClipboardDecoded[] = [];
 		for (let i = 0; i < list.length; i++) {
-			const decoded = await RDClipboard.decodeEntry(list[i]);
+			const decoded = await RDClipboard.decodeEntry(list[i], report);
 			if (decoded) out.push(decoded);
 		}
 		return out;

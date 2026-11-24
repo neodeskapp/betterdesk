@@ -45,6 +45,7 @@ class FakeClient {
 	setBlockInput = vi.fn();
 	setViewOnly = vi.fn();
 	setDisableClipboard = vi.fn();
+	sendClipboard = vi.fn(async () => true);
 	getMonitors = () => [];
 	switchMonitor = vi.fn();
 	toggleVirtualDisplay = vi.fn();
@@ -451,5 +452,57 @@ describe('several displays of one device', () => {
 		expect(win.close).toHaveBeenCalled();
 		expect(s.popouts).toEqual([]);
 		expect(s.windows.size).toBe(0);
+	});
+});
+
+describe('the clipboard of the active session', () => {
+	const paste = (text: string) =>
+		({
+			getData: (t: string) => (t === 'text/plain' ? text : ''),
+			items: [],
+			files: []
+		}) as unknown as DataTransfer;
+
+	function live() {
+		const t = setup();
+		t.c.emit('state', 'streaming');
+		return t;
+	}
+
+	test('a paste goes to the active session only while it streams with the clipboard on', async () => {
+		const { v, s, c } = setup();
+		expect(v.clipboardOff()).toBe('not_streaming');
+		expect(await v.clipboard.fromPaste(paste('early'))).toBe('off');
+		c.emit('state', 'streaming');
+		expect(await v.clipboard.fromPaste(paste('hello'))).toBe('sent');
+		expect(c.sendClipboard).toHaveBeenCalledWith({ text: 'hello' });
+		v.setToggle('disableClipboard', true);
+		expect(v.clipboardOff()).toBe('toggle');
+		expect(await v.clipboard.fromPaste(paste('blocked'))).toBe('off');
+		v.setToggle('disableClipboard', false);
+		c.emit('permission', { permission: 2, enabled: false });
+		expect(v.clipboardOff()).toBe('device');
+		c.emit('permission', { permission: 2, enabled: true });
+		s.viewOnly = true;
+		expect(v.clipboardOff()).toBe('view_only');
+		expect(c.sendClipboard).toHaveBeenCalledTimes(1);
+	});
+
+	test('what the device copies is written here for the active tab, not for a tab in the background', async () => {
+		const writeText = vi.fn(async () => {});
+		Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+		const a = live();
+		a.c.emit('clipboard_remote', { text: 'from the device', pngBlob: null });
+		await vi.runAllTimersAsync();
+		expect(writeText).toHaveBeenCalledWith('from the device');
+		a.v.open('900100099');
+		const b = a.v.sessions[1]!;
+		a.v.attach(b, document.createElement('canvas'));
+		const other = FakeClient.made.at(-1)!;
+		other.emit('state', 'streaming');
+		a.c.emit('clipboard_remote', { text: 'from the background tab', pngBlob: null });
+		await vi.runAllTimersAsync();
+		expect(writeText).toHaveBeenCalledTimes(1);
+		Reflect.deleteProperty(navigator, 'clipboard');
 	});
 });

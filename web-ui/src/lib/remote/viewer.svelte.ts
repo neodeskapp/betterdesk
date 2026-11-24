@@ -51,6 +51,13 @@ import {
 import { isGuestMode, isRemoteTarget, isViewOnlyGuest, peerAllowed, transportOf } from './access.ts';
 import { isMobileViewer } from './capabilities.ts';
 import {
+	CLIPBOARD_LIMITS,
+	ClipboardBridge,
+	type ClipEntry,
+	type ClipboardNotice,
+	type ClipboardOffReason
+} from './clipboard-bridge.svelte.ts';
+import {
 	createClient,
 	fileSheet,
 	touchInput,
@@ -409,12 +416,12 @@ export class Viewer {
 	readonly remoteTarget: boolean;
 	readonly userId: string | number | null;
 	private onleave: () => void;
-	private lastClipboard = '';
-	private clipboardGranted: boolean | null = null;
 	private openFilesOnConnect = false;
 	/** Devices the viewer signed in by itself since the page opened: a reconnect does not again */
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- nothing renders from it
 	private autoSignedIn = new Set<string>();
+	/** The clipboard between this computer and the active session's (clipboard-bridge.svelte.ts) */
+	readonly clipboard: ClipboardBridge;
 
 	constructor(opts: ViewerOptions) {
 		this.data = opts.data;
@@ -424,6 +431,11 @@ export class Viewer {
 		this.remoteTarget = isRemoteTarget(opts.data.capabilities);
 		this.userId = opts.data.user?.id ?? null;
 		this.onleave = opts.onleave;
+		this.clipboard = new ClipboardBridge({
+			allowed: () => this.clipboardOff(),
+			send: (entry) => this.sendClipboardEntry(entry),
+			notify: (n) => this.clipboardNotice(n)
+		});
 	}
 
 	get active(): ViewerSession | null {
@@ -723,6 +735,11 @@ export class Viewer {
 		on('step', (step: unknown) => {
 			if (s.view === 'connecting' && isStep(step)) this.setStep(s, step);
 		});
+		// The device's clipboard changed: to this computer's, for the active tab only
+		on('clipboard_remote', (entry: ClipEntry) => {
+			if (this.isActive(s)) this.clipboard.fromRemote(entry);
+		});
+		on('clipboard_too_large', () => this.clipboardNotice({ kind: 'from_remote_too_large' }));
 		on('error', (msg: unknown, meta?: CloseMeta) => {
 			const text =
 				msg && typeof msg === 'object'
@@ -1409,26 +1426,31 @@ export class Viewer {
 		this.focusScreen();
 	}
 
+	/**
+	 * Paste clipboard (Actions menu): reads this computer's clipboard (the
+	 * browser may ask first) and sends it. Ctrl+V in the viewer does the same
+	 * without the menu.
+	 */
 	async pasteClipboard(): Promise<void> {
 		const s = this.active;
 		if (!s?.client) return;
-		if (s.client.viewOnly || this.viewOnlyGuest) {
+		const off = this.clipboardOff();
+		if (off === 'view_only') {
 			toast.warning(tf('remote.view_only', 'View only mode'));
 			return;
 		}
-		if (!s.allowed.clipboard) {
+		if (off === 'device') {
 			toast.warning(tf('remote.feature_off', 'This is turned off for your account on this server.'));
 			return;
 		}
-		try {
-			const text = await navigator.clipboard.readText();
-			if (text) s.client.sendClipboard?.(text);
-			else toast.warning(tf('remote.clipboard_empty', 'Clipboard is empty'));
-		} catch {
+		if (off) return;
+		if (!(await this.clipboard.requestPermission()))
 			toast.error(
-				tf('remote.clipboard_denied', 'Clipboard access denied. HTTPS required or permission not granted.')
+				tf(
+					'remote.clipboard_read_refused',
+					"The browser didn't let the page read the clipboard. Press Ctrl+V in the viewer instead."
+				)
 			);
-		}
 	}
 
 	/** Type text (controls row): keystrokes for login screens and password fields; true when sent */
@@ -2042,6 +2064,7 @@ export class Viewer {
 		}
 	}
 
+
 	/** Tablets: touch input on the screen (RustDesk transport only) */
 	private attachTouch(s: ViewerSession): void {
 		if (!isMobileViewer() || !s.client || !s.canvas) return;
@@ -2090,38 +2113,79 @@ export class Viewer {
 	}
 
 	/**
-	 * The local clipboard to the device, when the browser already allows
-	 * reading it (Firefox asks on every read, so it never does there; Paste
-	 * clipboard in Actions stays the way to send it).
+	 * The local clipboard to the device when the viewer gets the focus, where
+	 * the browser allows reading it without asking (Chromium once granted;
+	 * Firefox and Safari ask on every read, there Ctrl+V sends it)
 	 */
 	async syncClipboard(): Promise<void> {
-		const s = this.active;
-		if (!s?.client || s.state !== 'streaming' || s.client.viewOnly) return;
-		if (!navigator.clipboard?.readText) return;
-		if (!(await this.clipboardReadGranted())) return;
-		try {
-			const text = await navigator.clipboard.readText();
-			if (text && text !== this.lastClipboard) {
-				this.lastClipboard = text;
-				s.client.sendClipboard?.(text);
-			}
-		} catch {
-			/* not focused or refused */
-		}
+		await this.clipboard.readSilently();
 	}
 
-	private async clipboardReadGranted(): Promise<boolean> {
-		if (this.clipboardGranted !== null) return this.clipboardGranted;
-		try {
-			const status = await navigator.permissions.query({ name: 'clipboard-read' as PermissionName });
-			this.clipboardGranted = status.state === 'granted';
-			status.onchange = () => {
-				this.clipboardGranted = status.state === 'granted';
-			};
-		} catch {
-			this.clipboardGranted = false;
+	/** Why the active session takes no clipboard now, '' when it does */
+	clipboardOff(): ClipboardOffReason {
+		const s = this.active;
+		if (!s || s.view !== 'streaming' || !s.client) return 'not_streaming';
+		if (this.viewOnlyGuest || s.viewOnly || !s.allowed.keyboard) return 'view_only';
+		if (!s.allowed.clipboard) return 'device';
+		if (s.toggles.disableClipboard) return 'toggle';
+		return '';
+	}
+
+	/** To the active session's device: text and a PNG image (RustDesk), text alone on the other transports */
+	private async sendClipboardEntry(entry: ClipEntry): Promise<void> {
+		const c = this.active?.client;
+		if (!c?.sendClipboard) throw new Error('no clipboard on this transport');
+		const rich = this.transport === 'rd' || !!this.data.mockRemote;
+		if (!rich && !entry.text) {
+			this.clipboardNotice({ kind: 'image_unsupported' });
+			return;
 		}
-		return this.clipboardGranted;
+		const sent = await c.sendClipboard(rich ? entry : (entry.text ?? ''));
+		if (sent === false) throw new Error('not sent');
+	}
+
+	private clipboardNotice(n: ClipboardNotice): void {
+		const mb = (bytes: number) => `${Math.round(bytes / (1024 * 1024))} MB`;
+		switch (n.kind) {
+			case 'too_large':
+				toast.warning(
+					n.what === 'text'
+						? tf(
+								'remote.clipboard_text_too_large',
+								'The copied text is larger than {limit} and was not sent.',
+								{
+									limit: mb(n.limit)
+								}
+							)
+						: tf(
+								'remote.clipboard_image_too_large',
+								'The copied image is larger than {limit} and was not sent.',
+								{
+									limit: mb(n.limit)
+								}
+							)
+				);
+				break;
+			case 'from_remote_too_large':
+				toast.warning(
+					tf(
+						'remote.clipboard_remote_too_large',
+						'The remote computer copied more than {limit}. It was not copied to this computer.',
+						{ limit: mb(CLIPBOARD_LIMITS.fromRemote) }
+					)
+				);
+				break;
+			case 'image_unsupported':
+				toast.warning(
+					tf('remote.clipboard_image_unsupported', "The copied image can't be sent. Only the text went over.")
+				);
+				break;
+			case 'send_failed':
+				toast.error(
+					tf('remote.clipboard_send_failed', 'The clipboard could not be sent to the remote computer.')
+				);
+				break;
+		}
 	}
 
 	/** Autoplay was blocked: the click on "Start playback" plays video and resumes audio */
