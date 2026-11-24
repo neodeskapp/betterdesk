@@ -61,3 +61,81 @@ func TestDescribeHoldsEveryCommand(t *testing.T) {
 		t.Errorf("describe xml: %d", code)
 	}
 }
+
+// cells splits a Markdown table row into its cells: a | that a backslash
+// escapes belongs to the cell.
+func cells(row string) []string {
+	row = strings.TrimSpace(row)
+	row = strings.TrimSuffix(strings.TrimPrefix(row, "|"), "|")
+	var out []string
+	var cur strings.Builder
+	for i := 0; i < len(row); i++ {
+		switch {
+		case row[i] == '\\' && i+1 < len(row) && row[i+1] == '|':
+			cur.WriteString(`\|`)
+			i++
+		case row[i] == '|':
+			out = append(out, cur.String())
+			cur.Reset()
+		default:
+			cur.WriteByte(row[i])
+		}
+	}
+	return append(out, cur.String())
+}
+
+// Every row of the reference's tables has the cells of its header: a |
+// in a cell, as in the choices of devices list --status online|offline,
+// is escaped, also inside the code of the flag's column (L445).
+func TestTheReferenceTablesKeepTheirCells(t *testing.T) {
+	tab, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var b strings.Builder
+	WriteMarkdown(&b, tab.Describe("test"))
+	width, broken := 0, 0
+	for i, line := range strings.Split(b.String(), "\n") {
+		if !strings.HasPrefix(line, "|") {
+			width = 0
+			continue
+		}
+		n := len(cells(line))
+		if width == 0 {
+			width = n
+			continue
+		}
+		if n != width {
+			broken++
+			if broken <= 5 {
+				t.Errorf("line %d has %d cells, its table %d: %s", i+1, n, width, line)
+			}
+		}
+	}
+	if broken > 5 {
+		t.Errorf("%d rows in all have the wrong number of cells", broken)
+	}
+	if !strings.Contains(b.String(), "| `--status online\\|offline` |") {
+		t.Error("the choices of devices list --status are not in the reference as one cell")
+	}
+}
+
+// Every flag says what it is: the reference and --help have no empty
+// cells (L445).
+func TestEveryFlagSaysWhatItIs(t *testing.T) {
+	tab, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var empty []string
+	for _, c := range tab.Commands {
+		for _, f := range c.Flags {
+			if strings.TrimSpace(f.Help) == "" {
+				empty = append(empty, c.Name+" --"+f.Name)
+			}
+		}
+	}
+	if len(empty) > 0 {
+		t.Errorf("%d flags have no help text:\n  %s", len(empty), strings.Join(empty, "\n  "))
+	}
+}

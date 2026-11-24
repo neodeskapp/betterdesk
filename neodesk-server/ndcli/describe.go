@@ -295,7 +295,7 @@ func WriteGroupMarkdown(w io.Writer, g GroupDesc) {
 				if f.Secret {
 					fmt.Fprintf(w, "| `--%s-stdin` | read the %s from standard input (its first line), so it stays out of the command line |\n", f.Name, strings.ReplaceAll(f.Name, "-", " "))
 				}
-				fmt.Fprintf(w, "| `--%s` | %s |\n", strings.TrimSpace(f.Name+" "+flagPlaceholder(f)), md(flagHelp(f)))
+				fmt.Fprintf(w, "| `--%s` | %s |\n", md(strings.TrimSpace(f.Name+" "+flagPlaceholder(f))), md(flagHelp(f)))
 			}
 			if c.Upload != "" {
 				fmt.Fprintf(w, "| `--file PATH` | the file to upload |\n")

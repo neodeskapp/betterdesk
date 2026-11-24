@@ -818,31 +818,36 @@
      "name": "ntp-servers",
      "in": "body",
      "type": "string",
-     "field": "ntp_servers"
+     "field": "ntp_servers",
+     "help": "NTP servers to check the clock against, comma separated (left out: pool.ntp.org, time.google.com and time.cloudflare.com)"
     },
     {
      "name": "max-skew-ms",
      "in": "body",
-     "type": "string",
-     "field": "max_skew_ms"
+     "type": "int",
+     "field": "max_skew_ms",
+     "help": "largest clock offset that still counts as synced, in milliseconds, 1 to 600000 (left out: 2000)"
     },
     {
      "name": "require-synced-clock",
      "in": "body",
-     "type": "string",
-     "field": "require_synced_clock"
+     "type": "bool",
+     "field": "require_synced_clock",
+     "help": "block billable sessions while the clock is not synced (left out: on)"
     },
     {
      "name": "trust-os-ntp",
      "in": "body",
-     "type": "string",
-     "field": "trust_os_ntp"
+     "type": "bool",
+     "field": "trust_os_ntp",
+     "help": "count the clock as synced when no NTP server answers but the system says it is synced (left out: on for Linux, off elsewhere)"
     },
     {
      "name": "billing-timezone",
      "in": "body",
      "type": "string",
-     "field": "billing_timezone"
+     "field": "billing_timezone",
+     "help": "time zone of the billing months, a name like Europe/Berlin (left out: UTC)"
     }
    ],
    "permission": "server.config"
@@ -919,26 +924,30 @@
     {
      "name": "help-requests-enabled",
      "in": "body",
-     "type": "string",
-     "field": "help_requests_enabled"
+     "type": "bool",
+     "field": "help_requests_enabled",
+     "help": "send a mail for each help request a device raises (left out: on)"
     },
     {
      "name": "notify-assigned-operators",
      "in": "body",
-     "type": "string",
-     "field": "notify_assigned_operators"
+     "type": "bool",
+     "field": "notify_assigned_operators",
+     "help": "mail the operators on the access lists of the device's folder and groups (left out: on)"
     },
     {
      "name": "fallback-alert-email",
      "in": "body",
-     "type": "string",
-     "field": "fallback_alert_email"
+     "type": "bool",
+     "field": "fallback_alert_email",
+     "help": "mail the alert address of the mail settings when no operator gets the mail (left out: on)"
     },
     {
      "name": "include-folder-in-subject",
      "in": "body",
-     "type": "string",
-     "field": "include_folder_in_subject"
+     "type": "bool",
+     "field": "include_folder_in_subject",
+     "help": "put the device's folder name in the mail subject (left out: on)"
     }
    ],
    "permission": "billing.manage"
@@ -1098,12 +1107,14 @@
     {
      "name": "family",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "the Google Fonts family to install, like Inter"
     },
     {
      "name": "weights",
      "in": "body",
-     "type": "string"
+     "type": "list",
+     "help": "weights to install, comma separated, like 400,700 (left out: 400, 500, 600 and 700)"
     }
    ],
    "permission": "branding.edit"
@@ -1152,7 +1163,8 @@
     {
      "name": "name",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "name of the copy (left out: the name with \"(copy)\" after it)"
     }
    ],
    "permission": "branding.edit"
@@ -1165,17 +1177,20 @@
     {
      "name": "name",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "profile name, at most 80 characters, not in use yet"
     },
     {
      "name": "description",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "what the profile is for, at most 200 characters"
     },
     {
      "name": "branding",
      "in": "body",
-     "type": "string"
+     "type": "json",
+     "help": "the settings to save, a JSON object like the data of branding show (left out: the current settings)"
     }
    ],
    "permission": "branding.edit"
@@ -1207,17 +1222,20 @@
     {
      "name": "name",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "new name, at most 80 characters (left out: kept)"
     },
     {
      "name": "description",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "new description, at most 200 characters (left out: kept)"
     },
     {
      "name": "branding",
      "in": "body",
-     "type": "string"
+     "type": "json",
+     "help": "new settings, a JSON object like the data of branding show (left out: kept)"
     }
    ],
    "permission": "branding.edit"
@@ -1281,22 +1299,33 @@
      "name": "widget-id",
      "in": "body",
      "type": "string",
-     "field": "widget_id"
+     "field": "widget_id",
+     "help": "the widget's ID in the device's manifest"
     },
     {
      "name": "action",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "what to do with the widget",
+     "enum": [
+      "set",
+      "trigger",
+      "execute",
+      "reset",
+      "query"
+     ]
     },
     {
      "name": "value",
      "in": "body",
-     "type": "string"
+     "type": "json",
+     "help": "the value for the widget as JSON, like true for a toggle or 50 for a slider"
     },
     {
      "name": "reason",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "why, sent to the device with the command"
     }
    ],
    "permission": "cdap.command",
@@ -1329,7 +1358,8 @@
      "name": "linked-peer-id",
      "in": "body",
      "type": "string",
-     "field": "linked_peer_id"
+     "field": "linked_peer_id",
+     "help": "ID of the desktop device to link; empty removes the link"
     }
    ],
    "permission": "cdap.command"
@@ -1390,7 +1420,8 @@
     {
      "name": "enabled",
      "in": "body",
-     "type": "bool"
+     "type": "bool",
+     "help": "turn the gateway on (true) or off (false); it takes effect after a restart"
     }
    ],
    "permission": "server.config"
@@ -1403,18 +1434,21 @@
     {
      "name": "name",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "flow name, at most 100 characters"
     },
     {
      "name": "description",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "what the flow does, at most 500 characters"
     },
     {
      "name": "flow-json",
      "in": "body",
      "type": "string",
-     "field": "flow_json"
+     "field": "flow_json",
+     "help": "the flow as JSON text, like {\"nodes\":[],\"wires\":[]} (left out: {})"
     }
    ],
    "permission": "the operator role, and a token with all of its account's permissions"
@@ -1606,38 +1640,45 @@
     {
      "name": "name",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "policy name"
     },
     {
      "name": "description",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "what the policy is for"
     },
     {
      "name": "policy-type",
      "in": "body",
      "type": "string",
-     "field": "policy_type"
+     "field": "policy_type",
+     "help": "what the policy covers: usb, file_type, clipboard, screen_share or file_transfer"
     },
     {
      "name": "action",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "what happens on a match: block, log or allow (left out: log)"
     },
     {
      "name": "scope",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "device IDs it applies to, comma separated; empty or all for every device"
     },
     {
      "name": "enabled",
      "in": "body",
-     "type": "bool"
+     "type": "bool",
+     "help": "turn the policy on or off (left out: on)"
     },
     {
      "name": "rules",
      "in": "body",
-     "type": "string"
+     "type": "json",
+     "help": "conditions the device checks, a JSON array like [{\"key\":\"file_ext\",\"value\":\".exe,.bat\"}] (left out: none)"
     }
    ],
    "permission": "server.config"
@@ -3548,31 +3589,36 @@
     {
      "name": "peer-ids",
      "in": "body",
-     "type": "string",
-     "field": "peer_ids"
+     "type": "list",
+     "field": "peer_ids",
+     "help": "the devices the link opens, by ID, comma separated"
     },
     {
      "name": "ttl-minutes",
      "in": "body",
-     "type": "string",
-     "field": "ttl_minutes"
+     "type": "int",
+     "field": "ttl_minutes",
+     "help": "minutes the link works, at most 1440 (left out: 60)"
     },
     {
      "name": "view-only",
      "in": "body",
-     "type": "string",
-     "field": "view_only"
+     "type": "bool",
+     "field": "view_only",
+     "help": "watch only, no control; for mesh and CDAP devices only"
     },
     {
      "name": "label",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "a name for the link"
     },
     {
      "name": "max-uses",
      "in": "body",
      "type": "int",
-     "field": "max_uses"
+     "field": "max_uses",
+     "help": "how many times the link may be used (left out or 0: no limit)"
     }
    ],
    "permission": "guest.create",
@@ -4119,7 +4165,8 @@
      "name": "interval-ms",
      "in": "body",
      "type": "int",
-     "field": "interval_ms"
+     "field": "interval_ms",
+     "help": "milliseconds between checks, at least 1000 (left out: 60000); a running monitor keeps its interval"
     }
    ],
    "permission": "server.config"
@@ -4216,46 +4263,60 @@
     {
      "name": "name",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "target name"
     },
     {
      "name": "host",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "host name or IP address to check; ping and tcp need it, http and https need it or --value-url"
     },
     {
      "name": "port",
      "in": "body",
-     "type": "int"
+     "type": "int",
+     "help": "the port, 1 to 65535 (left out: 80 for tcp and http, 443 for https)"
     },
     {
      "name": "value-url",
      "in": "body",
      "type": "string",
-     "field": "url"
+     "field": "url",
+     "help": "the URL for an http or https check; without it the URL is made from the host and port"
     },
     {
      "name": "check-type",
      "in": "body",
      "type": "string",
-     "field": "check_type"
+     "field": "check_type",
+     "help": "how to check the target",
+     "enum": [
+      "ping",
+      "tcp",
+      "http",
+      "https"
+     ]
     },
     {
      "name": "timeout-ms",
      "in": "body",
      "type": "int",
-     "field": "timeout_ms"
+     "field": "timeout_ms",
+     "help": "how long a check waits, in milliseconds, 1 to 60000 (left out: 5000)"
     },
     {
      "name": "interval-ms",
      "in": "body",
      "type": "int",
-     "field": "interval_ms"
+     "field": "interval_ms",
+     "help": "how often to check this target, in milliseconds (left out: 60000); never more often than the monitor runs"
     },
     {
      "name": "enabled",
      "in": "body",
-     "type": "bool"
+     "type": "bool",
+     "help": "check this target or not (left out: on)"
     }
    ],
    "permission": "server.config"
@@ -4452,7 +4513,8 @@
      "name": "device-id",
      "in": "body",
      "type": "string",
-     "field": "device_id"
+     "field": "device_id",
+     "help": "ID of the device to add; the server must know it"
     }
    ],
    "permission": "org.manage_devices"
@@ -5054,7 +5116,8 @@
     {
      "name": "fingerprint",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "SHA-256 of the target's TLS certificate, 64 hex characters without colons"
     }
    ],
    "permission": "remote_target.connect"
@@ -5106,12 +5169,16 @@
     {
      "name": "username",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "user name to sign in to the target with, at most 256 characters (empty clears it)"
     },
     {
      "name": "password",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "password to sign in to the target with, stored encrypted, at most 4096 characters",
+     "secret": true,
+     "required": true
     }
    ],
    "permission": "remote_target.edit"
@@ -5569,29 +5636,34 @@
     {
      "name": "name",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "relay name, 1 to 80 letters, digits, spaces and . _ - # / ( )"
     },
     {
      "name": "address",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "host:port the relay answers at, like relay.example.com:21117; each address once"
     },
     {
      "name": "location",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "where the relay is, at most 80 characters"
     },
     {
      "name": "max-sessions",
      "in": "body",
-     "type": "string",
-     "field": "max_sessions"
+     "type": "int",
+     "field": "max_sessions",
+     "help": "most sessions at once, 1 to 100000 (left out: 50)"
     },
     {
      "name": "max-bandwidth-mbps",
      "in": "body",
-     "type": "string",
-     "field": "max_bandwidth_mbps"
+     "type": "int",
+     "field": "max_bandwidth_mbps",
+     "help": "most bandwidth, in Mbit/s, 1 to 1000000 (left out: 100)"
     }
    ],
    "permission": "server.config"
@@ -5660,40 +5732,54 @@
     {
      "name": "name",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "rule name, 1 to 80 characters"
     },
     {
      "name": "match-type",
      "in": "body",
      "type": "string",
-     "field": "match_type"
+     "field": "match_type",
+     "help": "what to match devices by",
+     "enum": [
+      "subnet",
+      "group",
+      "tag",
+      "country",
+      "device_id"
+     ]
     },
     {
      "name": "match-value",
      "in": "body",
      "type": "string",
-     "field": "match_value"
+     "field": "match_value",
+     "help": "what to match, at most 200 characters: a subnet like 192.168.1.0/24, a device group name, a tag, a country or a device ID"
     },
     {
      "name": "target-relay",
      "in": "body",
      "type": "string",
-     "field": "target_relay"
+     "field": "target_relay",
+     "help": "ID of the relay for the matching devices (see scaling relays)"
     },
     {
      "name": "fallback",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "where the devices go when that relay can't take them: master or nearest (left out: master)"
     },
     {
      "name": "priority",
      "in": "body",
-     "type": "string"
+     "type": "int",
+     "help": "order of the rules, 0 to 1000, lowest first (left out: 10)"
     },
     {
      "name": "enabled",
      "in": "body",
-     "type": "bool"
+     "type": "bool",
+     "help": "turn the rule on or off (left out: on)"
     }
    ],
    "permission": "server.config"
@@ -6282,7 +6368,7 @@
   },
   {
    "name": "strategies assign",
-   "summary": "Give a strategy to devices, accounts or user groups.",
+   "summary": "Give a strategy to devices, accounts or device groups.",
    "route": "POST /api/panel/strategies/{guid}/assign",
    "args": [
     {
@@ -6294,17 +6380,20 @@
     {
      "name": "peers",
      "in": "body",
-     "type": "string"
+     "type": "list",
+     "help": "devices to give the strategy, by ID, comma separated"
     },
     {
      "name": "users",
      "in": "body",
-     "type": "string"
+     "type": "list",
+     "help": "accounts to give the strategy, by user name, comma separated"
     },
     {
      "name": "groups",
      "in": "body",
-     "type": "string"
+     "type": "list",
+     "help": "device groups to give the strategy, by name, comma separated"
     }
    ],
    "permission": "device.edit"
@@ -6349,23 +6438,26 @@
   },
   {
    "name": "strategies unassign",
-   "summary": "Take strategies away from devices, accounts or user groups.",
+   "summary": "Take strategies away from devices, accounts or device groups.",
    "route": "POST /api/panel/strategies/unassign",
    "flags": [
     {
      "name": "peers",
      "in": "body",
-     "type": "string"
+     "type": "list",
+     "help": "devices to take their strategy from, by ID, comma separated"
     },
     {
      "name": "users",
      "in": "body",
-     "type": "string"
+     "type": "list",
+     "help": "accounts to take their strategy from, by user name, comma separated"
     },
     {
      "name": "groups",
      "in": "body",
-     "type": "string"
+     "type": "list",
+     "help": "device groups to take their strategy from, by name, comma separated"
     }
    ],
    "permission": "device.edit"
@@ -6575,8 +6667,9 @@
     {
      "name": "device-ids",
      "in": "body",
-     "type": "string",
-     "field": "device_ids"
+     "type": "list",
+     "field": "device_ids",
+     "help": "devices to add, by ID, comma separated; the server must know each"
     }
    ]
   },
@@ -6661,8 +6754,9 @@
     {
      "name": "user-id",
      "in": "body",
-     "type": "string",
-     "field": "user_id"
+     "type": "int",
+     "field": "user_id",
+     "help": "the account's number ID"
     }
    ]
   },
@@ -7157,29 +7251,38 @@
     {
      "name": "direction",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "upload (console to device) or download (device to console)",
+     "enum": [
+      "upload",
+      "download"
+     ]
     },
     {
      "name": "device-id",
      "in": "body",
      "type": "string",
-     "field": "device_id"
+     "field": "device_id",
+     "help": "the device's ID"
     },
     {
      "name": "filename",
      "in": "body",
-     "type": "string"
+     "type": "string",
+     "help": "the file's name; only its last part is kept"
     },
     {
      "name": "size",
      "in": "body",
-     "type": "string"
+     "type": "int",
+     "help": "file size in bytes, at most 4 GiB (left out: unknown)"
     },
     {
      "name": "mime-type",
      "in": "body",
      "type": "string",
-     "field": "mime_type"
+     "field": "mime_type",
+     "help": "the file's content type, at most 255 characters (left out: application/octet-stream)"
     }
    ],
    "permission": "device.connect",
