@@ -21,6 +21,7 @@
 	import Table from '#lib/ui/Table.svelte';
 	import type { Column } from '#lib/ui/table.ts';
 	import Time from '#lib/ui/Time.svelte';
+	import { deviceState } from '../model.ts';
 	import { controlService, downloadFile, endProcess } from '../panel-actions.svelte.ts';
 	import type { PanelData } from '../panel-data.svelte.ts';
 	import {
@@ -216,8 +217,15 @@
 	{:else}
 		{#if st.result?.cached && st.result.collectedAt}
 			<p class="dp-muted">
-				{tf('device_detail.agent_cached', 'The device is offline. This is what it sent last:')}
+				{#if deviceState(device) === 'online'}
+					{t('device_detail.agent_sent_last')}
+				{:else}
+					{tf('device_detail.agent_cached', 'The device is offline. This is what it sent last:')}
+				{/if}
 				<Time value={st.result.collectedAt} relative={false} />
+				{#if st.result.pending}
+					{t('device_detail.agent_pending_hint')}
+				{/if}
 			</p>
 		{/if}
 		{#if empty}

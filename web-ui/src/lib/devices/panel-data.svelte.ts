@@ -143,8 +143,9 @@ export class PanelData {
 					: await agentApi.getAgentView(this.id, view as AgentView);
 			if (!current()) return;
 			this.#asked[view] = result.pending && asked ? asked : undefined;
+			// The last snapshot with a request for a new one shows while it waits
 			this.views[view] = {
-				state: result.pending ? 'pending' : 'ready',
+				state: result.pending && !result.cached ? 'pending' : 'ready',
 				result,
 				problem: null,
 				error: '',
@@ -166,7 +167,8 @@ export class PanelData {
 		this.#device = device;
 		for (const view of Object.keys(this.#asked) as LiveView[]) {
 			const asked = this.#asked[view];
-			if (!asked || this.views[view].state !== 'pending') continue;
+			const waiting = this.views[view].state === 'pending' || !!this.views[view].result?.pending;
+			if (!asked || !waiting) continue;
 			const now = waitMark(device, view);
 			if ((now.online && !asked.online) || now.collectedAt !== asked.collectedAt) {
 				this.#asked[view] = undefined;

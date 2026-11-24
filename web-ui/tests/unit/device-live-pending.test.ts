@@ -114,4 +114,34 @@ describe('a live view that waits for the device', () => {
 		expect((await screen.findAllByText('Audiosrv')).length).toBeGreaterThan(0);
 		expect(serviceLoads()).toBe(2);
 	});
+
+	/* L480: a NeoDesk client is online without a live agent; its views come from snapshots */
+	test('an online device: the last snapshot shows while a new one is asked for, then the new one', async () => {
+		const old = {
+			collected_at: '2026-11-23T21:07:22Z',
+			data: { services: [{ name: 'ALG', status: 'stopped' }] }
+		};
+		device = { ...device, online: true, device_type: 'neodesk', telemetry: { snapshots: { services: old } } };
+		services = { success: true, cached: true, pending: true, ...old };
+		render(DevicePanelHost);
+		openDeviceAt(ID, 'live', { liveView: 'services' });
+		expect((await screen.findAllByText('ALG')).length).toBeGreaterThan(0);
+		expect(screen.getByText('device_detail.agent_sent_last', { exact: false })).toBeTruthy();
+		expect(screen.queryByText('device_detail.agent_cached', { exact: false })).toBeNull();
+		expect(screen.queryByText('device_detail.agent_pending')).toBeNull();
+
+		// Nothing new yet: no new request
+		await reloadDevice();
+		expect(serviceLoads()).toBe(1);
+
+		const fresh = {
+			collected_at: '2026-11-24T23:30:00Z',
+			data: { services: [{ name: 'Spooler', status: 'running' }] }
+		};
+		device = { ...device, telemetry: { snapshots: { services: fresh } } };
+		services = { success: true, cached: true, ...fresh };
+		await reloadDevice();
+		expect((await screen.findAllByText('Spooler')).length).toBeGreaterThan(0);
+		expect(serviceLoads()).toBe(2);
+	});
 });

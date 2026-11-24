@@ -50,6 +50,21 @@ var snapshotFor = map[string]string{
 	"files.browse":   "files",
 }
 
+// snapshotStale is true for a snapshot the server received more than a
+// minute before now. Without a time it is not: nothing is asked for then.
+func snapshotStale(receivedAt any, now time.Time) bool {
+	text, _ := receivedAt.(string)
+	if text == "" {
+		return false
+	}
+	for _, layout := range []string{"2006-01-02 15:04:05", time.RFC3339Nano} {
+		if at, err := time.Parse(layout, text); err == nil {
+			return now.Sub(at) > time.Minute
+		}
+	}
+	return false
+}
+
 // agentRequest is proxyAgentRequest: the device of the path must exist and
 // be in the account's scope, then the agent is asked.
 func (h *handlers) agentRequest(w http.ResponseWriter, r *http.Request, typ string, payload any, timeout time.Duration) {
@@ -103,6 +118,20 @@ func (h *handlers) agentRequest(w http.ResponseWriter, r *http.Request, typ stri
 					cached.Set("collected_at", snapshot.Get("collected_at"))
 				}
 				cached.Set("data", snapshot.Get("data"))
+				// A NeoDesk client has no live agent connection: an old
+				// snapshot comes with a request for a new one (L480)
+				if snapshotStale(snapshot.Get("received_at"), time.Now()) {
+					if command, ok := commandFor[typ]; ok && h.allowed(r, telemetryTools[command]) {
+						args := payload
+						if !goapi.Truthy(args) {
+							args = goapi.NewObject()
+						}
+						queued := h.api.QueuePeerTelemetryCommand(ctx, id, command, args)
+						if !queued.Has("success") || queued.Get("success") != false {
+							cached.Set("pending", true)
+						}
+					}
+				}
 				answer(w, r, http.StatusOK, cached)
 				return
 			}
