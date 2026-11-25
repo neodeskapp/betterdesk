@@ -115,30 +115,35 @@ for (const role of ROLES) {
 			await expect(page.locator('.tickets-table')).not.toContainText(`e2e ${role} ticket`);
 		});
 
-		test('chat: needs chat.access; lists people and devices; a conversation opens', async ({ page }) => {
+		test('chat: needs Support chat or Team chat; the sections, the list and a new conversation', async ({
+			page
+		}) => {
 			await page.goto(`${UI}/chat`);
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 			const p = await permissions(page);
-			if (!has(p, 'chat.support')) {
-				// The chat section needs chat.access, as its API does (PA4)
+			if (!has(p, 'chat.support') && !has(p, 'chat.team')) {
+				// The chat needs Support chat or Team chat, as its API does (PA4, A242)
 				await expect(forbidden(page)).toBeVisible();
-				await expect(page.getByRole('button', { name: 'New group' })).toHaveCount(0);
+				await expect(page.getByRole('button', { name: 'New', exact: true })).toHaveCount(0);
 				await expectNoAxeViolations(page);
 				return;
 			}
-			const rows = page.locator('.chat-list button.list-row');
-			await expect(rows.first()).toBeVisible({ timeout: 20_000 });
+			const list = page.locator('.chat-list');
+			await expect(list.locator('.rows, .chat-list-empty').first()).toBeVisible({ timeout: 20_000 });
 			await expectNoAxeViolations(page);
-			await rows.first().click();
-			await expect(page.getByRole('textbox', { name: 'Message' })).toBeFocused();
-			await page.getByRole('button', { name: 'Emoji' }).click();
-			await expect(page.getByRole('menu')).toBeVisible();
-			await expectNoAxeViolations(page);
-			await page.keyboard.press('Escape');
-			await page.getByRole('button', { name: 'New group' }).click();
+			await list.getByRole('button', { name: 'New', exact: true }).click();
 			await expect(page.getByRole('dialog')).toBeVisible();
 			await expectNoAxeViolations(page);
 			await page.keyboard.press('Escape');
+			if (has(p, 'chat.team') && has(p, 'chat.support')) {
+				await page
+					.getByRole('group', { name: 'Chat sections' })
+					.getByRole('button', { name: /^Team/ })
+					.click();
+				await expect(page).toHaveURL(/s=team/);
+				await expect(list.locator('.rows, .chat-list-empty').first()).toBeVisible();
+				await expectNoAxeViolations(page);
+			}
 		});
 
 		test('network tools: tools and groups follow the permissions; #crypto opens its group', async ({

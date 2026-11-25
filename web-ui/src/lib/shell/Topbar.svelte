@@ -29,6 +29,7 @@
 	import Icon from '#lib/ui/Icon.svelte';
 	import AccountMenu from './AccountMenu.svelte';
 	import BrandLogo from './BrandLogo.svelte';
+	import ChatButton from '#lib/chat/ChatButton.svelte';
 	import NotificationsMenu from './NotificationsMenu.svelte';
 	import { shortcutHint } from './search.ts';
 
@@ -118,7 +119,7 @@
 				></button
 			>
 		{/if}
-		<!-- nd-chat: the Chat button goes here, before notifications -->
+		{#if can('chat.support') || can('chat.team')}<ChatButton />{/if}
 		<NotificationsMenu />
 		<!-- Help: on phones it is at the end of the sidebar -->
 		<span class="help-btn">

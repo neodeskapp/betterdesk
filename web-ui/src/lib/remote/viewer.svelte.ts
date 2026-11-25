@@ -11,6 +11,7 @@
  */
 
 import { tick } from 'svelte';
+import { sessionChat, type SessionBridge } from '#lib/chat/session-bridge.ts';
 import { formatDate } from '#lib/i18n/format.ts';
 import { tf } from '#lib/i18n/i18n.svelte.ts';
 import { toast } from '#lib/ui/toasts.svelte.ts';
@@ -230,6 +231,8 @@ let chatSeq = 0;
 
 export class ViewerSession {
 	readonly deviceId: string;
+	/** The session's chat as the device's support conversation (A242), null without chat */
+	chatBridge: SessionBridge | null = null;
 	deviceName = $state('');
 	platform = $state('');
 	/** What the panel shows */
@@ -544,6 +547,8 @@ export class Viewer {
 		const s = this.sessions.find((x) => x.deviceId === deviceId);
 		if (!s) return;
 		s.closed = true;
+		s.chatBridge?.dispose();
+		s.chatBridge = null;
 		this.clearStepTimer(s);
 		if (s.endTimer) clearTimeout(s.endTimer);
 		if (s.signinTimer) clearTimeout(s.signinTimer);
@@ -858,7 +863,15 @@ export class Viewer {
 		on('latency', (rtt: unknown) => {
 			s.latency = Number(rtt) || 0;
 		});
-		on('chat', (text: unknown) => this.addChat(s, String(text ?? ''), 'received'));
+		s.chatBridge?.dispose();
+		s.chatBridge = sessionChat(s.deviceId, (text) => {
+			s.client?.sendChat?.(text);
+			this.addChat(s, text, 'sent');
+		});
+		on('chat', (text: unknown) => {
+			this.addChat(s, String(text ?? ''), 'received');
+			s.chatBridge?.received(String(text ?? ''));
+		});
 		on('permission', (info: unknown) => this.applyPermission(s, c, info));
 		// CDAP: the agent lists its monitors; RustDesk: peer_info after sign-in
 		on('monitors', () => this.refreshMonitors(s));
@@ -1986,6 +1999,8 @@ export class Viewer {
 	sendChat(s: ViewerSession, text: string): boolean {
 		const msg = text.trim();
 		if (!msg || !s.client?.sendChat) return false;
+		// Stored in the device's conversation, which passes it into the session
+		if (s.chatBridge?.send(msg)) return true;
 		s.client.sendChat(msg);
 		this.addChat(s, msg, 'sent');
 		return true;

@@ -27,6 +27,7 @@
 	import { formatNumber, formatRelative, parseDate } from '#lib/i18n/format.ts';
 	import { i18n, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
+	import { openChat } from '#lib/chat/panel.svelte.ts';
 	import { onPanelEvents } from '#lib/shell/live-events.svelte.ts';
 	import { onRefresh } from '#lib/shell/page.svelte.ts';
 	import { openDevice } from '#lib/state/devicePanel.svelte.ts';
@@ -372,6 +373,15 @@
 					</MenuItem>
 				{/each}
 			</MenuButton>
+		{/if}
+		{#if r.device_id}
+			<!-- The computer's support conversation, in the chat panel (A242) -->
+			<Button
+				size="sm"
+				icon="chat"
+				aria-describedby="hr-msg-{r.id}"
+				onclick={(e) => openChat(r.device_id, e.currentTarget as HTMLElement)}>{t('chat.chat_button')}</Button
+			>
 		{/if}
 		{#if r.status !== 'resolved'}
 			<Button

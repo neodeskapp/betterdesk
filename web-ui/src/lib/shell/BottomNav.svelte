@@ -4,6 +4,7 @@
   and More, which opens the sidebar drawer.
 -->
 <script lang="ts">
+	import { chat } from '#lib/chat/client.svelte.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import Icon from '#lib/ui/Icon.svelte';
@@ -28,6 +29,11 @@
 		>
 			<Icon name={item.icon} />
 			<span>{t(item.labelKey)}</span>
+			{#if item.id === 'chat' && chat.total}<span class="bottom-count"
+					><span class="sr-only">{t('chat.unread_count', { count: chat.total })}</span><span
+						aria-hidden="true">{chat.total > 99 ? '99+' : chat.total}</span
+					></span
+				>{/if}
 		</a>
 	{/each}
 	<button
@@ -59,6 +65,7 @@
 		}
 	}
 	.bottom-item {
+		position: relative;
 		display: flex;
 		flex: 1;
 		flex-direction: column;
@@ -82,6 +89,20 @@
 	}
 	.bottom-item:focus-visible {
 		outline-offset: -2px;
+	}
+	.bottom-count {
+		position: absolute;
+		top: 4px;
+		inset-inline-start: calc(50% + 6px);
+		min-width: 18px;
+		padding: 0 4px;
+		border-radius: 999px;
+		background: var(--accent);
+		color: var(--on-accent, #fff);
+		font-size: 11px;
+		font-weight: 700;
+		line-height: 18px;
+		text-align: center;
 	}
 	.bottom-item.active {
 		border-top-color: var(--accent);

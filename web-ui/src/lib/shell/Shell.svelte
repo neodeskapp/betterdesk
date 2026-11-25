@@ -14,6 +14,8 @@
 	import { onMount, tick } from 'svelte';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { page } from '$app/state';
+	import ChatHost from '#lib/chat/ChatHost.svelte';
+	import { chat } from '#lib/chat/client.svelte.ts';
 	import DevicePanelHost from '#lib/devices/DevicePanelHost.svelte';
 	import GuideReturn from '#lib/guide/GuideReturn.svelte';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
@@ -196,7 +198,7 @@
 	}
 </script>
 
-<svelte:head><title>{docTitle}</title></svelte:head>
+<svelte:head><title>{chat.total ? `(${chat.total}) ` : ''}{docTitle}</title></svelte:head>
 <svelte:document {onkeydown} {ontouchstart} {ontouchend} />
 
 {#if embedded}
@@ -264,6 +266,7 @@
 {/if}
 <ToastHost />
 <DevicePanelHost />
+<ChatHost />
 
 <style>
 	/* Above the screen until it has focus; its shadow only then, since the

@@ -21,6 +21,7 @@
 	import { link } from '#lib/nav.ts';
 	import { session } from '#lib/state/session.svelte.ts';
 	import Icon from '#lib/ui/Icon.svelte';
+	import { chat } from '#lib/chat/client.svelte.ts';
 	import BrandLogo from './BrandLogo.svelte';
 	import type { BrandingExtras } from './api.ts';
 	import { live } from './live-events.svelte.ts';
@@ -254,6 +255,11 @@
 			<span class="nav-label">{p.page.text}</span>
 			{#if p.page.external}<span class="nav-note" aria-hidden="true">↗</span>{/if}
 			{#if p.page.countId && live.registrations}<span class="nav-count">{live.registrations}</span>{/if}
+			{#if p.page.page === 'chat' && chat.total}<span
+					class="nav-count"
+					aria-label={t('chat.unread_count', { count: chat.total })}
+					>{chat.total > 99 ? '99+' : chat.total}</span
+				>{/if}
 		</a>
 	</li>
 {/snippet}

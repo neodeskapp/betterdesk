@@ -30,6 +30,7 @@
 	import { tick, untrack } from 'svelte';
 	import { getDevice, type DeviceDetail } from '#lib/api/devices.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { openChat } from '#lib/chat/panel.svelte.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import { poll } from '#lib/state/live.ts';
 	import { closeDevice, devicePanel } from '#lib/state/devicePanel.svelte.ts';
@@ -391,6 +392,15 @@
 					>{t('actions.connect')}</Button
 				>
 			</span>
+		{/if}
+		{#if device && can('chat.support')}
+			<!-- The computer's support conversation, in the chat panel (A242) -->
+			<Button
+				icon="chat"
+				inert={editing || undefined}
+				onclick={(e) => device && openChat(String(device.id), e.currentTarget as HTMLElement)}
+				>{t('chat.chat_button')}</Button
+			>
 		{/if}
 	</div>
 	<span class="dp-slot" data-slot="close">
