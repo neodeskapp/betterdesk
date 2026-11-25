@@ -26,6 +26,11 @@ const (
 // Version2 is the protocol version of the hub's sockets.
 const Version2 = 2
 
+// MaxFrameBytesV2 is the largest frame a socket of version 2 takes: a
+// message of chatstore.MaxText characters fits whatever the characters
+// are (at most six bytes each in JSON). Version 1 keeps MaxTextBytes.
+const MaxFrameBytesV2 = 32 << 10
+
 // capabilities2 are what the welcome of version 2 says the server can do.
 var capabilities2 = []string{"v2", "reply", "edit", "delete", "attachments", "reactions", "read_marks", "typing", "presence", "inbox", "assign"}
 
@@ -125,7 +130,7 @@ func (h *Hub) serveOperator(u *ws.Upgrade, user *session.User) {
 	m.team = h.holds(ctx, user.Role, permTeam)
 	m.assign = h.holds(ctx, user.Role, permAssign)
 	m.admin = h.opts.IsAdmin(user.Role)
-	conn, ok := u.Accept(ws.AcceptOptions{MaxPayload: MaxTextBytes})
+	conn, ok := u.Accept(ws.AcceptOptions{MaxPayload: MaxFrameBytesV2})
 	if !ok {
 		return
 	}
@@ -144,7 +149,7 @@ func (h *Hub) serveOperator(u *ws.Upgrade, user *session.User) {
 // serveDevice runs a device's socket of version 2 once the relay has
 // checked its token.
 func (h *Hub) serveDevice(u *ws.Upgrade, device, name string) {
-	conn, ok := u.Accept(ws.AcceptOptions{MaxPayload: MaxTextBytes})
+	conn, ok := u.Accept(ws.AcceptOptions{MaxPayload: MaxFrameBytesV2})
 	if !ok {
 		return
 	}

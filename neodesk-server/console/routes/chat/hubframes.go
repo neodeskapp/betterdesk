@@ -52,6 +52,9 @@ func fail(m *member, code string, f map[string]json.RawMessage) {
 	if t := str(f, "type"); t != "" {
 		fields["for"] = t
 	}
+	if id := str(f, "message_id"); id != "" {
+		fields["message_id"] = id
+	}
 	m.conn.SendText(frame("error", fields))
 }
 

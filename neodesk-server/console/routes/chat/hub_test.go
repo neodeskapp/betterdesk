@@ -265,3 +265,62 @@ func asJSON(v any) string {
 	b, _ := json.Marshal(v)
 	return string(b)
 }
+
+// TestALongTextFitsAFrame: a text of the most characters a message keeps
+// fits in one frame of version 2, also when every character takes two
+// bytes (the desktop client found 8192 bytes too few for 4096
+// characters).
+func TestALongTextFitsAFrame(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		relay, _ := hubRelay(t, db)
+		dev1 := relay.v2(t, "dev1")
+		dev1.take()
+		text := strings.Repeat("ü", chatstore.MaxText)
+		dev1.send(t, `{"type":"send","text":"`+text+`","client_id":"long"}`)
+		got := frames(dev1.takeAtLeast(1), "message.new", "error")
+		if len(got) != 1 || textOf(got[0]) != text {
+			t.Errorf("a text of %d characters: %d frames", chatstore.MaxText, len(got))
+		}
+	})
+}
+
+// TestErrorsNameTheirMessage: an error about a message names it, so a
+// client knows which edit came too late or which reaction failed.
+func TestErrorsNameTheirMessage(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		relay, st := hubRelay(t, db)
+		m, err := st.Post(context.Background(), chatstore.Message{ConversationID: "dev1", From: chatstore.User(5, "anna"), Text: "hello"}, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		dev1 := relay.v2(t, "dev1")
+		dev1.take()
+		id := strings.TrimSpace(jsonNumber(m.ID))
+		dev1.send(t, `{"type":"edit","message_id":"`+id+`","text":"changed"}`)
+		got := frames(dev1.takeAtLeast(1), "error")
+		if len(got) != 1 || got[0]["code"] != "not_yours" || got[0]["message_id"] != id {
+			t.Errorf("editing the console's message: %v", got)
+		}
+	})
+}
+
+// TestAReplyToFilesShowsTheFirstName: a reply to a message of files only
+// quotes the first file's name.
+func TestAReplyToFilesShowsTheFirstName(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		relay, st := hubRelay(t, db)
+		files, err := st.Post(context.Background(), chatstore.Message{ConversationID: "dev1", From: chatstore.User(5, "anna"),
+			Attachments: []chatstore.Attachment{{ID: firstID, Name: "invoice.pdf", Type: "application/pdf", Size: 3}}}, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		dev1 := relay.v2(t, "dev1")
+		dev1.take()
+		dev1.send(t, `{"type":"send","text":"thanks","reply_to":"`+strings.TrimSpace(jsonNumber(files.ID))+`"}`)
+		got := frames(dev1.takeAtLeast(1), "message.new")
+		reply, _ := got[0]["message"].(map[string]any)["reply_to"].(map[string]any)
+		if len(got) != 1 || reply["preview"] != "invoice.pdf" {
+			t.Errorf("the reply's quote: %v", reply)
+		}
+	})
+}
