@@ -31,19 +31,22 @@
 		onclose: () => void;
 		/** After a save, with the ticket's id */
 		onsaved: (id: number) => void;
+		/** A new ticket's first values: from a chat conversation (A242) */
+		prefill?: { title?: string; device?: string };
 	}
 
-	let { ticket, onclose, onsaved }: Props = $props();
+	let { ticket, onclose, onsaved, prefill }: Props = $props();
+	const start = untrack(() => prefill);
 
 	const editing = untrack(() => ticket);
 
 	const form = createForm({
 		initial: {
-			title: editing?.title ?? '',
+			title: editing?.title ?? start?.title ?? '',
 			description: editing?.description ?? '',
 			priority: editing?.priority || 'medium',
 			category: editing?.category || 'general',
-			device: editing?.device_id ?? ''
+			device: editing?.device_id ?? start?.device ?? ''
 		},
 		validate: (v) => ({ title: v.title.trim() ? undefined : t('tickets.title_required') }),
 		submit: async (v) => {

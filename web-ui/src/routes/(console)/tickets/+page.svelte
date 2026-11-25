@@ -14,6 +14,8 @@
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import { page } from '$app/state';
+	import { linkConversation } from '#lib/chat/api.ts';
 	import { deleteTicket, listTickets, type Ticket } from '#lib/api/tickets.ts';
 	import { formatNumber, formatRelative } from '#lib/i18n/format.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
@@ -123,8 +125,30 @@
 	/* ── Sheets ── */
 
 	type SheetState =
-		{ kind: 'detail'; id: number } | { kind: 'form'; ticket: Ticket | null; back: number | null } | null;
-	let sheet = $state<SheetState>(null);
+		| { kind: 'detail'; id: number }
+		| {
+				kind: 'form';
+				ticket: Ticket | null;
+				back: number | null;
+				prefill?: { title?: string; device?: string };
+		  }
+		| null;
+	// ?new=1&device=<id>&title=<text>: a new ticket for a computer, from its chat conversation (A242)
+	let sheet = $state<SheetState>(
+		untrack(() =>
+			page.url.searchParams.get('new') === '1' && can('device.edit')
+				? {
+						kind: 'form',
+						ticket: null,
+						back: null,
+						prefill: {
+							title: page.url.searchParams.get('title') ?? '',
+							device: page.url.searchParams.get('device') ?? ''
+						}
+					}
+				: null
+		)
+	);
 	let menuFor = $state<number | null>(null);
 
 	const byId = (id: number) => tickets.find((x) => x.id === id);
@@ -434,11 +458,16 @@
 {:else if sheet?.kind === 'form'}
 	{@const back = sheet.back}
 	{@const isNew = sheet.ticket === null}
+	{@const prefill = sheet.prefill}
 	<TicketFormSheet
 		ticket={sheet.ticket}
+		{prefill}
 		onclose={() => (sheet = back !== null ? { kind: 'detail', id: back } : null)}
 		onsaved={(id) => {
 			reload();
+			// A ticket made from a conversation is linked to it
+			if (isNew && prefill?.device && can('chat.support'))
+				void linkConversation(prefill.device, { ticket_id: id }).catch(() => undefined);
 			// Edited from the ticket: back to it. A new ticket opens, so files can be attached right away
 			sheet = back !== null || isNew ? { kind: 'detail', id } : null;
 		}}
