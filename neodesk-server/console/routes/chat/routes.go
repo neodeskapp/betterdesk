@@ -114,9 +114,13 @@ func register(d *kit.Deps, dir string) *handlers {
 	r.Post("/api/chat/upload", h.upload, d.Limits.Upload.Middleware, d.RequireAuth, chatAccess)
 	r.Get("/api/chat/files/{fileId}", h.download, d.RequireAuth, chatAccess)
 	// A device's chat window sends and fetches files with its device
-	// token (A242)
-	r.Post("/api/chat/device/files", h.deviceUpload, d.Limits.Upload.Middleware, d.RequireDeviceToken)
-	r.Get("/api/chat/device/files/{fileId}", h.deviceDownload, d.RequireDeviceToken)
+	// token (A242): device API routes, which come before the CSRF gate and
+	// the JSON rule, so a request without a token gets the token's 401
+	// (L526). The server's API port hands these to the console too.
+	if d.Early != nil {
+		d.Early.Post("/api/chat/device/files", h.deviceUpload, d.Limits.Upload.Middleware, d.RequireDeviceToken)
+		d.Early.Get("/api/chat/device/files/{fileId}", h.deviceDownload, d.RequireDeviceToken)
+	}
 	return h
 }
 

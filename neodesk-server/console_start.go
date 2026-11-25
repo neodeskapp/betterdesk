@@ -88,7 +88,11 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 	if clientAPI := srv.ClientAPI(); clientAPI != nil {
 		setAPIProxy(clientAPI.Handler())
 	}
+	// Computers reach their support chat at the API port, where they send
+	// everything else (L526): the API hands it to the console
+	apiSrv.SetDeviceChat(srv)
 	return func() {
+		apiSrv.SetDeviceChat(nil)
 		setAPIProxy(apiSrv.ListenerHandler())
 		setFeatures(nil)
 		srv.Stop()

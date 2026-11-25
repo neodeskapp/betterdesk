@@ -83,7 +83,10 @@ type ldapAuthProvider interface {
 
 // Server is the HTTP API server.
 type Server struct {
-	cfg       *config.Config
+	// deviceChat is the console's handler of a computer's support chat
+	// (device_chat.go, L526)
+	deviceChat deviceChatHandler
+	cfg        *config.Config
 	db        db.Database
 	peers     *peer.Map
 	relay     *relay.Server
@@ -819,15 +822,16 @@ func (s *Server) routes() *http.ServeMux {
 	return mux
 }
 
-// ListenerHandler is what the API's listener serves: the secure envelope,
-// the credential check and the routes. The console's client API port
+// ListenerHandler is what the API's listener serves: a computer's support
+// chat, which the console answers (device_chat.go), then the secure
+// envelope, the credential check and the routes. The console's client API port
 // passes its clients' requests to it in process, each with the client's
 // address as RemoteAddr, so the limits per address count each client.
 //
 // The route table is built on the first call to this method,
 // InternalHandler or Start, so call it after the Set and Init methods.
 func (s *Server) ListenerHandler() http.Handler {
-	return s.secureEnvelopeMiddleware(s.authMiddleware(s.mux.get(s)))
+	return s.deviceChatGate(s.secureEnvelopeMiddleware(s.authMiddleware(s.mux.get(s))))
 }
 
 // Start launches the HTTP API server.

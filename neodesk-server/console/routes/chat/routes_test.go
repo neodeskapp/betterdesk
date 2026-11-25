@@ -86,7 +86,7 @@ func newWorldWith(t *testing.T, dir string, env map[string]string) *world {
 		}
 		answer(rw, r)
 	}))
-	d := &kit.Deps{Router: kit.NewRouter(), GoAPI: api, Limits: testLimits(env)}
+	d := &kit.Deps{Router: kit.NewRouter(), Early: kit.NewRouter(), GoAPI: api, Limits: testLimits(env)}
 	h := register(d, dir)
 	h.random = &counter{}
 	h.user = testUser
@@ -98,7 +98,7 @@ func newWorldWith(t *testing.T, dir string, env map[string]string) *world {
 			who = &access.Context{UserID: user.ID, HasUser: true, Role: user.Role}
 		}
 		kit.SetAccess(r, who)
-		if !d.Router.Serve(rw, r) {
+		if !d.Early.Serve(rw, r) && !d.Router.Serve(rw, r) {
 			http.NotFound(rw, r)
 		}
 	}))
@@ -227,16 +227,22 @@ func expect(t *testing.T, what string, rec *httptest.ResponseRecorder, status in
 }
 
 func TestRoutesInTheOrderOfTheOldFile(t *testing.T) {
-	d := &kit.Deps{Router: kit.NewRouter(), GoAPI: goapi.New(http.NotFoundHandler()), Limits: testLimits(nil)}
+	d := &kit.Deps{Router: kit.NewRouter(), Early: kit.NewRouter(), GoAPI: goapi.New(http.NotFoundHandler()), Limits: testLimits(nil)}
 	register(d, t.TempDir())
-	var got []string
-	for _, route := range d.Router.Routes() {
-		got = append(got, route.Method+" "+route.Path)
+	list := func(r *kit.Router) string {
+		var got []string
+		for _, route := range r.Routes() {
+			got = append(got, route.Method+" "+route.Path)
+		}
+		return strings.Join(got, "\n")
 	}
-	// and after them the routes of the device's chat window (A242)
-	want := "POST /api/chat/upload\nGET /api/chat/files/{fileId}\nPOST /api/chat/device/files\nGET /api/chat/device/files/{fileId}"
-	if strings.Join(got, "\n") != want {
-		t.Errorf("routes:\n%s\nwant:\n%s", strings.Join(got, "\n"), want)
+	if got, want := list(d.Router), "POST /api/chat/upload\nGET /api/chat/files/{fileId}"; got != want {
+		t.Errorf("routes:\n%s\nwant:\n%s", got, want)
+	}
+	// The routes of the device's chat window (A242) are device API routes,
+	// before the CSRF gate (L526)
+	if got, want := list(d.Early), "POST /api/chat/device/files\nGET /api/chat/device/files/{fileId}"; got != want {
+		t.Errorf("device routes:\n%s\nwant:\n%s", got, want)
 	}
 }
 
