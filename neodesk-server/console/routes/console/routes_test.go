@@ -386,6 +386,11 @@ var (
 		"security-checks": "L494", "billing": "L494", "commercialization:sessions": "L494", "commercialization:packages": "L494",
 		"settings:brand": "L494", "devices-add": "L494", "agents": "L494", "pairing": "L494", "activate-agent": "L494",
 	}
+	// changedPages stay in the navigation with another address, label,
+	// keywords and tab: the comparison keeps the page and its place and
+	// leaves those four out on both sides. A234 and L479 made the remote
+	// page Remote sessions inside the console.
+	changedPages = map[string]string{"remote": "A234, L479"}
 )
 
 // withoutFixed drops the fixed sections from the bootstrap's access (their
@@ -434,8 +439,14 @@ func withoutFixed(part string, raw json.RawMessage) json.RawMessage {
 			kept := []any{}
 			for _, p := range pages {
 				if page, ok := p.(map[string]any); ok {
-					if name, _ := page["page"].(string); fixedPages[name] != "" {
+					name, _ := page["page"].(string)
+					if fixedPages[name] != "" {
 						continue
+					}
+					if changedPages[name] != "" {
+						for _, key := range []string{"href", "keywords", "external", "text"} {
+							delete(page, key)
+						}
 					}
 				}
 				kept = append(kept, p)
