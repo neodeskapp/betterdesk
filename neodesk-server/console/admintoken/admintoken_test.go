@@ -12,7 +12,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
-// The rule secret scanners use (.gitleaks.toml has the same).
+// The rule secret scanners use (.github/gitleaks.toml has the same).
 var scannerRule = regexp.MustCompile(`\bndt_[a-km-z2-9]{12}_[A-Za-z0-9]{40}\b`)
 
 func newService(t *testing.T, db *store.DB, now func() time.Time) *Service {

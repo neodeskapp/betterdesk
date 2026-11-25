@@ -14,12 +14,12 @@ import (
 func versionTree(v string) map[string]string {
 	return map[string]string{
 		"VERSION":                v + "\n",
-		"neodesk.sh":             "#!/bin/bash\n#   NeoDesk Console Manager v" + v + "\nVERSION=\"" + v + "\"\necho \"NeoDesk Console Manager v$VERSION\"\n",
-		"neodesk.ps1":            "<#\n    NeoDesk Console Manager v" + v + " - All-in-One\n#>\n$script:VERSION = \"" + v + "\"\n",
-		"neodesk-docker.sh":      "#   NeoDesk Console Manager v" + v + " (Docker)\nVERSION=\"" + v + "\"\n",
-		"Dockerfile":             "FROM alpine\nLABEL version=\"" + v + "\"\n",
-		"Dockerfile.server":      "FROM alpine\nLABEL version=\"" + v + "\"\n",
-		"install.sh":             "#   --version TAG   Docker image tag / release baseline (default: " + v + ")\nNEODESK_VERSION=\"${NEODESK_VERSION:-" + v + "}\"\n",
+		"install/neodesk.sh":             "#!/bin/bash\n#   NeoDesk Console Manager v" + v + "\nVERSION=\"" + v + "\"\necho \"NeoDesk Console Manager v$VERSION\"\n",
+		"install/neodesk.ps1":            "<#\n    NeoDesk Console Manager v" + v + " - All-in-One\n#>\n$script:VERSION = \"" + v + "\"\n",
+		"install/neodesk-docker.sh":      "#   NeoDesk Console Manager v" + v + " (Docker)\nVERSION=\"" + v + "\"\n",
+		"docker/Dockerfile":             "FROM alpine\nLABEL version=\"" + v + "\"\n",
+		"docker/Dockerfile.server":      "FROM alpine\nLABEL version=\"" + v + "\"\n",
+		"install/install.sh":             "#   --version TAG   Docker image tag / release baseline (default: " + v + ")\nNEODESK_VERSION=\"${NEODESK_VERSION:-" + v + "}\"\n",
 		"docker/entrypoint.sh":   "echo \"  Version: ${NEODESK_IMAGE_VERSION:-" + v + "}\"\n",
 		"neodesk-server/VERSION": v + "\n",
 		"neodesk-server/internal/productversion/VERSION": v + "\n",
@@ -62,30 +62,30 @@ func TestBumpVersionVerify(t *testing.T) {
 	runCommand(bumpVersion, root, "--verify").want(t, 0, "All Tier 1/2 version files match VERSION (3.5.270).\n", "")
 
 	writeTree(t, root, map[string]string{
-		"Dockerfile":             "LABEL version=\"3.5.1\"\n",
-		"neodesk.ps1":            "$script:VERSION = \"3.5.2\"\n",
-		"neodesk-docker.sh":      "  VERSION=\"3.5.3\"\n",
+		"docker/Dockerfile":             "LABEL version=\"3.5.1\"\n",
+		"install/neodesk.ps1":            "$script:VERSION = \"3.5.2\"\n",
+		"install/neodesk-docker.sh":      "  VERSION=\"3.5.3\"\n",
 		"neodesk-server/VERSION": "  3.5.270 \n",
 		// README.md and the quick-start compose files are not version files
 		"README.md":                       "img.shields.io/badge/version-1.0.0-blue",
-		"docker-compose.quick.single.yml": "image: x:${NEODESK_IMAGE_TAG:-latest}\n",
+		"install/docker-compose.quick.single.yml": "image: x:${NEODESK_IMAGE_TAG:-latest}\n",
 	})
-	if err := os.Remove(filepath.Join(root, "install.sh")); err != nil {
+	if err := os.Remove(filepath.Join(root, "install/install.sh")); err != nil {
 		t.Fatal(err)
 	}
 	runBump(root, nil, "--verify").want(t, 1, "", "Version mismatch detected (canonical VERSION = 3.5.270):\n"+
-		"  - neodesk.ps1: expected 3.5.270, got 3.5.2\n"+
-		"  - neodesk-docker.sh: expected 3.5.270, got (not found)\n"+
-		"  - Dockerfile: expected 3.5.270, got 3.5.1\n"+
-		"  - install.sh: expected 3.5.270, got (missing file)\n")
+		"  - install/neodesk.ps1: expected 3.5.270, got 3.5.2\n"+
+		"  - install/neodesk-docker.sh: expected 3.5.270, got (not found)\n"+
+		"  - docker/Dockerfile: expected 3.5.270, got 3.5.1\n"+
+		"  - install/install.sh: expected 3.5.270, got (missing file)\n")
 }
 
 func TestBumpVersionPatch(t *testing.T) {
 	root := t.TempDir()
 	writeTree(t, root, versionTree("3.5.270"))
 	runBump(root, nil, "--patch").want(t, 0, "Version 3.5.270 → 3.5.271\nUpdated files:\n"+
-		"  - VERSION\n  - neodesk.sh\n  - neodesk.ps1\n  - neodesk-docker.sh\n  - Dockerfile\n  - Dockerfile.server\n"+
-		"  - install.sh\n  - docker/entrypoint.sh\n  - neodesk-server/VERSION\n  - neodesk-server/internal/productversion/VERSION\n"+
+		"  - VERSION\n  - install/neodesk.sh\n  - install/neodesk.ps1\n  - install/neodesk-docker.sh\n  - docker/Dockerfile\n  - docker/Dockerfile.server\n"+
+		"  - install/install.sh\n  - docker/entrypoint.sh\n  - neodesk-server/VERSION\n  - neodesk-server/internal/productversion/VERSION\n"+
 		"  - CHANGELOG.md\n", "")
 	got := readTree(t, root)
 	want := versionTree("3.5.271")
@@ -119,9 +119,9 @@ func TestBumpVersionManagerScripts(t *testing.T) {
 	tree := versionTree("3.5.270")
 	// Every version line and banner of a manager script changes; only the
 	// first label, default and image version of the others do
-	tree["neodesk.sh"] = "VERSION=\"3.5.270\"\nVERSION=\"3.5.270\"\n# NeoDesk Console Manager v3.5.270 x Console Manager v3.5.270\n"
-	tree["Dockerfile"] = "LABEL version=\"3.5.270\"\nLABEL version=\"3.5.270\"\n"
-	tree["install.sh"] = "#   --version TAG  Docker image tag / release baseline (default: 3.5.270)\nNEODESK_VERSION=\"${NEODESK_VERSION:-3.5.270}\"\nNEODESK_VERSION=\"${NEODESK_VERSION:-3.5.270}\"\n"
+	tree["install/neodesk.sh"] = "VERSION=\"3.5.270\"\nVERSION=\"3.5.270\"\n# NeoDesk Console Manager v3.5.270 x Console Manager v3.5.270\n"
+	tree["docker/Dockerfile"] = "LABEL version=\"3.5.270\"\nLABEL version=\"3.5.270\"\n"
+	tree["install/install.sh"] = "#   --version TAG  Docker image tag / release baseline (default: 3.5.270)\nNEODESK_VERSION=\"${NEODESK_VERSION:-3.5.270}\"\nNEODESK_VERSION=\"${NEODESK_VERSION:-3.5.270}\"\n"
 	tree["docker/entrypoint.sh"] = "a ${NEODESK_IMAGE_VERSION:-3.5.270} b ${NEODESK_IMAGE_VERSION:-3.5.270}\n"
 	writeTree(t, root, tree)
 	if r := runBump(root, nil, "--set", "4.0.0"); r.code != 0 {
@@ -129,9 +129,9 @@ func TestBumpVersionManagerScripts(t *testing.T) {
 	}
 	got := readTree(t, root)
 	for name, want := range map[string]string{
-		"neodesk.sh":           "VERSION=\"4.0.0\"\nVERSION=\"4.0.0\"\n# NeoDesk Console Manager v4.0.0 x Console Manager v3.5.270\n",
-		"Dockerfile":           "LABEL version=\"4.0.0\"\nLABEL version=\"3.5.270\"\n",
-		"install.sh":           "#   --version TAG  Docker image tag / release baseline (default: 4.0.0)\nNEODESK_VERSION=\"${NEODESK_VERSION:-4.0.0}\"\nNEODESK_VERSION=\"${NEODESK_VERSION:-3.5.270}\"\n",
+		"install/neodesk.sh":           "VERSION=\"4.0.0\"\nVERSION=\"4.0.0\"\n# NeoDesk Console Manager v4.0.0 x Console Manager v3.5.270\n",
+		"docker/Dockerfile":           "LABEL version=\"4.0.0\"\nLABEL version=\"3.5.270\"\n",
+		"install/install.sh":           "#   --version TAG  Docker image tag / release baseline (default: 4.0.0)\nNEODESK_VERSION=\"${NEODESK_VERSION:-4.0.0}\"\nNEODESK_VERSION=\"${NEODESK_VERSION:-3.5.270}\"\n",
 		"docker/entrypoint.sh": "a ${NEODESK_IMAGE_VERSION:-4.0.0} b ${NEODESK_IMAGE_VERSION:-3.5.270}\n",
 	} {
 		if got[name] != want {
@@ -145,23 +145,23 @@ func TestBumpVersionSync(t *testing.T) {
 	writeTree(t, root, versionTree("3.5.270"))
 	runBump(root, nil, "--sync").want(t, 0, "All Tier 1/2 files already match VERSION (3.5.270).\n", "")
 
-	writeTree(t, root, map[string]string{"Dockerfile": "LABEL version=\"3.5.1\"\n", "neodesk-server/VERSION": "  3.5.270 \n"})
-	runBump(root, nil, "--sync", "--dry-run").want(t, 0, "[dry-run] Synced drifted files to VERSION (3.5.270):\n  - Dockerfile\n  - neodesk-server/VERSION\n", "")
-	if got := readTree(t, root)["Dockerfile"]; got != "LABEL version=\"3.5.1\"\n" {
+	writeTree(t, root, map[string]string{"docker/Dockerfile": "LABEL version=\"3.5.1\"\n", "neodesk-server/VERSION": "  3.5.270 \n"})
+	runBump(root, nil, "--sync", "--dry-run").want(t, 0, "[dry-run] Synced drifted files to VERSION (3.5.270):\n  - docker/Dockerfile\n  - neodesk-server/VERSION\n", "")
+	if got := readTree(t, root)["docker/Dockerfile"]; got != "LABEL version=\"3.5.1\"\n" {
 		t.Errorf("a dry run wrote %q", got)
 	}
-	runBump(root, nil, "--sync").want(t, 0, "Synced drifted files to VERSION (3.5.270):\n  - Dockerfile\n  - neodesk-server/VERSION\n", "")
+	runBump(root, nil, "--sync").want(t, 0, "Synced drifted files to VERSION (3.5.270):\n  - docker/Dockerfile\n  - neodesk-server/VERSION\n", "")
 	got := readTree(t, root)
-	if got["Dockerfile"] != "LABEL version=\"3.5.270\"\n" || got["neodesk-server/VERSION"] != "3.5.270\n" || got["CHANGELOG.md"] != versionTree("3.5.270")["CHANGELOG.md"] {
-		t.Errorf("synced: %q %q", got["Dockerfile"], got["neodesk-server/VERSION"])
+	if got["docker/Dockerfile"] != "LABEL version=\"3.5.270\"\n" || got["neodesk-server/VERSION"] != "3.5.270\n" || got["CHANGELOG.md"] != versionTree("3.5.270")["CHANGELOG.md"] {
+		t.Errorf("synced: %q %q", got["docker/Dockerfile"], got["neodesk-server/VERSION"])
 	}
 }
 
 func TestBumpVersionArguments(t *testing.T) {
 	root := t.TempDir()
 	writeTree(t, root, versionTree("3.5.270"))
-	runBump(root, nil, "--list-paths", "--verify").want(t, 0, "VERSION\nneodesk.sh\nneodesk.ps1\nneodesk-docker.sh\nDockerfile\nDockerfile.server\n"+
-		"install.sh\ndocker/entrypoint.sh\nneodesk-server/VERSION\nneodesk-server/internal/productversion/VERSION\nCHANGELOG.md\n", "")
+	runBump(root, nil, "--list-paths", "--verify").want(t, 0, "VERSION\ninstall/neodesk.sh\ninstall/neodesk.ps1\ninstall/neodesk-docker.sh\ndocker/Dockerfile\ndocker/Dockerfile.server\n"+
+		"install/install.sh\ndocker/entrypoint.sh\nneodesk-server/VERSION\nneodesk-server/internal/productversion/VERSION\nCHANGELOG.md\n", "")
 	runBump(root, nil, "--set", "4.0").want(t, 1, "", "Invalid --set version (expected X.Y.Z or X.Y.Z-suffix): 4.0\n")
 	runBump(root, nil, "--set", "4.0.0-").want(t, 1, "", "Invalid --set version (expected X.Y.Z or X.Y.Z-suffix): 4.0.0-\n")
 	runBump(root, nil, "--set").want(t, 1, bumpUsage, "")

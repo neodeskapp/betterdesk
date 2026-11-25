@@ -85,14 +85,14 @@ One container runs the server and the web console from the published image
 admin password at the end:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/install.sh | sudo bash
 ```
 
 Or with the compose file by hand:
 
 ```bash
 mkdir neodesk && cd neodesk
-curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/docker-compose.quick.single.yml -o docker-compose.yml
 docker compose up -d
 docker compose exec neodesk neodesk-show-admin-credentials
 ```
@@ -105,7 +105,7 @@ points at the server. A small Traefik container then gets a Let's Encrypt
 certificate and serves the console on ports 80 and 443:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install.sh | sudo bash -s -- \
+curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/install.sh | sudo bash -s -- \
   --domain console.example.com --letsencrypt-email admin@example.com
 ```
 
@@ -116,7 +116,7 @@ to test with Let's Encrypt's staging server first.
 ### Linux
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/neodesk.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/neodesk.sh | sudo bash
 ```
 
 This installs the newest release as the service `neodesk-server` with the
@@ -129,7 +129,7 @@ questions instead, download `neodesk.sh` and run it with `sudo bash`. See
 In PowerShell as Administrator:
 
 ```powershell
-Invoke-WebRequest https://raw.githubusercontent.com/neodeskapp/neodesk/main/neodesk.ps1 -OutFile neodesk.ps1 -UseBasicParsing
+Invoke-WebRequest https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/neodesk.ps1 -OutFile neodesk.ps1 -UseBasicParsing
 .\neodesk.ps1
 ```
 

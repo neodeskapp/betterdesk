@@ -1,6 +1,6 @@
 param(
     [string[]]$Path = @(
-        "neodesk.ps1",
+        "install/neodesk.ps1",
         "scripts/check-powershell-syntax.ps1",
         "scripts/local-gate.ps1",
         "scripts/setup-local-gates.ps1"

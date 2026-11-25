@@ -73,9 +73,9 @@ grep -qx 'MANAGER_COMMAND="/usr/local/sbin/neodesk"' "$WORK/old-manager" || fail
 # its top made longer, so a copy written over a running script would
 # break that script's run
 {
-    head -n 1 "$SCRIPT_ROOT/neodesk.sh"
+    head -n 1 "$SCRIPT_ROOT/install/neodesk.sh"
     for _ in $(seq 1 300); do printf '# The newest installer, as the update fetches it\n'; done
-    tail -n +2 "$SCRIPT_ROOT/neodesk.sh"
+    tail -n +2 "$SCRIPT_ROOT/install/neodesk.sh"
 } > "$WORK/newest.sh"
 
 # curl: the newest installer for the address the manager fetches itself
@@ -153,11 +153,11 @@ new_layout() {
 }
 
 echo "== fresh install"
-RELAY_SERVERS=127.0.0.1 bash "$SCRIPT_ROOT/neodesk.sh" --auto --binary "$WORK/neodesk-server" \
+RELAY_SERVERS=127.0.0.1 bash "$SCRIPT_ROOT/install/neodesk.sh" --auto --binary "$WORK/neodesk-server" \
     < /dev/null > "$WORK/install.log" 2>&1 || fail "the install failed: $(tail -n 40 "$WORK/install.log")"
 ran_cleanly "the install" "$WORK/install.log"
 hash -r
-new_layout "after a fresh install" "$SCRIPT_ROOT/neodesk.sh"
+new_layout "after a fresh install" "$SCRIPT_ROOT/install/neodesk.sh"
 
 echo "== the command line for every user"
 # The server folder stays closed; the command line is outside it

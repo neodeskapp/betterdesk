@@ -28,6 +28,9 @@ neodesk-server/id_ed25519.pub
 neodesk-server/test_*.go
 neodesk-server/_test_*
 
+# The installers and compose files (install/): no image needs them
+install/
+
 # Archive (old/deprecated files)
 archive/
 

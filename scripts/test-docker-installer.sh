@@ -26,7 +26,7 @@ load() {
     printf 'sha256:old\n' > "$TEST_DIR/good-image"
     printf 'sha256:old\n' > "$TEST_DIR/pulled"
     {
-        printf 'NEODESK_DOCKER_SOURCED=1\nsource %q\n' "$SCRIPT_ROOT/neodesk-docker.sh"
+        printf 'NEODESK_DOCKER_SOURCED=1\nsource %q\n' "$SCRIPT_ROOT/install/neodesk-docker.sh"
         printf 'TEST_DIR=%q\nNEODESK_DIR=%q\nCALLS=%q\n' "$TEST_DIR" "$TEST_DIR/install" "$TEST_DIR/calls"
         printf 'HEALTH_TIMEOUT=4\nRED="" GREEN="" YELLOW="" CYAN="" BOLD="" NC=""\n'
         printf 'sleep() { :; }\nid() { printf "0\\n"; }\n'
@@ -154,7 +154,7 @@ test_fresh_install() (
     local out
     out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "a fresh install failed: $out"
     grep -qx 'RELAY_SERVERS=203.0.113.10' "$NEODESK_DIR/.env" || fail ".env has no relay address"
-    cmp -s "$NEODESK_DIR/docker-compose.yml" "$SCRIPT_ROOT/docker-compose.quick.single.yml" || fail "the compose file is not the release's"
+    cmp -s "$NEODESK_DIR/docker-compose.yml" "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" || fail "the compose file is not the release's"
     grep -qx 'compose up -d --remove-orphans' "$CALLS" || fail "the container was not started: $(cat "$CALLS")"
     printf '%s' "$out" | grep -q 'Web console: *http://203.0.113.10:5000' || fail "no console address in: $out"
     printf '%s' "$out" | grep -q 'ID server: *203.0.113.10' || fail "no ID server in: $out"
@@ -277,7 +277,7 @@ test_data_volume_at_the_neodesk_path() (
     grep -qF -- '- neodesk-data:${NEODESK_DATA_PATH:-/opt/neodesk/data}' "$NEODESK_DIR/docker-compose.yml" \
         || fail "the compose file mounts the data volume elsewhere: $(grep 'neodesk-data:' "$NEODESK_DIR/docker-compose.yml")"
     local f
-    for f in docker-compose.quick.single.yml docker-compose.quick.single.macvlan.yml docker-compose.single.yml; do
+    for f in install/docker-compose.quick.single.yml install/docker-compose.quick.single.macvlan.yml install/docker-compose.single.yml; do
         if grep -nE '^[^#]*/opt/rustdesk' "$SCRIPT_ROOT/$f"; then fail "$f uses /opt/rustdesk"; fi
     done
     if grep -q '^NEODESK_DATA_PATH=' "$NEODESK_DIR/.env"; then fail "an image of this release got NEODESK_DATA_PATH"; fi
@@ -298,7 +298,7 @@ test_update_from_the_old_data_path() (
     load
     mgr 'NEODESK_IMAGE_TAG_SET=3.6.0-rc.4; COMMAND=install; do_install' > /dev/null 2>&1 || fail "the install failed"
     # The compose file of 3.6.0-rc.4, as its manager wrote it
-    sed -e 's|${NEODESK_DATA_PATH:-/opt/neodesk/data}|/opt/rustdesk|g' "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+    sed -e 's|${NEODESK_DATA_PATH:-/opt/neodesk/data}|/opt/rustdesk|g' "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
         > "$NEODESK_DIR/docker-compose.yml"
     sha256sum "$NEODESK_DIR/docker-compose.yml" | cut -d' ' -f1 > "$NEODESK_DIR/.compose.sha256"
     printf 'SSL_CERT_PATH=/opt/rustdesk/ssl/console.pem\n' >> "$NEODESK_DIR/.env"
@@ -312,7 +312,7 @@ test_update_from_the_old_data_path() (
         }'
     local out backup
     out=$(mgr "$pull; NEODESK_IMAGE_TAG_SET=latest; COMMAND=update; do_update" 2>&1) || fail "the update failed: $out"
-    cmp -s "$NEODESK_DIR/docker-compose.yml" "$SCRIPT_ROOT/docker-compose.quick.single.yml" || fail "the update kept the old compose file"
+    cmp -s "$NEODESK_DIR/docker-compose.yml" "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" || fail "the update kept the old compose file"
     grep -qx 'SSL_CERT_PATH=/opt/neodesk/data/ssl/console.pem' "$NEODESK_DIR/.env" \
         || fail "a setting that names the old path was not rewritten: $(grep SSL_CERT_PATH "$NEODESK_DIR/.env")"
     grep -qxF '      - /srv/neodesk:${NEODESK_DATA_PATH:-/opt/neodesk/data}' "$NEODESK_DIR/docker-compose.override.yml" \
@@ -326,7 +326,7 @@ test_update_from_the_old_data_path() (
 
     # A compose file of 3.6.0-rc.4 changed by hand: the user's change stays,
     # the old path goes
-    sed -e 's|${NEODESK_DATA_PATH:-/opt/neodesk/data}|/opt/rustdesk|g' "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+    sed -e 's|${NEODESK_DATA_PATH:-/opt/neodesk/data}|/opt/rustdesk|g' "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
         > "$NEODESK_DIR/docker-compose.yml"
     printf '# my change\n' >> "$NEODESK_DIR/docker-compose.yml"
     cp "$NEODESK_DIR/docker-compose.yml" "$TEST_DIR/compose-before"
@@ -405,7 +405,7 @@ test_update_keeps_compose_edits() (
     printf '# my change\n' >> "$NEODESK_DIR/docker-compose.yml"
     mgr 'write_compose_file' 2> /dev/null
     grep -q '^# my change' "$NEODESK_DIR/docker-compose.yml" || fail "the update overwrote a changed compose file"
-    cmp -s "$NEODESK_DIR/docker-compose.yml.new" "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+    cmp -s "$NEODESK_DIR/docker-compose.yml.new" "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
         || fail "the release's compose file is not next to it"
     rm -rf "$TEST_DIR"
 )
@@ -518,8 +518,8 @@ test_purge_dumps_postgres_first() (
 # --help names every option the script takes.
 test_help_lists_every_option() (
     local opt help
-    help=$(bash "$SCRIPT_ROOT/neodesk-docker.sh" --help)
-    for opt in $(sed -n '/^parse_args() {/,/^}/p' "$SCRIPT_ROOT/neodesk-docker.sh" | grep -oE '^ +--[a-z-]+' | tr -d ' ' | sort -u); do
+    help=$(bash "$SCRIPT_ROOT/install/neodesk-docker.sh" --help)
+    for opt in $(sed -n '/^parse_args() {/,/^}/p' "$SCRIPT_ROOT/install/neodesk-docker.sh" | grep -oE '^ +--[a-z-]+' | tr -d ' ' | sort -u); do
         printf '%s' "$help" | grep -q -- "$opt" || fail "--help does not list $opt"
     done
 )
@@ -633,7 +633,7 @@ test_install_sh_runs_the_manager() (
             INSTALL_DIR="$dir/opt"
             NEODESK_RAW_BASE="https://raw.githubusercontent.com/example/fork/feature-x"
             # shellcheck disable=SC1091
-            source "$SCRIPT_ROOT/install.sh"
+            source "$SCRIPT_ROOT/install/install.sh"
             require_root() { :; }
             configure_firewall() { :; }
             fetch_url_to_file() {
@@ -667,7 +667,7 @@ test_install_sh_opens_the_published_ports() (
     dir=$(mktemp -d)
     (
         # shellcheck disable=SC1091
-        source "$SCRIPT_ROOT/install.sh"
+        source "$SCRIPT_ROOT/install/install.sh"
         ufw() { printf '%s\n' "$*" >> "$dir/ufw"; [ "$1" != status ] || echo "Status: active"; }
         configure_firewall
     ) > /dev/null 2>&1 || fail "install.sh's firewall step failed"
@@ -686,7 +686,7 @@ test_install_sh_leaves_an_inactive_ufw_alone() (
     dir=$(mktemp -d)
     (
         # shellcheck disable=SC1091
-        source "$SCRIPT_ROOT/install.sh"
+        source "$SCRIPT_ROOT/install/install.sh"
         ufw() { printf '%s\n' "$*" >> "$dir/ufw"; [ "$1" != status ] || echo "Status: inactive"; }
         systemctl() { return 3; }
         configure_firewall
@@ -778,7 +778,7 @@ test_install_sh_passes_the_domain() (
     (
         INSTALL_DIR="$dir/opt"
         # shellcheck disable=SC1091
-        source "$SCRIPT_ROOT/install.sh" --domain console.example.com --letsencrypt-email admin@example.com --letsencrypt-staging
+        source "$SCRIPT_ROOT/install/install.sh" --domain console.example.com --letsencrypt-email admin@example.com --letsencrypt-staging
         require_root() { :; }
         configure_firewall() { printf '%s\n' "$DOCKER_PORTS" > "$dir/ports"; }
         fetch_url_to_file() {

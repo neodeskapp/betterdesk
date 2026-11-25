@@ -34,12 +34,12 @@ check_pin() {
 
 for name in GO_MIN_VERSION GO_DOWNLOAD_VERSION; do
     check_pin neodesk.sh "$name" \
-        "$(lines "$ROOT/neodesk.sh" | sed -n "s/^${name}=\"\\([0-9.]*\\)\".*/\\1/p" | head -n 1)"
+        "$(lines "$ROOT/install/neodesk.sh" | sed -n "s/^${name}=\"\\([0-9.]*\\)\".*/\\1/p" | head -n 1)"
     check_pin neodesk.ps1 "$name" \
-        "$(lines "$ROOT/neodesk.ps1" | sed -n "s/^\\\$script:${name} = \"\\([0-9.]*\\)\".*/\\1/p" | head -n 1)"
+        "$(lines "$ROOT/install/neodesk.ps1" | sed -n "s/^\\\$script:${name} = \"\\([0-9.]*\\)\".*/\\1/p" | head -n 1)"
 done
 
-for dockerfile in "$ROOT"/Dockerfile*; do
+for dockerfile in "$ROOT"/docker/Dockerfile*; do
     [ -f "$dockerfile" ] || continue
     while IFS= read -r version; do
         check_pin "$(basename "$dockerfile")" "golang image" "$version"

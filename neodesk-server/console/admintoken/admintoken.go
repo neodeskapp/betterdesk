@@ -10,7 +10,7 @@
 //	ndt_<id>_<secret>
 //
 // The prefix lets secret scanners find tokens in code and logs
-// (.gitleaks.toml has the rule). The console stores the SHA-256 of the
+// (.github/gitleaks.toml has the rule). The console stores the SHA-256 of the
 // whole token, never the token: it is shown once, when it is made.
 //
 // A token is sent only as "Authorization: Bearer <token>" to the console's

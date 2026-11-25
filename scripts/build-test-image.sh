@@ -23,12 +23,12 @@ if [ -n "${NEODESK_TEST_BINARY:-}" ]; then
     trap 'rm -rf "$context"' EXIT
     cp -a "$SCRIPT_ROOT/docker" "$context/"
     cp "$NEODESK_TEST_BINARY" "$context/neodesk-server.bin"
-    sed -n '/^# ============= Runtime/,$p' "$SCRIPT_ROOT/Dockerfile" \
+    sed -n '/^# ============= Runtime/,$p' "$SCRIPT_ROOT/docker/Dockerfile" \
         | sed 's|^COPY --from=go-builder /neodesk-server /usr/local/bin/neodesk-server$|COPY neodesk-server.bin /usr/local/bin/neodesk-server|' \
         > "$context/Dockerfile"
     grep -q '^COPY neodesk-server.bin ' "$context/Dockerfile" || fail "the Dockerfile's last stage has no binary to replace"
     docker build -q -t "$IMAGE" "$context" >/dev/null || fail "the image did not build"
 else
-    docker build -q -t "$IMAGE" "$SCRIPT_ROOT" >/dev/null || fail "the image did not build"
+    docker build -q -f "$SCRIPT_ROOT/docker/Dockerfile" -t "$IMAGE" "$SCRIPT_ROOT" >/dev/null || fail "the image did not build"
 fi
 printf '%s\n' "$IMAGE"

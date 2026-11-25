@@ -71,12 +71,12 @@ var (
 // "latest" unless NEODESK_IMAGE_TAG pins a release.
 var versionRules = []versionRule{
 	{path: "VERSION", extract: jsTrim, apply: wholeFile},
-	{path: "neodesk.sh", extract: firstGroup(reShellVersion), apply: managerVersion(reShellVersion, `VERSION="%s"`)},
-	{path: "neodesk.ps1", extract: firstGroup(rePowerShellVersion), apply: managerVersion(rePowerShellVersion, `$script:VERSION = "%s"`)},
-	{path: "neodesk-docker.sh", extract: firstGroup(reShellVersion), apply: managerVersion(reShellVersion, `VERSION="%s"`)},
-	{path: "Dockerfile", extract: firstGroup(reLabelVersion), apply: replaceFirstOf(reLabelVersion, `LABEL version="%s"`)},
-	{path: "Dockerfile.server", extract: firstGroup(reLabelVersion), apply: replaceFirstOf(reLabelVersion, `LABEL version="%s"`)},
-	{path: "install.sh", extract: firstGroup(reInstallVersion), apply: installVersion},
+	{path: "install/neodesk.sh", extract: firstGroup(reShellVersion), apply: managerVersion(reShellVersion, `VERSION="%s"`)},
+	{path: "install/neodesk.ps1", extract: firstGroup(rePowerShellVersion), apply: managerVersion(rePowerShellVersion, `$script:VERSION = "%s"`)},
+	{path: "install/neodesk-docker.sh", extract: firstGroup(reShellVersion), apply: managerVersion(reShellVersion, `VERSION="%s"`)},
+	{path: "docker/Dockerfile", extract: firstGroup(reLabelVersion), apply: replaceFirstOf(reLabelVersion, `LABEL version="%s"`)},
+	{path: "docker/Dockerfile.server", extract: firstGroup(reLabelVersion), apply: replaceFirstOf(reLabelVersion, `LABEL version="%s"`)},
+	{path: "install/install.sh", extract: firstGroup(reInstallVersion), apply: installVersion},
 	{path: "docker/entrypoint.sh", extract: firstGroup(reImageVersion), apply: replaceFirstOf(reImageVersion, `${NEODESK_IMAGE_VERSION:-%s}`)},
 	{path: "neodesk-server/VERSION", extract: jsTrim, apply: wholeFile},
 	{path: "neodesk-server/internal/productversion/VERSION", extract: jsTrim, apply: wholeFile},

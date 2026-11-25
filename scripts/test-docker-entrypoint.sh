@@ -40,13 +40,13 @@ test_dsn_for_log_drops_credentials() (
 test_scripts_print_no_raw_dsn() (
     local hits
     hits=$(grep -nE '(echo|printf).*\$\{?(DATABASE_URL|DB_URL|POSTGRESQL_URI|POSTGRESQL_PASS|POSTGRES_PASSWORD|PG_PASSWORD)' \
-        "$SCRIPT_ROOT"/docker/*.sh "$SCRIPT_ROOT/neodesk-docker.sh" | grep -v 'dsn_for_log' || true)
+        "$SCRIPT_ROOT"/docker/*.sh "$SCRIPT_ROOT/install/neodesk-docker.sh" | grep -v 'dsn_for_log' || true)
     [ -z "$hits" ] || fail "a script prints a database address or password: $hits"
 )
 
 # The image copies dsn.sh next to the entrypoint, which sources it.
 test_image_has_dsn_helper() (
-    grep -q 'COPY docker/dsn.sh /docker/dsn.sh' "$SCRIPT_ROOT/Dockerfile" \
+    grep -q 'COPY docker/dsn.sh /docker/dsn.sh' "$SCRIPT_ROOT/docker/Dockerfile" \
         || fail "the Dockerfile does not copy docker/dsn.sh"
     grep -q '^\. /docker/dsn.sh' "$SCRIPT_ROOT/docker/entrypoint.sh" \
         || fail "docker/entrypoint.sh does not source /docker/dsn.sh"
@@ -59,7 +59,7 @@ test_enrollment_mode_is_not_forced() (
     local hits f
     hits=$(grep -nE '^[^#]*ENROLLMENT_MODE_ENV_OVERRIDE=' "$SCRIPT_ROOT"/docker/*.sh || true)
     [ -z "$hits" ] || fail "a start script sets ENROLLMENT_MODE_ENV_OVERRIDE: $hits"
-    for f in "$SCRIPT_ROOT"/docker-compose*.yml; do
+    for f in "$SCRIPT_ROOT"/install/docker-compose*.yml; do
         grep -q 'ENROLLMENT_MODE_ENV_OVERRIDE=${ENROLLMENT_MODE_ENV_OVERRIDE:-}' "$f" \
             || fail "$(basename "$f") does not pass ENROLLMENT_MODE_ENV_OVERRIDE through"
     done
@@ -68,11 +68,11 @@ test_enrollment_mode_is_not_forced() (
 # The compose file the docs show first runs the published image, builds
 # nothing and follows releases; every compose file says which one is which.
 test_quick_compose_pulls_the_published_image() (
-    local quick="$SCRIPT_ROOT/docker-compose.quick.single.yml" f other
+    local quick="$SCRIPT_ROOT/install/docker-compose.quick.single.yml" f other
     grep -q 'image: ghcr.io/neodeskapp/neodesk:${NEODESK_IMAGE_TAG:-latest}' "$quick" || fail "docker-compose.quick.single.yml does not run ghcr.io/neodeskapp/neodesk:latest"
     if grep -qE '^[[:space:]]+build:' "$quick"; then fail "docker-compose.quick.single.yml builds an image"; fi
     if grep -qE 'pull_policy:[[:space:]]*never' "$quick"; then fail "docker-compose.quick.single.yml never pulls"; fi
-    for f in "$SCRIPT_ROOT"/docker-compose*.yml; do
+    for f in "$SCRIPT_ROOT"/install/docker-compose*.yml; do
         for other in docker-compose.quick.single.yml docker-compose.quick.single.macvlan.yml docker-compose.single.yml; do
             sed -n '1,20p' "$f" | grep -q "$other" || fail "the comment at the top of $(basename "$f") does not name $other"
         done
@@ -84,10 +84,10 @@ test_quick_compose_pulls_the_published_image() (
 # expose it and the compose files with host ports publish it.
 test_cdap_port_is_published() (
     local f
-    for f in docker-compose.quick.single.yml docker-compose.single.yml; do
+    for f in install/docker-compose.quick.single.yml install/docker-compose.single.yml; do
         grep -qE '^[[:space:]]+- "21122:21122"' "$SCRIPT_ROOT/$f" || fail "$f does not publish 21122"
     done
-    for f in Dockerfile Dockerfile.server; do
+    for f in docker/Dockerfile docker/Dockerfile.server; do
         grep -qE '^EXPOSE .* 21122( |$)' "$SCRIPT_ROOT/$f" || fail "$f does not expose 21122"
     done
 )
@@ -97,11 +97,11 @@ test_cdap_port_is_published() (
 # console's ports are published on is a variable.
 test_compose_reads_env_file() (
     local f
-    for f in "$SCRIPT_ROOT"/docker-compose*.yml; do
+    for f in "$SCRIPT_ROOT"/install/docker-compose*.yml; do
         grep -A2 -E '^[[:space:]]+env_file:' "$f" | grep -qE 'path: \.env' || fail "$(basename "$f") does not read .env"
         grep -A2 -E '^[[:space:]]+env_file:' "$f" | grep -qE 'required: false' || fail "$(basename "$f") needs a .env to start"
     done
-    for f in docker-compose.quick.single.yml docker-compose.single.yml; do
+    for f in install/docker-compose.quick.single.yml install/docker-compose.single.yml; do
         grep -qF '"${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_PORT:-5000}:5000"' "$SCRIPT_ROOT/$f" || fail "$f fixes the console's bind address"
     done
 )
@@ -129,12 +129,12 @@ STUB
     : > "$dir/up"
     if PATH="$dir:$PATH" CONSOLE_PORT=0 sh "$SCRIPT_ROOT/docker/healthcheck.sh"; then fail "healthy without the API"; fi
     rm -rf "$dir"
-    for out in Dockerfile Dockerfile.server; do
+    for out in docker/Dockerfile docker/Dockerfile.server; do
         grep -qE '^[[:space:]]+CMD /usr/local/bin/neodesk-healthcheck' "$SCRIPT_ROOT/$out" || fail "$out does not use the health check script"
         grep -q 'COPY docker/healthcheck.sh /usr/local/bin/neodesk-healthcheck' "$SCRIPT_ROOT/$out" || fail "$out does not copy the health check script"
         grep -qE '^RUN chmod [+]x .*/usr/local/bin/neodesk-healthcheck' "$SCRIPT_ROOT/$out" || fail "$out does not make the health check script executable"
     done
-    for out in "$SCRIPT_ROOT"/docker-compose*.yml; do
+    for out in "$SCRIPT_ROOT"/install/docker-compose*.yml; do
         if grep -A1 -E '^[[:space:]]+healthcheck:' "$out" | grep -q 'curl'; then fail "$(basename "$out") checks health with plain curl"; fi
     done
 )
@@ -146,13 +146,13 @@ STUB
 # volume there (the start keeps the data where it is mounted).
 test_images_keep_their_data_in_the_neodesk_folder() (
     local df f
-    for df in Dockerfile Dockerfile.server; do
+    for df in docker/Dockerfile docker/Dockerfile.server; do
         if grep -nE '^[^#]*/opt/rustdesk' "$SCRIPT_ROOT/$df"; then fail "$df uses /opt/rustdesk"; fi
         grep -qx 'WORKDIR /opt/neodesk/data' "$SCRIPT_ROOT/$df" || fail "$df does not work in /opt/neodesk/data"
         grep -qF '"-key-file", "/opt/neodesk/data/id_ed25519"' "$SCRIPT_ROOT/$df" || fail "$df's server reads its key elsewhere"
         grep -qx 'COPY docker/data-path.sh /docker/data-path.sh' "$SCRIPT_ROOT/$df" || fail "$df lacks docker/data-path.sh"
     done
-    grep -q '^    RUSTDESK_PATH=/opt/neodesk/data \\$' "$SCRIPT_ROOT/Dockerfile" || fail "the image's RUSTDESK_PATH is not /opt/neodesk/data"
+    grep -q '^    RUSTDESK_PATH=/opt/neodesk/data \\$' "$SCRIPT_ROOT/docker/Dockerfile" || fail "the image's RUSTDESK_PATH is not /opt/neodesk/data"
     for f in docker/entrypoint.sh docker/server-entrypoint.sh docker/bootstrap-admin-credentials.sh docker/show-admin-credentials.sh; do
         if grep -nE '^[^#]*/opt/rustdesk' "$SCRIPT_ROOT/$f"; then fail "$f uses /opt/rustdesk"; fi
     done
@@ -205,12 +205,12 @@ test_old_data_mount_is_used_where_it_is() (
 # file that builds passes the commit on.
 test_image_binary_knows_its_build() (
     local df
-    for df in Dockerfile Dockerfile.server; do
+    for df in docker/Dockerfile docker/Dockerfile.server; do
         grep -qF -- '-X main.Commit=${NEODESK_COMMIT_SHA}' "$SCRIPT_ROOT/$df" || fail "$df builds without the commit"
         grep -qF -- '-X main.BuildDate=${built}' "$SCRIPT_ROOT/$df" || fail "$df builds without the build date"
         grep -qF -- 'version="${NEODESK_PRODUCT_VERSION:-$(tr -d' "$SCRIPT_ROOT/$df" || fail "$df does not take the version from VERSION"
     done
-    grep -qE '^[[:space:]]+NEODESK_COMMIT_SHA: \$\{NEODESK_COMMIT_SHA:-\}' "$SCRIPT_ROOT/docker-compose.single.yml" \
+    grep -qE '^[[:space:]]+NEODESK_COMMIT_SHA: \$\{NEODESK_COMMIT_SHA:-\}' "$SCRIPT_ROOT/install/docker-compose.single.yml" \
         || fail "docker-compose.single.yml does not pass the commit to the build"
 )
 
@@ -243,7 +243,7 @@ test_bootstrap_keeps_a_replaced_first_password_away() (
 # and keeps it in the data volume; guacd is an optional service in the
 # container's own network (the server only talks to guacd on loopback).
 test_remote_targets_work_out_of_the_box() (
-    local ep="$SCRIPT_ROOT/docker/entrypoint.sh" quick="$SCRIPT_ROOT/docker-compose.quick.single.yml"
+    local ep="$SCRIPT_ROOT/docker/entrypoint.sh" quick="$SCRIPT_ROOT/install/docker-compose.quick.single.yml"
     grep -q 'VAULT_KEY_FILE="$DATA_PATH/.remote_target_vault_key"' "$ep" || fail "the entrypoint keeps no vault key in the volume"
     grep -q '^NEW_DATA_PATH=/opt/neodesk/data$' "$SCRIPT_ROOT/docker/data-path.sh" || fail "the entrypoint's data volume is not /opt/neodesk/data"
     grep -q 'export REMOTE_TARGET_VAULT_KEY' "$ep" || fail "the entrypoint does not pass the vault key to the server"

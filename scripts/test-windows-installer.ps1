@@ -7,7 +7,7 @@
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $PSScriptRoot
-$installer = Join-Path $root 'neodesk.ps1'
+$installer = Join-Path $root 'install/neodesk.ps1'
 $tokens = $null
 $parseErrors = $null
 $ast = [System.Management.Automation.Language.Parser]::ParseFile($installer, [ref]$tokens, [ref]$parseErrors)

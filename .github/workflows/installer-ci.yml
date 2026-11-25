@@ -5,10 +5,7 @@ on:
     branches: [main]
     paths:
       - '*.sh'
-      - 'install.sh'
-      - 'neodesk.sh'
-      - 'neodesk.ps1'
-      - 'neodesk-docker.sh'
+      - 'install/**'
       - 'scripts/test-go-installer.sh'
       - 'scripts/test-setup-command.sh'
       - 'scripts/test-docker-data-path.sh'
@@ -32,19 +29,14 @@ on:
       - 'neodesk-server/cli/**'
       - 'neodesk-server/console/safepath/**'
       - 'neodesk-server/console/updater/**'
-      - 'Dockerfile*'
       - '.dockerignore'
-      - 'docker-compose*.yml'
       - 'docker/**'
       - '.github/workflows/installer-ci.yml'
   pull_request:
     branches: [main]
     paths:
       - '*.sh'
-      - 'install.sh'
-      - 'neodesk.sh'
-      - 'neodesk.ps1'
-      - 'neodesk-docker.sh'
+      - 'install/**'
       - 'scripts/test-go-installer.sh'
       - 'scripts/test-setup-command.sh'
       - 'scripts/test-docker-data-path.sh'
@@ -68,9 +60,7 @@ on:
       - 'neodesk-server/cli/**'
       - 'neodesk-server/console/safepath/**'
       - 'neodesk-server/console/updater/**'
-      - 'Dockerfile*'
       - '.dockerignore'
-      - 'docker-compose*.yml'
       - 'docker/**'
       - '.github/workflows/installer-ci.yml'
   workflow_dispatch:
@@ -111,9 +101,9 @@ jobs:
           while IFS= read -r file; do
             bash -n "$file"
           done < <(printf '%s\n' \
-            install.sh \
-            neodesk.sh \
-            neodesk-docker.sh \
+            install/install.sh \
+            install/neodesk.sh \
+            install/neodesk-docker.sh \
             scripts/test-native-installer.sh \
             scripts/test-go-installer.sh \
             scripts/test-setup-command.sh \
@@ -129,9 +119,9 @@ jobs:
       - name: Run ShellCheck
         run: |
           shellcheck --severity=error \
-            install.sh \
-            neodesk.sh \
-            neodesk-docker.sh \
+            install/install.sh \
+            install/neodesk.sh \
+            install/neodesk-docker.sh \
             scripts/test-native-installer.sh \
             scripts/test-go-installer.sh \
             scripts/test-setup-command.sh \
@@ -172,7 +162,7 @@ jobs:
         shell: pwsh
         run: |
           $files = @(
-            "neodesk.ps1",
+            "install/neodesk.ps1",
             "scripts/test-windows-installer.ps1"
           )
           foreach ($file in $files) {
@@ -260,9 +250,9 @@ jobs:
       - name: Verify help paths do not mutate the host
         run: |
           set -euo pipefail
-          bash install.sh --help >/dev/null
-          bash neodesk.sh --help >/dev/null
-          bash neodesk-docker.sh --help >/dev/null
+          bash install/install.sh --help >/dev/null
+          bash install/neodesk.sh --help >/dev/null
+          bash install/neodesk-docker.sh --help >/dev/null
 
   compose-static:
     name: Docker Compose validation
@@ -277,9 +267,9 @@ jobs:
         run: |
           set -euo pipefail
           for file in \
-            docker-compose.single.yml \
-            docker-compose.quick.single.yml \
-            docker-compose.quick.single.macvlan.yml; do
+            install/docker-compose.single.yml \
+            install/docker-compose.quick.single.yml \
+            install/docker-compose.quick.single.macvlan.yml; do
             docker compose -f "$file" config --quiet
           done
 
@@ -349,10 +339,16 @@ jobs:
           [ -n "$revision" ] || { echo "$image names no revision"; exit 1; }
           git fetch --depth=1 origin "$revision"
           git checkout --detach FETCH_HEAD
+      - name: The compose file of the image's commit
+        run: |
+          # In install/ since 3.6.0-rc.5, at the root before
+          compose=install/docker-compose.quick.single.yml
+          [ -f "$compose" ] || compose=docker-compose.quick.single.yml
+          echo "COMPOSE_FILE=$compose" >> "$GITHUB_ENV"
       - name: Start official single-container stack
         run: |
           set -euo pipefail
-          docker compose -f docker-compose.quick.single.yml up -d --wait --pull never
+          docker compose -f "$COMPOSE_FILE" up -d --wait --pull never
       - name: Verify API and console health
         run: |
           set -euo pipefail
@@ -360,12 +356,12 @@ jobs:
             http://127.0.0.1:21121/api/health
           curl --fail --retry 30 --retry-delay 2 --retry-connrefused \
             http://127.0.0.1:5000/health
-          docker compose -f docker-compose.quick.single.yml exec -T -u neodesk neodesk \
+          docker compose -f "$COMPOSE_FILE" exec -T -u neodesk neodesk \
             /usr/local/bin/neodesk-server check \
             --api http://127.0.0.1:21121/api/health \
             --panel http://127.0.0.1:5000/health \
             --port 127.0.0.1:21121
-          docker compose -f docker-compose.quick.single.yml ps
+          docker compose -f "$COMPOSE_FILE" ps
       - name: Tear down smoke stack
         if: always()
-        run: docker compose -f docker-compose.quick.single.yml down -v
+        run: docker compose -f "$COMPOSE_FILE" down -v

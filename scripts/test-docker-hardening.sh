@@ -26,10 +26,10 @@ fail() {
     printf 'FAIL: %s\n' "$*" >&2
     if [[ -f "$OVERRIDE_FILE" ]] && [[ -n "$DOCKER_BIN" ]]; then
         docker compose -p "$PROJECT" \
-            -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+            -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
             -f "$OVERRIDE_FILE" logs --tail=120 >&2 || true
         docker compose -p "$PROJECT" \
-            -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+            -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
             -f "$OVERRIDE_FILE" exec -T -u neodesk neodesk \
             sh -c 'ls -la /opt/neodesk/data; sqlite3 /opt/neodesk/data/db_v2.sqlite3 "SELECT COUNT(*) FROM users;"' >&2 || true
         ls -la "$TEST_DIR/data" >&2 || true
@@ -42,7 +42,7 @@ wait_for_bootstrap_admin() {
     local users
     for _ in {1..60}; do
         users=$(docker compose -p "$PROJECT" \
-            -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+            -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
             -f "$OVERRIDE_FILE" exec -T -u neodesk neodesk \
             sqlite3 /opt/neodesk/data/db_v2.sqlite3 "SELECT COUNT(*) FROM users;" 2>/dev/null | tr -d '\r\n' || true)
         if [ -n "$users" ] && [ "$users" -gt 0 ] 2>/dev/null; then
@@ -55,7 +55,7 @@ wait_for_bootstrap_admin() {
 
 cleanup() {
     docker compose -p "$PROJECT" \
-        -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+        -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
         -f "$OVERRIDE_FILE" down -v --remove-orphans >/dev/null 2>&1 || true
     # The server's folders belong to uid 10001 with mode 700, so only root
     # in a container can remove them
@@ -86,7 +86,7 @@ EOF
 # is used as it is
 if [[ "$IMAGE" == ghcr.io/* ]] && ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
     docker compose -p "$PROJECT" \
-        -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+        -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
         -f "$OVERRIDE_FILE" pull neodesk
 fi
 
@@ -100,50 +100,50 @@ docker run --rm \
     -c 'chown -R 10001:10001 /opt/neodesk/data /app/data && chmod 700 /opt/neodesk/data /app/data'
 
 docker compose -p "$PROJECT" \
-    -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+    -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" up -d --wait
 
 wait_for_bootstrap_admin
 
 first_key=$(docker compose -p "$PROJECT" \
-    -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+    -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" exec -T -u neodesk neodesk \
     sh -c 'cat /opt/neodesk/data/.api_key' | tr -d '\r\n')
 [ "$first_key" = "stable-test-api-key" ] \
     || fail "existing API key was not preserved on first start"
 
 docker compose -p "$PROJECT" \
-    -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+    -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" restart neodesk
 docker compose -p "$PROJECT" \
-    -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+    -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" up -d --wait
 
 second_key=$(docker compose -p "$PROJECT" \
-    -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+    -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" exec -T -u neodesk neodesk \
     sh -c 'cat /opt/neodesk/data/.api_key' | tr -d '\r\n')
 [ "$second_key" = "$first_key" ] \
     || fail "API key changed after a hardened-container restart"
 
 docker compose -p "$PROJECT" \
-    -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+    -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" exec -T -u neodesk neodesk \
     sh -c 'rm -f /opt/neodesk/data/.admin_credentials'
 [ ! -e "$TEST_DIR/data/.admin_credentials" ] \
     || fail "credentials file could not be removed from the bind mount"
 docker compose -p "$PROJECT" \
-    -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+    -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" restart neodesk
 docker compose -p "$PROJECT" \
-    -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+    -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" up -d --wait
 
 [ ! -e "$TEST_DIR/data/.admin_credentials" ] \
     || fail "bootstrap recreated credentials for an existing database"
 # One process: neodesk-server as neodesk under tini, nothing else
 processes=$(docker compose -p "$PROJECT" \
-    -f "$SCRIPT_ROOT/docker-compose.quick.single.yml" \
+    -f "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" \
     -f "$OVERRIDE_FILE" exec -T neodesk ps -o user,args | tr -d '\r')
 printf '%s\n' "$processes" | grep -Eq '^neodesk +/usr/local/bin/neodesk-server ' \
     || fail "neodesk-server does not run as neodesk: $processes"

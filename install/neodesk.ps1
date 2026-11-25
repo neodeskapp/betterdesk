@@ -2114,7 +2114,7 @@ function Install-ManagerScript {
         if ($script:SELF_PATH -and (Test-Path $script:SELF_PATH) -and ((Resolve-Path $script:SELF_PATH).Path -ne $target)) {
             Copy-Item -Path $script:SELF_PATH -Destination $target -Force -ErrorAction Stop
         } else {
-            $url = "https://raw.githubusercontent.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/$($script:INSTALLER_REF)/neodesk.ps1"
+            $url = "https://raw.githubusercontent.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/$($script:INSTALLER_REF)/install/neodesk.ps1"
             $tmp = "$target.download"
             Invoke-WebRequest -Uri $url -OutFile $tmp -UseBasicParsing -ErrorAction Stop
             if (-not (Select-String -Path $tmp -Pattern 'function Install-ManagerScript' -SimpleMatch -Quiet)) { throw "not the installer" }

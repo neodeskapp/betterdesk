@@ -287,6 +287,10 @@ func TestClassifyAndExclude(t *testing.T) {
 	for path, want := range map[string]string{
 		"web-nodejs/server.js": "other", "web-ui/src/a.ts": "webui", "neodesk-server/main.go": "server",
 		"neodesk-agent/x": "other", "docker/entrypoint.sh": "scripts", "Dockerfile": "scripts", "README.md": "other",
+		// Since 3.6.0-rc.5 the installers and compose files are in install/,
+		// the Dockerfiles in docker/
+		"install/neodesk.sh": "scripts", "install/docker-compose.quick.single.yml": "scripts",
+		"docker/Dockerfile": "scripts", "docker/Dockerfile.server": "scripts", "install/README.md": "other",
 	} {
 		if got := classifyFile(path); got != want {
 			t.Errorf("classifyFile(%q) = %q", path, got)

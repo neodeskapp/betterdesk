@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-INSTALLER="$REPO_ROOT/neodesk.sh"
+INSTALLER="$REPO_ROOT/install/neodesk.sh"
 TEST_ROOT="$(mktemp -d)"
 FUNCTIONS_FILE="$TEST_ROOT/neodesk-functions.sh"
 FAKE_BIN="$TEST_ROOT/bin"

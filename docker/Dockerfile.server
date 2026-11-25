@@ -4,7 +4,7 @@
 # The NeoDesk server is a single binary that replaces both hbbs and hbbr.
 # It provides: signal (UDP/TCP/WS), relay (TCP/WS), HTTP API, admin console.
 #
-# Build: docker build -f Dockerfile.server -t neodesk-server:local .
+# Build, from the repository's root: docker build -f docker/Dockerfile.server -t neodesk-server:local .
 
 # ---- Web app build (embedded in the binary, DECISIONS A25) ----
 FROM node:22.23.2-alpine3.24 AS web-ui-builder
@@ -44,7 +44,7 @@ RUN go run ./cmd/embed-webui -from /web-ui-build
 # The binary's version, build date and commit (-version, the update check).
 # Without build arguments: the version in VERSION and the time of the build;
 # the commit only when NEODESK_COMMIT_SHA names it (the publish workflow
-# and docker-compose.single.yml pass it).
+# and install/docker-compose.single.yml pass it).
 ARG NEODESK_PRODUCT_VERSION=
 ARG NEODESK_COMMIT_SHA=
 ARG NEODESK_BUILD_DATE=

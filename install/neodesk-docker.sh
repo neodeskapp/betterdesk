@@ -30,7 +30,7 @@ NEODESK_DIR="${NEODESK_DIR:-/opt/neodesk/docker}"
 # The image the compose file runs (a mirror goes into docker-compose.override.yml)
 NEODESK_IMAGE="ghcr.io/neodeskapp/neodesk"
 NEODESK_IMAGE_TAG_SET="${NEODESK_IMAGE_TAG:-}"
-NEODESK_RAW_BASE="${NEODESK_RAW_BASE:-https://raw.githubusercontent.com/neodeskapp/neodesk/${NEODESK_BRANCH:-main}}"
+NEODESK_RAW_BASE="${NEODESK_RAW_BASE:-https://raw.githubusercontent.com/neodeskapp/neodesk/${NEODESK_BRANCH:-main}/install}"
 RELAY_SERVERS_SET="${RELAY_SERVERS:-}"
 RELAY_MODE="${RELAY_MODE:-auto}"
 CONSOLE_PORT_SET="${NEODESK_CONSOLE_PORT:-}"
@@ -814,15 +814,19 @@ move_old_data_path() {
 }
 
 build_image() {
-    [ -f "$SCRIPT_DIR/Dockerfile" ] && [ -d "$SCRIPT_DIR/neodesk-server" ] \
-        || die "--build needs a checkout of the repository next to this script." \
-            "git clone https://github.com/neodeskapp/neodesk.git && sudo bash neodesk/neodesk-docker.sh --build"
+    # The checkout this script is in: its install/ folder holds the script,
+    # docker/ the Dockerfile
+    local checkout
+    checkout=$(cd "$SCRIPT_DIR/.." 2>/dev/null && pwd)
+    [ -f "$checkout/docker/Dockerfile" ] && [ -d "$checkout/neodesk-server" ] \
+        || die "--build needs a checkout of the repository, with this script in its install/ folder." \
+            "git clone https://github.com/neodeskapp/neodesk.git && sudo bash neodesk/install/neodesk-docker.sh --build"
     NEODESK_IMAGE_TAG_SET="local"
     env_set NEODESK_IMAGE_TAG local
-    step "Building $(image_ref) from $SCRIPT_DIR (several minutes)"
+    step "Building $(image_ref) from $checkout (several minutes)"
     local commit
-    commit=$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || true)
-    docker build -t "$(image_ref)" --build-arg NEODESK_COMMIT_SHA="$commit" "$SCRIPT_DIR" \
+    commit=$(git -C "$checkout" rev-parse HEAD 2>/dev/null || true)
+    docker build -f "$checkout/docker/Dockerfile" -t "$(image_ref)" --build-arg NEODESK_COMMIT_SHA="$commit" "$checkout" \
         || die "The image did not build (output above); the running container was not changed."
 }
 

@@ -3,14 +3,14 @@
 # NeoDesk — one-line installer (Linux)
 #
 # Docker (default: the published image in one container, neodesk-docker.sh):
-#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install.sh | sudo bash
+#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/install.sh | sudo bash
 #
 # Docker, move a two-container (split) install to the one container:
 #   curl -fsSL .../install.sh | sudo bash -s -- --migrate-split
 #
 # Native (git clone + neodesk.sh --auto): the newest stable release, or
 # the development build while the repository has none:
-#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install.sh | sudo bash -s -- --native
+#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/install.sh | sudo bash -s -- --native
 # Native, the development build: add --channel dev
 #
 # Options (pass after "bash -s --"):
@@ -63,7 +63,7 @@ RELEASE_CHANNEL=""
 # the install runs latest, the newest release (DECISIONS A163)
 NEODESK_VERSION_GIVEN="${NEODESK_VERSION:-}"
 NEODESK_VERSION="${NEODESK_VERSION:-3.6.2}"
-NEODESK_RAW_BASE="${NEODESK_RAW_BASE:-https://raw.githubusercontent.com/${NEODESK_REPO}/${NEODESK_BRANCH}}"
+NEODESK_RAW_BASE="${NEODESK_RAW_BASE:-https://raw.githubusercontent.com/${NEODESK_REPO}/${NEODESK_BRANCH}/install}"
 INSTALL_DIR="${INSTALL_DIR:-/opt/neodesk}"
 INSTALL_MODE="docker"
 MIGRATE_SPLIT=false
@@ -208,7 +208,7 @@ while [ $# -gt 0 ]; do
         --native) INSTALL_MODE="native"; shift ;;
         --install-dir) INSTALL_DIR="$2"; shift 2 ;;
         --version) NEODESK_VERSION="$2"; NEODESK_VERSION_GIVEN="$2"; shift 2 ;;
-        --branch) NEODESK_BRANCH="$2"; NEODESK_RAW_BASE="https://raw.githubusercontent.com/${NEODESK_REPO}/${NEODESK_BRANCH}"; shift 2 ;;
+        --branch) NEODESK_BRANCH="$2"; NEODESK_RAW_BASE="https://raw.githubusercontent.com/${NEODESK_REPO}/${NEODESK_BRANCH}/install"; shift 2 ;;
         --channel)
             case "${2:-}" in
                 stable|main|dev|development) RELEASE_CHANNEL="$2" ;;
@@ -630,7 +630,9 @@ install_native_mode() {
     commit_sha=$(git -C "$repo_dir" rev-parse --short HEAD 2>/dev/null || echo "unknown")
     log "Using ${NEODESK_REPO}@${NEODESK_BRANCH} (${commit_sha})"
 
-    chmod +x "${repo_dir}/neodesk.sh"
+    local native_installer
+    native_installer=$(native_installer_in "$repo_dir")
+    chmod +x "$native_installer"
 
     log "Running neodesk.sh --auto..."
     export RELAY_MODE RELAY_SERVERS="$relay"
@@ -644,14 +646,25 @@ install_native_mode() {
         dev|development) export UPDATE_GITHUB_BRANCH=dev ;;
     esac
     [ -z "${UPDATE_GITHUB_BRANCH:-}" ] || log "Update channel: ${UPDATE_GITHUB_BRANCH}"
-    (cd "$repo_dir" && ./neodesk.sh --auto --relay-servers "$relay")
+    (cd "$repo_dir" && "$native_installer" --auto --relay-servers "$relay")
 
     ok "Native installation finished. See ${repo_dir} for logs and credentials."
 }
 
+# native_installer_in DIR: neodesk.sh of the checkout DIR, in its install/
+# folder since 3.6.0-rc.5, at its root before
+native_installer_in() {
+    if [ -f "$1/install/neodesk.sh" ]; then
+        printf '%s\n' "$1/install/neodesk.sh"
+    else
+        printf '%s\n' "$1/neodesk.sh"
+    fi
+}
+
 uninstall_native_mode() {
     local repo_dir="${INSTALL_DIR}/source"
-    local native_installer="${repo_dir}/neodesk.sh"
+    local native_installer
+    native_installer=$(native_installer_in "$repo_dir")
 
     require_root
     if [ ! -x "$native_installer" ]; then
@@ -668,15 +681,17 @@ uninstall_native_mode() {
 
 rescue_native_mode() {
     local repo_dir="${INSTALL_DIR}/source"
+    local native_installer
+    native_installer=$(native_installer_in "$repo_dir")
 
-    if [ "$RESCUE_ACTION" = "repair-permissions" ] && [ -x "$repo_dir/neodesk.sh" ]; then
-        "$repo_dir/neodesk.sh" --repair-permissions
+    if [ "$RESCUE_ACTION" = "repair-permissions" ] && [ -x "$native_installer" ]; then
+        "$native_installer" --repair-permissions
         return $?
     fi
     warn "Native rescue is handled by neodesk.sh on the installed host."
-    if [ -x "$repo_dir/neodesk.sh" ]; then
+    if [ -x "$native_installer" ]; then
         echo "Run the interactive native repair toolkit with:"
-        echo "  sudo ${repo_dir}/neodesk.sh"
+        echo "  sudo ${native_installer}"
         echo "Then choose: Repair Installation or Diagnostics."
         return 0
     fi
@@ -686,7 +701,8 @@ rescue_native_mode() {
 
 run_native_management_action() {
     local repo_dir="${INSTALL_DIR}/source"
-    local native_installer="${repo_dir}/neodesk.sh"
+    local native_installer
+    native_installer=$(native_installer_in "$repo_dir")
     [ -x "$native_installer" ] || die "Native NeoDesk manager not found at ${native_installer}"
     local args=()
     [ "$CHECK_CAPABILITIES" = true ] && args+=(--check-permissions)

@@ -874,7 +874,7 @@ func TestSetConnectionModePermissionDenied(t *testing.T) {
 		s := New(Options{SystemdUnit: unit, DockerEnvFile: filepath.Join(dir, "none"), FS: fsys, Getenv: envMap(nil)})
 		_, err := s.SetConnectionMode(context.Background(), ConnectionInput{Mode: "relay_only"})
 		want := "Cannot write systemd connection settings (permission denied on " + unit + "). " +
-			"Run once as root: sudo ./neodesk.sh --update " +
+			"Run once as root: sudo neodesk-setup --update " +
 			"then retry \u2014 or set ALLOW_SHARED_NAT_INITIATOR via a systemd drop-in."
 		if err == nil || err.Error() != want || !errors.Is(err, fs.ErrPermission) {
 			t.Errorf("%s: error %v", name, err)

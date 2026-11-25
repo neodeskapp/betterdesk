@@ -41,6 +41,11 @@ var scriptFiles = []string{
 	"docker-entrypoint.sh", "docker/entrypoint.sh",
 	"docker/server-entrypoint.sh", "docker/console-entrypoint.sh",
 	"docker/supervisord.conf", "scripts/installer-protocol-check.js",
+	// Since 3.6.0-rc.5: the installers and compose files in install/, the
+	// Dockerfiles in docker/
+	"install/install.sh", "install/neodesk.sh", "install/neodesk.ps1", "install/neodesk-docker.sh",
+	"install/docker-compose.single.yml", "install/docker-compose.quick.single.yml",
+	"install/docker-compose.quick.single.macvlan.yml", "docker/Dockerfile", "docker/Dockerfile.server",
 }
 
 // classifyFile names the component of a repository path.

@@ -20,9 +20,9 @@ fail() {
 # repo: a repository in $TEST_DIR/repo with the check and a clean installer
 repo() {
     rm -rf "$TEST_DIR/repo"
-    mkdir -p "$TEST_DIR/repo/scripts"
+    mkdir -p "$TEST_DIR/repo/scripts" "$TEST_DIR/repo/install"
     cp "$SCRIPT_ROOT/scripts/check-security-regressions.sh" "$TEST_DIR/repo/scripts/"
-    printf '%s\n' '#!/usr/bin/env bash' 'echo "Environment=DB_TYPE=sqlite"' > "$TEST_DIR/repo/neodesk.sh"
+    printf '%s\n' '#!/usr/bin/env bash' 'echo "Environment=DB_TYPE=sqlite"' > "$TEST_DIR/repo/install/neodesk.sh"
 }
 
 # check: runs the check of $TEST_DIR/repo from another folder; its exit
@@ -37,7 +37,7 @@ check
 [ "$status" = 0 ] || fail "clean files: exit $status: $(cat "$TEST_DIR/out")"
 
 repo
-printf '%s\n' 'Environment=SESSION_SECRET=from-the-installer' >> "$TEST_DIR/repo/neodesk.sh"
+printf '%s\n' 'Environment=SESSION_SECRET=from-the-installer' >> "$TEST_DIR/repo/install/neodesk.sh"
 check
 [ "$status" = 1 ] || fail "an installer writing a secret into a unit passed: $(cat "$TEST_DIR/out")"
 grep -q 'neodesk.sh' "$TEST_DIR/out" || fail "the failure does not name the installer: $(cat "$TEST_DIR/out")"

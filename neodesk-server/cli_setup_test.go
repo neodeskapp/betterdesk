@@ -38,7 +38,7 @@ var installerCase = regexp.MustCompile(`^\s*(-[-A-Za-z|]+)\)\s*$`)
 // loop, without --help and -h (neodesk --help is the command line's).
 func installerFlags(t *testing.T) []string {
 	t.Helper()
-	data, err := os.ReadFile(filepath.Join("..", "neodesk.sh"))
+	data, err := os.ReadFile(filepath.Join("..", "install", "neodesk.sh"))
 	if err != nil {
 		t.Fatal(err)
 	}

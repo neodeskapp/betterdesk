@@ -14,11 +14,11 @@
 # Install with the script. It saves this file as docker-compose.yml with a
 # .env next to it in /opt/neodesk/docker, starts it and prints how to
 # sign in:
-#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/neodesk-docker.sh -o neodesk-docker.sh
+#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/neodesk-docker.sh -o neodesk-docker.sh
 #   sudo bash neodesk-docker.sh
 #
 # Or by hand:
-#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/docker-compose.quick.single.yml -o docker-compose.yml
+#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/docker-compose.quick.single.yml -o docker-compose.yml
 #   docker compose up -d
 #   docker compose exec neodesk neodesk-show-admin-credentials
 #

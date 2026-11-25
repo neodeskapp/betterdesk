@@ -61,7 +61,7 @@ restore() {
         # shellcheck disable=SC2034
         NEODESK_DOCKER_SOURCED=1
         # shellcheck source=/dev/null
-        source "$SCRIPT_ROOT/neodesk-docker.sh"
+        source "$SCRIPT_ROOT/install/neodesk-docker.sh"
         # shellcheck disable=SC2034
         NEODESK_DIR="$DIR"
         # shellcheck disable=SC2034
@@ -121,7 +121,7 @@ grep -q 'mounted at /opt/rustdesk' "$WORK/start.log" || fail "the start does not
 cp "$WORK/env-rc4" "$DIR/.env"
 
 echo "== the update with this checkout's manager"
-bash "$SCRIPT_ROOT/neodesk-docker.sh" update --dir "$DIR" --tag local --no-pull --yes \
+bash "$SCRIPT_ROOT/install/neodesk-docker.sh" update --dir "$DIR" --tag local --no-pull --yes \
     > "$WORK/update.log" 2>&1 || fail "the update failed: $(tail -n 40 "$WORK/update.log")"
 [ "$(data_mount)" = /opt/neodesk/data ] || fail "after the update the data volume is mounted at $(data_mount)"
 if in_container 'test -e /opt/rustdesk || test -L /opt/rustdesk'; then fail "after the update the container has something at /opt/rustdesk"; fi
@@ -141,7 +141,7 @@ if in_container 'test -e /opt/neodesk/data/marker-after'; then fail "the restore
 
 echo "== a backup made after the update goes back"
 in_container 'echo second > /opt/neodesk/data/marker'
-bash "$SCRIPT_ROOT/neodesk-docker.sh" backup --dir "$DIR" > "$WORK/backup.log" 2>&1 \
+bash "$SCRIPT_ROOT/install/neodesk-docker.sh" backup --dir "$DIR" > "$WORK/backup.log" 2>&1 \
     || fail "the backup after the update failed: $(tail -n 20 "$WORK/backup.log")"
 new_backup=$(ls -1t "$DIR"/backups/neodesk-*.tar.gz | head -n 1)
 [ "$new_backup" != "$old_backup" ] || fail "the backup after the update made no new file"
@@ -157,7 +157,7 @@ if in_container 'test -e /opt/neodesk/data/marker-after'; then fail "the restore
 [ "$(in_container 'cat /opt/neodesk/data/id_ed25519.pub')" = "$key" ] || fail "the restore of the new backup changed the server's key"
 
 echo "== uninstall"
-bash "$SCRIPT_ROOT/neodesk-docker.sh" uninstall --dir "$DIR" --purge --yes > "$WORK/uninstall.log" 2>&1 \
+bash "$SCRIPT_ROOT/install/neodesk-docker.sh" uninstall --dir "$DIR" --purge --yes > "$WORK/uninstall.log" 2>&1 \
     || fail "the uninstall failed: $(tail -n 20 "$WORK/uninstall.log")"
 rm -rf "$WORK"
 echo "PASS: the Docker image's data folder"

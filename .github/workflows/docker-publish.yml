@@ -51,8 +51,7 @@ on:
     # pushes by path.
     tags: ['v*']
     paths:
-      - 'Dockerfile*'
-      - 'docker-compose*.yml'
+      - 'install/docker-compose*.yml'
       - 'docker/**'
       - 'neodesk-server/**'
       - 'web-ui/**'
@@ -222,7 +221,7 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
-          file: ./Dockerfile.server
+          file: ./docker/Dockerfile.server
           outputs: type=image,name=${{ needs.read-version.outputs.image_prefix }}/neodesk-server,push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
@@ -306,7 +305,7 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
-          file: ./Dockerfile
+          file: ./docker/Dockerfile
           outputs: type=image,name=${{ needs.read-version.outputs.image_prefix }}/neodesk,push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
@@ -354,7 +353,7 @@ jobs:
         include:
           - name: server
             image: neodesk-server
-            file: Dockerfile.server
+            file: docker/Dockerfile.server
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 330
     permissions:
@@ -437,7 +436,7 @@ jobs:
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: .
-          file: ./Dockerfile
+          file: ./docker/Dockerfile
           outputs: type=image,name=${{ needs.read-version.outputs.image_prefix }}/neodesk,push-by-digest=true,name-canonical=true,push=true
           labels: |
             org.opencontainers.image.version=${{ needs.read-version.outputs.version }}
@@ -620,14 +619,14 @@ jobs:
             echo "### Pin a version (production — recommended)"
             echo "\`\`\`bash"
             echo "export NEODESK_IMAGE_TAG=${pin_ver}"
-            echo "curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose.quick.single.yml -o docker-compose.yml"
+            echo "curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install/docker-compose.quick.single.yml -o docker-compose.yml"
             echo "docker compose pull"
             echo "docker compose up -d"
             echo "\`\`\`"
             echo ""
             echo "### Newest release (\`latest\`: the newest stable release, or the newest pre-release while there is none)"
             echo "\`\`\`bash"
-            echo "curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose.quick.single.yml -o docker-compose.yml"
+            echo "curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install/docker-compose.quick.single.yml -o docker-compose.yml"
             echo "NEODESK_IMAGE_TAG=latest docker compose up -d"
             echo "\`\`\`"
             echo ""

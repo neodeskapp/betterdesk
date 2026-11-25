@@ -99,7 +99,7 @@ check_header() {
 # magenta, and their 24-bit colours keep 3.5:1 on black, on PowerShell's
 # blue and on white.
 check_output() {
-    local name=$1 title=$2 helpers=$3 file="$SCRIPT_ROOT/$1" out colours
+    local name=$1 title=$2 helpers=$3 file="$SCRIPT_ROOT/install/$1" out colours
     shift 3
     out=$(run_script "$file" "print_header; $helpers" "$@")
     case "$out" in *$'\033'*) fail "$name has escape codes without a terminal: $(printf '%q' "$out")" ;; esac
@@ -134,18 +134,18 @@ check_output() {
 # own out then.
 test_headers_and_colours() (
     local version out
-    version=$(sed -n 's/^VERSION="\(.*\)"$/\1/p' "$SCRIPT_ROOT/neodesk.sh")
+    version=$(sed -n 's/^VERSION="\(.*\)"$/\1/p' "$SCRIPT_ROOT/install/neodesk.sh")
     check_output neodesk.sh "Server installer $version" \
         'print_success s; print_error e; print_warning w; print_info i; print_step p'
-    version=$(sed -n 's/^VERSION="\(.*\)"$/\1/p' "$SCRIPT_ROOT/neodesk-docker.sh")
+    version=$(sed -n 's/^VERSION="\(.*\)"$/\1/p' "$SCRIPT_ROOT/install/neodesk-docker.sh")
     check_output neodesk-docker.sh "Docker installer $version" \
         'step s; ok o; warn w; (die e) || true' NEODESK_DOCKER_SOURCED=1
-    version=$(sed -n 's/^NEODESK_VERSION="${NEODESK_VERSION:-\(.*\)}"$/\1/p' "$SCRIPT_ROOT/install.sh")
+    version=$(sed -n 's/^NEODESK_VERSION="${NEODESK_VERSION:-\(.*\)}"$/\1/p' "$SCRIPT_ROOT/install/install.sh")
     check_output install.sh "Installer $version" 'log l; ok o; warn w; (die e) || true'
 
-    out=$(run_script "$SCRIPT_ROOT/install.sh" 'print_header > /dev/null; printenv NEODESK_HEADER_SHOWN')
+    out=$(run_script "$SCRIPT_ROOT/install/install.sh" 'print_header > /dev/null; printenv NEODESK_HEADER_SHOWN')
     [ "$out" = 1 ] || fail "install.sh does not tell the managers it showed the header: $out"
-    out=$(in_terminal "$SCRIPT_ROOT/neodesk-docker.sh" print_header NEODESK_DOCKER_SOURCED=1 NEODESK_HEADER_SHOWN=1)
+    out=$(in_terminal "$SCRIPT_ROOT/install/neodesk-docker.sh" print_header NEODESK_DOCKER_SOURCED=1 NEODESK_HEADER_SHOWN=1)
     [ -z "$out" ] || fail "neodesk-docker.sh shows its header after install.sh's: $out"
 )
 
@@ -154,7 +154,7 @@ test_bounded_go_commands() (
     export GO_COMMAND_KILL_AFTER=1
     set --
     # shellcheck disable=SC1091
-    source "$SCRIPT_ROOT/neodesk.sh"
+    source "$SCRIPT_ROOT/install/neodesk.sh"
 
     if ! _run_go_command_bounded "successful test command" 5 sh -c 'exit 0'; then
         fail "successful bounded command returned non-zero"
@@ -243,7 +243,7 @@ FAKE_ID
     export NEODESK_BRANCH="main"
     set --
     # shellcheck disable=SC1091
-    source "$SCRIPT_ROOT/install.sh"
+    source "$SCRIPT_ROOT/install/install.sh"
 
     install_native_mode
 
@@ -265,7 +265,7 @@ FAKE_ID
         export FAKE_GIT_FAIL_CLONE=1
         set --
         # shellcheck disable=SC1091
-        source "$SCRIPT_ROOT/install.sh"
+        source "$SCRIPT_ROOT/install/install.sh"
         install_native_mode
     ); then
         fail "failed clone returned success"
@@ -273,7 +273,7 @@ FAKE_ID
     [ -d "$repo_dir/.git" ] || fail "original source was not restored after clone failure"
 
     local piped_output
-    if ! piped_output=$(cat "$SCRIPT_ROOT/install.sh" | bash -s -- --native); then
+    if ! piped_output=$(cat "$SCRIPT_ROOT/install/install.sh" | bash -s -- --native); then
         fail "piped native installer invocation failed: ${piped_output}"
     fi
     [[ "$piped_output" == *"Native installation finished."* ]] \
@@ -319,7 +319,7 @@ FAKE_GIT
             export INSTALL_DIR="$temp_dir/install-$branch" NEODESK_BRANCH="$branch"
             set --
             # shellcheck disable=SC1091
-            source "$SCRIPT_ROOT/install.sh"
+            source "$SCRIPT_ROOT/install/install.sh"
             install_native_mode
         ) >/dev/null
         got=$(cat "$temp_dir/channel" 2>/dev/null || echo "(neodesk.sh did not run)")
@@ -344,7 +344,7 @@ FAKE_GIT
             # shellcheck disable=SC2086
             set -- $args
             # shellcheck disable=SC1091
-            source "$SCRIPT_ROOT/install.sh"
+            source "$SCRIPT_ROOT/install/install.sh"
             [ "$NEODESK_BRANCH" = main ] || fail "install.sh installs the files of $NEODESK_BRANCH"
             install_native_mode
         ) >/dev/null
@@ -376,7 +376,7 @@ FAKE_SERVER
 
     set --
     # shellcheck disable=SC1091
-    source "$SCRIPT_ROOT/neodesk.sh"
+    source "$SCRIPT_ROOT/install/neodesk.sh"
     SCRIPT_DIR="$temp_dir"
     RUSTDESK_PATH="$temp_dir/rustdesk"
     CONSOLE_PATH="$temp_dir/console"
@@ -486,7 +486,7 @@ FAKE_SERVER
 
     set --
     # shellcheck disable=SC1091
-    source "$SCRIPT_ROOT/neodesk.sh"
+    source "$SCRIPT_ROOT/install/neodesk.sh"
     SCRIPT_DIR="$temp_dir"
     RUSTDESK_PATH="$temp_dir/rustdesk"
     CONSOLE_PATH="$temp_dir/console"
@@ -556,7 +556,7 @@ test_install_sh_uses_the_fork() (
     unset NEODESK_REPO NEODESK_RAW_BASE NEODESK_BRANCH
     set --
     # shellcheck disable=SC1091
-    source "$SCRIPT_ROOT/install.sh"
+    source "$SCRIPT_ROOT/install/install.sh"
     [ "$NEODESK_REPO" = neodeskapp/neodesk ] || fail "install.sh clones $NEODESK_REPO"
     case "$NEODESK_RAW_BASE" in
         https://raw.githubusercontent.com/neodeskapp/neodesk/*) ;;
@@ -565,23 +565,23 @@ test_install_sh_uses_the_fork() (
     # The one-liners and the installers' own downloads name the only
     # branch, main; there is no dev branch, and nothing downloads from
     # upstream's repository
-    [ "$NEODESK_RAW_BASE" = https://raw.githubusercontent.com/neodeskapp/neodesk/main ] \
+    [ "$NEODESK_RAW_BASE" = https://raw.githubusercontent.com/neodeskapp/neodesk/main/install ] \
         || fail "install.sh downloads from $NEODESK_RAW_BASE"
     local hits
     hits=$(cd "$SCRIPT_ROOT" && grep -nE 'raw\.githubusercontent\.com/(neodeskapp/neodesk/dev/|UNITRONIX/BetterDesk/)|github\.com/neodeskapp/neodesk/(blob|tree)/dev/' \
-        install.sh neodesk.sh neodesk.ps1 neodesk-docker.sh docker-compose*.yml README.md SECURITY.md || true)
+        install/install.sh install/neodesk.sh install/neodesk.ps1 install/neodesk-docker.sh install/docker-compose*.yml README.md SECURITY.md || true)
     [ -z "$hits" ] || fail "one-liners name a branch without the current installers: $hits"
     local docker_base
     docker_base=$(
         unset NEODESK_RAW_BASE NEODESK_BRANCH
         NEODESK_DOCKER_SOURCED=1
         # shellcheck disable=SC1091
-        source "$SCRIPT_ROOT/neodesk-docker.sh"
+        source "$SCRIPT_ROOT/install/neodesk-docker.sh"
         printf '%s\n' "$NEODESK_RAW_BASE"
     )
-    [ "$docker_base" = https://raw.githubusercontent.com/neodeskapp/neodesk/main ] \
+    [ "$docker_base" = https://raw.githubusercontent.com/neodeskapp/neodesk/main/install ] \
         || fail "neodesk-docker.sh downloads from $docker_base"
-    grep -qF '$script:INSTALLER_REF = if ($env:INSTALLER_REF) { $env:INSTALLER_REF } else { "main" }' "$SCRIPT_ROOT/neodesk.ps1" \
+    grep -qF '$script:INSTALLER_REF = if ($env:INSTALLER_REF) { $env:INSTALLER_REF } else { "main" }' "$SCRIPT_ROOT/install/neodesk.ps1" \
         || fail "neodesk.ps1 does not fetch itself from main"
 )
 

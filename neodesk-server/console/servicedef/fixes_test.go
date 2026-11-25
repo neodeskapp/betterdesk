@@ -15,7 +15,7 @@ import (
 const nodeUnitHint = "Run once as root: sudo node web-nodejs/scripts/linux-ensure-console-user.js"
 
 // goUnitHint is the hint Go gives instead (NL4).
-const goUnitHint = "Run once as root: sudo ./neodesk.sh --update"
+const goUnitHint = "Run once as root: sudo neodesk-setup --update"
 
 // withUnitHint is a recorded result with the hint Go gives (NL4).
 func withUnitHint(node json.RawMessage) json.RawMessage {

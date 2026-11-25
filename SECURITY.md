@@ -54,9 +54,9 @@ In scope, everything in this repository:
 - The web console the server serves: its server code in
   `neodesk-server/console/` and the web app in `web-ui/`, including the
   browser remote desktop viewer.
-- The installers `install.sh`, `neodesk.sh`, `neodesk.ps1` and
-  `neodesk-docker.sh`, the Docker images (`Dockerfile`,
-  `Dockerfile.server`, `docker/`) and the compose files.
+- The installers (`install.sh`, `neodesk.sh`, `neodesk.ps1` and
+  `neodesk-docker.sh`) and the compose files in `install/`, and the
+  Docker images (`docker/`, with both Dockerfiles).
 - The CDAP SDKs in `sdks/` and the reference bridges in `bridges/`.
 - The RDP and VNC gateway deployment files in `remote-gateway/`.
 - The release and publishing workflows in `.github/workflows/`.

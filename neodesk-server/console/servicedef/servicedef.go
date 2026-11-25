@@ -67,7 +67,7 @@ var ErrNoPrivilegedHelper = errors.New("Privileged update failed")
 
 // unitHint is what a refused read or write of the unit adds to its
 // message: the installer's update writes the unit as it should be.
-const unitHint = "Run once as root: sudo ./neodesk.sh --update"
+const unitHint = "Run once as root: sudo neodesk-setup --update"
 
 // allowedUnits are the unit files the privileged helper may touch.
 var allowedUnits = map[string]bool{

@@ -21,7 +21,7 @@ unit_supervisor=$(
     set +eu
     set --
     # shellcheck disable=SC1091
-    source "$ROOT/neodesk.sh" >/dev/null 2>&1
+    source "$ROOT/install/neodesk.sh" >/dev/null 2>&1
     tmp=$(mktemp -d)
     SERVER_UNIT="$tmp/neodesk-server.service"
     RUSTDESK_PATH="$tmp/server"
@@ -36,7 +36,7 @@ unit_supervisor=$(
     || fail "the systemd unit of neodesk.sh sets NEODESK_SUPERVISOR='${unit_supervisor}', expected systemd"
 
 # The image: ENV of the last stage of the Dockerfile
-image_supervisor=$(tr -d '\r' < "$ROOT/Dockerfile" | awk '
+image_supervisor=$(tr -d '\r' < "$ROOT/docker/Dockerfile" | awk '
     /^FROM / { stage = ""; next }
     { stage = stage "\n" $0 }
     END { print stage }' | sed -n 's/.*[[:space:]]NEODESK_SUPERVISOR=\([a-z]*\).*/\1/p' | tail -n 1)
@@ -44,12 +44,15 @@ image_supervisor=$(tr -d '\r' < "$ROOT/Dockerfile" | awk '
     || fail "the Dockerfile's runtime stage sets NEODESK_SUPERVISOR='${image_supervisor}', expected docker"
 
 # The compose files keep the image's value
-for compose in "$ROOT"/docker-compose*.yml; do
+checked=0
+for compose in "$ROOT"/install/docker-compose*.yml; do
     [ -f "$compose" ] || continue
+    checked=$((checked + 1))
     if tr -d '\r' < "$compose" | grep -E 'NEODESK_SUPERVISOR[=:]' | grep -vqE 'NEODESK_SUPERVISOR[=:][[:space:]]*"?docker"?[[:space:]]*$'; then
         fail "$(basename "$compose") sets NEODESK_SUPERVISOR to something other than docker"
     fi
 done
+[ "$checked" -gt 0 ] || fail "no compose files in $ROOT/install"
 
 if [ "$failures" -gt 0 ]; then
     exit 1

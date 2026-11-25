@@ -45,6 +45,10 @@ NEODESK_SH_REVISION="20261124-neodesk-setup-307"
 # Where people ask for help: the NeoDesk Discord
 NEODESK_HELP_URL="https://discord.gg/nwERSawufr"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# The repository's root when this script runs from a checkout (its install/
+# folder), else the script's own folder
+REPO_DIR="$SCRIPT_DIR"
+[ -d "$SCRIPT_DIR/../neodesk-server" ] && REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 # This file; empty when the script is piped into bash
 NEODESK_SELF="${BASH_SOURCE[0]:-}"
 # Preserve argv before shift — used to re-exec after installer self-update.
@@ -350,7 +354,7 @@ while [[ $# -gt 0 ]]; do
             echo "  GO_API_PORT=21114 / CLIENT_API_PORT=21121  The server's own API port and the client API port"
             echo "  SIGNAL_RATE_LIMIT_PER_IP=20  Signal registrations per address and minute (0: no limit)"
             echo ""
-            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/neodesk.sh | sudo bash"
+            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/neodesk.sh | sudo bash"
             echo "Later:                     sudo neodesk-setup (menu), sudo neodesk-setup --update, sudo neodesk-setup --uninstall"
             echo "The command line:          neodesk --help (sudo neodesk and these options reach neodesk-setup too)"
             exit 0
@@ -363,7 +367,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Go server source directory
-GO_SERVER_SOURCE="$SCRIPT_DIR/neodesk-server"
+GO_SERVER_SOURCE="$REPO_DIR/neodesk-server"
 
 # Minimum Go version required for compilation (must match neodesk-server/go.mod).
 GO_MIN_VERSION="1.26.11"
@@ -735,7 +739,7 @@ install_manager_command() {
         && [ "$real" != "$(readlink -f "$OLD_MANAGER_COMMAND" 2>/dev/null)" ]; then
         cp "$self" "$tmp"
     elif ! curl -fsSL --retry 2 --connect-timeout 20 -o "$tmp" \
-        "https://raw.githubusercontent.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/${INSTALLER_REF}/neodesk.sh" \
+        "https://raw.githubusercontent.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/${INSTALLER_REF}/install/neodesk.sh" \
         || ! grep -q '^NEODESK_SH_REVISION=' "$tmp"; then
         if [ -n "$self" ] && [ -f "$self" ]; then
             cp "$self" "$tmp"
@@ -3447,7 +3451,7 @@ _run_go_mod_download_bounded() {
 # server module, where the binary embeds it from. Without a build it makes
 # one when Node.js and npm are installed; a build from source needs them.
 embed_web_ui_build() {
-    local go_bin="$1" web_ui="$SCRIPT_DIR/web-ui"
+    local go_bin="$1" web_ui="$REPO_DIR/web-ui"
     if [ ! -f "$web_ui/build/index.html" ]; then
         if ! command -v npm &>/dev/null || [ ! -f "$web_ui/package-lock.json" ]; then
             print_error "A build from source needs the web app: $web_ui/build, or Node.js 22 and npm to build it"
@@ -3559,7 +3563,7 @@ compile_go_server() {
     # Build with optimizations
     print_info "Building NeoDesk server (timeout: ${GO_BUILD_TIMEOUT}s)..."
     local build_status=0 commit
-    commit=$(git -C "$SCRIPT_DIR" rev-parse HEAD 2>/dev/null || true)
+    commit=$(git -C "$REPO_DIR" rev-parse HEAD 2>/dev/null || true)
     if _run_go_command_bounded "building Go server" "$GO_BUILD_TIMEOUT" \
         env CGO_ENABLED=0 "$go_bin" build -trimpath \
         -ldflags="-s -w -X main.Version=${VERSION} -X main.Commit=${commit}" -o "$output_name" .; then
@@ -4303,12 +4307,12 @@ setup_console_home() {
         print_info "Minimal installation: the web console stays off (CONSOLE_PORT=0)"
     fi
 
-    if [ -d "$SCRIPT_DIR/remote-gateway" ]; then
+    if [ -d "$REPO_DIR/remote-gateway" ]; then
         mkdir -p "$CONSOLE_PATH/remote-gateway"
-        cp -a "$SCRIPT_DIR/remote-gateway/." "$CONSOLE_PATH/remote-gateway/"
+        cp -a "$REPO_DIR/remote-gateway/." "$CONSOLE_PATH/remote-gateway/"
     fi
-    if [ -f "$SCRIPT_DIR/VERSION" ]; then
-        cp -a "$SCRIPT_DIR/VERSION" "$CONSOLE_PATH/VERSION" 2>/dev/null || true
+    if [ -f "$REPO_DIR/VERSION" ]; then
+        cp -a "$REPO_DIR/VERSION" "$CONSOLE_PATH/VERSION" 2>/dev/null || true
     fi
 
     if [ "$STORE_ADMIN_CREDENTIALS" = "true" ] && [ "$is_fresh" = true ] && [ -n "$ADMIN_PASSWORD" ]; then
@@ -5978,9 +5982,7 @@ do_install_build_toolchain() {
     echo "         plus cargo build cache (/var/cache/neodesk-build)."
     echo ""
 
-    local script_dir
-    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    local toolchain_script="$script_dir/scripts/install-build-toolchain.sh"
+    local toolchain_script="$REPO_DIR/scripts/install-build-toolchain.sh"
 
     if [ ! -f "$toolchain_script" ]; then
         print_error "Toolchain installer not found: $toolchain_script"
@@ -6193,12 +6195,12 @@ do_build_legacy_rust() {
     print_step "Applying NeoDesk modifications..."
 
     # Copy modified sources
-    if [ -d "$SCRIPT_DIR/hbbs-patch-v2/src" ]; then
-        cp "$SCRIPT_DIR/hbbs-patch-v2/src/main.rs" src/ 2>/dev/null || true
-        cp "$SCRIPT_DIR/hbbs-patch-v2/src/http_api.rs" src/ 2>/dev/null || true
-        cp "$SCRIPT_DIR/hbbs-patch-v2/src/database.rs" src/ 2>/dev/null || true
-        cp "$SCRIPT_DIR/hbbs-patch-v2/src/peer.rs" src/ 2>/dev/null || true
-        cp "$SCRIPT_DIR/hbbs-patch-v2/src/rendezvous_server.rs" src/ 2>/dev/null || true
+    if [ -d "$REPO_DIR/hbbs-patch-v2/src" ]; then
+        cp "$REPO_DIR/hbbs-patch-v2/src/main.rs" src/ 2>/dev/null || true
+        cp "$REPO_DIR/hbbs-patch-v2/src/http_api.rs" src/ 2>/dev/null || true
+        cp "$REPO_DIR/hbbs-patch-v2/src/database.rs" src/ 2>/dev/null || true
+        cp "$REPO_DIR/hbbs-patch-v2/src/peer.rs" src/ 2>/dev/null || true
+        cp "$REPO_DIR/hbbs-patch-v2/src/rendezvous_server.rs" src/ 2>/dev/null || true
     else
         print_error "Modified sources not found in hbbs-patch-v2/src/"
         press_enter
@@ -6211,17 +6213,17 @@ do_build_legacy_rust() {
     # Copy results
     print_step "Copying binaries..."
     detect_architecture
-    mkdir -p "$SCRIPT_DIR/hbbs-patch-v2"
+    mkdir -p "$REPO_DIR/hbbs-patch-v2"
 
-    cp target/release/hbbs "$SCRIPT_DIR/hbbs-patch-v2/hbbs-linux-$ARCH_NAME"
-    cp target/release/hbbr "$SCRIPT_DIR/hbbs-patch-v2/hbbr-linux-$ARCH_NAME"
+    cp target/release/hbbs "$REPO_DIR/hbbs-patch-v2/hbbs-linux-$ARCH_NAME"
+    cp target/release/hbbr "$REPO_DIR/hbbs-patch-v2/hbbr-linux-$ARCH_NAME"
 
     # Cleanup
     cd /
     rm -rf "$build_dir"
 
     print_success "Legacy Rust compilation completed!"
-    print_info "Binaries saved in: $SCRIPT_DIR/hbbs-patch-v2/"
+    print_info "Binaries saved in: $REPO_DIR/hbbs-patch-v2/"
 
     press_enter
 }

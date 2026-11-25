@@ -13,9 +13,9 @@ import (
 func TestShippedSettingsNameTheFork(t *testing.T) {
 	setting := regexp.MustCompile(`NEODESK_CLIENT_(?:ALLOWED_)?REPOS?=(?:\$\{NEODESK_CLIENT_REPO:-)?([^}\s]*)`)
 	for _, file := range []string{
-		"../../../docker-compose.single.yml",
-		"../../../docker-compose.quick.single.yml",
-		"../../../docker-compose.quick.single.macvlan.yml",
+		"../../../install/docker-compose.single.yml",
+		"../../../install/docker-compose.quick.single.yml",
+		"../../../install/docker-compose.quick.single.macvlan.yml",
 		"../managedconfig/env.example",
 	} {
 		raw, err := os.ReadFile(filepath.FromSlash(file))

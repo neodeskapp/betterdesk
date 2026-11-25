@@ -4,7 +4,7 @@
 # This file builds the image neodesk:local from the repository and runs
 # it: one container, one process (signal, relay, API and the web console).
 # `docker compose pull` does not update it; rebuild after git pull:
-#   git pull && NEODESK_COMMIT_SHA=$(git rev-parse HEAD) docker compose -f docker-compose.single.yml up -d --build
+#   git pull && NEODESK_COMMIT_SHA=$(git rev-parse HEAD) docker compose -f install/docker-compose.single.yml up -d --build
 #
 # Which compose file is which:
 #   docker-compose.quick.single.yml          the published image, builds
@@ -14,21 +14,21 @@
 #   docker-compose.single.yml                this file
 #
 # Quick start (SQLite, the default):
-#   docker compose -f docker-compose.single.yml up -d --build
+#   docker compose -f install/docker-compose.single.yml up -d --build
 #
 # With PostgreSQL:
-#   PG_PASSWORD=YourStrongPasswordHere #   DB_TYPE=postgres DATABASE_URL=postgres://neodesk:YourStrongPasswordHere@postgres:5432/neodesk #     docker compose -f docker-compose.single.yml --profile postgres up -d --build
+#   PG_PASSWORD=YourStrongPasswordHere #   DB_TYPE=postgres DATABASE_URL=postgres://neodesk:YourStrongPasswordHere@postgres:5432/neodesk #     docker compose -f install/docker-compose.single.yml --profile postgres up -d --build
 #
-#   Or create a .env file:
+#   Or create a .env file next to this file (install/.env):
 #     DB_TYPE=postgres
 #     DATABASE_URL=postgres://neodesk:YourStrongPasswordHere@postgres:5432/neodesk
 #     PG_PASSWORD=YourStrongPasswordHere
-#   Then: docker compose -f docker-compose.single.yml --profile postgres up -d --build
+#   Then: docker compose -f install/docker-compose.single.yml --profile postgres up -d --build
 #
 # Access:
 #   Web Console: http://localhost:5000
 #   Client API:  http://localhost:21121  (not panel :5000)
-#   Admin password: docker compose -f docker-compose.single.yml exec neodesk neodesk-show-admin-credentials
+#   Admin password: docker compose -f install/docker-compose.single.yml exec neodesk neodesk-show-admin-credentials
 #   (random unless ADMIN_PASSWORD is set before the first start)
 # =============================================================================
 
@@ -36,10 +36,11 @@ services:
   # NeoDesk: signal, relay, API and web console in one process
   neodesk:
     build:
-      context: .
-      dockerfile: Dockerfile
+      # The repository's root; the Dockerfiles are in docker/
+      context: ..
+      dockerfile: docker/Dockerfile
       # The commit the binary reports (-version, the update check):
-      #   NEODESK_COMMIT_SHA=$(git rev-parse HEAD) docker compose -f docker-compose.single.yml up -d --build
+      #   NEODESK_COMMIT_SHA=$(git rev-parse HEAD) docker compose -f install/docker-compose.single.yml up -d --build
       args:
         NEODESK_COMMIT_SHA: ${NEODESK_COMMIT_SHA:-}
     image: neodesk:local
@@ -126,7 +127,7 @@ services:
       # Admin credentials (first run only; existing users are not overwritten).
       # Do NOT comment these out — ADMIN_PASSWORD on the host shell only reaches
       # the container when referenced here.
-      #   ADMIN_PASSWORD=YourSecurePassword123 docker compose -f docker-compose.single.yml up -d --build
+      #   ADMIN_PASSWORD=YourSecurePassword123 docker compose -f install/docker-compose.single.yml up -d --build
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - INIT_ADMIN_USER=${ADMIN_USERNAME:-admin}
       - INIT_ADMIN_PASS=${ADMIN_PASSWORD:-}

@@ -227,7 +227,7 @@ func TestWithoutTheRelay(t *testing.T) {
 // set ND_DEV_MOCK_REMOTE.
 func TestNoComposeFileSwitchesTheMockOn(t *testing.T) {
 	root := repoRoot(t)
-	files, err := filepath.Glob(filepath.Join(root, "docker-compose*.y*ml"))
+	files, err := filepath.Glob(filepath.Join(root, "install", "docker-compose*.y*ml"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -254,7 +254,7 @@ func repoRoot(t *testing.T) string {
 		t.Fatal(err)
 	}
 	for {
-		if found, _ := filepath.Glob(filepath.Join(dir, "docker-compose*.y*ml")); len(found) > 0 {
+		if found, _ := filepath.Glob(filepath.Join(dir, "install", "docker-compose*.y*ml")); len(found) > 0 {
 			return dir
 		}
 		parent := filepath.Dir(dir)

@@ -65,15 +65,15 @@ const (
 )
 
 var composeFiles = []string{
-	"docker-compose.single.yml",
-	"docker-compose.quick.single.yml",
-	"docker-compose.quick.single.macvlan.yml",
+	"install/docker-compose.single.yml",
+	"install/docker-compose.quick.single.yml",
+	"install/docker-compose.quick.single.macvlan.yml",
 }
 
 var bashInstallerFiles = []string{
-	"install.sh",
-	"neodesk.sh",
-	"neodesk-docker.sh",
+	"install/install.sh",
+	"install/neodesk.sh",
+	"install/neodesk-docker.sh",
 	"scripts/test-native-installer.sh",
 	"scripts/test-go-installer.sh",
 	"scripts/check-go-toolchain-pins.sh",
@@ -1014,9 +1014,9 @@ func (g *gate) runInstallerChecks(tools gateTools) {
 		g.runCheck(c[0], c[2], tools["bash"], []string{c[1]}, runOptions{timeout: 2 * time.Minute})
 	}
 	for _, c := range [][3]string{
-		{"installer-help", "install.sh", "Check install.sh help path"},
-		{"neodesk-help", "neodesk.sh", "Check neodesk.sh help path"},
-		{"docker-installer-help", "neodesk-docker.sh", "Check neodesk-docker.sh help path"},
+		{"installer-help", "install/install.sh", "Check install.sh help path"},
+		{"neodesk-help", "install/neodesk.sh", "Check neodesk.sh help path"},
+		{"docker-installer-help", "install/neodesk-docker.sh", "Check neodesk-docker.sh help path"},
 	} {
 		g.runCheck(c[0], c[2], tools["bash"], []string{c[1], "--help"}, runOptions{timeout: time.Minute})
 	}
@@ -1026,7 +1026,7 @@ func (g *gate) runInstallerChecks(tools gateTools) {
 
 func (g *gate) runSecurityChecks(tools gateTools) {
 	g.runCheck("gitleaks", "Scan repository for secrets with gitleaks", tools["gitleaks"], []string{
-		"detect", "--source", ".", "--config", ".gitleaks.toml",
+		"detect", "--source", ".", "--config", ".github/gitleaks.toml",
 		"--exclude", ".local-test-results/**",
 		"--exclude", "**/node_modules/**",
 		"--exclude", "**/*_old/**",
@@ -1064,9 +1064,9 @@ func (g *gate) runComposeConfigChecks(tools gateTools) dockerBuilds {
 		})
 	}
 	single := g.runCheck("docker-build-single", "Build local single-container image", tools["docker"],
-		[]string{"compose", "-f", g.path("docker-compose.single.yml"), "build", "neodesk"}, runOptions{cwd: g.root})
+		[]string{"compose", "-f", g.path("install/docker-compose.single.yml"), "build", "neodesk"}, runOptions{cwd: g.root})
 	g.runCheck("docker-build-server", "Build local server-only image", tools["docker"],
-		[]string{"build", "-f", g.path("Dockerfile.server"), "-t", "neodesk-server:local", g.root}, runOptions{cwd: g.root})
+		[]string{"build", "-f", g.path("docker/Dockerfile.server"), "-t", "neodesk-server:local", g.root}, runOptions{cwd: g.root})
 	// There is no console image: the server serves the web console
 	return dockerBuilds{singleBuilt: single.Status == "PASS"}
 }

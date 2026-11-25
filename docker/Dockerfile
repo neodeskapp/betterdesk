@@ -4,10 +4,10 @@
 # neodesk-server serves the signal and relay server, the API and the web
 # console (DECISIONS A32). The web app is built into the binary.
 #
-# Published as ghcr.io/neodeskapp/neodesk (docker-compose.quick.single.yml
-# runs it). Build it from a checkout instead:
-#   docker build -t neodesk:local .
-#   docker compose -f docker-compose.single.yml up -d
+# Published as ghcr.io/neodeskapp/neodesk (install/docker-compose.quick.single.yml
+# runs it). Build it from a checkout instead, from the repository's root:
+#   docker build -f docker/Dockerfile -t neodesk:local .
+#   docker compose -f install/docker-compose.single.yml up -d
 #
 # Ports:
 #   5000  - Web console (5443 with HTTPS_ENABLED)
@@ -55,7 +55,7 @@ RUN go run ./cmd/embed-webui -from /web-ui-build
 # The binary's version, build date and commit (-version, the update check).
 # Without build arguments: the version in VERSION and the time of the build;
 # the commit only when NEODESK_COMMIT_SHA names it (the publish workflow
-# and docker-compose.single.yml pass it).
+# and install/docker-compose.single.yml pass it).
 ARG NEODESK_PRODUCT_VERSION=
 ARG NEODESK_COMMIT_SHA=
 ARG NEODESK_BUILD_DATE=

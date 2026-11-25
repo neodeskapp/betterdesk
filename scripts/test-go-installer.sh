@@ -15,7 +15,7 @@ fail() {
 load() {
     set --
     # shellcheck disable=SC1091
-    source "$SCRIPT_ROOT/neodesk.sh"
+    source "$SCRIPT_ROOT/install/neodesk.sh"
     TEST_DIR=$(mktemp -d)
     SERVER_UNIT="$TEST_DIR/neodesk-server.service"
     LEGACY_CONSOLE_UNIT="$TEST_DIR/neodesk-console.service"
@@ -172,7 +172,7 @@ test_no_upgrade_from_the_node_console() (
     local opt out code
     for opt in --rollback-go --cleanup-node; do
         code=0
-        out=$(bash "$SCRIPT_ROOT/neodesk.sh" "$opt" 2>&1 < /dev/null) || code=$?
+        out=$(bash "$SCRIPT_ROOT/install/neodesk.sh" "$opt" 2>&1 < /dev/null) || code=$?
         [ "$code" = 1 ] && [ "$out" = "Unknown option: $opt" ] || fail "$opt: exit $code: $out"
     done
     load
@@ -519,7 +519,7 @@ test_channel_and_download_errors() (
     unset UPDATE_GITHUB_BRANCH RELEASE_BASE_URL UPDATE_GITHUB_OWNER UPDATE_GITHUB_REPO
     set -- --channel dev
     # shellcheck disable=SC1091
-    source "$SCRIPT_ROOT/neodesk.sh"
+    source "$SCRIPT_ROOT/install/neodesk.sh"
     [ "$UPDATE_GITHUB_BRANCH" = dev ] && [ "$UPDATE_GITHUB_BRANCH_GIVEN" = dev ] \
         || fail "--channel dev gives the channel '$UPDATE_GITHUB_BRANCH' (given '$UPDATE_GITHUB_BRANCH_GIVEN')"
     load
@@ -539,7 +539,7 @@ test_channel_and_download_errors() (
         *"Could not reach"*"--binary"*) ;;
         *) fail "a download without network says: $out" ;;
     esac
-    if bash "$SCRIPT_ROOT/neodesk.sh" --channel nightly >/dev/null 2>&1; then fail "--channel nightly was taken"; fi
+    if bash "$SCRIPT_ROOT/install/neodesk.sh" --channel nightly >/dev/null 2>&1; then fail "--channel nightly was taken"; fi
     rm -rf "$TEST_DIR"
 )
 
@@ -548,7 +548,7 @@ test_channel_and_download_errors() (
 test_one_command_install() (
     local out
     # main runs: it asks for root, or as root it looks for an install
-    out=$(cd "$(mktemp -d)" && timeout 60 bash -s -- --check-permissions < "$SCRIPT_ROOT/neodesk.sh" 2>&1 || true)
+    out=$(cd "$(mktemp -d)" && timeout 60 bash -s -- --check-permissions < "$SCRIPT_ROOT/install/neodesk.sh" 2>&1 || true)
     case "$out" in
         *"requires root"*|*"Detecting installation"*) ;;
         *) fail "neodesk.sh piped into bash did not start: $out" ;;
@@ -565,7 +565,7 @@ test_one_command_install() (
     commands_in_test_dir
     install_manager_command >/dev/null
     [ -x "$MANAGER_COMMAND" ] || fail "no neodesk-setup command was left behind"
-    cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/neodesk.sh" || fail "the neodesk-setup command is not this installer"
+    cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/install/neodesk.sh" || fail "the neodesk-setup command is not this installer"
     # Piped from curl, it fetches itself from the repository's branch,
     # main, whatever the release channel: the development channel's id is
     # dev, and there is no dev branch
@@ -576,10 +576,10 @@ test_one_command_install() (
         local a prev="" dest=""
         for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; done
         printf '%s\n' "${!#}" > "$TEST_DIR/fetched"
-        cp "$SCRIPT_ROOT/neodesk.sh" "$dest"
+        cp "$SCRIPT_ROOT/install/neodesk.sh" "$dest"
     }
     install_manager_command >/dev/null
-    [ "$(cat "$TEST_DIR/fetched")" = "https://raw.githubusercontent.com/neodeskapp/neodesk/main/neodesk.sh" ] \
+    [ "$(cat "$TEST_DIR/fetched")" = "https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/neodesk.sh" ] \
         || fail "the neodesk-setup command came from $(cat "$TEST_DIR/fetched")"
     unset -f curl
     rm -rf "$TEST_DIR"
@@ -599,7 +599,7 @@ test_install_places_neodesk_setup_and_the_command_line() (
     fake_handing_binary
     install_manager_command >/dev/null
     [ -x "$MANAGER_COMMAND" ] || fail "no neodesk-setup"
-    cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/neodesk.sh" || fail "neodesk-setup is not this installer"
+    cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/install/neodesk.sh" || fail "neodesk-setup is not this installer"
     [ -f "$CLI_COMMAND" ] && [ ! -L "$CLI_COMMAND" ] && cmp -s "$CLI_COMMAND" "$RUSTDESK_PATH/neodesk-server" \
         || fail "neodesk is not a copy of the server binary: $(ls -l "$CLI_COMMAND" 2>&1)"
     [ "$(stat -c %a "$CLI_COMMAND")" = 755 ] || fail "neodesk has mode $(stat -c %a "$CLI_COMMAND")"
@@ -625,7 +625,7 @@ test_update_moves_the_old_manager() (
     load
     commands_in_test_dir
     mkdir -p "$TEST_DIR/sbin"
-    install -m 0755 "$SCRIPT_ROOT/neodesk.sh" "$OLD_MANAGER_COMMAND"
+    install -m 0755 "$SCRIPT_ROOT/install/neodesk.sh" "$OLD_MANAGER_COMMAND"
     fake_current_binary
     install_manager_command >/dev/null 2>&1
     [ -x "$MANAGER_COMMAND" ] || fail "no neodesk-setup next to an older binary"
@@ -652,7 +652,7 @@ test_update_moves_the_old_manager() (
     rm -f "$CLI_COMMAND"
     printf '#!/bin/sh\necho mine\n' > "$CLI_COMMAND"
     chmod 755 "$CLI_COMMAND"
-    install -m 0755 "$SCRIPT_ROOT/neodesk.sh" "$OLD_MANAGER_COMMAND"
+    install -m 0755 "$SCRIPT_ROOT/install/neodesk.sh" "$OLD_MANAGER_COMMAND"
     local out
     out=$(install_manager_command 2>&1)
     grep -qx 'echo mine' "$CLI_COMMAND" || fail "a neodesk of someone else was replaced"
@@ -718,10 +718,10 @@ test_backups_move_to_the_neodesk_folder() (
 test_no_settings_go_to_the_old_console_service() {
     local hits
     hits=$(grep -nE '_(upsert|remove)_systemd_env "\$svc_file"|grep .*NEODESK_API_URL=.*neodesk-console\.service|local svc_file="/etc/systemd/system/neodesk-console\.service"' \
-        "$SCRIPT_ROOT/neodesk.sh" || true)
+        "$SCRIPT_ROOT/install/neodesk.sh" || true)
     [ -z "$hits" ] || fail "neodesk.sh still writes or reads settings of neodesk-console.service:
 $hits"
-    hits=$(grep -nE '\$svcName = \$script:CONSOLE_SERVICE|"NeoDeskConsole" \}' "$SCRIPT_ROOT/neodesk.ps1" || true)
+    hits=$(grep -nE '\$svcName = \$script:CONSOLE_SERVICE|"NeoDeskConsole" \}' "$SCRIPT_ROOT/install/neodesk.ps1" || true)
     [ -z "$hits" ] || fail "neodesk.ps1 still writes settings into the NeoDeskConsole service:
 $hits"
 }
@@ -733,7 +733,7 @@ test_runs_without_term() (
     local out
     # A shell of its own: set -e is in force there as in a run of the script
     out=$(env -u TERM bash -c 'script=$1; set --; source "$script"; print_header; echo "after the header"' \
-        test "$SCRIPT_ROOT/neodesk.sh" 2>&1 < /dev/null) || true
+        test "$SCRIPT_ROOT/install/neodesk.sh" 2>&1 < /dev/null) || true
     case "$out" in *"after the header"*) ;; *) fail "the header stopped a run without TERM: $out" ;; esac
     rm -rf "$TEST_DIR"
 )
@@ -746,7 +746,7 @@ test_apt_source_failure_goes_on() (
     out=$(bash -c 'script=$1; set --; source "$script"
         LOG_FILE=/dev/null
         apt-get() { if [ "$1" = update ]; then echo "E: Failed to fetch https://packages.example.org/Packages.xz" >&2; return 100; fi; echo "apt-get $*"; }
-        install_dependencies; echo "after the dependencies"' test "$SCRIPT_ROOT/neodesk.sh" 2>&1 < /dev/null) || true
+        install_dependencies; echo "after the dependencies"' test "$SCRIPT_ROOT/install/neodesk.sh" 2>&1 < /dev/null) || true
     case "$out" in *"apt-get install -y -qq sqlite3"*"after the dependencies"*) ;; *) fail "a failing package source stopped the install: $out" ;; esac
     case "$out" in *"apt-get update failed for a package source"*) ;; *) fail "the failing package source is not said: $out" ;; esac
 )
