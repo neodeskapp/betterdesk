@@ -29,12 +29,21 @@ reaches the sockets of the other (see "What older and other clients see").
 
 | Who | Address |
 |---|---|
-| A computer's chat window | `wss://<console host>/ws/chat/<device id>?v=2&token=<device token>` |
+| A computer's chat window | `ws(s)://<API server>/ws/chat/<device id>?v=2&token=<device token>`, or the same path at the console's address |
 | A console user (console only) | `wss://<console host>/ws/chat-operator/panel?v=2` |
 
-`<console host>` is the console the computer is registered with, the same
-host and port the desktop app uses for `/api/nd/...`. Use `ws://` only when
-the console itself runs without TLS.
+A computer may use either of two addresses:
+
+- **The server's API port**, where it sends everything else (`/api/nd/...`,
+  the heartbeat): its API server setting, or the API port next to the ID
+  server (21121 by default). This is the address to use. The API port
+  answers only a computer's chat here: the socket of version 2 and the file
+  routes of section 8; nothing else of the console.
+- **The console's address** (`https://<console host>`), for a computer
+  behind a proxy that sends it there. It answers the same.
+
+Use `ws://` where the address is plain HTTP and `wss://` where it is HTTPS,
+as for the computer's other calls to it.
 
 **A computer's proof** is its device token, the one it got when it
 registered and already sends to `/api/nd/...`. The token is bound to one
@@ -44,7 +53,7 @@ query wins when both are there.
 
 **Origin.** A native client sends no `Origin` header and no session
 cookie; that is allowed. A client that does send `Origin` must send the
-console's own (`https://<console host>`), else the upgrade is refused.
+address it connects to (`https://<host>`), else the upgrade is refused.
 
 **A console user's proof** is the session cookie of the console; the
 account needs Support chat (`chat.support`) or Team chat (`chat.team`).
@@ -53,9 +62,9 @@ account needs Support chat (`chat.support`) or Team chat (`chat.team`).
 
 | Status | Why | What the client does |
 |---|---|---|
-| 401 | console socket without a signed-in session; **a computer never gets 401** | sign in again |
-| 403 | wrong or revoked token, a token for another device, a foreign `Origin`, the id `panel` on `/ws/chat/`, an account without a chat permission | stop retrying; show "chat not available" |
-| 404 | a computer's socket on a server that has no chat of version 2; a console socket with `v=2` on a room other than `panel` | a computer: no chat on this server, check again after some minutes |
+| 401 | a console socket without a signed-in session; a computer that reached an API port without chat (older servers only) | a console user: sign in again; a computer: no chat there, check again after some minutes |
+| 403 | wrong or revoked token, a token for another device, a foreign `Origin`, the id `panel` on `/ws/chat/`, an account without a chat permission | a computer: the token is refused; check again after some minutes, and at once with a new token |
+| 404 | a computer's socket on a server that has no chat of version 2 (also a server whose console is off), or without `v=2` on the API port; a console socket with `v=2` on a room other than `panel` | a computer: no chat on this server, check again after some minutes |
 | 503 with `X-NeoDesk-Chat: chat_off` | a computer's socket while an admin has "Chat with computers" off | no chat button; check again after `Retry-After` seconds (600) |
 | 429 | the token already has 4 chat sockets open | close old sockets; retry after 30 s |
 | 500 | the token could not be checked | retry with backoff |
@@ -89,9 +98,12 @@ depend on any account's permissions. What a computer can meet:
   server ignores `v=2` and speaks version 1, starting with `history` or
   `contacts`): close the socket and treat it as no chat; check again after
   some minutes.
-- 404: no chat of version 2 on this server; check again after some
-  minutes.
-- 403: the token is refused; stop until the computer has a new token.
+- 404: no chat of version 2 on this server (or its console is off);
+  check again after some minutes.
+- 401: an older server's API port, which had no chat; check again after
+  some minutes.
+- 403: the token is refused; check again after some minutes, and at once
+  when the computer has a new token.
 - No device token yet (the computer isn't registered or approved): don't
   connect.
 
@@ -417,7 +429,8 @@ frames.
 
 ## 8. Files
 
-A computer uploads and downloads with its device token:
+A computer uploads and downloads with its device token, at the same
+address as its socket (the API port, or the console's address):
 
 ```
 POST /api/chat/device/files
@@ -435,7 +448,7 @@ The answer:
 
 Then `send` with `attachments: ["<file_id>"]`. Pasted screenshots are
 files like any other. A failed upload answers `400 {"success":false,"error":"No file provided"}`
-(no file), `401` or `403` (bad token), `507` (the console's chat files are
+(no file), `401` (no token, or one that is not this computer's device token), `507` (the console's chat files are
 full) or `500` (a broken form or a file over 50 MB).
 
 To show or save a file of a message, ask
