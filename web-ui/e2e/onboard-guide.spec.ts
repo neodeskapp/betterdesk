@@ -137,7 +137,8 @@ test.describe('Add a computer, guided', () => {
 					const device = await call(page, 'GET', `/api/devices/${id}`);
 					expect(JSON.stringify(device.json)).toContain('Anna PC');
 				} finally {
-					await call(page, 'DELETE', `/api/devices/${id}?hard=true`);
+					const gone = await call(page, 'DELETE', `/api/devices/${id}?hard=true`);
+					expect(gone.status, JSON.stringify(gone.json)).toBe(200);
 				}
 			});
 		}
@@ -168,7 +169,7 @@ test.describe('the invite page', () => {
 				).toBeVisible();
 				for (const step of ['Download and open NeoDesk.', 'Click Install.'])
 					await expect(p.getByText(step, { exact: true })).toBeVisible();
-				await expect(p.getByText(code.slice(0, 4) + '-' + code.slice(4))).toBeVisible();
+				await expect(p.locator('.nd-ns .code')).toHaveText(code.slice(0, 4) + '-' + code.slice(4));
 				expect(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 				await shot(p, '20-page-nojs');
 				await plain.close();
