@@ -277,7 +277,7 @@ func TestBootstrap(t *testing.T) {
 		}
 
 		admin := decode(t, w.As("admin").Do("GET", "/api/console/bootstrap", "").Body)
-		if admin["isSuperAdmin"] != true || len(admin["permissions"].([]any)) != 45 {
+		if admin["isSuperAdmin"] != true || len(admin["permissions"].([]any)) != 48 {
 			t.Errorf("admin: isSuperAdmin %v, %d permissions", admin["isSuperAdmin"], len(admin["permissions"].([]any)))
 		}
 	})
@@ -375,7 +375,7 @@ func TestBootScriptAnswer(t *testing.T) {
 // the navigation pages those fixes show or hide. The comparison leaves
 // them out on both sides. A194 removed the server terminal's page.
 var (
-	fixedSections = map[string]string{"organizations": "PA4, G16", "cross-platform": "PA4", "reports": "PA3 (F6)", "server-attestation": "PA5 (F9)", "network": "PA3 (F4)", "toolkit": "PA3 (F7)", "commercialization": "PA3 (F11)", "registrations": "UM12 (F10)", "dataguard": "PA3 (F5)", "automation": "PA3 (F8)"}
+	fixedSections = map[string]string{"organizations": "PA4, G16", "cross-platform": "PA4", "reports": "PA3 (F6)", "server-attestation": "PA5 (F9)", "network": "PA3 (F4)", "toolkit": "PA3 (F7)", "commercialization": "PA3 (F11)", "registrations": "UM12 (F10)", "dataguard": "PA3 (F5)", "automation": "PA3 (F8)", "chat": "A242", "team-chat": "A242"}
 	fixedRules    = map[string]string{"/settings": "PA3 (F1)", "/keys": "PA3 (F1)", "/tokens": "PA3 (F1)", "/policies": "PA3 (F1)", "/client-branding": "PA3 (F1)", "/security-checks": "L494", "/billing": "L494"}
 	fixedPages    = map[string]string{
 		"cross-platform": "PA4", "network": "PA3 (F4)", "settings:general": "PA3 (F1)", "settings:branding": "PA3 (F1)", "settings:auth": "PA3 (F1)",
@@ -447,6 +447,21 @@ func withoutFixed(part string, raw json.RawMessage) json.RawMessage {
 			out = append(out, s)
 		}
 		body, _ := json.Marshal(out)
+		return body
+	case "permissions":
+		// A242: Node's chat.access is chat.support, chat.team, chat.assign
+		// and chat.canned_manage now; the chat's own tests pin them
+		var list []string
+		if json.Unmarshal(raw, &list) != nil {
+			return raw
+		}
+		kept := []string{}
+		for _, p := range list {
+			if !strings.HasPrefix(p, "chat.") {
+				kept = append(kept, p)
+			}
+		}
+		body, _ := json.Marshal(kept)
 		return body
 	}
 	return raw
