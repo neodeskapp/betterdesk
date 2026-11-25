@@ -74,8 +74,10 @@ test.describe('as an admin', () => {
 		await page.goto(`${UI}/users`);
 		const box = await openSearch(page);
 		await box.fill('invite');
-		await expect(page.getByRole('group', { name: /^Actions/ })).toBeVisible();
-		await page.keyboard.press('Enter');
+		const actions = page.getByRole('group', { name: /^Actions/ });
+		await expect(actions).toBeVisible();
+		// The page Add computers (its Invites tab) is found too; the action opens the dialog
+		await actions.getByRole('option', { name: /Add a computer/ }).click();
 		await expect(page).toHaveURL(/\/devices$/);
 		await expect(page.getByRole('dialog', { name: 'Add a computer' })).toBeVisible();
 	});

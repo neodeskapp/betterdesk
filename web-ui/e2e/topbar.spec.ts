@@ -97,7 +97,11 @@ test.describe('between phone and desktop', () => {
 		await page.setViewportSize({ width: 1100, height: 900 });
 		await page.goto(`${UI}/devices`);
 		await expect(bar(page).getByRole('button', { name: 'Quick support' })).toBeVisible();
-		await expect(bar(page).locator('.quick-support-label')).not.toBeInViewport();
+		// The name is there for screen readers only: no room on screen
+		const label = await bar(page)
+			.locator('.quick-support-label')
+			.evaluate((el) => el.getBoundingClientRect().width);
+		expect(label).toBeLessThanOrEqual(1);
 		await expect(bar(page).locator('button').last()).toHaveAttribute('aria-haspopup', 'menu');
 		await page.setViewportSize({ width: 900, height: 900 });
 		await bar(page).getByRole('button', { name: 'Open menu' }).click();
