@@ -14,19 +14,33 @@
 
 import { SEARCH_INDEX, TAB_IDS } from './search-index.ts';
 
-export const TABS = ['general', 'branding', 'auth', 'email', 'time'] as const;
+export const TABS = [
+	'general',
+	'auth',
+	'ldap',
+	'sso',
+	'joining',
+	'branding',
+	'email',
+	'time',
+	'meshcentral'
+] as const;
 export type TabId = (typeof TABS)[number];
 
 /** Tabs only people with server.config may open */
-export const ADMIN_TABS: readonly TabId[] = ['email', 'time'];
+export const ADMIN_TABS: readonly TabId[] = ['ldap', 'sso', 'joining', 'email', 'time', 'meshcentral'];
 
 /** The tab's name: page title, breadcrumb and search results */
 export const TAB_TITLE: Readonly<Record<TabId, string>> = {
 	general: 'settings.tab_general',
-	branding: 'settings.tab_branding',
 	auth: 'settings.tab_auth',
+	ldap: 'settings.ldap_title',
+	sso: 'settings.oidc_title',
+	joining: 'settings.enrollment_title',
+	branding: 'settings.tab_branding',
 	email: 'settings.tab_email',
-	time: 'settings.tab_time'
+	time: 'settings.tab_time',
+	meshcentral: 'nav.meshcentral'
 };
 
 /** Pages of settings outside Settings: where they are, their name and their section */

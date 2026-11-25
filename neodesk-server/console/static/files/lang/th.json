@@ -115,7 +115,8 @@
     "label": "การนำทางหลัก",
     "section_devices": "อุปกรณ์",
     "server_backups": "ข้อมูลสำรอง",
-    "server_config_files": "ไฟล์การกำหนดค่า"
+    "server_config_files": "ไฟล์การกำหนดค่า",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "ลงชื่อเข้าใช้",
@@ -1233,7 +1234,11 @@
       "discard_title": "ทิ้งการเปลี่ยนแปลงที่ยังไม่ได้บันทึกหรือไม่?",
       "discard_message": "การเปลี่ยนแปลงในหน้านี้ยังไม่ได้บันทึก",
       "discard_confirm": "ทิ้งการเปลี่ยนแปลง",
-      "shown_when_off": "แสดงเมื่อปิด \"{switch}\""
+      "shown_when_off": "แสดงเมื่อปิด \"{switch}\"",
+      "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+      "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+      "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
     },
     "general": {
       "endpoint_id_hint": "ชื่อโฮสต์หรือที่อยู่ IP ของเซิร์ฟเวอร์ ID ตามที่ไคลเอ็นต์บนอินเทอร์เน็ตเข้าถึง",
@@ -1485,7 +1490,8 @@
       "attrs_note": "ค่าเริ่มต้นใช้ได้ในเกือบทุกกรณี เปลี่ยนเฉพาะเมื่อชื่อหรืออีเมลที่ได้รับไม่ถูกต้องหรือว่างเปล่า",
       "single_session": "หนึ่งเซสชันต่อบัญชี",
       "single_session_hint": "การลงชื่อเข้าใช้ใหม่จะทำให้เบราว์เซอร์อื่นของบัญชีออกจากระบบ ปิด: บัญชีหนึ่งลงชื่อเข้าใช้พร้อมกันได้สูงสุด {max} เบราว์เซอร์และอุปกรณ์",
-      "single_session_env": "SESSION_MAX_PER_USER ถูกตั้งเป็น {value} ในสภาพแวดล้อมของเซิร์ฟเวอร์และใช้แทนสวิตช์นี้ ลบค่านั้นออกเพื่อใช้สวิตช์"
+      "single_session_env": "SESSION_MAX_PER_USER ถูกตั้งเป็น {value} ในสภาพแวดล้อมของเซิร์ฟเวอร์และใช้แทนสวิตช์นี้ ลบค่านั้นออกเพื่อใช้สวิตช์",
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
     },
     "backup_tab": {
       "create_title": "สร้างข้อมูลสำรอง",

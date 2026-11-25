@@ -1,6 +1,6 @@
 /**
  * The enrollment mode has one place, the Device tokens page, under
- * enrollment.manage (BUGS L100): Settings › Sign-in shows the mode it is in
+ * enrollment.manage (BUGS L100): Settings › Joining shows the mode it is in
  * and links there for accounts that may change it, and saving its
  * enrollment form sends the two approval options without a mode.
  */
@@ -37,11 +37,11 @@ afterEach(() => {
 	session.permissions = [];
 });
 
-describe('enrollment on Settings › Sign-in', () => {
+describe('enrollment on Settings › Joining', () => {
 	test('no mode to pick here; the link to Device tokens for enrollment.manage; the save sends no mode', async () => {
 		session.permissions = ['server.config', 'enrollment.manage'];
 		const user = userEvent.setup();
-		render(SignInTab);
+		render(SignInTab, { part: 'joining' });
 		const link = await screen.findByRole('link', { name: 'settings.enrollment_mode_link' });
 		expect(link.getAttribute('href')).toBe('/tokens');
 		expect(screen.queryByRole('radio', { name: 'tokens.mode_open' })).toBeNull();
@@ -58,7 +58,7 @@ describe('enrollment on Settings › Sign-in', () => {
 
 	test('without enrollment.manage the mode shows without a link', async () => {
 		session.permissions = ['server.config'];
-		render(SignInTab);
+		render(SignInTab, { part: 'joining' });
 		await screen.findByText('tokens.mode_managed');
 		expect(screen.queryByRole('link', { name: 'settings.enrollment_mode_link' })).toBeNull();
 	});

@@ -137,6 +137,43 @@ func TestNavRulesSection(t *testing.T) {
 	}
 }
 
+// Plan step 4: Sign-in splits into Sign-in, Directory (LDAP), Single
+// sign-on and Joining; MeshCentral is a tab of its own. The server-wide
+// tabs show to server.config, Sign-in to everyone.
+func TestNavSettingsTabs(t *testing.T) {
+	pages, _ := sectionPages("settings")
+	var tabs []string
+	for _, page := range pages {
+		if strings.HasPrefix(page, "settings:") {
+			tabs = append(tabs, strings.TrimPrefix(page, "settings:"))
+		}
+	}
+	if got := strings.Join(tabs, ","); got != "general,auth,ldap,sso,joining,branding,email,time,meshcentral" {
+		t.Errorf("settings tabs %s", got)
+	}
+	hrefs := map[string]NavPage{}
+	for _, section := range NavSections {
+		for _, page := range section.Pages {
+			hrefs[page.Page] = page
+		}
+	}
+	for tab, label := range map[string]string{"ldap": "settings.ldap_title", "sso": "settings.oidc_title", "joining": "settings.enrollment_title", "meshcentral": "nav.meshcentral"} {
+		p := hrefs["settings:"+tab]
+		if p.Href != "/settings?tab="+tab || p.Label != label {
+			t.Errorf("settings:%s: %+v", tab, p)
+		}
+	}
+	viewer := map[string]bool{}
+	for _, section := range BuildNav(NavInput{Can: func(string) bool { return false }, Role: "viewer"}).Sections {
+		for _, page := range section.Pages {
+			viewer[page.Page] = true
+		}
+	}
+	if !viewer["settings:auth"] || viewer["settings:ldap"] || viewer["settings:sso"] || viewer["settings:joining"] || viewer["settings:meshcentral"] {
+		t.Errorf("an account without server.config sees %v", viewer)
+	}
+}
+
 // Plan step 9: Activity splits what happened (Audit log) from what is
 // wrong (Security checks), and Billing is one page there with its tabs.
 func TestNavActivitySection(t *testing.T) {
@@ -269,7 +306,7 @@ func TestNavSectionsAndActivePage(t *testing.T) {
 		ids = append(ids, section.ID)
 		total += len(section.Pages)
 	}
-	if strings.Join(ids, ",") != "devices,support,people,activity,rules,server,settings" || total != 45 {
+	if strings.Join(ids, ",") != "devices,support,people,activity,rules,server,settings" || total != 49 {
 		t.Errorf("admin sees sections %v with %d pages", ids, total)
 	}
 	if nav.ActivePage != nil || nav.ActiveSection != nil {

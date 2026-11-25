@@ -116,7 +116,8 @@
     "label": "التنقل الرئيسي",
     "section_devices": "الأجهزة",
     "server_backups": "النسخ الاحتياطية",
-    "server_config_files": "ملفات الإعداد"
+    "server_config_files": "ملفات الإعداد",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -1234,7 +1235,11 @@
       "discard_title": "تجاهل التغييرات غير المحفوظة؟",
       "discard_message": "لم يتم حفظ التغييرات في هذه الصفحة بعد.",
       "discard_confirm": "تجاهل التغييرات",
-      "shown_when_off": "يظهر عندما يكون \"{switch}\" متوقفًا."
+      "shown_when_off": "يظهر عندما يكون \"{switch}\" متوقفًا.",
+      "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+      "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+      "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
     },
     "general": {
       "endpoint_id_hint": "اسم المضيف أو عنوان IP لخادم المعرّفات، كما يصل إليه العملاء عبر الإنترنت.",
@@ -1486,7 +1491,8 @@
       "attrs_note": "القيم الافتراضية تناسب أغلب الحالات. غيّرها فقط إذا وصلت الأسماء أو عناوين البريد خاطئة أو فارغة.",
       "single_session": "جلسة واحدة لكل حساب",
       "single_session_hint": "تسجيل دخول جديد يُخرج المتصفح الآخر للحساب. عند الإيقاف: يمكن أن يكون الحساب مسجّل الدخول على {max} متصفحات وأجهزة كحد أقصى في الوقت نفسه.",
-      "single_session_env": "قيمة SESSION_MAX_PER_USER في بيئة الخادم هي {value} وهي التي تقرّر بدل هذا المفتاح. احذفها هناك لاستخدام المفتاح."
+      "single_session_env": "قيمة SESSION_MAX_PER_USER في بيئة الخادم هي {value} وهي التي تقرّر بدل هذا المفتاح. احذفها هناك لاستخدام المفتاح.",
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
     },
     "backup_tab": {
       "create_title": "إنشاء نسخة احتياطية",

@@ -115,7 +115,8 @@
     "label": "Päänavigointi",
     "section_devices": "Laitteet",
     "server_backups": "Varmuuskopiot",
-    "server_config_files": "Määritystiedostot"
+    "server_config_files": "Määritystiedostot",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Kirjaudu sisään",
@@ -1233,7 +1234,11 @@
       "discard_title": "Hylätäänkö tallentamattomat muutokset?",
       "discard_message": "Tämän sivun muutoksia ei ole vielä tallennettu.",
       "discard_confirm": "Hylkää muutokset",
-      "shown_when_off": "Näytetään, kun \"{switch}\" on pois päältä."
+      "shown_when_off": "Näytetään, kun \"{switch}\" on pois päältä.",
+      "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+      "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+      "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
     },
     "general": {
       "endpoint_id_hint": "ID-palvelimen isäntänimi tai IP-osoite siinä muodossa, jolla asiakkaat tavoittavat sen internetistä.",
@@ -1485,7 +1490,8 @@
       "attrs_note": "Oletukset toimivat useimmiten. Muuta niitä vain, jos nimet tai sähköpostiosoitteet tulevat väärin tai tyhjinä.",
       "single_session": "Yksi istunto tiliä kohden",
       "single_session_hint": "Uusi kirjautuminen kirjaa tilin toisen selaimen ulos. Pois: tili voi olla kirjautuneena samaan aikaan enintään {max} selaimella ja laitteella.",
-      "single_session_env": "SESSION_MAX_PER_USER on palvelimen ympäristössä {value} ja päättää tämän valitsimen sijaan. Poista se sieltä, jotta voit käyttää valitsinta."
+      "single_session_env": "SESSION_MAX_PER_USER on palvelimen ympäristössä {value} ja päättää tämän valitsimen sijaan. Poista se sieltä, jotta voit käyttää valitsinta.",
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
     },
     "backup_tab": {
       "create_title": "Luo varmuuskopio",

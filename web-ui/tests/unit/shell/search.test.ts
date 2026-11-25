@@ -257,7 +257,7 @@ describe('SearchDialog: settings, things to do and recent searches', () => {
 		for (let i = 0; i < host; i++) await user.keyboard('{ArrowDown}');
 		expect(box.getAttribute('aria-activedescendant')).toBe(options[host]!.id);
 		await user.keyboard('{Enter}');
-		expect(goto).toHaveBeenCalledWith('/app/settings?tab=auth#ldap-host');
+		expect(goto).toHaveBeenCalledWith('/app/settings?tab=ldap#ldap-host');
 	});
 
 	test('groups name what they hold and count every match', async () => {

@@ -109,7 +109,8 @@
     "label": "Hoofdnavigatie",
     "section_devices": "Apparaten",
     "server_backups": "Back-ups",
-    "server_config_files": "Configuratiebestanden"
+    "server_config_files": "Configuratiebestanden",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Inloggen",
@@ -1227,7 +1228,11 @@
       "discard_title": "Niet-opgeslagen wijzigingen verwerpen?",
       "discard_message": "De wijzigingen op deze pagina zijn nog niet opgeslagen.",
       "discard_confirm": "Wijzigingen verwerpen",
-      "shown_when_off": "Zichtbaar als \"{switch}\" uit staat."
+      "shown_when_off": "Zichtbaar als \"{switch}\" uit staat.",
+      "ldap_desc": "Laat mensen zich bij de console aanmelden met hun account in een directory zoals Active Directory of OpenLDAP.",
+      "sso_desc": "Laat mensen zich bij de console aanmelden via een identiteitsprovider zoals Microsoft Entra ID, Okta of Google (OpenID Connect).",
+      "joining_desc": "Hoe een nieuw apparaat op deze server komt, en wat mensen standaard van apparaten zien.",
+      "meshcentral_desc": "MeshCentral-agents met deze server verbinden: de status, de apparaatgroepen, de naam in het .msh-bestand en de opgenomen sessies."
     },
     "general": {
       "endpoint_id_hint": "Hostnaam of IP-adres van de ID-server, zoals clients op internet die bereiken.",
@@ -1479,7 +1484,8 @@
       "attrs_note": "De standaardwaarden werken in de meeste gevallen. Wijzig ze alleen als namen of e-mailadressen verkeerd of leeg binnenkomen.",
       "single_session": "Eén sessie per account",
       "single_session_hint": "Een nieuwe aanmelding meldt de andere browser van het account af. Uit: een account kan tegelijk op maximaal {max} browsers en apparaten aangemeld zijn.",
-      "single_session_env": "SESSION_MAX_PER_USER staat in de omgeving van de server op {value} en beslist in plaats van deze schakelaar. Verwijder het daar om de schakelaar te gebruiken."
+      "single_session_env": "SESSION_MAX_PER_USER staat in de omgeving van de server op {value} en beslist in plaats van deze schakelaar. Verwijder het daar om de schakelaar te gebruiken.",
+      "oidc_advanced_note": "Alleen nodig als de provider geen discovery-document heeft of in een privénetwerk staat."
     },
     "backup_tab": {
       "create_title": "Een back-up maken",

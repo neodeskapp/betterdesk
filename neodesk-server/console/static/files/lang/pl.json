@@ -109,7 +109,8 @@
     "label": "Nawigacja główna",
     "section_devices": "Urządzenia",
     "server_backups": "Kopie zapasowe",
-    "server_config_files": "Pliki konfiguracyjne"
+    "server_config_files": "Pliki konfiguracyjne",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Zaloguj",
@@ -1207,10 +1208,10 @@
       "error_skew": "Podaj dozwoloną różnicę od 100 do 600000 milisekund."
     },
     "page": {
-      "general_desc": "Ustawienia całego serwera: adresy używane przez klientów, sposób łączenia i to, co użytkownicy widzą domyślnie.",
+      "general_desc": "Ustawienia całego serwera: adresy używane przez klientów i sposób łączenia.",
       "general_desc_viewer": "Informacje o tym serwerze.",
       "branding_desc": "Wygląd konsoli, strony logowania i strony pobierania dla wszystkich.",
-      "auth_desc": "Własne hasło i logowanie dwuetapowe oraz sposób logowania wszystkich użytkowników do tego serwera.",
+      "auth_desc": "Twoje hasło i logowanie dwuskładnikowe oraz zasady logowania dla wszystkich.",
       "auth_desc_viewer": "Hasło i logowanie dwuetapowe.",
       "backup_desc": "Pobieranie kopii wszystkiego, czego potrzebuje ten serwer, tworzenie kopii według harmonogramu i przywracanie z kopii.",
       "updates_desc": "Sprawdzanie nowszej wersji NeoDesk i jej instalacja.",
@@ -1227,7 +1228,11 @@
       "discard_title": "Odrzucić niezapisane zmiany?",
       "discard_message": "Zmiany na tej stronie nie zostały jeszcze zapisane.",
       "discard_confirm": "Odrzuć zmiany",
-      "shown_when_off": "Widoczne, gdy \"{switch}\" jest wyłączone."
+      "shown_when_off": "Widoczne, gdy \"{switch}\" jest wyłączone.",
+      "ldap_desc": "Użytkownicy logują się do konsoli kontem z katalogu, takiego jak Active Directory lub OpenLDAP.",
+      "sso_desc": "Użytkownicy logują się do konsoli przez dostawcę tożsamości, takiego jak Microsoft Entra ID, Okta lub Google (OpenID Connect).",
+      "joining_desc": "Jak nowe urządzenie trafia na ten serwer i co użytkownicy domyślnie widzą z urządzeń.",
+      "meshcentral_desc": "Połącz agentów MeshCentral z tym serwerem: stan, grupy urządzeń, nazwa w pliku .msh i nagrane sesje."
     },
     "general": {
       "endpoint_id_hint": "Nazwa hosta lub adres IP serwera ID, pod którym klienci łączą się z internetu.",
@@ -1479,7 +1484,8 @@
       "attrs_note": "Wartości domyślne działają w większości przypadków. Zmień je tylko wtedy, gdy nazwy lub adresy e-mail przychodzą błędne lub puste.",
       "single_session": "Jedna sesja na konto",
       "single_session_hint": "Nowe logowanie wylogowuje drugą przeglądarkę konta. Wyłączone: konto może być zalogowane jednocześnie na maksymalnie {max} przeglądarkach i urządzeniach.",
-      "single_session_env": "SESSION_MAX_PER_USER ma w środowisku serwera wartość {value} i decyduje zamiast tego przełącznika. Usuń je tam, aby używać przełącznika."
+      "single_session_env": "SESSION_MAX_PER_USER ma w środowisku serwera wartość {value} i decyduje zamiast tego przełącznika. Usuń je tam, aby używać przełącznika.",
+      "oidc_advanced_note": "Potrzebne tylko wtedy, gdy dostawca nie ma dokumentu discovery albo działa w sieci prywatnej."
     },
     "backup_tab": {
       "create_title": "Utwórz kopię zapasową",

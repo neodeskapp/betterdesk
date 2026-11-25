@@ -109,7 +109,8 @@
     "label": "Navigazione principale",
     "section_devices": "Dispositivi",
     "server_backups": "Backup",
-    "server_config_files": "File di configurazione"
+    "server_config_files": "File di configurazione",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Accedi",
@@ -1227,7 +1228,11 @@
       "discard_title": "Scartare le modifiche non salvate?",
       "discard_message": "Le modifiche di questa pagina non sono ancora salvate.",
       "discard_confirm": "Scarta modifiche",
-      "shown_when_off": "Visibile quando \"{switch}\" è disattivato."
+      "shown_when_off": "Visibile quando \"{switch}\" è disattivato.",
+      "ldap_desc": "Permette di accedere alla console con l'account di una directory come Active Directory o OpenLDAP.",
+      "sso_desc": "Permette di accedere alla console tramite un provider di identità come Microsoft Entra ID, Okta o Google (OpenID Connect).",
+      "joining_desc": "Come un nuovo dispositivo arriva su questo server e cosa vedono le persone dei dispositivi in modo predefinito.",
+      "meshcentral_desc": "Collega gli agenti MeshCentral a questo server: lo stato, i gruppi di dispositivi, il nome nel file .msh e le sessioni registrate."
     },
     "general": {
       "endpoint_id_hint": "Nome host o indirizzo IP del server ID, come lo raggiungono i client da internet.",
@@ -1479,7 +1484,8 @@
       "attrs_note": "I valori predefiniti vanno bene nella maggior parte dei casi. Cambiali solo se nomi o indirizzi email arrivano errati o vuoti.",
       "single_session": "Una sessione per account",
       "single_session_hint": "Un nuovo accesso disconnette l'altro browser dell'account. Disattivato: un account può essere connesso su un massimo di {max} browser e dispositivi alla volta.",
-      "single_session_env": "SESSION_MAX_PER_USER è impostato su {value} nell'ambiente del server e decide al posto di questa opzione. Rimuovilo lì per usare l'opzione."
+      "single_session_env": "SESSION_MAX_PER_USER è impostato su {value} nell'ambiente del server e decide al posto di questa opzione. Rimuovilo lì per usare l'opzione.",
+      "oidc_advanced_note": "Serve solo se il provider non ha un documento di discovery o si trova in una rete privata."
     },
     "backup_tab": {
       "create_title": "Crea un backup",

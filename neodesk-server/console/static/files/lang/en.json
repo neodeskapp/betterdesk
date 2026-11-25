@@ -109,7 +109,8 @@
         "label": "Main navigation",
         "section_devices": "Devices",
         "server_backups": "Backups",
-        "server_config_files": "Configuration files"
+        "server_config_files": "Configuration files",
+        "meshcentral": "MeshCentral"
     },
     "mobile_nav": {
         "label": "Main navigation",
@@ -1215,10 +1216,10 @@
         "unsaved_restart_save": "Save file",
         "unsaved_restart_stay": "Cancel",
         "page": {
-            "general_desc": "Server-wide settings: the addresses clients use, how they connect, and what people see by default.",
+            "general_desc": "Server-wide settings: the addresses clients use and how they connect.",
             "general_desc_viewer": "Information about this server.",
             "branding_desc": "How the console, the sign-in page and the download page look for everyone.",
-            "auth_desc": "Your own password and two-factor sign-in, and how everyone signs in to this server.",
+            "auth_desc": "Your own password and two-factor sign-in, and the sign-in rules for everyone.",
             "auth_desc_viewer": "Your password and two-factor sign-in.",
             "backup_desc": "Download a copy of everything this server needs, make copies on a schedule, or restore from one.",
             "updates_desc": "Check for a newer NeoDesk version and install it.",
@@ -1235,7 +1236,11 @@
             "discard_title": "Discard unsaved changes?",
             "discard_message": "The changes on this page are not saved yet.",
             "discard_confirm": "Discard changes",
-            "shown_when_off": "Shown when \"{switch}\" is off."
+            "shown_when_off": "Shown when \"{switch}\" is off.",
+            "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+            "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+            "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+            "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
         },
         "general": {
             "endpoint_id_hint": "Host name or IP address of the ID server, as clients on the internet reach it.",
@@ -1487,7 +1492,8 @@
             "attrs_note": "The defaults work in most cases. Change them only if names or email addresses arrive wrong or empty.",
             "single_session": "One session per account",
             "single_session_hint": "A new sign-in signs out the account's other browser. Off: an account can be signed in on up to {max} browsers and devices at once.",
-            "single_session_env": "SESSION_MAX_PER_USER is set to {value} in the server's environment and decides instead of this switch. Remove it there to use the switch."
+            "single_session_env": "SESSION_MAX_PER_USER is set to {value} in the server's environment and decides instead of this switch. Remove it there to use the switch.",
+            "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
         },
         "backup_tab": {
             "create_title": "Create a backup",

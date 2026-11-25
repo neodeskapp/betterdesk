@@ -113,7 +113,8 @@
     "label": "主導覽",
     "section_devices": "裝置",
     "server_backups": "備份",
-    "server_config_files": "設定檔"
+    "server_config_files": "設定檔",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "登錄",
@@ -1231,7 +1232,11 @@
       "discard_title": "要捨棄未儲存的變更嗎?",
       "discard_message": "此頁面的變更尚未儲存。",
       "discard_confirm": "捨棄變更",
-      "shown_when_off": "「{switch}」關閉時顯示。"
+      "shown_when_off": "「{switch}」關閉時顯示。",
+      "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+      "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+      "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
     },
     "general": {
       "endpoint_id_hint": "ID 伺服器的主機名稱或 IP 位址，也就是網際網路上的用戶端連線所用的位址。",
@@ -1483,7 +1488,8 @@
       "attrs_note": "預設值適用於大多數情況。只有在名稱或電子郵件地址錯誤或空白時才需變更。",
       "single_session": "每個帳戶一個工作階段",
       "single_session_hint": "新的登入會讓該帳戶的另一個瀏覽器登出。關閉時：一個帳戶最多可同時在 {max} 個瀏覽器和裝置上登入。",
-      "single_session_env": "伺服器環境中的 SESSION_MAX_PER_USER 設為 {value}，它取代此開關生效。要使用此開關，請在那裡刪除它。"
+      "single_session_env": "伺服器環境中的 SESSION_MAX_PER_USER 設為 {value}，它取代此開關生效。要使用此開關，請在那裡刪除它。",
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
     },
     "backup_tab": {
       "create_title": "建立備份",

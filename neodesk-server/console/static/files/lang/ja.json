@@ -109,7 +109,8 @@
     "label": "メインナビゲーション",
     "section_devices": "デバイス",
     "server_backups": "バックアップ",
-    "server_config_files": "設定ファイル"
+    "server_config_files": "設定ファイル",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "サインイン",
@@ -1227,7 +1228,11 @@
       "discard_title": "保存していない変更を破棄しますか?",
       "discard_message": "このページの変更はまだ保存されていません。",
       "discard_confirm": "変更を破棄",
-      "shown_when_off": "「{switch}」がオフのときに表示されます。"
+      "shown_when_off": "「{switch}」がオフのときに表示されます。",
+      "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+      "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+      "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
     },
     "general": {
       "endpoint_id_hint": "インターネット上のクライアントが接続する ID サーバーのホスト名または IP アドレスです。",
@@ -1479,7 +1484,8 @@
       "attrs_note": "ほとんどの場合は既定値のままで動きます。名前やメールアドレスが誤って、または空で届く場合だけ変更してください。",
       "single_session": "アカウントごとに 1 セッション",
       "single_session_hint": "新しくサインインすると、アカウントのもう一方のブラウザーはサインアウトされます。オフ: 1 つのアカウントは同時に最大 {max} 台のブラウザーとデバイスでサインインできます。",
-      "single_session_env": "サーバーの環境で SESSION_MAX_PER_USER が {value} に設定されており、このスイッチの代わりにそれが使われます。スイッチを使うには、そちらから削除してください。"
+      "single_session_env": "サーバーの環境で SESSION_MAX_PER_USER が {value} に設定されており、このスイッチの代わりにそれが使われます。スイッチを使うには、そちらから削除してください。",
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
     },
     "backup_tab": {
       "create_title": "バックアップを作成",

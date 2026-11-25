@@ -109,7 +109,8 @@
     "label": "主导航",
     "section_devices": "设备",
     "server_backups": "备份",
-    "server_config_files": "配置文件"
+    "server_config_files": "配置文件",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "登录",
@@ -1227,7 +1228,11 @@
       "discard_title": "要放弃未保存的更改吗?",
       "discard_message": "此页面的更改尚未保存。",
       "discard_confirm": "放弃更改",
-      "shown_when_off": "\"{switch}\"关闭时显示。"
+      "shown_when_off": "\"{switch}\"关闭时显示。",
+      "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+      "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+      "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
     },
     "general": {
       "endpoint_id_hint": "ID 服务器的主机名或 IP 地址，即互联网上的客户端访问时使用的地址。",
@@ -1479,7 +1484,8 @@
       "attrs_note": "默认值适用于大多数情况。只有在名称或电子邮件地址错误或为空时才需更改。",
       "single_session": "每个账户一个会话",
       "single_session_hint": "新的登录会让该账户的另一个浏览器退出登录。关闭时：一个账户最多可同时在 {max} 个浏览器和设备上登录。",
-      "single_session_env": "服务器环境中的 SESSION_MAX_PER_USER 设为 {value}，它取代此开关生效。要使用此开关，请在那里删除它。"
+      "single_session_env": "服务器环境中的 SESSION_MAX_PER_USER 设为 {value}，它取代此开关生效。要使用此开关，请在那里删除它。",
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
     },
     "backup_tab": {
       "create_title": "创建备份",

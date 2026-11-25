@@ -64,8 +64,8 @@ describe('settingEntries', () => {
 		const host = entries.find((e) => e.id === 'ldap-host');
 		expect(host).toMatchObject({
 			label: 'Host',
-			where: 'Settings, Sign-in, Directory (LDAP)',
-			href: '/settings?tab=auth#ldap-host'
+			where: 'Settings, Directory (LDAP)',
+			href: '/settings?tab=ldap#ldap-host'
 		});
 		const name = entries.find((e) => e.id === 'brand-name');
 		expect(name?.where).toBe('Settings, Appearance, Name and logo');

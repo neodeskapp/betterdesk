@@ -115,7 +115,8 @@
     "label": "Fő navigáció",
     "section_devices": "Eszközök",
     "server_backups": "Biztonsági mentések",
-    "server_config_files": "Konfigurációs fájlok"
+    "server_config_files": "Konfigurációs fájlok",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Bejelentkezés",
@@ -1233,7 +1234,11 @@
       "discard_title": "Elveti a nem mentett módosításokat?",
       "discard_message": "Az oldalon végzett módosítások még nincsenek mentve.",
       "discard_confirm": "Módosítások elvetése",
-      "shown_when_off": "Akkor látható, ha a(z) \"{switch}\" ki van kapcsolva."
+      "shown_when_off": "Akkor látható, ha a(z) \"{switch}\" ki van kapcsolva.",
+      "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+      "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+      "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
     },
     "general": {
       "endpoint_id_hint": "Az ID-szerver gépneve vagy IP-címe, ahogyan az interneten lévő kliensek elérik.",
@@ -1485,7 +1490,8 @@
       "attrs_note": "Az alapértékek a legtöbb esetben megfelelnek. Csak akkor módosítsa, ha a nevek vagy e-mail-címek hibásan vagy üresen érkeznek.",
       "single_session": "Fiókonként egy munkamenet",
       "single_session_hint": "Az új bejelentkezés kijelentkezteti a fiók másik böngészőjét. Kikapcsolva: egy fiók egyszerre legfeljebb {max} böngészőn és eszközön lehet bejelentkezve.",
-      "single_session_env": "A SESSION_MAX_PER_USER értéke a szerver környezetében {value}, és ez dönt a kapcsoló helyett. A kapcsoló használatához távolítsa el onnan."
+      "single_session_env": "A SESSION_MAX_PER_USER értéke a szerver környezetében {value}, és ez dönt a kapcsoló helyett. A kapcsoló használatához távolítsa el onnan.",
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
     },
     "backup_tab": {
       "create_title": "Biztonsági mentés készítése",

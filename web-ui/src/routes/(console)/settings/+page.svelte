@@ -1,8 +1,9 @@
 <!--
   Settings (/settings). Each tab is a sub-page: ?tab=general (or none),
-  branding, auth, email, time, listed in the sidebar; an unknown tab is
-  General. Email and Time need server.config; anyone else who opens one gets
-  one sentence. Backup, Updates and Advanced are pages of the Server section
+  auth, ldap, sso, joining, branding, email, time, meshcentral, listed in
+  the sidebar; an unknown tab is General. Directory (LDAP), Single sign-on,
+  Joining, Email, Time and MeshCentral need server.config; anyone else who
+  opens one gets one sentence. Backup, Updates and Advanced are pages of the Server section
   now (/server/...); their old addresses lead there (lib/redirects.ts).
 
   Old links: #<tab> and #server become ?tab=; #<element-id> scrolls to that
@@ -66,8 +67,12 @@
 		general: () => import('#lib/settings/tabs/GeneralTab.svelte'),
 		branding: () => import('#lib/settings/tabs/AppearanceTab.svelte'),
 		auth: () => import('#lib/settings/tabs/SignInTab.svelte'),
+		ldap: () => import('#lib/settings/tabs/LdapTab.svelte'),
+		sso: () => import('#lib/settings/tabs/SsoTab.svelte'),
+		joining: () => import('#lib/settings/tabs/JoiningTab.svelte'),
 		email: () => import('#lib/settings/tabs/EmailTab.svelte'),
-		time: () => import('#lib/settings/tabs/TimeTab.svelte')
+		time: () => import('#lib/settings/tabs/TimeTab.svelte'),
+		meshcentral: () => import('#lib/settings/tabs/MeshCentralTab.svelte')
 	};
 
 	/** Bumped by Retry when a tab's code could not be loaded */

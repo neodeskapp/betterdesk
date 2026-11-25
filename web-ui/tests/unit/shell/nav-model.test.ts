@@ -49,8 +49,8 @@ describe('pageKey (lib/consoleNav.js pageKey)', () => {
 
 describe('buildNavModel', () => {
 	test('marks the current page and its section', () => {
-		const m = buildNavModel(admin, pageKey('/settings', '?tab=auth'));
-		expect(m.activePage?.href).toBe('/settings?tab=auth');
+		const m = buildNavModel(admin, pageKey('/settings', '?tab=ldap'));
+		expect(m.activePage?.href).toBe('/settings?tab=ldap');
 		expect(m.activeSection?.id).toBe('settings');
 		const settings = m.sections.find((s) => s.id === 'settings')!;
 		expect(settings.active).toBe(true);
@@ -98,7 +98,7 @@ describe('buildNavModel', () => {
 
 	test('a heading where the group changes, only in the More list', () => {
 		const settings = buildNavModel(admin, 'devices').sections.find((s) => s.id === 'settings')!;
-		expect(settings.core.map((i) => i.page.text)).toEqual(['General', 'Client setup']);
+		expect(settings.core.map((i) => i.page.text)).toEqual(['General', 'Sign-in', 'Client setup']);
 		const rows = texts(settings.more);
 		expect(rows.filter((r) => r.startsWith('# '))).toEqual([
 			'# Console',
@@ -106,7 +106,7 @@ describe('buildNavModel', () => {
 			'# Developer tools'
 		]);
 		// Each heading comes right before the first page of its group, and once
-		expect(rows.slice(0, 3)).toEqual(['# Console', 'Appearance', 'Sign-in']);
+		expect(rows.slice(0, 3)).toEqual(['# Console', 'Directory (LDAP)', 'Single sign-on']);
 		expect(rows.indexOf('# Clients and joining')).toBe(rows.indexOf('Translations') + 1);
 	});
 

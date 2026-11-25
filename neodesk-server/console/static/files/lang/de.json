@@ -109,7 +109,8 @@
     "label": "Hauptnavigation",
     "section_devices": "Geräte",
     "server_backups": "Sicherungen",
-    "server_config_files": "Konfigurationsdateien"
+    "server_config_files": "Konfigurationsdateien",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Anmelden",
@@ -1207,10 +1208,10 @@
       "error_skew": "Geben Sie eine erlaubte Abweichung zwischen 1 und 600000 Millisekunden ein."
     },
     "page": {
-      "general_desc": "Einstellungen für den ganzen Server: die Adressen der Clients, wie sie sich verbinden und was Benutzer standardmäßig sehen.",
+      "general_desc": "Serverweite Einstellungen: die Adressen, die Clients nutzen, und wie sie sich verbinden.",
       "general_desc_viewer": "Informationen zu diesem Server.",
       "branding_desc": "Wie die Konsole, die Anmeldeseite und die Downloadseite für alle aussehen.",
-      "auth_desc": "Ihr eigenes Passwort und die Zwei-Faktor-Anmeldung sowie die Anmeldung für alle an diesem Server.",
+      "auth_desc": "Ihr eigenes Passwort und die Zwei-Faktor-Anmeldung sowie die Anmelderegeln für alle.",
       "auth_desc_viewer": "Ihr Passwort und die Zwei-Faktor-Anmeldung.",
       "backup_desc": "Laden Sie eine Kopie von allem herunter, was dieser Server braucht, erstellen Sie Kopien nach Zeitplan oder stellen Sie aus einer Kopie wieder her.",
       "updates_desc": "Nach einer neueren NeoDesk-Version suchen und sie installieren.",
@@ -1227,7 +1228,11 @@
       "discard_title": "Nicht gespeicherte Änderungen verwerfen?",
       "discard_message": "Die Änderungen auf dieser Seite sind noch nicht gespeichert.",
       "discard_confirm": "Änderungen verwerfen",
-      "shown_when_off": "Wird angezeigt, wenn \"{switch}\" ausgeschaltet ist."
+      "shown_when_off": "Wird angezeigt, wenn \"{switch}\" ausgeschaltet ist.",
+      "ldap_desc": "Personen melden sich mit ihrem Konto aus einem Verzeichnis wie Active Directory oder OpenLDAP an der Konsole an.",
+      "sso_desc": "Personen melden sich über einen Identitätsanbieter wie Microsoft Entra ID, Okta oder Google an der Konsole an (OpenID Connect).",
+      "joining_desc": "Wie ein neues Gerät auf diesen Server kommt und was Personen standardmäßig von Geräten sehen.",
+      "meshcentral_desc": "MeshCentral-Agenten mit diesem Server verbinden: der Zustand, die Gerätegruppen, der Name in der .msh-Datei und die aufgezeichneten Sitzungen."
     },
     "general": {
       "endpoint_id_hint": "Hostname oder IP-Adresse des ID-Servers, so wie Clients im Internet ihn erreichen.",
@@ -1479,7 +1484,8 @@
       "attrs_note": "Die Standardwerte passen in den meisten Fällen. Ändern Sie sie nur, wenn Namen oder E-Mail-Adressen falsch oder leer ankommen.",
       "single_session": "Eine Sitzung pro Konto",
       "single_session_hint": "Eine neue Anmeldung meldet den anderen Browser des Kontos ab. Aus: Ein Konto kann gleichzeitig auf bis zu {max} Browsern und Geräten angemeldet sein.",
-      "single_session_env": "SESSION_MAX_PER_USER ist in der Umgebung des Servers auf {value} gesetzt und entscheidet statt dieses Schalters. Entfernen Sie es dort, um den Schalter zu verwenden."
+      "single_session_env": "SESSION_MAX_PER_USER ist in der Umgebung des Servers auf {value} gesetzt und entscheidet statt dieses Schalters. Entfernen Sie es dort, um den Schalter zu verwenden.",
+      "oidc_advanced_note": "Nur nötig, wenn der Anbieter kein Discovery-Dokument hat oder in einem privaten Netz liegt."
     },
     "backup_tab": {
       "create_title": "Sicherung erstellen",

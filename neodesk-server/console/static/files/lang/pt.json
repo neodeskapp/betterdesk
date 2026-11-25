@@ -109,7 +109,8 @@
     "label": "Navegação principal",
     "section_devices": "Dispositivos",
     "server_backups": "Cópias de segurança",
-    "server_config_files": "Ficheiros de configuração"
+    "server_config_files": "Ficheiros de configuração",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Entrar",
@@ -1227,7 +1228,11 @@
       "discard_title": "Descartar as alterações não salvas?",
       "discard_message": "As alterações desta página ainda não foram salvas.",
       "discard_confirm": "Descartar alterações",
-      "shown_when_off": "Exibido quando \"{switch}\" está desativado."
+      "shown_when_off": "Exibido quando \"{switch}\" está desativado.",
+      "ldap_desc": "Permite iniciar sessão na consola com a conta de um diretório como o Active Directory ou o OpenLDAP.",
+      "sso_desc": "Permite iniciar sessão na consola através de um fornecedor de identidade como o Microsoft Entra ID, o Okta ou a Google (OpenID Connect).",
+      "joining_desc": "Como um dispositivo novo chega a este servidor e o que as pessoas veem dos dispositivos por predefinição.",
+      "meshcentral_desc": "Ligar agentes MeshCentral a este servidor: o estado, os grupos de dispositivos, o nome no ficheiro .msh e as sessões gravadas."
     },
     "general": {
       "endpoint_id_hint": "Nome do anfitrião ou endereço IP do servidor de ID, tal como os clientes na Internet o alcançam.",
@@ -1479,7 +1484,8 @@
       "attrs_note": "Os valores predefinidos funcionam na maioria dos casos. Altere-os só se nomes ou endereços de email chegarem errados ou vazios.",
       "single_session": "Uma sessão por conta",
       "single_session_hint": "Uma nova entrada termina a sessão do outro navegador da conta. Desligado: uma conta pode ter sessão iniciada em até {max} navegadores e dispositivos ao mesmo tempo.",
-      "single_session_env": "SESSION_MAX_PER_USER está definido como {value} no ambiente do servidor e decide em vez desta opção. Remova-o lá para usar a opção."
+      "single_session_env": "SESSION_MAX_PER_USER está definido como {value} no ambiente do servidor e decide em vez desta opção. Remova-o lá para usar a opção.",
+      "oidc_advanced_note": "Só é necessário se o fornecedor não tiver documento de descoberta ou estiver numa rede privada."
     },
     "backup_tab": {
       "create_title": "Criar uma cópia de segurança",

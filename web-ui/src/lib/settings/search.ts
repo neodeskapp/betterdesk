@@ -26,7 +26,7 @@ export interface SearchHit {
 	label: string;
 	/** "Tab › Section" */
 	where: string;
-	/** /settings?tab=auth#ldap-host or /server/backups#backup-create (without the base) */
+	/** /settings?tab=ldap#ldap-host or /server/backups#backup-create (without the base) */
 	href: string;
 }
 
@@ -59,7 +59,7 @@ export interface SettingEntry {
 	label: string;
 	/** "Settings, Sign-in", "Settings, Sign-in, Directory (LDAP)" or "Server, Backups" */
 	where: string;
-	/** /settings?tab=auth#ldap-host or /server/backups#backup-create (without the base) */
+	/** /settings?tab=ldap#ldap-host or /server/backups#backup-create (without the base) */
 	href: string;
 	/** Everything the search looks at: label, section, hints, tab, other words */
 	hay: string;
@@ -88,9 +88,9 @@ export function settingEntries(
 		seen.add(once);
 		const section = sectionKey ? clean(ctx.t(sectionKey)) : '';
 		const tabTitle = clean(ctx.t(placeTitle(tabName)));
-		const where = [isPage(tabName) ? server : settings, tabTitle, section && section !== label ? section : '']
-			.filter(Boolean)
-			.join(', ');
+		// A section named like its tab (Directory (LDAP) on its own tab) is said once
+		const own = section && section !== label && section !== tabTitle ? section : '';
+		const where = [isPage(tabName) ? server : settings, tabTitle, own].filter(Boolean).join(', ');
 		out.push({
 			place: tabName,
 			id,
@@ -134,7 +134,8 @@ export function searchSettings(
 				place: tabName,
 				id,
 				label,
-				where: section && section !== label ? `${tabTitle} › ${section}` : tabTitle,
+				where:
+					section && section !== label && section !== clean(tabTitle) ? `${tabTitle} › ${section}` : tabTitle,
 				href: placeHref(tabName, id)
 			},
 			score: (lower(label).includes(q) ? 0 : 1) + (tabName === ctx.current ? 0 : 0.5)

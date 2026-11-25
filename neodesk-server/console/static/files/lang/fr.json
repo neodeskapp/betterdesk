@@ -113,7 +113,8 @@
     "label": "Navigation principale",
     "section_devices": "Appareils",
     "server_backups": "Sauvegardes",
-    "server_config_files": "Fichiers de configuration"
+    "server_config_files": "Fichiers de configuration",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Connexion",
@@ -1231,7 +1232,11 @@
       "discard_title": "Abandonner les modifications non enregistrées ?",
       "discard_message": "Les modifications de cette page ne sont pas encore enregistrées.",
       "discard_confirm": "Abandonner les modifications",
-      "shown_when_off": "Affiché quand « {switch} » est désactivé."
+      "shown_when_off": "Affiché quand « {switch} » est désactivé.",
+      "ldap_desc": "Permet de se connecter à la console avec un compte d'annuaire comme Active Directory ou OpenLDAP.",
+      "sso_desc": "Permet de se connecter à la console via un fournisseur d'identité comme Microsoft Entra ID, Okta ou Google (OpenID Connect).",
+      "joining_desc": "Comment un nouvel appareil arrive sur ce serveur, et ce que les personnes voient des appareils par défaut.",
+      "meshcentral_desc": "Relier les agents MeshCentral à ce serveur : son état, les groupes d'appareils, le nom dans le fichier .msh et les sessions enregistrées."
     },
     "general": {
       "endpoint_id_hint": "Nom d'hôte ou adresse IP du serveur d'ID, tel que les clients le joignent depuis internet.",
@@ -1483,7 +1488,8 @@
       "attrs_note": "Les valeurs par défaut conviennent dans la plupart des cas. Modifiez-les seulement si les noms ou adresses e-mail arrivent faux ou vides.",
       "single_session": "Une session par compte",
       "single_session_hint": "Une nouvelle connexion déconnecte l'autre navigateur du compte. Désactivé : un compte peut être connecté sur {max} navigateurs et appareils au plus en même temps.",
-      "single_session_env": "SESSION_MAX_PER_USER vaut {value} dans l'environnement du serveur et décide à la place de ce réglage. Retirez-le pour utiliser ce réglage."
+      "single_session_env": "SESSION_MAX_PER_USER vaut {value} dans l'environnement du serveur et décide à la place de ce réglage. Retirez-le pour utiliser ce réglage.",
+      "oidc_advanced_note": "Nécessaire seulement si le fournisseur n'a pas de document de découverte ou se trouve dans un réseau privé."
     },
     "backup_tab": {
       "create_title": "Créer une sauvegarde",

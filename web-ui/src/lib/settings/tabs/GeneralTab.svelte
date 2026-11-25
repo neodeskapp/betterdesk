@@ -1,12 +1,19 @@
 <!--
-  Settings › General. With server.config: one form whose sections save to
-  their own endpoints (public client addresses, connection strategy,
-  device visibility, availability history). Save sends only the sections
-  that changed, one after the other, and the status line says which were
-  saved and which were not, and why; a section that failed keeps its
-  changes. MeshCentral sits beside them; its list actions save right away.
-  The side column shows the addresses clients get now and the server
-  information. Without server.config only the server information.
+  Three tabs of Settings in one component, by `view`:
+  - general (Settings › General): with server.config the public client
+    addresses and the connection strategy; the side column shows the
+    addresses clients get now and the server information. Without
+    server.config only the server information.
+  - joining (part of Settings › Joining, server.config): device visibility
+    and availability history.
+  - meshcentral (Settings › MeshCentral, server.config): its status,
+    groups, the name in the .msh file, recorded sessions and the install
+    steps; its list actions save right away.
+  Each view is one form whose sections save to their own endpoints. Save
+  sends only the sections that changed, one after the other, and the
+  status line says which were saved and which were not, and why; a
+  section that failed keeps its changes. `bare` leaves out the tab layout,
+  for a tab made of several parts (JoiningTab).
 
   Element ids are the old page's: links (/settings#public-endpoints) and the
   settings search (search-index.ts) point at them.
@@ -90,6 +97,9 @@
 	import { onRestartCanceled, showRestartPrompt } from '../restart.svelte.ts';
 	import SettingsGrid from '../SettingsGrid.svelte';
 	import SettingsLayout from '../SettingsLayout.svelte';
+
+	type View = 'general' | 'joining' | 'meshcentral';
+	let { view = 'general', bare = false }: { view?: View; bare?: boolean } = $props();
 
 	const canConfig = can('server.config');
 	const errText = (err: unknown) =>
@@ -532,22 +542,20 @@
 
 	/* ── Start ── */
 
+	// Each view loads what it shows
 	$effect(() => {
-		void loadInfo();
+		if (view === 'general') void loadInfo();
 		if (!canConfig) return;
 		void loadForm();
-		void loadClientConfig();
-		void loadMesh();
+		if (view === 'general') void loadClientConfig();
+		if (view === 'meshcentral') void loadMesh();
 	});
 
 	const toc = $derived(
-		canConfig
+		canConfig && view === 'general'
 			? [
 					{ id: 'public-endpoints', label: t('settings.public_endpoints_title') },
-					{ id: 'connection-mode-section', label: t('settings.connection_mode_title') },
-					{ id: 'device-scope-settings-panel', label: t('settings.device_scope_title') },
-					{ id: 'availability-history-settings-panel', label: t('settings.availability_history_title') },
-					{ id: 'mesh-settings-panel', label: t('mesh.settings_title') }
+					{ id: 'connection-mode-section', label: t('settings.connection_mode_title') }
 				]
 			: []
 	);
@@ -716,360 +724,372 @@
 	{/if}
 {/snippet}
 
-{#if !canConfig}
-	<ReadOnlyHint writes={['server.config']} />
-	{@render serverInfo()}
-{:else}
-	<SettingsLayout {toc} {side} sideLabelledby="general-side-title">
-		<form id="general-form" class="general-form" onsubmit={save} novalidate>
+{#snippet body()}
+	<form id="general-form" class="general-form" onsubmit={save} novalidate>
+		{#if view === 'meshcentral'}
+			<section class="section" id="mesh-settings-panel" aria-labelledby="mesh-title">
+				<h2 id="mesh-title">{t('mesh.settings_title')}</h2>
+				<p class="section-note">{t('settings.general.mesh_note2')}</p>
+				{#if !mesh}
+					<States kind="loading" />
+				{:else if !mesh.enabled}
+					<p class="state" id="mesh-state">{t('settings.general.mesh_off')}</p>
+				{:else}
+					<div class="settings-mesh-body" id="mesh-body">
+						<Facts
+							items={[
+								{ label: t('settings.general.mesh_status'), value: meshStatusValue },
+								{
+									label: t('settings.general.mesh_agents'),
+									value: formatNumber(Number(mesh.agents_online ?? 0))
+								},
+								{ label: t('settings.general.mesh_server_id'), value: meshServerId },
+								{ label: t('settings.general.mesh_cert'), value: meshCert }
+							]}
+						/>
+						{#if !mesh.cert_present}<Notice
+								tone="warning"
+								id="mesh-cert-banner"
+								message={t('settings.general.mesh_cert_missing')}
+							/>{/if}
+
+						<div class="settings-subgroup" id="mesh-groups-form">
+							<div class="section-head">
+								<h3 id="mesh-groups-title">{t('mesh.groups_title')}</h3>
+								<Button size="sm" icon="add" id="mesh-group-add" onclick={openAdd}
+									>{t('mesh.group_add')}</Button
+								>
+							</div>
+							<p class="form-hint">{t('settings.general.mesh_groups_note')}</p>
+							{#if groupsError}
+								<States kind="error" message={groupsError} onretry={() => void loadGroups()} />
+							{:else if !groups.length}
+								<p class="state">{t('settings.general.mesh_groups_empty')}</p>
+							{:else}
+								<div class="mesh-groups-table">
+									<Table
+										rows={groups}
+										columns={groupColumns}
+										key={(g) => g.id}
+										label={t('mesh.groups_title')}
+									/>
+								</div>
+							{/if}
+							{#if groupsStatus.message}<FormStatus
+									message={groupsStatus.message}
+									tone={groupsStatus.tone}
+								/>{/if}
+						</div>
+
+						<div id="mesh-install">
+							<Disclosure title={t('settings.general.mesh_install_title')} level={3}>
+								<div class="disclosure-body">
+									<Steps
+										items={[
+											t('settings.general.mesh_install_step1'),
+											t('settings.general.mesh_install_step2'),
+											t('settings.general.mesh_install_step3')
+										]}
+									/>
+									<Field
+										id="mesh-msh-name"
+										label={t('settings.general.mesh_msh_name')}
+										hint={t('settings.general.mesh_msh_name_hint')}
+										width="host"
+									>
+										{#snippet children(f)}
+											<Input
+												{...f}
+												bind:value={mshName}
+												onkeydown={(e) => {
+													// Not the page's save
+													if (e.key === 'Enter') e.preventDefault();
+												}}
+											/>
+										{/snippet}
+									</Field>
+									<p class="install-download">
+										<Button icon="download" href={meshDownloadHref(mshName, installGroup?.mesh_id)} download
+											>{t('mesh.download_msh')}</Button
+										>
+									</p>
+								</div>
+							</Disclosure>
+						</div>
+
+						<div class="settings-subgroup" id="mesh-recordings">
+							<h3>{t('settings.general.rec_title')}</h3>
+							{#if recordingsError}
+								<States kind="error" message={recordingsError} onretry={() => void loadRecordings()} />
+							{:else if !recordings}
+								<States kind="loading" />
+							{:else if !recordings.length}
+								<p class="form-hint">{t('settings.general.rec_empty')}</p>
+							{:else}
+								<p class="form-hint">{t('settings.general.rec_note')}</p>
+								<Table
+									rows={recordings}
+									columns={recordingColumns}
+									key={(r) => `${r.id}|${r.peer_id}|${r.modified}`}
+									label={t('settings.general.rec_title')}
+								/>
+							{/if}
+						</div>
+					</div>
+				{/if}
+			</section>
+		{:else}
 			<SettingsGrid>
 				{#snippet start()}
-					<section class="section" id="public-endpoints" aria-labelledby="public-endpoints-title">
-						<h2 id="public-endpoints-title">{t('settings.public_endpoints_title')}</h2>
-						<p class="section-note">{t('settings.public_endpoints_desc')}</p>
-						<div class="form-column" id="public-endpoints-form">
-							{#if envLocked.length}<Notice
-									id="public-endpoints-env-locked"
-									message={t('settings.public_endpoints_env_locked')}
-								/>{/if}
-							<Field
-								id="public-server-id"
-								label={t('settings.public_endpoints_server_id')}
-								hint={t('settings.general.endpoint_id_hint')}
-								error={fieldErrors.public_server_id}
-								width="host"
-							>
-								{#snippet children(f)}
-									<Input
-										{...f}
-										class="mono"
-										bind:value={values.endpoints.public_server_id}
-										disabled={envLocked.includes('public_server_id')}
-										autocomplete="off"
-										spellcheck={false}
-										placeholder={t('settings.public_endpoints_server_id_placeholder')}
-									/>
-								{/snippet}
-							</Field>
-							<Field
-								id="public-relay-server"
-								label={t('settings.public_endpoints_relay')}
-								hint={t('settings.general.endpoint_relay_hint')}
-								error={fieldErrors.public_relay_server}
-								width="host"
-							>
-								{#snippet children(f)}
-									<Input
-										{...f}
-										class="mono"
-										bind:value={values.endpoints.public_relay_server}
-										disabled={envLocked.includes('public_relay_server')}
-										autocomplete="off"
-										spellcheck={false}
-										placeholder={t('settings.public_endpoints_relay_placeholder')}
-									/>
-								{/snippet}
-							</Field>
-							<Field
-								id="public-api-url"
-								label={t('settings.public_endpoints_api_url')}
-								hint={t('settings.general.endpoint_api_hint')}
-								error={fieldErrors.public_api_url}
-								width="host"
-							>
-								{#snippet children(f)}
-									<Input
-										{...f}
-										class="mono"
-										bind:value={values.endpoints.public_api_url}
-										disabled={envLocked.includes('public_api_url')}
-										autocomplete="off"
-										spellcheck={false}
-										placeholder={t('settings.public_endpoints_api_url_placeholder')}
-									/>
-								{/snippet}
-							</Field>
-							<p class="form-hint">{t('settings.general.endpoints_when')}</p>
-							<p class="field-effect">{t('settings.general.endpoints_effect')}</p>
-						</div>
-					</section>
-
-					<section class="section" id="connection-mode-section" aria-labelledby="connection-mode-title">
-						<h2 id="connection-mode-title">{t('settings.connection_mode_title')}</h2>
-						<p class="section-note">{t('settings.connection_mode_desc')}</p>
-						<div class="form-column" id="connection-mode-form">
-							{#if connProblem}<Notice id="connection-mode-source" message={connProblem} />{/if}
-							<fieldset class="settings-fieldset" id="connection-mode-fields" disabled={!connWritable}>
-								<legend class="sr-only">{t('settings.connection_mode_title')}</legend>
-								<ChoiceList
-									name="connection-mode"
-									label={t('settings.connection_mode_label')}
-									disabled={!connWritable}
-									bind:value={values.connection.mode}
-									choices={[
-										{
-											id: 'conn-mode-p2p',
-											value: 'p2p_first',
-											title: t('settings.general.conn_p2p'),
-											description: t('settings.general.conn_p2p_desc')
-										},
-										{
-											id: 'conn-mode-relay',
-											value: 'relay_only',
-											title: t('settings.general.conn_relay'),
-											description: t('settings.general.conn_relay_desc')
-										}
-									]}
-								/>
-								<Disclosure
-									title={t('settings.connection_mode_advanced')}
-									level={3}
-									bind:open={connAdvancedOpen}
-								>
-									<div class="disclosure-body">
-										<Field
-											id="conn-p2p-fallback-ms"
-											label={t('settings.general.conn_fallback_label')}
-											hint={t('settings.general.conn_fallback_hint')}
-											error={fieldErrors.fallback}
-											width="short"
-										>
-											{#snippet children(f)}
-												<Input
-													{...f}
-													type="number"
-													min="0"
-													max="30000"
-													step="100"
-													bind:value={values.connection.p2p_fallback_ms}
-												/>
-											{/snippet}
-										</Field>
-										<Checkbox
-											id="conn-same-nat-relay"
-											label={t('settings.general.conn_same_nat')}
-											hint={t('settings.general.conn_same_nat_hint')}
-											bind:checked={values.connection.same_nat_relay}
-										/>
-										<Checkbox
-											id="conn-allow-shared-nat-initiator"
-											label={t('settings.general.conn_shared_nat')}
-											hint={t('settings.general.conn_shared_nat_hint')}
-											bind:checked={values.connection.allow_shared_nat_initiator}
-										/>
-										<Checkbox
-											id="conn-logged-in-only-initiator"
-											label={t('settings.general.conn_logged_in')}
-											hint={t('settings.general.conn_logged_in_hint')}
-											bind:checked={values.connection.logged_in_only_initiator}
-										/>
-										<Checkbox
-											id="conn-operator-only-outbound"
-											label={t('settings.general.conn_operator_only')}
-											hint={t('settings.general.conn_operator_only_hint')}
-											bind:checked={values.connection.operator_only_outbound}
-										/>
-									</div>
-								</Disclosure>
-							</fieldset>
-							{#if connWritable}<p class="field-effect" id="connection-mode-effect">
-									{t('settings.general.conn_effect')}
-								</p>{/if}
-							<h3 id="connection-diagram-title">{t('diagram.how_title')}</h3>
-							<div class="settings-diagram" id="connection-diagram">
-								<ConnectionDiagram {...diagram} />
-							</div>
-							<p class="form-hint" id="connection-mode-info">{t('settings.general.conn_ports_hint')}</p>
-						</div>
-					</section>
-				{/snippet}
-				{#snippet end()}
-					<section class="section" id="device-scope-settings-panel" aria-labelledby="device-scope-title">
-						<h2 id="device-scope-title">{t('settings.device_scope_title')}</h2>
-						<p class="section-note">{t('settings.general.scope_note')}</p>
-						<div class="form-column" id="device-scope-form">
-							<ChoiceList
-								name="device_scope_mode"
-								label={t('settings.device_scope_title')}
-								bind:value={values.scope}
-								choices={[
-									{
-										id: 'device-scope-open',
-										value: 'open',
-										title: t('settings.general.scope_open'),
-										description: t('settings.general.scope_open_desc')
-									},
-									{
-										id: 'device-scope-restricted',
-										value: 'restricted',
-										title: t('settings.general.scope_restricted'),
-										description: t('settings.general.scope_restricted_desc'),
-										controls: 'device-scope-warning'
-									}
-								]}
-							/>
-							<ShowWhen id="device-scope-warning" when={values.scope === 'restricted'}>
-								<Notice tone="warning" message={t('settings.general.scope_restricted_warning')} />
-							</ShowWhen>
-							<p class="field-effect">{t('settings.general.scope_effect')}</p>
-						</div>
-					</section>
-
-					<section
-						class="section"
-						id="availability-history-settings-panel"
-						aria-labelledby="availability-title"
-					>
-						<h2 id="availability-title">{t('settings.availability_history_title')}</h2>
-						<p class="section-note">{t('settings.general.availability_note')}</p>
-						<div class="form-column" id="availability-history-form">
-							<Checkbox
-								id="availability-history-enabled"
-								label={t('settings.availability_history_enable')}
-								hint={t('settings.general.availability_enable_hint')}
-								bind:checked={values.availability.enabled}
-								{...showWhenControl('availability-retention-group', values.availability.enabled)}
-							/>
-							<ShowWhen id="availability-retention-group" when={values.availability.enabled}>
+					{#if view === 'general'}
+						<section class="section" id="public-endpoints" aria-labelledby="public-endpoints-title">
+							<h2 id="public-endpoints-title">{t('settings.public_endpoints_title')}</h2>
+							<p class="section-note">{t('settings.public_endpoints_desc')}</p>
+							<div class="form-column" id="public-endpoints-form">
+								{#if envLocked.length}<Notice
+										id="public-endpoints-env-locked"
+										message={t('settings.public_endpoints_env_locked')}
+									/>{/if}
 								<Field
-									id="availability-history-retention"
-									label={t('settings.general.retention_label')}
-									hint={t('settings.general.retention_hint')}
-									error={fieldErrors.retention}
-									width="short"
+									id="public-server-id"
+									label={t('settings.public_endpoints_server_id')}
+									hint={t('settings.general.endpoint_id_hint')}
+									error={fieldErrors.public_server_id}
+									width="host"
 								>
 									{#snippet children(f)}
 										<Input
 											{...f}
-											type="number"
-											min="1"
-											max="3650"
-											bind:value={values.availability.retention_days}
+											class="mono"
+											bind:value={values.endpoints.public_server_id}
+											disabled={envLocked.includes('public_server_id')}
+											autocomplete="off"
+											spellcheck={false}
+											placeholder={t('settings.public_endpoints_server_id_placeholder')}
 										/>
 									{/snippet}
 								</Field>
-							</ShowWhen>
-							<p class="field-effect">{t('settings.general.availability_effect')}</p>
-						</div>
-					</section>
-
-					<section class="section" id="mesh-settings-panel" aria-labelledby="mesh-title">
-						<h2 id="mesh-title">{t('mesh.settings_title')}</h2>
-						<p class="section-note">{t('settings.general.mesh_note2')}</p>
-						{#if !mesh}
-							<States kind="loading" />
-						{:else if !mesh.enabled}
-							<p class="state" id="mesh-state">{t('settings.general.mesh_off')}</p>
-						{:else}
-							<div class="settings-mesh-body" id="mesh-body">
-								<Facts
-									items={[
-										{ label: t('settings.general.mesh_status'), value: meshStatusValue },
+								<Field
+									id="public-relay-server"
+									label={t('settings.public_endpoints_relay')}
+									hint={t('settings.general.endpoint_relay_hint')}
+									error={fieldErrors.public_relay_server}
+									width="host"
+								>
+									{#snippet children(f)}
+										<Input
+											{...f}
+											class="mono"
+											bind:value={values.endpoints.public_relay_server}
+											disabled={envLocked.includes('public_relay_server')}
+											autocomplete="off"
+											spellcheck={false}
+											placeholder={t('settings.public_endpoints_relay_placeholder')}
+										/>
+									{/snippet}
+								</Field>
+								<Field
+									id="public-api-url"
+									label={t('settings.public_endpoints_api_url')}
+									hint={t('settings.general.endpoint_api_hint')}
+									error={fieldErrors.public_api_url}
+									width="host"
+								>
+									{#snippet children(f)}
+										<Input
+											{...f}
+											class="mono"
+											bind:value={values.endpoints.public_api_url}
+											disabled={envLocked.includes('public_api_url')}
+											autocomplete="off"
+											spellcheck={false}
+											placeholder={t('settings.public_endpoints_api_url_placeholder')}
+										/>
+									{/snippet}
+								</Field>
+								<p class="form-hint">{t('settings.general.endpoints_when')}</p>
+								<p class="field-effect">{t('settings.general.endpoints_effect')}</p>
+							</div>
+						</section>
+					{:else}
+						<section class="section" id="device-scope-settings-panel" aria-labelledby="device-scope-title">
+							<h2 id="device-scope-title">{t('settings.device_scope_title')}</h2>
+							<p class="section-note">{t('settings.general.scope_note')}</p>
+							<div class="form-column" id="device-scope-form">
+								<ChoiceList
+									name="device_scope_mode"
+									label={t('settings.device_scope_title')}
+									bind:value={values.scope}
+									choices={[
 										{
-											label: t('settings.general.mesh_agents'),
-											value: formatNumber(Number(mesh.agents_online ?? 0))
+											id: 'device-scope-open',
+											value: 'open',
+											title: t('settings.general.scope_open'),
+											description: t('settings.general.scope_open_desc')
 										},
-										{ label: t('settings.general.mesh_server_id'), value: meshServerId },
-										{ label: t('settings.general.mesh_cert'), value: meshCert }
+										{
+											id: 'device-scope-restricted',
+											value: 'restricted',
+											title: t('settings.general.scope_restricted'),
+											description: t('settings.general.scope_restricted_desc'),
+											controls: 'device-scope-warning'
+										}
 									]}
 								/>
-								{#if !mesh.cert_present}<Notice
-										tone="warning"
-										id="mesh-cert-banner"
-										message={t('settings.general.mesh_cert_missing')}
-									/>{/if}
-
-								<div class="settings-subgroup" id="mesh-groups-form">
-									<div class="section-head">
-										<h3 id="mesh-groups-title">{t('mesh.groups_title')}</h3>
-										<Button size="sm" icon="add" id="mesh-group-add" onclick={openAdd}
-											>{t('mesh.group_add')}</Button
-										>
-									</div>
-									<p class="form-hint">{t('settings.general.mesh_groups_note')}</p>
-									{#if groupsError}
-										<States kind="error" message={groupsError} onretry={() => void loadGroups()} />
-									{:else if !groups.length}
-										<p class="state">{t('settings.general.mesh_groups_empty')}</p>
-									{:else}
-										<div class="mesh-groups-table">
-											<Table
-												rows={groups}
-												columns={groupColumns}
-												key={(g) => g.id}
-												label={t('mesh.groups_title')}
-											/>
-										</div>
-									{/if}
-									{#if groupsStatus.message}<FormStatus
-											message={groupsStatus.message}
-											tone={groupsStatus.tone}
-										/>{/if}
-								</div>
-
-								<div id="mesh-install">
-									<Disclosure title={t('settings.general.mesh_install_title')} level={3}>
+								<ShowWhen id="device-scope-warning" when={values.scope === 'restricted'}>
+									<Notice tone="warning" message={t('settings.general.scope_restricted_warning')} />
+								</ShowWhen>
+								<p class="field-effect">{t('settings.general.scope_effect')}</p>
+							</div>
+						</section>
+					{/if}
+				{/snippet}
+				{#snippet end()}
+					{#if view === 'general'}
+						<section class="section" id="connection-mode-section" aria-labelledby="connection-mode-title">
+							<h2 id="connection-mode-title">{t('settings.connection_mode_title')}</h2>
+							<p class="section-note">{t('settings.connection_mode_desc')}</p>
+							<div class="form-column" id="connection-mode-form">
+								{#if connProblem}<Notice id="connection-mode-source" message={connProblem} />{/if}
+								<fieldset class="settings-fieldset" id="connection-mode-fields" disabled={!connWritable}>
+									<legend class="sr-only">{t('settings.connection_mode_title')}</legend>
+									<ChoiceList
+										name="connection-mode"
+										label={t('settings.connection_mode_label')}
+										disabled={!connWritable}
+										bind:value={values.connection.mode}
+										choices={[
+											{
+												id: 'conn-mode-p2p',
+												value: 'p2p_first',
+												title: t('settings.general.conn_p2p'),
+												description: t('settings.general.conn_p2p_desc')
+											},
+											{
+												id: 'conn-mode-relay',
+												value: 'relay_only',
+												title: t('settings.general.conn_relay'),
+												description: t('settings.general.conn_relay_desc')
+											}
+										]}
+									/>
+									<Disclosure
+										title={t('settings.connection_mode_advanced')}
+										level={3}
+										bind:open={connAdvancedOpen}
+									>
 										<div class="disclosure-body">
-											<Steps
-												items={[
-													t('settings.general.mesh_install_step1'),
-													t('settings.general.mesh_install_step2'),
-													t('settings.general.mesh_install_step3')
-												]}
-											/>
 											<Field
-												id="mesh-msh-name"
-												label={t('settings.general.mesh_msh_name')}
-												hint={t('settings.general.mesh_msh_name_hint')}
-												width="host"
+												id="conn-p2p-fallback-ms"
+												label={t('settings.general.conn_fallback_label')}
+												hint={t('settings.general.conn_fallback_hint')}
+												error={fieldErrors.fallback}
+												width="short"
 											>
 												{#snippet children(f)}
 													<Input
 														{...f}
-														bind:value={mshName}
-														onkeydown={(e) => {
-															// Not the page's save
-															if (e.key === 'Enter') e.preventDefault();
-														}}
+														type="number"
+														min="0"
+														max="30000"
+														step="100"
+														bind:value={values.connection.p2p_fallback_ms}
 													/>
 												{/snippet}
 											</Field>
-											<p class="install-download">
-												<Button
-													icon="download"
-													href={meshDownloadHref(mshName, installGroup?.mesh_id)}
-													download>{t('mesh.download_msh')}</Button
-												>
-											</p>
+											<Checkbox
+												id="conn-same-nat-relay"
+												label={t('settings.general.conn_same_nat')}
+												hint={t('settings.general.conn_same_nat_hint')}
+												bind:checked={values.connection.same_nat_relay}
+											/>
+											<Checkbox
+												id="conn-allow-shared-nat-initiator"
+												label={t('settings.general.conn_shared_nat')}
+												hint={t('settings.general.conn_shared_nat_hint')}
+												bind:checked={values.connection.allow_shared_nat_initiator}
+											/>
+											<Checkbox
+												id="conn-logged-in-only-initiator"
+												label={t('settings.general.conn_logged_in')}
+												hint={t('settings.general.conn_logged_in_hint')}
+												bind:checked={values.connection.logged_in_only_initiator}
+											/>
+											<Checkbox
+												id="conn-operator-only-outbound"
+												label={t('settings.general.conn_operator_only')}
+												hint={t('settings.general.conn_operator_only_hint')}
+												bind:checked={values.connection.operator_only_outbound}
+											/>
 										</div>
 									</Disclosure>
+								</fieldset>
+								{#if connWritable}<p class="field-effect" id="connection-mode-effect">
+										{t('settings.general.conn_effect')}
+									</p>{/if}
+								<h3 id="connection-diagram-title">{t('diagram.how_title')}</h3>
+								<div class="settings-diagram" id="connection-diagram">
+									<ConnectionDiagram {...diagram} />
 								</div>
-
-								<div class="settings-subgroup" id="mesh-recordings">
-									<h3>{t('settings.general.rec_title')}</h3>
-									{#if recordingsError}
-										<States kind="error" message={recordingsError} onretry={() => void loadRecordings()} />
-									{:else if !recordings}
-										<States kind="loading" />
-									{:else if !recordings.length}
-										<p class="form-hint">{t('settings.general.rec_empty')}</p>
-									{:else}
-										<p class="form-hint">{t('settings.general.rec_note')}</p>
-										<Table
-											rows={recordings}
-											columns={recordingColumns}
-											key={(r) => `${r.id}|${r.peer_id}|${r.modified}`}
-											label={t('settings.general.rec_title')}
-										/>
-									{/if}
-								</div>
+								<p class="form-hint" id="connection-mode-info">{t('settings.general.conn_ports_hint')}</p>
 							</div>
-						{/if}
-					</section>
+						</section>
+					{:else}
+						<section
+							class="section"
+							id="availability-history-settings-panel"
+							aria-labelledby="availability-title"
+						>
+							<h2 id="availability-title">{t('settings.availability_history_title')}</h2>
+							<p class="section-note">{t('settings.general.availability_note')}</p>
+							<div class="form-column" id="availability-history-form">
+								<Checkbox
+									id="availability-history-enabled"
+									label={t('settings.availability_history_enable')}
+									hint={t('settings.general.availability_enable_hint')}
+									bind:checked={values.availability.enabled}
+									{...showWhenControl('availability-retention-group', values.availability.enabled)}
+								/>
+								<ShowWhen id="availability-retention-group" when={values.availability.enabled}>
+									<Field
+										id="availability-history-retention"
+										label={t('settings.general.retention_label')}
+										hint={t('settings.general.retention_hint')}
+										error={fieldErrors.retention}
+										width="short"
+									>
+										{#snippet children(f)}
+											<Input
+												{...f}
+												type="number"
+												min="1"
+												max="3650"
+												bind:value={values.availability.retention_days}
+											/>
+										{/snippet}
+									</Field>
+								</ShowWhen>
+								<p class="field-effect">{t('settings.general.availability_effect')}</p>
+							</div>
+						</section>
+					{/if}
 				{/snippet}
 			</SettingsGrid>
-			<SaveBar label={t('settings.general.save_all')} {dirty} {busy} {status} />
-		</form>
+		{/if}
+		<SaveBar label={t('settings.general.save_all')} {dirty} {busy} {status} />
+	</form>
+{/snippet}
+
+{#if !canConfig}
+	{#if view === 'general'}
+		<ReadOnlyHint writes={['server.config']} />
+		{@render serverInfo()}
+	{/if}
+{:else if bare}
+	{@render body()}
+{:else}
+	<SettingsLayout {toc} side={view === 'general' ? side : undefined} sideLabelledby="general-side-title">
+		{@render body()}
 	</SettingsLayout>
 {/if}
 

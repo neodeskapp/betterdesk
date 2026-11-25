@@ -115,7 +115,8 @@
     "label": "Điều hướng chính",
     "section_devices": "Thiết bị",
     "server_backups": "Bản sao lưu",
-    "server_config_files": "Tệp cấu hình"
+    "server_config_files": "Tệp cấu hình",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Đăng nhập",
@@ -1233,7 +1234,11 @@
       "discard_title": "Bỏ các thay đổi chưa lưu?",
       "discard_message": "Các thay đổi trên trang này chưa được lưu.",
       "discard_confirm": "Bỏ thay đổi",
-      "shown_when_off": "Hiển thị khi \"{switch}\" tắt."
+      "shown_when_off": "Hiển thị khi \"{switch}\" tắt.",
+      "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+      "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+      "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
     },
     "general": {
       "endpoint_id_hint": "Tên máy chủ hoặc địa chỉ IP của máy chủ ID, theo cách máy khách trên internet truy cập.",
@@ -1485,7 +1490,8 @@
       "attrs_note": "Giá trị mặc định dùng được trong hầu hết trường hợp. Chỉ đổi khi tên hoặc địa chỉ email nhận về bị sai hoặc trống.",
       "single_session": "Một phiên cho mỗi tài khoản",
       "single_session_hint": "Lần đăng nhập mới sẽ đăng xuất trình duyệt kia của tài khoản. Tắt: một tài khoản có thể đăng nhập cùng lúc trên tối đa {max} trình duyệt và thiết bị.",
-      "single_session_env": "SESSION_MAX_PER_USER được đặt là {value} trong môi trường của máy chủ và quyết định thay cho công tắc này. Hãy xóa nó ở đó để dùng công tắc."
+      "single_session_env": "SESSION_MAX_PER_USER được đặt là {value} trong môi trường của máy chủ và quyết định thay cho công tắc này. Hãy xóa nó ở đó để dùng công tắc.",
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
     },
     "backup_tab": {
       "create_title": "Tạo bản sao lưu",

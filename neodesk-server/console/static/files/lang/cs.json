@@ -109,7 +109,8 @@
     "label": "Hlavní navigace",
     "section_devices": "Zařízení",
     "server_backups": "Zálohy",
-    "server_config_files": "Konfigurační soubory"
+    "server_config_files": "Konfigurační soubory",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Přihlášení",
@@ -1227,7 +1228,11 @@
       "discard_title": "Zahodit neuložené změny?",
       "discard_message": "Změny na této stránce ještě nejsou uložené.",
       "discard_confirm": "Zahodit změny",
-      "shown_when_off": "Zobrazí se, když je \"{switch}\" vypnuto."
+      "shown_when_off": "Zobrazí se, když je \"{switch}\" vypnuto.",
+      "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+      "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+      "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
     },
     "general": {
       "endpoint_id_hint": "Název hostitele nebo IP adresa ID serveru, jak ji vidí klienti z internetu.",
@@ -1479,7 +1484,8 @@
       "attrs_note": "Výchozí hodnoty ve většině případů fungují. Změňte je jen tehdy, když jména nebo e-mailové adresy přicházejí chybně nebo prázdné.",
       "single_session": "Jedna relace na účet",
       "single_session_hint": "Nové přihlášení odhlásí druhý prohlížeč účtu. Vypnuto: účet může být současně přihlášen nejvýše na {max} prohlížečích a zařízeních.",
-      "single_session_env": "SESSION_MAX_PER_USER má v prostředí serveru hodnotu {value} a rozhoduje místo tohoto přepínače. Chcete-li použít přepínač, odstraňte ji tam."
+      "single_session_env": "SESSION_MAX_PER_USER má v prostředí serveru hodnotu {value} a rozhoduje místo tohoto přepínače. Chcete-li použít přepínač, odstraňte ji tam.",
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
     },
     "backup_tab": {
       "create_title": "Vytvořit zálohu",

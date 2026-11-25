@@ -115,7 +115,8 @@
     "label": "Ana gezinme",
     "section_devices": "Cihazlar",
     "server_backups": "Yedekler",
-    "server_config_files": "Yapılandırma dosyaları"
+    "server_config_files": "Yapılandırma dosyaları",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Oturum aç",
@@ -1233,7 +1234,11 @@
       "discard_title": "Kaydedilmemiş değişiklikler silinsin mi?",
       "discard_message": "Bu sayfadaki değişiklikler henüz kaydedilmedi.",
       "discard_confirm": "Değişiklikleri sil",
-      "shown_when_off": "\"{switch}\" kapalıyken gösterilir."
+      "shown_when_off": "\"{switch}\" kapalıyken gösterilir.",
+      "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+      "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+      "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
     },
     "general": {
       "endpoint_id_hint": "İnternetteki istemcilerin ulaştığı şekliyle ID sunucusunun ana bilgisayar adı veya IP adresi.",
@@ -1485,7 +1490,8 @@
       "attrs_note": "Varsayılanlar çoğu durumda işe yarar. Yalnızca adlar veya e-posta adresleri yanlış ya da boş geliyorsa değiştirin.",
       "single_session": "Hesap başına bir oturum",
       "single_session_hint": "Yeni bir oturum açma, hesabın diğer tarayıcısındaki oturumu kapatır. Kapalı: bir hesap aynı anda en fazla {max} tarayıcı ve cihazda oturum açabilir.",
-      "single_session_env": "SESSION_MAX_PER_USER sunucunun ortamında {value} olarak ayarlı ve bu anahtarın yerine o karar verir. Anahtarı kullanmak için oradan kaldırın."
+      "single_session_env": "SESSION_MAX_PER_USER sunucunun ortamında {value} olarak ayarlı ve bu anahtarın yerine o karar verir. Anahtarı kullanmak için oradan kaldırın.",
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
     },
     "backup_tab": {
       "create_title": "Yedek oluştur",

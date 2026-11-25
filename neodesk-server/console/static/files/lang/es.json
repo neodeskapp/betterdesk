@@ -109,7 +109,8 @@
     "label": "Navegación principal",
     "section_devices": "Dispositivos",
     "server_backups": "Copias de seguridad",
-    "server_config_files": "Archivos de configuración"
+    "server_config_files": "Archivos de configuración",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -1227,7 +1228,11 @@
       "discard_title": "¿Descartar los cambios sin guardar?",
       "discard_message": "Los cambios de esta página aún no se han guardado.",
       "discard_confirm": "Descartar cambios",
-      "shown_when_off": "Se muestra cuando \"{switch}\" está desactivado."
+      "shown_when_off": "Se muestra cuando \"{switch}\" está desactivado.",
+      "ldap_desc": "Permite iniciar sesión en la consola con la cuenta de un directorio como Active Directory u OpenLDAP.",
+      "sso_desc": "Permite iniciar sesión en la consola mediante un proveedor de identidad como Microsoft Entra ID, Okta o Google (OpenID Connect).",
+      "joining_desc": "Cómo llega un dispositivo nuevo a este servidor y qué ven las personas de los dispositivos de forma predeterminada.",
+      "meshcentral_desc": "Conecta agentes de MeshCentral a este servidor: su estado, los grupos de dispositivos, el nombre en el archivo .msh y las sesiones grabadas."
     },
     "general": {
       "endpoint_id_hint": "Nombre de host o dirección IP del servidor de ID, tal como lo alcanzan los clientes desde internet.",
@@ -1479,7 +1484,8 @@
       "attrs_note": "Los valores predeterminados sirven en la mayoría de los casos. Cámbielos solo si los nombres o correos llegan mal o vacíos.",
       "single_session": "Una sesión por cuenta",
       "single_session_hint": "Un nuevo inicio de sesión cierra la sesión del otro navegador de la cuenta. Desactivado: una cuenta puede tener la sesión iniciada en hasta {max} navegadores y dispositivos a la vez.",
-      "single_session_env": "SESSION_MAX_PER_USER vale {value} en el entorno del servidor y decide en lugar de este interruptor. Quítelo allí para usar el interruptor."
+      "single_session_env": "SESSION_MAX_PER_USER vale {value} en el entorno del servidor y decide en lugar de este interruptor. Quítelo allí para usar el interruptor.",
+      "oidc_advanced_note": "Solo hace falta si el proveedor no tiene documento de descubrimiento o está en una red privada."
     },
     "backup_tab": {
       "create_title": "Crear una copia de seguridad",

@@ -115,7 +115,8 @@
     "label": "Huvudnavigering",
     "section_devices": "Enheter",
     "server_backups": "Säkerhetskopior",
-    "server_config_files": "Konfigurationsfiler"
+    "server_config_files": "Konfigurationsfiler",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Logga in",
@@ -1233,7 +1234,11 @@
       "discard_title": "Ignorera ändringar som inte har sparats?",
       "discard_message": "Ändringarna på den här sidan har inte sparats än.",
       "discard_confirm": "Ignorera ändringar",
-      "shown_when_off": "Visas när \"{switch}\" är avstängt."
+      "shown_when_off": "Visas när \"{switch}\" är avstängt.",
+      "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+      "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+      "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
     },
     "general": {
       "endpoint_id_hint": "Värdnamn eller IP-adress för ID-servern, så som klienter på internet når den.",
@@ -1485,7 +1490,8 @@
       "attrs_note": "Standardvärdena fungerar i de flesta fall. Ändra dem bara om namn eller e-postadresser kommer fel eller tomma.",
       "single_session": "En session per konto",
       "single_session_hint": "En ny inloggning loggar ut kontots andra webbläsare. Av: ett konto kan vara inloggat i upp till {max} webbläsare och enheter samtidigt.",
-      "single_session_env": "SESSION_MAX_PER_USER är satt till {value} i serverns miljö och bestämmer i stället för den här brytaren. Ta bort den där för att använda brytaren."
+      "single_session_env": "SESSION_MAX_PER_USER är satt till {value} i serverns miljö och bestämmer i stället för den här brytaren. Ta bort den där för att använda brytaren.",
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
     },
     "backup_tab": {
       "create_title": "Skapa en säkerhetskopia",

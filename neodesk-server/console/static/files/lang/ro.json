@@ -115,7 +115,8 @@
     "label": "Navigare principală",
     "section_devices": "Dispozitive",
     "server_backups": "Copii de rezervă",
-    "server_config_files": "Fișiere de configurare"
+    "server_config_files": "Fișiere de configurare",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Conectare",
@@ -1233,7 +1234,11 @@
       "discard_title": "Renunțați la modificările nesalvate?",
       "discard_message": "Modificările de pe această pagină nu sunt încă salvate.",
       "discard_confirm": "Renunță la modificări",
-      "shown_when_off": "Afișat când \"{switch}\" este dezactivat."
+      "shown_when_off": "Afișat când \"{switch}\" este dezactivat.",
+      "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+      "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+      "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
     },
     "general": {
       "endpoint_id_hint": "Numele gazdei sau adresa IP a serverului ID, așa cum îl accesează clienții de pe internet.",
@@ -1485,7 +1490,8 @@
       "attrs_note": "Valorile implicite merg în majoritatea cazurilor. Schimbați-le doar dacă numele sau adresele de e-mail ajung greșit sau goale.",
       "single_session": "O sesiune per cont",
       "single_session_hint": "O autentificare nouă deconectează celălalt browser al contului. Oprit: un cont poate fi autentificat simultan pe cel mult {max} browsere și dispozitive.",
-      "single_session_env": "SESSION_MAX_PER_USER are valoarea {value} în mediul serverului și decide în locul acestui comutator. Eliminați-l de acolo pentru a folosi comutatorul."
+      "single_session_env": "SESSION_MAX_PER_USER are valoarea {value} în mediul serverului și decide în locul acestui comutator. Eliminați-l de acolo pentru a folosi comutatorul.",
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
     },
     "backup_tab": {
       "create_title": "Creați o copie de rezervă",

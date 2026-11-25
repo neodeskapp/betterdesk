@@ -14,10 +14,14 @@ export const TAB_TERMS: Readonly<Record<string, string>> = {
 	general: 'server allgemein',
 	branding: 'appearance look branding design aussehen erscheinungsbild marke',
 	auth: 'sign-in login security anmeldung sicherheit',
+	ldap: 'ldap active directory ad directory verzeichnis anmeldung',
+	sso: 'sso oidc oauth openid single sign-on azure okta google anmeldung',
+	joining: 'join enrollment enroll registration approve beitritt registrierung freigabe',
 	'server-backups': 'server backup sicherung datensicherung',
 	'server-updates': 'server update upgrade version aktualisierung',
 	email: 'email e-mail mail smtp',
 	time: 'time zeit uhr clock',
+	meshcentral: 'mesh meshcentral meshagent',
 	'server-config-files': 'server advanced erweitert expert config konfiguration dateien'
 };
 

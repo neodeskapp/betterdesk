@@ -120,7 +120,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'general',
+		'joining',
 		'device-scope-settings-panel',
 		'settings.device_scope_title',
 		'',
@@ -128,7 +128,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'general',
+		'joining',
 		'device-scope-open',
 		'settings.general.scope_open',
 		'settings.device_scope_title',
@@ -136,7 +136,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'general',
+		'joining',
 		'device-scope-restricted',
 		'settings.general.scope_restricted',
 		'settings.device_scope_title',
@@ -144,7 +144,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'general',
+		'joining',
 		'availability-history-settings-panel',
 		'settings.availability_history_title',
 		'',
@@ -152,7 +152,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'general',
+		'joining',
 		'availability-history-enabled',
 		'settings.availability_history_enable',
 		'settings.availability_history_title',
@@ -160,7 +160,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'general',
+		'joining',
 		'availability-history-retention',
 		'settings.general.retention_label',
 		'settings.availability_history_title',
@@ -168,7 +168,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'general',
+		'meshcentral',
 		'mesh-settings-panel',
 		'mesh.settings_title',
 		'',
@@ -176,7 +176,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'general',
+		'meshcentral',
 		'mesh-settings-panel',
 		'settings.general.mesh_status',
 		'mesh.settings_title',
@@ -184,7 +184,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'general',
+		'meshcentral',
 		'mesh-settings-panel',
 		'settings.general.mesh_agents',
 		'mesh.settings_title',
@@ -192,7 +192,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'general',
+		'meshcentral',
 		'mesh-settings-panel',
 		'settings.general.mesh_server_id',
 		'mesh.settings_title',
@@ -200,7 +200,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'general',
+		'meshcentral',
 		'mesh-settings-panel',
 		'settings.general.mesh_cert',
 		'mesh.settings_title',
@@ -208,7 +208,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'general',
+		'meshcentral',
 		'mesh-groups-form',
 		'mesh.groups_title',
 		'',
@@ -216,14 +216,14 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'general',
+		'meshcentral',
 		'mesh-msh-name',
 		'settings.general.mesh_msh_name',
 		'mesh.settings_title',
 		['settings.general.mesh_msh_name_hint'],
 		'server.config'
 	],
-	['general', 'mesh-recordings', 'settings.general.rec_title', '', [], 'server.config'],
+	['meshcentral', 'mesh-recordings', 'settings.general.rec_title', '', [], 'server.config'],
 	['general', 'server-info', 'settings.server_info', '', [], ''],
 	['general', 'server-info', 'settings.general.console_version', 'settings.server_info', [], ''],
 	['general', 'go-server-version', 'settings.general.server_version', 'settings.server_info', [], ''],
@@ -679,7 +679,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	['auth', 'confirm-password', 'settings.confirm_password', 'settings.change_password', [], ''],
 	['auth', 'auth-panel-totp', 'settings.totp_title', '', ['settings.signin.totp_note'], ''],
 	[
-		'auth',
+		'joining',
 		'enrollment-settings-section',
 		'settings.enrollment_title',
 		'',
@@ -687,7 +687,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'joining',
 		'enrollment-settings-section',
 		'tokens.mode_open',
 		'settings.enrollment_title',
@@ -695,7 +695,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'joining',
 		'enrollment-settings-section',
 		'tokens.mode_managed',
 		'settings.enrollment_title',
@@ -703,7 +703,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'joining',
 		'enrollment-settings-section',
 		'tokens.mode_locked',
 		'settings.enrollment_title',
@@ -711,7 +711,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'joining',
 		'enrollment-rich-approve',
 		'settings.enrollment_rich_approve',
 		'settings.enrollment_title',
@@ -719,7 +719,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'joining',
 		'enrollment-tag-picker',
 		'settings.enrollment_tag_picker',
 		'settings.enrollment_title',
@@ -759,7 +759,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'ldap',
 		'ldap-form',
 		'settings.ldap_title',
 		'',
@@ -767,20 +767,20 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'ldap',
 		'ldap-enabled',
 		'settings.ldap_enabled',
 		'settings.ldap_title',
 		['settings.signin.ldap_enabled_hint'],
 		'server.config'
 	],
-	['auth', 'ldap-host', 'settings.ldap_host', 'settings.ldap_title', [], 'server.config'],
-	['auth', 'ldap-port', 'settings.ldap_port', 'settings.ldap_title', [], 'server.config'],
-	['auth', 'ldap-use-tls', 'settings.ldap_use_tls', 'settings.ldap_title', [], 'server.config'],
-	['auth', 'ldap-start-tls', 'settings.ldap_start_tls', 'settings.ldap_title', [], 'server.config'],
-	['auth', 'ldap-skip-tls-verify', 'settings.ldap_skip_verify', 'settings.ldap_title', [], 'server.config'],
+	['ldap', 'ldap-host', 'settings.ldap_host', 'settings.ldap_title', [], 'server.config'],
+	['ldap', 'ldap-port', 'settings.ldap_port', 'settings.ldap_title', [], 'server.config'],
+	['ldap', 'ldap-use-tls', 'settings.ldap_use_tls', 'settings.ldap_title', [], 'server.config'],
+	['ldap', 'ldap-start-tls', 'settings.ldap_start_tls', 'settings.ldap_title', [], 'server.config'],
+	['ldap', 'ldap-skip-tls-verify', 'settings.ldap_skip_verify', 'settings.ldap_title', [], 'server.config'],
 	[
-		'auth',
+		'ldap',
 		'ldap-conn-timeout',
 		'settings.ldap_timeout',
 		'settings.ldap_title',
@@ -788,7 +788,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'ldap',
 		'ldap-direct-bind',
 		'settings.ldap_direct_bind',
 		'settings.ldap_title',
@@ -796,16 +796,16 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'ldap',
 		'ldap-bind-dn',
 		'settings.ldap_bind_dn',
 		'settings.ldap_title',
 		['settings.ldap_bind_dn_hint'],
 		'server.config'
 	],
-	['auth', 'ldap-bind-password', 'settings.ldap_bind_password', 'settings.ldap_title', [], 'server.config'],
+	['ldap', 'ldap-bind-password', 'settings.ldap_bind_password', 'settings.ldap_title', [], 'server.config'],
 	[
-		'auth',
+		'ldap',
 		'ldap-base-dn',
 		'settings.ldap_base_dn',
 		'settings.ldap_title',
@@ -813,7 +813,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'ldap',
 		'ldap-user-filter',
 		'settings.ldap_user_filter',
 		'settings.ldap_title',
@@ -821,27 +821,27 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'ldap',
 		'ldap-direct-bind-dn',
 		'settings.ldap_direct_bind_dn',
 		'settings.ldap_title',
 		['settings.ldap_direct_bind_dn_hint'],
 		'server.config'
 	],
-	['auth', 'ldap-user-attr-id', 'settings.ldap_attr_id', 'settings.ldap_title', [], 'server.config'],
-	['auth', 'ldap-user-attr-email', 'settings.ldap_attr_email', 'settings.ldap_title', [], 'server.config'],
-	['auth', 'ldap-user-attr-name', 'settings.ldap_attr_name', 'settings.ldap_title', [], 'server.config'],
+	['ldap', 'ldap-user-attr-id', 'settings.ldap_attr_id', 'settings.ldap_title', [], 'server.config'],
+	['ldap', 'ldap-user-attr-email', 'settings.ldap_attr_email', 'settings.ldap_title', [], 'server.config'],
+	['ldap', 'ldap-user-attr-name', 'settings.ldap_attr_name', 'settings.ldap_title', [], 'server.config'],
 	[
-		'auth',
+		'ldap',
 		'ldap-group-base-dn',
 		'settings.ldap_group_base_dn',
 		'settings.ldap_title',
 		['settings.ldap_group_base_dn_hint'],
 		'server.config'
 	],
-	['auth', 'ldap-group-filter', 'settings.ldap_group_filter', 'settings.ldap_title', [], 'server.config'],
+	['ldap', 'ldap-group-filter', 'settings.ldap_group_filter', 'settings.ldap_title', [], 'server.config'],
 	[
-		'auth',
+		'ldap',
 		'ldap-group-attr-name',
 		'settings.ldap_group_attr_name',
 		'settings.ldap_title',
@@ -865,7 +865,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'ldap',
 		'ldap-allow-signup',
 		'settings.ldap_allow_signup',
 		'settings.ldap_title',
@@ -873,7 +873,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'ldap',
 		'ldap-default-role',
 		'settings.ldap_default_role',
 		'settings.ldap_title',
@@ -881,7 +881,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'ldap',
 		'ldap-group-role-map',
 		'settings.ldap_group_role_map',
 		'settings.ldap_title',
@@ -889,7 +889,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'sso',
 		'oidc-form',
 		'settings.oidc_title',
 		'',
@@ -897,7 +897,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'sso',
 		'oidc-enabled',
 		'settings.oidc_enabled',
 		'settings.oidc_title',
@@ -905,7 +905,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'sso',
 		'oidc-display-name',
 		'settings.oidc_display_name',
 		'settings.oidc_title',
@@ -913,7 +913,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'sso',
 		'oidc-issuer-url',
 		'settings.oidc_issuer_url',
 		'settings.oidc_title',
@@ -921,17 +921,17 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'sso',
 		'oidc-allowed-private-cidrs',
 		'settings.oidc_allowed_private_cidrs',
 		'settings.oidc_title',
 		['settings.oidc_allowed_private_cidrs_hint'],
 		'server.config'
 	],
-	['auth', 'oidc-client-id', 'settings.oidc_client_id', 'settings.oidc_title', [], 'server.config'],
-	['auth', 'oidc-client-secret', 'settings.oidc_client_secret', 'settings.oidc_title', [], 'server.config'],
+	['sso', 'oidc-client-id', 'settings.oidc_client_id', 'settings.oidc_title', [], 'server.config'],
+	['sso', 'oidc-client-secret', 'settings.oidc_client_secret', 'settings.oidc_title', [], 'server.config'],
 	[
-		'auth',
+		'sso',
 		'oidc-redirect-url',
 		'settings.oidc_redirect_url',
 		'settings.oidc_title',
@@ -939,19 +939,19 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'sso',
 		'oidc-panel-url',
 		'settings.oidc_panel_url',
 		'settings.oidc_title',
 		['settings.oidc_panel_url_hint'],
 		'server.config'
 	],
-	['auth', 'oidc-scopes', 'settings.oidc_scopes', 'settings.oidc_title', [], 'server.config'],
-	['auth', 'oidc-use-pkce', 'settings.oidc_use_pkce', 'settings.oidc_title', [], 'server.config'],
-	['auth', 'oidc-auto-discovery', 'settings.oidc_auto_discovery', 'settings.oidc_title', [], 'server.config'],
-	['auth', 'oidc-allow-signup', 'settings.oidc_allow_signup', 'settings.oidc_title', [], 'server.config'],
+	['sso', 'oidc-scopes', 'settings.oidc_scopes', 'settings.oidc_title', [], 'server.config'],
+	['sso', 'oidc-use-pkce', 'settings.oidc_use_pkce', 'settings.oidc_title', [], 'server.config'],
+	['sso', 'oidc-auto-discovery', 'settings.oidc_auto_discovery', 'settings.oidc_title', [], 'server.config'],
+	['sso', 'oidc-allow-signup', 'settings.oidc_allow_signup', 'settings.oidc_title', [], 'server.config'],
 	[
-		'auth',
+		'sso',
 		'oidc-prefer-sso',
 		'settings.oidc_prefer_sso',
 		'settings.oidc_title',
@@ -959,22 +959,22 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'auth',
+		'sso',
 		'oidc-authorization-url',
 		'settings.oidc_authorization_url',
 		'settings.oidc_title',
 		[],
 		'server.config'
 	],
-	['auth', 'oidc-token-url', 'settings.oidc_token_url', 'settings.oidc_title', [], 'server.config'],
-	['auth', 'oidc-userinfo-url', 'settings.oidc_userinfo_url', 'settings.oidc_title', [], 'server.config'],
-	['auth', 'oidc-claim-username', 'settings.oidc_claim_username', 'settings.oidc_title', [], 'server.config'],
-	['auth', 'oidc-claim-email', 'settings.oidc_claim_email', 'settings.oidc_title', [], 'server.config'],
-	['auth', 'oidc-claim-name', 'settings.oidc_claim_name', 'settings.oidc_title', [], 'server.config'],
-	['auth', 'oidc-claim-groups', 'settings.oidc_claim_groups', 'settings.oidc_title', [], 'server.config'],
-	['auth', 'oidc-default-role', 'settings.oidc_default_role', 'settings.oidc_title', [], 'server.config'],
+	['sso', 'oidc-token-url', 'settings.oidc_token_url', 'settings.oidc_title', [], 'server.config'],
+	['sso', 'oidc-userinfo-url', 'settings.oidc_userinfo_url', 'settings.oidc_title', [], 'server.config'],
+	['sso', 'oidc-claim-username', 'settings.oidc_claim_username', 'settings.oidc_title', [], 'server.config'],
+	['sso', 'oidc-claim-email', 'settings.oidc_claim_email', 'settings.oidc_title', [], 'server.config'],
+	['sso', 'oidc-claim-name', 'settings.oidc_claim_name', 'settings.oidc_title', [], 'server.config'],
+	['sso', 'oidc-claim-groups', 'settings.oidc_claim_groups', 'settings.oidc_title', [], 'server.config'],
+	['sso', 'oidc-default-role', 'settings.oidc_default_role', 'settings.oidc_title', [], 'server.config'],
 	[
-		'auth',
+		'sso',
 		'oidc-group-role-map',
 		'settings.oidc_group_role_map',
 		'settings.oidc_title',
@@ -1256,13 +1256,19 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 /** Space-separated element ids per tab or page, for #<id> links into another one */
 export const TAB_IDS: Readonly<Record<string, string>> = {
 	general:
-		'availability-history-enabled availability-history-form availability-history-retention availability-history-settings-panel availability-retention-group availability-title conn-allow-shared-nat-initiator conn-logged-in-only-initiator conn-mode-p2p conn-mode-relay conn-operator-only-outbound conn-p2p-fallback-ms conn-same-nat-relay connection-diagram connection-diagram-title connection-mode-effect connection-mode-fields connection-mode-form connection-mode-info connection-mode-section connection-mode-source connection-mode-title db-path device-scope-form device-scope-open device-scope-restricted device-scope-settings-panel device-scope-title device-scope-warning general-form general-save go-server-version mesh-agents-online mesh-body mesh-cert-banner mesh-cert-state mesh-copy-server-id mesh-download-msh mesh-group-add mesh-groups-form mesh-groups-list mesh-groups-status mesh-groups-title mesh-install mesh-msh-name mesh-recordings mesh-recordings-table mesh-server-id mesh-settings-panel mesh-state mesh-status-enabled mesh-title public-api-url public-endpoints public-endpoints-form public-endpoints-title public-relay-server public-server-id server-info server-info-title uptime',
+		'conn-allow-shared-nat-initiator conn-logged-in-only-initiator conn-mode-p2p conn-mode-relay conn-operator-only-outbound conn-p2p-fallback-ms conn-same-nat-relay connection-diagram connection-diagram-title connection-mode-effect connection-mode-fields connection-mode-form connection-mode-info connection-mode-section connection-mode-source connection-mode-title db-path general-form general-save go-server-version public-api-url public-endpoints public-endpoints-form public-endpoints-title public-relay-server public-server-id server-info server-info-title uptime',
+	auth: 'account-password auth-panel-totp client-sessions-expiry-days client-sessions-form client-sessions-max-days client-sessions-max-group client-sessions-settings-section client-sessions-sliding confirm-password console-sessions-form current-password for-everyone-title new-password password-form password-requirements req-length req-lowercase req-number req-uppercase require-two-factor single-session totp-status-container two-factor-policy-form your-account-title',
+	ldap: 'auth-panel-ldap ldap-advanced ldap-allow-signup ldap-attrs ldap-base-dn ldap-bind-dn ldap-bind-password ldap-bind-search-fields ldap-config-fields ldap-conn-timeout ldap-default-role ldap-direct-bind ldap-direct-bind-dn ldap-direct-bind-fields ldap-enabled ldap-form ldap-group-attr-name ldap-group-base-dn ldap-group-filter ldap-group-role-map ldap-host ldap-port ldap-skip-tls-verify ldap-start-tls ldap-test-btn ldap-test-result ldap-use-tls ldap-user-attr-email ldap-user-attr-id ldap-user-attr-name ldap-user-filter',
+	sso: 'auth-panel-oidc oidc-advanced oidc-allow-signup oidc-allowed-private-cidrs oidc-authorization-url oidc-auto-discovery oidc-claim-email oidc-claim-groups oidc-claim-name oidc-claim-username oidc-claims oidc-client-id oidc-client-secret oidc-config-fields oidc-default-role oidc-display-name oidc-enabled oidc-form oidc-group-role-map oidc-issuer-url oidc-manual-endpoints oidc-panel-url oidc-prefer-sso oidc-redirect-url oidc-redirect-url-warning oidc-scopes oidc-test-btn oidc-test-result oidc-token-url oidc-use-pkce oidc-userinfo-url',
+	joining:
+		'availability-history-enabled availability-history-form availability-history-retention availability-history-settings-panel availability-retention-group availability-title device-scope-form device-scope-open device-scope-restricted device-scope-settings-panel device-scope-title device-scope-warning enrollment-pending-hint enrollment-rich-approve enrollment-settings-section enrollment-tag-picker joining-mode-section joining-mode-title',
 	branding:
 		'agent-bg-color agent-bg-color-panel agent-bg-color-picker agent-bg-file-name agent-bg-gradient agent-bg-gradient-panel agent-bg-image-file agent-bg-image-panel agent-bg-image-url agent-bg-upload-status agent-show-powered bg-blur bg-blur-value bg-color bg-color-panel bg-color-picker bg-effects-group bg-file-name bg-gradient bg-gradient-panel bg-image-file bg-image-library bg-image-panel bg-image-url bg-overlay bg-overlay-group bg-overlay-value bg-size bg-upload-status brand-name branding-agent branding-agent-title branding-background branding-background-title branding-builtin-themes branding-colors-title branding-css branding-css-title branding-custom-colors branding-danger-title branding-export-btn branding-fonts branding-fonts-title branding-footer branding-footer-title branding-form branding-identity branding-identity-title branding-ie-status branding-ie-title branding-import-export branding-import-input branding-login branding-login-title branding-profile-apply-btn branding-profile-delete-btn branding-profile-duplicate-btn branding-profile-menu branding-profile-new-btn branding-profile-save-btn branding-profile-select branding-profile-status branding-profiles branding-profiles-title branding-rdclient branding-rdclient-title branding-readability-alert branding-readability-text branding-reset-btn branding-revert-btn branding-save-btn branding-theme branding-theme-apply branding-theme-gallery branding-theme-select branding-theme-title branding-toc color-accentBlue color-accentGreen color-accentPurple color-accentRed color-accentYellow color-bgElevated color-bgPrimary color-bgSecondary color-bgTertiary color-borderPrimary color-borderSecondary color-textPrimary color-textSecondary custom-css font-body-clear font-body-current font-body-dropdown font-body-search font-body-slot font-body-value font-heading-clear font-heading-current font-heading-dropdown font-heading-search font-heading-slot font-heading-value font-local-count font-local-info font-local-list font-source-google font-source-label font-source-local font-source-upload font-upload-file font-upload-name footer-text login-bg-color login-bg-color-panel login-bg-color-picker login-bg-config login-bg-file-name login-bg-gradient login-bg-gradient-panel login-bg-image-file login-bg-image-panel login-bg-image-url login-bg-overlay login-bg-overlay-group login-bg-overlay-value login-bg-upload-status login-promo-mode-selector login-slides-add login-slides-list login-slides-max-hint login-slides-panel login-slides-restore login-subtitle login-title logo-file-name logo-icon-name logo-icon-panel logo-image-file logo-image-panel logo-image-url logo-svg-input logo-svg-panel logo-text-accent logo-text-input logo-text-panel rdclient-bg-color rdclient-bg-color-panel rdclient-bg-color-picker rdclient-bg-file-name rdclient-bg-gradient rdclient-bg-gradient-panel rdclient-bg-image-file rdclient-bg-image-panel rdclient-bg-image-url rdclient-bg-overlay rdclient-bg-overlay-group rdclient-bg-overlay-value rdclient-bg-size rdclient-bg-upload-status show-powered theme-mode-selector',
-	auth: 'account-password auth-panel-ldap auth-panel-oidc auth-panel-totp client-sessions-expiry-days client-sessions-form client-sessions-max-days client-sessions-max-group client-sessions-settings-section client-sessions-sliding confirm-password console-sessions-form current-password enrollment-pending-hint enrollment-rich-approve enrollment-settings-section enrollment-tag-picker for-everyone-title ldap-allow-signup ldap-attrs ldap-base-dn ldap-bind-dn ldap-bind-password ldap-bind-search-fields ldap-config-fields ldap-conn-timeout ldap-default-role ldap-direct-bind ldap-direct-bind-dn ldap-direct-bind-fields ldap-enabled ldap-form ldap-group-attr-name ldap-group-base-dn ldap-group-filter ldap-group-role-map ldap-host ldap-port ldap-skip-tls-verify ldap-start-tls ldap-test-btn ldap-test-result ldap-use-tls ldap-user-attr-email ldap-user-attr-id ldap-user-attr-name ldap-user-filter new-password oidc-allow-signup oidc-allowed-private-cidrs oidc-authorization-url oidc-auto-discovery oidc-claim-email oidc-claim-groups oidc-claim-name oidc-claim-username oidc-claims oidc-client-id oidc-client-secret oidc-config-fields oidc-default-role oidc-display-name oidc-enabled oidc-form oidc-group-role-map oidc-issuer-url oidc-manual-endpoints oidc-panel-url oidc-prefer-sso oidc-redirect-url oidc-redirect-url-warning oidc-scopes oidc-test-btn oidc-test-result oidc-token-url oidc-use-pkce oidc-userinfo-url password-form password-requirements req-length req-lowercase req-number req-uppercase require-two-factor single-session totp-status-container two-factor-policy-form your-account-title',
 	email:
 		'email-smtp-alert email-smtp-auth email-smtp-auth-fields email-smtp-form email-smtp-from email-smtp-host email-smtp-pass email-smtp-port email-smtp-save-btn email-smtp-secure email-smtp-user email-title',
 	time: 'time-billing-month-hint time-billing-timezone time-billing-timezone-custom time-check-status time-clock-advanced time-clock-detail time-clock-last-error time-clock-max-skew time-clock-ntp-server time-clock-ntp-servers time-clock-offset time-clock-os-sync time-clock-require-sync time-clock-settings-form time-clock-trust-os time-custom-zone time-detect-timezone-btn time-ntp-title time-save-clock-settings-btn time-side-title time-timesync-check-btn time-zone-now time-zone-title',
+	meshcentral:
+		'mesh-agents-online mesh-body mesh-cert-banner mesh-cert-state mesh-copy-server-id mesh-download-msh mesh-group-add mesh-groups-form mesh-groups-list mesh-groups-status mesh-groups-title mesh-install mesh-msh-name mesh-recordings mesh-recordings-table mesh-server-id mesh-settings-panel mesh-state mesh-status-enabled mesh-title',
 	'server-backups':
 		'backup-contents-title backup-create backup-create-title backup-download-btn backup-download-status backup-prune-now backup-restore backup-restore-title backup-retention-input backup-retention-save backup-smb-domain backup-smb-host backup-smb-mount-path backup-smb-password backup-smb-share backup-smb-status backup-smb-test-btn backup-smb-username backup-stat-backend backup-stat-database backup-stat-env backup-stat-folders backup-stat-groups backup-stat-keys backup-stat-settings backup-stat-strategies backup-stat-uploads backup-stat-users backup-stats backup-summary restore-actions restore-database restore-env restore-file-hint restore-file-input restore-godb restore-json-note restore-options restore-options-hint restore-result restore-secrets restore-start-btn restore-status restore-uploads scheduled-backup-destination-type scheduled-backup-details scheduled-backup-enabled scheduled-backup-form scheduled-backup-interval scheduled-backup-panel scheduled-backup-path scheduled-backup-path-group scheduled-backup-retention scheduled-backup-run-btn scheduled-backup-smb-form scheduled-backup-smb-panel scheduled-backup-status scheduled-backup-test-btn scheduled-backup-title smb-title update-backups-list update-backups-panel',
 	'server-updates':

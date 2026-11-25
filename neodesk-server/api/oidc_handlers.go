@@ -469,7 +469,7 @@ func (s *Server) handleOIDCSessionRedirect(w http.ResponseWriter, r *http.Reques
 	if panelBase == "" {
 		log.Printf("[OIDC] GET /api/auth/oidc/session on Go API but panel URL is not configured")
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{
-			"error": "OIDC panel URL is not configured — set Panel URL in Settings → Authentication → OIDC",
+			"error": "The console address for single sign-on is not set: set Console address in Settings, Single sign-on (/settings?tab=sso)",
 		})
 		return
 	}

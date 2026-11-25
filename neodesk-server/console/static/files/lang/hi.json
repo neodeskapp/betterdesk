@@ -115,7 +115,8 @@
     "label": "मुख्य नेविगेशन",
     "section_devices": "डिवाइस",
     "server_backups": "बैकअप",
-    "server_config_files": "कॉन्फ़िगरेशन फ़ाइलें"
+    "server_config_files": "कॉन्फ़िगरेशन फ़ाइलें",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "साइन इन करें",
@@ -1233,7 +1234,11 @@
       "discard_title": "बिना सहेजे बदलाव छोड़ दें?",
       "discard_message": "इस पेज के बदलाव अभी सहेजे नहीं गए हैं।",
       "discard_confirm": "बदलाव छोड़ें",
-      "shown_when_off": "तब दिखता है जब \"{switch}\" बंद हो।"
+      "shown_when_off": "तब दिखता है जब \"{switch}\" बंद हो।",
+      "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+      "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+      "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
     },
     "general": {
       "endpoint_id_hint": "ID सर्वर का होस्ट नाम या IP पता, जिस रूप में इंटरनेट पर क्लाइंट उस तक पहुँचते हैं।",
@@ -1485,7 +1490,8 @@
       "attrs_note": "ज़्यादातर मामलों में डिफ़ॉल्ट ठीक रहते हैं। इन्हें तभी बदलें जब नाम या ईमेल पते गलत या खाली आएँ।",
       "single_session": "हर खाते के लिए एक सत्र",
       "single_session_hint": "नया साइन इन खाते के दूसरे ब्राउज़र को साइन आउट कर देता है। बंद होने पर: एक खाता एक साथ अधिकतम {max} ब्राउज़र और डिवाइस पर साइन इन रह सकता है।",
-      "single_session_env": "सर्वर के वातावरण में SESSION_MAX_PER_USER का मान {value} है और यह इस स्विच की जगह तय करता है। स्विच इस्तेमाल करने के लिए इसे वहाँ से हटाएँ।"
+      "single_session_env": "सर्वर के वातावरण में SESSION_MAX_PER_USER का मान {value} है और यह इस स्विच की जगह तय करता है। स्विच इस्तेमाल करने के लिए इसे वहाँ से हटाएँ।",
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
     },
     "backup_tab": {
       "create_title": "बैकअप बनाएँ",

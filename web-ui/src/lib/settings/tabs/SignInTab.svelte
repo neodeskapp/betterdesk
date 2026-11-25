@@ -1,11 +1,21 @@
 <!--
-  Settings › Sign-in. For everyone: their own password and two-factor
-  sign-in. With server.config also how everyone signs in: how new devices
-  are approved, client sessions, LDAP and single sign-on (OIDC). Each is
-  its own form with its own save (different endpoints; LDAP and SSO have a
-  test button and ask before a save that can lock people out). The
-  enrollment mode shows here; it is changed on Device tokens, which the
-  section links to for accounts with enrollment.manage.
+  Four tabs of Settings in one component, by `part`:
+  - signin (Settings › Sign-in): for everyone their own password and
+    two-factor sign-in; with server.config also the console's client
+    sessions and whether everyone needs two-factor sign-in.
+  - ldap (Settings › Directory (LDAP), server.config): sign-in with a
+    directory, with a test button.
+  - sso (Settings › Single sign-on, server.config): sign-in with an OpenID
+    Connect provider, with a test of its discovery.
+  - joining (part of Settings › Joining, server.config): how new devices
+    are approved. The join mode shows here; it is changed on Device
+    tokens, which the section links to for accounts with
+    enrollment.manage.
+  Each is its own form with its own save (different endpoints; LDAP and
+  SSO ask before a save that can lock people out). What an install sets
+  once or never (LDAP's TLS check and timeout, the provider's endpoints and
+  private networks) sits behind Advanced. `bare` leaves out the tab layout,
+  for a tab made of several parts (JoiningTab).
 
   Element ids are the old page's, for links and the settings search.
 -->
@@ -71,6 +81,9 @@
 	import ConsoleSessionsForm from '../ConsoleSessionsForm.svelte';
 	import SettingsGrid from '../SettingsGrid.svelte';
 	import SettingsLayout from '../SettingsLayout.svelte';
+
+	type Part = 'signin' | 'ldap' | 'sso' | 'joining';
+	let { part = 'signin', bare = false }: { part?: Part; bare?: boolean } = $props();
 
 	const canConfig = can('server.config');
 
@@ -582,25 +595,26 @@
 		)
 	);
 
+	// Each part loads what it shows
 	$effect(() => {
-		void loadTotp();
+		if (part === 'signin') void loadTotp();
 		if (!canConfig) return;
-		void loadEnrollment();
-		void loadSessions();
-		void loadTwoFactor();
-		void loadLdap();
-		void loadOidc();
+		if (part === 'signin') {
+			void loadSessions();
+			void loadTwoFactor();
+		}
+		if (part === 'joining') void loadEnrollment();
+		if (part === 'ldap') void loadLdap();
+		if (part === 'sso') void loadOidc();
 	});
 
 	const toc = $derived(
-		canConfig
+		canConfig && part === 'signin'
 			? [
 					{ id: 'account-password', label: t('settings.change_password') },
 					{ id: 'auth-panel-totp', label: t('settings.totp_title') },
-					{ id: 'enrollment-settings-section', label: t('settings.enrollment_title') },
 					{ id: 'client-sessions-settings-section', label: t('settings.client_sessions_title') },
-					{ id: 'auth-panel-ldap', label: t('settings.ldap_title') },
-					{ id: 'auth-panel-oidc', label: t('settings.oidc_title') }
+					{ id: 'require-two-factor', label: t('settings.signin.require_2fa') }
 				]
 			: undefined
 	);
@@ -627,866 +641,896 @@
 	<section class="section" aria-labelledby="auth-side-title" data-search-skip>
 		<h2 id="auth-side-title">{t('settings.side.state_title')}</h2>
 		<Facts
-			items={[
-				{ label: t('settings.side.your_2fa'), value: side2fa },
-				...(canConfig
-					? [
-							{ label: t('settings.ldap_title'), value: sideLdap },
-							{ label: t('settings.oidc_title'), value: sideOidc }
-						]
-					: [])
-			]}
+			items={part === 'ldap'
+				? [{ label: t('settings.ldap_title'), value: sideLdap }]
+				: part === 'sso'
+					? [{ label: t('settings.oidc_title'), value: sideOidc }]
+					: [{ label: t('settings.side.your_2fa'), value: side2fa }]}
 		/>
 	</section>
 {/snippet}
 
-<SettingsLayout {toc} {side} sideLabelledby="auth-side-title" sticky>
-	<section class="section" aria-labelledby="your-account-title">
-		<h2 id="your-account-title">{t('settings.signin.your_account')}</h2>
-		<p class="section-note">
-			{t('settings.signin.your_account_note', { user: session.user?.username ?? '' })}
-		</p>
-
-		<SettingsGrid>
-			{#snippet start()}
-				{#if disableWithCode}
-					<!-- A directory or single sign-on account has no password of the console's -->
-					<div class="form-column settings-subgroup">
-						<h3 id="account-password">{t('settings.change_password')}</h3>
-						<p class="form-hint">{t('settings.signin.password_external')}</p>
-					</div>
-				{:else}
-					<form
-						id={password.id}
-						class="form-column settings-subgroup"
-						onsubmit={password.onsubmit}
-						novalidate
-					>
-						<h3 id="account-password">{t('settings.change_password')}</h3>
-						<Field
-							id="current-password"
-							label={t('settings.current_password')}
-							error={password.errors.current}
-						>
-							{#snippet children(f)}
-								<Input
-									{...f}
-									type="password"
-									autocomplete="current-password"
-									bind:value={password.values.current}
-								/>
-							{/snippet}
-						</Field>
-						<Field id="new-password" label={t('settings.new_password')} error={password.errors.next}>
-							{#snippet children(f)}
-								<Input
-									{...f}
-									describedby={[f.describedby, 'password-requirements'].filter(Boolean).join(' ')}
-									type="password"
-									autocomplete="new-password"
-									minlength={8}
-									bind:value={password.values.next}
-								/>
-								<div class="password-requirements" id="password-requirements">
-									<p class="form-hint">{t('settings.password_requirements')}:</p>
-									<ul>
-										{#each rules as rule (rule.id)}
-											<li id="req-{rule.id}" class={{ valid: rule.met }}>{t(RULE_LABEL[rule.id] ?? '')}</li>
-										{/each}
-									</ul>
-								</div>
-							{/snippet}
-						</Field>
-						<Field
-							id="confirm-password"
-							label={t('settings.confirm_password')}
-							error={password.errors.confirm}
-						>
-							{#snippet children(f)}
-								<Input
-									{...f}
-									type="password"
-									autocomplete="new-password"
-									bind:value={password.values.confirm}
-								/>
-							{/snippet}
-						</Field>
-						<p class="field-effect">{t('settings.signin.password_effect')}</p>
-						<SaveBar form={password} label={t('settings.save_password')} />
-					</form>
-				{/if}
-			{/snippet}
-			{#snippet end()}
-				<div class="form-column settings-subgroup" id="auth-panel-totp">
-					<h3>{t('settings.totp_title')}</h3>
-					<p class="form-hint">{t('settings.signin.totp_note')}</p>
-					<div class="totp" aria-live="polite">
-						{#if totpNote.message}<FormStatus message={totpNote.message} tone={totpNote.tone} />{/if}
-						{#if totpView === 'loading'}
-							<States kind="loading" />
-						{:else if totpView === 'error'}
-							<States kind="error" message={totpError} onretry={() => void loadTotp()} />
-						{:else if totpView === 'on'}
-							<p class="line"><Status tone="good" label={t('settings.signin.totp_on')} /></p>
-							<p class="form-hint">{t('settings.totp_enabled_desc')}</p>
-							<p class="line inline-controls">
-								<Button onclick={startRenew}>{t('settings.signin.recovery_new')}</Button>
-								<Button variant="danger-quiet" onclick={startDisable}
-									>{t('settings.signin.totp_turn_off')}</Button
-								>
-							</p>
-						{:else if totpView === 'off'}
-							<p class="line"><Status tone="neutral" label={t('settings.signin.totp_off')} /></p>
-							<p class="form-hint">{t('settings.totp_disabled_desc')}</p>
-							<p class="line">
-								<Button
-									id="totp-setup-btn"
-									bind:element={setupBtn}
-									busy={totpBusy}
-									onclick={() => void startSetup()}>{t('settings.signin.totp_set_up')}</Button
-								>
-							</p>
-							<p class="field-effect">{t('settings.signin.totp_effect')}</p>
-						{:else if totpView === 'setup' && setup}
-							<Steps items={[t('settings.totp_step1'), t('settings.totp_step2'), t('settings.totp_step3')]} />
-							{#if qrSrc}<img
-									src={qrSrc}
-									alt={t('settings.signin.totp_qr_alt')}
-									class="totp-qr-image"
-									width="200"
-									height="200"
-								/>{/if}
-							<div class="form-group">
-								<span class="form-label">{t('settings.totp_manual_key')}</span>
-								<ValueField value={setup.secret} label={t('settings.totp_manual_key')} />
-							</div>
-							<form class="totp-form" onsubmit={verifyCode} novalidate>
-								<Field id="totp-setup-code" label={t('settings.totp_enter_code')} width="short">
-									{#snippet children(f)}
-										<Input
-											{...f}
-											bind:element={codeEl}
-											bind:value={code}
-											inputmode="numeric"
-											pattern="[0-9]{6}"
-											maxlength={6}
-											autocomplete="one-time-code"
-											oninput={() => (code = code.replace(/[^0-9]/g, ''))}
-										/>
-									{/snippet}
-								</Field>
-								<div class="inline-controls">
-									<Button type="submit" variant="primary" busy={totpBusy}
-										>{t('settings.signin.totp_verify')}</Button
-									>
-									<Button onclick={cancelTotp}>{t('actions.cancel')}</Button>
-									<FormStatus message={codeStatus.message} tone={codeStatus.tone} />
-								</div>
-							</form>
-						{:else if totpView === 'renew'}
-							<form class="totp-form" onsubmit={confirmRenew} novalidate>
-								<p class="form-hint">{t('settings.signin.recovery_new_hint')}</p>
-								<Field id="totp-renew-code" label={t('auth.totp_code')} width="short">
-									{#snippet children(f)}
-										<Input
-											{...f}
-											bind:element={codeEl}
-											bind:value={code}
-											inputmode="numeric"
-											pattern="[0-9]{6}"
-											maxlength={6}
-											autocomplete="one-time-code"
-											oninput={() => (code = code.replace(/[^0-9]/g, ''))}
-										/>
-									{/snippet}
-								</Field>
-								<div class="inline-controls">
-									<Button type="submit" variant="primary" busy={totpBusy}
-										>{t('settings.signin.recovery_new')}</Button
-									>
-									<Button onclick={() => void loadTotp()}>{t('actions.cancel')}</Button>
-									<FormStatus message={codeStatus.message} tone={codeStatus.tone} />
-								</div>
-							</form>
-						{:else if totpView === 'codes'}
-							<p class="line">
-								<Status
-									tone="good"
-									label={codesRenewed
-										? t('settings.signin.recovery_renewed')
-										: t('settings.totp_enabled_success')}
-								/>
-							</p>
-							<Notice tone="warning" message={t('settings.totp_recovery_warning')} />
-							<div class="totp-recovery-codes">
-								<CodeBlock code={codes.join('\n')} title={t('settings.signin.recovery_codes')} />
-							</div>
-							<p class="line">
-								<Button variant="primary" onclick={() => void loadTotp()}
-									>{t('settings.signin.recovery_saved')}</Button
-								>
-							</p>
-						{:else if totpView === 'disable'}
-							<form class="totp-form" onsubmit={confirmDisable} novalidate>
-								<Notice tone="warning" message={t('settings.totp_disable_warning')} />
-								{#if disableWithCode}
-									<Field id="totp-disable-code" label={t('auth.totp_code')} width="short">
-										{#snippet children(f)}
-											<Input
-												{...f}
-												inputmode="numeric"
-												pattern="[0-9]{6}"
-												maxlength={6}
-												autocomplete="one-time-code"
-												bind:element={disableEl}
-												bind:value={disablePassword}
-											/>
-										{/snippet}
-									</Field>
-								{:else}
-									<Field id="totp-disable-password" label={t('settings.current_password')}>
-										{#snippet children(f)}
-											<Input
-												{...f}
-												type="password"
-												autocomplete="current-password"
-												bind:element={disableEl}
-												bind:value={disablePassword}
-											/>
-										{/snippet}
-									</Field>
-								{/if}
-								<div class="inline-controls">
-									<Button type="submit" variant="danger-quiet" busy={totpBusy}
-										>{t('settings.signin.totp_turn_off')}</Button
-									>
-									<Button onclick={() => void loadTotp()}>{t('actions.cancel')}</Button>
-									<FormStatus message={disableStatus.message} tone={disableStatus.tone} />
-								</div>
-							</form>
-						{/if}
-					</div>
-				</div>
-			{/snippet}
-		</SettingsGrid>
-	</section>
-
-	{#if canConfig}
-		<section class="section" aria-labelledby="for-everyone-title">
-			<h2 id="for-everyone-title">{t('settings.signin.for_everyone')}</h2>
-			<p class="section-note">{t('settings.signin.for_everyone_note')}</p>
+{#snippet body()}
+	{#if part === 'signin'}
+		<section class="section" aria-labelledby="your-account-title">
+			<h2 id="your-account-title">{t('settings.signin.your_account')}</h2>
+			<p class="section-note">
+				{t('settings.signin.your_account_note', { user: session.user?.username ?? '' })}
+			</p>
 
 			<SettingsGrid>
 				{#snippet start()}
-					<form
-						id="enrollment-settings-section"
-						class="form-column settings-subgroup"
-						onsubmit={enrollment.onsubmit}
-						novalidate
-					>
-						<h3>{t('settings.enrollment_title')}</h3>
-						<p class="form-hint">{t('settings.enrollment_desc')}</p>
-						{#if enrolledMode}
-							<p>
-								{t('tokens.enrollment_mode')}: <strong>{t(`tokens.mode_${enrolledMode}`)}</strong>.
-								{t(`tokens.mode_${enrolledMode}_desc`)}
-								{#if canChangeMode}<a href={link('/tokens')}>{t('settings.enrollment_mode_link')}</a>{/if}
-							</p>
-						{/if}
-						<Checkbox
-							id="enrollment-rich-approve"
-							label={t('settings.enrollment_rich_approve')}
-							hint={t('settings.enrollment_rich_approve_hint')}
-							bind:checked={enrollment.values.rich_approve}
-						/>
-						<Checkbox
-							id="enrollment-tag-picker"
-							label={t('settings.enrollment_tag_picker')}
-							hint={t('settings.enrollment_tag_picker_hint')}
-							bind:checked={enrollment.values.tag_picker}
-						/>
-						<p class="form-hint">
-							{#if pendingCount > 0}<span id="enrollment-pending-hint"
-									>{t('settings.enrollment_pending_count', { count: pendingCount })}</span
-								>{/if}
-							<a href={link('/registrations')}>{t('settings.enrollment_open_requests')}</a>
-						</p>
-						<p class="field-effect">{t('settings.signin.enrollment_effect')}</p>
-						<SaveBar
-							dirty={enrollment.dirty}
-							busy={enrollment.busy}
-							status={enrollment.status}
-							label={t('settings.signin.enrollment_save')}
-						/>
-					</form>
-
-					<form
-						id="client-sessions-form"
-						class="form-column settings-subgroup"
-						onsubmit={sessions.onsubmit}
-						novalidate
-					>
-						<h3 id="client-sessions-settings-section">{t('settings.client_sessions_title')}</h3>
-						<p class="form-hint">{t('settings.client_sessions_desc')}</p>
-						<Field
-							id="client-sessions-expiry-days"
-							label={t('settings.client_sessions_expiry_days')}
-							hint={t('settings.client_sessions_expiry_hint')}
-							width="short"
-							error={sessions.errors.expiry_days}
+					{#if disableWithCode}
+						<!-- A directory or single sign-on account has no password of the console's -->
+						<div class="form-column settings-subgroup">
+							<h3 id="account-password">{t('settings.change_password')}</h3>
+							<p class="form-hint">{t('settings.signin.password_external')}</p>
+						</div>
+					{:else}
+						<form
+							id={password.id}
+							class="form-column settings-subgroup"
+							onsubmit={password.onsubmit}
+							novalidate
 						>
-							{#snippet children(f)}
-								<Input {...f} type="number" min="1" max="365" bind:value={sessions.values.expiry_days} />
-							{/snippet}
-						</Field>
-						<Checkbox
-							id="client-sessions-sliding"
-							label={t('settings.client_sessions_sliding')}
-							hint={t('settings.client_sessions_sliding_hint')}
-							bind:checked={sessions.values.sliding}
-							{...showWhenControl('client-sessions-max-group', sessions.values.sliding)}
-						/>
-						<ShowWhen id="client-sessions-max-group" when={sessions.values.sliding}>
+							<h3 id="account-password">{t('settings.change_password')}</h3>
 							<Field
-								id="client-sessions-max-days"
-								label={t('settings.client_sessions_max_days')}
-								hint={t('settings.client_sessions_max_days_hint')}
-								width="short"
-								error={sessions.errors.max_days}
-							>
-								{#snippet children(f)}
-									<Input {...f} type="number" min="1" max="365" bind:value={sessions.values.max_days} />
-								{/snippet}
-							</Field>
-						</ShowWhen>
-						<p class="field-effect">{t('settings.signin.client_sessions_effect')}</p>
-						<SaveBar
-							dirty={sessions.dirty}
-							busy={sessions.busy}
-							status={sessions.status}
-							label={t('settings.client_sessions_save')}
-						/>
-					</form>
-
-					<form
-						id={twoFactor.id}
-						class="form-column settings-subgroup"
-						onsubmit={twoFactor.onsubmit}
-						novalidate
-					>
-						<Checkbox
-							id="require-two-factor"
-							label={t('settings.signin.require_2fa')}
-							hint={t('settings.signin.require_2fa_hint')}
-							bind:checked={twoFactor.values.required}
-						/>
-						<SaveBar form={twoFactor} label={t('actions.save')} />
-					</form>
-
-					<ConsoleSessionsForm />
-				{/snippet}
-				{#snippet end()}
-					<form id="ldap-form" class="form-column settings-subgroup" onsubmit={submitLdap} novalidate>
-						<h3 id="auth-panel-ldap">{t('settings.ldap_title')}</h3>
-						<p class="form-hint">{t('settings.ldap_desc')}</p>
-						<Checkbox
-							id="ldap-enabled"
-							label={t('settings.ldap_enabled')}
-							hint={t('settings.signin.ldap_enabled_hint')}
-							bind:checked={ldap.values.enabled}
-							onchange={() => void onLdapEnabled()}
-							{...showWhenControl('ldap-config-fields', ldap.values.enabled)}
-						/>
-						<ShowWhen id="ldap-config-fields" class="settings-subfields" when={ldap.values.enabled}>
-							<h4>{t('settings.ldap_connection')}</h4>
-							<Field id="ldap-host" label={t('settings.ldap_host')} error={ldap.errors.host}>
-								{#snippet children(f)}<Input
-										{...f}
-										class="mono"
-										placeholder={EX.ldapHost}
-										bind:value={ldap.values.host}
-									/>{/snippet}
-							</Field>
-							<Field id="ldap-port" label={t('settings.ldap_port')} width="short" error={ldap.errors.port}>
-								{#snippet children(f)}<Input
-										{...f}
-										type="number"
-										min="1"
-										max="65535"
-										placeholder={EX.ldapPort}
-										bind:value={ldap.values.port}
-									/>{/snippet}
-							</Field>
-							<Checkbox
-								id="ldap-use-tls"
-								label={t('settings.ldap_use_tls')}
-								bind:checked={ldap.values.use_tls}
-								onchange={onLdapTls}
-							/>
-							<Checkbox
-								id="ldap-start-tls"
-								label={t('settings.ldap_start_tls')}
-								bind:checked={ldap.values.start_tls}
-							/>
-							<Checkbox
-								id="ldap-skip-tls-verify"
-								label={t('settings.ldap_skip_verify')}
-								bind:checked={ldap.values.skip_tls_verify}
-							/>
-							<Field
-								id="ldap-conn-timeout"
-								label={t('settings.ldap_timeout')}
-								hint={t('settings.ldap_timeout_hint')}
-								width="short"
-								error={ldap.errors.conn_timeout_sec}
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										type="number"
-										min="1"
-										max="120"
-										placeholder={EX.ldapTimeout}
-										bind:value={ldap.values.conn_timeout_sec}
-									/>{/snippet}
-							</Field>
-
-							<h4>{t('settings.ldap_bind_mode')}</h4>
-							<Checkbox
-								id="ldap-direct-bind"
-								label={t('settings.ldap_direct_bind')}
-								hint={t('settings.ldap_direct_bind_hint')}
-								bind:checked={ldap.values.direct_bind}
-								aria-controls="ldap-bind-search-fields ldap-direct-bind-fields"
-							/>
-							<ShowWhen id="ldap-bind-search-fields" class="when-off" when={!ldap.values.direct_bind}>
-								<Field
-									id="ldap-bind-dn"
-									label={t('settings.ldap_bind_dn')}
-									hint={t('settings.ldap_bind_dn_hint')}
-								>
-									{#snippet children(f)}<Input
-											{...f}
-											class="mono"
-											placeholder={EX.bindDn}
-											bind:value={ldap.values.bind_dn}
-										/>{/snippet}
-								</Field>
-								<Field id="ldap-bind-password" label={t('settings.ldap_bind_password')}>
-									{#snippet children(f)}<Input
-											{...f}
-											type="password"
-											autocomplete="new-password"
-											bind:value={ldap.values.bind_password}
-										/>{/snippet}
-								</Field>
-								<Field
-									id="ldap-base-dn"
-									label={t('settings.ldap_base_dn')}
-									hint={t('settings.ldap_base_dn_hint')}
-									error={ldap.errors.base_dn}
-								>
-									{#snippet children(f)}<Input
-											{...f}
-											class="mono"
-											placeholder={EX.baseDn}
-											bind:value={ldap.values.base_dn}
-										/>{/snippet}
-								</Field>
-								<Field
-									id="ldap-user-filter"
-									label={t('settings.ldap_user_filter')}
-									hint={t('settings.ldap_user_filter_hint')}
-									error={ldap.errors.user_filter}
-								>
-									{#snippet children(f)}<Input
-											{...f}
-											class="mono"
-											placeholder={EX.userFilter}
-											bind:value={ldap.values.user_filter}
-										/>{/snippet}
-								</Field>
-							</ShowWhen>
-							<ShowWhen id="ldap-direct-bind-fields" when={ldap.values.direct_bind}>
-								<Field
-									id="ldap-direct-bind-dn"
-									label={t('settings.ldap_direct_bind_dn')}
-									hint={t('settings.ldap_direct_bind_dn_hint')}
-									error={ldap.errors.direct_bind_dn}
-								>
-									{#snippet children(f)}<Input
-											{...f}
-											class="mono"
-											placeholder={EX.directBindDn}
-											bind:value={ldap.values.direct_bind_dn}
-										/>{/snippet}
-								</Field>
-							</ShowWhen>
-
-							<div id="ldap-attrs">
-								<Disclosure title={t('settings.ldap_user_attrs')} level={4}>
-									<div class="disclosure-body">
-										<p class="form-hint">{t('settings.signin.attrs_note')}</p>
-										<Field id="ldap-user-attr-id" label={t('settings.ldap_attr_id')} width="medium">
-											{#snippet children(f)}<Input
-													{...f}
-													placeholder={EX.attrId}
-													bind:value={ldap.values.user_attr_id}
-												/>{/snippet}
-										</Field>
-										<Field id="ldap-user-attr-email" label={t('settings.ldap_attr_email')} width="medium">
-											{#snippet children(f)}<Input
-													{...f}
-													placeholder={EX.attrEmail}
-													bind:value={ldap.values.user_attr_email}
-												/>{/snippet}
-										</Field>
-										<Field id="ldap-user-attr-name" label={t('settings.ldap_attr_name')} width="medium">
-											{#snippet children(f)}<Input
-													{...f}
-													placeholder={EX.attrName}
-													bind:value={ldap.values.user_attr_name}
-												/>{/snippet}
-										</Field>
-									</div>
-								</Disclosure>
-							</div>
-
-							<h4>{t('settings.ldap_group_mapping')}</h4>
-							<Field
-								id="ldap-group-base-dn"
-								label={t('settings.ldap_group_base_dn')}
-								hint={t('settings.ldap_group_base_dn_hint')}
-								error={ldap.errors.group_base_dn}
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										class="mono"
-										placeholder={EX.groupBaseDn}
-										bind:value={ldap.values.group_base_dn}
-									/>{/snippet}
-							</Field>
-							<Field
-								id="ldap-group-filter"
-								label={t('settings.ldap_group_filter')}
-								error={ldap.errors.group_filter}
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										class="mono"
-										placeholder={EX.groupFilter}
-										bind:value={ldap.values.group_filter}
-									/>{/snippet}
-							</Field>
-							<Field
-								id="ldap-group-attr-name"
-								label={t('settings.ldap_group_attr_name')}
-								hint={t('settings.ldap_group_attr_name_hint')}
-								width="medium"
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										placeholder={EX.groupAttr}
-										bind:value={ldap.values.group_attr_name}
-									/>{/snippet}
-							</Field>
-							<Checkbox
-								id="ldap-allow-signup"
-								label={t('settings.ldap_allow_signup')}
-								hint={t('settings.ldap_allow_signup_hint')}
-								bind:checked={ldap.values.allow_signup}
-							/>
-							<Field
-								id="ldap-default-role"
-								label={t('settings.ldap_default_role')}
-								hint={t('settings.ldap_default_role_hint')}
-								width="medium"
-								error={ldap.errors.default_role}
-							>
-								{#snippet children(f)}<Select
-										{...f}
-										options={ROLES}
-										bind:value={ldap.values.default_role}
-									/>{/snippet}
-							</Field>
-							<Field
-								id="ldap-group-role-map"
-								label={t('settings.ldap_group_role_map')}
-								hint={t('settings.ldap_group_role_map_hint')}
-								error={ldap.errors.group_role_map}
-							>
-								{#snippet children(f)}
-									<Textarea
-										{...f}
-										class="mono"
-										rows={4}
-										placeholder={EX.ldapRoleMap}
-										bind:value={ldap.values.group_role_map}
-									/>
-								{/snippet}
-							</Field>
-						</ShowWhen>
-						<FormStatus message={ldapTest.message} tone={ldapTest.tone} class="test-result" />
-						<p class="field-effect">{t('settings.signin.ldap_effect')}</p>
-						<SaveBar dirty={ldap.dirty} busy={ldap.busy} status={ldap.status} label={t('settings.ldap_save')}>
-							<Button id="ldap-test-btn" busy={ldapTesting} onclick={() => void runLdapTest()}
-								>{ldapTesting ? t('settings.ldap_testing') : t('settings.ldap_test_connection')}</Button
-							>
-						</SaveBar>
-					</form>
-
-					<form id="oidc-form" class="form-column settings-subgroup" onsubmit={submitOidc} novalidate>
-						<h3 id="auth-panel-oidc">{t('settings.oidc_title')}</h3>
-						<p class="form-hint">{t('settings.oidc_desc')}</p>
-						<Checkbox
-							id="oidc-enabled"
-							label={t('settings.oidc_enabled')}
-							hint={t('settings.oidc_enabled_hint')}
-							bind:checked={oidc.values.enabled}
-							onchange={() => void onOidcEnabled()}
-							{...showWhenControl('oidc-config-fields', oidc.values.enabled)}
-						/>
-						<ShowWhen id="oidc-config-fields" class="settings-subfields" when={oidc.values.enabled}>
-							<h4>{t('settings.oidc_provider')}</h4>
-							<Field
-								id="oidc-display-name"
-								label={t('settings.oidc_display_name')}
-								hint={t('settings.oidc_display_name_hint')}
-								width="medium"
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										placeholder={EX.oidcName}
-										bind:value={oidc.values.display_name}
-									/>{/snippet}
-							</Field>
-							<Field
-								id="oidc-issuer-url"
-								label={t('settings.oidc_issuer_url')}
-								hint={t('settings.oidc_issuer_url_hint')}
-								error={oidc.errors.issuer_url}
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										type="url"
-										class="mono"
-										bind:element={issuerEl}
-										placeholder={EX.issuer}
-										bind:value={oidc.values.issuer_url}
-									/>{/snippet}
-							</Field>
-							<Field
-								id="oidc-allowed-private-cidrs"
-								label={t('settings.oidc_allowed_private_cidrs')}
-								hint={t('settings.oidc_allowed_private_cidrs_hint')}
-								error={oidc.errors.allowed_private_cidrs}
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										class="mono"
-										placeholder={EX.cidrs}
-										bind:value={oidc.values.allowed_private_cidrs}
-									/>{/snippet}
-							</Field>
-							<Field id="oidc-client-id" label={t('settings.oidc_client_id')} error={oidc.errors.client_id}>
-								{#snippet children(f)}<Input
-										{...f}
-										class="mono"
-										autocomplete="off"
-										bind:value={oidc.values.client_id}
-									/>{/snippet}
-							</Field>
-							<Field id="oidc-client-secret" label={t('settings.oidc_client_secret')}>
-								{#snippet children(f)}<Input
-										{...f}
-										type="password"
-										autocomplete="new-password"
-										bind:value={oidc.values.client_secret}
-									/>{/snippet}
-							</Field>
-							<Field
-								id="oidc-redirect-url"
-								label={t('settings.oidc_redirect_url')}
-								hint={t('settings.oidc_redirect_url_hint')}
-								error={oidc.errors.redirect_url}
+								id="current-password"
+								label={t('settings.current_password')}
+								error={password.errors.current}
 							>
 								{#snippet children(f)}
 									<Input
 										{...f}
-										type="url"
-										class="mono"
-										placeholder={EX.redirect}
-										bind:value={oidc.values.redirect_url}
+										type="password"
+										autocomplete="current-password"
+										bind:value={password.values.current}
 									/>
-									{#if redirectWarning && !oidc.errors.redirect_url}<Notice
-											tone="warning"
-											role="status"
-											id="oidc-redirect-url-warning"
-											message={redirectWarning}
-										/>{/if}
+								{/snippet}
+							</Field>
+							<Field id="new-password" label={t('settings.new_password')} error={password.errors.next}>
+								{#snippet children(f)}
+									<Input
+										{...f}
+										describedby={[f.describedby, 'password-requirements'].filter(Boolean).join(' ')}
+										type="password"
+										autocomplete="new-password"
+										minlength={8}
+										bind:value={password.values.next}
+									/>
+									<div class="password-requirements" id="password-requirements">
+										<p class="form-hint">{t('settings.password_requirements')}:</p>
+										<ul>
+											{#each rules as rule (rule.id)}
+												<li id="req-{rule.id}" class={{ valid: rule.met }}>{t(RULE_LABEL[rule.id] ?? '')}</li>
+											{/each}
+										</ul>
+									</div>
 								{/snippet}
 							</Field>
 							<Field
-								id="oidc-panel-url"
-								label={t('settings.oidc_panel_url')}
-								hint={t('settings.oidc_panel_url_hint')}
-								error={oidc.errors.panel_url}
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										type="url"
-										class="mono"
-										placeholder={EX.panel}
-										bind:value={oidc.values.panel_url}
-									/>{/snippet}
-							</Field>
-							<Field id="oidc-scopes" label={t('settings.oidc_scopes')}>
-								{#snippet children(f)}<Input
-										{...f}
-										placeholder={EX.scopes}
-										bind:value={oidc.values.scopes}
-									/>{/snippet}
-							</Field>
-							<Checkbox
-								id="oidc-use-pkce"
-								label={t('settings.oidc_use_pkce')}
-								bind:checked={oidc.values.use_pkce}
-							/>
-							<Checkbox
-								id="oidc-auto-discovery"
-								label={t('settings.oidc_auto_discovery')}
-								bind:checked={oidc.values.auto_discovery}
-								aria-controls="oidc-manual-endpoints"
-							/>
-							<Checkbox
-								id="oidc-allow-signup"
-								label={t('settings.oidc_allow_signup')}
-								bind:checked={oidc.values.allow_signup}
-							/>
-							<Checkbox
-								id="oidc-prefer-sso"
-								label={t('settings.oidc_prefer_sso')}
-								hint={t('settings.oidc_prefer_sso_hint')}
-								bind:checked={oidc.values.prefer_sso}
-							/>
-
-							<ShowWhen id="oidc-manual-endpoints" class="when-off" when={!oidc.values.auto_discovery}>
-								<h4>{t('settings.oidc_manual_endpoints')}</h4>
-								<Field
-									id="oidc-authorization-url"
-									label={t('settings.oidc_authorization_url')}
-									error={oidc.errors.authorization_url}
-								>
-									{#snippet children(f)}<Input
-											{...f}
-											type="url"
-											class="mono"
-											placeholder={EX.authUrl}
-											bind:value={oidc.values.authorization_url}
-										/>{/snippet}
-								</Field>
-								<Field id="oidc-token-url" label={t('settings.oidc_token_url')} error={oidc.errors.token_url}>
-									{#snippet children(f)}<Input
-											{...f}
-											type="url"
-											class="mono"
-											placeholder={EX.tokenUrl}
-											bind:value={oidc.values.token_url}
-										/>{/snippet}
-								</Field>
-								<Field
-									id="oidc-userinfo-url"
-									label={t('settings.oidc_userinfo_url')}
-									error={oidc.errors.userinfo_url}
-								>
-									{#snippet children(f)}<Input
-											{...f}
-											type="url"
-											class="mono"
-											placeholder={EX.userinfoUrl}
-											bind:value={oidc.values.userinfo_url}
-										/>{/snippet}
-								</Field>
-							</ShowWhen>
-
-							<div id="oidc-claims">
-								<Disclosure title={t('settings.oidc_claim_mapping')} level={4}>
-									<div class="disclosure-body">
-										<p class="form-hint">{t('settings.signin.attrs_note')}</p>
-										<Field id="oidc-claim-username" label={t('settings.oidc_claim_username')} width="medium">
-											{#snippet children(f)}<Input
-													{...f}
-													placeholder={EX.claimUser}
-													bind:value={oidc.values.claim_username}
-												/>{/snippet}
-										</Field>
-										<Field id="oidc-claim-email" label={t('settings.oidc_claim_email')} width="medium">
-											{#snippet children(f)}<Input
-													{...f}
-													placeholder={EX.claimEmail}
-													bind:value={oidc.values.claim_email}
-												/>{/snippet}
-										</Field>
-										<Field id="oidc-claim-name" label={t('settings.oidc_claim_name')} width="medium">
-											{#snippet children(f)}<Input
-													{...f}
-													placeholder={EX.claimName}
-													bind:value={oidc.values.claim_name}
-												/>{/snippet}
-										</Field>
-										<Field id="oidc-claim-groups" label={t('settings.oidc_claim_groups')} width="medium">
-											{#snippet children(f)}<Input
-													{...f}
-													placeholder={EX.claimGroups}
-													bind:value={oidc.values.claim_groups}
-												/>{/snippet}
-										</Field>
-									</div>
-								</Disclosure>
-							</div>
-
-							<h4>{t('settings.oidc_role_mapping')}</h4>
-							<Field
-								id="oidc-default-role"
-								label={t('settings.oidc_default_role')}
-								width="medium"
-								error={oidc.errors.default_role}
-							>
-								{#snippet children(f)}<Select
-										{...f}
-										options={ROLES}
-										bind:value={oidc.values.default_role}
-									/>{/snippet}
-							</Field>
-							<Field
-								id="oidc-group-role-map"
-								label={t('settings.oidc_group_role_map')}
-								hint={t('settings.oidc_group_role_map_hint')}
-								error={oidc.errors.group_role_map}
+								id="confirm-password"
+								label={t('settings.confirm_password')}
+								error={password.errors.confirm}
 							>
 								{#snippet children(f)}
-									<Textarea
+									<Input
 										{...f}
-										class="mono"
-										rows={3}
-										placeholder={EX.oidcRoleMap}
-										bind:value={oidc.values.group_role_map}
+										type="password"
+										autocomplete="new-password"
+										bind:value={password.values.confirm}
 									/>
 								{/snippet}
 							</Field>
-						</ShowWhen>
-						<FormStatus message={oidcTest.message} tone={oidcTest.tone} class="test-result" />
-						<p class="field-effect">{t('settings.signin.oidc_effect')}</p>
-						<SaveBar dirty={oidc.dirty} busy={oidc.busy} status={oidc.status} label={t('settings.oidc_save')}>
-							<Button id="oidc-test-btn" busy={oidcTesting} onclick={() => void runOidcTest()}
-								>{oidcTesting ? t('settings.oidc_testing') : t('settings.oidc_test_discovery')}</Button
-							>
-						</SaveBar>
-					</form>
+							<p class="field-effect">{t('settings.signin.password_effect')}</p>
+							<SaveBar form={password} label={t('settings.save_password')} />
+						</form>
+					{/if}
+				{/snippet}
+				{#snippet end()}
+					<div class="form-column settings-subgroup" id="auth-panel-totp">
+						<h3>{t('settings.totp_title')}</h3>
+						<p class="form-hint">{t('settings.signin.totp_note')}</p>
+						<div class="totp" aria-live="polite">
+							{#if totpNote.message}<FormStatus message={totpNote.message} tone={totpNote.tone} />{/if}
+							{#if totpView === 'loading'}
+								<States kind="loading" />
+							{:else if totpView === 'error'}
+								<States kind="error" message={totpError} onretry={() => void loadTotp()} />
+							{:else if totpView === 'on'}
+								<p class="line"><Status tone="good" label={t('settings.signin.totp_on')} /></p>
+								<p class="form-hint">{t('settings.totp_enabled_desc')}</p>
+								<p class="line inline-controls">
+									<Button onclick={startRenew}>{t('settings.signin.recovery_new')}</Button>
+									<Button variant="danger-quiet" onclick={startDisable}
+										>{t('settings.signin.totp_turn_off')}</Button
+									>
+								</p>
+							{:else if totpView === 'off'}
+								<p class="line"><Status tone="neutral" label={t('settings.signin.totp_off')} /></p>
+								<p class="form-hint">{t('settings.totp_disabled_desc')}</p>
+								<p class="line">
+									<Button
+										id="totp-setup-btn"
+										bind:element={setupBtn}
+										busy={totpBusy}
+										onclick={() => void startSetup()}>{t('settings.signin.totp_set_up')}</Button
+									>
+								</p>
+								<p class="field-effect">{t('settings.signin.totp_effect')}</p>
+							{:else if totpView === 'setup' && setup}
+								<Steps
+									items={[t('settings.totp_step1'), t('settings.totp_step2'), t('settings.totp_step3')]}
+								/>
+								{#if qrSrc}<img
+										src={qrSrc}
+										alt={t('settings.signin.totp_qr_alt')}
+										class="totp-qr-image"
+										width="200"
+										height="200"
+									/>{/if}
+								<div class="form-group">
+									<span class="form-label">{t('settings.totp_manual_key')}</span>
+									<ValueField value={setup.secret} label={t('settings.totp_manual_key')} />
+								</div>
+								<form class="totp-form" onsubmit={verifyCode} novalidate>
+									<Field id="totp-setup-code" label={t('settings.totp_enter_code')} width="short">
+										{#snippet children(f)}
+											<Input
+												{...f}
+												bind:element={codeEl}
+												bind:value={code}
+												inputmode="numeric"
+												pattern="[0-9]{6}"
+												maxlength={6}
+												autocomplete="one-time-code"
+												oninput={() => (code = code.replace(/[^0-9]/g, ''))}
+											/>
+										{/snippet}
+									</Field>
+									<div class="inline-controls">
+										<Button type="submit" variant="primary" busy={totpBusy}
+											>{t('settings.signin.totp_verify')}</Button
+										>
+										<Button onclick={cancelTotp}>{t('actions.cancel')}</Button>
+										<FormStatus message={codeStatus.message} tone={codeStatus.tone} />
+									</div>
+								</form>
+							{:else if totpView === 'renew'}
+								<form class="totp-form" onsubmit={confirmRenew} novalidate>
+									<p class="form-hint">{t('settings.signin.recovery_new_hint')}</p>
+									<Field id="totp-renew-code" label={t('auth.totp_code')} width="short">
+										{#snippet children(f)}
+											<Input
+												{...f}
+												bind:element={codeEl}
+												bind:value={code}
+												inputmode="numeric"
+												pattern="[0-9]{6}"
+												maxlength={6}
+												autocomplete="one-time-code"
+												oninput={() => (code = code.replace(/[^0-9]/g, ''))}
+											/>
+										{/snippet}
+									</Field>
+									<div class="inline-controls">
+										<Button type="submit" variant="primary" busy={totpBusy}
+											>{t('settings.signin.recovery_new')}</Button
+										>
+										<Button onclick={() => void loadTotp()}>{t('actions.cancel')}</Button>
+										<FormStatus message={codeStatus.message} tone={codeStatus.tone} />
+									</div>
+								</form>
+							{:else if totpView === 'codes'}
+								<p class="line">
+									<Status
+										tone="good"
+										label={codesRenewed
+											? t('settings.signin.recovery_renewed')
+											: t('settings.totp_enabled_success')}
+									/>
+								</p>
+								<Notice tone="warning" message={t('settings.totp_recovery_warning')} />
+								<div class="totp-recovery-codes">
+									<CodeBlock code={codes.join('\n')} title={t('settings.signin.recovery_codes')} />
+								</div>
+								<p class="line">
+									<Button variant="primary" onclick={() => void loadTotp()}
+										>{t('settings.signin.recovery_saved')}</Button
+									>
+								</p>
+							{:else if totpView === 'disable'}
+								<form class="totp-form" onsubmit={confirmDisable} novalidate>
+									<Notice tone="warning" message={t('settings.totp_disable_warning')} />
+									{#if disableWithCode}
+										<Field id="totp-disable-code" label={t('auth.totp_code')} width="short">
+											{#snippet children(f)}
+												<Input
+													{...f}
+													inputmode="numeric"
+													pattern="[0-9]{6}"
+													maxlength={6}
+													autocomplete="one-time-code"
+													bind:element={disableEl}
+													bind:value={disablePassword}
+												/>
+											{/snippet}
+										</Field>
+									{:else}
+										<Field id="totp-disable-password" label={t('settings.current_password')}>
+											{#snippet children(f)}
+												<Input
+													{...f}
+													type="password"
+													autocomplete="current-password"
+													bind:element={disableEl}
+													bind:value={disablePassword}
+												/>
+											{/snippet}
+										</Field>
+									{/if}
+									<div class="inline-controls">
+										<Button type="submit" variant="danger-quiet" busy={totpBusy}
+											>{t('settings.signin.totp_turn_off')}</Button
+										>
+										<Button onclick={() => void loadTotp()}>{t('actions.cancel')}</Button>
+										<FormStatus message={disableStatus.message} tone={disableStatus.tone} />
+									</div>
+								</form>
+							{/if}
+						</div>
+					</div>
 				{/snippet}
 			</SettingsGrid>
 		</section>
+
+		{#if canConfig}
+			<section class="section" aria-labelledby="for-everyone-title">
+				<h2 id="for-everyone-title">{t('settings.signin.for_everyone')}</h2>
+				<p class="section-note">{t('settings.signin.for_everyone_note')}</p>
+				<SettingsGrid>
+					{#snippet start()}
+						<form
+							id="client-sessions-form"
+							class="form-column settings-subgroup"
+							onsubmit={sessions.onsubmit}
+							novalidate
+						>
+							<h3 id="client-sessions-settings-section">{t('settings.client_sessions_title')}</h3>
+							<p class="form-hint">{t('settings.client_sessions_desc')}</p>
+							<Field
+								id="client-sessions-expiry-days"
+								label={t('settings.client_sessions_expiry_days')}
+								hint={t('settings.client_sessions_expiry_hint')}
+								width="short"
+								error={sessions.errors.expiry_days}
+							>
+								{#snippet children(f)}
+									<Input {...f} type="number" min="1" max="365" bind:value={sessions.values.expiry_days} />
+								{/snippet}
+							</Field>
+							<Checkbox
+								id="client-sessions-sliding"
+								label={t('settings.client_sessions_sliding')}
+								hint={t('settings.client_sessions_sliding_hint')}
+								bind:checked={sessions.values.sliding}
+								{...showWhenControl('client-sessions-max-group', sessions.values.sliding)}
+							/>
+							<ShowWhen id="client-sessions-max-group" when={sessions.values.sliding}>
+								<Field
+									id="client-sessions-max-days"
+									label={t('settings.client_sessions_max_days')}
+									hint={t('settings.client_sessions_max_days_hint')}
+									width="short"
+									error={sessions.errors.max_days}
+								>
+									{#snippet children(f)}
+										<Input {...f} type="number" min="1" max="365" bind:value={sessions.values.max_days} />
+									{/snippet}
+								</Field>
+							</ShowWhen>
+							<p class="field-effect">{t('settings.signin.client_sessions_effect')}</p>
+							<SaveBar
+								dirty={sessions.dirty}
+								busy={sessions.busy}
+								status={sessions.status}
+								label={t('settings.client_sessions_save')}
+							/>
+						</form>
+					{/snippet}
+					{#snippet end()}
+						<form
+							id={twoFactor.id}
+							class="form-column settings-subgroup"
+							onsubmit={twoFactor.onsubmit}
+							novalidate
+						>
+							<Checkbox
+								id="require-two-factor"
+								label={t('settings.signin.require_2fa')}
+								hint={t('settings.signin.require_2fa_hint')}
+								bind:checked={twoFactor.values.required}
+							/>
+							<SaveBar form={twoFactor} label={t('actions.save')} />
+						</form>
+
+						<ConsoleSessionsForm />
+					{/snippet}
+				</SettingsGrid>
+			</section>
+		{/if}
+	{:else if part === 'joining'}
+		<section class="section" id="joining-mode-section" aria-labelledby="joining-mode-title">
+			<h2 id="joining-mode-title">{t('tokens.enrollment_mode')}</h2>
+			<form
+				id="enrollment-settings-section"
+				class="form-column settings-subgroup"
+				onsubmit={enrollment.onsubmit}
+				novalidate
+			>
+				<p class="form-hint">{t('settings.enrollment_desc')}</p>
+				{#if enrolledMode}
+					<p>
+						{t('tokens.enrollment_mode')}: <strong>{t(`tokens.mode_${enrolledMode}`)}</strong>.
+						{t(`tokens.mode_${enrolledMode}_desc`)}
+						{#if canChangeMode}<a href={link('/tokens')}>{t('settings.enrollment_mode_link')}</a>{/if}
+					</p>
+				{/if}
+				<Checkbox
+					id="enrollment-rich-approve"
+					label={t('settings.enrollment_rich_approve')}
+					hint={t('settings.enrollment_rich_approve_hint')}
+					bind:checked={enrollment.values.rich_approve}
+				/>
+				<Checkbox
+					id="enrollment-tag-picker"
+					label={t('settings.enrollment_tag_picker')}
+					hint={t('settings.enrollment_tag_picker_hint')}
+					bind:checked={enrollment.values.tag_picker}
+				/>
+				<p class="form-hint">
+					{#if pendingCount > 0}<span id="enrollment-pending-hint"
+							>{t('settings.enrollment_pending_count', { count: pendingCount })}</span
+						>{/if}
+					<a href={link('/registrations')}>{t('settings.enrollment_open_requests')}</a>
+				</p>
+				<p class="field-effect">{t('settings.signin.enrollment_effect')}</p>
+				<SaveBar
+					dirty={enrollment.dirty}
+					busy={enrollment.busy}
+					status={enrollment.status}
+					label={t('settings.signin.enrollment_save')}
+				/>
+			</form>
+		</section>
+	{:else if part === 'ldap'}
+		<section class="section" aria-labelledby="auth-panel-ldap">
+			<form id="ldap-form" class="form-column settings-subgroup" onsubmit={submitLdap} novalidate>
+				<h2 id="auth-panel-ldap">{t('settings.ldap_title')}</h2>
+				<p class="form-hint">{t('settings.ldap_desc')}</p>
+				<Checkbox
+					id="ldap-enabled"
+					label={t('settings.ldap_enabled')}
+					hint={t('settings.signin.ldap_enabled_hint')}
+					bind:checked={ldap.values.enabled}
+					onchange={() => void onLdapEnabled()}
+					{...showWhenControl('ldap-config-fields', ldap.values.enabled)}
+				/>
+				<ShowWhen id="ldap-config-fields" class="settings-subfields" when={ldap.values.enabled}>
+					<h3>{t('settings.ldap_connection')}</h3>
+					<Field id="ldap-host" label={t('settings.ldap_host')} error={ldap.errors.host}>
+						{#snippet children(f)}<Input
+								{...f}
+								class="mono"
+								placeholder={EX.ldapHost}
+								bind:value={ldap.values.host}
+							/>{/snippet}
+					</Field>
+					<Field id="ldap-port" label={t('settings.ldap_port')} width="short" error={ldap.errors.port}>
+						{#snippet children(f)}<Input
+								{...f}
+								type="number"
+								min="1"
+								max="65535"
+								placeholder={EX.ldapPort}
+								bind:value={ldap.values.port}
+							/>{/snippet}
+					</Field>
+					<Checkbox
+						id="ldap-use-tls"
+						label={t('settings.ldap_use_tls')}
+						bind:checked={ldap.values.use_tls}
+						onchange={onLdapTls}
+					/>
+					<Checkbox
+						id="ldap-start-tls"
+						label={t('settings.ldap_start_tls')}
+						bind:checked={ldap.values.start_tls}
+					/>
+					<div id="ldap-advanced">
+						<Disclosure title={t('settings.connection_mode_advanced')} level={3}>
+							<div class="disclosure-body">
+								<Checkbox
+									id="ldap-skip-tls-verify"
+									label={t('settings.ldap_skip_verify')}
+									bind:checked={ldap.values.skip_tls_verify}
+								/>
+								<Field
+									id="ldap-conn-timeout"
+									label={t('settings.ldap_timeout')}
+									hint={t('settings.ldap_timeout_hint')}
+									width="short"
+									error={ldap.errors.conn_timeout_sec}
+								>
+									{#snippet children(f)}<Input
+											{...f}
+											type="number"
+											min="1"
+											max="120"
+											placeholder={EX.ldapTimeout}
+											bind:value={ldap.values.conn_timeout_sec}
+										/>{/snippet}
+								</Field>
+							</div>
+						</Disclosure>
+					</div>
+
+					<h3>{t('settings.ldap_bind_mode')}</h3>
+					<Checkbox
+						id="ldap-direct-bind"
+						label={t('settings.ldap_direct_bind')}
+						hint={t('settings.ldap_direct_bind_hint')}
+						bind:checked={ldap.values.direct_bind}
+						aria-controls="ldap-bind-search-fields ldap-direct-bind-fields"
+					/>
+					<ShowWhen id="ldap-bind-search-fields" class="when-off" when={!ldap.values.direct_bind}>
+						<Field
+							id="ldap-bind-dn"
+							label={t('settings.ldap_bind_dn')}
+							hint={t('settings.ldap_bind_dn_hint')}
+						>
+							{#snippet children(f)}<Input
+									{...f}
+									class="mono"
+									placeholder={EX.bindDn}
+									bind:value={ldap.values.bind_dn}
+								/>{/snippet}
+						</Field>
+						<Field id="ldap-bind-password" label={t('settings.ldap_bind_password')}>
+							{#snippet children(f)}<Input
+									{...f}
+									type="password"
+									autocomplete="new-password"
+									bind:value={ldap.values.bind_password}
+								/>{/snippet}
+						</Field>
+						<Field
+							id="ldap-base-dn"
+							label={t('settings.ldap_base_dn')}
+							hint={t('settings.ldap_base_dn_hint')}
+							error={ldap.errors.base_dn}
+						>
+							{#snippet children(f)}<Input
+									{...f}
+									class="mono"
+									placeholder={EX.baseDn}
+									bind:value={ldap.values.base_dn}
+								/>{/snippet}
+						</Field>
+						<Field
+							id="ldap-user-filter"
+							label={t('settings.ldap_user_filter')}
+							hint={t('settings.ldap_user_filter_hint')}
+							error={ldap.errors.user_filter}
+						>
+							{#snippet children(f)}<Input
+									{...f}
+									class="mono"
+									placeholder={EX.userFilter}
+									bind:value={ldap.values.user_filter}
+								/>{/snippet}
+						</Field>
+					</ShowWhen>
+					<ShowWhen id="ldap-direct-bind-fields" when={ldap.values.direct_bind}>
+						<Field
+							id="ldap-direct-bind-dn"
+							label={t('settings.ldap_direct_bind_dn')}
+							hint={t('settings.ldap_direct_bind_dn_hint')}
+							error={ldap.errors.direct_bind_dn}
+						>
+							{#snippet children(f)}<Input
+									{...f}
+									class="mono"
+									placeholder={EX.directBindDn}
+									bind:value={ldap.values.direct_bind_dn}
+								/>{/snippet}
+						</Field>
+					</ShowWhen>
+
+					<div id="ldap-attrs">
+						<Disclosure title={t('settings.ldap_user_attrs')} level={3}>
+							<div class="disclosure-body">
+								<p class="form-hint">{t('settings.signin.attrs_note')}</p>
+								<Field id="ldap-user-attr-id" label={t('settings.ldap_attr_id')} width="medium">
+									{#snippet children(f)}<Input
+											{...f}
+											placeholder={EX.attrId}
+											bind:value={ldap.values.user_attr_id}
+										/>{/snippet}
+								</Field>
+								<Field id="ldap-user-attr-email" label={t('settings.ldap_attr_email')} width="medium">
+									{#snippet children(f)}<Input
+											{...f}
+											placeholder={EX.attrEmail}
+											bind:value={ldap.values.user_attr_email}
+										/>{/snippet}
+								</Field>
+								<Field id="ldap-user-attr-name" label={t('settings.ldap_attr_name')} width="medium">
+									{#snippet children(f)}<Input
+											{...f}
+											placeholder={EX.attrName}
+											bind:value={ldap.values.user_attr_name}
+										/>{/snippet}
+								</Field>
+							</div>
+						</Disclosure>
+					</div>
+
+					<h3>{t('settings.ldap_group_mapping')}</h3>
+					<Field
+						id="ldap-group-base-dn"
+						label={t('settings.ldap_group_base_dn')}
+						hint={t('settings.ldap_group_base_dn_hint')}
+						error={ldap.errors.group_base_dn}
+					>
+						{#snippet children(f)}<Input
+								{...f}
+								class="mono"
+								placeholder={EX.groupBaseDn}
+								bind:value={ldap.values.group_base_dn}
+							/>{/snippet}
+					</Field>
+					<Field
+						id="ldap-group-filter"
+						label={t('settings.ldap_group_filter')}
+						error={ldap.errors.group_filter}
+					>
+						{#snippet children(f)}<Input
+								{...f}
+								class="mono"
+								placeholder={EX.groupFilter}
+								bind:value={ldap.values.group_filter}
+							/>{/snippet}
+					</Field>
+					<Field
+						id="ldap-group-attr-name"
+						label={t('settings.ldap_group_attr_name')}
+						hint={t('settings.ldap_group_attr_name_hint')}
+						width="medium"
+					>
+						{#snippet children(f)}<Input
+								{...f}
+								placeholder={EX.groupAttr}
+								bind:value={ldap.values.group_attr_name}
+							/>{/snippet}
+					</Field>
+					<Checkbox
+						id="ldap-allow-signup"
+						label={t('settings.ldap_allow_signup')}
+						hint={t('settings.ldap_allow_signup_hint')}
+						bind:checked={ldap.values.allow_signup}
+					/>
+					<Field
+						id="ldap-default-role"
+						label={t('settings.ldap_default_role')}
+						hint={t('settings.ldap_default_role_hint')}
+						width="medium"
+						error={ldap.errors.default_role}
+					>
+						{#snippet children(f)}<Select
+								{...f}
+								options={ROLES}
+								bind:value={ldap.values.default_role}
+							/>{/snippet}
+					</Field>
+					<Field
+						id="ldap-group-role-map"
+						label={t('settings.ldap_group_role_map')}
+						hint={t('settings.ldap_group_role_map_hint')}
+						error={ldap.errors.group_role_map}
+					>
+						{#snippet children(f)}
+							<Textarea
+								{...f}
+								class="mono"
+								rows={4}
+								placeholder={EX.ldapRoleMap}
+								bind:value={ldap.values.group_role_map}
+							/>
+						{/snippet}
+					</Field>
+				</ShowWhen>
+				<FormStatus message={ldapTest.message} tone={ldapTest.tone} class="test-result" />
+				<p class="field-effect">{t('settings.signin.ldap_effect')}</p>
+				<SaveBar dirty={ldap.dirty} busy={ldap.busy} status={ldap.status} label={t('settings.ldap_save')}>
+					<Button id="ldap-test-btn" busy={ldapTesting} onclick={() => void runLdapTest()}
+						>{ldapTesting ? t('settings.ldap_testing') : t('settings.ldap_test_connection')}</Button
+					>
+				</SaveBar>
+			</form>
+		</section>
+	{:else if part === 'sso'}
+		<section class="section" aria-labelledby="auth-panel-oidc">
+			<form id="oidc-form" class="form-column settings-subgroup" onsubmit={submitOidc} novalidate>
+				<h2 id="auth-panel-oidc">{t('settings.oidc_title')}</h2>
+				<p class="form-hint">{t('settings.oidc_desc')}</p>
+				<Checkbox
+					id="oidc-enabled"
+					label={t('settings.oidc_enabled')}
+					hint={t('settings.oidc_enabled_hint')}
+					bind:checked={oidc.values.enabled}
+					onchange={() => void onOidcEnabled()}
+					{...showWhenControl('oidc-config-fields', oidc.values.enabled)}
+				/>
+				<ShowWhen id="oidc-config-fields" class="settings-subfields" when={oidc.values.enabled}>
+					<h3>{t('settings.oidc_provider')}</h3>
+					<Field
+						id="oidc-display-name"
+						label={t('settings.oidc_display_name')}
+						hint={t('settings.oidc_display_name_hint')}
+						width="medium"
+					>
+						{#snippet children(f)}<Input
+								{...f}
+								placeholder={EX.oidcName}
+								bind:value={oidc.values.display_name}
+							/>{/snippet}
+					</Field>
+					<Field
+						id="oidc-issuer-url"
+						label={t('settings.oidc_issuer_url')}
+						hint={t('settings.oidc_issuer_url_hint')}
+						error={oidc.errors.issuer_url}
+					>
+						{#snippet children(f)}<Input
+								{...f}
+								type="url"
+								class="mono"
+								bind:element={issuerEl}
+								placeholder={EX.issuer}
+								bind:value={oidc.values.issuer_url}
+							/>{/snippet}
+					</Field>
+					<Field id="oidc-client-id" label={t('settings.oidc_client_id')} error={oidc.errors.client_id}>
+						{#snippet children(f)}<Input
+								{...f}
+								class="mono"
+								autocomplete="off"
+								bind:value={oidc.values.client_id}
+							/>{/snippet}
+					</Field>
+					<Field id="oidc-client-secret" label={t('settings.oidc_client_secret')}>
+						{#snippet children(f)}<Input
+								{...f}
+								type="password"
+								autocomplete="new-password"
+								bind:value={oidc.values.client_secret}
+							/>{/snippet}
+					</Field>
+					<Field
+						id="oidc-redirect-url"
+						label={t('settings.oidc_redirect_url')}
+						hint={t('settings.oidc_redirect_url_hint')}
+						error={oidc.errors.redirect_url}
+					>
+						{#snippet children(f)}
+							<Input
+								{...f}
+								type="url"
+								class="mono"
+								placeholder={EX.redirect}
+								bind:value={oidc.values.redirect_url}
+							/>
+							{#if redirectWarning && !oidc.errors.redirect_url}<Notice
+									tone="warning"
+									role="status"
+									id="oidc-redirect-url-warning"
+									message={redirectWarning}
+								/>{/if}
+						{/snippet}
+					</Field>
+					<Field
+						id="oidc-panel-url"
+						label={t('settings.oidc_panel_url')}
+						hint={t('settings.oidc_panel_url_hint')}
+						error={oidc.errors.panel_url}
+					>
+						{#snippet children(f)}<Input
+								{...f}
+								type="url"
+								class="mono"
+								placeholder={EX.panel}
+								bind:value={oidc.values.panel_url}
+							/>{/snippet}
+					</Field>
+					<Field id="oidc-scopes" label={t('settings.oidc_scopes')}>
+						{#snippet children(f)}<Input
+								{...f}
+								placeholder={EX.scopes}
+								bind:value={oidc.values.scopes}
+							/>{/snippet}
+					</Field>
+					<Checkbox
+						id="oidc-use-pkce"
+						label={t('settings.oidc_use_pkce')}
+						bind:checked={oidc.values.use_pkce}
+					/>
+					<Checkbox
+						id="oidc-allow-signup"
+						label={t('settings.oidc_allow_signup')}
+						bind:checked={oidc.values.allow_signup}
+					/>
+					<Checkbox
+						id="oidc-prefer-sso"
+						label={t('settings.oidc_prefer_sso')}
+						hint={t('settings.oidc_prefer_sso_hint')}
+						bind:checked={oidc.values.prefer_sso}
+					/>
+
+					<div id="oidc-advanced">
+						<Disclosure title={t('settings.connection_mode_advanced')} level={3}>
+							<div class="disclosure-body">
+								<p class="form-hint">{t('settings.signin.oidc_advanced_note')}</p>
+								<Checkbox
+									id="oidc-auto-discovery"
+									label={t('settings.oidc_auto_discovery')}
+									bind:checked={oidc.values.auto_discovery}
+									aria-controls="oidc-manual-endpoints"
+								/>
+								<ShowWhen id="oidc-manual-endpoints" class="when-off" when={!oidc.values.auto_discovery}>
+									<h4>{t('settings.oidc_manual_endpoints')}</h4>
+									<Field
+										id="oidc-authorization-url"
+										label={t('settings.oidc_authorization_url')}
+										error={oidc.errors.authorization_url}
+									>
+										{#snippet children(f)}<Input
+												{...f}
+												type="url"
+												class="mono"
+												placeholder={EX.authUrl}
+												bind:value={oidc.values.authorization_url}
+											/>{/snippet}
+									</Field>
+									<Field
+										id="oidc-token-url"
+										label={t('settings.oidc_token_url')}
+										error={oidc.errors.token_url}
+									>
+										{#snippet children(f)}<Input
+												{...f}
+												type="url"
+												class="mono"
+												placeholder={EX.tokenUrl}
+												bind:value={oidc.values.token_url}
+											/>{/snippet}
+									</Field>
+									<Field
+										id="oidc-userinfo-url"
+										label={t('settings.oidc_userinfo_url')}
+										error={oidc.errors.userinfo_url}
+									>
+										{#snippet children(f)}<Input
+												{...f}
+												type="url"
+												class="mono"
+												placeholder={EX.userinfoUrl}
+												bind:value={oidc.values.userinfo_url}
+											/>{/snippet}
+									</Field>
+								</ShowWhen>
+								<Field
+									id="oidc-allowed-private-cidrs"
+									label={t('settings.oidc_allowed_private_cidrs')}
+									hint={t('settings.oidc_allowed_private_cidrs_hint')}
+									error={oidc.errors.allowed_private_cidrs}
+								>
+									{#snippet children(f)}<Input
+											{...f}
+											class="mono"
+											placeholder={EX.cidrs}
+											bind:value={oidc.values.allowed_private_cidrs}
+										/>{/snippet}
+								</Field>
+							</div>
+						</Disclosure>
+					</div>
+
+					<div id="oidc-claims">
+						<Disclosure title={t('settings.oidc_claim_mapping')} level={3}>
+							<div class="disclosure-body">
+								<p class="form-hint">{t('settings.signin.attrs_note')}</p>
+								<Field id="oidc-claim-username" label={t('settings.oidc_claim_username')} width="medium">
+									{#snippet children(f)}<Input
+											{...f}
+											placeholder={EX.claimUser}
+											bind:value={oidc.values.claim_username}
+										/>{/snippet}
+								</Field>
+								<Field id="oidc-claim-email" label={t('settings.oidc_claim_email')} width="medium">
+									{#snippet children(f)}<Input
+											{...f}
+											placeholder={EX.claimEmail}
+											bind:value={oidc.values.claim_email}
+										/>{/snippet}
+								</Field>
+								<Field id="oidc-claim-name" label={t('settings.oidc_claim_name')} width="medium">
+									{#snippet children(f)}<Input
+											{...f}
+											placeholder={EX.claimName}
+											bind:value={oidc.values.claim_name}
+										/>{/snippet}
+								</Field>
+								<Field id="oidc-claim-groups" label={t('settings.oidc_claim_groups')} width="medium">
+									{#snippet children(f)}<Input
+											{...f}
+											placeholder={EX.claimGroups}
+											bind:value={oidc.values.claim_groups}
+										/>{/snippet}
+								</Field>
+							</div>
+						</Disclosure>
+					</div>
+
+					<h3>{t('settings.oidc_role_mapping')}</h3>
+					<Field
+						id="oidc-default-role"
+						label={t('settings.oidc_default_role')}
+						width="medium"
+						error={oidc.errors.default_role}
+					>
+						{#snippet children(f)}<Select
+								{...f}
+								options={ROLES}
+								bind:value={oidc.values.default_role}
+							/>{/snippet}
+					</Field>
+					<Field
+						id="oidc-group-role-map"
+						label={t('settings.oidc_group_role_map')}
+						hint={t('settings.oidc_group_role_map_hint')}
+						error={oidc.errors.group_role_map}
+					>
+						{#snippet children(f)}
+							<Textarea
+								{...f}
+								class="mono"
+								rows={3}
+								placeholder={EX.oidcRoleMap}
+								bind:value={oidc.values.group_role_map}
+							/>
+						{/snippet}
+					</Field>
+				</ShowWhen>
+				<FormStatus message={oidcTest.message} tone={oidcTest.tone} class="test-result" />
+				<p class="field-effect">{t('settings.signin.oidc_effect')}</p>
+				<SaveBar dirty={oidc.dirty} busy={oidc.busy} status={oidc.status} label={t('settings.oidc_save')}>
+					<Button id="oidc-test-btn" busy={oidcTesting} onclick={() => void runOidcTest()}
+						>{oidcTesting ? t('settings.oidc_testing') : t('settings.oidc_test_discovery')}</Button
+					>
+				</SaveBar>
+			</form>
+		</section>
 	{/if}
-</SettingsLayout>
+{/snippet}
+
+{#if bare}
+	{@render body()}
+{:else}
+	<SettingsLayout {toc} {side} sideLabelledby="auth-side-title" sticky>
+		{@render body()}
+	</SettingsLayout>
+{/if}
 
 <style>
 	.form-column {

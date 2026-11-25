@@ -115,7 +115,8 @@
     "label": "Navigasi utama",
     "section_devices": "Perangkat",
     "server_backups": "Cadangan",
-    "server_config_files": "Berkas konfigurasi"
+    "server_config_files": "Berkas konfigurasi",
+    "meshcentral": "MeshCentral"
   },
   "auth": {
     "login": "Masuk",
@@ -1233,7 +1234,11 @@
       "discard_title": "Buang perubahan yang belum disimpan?",
       "discard_message": "Perubahan di halaman ini belum disimpan.",
       "discard_confirm": "Buang perubahan",
-      "shown_when_off": "Ditampilkan saat \"{switch}\" nonaktif."
+      "shown_when_off": "Ditampilkan saat \"{switch}\" nonaktif.",
+      "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
+      "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
+      "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
     },
     "general": {
       "endpoint_id_hint": "Nama host atau alamat IP server ID, sebagaimana klien di internet menjangkaunya.",
@@ -1485,7 +1490,8 @@
       "attrs_note": "Nilai bawaan cocok untuk sebagian besar kasus. Ubah hanya jika nama atau alamat email masuk salah atau kosong.",
       "single_session": "Satu sesi per akun",
       "single_session_hint": "Masuk yang baru mengeluarkan browser lain dari akun. Nonaktif: satu akun dapat masuk di paling banyak {max} browser dan perangkat sekaligus.",
-      "single_session_env": "SESSION_MAX_PER_USER diatur ke {value} di lingkungan server dan menentukan sebagai ganti sakelar ini. Hapus di sana untuk memakai sakelar."
+      "single_session_env": "SESSION_MAX_PER_USER diatur ke {value} di lingkungan server dan menentukan sebagai ganti sakelar ini. Hapus di sana untuk memakai sakelar.",
+      "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network."
     },
     "backup_tab": {
       "create_title": "Buat cadangan",

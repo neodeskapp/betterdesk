@@ -27,8 +27,8 @@ describe('settings tabs in the URL', () => {
 		expect(parseTab('__proto__')).toBe('general');
 	});
 
-	test('Email and Time need server.config; General, Appearance and Sign-in are for everyone', () => {
-		expect([...ADMIN_TABS].sort()).toEqual(['email', 'time']);
+	test('the server-wide tabs need server.config; General, Appearance and Sign-in are for everyone', () => {
+		expect([...ADMIN_TABS].sort()).toEqual(['email', 'joining', 'ldap', 'meshcentral', 'sso', 'time']);
 		for (const tab of TABS) expect(tabAllowed(tab, true)).toBe(true);
 		expect(tabAllowed('general', false)).toBe(true);
 		expect(tabAllowed('branding', false)).toBe(true);
@@ -69,7 +69,15 @@ describe('old links into settings', () => {
 		expect(placeOfId('public-endpoints')).toBe('general');
 		expect(placeOfId('account-password')).toBe('auth');
 		expect(placeOfId('auth-panel-totp')).toBe('auth');
-		expect(placeOfId('ldap-host')).toBe('auth');
+		// Sign-in split into Sign-in, Directory (LDAP), Single sign-on and Joining; MeshCentral left General
+		expect(placeOfId('ldap-host')).toBe('ldap');
+		expect(placeOfId('auth-panel-oidc')).toBe('sso');
+		expect(placeOfId('oidc-issuer-url')).toBe('sso');
+		expect(placeOfId('enrollment-rich-approve')).toBe('joining');
+		expect(placeOfId('device-scope-settings-panel')).toBe('joining');
+		expect(placeOfId('availability-history-enabled')).toBe('joining');
+		expect(placeOfId('mesh-msh-name')).toBe('meshcentral');
+		expect(placeOfId('client-sessions-form')).toBe('auth');
 		expect(placeOfId('branding-css')).toBe('branding');
 		expect(placeOfId('color-accentBlue')).toBe('branding');
 		expect(placeOfId('nothing-like-this')).toBeNull();
