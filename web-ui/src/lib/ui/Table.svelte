@@ -733,9 +733,11 @@
 	/* A row menu stays in its cell. When a page pins the actions column
 	   (position: sticky), each cell is a layer of its own and the cells of
 	   the rows below would paint over the open menu: the cell with the open
-	   menu goes above them (and above the sticky header) */
+	   menu goes above them, above the sticky header, and above the top bar
+	   and the bottom navigation, which a tall menu that opens upwards or
+	   downwards on a small screen reaches */
 	.data-table :is(td, th):has(:global(.menu-anchor > [aria-expanded='true'])) {
-		z-index: calc(var(--layer-sticky) + 1);
+		z-index: calc(var(--layer-topbar) + 1);
 	}
 
 	/* Loading, empty and error: one sentence, optional action */
