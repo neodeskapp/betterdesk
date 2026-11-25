@@ -283,6 +283,8 @@ export class ViewerSession {
 	signinOffer = $state.raw<SigninOffer>({ kind: 'none' });
 	/** This connection used its one attempt */
 	signinTried = false;
+	/** Due to sign in by itself while the viewer was off screen: it does once back */
+	signinDeferred = false;
 	signinBusy = $state(false);
 	/** What the bar over the screen says after an attempt */
 	signinNote = $state('');
@@ -695,6 +697,7 @@ export class Viewer {
 		s.peerFacts = null;
 		s.signinOffer = { kind: 'none' };
 		s.signinTried = false;
+		s.signinDeferred = false;
 		s.signinBusy = false;
 		s.signinNote = '';
 		s.signinDismissed = false;
@@ -1194,10 +1197,22 @@ export class Viewer {
 			atStart: opts.atStart !== false
 		});
 		s.signinOffer = offer;
+		s.signinDeferred = false;
 		if (offer.kind === 'auto') {
+			// Nobody sees a parked session: it signs in by itself only once it is on screen again
+			if (this.parked) {
+				s.signinDeferred = true;
+				return;
+			}
 			this.autoSignedIn.add(s.deviceId);
 			await new Promise((r) => setTimeout(r, SIGNIN_AUTO_DELAY_MS));
-			if (s.client === c && !s.closed) void this.signIn(s, { auto: true });
+			if (s.client !== c || s.closed) return;
+			if (this.parked) {
+				this.autoSignedIn.delete(s.deviceId);
+				s.signinDeferred = true;
+				return;
+			}
+			void this.signIn(s, { auto: true });
 		}
 	}
 
@@ -1209,6 +1224,7 @@ export class Viewer {
 	 */
 	async signIn(s: ViewerSession, opts: { auto?: boolean } = {}): Promise<void> {
 		const c = s.client;
+		if (this.parked) return;
 		if (!c || !s.encrypted || s.signinTried || s.view !== 'streaming' || s.viewOnly || !s.allowed.keyboard)
 			return;
 		const offer = s.signinOffer;
@@ -2093,6 +2109,11 @@ export class Viewer {
 		if (!parked) {
 			this.resize();
 			void tick().then(() => this.focusScreen());
+			for (const s of this.sessions) {
+				if (!s.signinDeferred) continue;
+				s.signinDeferred = false;
+				void this.refreshSignin(s);
+			}
 		}
 	}
 

@@ -339,3 +339,37 @@ describe('saved sign-in (L469)', () => {
 		expect(signinApi.useSealedSignin).toHaveBeenCalledTimes(1);
 	});
 });
+
+describe('saved sign-in while the console shows another page (the viewer is parked)', () => {
+	test('a parked session signs in by itself only once it is back on screen, still once', async () => {
+		signinApi.getSignin.mockResolvedValueOnce({ ...(await signinApi.getSignin()), auto: true });
+		const { v, c } = setup();
+		v.setParked(true);
+		stream(c);
+		await new Promise((r) => setTimeout(r, 1200));
+		expect(signinApi.useSignin).not.toHaveBeenCalled();
+		expect(c.keys).toEqual([]);
+		v.setParked(false);
+		await vi.waitFor(() => expect(c.keys.at(-1)).toBe('key:Return'), { timeout: 4000 });
+		expect(c.keys).toEqual(['sas', 'text:made-up-pass', 'key:Return']);
+		v.setParked(true);
+		v.setParked(false);
+		await new Promise((r) => setTimeout(r, 1200));
+		expect(signinApi.useSignin).toHaveBeenCalledTimes(1);
+	});
+
+	test('no sealed request goes out while parked, also when it was parked during the wait', async () => {
+		signinApi.getSignin.mockResolvedValueOnce({ ...(await signinApi.getSignin()), auto: true });
+		const { v, c } = setup();
+		stream(c, { platformAdditions: '{"logon_state":"prelogin","nd_signin":1}' });
+		// Parked within the short wait before signing in by itself
+		await new Promise((r) => setTimeout(r, 100));
+		v.setParked(true);
+		await new Promise((r) => setTimeout(r, 1200));
+		expect(signinApi.useSealedSignin).not.toHaveBeenCalled();
+		expect(c.plugins).toEqual([]);
+		v.setParked(false);
+		await vi.waitFor(() => expect(c.plugins).toHaveLength(1), { timeout: 4000 });
+		expect(signinApi.useSealedSignin).toHaveBeenCalledTimes(1);
+	});
+});
