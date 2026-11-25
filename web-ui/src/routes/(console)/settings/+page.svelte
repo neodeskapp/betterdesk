@@ -1,14 +1,16 @@
 <!--
   Settings (/settings). Each tab is a sub-page: ?tab=general (or none),
-  branding, auth, backup, updates, email, time, advanced, listed in the
-  sidebar; an unknown tab is General. The tabs Backup to Advanced need
-  server.config; anyone else who opens one gets one sentence.
+  branding, auth, email, time, listed in the sidebar; an unknown tab is
+  General. Email and Time need server.config; anyone else who opens one gets
+  one sentence. Backup, Updates and Advanced are pages of the Server section
+  now (/server/...); their old addresses lead there (lib/redirects.ts).
 
   Old links: #<tab> and #server become ?tab=; #<element-id> scrolls to that
-  setting, or switches to the tab that holds it first (lib/settings/tabs.ts,
-  search-index.ts). The search above the side column finds a setting on any
-  tab the person may open (lib/settings/search.ts) and jumps to it the same
-  way (lib/settings/reveal.ts).
+  setting, or switches to the tab or page that holds it first
+  (lib/settings/tabs.ts, search-index.ts). The search above the side column
+  finds a setting on any tab or page the person may open
+  (lib/settings/search.ts) and jumps to it the same way
+  (lib/settings/reveal.ts).
 
   Each tab is its own component in lib/settings/tabs/, loaded when it is
   opened; it loads its own data. Leaving a tab with unsaved changes asks
@@ -22,7 +24,7 @@
 	import { beforeNavigate, goto } from '$app/navigation';
 	import { clientMessages } from '#lib/api/client.ts';
 	import { i18n, t, tf } from '#lib/i18n/i18n.svelte.ts';
-	import { base } from '#lib/nav.ts';
+	import { base, link } from '#lib/nav.ts';
 	import { setPageTitle } from '#lib/shell/page.svelte.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import CountLine from '#lib/ui/CountLine.svelte';
@@ -46,10 +48,13 @@
 		TAB_TITLE,
 		decodeHash,
 		hashTab,
+		isPage,
 		parseTab,
+		placeAllowed,
+		placeHref,
+		placeOfId,
 		tabAllowed,
 		tabDescKey,
-		tabOfId,
 		tabSearch,
 		type TabId
 	} from '#lib/settings/tabs.ts';
@@ -61,11 +66,8 @@
 		general: () => import('#lib/settings/tabs/GeneralTab.svelte'),
 		branding: () => import('#lib/settings/tabs/AppearanceTab.svelte'),
 		auth: () => import('#lib/settings/tabs/SignInTab.svelte'),
-		backup: () => import('#lib/settings/tabs/BackupTab.svelte'),
-		updates: () => import('#lib/settings/tabs/UpdatesTab.svelte'),
 		email: () => import('#lib/settings/tabs/EmailTab.svelte'),
-		time: () => import('#lib/settings/tabs/TimeTab.svelte'),
-		advanced: () => import('#lib/settings/tabs/AdvancedTab.svelte')
+		time: () => import('#lib/settings/tabs/TimeTab.svelte')
 	};
 
 	/** Bumped by Retry when a tab's code could not be loaded */
@@ -116,9 +118,13 @@
 			return;
 		}
 		const id = decodeHash(hash);
-		const owner = tabOfId(id);
-		if (owner && owner !== current && tabAllowed(owner, canConfig)) {
-			await go2(tabHref(owner, id), { replace: true, reset: false });
+		const owner = placeOfId(id);
+		if (owner && owner !== current && placeAllowed(owner, canConfig)) {
+			// A setting on a page of its own (the Server section) is there now
+			await go2(isPage(owner) ? link(placeHref(owner, id)) : tabHref(owner, id), {
+				replace: true,
+				reset: false
+			});
 			return;
 		}
 		const ctrl = new AbortController();
@@ -171,9 +177,13 @@
 
 	async function go(hit: SearchHit): Promise<void> {
 		query = '';
-		if (hit.tab === tab) {
+		if (isPage(hit.place)) {
+			await go2(link(hit.href));
+			return;
+		}
+		if (hit.place === tab) {
 			const same = decodeHash(page.url.hash) === hit.id;
-			await go2(tabHref(hit.tab, hit.id), { replace: true, reset: false });
+			await go2(tabHref(hit.place, hit.id), { replace: true, reset: false });
 			// The same #id again: no change for the URL to follow
 			if (same) {
 				const el = findTarget(hit.id);
@@ -181,7 +191,7 @@
 			}
 			return;
 		}
-		await go2(tabHref(hit.tab, hit.id), { reset: false });
+		await go2(tabHref(hit.place, hit.id), { reset: false });
 	}
 
 	function onSearchKey(e: KeyboardEvent) {
@@ -198,10 +208,15 @@
 	function onResultClick(e: MouseEvent) {
 		if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 		const a = e.target instanceof Element ? e.target.closest('a') : null;
-		const hit = a ? hits.find((h) => tabHref(h.tab, h.id) === a.getAttribute('href')) : undefined;
+		const hit = a ? hits.find((h) => hitHref(h) === a.getAttribute('href')) : undefined;
 		if (!hit) return;
 		e.preventDefault();
 		void go(hit);
+	}
+
+	/** A result's link: on this page a tab, else the page that holds it */
+	function hitHref(hit: SearchHit): string {
+		return isPage(hit.place) ? link(hit.href) : tabHref(hit.place, hit.id);
 	}
 
 	/* ── Unsaved changes ── */
@@ -240,7 +255,7 @@
 	});
 </script>
 
-<div class={['page', 'settings-page', tab === 'advanced' && 'is-wide']} data-current-tab={tab}>
+<div class={['page', 'settings-page']} data-current-tab={tab}>
 	<div class="page-head">
 		<h1>{title}</h1>
 		<div class="page-actions settings-search" role="search">
@@ -268,8 +283,8 @@
 			{#if hits.length}
 				<CountLine text={t('settings.page.search_count')} values={{ count: hits.length }} />
 				<RowList label={t('settings.page.search_label')}>
-					{#each hits as hit (`${hit.tab}#${hit.id}#${hit.label}`)}
-						<ListRow title={hit.label} sub={hit.where} href={tabHref(hit.tab, hit.id)} />
+					{#each hits as hit (`${hit.place}#${hit.id}#${hit.label}`)}
+						<ListRow title={hit.label} sub={hit.where} href={hitHref(hit)} />
 					{/each}
 				</RowList>
 			{:else}

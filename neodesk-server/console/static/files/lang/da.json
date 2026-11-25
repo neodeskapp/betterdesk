@@ -105,7 +105,7 @@
     "section_support": "Support",
     "group_console": "Konsol",
     "group_clients": "Klienter og tilslutning",
-    "group_server": "Server",
+    "section_server": "Server",
     "group_billing": "Fakturering",
     "group_developer": "Udviklerværktøjer",
     "server_status": "Serverstatus",
@@ -113,7 +113,9 @@
     "more": "Vis {count} mere",
     "fewer": "Vis færre",
     "label": "Hovednavigation",
-    "section_devices": "Enheder"
+    "section_devices": "Enheder",
+    "server_backups": "Sikkerhedskopier",
+    "server_config_files": "Konfigurationsfiler"
   },
   "auth": {
     "login": "Log ind",
@@ -1563,7 +1565,7 @@
       "channel_source_development": "Udviklingsbuilds af {repo} på GitHub",
       "channel_confirm": "Skift opdateringer til {to}? Næste tjek sammenligner din version med kanalen {to}.",
       "backups_note": "Før hver opdatering gemmer konsollen de filer, den erstatter. Du kan sætte dem tilbage herfra.",
-      "retention_label": "Sikkerhedskopier, der beholdes",
+      "retention_label": "Behold opdateringssikkerhedskopier",
       "newest_version": "Nyeste version",
       "not_checked": "Ikke tjekket endnu",
       "changes_behind": "{n} ændringer nyere end din",
@@ -4365,7 +4367,7 @@
     "schedule_interval_12h": "Hver 12. time",
     "schedule_interval_24h": "Hver 24. time",
     "schedule_interval_weekly": "Hver uge",
-    "schedule_retention": "Arkiver der skal gemmes",
+    "schedule_retention": "Behold planlagte sikkerhedskopier",
     "schedule_destination": "Destination",
     "schedule_destination_local": "Lokal NeoDesk-datamappe",
     "schedule_destination_path": "Brugerdefineret lokal eller monteret netværkssti",

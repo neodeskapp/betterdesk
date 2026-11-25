@@ -99,7 +99,7 @@
     "section_support": "Ondersteuning",
     "group_console": "Console",
     "group_clients": "Clients en deelname",
-    "group_server": "Server",
+    "section_server": "Server",
     "group_billing": "Facturering",
     "group_developer": "Ontwikkelaarstools",
     "server_status": "Serverstatus",
@@ -107,7 +107,9 @@
     "more": "Nog {count} tonen",
     "fewer": "Minder tonen",
     "label": "Hoofdnavigatie",
-    "section_devices": "Apparaten"
+    "section_devices": "Apparaten",
+    "server_backups": "Back-ups",
+    "server_config_files": "Configuratiebestanden"
   },
   "auth": {
     "login": "Inloggen",
@@ -1557,7 +1559,7 @@
       "channel_source_development": "Ontwikkelbuilds van {repo} op GitHub",
       "channel_confirm": "Updates overzetten naar {to}? De volgende controle vergelijkt uw versie met het kanaal {to}.",
       "backups_note": "Vóór elke update bewaart de console de bestanden die worden vervangen. U kunt ze hier terugzetten.",
-      "retention_label": "Te bewaren back-ups",
+      "retention_label": "Update-back-ups bewaren",
       "newest_version": "Nieuwste versie",
       "not_checked": "Nog niet gecontroleerd",
       "changes_behind": "{n} wijzigingen nieuwer dan uw versie",
@@ -4359,7 +4361,7 @@
     "schedule_interval_12h": "Elke 12 uur",
     "schedule_interval_24h": "Elke 24 uur",
     "schedule_interval_weekly": "Elke week",
-    "schedule_retention": "Te bewaren archieven",
+    "schedule_retention": "Geplande back-ups bewaren",
     "schedule_destination": "Bestemming",
     "schedule_destination_local": "Lokale NeoDesk-gegevensmap",
     "schedule_destination_path": "Aangepast lokaal of gekoppeld netwerkpad",

@@ -105,7 +105,7 @@
     "section_support": "Támogatás",
     "group_console": "Konzol",
     "group_clients": "Kliensek és csatlakozás",
-    "group_server": "Szerver",
+    "section_server": "Szerver",
     "group_billing": "Számlázás",
     "group_developer": "Fejlesztői eszközök",
     "server_status": "Szerver állapota",
@@ -113,7 +113,9 @@
     "more": "{count} további megjelenítése",
     "fewer": "Kevesebb megjelenítése",
     "label": "Fő navigáció",
-    "section_devices": "Eszközök"
+    "section_devices": "Eszközök",
+    "server_backups": "Biztonsági mentések",
+    "server_config_files": "Konfigurációs fájlok"
   },
   "auth": {
     "login": "Bejelentkezés",
@@ -1563,7 +1565,7 @@
       "channel_source_development": "{repo} fejlesztői buildjei a GitHubon",
       "channel_confirm": "Átváltja a frissítéseket erre: {to}? A következő ellenőrzés a {to} csatornával veti össze a verzióját.",
       "backups_note": "A konzol minden frissítés előtt elmenti a lecserélt fájlokat. Innen visszaállíthatja őket.",
-      "retention_label": "Megtartott mentések",
+      "retention_label": "Megőrzött frissítési mentések",
       "newest_version": "Legújabb verzió",
       "not_checked": "Még nincs ellenőrizve",
       "changes_behind": "{n} változás újabb, mint az Öné",
@@ -4365,7 +4367,7 @@
     "schedule_interval_12h": "12 óránként",
     "schedule_interval_24h": "24 óránként",
     "schedule_interval_weekly": "Hetente",
-    "schedule_retention": "Megtartandó archívumok",
+    "schedule_retention": "Megőrzött ütemezett mentések",
     "schedule_destination": "Cél",
     "schedule_destination_local": "Helyi NeoDesk-adatkönyvtár",
     "schedule_destination_path": "Egyéni helyi vagy csatolt hálózati útvonal",

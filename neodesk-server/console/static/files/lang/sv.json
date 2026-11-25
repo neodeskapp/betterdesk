@@ -105,7 +105,7 @@
     "section_support": "Support",
     "group_console": "Konsol",
     "group_clients": "Klienter och anslutning",
-    "group_server": "Server",
+    "section_server": "Server",
     "group_billing": "Fakturering",
     "group_developer": "Utvecklarverktyg",
     "server_status": "Serverstatus",
@@ -113,7 +113,9 @@
     "more": "Visa {count} till",
     "fewer": "Visa färre",
     "label": "Huvudnavigering",
-    "section_devices": "Enheter"
+    "section_devices": "Enheter",
+    "server_backups": "Säkerhetskopior",
+    "server_config_files": "Konfigurationsfiler"
   },
   "auth": {
     "login": "Logga in",
@@ -1563,7 +1565,7 @@
       "channel_source_development": "Utvecklingsbyggen av {repo} på GitHub",
       "channel_confirm": "Byta uppdateringar till {to}? Nästa kontroll jämför din version med kanalen {to}.",
       "backups_note": "Före varje uppdatering sparar konsolen filerna den ersätter. Du kan lägga tillbaka dem härifrån.",
-      "retention_label": "Säkerhetskopior att behålla",
+      "retention_label": "Behåll uppdateringskopior",
       "newest_version": "Senaste version",
       "not_checked": "Inte kontrollerad än",
       "changes_behind": "{n} ändringar nyare än din",
@@ -4365,7 +4367,7 @@
     "schedule_interval_12h": "Var 12:e timme",
     "schedule_interval_24h": "Var 24:e timme",
     "schedule_interval_weekly": "Varje vecka",
-    "schedule_retention": "Arkiv att behålla",
+    "schedule_retention": "Behåll schemalagda säkerhetskopior",
     "schedule_destination": "Mål",
     "schedule_destination_local": "Lokal NeoDesk-datamapp",
     "schedule_destination_path": "Anpassad lokal eller monterad nätverkssökväg",

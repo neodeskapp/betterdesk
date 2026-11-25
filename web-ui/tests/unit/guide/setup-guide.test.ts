@@ -93,7 +93,7 @@ describe('where each step leads', () => {
 		expect(STEP_TARGETS.address).toEqual({ kind: 'page', href: '/settings?guide=address#public-endpoints' });
 		expect(STEP_TARGETS.backup).toEqual({
 			kind: 'page',
-			href: '/settings?tab=backup&guide=backup#backup-create'
+			href: '/server/backups?guide=backup#backup-create'
 		});
 		expect(STEP_TARGETS.computer).toEqual({ kind: 'add-computer' });
 		expect(STEP_TARGETS.https.kind).toBe('docs');

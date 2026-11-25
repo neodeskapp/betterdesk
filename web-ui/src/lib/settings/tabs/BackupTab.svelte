@@ -1,5 +1,6 @@
 <!--
-  Settings › Backup (server.config). Download a full backup; make backups
+  Server › Backups (/server/backups, server.config; Settings › Backup
+  before). Download a full backup; make backups
   on a schedule into a folder; restore from a file. The
   side column has the schedule's state and what a backup made now holds.
   Old page: views/settings.ejs "Backup", settings.js initBackupSection.

@@ -9,7 +9,7 @@ import { describe, expect, test } from 'vitest';
 import { SEARCH_INDEX } from '../../../src/lib/settings/search-index.ts';
 import { TAB_TERMS, TERMS } from '../../../src/lib/settings/search-terms.ts';
 import { settingEntries } from '../../../src/lib/settings/search.ts';
-import { TABS, tabAllowed, isTab } from '../../../src/lib/settings/tabs.ts';
+import { TABS, tabAllowed, isPlace, isTab } from '../../../src/lib/settings/tabs.ts';
 import { searchGrouped, MAX_SETTINGS, type SearchSetting } from '../../../src/lib/shell/search.ts';
 
 const langDir = path.resolve(__dirname, '../../../../neodesk-server/console/static/files/lang');
@@ -42,7 +42,7 @@ describe('the settings list', () => {
 	test('other words belong to a tab or a setting of the list', () => {
 		const ids = new Set(SEARCH_INDEX.map((r) => r[1]));
 		expect(Object.keys(TERMS).filter((id) => !ids.has(id))).toEqual([]);
-		expect(Object.keys(TAB_TERMS).filter((tab) => !isTab(tab))).toEqual([]);
+		expect(Object.keys(TAB_TERMS).filter((tab) => !isPlace(tab))).toEqual([]);
 	});
 });
 
@@ -51,12 +51,12 @@ describe('settingEntries', () => {
 		const t = tOf(en);
 		const entries = settingEntries({ t, can: everyone });
 		const expected = new Set(
-			SEARCH_INDEX.filter((r) => isTab(r[0])).map(
+			SEARCH_INDEX.filter((r) => isPlace(r[0])).map(
 				(r) => `${r[0]}#${r[1]}#${t(r[2]).replace(/:$/, '').trim()}`
 			)
 		);
 		expect(entries.length).toBe(expected.size);
-		for (const e of entries) expect(expected.has(`${e.tab}#${e.id}#${e.label}`)).toBe(true);
+		for (const e of entries) expect(expected.has(`${e.place}#${e.id}#${e.label}`)).toBe(true);
 	});
 
 	test('each setting says where it lives and links to its element on its tab', () => {
@@ -71,14 +71,25 @@ describe('settingEntries', () => {
 		expect(name?.where).toBe('Settings, Appearance, Name and logo');
 		// General has no ?tab= in its address
 		expect(entries.find((e) => e.id === 'public-server-id')?.href).toBe('/settings#public-server-id');
+		// The server's own settings are on the pages of the Server section
+		const scheduled = entries.find((e) => e.id === 'scheduled-backup-enabled');
+		expect(scheduled?.where).toBe('Server, Backups, Scheduled full backup');
+		expect(scheduled?.href).toBe('/server/backups#scheduled-backup-enabled');
+		expect(entries.find((e) => e.id === 'backup-retention-input')).toMatchObject({
+			label: 'Keep update backups',
+			href: '/server/backups#backup-retention-input'
+		});
+		expect(entries.find((e) => e.id === 'update-channel-panel')?.href).toBe(
+			'/server/updates#update-channel-panel'
+		);
 	});
 
 	test('no setting the account cannot see: tabs it may not open and rows that need a permission', () => {
 		const entries = settingEntries({ t: tOf(en), can: viewer });
 		expect(entries.length).toBeGreaterThan(0);
 		for (const e of entries) {
-			expect(tabAllowed(e.tab, false)).toBe(true);
-			const row = SEARCH_INDEX.find((r) => r[0] === e.tab && r[1] === e.id);
+			expect(isTab(e.place) && tabAllowed(e.place, false)).toBe(true);
+			const row = SEARCH_INDEX.find((r) => r[0] === e.place && r[1] === e.id);
 			expect(row?.[5]).toBe('');
 		}
 		const ids = entries.map((e) => e.id);
@@ -87,7 +98,7 @@ describe('settingEntries', () => {
 		expect(ids).not.toContain('email-smtp-host');
 		expect(ids).not.toContain('branding-profiles');
 		// Each tab of the list that a viewer may open still has its settings
-		const tabs = new Set(entries.map((e) => e.tab));
+		const tabs = new Set<string>(entries.map((e) => e.place));
 		for (const tab of TABS.filter((x) => tabAllowed(x, false)))
 			if (SEARCH_INDEX.some((r) => r[0] === tab && r[5] === '')) expect(tabs.has(tab)).toBe(true);
 	});
@@ -110,7 +121,7 @@ describe('English and German find the same setting', () => {
 		['smtp', 'mailserver', 'email-smtp-host'],
 		['application name', 'anwendungsname', 'brand-name'],
 		['update channel', 'update-kanal', 'update-channel-panel'],
-		['scheduled backups', 'geplante sicherungen', 'scheduled-backup-enabled'],
+		['scheduled backups', 'geplante sicherungen', 'scheduled-backup-panel'],
 		['relay server', 'relay-server', 'public-relay-server']
 	])('"%s" in English and "%s" in German', (qEn, qDe, id) => {
 		expect(first(qEn, inEn)).toBe(id);

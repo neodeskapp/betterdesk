@@ -20,11 +20,14 @@ const ALSO_ACTIVE: Readonly<Record<string, string>> = { generator: 'agents' };
  */
 export function pageKey(path: string, search: { get(name: string): string | null } | string = ''): string {
 	const q = typeof search === 'string' ? new URLSearchParams(search) : search;
-	const first = path.replace(/^\/+/, '').split('/')[0] ?? '';
+	const [first = '', second = ''] = path.replace(/^\/+/, '').split('/');
 	const tab = q.get('tab') ?? '';
 	if (first === '') return q.get('activateAgent') === '1' ? 'activate-agent' : 'dashboard';
 	if (first === 'settings') return 'settings:' + (tab || 'general');
-	if (first === 'server-management') return 'server-management:' + (tab || 'overview');
+	// Files and Services are tabs of Server status, one entry in the Server section
+	if (first === 'server-management') return 'server-management:overview';
+	// The Server section's own pages: /server/backups is server-backups
+	if (first === 'server' && second) return `server-${second}`;
 	if (first === 'commercialization') {
 		const t = tab || 'packages';
 		return 'commercialization:' + (t === 'sessions' || t === 'reports' ? 'sessions' : 'packages');

@@ -99,7 +99,7 @@
     "section_support": "Podpora",
     "group_console": "Konzole",
     "group_clients": "Klienti a připojování",
-    "group_server": "Server",
+    "section_server": "Server",
     "group_billing": "Fakturace",
     "group_developer": "Nástroje pro vývojáře",
     "server_status": "Stav serveru",
@@ -107,7 +107,9 @@
     "more": "Zobrazit další ({count})",
     "fewer": "Zobrazit méně",
     "label": "Hlavní navigace",
-    "section_devices": "Zařízení"
+    "section_devices": "Zařízení",
+    "server_backups": "Zálohy",
+    "server_config_files": "Konfigurační soubory"
   },
   "auth": {
     "login": "Přihlášení",
@@ -1557,7 +1559,7 @@
       "channel_source_development": "Vývojová sestavení {repo} na GitHubu",
       "channel_confirm": "Přepnout aktualizace na {to}? Příští kontrola porovná vaši verzi s kanálem {to}.",
       "backups_note": "Před každou aktualizací konzole uloží soubory, které nahrazuje. Odtud je můžete vrátit.",
-      "retention_label": "Počet ponechaných záloh",
+      "retention_label": "Ponechat zálohy před aktualizací",
       "newest_version": "Nejnovější verze",
       "not_checked": "Zatím nekontrolováno",
       "changes_behind": "{n} změn novějších než vaše verze",
@@ -4359,7 +4361,7 @@
     "schedule_interval_12h": "Každých 12 hodin",
     "schedule_interval_24h": "Každých 24 hodin",
     "schedule_interval_weekly": "Každý týden",
-    "schedule_retention": "Počet uchovávaných archivů",
+    "schedule_retention": "Ponechat plánované zálohy",
     "schedule_destination": "Cíl",
     "schedule_destination_local": "Místní datový adresář NeoDesk",
     "schedule_destination_path": "Vlastní místní nebo připojená síťová cesta",

@@ -105,7 +105,7 @@
     "section_support": "Hỗ trợ",
     "group_console": "Bảng điều khiển",
     "group_clients": "Máy khách và tham gia",
-    "group_server": "Máy chủ",
+    "section_server": "Máy chủ",
     "group_billing": "Thanh toán",
     "group_developer": "Công cụ nhà phát triển",
     "server_status": "Trạng thái máy chủ",
@@ -113,7 +113,9 @@
     "more": "Hiện thêm {count}",
     "fewer": "Ẩn bớt",
     "label": "Điều hướng chính",
-    "section_devices": "Thiết bị"
+    "section_devices": "Thiết bị",
+    "server_backups": "Bản sao lưu",
+    "server_config_files": "Tệp cấu hình"
   },
   "auth": {
     "login": "Đăng nhập",
@@ -1563,7 +1565,7 @@
       "channel_source_development": "Bản dựng phát triển của {repo} trên GitHub",
       "channel_confirm": "Chuyển cập nhật sang {to}? Lần kiểm tra tới sẽ so sánh phiên bản của bạn với kênh {to}.",
       "backups_note": "Trước mỗi lần cập nhật, bảng điều khiển lưu các tệp sẽ bị thay thế. Bạn có thể khôi phục chúng tại đây.",
-      "retention_label": "Số bản sao lưu giữ lại",
+      "retention_label": "Giữ bản sao lưu cập nhật",
       "newest_version": "Phiên bản mới nhất",
       "not_checked": "Chưa kiểm tra",
       "changes_behind": "{n} thay đổi mới hơn bản của bạn",
@@ -4365,7 +4367,7 @@
     "schedule_interval_12h": "Mỗi 12 giờ",
     "schedule_interval_24h": "Mỗi 24 giờ",
     "schedule_interval_weekly": "Mỗi tuần",
-    "schedule_retention": "Số tệp lưu giữ",
+    "schedule_retention": "Giữ bản sao lưu theo lịch",
     "schedule_destination": "Đích",
     "schedule_destination_local": "Thư mục dữ liệu NeoDesk cục bộ",
     "schedule_destination_path": "Đường dẫn cục bộ hoặc mạng đã gắn kết",

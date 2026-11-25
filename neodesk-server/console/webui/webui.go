@@ -355,6 +355,12 @@ func (h *Host) servePage(w http.ResponseWriter, r *http.Request, req request) bo
 	if extname(sub) != "" && !strings.HasSuffix(sub, ".html") {
 		return false
 	}
+	// An old address of the console goes to its new place first, signed
+	// in or not: the sign-in page then carries the new address
+	if target, ok := redirectFor(p.redirects, sub, req.query); ok {
+		httpx.Redirect(w, r, http.StatusFound, h.base+target)
+		return true
+	}
 	if !p.isPage(sub) {
 		h.sendPage(w, r, p, http.StatusNotFound, p.html)
 		return true

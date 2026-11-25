@@ -105,7 +105,7 @@
     "section_support": "सहायता",
     "group_console": "कंसोल",
     "group_clients": "क्लाइंट और जुड़ना",
-    "group_server": "सर्वर",
+    "section_server": "सर्वर",
     "group_billing": "बिलिंग",
     "group_developer": "डेवलपर टूल",
     "server_status": "सर्वर की स्थिति",
@@ -113,7 +113,9 @@
     "more": "{count} और दिखाएँ",
     "fewer": "कम दिखाएँ",
     "label": "मुख्य नेविगेशन",
-    "section_devices": "डिवाइस"
+    "section_devices": "डिवाइस",
+    "server_backups": "बैकअप",
+    "server_config_files": "कॉन्फ़िगरेशन फ़ाइलें"
   },
   "auth": {
     "login": "साइन इन करें",
@@ -1563,7 +1565,7 @@
       "channel_source_development": "GitHub पर {repo} के डेवलपमेंट बिल्ड",
       "channel_confirm": "अपडेट को {to} पर बदलें? अगली जाँच आपके संस्करण की तुलना {to} चैनल से करेगी।",
       "backups_note": "हर अपडेट से पहले कंसोल उन फ़ाइलों को सहेजता है जिन्हें वह बदलता है। आप उन्हें यहाँ से वापस ला सकते हैं।",
-      "retention_label": "रखने के लिए बैकअप",
+      "retention_label": "अपडेट बैकअप रखें",
       "newest_version": "सबसे नया संस्करण",
       "not_checked": "अभी जाँचा नहीं गया",
       "changes_behind": "आपके संस्करण से {n} नए बदलाव",
@@ -4365,7 +4367,7 @@
     "schedule_interval_12h": "हर 12 घंटे",
     "schedule_interval_24h": "हर 24 घंटे",
     "schedule_interval_weekly": "हर सप्ताह",
-    "schedule_retention": "रखे जाने वाले अभिलेख",
+    "schedule_retention": "निर्धारित बैकअप रखें",
     "schedule_destination": "गंतव्य",
     "schedule_destination_local": "स्थानीय NeoDesk डेटा निर्देशिका",
     "schedule_destination_path": "कस्टम स्थानीय या माउंट किया गया नेटवर्क पथ",

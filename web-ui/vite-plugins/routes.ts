@@ -4,10 +4,15 @@
  * [[optional]] and [...rest] as SvelteKit reads them). The server
  * (web-nodejs/lib/webUi.js) answers an address that matches none of them
  * with status 404, and the app shows its not-found page there.
+ *
+ * Next to it, redirects.json: the old addresses of the console and where
+ * they lead now (src/lib/redirects.ts), which the server follows for an
+ * address it is asked for first.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Adapter, Builder } from '@sveltejs/kit';
+import { REDIRECTS } from '../src/lib/redirects.ts';
 
 export interface RouteEntry {
 	/** The route's folder under src/routes, e.g. "/(console)/policies/[[orgId]]" */
@@ -20,7 +25,7 @@ export function routeEntries(routes: Builder['routes']): RouteEntry[] {
 	return routes.map((r) => ({ id: r.id, pattern: r.pattern.source }));
 }
 
-/** The adapter, then routes.json in its output folder (the adapter empties it first) */
+/** The adapter, then routes.json and redirects.json in its output folder (the adapter empties it first) */
 export function withRoutesList(adapter: Adapter, dir: string): Adapter {
 	return {
 		...adapter,
@@ -29,6 +34,8 @@ export function withRoutesList(adapter: Adapter, dir: string): Adapter {
 			const list = routeEntries(builder.routes);
 			fs.writeFileSync(path.join(dir, 'routes.json'), JSON.stringify(list, null, '\t') + '\n');
 			builder.log.minor(`Wrote routes.json (${list.length} pages)`);
+			fs.writeFileSync(path.join(dir, 'redirects.json'), JSON.stringify(REDIRECTS, null, '\t') + '\n');
+			builder.log.minor(`Wrote redirects.json (${REDIRECTS.length} old addresses)`);
 		}
 	};
 }

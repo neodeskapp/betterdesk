@@ -99,7 +99,7 @@
     "section_support": "Soporte",
     "group_console": "Consola",
     "group_clients": "Clientes y unión",
-    "group_server": "Servidor",
+    "section_server": "Servidor",
     "group_billing": "Facturación",
     "group_developer": "Herramientas para desarrolladores",
     "server_status": "Estado del servidor",
@@ -107,7 +107,9 @@
     "more": "Mostrar {count} más",
     "fewer": "Mostrar menos",
     "label": "Navegación principal",
-    "section_devices": "Dispositivos"
+    "section_devices": "Dispositivos",
+    "server_backups": "Copias de seguridad",
+    "server_config_files": "Archivos de configuración"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -1557,7 +1559,7 @@
       "channel_source_development": "Compilaciones de desarrollo de {repo} en GitHub",
       "channel_confirm": "¿Cambiar las actualizaciones a {to}? La próxima comprobación compara su versión con el canal {to}.",
       "backups_note": "Antes de cada actualización la consola guarda los archivos que sustituye. Puede recuperarlos desde aquí.",
-      "retention_label": "Copias a conservar",
+      "retention_label": "Conservar copias de actualización",
       "newest_version": "Versión más reciente",
       "not_checked": "Aún no comprobado",
       "changes_behind": "{n} cambios más recientes que su versión",
@@ -4359,7 +4361,7 @@
     "schedule_interval_12h": "Cada 12 horas",
     "schedule_interval_24h": "Cada 24 horas",
     "schedule_interval_weekly": "Cada semana",
-    "schedule_retention": "Archivos a conservar",
+    "schedule_retention": "Conservar copias programadas",
     "schedule_destination": "Destino",
     "schedule_destination_local": "Directorio local de datos de NeoDesk",
     "schedule_destination_path": "Ruta local o de red montada personalizada",

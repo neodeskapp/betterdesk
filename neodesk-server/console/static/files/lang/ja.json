@@ -99,7 +99,7 @@
     "section_support": "サポート",
     "group_console": "コンソール",
     "group_clients": "クライアントと参加",
-    "group_server": "サーバー",
+    "section_server": "サーバー",
     "group_billing": "請求",
     "group_developer": "開発者ツール",
     "server_status": "サーバーの状態",
@@ -107,7 +107,9 @@
     "more": "さらに {count} 件を表示",
     "fewer": "表示を減らす",
     "label": "メインナビゲーション",
-    "section_devices": "デバイス"
+    "section_devices": "デバイス",
+    "server_backups": "バックアップ",
+    "server_config_files": "設定ファイル"
   },
   "auth": {
     "login": "サインイン",
@@ -1557,7 +1559,7 @@
       "channel_source_development": "GitHub の {repo} の開発ビルド",
       "channel_confirm": "更新を {to} に切り替えますか？次の確認では、現在のバージョンを {to} チャネルと比較します。",
       "backups_note": "更新のたびに、コンソールは置き換えるファイルを保存します。ここから元に戻せます。",
-      "retention_label": "保持するバックアップ数",
+      "retention_label": "保持する更新バックアップ",
       "newest_version": "最新バージョン",
       "not_checked": "まだ確認していません",
       "changes_behind": "現在より新しい変更 {n} 件",
@@ -4359,7 +4361,7 @@
     "schedule_interval_12h": "12時間ごと",
     "schedule_interval_24h": "24時間ごと",
     "schedule_interval_weekly": "毎週",
-    "schedule_retention": "保持するアーカイブ数",
+    "schedule_retention": "保持する定期バックアップ",
     "schedule_destination": "保存先",
     "schedule_destination_local": "NeoDesk ローカルデータディレクトリ",
     "schedule_destination_path": "カスタムローカルまたはマウント済みネットワークパス",

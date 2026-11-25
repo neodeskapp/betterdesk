@@ -55,11 +55,12 @@ describe('searchAll', () => {
 		const titles = (q: string) => searchAll(q, { pages }).map((r) => r.title);
 		expect(titles('2fa')).toEqual(['Sign-in']);
 		expect(titles('dlp')).toEqual(['Data loss prevention']);
-		expect(titles('systemd')).toEqual(['Services']);
+		// Files and Services are tabs of Server status now
+		expect(titles('systemd')).toEqual(['Server status']);
 	});
 
 	test('every word must match somewhere; case and accents do not matter', () => {
-		expect(searchAll('settings backup', { pages }).map((r) => r.title)).toEqual(['Backup']);
+		expect(searchAll('server backup', { pages }).map((r) => r.title)).toEqual(['Backups']);
 		expect(searchAll('BURO', { pages: [], devices }).map((r) => r.id)).toEqual(['900100002']);
 		expect(norm('Geräte')).toBe('gerate');
 		expect(searchAll('settings nothing-like-this', { pages })).toEqual([]);

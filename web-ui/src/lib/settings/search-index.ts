@@ -982,7 +982,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'backup',
+		'server-backups',
 		'backup-create',
 		'settings.backup_tab.create_title',
 		'',
@@ -990,7 +990,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'backup',
+		'server-backups',
 		'scheduled-backup-panel',
 		'backup.schedule_title',
 		'',
@@ -998,7 +998,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'backup',
+		'server-backups',
 		'scheduled-backup-enabled',
 		'backup.schedule_enabled',
 		'backup.schedule_title',
@@ -1006,7 +1006,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'backup',
+		'server-backups',
 		'scheduled-backup-interval',
 		'backup.schedule_interval',
 		'backup.schedule_title',
@@ -1014,7 +1014,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'backup',
+		'server-backups',
 		'scheduled-backup-retention',
 		'backup.schedule_retention',
 		'backup.schedule_title',
@@ -1022,7 +1022,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'backup',
+		'server-backups',
 		'scheduled-backup-destination-type',
 		'backup.schedule_destination',
 		'backup.schedule_title',
@@ -1030,7 +1030,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'backup',
+		'server-backups',
 		'scheduled-backup-path',
 		'backup.schedule_destination_path_label',
 		'backup.schedule_title',
@@ -1038,7 +1038,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'backup',
+		'server-backups',
 		'backup-restore',
 		'settings.backup_tab.restore_title',
 		'',
@@ -1046,7 +1046,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'backup',
+		'server-backups',
 		'restore-file-input',
 		'settings.backup_tab.restore_file',
 		'settings.backup_tab.restore_title',
@@ -1054,7 +1054,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'backup',
+		'server-backups',
 		'restore-database',
 		'settings.backup_tab.opt_database',
 		'',
@@ -1062,7 +1062,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'backup',
+		'server-backups',
 		'restore-uploads',
 		'settings.backup_tab.opt_uploads',
 		'',
@@ -1070,7 +1070,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'backup',
+		'server-backups',
 		'restore-secrets',
 		'settings.backup_tab.opt_secrets',
 		'',
@@ -1078,7 +1078,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'backup',
+		'server-backups',
 		'restore-env',
 		'settings.backup_tab.opt_env',
 		'',
@@ -1086,25 +1086,32 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'backup',
+		'server-backups',
 		'restore-godb',
 		'settings.backup_tab.opt_godb',
 		'',
 		['settings.backup_tab.opt_godb_desc'],
 		'server.config'
 	],
-	['backup', 'backup-stat-users', 'backup.stat_users', '', [], 'server.config'],
-	['backup', 'backup-stat-settings', 'backup.stat_settings', '', [], 'server.config'],
-	['backup', 'backup-stat-folders', 'backup.stat_folders', '', [], 'server.config'],
-	['backup', 'backup-stat-groups', 'backup.stat_groups', '', [], 'server.config'],
-	['backup', 'backup-stat-strategies', 'settings.backup_tab.stat_strategies', '', [], 'server.config'],
-	['backup', 'backup-stat-backend', 'settings.backup_tab.stat_backend', '', [], 'server.config'],
-	['backup', 'backup-stat-database', 'backup.stat_database', '', [], 'server.config'],
-	['backup', 'backup-stat-keys', 'backup.stat_keys', '', [], 'server.config'],
-	['backup', 'backup-stat-env', 'backup.stat_env', '', [], 'server.config'],
-	['backup', 'backup-stat-uploads', 'settings.backup_tab.stat_uploads', '', [], 'server.config'],
+	['server-backups', 'backup-stat-users', 'backup.stat_users', '', [], 'server.config'],
+	['server-backups', 'backup-stat-settings', 'backup.stat_settings', '', [], 'server.config'],
+	['server-backups', 'backup-stat-folders', 'backup.stat_folders', '', [], 'server.config'],
+	['server-backups', 'backup-stat-groups', 'backup.stat_groups', '', [], 'server.config'],
 	[
-		'updates',
+		'server-backups',
+		'backup-stat-strategies',
+		'settings.backup_tab.stat_strategies',
+		'',
+		[],
+		'server.config'
+	],
+	['server-backups', 'backup-stat-backend', 'settings.backup_tab.stat_backend', '', [], 'server.config'],
+	['server-backups', 'backup-stat-database', 'backup.stat_database', '', [], 'server.config'],
+	['server-backups', 'backup-stat-keys', 'backup.stat_keys', '', [], 'server.config'],
+	['server-backups', 'backup-stat-env', 'backup.stat_env', '', [], 'server.config'],
+	['server-backups', 'backup-stat-uploads', 'settings.backup_tab.stat_uploads', '', [], 'server.config'],
+	[
+		'server-updates',
 		'update-status-headline',
 		'updates.update_available',
 		'',
@@ -1112,7 +1119,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'updates',
+		'server-backups',
 		'update-backups-panel',
 		'updates.create_backup',
 		'updates.update_available',
@@ -1120,7 +1127,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'updates',
+		'server-updates',
 		'update-channel-panel',
 		'updates.channel_title',
 		'',
@@ -1128,7 +1135,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'updates',
+		'server-updates',
 		'update-channel-select',
 		'updates.channel_title',
 		'',
@@ -1136,7 +1143,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'updates',
+		'server-updates',
 		'update-channel-select',
 		'settings.updates_tab.channel_stable',
 		'updates.channel_title',
@@ -1144,7 +1151,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'updates',
+		'server-updates',
 		'update-channel-select',
 		'settings.updates_tab.channel_development',
 		'updates.channel_title',
@@ -1152,16 +1159,16 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	[
-		'updates',
+		'server-backups',
 		'backup-retention-input',
 		'settings.updates_tab.retention_label',
 		'',
 		['updates.retention_hint'],
 		'server.config'
 	],
-	['updates', 'update-local-version', 'updates.current_version', '', [], 'server.config'],
-	['updates', 'update-remote-version', 'settings.updates_tab.newest_version', '', [], 'server.config'],
-	['updates', 'update-status-headline', 'updates.status', '', [], 'server.config'],
+	['server-updates', 'update-local-version', 'updates.current_version', '', [], 'server.config'],
+	['server-updates', 'update-remote-version', 'settings.updates_tab.newest_version', '', [], 'server.config'],
+	['server-updates', 'update-status-headline', 'updates.status', '', [], 'server.config'],
 	['email', 'email-smtp-host', 'settings.email.host_label', '', [], 'server.config'],
 	['email', 'email-smtp-port', 'settings.email.smtp_port', '', ['settings.email.port_hint'], 'server.config'],
 	[
@@ -1243,23 +1250,23 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	['time', 'time-clock-ntp-server', 'commercialization.clock.status_server', '', [], 'server.config'],
 	['time', 'time-clock-os-sync', 'commercialization.clock.status_os', '', [], 'server.config'],
 	['time', 'time-clock-last-error', 'commercialization.clock.status_error', '', [], 'server.config'],
-	['advanced', 'advanced-title', 'settings.advanced_tab.restart_title', '', [], 'server.config']
+	['server-config-files', 'advanced-title', 'settings.advanced_tab.restart_title', '', [], 'server.config']
 ];
 
-/** Space-separated element ids per tab, for #<id> links into another tab */
+/** Space-separated element ids per tab or page, for #<id> links into another one */
 export const TAB_IDS: Readonly<Record<string, string>> = {
 	general:
 		'availability-history-enabled availability-history-form availability-history-retention availability-history-settings-panel availability-retention-group availability-title conn-allow-shared-nat-initiator conn-logged-in-only-initiator conn-mode-p2p conn-mode-relay conn-operator-only-outbound conn-p2p-fallback-ms conn-same-nat-relay connection-diagram connection-diagram-title connection-mode-effect connection-mode-fields connection-mode-form connection-mode-info connection-mode-section connection-mode-source connection-mode-title db-path device-scope-form device-scope-open device-scope-restricted device-scope-settings-panel device-scope-title device-scope-warning general-form general-save go-server-version mesh-agents-online mesh-body mesh-cert-banner mesh-cert-state mesh-copy-server-id mesh-download-msh mesh-group-add mesh-groups-form mesh-groups-list mesh-groups-status mesh-groups-title mesh-install mesh-msh-name mesh-recordings mesh-recordings-table mesh-server-id mesh-settings-panel mesh-state mesh-status-enabled mesh-title public-api-url public-endpoints public-endpoints-form public-endpoints-title public-relay-server public-server-id server-info server-info-title uptime',
 	branding:
 		'agent-bg-color agent-bg-color-panel agent-bg-color-picker agent-bg-file-name agent-bg-gradient agent-bg-gradient-panel agent-bg-image-file agent-bg-image-panel agent-bg-image-url agent-bg-upload-status agent-show-powered bg-blur bg-blur-value bg-color bg-color-panel bg-color-picker bg-effects-group bg-file-name bg-gradient bg-gradient-panel bg-image-file bg-image-library bg-image-panel bg-image-url bg-overlay bg-overlay-group bg-overlay-value bg-size bg-upload-status brand-name branding-agent branding-agent-title branding-background branding-background-title branding-builtin-themes branding-colors-title branding-css branding-css-title branding-custom-colors branding-danger-title branding-export-btn branding-fonts branding-fonts-title branding-footer branding-footer-title branding-form branding-identity branding-identity-title branding-ie-status branding-ie-title branding-import-export branding-import-input branding-login branding-login-title branding-profile-apply-btn branding-profile-delete-btn branding-profile-duplicate-btn branding-profile-menu branding-profile-new-btn branding-profile-save-btn branding-profile-select branding-profile-status branding-profiles branding-profiles-title branding-rdclient branding-rdclient-title branding-readability-alert branding-readability-text branding-reset-btn branding-revert-btn branding-save-btn branding-theme branding-theme-apply branding-theme-gallery branding-theme-select branding-theme-title branding-toc color-accentBlue color-accentGreen color-accentPurple color-accentRed color-accentYellow color-bgElevated color-bgPrimary color-bgSecondary color-bgTertiary color-borderPrimary color-borderSecondary color-textPrimary color-textSecondary custom-css font-body-clear font-body-current font-body-dropdown font-body-search font-body-slot font-body-value font-heading-clear font-heading-current font-heading-dropdown font-heading-search font-heading-slot font-heading-value font-local-count font-local-info font-local-list font-source-google font-source-label font-source-local font-source-upload font-upload-file font-upload-name footer-text login-bg-color login-bg-color-panel login-bg-color-picker login-bg-config login-bg-file-name login-bg-gradient login-bg-gradient-panel login-bg-image-file login-bg-image-panel login-bg-image-url login-bg-overlay login-bg-overlay-group login-bg-overlay-value login-bg-upload-status login-promo-mode-selector login-slides-add login-slides-list login-slides-max-hint login-slides-panel login-slides-restore login-subtitle login-title logo-file-name logo-icon-name logo-icon-panel logo-image-file logo-image-panel logo-image-url logo-svg-input logo-svg-panel logo-text-accent logo-text-input logo-text-panel rdclient-bg-color rdclient-bg-color-panel rdclient-bg-color-picker rdclient-bg-file-name rdclient-bg-gradient rdclient-bg-gradient-panel rdclient-bg-image-file rdclient-bg-image-panel rdclient-bg-image-url rdclient-bg-overlay rdclient-bg-overlay-group rdclient-bg-overlay-value rdclient-bg-size rdclient-bg-upload-status show-powered theme-mode-selector',
 	auth: 'account-password auth-panel-ldap auth-panel-oidc auth-panel-totp client-sessions-expiry-days client-sessions-form client-sessions-max-days client-sessions-max-group client-sessions-settings-section client-sessions-sliding confirm-password console-sessions-form current-password enrollment-pending-hint enrollment-rich-approve enrollment-settings-section enrollment-tag-picker for-everyone-title ldap-allow-signup ldap-attrs ldap-base-dn ldap-bind-dn ldap-bind-password ldap-bind-search-fields ldap-config-fields ldap-conn-timeout ldap-default-role ldap-direct-bind ldap-direct-bind-dn ldap-direct-bind-fields ldap-enabled ldap-form ldap-group-attr-name ldap-group-base-dn ldap-group-filter ldap-group-role-map ldap-host ldap-port ldap-skip-tls-verify ldap-start-tls ldap-test-btn ldap-test-result ldap-use-tls ldap-user-attr-email ldap-user-attr-id ldap-user-attr-name ldap-user-filter new-password oidc-allow-signup oidc-allowed-private-cidrs oidc-authorization-url oidc-auto-discovery oidc-claim-email oidc-claim-groups oidc-claim-name oidc-claim-username oidc-claims oidc-client-id oidc-client-secret oidc-config-fields oidc-default-role oidc-display-name oidc-enabled oidc-form oidc-group-role-map oidc-issuer-url oidc-manual-endpoints oidc-panel-url oidc-prefer-sso oidc-redirect-url oidc-redirect-url-warning oidc-scopes oidc-test-btn oidc-test-result oidc-token-url oidc-use-pkce oidc-userinfo-url password-form password-requirements req-length req-lowercase req-number req-uppercase require-two-factor single-session totp-status-container two-factor-policy-form your-account-title',
-	backup:
-		'backup-contents-title backup-create backup-create-title backup-download-btn backup-download-status backup-restore backup-restore-title backup-smb-domain backup-smb-host backup-smb-mount-path backup-smb-password backup-smb-share backup-smb-status backup-smb-test-btn backup-smb-username backup-stat-backend backup-stat-database backup-stat-env backup-stat-folders backup-stat-groups backup-stat-keys backup-stat-settings backup-stat-strategies backup-stat-uploads backup-stat-users backup-stats restore-actions restore-database restore-env restore-file-hint restore-file-input restore-godb restore-json-note restore-options restore-options-hint restore-result restore-secrets restore-start-btn restore-status restore-uploads scheduled-backup-destination-type scheduled-backup-details scheduled-backup-enabled scheduled-backup-form scheduled-backup-interval scheduled-backup-panel scheduled-backup-path scheduled-backup-path-group scheduled-backup-retention scheduled-backup-run-btn scheduled-backup-smb-form scheduled-backup-smb-panel scheduled-backup-status scheduled-backup-test-btn scheduled-backup-title smb-title',
-	updates:
-		'backup-prune-now backup-retention-input backup-retention-save backup-summary update-alerts update-available-heading update-backup-toggle update-backups-list update-backups-panel update-changelog update-channel-active-badge update-channel-branch update-channel-development update-channel-docker-hint update-channel-effect update-channel-panel update-channel-select update-channel-stable update-channel-title update-check-btn update-details-section update-docker-commands update-docker-desc update-docker-images update-docker-info update-docker-install-note update-files-summary update-install-blocked-hint update-install-btn update-local-version update-progress update-progress-fill update-progress-text update-rebuild-server-btn update-remote-version update-stale-detail update-stale-warning update-status-badge update-status-desc update-status-headline update-status-row updates-side-title',
 	email:
 		'email-smtp-alert email-smtp-auth email-smtp-auth-fields email-smtp-form email-smtp-from email-smtp-host email-smtp-pass email-smtp-port email-smtp-save-btn email-smtp-secure email-smtp-user email-title',
 	time: 'time-billing-month-hint time-billing-timezone time-billing-timezone-custom time-check-status time-clock-advanced time-clock-detail time-clock-last-error time-clock-max-skew time-clock-ntp-server time-clock-ntp-servers time-clock-offset time-clock-os-sync time-clock-require-sync time-clock-settings-form time-clock-trust-os time-custom-zone time-detect-timezone-btn time-ntp-title time-save-clock-settings-btn time-side-title time-timesync-check-btn time-zone-now time-zone-title',
-	advanced:
+	'server-backups':
+		'backup-contents-title backup-create backup-create-title backup-download-btn backup-download-status backup-prune-now backup-restore backup-restore-title backup-retention-input backup-retention-save backup-smb-domain backup-smb-host backup-smb-mount-path backup-smb-password backup-smb-share backup-smb-status backup-smb-test-btn backup-smb-username backup-stat-backend backup-stat-database backup-stat-env backup-stat-folders backup-stat-groups backup-stat-keys backup-stat-settings backup-stat-strategies backup-stat-uploads backup-stat-users backup-stats backup-summary restore-actions restore-database restore-env restore-file-hint restore-file-input restore-godb restore-json-note restore-options restore-options-hint restore-result restore-secrets restore-start-btn restore-status restore-uploads scheduled-backup-destination-type scheduled-backup-details scheduled-backup-enabled scheduled-backup-form scheduled-backup-interval scheduled-backup-panel scheduled-backup-path scheduled-backup-path-group scheduled-backup-retention scheduled-backup-run-btn scheduled-backup-smb-form scheduled-backup-smb-panel scheduled-backup-status scheduled-backup-test-btn scheduled-backup-title smb-title update-backups-list update-backups-panel',
+	'server-updates':
+		'update-alerts update-available-heading update-backup-toggle update-changelog update-channel-active-badge update-channel-branch update-channel-development update-channel-docker-hint update-channel-effect update-channel-panel update-channel-select update-channel-stable update-channel-title update-check-btn update-details-section update-docker-commands update-docker-desc update-docker-images update-docker-info update-docker-install-note update-files-summary update-install-blocked-hint update-install-btn update-local-version update-progress update-progress-fill update-progress-text update-rebuild-server-btn update-remote-version update-stale-detail update-stale-warning update-status-badge update-status-desc update-status-headline update-status-row updates-side-title',
+	'server-config-files':
 		'advanced-config-file-list advanced-config-meta advanced-config-path advanced-config-placeholder advanced-config-reload advanced-config-restart advanced-config-restart-hint advanced-config-save advanced-config-textarea advanced-config-toolbar advanced-files-label advanced-restart-desc advanced-restart-title advanced-restart-zone advanced-title'
 };

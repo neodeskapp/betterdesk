@@ -106,7 +106,7 @@
     "section_support": "الدعم",
     "group_console": "وحدة التحكم",
     "group_clients": "العملاء والانضمام",
-    "group_server": "الخادم",
+    "section_server": "الخادم",
     "group_billing": "الفوترة",
     "group_developer": "أدوات المطورين",
     "server_status": "حالة الخادم",
@@ -114,7 +114,9 @@
     "more": "عرض {count} أخرى",
     "fewer": "عرض أقل",
     "label": "التنقل الرئيسي",
-    "section_devices": "الأجهزة"
+    "section_devices": "الأجهزة",
+    "server_backups": "النسخ الاحتياطية",
+    "server_config_files": "ملفات الإعداد"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -1564,7 +1566,7 @@
       "channel_source_development": "إصدارات التطوير من {repo} على GitHub",
       "channel_confirm": "التحويل إلى {to}؟ سيقارن الفحص التالي إصدارك بقناة {to}.",
       "backups_note": "قبل كل تحديث تحفظ وحدة التحكم الملفات التي تستبدلها. يمكنك إعادتها من هنا.",
-      "retention_label": "عدد النسخ الاحتياطية المحفوظة",
+      "retention_label": "عدد نسخ التحديث المحفوظة",
       "newest_version": "أحدث إصدار",
       "not_checked": "لم يُفحص بعد",
       "changes_behind": "{n} تغييرات أحدث من إصدارك",
@@ -4366,7 +4368,7 @@
     "schedule_interval_12h": "كل 12 ساعة",
     "schedule_interval_24h": "كل 24 ساعة",
     "schedule_interval_weekly": "كل أسبوع",
-    "schedule_retention": "الأرشيفات المحتفظ بها",
+    "schedule_retention": "عدد النسخ المجدولة المحفوظة",
     "schedule_destination": "الوجهة",
     "schedule_destination_local": "مجلد بيانات NeoDesk المحلي",
     "schedule_destination_path": "مسار محلي أو شبكي موصول مخصص",

@@ -31,7 +31,12 @@ describe('pageKey (lib/consoleNav.js pageKey)', () => {
 		['/settings', '', 'settings:general'],
 		['/settings', '?tab=auth', 'settings:auth'],
 		['/server-management', '', 'server-management:overview'],
-		['/server-management', '?tab=files', 'server-management:files'],
+		// Files and Services are tabs of Server status, one entry
+		['/server-management', '?tab=files', 'server-management:overview'],
+		['/server-management', '?tab=services', 'server-management:overview'],
+		['/server/backups', '', 'server-backups'],
+		['/server/updates', '', 'server-updates'],
+		['/server/config-files', '?x=1', 'server-config-files'],
 		['/commercialization', '', 'commercialization:packages'],
 		['/commercialization', '?tab=reports', 'commercialization:sessions'],
 		['/commercialization', '?tab=sessions', 'commercialization:sessions'],
@@ -88,18 +93,33 @@ describe('buildNavModel', () => {
 
 	test('a heading where the group changes, only in the More list', () => {
 		const settings = buildNavModel(admin, 'devices').sections.find((s) => s.id === 'settings')!;
-		expect(settings.core.map((i) => i.page.text)).toEqual(['General', 'Client setup', 'Server status']);
+		expect(settings.core.map((i) => i.page.text)).toEqual(['General', 'Client setup']);
 		const rows = texts(settings.more);
 		expect(rows.filter((r) => r.startsWith('# '))).toEqual([
 			'# Console',
 			'# Clients and joining',
-			'# Server',
 			'# Billing',
 			'# Developer tools'
 		]);
 		// Each heading comes right before the first page of its group, and once
 		expect(rows.slice(0, 3)).toEqual(['# Console', 'Appearance', 'Sign-in']);
 		expect(rows.indexOf('# Clients and joining')).toBe(rows.indexOf('Translations') + 1);
+	});
+
+	test('the server pages are a section of their own, Server status one entry with its tabs', () => {
+		const server = buildNavModel(admin, pageKey('/server-management', '?tab=files')).sections.find(
+			(s) => s.id === 'server'
+		)!;
+		expect(server.active).toBe(true);
+		expect(server.core.map((i) => [i.page.text, i.active])).toEqual([
+			['Server status', true],
+			['Relay servers', false],
+			['Backups', false],
+			['Updates', false]
+		]);
+		expect(texts(server.more)).toEqual(['Configuration files', 'Capacity test']);
+		const backups = buildNavModel(admin, pageKey('/server/backups')).activePage;
+		expect(backups?.href).toBe('/server/backups');
 	});
 
 	test('the rules pages are a section of their own, Policies and Alerts and automation shown', () => {

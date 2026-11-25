@@ -105,7 +105,7 @@
     "section_support": "Dukungan",
     "group_console": "Konsol",
     "group_clients": "Klien dan bergabung",
-    "group_server": "Server",
+    "section_server": "Server",
     "group_billing": "Penagihan",
     "group_developer": "Alat pengembang",
     "server_status": "Status server",
@@ -113,7 +113,9 @@
     "more": "Tampilkan {count} lagi",
     "fewer": "Tampilkan lebih sedikit",
     "label": "Navigasi utama",
-    "section_devices": "Perangkat"
+    "section_devices": "Perangkat",
+    "server_backups": "Cadangan",
+    "server_config_files": "Berkas konfigurasi"
   },
   "auth": {
     "login": "Masuk",
@@ -1563,7 +1565,7 @@
       "channel_source_development": "Build pengembangan {repo} di GitHub",
       "channel_confirm": "Ganti pembaruan ke {to}? Pemeriksaan berikutnya membandingkan versi Anda dengan kanal {to}.",
       "backups_note": "Sebelum setiap pembaruan, konsol menyimpan file yang diganti. Anda bisa mengembalikannya dari sini.",
-      "retention_label": "Cadangan yang disimpan",
+      "retention_label": "Simpan cadangan pembaruan",
       "newest_version": "Versi terbaru",
       "not_checked": "Belum diperiksa",
       "changes_behind": "{n} perubahan lebih baru dari versi Anda",
@@ -4365,7 +4367,7 @@
     "schedule_interval_12h": "Setiap 12 jam",
     "schedule_interval_24h": "Setiap 24 jam",
     "schedule_interval_weekly": "Setiap minggu",
-    "schedule_retention": "Arsip yang disimpan",
+    "schedule_retention": "Simpan cadangan terjadwal",
     "schedule_destination": "Tujuan",
     "schedule_destination_local": "Direktori data NeoDesk lokal",
     "schedule_destination_path": "Jalur lokal atau jaringan terpasang khusus",

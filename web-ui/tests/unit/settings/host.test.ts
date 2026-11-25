@@ -12,7 +12,8 @@ import {
 	parseTab,
 	tabAllowed,
 	tabDescKey,
-	tabOfId,
+	placeHref,
+	placeOfId,
 	tabSearch
 } from '#lib/settings/tabs.ts';
 
@@ -26,14 +27,14 @@ describe('settings tabs in the URL', () => {
 		expect(parseTab('__proto__')).toBe('general');
 	});
 
-	test('the five server tabs need server.config; General, Appearance and Sign-in are for everyone', () => {
-		expect([...ADMIN_TABS].sort()).toEqual(['advanced', 'backup', 'email', 'time', 'updates']);
+	test('Email and Time need server.config; General, Appearance and Sign-in are for everyone', () => {
+		expect([...ADMIN_TABS].sort()).toEqual(['email', 'time']);
 		for (const tab of TABS) expect(tabAllowed(tab, true)).toBe(true);
 		expect(tabAllowed('general', false)).toBe(true);
 		expect(tabAllowed('branding', false)).toBe(true);
 		expect(tabAllowed('auth', false)).toBe(true);
-		expect(tabAllowed('backup', false)).toBe(false);
-		expect(tabAllowed('advanced', false)).toBe(false);
+		expect(tabAllowed('email', false)).toBe(false);
+		expect(tabAllowed('time', false)).toBe(false);
 	});
 
 	test('General has no ?tab=, the others keep the old names', () => {
@@ -63,16 +64,23 @@ describe('old links into settings', () => {
 		expect(decodeHash('#%E0%A4%A')).toBe('%E0%A4%A');
 	});
 
-	test('an element id leads to the tab that holds it', () => {
+	test('an element id leads to the tab or the page that holds it', () => {
 		// Links the old console has: dashboard, keys and scaling point at General
-		expect(tabOfId('public-endpoints')).toBe('general');
-		expect(tabOfId('account-password')).toBe('auth');
-		expect(tabOfId('auth-panel-totp')).toBe('auth');
-		expect(tabOfId('ldap-host')).toBe('auth');
-		expect(tabOfId('branding-css')).toBe('branding');
-		expect(tabOfId('color-accentBlue')).toBe('branding');
-		expect(tabOfId('scheduled-backup-enabled')).toBe('backup');
-		expect(tabOfId('nothing-like-this')).toBeNull();
+		expect(placeOfId('public-endpoints')).toBe('general');
+		expect(placeOfId('account-password')).toBe('auth');
+		expect(placeOfId('auth-panel-totp')).toBe('auth');
+		expect(placeOfId('ldap-host')).toBe('auth');
+		expect(placeOfId('branding-css')).toBe('branding');
+		expect(placeOfId('color-accentBlue')).toBe('branding');
+		expect(placeOfId('nothing-like-this')).toBeNull();
+		// Backup, Updates and Advanced are pages of the Server section now
+		expect(placeOfId('scheduled-backup-enabled')).toBe('server-backups');
+		expect(placeOfId('backup-retention-input')).toBe('server-backups');
+		expect(placeOfId('update-channel-panel')).toBe('server-updates');
+		expect(placeOfId('advanced-config-save')).toBe('server-config-files');
+		expect(placeHref('server-backups', 'backup-create')).toBe('/server/backups#backup-create');
+		expect(placeHref('auth', 'ldap-host')).toBe('/settings?tab=auth#ldap-host');
+		expect(placeHref('general')).toBe('/settings');
 	});
 
 	test('every index row points at an id of its own tab', () => {
@@ -147,10 +155,11 @@ describe('settings search', () => {
 		const hits = searchSettings('server', { t, can: admin, current: 'auth' }, ROWS);
 		// "Server address" (Sign-in, open) and "Server version" match by label, Public ID server too
 		expect(hits[0]).toEqual({
-			tab: 'auth',
+			place: 'auth',
 			id: 'ldap-host',
 			label: 'Server address',
-			where: 'Sign-in › LDAP / Active Directory'
+			where: 'Sign-in › LDAP / Active Directory',
+			href: '/settings?tab=auth#ldap-host'
 		});
 		expect(hits.filter((h) => h.id === 'ldap-host')).toHaveLength(1);
 		expect(hits.map((h) => h.id)).not.toContain('x');

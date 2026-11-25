@@ -99,7 +99,7 @@
     "section_support": "Assistenza",
     "group_console": "Console",
     "group_clients": "Client e adesione",
-    "group_server": "Server",
+    "section_server": "Server",
     "group_billing": "Fatturazione",
     "group_developer": "Strumenti per sviluppatori",
     "server_status": "Stato del server",
@@ -107,7 +107,9 @@
     "more": "Mostra altri {count}",
     "fewer": "Mostra meno",
     "label": "Navigazione principale",
-    "section_devices": "Dispositivi"
+    "section_devices": "Dispositivi",
+    "server_backups": "Backup",
+    "server_config_files": "File di configurazione"
   },
   "auth": {
     "login": "Accedi",
@@ -1557,7 +1559,7 @@
       "channel_source_development": "Build di sviluppo di {repo} su GitHub",
       "channel_confirm": "Passare gli aggiornamenti a {to}? Il prossimo controllo confronta la tua versione con il canale {to}.",
       "backups_note": "Prima di ogni aggiornamento la console salva i file che sostituisce. Puoi ripristinarli da qui.",
-      "retention_label": "Backup da conservare",
+      "retention_label": "Backup degli aggiornamenti da conservare",
       "newest_version": "Versione più recente",
       "not_checked": "Non ancora controllato",
       "changes_behind": "{n} modifiche più recenti della tua versione",
@@ -4359,7 +4361,7 @@
     "schedule_interval_12h": "Ogni 12 ore",
     "schedule_interval_24h": "Ogni 24 ore",
     "schedule_interval_weekly": "Ogni settimana",
-    "schedule_retention": "Archivi da conservare",
+    "schedule_retention": "Backup pianificati da conservare",
     "schedule_destination": "Destinazione",
     "schedule_destination_local": "Directory dati locale di NeoDesk",
     "schedule_destination_path": "Percorso locale o di rete montato personalizzato",

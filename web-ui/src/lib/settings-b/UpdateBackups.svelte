@@ -1,7 +1,8 @@
 <!--
-  Updates › Backups made before updates (old settings.js loadUpdateBackups,
-  retention and prune): the copies of the files each update replaced, to
-  put back or delete, and how many to keep. Folded by default.
+  Server › Backups › Backups made before updates (old settings.js
+  loadUpdateBackups, retention and prune): the copies of the files each
+  update replaced, to put back or delete, and how many to keep ("Keep
+  update backups").
 -->
 <script lang="ts">
 	import {
@@ -19,7 +20,6 @@
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
-	import Disclosure from '#lib/ui/Disclosure.svelte';
 	import Field from '#lib/ui/Field.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import ListRow from '#lib/ui/ListRow.svelte';
@@ -161,65 +161,64 @@
 	});
 </script>
 
-<Disclosure id="update-backups-panel" title={t('updates.backups_title')}>
-	<div class="backups">
-		<p class="section-note">{t('settings.updates_tab.backups_note')}</p>
-		{#if listState === 'ready' && backups.length}
-			<CountLine
-				text={t('settings.updates_tab.backups_summary', { size: formatBytes(total) })}
-				values={{ count: backups.length }}
-			/>
-		{/if}
-		{#if listState === 'loading'}
-			<States kind="loading" />
-		{:else if listState === 'error'}
-			<States kind="error" message={listError} onretry={() => void load()} />
-		{:else if !backups.length}
-			<States message={t('updates.no_backups')} />
-		{:else}
-			<RowList>
-				{#each backups as b (b.name)}
-					<ListRow title={b.name}>
-						{#snippet sub()}
-							<Time value={b.timestamp} />{#if b.sha},
-								<span class="mono">{b.sha}</span>{/if},
-							{formatNumber(b.fileCount || b.filesBackedUp || 0)}
-							{t('updates.files')}, {formatBytes(b.sizeBytes ?? 0)}
-						{/snippet}
-						{#snippet end()}
-							<Button size="sm" busy={busy === b.name} onclick={() => void restore(b.name)}
-								>{t('settings.updates_tab.restore_files')}</Button
-							>
-							<Button
-								size="sm"
-								variant="danger-quiet"
-								disabled={busy === b.name}
-								onclick={() => void remove(b.name)}>{t('updates.delete')}</Button
-							>
-						{/snippet}
-					</ListRow>
-				{/each}
-			</RowList>
-		{/if}
-		<Field
-			id="backup-retention-input"
-			label={t('settings.updates_tab.retention_label')}
-			hint={t('updates.retention_hint')}
-		>
-			{#snippet children(f)}
-				<div class="settings-inline-controls">
-					<Input {...f} type="number" width="short" min="0" max="1000" step="1" bind:value={keep} />
-					<Button id="backup-retention-save" busy={busy === 'retention'} onclick={saveRetention}
-						>{t('settings.updates_tab.retention_save')}</Button
-					>
-					<Button id="backup-prune-now" busy={busy === 'prune'} onclick={prune}
-						>{t('settings.updates_tab.prune_now')}</Button
-					>
-				</div>
-			{/snippet}
-		</Field>
-	</div>
-</Disclosure>
+<section class="section backups" id="update-backups-panel" aria-labelledby="update-backups-title">
+	<h2 id="update-backups-title">{t('updates.backups_title')}</h2>
+	<p class="section-note">{t('settings.updates_tab.backups_note')}</p>
+	{#if listState === 'ready' && backups.length}
+		<CountLine
+			text={t('settings.updates_tab.backups_summary', { size: formatBytes(total) })}
+			values={{ count: backups.length }}
+		/>
+	{/if}
+	{#if listState === 'loading'}
+		<States kind="loading" />
+	{:else if listState === 'error'}
+		<States kind="error" message={listError} onretry={() => void load()} />
+	{:else if !backups.length}
+		<States message={t('updates.no_backups')} />
+	{:else}
+		<RowList>
+			{#each backups as b (b.name)}
+				<ListRow title={b.name}>
+					{#snippet sub()}
+						<Time value={b.timestamp} />{#if b.sha},
+							<span class="mono">{b.sha}</span>{/if},
+						{formatNumber(b.fileCount || b.filesBackedUp || 0)}
+						{t('updates.files')}, {formatBytes(b.sizeBytes ?? 0)}
+					{/snippet}
+					{#snippet end()}
+						<Button size="sm" busy={busy === b.name} onclick={() => void restore(b.name)}
+							>{t('settings.updates_tab.restore_files')}</Button
+						>
+						<Button
+							size="sm"
+							variant="danger-quiet"
+							disabled={busy === b.name}
+							onclick={() => void remove(b.name)}>{t('updates.delete')}</Button
+						>
+					{/snippet}
+				</ListRow>
+			{/each}
+		</RowList>
+	{/if}
+	<Field
+		id="backup-retention-input"
+		label={t('settings.updates_tab.retention_label')}
+		hint={t('updates.retention_hint')}
+	>
+		{#snippet children(f)}
+			<div class="settings-inline-controls">
+				<Input {...f} type="number" width="short" min="0" max="1000" step="1" bind:value={keep} />
+				<Button id="backup-retention-save" busy={busy === 'retention'} onclick={saveRetention}
+					>{t('settings.updates_tab.retention_save')}</Button
+				>
+				<Button id="backup-prune-now" busy={busy === 'prune'} onclick={prune}
+					>{t('settings.updates_tab.prune_now')}</Button
+				>
+			</div>
+		{/snippet}
+	</Field>
+</section>
 
 <style>
 	.backups {
@@ -227,7 +226,7 @@
 		flex-direction: column;
 		gap: var(--space-3);
 	}
-	.backups > .section-note {
+	.backups > h2 + .section-note {
 		margin-top: 0;
 	}
 	.settings-inline-controls {

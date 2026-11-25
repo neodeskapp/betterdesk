@@ -1,7 +1,8 @@
 <!--
-  Settings › Updates (server.config). Check for a newer version and
-  install it (step by step in a dialog); the update channel and the
-  backups made before updates beside it; the installed and newest version
+  Server › Updates (/server/updates, server.config). Check for a newer
+  version and install it (step by step in a dialog); the update channel
+  beside it (the backups made before updates are on Server › Backups); the
+  installed and newest version
   in the side column. Docker image installs show the host commands
   instead of Install. Old page: views/settings.ejs "Updates", settings.js
   "Self-Update".
@@ -32,7 +33,6 @@
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { InstallRun } from '#lib/settings-b/install.svelte.ts';
 	import TabCols from '#lib/settings-b/TabCols.svelte';
-	import UpdateBackups from '#lib/settings-b/UpdateBackups.svelte';
 	import UpdateInstall from '#lib/settings-b/UpdateInstall.svelte';
 	import {
 		GO_SOURCES,
@@ -669,7 +669,6 @@
 							{#if docker}<p class="hint">{t('settings.updates_tab.channel_docker_note')}</p>{/if}
 						</fieldset>
 					</section>
-					<UpdateBackups />
 				</div>
 			</div>
 		{/snippet}

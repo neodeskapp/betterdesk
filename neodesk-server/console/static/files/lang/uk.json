@@ -105,7 +105,7 @@
     "section_support": "Підтримка",
     "group_console": "Консоль",
     "group_clients": "Клієнти та приєднання",
-    "group_server": "Сервер",
+    "section_server": "Сервер",
     "group_billing": "Рахунки",
     "group_developer": "Інструменти розробника",
     "server_status": "Стан сервера",
@@ -113,7 +113,9 @@
     "more": "Показати ще {count}",
     "fewer": "Показати менше",
     "label": "Головна навігація",
-    "section_devices": "Пристрої"
+    "section_devices": "Пристрої",
+    "server_backups": "Резервні копії",
+    "server_config_files": "Файли конфігурації"
   },
   "auth": {
     "login": "Увійти",
@@ -1563,7 +1565,7 @@
       "channel_source_development": "Збірки для розробки {repo} на GitHub",
       "channel_confirm": "Перемкнути оновлення на {to}? Наступна перевірка порівняє вашу версію з каналом {to}.",
       "backups_note": "Перед кожним оновленням консоль зберігає файли, які замінює. Звідси їх можна повернути.",
-      "retention_label": "Скільки копій зберігати",
+      "retention_label": "Зберігати копії оновлень",
       "newest_version": "Найновіша версія",
       "not_checked": "Ще не перевірено",
       "changes_behind": "{n} змін новіших за вашу версію",
@@ -4365,7 +4367,7 @@
     "schedule_interval_12h": "Кожні 12 годин",
     "schedule_interval_24h": "Кожні 24 години",
     "schedule_interval_weekly": "Щотижня",
-    "schedule_retention": "Архівів для зберігання",
+    "schedule_retention": "Зберігати заплановані копії",
     "schedule_destination": "Місце призначення",
     "schedule_destination_local": "Локальний каталог даних NeoDesk",
     "schedule_destination_path": "Власний локальний або змонтований мережевий шлях",

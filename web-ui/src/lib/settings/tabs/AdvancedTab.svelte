@@ -1,5 +1,6 @@
 <!--
-  Settings › Advanced (server.config). The configuration files: editable
+  Server › Configuration files (/server/config-files, server.config;
+  Settings › Advanced before). The configuration files: editable
   ones first, read-only ones after, the ones that don't exist on this
   server folded at the end; the editor beside the list (under it on
   phones, both stay in view). A file whose saves need a service restart

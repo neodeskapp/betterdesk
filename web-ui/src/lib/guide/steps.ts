@@ -30,7 +30,7 @@ export const STEP_TARGETS: Readonly<Record<StepId, StepTarget>> = {
 	computer: { kind: 'add-computer' },
 	session: page('/devices', 'session'),
 	people: page('/users', 'people'),
-	backup: page('/settings?tab=backup', 'backup', 'backup-create')
+	backup: page('/server/backups', 'backup', 'backup-create')
 };
 
 export const stepTitleKey = (id: StepId) => `setup_guide.steps.${id}.title`;

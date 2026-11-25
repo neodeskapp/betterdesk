@@ -2,7 +2,7 @@ package access
 
 import "strings"
 
-// The console's navigation: six sections, each with its pages. A page is
+// The console's navigation: seven sections, each with its pages. A page is
 // shown to exactly the accounts its route lets in, so each page carries the
 // check its route uses. The account's panel access policy then hides the
 // pages whose section it may not read.
@@ -78,7 +78,6 @@ func countID(id string) func(*NavPage)    { return func(p *NavPage) { p.CountID 
 const (
 	groupConsole   = "nav.group_console"
 	groupClients   = "nav.group_clients"
-	groupServer    = "nav.group_server"
 	groupBilling   = "nav.group_billing"
 	groupDeveloper = "nav.group_developer"
 )
@@ -122,15 +121,21 @@ var NavSections = []NavSection{
 		navPage("dataguard", "dataguard dlp data loss", "/dataguard", "nav.dataguard", withPermission("server.config")),
 		navPage("attestation", "attestation fingerprint hardware identity", "/attestation", "nav.attestation", withRule(navAdminRole)),
 	}},
+	{ID: "server", Label: "nav.section_server", Icon: "dns", Pages: []NavPage{
+		navPage("server-management:overview", "server management status health cpu memory uptime files services systemd", "/server-management", "nav.server_status", withPermission("server.config"), core,
+			func(p *NavPage) { p.AlsoActiveFor = []string{"server-management:files", "server-management:services"} }),
+		navPage("scaling", "scaling relays relay servers", "/scaling", "nav.scaling", withPermission("server.config"), core),
+		navPage("server-backups", "backup backups restore schedule", "/server/backups", "nav.server_backups", withPermission("server.config"), core),
+		navPage("server-updates", "updates version upgrade channel", "/server/updates", "updates.tab_title", withPermission("server.config"), core),
+		navPage("server-config-files", "advanced configuration config files env restart", "/server/config-files", "nav.server_config_files", withPermission("server.config")),
+		navPage("server-attestation", "server attestation capacity benchmark load test badge", "/server-attestation", "nav.server_attestation", withPermission("server.attestation")),
+	}},
 	{ID: "settings", Label: "nav.settings", Icon: "settings", Pages: []NavPage{
 		navPage("settings:general", "settings relay address public endpoints connection strategy meshcentral", "/settings", "settings.tab_general", withRule(navAlways), core, inGroup(groupConsole)),
 		navPage("settings:branding", "branding theme colours colors logo dark mode", "/settings?tab=branding", "settings.tab_branding", withRule(navAlways), inGroup(groupConsole)),
 		navPage("settings:auth", "authentication 2fa two-factor totp password ldap sso oidc", "/settings?tab=auth", "settings.tab_auth", withRule(navAlways), inGroup(groupConsole)),
-		navPage("settings:backup", "backup restore", "/settings?tab=backup", "settings.tab_backup", withPermission("server.config"), inGroup(groupConsole)),
-		navPage("settings:updates", "updates version upgrade", "/settings?tab=updates", "updates.tab_title", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("settings:email", "email smtp mail", "/settings?tab=email", "settings.tab_email", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("settings:time", "time zone timezone ntp clock", "/settings?tab=time", "settings.tab_time", withPermission("server.config"), inGroup(groupConsole)),
-		navPage("settings:advanced", "advanced config files restart", "/settings?tab=advanced", "settings.tab_advanced", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("languages", "languages translations i18n", "/languages", "nav.languages", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("keys", "keys public key qr client setup rustdesk config", "/keys", "nav.keys", withRule(navAlways), core, inGroup(groupClients)),
 		navPage("tokens", "tokens enrollment mode", "/tokens", "nav.tokens", withPermission("enrollment.manage"), inGroup(groupClients)),
@@ -138,11 +143,6 @@ var NavSections = []NavSection{
 		navPage("agents", "agents installers generator", "/agents", "nav.agents", withRule(navAdminRole), inGroup(groupClients),
 			func(p *NavPage) { p.AlsoActiveFor = []string{"generator"} }),
 		navPage("client-branding", "client branding white label", "/client-branding", "nav.client_branding", withPermission("branding.edit"), inGroup(groupClients)),
-		navPage("server-management:overview", "server management status health cpu memory uptime", "/server-management?tab=overview", "nav.server_status", withPermission("server.config"), core, inGroup(groupServer)),
-		navPage("server-management:files", "file browser", "/server-management?tab=files", "server_mgmt.tab_files", withPermission("server.config"), inGroup(groupServer)),
-		navPage("server-management:services", "systemd services", "/server-management?tab=services", "server_mgmt.tab_services", withPermission("server.config"), inGroup(groupServer)),
-		navPage("scaling", "scaling relays", "/scaling", "nav.scaling", withPermission("server.config"), inGroup(groupServer)),
-		navPage("server-attestation", "server attestation benchmark load test badge", "/server-attestation", "nav.server_attestation", withPermission("server.attestation"), inGroup(groupServer)),
 		navPage("commercialization:packages", "packages contracts billing", "/commercialization?tab=packages", "commercialization.tabs.packages", withPermission("billing.view"), inGroup(groupBilling)),
 		navPage("cdap-studio", "sdk studio flows widgets", "/cdap-studio", "nav.sdk_studio", withRole("operator"), inGroup(groupDeveloper)),
 	}},

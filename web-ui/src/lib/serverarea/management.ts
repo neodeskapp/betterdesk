@@ -26,9 +26,9 @@ export function tabGone(value: string | null | undefined): boolean {
 	return String(value ?? '').toLowerCase() === 'terminal';
 }
 
-/** Title key per tab, as the navigation names them */
+/** Label key per tab of Server status */
 export const TAB_TITLE: Record<Tab, string> = {
-	overview: 'nav.server_status',
+	overview: 'server_mgmt.tab_overview',
 	files: 'server_mgmt.tab_files',
 	services: 'server_mgmt.tab_services'
 };

@@ -105,7 +105,7 @@
     "section_support": "การช่วยเหลือ",
     "group_console": "คอนโซล",
     "group_clients": "ไคลเอนต์และการเข้าร่วม",
-    "group_server": "เซิร์ฟเวอร์",
+    "section_server": "เซิร์ฟเวอร์",
     "group_billing": "การเรียกเก็บเงิน",
     "group_developer": "เครื่องมือนักพัฒนา",
     "server_status": "สถานะเซิร์ฟเวอร์",
@@ -113,7 +113,9 @@
     "more": "แสดงเพิ่มอีก {count}",
     "fewer": "แสดงน้อยลง",
     "label": "การนำทางหลัก",
-    "section_devices": "อุปกรณ์"
+    "section_devices": "อุปกรณ์",
+    "server_backups": "ข้อมูลสำรอง",
+    "server_config_files": "ไฟล์การกำหนดค่า"
   },
   "auth": {
     "login": "ลงชื่อเข้าใช้",
@@ -1563,7 +1565,7 @@
       "channel_source_development": "รุ่นพัฒนาของ {repo} บน GitHub",
       "channel_confirm": "เปลี่ยนการอัปเดตเป็น {to} หรือไม่ การตรวจครั้งถัดไปจะเทียบเวอร์ชันของคุณกับช่องทาง {to}",
       "backups_note": "ก่อนการอัปเดตแต่ละครั้ง คอนโซลจะบันทึกไฟล์ที่ถูกแทนที่ไว้ คุณนำกลับมาได้จากที่นี่",
-      "retention_label": "จำนวนข้อมูลสำรองที่เก็บไว้",
+      "retention_label": "เก็บข้อมูลสำรองก่อนอัปเดต",
       "newest_version": "เวอร์ชันล่าสุด",
       "not_checked": "ยังไม่ได้ตรวจ",
       "changes_behind": "การเปลี่ยนแปลงที่ใหม่กว่าของคุณ {n} รายการ",
@@ -4365,7 +4367,7 @@
     "schedule_interval_12h": "ทุก 12 ชั่วโมง",
     "schedule_interval_24h": "ทุก 24 ชั่วโมง",
     "schedule_interval_weekly": "ทุกสัปดาห์",
-    "schedule_retention": "จำนวนไฟล์ที่เก็บไว้",
+    "schedule_retention": "เก็บข้อมูลสำรองตามกำหนดเวลา",
     "schedule_destination": "ปลายทาง",
     "schedule_destination_local": "ไดเรกทอรีข้อมูล NeoDesk ในเครื่อง",
     "schedule_destination_path": "เส้นทางเครือข่ายที่กำหนดเองหรือเชื่อมต่อแล้ว",

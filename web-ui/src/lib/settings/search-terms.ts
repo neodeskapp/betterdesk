@@ -14,11 +14,11 @@ export const TAB_TERMS: Readonly<Record<string, string>> = {
 	general: 'server allgemein',
 	branding: 'appearance look branding design aussehen erscheinungsbild marke',
 	auth: 'sign-in login security anmeldung sicherheit',
-	backup: 'backup sicherung datensicherung',
-	updates: 'update upgrade version aktualisierung',
+	'server-backups': 'server backup sicherung datensicherung',
+	'server-updates': 'server update upgrade version aktualisierung',
 	email: 'email e-mail mail smtp',
 	time: 'time zeit uhr clock',
-	advanced: 'advanced erweitert expert config konfiguration'
+	'server-config-files': 'server advanced erweitert expert config konfiguration dateien'
 };
 
 export const TERMS: Readonly<Record<string, string>> = {

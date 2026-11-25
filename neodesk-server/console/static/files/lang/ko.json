@@ -99,7 +99,7 @@
     "section_support": "지원",
     "group_console": "콘솔",
     "group_clients": "클라이언트 및 참가",
-    "group_server": "서버",
+    "section_server": "서버",
     "group_billing": "청구",
     "group_developer": "개발자 도구",
     "server_status": "서버 상태",
@@ -107,7 +107,9 @@
     "more": "{count}개 더 보기",
     "fewer": "간단히 보기",
     "label": "주요 탐색",
-    "section_devices": "장치"
+    "section_devices": "장치",
+    "server_backups": "백업",
+    "server_config_files": "구성 파일"
   },
   "auth": {
     "login": "로그인",
@@ -1557,7 +1559,7 @@
       "channel_source_development": "GitHub의 {repo} 개발 빌드",
       "channel_confirm": "업데이트를 {to}(으)로 바꿀까요? 다음 확인 때 현재 버전을 {to} 채널과 비교합니다.",
       "backups_note": "업데이트할 때마다 콘솔은 바꾸는 파일을 저장해 둡니다. 여기에서 되돌릴 수 있습니다.",
-      "retention_label": "보관할 백업 수",
+      "retention_label": "보관할 업데이트 백업",
       "newest_version": "최신 버전",
       "not_checked": "아직 확인하지 않음",
       "changes_behind": "현재 버전보다 새로운 변경 {n}개",
@@ -4359,7 +4361,7 @@
     "schedule_interval_12h": "12시간마다",
     "schedule_interval_24h": "24시간마다",
     "schedule_interval_weekly": "매주",
-    "schedule_retention": "보관할 아카이브",
+    "schedule_retention": "보관할 예약 백업",
     "schedule_destination": "대상",
     "schedule_destination_local": "로컬 NeoDesk 데이터 디렉터리",
     "schedule_destination_path": "사용자 지정 로컬 또는 마운트된 네트워크 경로",

@@ -1,5 +1,6 @@
 /**
- * The settings search: finds a setting on any tab the person may open, by
+ * The settings search: finds a setting on any tab or page of settings the
+ * person may open (tabs.ts places), by
  * its label, its section and its hints, in the console language. Same rules
  * as the old settings.js: at least two characters, every word must match,
  * label matches and the current tab first, eight results at most.
@@ -7,15 +8,26 @@
 
 import { SEARCH_INDEX, type IndexRow } from './search-index.ts';
 import { TAB_TERMS, TERMS } from './search-terms.ts';
-import { TAB_TITLE, isTab, tabAllowed, tabSearch, type TabId } from './tabs.ts';
+import {
+	PAGE_SECTION,
+	isPage,
+	isPlace,
+	placeAllowed,
+	placeHref,
+	placeTitle,
+	type PlaceId,
+	type TabId
+} from './tabs.ts';
 
 export interface SearchHit {
-	tab: TabId;
+	place: PlaceId;
 	/** Element id the result jumps to */
 	id: string;
 	label: string;
 	/** "Tab › Section" */
 	where: string;
+	/** /settings?tab=auth#ldap-host or /server/backups#backup-create (without the base) */
+	href: string;
 }
 
 export interface SearchContext {
@@ -37,17 +49,17 @@ export function visibleRows(
 	can: (p: string) => boolean,
 	rows: readonly IndexRow[] = SEARCH_INDEX
 ): IndexRow[] {
-	return rows.filter((r) => isTab(r[0]) && (r[5] === '' || can(r[5])));
+	return rows.filter((r) => isPlace(r[0]) && (r[5] === '' || can(r[5])));
 }
 
 /** One setting for the console-wide search (Ctrl K) */
 export interface SettingEntry {
-	tab: TabId;
+	place: PlaceId;
 	id: string;
 	label: string;
-	/** "Settings, Sign-in" or "Settings, Sign-in, LDAP / Active Directory" */
+	/** "Settings, Sign-in", "Settings, Sign-in, Directory (LDAP)" or "Server, Backups" */
 	where: string;
-	/** /settings?tab=auth#ldap-host (without the base) */
+	/** /settings?tab=auth#ldap-host or /server/backups#backup-create (without the base) */
 	href: string;
 	/** Everything the search looks at: label, section, hints, tab, other words */
 	hay: string;
@@ -64,26 +76,27 @@ export function settingEntries(
 ): SettingEntry[] {
 	const canConfig = ctx.can('server.config');
 	const settings = clean(ctx.t('nav.settings'));
+	const server = clean(ctx.t(PAGE_SECTION));
 	const seen = new Set<string>();
 	const out: SettingEntry[] = [];
 	for (const [tabName, id, labelKey, sectionKey, hintKeys] of visibleRows(ctx.can, rows)) {
-		if (!isTab(tabName) || !tabAllowed(tabName, canConfig)) continue;
+		if (!isPlace(tabName) || !placeAllowed(tabName, canConfig)) continue;
 		const label = clean(ctx.t(labelKey));
 		if (!label) continue;
 		const once = `${tabName}#${id}#${label}`;
 		if (seen.has(once)) continue;
 		seen.add(once);
 		const section = sectionKey ? clean(ctx.t(sectionKey)) : '';
-		const tabTitle = clean(ctx.t(TAB_TITLE[tabName]));
-		const where = [settings, tabTitle, section && section !== label ? section : '']
+		const tabTitle = clean(ctx.t(placeTitle(tabName)));
+		const where = [isPage(tabName) ? server : settings, tabTitle, section && section !== label ? section : '']
 			.filter(Boolean)
 			.join(', ');
 		out.push({
-			tab: tabName,
+			place: tabName,
 			id,
 			label,
 			where,
-			href: `/settings${tabSearch(tabName)}#${encodeURIComponent(id)}`,
+			href: placeHref(tabName, id),
 			hay: [label, section, ...hintKeys.map((k) => ctx.t(k)), tabTitle, TAB_TERMS[tabName], TERMS[id]]
 				.filter(Boolean)
 				.join(' ')
@@ -105,7 +118,7 @@ export function searchSettings(
 	const hits: { hit: SearchHit; score: number }[] = [];
 	for (const row of visibleRows(ctx.can, rows)) {
 		const [tabName, id, labelKey, sectionKey, hintKeys] = row;
-		if (!isTab(tabName)) continue;
+		if (!isPlace(tabName) || !placeAllowed(tabName, ctx.can('server.config'))) continue;
 		const label = clean(ctx.t(labelKey));
 		if (!label) continue;
 		const once = `${tabName}#${id}#${label}`;
@@ -115,13 +128,14 @@ export function searchSettings(
 		const hints = hintKeys.map((k) => ctx.t(k)).join(' ');
 		const text = lower(`${label} ${section} ${hints}`);
 		if (!words.every((w) => text.includes(w))) continue;
-		const tabTitle = ctx.t(TAB_TITLE[tabName]);
+		const tabTitle = ctx.t(placeTitle(tabName));
 		hits.push({
 			hit: {
-				tab: tabName,
+				place: tabName,
 				id,
 				label,
-				where: section && section !== label ? `${tabTitle} › ${section}` : tabTitle
+				where: section && section !== label ? `${tabTitle} › ${section}` : tabTitle,
+				href: placeHref(tabName, id)
 			},
 			score: (lower(label).includes(q) ? 0 : 1) + (tabName === ctx.current ? 0 : 0.5)
 		});

@@ -105,7 +105,7 @@
     "section_support": "Asistență",
     "group_console": "Consolă",
     "group_clients": "Clienți și alăturare",
-    "group_server": "Server",
+    "section_server": "Server",
     "group_billing": "Facturare",
     "group_developer": "Instrumente pentru dezvoltatori",
     "server_status": "Starea serverului",
@@ -113,7 +113,9 @@
     "more": "Arată încă {count}",
     "fewer": "Arată mai puține",
     "label": "Navigare principală",
-    "section_devices": "Dispozitive"
+    "section_devices": "Dispozitive",
+    "server_backups": "Copii de rezervă",
+    "server_config_files": "Fișiere de configurare"
   },
   "auth": {
     "login": "Conectare",
@@ -1563,7 +1565,7 @@
       "channel_source_development": "Versiunile de dezvoltare ale {repo} pe GitHub",
       "channel_confirm": "Comutați actualizările la {to}? Următoarea verificare compară versiunea dvs. cu canalul {to}.",
       "backups_note": "Înainte de fiecare actualizare, consola salvează fișierele pe care le înlocuiește. Le puteți readuce de aici.",
-      "retention_label": "Copii de păstrat",
+      "retention_label": "Păstrează copiile de actualizare",
       "newest_version": "Cea mai nouă versiune",
       "not_checked": "Încă neverificat",
       "changes_behind": "{n} modificări mai noi decât versiunea dvs.",
@@ -4365,7 +4367,7 @@
     "schedule_interval_12h": "La fiecare 12 ore",
     "schedule_interval_24h": "La fiecare 24 de ore",
     "schedule_interval_weekly": "Săptămânal",
-    "schedule_retention": "Arhive de păstrat",
+    "schedule_retention": "Păstrează copiile programate",
     "schedule_destination": "Destinație",
     "schedule_destination_local": "Director local de date NeoDesk",
     "schedule_destination_path": "Cale locală sau de rețea montată personalizată",

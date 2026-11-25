@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import type { Adapter, Builder } from '@sveltejs/kit';
 import { withRoutesList } from '../../vite-plugins/routes.ts';
+import { REDIRECTS } from '../../src/lib/redirects.ts';
 
 let dir: string;
 beforeEach(() => {
@@ -50,6 +51,13 @@ describe('routes.json', () => {
 		expect(match('/remote/900100001')).toBe(true);
 		expect(match('/policies/7/x')).toBe(false);
 		expect(match('/no-such-page')).toBe(false);
+	});
+
+	test('writes the old addresses for the server next to it', async () => {
+		await withRoutesList(fakeAdapter, dir).adapt(builder);
+		const list = JSON.parse(fs.readFileSync(path.join(dir, 'redirects.json'), 'utf8')) as unknown;
+		expect(list).toEqual(REDIRECTS);
+		expect(list).toContainEqual({ from: '/settings', tab: 'backup', to: '/server/backups' });
 	});
 
 	test('keeps the adapter name and options', () => {

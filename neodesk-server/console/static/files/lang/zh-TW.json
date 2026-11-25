@@ -103,7 +103,7 @@
     "section_support": "支援",
     "group_console": "主控台",
     "group_clients": "用戶端與加入",
-    "group_server": "伺服器",
+    "section_server": "伺服器",
     "group_billing": "計費",
     "group_developer": "開發人員工具",
     "server_status": "伺服器狀態",
@@ -111,7 +111,9 @@
     "more": "再顯示 {count} 項",
     "fewer": "顯示較少",
     "label": "主導覽",
-    "section_devices": "裝置"
+    "section_devices": "裝置",
+    "server_backups": "備份",
+    "server_config_files": "設定檔"
   },
   "auth": {
     "login": "登錄",
@@ -1561,7 +1563,7 @@
       "channel_source_development": "GitHub 上 {repo} 的開發版本",
       "channel_confirm": "要將更新切換為{to}嗎？下次檢查會將您的版本與{to}通道比較。",
       "backups_note": "每次更新前，主控台會保存將被取代的檔案。您可以在這裡還原。",
-      "retention_label": "保留的備份數",
+      "retention_label": "保留更新備份",
       "newest_version": "最新版本",
       "not_checked": "尚未檢查",
       "changes_behind": "比您的版本新 {n} 項變更",
@@ -4398,7 +4400,7 @@
     "schedule_interval_12h": "每 12 小時",
     "schedule_interval_24h": "每 24 小時",
     "schedule_interval_weekly": "每週",
-    "schedule_retention": "保留封存檔數量",
+    "schedule_retention": "保留排程備份",
     "schedule_destination": "目的地",
     "schedule_destination_local": "本機 NeoDesk 資料目錄",
     "schedule_destination_path": "自訂本機或已掛載的網路路徑",

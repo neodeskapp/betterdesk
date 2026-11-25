@@ -76,14 +76,14 @@ func TestNavFollowsRouteGuards(t *testing.T) {
 }
 
 // A194: the console has no server terminal, so no role sees an entry for
-// it; Server management keeps its other pages.
+// it; Server status keeps its entry (Files and Services are its tabs).
 func TestNavHasNoServerTerminal(t *testing.T) {
 	for _, role := range []string{"super_admin", "admin", "server_admin"} {
 		pages := pagesFor(role)
 		if pages["server-management:terminal"] {
 			t.Errorf("%s sees the server terminal", role)
 		}
-		for _, page := range []string{"server-management:overview", "server-management:files", "server-management:services"} {
+		for _, page := range []string{"server-management:overview"} {
 			if !pages[page] {
 				t.Errorf("%s does not see %s", role, page)
 			}
@@ -137,6 +137,72 @@ func TestNavRulesSection(t *testing.T) {
 	}
 }
 
+// Plan step 6: what a server admin runs is a section of its own, shown only
+// to server.config (Capacity test: server.attestation). Server status is one
+// entry with Files and Services as its tabs.
+func TestNavServerSection(t *testing.T) {
+	pages, groups := sectionPages("server")
+	want := "server-management:overview,scaling,server-backups,server-updates,server-config-files,server-attestation"
+	if got := strings.Join(pages, ","); got != want {
+		t.Errorf("server section has %s, want %s", got, want)
+	}
+	for i, group := range groups {
+		if group != "" {
+			t.Errorf("%s still carries the group %q", pages[i], group)
+		}
+	}
+	hrefs := map[string]string{}
+	for _, section := range NavSections {
+		for _, page := range section.Pages {
+			hrefs[page.Page] = page.Href
+		}
+		if section.ID == "server" && (section.Label != "nav.section_server" || section.Icon != "dns") {
+			t.Errorf("server section: label %q, icon %q", section.Label, section.Icon)
+		}
+	}
+	for page, href := range map[string]string{
+		"server-management:overview": "/server-management", "server-backups": "/server/backups",
+		"server-updates": "/server/updates", "server-config-files": "/server/config-files",
+	} {
+		if hrefs[page] != href {
+			t.Errorf("%s leads to %q, want %q", page, hrefs[page], href)
+		}
+	}
+	for _, gone := range []string{"settings:backup", "settings:updates", "settings:advanced", "server-management:files", "server-management:services"} {
+		if _, ok := hrefs[gone]; ok {
+			t.Errorf("the navigation still has %s", gone)
+		}
+	}
+	// Only server.config sees the section; the capacity test asks its own
+	// permission
+	only := func(permission string) NavInput {
+		return NavInput{Can: func(p string) bool { return p == permission }, Role: "operator"}
+	}
+	for _, section := range BuildNav(only("device.view")).Sections {
+		if section.ID == "server" {
+			t.Error("an account without server.config sees the server section")
+		}
+	}
+	var attestationOnly []string
+	for _, section := range BuildNav(only("server.attestation")).Sections {
+		if section.ID == "server" {
+			for _, page := range section.Pages {
+				attestationOnly = append(attestationOnly, page.Page)
+			}
+		}
+	}
+	if strings.Join(attestationOnly, ",") != "server-attestation" {
+		t.Errorf("server.attestation alone sees %v", attestationOnly)
+	}
+	// Files and Services mark Server status as the current page
+	for _, tab := range []string{"", "files", "services"} {
+		nav := BuildNav(NavInput{Can: func(string) bool { return true }, IsSuperAdmin: true, Role: "super_admin", CurrentPage: "server-management", CurrentTab: tab})
+		if nav.ActivePage == nil || nav.ActivePage.Page != "server-management:overview" || nav.ActiveSection.ID != "server" {
+			t.Errorf("tab %q: active %+v", tab, nav.ActivePage)
+		}
+	}
+}
+
 func TestNavSectionsAndActivePage(t *testing.T) {
 	admin := NavInput{Can: func(string) bool { return true }, IsSuperAdmin: true, Role: "admin"}
 	nav := BuildNav(admin)
@@ -146,7 +212,7 @@ func TestNavSectionsAndActivePage(t *testing.T) {
 		ids = append(ids, section.ID)
 		total += len(section.Pages)
 	}
-	if strings.Join(ids, ",") != "devices,support,people,activity,rules,settings" || total != 47 {
+	if strings.Join(ids, ",") != "devices,support,people,activity,rules,server,settings" || total != 45 {
 		t.Errorf("admin sees sections %v with %d pages", ids, total)
 	}
 	if nav.ActivePage != nil || nav.ActiveSection != nil {
@@ -172,7 +238,7 @@ func TestNavSectionsAndActivePage(t *testing.T) {
 		{"devices", "", false, "devices", "devices"},
 		{"settings", "", false, "settings:general", "settings"},
 		{"settings", "branding", false, "settings:branding", "settings"},
-		{"server-management", "", false, "server-management:overview", "settings"},
+		{"server-management", "", false, "server-management:overview", "server"},
 		{"commercialization", "", false, "commercialization:packages", "settings"},
 		{"commercialization", "reports", false, "commercialization:sessions", "activity"},
 		{"generator", "", false, "agents", "settings"},
@@ -226,7 +292,7 @@ func TestPageAllowed(t *testing.T) {
 		"dashboard": true, "devices": true,
 		"users": false, // its section is at none
 		// no section since F1: their routes and menu rules decide
-		"settings:general": true, "settings:backup": true, "keys": true, "tokens": true, "policies": true, "client-branding": true,
+		"settings:general": true, "server-backups": true, "keys": true, "tokens": true, "policies": true, "client-branding": true,
 		"registrations":              false,
 		"activate-agent":             false, // its address is the dashboard's, its section is registrations
 		"pairing":                    true,  // no rule for its address

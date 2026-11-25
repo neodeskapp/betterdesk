@@ -105,7 +105,7 @@
     "section_support": "Destek",
     "group_console": "Konsol",
     "group_clients": "İstemciler ve katılım",
-    "group_server": "Sunucu",
+    "section_server": "Sunucu",
     "group_billing": "Faturalandırma",
     "group_developer": "Geliştirici araçları",
     "server_status": "Sunucu durumu",
@@ -113,7 +113,9 @@
     "more": "{count} tane daha göster",
     "fewer": "Daha az göster",
     "label": "Ana gezinme",
-    "section_devices": "Cihazlar"
+    "section_devices": "Cihazlar",
+    "server_backups": "Yedekler",
+    "server_config_files": "Yapılandırma dosyaları"
   },
   "auth": {
     "login": "Oturum aç",
@@ -1563,7 +1565,7 @@
       "channel_source_development": "GitHub'daki {repo} geliştirme sürümleri",
       "channel_confirm": "Güncellemeler {to} kanalına geçirilsin mi? Sonraki denetim sürümünüzü {to} kanalıyla karşılaştırır.",
       "backups_note": "Konsol her güncellemeden önce değiştirdiği dosyaları kaydeder. Onları buradan geri koyabilirsiniz.",
-      "retention_label": "Saklanacak yedekler",
+      "retention_label": "Saklanacak güncelleme yedekleri",
       "newest_version": "En yeni sürüm",
       "not_checked": "Henüz denetlenmedi",
       "changes_behind": "Sizinkinden yeni {n} değişiklik",
@@ -4365,7 +4367,7 @@
     "schedule_interval_12h": "12 saatte bir",
     "schedule_interval_24h": "24 saatte bir",
     "schedule_interval_weekly": "Her hafta",
-    "schedule_retention": "Saklanacak arşiv sayısı",
+    "schedule_retention": "Saklanacak zamanlanmış yedekler",
     "schedule_destination": "Hedef",
     "schedule_destination_local": "Yerel NeoDesk veri dizini",
     "schedule_destination_path": "Özel yerel veya bağlı ağ yolu",

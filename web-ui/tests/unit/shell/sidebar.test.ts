@@ -91,10 +91,10 @@ describe('Sidebar', () => {
 	});
 
 	test('More is open when the current page is in it', async () => {
-		await setup('/settings', '?tab=backup');
-		const backup = screen.getByRole('link', { name: 'Backup' });
-		expect(backup).toBeVisible();
-		const list = backup.closest('ul')!;
+		await setup('/settings', '?tab=time');
+		const time = screen.getByRole('link', { name: 'Time' });
+		expect(time).toBeVisible();
+		const list = time.closest('ul')!;
 		expect(within(list).getByText('Console')).toBeInTheDocument();
 	});
 

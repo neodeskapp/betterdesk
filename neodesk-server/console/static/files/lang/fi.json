@@ -105,7 +105,7 @@
     "section_support": "Tuki",
     "group_console": "Konsoli",
     "group_clients": "Asiakasohjelmat ja liittyminen",
-    "group_server": "Palvelin",
+    "section_server": "Palvelin",
     "group_billing": "Laskutus",
     "group_developer": "Kehittäjätyökalut",
     "server_status": "Palvelimen tila",
@@ -113,7 +113,9 @@
     "more": "Näytä {count} lisää",
     "fewer": "Näytä vähemmän",
     "label": "Päänavigointi",
-    "section_devices": "Laitteet"
+    "section_devices": "Laitteet",
+    "server_backups": "Varmuuskopiot",
+    "server_config_files": "Määritystiedostot"
   },
   "auth": {
     "login": "Kirjaudu sisään",
@@ -1563,7 +1565,7 @@
       "channel_source_development": "Kehitysversiot: {repo} GitHubissa",
       "channel_confirm": "Vaihdetaanko päivitykset kanavaan {to}? Seuraava tarkistus vertaa versiotasi kanavaan {to}.",
       "backups_note": "Ennen jokaista päivitystä konsoli tallentaa korvaamansa tiedostot. Voit palauttaa ne täältä.",
-      "retention_label": "Säilytettävät varmuuskopiot",
+      "retention_label": "Säilytä päivitysvarmuuskopiot",
       "newest_version": "Uusin versio",
       "not_checked": "Ei vielä tarkistettu",
       "changes_behind": "{n} muutosta omaasi uudempia",
@@ -4365,7 +4367,7 @@
     "schedule_interval_12h": "12 tunnin välein",
     "schedule_interval_24h": "24 tunnin välein",
     "schedule_interval_weekly": "Viikoittain",
-    "schedule_retention": "Säilytettävät arkistot",
+    "schedule_retention": "Säilytä ajastetut varmuuskopiot",
     "schedule_destination": "Kohde",
     "schedule_destination_local": "Paikallinen NeoDesk-datakansio",
     "schedule_destination_path": "Mukautettu paikallinen tai liitetty verkkopolku",

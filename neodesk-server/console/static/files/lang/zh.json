@@ -99,7 +99,7 @@
     "section_support": "支持",
     "group_console": "控制台",
     "group_clients": "客户端与加入",
-    "group_server": "服务器",
+    "section_server": "服务器",
     "group_billing": "计费",
     "group_developer": "开发者工具",
     "server_status": "服务器状态",
@@ -107,7 +107,9 @@
     "more": "再显示 {count} 项",
     "fewer": "显示较少",
     "label": "主导航",
-    "section_devices": "设备"
+    "section_devices": "设备",
+    "server_backups": "备份",
+    "server_config_files": "配置文件"
   },
   "auth": {
     "login": "登录",
@@ -1557,7 +1559,7 @@
       "channel_source_development": "GitHub 上 {repo} 的开发版本",
       "channel_confirm": "要将更新切换为{to}吗？下次检查会将您的版本与{to}通道比较。",
       "backups_note": "每次更新前，控制台会保存将被替换的文件。您可以在这里还原。",
-      "retention_label": "保留的备份数",
+      "retention_label": "保留更新备份",
       "newest_version": "最新版本",
       "not_checked": "尚未检查",
       "changes_behind": "比您的版本新 {n} 项变更",
@@ -4376,7 +4378,7 @@
     "schedule_interval_12h": "每 12 小时",
     "schedule_interval_24h": "每 24 小时",
     "schedule_interval_weekly": "每周",
-    "schedule_retention": "保留存档数",
+    "schedule_retention": "保留计划备份",
     "schedule_destination": "目标",
     "schedule_destination_local": "本地 NeoDesk 数据目录",
     "schedule_destination_path": "自定义本地或已挂载的网络路径",

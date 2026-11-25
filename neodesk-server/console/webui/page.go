@@ -21,6 +21,8 @@ type page struct {
 	// routes are the patterns of the app's pages. nil means the build has
 	// no usable list, and then every address counts as a page.
 	routes []*regexp.Regexp
+	// redirects are the old addresses of the console (redirects.json).
+	redirects []redirect
 	// mtime and routesMtime are when index.html and routes.json were last
 	// written (zero for a missing routes.json).
 	mtime, routesMtime time.Time
@@ -154,6 +156,7 @@ func (h *Host) loadPage() *page {
 		html:        html,
 		csp:         HeaderPolicy(meta, h.https),
 		routes:      routes,
+		redirects:   h.loadRedirects(),
 		mtime:       info.ModTime(),
 		routesMtime: h.mtimeOf(filepath.Join(h.dir, "routes.json")),
 	}
