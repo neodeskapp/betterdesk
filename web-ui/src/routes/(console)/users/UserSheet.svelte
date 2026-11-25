@@ -141,6 +141,16 @@
 		form.values[list] = on ? [...cur.filter((x) => x !== value), value] : cur.filter((x) => x !== value);
 	}
 
+	// The page learns whether mail is set up after the sheet may have opened: a
+	// new account nobody has typed into yet then starts with the invite
+	$effect(() => {
+		if (!mailReady || editing) return;
+		untrack(() => {
+			const v = form.values;
+			if (v.mode === 'password' && !v.username && !v.password && !v.email) v.mode = 'invite';
+		});
+	});
+
 	const inviting = $derived(!editing && form.values.mode === 'invite');
 	const suggestion = $derived(inviting ? usernameFromEmail(form.values.email) : '');
 	const modeChoices = $derived([
