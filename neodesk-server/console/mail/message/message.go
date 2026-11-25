@@ -49,6 +49,12 @@ type Mail struct {
 	// for "no such body".
 	Text *string
 	HTML *string
+	// Inline are images the HTML shows by Content-ID. With any, the HTML
+	// goes out in a multipart/related part with them; an image whose ID,
+	// type or name could break a header is left out. Without an HTML body
+	// they are ignored, and a mail without them is built as nodemailer
+	// builds it.
+	Inline []Inline
 }
 
 // Options holds everything the message depends on besides the mail.
@@ -136,6 +142,20 @@ func Build(mail Mail, opts Options) (*Message, error) {
 			}
 		}
 	}
+	var images []Inline
+	for _, img := range mail.Inline {
+		if img.usable() {
+			images = append(images, img)
+		}
+	}
+	relatedBoundary := ""
+	if len(images) > 0 && len(parts) > 0 && strings.HasPrefix(parts[len(parts)-1].contentType, "text/html") {
+		more, err := b.randomHex(8)
+		if err != nil {
+			return nil, err
+		}
+		relatedBoundary = "--_NmP-" + more + "-Part_2"
+	}
 
 	from := validUTF8(mail.From)
 	to := make([]string, len(mail.To))
@@ -182,6 +202,16 @@ func Build(mail Mail, opts Options) (*Message, error) {
 		boundary = "--_NmP-" + base + "-Part_1"
 		root = part{contentType: `multipart/alternative; boundary="` + boundary + `"`}
 	}
+	// The HTML with its images: the whole message when it is the only
+	// body, else the second part of the alternative
+	relatedType := `multipart/related; type="text/html"; boundary="` + relatedBoundary + `"`
+	var relatedBody []byte
+	if relatedBoundary != "" {
+		relatedBody = related(parts[len(parts)-1].content, relatedBoundary, images)
+		if len(parts) == 1 {
+			root = part{contentType: relatedType}
+		}
+	}
 
 	var headers []string
 	add := func(key, value string) {
@@ -205,10 +235,18 @@ func Build(mail Mail, opts Options) (*Message, error) {
 
 	raw := []byte(strings.Join(headers, "\r\n") + "\r\n\r\n")
 	raw = append(raw, encodeBody(root.content, rootEncoding)...)
+	if relatedBoundary != "" && len(parts) == 1 {
+		raw = append(raw, relatedBody...)
+	}
 	if boundary != "" {
 		for i, p := range parts {
 			if i > 0 {
 				raw = append(raw, "\r\n"...)
+			}
+			if relatedBoundary != "" && i == len(parts)-1 {
+				raw = append(raw, "--"+boundary+"\r\n"+foldLines("Content-Type: "+relatedType)+"\r\n\r\n"...)
+				raw = append(raw, relatedBody...)
+				continue
 			}
 			encoding := transferEncoding(p.content)
 			raw = append(raw, "--"+boundary+"\r\n"+

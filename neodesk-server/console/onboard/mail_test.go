@@ -75,13 +75,18 @@ func TestTheWelcomeMailHasOneButtonAndThreeSteps(t *testing.T) {
 }
 
 // TestTheWelcomeMailRendersInMailClients: table layout with inline styles,
-// no style sheet, classes, scripts, SVG or forms, which mail clients drop;
-// a plain text part without markup.
+// no scripts, SVG or forms, which mail clients drop; the one style sheet,
+// in the head, only adds dark mode, so the mail reads without it; a plain
+// text part without markup.
 func TestTheWelcomeMailRendersInMailClients(t *testing.T) {
 	m := BuildMail(englishMail, welcomeFacts())
-	for _, banned := range []string{"<style", "class=", "<script", "<svg", "<form", "<div", "<link", "display: flex", "display:flex", "position:"} {
-		if strings.Contains(m.HTML, banned) {
-			t.Errorf("the HTML part has %q", banned)
+	head, body, ok := strings.Cut(m.HTML, "</head>")
+	if !ok || strings.Count(m.HTML, "<style") != 1 || !strings.Contains(head, "<style>") || !strings.Contains(head, "prefers-color-scheme: dark") {
+		t.Errorf("want one style sheet in the head, for dark mode:\n%s", head)
+	}
+	for _, banned := range []string{"<style", "<script", "<svg", "<form", "<div", "<link", "display: flex", "display:flex", "position:"} {
+		if strings.Contains(body, banned) {
+			t.Errorf("the HTML body has %q", banned)
 		}
 	}
 	if !strings.Contains(m.HTML, `role="presentation"`) || !strings.HasPrefix(m.HTML, "<!DOCTYPE html>") {
@@ -91,7 +96,7 @@ func TestTheWelcomeMailRendersInMailClients(t *testing.T) {
 		t.Errorf("the text part has markup:\n%s", m.Text)
 	}
 	// The button is a table cell with the accent colour, so Outlook shows it
-	if !strings.Contains(m.HTML, `bgcolor="#1d4ed8"`) {
+	if !strings.Contains(m.HTML, `bgcolor="#1b62cf"`) {
 		t.Errorf("the button is not in the accent colour:\n%s", m.HTML)
 	}
 }
@@ -112,28 +117,32 @@ func TestTheWelcomeMailCarriesNoSecretButTheLink(t *testing.T) {
 }
 
 // TestTheWelcomeMailTakesOnlyAUsableLogoAndColour: an SVG, plain-HTTP or
-// script logo is left out for the name; a colour that is not one is the
-// default blue; a light accent gets dark text on the button.
+// script logo is left out for NeoDesk's mark, carried in the mail, and the
+// name; a colour that is not one is the console's blue; a light accent
+// gets dark text on the button.
 func TestTheWelcomeMailTakesOnlyAUsableLogoAndColour(t *testing.T) {
+	srcs := regexp.MustCompile(`src="([^"]*)"`)
 	for _, logo := range []string{"", "https://desk.example.com/logo.svg", "http://desk.example.com/logo.png", "javascript:alert(1)//x.png", "data:image/png;base64,AAAA", `https://x.example/a.png" onerror="x`} {
 		f := welcomeFacts()
 		f.Logo = logo
 		m := BuildMail(englishMail, f)
-		if strings.Contains(m.HTML, "<img") {
-			t.Errorf("logo %q went in:\n%s", logo, m.HTML)
+		for _, src := range srcs.FindAllStringSubmatch(m.HTML, -1) {
+			if !strings.HasPrefix(src[1], "cid:") {
+				t.Errorf("logo %q went in as %q", logo, src[1])
+			}
 		}
-		if !strings.Contains(m.HTML, ">Acme Desk</td>") {
-			t.Errorf("logo %q: the name is not shown instead", logo)
+		if !strings.Contains(m.HTML, ">Acme Desk</td>") || len(m.Inline) != 2 {
+			t.Errorf("logo %q: not the mark and the name instead (%d images)", logo, len(m.Inline))
 		}
 	}
 	f := welcomeFacts()
 	f.Accent = "red; background:url(x)"
-	if m := BuildMail(englishMail, f); !strings.Contains(m.HTML, `bgcolor="#1d4ed8"`) || strings.Contains(m.HTML, "url(x)") {
+	if m := BuildMail(englishMail, f); !strings.Contains(m.HTML, `bgcolor="#1b62cf"`) || strings.Contains(m.HTML, "url(x)") {
 		t.Errorf("a bad colour went in:\n%s", m.HTML)
 	}
-	f.Accent = "#58A6FF"
+	f.Accent = "#A3E635"
 	m := BuildMail(englishMail, f)
-	if !strings.Contains(m.HTML, `bgcolor="#58a6ff"`) || !strings.Contains(m.HTML, "color: #111827") {
+	if !strings.Contains(m.HTML, `bgcolor="#a3e635"`) || !strings.Contains(m.HTML, "color: #111827") {
 		t.Errorf("a light accent keeps white text:\n%s", m.HTML)
 	}
 }

@@ -13,6 +13,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/message"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/smtpwire"
 )
 
@@ -27,7 +28,13 @@ type Email struct {
 	// Text and HTML are the two bodies; nil leaves one out.
 	Text *string
 	HTML *string
+	// Inline are the images the HTML shows by Content-ID (the logo of
+	// brandmail).
+	Inline []Inline
 }
+
+// Inline is an image a mail's HTML shows by its Content-ID.
+type Inline = message.Inline
 
 // countRecipients counts the recipients for the log: the entries of a
 // list that are not empty, or the parts of a text between commas that are
@@ -136,6 +143,7 @@ func (s *Service) send(ctx context.Context, t *transporter, m Email) error {
 		Subject: m.Subject,
 		Text:    m.Text,
 		HTML:    m.HTML,
+		Inline:  m.Inline,
 	})
 }
 

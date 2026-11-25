@@ -57,6 +57,8 @@ type Outgoing struct {
 	// Text and HTML are nil where the console passed undefined.
 	Text *string
 	HTML *string
+	// Inline are the images the HTML shows by Content-ID.
+	Inline []Inline
 }
 
 // Transport does what nodemailer did: Send delivers one message over a
