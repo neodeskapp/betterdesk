@@ -38,7 +38,6 @@ import {
 	type SigninStatus
 } from '#lib/api/savedSignin.ts';
 import {
-	isWindows,
 	logonStateFromMessage,
 	signinAdditions,
 	signinOffer,
@@ -1181,7 +1180,7 @@ export class Viewer {
 		const c = s.client;
 		// Only over a session encrypted end to end with the device: the relay never sees what is typed
 		if (!c || !s.encrypted || !s.peerFacts || s.view !== 'streaming') return;
-		if (!s.peerFacts.sealed && !isWindows(s.peerFacts.platform)) return;
+		// Also on a computer that isn't Windows: saved details there get the bar that says why nothing is typed
 		if (!s.signinLoaded) {
 			s.signinLoaded = true;
 			try {

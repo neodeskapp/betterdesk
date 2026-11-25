@@ -234,6 +234,14 @@ describe('saved sign-in (L469)', () => {
 		}
 	});
 
+	test('says on a computer that is not Windows that saved sign-in works on Windows only (L510)', async () => {
+		const { s, c } = setup();
+		stream(c, { platform: 'Linux' });
+		await vi.waitFor(() => expect(s.signinOffer).toEqual({ kind: 'unsupported', why: 'platform' }));
+		expect(signinApi.useSignin).not.toHaveBeenCalled();
+		expect(c.keys).toEqual([]);
+	});
+
 	test('with the reported lock screen and the switch on it signs in by itself without asking, also when someone is signed in', async () => {
 		signinApi.getSignin.mockResolvedValueOnce({ ...(await signinApi.getSignin()), auto: true });
 		const { s, c } = setup();

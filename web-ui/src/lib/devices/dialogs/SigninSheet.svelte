@@ -8,6 +8,7 @@
 <script lang="ts">
 	import type { SigninForm, SigninInput, SigninStatus } from '#lib/api/savedSignin.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { isWindows } from '#lib/remote/signin.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Field from '#lib/ui/Field.svelte';
@@ -39,6 +40,11 @@
 	} = $props();
 
 	const uid = $props.id();
+	/** The computer reports a system other than Windows: the viewer won't use the details there */
+	const notWindows = $derived.by(() => {
+		const system = (device.platform || device.os || '').trim();
+		return system !== '' && !isWindows(system);
+	});
 
 	interface Values {
 		username: string;
@@ -137,6 +143,9 @@
 			<FormSection title={t('devices.signin_action')}>
 				<p class="note">{t('devices.signin_intro')}</p>
 				<p class="note">{t('devices.signin_windows_only')}</p>
+				{#if notWindows}
+					<p class="note" role="alert">{t('remote.signin_unsupported_platform')}</p>
+				{/if}
 				<p class="note">
 					{status.sealed_signin ? t('devices.signin_path_sealed') : t('devices.signin_path_typed')}
 				</p>
