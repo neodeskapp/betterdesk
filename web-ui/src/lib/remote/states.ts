@@ -158,6 +158,8 @@ export interface CloseMeta {
 	closeReason?: string;
 	peerReason?: string;
 	cdapFallback?: boolean;
+	/** The client's close: a login waited for the device's answer (RDClientDisconnectInfo) */
+	loginUnanswered?: boolean;
 }
 
 /** Known messages and close codes to a sentence on what happened and what to try */
@@ -213,6 +215,19 @@ export function classifyEnd(
 			tf(
 				'remote_viewer.try_insecure',
 				'No password was sent. Someone between this browser and the device may be listening in, or the server key is not set up. Ask an administrator to check the server.'
+			)
+		);
+	}
+
+	// The device closed the connection while it had a sign-in to answer: it refused the sign-in,
+	// it isn't asleep (L530: a device that latches the first login's caller closes on a second one)
+	if (meta?.loginUnanswered && !ctx.everStreamed && !/password|refus|reject|declin|denied/.test(m)) {
+		return pick(
+			'signin_closed',
+			tf('remote_viewer.fail_signin_closed', '{name} closed the connection when this browser signed in.', p),
+			tf(
+				'remote_viewer.try_signin_closed',
+				'The device refused the sign-in. Reconnect and sign in again. If it keeps happening, ask an administrator to look at the log of NeoDesk on the device.'
 			)
 		);
 	}

@@ -127,6 +127,8 @@ export interface RDLoginRequestOptions {
 	username?: string;
 	myId?: string;
 	myName?: string;
+	/** LoginRequest.session_id: the same for every login of a connection (login-identity.ts) */
+	sessionId?: number;
 	/** ImageQuality name (Best/Balanced/Low) */
 	imageQuality?: string;
 	codecAbilities?: RDCodecAbilities | null;
@@ -454,7 +456,7 @@ export class RDProtocol {
 				myName: opts.myName || 'NeoDesk Web',
 				myPlatform: 'Web',
 				version: RDProtocol.SESSION_VERSION,
-				sessionId: Date.now(),
+				sessionId: opts.sessionId ?? Date.now(),
 				option: {
 					imageQuality:
 						enumLookup(this.enums.ImageQuality.values, quality) || this.enums.ImageQuality.values.Best,

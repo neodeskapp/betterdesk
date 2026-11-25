@@ -8807,7 +8807,9 @@
     "no_keyboard_lock": "Denne nettleseren beholder noen snarveier selv, også i fullskjerm: Ctrl+W, Ctrl+T, Ctrl+N, Windows-tasten, og Esc avslutter fullskjerm. Handlinger sender Windows-tasten, Alt+Tab og Ctrl+Alt+Del til den eksterne datamaskinen.",
     "no_screen_placement": "Denne nettleseren kan ikke legge vinduer på de andre skjermene dine. Dra hver skjerms vindu til skjermen du vil ha det på.",
     "phone_turn": "Eller snu telefonen på tvers: i liggende format åpnes økten her i nettleseren.",
-    "no_open_sessions": "Ingen økt er åpen. Koble til med ID, eller velg en enhet nedenfor."
+    "no_open_sessions": "Ingen økt er åpen. Koble til med ID, eller velg en enhet nedenfor.",
+    "fail_signin_closed": "{name} lukket tilkoblingen da denne nettleseren logget på.",
+    "try_signin_closed": "Enheten avviste påloggingen. Koble til på nytt og logg på igjen. Hvis det fortsetter, be en administrator se i NeoDesk-loggen på enheten."
   },
   "diagram": {
     "your_computer": "Din datamaskin",

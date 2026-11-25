@@ -46,6 +46,7 @@ import {
 import type { RDDisplay } from './displays.ts';
 import type { ICursorData, MessageInit } from './generated/protos.ts';
 import { RDInput } from './input.ts';
+import { ConnectionLogins, loginLatch } from './login-identity.ts';
 import { page } from './page.ts';
 import { RDRenderer, type RDRendererStats } from './renderer.ts';
 import type { RDDecodedFrame, RDVideoChunk } from './video.ts';
@@ -944,6 +945,8 @@ interface MockDeviceState {
 	copy?: (text: string, png?: Blob | null) => void;
 	/** The last key presses the device received (code, then +ctrl and +meta) */
 	keys?: string[];
+	/** The logins of the current connection: without a password or typed, and the caller each named */
+	logins?: { password: boolean; latch: string }[];
 }
 
 function deviceState(): MockDeviceState {
@@ -1094,7 +1097,43 @@ export class MockRemoteSession implements RemoteClient {
 	}
 
 	/** The same log lines RDClient writes, so the viewer maps them to its steps */
+	/** Who the viewer is to this device on this connection, as RDClient makes it */
+	_logins = new ConnectionLogins();
+	/** The caller the device latched from this connection's first login */
+	_latched = '';
+	_askedWithoutPassword = false;
+
+	/**
+	 * A login reaches the device. It latches the first login's caller and
+	 * closes the connection on a later login that names another one, as the
+	 * desktop client 1.5 does ("Rejected login scope change", L530). false
+	 * when the device closed the connection.
+	 */
+	_login(password: boolean): boolean {
+		const identity = this._logins.forLogin();
+		const latch = loginLatch({ myId: identity.myId, kind: 'remote' });
+		const state = deviceState();
+		state.logins = [...(state.logins ?? []), { password, latch }];
+		if (!this._latched) this._latched = latch;
+		if (latch === this._latched) return true;
+		this._after(150, () =>
+			this._disconnect('Connection closed: End', { source: 'peer', loginUnanswered: true })
+		);
+		return false;
+	}
+
+	/** The login without a password RDClient sends while the form shows: this device wants a password, so no answer */
+	async askWithoutPassword(): Promise<void> {
+		if (this._askedWithoutPassword || this._state !== 'waiting_password') return;
+		this._askedWithoutPassword = true;
+		this._login(false);
+	}
+
 	async connect(): Promise<void> {
+		this._logins.reset();
+		this._latched = '';
+		this._askedWithoutPassword = false;
+		deviceState().logins = [];
 		const slow = this.scenario === 'slow';
 		let t = 0;
 		const at = (ms: number, fn: () => void) => {
@@ -1151,6 +1190,8 @@ export class MockRemoteSession implements RemoteClient {
 	async authenticate(password: string): Promise<void> {
 		this._setState('authenticating');
 		this._emit('log', 'Authenticating...');
+		this._askedWithoutPassword = true;
+		if (!this._login(true)) return;
 		this._after(700, () => {
 			if (password !== 'demo') {
 				this._emit('login_error', 'Wrong Password');

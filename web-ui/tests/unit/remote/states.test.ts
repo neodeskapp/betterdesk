@@ -76,6 +76,15 @@ describe('what happened, in plain words', () => {
 		);
 	});
 
+	test('a close while the device had a sign-in to answer says the device refused it, not that it sleeps (L530)', () => {
+		const out = classifyEnd('Connection closed: End', { loginUnanswered: true }, ctx);
+		expect(out.kind).toBe('signin_closed');
+		expect(out.text).toBe('demo-build-server closed the connection when this browser signed in.');
+		expect(out.tryText).not.toMatch(/asleep|offline/);
+		// Without a sign-in on its way it stays the early drop
+		expect(classifyEnd('Connection closed: End', null, ctx).kind).toBe('dropped_early');
+	});
+
 	test('an end on the device is an end, not a failure; a refusal there is a failure', () => {
 		const peer = classifyEnd('remote: session ended', null, ctx);
 		expect(peer).toMatchObject({ kind: 'peer', ended: true });
