@@ -5578,7 +5578,6 @@
     "sections": "Sections du chat",
     "seen": "Vu",
     "sending": "Envoi…",
-    "server_settings": "Paramètres des e-mails du chat",
     "start_direct": "Écrire",
     "start_group": "Créer le groupe",
     "take": "Prendre",
@@ -5603,7 +5602,11 @@
     "old_messages_hint": "Du chat d'avant cette version. Seuls les administrateurs les voient, et personne ne peut écrire ici.",
     "found_messages": "Messages",
     "search_support": "Trouver un ordinateur ou un message",
-    "search_team": "Trouver un collègue ou un message"
+    "search_team": "Trouver un collègue ou un message",
+    "server_settings": "Paramètres du chat de ce serveur",
+    "computers": "Chat avec les ordinateurs",
+    "computers_hint": "Désactivé : l'application NeoDesk des ordinateurs ne peut pas ouvrir le chat, et la console ne peut pas joindre leurs utilisateurs par chat. Le chat entre collègues continue de fonctionner.",
+    "computers_off": "Le chat avec les ordinateurs est désactivé : l'application NeoDesk des ordinateurs ne peut pas ouvrir le chat. Un administrateur peut l'activer dans le menu du chat, sous Paramètres du chat de ce serveur."
   },
   "toast": {
     "device_connected": "Device connected",

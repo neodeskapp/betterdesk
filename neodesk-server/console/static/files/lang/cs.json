@@ -5435,7 +5435,6 @@
     "sections": "Části chatu",
     "seen": "Zobrazeno",
     "sending": "Odesílání…",
-    "server_settings": "Nastavení e-mailů chatu",
     "start_direct": "Napsat",
     "start_group": "Založit skupinu",
     "take": "Vzít si",
@@ -5460,7 +5459,11 @@
     "old_messages_hint": "Z chatu před touto verzí. Vidí je jen správci a nikdo sem nemůže psát.",
     "found_messages": "Zprávy",
     "search_support": "Najít počítač nebo zprávu",
-    "search_team": "Najít kolegu nebo zprávu"
+    "search_team": "Najít kolegu nebo zprávu",
+    "server_settings": "Nastavení chatu pro tento server",
+    "computers": "Chat s počítači",
+    "computers_hint": "Vypnuto: aplikace NeoDesk na počítačích nemůže otevřít chat a konzole nezastihne lidi u nich chatem. Chat mezi kolegy funguje dál.",
+    "computers_off": "Chat s počítači je vypnutý: aplikace NeoDesk na počítačích nemůže otevřít chat. Správce ho může zapnout v nabídce chatu v Nastavení chatu pro tento server."
   },
   "toast": {
     "device_connected": "Zařízení připojeno",

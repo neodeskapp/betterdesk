@@ -462,3 +462,35 @@ func wantsV2(u *ws.Upgrade) bool {
 
 // refuseNoHub refuses an upgrade of version 2 on a relay without a hub.
 func refuseNoHub(u *ws.Upgrade) { u.Refuse(http.StatusNotFound) }
+
+// ComputersOn reports whether computers may open the chat ("Chat with
+// computers", A259; on unless an admin turned it off).
+func (h *Hub) ComputersOn(ctx context.Context) bool {
+	if h.opts.Store == nil {
+		return true
+	}
+	return LoadServerSettings(ctx, h.opts.Store).Computers
+}
+
+// ComputersChanged is told when "Chat with computers" changed: off closes
+// the computers' open sockets, which then meet the refusal when they come
+// back.
+func (h *Hub) ComputersChanged(ctx context.Context) {
+	if h.ComputersOn(ctx) {
+		return
+	}
+	for _, m := range h.all() {
+		if m.user == nil {
+			m.conn.Close(1008, "chat_off")
+		}
+	}
+}
+
+// refuseChatOff answers a computer's socket of version 2 while chat with
+// computers is off: 503 with the code chat_off in X-NeoDesk-Chat and the
+// body, and Retry-After in seconds (PROTOCOL.md).
+func refuseChatOff(u *ws.Upgrade) {
+	body := `{"success":false,"error":"Chat with computers is off","code":"chat_off"}`
+	u.RefuseRaw("HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\nContent-Type: application/json\r\n" +
+		"Content-Length: " + strconv.Itoa(len(body)) + "\r\nRetry-After: 600\r\nX-NeoDesk-Chat: chat_off\r\n\r\n" + body)
+}

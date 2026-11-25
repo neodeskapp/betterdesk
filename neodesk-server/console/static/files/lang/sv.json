@@ -5441,7 +5441,6 @@
     "sections": "Chattavsnitt",
     "seen": "Sett",
     "sending": "Skickar…",
-    "server_settings": "Inställningar för chattmejl",
     "start_direct": "Skriv",
     "start_group": "Starta grupp",
     "take": "Ta",
@@ -5466,7 +5465,11 @@
     "old_messages_hint": "Från chatten före den här versionen. Bara administratörer ser dem, och ingen kan skriva här.",
     "found_messages": "Meddelanden",
     "search_support": "Hitta en dator eller ett meddelande",
-    "search_team": "Hitta en kollega eller ett meddelande"
+    "search_team": "Hitta en kollega eller ett meddelande",
+    "server_settings": "Chattinställningar för den här servern",
+    "computers": "Chatt med datorer",
+    "computers_hint": "Av: NeoDesk-appen på datorer kan inte öppna chatten, och konsolen når inte personerna vid dem via chatt. Chatt mellan kollegor fungerar fortfarande.",
+    "computers_off": "Chatt med datorer är avstängd: NeoDesk-appen på datorer kan inte öppna chatten. En administratör kan slå på den i chattens meny under Chattinställningar för den här servern."
   },
   "toast": {
     "device_connected": "Enhet ansluten",

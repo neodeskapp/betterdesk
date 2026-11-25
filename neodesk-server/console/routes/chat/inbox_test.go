@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/chatstore"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
@@ -22,6 +24,8 @@ type inboxWorld struct {
 	db      *store.DB
 	st      *chatstore.Store
 	handler http.Handler
+	// audits are the audit entries the routes wrote: action and details
+	audits []string
 }
 
 func newInboxWorld(t *testing.T, db *store.DB) *inboxWorld {
@@ -32,11 +36,16 @@ func newInboxWorld(t *testing.T, db *store.DB) *inboxWorld {
 	}
 	st := chatstore.New(db, nil)
 	scope := realScope(t, db)
+	w := &inboxWorld{t: t, db: db, st: st}
 	hub := NewHub(HubOptions{Store: st, Scope: scope, IsAdmin: func(role string) bool { return role == "admin" },
-		Holds: func(_ context.Context, role, p string) (bool, error) { return p != permAssign || role != "viewer", nil }})
+		Holds: func(_ context.Context, role, p string) (bool, error) { return p != permAssign || role != "viewer", nil },
+		Audit: func(_ context.Context, _ int64, action string, details map[string]any) {
+			b, _ := json.Marshal(details)
+			w.audits = append(w.audits, action+" "+string(b))
+		}})
 	d := &kit.Deps{Router: kit.NewRouter(), Store: db, Chat: st}
 	registerInbox(d, hub).user = testUser
-	handler := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+	handler := middleware.Bodies(middleware.BodyOptions{})(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		r = kit.Begin(r, httpx.TrustProxy{}, nil)
 		who := &access.Context{}
 		if user := testUser(r); user != nil {
@@ -46,8 +55,22 @@ func newInboxWorld(t *testing.T, db *store.DB) *inboxWorld {
 		if !d.Router.Serve(rw, r) {
 			http.NotFound(rw, r)
 		}
-	})
-	return &inboxWorld{t: t, db: db, st: st, handler: handler}
+	}))
+	w.handler = handler
+	return w
+}
+
+// send asks the routes with a JSON body as one of the scope accounts.
+func (w *inboxWorld) send(who, method, target, body string) (int, map[string]any) {
+	w.t.Helper()
+	r := httptest.NewRequest(method, target, strings.NewReader(body))
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set("X-Test-User", who)
+	rec := httptest.NewRecorder()
+	w.handler.ServeHTTP(rec, r)
+	var out map[string]any
+	_ = json.Unmarshal(rec.Body.Bytes(), &out)
+	return rec.Code, out
 }
 
 // get asks the routes as one of the scope accounts and decodes the answer.

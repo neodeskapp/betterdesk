@@ -5441,7 +5441,6 @@
     "sections": "Secțiuni de chat",
     "seen": "Văzut",
     "sending": "Se trimite…",
-    "server_settings": "Setări e-mail pentru chat",
     "start_direct": "Scrieți",
     "start_group": "Creați grupul",
     "take": "Preluați",
@@ -5466,7 +5465,11 @@
     "old_messages_hint": "Din chatul de dinaintea acestei versiuni. Doar administratorii le văd și nimeni nu poate scrie aici.",
     "found_messages": "Mesaje",
     "search_support": "Găsiți un computer sau un mesaj",
-    "search_team": "Găsiți un coleg sau un mesaj"
+    "search_team": "Găsiți un coleg sau un mesaj",
+    "server_settings": "Setările chatului pentru acest server",
+    "computers": "Chat cu computerele",
+    "computers_hint": "Oprit: aplicația NeoDesk de pe computere nu poate deschide chatul, iar consola nu poate contacta prin chat persoanele de la ele. Chatul dintre colegi funcționează în continuare.",
+    "computers_off": "Chatul cu computerele este oprit: aplicația NeoDesk de pe computere nu poate deschide chatul. Un administrator îl poate porni din meniul chatului, la Setările chatului pentru acest server."
   },
   "toast": {
     "device_connected": "Dispozitiv conectat",

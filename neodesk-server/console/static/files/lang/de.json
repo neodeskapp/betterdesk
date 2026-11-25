@@ -5435,7 +5435,6 @@
     "sections": "Chat-Bereiche",
     "seen": "Gesehen",
     "sending": "Wird gesendet…",
-    "server_settings": "Chat-Mail-Einstellungen",
     "start_direct": "Schreiben",
     "start_group": "Gruppe starten",
     "take": "Übernehmen",
@@ -5460,7 +5459,11 @@
     "old_messages_hint": "Aus dem Chat vor dieser Version. Nur Admins sehen sie, und hier kann niemand schreiben.",
     "found_messages": "Nachrichten",
     "search_support": "Computer oder Nachricht finden",
-    "search_team": "Kollegen oder Nachricht finden"
+    "search_team": "Kollegen oder Nachricht finden",
+    "server_settings": "Chat-Einstellungen für diesen Server",
+    "computers": "Chat mit Computern",
+    "computers_hint": "Aus: Die NeoDesk-App auf Computern kann den Chat nicht öffnen, und die Konsole erreicht die Personen dort nicht per Chat. Der Chat zwischen Kollegen funktioniert weiter.",
+    "computers_off": "Der Chat mit Computern ist aus: Die NeoDesk-App auf Computern kann den Chat nicht öffnen. Ein Admin kann ihn im Menü des Chats unter Chat-Einstellungen für diesen Server einschalten."
   },
   "toast": {
     "device_connected": "Gerät verbunden",

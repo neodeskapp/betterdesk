@@ -1722,13 +1722,13 @@
   },
   {
    "name": "chat settings",
-   "summary": "Show when the chat mails about a waiting person and whether the mail quotes it.",
+   "summary": "Show when the chat mails about a waiting person, whether the mail quotes it, and whether computers may open the chat.",
    "route": "GET /api/chat/settings",
    "permission": "chat.support or chat.team"
   },
   {
    "name": "chat settings-set",
-   "summary": "Change the chat's mail (-F mail_after_minutes=15, 0 is off; -F mail_preview=false).",
+   "summary": "Change the chat's mail (-F mail_after_minutes=15, 0 is off; -F mail_preview=false) and chat with computers (-F computers=false turns it off; left out keeps it).",
    "route": "PUT /api/chat/settings",
    "permission": "server.config",
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."

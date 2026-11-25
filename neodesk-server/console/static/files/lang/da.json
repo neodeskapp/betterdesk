@@ -5441,7 +5441,6 @@
     "sections": "Chatsektioner",
     "seen": "Set",
     "sending": "Sender…",
-    "server_settings": "Indstillinger for chatmails",
     "start_direct": "Skriv",
     "start_group": "Start gruppe",
     "take": "Tag",
@@ -5466,7 +5465,11 @@
     "old_messages_hint": "Fra chatten før denne version. Kun administratorer ser dem, og ingen kan skrive her.",
     "found_messages": "Beskeder",
     "search_support": "Find en computer eller besked",
-    "search_team": "Find en kollega eller besked"
+    "search_team": "Find en kollega eller besked",
+    "server_settings": "Chatindstillinger for denne server",
+    "computers": "Chat med computere",
+    "computers_hint": "Fra: NeoDesk-appen på computere kan ikke åbne chatten, og konsollen kan ikke nå personerne ved dem via chat. Chat mellem kolleger virker stadig.",
+    "computers_off": "Chat med computere er slået fra: NeoDesk-appen på computere kan ikke åbne chatten. En administrator kan slå den til i chattens menu under Chatindstillinger for denne server."
   },
   "toast": {
     "device_connected": "Enhed tilsluttet",

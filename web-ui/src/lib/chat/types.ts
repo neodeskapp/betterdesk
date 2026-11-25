@@ -156,6 +156,8 @@ export interface AccountSettings {
 export interface ServerSettings {
 	mail_after_minutes: number;
 	mail_preview: boolean;
+	/** Computers may open the chat ("Chat with computers", A259) */
+	computers: boolean;
 }
 
 export interface Summary {

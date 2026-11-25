@@ -56,20 +56,35 @@ account needs Support chat (`chat.support`) or Team chat (`chat.team`).
 | 401 | console socket without a signed-in session; **a computer never gets 401** | sign in again |
 | 403 | wrong or revoked token, a token for another device, a foreign `Origin`, the id `panel` on `/ws/chat/`, an account without a chat permission | stop retrying; show "chat not available" |
 | 404 | a computer's socket on a server that has no chat of version 2; a console socket with `v=2` on a room other than `panel` | a computer: no chat on this server, check again after some minutes |
+| 503 with `X-NeoDesk-Chat: chat_off` | a computer's socket while an admin has "Chat with computers" off | no chat button; check again after `Retry-After` seconds (600) |
 | 429 | the token already has 4 chat sockets open | close old sockets; retry after 30 s |
 | 500 | the token could not be checked | retry with backoff |
 
 Without `v=2` the socket speaks version 1. Every open socket of a computer
 gets every frame of version 2; a second window doesn't push out the first.
 
-**Is there chat on this server?** There is no answer that says "chat is
-off": the server has no setting that turns chat off for computers, and a
-computer's socket doesn't depend on any account's permissions. A computer
-with a valid device token can chat whenever the server has version 2.
-What a computer can meet instead:
+**Is there chat on this server?** An admin can turn "Chat with
+computers" off (on by default). Then a computer's socket of version 2 is
+refused with this answer, and sockets already open are closed with code
+1008 and the reason `chat_off`:
+
+```
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/json
+Retry-After: 600
+X-NeoDesk-Chat: chat_off
+
+{"success":false,"error":"Chat with computers is off","code":"chat_off"}
+```
+
+The client shows no chat button and asks again after `Retry-After`
+seconds. Nothing else turns chat off for a computer: its socket doesn't
+depend on any account's permissions. What a computer can meet:
 
 - The upgrade succeeds and the first frame is `welcome` with `v: 2`: chat
   works.
+- 503 with `chat_off`, or a close with 1008 `chat_off`: chat with
+  computers is off; no chat button, ask again after some minutes.
 - The upgrade succeeds but the first frame is anything else (an older
   server ignores `v=2` and speaks version 1, starting with `history` or
   `contacts`): close the socket and treat it as no chat; check again after
@@ -530,7 +545,7 @@ All under `/api/chat`, answering JSON with `success`:
 | `GET /search?q=&section=support\|team&conversation_id=` | either | up to 50 messages with the text (2 characters at least, case-insensitive for Latin letters), newest first, in the conversations the account reads, and `conversations` naming them by id |
 | `GET/POST /canned`, `PATCH/DELETE /canned/{id}` | either; shared replies need chat.canned_manage | |
 | `GET/PUT /me` | either | the account's notifications {browser, sound, mail} |
-| `GET /settings`, `PUT /settings` | either; server.config to change | {mail_after_minutes, mail_preview} |
+| `GET /settings`, `PUT /settings` | either; server.config to change | {mail_after_minutes, mail_preview, computers}; `computers` left out of a PUT keeps it |
 | `GET /messages/{id}/trail` | audit.view | earlier texts of an edited or deleted message |
 | `POST /upload`, `GET /files/{id}[?inline=1]` | either | files |
 | `POST /device/files`, `GET /device/files/{id}` | device token | a computer's files (section 8) |

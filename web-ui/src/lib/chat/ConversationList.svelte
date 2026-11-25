@@ -17,7 +17,7 @@
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import SegmentedFilter from '#lib/ui/SegmentedFilter.svelte';
 	import Time from '#lib/ui/Time.svelte';
-	import { loadInbox, loadTeam, searchMessages } from './api.ts';
+	import { loadInbox, loadServerSettings, loadTeam, searchMessages } from './api.ts';
 	import { chat } from './client.svelte.ts';
 	import { lastLine, snippet } from './logic.ts';
 	import type {
@@ -68,6 +68,8 @@
 	let found = $state.raw<Message[]>([]);
 	let foundIn = $state.raw<Record<string, FoundConversation>>({});
 	let searching: AbortController | null = null;
+	/** "Chat with computers" is off (A259): computers can't open the chat */
+	let computersOff = $state(false);
 
 	async function findMessages(text: string) {
 		searching?.abort();
@@ -93,6 +95,10 @@
 		void findMessages(q.trim());
 		try {
 			if (section === 'support' && chat.may.support) {
+				void loadServerSettings().then(
+					(s) => (computersOff = !s.computers),
+					() => undefined
+				);
 				const r = await loadInbox(filter, q.trim());
 				support = r.conversations;
 				counts = r.counts;
@@ -240,6 +246,9 @@
 	</div>
 
 	<div class="chat-rows">
+		{#if section === 'support' && computersOff}
+			<p class="chat-list-note" role="status">{t('chat.computers_off')}</p>
+		{/if}
 		{#if failed}
 			<p class="chat-list-state is-error">
 				{t('chat.list_failed')}
@@ -439,6 +448,13 @@
 		flex-direction: column;
 		height: 100%;
 		min-height: 0;
+	}
+	.chat-list-note {
+		margin: var(--space-2) var(--space-3);
+		padding: var(--space-2) var(--space-3);
+		border: 1px solid var(--rule);
+		border-radius: var(--radius);
+		color: var(--text-muted);
 	}
 	.chat-list-top {
 		display: flex;

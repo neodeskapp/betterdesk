@@ -5435,7 +5435,6 @@
     "sections": "채팅 섹션",
     "seen": "읽음",
     "sending": "보내는 중…",
-    "server_settings": "채팅 메일 설정",
     "start_direct": "메시지 보내기",
     "start_group": "그룹 만들기",
     "take": "맡기",
@@ -5460,7 +5459,11 @@
     "old_messages_hint": "이 버전 이전의 채팅 메시지입니다. 관리자만 볼 수 있으며 여기에는 아무도 쓸 수 없습니다.",
     "found_messages": "메시지",
     "search_support": "컴퓨터 또는 메시지 찾기",
-    "search_team": "동료 또는 메시지 찾기"
+    "search_team": "동료 또는 메시지 찾기",
+    "server_settings": "이 서버의 채팅 설정",
+    "computers": "컴퓨터와 채팅",
+    "computers_hint": "끄면: 컴퓨터의 NeoDesk 앱이 채팅을 열 수 없고 콘솔도 채팅으로 그 사용자에게 연락할 수 없습니다. 동료 간 채팅은 계속 됩니다.",
+    "computers_off": "컴퓨터와 채팅이 꺼져 있습니다: 컴퓨터의 NeoDesk 앱이 채팅을 열 수 없습니다. 관리자는 채팅 메뉴의 이 서버의 채팅 설정에서 켤 수 있습니다."
   },
   "toast": {
     "device_connected": "장치가 연결됨",

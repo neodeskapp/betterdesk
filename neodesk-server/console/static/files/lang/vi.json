@@ -5441,7 +5441,6 @@
     "sections": "Các mục trò chuyện",
     "seen": "Đã xem",
     "sending": "Đang gửi…",
-    "server_settings": "Cài đặt email trò chuyện",
     "start_direct": "Viết",
     "start_group": "Tạo nhóm",
     "take": "Nhận",
@@ -5466,7 +5465,11 @@
     "old_messages_hint": "Từ trò chuyện trước phiên bản này. Chỉ quản trị viên thấy, và không ai có thể viết ở đây.",
     "found_messages": "Tin nhắn",
     "search_support": "Tìm máy tính hoặc tin nhắn",
-    "search_team": "Tìm đồng nghiệp hoặc tin nhắn"
+    "search_team": "Tìm đồng nghiệp hoặc tin nhắn",
+    "server_settings": "Cài đặt trò chuyện của máy chủ này",
+    "computers": "Trò chuyện với máy tính",
+    "computers_hint": "Tắt: ứng dụng NeoDesk trên máy tính không mở được trò chuyện, và bảng điều khiển không liên hệ được người dùng ở đó qua trò chuyện. Trò chuyện giữa đồng nghiệp vẫn hoạt động.",
+    "computers_off": "Trò chuyện với máy tính đang tắt: ứng dụng NeoDesk trên máy tính không mở được trò chuyện. Quản trị viên có thể bật lại trong menu trò chuyện, mục Cài đặt trò chuyện của máy chủ này."
   },
   "toast": {
     "device_connected": "Đã kết nối thiết bị",

@@ -967,6 +967,7 @@ func (h *inboxRoutes) cannedDelete(w http.ResponseWriter, r *http.Request) {
 const (
 	settingMailAfter   = "mail_after_minutes"
 	settingMailPreview = "mail_preview"
+	settingComputers   = "computers"
 	accountSettings    = "account:"
 )
 
@@ -977,6 +978,8 @@ type ServerSettings struct {
 	MailAfterMinutes int `json:"mail_after_minutes"`
 	// MailPreview puts the start of the waiting message into the mail
 	MailPreview bool `json:"mail_preview"`
+	// Computers lets computers open the chat (A259)
+	Computers bool `json:"computers"`
 }
 
 // AccountSettings are an account's chat notifications.
@@ -989,7 +992,7 @@ type AccountSettings struct {
 // LoadServerSettings reads the chat's settings: a mail after 15 minutes
 // with a preview unless an admin changed them (A242 c).
 func LoadServerSettings(ctx context.Context, s *chatstore.Store) ServerSettings {
-	out := ServerSettings{MailAfterMinutes: 15, MailPreview: true}
+	out := ServerSettings{MailAfterMinutes: 15, MailPreview: true, Computers: true}
 	if v, err := s.Setting(ctx, settingMailAfter); err == nil && v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
 			out.MailAfterMinutes = n
@@ -997,6 +1000,9 @@ func LoadServerSettings(ctx context.Context, s *chatstore.Store) ServerSettings 
 	}
 	if v, err := s.Setting(ctx, settingMailPreview); err == nil && v != "" {
 		out.MailPreview = v == "1"
+	}
+	if v, err := s.Setting(ctx, settingComputers); err == nil && v != "" {
+		out.Computers = v == "1"
 	}
 	return out
 }
@@ -1045,12 +1051,26 @@ func (h *inboxRoutes) settings(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *inboxRoutes) setSettings(w http.ResponseWriter, r *http.Request) {
-	var body ServerSettings
+	var body struct {
+		MailAfterMinutes int  `json:"mail_after_minutes"`
+		MailPreview      bool `json:"mail_preview"`
+		// Computers left out keeps the setting (an older page)
+		Computers *bool `json:"computers"`
+	}
 	if err := kit.Bind(r, &body); err != nil || body.MailAfterMinutes < 0 || body.MailAfterMinutes > 7*24*60 {
 		kit.Fail(w, r, http.StatusBadRequest, "mail_after_minutes must be between 0 and 10080")
 		return
 	}
 	ctx := r.Context()
+	before := LoadServerSettings(ctx, h.store())
+	saved := ServerSettings{MailAfterMinutes: body.MailAfterMinutes, MailPreview: body.MailPreview, Computers: before.Computers}
+	if body.Computers != nil {
+		saved.Computers = *body.Computers
+	}
+	if err := h.store().SetSetting(ctx, settingComputers, bit(saved.Computers)); err != nil {
+		h.fail(w, r, err)
+		return
+	}
 	if err := h.store().SetSetting(ctx, settingMailAfter, strconv.Itoa(body.MailAfterMinutes)); err != nil {
 		h.fail(w, r, err)
 		return
@@ -1059,8 +1079,12 @@ func (h *inboxRoutes) setSettings(w http.ResponseWriter, r *http.Request) {
 		h.fail(w, r, err)
 		return
 	}
-	h.hub.audit(ctx, &member{user: h.user(r)}, "chat_settings_changed", map[string]any{"mail_after_minutes": body.MailAfterMinutes, "mail_preview": body.MailPreview})
-	kit.JSON(w, r, http.StatusOK, map[string]any{"success": true, "settings": body})
+	h.hub.audit(ctx, &member{user: h.user(r)}, "chat_settings_changed", map[string]any{"mail_after_minutes": saved.MailAfterMinutes,
+		"mail_preview": saved.MailPreview, "computers": saved.Computers})
+	if saved.Computers != before.Computers {
+		h.hub.ComputersChanged(ctx)
+	}
+	kit.JSON(w, r, http.StatusOK, map[string]any{"success": true, "settings": saved})
 }
 
 // trail answers GET /api/chat/messages/{id}/trail: the old texts of an

@@ -5435,7 +5435,6 @@
     "sections": "Chatonderdelen",
     "seen": "Gezien",
     "sending": "Verzenden…",
-    "server_settings": "Instellingen voor chatmails",
     "start_direct": "Schrijven",
     "start_group": "Groep starten",
     "take": "Oppakken",
@@ -5460,7 +5459,11 @@
     "old_messages_hint": "Uit de chat van vóór deze versie. Alleen beheerders zien ze en niemand kan hier schrijven.",
     "found_messages": "Berichten",
     "search_support": "Zoek een computer of bericht",
-    "search_team": "Zoek een collega of bericht"
+    "search_team": "Zoek een collega of bericht",
+    "server_settings": "Chatinstellingen voor deze server",
+    "computers": "Chat met computers",
+    "computers_hint": "Uit: de NeoDesk-app op computers kan de chat niet openen en de console bereikt de mensen daar niet via chat. Chat tussen collega's blijft werken.",
+    "computers_off": "Chat met computers staat uit: de NeoDesk-app op computers kan de chat niet openen. Een beheerder kan hem aanzetten in het menu van de chat onder Chatinstellingen voor deze server."
   },
   "toast": {
     "device_connected": "Apparaat verbonden",

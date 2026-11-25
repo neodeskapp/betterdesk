@@ -2,8 +2,9 @@
   The chat's notification settings (A242), per account and kept on the
   server: browser notifications (the browser asks for its permission when
   they are turned on), a short sound, and a mail when a person waits for
-  an answer. Accounts with server.config also set when that mail goes out
-  and whether it quotes the message.
+  an answer. Accounts with server.config also set when that mail goes out,
+  whether it quotes the message, and whether computers may open the chat
+  at all ("Chat with computers", A259).
 -->
 <script lang="ts">
 	import { t } from '#lib/i18n/i18n.svelte.ts';
@@ -50,7 +51,7 @@
 			server = await api.loadServerSettings();
 			minutes = String(server.mail_after_minutes);
 		} catch {
-			server = { mail_after_minutes: 15, mail_preview: true };
+			server = { mail_after_minutes: 15, mail_preview: true, computers: true };
 		}
 	}
 
@@ -63,8 +64,13 @@
 		}
 		busy = true;
 		try {
-			await api.saveServerSettings({ mail_after_minutes: n, mail_preview: server.mail_preview });
+			await api.saveServerSettings({
+				mail_after_minutes: n,
+				mail_preview: server.mail_preview,
+				computers: server.computers
+			});
 			editing = false;
+			chat.listVersion++;
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : t('chat.action_failed'));
 		} finally {
@@ -107,6 +113,9 @@
 			<Input id="chat-mail-after" type="number" min="0" max="10080" bind:value={minutes} />
 			<p class="cs-hint">{t('chat.mail_after_hint')}</p>
 			<Checkbox bind:checked={server.mail_preview} label={t('chat.mail_preview')} />
+			<div class="cs-gap"></div>
+			<Checkbox bind:checked={server.computers} label={t('chat.computers')} />
+			<p class="cs-hint">{t('chat.computers_hint')}</p>
 		{/if}
 		{#snippet footer()}
 			<Button onclick={() => (editing = false)}>{t('actions.cancel')}</Button>
@@ -120,6 +129,9 @@
 		display: block;
 		margin-bottom: var(--space-1);
 		font-weight: 600;
+	}
+	.cs-gap {
+		height: var(--space-3);
 	}
 	.cs-hint {
 		margin: var(--space-1) 0 var(--space-3);

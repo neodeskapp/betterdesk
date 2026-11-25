@@ -5441,7 +5441,6 @@
     "sections": "Sohbet bölümleri",
     "seen": "Görüldü",
     "sending": "Gönderiliyor…",
-    "server_settings": "Sohbet e-posta ayarları",
     "start_direct": "Yaz",
     "start_group": "Grup başlat",
     "take": "Üstlen",
@@ -5466,7 +5465,11 @@
     "old_messages_hint": "Bu sürümden önceki sohbetten. Yalnızca yöneticiler görür ve buraya kimse yazamaz.",
     "found_messages": "Mesajlar",
     "search_support": "Bilgisayar veya mesaj bul",
-    "search_team": "Çalışma arkadaşı veya mesaj bul"
+    "search_team": "Çalışma arkadaşı veya mesaj bul",
+    "server_settings": "Bu sunucunun sohbet ayarları",
+    "computers": "Bilgisayarlarla sohbet",
+    "computers_hint": "Kapalı: bilgisayarlardaki NeoDesk uygulaması sohbeti açamaz ve konsol başlarındaki kişilere sohbetle ulaşamaz. Çalışma arkadaşları arasındaki sohbet çalışmaya devam eder.",
+    "computers_off": "Bilgisayarlarla sohbet kapalı: bilgisayarlardaki NeoDesk uygulaması sohbeti açamaz. Bir yönetici bunu sohbet menüsünde Bu sunucunun sohbet ayarları altından açabilir."
   },
   "toast": {
     "device_connected": "Cihaz bağlandı",

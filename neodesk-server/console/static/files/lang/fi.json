@@ -5441,7 +5441,6 @@
     "sections": "Chatin osiot",
     "seen": "Nähty",
     "sending": "Lähetetään…",
-    "server_settings": "Chatin sähköpostiasetukset",
     "start_direct": "Kirjoita",
     "start_group": "Aloita ryhmä",
     "take": "Ota",
@@ -5466,7 +5465,11 @@
     "old_messages_hint": "Tätä versiota edeltäneestä chatista. Vain ylläpitäjät näkevät ne, eikä tänne voi kirjoittaa.",
     "found_messages": "Viestit",
     "search_support": "Etsi tietokone tai viesti",
-    "search_team": "Etsi kollega tai viesti"
+    "search_team": "Etsi kollega tai viesti",
+    "server_settings": "Tämän palvelimen chat-asetukset",
+    "computers": "Chat tietokoneiden kanssa",
+    "computers_hint": "Pois: tietokoneiden NeoDesk-sovellus ei voi avata chattia, eikä konsoli tavoita niiden käyttäjiä chatilla. Kollegoiden välinen chat toimii edelleen.",
+    "computers_off": "Chat tietokoneiden kanssa on pois päältä: tietokoneiden NeoDesk-sovellus ei voi avata chattia. Ylläpitäjä voi ottaa sen käyttöön chatin valikosta kohdasta Tämän palvelimen chat-asetukset."
   },
   "toast": {
     "device_connected": "Laite yhdistetty",

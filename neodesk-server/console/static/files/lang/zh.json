@@ -5556,7 +5556,6 @@
     "sections": "聊天分区",
     "seen": "已读",
     "sending": "正在发送…",
-    "server_settings": "聊天邮件设置",
     "start_direct": "发消息",
     "start_group": "创建群组",
     "take": "接手",
@@ -5581,7 +5580,11 @@
     "old_messages_hint": "来自此版本之前的聊天。只有管理员可以看到，任何人都不能在此发言。",
     "found_messages": "消息",
     "search_support": "查找计算机或消息",
-    "search_team": "查找同事或消息"
+    "search_team": "查找同事或消息",
+    "server_settings": "此服务器的聊天设置",
+    "computers": "与计算机聊天",
+    "computers_hint": "关闭后：计算机上的 NeoDesk 应用无法打开聊天，控制台也无法通过聊天联系这些计算机前的用户。同事之间的聊天不受影响。",
+    "computers_off": "与计算机聊天已关闭：计算机上的 NeoDesk 应用无法打开聊天。管理员可以在聊天菜单的“此服务器的聊天设置”中开启。"
   },
   "toast": {
     "device_connected": "设备已连接",

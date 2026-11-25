@@ -203,7 +203,11 @@ export async function saveMySettings(settings: AccountSettings): Promise<void> {
 
 export async function loadServerSettings(): Promise<ServerSettings> {
 	const s = obj(obj(await request('/api/chat/settings')).settings);
-	return { mail_after_minutes: Number(s.mail_after_minutes) || 0, mail_preview: s.mail_preview !== false };
+	return {
+		mail_after_minutes: Number(s.mail_after_minutes) || 0,
+		mail_preview: s.mail_preview !== false,
+		computers: s.computers !== false
+	};
 }
 
 export async function saveServerSettings(settings: ServerSettings): Promise<void> {

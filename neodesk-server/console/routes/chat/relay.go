@@ -146,6 +146,10 @@ func (r *Relay) serveAgent(u *ws.Upgrade) {
 		u.Refuse(http.StatusForbidden)
 		return
 	}
+	if wantsV2(u) && r.opts.Hub != nil && !r.opts.Hub.ComputersOn(u.R.Context()) {
+		refuseChatOff(u)
+		return
+	}
 	key := tokenKey(token)
 	if !r.agentTokens.take(key, MaxAgentSocketsPerToken) {
 		u.Refuse(http.StatusTooManyRequests)

@@ -5441,7 +5441,6 @@
     "sections": "Bagian chat",
     "seen": "Dilihat",
     "sending": "Mengirim…",
-    "server_settings": "Pengaturan email chat",
     "start_direct": "Tulis",
     "start_group": "Mulai grup",
     "take": "Ambil",
@@ -5466,7 +5465,11 @@
     "old_messages_hint": "Dari obrolan sebelum versi ini. Hanya admin yang melihatnya, dan tidak ada yang bisa menulis di sini.",
     "found_messages": "Pesan",
     "search_support": "Cari komputer atau pesan",
-    "search_team": "Cari rekan atau pesan"
+    "search_team": "Cari rekan atau pesan",
+    "server_settings": "Pengaturan obrolan untuk server ini",
+    "computers": "Obrolan dengan komputer",
+    "computers_hint": "Mati: aplikasi NeoDesk di komputer tidak dapat membuka obrolan, dan konsol tidak dapat menjangkau orang di sana lewat obrolan. Obrolan antarrekan tetap berjalan.",
+    "computers_off": "Obrolan dengan komputer mati: aplikasi NeoDesk di komputer tidak dapat membuka obrolan. Admin dapat menyalakannya di menu obrolan pada Pengaturan obrolan untuk server ini."
   },
   "toast": {
     "device_connected": "Perangkat terhubung",

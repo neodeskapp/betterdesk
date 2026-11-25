@@ -5635,7 +5635,6 @@
         "sections": "Chat sections",
         "seen": "Seen",
         "sending": "Sending…",
-        "server_settings": "Chat mail settings",
         "start_direct": "Write",
         "start_group": "Start group",
         "take": "Take",
@@ -5660,7 +5659,11 @@
         "old_messages_hint": "From the chat before this version. Only admins see them, and nobody can write here.",
         "found_messages": "Messages",
         "search_support": "Find a computer or message",
-        "search_team": "Find a colleague or message"
+        "search_team": "Find a colleague or message",
+        "server_settings": "Chat settings for this server",
+        "computers": "Chat with computers",
+        "computers_hint": "Off: the NeoDesk app on computers can't open the chat, and the console can't reach the people at them by chat. Chat between colleagues keeps working.",
+        "computers_off": "Chat with computers is off: the NeoDesk app on computers can't open the chat. An admin can turn it on in the chat's menu under Chat settings for this server."
     },
     "toast": {
         "device_connected": "Device connected",
