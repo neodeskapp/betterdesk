@@ -204,11 +204,16 @@ func (h *handlers) device(w http.ResponseWriter, r *http.Request) {
 			"cpu_usage", m.CPU, "memory_usage", m.Memory, "disk_usage", m.Disk, "updated_at", m.CreatedAt,
 		))
 	}
-	// 48 samples: a day at one every 30 minutes
+	// 48 samples: a day of console heartbeats at one every 30 minutes, or
+	// about an hour of a NeoDesk client's telemetry
 	if history, err := metrics(ctx, h.d.Store, id, 48); err == nil && len(history) > 0 {
 		list := make([]any, len(history))
 		for i, m := range history {
-			list[i] = goapi.NewObject("cpu", m.CPU, "memory", m.Memory, "disk", m.Disk, "time", m.CreatedAt)
+			sample := goapi.NewObject("cpu", m.CPU, "memory", m.Memory, "disk", m.Disk, "time", m.CreatedAt)
+			if m.NetRx.Valid || m.NetTx.Valid {
+				sample.Set("net_rx", m.NetRx).Set("net_tx", m.NetTx)
+			}
+			list[i] = sample
 		}
 		device.Set("metrics_history", list)
 	}

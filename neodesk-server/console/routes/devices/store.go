@@ -103,16 +103,40 @@ func safeJSONParse(db *store.DB, v any, fallback any) any {
 	return parsed
 }
 
-// metric is one row of peer_metrics.
+// metric is one row of peer_metrics. NetRx and NetTx are the network
+// rates (bytes per second) of a NeoDesk client's telemetry, which the
+// server writes into the same table (L480); a row without them, or a
+// table without their columns, leaves them invalid.
 type metric struct {
 	CPU, Memory, Disk store.Float
+	NetRx, NetTx      store.Float
 	CreatedAt         store.Time
+}
+
+// hasRateColumns is true when peer_metrics has the server's network rate
+// columns: the server adds them, the console's own schema does not.
+func hasRateColumns(ctx context.Context, db *store.DB) bool {
+	query := `SELECT COUNT(*) FROM pragma_table_info('peer_metrics') WHERE name IN ('net_rx_bps', 'net_tx_bps')`
+	if db.Dialect() != store.SQLite {
+		query = `SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = current_schema()
+			AND table_name = 'peer_metrics' AND column_name IN ('net_rx_bps', 'net_tx_bps')`
+	}
+	var n int64
+	if err := db.QueryRow(ctx, query).Scan(&n); err != nil {
+		return false
+	}
+	return n == 2
 }
 
 // metrics returns the newest rows of peer_metrics of a device, newest
 // first.
 func metrics(ctx context.Context, db *store.DB, peerID string, limit int) ([]metric, error) {
-	rows, err := store.Select(ctx, db, `SELECT cpu_usage, memory_usage, disk_usage, created_at FROM peer_metrics WHERE peer_id = ? ORDER BY created_at DESC LIMIT ?`, peerID, limit)
+	rates := hasRateColumns(ctx, db)
+	columns := `cpu_usage, memory_usage, disk_usage, created_at`
+	if rates {
+		columns += `, net_rx_bps, net_tx_bps`
+	}
+	rows, err := store.Select(ctx, db, `SELECT `+columns+` FROM peer_metrics WHERE peer_id = ? ORDER BY created_at DESC LIMIT ?`, peerID, limit)
 	if err != nil {
 		return nil, fmt.Errorf("load the metrics of device %s: %w", peerID, err)
 	}
@@ -120,7 +144,11 @@ func metrics(ctx context.Context, db *store.DB, peerID string, limit int) ([]met
 	var out []metric
 	for rows.Next() {
 		var m metric
-		if err := rows.Scan(&m.CPU, &m.Memory, &m.Disk, &m.CreatedAt); err != nil {
+		dest := []any{&m.CPU, &m.Memory, &m.Disk, &m.CreatedAt}
+		if rates {
+			dest = append(dest, &m.NetRx, &m.NetTx)
+		}
+		if err := rows.Scan(dest...); err != nil {
 			return nil, fmt.Errorf("load the metrics of device %s: %w", peerID, err)
 		}
 		out = append(out, m)
