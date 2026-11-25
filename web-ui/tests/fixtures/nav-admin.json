@@ -382,7 +382,47 @@
 				"text": "General",
 				"group": "Console",
 				"core": true,
-				"keywords": "settings relay address public endpoints connection strategy meshcentral",
+				"keywords": "settings relay address public endpoints connection strategy",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:auth",
+				"href": "/settings?tab=auth",
+				"text": "Sign-in",
+				"group": "Console",
+				"core": true,
+				"keywords": "sign-in authentication 2fa two-factor totp password sessions",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:ldap",
+				"href": "/settings?tab=ldap",
+				"text": "Directory (LDAP)",
+				"group": "Console",
+				"core": false,
+				"keywords": "ldap active directory directory sign-in",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:sso",
+				"href": "/settings?tab=sso",
+				"text": "Single sign-on",
+				"group": "Console",
+				"core": false,
+				"keywords": "sso oidc oauth openid single sign-on",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:joining",
+				"href": "/settings?tab=joining",
+				"text": "Joining",
+				"group": "Console",
+				"core": false,
+				"keywords": "join joining enrollment approval visibility availability history",
 				"external": false,
 				"countId": null
 			},
@@ -392,17 +432,7 @@
 				"text": "Appearance",
 				"group": "Console",
 				"core": false,
-				"keywords": "branding theme colours colors logo dark mode",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "settings:auth",
-				"href": "/settings?tab=auth",
-				"text": "Sign-in",
-				"group": "Console",
-				"core": false,
-				"keywords": "authentication 2fa two-factor totp password ldap sso oidc",
+				"keywords": "appearance theme colours colors fonts dark mode branding logo",
 				"external": false,
 				"countId": null
 			},
@@ -423,6 +453,16 @@
 				"group": "Console",
 				"core": false,
 				"keywords": "time zone timezone ntp clock",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:meshcentral",
+				"href": "/settings?tab=meshcentral",
+				"text": "MeshCentral",
+				"group": "Console",
+				"core": false,
+				"keywords": "meshcentral mesh meshagent",
 				"external": false,
 				"countId": null
 			},

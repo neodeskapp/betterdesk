@@ -51,7 +51,7 @@ test.describe('as an admin', () => {
 			.getByRole('option', { name: /Host/ })
 			.first()
 			.click();
-		await expect(page).toHaveURL(/\/settings\?tab=auth#ldap-host$/);
+		await expect(page).toHaveURL(/\/settings\?tab=ldap#ldap-host$/);
 		await expect(page.locator('#ldap-host')).toBeInViewport();
 		await expect(page.locator('.is-found')).toBeVisible();
 	});
@@ -101,8 +101,8 @@ test.describe('as a viewer', () => {
 		await page.goto(`${UI}/`);
 		const box = await openSearch(page);
 		await box.fill('ldap');
-		// The Sign-in page itself is a page result; none of its LDAP settings are
-		await expect(page.getByRole('group', { name: /^Pages/ })).toBeVisible();
+		// Directory (LDAP) is a tab for server.config: neither the page nor its settings
+		await expect(page.getByRole('option', { name: /Directory \(LDAP\)/ })).toHaveCount(0);
 		await expect(page.getByRole('group', { name: /^Settings/ })).toHaveCount(0);
 		await box.fill('password');
 		await expect(

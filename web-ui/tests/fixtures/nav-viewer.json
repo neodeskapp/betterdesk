@@ -161,7 +161,17 @@
 				"text": "General",
 				"group": "Console",
 				"core": true,
-				"keywords": "settings relay address public endpoints connection strategy meshcentral",
+				"keywords": "settings relay address public endpoints connection strategy",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:auth",
+				"href": "/settings?tab=auth",
+				"text": "Sign-in",
+				"group": "Console",
+				"core": true,
+				"keywords": "sign-in authentication 2fa two-factor totp password sessions",
 				"external": false,
 				"countId": null
 			},
@@ -171,17 +181,7 @@
 				"text": "Appearance",
 				"group": "Console",
 				"core": false,
-				"keywords": "branding theme colours colors logo dark mode",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "settings:auth",
-				"href": "/settings?tab=auth",
-				"text": "Sign-in",
-				"group": "Console",
-				"core": false,
-				"keywords": "authentication 2fa two-factor totp password ldap sso oidc",
+				"keywords": "appearance theme colours colors fonts dark mode branding logo",
 				"external": false,
 				"countId": null
 			},

@@ -37,7 +37,9 @@ for (const role of ROLES) {
 			await expect(page.locator('#server-info')).toBeVisible();
 			await expect(page.locator('#public-server-id')).toHaveCount(config ? 1 : 0);
 			await expect(page.locator('#general-form')).toHaveCount(config ? 1 : 0);
-			if (config) await expect(page.locator('#mesh-settings-panel .state, #mesh-body').first()).toBeVisible();
+			// MeshCentral, device visibility and availability left General for tabs of their own
+			for (const id of ['#mesh-settings-panel', '#device-scope-settings-panel', '#availability-history-form'])
+				await expect(page.locator(id)).toHaveCount(0);
 			await expectNoAxeViolations(page);
 
 			await page.goto(`${UI}/settings?tab=branding`);
@@ -60,15 +62,34 @@ for (const role of ROLES) {
 			await expect(h1(page)).toHaveText('Sign-in');
 			await expect(page.locator('#current-password')).toBeVisible();
 			await expect(page.locator('#auth-panel-totp')).toBeVisible();
-			for (const id of [
-				'#enrollment-settings-section',
-				'#client-sessions-form',
-				'#ldap-form',
-				'#oidc-form'
-			]) {
-				await expect(page.locator(id)).toHaveCount(config ? 1 : 0);
-			}
+			await expect(page.locator('#client-sessions-form')).toHaveCount(config ? 1 : 0);
+			await expect(page.locator('#require-two-factor')).toHaveCount(config ? 1 : 0);
+			// Directory, single sign-on and joining are tabs of their own now
+			for (const id of ['#enrollment-settings-section', '#ldap-form', '#oidc-form'])
+				await expect(page.locator(id)).toHaveCount(0);
 			await expectNoAxeViolations(page);
+
+			for (const [tab, heading, id] of [
+				['ldap', 'Directory (LDAP)', '#ldap-form'],
+				['sso', 'Single sign-on', '#oidc-form'],
+				['joining', 'Joining', '#enrollment-settings-section'],
+				['meshcentral', 'MeshCentral', '#mesh-settings-panel']
+			] as const) {
+				await page.goto(`${UI}/settings?tab=${tab}`);
+				await expect(h1(page)).toHaveText(heading);
+				await expect(page.locator(id)).toHaveCount(config ? 1 : 0);
+				if (!config)
+					await expect(
+						page.getByText('Only super admins and server admins can see and change these settings.')
+					).toBeVisible();
+				if (config && tab === 'joining') {
+					await expect(page.locator('#device-scope-settings-panel')).toBeVisible();
+					await expect(page.locator('#availability-history-form')).toBeVisible();
+				}
+				if (config && tab === 'meshcentral')
+					await expect(page.locator('#mesh-settings-panel .state, #mesh-body').first()).toBeVisible();
+				await expectNoAxeViolations(page);
+			}
 
 			// The server tabs: open with server.config, one sentence otherwise
 			await page.goto(`${UI}/settings?tab=email`);
@@ -110,10 +131,12 @@ test.describe('settings forms (super admin)', () => {
 	// A submit button whose form attribute names no form submits nothing
 	// (BUGS L325: Save of "Require two-factor sign-in" did nothing)
 	test('every Save button on every tab belongs to a form', async ({ page }) => {
-		const tabs = ['general', 'branding', 'auth', 'backup', 'updates', 'email', 'time', 'advanced'];
+		const tabs = ['general', 'auth', 'ldap', 'sso', 'joining', 'branding', 'email', 'time', 'meshcentral']
+			.map((tab) => `/settings?tab=${tab}`)
+			.concat(['/server/backups', '/server/updates', '/server/config-files']);
 		const lost: string[] = [];
 		for (const tab of tabs) {
-			await page.goto(`${UI}/settings?tab=${tab}`);
+			await page.goto(`${UI}${tab}`);
 			await expect(h1(page)).toBeVisible();
 			await page.waitForLoadState('networkidle');
 			const here = await page.evaluate(() =>
@@ -147,7 +170,7 @@ test.describe('settings links and search (admin)', () => {
 
 	test('#<id> on another tab switches there and shows the hidden field with a note', async ({ page }) => {
 		await page.goto(`${UI}/settings#ldap-host`);
-		await expect(page).toHaveURL(/\?tab=auth#ldap-host$/);
+		await expect(page).toHaveURL(/\?tab=ldap#ldap-host$/);
 		const note = page.locator('#ldap-config-fields-note');
 		await expect(note).toBeVisible();
 		await expect(note).toContainText('LDAP');
