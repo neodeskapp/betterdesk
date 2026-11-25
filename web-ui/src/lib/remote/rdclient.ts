@@ -108,6 +108,8 @@ export interface RemoteClient {
 	sendKeyPress?(key: 'Tab' | 'Return'): boolean;
 	/** RDClient: sign in with the server's answer to the device's question; the page holds no password (L454) */
 	authenticateWith?(answer: LoginAnswer): Promise<boolean>;
+	/** RDClient: ask the device without a password while the form shows, so someone there can accept (L515) */
+	askWithoutPassword?(): Promise<void>;
 	/** RDClient: the relay session's id, which the server knows as this viewer's open session */
 	readonly relayUUID?: string;
 	/** RDClient: what the device said about itself at the sign-in (PeerInfo) */
