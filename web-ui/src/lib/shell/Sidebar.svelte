@@ -516,11 +516,12 @@
 		background: var(--bg);
 		font-weight: 600;
 	}
+	/* A long name (or a long translation) wraps to a second line instead of
+	   being cut off: the sidebar is how people find a page */
 	.nav-label {
 		min-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		line-height: 1.3;
+		overflow-wrap: anywhere;
 	}
 	.nav-note,
 	.nav-count {
