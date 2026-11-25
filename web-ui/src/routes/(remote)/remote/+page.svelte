@@ -1,8 +1,8 @@
 <!--
   The remote client's start page (/remote): connect by ID, then the device
   list with folders, groups and tags, refreshed every 30 seconds while the
-  tab is visible. Connect adds a tab to an open viewer (BroadcastChannel
-  "neodesk-remote") or opens one; on phones the RustDesk app opens
+  tab is visible. Connect brings an open viewer tab to the front and adds
+  the session there, or opens one (viewer-window.ts); on phones the RustDesk app opens
   instead (there is no NeoDesk app for phones); in the desktop app (Tauri)
   the app opens the session. On a computer, Connect by ID also hands the
   ID to NeoDesk or stock RustDesk. Needs a
@@ -17,6 +17,7 @@
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
 	import { base, link } from '#lib/nav.ts';
 	import { isPhone, viewportWidth } from '#lib/remote/capabilities.ts';
+	import { openInViewerTab } from '#lib/remote/viewer-window.ts';
 	import { can, startSession, session } from '#lib/state/session.svelte.ts';
 	import { poll } from '#lib/state/live.ts';
 	import AddressBook from '#lib/remote/AddressBook.svelte';
@@ -66,9 +67,10 @@
 		location.href = appLink(id, app);
 	}
 
-	function openViewerTab(id: string) {
-		const win = window.open(link(`/remote/${encodeURIComponent(id)}`), '_blank');
-		if (!win)
+	/** The viewer tab comes to the front with the session, or a new one opens (viewer-window.ts) */
+	function openViewerTab(id: string, name = '') {
+		const url = new URL(link(`/remote/${encodeURIComponent(id)}`), location.href).href;
+		if (!openInViewerTab(url, id, name))
 			toast.error(
 				tf(
 					'remote_dashboard.popup_blocked',
@@ -77,7 +79,6 @@
 			);
 	}
 
-	/** A viewer tab that is already open adds the session as a tab; otherwise open a new one */
 	function connect(id: string, name: string) {
 		if (phone) return openInApp(id);
 		const invoke = tauri();
@@ -92,25 +93,7 @@
 			});
 			return;
 		}
-		if (typeof BroadcastChannel === 'undefined') return openViewerTab(id);
-		const bc = new BroadcastChannel('neodesk-remote');
-		let handled = false;
-		bc.onmessage = (ev: MessageEvent<{ type?: string }>) => {
-			if (ev.data?.type === 'pong' && !handled) {
-				handled = true;
-				bc.postMessage({ type: 'add-session', deviceId: id, deviceName: name || '' });
-				bc.close();
-			} else if (ev.data?.type === 'session-added') {
-				handled = true;
-				bc.close();
-			}
-		};
-		bc.postMessage({ type: 'ping' });
-		setTimeout(() => {
-			if (handled) return;
-			bc.close();
-			openViewerTab(id);
-		}, 300);
+		openViewerTab(id, name || '');
 	}
 
 	function onsync(ok: boolean) {
