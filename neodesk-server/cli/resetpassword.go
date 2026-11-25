@@ -216,6 +216,12 @@ func resetPassword(args []string, env Env, opts resetOptions) int {
 			fmt.Fprintf(e, "Error: %s\n", sqliteMessage(err))
 			return 1
 		}
+		// Whoever held the old password is signed out of the console
+		// everywhere, as a reset in the console does (A239)
+		if err := endConsoleSessions(ctx, users, dialect, bind, id); err != nil {
+			fmt.Fprintf(e, "Error: %s\n", sqliteMessage(err))
+			return 1
+		}
 		fmt.Fprintf(o, "Password updated for user: %s\n", username)
 	case errors.Is(err, sql.ErrNoRows):
 		if _, err := users.ExecContext(ctx, bind("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)"), username, hash, "admin"); err != nil {
@@ -437,4 +443,21 @@ func orElse(value, fallback string) string {
 		return fallback
 	}
 	return value
+}
+
+// endConsoleSessions ends the account's live console sessions (the
+// panel_sessions rows the console keeps) with the reason "revoked". A
+// database without the table has none.
+func endConsoleSessions(ctx context.Context, db *sql.DB, dialect string, bind func(string) string, id any) error {
+	active, inactive := "1", "0"
+	if dialect == "postgres" {
+		active, inactive = "TRUE", "FALSE"
+	}
+	_, err := db.ExecContext(ctx, bind("UPDATE panel_sessions SET is_active = "+inactive+
+		", ended_at = ?, end_reason = 'revoked', session_json = '{}' WHERE user_id = ? AND is_active = "+active),
+		time.Now().UnixMilli(), id)
+	if err != nil && (strings.Contains(err.Error(), "no such table") || strings.Contains(err.Error(), "does not exist")) {
+		return nil
+	}
+	return err
 }
