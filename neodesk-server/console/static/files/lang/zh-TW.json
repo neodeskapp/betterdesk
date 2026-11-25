@@ -7008,6 +7008,8 @@
     "server_build_failed": "服務器編譯失敗",
     "server_stale_title": "服務器二進制文件已過期",
     "server_stale_desc": "Go 服務器源代碼已更新，但正在運行的二進制文件尚未重新編譯。立即重新編譯以應用安全和庫更新。",
+    "cli_outdated_title": "也請更新命令列",
+    "cli_outdated_desc": "此伺服器上的命令列 neodesk 比伺服器舊。請在伺服器上執行一次以下命令來更新它。",
     "rebuild_server": "重新編譯服務器二進制文件",
     "rebuilding_server": "正在重新編譯…",
     "rebuild_server_success": "服務器二進制文件已重新編譯並重啓",

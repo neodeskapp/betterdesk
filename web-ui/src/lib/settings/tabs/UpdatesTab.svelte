@@ -226,6 +226,9 @@
 
 	// ── Server program out of date, last install with errors ──
 	let stale = $state<{ stale: boolean; detail: string } | null>(null);
+	// The command line's copy on a Linux host is older than the server: an
+	// update from here replaces only the server
+	let cliOutdated = $state(false);
 	let rebuilding = $state(false);
 	let lastResult = $state.raw<LastResult | null>(null);
 
@@ -233,8 +236,10 @@
 		try {
 			const s = await getServerBinaryStatus();
 			stale = s.dockerMode ? null : { stale: !!s.stale, detail: s.detail ?? '' };
+			cliOutdated = !s.dockerMode && !!s.cliOutdated;
 		} catch {
 			stale = null;
+			cliOutdated = false;
 		}
 	}
 
@@ -509,6 +514,12 @@
 										>{rebuilding ? t('updates.rebuilding_server') : t('updates.rebuild_server')}</Button
 									>
 								</div>
+							</div>
+						{/if}
+						{#if cliOutdated}
+							<div class="stack" id="update-cli-outdated">
+								<Notice title={t('updates.cli_outdated_title')} message={t('updates.cli_outdated_desc')} />
+								<CodeBlock code="sudo neodesk-setup --update" />
 							</div>
 						{/if}
 						{#if lastResult}

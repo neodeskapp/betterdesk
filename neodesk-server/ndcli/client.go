@@ -27,6 +27,10 @@ type conn struct {
 	client      *http.Client
 	verbose     io.Writer
 	userAgent   string
+	// env is the command line's environment, for the version notice
+	// (version_notice.go); versionNoted says it was given in this run.
+	env          *Env
+	versionNoted bool
 }
 
 // connError is a problem with the address, the token or the config file,
@@ -115,7 +119,7 @@ func connect(o *options, env *Env, needToken bool) (*conn, error) {
 	if err != nil {
 		return nil, &connError{ExitConfig, err.Error()}
 	}
-	c := &conn{url: address, token: token, tokenSource: source, client: client, userAgent: "neodesk-cli/" + env.Version}
+	c := &conn{url: address, token: token, tokenSource: source, client: client, userAgent: "neodesk-cli/" + env.Version, env: env}
 	if o.verbose {
 		c.verbose = env.Stderr
 	}
@@ -254,6 +258,7 @@ func (c *conn) do(ctx context.Context, req request) (*response, error) {
 	if c.verbose != nil {
 		fmt.Fprintf(c.verbose, "> %s %s\n< %d %s (%d bytes, %s)\n", req.method, redactQuery(target), res.StatusCode, res.Header.Get("Content-Type"), len(data), time.Since(start).Round(time.Millisecond))
 	}
+	c.noteServerVersion(res.Header.Get(versionHeader))
 	return &response{status: res.StatusCode, contentType: res.Header.Get("Content-Type"), body: data, header: res.Header}, nil
 }
 

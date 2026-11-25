@@ -6854,6 +6854,8 @@
     "server_build_failed": "서버 컴파일 실패",
     "server_stale_title": "서버 바이너리가 오래됨",
     "server_stale_desc": "Go server 소스가 업데이트되었지만 실행 중인 바이너리가 다시 빌드되지 않았습니다. 보안 및 라이브러리 업데이트를 적용하려면 지금 다시 빌드하세요.",
+    "cli_outdated_title": "명령줄도 업데이트하세요",
+    "cli_outdated_desc": "이 서버의 명령줄 neodesk가 서버보다 오래된 버전입니다. 서버에서 다음을 한 번 실행해 업데이트하세요.",
     "rebuild_server": "서버 바이너리 재구축",
     "rebuilding_server": "Rebuilding…",
     "rebuild_server_success": "서버 바이너리가 다시 빌드되고 다시 시작되었습니다.",

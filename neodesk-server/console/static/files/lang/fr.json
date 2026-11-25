@@ -7008,6 +7008,8 @@
     "server_build_failed": "Échec de la compilation du serveur",
     "server_stale_title": "Binaire du serveur obsolète",
     "server_stale_desc": "Les sources du serveur Go ont été mises à jour, mais le binaire en cours d'exécution n'a pas été recompilé. Recompilez-le maintenant pour appliquer les mises à jour de sécurité et de bibliothèques.",
+    "cli_outdated_title": "Mettre aussi à jour la ligne de commande",
+    "cli_outdated_desc": "La ligne de commande neodesk de ce serveur est plus ancienne que le serveur. Exécutez ceci une fois sur le serveur pour la mettre à jour.",
     "rebuild_server": "Recompiler le binaire du serveur",
     "rebuilding_server": "Rebuilding…",
     "rebuild_server_success": "Binaire du serveur recompilé et redémarré",

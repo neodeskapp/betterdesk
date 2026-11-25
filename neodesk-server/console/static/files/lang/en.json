@@ -7082,6 +7082,8 @@
         "server_build_failed": "Server compilation failed",
         "server_stale_title": "Server binary out of date",
         "server_stale_desc": "The Go server source was updated but the running binary was not rebuilt. Rebuild it now to apply security and library updates.",
+        "cli_outdated_title": "Update the command line too",
+        "cli_outdated_desc": "The command line neodesk on this server is older than the server. Run this once on the server to update it.",
         "rebuild_server": "Rebuild server binary",
         "rebuilding_server": "Rebuilding…",
         "rebuild_server_success": "Server binary rebuilt and restarted",

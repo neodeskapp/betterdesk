@@ -201,7 +201,9 @@ export function getLastUpdateResult(signal?: AbortSignal) {
 export const BinaryStatus = v.looseObject({
 	stale: BoolLike,
 	dockerMode: BoolLike,
-	detail: Text
+	detail: Text,
+	/** On a Linux host install: the command line's copy is older than the server */
+	cliOutdated: BoolLike
 });
 
 export function getServerBinaryStatus(signal?: AbortSignal) {

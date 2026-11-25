@@ -7004,6 +7004,8 @@
     "server_build_failed": "Kompilacja serwera nie powiodła się",
     "server_stale_title": "Nieaktualna binarka serwera",
     "server_stale_desc": "Źródła serwera Go zostały zaktualizowane, ale działająca binarka nie została przebudowana. Przebuduj ją teraz, aby zastosować aktualizacje bezpieczeństwa i bibliotek.",
+    "cli_outdated_title": "Zaktualizuj też wiersz poleceń",
+    "cli_outdated_desc": "Wiersz poleceń neodesk na tym serwerze jest starszy niż serwer. Uruchom to raz na serwerze, aby go zaktualizować.",
     "rebuild_server": "Przebuduj binarkę serwera",
     "rebuilding_server": "Przebudowywanie…",
     "rebuild_server_success": "Binarka serwera przebudowana i zrestartowana",

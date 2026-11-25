@@ -6860,6 +6860,8 @@
     "server_build_failed": "Serverkompilering mislykkedes",
     "server_stale_title": "Server binær forældet",
     "server_stale_desc": "Go server-kilden blev opdateret, men den kørende binære fil blev ikke genopbygget. Genopbyg det nu for at anvende sikkerheds- og biblioteksopdateringer.",
+    "cli_outdated_title": "Opdater også kommandolinjen",
+    "cli_outdated_desc": "Kommandolinjen neodesk på denne server er ældre end serveren. Kør dette én gang på serveren for at opdatere den.",
     "rebuild_server": "Genopbyg server binær",
     "rebuilding_server": "Rebuilding…",
     "rebuild_server_success": "Server binær genopbygget og genstartet",

@@ -6928,6 +6928,8 @@
     "confirm_no_backup": "Nenhum backup será criado (continue por sua conta e risco).",
     "server_stale_title": "Binário do servidor desatualizado",
     "server_stale_desc": "O código-fonte do servidor Go foi atualizado, mas o binário em execução não foi recompilado. Recompile agora para aplicar atualizações de segurança e bibliotecas.",
+    "cli_outdated_title": "Atualize também a linha de comandos",
+    "cli_outdated_desc": "A linha de comandos neodesk deste servidor é mais antiga do que o servidor. Execute isto uma vez no servidor para a atualizar.",
     "rebuild_server": "Recompilar binário do servidor",
     "rebuilding_server": "Recompilando servidor...",
     "rebuild_server_success": "Binário do servidor recompilado e reiniciado",

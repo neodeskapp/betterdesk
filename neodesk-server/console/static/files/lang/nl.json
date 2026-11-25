@@ -6928,6 +6928,8 @@
     "confirm_no_backup": "De update wordt zonder back-up geïnstalleerd.",
     "server_stale_title": "Serverbinary verouderd",
     "server_stale_desc": "De broncode van de Go-server is bijgewerkt, maar de actieve binary is niet opnieuw gebouwd. Bouw deze nu opnieuw om beveiligings- en bibliotheekupdates toe te passen.",
+    "cli_outdated_title": "Werk ook de opdrachtregel bij",
+    "cli_outdated_desc": "De opdrachtregel neodesk op deze server is ouder dan de server. Voer dit één keer op de server uit om hem bij te werken.",
     "rebuild_server": "Serverbinary opnieuw bouwen",
     "rebuilding_server": "Server opnieuw bouwen...",
     "rebuild_server_success": "Serverbinary opnieuw gebouwd en herstart",

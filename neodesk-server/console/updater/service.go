@@ -65,6 +65,10 @@ type Options struct {
 	Transport http.RoundTripper
 	// Executable finds the running binary. Nil means os.Executable.
 	Executable func() (string, error)
+	// CLICopy is where a Linux host install keeps its root-owned copy of
+	// the binary as the command line neodesk. Empty means
+	// /usr/local/bin/neodesk.
+	CLICopy string
 	// GOOS and GOARCH name the platform whose binary is installed. Empty
 	// means the running one's.
 	GOOS, GOARCH string
@@ -409,12 +413,22 @@ func (s *Service) ServerInfo() ServerInfo {
 }
 
 // BinaryStatus is the answer of the server-binary status route: whether
-// the running binary was put back by an automatic rollback.
+// the running binary was put back by an automatic rollback, and whether
+// the command line's copy on a Linux host install is older than it.
 func (s *Service) BinaryStatus() any {
 	if s.ImageMode() {
 		return BinaryStatus{DockerMode: true}
 	}
-	return s.files.binaryStatus()
+	switch st := s.files.binaryStatus().(type) {
+	case BinaryStatus:
+		st.CLIOutdated = s.cliCopyOutdated()
+		return st
+	case StaleStatus:
+		st.CLIOutdated = s.cliCopyOutdated()
+		return st
+	default:
+		return st
+	}
 }
 
 // InstallStatus is the answer of the install-status route.

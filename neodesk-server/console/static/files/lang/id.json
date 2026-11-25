@@ -6860,6 +6860,8 @@
     "server_build_failed": "Kompilasi server gagal",
     "server_stale_title": "Biner server kedaluwarsa",
     "server_stale_desc": "Sumber Go server telah diperbarui tetapi biner yang berjalan tidak dibuat ulang. Bangun kembali sekarang untuk menerapkan pembaruan keamanan dan perpustakaan.",
+    "cli_outdated_title": "Perbarui juga baris perintah",
+    "cli_outdated_desc": "Baris perintah neodesk di server ini lebih lama daripada server. Jalankan ini sekali di server untuk memperbaruinya.",
     "rebuild_server": "Membangun kembali biner server",
     "rebuilding_server": "Rebuilding…",
     "rebuild_server_success": "Biner server dibangun kembali dan dimulai ulang",

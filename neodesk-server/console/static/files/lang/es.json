@@ -6854,6 +6854,8 @@
     "server_build_failed": "Compilación del servidor fallida",
     "server_stale_title": "Binario del servidor obsoleto",
     "server_stale_desc": "El código fuente del servidor Go se actualizó, pero el binario en ejecución no se reconstruyó. Reconstrúyelo ahora para aplicar actualizaciones de seguridad y bibliotecas.",
+    "cli_outdated_title": "Actualiza también la línea de comandos",
+    "cli_outdated_desc": "La línea de comandos neodesk de este servidor es más antigua que el servidor. Ejecuta esto una vez en el servidor para actualizarla.",
     "rebuild_server": "Reconstruir binario del servidor",
     "rebuilding_server": "Rebuilding…",
     "rebuild_server_success": "Binario del servidor reconstruido y reiniciado",

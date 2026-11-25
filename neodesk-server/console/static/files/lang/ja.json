@@ -6854,6 +6854,8 @@
     "server_build_failed": "サーバーのコンパイルに失敗しました",
     "server_stale_title": "サーバーのバイナリが古くなっています",
     "server_stale_desc": "Go server ソースは更新されましたが、実行中のバイナリは再構築されませんでした。今すぐ再構築して、セキュリティとライブラリの更新を適用します。",
+    "cli_outdated_title": "コマンドラインも更新してください",
+    "cli_outdated_desc": "このサーバーのコマンドライン neodesk はサーバーより古いバージョンです。サーバーで次のコマンドを一度実行して更新してください。",
     "rebuild_server": "サーバーバイナリを再構築する",
     "rebuilding_server": "Rebuilding…",
     "rebuild_server_success": "サーバーバイナリが再構築され、再起動されました",

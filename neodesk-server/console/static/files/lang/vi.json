@@ -6860,6 +6860,8 @@
     "server_build_failed": "Biên dịch máy chủ không thành công",
     "server_stale_title": "Tệp nhị phân máy chủ đã lỗi thời",
     "server_stale_desc": "Nguồn Go server đã được cập nhật nhưng tệp nhị phân đang chạy không được xây dựng lại. Xây dựng lại nó ngay bây giờ để áp dụng các bản cập nhật bảo mật và thư viện.",
+    "cli_outdated_title": "Cập nhật cả dòng lệnh",
+    "cli_outdated_desc": "Dòng lệnh neodesk trên máy chủ này cũ hơn máy chủ. Chạy lệnh này một lần trên máy chủ để cập nhật nó.",
     "rebuild_server": "Xây dựng lại tệp nhị phân máy chủ",
     "rebuilding_server": "Rebuilding…",
     "rebuild_server_success": "Đã xây dựng lại tệp nhị phân máy chủ và khởi động lại",

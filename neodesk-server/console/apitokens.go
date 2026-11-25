@@ -80,6 +80,10 @@ func (s *Server) tokenOrSession(next http.Handler) http.Handler {
 			return
 		}
 		s.tokens.Touch(context.WithoutCancel(r.Context()), tok, ip)
+		// The command line says when it is older than the server
+		if s.cfg.Version != "" {
+			w.Header().Set("X-NeoDesk-Version", s.cfg.Version)
+		}
 
 		// The token's header and the cookies go: no route after this sees
 		// them, so the client API and device routes don't take the token

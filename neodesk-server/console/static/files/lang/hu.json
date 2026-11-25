@@ -6860,6 +6860,8 @@
     "server_build_failed": "A szerver fordítása nem sikerült",
     "server_stale_title": "A szerver bináris fájlja elavult",
     "server_stale_desc": "A Go server forrás frissítése megtörtént, de a futó bináris fájl nem épült újra. Építse újra most a biztonsági és a könyvtári frissítések alkalmazásához.",
+    "cli_outdated_title": "Frissítse a parancssort is",
+    "cli_outdated_desc": "A szerveren lévő neodesk parancssor régebbi, mint a szerver. Futtassa ezt egyszer a szerveren a frissítéséhez.",
     "rebuild_server": "Szerver bináris újraépítése",
     "rebuilding_server": "Rebuilding…",
     "rebuild_server_success": "A szerver bináris újraépítése és újraindítása",

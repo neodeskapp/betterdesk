@@ -6854,6 +6854,8 @@
     "server_build_failed": "Server-Kompilierung fehlgeschlagen",
     "server_stale_title": "Server-Binary veraltet",
     "server_stale_desc": "Der Quellcode des Go-Servers wurde aktualisiert, aber das laufende Binary wurde nicht neu gebaut. Bauen Sie es jetzt neu, um Sicherheits- und Bibliotheksupdates anzuwenden.",
+    "cli_outdated_title": "Auch die Befehlszeile aktualisieren",
+    "cli_outdated_desc": "Die Befehlszeile neodesk auf diesem Server ist älter als der Server. Führen Sie dies einmal auf dem Server aus, um sie zu aktualisieren.",
     "rebuild_server": "Server-Binary neu bauen",
     "rebuilding_server": "Rebuilding…",
     "rebuild_server_success": "Server-Binary neu gebaut und neu gestartet",

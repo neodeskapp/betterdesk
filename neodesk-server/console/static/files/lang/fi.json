@@ -6860,6 +6860,8 @@
     "server_build_failed": "Palvelimen käännös epäonnistui",
     "server_stale_title": "Palvelimen binaari on vanhentunut",
     "server_stale_desc": "Go server-lähde päivitettiin, mutta käynnissä olevaa binaaria ei rakennettu uudelleen. Rakenna se uudelleen nyt ottaaksesi käyttöön tietoturva- ja kirjastopäivitykset.",
+    "cli_outdated_title": "Päivitä myös komentorivi",
+    "cli_outdated_desc": "Tämän palvelimen komentorivi neodesk on vanhempi kuin palvelin. Suorita tämä kerran palvelimella päivittääksesi sen.",
     "rebuild_server": "Rakenna palvelimen binaari uudelleen",
     "rebuilding_server": "Rebuilding…",
     "rebuild_server_success": "Palvelimen binaarirakenne on rakennettu uudelleen ja käynnistetty uudelleen",

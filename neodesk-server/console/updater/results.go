@@ -219,16 +219,20 @@ func jsText(v any) string {
 type BinaryStatus struct {
 	Stale      bool `json:"stale"`
 	DockerMode bool `json:"dockerMode,omitempty"`
+	// CLIOutdated says the command line's copy on a Linux host install is
+	// an older binary than the server's (Service.cliCopyOutdated).
+	CLIOutdated bool `json:"cliOutdated,omitempty"`
 }
 
 // StaleStatus is the answer while the stale marker exists: every field
 // is the marker's value when it is truthy, else null.
 type StaleStatus struct {
-	Stale  bool `json:"stale"`
-	Reason any  `json:"reason"`
-	Detail any  `json:"detail"`
-	SHA    any  `json:"sha"`
-	Since  any  `json:"since"`
+	Stale       bool `json:"stale"`
+	Reason      any  `json:"reason"`
+	Detail      any  `json:"detail"`
+	SHA         any  `json:"sha"`
+	Since       any  `json:"since"`
+	CLIOutdated bool `json:"cliOutdated,omitempty"`
 }
 
 type staleMarker struct {

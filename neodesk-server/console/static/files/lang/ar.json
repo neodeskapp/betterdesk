@@ -6861,6 +6861,8 @@
     "server_build_failed": "فشل تجميع الخادم",
     "server_stale_title": "الخادم الثنائي قديم",
     "server_stale_desc": "تم تحديث مصدر Go server ولكن لم تتم إعادة بناء الثنائي قيد التشغيل. أعد بنائه الآن لتطبيق تحديثات الأمان والمكتبة.",
+    "cli_outdated_title": "حدّث سطر الأوامر أيضًا",
+    "cli_outdated_desc": "سطر الأوامر neodesk على هذا الخادم أقدم من الخادم. شغّل هذا مرة واحدة على الخادم لتحديثه.",
     "rebuild_server": "إعادة بناء الخادم الثنائي",
     "rebuilding_server": "Rebuilding…",
     "rebuild_server_success": "تمت إعادة بناء الخادم الثنائي وإعادة تشغيله",

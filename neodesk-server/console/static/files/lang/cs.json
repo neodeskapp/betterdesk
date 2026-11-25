@@ -6854,6 +6854,8 @@
     "server_build_failed": "Kompilace serveru selhala",
     "server_stale_title": "Binární soubor serveru je zastaralý",
     "server_stale_desc": "Zdrojový kód serveru Go byl aktualizován, ale spuštěný binární soubor nebyl znovu sestaven. Sestavte jej nyní, aby se použily aktualizace zabezpečení a knihoven.",
+    "cli_outdated_title": "Aktualizujte i příkazový řádek",
+    "cli_outdated_desc": "Příkazový řádek neodesk na tomto serveru je starší než server. Spusťte toto jednou na serveru, abyste ho aktualizovali.",
     "rebuild_server": "Znovu sestavit binární soubor serveru",
     "rebuilding_server": "Rebuilding…",
     "rebuild_server_success": "Binární soubor serveru byl znovu sestaven a restartován",

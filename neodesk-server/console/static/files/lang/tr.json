@@ -6934,6 +6934,8 @@
     "confirm_no_backup": "Hiçbir yedekleme oluşturulmayacak (risk size ait olmak üzere devam edin).",
     "server_stale_title": "Sunucu ikili programı güncel değil",
     "server_stale_desc": "Go server kaynağı güncellendi ancak çalışan ikili dosya yeniden oluşturulmadı. Güvenlik ve kitaplık güncellemelerini uygulamak için şimdi yeniden oluşturun.",
+    "cli_outdated_title": "Komut satırını da güncelleyin",
+    "cli_outdated_desc": "Bu sunucudaki neodesk komut satırı sunucudan daha eski. Güncellemek için bunu sunucuda bir kez çalıştırın.",
     "rebuild_server": "Sunucu ikili dosyasını yeniden oluştur",
     "rebuilding_server": "Yeniden inşa ediliyor…",
     "rebuild_server_success": "Sunucu ikili programı yeniden oluşturuldu ve yeniden başlatıldı",

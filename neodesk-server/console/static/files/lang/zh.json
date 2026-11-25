@@ -6972,6 +6972,8 @@
     "server_build_failed": "服务器编译失败",
     "server_stale_title": "服务器二进制文件已过期",
     "server_stale_desc": "Go 服务器源代码已更新，但正在运行的二进制文件尚未重新编译。立即重新编译以应用安全和库更新。",
+    "cli_outdated_title": "也请更新命令行",
+    "cli_outdated_desc": "此服务器上的命令行 neodesk 比服务器旧。请在服务器上运行一次以下命令来更新它。",
     "rebuild_server": "重新编译服务器二进制文件",
     "rebuilding_server": "正在重新编译…",
     "rebuild_server_success": "服务器二进制文件已重新编译并重启",

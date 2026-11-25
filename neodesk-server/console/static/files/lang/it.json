@@ -6854,6 +6854,8 @@
     "server_build_failed": "Build server non riuscita",
     "server_stale_title": "Binary server obsoleto",
     "server_stale_desc": "Il codice sorgente del server Go è stato aggiornato, ma il binary attivo non è stato ricompilato. Ricompilalo ora per applicare aggiornamenti di sicurezza e librerie.",
+    "cli_outdated_title": "Aggiorna anche la riga di comando",
+    "cli_outdated_desc": "La riga di comando neodesk di questo server è più vecchia del server. Esegui questo comando una volta sul server per aggiornarla.",
     "rebuild_server": "Ricompila binary server",
     "rebuilding_server": "Ricompilazione server...",
     "rebuild_server_success": "Binary server ricompilato e riavviato",

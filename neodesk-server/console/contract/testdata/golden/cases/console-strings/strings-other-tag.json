@@ -8161,6 +8161,8 @@
       "check_now": "Jetzt prüfen",
       "checking": "Prüfe...",
       "checking_go": "Go wird geprüft...",
+      "cli_outdated_desc": "Die Befehlszeile neodesk auf diesem Server ist älter als der Server. Führen Sie dies einmal auf dem Server aus, um sie zu aktualisieren.",
+      "cli_outdated_title": "Auch die Befehlszeile aktualisieren",
       "commits_behind": "Commits zurück",
       "complete": "Update angewendet",
       "complete_summary": "Das Update wurde erfolgreich angewendet.",

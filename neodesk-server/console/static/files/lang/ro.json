@@ -6860,6 +6860,8 @@
     "server_build_failed": "Compilarea serverului a eșuat",
     "server_stale_title": "Binarul serverului este învechit",
     "server_stale_desc": "Sursa Go server a fost actualizată, dar binarul care rulează nu a fost reconstruit. Reconstruiți-l acum pentru a aplica actualizările de securitate și bibliotecă.",
+    "cli_outdated_title": "Actualizați și linia de comandă",
+    "cli_outdated_desc": "Linia de comandă neodesk de pe acest server este mai veche decât serverul. Rulați aceasta o dată pe server pentru a o actualiza.",
     "rebuild_server": "Reconstruiți serverul binar",
     "rebuilding_server": "Rebuilding…",
     "rebuild_server_success": "Binarul serverului a fost reconstruit și repornit",
