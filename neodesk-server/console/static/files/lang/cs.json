@@ -5451,7 +5451,13 @@
     "unassigned": "Čeká na někoho",
     "unknown_person": "Někdo",
     "upload_failed": "Nahrání se nezdařilo",
-    "uploading": "Nahrávání…"
+    "uploading": "Nahrávání…",
+    "mail_subject": "{app}: {name} čeká na odpověď",
+    "mail_heading": "{name} čeká na odpověď",
+    "mail_waited": "Někdo u {name} (ID {id}) čeká v chatu na odpověď už {minutes} min.",
+    "mail_quote": "Napsal(a): {quote}",
+    "mail_open": "Otevřít konverzaci: {link}",
+    "mail_button": "Otevřít konverzaci v {app}"
   },
   "toast": {
     "device_connected": "Zařízení připojeno",

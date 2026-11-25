@@ -5457,7 +5457,13 @@
     "unassigned": "Menunggu seseorang",
     "unknown_person": "Seseorang",
     "upload_failed": "Gagal mengunggah",
-    "uploading": "Mengunggah…"
+    "uploading": "Mengunggah…",
+    "mail_subject": "{app}: {name} menunggu jawaban",
+    "mail_heading": "{name} menunggu jawaban",
+    "mail_waited": "Seseorang di {name} (ID {id}) sudah menunggu jawaban di obrolan selama {minutes} menit.",
+    "mail_quote": "Pesannya: {quote}",
+    "mail_open": "Buka percakapan: {link}",
+    "mail_button": "Buka percakapan di {app}"
   },
   "toast": {
     "device_connected": "Perangkat terhubung",

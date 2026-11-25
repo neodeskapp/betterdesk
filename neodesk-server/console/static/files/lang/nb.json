@@ -5457,7 +5457,13 @@
     "unassigned": "Venter på noen",
     "unknown_person": "Noen",
     "upload_failed": "Opplastingen mislyktes",
-    "uploading": "Laster opp…"
+    "uploading": "Laster opp…",
+    "mail_subject": "{app}: {name} venter på svar",
+    "mail_heading": "{name} venter på svar",
+    "mail_waited": "Noen ved {name} (ID {id}) har ventet {minutes} minutter på svar i chatten.",
+    "mail_quote": "Meldingen: {quote}",
+    "mail_open": "Åpne samtalen: {link}",
+    "mail_button": "Åpne samtalen i {app}"
   },
   "toast": {
     "device_connected": "Enhet tilkoblet",

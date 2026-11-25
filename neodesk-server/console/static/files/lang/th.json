@@ -5457,7 +5457,13 @@
     "unassigned": "รอคนรับเรื่อง",
     "unknown_person": "ใครบางคน",
     "upload_failed": "อัปโหลดไม่สำเร็จ",
-    "uploading": "กำลังอัปโหลด…"
+    "uploading": "กำลังอัปโหลด…",
+    "mail_subject": "{app}: {name} กำลังรอคำตอบ",
+    "mail_heading": "{name} กำลังรอคำตอบ",
+    "mail_waited": "มีคนที่ {name} (ID {id}) รอคำตอบในแชทมา {minutes} นาทีแล้ว",
+    "mail_quote": "ข้อความ: {quote}",
+    "mail_open": "เปิดการสนทนา: {link}",
+    "mail_button": "เปิดการสนทนาใน {app}"
   },
   "toast": {
     "device_connected": "เชื่อมต่ออุปกรณ์แล้ว",

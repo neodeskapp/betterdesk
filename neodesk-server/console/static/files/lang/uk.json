@@ -5457,7 +5457,13 @@
     "unassigned": "Чекає на когось",
     "unknown_person": "Хтось",
     "upload_failed": "Не вдалося завантажити",
-    "uploading": "Завантаження…"
+    "uploading": "Завантаження…",
+    "mail_subject": "{app}: {name} чекає на відповідь",
+    "mail_heading": "{name} чекає на відповідь",
+    "mail_waited": "Хтось за {name} (ID {id}) чекає на відповідь у чаті вже {minutes} хв.",
+    "mail_quote": "Повідомлення: {quote}",
+    "mail_open": "Відкрити розмову: {link}",
+    "mail_button": "Відкрити розмову в {app}"
   },
   "toast": {
     "device_connected": "Пристрій підключено",

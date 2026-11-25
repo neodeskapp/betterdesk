@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/chatstore"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
@@ -19,6 +20,17 @@ func (s *sentMails) SendEmail(_ context.Context, m mail.Email) (bool, error) {
 	return true, nil
 }
 func (s *sentMails) GetPanelBaseURL() string { return "https://console.example" }
+
+// texts are the console's languages, as the server loads them.
+func texts(t *testing.T) *i18n.Bundle {
+	t.Helper()
+	b := i18n.New("../../static/files/lang", "en")
+	b.Load()
+	if got := b.Translate("de", "chat.mail_subject", nil); got == "chat.mail_subject" {
+		t.Fatalf("no text for the mail: %q", got)
+	}
+	return b
+}
 
 // TestWaitMail: a person who waited longer than the set minutes gets the
 // console a mail: to whoever has the conversation, else to those who may
@@ -53,10 +65,10 @@ func TestWaitMail(t *testing.T) {
 			t.Fatal(err)
 		}
 		sent := &sentMails{}
-		if err := hub.mailWaiting(ctx, sent, "NeoDesk", now.Add(-10*time.Minute)); err != nil || len(sent.list) != 0 {
+		if err := hub.mailWaiting(ctx, sent, "NeoDesk", texts(t), now.Add(-10*time.Minute)); err != nil || len(sent.list) != 0 {
 			t.Fatalf("after 10 minutes: %d mails, %v", len(sent.list), err)
 		}
-		if err := hub.mailWaiting(ctx, sent, "NeoDesk", now); err != nil {
+		if err := hub.mailWaiting(ctx, sent, "NeoDesk", texts(t), now); err != nil {
 			t.Fatal(err)
 		}
 		if len(sent.list) != 1 {
@@ -71,7 +83,7 @@ func TestWaitMail(t *testing.T) {
 			strings.Contains(*m.Text, "E-42") || !strings.Contains(*m.Text, "https://console.example/chat?c=dev1") {
 			t.Errorf("mail: %s\n%s", m.Subject, *m.Text)
 		}
-		if err := hub.mailWaiting(ctx, sent, "NeoDesk", now.Add(time.Hour)); err != nil || len(sent.list) != 1 {
+		if err := hub.mailWaiting(ctx, sent, "NeoDesk", texts(t), now.Add(time.Hour)); err != nil || len(sent.list) != 1 {
 			t.Errorf("a second mail for the same wait: %d, %v", len(sent.list), err)
 		}
 
@@ -91,7 +103,7 @@ func TestWaitMail(t *testing.T) {
 		if _, err := db.Exec(ctx, `INSERT INTO user_peer_grants (user_id, peer_id) VALUES (6, 'dev1')`); err != nil {
 			t.Fatal(err)
 		}
-		if err := hub.mailWaiting(ctx, sent, "NeoDesk", now); err != nil || len(sent.list) != 2 {
+		if err := hub.mailWaiting(ctx, sent, "NeoDesk", texts(t), now); err != nil || len(sent.list) != 2 {
 			t.Fatalf("the second wait: %d mails, %v", len(sent.list), err)
 		}
 		m = sent.list[1]
@@ -108,8 +120,59 @@ func TestWaitMail(t *testing.T) {
 		if _, err := st.Post(ctx, chatstore.Message{ConversationID: "dev1", From: chatstore.Device("dev1", "reception-01"), Text: "again"}, nil); err != nil {
 			t.Fatal(err)
 		}
-		if err := hub.mailWaiting(ctx, sent, "NeoDesk", now.Add(time.Hour)); err != nil || len(sent.list) != 2 {
+		if err := hub.mailWaiting(ctx, sent, "NeoDesk", texts(t), now.Add(time.Hour)); err != nil || len(sent.list) != 2 {
 			t.Errorf("with the mail off: %d mails, %v", len(sent.list), err)
+		}
+	})
+}
+
+// TestWaitMailSpeaksTheRecipientsLanguage: each recipient gets the mail in
+// the language of the account (A242, the lead's call on question 1); an
+// account without a language, or with one the console doesn't have, gets
+// English.
+func TestWaitMailSpeaksTheRecipientsLanguage(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		if err := chatstore.Ensure(ctx, db); err != nil {
+			t.Fatal(err)
+		}
+		scope := realScope(t, db)
+		for name, lang := range map[string]string{"anna": "de", "admin": "xx"} {
+			if _, err := db.Exec(ctx, `UPDATE users SET email = ?, preferred_language = ? WHERE username = ?`, name+"@example.test", lang, name); err != nil {
+				t.Fatal(err)
+			}
+		}
+		now := time.Date(2026, 11, 25, 10, 0, 0, 0, time.UTC)
+		clock := now.Add(-20 * time.Minute)
+		st := chatstore.New(db, func() time.Time { return clock })
+		hub := NewHub(HubOptions{Store: st, Scope: scope, Holds: func(_ context.Context, role, p string) (bool, error) {
+			return p != permAssign || role != "viewer", nil
+		}})
+		if _, err := st.Post(ctx, chatstore.Message{ConversationID: "dev1", From: chatstore.Device("dev1", "reception-01"), Text: "Der Drucker blinkt"}, nil); err != nil {
+			t.Fatal(err)
+		}
+		sent := &sentMails{}
+		if err := hub.mailWaiting(ctx, sent, "NeoDesk", texts(t), now); err != nil {
+			t.Fatal(err)
+		}
+		byTo := map[string]string{}
+		for _, m := range sent.list {
+			byTo[strings.Join(m.To, ",")] = m.Subject + "\n" + *m.Text + "\n" + *m.HTML
+		}
+		if len(sent.list) != 2 {
+			t.Fatalf("%d mails, want one per language: %q", len(sent.list), byTo)
+		}
+		de := byTo["anna@example.test"]
+		for _, want := range []string{"NeoDesk: dev1 wartet auf eine Antwort", "seit 20 Minuten", "Der Drucker blinkt", "https://console.example/chat?c=dev1"} {
+			if !strings.Contains(de, want) {
+				t.Errorf("anna's mail has no %q:\n%s", want, de)
+			}
+		}
+		en := byTo["admin@example.test"]
+		for _, want := range []string{"NeoDesk: dev1 is waiting for an answer", "waited 20 minutes", "Der Drucker blinkt"} {
+			if !strings.Contains(en, want) {
+				t.Errorf("admin's mail has no %q:\n%s", want, en)
+			}
 		}
 	})
 }

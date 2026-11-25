@@ -5451,7 +5451,13 @@
     "unassigned": "Wacht op iemand",
     "unknown_person": "Iemand",
     "upload_failed": "Uploaden mislukt",
-    "uploading": "Uploaden…"
+    "uploading": "Uploaden…",
+    "mail_subject": "{app}: {name} wacht op een antwoord",
+    "mail_heading": "{name} wacht op een antwoord",
+    "mail_waited": "Iemand bij {name} (ID {id}) wacht al {minutes} minuten op een antwoord in de chat.",
+    "mail_quote": "Bericht: {quote}",
+    "mail_open": "Gesprek openen: {link}",
+    "mail_button": "Gesprek openen in {app}"
   },
   "toast": {
     "device_connected": "Apparaat verbonden",

@@ -5457,7 +5457,13 @@
     "unassigned": "Valakire vár",
     "unknown_person": "Valaki",
     "upload_failed": "A feltöltés nem sikerült",
-    "uploading": "Feltöltés…"
+    "uploading": "Feltöltés…",
+    "mail_subject": "{app}: {name} válaszra vár",
+    "mail_heading": "{name} válaszra vár",
+    "mail_waited": "Valaki a(z) {name} gépnél (azonosító: {id}) {minutes} perce vár válaszra a csevegésben.",
+    "mail_quote": "Az üzenet: {quote}",
+    "mail_open": "A beszélgetés megnyitása: {link}",
+    "mail_button": "A beszélgetés megnyitása itt: {app}"
   },
   "toast": {
     "device_connected": "Eszköz csatlakoztatva",

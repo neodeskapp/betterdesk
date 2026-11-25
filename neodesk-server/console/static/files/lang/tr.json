@@ -5457,7 +5457,13 @@
     "unassigned": "Birini bekliyor",
     "unknown_person": "Biri",
     "upload_failed": "Yükleme başarısız",
-    "uploading": "Yükleniyor…"
+    "uploading": "Yükleniyor…",
+    "mail_subject": "{app}: {name} yanıt bekliyor",
+    "mail_heading": "{name} yanıt bekliyor",
+    "mail_waited": "{name} (ID {id}) başındaki biri sohbette {minutes} dakikadır yanıt bekliyor.",
+    "mail_quote": "Mesaj: {quote}",
+    "mail_open": "Konuşmayı aç: {link}",
+    "mail_button": "Konuşmayı {app} içinde aç"
   },
   "toast": {
     "device_connected": "Cihaz bağlandı",

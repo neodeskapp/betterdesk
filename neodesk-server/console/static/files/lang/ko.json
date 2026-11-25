@@ -5451,7 +5451,13 @@
     "unassigned": "담당자 대기 중",
     "unknown_person": "알 수 없는 사용자",
     "upload_failed": "업로드하지 못했습니다",
-    "uploading": "업로드 중…"
+    "uploading": "업로드 중…",
+    "mail_subject": "{app}: {name}에서 답변을 기다리고 있습니다",
+    "mail_heading": "{name}에서 답변을 기다리고 있습니다",
+    "mail_waited": "{name}(ID {id})의 사용자가 채팅에서 {minutes}분 동안 답변을 기다리고 있습니다.",
+    "mail_quote": "메시지: {quote}",
+    "mail_open": "대화 열기: {link}",
+    "mail_button": "{app}에서 대화 열기"
   },
   "toast": {
     "device_connected": "장치가 연결됨",

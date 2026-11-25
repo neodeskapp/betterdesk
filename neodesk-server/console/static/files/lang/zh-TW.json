@@ -5594,7 +5594,13 @@
     "unassigned": "等待接手",
     "unknown_person": "某人",
     "upload_failed": "上傳失敗",
-    "uploading": "正在上傳…"
+    "uploading": "正在上傳…",
+    "mail_subject": "{app}：{name} 正在等待回覆",
+    "mail_heading": "{name} 正在等待回覆",
+    "mail_waited": "{name}（ID {id}）上的使用者已在聊天中等待回覆 {minutes} 分鐘。",
+    "mail_quote": "訊息：{quote}",
+    "mail_open": "開啟對話：{link}",
+    "mail_button": "在 {app} 中開啟對話"
   },
   "toast": {
     "device_connected": "設備已連接",

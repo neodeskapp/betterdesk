@@ -5458,7 +5458,13 @@
     "unassigned": "بانتظار من يتولاها",
     "unknown_person": "شخص ما",
     "upload_failed": "فشل الرفع",
-    "uploading": "جارٍ الرفع…"
+    "uploading": "جارٍ الرفع…",
+    "mail_subject": "{app}: {name} ينتظر ردًا",
+    "mail_heading": "{name} ينتظر ردًا",
+    "mail_waited": "ينتظر شخص على {name} (المعرّف {id}) ردًا في المحادثة منذ {minutes} دقيقة.",
+    "mail_quote": "كتب: {quote}",
+    "mail_open": "افتح المحادثة: {link}",
+    "mail_button": "افتح المحادثة في {app}"
   },
   "toast": {
     "device_connected": "الجهاز متصل",

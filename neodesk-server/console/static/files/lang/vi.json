@@ -5457,7 +5457,13 @@
     "unassigned": "Đang chờ người nhận",
     "unknown_person": "Ai đó",
     "upload_failed": "Tải lên thất bại",
-    "uploading": "Đang tải lên…"
+    "uploading": "Đang tải lên…",
+    "mail_subject": "{app}: {name} đang chờ trả lời",
+    "mail_heading": "{name} đang chờ trả lời",
+    "mail_waited": "Có người tại {name} (ID {id}) đã chờ trả lời trong trò chuyện {minutes} phút.",
+    "mail_quote": "Tin nhắn: {quote}",
+    "mail_open": "Mở cuộc trò chuyện: {link}",
+    "mail_button": "Mở cuộc trò chuyện trong {app}"
   },
   "toast": {
     "device_connected": "Đã kết nối thiết bị",

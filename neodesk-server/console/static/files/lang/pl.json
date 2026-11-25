@@ -5590,7 +5590,13 @@
     "unassigned": "Czeka na kogoś",
     "unknown_person": "Ktoś",
     "upload_failed": "Przesyłanie nie powiodło się",
-    "uploading": "Przesyłanie…"
+    "uploading": "Przesyłanie…",
+    "mail_subject": "{app}: {name} czeka na odpowiedź",
+    "mail_heading": "{name} czeka na odpowiedź",
+    "mail_waited": "Ktoś przy {name} (ID {id}) czeka na odpowiedź na czacie od {minutes} min.",
+    "mail_quote": "Wiadomość: {quote}",
+    "mail_open": "Otwórz rozmowę: {link}",
+    "mail_button": "Otwórz rozmowę w {app}"
   },
   "toast": {
     "device_connected": "Urządzenie połączone",

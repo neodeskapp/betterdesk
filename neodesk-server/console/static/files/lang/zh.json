@@ -5572,7 +5572,13 @@
     "unassigned": "等待接手",
     "unknown_person": "某人",
     "upload_failed": "上传失败",
-    "uploading": "正在上传…"
+    "uploading": "正在上传…",
+    "mail_subject": "{app}：{name} 正在等待回复",
+    "mail_heading": "{name} 正在等待回复",
+    "mail_waited": "{name}（ID {id}）上的用户已在聊天中等待回复 {minutes} 分钟。",
+    "mail_quote": "消息：{quote}",
+    "mail_open": "打开会话：{link}",
+    "mail_button": "在 {app} 中打开会话"
   },
   "toast": {
     "device_connected": "设备已连接",

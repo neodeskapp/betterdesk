@@ -5457,7 +5457,13 @@
     "unassigned": "Așteaptă pe cineva",
     "unknown_person": "Cineva",
     "upload_failed": "Încărcarea a eșuat",
-    "uploading": "Se încarcă…"
+    "uploading": "Se încarcă…",
+    "mail_subject": "{app}: {name} așteaptă un răspuns",
+    "mail_heading": "{name} așteaptă un răspuns",
+    "mail_waited": "Cineva la {name} (ID {id}) așteaptă de {minutes} minute un răspuns în chat.",
+    "mail_quote": "Mesajul: {quote}",
+    "mail_open": "Deschideți conversația: {link}",
+    "mail_button": "Deschideți conversația în {app}"
   },
   "toast": {
     "device_connected": "Dispozitiv conectat",

@@ -5451,7 +5451,13 @@
     "unassigned": "Aguardando alguém",
     "unknown_person": "Alguém",
     "upload_failed": "Falha ao enviar o arquivo",
-    "uploading": "Enviando arquivo…"
+    "uploading": "Enviando arquivo…",
+    "mail_subject": "{app}: {name} está aguardando uma resposta",
+    "mail_heading": "{name} está aguardando uma resposta",
+    "mail_waited": "Alguém em {name} (ID {id}) está aguardando uma resposta no chat há {minutes} minutos.",
+    "mail_quote": "Mensagem: {quote}",
+    "mail_open": "Abrir a conversa: {link}",
+    "mail_button": "Abrir a conversa no {app}"
   },
   "toast": {
     "device_connected": "Dispositivo conectado",

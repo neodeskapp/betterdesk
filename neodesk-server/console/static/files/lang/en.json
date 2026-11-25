@@ -5651,7 +5651,13 @@
         "unassigned": "Waiting for someone",
         "unknown_person": "Someone",
         "upload_failed": "Upload failed",
-        "uploading": "Uploading…"
+        "uploading": "Uploading…",
+        "mail_subject": "{app}: {name} is waiting for an answer",
+        "mail_heading": "{name} is waiting for an answer",
+        "mail_waited": "Someone at {name} (ID {id}) has waited {minutes} minutes for an answer in the chat.",
+        "mail_quote": "They wrote: {quote}",
+        "mail_open": "Open the conversation: {link}",
+        "mail_button": "Open the conversation in {app}"
     },
     "toast": {
         "device_connected": "Device connected",

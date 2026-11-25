@@ -5451,7 +5451,13 @@
     "unassigned": "Esperando a alguien",
     "unknown_person": "Alguien",
     "upload_failed": "Error al subir",
-    "uploading": "Subiendo…"
+    "uploading": "Subiendo…",
+    "mail_subject": "{app}: {name} espera una respuesta",
+    "mail_heading": "{name} espera una respuesta",
+    "mail_waited": "Alguien en {name} (ID {id}) lleva {minutes} minutos esperando una respuesta en el chat.",
+    "mail_quote": "Escribió: {quote}",
+    "mail_open": "Abrir la conversación: {link}",
+    "mail_button": "Abrir la conversación en {app}"
   },
   "toast": {
     "device_connected": "Dispositivo conectado",

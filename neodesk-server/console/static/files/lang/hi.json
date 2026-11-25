@@ -5457,7 +5457,13 @@
     "unassigned": "किसी का इंतज़ार",
     "unknown_person": "कोई",
     "upload_failed": "अपलोड विफल रहा",
-    "uploading": "अपलोड हो रहा है…"
+    "uploading": "अपलोड हो रहा है…",
+    "mail_subject": "{app}: {name} जवाब का इंतज़ार कर रहा है",
+    "mail_heading": "{name} जवाब का इंतज़ार कर रहा है",
+    "mail_waited": "{name} (ID {id}) पर कोई {minutes} मिनट से चैट में जवाब का इंतज़ार कर रहा है।",
+    "mail_quote": "संदेश: {quote}",
+    "mail_open": "बातचीत खोलें: {link}",
+    "mail_button": "{app} में बातचीत खोलें"
   },
   "toast": {
     "device_connected": "डिवाइस कनेक्ट किया गया",

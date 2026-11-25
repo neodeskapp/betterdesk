@@ -5594,7 +5594,13 @@
     "unassigned": "En attente de quelqu'un",
     "unknown_person": "Quelqu'un",
     "upload_failed": "Échec du téléversement",
-    "uploading": "Téléversement…"
+    "uploading": "Téléversement…",
+    "mail_subject": "{app} : {name} attend une réponse",
+    "mail_heading": "{name} attend une réponse",
+    "mail_waited": "Une personne sur {name} (ID {id}) attend une réponse dans le chat depuis {minutes} minutes.",
+    "mail_quote": "Message : {quote}",
+    "mail_open": "Ouvrir la conversation : {link}",
+    "mail_button": "Ouvrir la conversation dans {app}"
   },
   "toast": {
     "device_connected": "Device connected",

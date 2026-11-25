@@ -5451,7 +5451,13 @@
     "unassigned": "担当者待ち",
     "unknown_person": "不明なユーザー",
     "upload_failed": "アップロードに失敗しました",
-    "uploading": "アップロード中…"
+    "uploading": "アップロード中…",
+    "mail_subject": "{app}: {name} が返信を待っています",
+    "mail_heading": "{name} が返信を待っています",
+    "mail_waited": "{name} (ID {id}) の利用者がチャットで {minutes} 分間返信を待っています。",
+    "mail_quote": "メッセージ: {quote}",
+    "mail_open": "会話を開く: {link}",
+    "mail_button": "{app} で会話を開く"
   },
   "toast": {
     "device_connected": "接続されたデバイス",

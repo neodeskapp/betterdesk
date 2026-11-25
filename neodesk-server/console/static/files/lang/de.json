@@ -5451,7 +5451,13 @@
     "unassigned": "Wartet auf jemanden",
     "unknown_person": "Jemand",
     "upload_failed": "Hochladen fehlgeschlagen",
-    "uploading": "Wird hochgeladen…"
+    "uploading": "Wird hochgeladen…",
+    "mail_subject": "{app}: {name} wartet auf eine Antwort",
+    "mail_heading": "{name} wartet auf eine Antwort",
+    "mail_waited": "Jemand an {name} (ID {id}) wartet seit {minutes} Minuten im Chat auf eine Antwort.",
+    "mail_quote": "Nachricht: {quote}",
+    "mail_open": "Unterhaltung öffnen: {link}",
+    "mail_button": "Unterhaltung in {app} öffnen"
   },
   "toast": {
     "device_connected": "Gerät verbunden",

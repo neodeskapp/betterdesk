@@ -5457,7 +5457,13 @@
     "unassigned": "Odottaa käsittelijää",
     "unknown_person": "Joku",
     "upload_failed": "Lähetys epäonnistui",
-    "uploading": "Lähetetään tiedostoa…"
+    "uploading": "Lähetetään tiedostoa…",
+    "mail_subject": "{app}: {name} odottaa vastausta",
+    "mail_heading": "{name} odottaa vastausta",
+    "mail_waited": "Joku laitteella {name} (tunnus {id}) on odottanut vastausta chatissa {minutes} minuuttia.",
+    "mail_quote": "Viesti: {quote}",
+    "mail_open": "Avaa keskustelu: {link}",
+    "mail_button": "Avaa keskustelu sovelluksessa {app}"
   },
   "toast": {
     "device_connected": "Laite yhdistetty",
