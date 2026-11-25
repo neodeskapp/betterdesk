@@ -59,6 +59,7 @@ const joinProofRefusal = "This computer's ID is already enrolled on this server.
 func (s *Server) onboardRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/onboard/codes", s.inProcessOnly(s.handleOnboardCreate))
 	mux.HandleFunc("GET /api/onboard/codes", s.inProcessOnly(s.handleOnboardList))
+	mux.HandleFunc("GET /api/onboard/codes/{id}", s.inProcessOnly(s.handleOnboardCode))
 	mux.HandleFunc("DELETE /api/onboard/codes/{id}", s.inProcessOnly(s.handleOnboardRevoke))
 	mux.HandleFunc("POST /api/onboard/codes/lookup", s.inProcessOnly(s.handleOnboardLookup))
 	mux.HandleFunc("POST /api/onboard/codes/redeem", s.inProcessOnly(s.handleOnboardRedeem))
@@ -292,6 +293,7 @@ func (s *Server) handleOnboardRevoke(w http.ResponseWriter, r *http.Request) {
 	for _, entry := range s.pairingRecords() {
 		if entry.Record.ID == id && validOnboardKind(entry.Record.Kind) {
 			s.deletePairingRecord(entry.Hash)
+			_ = s.db.DeleteConfig(onboardJoinsPrefix + id)
 			if s.auditLog != nil {
 				s.auditLog.Log("onboard_code_revoked", s.remoteIP(r), actorFromCtx(r), map[string]string{
 					"id": id, "kind": entry.Record.Kind,
@@ -562,6 +564,9 @@ func (s *Server) handleOnboardRedeem(w http.ResponseWriter, r *http.Request) {
 		var err error
 		created, err = s.admitOnboardDevice(r, body.Device, record.Kind == onboardKindJoin)
 		if errors.Is(err, errOnboardRefused) {
+			if record.Kind == onboardKindJoin {
+				s.noteOnboardJoin(record, strings.TrimSpace(body.Device.DeviceID), strings.TrimPrefix(err.Error(), errOnboardRefused.Error()+": "))
+			}
 			writeJSON(w, http.StatusForbidden, map[string]any{
 				"success": false, "error": "device_refused", "message": strings.TrimPrefix(err.Error(), errOnboardRefused.Error()+": "),
 			})
@@ -576,6 +581,9 @@ func (s *Server) handleOnboardRedeem(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	record.UsesLeft--
+	if record.Kind == onboardKindJoin && body.Device != nil {
+		s.noteOnboardJoin(record, strings.TrimSpace(body.Device.DeviceID), "")
+	}
 	if record.UsesLeft <= 0 {
 		s.deletePairingRecord(hash)
 	} else if err := s.storePairingRecord(hash, record); err != nil {
@@ -601,6 +609,7 @@ func (s *Server) handleOnboardRedeem(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleOnboardPrune(w http.ResponseWriter, _ *http.Request) {
 	s.onboardMu.Lock()
 	s.prunePairingRecords()
+	s.pruneOnboardJoins()
 	s.onboardMu.Unlock()
 	writeJSON(w, http.StatusOK, map[string]any{"success": true})
 }

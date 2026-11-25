@@ -125,6 +125,48 @@ type answer struct {
 		ID      string `json:"id"`
 		Created bool   `json:"created"`
 	} `json:"device"`
+	Joined  []Joined `json:"joined"`
+	Refused *Refused `json:"refused"`
+}
+
+// Joined is a computer that joined with an invite, and when.
+type Joined struct {
+	DeviceID string `json:"device_id"`
+	JoinedAt string `json:"joined_at"`
+}
+
+// Refused is the last computer an invite's join refused: Reason is
+// key_changed (an enrolled ID came with another key, which an
+// administrator can approve) or refused.
+type Refused struct {
+	DeviceID string `json:"device_id"`
+	Reason   string `json:"reason"`
+	At       string `json:"at"`
+}
+
+// InviteState is what happened with an invite: its record, the computers
+// that joined with it and the last one it refused (nil for none).
+type InviteState struct {
+	Code    Code
+	Joined  []Joined
+	Refused *Refused
+}
+
+// Invite returns what happened with the invite (join code) of the id, also
+// once its joins used it up, until it would have expired. ErrNotFound for
+// any other id.
+func (c *Codes) Invite(ctx context.Context, id string) (InviteState, error) {
+	status, out, err := c.call(ctx, http.MethodGet, "/onboard/codes/"+id, nil)
+	if err != nil {
+		return InviteState{}, err
+	}
+	if status != http.StatusOK || !out.Success {
+		return InviteState{}, failure("read invite", status, out)
+	}
+	if out.Joined == nil {
+		out.Joined = []Joined{}
+	}
+	return InviteState{Code: out.Record, Joined: out.Joined, Refused: out.Refused}, nil
 }
 
 // call sends one request and reads the answer whatever its status.

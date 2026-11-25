@@ -65,15 +65,20 @@ func init() {
 			CaptureSecret: map[string]string{"joined_token": "device_token"},
 		}),
 		visitor(contract.Case{Name: "join-used", Method: "POST", Path: "/api/onboard/join", Body: map[string]any{"code": "{secret:invite_code}", "device_id": "900200003"}}),
+		// The invite sheet follows the join: the used-up invite still answers
+		// with the computer that joined
+		{Name: "invite-show-joined", Path: "/api/onboard/invites/{invite}"},
+		{Name: "invite-show-unknown", Path: "/api/onboard/invites/0123456789abcdef", Roles: approvers},
 		// A join with another device's ID and no proof is refused: the ID is
 		// enrolled now, and the join brings neither its key nor the proof of
-		// it. The invite is not spent.
+		// it. The invite is not spent, and its sheet names the refused ID.
 		{
 			Name: "invite-second", Method: "POST", Path: "/api/onboard/invites", Body: map[string]any{"name": "Second desk"},
 			Capture: map[string]string{"second": "invite.id"}, CaptureSecret: map[string]string{"second_code": "code"},
 			Roles: approvers,
 		},
 		visitor(contract.Case{Name: "join-other-device-no-proof", Method: "POST", Path: "/api/onboard/join", Body: map[string]any{"code": "{secret:second_code}", "device_id": "900400001"}}),
+		{Name: "invite-show-refused", Path: "/api/onboard/invites/{second}", Roles: approvers},
 		{Name: "invite-second-cleanup", Method: "DELETE", Path: "/api/onboard/invites/{second}", Roles: approvers},
 		visitor(contract.Case{Name: "public-used", Path: "/api/onboard/public/{secret:invite_code}"}),
 		visitor(contract.Case{Name: "public-wrong", Path: "/api/onboard/public/ZZZZ-ZZZZ"}),

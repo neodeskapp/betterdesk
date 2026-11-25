@@ -119,6 +119,7 @@ func RegisterWith(d *kit.Deps, opts Options) {
 	r.Get("/api/onboard/status", h.status, d.RequireAuth, either)
 	r.Get("/api/onboard/invites", h.listInvites, d.RequireAuth, approve)
 	r.Post("/api/onboard/invites", h.createInvite, d.RequireAuth, approve)
+	r.Get("/api/onboard/invites/{id}", h.getInvite, d.RequireAuth, approve)
 	r.Delete("/api/onboard/invites/{id}", h.revokeInvite, d.RequireAuth, approve)
 	r.Post("/api/onboard/invites/{id}/mail", h.mailInvite, d.RequireAuth, approve)
 	r.Post("/api/onboard/devices/{id}/approve-key", h.approveKey, d.RequireAuth, approve)
