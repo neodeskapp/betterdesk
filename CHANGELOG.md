@@ -5,31 +5,76 @@
 
 ---
 
-## [3.6.4] — 2026-11-25
+## [3.6.0-rc.5] — 2026-11-25
+
+Fifth release candidate of 3.6.0.
+
+### Added
+- Saved sign-in: a device keeps the account name and password of a
+  Windows account, encrypted on the server, and the browser viewer signs
+  in with them at the computer's lock or sign-in screen, once per
+  session, by itself when the device's switch is on. Permissions Use
+  saved sign-in and Manage saved sign-in, super admins only by default;
+  API tokens can manage the details but never use or read them. With a
+  client that opens sealed sign-ins the password never reaches the
+  browser.
+- Connect in the browser viewer signs in with the device password an
+  organisation's address book stores, without the browser getting it.
+- Revoking, expiring or deleting an API token ends the guest links,
+  device tokens, quick support sessions, invites, pairing codes, guest
+  desktop links and organization invitations it made, and the revoke
+  dialog lists the computers it let in, which stay.
+- Every release carries its installers and compose files, listed in
+  SHA256SUMS and signed in SHA256SUMS.sig; the install commands fetch
+  them from neode.sk.
+- `neodesk` hands the desktop client's options and a bare join or
+  support link to the client on Linux, and says when it is older than
+  the server.
 
 ### Changed
-- _(none yet)_
+- `neodesk` is the command line on every install: on Linux a copy of
+  the server binary in /usr/local/bin that every user can run, on
+  Windows `C:\NeoDesk\bin\neodesk.exe` on the machine's Path. The Linux
+  installer's manager is `neodesk-setup`; its old options on `neodesk`
+  still reach it.
+- The installers and compose files are in `install/`, the Dockerfiles
+  in `docker/`, and the scripts update themselves from the release they
+  install instead of from the main branch.
+- The console's default port is 3375 instead of 5000; installs whose
+  settings name a port keep it. HTTPS stays on 5443.
+- Linux backups go to /opt/neodesk-backups and the Docker data volume is
+  mounted at /opt/neodesk/data; an update moves both.
+- The address book's device passwords are sealed with the key file
+  `.device_vault_key` next to the server's key pair, which no backup
+  holds. The console, the command line and MCP no longer return them.
+- Every command of the command line names the permission its route
+  needs, every option has a help text, and times without a zone say UTC.
+- `neodesk mcp` asks the person before a tool that deletes, ends, runs
+  or changes access, when the MCP client can ask.
+- Links that open a device in an app use `neodesk://`; Open in RustDesk
+  stays as a second choice.
+- Help points to the NeoDesk Discord.
 
----
+### Removed
+- The upgrade path from the old Node.js console and the migration tools.
 
-## [3.6.3] — 2026-11-25
-
-### Changed
-- _(none yet)_
-
----
-
-## [3.6.2] — 2026-11-25
-
-### Changed
-- _(none yet)_
-
----
-
-## [3.6.1] — 2026-11-24
-
-### Changed
-- _(none yet)_
+### Fixed
+- A computer whose key the server refuses shows offline, also after a
+  restart, and its system information isn't stored.
+- A permanently deleted device leaves no key, passwords, grants or
+  settings behind.
+- Accounts that see only some devices can't widen their access through
+  the API port, and access rules reach device groups made from tags.
+- A read-only API token sees agent templates' enrollment tokens only by
+  their start.
+- The browser viewer no longer logs a 409 for the quick support password
+  at every session start.
+- The Intune script falls back to the client API port 21121.
+- The Docker update backs up the settings from before the update, and a
+  failed Linux update starts the previous binary also when systemd gave
+  up on the new one.
+- The invite page says what Windows' permission prompt shows for the
+  exe.
 
 ---
 
@@ -247,7 +292,4 @@ Second release candidate, and the first as NeoDesk.
 [3.6.0-rc.2]: https://github.com/neodeskapp/neodesk/releases/tag/v3.6.0-rc.2
 [3.6.0-rc.3]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.2...v3.6.0-rc.3
 [3.6.0-rc.4]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.3...v3.6.0-rc.4
-[3.6.1]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.4...v3.6.1
-[3.6.2]: https://github.com/neodeskapp/neodesk/compare/v3.6.1...v3.6.2
-[3.6.3]: https://github.com/neodeskapp/neodesk/compare/v3.6.2...v3.6.3
-[3.6.4]: https://github.com/neodeskapp/neodesk/compare/v3.6.3...v3.6.4
+[3.6.0-rc.5]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.4...v3.6.0-rc.5
