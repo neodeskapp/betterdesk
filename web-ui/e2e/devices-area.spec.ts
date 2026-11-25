@@ -110,7 +110,8 @@ for (const role of ROLES) {
 				await expect(page.getByRole('dialog')).toHaveCount(0);
 				return;
 			}
-			await expect(page).toHaveTitle(/^Add computers/);
+			// The tab title starts with the unread chat count when there is one (A242)
+			await expect(page).toHaveTitle(/^(\(\d+\) )?Add computers/);
 			await expect(dialog).toBeVisible();
 			// The client address is filled in; the label is optional
 			await expect(dialog.getByLabel('Server address')).not.toHaveValue('');

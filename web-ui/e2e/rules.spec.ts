@@ -76,7 +76,8 @@ for (const role of ROLES) {
 			const heading = page.getByRole('heading', { level: 1 });
 			await expect(heading).toHaveText(/^Policies: \S/);
 			const name = (await heading.innerText()).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-			await expect(page).toHaveTitle(new RegExp(`^${name} - `));
+			// The tab title starts with the unread chat count when there is one (A242)
+			await expect(page).toHaveTitle(new RegExp(`^(\\(\\d+\\) )?${name} - `));
 			if (!(b.isSuperAdmin || b.permissions.includes('org.edit'))) {
 				// A83: saving policies needs org.edit (server_admin reads them)
 				await expect(page.getByText('You can view this page but not change it.')).toBeVisible();
