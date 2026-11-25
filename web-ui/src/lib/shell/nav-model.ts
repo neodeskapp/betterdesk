@@ -11,19 +11,27 @@
 import type { NavPage, NavSection } from '#lib/api/console.ts';
 
 /** Pages that are the current one for another page's URL (consoleNav alsoActiveFor) */
-const ALSO_ACTIVE: Readonly<Record<string, string>> = { generator: 'agents' };
+const ALSO_ACTIVE: Readonly<Record<string, string>> = {
+	// The old addresses of the tabs of Devices › Add computers
+	keys: 'devices-add',
+	tokens: 'devices-add',
+	pairing: 'devices-add',
+	agents: 'devices-add',
+	generator: 'devices-add'
+};
 
 /**
  * The page key for a URL (old path plus query), as lib/consoleNav.js
- * pageKey() made it: settings split by tab, /?activateAgent=1 is its own
- * page. Server status, Billing and the Server section's pages are one
- * entry each, whatever their tab.
+ * pageKey() made it: settings split by tab. Server status, Billing, Add
+ * computers and the Server section's pages are one entry each, whatever
+ * their tab.
  */
 export function pageKey(path: string, search: { get(name: string): string | null } | string = ''): string {
 	const q = typeof search === 'string' ? new URLSearchParams(search) : search;
 	const [first = '', second = ''] = path.replace(/^\/+/, '').split('/');
 	const tab = q.get('tab') ?? '';
-	if (first === '') return q.get('activateAgent') === '1' ? 'activate-agent' : 'dashboard';
+	if (first === '') return 'dashboard';
+	if (first === 'devices' && second === 'add') return 'devices-add';
 	if (first === 'settings') return 'settings:' + (tab || 'general');
 	// Files and Services are tabs of Server status, one entry in the Server section
 	if (first === 'server-management') return 'server-management:overview';

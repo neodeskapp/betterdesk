@@ -26,7 +26,7 @@ const PAGES = [
 	'/help-requests',
 	'/settings?tab=auth',
 	'/settings?tab=email',
-	'/keys',
+	'/devices/add',
 	'/security-audit',
 	'/automation',
 	'/billing?tab=packages'
@@ -333,7 +333,7 @@ test.describe('list rows in German at 360', () => {
 	}) => {
 		await useLanguage(page, 'de', baseURL);
 		const bad: string[] = [];
-		for (const path of ['/keys', '/permissions', '/settings?tab=branding']) {
+		for (const path of ['/devices/add?tab=manual', '/permissions', '/settings?tab=branding']) {
 			await open(page, path, 'de');
 			bad.push(
 				...(await page.evaluate(() =>

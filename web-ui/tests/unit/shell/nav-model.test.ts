@@ -25,9 +25,11 @@ const texts = (rows: NavRow[]) => rows.map((r) => (r.kind === 'group' ? `# ${r.t
 describe('pageKey (lib/consoleNav.js pageKey)', () => {
 	test.each([
 		['/', '', 'dashboard'],
-		['/', '?activateAgent=1', 'activate-agent'],
+		// Enter a pairing code is a tab of Add computers now (lib/redirects.ts)
+		['/', '?activateAgent=1', 'dashboard'],
 		['/devices', '?open=900100001', 'devices'],
 		['/devices/900100001', '', 'devices'],
+		['/devices/add', '?tab=tokens', 'devices-add'],
 		['/settings', '', 'settings:general'],
 		['/settings', '?tab=auth', 'settings:auth'],
 		['/server-management', '', 'server-management:overview'],
@@ -40,7 +42,9 @@ describe('pageKey (lib/consoleNav.js pageKey)', () => {
 		['/billing', '?tab=reports', 'billing'],
 		['/commercialization', '?tab=sessions', 'billing'],
 		['/security-checks', '?tab=hardening', 'security-checks'],
-		['/generator', '', 'agents'],
+		['/generator', '', 'devices-add'],
+		['/keys', '', 'devices-add'],
+		['/pairing', '', 'devices-add'],
 		['/help-requests', '', 'help-requests']
 	])('%s%s is %s', (path, search, key) => {
 		expect(pageKey(path, search)).toBe(key);
@@ -70,17 +74,12 @@ describe('buildNavModel', () => {
 			'Overview',
 			'All devices',
 			'Join requests',
+			'Add computers',
 			'Remote desktop in browser'
 		]);
-		expect(texts(devices.more)).toEqual([
-			'Activate support agent',
-			'Inventory',
-			'Network monitoring',
-			'Fleet tasks',
-			'Platform support',
-			'IoT devices'
-		]);
-		expect(devices.moreCount).toBe(6);
+		// Enter a pairing code is a tab of Add computers, Platform support is in Help
+		expect(texts(devices.more)).toEqual(['Inventory', 'Network monitoring', 'Fleet tasks', 'IoT devices']);
+		expect(devices.moreCount).toBe(4);
 	});
 
 	test('a section with only one extra page shows everything, in order', () => {
@@ -98,16 +97,12 @@ describe('buildNavModel', () => {
 
 	test('a heading where the group changes, only in the More list', () => {
 		const settings = buildNavModel(admin, 'devices').sections.find((s) => s.id === 'settings')!;
-		expect(settings.core.map((i) => i.page.text)).toEqual(['General', 'Sign-in', 'Client setup']);
+		expect(settings.core.map((i) => i.page.text)).toEqual(['General', 'Sign-in']);
 		const rows = texts(settings.more);
-		expect(rows.filter((r) => r.startsWith('# '))).toEqual([
-			'# Console',
-			'# Clients and joining',
-			'# Developer tools'
-		]);
+		expect(rows.filter((r) => r.startsWith('# '))).toEqual(['# Console', '# Developer tools']);
 		// Each heading comes right before the first page of its group, and once
 		expect(rows.slice(0, 3)).toEqual(['# Console', 'Directory (LDAP)', 'Single sign-on']);
-		expect(rows.indexOf('# Clients and joining')).toBe(rows.indexOf('Translations') + 1);
+		expect(rows.indexOf('# Developer tools')).toBe(rows.indexOf('Translations') + 1);
 	});
 
 	test('the server pages are a section of their own, Server status one entry with its tabs', () => {

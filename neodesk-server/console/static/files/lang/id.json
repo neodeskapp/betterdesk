@@ -116,7 +116,8 @@
     "section_devices": "Perangkat",
     "server_backups": "Cadangan",
     "server_config_files": "Berkas konfigurasi",
-    "meshcentral": "MeshCentral"
+    "meshcentral": "MeshCentral",
+    "devices_add": "Add computers"
   },
   "auth": {
     "login": "Masuk",
@@ -8745,5 +8746,12 @@
     "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
     "accessibility_on": "Some accessibility settings are on in this browser.",
     "accessibility_open": "Accessibility settings"
+  },
+  "devices_add": {
+    "tab_invites": "Invites and install links",
+    "tab_manual": "Manual setup",
+    "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
+    "invite_title": "Invite a computer",
+    "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
   }
 }

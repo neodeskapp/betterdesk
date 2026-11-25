@@ -18,6 +18,8 @@ var guardPaths = []struct {
 	{"/fleet", "fleet"}, {"/chat", "chat"}, {"/scaling", "scaling"}, {"/cross-platform", "cross-platform"},
 	{"/reports", "reports"}, {"/agents", "agents"}, {"/toolkit", "toolkit"}, {"/keys", ""},
 	{"/tokens", ""}, {"/policies", ""}, {"/attestation", ""},
+	// Add computers: below /devices, but its tabs ask their own permissions
+	{"/devices/add", ""}, {"/devices/addx", "devices"}, {"/devices/x", "devices"},
 	{"/dataguard", "dataguard"}, {"/security-audit", "security-audit"}, {"/permissions", "permissions"},
 	{"/languages", "languages"}, {"/resource-control", "resource-control"}, {"/server-management", "server-management"},
 	{"/client-branding", ""}, {"/cdap-studio", "cdap"}, {"/users", "users"}, {"/api/users", "users"},

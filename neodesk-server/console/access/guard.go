@@ -151,6 +151,10 @@ var RouteRules = []Rule{
 	// step 9 of L494) belong to the sections of their old addresses.
 	{Prefix: "/security-checks", Section: "security-audit"},
 	{Prefix: "/billing", Section: "commercialization"},
+	// Devices › Add computers (plan step 8) is below /devices but for every
+	// account: Manual setup needs a session only, the other tabs and their
+	// calls ask their own permissions.
+	{Prefix: "/devices/add"},
 }
 
 const apiPrefix = "/api/"

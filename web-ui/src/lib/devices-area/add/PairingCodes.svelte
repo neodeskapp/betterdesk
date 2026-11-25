@@ -1,11 +1,16 @@
 <!--
-  Pairing codes (/pairing): a short one-time code and the server address,
+  Devices › Add computers › Pairing codes (/devices/add?tab=pairing;
+  /pairing before): a short one-time code and the server address,
   for setting up a NeoDesk client without the long config string.
   Create a code (shown once, large enough to read out, with the time it
   still works), and revoke active codes in the list below.
 
   Needs enrollment.approve (the route and every call). The suggested
   server address comes from /api/panel/pairing/host.
+
+  pair: open "Pair with code" at once (/devices/add?tab=pairing&pair=1,
+  the old Enter a pairing code entry and /?activateAgent=1); its "Scan
+  agent QR" opens the agent QR scanner.
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
@@ -28,8 +33,18 @@
 	import type { Column } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
+	import { lazy } from '#lib/util/lazy.ts';
+
+	let { pair = false }: { pair?: boolean } = $props();
 
 	const allowed = can('enrollment.approve');
+
+	/* ── Pair with code and the agent QR scanner (their code loads on first use) ── */
+
+	const pairDialog = lazy(() => import('#lib/devices-area/PairCodeDialog.svelte'));
+	const activation = lazy(() => import('#lib/devices-area/AgentActivation.svelte'));
+	let pairOpen = $state(untrack(() => pair) && allowed);
+	let activationOpen = $state(false);
 	/** Clock time only: a code lives for minutes, so the date adds nothing */
 	const CLOCK: Intl.DateTimeFormatOptions = { year: undefined, month: undefined, day: undefined };
 
@@ -182,12 +197,7 @@
 {#if !allowed}
 	<NoAccess />
 {:else}
-	<div class="page pairing-page">
-		<div class="page-head">
-			<h1>{t('nav.pairing')}</h1>
-			<p class="page-description">{t('pairing.subtitle')}</p>
-		</div>
-
+	<div class="add-tab pairing-page">
 		<!-- The form and the new code side by side, so the code appears next to
 		     the button that made it (below it on narrow screens) -->
 		<section class="section" aria-labelledby="pairing-create-title">
@@ -269,6 +279,25 @@
 			/>
 		</section>
 	</div>
+{/if}
+
+{#if pairOpen}
+	{#await pairDialog.open(() => (pairOpen = false)) then { default: PairCodeDialog }}
+		<PairCodeDialog
+			{host}
+			onclose={() => (pairOpen = false)}
+			onscan={() => {
+				pairOpen = false;
+				activationOpen = true;
+			}}
+		/>
+	{/await}
+{/if}
+
+{#if activationOpen}
+	{#await activation.open(() => (activationOpen = false)) then { default: AgentActivation }}
+		<AgentActivation onclose={() => (activationOpen = false)} />
+	{/await}
 {/if}
 
 <style>

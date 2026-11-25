@@ -15,7 +15,7 @@ import { signOut } from './sign-out.ts';
 
 const PAGES: Record<Intent, string> = {
 	'add-computer': '/devices',
-	'new-device-token': '/tokens',
+	'new-device-token': '/devices/add?tab=tokens',
 	'add-user': '/users',
 	'new-api-token': '/account'
 };
@@ -27,9 +27,11 @@ function isIntent(id: string): id is Intent {
 export async function runAction(id: ActionId | string): Promise<void> {
 	if (isIntent(id)) {
 		requestIntent(id);
-		const here = location.pathname === link(PAGES[id]);
+		const target = link(PAGES[id]);
+		// The page takes the intent itself when it shows already (with its tab)
+		if (location.pathname + location.search === target) return;
 		// eslint-disable-next-line svelte/no-navigation-without-resolve -- link() adds the base
-		if (!here) await goto(link(PAGES[id]));
+		await goto(target);
 		return;
 	}
 	switch (id) {

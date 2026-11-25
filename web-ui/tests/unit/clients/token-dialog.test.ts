@@ -4,7 +4,7 @@
 import { cleanup, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import TokenDialog from '../../../src/routes/(console)/tokens/TokenDialog.svelte';
+import TokenDialog from '../../../src/lib/devices-area/add/TokenDialog.svelte';
 import type { DeviceToken } from '../../../src/lib/api/tokens.ts';
 
 let bodies: unknown[] = [];

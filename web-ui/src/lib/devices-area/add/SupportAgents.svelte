@@ -1,6 +1,6 @@
 <!--
-  Support agents (/agents; the old /generator redirects here on the
-  server): the signed agent release this server serves on its download
+  Devices › Add computers › Support agents (/devices/add?tab=agents; /agents
+  and /generator before): the signed agent release this server serves on its download
   page, how to set an agent up, where people get it, and where its name
   and logo come from.
 
@@ -111,11 +111,7 @@
 {#if !allowed}
 	<NoAccess />
 {:else}
-	<div class="page agents-page">
-		<div class="page-head">
-			<h1>{t('nav.agents')}</h1>
-			<p class="page-description">{t('agents.page_description')}</p>
-		</div>
+	<div class="add-tab agents-page">
 		<ReadOnlyHint writes={['enrollment.manage', 'enrollment.approve']} />
 
 		<div class="page-cols">
@@ -164,7 +160,7 @@
 					<Steps items={[t('agents.step1'), t('agents.step2'), t('agents.step3'), step4]} />
 					{#if can('enrollment.approve')}
 						<div class="form-actions">
-							<Button href={link('/?activateAgent=1')} icon="pin" class="agents-pair"
+							<Button href={link('/devices/add?tab=pairing&pair=1')} icon="pin" class="agents-pair"
 								>{t('agents.pair_activate')}</Button
 							>
 						</div>
@@ -239,11 +235,6 @@
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 			gap: var(--space-6) var(--space-7);
 			align-items: start;
-		}
-	}
-	@media (min-width: 2200px) {
-		.page.agents-page {
-			max-width: none;
 		}
 	}
 </style>

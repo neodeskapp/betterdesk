@@ -77,7 +77,6 @@ func countID(id string) func(*NavPage)    { return func(p *NavPage) { p.CountID 
 
 const (
 	groupConsole   = "nav.group_console"
-	groupClients   = "nav.group_clients"
 	groupDeveloper = "nav.group_developer"
 )
 
@@ -87,8 +86,10 @@ var NavSections = []NavSection{
 		navPage("dashboard", "home dashboard start", "/", "nav.dashboard", withRule(navAlways), core),
 		navPage("devices", "computers peers machines connect", "/devices", "folders.all_devices", withPermission("device.view"), core),
 		navPage("registrations", "enrollment approve new device registration pending", "/registrations", "nav.registrations", withPermission("enrollment.approve"), core, countID("reg-sidebar-badge")),
-		navPage("activate-agent", "pair agent code activation", "/?activateAgent=1", "nav.pair_agent", withPermission("enrollment.approve"),
-			func(p *NavPage) { p.Access, p.ID = "registrations", "nav-activate-agent" }),
+		// Every way a computer gets in, as tabs; the tabs ask their own
+		// permissions, so the page is for every account (Manual setup is)
+		navPage("devices-add", "add computers install join invite install links client setup keys device tokens pairing codes support agents", "/devices/add", "nav.devices_add", withRule(navAlways), core,
+			func(p *NavPage) { p.AlsoActiveFor = []string{"keys", "tokens", "pairing", "agents", "generator"} }),
 		navPage("remote", "web client browser remote control", "/remote", "nav.remote", withPermission("device.connect"), core, external),
 		navPage("inventory", "hardware software", "/inventory", "nav.inventory", withPermission("device.view")),
 		navPage("network", "ping monitor latency targets", "/network", "nav.network", withPermission("device.view")),
@@ -144,11 +145,6 @@ var NavSections = []NavSection{
 		navPage("settings:time", "time zone timezone ntp clock", "/settings?tab=time", "settings.tab_time", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("settings:meshcentral", "meshcentral mesh meshagent", "/settings?tab=meshcentral", "nav.meshcentral", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("languages", "languages translations i18n", "/languages", "nav.languages", withPermission("server.config"), inGroup(groupConsole)),
-		navPage("keys", "keys public key qr client setup rustdesk config", "/keys", "nav.keys", withRule(navAlways), core, inGroup(groupClients)),
-		navPage("tokens", "tokens enrollment mode", "/tokens", "nav.tokens", withPermission("enrollment.manage"), inGroup(groupClients)),
-		navPage("pairing", "pairing code", "/pairing", "nav.pairing", withPermission("enrollment.approve"), inGroup(groupClients)),
-		navPage("agents", "agents installers generator", "/agents", "nav.agents", withRule(navAdminRole), inGroup(groupClients),
-			func(p *NavPage) { p.AlsoActiveFor = []string{"generator"} }),
 		navPage("cdap-studio", "sdk studio flows widgets", "/cdap-studio", "nav.sdk_studio", withRole("operator"), inGroup(groupDeveloper)),
 	}},
 }
@@ -162,8 +158,11 @@ type NavInput struct {
 	// T translates a key; nil leaves keys as they are.
 	T func(key string) string
 	// CurrentPage and CurrentTab mark the active page.
-	CurrentPage      string
-	CurrentTab       string
+	CurrentPage string
+	CurrentTab  string
+	// ActivateAgentNav marks the old Pair agent entry of Node's navigation
+	// (/?activateAgent=1), which the oracle tests still build; the console's
+	// own navigation has no such entry since plan step 8 of L494.
 	ActivateAgentNav bool
 	// Allows is a further filter, in practice PageAllowed; nil lets every
 	// page through.

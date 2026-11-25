@@ -110,7 +110,8 @@
     "section_devices": "Dispositivos",
     "server_backups": "Copias de seguridad",
     "server_config_files": "Archivos de configuración",
-    "meshcentral": "MeshCentral"
+    "meshcentral": "MeshCentral",
+    "devices_add": "Añadir equipos"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -8739,5 +8740,12 @@
     "accessibility_note": "Contraste, tamaño del texto, movimiento y filtros de color para este navegador.",
     "accessibility_on": "Algunos ajustes de accesibilidad están activados en este navegador.",
     "accessibility_open": "Ajustes de accesibilidad"
+  },
+  "devices_add": {
+    "tab_invites": "Invitaciones y enlaces de instalación",
+    "tab_manual": "Configuración manual",
+    "invites_desc": "Invite a un equipo con un enlace o por correo. El equipo instala NeoDesk y se une a este servidor, con su nombre y en su carpeta.",
+    "invite_title": "Invitar a un equipo",
+    "invite_note": "El botón de abajo crea un enlace de invitación y muestra las invitaciones que siguen abiertas."
   }
 }

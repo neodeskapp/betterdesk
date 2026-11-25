@@ -110,7 +110,8 @@
     "section_devices": "장치",
     "server_backups": "백업",
     "server_config_files": "구성 파일",
-    "meshcentral": "MeshCentral"
+    "meshcentral": "MeshCentral",
+    "devices_add": "컴퓨터 추가"
   },
   "auth": {
     "login": "로그인",
@@ -8739,5 +8740,12 @@
     "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
     "accessibility_on": "Some accessibility settings are on in this browser.",
     "accessibility_open": "Accessibility settings"
+  },
+  "devices_add": {
+    "tab_invites": "Invites and install links",
+    "tab_manual": "수동 설정",
+    "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
+    "invite_title": "Invite a computer",
+    "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
   }
 }

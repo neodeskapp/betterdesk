@@ -110,7 +110,8 @@
     "section_devices": "Geräte",
     "server_backups": "Sicherungen",
     "server_config_files": "Konfigurationsdateien",
-    "meshcentral": "MeshCentral"
+    "meshcentral": "MeshCentral",
+    "devices_add": "Computer hinzufügen"
   },
   "auth": {
     "login": "Anmelden",
@@ -8739,5 +8740,12 @@
     "accessibility_note": "Kontrast, Textgröße, Bewegung und Farbfilter für diesen Browser.",
     "accessibility_on": "In diesem Browser sind Einstellungen zur Barrierefreiheit an.",
     "accessibility_open": "Barrierefreiheit einstellen"
+  },
+  "devices_add": {
+    "tab_invites": "Einladungen und Installationslinks",
+    "tab_manual": "Manuelle Einrichtung",
+    "invites_desc": "Laden Sie einen Computer mit einem Link oder per E-Mail ein. Der Computer richtet NeoDesk ein und tritt diesem Server bei, mit Namen und in seinem Ordner.",
+    "invite_title": "Einen Computer einladen",
+    "invite_note": "„Computer hinzufügen“ erstellt einen Einladungslink und zeigt die Einladungen, die noch offen sind."
   }
 }

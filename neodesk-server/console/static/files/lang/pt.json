@@ -110,7 +110,8 @@
     "section_devices": "Dispositivos",
     "server_backups": "Cópias de segurança",
     "server_config_files": "Ficheiros de configuração",
-    "meshcentral": "MeshCentral"
+    "meshcentral": "MeshCentral",
+    "devices_add": "Adicionar computadores"
   },
   "auth": {
     "login": "Entrar",
@@ -8739,5 +8740,12 @@
     "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
     "accessibility_on": "Some accessibility settings are on in this browser.",
     "accessibility_open": "Definições de acessibilidade"
+  },
+  "devices_add": {
+    "tab_invites": "Convites e ligações de instalação",
+    "tab_manual": "Configuração manual",
+    "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
+    "invite_title": "Convidar um computador",
+    "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
   }
 }

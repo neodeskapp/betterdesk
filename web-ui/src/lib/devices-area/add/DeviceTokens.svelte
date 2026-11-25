@@ -1,5 +1,6 @@
 <!--
-  Device tokens (/tokens): tokens that let a new device join without
+  Devices › Add computers › Device tokens (/devices/add?tab=tokens; /tokens
+  before): tokens that let a new device join without
   waiting for approval, and the enrollment mode that decides which new
   devices may join. Create one token or several (each shown once), edit
   and revoke from the row menu. The mode is saved as soon as it is picked;
@@ -47,8 +48,8 @@
 	import type { Column } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
-	import BulkDialog from './BulkDialog.svelte';
-	import CreatedDialog from './CreatedDialog.svelte';
+	import BulkDialog from './TokenBulkDialog.svelte';
+	import CreatedDialog from './TokenCreatedDialog.svelte';
 	import TokenDialog from './TokenDialog.svelte';
 
 	const allowed = can('enrollment.manage');
@@ -273,10 +274,8 @@
 {#if !allowed}
 	<NoAccess />
 {:else}
-	<div class="page page-wide tokens-page">
-		<div class="page-head">
-			<h1>{t('nav.tokens')}</h1>
-			<p class="page-description">{t('tokens.page_description')}</p>
+	<div class="add-tab tokens-page">
+		<div class="page-head add-tab-actions">
 			<div class="page-actions">
 				<Button icon={ICONS.add} class="act-bulk" onclick={() => (bulk = true)}
 					>{t('tokens.bulk_generate')}</Button

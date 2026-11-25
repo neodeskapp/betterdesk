@@ -43,7 +43,7 @@ describe('enrollment on Settings › Joining', () => {
 		const user = userEvent.setup();
 		render(SignInTab, { part: 'joining' });
 		const link = await screen.findByRole('link', { name: 'settings.enrollment_mode_link' });
-		expect(link.getAttribute('href')).toBe('/tokens');
+		expect(link.getAttribute('href')).toBe('/devices/add?tab=tokens');
 		expect(screen.queryByRole('radio', { name: 'tokens.mode_open' })).toBeNull();
 		expect(screen.getByText('tokens.mode_managed')).toBeTruthy();
 

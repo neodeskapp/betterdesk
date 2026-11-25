@@ -37,7 +37,9 @@
 			<dd><ValueField value={tok.token} label={tok.name} /></dd>
 		{/each}
 	</dl>
-	<p class="next">{next[0]}<a href={link('/keys')}>{t('nav.keys')}</a>{next[1]}</p>
+	<p class="next">
+		{next[0]}<a href={link('/devices/add?tab=manual')}>{t('devices_add.tab_manual')}</a>{next[1]}
+	</p>
 	{#snippet footer()}
 		{#if tokens.length > 1}
 			<Button icon={ICONS.copy} class="copy-all" onclick={() => void copier.copy(copyAllText(tokens))}

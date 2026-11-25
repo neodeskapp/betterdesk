@@ -468,11 +468,11 @@
 							<ListRow
 								title={t('dashboard.open_agents')}
 								sub={t('dashboard.agents_hint')}
-								href={link('/agents')}
+								href={link('/devices/add?tab=agents')}
 							/>
 						{/if}
 						{#if navPages.has('keys')}
-							<ListRow title={t('dashboard.open_keys')} href={link('/keys')} />
+							<ListRow title={t('dashboard.open_keys')} href={link('/devices/add?tab=manual')} />
 						{/if}
 					</RowList>
 				</section>

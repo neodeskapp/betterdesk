@@ -9,9 +9,11 @@
  * sides read it the same way.
  *
  * Each entry: the old path (any letter case), the ?tab= value it needs when
- * only that tab moved (any letter case; the new address leaves it out), the
- * #ids it needs when only some settings of a page moved (any letter case;
- * the new address leaves the old tab out), and the new address. The other
+ * only that tab moved (any letter case; the new address leaves it out),
+ * other parameters it needs with their values (any letter case; the new
+ * address leaves them out), the #ids it needs when only some settings of a
+ * page moved (any letter case; the new address leaves the old tab out), and
+ * the new address. The other
  * parameters of the old address come along after the new one's own; the
  * new address's #id wins over the old one. Old addresses stay for two
  * releases, then they are reviewed.
@@ -24,6 +26,7 @@
 export interface Redirect {
 	readonly from: string;
 	readonly tab?: string;
+	readonly query?: Readonly<Record<string, string>>;
 	readonly hash?: readonly string[];
 	readonly to: string;
 }
@@ -55,7 +58,15 @@ export const REDIRECTS: readonly Redirect[] = [
 	{ from: '/settings', hash: PASSWORD_IDS, to: '/account#password' },
 	{ from: '/settings', hash: ['auth-panel-totp'], to: '/account#two-factor' },
 	{ from: '/security-audit', tab: 'sessions', to: '/account#sessions' },
-	{ from: '/api-tokens', to: '/account#api-tokens' }
+	{ from: '/api-tokens', to: '/account#api-tokens' },
+	// Add computers (plan step 8): every way a computer gets in is a tab of
+	// Devices › Add computers; Enter a pairing code opens its dialog there
+	{ from: '/keys', to: '/devices/add?tab=manual' },
+	{ from: '/tokens', to: '/devices/add?tab=tokens' },
+	{ from: '/pairing', to: '/devices/add?tab=pairing' },
+	{ from: '/agents', to: '/devices/add?tab=agents' },
+	{ from: '/generator', to: '/devices/add?tab=agents' },
+	{ from: '/', query: { activateAgent: '1' }, to: '/devices/add?tab=pairing&pair=1' }
 ];
 
 const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
@@ -82,13 +93,15 @@ export function redirectTarget(path: string, search = '', hash = ''): string | n
 		if (!same(path, r.from)) continue;
 		if (r.tab !== undefined && (tab === null || !same(tab, r.tab))) continue;
 		if (r.hash && !r.hash.some((id) => same(id, oldId))) continue;
+		const needs = Object.entries(r.query ?? {});
+		if (needs.some(([key, value]) => !same(old.get(key) ?? '', value) || !old.has(key))) continue;
 		const dropTab = r.tab !== undefined || r.hash !== undefined;
 		const [address = '', ownHash = ''] = r.to.split('#');
 		const [toPath = '', toQuery = ''] = address.split('?');
 		const params = new URLSearchParams(toQuery);
 		const own = new Set(params.keys());
 		for (const [key, value] of old) {
-			if (own.has(key) || (dropTab && key === 'tab')) continue;
+			if (own.has(key) || (dropTab && key === 'tab') || Object.hasOwn(r.query ?? {}, key)) continue;
 			params.append(key, value);
 		}
 		const query = params.toString();

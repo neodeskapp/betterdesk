@@ -99,6 +99,7 @@ var ruleFixes = []ruleFix{
 	// sections of their old addresses.
 	{bug: "L494", add: Rule{Prefix: "/security-checks", Section: "security-audit"}},
 	{bug: "L494", add: Rule{Prefix: "/billing", Section: "commercialization"}},
+	{bug: "L494", add: Rule{Prefix: "/devices/add"}},
 }
 
 // sectionFix is a catalog section whose permissions differ from Node's.

@@ -307,7 +307,7 @@ describe('pairing an agent with a one-time code', () => {
 		as(['enrollment.approve']);
 		render(Page, early());
 		const dialog = await screen.findByRole('dialog', { name: 'pairing.title' });
-		expect(within(dialog).getByRole('link', { name: 'nav.pairing' })).toHaveAttribute('href', '/app/pairing');
+		expect(within(dialog).getByRole('link', { name: 'nav.pairing' })).toHaveAttribute('href', '/app/devices/add?tab=pairing');
 		await user.click(within(dialog).getByRole('button', { name: 'pairing.scan_qr_agent' }));
 		const scanner = await screen.findByRole('dialog', { name: 'pairing.scan_qr_agent' });
 		// jsdom has no BarcodeDetector: the way to approve the device instead

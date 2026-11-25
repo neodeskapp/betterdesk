@@ -1,7 +1,7 @@
 /**
- * Support agents page, step 3: agents pair with a one-time code now. The
+ * Add computers › Support agents, step 3: agents pair with a one-time code now. The
  * step is plain text (agents.step3 has no {page} placeholder any more), and
- * "Pair with code" opens the overview's pairing dialog, for the people who
+ * "Pair with code" opens the pairing dialog on the Pairing codes tab, for the people who
  * may create codes (enrollment.approve).
  */
 import { cleanup, render, screen } from '@testing-library/svelte';
@@ -9,9 +9,9 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 vi.mock('$app/paths', () => ({ resolve: (p: string) => '/app' + (p || '/'), asset: (p: string) => '/' + p }));
 vi.mock('$app/navigation', () => ({ goto: vi.fn(), pushState: vi.fn(), replaceState: vi.fn() }));
-vi.mock('$app/state', () => ({ page: { url: new URL('http://localhost/app/agents') } }));
+vi.mock('$app/state', () => ({ page: { url: new URL('http://localhost/app/devices/add?tab=agents') } }));
 
-import Page from '../../../src/routes/(console)/agents/+page.svelte';
+import Page from '../../../src/lib/devices-area/add/SupportAgents.svelte';
 import { session } from '../../../src/lib/state/session.svelte.ts';
 import { setStrings } from '../../../src/lib/i18n/i18n.svelte.ts';
 
@@ -60,11 +60,11 @@ describe('pairing on the support agents page', () => {
 		expect(screen.queryByRole('link', { name: 'nav.activate_agent' })).toBeNull();
 	});
 
-	test('Pair with code opens the pairing dialog on the overview', () => {
+	test('Pair with code opens the pairing dialog on the Pairing codes tab', () => {
 		as(['enrollment.approve']);
 		render(Page);
 		const pair = screen.getByRole('link', { name: 'Pair with code' });
-		expect(pair).toHaveAttribute('href', '/app?activateAgent=1');
+		expect(pair).toHaveAttribute('href', '/app/devices/add?tab=pairing&pair=1');
 		expect(pair.querySelector('.material-symbols-outlined, .material-icons')?.textContent).toBe('pin');
 	});
 

@@ -18,6 +18,9 @@ type redirect struct {
 	// Tab, when set, is the ?tab= value the old address needs (in any
 	// letter case); the new address leaves the old tab out.
 	Tab *string `json:"tab"`
+	// Query lists other parameters the old address needs, each with its
+	// value (in any letter case); the new address leaves them out.
+	Query map[string]string `json:"query"`
 	// Hash, when set, lists the #ids the old address needs. A browser never
 	// sends the #id, so the app alone follows such a rule; the server skips
 	// it.
@@ -54,6 +57,9 @@ func redirectFor(list []redirect, sub, query string) (string, bool) {
 		if r.Tab != nil && (!hasTab || !asciiEqualFold(tab, *r.Tab)) {
 			continue
 		}
+		if !hasParams(query, r.Query) {
+			continue
+		}
 		to, hash, _ := strings.Cut(r.To, "#")
 		path, toQuery, _ := strings.Cut(to, "?")
 		var parts []string
@@ -64,7 +70,7 @@ func redirectFor(list []redirect, sub, query string) (string, bool) {
 		}
 		for _, part := range splitQuery(query) {
 			key := queryKey(part)
-			if own[key] || (r.Tab != nil && key == "tab") {
+			if _, needed := r.Query[key]; own[key] || needed || (r.Tab != nil && key == "tab") {
 				continue
 			}
 			parts = append(parts, part)
@@ -79,6 +85,18 @@ func redirectFor(list []redirect, sub, query string) (string, bool) {
 		return target, true
 	}
 	return "", false
+}
+
+// hasParams reports whether a raw query has every parameter of a rule with
+// its value, in any letter case.
+func hasParams(query string, want map[string]string) bool {
+	for name, value := range want {
+		got, ok := queryParam(query, name)
+		if !ok || !asciiEqualFold(got, value) {
+			return false
+		}
+	}
+	return true
 }
 
 func splitQuery(query string) []string {

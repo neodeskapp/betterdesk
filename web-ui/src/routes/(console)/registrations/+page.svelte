@@ -552,7 +552,7 @@
 								</p>
 							{/if}
 							{#if modeLinkShown}
-								<p><a href={link('/tokens')}>{t('registrations.mode_link')}</a></p>
+								<p><a href={link('/devices/add?tab=tokens')}>{t('registrations.mode_link')}</a></p>
 							{/if}
 						</section>
 					{/if}

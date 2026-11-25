@@ -547,7 +547,9 @@
 					<p>
 						{t('tokens.enrollment_mode')}: <strong>{t(`tokens.mode_${enrolledMode}`)}</strong>.
 						{t(`tokens.mode_${enrolledMode}_desc`)}
-						{#if canChangeMode}<a href={link('/tokens')}>{t('settings.enrollment_mode_link')}</a>{/if}
+						{#if canChangeMode}<a href={link('/devices/add?tab=tokens')}
+								>{t('settings.enrollment_mode_link')}</a
+							>{/if}
 					</p>
 				{/if}
 				<Checkbox

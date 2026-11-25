@@ -1,5 +1,6 @@
 <!--
-  Client setup (/keys): what a RustDesk client needs to reach this server.
+  Devices › Add computers › Manual setup (/devices/add?tab=manual; /keys,
+  Client setup, before): what a RustDesk client needs to reach this server.
   The four values with Copy, all of them as one config string, the same
   values as a QR code for the phone app, how a connection runs (diagram),
   what happens after the client connects in the current enrollment mode,
@@ -124,8 +125,8 @@
 	const steps = $derived(nextSteps(mode, { approve: canApprove, manage: canManage }));
 	const STEP_PAGES: Record<NextStep, { href: string; title: string; sub: string }> = {
 		registrations: { href: '/registrations', title: 'nav.registrations', sub: 'keys.next_requests_sub' },
-		tokens: { href: '/tokens', title: 'nav.tokens', sub: 'keys.next_tokens_sub' },
-		pairing: { href: '/pairing', title: 'nav.pairing', sub: 'keys.next_pairing_sub' },
+		tokens: { href: '/devices/add?tab=tokens', title: 'nav.tokens', sub: 'keys.next_tokens_sub' },
+		pairing: { href: '/devices/add?tab=pairing', title: 'nav.pairing', sub: 'keys.next_pairing_sub' },
 		devices: { href: '/devices', title: 'nav.devices', sub: 'keys.next_devices_sub' }
 	};
 
@@ -181,12 +182,7 @@
 
 {#snippet externalMark()}<Icon name="open_in_new" class="row-chevron" />{/snippet}
 
-<div class="page keys-page">
-	<div class="page-head">
-		<h1>{t('nav.keys')}</h1>
-		<p class="page-description">{t('keys.page_description')}</p>
-	</div>
-
+<div class="add-tab keys-page">
 	{#if !settled}
 		<States kind="loading" />
 	{:else}
@@ -382,12 +378,9 @@
 		white-space: nowrap;
 	}
 
-	/* Very wide screens: the page takes the whole width and the diagram sits
+	/* Very wide screens: the diagram sits
 	   beside the values instead of below them */
 	@media (min-width: 2200px) {
-		.page.keys-page {
-			max-width: none;
-		}
 		.keys-page .page-main {
 			display: grid;
 			grid-template-columns: minmax(0, 880px) minmax(0, 1fr);

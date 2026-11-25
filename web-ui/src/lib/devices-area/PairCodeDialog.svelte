@@ -51,7 +51,7 @@
 	let code = $state<{ value: string; host: string; endsAt: number } | null>(null);
 	let now = $state(Date.now());
 
-	// The client values can arrive after the dialog opened (?activateAgent=1 opens it at once)
+	// The client values can arrive after the dialog opened (?pair=1 on Pairing codes opens it at once)
 	$effect(() => {
 		const suggested = host;
 		untrack(() => {
@@ -161,7 +161,7 @@
 		<!-- The other ways to pair: read the agent's QR code, or the list of codes -->
 		<div class="other">
 			<Button size="sm" icon={ICONS.qr} onclick={onscan}>{t('pairing.scan_qr_agent')}</Button>
-			<a href={link('/pairing')}>{t('nav.pairing')}</a>
+			<a href={link('/devices/add?tab=pairing')}>{t('nav.pairing')}</a>
 		</div>
 	</div>
 	{#snippet footer()}

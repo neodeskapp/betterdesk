@@ -55,6 +55,22 @@ describe('the old addresses', () => {
 		expect(go('/settings?tab=ldap#ldap-host')).toBeNull();
 	});
 
+	test('every way to add a computer is a tab of Devices › Add computers', () => {
+		expect(go('/keys')).toBe('/devices/add?tab=manual');
+		expect(go('/tokens')).toBe('/devices/add?tab=tokens');
+		expect(go('/pairing')).toBe('/devices/add?tab=pairing');
+		expect(go('/agents')).toBe('/devices/add?tab=agents');
+		expect(go('/generator')).toBe('/devices/add?tab=agents');
+		expect(go('/Keys#key-file')).toBe('/devices/add?tab=manual#key-file');
+		expect(go('/tokens?guide=computer')).toBe('/devices/add?tab=tokens&guide=computer');
+		// Enter a pairing code opens its dialog on the Pairing codes tab
+		expect(go('/?activateAgent=1')).toBe('/devices/add?tab=pairing&pair=1');
+		expect(go('/?activateAgent=1&x=2')).toBe('/devices/add?tab=pairing&pair=1&x=2');
+		// The overview itself stays
+		expect(go('/')).toBeNull();
+		expect(go('/?activateAgent=0')).toBeNull();
+	});
+
 	test('a rule that needs a #id is for the app alone: without the #id nothing moves', () => {
 		const forApp = REDIRECTS.filter((r) => r.hash);
 		expect(forApp.length).toBeGreaterThan(0);
@@ -78,7 +94,10 @@ describe('the old addresses', () => {
 
 	test('every rule leads to a different address than its own', () => {
 		for (const r of REDIRECTS) {
-			const from = `${r.from}${r.tab === undefined ? '' : `?tab=${r.tab}`}${r.hash ? `#${r.hash[0]}` : ''}`;
+			const query = new URLSearchParams(r.query);
+			if (r.tab !== undefined) query.set('tab', r.tab);
+			const q = query.toString();
+			const from = `${r.from}${q ? `?${q}` : ''}${r.hash ? `#${r.hash[0]}` : ''}`;
 			const to = go(from);
 			expect(to, from).not.toBeNull();
 			expect(to, from).not.toBe(from);

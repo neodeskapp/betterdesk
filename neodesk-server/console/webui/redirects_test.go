@@ -11,12 +11,14 @@ import (
 func TestOldConsoleAddressesRedirect(t *testing.T) {
 	bases(t, func(t *testing.T, h *Host, base, dir string) {
 		writeFile(t, filepath.Join(dir, "redirects.json"), `[
+			{"from":"/","query":{"activateAgent":"1"},"to":"/devices/add?tab=pairing&pair=1"},
 			{"from":"/settings","hash":["account-password"],"to":"/account#password"},
 			{"from":"/settings","tab":"backup","to":"/server/backups"},
 			{"from":"/settings","tab":"auth","to":"/settings?tab=ldap#ldap-host"},
 			{"from":"/commercialization","to":"/billing"},
 			{"from":"/client-branding","to":"/settings?tab=brand#client-app"},
-			{"from":"/api-tokens","to":"/account#api-tokens"}
+			{"from":"/api-tokens","to":"/account#api-tokens"},
+			{"from":"/keys","to":"/devices/add?tab=manual"}
 		]`)
 		h = New(Options{Dir: dir, Production: true, Session: sessionFromHeader})
 		for from, to := range map[string]string{
@@ -28,6 +30,9 @@ func TestOldConsoleAddressesRedirect(t *testing.T) {
 			"/commercialization":                "/billing",
 			"/client-branding":                  "/settings?tab=brand#client-app",
 			"/api-tokens":                       "/account#api-tokens",
+			"/keys?guide=computer":              "/devices/add?tab=manual&guide=computer",
+			"/?activateAgent=1":                 "/devices/add?tab=pairing&pair=1",
+			"/?x=2&activateAgent=1":             "/devices/add?tab=pairing&pair=1&x=2",
 		} {
 			wantRedirect(t, serve(h, "GET", base+from, admin), from, 302, base+to)
 			// Signed out too: the sign-in page then has the new address
@@ -37,6 +42,9 @@ func TestOldConsoleAddressesRedirect(t *testing.T) {
 		// is the app's alone: the server never sees the #id
 		wantPage(t, serve(h, "GET", base+"/settings?tab=email", admin), "another tab", 200)
 		wantPage(t, serve(h, "GET", base+"/settings", admin), "no tab", 200)
+		// A rule that needs a parameter: without it, or with another value, the page stays
+		wantPage(t, serve(h, "GET", base+"/", admin), "the overview", 200)
+		wantPage(t, serve(h, "GET", base+"/?activateAgent=0", admin), "another value", 200)
 		// Writes are not redirected
 		wantDeclined(t, serve(h, "POST", base+"/settings?tab=backup", admin), "POST")
 	})

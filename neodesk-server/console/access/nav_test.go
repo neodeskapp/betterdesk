@@ -29,15 +29,14 @@ func TestNavFollowsRouteGuards(t *testing.T) {
 		roles map[string]bool
 	}{
 		// requireAdmin routes
-		{"agents", map[string]bool{"super_admin": true, "admin": true, "global_admin": true, "server_admin": true, "operator": false, "viewer": false}},
 		{"policies", map[string]bool{"super_admin": true, "admin": true, "global_admin": true, "server_admin": true, "operator": false, "viewer": false}},
 		{"attestation", map[string]bool{"super_admin": true, "admin": true, "global_admin": true, "server_admin": true, "operator": false, "viewer": false}},
 		// requireRole('operator')
 		{"cdap-studio", map[string]bool{"operator": true, "super_admin": true, "admin": true, "global_admin": false, "server_admin": false, "viewer": false}},
 		// chat.access, as the chat socket needs
 		{"chat", map[string]bool{"operator": true, "viewer": true, "global_admin": true, "server_admin": false}},
-		// a session is enough
-		{"keys", map[string]bool{"super_admin": true, "admin": true, "global_admin": true, "server_admin": true, "operator": true, "viewer": true, "guest_issuer": true}},
+		// a session is enough: Add computers shows each account the tabs it may use
+		{"devices-add", map[string]bool{"super_admin": true, "admin": true, "global_admin": true, "server_admin": true, "operator": true, "viewer": true, "guest_issuer": true}},
 		{"dashboard", map[string]bool{"viewer": true, "guest_issuer": true, "pro": true}},
 		// super admins only
 		{"permissions", map[string]bool{"super_admin": true, "admin": true, "server_admin": false, "global_admin": false, "operator": false}},
@@ -320,6 +319,31 @@ func TestNavPlatformSupportInHelp(t *testing.T) {
 	}
 }
 
+// Plan step 8: every way a computer gets in is a tab of Devices › Add
+// computers, right after Join requests; the pages it replaced and Enter a
+// pairing code left the sidebar.
+func TestNavAddComputers(t *testing.T) {
+	nav := BuildNav(NavInput{Can: func(string) bool { return true }, IsSuperAdmin: true, Role: "super_admin"})
+	var devices []string
+	all := map[string]bool{}
+	for _, section := range nav.Sections {
+		for _, page := range section.Pages {
+			all[page.Page] = true
+			if section.ID == "devices" {
+				devices = append(devices, page.Page)
+			}
+		}
+	}
+	if got := strings.Join(devices, ","); !strings.HasPrefix(got, "dashboard,devices,registrations,devices-add,") {
+		t.Errorf("Devices: %s", got)
+	}
+	for _, gone := range []string{"keys", "tokens", "pairing", "agents", "activate-agent"} {
+		if all[gone] {
+			t.Errorf("%s still has an entry", gone)
+		}
+	}
+}
+
 func TestNavSectionsAndActivePage(t *testing.T) {
 	admin := NavInput{Can: func(string) bool { return true }, IsSuperAdmin: true, Role: "admin"}
 	nav := BuildNav(admin)
@@ -329,7 +353,7 @@ func TestNavSectionsAndActivePage(t *testing.T) {
 		ids = append(ids, section.ID)
 		total += len(section.Pages)
 	}
-	if strings.Join(ids, ",") != "devices,support,people,activity,rules,server,settings" || total != 48 {
+	if strings.Join(ids, ",") != "devices,support,people,activity,rules,server,settings" || total != 44 {
 		t.Errorf("admin sees sections %v with %d pages", ids, total)
 	}
 	if nav.ActivePage != nil || nav.ActiveSection != nil {
@@ -348,22 +372,24 @@ func TestNavSectionsAndActivePage(t *testing.T) {
 
 	for _, c := range []struct {
 		page, tab string
-		activate  bool
 		key       string
 		section   string
 	}{
-		{"devices", "", false, "devices", "devices"},
-		{"settings", "", false, "settings:general", "settings"},
-		{"settings", "branding", false, "settings:branding", "settings"},
-		{"server-management", "", false, "server-management:overview", "server"},
-		{"billing", "", false, "billing", "activity"},
-		{"billing", "reports", false, "billing", "activity"},
-		{"security-checks", "", false, "security-checks", "activity"},
-		{"generator", "", false, "agents", "settings"},
-		{"devices", "", true, "activate-agent", "devices"},
+		{"devices", "", "devices", "devices"},
+		{"settings", "", "settings:general", "settings"},
+		{"settings", "branding", "settings:branding", "settings"},
+		{"server-management", "", "server-management:overview", "server"},
+		{"billing", "", "billing", "activity"},
+		{"billing", "reports", "billing", "activity"},
+		{"security-checks", "", "security-checks", "activity"},
+		{"devices-add", "", "devices-add", "devices"},
+		{"devices-add", "pairing", "devices-add", "devices"},
+		// The old addresses of its tabs mark it too
+		{"generator", "", "devices-add", "devices"},
+		{"keys", "", "devices-add", "devices"},
 	} {
 		in := admin
-		in.CurrentPage, in.CurrentTab, in.ActivateAgentNav = c.page, c.tab, c.activate
+		in.CurrentPage, in.CurrentTab = c.page, c.tab
 		in.T = func(key string) string { return "<" + key + ">" }
 		nav := BuildNav(in)
 		if nav.ActivePage == nil || nav.ActiveSection == nil {
@@ -371,12 +397,12 @@ func TestNavSectionsAndActivePage(t *testing.T) {
 			continue
 		}
 		wantPage := c.key
-		if c.page == "generator" {
-			// The generator has no entry of its own; Agents is active for it.
-			if got := NavPageKey(c.page, c.tab, c.activate); got != "generator" {
-				t.Errorf("NavPageKey(generator) = %q", got)
+		if c.page == "generator" || c.page == "keys" {
+			// No entry of their own; Add computers is active for them
+			if got := NavPageKey(c.page, c.tab, false); got != c.page {
+				t.Errorf("NavPageKey(%s) = %q", c.page, got)
 			}
-		} else if got := NavPageKey(c.page, c.tab, c.activate); got != c.key {
+		} else if got := NavPageKey(c.page, c.tab, false); got != c.key {
 			t.Errorf("NavPageKey(%s, %s) = %q, want %q", c.page, c.tab, got, c.key)
 		}
 		if nav.ActivePage.Page != wantPage || nav.ActiveSection.ID != c.section || !nav.ActivePage.Active || !nav.ActiveSection.Active {
@@ -410,10 +436,10 @@ func TestPageAllowed(t *testing.T) {
 		"dashboard": true, "devices": true,
 		"users": false, // its section is at none
 		// no section since F1: their routes and menu rules decide
-		"settings:general": true, "server-backups": true, "keys": true, "tokens": true, "policies": true, "settings:brand": true,
-		"registrations":      false,
-		"activate-agent":     false, // its address is the dashboard's, its section is registrations
-		"pairing":            true,  // no rule for its address
+		"settings:general": true, "server-backups": true, "policies": true, "settings:brand": true,
+		"registrations": false,
+		// Add computers is below /devices but has no section: its tabs ask their own permissions
+		"devices-add":        true,
 		"server-attestation": true,
 		"billing":            true,
 	} {
@@ -465,7 +491,7 @@ func TestBootstrapNavShape(t *testing.T) {
 	want := `{"id":"devices","icon":"devices","text":"nav.devices","pages":[` +
 		`{"page":"dashboard","href":"/","text":"nav.dashboard","group":"","core":true,"keywords":"home dashboard start","external":false,"countId":null},` +
 		`{"page":"registrations","href":"/registrations","text":"nav.registrations","group":"","core":true,"keywords":"enrollment approve new device registration pending","external":false,"countId":"reg-sidebar-badge"},` +
-		`{"page":"activate-agent","href":"/?activateAgent=1","text":"nav.pair_agent","group":"","core":false,"keywords":"pair agent code activation","external":false,"countId":null}]}`
+		`{"page":"devices-add","href":"/devices/add","text":"nav.devices_add","group":"","core":true,"keywords":"add computers install join invite install links client setup keys device tokens pairing codes support agents","external":false,"countId":null}]}`
 	if body != want {
 		t.Errorf("first section:\n got  %s\n want %s", body, want)
 	}

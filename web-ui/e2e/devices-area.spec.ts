@@ -96,10 +96,12 @@ for (const role of ROLES) {
 			}
 		});
 
-		test('overview: ?activateAgent=1 pairs an agent with a one-time code, only for enrollment.approve', async ({
+		test('?activateAgent=1 pairs an agent with a one-time code on Add computers, only for enrollment.approve', async ({
 			page
 		}) => {
 			await page.goto(`${UI}/?activateAgent=1`);
+			// Enter a pairing code is a tab of Devices › Add computers now
+			await expect(page).toHaveURL(/\/devices\/add\?tab=/);
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 			const { can } = await boot(page);
 			const dialog = page.getByRole('dialog', { name: 'Pairing code' });
@@ -108,7 +110,7 @@ for (const role of ROLES) {
 				await expect(page.getByRole('dialog')).toHaveCount(0);
 				return;
 			}
-			await expect(page).toHaveTitle(/^Enter a pairing code/);
+			await expect(page).toHaveTitle(/^Add computers/);
 			await expect(dialog).toBeVisible();
 			// The client address is filled in; the label is optional
 			await expect(dialog.getByLabel('Server address')).not.toHaveValue('');

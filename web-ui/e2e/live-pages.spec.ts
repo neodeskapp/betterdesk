@@ -13,7 +13,7 @@ const PAGES = [
 	{ name: 'Network monitoring', url: '/network', api: '/api/network/targets' },
 	{ name: 'Users', url: '/users', api: '/api/users' },
 	{ name: 'Organizations', url: '/organizations', api: '/api/panel/org' },
-	{ name: 'Device tokens', url: '/tokens', api: '/api/panel/tokens' },
+	{ name: 'Device tokens', url: '/devices/add?tab=tokens', api: '/api/panel/tokens' },
 	{ name: 'Billing sessions', url: '/billing?tab=sessions', api: '/api/panel/billing/sessions' }
 ];
 

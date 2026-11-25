@@ -75,7 +75,7 @@ for (const role of ROLES) {
 		});
 
 		test('client setup', async ({ page }) => {
-			await page.goto(`${UI}/keys`);
+			await page.goto(`${UI}/devices/add?tab=manual`);
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 			const perms = await permissions(page);
 			// Every signed-in role reads the values (the route needs only a session)
@@ -99,10 +99,11 @@ for (const role of ROLES) {
 		});
 
 		test('device tokens', async ({ page }) => {
-			await page.goto(`${UI}/tokens`);
+			await page.goto(`${UI}/devices/add?tab=tokens`);
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 			const perms = await permissions(page);
-			if (!has(perms, 'enrollment.manage')) return expectNoAccess(page);
+			// Add computers offers only the tabs the account may use
+			if (!has(perms, 'enrollment.manage')) return expect(page).not.toHaveURL(/tab=tokens/);
 
 			await expect(page.getByRole('radiogroup')).toBeVisible();
 			await expectNoAxeViolations(page);
@@ -124,26 +125,26 @@ for (const role of ROLES) {
 		});
 
 		test('pairing codes', async ({ page }) => {
-			await page.goto(`${UI}/pairing`);
+			await page.goto(`${UI}/devices/add?tab=pairing`);
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 			const perms = await permissions(page);
-			if (!has(perms, 'enrollment.approve')) return expectNoAccess(page);
+			if (!has(perms, 'enrollment.approve')) return expect(page).not.toHaveURL(/tab=pairing/);
 			await expect(page.locator('.pairing-generate')).toBeVisible();
 			await expect(page.getByRole('table')).toBeVisible();
 			await expectNoAxeViolations(page);
 		});
 
 		test('support agents', async ({ page }) => {
-			await page.goto(`${UI}/agents`);
+			await page.goto(`${UI}/devices/add?tab=agents`);
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-			if (!ADMIN_ROLES.includes(role)) return expectNoAccess(page);
+			if (!ADMIN_ROLES.includes(role)) return expect(page).not.toHaveURL(/tab=agents/);
 			const perms = await permissions(page);
 			await expect(page.locator('.agents-import')).toHaveCount(has(perms, 'enrollment.manage') ? 1 : 0);
-			// Step 3 is plain text; Pair with code opens the overview's pairing dialog
+			// Step 3 is plain text; Pair with code opens the pairing dialog on the Pairing codes tab
 			const pair = page.locator('main').getByRole('link', { name: 'Pair with code' });
 			await expect(pair).toHaveCount(has(perms, 'enrollment.approve') ? 1 : 0);
 			if (has(perms, 'enrollment.approve'))
-				await expect(pair).toHaveAttribute('href', UI ? `${UI}?activateAgent=1` : '/?activateAgent=1');
+				await expect(pair).toHaveAttribute('href', `${UI}/devices/add?tab=pairing&pair=1`);
 			await expect(page.getByRole('link', { name: 'Open the download page' })).toHaveAttribute(
 				'target',
 				'_blank'

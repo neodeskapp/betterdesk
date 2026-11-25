@@ -384,7 +384,7 @@ var (
 		// The console structure plan (L494): pages that are new, gone, or
 		// shown to other roles than in Node
 		"security-checks": "L494", "billing": "L494", "commercialization:sessions": "L494", "commercialization:packages": "L494",
-		"settings:brand": "L494",
+		"settings:brand": "L494", "devices-add": "L494", "agents": "L494", "pairing": "L494", "activate-agent": "L494",
 	}
 )
 
