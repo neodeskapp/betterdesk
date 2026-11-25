@@ -452,7 +452,8 @@
 		<!-- Saved sign-in (L469): the offer, why there is none, or what the attempt did -->
 		<div class="signin-bar" role="status">
 			<p class="signin-text">
-				{signinText}{#if signinPathText}<span class="signin-path"> {signinPathText}</span>{/if}
+				<!-- The space goes in as text: Svelte drops one at the start of an element -->
+				{signinText}{#if signinPathText}{' '}<span class="signin-path">{signinPathText}</span>{/if}
 			</p>
 			{#if signinOffer.kind === 'button'}
 				<Button size="sm" variant="primary" icon="login" onclick={() => void viewer.signIn(s)}
