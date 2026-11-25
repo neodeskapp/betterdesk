@@ -50,7 +50,8 @@ type totpEnabledAnswer struct {
 
 // totpEnable answers POST /api/auth/totp/enable with the body {code}: the
 // current code of the secret from totpSetup turns two-factor sign-in on.
-// The answer holds the recovery codes, which are shown this once.
+// The answer holds the recovery codes, which are shown this once. The
+// account's other sessions end and its access tokens are revoked.
 func (h *handlers) totpEnable(w http.ResponseWriter, r *http.Request) {
 	code := kit.Body(r).Get("code")
 	if !code.Truthy() || !hasLength(code, totpCodeLength) {
@@ -67,6 +68,10 @@ func (h *handlers) totpEnable(w http.ResponseWriter, r *http.Request) {
 		refuse(w, r, refusal)
 		return
 	case err == nil:
+		// The account's other sessions signed in without the second factor
+		err = h.endOtherSessions(r)
+	}
+	if err == nil {
 		err = h.audit(r, kit.UserID(r), "totp_enabled", "2FA enabled")
 	}
 	if err != nil {
@@ -91,7 +96,8 @@ func disableWith(user *authn.Account) string {
 // account: it turns two-factor sign-in off and deletes the secret and the
 // recovery codes. A wrong password or code is a failed sign-in attempt of
 // the account at the client's address, and the lockout that refuses the
-// account's sign-in there refuses this too. A code works once.
+// account's sign-in there refuses this too. A code works once. The
+// account's other sessions end and its access tokens are revoked.
 func (h *handlers) totpDisable(w http.ResponseWriter, r *http.Request) {
 	body := kit.Body(r)
 	userID := kit.UserID(r)
@@ -155,6 +161,11 @@ func (h *handlers) totpDisable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err = h.authn.DisableTOTP(r.Context(), userID); err == nil {
+		// Turning the second factor off ends the account's other sessions,
+		// as a new password does
+		err = h.endOtherSessions(r)
+	}
+	if err == nil {
 		err = h.audit(r, userID, "totp_disabled", "2FA disabled")
 	}
 	if err != nil {
