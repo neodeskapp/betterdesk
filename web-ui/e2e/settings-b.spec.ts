@@ -76,7 +76,9 @@ for (const role of ROLES) {
 				await page.goto(`${UI}${path}`);
 				await expect(page.getByRole('heading', { level: 1 })).toBeVisible(START);
 				if (allowed) {
-					await expect(page.getByRole('heading', { name: heading, exact: true, level: 2 })).toBeVisible(START);
+					await expect(page.getByRole('heading', { name: heading, exact: true, level: 2 })).toBeVisible(
+						START
+					);
 				} else if (own) {
 					await expect(page.getByRole('heading', { name: "You don't have access to this page" })).toBeVisible(
 						START
