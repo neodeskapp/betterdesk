@@ -217,11 +217,42 @@ func (s *Store) apply(ctx context.Context, m Message, old bool) error {
 			if c.WaitingSinceMs == 0 {
 				c.WaitingSinceMs = m.CreatedMs
 			}
+			if !s.helpRequestOpen(ctx, c.HelpRequestID) {
+				if id := s.openHelpRequest(ctx, c.ID); id != 0 {
+					c.HelpRequestID = id
+				}
+			}
 		case KindUser:
 			c.WaitingSinceMs, c.MailSentMs = 0, 0
 		}
 	}
 	return s.save(ctx, c)
+}
+
+// The help requests (the API server's table help_requests) that are still
+// open: raised by the device, or picked up by an operator.
+const openHelpStates = `status IN ('pending', 'acknowledged')`
+
+// helpRequestOpen reports whether the help request id is still open; 0
+// and a failed check are not.
+func (s *Store) helpRequestOpen(ctx context.Context, id int64) bool {
+	if id == 0 {
+		return false
+	}
+	var n int
+	err := s.db.QueryRow(ctx, `SELECT COUNT(*) FROM help_requests WHERE id = ? AND `+openHelpStates, id).Scan(&n)
+	return err == nil && n > 0
+}
+
+// openHelpRequest is the newest open help request of a device, 0 when it
+// has none. A database without help requests has none.
+func (s *Store) openHelpRequest(ctx context.Context, device string) int64 {
+	var id int64
+	err := s.db.QueryRow(ctx, `SELECT id FROM help_requests WHERE device_id = ? AND `+openHelpStates+` ORDER BY id DESC LIMIT 1`, device).Scan(&id)
+	if err != nil {
+		return 0
+	}
+	return id
 }
 
 // ensure returns the conversation, made when it is missing: open, or
