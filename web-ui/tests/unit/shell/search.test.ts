@@ -70,8 +70,8 @@ describe('searchAll', () => {
 	test('titles that start with the first word come first, at most six pages', () => {
 		const r = searchAll('set', { pages });
 		expect(r).toHaveLength(MAX_PAGES);
-		const s = searchAll('agents', { pages }).map((x) => x.title);
-		expect(s[0]).toBe('Support agents');
+		const s = searchAll('add', { pages }).map((x) => x.title);
+		expect(s[0]).toBe('Add computers');
 	});
 
 	test('devices match ID, names, tags and note, and link to the device', () => {

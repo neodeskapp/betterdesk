@@ -35,12 +35,12 @@
 				"countId": "reg-sidebar-badge"
 			},
 			{
-				"page": "activate-agent",
-				"href": "/?activateAgent=1",
-				"text": "Activate support agent",
+				"page": "devices-add",
+				"href": "/devices/add",
+				"text": "Add computers",
 				"group": "",
-				"core": false,
-				"keywords": "qr agent activation",
+				"core": true,
+				"keywords": "add computers install join invite install links client setup keys device tokens pairing codes support agents",
 				"external": false,
 				"countId": null
 			},
@@ -81,16 +81,6 @@
 				"group": "",
 				"core": false,
 				"keywords": "fleet bulk tasks workflows compliance",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "cross-platform",
-				"href": "/cross-platform",
-				"text": "Platform support",
-				"group": "",
-				"core": false,
-				"keywords": "cross-platform matrix features os",
 				"external": false,
 				"countId": null
 			},
@@ -201,7 +191,7 @@
 				"text": "Audit log",
 				"group": "",
 				"core": true,
-				"keywords": "audit log who banned events server events sessions",
+				"keywords": "audit log who banned events server events",
 				"external": false,
 				"countId": null
 			},
@@ -392,7 +382,7 @@
 				"text": "Sign-in",
 				"group": "Console",
 				"core": true,
-				"keywords": "sign-in authentication 2fa two-factor totp password sessions",
+				"keywords": "sign-in authentication 2fa two-factor require client sessions",
 				"external": false,
 				"countId": null
 			},
@@ -483,46 +473,6 @@
 				"group": "Console",
 				"core": false,
 				"keywords": "languages translations i18n",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "keys",
-				"href": "/keys",
-				"text": "Client setup",
-				"group": "Clients and joining",
-				"core": true,
-				"keywords": "keys public key qr client setup rustdesk config",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "tokens",
-				"href": "/tokens",
-				"text": "Device tokens",
-				"group": "Clients and joining",
-				"core": false,
-				"keywords": "tokens enrollment mode",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "pairing",
-				"href": "/pairing",
-				"text": "Pairing codes",
-				"group": "Clients and joining",
-				"core": false,
-				"keywords": "pairing code",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "agents",
-				"href": "/agents",
-				"text": "Support agents",
-				"group": "Clients and joining",
-				"core": false,
-				"keywords": "agents installers generator",
 				"external": false,
 				"countId": null
 			},

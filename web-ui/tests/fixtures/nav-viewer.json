@@ -25,6 +25,16 @@
 				"countId": null
 			},
 			{
+				"page": "devices-add",
+				"href": "/devices/add",
+				"text": "Add computers",
+				"group": "",
+				"core": true,
+				"keywords": "add computers install join invite install links client setup keys device tokens pairing codes support agents",
+				"external": false,
+				"countId": null
+			},
+			{
 				"page": "inventory",
 				"href": "/inventory",
 				"text": "Inventory",
@@ -41,16 +51,6 @@
 				"group": "",
 				"core": false,
 				"keywords": "ping monitor latency targets",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "cross-platform",
-				"href": "/cross-platform",
-				"text": "Platform support",
-				"group": "",
-				"core": false,
-				"keywords": "cross-platform matrix features os",
 				"external": false,
 				"countId": null
 			},
@@ -114,7 +114,7 @@
 				"text": "Audit log",
 				"group": "",
 				"core": true,
-				"keywords": "audit log who banned events server events sessions",
+				"keywords": "audit log who banned events server events",
 				"external": false,
 				"countId": null
 			},
@@ -162,16 +162,6 @@
 				"group": "Console",
 				"core": true,
 				"keywords": "settings relay address public endpoints connection strategy",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "settings:auth",
-				"href": "/settings?tab=auth",
-				"text": "Sign-in",
-				"group": "Console",
-				"core": true,
-				"keywords": "sign-in authentication 2fa two-factor totp password sessions",
 				"external": false,
 				"countId": null
 			},
