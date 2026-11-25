@@ -118,6 +118,11 @@ package. Graphics licensed under CC-BY 4.0
 other contributors. The files are renamed to the language code they stand
 for; the drawings are unchanged.
 
+The chat's emoji (reactions and the emoji picker) in
+`web-ui/static/img/emoji/` are from the same `@twemoji/svg` 15.0.0 package,
+under the same licence and copyright. The files keep the package's names
+(the emoji's code points) and are unchanged.
+
 ## Compatibility components
 
 Code that talks to the stock RustDesk client follows a protocol NeoDesk
