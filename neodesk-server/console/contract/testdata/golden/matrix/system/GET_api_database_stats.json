@@ -418,6 +418,10 @@
       },
       {
        "count": 0,
+       "name": "password_links"
+      },
+      {
+       "count": 0,
        "name": "peer"
       },
       {
