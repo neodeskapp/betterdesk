@@ -538,6 +538,7 @@
       "action_onboard_code_created": "Einrichtungscode erstellt",
       "action_onboard_code_redeemed": "Einrichtungscode eingelöst",
       "action_onboard_code_revoked": "Einrichtungscode widerrufen",
+      "action_onboard_join_unproved": "Beitritt abgelehnt: ohne Nachweis des Computerschlüssels",
       "action_onboard_mail_sent": "Einrichtungs-E-Mail gesendet",
       "action_operator_login": "Operator angemeldet",
       "action_org_invitation_created": "Einladung in die Organisation erstellt",
