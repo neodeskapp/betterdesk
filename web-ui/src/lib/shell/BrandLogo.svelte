@@ -9,14 +9,38 @@
   other name draws the mark followed by that name as text.
   mark: draw the mark alone (where it is tight; below 24 px use the mark).
   The full logo is labelled with the name; the mark alone is decoration.
+
+  A right-click on NeoDesk's own logo opens the brand guide in a new tab
+  instead of the browser's menu, and so does the context-menu key or
+  Shift+F10 on the link or button around it. A left click does what the
+  link does. A logo with another name is the install's own: the browser's
+  menu stays.
 -->
 <script lang="ts">
+	import { BRAND_GUIDE_URL } from '#lib/util/links.ts';
+
 	let { name = 'NeoDesk', mark = false }: { name?: string; mark?: boolean } = $props();
 
 	const uid = $props.id();
 	const trimmed = $derived(name.trim());
 	const full = $derived(!mark && (!trimmed || trimmed.toLowerCase() === 'neodesk'));
 	const label = $derived(trimmed || 'NeoDesk');
+	const ours = $derived(!trimmed || trimmed.toLowerCase() === 'neodesk');
+
+	function guide(svg: SVGSVGElement) {
+		if (!ours) return;
+		const host: Element = svg.closest('a, button') ?? svg;
+		const onmenu = (e: Event) => {
+			const target = e.target instanceof Node ? e.target : null;
+			// On the logo itself; on the link around it only from the keyboard (focus on it, no right button)
+			const fromKeys = target === host && document.activeElement === host && (e as MouseEvent).button !== 2;
+			if (!(target && svg.contains(target)) && !fromKeys) return;
+			e.preventDefault();
+			window.open(BRAND_GUIDE_URL, '_blank', 'noopener');
+		};
+		host.addEventListener('contextmenu', onmenu);
+		return () => host.removeEventListener('contextmenu', onmenu);
+	}
 </script>
 
 {#snippet shapes(clip: string)}
@@ -27,6 +51,7 @@
 
 {#if full}
 	<svg
+		{@attach guide}
 		class="brand-logo brand-logo-full"
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="6.04 -100.21 679.18 132.92"
@@ -47,6 +72,7 @@
 	</svg>
 {:else}
 	<svg
+		{@attach guide}
 		class="brand-logo brand-logo-mark"
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="10 10 44 44"
