@@ -131,6 +131,30 @@ describe('the own list', () => {
 	});
 });
 
+describe('Your account › Signed-in devices', () => {
+	test('the page lists the own sessions, signs one out and all the others', async () => {
+		const user = userEvent.setup();
+		lists = [
+			{
+				sessions: [device('aaa', { current: true }), device('bbb'), device('ccc')],
+				limit: { max: 10, source: 'default' }
+			}
+		];
+		const AccountSessions = (await import('../../../src/lib/account/Sessions.svelte')).default;
+		render(AccountSessions);
+		const part = await screen.findByRole('region', { name: 'account.sessions' });
+		const rows = await within(part).findAllByRole('listitem');
+		expect(rows).toHaveLength(3);
+		expect(calls[0]?.path).toBe('/api/users/me/sessions');
+		await user.click(within(rows[1]!).getByRole('button', { name: /sessions.sign_out/ }));
+		await user.click(within(part).getByRole('button', { name: 'sessions.sign_out_everywhere_else' }));
+		await waitFor(() =>
+			expect(writes()).toEqual(['DELETE /api/users/me/sessions/bbb', 'POST /api/users/me/sessions/end-others'])
+		);
+		await waitFor(() => expect(within(part).getByRole('status')).toHaveTextContent(/sessions.signed_out_count/));
+	});
+});
+
 describe("another account's list on the user's page", () => {
 	test('every entry has Sign out, and Sign out everywhere ends them all', async () => {
 		const user = userEvent.setup();
