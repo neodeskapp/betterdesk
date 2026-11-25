@@ -17,6 +17,7 @@
 	import { onMount, tick } from 'svelte';
 	import { setCsrfToken } from '#lib/api/client.ts';
 	import { saveLanguage } from '#lib/api/console.ts';
+	import { passwordResetAvailable } from '#lib/api/passwordlinks.ts';
 	import {
 		enableRequiredTotp,
 		getLoginPage,
@@ -30,6 +31,7 @@
 		type RequiredTotpSetup
 	} from '#lib/api/signin.ts';
 	import { i18n, switchLanguage, t, tf } from '#lib/i18n/i18n.svelte.ts';
+	import { link } from '#lib/nav.ts';
 	import LanguageMenu from '#lib/shell/LanguageMenu.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
@@ -93,6 +95,8 @@
 	let oidc = $state<OidcStatus | null>(null);
 	/** Off to the identity provider ("Prefer SSO"): the form is hidden meanwhile */
 	let leaving = $state(false);
+	/** The console can send mail, so Forgot password is offered */
+	let resetAvailable = $state(false);
 	let languageError = $state('');
 
 	let usernameInput = $state<HTMLInputElement | null>(null);
@@ -119,6 +123,10 @@
 		usernameInput?.focus();
 		if (compact) return;
 		const ctrl = new AbortController();
+		passwordResetAvailable(ctrl.signal).then(
+			(available) => (resetAvailable = available),
+			() => undefined
+		);
 		getOidcStatus(ctrl.signal)
 			.then((status) => {
 				oidc = status;
@@ -398,6 +406,9 @@
 					{/if}
 					<Button type="submit" variant="primary" block {busy}>{t('auth.login')}</Button>
 				</form>
+				{#if resetAvailable}
+					<p class="login-forgot"><a href={link('/set-password')}>{t('auth.forgot_password')}</a></p>
+				{/if}
 
 				{#if !compact && oidc?.enabled}
 					<div class="login-sso">
@@ -586,6 +597,11 @@
 	}
 	.login-leaving {
 		color: var(--text-muted);
+	}
+	.login-forgot {
+		margin: var(--space-3) 0 0;
+		text-align: center;
+		font-size: var(--text-sm);
 	}
 	.login-form {
 		display: flex;

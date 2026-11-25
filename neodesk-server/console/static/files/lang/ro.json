@@ -184,7 +184,14 @@
     "signed_out_by_admin": "Un administrator v-a deconectat. Autentificați-vă din nou.",
     "signed_out_replaced": "Ați fost deconectat pentru că contul dvs. s-a autentificat în alt browser. Acest server permite o sesiune per cont.",
     "signed_out_limit": "Ați fost deconectat pentru că contul dvs. s-a autentificat în mai multe browsere decât permite acest server. Autentificați-vă din nou.",
-    "signed_out_account_changed": "Ați fost deconectat pentru că s-a schimbat parola, autentificarea în doi pași sau accesul dvs. Autentificați-vă din nou."
+    "signed_out_account_changed": "Ați fost deconectat pentru că s-a schimbat parola, autentificarea în doi pași sau accesul dvs. Autentificați-vă din nou.",
+    "forgot_password": "Ați uitat parola?",
+    "forgot_title": "Resetați-vă parola",
+    "forgot_intro": "Introduceți numele de utilizator sau adresa de e-mail. Dacă contul are o adresă de e-mail, acolo ajunge un link pentru a seta o parolă nouă.",
+    "forgot_field": "Nume de utilizator sau e-mail",
+    "forgot_send": "Trimiteți linkul",
+    "forgot_sent": "Dacă contul există și are o adresă de e-mail, un link este pe drum. Funcționează 1 oră.",
+    "forgot_back": "Înapoi la autentificare"
   },
   "dashboard": {
     "title": "Tabloul de bord",
@@ -1965,7 +1972,9 @@
     "action_console_sessions_policy_changed": "Sesiuni per cont modificate",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "Invitație trimisă",
-    "action_user_invite_accepted": "Invitație acceptată"
+    "action_user_invite_accepted": "Invitație acceptată",
+    "action_password_reset_link_sent": "Link de resetare a parolei trimis",
+    "action_password_reset_by_link": "Parolă setată dintr-un link de resetare"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2572,7 +2581,15 @@
     "invite_needs_email": "Trimiterea linkurilor prin e-mail necesită setările de e-mail. Configurați-le în Setări, Email.",
     "invite_signed_in": "Acest cont s-a autentificat deja, deci nu are nevoie de invitație.",
     "link_local_only": "Acest cont se autentifică printr-un director sau prin autentificare unică, deci parola lui nu se setează aici.",
-    "link_mail_failed": "Serverul de e-mail nu a acceptat mesajul. Verificați setările de e-mail."
+    "link_mail_failed": "Serverul de e-mail nu a acceptat mesajul. Verificați setările de e-mail.",
+    "reset_mode_link": "Trimiteți un link de resetare prin e-mail",
+    "reset_mode_link_desc": "{username} primește un link la {email} și alege o parolă nouă. Linkul funcționează 24 de ore.",
+    "reset_mode_set": "Setați o parolă nouă acum",
+    "reset_mode_set_desc": "Alegeți dvs. parola și o transmiteți personal.",
+    "reset_link_no_email": "{username} nu are adresă de e-mail. Adăugați una în Editați pentru a trimite un link de resetare.",
+    "send_reset_link": "Trimiteți linkul",
+    "reset_link_sent_named": "Un link de resetare a fost trimis către {username}.",
+    "reset_email_required": "Acest cont nu are adresă de e-mail."
   },
   "folders": {
     "title": "Foldere",
@@ -8978,6 +8995,16 @@
     "sign_in": "Conectare",
     "invalid_title": "Acest link nu funcționează",
     "no_link": "Deschideți linkul din e-mail pentru a alege o parolă.",
-    "check_failed": "Linkul nu a putut fi verificat. Încercați din nou peste câteva momente."
+    "check_failed": "Linkul nu a putut fi verificat. Încercați din nou peste câteva momente.",
+    "reset_subject": "Setați o parolă nouă pentru {server}",
+    "reset_heading": "Setați o parolă nouă",
+    "reset_lead": "{sender} v-a trimis un link pentru a seta o parolă nouă pentru contul dvs. de pe {server}.",
+    "reset_lead_self": "Cineva a cerut o parolă nouă pentru contul dvs. de pe {server}. Dacă ați fost dvs., setați-o aici.",
+    "reset_button": "Setați o parolă nouă",
+    "reset_expires": "Linkul funcționează o singură dată, până la {expires}.",
+    "reset_ignore": "Dacă nu vă așteptați la acest mesaj, ignorați-l. Parola dvs. rămâne neschimbată.",
+    "page_title_reset": "Setați o parolă nouă",
+    "page_intro_reset": "Alegeți o parolă nouă pentru contul dvs. {username}.",
+    "done_text_reset": "Celelalte sesiuni ale dvs. au fost deconectate. Autentificați-vă ca {username} cu parola nouă."
   }
 }

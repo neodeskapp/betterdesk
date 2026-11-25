@@ -36,6 +36,9 @@ const (
 const (
 	InviteLifetime = 7 * 24 * time.Hour
 	ResetLifetime  = 24 * time.Hour
+	// SelfResetLifetime is a reset the person asked for on the sign-in
+	// page, where nobody checked who asked.
+	SelfResetLifetime = time.Hour
 )
 
 // Lifetime is how long a link for the purpose works.
@@ -120,6 +123,11 @@ func hash(token string) string {
 // exists only in the answer and the mail. The account's earlier links stop
 // working.
 func (s *Store) Issue(ctx context.Context, userID int64, purpose, by string) (token string, expires time.Time, err error) {
+	return s.IssueFor(ctx, userID, purpose, by, Lifetime(purpose))
+}
+
+// IssueFor is Issue with a lifetime of its own.
+func (s *Store) IssueFor(ctx context.Context, userID int64, purpose, by string, lifetime time.Duration) (token string, expires time.Time, err error) {
 	if purpose != PurposeInvite && purpose != PurposeReset {
 		return "", time.Time{}, fmt.Errorf("password links: unknown purpose %q", purpose)
 	}
@@ -129,7 +137,7 @@ func (s *Store) Issue(ctx context.Context, userID int64, purpose, by string) (to
 	}
 	token = base64.RawURLEncoding.EncodeToString(raw)
 	now := s.now()
-	expires = now.Add(Lifetime(purpose))
+	expires = now.Add(lifetime)
 	err = s.db.InTx(ctx, func(tx *store.Tx) error {
 		if _, err := tx.Exec(ctx, `DELETE FROM password_links WHERE user_id = ? OR expires_ms < ?`, userID, now.Add(-keep).UnixMilli()); err != nil {
 			return err
@@ -210,6 +218,16 @@ func (s *Store) Redeem(ctx context.Context, token, passwordHash string) (Link, e
 		return Link{}, fmt.Errorf("password links: redeem: %w", err)
 	}
 	return link, nil
+}
+
+// IssuedSince reports whether the account got a link that is not used yet
+// after t, so a request for another one can be left alone.
+func (s *Store) IssuedSince(ctx context.Context, userID int64, t time.Time) (bool, error) {
+	var n int
+	if err := s.db.QueryRow(ctx, `SELECT COUNT(*) FROM password_links WHERE user_id = ? AND used_ms IS NULL AND created_ms > ?`, userID, t.UnixMilli()).Scan(&n); err != nil {
+		return false, fmt.Errorf("password links: recent: %w", err)
+	}
+	return n > 0, nil
 }
 
 // Revoke ends the account's links, for a password set another way or an

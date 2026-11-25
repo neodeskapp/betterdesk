@@ -117,6 +117,18 @@ export function inviteUser(
 	return api(wrapped(InvitedUser), '/api/users/invite', { method: 'POST', body });
 }
 
+/**
+ * Mails the account a link to set a new password; it works once, for 24
+ * hours. Needs user.edit, an address on the account (400 without) and the
+ * console's email settings (409 without).
+ */
+export function sendResetLink(id: number | string) {
+	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/password-reset-link`, {
+		method: 'POST',
+		body: {}
+	});
+}
+
 /** A new invite link for an account that hasn't signed in yet; the old link stops working. Needs user.edit */
 export function resendInvite(id: number | string) {
 	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/invite`, { method: 'POST', body: {} });

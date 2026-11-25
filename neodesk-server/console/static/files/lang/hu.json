@@ -184,7 +184,14 @@
     "signed_out_by_admin": "Egy rendszergazda kijelentkeztette. Jelentkezzen be újra.",
     "signed_out_replaced": "Kijelentkeztették, mert a fiókja egy másik böngészőben jelentkezett be. Ez a szerver fiókonként egy munkamenetet enged.",
     "signed_out_limit": "Kijelentkeztették, mert a fiókja több böngészőben jelentkezett be, mint amennyit ez a szerver enged. Jelentkezzen be újra.",
-    "signed_out_account_changed": "Kijelentkeztették, mert megváltozott a jelszava, a kétlépcsős bejelentkezése vagy a hozzáférése. Jelentkezzen be újra."
+    "signed_out_account_changed": "Kijelentkeztették, mert megváltozott a jelszava, a kétlépcsős bejelentkezése vagy a hozzáférése. Jelentkezzen be újra.",
+    "forgot_password": "Elfelejtette a jelszavát?",
+    "forgot_title": "Jelszó visszaállítása",
+    "forgot_intro": "Adja meg a felhasználónevét vagy e-mail-címét. Ha a fióknak van e-mail-címe, oda megy egy link az új jelszó beállításához.",
+    "forgot_field": "Felhasználónév vagy e-mail",
+    "forgot_send": "Link küldése",
+    "forgot_sent": "Ha a fiók létezik, és van e-mail-címe, a link úton van. 1 óráig működik.",
+    "forgot_back": "Vissza a bejelentkezéshez"
   },
   "dashboard": {
     "title": "Irányítópult",
@@ -1965,7 +1972,9 @@
     "action_console_sessions_policy_changed": "Fiókonkénti munkamenetek módosítva",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "Meghívó elküldve",
-    "action_user_invite_accepted": "Meghívó elfogadva"
+    "action_user_invite_accepted": "Meghívó elfogadva",
+    "action_password_reset_link_sent": "Jelszó-visszaállító link elküldve",
+    "action_password_reset_by_link": "Jelszó beállítva visszaállító linkkel"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2572,7 +2581,15 @@
     "invite_needs_email": "A linkek e-mailes küldéséhez e-mail-beállítások kellenek. Állítsa be őket itt: Beállítások, Email.",
     "invite_signed_in": "Ez a fiók már bejelentkezett, így nincs szüksége meghívóra.",
     "link_local_only": "Ez a fiók címtáron vagy egyszeri bejelentkezésen keresztül jelentkezik be, ezért a jelszava nem itt állítható be.",
-    "link_mail_failed": "A levelezőszerver nem fogadta el az e-mailt. Ellenőrizze az e-mail-beállításokat."
+    "link_mail_failed": "A levelezőszerver nem fogadta el az e-mailt. Ellenőrizze az e-mail-beállításokat.",
+    "reset_mode_link": "Visszaállító link küldése e-mailben",
+    "reset_mode_link_desc": "{username} kap egy linket a(z) {email} címre, és új jelszót választ. A link 24 óráig működik.",
+    "reset_mode_set": "Új jelszó megadása most",
+    "reset_mode_set_desc": "Ön választja meg a jelszót, és maga adja át.",
+    "reset_link_no_email": "{username} felhasználónak nincs e-mail-címe. Adjon meg egyet a Szerkesztés alatt, hogy visszaállító linket küldhessen.",
+    "send_reset_link": "Link küldése",
+    "reset_link_sent_named": "Visszaállító link elküldve neki: {username}.",
+    "reset_email_required": "Ennek a fióknak nincs e-mail-címe."
   },
   "folders": {
     "title": "Mappák",
@@ -8978,6 +8995,16 @@
     "sign_in": "Bejelentkezés",
     "invalid_title": "Ez a link nem működik",
     "no_link": "Nyissa meg az e-mailben kapott linket a jelszó választásához.",
-    "check_failed": "A linket nem sikerült ellenőrizni. Próbálja újra egy kis idő múlva."
+    "check_failed": "A linket nem sikerült ellenőrizni. Próbálja újra egy kis idő múlva.",
+    "reset_subject": "Új jelszó beállítása ehhez: {server}",
+    "reset_heading": "Új jelszó beállítása",
+    "reset_lead": "{sender} linket küldött Önnek, amellyel új jelszót állíthat be a fiókjához itt: {server}.",
+    "reset_lead_self": "Valaki új jelszót kért az Ön fiókjához itt: {server}. Ha Ön volt, itt állíthatja be.",
+    "reset_button": "Új jelszó beállítása",
+    "reset_expires": "A link egyszer működik, eddig: {expires}.",
+    "reset_ignore": "Ha nem várta ezt az e-mailt, hagyja figyelmen kívül. A jelszava változatlan marad.",
+    "page_title_reset": "Új jelszó beállítása",
+    "page_intro_reset": "Válasszon új jelszót a(z) {username} fiókjához.",
+    "done_text_reset": "A többi munkamenetéből kijelentkeztettük. Jelentkezzen be {username} néven az új jelszavával."
   }
 }

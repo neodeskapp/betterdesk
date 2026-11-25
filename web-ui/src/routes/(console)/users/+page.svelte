@@ -699,7 +699,7 @@
 	{/if}
 
 	{#if resetFor}
-		<ResetPasswordDialog user={resetFor} onclose={() => (resetFor = null)} />
+		<ResetPasswordDialog user={resetFor} {mailReady} onclose={() => (resetFor = null)} />
 	{/if}
 
 	{#if sessionsFor}

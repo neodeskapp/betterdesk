@@ -178,7 +178,14 @@
     "signed_out_by_admin": "Un amministratore ti ha disconnesso. Accedi di nuovo.",
     "signed_out_replaced": "Sei stato disconnesso perché il tuo account ha effettuato l'accesso in un altro browser. Questo server consente una sessione per account.",
     "signed_out_limit": "Sei stato disconnesso perché il tuo account ha effettuato l'accesso in più browser di quanti questo server ne consenta. Accedi di nuovo.",
-    "signed_out_account_changed": "Sei stato disconnesso perché sono cambiati la password, l'accesso in due passaggi o i tuoi permessi. Accedi di nuovo."
+    "signed_out_account_changed": "Sei stato disconnesso perché sono cambiati la password, l'accesso in due passaggi o i tuoi permessi. Accedi di nuovo.",
+    "forgot_password": "Password dimenticata?",
+    "forgot_title": "Reimposta la password",
+    "forgot_intro": "Inserisci il tuo nome utente o indirizzo email. Se l'account ha un indirizzo email, lì arriva un link per impostare una nuova password.",
+    "forgot_field": "Nome utente o email",
+    "forgot_send": "Invia link",
+    "forgot_sent": "Se l'account esiste e ha un indirizzo email, il link è in arrivo. Vale 1 ora.",
+    "forgot_back": "Torna all'accesso"
   },
   "dashboard": {
     "title": "Panoramica",
@@ -1959,7 +1966,9 @@
     "action_console_sessions_policy_changed": "Sessioni per account modificate",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "Invito inviato",
-    "action_user_invite_accepted": "Invito accettato"
+    "action_user_invite_accepted": "Invito accettato",
+    "action_password_reset_link_sent": "Link di reimpostazione password inviato",
+    "action_password_reset_by_link": "Password impostata da un link di reimpostazione"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2566,7 +2575,15 @@
     "invite_needs_email": "Per inviare link via email servono le impostazioni email. Configurale in Impostazioni, Email.",
     "invite_signed_in": "Questo account ha già effettuato l'accesso, quindi non serve un invito.",
     "link_local_only": "Questo account accede tramite una directory o il single sign-on, quindi la sua password non si imposta qui.",
-    "link_mail_failed": "Il server di posta non ha accettato l'email. Controlla le impostazioni email."
+    "link_mail_failed": "Il server di posta non ha accettato l'email. Controlla le impostazioni email.",
+    "reset_mode_link": "Invia un link di reimpostazione via email",
+    "reset_mode_link_desc": "{username} riceve un link a {email} e sceglie una nuova password. Il link vale 24 ore.",
+    "reset_mode_set": "Imposta ora una nuova password",
+    "reset_mode_set_desc": "Scegli tu la password e la comunichi di persona.",
+    "reset_link_no_email": "{username} non ha un indirizzo email. Aggiungine uno in Modifica per inviare un link di reimpostazione.",
+    "send_reset_link": "Invia link",
+    "reset_link_sent_named": "Link di reimpostazione inviato a {username}.",
+    "reset_email_required": "Questo account non ha un indirizzo email."
   },
   "folders": {
     "title": "Cartelle",
@@ -8972,6 +8989,16 @@
     "sign_in": "Accedi",
     "invalid_title": "Questo link non funziona",
     "no_link": "Apri il link dalla tua email per scegliere una password.",
-    "check_failed": "Impossibile verificare il link. Riprova tra poco."
+    "check_failed": "Impossibile verificare il link. Riprova tra poco.",
+    "reset_subject": "Imposta una nuova password per {server}",
+    "reset_heading": "Imposta una nuova password",
+    "reset_lead": "{sender} ti ha inviato un link per impostare una nuova password per il tuo account su {server}.",
+    "reset_lead_self": "Qualcuno ha chiesto una nuova password per il tuo account su {server}. Se sei stato tu, impostala qui.",
+    "reset_button": "Imposta una nuova password",
+    "reset_expires": "Il link vale una sola volta, fino al {expires}.",
+    "reset_ignore": "Se non te lo aspettavi, ignora questa email. La tua password resta com'è.",
+    "page_title_reset": "Imposta una nuova password",
+    "page_intro_reset": "Scegli una nuova password per il tuo account {username}.",
+    "done_text_reset": "Le tue altre sessioni sono state chiuse. Accedi come {username} con la tua nuova password."
   }
 }

@@ -182,7 +182,14 @@
     "signed_out_by_admin": "管理員已將您登出。請重新登入。",
     "signed_out_replaced": "由於您的帳戶在另一個瀏覽器中登入，您已被登出。此伺服器每個帳戶只允許一個工作階段。",
     "signed_out_limit": "由於您的帳戶登入的瀏覽器超過此伺服器允許的數量，您已被登出。請重新登入。",
-    "signed_out_account_changed": "由於您的密碼、兩步驟登入或存取權限已變更，您已被登出。請重新登入。"
+    "signed_out_account_changed": "由於您的密碼、兩步驟登入或存取權限已變更，您已被登出。請重新登入。",
+    "forgot_password": "忘記密碼？",
+    "forgot_title": "重設密碼",
+    "forgot_intro": "請輸入您的用戶名或電子郵件地址。如果該帳戶有電子郵件地址，用於設定新密碼的連結會寄到該地址。",
+    "forgot_field": "用戶名或電子郵件",
+    "forgot_send": "寄送連結",
+    "forgot_sent": "如果該帳戶存在且有電子郵件地址，連結正在寄送中。連結 1 小時內有效。",
+    "forgot_back": "返回登入"
   },
   "dashboard": {
     "title": "儀表板",
@@ -1963,7 +1970,9 @@
     "action_console_sessions_policy_changed": "每個帳戶的工作階段已變更",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "邀請已寄送",
-    "action_user_invite_accepted": "邀請已接受"
+    "action_user_invite_accepted": "邀請已接受",
+    "action_password_reset_link_sent": "密碼重設連結已寄送",
+    "action_password_reset_by_link": "已透過重設連結設定密碼"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2588,7 +2597,15 @@
     "invite_needs_email": "透過電子郵件寄送連結需要先設定電子郵件。請在「設置 > Email」中設定。",
     "invite_signed_in": "此帳戶已經登入過，因此不需要邀請。",
     "link_local_only": "此帳戶透過目錄服務或單一登入進行登入，因此不在這裡設定密碼。",
-    "link_mail_failed": "郵件伺服器未接受該郵件。請檢查電子郵件設定。"
+    "link_mail_failed": "郵件伺服器未接受該郵件。請檢查電子郵件設定。",
+    "reset_mode_link": "透過電子郵件寄送重設連結",
+    "reset_mode_link_desc": "{username} 會在 {email} 收到一個連結，並設定新密碼。連結 24 小時內有效。",
+    "reset_mode_set": "現在設定新密碼",
+    "reset_mode_set_desc": "由您設定密碼，並親自轉告對方。",
+    "reset_link_no_email": "{username} 沒有電子郵件地址。請在「編輯」中新增一個，以便寄送重設連結。",
+    "send_reset_link": "寄送連結",
+    "reset_link_sent_named": "已向 {username} 寄送重設連結。",
+    "reset_email_required": "此帳戶沒有電子郵件地址。"
   },
   "folders": {
     "title": "資料夾",
@@ -8976,6 +8993,16 @@
     "sign_in": "登入",
     "invalid_title": "此連結無效",
     "no_link": "請開啟電子郵件中的連結來設定密碼。",
-    "check_failed": "無法檢查該連結。請稍後再試。"
+    "check_failed": "無法檢查該連結。請稍後再試。",
+    "reset_subject": "為 {server} 設定新密碼",
+    "reset_heading": "設定新密碼",
+    "reset_lead": "{sender} 寄給您一個連結，用於為您在 {server} 上的帳戶設定新密碼。",
+    "reset_lead_self": "有人為您在 {server} 上的帳戶申請了新密碼。如果是您本人，請在這裡設定。",
+    "reset_button": "設定新密碼",
+    "reset_expires": "此連結只能使用一次，在 {expires} 之前有效。",
+    "reset_ignore": "如果您沒有預期收到這封郵件，請忽略它。您的密碼保持不變。",
+    "page_title_reset": "設定新密碼",
+    "page_intro_reset": "請為您的帳戶 {username} 設定新密碼。",
+    "done_text_reset": "您的其他工作階段已登出。請使用新密碼以 {username} 身分登入。"
   }
 }

@@ -337,3 +337,20 @@ describe('notices, branding and the compact sign-in', () => {
 		expect(badge).toHaveTextContent('Acme');
 	});
 });
+
+describe('forgot password', () => {
+	test('the sign-in offers Forgot password only when the console can send mail', async () => {
+		reply('/api/auth/password-reset/available', { body: { success: true, data: { available: true } } });
+		render(LoginView, { page: page(), query: readLoginQuery(''), go: vi.fn() });
+		const linkEl = await screen.findByRole('link', { name: 'auth.forgot_password' });
+		expect(linkEl.getAttribute('href')).toMatch(/\/set-password$/);
+		cleanup();
+
+		reply('/api/auth/password-reset/available', { body: { success: true, data: { available: false } } });
+		render(LoginView, { page: page(), query: readLoginQuery(''), go: vi.fn() });
+		await waitFor(() =>
+			expect(sent.filter((s) => s.url === '/api/auth/password-reset/available')).toHaveLength(2)
+		);
+		expect(screen.queryByRole('link', { name: 'auth.forgot_password' })).toBeNull();
+	});
+});

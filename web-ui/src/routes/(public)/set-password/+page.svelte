@@ -1,5 +1,6 @@
 <!--
-  /set-password: where the link of an invite mail leads. The link carries
+  /set-password: where the link of an invite or a password reset mail
+  leads, and where "Forgot password?" on the sign-in page goes. The link carries
   its token after #, which the browser never sends to the server; the page
   reads it, keeps it for this tab (so a reload keeps it) and takes it out
   of the address bar.
@@ -8,10 +9,13 @@
   (unknown, used and expired look the same). A usable one gets a form:
   password, password again. Saving sets the password, spends the link and
   signs the account out everywhere; the page then sends the person to the
-  sign-in. Without a token the page says to open the link from the mail.
+  sign-in. Without a token the page asks for a username or email address
+  and requests a reset link for it, when the console can send mail; else
+  it says to open the link from the mail.
 
   Data: GET /api/auth/login-page (CSRF token, the console's name), POST
-  /api/auth/password-link/lookup, POST /api/auth/password-link/redeem.
+  /api/auth/password-link/lookup, POST /api/auth/password-link/redeem, GET
+  /api/auth/password-reset/available, POST /api/auth/password-reset/request.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -19,7 +23,9 @@
 	import {
 		linkToken,
 		lookupPasswordLink,
+		passwordResetAvailable,
 		redeemPasswordLink,
+		requestPasswordReset,
 		type PasswordLink
 	} from '#lib/api/passwordlinks.ts';
 	import { getLoginPage } from '#lib/api/signin.ts';
@@ -40,7 +46,7 @@
 	/** The token survives a reload of this tab; it is gone with the tab */
 	const KEY = 'nd.password-link';
 
-	type Phase = 'loading' | 'none' | 'form' | 'invalid' | 'failed' | 'done';
+	type Phase = 'loading' | 'none' | 'request' | 'requested' | 'form' | 'invalid' | 'failed' | 'done';
 	let phase = $state<Phase>('loading');
 	let token = '';
 	let found = $state.raw<PasswordLink | null>(null);
@@ -94,8 +100,22 @@
 				return;
 			}
 			if (value) await check(value);
-			else phase = 'none';
+			else phase = (await passwordResetAvailable().catch(() => false)) ? 'request' : 'none';
 		})();
+	});
+
+	const ask = createForm({
+		initial: { login: '' },
+		validate: (v) => ({ login: v.login.trim() ? undefined : t('auth.fill_all_fields') }),
+		submit: async (v) => {
+			try {
+				await requestPasswordReset(v.login.trim());
+			} catch (err) {
+				if (err instanceof ApiError && err.status === 429) throw new FormError(err.message);
+				throw new FormError(t('password_link.check_failed'));
+			}
+			phase = 'requested';
+		}
 	});
 
 	const form = createForm({
@@ -125,12 +145,17 @@
 		}
 	});
 
+	const reset = $derived(found?.purpose === 'reset');
 	const title = $derived(
 		phase === 'done'
 			? t('password_link.done_title')
 			: phase === 'invalid'
 				? t('password_link.invalid_title')
-				: t('password_link.page_title_invite')
+				: phase === 'request' || phase === 'requested'
+					? t('auth.forgot_title')
+					: reset
+						? t('password_link.page_title_reset')
+						: t('password_link.page_title_invite')
 	);
 </script>
 
@@ -154,11 +179,38 @@
 			/>
 		{:else if phase === 'none'}
 			<p>{t('password_link.no_link')}</p>
+		{:else if phase === 'request'}
+			<p>{t('auth.forgot_intro')}</p>
+			<form id={ask.id} class="link-form" onsubmit={ask.onsubmit} novalidate>
+				<Field label={t('auth.forgot_field')} error={ask.errors.login}>
+					{#snippet children(f)}
+						<Input
+							{...f}
+							width="host"
+							autocomplete="username"
+							autocapitalize="none"
+							spellcheck="false"
+							data-autofocus
+							bind:value={ask.values.login}
+						/>
+					{/snippet}
+				</Field>
+				<FormStatus status={ask.status} />
+				<div class="link-actions">
+					<Button type="submit" variant="primary" busy={ask.busy}>{t('auth.forgot_send')}</Button>
+					<Button variant="ghost" href={link('/login')}>{t('auth.forgot_back')}</Button>
+				</div>
+			</form>
+		{:else if phase === 'requested'}
+			<p class="link-sent" role="status">{t('auth.forgot_sent')}</p>
+			<div><Button href={link('/login')}>{t('auth.forgot_back')}</Button></div>
 		{:else if phase === 'invalid'}
 			<Notice tone="warning" class="link-invalid" message={t('password_link.unusable')} />
 		{:else if phase === 'form' && found}
 			<p class="link-for">
-				{t('password_link.page_intro_invite', { server: appName || 'NeoDesk', username: found.username })}
+				{reset
+					? t('password_link.page_intro_reset', { username: found.username })
+					: t('password_link.page_intro_invite', { server: appName || 'NeoDesk', username: found.username })}
 			</p>
 			<form id={form.id} class="link-form" onsubmit={form.onsubmit} novalidate>
 				<!-- The username for password managers, which file the new password under it -->
@@ -195,7 +247,9 @@
 				</div>
 			</form>
 		{:else if phase === 'done'}
-			<p class="link-done">{t('password_link.done_text', { username: doneFor })}</p>
+			<p class="link-done">
+				{t(reset ? 'password_link.done_text_reset' : 'password_link.done_text', { username: doneFor })}
+			</p>
 			<div>
 				<Button variant="primary" href={link('/login')}>{t('password_link.sign_in')}</Button>
 			</div>
@@ -215,6 +269,11 @@
 	}
 	.link-body p {
 		margin: 0;
+	}
+	.link-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
 	}
 	.link-form {
 		display: flex;

@@ -42,6 +42,7 @@ func Register(d *kit.Deps) {
 	r.Post("/api/users/invite", h.invite, d.RequireAuth, d.RequirePermission("user.create"))
 	r.Get("/api/users/invites", h.invites, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Post("/api/users/{id}/invite", h.resendInvite, d.RequireAuth, d.RequirePermission("user.edit"))
+	r.Post("/api/users/{id}/password-reset-link", h.sendResetLink, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Patch("/api/users/{id}", h.update, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Get("/api/users/{id}/effective-scope", h.effectiveScope, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Delete("/api/users/{id}", h.remove, d.RequireAuth, d.RequirePermission("user.delete"))

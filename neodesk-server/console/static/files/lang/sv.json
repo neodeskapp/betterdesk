@@ -184,7 +184,14 @@
     "signed_out_by_admin": "En administratör har loggat ut dig. Logga in igen.",
     "signed_out_replaced": "Du har loggats ut eftersom ditt konto loggade in i en annan webbläsare. Den här servern tillåter en session per konto.",
     "signed_out_limit": "Du har loggats ut eftersom ditt konto loggade in i fler webbläsare än den här servern tillåter. Logga in igen.",
-    "signed_out_account_changed": "Du har loggats ut eftersom ditt lösenord, din tvåstegsinloggning eller din åtkomst ändrades. Logga in igen."
+    "signed_out_account_changed": "Du har loggats ut eftersom ditt lösenord, din tvåstegsinloggning eller din åtkomst ändrades. Logga in igen.",
+    "forgot_password": "Glömt lösenordet?",
+    "forgot_title": "Återställ ditt lösenord",
+    "forgot_intro": "Ange ditt användarnamn eller din e-postadress. Om kontot har en e-postadress skickas en länk dit för att ange ett nytt lösenord.",
+    "forgot_field": "Användarnamn eller e-post",
+    "forgot_send": "Skicka länk",
+    "forgot_sent": "Om kontot finns och har en e-postadress är en länk på väg. Den fungerar i 1 timme.",
+    "forgot_back": "Tillbaka till inloggning"
   },
   "dashboard": {
     "title": "Instrumentbräda",
@@ -1965,7 +1972,9 @@
     "action_console_sessions_policy_changed": "Sessioner per konto ändrade",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "Inbjudan skickad",
-    "action_user_invite_accepted": "Inbjudan accepterad"
+    "action_user_invite_accepted": "Inbjudan accepterad",
+    "action_password_reset_link_sent": "Länk för återställning av lösenord skickad",
+    "action_password_reset_by_link": "Lösenord angivet via återställningslänk"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2572,7 +2581,15 @@
     "invite_needs_email": "För att skicka länkar via e-post behövs e-postinställningarna. Ställ in dem under Inställningar, Email.",
     "invite_signed_in": "Det här kontot har redan loggat in, så det behöver ingen inbjudan.",
     "link_local_only": "Det här kontot loggar in via en katalog eller enkel inloggning, så dess lösenord anges inte här.",
-    "link_mail_failed": "E-postservern tog inte emot meddelandet. Kontrollera e-postinställningarna."
+    "link_mail_failed": "E-postservern tog inte emot meddelandet. Kontrollera e-postinställningarna.",
+    "reset_mode_link": "Skicka en återställningslänk via e-post",
+    "reset_mode_link_desc": "{username} får en länk till {email} och väljer ett nytt lösenord. Länken fungerar i 24 timmar.",
+    "reset_mode_set": "Ange ett nytt lösenord nu",
+    "reset_mode_set_desc": "Du väljer lösenordet och lämnar själv över det.",
+    "reset_link_no_email": "{username} har ingen e-postadress. Lägg till en under Redigera för att skicka en återställningslänk.",
+    "send_reset_link": "Skicka länk",
+    "reset_link_sent_named": "En återställningslänk har skickats till {username}.",
+    "reset_email_required": "Det här kontot har ingen e-postadress."
   },
   "folders": {
     "title": "Mappar",
@@ -8978,6 +8995,16 @@
     "sign_in": "Logga in",
     "invalid_title": "Den här länken fungerar inte",
     "no_link": "Öppna länken i ditt e-postmeddelande för att välja ett lösenord.",
-    "check_failed": "Länken kunde inte kontrolleras. Försök igen om en stund."
+    "check_failed": "Länken kunde inte kontrolleras. Försök igen om en stund.",
+    "reset_subject": "Ange ett nytt lösenord för {server}",
+    "reset_heading": "Ange ett nytt lösenord",
+    "reset_lead": "{sender} har skickat en länk till dig för att ange ett nytt lösenord för ditt konto på {server}.",
+    "reset_lead_self": "Någon har bett om ett nytt lösenord för ditt konto på {server}. Om det var du anger du det här.",
+    "reset_button": "Ange ett nytt lösenord",
+    "reset_expires": "Länken fungerar en gång, till {expires}.",
+    "reset_ignore": "Om du inte väntade dig detta kan du ignorera det här meddelandet. Ditt lösenord förblir som det är.",
+    "page_title_reset": "Ange ett nytt lösenord",
+    "page_intro_reset": "Välj ett nytt lösenord för ditt konto {username}.",
+    "done_text_reset": "Dina andra sessioner har loggats ut. Logga in som {username} med ditt nya lösenord."
   }
 }
