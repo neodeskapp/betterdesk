@@ -78,7 +78,7 @@
         "organizations": "Organizations",
         "policies": "Policies",
         "attestation": "Device identity",
-        "remote": "Remote desktop in browser",
+        "remote": "Remote sessions",
         "remote_open_tab": "Open Remote Desktop client in a new tab",
         "toolkit": "Network tools",
         "security_audit": "Security and audit",
