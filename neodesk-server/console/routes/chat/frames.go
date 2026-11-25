@@ -108,7 +108,7 @@ func (r *Relay) agentFrame(c *client, frame jsjson.Value) error {
 	case "message":
 		msgID := r.nowMillis()
 		fromName := text(c.name)
-		conversation := or(frame.Get("conversation_id"), text("operator"))
+		conversation := or(frame.Get("conversation_id"), id)
 		msgText, err := messageText(frame.Get("text"))
 		if err != nil {
 			return errDrop
@@ -128,7 +128,7 @@ func (r *Relay) agentFrame(c *client, frame jsjson.Value) error {
 		})
 
 	case "typing":
-		conversation := or(frame.Get("conversation_id"), text("operator"))
+		conversation := or(frame.Get("conversation_id"), id)
 		r.asAgent(c, conversation, true, func(func(func(context.Context))) {
 			r.toAgentRoom(c, newObject().str("type", "typing").str("from", c.id).val("conversation_id", conversation))
 		})
@@ -210,7 +210,7 @@ func (r *Relay) agentFrame(c *client, frame jsjson.Value) error {
 			val("status", or(frame.Get("status"), text("available"))).num("timestamp", r.nowMillis()))
 
 	case "file_share":
-		conversation := or(frame.Get("conversation_id"), text("operator"))
+		conversation := or(frame.Get("conversation_id"), id)
 		r.asAgent(c, conversation, true, func(func(func(context.Context))) {
 			r.toAgentRoom(c, r.fileShare(frame, text(c.id), text(c.name), conversation))
 		})

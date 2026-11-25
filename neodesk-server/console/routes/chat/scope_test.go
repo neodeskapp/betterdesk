@@ -129,7 +129,7 @@ func TestScopedOperator(t *testing.T) {
 
 		dev1.send(t, `{"type":"typing"}`)
 		dev1.sync(t)
-		want(t, "anna gets dev1's typing", anna.take(), `{"type":"typing","from":"dev1","conversation_id":"operator"}`)
+		want(t, "anna gets dev1's typing", anna.take(), `{"type":"typing","from":"dev1","conversation_id":"dev1"}`)
 		want(t, "ben gets nothing of dev1", ben.take())
 
 		relay.api.taken()

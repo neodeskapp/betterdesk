@@ -75,7 +75,7 @@ func TestAgentWritesIntoItsOwnConversations(t *testing.T) {
 	}
 	dev.sync(t)
 	want := []string{
-		`POST /chat/messages {"conversation_id":"operator","from_id":"devA","from_name":"office-pc","to_id":"","text":"to support"}`,
+		`POST /chat/messages {"conversation_id":"devA","from_id":"devA","from_name":"office-pc","to_id":"","text":"to support"}`, // L493
 		`POST /chat/messages {"conversation_id":"group:g1","from_id":"devA","from_name":"office-pc","to_id":"","text":"into g1"}`,
 		`POST /chat/messages {"conversation_id":"devA","from_id":"devA","from_name":"office-pc","to_id":"","text":"own"}`,
 		`POST /chat/read {"conversation_id":"devA","reader_id":"devA"}`,

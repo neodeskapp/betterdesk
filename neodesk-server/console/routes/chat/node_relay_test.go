@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -248,9 +249,9 @@ var fixes = []fix{
 	// has no device rows), and an agent writes only into its device's
 	// conversation, the operators' and its groups': anything else waits for
 	// the group lookup and goes nowhere
-	{"RV163", "agent session", 5, `[{"api":{"method":"POST","path":"/chat/messages","body":"{\"conversation_id\":\"operator\",\"from_id\":\"dev1\",\"from_name\":\"dev1\",\"to_id\":\"\",\"text\":\"no conversation\"}"}},` +
-		`{"socket":"op","text":"{\"type\":\"message\",\"id\":1700000002000,\"from\":\"dev1\",\"from_name\":\"dev1\",\"conversation_id\":\"operator\",\"text\":\"no conversation\",\"timestamp\":\"yesterday\"}"},` +
-		`{"socket":"panel","text":"{\"type\":\"message\",\"id\":1700000002000,\"from\":\"dev1\",\"from_name\":\"dev1\",\"conversation_id\":\"operator\",\"text\":\"no conversation\",\"timestamp\":\"yesterday\"}"}]`},
+	{"RV163", "agent session", 5, `[{"api":{"method":"POST","path":"/chat/messages","body":"{\"conversation_id\":\"dev1\",\"from_id\":\"dev1\",\"from_name\":\"dev1\",\"to_id\":\"\",\"text\":\"no conversation\"}"}},` +
+		`{"socket":"op","text":"{\"type\":\"message\",\"id\":1700000002000,\"from\":\"dev1\",\"from_name\":\"dev1\",\"conversation_id\":\"dev1\",\"text\":\"no conversation\",\"timestamp\":\"yesterday\"}"},` +
+		`{"socket":"panel","text":"{\"type\":\"message\",\"id\":1700000002000,\"from\":\"dev1\",\"from_name\":\"dev1\",\"conversation_id\":\"dev1\",\"text\":\"no conversation\",\"timestamp\":\"yesterday\"}"}]`},
 	{"RV163", "agent session", 7, `[{"api":{"method":"GET","path":"/chat/groups/dev1"}}]`},
 	{"RV163", "agent session", 14, `[{"api":{"method":"GET","path":"/chat/groups/dev1"}}]`},
 	{"RV163", "agent session", 19, `[{"api":{"method":"GET","path":"/chat/groups/dev1"}}]`},
@@ -317,6 +318,11 @@ func oneChatCheck(events []wstest.Event) []wstest.Event {
 // rewritten applies the rewrites to the texts of the recorded events.
 func rewritten(events []wstest.Event) []wstest.Event {
 	for _, e := range events {
+		if api, ok := e["api"].(map[string]any); ok {
+			if body, ok := api["body"].(string); ok {
+				api["body"] = ownConversationBody.ReplaceAllString(body, `{"conversation_id":"$1","from_id":"$1"`)
+			}
+		}
 		text, ok := e["text"].(string)
 		if !ok {
 			continue
@@ -324,10 +330,19 @@ func rewritten(events []wstest.Event) []wstest.Event {
 		for _, rw := range rewrites {
 			text = strings.ReplaceAll(text, rw.old, rw.new)
 		}
-		e["text"] = text
+		e["text"] = ownConversation.ReplaceAllString(text, `"from":"$1"$2,"conversation_id":"$1"`)
 	}
 	return events
 }
+
+// L493: what an agent sends without naming a conversation (a message, its
+// typing, a file) belongs to its device's conversation, which Node named
+// "operator", a conversation no list shows: the frames handed on and the
+// message stored say the device's id.
+var (
+	ownConversation     = regexp.MustCompile(`"from":"(dev[A-Za-z0-9]*)"(,"from_name":"[^"]*")?,"conversation_id":"operator"`)
+	ownConversationBody = regexp.MustCompile(`\{"conversation_id":"operator","from_id":"(dev[A-Za-z0-9]*)"`)
+)
 
 // fixedEvents is what a step of the recording looks like since the fixes:
 // ok is false for a step no fix changed. A fix whose events are the ones
