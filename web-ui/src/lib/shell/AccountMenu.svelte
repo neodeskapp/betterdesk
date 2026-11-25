@@ -1,9 +1,10 @@
 <!--
   Account menu (views/partials/user-menu.ejs, public/js/app.js): the
   signed-in person with picture or initials and their status dot, then My
-  status (online, away, busy), Change password, Two-factor sign-in,
-  Signed-in devices (the account's sessions on other browsers, A239), API
-  tokens (admins) and Sign out.
+  status (online, away, busy), Your account (/account: profile, password,
+  two-factor sign-in, signed-in devices, preferences), Signed-in devices
+  (the account's sessions on other browsers, A239), API tokens (admins,
+  their part of Your account) and Sign out.
 
   place "sidebar": the sidebar footer button (avatar, name, role); the
   menu opens upwards there. place "topbar": the top bar button below
@@ -126,15 +127,11 @@
 			{/each}
 		</div>
 		<MenuDivider />
-		<MenuItem icon="key" href={link('/settings?tab=auth#account-password')}
-			>{t('auth.change_password')}</MenuItem
-		>
-		<MenuItem icon="verified_user" href={link('/settings?tab=auth#auth-panel-totp')}
-			>{t('nav.account_2fa')}</MenuItem
-		>
+		<MenuItem icon="person" href={link('/account')}>{t('account.title')}</MenuItem>
 		<MenuItem icon="devices" onselect={() => (devices = true)}>{t('sessions.title')}</MenuItem>
 		{#if mayMakeTokens(user?.role)}
-			<MenuItem icon="api" href={link('/api-tokens')} class="act-api-tokens">{t('api_tokens.title')}</MenuItem
+			<MenuItem icon="api" href={link('/account#api-tokens')} class="act-api-tokens"
+				>{t('api_tokens.title')}</MenuItem
 			>
 		{/if}
 		<MenuDivider />
