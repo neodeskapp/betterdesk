@@ -155,7 +155,7 @@ describe('overview per permission', () => {
 		expect(screen.getByRole('button', { name: /dashboard.config_server_id$/ })).toBeInTheDocument();
 	});
 
-	test('device.view without chat.access: banned devices, but the help request list is not asked for (P17)', async () => {
+	test('device.view without chat.support: banned devices, but the help request list is not asked for (P17)', async () => {
 		as(['device.view']);
 		render(Page, early());
 		await settle();
@@ -168,8 +168,8 @@ describe('overview per permission', () => {
 		expect(screen.getByText('dashboard.devices_now_offline').closest('a')).toHaveTextContent('17');
 	});
 
-	test('enrollment.approve and chat.access add their lines and the activation button', async () => {
-		as(['device.view', 'chat.access', 'enrollment.approve']);
+	test('enrollment.approve and chat.support add their lines and the activation button', async () => {
+		as(['device.view', 'chat.support', 'enrollment.approve']);
 		render(Page, early());
 		await settle();
 		const list = attention();
