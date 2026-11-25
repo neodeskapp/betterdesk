@@ -1,8 +1,11 @@
 <!--
-  Your sessions tab: the signed-in person's own sign-ins to this console
-  (any role may see their own): state, address, start, last activity, end
-  and why it ended, and the browser ("Chrome 156 on Windows" with the full
-  string under it). The idle and maximum session length above the table.
+  Your account › Signed-in devices (#sessions): the signed-in person's own
+  sign-ins to this console (any role may see their own): state, address,
+  start, last activity, end and why it ended, and the browser ("Chrome 156
+  on Windows" with the full string under it). The idle and maximum session
+  length above the table. Audit log › Your sessions before
+  (/security-audit?tab=sessions leads here). The signed-in devices list of
+  several sessions per account takes this place when it comes.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -19,8 +22,6 @@
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import type { Column } from '#lib/ui/table.ts';
 	import { ICONS } from '#lib/util/display.ts';
-
-	const uid = $props.id();
 
 	let sessions = $state.raw<PanelSession[]>([]);
 	let policy = $state('');
@@ -95,8 +96,8 @@
 			>{s.userAgent}</span
 		>{/if}{/snippet}
 
-<section class="section" aria-labelledby="{uid}-title">
-	<h2 id="{uid}-title" class="sr-only">{t('security_audit.tab_your_sessions')}</h2>
+<section class="section" id="sessions" aria-labelledby="sessions-title">
+	<h2 id="sessions-title">{t('account.sessions')}</h2>
 	<p class="section-note">{t('security_audit.sessions_hint')}</p>
 	<Toolbar>
 		{#if policy}<p class="policy">{policy}</p>{/if}
@@ -109,7 +110,7 @@
 			rows={sessions}
 			{columns}
 			key={(s) => s.id}
-			label={t('security_audit.tab_your_sessions')}
+			label={t('account.sessions')}
 			loading={!loaded}
 			error={loadError}
 			onretry={() => void load()}

@@ -8721,5 +8721,20 @@
     "limit_one": "Bu sunucu hesap başına bir oturuma izin verir: yeni bir oturum açma diğer tarayıcıdaki oturumu kapatır.",
     "limit_none": "Bu sunucu hesap başına oturum sayısını sınırlamaz.",
     "load_failed": "Oturum açık cihazlar yüklenemedi."
+  },
+  "account": {
+    "title": "Hesabınız",
+    "description": "Your profile, password and two-factor sign-in, where you are signed in, and how the console looks for you.",
+    "profile": "Profil",
+    "status_note": "Colleagues see your status in chat and next to your name. The account menu changes it too.",
+    "password": "Parola",
+    "sessions": "Signed-in devices",
+    "preferences": "Tercihler",
+    "theme": "Theme for this browser",
+    "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
+    "language_note": "The language of the console for your account, on every device.",
+    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
+    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_open": "Accessibility settings"
   }
 }

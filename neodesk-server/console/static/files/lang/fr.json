@@ -8719,5 +8719,20 @@
     "limit_one": "Ce serveur autorise une session par compte : une nouvelle connexion déconnecte l'autre navigateur.",
     "limit_none": "Ce serveur ne limite pas les sessions par compte.",
     "load_failed": "Impossible de charger les appareils connectés."
+  },
+  "account": {
+    "title": "Votre compte",
+    "description": "Votre profil, votre mot de passe et la connexion à deux facteurs, où vous êtes connecté, et l'apparence de la console pour vous.",
+    "profile": "Profil",
+    "status_note": "Vos collègues voient votre statut dans le chat et à côté de votre nom. Le menu du compte le change aussi.",
+    "password": "Mot de passe",
+    "sessions": "Appareils connectés",
+    "preferences": "Préférences",
+    "theme": "Thème pour ce navigateur",
+    "theme_note": "Par défaut de la console suit le thème défini dans Paramètres › Apparence. Clair et Sombre ne valent que pour ce navigateur.",
+    "language_note": "La langue de la console pour votre compte, sur chaque appareil.",
+    "accessibility_note": "Contraste, taille du texte, animations et filtres de couleur pour ce navigateur.",
+    "accessibility_on": "Certains réglages d'accessibilité sont activés dans ce navigateur.",
+    "accessibility_open": "Réglages d'accessibilité"
   }
 }

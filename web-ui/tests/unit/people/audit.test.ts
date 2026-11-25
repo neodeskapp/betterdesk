@@ -66,7 +66,8 @@ const rows = [
 describe('tabs in the URL', () => {
 	test('known tabs, anything else is the audit log', () => {
 		expect(auditTab('events')).toBe('events');
-		expect(auditTab('sessions')).toBe('sessions');
+		// Your sessions are on Your account (/account#sessions)
+		expect(auditTab('sessions')).toBe('audit');
 		// The checks are on Security checks now (lib/redirects.ts sends the old addresses there)
 		expect(auditTab('overview')).toBe('audit');
 		expect(auditTab('hardening')).toBe('audit');

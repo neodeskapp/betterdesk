@@ -1,8 +1,9 @@
 <!--
   Four tabs of Settings in one component, by `part`:
-  - signin (Settings › Sign-in): for everyone their own password and
-    two-factor sign-in; with server.config also the console's client
-    sessions and whether everyone needs two-factor sign-in.
+  - signin (Settings › Sign-in, server.config): the console's client
+    sessions and whether everyone needs two-factor sign-in. Your own
+    password and two-factor sign-in are on Your account
+    (lib/account/PasswordAndTwoFactor.svelte).
   - ldap (Settings › Directory (LDAP), server.config): sign-in with a
     directory, with a test button.
   - sso (Settings › Single sign-on, server.config): sign-in with an OpenID
@@ -21,32 +22,25 @@
 -->
 <script lang="ts">
 	import {
-		changePassword,
-		disableTotp,
-		enableTotp,
 		getClientSessions,
 		getEnrollment,
 		getLdap,
 		getOidc,
-		getTotpStatus,
 		getTwoFactorPolicy,
-		renewRecoveryCodes,
 		saveClientSessions,
 		saveEnrollment,
 		saveLdap,
 		saveOidc,
 		saveTwoFactorPolicy,
-		setupTotp,
 		testLdap,
 		testOidc
 	} from '#lib/api/settings.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
-	import { can, session } from '#lib/state/session.svelte.ts';
+	import { can } from '#lib/state/session.svelte.ts';
 	import BooleanStatus from '#lib/ui/BooleanStatus.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
-	import CodeBlock from '#lib/ui/CodeBlock.svelte';
 	import Disclosure from '#lib/ui/Disclosure.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
 	import Facts from '#lib/ui/Facts.svelte';
@@ -57,11 +51,7 @@
 	import SaveBar from '#lib/ui/SaveBar.svelte';
 	import Select from '#lib/ui/Select.svelte';
 	import ShowWhen, { showWhenControl } from '#lib/ui/ShowWhen.svelte';
-	import States from '#lib/ui/States.svelte';
-	import Status from '#lib/ui/Status.svelte';
-	import Steps from '#lib/ui/Steps.svelte';
 	import Textarea from '#lib/ui/Textarea.svelte';
-	import ValueField from '#lib/ui/ValueField.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { createForm } from '#lib/ui/form.svelte.ts';
 	import { trackDirty } from '../dirty.ts';
@@ -71,7 +61,6 @@
 		oidcFromServer,
 		oidcPayload,
 		ldapNumberProblems,
-		passwordRules,
 		sessionProblems,
 		validOidcRedirect,
 		suggestedRedirect,
@@ -123,182 +112,6 @@
 		err instanceof Error && err.message ? err.message : fallback;
 	type Line = { message: string; tone: 'neutral' | 'ok' | 'error' };
 	const NO_LINE: Line = { message: '', tone: 'neutral' };
-
-	/* ── Your password ── */
-
-	const password = createForm({
-		initial: { current: '', next: '', confirm: '' },
-		validate: (v) => {
-			const fill = t('settings.fill_all_fields');
-			if (!v.current || !v.next || !v.confirm) {
-				return {
-					current: v.current ? undefined : fill,
-					next: v.next ? undefined : fill,
-					confirm: v.confirm ? undefined : fill
-				};
-			}
-			if (!passwordRules(v.next).every((r) => r.met))
-				return { next: t('settings.password_requirements_not_met') };
-			if (v.next !== v.confirm) return { confirm: t('settings.passwords_not_match') };
-			return null;
-		},
-		submit: async (v) => {
-			await changePassword(v.current, v.next, v.confirm);
-			return { current: '', next: '', confirm: '' };
-		},
-		savedMessage: t('settings.password_changed')
-	});
-	const rules = $derived(passwordRules(password.values.next));
-	const RULE_LABEL: Record<string, string> = {
-		length: 'settings.req_length'
-	};
-
-	/* ── Two-factor sign-in ── */
-
-	type TotpView = 'loading' | 'error' | 'off' | 'on' | 'setup' | 'codes' | 'disable' | 'renew';
-	let totpView = $state<TotpView>('loading');
-	let totpOn = $state<boolean | null>(null);
-	/**
-	 * Turning it off asks the password, or a current code where the account
-	 * has none here: a directory or single sign-on account, which has no
-	 * password to change here either
-	 */
-	let disableWithCode = $state(false);
-	let totpError = $state('');
-	let totpNote = $state<Line>(NO_LINE);
-	let setup = $state.raw<{ qrCode: string; secret: string } | null>(null);
-	let code = $state('');
-	let codeStatus = $state<Line>(NO_LINE);
-	let codes = $state.raw<string[]>([]);
-	/** The codes on show are new ones for an account that had two-factor sign-in already */
-	let codesRenewed = $state(false);
-	let disablePassword = $state('');
-	let disableStatus = $state<Line>(NO_LINE);
-	let totpBusy = $state(false);
-	let codeEl = $state<HTMLInputElement | null>(null);
-	let disableEl = $state<HTMLInputElement | null>(null);
-	let setupBtn = $state<HTMLElement | null>(null);
-
-	async function loadTotp() {
-		totpView = 'loading';
-		try {
-			const status = await getTotpStatus();
-			totpOn = status.enabled;
-			disableWithCode = status.disableWith === 'code';
-			totpView = totpOn ? 'on' : 'off';
-		} catch (err) {
-			totpError = errText(err);
-			totpView = 'error';
-		}
-	}
-
-	// The QR code comes as a data URL from the server; anything else is not shown
-	const qrSrc = $derived(
-		setup && /^data:image\/(png|svg\+xml|jpeg|gif);base64,/i.test(setup.qrCode) ? setup.qrCode : ''
-	);
-
-	async function startSetup() {
-		totpNote = NO_LINE;
-		totpBusy = true;
-		try {
-			const s = await setupTotp();
-			setup = { qrCode: s.qrCode ?? '', secret: s.secret ?? '' };
-			code = '';
-			codeStatus = NO_LINE;
-			totpView = 'setup';
-			await Promise.resolve();
-			queueMicrotask(() => codeEl?.focus());
-		} catch (err) {
-			totpNote = { message: errText(err), tone: 'error' };
-		} finally {
-			totpBusy = false;
-		}
-	}
-
-	async function verifyCode(e: SubmitEvent) {
-		e.preventDefault();
-		if (totpBusy) return;
-		const c = code.trim();
-		if (c.length !== 6) {
-			codeStatus = { message: t('auth.totp_enter_code'), tone: 'error' };
-			codeEl?.focus();
-			return;
-		}
-		totpBusy = true;
-		try {
-			codes = await enableTotp(c);
-			totpOn = true;
-			codesRenewed = false;
-			totpView = 'codes';
-		} catch (err) {
-			codeStatus = { message: errText(err, t('auth.totp_invalid_code')), tone: 'error' };
-		} finally {
-			totpBusy = false;
-		}
-	}
-
-	function startRenew() {
-		code = '';
-		codeStatus = NO_LINE;
-		totpNote = NO_LINE;
-		totpView = 'renew';
-		queueMicrotask(() => codeEl?.focus());
-	}
-
-	async function confirmRenew(e: SubmitEvent) {
-		e.preventDefault();
-		if (totpBusy) return;
-		const c = code.trim();
-		if (c.length !== 6) {
-			codeStatus = { message: t('auth.totp_enter_code'), tone: 'error' };
-			codeEl?.focus();
-			return;
-		}
-		totpBusy = true;
-		try {
-			codes = await renewRecoveryCodes(c);
-			codesRenewed = true;
-			totpView = 'codes';
-		} catch (err) {
-			codeStatus = { message: errText(err, t('auth.totp_invalid_code')), tone: 'error' };
-		} finally {
-			totpBusy = false;
-		}
-	}
-
-	function startDisable() {
-		disablePassword = '';
-		disableStatus = NO_LINE;
-		totpNote = NO_LINE;
-		totpView = 'disable';
-		queueMicrotask(() => disableEl?.focus());
-	}
-
-	async function confirmDisable(e: SubmitEvent) {
-		e.preventDefault();
-		if (totpBusy) return;
-		if (!disablePassword) {
-			disableStatus = { message: t('auth.fill_all_fields'), tone: 'error' };
-			disableEl?.focus();
-			return;
-		}
-		totpBusy = true;
-		try {
-			await disableTotp(disableWithCode ? { code: disablePassword.trim() } : { password: disablePassword });
-			disablePassword = '';
-			await loadTotp();
-			totpNote = { message: t('settings.totp_disabled_success'), tone: 'ok' };
-		} catch (err) {
-			disableStatus = { message: errText(err), tone: 'error' };
-		} finally {
-			totpBusy = false;
-		}
-	}
-
-	function cancelTotp() {
-		setup = null;
-		void loadTotp().then(() => queueMicrotask(() => setupBtn?.focus()));
-	}
 
 	/* ── Device enrollment ── */
 
@@ -589,15 +402,13 @@
 
 	$effect(() =>
 		trackDirty(
-			() =>
-				password.dirty || enrollment.dirty || sessions.dirty || twoFactor.dirty || ldap.dirty || oidc.dirty,
-			() => password.busy || enrollment.busy || sessions.busy || twoFactor.busy || ldap.busy || oidc.busy
+			() => enrollment.dirty || sessions.dirty || twoFactor.dirty || ldap.dirty || oidc.dirty,
+			() => enrollment.busy || sessions.busy || twoFactor.busy || ldap.busy || oidc.busy
 		)
 	);
 
 	// Each part loads what it shows
 	$effect(() => {
-		if (part === 'signin') void loadTotp();
 		if (!canConfig) return;
 		if (part === 'signin') {
 			void loadSessions();
@@ -611,8 +422,6 @@
 	const toc = $derived(
 		canConfig && part === 'signin'
 			? [
-					{ id: 'account-password', label: t('settings.change_password') },
-					{ id: 'auth-panel-totp', label: t('settings.totp_title') },
 					{ id: 'client-sessions-settings-section', label: t('settings.client_sessions_title') },
 					{ id: 'require-two-factor', label: t('settings.signin.require_2fa') }
 				]
@@ -633,7 +442,6 @@
 			off={t('settings.side.off')}
 		/>{/if}
 {/snippet}
-{#snippet side2fa()}{@render onOff(totpOn)}{/snippet}
 {#snippet sideLdap()}{@render onOff(ldapOn)}{/snippet}
 {#snippet sideOidc()}{@render onOff(oidcOn)}{/snippet}
 
@@ -643,247 +451,13 @@
 		<Facts
 			items={part === 'ldap'
 				? [{ label: t('settings.ldap_title'), value: sideLdap }]
-				: part === 'sso'
-					? [{ label: t('settings.oidc_title'), value: sideOidc }]
-					: [{ label: t('settings.side.your_2fa'), value: side2fa }]}
+				: [{ label: t('settings.oidc_title'), value: sideOidc }]}
 		/>
 	</section>
 {/snippet}
 
 {#snippet body()}
 	{#if part === 'signin'}
-		<section class="section" aria-labelledby="your-account-title">
-			<h2 id="your-account-title">{t('settings.signin.your_account')}</h2>
-			<p class="section-note">
-				{t('settings.signin.your_account_note', { user: session.user?.username ?? '' })}
-			</p>
-
-			<SettingsGrid>
-				{#snippet start()}
-					{#if disableWithCode}
-						<!-- A directory or single sign-on account has no password of the console's -->
-						<div class="form-column settings-subgroup">
-							<h3 id="account-password">{t('settings.change_password')}</h3>
-							<p class="form-hint">{t('settings.signin.password_external')}</p>
-						</div>
-					{:else}
-						<form
-							id={password.id}
-							class="form-column settings-subgroup"
-							onsubmit={password.onsubmit}
-							novalidate
-						>
-							<h3 id="account-password">{t('settings.change_password')}</h3>
-							<Field
-								id="current-password"
-								label={t('settings.current_password')}
-								error={password.errors.current}
-							>
-								{#snippet children(f)}
-									<Input
-										{...f}
-										type="password"
-										autocomplete="current-password"
-										bind:value={password.values.current}
-									/>
-								{/snippet}
-							</Field>
-							<Field id="new-password" label={t('settings.new_password')} error={password.errors.next}>
-								{#snippet children(f)}
-									<Input
-										{...f}
-										describedby={[f.describedby, 'password-requirements'].filter(Boolean).join(' ')}
-										type="password"
-										autocomplete="new-password"
-										minlength={8}
-										bind:value={password.values.next}
-									/>
-									<div class="password-requirements" id="password-requirements">
-										<p class="form-hint">{t('settings.password_requirements')}:</p>
-										<ul>
-											{#each rules as rule (rule.id)}
-												<li id="req-{rule.id}" class={{ valid: rule.met }}>{t(RULE_LABEL[rule.id] ?? '')}</li>
-											{/each}
-										</ul>
-									</div>
-								{/snippet}
-							</Field>
-							<Field
-								id="confirm-password"
-								label={t('settings.confirm_password')}
-								error={password.errors.confirm}
-							>
-								{#snippet children(f)}
-									<Input
-										{...f}
-										type="password"
-										autocomplete="new-password"
-										bind:value={password.values.confirm}
-									/>
-								{/snippet}
-							</Field>
-							<p class="field-effect">{t('settings.signin.password_effect')}</p>
-							<SaveBar form={password} label={t('settings.save_password')} />
-						</form>
-					{/if}
-				{/snippet}
-				{#snippet end()}
-					<div class="form-column settings-subgroup" id="auth-panel-totp">
-						<h3>{t('settings.totp_title')}</h3>
-						<p class="form-hint">{t('settings.signin.totp_note')}</p>
-						<div class="totp" aria-live="polite">
-							{#if totpNote.message}<FormStatus message={totpNote.message} tone={totpNote.tone} />{/if}
-							{#if totpView === 'loading'}
-								<States kind="loading" />
-							{:else if totpView === 'error'}
-								<States kind="error" message={totpError} onretry={() => void loadTotp()} />
-							{:else if totpView === 'on'}
-								<p class="line"><Status tone="good" label={t('settings.signin.totp_on')} /></p>
-								<p class="form-hint">{t('settings.totp_enabled_desc')}</p>
-								<p class="line inline-controls">
-									<Button onclick={startRenew}>{t('settings.signin.recovery_new')}</Button>
-									<Button variant="danger-quiet" onclick={startDisable}
-										>{t('settings.signin.totp_turn_off')}</Button
-									>
-								</p>
-							{:else if totpView === 'off'}
-								<p class="line"><Status tone="neutral" label={t('settings.signin.totp_off')} /></p>
-								<p class="form-hint">{t('settings.totp_disabled_desc')}</p>
-								<p class="line">
-									<Button
-										id="totp-setup-btn"
-										bind:element={setupBtn}
-										busy={totpBusy}
-										onclick={() => void startSetup()}>{t('settings.signin.totp_set_up')}</Button
-									>
-								</p>
-								<p class="field-effect">{t('settings.signin.totp_effect')}</p>
-							{:else if totpView === 'setup' && setup}
-								<Steps
-									items={[t('settings.totp_step1'), t('settings.totp_step2'), t('settings.totp_step3')]}
-								/>
-								{#if qrSrc}<img
-										src={qrSrc}
-										alt={t('settings.signin.totp_qr_alt')}
-										class="totp-qr-image"
-										width="200"
-										height="200"
-									/>{/if}
-								<div class="form-group">
-									<span class="form-label">{t('settings.totp_manual_key')}</span>
-									<ValueField value={setup.secret} label={t('settings.totp_manual_key')} />
-								</div>
-								<form class="totp-form" onsubmit={verifyCode} novalidate>
-									<Field id="totp-setup-code" label={t('settings.totp_enter_code')} width="short">
-										{#snippet children(f)}
-											<Input
-												{...f}
-												bind:element={codeEl}
-												bind:value={code}
-												inputmode="numeric"
-												pattern="[0-9]{6}"
-												maxlength={6}
-												autocomplete="one-time-code"
-												oninput={() => (code = code.replace(/[^0-9]/g, ''))}
-											/>
-										{/snippet}
-									</Field>
-									<div class="inline-controls">
-										<Button type="submit" variant="primary" busy={totpBusy}
-											>{t('settings.signin.totp_verify')}</Button
-										>
-										<Button onclick={cancelTotp}>{t('actions.cancel')}</Button>
-										<FormStatus message={codeStatus.message} tone={codeStatus.tone} />
-									</div>
-								</form>
-							{:else if totpView === 'renew'}
-								<form class="totp-form" onsubmit={confirmRenew} novalidate>
-									<p class="form-hint">{t('settings.signin.recovery_new_hint')}</p>
-									<Field id="totp-renew-code" label={t('auth.totp_code')} width="short">
-										{#snippet children(f)}
-											<Input
-												{...f}
-												bind:element={codeEl}
-												bind:value={code}
-												inputmode="numeric"
-												pattern="[0-9]{6}"
-												maxlength={6}
-												autocomplete="one-time-code"
-												oninput={() => (code = code.replace(/[^0-9]/g, ''))}
-											/>
-										{/snippet}
-									</Field>
-									<div class="inline-controls">
-										<Button type="submit" variant="primary" busy={totpBusy}
-											>{t('settings.signin.recovery_new')}</Button
-										>
-										<Button onclick={() => void loadTotp()}>{t('actions.cancel')}</Button>
-										<FormStatus message={codeStatus.message} tone={codeStatus.tone} />
-									</div>
-								</form>
-							{:else if totpView === 'codes'}
-								<p class="line">
-									<Status
-										tone="good"
-										label={codesRenewed
-											? t('settings.signin.recovery_renewed')
-											: t('settings.totp_enabled_success')}
-									/>
-								</p>
-								<Notice tone="warning" message={t('settings.totp_recovery_warning')} />
-								<div class="totp-recovery-codes">
-									<CodeBlock code={codes.join('\n')} title={t('settings.signin.recovery_codes')} />
-								</div>
-								<p class="line">
-									<Button variant="primary" onclick={() => void loadTotp()}
-										>{t('settings.signin.recovery_saved')}</Button
-									>
-								</p>
-							{:else if totpView === 'disable'}
-								<form class="totp-form" onsubmit={confirmDisable} novalidate>
-									<Notice tone="warning" message={t('settings.totp_disable_warning')} />
-									{#if disableWithCode}
-										<Field id="totp-disable-code" label={t('auth.totp_code')} width="short">
-											{#snippet children(f)}
-												<Input
-													{...f}
-													inputmode="numeric"
-													pattern="[0-9]{6}"
-													maxlength={6}
-													autocomplete="one-time-code"
-													bind:element={disableEl}
-													bind:value={disablePassword}
-												/>
-											{/snippet}
-										</Field>
-									{:else}
-										<Field id="totp-disable-password" label={t('settings.current_password')}>
-											{#snippet children(f)}
-												<Input
-													{...f}
-													type="password"
-													autocomplete="current-password"
-													bind:element={disableEl}
-													bind:value={disablePassword}
-												/>
-											{/snippet}
-										</Field>
-									{/if}
-									<div class="inline-controls">
-										<Button type="submit" variant="danger-quiet" busy={totpBusy}
-											>{t('settings.signin.totp_turn_off')}</Button
-										>
-										<Button onclick={() => void loadTotp()}>{t('actions.cancel')}</Button>
-										<FormStatus message={disableStatus.message} tone={disableStatus.tone} />
-									</div>
-								</form>
-							{/if}
-						</div>
-					</div>
-				{/snippet}
-			</SettingsGrid>
-		</section>
-
 		{#if canConfig}
 			<section class="section" aria-labelledby="for-everyone-title">
 				<h2 id="for-everyone-title">{t('settings.signin.for_everyone')}</h2>
@@ -1527,7 +1101,7 @@
 {#if bare}
 	{@render body()}
 {:else}
-	<SettingsLayout {toc} {side} sideLabelledby="auth-side-title" sticky>
+	<SettingsLayout {toc} side={part === 'signin' ? undefined : side} sideLabelledby="auth-side-title" sticky>
 		{@render body()}
 	</SettingsLayout>
 {/if}
@@ -1577,66 +1151,5 @@
 	}
 	.disclosure-body > :global(.form-group) {
 		margin-bottom: 0;
-	}
-	/* Password rules: ticked off as they are met */
-	.password-requirements ul {
-		margin: var(--space-1) 0 0;
-		padding: 0;
-		list-style: none;
-		color: var(--text-muted);
-		font-size: var(--text-sm);
-	}
-	.password-requirements li::before {
-		content: '–';
-		display: inline-block;
-		width: 1.25em;
-	}
-	.password-requirements li.valid {
-		color: var(--success);
-	}
-	.password-requirements li.valid::before {
-		content: '✓';
-	}
-	.totp {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-3);
-	}
-	.totp-form {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-3);
-	}
-	.totp-form > :global(.form-group) {
-		margin: 0;
-	}
-	.line {
-		margin: 0;
-	}
-	.totp-qr-image {
-		display: block;
-		width: 200px;
-		height: 200px;
-		padding: var(--space-2);
-		border: 1px solid var(--rule);
-		border-radius: var(--radius);
-		background: #ffffff;
-	}
-	.totp-recovery-codes {
-		max-width: 32ch;
-	}
-	.form-group {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-1);
-	}
-	.form-label {
-		font-weight: 600;
-	}
-	.inline-controls {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: var(--space-2);
 	}
 </style>

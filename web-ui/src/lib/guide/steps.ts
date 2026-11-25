@@ -23,8 +23,8 @@ function page(path: string, step: StepId, hash = ''): StepTarget {
 }
 
 export const STEP_TARGETS: Readonly<Record<StepId, StepTarget>> = {
-	password: page('/settings?tab=auth', 'password', 'account-password'),
-	two_factor: page('/settings?tab=auth', 'two_factor', 'auth-panel-totp'),
+	password: page('/account', 'password', 'password'),
+	two_factor: page('/account', 'two_factor', 'two-factor'),
 	address: page('/settings', 'address', 'public-endpoints'),
 	https: { kind: 'docs', href: HTTPS_DOCS },
 	computer: { kind: 'add-computer' },

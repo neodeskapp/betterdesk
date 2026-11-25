@@ -11,10 +11,12 @@ import (
 func TestOldConsoleAddressesRedirect(t *testing.T) {
 	bases(t, func(t *testing.T, h *Host, base, dir string) {
 		writeFile(t, filepath.Join(dir, "redirects.json"), `[
+			{"from":"/settings","hash":["account-password"],"to":"/account#password"},
 			{"from":"/settings","tab":"backup","to":"/server/backups"},
 			{"from":"/settings","tab":"auth","to":"/settings?tab=ldap#ldap-host"},
 			{"from":"/commercialization","to":"/billing"},
-			{"from":"/client-branding","to":"/settings?tab=brand#client-app"}
+			{"from":"/client-branding","to":"/settings?tab=brand#client-app"},
+			{"from":"/api-tokens","to":"/account#api-tokens"}
 		]`)
 		h = New(Options{Dir: dir, Production: true, Session: sessionFromHeader})
 		for from, to := range map[string]string{
@@ -25,12 +27,14 @@ func TestOldConsoleAddressesRedirect(t *testing.T) {
 			"/commercialization?tab=sessions":   "/billing?tab=sessions",
 			"/commercialization":                "/billing",
 			"/client-branding":                  "/settings?tab=brand#client-app",
+			"/api-tokens":                       "/account#api-tokens",
 		} {
 			wantRedirect(t, serve(h, "GET", base+from, admin), from, 302, base+to)
 			// Signed out too: the sign-in page then has the new address
 			wantRedirect(t, serve(h, "GET", base+from, nil), from+" signed out", 302, base+to)
 		}
-		// Another tab, or no tab, stays where it is
+		// Another tab, or no tab, stays where it is. A rule that needs a #id
+		// is the app's alone: the server never sees the #id
 		wantPage(t, serve(h, "GET", base+"/settings?tab=email", admin), "another tab", 200)
 		wantPage(t, serve(h, "GET", base+"/settings", admin), "no tab", 200)
 		// Writes are not redirected

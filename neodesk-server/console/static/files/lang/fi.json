@@ -8721,5 +8721,20 @@
     "limit_one": "Tämä palvelin sallii yhden istunnon tiliä kohden: uusi kirjautuminen kirjaa toisen selaimen ulos.",
     "limit_none": "Tämä palvelin ei rajoita istuntoja tiliä kohden.",
     "load_failed": "Kirjautuneita laitteita ei voitu ladata."
+  },
+  "account": {
+    "title": "Oma tili",
+    "description": "Your profile, password and two-factor sign-in, where you are signed in, and how the console looks for you.",
+    "profile": "Profiili",
+    "status_note": "Colleagues see your status in chat and next to your name. The account menu changes it too.",
+    "password": "Salasana",
+    "sessions": "Signed-in devices",
+    "preferences": "Asetukset",
+    "theme": "Theme for this browser",
+    "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
+    "language_note": "The language of the console for your account, on every device.",
+    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
+    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_open": "Accessibility settings"
   }
 }

@@ -420,7 +420,7 @@ test.describe('tab strips on a phone', () => {
 
 	// Small-screen pass, usability 3: a page opened on a later tab showed a strip with no tab selected
 	test('the open tab is in view when the page opens on it', async ({ page }) => {
-		await open(page, '/security-audit?tab=sessions', 'en');
+		await open(page, '/security-audit?tab=events', 'en');
 		const strip = page.getByRole('tablist').first();
 		const tab = strip.getByRole('tab', { selected: true });
 		await expect(tab).toBeVisible();

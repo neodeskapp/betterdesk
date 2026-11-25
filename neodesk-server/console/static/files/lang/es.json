@@ -8715,5 +8715,20 @@
     "limit_one": "Este servidor permite una sesión por cuenta: un nuevo inicio de sesión cierra la del otro navegador.",
     "limit_none": "Este servidor no limita las sesiones por cuenta.",
     "load_failed": "No se pudieron cargar los dispositivos con sesión iniciada."
+  },
+  "account": {
+    "title": "Su cuenta",
+    "description": "Su perfil, contraseña e inicio de sesión en dos pasos, dónde tiene la sesión iniciada y cómo ve la consola.",
+    "profile": "Perfil",
+    "status_note": "Sus compañeros ven su estado en el chat y junto a su nombre. El menú de la cuenta también lo cambia.",
+    "password": "Contraseña",
+    "sessions": "Dispositivos con sesión iniciada",
+    "preferences": "Preferencias",
+    "theme": "Tema para este navegador",
+    "theme_note": "Predeterminado de la consola sigue el tema de Ajustes › Apariencia. Claro y Oscuro solo valen para este navegador.",
+    "language_note": "El idioma de la consola para su cuenta, en todos los dispositivos.",
+    "accessibility_note": "Contraste, tamaño del texto, movimiento y filtros de color para este navegador.",
+    "accessibility_on": "Algunos ajustes de accesibilidad están activados en este navegador.",
+    "accessibility_open": "Ajustes de accesibilidad"
   }
 }

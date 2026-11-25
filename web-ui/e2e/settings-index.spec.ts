@@ -7,8 +7,8 @@ import { PAGES, TABS, placeHref, type PlaceId } from '../src/lib/settings/tabs.t
  * The settings list (search-index.ts) is the one list both searches read,
  * and the tabs are written by hand. This keeps the two the same: on every
  * tab of Settings and every page of settings outside it (the Server
- * section's Backups, Updates and Configuration files), each row's element
- * is on the page, and each field on the page sits
+ * section's Backups, Updates and Configuration files, and Your account),
+ * each row's element is on the page, and each field on the page sits
  * inside an element a row names. A field added without a row, or a row
  * whose element went away, fails here.
  */
@@ -51,7 +51,8 @@ for (const tab of PLACES) {
 				(el) =>
 					el.id !== 'settings-search-input' &&
 					!(el instanceof HTMLInputElement && el.type === 'hidden') &&
-					!el.closest('.settings-search-results, [role="search"]')
+					// A list of records on a page of settings (API tokens on Your account) has no settings
+					!el.closest('.settings-search-results, [role="search"], [data-search-skip]')
 			);
 			const out: string[] = [];
 			for (const el of fields) {

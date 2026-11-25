@@ -165,7 +165,7 @@ test('each step leads to its place and back, and the server ticks it', async ({ 
 	const errors = pageErrors(page);
 	await page.goto(`${UI}/`);
 
-	await viaStep(page, 'password', /\/settings\?tab=auth/, async () => {
+	await viaStep(page, 'password', /\/account\?guide=password/, async () => {
 		await page.fill('#current-password', firstPassword);
 		await page.fill('#new-password', NEW_PASSWORD);
 		await page.fill('#confirm-password', NEW_PASSWORD);
@@ -176,7 +176,7 @@ test('each step leads to its place and back, and the server ticks it', async ({ 
 		expect((await saved).status()).toBe(200);
 	});
 
-	await viaStep(page, 'two_factor', /\/settings\?tab=auth/, async () => {
+	await viaStep(page, 'two_factor', /\/account\?guide=two_factor/, async () => {
 		const setup = page.waitForResponse((r) => r.url().endsWith('/api/auth/totp/setup'));
 		await page.locator('#totp-setup-btn').click();
 		totpSecret = (await (await setup).json()).secret;
@@ -343,7 +343,7 @@ for (const size of VIEWS) {
 					name: german ? 'Zurück zur Einrichtungsanleitung' : 'Back to the setup guide'
 				});
 				await expect(back).toBeVisible();
-				await expect(page.locator('#auth-panel-totp')).toBeInViewport();
+				await expect(page.locator('#two-factor')).toBeInViewport();
 				if (size.width < 768) await expect(back).toBeInViewport();
 				expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
 					size.width

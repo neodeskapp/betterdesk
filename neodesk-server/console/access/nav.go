@@ -108,7 +108,7 @@ var NavSections = []NavSection{
 		navPage("permissions", "roles rights access", "/permissions", "nav.permissions", withRule(navSuperAdmin)),
 	}},
 	{ID: "activity", Label: "nav.activity", Icon: "history", Pages: []NavPage{
-		navPage("security-audit", "audit log who banned events server events sessions", "/security-audit", "security_audit.tab_audit_log", withPermission("audit.view"), core),
+		navPage("security-audit", "audit log who banned events server events", "/security-audit", "security_audit.tab_audit_log", withPermission("audit.view"), core),
 		navPage("security-checks", "security checks hardening vulnerabilities", "/security-checks", "security_audit.tab_checks", withPermission("audit.view"), core),
 		navPage("activity", "app usage activity monitoring", "/activity", "activity.title", withPermission("audit.view")),
 		navPage("reports", "reports export trends", "/reports", "nav.reports", withPermission("audit.view"), core),
@@ -135,7 +135,7 @@ var NavSections = []NavSection{
 	}},
 	{ID: "settings", Label: "nav.settings", Icon: "settings", Pages: []NavPage{
 		navPage("settings:general", "settings relay address public endpoints connection strategy", "/settings", "settings.tab_general", withRule(navAlways), core, inGroup(groupConsole)),
-		navPage("settings:auth", "sign-in authentication 2fa two-factor totp password sessions", "/settings?tab=auth", "settings.tab_auth", withRule(navAlways), core, inGroup(groupConsole)),
+		navPage("settings:auth", "sign-in authentication 2fa two-factor require client sessions", "/settings?tab=auth", "settings.tab_auth", withPermission("server.config"), core, inGroup(groupConsole)),
 		navPage("settings:ldap", "ldap active directory directory sign-in", "/settings?tab=ldap", "settings.ldap_title", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("settings:sso", "sso oidc oauth openid single sign-on", "/settings?tab=sso", "settings.oidc_title", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("settings:joining", "join joining enrollment approval visibility availability history", "/settings?tab=joining", "settings.enrollment_title", withPermission("server.config"), inGroup(groupConsole)),

@@ -177,7 +177,9 @@ func TestNavSettingsTabs(t *testing.T) {
 			viewer[page.Page] = true
 		}
 	}
-	if !viewer["settings:auth"] || viewer["settings:ldap"] || viewer["settings:sso"] || viewer["settings:joining"] || viewer["settings:meshcentral"] {
+	// Sign-in holds only what applies to everyone since the own password
+	// and two-factor sign-in moved to Your account (plan step 2)
+	if viewer["settings:auth"] || viewer["settings:ldap"] || viewer["settings:sso"] || viewer["settings:joining"] || viewer["settings:meshcentral"] {
 		t.Errorf("an account without server.config sees %v", viewer)
 	}
 }

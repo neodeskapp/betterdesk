@@ -1,5 +1,5 @@
 /**
- * New recovery codes on the Sign-in tab (L111): with two-factor sign-in on,
+ * New recovery codes on Your account (L111): with two-factor sign-in on,
  * a current code makes eight new ones, shown once.
  */
 import { cleanup, render, screen } from '@testing-library/svelte';
@@ -37,8 +37,8 @@ afterEach(() => {
 });
 
 test('a current code makes new recovery codes and the tab shows them', async () => {
-	const SignInTab = (await import('../../../src/lib/settings/tabs/SignInTab.svelte')).default;
-	render(SignInTab);
+	const PasswordAndTwoFactor = (await import('../../../src/lib/account/PasswordAndTwoFactor.svelte')).default;
+	render(PasswordAndTwoFactor);
 	await userEvent.click(await screen.findByRole('button', { name: 'settings.signin.recovery_new' }));
 	await userEvent.type(screen.getByLabelText('auth.totp_code'), '123456');
 	await userEvent.click(screen.getByRole('button', { name: 'settings.signin.recovery_new' }));

@@ -53,7 +53,7 @@ const PAGES = [
 	'/server-management',
 	'/scaling',
 	'/server-attestation',
-	'/api-tokens'
+	'/account'
 ];
 
 type Open = (p: Page) => Promise<unknown>;
@@ -72,7 +72,7 @@ const DIALOGS: { name: string; url: string; open: Open; after?: Open }[] = [
 	},
 	{ name: 'Add a computer', url: '/devices', open: button(/^Add a computer$/) },
 	{ name: 'Device panel', url: '/devices', open: (p) => p.locator('.device-card, tbody tr').first().click() },
-	{ name: 'New API token', url: '/api-tokens', open: button(/^New token$/) },
+	{ name: 'New API token', url: '/account#api-tokens', open: button(/^New token$/) },
 	{ name: 'Add user', url: '/users', open: button(/^Add user$/) },
 	{ name: 'Create device token', url: '/tokens', open: button(/^Create token$/) },
 	{ name: 'Add target', url: '/network', open: button(/^Add target$/) },

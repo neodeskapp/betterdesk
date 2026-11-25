@@ -1,9 +1,13 @@
 <!--
-  API tokens (/api-tokens): tokens that scripts, the neodesk command line
-  and its MCP server sign in with. A token acts as the person who made it,
-  with only the permissions they gave it, and is shown once. Admins make
-  and revoke their own tokens; super admins can list and revoke every
-  account's. Reached from the account menu.
+  Your account › API tokens (#api-tokens): tokens that scripts, the
+  neodesk command line and its MCP server sign in with. A token acts as the
+  person who made it, with only the permissions they gave it, and is shown
+  once. Admins make and revoke their own tokens; super admins can list and
+  revoke every account's. The account page shows this part only to the
+  roles that may make tokens. /api-tokens before (it leads here).
+
+  A list of records, not settings: the settings search skips its fields
+  (data-search-skip); the search's "New API token" opens its dialog.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -21,8 +25,6 @@
 		type ApiTokenFilter
 	} from '#lib/people/apiTokens.ts';
 	import { permLabel } from '#lib/people/permissions.ts';
-	import NoAccess from '#lib/shell/NoAccess.svelte';
-	import { onRefresh } from '#lib/shell/page.svelte.ts';
 	import { session } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
@@ -41,8 +43,8 @@
 	import type { Column } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
-	import CreateDialog from './CreateDialog.svelte';
-	import ShownOnceDialog from './ShownOnceDialog.svelte';
+	import CreateDialog from './ApiTokenCreateDialog.svelte';
+	import ShownOnceDialog from './ApiTokenShownOnceDialog.svelte';
 
 	const allowed = $derived(mayMakeTokens(session.user?.role));
 	const superAdmin = $derived(session.isSuperAdmin);
@@ -70,7 +72,6 @@
 		void everyone;
 		untrack(() => void load());
 	});
-	$effect(() => onRefresh(() => void load()));
 
 	let filter = $state<ApiTokenFilter>('active');
 	let query = $state('');
@@ -176,74 +177,66 @@
 			>
 		</MenuButton>{/if}{/snippet}
 
-{#if !allowed}
-	<NoAccess />
-{:else}
-	<div class="page page-wide api-tokens-page">
-		<div class="page-head">
-			<h1>{t('api_tokens.title')}</h1>
-			<p class="page-description">{t('api_tokens.page_description')}</p>
-			<div class="page-actions">
-				<Button variant="primary" icon={ICONS.add} class="act-create" onclick={() => (creating = true)}
-					>{t('api_tokens.create')}</Button
-				>
-			</div>
-		</div>
-
-		{#if !loaded}
-			<States kind="loading" message={t('api_tokens.loading')} />
-		{:else}
-			<div class="page-cols">
-				<div class="page-main">
-					<section class="section" aria-labelledby="api-tokens-list-title">
-						<div class="section-head"><h2 id="api-tokens-list-title">{t('api_tokens.list_title')}</h2></div>
-						<Toolbar>
-							{#snippet search()}<SearchField label={t('api_tokens.search')} bind:value={query} />{/snippet}
-							<SegmentedFilter label={t('api_tokens.status')} options={filterOptions} bind:value={filter} />
-							{#if superAdmin}
-								<Checkbox inline label={t('api_tokens.everyone')} bind:checked={everyone} />
-							{/if}
-						</Toolbar>
-						{#if !loadError && tokens.length}
-							<p class="count-line" aria-live="polite">
-								{t('api_tokens.count', { count: formatNumber(activeCount) })}
-							</p>
-						{/if}
-						<div class="api-tokens-table">
-							<Table
-								rows={shown}
-								{columns}
-								key={(tok) => tok.id}
-								label={t('api_tokens.list_title')}
-								error={loadError}
-								onretry={() => void load()}
-								emptyText={tokens.length ? t('api_tokens.no_match') : t('api_tokens.none')}
-							/>
-						</div>
-					</section>
-				</div>
-				<aside class="page-side" aria-label={t('api_tokens.cli_title')}>
-					<section class="section" aria-labelledby="api-tokens-cli-title">
-						<div class="section-head"><h2 id="api-tokens-cli-title">{t('api_tokens.cli_title')}</h2></div>
-						<Steps
-							items={[t('api_tokens.cli_step1'), t('api_tokens.cli_step2'), t('api_tokens.cli_step3')]}
-						/>
-						<CodeBlock title={t('api_tokens.cli_command')} code={loginCommand(origin)} />
-					</section>
-					<section class="section" aria-labelledby="api-tokens-rules-title">
-						<div class="section-head"><h2 id="api-tokens-rules-title">{t('api_tokens.rules_title')}</h2></div>
-						<ul class="rules">
-							<li>{t('api_tokens.rule_permissions')}</li>
-							<li>{t('api_tokens.rule_lose')}</li>
-							<li>{t('api_tokens.rule_accounts')}</li>
-							<li>{t('api_tokens.rule_once')}</li>
-						</ul>
-					</section>
-				</aside>
-			</div>
-		{/if}
+<section class="section api-tokens-page" id="api-tokens" aria-labelledby="api-tokens-title" data-search-skip>
+	<div class="section-head">
+		<h2 id="api-tokens-title">{t('api_tokens.title')}</h2>
+		<Button variant="primary" icon={ICONS.add} class="act-create" onclick={() => (creating = true)}
+			>{t('api_tokens.create')}</Button
+		>
 	</div>
-{/if}
+	<p class="section-note">{t('api_tokens.page_description')}</p>
+
+	{#if !loaded}
+		<States kind="loading" message={t('api_tokens.loading')} />
+	{:else}
+		<div class="page-cols">
+			<div class="page-main">
+				<section class="section" aria-labelledby="api-tokens-list-title">
+					<div class="section-head"><h3 id="api-tokens-list-title">{t('api_tokens.list_title')}</h3></div>
+					<Toolbar>
+						{#snippet search()}<SearchField label={t('api_tokens.search')} bind:value={query} />{/snippet}
+						<SegmentedFilter label={t('api_tokens.status')} options={filterOptions} bind:value={filter} />
+						{#if superAdmin}
+							<Checkbox inline label={t('api_tokens.everyone')} bind:checked={everyone} />
+						{/if}
+					</Toolbar>
+					{#if !loadError && tokens.length}
+						<p class="count-line" aria-live="polite">
+							{t('api_tokens.count', { count: formatNumber(activeCount) })}
+						</p>
+					{/if}
+					<div class="api-tokens-table">
+						<Table
+							rows={shown}
+							{columns}
+							key={(tok) => tok.id}
+							label={t('api_tokens.list_title')}
+							error={loadError}
+							onretry={() => void load()}
+							emptyText={tokens.length ? t('api_tokens.no_match') : t('api_tokens.none')}
+						/>
+					</div>
+				</section>
+			</div>
+			<aside class="page-side" aria-label={t('api_tokens.cli_title')}>
+				<section class="section" aria-labelledby="api-tokens-cli-title">
+					<div class="section-head"><h3 id="api-tokens-cli-title">{t('api_tokens.cli_title')}</h3></div>
+					<Steps items={[t('api_tokens.cli_step1'), t('api_tokens.cli_step2'), t('api_tokens.cli_step3')]} />
+					<CodeBlock title={t('api_tokens.cli_command')} code={loginCommand(origin)} />
+				</section>
+				<section class="section" aria-labelledby="api-tokens-rules-title">
+					<div class="section-head"><h3 id="api-tokens-rules-title">{t('api_tokens.rules_title')}</h3></div>
+					<ul class="rules">
+						<li>{t('api_tokens.rule_permissions')}</li>
+						<li>{t('api_tokens.rule_lose')}</li>
+						<li>{t('api_tokens.rule_accounts')}</li>
+						<li>{t('api_tokens.rule_once')}</li>
+					</ul>
+				</section>
+			</aside>
+		</div>
+	{/if}
+</section>
 
 {#if creating}
 	<CreateDialog

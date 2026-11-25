@@ -1,9 +1,10 @@
 <!--
   A page of settings forms that is not a tab of Settings: the Server
-  section's Backups, Updates and Configuration files. It does for one page
-  what the Settings page does for its tabs: the title and its sentence, the
-  check for server.config (anyone else sees the no-access view), a #<id> in
-  the address scrolls to that setting and marks it (lib/settings/reveal.ts,
+  section's Backups, Updates and Configuration files, and Your account. It
+  does for one page what the Settings page does for its tabs: the title
+  and its sentence, the check for the permission it needs (anyone else
+  sees the no-access view; Your account needs none), a #<id> in the
+  address scrolls to that setting and marks it (lib/settings/reveal.ts,
   also when the top bar search jumps here), and leaving with unsaved
   changes asks first (lib/settings/dirty.ts).
 -->
@@ -26,7 +27,7 @@
 	interface Props {
 		title: string;
 		description: string;
-		/** The permission the page needs */
+		/** The permission the page needs; '' for every account (Your account) */
 		need?: string;
 		/** Use the whole width (the configuration file editor) */
 		wide?: boolean;
@@ -37,7 +38,7 @@
 
 	let { title, description, need = 'server.config', wide = false, id, children }: Props = $props();
 
-	const allowed = $derived(can(need));
+	const allowed = $derived(need === '' || can(need));
 
 	$effect(() => setPageTitle(title));
 

@@ -27,12 +27,22 @@ describe('settings tabs in the URL', () => {
 		expect(parseTab('__proto__')).toBe('general');
 	});
 
-	test('the server-wide tabs need server.config; General, Appearance and Sign-in are for everyone', () => {
-		expect([...ADMIN_TABS].sort()).toEqual(['email', 'joining', 'ldap', 'meshcentral', 'sso', 'time']);
+	test('the server-wide tabs need server.config; General, Appearance and Branding are for everyone', () => {
+		// Sign-in keeps only what applies to everyone: your own part is on Your account
+		expect([...ADMIN_TABS].sort()).toEqual([
+			'auth',
+			'email',
+			'joining',
+			'ldap',
+			'meshcentral',
+			'sso',
+			'time'
+		]);
 		for (const tab of TABS) expect(tabAllowed(tab, true)).toBe(true);
 		expect(tabAllowed('general', false)).toBe(true);
 		expect(tabAllowed('branding', false)).toBe(true);
-		expect(tabAllowed('auth', false)).toBe(true);
+		expect(tabAllowed('brand', false)).toBe(true);
+		expect(tabAllowed('auth', false)).toBe(false);
 		expect(tabAllowed('email', false)).toBe(false);
 		expect(tabAllowed('time', false)).toBe(false);
 	});
@@ -67,8 +77,11 @@ describe('old links into settings', () => {
 	test('an element id leads to the tab or the page that holds it', () => {
 		// Links the old console has: dashboard, keys and scaling point at General
 		expect(placeOfId('public-endpoints')).toBe('general');
-		expect(placeOfId('account-password')).toBe('auth');
-		expect(placeOfId('auth-panel-totp')).toBe('auth');
+		// Your password and two-factor sign-in are on Your account
+		expect(placeOfId('current-password')).toBe('account');
+		expect(placeOfId('two-factor')).toBe('account');
+		expect(placeOfId('account-password')).toBeNull();
+		expect(placeHref('account', 'new-password')).toBe('/account#new-password');
 		// Sign-in split into Sign-in, Directory (LDAP), Single sign-on and Joining; MeshCentral left General
 		expect(placeOfId('ldap-host')).toBe('ldap');
 		expect(placeOfId('auth-panel-oidc')).toBe('sso');

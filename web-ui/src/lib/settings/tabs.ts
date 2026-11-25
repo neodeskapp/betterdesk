@@ -28,8 +28,20 @@ export const TABS = [
 ] as const;
 export type TabId = (typeof TABS)[number];
 
-/** Tabs only people with server.config may open */
-export const ADMIN_TABS: readonly TabId[] = ['ldap', 'sso', 'joining', 'email', 'time', 'meshcentral'];
+/**
+ * Tabs only people with server.config may open. Sign-in holds only what
+ * applies to everyone since your own password and two-factor sign-in moved
+ * to Your account.
+ */
+export const ADMIN_TABS: readonly TabId[] = [
+	'auth',
+	'ldap',
+	'sso',
+	'joining',
+	'email',
+	'time',
+	'meshcentral'
+];
 
 /** The tab's name: page title, breadcrumb and search results */
 export const TAB_TITLE: Readonly<Record<TabId, string>> = {
@@ -45,15 +57,37 @@ export const TAB_TITLE: Readonly<Record<TabId, string>> = {
 	meshcentral: 'nav.meshcentral'
 };
 
-/** Pages of settings outside Settings: where they are, their name and their section */
+/**
+ * Pages of settings outside Settings: where they are, their name, the
+ * section of the sidebar they are in ('' for none, as Your account, which
+ * the account menu opens) and the permission they need ('' for every
+ * account)
+ */
 export const PAGES = {
-	'server-backups': { href: '/server/backups', title: 'nav.server_backups' },
-	'server-updates': { href: '/server/updates', title: 'updates.tab_title' },
-	'server-config-files': { href: '/server/config-files', title: 'nav.server_config_files' }
-} as const satisfies Record<string, { href: string; title: string }>;
+	account: { href: '/account', title: 'account.title', section: '', need: '' },
+	'server-backups': {
+		href: '/server/backups',
+		title: 'nav.server_backups',
+		section: 'nav.section_server',
+		need: 'server.config'
+	},
+	'server-updates': {
+		href: '/server/updates',
+		title: 'updates.tab_title',
+		section: 'nav.section_server',
+		need: 'server.config'
+	},
+	'server-config-files': {
+		href: '/server/config-files',
+		title: 'nav.server_config_files',
+		section: 'nav.section_server',
+		need: 'server.config'
+	}
+} as const satisfies Record<
+	string,
+	{ href: string; title: string; section: string; need: '' | 'server.config' }
+>;
 export type PageId = keyof typeof PAGES;
-/** The section these pages are in, for "where" in the search */
-export const PAGE_SECTION = 'nav.section_server';
 
 export type PlaceId = TabId | PageId;
 
@@ -87,9 +121,9 @@ export function tabAllowed(tab: TabId, canServerConfig: boolean): boolean {
 	return canServerConfig || !ADMIN_TABS.includes(tab);
 }
 
-/** Whether a person may open a place: the pages of the Server section need server.config */
+/** Whether a person may open a place: the pages of the Server section need server.config, Your account nothing */
 export function placeAllowed(place: PlaceId, canServerConfig: boolean): boolean {
-	return isPage(place) ? canServerConfig : tabAllowed(place, canServerConfig);
+	return isPage(place) ? PAGES[place].need === '' || canServerConfig : tabAllowed(place, canServerConfig);
 }
 
 /** The place's name: the tab title or the page title */

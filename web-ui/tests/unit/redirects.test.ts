@@ -17,10 +17,9 @@ describe('the old addresses', () => {
 		expect(go('/security-audit?tab=overview')).toBe('/security-checks?tab=checks');
 		expect(go('/security-audit?tab=hardening')).toBe('/security-checks?tab=hardening');
 		expect(go('/security-audit?tab=vulnerabilities')).toBe('/security-checks?tab=hardening');
-		// The audit log, the server events and the own sessions stay
+		// The audit log and the server events stay
 		expect(go('/security-audit')).toBeNull();
 		expect(go('/security-audit?tab=events')).toBeNull();
-		expect(go('/security-audit?tab=sessions')).toBeNull();
 		expect(go('/commercialization')).toBe('/billing');
 		expect(go('/commercialization?tab=sessions')).toBe('/billing?tab=sessions');
 		expect(go('/commercialization?settings=1#billing-settings-panel')).toBe(
@@ -31,6 +30,35 @@ describe('the old addresses', () => {
 	test('Client app branding is a part of Settings › Branding', () => {
 		expect(go('/client-branding')).toBe('/settings?tab=brand#client-app');
 		expect(go('/Client-Branding#old')).toBe('/settings?tab=brand#client-app');
+	});
+
+	test('your password, two-factor sign-in, sessions and API tokens are on Your account', () => {
+		for (const id of [
+			'account-password',
+			'current-password',
+			'new-password',
+			'confirm-password',
+			'password-form'
+		])
+			expect(go(`/settings?tab=auth#${id}`), id).toBe('/account#password');
+		expect(go('/settings?tab=auth#auth-panel-totp')).toBe('/account#two-factor');
+		expect(go('/Settings?tab=Auth#Account-Password')).toBe('/account#password');
+		// The old links without a tab went to the same place
+		expect(go('/settings#account-password')).toBe('/account#password');
+		expect(go('/settings#auth-panel-totp')).toBe('/account#two-factor');
+		expect(go('/security-audit?tab=sessions')).toBe('/account#sessions');
+		expect(go('/api-tokens')).toBe('/account#api-tokens');
+		expect(go('/API-Tokens?x=1')).toBe('/account?x=1#api-tokens');
+		// The rest of Sign-in stays, also with another #id
+		expect(go('/settings?tab=auth')).toBeNull();
+		expect(go('/settings?tab=auth#require-two-factor')).toBeNull();
+		expect(go('/settings?tab=ldap#ldap-host')).toBeNull();
+	});
+
+	test('a rule that needs a #id is for the app alone: without the #id nothing moves', () => {
+		const forApp = REDIRECTS.filter((r) => r.hash);
+		expect(forApp.length).toBeGreaterThan(0);
+		for (const r of forApp) expect(go(r.from + (r.tab ? `?tab=${r.tab}` : '')), r.from).toBeNull();
 	});
 
 	test('the other parameters and the #id come along; the tab is left out', () => {
@@ -50,7 +78,7 @@ describe('the old addresses', () => {
 
 	test('every rule leads to a different address than its own', () => {
 		for (const r of REDIRECTS) {
-			const from = r.tab === undefined ? r.from : `${r.from}?tab=${r.tab}`;
+			const from = `${r.from}${r.tab === undefined ? '' : `?tab=${r.tab}`}${r.hash ? `#${r.hash[0]}` : ''}`;
 			const to = go(from);
 			expect(to, from).not.toBeNull();
 			expect(to, from).not.toBe(from);

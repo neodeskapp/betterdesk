@@ -8715,5 +8715,20 @@
     "limit_one": "Este servidor permite uma sessão por conta: uma nova entrada termina a do outro navegador.",
     "limit_none": "Este servidor não limita as sessões por conta.",
     "load_failed": "Não foi possível carregar os dispositivos conectados."
+  },
+  "account": {
+    "title": "A sua conta",
+    "description": "Your profile, password and two-factor sign-in, where you are signed in, and how the console looks for you.",
+    "profile": "Perfil",
+    "status_note": "Colleagues see your status in chat and next to your name. The account menu changes it too.",
+    "password": "Palavra-passe",
+    "sessions": "Signed-in devices",
+    "preferences": "Preferências",
+    "theme": "Tema para este navegador",
+    "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
+    "language_note": "The language of the console for your account, on every device.",
+    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
+    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_open": "Definições de acessibilidade"
   }
 }

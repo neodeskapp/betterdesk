@@ -1,5 +1,5 @@
 /**
- * Leaving Settings while a save runs, by the setup guide's way back or any
+ * Leaving a page of settings (here Your account's password) while a save runs, by the setup guide's way back or any
  * other link: the page waits for the save and leaves without asking when
  * it saved everything. It asks only about changes that are still unsaved.
  */
@@ -44,8 +44,8 @@ afterEach(() => {
 
 async function fillPassword() {
 	const user = userEvent.setup();
-	const SignInTab = (await import('../../../src/lib/settings/tabs/SignInTab.svelte')).default;
-	render(SignInTab);
+	const PasswordAndTwoFactor = (await import('../../../src/lib/account/PasswordAndTwoFactor.svelte')).default;
+	render(PasswordAndTwoFactor);
 	await user.type(await screen.findByLabelText('settings.current_password'), 'old-password');
 	await user.type(screen.getByLabelText('settings.new_password'), 'new-password-1');
 	await user.type(screen.getByLabelText('settings.confirm_password'), 'new-password-1');

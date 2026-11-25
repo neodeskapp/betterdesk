@@ -8721,5 +8721,20 @@
     "limit_one": "Denne server tillader én session pr. konto: et nyt login logger den anden browser ud.",
     "limit_none": "Denne server begrænser ikke antallet af sessioner pr. konto.",
     "load_failed": "De loggede ind-enheder kunne ikke indlæses."
+  },
+  "account": {
+    "title": "Din konto",
+    "description": "Your profile, password and two-factor sign-in, where you are signed in, and how the console looks for you.",
+    "profile": "Profil",
+    "status_note": "Colleagues see your status in chat and next to your name. The account menu changes it too.",
+    "password": "Adgangskode",
+    "sessions": "Signed-in devices",
+    "preferences": "Præferencer",
+    "theme": "Theme for this browser",
+    "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
+    "language_note": "The language of the console for your account, on every device.",
+    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
+    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_open": "Accessibility settings"
   }
 }

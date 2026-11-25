@@ -8715,5 +8715,20 @@
     "limit_one": "Tento server povoluje jednu relaci na účet: nové přihlášení odhlásí druhý prohlížeč.",
     "limit_none": "Tento server počet relací na účet neomezuje.",
     "load_failed": "Přihlášená zařízení se nepodařilo načíst."
+  },
+  "account": {
+    "title": "Váš účet",
+    "description": "Your profile, password and two-factor sign-in, where you are signed in, and how the console looks for you.",
+    "profile": "Profil",
+    "status_note": "Colleagues see your status in chat and next to your name. The account menu changes it too.",
+    "password": "Heslo",
+    "sessions": "Signed-in devices",
+    "preferences": "Předvolby",
+    "theme": "Theme for this browser",
+    "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
+    "language_note": "The language of the console for your account, on every device.",
+    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
+    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_open": "Accessibility settings"
   }
 }

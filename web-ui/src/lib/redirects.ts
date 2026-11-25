@@ -9,17 +9,33 @@
  * sides read it the same way.
  *
  * Each entry: the old path (any letter case), the ?tab= value it needs when
- * only that tab moved (any letter case; the new address leaves it out), and
- * the new address. The other parameters of the old address come along
- * after the new one's own; the new address's #id wins over the old one.
- * Old addresses stay for two releases, then they are reviewed.
+ * only that tab moved (any letter case; the new address leaves it out), the
+ * #ids it needs when only some settings of a page moved (any letter case;
+ * the new address leaves the old tab out), and the new address. The other
+ * parameters of the old address come along after the new one's own; the
+ * new address's #id wins over the old one. Old addresses stay for two
+ * releases, then they are reviewed.
+ *
+ * A browser never sends the #id to the server, so an entry with #ids is
+ * the app's alone: it follows them for links inside the app and for an
+ * address it is opened with (routes/+layout.svelte); the server skips them.
  */
 
 export interface Redirect {
 	readonly from: string;
 	readonly tab?: string;
+	readonly hash?: readonly string[];
 	readonly to: string;
 }
+
+/** The old ids of your password on Settings › Sign-in */
+const PASSWORD_IDS = [
+	'account-password',
+	'current-password',
+	'new-password',
+	'confirm-password',
+	'password-form'
+];
 
 export const REDIRECTS: readonly Redirect[] = [
 	// Server section (plan step 6)
@@ -33,10 +49,26 @@ export const REDIRECTS: readonly Redirect[] = [
 	{ from: '/security-audit', tab: 'vulnerabilities', to: '/security-checks?tab=hardening' },
 	{ from: '/commercialization', to: '/billing' },
 	// Branding (plan step 5): Client app branding is a part of Settings › Branding
-	{ from: '/client-branding', to: '/settings?tab=brand#client-app' }
+	{ from: '/client-branding', to: '/settings?tab=brand#client-app' },
+	// Your account (plan step 2): your password, two-factor sign-in, sessions
+	// and API tokens left Settings › Sign-in, the Audit log and /api-tokens
+	{ from: '/settings', hash: PASSWORD_IDS, to: '/account#password' },
+	{ from: '/settings', hash: ['auth-panel-totp'], to: '/account#two-factor' },
+	{ from: '/security-audit', tab: 'sessions', to: '/account#sessions' },
+	{ from: '/api-tokens', to: '/account#api-tokens' }
 ];
 
 const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+
+/** "#account-password" → "account-password" (decoded; a broken escape stays as it is) */
+function decodeId(hash: string): string {
+	const raw = hash.replace(/^#/, '');
+	try {
+		return decodeURIComponent(raw);
+	} catch {
+		return raw;
+	}
+}
 
 /**
  * The new address of an old one (path without the base, the query with or
@@ -45,20 +77,22 @@ const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
 export function redirectTarget(path: string, search = '', hash = ''): string | null {
 	const old = new URLSearchParams(search);
 	const tab = old.get('tab');
+	const oldId = decodeId(hash);
 	for (const r of REDIRECTS) {
 		if (!same(path, r.from)) continue;
 		if (r.tab !== undefined && (tab === null || !same(tab, r.tab))) continue;
+		if (r.hash && !r.hash.some((id) => same(id, oldId))) continue;
+		const dropTab = r.tab !== undefined || r.hash !== undefined;
 		const [address = '', ownHash = ''] = r.to.split('#');
 		const [toPath = '', toQuery = ''] = address.split('?');
 		const params = new URLSearchParams(toQuery);
 		const own = new Set(params.keys());
 		for (const [key, value] of old) {
-			if (own.has(key) || (r.tab !== undefined && key === 'tab')) continue;
+			if (own.has(key) || (dropTab && key === 'tab')) continue;
 			params.append(key, value);
 		}
 		const query = params.toString();
-		const oldId = hash.replace(/^#/, '');
-		const id = ownHash || oldId;
+		const id = ownHash || hash.replace(/^#/, '');
 		return `${toPath}${query ? `?${query}` : ''}${id ? `#${id}` : ''}`;
 	}
 	return null;

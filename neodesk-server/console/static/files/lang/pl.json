@@ -8715,5 +8715,20 @@
     "limit_one": "Ten serwer pozwala na jedną sesję na konto: nowe logowanie wylogowuje drugą przeglądarkę.",
     "limit_none": "Ten serwer nie ogranicza liczby sesji na konto.",
     "load_failed": "Nie udało się wczytać zalogowanych urządzeń."
+  },
+  "account": {
+    "title": "Twoje konto",
+    "description": "Twój profil, hasło i logowanie dwuskładnikowe, gdzie jesteś zalogowany oraz jak wygląda dla Ciebie konsola.",
+    "profile": "Profil",
+    "status_note": "Colleagues see your status in chat and next to your name. The account menu changes it too.",
+    "password": "Hasło",
+    "sessions": "Zalogowane urządzenia",
+    "preferences": "Preferencje",
+    "theme": "Motyw dla tej przeglądarki",
+    "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
+    "language_note": "The language of the console for your account, on every device.",
+    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
+    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_open": "Ustawienia dostępności"
   }
 }

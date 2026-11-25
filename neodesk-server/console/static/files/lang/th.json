@@ -8721,5 +8721,20 @@
     "limit_one": "เซิร์ฟเวอร์นี้อนุญาตหนึ่งเซสชันต่อบัญชี การลงชื่อเข้าใช้ใหม่จะทำให้เบราว์เซอร์อื่นออกจากระบบ",
     "limit_none": "เซิร์ฟเวอร์นี้ไม่จำกัดจำนวนเซสชันต่อบัญชี",
     "load_failed": "โหลดอุปกรณ์ที่ลงชื่อเข้าใช้อยู่ไม่ได้"
+  },
+  "account": {
+    "title": "บัญชีของคุณ",
+    "description": "Your profile, password and two-factor sign-in, where you are signed in, and how the console looks for you.",
+    "profile": "Profile",
+    "status_note": "Colleagues see your status in chat and next to your name. The account menu changes it too.",
+    "password": "Password",
+    "sessions": "Signed-in devices",
+    "preferences": "Preferences",
+    "theme": "Theme for this browser",
+    "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
+    "language_note": "The language of the console for your account, on every device.",
+    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
+    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_open": "Accessibility settings"
   }
 }

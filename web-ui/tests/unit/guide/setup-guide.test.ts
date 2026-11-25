@@ -84,11 +84,11 @@ describe('where each step leads', () => {
 		for (const id of STEP_IDS) expect(STEP_TARGETS[id]).toBeTruthy();
 		expect(STEP_TARGETS.password).toEqual({
 			kind: 'page',
-			href: '/settings?tab=auth&guide=password#account-password'
+			href: '/account?guide=password#password'
 		});
 		expect(STEP_TARGETS.two_factor).toEqual({
 			kind: 'page',
-			href: '/settings?tab=auth&guide=two_factor#auth-panel-totp'
+			href: '/account?guide=two_factor#two-factor'
 		});
 		expect(STEP_TARGETS.address).toEqual({ kind: 'page', href: '/settings?guide=address#public-endpoints' });
 		expect(STEP_TARGETS.backup).toEqual({
@@ -126,7 +126,7 @@ describe('the guide on the overview', () => {
 		// Rows lead to their place: a page with the step, the docs in a new tab, the dialog here
 		expect(within(rows[0]!).getByRole('link')).toHaveAttribute(
 			'href',
-			'/app/settings?tab=auth&guide=password#account-password'
+			'/app/account?guide=password#password'
 		);
 		expect(within(rows[3]!).getByRole('link')).toHaveAttribute('target', '_blank');
 		expect(within(rows[4]!).getByRole('button')).toBeInTheDocument();

@@ -8715,5 +8715,20 @@
     "limit_one": "Deze server staat één sessie per account toe: een nieuwe aanmelding meldt de andere browser af.",
     "limit_none": "Deze server beperkt het aantal sessies per account niet.",
     "load_failed": "De aangemelde apparaten konden niet worden geladen."
+  },
+  "account": {
+    "title": "Uw account",
+    "description": "Uw profiel, wachtwoord en aanmelding in twee stappen, waar u bent aangemeld en hoe de console er voor u uitziet.",
+    "profile": "Profiel",
+    "status_note": "Colleagues see your status in chat and next to your name. The account menu changes it too.",
+    "password": "Wachtwoord",
+    "sessions": "Aangemelde apparaten",
+    "preferences": "Voorkeuren",
+    "theme": "Thema voor deze browser",
+    "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
+    "language_note": "The language of the console for your account, on every device.",
+    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
+    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_open": "Toegankelijkheid instellen"
   }
 }

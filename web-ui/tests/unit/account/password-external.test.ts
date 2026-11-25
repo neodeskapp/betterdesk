@@ -1,5 +1,5 @@
 /**
- * Settings › Sign-in for a directory or single sign-on account (L345): its
+ * Your account for a directory or single sign-on account (L345): its
  * password lives in the directory or at the provider, so the tab says so
  * instead of offering a Change password form that can never work.
  */
@@ -34,8 +34,8 @@ afterEach(() => {
 
 test('a directory account gets a note instead of the password form', async () => {
 	disableWith = 'code';
-	const SignInTab = (await import('../../../src/lib/settings/tabs/SignInTab.svelte')).default;
-	render(SignInTab);
+	const PasswordAndTwoFactor = (await import('../../../src/lib/account/PasswordAndTwoFactor.svelte')).default;
+	render(PasswordAndTwoFactor);
 	expect(await screen.findByText('settings.signin.password_external')).toBeInTheDocument();
 	expect(screen.queryByLabelText('settings.current_password')).toBeNull();
 	expect(screen.queryByRole('button', { name: 'settings.save_password' })).toBeNull();
@@ -43,8 +43,8 @@ test('a directory account gets a note instead of the password form', async () =>
 
 test('a local account keeps the password form', async () => {
 	disableWith = 'password';
-	const SignInTab = (await import('../../../src/lib/settings/tabs/SignInTab.svelte')).default;
-	render(SignInTab);
+	const PasswordAndTwoFactor = (await import('../../../src/lib/account/PasswordAndTwoFactor.svelte')).default;
+	render(PasswordAndTwoFactor);
 	expect(await screen.findByLabelText('settings.current_password')).toBeInTheDocument();
 	expect(screen.queryByText('settings.signin.password_external')).toBeNull();
 }, 30_000);

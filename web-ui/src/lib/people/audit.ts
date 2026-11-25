@@ -13,8 +13,8 @@ import type { AuditRow } from '#lib/api/audit.ts';
 
 type T = (key: string, params?: Record<string, string | number>) => string;
 
-/** The audit log page (/security-audit): the log, the server's events and your own sessions */
-export const AUDIT_TABS = ['audit', 'events', 'sessions'] as const;
+/** The audit log page (/security-audit): the log and the server's events; your own sessions are on Your account */
+export const AUDIT_TABS = ['audit', 'events'] as const;
 export type AuditTab = (typeof AUDIT_TABS)[number];
 
 /** ?tab= as a tab, anything else the audit log. The checks moved to /security-checks (lib/redirects.ts) */

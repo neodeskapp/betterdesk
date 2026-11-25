@@ -1,5 +1,5 @@
 /**
- * Turning two-factor sign-in off on the Sign-in tab (L112): a directory or
+ * Turning two-factor sign-in off on Your account (L112): a directory or
  * single sign-on account, which has no password here, gives a current code;
  * a local account its password.
  */
@@ -38,8 +38,8 @@ afterEach(() => {
 });
 
 test('a directory account turns it off with a current code', async () => {
-	const SignInTab = (await import('../../../src/lib/settings/tabs/SignInTab.svelte')).default;
-	render(SignInTab);
+	const PasswordAndTwoFactor = (await import('../../../src/lib/account/PasswordAndTwoFactor.svelte')).default;
+	render(PasswordAndTwoFactor);
 	await userEvent.click(await screen.findByRole('button', { name: 'settings.signin.totp_turn_off' }));
 	expect(document.getElementById('totp-disable-password')).toBeNull();
 	await userEvent.type(document.getElementById('totp-disable-code') as HTMLElement, '123456');
@@ -52,8 +52,8 @@ test('a directory account turns it off with a current code', async () => {
 
 test('a local account turns it off with its password', async () => {
 	disableWith = 'password';
-	const SignInTab = (await import('../../../src/lib/settings/tabs/SignInTab.svelte')).default;
-	render(SignInTab);
+	const PasswordAndTwoFactor = (await import('../../../src/lib/account/PasswordAndTwoFactor.svelte')).default;
+	render(PasswordAndTwoFactor);
 	await userEvent.click(await screen.findByRole('button', { name: 'settings.signin.totp_turn_off' }));
 	expect(document.getElementById('totp-disable-code')).toBeNull();
 	await userEvent.type(document.getElementById('totp-disable-password') as HTMLElement, 'secret');

@@ -1,11 +1,12 @@
 <!--
-  Audit log (/security-audit, audit.view): the console audit log, the
-  server's own events and the signed-in person's sessions. Each tab loads
-  when it is first opened. The security checks and the hardening settings
+  Audit log (/security-audit, audit.view): the console audit log and the
+  server's own events. Each tab loads when it is first opened. Your own
+  sessions are on Your account (/account#sessions; ?tab=sessions leads
+  there, lib/redirects.ts). The security checks and the hardening settings
   are on Security checks (/security-checks); their old addresses
   (?tab=overview, hardening, vulnerabilities) lead there (lib/redirects.ts).
 
-  URL: ?tab=audit|events|sessions follows the open tab; on the audit log
+  URL: ?tab=audit|events follows the open tab; on the audit log
   ?q= and ?type= fill the search and the filter and follow them.
 -->
 <script lang="ts">
@@ -21,7 +22,6 @@
 	import Tabs from '#lib/ui/Tabs.svelte';
 	import AuditLogTab from './AuditLogTab.svelte';
 	import EventsTab from './EventsTab.svelte';
-	import SessionsTab from './SessionsTab.svelte';
 
 	const allowed = can('audit.view');
 	const params = untrack(() => page.url.searchParams);
@@ -66,8 +66,7 @@
 
 	const tabs = $derived([
 		{ id: 'audit', label: t('security_audit.tab_audit_log') },
-		{ id: 'events', label: t('security_audit.tab_server_events') },
-		{ id: 'sessions', label: t('security_audit.tab_your_sessions') }
+		{ id: 'events', label: t('security_audit.tab_server_events') }
 	]);
 </script>
 
@@ -100,9 +99,6 @@
 							{/if}
 							{#if opened.has('events')}
 								<div hidden={current !== 'events'}><EventsTab /></div>
-							{/if}
-							{#if opened.has('sessions')}
-								<div hidden={current !== 'sessions'}><SessionsTab /></div>
 							{/if}
 						</div>
 					{/key}

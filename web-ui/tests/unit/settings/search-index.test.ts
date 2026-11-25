@@ -9,7 +9,7 @@ import { describe, expect, test } from 'vitest';
 import { SEARCH_INDEX } from '../../../src/lib/settings/search-index.ts';
 import { TAB_TERMS, TERMS } from '../../../src/lib/settings/search-terms.ts';
 import { settingEntries } from '../../../src/lib/settings/search.ts';
-import { TABS, tabAllowed, isPlace, isTab } from '../../../src/lib/settings/tabs.ts';
+import { TABS, tabAllowed, isPlace, placeAllowed } from '../../../src/lib/settings/tabs.ts';
 import { searchGrouped, MAX_SETTINGS, type SearchSetting } from '../../../src/lib/shell/search.ts';
 
 const langDir = path.resolve(__dirname, '../../../../neodesk-server/console/static/files/lang');
@@ -85,11 +85,33 @@ describe('settingEntries', () => {
 		);
 	});
 
+	test('your password and two-factor sign-in are on Your account, for every account', () => {
+		for (const can of [everyone, viewer]) {
+			const entries = settingEntries({ t: tOf(en), can });
+			expect(entries.find((e) => e.id === 'new-password')).toMatchObject({
+				place: 'account',
+				where: 'Your account, Password',
+				href: '/account#new-password'
+			});
+			expect(entries.find((e) => e.id === 'two-factor')).toMatchObject({
+				place: 'account',
+				label: 'Two-factor sign-in',
+				where: 'Your account',
+				href: '/account#two-factor'
+			});
+		}
+		// Settings › Sign-in keeps what applies to everyone
+		expect(
+			settingEntries({ t: tOf(en), can: everyone }).find((e) => e.id === 'require-two-factor')?.href
+		).toBe('/settings?tab=auth#require-two-factor');
+		expect(SEARCH_INDEX.filter((r) => r[0] === 'auth' && /password|totp/.test(r[1]))).toEqual([]);
+	});
+
 	test('no setting the account cannot see: tabs it may not open and rows that need a permission', () => {
 		const entries = settingEntries({ t: tOf(en), can: viewer });
 		expect(entries.length).toBeGreaterThan(0);
 		for (const e of entries) {
-			expect(isTab(e.place) && tabAllowed(e.place, false)).toBe(true);
+			expect(placeAllowed(e.place, false)).toBe(true);
 			const row = SEARCH_INDEX.find((r) => r[0] === e.place && r[1] === e.id);
 			expect(row?.[5]).toBe('');
 		}
@@ -134,7 +156,7 @@ describe('English and German find the same setting', () => {
 	test('the other language works too, whatever the console shows', () => {
 		expect(find('zeitzone', inEn).map((r) => r.id)).toContain('time-billing-timezone');
 		expect(find('timezone', inDe).map((r) => r.id)).toContain('time-billing-timezone');
-		expect(find('2fa', inDe).map((r) => r.id)).toContain('auth-panel-totp');
+		expect(find('2fa', inDe).map((r) => r.id)).toContain('two-factor');
 		expect(find('dunkel', inEn).map((r) => r.id)).toContain('theme-mode-selector');
 	});
 

@@ -347,10 +347,8 @@ for (const role of ROLES) {
 			await expect(page.getByRole('heading', { level: 1, name: 'Audit log' })).toBeVisible();
 			await expect(page.getByRole('searchbox')).toHaveValue('login');
 			await expectNoAxeViolations(page);
-			for (const [tab, name] of [
-				['events', 'Server events'],
-				['sessions', 'Your sessions']
-			] as const) {
+			// Your own sessions are on Your account (account.spec.ts)
+			for (const [tab, name] of [['events', 'Server events']] as const) {
 				await page.getByRole('tab', { name }).click();
 				await expect(page).toHaveURL(new RegExp(`[?&]tab=${tab}`));
 				await expect(page).not.toHaveURL(/[?&]q=/);

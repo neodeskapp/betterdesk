@@ -164,7 +164,7 @@ export const ID_ALIASES: Readonly<Record<string, string>> = {
 	'login-bg-color-picker': '#login-bg-color',
 	'agent-bg-color-picker': '#agent-bg-color',
 	'rdclient-bg-color-picker': '#rdclient-bg-color',
-	'password-form': '#account-password'
+	'password-form': '#password'
 };
 
 /** The element an old id points at now */

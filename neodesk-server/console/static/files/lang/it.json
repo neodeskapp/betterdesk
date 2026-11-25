@@ -8715,5 +8715,20 @@
     "limit_one": "Questo server consente una sessione per account: un nuovo accesso disconnette l'altro browser.",
     "limit_none": "Questo server non limita le sessioni per account.",
     "load_failed": "Impossibile caricare i dispositivi connessi."
+  },
+  "account": {
+    "title": "Il tuo account",
+    "description": "Your profile, password and two-factor sign-in, where you are signed in, and how the console looks for you.",
+    "profile": "Profilo",
+    "status_note": "Colleagues see your status in chat and next to your name. The account menu changes it too.",
+    "password": "Password",
+    "sessions": "Dispositivi con accesso",
+    "preferences": "Preferenze",
+    "theme": "Tema per questo browser",
+    "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
+    "language_note": "The language of the console for your account, on every device.",
+    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
+    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_open": "Impostazioni di accessibilità"
   }
 }

@@ -18,6 +18,10 @@ type redirect struct {
 	// Tab, when set, is the ?tab= value the old address needs (in any
 	// letter case); the new address leaves the old tab out.
 	Tab *string `json:"tab"`
+	// Hash, when set, lists the #ids the old address needs. A browser never
+	// sends the #id, so the app alone follows such a rule; the server skips
+	// it.
+	Hash []string `json:"hash"`
 	// To is the new path, with its own query and #id when it has them.
 	To string `json:"to"`
 }
@@ -44,7 +48,7 @@ func (h *Host) loadRedirects() []redirect {
 func redirectFor(list []redirect, sub, query string) (string, bool) {
 	tab, hasTab := queryParam(query, "tab")
 	for _, r := range list {
-		if !asciiEqualFold(sub, r.From) {
+		if len(r.Hash) > 0 || !asciiEqualFold(sub, r.From) {
 			continue
 		}
 		if r.Tab != nil && (!hasTab || !asciiEqualFold(tab, *r.Tab)) {

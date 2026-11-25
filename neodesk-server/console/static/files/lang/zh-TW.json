@@ -8719,5 +8719,20 @@
     "limit_one": "此伺服器每個帳戶只允許一個工作階段：新的登入會讓另一個瀏覽器登出。",
     "limit_none": "此伺服器不限制每個帳戶的工作階段數。",
     "load_failed": "無法載入已登入的裝置。"
+  },
+  "account": {
+    "title": "您的帳戶",
+    "description": "Your profile, password and two-factor sign-in, where you are signed in, and how the console looks for you.",
+    "profile": "個人資料",
+    "status_note": "Colleagues see your status in chat and next to your name. The account menu changes it too.",
+    "password": "密碼",
+    "sessions": "Signed-in devices",
+    "preferences": "偏好設定",
+    "theme": "Theme for this browser",
+    "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
+    "language_note": "The language of the console for your account, on every device.",
+    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
+    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_open": "Accessibility settings"
   }
 }

@@ -71,8 +71,9 @@ for (const role of ROLES) {
 
 			await page.goto(`${UI}/settings?tab=auth`);
 			await expect(h1(page)).toHaveText('Sign-in');
-			await expect(page.locator('#current-password')).toBeVisible();
-			await expect(page.locator('#auth-panel-totp')).toBeVisible();
+			// Your own password and two-factor sign-in are on Your account (/account)
+			await expect(page.locator('#current-password')).toHaveCount(0);
+			await expect(page.locator('#auth-panel-totp')).toHaveCount(0);
 			await expect(page.locator('#client-sessions-form')).toHaveCount(config ? 1 : 0);
 			await expect(page.locator('#require-two-factor')).toHaveCount(config ? 1 : 0);
 			// Directory, single sign-on and joining are tabs of their own now
@@ -129,9 +130,9 @@ for (const role of ROLES) {
 			await search.fill('password');
 			await expect(results.first()).toBeVisible();
 			await expectNoAxeViolations(page);
+			// The password is on Your account
 			await search.press('Enter');
-			await expect(page).toHaveURL(/[?&]tab=auth#/);
-			await expect(search).toHaveValue('');
+			await expect(page).toHaveURL(/\/account#/);
 		});
 	});
 }

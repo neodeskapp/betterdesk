@@ -27,6 +27,7 @@
 	import { clientMessages } from '#lib/api/client.ts';
 	import { i18n, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { base, link } from '#lib/nav.ts';
+	import { redirectTarget } from '#lib/redirects.ts';
 	import { setPageTitle } from '#lib/shell/page.svelte.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import CountLine from '#lib/ui/CountLine.svelte';
@@ -119,6 +120,8 @@
 		following?.abort();
 		following = null;
 		if (!hash || hash === '#') return;
+		// An old #id of a part that left Settings (Your account): the app's redirect table takes it there
+		if (redirectTarget('/settings', page.url.search, hash)) return;
 		const asTab = hashTab(hash);
 		if (asTab) {
 			await go2(tabHref(asTab), { replace: true, reset: false });

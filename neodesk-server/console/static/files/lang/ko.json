@@ -8715,5 +8715,20 @@
     "limit_one": "이 서버는 계정당 세션 하나만 허용합니다: 새로 로그인하면 다른 브라우저가 로그아웃됩니다.",
     "limit_none": "이 서버는 계정당 세션 수를 제한하지 않습니다.",
     "load_failed": "로그인된 기기를 불러오지 못했습니다."
+  },
+  "account": {
+    "title": "내 계정",
+    "description": "Your profile, password and two-factor sign-in, where you are signed in, and how the console looks for you.",
+    "profile": "프로필",
+    "status_note": "Colleagues see your status in chat and next to your name. The account menu changes it too.",
+    "password": "비밀번호",
+    "sessions": "Signed-in devices",
+    "preferences": "환경설정",
+    "theme": "Theme for this browser",
+    "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
+    "language_note": "The language of the console for your account, on every device.",
+    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
+    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_open": "Accessibility settings"
   }
 }

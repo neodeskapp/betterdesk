@@ -9,7 +9,7 @@
 import { SEARCH_INDEX, type IndexRow } from './search-index.ts';
 import { TAB_TERMS, TERMS } from './search-terms.ts';
 import {
-	PAGE_SECTION,
+	PAGES,
 	isPage,
 	isPlace,
 	placeAllowed,
@@ -76,7 +76,6 @@ export function settingEntries(
 ): SettingEntry[] {
 	const canConfig = ctx.can('server.config');
 	const settings = clean(ctx.t('nav.settings'));
-	const server = clean(ctx.t(PAGE_SECTION));
 	const seen = new Set<string>();
 	const out: SettingEntry[] = [];
 	for (const [tabName, id, labelKey, sectionKey, hintKeys] of visibleRows(ctx.can, rows)) {
@@ -90,7 +89,9 @@ export function settingEntries(
 		const tabTitle = clean(ctx.t(placeTitle(tabName)));
 		// A section named like its tab (Directory (LDAP) on its own tab) is said once
 		const own = section && section !== label && section !== tabTitle ? section : '';
-		const where = [isPage(tabName) ? server : settings, tabTitle, own].filter(Boolean).join(', ');
+		// Settings › tab, the page's section › page (Server, Backups), or the page alone (Your account)
+		const area = isPage(tabName) ? PAGES[tabName].section && clean(ctx.t(PAGES[tabName].section)) : settings;
+		const where = [area, tabTitle, own].filter(Boolean).join(', ');
 		out.push({
 			place: tabName,
 			id,

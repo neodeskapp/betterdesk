@@ -11,6 +11,7 @@
  */
 
 export const TAB_TERMS: Readonly<Record<string, string>> = {
+	account: 'account profile my own konto profil mein eigenes',
 	general: 'server allgemein',
 	branding: 'appearance look theme colours design aussehen erscheinungsbild darstellung farben',
 	brand: 'branding brand white label logo name company firma marke sign-in page download',
@@ -81,13 +82,20 @@ export const TERMS: Readonly<Record<string, string>> = {
 	'custom-css': 'css stylesheet style',
 	'branding-profiles': 'profile preset vorlage profil',
 	'branding-import-export': 'import export json',
-	// Sign-in
-	'account-password': 'password change passwort kennwort ändern',
+	// Your account
+	'profile-status': 'status presence online away busy anwesenheit abwesend beschäftigt',
+	password: 'password change passwort kennwort ändern',
 	'current-password': 'password passwort kennwort',
 	'new-password': 'change password passwort ändern kennwort',
 	'confirm-password': 'password repeat passwort wiederholen',
-	'auth-panel-totp':
+	'two-factor':
 		'2fa mfa totp authenticator otp two factor zwei faktor recovery codes wiederherstellungscodes',
+	sessions: 'sessions signed in devices browsers sign out sitzungen angemeldete geräte browser',
+	'preferences-theme': 'theme dark light mode dunkel hell modus design',
+	'preferences-language': 'language sprache',
+	'preferences-accessibility':
+		'accessibility a11y contrast text size motion barrierefreiheit kontrast schriftgröße',
+	// Sign-in
 	'require-two-factor': '2fa mfa enforce force pflicht erzwingen',
 	'enrollment-settings-section':
 		'enrollment registration approve join new devices registrierung freigabe beitreten',

@@ -45,11 +45,14 @@ const closedDetails = (id: string) => {
 };
 
 describe('the parts of sign-in', () => {
-	test('Sign-in keeps the account, client sessions and two-factor for everyone; nothing of the others', async () => {
+	test('Sign-in keeps client sessions and two-factor for everyone; nothing of your own account or the others', async () => {
 		render(SignInTab);
 		await screen.findByRole('heading', { name: 'settings.signin.for_everyone' });
 		expect(byId('client-sessions-form')).not.toBeNull();
 		expect(byId('require-two-factor')).not.toBeNull();
+		// Your own password and two-factor sign-in are on Your account (/account)
+		for (const gone of ['account-password', 'current-password', 'auth-panel-totp', 'your-account-title'])
+			expect(byId(gone), gone).toBeNull();
 		for (const gone of ['enrollment-settings-section', 'ldap-form', 'oidc-form'])
 			expect(byId(gone), gone).toBeNull();
 		expect(api.getLdap).not.toHaveBeenCalled();

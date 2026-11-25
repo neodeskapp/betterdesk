@@ -8715,5 +8715,20 @@
     "limit_one": "Dieser Server erlaubt eine Sitzung pro Konto: Eine neue Anmeldung meldet den anderen Browser ab.",
     "limit_none": "Dieser Server begrenzt die Sitzungen pro Konto nicht.",
     "load_failed": "Die angemeldeten Geräte konnten nicht geladen werden."
+  },
+  "account": {
+    "title": "Ihr Konto",
+    "description": "Ihr Profil, Passwort und Zwei-Faktor-Anmeldung, wo Sie angemeldet sind, und wie die Konsole für Sie aussieht.",
+    "profile": "Profil",
+    "status_note": "Kolleginnen und Kollegen sehen Ihren Status im Chat und neben Ihrem Namen. Das Kontomenü ändert ihn auch.",
+    "password": "Passwort",
+    "sessions": "Angemeldete Geräte",
+    "preferences": "Persönliche Einstellungen",
+    "theme": "Design für diesen Browser",
+    "theme_note": "Standard der Konsole folgt dem Design unter Einstellungen › Darstellung. Hell und Dunkel gelten nur für diesen Browser.",
+    "language_note": "Die Sprache der Konsole für Ihr Konto, auf jedem Gerät.",
+    "accessibility_note": "Kontrast, Textgröße, Bewegung und Farbfilter für diesen Browser.",
+    "accessibility_on": "In diesem Browser sind Einstellungen zur Barrierefreiheit an.",
+    "accessibility_open": "Barrierefreiheit einstellen"
   }
 }
