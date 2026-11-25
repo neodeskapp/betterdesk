@@ -7236,7 +7236,7 @@
       "oidc_issuer_url_hint": "Aussteller-URL von OpenID Connect (Discovery erfolgt automatisch)",
       "oidc_manual_endpoints": "Endpoint-URLs",
       "oidc_panel_url": "Panel-URL",
-      "oidc_panel_url_hint": "URL, über die Operatoren die Web-Konsole öffnen (Port 5000 oder Reverse-Proxy-Hostname). Erforderlich für SSO-Anmeldung, wenn der OIDC-Callback auf dem Go-API-Port läuft.",
+      "oidc_panel_url_hint": "URL, über die Operatoren die Web-Konsole öffnen (Port 3375 oder Reverse-Proxy-Hostname). Erforderlich für SSO-Anmeldung, wenn der OIDC-Callback auf dem Go-API-Port läuft.",
       "oidc_prefer_sso": "SSO-Anmeldung bevorzugen",
       "oidc_prefer_sso_hint": "SSO automatisch starten, wenn OIDC aktiviert ist. Verwenden Sie /login?autoLaunch=0 oder eine private Netzwerkadresse für die lokale Passwortanmeldung.",
       "oidc_provider": "Identitätsanbieter",
