@@ -192,7 +192,7 @@
 			{:else}
 				<ul class="rows" aria-label={t('chat.section_support')}>
 					{#each support as c (c.id)}
-						{@const unread = chat.unread(c.id) || c.unread}
+						{@const unread = c.unread}
 						<li>
 							<button
 								type="button"
@@ -250,7 +250,7 @@
 			{#if teamShown.length}
 				<ul class="rows" aria-label={t('chat.conversations')}>
 					{#each teamShown as c (c.id)}
-						{@const unread = chat.unread(c.id) || c.unread}
+						{@const unread = c.unread}
 						{@const person = c.kind === 'dm' ? c.people[0] : undefined}
 						<li>
 							<button

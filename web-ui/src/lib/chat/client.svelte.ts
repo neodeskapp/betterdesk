@@ -266,7 +266,11 @@ class ChatClient {
 				const reader = f.reader as { kind: string; id: string } | undefined;
 				if (!conv || !reader) return;
 				this.setThread(conv, withRead(this.thread(conv), reader, String(f.up_to ?? '0')));
-				if (reader.kind === 'user' && this.me && reader.id === String(this.me.id)) this.refreshSummary();
+				if (reader.kind === 'user' && this.me && reader.id === String(this.me.id)) {
+					// I read it here or in another tab: the lists and badges count again
+					this.listVersion++;
+					this.refreshSummary();
+				}
 				return;
 			}
 			case 'typing': {

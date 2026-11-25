@@ -14,7 +14,11 @@ import type { Browser, Page } from '@playwright/test';
 import { test, expect, expectNoAxeViolations } from './fixtures.ts';
 import { UI, authFile } from './roles.ts';
 
-const DEVICE = '900100001';
+// Each browser has its own computer, so the two runs don't read each other's messages
+const DEVICES: Record<string, { id: string; token: string }> = {
+	chromium: { id: '900100001', token: '/stack/secrets/device_token' },
+	firefox: { id: '900100002', token: '/stack/secrets/device_token_other' }
+};
 const TOKEN_FILE = '/stack/secrets/device_token';
 
 /** A computer's chat window: sends frames, keeps what it gets */
@@ -25,9 +29,9 @@ class Device {
 		this.ws = ws;
 		ws.onmessage = (e) => this.frames.push(JSON.parse(String(e.data)));
 	}
-	static async open(baseURL: string): Promise<Device> {
-		const token = fs.readFileSync(TOKEN_FILE, 'utf8').trim();
-		const url = `${baseURL.replace(/^http/, 'ws')}/ws/chat/${DEVICE}?v=2&token=${encodeURIComponent(token)}`;
+	static async open(baseURL: string, which: { id: string; token: string }): Promise<Device> {
+		const token = fs.readFileSync(which.token, 'utf8').trim();
+		const url = `${baseURL.replace(/^http/, 'ws')}/ws/chat/${which.id}?v=2&token=${encodeURIComponent(token)}`;
 		const ws = new WebSocket(url);
 		const d = new Device(ws);
 		await new Promise<void>((ok, bad) => {
@@ -53,8 +57,11 @@ class Device {
 
 const stamp = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
-async function asOperator(browser: Browser, baseURL: string): Promise<Page> {
-	const ctx = await browser.newContext({ baseURL, storageState: authFile('operator') });
+/** The colleague of each browser's run: two pairs, so the runs don't read each other's messages */
+const COLLEAGUE: Record<string, 'operator' | 'viewer'> = { chromium: 'operator', firefox: 'viewer' };
+
+async function asColleague(browser: Browser, baseURL: string, role: 'operator' | 'viewer'): Promise<Page> {
+	const ctx = await browser.newContext({ baseURL, storageState: authFile(role) });
 	return ctx.newPage();
 }
 
@@ -65,8 +72,10 @@ test.describe('chat', () => {
 	test('support: a computer writes, the inbox shows it unread, the answer reaches the computer', async ({
 		page,
 		baseURL
-	}) => {
-		const device = await Device.open(baseURL ?? '');
+	}, testInfo) => {
+		const which = DEVICES[testInfo.project.name] ?? DEVICES.chromium!;
+		const DEVICE = which.id;
+		const device = await Device.open(baseURL ?? '', which);
 		const hello = `printer stopped ${stamp()}`;
 		await page.goto(`${UI}/chat?s=support`);
 		await expect(page.locator('.chat-list .rows, .chat-list .chat-list-empty').first()).toBeVisible({
@@ -111,13 +120,14 @@ test.describe('chat', () => {
 		page,
 		browser,
 		baseURL
-	}) => {
-		const operator = await asOperator(browser, baseURL ?? '');
+	}, testInfo) => {
+		const role = COLLEAGUE[testInfo.project.name] ?? 'operator';
+		const operator = await asColleague(browser, baseURL ?? '', role);
 		await operator.goto(`${UI}/chat?s=team`);
 		await expect(operator.locator('.chat-list')).toBeVisible();
 		await page.goto(`${UI}/chat?s=team`);
 		// Admin writes to the operator from the colleagues list
-		const colleague = page.locator('.chat-list .row', { hasText: 'e2e_operator' }).first();
+		const colleague = page.locator('.chat-list .row', { hasText: `e2e_${role}` }).first();
 		await expect(colleague).toBeVisible({ timeout: 20_000 });
 		await colleague.click();
 		const text = `lunch ${stamp()}`;

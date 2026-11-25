@@ -72,17 +72,22 @@ type errorString string
 
 func (e errorString) Error() string { return string(e) }
 
-// displayNames is an account's first and last name, else "".
+// displayNames is an account's first and last name, else its user name;
+// "" for an account that isn't there.
 func displayNames(db *store.DB) func(ctx context.Context, id int64) string {
 	return func(ctx context.Context, id int64) string {
 		if db == nil {
 			return ""
 		}
+		var username string
 		var first, last sql.NullString
-		if err := db.QueryRow(ctx, `SELECT first_name, last_name FROM users WHERE id = ?`, id).Scan(&first, &last); err != nil {
+		if err := db.QueryRow(ctx, `SELECT username, first_name, last_name FROM users WHERE id = ?`, id).Scan(&username, &first, &last); err != nil {
 			return ""
 		}
-		return strings.TrimSpace(strings.TrimSpace(first.String) + " " + strings.TrimSpace(last.String))
+		if name := strings.TrimSpace(strings.TrimSpace(first.String) + " " + strings.TrimSpace(last.String)); name != "" {
+			return name
+		}
+		return username
 	}
 }
 
