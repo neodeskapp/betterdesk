@@ -201,6 +201,10 @@ func withNodeTables(t *testing.T) {
 	t.Cleanup(func() { RouteRules, Catalog, ClientFeatures = goRules, goCatalog, goFeatures })
 }
 
+// external opens a page in a new tab, as Node's web client entry did; the
+// console's own pages all open inside it (A234, L479).
+func external(p *NavPage) { p.External = true }
+
 // nodeNavSections is the navigation as Node had it: five sections, the
 // rules, server and billing pages under Settings, and the server terminal
 // after the server status page (A194 removed it). The console's own table
