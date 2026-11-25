@@ -145,7 +145,8 @@ describe('the guided first join', () => {
 
 		// Test session
 		await user.click(await screen.findByRole('button', { name: 'onboard.guide.test_start' }));
-		expect(opened).toEqual(['/remote/523456789']);
+		// A tab of its own gets the viewer on its own, not a second console (L479)
+		expect(opened).toEqual(['/remote/523456789?standalone=1']);
 		await user.click(screen.getByRole('button', { name: 'onboard.guide.done' }));
 		expect(await screen.findByText('onboard.guide.finished')).toBeInTheDocument();
 	}, 20000);

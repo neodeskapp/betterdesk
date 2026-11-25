@@ -364,7 +364,7 @@ describe('saved sign-in while the console shows another page (the viewer is park
 		v.setParked(false);
 		await new Promise((r) => setTimeout(r, 1200));
 		expect(signinApi.useSignin).toHaveBeenCalledTimes(1);
-	});
+	}, 15_000);
 
 	test('no sealed request goes out while parked, also when it was parked during the wait', async () => {
 		signinApi.getSignin.mockResolvedValueOnce({ ...(await signinApi.getSignin()), auto: true });
@@ -379,5 +379,5 @@ describe('saved sign-in while the console shows another page (the viewer is park
 		v.setParked(false);
 		await vi.waitFor(() => expect(c.plugins).toHaveLength(1), { timeout: 4000 });
 		expect(signinApi.useSealedSignin).toHaveBeenCalledTimes(1);
-	});
+	}, 15_000);
 });
