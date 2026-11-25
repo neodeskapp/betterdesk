@@ -99,7 +99,12 @@ export function seen(thread: Thread, msg: Message): boolean {
 	if (msg.pending) return false;
 	const id = num(msg.id);
 	const sender = readerKey(msg.from);
-	return Object.entries(thread.reads).some(([who, upTo]) => who !== sender && upTo >= id);
+	// A computer's conversation: only the computer's read counts, a
+	// colleague who opened it is not the person at the computer (L532)
+	const toComputer = !/^(dm|group|old):/.test(msg.conversation_id);
+	return Object.entries(thread.reads).some(
+		([who, upTo]) => who !== sender && upTo >= id && (!toComputer || who.startsWith('d:'))
+	);
 }
 
 /** Messages from others after my read mark: what is unread for me */

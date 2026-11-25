@@ -114,6 +114,22 @@ describe('read marks', () => {
 		th = withRead(th, { kind: 'device', id: 'dev1' }, '7');
 		expect(seen(th, m)).toBe(true);
 	});
+
+	test("in a computer's conversation only the computer's read is \"Seen\", not a colleague's (L532)", () => {
+		let th = withMessage(emptyThread(), msg('7', anna));
+		const m = th.messages[0] as Message;
+		th = withRead(th, { kind: 'user', id: '6' }, '7');
+		expect(seen(th, m)).toBe(false);
+		th = withRead(th, { kind: 'device', id: 'dev1' }, '7');
+		expect(seen(th, m)).toBe(true);
+	});
+
+	test('between colleagues another person\'s read is "Seen"', () => {
+		let th = withMessage(emptyThread(), { ...msg('7', anna), conversation_id: 'dm:5:6' });
+		const m = th.messages[0] as Message;
+		th = withRead(th, { kind: 'user', id: '6' }, '7');
+		expect(seen(th, m)).toBe(true);
+	});
 });
 
 describe('who and when', () => {
