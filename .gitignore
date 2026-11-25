@@ -89,6 +89,8 @@ web-nodejs/
 *.bak
 *.backup
 *backup*/
+# The console's Server › Backups page is source, not a backup
+!web-ui/src/routes/(console)/server/backups/
 rustdesk-backup*/
 rustdesk-backup-*/
 
