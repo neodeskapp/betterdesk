@@ -93,7 +93,6 @@ var NavSections = []NavSection{
 		navPage("inventory", "hardware software", "/inventory", "nav.inventory", withPermission("device.view")),
 		navPage("network", "ping monitor latency targets", "/network", "nav.network", withPermission("device.view")),
 		navPage("fleet", "fleet bulk tasks workflows compliance", "/fleet", "nav.fleet", withPermission("org.manage_devices")),
-		navPage("cross-platform", "cross-platform matrix features os", "/cross-platform", "nav.cross_platform", withPermission("device.view")),
 		navPage("cdap", "cdap iot scada sensors gateway", "/cdap", "nav.cdap", withPermission("cdap.view")),
 	}},
 	{ID: "support", Label: "nav.section_support", Icon: "support_agent", Pages: []NavPage{

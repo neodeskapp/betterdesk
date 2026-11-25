@@ -8024,7 +8024,16 @@
       "link_repo": "GitHub-repositorium",
       "link_discord": "Fellesskap på Discord",
       "close": "Lukk",
-      "link_docs": "Dokumentasjon"
+      "link_docs": "Dokumentasjon",
+      "console": "In the console",
+      "shortcuts": "Hurtigtaster"
+    },
+    "shortcuts": {
+      "search": "Open the search",
+      "results": "Move through the search results and open one",
+      "close": "Close a dialog, menu or panel",
+      "move": "Move between buttons and fields",
+      "or": "eller"
     }
   },
   "setup_guide": {

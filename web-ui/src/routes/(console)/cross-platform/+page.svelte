@@ -35,7 +35,7 @@
 		type Support
 	} from '#lib/devices-area/crossPlatform.ts';
 	import { has, t } from '#lib/i18n/i18n.svelte.ts';
-	import { onRefresh } from '#lib/shell/page.svelte.ts';
+	import { onRefresh, setPageTitle } from '#lib/shell/page.svelte.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import CodeBlock from '#lib/ui/CodeBlock.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
@@ -139,6 +139,9 @@
 }`;
 
 	const SUPPORT: readonly Support[] = ['full', 'partial', 'none', 'planned'];
+
+	// Reached from Help, not the sidebar: the breadcrumb names it itself
+	$effect(() => setPageTitle(t('nav.cross_platform')));
 </script>
 
 {#snippet countCell(r: CountRow)}{r.count}{/snippet}

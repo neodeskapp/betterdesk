@@ -8024,7 +8024,16 @@
       "link_repo": "Repository GitHub",
       "link_discord": "Comunitatea pe Discord",
       "close": "Închide",
-      "link_docs": "Documentație"
+      "link_docs": "Documentație",
+      "console": "In the console",
+      "shortcuts": "Comenzi rapide"
+    },
+    "shortcuts": {
+      "search": "Open the search",
+      "results": "Move through the search results and open one",
+      "close": "Close a dialog, menu or panel",
+      "move": "Move between buttons and fields",
+      "or": "sau"
     }
   },
   "setup_guide": {

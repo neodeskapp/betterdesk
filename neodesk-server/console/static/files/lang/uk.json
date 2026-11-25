@@ -8024,7 +8024,16 @@
       "link_repo": "Репозиторій GitHub",
       "link_discord": "Спільнота в Discord",
       "close": "Закрити",
-      "link_docs": "Документація"
+      "link_docs": "Документація",
+      "console": "In the console",
+      "shortcuts": "Сполучення клавіш"
+    },
+    "shortcuts": {
+      "search": "Open the search",
+      "results": "Move through the search results and open one",
+      "close": "Close a dialog, menu or panel",
+      "move": "Move between buttons and fields",
+      "or": "або"
     }
   },
   "setup_guide": {

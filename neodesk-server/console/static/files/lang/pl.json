@@ -8018,7 +8018,16 @@
       "link_repo": "Repozytorium GitHub",
       "link_discord": "Społeczność na Discordzie",
       "close": "Zamknij",
-      "link_docs": "Dokumentacja"
+      "link_docs": "Dokumentacja",
+      "console": "W konsoli",
+      "shortcuts": "Skróty klawiszowe"
+    },
+    "shortcuts": {
+      "search": "Otwórz wyszukiwanie",
+      "results": "Move through the search results and open one",
+      "close": "Close a dialog, menu or panel",
+      "move": "Move between buttons and fields",
+      "or": "lub"
     }
   },
   "setup_guide": {

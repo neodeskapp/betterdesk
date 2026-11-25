@@ -8022,7 +8022,16 @@
       "link_repo": "Dépôt GitHub",
       "link_discord": "Communauté sur Discord",
       "close": "Fermer",
-      "link_docs": "Documentation"
+      "link_docs": "Documentation",
+      "console": "Dans la console",
+      "shortcuts": "Raccourcis clavier"
+    },
+    "shortcuts": {
+      "search": "Ouvrir la recherche",
+      "results": "Parcourir les résultats et en ouvrir un",
+      "close": "Fermer une boîte de dialogue, un menu ou un panneau",
+      "move": "Passer d'un bouton ou d'un champ à l'autre",
+      "or": "ou"
     }
   },
   "setup_guide": {

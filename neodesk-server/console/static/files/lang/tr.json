@@ -8024,7 +8024,16 @@
       "link_repo": "GitHub deposu",
       "link_discord": "Discord topluluğu",
       "close": "Kapat",
-      "link_docs": "Belgeler"
+      "link_docs": "Belgeler",
+      "console": "In the console",
+      "shortcuts": "Klavye kısayolları"
+    },
+    "shortcuts": {
+      "search": "Open the search",
+      "results": "Move through the search results and open one",
+      "close": "Close a dialog, menu or panel",
+      "move": "Move between buttons and fields",
+      "or": "veya"
     }
   },
   "setup_guide": {

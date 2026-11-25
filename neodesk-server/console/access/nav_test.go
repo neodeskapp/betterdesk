@@ -307,6 +307,19 @@ func TestNavServerSection(t *testing.T) {
 	}
 }
 
+// Plan step 3: Platform support is reference, reached from Help; it left
+// the Devices section.
+func TestNavPlatformSupportInHelp(t *testing.T) {
+	nav := BuildNav(NavInput{Can: func(string) bool { return true }, IsSuperAdmin: true, Role: "super_admin"})
+	for _, section := range nav.Sections {
+		for _, page := range section.Pages {
+			if page.Page == "cross-platform" || page.Href == "/cross-platform" {
+				t.Errorf("Platform support is still in the %s section", section.ID)
+			}
+		}
+	}
+}
+
 func TestNavSectionsAndActivePage(t *testing.T) {
 	admin := NavInput{Can: func(string) bool { return true }, IsSuperAdmin: true, Role: "admin"}
 	nav := BuildNav(admin)
@@ -316,7 +329,7 @@ func TestNavSectionsAndActivePage(t *testing.T) {
 		ids = append(ids, section.ID)
 		total += len(section.Pages)
 	}
-	if strings.Join(ids, ",") != "devices,support,people,activity,rules,server,settings" || total != 49 {
+	if strings.Join(ids, ",") != "devices,support,people,activity,rules,server,settings" || total != 48 {
 		t.Errorf("admin sees sections %v with %d pages", ids, total)
 	}
 	if nav.ActivePage != nil || nav.ActiveSection != nil {

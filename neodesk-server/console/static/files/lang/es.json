@@ -8018,7 +8018,16 @@
       "link_repo": "Repositorio de GitHub",
       "link_discord": "Comunidad en Discord",
       "close": "Cerrar",
-      "link_docs": "Documentación"
+      "link_docs": "Documentación",
+      "console": "En la consola",
+      "shortcuts": "Atajos de teclado"
+    },
+    "shortcuts": {
+      "search": "Abrir la búsqueda",
+      "results": "Recorrer los resultados y abrir uno",
+      "close": "Cerrar un diálogo, menú o panel",
+      "move": "Moverse entre botones y campos",
+      "or": "o"
     }
   },
   "setup_guide": {
