@@ -123,7 +123,9 @@ describe('in German', () => {
 			t
 		);
 		expect(single.name).toBe('Grenze für Konsolensitzungen pro Konto');
-		expect(single.description).toContain('(derzeit keine Grenze; einzustellen unter Einstellungen, Anmeldung');
+		expect(single.description).toContain(
+			'(derzeit keine Grenze; einzustellen unter Einstellungen, Anmeldung'
+		);
 	});
 
 	test('notes of the built-in groups', () => {
