@@ -5459,8 +5459,8 @@
     "old_messages": "Messaggi vecchi",
     "old_messages_hint": "Dalla chat prima di questa versione. Solo gli amministratori li vedono e qui nessuno può scrivere.",
     "found_messages": "Messaggi",
-    "search_support": "Trova un computer o un messaggio: nome, ID, proprietario, cartella o testo",
-    "search_team": "Trova un collega, un gruppo o un messaggio"
+    "search_support": "Trova un computer o un messaggio",
+    "search_team": "Trova un collega o un messaggio"
   },
   "toast": {
     "device_connected": "Dispositivo connesso",

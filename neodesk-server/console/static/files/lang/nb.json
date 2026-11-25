@@ -5465,8 +5465,8 @@
     "old_messages": "Gamle meldinger",
     "old_messages_hint": "Fra chatten før denne versjonen. Bare administratorer ser dem, og ingen kan skrive her.",
     "found_messages": "Meldinger",
-    "search_support": "Finn en datamaskin eller melding: navn, ID, eier, mappe eller tekst",
-    "search_team": "Finn en kollega, gruppe eller melding"
+    "search_support": "Finn en datamaskin eller melding",
+    "search_team": "Finn en kollega eller melding"
   },
   "toast": {
     "device_connected": "Enhet tilkoblet",

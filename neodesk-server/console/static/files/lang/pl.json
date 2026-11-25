@@ -5598,8 +5598,8 @@
     "old_messages": "Stare wiadomości",
     "old_messages_hint": "Z czatu sprzed tej wersji. Widzą je tylko administratorzy i nikt nie może tu pisać.",
     "found_messages": "Wiadomości",
-    "search_support": "Znajdź komputer lub wiadomość: nazwa, ID, właściciel, folder lub tekst",
-    "search_team": "Znajdź współpracownika, grupę lub wiadomość"
+    "search_support": "Znajdź komputer lub wiadomość",
+    "search_team": "Znajdź współpracownika lub wiadomość"
   },
   "toast": {
     "device_connected": "Urządzenie połączone",

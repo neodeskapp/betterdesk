@@ -5459,8 +5459,8 @@
     "old_messages": "以前のメッセージ",
     "old_messages_hint": "このバージョンより前のチャットのメッセージです。管理者だけが表示でき、ここには誰も書き込めません。",
     "found_messages": "メッセージ",
-    "search_support": "コンピューターまたはメッセージを検索: 名前、ID、所有者、フォルダー、テキスト",
-    "search_team": "同僚、グループ、メッセージを検索"
+    "search_support": "コンピューターまたはメッセージを検索",
+    "search_team": "同僚またはメッセージを検索"
   },
   "toast": {
     "device_connected": "接続されたデバイス",

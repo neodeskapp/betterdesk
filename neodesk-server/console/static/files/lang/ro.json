@@ -5465,8 +5465,8 @@
     "old_messages": "Mesaje vechi",
     "old_messages_hint": "Din chatul de dinaintea acestei versiuni. Doar administratorii le văd și nimeni nu poate scrie aici.",
     "found_messages": "Mesaje",
-    "search_support": "Găsiți un computer sau un mesaj: nume, ID, proprietar, folder sau text",
-    "search_team": "Găsiți un coleg, un grup sau un mesaj"
+    "search_support": "Găsiți un computer sau un mesaj",
+    "search_team": "Găsiți un coleg sau un mesaj"
   },
   "toast": {
     "device_connected": "Dispozitiv conectat",

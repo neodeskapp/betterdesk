@@ -5465,8 +5465,8 @@
     "old_messages": "Pesan lama",
     "old_messages_hint": "Dari obrolan sebelum versi ini. Hanya admin yang melihatnya, dan tidak ada yang bisa menulis di sini.",
     "found_messages": "Pesan",
-    "search_support": "Cari komputer atau pesan: nama, ID, pemilik, folder, atau teks",
-    "search_team": "Cari rekan, grup, atau pesan"
+    "search_support": "Cari komputer atau pesan",
+    "search_team": "Cari rekan atau pesan"
   },
   "toast": {
     "device_connected": "Perangkat terhubung",

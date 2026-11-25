@@ -5602,8 +5602,8 @@
     "old_messages": "舊訊息",
     "old_messages_hint": "來自此版本之前的聊天。只有管理員可以看到，任何人都無法在此發言。",
     "found_messages": "訊息",
-    "search_support": "尋找電腦或訊息：名稱、ID、擁有者、資料夾或文字",
-    "search_team": "尋找同事、群組或訊息"
+    "search_support": "尋找電腦或訊息",
+    "search_team": "尋找同事或訊息"
   },
   "toast": {
     "device_connected": "設備已連接",

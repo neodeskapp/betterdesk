@@ -5659,8 +5659,8 @@
         "old_messages": "Old messages",
         "old_messages_hint": "From the chat before this version. Only admins see them, and nobody can write here.",
         "found_messages": "Messages",
-        "search_support": "Find a computer or message: name, ID, owner, folder or text",
-        "search_team": "Find a colleague, group or message"
+        "search_support": "Find a computer or message",
+        "search_team": "Find a colleague or message"
     },
     "toast": {
         "device_connected": "Device connected",

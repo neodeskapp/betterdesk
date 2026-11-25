@@ -5459,8 +5459,8 @@
     "old_messages": "Staré zprávy",
     "old_messages_hint": "Z chatu před touto verzí. Vidí je jen správci a nikdo sem nemůže psát.",
     "found_messages": "Zprávy",
-    "search_support": "Najít počítač nebo zprávu: název, ID, vlastník, složka nebo text",
-    "search_team": "Najít kolegu, skupinu nebo zprávu"
+    "search_support": "Najít počítač nebo zprávu",
+    "search_team": "Najít kolegu nebo zprávu"
   },
   "toast": {
     "device_connected": "Zařízení připojeno",

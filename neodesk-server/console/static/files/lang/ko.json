@@ -5459,8 +5459,8 @@
     "old_messages": "이전 메시지",
     "old_messages_hint": "이 버전 이전의 채팅 메시지입니다. 관리자만 볼 수 있으며 여기에는 아무도 쓸 수 없습니다.",
     "found_messages": "메시지",
-    "search_support": "컴퓨터 또는 메시지 찾기: 이름, ID, 소유자, 폴더 또는 텍스트",
-    "search_team": "동료, 그룹 또는 메시지 찾기"
+    "search_support": "컴퓨터 또는 메시지 찾기",
+    "search_team": "동료 또는 메시지 찾기"
   },
   "toast": {
     "device_connected": "장치가 연결됨",

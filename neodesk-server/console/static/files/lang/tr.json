@@ -5465,8 +5465,8 @@
     "old_messages": "Eski mesajlar",
     "old_messages_hint": "Bu sürümden önceki sohbetten. Yalnızca yöneticiler görür ve buraya kimse yazamaz.",
     "found_messages": "Mesajlar",
-    "search_support": "Bilgisayar veya mesaj bul: ad, ID, sahip, klasör ya da metin",
-    "search_team": "Çalışma arkadaşı, grup veya mesaj bul"
+    "search_support": "Bilgisayar veya mesaj bul",
+    "search_team": "Çalışma arkadaşı veya mesaj bul"
   },
   "toast": {
     "device_connected": "Cihaz bağlandı",

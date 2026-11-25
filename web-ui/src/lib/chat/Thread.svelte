@@ -151,8 +151,11 @@
 
 	async function showQuoted(id: string, ms = 1600) {
 		const el = scroller?.querySelector<HTMLElement>(`[data-id="${CSS.escape(id)}"]`);
-		if (!el) return;
-		el.scrollIntoView({ block: 'center' });
+		if (!el || !scroller) return;
+		// Only the thread scrolls, not the page around it
+		const box = scroller.getBoundingClientRect();
+		const at = el.getBoundingClientRect();
+		scroller.scrollTop += at.top - box.top - (box.height - at.height) / 2;
 		marked = id;
 		setTimeout(() => {
 			if (marked === id) marked = null;

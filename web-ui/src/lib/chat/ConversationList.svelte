@@ -183,7 +183,7 @@
 				<li>
 					<button
 						type="button"
-						class={['row', 'is-found', active === m.conversation_id && 'is-current']}
+						class="row is-found"
 						onclick={(e) => onopen(m.conversation_id, e.currentTarget, m.id)}
 					>
 						<span class="row-avatar"
@@ -197,8 +197,9 @@
 								<span class="row-time"><Time value={m.created_at} /></span>
 							</span>
 							<span class="row-found"
-								>{#if m.from.name}<span class="row-from">{m.from.name}:</span>
-								{/if}{part.before}<mark>{part.match}</mark>{part.after}</span
+								>{#if m.from.name}<span class="row-from">{m.from.name}:</span>{/if}{part.before}<mark
+									>{part.match}</mark
+								>{part.after}</span
 							>
 						</span>
 					</button>
@@ -615,6 +616,7 @@
 		font-weight: 600;
 	}
 	.row-from {
+		margin-inline-end: 0.3em;
 		color: var(--text);
 	}
 	.is-unread .row-last {

@@ -5459,8 +5459,8 @@
     "old_messages": "Oude berichten",
     "old_messages_hint": "Uit de chat van vóór deze versie. Alleen beheerders zien ze en niemand kan hier schrijven.",
     "found_messages": "Berichten",
-    "search_support": "Zoek een computer of bericht: naam, ID, eigenaar, map of tekst",
-    "search_team": "Zoek een collega, groep of bericht"
+    "search_support": "Zoek een computer of bericht",
+    "search_team": "Zoek een collega of bericht"
   },
   "toast": {
     "device_connected": "Apparaat verbonden",
