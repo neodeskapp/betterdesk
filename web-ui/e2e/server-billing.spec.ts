@@ -1,9 +1,9 @@
 /**
- * Billing (/commercialization), once per role: the page needs billing.view;
- * New package, Assign package and the row menus need billing.manage; Write
- * report billing.reports; Export billing.export. Deep links: ?tab=reports
- * is the sessions view, ?settings=1 opens the billing settings. axe on both
- * views, the month preview, the session details and the report dialog. An
+ * Billing (/billing; /commercialization leads there), once per role: the
+ * page needs billing.view; New package, Assign package and the row menus
+ * need billing.manage; Write report billing.reports; Export billing.export.
+ * Deep links: ?tab=sessions opens the Sessions tab, ?settings=1 opens the
+ * billing settings. axe on both tabs, the month preview, the session details and the report dialog. An
  * admin creates a package and deletes it again.
  */
 import type { Page } from '@playwright/test';
@@ -59,7 +59,7 @@ for (const role of ROLES) {
 		test('packages follow billing.view and billing.manage', async ({ page, problems }) => {
 			let own = '';
 			allowGonePackages(page, problems, () => own);
-			await page.goto(`${UI}/commercialization?tab=packages`);
+			await page.goto(`${UI}/billing?tab=packages`);
 			// The console's start (session, strings) can take more than 5 s on a busy server
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 20_000 });
 			const can = await perms(page);
@@ -90,7 +90,7 @@ for (const role of ROLES) {
 			await expect(sheet).toBeHidden();
 
 			// ?settings=1 opens the billing settings
-			await page.goto(`${UI}/commercialization?settings=1`);
+			await page.goto(`${UI}/billing?settings=1`);
 			await expect(page.locator('#billing-settings-panel details')).toHaveAttribute('open', '');
 			await expect(page.locator('#billing-settings-panel .save-bar')).toHaveCount(
 				can('billing.manage') ? 1 : 0
@@ -118,11 +118,14 @@ for (const role of ROLES) {
 		});
 
 		test('sessions follow billing.reports and billing.export', async ({ page }) => {
-			await page.goto(`${UI}/commercialization?tab=reports`);
+			// The old address leads to the Billing page with its tab
+			await page.goto(`${UI}/commercialization?tab=sessions`);
+			await expect(page).toHaveURL(/\/billing\?tab=sessions$/, { timeout: 20_000 });
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 20_000 });
 			const can = await perms(page);
 			if (!can('billing.view')) return;
-			await expect(page).toHaveURL(/tab=reports/);
+			await expect(page.getByRole('heading', { level: 1, name: 'Billing' })).toBeVisible();
+			await expect(page.getByRole('tab', { name: 'Sessions' })).toHaveAttribute('aria-selected', 'true');
 			await expect(page.locator('.sessions-refresh')).toBeVisible();
 			await expect(page.getByRole('button', { name: 'Export' })).toHaveCount(can('billing.export') ? 1 : 0);
 			const rows = page.locator('.sessions-table tbody tr[data-key]');

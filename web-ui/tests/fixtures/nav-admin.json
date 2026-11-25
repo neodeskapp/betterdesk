@@ -198,10 +198,20 @@
 			{
 				"page": "security-audit",
 				"href": "/security-audit",
-				"text": "Security and audit",
+				"text": "Audit log",
 				"group": "",
 				"core": true,
-				"keywords": "audit log who banned security events",
+				"keywords": "audit log who banned events server events sessions",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "security-checks",
+				"href": "/security-checks",
+				"text": "Security checks",
+				"group": "",
+				"core": true,
+				"keywords": "security checks hardening vulnerabilities",
 				"external": false,
 				"countId": null
 			},
@@ -226,12 +236,12 @@
 				"countId": null
 			},
 			{
-				"page": "commercialization:sessions",
-				"href": "/commercialization?tab=sessions",
-				"text": "Billable sessions",
+				"page": "billing",
+				"href": "/billing",
+				"text": "Billing",
 				"group": "",
 				"core": false,
-				"keywords": "sessions billing minutes work reports",
+				"keywords": "billing commercialization packages contracts sessions minutes work reports",
 				"external": false,
 				"countId": null
 			}
@@ -473,16 +483,6 @@
 				"group": "Clients and joining",
 				"core": false,
 				"keywords": "client branding white label",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "commercialization:packages",
-				"href": "/commercialization?tab=packages",
-				"text": "Billing packages",
-				"group": "Billing",
-				"core": false,
-				"keywords": "packages contracts billing",
 				"external": false,
 				"countId": null
 			},

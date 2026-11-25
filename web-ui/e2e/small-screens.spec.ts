@@ -29,7 +29,7 @@ const PAGES = [
 	'/keys',
 	'/security-audit',
 	'/automation',
-	'/commercialization?tab=packages'
+	'/billing?tab=packages'
 ];
 
 test.use({
@@ -267,13 +267,7 @@ test.describe('empty tables at 360', () => {
 	test('the empty-table sentence wraps inside the visible part of the table', async ({ page }) => {
 		const cut: string[] = [];
 		let seen = 0;
-		for (const path of [
-			'/automation',
-			'/commercialization?tab=packages',
-			'/dataguard',
-			'/fleet',
-			'/activity'
-		]) {
+		for (const path of ['/automation', '/billing?tab=packages', '/dataguard', '/fleet', '/activity']) {
 			await open(page, path, 'en');
 			const cells = await page.evaluate(() =>
 				[...document.querySelectorAll<HTMLElement>('.table-scroll td.state-cell')].map((td) => {
@@ -372,8 +366,7 @@ test.describe('security checks in German at 360', () => {
 	// BUGS L322: "Was zu tun" was clipped at the right edge mid-word
 	test('the checks table fits the screen', async ({ page, baseURL }) => {
 		await useLanguage(page, 'de', baseURL);
-		await open(page, '/security-audit', 'de');
-		await page.getByRole('tab', { name: 'Sicherheitsprüfungen' }).click();
+		await open(page, '/security-checks', 'de');
 		const box = page.locator('.checks .table-scroll');
 		await expect(box.locator('tbody tr').first()).toBeVisible();
 		const { scroll, client } = await box.evaluate((el) => ({

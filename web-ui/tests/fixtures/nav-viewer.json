@@ -111,10 +111,20 @@
 			{
 				"page": "security-audit",
 				"href": "/security-audit",
-				"text": "Security and audit",
+				"text": "Audit log",
 				"group": "",
 				"core": true,
-				"keywords": "audit log who banned security events",
+				"keywords": "audit log who banned events server events sessions",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "security-checks",
+				"href": "/security-checks",
+				"text": "Security checks",
+				"group": "",
+				"core": true,
+				"keywords": "security checks hardening vulnerabilities",
 				"external": false,
 				"countId": null
 			},

@@ -336,7 +336,7 @@ for (const role of ROLES) {
 		});
 
 		// Three tests: with axe at every step one would run past the 30 s test timeout
-		test('security and audit: audit.view; ?tab=, ?q= and ?type= in the URL', async ({ page }) => {
+		test('audit log and security checks: audit.view; ?tab=, ?q= and ?type= in the URL', async ({ page }) => {
 			await page.goto(`${UI}/security-audit?tab=audit&q=login&type=signins`);
 			const me = await who(page);
 			const can = (p: string) => me.isSuperAdmin || me.permissions.includes(p);
@@ -344,13 +344,11 @@ for (const role of ROLES) {
 				await expect(noAccess(page)).toBeVisible();
 				return;
 			}
-			await expect(page.getByRole('heading', { level: 1, name: 'Security and audit' })).toBeVisible();
+			await expect(page.getByRole('heading', { level: 1, name: 'Audit log' })).toBeVisible();
 			await expect(page.getByRole('searchbox')).toHaveValue('login');
 			await expectNoAxeViolations(page);
 			for (const [tab, name] of [
 				['events', 'Server events'],
-				['overview', 'Security checks'],
-				['hardening', 'Hardening'],
 				['sessions', 'Your sessions']
 			] as const) {
 				await page.getByRole('tab', { name }).click();
@@ -358,10 +356,17 @@ for (const role of ROLES) {
 				await expect(page).not.toHaveURL(/[?&]q=/);
 				await expectNoAxeViolations(page);
 			}
-			// The old name of the Hardening tab
+			await expect(page.getByRole('tab', { name: 'Hardening' })).toHaveCount(0);
+			// The checks are a page of their own; the old addresses lead there
 			await page.goto(`${UI}/security-audit?tab=vulnerabilities`);
-			await expect(page.getByRole('heading', { level: 1, name: 'Security and audit' })).toBeVisible();
+			await expect(page).toHaveURL(/\/security-checks\?tab=hardening$/);
+			await expect(page.getByRole('heading', { level: 1, name: 'Security checks' })).toBeVisible();
 			await expect(page.getByRole('tab', { name: 'Hardening' })).toHaveAttribute('aria-selected', 'true');
+			await expectNoAxeViolations(page);
+			await page.getByRole('tab', { name: 'Security checks' }).click();
+			await expect(page).toHaveURL(/[?&]tab=checks/);
+			await page.goto(`${UI}/security-audit?tab=overview`);
+			await expect(page).toHaveURL(/\/security-checks\?tab=checks$/);
 		});
 
 		test('app usage: audit.view', async ({ page }) => {
