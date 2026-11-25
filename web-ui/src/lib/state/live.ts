@@ -171,3 +171,16 @@ export function socket(path: string, opts: SocketOptions): LiveSocket {
 		}
 	};
 }
+
+/** How often a list that other people change loads again while it is on screen */
+export const RELOAD_EVERY = 30_000;
+
+/**
+ * Load a page's data again every 30 s while the tab is visible, and once
+ * when it is shown again; the page's own first load comes before. Pages
+ * whose data changes elsewhere use it, since the top bar has no Refresh.
+ * Returns stop().
+ */
+export function reloadWhileShown(fn: () => unknown, every: number = RELOAD_EVERY): () => void {
+	return poll(async () => void (await fn()), { every, immediate: false });
+}

@@ -40,7 +40,7 @@
 	import { parseDate } from '#lib/i18n/format.ts';
 	import { i18n, t } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
-	import { onRefresh } from '#lib/shell/page.svelte.ts';
+	import { reloadWhileShown } from '#lib/state/live.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Chart from '#lib/ui/Chart.svelte';
@@ -147,7 +147,8 @@
 		void loadTargets();
 		void loadMonitor();
 	};
-	$effect(() => onRefresh(refresh));
+	// Others add and change targets: the list loads again every 30 s while on screen
+	$effect(() => reloadWhileShown(refresh));
 
 	/* ── Search ── */
 

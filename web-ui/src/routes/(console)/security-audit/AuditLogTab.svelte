@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import { reloadWhileShown } from '#lib/state/live.ts';
 	import { listAuditLog, listAvatarVersions } from '#lib/api/audit.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import DetailsText from '#lib/people/DetailsText.svelte';
@@ -54,9 +55,12 @@
 	let query = $state(untrack(() => q));
 	let kind = $state<AuditFilter | ''>(untrack(() => (isAuditFilter(type) ? type : '')));
 
-	async function load() {
-		loaded = false;
-		loadError = null;
+	/** quiet: a reload in the background keeps the list on screen while it runs */
+	async function load(quiet = false) {
+		if (!quiet) {
+			loaded = false;
+			loadError = null;
+		}
 		try {
 			const [rows, pics] = await Promise.all([
 				listAuditLog(2000),
@@ -64,8 +68,10 @@
 			]);
 			entries = toAuditEntries(rows, t);
 			avatars = pics;
+			loadError = null;
 		} catch {
-			loadError = t('security_audit.audit_load_failed');
+			// A failed reload keeps the list it has
+			if (!quiet) loadError = t('security_audit.audit_load_failed');
 		} finally {
 			loaded = true;
 		}
@@ -74,6 +80,8 @@
 	$effect(() => {
 		untrack(() => void load());
 	});
+	// New entries come in all the time: the log loads again every 30 s while on screen
+	$effect(() => reloadWhileShown(() => load(true)));
 
 	$effect(() => {
 		const v = searchInput.trim();

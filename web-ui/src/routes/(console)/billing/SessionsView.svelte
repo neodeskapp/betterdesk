@@ -29,6 +29,7 @@
 		type WorkReport
 	} from '#lib/api/billing.ts';
 	import { ApiError } from '#lib/api/client.ts';
+	import { reloadWhileShown } from '#lib/state/live.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import {
@@ -151,6 +152,8 @@
 		void filter;
 		untrack(() => void loadSessions());
 	});
+	// Sessions start and end on their own: the list loads again every 30 s while on screen
+	$effect(() => reloadWhileShown(loadSessions));
 
 	/* ── Above the list ── */
 

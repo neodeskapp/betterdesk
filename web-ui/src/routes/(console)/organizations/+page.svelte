@@ -18,7 +18,7 @@
 	import { go } from '#lib/people/go.ts';
 	import OrgDialog from '#lib/people/OrgDialog.svelte';
 	import { eachLimited } from '#lib/people/users.ts';
-	import { onRefresh } from '#lib/shell/page.svelte.ts';
+	import { reloadWhileShown } from '#lib/state/live.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
@@ -89,7 +89,8 @@
 
 	$effect(() => {
 		untrack(() => void load());
-		const stop = onRefresh(() => void load());
+		// Others add and change organizations: the list loads again every 30 s while on screen
+		const stop = reloadWhileShown(load);
 		return () => {
 			stop();
 			countRequests?.abort();

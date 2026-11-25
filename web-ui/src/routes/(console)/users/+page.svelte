@@ -57,7 +57,7 @@
 		providerOf,
 		scopeText
 	} from '#lib/people/users.ts';
-	import { onRefresh } from '#lib/shell/page.svelte.ts';
+	import { reloadWhileShown } from '#lib/state/live.ts';
 	import { myPresence } from '#lib/state/presence.svelte.ts';
 	import { can, sectionWritable, session } from '#lib/state/session.svelte.ts';
 	import BooleanStatus from '#lib/ui/BooleanStatus.svelte';
@@ -174,10 +174,8 @@
 			void loadUsers();
 			void loadGroups();
 		});
-		const stop = onRefresh(() => {
-			void loadUsers();
-			void loadGroups();
-		});
+		// Others add and change accounts: the list loads again every 30 s while on screen
+		const stop = reloadWhileShown(() => Promise.all([loadUsers(), loadGroups()]));
 		return () => {
 			stop();
 			rowRequests?.abort();

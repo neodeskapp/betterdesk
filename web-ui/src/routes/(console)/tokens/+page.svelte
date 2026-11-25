@@ -24,7 +24,7 @@
 	import { formatNumber } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
-	import { onRefresh } from '#lib/shell/page.svelte.ts';
+	import { reloadWhileShown } from '#lib/state/live.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import ChoiceList from '#lib/ui/ChoiceList.svelte';
@@ -131,7 +131,8 @@
 			void load();
 		})
 	);
-	$effect(() => onRefresh(() => void Promise.all([load(), loadMode()])));
+	// Devices use tokens up and others make new ones: the list loads again every 30 s while on screen
+	$effect(() => reloadWhileShown(() => Promise.all([load(), loadMode()])));
 
 	const modeChoices = $derived(
 		(['open', 'managed', 'locked'] as const).map((m) => ({
