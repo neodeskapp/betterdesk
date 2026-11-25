@@ -12,7 +12,7 @@ import (
 
 // TestCreateHelpRequestIsStored: POST /api/help/requests, which the
 // console calls for a device's help request, stores the request, answers
-// with its id, lists it and publishes it; it needs chat.access (BUGS G1,
+// with its id, lists it and publishes it; it needs chat.support (BUGS G1,
 // RG12).
 func TestCreateHelpRequestIsStored(t *testing.T) {
 	srv, _ := newInternalServer(t, nil)
@@ -45,6 +45,6 @@ func TestCreateHelpRequestIsStored(t *testing.T) {
 
 	issuer := Identity{Username: "issuer", Role: auth.RoleGuestIssuer}
 	if status, body := callAs(t, srv, issuer, http.MethodPost, "/api/help/requests", `{"device_id":"PEERAAA1"}`); status != http.StatusForbidden {
-		t.Errorf("create without chat.access: %d %s", status, body)
+		t.Errorf("create without chat.support: %d %s", status, body)
 	}
 }

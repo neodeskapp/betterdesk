@@ -73,7 +73,16 @@ const (
 	PermEnrollmentManage  = "enrollment.manage"
 	PermEnrollmentApprove = "enrollment.approve"
 
-	// Chat
+	// Chat (A242): Support chat with the people at computers, Team chat
+	// between console accounts, assigning support conversations and the
+	// shared canned replies.
+	PermChatSupport      = "chat.support"
+	PermChatTeam         = "chat.team"
+	PermChatAssign       = "chat.assign"
+	PermChatCannedManage = "chat.canned_manage"
+	// PermChatAccess is the one chat permission before A242. It is no
+	// permission of its own any more: a role override or an API token that
+	// still names it means Support chat and Team chat (LegacyPermissions).
 	PermChatAccess = "chat.access"
 
 	// Branding
@@ -101,7 +110,7 @@ var AllPermissions = []string{
 	PermMeshTerminal, PermMeshFiles, PermMeshPower,
 	PermAgentTerminal, PermAgentFiles,
 	PermEnrollmentManage, PermEnrollmentApprove,
-	PermChatAccess,
+	PermChatSupport, PermChatTeam, PermChatAssign, PermChatCannedManage,
 	PermBrandingEdit,
 	PermBillingView, PermBillingManage, PermBillingReports, PermBillingExport,
 }
@@ -148,7 +157,7 @@ var DefaultRolePermissions = map[string]map[string]bool{
 		PermCDAPView, PermCDAPCommand, PermCDAPTerminal, PermCDAPFiles,
 		PermMeshTerminal, PermMeshFiles, PermMeshPower,
 		PermAgentTerminal, PermAgentFiles,
-		PermChatAccess,
+		PermChatSupport, PermChatTeam, PermChatAssign, PermChatCannedManage,
 		PermEnrollmentManage, PermEnrollmentApprove,
 		PermBrandingEdit,
 		PermBillingView, PermBillingManage, PermBillingReports, PermBillingExport,
@@ -162,7 +171,7 @@ var DefaultRolePermissions = map[string]map[string]bool{
 		PermAuditView, PermMetricsView,
 		PermCDAPView, PermCDAPCommand,
 		PermMeshPower,
-		PermChatAccess,
+		PermChatSupport, PermChatTeam, PermChatAssign,
 		PermOrgManageDevices,
 		PermBillingView, PermBillingReports,
 	}),
@@ -171,7 +180,7 @@ var DefaultRolePermissions = map[string]map[string]bool{
 		PermRemoteTargetView,
 		PermAuditView, PermMetricsView,
 		PermCDAPView,
-		PermChatAccess,
+		PermChatSupport, PermChatTeam,
 	}),
 	RolePro:         buildPermMap([]string{}),
 	RoleGuestIssuer: buildPermMap([]string{PermDeviceView, PermGuestCreate}),
@@ -220,6 +229,23 @@ func RoleHasPermission(role, permission string) bool {
 		return false
 	}
 	return perms[permission]
+}
+
+// LegacyPermissions are permission names of older versions, each with the
+// permissions it stands for now. A stored role override or an API token
+// that still names one is read as those (ExpandLegacy); the migrations
+// write the new names.
+var LegacyPermissions = map[string][]string{
+	PermChatAccess: {PermChatSupport, PermChatTeam},
+}
+
+// ExpandLegacy is the permission's current names: the ones a legacy name
+// stands for, else the name itself.
+func ExpandLegacy(permission string) []string {
+	if now, ok := LegacyPermissions[permission]; ok {
+		return now
+	}
+	return []string{permission}
 }
 
 // ValidPermission returns true if the given string is a recognized permission.

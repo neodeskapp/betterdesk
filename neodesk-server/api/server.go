@@ -447,16 +447,16 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("PUT /api/peers/{id}/tags", s.requirePermission(auth.PermDeviceEdit, s.scopedDevice(s.handleSetPeerTags)))
 	mux.HandleFunc("GET /api/tags/{tag}/peers", s.requirePermission(auth.PermDeviceView, s.handlePeersByTag))
 
-	// Chat (requires chat.access permission)
-	mux.HandleFunc("GET /api/chat/history/", s.requirePermission(auth.PermChatAccess, s.handleChatHistory))
-	mux.HandleFunc("POST /api/chat/messages", s.requirePermission(auth.PermChatAccess, s.handleChatSendMessage))
-	mux.HandleFunc("POST /api/chat/read", s.requirePermission(auth.PermChatAccess, s.handleChatMarkRead))
-	mux.HandleFunc("GET /api/chat/unread/", s.requirePermission(auth.PermChatAccess, s.handleChatUnread))
-	mux.HandleFunc("GET /api/chat/contacts/", s.requirePermission(auth.PermChatAccess, s.handleChatContacts))
-	mux.HandleFunc("POST /api/chat/groups", s.requirePermission(auth.PermChatAccess, s.handleChatCreateGroup))
-	mux.HandleFunc("GET /api/chat/groups/", s.requirePermission(auth.PermChatAccess, s.handleChatListGroups))
-	mux.HandleFunc("PUT /api/chat/groups/", s.requirePermission(auth.PermChatAccess, s.handleChatUpdateGroup))
-	mux.HandleFunc("DELETE /api/chat/groups/", s.requirePermission(auth.PermChatAccess, s.handleChatDeleteGroup))
+	// Chat (Support chat or Team chat, A242)
+	mux.HandleFunc("GET /api/chat/history/", s.requireAnyPermission([]string{auth.PermChatSupport, auth.PermChatTeam}, s.handleChatHistory))
+	mux.HandleFunc("POST /api/chat/messages", s.requireAnyPermission([]string{auth.PermChatSupport, auth.PermChatTeam}, s.handleChatSendMessage))
+	mux.HandleFunc("POST /api/chat/read", s.requireAnyPermission([]string{auth.PermChatSupport, auth.PermChatTeam}, s.handleChatMarkRead))
+	mux.HandleFunc("GET /api/chat/unread/", s.requireAnyPermission([]string{auth.PermChatSupport, auth.PermChatTeam}, s.handleChatUnread))
+	mux.HandleFunc("GET /api/chat/contacts/", s.requireAnyPermission([]string{auth.PermChatSupport, auth.PermChatTeam}, s.handleChatContacts))
+	mux.HandleFunc("POST /api/chat/groups", s.requireAnyPermission([]string{auth.PermChatSupport, auth.PermChatTeam}, s.handleChatCreateGroup))
+	mux.HandleFunc("GET /api/chat/groups/", s.requireAnyPermission([]string{auth.PermChatSupport, auth.PermChatTeam}, s.handleChatListGroups))
+	mux.HandleFunc("PUT /api/chat/groups/", s.requireAnyPermission([]string{auth.PermChatSupport, auth.PermChatTeam}, s.handleChatUpdateGroup))
+	mux.HandleFunc("DELETE /api/chat/groups/", s.requireAnyPermission([]string{auth.PermChatSupport, auth.PermChatTeam}, s.handleChatDeleteGroup))
 
 	// Organizations — org membership enforced on org-specific routes
 	mux.HandleFunc("POST /api/org", s.requirePermission(auth.PermOrgCreate, s.handleCreateOrg))
@@ -629,11 +629,11 @@ func (s *Server) routes() *http.ServeMux {
 	mux.HandleFunc("POST /api/devices/self/totp", s.rateLimitPublic(s.enrollmentLimiter, s.handleDeviceSelfTOTP))
 
 	// Help requests — operator panel (raised by agents via CDAP or REST self endpoint)
-	mux.HandleFunc("GET /api/help/requests", s.requirePermission(auth.PermChatAccess, s.handleListHelpRequests))
-	mux.HandleFunc("POST /api/help/requests", s.requirePermission(auth.PermChatAccess, s.handleCreateHelpRequest))
-	mux.HandleFunc("GET /api/help/requests/{id}", s.requirePermission(auth.PermChatAccess, s.handleGetHelpRequest))
-	mux.HandleFunc("POST /api/help/requests/{id}/acknowledge", s.requirePermission(auth.PermChatAccess, s.handleAcknowledgeHelpRequest))
-	mux.HandleFunc("POST /api/help/requests/{id}/resolve", s.requirePermission(auth.PermChatAccess, s.handleResolveHelpRequest))
+	mux.HandleFunc("GET /api/help/requests", s.requirePermission(auth.PermChatSupport, s.handleListHelpRequests))
+	mux.HandleFunc("POST /api/help/requests", s.requirePermission(auth.PermChatSupport, s.handleCreateHelpRequest))
+	mux.HandleFunc("GET /api/help/requests/{id}", s.requirePermission(auth.PermChatSupport, s.handleGetHelpRequest))
+	mux.HandleFunc("POST /api/help/requests/{id}/acknowledge", s.requirePermission(auth.PermChatSupport, s.handleAcknowledgeHelpRequest))
+	mux.HandleFunc("POST /api/help/requests/{id}/resolve", s.requirePermission(auth.PermChatSupport, s.handleResolveHelpRequest))
 
 	// Panel grouping — device groups, their members and ACL, folders, grants.
 	// Go owns these writes (strangler stage P2); the RustDesk client reads the

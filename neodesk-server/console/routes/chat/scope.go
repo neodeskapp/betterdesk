@@ -15,7 +15,7 @@ import (
 // A conversation whose id is a device's id is that device's chat: an
 // account sees it when the device is in its scope. Any other conversation
 // (between operators, of a group, the inbox's own) is no device's, and
-// every account with chat.access sees it. The zero Scope has no limits.
+// every account with chat sees it. The zero Scope has no limits.
 type Scope struct {
 	// Device is the device of an id, deleted ones included; nil when
 	// there is none (goapi.Backend.GetDeviceByID).

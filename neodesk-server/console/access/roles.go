@@ -187,8 +187,19 @@ func (s *DBRoleSource) RolePermissions(_ context.Context, role string) ([]string
 		if err != nil {
 			return nil, fmt.Errorf("read the permission overrides of role %s: %w", role, err)
 		}
+		// An override under an older name (chat.access) counts for the
+		// permissions it stands for, unless one names them itself
 		for _, o := range overrides {
-			effective[o.Permission] = o.Granted
+			if _, legacy := auth.LegacyPermissions[o.Permission]; legacy {
+				for _, p := range auth.ExpandLegacy(o.Permission) {
+					effective[p] = o.Granted
+				}
+			}
+		}
+		for _, o := range overrides {
+			if _, legacy := auth.LegacyPermissions[o.Permission]; !legacy {
+				effective[o.Permission] = o.Granted
+			}
 		}
 	}
 	out := make([]string, 0, len(effective))

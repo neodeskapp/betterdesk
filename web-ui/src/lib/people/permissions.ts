@@ -40,7 +40,7 @@ export const CATEGORIES: readonly { id: string; permissions: readonly string[] }
 		permissions: ['org.create', 'org.edit', 'org.delete', 'org.manage_users', 'org.manage_devices']
 	},
 	{ id: 'enrollment', permissions: ['enrollment.manage', 'enrollment.approve'] },
-	{ id: 'chat', permissions: ['chat.access'] },
+	{ id: 'chat', permissions: ['chat.support', 'chat.team', 'chat.assign', 'chat.canned_manage'] },
 	{ id: 'audit', permissions: ['audit.view', 'metrics.view', 'blocklist.edit'] },
 	{ id: 'server', permissions: ['server.config', 'server.keys', 'server.attestation'] },
 	{ id: 'branding', permissions: ['branding.edit'] },

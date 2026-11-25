@@ -130,7 +130,7 @@ func TestCatalogContents(t *testing.T) {
 	if toolkit.Group != "operations" || toolkit.ReadPermission != "device.connect" || toolkit.WritePermission != "device.connect" {
 		t.Errorf("toolkit: lookup finds %+v", toolkit)
 	}
-	if len(Catalog) != 33 || len(catalogKeys()) != 33 {
+	if len(Catalog) != 34 || len(catalogKeys()) != 34 {
 		t.Errorf("catalog has %d entries and %d keys", len(Catalog), len(catalogKeys()))
 	}
 

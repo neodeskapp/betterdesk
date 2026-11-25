@@ -7,7 +7,7 @@
 
   Data: GET /api/help/requests (newest 200) every 5 s while the tab is
   visible, on Refresh and on a help_request panel event. The list and its
-  actions need chat.access (P17): without it the page says so in one line
+  actions need chat.support (P17, A242): without it the page says so in one line
   instead of a list that fails.
 
   Quick support (device.connect): a button that opens the Quick support
@@ -67,7 +67,7 @@
 
 	const POLL_MS = 5000;
 
-	const allowed = $derived(can('chat.access'));
+	const allowed = $derived(can('chat.support'));
 
 	/* ── Data ── */
 

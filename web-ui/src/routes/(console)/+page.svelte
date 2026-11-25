@@ -7,7 +7,7 @@
 
   Data: /api/stats and /api/server/status on load, every 30 s while the tab
   is visible (poll) and on Refresh; the attention counts with them, each
-  only for the people allowed to read it (enrollment.approve, chat.access).
+  only for the people allowed to read it (enrollment.approve, chat.support).
   The client values (/api/dashboard/client-config) on load, on Refresh and
   when an address is typed into "Client server address" (kept for this
   tab, as the old overview did). Trends (audit.view) load on their own.
@@ -75,8 +75,8 @@
 
 	const canDevices = can('device.view');
 	const canApprove = can('enrollment.approve');
-	// The help request list needs chat.access (DECISIONS.md P17)
-	const canHelp = canDevices && can('chat.access');
+	// The help request list needs Support chat (DECISIONS.md P17, A242)
+	const canHelp = canDevices && can('chat.support');
 	const canTrends = can('audit.view');
 	// Links go only where the menu goes: the server builds the menu from the same checks as its routes
 	const navPages = new Set(session.nav.flatMap((s) => s.pages.map((p) => p.page)));

@@ -174,7 +174,7 @@ func (r *Relay) deviceName(ctx context.Context, id string) string {
 
 // serveOperator is a console user's socket. Before the handshake: a
 // foreign origin 403, no signed-in session 401, the role without
-// chat.access (or its lookup failing) 403, a room that is no device in
+// chat.support and chat.team (or their lookup failing) 403, a room that is no device in
 // the account's device scope 404 (the inbox is open to every account),
 // MaxOperatorSockets of the account open 429. The operator's name is the
 // session's user name, "operator" without one.
@@ -187,8 +187,7 @@ func (r *Relay) serveOperator(u *ws.Upgrade) {
 		u.Refuse(http.StatusUnauthorized)
 		return
 	}
-	allowed, err := u.RoleHasPermission(session.UserRole(), "chat.access")
-	if err != nil || !allowed {
+	if !anyChatPermission(u, session.UserRole()) {
 		u.Refuse(http.StatusForbidden)
 		return
 	}
@@ -217,6 +216,17 @@ func (r *Relay) serveOperator(u *ws.Upgrade) {
 	c.run(r.operatorFrame)
 	r.operatorLeaves(c)
 	c.wait()
+}
+
+// anyChatPermission reports whether the role holds Support chat or Team
+// chat; a failed lookup holds neither.
+func anyChatPermission(u *ws.Upgrade, role string) bool {
+	for _, p := range ChatPermissions {
+		if ok, err := u.RoleHasPermission(role, p); err == nil && ok {
+			return true
+		}
+	}
+	return false
 }
 
 // accept answers the handshake of an upgrade whose client's answers to

@@ -33,7 +33,7 @@ func TestNavFollowsRouteGuards(t *testing.T) {
 		{"attestation", map[string]bool{"super_admin": true, "admin": true, "global_admin": true, "server_admin": true, "operator": false, "viewer": false}},
 		// requireRole('operator')
 		{"cdap-studio", map[string]bool{"operator": true, "super_admin": true, "admin": true, "global_admin": false, "server_admin": false, "viewer": false}},
-		// chat.access, as the chat socket needs
+		// Support chat or Team chat, as the chat socket needs (A242)
 		{"chat", map[string]bool{"operator": true, "viewer": true, "global_admin": true, "server_admin": false}},
 		// a session is enough: Add computers shows each account the tabs it may use
 		{"devices-add", map[string]bool{"super_admin": true, "admin": true, "global_admin": true, "server_admin": true, "operator": true, "viewer": true, "guest_issuer": true}},

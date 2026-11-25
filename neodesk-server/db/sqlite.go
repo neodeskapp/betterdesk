@@ -55,6 +55,9 @@ func (s *SQLiteDB) Migrate() error {
 	if err := s.migrateSchema(); err != nil {
 		return err
 	}
+	if err := s.renameLegacyPermissions(); err != nil {
+		return err
+	}
 	return s.lowerCaseDirectoryAccounts()
 }
 

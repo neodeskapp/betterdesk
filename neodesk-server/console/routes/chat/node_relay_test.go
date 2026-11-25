@@ -160,7 +160,8 @@ func TestNodeScenarios(t *testing.T) {
 					if role == "throw" {
 						return false, errors.New("lookup failed")
 					}
-					return permission == "chat.access" && oracleChat[role], nil
+					// chat.access before A242: Support chat and Team chat now
+					return (permission == "chat.support" || permission == "chat.team") && oracleChat[role], nil
 				},
 			})
 			relay.Register(reg)
@@ -190,7 +191,7 @@ func TestNodeScenarios(t *testing.T) {
 				} else {
 					p.Quiet(10)
 				}
-				got := p.Take()
+				got := oneChatCheck(p.Take())
 				node := rewritten(wstest.RecordedEvents(t, s.Events))
 				if fixed, ok := fixedEvents(t, sc.Name, i, node); ok {
 					node = fixed
@@ -292,6 +293,25 @@ type rewrite struct {
 var rewrites = []rewrite{
 	// The welcome lists no end-to-end encryption, which the relay does not do
 	{"L212", `"history","e2e_encryption","read_receipts"`, `"history","read_receipts"`},
+}
+
+// oneChatCheck writes the permission checks of A242 as Node's one check:
+// chat.support, and chat.team after it when that failed, stand for
+// chat.access.
+func oneChatCheck(events []wstest.Event) []wstest.Event {
+	out := events[:0:0]
+	for _, e := range events {
+		if p, ok := e["permission"].([]any); ok && len(p) == 2 {
+			switch p[1] {
+			case "chat.team":
+				continue
+			case "chat.support":
+				e = wstest.Event{"permission": []any{p[0], "chat.access"}}
+			}
+		}
+		out = append(out, e)
+	}
+	return out
 }
 
 // rewritten applies the rewrites to the texts of the recorded events.

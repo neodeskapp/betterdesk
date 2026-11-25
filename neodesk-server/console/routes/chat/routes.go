@@ -56,6 +56,9 @@ func FilesDir(cfg *config.Config) string {
 	return filepath.Join(cfg.ConsoleDir, "data", "chat-files")
 }
 
+// ChatPermissions open the chat: Support chat and Team chat (A242).
+var ChatPermissions = []string{"chat.support", "chat.team"}
+
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
 	h := register(d, FilesDir(d.Config))
@@ -80,8 +83,9 @@ func register(d *kit.Deps, dir string) *handlers {
 			h.serverError(w, r, err, status)
 		},
 	})
-	// The chat websocket needs chat.access; its HTTP routes need the same
-	chatAccess := d.RequirePermission("chat.access")
+	// The chat websocket needs Support chat or Team chat; so do the
+	// HTTP routes both use
+	chatAccess := d.RequireAnyPermission(ChatPermissions...)
 	r := d.Router
 	r.Post("/api/chat/upload", h.upload, d.Limits.Upload.Middleware, d.RequireAuth, chatAccess)
 	r.Get("/api/chat/files/{fileId}", h.download, d.RequireAuth, chatAccess)

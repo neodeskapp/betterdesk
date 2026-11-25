@@ -1558,14 +1558,14 @@
      "help": "The file id"
     }
    ],
-   "permission": "chat.access",
+   "permission": "chat.support or chat.team",
    "secrets": true
   },
   {
    "name": "chat search",
    "summary": "Search chat messages.",
    "route": "GET /api/chat/search",
-   "permission": "chat.access"
+   "permission": "chat.support or chat.team"
   },
   {
    "name": "client-branding set",
@@ -3657,14 +3657,14 @@
      "help": "The ID"
     }
    ],
-   "permission": "chat.access",
+   "permission": "chat.support",
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
   },
   {
    "name": "help-requests list",
    "summary": "List help requests.",
    "route": "GET /api/help/requests",
-   "permission": "chat.access"
+   "permission": "chat.support"
   },
   {
    "name": "help-requests resolve",
@@ -3676,7 +3676,7 @@
      "help": "The ID"
     }
    ],
-   "permission": "chat.access",
+   "permission": "chat.support",
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
   },
   {

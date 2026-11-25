@@ -59,14 +59,14 @@ func newHandlers(d *kit.Deps, actors *helpActors) *handlers {
 // Register adds the group's routes below the mount of d, in the order of
 // the old route file. Every route but the two of devices needs a
 // permission: enrollment.approve, enrollment.manage to delete a
-// registration, chat.access for the help requests. A registration request
+// registration, chat.support for the help requests. A registration request
 // that adds a registration counts against the limit of device
 // registrations (registerRequest).
 func (g *Routes) Register(d *kit.Deps) {
 	h := newHandlers(d, g.actors)
 	r := d.Router
 	approve := d.RequirePermission("enrollment.approve")
-	chat := d.RequirePermission("chat.access")
+	chat := d.RequirePermission("chat.support")
 
 	r.Post("/register-request", h.registerRequest)
 	r.Get("/register-status", h.registerStatus)

@@ -8,7 +8,7 @@
 
   Real time: one socket, /ws/chat-operator/panel (reconnects with backoff,
   closes in a hidden tab after 30 s and opens again when shown). It needs
-  chat.access; without it the page says so instead of a list that never
+  chat.support or chat.team; without them the page says so instead of a list that never
   fills. End-to-end encryption stays off (U3): the old page never loaded
   its crypto code.
 -->
@@ -56,9 +56,9 @@
 	import GroupDialog from './GroupDialog.svelte';
 	import MessageItem from './MessageItem.svelte';
 
-	const allowed = $derived(can('chat.access'));
+	const allowed = $derived(can('chat.support') || can('chat.team'));
 	/** Sending, reacting and new groups need Chat at write; at read the conversations can be read */
-	const canEdit = $derived(canWrite('chat.access'));
+	const canEdit = $derived(canWrite('chat.support') || canWrite('chat.team'));
 	const me = $derived(session.user?.username ?? '');
 	const chat = new ChatState();
 
@@ -483,7 +483,7 @@
 			message={tf('chat.needs_access', 'Your role cannot use chat. Ask an administrator if you need it.')}
 		/>
 	{:else}
-		<ReadOnlyHint writes={['chat.access']} />
+		<ReadOnlyHint writes={['chat.support', 'chat.team']} />
 		{#if failed && status !== 'open'}
 			<Notice tone="warning" role="status" message={t('chat.not_connected')} />
 		{/if}

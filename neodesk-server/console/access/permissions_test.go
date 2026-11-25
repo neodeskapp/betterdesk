@@ -27,16 +27,16 @@ var consoleRoleMap = map[string][]string{
 		"guest.create", "device.ban", "device.change_id", "device.connection_mode", "audit.view", "metrics.view",
 		"cdap.view", "cdap.command", "cdap.terminal", "cdap.files", "mesh.terminal", "mesh.files", "mesh.power",
 		"agent.terminal", "agent.files",
-		"chat.access", "enrollment.manage", "enrollment.approve", "branding.edit",
+		"chat.support", "chat.team", "chat.assign", "chat.canned_manage", "enrollment.manage", "enrollment.approve", "branding.edit",
 		"billing.view", "billing.manage", "billing.reports", "billing.export",
 	},
 	"operator": {
 		"device.view", "device.connect", "device.edit", "device.connection_mode",
 		"remote_target.view", "remote_target.connect", "remote_target.test", "guest.create", "user.view",
-		"audit.view", "metrics.view", "cdap.view", "cdap.command", "mesh.power", "chat.access",
+		"audit.view", "metrics.view", "cdap.view", "cdap.command", "mesh.power", "chat.support", "chat.team", "chat.assign",
 		"org.manage_devices", "billing.view", "billing.reports",
 	},
-	"viewer":       {"device.view", "remote_target.view", "audit.view", "metrics.view", "cdap.view", "chat.access"},
+	"viewer":       {"device.view", "remote_target.view", "audit.view", "metrics.view", "cdap.view", "chat.support", "chat.team"},
 	"guest_issuer": {"device.view", "guest.create"},
 	"pro":          {},
 }
@@ -44,10 +44,11 @@ var consoleRoleMap = map[string][]string{
 // Jest: rolePermissions.goParity.test.js. Every default role against every
 // permission name the server knows.
 func TestRoleHasPermissionForEveryRoleAndPermission(t *testing.T) {
-	// 43 of the Node console, the NeoDesk agent's terminal and files (L388)
-	// and the two of saved sign-in, which no role but the super admins has (L469)
-	if len(auth.AllPermissions) != 47 {
-		t.Fatalf("the server knows %d permissions, the console's contract was written for 47", len(auth.AllPermissions))
+	// 43 of the Node console, the NeoDesk agent's terminal and files (L388),
+	// the two of saved sign-in, which no role but the super admins has
+	// (L469), and chat.access as four chat permissions (A242)
+	if len(auth.AllPermissions) != 50 {
+		t.Fatalf("the server knows %d permissions, the console's contract was written for 50", len(auth.AllPermissions))
 	}
 	for role, granted := range consoleRoleMap {
 		want := newPermissionSet(granted)
@@ -80,7 +81,7 @@ func TestRoleHasPermissionForEveryRoleAndPermission(t *testing.T) {
 
 func TestProRule(t *testing.T) {
 	blocked := []string{"device.view", "device.edit", "device.", "device.anything", "remote_target.view", "remote_target.", "org.manage_devices"}
-	open := []string{"chat.access", "org.manage_users", "devicex.view", "device", "org.manage_devicesx", "DEVICE.VIEW"}
+	open := []string{"chat.support", "org.manage_users", "devicex.view", "device", "org.manage_devicesx", "DEVICE.VIEW"}
 	for _, p := range blocked {
 		if !ProRoleBlocksPermission("pro", p) {
 			t.Errorf("pro must be blocked from %q", p)
@@ -97,13 +98,13 @@ func TestProRule(t *testing.T) {
 	// The block holds against overrides and against a section level.
 	c := &Context{
 		UserID: 8, HasUser: true, Role: "pro", Loaded: true,
-		Permissions: newPermissionSet([]string{"device.view", "chat.access"}),
+		Permissions: newPermissionSet([]string{"device.view", "chat.support"}),
 		Section:     "devices", Policy: policyWith("devices", LevelWrite),
 	}
 	if c.HasPermission("device.view") || c.HasPermission("device.edit") {
 		t.Error("a pro account got a device permission")
 	}
-	if !c.HasPermission("chat.access") {
+	if !c.HasPermission("chat.support") {
 		t.Error("a pro account lost a permission its overrides grant")
 	}
 }

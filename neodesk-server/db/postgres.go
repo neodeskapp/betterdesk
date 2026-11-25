@@ -854,6 +854,9 @@ func (pg *PostgresDB) Migrate() error {
 	}
 	pg.auditFileFlagBool.Store(flagType == "boolean")
 
+	if err := pg.renameLegacyPermissions(); err != nil {
+		return err
+	}
 	// Directory accounts get the name their directory signs them in under
 	return pg.lowerCaseDirectoryAccounts()
 }

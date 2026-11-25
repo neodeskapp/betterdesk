@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -143,6 +144,13 @@ func (s *Server) resolvePermission(role, permission string) (bool, bool, error) 
 	}
 	for _, override := range overrides {
 		if override != nil && override.Permission == permission {
+			return override.Granted, true, nil
+		}
+	}
+	// An override under an older name (chat.access) counts for the
+	// permissions it stands for
+	for _, override := range overrides {
+		if override != nil && slices.Contains(auth.LegacyPermissions[override.Permission], permission) {
 			return override.Granted, true, nil
 		}
 	}

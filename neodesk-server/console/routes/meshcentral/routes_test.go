@@ -225,9 +225,9 @@ func TestGuards(t *testing.T) {
 		{"POST", "/api/mesh/devices/d1/udp", "device.connect", "operator", "viewer", "POST /mesh/devices/d1/udp {}"},
 		{"POST", "/api/mesh/devices/d1/power", "mesh.power", "operator", "viewer", "POST /mesh/devices/d1/power {}"},
 		{"POST", "/api/mesh/devices/d1/group", "server.config", "server_admin", "global_admin", "POST /mesh/devices/d1/group {}"},
-		{"GET", "/api/mesh/recordings", "device.view", "guest_issuer", "only:device.connect,chat.access", "GET /mesh/recordings"},
+		{"GET", "/api/mesh/recordings", "device.view", "guest_issuer", "only:device.connect,chat.support", "GET /mesh/recordings"},
 		{"GET", "/api/mesh/recordings/r1", "device.connect", "operator", "viewer", "GET /mesh/recordings/r1"},
-		{"GET", "/api/session/recordings", "device.view", "guest_issuer", "only:device.connect,chat.access", "GET /session/recordings"},
+		{"GET", "/api/session/recordings", "device.view", "guest_issuer", "only:device.connect,chat.support", "GET /session/recordings"},
 		// exec runs a shell command: the terminal's permission (BUGS RV159, A96)
 		{"POST", "/api/mesh/devices/d1/exec", "mesh.terminal", "global_admin", "operator", "POST /mesh/devices/d1/exec {}"},
 	}

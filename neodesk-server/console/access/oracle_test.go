@@ -17,6 +17,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 )
 
 // The tests in this file replay vectors recorded from the console's Node
@@ -184,8 +186,11 @@ func TestOracleRoleHasPermission(t *testing.T) {
 		}
 		for i, permission := range v.Permissions {
 			want := v.Rows[role][i] == '1'
-			if got := RoleHasPermission(role, permission); got != want {
-				t.Errorf("RoleHasPermission(%q, %q) = %v, Node says %v", role, permission, got, want)
+			// Node's chat.access is Support chat and Team chat since A242
+			for _, now := range auth.ExpandLegacy(permission) {
+				if got := RoleHasPermission(role, now); got != want {
+					t.Errorf("RoleHasPermission(%q, %q) = %v, Node says %v for %q", role, now, got, want, permission)
+				}
 			}
 		}
 	}
@@ -1000,8 +1005,17 @@ func TestOracleBootstrap(t *testing.T) {
 	loadVectors(t, "bootstrap", &v)
 	withNodeTables(t)
 	withNodeNav(t)
-	if !reflect.DeepEqual(v.UIPermissions, UIPermissions) {
-		t.Fatalf("UIPermissions differ from Node's UI_PERMISSIONS:\n got  %v\n want %v", UIPermissions, v.UIPermissions)
+	// Node's chat.access is the four chat permissions since A242
+	var nodeUI []string
+	for _, p := range v.UIPermissions {
+		if p == "chat.access" {
+			nodeUI = append(nodeUI, "chat.support", "chat.team", "chat.assign", "chat.canned_manage")
+			continue
+		}
+		nodeUI = append(nodeUI, p)
+	}
+	if !reflect.DeepEqual(nodeUI, UIPermissions) {
+		t.Fatalf("UIPermissions differ from Node's UI_PERMISSIONS:\n got  %v\n want %v", UIPermissions, nodeUI)
 	}
 	if len(v.Cases) < 40 {
 		t.Fatalf("only %d cases", len(v.Cases))
@@ -1010,7 +1024,13 @@ func TestOracleBootstrap(t *testing.T) {
 		label := c.Role + " / " + c.Variant
 		ctx := &Context{UserID: 3, HasUser: true, Role: c.Role, Loaded: c.Variant != "static map"}
 		if c.Effective != nil {
-			ctx.Permissions = newPermissionSet(c.Effective)
+			// An effective set from Node names chat.access: Support chat
+			// and Team chat since A242
+			var effective []string
+			for _, p := range c.Effective {
+				effective = append(effective, auth.ExpandLegacy(p)...)
+			}
+			ctx.Permissions = newPermissionSet(effective)
 		}
 		if c.Variant == "load error" {
 			ctx.PermissionErr = errors.New("boom")
@@ -1021,8 +1041,22 @@ func TestOracleBootstrap(t *testing.T) {
 				ctx.Policy.Sections.Set(key, SectionAccess{Access: c.Policy[key], Source: SourceRole, RoleCeiling: LevelNone})
 			}
 		}
-		if got := ctx.GrantedUIPermissions(); !reflect.DeepEqual(got, c.Expected.Permissions) {
-			t.Fatalf("%s: permissions\n got  %v\n want %v", label, got, c.Expected.Permissions)
+		// Node's chat.access in the answer is the chat permissions of A242
+		// the role holds
+		wantPerms := []string{}
+		for _, p := range c.Expected.Permissions {
+			if p != "chat.access" {
+				wantPerms = append(wantPerms, p)
+				continue
+			}
+			for _, now := range []string{"chat.support", "chat.team", "chat.assign", "chat.canned_manage"} {
+				if ctx.HasPermission(now) {
+					wantPerms = append(wantPerms, now)
+				}
+			}
+		}
+		if got := ctx.GrantedUIPermissions(); !reflect.DeepEqual(got, wantPerms) {
+			t.Fatalf("%s: permissions\n got  %v\n want %v", label, got, wantPerms)
 		}
 		if IsSuperAdminRole(c.Role) != c.Expected.IsSuperAdmin {
 			t.Fatalf("%s: isSuperAdmin", label)

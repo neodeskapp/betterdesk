@@ -24,7 +24,7 @@ import (
 
 const (
 	signedOut = `{"success":false,"error":"Unauthorized. Please log in.","code":"session_required"}`
-	noAccess  = `{"success":false,"error":"Permission denied: chat.access"}`
+	noAccess  = `{"success":false,"error":"Permission denied: chat.support or chat.team"}`
 	failed    = `{"success":false,"error":"Internal Server Error"}`
 	// firstID is the id of the first upload in a world: its random bytes
 	// count up from zero
@@ -239,8 +239,8 @@ func TestRoutesInTheOrderOfTheOldFile(t *testing.T) {
 	}
 }
 
-// Every route needs a session and chat.access, as the chat websocket
-// does. A refused upload is not read and leaves nothing behind.
+// Every route needs a session and Support chat or Team chat, as the chat
+// websocket does. A refused upload is not read and leaves nothing behind.
 func TestRoutesNeedChatAccess(t *testing.T) {
 	w := newWorld(t)
 	w.put(firstID+".txt", "secret")

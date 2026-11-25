@@ -61,6 +61,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/netip"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -68,6 +69,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
@@ -243,6 +245,9 @@ func (s *Service) ensureSchema(ctx context.Context) error {
 	}
 	if _, err := s.db.Exec(ctx, `CREATE INDEX IF NOT EXISTS idx_admin_tokens_user ON admin_tokens (user_id)`); err != nil {
 		return fmt.Errorf("index admin_tokens: %w", err)
+	}
+	if err := s.renameLegacyPermissions(ctx); err != nil {
+		return err
 	}
 	// ended_at: when what the token made was ended (ends.go). A table
 	// from before it gets the column with the tokens that had ended
@@ -660,6 +665,7 @@ func scanToken(row scanner, hash *string) (*Token, error) {
 	if err := json.Unmarshal([]byte(perms), &tok.Permissions); err != nil {
 		return nil, fmt.Errorf("token %s: permissions: %w", tok.ID, err)
 	}
+	tok.Permissions = currentNames(tok.Permissions)
 	if err := json.Unmarshal([]byte(allow), &tok.AllowList); err != nil {
 		return nil, fmt.Errorf("token %s: allow list: %w", tok.ID, err)
 	}
@@ -677,6 +683,57 @@ func scanToken(row scanner, hash *string) (*Token, error) {
 }
 
 func msTime(ms int64) time.Time { return time.UnixMilli(ms).UTC() }
+
+// renameLegacyPermissions writes the permissions of tokens that name an
+// older permission (chat.access) under their current names (A242), so a
+// token keeps what it could do and its list shows names that exist.
+func (s *Service) renameLegacyPermissions(ctx context.Context) error {
+	rows, err := s.db.Query(ctx, `SELECT id, permissions FROM admin_tokens WHERE permissions LIKE '%"chat.access"%'`)
+	if err != nil {
+		return fmt.Errorf("read admin_tokens: %w", err)
+	}
+	type change struct {
+		id    int64
+		perms string
+	}
+	var changes []change
+	for rows.Next() {
+		var id int64
+		var raw string
+		if err := rows.Scan(&id, &raw); err != nil {
+			rows.Close()
+			return fmt.Errorf("read admin_tokens: %w", err)
+		}
+		var perms []string
+		if json.Unmarshal([]byte(raw), &perms) != nil {
+			continue
+		}
+		b, _ := json.Marshal(currentNames(perms))
+		changes = append(changes, change{id, string(b)})
+	}
+	rows.Close()
+	for _, c := range changes {
+		if _, err := s.db.Exec(ctx, `UPDATE admin_tokens SET permissions = ? WHERE id = ?`, c.perms, c.id); err != nil {
+			return fmt.Errorf("rename the permissions of a token: %w", err)
+		}
+	}
+	return nil
+}
+
+// currentNames is a token's permissions with an older name (chat.access,
+// before A242) read as the permissions it stands for, so a token made
+// before an update keeps what it could do.
+func currentNames(perms []string) []string {
+	out := make([]string, 0, len(perms))
+	for _, p := range perms {
+		for _, now := range auth.ExpandLegacy(p) {
+			if !slices.Contains(out, now) {
+				out = append(out, now)
+			}
+		}
+	}
+	return out
+}
 
 // load returns the row with the public id and its hash, nil when there is
 // none.

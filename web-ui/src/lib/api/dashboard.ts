@@ -154,7 +154,7 @@ const HelpList = v.looseObject({
 	requests: v.optional(v.nullable(v.array(v.looseObject({ status: Str }))), null)
 });
 
-/** Help requests nobody has taken yet (chat.access) */
+/** Help requests nobody has taken yet (chat.support) */
 export async function countOpenHelpRequests(signal?: AbortSignal): Promise<number> {
 	const out = await api(HelpList, '/api/help/requests', { signal });
 	return (out.requests ?? []).filter((r) => r.status === 'pending').length;

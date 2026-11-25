@@ -448,6 +448,8 @@ var fixes = []fix{
 	{bug: "S17", steps: []string{"340 raw POST /api/nd/register-request", "343 raw POST /api/nd/register-request", "344 raw POST /api/nd/register-request", "345 raw POST /api/nd/register-request"},
 		answer: `{"success":false,"error":"invalid JSON: the body has to be an object or an array"}`},
 	{bug: "S17", steps: []string{"347 raw POST /api/nd/register-request"}, answer: `{"success":false,"error":"invalid JSON: unexpected end of JSON input"}`},
+	// A242: the help requests need Support chat, Node's chat.access
+	{bug: "A242", steps: []string{"47 GET /api/help/requests..."}, edits: []string{"Permission denied: chat.access", "Permission denied: chat.support"}},
 }
 
 // forwardedAddresses are the edits of RG1: each address the requests of

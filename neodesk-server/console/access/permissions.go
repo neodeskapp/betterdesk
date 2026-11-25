@@ -240,7 +240,7 @@ var UIPermissions = []string{
 	"audit.view", "user.view", "user.create", "user.edit", "user.delete", "metrics.view",
 	"remote_target.view", "remote_target.edit", "remote_target.delete",
 	"remote_target.connect", "remote_target.test",
-	"guest.create", "chat.access", "cdap.view", "cdap.command", "cdap.terminal", "cdap.files",
+	"guest.create", "chat.support", "chat.team", "chat.assign", "chat.canned_manage", "cdap.view", "cdap.command", "cdap.terminal", "cdap.files",
 	"mesh.terminal", "mesh.power", "mesh.files",
 }
 

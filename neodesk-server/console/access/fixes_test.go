@@ -102,11 +102,25 @@ var ruleFixes = []ruleFix{
 	{bug: "L494", add: Rule{Prefix: "/devices/add"}},
 }
 
-// sectionFix is a catalog section whose permissions differ from Node's.
+// sectionFix is a catalog section whose permissions differ from Node's,
+// and its label when that changed too.
 type sectionFix struct {
 	bug         string
 	key         string
 	read, write Permission
+	label       string
+}
+
+// sectionAdd is a catalog section Node did not have, placed after
+// another.
+type sectionAdd struct {
+	bug, after string
+	section    Section
+}
+
+var sectionAdds = []sectionAdd{
+	// Team chat has its own section beside Support chat (A242).
+	{bug: "A242", after: "chat", section: Section{"team-chat", "Team chat", "operations", "chat.team", "chat.team"}},
 }
 
 var sectionFixes = []sectionFix{
@@ -135,6 +149,8 @@ var sectionFixes = []sectionFix{
 	{bug: "PA3 (F5)", key: "dataguard", read: "device.view", write: "server.config"},
 	// Every automation route and the menu entry ask server.config.
 	{bug: "PA3 (F8)", key: "automation", read: "server.config", write: "server.config"},
+	// Chat is Support chat; Team chat is a section of its own (A242).
+	{bug: "A242", key: "chat", read: "chat.support", write: "chat.support", label: "Support chat"},
 }
 
 // nodeTables returns the guard's rules and the catalog's sections as the
@@ -376,12 +392,27 @@ func TestTablesAreNodesWithTheFixes(t *testing.T) {
 		for i := range wantCatalog {
 			if wantCatalog[i].Key == fix.key {
 				wantCatalog[i].ReadPermission, wantCatalog[i].WritePermission = fix.read, fix.write
+				if fix.label != "" {
+					wantCatalog[i].Label = fix.label
+				}
 				found = true
 			}
 		}
 		if !found {
 			t.Fatalf("%s: Node has no section %q", fix.bug, fix.key)
 		}
+	}
+	for _, add := range sectionAdds {
+		at := -1
+		for i := range wantCatalog {
+			if wantCatalog[i].Key == add.after {
+				at = i + 1
+			}
+		}
+		if at < 0 {
+			t.Fatalf("%s: no section %q to add %q after", add.bug, add.after, add.section.Key)
+		}
+		wantCatalog = append(wantCatalog[:at:at], append([]Section{add.section}, wantCatalog[at:]...)...)
 	}
 	if len(Catalog) != len(wantCatalog) {
 		t.Fatalf("%d catalog sections, Node's catalog with the fixes has %d", len(Catalog), len(wantCatalog))

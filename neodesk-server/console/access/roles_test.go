@@ -5,6 +5,7 @@ import (
 	"errors"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"sort"
 	"sync"
 	"testing"
@@ -90,6 +91,8 @@ func TestDBRoleSourceOverrides(t *testing.T) {
 	store := &memoryOverrides{rows: map[string]map[string]bool{
 		"viewer": {"server.config": true, "audit.view": false, "made.up": true, "also.made_up": false},
 		"pro":    {"device.view": true, "chat.access": true},
+		// The old chat permission taken away, Team chat given back
+		"operator": {"chat.access": false, "chat.team": true},
 	}}
 	source := NewDBRoleSource(store)
 
@@ -98,17 +101,20 @@ func TestDBRoleSourceOverrides(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Built-in order first, names the server does not know after them.
-	want := []string{"device.view", "remote_target.view", "server.config", "metrics.view", "cdap.view", "chat.access", "made.up"}
+	want := []string{"device.view", "remote_target.view", "server.config", "metrics.view", "cdap.view", "chat.support", "chat.team", "made.up"}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("viewer with overrides:\n got  %v\n want %v", got, want)
 	}
-	// The role's own overrides only.
-	if got, _ := source.RolePermissions(ctx, "operator"); !reflect.DeepEqual(sortedStrings(got), sortedStrings(consoleRoleMap["operator"])) {
-		t.Errorf("operator picked up another role's overrides: %v", got)
+	// The role's own overrides only; one under the new name wins over the
+	// old name's
+	operator, _ := source.RolePermissions(ctx, "operator")
+	if !slices.Contains(operator, "chat.team") || slices.Contains(operator, "chat.support") || slices.Contains(operator, "server.config") {
+		t.Errorf("operator: %v, want Team chat without Support chat and no other role's overrides", operator)
 	}
 	// The effective list carries what was granted to pro; the pro rule is
-	// applied by the checks.
-	if got, _ := source.RolePermissions(ctx, "pro"); !reflect.DeepEqual(got, []string{"device.view", "chat.access"}) {
+	// applied by the checks. An override of chat.access, the one chat
+	// permission before A242, stands for Support chat and Team chat.
+	if got, _ := source.RolePermissions(ctx, "pro"); !reflect.DeepEqual(got, []string{"device.view", "chat.support", "chat.team"}) {
 		t.Errorf("pro: %v", got)
 	}
 	// The role is trimmed like the path segment it once was.

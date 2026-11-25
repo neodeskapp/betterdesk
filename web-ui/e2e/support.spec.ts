@@ -38,11 +38,11 @@ for (const role of ROLES) {
 	test.describe(`support pages as ${role}`, () => {
 		test.use({ role });
 
-		test('help requests: the list needs chat.access, actions follow the permissions', async ({ page }) => {
+		test('help requests: the list needs chat.support, actions follow the permissions', async ({ page }) => {
 			await page.goto(`${UI}/help-requests`);
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 			const p = await permissions(page);
-			if (!has(p, 'chat.access')) {
+			if (!has(p, 'chat.support')) {
 				// P17: one sentence instead of a list whose API answers 403
 				await expect(page.locator('.notice')).toBeVisible();
 				await expect(page.locator('.hr-table')).toHaveCount(0);
@@ -119,7 +119,7 @@ for (const role of ROLES) {
 			await page.goto(`${UI}/chat`);
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 			const p = await permissions(page);
-			if (!has(p, 'chat.access')) {
+			if (!has(p, 'chat.support')) {
 				// The chat section needs chat.access, as its API does (PA4)
 				await expect(forbidden(page)).toBeVisible();
 				await expect(page.getByRole('button', { name: 'New group' })).toHaveCount(0);

@@ -1,6 +1,6 @@
 /**
  * Help requests (routes/registration.routes.js): someone pressed the help
- * button in the desktop app. The list and both actions need chat.access.
+ * button in the desktop app. The list and both actions need chat.support.
  * The list is the newest 200, normalised by the console (Go's
  * "acknowledged" arrives as "accepted", times in ms). Accept and resolve
  * answer Go's raw result, which the page doesn't read.

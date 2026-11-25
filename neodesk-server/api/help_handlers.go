@@ -59,7 +59,7 @@ func (s *Server) handleListHelpRequests(w http.ResponseWriter, r *http.Request) 
 //
 // Modern agents raise help requests over CDAP (handleHelpRequest). This REST
 // endpoint exists so the Node.js panel can proxy legacy desktop clients that
-// still POST to the panel. It is gated by chat.access permission (the panel
+// still POST to the panel. It is gated by chat.support permission (the panel
 // authenticates with its API key), not exposed to anonymous callers.
 func (s *Server) handleCreateHelpRequest(w http.ResponseWriter, r *http.Request) {
 	var body struct {

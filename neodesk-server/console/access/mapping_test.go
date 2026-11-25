@@ -132,7 +132,7 @@ func TestOrganizationsNeedUserView(t *testing.T) {
 		{"GET", "/api/panel/cross-platform/protocols", "device.view", [5]string{"ok", "ok", "ok", "ok", "ok"}},
 		{"GET", "/api/panel/scaling/relays", "server.config", [5]string{"guard", "guard", "guard", "guard", "ok"}},
 		{"GET", "/api/panel/fleet/tasks", "org.manage_devices", [5]string{"guard", "ok", "guard", "ok", "guard"}},
-		{"POST", "/api/chat/upload", "chat.access", [5]string{"ok", "ok", "guard", "ok", "guard"}},
+		{"POST", "/api/chat/upload", "chat.support", [5]string{"ok", "ok", "guard", "ok", "guard"}},
 	})
 }
 
