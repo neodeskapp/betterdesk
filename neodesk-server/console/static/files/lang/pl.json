@@ -1957,7 +1957,9 @@
     "action_session_ended_by_admin": "Sesja zakończona przez administratora",
     "action_session_limit": "Sesja zakończona przez limit sesji",
     "action_console_sessions_policy_changed": "Zmieniono sesje na konto",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Wysłano zaproszenie",
+    "action_user_invite_accepted": "Przyjęto zaproszenie"
   },
   "generator": {
     "title": "Generator NeoDesk Support",
@@ -2559,7 +2561,29 @@
     "access_now_role": "Teraz: {level}, {source}. Limit roli: {limit}",
     "note_default_user_group": "Domyślna grupa użytkowników",
     "note_default_device_group": "Domyślna grupa urządzeń",
-    "note_org_default_group": "Domyślna grupa utworzona wraz z organizacją"
+    "note_org_default_group": "Domyślna grupa utworzona wraz z organizacją",
+    "add_mode_invite": "Wyślij zaproszenie e-mailem",
+    "add_mode_invite_desc": "Osoba dostaje link i sama wybiera hasło. Link działa przez 7 dni.",
+    "add_mode_password": "Ustaw hasło teraz",
+    "add_mode_password_desc": "Wybierasz hasło i sam je przekazujesz.",
+    "username_optional_hint": "Opcjonalne. Zostaw puste, aby użyć {suggestion}.",
+    "username_optional_hint_empty": "Opcjonalne. Zostaw puste, aby użyć części adresu e-mail przed @.",
+    "invite_email_hint": "Zaproszenie trafi na ten adres. Używają go też powiadomienia o prośbach o pomoc.",
+    "send_invite": "Wyślij zaproszenie",
+    "invite_sent_named": "Wysłano zaproszenie na {email}.",
+    "invite_not_sent_named": "Dodano {username}, ale zaproszenie nie zostało wysłane. Sprawdź ustawienia e-mail, a potem użyj Wyślij zaproszenie ponownie.",
+    "invited": "Zaproszony",
+    "invite_expired": "Zaproszenie wygasło",
+    "invite_open_until": "Link z zaproszeniem działa do {date}.",
+    "invite_expired_on": "Link z zaproszeniem wygasł {date}.",
+    "resend_invite": "Wyślij zaproszenie ponownie",
+    "invite_resent_named": "Wysłano nowe zaproszenie do {username}.",
+    "invite_password_given": "Zaproszona osoba sama wybiera hasło. Nie podawaj hasła.",
+    "invite_email_required": "Podaj adres e-mail, na który ma trafić zaproszenie.",
+    "invite_needs_email": "Wysyłanie linków e-mailem wymaga ustawień e-mail. Skonfiguruj je w Ustawienia, E-mail.",
+    "invite_signed_in": "To konto już się logowało, więc nie potrzebuje zaproszenia.",
+    "link_local_only": "To konto loguje się przez katalog lub logowanie jednokrotne, więc jego hasła nie ustawia się tutaj.",
+    "link_mail_failed": "Serwer poczty nie przyjął wiadomości. Sprawdź ustawienia e-mail."
   },
   "folders": {
     "title": "Foldery",
@@ -8928,5 +8952,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Zaproś komputer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} zaprasza Cię do serwera {server}",
+    "invite_heading": "Witaj na serwerze {server}",
+    "invite_lead": "{sender} założył Ci konto na serwerze {server}. Wybierz hasło, aby się zalogować.",
+    "invite_button": "Wybierz hasło",
+    "invite_expires": "Link działa jeden raz, do {expires}.",
+    "mail_username": "Twoja nazwa użytkownika: {username}",
+    "mail_link_hint": "Jeśli przycisk nie działa, otwórz ten link:",
+    "mail_footer": "Wysłane przez {host} dla {server}.",
+    "unusable": "Ten link już nie działa. Został użyty albo wygasł. Poproś o nowy.",
+    "page_title_invite": "Wybierz hasło",
+    "page_intro_invite": "Witaj na serwerze {server}. Wybierz hasło do swojego konta {username}.",
+    "repeat_password": "Powtórz hasło",
+    "passwords_differ": "Hasła nie są identyczne.",
+    "save": "Zapisz hasło",
+    "done_title": "Hasło zapisane",
+    "done_text": "Zaloguj się jako {username} nowym hasłem.",
+    "sign_in": "Zaloguj",
+    "invalid_title": "Ten link nie działa",
+    "no_link": "Otwórz link z wiadomości e-mail, aby wybrać hasło.",
+    "check_failed": "Nie udało się sprawdzić linku. Spróbuj ponownie za chwilę."
   }
 }

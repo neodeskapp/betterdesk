@@ -1957,7 +1957,9 @@
     "action_session_ended_by_admin": "관리자가 세션 종료",
     "action_session_limit": "세션 제한으로 세션 종료",
     "action_console_sessions_policy_changed": "계정당 세션 변경",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "초대 보냄",
+    "action_user_invite_accepted": "초대 수락됨"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2541,7 +2543,29 @@
     "access_now_role": "현재: {level}, {source}. 역할 제한: {limit}",
     "note_default_user_group": "기본 사용자 그룹",
     "note_default_device_group": "기본 장치 그룹",
-    "note_org_default_group": "조직과 함께 생성된 기본 그룹"
+    "note_org_default_group": "조직과 함께 생성된 기본 그룹",
+    "add_mode_invite": "이메일로 초대 보내기",
+    "add_mode_invite_desc": "상대방이 링크를 받아 직접 비밀번호를 정합니다. 링크는 7일 동안 유효합니다.",
+    "add_mode_password": "지금 비밀번호 설정",
+    "add_mode_password_desc": "비밀번호를 직접 정하고 상대방에게 전달합니다.",
+    "username_optional_hint": "선택 사항입니다. 비워 두면 {suggestion}을(를) 사용합니다.",
+    "username_optional_hint_empty": "선택 사항입니다. 비워 두면 이메일 주소에서 @ 앞부분을 사용합니다.",
+    "invite_email_hint": "초대는 이 주소로 전송됩니다. 도움 요청 알림도 이 주소를 사용합니다.",
+    "send_invite": "초대 보내기",
+    "invite_sent_named": "{email}(으)로 초대를 보냈습니다.",
+    "invite_not_sent_named": "{username}을(를) 추가했지만 초대가 전송되지 않았습니다. 이메일 설정을 확인한 뒤 초대 다시 보내기를 사용하세요.",
+    "invited": "초대됨",
+    "invite_expired": "초대 만료됨",
+    "invite_open_until": "초대 링크는 {date}까지 유효합니다.",
+    "invite_expired_on": "초대 링크가 {date}에 만료되었습니다.",
+    "resend_invite": "초대 다시 보내기",
+    "invite_resent_named": "{username}에게 새 초대를 보냈습니다.",
+    "invite_password_given": "초대받은 사람은 직접 비밀번호를 정합니다. 비밀번호는 비워 두세요.",
+    "invite_email_required": "초대를 받을 이메일 주소를 입력하세요.",
+    "invite_needs_email": "이메일로 링크를 보내려면 이메일 설정이 필요합니다. 설정, Email에서 설정하세요.",
+    "invite_signed_in": "이 계정은 이미 로그인한 적이 있으므로 초대가 필요하지 않습니다.",
+    "link_local_only": "이 계정은 디렉터리나 싱글 사인온으로 로그인하므로 여기서 비밀번호를 설정하지 않습니다.",
+    "link_mail_failed": "메일 서버가 이메일을 받지 않았습니다. 이메일 설정을 확인하세요."
   },
   "folders": {
     "title": "폴더",
@@ -8928,5 +8952,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender}님이 {server}에 초대했습니다",
+    "invite_heading": "{server}에 오신 것을 환영합니다",
+    "invite_lead": "{sender}님이 {server}에 계정을 만들었습니다. 로그인할 비밀번호를 정하세요.",
+    "invite_button": "비밀번호 정하기",
+    "invite_expires": "링크는 {expires}까지 한 번만 사용할 수 있습니다.",
+    "mail_username": "사용자 이름: {username}",
+    "mail_link_hint": "버튼이 작동하지 않으면 이 링크를 여세요:",
+    "mail_footer": "{host}에서 {server}을(를) 대신해 보냈습니다.",
+    "unusable": "이 링크는 더 이상 사용할 수 없습니다. 이미 사용되었거나 만료되었습니다. 새 링크를 요청하세요.",
+    "page_title_invite": "비밀번호 정하기",
+    "page_intro_invite": "{server}에 오신 것을 환영합니다. 계정 {username}의 비밀번호를 정하세요.",
+    "repeat_password": "비밀번호 다시 입력",
+    "passwords_differ": "비밀번호가 일치하지 않습니다.",
+    "save": "비밀번호 저장",
+    "done_title": "비밀번호 저장됨",
+    "done_text": "새 비밀번호로 {username}(으)로 로그인하세요.",
+    "sign_in": "로그인",
+    "invalid_title": "이 링크는 사용할 수 없습니다",
+    "no_link": "비밀번호를 정하려면 이메일에 있는 링크를 여세요.",
+    "check_failed": "링크를 확인하지 못했습니다. 잠시 후 다시 시도하세요."
   }
 }

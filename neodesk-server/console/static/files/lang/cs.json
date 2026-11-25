@@ -1957,7 +1957,9 @@
     "action_session_ended_by_admin": "Relace ukončena správcem",
     "action_session_limit": "Relace ukončena limitem relací",
     "action_console_sessions_policy_changed": "Relace na účet změněny",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Pozvánka odeslána",
+    "action_user_invite_accepted": "Pozvánka přijata"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2541,7 +2543,29 @@
     "access_now_role": "Nyní: {level}, {source}. Limit role: {limit}",
     "note_default_user_group": "Výchozí skupina uživatelů",
     "note_default_device_group": "Výchozí skupina zařízení",
-    "note_org_default_group": "Výchozí skupina vytvořená s organizací"
+    "note_org_default_group": "Výchozí skupina vytvořená s organizací",
+    "add_mode_invite": "Poslat pozvánku e-mailem",
+    "add_mode_invite_desc": "Osoba dostane odkaz a heslo si zvolí sama. Odkaz platí 7 dní.",
+    "add_mode_password": "Nastavit heslo hned",
+    "add_mode_password_desc": "Heslo zvolíte vy a sami ho předáte.",
+    "username_optional_hint": "Nepovinné. Nechte prázdné, aby se použilo {suggestion}.",
+    "username_optional_hint_empty": "Nepovinné. Nechte prázdné, aby se použila část e-mailové adresy před @.",
+    "invite_email_hint": "Pozvánka přijde na tuto adresu. Používají ji i oznámení o žádostech o pomoc.",
+    "send_invite": "Poslat pozvánku",
+    "invite_sent_named": "Pozvánka odeslána na {email}.",
+    "invite_not_sent_named": "Uživatel {username} byl přidán, ale pozvánka se neodeslala. Zkontrolujte nastavení e-mailu a pak použijte Poslat pozvánku znovu.",
+    "invited": "Pozván",
+    "invite_expired": "Pozvánka vypršela",
+    "invite_open_until": "Odkaz z pozvánky platí do {date}.",
+    "invite_expired_on": "Odkaz z pozvánky vypršel {date}.",
+    "resend_invite": "Poslat pozvánku znovu",
+    "invite_resent_named": "Uživateli {username} byla poslána nová pozvánka.",
+    "invite_password_given": "Pozvaná osoba si heslo zvolí sama. Heslo nevyplňujte.",
+    "invite_email_required": "Zadejte e-mailovou adresu, na kterou pozvánka půjde.",
+    "invite_needs_email": "Posílání odkazů e-mailem vyžaduje nastavení e-mailu. Nastavte ho v Nastavení, Email.",
+    "invite_signed_in": "Tento účet se už přihlásil, takže pozvánku nepotřebuje.",
+    "link_local_only": "Tento účet se přihlašuje přes adresář nebo jednotné přihlášení, takže jeho heslo se nenastavuje tady.",
+    "link_mail_failed": "Poštovní server e-mail nepřijal. Zkontrolujte nastavení e-mailu."
   },
   "folders": {
     "title": "Složky",
@@ -8928,5 +8952,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} vás zve na {server}",
+    "invite_heading": "Vítejte na {server}",
+    "invite_lead": "{sender} vám založil účet na {server}. Zvolte si heslo, abyste se mohli přihlásit.",
+    "invite_button": "Zvolit heslo",
+    "invite_expires": "Odkaz funguje jednou, do {expires}.",
+    "mail_username": "Vaše uživatelské jméno: {username}",
+    "mail_link_hint": "Pokud tlačítko nefunguje, otevřete tento odkaz:",
+    "mail_footer": "Odesláno z {host} pro {server}.",
+    "unusable": "Tento odkaz už nefunguje. Byl už použit nebo vypršel. Požádejte o nový.",
+    "page_title_invite": "Zvolte si heslo",
+    "page_intro_invite": "Vítejte na {server}. Zvolte si heslo pro svůj účet {username}.",
+    "repeat_password": "Heslo znovu",
+    "passwords_differ": "Hesla se neshodují.",
+    "save": "Uložit heslo",
+    "done_title": "Heslo uloženo",
+    "done_text": "Přihlaste se jako {username} svým novým heslem.",
+    "sign_in": "Přihlásit se",
+    "invalid_title": "Tento odkaz nefunguje",
+    "no_link": "Otevřete odkaz ze svého e-mailu a zvolte si heslo.",
+    "check_failed": "Odkaz se nepodařilo ověřit. Zkuste to za chvíli znovu."
   }
 }

@@ -1963,7 +1963,9 @@
     "action_session_ended_by_admin": "सत्र व्यवस्थापक ने समाप्त किया",
     "action_session_limit": "सत्र सत्र-सीमा से समाप्त हुआ",
     "action_console_sessions_policy_changed": "हर खाते के सत्र बदले गए",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "आमंत्रण भेजा गया",
+    "action_user_invite_accepted": "आमंत्रण स्वीकार किया गया"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2547,7 +2549,29 @@
     "access_now_role": "अभी: {level}, {source}। भूमिका की सीमा: {limit}",
     "note_default_user_group": "डिफ़ॉल्ट उपयोगकर्ता समूह",
     "note_default_device_group": "डिफ़ॉल्ट डिवाइस समूह",
-    "note_org_default_group": "संगठन के साथ बनाया गया डिफ़ॉल्ट समूह"
+    "note_org_default_group": "संगठन के साथ बनाया गया डिफ़ॉल्ट समूह",
+    "add_mode_invite": "ईमेल से आमंत्रण भेजें",
+    "add_mode_invite_desc": "व्यक्ति को एक लिंक मिलता है और वह अपना पासवर्ड खुद चुनता है। लिंक 7 दिन तक काम करता है।",
+    "add_mode_password": "अभी पासवर्ड सेट करें",
+    "add_mode_password_desc": "आप पासवर्ड चुनते हैं और उसे खुद आगे देते हैं।",
+    "username_optional_hint": "वैकल्पिक। {suggestion} इस्तेमाल करने के लिए खाली छोड़ें।",
+    "username_optional_hint_empty": "वैकल्पिक। ईमेल पते में @ से पहले का हिस्सा इस्तेमाल करने के लिए खाली छोड़ें।",
+    "invite_email_hint": "आमंत्रण इस पते पर जाता है। सहायता अनुरोध की सूचनाएँ भी इसी का उपयोग करती हैं।",
+    "send_invite": "आमंत्रण भेजें",
+    "invite_sent_named": "{email} पर आमंत्रण भेजा गया।",
+    "invite_not_sent_named": "{username} जोड़ा गया, लेकिन आमंत्रण नहीं गया। ईमेल सेटिंग्स जाँचें, फिर आमंत्रण दोबारा भेजें का उपयोग करें।",
+    "invited": "आमंत्रित",
+    "invite_expired": "आमंत्रण की अवधि समाप्त",
+    "invite_open_until": "आमंत्रण लिंक {date} तक काम करता है।",
+    "invite_expired_on": "आमंत्रण लिंक की अवधि {date} को समाप्त हो गई।",
+    "resend_invite": "आमंत्रण दोबारा भेजें",
+    "invite_resent_named": "{username} को नया आमंत्रण भेजा गया।",
+    "invite_password_given": "आमंत्रित व्यक्ति अपना पासवर्ड खुद चुनता है। पासवर्ड खाली छोड़ें।",
+    "invite_email_required": "वह ईमेल पता दर्ज करें जिस पर आमंत्रण जाएगा।",
+    "invite_needs_email": "ईमेल से लिंक भेजने के लिए ईमेल सेटिंग्स चाहिए। उन्हें सेटिंग्स, Email में सेट करें।",
+    "invite_signed_in": "यह खाता पहले ही साइन इन कर चुका है, इसलिए इसे आमंत्रण की ज़रूरत नहीं है।",
+    "link_local_only": "यह खाता किसी डायरेक्टरी या सिंगल साइन-ऑन से साइन इन करता है, इसलिए इसका पासवर्ड यहाँ सेट नहीं होता।",
+    "link_mail_failed": "मेल सर्वर ने ईमेल स्वीकार नहीं किया। ईमेल सेटिंग्स जाँचें।"
   },
   "folders": {
     "title": "फ़ोल्डर",
@@ -8934,5 +8958,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} ने आपको {server} पर आमंत्रित किया है",
+    "invite_heading": "{server} पर आपका स्वागत है",
+    "invite_lead": "{sender} ने {server} पर आपके लिए एक खाता बनाया है। साइन इन करने के लिए पासवर्ड चुनें।",
+    "invite_button": "अपना पासवर्ड चुनें",
+    "invite_expires": "लिंक एक बार, {expires} तक काम करता है।",
+    "mail_username": "आपका उपयोगकर्ता नाम: {username}",
+    "mail_link_hint": "अगर बटन काम न करे, तो यह लिंक खोलें:",
+    "mail_footer": "{server} के लिए {host} द्वारा भेजा गया।",
+    "unusable": "यह लिंक अब काम नहीं करता। इसका उपयोग हो चुका है या इसकी अवधि समाप्त हो गई है। नया लिंक माँगें।",
+    "page_title_invite": "अपना पासवर्ड चुनें",
+    "page_intro_invite": "{server} पर आपका स्वागत है। अपने खाते {username} के लिए पासवर्ड चुनें।",
+    "repeat_password": "पासवर्ड दोबारा",
+    "passwords_differ": "पासवर्ड मेल नहीं खाते।",
+    "save": "पासवर्ड सहेजें",
+    "done_title": "पासवर्ड सहेजा गया",
+    "done_text": "अपने नए पासवर्ड से {username} के रूप में साइन इन करें।",
+    "sign_in": "साइन इन करें",
+    "invalid_title": "यह लिंक काम नहीं करता",
+    "no_link": "पासवर्ड चुनने के लिए अपने ईमेल का लिंक खोलें।",
+    "check_failed": "लिंक की जाँच नहीं हो सकी। थोड़ी देर में फिर कोशिश करें।"
   }
 }

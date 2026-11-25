@@ -8,6 +8,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 )
 
@@ -25,6 +26,8 @@ type handlers struct {
 	now         func() time.Time
 	// appVersion is the product version, read once at start.
 	appVersion string
+	// links are the links that set a password (invites, resets by mail).
+	links *passwordlinks.Store
 	// syncPicture brings the account's profile picture in line with the
 	// "picture" of a single sign-on. It returns at once and works in the
 	// background. nil skips it.
@@ -40,6 +43,7 @@ func newHandlers(d *kit.Deps) *handlers {
 		guestCookie: "nd.guest",
 		now:         time.Now,
 		appVersion:  d.Config.Version,
+		links:       passwordlinks.New(d.Store, nil),
 	}
 	if d.Config.HTTPS {
 		h.guestCookie = "neodesk.guest"
@@ -80,10 +84,20 @@ func Register(d *kit.Deps) {
 	r.Post("/api/auth/totp/required/setup", h.requiredSetup, d.Limits.TOTPVerify.Middleware)
 	r.Post("/api/auth/totp/required/enable", h.requiredEnable, d.Limits.TOTPVerify.Middleware)
 	r.Get("/api/auth/login-page", h.loginPage)
+	r.Post("/api/auth/password-link/lookup", h.passwordLinkLookup, passwordLinkLimit(d)...)
+	r.Post("/api/auth/password-link/redeem", h.passwordLinkRedeem, passwordLinkLimit(d)...)
 
 	// The Node console runs the same clean-up while it is still there. Both
 	// delete by a rule on time, so a second run finds nothing left to do.
 	d.Jobs.Add("sign-in housekeeping", func(ctx context.Context) { h.housekeeping(ctx, housekeepingInterval) })
+}
+
+// passwordLinkLimit is the rate limit of the password link routes.
+func passwordLinkLimit(d *kit.Deps) []kit.Middleware {
+	if d.Limits == nil || d.Limits.PasswordLink == nil {
+		return nil
+	}
+	return []kit.Middleware{d.Limits.PasswordLink.Middleware}
 }
 
 // housekeeping deletes access tokens that are expired or revoked and

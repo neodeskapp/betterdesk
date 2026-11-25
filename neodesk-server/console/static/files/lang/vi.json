@@ -1963,7 +1963,9 @@
     "action_session_ended_by_admin": "Phiên bị quản trị viên kết thúc",
     "action_session_limit": "Phiên bị kết thúc do giới hạn phiên",
     "action_console_sessions_policy_changed": "Đã thay đổi số phiên cho mỗi tài khoản",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Đã gửi lời mời",
+    "action_user_invite_accepted": "Đã chấp nhận lời mời"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2547,7 +2549,29 @@
     "access_now_role": "Hiện tại: {level}, {source}. Giới hạn của vai trò: {limit}",
     "note_default_user_group": "Nhóm người dùng mặc định",
     "note_default_device_group": "Nhóm thiết bị mặc định",
-    "note_org_default_group": "Nhóm mặc định được tạo cùng tổ chức"
+    "note_org_default_group": "Nhóm mặc định được tạo cùng tổ chức",
+    "add_mode_invite": "Gửi lời mời qua email",
+    "add_mode_invite_desc": "Người đó nhận được một liên kết và tự chọn mật khẩu. Liên kết dùng được trong 7 ngày.",
+    "add_mode_password": "Đặt mật khẩu ngay",
+    "add_mode_password_desc": "Bạn chọn mật khẩu và tự chuyển cho người đó.",
+    "username_optional_hint": "Không bắt buộc. Để trống để dùng {suggestion}.",
+    "username_optional_hint_empty": "Không bắt buộc. Để trống để dùng phần địa chỉ email trước dấu @.",
+    "invite_email_hint": "Lời mời được gửi đến địa chỉ này. Thông báo yêu cầu trợ giúp cũng dùng địa chỉ này.",
+    "send_invite": "Gửi lời mời",
+    "invite_sent_named": "Đã gửi lời mời đến {email}.",
+    "invite_not_sent_named": "Đã thêm {username}, nhưng lời mời chưa được gửi đi. Kiểm tra cài đặt email, sau đó dùng Gửi lại lời mời.",
+    "invited": "Đã mời",
+    "invite_expired": "Lời mời đã hết hạn",
+    "invite_open_until": "Liên kết mời dùng được đến {date}.",
+    "invite_expired_on": "Liên kết mời đã hết hạn vào {date}.",
+    "resend_invite": "Gửi lại lời mời",
+    "invite_resent_named": "Đã gửi lời mời mới cho {username}.",
+    "invite_password_given": "Người được mời tự chọn mật khẩu. Hãy bỏ trống mật khẩu.",
+    "invite_email_required": "Nhập địa chỉ email sẽ nhận lời mời.",
+    "invite_needs_email": "Gửi liên kết qua email cần có cài đặt email. Hãy thiết lập trong Cài đặt, Email.",
+    "invite_signed_in": "Tài khoản này đã đăng nhập rồi nên không cần lời mời.",
+    "link_local_only": "Tài khoản này đăng nhập qua thư mục hoặc đăng nhập một lần, nên mật khẩu không được đặt ở đây.",
+    "link_mail_failed": "Máy chủ thư không nhận email. Kiểm tra cài đặt email."
   },
   "folders": {
     "title": "Thư mục",
@@ -8934,5 +8958,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} đã mời bạn tham gia {server}",
+    "invite_heading": "Chào mừng đến với {server}",
+    "invite_lead": "{sender} đã tạo cho bạn một tài khoản trên {server}. Hãy chọn mật khẩu để đăng nhập.",
+    "invite_button": "Chọn mật khẩu của bạn",
+    "invite_expires": "Liên kết dùng được một lần, đến {expires}.",
+    "mail_username": "Tên người dùng của bạn: {username}",
+    "mail_link_hint": "Nếu nút không hoạt động, hãy mở liên kết này:",
+    "mail_footer": "Gửi bởi {host} cho {server}.",
+    "unusable": "Liên kết này không còn dùng được. Nó đã được dùng hoặc đã hết hạn. Hãy yêu cầu liên kết mới.",
+    "page_title_invite": "Chọn mật khẩu của bạn",
+    "page_intro_invite": "Chào mừng đến với {server}. Hãy chọn mật khẩu cho tài khoản {username} của bạn.",
+    "repeat_password": "Nhập lại mật khẩu",
+    "passwords_differ": "Mật khẩu không khớp.",
+    "save": "Lưu mật khẩu",
+    "done_title": "Đã lưu mật khẩu",
+    "done_text": "Đăng nhập với tên {username} bằng mật khẩu mới của bạn.",
+    "sign_in": "Đăng nhập",
+    "invalid_title": "Liên kết này không dùng được",
+    "no_link": "Mở liên kết trong email của bạn để chọn mật khẩu.",
+    "check_failed": "Không kiểm tra được liên kết. Hãy thử lại sau giây lát."
   }
 }

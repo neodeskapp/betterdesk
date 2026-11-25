@@ -47,6 +47,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/listen"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/ndrelay"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/qr"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/remoterelay"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/restart"
@@ -420,6 +421,10 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		return nil, fmt.Errorf("chat: %w", err)
 	}
 	s.deps.Chat = chatstore.New(opts.Store, nil)
+	// The links that let a person choose a password (invites, resets)
+	if err := passwordlinks.Ensure(ctx, opts.Store); err != nil {
+		return nil, err
+	}
 	// Once: the history of the chat of version 1 into its conversations
 	if r, err := s.deps.Chat.ImportLegacy(ctx); err != nil {
 		return nil, fmt.Errorf("chat: import the history of version 1: %w", err)

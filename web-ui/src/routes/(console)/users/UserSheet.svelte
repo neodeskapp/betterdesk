@@ -1,8 +1,9 @@
 <!--
-  Add or edit a console account: sign-in (username and password for a new
-  account; a new password for a local one), email, role, and which devices
-  the account may see (user groups, folders, single devices, a client
-  policy). A long form, so a side sheet. The role picker shows the roles
+  Add or edit a console account: sign-in (a new account either gets an
+  invite by email, where the person chooses the password, or a username
+  and password now; a local one can get a new password), email, role, and
+  which devices the account may see (user groups, folders, single devices,
+  a client policy). A long form, so a side sheet. The role picker shows the roles
   the signed-in person may give, plus the account's current role (locked);
   LDAP accounts take their role from the directory.
 -->
@@ -10,7 +11,7 @@
 	import { untrack } from 'svelte';
 	import { listFolders, type Folder } from '#lib/api/devices.ts';
 	import { listStrategies, type Strategy } from '#lib/api/strategies.ts';
-	import { createUser, updateUser, type ConsoleUser, type UserGroupRow } from '#lib/api/users.ts';
+	import { createUser, inviteUser, updateUser, type ConsoleUser, type UserGroupRow } from '#lib/api/users.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import PasswordField from '#lib/people/PasswordField.svelte';
 	import {
@@ -19,6 +20,7 @@
 		providerOf,
 		roleChoices,
 		splitIds,
+		usernameFromEmail,
 		usernameProblem
 	} from '#lib/people/users.ts';
 	import { can, session } from '#lib/state/session.svelte.ts';
@@ -42,11 +44,13 @@
 		groups: UserGroupRow[];
 		roleLabel: (role: string) => string;
 		providerLabel: (provider: string) => string;
+		/** The console has email settings, so a new account can get an invite */
+		mailReady?: boolean;
 		onclose: () => void;
 		onsaved: () => void;
 	}
 
-	let { user, groups, roleLabel, providerLabel, onclose, onsaved }: Props = $props();
+	let { user, groups, roleLabel, providerLabel, mailReady = false, onclose, onsaved }: Props = $props();
 
 	const uid = $props.id();
 	const editing = untrack(() => !!user);
@@ -80,6 +84,8 @@
 
 	const form = createForm({
 		initial: untrack(() => ({
+			/** invite: the person chooses the password from a mail; password: set here */
+			mode: !user && mailReady ? 'invite' : 'password',
 			username: '',
 			password: '',
 			email: user?.email ?? '',
@@ -90,11 +96,13 @@
 			strategy: user?.strategy_guid ?? ''
 		})),
 		validate: (v) => {
-			const name = editing ? null : usernameProblem(v.username.trim());
-			const pw = editing && !isLocal ? null : passwordProblem(v.password, !editing);
+			const inviting = !editing && v.mode === 'invite';
+			const name = editing || (inviting && !v.username.trim()) ? null : usernameProblem(v.username.trim());
+			const pw = inviting || (editing && !isLocal) ? null : passwordProblem(v.password, !editing);
 			return {
 				username: name ? t(name) : undefined,
 				password: pw ? t(pw) : undefined,
+				email: inviting && !v.email.trim() ? t('users.invite_email_required') : undefined,
 				direct: deviceIdsOk(splitIds(v.direct)) ? undefined : t('users.invalid_device_id')
 			};
 		},
@@ -114,6 +122,11 @@
 					...(isLocal && v.password ? { password: v.password } : {})
 				});
 				toast.success(t('users.user_updated_named', { username: user.username }));
+			} else if (v.mode === 'invite') {
+				const username = v.username.trim();
+				const made = await inviteUser({ ...common, ...(username ? { username } : {}), role: v.role });
+				if (made.invite_sent) toast.success(t('users.invite_sent_named', { email: common.email }));
+				else toast.warning(t('users.invite_not_sent_named', { username: made.username }));
 			} else {
 				const username = v.username.trim();
 				await createUser({ ...common, username, password: v.password, role: v.role });
@@ -127,6 +140,28 @@
 		const cur = form.values[list];
 		form.values[list] = on ? [...cur.filter((x) => x !== value), value] : cur.filter((x) => x !== value);
 	}
+
+	// The page learns whether mail is set up after the sheet may have opened: a
+	// new account nobody has typed into yet then starts with the invite
+	$effect(() => {
+		if (!mailReady || editing) return;
+		untrack(() => {
+			const v = form.values;
+			if (v.mode === 'password' && !v.username && !v.password && !v.email) v.mode = 'invite';
+		});
+	});
+
+	const inviting = $derived(!editing && form.values.mode === 'invite');
+	const suggestion = $derived(inviting ? usernameFromEmail(form.values.email) : '');
+	const modeChoices = $derived([
+		{
+			value: 'invite',
+			title: t('users.add_mode_invite'),
+			description: mailReady ? t('users.add_mode_invite_desc') : t('users.invite_needs_email'),
+			disabled: !mailReady
+		},
+		{ value: 'password', title: t('users.add_mode_password'), description: t('users.add_mode_password_desc') }
+	]);
 
 	const strategyOptions = $derived([
 		{ value: '', label: t('users.pro_strategy_none') },
@@ -167,38 +202,83 @@
 				<p class="note">{t('users.provider_managed_hint')}</p>
 			{/if}
 		{:else}
-			<Field label={t('users.username')} hint={t('users.username_hint')} error={form.errors.username}>
+			<FormSection title={t('settings.tab_auth')} id="{uid}-mode">
+				<ChoiceList
+					choices={modeChoices}
+					labelledby="{uid}-mode-title"
+					name="{uid}-mode-choice"
+					bind:value={form.values.mode}
+				/>
+			</FormSection>
+			{#if inviting}
+				<Field label={t('users.email')} hint={t('users.invite_email_hint')} error={form.errors.email}>
+					{#snippet children(f)}
+						<Input
+							{...f}
+							type="email"
+							width="host"
+							autocomplete="off"
+							spellcheck="false"
+							data-autofocus
+							bind:value={form.values.email}
+						/>
+					{/snippet}
+				</Field>
+				<Field
+					label={t('users.username')}
+					hint={suggestion
+						? t('users.username_optional_hint', { suggestion })
+						: t('users.username_optional_hint_empty')}
+					error={form.errors.username}
+				>
+					{#snippet children(f)}
+						<Input
+							{...f}
+							width="medium"
+							maxlength={64}
+							autocomplete="off"
+							spellcheck="false"
+							placeholder={suggestion}
+							bind:value={form.values.username}
+						/>
+					{/snippet}
+				</Field>
+			{:else}
+				<Field label={t('users.username')} hint={t('users.username_hint')} error={form.errors.username}>
+					{#snippet children(f)}
+						<Input
+							{...f}
+							width="medium"
+							maxlength={64}
+							autocomplete="off"
+							spellcheck="false"
+							data-autofocus
+							bind:value={form.values.username}
+						/>
+					{/snippet}
+				</Field>
+				<PasswordField
+					label={t('users.password')}
+					hint={t('users.password_hint')}
+					error={form.errors.password}
+					bind:value={form.values.password}
+				/>
+			{/if}
+		{/if}
+		{#if !inviting}
+			<Field label={t('users.email')} hint={t('users.email_hint')}>
 				{#snippet children(f)}
 					<Input
 						{...f}
-						width="medium"
-						maxlength={64}
+						type="email"
+						width="host"
 						autocomplete="off"
 						spellcheck="false"
-						data-autofocus
-						bind:value={form.values.username}
+						bind:value={form.values.email}
 					/>
 				{/snippet}
 			</Field>
-			<PasswordField
-				label={t('users.password')}
-				hint={t('users.password_hint')}
-				error={form.errors.password}
-				bind:value={form.values.password}
-			/>
 		{/if}
-		<Field label={t('users.email')} hint={t('users.email_hint')}>
-			{#snippet children(f)}
-				<Input
-					{...f}
-					type="email"
-					width="host"
-					autocomplete="off"
-					spellcheck="false"
-					bind:value={form.values.email}
-				/>
-			{/snippet}
-		</Field>
 
 		<FormSection title={t('users.role')} id="{uid}-role">
 			<ChoiceList
@@ -270,7 +350,7 @@
 	{#snippet footer()}
 		<Button class="sheet-footer-start" onclick={onclose}>{t('actions.cancel')}</Button>
 		<Button variant="primary" type="submit" form={form.id} busy={form.busy}
-			>{user ? t('actions.save') : t('users.create')}</Button
+			>{user ? t('actions.save') : inviting ? t('users.send_invite') : t('users.create')}</Button
 		>
 	{/snippet}
 </Sheet>

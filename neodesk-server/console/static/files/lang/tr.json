@@ -1963,7 +1963,9 @@
     "action_session_ended_by_admin": "Oturum bir yönetici tarafından sonlandırıldı",
     "action_session_limit": "Oturum, oturum sınırı nedeniyle sonlandırıldı",
     "action_console_sessions_policy_changed": "Hesap başına oturumlar değiştirildi",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Davet gönderildi",
+    "action_user_invite_accepted": "Davet kabul edildi"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2547,7 +2549,29 @@
     "access_now_role": "Şu an: {level}, {source}. Rol sınırı: {limit}",
     "note_default_user_group": "Varsayılan kullanıcı grubu",
     "note_default_device_group": "Varsayılan cihaz grubu",
-    "note_org_default_group": "Kuruluşla birlikte oluşturulan varsayılan grup"
+    "note_org_default_group": "Kuruluşla birlikte oluşturulan varsayılan grup",
+    "add_mode_invite": "E-postayla davet gönder",
+    "add_mode_invite_desc": "Kişi bir bağlantı alır ve şifresini kendisi seçer. Bağlantı 7 gün geçerlidir.",
+    "add_mode_password": "Şifreyi şimdi belirle",
+    "add_mode_password_desc": "Şifreyi siz seçer ve kendiniz iletirsiniz.",
+    "username_optional_hint": "İsteğe bağlı. {suggestion} kullanılması için boş bırakın.",
+    "username_optional_hint_empty": "İsteğe bağlı. E-posta adresinin @ işaretinden önceki kısmının kullanılması için boş bırakın.",
+    "invite_email_hint": "Davet bu adrese gönderilir. Yardım talebi bildirimleri de bu adresi kullanır.",
+    "send_invite": "Davet gönder",
+    "invite_sent_named": "Davet {email} adresine gönderildi.",
+    "invite_not_sent_named": "{username} eklendi, ancak davet gönderilemedi. E-posta ayarlarını kontrol edin, ardından Daveti yeniden gönder seçeneğini kullanın.",
+    "invited": "Davet edildi",
+    "invite_expired": "Davetin süresi doldu",
+    "invite_open_until": "Davet bağlantısı {date} tarihine kadar geçerli.",
+    "invite_expired_on": "Davet bağlantısının süresi {date} tarihinde doldu.",
+    "resend_invite": "Daveti yeniden gönder",
+    "invite_resent_named": "{username} için yeni bir davet gönderildi.",
+    "invite_password_given": "Davet edilen kişi şifresini kendisi seçer. Şifre alanını boş bırakın.",
+    "invite_email_required": "Davetin gönderileceği e-posta adresini girin.",
+    "invite_needs_email": "Bağlantıları e-postayla göndermek için e-posta ayarları gerekir. Bunları Ayarlar, Email bölümünden yapın.",
+    "invite_signed_in": "Bu hesap zaten oturum açtı, bu yüzden davete ihtiyacı yok.",
+    "link_local_only": "Bu hesap bir dizin veya çoklu oturum açma üzerinden oturum açar, bu yüzden şifresi burada belirlenmez.",
+    "link_mail_failed": "Posta sunucusu e-postayı kabul etmedi. E-posta ayarlarını kontrol edin."
   },
   "folders": {
     "title": "Klasörler",
@@ -8934,5 +8958,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} sizi {server} sunucusuna davet etti",
+    "invite_heading": "{server} sunucusuna hoş geldiniz",
+    "invite_lead": "{sender} size {server} sunucusunda bir hesap açtı. Oturum açmak için bir şifre seçin.",
+    "invite_button": "Şifrenizi seçin",
+    "invite_expires": "Bağlantı bir kez, {expires} tarihine kadar çalışır.",
+    "mail_username": "Kullanıcı adınız: {username}",
+    "mail_link_hint": "Düğme çalışmazsa bu bağlantıyı açın:",
+    "mail_footer": "{host} tarafından {server} için gönderildi.",
+    "unusable": "Bu bağlantı artık çalışmıyor. Zaten kullanıldı ya da süresi doldu. Yeni bir bağlantı isteyin.",
+    "page_title_invite": "Şifrenizi seçin",
+    "page_intro_invite": "{server} sunucusuna hoş geldiniz. {username} hesabınız için bir şifre seçin.",
+    "repeat_password": "Şifre tekrar",
+    "passwords_differ": "Şifreler eşleşmiyor.",
+    "save": "Şifreyi kaydet",
+    "done_title": "Şifre kaydedildi",
+    "done_text": "Yeni şifrenizle {username} olarak oturum açın.",
+    "sign_in": "Oturum aç",
+    "invalid_title": "Bu bağlantı çalışmıyor",
+    "no_link": "Şifre seçmek için e-postanızdaki bağlantıyı açın.",
+    "check_failed": "Bağlantı kontrol edilemedi. Biraz sonra tekrar deneyin."
   }
 }

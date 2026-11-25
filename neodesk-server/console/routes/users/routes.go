@@ -20,16 +20,18 @@ import (
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
 )
 
 type handlers struct {
-	d   *kit.Deps
-	log *kit.Logger
+	d     *kit.Deps
+	log   *kit.Logger
+	links *passwordlinks.Store
 }
 
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
-	h := &handlers{d: d, log: d.Log}
+	h := &handlers{d: d, log: d.Log, links: passwordlinks.New(d.Store, nil)}
 	r := d.Router
 	r.Get("/api/users", h.list, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Get("/api/panel/user-groups", h.userGroups, d.RequireAuth, d.RequireAnyPermission("user.view", "device.edit"))
@@ -37,6 +39,9 @@ func Register(d *kit.Deps) {
 	r.Patch("/api/panel/user-groups/{guid}", h.updateUserGroup, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Delete("/api/panel/user-groups/{guid}", h.deleteUserGroup, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Post("/api/users", h.create, d.RequireAuth, d.RequirePermission("user.create"))
+	r.Post("/api/users/invite", h.invite, d.RequireAuth, d.RequirePermission("user.create"))
+	r.Get("/api/users/invites", h.invites, d.RequireAuth, d.RequirePermission("user.view"))
+	r.Post("/api/users/{id}/invite", h.resendInvite, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Patch("/api/users/{id}", h.update, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Get("/api/users/{id}/effective-scope", h.effectiveScope, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Delete("/api/users/{id}", h.remove, d.RequireAuth, d.RequirePermission("user.delete"))

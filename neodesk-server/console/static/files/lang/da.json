@@ -1963,7 +1963,9 @@
     "action_session_ended_by_admin": "Session afsluttet af en administrator",
     "action_session_limit": "Session afsluttet af sessionsgrænsen",
     "action_console_sessions_policy_changed": "Sessioner pr. konto ændret",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Invitation sendt",
+    "action_user_invite_accepted": "Invitation accepteret"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2547,7 +2549,29 @@
     "access_now_role": "Nu: {level}, {source}. Rollens grænse: {limit}",
     "note_default_user_group": "Standardbrugergruppe",
     "note_default_device_group": "Standardenhedsgruppe",
-    "note_org_default_group": "Standardgruppe oprettet med organisationen"
+    "note_org_default_group": "Standardgruppe oprettet med organisationen",
+    "add_mode_invite": "Send en invitation via e-mail",
+    "add_mode_invite_desc": "Personen får et link og vælger selv sin adgangskode. Linket virker i 7 dage.",
+    "add_mode_password": "Angiv en adgangskode nu",
+    "add_mode_password_desc": "Du vælger adgangskoden og giver den selv videre.",
+    "username_optional_hint": "Valgfrit. Lad feltet være tomt for at bruge {suggestion}.",
+    "username_optional_hint_empty": "Valgfrit. Lad feltet være tomt for at bruge delen af e-mailadressen før @.",
+    "invite_email_hint": "Invitationen sendes til denne adresse. Meddelelser om hjælpeanmodninger bruger den også.",
+    "send_invite": "Send invitation",
+    "invite_sent_named": "Invitation sendt til {email}.",
+    "invite_not_sent_named": "{username} er tilføjet, men invitationen blev ikke sendt. Tjek e-mailindstillingerne, og brug derefter Send invitation igen.",
+    "invited": "Inviteret",
+    "invite_expired": "Invitationen er udløbet",
+    "invite_open_until": "Invitationslinket virker indtil {date}.",
+    "invite_expired_on": "Invitationslinket udløb {date}.",
+    "resend_invite": "Send invitation igen",
+    "invite_resent_named": "Der er sendt en ny invitation til {username}.",
+    "invite_password_given": "En inviteret person vælger selv sin adgangskode. Lad adgangskoden være tom.",
+    "invite_email_required": "Angiv den e-mailadresse, invitationen skal sendes til.",
+    "invite_needs_email": "For at sende links via e-mail skal e-mailindstillingerne være sat op. Sæt dem op under Indstillinger, Email.",
+    "invite_signed_in": "Denne konto har allerede logget ind, så den behøver ingen invitation.",
+    "link_local_only": "Denne konto logger ind via en katalogtjeneste eller single sign-on, så dens adgangskode angives ikke her.",
+    "link_mail_failed": "Mailserveren tog ikke imod e-mailen. Tjek e-mailindstillingerne."
   },
   "folders": {
     "title": "Mapper",
@@ -8934,5 +8958,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} har inviteret dig til {server}",
+    "invite_heading": "Velkommen til {server}",
+    "invite_lead": "{sender} har oprettet en konto til dig på {server}. Vælg en adgangskode for at logge ind.",
+    "invite_button": "Vælg din adgangskode",
+    "invite_expires": "Linket virker én gang, indtil {expires}.",
+    "mail_username": "Dit brugernavn: {username}",
+    "mail_link_hint": "Hvis knappen ikke virker, så åbn dette link:",
+    "mail_footer": "Sendt af {host} for {server}.",
+    "unusable": "Dette link virker ikke længere. Det er allerede brugt, eller det er udløbet. Bed om et nyt.",
+    "page_title_invite": "Vælg din adgangskode",
+    "page_intro_invite": "Velkommen til {server}. Vælg en adgangskode til din konto {username}.",
+    "repeat_password": "Adgangskode igen",
+    "passwords_differ": "Adgangskoderne stemmer ikke overens.",
+    "save": "Gem adgangskode",
+    "done_title": "Adgangskoden er gemt",
+    "done_text": "Log ind som {username} med din nye adgangskode.",
+    "sign_in": "Log ind",
+    "invalid_title": "Dette link virker ikke",
+    "no_link": "Åbn linket i din e-mail for at vælge en adgangskode.",
+    "check_failed": "Linket kunne ikke kontrolleres. Prøv igen om lidt."
   }
 }

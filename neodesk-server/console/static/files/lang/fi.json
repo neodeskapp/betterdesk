@@ -1963,7 +1963,9 @@
     "action_session_ended_by_admin": "Ylläpitäjä päätti istunnon",
     "action_session_limit": "Istuntoraja päätti istunnon",
     "action_console_sessions_policy_changed": "Istunnot tiliä kohden muutettu",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Kutsu lähetetty",
+    "action_user_invite_accepted": "Kutsu hyväksytty"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2547,7 +2549,29 @@
     "access_now_role": "Nyt: {level}, {source}. Roolin raja: {limit}",
     "note_default_user_group": "Oletuskäyttäjäryhmä",
     "note_default_device_group": "Oletuslaiteryhmä",
-    "note_org_default_group": "Organisaation kanssa luotu oletusryhmä"
+    "note_org_default_group": "Organisaation kanssa luotu oletusryhmä",
+    "add_mode_invite": "Lähetä kutsu sähköpostilla",
+    "add_mode_invite_desc": "Henkilö saa linkin ja valitsee itse salasanansa. Linkki toimii 7 päivää.",
+    "add_mode_password": "Aseta salasana nyt",
+    "add_mode_password_desc": "Valitset salasanan ja välität sen itse eteenpäin.",
+    "username_optional_hint": "Valinnainen. Jätä tyhjäksi, niin käytetään tunnusta {suggestion}.",
+    "username_optional_hint_empty": "Valinnainen. Jätä tyhjäksi, niin käytetään sähköpostiosoitteen @-merkkiä edeltävää osaa.",
+    "invite_email_hint": "Kutsu lähetetään tähän osoitteeseen. Myös tukipyyntöjen ilmoitukset käyttävät sitä.",
+    "send_invite": "Lähetä kutsu",
+    "invite_sent_named": "Kutsu lähetetty osoitteeseen {email}.",
+    "invite_not_sent_named": "{username} lisättiin, mutta kutsua ei lähetetty. Tarkista sähköpostiasetukset ja käytä sitten toimintoa Lähetä kutsu uudelleen.",
+    "invited": "Kutsuttu",
+    "invite_expired": "Kutsu vanhentunut",
+    "invite_open_until": "Kutsulinkki toimii {date} asti.",
+    "invite_expired_on": "Kutsulinkki vanheni {date}.",
+    "resend_invite": "Lähetä kutsu uudelleen",
+    "invite_resent_named": "Uusi kutsu lähetetty käyttäjälle {username}.",
+    "invite_password_given": "Kutsuttu henkilö valitsee salasanansa itse. Jätä salasana pois.",
+    "invite_email_required": "Anna sähköpostiosoite, johon kutsu lähetetään.",
+    "invite_needs_email": "Linkkien lähettäminen sähköpostilla vaatii sähköpostiasetukset. Määritä ne kohdassa Asetukset, Email.",
+    "invite_signed_in": "Tällä tilillä on jo kirjauduttu, joten se ei tarvitse kutsua.",
+    "link_local_only": "Tämä tili kirjautuu hakemiston tai kertakirjautumisen kautta, joten sen salasanaa ei aseteta täällä.",
+    "link_mail_failed": "Sähköpostipalvelin ei hyväksynyt viestiä. Tarkista sähköpostiasetukset."
   },
   "folders": {
     "title": "Kansiot",
@@ -8934,5 +8958,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} kutsui sinut palvelimeen {server}",
+    "invite_heading": "Tervetuloa palvelimeen {server}",
+    "invite_lead": "{sender} loi sinulle tilin palvelimeen {server}. Valitse salasana, jotta voit kirjautua.",
+    "invite_button": "Valitse salasana",
+    "invite_expires": "Linkki toimii kerran, {expires} asti.",
+    "mail_username": "Käyttäjätunnuksesi: {username}",
+    "mail_link_hint": "Jos painike ei toimi, avaa tämä linkki:",
+    "mail_footer": "Lähettäjä {host} palvelimen {server} puolesta.",
+    "unusable": "Tämä linkki ei enää toimi. Se on jo käytetty tai se on vanhentunut. Pyydä uusi.",
+    "page_title_invite": "Valitse salasana",
+    "page_intro_invite": "Tervetuloa palvelimeen {server}. Valitse salasana tilillesi {username}.",
+    "repeat_password": "Salasana uudelleen",
+    "passwords_differ": "Salasanat eivät täsmää.",
+    "save": "Tallenna salasana",
+    "done_title": "Salasana tallennettu",
+    "done_text": "Kirjaudu käyttäjänä {username} uudella salasanallasi.",
+    "sign_in": "Kirjaudu sisään",
+    "invalid_title": "Tämä linkki ei toimi",
+    "no_link": "Avaa sähköpostissasi oleva linkki, niin voit valita salasanan.",
+    "check_failed": "Linkkiä ei voitu tarkistaa. Yritä hetken päästä uudelleen."
   }
 }

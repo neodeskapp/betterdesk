@@ -1965,7 +1965,9 @@
         "action_session_ended_by_admin": "Session ended by an administrator",
         "action_session_limit": "Session ended by the session limit",
         "action_console_sessions_policy_changed": "Sessions per account changed",
-        "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+        "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+        "action_user_invite_sent": "Invite sent",
+        "action_user_invite_accepted": "Invite accepted"
     },
     "generator": {
         "title": "NeoDesk Support Generator",
@@ -2567,7 +2569,29 @@
         "access_now_role": "Now: {level}, {source}. Role limit: {limit}",
         "note_default_user_group": "Default user group",
         "note_default_device_group": "Default device group",
-        "note_org_default_group": "Default group created with the organization"
+        "note_org_default_group": "Default group created with the organization",
+        "add_mode_invite": "Send an invite by email",
+        "add_mode_invite_desc": "The person gets a link and chooses their own password. The link works for 7 days.",
+        "add_mode_password": "Set a password now",
+        "add_mode_password_desc": "You choose the password and pass it on yourself.",
+        "username_optional_hint": "Optional. Leave empty to use {suggestion}.",
+        "username_optional_hint_empty": "Optional. Leave empty to use the part of the email address before the @.",
+        "invite_email_hint": "The invite goes to this address. Help request notifications use it too.",
+        "send_invite": "Send invite",
+        "invite_sent_named": "Invite sent to {email}.",
+        "invite_not_sent_named": "Added {username}, but the invite didn't go out. Check the email settings, then use Resend invite.",
+        "invited": "Invited",
+        "invite_expired": "Invite expired",
+        "invite_open_until": "The invite link works until {date}.",
+        "invite_expired_on": "The invite link expired on {date}.",
+        "resend_invite": "Resend invite",
+        "invite_resent_named": "Sent a new invite to {username}.",
+        "invite_password_given": "An invited person chooses their own password. Leave the password out.",
+        "invite_email_required": "Enter the email address the invite goes to.",
+        "invite_needs_email": "Sending links by email needs the email settings. Set them up under Settings, Email.",
+        "invite_signed_in": "This account has signed in already, so it needs no invite.",
+        "link_local_only": "This account signs in through a directory or single sign-on, so its password isn't set here.",
+        "link_mail_failed": "The mail server didn't take the email. Check the email settings."
     },
     "folders": {
         "title": "Folders",
@@ -8928,5 +8952,27 @@
         "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
         "invite_title": "Invite a computer",
         "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+    },
+    "password_link": {
+        "invite_subject": "{sender} invited you to {server}",
+        "invite_heading": "Welcome to {server}",
+        "invite_lead": "{sender} made you an account on {server}. Choose a password to sign in.",
+        "invite_button": "Choose your password",
+        "invite_expires": "The link works once, until {expires}.",
+        "mail_username": "Your username: {username}",
+        "mail_link_hint": "If the button doesn't work, open this link:",
+        "mail_footer": "Sent by {host} for {server}.",
+        "unusable": "This link doesn't work any more. It was used already or it expired. Ask for a new one.",
+        "page_title_invite": "Choose your password",
+        "page_intro_invite": "Welcome to {server}. Choose a password for your account {username}.",
+        "repeat_password": "Password again",
+        "passwords_differ": "The passwords don't match.",
+        "save": "Save password",
+        "done_title": "Password saved",
+        "done_text": "Sign in as {username} with your new password.",
+        "sign_in": "Sign in",
+        "invalid_title": "This link doesn't work",
+        "no_link": "Open the link from your email to choose a password.",
+        "check_failed": "The link couldn't be checked. Try again in a moment."
     }
 }

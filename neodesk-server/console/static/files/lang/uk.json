@@ -1963,7 +1963,9 @@
     "action_session_ended_by_admin": "Сеанс завершено адміністратором",
     "action_session_limit": "Сеанс завершено обмеженням сеансів",
     "action_console_sessions_policy_changed": "Змінено кількість сеансів на обліковий запис",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Запрошення надіслано",
+    "action_user_invite_accepted": "Запрошення прийнято"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2547,7 +2549,29 @@
     "access_now_role": "Зараз: {level}, {source}. Межа ролі: {limit}",
     "note_default_user_group": "Стандартна група користувачів",
     "note_default_device_group": "Стандартна група пристроїв",
-    "note_org_default_group": "Стандартна група, створена разом з організацією"
+    "note_org_default_group": "Стандартна група, створена разом з організацією",
+    "add_mode_invite": "Надіслати запрошення електронною поштою",
+    "add_mode_invite_desc": "Людина отримує посилання і сама обирає пароль. Посилання діє 7 днів.",
+    "add_mode_password": "Задати пароль зараз",
+    "add_mode_password_desc": "Ви обираєте пароль і самі передаєте його.",
+    "username_optional_hint": "Необов'язково. Залиште порожнім, щоб використати {suggestion}.",
+    "username_optional_hint_empty": "Необов'язково. Залиште порожнім, щоб використати частину адреси електронної пошти до @.",
+    "invite_email_hint": "Запрошення надійде на цю адресу. Сповіщення про запити на допомогу теж її використовують.",
+    "send_invite": "Надіслати запрошення",
+    "invite_sent_named": "Запрошення надіслано на {email}.",
+    "invite_not_sent_named": "{username} додано, але запрошення не надіслано. Перевірте налаштування електронної пошти, а потім скористайтеся «Надіслати запрошення ще раз».",
+    "invited": "Запрошено",
+    "invite_expired": "Запрошення прострочене",
+    "invite_open_until": "Посилання із запрошенням діє до {date}.",
+    "invite_expired_on": "Посилання із запрошенням закінчилося {date}.",
+    "resend_invite": "Надіслати запрошення ще раз",
+    "invite_resent_named": "Нове запрошення надіслано для {username}.",
+    "invite_password_given": "Запрошена людина сама обирає пароль. Не вказуйте пароль.",
+    "invite_email_required": "Введіть адресу електронної пошти, на яку надійде запрошення.",
+    "invite_needs_email": "Щоб надсилати посилання електронною поштою, потрібні налаштування пошти. Задайте їх у Налаштування, Email.",
+    "invite_signed_in": "Цей обліковий запис уже входив, тож запрошення йому не потрібне.",
+    "link_local_only": "Цей обліковий запис входить через каталог або єдиний вхід, тому його пароль тут не задається.",
+    "link_mail_failed": "Поштовий сервер не прийняв лист. Перевірте налаштування електронної пошти."
   },
   "folders": {
     "title": "Папки",
@@ -8934,5 +8958,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} запрошує вас до {server}",
+    "invite_heading": "Ласкаво просимо до {server}",
+    "invite_lead": "{sender} створив для вас обліковий запис на {server}. Оберіть пароль, щоб увійти.",
+    "invite_button": "Обрати пароль",
+    "invite_expires": "Посилання діє один раз, до {expires}.",
+    "mail_username": "Ваше ім'я користувача: {username}",
+    "mail_link_hint": "Якщо кнопка не працює, відкрийте це посилання:",
+    "mail_footer": "Надіслано {host} для {server}.",
+    "unusable": "Це посилання більше не діє. Його вже використали або воно закінчилося. Попросіть нове.",
+    "page_title_invite": "Оберіть пароль",
+    "page_intro_invite": "Ласкаво просимо до {server}. Оберіть пароль для вашого облікового запису {username}.",
+    "repeat_password": "Пароль ще раз",
+    "passwords_differ": "Паролі не збігаються.",
+    "save": "Зберегти пароль",
+    "done_title": "Пароль збережено",
+    "done_text": "Увійдіть як {username} з новим паролем.",
+    "sign_in": "Увійти",
+    "invalid_title": "Це посилання не діє",
+    "no_link": "Відкрийте посилання з вашого листа, щоб обрати пароль.",
+    "check_failed": "Не вдалося перевірити посилання. Спробуйте ще раз за хвилину."
   }
 }

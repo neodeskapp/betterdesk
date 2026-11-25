@@ -1961,7 +1961,9 @@
     "action_session_ended_by_admin": "工作階段已被管理員結束",
     "action_session_limit": "工作階段因工作階段上限而結束",
     "action_console_sessions_policy_changed": "每個帳戶的工作階段已變更",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "邀請已寄送",
+    "action_user_invite_accepted": "邀請已接受"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2563,7 +2565,29 @@
     "access_now_role": "目前：{level}，{source}。角色上限：{limit}",
     "note_default_user_group": "預設使用者群組",
     "note_default_device_group": "預設裝置群組",
-    "note_org_default_group": "隨組織建立的預設群組"
+    "note_org_default_group": "隨組織建立的預設群組",
+    "add_mode_invite": "透過電子郵件寄送邀請",
+    "add_mode_invite_desc": "對方會收到一個連結，並自行設定密碼。連結 7 天內有效。",
+    "add_mode_password": "現在設定密碼",
+    "add_mode_password_desc": "由您設定密碼，並親自轉告對方。",
+    "username_optional_hint": "選填。留空則使用 {suggestion}。",
+    "username_optional_hint_empty": "選填。留空則使用電子郵件地址中 @ 之前的部分。",
+    "invite_email_hint": "邀請會寄到此地址。求助請求通知也使用此地址。",
+    "send_invite": "寄送邀請",
+    "invite_sent_named": "已寄送邀請至 {email}。",
+    "invite_not_sent_named": "已新增 {username}，但邀請未能寄出。請檢查電子郵件設定，然後使用「重新寄送邀請」。",
+    "invited": "已邀請",
+    "invite_expired": "邀請已過期",
+    "invite_open_until": "邀請連結在 {date} 之前有效。",
+    "invite_expired_on": "邀請連結已於 {date} 過期。",
+    "resend_invite": "重新寄送邀請",
+    "invite_resent_named": "已向 {username} 寄送新的邀請。",
+    "invite_password_given": "受邀者會自行設定密碼。請不要填寫密碼。",
+    "invite_email_required": "請輸入接收邀請的電子郵件地址。",
+    "invite_needs_email": "透過電子郵件寄送連結需要先設定電子郵件。請在「設置 > Email」中設定。",
+    "invite_signed_in": "此帳戶已經登入過，因此不需要邀請。",
+    "link_local_only": "此帳戶透過目錄服務或單一登入進行登入，因此不在這裡設定密碼。",
+    "link_mail_failed": "郵件伺服器未接受該郵件。請檢查電子郵件設定。"
   },
   "folders": {
     "title": "資料夾",
@@ -8932,5 +8956,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} 邀請您加入 {server}",
+    "invite_heading": "歡迎使用 {server}",
+    "invite_lead": "{sender} 為您在 {server} 上建立了一個帳戶。請設定密碼以登入。",
+    "invite_button": "設定您的密碼",
+    "invite_expires": "此連結只能使用一次，在 {expires} 之前有效。",
+    "mail_username": "您的用戶名：{username}",
+    "mail_link_hint": "如果按鈕無法使用，請開啟此連結：",
+    "mail_footer": "由 {host} 代表 {server} 寄出。",
+    "unusable": "此連結已失效。它已被使用或已過期。請索取新的連結。",
+    "page_title_invite": "設定您的密碼",
+    "page_intro_invite": "歡迎使用 {server}。請為您的帳戶 {username} 設定密碼。",
+    "repeat_password": "再次輸入密碼",
+    "passwords_differ": "兩次輸入的密碼不一致。",
+    "save": "儲存密碼",
+    "done_title": "密碼已儲存",
+    "done_text": "請使用新密碼以 {username} 身分登入。",
+    "sign_in": "登入",
+    "invalid_title": "此連結無效",
+    "no_link": "請開啟電子郵件中的連結來設定密碼。",
+    "check_failed": "無法檢查該連結。請稍後再試。"
   }
 }

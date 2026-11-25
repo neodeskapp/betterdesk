@@ -1963,7 +1963,9 @@
     "action_session_ended_by_admin": "Munkamenetet egy rendszergazda zárta le",
     "action_session_limit": "Munkamenetet a munkamenet-korlát zárta le",
     "action_console_sessions_policy_changed": "Fiókonkénti munkamenetek módosítva",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Meghívó elküldve",
+    "action_user_invite_accepted": "Meghívó elfogadva"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2547,7 +2549,29 @@
     "access_now_role": "Most: {level}, {source}. A szerepkör korlátja: {limit}",
     "note_default_user_group": "Alapértelmezett felhasználói csoport",
     "note_default_device_group": "Alapértelmezett eszközcsoport",
-    "note_org_default_group": "Alapértelmezett csoport, a szervezettel együtt létrehozva"
+    "note_org_default_group": "Alapértelmezett csoport, a szervezettel együtt létrehozva",
+    "add_mode_invite": "Meghívó küldése e-mailben",
+    "add_mode_invite_desc": "A személy kap egy linket, és maga választja meg a jelszavát. A link 7 napig működik.",
+    "add_mode_password": "Jelszó megadása most",
+    "add_mode_password_desc": "Ön választja meg a jelszót, és maga adja át.",
+    "username_optional_hint": "Nem kötelező. Hagyja üresen, ha ezt szeretné használni: {suggestion}.",
+    "username_optional_hint_empty": "Nem kötelező. Hagyja üresen, ha az e-mail-cím @ előtti részét szeretné használni.",
+    "invite_email_hint": "A meghívó erre a címre megy. A segítségkérések értesítései is ezt használják.",
+    "send_invite": "Meghívó küldése",
+    "invite_sent_named": "Meghívó elküldve ide: {email}.",
+    "invite_not_sent_named": "{username} hozzáadva, de a meghívó nem ment ki. Ellenőrizze az e-mail-beállításokat, majd használja a Meghívó újraküldése lehetőséget.",
+    "invited": "Meghívva",
+    "invite_expired": "A meghívó lejárt",
+    "invite_open_until": "A meghívó linkje eddig működik: {date}.",
+    "invite_expired_on": "A meghívó linkje lejárt: {date}.",
+    "resend_invite": "Meghívó újraküldése",
+    "invite_resent_named": "Új meghívó elküldve neki: {username}.",
+    "invite_password_given": "A meghívott személy maga választja meg a jelszavát. Hagyja ki a jelszót.",
+    "invite_email_required": "Adja meg az e-mail-címet, ahová a meghívó megy.",
+    "invite_needs_email": "A linkek e-mailes küldéséhez e-mail-beállítások kellenek. Állítsa be őket itt: Beállítások, Email.",
+    "invite_signed_in": "Ez a fiók már bejelentkezett, így nincs szüksége meghívóra.",
+    "link_local_only": "Ez a fiók címtáron vagy egyszeri bejelentkezésen keresztül jelentkezik be, ezért a jelszava nem itt állítható be.",
+    "link_mail_failed": "A levelezőszerver nem fogadta el az e-mailt. Ellenőrizze az e-mail-beállításokat."
   },
   "folders": {
     "title": "Mappák",
@@ -8934,5 +8958,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} meghívta Önt ide: {server}",
+    "invite_heading": "Üdvözöljük itt: {server}",
+    "invite_lead": "{sender} fiókot hozott létre Önnek itt: {server}. Válasszon jelszót a bejelentkezéshez.",
+    "invite_button": "Jelszó választása",
+    "invite_expires": "A link egyszer működik, eddig: {expires}.",
+    "mail_username": "Az Ön felhasználóneve: {username}",
+    "mail_link_hint": "Ha a gomb nem működik, nyissa meg ezt a linket:",
+    "mail_footer": "Küldte: {host}, a következő nevében: {server}.",
+    "unusable": "Ez a link már nem működik. Már felhasználták, vagy lejárt. Kérjen újat.",
+    "page_title_invite": "Jelszó választása",
+    "page_intro_invite": "Üdvözöljük itt: {server}. Válasszon jelszót a(z) {username} fiókjához.",
+    "repeat_password": "Jelszó újra",
+    "passwords_differ": "A jelszavak nem egyeznek.",
+    "save": "Jelszó mentése",
+    "done_title": "Jelszó elmentve",
+    "done_text": "Jelentkezzen be {username} néven az új jelszavával.",
+    "sign_in": "Bejelentkezés",
+    "invalid_title": "Ez a link nem működik",
+    "no_link": "Nyissa meg az e-mailben kapott linket a jelszó választásához.",
+    "check_failed": "A linket nem sikerült ellenőrizni. Próbálja újra egy kis idő múlva."
   }
 }

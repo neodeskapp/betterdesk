@@ -309,12 +309,13 @@ func isServerPath(path string) bool {
 
 // isPublicPage reports whether anyone may open a page of the app: the
 // sign-in pages, the portal, device links, the page that redeems an
-// organization invitation, the pages of invites (/join/<code>) and quick
+// organization invitation, the page where an invite or reset link sets a
+// password, the pages of invites (/join/<code>) and quick
 // support links (/s/<code>), and the remote viewer (/remote/<device id>),
 // which also opens for guest links and mesh shares. The viewer page holds
 // no data; its data endpoint checks access.
 func isPublicPage(sub string) bool {
-	if isSegment(sub, "/login") || isSegment(sub, "/portal") || strings.HasPrefix(sub, "/d/") || isSegment(sub, "/invite") ||
+	if isSegment(sub, "/login") || isSegment(sub, "/portal") || strings.HasPrefix(sub, "/d/") || isSegment(sub, "/invite") || isSegment(sub, "/set-password") ||
 		strings.HasPrefix(sub, "/join/") || strings.HasPrefix(sub, "/s/") ||
 		isSegment(sub, "/remote/login") || isSegment(sub, "/remote/guest") {
 		return true

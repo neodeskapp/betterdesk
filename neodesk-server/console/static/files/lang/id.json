@@ -1963,7 +1963,9 @@
     "action_session_ended_by_admin": "Sesi diakhiri oleh administrator",
     "action_session_limit": "Sesi diakhiri oleh batas sesi",
     "action_console_sessions_policy_changed": "Sesi per akun diubah",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Undangan dikirim",
+    "action_user_invite_accepted": "Undangan diterima"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2547,7 +2549,29 @@
     "access_now_role": "Sekarang: {level}, {source}. Batas peran: {limit}",
     "note_default_user_group": "Grup pengguna default",
     "note_default_device_group": "Grup perangkat default",
-    "note_org_default_group": "Grup default yang dibuat bersama organisasi"
+    "note_org_default_group": "Grup default yang dibuat bersama organisasi",
+    "add_mode_invite": "Kirim undangan lewat email",
+    "add_mode_invite_desc": "Orang itu mendapat tautan dan memilih kata sandinya sendiri. Tautan berlaku 7 hari.",
+    "add_mode_password": "Atur kata sandi sekarang",
+    "add_mode_password_desc": "Anda memilih kata sandi dan menyampaikannya sendiri.",
+    "username_optional_hint": "Opsional. Biarkan kosong untuk memakai {suggestion}.",
+    "username_optional_hint_empty": "Opsional. Biarkan kosong untuk memakai bagian alamat email sebelum @.",
+    "invite_email_hint": "Undangan dikirim ke alamat ini. Notifikasi permintaan bantuan juga memakainya.",
+    "send_invite": "Kirim undangan",
+    "invite_sent_named": "Undangan dikirim ke {email}.",
+    "invite_not_sent_named": "{username} ditambahkan, tetapi undangan tidak terkirim. Periksa pengaturan email, lalu gunakan Kirim ulang undangan.",
+    "invited": "Diundang",
+    "invite_expired": "Undangan kedaluwarsa",
+    "invite_open_until": "Tautan undangan berlaku sampai {date}.",
+    "invite_expired_on": "Tautan undangan kedaluwarsa pada {date}.",
+    "resend_invite": "Kirim ulang undangan",
+    "invite_resent_named": "Undangan baru dikirim ke {username}.",
+    "invite_password_given": "Orang yang diundang memilih kata sandinya sendiri. Kosongkan kata sandi.",
+    "invite_email_required": "Masukkan alamat email tujuan undangan.",
+    "invite_needs_email": "Mengirim tautan lewat email memerlukan pengaturan email. Atur di Pengaturan, Email.",
+    "invite_signed_in": "Akun ini sudah pernah masuk, jadi tidak perlu undangan.",
+    "link_local_only": "Akun ini masuk melalui direktori atau single sign-on, jadi kata sandinya tidak diatur di sini.",
+    "link_mail_failed": "Server email tidak menerima email tersebut. Periksa pengaturan email."
   },
   "folders": {
     "title": "Folder",
@@ -8934,5 +8958,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} mengundang Anda ke {server}",
+    "invite_heading": "Selamat datang di {server}",
+    "invite_lead": "{sender} membuatkan akun untuk Anda di {server}. Pilih kata sandi untuk masuk.",
+    "invite_button": "Pilih kata sandi Anda",
+    "invite_expires": "Tautan berlaku sekali, sampai {expires}.",
+    "mail_username": "Nama pengguna Anda: {username}",
+    "mail_link_hint": "Jika tombol tidak berfungsi, buka tautan ini:",
+    "mail_footer": "Dikirim oleh {host} untuk {server}.",
+    "unusable": "Tautan ini sudah tidak berfungsi. Tautan sudah dipakai atau kedaluwarsa. Minta tautan baru.",
+    "page_title_invite": "Pilih kata sandi Anda",
+    "page_intro_invite": "Selamat datang di {server}. Pilih kata sandi untuk akun Anda {username}.",
+    "repeat_password": "Ulangi kata sandi",
+    "passwords_differ": "Kata sandi tidak cocok.",
+    "save": "Simpan kata sandi",
+    "done_title": "Kata sandi tersimpan",
+    "done_text": "Masuk sebagai {username} dengan kata sandi baru Anda.",
+    "sign_in": "Masuk",
+    "invalid_title": "Tautan ini tidak berfungsi",
+    "no_link": "Buka tautan dari email Anda untuk memilih kata sandi.",
+    "check_failed": "Tautan tidak dapat diperiksa. Coba lagi sebentar lagi."
   }
 }

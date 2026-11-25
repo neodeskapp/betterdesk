@@ -90,6 +90,10 @@ func (h *handlers) changePassword(w http.ResponseWriter, r *http.Request) {
 		err = h.endOtherSessions(r)
 	}
 	if err == nil {
+		// A link sent before would replace the new password
+		err = h.links.Revoke(r.Context(), kit.UserID(r))
+	}
+	if err == nil {
 		err = h.audit(r, kit.UserID(r), "password_changed", "Password changed")
 	}
 	if err != nil {

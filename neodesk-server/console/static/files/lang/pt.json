@@ -1957,7 +1957,9 @@
     "action_session_ended_by_admin": "Sessão terminada por um administrador",
     "action_session_limit": "Sessão terminada pelo limite de sessões",
     "action_console_sessions_policy_changed": "Sessões por conta alteradas",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Convite enviado",
+    "action_user_invite_accepted": "Convite aceite"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2541,7 +2543,29 @@
     "access_now_role": "Agora: {level}, {source}. Limite da função: {limit}",
     "note_default_user_group": "Grupo de utilizadores predefinido",
     "note_default_device_group": "Grupo de dispositivos predefinido",
-    "note_org_default_group": "Grupo predefinido criado com a organização"
+    "note_org_default_group": "Grupo predefinido criado com a organização",
+    "add_mode_invite": "Enviar um convite por e-mail",
+    "add_mode_invite_desc": "A pessoa recebe um link e escolhe a sua própria palavra-passe. O link funciona durante 7 dias.",
+    "add_mode_password": "Definir uma palavra-passe agora",
+    "add_mode_password_desc": "Escolhe a palavra-passe e entrega-a pessoalmente.",
+    "username_optional_hint": "Opcional. Deixe vazio para usar {suggestion}.",
+    "username_optional_hint_empty": "Opcional. Deixe vazio para usar a parte do endereço de e-mail antes do @.",
+    "invite_email_hint": "O convite vai para este endereço. As notificações de pedidos de ajuda também o usam.",
+    "send_invite": "Enviar convite",
+    "invite_sent_named": "Convite enviado para {email}.",
+    "invite_not_sent_named": "{username} foi adicionado, mas o convite não foi enviado. Verifique as definições de e-mail e depois use Reenviar convite.",
+    "invited": "Convidado",
+    "invite_expired": "Convite expirado",
+    "invite_open_until": "O link do convite funciona até {date}.",
+    "invite_expired_on": "O link do convite expirou em {date}.",
+    "resend_invite": "Reenviar convite",
+    "invite_resent_named": "Novo convite enviado para {username}.",
+    "invite_password_given": "Uma pessoa convidada escolhe a sua própria palavra-passe. Deixe a palavra-passe vazia.",
+    "invite_email_required": "Introduza o endereço de e-mail para onde vai o convite.",
+    "invite_needs_email": "Enviar links por e-mail precisa das definições de e-mail. Configure-as em Configurações, Email.",
+    "invite_signed_in": "Esta conta já iniciou sessão, por isso não precisa de convite.",
+    "link_local_only": "Esta conta inicia sessão através de um diretório ou do início de sessão único, por isso a palavra-passe não é definida aqui.",
+    "link_mail_failed": "O servidor de correio não aceitou o e-mail. Verifique as definições de e-mail."
   },
   "folders": {
     "title": "Pastas",
@@ -8928,5 +8952,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Convidar um computador",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} enviou um convite para {server}",
+    "invite_heading": "Bem-vindo a {server}",
+    "invite_lead": "{sender} criou-lhe uma conta em {server}. Escolha uma palavra-passe para iniciar sessão.",
+    "invite_button": "Escolher a sua palavra-passe",
+    "invite_expires": "O link funciona uma vez, até {expires}.",
+    "mail_username": "O seu nome de utilizador: {username}",
+    "mail_link_hint": "Se o botão não funcionar, abra este link:",
+    "mail_footer": "Enviado por {host} para {server}.",
+    "unusable": "Este link já não funciona. Já foi usado ou expirou. Peça um novo.",
+    "page_title_invite": "Escolher a sua palavra-passe",
+    "page_intro_invite": "Bem-vindo a {server}. Escolha uma palavra-passe para a sua conta {username}.",
+    "repeat_password": "Repetir palavra-passe",
+    "passwords_differ": "As palavras-passe não coincidem.",
+    "save": "Guardar palavra-passe",
+    "done_title": "Palavra-passe guardada",
+    "done_text": "Inicie sessão como {username} com a sua nova palavra-passe.",
+    "sign_in": "Iniciar sessão",
+    "invalid_title": "Este link não funciona",
+    "no_link": "Abra o link do seu e-mail para escolher uma palavra-passe.",
+    "check_failed": "Não foi possível verificar o link. Tente novamente daqui a pouco."
   }
 }
