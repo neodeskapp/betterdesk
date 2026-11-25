@@ -105,6 +105,21 @@
       "visual": "視覺",
       "word_spacing": "單詞間距"
      },
+     "account": {
+      "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
+      "accessibility_on": "Some accessibility settings are on in this browser.",
+      "accessibility_open": "Accessibility settings",
+      "description": "Your profile, password and two-factor sign-in, where you are signed in, and how the console looks for you.",
+      "language_note": "The language of the console for your account, on every device.",
+      "password": "密碼",
+      "preferences": "偏好設定",
+      "profile": "個人資料",
+      "sessions": "Signed-in devices",
+      "status_note": "Colleagues see your status in chat and next to your name. The account menu changes it too.",
+      "theme": "Theme for this browser",
+      "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
+      "title": "您的帳戶"
+     },
      "actions": {
       "add": "添加",
       "back": "返回",
@@ -2984,6 +2999,13 @@
       "username": "用戶名",
       "version": "版本"
      },
+     "devices_add": {
+      "invite_note": "Add a computer makes an invite link and lists the invites that are still open.",
+      "invite_title": "Invite a computer",
+      "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
+      "tab_invites": "Invites and install links",
+      "tab_manual": "手動設定"
+     },
      "diagram": {
       "how_title": "連線如何運作",
       "id_server": "ID 伺服器",
@@ -3714,10 +3736,19 @@
      "help": {
       "panel": {
        "close": "關閉",
+       "console": "In the console",
        "link_discord": "Discord 社群",
        "link_docs": "說明文件",
        "link_repo": "GitHub 儲存庫",
-       "links": "實用連結"
+       "links": "實用連結",
+       "shortcuts": "鍵盤快速鍵"
+      },
+      "shortcuts": {
+       "close": "Close a dialog, menu or panel",
+       "move": "Move between buttons and fields",
+       "or": "或",
+       "results": "Move through the search results and open one",
+       "search": "Open the search"
       }
      },
      "help_request": {
@@ -4176,6 +4207,7 @@
       "dashboard": "儀表板",
       "dataguard": "資料外洩防護",
       "devices": "設備",
+      "devices_add": "新增電腦",
       "expand_sidebar": "展開側邊欄",
       "fewer": "顯示較少",
       "file_transfer": "文件傳輸",

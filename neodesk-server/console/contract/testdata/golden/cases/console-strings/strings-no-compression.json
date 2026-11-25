@@ -107,6 +107,21 @@
       "visual": "Visuell",
       "word_spacing": "Wortabstand"
      },
+     "account": {
+      "accessibility_note": "Kontrast, Textgröße, Bewegung und Farbfilter für diesen Browser.",
+      "accessibility_on": "In diesem Browser sind Einstellungen zur Barrierefreiheit an.",
+      "accessibility_open": "Barrierefreiheit einstellen",
+      "description": "Ihr Profil, Passwort und Zwei-Faktor-Anmeldung, wo Sie angemeldet sind, und wie die Konsole für Sie aussieht.",
+      "language_note": "Die Sprache der Konsole für Ihr Konto, auf jedem Gerät.",
+      "password": "Passwort",
+      "preferences": "Persönliche Einstellungen",
+      "profile": "Profil",
+      "sessions": "Angemeldete Geräte",
+      "status_note": "Kolleginnen und Kollegen sehen Ihren Status im Chat und neben Ihrem Namen. Das Kontomenü ändert ihn auch.",
+      "theme": "Design für diesen Browser",
+      "theme_note": "Standard der Konsole folgt dem Design unter Einstellungen › Darstellung. Hell und Dunkel gelten nur für diesen Browser.",
+      "title": "Ihr Konto"
+     },
      "actions": {
       "add": "Add",
       "back": "Zurück",
@@ -2986,6 +3001,13 @@
       "username": "Benutzername",
       "version": "Version"
      },
+     "devices_add": {
+      "invite_note": "„Computer hinzufügen“ erstellt einen Einladungslink und zeigt die Einladungen, die noch offen sind.",
+      "invite_title": "Einen Computer einladen",
+      "invites_desc": "Laden Sie einen Computer mit einem Link oder per E-Mail ein. Der Computer richtet NeoDesk ein und tritt diesem Server bei, mit Namen und in seinem Ordner.",
+      "tab_invites": "Einladungen und Installationslinks",
+      "tab_manual": "Manuelle Einrichtung"
+     },
      "diagram": {
       "how_title": "So entsteht eine Verbindung",
       "id_server": "ID-Server",
@@ -3716,10 +3738,19 @@
      "help": {
       "panel": {
        "close": "Schließen",
+       "console": "In der Konsole",
        "link_discord": "Community auf Discord",
        "link_docs": "Dokumentation",
        "link_repo": "GitHub-Repository",
-       "links": "Nützliche Links"
+       "links": "Nützliche Links",
+       "shortcuts": "Tastenkürzel"
+      },
+      "shortcuts": {
+       "close": "Dialog, Menü oder Bereich schließen",
+       "move": "Zwischen Schaltflächen und Feldern wechseln",
+       "or": "oder",
+       "results": "Durch die Suchergebnisse gehen und eines öffnen",
+       "search": "Suche öffnen"
       }
      },
      "help_request": {
@@ -4174,6 +4205,7 @@
       "dashboard": "Übersicht",
       "dataguard": "Schutz vor Datenabfluss",
       "devices": "Geräte",
+      "devices_add": "Computer hinzufügen",
       "expand_sidebar": "Seitenleiste erweitern",
       "fewer": "Weniger anzeigen",
       "file_transfer": "Dateiübertragung",
@@ -8859,6 +8891,21 @@
       "visual": "Visuell",
       "word_spacing": "Wortabstand"
      },
+     "account": {
+      "accessibility_note": "Kontrast, Textgröße, Bewegung und Farbfilter für diesen Browser.",
+      "accessibility_on": "In diesem Browser sind Einstellungen zur Barrierefreiheit an.",
+      "accessibility_open": "Barrierefreiheit einstellen",
+      "description": "Ihr Profil, Passwort und Zwei-Faktor-Anmeldung, wo Sie angemeldet sind, und wie die Konsole für Sie aussieht.",
+      "language_note": "Die Sprache der Konsole für Ihr Konto, auf jedem Gerät.",
+      "password": "Passwort",
+      "preferences": "Persönliche Einstellungen",
+      "profile": "Profil",
+      "sessions": "Angemeldete Geräte",
+      "status_note": "Kolleginnen und Kollegen sehen Ihren Status im Chat und neben Ihrem Namen. Das Kontomenü ändert ihn auch.",
+      "theme": "Design für diesen Browser",
+      "theme_note": "Standard der Konsole folgt dem Design unter Einstellungen › Darstellung. Hell und Dunkel gelten nur für diesen Browser.",
+      "title": "Ihr Konto"
+     },
      "actions": {
       "add": "Add",
       "back": "Zurück",
@@ -11738,6 +11785,13 @@
       "username": "Benutzername",
       "version": "Version"
      },
+     "devices_add": {
+      "invite_note": "„Computer hinzufügen“ erstellt einen Einladungslink und zeigt die Einladungen, die noch offen sind.",
+      "invite_title": "Einen Computer einladen",
+      "invites_desc": "Laden Sie einen Computer mit einem Link oder per E-Mail ein. Der Computer richtet NeoDesk ein und tritt diesem Server bei, mit Namen und in seinem Ordner.",
+      "tab_invites": "Einladungen und Installationslinks",
+      "tab_manual": "Manuelle Einrichtung"
+     },
      "diagram": {
       "how_title": "So entsteht eine Verbindung",
       "id_server": "ID-Server",
@@ -12468,10 +12522,19 @@
      "help": {
       "panel": {
        "close": "Schließen",
+       "console": "In der Konsole",
        "link_discord": "Community auf Discord",
        "link_docs": "Dokumentation",
        "link_repo": "GitHub-Repository",
-       "links": "Nützliche Links"
+       "links": "Nützliche Links",
+       "shortcuts": "Tastenkürzel"
+      },
+      "shortcuts": {
+       "close": "Dialog, Menü oder Bereich schließen",
+       "move": "Zwischen Schaltflächen und Feldern wechseln",
+       "or": "oder",
+       "results": "Durch die Suchergebnisse gehen und eines öffnen",
+       "search": "Suche öffnen"
       }
      },
      "help_request": {
@@ -12926,6 +12989,7 @@
       "dashboard": "Übersicht",
       "dataguard": "Schutz vor Datenabfluss",
       "devices": "Geräte",
+      "devices_add": "Computer hinzufügen",
       "expand_sidebar": "Seitenleiste erweitern",
       "fewer": "Weniger anzeigen",
       "file_transfer": "Dateiübertragung",
