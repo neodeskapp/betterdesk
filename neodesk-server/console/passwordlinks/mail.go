@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/message"
 )
 
 // Translate gives the text of a language key with its placeholders
@@ -16,6 +17,8 @@ type Mail struct {
 	Subject string
 	Text    string
 	HTML    string
+	// Inline are the logo images the HTML shows.
+	Inline []message.Inline
 }
 
 // MailFacts are what a link's mail says.
@@ -66,12 +69,14 @@ func BuildMail(t Translate, f MailFacts) Mail {
 	lines := []string{heading, "", lead, "", button + ": " + f.Link, ""}
 	lines = append(lines, small...)
 	lines = append(lines, "", "--", footer)
+	page := brandmail.Page{
+		Branding: f.Branding, Heading: heading, Lead: lead, Button: button, Link: f.Link,
+		LinkHint: linkHint, Small: small, Footer: footer,
+	}
 	return Mail{
 		Subject: subject,
 		Text:    strings.Join(lines, "\n") + "\n",
-		HTML: brandmail.HTML(brandmail.Page{
-			Branding: f.Branding, Heading: heading, Lead: lead, Button: button, Link: f.Link,
-			LinkHint: linkHint, Small: small, Footer: footer,
-		}),
+		HTML:    brandmail.HTML(page),
+		Inline:  brandmail.Inline(page),
 	}
 }

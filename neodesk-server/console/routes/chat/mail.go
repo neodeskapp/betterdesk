@@ -92,7 +92,8 @@ func (h *Hub) mailWaiting(ctx context.Context, mailer waitMailer, brand brandmai
 		for _, lang := range langs {
 			t := func(key string, pairs ...any) string { return texts.Translate(lang, "chat."+key, i18n.V(pairs...)) }
 			subject, text, body := h.waitMail(ctx, c, brand, mailer.GetPanelBaseURL(), settings.MailPreview, t, now)
-			if _, err := mailer.SendEmail(ctx, mail.Email{To: byLang[lang], ToList: true, Subject: subject, Text: &text, HTML: &body}); err != nil {
+			m := mail.Email{To: byLang[lang], ToList: true, Subject: subject, Text: &text, HTML: &body, Inline: brandmail.Inline(brandmail.Page{Branding: brand})}
+			if _, err := mailer.SendEmail(ctx, m); err != nil {
 				return err
 			}
 		}

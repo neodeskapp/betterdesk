@@ -135,6 +135,9 @@ func TestInviteByMail(t *testing.T) {
 		t.Fatalf("mail to %v, subject %q", m.To, m.Subject)
 	}
 	first := tokenOf(t, m)
+	if len(m.Inline) != 2 || !strings.Contains(*m.HTML, "cid:"+m.Inline[0].ID) {
+		t.Errorf("the mail doesn't carry the logo: %d images", len(m.Inline))
+	}
 	if !strings.Contains(*m.Text, "Jannis.Gdesk") {
 		t.Errorf("the mail doesn't name the username:\n%s", *m.Text)
 	}

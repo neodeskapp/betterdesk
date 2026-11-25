@@ -55,6 +55,9 @@ func TestResetLinkFromAdmin(t *testing.T) {
 		t.Fatalf("mail to %v, subject %q", m.To, m.Subject)
 	}
 	token := tokenOf(t, m)
+	if len(m.Inline) != 2 || !strings.Contains(*m.HTML, "cid:"+m.Inline[0].ID) {
+		t.Errorf("the mail doesn't carry the logo: %d images", len(m.Inline))
+	}
 	if !signsIn(w, "carol", "Old-Pass-123!") {
 		t.Fatal("the old password stopped working before the link was used")
 	}
@@ -105,6 +108,9 @@ func TestForgotPassword(t *testing.T) {
 		t.Errorf("the mail doesn't say someone asked:\n%s", *m.Text)
 	}
 	first := tokenOf(t, m)
+	if len(m.Inline) != 2 || !strings.Contains(*m.HTML, "cid:"+m.Inline[0].ID) {
+		t.Errorf("the mail doesn't carry the logo: %d images", len(m.Inline))
+	}
 	got := person.Do("POST", "/api/auth/password-link/lookup", `{"token":"`+first+`"}`)
 	if !strings.Contains(got.Body, `"purpose":"reset"`) {
 		t.Fatalf("lookup: %s", got.Body)

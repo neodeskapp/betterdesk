@@ -76,6 +76,9 @@ func TestWaitMail(t *testing.T) {
 			t.Fatalf("after 20 minutes: %d mails", len(sent.list))
 		}
 		m := sent.list[0]
+		if len(m.Inline) != 2 || !strings.Contains(*m.HTML, "cid:"+m.Inline[0].ID) {
+			t.Errorf("the mail doesn't carry the logo: %d images", len(m.Inline))
+		}
 		if strings.Join(m.To, ",") != "anna@example.test" {
 			t.Errorf("to %v, want anna only (admin has chat mails off, ben doesn't see dev1, cleo may not assign)", m.To)
 		}

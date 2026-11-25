@@ -87,7 +87,7 @@ func (h *handlers) sendLink(r *http.Request, userID int64, username, to, purpose
 		Sender: h.senderName(r), Host: host, Expires: expires.UTC().Format("2006-01-02 15:04") + " UTC",
 		Branding: brandmail.Of(h.d.Branding, base),
 	})
-	sent, err := h.d.Mail.SendEmail(ctx, mail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML})
+	sent, err := h.d.Mail.SendEmail(ctx, mail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline})
 	if err != nil || !sent {
 		return false, err
 	}

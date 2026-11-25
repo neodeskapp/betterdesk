@@ -416,7 +416,7 @@ func (h *handlers) sendCodeMail(r *http.Request, code onboard.Code, text, to str
 		Server: h.serverName(), Sender: h.personName(r.Context(), kit.UserID(r), code.CreatedBy), Host: c.Host, Expires: expires,
 		Company: h.serverName(), Accent: accent, Logo: logo,
 	})
-	sent, err := h.d.Mail.SendEmail(r.Context(), consolemail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML})
+	sent, err := h.d.Mail.SendEmail(r.Context(), consolemail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline})
 	if err != nil || !sent {
 		return false, "mail_failed"
 	}
