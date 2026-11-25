@@ -11,6 +11,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/avatars"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/chatstore"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/csrf"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/devicegroups"
@@ -61,6 +62,9 @@ type Deps struct {
 	Config *config.Config
 	// Store is the console's database.
 	Store *store.DB
+	// Chat is the chat's conversations, read marks, edits, reactions and
+	// canned replies, on Store (A242).
+	Chat *chatstore.Store
 	// Sessions is the session manager (sign-in, sign-out, session list).
 	Sessions *session.Manager
 	// Authn is the sign-in service: passwords, the second factor, lockouts,

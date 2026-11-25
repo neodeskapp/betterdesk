@@ -29,6 +29,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/avatars"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/chatstore"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/csrf"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/devicegroups"
@@ -409,6 +410,12 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("sign-in service: %w", err)
 	}
+
+	// The chat's tables beside the messages the API server keeps (A242)
+	if err := chatstore.Ensure(ctx, opts.Store); err != nil {
+		return nil, fmt.Errorf("chat: %w", err)
+	}
+	s.deps.Chat = chatstore.New(opts.Store, nil)
 
 	s.tokens, err = admintoken.New(ctx, admintoken.Options{DB: opts.Store})
 	if err != nil {
