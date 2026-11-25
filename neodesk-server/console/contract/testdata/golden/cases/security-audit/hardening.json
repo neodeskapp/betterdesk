@@ -121,7 +121,7 @@
       },
       {
        "category": "auth",
-       "description": "A new console login ends the least recently active sessions beyond SESSION_MAX_PER_USER (currently 1) and records IP/User-Agent for audit.",
+       "description": "A new console login ends the least recently active sessions beyond the limit per account (currently 1; Settings, Sign-in, or SESSION_MAX_PER_USER when set) and records IP/User-Agent for audit.",
        "id": "single_session",
        "implemented": true,
        "name": "Concurrent Panel Session Limit per Account",

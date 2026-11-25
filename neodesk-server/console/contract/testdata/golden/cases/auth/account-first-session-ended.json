@@ -12,18 +12,17 @@
    ],
    "status": 401,
    "headers": {
-    "cache-control": "no-cache, no-store, must-revalidate",
+    "cache-control": "no-store",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
     "etag": "<present>",
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "ratelimit-limit": "1000000",
-    "ratelimit-policy": "1000000;w=60",
-    "ratelimit-remaining": "<n>",
-    "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "set-cookie": [
+     "nd.sid=; Path=/; Expires=<past>",
+     "neodesk.sid=; Path=/; Expires=<past>"
+    ],
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -34,8 +33,8 @@
    "body": {
     "kind": "json",
     "json": {
-     "code": "session_required",
-     "error": "Unauthorized. Please log in.",
+     "code": "session_replaced",
+     "error": "You were signed out because this account signed in on another browser. This server allows one session per account.",
      "success": false
     }
    }
