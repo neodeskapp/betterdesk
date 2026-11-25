@@ -127,3 +127,21 @@ describe('add user by invite', () => {
 		expect(sent[0]?.body.password).toBe('Strong-Pass-1!');
 	});
 });
+
+describe('mail settings that arrive late', () => {
+	test('a new account nobody typed into switches to the invite when mail turns out to be set up', async () => {
+		const { rerender } = render(UserSheet, {
+			user: null,
+			groups: [],
+			roleLabel: (r: string) => r,
+			providerLabel: (p: string) => p,
+			mailReady: false,
+			onclose: () => {},
+			onsaved: () => {}
+		});
+		expect(screen.getByLabelText('users.password')).toBeTruthy();
+		await rerender({ mailReady: true });
+		await vi.waitFor(() => expect(screen.queryByLabelText('users.password')).toBeNull());
+		expect(screen.getByRole('radio', { name: /users.add_mode_invite/ })).toBeChecked();
+	});
+});
