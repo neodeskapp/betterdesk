@@ -51,6 +51,7 @@
 	import Disclosure from '#lib/ui/Disclosure.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
 	import Facts from '#lib/ui/Facts.svelte';
+	import IdFacts from '#lib/settings-b/IdFacts.svelte';
 	import Field from '#lib/ui/Field.svelte';
 	import FormStatus from '#lib/ui/FormStatus.svelte';
 	import Input from '#lib/ui/Input.svelte';
@@ -607,14 +608,22 @@
 	<section class="section" id="server-info" aria-labelledby="server-info-title">
 		<h2 id="server-info-title">{t('settings.server_info')}</h2>
 		{#if infoError}<p class="state is-error" role="alert">{infoError}</p>{/if}
-		<Facts
+		<IdFacts
 			items={[
-				{ label: t('settings.general.console_version'), value: consoleVersion },
-				{ label: t('settings.general.server_version'), value: serverVersion },
+				{ id: 'console-version', label: t('settings.general.console_version'), value: consoleVersion },
+				{ id: 'go-server-version', label: t('settings.general.server_version'), value: serverVersion },
 				// The database file and the uptime come only with server.config
-				...(info?.paths ? [{ label: t('settings.general.database_file'), value: dbPath }] : []),
+				...(info?.paths
+					? [{ id: 'db-path', label: t('settings.general.database_file'), value: dbPath }]
+					: []),
 				...(info?.server
-					? [{ label: t('settings.general.running_for'), value: uptime > 0 ? formatDuration(uptime) : '' }]
+					? [
+							{
+								id: 'uptime',
+								label: t('settings.general.running_for'),
+								value: uptime > 0 ? formatDuration(uptime) : ''
+							}
+						]
 					: [])
 			]}
 		/>
@@ -799,11 +808,13 @@
 									bind:value={values.connection.mode}
 									choices={[
 										{
+											id: 'conn-mode-p2p',
 											value: 'p2p_first',
 											title: t('settings.general.conn_p2p'),
 											description: t('settings.general.conn_p2p_desc')
 										},
 										{
+											id: 'conn-mode-relay',
 											value: 'relay_only',
 											title: t('settings.general.conn_relay'),
 											description: t('settings.general.conn_relay_desc')
@@ -883,11 +894,13 @@
 								bind:value={values.scope}
 								choices={[
 									{
+										id: 'device-scope-open',
 										value: 'open',
 										title: t('settings.general.scope_open'),
 										description: t('settings.general.scope_open_desc')
 									},
 									{
+										id: 'device-scope-restricted',
 										value: 'restricted',
 										title: t('settings.general.scope_restricted'),
 										description: t('settings.general.scope_restricted_desc'),

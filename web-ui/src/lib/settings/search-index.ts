@@ -1,8 +1,12 @@
 /**
- * The settings search index and the element ids of every settings tab.
- * Generated from the old settings view (views/settings.ejs) by
- * .ui-rework/tools/svelte-settings-index.mjs; don't edit by hand, run it
- * again when a tab gains or loses a setting.
+ * The one list of settings on the Settings page: every setting with the
+ * element that shows it. The search on the Settings page and the search in
+ * the top bar (Ctrl K) both read it; other words for a setting are in
+ * search-terms.ts. The tabs are written by hand, so the list is kept true
+ * by tests: e2e/settings-index.spec.ts opens every tab and fails when a
+ * row's element is gone or a field on the page has no row, and
+ * tests/unit/settings/search-index.test.ts checks the keys and words.
+ * Add a row here when a tab gains a setting.
  *
  * Each entry: tab, element id it jumps to, label key, section key, up to two
  * hint keys (searched too), and the permission a person needs to see it
@@ -173,7 +177,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	],
 	[
 		'general',
-		'mesh-status-enabled',
+		'mesh-settings-panel',
 		'settings.general.mesh_status',
 		'mesh.settings_title',
 		[],
@@ -181,7 +185,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	],
 	[
 		'general',
-		'mesh-agents-online',
+		'mesh-settings-panel',
 		'settings.general.mesh_agents',
 		'mesh.settings_title',
 		[],
@@ -195,7 +199,14 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		[],
 		'server.config'
 	],
-	['general', 'mesh-cert-state', 'settings.general.mesh_cert', 'mesh.settings_title', [], 'server.config'],
+	[
+		'general',
+		'mesh-settings-panel',
+		'settings.general.mesh_cert',
+		'mesh.settings_title',
+		[],
+		'server.config'
+	],
 	[
 		'general',
 		'mesh-groups-form',
@@ -655,7 +666,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		[],
 		'branding.edit'
 	],
-	['auth', 'password-form', 'settings.change_password', '', ['settings.password_requirements'], ''],
+	['auth', 'account-password', 'settings.change_password', '', ['settings.password_requirements'], ''],
 	['auth', 'current-password', 'settings.current_password', 'settings.change_password', [], ''],
 	[
 		'auth',
@@ -1094,7 +1105,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	['backup', 'backup-stat-uploads', 'settings.backup_tab.stat_uploads', '', [], 'server.config'],
 	[
 		'updates',
-		'update-details-section',
+		'update-status-headline',
 		'updates.update_available',
 		'',
 		['updates.install_blocked_hint', 'settings.updates_tab.docker_install_note'],
@@ -1102,7 +1113,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	],
 	[
 		'updates',
-		'update-backup-toggle',
+		'update-backups-panel',
 		'updates.create_backup',
 		'updates.update_available',
 		[],
@@ -1118,7 +1129,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	],
 	[
 		'updates',
-		'update-channel-stable',
+		'update-channel-select',
 		'updates.channel_title',
 		'',
 		['settings.updates_tab.channel_stable_desc', 'settings.updates_tab.channel_development_desc'],
@@ -1126,7 +1137,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	],
 	[
 		'updates',
-		'update-channel-stable',
+		'update-channel-select',
 		'settings.updates_tab.channel_stable',
 		'updates.channel_title',
 		['settings.updates_tab.channel_stable_desc'],
@@ -1134,7 +1145,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	],
 	[
 		'updates',
-		'update-channel-development',
+		'update-channel-select',
 		'settings.updates_tab.channel_development',
 		'updates.channel_title',
 		['settings.updates_tab.channel_development_desc'],
@@ -1150,7 +1161,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	],
 	['updates', 'update-local-version', 'updates.current_version', '', [], 'server.config'],
 	['updates', 'update-remote-version', 'settings.updates_tab.newest_version', '', [], 'server.config'],
-	['updates', 'update-status-badge', 'updates.status', '', [], 'server.config'],
+	['updates', 'update-status-headline', 'updates.status', '', [], 'server.config'],
 	['email', 'email-smtp-host', 'settings.email.host_label', '', [], 'server.config'],
 	['email', 'email-smtp-port', 'settings.email.smtp_port', '', ['settings.email.port_hint'], 'server.config'],
 	[
@@ -1232,7 +1243,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	['time', 'time-clock-ntp-server', 'commercialization.clock.status_server', '', [], 'server.config'],
 	['time', 'time-clock-os-sync', 'commercialization.clock.status_os', '', [], 'server.config'],
 	['time', 'time-clock-last-error', 'commercialization.clock.status_error', '', [], 'server.config'],
-	['advanced', 'advanced-restart-zone', 'settings.advanced_tab.restart_title', '', [], 'server.config']
+	['advanced', 'advanced-title', 'settings.advanced_tab.restart_title', '', [], 'server.config']
 ];
 
 /** Space-separated element ids per tab, for #<id> links into another tab */

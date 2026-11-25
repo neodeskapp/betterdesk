@@ -16,6 +16,8 @@
 		disabled?: boolean;
 		/** Id of the ShowWhen block this choice shows */
 		controls?: string;
+		/** Element id of the choice, for #<id> links and the settings search */
+		id?: string;
 	}
 </script>
 
@@ -79,7 +81,7 @@
 		{#each choices as c, i (c.value)}
 			{@const cid = `${name}-${i}`}
 			<li>
-				<label class="choice">
+				<label class="choice" id={c.id}>
 					<input
 						{type}
 						{name}
