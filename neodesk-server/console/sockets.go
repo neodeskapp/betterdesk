@@ -17,7 +17,7 @@ import (
 // set its websocket services up. An upgrade to any other path passes the
 // pipeline like a plain request. signalProof is what the web client's
 // bridge presents to the signal server (Options.SignalProof).
-func registerSockets(d *kit.Deps, signalProof func(userID int64) []byte) {
+func registerSockets(d *kit.Deps, signalProof func(userID int64, consoleSession string) []byte) {
 	// services/wsRelay.js: /ws/rendezvous, /ws/relay. A guest link that is
 	// taken back ends its bridges at once; an account with a device scope
 	// reaches the devices of its scope only, looked up as the remote

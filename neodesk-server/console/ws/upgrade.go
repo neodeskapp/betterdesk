@@ -41,6 +41,15 @@ func (u *Upgrade) SearchParam(name string) (value string, ok bool) {
 	return searchParam(u.query, name)
 }
 
+// SessionID is the id of the console session the upgrade's cookie names
+// with a good signature (Options.SessionID), "" for none. It reads no row.
+func (u *Upgrade) SessionID() string {
+	if u.reg == nil || u.reg.opts.SessionID == nil {
+		return ""
+	}
+	return u.reg.opts.SessionID(u.R)
+}
+
 // Context ends when the console stops or the session the upgrade's cookie
 // named ends.
 func (u *Upgrade) Context() context.Context {

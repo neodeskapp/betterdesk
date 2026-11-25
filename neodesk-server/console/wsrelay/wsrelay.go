@@ -118,7 +118,7 @@ type Options struct {
 	// web client, which needs no registered peer, and knows the account.
 	// nil, or an empty frame, writes none, and the signal server treats
 	// the bridge as any client.
-	SignalProof func(userID int64) []byte
+	SignalProof func(userID int64, consoleSession string) []byte
 	// RelayHost and RelayPort are the relay server's TCP address
 	// (WS_HBBR_HOST, default localhost; WS_HBBR_PORT, default 21117). A
 	// loopback host is replaced at New by the first IPv4 address of

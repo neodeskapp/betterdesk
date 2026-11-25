@@ -27,16 +27,19 @@ type relayAuthorization struct {
 	initiatorID string
 	targetID    string
 	account     int64
+	session     string
 	expiresAt   time.Time
 	claims      uint8
 }
 
 // LivePair is a relay session that runs: who started it, to which device,
-// and the console account signal named for it (0 for none).
+// the console account signal named for it (0 for none) and the console
+// session of that account whose viewer opened it (a handle, "" for none).
 type LivePair struct {
-	Initiator string
-	Target    string
-	Account   int64
+	Initiator      string
+	Target         string
+	Account        int64
+	ConsoleSession string
 }
 
 type livePair struct {
@@ -79,6 +82,14 @@ func AuthorizeRelayPairFor(uuid, initiatorID, targetID string, account int64) bo
 	return defaultAuthorizationRegistry.AuthorizeFor(uuid, initiatorID, targetID, account)
 }
 
+// AuthorizeRelayPairForSession is AuthorizeRelayPairFor that also names the
+// console session (a handle) whose viewer opened the session: an account
+// may be signed in on several browsers (A239), and saved sign-in binds its
+// one use to the browser that opened the relay session.
+func AuthorizeRelayPairForSession(uuid, initiatorID, targetID string, account int64, session string) bool {
+	return defaultAuthorizationRegistry.AuthorizeForSession(uuid, initiatorID, targetID, account, session)
+}
+
 // ClaimRelayPair reserves one of the two connections for a signal-authorized
 // UUID on the shared all-in-one registry (same store Claim uses in hbbr).
 func ClaimRelayPair(uuid string) bool {
@@ -97,6 +108,12 @@ func (r *AuthorizationRegistry) Authorize(uuid, initiatorID, targetID string) bo
 // AuthorizeFor is Authorize with the console account behind the session.
 // A retry of an active ticket must name the same pair and account.
 func (r *AuthorizationRegistry) AuthorizeFor(uuid, initiatorID, targetID string, account int64) bool {
+	return r.AuthorizeForSession(uuid, initiatorID, targetID, account, "")
+}
+
+// AuthorizeForSession is AuthorizeFor with the console session behind the
+// session; a retry must name the same one too.
+func (r *AuthorizationRegistry) AuthorizeForSession(uuid, initiatorID, targetID string, account int64, session string) bool {
 	if uuid == "" || initiatorID == "" || targetID == "" {
 		return false
 	}
@@ -110,12 +127,13 @@ func (r *AuthorizationRegistry) AuthorizeFor(uuid, initiatorID, targetID string,
 		return false
 	}
 	if ticket, exists := r.tickets[uuid]; exists {
-		return ticket.initiatorID == initiatorID && ticket.targetID == targetID && ticket.account == account
+		return ticket.initiatorID == initiatorID && ticket.targetID == targetID && ticket.account == account && ticket.session == session
 	}
 	r.tickets[uuid] = &relayAuthorization{
 		initiatorID: initiatorID,
 		targetID:    targetID,
 		account:     account,
+		session:     session,
 		expiresAt:   now.Add(config.RelayPairTimeout),
 	}
 	r.signalWaitersLocked(uuid)
@@ -189,7 +207,7 @@ func (r *AuthorizationRegistry) Claim(uuid string) bool {
 			r.live = make(map[string]livePair)
 		}
 		r.live[uuid] = livePair{
-			LivePair: LivePair{Initiator: ticket.initiatorID, Target: ticket.targetID, Account: ticket.account},
+			LivePair: LivePair{Initiator: ticket.initiatorID, Target: ticket.targetID, Account: ticket.account, ConsoleSession: ticket.session},
 			since:    now,
 		}
 	}

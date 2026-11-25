@@ -1126,7 +1126,7 @@ func (s *Server) handlePunchHoleRequest(msg *pb.PunchHoleRequest, raddr *net.UDP
 		return
 	}
 
-	if refuse := s.admitSession("", initiatorID, targetID, policy.account); refuse != "" {
+	if refuse := s.admitSession("", initiatorID, targetID, policy.account, policy.consoleSession); refuse != "" {
 		s.sendUDP(punchHoleOfflineResponse(), raddr)
 		return
 	}
@@ -1342,7 +1342,7 @@ func (s *Server) punchHoleRequestTCP(msg *pb.PunchHoleRequest, raddr *net.UDPAdd
 		log.Printf("[signal] PunchHole (TCP): target %s is unavailable, rejecting", targetID)
 		return punchHoleOfflineResponse()
 	}
-	if refuse := s.admitSession("", initiatorID, targetID, policy.account); refuse != "" {
+	if refuse := s.admitSession("", initiatorID, targetID, policy.account, policy.consoleSession); refuse != "" {
 		return punchHoleOfflineResponse()
 	}
 
@@ -1740,7 +1740,7 @@ func (s *Server) handleRequestRelay(msg *pb.RequestRelay, raddr *net.UDPAddr) {
 		return
 	}
 
-	if refuse := s.admitSession(relayUUID, initiatorID, targetID, policy.account); refuse != "" {
+	if refuse := s.admitSession(relayUUID, initiatorID, targetID, policy.account, policy.consoleSession); refuse != "" {
 		s.sendUDP(relayRefusedResponse(refuse, relayServer), raddr)
 		return
 	}
@@ -1909,7 +1909,7 @@ func (s *Server) requestRelayTCP(msg *pb.RequestRelay, raddr *net.UDPAddr, initi
 		log.Printf("[signal] RequestRelay (TCP): mixed transport initiator=%s target=%s (%s vs %s) — relay will bridge framing",
 			initiatorID, targetID, initiatorType, target.ConnType)
 	}
-	if refuse := s.admitSession(relayUUID, initiatorID, targetID, policy.account); refuse != "" {
+	if refuse := s.admitSession(relayUUID, initiatorID, targetID, policy.account, policy.consoleSession); refuse != "" {
 		return relayRefusedResponse(refuse, relayServer)
 	}
 
@@ -2160,7 +2160,7 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 			rr.Uuid, initiatorID, targetID, senderAddr)
 		return
 	}
-	if refuse := s.admitSession(rr.Uuid, initiatorID, targetID, s.panelAccount(initiatorAddr)); refuse != "" {
+	if refuse := s.admitSession(rr.Uuid, initiatorID, targetID, s.panelAccount(initiatorAddr), s.panelSession(initiatorAddr)); refuse != "" {
 		log.Printf("[signal] RelayResponse forward: %s (uuid=%q initiator=%q target=%q) — not forwarding",
 			refuse, rr.Uuid, initiatorID, targetID)
 		return
@@ -2469,7 +2469,7 @@ func (s *Server) sendRelayResponse(target *peer.Entry, raddr *net.UDPAddr, msg *
 	permissions := policy.permissions
 	// Generate a relay session UUID for pairing both peers at hbbr.
 	relayUUID := uuid.New().String()
-	if refuse := s.admitSession(relayUUID, initiatorID, target.ID, policy.account); refuse != "" {
+	if refuse := s.admitSession(relayUUID, initiatorID, target.ID, policy.account, policy.consoleSession); refuse != "" {
 		s.sendUDP(relayRefusedResponse(refuse, relay), raddr)
 		return
 	}
@@ -2621,9 +2621,11 @@ const (
 // relay uuid the session is also registered with billing, which meters it
 // once the relay pairs both sides and records the console account behind
 // the request (account, controllerAccount; 0 for none) by its name as the
-// session's operator, and the relay ticket is issued. It returns "" when
-// the session may start, otherwise the reason it is refused.
-func (s *Server) admitSession(relayUUID, initiatorID, targetID string, account int64) string {
+// session's operator, and the relay ticket is issued, naming the console
+// session (consoleSession, a handle; "" for none) whose viewer asked. It
+// returns "" when the session may start, otherwise the reason it is
+// refused.
+func (s *Server) admitSession(relayUUID, initiatorID, targetID string, account int64, consoleSession string) string {
 	if s.billing != nil {
 		if check := s.billing.CheckConnection(targetID); !check.Allowed {
 			log.Printf("[signal] Billing denied session to %s: %s", targetID, check.Reason)
@@ -2639,9 +2641,10 @@ func (s *Server) admitSession(relayUUID, initiatorID, targetID string, account i
 			return refuseBillingBlocked
 		}
 	}
-	// The account rides along so the live session names who opened it
-	// (saved sign-in binds its use to that account's own session)
-	if !relay.AuthorizeRelayPairFor(relayUUID, initiatorID, targetID, max(account, 0)) {
+	// The account and its console session ride along so the live session
+	// names who opened it (saved sign-in binds its use to that browser's
+	// own session)
+	if !relay.AuthorizeRelayPairForSession(relayUUID, initiatorID, targetID, max(account, 0), consoleSession) {
 		log.Printf("[signal] Rejected relay authorization (uuid=%q initiator=%q target=%q)",
 			relayUUID, initiatorID, targetID)
 		return refuseRelayTicketRejected

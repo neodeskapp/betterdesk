@@ -721,7 +721,7 @@ func main() {
 		// HttpProxyRequest from clients without an API server setting: the
 		// API port's handler, the console's client API port when it runs
 		sig.SetAPIProxy(apiSrv.ListenerHandler())
-		stopConsole := withoutConsoleOnError(startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), sig.PanelProofFor, sig.SetControllerFeatures, sig.SetAPIProxy, requestRestart))
+		stopConsole := withoutConsoleOnError(startConsole(ctx, cfg, database, apiSrv, sig.EventBus(), sig.PanelProofForSession, sig.SetControllerFeatures, sig.SetAPIProxy, requestRestart))
 		defer stopConsole()
 
 	default:

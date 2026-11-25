@@ -54,7 +54,7 @@ func TestSavedSigninIsSealedForTheDevice(t *testing.T) {
 	}
 	srv.signinLiveFn = func(uuid string) (relay.LivePair, bool) {
 		target := map[string]string{"s-1": "PEERAAA1", "s-2": "PEERAAA1", "s-3": "PEERAAA1", "s-b": "PEERBBB2"}[uuid]
-		return relay.LivePair{Initiator: webRemoteInitiator, Target: target, Account: 5}, target != ""
+		return relay.LivePair{Initiator: webRemoteInitiator, Target: target, Account: 5, ConsoleSession: "console-1"}, target != ""
 	}
 	for _, id := range []string{"PEERAAA1", "PEERBBB2"} {
 		if status, body := asConsole(t, srv, http.MethodPut, "/api/peers/"+id+"/signin",
@@ -64,7 +64,7 @@ func TestSavedSigninIsSealedForTheDevice(t *testing.T) {
 	}
 	use := func(id, session, mode string) (int, string) {
 		return asConsole(t, srv, http.MethodPost, "/api/peers/"+id+"/signin/use",
-			`{"session":"`+session+`","account":5,"mode":"`+mode+`"}`)
+			`{"session":"`+session+`","account":5,"console_session":"console-1","mode":"`+mode+`"}`)
 	}
 	status, body := use("PEERAAA1", "s-1", "sealed")
 	if status != http.StatusOK || strings.Contains(body, "made-up-sealed-pass") || strings.Contains(body, `"password"`) {
@@ -149,7 +149,7 @@ func TestSysinfoReportPutsTheDeviceOnTheSealedWay(t *testing.T) {
 	}
 	srv.signinLiveFn = func(uuid string) (relay.LivePair, bool) {
 		target, _, _ := strings.Cut(uuid, "/")
-		return relay.LivePair{Initiator: webRemoteInitiator, Target: target, Account: 5}, true
+		return relay.LivePair{Initiator: webRemoteInitiator, Target: target, Account: 5, ConsoleSession: "console-1"}, true
 	}
 	sysinfo := func(id, uuid, additions string) string {
 		body := `{"id":"` + id + `","uuid":"` + uuid + `","hostname":"lab-pc","os":"Windows 11"`
@@ -165,7 +165,7 @@ func TestSysinfoReportPutsTheDeviceOnTheSealedWay(t *testing.T) {
 	}
 	use := func(id, session, mode string) (int, string) {
 		return asConsole(t, srv, http.MethodPost, "/api/peers/"+id+"/signin/use",
-			`{"session":"`+id+"/"+session+`","account":5,"mode":"`+mode+`"}`)
+			`{"session":"`+id+"/"+session+`","account":5,"console_session":"console-1","mode":"`+mode+`"}`)
 	}
 
 	if got := sysinfo("PEERAAA1", right, `{"nd_signin":1,"is_installed":true}`); got != "SYSINFO_UPDATED" {

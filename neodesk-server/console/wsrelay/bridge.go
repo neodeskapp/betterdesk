@@ -306,13 +306,14 @@ func (b *bridge) dialAndRead(ctx context.Context) {
 	tcp, err := b.s.opts.Dial(ctx, "tcp", b.target)
 	if err == nil && b.label == "rendezvous" && b.s.opts.SignalProof != nil {
 		var userID int64
+		var consoleSession string
 		switch {
 		case b.account != nil:
-			userID = b.account.userID
+			userID, consoleSession = b.account.userID, b.account.session
 		case b.guest != nil:
 			userID = b.guest.creatorID()
 		}
-		if proof := b.s.opts.SignalProof(userID); len(proof) > 0 {
+		if proof := b.s.opts.SignalProof(userID, consoleSession); len(proof) > 0 {
 			if _, err = tcp.Write(proof); err != nil {
 				_ = tcp.Close()
 			}

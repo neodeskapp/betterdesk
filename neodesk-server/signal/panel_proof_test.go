@@ -3,6 +3,7 @@ package signal
 import (
 	"bytes"
 	"net"
+	"strings"
 	"testing"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/crypto"
 	"github.com/neodeskapp/neodesk/neodesk-server/peer"
 	pb "github.com/neodeskapp/neodesk/neodesk-server/proto"
+	"github.com/neodeskapp/neodesk/neodesk-server/relay"
 )
 
 // serveTCPOnLoopback runs srv's TCP connection handling on a loopback
@@ -155,5 +157,30 @@ func TestPanelProofMustMatchAndComeFromTheAllowedAddresses(t *testing.T) {
 	}
 	if rr.RefuseReason != refuseInitiatorNotAuthorized {
 		t.Fatalf("proof outside the addresses: refuse reason %q, want %q", rr.RefuseReason, refuseInitiatorNotAuthorized)
+	}
+}
+
+// TestTheRelayTicketNamesTheConsoleSession: the web client's proof may
+// name the console session of its account (A239: an account may be signed
+// in on several browsers); the relay ticket of its request names it too,
+// so a retry from another browser's session of the same account is not
+// the same ticket, and saved sign-in hands its one use to the browser
+// whose viewer opened the session. The proof with the session is longer
+// than a one-byte frame header carries.
+func TestTheRelayTicketNamesTheConsoleSession(t *testing.T) {
+	srv, _ := newTestSignalServer(t, config.EnrollmentModeManaged)
+	_, targetAddr := attachTestUDPPair(t, srv)
+	putOnlinePeer(srv, "WEBSESS01", targetAddr.IP.String(), targetAddr.Port, peer.ConnUDP)
+	addr := serveTCPOnLoopback(t, srv)
+	first, second := strings.Repeat("a1", 16), strings.Repeat("b2", 16)
+	uuid := "panel-proof-console-session-WEBSESS01"
+	if rr, err := relayRequestOverTCPWithUUID(t, addr, srv.PanelProofForSession(9, first), "WEBSESS01", uuid); err != nil || rr.RefuseReason != "" {
+		t.Fatalf("web client with a console session: %+v, %v", rr, err)
+	}
+	if relay.AuthorizeRelayPairForSession(uuid, "panel-web-remote", "WEBSESS01", 9, second) {
+		t.Error("the ticket took another console session of the account")
+	}
+	if !relay.AuthorizeRelayPairForSession(uuid, "panel-web-remote", "WEBSESS01", 9, first) {
+		t.Error("the ticket does not name the console session that asked")
 	}
 }

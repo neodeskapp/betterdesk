@@ -167,6 +167,9 @@ type sessionPolicy struct {
 	// account is the console account behind the request
 	// (controllerAccount), which billing records as the session's operator.
 	account int64
+	// consoleSession is the console session (handle) the web client's
+	// proof named, "" for any other request: the relay ticket names it
+	consoleSession string
 	// permissions go to the device: the features the account may not
 	// use turned off, nil for a request without an account.
 	permissions *pb.ControlPermissions
@@ -180,6 +183,9 @@ func (s *Server) sessionPolicy(token string, raddr *net.UDPAddr, panel bool, con
 	account := s.controllerAccount(token, raddr, panel)
 	off := s.featuresOff(account, raddr)
 	policy := sessionPolicy{account: account, permissions: disabledPermissions(off)}
+	if panel {
+		policy.consoleSession = s.panelSession(raddr)
+	}
 	for _, need := range connTypeFeatures[connType] {
 		if slices.Contains(off, need) {
 			policy.refusal, policy.feature = featureRefusals[need], need

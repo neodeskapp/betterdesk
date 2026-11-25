@@ -277,7 +277,12 @@ func TestReadPanelProof(t *testing.T) {
 	message := func(frame []byte) *pb.RendezvousMessage {
 		t.Helper()
 		var msg pb.RendezvousMessage
-		if err := proto.Unmarshal(frame[1:], &msg); err != nil {
+		// A one-byte header (length*4) or a two-byte one (length*4+1)
+		body := frame[1:]
+		if frame[0]&3 == 1 {
+			body = frame[2:]
+		}
+		if err := proto.Unmarshal(body, &msg); err != nil {
 			t.Fatalf("unmarshal: %v", err)
 		}
 		return &msg
@@ -287,24 +292,32 @@ func TestReadPanelProof(t *testing.T) {
 		msg.ProtoReflect().SetUnknown(append(append([]byte(nil), srv.panelProof...), field...))
 		return &msg
 	}
+	handle := strings.Repeat("ab", 16)
+	account9 := protowire.AppendVarint(protowire.AppendTag(nil, panelAccountField, protowire.VarintType), 9)
 	for _, c := range []struct {
-		name   string
-		msg    *pb.RendezvousMessage
-		userID int64
-		ok     bool
+		name    string
+		msg     *pb.RendezvousMessage
+		userID  int64
+		ok      bool
+		session string
 	}{
-		{"guest", message(srv.PanelProof()), 0, true},
-		{"account", message(srv.PanelProofFor(9)), 9, true},
-		{"large account id", message(srv.PanelProofFor(1 << 40)), 1 << 40, true},
-		{"account 0", withField(protowire.AppendVarint(protowire.AppendTag(nil, panelAccountField, protowire.VarintType), 0)), 0, false},
-		{"another field", withField(protowire.AppendVarint(protowire.AppendTag(nil, 1002, protowire.VarintType), 9)), 0, false},
-		{"account as bytes", withField(protowire.AppendBytes(protowire.AppendTag(nil, panelAccountField, protowire.BytesType), []byte{9})), 0, false},
-		{"bytes after the account", withField(append(protowire.AppendVarint(protowire.AppendTag(nil, panelAccountField, protowire.VarintType), 9), 0x08, 0x01)), 0, false},
-		{"another secret", message(New(config.DefaultConfig(), nil, nil).PanelProofFor(9)), 0, false},
+		{"guest", message(srv.PanelProof()), 0, true, ""},
+		{"account", message(srv.PanelProofFor(9)), 9, true, ""},
+		{"large account id", message(srv.PanelProofFor(1 << 40)), 1 << 40, true, ""},
+		{"account and console session", message(srv.PanelProofForSession(9, handle)), 9, true, handle},
+		{"a guest names no console session", message(srv.PanelProofForSession(0, handle)), 0, true, ""},
+		{"console session of another form", withField(protowire.AppendBytes(protowire.AppendTag(account9, panelSessionField, protowire.BytesType), []byte("short"))), 0, false, ""},
+		{"console session before the account", withField(append(protowire.AppendBytes(protowire.AppendTag(nil, panelSessionField, protowire.BytesType), []byte(handle)), account9...)), 0, false, ""},
+		{"account 0", withField(protowire.AppendVarint(protowire.AppendTag(nil, panelAccountField, protowire.VarintType), 0)), 0, false, ""},
+		{"another field", withField(protowire.AppendVarint(protowire.AppendTag(nil, 1003, protowire.VarintType), 9)), 0, false, ""},
+		{"console session as a number", withField(protowire.AppendVarint(protowire.AppendTag(account9, panelSessionField, protowire.VarintType), 9)), 0, false, ""},
+		{"account as bytes", withField(protowire.AppendBytes(protowire.AppendTag(nil, panelAccountField, protowire.BytesType), []byte{9})), 0, false, ""},
+		{"bytes after the account", withField(append(protowire.AppendVarint(protowire.AppendTag(nil, panelAccountField, protowire.VarintType), 9), 0x08, 0x01)), 0, false, ""},
+		{"another secret", message(New(config.DefaultConfig(), nil, nil).PanelProofFor(9)), 0, false, ""},
 	} {
-		userID, ok := srv.readPanelProof(c.msg)
-		if userID != c.userID || ok != c.ok {
-			t.Errorf("%s: (%d, %v), want (%d, %v)", c.name, userID, ok, c.userID, c.ok)
+		userID, session, ok := srv.readPanelProof(c.msg)
+		if userID != c.userID || ok != c.ok || session != c.session {
+			t.Errorf("%s: (%d, %q, %v), want (%d, %q, %v)", c.name, userID, session, ok, c.userID, c.session, c.ok)
 		}
 	}
 }

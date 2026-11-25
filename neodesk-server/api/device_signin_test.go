@@ -242,19 +242,21 @@ func TestSavedSigninIsHandedOutOncePerLiveSession(t *testing.T) {
 	}
 	srv.signinLiveFn = func(uuid string) (relay.LivePair, bool) {
 		pairs := map[string]relay.LivePair{
-			"sess-a":     {Initiator: webRemoteInitiator, Target: "PEERAAA1", Account: 5},
-			"sess-b":     {Initiator: webRemoteInitiator, Target: "PEERAAA1", Account: 5},
-			"sess-other": {Initiator: webRemoteInitiator, Target: "PEERBBB2", Account: 5},
-			"sess-app":   {Initiator: "123456789", Target: "PEERAAA1", Account: 5},
+			"sess-a":     {Initiator: webRemoteInitiator, Target: "PEERAAA1", Account: 5, ConsoleSession: "console-1"},
+			"sess-b":     {Initiator: webRemoteInitiator, Target: "PEERAAA1", Account: 5, ConsoleSession: "console-1"},
+			"sess-other": {Initiator: webRemoteInitiator, Target: "PEERBBB2", Account: 5, ConsoleSession: "console-1"},
+			"sess-app":   {Initiator: "123456789", Target: "PEERAAA1", Account: 5, ConsoleSession: "console-1"},
 			"sess-guest": {Initiator: webRemoteInitiator, Target: "PEERAAA1", Account: 0},
+			"sess-old":   {Initiator: webRemoteInitiator, Target: "PEERAAA1", Account: 5},
 		}
 		p, ok := pairs[uuid]
 		return p, ok
 	}
-	use := func(session string, account int) (int, string) {
+	useFrom := func(session string, account int, console string) (int, string) {
 		return asConsole(t, srv, http.MethodPost, "/api/peers/PEERAAA1/signin/use",
-			`{"session":"`+session+`","account":`+jsonInt(account)+`}`)
+			`{"session":"`+session+`","account":`+jsonInt(account)+`,"console_session":"`+console+`"}`)
 	}
+	use := func(session string, account int) (int, string) { return useFrom(session, account, "console-1") }
 	if status, body := use("sess-a", 5); status != http.StatusNotFound || !strings.Contains(body, "not_set") {
 		t.Fatalf("use without saved details: %d %s", status, body)
 	}
@@ -272,9 +274,17 @@ func TestSavedSigninIsHandedOutOncePerLiveSession(t *testing.T) {
 		{"sess-app", 5, "a session a RustDesk app opened"},
 		{"sess-guest", 0, "a guest's session"},
 		{"sess-a", 6, "another account's session"},
+		{"sess-old", 5, "a session no console session is named for"},
 	} {
 		if status, body := use(c.session, c.account); status != http.StatusConflict || !strings.Contains(body, "session_not_open") {
 			t.Errorf("%s: %d %s, want 409 session_not_open", c.why, status, body)
+		}
+	}
+	// Another console session of the same account (a second browser, A239)
+	// can't spend the one use of the session the first one opened
+	for _, other := range []string{"console-2", ""} {
+		if status, body := useFrom("sess-a", 5, other); status != http.StatusConflict || !strings.Contains(body, "session_not_open") {
+			t.Errorf("console session %q: %d %s, want 409 session_not_open", other, status, body)
 		}
 	}
 	status, body := use("sess-a", 5)
@@ -301,7 +311,7 @@ func TestSavedSigninIsHandedOutOncePerLiveSession(t *testing.T) {
 		t.Fatal(err)
 	}
 	srv.signinLiveFn = func(string) (relay.LivePair, bool) {
-		return relay.LivePair{Initiator: webRemoteInitiator, Target: "PEERAAA1", Account: 5}, true
+		return relay.LivePair{Initiator: webRemoteInitiator, Target: "PEERAAA1", Account: 5, ConsoleSession: "console-1"}, true
 	}
 	if status, body := use("sess-c", 5); status != http.StatusConflict || !strings.Contains(body, "cannot_open") || strings.Contains(body, "made-up") {
 		t.Errorf("details sealed with another key (%s): %d %s", other.KeyID, status, body)

@@ -102,7 +102,7 @@ type Options struct {
 	// of the account with the id, 0 for a guest
 	// (signal.Server.PanelProofFor). nil: the bridge sends none, and the
 	// signal server treats it as any client.
-	SignalProof func(userID int64) []byte
+	SignalProof func(userID int64, consoleSession string) []byte
 	// PublicRelay is told the relay the console's settings name after each
 	// save of the public endpoints, so the signal server of this process
 	// gives devices that relay (config.Config.SetPublicRelayServer). nil

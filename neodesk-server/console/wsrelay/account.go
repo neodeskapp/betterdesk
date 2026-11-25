@@ -13,6 +13,9 @@ import (
 type account struct {
 	u      *ws.Upgrade
 	userID int64
+	// session is the handle of the console session of the upgrade, "" for
+	// none: the signal server's relay ticket names it (A239)
+	session string
 	// limited says the account had a device scope at the upgrade: the
 	// bridge reads its frames, and every punch or relay request must name
 	// a device of the scope.
@@ -31,6 +34,9 @@ type account struct {
 // be looked up counts as a limit, so the account's requests are checked.
 func (s *Service) newAccount(u *ws.Upgrade, sn ws.Session) *account {
 	a := &account{u: u, userID: sn.UserID(), user: sn.User(), targets: map[string]struct{}{}}
+	if id := u.SessionID(); id != "" {
+		a.session = session.Handle(id)
+	}
 	a.limited = s.hasLimit(u.R.Context(), a.user)
 	return a
 }

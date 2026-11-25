@@ -3,6 +3,7 @@ package devices_test
 import (
 	"context"
 	"crypto/ed25519"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -76,13 +77,43 @@ var liveSessions atomic.Int64
 // liveSession opens a relay session of the browser viewer of account to
 // device, as signal and the relay do, and returns its uuid: prefix and a
 // number of its own (a uuid is used once, also across the databases' runs).
-func liveSession(t *testing.T, prefix, device string, account int64) string {
+func liveSession(t *testing.T, prefix, device string, account int64, browser *routetest.Agent) string {
 	t.Helper()
 	uuid := fmt.Sprintf("%s-%d", prefix, liveSessions.Add(1))
-	if !relay.AuthorizeRelayPairFor(uuid, "panel-web-remote", device, account) || !relay.ClaimRelayPair(uuid) || !relay.ClaimRelayPair(uuid) {
+	if !relay.AuthorizeRelayPairForSession(uuid, "panel-web-remote", device, account, consoleSession(t, browser)) ||
+		!relay.ClaimRelayPair(uuid) || !relay.ClaimRelayPair(uuid) {
 		t.Fatalf("open the relay session %s", uuid)
 	}
 	return uuid
+}
+
+// consoleSession is the handle of a browser's console session, as its
+// list of signed-in devices names it and the viewer's bridge hands it to
+// the signal server; "" without a browser.
+func consoleSession(t *testing.T, browser *routetest.Agent) string {
+	t.Helper()
+	if browser == nil {
+		return ""
+	}
+	var out struct {
+		Data struct {
+			Sessions []struct {
+				ID      string `json:"id"`
+				Current bool   `json:"current"`
+			} `json:"sessions"`
+		} `json:"data"`
+	}
+	got := browser.Do(http.MethodGet, "/api/users/me/sessions", "")
+	if err := json.Unmarshal([]byte(got.Body), &out); err != nil {
+		t.Fatalf("own sessions: %d %s", got.Status, got.Body)
+	}
+	for _, s := range out.Data.Sessions {
+		if s.Current {
+			return s.ID
+		}
+	}
+	t.Fatal("no current session")
+	return ""
 }
 
 func auditHas(rows []string, action, part string) bool {
@@ -125,7 +156,14 @@ func TestSavedSigninThroughTheConsole(t *testing.T) {
 			t.Fatalf("switch: %d %s", got.Status, got.Body)
 		}
 
-		session := liveSession(t, "11111111-2222-4333-8444-555555555555", "SIGNC1", routetest.RoleIDs["super_admin"])
+		session := liveSession(t, "11111111-2222-4333-8444-555555555555", "SIGNC1", routetest.RoleIDs["super_admin"], admin)
+		// A second browser of the same account (A239) can't spend the use
+		// of the viewer the first one opened
+		second := w.As("super_admin")
+		if got = second.Do(http.MethodPost, "/api/devices/SIGNC1/signin/use", `{"session":"`+session+`"}`); got.Status != http.StatusConflict ||
+			!strings.Contains(got.Body, "session_not_open") || strings.Contains(got.Body, signinPassword) {
+			t.Fatalf("use from another console session of the account: %d %s", got.Status, got.Body)
+		}
 		got = admin.Do(http.MethodPost, "/api/devices/SIGNC1/signin/use", `{"session":"`+session+`"}`)
 		if got.Status != http.StatusOK || !strings.Contains(got.Body, `"password":"`+signinPassword+`"`) {
 			t.Fatalf("use: %d %s", got.Status, got.Body)
@@ -193,13 +231,14 @@ func TestSavedSigninRefusesTokensAndAccountsWithoutIt(t *testing.T) {
 		if got := script.Do(http.MethodPut, "/api/devices/SIGNC1/signin", `{"username":"admin","password":"`+signinPassword+`"}`, bearer...); got.Status != http.StatusOK {
 			t.Fatalf("a token sets the details: %d %s", got.Status, got.Body)
 		}
-		session := liveSession(t, "21111111-2222-4333-8444-555555555555", "SIGNC1", routetest.RoleIDs["super_admin"])
+		person := w.As("super_admin")
+		session := liveSession(t, "21111111-2222-4333-8444-555555555555", "SIGNC1", routetest.RoleIDs["super_admin"], person)
 		got := script.Do(http.MethodPost, "/api/devices/SIGNC1/signin/use", `{"session":"`+session+`"}`, bearer...)
 		if got.Status != http.StatusForbidden || !strings.Contains(got.Body, "token_not_allowed") || strings.Contains(got.Body, signinPassword) {
 			t.Errorf("a token uses the details: %d %s", got.Status, got.Body)
 		}
 		// The token's refusal did not spend the session's one use
-		if got := w.As("super_admin").Do(http.MethodPost, "/api/devices/SIGNC1/signin/use", `{"session":"`+session+`"}`); got.Status != http.StatusOK {
+		if got := person.Do(http.MethodPost, "/api/devices/SIGNC1/signin/use", `{"session":"`+session+`"}`); got.Status != http.StatusOK {
 			t.Errorf("the person's use after the token's refusal: %d %s", got.Status, got.Body)
 		}
 
@@ -242,7 +281,7 @@ func TestSavedSigninSealedThroughTheConsole(t *testing.T) {
 		if got := admin.Do(http.MethodPut, "/api/devices/SIGNC1/signin", `{"username":"admin","password":"`+signinPassword+`"}`); got.Status != http.StatusOK {
 			t.Fatalf("set: %d %s", got.Status, got.Body)
 		}
-		session := liveSession(t, "41111111-2222-4333-8444-555555555555", "SIGNC1", routetest.RoleIDs["super_admin"])
+		session := liveSession(t, "41111111-2222-4333-8444-555555555555", "SIGNC1", routetest.RoleIDs["super_admin"], admin)
 		got := admin.Do(http.MethodPost, "/api/devices/SIGNC1/signin/use", `{"session":"`+session+`","mode":"sealed"}`)
 		if got.Status != http.StatusOK || !strings.Contains(got.Body, `"path":"sealed"`) || strings.Contains(got.Body, signinPassword) || strings.Contains(got.Body, `"password"`) {
 			t.Fatalf("sealed use: %d %s", got.Status, got.Body)
@@ -250,7 +289,7 @@ func TestSavedSigninSealedThroughTheConsole(t *testing.T) {
 		if !auditHas(w.AuditRows(), "signin.use", "sealed for the computer's NeoDesk") {
 			t.Errorf("no audit entry of the sealed use: %v", w.AuditRows())
 		}
-		other := liveSession(t, "51111111-2222-4333-8444-555555555555", "SIGNC1", routetest.RoleIDs["super_admin"])
+		other := liveSession(t, "51111111-2222-4333-8444-555555555555", "SIGNC1", routetest.RoleIDs["super_admin"], admin)
 		if got := admin.Do(http.MethodPost, "/api/devices/SIGNC1/signin/use", `{"session":"`+other+`","mode":"typed"}`); got.Status != http.StatusConflict || strings.Contains(got.Body, signinPassword) {
 			t.Errorf("readable details after a sealed use: %d %s", got.Status, got.Body)
 		}
@@ -270,7 +309,7 @@ func TestSavedSigninSealedThroughTheConsole(t *testing.T) {
 		if got := admin.Do(http.MethodPut, "/api/devices/SIGNC2/signin", `{"username":"admin","password":"`+signinPassword+`"}`); got.Status != http.StatusOK {
 			t.Fatalf("set: %d %s", got.Status, got.Body)
 		}
-		first := liveSession(t, "61111111-2222-4333-8444-555555555555", "SIGNC2", routetest.RoleIDs["super_admin"])
+		first := liveSession(t, "61111111-2222-4333-8444-555555555555", "SIGNC2", routetest.RoleIDs["super_admin"], admin)
 		if got := admin.Do(http.MethodPost, "/api/devices/SIGNC2/signin/use", `{"session":"`+first+`","mode":"typed"}`); got.Status != http.StatusConflict || !strings.Contains(got.Body, "sealed_required") || strings.Contains(got.Body, signinPassword) {
 			t.Errorf("first readable use of a reporting device: %d %s", got.Status, got.Body)
 		}
@@ -296,7 +335,7 @@ func TestSavedSigninKeepsToTheScope(t *testing.T) {
 		if got := op.Do(http.MethodPut, "/api/devices/SIGNC1/signin", `{"username":"x","password":"y"}`); got.Status != http.StatusOK {
 			t.Errorf("a device in the scope: %d %s", got.Status, got.Body)
 		}
-		session := liveSession(t, "31111111-2222-4333-8444-555555555555", "SIGNC1", routetest.RoleIDs["operator"])
+		session := liveSession(t, "31111111-2222-4333-8444-555555555555", "SIGNC1", routetest.RoleIDs["operator"], op)
 		if got := op.Do(http.MethodPost, "/api/devices/SIGNC1/signin/use", `{"session":"`+session+`"}`); got.Status != http.StatusOK || !strings.Contains(got.Body, `"password":"y"`) {
 			t.Errorf("use on a device in the scope: %d %s", got.Status, got.Body)
 		}

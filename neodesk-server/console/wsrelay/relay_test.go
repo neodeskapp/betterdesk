@@ -27,7 +27,9 @@ type sink struct {
 	mu    sync.Mutex
 	conns []net.Conn
 	got   map[int][]byte
-	wg    sync.WaitGroup
+	// gone are the connections the bridge closed
+	gone map[int]bool
+	wg   sync.WaitGroup
 }
 
 func newSink(t *testing.T) *sink {
@@ -36,7 +38,7 @@ func newSink(t *testing.T) *sink {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := &sink{ln: ln, got: map[int][]byte{}}
+	s := &sink{ln: ln, got: map[int][]byte{}, gone: map[int]bool{}}
 	s.wg.Add(1)
 	go func() {
 		defer s.wg.Done()
@@ -57,6 +59,9 @@ func newSink(t *testing.T) *sink {
 					k, err := c.Read(buf)
 					s.mu.Lock()
 					s.got[n] = append(s.got[n], buf[:k]...)
+					if err != nil {
+						s.gone[n] = true
+					}
 					s.mu.Unlock()
 					if err != nil {
 						return
@@ -74,6 +79,13 @@ func (s *sink) received(n int) []byte {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return append([]byte(nil), s.got[n]...)
+}
+
+// ended reports whether the bridge closed connection n.
+func (s *sink) ended(n int) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.gone[n]
 }
 
 func (s *sink) close() {
@@ -148,7 +160,9 @@ func newHarness(t *testing.T, opts Options) *harness {
 		opts.GoAPI = goapi.New(h.api)
 	}
 	h.svc = New(opts)
-	h.reg = ws.New(ws.Options{Session: wstest.OracleSession, Permission: oraclePermission})
+	// The console session of an upgrade is the header the test sets
+	h.reg = ws.New(ws.Options{Session: wstest.OracleSession, Permission: oraclePermission,
+		SessionID: func(r *http.Request) string { return r.Header.Get("X-Test-Session-Id") }})
 	h.svc.Register(h.reg)
 	h.srv = httptest.NewServer(h.reg)
 	h.addr = strings.TrimPrefix(h.srv.URL, "http://")

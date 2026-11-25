@@ -672,11 +672,11 @@ func (s *Server) handlePlainTCPConn(conn net.Conn, addrKey string, firstMsg *pb.
 	}()
 
 	panel := false
-	if userID, ok := s.readPanelProof(firstMsg); ok {
+	if userID, session, ok := s.readPanelProof(firstMsg); ok {
 		firstMsg = nil
 		if s.panelSourceAllowed(conn.RemoteAddr()) {
 			panel = true
-			pc := &panelConn{conn: conn, userID: userID}
+			pc := &panelConn{conn: conn, userID: userID, session: session}
 			s.panelConns.Store(addrKey, pc)
 			defer s.panelConns.CompareAndDelete(addrKey, pc)
 			log.Printf("[signal] TCP session %s is the console's web client", addrKey)

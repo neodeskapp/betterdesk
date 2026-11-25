@@ -346,6 +346,10 @@ func (s *Server) handleUseSignin(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Session string `json:"session"`
 		Account int64  `json:"account"`
+		// ConsoleSession is the handle of the console session that asks:
+		// an account may be signed in on several browsers (A239), and only
+		// the one whose viewer opened the relay session may use it
+		ConsoleSession string `json:"console_session"`
 		// Mode is "sealed" (a packet only the device's NeoDesk opens) or
 		// "typed" (the details, for the browser to type); "" is typed
 		Mode string `json:"mode"`
@@ -377,7 +381,8 @@ func (s *Server) handleUseSignin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pair, live := s.signinLive(session)
-	if !live || pair.Target != id || pair.Initiator != webRemoteInitiator || pair.Account <= 0 || pair.Account != body.Account {
+	if !live || pair.Target != id || pair.Initiator != webRemoteInitiator || pair.Account <= 0 || pair.Account != body.Account ||
+		pair.ConsoleSession == "" || pair.ConsoleSession != body.ConsoleSession {
 		refuse(http.StatusConflict, "session_not_open")
 		return
 	}

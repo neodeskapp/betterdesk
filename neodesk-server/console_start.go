@@ -35,7 +35,7 @@ import (
 // accounts from it through setFeatures (signal.Server.SetControllerFeatures),
 // and answers the clients' HttpProxyRequest with the handler of its client
 // API port when it has one (setAPIProxy, signal.Server.SetAPIProxy).
-func startConsole(ctx context.Context, cfg *config.Config, database db.Database, apiSrv *api.Server, bus *events.Bus, signalProof func(userID int64) []byte, setFeatures func(signal.ControllerFeatures), setAPIProxy func(http.Handler), requestRestart func()) (func(), error) {
+func startConsole(ctx context.Context, cfg *config.Config, database db.Database, apiSrv *api.Server, bus *events.Bus, signalProof func(userID int64, consoleSession string) []byte, setFeatures func(signal.ControllerFeatures), setAPIProxy func(http.Handler), requestRestart func()) (func(), error) {
 	ccfg, err := consoleconfig.LoadEnv()
 	if err != nil {
 		return nil, fmt.Errorf("console configuration: %w", err)

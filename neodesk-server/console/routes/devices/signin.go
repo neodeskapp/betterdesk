@@ -10,6 +10,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	consolesession "github.com/neodeskapp/neodesk/neodesk-server/console/session"
 )
 
 // Saved sign-in (BUGS L469): the account name and password of a device's
@@ -241,7 +242,10 @@ func (h *handlers) signinUseAnswer(w http.ResponseWriter, r *http.Request) {
 	}
 	session := strings.TrimSpace(body.Session)
 	a, err := h.askAsAccount(r, http.MethodPost, "/peers/"+url.PathEscape(r.PathValue("id"))+"/signin/use",
-		map[string]any{"session": session, "account": kit.UserID(r), "mode": body.Mode})
+		map[string]any{"session": session, "account": kit.UserID(r), "mode": body.Mode,
+			// The browser's own console session: the relay session must be
+			// one its viewer opened, not another browser's of the account
+			"console_session": consolesession.Handle(kit.Session(r).ID())})
 	if err != nil {
 		h.serverError(w, r, "Saved sign-in error:", err)
 		return
