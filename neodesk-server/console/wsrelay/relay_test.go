@@ -290,6 +290,11 @@ func TestBadTextCountsDownOnce(t *testing.T) {
 	for i := 0; i < MaxConnectionsPerIP; i++ {
 		clients = append(clients, h.dial("/ws/rendezvous", adminHeader()))
 	}
+	count := func() int { h.svc.mu.Lock(); defer h.svc.mu.Unlock(); return h.svc.perIP.Count("127.0.0.1") }
+	// The handshake answers before the bridge counts the socket. Until all
+	// five count, a count of four can mean a bridge not counted yet instead
+	// of the first one freed, and the sixth then finds a free place
+	waitFor(t, "five bridges counted", func() bool { return count() == MaxConnectionsPerIP })
 	_ = clients[0].WriteFrame(0x1, []byte{0xff, 0xfe})
 	if !clients[0].Wait(5*time.Second, func(_ []wstest.Frame, closed bool) bool { return closed }) {
 		t.Fatal("not closed")
@@ -297,7 +302,6 @@ func TestBadTextCountsDownOnce(t *testing.T) {
 	if _, code, _ := clients[0].Closed(); code != 1007 {
 		t.Fatalf("close %d", code)
 	}
-	count := func() int { h.svc.mu.Lock(); defer h.svc.mu.Unlock(); return h.svc.perIP.Count("127.0.0.1") }
 	waitFor(t, "the place freed", func() bool { return count() == 4 })
 	clients[0] = h.dial("/ws/rendezvous", adminHeader())
 	// The handshake answers before the bridge counts the socket: without
