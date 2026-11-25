@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
@@ -225,6 +226,19 @@ type joinAnswer struct {
 	Console     string       `json:"console"`
 }
 
+// auditJoinUnproved writes the audit entry of a join under an enrolled
+// computer's ID that came without the proof of its key into the console's
+// audit list (Security and audit): the device, the address (the entry's
+// own) and why. The API server decides when one is due, once a minute per
+// device, and counts the refusals it stands for.
+func (h *handlers) auditJoinUnproved(r *http.Request, deviceID string, refused *onboard.RefusedError) {
+	details := "Join of enrolled device " + deviceID + " refused without proof of its key (" + refused.Unproved + ")"
+	if refused.Repeats > 0 {
+		details += ", " + strconv.Itoa(refused.Repeats) + " more refused since the last entry"
+	}
+	h.auditAs(r, 0, "onboard_join_unproved", details)
+}
+
 // joinProofOf is the key proof a join carries in the headers
 // X-ND-Enrollment-Timestamp, -Nonce and -Signature (the proof the client
 // makes for its registration too), nil without them. The API server checks
@@ -277,6 +291,9 @@ func (h *handlers) join(w http.ResponseWriter, r *http.Request) {
 		unusable(w, r)
 		return
 	case errors.As(err, &refused):
+		if refused.Audit {
+			h.auditJoinUnproved(r, deviceID, refused)
+		}
 		appFail(w, r, http.StatusForbidden, "device_refused", refused.Reason)
 		return
 	case errors.As(err, &invalid):
