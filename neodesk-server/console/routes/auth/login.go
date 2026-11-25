@@ -161,6 +161,8 @@ func (h *handlers) auditEnded(r *http.Request, userID int64, est session.Establi
 // clearGuestCookie makes the browser forget the cookie of a guest link.
 func (h *handlers) clearGuestCookie(w http.ResponseWriter, r *http.Request) {
 	cookie.Clear(w, h.guestCookie, cookie.Attributes{Path: "/", HTTPOnly: true, Secure: h.d.Sessions.SecureCookie(r), SameSite: "lax"})
+	// Every sign-in passes here: the reason the last session ended is old news
+	h.d.Sessions.ClearEndedNotice(w, r)
 }
 
 // replacedNote is the end of a sign-in's audit text when the sign-in ended

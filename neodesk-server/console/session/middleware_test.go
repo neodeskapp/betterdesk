@@ -709,12 +709,14 @@ func TestEstablishWithLanguageAndLimit(t *testing.T) {
 		if row.fp.Valid || row.userAgent.Valid {
 			t.Fatalf("empty details must be NULL: %+v", row)
 		}
-		// The replaced browser is told why at its next page, once: the
-		// sign-in page with the reason, and its cookie cleared (A239)
+		// The replaced browser is told why at its next page: the sign-in
+		// page with the reason, its session cookie cleared, and the reason
+		// kept a few minutes for the answers after this one (A239)
 		var userID int64 = -1
 		rec = f.serve(get("/", first), func(w http.ResponseWriter, r *http.Request) { userID = From(r).UserID() })
+		cookies := setCookies(rec)
 		if userID != -1 || rec.Code != http.StatusFound || !strings.Contains(rec.Header().Get("Location"), "reason=session_replaced") ||
-			len(setCookies(rec)) != 2 {
+			len(cookies) != 3 || cookies[2] != "nd.ended=session_replaced; Max-Age=600; Path=/; HttpOnly; SameSite=Lax" {
 			t.Fatalf("replaced browser: user %d, %d %q, Set-Cookie %q", userID, rec.Code, rec.Header().Get("Location"), setCookies(rec))
 		}
 	})
