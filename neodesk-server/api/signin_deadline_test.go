@@ -57,17 +57,69 @@ func TestSlowDirectoryMakesNoAccount(t *testing.T) {
 	}
 }
 
+// gatedLDAP is a directory that accepts everyone once the test lets it
+// answer. It hands the context it is asked in to asked first.
+type gatedLDAP struct {
+	*mockLDAPProvider
+	asked  chan context.Context
+	answer chan struct{}
+}
+
+func newGatedLDAP() *gatedLDAP {
+	return &gatedLDAP{
+		mockLDAPProvider: &mockLDAPProvider{enabled: true},
+		asked:            make(chan context.Context, 1),
+		answer:           make(chan struct{}),
+	}
+}
+
+func (g *gatedLDAP) AuthenticateContext(ctx context.Context, username, _ string) (*auth.LDAPResult, error) {
+	g.asked <- ctx
+	<-g.answer
+	return &auth.LDAPResult{Authenticated: true, Username: username, Role: auth.RoleOperator}, nil
+}
+
 // TestDirectoryInTimeSignsIn: a directory that answers within the
-// deadline signs the person in and makes the account.
+// deadline signs the person in and makes the account. The directory is
+// asked with the sign-in's deadline less signInAnswerTime and answers
+// while that deadline is still ahead. The deadline is a minute away, so
+// the account's password hash (slow under -race) fits on any machine.
 func TestDirectoryInTimeSignsIn(t *testing.T) {
 	database := testSetupDB(t)
 	defer database.Close()
 	srv := newClientLoginTestServer(database)
-	srv.ldapProvider = slowLDAP(100 * time.Millisecond)
+	directory := newGatedLDAP()
+	srv.ldapProvider = directory
 
-	status, answer := postLogin(srv, `{"username":"quick.ad","password":"ad-pass"}`, 5*time.Second)
-	if status != http.StatusOK || answer["token"] == nil {
-		t.Fatalf("answer %d %v, want a sign-in", status, answer)
+	deadline := time.Now().Add(time.Minute)
+	ctx, cancel := context.WithDeadline(context.Background(), deadline)
+	defer cancel()
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(`{"username":"quick.ad","password":"ad-pass"}`)).WithContext(ctx)
+	answered := make(chan struct{})
+	go func() {
+		defer close(answered)
+		srv.handleLogin(rec, req)
+	}()
+
+	select {
+	case dirCtx := <-directory.asked:
+		if got, ok := dirCtx.Deadline(); !ok || !got.Equal(deadline.Add(-signInAnswerTime)) {
+			t.Errorf("directory asked with the deadline %v (%v), want %v", got, ok, deadline.Add(-signInAnswerTime))
+		}
+		if err := dirCtx.Err(); err != nil {
+			t.Errorf("directory asked after its deadline: %v", err)
+		}
+		close(directory.answer)
+	case <-answered:
+		t.Fatalf("answer %d %s before the directory was asked", rec.Code, rec.Body.String())
+	}
+	<-answered
+
+	var answer map[string]any
+	_ = json.Unmarshal(rec.Body.Bytes(), &answer)
+	if rec.Code != http.StatusOK || answer["token"] == nil {
+		t.Fatalf("answer %d %v, want a sign-in", rec.Code, answer)
 	}
 	if u, err := database.GetUser("quick.ad"); err != nil || u == nil {
 		t.Errorf("no account: %v", err)
