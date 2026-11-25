@@ -354,7 +354,7 @@ while [[ $# -gt 0 ]]; do
             echo "  GO_API_PORT=21114 / CLIENT_API_PORT=21121  The server's own API port and the client API port"
             echo "  SIGNAL_RATE_LIMIT_PER_IP=20  Signal registrations per address and minute (0: no limit)"
             echo ""
-            echo "Install with one command:  curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/neodesk.sh | sudo bash"
+            echo "Install with one command:  curl -fsSL https://neode.sk/neodesk.sh | sudo bash"
             echo "Later:                     sudo neodesk-setup (menu), sudo neodesk-setup --update, sudo neodesk-setup --uninstall"
             echo "The command line:          neodesk --help (sudo neodesk and these options reach neodesk-setup too)"
             exit 0

@@ -3,14 +3,14 @@
 # NeoDesk — one-line installer (Linux)
 #
 # Docker (default: the published image in one container, neodesk-docker.sh):
-#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/install.sh | sudo bash
+#   curl -fsSL https://neode.sk/install.sh | sudo bash
 #
 # Docker, move a two-container (split) install to the one container:
 #   curl -fsSL .../install.sh | sudo bash -s -- --migrate-split
 #
 # Native (git clone + neodesk.sh --auto): the newest stable release, or
 # the development build while the repository has none:
-#   curl -fsSL https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/install.sh | sudo bash -s -- --native
+#   curl -fsSL https://neode.sk/install.sh | sudo bash -s -- --native
 # Native, the development build: add --channel dev
 #
 # Options (pass after "bash -s --"):

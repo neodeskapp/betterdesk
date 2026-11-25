@@ -585,11 +585,37 @@ test_install_sh_uses_the_fork() (
         || fail "neodesk.ps1 does not fetch itself from main"
 )
 
+# The public addresses: neode.sk answers with the newest release's
+# installers (/install.sh, /neodesk.sh, /neodesk.ps1, /neodesk-docker.sh)
+# and compose files (/install/...). The docs, the compose files' comments
+# and the installers' help name them, never main's raw files.
+test_public_addresses() (
+    local hits
+    hits=$(cd "$SCRIPT_ROOT" && grep -nE 'raw\.githubusercontent\.com/neodeskapp/neodesk/main/' \
+        README.md SECURITY.md install/docker-compose*.yml .github/workflows/docker-publish.yml || true)
+    [ -z "$hits" ] || fail "the docs name main's raw files: $hits"
+    hits=$(cd "$SCRIPT_ROOT" && grep -nE '^#.*raw\.githubusercontent\.com/neodeskapp/neodesk/main/|echo .*raw\.githubusercontent\.com/neodeskapp/neodesk/main/' \
+        install/*.sh || true)
+    [ -z "$hits" ] || fail "the installers' help names main's raw files: $hits"
+    local want
+    for want in 'curl -fsSL https://neode.sk/install.sh | sudo bash' \
+        'curl -fsSL https://neode.sk/install/docker-compose.quick.single.yml -o docker-compose.yml' \
+        'curl -fsSL https://neode.sk/neodesk.sh | sudo bash' \
+        'Invoke-WebRequest https://neode.sk/neodesk.ps1 -OutFile neodesk.ps1'; do
+        grep -qF -- "$want" "$SCRIPT_ROOT/README.md" || fail "README.md does not show: $want"
+    done
+    grep -qF 'curl -fsSL https://neode.sk/neodesk.sh | sudo bash' "$SCRIPT_ROOT/install/neodesk.sh" \
+        || fail "neodesk.sh's help does not show the install command"
+    grep -qF 'curl -fsSL https://neode.sk/install.sh | sudo bash' "$SCRIPT_ROOT/install/install.sh" \
+        || fail "install.sh's comment does not show the install command"
+)
+
 test_bounded_go_commands
 test_dirty_native_clone
 test_native_update_channel
 test_migration_menus
 test_postgresql_switch
 test_install_sh_uses_the_fork
+test_public_addresses
 test_headers_and_colours
 printf 'PASS: native installer regression tests\n'
