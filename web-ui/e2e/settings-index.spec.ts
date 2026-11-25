@@ -1,12 +1,14 @@
 import { test, expect } from './fixtures.ts';
 import { UI } from './roles.ts';
 import { SEARCH_INDEX } from '../src/lib/settings/search-index.ts';
-import { TABS } from '../src/lib/settings/tabs.ts';
+import { PAGES, TABS, placeHref, type PlaceId } from '../src/lib/settings/tabs.ts';
 
 /**
  * The settings list (search-index.ts) is the one list both searches read,
  * and the tabs are written by hand. This keeps the two the same: on every
- * tab, each row's element is on the page, and each field on the page sits
+ * tab of Settings and every page of settings outside it (the Server
+ * section's Backups, Updates and Configuration files), each row's element
+ * is on the page, and each field on the page sits
  * inside an element a row names. A field added without a row, or a row
  * whose element went away, fails here.
  */
@@ -19,10 +21,12 @@ const SHOWN_LATER: Readonly<Record<string, string>> = {
 
 test.use({ role: 'super_admin' });
 
-for (const tab of TABS) {
+const PLACES: readonly PlaceId[] = [...TABS, ...(Object.keys(PAGES) as (keyof typeof PAGES)[])];
+
+for (const tab of PLACES) {
 	test(`settings list and the ${tab} tab name the same settings`, async ({ page }) => {
 		test.setTimeout(60_000);
-		await page.goto(`${UI}/settings${tab === 'general' ? '' : `?tab=${tab}`}`);
+		await page.goto(`${UI}${placeHref(tab)}`);
 		await expect(page.locator('.settings-page')).toBeVisible();
 		await expect(
 			page.locator('.settings-page [aria-busy="true"], .settings-page .state-loading')

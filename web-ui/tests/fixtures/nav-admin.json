@@ -295,6 +295,73 @@
 		]
 	},
 	{
+		"id": "server",
+		"icon": "dns",
+		"text": "Server",
+		"pages": [
+			{
+				"page": "server-management:overview",
+				"href": "/server-management",
+				"text": "Server status",
+				"group": "",
+				"core": true,
+				"keywords": "server management status health cpu memory uptime files services systemd",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "scaling",
+				"href": "/scaling",
+				"text": "Relay servers",
+				"group": "",
+				"core": true,
+				"keywords": "scaling relays relay servers",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "server-backups",
+				"href": "/server/backups",
+				"text": "Backups",
+				"group": "",
+				"core": true,
+				"keywords": "backup backups restore schedule",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "server-updates",
+				"href": "/server/updates",
+				"text": "Updates",
+				"group": "",
+				"core": true,
+				"keywords": "updates version upgrade channel",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "server-config-files",
+				"href": "/server/config-files",
+				"text": "Configuration files",
+				"group": "",
+				"core": false,
+				"keywords": "advanced configuration config files env restart",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "server-attestation",
+				"href": "/server-attestation",
+				"text": "Capacity test",
+				"group": "",
+				"core": false,
+				"keywords": "server attestation capacity benchmark load test badge",
+				"external": false,
+				"countId": null
+			}
+		]
+	},
+	{
 		"id": "settings",
 		"icon": "settings",
 		"text": "Settings",
@@ -330,26 +397,6 @@
 				"countId": null
 			},
 			{
-				"page": "settings:backup",
-				"href": "/settings?tab=backup",
-				"text": "Backup",
-				"group": "Console",
-				"core": false,
-				"keywords": "backup restore",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "settings:updates",
-				"href": "/settings?tab=updates",
-				"text": "Updates",
-				"group": "Console",
-				"core": false,
-				"keywords": "updates version upgrade",
-				"external": false,
-				"countId": null
-			},
-			{
 				"page": "settings:email",
 				"href": "/settings?tab=email",
 				"text": "Email",
@@ -366,16 +413,6 @@
 				"group": "Console",
 				"core": false,
 				"keywords": "time zone timezone ntp clock",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "settings:advanced",
-				"href": "/settings?tab=advanced",
-				"text": "Advanced",
-				"group": "Console",
-				"core": false,
-				"keywords": "advanced config files restart",
 				"external": false,
 				"countId": null
 			},
@@ -436,56 +473,6 @@
 				"group": "Clients and joining",
 				"core": false,
 				"keywords": "client branding white label",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "server-management:overview",
-				"href": "/server-management?tab=overview",
-				"text": "Server status",
-				"group": "Server",
-				"core": true,
-				"keywords": "server management status health cpu memory uptime",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "server-management:files",
-				"href": "/server-management?tab=files",
-				"text": "Files",
-				"group": "Server",
-				"core": false,
-				"keywords": "file browser",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "server-management:services",
-				"href": "/server-management?tab=services",
-				"text": "Services",
-				"group": "Server",
-				"core": false,
-				"keywords": "systemd services",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "scaling",
-				"href": "/scaling",
-				"text": "Relay servers",
-				"group": "Server",
-				"core": false,
-				"keywords": "scaling relays",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "server-attestation",
-				"href": "/server-attestation",
-				"text": "Capacity test",
-				"group": "Server",
-				"core": false,
-				"keywords": "server attestation benchmark load test badge",
 				"external": false,
 				"countId": null
 			},

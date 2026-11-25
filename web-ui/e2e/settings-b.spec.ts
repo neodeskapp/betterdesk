@@ -1,16 +1,17 @@
 /**
- * Settings B: the system settings tabs (Backup, Updates, Email, Time zones,
- * Advanced), /languages and the "restart required" prompt.
+ * Settings B: the system settings (Settings › Email and Time, the Server
+ * section's Backups, Updates and Configuration files), /languages and the
+ * "restart required" prompt.
  *
- * Per role: the tabs and the Translations page show their controls exactly
- * to the roles with server.config (the server checks the same), and one
- * sentence to everyone else, without asking the server for what it would
- * refuse; axe finds nothing on any tab. Then the main tasks with their
+ * Per role: the tabs, the Server pages and the Translations page show their
+ * controls exactly to the roles with server.config (the server checks the
+ * same); everyone else gets one sentence on a tab and the no-access view on
+ * a page, without asking the server for what it would refuse; axe finds nothing on any tab. Then the main tasks with their
  * conditional parts, without saving anything: the restore steps, the mail
  * sign-in fields, the update check, the file editor's discard question, a
  * language's texts, and the restart prompt with a mocked pending restart.
  *
- * The Time zones tab for server_admin needs the server change in
+ * The Time tab for server_admin needs the server change in
  * routes/commercialization.routes.js (clock reads with server.config) and a
  * console restart.
  */
@@ -21,13 +22,13 @@ import { UI, type Role } from './roles.ts';
 const ROLES: Role[] = ['admin', 'super_admin', 'server_admin', 'global_admin', 'operator', 'viewer'];
 const CONFIG: Role[] = ['admin', 'super_admin', 'server_admin'];
 
-/** The tab and a heading only its content has */
+/** The address and a heading only its content has; a page has no Settings tab */
 const TABS = [
-	{ tab: 'backup', heading: 'Create a backup' },
-	{ tab: 'updates', heading: 'Update channel' },
-	{ tab: 'email', heading: 'Mail server' },
-	{ tab: 'time', heading: 'Billing time zone' },
-	{ tab: 'advanced', heading: 'Configuration files' }
+	{ path: '/server/backups', heading: 'Create a backup', page: true },
+	{ path: '/server/updates', heading: 'Update channel', page: true },
+	{ path: '/settings?tab=email', heading: 'Mail server', page: false },
+	{ path: '/settings?tab=time', heading: 'Billing time zone', page: false },
+	{ path: '/server/config-files', heading: 'Configuration files', page: true }
 ] as const;
 
 /**
@@ -65,22 +66,27 @@ for (const role of ROLES) {
 				if (/\/api\/(settings\/(backup|updates|email|advanced)|panel\/languages)/.test(r.url()))
 					settingsCalls.push(r.url());
 			});
-			await page.goto(`${UI}/settings?tab=backup`);
+			await page.goto(`${UI}/server/backups`);
 			await expect(page.getByRole('heading', { level: 1 })).toBeVisible(START);
 			const perms = await permissions(page);
 			const allowed = CONFIG.includes(role);
 			expect(perms.includes('server.config') || role === 'admin' || role === 'super_admin').toBe(allowed);
 
-			for (const { tab, heading } of TABS) {
-				await page.goto(`${UI}/settings?tab=${tab}`);
+			for (const { path, heading, page: own } of TABS) {
+				await page.goto(`${UI}${path}`);
 				await expect(page.getByRole('heading', { level: 1 })).toBeVisible(START);
 				if (allowed) {
-					await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible(START);
+					await expect(page.getByRole('heading', { name: heading, exact: true, level: 2 })).toBeVisible(START);
+				} else if (own) {
+					await expect(page.getByRole('heading', { name: "You don't have access to this page" })).toBeVisible(
+						START
+					);
+					await expect(page.getByRole('heading', { name: heading, exact: true, level: 2 })).toHaveCount(0);
 				} else {
 					await expect(
 						page.getByText('Only super admins and server admins can see and change these settings.')
 					).toBeVisible();
-					await expect(page.getByRole('heading', { name: heading, exact: true })).toHaveCount(0);
+					await expect(page.getByRole('heading', { name: heading, exact: true, level: 2 })).toHaveCount(0);
 				}
 				await settled(page);
 				await expectNoAxeViolations(page);
@@ -104,7 +110,7 @@ test.describe('system settings tasks', () => {
 	test.use({ role: 'admin' });
 
 	test('restore: a file, then the parts, then Restore asks first', async ({ page }) => {
-		await page.goto(`${UI}/settings?tab=backup`);
+		await page.goto(`${UI}/server/backups`);
 		const restore = page.locator('#backup-restore');
 		await expect(
 			restore.getByText('Choose a backup file. Then you pick what to restore from it.')
@@ -142,7 +148,7 @@ test.describe('system settings tasks', () => {
 	test('schedule details show when they apply; no network share login', async ({ page }) => {
 		// The switch shows the saved schedule once it has loaded
 		const loaded = page.waitForResponse((r) => r.url().endsWith('/api/settings/backup/schedule'), START);
-		await page.goto(`${UI}/settings?tab=backup`);
+		await page.goto(`${UI}/server/backups`);
 		await loaded;
 		const enabled = page.locator('#scheduled-backup-enabled');
 		await expect(enabled).toBeVisible(START);
@@ -187,18 +193,32 @@ test.describe('system settings tasks', () => {
 	});
 
 	test('updates: a check says what it found', async ({ page }) => {
-		await page.goto(`${UI}/settings?tab=updates`);
+		await page.goto(`${UI}/server/updates`);
 		await expect(page.locator('#update-remote-version')).toContainText('Not checked yet', START);
 		await page.locator('#update-check-btn').click();
 		await expect(page.locator('#update-status-badge')).toBeVisible({ timeout: 30000 });
 		await expect(page.locator('#update-remote-version')).not.toContainText('Not checked yet');
-		await page.getByText('Backups made before updates').click();
-		await expect(page.locator('#backup-retention-input')).toBeVisible();
+		// The backups made before updates are with the other backups now
+		await expect(page.locator('#backup-retention-input')).toHaveCount(0);
+		await expectNoAxeViolations(page);
+	});
+
+	test('backups: both retention counts on one page; old addresses lead here', async ({ page }) => {
+		await page.goto(`${UI}/settings?tab=backup#scheduled-backup-retention`);
+		await expect(page).toHaveURL(/\/server\/backups#scheduled-backup-retention$/, START);
+		await expect(page.getByRole('heading', { level: 1, name: 'Backups' })).toBeVisible(START);
+		await expect(page.getByRole('heading', { name: 'Backups made before updates' })).toBeVisible(START);
+		await expect(page.getByLabel('Keep update backups')).toBeVisible(START);
+		await page.goto(`${UI}/settings?tab=updates`);
+		await expect(page).toHaveURL(/\/server\/updates$/, START);
+		await page.goto(`${UI}/settings?tab=advanced`);
+		await expect(page).toHaveURL(/\/server\/config-files$/, START);
+		await expect(page.getByRole('heading', { level: 1, name: 'Configuration files' })).toBeVisible(START);
 		await expectNoAxeViolations(page);
 	});
 
 	test('advanced: a file opens in the editor; switching with changes asks first', async ({ page }) => {
-		await page.goto(`${UI}/settings?tab=advanced`);
+		await page.goto(`${UI}/server/config-files`);
 		const files = page.locator('.split-list .list-row');
 		await expect(files.first()).toBeVisible(START);
 		await files.first().click();

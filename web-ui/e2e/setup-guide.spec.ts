@@ -258,7 +258,7 @@ test('each step leads to its place and back, and the server ticks it', async ({ 
 		expect((await created).ok()).toBe(true);
 	});
 
-	await viaStep(page, 'backup', /\/settings\?tab=backup/, async () => {
+	await viaStep(page, 'backup', /\/server\/backups/, async () => {
 		const download = page.waitForEvent('download');
 		await page.locator('#backup-download-btn').click();
 		await download;

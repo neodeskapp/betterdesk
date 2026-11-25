@@ -71,7 +71,7 @@ for (const role of ROLES) {
 			await expectNoAxeViolations(page);
 
 			// The server tabs: open with server.config, one sentence otherwise
-			await page.goto(`${UI}/settings?tab=backup`);
+			await page.goto(`${UI}/settings?tab=email`);
 			if (config)
 				await expect(
 					page.getByText('Only super admins and server admins can see and change these settings.')

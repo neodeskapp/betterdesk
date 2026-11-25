@@ -44,8 +44,15 @@ for (const role of ROLES) {
 			await expect(page.locator('.facts').first()).toBeVisible({ timeout: 15_000 });
 			await expectNoAxeViolations(page);
 
+			// Files and Services are tabs of Server status: one page, one heading
+			await expect(page.getByRole('heading', { level: 1, name: 'Server status' })).toBeVisible();
+			await page.getByRole('tab', { name: 'Files' }).click();
+			await expect(page).toHaveURL(/\?tab=files$/);
+			await expect(page.getByRole('heading', { level: 1, name: 'Server status' })).toBeVisible();
+
 			// Files: a folder, and a file in a read-only sheet. A194: no row menu, nothing that writes
 			await page.goto(`${UI}/server-management?tab=files`);
+			await expect(page.getByRole('tab', { name: 'Files', selected: true })).toBeVisible();
 			const rows = page.locator('.files-table tbody tr[data-key]');
 			await expect(rows.first()).toBeVisible({ timeout: 15_000 });
 			await expect(rows.first().getByRole('button', { name: /^Actions for/ })).toHaveCount(0);
