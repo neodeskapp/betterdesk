@@ -629,7 +629,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=be04565a3192e809"
+      "stringsUrl": "/api/console/strings/en?v=11fc8c63ee43ee26"
      },
      "nav": [
       {
@@ -1415,7 +1415,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=be04565a3192e809"
+      "stringsUrl": "/api/console/strings/en?v=11fc8c63ee43ee26"
      },
      "nav": [
       {
@@ -2273,7 +2273,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=be04565a3192e809"
+      "stringsUrl": "/api/console/strings/en?v=11fc8c63ee43ee26"
      },
      "nav": [
       {
@@ -2313,12 +2313,12 @@
         {
          "core": true,
          "countId": null,
-         "external": true,
+         "external": false,
          "group": "",
-         "href": "/remote",
-         "keywords": "web client browser remote control",
+         "href": "/remote/sessions",
+         "keywords": "web client browser remote control sessions",
          "page": "remote",
-         "text": "Remote desktop in browser"
+         "text": "Remote sessions"
         },
         {
          "core": false,
@@ -3211,7 +3211,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=be04565a3192e809"
+      "stringsUrl": "/api/console/strings/en?v=11fc8c63ee43ee26"
      },
      "nav": [
       {
@@ -3261,12 +3261,12 @@
         {
          "core": true,
          "countId": null,
-         "external": true,
+         "external": false,
          "group": "",
-         "href": "/remote",
-         "keywords": "web client browser remote control",
+         "href": "/remote/sessions",
+         "keywords": "web client browser remote control sessions",
          "page": "remote",
-         "text": "Remote desktop in browser"
+         "text": "Remote sessions"
         },
         {
          "core": false,
@@ -4208,7 +4208,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=be04565a3192e809"
+      "stringsUrl": "/api/console/strings/en?v=11fc8c63ee43ee26"
      },
      "nav": [
       {
@@ -5270,7 +5270,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=be04565a3192e809"
+      "stringsUrl": "/api/console/strings/en?v=11fc8c63ee43ee26"
      },
      "nav": [
       {
@@ -5320,12 +5320,12 @@
         {
          "core": true,
          "countId": null,
-         "external": true,
+         "external": false,
          "group": "",
-         "href": "/remote",
-         "keywords": "web client browser remote control",
+         "href": "/remote/sessions",
+         "keywords": "web client browser remote control sessions",
          "page": "remote",
-         "text": "Remote desktop in browser"
+         "text": "Remote sessions"
         },
         {
          "core": false,
@@ -6470,7 +6470,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=be04565a3192e809"
+      "stringsUrl": "/api/console/strings/en?v=11fc8c63ee43ee26"
      },
      "nav": [
       {
@@ -6520,12 +6520,12 @@
         {
          "core": true,
          "countId": null,
-         "external": true,
+         "external": false,
          "group": "",
-         "href": "/remote",
-         "keywords": "web client browser remote control",
+         "href": "/remote/sessions",
+         "keywords": "web client browser remote control sessions",
          "page": "remote",
-         "text": "Remote desktop in browser"
+         "text": "Remote sessions"
         },
         {
          "core": false,

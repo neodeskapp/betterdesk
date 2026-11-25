@@ -597,7 +597,7 @@
       ],
       "code": "ar",
       "dir": "rtl",
-      "stringsUrl": "/api/console/strings/ar?v=ad1c4a04bd4c897c"
+      "stringsUrl": "/api/console/strings/ar?v=7b4ef3df89a60dac"
      },
      "nav": [
       {
@@ -1455,7 +1455,7 @@
       ],
       "code": "ar",
       "dir": "rtl",
-      "stringsUrl": "/api/console/strings/ar?v=ad1c4a04bd4c897c"
+      "stringsUrl": "/api/console/strings/ar?v=7b4ef3df89a60dac"
      },
      "nav": [
       {
@@ -1505,12 +1505,12 @@
         {
          "core": true,
          "countId": null,
-         "external": true,
+         "external": false,
          "group": "",
-         "href": "/remote",
-         "keywords": "web client browser remote control",
+         "href": "/remote/sessions",
+         "keywords": "web client browser remote control sessions",
          "page": "remote",
-         "text": "سطح المكتب البعيد في المتصفح"
+         "text": "الجلسات عن بُعد"
         },
         {
          "core": false,

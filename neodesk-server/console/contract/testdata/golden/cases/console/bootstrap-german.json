@@ -597,7 +597,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=92097c408564d010"
+      "stringsUrl": "/api/console/strings/de?v=244b67e89e77abfd"
      },
      "nav": [
       {
@@ -1455,7 +1455,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=92097c408564d010"
+      "stringsUrl": "/api/console/strings/de?v=244b67e89e77abfd"
      },
      "nav": [
       {
@@ -1495,12 +1495,12 @@
         {
          "core": true,
          "countId": null,
-         "external": true,
+         "external": false,
          "group": "",
-         "href": "/remote",
-         "keywords": "web client browser remote control",
+         "href": "/remote/sessions",
+         "keywords": "web client browser remote control sessions",
          "page": "remote",
-         "text": "Fernzugriff im Browser"
+         "text": "Fernsitzungen"
         },
         {
          "core": false,
@@ -2393,7 +2393,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=92097c408564d010"
+      "stringsUrl": "/api/console/strings/de?v=244b67e89e77abfd"
      },
      "nav": [
       {
@@ -2443,12 +2443,12 @@
         {
          "core": true,
          "countId": null,
-         "external": true,
+         "external": false,
          "group": "",
-         "href": "/remote",
-         "keywords": "web client browser remote control",
+         "href": "/remote/sessions",
+         "keywords": "web client browser remote control sessions",
          "page": "remote",
-         "text": "Fernzugriff im Browser"
+         "text": "Fernsitzungen"
         },
         {
          "core": false,
@@ -3390,7 +3390,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=92097c408564d010"
+      "stringsUrl": "/api/console/strings/de?v=244b67e89e77abfd"
      },
      "nav": [
       {
@@ -3440,12 +3440,12 @@
         {
          "core": true,
          "countId": null,
-         "external": true,
+         "external": false,
          "group": "",
-         "href": "/remote",
-         "keywords": "web client browser remote control",
+         "href": "/remote/sessions",
+         "keywords": "web client browser remote control sessions",
          "page": "remote",
-         "text": "Fernzugriff im Browser"
+         "text": "Fernsitzungen"
         },
         {
          "core": false,

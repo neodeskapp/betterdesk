@@ -35,7 +35,7 @@
     "kind": "bytes",
     "type": "text/html",
     "length": 2926,
-    "sha256": "55a3650166c309e7249fad85c731c2649b6bef3294bab39c051cd8a31d685377",
+    "sha256": "b9fe3feac5ce10177dc2698475f80f3f4446b02aef9854472fcb68bd4e75a02b",
     "head": "<!doctype html>\n<html lang=\"en\" dir=\"ltr\" data-theme=\"light\" data-theme-mode=\"system\">\n\t<head><meta name=\"bd-error\" content=\"500\" data-title=\"Logout requires POST\" data-message=\"Signing out changed to a POST request for CSRF protection. Use the sign-out button in the panel.\">\n\t\t<meta charset=\"utf-8\""
    }
   }
