@@ -1943,7 +1943,8 @@
     "action_session_signed_out": "Istunto kirjattu ulos toiselta laitteelta",
     "action_session_ended_by_admin": "Ylläpitäjä päätti istunnon",
     "action_session_limit": "Istuntoraja päätti istunnon",
-    "action_console_sessions_policy_changed": "Istunnot tiliä kohden muutettu"
+    "action_console_sessions_policy_changed": "Istunnot tiliä kohden muutettu",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

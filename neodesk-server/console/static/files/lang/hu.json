@@ -1943,7 +1943,8 @@
     "action_session_signed_out": "Munkamenet kijelentkeztetve egy másik eszközről",
     "action_session_ended_by_admin": "Munkamenetet egy rendszergazda zárta le",
     "action_session_limit": "Munkamenetet a munkamenet-korlát zárta le",
-    "action_console_sessions_policy_changed": "Fiókonkénti munkamenetek módosítva"
+    "action_console_sessions_policy_changed": "Fiókonkénti munkamenetek módosítva",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

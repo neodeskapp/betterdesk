@@ -1943,7 +1943,8 @@
     "action_session_signed_out": "Сеанс завершено з іншого пристрою",
     "action_session_ended_by_admin": "Сеанс завершено адміністратором",
     "action_session_limit": "Сеанс завершено обмеженням сеансів",
-    "action_console_sessions_policy_changed": "Змінено кількість сеансів на обліковий запис"
+    "action_console_sessions_policy_changed": "Змінено кількість сеансів на обліковий запис",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

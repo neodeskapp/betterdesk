@@ -1937,7 +1937,8 @@
     "action_session_signed_out": "Sitzung von einem anderen Gerät abgemeldet",
     "action_session_ended_by_admin": "Sitzung von einem Administrator beendet",
     "action_session_limit": "Sitzung durch die Sitzungsgrenze beendet",
-    "action_console_sessions_policy_changed": "Sitzungen pro Konto geändert"
+    "action_console_sessions_policy_changed": "Sitzungen pro Konto geändert",
+    "action_onboard_join_unproved": "Beitritt abgelehnt: ohne Nachweis des Computerschlüssels"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

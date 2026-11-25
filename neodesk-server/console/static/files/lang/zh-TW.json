@@ -1941,7 +1941,8 @@
     "action_session_signed_out": "工作階段已從另一台裝置登出",
     "action_session_ended_by_admin": "工作階段已被管理員結束",
     "action_session_limit": "工作階段因工作階段上限而結束",
-    "action_console_sessions_policy_changed": "每個帳戶的工作階段已變更"
+    "action_console_sessions_policy_changed": "每個帳戶的工作階段已變更",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

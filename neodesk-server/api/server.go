@@ -83,13 +83,16 @@ type ldapAuthProvider interface {
 
 // Server is the HTTP API server.
 type Server struct {
-	cfg          *config.Config
-	db           db.Database
-	peers        *peer.Map
-	relay        *relay.Server
-	blocklist    *security.Blocklist
-	bwLimiter    *ratelimit.BandwidthLimiter
-	auditLog     *audit.Logger
+	cfg       *config.Config
+	db        db.Database
+	peers     *peer.Map
+	relay     *relay.Server
+	blocklist *security.Blocklist
+	bwLimiter *ratelimit.BandwidthLimiter
+	auditLog  *audit.Logger
+	// joinUnproved limits the audit entries of refused joins per device
+	// (auditJoinUnproved)
+	joinUnproved unprovedAudit
 	eventBus     *eventsModule.Bus
 	metrics      *metrics.Collector
 	jwtManager   *auth.JWTManager

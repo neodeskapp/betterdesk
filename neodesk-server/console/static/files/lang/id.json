@@ -1943,7 +1943,8 @@
     "action_session_signed_out": "Sesi dikeluarkan dari perangkat lain",
     "action_session_ended_by_admin": "Sesi diakhiri oleh administrator",
     "action_session_limit": "Sesi diakhiri oleh batas sesi",
-    "action_console_sessions_policy_changed": "Sesi per akun diubah"
+    "action_console_sessions_policy_changed": "Sesi per akun diubah",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

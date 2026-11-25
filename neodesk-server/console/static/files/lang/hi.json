@@ -1943,7 +1943,8 @@
     "action_session_signed_out": "सत्र को दूसरे डिवाइस से साइन आउट किया गया",
     "action_session_ended_by_admin": "सत्र व्यवस्थापक ने समाप्त किया",
     "action_session_limit": "सत्र सत्र-सीमा से समाप्त हुआ",
-    "action_console_sessions_policy_changed": "हर खाते के सत्र बदले गए"
+    "action_console_sessions_policy_changed": "हर खाते के सत्र बदले गए",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

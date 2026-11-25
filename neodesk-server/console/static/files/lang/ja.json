@@ -1937,7 +1937,8 @@
     "action_session_signed_out": "別のデバイスからセッションをサインアウト",
     "action_session_ended_by_admin": "管理者がセッションを終了",
     "action_session_limit": "セッション上限によりセッションを終了",
-    "action_console_sessions_policy_changed": "アカウントごとのセッションを変更"
+    "action_console_sessions_policy_changed": "アカウントごとのセッションを変更",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

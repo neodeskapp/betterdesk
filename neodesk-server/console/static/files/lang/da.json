@@ -1943,7 +1943,8 @@
     "action_session_signed_out": "Session logget ud fra en anden enhed",
     "action_session_ended_by_admin": "Session afsluttet af en administrator",
     "action_session_limit": "Session afsluttet af sessionsgrænsen",
-    "action_console_sessions_policy_changed": "Sessioner pr. konto ændret"
+    "action_console_sessions_policy_changed": "Sessioner pr. konto ændret",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

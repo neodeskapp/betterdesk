@@ -1937,7 +1937,8 @@
     "action_session_signed_out": "会话已从另一台设备退出登录",
     "action_session_ended_by_admin": "会话已被管理员结束",
     "action_session_limit": "会话因会话上限而结束",
-    "action_console_sessions_policy_changed": "每个账户的会话已更改"
+    "action_console_sessions_policy_changed": "每个账户的会话已更改",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

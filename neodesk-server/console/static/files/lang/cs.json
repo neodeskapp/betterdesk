@@ -1937,7 +1937,8 @@
     "action_session_signed_out": "Relace odhlášena z jiného zařízení",
     "action_session_ended_by_admin": "Relace ukončena správcem",
     "action_session_limit": "Relace ukončena limitem relací",
-    "action_console_sessions_policy_changed": "Relace na účet změněny"
+    "action_console_sessions_policy_changed": "Relace na účet změněny",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

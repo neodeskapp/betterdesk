@@ -1937,7 +1937,8 @@
     "action_session_signed_out": "Sessão terminada a partir de outro dispositivo",
     "action_session_ended_by_admin": "Sessão terminada por um administrador",
     "action_session_limit": "Sessão terminada pelo limite de sessões",
-    "action_console_sessions_policy_changed": "Sessões por conta alteradas"
+    "action_console_sessions_policy_changed": "Sessões por conta alteradas",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

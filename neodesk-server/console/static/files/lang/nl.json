@@ -1937,7 +1937,8 @@
     "action_session_signed_out": "Sessie vanaf een ander apparaat afgemeld",
     "action_session_ended_by_admin": "Sessie beëindigd door een beheerder",
     "action_session_limit": "Sessie beëindigd door de sessielimiet",
-    "action_console_sessions_policy_changed": "Sessies per account gewijzigd"
+    "action_console_sessions_policy_changed": "Sessies per account gewijzigd",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

@@ -1943,7 +1943,8 @@
     "action_session_signed_out": "Økt logget ut fra en annen enhet",
     "action_session_ended_by_admin": "Økt avsluttet av en administrator",
     "action_session_limit": "Økt avsluttet av øktgrensen",
-    "action_console_sessions_policy_changed": "Økter per konto endret"
+    "action_console_sessions_policy_changed": "Økter per konto endret",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

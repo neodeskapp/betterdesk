@@ -27,9 +27,13 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
+
+	"github.com/neodeskapp/neodesk/neodesk-server/audit"
 )
 
 const (
@@ -360,12 +364,18 @@ type joinProof struct {
 // made for.
 const joinPath = "/api/onboard/join"
 
+// Why a join under a known ID was refused, as the audit names it.
+var (
+	errNoJoinProof       = errors.New("no key proof")
+	errJoinProofReplayed = errors.New("the proof was used before")
+)
+
 // verifyJoinProof checks a join's key proof against the key the server
 // bound to the device ID: the route, the time (five minutes either side),
 // the signature and that the nonce was not used before.
 func (s *Server) verifyJoinProof(deviceID string, bound []byte, p *joinProof) error {
 	if p == nil {
-		return errors.New("no key proof")
+		return errNoJoinProof
 	}
 	timestamp, nonce := strings.TrimSpace(p.Timestamp), strings.TrimSpace(p.Nonce)
 	if !strings.HasSuffix(p.Path, joinPath) {
@@ -391,7 +401,7 @@ func (s *Server) verifyJoinProof(deviceID string, bound []byte, p *joinProof) er
 		return errors.New("the proof's signature is not the device's")
 	}
 	if enrollmentProofNonceCache.markUsed("enrollment:"+deviceID+":"+nonce, now) {
-		return errors.New("the proof was used before")
+		return errJoinProofReplayed
 	}
 	return nil
 }
@@ -418,20 +428,23 @@ func (d *onboardDevice) enrollment() *EnrollmentRequest {
 // bound key there is nothing to prove; the key it brings waits for an
 // administrator as a changed key does. A device the server does not know
 // joins without a proof, as older clients do.
-func (s *Server) admissionRefusal(dev *onboardDevice, proved bool) string {
+//
+// unproved names why a join under a known ID was refused for its proof
+// (no_proof, bad_proof, replayed, empty_key, empty_uuid), "" otherwise.
+func (s *Server) admissionRefusal(dev *onboardDevice, proved bool) (refusal, unproved string) {
 	req := dev.enrollment()
 	if banned, _ := s.db.IsPeerBanned(req.DeviceID); banned {
-		return "Device is banned"
+		return "Device is banned", ""
 	}
 	if removed, _ := s.db.IsPeerSoftDeleted(req.DeviceID); removed {
-		return "Device has been removed"
+		return "Device has been removed", ""
 	}
 	if rejected, _ := s.db.GetConfig(rejectedDevicePrefix + req.DeviceID); rejected != "" {
-		return "Device enrollment was rejected"
+		return "Device enrollment was rejected", ""
 	}
 	existing, _ := s.db.GetPeer(req.DeviceID)
 	if existing == nil {
-		return ""
+		return "", ""
 	}
 	if proved && existing.DeviceType == onboardDeviceType {
 		// A quick support session's device came in without a key the
@@ -442,36 +455,45 @@ func (s *Server) admissionRefusal(dev *onboardDevice, proved bool) string {
 			proved = false
 		}
 	}
-	if proved && (strings.TrimSpace(req.UUID) == "" || strings.TrimSpace(req.PublicKey) == "") {
-		return joinProofRefusal
+	if proved && strings.TrimSpace(req.PublicKey) == "" {
+		return joinProofRefusal, "empty_key"
+	}
+	if proved && strings.TrimSpace(req.UUID) == "" {
+		return joinProofRefusal, "empty_uuid"
 	}
 	if req.UUID != "" && existing.UUID != "" && !sameDeviceUUID(existing.UUID, req.UUID) {
-		return "Device ID is already registered to a different machine"
+		return "Device ID is already registered to a different machine", ""
 	}
 	if req.PublicKey == "" {
-		return ""
+		return "", ""
 	}
 	incoming, err := canonicalizeDevicePublicKey(req.PublicKey)
 	if err != nil {
 		if proved {
-			return joinProofRefusal
+			return joinProofRefusal, "bad_proof"
 		}
-		return ""
+		return "", ""
 	}
 	bound, err := s.loadNdMgmtPublicKey(req.DeviceID)
 	switch {
 	case err == nil && base64.StdEncoding.EncodeToString(bound) != incoming:
-		return keyChangedRefusal
+		return keyChangedRefusal, ""
 	case !proved:
-		return ""
+		return "", ""
 	case err != nil:
-		return keyChangedRefusal
+		return keyChangedRefusal, ""
 	}
 	if err := s.verifyJoinProof(req.DeviceID, bound, dev.Proof); err != nil {
 		log.Printf("[API] Join of enrolled device %s refused: %v", req.DeviceID, err)
-		return joinProofRefusal
+		switch {
+		case errors.Is(err, errNoJoinProof):
+			return joinProofRefusal, "no_proof"
+		case errors.Is(err, errJoinProofReplayed):
+			return joinProofRefusal, "replayed"
+		}
+		return joinProofRefusal, "bad_proof"
 	}
-	return ""
+	return "", ""
 }
 
 // admitOnboardDevice makes the device approved: a device the server does
@@ -483,7 +505,10 @@ func (s *Server) admissionRefusal(dev *onboardDevice, proved bool) string {
 // for the proof of its key (a join, admissionRefusal).
 func (s *Server) admitOnboardDevice(r *http.Request, dev *onboardDevice, proved bool) (created bool, err error) {
 	req := dev.enrollment()
-	if reason := s.admissionRefusal(dev, proved); reason != "" {
+	if reason, unproved := s.admissionRefusal(dev, proved); reason != "" {
+		if unproved != "" {
+			s.auditJoinUnproved(req.DeviceID, s.remoteIP(r), unproved)
+		}
 		if reason == keyChangedRefusal {
 			s.storeDeviceKeyRequest(req, s.signInIP(r))
 		}
@@ -672,4 +697,70 @@ func (s *Server) handleOnboardRemoveDevice(w http.ResponseWriter, r *http.Reques
 		s.auditLog.Log("quick_support_device_removed", s.remoteIP(r), id, map[string]string{"id": id})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"success": true, "removed": true})
+}
+
+// actionJoinUnproved is the audit entry of a join under an enrolled ID
+// that did not prove the ID's key.
+const actionJoinUnproved audit.Action = "onboard_join_unproved"
+
+// auditUnprovedEvery is how often one device's refused joins make an
+// entry at most; the next entry counts the ones in between.
+const auditUnprovedEvery = time.Minute
+
+// unprovedAuditMax is how many devices the limit of auditJoinUnproved
+// keeps; past it, entries older than the window go first.
+const unprovedAuditMax = 10000
+
+// unprovedAudit is when each device's last refused join was written to the
+// audit and how many came after it unwritten.
+type unprovedAudit struct {
+	mu      sync.Mutex
+	devices map[string]*unprovedSeen
+}
+
+type unprovedSeen struct {
+	at      time.Time
+	skipped int
+}
+
+// auditJoinUnproved writes the audit entry of a join under a known ID that
+// did not prove its key: the device, the address and the reason. A device
+// gets one entry per auditUnprovedEvery; the next says how many refusals
+// it stands for (repeats), so a loop can't flood the audit.
+func (s *Server) auditJoinUnproved(deviceID, ip, reason string) {
+	if s.auditLog == nil {
+		return
+	}
+	now := s.now()
+	a := &s.joinUnproved
+	a.mu.Lock()
+	if a.devices == nil {
+		a.devices = map[string]*unprovedSeen{}
+	}
+	seen := a.devices[deviceID]
+	if seen != nil && now.Sub(seen.at) < auditUnprovedEvery {
+		seen.skipped++
+		a.mu.Unlock()
+		return
+	}
+	repeats := 0
+	if seen != nil {
+		repeats = seen.skipped
+	}
+	if len(a.devices) >= unprovedAuditMax {
+		for id, d := range a.devices {
+			if now.Sub(d.at) >= auditUnprovedEvery {
+				delete(a.devices, id)
+			}
+		}
+	}
+	if len(a.devices) < unprovedAuditMax || seen != nil {
+		a.devices[deviceID] = &unprovedSeen{at: now}
+	}
+	a.mu.Unlock()
+	details := map[string]string{"device_id": deviceID, "ip": ip, "reason": reason}
+	if repeats > 0 {
+		details["repeats"] = strconv.Itoa(repeats)
+	}
+	s.auditLog.Log(actionJoinUnproved, ip, deviceID, details)
 }

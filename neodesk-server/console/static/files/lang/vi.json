@@ -1943,7 +1943,8 @@
     "action_session_signed_out": "Phiên bị đăng xuất từ thiết bị khác",
     "action_session_ended_by_admin": "Phiên bị quản trị viên kết thúc",
     "action_session_limit": "Phiên bị kết thúc do giới hạn phiên",
-    "action_console_sessions_policy_changed": "Đã thay đổi số phiên cho mỗi tài khoản"
+    "action_console_sessions_policy_changed": "Đã thay đổi số phiên cho mỗi tài khoản",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

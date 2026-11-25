@@ -1943,7 +1943,8 @@
     "action_session_signed_out": "Oturum başka bir cihazdan kapatıldı",
     "action_session_ended_by_admin": "Oturum bir yönetici tarafından sonlandırıldı",
     "action_session_limit": "Oturum, oturum sınırı nedeniyle sonlandırıldı",
-    "action_console_sessions_policy_changed": "Hesap başına oturumlar değiştirildi"
+    "action_console_sessions_policy_changed": "Hesap başına oturumlar değiştirildi",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

@@ -1943,7 +1943,8 @@
     "action_session_signed_out": "Sesiune deconectată de pe alt dispozitiv",
     "action_session_ended_by_admin": "Sesiune încheiată de un administrator",
     "action_session_limit": "Sesiune încheiată de limita de sesiuni",
-    "action_console_sessions_policy_changed": "Sesiuni per cont modificate"
+    "action_console_sessions_policy_changed": "Sesiuni per cont modificate",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",

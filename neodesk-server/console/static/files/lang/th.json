@@ -1943,7 +1943,8 @@
     "action_session_signed_out": "เซสชันถูกให้ออกจากระบบจากอุปกรณ์อื่น",
     "action_session_ended_by_admin": "ผู้ดูแลระบบสิ้นสุดเซสชัน",
     "action_session_limit": "เซสชันสิ้นสุดเพราะขีดจำกัดเซสชัน",
-    "action_console_sessions_policy_changed": "เปลี่ยนจำนวนเซสชันต่อบัญชี"
+    "action_console_sessions_policy_changed": "เปลี่ยนจำนวนเซสชันต่อบัญชี",
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
