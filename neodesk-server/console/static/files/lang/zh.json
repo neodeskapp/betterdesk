@@ -8216,7 +8216,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} 邀请您加入 {server}",
+      "welcome_lead": "在您的电脑上设置 NeoDesk。只需几分钟。",
+      "welcome_button": "设置 NeoDesk",
+      "welcome_step_1": "下载并打开 NeoDesk。",
+      "welcome_step_2": "点击“安装”。",
+      "welcome_step_3": "完成：从现在起，{company} 的支持人员可以为您提供帮助，有人连接时您也能看到。",
+      "welcome_link": "如果按钮无效，请在电脑上打开此链接："
     },
     "invite": {
       "button": "Add a computer",
@@ -8351,7 +8358,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} 邀请您加入 {server}",
+      "welcome_step_1": "下载并打开 NeoDesk。",
+      "welcome_step_2": "点击“安装”。",
+      "welcome_step_3": "完成：从现在起，{company} 的支持人员可以为您提供帮助，有人连接时您也能看到。",
+      "mac_steps_title": "在 Mac 上"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8369,6 +8381,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "仍在等待电脑。链接有效期至 {date}。",
+      "waiting_named": "仍在等待 {name}。链接有效期至 {date}。",
+      "joined_title": "{name} 已加入",
+      "joined_lead": "四个简短步骤。点击“跳过”会保持一切不变。",
+      "step_of": "第 {step} 步，共 {count} 步",
+      "step_name": "名称",
+      "step_folder": "文件夹",
+      "step_reach": "连接方式",
+      "step_test": "测试会话",
+      "name_hint": "显示在“设备”和查看器中。",
+      "folder_hint": "谁能看到并连接这台电脑，取决于它所在的文件夹。",
+      "no_permission": "您的角色无法更改此项。它将保持不变。",
+      "save_failed": "无法保存。请重试。",
+      "reach_lead": "您可以这样连接到 {name}：",
+      "reach_password": "使用密码：电脑前的人在 NeoDesk 的“设置”、“安全”中设置一个永久密码。连接时输入该密码。",
+      "reach_accept": "无需密码：电脑前的人会看到谁想连接，然后点击“接受”。",
+      "test_lead": "打开一个会话，检查一切是否正常。电脑上的 NeoDesk 会请那里的人接受。",
+      "test_start": "开始测试会话",
+      "test_offline": "{name} 处于离线状态。请将其开机，并等待它在这里显示为在线。",
+      "next": "下一步",
+      "skip": "跳过",
+      "done": "完成",
+      "finished": "{name} 已就绪。",
+      "finished_folder": "您可以在“设备”中的 {folder} 里找到它。",
+      "finished_plain": "您可以在“设备”中找到它。",
+      "next_computer": "设置下一台电脑",
+      "key_changed": "这台电脑以前用另一个密钥在这里出现过。",
+      "key_changed_hint": "如果它已重新安装或重置，请批准新密钥。然后在电脑上再次打开邀请。",
+      "approve_key": "批准新密钥",
+      "key_approved": "已批准新密钥。请在电脑上再次打开邀请。",
+      "refused": "ID 为 {id} 的电脑尝试使用此邀请，但被拒绝。请检查“设备”：它可能已被封禁或删除。"
     }
   },
   "ui_form": {

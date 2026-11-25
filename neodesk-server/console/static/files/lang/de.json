@@ -8216,7 +8216,14 @@
       "support_steps": "Öffnen Sie diesen Link auf dem Computer, bei dem Sie Hilfe brauchen. Laden Sie die kleine App herunter, öffnen Sie sie und klicken Sie auf Erlauben. Es wird nichts installiert.",
       "support_button": "Hilfesitzung starten",
       "support_expires": "Der Link gilt einmal, bis {expires}.",
-      "footer": "Gesendet von {host} für {server}. Wenn Sie diese E-Mail nicht erwartet haben, können Sie sie ignorieren."
+      "footer": "Gesendet von {host} für {server}. Wenn Sie diese E-Mail nicht erwartet haben, können Sie sie ignorieren.",
+      "welcome_subject": "{sender} hat Sie zu {server} eingeladen",
+      "welcome_lead": "Richten Sie NeoDesk auf Ihrem Computer ein. Das dauert nur ein paar Minuten.",
+      "welcome_button": "NeoDesk einrichten",
+      "welcome_step_1": "NeoDesk herunterladen und öffnen.",
+      "welcome_step_2": "Auf Installieren klicken.",
+      "welcome_step_3": "Fertig: Der Support von {company} kann Ihnen ab jetzt helfen, und Sie sehen, wenn sich jemand verbindet.",
+      "welcome_link": "Falls die Schaltfläche nicht funktioniert, öffnen Sie diesen Link auf dem Computer:"
     },
     "invite": {
       "button": "Computer hinzufügen",
@@ -8351,7 +8358,12 @@
       "support_steps_macos_1": "Öffnen Sie die heruntergeladene Datei. Sie läuft aus Ihrem Download-Ordner. Wenn Ihr Mac meldet, dass er die App nicht prüfen kann: Systemeinstellungen, Datenschutz & Sicherheit, nach unten scrollen und Dennoch öffnen klicken.",
       "support_steps_macos_2": "Erlauben Sie Bildschirmaufnahme und Bedienungshilfen, wenn Ihr Mac fragt.",
       "support_steps_macos_3": "Prüfen Sie, dass {supporter} angezeigt wird, und klicken Sie auf Erlauben.",
-      "support_steps_macos_4": "Wenn Sie fertig sind, klicken Sie oben auf Ihrem Bildschirm auf Beenden."
+      "support_steps_macos_4": "Wenn Sie fertig sind, klicken Sie oben auf Ihrem Bildschirm auf Beenden.",
+      "welcome_title": "{sender} hat Sie zu {server} eingeladen",
+      "welcome_step_1": "NeoDesk herunterladen und öffnen.",
+      "welcome_step_2": "Auf Installieren klicken.",
+      "welcome_step_3": "Fertig: Der Support von {company} kann Ihnen ab jetzt helfen, und Sie sehen, wenn sich jemand verbindet.",
+      "mac_steps_title": "Auf einem Mac"
     },
     "errors": {
       "invalid_body": "Die Anfrage konnte nicht gelesen werden.",
@@ -8369,6 +8381,39 @@
       "server_error": "Auf dem Server ist etwas schiefgegangen. Versuchen Sie es noch einmal.",
       "rate_limited": "Zu viele Versuche. Warten Sie eine Minute und versuchen Sie es noch einmal.",
       "invalid_or_expired": "Dieser Link ist abgelaufen oder wurde schon benutzt."
+    },
+    "guide": {
+      "waiting": "Wartet noch auf den Computer. Der Link funktioniert bis {date}.",
+      "waiting_named": "Wartet noch auf {name}. Der Link funktioniert bis {date}.",
+      "joined_title": "{name} ist beigetreten",
+      "joined_lead": "Vier kurze Schritte. Überspringen lässt alles, wie es jetzt ist.",
+      "step_of": "Schritt {step} von {count}",
+      "step_name": "Name",
+      "step_folder": "Ordner",
+      "step_reach": "So erreichen Sie ihn",
+      "step_test": "Testsitzung",
+      "name_hint": "Wird in Geräte und im Viewer angezeigt.",
+      "folder_hint": "Wer den Computer sehen und erreichen kann, richtet sich nach seinem Ordner.",
+      "no_permission": "Ihre Rolle kann das nicht ändern. Es bleibt, wie es ist.",
+      "save_failed": "Speichern hat nicht geklappt. Versuchen Sie es noch einmal.",
+      "reach_lead": "So verbinden Sie sich mit {name}:",
+      "reach_password": "Mit seinem Passwort: Jemand am Computer legt in NeoDesk unter Einstellungen, Sicherheit ein dauerhaftes Passwort fest. Sie geben es beim Verbinden ein.",
+      "reach_accept": "Ohne Passwort: Die Person am Computer sieht, wer sich verbinden möchte, und klickt auf Annehmen.",
+      "test_lead": "Öffnen Sie eine Sitzung, um zu prüfen, ob alles funktioniert. NeoDesk auf dem Computer bittet die Person dort, sie anzunehmen.",
+      "test_start": "Testsitzung starten",
+      "test_offline": "{name} ist offline. Schalten Sie ihn ein und warten Sie, bis er hier als online erscheint.",
+      "next": "Weiter",
+      "skip": "Überspringen",
+      "done": "Fertig",
+      "finished": "{name} ist bereit.",
+      "finished_folder": "Sie finden ihn in Geräte, im Ordner {folder}.",
+      "finished_plain": "Sie finden ihn in Geräte.",
+      "next_computer": "Nächsten Computer einrichten",
+      "key_changed": "Dieser Computer war schon einmal hier, mit einem anderen Schlüssel.",
+      "key_changed_hint": "Wenn er neu installiert oder zurückgesetzt wurde, genehmigen Sie den neuen Schlüssel. Öffnen Sie dann die Einladung auf dem Computer noch einmal.",
+      "approve_key": "Neuen Schlüssel genehmigen",
+      "key_approved": "Neuer Schlüssel genehmigt. Öffnen Sie die Einladung auf dem Computer noch einmal.",
+      "refused": "Ein Computer mit der ID {id} hat diese Einladung versucht und wurde abgewiesen. Sehen Sie in Geräte nach: Er ist vielleicht gesperrt oder entfernt."
     }
   },
   "ui_form": {

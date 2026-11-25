@@ -12,6 +12,7 @@ import (
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/devicegroups"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
@@ -407,11 +408,13 @@ func (h *handlers) sendCodeMail(r *http.Request, code onboard.Code, text, to str
 	if t, err := time.Parse(time.RFC3339, code.ExpiresAt); err == nil {
 		expires = t.UTC().Format("2006-01-02 15:04") + " UTC"
 	}
+	accent, logo := h.mailBranding(c)
 	m := onboard.BuildMail(func(key string, vars map[string]any) string {
 		return kit.T(r, key, kit.Vars(flatten(vars)...))
 	}, onboard.MailFacts{
 		Kind: code.Kind, Link: c.Link(code.Kind, text), Code: onboard.Display(text),
 		Server: h.serverName(), Sender: h.personName(r.Context(), kit.UserID(r), code.CreatedBy), Host: c.Host, Expires: expires,
+		Company: h.serverName(), Accent: accent, Logo: logo,
 	})
 	sent, err := h.d.Mail.SendEmail(r.Context(), consolemail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML})
 	if err != nil || !sent {
@@ -453,4 +456,36 @@ func (h *handlers) approveKey(w http.ResponseWriter, r *http.Request) {
 	}
 	h.audit(r, "device_key_approved", "Approved the new key of device "+id)
 	kit.JSON(w, r, http.StatusOK, map[string]bool{"success": true})
+}
+
+// mailBranding is the accent colour and logo address of the console's
+// branding for a mail: the logo only when it is an uploaded or linked
+// image, made absolute with the console's address (BuildMail keeps it
+// only as PNG, JPEG or GIF over HTTPS).
+func (h *handlers) mailBranding(c onboard.Console) (accent, logo string) {
+	if h.d.Branding == nil {
+		return "", ""
+	}
+	appearance, err := h.d.Branding.GetPublicAppearance()
+	if err != nil || appearance == nil {
+		return "", ""
+	}
+	text := func(section, key string) string {
+		obj, _ := appearance.Get(section)
+		o, ok := obj.(*branding.Object)
+		if !ok {
+			return ""
+		}
+		v, _ := o.Get(key)
+		s, _ := v.(string)
+		return strings.TrimSpace(s)
+	}
+	accent = text("palette", "primary")
+	if text("identity", "logoType") == "image" {
+		logo = text("identity", "logoUrl")
+		if strings.HasPrefix(logo, "/") && !strings.HasPrefix(logo, "//") {
+			logo = c.Base() + logo
+		}
+	}
+	return accent, logo
 }

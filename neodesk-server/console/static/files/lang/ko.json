@@ -8216,7 +8216,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender}님이 {server}에 초대했습니다",
+      "welcome_lead": "컴퓨터에 NeoDesk를 설정하세요. 몇 분이면 됩니다.",
+      "welcome_button": "NeoDesk 설정",
+      "welcome_step_1": "NeoDesk를 다운로드하고 여세요.",
+      "welcome_step_2": "설치를 클릭하세요.",
+      "welcome_step_3": "완료: 이제부터 {company} 지원팀이 도와드릴 수 있으며, 누군가 연결하면 알 수 있습니다.",
+      "welcome_link": "버튼이 작동하지 않으면 컴퓨터에서 이 링크를 여세요:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8351,7 +8358,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender}님이 {server}에 초대했습니다",
+      "welcome_step_1": "NeoDesk를 다운로드하고 여세요.",
+      "welcome_step_2": "설치를 클릭하세요.",
+      "welcome_step_3": "완료: 이제부터 {company} 지원팀이 도와드릴 수 있으며, 누군가 연결하면 알 수 있습니다.",
+      "mac_steps_title": "Mac에서"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8369,6 +8381,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "아직 컴퓨터를 기다리는 중입니다. 링크는 {date}까지 유효합니다.",
+      "waiting_named": "아직 {name}을(를) 기다리는 중입니다. 링크는 {date}까지 유효합니다.",
+      "joined_title": "{name}이(가) 가입했습니다",
+      "joined_lead": "짧은 4단계입니다. 건너뛰기를 누르면 모든 것이 지금 그대로 유지됩니다.",
+      "step_of": "{count}단계 중 {step}단계",
+      "step_name": "이름",
+      "step_folder": "폴더",
+      "step_reach": "연결 방법",
+      "step_test": "테스트 세션",
+      "name_hint": "장치와 뷰어에 표시됩니다.",
+      "folder_hint": "누가 이 컴퓨터를 보고 연결할 수 있는지는 폴더에 따라 정해집니다.",
+      "no_permission": "현재 역할로는 이것을 변경할 수 없습니다. 지금 그대로 유지됩니다.",
+      "save_failed": "저장하지 못했습니다. 다시 시도하세요.",
+      "reach_lead": "{name}에 연결하는 방법:",
+      "reach_password": "비밀번호 사용: 컴퓨터 앞에 있는 사람이 NeoDesk의 설정, 보안에서 영구 비밀번호를 설정합니다. 연결할 때 그 비밀번호를 입력합니다.",
+      "reach_accept": "비밀번호 없이: 컴퓨터 앞에 있는 사람이 누가 연결하려는지 보고 수락을 클릭합니다.",
+      "test_lead": "세션을 열어 모든 것이 작동하는지 확인하세요. 컴퓨터의 NeoDesk가 그곳에 있는 사람에게 수락을 요청합니다.",
+      "test_start": "테스트 세션 시작",
+      "test_offline": "{name}이(가) 오프라인입니다. 컴퓨터를 켜고 여기에 온라인으로 표시될 때까지 기다리세요.",
+      "next": "다음",
+      "skip": "건너뛰기",
+      "done": "완료",
+      "finished": "{name} 준비가 끝났습니다.",
+      "finished_folder": "장치의 {folder}에서 찾을 수 있습니다.",
+      "finished_plain": "장치에서 찾을 수 있습니다.",
+      "next_computer": "다음 컴퓨터 설정",
+      "key_changed": "이 컴퓨터는 이전에 다른 키로 등록된 적이 있습니다.",
+      "key_changed_hint": "다시 설치했거나 초기화했다면 새 키를 승인하세요. 그런 다음 컴퓨터에서 초대를 다시 여세요.",
+      "approve_key": "새 키 승인",
+      "key_approved": "새 키를 승인했습니다. 컴퓨터에서 초대를 다시 여세요.",
+      "refused": "ID가 {id}인 컴퓨터가 이 초대를 사용하려다 거부되었습니다. 장치를 확인하세요: 차단되었거나 제거되었을 수 있습니다."
     }
   },
   "ui_form": {

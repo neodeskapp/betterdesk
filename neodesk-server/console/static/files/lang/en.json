@@ -8216,7 +8216,14 @@
             "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
             "support_button": "Start the support session",
             "support_expires": "The link works once, until {expires}.",
-            "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+            "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+            "welcome_subject": "{sender} invited you to {server}",
+            "welcome_lead": "Set up NeoDesk on your computer. It takes a few minutes.",
+            "welcome_button": "Set up NeoDesk",
+            "welcome_step_1": "Download and open NeoDesk.",
+            "welcome_step_2": "Click Install.",
+            "welcome_step_3": "Done: {company}'s support can help you from now on, and you see when someone connects.",
+            "welcome_link": "If the button doesn't work, open this link on the computer:"
         },
         "invite": {
             "button": "Add a computer",
@@ -8351,7 +8358,12 @@
             "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
             "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
             "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-            "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+            "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+            "welcome_title": "{sender} invited you to {server}",
+            "welcome_step_1": "Download and open NeoDesk.",
+            "welcome_step_2": "Click Install.",
+            "welcome_step_3": "Done: {company}'s support can help you from now on, and you see when someone connects.",
+            "mac_steps_title": "On a Mac"
         },
         "errors": {
             "invalid_body": "The request could not be read.",
@@ -8369,6 +8381,39 @@
             "server_error": "Something went wrong on the server. Try again.",
             "rate_limited": "Too many tries. Wait a minute and try again.",
             "invalid_or_expired": "This link has expired or was already used."
+        },
+        "guide": {
+            "waiting": "Still waiting for the computer. The link works until {date}.",
+            "waiting_named": "Still waiting for {name}. The link works until {date}.",
+            "joined_title": "{name} joined",
+            "joined_lead": "Four short steps. Skip keeps everything as it is now.",
+            "step_of": "Step {step} of {count}",
+            "step_name": "Name",
+            "step_folder": "Folder",
+            "step_reach": "How you reach it",
+            "step_test": "Test session",
+            "name_hint": "Shown in Devices and in the viewer.",
+            "folder_hint": "Who can see and reach the computer follows its folder.",
+            "no_permission": "Your role can't change this. It stays as it is.",
+            "save_failed": "Couldn't save. Try again.",
+            "reach_lead": "This is how you connect to {name}:",
+            "reach_password": "With its password: someone at the computer sets a permanent password in NeoDesk, under Settings, Security. You type it when you connect.",
+            "reach_accept": "Without a password: the person at the computer sees who wants to connect and clicks Accept.",
+            "test_lead": "Open a session to check that everything works. NeoDesk on the computer asks the person there to accept.",
+            "test_start": "Start test session",
+            "test_offline": "{name} is offline. Turn it on and wait until it shows as online here.",
+            "next": "Next",
+            "skip": "Skip",
+            "done": "Done",
+            "finished": "{name} is ready.",
+            "finished_folder": "You find it in Devices, in {folder}.",
+            "finished_plain": "You find it in Devices.",
+            "next_computer": "Set up the next computer",
+            "key_changed": "This computer was here before with another key.",
+            "key_changed_hint": "If it was reinstalled or reset, approve the new key. Then open the invite on the computer again.",
+            "approve_key": "Approve new key",
+            "key_approved": "New key approved. Open the invite on the computer again.",
+            "refused": "A computer with the ID {id} tried this invite and was turned away. Check Devices: it may be banned or removed."
         }
     },
     "ui_form": {

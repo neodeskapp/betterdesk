@@ -8216,7 +8216,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} heeft u uitgenodigd voor {server}",
+      "welcome_lead": "Stel NeoDesk in op uw computer. Het duurt een paar minuten.",
+      "welcome_button": "NeoDesk instellen",
+      "welcome_step_1": "Download en open NeoDesk.",
+      "welcome_step_2": "Klik op Installeren.",
+      "welcome_step_3": "Klaar: de support van {company} kan u vanaf nu helpen, en u ziet wanneer iemand verbinding maakt.",
+      "welcome_link": "Als de knop niet werkt, open dan deze link op de computer:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8351,7 +8358,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} heeft u uitgenodigd voor {server}",
+      "welcome_step_1": "Download en open NeoDesk.",
+      "welcome_step_2": "Klik op Installeren.",
+      "welcome_step_3": "Klaar: de support van {company} kan u vanaf nu helpen, en u ziet wanneer iemand verbinding maakt.",
+      "mac_steps_title": "Op een Mac"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8369,6 +8381,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "Wacht nog op de computer. De link werkt tot {date}.",
+      "waiting_named": "Wacht nog op {name}. De link werkt tot {date}.",
+      "joined_title": "{name} is lid geworden",
+      "joined_lead": "Vier korte stappen. Overslaan laat alles zoals het nu is.",
+      "step_of": "Stap {step} van {count}",
+      "step_name": "Naam",
+      "step_folder": "Map",
+      "step_reach": "Hoe u hem bereikt",
+      "step_test": "Testsessie",
+      "name_hint": "Wordt getoond in Apparaten en in de viewer.",
+      "folder_hint": "Wie de computer kan zien en bereiken, hangt af van zijn map.",
+      "no_permission": "Uw rol kan dit niet wijzigen. Het blijft zoals het is.",
+      "save_failed": "Opslaan is mislukt. Probeer het opnieuw.",
+      "reach_lead": "Zo maakt u verbinding met {name}:",
+      "reach_password": "Met het wachtwoord: iemand bij de computer stelt in NeoDesk een vast wachtwoord in, onder Instellingen, Beveiliging. U typt het als u verbinding maakt.",
+      "reach_accept": "Zonder wachtwoord: de persoon bij de computer ziet wie verbinding wil maken en klikt op Accepteren.",
+      "test_lead": "Open een sessie om te controleren of alles werkt. NeoDesk op de computer vraagt de persoon daar om te accepteren.",
+      "test_start": "Testsessie starten",
+      "test_offline": "{name} is offline. Zet hem aan en wacht tot hij hier als online verschijnt.",
+      "next": "Volgende",
+      "skip": "Overslaan",
+      "done": "Gereed",
+      "finished": "{name} is klaar.",
+      "finished_folder": "U vindt hem in Apparaten, in {folder}.",
+      "finished_plain": "U vindt hem in Apparaten.",
+      "next_computer": "Volgende computer instellen",
+      "key_changed": "Deze computer was hier al eerder, met een andere sleutel.",
+      "key_changed_hint": "Als hij opnieuw is geïnstalleerd of teruggezet, keur dan de nieuwe sleutel goed. Open daarna de uitnodiging opnieuw op de computer.",
+      "approve_key": "Nieuwe sleutel goedkeuren",
+      "key_approved": "Nieuwe sleutel goedgekeurd. Open de uitnodiging opnieuw op de computer.",
+      "refused": "Een computer met de ID {id} probeerde deze uitnodiging en werd geweigerd. Kijk in Apparaten: misschien is hij verbannen of verwijderd."
     }
   },
   "ui_form": {

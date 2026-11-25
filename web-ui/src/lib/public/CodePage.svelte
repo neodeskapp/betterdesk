@@ -2,7 +2,9 @@
   The page of an invite (/join/<code>) or a quick support link (/s/<code>),
   as launch/design/DESIGN.md draws them: who sent it, one big button for
   this computer (lib/public/onboard.ts) with the file and its publisher,
-  the steps for the system, the short code for a NeoDesk that is
+  the steps for the system (for an invite the three steps of the welcome
+  mail first, then what Windows or a Mac asks), the short code for a
+  NeoDesk that is
   already installed, a warning when the console is not on HTTPS, the other
   systems' downloads folded away, and until when the link works. A phone
   gets the link to copy or mail to oneself. A code that cannot be used
@@ -35,7 +37,8 @@
 		mailMyself,
 		mainAction,
 		otherDownloads,
-		stepKeys
+		stepKeys,
+		WELCOME_STEPS
 	} from './onboard.ts';
 
 	interface Props {
@@ -73,17 +76,34 @@
 	const others = $derived(data ? otherDownloads(data, main) : []);
 	const insecure = $derived(!!data && isInsecure(data, location.protocol));
 	const server = $derived(data ? data.company || data.server.name : '');
-	const vars = $derived({ server, publisher: data?.publisher ?? '', supporter: data?.supporter || server });
-	const steps = $derived(
-		data && main.kind === 'download'
-			? stepKeys(data.kind, mine?.platform ?? null, main.download.format).map((k) => t(k, vars))
-			: []
+	const vars = $derived({
+		server,
+		company: server,
+		sender: data?.supporter ?? '',
+		publisher: data?.publisher ?? '',
+		supporter: data?.supporter || server
+	});
+	/** An invite on a computer: the welcome mail's three steps, then what the system asks */
+	const welcome = $derived(!!data && data.kind === 'join' && !!mine && mine.platform !== 'linux');
+	const steps = $derived.by(() => {
+		if (!data || main.kind !== 'download') return [];
+		// On Windows the three steps say it all but the permission prompt
+		if (welcome && mine?.platform === 'windows') return [];
+		return stepKeys(data.kind, mine?.platform ?? null, main.download.format).map((k) => t(k, vars));
+	});
+	const windowsPrompt = $derived(
+		welcome && main.kind === 'download' && mine?.platform === 'windows'
+			? t(stepKeys('join', 'windows', main.download.format)[2] ?? '', vars)
+			: ''
 	);
 	const archWords = $derived({ apple: t('onboard.public.mac_apple'), intel: t('onboard.public.mac_intel') });
 	const heading = $derived.by(() => {
 		if (!data) return '';
 		if (!mine) return t(`onboard.public.phone_title_${data.kind}`);
-		if (data.kind === 'join') return t('onboard.public.join_title');
+		if (data.kind === 'join')
+			return data.supporter
+				? t('onboard.public.welcome_title', { sender: data.supporter, server })
+				: t('onboard.public.join_title');
 		return data.supporter
 			? t('onboard.public.support_title', { supporter: data.supporter })
 			: t('onboard.public.support_title_plain', { company: server });
@@ -143,6 +163,11 @@
 			{/if}
 			<h1 id="code-title">{heading}</h1>
 			<p class="lead">{lead}</p>
+			{#if welcome}
+				<ol class="welcome-steps">
+					{#each WELCOME_STEPS as key (key)}<li>{t(key, vars)}</li>{/each}
+				</ol>
+			{/if}
 
 			{#if !mine}
 				<div class="phone">
@@ -162,6 +187,10 @@
 					>
 					<p class="file">{fileLine}</p>
 				</div>
+				{#if windowsPrompt}<p class="prompt-note">{windowsPrompt}</p>{/if}
+				{#if steps.length && welcome}
+					<h2 class="system-steps">{t('onboard.public.mac_steps_title')}</h2>
+				{/if}
 				{#if steps.length}<Steps items={steps} />{/if}
 				{#if mine.platform === 'macos' && data.kind === 'join' && data.deep_link}
 					<div class="open-app">
@@ -216,9 +245,24 @@
 	.code-page h1 {
 		margin: 0;
 	}
+	.welcome-steps {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		margin: 0;
+		padding-inline-start: 1.5rem;
+	}
+	.welcome-steps li {
+		padding-inline-start: var(--space-1);
+	}
+	.system-steps {
+		margin: 0;
+		font-size: var(--text-base, 1rem);
+	}
 	.lead,
 	.file,
 	.sender,
+	.prompt-note,
 	.footer {
 		margin: 0;
 		color: var(--text-muted);

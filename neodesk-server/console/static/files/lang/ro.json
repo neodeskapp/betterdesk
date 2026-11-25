@@ -8222,7 +8222,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} v-a invitat pe {server}",
+      "welcome_lead": "Configurați NeoDesk pe computerul dvs. Durează câteva minute.",
+      "welcome_button": "Configurați NeoDesk",
+      "welcome_step_1": "Descărcați și deschideți NeoDesk.",
+      "welcome_step_2": "Faceți clic pe Instalare.",
+      "welcome_step_3": "Gata: asistența {company} vă poate ajuta de acum înainte, iar dvs. vedeți când se conectează cineva.",
+      "welcome_link": "Dacă butonul nu funcționează, deschideți acest link pe computer:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8357,7 +8364,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} v-a invitat pe {server}",
+      "welcome_step_1": "Descărcați și deschideți NeoDesk.",
+      "welcome_step_2": "Faceți clic pe Instalare.",
+      "welcome_step_3": "Gata: asistența {company} vă poate ajuta de acum înainte, iar dvs. vedeți când se conectează cineva.",
+      "mac_steps_title": "Pe un Mac"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8375,6 +8387,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "Se așteaptă în continuare computerul. Linkul funcționează până la {date}.",
+      "waiting_named": "Se așteaptă în continuare {name}. Linkul funcționează până la {date}.",
+      "joined_title": "{name} s-a alăturat",
+      "joined_lead": "Patru pași scurți. Omite lasă totul așa cum este acum.",
+      "step_of": "Pasul {step} din {count}",
+      "step_name": "Nume",
+      "step_folder": "Folder",
+      "step_reach": "Cum vă conectați la el",
+      "step_test": "Sesiune de test",
+      "name_hint": "Afișat în Dispozitive și în vizualizator.",
+      "folder_hint": "Cine poate vedea computerul și se poate conecta la el depinde de folderul său.",
+      "no_permission": "Rolul dvs. nu poate modifica acest lucru. Rămâne așa cum este.",
+      "save_failed": "Nu s-a putut salva. Încercați din nou.",
+      "reach_lead": "Așa vă conectați la {name}:",
+      "reach_password": "Cu parola sa: cineva de la computer setează o parolă permanentă în NeoDesk, la Setări, Securitate. O introduceți când vă conectați.",
+      "reach_accept": "Fără parolă: persoana de la computer vede cine vrea să se conecteze și face clic pe Acceptare.",
+      "test_lead": "Deschideți o sesiune pentru a verifica dacă totul funcționează. NeoDesk de pe computer îi cere persoanei de acolo să accepte.",
+      "test_start": "Porniți sesiunea de test",
+      "test_offline": "{name} este offline. Porniți-l și așteptați până apare aici ca online.",
+      "next": "Înainte",
+      "skip": "Omite",
+      "done": "Gata",
+      "finished": "{name} este gata.",
+      "finished_folder": "Îl găsiți în Dispozitive, în {folder}.",
+      "finished_plain": "Îl găsiți în Dispozitive.",
+      "next_computer": "Configurați următorul computer",
+      "key_changed": "Acest computer a mai fost aici cu o altă cheie.",
+      "key_changed_hint": "Dacă a fost reinstalat sau resetat, aprobați cheia nouă. Apoi deschideți din nou invitația pe computer.",
+      "approve_key": "Aprobați cheia nouă",
+      "key_approved": "Cheia nouă a fost aprobată. Deschideți din nou invitația pe computer.",
+      "refused": "Un computer cu ID-ul {id} a încercat această invitație și a fost respins. Verificați Dispozitive: poate fi blocat sau eliminat."
     }
   },
   "ui_form": {

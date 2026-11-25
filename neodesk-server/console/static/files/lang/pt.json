@@ -8216,7 +8216,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} enviou um convite para {server}",
+      "welcome_lead": "Configure o NeoDesk no seu computador. Leva poucos minutos.",
+      "welcome_button": "Configurar o NeoDesk",
+      "welcome_step_1": "Faça o download e abra o NeoDesk.",
+      "welcome_step_2": "Clique em Instalar.",
+      "welcome_step_3": "Pronto: a partir de agora, o suporte de {company} pode ajudar, e verá quando alguém se conectar.",
+      "welcome_link": "Se o botão não funcionar, abra este link no computador:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8351,7 +8358,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} enviou um convite para {server}",
+      "welcome_step_1": "Faça o download e abra o NeoDesk.",
+      "welcome_step_2": "Clique em Instalar.",
+      "welcome_step_3": "Pronto: a partir de agora, o suporte de {company} pode ajudar, e verá quando alguém se conectar.",
+      "mac_steps_title": "Em um Mac"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8369,6 +8381,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "Aguardando o computador. O link funciona até {date}.",
+      "waiting_named": "Aguardando {name}. O link funciona até {date}.",
+      "joined_title": "{name} entrou",
+      "joined_lead": "Quatro passos curtos. Ignorar mantém tudo como está.",
+      "step_of": "Passo {step} de {count}",
+      "step_name": "Nome",
+      "step_folder": "Pasta",
+      "step_reach": "Como se conecta",
+      "step_test": "Sessão de teste",
+      "name_hint": "Aparece em Dispositivos e no visualizador.",
+      "folder_hint": "Quem pode ver e acessar o computador depende da pasta dele.",
+      "no_permission": "A sua função não permite alterar isto. Fica como está.",
+      "save_failed": "Não foi possível guardar. Tente novamente.",
+      "reach_lead": "É assim que se conecta a {name}:",
+      "reach_password": "Com a senha: alguém no computador define uma senha permanente no NeoDesk, em Configurações, Segurança. Digite-a ao se conectar.",
+      "reach_accept": "Sem senha: a pessoa no computador vê quem quer se conectar e clica em Aceitar.",
+      "test_lead": "Abra uma sessão para verificar se tudo funciona. O NeoDesk no computador pede à pessoa que lá está que aceite.",
+      "test_start": "Iniciar sessão de teste",
+      "test_offline": "{name} está offline. Ligue-o e aguarde até aparecer aqui como online.",
+      "next": "Avançar",
+      "skip": "Ignorar",
+      "done": "Concluído",
+      "finished": "{name} está pronto.",
+      "finished_folder": "Está em Dispositivos, na pasta {folder}.",
+      "finished_plain": "Está em Dispositivos.",
+      "next_computer": "Configurar o próximo computador",
+      "key_changed": "Este computador já esteve aqui com outra chave.",
+      "key_changed_hint": "Se foi reinstalado ou redefinido, aprove a nova chave. Depois abra o convite no computador outra vez.",
+      "approve_key": "Aprovar nova chave",
+      "key_approved": "Nova chave aprovada. Abra o convite no computador outra vez.",
+      "refused": "Um computador com o ID {id} tentou usar este convite e foi recusado. Verifique Dispositivos: pode ter sido banido ou removido."
     }
   },
   "ui_form": {

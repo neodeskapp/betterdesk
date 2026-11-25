@@ -8216,7 +8216,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} zaprasza Cię do serwera {server}",
+      "welcome_lead": "Skonfiguruj NeoDesk na swoim komputerze. To zajmie kilka minut.",
+      "welcome_button": "Skonfiguruj NeoDesk",
+      "welcome_step_1": "Pobierz i otwórz NeoDesk.",
+      "welcome_step_2": "Kliknij Zainstaluj.",
+      "welcome_step_3": "Gotowe: od teraz wsparcie firmy {company} może Ci pomagać, a Ty widzisz, gdy ktoś się łączy.",
+      "welcome_link": "Jeśli przycisk nie działa, otwórz ten link na komputerze:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8351,7 +8358,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} zaprasza Cię do serwera {server}",
+      "welcome_step_1": "Pobierz i otwórz NeoDesk.",
+      "welcome_step_2": "Kliknij Zainstaluj.",
+      "welcome_step_3": "Gotowe: od teraz wsparcie firmy {company} może Ci pomagać, a Ty widzisz, gdy ktoś się łączy.",
+      "mac_steps_title": "Na Macu"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8369,6 +8381,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "Nadal czekamy na komputer. Link działa do {date}.",
+      "waiting_named": "Nadal czekamy na komputer {name}. Link działa do {date}.",
+      "joined_title": "Komputer {name} dołączył",
+      "joined_lead": "Cztery krótkie kroki. Pomiń zostawia wszystko tak, jak jest teraz.",
+      "step_of": "Krok {step} z {count}",
+      "step_name": "Nazwa",
+      "step_folder": "Folder",
+      "step_reach": "Jak się z nim łączysz",
+      "step_test": "Sesja testowa",
+      "name_hint": "Widoczna w Urządzenia i w podglądzie.",
+      "folder_hint": "Kto może widzieć komputer i łączyć się z nim, zależy od jego folderu.",
+      "no_permission": "Twoja rola nie może tego zmienić. Zostaje tak, jak jest.",
+      "save_failed": "Nie udało się zapisać. Spróbuj ponownie.",
+      "reach_lead": "Tak łączysz się z komputerem {name}:",
+      "reach_password": "Za pomocą hasła: ktoś przy komputerze ustawia stałe hasło w NeoDesk, w Ustawienia, Bezpieczeństwo. Wpisujesz je przy łączeniu.",
+      "reach_accept": "Bez hasła: osoba przy komputerze widzi, kto chce się połączyć, i klika Akceptuj.",
+      "test_lead": "Otwórz sesję, aby sprawdzić, czy wszystko działa. NeoDesk na komputerze poprosi osobę przy nim o akceptację.",
+      "test_start": "Uruchom sesję testową",
+      "test_offline": "Komputer {name} jest offline. Włącz go i poczekaj, aż pojawi się tutaj jako online.",
+      "next": "Dalej",
+      "skip": "Pomiń",
+      "done": "Gotowe",
+      "finished": "Komputer {name} jest gotowy.",
+      "finished_folder": "Znajdziesz go w Urządzenia, w folderze {folder}.",
+      "finished_plain": "Znajdziesz go w Urządzenia.",
+      "next_computer": "Skonfiguruj kolejny komputer",
+      "key_changed": "Ten komputer był tu już wcześniej z innym kluczem.",
+      "key_changed_hint": "Jeśli został ponownie zainstalowany lub zresetowany, zatwierdź nowy klucz. Potem ponownie otwórz zaproszenie na komputerze.",
+      "approve_key": "Zatwierdź nowy klucz",
+      "key_approved": "Nowy klucz zatwierdzony. Ponownie otwórz zaproszenie na komputerze.",
+      "refused": "Komputer o ID {id} próbował użyć tego zaproszenia i został odrzucony. Sprawdź Urządzenia: może być zablokowany lub usunięty."
     }
   },
   "ui_form": {

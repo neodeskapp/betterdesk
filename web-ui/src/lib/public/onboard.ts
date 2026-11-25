@@ -67,6 +67,16 @@ export function stepKeys(
 	});
 }
 
+/**
+ * The three steps of an invite, as the welcome mail has them: download and
+ * open NeoDesk, click Install, done.
+ */
+export const WELCOME_STEPS = [
+	'onboard.public.welcome_step_1',
+	'onboard.public.welcome_step_2',
+	'onboard.public.welcome_step_3'
+] as const;
+
 /** The label of the main download button */
 export function downloadLabel(kind: PublicCode['kind'], platform: ThisComputer['platform'] | null): string {
 	if (kind === 'support') return 'onboard.public.download_support';

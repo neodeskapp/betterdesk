@@ -8222,7 +8222,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} ने आपको {server} पर आमंत्रित किया है",
+      "welcome_lead": "अपने कंप्यूटर पर NeoDesk सेट अप करें। इसमें कुछ मिनट लगते हैं।",
+      "welcome_button": "NeoDesk सेट अप करें",
+      "welcome_step_1": "NeoDesk डाउनलोड करें और खोलें।",
+      "welcome_step_2": "इंस्टॉल पर क्लिक करें।",
+      "welcome_step_3": "हो गया: अब से {company} की सहायता टीम आपकी मदद कर सकती है, और कोई कनेक्ट करे तो आपको दिखता है।",
+      "welcome_link": "अगर बटन काम न करे, तो यह लिंक कंप्यूटर पर खोलें:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8357,7 +8364,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} ने आपको {server} पर आमंत्रित किया है",
+      "welcome_step_1": "NeoDesk डाउनलोड करें और खोलें।",
+      "welcome_step_2": "इंस्टॉल पर क्लिक करें।",
+      "welcome_step_3": "हो गया: अब से {company} की सहायता टीम आपकी मदद कर सकती है, और कोई कनेक्ट करे तो आपको दिखता है।",
+      "mac_steps_title": "Mac पर"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8375,6 +8387,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "अभी भी कंप्यूटर का इंतज़ार है। लिंक {date} तक काम करता है।",
+      "waiting_named": "अभी भी {name} का इंतज़ार है। लिंक {date} तक काम करता है।",
+      "joined_title": "{name} जुड़ गया",
+      "joined_lead": "चार छोटे चरण। छोड़ें दबाने पर सब कुछ अभी जैसा ही रहता है।",
+      "step_of": "{count} में से चरण {step}",
+      "step_name": "नाम",
+      "step_folder": "फ़ोल्डर",
+      "step_reach": "आप इस तक कैसे पहुँचते हैं",
+      "step_test": "परीक्षण सत्र",
+      "name_hint": "डिवाइस में और दर्शक में दिखता है।",
+      "folder_hint": "कंप्यूटर को कौन देख और उस तक पहुँच सकता है, यह उसके फ़ोल्डर से तय होता है।",
+      "no_permission": "आपकी भूमिका इसे नहीं बदल सकती। यह जैसा है वैसा ही रहेगा।",
+      "save_failed": "सहेजा नहीं जा सका। फिर से कोशिश करें।",
+      "reach_lead": "आप {name} से ऐसे कनेक्ट करते हैं:",
+      "reach_password": "इसके पासवर्ड से: कंप्यूटर पर मौजूद कोई व्यक्ति NeoDesk में सेटिंग्स, सुरक्षा के अंतर्गत एक स्थायी पासवर्ड सेट करता है। कनेक्ट करते समय आप उसे टाइप करते हैं।",
+      "reach_accept": "बिना पासवर्ड के: कंप्यूटर पर मौजूद व्यक्ति देखता है कि कौन कनेक्ट करना चाहता है और स्वीकार करें पर क्लिक करता है।",
+      "test_lead": "सब कुछ काम करता है, यह जाँचने के लिए एक सत्र खोलें। कंप्यूटर पर NeoDesk वहाँ मौजूद व्यक्ति से स्वीकार करने को कहता है।",
+      "test_start": "परीक्षण सत्र शुरू करें",
+      "test_offline": "{name} ऑफ़लाइन है। इसे चालू करें और तब तक प्रतीक्षा करें जब तक यह यहाँ ऑनलाइन न दिखे।",
+      "next": "आगे",
+      "skip": "छोड़ें",
+      "done": "पूर्ण",
+      "finished": "{name} तैयार है।",
+      "finished_folder": "यह आपको डिवाइस में, {folder} में मिलेगा।",
+      "finished_plain": "यह आपको डिवाइस में मिलेगा।",
+      "next_computer": "अगला कंप्यूटर सेट अप करें",
+      "key_changed": "यह कंप्यूटर पहले किसी दूसरी कुंजी के साथ यहाँ था।",
+      "key_changed_hint": "अगर इसे फिर से इंस्टॉल या रीसेट किया गया था, तो नई कुंजी स्वीकृत करें। फिर कंप्यूटर पर आमंत्रण दोबारा खोलें।",
+      "approve_key": "नई कुंजी स्वीकृत करें",
+      "key_approved": "नई कुंजी स्वीकृत हो गई। कंप्यूटर पर आमंत्रण दोबारा खोलें।",
+      "refused": "ID {id} वाले एक कंप्यूटर ने यह आमंत्रण आज़माया और उसे लौटा दिया गया। डिवाइस देखें: हो सकता है कि यह प्रतिबंधित हो या हटा दिया गया हो।"
     }
   },
   "ui_form": {

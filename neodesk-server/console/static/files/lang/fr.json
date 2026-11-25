@@ -8220,7 +8220,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} vous invite à rejoindre {server}",
+      "welcome_lead": "Configurez NeoDesk sur votre ordinateur. Cela prend quelques minutes.",
+      "welcome_button": "Configurer NeoDesk",
+      "welcome_step_1": "Téléchargez et ouvrez NeoDesk.",
+      "welcome_step_2": "Cliquez sur Installer.",
+      "welcome_step_3": "Terminé : le support de {company} peut désormais vous aider, et vous voyez quand quelqu'un se connecte.",
+      "welcome_link": "Si le bouton ne fonctionne pas, ouvrez ce lien sur l'ordinateur :"
     },
     "invite": {
       "button": "Add a computer",
@@ -8355,7 +8362,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} vous invite à rejoindre {server}",
+      "welcome_step_1": "Téléchargez et ouvrez NeoDesk.",
+      "welcome_step_2": "Cliquez sur Installer.",
+      "welcome_step_3": "Terminé : le support de {company} peut désormais vous aider, et vous voyez quand quelqu'un se connecte.",
+      "mac_steps_title": "Sur un Mac"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8373,6 +8385,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "En attente de l'ordinateur. Le lien fonctionne jusqu'au {date}.",
+      "waiting_named": "En attente de {name}. Le lien fonctionne jusqu'au {date}.",
+      "joined_title": "{name} a rejoint le serveur",
+      "joined_lead": "Quatre étapes courtes. Ignorer laisse tout tel quel.",
+      "step_of": "Étape {step} sur {count}",
+      "step_name": "Nom",
+      "step_folder": "Dossier",
+      "step_reach": "Comment vous y connecter",
+      "step_test": "Session de test",
+      "name_hint": "Affiché dans Appareils et dans la visionneuse.",
+      "folder_hint": "Le dossier de l'ordinateur détermine qui peut le voir et s'y connecter.",
+      "no_permission": "Votre rôle ne permet pas de modifier ceci. Cela reste tel quel.",
+      "save_failed": "Impossible d'enregistrer. Réessayez.",
+      "reach_lead": "Voici comment vous connecter à {name} :",
+      "reach_password": "Avec son mot de passe : une personne devant l'ordinateur définit un mot de passe permanent dans NeoDesk, sous Paramètres, Sécurité. Vous le saisissez lors de la connexion.",
+      "reach_accept": "Sans mot de passe : la personne devant l'ordinateur voit qui veut se connecter et clique sur Accepter.",
+      "test_lead": "Ouvrez une session pour vérifier que tout fonctionne. NeoDesk sur l'ordinateur demande à la personne présente d'accepter.",
+      "test_start": "Démarrer la session de test",
+      "test_offline": "{name} est hors ligne. Allumez-le et attendez qu'il apparaisse ici comme en ligne.",
+      "next": "Suivant",
+      "skip": "Ignorer",
+      "done": "Terminé",
+      "finished": "{name} est prêt.",
+      "finished_folder": "Vous le trouverez dans Appareils, dans {folder}.",
+      "finished_plain": "Vous le trouverez dans Appareils.",
+      "next_computer": "Configurer l'ordinateur suivant",
+      "key_changed": "Cet ordinateur était déjà enregistré ici avec une autre clé.",
+      "key_changed_hint": "S'il a été réinstallé ou réinitialisé, approuvez la nouvelle clé. Ouvrez ensuite de nouveau l'invitation sur l'ordinateur.",
+      "approve_key": "Approuver la nouvelle clé",
+      "key_approved": "Nouvelle clé approuvée. Ouvrez de nouveau l'invitation sur l'ordinateur.",
+      "refused": "Un ordinateur avec l'ID {id} a essayé cette invitation et a été refusé. Vérifiez Appareils : il est peut-être banni ou supprimé."
     }
   },
   "ui_form": {

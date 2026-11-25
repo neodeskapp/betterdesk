@@ -8222,7 +8222,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} เชิญคุณเข้าร่วม {server}",
+      "welcome_lead": "ตั้งค่า NeoDesk บนคอมพิวเตอร์ของคุณ ใช้เวลาเพียงไม่กี่นาที",
+      "welcome_button": "ตั้งค่า NeoDesk",
+      "welcome_step_1": "ดาวน์โหลดและเปิด NeoDesk",
+      "welcome_step_2": "คลิก ติดตั้ง",
+      "welcome_step_3": "เสร็จแล้ว: ฝ่ายซัพพอร์ตของ {company} ช่วยเหลือคุณได้ตั้งแต่นี้ไป และคุณจะเห็นเมื่อมีคนเชื่อมต่อ",
+      "welcome_link": "หากปุ่มใช้งานไม่ได้ ให้เปิดลิงก์นี้บนคอมพิวเตอร์:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8357,7 +8364,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} เชิญคุณเข้าร่วม {server}",
+      "welcome_step_1": "ดาวน์โหลดและเปิด NeoDesk",
+      "welcome_step_2": "คลิก ติดตั้ง",
+      "welcome_step_3": "เสร็จแล้ว: ฝ่ายซัพพอร์ตของ {company} ช่วยเหลือคุณได้ตั้งแต่นี้ไป และคุณจะเห็นเมื่อมีคนเชื่อมต่อ",
+      "mac_steps_title": "บน Mac"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8375,6 +8387,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "ยังรอคอมพิวเตอร์อยู่ ลิงก์ใช้ได้ถึง {date}",
+      "waiting_named": "ยังรอ {name} อยู่ ลิงก์ใช้ได้ถึง {date}",
+      "joined_title": "{name} เข้าร่วมแล้ว",
+      "joined_lead": "สี่ขั้นตอนสั้นๆ ข้าม จะคงทุกอย่างไว้อย่างที่เป็นอยู่",
+      "step_of": "ขั้นตอนที่ {step} จาก {count}",
+      "step_name": "ชื่อ",
+      "step_folder": "โฟลเดอร์",
+      "step_reach": "วิธีเชื่อมต่อ",
+      "step_test": "เซสชันทดสอบ",
+      "name_hint": "แสดงใน อุปกรณ์ และในโปรแกรมดู",
+      "folder_hint": "ผู้ที่มองเห็นและเข้าถึงคอมพิวเตอร์ได้จะเป็นไปตามโฟลเดอร์ของเครื่อง",
+      "no_permission": "บทบาทของคุณเปลี่ยนส่วนนี้ไม่ได้ จะคงไว้อย่างที่เป็นอยู่",
+      "save_failed": "บันทึกไม่สำเร็จ ลองอีกครั้ง",
+      "reach_lead": "นี่คือวิธีเชื่อมต่อกับ {name}:",
+      "reach_password": "ใช้รหัสผ่าน: คนที่อยู่หน้าคอมพิวเตอร์ตั้งรหัสผ่านถาวรใน NeoDesk ที่ การตั้งค่า, ความปลอดภัย คุณพิมพ์รหัสนั้นตอนเชื่อมต่อ",
+      "reach_accept": "ไม่ใช้รหัสผ่าน: คนที่อยู่หน้าคอมพิวเตอร์จะเห็นว่าใครต้องการเชื่อมต่อ แล้วคลิก ยอมรับ",
+      "test_lead": "เปิดเซสชันเพื่อตรวจสอบว่าทุกอย่างทำงานได้ NeoDesk บนคอมพิวเตอร์จะขอให้คนที่อยู่ตรงนั้นยอมรับ",
+      "test_start": "เริ่มเซสชันทดสอบ",
+      "test_offline": "{name} ออฟไลน์อยู่ เปิดเครื่องแล้วรอจนกว่าจะแสดงเป็นออนไลน์ที่นี่",
+      "next": "ถัดไป",
+      "skip": "ข้าม",
+      "done": "เสร็จสิ้น",
+      "finished": "{name} พร้อมแล้ว",
+      "finished_folder": "คุณจะพบเครื่องนี้ใน อุปกรณ์ ในโฟลเดอร์ {folder}",
+      "finished_plain": "คุณจะพบเครื่องนี้ใน อุปกรณ์",
+      "next_computer": "ตั้งค่าคอมพิวเตอร์เครื่องถัดไป",
+      "key_changed": "คอมพิวเตอร์เครื่องนี้เคยอยู่ที่นี่ด้วยคีย์อื่น",
+      "key_changed_hint": "หากติดตั้งใหม่หรือรีเซ็ตเครื่องแล้ว ให้อนุมัติคีย์ใหม่ จากนั้นเปิดคำเชิญบนคอมพิวเตอร์อีกครั้ง",
+      "approve_key": "อนุมัติคีย์ใหม่",
+      "key_approved": "อนุมัติคีย์ใหม่แล้ว เปิดคำเชิญบนคอมพิวเตอร์อีกครั้ง",
+      "refused": "คอมพิวเตอร์ที่มี ID {id} ลองใช้คำเชิญนี้และถูกปฏิเสธ ตรวจสอบ อุปกรณ์: เครื่องอาจถูกแบนหรือถูกลบ"
     }
   },
   "ui_form": {

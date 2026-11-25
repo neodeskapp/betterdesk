@@ -265,3 +265,34 @@ func (h *Host) ErrorPage(w http.ResponseWriter, r *http.Request, kind int, o Err
 	h.sendPage(w, r, p, status, html)
 	return true
 }
+
+var bodyTag = regexp.MustCompile(`(?i)<body(` + jsSpace + `[^>]*)?>`)
+
+// PageWith answers a public page of the app (isPublicPage) with markup the
+// server adds right after the page's <body> tag: what the page says for a
+// browser without JavaScript, in a <noscript> block (the invite page,
+// routes/onboard). The rest of the page and its headers are the plain
+// page's.
+//
+// It answers false, having written nothing, without a build or for an
+// address that is no public page under the build's base; the caller then
+// lets Handle answer.
+func (h *Host) PageWith(w http.ResponseWriter, r *http.Request, body string) bool {
+	p := h.current()
+	if p == nil {
+		return false
+	}
+	path := parseRequest(r).path
+	if h.base != "" && !strings.HasPrefix(path, h.base+"/") {
+		return false
+	}
+	if !isPublicPage(path[len(h.base):]) {
+		return false
+	}
+	html := p.html
+	if at := bodyTag.FindStringIndex(html); at != nil {
+		html = html[:at[1]] + body + html[at[1]:]
+	}
+	h.sendPage(w, r, p, http.StatusOK, html)
+	return true
+}

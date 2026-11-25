@@ -8216,7 +8216,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} さんが {server} にあなたを招待しました",
+      "welcome_lead": "お使いのコンピューターに NeoDesk をセットアップしてください。数分で終わります。",
+      "welcome_button": "NeoDesk をセットアップ",
+      "welcome_step_1": "NeoDesk をダウンロードして開きます。",
+      "welcome_step_2": "[インストール] をクリックします。",
+      "welcome_step_3": "完了: これからは {company} のサポートが対応でき、誰かが接続したときはあなたにもわかります。",
+      "welcome_link": "ボタンが機能しない場合は、このリンクをコンピューターで開いてください:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8351,7 +8358,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} さんが {server} にあなたを招待しました",
+      "welcome_step_1": "NeoDesk をダウンロードして開きます。",
+      "welcome_step_2": "[インストール] をクリックします。",
+      "welcome_step_3": "完了: これからは {company} のサポートが対応でき、誰かが接続したときはあなたにもわかります。",
+      "mac_steps_title": "Mac の場合"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8369,6 +8381,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "コンピューターを待っています。リンクは {date} まで有効です。",
+      "waiting_named": "{name} を待っています。リンクは {date} まで有効です。",
+      "joined_title": "{name} が参加しました",
+      "joined_lead": "短い 4 つのステップです。[スキップ] を押すと、すべて今のままになります。",
+      "step_of": "ステップ {step}/{count}",
+      "step_name": "名前",
+      "step_folder": "フォルダー",
+      "step_reach": "接続方法",
+      "step_test": "テストセッション",
+      "name_hint": "デバイスとビューアーに表示されます。",
+      "folder_hint": "コンピューターを表示して接続できるユーザーは、そのフォルダーで決まります。",
+      "no_permission": "あなたのロールではこれを変更できません。現在のままになります。",
+      "save_failed": "保存できませんでした。もう一度お試しください。",
+      "reach_lead": "{name} への接続方法:",
+      "reach_password": "パスワードを使う場合: コンピューターの前にいる人が NeoDesk の [設定]、[セキュリティ] で固定パスワードを設定します。接続時にそのパスワードを入力します。",
+      "reach_accept": "パスワードを使わない場合: コンピューターの前にいる人に接続しようとしている相手が表示され、その人が [承諾] をクリックします。",
+      "test_lead": "セッションを開いて、すべて動作することを確認します。コンピューター上の NeoDesk が、そこにいる人に承諾を求めます。",
+      "test_start": "テストセッションを開始",
+      "test_offline": "{name} はオフラインです。電源を入れ、ここでオンラインと表示されるまでお待ちください。",
+      "next": "次へ",
+      "skip": "スキップ",
+      "done": "完了",
+      "finished": "{name} の準備ができました。",
+      "finished_folder": "デバイスの {folder} にあります。",
+      "finished_plain": "デバイスにあります。",
+      "next_computer": "次のコンピューターをセットアップ",
+      "key_changed": "このコンピューターは以前、別のキーでここに登録されていました。",
+      "key_changed_hint": "再インストールまたはリセットした場合は、新しいキーを承認してください。その後、コンピューターで招待をもう一度開いてください。",
+      "approve_key": "新しいキーを承認",
+      "key_approved": "新しいキーを承認しました。コンピューターで招待をもう一度開いてください。",
+      "refused": "ID {id} のコンピューターがこの招待を使おうとしましたが、拒否されました。デバイスを確認してください: 禁止または削除されている可能性があります。"
     }
   },
   "ui_form": {

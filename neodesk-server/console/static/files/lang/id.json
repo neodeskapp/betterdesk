@@ -8222,7 +8222,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} mengundang Anda ke {server}",
+      "welcome_lead": "Siapkan NeoDesk di komputer Anda. Hanya butuh beberapa menit.",
+      "welcome_button": "Siapkan NeoDesk",
+      "welcome_step_1": "Unduh dan buka NeoDesk.",
+      "welcome_step_2": "Klik Instal.",
+      "welcome_step_3": "Selesai: mulai sekarang dukungan {company} dapat membantu Anda, dan Anda melihat saat seseorang terhubung.",
+      "welcome_link": "Jika tombol tidak berfungsi, buka tautan ini di komputer:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8357,7 +8364,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} mengundang Anda ke {server}",
+      "welcome_step_1": "Unduh dan buka NeoDesk.",
+      "welcome_step_2": "Klik Instal.",
+      "welcome_step_3": "Selesai: mulai sekarang dukungan {company} dapat membantu Anda, dan Anda melihat saat seseorang terhubung.",
+      "mac_steps_title": "Di Mac"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8375,6 +8387,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "Masih menunggu komputer. Tautan berlaku sampai {date}.",
+      "waiting_named": "Masih menunggu {name}. Tautan berlaku sampai {date}.",
+      "joined_title": "{name} telah bergabung",
+      "joined_lead": "Empat langkah singkat. Lewati membiarkan semuanya seperti sekarang.",
+      "step_of": "Langkah {step} dari {count}",
+      "step_name": "Nama",
+      "step_folder": "Folder",
+      "step_reach": "Cara Anda terhubung",
+      "step_test": "Sesi uji",
+      "name_hint": "Ditampilkan di Perangkat dan di penampil.",
+      "folder_hint": "Siapa yang dapat melihat dan menjangkau komputer ini ditentukan oleh foldernya.",
+      "no_permission": "Peran Anda tidak dapat mengubah ini. Semuanya tetap seperti sekarang.",
+      "save_failed": "Tidak dapat menyimpan. Coba lagi.",
+      "reach_lead": "Begini cara Anda terhubung ke {name}:",
+      "reach_password": "Dengan kata sandinya: seseorang di komputer menetapkan kata sandi permanen di NeoDesk, di Pengaturan, Keamanan. Anda mengetiknya saat terhubung.",
+      "reach_accept": "Tanpa kata sandi: orang di komputer melihat siapa yang ingin terhubung lalu mengklik Terima.",
+      "test_lead": "Buka sesi untuk memeriksa bahwa semuanya berfungsi. NeoDesk di komputer meminta orang di sana untuk menerima.",
+      "test_start": "Mulai sesi uji",
+      "test_offline": "{name} sedang offline. Nyalakan dan tunggu sampai tampil online di sini.",
+      "next": "Berikutnya",
+      "skip": "Lewati",
+      "done": "Selesai",
+      "finished": "{name} sudah siap.",
+      "finished_folder": "Anda menemukannya di Perangkat, di {folder}.",
+      "finished_plain": "Anda menemukannya di Perangkat.",
+      "next_computer": "Siapkan komputer berikutnya",
+      "key_changed": "Komputer ini pernah ada di sini dengan kunci lain.",
+      "key_changed_hint": "Jika komputer ini diinstal ulang atau direset, setujui kunci baru. Lalu buka undangan di komputer lagi.",
+      "approve_key": "Setujui kunci baru",
+      "key_approved": "Kunci baru disetujui. Buka undangan di komputer lagi.",
+      "refused": "Komputer dengan ID {id} mencoba undangan ini dan ditolak. Periksa Perangkat: mungkin diblokir atau dihapus."
     }
   },
   "ui_form": {

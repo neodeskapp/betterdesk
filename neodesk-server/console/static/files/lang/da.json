@@ -8222,7 +8222,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} har inviteret dig til {server}",
+      "welcome_lead": "Konfigurer NeoDesk på din computer. Det tager et par minutter.",
+      "welcome_button": "Konfigurer NeoDesk",
+      "welcome_step_1": "Download og åbn NeoDesk.",
+      "welcome_step_2": "Klik på Installér.",
+      "welcome_step_3": "Færdig: supporten hos {company} kan hjælpe dig fra nu af, og du kan se, når nogen opretter forbindelse.",
+      "welcome_link": "Hvis knappen ikke virker, så åbn dette link på computeren:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8357,7 +8364,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} har inviteret dig til {server}",
+      "welcome_step_1": "Download og åbn NeoDesk.",
+      "welcome_step_2": "Klik på Installér.",
+      "welcome_step_3": "Færdig: supporten hos {company} kan hjælpe dig fra nu af, og du kan se, når nogen opretter forbindelse.",
+      "mac_steps_title": "På en Mac"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8375,6 +8387,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "Venter stadig på computeren. Linket virker indtil {date}.",
+      "waiting_named": "Venter stadig på {name}. Linket virker indtil {date}.",
+      "joined_title": "{name} er tilknyttet",
+      "joined_lead": "Fire korte trin. Spring over lader alt være, som det er nu.",
+      "step_of": "Trin {step} af {count}",
+      "step_name": "Navn",
+      "step_folder": "Mappe",
+      "step_reach": "Sådan når du den",
+      "step_test": "Testsession",
+      "name_hint": "Vises i Enheder og i fjernvisningen.",
+      "folder_hint": "Hvem der kan se og nå computeren, følger dens mappe.",
+      "no_permission": "Din rolle kan ikke ændre dette. Det forbliver, som det er.",
+      "save_failed": "Kunne ikke gemme. Prøv igen.",
+      "reach_lead": "Sådan opretter du forbindelse til {name}:",
+      "reach_password": "Med dens adgangskode: en person ved computeren angiver en permanent adgangskode i NeoDesk under Indstillinger, Sikkerhed. Du indtaster den, når du opretter forbindelse.",
+      "reach_accept": "Uden adgangskode: personen ved computeren ser, hvem der vil oprette forbindelse, og klikker på Acceptér.",
+      "test_lead": "Åbn en session for at kontrollere, at alt virker. NeoDesk på computeren beder personen der om at acceptere.",
+      "test_start": "Start testsession",
+      "test_offline": "{name} er offline. Tænd den, og vent, til den vises som online her.",
+      "next": "Næste",
+      "skip": "Spring over",
+      "done": "Færdig",
+      "finished": "{name} er klar.",
+      "finished_folder": "Du finder den i Enheder, i {folder}.",
+      "finished_plain": "Du finder den i Enheder.",
+      "next_computer": "Konfigurer den næste computer",
+      "key_changed": "Denne computer har været her før med en anden nøgle.",
+      "key_changed_hint": "Hvis den er blevet geninstalleret eller nulstillet, så godkend den nye nøgle. Åbn derefter invitationen på computeren igen.",
+      "approve_key": "Godkend ny nøgle",
+      "key_approved": "Ny nøgle godkendt. Åbn invitationen på computeren igen.",
+      "refused": "En computer med ID'et {id} forsøgte at bruge denne invitation og blev afvist. Tjek Enheder: den er måske spærret eller fjernet."
     }
   },
   "ui_form": {

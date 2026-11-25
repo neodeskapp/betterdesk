@@ -114,7 +114,7 @@ func TestMailEscapesAndCarriesTheLink(t *testing.T) {
 		t.Errorf("support mail text: %s", m.Text)
 	}
 	j := BuildMail(tr, MailFacts{Kind: KindJoin, Code: "ABCD-2345"})
-	if !strings.HasPrefix(j.Subject, "onboard.mail.invite_subject") || !strings.Contains(j.Text, "onboard.mail.invite_code") || !strings.Contains(j.HTML, "code=ABCD-2345") {
+	if !strings.HasPrefix(j.Subject, "onboard.mail.welcome_subject") || !strings.Contains(j.Text, "onboard.mail.invite_code") || !strings.Contains(j.HTML, "code=ABCD-2345") {
 		t.Errorf("invite mail: %q %s", j.Subject, j.Text)
 	}
 }

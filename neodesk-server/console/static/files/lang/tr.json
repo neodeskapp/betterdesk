@@ -8222,7 +8222,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} sizi {server} sunucusuna davet etti",
+      "welcome_lead": "NeoDesk'i bilgisayarınızda kurun. Birkaç dakika sürer.",
+      "welcome_button": "NeoDesk'i kur",
+      "welcome_step_1": "NeoDesk'i indirip açın.",
+      "welcome_step_2": "Yükle'ye tıklayın.",
+      "welcome_step_3": "Tamam: {company} desteği artık size yardımcı olabilir ve biri bağlandığında bunu görürsünüz.",
+      "welcome_link": "Düğme çalışmazsa bu bağlantıyı bilgisayarda açın:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8357,7 +8364,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} sizi {server} sunucusuna davet etti",
+      "welcome_step_1": "NeoDesk'i indirip açın.",
+      "welcome_step_2": "Yükle'ye tıklayın.",
+      "welcome_step_3": "Tamam: {company} desteği artık size yardımcı olabilir ve biri bağlandığında bunu görürsünüz.",
+      "mac_steps_title": "Mac'te"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8375,6 +8387,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "Hâlâ bilgisayar bekleniyor. Bağlantı {date} tarihine kadar geçerli.",
+      "waiting_named": "Hâlâ {name} bekleniyor. Bağlantı {date} tarihine kadar geçerli.",
+      "joined_title": "{name} katıldı",
+      "joined_lead": "Dört kısa adım. Atla her şeyi şimdiki gibi bırakır.",
+      "step_of": "Adım {step}/{count}",
+      "step_name": "Ad",
+      "step_folder": "Klasör",
+      "step_reach": "Nasıl bağlanırsınız",
+      "step_test": "Test oturumu",
+      "name_hint": "Cihazlar'da ve görüntüleyicide gösterilir.",
+      "folder_hint": "Bilgisayarı kimin görebileceği ve ona kimin bağlanabileceği klasörüne göre belirlenir.",
+      "no_permission": "Rolünüz bunu değiştiremez. Olduğu gibi kalır.",
+      "save_failed": "Kaydedilemedi. Yeniden deneyin.",
+      "reach_lead": "{name} cihazına şöyle bağlanırsınız:",
+      "reach_password": "Parolasıyla: bilgisayarın başındaki biri NeoDesk'te Ayarlar, Güvenlik altında kalıcı bir parola belirler. Bağlanırken bu parolayı yazarsınız.",
+      "reach_accept": "Parola olmadan: bilgisayarın başındaki kişi kimin bağlanmak istediğini görür ve Kabul et'e tıklar.",
+      "test_lead": "Her şeyin çalıştığını kontrol etmek için bir oturum açın. Bilgisayardaki NeoDesk, oradaki kişiden kabul etmesini ister.",
+      "test_start": "Test oturumunu başlat",
+      "test_offline": "{name} çevrimdışı. Cihazı açın ve burada çevrimiçi görünene kadar bekleyin.",
+      "next": "İleri",
+      "skip": "Atla",
+      "done": "Bitti",
+      "finished": "{name} hazır.",
+      "finished_folder": "Cihazlar'da, {folder} klasöründe bulabilirsiniz.",
+      "finished_plain": "Cihazlar'da bulabilirsiniz.",
+      "next_computer": "Sonraki bilgisayarı kur",
+      "key_changed": "Bu bilgisayar daha önce başka bir anahtarla buradaydı.",
+      "key_changed_hint": "Yeniden kurulduysa veya sıfırlandıysa yeni anahtarı onaylayın. Ardından daveti bilgisayarda yeniden açın.",
+      "approve_key": "Yeni anahtarı onayla",
+      "key_approved": "Yeni anahtar onaylandı. Daveti bilgisayarda yeniden açın.",
+      "refused": "{id} kimlikli bir bilgisayar bu daveti denedi ve reddedildi. Cihazlar'ı kontrol edin: yasaklanmış veya kaldırılmış olabilir."
     }
   },
   "ui_form": {

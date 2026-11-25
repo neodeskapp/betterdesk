@@ -8222,7 +8222,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} đã mời bạn tham gia {server}",
+      "welcome_lead": "Thiết lập NeoDesk trên máy tính của bạn. Chỉ mất vài phút.",
+      "welcome_button": "Thiết lập NeoDesk",
+      "welcome_step_1": "Tải xuống và mở NeoDesk.",
+      "welcome_step_2": "Nhấp vào Cài đặt.",
+      "welcome_step_3": "Xong: từ giờ bộ phận hỗ trợ của {company} có thể giúp bạn, và bạn sẽ thấy khi có người kết nối.",
+      "welcome_link": "Nếu nút không hoạt động, hãy mở liên kết này trên máy tính:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8357,7 +8364,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} đã mời bạn tham gia {server}",
+      "welcome_step_1": "Tải xuống và mở NeoDesk.",
+      "welcome_step_2": "Nhấp vào Cài đặt.",
+      "welcome_step_3": "Xong: từ giờ bộ phận hỗ trợ của {company} có thể giúp bạn, và bạn sẽ thấy khi có người kết nối.",
+      "mac_steps_title": "Trên máy Mac"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8375,6 +8387,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "Vẫn đang chờ máy tính. Liên kết dùng được đến {date}.",
+      "waiting_named": "Vẫn đang chờ {name}. Liên kết dùng được đến {date}.",
+      "joined_title": "{name} đã tham gia",
+      "joined_lead": "Bốn bước ngắn. Bỏ qua sẽ giữ mọi thứ như hiện tại.",
+      "step_of": "Bước {step}/{count}",
+      "step_name": "Tên",
+      "step_folder": "Thư mục",
+      "step_reach": "Cách bạn kết nối",
+      "step_test": "Phiên thử nghiệm",
+      "name_hint": "Hiển thị trong Thiết bị và trong trình xem.",
+      "folder_hint": "Ai có thể thấy và kết nối tới máy tính tùy thuộc vào thư mục của nó.",
+      "no_permission": "Vai trò của bạn không thể thay đổi mục này. Mục này giữ nguyên như hiện tại.",
+      "save_failed": "Không lưu được. Hãy thử lại.",
+      "reach_lead": "Đây là cách bạn kết nối tới {name}:",
+      "reach_password": "Bằng mật khẩu: người ở máy tính đặt mật khẩu cố định trong NeoDesk, tại Cài đặt, Bảo mật. Bạn nhập mật khẩu đó khi kết nối.",
+      "reach_accept": "Không cần mật khẩu: người ở máy tính thấy ai muốn kết nối và nhấp vào Chấp nhận.",
+      "test_lead": "Mở một phiên để kiểm tra mọi thứ hoạt động. NeoDesk trên máy tính sẽ hỏi người ở đó có chấp nhận không.",
+      "test_start": "Bắt đầu phiên thử nghiệm",
+      "test_offline": "{name} đang ngoại tuyến. Hãy bật máy và chờ đến khi nó hiện trực tuyến ở đây.",
+      "next": "Tiếp",
+      "skip": "Bỏ qua",
+      "done": "Xong",
+      "finished": "{name} đã sẵn sàng.",
+      "finished_folder": "Bạn sẽ thấy nó trong Thiết bị, trong {folder}.",
+      "finished_plain": "Bạn sẽ thấy nó trong Thiết bị.",
+      "next_computer": "Thiết lập máy tính tiếp theo",
+      "key_changed": "Máy tính này đã từng ở đây với một khóa khác.",
+      "key_changed_hint": "Nếu máy đã được cài đặt lại hoặc đặt lại, hãy phê duyệt khóa mới. Sau đó mở lại lời mời trên máy tính.",
+      "approve_key": "Phê duyệt khóa mới",
+      "key_approved": "Đã phê duyệt khóa mới. Hãy mở lại lời mời trên máy tính.",
+      "refused": "Một máy tính có ID {id} đã thử lời mời này và bị từ chối. Hãy kiểm tra Thiết bị: có thể máy đã bị cấm hoặc bị xóa."
     }
   },
   "ui_form": {

@@ -8222,7 +8222,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} kutsui sinut palvelimeen {server}",
+      "welcome_lead": "Ota NeoDesk käyttöön tietokoneellasi. Se vie muutaman minuutin.",
+      "welcome_button": "Ota NeoDesk käyttöön",
+      "welcome_step_1": "Lataa ja avaa NeoDesk.",
+      "welcome_step_2": "Napsauta Asenna.",
+      "welcome_step_3": "Valmis: yrityksen {company} tuki voi auttaa sinua tästä lähtien, ja näet, kun joku muodostaa yhteyden.",
+      "welcome_link": "Jos painike ei toimi, avaa tämä linkki tietokoneella:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8357,7 +8364,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} kutsui sinut palvelimeen {server}",
+      "welcome_step_1": "Lataa ja avaa NeoDesk.",
+      "welcome_step_2": "Napsauta Asenna.",
+      "welcome_step_3": "Valmis: yrityksen {company} tuki voi auttaa sinua tästä lähtien, ja näet, kun joku muodostaa yhteyden.",
+      "mac_steps_title": "Macilla"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8375,6 +8387,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "Odotetaan yhä tietokonetta. Linkki toimii {date} asti.",
+      "waiting_named": "Odotetaan yhä laitetta {name}. Linkki toimii {date} asti.",
+      "joined_title": "{name} liittyi",
+      "joined_lead": "Neljä lyhyttä vaihetta. Ohita jättää kaiken ennalleen.",
+      "step_of": "Vaihe {step}/{count}",
+      "step_name": "Nimi",
+      "step_folder": "Kansio",
+      "step_reach": "Miten tavoitat sen",
+      "step_test": "Testi-istunto",
+      "name_hint": "Näkyy kohdassa Laitteet ja katselimessa.",
+      "folder_hint": "Kansio määrää, kuka voi nähdä tietokoneen ja tavoittaa sen.",
+      "no_permission": "Roolisi ei voi muuttaa tätä. Se pysyy ennallaan.",
+      "save_failed": "Tallennus epäonnistui. Yritä uudelleen.",
+      "reach_lead": "Näin muodostat yhteyden laitteeseen {name}:",
+      "reach_password": "Salasanalla: joku tietokoneen ääressä asettaa NeoDeskissä pysyvän salasanan kohdassa Asetukset, Tietoturva. Kirjoitat sen, kun muodostat yhteyden.",
+      "reach_accept": "Ilman salasanaa: tietokoneen ääressä oleva henkilö näkee, kuka haluaa muodostaa yhteyden, ja napsauttaa Hyväksy.",
+      "test_lead": "Avaa istunto ja tarkista, että kaikki toimii. Tietokoneen NeoDesk pyytää siellä olevaa henkilöä hyväksymään.",
+      "test_start": "Aloita testi-istunto",
+      "test_offline": "{name} on offline-tilassa. Käynnistä se ja odota, kunnes se näkyy täällä online-tilassa.",
+      "next": "Seuraava",
+      "skip": "Ohita",
+      "done": "Valmis",
+      "finished": "{name} on valmis.",
+      "finished_folder": "Löydät sen kohdasta Laitteet, kansiosta {folder}.",
+      "finished_plain": "Löydät sen kohdasta Laitteet.",
+      "next_computer": "Ota seuraava tietokone käyttöön",
+      "key_changed": "Tämä tietokone on ollut täällä aiemmin toisella avaimella.",
+      "key_changed_hint": "Jos se on asennettu uudelleen tai palautettu, hyväksy uusi avain. Avaa sitten kutsu tietokoneella uudelleen.",
+      "approve_key": "Hyväksy uusi avain",
+      "key_approved": "Uusi avain hyväksytty. Avaa kutsu tietokoneella uudelleen.",
+      "refused": "Tietokone, jonka tunnus on {id}, yritti käyttää tätä kutsua, ja se torjuttiin. Tarkista Laitteet: se voi olla estetty tai poistettu."
     }
   },
   "ui_form": {

@@ -8222,7 +8222,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} meghívta Önt ide: {server}",
+      "welcome_lead": "Állítsa be a NeoDesk alkalmazást a számítógépén. Néhány percig tart.",
+      "welcome_button": "NeoDesk beállítása",
+      "welcome_step_1": "Töltse le és nyissa meg a NeoDesk alkalmazást.",
+      "welcome_step_2": "Kattintson a Telepítés gombra.",
+      "welcome_step_3": "Kész: a(z) {company} ügyfélszolgálata mostantól segíthet Önnek, és látja, ha valaki csatlakozik.",
+      "welcome_link": "Ha a gomb nem működik, nyissa meg ezt a linket a számítógépen:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8357,7 +8364,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} meghívta Önt ide: {server}",
+      "welcome_step_1": "Töltse le és nyissa meg a NeoDesk alkalmazást.",
+      "welcome_step_2": "Kattintson a Telepítés gombra.",
+      "welcome_step_3": "Kész: a(z) {company} ügyfélszolgálata mostantól segíthet Önnek, és látja, ha valaki csatlakozik.",
+      "mac_steps_title": "Macen"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8375,6 +8387,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "Még várunk a számítógépre. A link eddig működik: {date}.",
+      "waiting_named": "Még várunk erre: {name}. A link eddig működik: {date}.",
+      "joined_title": "{name} csatlakozott",
+      "joined_lead": "Négy rövid lépés. A Kihagyás mindent úgy hagy, ahogy most van.",
+      "step_of": "Lépés: {step}/{count}",
+      "step_name": "Név",
+      "step_folder": "Mappa",
+      "step_reach": "Így éri el",
+      "step_test": "Tesztmunkamenet",
+      "name_hint": "Megjelenik az Eszközök között és a megtekintőben.",
+      "folder_hint": "A mappája határozza meg, ki láthatja és érheti el a számítógépet.",
+      "no_permission": "Az Ön szerepköre ezt nem módosíthatja. Úgy marad, ahogy van.",
+      "save_failed": "Nem sikerült menteni. Próbálja újra.",
+      "reach_lead": "Így csatlakozhat a(z) {name} géphez:",
+      "reach_password": "Jelszóval: valaki a számítógépnél állandó jelszót állít be a NeoDesk alkalmazásban, a Beállítások, Biztonság részben. Ezt írja be csatlakozáskor.",
+      "reach_accept": "Jelszó nélkül: a számítógépnél ülő személy látja, ki szeretne csatlakozni, és az Elfogadás gombra kattint.",
+      "test_lead": "Nyisson meg egy munkamenetet, és ellenőrizze, hogy minden működik-e. A számítógépen futó NeoDesk megkéri az ott lévő személyt, hogy fogadja el.",
+      "test_start": "Tesztmunkamenet indítása",
+      "test_offline": "A(z) {name} offline. Kapcsolja be, és várjon, amíg itt online-ként jelenik meg.",
+      "next": "Tovább",
+      "skip": "Kihagyás",
+      "done": "Kész",
+      "finished": "A(z) {name} készen áll.",
+      "finished_folder": "Az Eszközök között találja, itt: {folder}.",
+      "finished_plain": "Az Eszközök között találja.",
+      "next_computer": "Következő számítógép beállítása",
+      "key_changed": "Ez a számítógép már járt itt egy másik kulccsal.",
+      "key_changed_hint": "Ha újratelepítették vagy visszaállították, hagyja jóvá az új kulcsot. Ezután nyissa meg újra a meghívót a számítógépen.",
+      "approve_key": "Új kulcs jóváhagyása",
+      "key_approved": "Az új kulcs jóváhagyva. Nyissa meg újra a meghívót a számítógépen.",
+      "refused": "Egy {id} azonosítójú számítógép megpróbálta használni ezt a meghívót, de elutasították. Nézzen utána az Eszközök között: lehet, hogy le van tiltva vagy el lett távolítva."
     }
   },
   "ui_form": {

@@ -8222,7 +8222,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} har invitert deg til {server}",
+      "welcome_lead": "Konfigurer NeoDesk på datamaskinen din. Det tar noen minutter.",
+      "welcome_button": "Konfigurer NeoDesk",
+      "welcome_step_1": "Last ned og åpne NeoDesk.",
+      "welcome_step_2": "Klikk på Installer.",
+      "welcome_step_3": "Ferdig: brukerstøtten hos {company} kan hjelpe deg fra nå av, og du ser når noen kobler til.",
+      "welcome_link": "Hvis knappen ikke virker, åpner du denne lenken på datamaskinen:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8357,7 +8364,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} har invitert deg til {server}",
+      "welcome_step_1": "Last ned og åpne NeoDesk.",
+      "welcome_step_2": "Klikk på Installer.",
+      "welcome_step_3": "Ferdig: brukerstøtten hos {company} kan hjelpe deg fra nå av, og du ser når noen kobler til.",
+      "mac_steps_title": "På en Mac"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8375,6 +8387,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "Venter fortsatt på datamaskinen. Lenken virker til {date}.",
+      "waiting_named": "Venter fortsatt på {name}. Lenken virker til {date}.",
+      "joined_title": "{name} ble med",
+      "joined_lead": "Fire korte trinn. Hopp over lar alt være som det er nå.",
+      "step_of": "Trinn {step} av {count}",
+      "step_name": "Navn",
+      "step_folder": "Mappe",
+      "step_reach": "Slik når du den",
+      "step_test": "Testøkt",
+      "name_hint": "Vises i Enheter og i fjernvisningen.",
+      "folder_hint": "Hvem som kan se og nå datamaskinen, følger mappen den ligger i.",
+      "no_permission": "Rollen din kan ikke endre dette. Det blir som det er.",
+      "save_failed": "Kunne ikke lagre. Prøv igjen.",
+      "reach_lead": "Slik kobler du til {name}:",
+      "reach_password": "Med passordet: noen ved datamaskinen angir et permanent passord i NeoDesk, under Innstillinger, Sikkerhet. Du skriver det inn når du kobler til.",
+      "reach_accept": "Uten passord: personen ved datamaskinen ser hvem som vil koble til, og klikker på Godta.",
+      "test_lead": "Åpne en økt for å sjekke at alt virker. NeoDesk på datamaskinen ber personen der om å godta.",
+      "test_start": "Start testøkt",
+      "test_offline": "{name} er frakoblet. Slå den på og vent til den vises som online her.",
+      "next": "Neste",
+      "skip": "Hopp over",
+      "done": "Ferdig",
+      "finished": "{name} er klar.",
+      "finished_folder": "Du finner den i Enheter, i {folder}.",
+      "finished_plain": "Du finner den i Enheter.",
+      "next_computer": "Konfigurer neste datamaskin",
+      "key_changed": "Denne datamaskinen har vært her før med en annen nøkkel.",
+      "key_changed_hint": "Hvis den er installert på nytt eller tilbakestilt, godkjenner du den nye nøkkelen. Åpne så invitasjonen på datamaskinen igjen.",
+      "approve_key": "Godkjenn ny nøkkel",
+      "key_approved": "Ny nøkkel godkjent. Åpne invitasjonen på datamaskinen igjen.",
+      "refused": "En datamaskin med ID-en {id} prøvde denne invitasjonen og ble avvist. Sjekk Enheter: den kan være utestengt eller fjernet."
     }
   },
   "ui_form": {

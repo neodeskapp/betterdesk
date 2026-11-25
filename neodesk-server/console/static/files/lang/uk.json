@@ -8222,7 +8222,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "{sender} запрошує вас до {server}",
+      "welcome_lead": "Налаштуйте NeoDesk на своєму комп'ютері. Це займе кілька хвилин.",
+      "welcome_button": "Налаштувати NeoDesk",
+      "welcome_step_1": "Завантажте й відкрийте NeoDesk.",
+      "welcome_step_2": "Натисніть «Встановити».",
+      "welcome_step_3": "Готово: підтримка {company} тепер може вам допомагати, а ви бачите, коли хтось підключається.",
+      "welcome_link": "Якщо кнопка не працює, відкрийте це посилання на комп'ютері:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8357,7 +8364,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "{sender} запрошує вас до {server}",
+      "welcome_step_1": "Завантажте й відкрийте NeoDesk.",
+      "welcome_step_2": "Натисніть «Встановити».",
+      "welcome_step_3": "Готово: підтримка {company} тепер може вам допомагати, а ви бачите, коли хтось підключається.",
+      "mac_steps_title": "На Mac"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8375,6 +8387,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "Досі чекаємо на комп'ютер. Посилання діє до {date}.",
+      "waiting_named": "Досі чекаємо на {name}. Посилання діє до {date}.",
+      "joined_title": "Комп'ютер {name} приєднався",
+      "joined_lead": "Чотири короткі кроки. «Пропустити» залишає все як є.",
+      "step_of": "Крок {step} з {count}",
+      "step_name": "Назва",
+      "step_folder": "Папка",
+      "step_reach": "Як ви до нього підключаєтеся",
+      "step_test": "Тестовий сеанс",
+      "name_hint": "Показується в розділі «Пристрої» і в переглядачі.",
+      "folder_hint": "Хто може бачити комп'ютер і підключатися до нього, залежить від його папки.",
+      "no_permission": "Ваша роль не може це змінити. Усе лишається як є.",
+      "save_failed": "Не вдалося зберегти. Спробуйте ще раз.",
+      "reach_lead": "Так ви підключаєтеся до {name}:",
+      "reach_password": "З його паролем: хтось за комп'ютером задає постійний пароль у NeoDesk, у розділі «Налаштування», «Безпека». Ви вводите його під час підключення.",
+      "reach_accept": "Без пароля: людина за комп'ютером бачить, хто хоче підключитися, і натискає «Прийняти».",
+      "test_lead": "Відкрийте сеанс, щоб перевірити, що все працює. NeoDesk на комп'ютері попросить людину там погодитися.",
+      "test_start": "Почати тестовий сеанс",
+      "test_offline": "Комп'ютер {name} не в мережі. Увімкніть його й зачекайте, доки він з'явиться тут як онлайн.",
+      "next": "Далі",
+      "skip": "Пропустити",
+      "done": "Готово",
+      "finished": "Комп'ютер {name} готовий.",
+      "finished_folder": "Ви знайдете його в розділі «Пристрої», у папці {folder}.",
+      "finished_plain": "Ви знайдете його в розділі «Пристрої».",
+      "next_computer": "Налаштувати наступний комп'ютер",
+      "key_changed": "Цей комп'ютер уже був тут з іншим ключем.",
+      "key_changed_hint": "Якщо його перевстановили або скинули, схваліть новий ключ. Потім знову відкрийте запрошення на комп'ютері.",
+      "approve_key": "Схвалити новий ключ",
+      "key_approved": "Новий ключ схвалено. Знову відкрийте запрошення на комп'ютері.",
+      "refused": "Комп'ютер з ID {id} спробував використати це запрошення, і його не прийняли. Перевірте «Пристрої»: можливо, його заблоковано або видалено."
     }
   },
   "ui_form": {

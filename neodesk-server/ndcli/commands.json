@@ -8475,6 +8475,10 @@
    "reason": "A page or file of the web console: open it in a browser."
   },
   {
+   "route": "GET /join/{code}",
+   "reason": "The invite page the person who got a link opens in a browser, not an admin's command."
+  },
+  {
    "route": "GET /join/{code}/install.sh",
    "reason": "Used by the person who got a link or the device that joins with it, not by an admin."
   },

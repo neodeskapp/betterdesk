@@ -134,6 +134,7 @@ func RegisterWith(d *kit.Deps, opts Options) {
 
 	r.Get("/api/onboard/public/{code}", h.publicCode, h.limit)
 	r.Get("/api/onboard/public/{code}/download", h.download, h.limit)
+	r.Get("/join/{code}", h.joinPage)
 	r.Get("/join/{code}/install.sh", h.installScript, h.limit)
 	r.Get("/s/{code}/run.sh", h.runScript, h.limit)
 

@@ -8223,7 +8223,14 @@
       "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
       "support_button": "Start the support session",
       "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it."
+      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "welcome_subject": "دعاك {sender} إلى {server}",
+      "welcome_lead": "قم بإعداد NeoDesk على الكمبيوتر الخاص بك. يستغرق ذلك بضع دقائق.",
+      "welcome_button": "إعداد NeoDesk",
+      "welcome_step_1": "نزّل NeoDesk وافتحه.",
+      "welcome_step_2": "انقر على تثبيت.",
+      "welcome_step_3": "تم: يمكن لفريق دعم {company} مساعدتك من الآن، وسترى عندما يتصل أحد.",
+      "welcome_link": "إذا لم يعمل الزر، فافتح هذا الرابط على الكمبيوتر:"
     },
     "invite": {
       "button": "Add a computer",
@@ -8358,7 +8365,12 @@
       "support_steps_macos_1": "Open the downloaded file. It runs from your Downloads folder. If your Mac says it can't check the app: open System Settings, Privacy & Security, scroll down and click Open Anyway.",
       "support_steps_macos_2": "Allow Screen Recording and Accessibility when your Mac asks.",
       "support_steps_macos_3": "Check that it shows {supporter}, then click Allow.",
-      "support_steps_macos_4": "When you are done, click Stop at the top of your screen."
+      "support_steps_macos_4": "When you are done, click Stop at the top of your screen.",
+      "welcome_title": "دعاك {sender} إلى {server}",
+      "welcome_step_1": "نزّل NeoDesk وافتحه.",
+      "welcome_step_2": "انقر على تثبيت.",
+      "welcome_step_3": "تم: يمكن لفريق دعم {company} مساعدتك من الآن، وسترى عندما يتصل أحد.",
+      "mac_steps_title": "على جهاز Mac"
     },
     "errors": {
       "invalid_body": "The request could not be read.",
@@ -8376,6 +8388,39 @@
       "server_error": "Something went wrong on the server. Try again.",
       "rate_limited": "Too many tries. Wait a minute and try again.",
       "invalid_or_expired": "This link has expired or was already used."
+    },
+    "guide": {
+      "waiting": "لا يزال في انتظار الكمبيوتر. يعمل الرابط حتى {date}.",
+      "waiting_named": "لا يزال في انتظار {name}. يعمل الرابط حتى {date}.",
+      "joined_title": "انضم {name}",
+      "joined_lead": "أربع خطوات قصيرة. يُبقي التخطي كل شيء كما هو الآن.",
+      "step_of": "الخطوة {step} من {count}",
+      "step_name": "الاسم",
+      "step_folder": "المجلد",
+      "step_reach": "كيف تصل إليه",
+      "step_test": "جلسة اختبار",
+      "name_hint": "يظهر في الأجهزة وفي العارض.",
+      "folder_hint": "مجلد الكمبيوتر يحدد من يمكنه رؤيته والوصول إليه.",
+      "no_permission": "لا يمكن لدورك تغيير هذا. سيبقى كما هو.",
+      "save_failed": "تعذّر الحفظ. حاول مرة أخرى.",
+      "reach_lead": "هكذا تتصل بـ {name}:",
+      "reach_password": "بكلمة مرور: يضبط شخص عند الكمبيوتر كلمة مرور دائمة في NeoDesk، ضمن الإعدادات، الأمان. تكتبها عند الاتصال.",
+      "reach_accept": "بدون كلمة مرور: يرى الشخص عند الكمبيوتر من يريد الاتصال وينقر على قبول.",
+      "test_lead": "افتح جلسة للتحقق من أن كل شيء يعمل. يطلب NeoDesk على الكمبيوتر من الشخص هناك القبول.",
+      "test_start": "بدء جلسة الاختبار",
+      "test_offline": "{name} غير متصل. شغّله وانتظر حتى يظهر هنا متصلًا.",
+      "next": "التالي",
+      "skip": "تخطي",
+      "done": "تم",
+      "finished": "{name} جاهز.",
+      "finished_folder": "ستجده في الأجهزة، في {folder}.",
+      "finished_plain": "ستجده في الأجهزة.",
+      "next_computer": "إعداد الكمبيوتر التالي",
+      "key_changed": "كان هذا الكمبيوتر هنا من قبل بمفتاح آخر.",
+      "key_changed_hint": "إذا أُعيد تثبيته أو إعادة تعيينه، فوافق على المفتاح الجديد. ثم افتح الدعوة على الكمبيوتر مرة أخرى.",
+      "approve_key": "الموافقة على المفتاح الجديد",
+      "key_approved": "تمت الموافقة على المفتاح الجديد. افتح الدعوة على الكمبيوتر مرة أخرى.",
+      "refused": "حاول كمبيوتر بالمعرّف {id} استخدام هذه الدعوة ورُفض. تحقق من الأجهزة: ربما يكون محظورًا أو محذوفًا."
     }
   },
   "ui_form": {
