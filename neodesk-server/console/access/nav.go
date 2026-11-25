@@ -2,7 +2,7 @@ package access
 
 import "strings"
 
-// The console's navigation: five sections, each with its pages. A page is
+// The console's navigation: six sections, each with its pages. A page is
 // shown to exactly the accounts its route lets in, so each page carries the
 // check its route uses. The account's panel access policy then hides the
 // pages whose section it may not read.
@@ -78,7 +78,6 @@ func countID(id string) func(*NavPage)    { return func(p *NavPage) { p.CountID 
 const (
 	groupConsole   = "nav.group_console"
 	groupClients   = "nav.group_clients"
-	groupRules     = "nav.group_rules"
 	groupServer    = "nav.group_server"
 	groupBilling   = "nav.group_billing"
 	groupDeveloper = "nav.group_developer"
@@ -116,6 +115,13 @@ var NavSections = []NavSection{
 		navPage("reports", "reports export trends", "/reports", "nav.reports", withPermission("audit.view"), core),
 		navPage("commercialization:sessions", "sessions billing minutes work reports", "/commercialization?tab=sessions", "commercialization.tabs.sessions", withPermission("billing.view")),
 	}},
+	{ID: "rules", Label: "nav.section_rules", Icon: "shield", Pages: []NavPage{
+		navPage("policies", "policies rules", "/policies", "nav.policies", withRule(navAdminRole), core),
+		navPage("automation", "automation alerts commands rules", "/automation", "nav.automation", withPermission("server.config"), core),
+		navPage("resource-control", "resource control usb drives disks", "/resource-control", "nav.resource_control", withPermission("server.config")),
+		navPage("dataguard", "dataguard dlp data loss", "/dataguard", "nav.dataguard", withPermission("server.config")),
+		navPage("attestation", "attestation fingerprint hardware identity", "/attestation", "nav.attestation", withRule(navAdminRole)),
+	}},
 	{ID: "settings", Label: "nav.settings", Icon: "settings", Pages: []NavPage{
 		navPage("settings:general", "settings relay address public endpoints connection strategy meshcentral", "/settings", "settings.tab_general", withRule(navAlways), core, inGroup(groupConsole)),
 		navPage("settings:branding", "branding theme colours colors logo dark mode", "/settings?tab=branding", "settings.tab_branding", withRule(navAlways), inGroup(groupConsole)),
@@ -132,11 +138,6 @@ var NavSections = []NavSection{
 		navPage("agents", "agents installers generator", "/agents", "nav.agents", withRule(navAdminRole), inGroup(groupClients),
 			func(p *NavPage) { p.AlsoActiveFor = []string{"generator"} }),
 		navPage("client-branding", "client branding white label", "/client-branding", "nav.client_branding", withPermission("branding.edit"), inGroup(groupClients)),
-		navPage("policies", "policies rules", "/policies", "nav.policies", withRule(navAdminRole), inGroup(groupRules)),
-		navPage("automation", "automation alerts commands", "/automation", "nav.automation", withPermission("server.config"), inGroup(groupRules)),
-		navPage("resource-control", "resource control usb drives disks", "/resource-control", "nav.resource_control", withPermission("server.config"), inGroup(groupRules)),
-		navPage("dataguard", "dataguard dlp data loss", "/dataguard", "nav.dataguard", withPermission("server.config"), inGroup(groupRules)),
-		navPage("attestation", "attestation fingerprint hardware identity", "/attestation", "nav.attestation", withRule(navAdminRole), inGroup(groupRules)),
 		navPage("server-management:overview", "server management status health cpu memory uptime", "/server-management?tab=overview", "nav.server_status", withPermission("server.config"), core, inGroup(groupServer)),
 		navPage("server-management:files", "file browser", "/server-management?tab=files", "server_mgmt.tab_files", withPermission("server.config"), inGroup(groupServer)),
 		navPage("server-management:services", "systemd services", "/server-management?tab=services", "server_mgmt.tab_services", withPermission("server.config"), inGroup(groupServer)),

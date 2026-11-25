@@ -91,6 +91,52 @@ func TestNavHasNoServerTerminal(t *testing.T) {
 	}
 }
 
+// sectionPages lists the pages of one section, in order, for an account
+// that may open everything.
+func sectionPages(id string) (pages []string, groups []string) {
+	nav := BuildNav(NavInput{Can: func(string) bool { return true }, IsSuperAdmin: true, Role: "super_admin"})
+	for _, section := range nav.Sections {
+		if section.ID != id {
+			continue
+		}
+		for _, page := range section.Pages {
+			pages = append(pages, page.Page)
+			groups = append(groups, page.Group)
+		}
+	}
+	return pages, groups
+}
+
+// Plan step 7: the rules pages are a section of their own between Activity
+// and Settings, each with the check and address it had.
+func TestNavRulesSection(t *testing.T) {
+	pages, groups := sectionPages("rules")
+	if got := strings.Join(pages, ","); got != "policies,automation,resource-control,dataguard,attestation" {
+		t.Errorf("rules section has %s", got)
+	}
+	for i, group := range groups {
+		if group != "" {
+			t.Errorf("%s still carries the group %q", pages[i], group)
+		}
+	}
+	settings, settingsGroups := sectionPages("settings")
+	for i, page := range settings {
+		if settingsGroups[i] == "nav.group_rules" || page == "policies" || page == "dataguard" {
+			t.Errorf("settings still holds %s", page)
+		}
+	}
+	for _, section := range NavSections {
+		if section.ID == "rules" && (section.Label != "nav.section_rules" || section.Icon != "shield") {
+			t.Errorf("rules section: label %q, icon %q", section.Label, section.Icon)
+		}
+	}
+	// The checks did not change: operators see no policy page, server
+	// admins see them all
+	if pagesFor("operator")["policies"] || !pagesFor("server_admin")["dataguard"] {
+		t.Error("the rules pages changed who sees them")
+	}
+}
+
 func TestNavSectionsAndActivePage(t *testing.T) {
 	admin := NavInput{Can: func(string) bool { return true }, IsSuperAdmin: true, Role: "admin"}
 	nav := BuildNav(admin)
@@ -100,7 +146,7 @@ func TestNavSectionsAndActivePage(t *testing.T) {
 		ids = append(ids, section.ID)
 		total += len(section.Pages)
 	}
-	if strings.Join(ids, ",") != "devices,support,people,activity,settings" || total != 47 {
+	if strings.Join(ids, ",") != "devices,support,people,activity,rules,settings" || total != 47 {
 		t.Errorf("admin sees sections %v with %d pages", ids, total)
 	}
 	if nav.ActivePage != nil || nav.ActiveSection != nil {

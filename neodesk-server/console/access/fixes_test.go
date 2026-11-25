@@ -180,31 +180,80 @@ func withNodeTables(t *testing.T) {
 	t.Cleanup(func() { RouteRules, Catalog, ClientFeatures = goRules, goCatalog, goFeatures })
 }
 
-// withNodeTerminal puts the server terminal's page back into the
-// navigation after the server status page, where Node had it, until the
-// test ends, so that the rest of the navigation is compared with Node's.
-// A194 removed the page.
-func withNodeTerminal(t *testing.T) {
+// nodeNavSections is the navigation as Node had it: five sections, the
+// rules, server and billing pages under Settings, and the server terminal
+// after the server status page (A194 removed it). The console's own table
+// moved on (plan steps 6, 7 and 9 of L494, nav_test.go); the oracle replays
+// Node's answers, so it runs with this table.
+var nodeNavSections = []NavSection{
+	{ID: "devices", Label: "nav.devices", Icon: "devices", Pages: []NavPage{
+		navPage("dashboard", "home dashboard start", "/", "nav.dashboard", withRule(navAlways), core),
+		navPage("devices", "computers peers machines connect", "/devices", "folders.all_devices", withPermission("device.view"), core),
+		navPage("registrations", "enrollment approve new device registration pending", "/registrations", "nav.registrations", withPermission("enrollment.approve"), core, countID("reg-sidebar-badge")),
+		navPage("activate-agent", "pair agent code activation", "/?activateAgent=1", "nav.pair_agent", withPermission("enrollment.approve"),
+			func(p *NavPage) { p.Access, p.ID = "registrations", "nav-activate-agent" }),
+		navPage("remote", "web client browser remote control", "/remote", "nav.remote", withPermission("device.connect"), core, external),
+		navPage("inventory", "hardware software", "/inventory", "nav.inventory", withPermission("device.view")),
+		navPage("network", "ping monitor latency targets", "/network", "nav.network", withPermission("device.view")),
+		navPage("fleet", "fleet bulk tasks workflows compliance", "/fleet", "nav.fleet", withPermission("org.manage_devices")),
+		navPage("cross-platform", "cross-platform matrix features os", "/cross-platform", "nav.cross_platform", withPermission("device.view")),
+		navPage("cdap", "cdap iot scada sensors gateway", "/cdap", "nav.cdap", withPermission("cdap.view")),
+	}},
+	{ID: "support", Label: "nav.section_support", Icon: "support_agent", Pages: []NavPage{
+		navPage("help-requests", "help support requests", "/help-requests", "nav.help_requests", withPermission("device.view"), core),
+		navPage("tickets", "issues", "/tickets", "nav.tickets", withPermission("device.view"), core),
+		navPage("chat", "messages", "/chat", "nav.chat", withPermission("chat.access"), core),
+		navPage("toolkit", "toolkit ping dns port ssl diagnostics", "/toolkit", "nav.toolkit", withPermission("device.connect")),
+	}},
+	{ID: "people", Label: "nav.section_people", Icon: "group", Pages: []NavPage{
+		navPage("users", "accounts people operators", "/users", "nav.users", withPermission("user.view"), core),
+		navPage("organizations", "tenants customers", "/organizations", "nav.organizations", withPermission("org.create", "org.edit", "org.manage_users")),
+		navPage("permissions", "roles rights access", "/permissions", "nav.permissions", withRule(navSuperAdmin)),
+	}},
+	{ID: "activity", Label: "nav.activity", Icon: "history", Pages: []NavPage{
+		navPage("security-audit", "audit log who banned security events", "/security-audit", "nav.security_audit", withPermission("audit.view"), core),
+		navPage("activity", "app usage activity monitoring", "/activity", "activity.title", withPermission("audit.view")),
+		navPage("reports", "reports export trends", "/reports", "nav.reports", withPermission("audit.view"), core),
+		navPage("commercialization:sessions", "sessions billing minutes work reports", "/commercialization?tab=sessions", "commercialization.tabs.sessions", withPermission("billing.view")),
+	}},
+	{ID: "settings", Label: "nav.settings", Icon: "settings", Pages: []NavPage{
+		navPage("settings:general", "settings relay address public endpoints connection strategy meshcentral", "/settings", "settings.tab_general", withRule(navAlways), core, inGroup("nav.group_console")),
+		navPage("settings:branding", "branding theme colours colors logo dark mode", "/settings?tab=branding", "settings.tab_branding", withRule(navAlways), inGroup("nav.group_console")),
+		navPage("settings:auth", "authentication 2fa two-factor totp password ldap sso oidc", "/settings?tab=auth", "settings.tab_auth", withRule(navAlways), inGroup("nav.group_console")),
+		navPage("settings:backup", "backup restore", "/settings?tab=backup", "settings.tab_backup", withPermission("server.config"), inGroup("nav.group_console")),
+		navPage("settings:updates", "updates version upgrade", "/settings?tab=updates", "updates.tab_title", withPermission("server.config"), inGroup("nav.group_console")),
+		navPage("settings:email", "email smtp mail", "/settings?tab=email", "settings.tab_email", withPermission("server.config"), inGroup("nav.group_console")),
+		navPage("settings:time", "time zone timezone ntp clock", "/settings?tab=time", "settings.tab_time", withPermission("server.config"), inGroup("nav.group_console")),
+		navPage("settings:advanced", "advanced config files restart", "/settings?tab=advanced", "settings.tab_advanced", withPermission("server.config"), inGroup("nav.group_console")),
+		navPage("languages", "languages translations i18n", "/languages", "nav.languages", withPermission("server.config"), inGroup("nav.group_console")),
+		navPage("keys", "keys public key qr client setup rustdesk config", "/keys", "nav.keys", withRule(navAlways), core, inGroup("nav.group_clients")),
+		navPage("tokens", "tokens enrollment mode", "/tokens", "nav.tokens", withPermission("enrollment.manage"), inGroup("nav.group_clients")),
+		navPage("pairing", "pairing code", "/pairing", "nav.pairing", withPermission("enrollment.approve"), inGroup("nav.group_clients")),
+		navPage("agents", "agents installers generator", "/agents", "nav.agents", withRule(navAdminRole), inGroup("nav.group_clients"),
+			func(p *NavPage) { p.AlsoActiveFor = []string{"generator"} }),
+		navPage("client-branding", "client branding white label", "/client-branding", "nav.client_branding", withPermission("branding.edit"), inGroup("nav.group_clients")),
+		navPage("policies", "policies rules", "/policies", "nav.policies", withRule(navAdminRole), inGroup("nav.group_rules")),
+		navPage("automation", "automation alerts commands", "/automation", "nav.automation", withPermission("server.config"), inGroup("nav.group_rules")),
+		navPage("resource-control", "resource control usb drives disks", "/resource-control", "nav.resource_control", withPermission("server.config"), inGroup("nav.group_rules")),
+		navPage("dataguard", "dataguard dlp data loss", "/dataguard", "nav.dataguard", withPermission("server.config"), inGroup("nav.group_rules")),
+		navPage("attestation", "attestation fingerprint hardware identity", "/attestation", "nav.attestation", withRule(navAdminRole), inGroup("nav.group_rules")),
+		navPage("server-management:overview", "server management status health cpu memory uptime", "/server-management?tab=overview", "nav.server_status", withPermission("server.config"), core, inGroup("nav.group_server")),
+		navPage("server-management:terminal", "shell console ssh", "/server-management?tab=terminal", "server_mgmt.tab_terminal", withPermission("server.config"), inGroup("nav.group_server")),
+		navPage("server-management:files", "file browser", "/server-management?tab=files", "server_mgmt.tab_files", withPermission("server.config"), inGroup("nav.group_server")),
+		navPage("server-management:services", "systemd services", "/server-management?tab=services", "server_mgmt.tab_services", withPermission("server.config"), inGroup("nav.group_server")),
+		navPage("scaling", "scaling relays", "/scaling", "nav.scaling", withPermission("server.config"), inGroup("nav.group_server")),
+		navPage("server-attestation", "server attestation benchmark load test badge", "/server-attestation", "nav.server_attestation", withPermission("server.attestation"), inGroup("nav.group_server")),
+		navPage("commercialization:packages", "packages contracts billing", "/commercialization?tab=packages", "commercialization.tabs.packages", withPermission("billing.view"), inGroup("nav.group_billing")),
+		navPage("cdap-studio", "sdk studio flows widgets", "/cdap-studio", "nav.sdk_studio", withRole("operator"), inGroup("nav.group_developer")),
+	}},
+}
+
+// withNodeNav puts Node's navigation in place of the console's until the
+// test ends, so that BuildNav and the bootstrap are compared with Node's.
+func withNodeNav(t *testing.T) {
 	t.Helper()
 	goSections := NavSections
-	sections := make([]NavSection, len(goSections))
-	copy(sections, goSections)
-	found := false
-	for i, section := range sections {
-		for j, page := range section.Pages {
-			if page.Page != "server-management:overview" {
-				continue
-			}
-			terminal := navPage("server-management:terminal", "shell console ssh", "/server-management?tab=terminal", "server_mgmt.tab_terminal", withPermission("server.config"), inGroup(groupServer))
-			pages := append(append(append([]NavPage(nil), section.Pages[:j+1]...), terminal), section.Pages[j+1:]...)
-			sections[i].Pages, found = pages, true
-			break
-		}
-	}
-	if !found {
-		t.Fatal("no server status page to put the terminal after")
-	}
-	NavSections = sections
+	NavSections = nodeNavSections
 	t.Cleanup(func() { NavSections = goSections })
 }
 
