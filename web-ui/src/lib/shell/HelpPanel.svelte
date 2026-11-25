@@ -1,5 +1,6 @@
 <!--
-  Help panel (public/js/help-panel.js): opened from "Help" in the top bar.
+  Help panel (public/js/help-panel.js): opened from Help in the top bar, or
+  at the end of the sidebar on phones.
   From 1100 px it docks beside the page (not modal: the page stays usable,
   focus goes to its close button, Escape closes it); below that it is a
   side sheet over the page (modal, Tab stays inside). Either way focus goes
@@ -56,7 +57,7 @@
 	</aside>
 {:else if open}
 	<Sheet bind:open title={t('nav.help')}>
-		<HelpContent onguide={() => (open = false)} />
+		<HelpContent onguide={() => (open = false)} onleave={() => (open = false)} />
 	</Sheet>
 {/if}
 

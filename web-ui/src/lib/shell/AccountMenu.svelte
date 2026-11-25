@@ -4,32 +4,36 @@
   status (online, away, busy), Your account (/account: profile, password,
   two-factor sign-in, signed-in devices, preferences), Signed-in devices
   (the account's sessions on other browsers, A239), API tokens (admins,
-  their part of Your account) and Sign out.
+  their part of Your account), Preferences (the theme of this browser as a
+  choice, Language, which opens the language list, Accessibility, which
+  opens its panel) and Sign out.
 
-  place "sidebar": the sidebar footer button (avatar, name, role); the
-  menu opens upwards there. place "topbar": the top bar button below
-  1100 px, where the sidebar is a drawer.
+  The button is the avatar at the end of the top bar, at every width.
 -->
 <script lang="ts">
 	import { t, tf, has } from '#lib/i18n/i18n.svelte.ts';
+	import { i18n } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import SessionsSheet from '#lib/people/SessionsSheet.svelte';
 	import { mayMakeTokens } from '#lib/people/apiTokens.ts';
 	import { session } from '#lib/state/session.svelte.ts';
+	import { setTheme, theme, type ThemeChoice } from '#lib/state/theme.svelte.ts';
 	import { myPresence, setPresence, PRESENCE_VALUES } from '#lib/state/presence.svelte.ts';
 	import Avatar from '#lib/ui/Avatar.svelte';
-	import Icon from '#lib/ui/Icon.svelte';
+	import LangFlag from '#lib/ui/LangFlag.svelte';
 	import Menu from '#lib/ui/Menu.svelte';
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import Presence from '#lib/ui/Presence.svelte';
+	import { a11y } from './a11y.svelte.ts';
+	import { chooseLanguage, currentLanguageName } from './language.ts';
 	import { signOut } from './sign-out.ts';
-
-	let { place = 'sidebar' }: { place?: 'sidebar' | 'topbar' } = $props();
 
 	const uid = $props.id();
 	let open = $state(false);
 	let devices = $state(false);
+	/** The language list, opened from Language */
+	let languages = $state(false);
 	let button = $state<HTMLButtonElement | null>(null);
 
 	const user = $derived(session.user);
@@ -46,6 +50,11 @@
 		return words.charAt(0).toUpperCase() + words.slice(1);
 	});
 	const statusLabel = (s: string) => t(`chat.presence_${s}`);
+	const THEMES: { value: ThemeChoice; key: string }[] = [
+		{ value: 'default', key: 'theme.console_default' },
+		{ value: 'light', key: 'theme.light' },
+		{ value: 'dark', key: 'theme.dark' }
+	];
 
 	function toggle() {
 		open = !open;
@@ -61,49 +70,33 @@
 	function onclose(returnFocus: boolean) {
 		if (returnFocus) button?.focus();
 	}
+
+	/** The account menu has closed and given focus back: the language list opens from the same button */
+	function openLanguages() {
+		queueMicrotask(() => (languages = true));
+	}
 </script>
 
-<span class={['account', `is-${place}`]}>
-	{#if place === 'sidebar'}
-		<button
-			bind:this={button}
-			type="button"
-			class="account-btn"
-			aria-haspopup="menu"
-			aria-expanded={open}
-			aria-controls={open ? `${uid}-menu` : undefined}
-			onclick={toggle}
-			{onkeydown}
-		>
-			<Avatar user={person} size="md" presence={myPresence.status} />
-			<span class="account-text">
-				<span class="account-name">{name}</span>
-				{#if role}<span class="account-role">{role}</span>{/if}
-				<span class="sr-only">{statusLabel(myPresence.status)}</span>
-			</span>
-			<Icon name={open ? 'expand_more' : 'expand_less'} class="account-chevron" />
-		</button>
-	{:else}
-		<button
-			bind:this={button}
-			type="button"
-			class="account-icon-btn"
-			aria-haspopup="menu"
-			aria-expanded={open}
-			aria-controls={open ? `${uid}-menu` : undefined}
-			title={name}
-			onclick={toggle}
-			{onkeydown}
-		>
-			<Avatar user={person} presence={myPresence.status} />
-			<!-- The name, not the initials on the picture, names the button -->
-			<span class="sr-only">{name}, {statusLabel(myPresence.status)}</span>
-		</button>
-	{/if}
+<span class="account">
+	<button
+		bind:this={button}
+		type="button"
+		class="account-icon-btn"
+		aria-haspopup="menu"
+		aria-expanded={open}
+		aria-controls={open ? `${uid}-menu` : undefined}
+		title={name}
+		onclick={toggle}
+		{onkeydown}
+	>
+		<Avatar user={person} presence={myPresence.status} />
+		<!-- The name, not the initials on the picture, names the button -->
+		<span class="sr-only">{name}, {statusLabel(myPresence.status)}</span>
+	</button>
 	<Menu
 		bind:open
 		anchor={button}
-		align={place === 'sidebar' ? 'start' : 'end'}
+		align="end"
 		id={`${uid}-menu`}
 		label={tf('user_menu.label', 'Account')}
 		class="account-menu"
@@ -135,45 +128,56 @@
 			>
 		{/if}
 		<MenuDivider />
+		<div role="group" aria-labelledby={`${uid}-theme`}>
+			<div class="menu-label" id={`${uid}-theme`}>{t('theme.title')}</div>
+			{#each THEMES as th (th.value)}
+				<MenuItem type="radio" checked={theme.choice === th.value} onselect={() => setTheme(th.value)}
+					>{t(th.key)}</MenuItem
+				>
+			{/each}
+		</div>
+		<MenuItem icon="language" haspopup="menu" onselect={openLanguages}
+			>{t('settings.language')}: {currentLanguageName()}</MenuItem
+		>
+		<MenuItem icon="accessibility_new" haspopup="dialog" onselect={() => (a11y.open = true)}
+			>{t('accessibility.title')}</MenuItem
+		>
+		<MenuDivider />
 		<MenuItem icon="logout" onselect={signOut}>{t('user_menu.sign_out')}</MenuItem>
 	</Menu>
 	{#if devices}
 		<SessionsSheet onclose={() => (devices = false)} />
 	{/if}
+	<Menu
+		bind:open={languages}
+		anchor={button}
+		align="end"
+		id={`${uid}-languages`}
+		label={t('settings.language')}
+		initialFocus="checked"
+		class="lang-menu"
+		{onclose}
+	>
+		{#each i18n.available as l (l.code)}
+			<MenuItem
+				type="radio"
+				checked={l.code === i18n.lang}
+				lang={l.code}
+				onselect={() => chooseLanguage(l.code)}
+			>
+				{#snippet lead()}<LangFlag code={l.code} />{/snippet}
+				{l.native || l.name || l.code}
+			</MenuItem>
+		{/each}
+	</Menu>
 </span>
 
 <style>
 	.account {
 		position: relative;
-		display: block;
-	}
-	.account.is-topbar {
 		display: inline-flex;
 	}
 	/* The dot on the avatar is ringed in the surface it sits on */
-	.account-btn {
-		--presence-ring: var(--bg-subtle);
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-		box-sizing: border-box;
-		width: calc(100% + 2 * var(--space-2));
-		min-height: var(--control-h);
-		margin-inline: calc(-1 * var(--space-2));
-		padding: var(--space-1) var(--space-2);
-		border: 0;
-		border-radius: var(--radius);
-		background: transparent;
-		color: var(--text);
-		font: inherit;
-		text-align: start;
-		cursor: pointer;
-	}
-	.account-btn:hover,
-	.account-btn[aria-expanded='true'] {
-		--presence-ring: var(--hover);
-		background: var(--hover);
-	}
 	.account-icon-btn {
 		--presence-ring: var(--bg);
 		display: inline-flex;
@@ -212,16 +216,15 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-	.account-btn > :global(.account-chevron) {
-		flex-shrink: 0;
-		color: var(--text-muted);
-		font-size: 18px;
-	}
 	.account :global(.menu.account-menu) {
 		--presence-ring: var(--bg-float);
 		width: max-content;
 		min-width: 220px;
 		max-width: min(320px, calc(100vw - 2 * var(--space-3)));
+	}
+	.account :global(.menu.lang-menu) {
+		min-width: 200px;
+		max-height: min(70vh, 480px);
 	}
 	.account-person {
 		display: flex;
@@ -245,10 +248,6 @@
 		width: 20px;
 	}
 	@media (pointer: coarse) {
-		.account-btn,
-		.account-icon-btn {
-			min-height: 44px;
-		}
 		.account-icon-btn {
 			width: 44px;
 			height: 44px;

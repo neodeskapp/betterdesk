@@ -47,3 +47,26 @@ test('an account that may not make API tokens gets no API tokens item', async ()
 	expect(screen.getByRole('menuitem', { name: 'account.title' })).toBeTruthy();
 	expect(screen.queryByRole('menuitem', { name: 'api_tokens.title' })).toBeNull();
 });
+
+test('Preferences: the theme of this browser as a choice, Language and Accessibility', async () => {
+	session.user = { id: 7, username: 'demo_ui_admin', role: 'admin' } as User;
+	const { theme } = await import('../../../src/lib/state/theme.svelte.ts');
+	const { a11y } = await import('../../../src/lib/shell/a11y.svelte.ts');
+	const AccountMenu = (await import('../../../src/lib/shell/AccountMenu.svelte')).default;
+	render(AccountMenu);
+	const button = screen.getByRole('button', { name: /demo_ui_admin/ });
+	await userEvent.click(button);
+	for (const name of ['theme.console_default', 'theme.light', 'theme.dark'])
+		expect(screen.getByRole('menuitemradio', { name })).toBeInTheDocument();
+	await userEvent.click(screen.getByRole('menuitemradio', { name: 'theme.dark' }));
+	expect(theme.choice).toBe('dark');
+	await userEvent.click(button);
+	expect(screen.getByRole('menuitemradio', { name: 'theme.dark' })).toHaveAttribute('aria-checked', 'true');
+	expect(screen.getByRole('menuitem', { name: /^settings\.language/ })).toHaveAttribute(
+		'aria-haspopup',
+		'menu'
+	);
+	await userEvent.click(screen.getByRole('menuitem', { name: /^accessibility\.title/ }));
+	expect(a11y.open).toBe(true);
+	a11y.open = false;
+});

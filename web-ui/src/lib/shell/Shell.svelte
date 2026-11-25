@@ -5,8 +5,7 @@
   accessibility panel, the idle warning, the dialog, toast and device
   panel hosts. Inside a Desktop Mode window (?embed=1) only the page.
 
-  On every navigation: dialogs from code, menus, the drawer and the phone
-  actions row close. When the page itself changes (not just its query),
+  On every navigation: dialogs from code, menus and the drawer close. When the page itself changes (not just its query),
   focus moves to the page's heading, so keyboard and screen reader users
   start there.
 -->
@@ -56,7 +55,6 @@
 	let drawerOpen = $state(false);
 	let helpOpen = $state(false);
 	let searchOpen = $state(false);
-	let actionsOpen = $state(false);
 	let navigation = $state(0);
 	const branding = $derived(session.raw ? brandingExtras(session.raw.branding) : null);
 	let sidebar = $state<HTMLElement | null>(null);
@@ -113,7 +111,6 @@
 		closeDialogs();
 		closePopups();
 		drawerOpen = false;
-		actionsOpen = false;
 		navigation++;
 		if (type === 'enter' || !from || !to || from.url.pathname === to.url.pathname) return;
 		void tick().then(() => {
@@ -221,6 +218,10 @@
 			{drawer}
 			open={drawerOpen}
 			onlinkclick={closeDrawer}
+			onhelp={() => {
+				closeDrawer();
+				helpOpen = true;
+			}}
 			{branding}
 			{navigation}
 		/>
@@ -237,7 +238,6 @@
 				{helpOpen}
 				{helpId}
 				bind:helpButton
-				bind:actionsOpen
 				ondrawer={() => (drawerOpen ? closeDrawer() : openDrawer())}
 				onsearch={() => (searchOpen = true)}
 				onhelp={() => (helpOpen = !helpOpen)}

@@ -2,8 +2,10 @@
   The sidebar (views/partials/ux35-sidebar.ejs, public/js/ux35-shell.js):
   the logo section on top, as wide as the sidebar; the sections the server
   sent, each with its everyday pages and the rest under "More" (with a
-  heading where the group changes); the account menu and the footer text
-  at the bottom; a handle on the end edge to change the width.
+  heading where the group changes); Help at the end on phones, where the
+  top bar has no room for it; the footer text and "Powered by NeoDesk" at
+  the bottom (the account menu is in the top bar); a handle on the end
+  edge to change the width.
 
   Remembered with the old keys: sections opened or closed in this tab
   (sessionStorage nd_nav_sections_collapsed; the current page's section is
@@ -19,7 +21,6 @@
 	import { link } from '#lib/nav.ts';
 	import { session } from '#lib/state/session.svelte.ts';
 	import Icon from '#lib/ui/Icon.svelte';
-	import AccountMenu from './AccountMenu.svelte';
 	import BrandLogo from './BrandLogo.svelte';
 	import type { BrandingExtras } from './api.ts';
 	import { live } from './live-events.svelte.ts';
@@ -50,6 +51,8 @@
 		open?: boolean;
 		/** A link in the sidebar was clicked (closes the drawer) */
 		onlinkclick?: () => void;
+		/** Help at the end, on phones: opens the Help panel */
+		onhelp?: () => void;
 		branding: BrandingExtras | null;
 		/** Bumped on every navigation: forget choices made for the page that was open */
 		navigation: number;
@@ -62,6 +65,7 @@
 		drawer,
 		open = false,
 		onlinkclick,
+		onhelp,
 		branding,
 		navigation,
 		element = $bindable(null)
@@ -330,8 +334,14 @@
 		{/each}
 	</nav>
 
+	<!-- On phones Help is here: the top bar has no room for it -->
+	<div class="sidebar-help">
+		<button type="button" class="help-entry" aria-haspopup="dialog" onclick={() => onhelp?.()}
+			><Icon name="menu_book" /><span class="nav-label">{t('nav.help')}</span></button
+		>
+	</div>
+
 	<div class="sidebar-footer">
-		<AccountMenu place="sidebar" />
 		{#if footerText || showPoweredBy}
 			<div class="sidebar-attribution">
 				{#if footerText}<span>{footerText}</span>{/if}
@@ -559,6 +569,40 @@
 		padding-top: var(--space-1);
 	}
 
+	.sidebar-help {
+		display: none;
+		flex: none;
+		padding: var(--space-1) var(--space-2);
+		border-top: 1px solid var(--rule);
+	}
+	.help-entry {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		box-sizing: border-box;
+		width: 100%;
+		min-height: 44px;
+		padding: var(--space-1) var(--space-2);
+		border: 0;
+		border-radius: var(--radius);
+		background: transparent;
+		color: var(--text);
+		font: inherit;
+		text-align: start;
+		cursor: pointer;
+	}
+	.help-entry:hover {
+		background: var(--hover);
+	}
+	.help-entry > :global(.material-icons) {
+		color: var(--text-muted);
+		font-size: 20px;
+	}
+	@media (max-width: 767px) {
+		.sidebar-help {
+			display: block;
+		}
+	}
 	.sidebar-footer {
 		display: flex;
 		flex: none;

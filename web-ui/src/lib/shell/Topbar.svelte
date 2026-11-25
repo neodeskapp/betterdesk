@@ -1,17 +1,22 @@
 <!--
-  The top bar (views/partials/ux35-topbar.ejs): the drawer button and the
-  logo mark below 1100 px, the breadcrumb (section, page), the global
-  search, Quick support (device.connect), Help, then notifications,
-  refresh, theme, accessibility, language, and the account menu below
-  1100 px. On phones (767 px and below) those last actions fold behind a
-  "More" button into a row under the bar; menus open from there.
+  The top bar (views/partials/ux35-topbar.ejs): the logo mark below
+  1100 px, with the drawer button from 768 to 1099 px; the breadcrumb
+  (section, page), the global search, Quick support (device.connect; its
+  name from 1280 px, an icon below), notifications, Help (an icon that
+  opens the Help panel) and the account menu at the end, at every width.
+  Theme, language and accessibility are in the account menu under
+  Preferences. Pages whose data others change load it again by themselves
+  (lib/state/live.ts reloadWhileShown), so there is no Refresh.
+
+  Phones (767 px and below): logo, search, Quick support, notifications
+  and the account. The bottom bar's More opens the sidebar, which has Help
+  at its end.
 
   The bar never gets wider than the screen: its buttons keep their width
   and their one line, the breadcrumb takes the room that is left, and the
   search field gives way first (down to its icon). A short breadcrumb shows
-  only the current page. On phones Quick support and search show only their
-  icon, and below 420 px the breadcrumb is gone from view; their names stay
-  for screen readers.
+  only the current page. Below 420 px the breadcrumb is gone from view;
+  hidden names stay for screen readers.
 -->
 <script lang="ts">
 	import { i18n, t } from '#lib/i18n/i18n.svelte.ts';
@@ -19,16 +24,12 @@
 	import { closeQuickSupport, openQuickSupport, quickSupport } from '#lib/onboard/open.svelte.ts';
 	import QuickSupportDialog from '#lib/onboard/QuickSupportDialog.svelte';
 	import { can, session } from '#lib/state/session.svelte.ts';
-	import { cycleTheme, theme } from '#lib/state/theme.svelte.ts';
 	import IconButton from '#lib/ui/IconButton.svelte';
 	import { ICONS } from '#lib/util/display.ts';
 	import Icon from '#lib/ui/Icon.svelte';
 	import AccountMenu from './AccountMenu.svelte';
 	import BrandLogo from './BrandLogo.svelte';
-	import LanguageMenu from './LanguageMenu.svelte';
 	import NotificationsMenu from './NotificationsMenu.svelte';
-	import { a11y, isDefault } from './a11y.svelte.ts';
-	import { requestRefresh } from './page.svelte.ts';
 	import { shortcutHint } from './search.ts';
 
 	interface Props {
@@ -39,8 +40,6 @@
 		helpOpen: boolean;
 		helpId: string;
 		helpButton?: HTMLButtonElement | null;
-		/** The actions row on phones is open */
-		actionsOpen?: boolean;
 		ondrawer: (opener: HTMLElement) => void;
 		onsearch: () => void;
 		onhelp: () => void;
@@ -54,81 +53,28 @@
 		helpOpen,
 		helpId,
 		helpButton = $bindable(null),
-		actionsOpen = $bindable(false),
 		ondrawer,
 		onsearch,
 		onhelp
 	}: Props = $props();
 
-	const uid = $props.id();
-	let moreButton = $state<HTMLButtonElement | null>(null);
-	let actions = $state<HTMLElement | null>(null);
-	let spinning = $state(false);
-
-	const themeLabel = $derived(
-		`${t('theme.title')}: ${
-			theme.choice === 'light'
-				? t('theme.light')
-				: theme.choice === 'dark'
-					? t('theme.dark')
-					: t('theme.console_default')
-		}`
-	);
-	const themeIcon = $derived(
-		theme.choice === 'light' ? 'light_mode' : theme.choice === 'dark' ? 'dark_mode' : 'contrast'
-	);
-	const a11yOn = $derived(!isDefault(a11y.settings));
 	const isMac =
 		typeof navigator !== 'undefined' && /Mac|iP(hone|ad|od)/.test(navigator.platform || navigator.userAgent);
 	const kbd = $derived(shortcutHint(i18n.lang, isMac));
-
-	function refresh() {
-		requestRefresh();
-		spinning = true;
-		setTimeout(() => (spinning = false), 300);
-	}
-
-	// Phones: the actions row closes on a click outside it (menus inside stay part of it),
-	// Escape (when no menu took the key), and when the screen gets wider
-	$effect(() => {
-		const el = actions;
-		if (!actionsOpen || !el) return;
-		const outside = (e: PointerEvent) => {
-			const target = e.target as Node | null;
-			if (target && (el.contains(target) || moreButton?.contains(target))) return;
-			actionsOpen = false;
-		};
-		const key = (e: KeyboardEvent) => {
-			if (e.key !== 'Escape' || e.defaultPrevented) return;
-			e.preventDefault();
-			const inside = el.contains(document.activeElement);
-			actionsOpen = false;
-			if (inside) moreButton?.focus();
-		};
-		const mq = window.matchMedia('(max-width: 767px)');
-		const wide = () => {
-			if (!mq.matches) actionsOpen = false;
-		};
-		document.addEventListener('pointerdown', outside, true);
-		document.addEventListener('keydown', key);
-		mq.addEventListener('change', wide);
-		return () => {
-			document.removeEventListener('pointerdown', outside, true);
-			document.removeEventListener('keydown', key);
-			mq.removeEventListener('change', wide);
-		};
-	});
 </script>
 
 <header class="shell-topbar">
 	{#if drawer}
-		<IconButton
-			icon="menu"
-			label={t('ux35.open_menu')}
-			aria-controls={sidebarId}
-			aria-expanded={drawerOpen}
-			onclick={(e) => ondrawer(e.currentTarget)}
-		/>
+		<!-- From 768 to 1099 px; on phones the bottom bar's More opens the sidebar -->
+		<span class="menu-btn">
+			<IconButton
+				icon="menu"
+				label={t('ux35.open_menu')}
+				aria-controls={sidebarId}
+				aria-expanded={drawerOpen}
+				onclick={(e) => ondrawer(e.currentTarget)}
+			/>
+		</span>
 		<a class="topbar-logo" href={link('/')} title={session.appName}>
 			<BrandLogo mark name={session.appName} /><span class="sr-only">{session.appName}</span>
 		</a>
@@ -172,42 +118,21 @@
 				></button
 			>
 		{/if}
-		<button
-			bind:this={helpButton}
-			type="button"
-			class="topbar-text-btn"
-			aria-haspopup="dialog"
-			aria-expanded={helpOpen}
-			aria-controls={helpOpen ? helpId : undefined}
-			onclick={onhelp}>{t('nav.help')}</button
-		>
-		<span class="more-btn">
+		<!-- nd-chat: the Chat button goes here, before notifications -->
+		<NotificationsMenu />
+		<!-- Help: on phones it is at the end of the sidebar -->
+		<span class="help-btn">
 			<IconButton
-				bind:element={moreButton}
-				icon="more_vert"
-				label={t('mobile_nav.more')}
-				aria-controls={`${uid}-actions`}
-				aria-expanded={actionsOpen}
-				onclick={() => (actionsOpen = !actionsOpen)}
+				bind:element={helpButton}
+				icon="menu_book"
+				label={t('nav.help')}
+				aria-haspopup="dialog"
+				aria-expanded={helpOpen}
+				aria-controls={helpOpen ? helpId : undefined}
+				onclick={onhelp}
 			/>
 		</span>
-		<div bind:this={actions} id={`${uid}-actions`} class={['action-list', actionsOpen && 'is-open']}>
-			<NotificationsMenu />
-			<span class={['refresh', spinning && 'is-spinning']}>
-				<IconButton icon="refresh" label={t('actions.refresh')} onclick={refresh} />
-			</span>
-			<IconButton icon={themeIcon} label={themeLabel} onclick={cycleTheme} />
-			<IconButton
-				icon="accessibility_new"
-				label={t('accessibility.title')}
-				class={a11yOn ? 'is-active' : ''}
-				aria-haspopup="dialog"
-				aria-expanded={a11y.open}
-				onclick={() => (a11y.open = true)}
-			/>
-			<LanguageMenu />
-			{#if drawer}<AccountMenu place="topbar" />{/if}
-		</div>
+		<AccountMenu />
 	</div>
 </header>
 
@@ -357,14 +282,13 @@
 		}
 	}
 
-	.topbar-actions,
-	.action-list {
+	.topbar-actions {
 		display: flex;
 		flex: none;
 		align-items: center;
 		gap: 2px;
 	}
-	/* Help: the one top bar control with a word, since it opens a panel, not a setting */
+	/* Quick support: a supporter's most common start, with its name where there is room */
 	.topbar-text-btn {
 		flex: none;
 		min-height: var(--control-h);
@@ -377,30 +301,29 @@
 		white-space: nowrap;
 		cursor: pointer;
 	}
-	.topbar-text-btn:hover,
-	.topbar-text-btn[aria-expanded='true'] {
+	.topbar-text-btn:hover {
 		background: var(--hover);
 	}
-	.action-list :global(.icon-btn.is-active) {
-		background: var(--accent-tint);
-		color: var(--accent);
-	}
-	.refresh {
+	.menu-btn,
+	.help-btn {
 		display: inline-flex;
 	}
-	.refresh.is-spinning :global(.material-icons) {
-		animation: spin var(--motion) linear;
-	}
-	@keyframes spin {
-		from {
-			transform: rotate(0deg);
+
+	/* Below 1280 px Quick support is an icon; its name stays for screen readers */
+	@media (max-width: 1279px) {
+		.quick-support-label {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip: rect(0, 0, 0, 0);
+			white-space: nowrap;
 		}
-		to {
-			transform: rotate(360deg);
+		.quick-support-btn {
+			justify-content: center;
+			width: var(--icon-btn-size);
+			padding: 0;
 		}
-	}
-	.more-btn {
-		display: none;
 	}
 
 	@media (max-width: 767px), (pointer: coarse) {
@@ -432,38 +355,9 @@
 			width: var(--control-h);
 			margin-inline-end: 0;
 		}
-		/* Hidden but still the button's name */
-		.quick-support-label {
-			position: absolute;
-			width: 1px;
-			height: 1px;
-			overflow: hidden;
-			clip: rect(0, 0, 0, 0);
-			white-space: nowrap;
-		}
-		.quick-support-btn {
-			justify-content: center;
-			width: var(--icon-btn-size);
-			padding: 0;
-		}
-		.more-btn {
-			display: inline-flex;
-		}
-		/* The actions fold into a row under the bar */
-		.action-list {
-			position: absolute;
-			top: calc(var(--topbar-h) - var(--space-1));
-			inset-inline-end: var(--space-2);
-			z-index: var(--layer-menu);
+		.menu-btn,
+		.help-btn {
 			display: none;
-			padding: var(--space-1);
-			border: 1px solid var(--rule);
-			border-radius: var(--radius);
-			background: var(--bg-float);
-			box-shadow: var(--shadow-float);
-		}
-		.action-list.is-open {
-			display: flex;
 		}
 	}
 	/* Narrow phones: no room for a page name worth reading (the page's own
