@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -127,11 +128,10 @@ func TestBootstrapUnderAPolicyAsNodeAnswered(t *testing.T) {
 		sections = append(sections, map[string]string{"resource_key": s[0], "access_level": s[1]})
 	}
 	body, _ := json.Marshal(map[string]any{"sections": sections, "features": []any{}})
-	// The navigation's texts are compared when the language files of the
-	// source tree are there; without them everything else is
-	langDir, texts := sourceLangDir(t), true
+	// The language files of the source tree when they are there
+	langDir := sourceLangDir(t)
 	if langDir == "" {
-		langDir, texts = smallLangDir(t), false
+		langDir = smallLangDir(t)
 	}
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
 		w := worldWithLanguages(t, db, langDir)
@@ -179,10 +179,10 @@ func TestBootstrapUnderAPolicyAsNodeAnswered(t *testing.T) {
 				name      string
 				want, got json.RawMessage
 			}{{"access", want.Access, got.Access}, {"nav", want.Nav, got.Nav}, {"permissions", want.Permissions, got.Permissions}} {
-				if part.name == "nav" && !texts {
-					part.want, part.got = withoutTexts(part.want), withoutTexts(part.got)
-				}
 				part.want, part.got = withoutFixed(part.name, part.want), withoutFixed(part.name, part.got)
+				if part.name == "nav" {
+					part.want, part.got = navPages(part.want), navPages(part.got)
+				}
 				if !sameJSON(part.want, part.got) {
 					t.Errorf("%s of %s differs\n  node: %s\n    go: %s", part.name, role, part.want, part.got)
 				}
@@ -376,11 +376,15 @@ func TestBootScriptAnswer(t *testing.T) {
 // them out on both sides. A194 removed the server terminal's page.
 var (
 	fixedSections = map[string]string{"organizations": "PA4, G16", "cross-platform": "PA4", "reports": "PA3 (F6)", "server-attestation": "PA5 (F9)", "network": "PA3 (F4)", "toolkit": "PA3 (F7)", "commercialization": "PA3 (F11)", "registrations": "UM12 (F10)", "dataguard": "PA3 (F5)", "automation": "PA3 (F8)"}
-	fixedRules    = map[string]string{"/settings": "PA3 (F1)", "/keys": "PA3 (F1)", "/tokens": "PA3 (F1)", "/policies": "PA3 (F1)", "/client-branding": "PA3 (F1)"}
+	fixedRules    = map[string]string{"/settings": "PA3 (F1)", "/keys": "PA3 (F1)", "/tokens": "PA3 (F1)", "/policies": "PA3 (F1)", "/client-branding": "PA3 (F1)", "/security-checks": "L494", "/billing": "L494"}
 	fixedPages    = map[string]string{
 		"cross-platform": "PA4", "network": "PA3 (F4)", "settings:general": "PA3 (F1)", "settings:branding": "PA3 (F1)", "settings:auth": "PA3 (F1)",
 		"keys": "PA3 (F1)", "tokens": "PA3 (F1)", "policies": "PA3 (F1)", "client-branding": "PA3 (F1)",
 		"server-management:terminal": "A194",
+		// The console structure plan (L494): pages that are new, gone, or
+		// shown to other roles than in Node
+		"security-checks": "L494", "billing": "L494", "commercialization:sessions": "L494", "commercialization:packages": "L494",
+		"settings:brand": "L494",
 	}
 )
 
@@ -446,6 +450,34 @@ func withoutFixed(part string, raw json.RawMessage) json.RawMessage {
 		return body
 	}
 	return raw
+}
+
+// navPages is a navigation as the list of its pages, sorted, without
+// their section, texts, group and keywords. The console structure plan
+// (L494) moved pages into new sections and gave them new names and search
+// words; which pages a policy shows, and where they lead, is still Node's.
+func navPages(nav json.RawMessage) json.RawMessage {
+	var sections []map[string]any
+	if json.Unmarshal(withoutTexts(nav), &sections) != nil {
+		return nav
+	}
+	pages := []map[string]any{}
+	for _, s := range sections {
+		list, _ := s["pages"].([]any)
+		for _, p := range list {
+			if page, ok := p.(map[string]any); ok {
+				delete(page, "keywords")
+				pages = append(pages, page)
+			}
+		}
+	}
+	sort.Slice(pages, func(i, j int) bool {
+		a, _ := pages[i]["page"].(string)
+		b, _ := pages[j]["page"].(string)
+		return a < b
+	})
+	out, _ := json.Marshal(pages)
+	return out
 }
 
 func withoutTexts(nav json.RawMessage) json.RawMessage {
