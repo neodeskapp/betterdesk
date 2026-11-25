@@ -44,6 +44,8 @@
 
 	let detail = $state<api.ConversationDetail | null>(null);
 	let lastRow: HTMLElement | null = null;
+	/** A found message to show when its conversation opens */
+	let focus = $state<{ conv: string; message: string } | null>(null);
 
 	// The open conversation's facts, and again when the server says it changed
 	$effect(() => {
@@ -83,8 +85,9 @@
 		void reload(c.id);
 	}
 
-	function open(c: string, row: HTMLElement | null) {
+	function open(c: string, row: HTMLElement | null, message?: string) {
 		lastRow = row;
+		focus = message ? { conv: c, message } : null;
 		onchange({ conv: c });
 	}
 
@@ -144,7 +147,14 @@
 	<div class="chat-pane-thread">
 		{#if conv}
 			{#key conv}
-				<Thread {conv} {target} {writable} autofocus={!compact} onmanagecanned={() => (managing = true)}>
+				<Thread
+					{conv}
+					{target}
+					{writable}
+					focus={focus?.conv === conv ? focus.message : null}
+					autofocus={!compact && !focus}
+					onmanagecanned={() => (managing = true)}
+				>
 					{#snippet header()}
 						<ConversationHeader
 							{conv}

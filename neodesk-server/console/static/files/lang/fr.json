@@ -5573,8 +5573,6 @@
     "save_edit": "Enregistrer",
     "screenshot_name": "capture-ecran",
     "search_people": "Trouver un collègue",
-    "search_support": "Trouver un ordinateur par nom, ID, propriétaire ou dossier",
-    "search_team": "Trouver un collègue ou un groupe",
     "section_support": "Assistance",
     "section_team": "Équipe",
     "sections": "Sections du chat",
@@ -5602,7 +5600,10 @@
     "mail_open": "Ouvrir la conversation : {link}",
     "mail_button": "Ouvrir la conversation dans {app}",
     "old_messages": "Anciens messages",
-    "old_messages_hint": "Du chat d'avant cette version. Seuls les administrateurs les voient, et personne ne peut écrire ici."
+    "old_messages_hint": "Du chat d'avant cette version. Seuls les administrateurs les voient, et personne ne peut écrire ici.",
+    "found_messages": "Messages",
+    "search_support": "Trouver un ordinateur ou un message : nom, ID, propriétaire, dossier ou texte",
+    "search_team": "Trouver un collègue, un groupe ou un message"
   },
   "toast": {
     "device_connected": "Device connected",

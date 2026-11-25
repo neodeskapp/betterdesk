@@ -17,10 +17,19 @@
 	import SearchField from '#lib/ui/SearchField.svelte';
 	import SegmentedFilter from '#lib/ui/SegmentedFilter.svelte';
 	import Time from '#lib/ui/Time.svelte';
-	import { loadInbox, loadTeam } from './api.ts';
+	import { loadInbox, loadTeam, searchMessages } from './api.ts';
 	import { chat } from './client.svelte.ts';
-	import { lastLine } from './logic.ts';
-	import type { InboxCounts, InboxFilter, InboxItem, Person, Section, TeamItem } from './types.ts';
+	import { lastLine, snippet } from './logic.ts';
+	import type {
+		FoundConversation,
+		InboxCounts,
+		InboxFilter,
+		InboxItem,
+		Message,
+		Person,
+		Section,
+		TeamItem
+	} from './types.ts';
 
 	interface Props {
 		section: Section;
@@ -28,7 +37,8 @@
 		active: string | null;
 		onsection: (s: Section) => void;
 		onfilter: (f: InboxFilter) => void;
-		onopen: (conv: string, row: HTMLElement | null) => void;
+		/** message: a found message to show in the conversation */
+		onopen: (conv: string, row: HTMLElement | null, message?: string) => void;
 		onnew: () => void;
 		/** Open a direct conversation with a colleague */
 		onperson: (p: Person, row: HTMLElement | null) => void;
@@ -54,9 +64,33 @@
 	let people = $state.raw<Person[]>([]);
 	let old = $state.raw<TeamItem[]>([]);
 	let failed = $state(false);
+	/** Messages with the search text, and their conversations */
+	let found = $state.raw<Message[]>([]);
+	let foundIn = $state.raw<Record<string, FoundConversation>>({});
+	let searching: AbortController | null = null;
+
+	async function findMessages(text: string) {
+		searching?.abort();
+		if (text.length < 2) {
+			found = [];
+			return;
+		}
+		const ctl = new AbortController();
+		searching = ctl;
+		try {
+			const r = await searchMessages(text, section, ctl.signal);
+			if (searching === ctl) {
+				found = r.messages;
+				foundIn = r.conversations;
+			}
+		} catch {
+			if (searching === ctl) found = [];
+		}
+	}
 
 	async function load() {
 		failed = false;
+		void findMessages(q.trim());
 		try {
 			if (section === 'support' && chat.may.support) {
 				const r = await loadInbox(filter, q.trim());
@@ -140,6 +174,40 @@
 	}
 </script>
 
+{#snippet foundRows()}
+	{#if found.length}
+		<h3 class="rows-title">{t('chat.found_messages')}</h3>
+		<ul class="rows" aria-label={t('chat.found_messages')}>
+			{#each found as m (m.id)}
+				{@const part = snippet(m.text, q.trim())}
+				<li>
+					<button
+						type="button"
+						class={['row', 'is-found', active === m.conversation_id && 'is-current']}
+						onclick={(e) => onopen(m.conversation_id, e.currentTarget, m.id)}
+					>
+						<span class="row-avatar"
+							><span class="row-icon" aria-hidden="true"
+								><Icon name={foundIn[m.conversation_id]?.kind === 'support' ? 'computer' : 'forum'} /></span
+							></span
+						>
+						<span class="row-main">
+							<span class="row-top">
+								<span class="row-name">{foundIn[m.conversation_id]?.name || m.conversation_id}</span>
+								<span class="row-time"><Time value={m.created_at} /></span>
+							</span>
+							<span class="row-found"
+								>{#if m.from.name}<span class="row-from">{m.from.name}:</span>
+								{/if}{part.before}<mark>{part.match}</mark>{part.after}</span
+							>
+						</span>
+					</button>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+{/snippet}
+
 <div class={['chat-list', compact && 'is-compact']}>
 	<div class="chat-list-top">
 		{#if sections.length > 1}
@@ -180,18 +248,21 @@
 			{#if support === null}
 				<p class="chat-list-state">{t('common.loading')}</p>
 			{:else if !support.length}
-				<div class="chat-list-empty">
-					<Icon name="support_agent" />
-					<p>
-						{q.trim()
-							? t('chat.no_match')
-							: filter === 'mine'
-								? t('chat.empty_mine')
-								: filter === 'closed'
-									? t('chat.empty_closed')
-									: t('chat.empty_support')}
-					</p>
-				</div>
+				{#if !found.length}
+					<div class="chat-list-empty">
+						<Icon name="support_agent" />
+						<p>
+							{q.trim()
+								? t('chat.no_match')
+								: filter === 'mine'
+									? t('chat.empty_mine')
+									: filter === 'closed'
+										? t('chat.empty_closed')
+										: t('chat.empty_support')}
+						</p>
+					</div>
+				{/if}
+				{@render foundRows()}
 			{:else}
 				<ul class="rows" aria-label={t('chat.section_support')}>
 					{#each support as c (c.id)}
@@ -246,6 +317,7 @@
 						</li>
 					{/each}
 				</ul>
+				{@render foundRows()}
 			{/if}
 		{:else if team === null}
 			<p class="chat-list-state">{t('common.loading')}</p>
@@ -349,7 +421,8 @@
 					{/each}
 				</ul>
 			{/if}
-			{#if !teamShown.length && !others.length && !oldShown.length}
+			{@render foundRows()}
+			{#if !teamShown.length && !others.length && !oldShown.length && !found.length}
 				<div class="chat-list-empty">
 					<Icon name="group" />
 					<p>{q.trim() ? t('chat.no_match') : t('chat.empty_team')}</p>
@@ -525,6 +598,24 @@
 		color: var(--text-muted);
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+	.row-found {
+		display: -webkit-box;
+		overflow: hidden;
+		color: var(--text-muted);
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		overflow-wrap: anywhere;
+	}
+	.row-found mark {
+		border-radius: 2px;
+		background: var(--accent-tint);
+		color: var(--text);
+		font-weight: 600;
+	}
+	.row-from {
+		color: var(--text);
 	}
 	.is-unread .row-last {
 		color: var(--text);

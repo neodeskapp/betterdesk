@@ -5436,8 +5436,6 @@
     "save_edit": "Lagre",
     "screenshot_name": "skjermbilde",
     "search_people": "Finn en kollega",
-    "search_support": "Finn en datamaskin etter navn, ID, eier eller mappe",
-    "search_team": "Finn en kollega eller gruppe",
     "section_support": "Brukerstøtte",
     "section_team": "Team",
     "sections": "Chatdeler",
@@ -5465,7 +5463,10 @@
     "mail_open": "Åpne samtalen: {link}",
     "mail_button": "Åpne samtalen i {app}",
     "old_messages": "Gamle meldinger",
-    "old_messages_hint": "Fra chatten før denne versjonen. Bare administratorer ser dem, og ingen kan skrive her."
+    "old_messages_hint": "Fra chatten før denne versjonen. Bare administratorer ser dem, og ingen kan skrive her.",
+    "found_messages": "Meldinger",
+    "search_support": "Finn en datamaskin eller melding: navn, ID, eier, mappe eller tekst",
+    "search_team": "Finn en kollega, gruppe eller melding"
   },
   "toast": {
     "device_connected": "Enhet tilkoblet",

@@ -1716,7 +1716,7 @@
   },
   {
    "name": "chat search",
-   "summary": "Search chat messages.",
+   "summary": "Find messages by their text in the conversations you read (-f q=text, two characters at least; -f section=support or team; -f conversation_id=...).",
    "route": "GET /api/chat/search",
    "permission": "chat.support or chat.team"
   },

@@ -5436,8 +5436,6 @@
     "save_edit": "Kaydet",
     "screenshot_name": "ekran-goruntusu",
     "search_people": "İş arkadaşı bul",
-    "search_support": "Bilgisayarı ada, ID'ye, sahibine veya klasöre göre bul",
-    "search_team": "İş arkadaşı veya grup bul",
     "section_support": "Destek",
     "section_team": "Ekip",
     "sections": "Sohbet bölümleri",
@@ -5465,7 +5463,10 @@
     "mail_open": "Konuşmayı aç: {link}",
     "mail_button": "Konuşmayı {app} içinde aç",
     "old_messages": "Eski mesajlar",
-    "old_messages_hint": "Bu sürümden önceki sohbetten. Yalnızca yöneticiler görür ve buraya kimse yazamaz."
+    "old_messages_hint": "Bu sürümden önceki sohbetten. Yalnızca yöneticiler görür ve buraya kimse yazamaz.",
+    "found_messages": "Mesajlar",
+    "search_support": "Bilgisayar veya mesaj bul: ad, ID, sahip, klasör ya da metin",
+    "search_team": "Çalışma arkadaşı, grup veya mesaj bul"
   },
   "toast": {
     "device_connected": "Cihaz bağlandı",

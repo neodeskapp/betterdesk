@@ -5569,8 +5569,6 @@
     "save_edit": "Zapisz",
     "screenshot_name": "zrzut-ekranu",
     "search_people": "Znajdź współpracownika",
-    "search_support": "Znajdź komputer po nazwie, ID, właścicielu lub folderze",
-    "search_team": "Znajdź współpracownika lub grupę",
     "section_support": "Wsparcie",
     "section_team": "Zespół",
     "sections": "Sekcje czatu",
@@ -5598,7 +5596,10 @@
     "mail_open": "Otwórz rozmowę: {link}",
     "mail_button": "Otwórz rozmowę w {app}",
     "old_messages": "Stare wiadomości",
-    "old_messages_hint": "Z czatu sprzed tej wersji. Widzą je tylko administratorzy i nikt nie może tu pisać."
+    "old_messages_hint": "Z czatu sprzed tej wersji. Widzą je tylko administratorzy i nikt nie może tu pisać.",
+    "found_messages": "Wiadomości",
+    "search_support": "Znajdź komputer lub wiadomość: nazwa, ID, właściciel, folder lub tekst",
+    "search_team": "Znajdź współpracownika, grupę lub wiadomość"
   },
   "toast": {
     "device_connected": "Urządzenie połączone",

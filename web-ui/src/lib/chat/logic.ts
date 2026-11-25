@@ -249,3 +249,27 @@ export function isPicture(type: string): boolean {
 export function reactors(who: Party[]): string {
 	return who.map((p) => p.name).join(', ');
 }
+
+/**
+ * The part of a found message around the first match of q (any case):
+ * radius characters on each side, with an ellipsis where the text is cut.
+ * A text without the match shows its start.
+ */
+export function snippet(
+	text: string,
+	q: string,
+	radius = 40
+): { before: string; match: string; after: string } {
+	const at = q ? text.toLowerCase().indexOf(q.toLowerCase()) : -1;
+	if (at < 0) {
+		return { before: '', match: '', after: text.slice(0, radius) + (text.length > radius ? '…' : '') };
+	}
+	const end = at + q.length;
+	const from = Math.max(0, at - radius);
+	const to = Math.min(text.length, end + radius);
+	return {
+		before: (from > 0 ? '…' : '') + text.slice(from, at),
+		match: text.slice(at, end),
+		after: text.slice(end, to) + (to < text.length ? '…' : '')
+	};
+}

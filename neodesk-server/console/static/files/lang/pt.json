@@ -5430,8 +5430,6 @@
     "save_edit": "Salvar",
     "screenshot_name": "captura-de-tela",
     "search_people": "Encontrar um colega",
-    "search_support": "Encontrar um computador por nome, ID, proprietário ou pasta",
-    "search_team": "Encontrar um colega ou grupo",
     "section_support": "Suporte",
     "section_team": "Equipe",
     "sections": "Seções do chat",
@@ -5459,7 +5457,10 @@
     "mail_open": "Abrir a conversa: {link}",
     "mail_button": "Abrir a conversa no {app}",
     "old_messages": "Mensagens antigas",
-    "old_messages_hint": "Do chat anterior a esta versão. Só os administradores as veem, e ninguém pode escrever aqui."
+    "old_messages_hint": "Do chat anterior a esta versão. Só os administradores as veem, e ninguém pode escrever aqui.",
+    "found_messages": "Mensagens",
+    "search_support": "Encontrar um computador ou mensagem: nome, ID, proprietário, pasta ou texto",
+    "search_team": "Encontrar um colega, grupo ou mensagem"
   },
   "toast": {
     "device_connected": "Dispositivo conectado",

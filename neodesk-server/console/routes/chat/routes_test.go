@@ -234,7 +234,7 @@ func TestRoutesInTheOrderOfTheOldFile(t *testing.T) {
 		got = append(got, route.Method+" "+route.Path)
 	}
 	// and after them the routes of the device's chat window (A242)
-	want := "POST /api/chat/upload\nGET /api/chat/files/{fileId}\nGET /api/chat/search\nPOST /api/chat/device/files\nGET /api/chat/device/files/{fileId}"
+	want := "POST /api/chat/upload\nGET /api/chat/files/{fileId}\nPOST /api/chat/device/files\nGET /api/chat/device/files/{fileId}"
 	if strings.Join(got, "\n") != want {
 		t.Errorf("routes:\n%s\nwant:\n%s", strings.Join(got, "\n"), want)
 	}
@@ -250,7 +250,6 @@ func TestRoutesNeedChatAccess(t *testing.T) {
 		"upload":   func(role string) *httptest.ResponseRecorder { return w.upload(role, file) },
 		"download": func(role string) *httptest.ResponseRecorder { return w.get(role, "GET", "/api/chat/files/"+firstID) },
 		"short id": func(role string) *httptest.ResponseRecorder { return w.get(role, "GET", "/api/chat/files/abc123") },
-		"search":   func(role string) *httptest.ResponseRecorder { return w.get(role, "GET", "/api/chat/search?q=hi") },
 	}
 	for name, request := range requests {
 		expect(t, name+" signed out", request(""), 401, signedOut)
@@ -262,12 +261,8 @@ func TestRoutesNeedChatAccess(t *testing.T) {
 	if got := w.stored(); len(got) != 1 {
 		t.Errorf("a refused upload left a file: %v", got)
 	}
-	if got := w.sent(); got != "" {
-		t.Errorf("a refused search reached the API server: %s", got)
-	}
 	for _, role := range []string{"viewer", "operator", "global_admin", "admin", "super_admin"} {
 		expect(t, "download as "+role, w.get(role, "GET", "/api/chat/files/"+firstID), 200, "secret")
-		expect(t, "search as "+role, w.get(role, "GET", "/api/chat/search?q=hi"), 200, `{"success":true,"messages":[]}`)
 	}
 }
 
@@ -539,64 +534,4 @@ func TestDownloadFromAHiddenFolder(t *testing.T) {
 	expect(t, "upload", w.upload("viewer", part{"file", "a.txt", []byte("x")}), 200,
 		`{"success":true,"file_id":"`+firstID+`","filename":"`+firstID+`.txt","size":1,"url":"/api/chat/files/`+firstID+`"}`)
 	expect(t, "download of the upload", w.get("viewer", "GET", "/api/chat/files/"+firstID), 200, "x")
-}
-
-func TestSearch(t *testing.T) {
-	w := newWorld(t)
-	const nothing = `{"success":true,"messages":[]}`
-
-	for _, target := range []string{"/api/chat/search", "/api/chat/search?q=", "/api/chat/search?conversation_id=c1"} {
-		expect(t, target, w.get("viewer", "GET", target), 200, nothing)
-		if got := w.sent(); got != "" {
-			t.Errorf("%s reached the API server: %s", target, got)
-		}
-	}
-
-	// The API server has no route at the path the call goes to
-	expect(t, "a search", w.get("viewer", "GET", "/api/chat/search?q=hello+world&conversation_id=c1"), 200, nothing)
-	if got, want := w.sent(), "GET /api/api/chat/search?q=hello+world&conversation_id=c1&limit=50"; got != want {
-		t.Errorf("the API server got %q, want %q", got, want)
-	}
-	expect(t, "without a conversation", w.get("viewer", "GET", "/api/chat/search?q=hi"), 200, nothing)
-	if got, want := w.sent(), "GET /api/api/chat/search?q=hi&conversation_id=&limit=50"; got != want {
-		t.Errorf("the API server got %q, want %q", got, want)
-	}
-	long := strings.Repeat("a", 198)
-	expect(t, "a long text given twice", w.get("viewer", "GET", "/api/chat/search?q="+long+"&q=more&conversation_id=a&conversation_id=b"), 200, nothing)
-	if got, want := w.sent(), "GET /api/api/chat/search?q="+long+"%2Cm&conversation_id%5B%5D=a&conversation_id%5B%5D=b&limit=50"; got != want {
-		t.Errorf("the API server got %q, want %q", got, want)
-	}
-	// A text cut in the middle of a character cannot be sent on
-	expect(t, "a cut through a character", w.get("viewer", "GET", "/api/chat/search?q="+strings.Repeat("a", 199)+"%F0%9F%98%80tail"), 200, nothing)
-	if got := w.sent(); got != "" {
-		t.Errorf("a text cut through a character reached the API server: %s", got)
-	}
-	expect(t, "a cut behind such a character", w.get("viewer", "GET", "/api/chat/search?q="+strings.Repeat("a", 198)+"%F0%9F%98%80tail"), 200, nothing)
-	if got, want := w.sent(), "GET /api/api/chat/search?q="+long+"%F0%9F%98%80&conversation_id=&limit=50"; got != want {
-		t.Errorf("the API server got %q, want %q", got, want)
-	}
-
-	// Were the route there, its messages would be passed on
-	answers := []struct {
-		status     int
-		body, want string
-	}{
-		{200, `{"messages":[{"id":1,"text":"hello"},{"id":2,"text":"hello again"}]}`, `{"success":true,"messages":[{"id":1,"text":"hello"},{"id":2,"text":"hello again"}]}`},
-		{200, `{"messages":null}`, nothing},
-		{200, `{}`, nothing},
-		{200, `[]`, nothing},
-		{200, `not json`, nothing},
-		{500, `{"messages":[{"id":1}]}`, nothing},
-		{403, `{"error":"forbidden"}`, nothing},
-	}
-	for _, a := range answers {
-		w.mu.Lock()
-		w.api = func(rw http.ResponseWriter, r *http.Request) {
-			rw.Header().Set("Content-Type", "application/json")
-			rw.WriteHeader(a.status)
-			_, _ = io.WriteString(rw, a.body)
-		}
-		w.mu.Unlock()
-		expect(t, "the API server answers "+a.body, w.get("viewer", "GET", "/api/chat/search?q=hello"), 200, a.want)
-	}
 }

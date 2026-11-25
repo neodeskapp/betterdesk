@@ -1,5 +1,6 @@
 // Package chat holds the console's chat: the HTTP routes (uploading a
-// file that a message links to, downloading it, searching messages) and
+// file that a message links to, downloading it), the routes of version 2
+// (inbox.go, search.go: the inbox, the team, searching messages) and
 // the relay, the websockets of devices and operators (relay.go). The
 // messages, contacts, groups and read marks are kept by the API server;
 // both reach them through api.go.
@@ -108,11 +109,10 @@ func register(d *kit.Deps, dir string) *handlers {
 			h.serverError(w, r, err, status)
 		},
 	})
-	// Support chat and Team chat both send files and search: no section
+	// Support chat and Team chat both send files: no section
 	r := d.Router.NoSection()
 	r.Post("/api/chat/upload", h.upload, d.Limits.Upload.Middleware, d.RequireAuth, chatAccess)
 	r.Get("/api/chat/files/{fileId}", h.download, d.RequireAuth, chatAccess)
-	r.Get("/api/chat/search", h.search, d.RequireAuth, chatAccess)
 	// A device's chat window sends and fetches files with its device
 	// token (A242)
 	r.Post("/api/chat/device/files", h.deviceUpload, d.Limits.Upload.Middleware, d.RequireDeviceToken)

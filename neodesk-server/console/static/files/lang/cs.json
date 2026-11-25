@@ -5430,8 +5430,6 @@
     "save_edit": "Uložit",
     "screenshot_name": "snimek-obrazovky",
     "search_people": "Najít kolegu",
-    "search_support": "Najít počítač podle názvu, ID, vlastníka nebo složky",
-    "search_team": "Najít kolegu nebo skupinu",
     "section_support": "Podpora",
     "section_team": "Tým",
     "sections": "Části chatu",
@@ -5459,7 +5457,10 @@
     "mail_open": "Otevřít konverzaci: {link}",
     "mail_button": "Otevřít konverzaci v {app}",
     "old_messages": "Staré zprávy",
-    "old_messages_hint": "Z chatu před touto verzí. Vidí je jen správci a nikdo sem nemůže psát."
+    "old_messages_hint": "Z chatu před touto verzí. Vidí je jen správci a nikdo sem nemůže psát.",
+    "found_messages": "Zprávy",
+    "search_support": "Najít počítač nebo zprávu: název, ID, vlastník, složka nebo text",
+    "search_team": "Najít kolegu, skupinu nebo zprávu"
   },
   "toast": {
     "device_connected": "Zařízení připojeno",

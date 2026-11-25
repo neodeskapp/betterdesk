@@ -5573,8 +5573,6 @@
     "save_edit": "儲存",
     "screenshot_name": "screenshot",
     "search_people": "尋找同事",
-    "search_support": "依名稱、ID、擁有者或資料夾尋找電腦",
-    "search_team": "尋找同事或群組",
     "section_support": "支援",
     "section_team": "團隊",
     "sections": "聊天分區",
@@ -5602,7 +5600,10 @@
     "mail_open": "開啟對話：{link}",
     "mail_button": "在 {app} 中開啟對話",
     "old_messages": "舊訊息",
-    "old_messages_hint": "來自此版本之前的聊天。只有管理員可以看到，任何人都無法在此發言。"
+    "old_messages_hint": "來自此版本之前的聊天。只有管理員可以看到，任何人都無法在此發言。",
+    "found_messages": "訊息",
+    "search_support": "尋找電腦或訊息：名稱、ID、擁有者、資料夾或文字",
+    "search_team": "尋找同事、群組或訊息"
   },
   "toast": {
     "device_connected": "設備已連接",

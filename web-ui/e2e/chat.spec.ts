@@ -151,6 +151,32 @@ test.describe('chat', () => {
 		await operator.context().close();
 	});
 
+	test('search: a message is found by its text and opens marked in its conversation', async ({
+		page,
+		baseURL
+	}, testInfo) => {
+		const which = DEVICES[testInfo.project.name] ?? DEVICES.chromium!;
+		const device = await Device.open(baseURL ?? '', which);
+		const word = `toner${stamp()}`;
+		device.send({ type: 'send', text: `the ${word} is empty`, client_id: 'e2e-s1' });
+		// Newer messages after it, so it is not the newest line
+		for (let i = 0; i < 3; i++)
+			device.send({ type: 'send', text: `later line ${i} ${stamp()}`, client_id: `e2e-s${i + 2}` });
+		await page.goto(`${UI}/chat?s=support`);
+		await expect(page.locator('.chat-list .rows, .chat-list .chat-list-empty').first()).toBeVisible({
+			timeout: 20_000
+		});
+		await page.getByRole('searchbox', { name: /Find a computer/ }).fill(word.toUpperCase());
+		const found = page.getByRole('list', { name: 'Messages' }).locator('.row');
+		await expect(found).toHaveCount(1, { timeout: 15_000 });
+		await expect(found.locator('mark')).toHaveText(word);
+		await expectNoAxeViolations(page);
+		await found.click();
+		await expect(page).toHaveURL(new RegExp(`c=${which.id}`));
+		await expect(page.locator('.chat-msg.is-marked', { hasText: word })).toBeVisible();
+		device.close();
+	});
+
 	test('panel: the chat opens over another page and from a computer', async ({ page }) => {
 		await page.goto(`${UI}/devices`);
 		await page.locator('.chat-btn').click();

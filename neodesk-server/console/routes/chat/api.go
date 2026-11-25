@@ -10,7 +10,7 @@ import (
 )
 
 // The chat's messages, contacts, groups and read marks are kept by the API
-// server (api/chat_handlers.go). The search route and the relay reach
+// server (api/chat_handlers.go). The relay of version 1 reaches
 // them through these calls, as the old console's routes and relay did
 // through its API client.
 
@@ -119,16 +119,4 @@ func markRead(ctx context.Context, api *goapi.Client, body []byte) {
 // made.
 func createGroup(ctx context.Context, api *goapi.Client, body []byte) (jsjson.Value, bool) {
 	return apiPost(ctx, api, "/chat/groups", body)
-}
-
-// searchMessages asks for up to 50 messages that have text, in one
-// conversation or in all ("" or a list of ids), and returns the messages
-// of the answer; ok is false when the call failed.
-func searchMessages(ctx context.Context, api *goapi.Client, text string, conversation any) (any, bool) {
-	resp, err := api.Get(ctx, "/api/chat/search",
-		goapi.Query("q", text), goapi.Query("conversation_id", conversation), goapi.Query("limit", 50))
-	if err != nil {
-		return nil, false
-	}
-	return goapi.Dig(resp.Data(), "messages"), true
 }

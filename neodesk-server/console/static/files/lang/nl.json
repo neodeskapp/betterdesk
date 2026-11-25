@@ -5430,8 +5430,6 @@
     "save_edit": "Opslaan",
     "screenshot_name": "schermafbeelding",
     "search_people": "Collega zoeken",
-    "search_support": "Computer zoeken op naam, ID, eigenaar of map",
-    "search_team": "Collega of groep zoeken",
     "section_support": "Support",
     "section_team": "Team",
     "sections": "Chatonderdelen",
@@ -5459,7 +5457,10 @@
     "mail_open": "Gesprek openen: {link}",
     "mail_button": "Gesprek openen in {app}",
     "old_messages": "Oude berichten",
-    "old_messages_hint": "Uit de chat van vóór deze versie. Alleen beheerders zien ze en niemand kan hier schrijven."
+    "old_messages_hint": "Uit de chat van vóór deze versie. Alleen beheerders zien ze en niemand kan hier schrijven.",
+    "found_messages": "Berichten",
+    "search_support": "Zoek een computer of bericht: naam, ID, eigenaar, map of tekst",
+    "search_team": "Zoek een collega, groep of bericht"
   },
   "toast": {
     "device_connected": "Apparaat verbonden",

@@ -12,6 +12,7 @@ import {
 	isMine,
 	lastLine,
 	linkParts,
+	snippet,
 	mayEdit,
 	pendingMessage,
 	seen,
@@ -175,5 +176,25 @@ describe('words', () => {
 			{ text: '. ok' }
 		]);
 		expect(linkParts('javascript:alert(1) <b>x</b>')).toEqual([{ text: 'javascript:alert(1) <b>x</b>' }]);
+	});
+});
+
+describe('snippet: the part of a found message around the match', () => {
+	test('keeps short texts whole and marks the match without regard to case', () => {
+		expect(snippet('The printer blinks', 'PRINTER')).toEqual({
+			before: 'The ',
+			match: 'printer',
+			after: ' blinks'
+		});
+	});
+	test('cuts long texts around the first match with an ellipsis on the cut sides', () => {
+		const text = `${'a'.repeat(100)} printer ${'b'.repeat(100)}`;
+		const s = snippet(text, 'printer', 10);
+		expect(s.match).toBe('printer');
+		expect(s.before).toBe(`…${'a'.repeat(9)} `);
+		expect(s.after).toBe(` ${'b'.repeat(9)}…`);
+	});
+	test('a text without the match starts at the beginning', () => {
+		expect(snippet('hello there', 'zzz', 5)).toEqual({ before: '', match: '', after: 'hello…' });
 	});
 });

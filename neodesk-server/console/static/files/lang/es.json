@@ -5430,8 +5430,6 @@
     "save_edit": "Guardar",
     "screenshot_name": "captura-de-pantalla",
     "search_people": "Buscar un compañero",
-    "search_support": "Buscar un ordenador por nombre, ID, propietario o carpeta",
-    "search_team": "Buscar un compañero o un grupo",
     "section_support": "Soporte",
     "section_team": "Equipo",
     "sections": "Secciones del chat",
@@ -5459,7 +5457,10 @@
     "mail_open": "Abrir la conversación: {link}",
     "mail_button": "Abrir la conversación en {app}",
     "old_messages": "Mensajes antiguos",
-    "old_messages_hint": "Del chat anterior a esta versión. Solo los administradores las ven y nadie puede escribir aquí."
+    "old_messages_hint": "Del chat anterior a esta versión. Solo los administradores las ven y nadie puede escribir aquí.",
+    "found_messages": "Mensajes",
+    "search_support": "Buscar un equipo o mensaje: nombre, ID, propietario, carpeta o texto",
+    "search_team": "Buscar un compañero, grupo o mensaje"
   },
   "toast": {
     "device_connected": "Dispositivo conectado",

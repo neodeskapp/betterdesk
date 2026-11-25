@@ -547,3 +547,54 @@ func nullInt(v int64) any {
 	}
 	return v
 }
+
+// Search narrows Find.
+type Search struct {
+	// Text is what a message's text has: case does not count for Latin
+	// letters, % and _ are text
+	Text string
+	// Conversation limits the search to one conversation ("" for all)
+	Conversation string
+	// Before finds messages older than this one (0: from the newest)
+	Before int64
+	// Limit is the most messages (at most 500, default 200)
+	Limit int
+}
+
+// Find returns the messages whose text has s.Text, newest first: neither
+// deleted ones nor lines of the system. It does not check who may read
+// them.
+func (s *Store) Find(ctx context.Context, q Search) ([]Message, error) {
+	if err := s.CatchUp(ctx); err != nil {
+		return nil, err
+	}
+	where := []string{s.db.Pick(`text LIKE ? ESCAPE '\'`, `text ILIKE ? ESCAPE '\'`), `deleted_ms IS NULL`, `from_kind <> ?`, `from_id <> 'system'`}
+	args := []any{"%" + store.EscapeLike(q.Text) + "%", KindSystem}
+	if q.Conversation != "" {
+		where = append(where, `conversation_id = ?`)
+		args = append(args, q.Conversation)
+	}
+	if q.Before > 0 {
+		where = append(where, `id < ?`)
+		args = append(args, q.Before)
+	}
+	limit := q.Limit
+	if limit <= 0 || limit > 500 {
+		limit = 200
+	}
+	args = append(args, limit)
+	rows, err := s.db.Query(ctx, messageSelect+` WHERE `+strings.Join(where, " AND ")+` ORDER BY id DESC LIMIT ?`, args...)
+	if err != nil {
+		return nil, fmt.Errorf("chat: search: %w", err)
+	}
+	defer rows.Close()
+	var out []Message
+	for rows.Next() {
+		m, err := scanMessage(rows)
+		if err != nil {
+			return nil, fmt.Errorf("chat: search: %w", err)
+		}
+		out = append(out, m)
+	}
+	return out, rows.Err()
+}

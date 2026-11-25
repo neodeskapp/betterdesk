@@ -5436,8 +5436,6 @@
     "save_edit": "Lưu",
     "screenshot_name": "anh-chup-man-hinh",
     "search_people": "Tìm đồng nghiệp",
-    "search_support": "Tìm máy tính theo tên, ID, chủ sở hữu hoặc thư mục",
-    "search_team": "Tìm đồng nghiệp hoặc nhóm",
     "section_support": "Hỗ trợ",
     "section_team": "Đội ngũ",
     "sections": "Các mục trò chuyện",
@@ -5465,7 +5463,10 @@
     "mail_open": "Mở cuộc trò chuyện: {link}",
     "mail_button": "Mở cuộc trò chuyện trong {app}",
     "old_messages": "Tin nhắn cũ",
-    "old_messages_hint": "Từ trò chuyện trước phiên bản này. Chỉ quản trị viên thấy, và không ai có thể viết ở đây."
+    "old_messages_hint": "Từ trò chuyện trước phiên bản này. Chỉ quản trị viên thấy, và không ai có thể viết ở đây.",
+    "found_messages": "Tin nhắn",
+    "search_support": "Tìm máy tính hoặc tin nhắn: tên, ID, chủ sở hữu, thư mục hoặc nội dung",
+    "search_team": "Tìm đồng nghiệp, nhóm hoặc tin nhắn"
   },
   "toast": {
     "device_connected": "Đã kết nối thiết bị",

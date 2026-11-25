@@ -5436,8 +5436,6 @@
     "save_edit": "Mentés",
     "screenshot_name": "kepernyokep",
     "search_people": "Kolléga keresése",
-    "search_support": "Számítógép keresése név, ID, tulajdonos vagy mappa szerint",
-    "search_team": "Kolléga vagy csoport keresése",
     "section_support": "Ügyfélszolgálat",
     "section_team": "Csapat",
     "sections": "Csevegési részek",
@@ -5465,7 +5463,10 @@
     "mail_open": "A beszélgetés megnyitása: {link}",
     "mail_button": "A beszélgetés megnyitása itt: {app}",
     "old_messages": "Régi üzenetek",
-    "old_messages_hint": "Az ez előtti verzió csevegéséből. Csak a rendszergazdák látják, és ide senki sem írhat."
+    "old_messages_hint": "Az ez előtti verzió csevegéséből. Csak a rendszergazdák látják, és ide senki sem írhat.",
+    "found_messages": "Üzenetek",
+    "search_support": "Számítógép vagy üzenet keresése: név, azonosító, tulajdonos, mappa vagy szöveg",
+    "search_team": "Kolléga, csoport vagy üzenet keresése"
   },
   "toast": {
     "device_connected": "Eszköz csatlakoztatva",

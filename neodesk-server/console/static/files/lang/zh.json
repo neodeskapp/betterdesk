@@ -5551,8 +5551,6 @@
     "save_edit": "保存",
     "screenshot_name": "screenshot",
     "search_people": "查找同事",
-    "search_support": "按名称、ID、所有者或文件夹查找电脑",
-    "search_team": "查找同事或群组",
     "section_support": "支持",
     "section_team": "团队",
     "sections": "聊天分区",
@@ -5580,7 +5578,10 @@
     "mail_open": "打开会话：{link}",
     "mail_button": "在 {app} 中打开会话",
     "old_messages": "旧消息",
-    "old_messages_hint": "来自此版本之前的聊天。只有管理员可以看到，任何人都不能在此发言。"
+    "old_messages_hint": "来自此版本之前的聊天。只有管理员可以看到，任何人都不能在此发言。",
+    "found_messages": "消息",
+    "search_support": "查找计算机或消息：名称、ID、所有者、文件夹或文本",
+    "search_team": "查找同事、群组或消息"
   },
   "toast": {
     "device_connected": "设备已连接",

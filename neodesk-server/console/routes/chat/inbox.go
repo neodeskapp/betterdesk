@@ -53,6 +53,7 @@ func registerInbox(d *kit.Deps, hub *Hub) *inboxRoutes {
 
 	shared := r.NoSection()
 	shared.Get("/api/chat/summary", h.summary, d.RequireAuth, either)
+	shared.Get("/api/chat/search", h.search, d.RequireAuth, either)
 	shared.Get("/api/chat/conversations/{id}", h.conversation, d.RequireAuth, either)
 	shared.Get("/api/chat/canned", h.cannedList, d.RequireAuth, either)
 	shared.Post("/api/chat/canned", h.cannedAdd, d.RequireAuth, either)

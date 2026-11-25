@@ -5430,8 +5430,6 @@
     "save_edit": "保存",
     "screenshot_name": "screenshot",
     "search_people": "同僚を検索",
-    "search_support": "名前、ID、所有者、フォルダーでコンピューターを検索",
-    "search_team": "同僚またはグループを検索",
     "section_support": "サポート",
     "section_team": "チーム",
     "sections": "チャットのセクション",
@@ -5459,7 +5457,10 @@
     "mail_open": "会話を開く: {link}",
     "mail_button": "{app} で会話を開く",
     "old_messages": "以前のメッセージ",
-    "old_messages_hint": "このバージョンより前のチャットのメッセージです。管理者だけが表示でき、ここには誰も書き込めません。"
+    "old_messages_hint": "このバージョンより前のチャットのメッセージです。管理者だけが表示でき、ここには誰も書き込めません。",
+    "found_messages": "メッセージ",
+    "search_support": "コンピューターまたはメッセージを検索: 名前、ID、所有者、フォルダー、テキスト",
+    "search_team": "同僚、グループ、メッセージを検索"
   },
   "toast": {
     "device_connected": "接続されたデバイス",

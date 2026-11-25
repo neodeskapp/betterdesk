@@ -5436,8 +5436,6 @@
     "save_edit": "Spara",
     "screenshot_name": "skarmbild",
     "search_people": "Hitta en kollega",
-    "search_support": "Hitta en dator efter namn, ID, ägare eller mapp",
-    "search_team": "Hitta en kollega eller grupp",
     "section_support": "Support",
     "section_team": "Team",
     "sections": "Chattavsnitt",
@@ -5465,7 +5463,10 @@
     "mail_open": "Öppna konversationen: {link}",
     "mail_button": "Öppna konversationen i {app}",
     "old_messages": "Gamla meddelanden",
-    "old_messages_hint": "Från chatten före den här versionen. Bara administratörer ser dem, och ingen kan skriva här."
+    "old_messages_hint": "Från chatten före den här versionen. Bara administratörer ser dem, och ingen kan skriva här.",
+    "found_messages": "Meddelanden",
+    "search_support": "Hitta en dator eller ett meddelande: namn, ID, ägare, mapp eller text",
+    "search_team": "Hitta en kollega, grupp eller ett meddelande"
   },
   "toast": {
     "device_connected": "Enhet ansluten",

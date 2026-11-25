@@ -5436,8 +5436,6 @@
     "save_edit": "Tallenna",
     "screenshot_name": "kuvakaappaus",
     "search_people": "Etsi kollega",
-    "search_support": "Etsi tietokone nimen, ID:n, omistajan tai kansion mukaan",
-    "search_team": "Etsi kollega tai ryhmä",
     "section_support": "Tuki",
     "section_team": "Tiimi",
     "sections": "Chatin osiot",
@@ -5465,7 +5463,10 @@
     "mail_open": "Avaa keskustelu: {link}",
     "mail_button": "Avaa keskustelu sovelluksessa {app}",
     "old_messages": "Vanhat viestit",
-    "old_messages_hint": "Tätä versiota edeltäneestä chatista. Vain ylläpitäjät näkevät ne, eikä tänne voi kirjoittaa."
+    "old_messages_hint": "Tätä versiota edeltäneestä chatista. Vain ylläpitäjät näkevät ne, eikä tänne voi kirjoittaa.",
+    "found_messages": "Viestit",
+    "search_support": "Etsi tietokone tai viesti: nimi, tunnus, omistaja, kansio tai teksti",
+    "search_team": "Etsi kollega, ryhmä tai viesti"
   },
   "toast": {
     "device_connected": "Laite yhdistetty",

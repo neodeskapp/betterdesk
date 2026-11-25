@@ -5436,8 +5436,6 @@
     "save_edit": "Salvați",
     "screenshot_name": "captura-ecran",
     "search_people": "Găsiți un coleg",
-    "search_support": "Găsiți un computer după nume, ID, proprietar sau folder",
-    "search_team": "Găsiți un coleg sau un grup",
     "section_support": "Asistență",
     "section_team": "Echipă",
     "sections": "Secțiuni de chat",
@@ -5465,7 +5463,10 @@
     "mail_open": "Deschideți conversația: {link}",
     "mail_button": "Deschideți conversația în {app}",
     "old_messages": "Mesaje vechi",
-    "old_messages_hint": "Din chatul de dinaintea acestei versiuni. Doar administratorii le văd și nimeni nu poate scrie aici."
+    "old_messages_hint": "Din chatul de dinaintea acestei versiuni. Doar administratorii le văd și nimeni nu poate scrie aici.",
+    "found_messages": "Mesaje",
+    "search_support": "Găsiți un computer sau un mesaj: nume, ID, proprietar, folder sau text",
+    "search_team": "Găsiți un coleg, un grup sau un mesaj"
   },
   "toast": {
     "device_connected": "Dispozitiv conectat",

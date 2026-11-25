@@ -5430,8 +5430,6 @@
     "save_edit": "Speichern",
     "screenshot_name": "bildschirmfoto",
     "search_people": "Kollegen finden",
-    "search_support": "Computer nach Name, ID, Besitzer oder Ordner finden",
-    "search_team": "Kollegen oder Gruppe finden",
     "section_support": "Support",
     "section_team": "Team",
     "sections": "Chat-Bereiche",
@@ -5459,7 +5457,10 @@
     "mail_open": "Unterhaltung öffnen: {link}",
     "mail_button": "Unterhaltung in {app} öffnen",
     "old_messages": "Alte Nachrichten",
-    "old_messages_hint": "Aus dem Chat vor dieser Version. Nur Admins sehen sie, und hier kann niemand schreiben."
+    "old_messages_hint": "Aus dem Chat vor dieser Version. Nur Admins sehen sie, und hier kann niemand schreiben.",
+    "found_messages": "Nachrichten",
+    "search_support": "Computer oder Nachricht finden: Name, ID, Besitzer, Ordner oder Text",
+    "search_team": "Kollegen, Gruppe oder Nachricht finden"
   },
   "toast": {
     "device_connected": "Gerät verbunden",

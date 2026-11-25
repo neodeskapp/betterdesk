@@ -119,6 +119,13 @@ export interface InboxItem extends Conversation {
 	unread: number;
 }
 
+/** A conversation a search found messages in */
+export interface FoundConversation {
+	id: string;
+	kind: ConversationKind;
+	name: string;
+}
+
 export interface TeamItem extends Conversation {
 	people: Person[];
 	last_message: LastMessage | null;

@@ -5436,8 +5436,6 @@
     "save_edit": "Gem",
     "screenshot_name": "skaermbillede",
     "search_people": "Find en kollega",
-    "search_support": "Find en computer efter navn, ID, ejer eller mappe",
-    "search_team": "Find en kollega eller gruppe",
     "section_support": "Support",
     "section_team": "Team",
     "sections": "Chatsektioner",
@@ -5465,7 +5463,10 @@
     "mail_open": "Åbn samtalen: {link}",
     "mail_button": "Åbn samtalen i {app}",
     "old_messages": "Gamle beskeder",
-    "old_messages_hint": "Fra chatten før denne version. Kun administratorer ser dem, og ingen kan skrive her."
+    "old_messages_hint": "Fra chatten før denne version. Kun administratorer ser dem, og ingen kan skrive her.",
+    "found_messages": "Beskeder",
+    "search_support": "Find en computer eller besked: navn, ID, ejer, mappe eller tekst",
+    "search_team": "Find en kollega, gruppe eller besked"
   },
   "toast": {
     "device_connected": "Enhed tilsluttet",

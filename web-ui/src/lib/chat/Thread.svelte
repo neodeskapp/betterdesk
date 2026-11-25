@@ -39,6 +39,8 @@
 		onmanagecanned: () => void;
 		/** Focus the field when the thread opens */
 		autofocus?: boolean;
+		/** A message to show and mark: older pages load until it is there */
+		focus?: string | null;
 	}
 
 	let {
@@ -49,7 +51,8 @@
 		notice,
 		empty,
 		onmanagecanned,
-		autofocus = false
+		autofocus = false,
+		focus = null
 	}: Props = $props();
 
 	const thread = $derived(chat.thread(conv));
@@ -79,9 +82,39 @@
 			if (!chat.thread(c).loaded) chat.history(c);
 			chat.setVisible(c, true);
 		});
-		void scrollToEnd();
+		if (!untrack(() => focus)) void scrollToEnd();
 		if (autofocus) void tick().then(() => field?.focus());
 		return () => chat.setVisible(c, false);
+	});
+
+	// A found message: older pages until it is loaded (40 at most), then in view
+	let seeking = $state<string | null>(null);
+	let seekPages = 0;
+	$effect(() => {
+		const f = focus;
+		untrack(() => {
+			seeking = f;
+			seekPages = 0;
+			if (f) atBottom = false;
+		});
+	});
+	$effect(() => {
+		const want = seeking;
+		void messages.length;
+		void thread.loaded;
+		if (!want) return;
+		untrack(() => {
+			if (!thread.loaded) return;
+			if (messages.some((m) => m.id === want)) {
+				seeking = null;
+				void tick().then(() => showQuoted(want, 4000));
+			} else if (thread.more && seekPages < 40) {
+				seekPages++;
+				earlier();
+			} else {
+				seeking = null;
+			}
+		});
 	});
 
 	// New messages: stay at the bottom when there, and mark them read
@@ -116,14 +149,14 @@
 		if (first) chat.history(conv, first.id);
 	}
 
-	async function showQuoted(id: string) {
+	async function showQuoted(id: string, ms = 1600) {
 		const el = scroller?.querySelector<HTMLElement>(`[data-id="${CSS.escape(id)}"]`);
 		if (!el) return;
 		el.scrollIntoView({ block: 'center' });
 		marked = id;
 		setTimeout(() => {
 			if (marked === id) marked = null;
-		}, 1600);
+		}, ms);
 	}
 
 	function dayLabel(ts: number): string {

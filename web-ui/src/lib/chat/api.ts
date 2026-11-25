@@ -14,6 +14,8 @@ import type {
 	InboxCounts,
 	InboxFilter,
 	InboxItem,
+	FoundConversation,
+	Message,
 	Person,
 	ServerSettings,
 	Summary,
@@ -128,6 +130,24 @@ export async function loadTeam(): Promise<{
 		conversations: list<TeamItem>(data.conversations),
 		people: list<Person>(data.people),
 		old: list<TeamItem>(data.old)
+	};
+}
+
+/**
+ * Messages with the text in the conversations the account reads, newest
+ * first, and the names of their conversations; a section narrows it.
+ */
+export async function searchMessages(
+	q: string,
+	section: 'support' | 'team' | null,
+	signal?: AbortSignal
+): Promise<{ messages: Message[]; conversations: Record<string, FoundConversation> }> {
+	const query = new URLSearchParams({ q });
+	if (section) query.set('section', section);
+	const data = obj(await request(`/api/chat/search?${query}`, { signal }));
+	return {
+		messages: list<Message>(data.messages),
+		conversations: obj(data.conversations) as Record<string, FoundConversation>
 	};
 }
 

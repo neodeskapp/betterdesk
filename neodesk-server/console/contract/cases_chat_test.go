@@ -12,8 +12,8 @@ import (
 // stay: no route deletes one. The instances keep them in the source
 // tree's web-nodejs/data/chat-files, which git ignores.
 //
-// Search asks the API server at a path it does not have, so every search
-// answers the empty list (BUGS.md, chat search).
+// Search finds messages by their text in the conversations the account
+// reads (routes/chat/search.go, A242).
 func init() {
 	few := contract.Roles("signed-out", "viewer", "admin")
 	chatters := contract.Roles("viewer", "admin")
