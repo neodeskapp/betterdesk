@@ -184,7 +184,14 @@
     "signed_out_by_admin": "En administrator har logget dig ud. Log ind igen.",
     "signed_out_replaced": "Du er blevet logget ud, fordi din konto loggede ind i en anden browser. Denne server tillader én session pr. konto.",
     "signed_out_limit": "Du er blevet logget ud, fordi din konto loggede ind i flere browsere, end denne server tillader. Log ind igen.",
-    "signed_out_account_changed": "Du er blevet logget ud, fordi din adgangskode, dit totrinslogin eller din adgang er ændret. Log ind igen."
+    "signed_out_account_changed": "Du er blevet logget ud, fordi din adgangskode, dit totrinslogin eller din adgang er ændret. Log ind igen.",
+    "forgot_password": "Glemt adgangskode?",
+    "forgot_title": "Nulstil din adgangskode",
+    "forgot_intro": "Angiv dit brugernavn eller din e-mailadresse. Hvis kontoen har en e-mailadresse, sendes der et link dertil, så du kan angive en ny adgangskode.",
+    "forgot_field": "Brugernavn eller e-mail",
+    "forgot_send": "Send link",
+    "forgot_sent": "Hvis kontoen findes og har en e-mailadresse, er et link på vej. Det virker i 1 time.",
+    "forgot_back": "Tilbage til login"
   },
   "dashboard": {
     "title": "Oversigt",
@@ -1965,7 +1972,9 @@
     "action_console_sessions_policy_changed": "Sessioner pr. konto ændret",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "Invitation sendt",
-    "action_user_invite_accepted": "Invitation accepteret"
+    "action_user_invite_accepted": "Invitation accepteret",
+    "action_password_reset_link_sent": "Link til nulstilling af adgangskode sendt",
+    "action_password_reset_by_link": "Adgangskode angivet via nulstillingslink"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2571,7 +2580,15 @@
     "invite_needs_email": "For at sende links via e-mail skal e-mailindstillingerne være sat op. Sæt dem op under Indstillinger, Email.",
     "invite_signed_in": "Denne konto har allerede logget ind, så den behøver ingen invitation.",
     "link_local_only": "Denne konto logger ind via en katalogtjeneste eller single sign-on, så dens adgangskode angives ikke her.",
-    "link_mail_failed": "Mailserveren tog ikke imod e-mailen. Tjek e-mailindstillingerne."
+    "link_mail_failed": "Mailserveren tog ikke imod e-mailen. Tjek e-mailindstillingerne.",
+    "reset_mode_link": "Send et nulstillingslink via e-mail",
+    "reset_mode_link_desc": "{username} får et link på {email} og vælger en ny adgangskode. Linket virker i 24 timer.",
+    "reset_mode_set": "Angiv en ny adgangskode nu",
+    "reset_mode_set_desc": "Du vælger adgangskoden og giver den selv videre.",
+    "reset_link_no_email": "{username} har ingen e-mailadresse. Tilføj en under Rediger for at sende et nulstillingslink.",
+    "send_reset_link": "Send link",
+    "reset_link_sent_named": "Der er sendt et nulstillingslink til {username}.",
+    "reset_email_required": "Denne konto har ingen e-mailadresse."
   },
   "folders": {
     "title": "Mapper",
@@ -8979,6 +8996,16 @@
     "sign_in": "Log ind",
     "invalid_title": "Dette link virker ikke",
     "no_link": "Åbn linket i din e-mail for at vælge en adgangskode.",
-    "check_failed": "Linket kunne ikke kontrolleres. Prøv igen om lidt."
+    "check_failed": "Linket kunne ikke kontrolleres. Prøv igen om lidt.",
+    "reset_subject": "Angiv en ny adgangskode til {server}",
+    "reset_heading": "Angiv en ny adgangskode",
+    "reset_lead": "{sender} har sendt dig et link, så du kan angive en ny adgangskode til din konto på {server}.",
+    "reset_lead_self": "Nogen har bedt om en ny adgangskode til din konto på {server}. Hvis det var dig, kan du angive den her.",
+    "reset_button": "Angiv en ny adgangskode",
+    "reset_expires": "Linket virker én gang, indtil {expires}.",
+    "reset_ignore": "Hvis du ikke ventede dette, kan du ignorere denne e-mail. Din adgangskode forbliver, som den er.",
+    "page_title_reset": "Angiv en ny adgangskode",
+    "page_intro_reset": "Vælg en ny adgangskode til din konto {username}.",
+    "done_text_reset": "Dine andre sessioner er logget ud. Log ind som {username} med din nye adgangskode."
   }
 }

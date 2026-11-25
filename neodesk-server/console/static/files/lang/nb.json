@@ -184,7 +184,14 @@
     "signed_out_by_admin": "En administrator logget deg ut. Logg inn på nytt.",
     "signed_out_replaced": "Du ble logget ut fordi kontoen din logget inn i en annen nettleser. Denne serveren tillater én økt per konto.",
     "signed_out_limit": "Du ble logget ut fordi kontoen din logget inn i flere nettlesere enn denne serveren tillater. Logg inn på nytt.",
-    "signed_out_account_changed": "Du ble logget ut fordi passordet, totrinnspåloggingen eller tilgangen din ble endret. Logg inn på nytt."
+    "signed_out_account_changed": "Du ble logget ut fordi passordet, totrinnspåloggingen eller tilgangen din ble endret. Logg inn på nytt.",
+    "forgot_password": "Glemt passordet?",
+    "forgot_title": "Tilbakestill passordet ditt",
+    "forgot_intro": "Skriv inn brukernavnet eller e-postadressen din. Hvis kontoen har en e-postadresse, sendes en lenke dit for å angi et nytt passord.",
+    "forgot_field": "Brukernavn eller e-post",
+    "forgot_send": "Send lenke",
+    "forgot_sent": "Hvis kontoen finnes og har en e-postadresse, er en lenke på vei. Den virker i 1 time.",
+    "forgot_back": "Tilbake til pålogging"
   },
   "dashboard": {
     "title": "Dashbord",
@@ -1965,7 +1972,9 @@
     "action_console_sessions_policy_changed": "Økter per konto endret",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "Invitasjon sendt",
-    "action_user_invite_accepted": "Invitasjon godtatt"
+    "action_user_invite_accepted": "Invitasjon godtatt",
+    "action_password_reset_link_sent": "Lenke for tilbakestilling av passord sendt",
+    "action_password_reset_by_link": "Passord angitt via tilbakestillingslenke"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2571,7 +2580,15 @@
     "invite_needs_email": "For å sende lenker på e-post trengs e-postinnstillingene. Sett dem opp under Innstillinger, Email.",
     "invite_signed_in": "Denne kontoen har allerede logget på, så den trenger ingen invitasjon.",
     "link_local_only": "Denne kontoen logger på via en katalogtjeneste eller enkel pålogging, så passordet angis ikke her.",
-    "link_mail_failed": "E-postserveren tok ikke imot e-posten. Sjekk e-postinnstillingene."
+    "link_mail_failed": "E-postserveren tok ikke imot e-posten. Sjekk e-postinnstillingene.",
+    "reset_mode_link": "Send en tilbakestillingslenke på e-post",
+    "reset_mode_link_desc": "{username} får en lenke på {email} og velger et nytt passord. Lenken virker i 24 timer.",
+    "reset_mode_set": "Angi et nytt passord nå",
+    "reset_mode_set_desc": "Du velger passordet og gir det videre selv.",
+    "reset_link_no_email": "{username} har ingen e-postadresse. Legg til en under Rediger for å sende en tilbakestillingslenke.",
+    "send_reset_link": "Send lenke",
+    "reset_link_sent_named": "En tilbakestillingslenke er sendt til {username}.",
+    "reset_email_required": "Denne kontoen har ingen e-postadresse."
   },
   "folders": {
     "title": "Mapper",
@@ -8979,6 +8996,16 @@
     "sign_in": "Logg på",
     "invalid_title": "Denne lenken virker ikke",
     "no_link": "Åpne lenken i e-posten din for å velge et passord.",
-    "check_failed": "Lenken kunne ikke kontrolleres. Prøv igjen om litt."
+    "check_failed": "Lenken kunne ikke kontrolleres. Prøv igjen om litt.",
+    "reset_subject": "Angi et nytt passord for {server}",
+    "reset_heading": "Angi et nytt passord",
+    "reset_lead": "{sender} har sendt deg en lenke for å angi et nytt passord for kontoen din på {server}.",
+    "reset_lead_self": "Noen har bedt om et nytt passord for kontoen din på {server}. Hvis det var deg, angir du det her.",
+    "reset_button": "Angi et nytt passord",
+    "reset_expires": "Lenken virker én gang, til {expires}.",
+    "reset_ignore": "Hvis du ikke ventet dette, kan du se bort fra denne e-posten. Passordet ditt forblir som det er.",
+    "page_title_reset": "Angi et nytt passord",
+    "page_intro_reset": "Velg et nytt passord for kontoen din {username}.",
+    "done_text_reset": "De andre øktene dine er logget av. Logg på som {username} med det nye passordet ditt."
   }
 }

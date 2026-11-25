@@ -25,8 +25,10 @@ type MailFacts struct {
 	// Link is the link, Username the account it is for.
 	Link     string
 	Username string
-	// Sender is who sent it, Host the console's host name.
+	// Sender is who sent it, Host the console's host name. A reset the
+	// person asked for themselves (Self) names no sender.
 	Sender string
+	Self   bool
 	Host   string
 	// Expires is when the link stops working, as the reader sees it.
 	Expires string
@@ -50,6 +52,9 @@ func BuildMail(t Translate, f MailFacts) Mail {
 	subject := t(prefix+"subject", vars)
 	heading := t(prefix+"heading", vars)
 	lead := t(prefix+"lead", vars)
+	if f.Self && f.Purpose == PurposeReset {
+		lead = t("password_link.reset_lead_self", vars)
+	}
 	button := t(prefix+"button", vars)
 	small := []string{t("password_link.mail_username", vars), t(prefix+"expires", vars)}
 	if f.Purpose != PurposeInvite {

@@ -182,7 +182,14 @@
     "signed_out_by_admin": "Un administrateur vous a déconnecté. Veuillez vous reconnecter.",
     "signed_out_replaced": "Vous avez été déconnecté, car votre compte s'est connecté dans un autre navigateur. Ce serveur autorise une session par compte.",
     "signed_out_limit": "Vous avez été déconnecté, car votre compte s'est connecté dans plus de navigateurs que ce serveur n'autorise. Veuillez vous reconnecter.",
-    "signed_out_account_changed": "Vous avez été déconnecté, car votre mot de passe, votre connexion à deux facteurs ou vos accès ont changé. Veuillez vous reconnecter."
+    "signed_out_account_changed": "Vous avez été déconnecté, car votre mot de passe, votre connexion à deux facteurs ou vos accès ont changé. Veuillez vous reconnecter.",
+    "forgot_password": "Mot de passe oublié ?",
+    "forgot_title": "Réinitialiser votre mot de passe",
+    "forgot_intro": "Saisissez votre nom d'utilisateur ou votre adresse e-mail. Si le compte a une adresse e-mail, un lien pour définir un nouveau mot de passe y est envoyé.",
+    "forgot_field": "Nom d'utilisateur ou e-mail",
+    "forgot_send": "Envoyer le lien",
+    "forgot_sent": "Si le compte existe et a une adresse e-mail, un lien est en route. Il fonctionne 1 heure.",
+    "forgot_back": "Retour à la connexion"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -1963,7 +1970,9 @@
     "action_console_sessions_policy_changed": "Sessions par compte modifiées",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "Invitation envoyée",
-    "action_user_invite_accepted": "Invitation acceptée"
+    "action_user_invite_accepted": "Invitation acceptée",
+    "action_password_reset_link_sent": "Lien de réinitialisation du mot de passe envoyé",
+    "action_password_reset_by_link": "Mot de passe défini via un lien de réinitialisation"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2587,7 +2596,15 @@
     "invite_needs_email": "L'envoi de liens par e-mail nécessite les paramètres e-mail. Configurez-les dans Paramètres, E-mail.",
     "invite_signed_in": "Ce compte s'est déjà connecté, il n'a donc pas besoin d'invitation.",
     "link_local_only": "Ce compte se connecte via un annuaire ou l'authentification unique, son mot de passe n'est donc pas défini ici.",
-    "link_mail_failed": "Le serveur de messagerie n'a pas accepté l'e-mail. Vérifiez les paramètres e-mail."
+    "link_mail_failed": "Le serveur de messagerie n'a pas accepté l'e-mail. Vérifiez les paramètres e-mail.",
+    "reset_mode_link": "Envoyer un lien de réinitialisation par e-mail",
+    "reset_mode_link_desc": "{username} reçoit un lien à {email} et choisit un nouveau mot de passe. Le lien fonctionne 24 heures.",
+    "reset_mode_set": "Définir un nouveau mot de passe maintenant",
+    "reset_mode_set_desc": "Vous choisissez le mot de passe et le transmettez vous-même.",
+    "reset_link_no_email": "{username} n'a pas d'adresse e-mail. Ajoutez-en une dans Modifier pour envoyer un lien de réinitialisation.",
+    "send_reset_link": "Envoyer le lien",
+    "reset_link_sent_named": "Lien de réinitialisation envoyé à {username}.",
+    "reset_email_required": "Ce compte n'a pas d'adresse e-mail."
   },
   "folders": {
     "title": "Dossiers",
@@ -8977,6 +8994,16 @@
     "sign_in": "Se connecter",
     "invalid_title": "Ce lien ne fonctionne pas",
     "no_link": "Ouvrez le lien de votre e-mail pour choisir un mot de passe.",
-    "check_failed": "Impossible de vérifier le lien. Réessayez dans un instant."
+    "check_failed": "Impossible de vérifier le lien. Réessayez dans un instant.",
+    "reset_subject": "Définir un nouveau mot de passe pour {server}",
+    "reset_heading": "Définir un nouveau mot de passe",
+    "reset_lead": "{sender} vous a envoyé un lien pour définir un nouveau mot de passe pour votre compte sur {server}.",
+    "reset_lead_self": "Quelqu'un a demandé un nouveau mot de passe pour votre compte sur {server}. Si c'était vous, définissez-le ici.",
+    "reset_button": "Définir un nouveau mot de passe",
+    "reset_expires": "Le lien fonctionne une seule fois, jusqu'au {expires}.",
+    "reset_ignore": "Si vous ne vous attendiez pas à cet e-mail, ignorez-le. Votre mot de passe reste inchangé.",
+    "page_title_reset": "Définir un nouveau mot de passe",
+    "page_intro_reset": "Choisissez un nouveau mot de passe pour votre compte {username}.",
+    "done_text_reset": "Vos autres sessions ont été déconnectées. Connectez-vous en tant que {username} avec votre nouveau mot de passe."
   }
 }

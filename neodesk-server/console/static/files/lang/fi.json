@@ -184,7 +184,14 @@
     "signed_out_by_admin": "Ylläpitäjä kirjasi sinut ulos. Kirjaudu uudelleen.",
     "signed_out_replaced": "Sinut kirjattiin ulos, koska tilisi kirjautui toisella selaimella. Tämä palvelin sallii yhden istunnon tiliä kohden.",
     "signed_out_limit": "Sinut kirjattiin ulos, koska tilisi kirjautui useammalla selaimella kuin tämä palvelin sallii. Kirjaudu uudelleen.",
-    "signed_out_account_changed": "Sinut kirjattiin ulos, koska salasanasi, kaksivaiheinen kirjautumisesi tai käyttöoikeutesi muuttui. Kirjaudu uudelleen."
+    "signed_out_account_changed": "Sinut kirjattiin ulos, koska salasanasi, kaksivaiheinen kirjautumisesi tai käyttöoikeutesi muuttui. Kirjaudu uudelleen.",
+    "forgot_password": "Unohditko salasanan?",
+    "forgot_title": "Palauta salasana",
+    "forgot_intro": "Anna käyttäjätunnuksesi tai sähköpostiosoitteesi. Jos tilillä on sähköpostiosoite, sinne lähetetään linkki uuden salasanan asettamista varten.",
+    "forgot_field": "Käyttäjätunnus tai sähköposti",
+    "forgot_send": "Lähetä linkki",
+    "forgot_sent": "Jos tili on olemassa ja sillä on sähköpostiosoite, linkki on matkalla. Se toimii 1 tunnin.",
+    "forgot_back": "Takaisin kirjautumiseen"
   },
   "dashboard": {
     "title": "Kojelauta",
@@ -1965,7 +1972,9 @@
     "action_console_sessions_policy_changed": "Istunnot tiliä kohden muutettu",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "Kutsu lähetetty",
-    "action_user_invite_accepted": "Kutsu hyväksytty"
+    "action_user_invite_accepted": "Kutsu hyväksytty",
+    "action_password_reset_link_sent": "Salasanan palautuslinkki lähetetty",
+    "action_password_reset_by_link": "Salasana asetettu palautuslinkillä"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2571,7 +2580,15 @@
     "invite_needs_email": "Linkkien lähettäminen sähköpostilla vaatii sähköpostiasetukset. Määritä ne kohdassa Asetukset, Email.",
     "invite_signed_in": "Tällä tilillä on jo kirjauduttu, joten se ei tarvitse kutsua.",
     "link_local_only": "Tämä tili kirjautuu hakemiston tai kertakirjautumisen kautta, joten sen salasanaa ei aseteta täällä.",
-    "link_mail_failed": "Sähköpostipalvelin ei hyväksynyt viestiä. Tarkista sähköpostiasetukset."
+    "link_mail_failed": "Sähköpostipalvelin ei hyväksynyt viestiä. Tarkista sähköpostiasetukset.",
+    "reset_mode_link": "Lähetä palautuslinkki sähköpostilla",
+    "reset_mode_link_desc": "{username} saa linkin osoitteeseen {email} ja valitsee uuden salasanan. Linkki toimii 24 tuntia.",
+    "reset_mode_set": "Aseta uusi salasana nyt",
+    "reset_mode_set_desc": "Valitset salasanan ja välität sen itse eteenpäin.",
+    "reset_link_no_email": "Käyttäjällä {username} ei ole sähköpostiosoitetta. Lisää se kohdassa Muokkaa, niin voit lähettää palautuslinkin.",
+    "send_reset_link": "Lähetä linkki",
+    "reset_link_sent_named": "Palautuslinkki lähetetty käyttäjälle {username}.",
+    "reset_email_required": "Tällä tilillä ei ole sähköpostiosoitetta."
   },
   "folders": {
     "title": "Kansiot",
@@ -8979,6 +8996,16 @@
     "sign_in": "Kirjaudu sisään",
     "invalid_title": "Tämä linkki ei toimi",
     "no_link": "Avaa sähköpostissasi oleva linkki, niin voit valita salasanan.",
-    "check_failed": "Linkkiä ei voitu tarkistaa. Yritä hetken päästä uudelleen."
+    "check_failed": "Linkkiä ei voitu tarkistaa. Yritä hetken päästä uudelleen.",
+    "reset_subject": "Aseta uusi salasana palvelimeen {server}",
+    "reset_heading": "Aseta uusi salasana",
+    "reset_lead": "{sender} lähetti sinulle linkin, jolla voit asettaa uuden salasanan tilillesi palvelimessa {server}.",
+    "reset_lead_self": "Joku pyysi uutta salasanaa tilillesi palvelimessa {server}. Jos se olit sinä, aseta salasana tässä.",
+    "reset_button": "Aseta uusi salasana",
+    "reset_expires": "Linkki toimii kerran, {expires} asti.",
+    "reset_ignore": "Jos et odottanut tätä, voit jättää tämän viestin huomiotta. Salasanasi pysyy ennallaan.",
+    "page_title_reset": "Aseta uusi salasana",
+    "page_intro_reset": "Valitse uusi salasana tilillesi {username}.",
+    "done_text_reset": "Muut istuntosi kirjattiin ulos. Kirjaudu käyttäjänä {username} uudella salasanallasi."
   }
 }

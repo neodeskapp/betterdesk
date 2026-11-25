@@ -45,6 +45,33 @@ export function redeemPasswordLink(body: { token: string; password: string }): P
 	});
 }
 
+/** Whether the sign-in page offers Forgot password (the console can send mail) */
+export async function passwordResetAvailable(signal?: AbortSignal): Promise<boolean> {
+	const out = await api(
+		wrapped(v.looseObject({ available: v.optional(v.boolean(), false) })),
+		'/api/auth/password-reset/available',
+		{
+			signal,
+			allowAnonymous: true,
+			activity: false
+		}
+	);
+	return out.available;
+}
+
+/**
+ * Asks for a reset link for a username or an email address. The answer is
+ * the same whether an account was found or not; a found one gets a link
+ * that works for an hour.
+ */
+export function requestPasswordReset(login: string) {
+	return api(v.looseObject({ success: v.optional(v.boolean()) }), '/api/auth/password-reset/request', {
+		method: 'POST',
+		body: { login },
+		allowAnonymous: true
+	});
+}
+
 /** The token of a link: what follows # (the browser never sends it), or a whole link pasted */
 export function linkToken(value: string): string {
 	const text = value.trim();

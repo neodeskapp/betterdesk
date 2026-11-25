@@ -178,7 +178,14 @@
     "signed_out_by_admin": "Ein Administrator hat dich abgemeldet. Bitte melde dich erneut an.",
     "signed_out_replaced": "Du wurdest abgemeldet, weil sich dein Konto in einem anderen Browser angemeldet hat. Dieser Server erlaubt eine Sitzung pro Konto.",
     "signed_out_limit": "Du wurdest abgemeldet, weil sich dein Konto in mehr Browsern angemeldet hat, als dieser Server erlaubt. Bitte melde dich erneut an.",
-    "signed_out_account_changed": "Du wurdest abgemeldet, weil sich dein Passwort, deine Zwei-Faktor-Anmeldung oder dein Zugriff geändert hat. Bitte melde dich erneut an."
+    "signed_out_account_changed": "Du wurdest abgemeldet, weil sich dein Passwort, deine Zwei-Faktor-Anmeldung oder dein Zugriff geändert hat. Bitte melde dich erneut an.",
+    "forgot_password": "Passwort vergessen?",
+    "forgot_title": "Passwort zurücksetzen",
+    "forgot_intro": "Gib deinen Benutzernamen oder deine E-Mail-Adresse ein. Wenn das Konto eine E-Mail-Adresse hat, geht ein Link für ein neues Passwort dorthin.",
+    "forgot_field": "Benutzername oder E-Mail",
+    "forgot_send": "Link senden",
+    "forgot_sent": "Wenn das Konto existiert und eine E-Mail-Adresse hat, ist ein Link unterwegs. Er gilt 1 Stunde.",
+    "forgot_back": "Zurück zur Anmeldung"
   },
   "dashboard": {
     "title": "Übersicht",
@@ -1959,7 +1966,9 @@
     "action_console_sessions_policy_changed": "Sitzungen pro Konto geändert",
     "action_onboard_join_unproved": "Beitritt abgelehnt: ohne Nachweis des Computerschlüssels",
     "action_user_invite_sent": "Einladung gesendet",
-    "action_user_invite_accepted": "Einladung angenommen"
+    "action_user_invite_accepted": "Einladung angenommen",
+    "action_password_reset_link_sent": "Link zum Zurücksetzen des Passworts gesendet",
+    "action_password_reset_by_link": "Passwort über Link zum Zurücksetzen festgelegt"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2565,7 +2574,15 @@
     "invite_needs_email": "Für Links per E-Mail braucht es die E-Mail-Einstellungen. Richte sie unter Einstellungen, E-Mail ein.",
     "invite_signed_in": "Dieses Konto hat sich schon angemeldet und braucht keine Einladung.",
     "link_local_only": "Dieses Konto meldet sich über ein Verzeichnis oder Single Sign-on an, daher wird sein Passwort nicht hier festgelegt.",
-    "link_mail_failed": "Der Mailserver hat die E-Mail nicht angenommen. Prüfe die E-Mail-Einstellungen."
+    "link_mail_failed": "Der Mailserver hat die E-Mail nicht angenommen. Prüfe die E-Mail-Einstellungen.",
+    "reset_mode_link": "Link zum Zurücksetzen per E-Mail senden",
+    "reset_mode_link_desc": "{username} bekommt einen Link an {email} und wählt ein neues Passwort. Der Link gilt 24 Stunden.",
+    "reset_mode_set": "Neues Passwort jetzt festlegen",
+    "reset_mode_set_desc": "Du wählst das Passwort und gibst es selbst weiter.",
+    "reset_link_no_email": "{username} hat keine E-Mail-Adresse. Füge unter Bearbeiten eine hinzu, um einen Link zum Zurücksetzen zu senden.",
+    "send_reset_link": "Link senden",
+    "reset_link_sent_named": "Link zum Zurücksetzen an {username} gesendet.",
+    "reset_email_required": "Dieses Konto hat keine E-Mail-Adresse."
   },
   "folders": {
     "title": "Ordner",
@@ -8973,6 +8990,16 @@
     "sign_in": "Anmelden",
     "invalid_title": "Dieser Link funktioniert nicht",
     "no_link": "Öffne den Link aus deiner E-Mail, um ein Passwort zu wählen.",
-    "check_failed": "Der Link konnte nicht geprüft werden. Versuch es gleich noch einmal."
+    "check_failed": "Der Link konnte nicht geprüft werden. Versuch es gleich noch einmal.",
+    "reset_subject": "Neues Passwort für {server} festlegen",
+    "reset_heading": "Neues Passwort festlegen",
+    "reset_lead": "{sender} hat dir einen Link geschickt, mit dem du ein neues Passwort für dein Konto auf {server} festlegst.",
+    "reset_lead_self": "Jemand hat ein neues Passwort für dein Konto auf {server} angefordert. Wenn du das warst, leg es hier fest.",
+    "reset_button": "Neues Passwort festlegen",
+    "reset_expires": "Der Link gilt einmal, bis {expires}.",
+    "reset_ignore": "Wenn du das nicht erwartet hast, ignoriere diese E-Mail. Dein Passwort bleibt, wie es ist.",
+    "page_title_reset": "Neues Passwort festlegen",
+    "page_intro_reset": "Wähle ein neues Passwort für dein Konto {username}.",
+    "done_text_reset": "Deine anderen Sitzungen wurden abgemeldet. Melde dich als {username} mit deinem neuen Passwort an."
   }
 }

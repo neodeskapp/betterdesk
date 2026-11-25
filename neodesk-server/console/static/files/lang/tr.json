@@ -184,7 +184,14 @@
     "signed_out_by_admin": "Bir yönetici oturumunuzu kapattı. Lütfen tekrar oturum açın.",
     "signed_out_replaced": "Hesabınız başka bir tarayıcıda oturum açtığı için oturumunuz kapatıldı. Bu sunucu hesap başına bir oturuma izin verir.",
     "signed_out_limit": "Hesabınız bu sunucunun izin verdiğinden fazla tarayıcıda oturum açtığı için oturumunuz kapatıldı. Lütfen tekrar oturum açın.",
-    "signed_out_account_changed": "Parolanız, iki adımlı oturum açmanız veya erişiminiz değiştiği için oturumunuz kapatıldı. Lütfen tekrar oturum açın."
+    "signed_out_account_changed": "Parolanız, iki adımlı oturum açmanız veya erişiminiz değiştiği için oturumunuz kapatıldı. Lütfen tekrar oturum açın.",
+    "forgot_password": "Şifrenizi mi unuttunuz?",
+    "forgot_title": "Şifrenizi sıfırlayın",
+    "forgot_intro": "Kullanıcı adınızı veya e-posta adresinizi girin. Hesabın bir e-posta adresi varsa, yeni bir şifre belirlemek için oraya bir bağlantı gönderilir.",
+    "forgot_field": "Kullanıcı adı veya e-posta",
+    "forgot_send": "Bağlantı gönder",
+    "forgot_sent": "Hesap varsa ve bir e-posta adresi varsa, bağlantı yolda. 1 saat geçerlidir.",
+    "forgot_back": "Oturum açmaya dön"
   },
   "dashboard": {
     "title": "Kontrol Paneli",
@@ -1965,7 +1972,9 @@
     "action_console_sessions_policy_changed": "Hesap başına oturumlar değiştirildi",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "Davet gönderildi",
-    "action_user_invite_accepted": "Davet kabul edildi"
+    "action_user_invite_accepted": "Davet kabul edildi",
+    "action_password_reset_link_sent": "Parola sıfırlama bağlantısı gönderildi",
+    "action_password_reset_by_link": "Parola sıfırlama bağlantısıyla belirlendi"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2571,7 +2580,15 @@
     "invite_needs_email": "Bağlantıları e-postayla göndermek için e-posta ayarları gerekir. Bunları Ayarlar, Email bölümünden yapın.",
     "invite_signed_in": "Bu hesap zaten oturum açtı, bu yüzden davete ihtiyacı yok.",
     "link_local_only": "Bu hesap bir dizin veya çoklu oturum açma üzerinden oturum açar, bu yüzden şifresi burada belirlenmez.",
-    "link_mail_failed": "Posta sunucusu e-postayı kabul etmedi. E-posta ayarlarını kontrol edin."
+    "link_mail_failed": "Posta sunucusu e-postayı kabul etmedi. E-posta ayarlarını kontrol edin.",
+    "reset_mode_link": "E-postayla sıfırlama bağlantısı gönder",
+    "reset_mode_link_desc": "{username}, {email} adresine bir bağlantı alır ve yeni bir şifre seçer. Bağlantı 24 saat geçerlidir.",
+    "reset_mode_set": "Yeni şifreyi şimdi belirle",
+    "reset_mode_set_desc": "Şifreyi siz seçer ve kendiniz iletirsiniz.",
+    "reset_link_no_email": "{username} için e-posta adresi yok. Sıfırlama bağlantısı göndermek için Düzenle bölümünden bir adres ekleyin.",
+    "send_reset_link": "Bağlantı gönder",
+    "reset_link_sent_named": "{username} için sıfırlama bağlantısı gönderildi.",
+    "reset_email_required": "Bu hesabın e-posta adresi yok."
   },
   "folders": {
     "title": "Klasörler",
@@ -8979,6 +8996,16 @@
     "sign_in": "Oturum aç",
     "invalid_title": "Bu bağlantı çalışmıyor",
     "no_link": "Şifre seçmek için e-postanızdaki bağlantıyı açın.",
-    "check_failed": "Bağlantı kontrol edilemedi. Biraz sonra tekrar deneyin."
+    "check_failed": "Bağlantı kontrol edilemedi. Biraz sonra tekrar deneyin.",
+    "reset_subject": "{server} için yeni bir şifre belirleyin",
+    "reset_heading": "Yeni bir şifre belirleyin",
+    "reset_lead": "{sender}, {server} sunucusundaki hesabınız için yeni bir şifre belirlemeniz amacıyla size bir bağlantı gönderdi.",
+    "reset_lead_self": "Birisi {server} sunucusundaki hesabınız için yeni bir şifre istedi. Bu sizseniz, şifreyi burada belirleyin.",
+    "reset_button": "Yeni bir şifre belirleyin",
+    "reset_expires": "Bağlantı bir kez, {expires} tarihine kadar çalışır.",
+    "reset_ignore": "Bunu beklemiyorsanız bu e-postayı yok sayın. Şifreniz olduğu gibi kalır.",
+    "page_title_reset": "Yeni bir şifre belirleyin",
+    "page_intro_reset": "{username} hesabınız için yeni bir şifre seçin.",
+    "done_text_reset": "Diğer oturumlarınız kapatıldı. Yeni şifrenizle {username} olarak oturum açın."
   }
 }

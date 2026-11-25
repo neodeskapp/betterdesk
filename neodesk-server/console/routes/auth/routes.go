@@ -86,6 +86,8 @@ func Register(d *kit.Deps) {
 	r.Get("/api/auth/login-page", h.loginPage)
 	r.Post("/api/auth/password-link/lookup", h.passwordLinkLookup, passwordLinkLimit(d)...)
 	r.Post("/api/auth/password-link/redeem", h.passwordLinkRedeem, passwordLinkLimit(d)...)
+	r.Get("/api/auth/password-reset/available", h.passwordResetAvailable)
+	r.Post("/api/auth/password-reset/request", h.passwordResetRequest, passwordLinkLimit(d)...)
 
 	// The Node console runs the same clean-up while it is still there. Both
 	// delete by a rule on time, so a second run finds nothing left to do.

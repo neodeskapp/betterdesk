@@ -178,7 +178,14 @@
     "signed_out_by_admin": "Een beheerder heeft u afgemeld. Meld u opnieuw aan.",
     "signed_out_replaced": "U bent afgemeld omdat uw account zich in een andere browser heeft aangemeld. Deze server staat één sessie per account toe.",
     "signed_out_limit": "U bent afgemeld omdat uw account zich in meer browsers heeft aangemeld dan deze server toestaat. Meld u opnieuw aan.",
-    "signed_out_account_changed": "U bent afgemeld omdat uw wachtwoord, aanmelden in twee stappen of uw toegang is gewijzigd. Meld u opnieuw aan."
+    "signed_out_account_changed": "U bent afgemeld omdat uw wachtwoord, aanmelden in twee stappen of uw toegang is gewijzigd. Meld u opnieuw aan.",
+    "forgot_password": "Wachtwoord vergeten?",
+    "forgot_title": "Wachtwoord herstellen",
+    "forgot_intro": "Voer uw gebruikersnaam of e-mailadres in. Als het account een e-mailadres heeft, gaat daar een link naartoe om een nieuw wachtwoord in te stellen.",
+    "forgot_field": "Gebruikersnaam of e-mail",
+    "forgot_send": "Link sturen",
+    "forgot_sent": "Als het account bestaat en een e-mailadres heeft, is er een link onderweg. Die werkt 1 uur.",
+    "forgot_back": "Terug naar inloggen"
   },
   "dashboard": {
     "title": "Overzicht",
@@ -1959,7 +1966,9 @@
     "action_console_sessions_policy_changed": "Sessies per account gewijzigd",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "Uitnodiging verstuurd",
-    "action_user_invite_accepted": "Uitnodiging geaccepteerd"
+    "action_user_invite_accepted": "Uitnodiging geaccepteerd",
+    "action_password_reset_link_sent": "Herstellink voor wachtwoord verstuurd",
+    "action_password_reset_by_link": "Wachtwoord ingesteld via herstellink"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2565,7 +2574,15 @@
     "invite_needs_email": "Voor links per e-mail zijn de e-mailinstellingen nodig. Stel ze in onder Instellingen, Email.",
     "invite_signed_in": "Dit account heeft al ingelogd en heeft dus geen uitnodiging nodig.",
     "link_local_only": "Dit account logt in via een directory of single sign-on, dus het wachtwoord wordt hier niet ingesteld.",
-    "link_mail_failed": "De mailserver heeft de e-mail niet aangenomen. Controleer de e-mailinstellingen."
+    "link_mail_failed": "De mailserver heeft de e-mail niet aangenomen. Controleer de e-mailinstellingen.",
+    "reset_mode_link": "Herstellink per e-mail sturen",
+    "reset_mode_link_desc": "{username} krijgt een link op {email} en kiest een nieuw wachtwoord. De link werkt 24 uur.",
+    "reset_mode_set": "Nu een nieuw wachtwoord instellen",
+    "reset_mode_set_desc": "U kiest het wachtwoord en geeft het zelf door.",
+    "reset_link_no_email": "{username} heeft geen e-mailadres. Voeg er een toe onder Bewerken om een herstellink te sturen.",
+    "send_reset_link": "Link sturen",
+    "reset_link_sent_named": "Herstellink gestuurd naar {username}.",
+    "reset_email_required": "Dit account heeft geen e-mailadres."
   },
   "folders": {
     "title": "Mappen",
@@ -8973,6 +8990,16 @@
     "sign_in": "Inloggen",
     "invalid_title": "Deze link werkt niet",
     "no_link": "Open de link uit uw e-mail om een wachtwoord te kiezen.",
-    "check_failed": "De link kon niet worden gecontroleerd. Probeer het zo opnieuw."
+    "check_failed": "De link kon niet worden gecontroleerd. Probeer het zo opnieuw.",
+    "reset_subject": "Stel een nieuw wachtwoord in voor {server}",
+    "reset_heading": "Nieuw wachtwoord instellen",
+    "reset_lead": "{sender} heeft u een link gestuurd om een nieuw wachtwoord in te stellen voor uw account op {server}.",
+    "reset_lead_self": "Iemand heeft een nieuw wachtwoord aangevraagd voor uw account op {server}. Was u dat, stel het dan hier in.",
+    "reset_button": "Nieuw wachtwoord instellen",
+    "reset_expires": "De link werkt één keer, tot {expires}.",
+    "reset_ignore": "Had u dit niet verwacht, negeer deze e-mail dan. Uw wachtwoord blijft zoals het is.",
+    "page_title_reset": "Nieuw wachtwoord instellen",
+    "page_intro_reset": "Kies een nieuw wachtwoord voor uw account {username}.",
+    "done_text_reset": "Uw andere sessies zijn afgemeld. Log in als {username} met uw nieuwe wachtwoord."
   }
 }

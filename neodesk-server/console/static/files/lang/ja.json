@@ -178,7 +178,14 @@
     "signed_out_by_admin": "管理者によってサインアウトされました。再度サインインしてください。",
     "signed_out_replaced": "アカウントが別のブラウザーでサインインしたため、サインアウトされました。このサーバーではアカウントごとに 1 セッションです。",
     "signed_out_limit": "アカウントがこのサーバーで許可された数より多くのブラウザーでサインインしたため、サインアウトされました。再度サインインしてください。",
-    "signed_out_account_changed": "パスワード、2 段階サインイン、またはアクセス権が変更されたため、サインアウトされました。再度サインインしてください。"
+    "signed_out_account_changed": "パスワード、2 段階サインイン、またはアクセス権が変更されたため、サインアウトされました。再度サインインしてください。",
+    "forgot_password": "パスワードをお忘れですか?",
+    "forgot_title": "パスワードのリセット",
+    "forgot_intro": "ユーザー名またはメールアドレスを入力してください。アカウントにメールアドレスがある場合、新しいパスワードを設定するリンクがそこに届きます。",
+    "forgot_field": "ユーザー名またはメールアドレス",
+    "forgot_send": "リンクを送る",
+    "forgot_sent": "アカウントが存在し、メールアドレスがある場合は、リンクを送信しました。リンクは 1 時間有効です。",
+    "forgot_back": "サインインに戻る"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -1959,7 +1966,9 @@
     "action_console_sessions_policy_changed": "アカウントごとのセッションを変更",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "招待を送信",
-    "action_user_invite_accepted": "招待を承諾"
+    "action_user_invite_accepted": "招待を承諾",
+    "action_password_reset_link_sent": "パスワードリセット用リンクを送信",
+    "action_password_reset_by_link": "リセット用リンクからパスワードを設定"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2565,7 +2574,15 @@
     "invite_needs_email": "リンクをメールで送るにはメール設定が必要です。設定 > Email で設定してください。",
     "invite_signed_in": "このアカウントはすでにサインインしているため、招待は不要です。",
     "link_local_only": "このアカウントはディレクトリまたはシングルサインオンでサインインするため、パスワードはここでは設定しません。",
-    "link_mail_failed": "メールサーバーがメールを受け付けませんでした。メール設定を確認してください。"
+    "link_mail_failed": "メールサーバーがメールを受け付けませんでした。メール設定を確認してください。",
+    "reset_mode_link": "リセット用リンクをメールで送る",
+    "reset_mode_link_desc": "{username} は {email} でリンクを受け取り、新しいパスワードを決めます。リンクは 24 時間有効です。",
+    "reset_mode_set": "今新しいパスワードを設定する",
+    "reset_mode_set_desc": "パスワードを自分で決めて、相手に直接伝えます。",
+    "reset_link_no_email": "{username} にはメールアドレスがありません。リセット用リンクを送るには「編集」でアドレスを追加してください。",
+    "send_reset_link": "リンクを送る",
+    "reset_link_sent_named": "{username} にリセット用リンクを送りました。",
+    "reset_email_required": "このアカウントにはメールアドレスがありません。"
   },
   "folders": {
     "title": "フォルダー",
@@ -8973,6 +8990,16 @@
     "sign_in": "サインイン",
     "invalid_title": "このリンクは使えません",
     "no_link": "パスワードを決めるには、メールに記載のリンクを開いてください。",
-    "check_failed": "リンクを確認できませんでした。しばらくしてからもう一度お試しください。"
+    "check_failed": "リンクを確認できませんでした。しばらくしてからもう一度お試しください。",
+    "reset_subject": "{server} の新しいパスワードを設定してください",
+    "reset_heading": "新しいパスワードを設定",
+    "reset_lead": "{sender} さんから、{server} のアカウントに新しいパスワードを設定するためのリンクが届きました。",
+    "reset_lead_self": "{server} のあなたのアカウントで新しいパスワードがリクエストされました。ご自身のリクエストであれば、ここで設定してください。",
+    "reset_button": "新しいパスワードを設定",
+    "reset_expires": "リンクは 1 回だけ、{expires} まで使えます。",
+    "reset_ignore": "心当たりがない場合は、このメールを無視してください。パスワードは変わりません。",
+    "page_title_reset": "新しいパスワードを設定",
+    "page_intro_reset": "アカウント {username} の新しいパスワードを決めてください。",
+    "done_text_reset": "ほかのセッションはサインアウトされました。新しいパスワードで {username} としてサインインしてください。"
   }
 }

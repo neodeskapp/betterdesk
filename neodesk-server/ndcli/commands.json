@@ -8090,6 +8090,19 @@
    "permission": "user.view"
   },
   {
+   "name": "users send-reset-link",
+   "summary": "Mail an account a link to set a new password.",
+   "route": "POST /api/users/{id}/password-reset-link",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.edit",
+   "description": "The link works once, for 24 hours; the password stays as it is until it is used. The account needs an email address, and the console needs the email settings."
+  },
+  {
    "name": "users update",
    "summary": "Change an account: name, role, email, groups, disabled. Give only what changes.",
    "route": "PATCH /api/users/{id}",
@@ -8932,6 +8945,14 @@
   {
    "route": "POST /api/auth/password-link/redeem",
    "reason": "Used by the person who got an invite or a password reset link, not by an admin."
+  },
+  {
+   "route": "GET /api/auth/password-reset/available",
+   "reason": "Used by the sign-in page for Forgot password, not by an admin."
+  },
+  {
+   "route": "POST /api/auth/password-reset/request",
+   "reason": "Used by the sign-in page for Forgot password, not by an admin."
   },
   {
    "route": "POST /api/invitations/lookup",

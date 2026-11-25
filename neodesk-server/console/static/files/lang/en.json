@@ -186,7 +186,14 @@
         "signed_out_by_admin": "An administrator signed you out. Please sign in again.",
         "signed_out_replaced": "You were signed out because your account signed in on another browser. This server allows one session per account.",
         "signed_out_limit": "You were signed out because your account signed in on more browsers than this server allows. Please sign in again.",
-        "signed_out_account_changed": "You were signed out because your password, two-factor sign-in or access changed. Please sign in again."
+        "signed_out_account_changed": "You were signed out because your password, two-factor sign-in or access changed. Please sign in again.",
+        "forgot_password": "Forgot password?",
+        "forgot_title": "Reset your password",
+        "forgot_intro": "Enter your username or email address. If the account has an email address, a link to set a new password goes there.",
+        "forgot_field": "Username or email",
+        "forgot_send": "Send link",
+        "forgot_sent": "If the account exists and has an email address, a link is on its way. It works for 1 hour.",
+        "forgot_back": "Back to sign-in"
     },
     "dashboard": {
         "title": "Dashboard",
@@ -1967,7 +1974,9 @@
         "action_console_sessions_policy_changed": "Sessions per account changed",
         "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
         "action_user_invite_sent": "Invite sent",
-        "action_user_invite_accepted": "Invite accepted"
+        "action_user_invite_accepted": "Invite accepted",
+        "action_password_reset_link_sent": "Password reset link sent",
+        "action_password_reset_by_link": "Password set from a reset link"
     },
     "generator": {
         "title": "NeoDesk Support Generator",
@@ -2591,7 +2600,15 @@
         "invite_needs_email": "Sending links by email needs the email settings. Set them up under Settings, Email.",
         "invite_signed_in": "This account has signed in already, so it needs no invite.",
         "link_local_only": "This account signs in through a directory or single sign-on, so its password isn't set here.",
-        "link_mail_failed": "The mail server didn't take the email. Check the email settings."
+        "link_mail_failed": "The mail server didn't take the email. Check the email settings.",
+        "reset_mode_link": "Send a reset link by email",
+        "reset_mode_link_desc": "{username} gets a link at {email} and chooses a new password. The link works for 24 hours.",
+        "reset_mode_set": "Set a new password now",
+        "reset_mode_set_desc": "You choose the password and pass it on yourself.",
+        "reset_link_no_email": "{username} has no email address. Add one under Edit to send a reset link.",
+        "send_reset_link": "Send link",
+        "reset_link_sent_named": "Sent a reset link to {username}.",
+        "reset_email_required": "This account has no email address."
     },
     "folders": {
         "title": "Folders",
@@ -8973,6 +8990,16 @@
         "sign_in": "Sign in",
         "invalid_title": "This link doesn't work",
         "no_link": "Open the link from your email to choose a password.",
-        "check_failed": "The link couldn't be checked. Try again in a moment."
+        "check_failed": "The link couldn't be checked. Try again in a moment.",
+        "reset_subject": "Set a new password for {server}",
+        "reset_heading": "Set a new password",
+        "reset_lead": "{sender} sent you a link to set a new password for your account on {server}.",
+        "reset_lead_self": "Someone asked for a new password for your account on {server}. If that was you, set it here.",
+        "reset_button": "Set a new password",
+        "reset_expires": "The link works once, until {expires}.",
+        "reset_ignore": "If you didn't expect this, ignore this email. Your password stays as it is.",
+        "page_title_reset": "Set a new password",
+        "page_intro_reset": "Choose a new password for your account {username}.",
+        "done_text_reset": "Your other sessions were signed out. Sign in as {username} with your new password."
     }
 }

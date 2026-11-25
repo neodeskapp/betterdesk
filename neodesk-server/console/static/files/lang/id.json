@@ -184,7 +184,14 @@
     "signed_out_by_admin": "Seorang administrator mengeluarkan Anda. Silakan masuk lagi.",
     "signed_out_replaced": "Anda dikeluarkan karena akun Anda masuk di browser lain. Server ini mengizinkan satu sesi per akun.",
     "signed_out_limit": "Anda dikeluarkan karena akun Anda masuk di lebih banyak browser daripada yang diizinkan server ini. Silakan masuk lagi.",
-    "signed_out_account_changed": "Anda dikeluarkan karena kata sandi, masuk dua langkah, atau akses Anda berubah. Silakan masuk lagi."
+    "signed_out_account_changed": "Anda dikeluarkan karena kata sandi, masuk dua langkah, atau akses Anda berubah. Silakan masuk lagi.",
+    "forgot_password": "Lupa kata sandi?",
+    "forgot_title": "Atur ulang kata sandi Anda",
+    "forgot_intro": "Masukkan nama pengguna atau alamat email Anda. Jika akun punya alamat email, tautan untuk mengatur kata sandi baru dikirim ke sana.",
+    "forgot_field": "Nama pengguna atau email",
+    "forgot_send": "Kirim tautan",
+    "forgot_sent": "Jika akun ada dan punya alamat email, tautan sedang dikirim. Tautan berlaku 1 jam.",
+    "forgot_back": "Kembali ke halaman masuk"
   },
   "dashboard": {
     "title": "Dasbor",
@@ -1965,7 +1972,9 @@
     "action_console_sessions_policy_changed": "Sesi per akun diubah",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "Undangan dikirim",
-    "action_user_invite_accepted": "Undangan diterima"
+    "action_user_invite_accepted": "Undangan diterima",
+    "action_password_reset_link_sent": "Tautan atur ulang kata sandi dikirim",
+    "action_password_reset_by_link": "Kata sandi diatur dari tautan atur ulang"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2571,7 +2580,15 @@
     "invite_needs_email": "Mengirim tautan lewat email memerlukan pengaturan email. Atur di Pengaturan, Email.",
     "invite_signed_in": "Akun ini sudah pernah masuk, jadi tidak perlu undangan.",
     "link_local_only": "Akun ini masuk melalui direktori atau single sign-on, jadi kata sandinya tidak diatur di sini.",
-    "link_mail_failed": "Server email tidak menerima email tersebut. Periksa pengaturan email."
+    "link_mail_failed": "Server email tidak menerima email tersebut. Periksa pengaturan email.",
+    "reset_mode_link": "Kirim tautan atur ulang lewat email",
+    "reset_mode_link_desc": "{username} mendapat tautan di {email} dan memilih kata sandi baru. Tautan berlaku 24 jam.",
+    "reset_mode_set": "Atur kata sandi baru sekarang",
+    "reset_mode_set_desc": "Anda memilih kata sandi dan menyampaikannya sendiri.",
+    "reset_link_no_email": "{username} tidak punya alamat email. Tambahkan di Sunting untuk mengirim tautan atur ulang.",
+    "send_reset_link": "Kirim tautan",
+    "reset_link_sent_named": "Tautan atur ulang dikirim ke {username}.",
+    "reset_email_required": "Akun ini tidak punya alamat email."
   },
   "folders": {
     "title": "Folder",
@@ -8979,6 +8996,16 @@
     "sign_in": "Masuk",
     "invalid_title": "Tautan ini tidak berfungsi",
     "no_link": "Buka tautan dari email Anda untuk memilih kata sandi.",
-    "check_failed": "Tautan tidak dapat diperiksa. Coba lagi sebentar lagi."
+    "check_failed": "Tautan tidak dapat diperiksa. Coba lagi sebentar lagi.",
+    "reset_subject": "Atur kata sandi baru untuk {server}",
+    "reset_heading": "Atur kata sandi baru",
+    "reset_lead": "{sender} mengirimi Anda tautan untuk mengatur kata sandi baru bagi akun Anda di {server}.",
+    "reset_lead_self": "Seseorang meminta kata sandi baru untuk akun Anda di {server}. Jika itu Anda, atur di sini.",
+    "reset_button": "Atur kata sandi baru",
+    "reset_expires": "Tautan berlaku sekali, sampai {expires}.",
+    "reset_ignore": "Jika Anda tidak mengharapkan ini, abaikan email ini. Kata sandi Anda tetap seperti semula.",
+    "page_title_reset": "Atur kata sandi baru",
+    "page_intro_reset": "Pilih kata sandi baru untuk akun Anda {username}.",
+    "done_text_reset": "Sesi Anda yang lain sudah dikeluarkan. Masuk sebagai {username} dengan kata sandi baru Anda."
   }
 }

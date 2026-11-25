@@ -184,7 +184,14 @@
     "signed_out_by_admin": "Một quản trị viên đã đăng xuất bạn. Vui lòng đăng nhập lại.",
     "signed_out_replaced": "Bạn đã bị đăng xuất vì tài khoản của bạn đăng nhập trên một trình duyệt khác. Máy chủ này cho phép một phiên cho mỗi tài khoản.",
     "signed_out_limit": "Bạn đã bị đăng xuất vì tài khoản của bạn đăng nhập trên nhiều trình duyệt hơn mức máy chủ này cho phép. Vui lòng đăng nhập lại.",
-    "signed_out_account_changed": "Bạn đã bị đăng xuất vì mật khẩu, đăng nhập hai bước hoặc quyền truy cập của bạn đã thay đổi. Vui lòng đăng nhập lại."
+    "signed_out_account_changed": "Bạn đã bị đăng xuất vì mật khẩu, đăng nhập hai bước hoặc quyền truy cập của bạn đã thay đổi. Vui lòng đăng nhập lại.",
+    "forgot_password": "Quên mật khẩu?",
+    "forgot_title": "Đặt lại mật khẩu",
+    "forgot_intro": "Nhập tên người dùng hoặc địa chỉ email của bạn. Nếu tài khoản có địa chỉ email, một liên kết để đặt mật khẩu mới sẽ được gửi đến đó.",
+    "forgot_field": "Tên người dùng hoặc email",
+    "forgot_send": "Gửi liên kết",
+    "forgot_sent": "Nếu tài khoản tồn tại và có địa chỉ email, liên kết đang được gửi đến. Liên kết dùng được trong 1 giờ.",
+    "forgot_back": "Quay lại đăng nhập"
   },
   "dashboard": {
     "title": "Trang tổng quan",
@@ -1965,7 +1972,9 @@
     "action_console_sessions_policy_changed": "Đã thay đổi số phiên cho mỗi tài khoản",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "Đã gửi lời mời",
-    "action_user_invite_accepted": "Đã chấp nhận lời mời"
+    "action_user_invite_accepted": "Đã chấp nhận lời mời",
+    "action_password_reset_link_sent": "Đã gửi liên kết đặt lại mật khẩu",
+    "action_password_reset_by_link": "Đã đặt mật khẩu từ liên kết đặt lại"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2571,7 +2580,15 @@
     "invite_needs_email": "Gửi liên kết qua email cần có cài đặt email. Hãy thiết lập trong Cài đặt, Email.",
     "invite_signed_in": "Tài khoản này đã đăng nhập rồi nên không cần lời mời.",
     "link_local_only": "Tài khoản này đăng nhập qua thư mục hoặc đăng nhập một lần, nên mật khẩu không được đặt ở đây.",
-    "link_mail_failed": "Máy chủ thư không nhận email. Kiểm tra cài đặt email."
+    "link_mail_failed": "Máy chủ thư không nhận email. Kiểm tra cài đặt email.",
+    "reset_mode_link": "Gửi liên kết đặt lại qua email",
+    "reset_mode_link_desc": "{username} nhận liên kết tại {email} và chọn mật khẩu mới. Liên kết dùng được trong 24 giờ.",
+    "reset_mode_set": "Đặt mật khẩu mới ngay",
+    "reset_mode_set_desc": "Bạn chọn mật khẩu và tự chuyển cho người đó.",
+    "reset_link_no_email": "{username} chưa có địa chỉ email. Thêm địa chỉ trong Chỉnh sửa để gửi liên kết đặt lại.",
+    "send_reset_link": "Gửi liên kết",
+    "reset_link_sent_named": "Đã gửi liên kết đặt lại cho {username}.",
+    "reset_email_required": "Tài khoản này không có địa chỉ email."
   },
   "folders": {
     "title": "Thư mục",
@@ -8979,6 +8996,16 @@
     "sign_in": "Đăng nhập",
     "invalid_title": "Liên kết này không dùng được",
     "no_link": "Mở liên kết trong email của bạn để chọn mật khẩu.",
-    "check_failed": "Không kiểm tra được liên kết. Hãy thử lại sau giây lát."
+    "check_failed": "Không kiểm tra được liên kết. Hãy thử lại sau giây lát.",
+    "reset_subject": "Đặt mật khẩu mới cho {server}",
+    "reset_heading": "Đặt mật khẩu mới",
+    "reset_lead": "{sender} đã gửi cho bạn một liên kết để đặt mật khẩu mới cho tài khoản của bạn trên {server}.",
+    "reset_lead_self": "Có người đã yêu cầu mật khẩu mới cho tài khoản của bạn trên {server}. Nếu đó là bạn, hãy đặt mật khẩu tại đây.",
+    "reset_button": "Đặt mật khẩu mới",
+    "reset_expires": "Liên kết dùng được một lần, đến {expires}.",
+    "reset_ignore": "Nếu bạn không yêu cầu, hãy bỏ qua email này. Mật khẩu của bạn vẫn giữ nguyên.",
+    "page_title_reset": "Đặt mật khẩu mới",
+    "page_intro_reset": "Chọn mật khẩu mới cho tài khoản {username} của bạn.",
+    "done_text_reset": "Các phiên khác của bạn đã bị đăng xuất. Đăng nhập với tên {username} bằng mật khẩu mới của bạn."
   }
 }

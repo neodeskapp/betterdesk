@@ -178,7 +178,14 @@
     "signed_out_by_admin": "Un administrador cerró su sesión. Inicie sesión de nuevo.",
     "signed_out_replaced": "Se cerró su sesión porque su cuenta inició sesión en otro navegador. Este servidor permite una sesión por cuenta.",
     "signed_out_limit": "Se cerró su sesión porque su cuenta inició sesión en más navegadores de los que permite este servidor. Inicie sesión de nuevo.",
-    "signed_out_account_changed": "Se cerró su sesión porque cambió su contraseña, su inicio de sesión en dos pasos o su acceso. Inicie sesión de nuevo."
+    "signed_out_account_changed": "Se cerró su sesión porque cambió su contraseña, su inicio de sesión en dos pasos o su acceso. Inicie sesión de nuevo.",
+    "forgot_password": "¿Olvidó su contraseña?",
+    "forgot_title": "Restablecer su contraseña",
+    "forgot_intro": "Introduzca su nombre de usuario o su dirección de correo electrónico. Si la cuenta tiene una dirección de correo, se envía allí un enlace para establecer una nueva contraseña.",
+    "forgot_field": "Nombre de usuario o correo electrónico",
+    "forgot_send": "Enviar enlace",
+    "forgot_sent": "Si la cuenta existe y tiene una dirección de correo, el enlace va en camino. Funciona durante 1 hora.",
+    "forgot_back": "Volver al inicio de sesión"
   },
   "dashboard": {
     "title": "Panel",
@@ -1959,7 +1966,9 @@
     "action_console_sessions_policy_changed": "Sesiones por cuenta cambiadas",
     "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
     "action_user_invite_sent": "Invitación enviada",
-    "action_user_invite_accepted": "Invitación aceptada"
+    "action_user_invite_accepted": "Invitación aceptada",
+    "action_password_reset_link_sent": "Enlace de restablecimiento de contraseña enviado",
+    "action_password_reset_by_link": "Contraseña establecida con un enlace de restablecimiento"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2565,7 +2574,15 @@
     "invite_needs_email": "Para enviar enlaces por correo hacen falta los ajustes de correo. Configúrelos en Configuración, Correo.",
     "invite_signed_in": "Esta cuenta ya ha iniciado sesión, así que no necesita invitación.",
     "link_local_only": "Esta cuenta inicia sesión a través de un directorio o de inicio de sesión único, así que su contraseña no se establece aquí.",
-    "link_mail_failed": "El servidor de correo no aceptó el mensaje. Revise los ajustes de correo."
+    "link_mail_failed": "El servidor de correo no aceptó el mensaje. Revise los ajustes de correo.",
+    "reset_mode_link": "Enviar un enlace de restablecimiento por correo electrónico",
+    "reset_mode_link_desc": "{username} recibe un enlace en {email} y elige una nueva contraseña. El enlace funciona durante 24 horas.",
+    "reset_mode_set": "Establecer una nueva contraseña ahora",
+    "reset_mode_set_desc": "Usted elige la contraseña y se la pasa usted mismo.",
+    "reset_link_no_email": "{username} no tiene dirección de correo. Añada una en Editar para enviar un enlace de restablecimiento.",
+    "send_reset_link": "Enviar enlace",
+    "reset_link_sent_named": "Se envió un enlace de restablecimiento a {username}.",
+    "reset_email_required": "Esta cuenta no tiene dirección de correo electrónico."
   },
   "folders": {
     "title": "Carpetas",
@@ -8973,6 +8990,16 @@
     "sign_in": "Iniciar sesión",
     "invalid_title": "Este enlace no funciona",
     "no_link": "Abra el enlace de su correo para elegir una contraseña.",
-    "check_failed": "No se pudo comprobar el enlace. Inténtelo de nuevo en un momento."
+    "check_failed": "No se pudo comprobar el enlace. Inténtelo de nuevo en un momento.",
+    "reset_subject": "Establezca una nueva contraseña para {server}",
+    "reset_heading": "Establecer una nueva contraseña",
+    "reset_lead": "{sender} le ha enviado un enlace para establecer una nueva contraseña para su cuenta en {server}.",
+    "reset_lead_self": "Alguien pidió una nueva contraseña para su cuenta en {server}. Si fue usted, establézcala aquí.",
+    "reset_button": "Establecer una nueva contraseña",
+    "reset_expires": "El enlace funciona una vez, hasta el {expires}.",
+    "reset_ignore": "Si no esperaba este mensaje, ignórelo. Su contraseña sigue igual.",
+    "page_title_reset": "Establecer una nueva contraseña",
+    "page_intro_reset": "Elija una nueva contraseña para su cuenta {username}.",
+    "done_text_reset": "Se cerraron sus otras sesiones. Inicie sesión como {username} con su nueva contraseña."
   }
 }
