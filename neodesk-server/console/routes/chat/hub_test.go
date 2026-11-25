@@ -91,7 +91,7 @@ func TestSupportMessagesReachTheDeviceAndWhoSeesIt(t *testing.T) {
 		admin.take()
 
 		dev1.send(t, `{"type":"send","text":"my printer stopped","client_id":"c1"}`)
-		got := frames(anna.takeAtLeast(1), "message.new")
+		got := frames(anna.takeType("message.new"), "message.new")
 		if len(got) != 1 || textOf(got[0]) != "my printer stopped" {
 			t.Fatalf("anna got %v", got)
 		}
@@ -323,4 +323,20 @@ func TestAReplyToFilesShowsTheFirstName(t *testing.T) {
 			t.Errorf("the reply's quote: %v", reply)
 		}
 	})
+}
+
+// takeType waits until a frame of the type arrived and takes everything
+// that came: a late presence or device frame doesn't stand in for it.
+func (s *testSocket) takeType(typ string) []string {
+	waitFor(func() bool {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		for _, g := range s.got {
+			if strings.Contains(g, `"type":"`+typ+`"`) {
+				return true
+			}
+		}
+		return false
+	})
+	return s.take()
 }
