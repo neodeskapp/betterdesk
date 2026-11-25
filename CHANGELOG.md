@@ -5,59 +5,81 @@
 
 ---
 
-## [3.6.8] — 2026-11-25
+## [3.6.0-rc.6] — 2026-11-25
+
+Sixth release candidate of 3.6.0.
+
+### Added
+- An account can be signed in on up to 10 browsers at once. Signed-in
+  devices, in the account menu and on Your account, lists them with Sign
+  out and Sign out everywhere else; admins with Edit users see a
+  person's list on Users. The setting One session per account keeps the
+  old rule, and `SESSION_MAX_PER_USER` decides over it when set.
+- Your account: profile, password, two-factor sign-in, signed-in
+  devices, API tokens and preferences on one page.
+- The chat is rebuilt as Support, a shared inbox with one conversation
+  per computer, assignment and closing, and Team, with direct
+  conversations and groups. A chat panel opens over any page; unread
+  counts, notifications, replies, edits, reactions, files, canned
+  replies and message search. A mail goes out when a person waits 15
+  minutes, in the server's branding and each recipient's language.
+  Chat with computers can be turned off. Computers reach the chat on the
+  server's API port.
+- Invites go out as a welcome mail in the server's branding, and the
+  invite sheet walks through a new computer's name, folder, access and a
+  test session as it joins. `neodesk invites show` lists the computers
+  that joined with an invite.
+- The device page keeps a usage history and draws CPU, memory, disk and
+  network graphs; CPU and network rates come with a NeoDesk client
+  after 1.5.0-rc.7.
+- Remote sessions open inside the console as tabs that stay connected
+  across pages. Copy and paste of text and images in the browser
+  viewer, Cmd as Ctrl on a Mac, phones held sideways, and Firefox's
+  limits named.
+- The top bar search finds every setting and actions such as Quick
+  support, Add a computer and New API token.
+- The command line's `sessions` group, the `chat` commands and
+  `settings console-sessions`: 564 commands in 60 groups.
 
 ### Changed
-- _(none yet)_
+- The console's sidebar has the sections Devices, Support, People,
+  Activity, Rules, Server and Settings. Backups, updates and
+  configuration files are under Server; Directory (LDAP), Single
+  sign-on, Joining, MeshCentral and Branding are tabs of their own;
+  invites, device tokens, pairing codes, support agents and manual setup
+  are tabs of Devices, Add computers; Security checks left the audit
+  log. The old addresses lead to the new pages.
+- Theme, language and accessibility moved into the account menu, Help
+  is an icon, and Refresh is gone: six pages load again every 30
+  seconds while they are on screen.
+- Enrollment requests are called Join requests.
+- The permission Chat access is split into Support chat and Team chat;
+  Assign conversations and Manage canned replies are new.
+- On a phone every dialog is a full-height sheet.
+- The client API counts heartbeats per device (40 a minute), with 6000 a
+  minute per address as a flood brake, answers 429 when over and counts
+  the drops in /metrics.
+- The console's German and the server's German mails say "du".
+- The earlier chat's messages move once into the new conversations;
+  what fits nobody stays under Old messages for admins.
 
----
-
-## [3.6.7] — 2026-11-25
-
-### Changed
-- _(none yet)_
-
----
-
-## [3.6.6] — 2026-11-25
-
-### Changed
-- _(none yet)_
-
----
-
-## [3.6.5] — 2026-11-25
-
-### Changed
-- _(none yet)_
-
----
-
-## [3.6.4] — 2026-11-25
-
-### Changed
-- _(none yet)_
-
----
-
-## [3.6.3] — 2026-11-25
-
-### Changed
-- _(none yet)_
-
----
-
-## [3.6.2] — 2026-11-25
-
-### Changed
-- _(none yet)_
-
----
-
-## [3.6.1] — 2026-11-25
-
-### Changed
-- _(none yet)_
+### Fixed
+- A join under an enrolled computer's ID needs the proof of that
+  computer's key, so an invite can't take over a computer; refused
+  joins show in the audit log.
+- Direct chat messages reach only their two people, and read marks are
+  per account.
+- The one-line Docker install opens the console's ports only when they
+  are served and no reverse proxy is set.
+- A browser's live updates, chat and remote sessions close as soon as
+  its session ends, turning two-factor sign-in on or off ends the
+  account's other sessions, and a password reset on the server's
+  command line signs the account out of the console.
+- A signed-out browser is told why, whichever request notices first.
+- The device page shows real values and asks an online NeoDesk client
+  for new live data instead of calling it offline.
+- A computer's message without a conversation shows in its
+  conversation.
 
 ---
 
@@ -349,11 +371,4 @@ Second release candidate, and the first as NeoDesk.
 [3.6.0-rc.3]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.2...v3.6.0-rc.3
 [3.6.0-rc.4]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.3...v3.6.0-rc.4
 [3.6.0-rc.5]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.4...v3.6.0-rc.5
-[3.6.1]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.5...v3.6.1
-[3.6.2]: https://github.com/neodeskapp/neodesk/compare/v3.6.1...v3.6.2
-[3.6.3]: https://github.com/neodeskapp/neodesk/compare/v3.6.2...v3.6.3
-[3.6.4]: https://github.com/neodeskapp/neodesk/compare/v3.6.3...v3.6.4
-[3.6.5]: https://github.com/neodeskapp/neodesk/compare/v3.6.4...v3.6.5
-[3.6.6]: https://github.com/neodeskapp/neodesk/compare/v3.6.5...v3.6.6
-[3.6.7]: https://github.com/neodeskapp/neodesk/compare/v3.6.6...v3.6.7
-[3.6.8]: https://github.com/neodeskapp/neodesk/compare/v3.6.7...v3.6.8
+[3.6.0-rc.6]: https://github.com/neodeskapp/neodesk/compare/v3.6.0-rc.5...v3.6.0-rc.6

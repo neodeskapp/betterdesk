@@ -2559,7 +2559,6 @@
     "note_default_user_group": "Varsayılan kullanıcı grubu",
     "note_default_device_group": "Varsayılan cihaz grubu",
     "note_org_default_group": "Kuruluşla birlikte oluşturulan varsayılan grup",
-    "add_mode_title": "Şifre",
     "add_mode_invite": "E-postayla davet gönder",
     "add_mode_invite_desc": "Kişi bir bağlantı alır ve şifresini kendisi seçer. Bağlantı 7 gün geçerlidir.",
     "add_mode_password": "Şifreyi şimdi belirle",
@@ -8849,7 +8848,9 @@
     "no_keyboard_lock": "Bu tarayıcı bazı kısayolları tam ekranda da kendine saklar: Ctrl+W, Ctrl+T, Ctrl+N, Windows tuşu; Esc ise tam ekrandan çıkar. Eylemler, Windows tuşunu, Alt+Tab'ı ve Ctrl+Alt+Del'i uzak bilgisayara gönderir.",
     "no_screen_placement": "Bu tarayıcı pencereleri diğer ekranlarınıza yerleştiremez. Her ekranın penceresini istediğiniz ekrana sürükleyin.",
     "phone_turn": "Ya da telefonu yan çevirin: yatay görünümde oturum burada, tarayıcıda açılır.",
-    "no_open_sessions": "Açık oturum yok. Kimlikle bağlanın ya da aşağıdan bir cihaz seçin."
+    "no_open_sessions": "Açık oturum yok. Kimlikle bağlanın ya da aşağıdan bir cihaz seçin.",
+    "fail_signin_closed": "Bu tarayıcı oturum açarken {name} bağlantıyı kapattı.",
+    "try_signin_closed": "Cihaz oturum açmayı reddetti. Yeniden bağlanın ve tekrar oturum açın. Bu tekrarlanırsa bir yöneticiden cihazdaki NeoDesk günlüğüne bakmasını isteyin."
   },
   "diagram": {
     "your_computer": "Bilgisayarınız",

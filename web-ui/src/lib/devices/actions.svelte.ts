@@ -155,8 +155,9 @@ function openViewer(id: string) {
 	window.open(link(standalonePath(id)), '_blank');
 }
 
-/** A device's session opens inside the console, in place of the page */
+/** A device's session opens inside the console, in place of the page; the device panel closes, or it would cover it (L531) */
 function openHere(id: string) {
+	if (devicePanel.id) closeDevice();
 	// eslint-disable-next-line svelte/no-navigation-without-resolve -- link() adds the base
 	void goto(link(sessionPath(id)));
 }

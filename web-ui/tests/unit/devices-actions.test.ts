@@ -61,6 +61,8 @@ const defaults: Record<string, unknown> = {
 	tags: { add: ['new'], remove: [] },
 	'move-folder': 3
 };
+const navigated: string[] = [];
+vi.mock('$app/navigation', () => ({ goto: vi.fn(async (to: string) => void navigated.push(to)) }));
 vi.mock('../../src/lib/devices/ask.svelte.ts', () => ({
 	ask: vi.fn(async (kind: string, props: Record<string, (...a: unknown[]) => Promise<unknown>>) => {
 		if (kind === 'memberships') await props.save!(['m1']);
@@ -495,5 +497,29 @@ describe('row menu', () => {
 			'groups',
 			'delete'
 		]);
+	});
+});
+
+describe('Connect in the web viewer (L531)', () => {
+	test('the session opens in place and the device panel closes, so it covers nothing', async () => {
+		as('device.connect');
+		const d = dev({ online: true });
+		openDevice(d.id);
+		expect(devicePanel.id).toBe(d.id);
+		navigated.length = 0;
+		expect(await act.connectInBrowser(d)).toBe(true);
+		expect(navigated).toEqual([expect.stringMatching(/\/remote\/session\/900100001$/)]);
+		expect(devicePanel.id).toBeNull();
+	});
+
+	test('an RDP or VNC target opens its own tab and the panel stays', async () => {
+		as('remote_target.connect');
+		const opened = vi.spyOn(window, 'open').mockImplementation(() => null);
+		const d = dev({ online: true, remote_target: true, disabled: false });
+		openDevice(d.id);
+		await act.connectInBrowser(d);
+		expect(opened).toHaveBeenCalledOnce();
+		expect(devicePanel.id).toBe(d.id);
+		opened.mockRestore();
 	});
 });

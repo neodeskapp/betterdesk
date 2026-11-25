@@ -2559,7 +2559,6 @@
     "note_default_user_group": "Oletuskäyttäjäryhmä",
     "note_default_device_group": "Oletuslaiteryhmä",
     "note_org_default_group": "Organisaation kanssa luotu oletusryhmä",
-    "add_mode_title": "Salasana",
     "add_mode_invite": "Lähetä kutsu sähköpostilla",
     "add_mode_invite_desc": "Henkilö saa linkin ja valitsee itse salasanansa. Linkki toimii 7 päivää.",
     "add_mode_password": "Aseta salasana nyt",
@@ -8849,7 +8848,9 @@
     "no_keyboard_lock": "Tämä selain pitää osan pikanäppäimistä itsellään myös koko näytön tilassa: Ctrl+W, Ctrl+T, Ctrl+N, Windows-näppäin, ja Esc poistuu koko näytöstä. Toiminnot lähettää Windows-näppäimen, Alt+Tabin ja Ctrl+Alt+Del:n etätietokoneelle.",
     "no_screen_placement": "Tämä selain ei voi sijoittaa ikkunoita muille näytöillesi. Vedä kunkin näytön ikkuna haluamallesi näytölle.",
     "phone_turn": "Tai käännä puhelin vaakaan: vaakatilassa istunto avautuu tässä selaimessa.",
-    "no_open_sessions": "Yhtään istuntoa ei ole auki. Yhdistä tunnuksella tai valitse laite alta."
+    "no_open_sessions": "Yhtään istuntoa ei ole auki. Yhdistä tunnuksella tai valitse laite alta.",
+    "fail_signin_closed": "{name} sulki yhteyden, kun tämä selain kirjautui.",
+    "try_signin_closed": "Laite hylkäsi kirjautumisen. Yhdistä uudelleen ja kirjaudu uudelleen. Jos näin käy jatkuvasti, pyydä ylläpitäjää katsomaan laitteen NeoDesk-lokia."
   },
   "diagram": {
     "your_computer": "Tietokoneesi",

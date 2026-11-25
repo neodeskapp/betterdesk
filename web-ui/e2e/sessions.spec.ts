@@ -48,6 +48,20 @@ async function signedInBrowser(browser: Browser, baseURL: string, username: stri
 	return { context, page };
 }
 
+/**
+ * Open a console page and land on the sign-in page. The browser may have
+ * left for it already (a request noticed the ended session first): a page
+ * opened now is told the same reason, so the check never depends on which
+ * request was first.
+ */
+async function openAPage(p: Page): Promise<void> {
+	// The browser's own move to the sign-in page can cut this navigation short
+	await p.goto(`${UI}/devices`).catch((e: unknown) => {
+		if (!/interrupted by another navigation/.test(String(e))) throw e;
+	});
+	await p.waitForURL(/\/login\?/);
+}
+
 async function stillSignedIn(context: BrowserContext): Promise<boolean> {
 	return (await context.request.get('/api/auth/verify', { headers: { Accept: 'application/json' } })).ok();
 }
@@ -102,9 +116,9 @@ test('one account on two browsers: both stay signed in, and each can be signed o
 		await expect(sheet.getByRole('listitem')).toHaveCount(1);
 		expect(await stillSignedIn(first.context)).toBe(true);
 
-		// The second browser goes to the sign-in page at once, and is told why
-		await second.page.reload();
-		await second.page.waitForURL(/\/login/);
+		// The second browser goes to the sign-in page at its next page and is
+		// told why, also when a poll or a closed socket noticed first
+		await openAPage(second.page);
 		await expect(second.page.getByRole('status')).toHaveText(
 			'You were signed out from another device. Please sign in again.'
 		);
@@ -120,8 +134,7 @@ test('one account on two browsers: both stay signed in, and each can be signed o
 		await page.getByRole('dialog').last().getByRole('button', { name: 'Sign out everywhere' }).click();
 		await expect(userSheet.getByText(`${username} is not signed in anywhere.`)).toBeVisible();
 
-		await a.reload();
-		await a.waitForURL(/\/login/);
+		await openAPage(a);
 		await expect(a.getByRole('status')).toHaveText('An administrator signed you out. Please sign in again.');
 	} finally {
 		await first.context.close();

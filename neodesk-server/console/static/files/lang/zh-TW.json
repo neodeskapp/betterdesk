@@ -2575,7 +2575,6 @@
     "note_default_user_group": "預設使用者群組",
     "note_default_device_group": "預設裝置群組",
     "note_org_default_group": "隨組織建立的預設群組",
-    "add_mode_title": "密碼",
     "add_mode_invite": "透過電子郵件寄送邀請",
     "add_mode_invite_desc": "對方會收到一個連結，並自行設定密碼。連結 7 天內有效。",
     "add_mode_password": "現在設定密碼",
@@ -8847,7 +8846,9 @@
     "no_keyboard_lock": "此瀏覽器在全螢幕時也會保留一些快速鍵：Ctrl+W、Ctrl+T、Ctrl+N、Windows 鍵，按 Esc 會離開全螢幕。可在「動作」中向遠端電腦傳送 Windows 鍵、Alt+Tab 和 Ctrl+Alt+Del。",
     "no_screen_placement": "此瀏覽器無法把視窗放到你的其他螢幕上。請把每個顯示器的視窗拖到想要的螢幕。",
     "phone_turn": "或者把手機轉成橫向：橫向時工作階段會在這個瀏覽器中開啟。",
-    "no_open_sessions": "沒有開啟的工作階段。依 ID 連線，或在下方選擇裝置。"
+    "no_open_sessions": "沒有開啟的工作階段。依 ID 連線，或在下方選擇裝置。",
+    "fail_signin_closed": "此瀏覽器登入時，{name} 關閉了連線。",
+    "try_signin_closed": "裝置拒絕了登入。請重新連線並再次登入。如果一再發生，請管理員查看裝置上 NeoDesk 的記錄。"
   },
   "diagram": {
     "your_computer": "您的電腦",

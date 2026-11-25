@@ -9,7 +9,7 @@ beforeEach(() =>
 	setStrings('de', 'ltr', {
 		errors: {
 			forbidden_title: 'Zugriff verweigert',
-			forbidden_message: 'Sie haben keine Berechtigung für diese Seite.',
+			forbidden_message: 'Du hast keine Berechtigung für diese Seite.',
 			// The name comes after the role in this sentence
 			signed_in_as: 'Rolle {role}, angemeldet als {user}.',
 			go_home: 'Zur Übersicht'
@@ -31,7 +31,7 @@ async function show(user: Partial<User>) {
 test('says the page is refused, who is signed in with which role, and links to the overview', async () => {
 	await show({});
 	expect(screen.getByRole('heading', { level: 1, name: 'Zugriff verweigert' })).toBeInTheDocument();
-	expect(screen.getByText('Sie haben keine Berechtigung für diese Seite.')).toBeInTheDocument();
+	expect(screen.getByText('Du hast keine Berechtigung für diese Seite.')).toBeInTheDocument();
 	const line = screen.getByText(
 		(_, el) => el?.tagName === 'P' && /^Rolle Betrachter, angemeldet als/.test(el.textContent ?? '')
 	);

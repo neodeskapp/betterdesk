@@ -29,6 +29,7 @@
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
+     "nd.ended=; Path=/; Expires=<past>; HttpOnly; SameSite=Lax",
      "nd.guest=; Path=/; Expires=<past>; HttpOnly; SameSite=Lax",
      "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
     ],

@@ -2559,7 +2559,6 @@
     "note_default_user_group": "Grup pengguna default",
     "note_default_device_group": "Grup perangkat default",
     "note_org_default_group": "Grup default yang dibuat bersama organisasi",
-    "add_mode_title": "Kata sandi",
     "add_mode_invite": "Kirim undangan lewat email",
     "add_mode_invite_desc": "Orang itu mendapat tautan dan memilih kata sandinya sendiri. Tautan berlaku 7 hari.",
     "add_mode_password": "Atur kata sandi sekarang",
@@ -8849,7 +8848,9 @@
     "no_keyboard_lock": "Browser ini menyimpan beberapa pintasan untuk dirinya, juga di layar penuh: Ctrl+W, Ctrl+T, Ctrl+N, tombol Windows, dan Esc keluar dari layar penuh. Tindakan mengirim tombol Windows, Alt+Tab, dan Ctrl+Alt+Del ke komputer jarak jauh.",
     "no_screen_placement": "Browser ini tidak bisa menaruh jendela di layar Anda yang lain. Seret jendela setiap tampilan ke layar yang Anda inginkan.",
     "phone_turn": "Atau putar ponsel ke samping: dalam mode lanskap sesi terbuka di sini di browser.",
-    "no_open_sessions": "Tidak ada sesi yang terbuka. Sambungkan dengan ID, atau pilih perangkat di bawah."
+    "no_open_sessions": "Tidak ada sesi yang terbuka. Sambungkan dengan ID, atau pilih perangkat di bawah.",
+    "fail_signin_closed": "{name} menutup koneksi saat browser ini masuk.",
+    "try_signin_closed": "Perangkat menolak proses masuk. Hubungkan lagi dan masuk kembali. Jika terus terjadi, minta administrator memeriksa log NeoDesk di perangkat."
   },
   "diagram": {
     "your_computer": "Komputer Anda",

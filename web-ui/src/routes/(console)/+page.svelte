@@ -30,6 +30,7 @@
 		type DeviceStats,
 		type ServerStatus
 	} from '#lib/api/dashboard.ts';
+	import { addTabs } from '#lib/devices-area/add-computers.ts';
 	import {
 		configText,
 		deviceParts,
@@ -81,6 +82,11 @@
 	// Links go only where the menu goes: the server builds the menu from the same checks as its routes
 	const navPages = new Set(session.nav.flatMap((s) => s.pages.map((p) => p.page)));
 	const showServerLink = navPages.has('server-management:overview');
+	// Support agents and the server key are tabs of Devices, Add computers,
+	// each for the accounts that get the tab (its old page's permission)
+	const addComputerTabs = addTabs({ can, role: session.user?.role });
+	const showAgentsLink = addComputerTabs.includes('agents');
+	const showKeysLink = addComputerTabs.includes('manual');
 
 	/* ── The answers +page.ts asked for while the console started, each used once ── */
 
@@ -464,14 +470,14 @@
 							title={t('dashboard.get_rustdesk')}
 							sub={t('dashboard.get_rustdesk_hint')}
 						/>
-						{#if navPages.has('agents')}
+						{#if showAgentsLink}
 							<ListRow
 								title={t('dashboard.open_agents')}
 								sub={t('dashboard.agents_hint')}
 								href={link('/devices/add?tab=agents')}
 							/>
 						{/if}
-						{#if navPages.has('keys')}
+						{#if showKeysLink}
 							<ListRow title={t('dashboard.open_keys')} href={link('/devices/add?tab=manual')} />
 						{/if}
 					</RowList>

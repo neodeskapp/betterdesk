@@ -2559,7 +2559,6 @@
     "note_default_user_group": "Grup de utilizatori implicit",
     "note_default_device_group": "Grup de dispozitive implicit",
     "note_org_default_group": "Grup implicit creat odată cu organizația",
-    "add_mode_title": "Parolă",
     "add_mode_invite": "Trimiteți o invitație prin e-mail",
     "add_mode_invite_desc": "Persoana primește un link și își alege singură parola. Linkul funcționează 7 zile.",
     "add_mode_password": "Setați o parolă acum",
@@ -8849,7 +8848,9 @@
     "no_keyboard_lock": "Acest browser păstrează unele comenzi rapide pentru el, și pe ecran complet: Ctrl+W, Ctrl+T, Ctrl+N, tasta Windows, iar Esc iese din ecranul complet. Acțiuni trimite tasta Windows, Alt+Tab și Ctrl+Alt+Del la computerul la distanță.",
     "no_screen_placement": "Acest browser nu poate pune ferestre pe celelalte ecrane. Trageți fereastra fiecărui afișaj pe ecranul dorit.",
     "phone_turn": "Sau rotiți telefonul pe orizontală: așa sesiunea se deschide aici, în browser.",
-    "no_open_sessions": "Nicio sesiune nu este deschisă. Conectați-vă după ID sau alegeți un dispozitiv mai jos."
+    "no_open_sessions": "Nicio sesiune nu este deschisă. Conectați-vă după ID sau alegeți un dispozitiv mai jos.",
+    "fail_signin_closed": "{name} a închis conexiunea când acest browser s-a conectat.",
+    "try_signin_closed": "Dispozitivul a refuzat conectarea. Reconectează-te și autentifică-te din nou. Dacă se repetă, roagă un administrator să verifice jurnalul NeoDesk de pe dispozitiv."
   },
   "diagram": {
     "your_computer": "Computerul dvs.",

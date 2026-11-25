@@ -369,6 +369,11 @@ func (m *Manager) answerEnded(w http.ResponseWriter, r *http.Request, reason str
 	code, text, _ := Notice(reason)
 	clearCookie(w, cookieNameHTTPS)
 	clearCookie(w, cookieNameHTTP)
+	// The reason stays a few minutes, so the answers after this one say it
+	// too, whichever request of the browser was first (EndedReason)
+	w.Header().Add("Set-Cookie", cookie.Format(httpx.EndedCookie, code, cookie.Attributes{
+		Path: "/", MaxAge: endedNoticeFor, HTTPOnly: true, Secure: m.SecureCookie(r), SameSite: "lax",
+	}))
 	if strings.HasPrefix(r.URL.EscapedPath(), "/api/") || wantsJSON(r) {
 		httpx.WriteJSON(w, r, http.StatusUnauthorized, expiredAnswer{Error: text, Code: code})
 		return
@@ -380,6 +385,30 @@ func (m *Manager) answerEnded(w http.ResponseWriter, r *http.Request, reason str
 		target = "/login?expired=1&reason=" + code
 	}
 	httpx.Redirect(w, r, http.StatusFound, target)
+}
+
+// endedNoticeFor is how long a browser keeps the reason its session was
+// ended elsewhere after it was first told.
+const endedNoticeFor = 10 * time.Minute
+
+// NoticeText is the English text of a notice code (Notice), ok false for
+// a code that is none.
+func NoticeText(code string) (text string, ok bool) {
+	for _, reason := range []string{ReasonSignedOut, ReasonEndedByAdmin, ReasonReplaced, ReasonLimit, ReasonRevoked} {
+		if c, t, _ := Notice(reason); c == code {
+			return t, true
+		}
+	}
+	return "", false
+}
+
+// ClearEndedNotice makes the browser forget the reason its last session
+// ended, when it holds one: a sign-in does it.
+func (m *Manager) ClearEndedNotice(w http.ResponseWriter, r *http.Request) {
+	if httpx.EndedReason(r) == "" {
+		return
+	}
+	cookie.Clear(w, httpx.EndedCookie, cookie.Attributes{Path: "/", HTTPOnly: true, Secure: m.SecureCookie(r), SameSite: "lax"})
 }
 
 // Notice is what a browser is told about a session that ended for a

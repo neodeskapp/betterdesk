@@ -665,7 +665,7 @@ func TestDirectorySignInRefusedForTooManyAttempts(t *testing.T) {
 		want(t, "known account", w.agent().post("/api/auth/login", login("dora", password)), http.StatusTooManyRequests,
 			`{"success":false,"error":"Too many sign-in attempts. Please try again later."}`)
 		want(t, "new account", w.agent().post("/api/auth/login", login("erin", password), "Accept-Language", "de"), http.StatusTooManyRequests,
-			`{"success":false,"error":"Zu viele Anmeldeversuche. Bitte versuchen Sie es später erneut."}`)
+			`{"success":false,"error":"Zu viele Anmeldeversuche. Bitte versuche es später erneut."}`)
 		if got := w.attempts(); len(got) != 0 {
 			t.Errorf("attempts: %v; a refusal of the server is no wrong password", got)
 		}

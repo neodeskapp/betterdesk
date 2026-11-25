@@ -143,7 +143,7 @@ func TestSignedInDevicesListsTheAccountsOwnSessions(t *testing.T) {
 }
 
 func TestEndingOneSessionFromTheListEndsExactlyThatOne(t *testing.T) {
-	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+	eachWorld(t, setup{build: true}, func(t *testing.T, w *world) {
 		alice := w.addUser(user{name: "alice"})
 		bob := w.addUser(user{name: "bob"})
 		a, b, c := w.agent(), w.agent("User-Agent", firefoxOnWindows), w.agent()
@@ -162,8 +162,16 @@ func TestEndingOneSessionFromTheListEndsExactlyThatOne(t *testing.T) {
 
 		want(t, "end it", a.del("/api/users/me/sessions/"+target), http.StatusOK, `{"success":true}`)
 		want(t, "the ended browser", b.get("/api/auth/verify"), http.StatusUnauthorized, signedOut("session_signed_out", signedOutElsewhere))
-		// Told once: the answer clears its cookie, and then it is signed out
-		want(t, "the ended browser again", b.get("/api/auth/verify"), http.StatusUnauthorized, notSignedIn)
+		// Told by whichever request notices first, and by the ones after it
+		// too: a poll or a socket's retry that comes first doesn't take the
+		// reason away from the page the person opens next (A239)
+		want(t, "the ended browser again", b.get("/api/auth/verify"), http.StatusUnauthorized, signedOut("session_signed_out", signedOutElsewhere))
+		if res := b.get("/devices"); res.status != http.StatusFound || res.header.Get("Location") != "/login?expired=1&reason=session_signed_out&return=%2Fdevices" {
+			t.Errorf("a page after the API was told: %d %q", res.status, res.header.Get("Location"))
+		}
+		if b.sessionID() != "" {
+			t.Error("the ended browser kept its session cookie")
+		}
 		for name, x := range map[string]*agent{"the browser that ended it": a, "the third browser": c, "bob": bobs} {
 			if res := x.get("/api/auth/verify"); res.status != http.StatusOK {
 				t.Errorf("%s: %d %s", name, res.status, res.body)
@@ -178,6 +186,14 @@ func TestEndingOneSessionFromTheListEndsExactlyThatOne(t *testing.T) {
 		wantPrefix := fmt.Sprintf("session_signed_out|Signed out session %s (Firefox on Windows, 127.0.0.1) of alice from another device|127.0.0.1|%d", target[:8], alice)
 		if last != wantPrefix {
 			t.Errorf("audit entry:\n%s\nwant\n%s", last, wantPrefix)
+		}
+		// Signing in again ends the notice
+		b.signIn("alice")
+		if res := b.get("/api/auth/verify"); res.status != http.StatusOK {
+			t.Errorf("signed in again: %d %s", res.status, res.body)
+		}
+		if _, left := b.cookies["nd.ended"]; left {
+			t.Error("the sign-in kept the notice of the ended session")
 		}
 		// A page request of the ended browser goes to the sign-in page with the reason
 		d := w.agent()
