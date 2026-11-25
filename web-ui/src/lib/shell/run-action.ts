@@ -17,7 +17,8 @@ const PAGES: Record<Intent, string> = {
 	'add-computer': '/devices',
 	'new-device-token': '/devices/add?tab=tokens',
 	'add-user': '/users',
-	'new-api-token': '/account'
+	'new-api-token': '/account',
+	'chat-settings': '/chat'
 };
 
 function isIntent(id: string): id is Intent {

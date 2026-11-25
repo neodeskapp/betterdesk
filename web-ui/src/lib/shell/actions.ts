@@ -13,6 +13,7 @@ export type ActionId =
 	| 'new-device-token'
 	| 'add-user'
 	| 'new-api-token'
+	| 'chat-settings'
 	| 'accessibility'
 	| 'theme'
 	| 'sign-out';
@@ -71,6 +72,15 @@ const ACTIONS: readonly ActionDef[] = [
 		title: (c) => c.t('search.action_new_api_token'),
 		keywords: 'api token key create new schlüssel erstellen neu',
 		allowed: (c) => c.mayMakeTokens
+	},
+	{
+		// The chat's settings for the server (A259): Chat with computers and the mail about a waiting person
+		id: 'chat-settings',
+		icon: 'settings',
+		title: (c) => c.t('chat.server_settings'),
+		keywords:
+			'chat with computers mail waiting answer preview settings chat mit computern mail wartet antwort vorschau einstellungen',
+		allowed: (c) => c.can('server.config') && (c.can('chat.support') || c.can('chat.team'))
 	},
 	{
 		id: 'accessibility',

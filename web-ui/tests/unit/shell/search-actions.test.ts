@@ -61,6 +61,20 @@ describe('searchActions', () => {
 		expect(ids('log out')).toEqual(['sign-out']);
 		expect(ids('fernwartung')).toEqual(['quick-support']);
 	});
+
+	test('the chat settings for the server: for chat users who may change the server, found by chat with computers and the mail', () => {
+		expect(searchActions(ctx(['chat.support'])).map((a) => a.id)).not.toContain('chat-settings');
+		expect(searchActions(ctx(['server.config'])).map((a) => a.id)).not.toContain('chat-settings');
+		const actions = searchActions(ctx(['server.config', 'chat.team']));
+		expect(actions.find((a) => a.id === 'chat-settings')?.title).toBe('chat.server_settings');
+		const ids = (q: string) =>
+			searchGrouped(q, { pages: [], actions })
+				.results.filter((r) => r.kind === 'action')
+				.map((r) => r.id);
+		expect(ids('chat with computers')).toEqual(['chat-settings']);
+		expect(ids('chat mail')).toEqual(['chat-settings']);
+		expect(ids('chat mit computern')).toEqual(['chat-settings']);
+	});
 });
 
 describe('recent searches', () => {

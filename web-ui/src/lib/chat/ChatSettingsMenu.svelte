@@ -16,6 +16,7 @@
 	import MenuButton from '#lib/ui/MenuButton.svelte';
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
+	import { takeIntent } from '#lib/shell/intent.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import * as api from './api.ts';
 	import { chat } from './client.svelte.ts';
@@ -54,6 +55,11 @@
 			server = { mail_after_minutes: 15, mail_preview: true, computers: true };
 		}
 	}
+
+	// The top bar search's "Chat settings for this server" opens the dialog
+	$effect(() => {
+		if (takeIntent('chat-settings') && can('server.config')) void openServer();
+	});
 
 	async function saveServer() {
 		if (!server) return;

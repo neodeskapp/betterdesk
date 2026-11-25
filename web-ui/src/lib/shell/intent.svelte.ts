@@ -7,7 +7,7 @@
  *   $effect(() => { if (takeIntent('add-computer')) addComputer = true; });
  */
 
-export type Intent = 'add-computer' | 'new-device-token' | 'add-user' | 'new-api-token';
+export type Intent = 'add-computer' | 'new-device-token' | 'add-user' | 'new-api-token' | 'chat-settings';
 
 class PendingIntent {
 	name = $state<Intent | null>(null);
