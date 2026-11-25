@@ -7,16 +7,14 @@
   everyone, which is something else.
 -->
 <script lang="ts">
-	import { getBootstrap, saveLanguage } from '#lib/api/console.ts';
-	import { i18n, switchLanguage, t } from '#lib/i18n/i18n.svelte.ts';
+	import { i18n, t } from '#lib/i18n/i18n.svelte.ts';
 	import { a11y, isDefault } from '#lib/shell/a11y.svelte.ts';
-	import { applyBootstrap } from '#lib/state/session.svelte.ts';
+	import { chooseLanguage } from '#lib/shell/language.ts';
 	import { setTheme, theme, type ThemeChoice } from '#lib/state/theme.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import ChoiceList from '#lib/ui/ChoiceList.svelte';
 	import Field from '#lib/ui/Field.svelte';
 	import Select from '#lib/ui/Select.svelte';
-	import { toast } from '#lib/ui/toasts.svelte.ts';
 
 	const themes = $derived<{ value: ThemeChoice; title: string }[]>([
 		{ value: 'default', title: t('theme.console_default') },
@@ -27,21 +25,6 @@
 		i18n.available.map((l) => ({ value: l.code, label: l.native || l.name || l.code }))
 	);
 	const a11yOn = $derived(!isDefault(a11y.settings));
-	let busy = false;
-
-	async function chooseLanguage(code: string) {
-		if (busy || !code || code === i18n.lang) return;
-		busy = true;
-		try {
-			await switchLanguage(code, saveLanguage);
-			// Page names in the navigation come translated from the server
-			applyBootstrap(await getBootstrap());
-		} catch {
-			toast.error(t('errors.language_change_failed'));
-		} finally {
-			busy = false;
-		}
-	}
 </script>
 
 <section class="section" id="preferences" aria-labelledby="preferences-title">

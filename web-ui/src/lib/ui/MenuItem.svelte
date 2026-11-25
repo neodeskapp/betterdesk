@@ -14,7 +14,8 @@
   before the label instead of an icon (a presence dot, a flag); `lang`
   marks a label in another language.
   `href` makes it a link (type item only); `download` marks a link to a
-  file (true, or the file name), as on Button.
+  file (true, or the file name), as on Button. `haspopup` says the item
+  opens another menu or a dialog (aria-haspopup).
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -31,6 +32,7 @@
 		download?: boolean | string;
 		lang?: string;
 		lead?: Snippet;
+		haspopup?: 'menu' | 'dialog';
 		class?: string;
 		onselect?: () => void;
 		children: Snippet;
@@ -46,6 +48,7 @@
 		download,
 		lang,
 		lead,
+		haspopup,
 		class: cls = '',
 		onselect,
 		children
@@ -90,6 +93,7 @@
 		class={classes}
 		{role}
 		aria-checked={type === 'item' ? undefined : checked}
+		aria-haspopup={haspopup}
 		tabindex="-1"
 		{disabled}
 		{lang}
