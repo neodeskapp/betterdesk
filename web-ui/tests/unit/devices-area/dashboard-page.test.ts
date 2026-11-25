@@ -105,6 +105,7 @@ afterEach(() => {
 	cleanup();
 	dismissAll();
 	vi.unstubAllGlobals();
+	session.user = null;
 });
 
 function as(permissions: string[], navPages: string[] = []) {
@@ -198,22 +199,43 @@ describe('overview per permission', () => {
 		expect(row.closest('a')).toBeNull();
 		cleanup();
 
-		as(['server.config'], ['server-management:overview', 'keys', 'agents']);
+		as(['server.config'], ['server-management:overview']);
 		render(Page, early());
 		await settle();
 		const linked = within(attention()).getByText('dashboard.status_relay_down').closest('a');
 		expect(linked).toHaveAttribute('href', '/app/server-management?tab=overview');
-		expect(screen.getByRole('link', { name: 'dashboard.open_keys' })).toBeInTheDocument();
-		expect(screen.getByRole('link', { name: /dashboard\.open_agents/ })).toBeInTheDocument();
 	});
 
-	test('links to Agents and Keys follow the menu', async () => {
+	test('without the server status page in the menu there is no link to it', async () => {
 		as(['server.config']);
 		render(Page, early());
 		await settle();
-		expect(screen.queryByRole('link', { name: 'dashboard.open_keys' })).toBeNull();
-		expect(screen.queryByRole('link', { name: /dashboard\.open_agents/ })).toBeNull();
 		expect(screen.queryByRole('link', { name: 'dashboard.open_server_status' })).toBeNull();
+	});
+
+	// Support agents and the server key moved under Devices, Add computers
+	// (?tab=agents, ?tab=manual); each link shows to those who get its tab
+	test('links to support agents and the server key lead to their Add computers tabs, for those who get the tab', async () => {
+		as([], ['dashboard', 'devices-add']);
+		session.user = { id: 1, username: 'ada', role: 'admin' } as typeof session.user;
+		render(Page, early());
+		await settle();
+		expect(screen.getByRole('link', { name: 'dashboard.open_keys' })).toHaveAttribute(
+			'href',
+			'/app/devices/add?tab=manual'
+		);
+		expect(screen.getByRole('link', { name: /dashboard\.open_agents/ })).toHaveAttribute(
+			'href',
+			'/app/devices/add?tab=agents'
+		);
+		cleanup();
+
+		// Support agents is for the admin roles, manual setup for every account
+		session.user = { id: 2, username: 'otto', role: 'operator' } as typeof session.user;
+		render(Page, early());
+		await settle();
+		expect(screen.getByRole('link', { name: 'dashboard.open_keys' })).toBeInTheDocument();
+		expect(screen.queryByRole('link', { name: /dashboard\.open_agents/ })).toBeNull();
 	});
 });
 
