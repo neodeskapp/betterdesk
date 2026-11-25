@@ -155,20 +155,26 @@ for (const role of ROLES) {
 		});
 
 		test('client app branding', async ({ page }) => {
+			// Its old page leads to its part of Settings › Branding
 			await page.goto(`${UI}/client-branding`);
-			await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+			await expect(page).toHaveURL(/\/settings\?tab=brand#client-app$/);
+			await expect(page.getByRole('heading', { level: 1, name: 'Branding' })).toBeVisible();
 			const perms = await permissions(page);
-			if (!has(perms, 'branding.edit')) return expectNoAccess(page);
+			if (!has(perms, 'branding.edit')) {
+				await expect(page.locator('#client-app')).toHaveCount(0);
+				return;
+			}
 			const name = page.getByLabel('Company name');
 			await expect(name).not.toHaveValue('');
 			// The preview follows the form; the save bar says there are changes
 			const before = await name.inputValue();
 			await name.fill('Preview Test');
 			await expect(page.locator('.cb-pv-name')).toHaveText('Preview Test');
-			await expect(page.locator('.save-bar')).toContainText('Unsaved');
+			const bar = page.locator('#client-app .save-bar');
+			await expect(bar).toContainText('Unsaved');
 			await expectNoAxeViolations(page);
 			await name.fill(before);
-			await expect(page.locator('.save-bar')).not.toContainText('Unsaved');
+			await expect(bar).not.toContainText('Unsaved');
 		});
 	});
 }

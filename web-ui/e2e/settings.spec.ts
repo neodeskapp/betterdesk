@@ -28,6 +28,8 @@ for (const role of ROLES) {
 		test.use({ role });
 
 		test('General, Appearance and Sign-in show what the role may change', async ({ page }) => {
+			// Nine tabs, each with an axe run
+			test.slow();
 			await page.goto(`${UI}/settings`);
 			await expect(h1(page)).toHaveText('General');
 			const perms = await permissions(page);
@@ -47,15 +49,24 @@ for (const role of ROLES) {
 			await expect(page.locator('#branding-theme')).toBeVisible();
 			// The form is one disabled fieldset without branding.edit; Playwright reads
 			// that on the controls inside it, not on the fieldset itself
-			const name = page.locator('#brand-name');
-			if (branding) await expect(name).toBeEnabled();
-			else await expect(name).toBeDisabled();
 			await expect(page.locator('#branding-theme input[type="radio"]').first()).toBeEnabled({
 				enabled: branding
 			});
+			// Name, logo and the pages others see are on Branding
+			await expect(page.locator('#brand-name')).toHaveCount(0);
 			await expect(page.locator('#branding-profiles')).toHaveCount(branding ? 1 : 0);
 			await expect(page.locator('#branding-import-export')).toHaveCount(branding ? 1 : 0);
 			await expect(page.getByRole('button', { name: /Reset appearance/ })).toHaveCount(branding ? 1 : 0);
+			await expectNoAxeViolations(page);
+
+			await page.goto(`${UI}/settings?tab=brand`);
+			await expect(h1(page)).toHaveText('Branding');
+			const name = page.locator('#brand-name');
+			if (branding) await expect(name).toBeEnabled();
+			else await expect(name).toBeDisabled();
+			await expect(page.locator('#branding-login')).toBeVisible();
+			await expect(page.locator('#client-app')).toHaveCount(branding ? 1 : 0);
+			await expect(page.locator('#branding-theme')).toHaveCount(0);
 			await expectNoAxeViolations(page);
 
 			await page.goto(`${UI}/settings?tab=auth`);

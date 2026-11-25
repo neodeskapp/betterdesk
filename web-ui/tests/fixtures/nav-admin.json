@@ -432,7 +432,17 @@
 				"text": "Appearance",
 				"group": "Console",
 				"core": false,
-				"keywords": "appearance theme colours colors fonts dark mode branding logo",
+				"keywords": "appearance theme colours colors fonts dark mode",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:brand",
+				"href": "/settings?tab=brand",
+				"text": "Branding",
+				"group": "Console",
+				"core": false,
+				"keywords": "branding brand logo name sign-in page download page client app white label",
 				"external": false,
 				"countId": null
 			},
@@ -513,16 +523,6 @@
 				"group": "Clients and joining",
 				"core": false,
 				"keywords": "agents installers generator",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "client-branding",
-				"href": "/client-branding",
-				"text": "Client app branding",
-				"group": "Clients and joining",
-				"core": false,
-				"keywords": "client branding white label",
 				"external": false,
 				"countId": null
 			},

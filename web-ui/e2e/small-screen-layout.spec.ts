@@ -44,7 +44,7 @@ const PAGES = [
 	'/tokens',
 	'/pairing',
 	'/agents',
-	'/client-branding',
+	'/settings?tab=brand',
 	'/policies',
 	'/automation',
 	'/resource-control',

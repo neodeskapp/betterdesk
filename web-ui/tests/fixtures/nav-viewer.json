@@ -181,7 +181,17 @@
 				"text": "Appearance",
 				"group": "Console",
 				"core": false,
-				"keywords": "appearance theme colours colors fonts dark mode branding logo",
+				"keywords": "appearance theme colours colors fonts dark mode",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "settings:brand",
+				"href": "/settings?tab=brand",
+				"text": "Branding",
+				"group": "Console",
+				"core": false,
+				"keywords": "branding brand logo name sign-in page download page client app white label",
 				"external": false,
 				"countId": null
 			},
