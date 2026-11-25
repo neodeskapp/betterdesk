@@ -95,10 +95,11 @@ RESCUE_ACTION="rescue"
 CHECK_CAPABILITIES=false
 MANAGED_CONFIG_CHANGES=()
 
-# Docker ports: web console 3375 and 5443, API 21121, CDAP 21122, signal and relay
-DOCKER_PORTS="21115 21116 21117 21118 21119 21121 21122 3375 5443"
-# With --domain: Traefik's HTTP (certificate, redirect) and HTTPS instead
-# of the console's own ports, which then answer on this host only
+# Docker ports for the clients: signal and relay, API 21121, CDAP 21122.
+# The console's own ports follow the install's .env (docker_console_ports).
+DOCKER_PORTS="21115 21116 21117 21118 21119 21121 21122"
+# With --domain: Traefik's HTTP (certificate, redirect) and HTTPS as well;
+# the console's own ports then answer on this host only
 DOCKER_PORTS_TRAEFIK="21115 21116 21117 21118 21119 21121 21122 80 443"
 
 # ── Output helpers ────────────────────────────────────────────────────────────
@@ -369,43 +370,107 @@ ufw_active() {
     command -v ufw >/dev/null 2>&1 && LC_ALL=C ufw status 2>/dev/null | grep -q '^Status: active'
 }
 
+# docker_env_get KEY: KEY's value in the Docker install's .env, without
+# quotes around it; empty when .env or the key is missing
+docker_env_get() {
+    local value
+    value=$(grep -E "^${1}=" "${INSTALL_DIR}/docker/.env" 2>/dev/null | tail -n 1 | cut -d= -f2- | tr -d '\r') || true
+    case "$value" in
+        \"*\"|\'*\') value="${value:1:${#value}-2}" ;;
+    esac
+    printf '%s\n' "$value"
+}
+
+# docker_console_ports: the console's ports for the host firewall, by the
+# rule of neodesk.sh and neodesk.ps1, read from the .env the manager wrote
+# (it runs before the firewall step). Sets CONSOLE_PORTS_OPEN, the ports
+# to open, and CONSOLE_PORTS_CLOSED with CONSOLE_CLOSED_WHY, the ports left
+# closed and why:
+#   - no .env: nothing is opened, the step cannot tell how the console is served
+#   - NEODESK_CONSOLE_BIND on loopback (--domain sets 127.0.0.1): the ports
+#     answer on this host only, nothing to open
+#   - TRUST_PROXY on (any value but an off one, as the console reads it):
+#     a reverse proxy is in front, nothing is opened
+#   - else the HTTP port (NEODESK_CONSOLE_PORT, 3375), and the HTTPS port
+#     (NEODESK_CONSOLE_HTTPS_PORT, 5443) only with HTTPS_ENABLED on
+docker_console_ports() {
+    local env_file="${INSTALL_DIR}/docker/.env" http https
+    CONSOLE_PORTS_OPEN="" CONSOLE_PORTS_CLOSED="" CONSOLE_CLOSED_WHY=""
+    http=$(docker_env_get NEODESK_CONSOLE_PORT)
+    https=$(docker_env_get NEODESK_CONSOLE_HTTPS_PORT)
+    CONSOLE_PORTS_OPEN="${http:-3375}"
+    case "$(docker_env_get HTTPS_ENABLED | tr '[:upper:]' '[:lower:]')" in
+        1|y|yes|true|on) CONSOLE_PORTS_OPEN="$CONSOLE_PORTS_OPEN ${https:-5443}" ;;
+    esac
+    if [ ! -f "$env_file" ]; then
+        CONSOLE_CLOSED_WHY="there is no ${env_file} that says how the console is served"
+    else
+        case "$(docker_env_get NEODESK_CONSOLE_BIND)" in
+            127.*|::1|"[::1]"|localhost)
+                CONSOLE_CLOSED_WHY="local"
+                ;;
+        esac
+        if [ -z "$CONSOLE_CLOSED_WHY" ]; then
+            case "$(docker_env_get TRUST_PROXY | tr '[:upper:]' '[:lower:]')" in
+                ""|n|no|0|false|off) return 0 ;;
+            esac
+            CONSOLE_CLOSED_WHY="a reverse proxy is in front of it (TRUST_PROXY in ${env_file})"
+        fi
+    fi
+    CONSOLE_PORTS_CLOSED="$CONSOLE_PORTS_OPEN"
+    CONSOLE_PORTS_OPEN=""
+}
+
+# configure_firewall: opens the client ports (DOCKER_PORTS) and the
+# console's (docker_console_ports) in ufw or firewalld when one of them is
+# active, names the ports it opened, and says how to open the console's
+# ports by hand when it left them closed.
 configure_firewall() {
     [ "$SKIP_FIREWALL" = true ] && { log "Skipping firewall configuration"; return 0; }
 
-    local port created=0
-    local docker_ports="$DOCKER_PORTS"
+    local port firewall opened=() hint=()
 
     log "Configuring firewall (if active)..."
+    docker_console_ports
 
     if ufw_active; then
-        for port in $docker_ports; do
+        firewall=ufw
+        for port in $DOCKER_PORTS $CONSOLE_PORTS_OPEN; do
             if [ "$port" = "21116" ]; then
-                ufw allow 21116/tcp comment "NeoDesk signal TCP" >/dev/null 2>&1 && created=$((created + 1)) || true
-                ufw allow 21116/udp comment "NeoDesk signal UDP" >/dev/null 2>&1 && created=$((created + 1)) || true
-            elif ! ufw status 2>/dev/null | grep -qE "^${port}[/ ]"; then
-                ufw allow "${port}/tcp" comment "NeoDesk port ${port}" >/dev/null 2>&1 && created=$((created + 1)) || true
+                ufw allow 21116/tcp comment "NeoDesk signal TCP" >/dev/null 2>&1 && opened+=(21116/tcp) || true
+                ufw allow 21116/udp comment "NeoDesk signal UDP" >/dev/null 2>&1 && opened+=(21116/udp) || true
+            elif ufw status 2>/dev/null | grep -qE "^${port}[/ ]"; then
+                opened+=("${port}/tcp")
+            else
+                ufw allow "${port}/tcp" comment "NeoDesk port ${port}" >/dev/null 2>&1 && opened+=("${port}/tcp") || true
             fi
         done
         ufw reload >/dev/null 2>&1 || true
+        for port in $CONSOLE_PORTS_CLOSED; do hint+=("sudo ufw allow ${port}/tcp"); done
     elif command -v firewall-cmd >/dev/null 2>&1 && systemctl is-active --quiet firewalld 2>/dev/null; then
-        for port in $docker_ports; do
+        firewall=firewalld
+        for port in $DOCKER_PORTS $CONSOLE_PORTS_OPEN; do
             if [ "$port" = "21116" ]; then
-                firewall-cmd --permanent --add-port=21116/tcp >/dev/null 2>&1 && created=$((created + 1)) || true
-                firewall-cmd --permanent --add-port=21116/udp >/dev/null 2>&1 && created=$((created + 1)) || true
+                firewall-cmd --permanent --add-port=21116/tcp >/dev/null 2>&1 && opened+=(21116/tcp) || true
+                firewall-cmd --permanent --add-port=21116/udp >/dev/null 2>&1 && opened+=(21116/udp) || true
             else
-                firewall-cmd --permanent --add-port="${port}/tcp" >/dev/null 2>&1 && created=$((created + 1)) || true
+                firewall-cmd --permanent --add-port="${port}/tcp" >/dev/null 2>&1 && opened+=("${port}/tcp") || true
             fi
         done
         firewall-cmd --reload >/dev/null 2>&1 || true
+        for port in $CONSOLE_PORTS_CLOSED; do hint+=("sudo firewall-cmd --permanent --add-port=${port}/tcp"); done
+        [ "${#hint[@]}" -eq 0 ] || hint+=("sudo firewall-cmd --reload")
     else
         log "No active UFW/firewalld detected — skipping firewall rules"
         return 0
     fi
 
-    if [ "$created" -gt 0 ]; then
-        ok "Created $created firewall rule(s)"
-    else
-        ok "Firewall rules already present"
+    ok "Opened in ${firewall}: ${opened[*]:-none}"
+    if [ "$CONSOLE_CLOSED_WHY" = local ]; then
+        log "The console (TCP ${CONSOLE_PORTS_CLOSED// /, }) answers on this machine only (NEODESK_CONSOLE_BIND), so ${firewall} keeps it closed"
+    elif [ -n "$CONSOLE_PORTS_CLOSED" ]; then
+        log "${firewall} keeps the console (TCP ${CONSOLE_PORTS_CLOSED// /, }) closed: ${CONSOLE_CLOSED_WHY}"
+        log "To reach the console directly, open it by hand: $(printf '%s; ' "${hint[@]}" | sed 's/; $//')"
     fi
 }
 

@@ -620,6 +620,23 @@ test_rerun_without_changes_keeps_the_container() (
     rm -rf "$TEST_DIR"
 )
 
+# L513: the summary's ports for a firewall in front of this machine
+# follow the installers' rule: the console's port unless a reverse proxy
+# is in front (TRUST_PROXY), its HTTPS port only with HTTPS_ENABLED on
+test_summary_names_the_console_ports_it_serves() (
+    load
+    local out
+    out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "the install failed: $out"
+    printf '%s' "$out" | grep -q 'in front of this machine: TCP 3375, 21115-21119' || fail "a plain install's summary does not name 3375 alone: $out"
+    env_set HTTPS_ENABLED true
+    out=$(mgr 'COMMAND=update; do_install' 2>&1) || fail "the update with HTTPS failed: $out"
+    printf '%s' "$out" | grep -q 'in front of this machine: TCP 3375, 5443, 21115-21119' || fail "the summary with HTTPS does not name 5443: $out"
+    env_set TRUST_PROXY 1
+    out=$(mgr 'COMMAND=update; do_install' 2>&1) || fail "the update with TRUST_PROXY failed: $out"
+    printf '%s' "$out" | grep -q 'in front of this machine: TCP 21115-21119' || fail "the summary behind a reverse proxy names the console's ports: $out"
+    rm -rf "$TEST_DIR"
+)
+
 # install.sh's Docker path runs neodesk-docker.sh in the compose folder
 # of the install folder with the options it was given (a split install is
 # taken over with --adopt), and its uninstall runs it for the same folder.
@@ -660,22 +677,75 @@ test_install_sh_runs_the_manager() (
     rm -rf "$dir"
 )
 
-# L225: install.sh's firewall for Docker opens the ports the compose file
-# publishes, the console's HTTPS port (5443) among them
-test_install_sh_opens_the_published_ports() (
-    local dir
+# L225, L513: after a Docker install, install.sh's firewall step opens
+# the client ports the compose file publishes, and the console's by the
+# rule of neodesk.sh and neodesk.ps1, read from the .env the manager
+# wrote: none behind a reverse proxy (TRUST_PROXY, --domain, where
+# Traefik's 80 and 443 are opened instead), else 3375, and 5443 only with
+# HTTPS_ENABLED on. ufw, firewall-cmd and systemctl are stand-ins on the
+# PATH that record their calls; the list of opened ports must be exact.
+test_install_sh_opens_the_console_ports_it_serves() (
+    local dir bin clients
     dir=$(mktemp -d)
-    (
-        # shellcheck disable=SC1091
-        source "$SCRIPT_ROOT/install/install.sh"
-        ufw() { printf '%s\n' "$*" >> "$dir/ufw"; [ "$1" != status ] || echo "Status: active"; }
-        configure_firewall
-    ) > /dev/null 2>&1 || fail "install.sh's firewall step failed"
-    local port
-    for port in 3375 5443 21115 21116 21117 21121 21122; do
-        grep -q "^allow ${port}/tcp" "$dir/ufw" || fail "install.sh does not open ${port}/tcp: $(tr '\n' ';' < "$dir/ufw")"
+    bin="$dir/bin"
+    mkdir -p "$bin"
+    clients="21115/tcp 21116/tcp 21116/udp 21117/tcp 21118/tcp 21119/tcp 21121/tcp 21122/tcp"
+    # sorted WORDS...: the words, sorted, on one line
+    sorted() { printf '%s\n' "$@" | sort | tr '\n' ' '; }
+    # firewall_step FIREWALL ENV ARGS...: install.sh ARGS's Docker path
+    # with a manager that writes ENV as the install's .env, under FIREWALL
+    # (ufw or firewalld, the other one off); prints the opened ports, sorted
+    firewall_step() {
+        local firewall="$1" ufw_status=inactive firewalld_state=3
+        printf '%s\n' "$2" > "$dir/case.env"
+        shift 2
+        rm -rf "$dir/opt" "$dir/calls"
+        [ "$firewall" = ufw ] && ufw_status=active
+        [ "$firewall" = firewalld ] && firewalld_state=0
+        printf '#!/bin/sh\nprintf "ufw %%s\\n" "$*" >> %q\n[ "$1" != status ] || echo "Status: %s"\n' "$dir/calls" "$ufw_status" > "$bin/ufw"
+        printf '#!/bin/sh\nprintf "firewall-cmd %%s\\n" "$*" >> %q\n' "$dir/calls" > "$bin/firewall-cmd"
+        printf '#!/bin/sh\nexit %s\n' "$firewalld_state" > "$bin/systemctl"
+        chmod +x "$bin/ufw" "$bin/firewall-cmd" "$bin/systemctl"
+        (
+            INSTALL_DIR="$dir/opt"
+            # shellcheck disable=SC1091
+            source "$SCRIPT_ROOT/install/install.sh" "$@"
+            PATH="$bin:$PATH"
+            fetch_docker_manager() {
+                mkdir -p "$(dirname "$1")"
+                printf '#!/bin/sh\ncp %q "$(dirname "$0")/.env"\n' "$dir/case.env" > "$1"
+                chmod +x "$1"
+            }
+            install_docker_mode
+        ) > "$dir/out" 2>&1 || fail "install.sh's Docker path under $firewall failed: $(cat "$dir/out")"
+        # shellcheck disable=SC2046
+        sorted $(sed -nE 's/^ufw allow ([^ ]+).*/\1/p; s/^firewall-cmd --permanent --add-port=([^ ]+)$/\1/p' "$dir/calls")
+    }
+    # check FIREWALL NAME ENV EXPECTED ARGS...: the ports opened in that
+    # case are EXPECTED, and the step's output names exactly them
+    check() {
+        local firewall="$1" name="$2" env="$3" expected opened said
+        # shellcheck disable=SC2086
+        expected=$(sorted $4)
+        shift 4
+        opened=$(firewall_step "$firewall" "$env" "$@")
+        [ "$opened" = "$expected" ] || fail "$name under $firewall opened: $opened; expected: $expected"
+        said=$(sed -n "s/.*Opened in ${firewall}: //p" "$dir/out")
+        # shellcheck disable=SC2086
+        [ "$(sorted $said)" = "$expected" ] || fail "$name under $firewall: the output names other ports: $(cat "$dir/out")"
+    }
+    local firewall
+    for firewall in ufw firewalld; do
+        check "$firewall" "a plain install" "NEODESK_DOCKER_LAYOUT=single" "$clients 3375/tcp"
+        check "$firewall" "TRUST_PROXY on" "TRUST_PROXY=1" "$clients"
+        case "$firewall" in
+            ufw) grep -q 'sudo ufw allow 3375/tcp' "$dir/out" || fail "no hint how to open 3375 in ufw: $(cat "$dir/out")" ;;
+            firewalld) grep -q 'firewall-cmd --permanent --add-port=3375/tcp' "$dir/out" || fail "no hint how to open 3375 in firewalld: $(cat "$dir/out")" ;;
+        esac
+        check "$firewall" "HTTPS on" "HTTPS_ENABLED=true" "$clients 3375/tcp 5443/tcp"
+        check "$firewall" "--domain" "$(printf 'NEODESK_DOMAIN=console.example.com\nNEODESK_CONSOLE_BIND=127.0.0.1\nTRUST_PROXY=1')" \
+            "$clients 80/tcp 443/tcp" --domain console.example.com --letsencrypt-email admin@example.com
     done
-    grep -q '^allow 21116/udp' "$dir/ufw" || fail "install.sh does not open 21116/udp"
     rm -rf "$dir"
 )
 
@@ -992,8 +1062,9 @@ test_postgres_declined_keeps_sqlite
 test_postgres_failed_move_keeps_sqlite
 test_failed_first_install_resumes
 test_rerun_without_changes_keeps_the_container
+test_summary_names_the_console_ports_it_serves
 test_install_sh_runs_the_manager
-test_install_sh_opens_the_published_ports
+test_install_sh_opens_the_console_ports_it_serves
 test_install_sh_leaves_an_inactive_ufw_alone
 test_traefik_with_letsencrypt
 test_traefik_errors_say_what_to_do

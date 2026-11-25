@@ -499,6 +499,29 @@ console_domain() {
     printf '%s\n' "${DOMAIN_SET:-$(env_get NEODESK_DOMAIN)}"
 }
 
+# console_firewall_ports DOMAIN: the console's TCP ports a firewall in
+# front of this machine needs, each followed by ", ", by the rule of the
+# installers: Traefik's 80 and 443 with a domain; none while a reverse
+# proxy is in front (TRUST_PROXY on, or the console published on loopback
+# only); else the console's port, and its HTTPS port with HTTPS_ENABLED on
+console_firewall_ports() {
+    if [ -n "$1" ]; then
+        printf '80, 443, '
+        return 0
+    fi
+    case "$(env_get NEODESK_CONSOLE_BIND)" in
+        127.*|::1|"[::1]"|localhost) return 0 ;;
+    esac
+    case "$(env_get TRUST_PROXY | tr '[:upper:]' '[:lower:]')" in
+        ""|n|no|0|false|off) ;;
+        *) return 0 ;;
+    esac
+    printf '%s, ' "$(console_port)"
+    case "$(env_get HTTPS_ENABLED | tr '[:upper:]' '[:lower:]')" in
+        1|y|yes|true|on) printf '%s, ' "$(console_https_port)" ;;
+    esac
+}
+
 sha_of() { sha256sum "$1" 2>/dev/null | cut -d' ' -f1; }
 
 # newest_release_tag: the tag of the newest published release, a
@@ -1462,11 +1485,7 @@ print_summary() {
     say "  API server:    http://${addr}:21121"
     say "  Key:           ${key:-not made yet; later: docker exec neodesk cat /opt/neodesk/data/id_ed25519.pub}"
     say ""
-    if [ -n "$domain" ]; then
-        say "Ports to open in a firewall in front of this machine: TCP 80, 443, 21115-21119, 21121, 21122 and UDP 21116"
-    else
-        say "Ports to open in a firewall in front of this machine: TCP ${port}, 21115-21119, 21121, 21122 and UDP 21116"
-    fi
+    say "Ports to open in a firewall in front of this machine: TCP $(console_firewall_ports "$domain")21115-21119, 21121, 21122 and UDP 21116"
     say "Logs:            cd $NEODESK_DIR && docker compose logs -f neodesk"
     say "Update:          sudo bash neodesk-docker.sh   (or: cd $NEODESK_DIR && docker compose pull && docker compose up -d)"
     say "Settings:        $(env_file)   (then: cd $NEODESK_DIR && docker compose up -d)"
