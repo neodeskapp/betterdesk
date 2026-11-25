@@ -34,7 +34,9 @@
 				{#snippet sub()}
 					<span class="facts">
 						<span>{t('sessions.address')}: {d.ipAddress || '-'}</span>
-						<span title={formatDate(d.createdAt)}>{t('sessions.signed_in')}: {formatRelative(d.createdAt)}</span>
+						<span title={formatDate(d.createdAt)}
+							>{t('sessions.signed_in')}: {formatRelative(d.createdAt)}</span
+						>
 						<span title={formatDate(d.lastActivityAt)}
 							>{t('sessions.last_used')}: {formatRelative(d.lastActivityAt)}</span
 						>

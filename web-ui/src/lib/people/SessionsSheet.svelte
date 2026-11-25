@@ -58,7 +58,9 @@
 
 	{#snippet footer()}
 		{#if model.list && model.others.length}
-			<Button variant="danger" disabled={model.busy} onclick={() => model.signOutAll()}>{model.allLabel}</Button>
+			<Button variant="danger" disabled={model.busy} onclick={() => model.signOutAll()}
+				>{model.allLabel}</Button
+			>
 		{/if}
 		<Button onclick={onclose}>{t('actions.close')}</Button>
 	{/snippet}

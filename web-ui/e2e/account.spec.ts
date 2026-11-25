@@ -21,7 +21,9 @@ test.describe('as an admin', () => {
 			await expect(page.locator(`#${id}`), id).toBeVisible();
 		await expect(page.locator('#current-password')).toBeVisible();
 		// The browsers this account is signed in on, with this one marked
-		await expect(page.locator('#sessions').getByRole('listitem').filter({ hasText: 'This browser' })).toBeVisible();
+		await expect(
+			page.locator('#sessions').getByRole('listitem').filter({ hasText: 'This browser' })
+		).toBeVisible();
 	});
 
 	test('old addresses land on their part of Your account', async ({ page }) => {

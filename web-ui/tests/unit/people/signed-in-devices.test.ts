@@ -149,9 +149,14 @@ describe('Your account › Signed-in devices', () => {
 		await user.click(within(rows[1]!).getByRole('button', { name: /sessions.sign_out/ }));
 		await user.click(within(part).getByRole('button', { name: 'sessions.sign_out_everywhere_else' }));
 		await waitFor(() =>
-			expect(writes()).toEqual(['DELETE /api/users/me/sessions/bbb', 'POST /api/users/me/sessions/end-others'])
+			expect(writes()).toEqual([
+				'DELETE /api/users/me/sessions/bbb',
+				'POST /api/users/me/sessions/end-others'
+			])
 		);
-		await waitFor(() => expect(within(part).getByRole('status')).toHaveTextContent(/sessions.signed_out_count/));
+		await waitFor(() =>
+			expect(within(part).getByRole('status')).toHaveTextContent(/sessions.signed_out_count/)
+		);
 	});
 });
 
