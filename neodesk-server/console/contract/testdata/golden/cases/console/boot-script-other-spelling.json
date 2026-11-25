@@ -31,7 +31,7 @@
     "kind": "bytes",
     "type": "application/javascript",
     "length": 6636,
-    "sha256": "5effb710486dd43b3627cecffa4fa016f91b73d5b636ff17058a9f36f2e71779",
+    "sha256": "df22025ee7808850318d74030d2ac6a07f78b6a17140b782e99530d3aabf22da",
     "head": "(function (boot) {\n    var root = document.documentElement;\n    var VARS = {\n        bgPrimary: '--bg-primary', bgSecondary: '--bg-secondary', bgTertiary: '--bg-tertiary',\n        bgElevated: '--bg-elevated', textPrimary: '--text-primary', textSecondary: '--text-secondary',\n        accentBlue: '--ac"
    }
   },
@@ -64,7 +64,7 @@
     "kind": "bytes",
     "type": "application/javascript",
     "length": 6636,
-    "sha256": "5effb710486dd43b3627cecffa4fa016f91b73d5b636ff17058a9f36f2e71779",
+    "sha256": "df22025ee7808850318d74030d2ac6a07f78b6a17140b782e99530d3aabf22da",
     "head": "(function (boot) {\n    var root = document.documentElement;\n    var VARS = {\n        bgPrimary: '--bg-primary', bgSecondary: '--bg-secondary', bgTertiary: '--bg-tertiary',\n        bgElevated: '--bg-elevated', textPrimary: '--text-primary', textSecondary: '--text-secondary',\n        accentBlue: '--ac"
    }
   }
