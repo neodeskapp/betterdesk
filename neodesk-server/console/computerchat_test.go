@@ -14,6 +14,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/api"
 	"github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
+	consoleconfig "github.com/neodeskapp/neodesk/neodesk-server/console/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/ws/wstest"
@@ -35,7 +36,10 @@ func computerChatWorld(t *testing.T) (*world, *httptest.Server, *api.Server) {
 	db := storetest.Migrated(t)
 	gdb := storetest.GoServer(t, db)
 	apiSrv := api.New(config.DefaultConfig(), gdb, peer.NewMap(), nil, "test")
-	w := newWorld(t, setup{db: db, api: apiSrv.InternalHandler(), listener: apiSrv.ListenerHandler()})
+	// The chat files go to a folder of the test, not the source tree
+	files := t.TempDir()
+	w := newWorld(t, setup{db: db, api: apiSrv.InternalHandler(), listener: apiSrv.ListenerHandler(),
+		configure: func(c *consoleconfig.Config) { c.ConsoleDir = files }})
 	ctx := context.Background()
 	for _, q := range []string{
 		`INSERT INTO peers (id) VALUES ('` + chatDevice + `')`,
