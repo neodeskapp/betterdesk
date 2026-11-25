@@ -174,7 +174,8 @@ func TestWrongCodesCountAgainstTheAccount(t *testing.T) {
 }
 
 func TestRecoveryCodes(t *testing.T) {
-	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+	// One session per account, so the second sign-in ends the first
+	eachWorld(t, setup{env: map[string]string{"SESSION_MAX_PER_USER": "1"}}, func(t *testing.T, w *world) {
 		alice := w.addUser(user{name: "alice", totpEnabled: true, totpSecret: totpSecret, recoveryCodes: recoveryCodes})
 		first := w.agent()
 		first.signInWithRecoveryCode(" aaaa-bbbb ")
@@ -195,7 +196,7 @@ func TestRecoveryCodes(t *testing.T) {
 			fmt.Sprintf("login|User logged in (2FA: recovery (local)); ip=127.0.0.1; ua=auth-test/1; replaced=1 prior session(s)|127.0.0.1|%d", alice),
 			fmt.Sprintf("session_replaced|2FA login replaced 1 prior session(s); newIp=127.0.0.1|127.0.0.1|%d", alice),
 		})
-		want(t, "the first browser", first.get("/api/auth/verify"), http.StatusUnauthorized, notSignedIn)
+		want(t, "the first browser", first.get("/api/auth/verify"), http.StatusUnauthorized, signedOut("session_replaced", replacedElsewhere))
 	})
 }
 
@@ -245,7 +246,8 @@ func TestSecondFactorOfASessionAnOlderConsoleLeft(t *testing.T) {
 }
 
 func TestSecondFactorCheckedByTheSignalServer(t *testing.T) {
-	w := newWorld(t, nil, setup{})
+	// One session per account, so the finished sign-in replaces the first
+	w := newWorld(t, nil, setup{env: map[string]string{"SESSION_MAX_PER_USER": "1"}})
 	alice := w.addUser(user{name: "alice", totpEnabled: true, totpSecret: totpSecret})
 	pending := fmt.Sprintf(`{"pendingTotpUserId":%d,"pendingTotpUser":{"id":%d,"username":"alice","role":"operator","preferred_language":null},"goPartialToken":"partial-1",%s}`, alice, alice, waitingSince(time.Now()))
 

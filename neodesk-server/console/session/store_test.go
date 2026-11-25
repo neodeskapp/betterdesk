@@ -125,7 +125,7 @@ func TestSchemaUpgradesTheFirstTable(t *testing.T) {
 		if row == nil || !row.active {
 			t.Fatalf("the old row is not active after the upgrade: %+v", row)
 		}
-		text, found, _, err := f.m.table.get(ctx, "old-sid")
+		text, found, _, _, err := f.m.table.get(ctx, "old-sid")
 		if err != nil || !found || !strings.Contains(text, `"k":"v"`) {
 			t.Fatalf("get(old-sid) = %q, %v, %v", text, found, err)
 		}
@@ -153,7 +153,7 @@ func (f *fixture) mustSet(sid string, rec record) {
 
 func (f *fixture) found(sid string) bool {
 	f.t.Helper()
-	_, found, _, err := f.m.table.get(ctx, sid)
+	_, found, _, _, err := f.m.table.get(ctx, sid)
 	if err != nil {
 		f.t.Fatalf("get %s: %v", sid, err)
 	}
@@ -172,7 +172,7 @@ func TestStoreSetGetTouchDestroy(t *testing.T) {
 			json: text, expiresAt: now + 60_000, createdAt: now, lastActivityAt: now,
 			userID: int64(7), username: "alice", ip: "203.0.113.10", userAgent: "TestAgent/1.0", fingerprint: "fp_12345678",
 		})
-		got, found, _, err := f.m.table.get(ctx, "sid-1")
+		got, found, _, _, err := f.m.table.get(ctx, "sid-1")
 		if err != nil || !found || got != text {
 			t.Fatalf("get = %q, %v, %v", got, found, err)
 		}
@@ -381,7 +381,7 @@ func TestStoreEnd(t *testing.T) {
 func (f *fixture) login(sid string, userID, at int64) []string {
 	f.t.Helper()
 	f.mustSet(sid, f.rec(userID, at))
-	replaced, err := f.m.table.activate(ctx, sid, userID, fmt.Sprintf("user%d", userID), Meta{IP: "::ffff:198.51.100.20", UserAgent: " Agent/2.0 ", Fingerprint: "fp_abcdef12"}, at)
+	replaced, err := f.m.table.activate(ctx, sid, userID, fmt.Sprintf("user%d", userID), Meta{IP: "::ffff:198.51.100.20", UserAgent: " Agent/2.0 ", Fingerprint: "fp_abcdef12"}, at, f.m.policy.MaxSessionsPerUser)
 	if err != nil {
 		f.t.Fatalf("activate %s: %v", sid, err)
 	}
@@ -398,7 +398,7 @@ func withLimit(n int) func(*Options) {
 
 func TestLimitOneSessionPerAccount(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
-		f := newFixture(t, db)
+		f := newFixture(t, db, withLimit(1))
 		now := f.clock.Now().UnixMilli()
 		if got := f.login("sid-a", 42, now); len(got) != 0 {
 			t.Fatalf("the first sign-in replaced %v", got)
@@ -458,7 +458,8 @@ func TestLimitKeepsTheMostRecentlyActive(t *testing.T) {
 		if f.found("n-old") || !f.found("n-mid") || !f.found("n-new") {
 			t.Fatal("want n-old ended, n-mid and n-new alive")
 		}
-		if row := f.row("n-old"); row.reason.String != ReasonReplaced {
+		// Above a limit of one the reason is "limit"
+		if row := f.row("n-old"); row.reason.String != ReasonLimit {
 			t.Fatalf("reason %q", row.reason.String)
 		}
 		// Recency is the last activity, not the sign-in order: n-mid is used,
@@ -530,7 +531,7 @@ func TestActivateRevivesItsOwnRow(t *testing.T) {
 		if err := f.m.table.markEnded(ctx, "sid", ReasonIdle); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := f.m.table.activate(ctx, "sid", 7, "alice", Meta{}, now); err != nil {
+		if _, err := f.m.table.activate(ctx, "sid", 7, "alice", Meta{}, now, 1); err != nil {
 			t.Fatal(err)
 		}
 		row := f.row("sid")
@@ -550,7 +551,7 @@ func TestActivateExpiryNearTheAbsoluteEnd(t *testing.T) {
 		f.mustSet("sid", f.rec(7, now))
 		// Signed in almost a whole lifetime ago: the absolute end comes first
 		at := now - f.m.policy.MaxAgeMs + 5000
-		if _, err := f.m.table.activate(ctx, "sid", 7, "alice", Meta{}, at); err != nil {
+		if _, err := f.m.table.activate(ctx, "sid", 7, "alice", Meta{}, at, 1); err != nil {
 			t.Fatal(err)
 		}
 		if row := f.row("sid"); row.expiresAt != now+5000 {
@@ -658,7 +659,8 @@ func TestList(t *testing.T) {
 		for _, info := range list {
 			order = append(order, info.ID)
 		}
-		if strings.Join(order, ",") != "second,third,first" {
+		// The list names a session by its handle
+		if strings.Join(order, ",") != Handle("second")+","+Handle("third")+","+Handle("first") {
 			t.Fatalf("order %v, want the most recently active first, ended ones included", order)
 		}
 		if !list[0].Current || list[1].Current || list[2].Current {
@@ -677,9 +679,9 @@ func TestList(t *testing.T) {
 		}
 		// The BIGINT columns have always gone out as text on PostgreSQL
 		created := fmt.Sprintf(db.Pick("%d", `"%d"`), now-1000)
-		want := fmt.Sprintf(`{"id":"second","current":true,"username":"user80","ipAddress":"198.51.100.20","userAgent":"Agent/2.0",`+
+		want := fmt.Sprintf(`{"id":%q,"current":true,"username":"user80","ipAddress":"198.51.100.20","userAgent":"Agent/2.0",`+
 			`"clientFingerprint":"fp_abcdef12","createdAt":%s,"lastActivityAt":%s,"endedAt":null,"endReason":null,"active":true,"expiresAt":%d}`,
-			created, created, list[0].ExpiresAt)
+			Handle("second"), created, created, list[0].ExpiresAt)
 		if string(raw) != want {
 			t.Fatalf("JSON:\n got %s\nwant %s", raw, want)
 		}
@@ -692,12 +694,12 @@ func TestList(t *testing.T) {
 			t.Fatal(err)
 		}
 		last := list[len(list)-1]
-		if last.ID != "first" {
+		if last.ID != Handle("first") {
 			t.Fatalf("an entry without times sorts last on both databases, got order ending in %s", last.ID)
 		}
 		raw, _ = json.Marshal(last)
-		want = fmt.Sprintf(`{"id":"first","current":false,"username":null,"ipAddress":null,"userAgent":null,"clientFingerprint":null,`+
-			`"createdAt":null,"lastActivityAt":null,"endedAt":null,"endReason":null,"active":true,"expiresAt":%d}`, last.ExpiresAt)
+		want = fmt.Sprintf(`{"id":%q,"current":false,"username":null,"ipAddress":null,"userAgent":null,"clientFingerprint":null,`+
+			`"createdAt":null,"lastActivityAt":null,"endedAt":null,"endReason":null,"active":true,"expiresAt":%d}`, Handle("first"), last.ExpiresAt)
 		if string(raw) != want {
 			t.Fatalf("JSON:\n got %s\nwant %s", raw, want)
 		}
@@ -715,7 +717,7 @@ func TestListLimit(t *testing.T) {
 		if err != nil || len(list) != 50 {
 			t.Fatalf("got %d entries (%v), want 50", len(list), err)
 		}
-		if list[0].ID != "s00" || list[49].ID != "s49" {
+		if list[0].ID != Handle("s00") || list[49].ID != Handle("s49") {
 			t.Fatalf("got %s to %s, want the 50 most recently active", list[0].ID, list[49].ID)
 		}
 		active, err := f.m.table.list(ctx, 90, false, 500)

@@ -142,19 +142,33 @@ func fixScenarios(bug string, status int, answer func(node string) string, names
 
 // L104: the hardening list holds only what this server's settings decide:
 // the session timeouts (the defaults in the scenarios) and the session
-// limit as before; the fixed list of planned work is gone.
-var _ = fixScenarios("L104", 200, func(node string) string {
-	start := strings.Index(node, `{"id":"single_session"`)
-	if start < 0 {
-		return "a recorded answer without the session limit"
+// limit as before; the fixed list of planned work is gone. L489 (A239):
+// the limit is the one in force, named by the setting or the variable,
+// and an account has 10 sessions where SESSION_MAX_PER_USER is not set or
+// not a number (Node had 1).
+func hardeningFix(defaultLimit bool) func(node string) string {
+	return func(node string) string {
+		start := strings.Index(node, `{"id":"single_session"`)
+		if start < 0 {
+			return "a recorded answer without the session limit"
+		}
+		limit := node[start : start+strings.Index(node[start:], "}")+1]
+		if defaultLimit {
+			limit = strings.Replace(limit, "(currently 1)", "(currently 10)", 1)
+		}
+		limit = strings.Replace(limit, "beyond SESSION_MAX_PER_USER (currently ", "beyond the limit per account (currently ", 1)
+		limit = strings.Replace(limit, ") and records", "; Settings, Sign-in, or SESSION_MAX_PER_USER when set) and records", 1)
+		return `{"priorities":[{"id":"session_timeout","name":"Panel Idle and Absolute Session Timeout","category":"auth","severity":"medium","implemented":true,` +
+			`"description":"A console session ends after 30 minutes without a request and 1440 minutes after sign-in (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE)."},` +
+			limit + `]}`
 	}
-	limit := node[start : start+strings.Index(node[start:], "}")+1]
-	return `{"priorities":[{"id":"session_timeout","name":"Panel Idle and Absolute Session Timeout","category":"auth","severity":"medium","implemented":true,` +
-		`"description":"A console session ends after 30 minutes without a request and 1440 minutes after sign-in (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE)."},` +
-		limit + `]}`
-}, "hardening, session limit undefined", `hardening, session limit "0"`, `hardening, session limit "1"`, `hardening, session limit "5"`,
-	`hardening, session limit "abc"`, `hardening, session limit "2000"`, `hardening, session limit " 3 "`, `hardening, session limit "-1"`,
-	`hardening, session limit "1.5"`, `hardening, session limit ""`, `hardening, session limit "007"`)
+}
+
+var _ = fixScenarios("L104, L489", 200, hardeningFix(true), "hardening, session limit undefined",
+	`hardening, session limit "abc"`, `hardening, session limit "-1"`, `hardening, session limit "1.5"`, `hardening, session limit ""`)
+
+var _ = fixScenarios("L104, L489", 200, hardeningFix(false), `hardening, session limit "0"`, `hardening, session limit "1"`,
+	`hardening, session limit "5"`, `hardening, session limit "2000"`, `hardening, session limit " 3 "`, `hardening, session limit "007"`)
 
 // TH13: an API answer without a body, or with null, 0, false or "", is
 // no events, where Node failed with 502 trying to send the client's

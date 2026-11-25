@@ -131,7 +131,8 @@ func singleSignOn(t *testing.T, a *agent, returnURL string) answer {
 }
 
 func TestSingleSignOn(t *testing.T) {
-	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+	// One session per account, so the second sign-on replaces the first
+	eachWorld(t, setup{env: map[string]string{"SESSION_MAX_PER_USER": "1"}}, func(t *testing.T, w *world) {
 		w.provider(`"token":"go-jwt","username":"sso-user","role":"operator","picture":"` + pngPicture + `"`)
 		a := w.agent("X-Client-Fingerprint", "fp-of-the-browser")
 		a.setSession(`{"before":"sign-in"}`)
@@ -201,7 +202,7 @@ func TestSingleSignOn(t *testing.T) {
 			fmt.Sprintf("login|User logged in via OIDC; ip=127.0.0.1; ua=auth-test/1; replaced=1 prior session(s)|127.0.0.1|%d", id),
 			fmt.Sprintf("session_replaced|OIDC login replaced 1 prior session(s); newIp=127.0.0.1|127.0.0.1|%d", id),
 		})
-		want(t, "the first browser", a.get("/api/auth/verify"), http.StatusUnauthorized, notSignedIn)
+		want(t, "the first browser", a.get("/api/auth/verify"), http.StatusUnauthorized, signedOut("session_replaced", replacedElsewhere))
 	})
 }
 

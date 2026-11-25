@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/auth"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 )
 
 // The clearing cookies of a sign-out: the session cookie under both names
@@ -242,7 +243,8 @@ func TestVerifyOfSessionsWithOtherFields(t *testing.T) {
 }
 
 func TestSessionList(t *testing.T) {
-	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+	// One session per account, so the list holds a replaced one
+	eachWorld(t, setup{env: map[string]string{"SESSION_MAX_PER_USER": "1"}}, func(t *testing.T, w *world) {
 		w.addUser(user{name: "alice"})
 		w.addUser(user{name: "bob"})
 		a := w.agent()
@@ -268,7 +270,8 @@ func TestSessionList(t *testing.T) {
 		if res.status != http.StatusOK || !wantBody.MatchString(res.body) {
 			t.Errorf("sessions: %d %s", res.status, res.body)
 		}
-		if !strings.Contains(res.body, `{"id":"`+a.sessionID()+`","current":true`) {
+		// The list names a session by its handle, never by the cookie's id
+		if !strings.Contains(res.body, `{"id":"`+session.Handle(a.sessionID())+`","current":true`) || strings.Contains(res.body, a.sessionID()) {
 			t.Error("the current session is not the one of the cookie")
 		}
 	})

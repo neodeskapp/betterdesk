@@ -132,7 +132,7 @@ func (c *Command) ReadOnly() bool { return c.Method() == "GET" }
 // changesAccess matches the routes whose writes change who may do what:
 // accounts, roles, panel access, organization and tenant members, the
 // sign-in settings and guest links.
-var changesAccess = regexp.MustCompile(`^/api/(users|panel/(user-groups|access|role-permissions|roles)|panel/org/[^/]+/(users|members|invite|invitations)|tenants/[^/]+/users|settings/(ldap|oidc|two-factor|device-scope|client-sessions|enrollment)|guest/access-links)(/|$)`)
+var changesAccess = regexp.MustCompile(`^/api/(users|panel/(user-groups|access|role-permissions|roles)|panel/org/[^/]+/(users|members|invite|invitations)|tenants/[^/]+/users|settings/(ldap|oidc|two-factor|console-sessions|device-scope|client-sessions|enrollment)|guest/access-links)(/|$)`)
 
 // AsksFirst reports whether an AI agent needs the person's yes before
 // the command runs (confirm: true in MCP): it deletes or ends something,

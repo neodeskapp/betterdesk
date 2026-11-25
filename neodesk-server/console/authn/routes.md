@@ -76,7 +76,9 @@ attestation.
    `goPartialToken` when the user object had one; it never has (kept
    defect S10).
 10. Else `sess.Regenerate()`, `sess.Establish(session.User{...}, meta)`,
-   clear the guest cookie, audit `login` (and `session_replaced`), answer
+   clear the guest cookie, audit `login` (and, for the sessions the
+   account's limit ended, `session_replaced` with one session per account
+   or one `session_limit` entry each with several), answer
    with `user`, `redirect` (`httpx.SafeReturnPath(body.return)` or `/`) and
    `session`. `last_login` was already written by `Authenticate`.
 
@@ -137,7 +139,7 @@ plus `local_bypass: authn.IsPrivateClientIP(req.ip)`.
    the extra fields `username`, `role`, `goToken`, `authMethod: "oidc"`,
    clear the guest cookie.
 6. `s.TouchLastLogin(ctx, user.ID.V)`, audit `login` / `User logged in via OIDC; ...`
-   (and `session_replaced`), redirect to the safe return path. A failure
+   (and `session_replaced` or `session_limit` as above), redirect to the safe return path. A failure
    in this step is logged and the redirect still happens.
 
 No second factor and no `pro` check on this path (kept defect S11).

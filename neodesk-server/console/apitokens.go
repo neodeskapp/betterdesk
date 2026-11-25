@@ -194,7 +194,7 @@ func showsWholeKey(r *http.Request) bool {
 // access or how people sign in. A token reaches them only when it is
 // full: a token with fewer permissions than its account could otherwise
 // make an account with more than the token holds and sign in as it.
-var accountChanges = regexp.MustCompile(`^(/api/nd)?/api/(users(/.*)?|panel/(user-groups|access|role-permissions)(/.*)?|panel/org/[^/]+/(users|members|invite|invitations)(/.*)?|tenants/[^/]+/users(/.*)?|settings/(ldap|oidc|two-factor|device-scope|client-sessions|enrollment)(/.*)?)$`)
+var accountChanges = regexp.MustCompile(`^(/api/nd)?/api/(users(/.*)?|panel/(user-groups|access|role-permissions)(/.*)?|panel/org/[^/]+/(users|members|invite|invitations)(/.*)?|tenants/[^/]+/users(/.*)?|settings/(ldap|oidc|two-factor|console-sessions|device-scope|client-sessions|enrollment)(/.*)?)$`)
 
 // secretRoutes read or replace the server's secrets: the full backup
 // holds the password hashes, the keys and the session secret, a restore

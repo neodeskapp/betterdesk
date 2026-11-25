@@ -49,6 +49,9 @@ type Session struct {
 	// ephemeral marks the session of a request an API token signed in
 	// (Manager.Ephemeral): nothing of it reaches the store or a cookie.
 	ephemeral bool
+	// notice is the end reason of the session the request's cookie named,
+	// when it was ended elsewhere (Notice); the request goes on without it.
+	notice string
 }
 
 // User is the account a session belongs to, as copied at sign-in.
@@ -288,18 +291,34 @@ func (s *Session) Regenerate() error {
 // Establish signs the account in on this session: it writes the account
 // and the client's details, gives the cookie the idle lifetime, stores the
 // session, and applies the per-account limit. It answers how many of the
-// account's other sessions the limit ended (reason "replaced").
+// account's other sessions the limit ended.
 //
 // Call Regenerate first. Fields set after Establish are stored with the
 // answer.
 func (s *Session) Establish(user User, meta Meta) (replaced int, err error) {
+	got, err := s.EstablishWith(user, meta)
+	return len(got.Ended), err
+}
+
+// Established is what a sign-in did to the account's other sessions.
+type Established struct {
+	// Ended are the sessions the limit ended.
+	Ended []Device
+	// Limit is the limit in force.
+	Limit Limit
+}
+
+// EstablishWith is Establish that tells which sessions the limit ended
+// (reason "replaced" with a limit of one, "limit" with more) and the
+// limit in force.
+func (s *Session) EstablishWith(user User, meta Meta) (Established, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.ephemeral {
-		return 0, ErrEphemeral
+		return Established{}, ErrEphemeral
 	}
 	if s.destroyed {
-		return 0, errors.New("session: Establish on a destroyed session")
+		return Established{}, errors.New("session: Establish on a destroyed session")
 	}
 	now := s.m.now()
 	at := now.UnixMilli()
@@ -314,22 +333,27 @@ func (s *Session) Establish(user User, meta Meta) (replaced int, err error) {
 
 	ctx, cancel := s.ctx()
 	defer cancel()
-	if err := s.m.table.set(ctx, s.id, s.record(now)); err != nil {
-		return 0, err
-	}
-	ended, err := s.m.table.activate(ctx, s.id, user.ID, user.Username, meta, at)
+	limit, err := s.m.Limit(ctx)
 	if err != nil {
-		return 0, err
+		logging.Logf("session", "WARN: reading the session limit failed, one session per account applies: %v", err)
+	}
+	if err := s.m.table.set(ctx, s.id, s.record(now)); err != nil {
+		return Established{}, err
+	}
+	ended, err := s.m.table.activate(ctx, s.id, user.ID, user.Username, meta, at, limit.Max)
+	if err != nil {
+		return Established{}, err
 	}
 	if len(ended) > 0 {
-		logging.Logf("session", "WARN: replaced %d prior session(s) for user %s (id=%d) from new login ip=%s",
-			len(ended), user.Username, user.ID, orUnknown(meta.IP))
+		logging.Logf("session", "WARN: ended %d prior session(s) for user %s (id=%d) from new login ip=%s (limit %d)",
+			len(ended), user.Username, user.ID, orUnknown(meta.IP), limit.Max)
 		for _, prev := range ended {
-			logging.Logf("session", "WARN: prior session ended (replaced): user=%s prevIp=%s prevUa=%s",
-				user.Username, orUnknown(prev.ip), cut(prev.userAgent, 120))
+			logging.Logf("session", "WARN: prior session ended (limit): user=%s prevIp=%s prevUa=%s",
+				user.Username, orUnknown(prev.IPAddress), cut(prev.UserAgent, 120))
 		}
+		s.m.ended(ended)
 	}
-	return len(ended), nil
+	return Established{Ended: ended, Limit: limit}, nil
 }
 
 func orUnknown(s string) string {
@@ -353,7 +377,9 @@ func (s *Session) End(reason string) {
 	defer cancel()
 	if err := s.m.table.end(ctx, id, reason); err != nil {
 		logging.Logf("session", "WARN: ending the session failed: %v", err)
+		return
 	}
+	s.m.endedIDs([]string{id})
 }
 
 // ClearCookies makes the browser forget the session cookie under both

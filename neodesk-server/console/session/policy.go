@@ -20,34 +20,47 @@ type Policy struct {
 	// WarnBeforeMs is how long before the idle end the web app warns.
 	WarnBeforeMs int64 `json:"warnBeforeMs"`
 	// MaxSessionsPerUser is the number of sessions an account may have at
-	// once. 0 means any number.
+	// once. 0 means any number. Without SESSION_MAX_PER_USER it is the cap
+	// of DefaultMaxPerUser, and the setting "One session per account"
+	// (Manager.Limit) can make it 1.
 	MaxSessionsPerUser int `json:"maxSessionsPerUser"`
+	// MaxPerUserEnv is SESSION_MAX_PER_USER as it was set, trimmed; "" when
+	// it was not set or not a number. A value here decides over the
+	// setting.
+	MaxPerUserEnv string `json:"-"`
 }
 
 const (
-	minIdleMs         = 60 * 1000
-	maxIdleMs         = 24 * 60 * 60 * 1000
-	defaultIdleMs     = 30 * 60 * 1000
-	minMaxAgeMs       = 5 * 60 * 1000
-	maxMaxAgeMs       = 7 * 24 * 60 * 60 * 1000
-	defaultMaxAgeMs   = 24 * 60 * 60 * 1000
-	defaultWarnMs     = 60 * 1000
-	minWarnMs         = 15 * 1000
-	maxWarnMs         = 10 * 60 * 1000
-	defaultMaxPerUser = 1
-	maxMaxPerUser     = 1000
+	minIdleMs       = 60 * 1000
+	maxIdleMs       = 24 * 60 * 60 * 1000
+	defaultIdleMs   = 30 * 60 * 1000
+	minMaxAgeMs     = 5 * 60 * 1000
+	maxMaxAgeMs     = 7 * 24 * 60 * 60 * 1000
+	defaultMaxAgeMs = 24 * 60 * 60 * 1000
+	defaultWarnMs   = 60 * 1000
+	minWarnMs       = 15 * 1000
+	maxWarnMs       = 10 * 60 * 1000
+	maxMaxPerUser   = 1000
 )
+
+// DefaultMaxPerUser is how many sessions an account may have at once when
+// SESSION_MAX_PER_USER is not set and "One session per account" is off: a
+// person's browsers and devices, with the least recently used one ended
+// at a sign-in beyond it.
+const DefaultMaxPerUser = 10
 
 // PolicyFromEnv reads the policy from the environment:
 //
 //	SESSION_IDLE_TIMEOUT   default 30 minutes, 1 minute to 24 hours
 //	SESSION_MAX_AGE        default 24 hours, 5 minutes to 7 days, never below the idle timeout
 //	SESSION_IDLE_WARN_MS   default 1 minute, 15 seconds to the idle timeout or 10 minutes
-//	SESSION_MAX_PER_USER   default 1, 0 (no limit) to 1000
+//	SESSION_MAX_PER_USER   not set by default, 0 (no limit) to 1000
 //
 // The first three take the leading whole number of the value, and a value
 // without one, or one that is not above zero, gives the default.
-// SESSION_MAX_PER_USER must be digits only, or it gives the default.
+// SESSION_MAX_PER_USER must be digits only; empty or anything else counts
+// as not set, and then the account's limit is DefaultMaxPerUser, or 1 with
+// the setting "One session per account" (Manager.Limit).
 func PolicyFromEnv(getenv func(string) string) Policy {
 	idle := clamp(leadingInt(getenv("SESSION_IDLE_TIMEOUT"), defaultIdleMs), minIdleMs, maxIdleMs)
 	maxAge := clamp(leadingInt(getenv("SESSION_MAX_AGE"), defaultMaxAgeMs), minMaxAgeMs, maxMaxAgeMs)
@@ -55,12 +68,18 @@ func PolicyFromEnv(getenv func(string) string) Policy {
 		maxAge = idle
 	}
 	warn := clamp(leadingInt(getenv("SESSION_IDLE_WARN_MS"), defaultWarnMs), minWarnMs, min(idle, maxWarnMs))
-	return Policy{
+	p := Policy{
 		IdleTimeoutMs:      idle,
 		MaxAgeMs:           maxAge,
 		WarnBeforeMs:       warn,
-		MaxSessionsPerUser: int(min(maxMaxPerUser, digitsOnly(getenv("SESSION_MAX_PER_USER"), defaultMaxPerUser))),
+		MaxSessionsPerUser: DefaultMaxPerUser,
 	}
+	raw := strings.Trim(getenv("SESSION_MAX_PER_USER"), jsWhitespace)
+	if n := digitsOnly(raw, -1); n >= 0 {
+		p.MaxSessionsPerUser = int(min(maxMaxPerUser, n))
+		p.MaxPerUserEnv = raw
+	}
+	return p
 }
 
 // CleanupInterval is how often ended sessions are swept: the idle timeout,
@@ -90,6 +109,7 @@ func (p Policy) normalized() Policy {
 	}
 	if p.MaxSessionsPerUser < 0 {
 		p.MaxSessionsPerUser = def.MaxSessionsPerUser
+		p.MaxPerUserEnv = ""
 	}
 	return p
 }
@@ -154,6 +174,16 @@ const (
 	ReasonMaxAge    = "max_age"
 	ReasonRevoked   = "revoked"
 	ReasonDestroyed = "destroyed"
+	// ReasonLimit ends the least recently used session when a sign-in
+	// goes beyond the account's limit of several sessions; ReasonReplaced
+	// is the same with a limit of one.
+	ReasonLimit = "limit"
+	// ReasonSignedOut ends a session the account signed out from another
+	// browser (Signed-in devices).
+	ReasonSignedOut = "signed_out"
+	// ReasonEndedByAdmin ends a session someone who manages accounts
+	// ended from the user's page.
+	ReasonEndedByAdmin = "ended_by_admin"
 	// ReasonUnreadable ends a row whose stored session is not one the
 	// console can read.
 	ReasonUnreadable = "unreadable"

@@ -35,7 +35,7 @@ func TestOwnPasswordChangeEndsTheOtherSessions(t *testing.T) {
 			t.Errorf("the session that changed the password: %d %s", res.status, res.body)
 		}
 		for name, browser := range map[string]*agent{"second": other, "third": third} {
-			want(t, name+" session of the account", browser.get("/api/auth/verify"), http.StatusUnauthorized, notSignedIn)
+			want(t, name+" session of the account", browser.get("/api/auth/verify"), http.StatusUnauthorized, signedOut("session_revoked", accountChanged))
 		}
 		if user, err := authn.ValidateAccessToken(ctx, token); err != nil || user != nil {
 			t.Errorf("the account's access token still works: %v, %v", user, err)

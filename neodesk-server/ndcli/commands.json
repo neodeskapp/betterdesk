@@ -189,6 +189,10 @@
    "summary": "The server: health, versions, resources, services and logs"
   },
   {
+   "name": "sessions",
+   "summary": "Console sign-ins: the browsers and devices an account is signed in on"
+  },
+  {
    "name": "settings",
    "summary": "Server settings: mail, sign-in, addresses, enrollment, sessions"
   },
@@ -5959,6 +5963,77 @@
    "permission": "metrics.view"
   },
   {
+   "name": "sessions end",
+   "summary": "Sign an account out on one browser or device.",
+   "description": "That browser goes to the sign-in page at its next request and is told an administrator signed it out. Ending your own account's sessions is refused to API tokens: use Signed-in devices in the account menu.",
+   "route": "DELETE /api/users/{id}/sessions/{sessionId}",
+   "args": [
+    {
+     "name": "user",
+     "help": "The account ID (see users list)"
+    },
+    {
+     "name": "session",
+     "help": "The session ID (see sessions list-for)"
+    }
+   ],
+   "permission": "user.edit",
+   "destructive": true,
+   "examples": [
+    "neodesk sessions end 7 3f2a9c0d41b7e8a65d2c19f0b4e7a3d1"
+   ]
+  },
+  {
+   "name": "sessions end-all",
+   "summary": "Sign an account out on every browser and device.",
+   "description": "Ending your own account's sessions is refused to API tokens: use Signed-in devices in the account menu.",
+   "route": "POST /api/users/{id}/sessions/end-all",
+   "args": [
+    {
+     "name": "user",
+     "help": "The account ID (see users list)"
+    }
+   ],
+   "permission": "user.edit",
+   "destructive": true
+  },
+  {
+   "name": "sessions list",
+   "summary": "List the browsers and devices your account is signed in on.",
+   "description": "Each entry shows the browser and system, the address, when it signed in and when it was last used. An API token has no browser session of its own, so no entry is marked current.",
+   "route": "GET /api/users/me/sessions",
+   "rows": "data.sessions",
+   "columns": [
+    "id",
+    "browser",
+    "system",
+    "ipAddress",
+    "createdAt",
+    "lastActivityAt"
+   ]
+  },
+  {
+   "name": "sessions list-for",
+   "summary": "List the browsers and devices an account is signed in on.",
+   "route": "GET /api/users/{id}/sessions",
+   "args": [
+    {
+     "name": "user",
+     "help": "The account ID (see users list)"
+    }
+   ],
+   "rows": "data.sessions",
+   "columns": [
+    "id",
+    "browser",
+    "system",
+    "ipAddress",
+    "createdAt",
+    "lastActivityAt"
+   ],
+   "permission": "user.edit"
+  },
+  {
    "name": "settings addresses",
    "summary": "Show the public addresses clients are given.",
    "route": "GET /api/settings/public-endpoints",
@@ -6083,6 +6158,30 @@
    "route": "PUT /api/settings/connection-mode",
    "permission": "server.config",
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
+   "name": "settings console-sessions",
+   "summary": "Show whether an account may be signed in on several browsers at once.",
+   "description": "single_session is the switch One session per account; source says what decides the limit: the switch, the default, or SESSION_MAX_PER_USER (env_value) in the server's environment.",
+   "route": "GET /api/settings/console-sessions",
+   "permission": "server.config"
+  },
+  {
+   "name": "settings console-sessions-set",
+   "summary": "Turn One session per account on or off.",
+   "description": "On: a new sign-in signs out the account's other browser. Off (the default): up to 10 at once. It applies from the next sign-in. SESSION_MAX_PER_USER, when set in the server's environment, decides instead.",
+   "route": "PUT /api/settings/console-sessions",
+   "flags": [
+    {
+     "name": "single-session",
+     "in": "body",
+     "type": "bool",
+     "help": "one session per account",
+     "required": true,
+     "field": "single_session"
+    }
+   ],
+   "permission": "server.config"
   },
   {
    "name": "settings device-scope",
@@ -7816,6 +7915,10 @@
    "reason": "The RustDesk client API: desktop clients call it with their own sign-in."
   },
   {
+   "route": "DELETE /api/users/me/sessions/{id}",
+   "reason": "Your own account's sessions: API tokens cannot end them (a stolen token must not sign its owner out). Signed-in devices in the account menu does it; sessions end does it for other accounts."
+  },
+  {
    "route": "GET /_ui/immutable/{rest...}",
    "reason": "A page or file of the web console: open it in a browser."
   },
@@ -8818,6 +8921,10 @@
   {
    "route": "POST /api/user-groups",
    "reason": "The RustDesk client API: desktop clients call it with their own sign-in."
+  },
+  {
+   "route": "POST /api/users/me/sessions/end-others",
+   "reason": "Your own account's sessions: API tokens cannot end them (a stolen token must not sign its owner out). Signed-in devices in the account menu does it; sessions end does it for other accounts."
   },
   {
    "route": "POST /logout",

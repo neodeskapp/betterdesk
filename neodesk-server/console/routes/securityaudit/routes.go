@@ -18,10 +18,11 @@ import (
 )
 
 type handlers struct {
-	api    *goapi.Client
-	getenv func(string) string
-	now    func() time.Time
-	local  *time.Location
+	api      *goapi.Client
+	sessions *session.Manager
+	getenv   func(string) string
+	now      func() time.Time
+	local    *time.Location
 }
 
 // Register adds the group's routes.
@@ -31,10 +32,11 @@ func Register(d *kit.Deps) {
 		getenv = func(string) string { return "" }
 	}
 	h := &handlers{
-		api:    d.GoAPI,
-		getenv: getenv,
-		now:    time.Now,
-		local:  time.Local,
+		api:      d.GoAPI,
+		sessions: d.Sessions,
+		getenv:   getenv,
+		now:      time.Now,
+		local:    time.Local,
 	}
 	r := d.Router
 	view := d.RequirePermission("audit.view")
@@ -306,11 +308,20 @@ type hardeningList struct {
 
 // hardening answers GET /api/panel/security-audit/hardening: the hardening
 // settings this server runs with, read from its configuration: the idle
-// and absolute session timeouts, and the limit of sessions per account,
-// which is off at 0.
+// and absolute session timeouts, and the limit of sessions per account in
+// force (SESSION_MAX_PER_USER when set, else Settings, Sign-in), which is
+// off at 0.
 func (h *handlers) hardening(w http.ResponseWriter, r *http.Request) {
 	policy := session.PolicyFromEnv(h.getenv)
 	perUser := policy.MaxSessionsPerUser
+	if h.sessions != nil {
+		limit, err := h.sessions.Limit(r.Context())
+		if err != nil {
+			kit.Fail(w, r, http.StatusInternalServerError, kit.T(r, "errors.server_error", nil))
+			return
+		}
+		perUser = limit.Max
+	}
 	limit := "unlimited"
 	if perUser > 0 {
 		limit = strconv.Itoa(perUser)
@@ -319,6 +330,6 @@ func (h *handlers) hardening(w http.ResponseWriter, r *http.Request) {
 	kit.JSON(w, r, http.StatusOK, hardeningList{Priorities: []priority{
 		{"session_timeout", "Panel Idle and Absolute Session Timeout", "auth", "medium", true, "A console session ends after " + minutes(policy.IdleTimeoutMs) +
 			" minutes without a request and " + minutes(policy.MaxAgeMs) + " minutes after sign-in (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE)."},
-		{"single_session", "Concurrent Panel Session Limit per Account", "auth", "high", perUser > 0, "A new console login ends the least recently active sessions beyond SESSION_MAX_PER_USER (currently " + limit + ") and records IP/User-Agent for audit."},
+		{"single_session", "Concurrent Panel Session Limit per Account", "auth", "high", perUser > 0, "A new console login ends the least recently active sessions beyond the limit per account (currently " + limit + "; Settings, Sign-in, or SESSION_MAX_PER_USER when set) and records IP/User-Agent for audit."},
 	}})
 }

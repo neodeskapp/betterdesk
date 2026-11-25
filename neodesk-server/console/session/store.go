@@ -163,8 +163,9 @@ func (t *table) expired(row storedRow, now int64) (bool, string) {
 // get returns the stored JSON of a live session. found is false when there
 // is no row, or when the row has ended or is past a limit. A row found past
 // a limit is marked as ended on the way: then ended is the reason, and
-// text what the row held.
-func (t *table) get(ctx context.Context, sid string) (text string, found bool, ended string, err error) {
+// text what the row held. gone is the end reason of a row that had ended
+// before.
+func (t *table) get(ctx context.Context, sid string) (text string, found bool, ended, gone string, err error) {
 	var row storedRow
 	var expires, created, last any
 	var reason sql.NullString
@@ -174,10 +175,10 @@ func (t *table) get(ctx context.Context, sid string) (text string, found bool, e
 		 FROM panel_sessions WHERE sid = ?`, sid,
 	).Scan(&row.json, &expires, &created, &last, &reason, &active)
 	if errors.Is(err, sql.ErrNoRows) {
-		return "", false, "", nil
+		return "", false, "", "", nil
 	}
 	if err != nil {
-		return "", false, "", fmt.Errorf("load session: %w", err)
+		return "", false, "", "", fmt.Errorf("load session: %w", err)
 	}
 	row.expiresAt = columnMillis(expires)
 	row.createdAt = columnMillis(created)
@@ -185,16 +186,16 @@ func (t *table) get(ctx context.Context, sid string) (text string, found bool, e
 	row.endReason = reason.String
 	row.active = active == 1
 
-	if gone, why := t.expired(row, t.nowMs()); gone {
+	if past, why := t.expired(row, t.nowMs()); past {
 		if !row.active {
-			return "", false, "", nil
+			return "", false, "", why, nil
 		}
 		if err := t.markEnded(ctx, sid, why); err != nil {
-			return "", false, "", err
+			return "", false, "", "", err
 		}
-		return row.json, false, why, nil
+		return row.json, false, why, "", nil
 	}
-	return row.json, true, "", nil
+	return row.json, true, "", "", nil
 }
 
 // columnMillis reads a time column: milliseconds as a number, or a
@@ -328,42 +329,70 @@ func (t *table) end(ctx context.Context, sid, reason string) error {
 	return nil
 }
 
-// endAccount ends the active rows of an account but keep with the reason
-// "revoked" and empties their stored sessions.
-func (t *table) endAccount(ctx context.Context, userID int64, keep string) (int, error) {
-	result, err := t.db.Exec(ctx,
-		`UPDATE panel_sessions
-		 SET is_active = `+t.sqlFalse()+`, ended_at = ?, end_reason = ?, session_json = '{}', updated_at = `+t.sqlNow()+`
-		 WHERE user_id = ? AND is_active = `+t.sqlTrue()+` AND sid <> ?`,
-		t.nowMs(), ReasonRevoked, userID, keep)
-	if err != nil {
-		return 0, fmt.Errorf("end the sessions of account %d: %w", userID, err)
+// endSessions ends live rows of an account with a reason and empties
+// their stored sessions, in one statement: the rows sids names, or with
+// sids nil every one but keep. It returns the rows it ended.
+func (t *table) endSessions(ctx context.Context, userID int64, sids []string, keep, reason string) ([]Device, error) {
+	where, args := "", []any{t.nowMs(), reason, userID}
+	if sids == nil {
+		where, args = " AND sid <> ?", append(args, keep)
+	} else {
+		if len(sids) == 0 {
+			return nil, nil
+		}
+		where = " AND sid IN (?" + strings.Repeat(", ?", len(sids)-1) + ")"
+		for _, sid := range sids {
+			args = append(args, sid)
+		}
 	}
-	ended, err := result.RowsAffected()
+	// On the writer: the readers of SQLite can't run an UPDATE
+	ended := []Device{}
+	err := t.db.InTx(ctx, func(tx *store.Tx) error {
+		ended = ended[:0]
+		rows, err := tx.Query(ctx,
+			`UPDATE panel_sessions
+			 SET is_active = `+t.sqlFalse()+`, ended_at = ?, end_reason = ?, session_json = '{}', updated_at = `+t.sqlNow()+`
+			 WHERE user_id = ? AND is_active = `+t.sqlTrue()+where+`
+			 RETURNING sid, ip_address, user_agent, created_at, last_activity_at`,
+			args...)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var sid string
+			var ip, ua sql.NullString
+			var created, last any
+			if err := rows.Scan(&sid, &ip, &ua, &created, &last); err != nil {
+				return err
+			}
+			ended = append(ended, newDevice(sid, ip.String, ua.String, columnMillis(created), columnMillis(last), 0))
+		}
+		return rows.Err()
+	})
 	if err != nil {
-		return 0, fmt.Errorf("end the sessions of account %d: %w", userID, err)
+		return nil, fmt.Errorf("end the sessions of account %d: %w", userID, err)
 	}
-	return int(ended), nil
-}
-
-// replacedSession is a session a newer sign-in ended.
-type replacedSession struct {
-	sid       string
-	ip        string
-	userAgent string
+	return ended, nil
 }
 
 // activate makes sid the account's session after sign-in and applies the
 // per-account limit, in one transaction. With a limit of N, this session
 // and the N-1 other sessions of the account that were active most recently
-// stay; the rest end with the reason "replaced". A limit of 0 ends none.
-func (t *table) activate(ctx context.Context, sid string, userID int64, username string, meta Meta, at int64) ([]replacedSession, error) {
+// stay; the rest end with the reason "replaced" for a limit of one and
+// "limit" for more. A limit of 0 ends none.
+func (t *table) activate(ctx context.Context, sid string, userID int64, username string, meta Meta, at int64, limit int) ([]Device, error) {
 	now := t.nowMs()
 	expiresAt := min(at+t.policy.MaxAgeMs, now+t.policy.IdleTimeoutMs)
-	var replaced []replacedSession
+	reason := ReasonLimit
+	if limit == 1 {
+		reason = ReasonReplaced
+	}
+	var replaced []Device
 	err := t.db.InTx(ctx, func(tx *store.Tx) error {
+		replaced = nil
 		rows, err := tx.Query(ctx,
-			`SELECT sid, ip_address, user_agent
+			`SELECT sid, ip_address, user_agent, created_at, last_activity_at
 			 FROM panel_sessions
 			 WHERE user_id = ? AND is_active = `+t.sqlTrue()+` AND sid <> ?
 			 ORDER BY COALESCE(last_activity_at, created_at, 0) DESC, sid`+t.db.Pick("", " FOR UPDATE"),
@@ -371,21 +400,21 @@ func (t *table) activate(ctx context.Context, sid string, userID int64, username
 		if err != nil {
 			return err
 		}
-		var others []replacedSession
+		var others []Device
 		for rows.Next() {
-			var other replacedSession
+			var other string
 			var ip, ua sql.NullString
-			if err := rows.Scan(&other.sid, &ip, &ua); err != nil {
+			var created, last any
+			if err := rows.Scan(&other, &ip, &ua, &created, &last); err != nil {
 				_ = rows.Close()
 				return err
 			}
-			other.ip, other.userAgent = ip.String, ua.String
-			others = append(others, other)
+			others = append(others, newDevice(other, ip.String, ua.String, columnMillis(created), columnMillis(last), 0))
 		}
 		if err := errors.Join(rows.Err(), rows.Close()); err != nil {
 			return err
 		}
-		if limit := t.policy.MaxSessionsPerUser; limit > 0 && len(others) > limit-1 {
+		if limit > 0 && len(others) > limit-1 {
 			replaced = others[limit-1:]
 		}
 		for _, old := range replaced {
@@ -393,7 +422,7 @@ func (t *table) activate(ctx context.Context, sid string, userID int64, username
 				`UPDATE panel_sessions
 				 SET is_active = `+t.sqlFalse()+`, ended_at = ?, end_reason = ?, updated_at = `+t.sqlNow()+`
 				 WHERE sid = ?`,
-				now, ReasonReplaced, old.sid); err != nil {
+				now, reason, old.sid); err != nil {
 				return err
 			}
 		}

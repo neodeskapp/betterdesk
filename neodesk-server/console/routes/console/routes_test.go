@@ -241,7 +241,7 @@ func TestBootstrap(t *testing.T) {
 			t.Errorf("palettes = %s", palettes)
 		}
 		policy, _ := json.Marshal(got["sessionPolicy"])
-		if string(policy) != `{"idleTimeoutMs":1800000,"maxAgeMs":86400000,"maxSessionsPerUser":1,"warnBeforeMs":60000}` {
+		if string(policy) != `{"idleTimeoutMs":1800000,"maxAgeMs":86400000,"maxSessionsPerUser":10,"warnBeforeMs":60000}` {
 			t.Errorf("sessionPolicy = %s", policy)
 		}
 		branding, _ := got["branding"].(map[string]any)

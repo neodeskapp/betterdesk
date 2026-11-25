@@ -111,13 +111,13 @@ func TestHardeningReadsThisServer(t *testing.T) {
 	}
 	limit := func(on bool, count string) string {
 		return `{"id":"single_session","name":"Concurrent Panel Session Limit per Account","category":"auth","severity":"high","implemented":` + strconv.FormatBool(on) +
-			`,"description":"A new console login ends the least recently active sessions beyond SESSION_MAX_PER_USER (currently ` + count + `) and records IP/User-Agent for audit."}`
+			`,"description":"A new console login ends the least recently active sessions beyond the limit per account (currently ` + count + `; Settings, Sign-in, or SESSION_MAX_PER_USER when set) and records IP/User-Agent for audit."}`
 	}
 	for _, c := range []struct {
 		env  map[string]string
 		want string
 	}{
-		{map[string]string{}, timeouts("30", "1440") + "," + limit(true, "1")},
+		{map[string]string{}, timeouts("30", "1440") + "," + limit(true, "10")},
 		{map[string]string{"SESSION_MAX_PER_USER": "0"}, timeouts("30", "1440") + "," + limit(false, "unlimited")},
 		{map[string]string{"SESSION_MAX_PER_USER": "4", "SESSION_IDLE_TIMEOUT": "600000", "SESSION_MAX_AGE": "7200000"}, timeouts("10", "120") + "," + limit(true, "4")},
 	} {

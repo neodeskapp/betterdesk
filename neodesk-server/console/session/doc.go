@@ -66,6 +66,21 @@
 // start) is checked but does not count as activity. Its answer still
 // renews the cookie.
 //
+// # Several sessions per account
+//
+// An account may be signed in on several browsers at once (DECISIONS
+// A239). The limit is SESSION_MAX_PER_USER when it is set, else 1 with
+// the setting "One session per account" (server_config key
+// console_single_session), else DefaultMaxPerUser. A sign-in beyond it
+// ends the least recently used sessions, with the reason "replaced" at a
+// limit of one and "limit" above. A session another browser of the
+// account signed out ("signed_out"), an admin ended ("ended_by_admin"), or
+// the limit or a change to the account ended ("revoked") answers its
+// browser's next request once: 401 with a code for the API, the sign-in
+// page with ?reason= for a page (Notice). The lists name a session by its
+// Handle, never by its id, and OnEnd tells the sockets of a session that
+// it ended.
+//
 // # Use
 //
 // Manager.Middleware gives every request a session; handlers get it with

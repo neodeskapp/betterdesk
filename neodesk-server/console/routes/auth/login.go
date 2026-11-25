@@ -115,26 +115,47 @@ func newAccount(id store.Int64String, username string, role, language store.Null
 }
 
 // establish gives the request a new session and signs the account in on
-// it. It answers how many of the account's other sessions that ended.
+// it. It answers which of the account's other sessions the limit ended.
 //
 // The session's userId and user are written in the JSON form the account's
 // values have: an id is text where the users table has 64-bit ids, and a
 // role can be null.
-func (h *handlers) establish(r *http.Request, who account, meta session.Meta) (replaced int, err error) {
+func (h *handlers) establish(r *http.Request, who account, meta session.Meta) (session.Established, error) {
 	sess := kit.Session(r)
 	if err := sess.Regenerate(); err != nil {
-		return 0, fmt.Errorf("regenerate the session: %w", err)
+		return session.Established{}, fmt.Errorf("regenerate the session: %w", err)
 	}
 	user := session.User{ID: who.id, Username: who.username, Role: who.role, PreferredLanguage: who.language}
-	replaced, err = sess.Establish(user, meta)
+	est, err := sess.EstablishWith(user, meta)
 	if err != nil {
-		return 0, fmt.Errorf("establish the session: %w", err)
+		return session.Established{}, fmt.Errorf("establish the session: %w", err)
 	}
 	if who.ID != nil {
 		sess.Set("userId", who.ID)
 	}
 	sess.Set("user", sessionUser{ID: who.ID, Username: who.Username, Role: who.Role, PreferredLanguage: who.PreferredLanguage})
-	return replaced, nil
+	return est, nil
+}
+
+// auditEnded writes the audit entries of the sessions a sign-in ended:
+// with one session per account the old session_replaced entry (how is
+// "New login", "2FA login" or "OIDC login"), with a limit of several one
+// session_limit entry for each session the limit ended.
+func (h *handlers) auditEnded(r *http.Request, userID int64, est session.Established, meta session.Meta, how string) error {
+	if len(est.Ended) == 0 {
+		return nil
+	}
+	if est.Limit.Max == 1 {
+		return h.audit(r, userID, "session_replaced", fmt.Sprintf("%s replaced %d prior session(s); newIp=%s", how, len(est.Ended), meta.IP))
+	}
+	for _, d := range est.Ended {
+		details := fmt.Sprintf("Sign-in from %s ended the least recently used session %s (%s) at the limit of %d sessions per account",
+			meta.IP, d.Short(), d.Describe(), est.Limit.Max)
+		if err := h.audit(r, userID, "session_limit", details); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // clearGuestCookie makes the browser forget the cookie of a guest link.
@@ -307,7 +328,8 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	who := accountOf(user)
-	replaced, err := h.establish(r, who, meta)
+	est, err := h.establish(r, who, meta)
+	replaced := len(est.Ended)
 	if err != nil {
 		h.sessionFailure(w, r, "Session establish error:", err)
 		return
@@ -319,8 +341,8 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		fingerprint = "none"
 	}
 	err = h.audit(r, who.id, "login", "User logged in"+client+"; fingerprint="+fingerprint+replacedNote(replaced))
-	if err == nil && replaced > 0 {
-		err = h.audit(r, who.id, "session_replaced", fmt.Sprintf("New login replaced %d prior session(s); newIp=%s", replaced, meta.IP))
+	if err == nil {
+		err = h.auditEnded(r, who.id, est, meta, "New login")
 	}
 	if err != nil {
 		h.sessionFailure(w, r, "Session establish error:", err)
@@ -582,7 +604,8 @@ func (h *handlers) finishSecondFactor(w http.ResponseWriter, r *http.Request, wh
 		meta = h.clientMeta(r, body)
 	}
 
-	replaced, err := h.establish(r, who, meta)
+	est, err := h.establish(r, who, meta)
+	replaced := len(est.Ended)
 	if err != nil {
 		h.sessionFailure(w, r, "TOTP session regeneration error:", err)
 		return
@@ -595,8 +618,8 @@ func (h *handlers) finishSecondFactor(w http.ResponseWriter, r *http.Request, wh
 		details := "User logged in (2FA: " + method + "); ip=" + meta.IP + "; ua=" + cutUTF16(meta.UserAgent, 160) + replacedNote(replaced)
 		err = h.audit(r, who.id, "login", details)
 	}
-	if err == nil && replaced > 0 {
-		err = h.audit(r, who.id, "session_replaced", fmt.Sprintf("2FA login replaced %d prior session(s); newIp=%s", replaced, meta.IP))
+	if err == nil {
+		err = h.auditEnded(r, who.id, est, meta, "2FA login")
 	}
 	if err != nil {
 		h.sessionFailure(w, r, "TOTP post-auth bookkeeping error:", err)

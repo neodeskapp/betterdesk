@@ -135,7 +135,8 @@
 //	SESSION_IDLE_TIMEOUT     30 minutes            session.PolicyFromEnv, in milliseconds.
 //	SESSION_MAX_AGE          24 hours
 //	SESSION_IDLE_WARN_MS     1 minute
-//	SESSION_MAX_PER_USER     1
+//	SESSION_MAX_PER_USER     not set               When set, decides the sessions per account instead of Settings,
+//	                                               Sign-in (A239); not set: 10, or 1 with "One session per account".
 //	RATE_LIMIT_WINDOW_MS     60000                 limits.NewSet lists the rate limit settings:
 //	RATE_LIMIT_MAX           100                   LOGIN_RATE_LIMIT_MAX, PANEL_READ_RATE_LIMIT_MAX,
 //	...                                            WIDGET_RATE_LIMIT_MAX, PANEL_PREFERENCE_RATE_LIMIT_MAX,

@@ -3,7 +3,6 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -176,7 +175,8 @@ func (h *handlers) requiredEnable(w http.ResponseWriter, r *http.Request) {
 	if sess.Get(pendingMeta, &rawMeta); !jsonTruthy(rawMeta) || json.Unmarshal(rawMeta, &meta) != nil {
 		meta = h.clientMeta(r, kit.Body(r))
 	}
-	replaced, err := h.establish(r, who, meta)
+	est, err := h.establish(r, who, meta)
+	replaced := len(est.Ended)
 	if err != nil {
 		h.sessionFailure(w, r, "TOTP session regeneration error:", err)
 		return
@@ -191,8 +191,8 @@ func (h *handlers) requiredEnable(w http.ResponseWriter, r *http.Request) {
 		details := "User logged in (2FA set up at sign-in); ip=" + meta.IP + "; ua=" + cutUTF16(meta.UserAgent, 160) + replacedNote(replaced)
 		err = h.audit(r, who.id, "login", details)
 	}
-	if err == nil && replaced > 0 {
-		err = h.audit(r, who.id, "session_replaced", fmt.Sprintf("2FA login replaced %d prior session(s); newIp=%s", replaced, meta.IP))
+	if err == nil {
+		err = h.auditEnded(r, who.id, est, meta, "2FA login")
 	}
 	if err != nil {
 		h.sessionFailure(w, r, "TOTP post-auth bookkeeping error:", err)

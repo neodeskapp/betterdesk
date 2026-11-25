@@ -19,6 +19,19 @@ func applyEnvDefaultsFromOS() {
 	if path == "" {
 		return
 	}
+	// A default that changed: the template's old line, untouched, gets the
+	// new one, and this start forgets the old value the service gave it
+	if retired, err := cli.RetireEnvDefaults(path); err != nil {
+		fmt.Fprintf(os.Stderr, "WARN: the changed defaults of this release were not written to the env file: %v\n", err)
+	} else if len(retired) > 0 {
+		for _, key := range retired {
+			if os.Getenv(key) == cli.RetiredValue(key) {
+				_ = os.Unsetenv(key)
+			}
+		}
+		fmt.Fprintf(os.Stderr, "Changed defaults of this release in %s: %s\n", path, strings.Join(retired, ", "))
+		loadEnvFileFromOS()
+	}
 	added, err := cli.ApplyEnvDefaults(path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "WARN: the new settings of this release were not added to the env file: %v\n", err)

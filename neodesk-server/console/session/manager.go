@@ -69,6 +69,7 @@ type Manager struct {
 	audit         func(ctx context.Context, userID int64, action, details, ip string)
 	onError       func(w http.ResponseWriter, r *http.Request, err error)
 	now           func() time.Time
+	endHooks
 }
 
 // New returns a Manager and makes sure the panel_sessions table has every
@@ -170,11 +171,16 @@ func (m *Manager) load(r *http.Request) (s *Session, expired string, err error) 
 		return s, "", nil
 	}
 	s.cookieID = id
-	text, found, ended, err := m.table.get(r.Context(), id)
+	text, found, ended, gone, err := m.table.get(r.Context(), id)
 	if err != nil {
 		return nil, "", err
 	}
 	if !found && ended == "" {
+		// A session another browser or an admin ended: the browser is told
+		// why at its next request (Middleware)
+		if _, _, ok := Notice(gone); ok {
+			s.notice = gone
+		}
 		return s, "", nil
 	}
 	if err := s.restore(text); err != nil {
@@ -211,6 +217,17 @@ func (m *Manager) cookieID(r *http.Request) (id string, ok bool) {
 	}
 	id, ok = unsign(value[len(cookiePrefix):], m.secret)
 	return id, ok && id != ""
+}
+
+// CookieSessionID is the session id the request's cookie carries with a
+// good signature, "" without one. It reads no row: an upgrade notes it,
+// so its socket closes when that session ends (OnEnd).
+func (m *Manager) CookieSessionID(r *http.Request) string {
+	id, ok := m.cookieID(r)
+	if !ok {
+		return ""
+	}
+	return id
 }
 
 // cookieHeader is the Set-Cookie text for a session.
@@ -268,6 +285,10 @@ func (m *Manager) Middleware(next http.Handler) http.Handler {
 			m.answerExpired(w, r, s, expired)
 			return
 		}
+		if s.notice != "" && tellsEnd(r) {
+			m.answerEnded(w, r, s.notice)
+			return
+		}
 		if s.signedInLocked() {
 			if ok, reason := s.touchActivity(r); !ok {
 				m.answerExpired(w, r, s, reason)
@@ -310,6 +331,75 @@ func (m *Manager) answerExpired(w http.ResponseWriter, r *http.Request, s *Sessi
 	if m.audit != nil {
 		m.audit(r.Context(), userID, "session_expired", "reason="+reason, m.trust.ClientIP(r))
 	}
+}
+
+// tellsEnd reports whether the answer to r tells a browser that its
+// session was ended elsewhere: an API call or a page, but not a file the
+// page loads, and not the sign-in itself, which then goes on signed out.
+func tellsEnd(r *http.Request) bool {
+	path := r.URL.EscapedPath()
+	for _, quiet := range []string{"/login", "/logout", "/api/auth/login", "/api/auth/login-page", "/api/auth/logout",
+		"/api/auth/totp/verify", "/api/oidc/callback"} {
+		if path == quiet {
+			return false
+		}
+	}
+	for _, quiet := range []string{"/api/auth/oidc/", "/api/auth/totp/required/"} {
+		if strings.HasPrefix(path, quiet) {
+			return false
+		}
+	}
+	if strings.HasPrefix(path, "/api/") || wantsJSON(r) {
+		return true
+	}
+	last := path[strings.LastIndex(path, "/")+1:]
+	return !strings.Contains(last, ".")
+}
+
+func wantsJSON(r *http.Request) bool {
+	return strings.Contains(strings.Join(r.Header.Values("Accept"), ", "), "application/json")
+}
+
+// answerEnded answers a request whose cookie names a session that was
+// ended from another browser, by an admin, by the limit or by a change to
+// the account: 401 with the reason's code for the API, the sign-in page
+// with the reason otherwise. The cookie is cleared, so the browser is told
+// once.
+func (m *Manager) answerEnded(w http.ResponseWriter, r *http.Request, reason string) {
+	code, text, _ := Notice(reason)
+	clearCookie(w, cookieNameHTTPS)
+	clearCookie(w, cookieNameHTTP)
+	if strings.HasPrefix(r.URL.EscapedPath(), "/api/") || wantsJSON(r) {
+		httpx.WriteJSON(w, r, http.StatusUnauthorized, expiredAnswer{Error: text, Code: code})
+		return
+	}
+	target := m.loginRedirect(r)
+	if rest, ok := strings.CutPrefix(target, "/login?expired=1"); ok {
+		target = "/login?expired=1&reason=" + code + rest
+	} else {
+		target = "/login?expired=1&reason=" + code
+	}
+	httpx.Redirect(w, r, http.StatusFound, target)
+}
+
+// Notice is what a browser is told about a session that ended for a
+// reason: the code the web app knows and the English text. ok is false
+// for a reason the browser is not told about (its own sign-out, idle and
+// absolute ends, which have their own answer).
+func Notice(reason string) (code, text string, ok bool) {
+	switch reason {
+	case ReasonSignedOut:
+		return "session_signed_out", "You were signed out from another device. Please sign in again.", true
+	case ReasonEndedByAdmin:
+		return "session_ended_by_admin", "An administrator signed you out. Please sign in again.", true
+	case ReasonReplaced:
+		return "session_replaced", "You were signed out because this account signed in on another browser. This server allows one session per account.", true
+	case ReasonLimit:
+		return "session_limit", "You were signed out because this account signed in on more browsers than this server allows.", true
+	case ReasonRevoked:
+		return "session_revoked", "You were signed out because the account's password, two-factor sign-in or access changed. Please sign in again.", true
+	}
+	return "", "", false
 }
 
 type expiredAnswer struct {
@@ -432,6 +522,8 @@ func (m *Manager) List(ctx context.Context, userID int64, current string) ([]Inf
 	}
 	for i := range list {
 		list[i].Current = list[i].ID == current
+		// The list names a session by its handle, never by the id the cookie carries
+		list[i].ID = Handle(list[i].ID)
 	}
 	return list, nil
 }
@@ -442,7 +534,8 @@ func (m *Manager) List(ctx context.Context, userID int64, current string) ([]Inf
 // session goes on with what the account was at sign-in. It returns how
 // many sessions it ended.
 func (m *Manager) EndAccount(ctx context.Context, userID int64, keep string) (int, error) {
-	return m.table.endAccount(ctx, userID, keep)
+	ended, err := m.EndDevices(ctx, userID, keep, ReasonRevoked)
+	return len(ended), err
 }
 
 // Cleanup ends the sessions that are past a limit, deletes old rows that

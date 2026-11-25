@@ -681,7 +681,7 @@ func TestEstablish(t *testing.T) {
 
 func TestEstablishWithLanguageAndLimit(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
-		f := newFixture(t, db)
+		f := newFixture(t, db, withLimit(1))
 		first := f.signIn(alice)
 		var replaced int
 		rec := f.serve(get("/"), func(w http.ResponseWriter, r *http.Request) {
@@ -709,11 +709,13 @@ func TestEstablishWithLanguageAndLimit(t *testing.T) {
 		if row.fp.Valid || row.userAgent.Valid {
 			t.Fatalf("empty details must be NULL: %+v", row)
 		}
-		// The replaced browser is signed out and keeps its cookie
+		// The replaced browser is told why at its next page, once: the
+		// sign-in page with the reason, and its cookie cleared (A239)
 		var userID int64 = -1
 		rec = f.serve(get("/", first), func(w http.ResponseWriter, r *http.Request) { userID = From(r).UserID() })
-		if userID != 0 || len(setCookies(rec)) != 0 {
-			t.Fatalf("replaced browser: user %d, Set-Cookie %q", userID, setCookies(rec))
+		if userID != -1 || rec.Code != http.StatusFound || !strings.Contains(rec.Header().Get("Location"), "reason=session_replaced") ||
+			len(setCookies(rec)) != 2 {
+			t.Fatalf("replaced browser: user %d, %d %q, Set-Cookie %q", userID, rec.Code, rec.Header().Get("Location"), setCookies(rec))
 		}
 	})
 }

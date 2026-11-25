@@ -17,7 +17,7 @@ func env(pairs ...string) func(string) string {
 
 func TestPolicyDefaults(t *testing.T) {
 	got := PolicyFromEnv(env())
-	want := Policy{IdleTimeoutMs: 30 * 60 * 1000, MaxAgeMs: 24 * 60 * 60 * 1000, WarnBeforeMs: 60 * 1000, MaxSessionsPerUser: 1}
+	want := Policy{IdleTimeoutMs: 30 * 60 * 1000, MaxAgeMs: 24 * 60 * 60 * 1000, WarnBeforeMs: 60 * 1000, MaxSessionsPerUser: DefaultMaxPerUser}
 	if got != want {
 		t.Fatalf("got %+v, want %+v", got, want)
 	}
@@ -31,30 +31,30 @@ func TestPolicyFromEnv(t *testing.T) {
 		want Policy
 	}{
 		{"values in range are taken", []string{"SESSION_IDLE_TIMEOUT", "120000", "SESSION_MAX_AGE", "600000", "SESSION_IDLE_WARN_MS", "30000", "SESSION_MAX_PER_USER", "5"},
-			Policy{120000, 600000, 30000, 5}},
-		{"idle below the minimum", []string{"SESSION_IDLE_TIMEOUT", "1"}, Policy{60000, day, 60000, 1}},
-		{"idle above the maximum", []string{"SESSION_IDLE_TIMEOUT", "999999999999"}, Policy{day, day, 60000, 1}},
-		{"absolute lifetime below the minimum", []string{"SESSION_IDLE_TIMEOUT", "60000", "SESSION_MAX_AGE", "1000"}, Policy{60000, 300000, 60000, 1}},
-		{"absolute lifetime above the maximum", []string{"SESSION_MAX_AGE", "99999999999"}, Policy{1800000, 7 * day, 60000, 1}},
-		{"absolute lifetime is raised to the idle timeout", []string{"SESSION_IDLE_TIMEOUT", "3600000", "SESSION_MAX_AGE", "600000"}, Policy{3600000, 3600000, 60000, 1}},
-		{"zero gives the default", []string{"SESSION_IDLE_TIMEOUT", "0", "SESSION_MAX_AGE", "0", "SESSION_IDLE_WARN_MS", "0"}, Policy{1800000, day, 60000, 1}},
-		{"a negative number gives the default", []string{"SESSION_IDLE_TIMEOUT", "-5000000"}, Policy{1800000, day, 60000, 1}},
-		{"text gives the default", []string{"SESSION_IDLE_TIMEOUT", "soon", "SESSION_MAX_AGE", "never"}, Policy{1800000, day, 60000, 1}},
-		{"the leading number counts", []string{"SESSION_IDLE_TIMEOUT", " 120000ms", "SESSION_MAX_AGE", "+600000.9"}, Policy{120000, 600000, 60000, 1}},
-		{"1e6 is 1", []string{"SESSION_IDLE_TIMEOUT", "1e6"}, Policy{60000, day, 60000, 1}},
-		{"a number too long to be finite gives the default", []string{"SESSION_IDLE_TIMEOUT", strings.Repeat("9", 400)}, Policy{1800000, day, 60000, 1}},
-		{"warning below the minimum", []string{"SESSION_IDLE_WARN_MS", "1"}, Policy{1800000, day, 15000, 1}},
-		{"warning above ten minutes", []string{"SESSION_IDLE_WARN_MS", "9999999"}, Policy{1800000, day, 600000, 1}},
-		{"warning is at most the idle timeout", []string{"SESSION_IDLE_TIMEOUT", "60000", "SESSION_IDLE_WARN_MS", "500000"}, Policy{60000, day, 60000, 1}},
-		{"no limit", []string{"SESSION_MAX_PER_USER", "0"}, Policy{1800000, day, 60000, 0}},
-		{"limit with spaces", []string{"SESSION_MAX_PER_USER", " 12 "}, Policy{1800000, day, 60000, 12}},
-		{"empty limit", []string{"SESSION_MAX_PER_USER", "  "}, Policy{1800000, day, 60000, 1}},
-		{"negative limit", []string{"SESSION_MAX_PER_USER", "-3"}, Policy{1800000, day, 60000, 1}},
-		{"limit with a sign", []string{"SESSION_MAX_PER_USER", "+3"}, Policy{1800000, day, 60000, 1}},
-		{"limit with a unit", []string{"SESSION_MAX_PER_USER", "3x"}, Policy{1800000, day, 60000, 1}},
-		{"limit in words", []string{"SESSION_MAX_PER_USER", "many"}, Policy{1800000, day, 60000, 1}},
-		{"limit above the maximum", []string{"SESSION_MAX_PER_USER", "99999999"}, Policy{1800000, day, 60000, 1000}},
-		{"limit far above the maximum", []string{"SESSION_MAX_PER_USER", strings.Repeat("9", 400)}, Policy{1800000, day, 60000, 1000}},
+			Policy{120000, 600000, 30000, 5, "5"}},
+		{"idle below the minimum", []string{"SESSION_IDLE_TIMEOUT", "1"}, Policy{60000, day, 60000, DefaultMaxPerUser, ""}},
+		{"idle above the maximum", []string{"SESSION_IDLE_TIMEOUT", "999999999999"}, Policy{day, day, 60000, DefaultMaxPerUser, ""}},
+		{"absolute lifetime below the minimum", []string{"SESSION_IDLE_TIMEOUT", "60000", "SESSION_MAX_AGE", "1000"}, Policy{60000, 300000, 60000, DefaultMaxPerUser, ""}},
+		{"absolute lifetime above the maximum", []string{"SESSION_MAX_AGE", "99999999999"}, Policy{1800000, 7 * day, 60000, DefaultMaxPerUser, ""}},
+		{"absolute lifetime is raised to the idle timeout", []string{"SESSION_IDLE_TIMEOUT", "3600000", "SESSION_MAX_AGE", "600000"}, Policy{3600000, 3600000, 60000, DefaultMaxPerUser, ""}},
+		{"zero gives the default", []string{"SESSION_IDLE_TIMEOUT", "0", "SESSION_MAX_AGE", "0", "SESSION_IDLE_WARN_MS", "0"}, Policy{1800000, day, 60000, DefaultMaxPerUser, ""}},
+		{"a negative number gives the default", []string{"SESSION_IDLE_TIMEOUT", "-5000000"}, Policy{1800000, day, 60000, DefaultMaxPerUser, ""}},
+		{"text gives the default", []string{"SESSION_IDLE_TIMEOUT", "soon", "SESSION_MAX_AGE", "never"}, Policy{1800000, day, 60000, DefaultMaxPerUser, ""}},
+		{"the leading number counts", []string{"SESSION_IDLE_TIMEOUT", " 120000ms", "SESSION_MAX_AGE", "+600000.9"}, Policy{120000, 600000, 60000, DefaultMaxPerUser, ""}},
+		{"1e6 is 1", []string{"SESSION_IDLE_TIMEOUT", "1e6"}, Policy{60000, day, 60000, DefaultMaxPerUser, ""}},
+		{"a number too long to be finite gives the default", []string{"SESSION_IDLE_TIMEOUT", strings.Repeat("9", 400)}, Policy{1800000, day, 60000, DefaultMaxPerUser, ""}},
+		{"warning below the minimum", []string{"SESSION_IDLE_WARN_MS", "1"}, Policy{1800000, day, 15000, DefaultMaxPerUser, ""}},
+		{"warning above ten minutes", []string{"SESSION_IDLE_WARN_MS", "9999999"}, Policy{1800000, day, 600000, DefaultMaxPerUser, ""}},
+		{"warning is at most the idle timeout", []string{"SESSION_IDLE_TIMEOUT", "60000", "SESSION_IDLE_WARN_MS", "500000"}, Policy{60000, day, 60000, DefaultMaxPerUser, ""}},
+		{"no limit", []string{"SESSION_MAX_PER_USER", "0"}, Policy{1800000, day, 60000, 0, "0"}},
+		{"limit with spaces", []string{"SESSION_MAX_PER_USER", " 12 "}, Policy{1800000, day, 60000, 12, "12"}},
+		{"empty limit", []string{"SESSION_MAX_PER_USER", "  "}, Policy{1800000, day, 60000, DefaultMaxPerUser, ""}},
+		{"negative limit", []string{"SESSION_MAX_PER_USER", "-3"}, Policy{1800000, day, 60000, DefaultMaxPerUser, ""}},
+		{"limit with a sign", []string{"SESSION_MAX_PER_USER", "+3"}, Policy{1800000, day, 60000, DefaultMaxPerUser, ""}},
+		{"limit with a unit", []string{"SESSION_MAX_PER_USER", "3x"}, Policy{1800000, day, 60000, DefaultMaxPerUser, ""}},
+		{"limit in words", []string{"SESSION_MAX_PER_USER", "many"}, Policy{1800000, day, 60000, DefaultMaxPerUser, ""}},
+		{"limit above the maximum", []string{"SESSION_MAX_PER_USER", "99999999"}, Policy{1800000, day, 60000, 1000, "99999999"}},
+		{"limit far above the maximum", []string{"SESSION_MAX_PER_USER", strings.Repeat("9", 400)}, Policy{1800000, day, 60000, 1000, strings.Repeat("9", 400)}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -66,7 +66,7 @@ func TestPolicyFromEnv(t *testing.T) {
 }
 
 func TestPolicyJSON(t *testing.T) {
-	raw, err := json.Marshal(Policy{1, 2, 3, 4})
+	raw, err := json.Marshal(Policy{1, 2, 3, 4, "4"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,7 +98,7 @@ func TestPolicyNormalized(t *testing.T) {
 		t.Errorf("zero policy: got %+v, want the defaults", got)
 	}
 	got := Policy{IdleTimeoutMs: 5, MaxAgeMs: 10, WarnBeforeMs: 20000, MaxSessionsPerUser: 0}.normalized()
-	if want := (Policy{60000, 60000, 20000, 0}); got != want {
+	if want := (Policy{60000, 60000, 20000, 0, ""}); got != want {
 		t.Errorf("got %+v, want %+v", got, want)
 	}
 }

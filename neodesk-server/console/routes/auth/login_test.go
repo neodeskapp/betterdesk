@@ -396,14 +396,17 @@ func TestLoginRecordsTheClientAndTheWayBack(t *testing.T) {
 	}
 }
 
+// With one session per account (here SESSION_MAX_PER_USER=1; the
+// setting does the same), a second sign-in ends the first, and the first
+// browser is told so at its next request.
 func TestSecondSignInEndsTheFirst(t *testing.T) {
-	eachWorld(t, setup{}, func(t *testing.T, w *world) {
+	eachWorld(t, setup{env: map[string]string{"SESSION_MAX_PER_USER": "1"}}, func(t *testing.T, w *world) {
 		alice := w.addUser(user{name: "alice"})
 		first, second := w.agent(), w.agent()
 		first.signIn("alice")
 		res := second.post("/api/auth/login", login("alice", password))
 		want(t, "second sign-in", res, http.StatusOK, strings.Replace(signedInAlice, `"replacedPriorSessions":0`, `"replacedPriorSessions":1`, 1))
-		want(t, "the first browser", first.get("/api/auth/verify"), http.StatusUnauthorized, notSignedIn)
+		want(t, "the first browser", first.get("/api/auth/verify"), http.StatusUnauthorized, signedOut("session_replaced", replacedElsewhere))
 		if res := second.get("/api/auth/verify"); res.status != http.StatusOK {
 			t.Errorf("the second browser: %d %s", res.status, res.body)
 		}
@@ -609,7 +612,8 @@ func TestLoginOverPlainHTTPInHTTPSMode(t *testing.T) {
 // 64-bit and have always gone out, and into the session, as text.
 func TestSignInKeepsTheFormOfTheAccountID(t *testing.T) {
 	storetest.EachOrigin(t, func(t *testing.T, db *store.DB, _ storetest.Origin) {
-		w := newWorld(t, db, setup{})
+		// One session per account, so the second sign-in replaces the first
+		w := newWorld(t, db, setup{env: map[string]string{"SESSION_MAX_PER_USER": "1"}})
 		alice := w.addUser(user{name: "alice"})
 		id := fmt.Sprint(alice)
 		if db.Shape().Table("users").Type("id") == store.TypeBigInt {

@@ -3,7 +3,6 @@ package auth
 import (
 	"crypto/subtle"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -326,7 +325,8 @@ func (h *handlers) oidcSession(w http.ResponseWriter, r *http.Request) {
 	}
 	who := newAccount(user.ID, user.Username, sessionRole, user.PreferredLanguage)
 	meta := h.sessions.ClientMeta(r, "")
-	replaced, err := h.establish(r, who, meta)
+	est, err := h.establish(r, who, meta)
+	replaced := len(est.Ended)
 	if err != nil {
 		h.log.Error("OIDC session establish error:", err)
 		kit.Redirect(w, r, oidcFailed)
@@ -345,8 +345,8 @@ func (h *handlers) oidcSession(w http.ResponseWriter, r *http.Request) {
 		details := "User logged in via OIDC; ip=" + meta.IP + "; ua=" + cutUTF16(meta.UserAgent, 160) + replacedNote(replaced)
 		err = h.audit(r, who.id, "login", details)
 	}
-	if err == nil && replaced > 0 {
-		err = h.audit(r, who.id, "session_replaced", fmt.Sprintf("OIDC login replaced %d prior session(s); newIp=%s", replaced, meta.IP))
+	if err == nil {
+		err = h.auditEnded(r, who.id, est, meta, "OIDC login")
 	}
 	if err != nil {
 		h.log.Error("OIDC post-auth bookkeeping error:", err)
