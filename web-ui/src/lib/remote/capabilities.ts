@@ -59,6 +59,33 @@ function refresh(): void {
 }
 
 /** A narrow screen without a fine pointer: the web viewer cannot run there */
+/** Phones get a session in landscape from this width (owner's decision of 25 Nov) */
+export const PHONE_LANDSCAPE_MIN = 640;
+
+export interface PhoneGate {
+	/** The viewer shows the "needs a larger screen" notice instead of the session */
+	blocked: boolean;
+	/** In landscape the session would open: the notice says so */
+	turnHelps: boolean;
+}
+
+/**
+ * A phone (no fine pointer, its short side a phone's) gets the session in
+ * landscape from PHONE_LANDSCAPE_MIN px wide; otherwise the notice.
+ * Desktops and tablets are never stopped.
+ */
+export function phoneSessionGate(width: number, height: number, finePointer: boolean): PhoneGate {
+	const phone = !finePointer && width > 0 && height > 0 && Math.min(width, height) <= BP_PHONE;
+	if (!phone || (width > height && width >= PHONE_LANDSCAPE_MIN)) return { blocked: false, turnHelps: false };
+	return { blocked: true, turnHelps: width <= height && height >= PHONE_LANDSCAPE_MIN };
+}
+
+/** phoneSessionGate for this browser window */
+export function phoneGate(): PhoneGate {
+	refresh();
+	return phoneSessionGate(state.width, state.height, matches('(hover: hover) and (pointer: fine)'));
+}
+
 export function isPhone(): boolean {
 	refresh();
 	if (state.width <= 0 || state.width > BP_PHONE) return false;

@@ -8798,7 +8798,8 @@
         "open_in_new_tab": "Open in new tab",
         "open_in_new_tab_hint": "Move this session to a tab of its own: it connects again there and ends here",
         "no_keyboard_lock": "This browser keeps some shortcuts for itself, also in full screen: Ctrl+W, Ctrl+T, Ctrl+N, the Windows key, and Esc leaves full screen. Actions sends the Windows key, Alt+Tab and Ctrl+Alt+Del to the remote computer.",
-        "no_screen_placement": "This browser can't put windows on your other screens. Drag each display's window to the screen you want it on."
+        "no_screen_placement": "This browser can't put windows on your other screens. Drag each display's window to the screen you want it on.",
+        "phone_turn": "Or turn the phone sideways: in landscape the session opens here in the browser."
     },
     "diagram": {
         "your_computer": "Your computer",

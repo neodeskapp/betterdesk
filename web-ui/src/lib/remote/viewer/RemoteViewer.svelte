@@ -26,7 +26,7 @@
 	import { link } from '#lib/nav.ts';
 	import type { ViewerData } from '#lib/api/remote.ts';
 	import { addFromHash, guestTokenFromSearch, isDeviceId } from '#lib/remote/access.ts';
-	import { isMobileViewer, isPhone } from '#lib/remote/capabilities.ts';
+	import { isMobileViewer, isPhone, phoneGate } from '#lib/remote/capabilities.ts';
 	import { tabStatus } from '#lib/remote/states.ts';
 	import { SHEET_BUTTONS, TILES_MIN_WIDTH, Viewer } from '#lib/remote/viewer.svelte.ts';
 	import AddressBook from '#lib/remote/AddressBook.svelte';
@@ -79,6 +79,7 @@
 	const viewer = given ?? new Viewer({ data, onleave: () => returnToDevices() });
 
 	let phone = $state(false);
+	let phoneTurnHelps = $state(false);
 	let mobile = $state(false);
 	let started = false;
 	let controlsBtn = $state<HTMLElement | null>(null);
@@ -279,8 +280,11 @@
 	}
 
 	function evaluatePhone() {
-		phone = isPhone();
-		mobile = isMobileViewer();
+		const gate = phoneGate();
+		phone = gate.blocked;
+		phoneTurnHelps = gate.turnHelps;
+		// A phone in landscape gets the session with the touch controls, as a tablet does
+		mobile = isMobileViewer() || (!phone && isPhone());
 		// Tiles need room and a mouse: narrower windows and touch tablets show one display at a time
 		viewer.setWide(window.innerWidth >= TILES_MIN_WIDTH && !mobile);
 		// The console opens its sessions itself
@@ -445,6 +449,14 @@
 					'On a phone, open this device in the RustDesk app. The app has to be installed on the phone.'
 				)}
 			</p>
+			{#if phoneTurnHelps}
+				<p class="phone-body">
+					{tf(
+						'remote_viewer.phone_turn',
+						'Or turn the phone sideways: in landscape the session opens here in the browser.'
+					)}
+				</p>
+			{/if}
 			<p class="phone-id mono">{data.deviceId}</p>
 			<div class="phone-actions">
 				<LinkButton variant="primary" href={appLink(data.deviceId, 'rustdesk')}

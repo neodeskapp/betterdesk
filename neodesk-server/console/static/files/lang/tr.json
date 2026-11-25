@@ -8804,7 +8804,8 @@
     "open_in_new_tab": "Yeni sekmede aç",
     "open_in_new_tab_hint": "Bu oturumu kendi sekmesine taşı: orada yeniden bağlanır, burada sona erer",
     "no_keyboard_lock": "Bu tarayıcı bazı kısayolları tam ekranda da kendine saklar: Ctrl+W, Ctrl+T, Ctrl+N, Windows tuşu; Esc ise tam ekrandan çıkar. Eylemler, Windows tuşunu, Alt+Tab'ı ve Ctrl+Alt+Del'i uzak bilgisayara gönderir.",
-    "no_screen_placement": "Bu tarayıcı pencereleri diğer ekranlarınıza yerleştiremez. Her ekranın penceresini istediğiniz ekrana sürükleyin."
+    "no_screen_placement": "Bu tarayıcı pencereleri diğer ekranlarınıza yerleştiremez. Her ekranın penceresini istediğiniz ekrana sürükleyin.",
+    "phone_turn": "Ya da telefonu yan çevirin: yatay görünümde oturum burada, tarayıcıda açılır."
   },
   "diagram": {
     "your_computer": "Bilgisayarınız",

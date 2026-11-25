@@ -8798,7 +8798,8 @@
     "open_in_new_tab": "Openen in nieuw tabblad",
     "open_in_new_tab_hint": "Deze sessie naar een eigen tabblad verplaatsen: daar maakt ze opnieuw verbinding en hier stopt ze",
     "no_keyboard_lock": "Deze browser houdt enkele sneltoetsen voor zichzelf, ook op volledig scherm: Ctrl+W, Ctrl+T, Ctrl+N, de Windows-toets, en Esc verlaat volledig scherm. Acties stuurt de Windows-toets, Alt+Tab en Ctrl+Alt+Del naar de externe computer.",
-    "no_screen_placement": "Deze browser kan geen vensters op uw andere schermen zetten. Sleep het venster van elk beeldscherm naar het scherm waar u het wilt."
+    "no_screen_placement": "Deze browser kan geen vensters op uw andere schermen zetten. Sleep het venster van elk beeldscherm naar het scherm waar u het wilt.",
+    "phone_turn": "Of draai de telefoon naar liggend: dan opent de sessie hier in de browser."
   },
   "diagram": {
     "your_computer": "Uw computer",

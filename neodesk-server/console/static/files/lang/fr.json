@@ -8802,7 +8802,8 @@
     "open_in_new_tab": "Ouvrir dans un nouvel onglet",
     "open_in_new_tab_hint": "Déplacer cette session dans son propre onglet : elle s'y reconnecte et se termine ici",
     "no_keyboard_lock": "Ce navigateur garde certains raccourcis pour lui, même en plein écran : Ctrl+W, Ctrl+T, Ctrl+N, la touche Windows, et Échap quitte le plein écran. Actions envoie la touche Windows, Alt+Tab et Ctrl+Alt+Suppr à l'ordinateur distant.",
-    "no_screen_placement": "Ce navigateur ne peut pas placer les fenêtres sur vos autres écrans. Faites glisser la fenêtre de chaque affichage sur l'écran voulu."
+    "no_screen_placement": "Ce navigateur ne peut pas placer les fenêtres sur vos autres écrans. Faites glisser la fenêtre de chaque affichage sur l'écran voulu.",
+    "phone_turn": "Ou tournez le téléphone à l'horizontale : en paysage, la session s'ouvre ici dans le navigateur."
   },
   "diagram": {
     "your_computer": "Votre ordinateur",

@@ -8804,7 +8804,8 @@
     "open_in_new_tab": "Mở trong thẻ mới",
     "open_in_new_tab_hint": "Chuyển phiên này sang thẻ riêng: phiên sẽ kết nối lại ở đó và kết thúc ở đây",
     "no_keyboard_lock": "Trình duyệt này giữ lại một số phím tắt cho chính nó, kể cả khi toàn màn hình: Ctrl+W, Ctrl+T, Ctrl+N, phím Windows, và Esc thoát toàn màn hình. Thao tác gửi phím Windows, Alt+Tab và Ctrl+Alt+Del tới máy tính từ xa.",
-    "no_screen_placement": "Trình duyệt này không thể đặt cửa sổ lên các màn hình khác của bạn. Hãy kéo cửa sổ của từng màn hình tới màn hình bạn muốn."
+    "no_screen_placement": "Trình duyệt này không thể đặt cửa sổ lên các màn hình khác của bạn. Hãy kéo cửa sổ của từng màn hình tới màn hình bạn muốn.",
+    "phone_turn": "Hoặc xoay ngang điện thoại: ở chế độ ngang, phiên sẽ mở ngay trong trình duyệt này."
   },
   "diagram": {
     "your_computer": "Máy tính của bạn",

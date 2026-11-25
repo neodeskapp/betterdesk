@@ -8798,7 +8798,8 @@
     "open_in_new_tab": "Otwórz w nowej karcie",
     "open_in_new_tab_hint": "Przenieś tę sesję do osobnej karty: tam połączy się ponownie, a tutaj się zakończy",
     "no_keyboard_lock": "Ta przeglądarka zatrzymuje dla siebie niektóre skróty, także na pełnym ekranie: Ctrl+W, Ctrl+T, Ctrl+N, klawisz Windows, a Esc zamyka pełny ekran. Akcje wysyłają klawisz Windows, Alt+Tab i Ctrl+Alt+Del do komputera zdalnego.",
-    "no_screen_placement": "Ta przeglądarka nie potrafi umieścić okien na innych ekranach. Przeciągnij okno każdego wyświetlacza na wybrany ekran."
+    "no_screen_placement": "Ta przeglądarka nie potrafi umieścić okien na innych ekranach. Przeciągnij okno każdego wyświetlacza na wybrany ekran.",
+    "phone_turn": "Albo obróć telefon poziomo: w orientacji poziomej sesja otworzy się tutaj w przeglądarce."
   },
   "diagram": {
     "your_computer": "Twój komputer",

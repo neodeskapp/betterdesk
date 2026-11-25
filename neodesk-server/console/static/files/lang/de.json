@@ -8798,7 +8798,8 @@
     "open_in_new_tab": "In neuem Tab öffnen",
     "open_in_new_tab_hint": "Diese Sitzung in einen eigenen Tab verschieben: Sie verbindet sich dort neu und endet hier",
     "no_keyboard_lock": "Dieser Browser behält einige Tastenkürzel für sich, auch im Vollbild: Strg+W, Strg+T, Strg+N, die Windows-Taste, und Esc beendet das Vollbild. Aktionen sendet die Windows-Taste, Alt+Tab und Strg+Alt+Entf an den entfernten Computer.",
-    "no_screen_placement": "Dieser Browser kann keine Fenster auf Ihre anderen Bildschirme legen. Ziehen Sie das Fenster jeder Anzeige auf den gewünschten Bildschirm."
+    "no_screen_placement": "Dieser Browser kann keine Fenster auf Ihre anderen Bildschirme legen. Ziehen Sie das Fenster jeder Anzeige auf den gewünschten Bildschirm.",
+    "phone_turn": "Oder drehen Sie das Telefon quer: Im Querformat öffnet sich die Sitzung hier im Browser."
   },
   "diagram": {
     "your_computer": "Ihr Computer",

@@ -8804,7 +8804,8 @@
     "open_in_new_tab": "Öppna i ny flik",
     "open_in_new_tab_hint": "Flytta sessionen till en egen flik: den ansluter igen där och avslutas här",
     "no_keyboard_lock": "Den här webbläsaren behåller vissa kortkommandon själv, även i helskärm: Ctrl+W, Ctrl+T, Ctrl+N, Windows-tangenten, och Esc lämnar helskärm. Åtgärder skickar Windows-tangenten, Alt+Tab och Ctrl+Alt+Del till fjärrdatorn.",
-    "no_screen_placement": "Den här webbläsaren kan inte lägga fönster på dina andra skärmar. Dra varje skärms fönster till den skärm du vill ha det på."
+    "no_screen_placement": "Den här webbläsaren kan inte lägga fönster på dina andra skärmar. Dra varje skärms fönster till den skärm du vill ha det på.",
+    "phone_turn": "Eller vänd telefonen på tvären: i liggande läge öppnas sessionen här i webbläsaren."
   },
   "diagram": {
     "your_computer": "Din dator",

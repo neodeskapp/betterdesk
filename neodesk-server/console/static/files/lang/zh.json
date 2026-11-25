@@ -8798,7 +8798,8 @@
     "open_in_new_tab": "在新标签页中打开",
     "open_in_new_tab_hint": "将此会话移到单独的标签页：会在那里重新连接，并在这里结束",
     "no_keyboard_lock": "此浏览器在全屏时也会保留一些快捷键：Ctrl+W、Ctrl+T、Ctrl+N、Windows 键，按 Esc 会退出全屏。可在“操作”中向远程计算机发送 Windows 键、Alt+Tab 和 Ctrl+Alt+Del。",
-    "no_screen_placement": "此浏览器无法把窗口放到你的其他屏幕上。请把每个显示器的窗口拖到想要的屏幕。"
+    "no_screen_placement": "此浏览器无法把窗口放到你的其他屏幕上。请把每个显示器的窗口拖到想要的屏幕。",
+    "phone_turn": "或者把手机横过来：横屏时会话会在这个浏览器中打开。"
   },
   "diagram": {
     "your_computer": "您的电脑",
