@@ -72,4 +72,14 @@
 	.is-host {
 		max-width: 40ch;
 	}
+	/* In a dialog or a sheet, and on a phone, a field is as wide as its row */
+	:global(:is(.modal, .sheet)) :is(.is-medium, .is-host) {
+		max-width: none;
+	}
+	@media (max-width: 640px) {
+		.is-medium,
+		.is-host {
+			max-width: none;
+		}
+	}
 </style>

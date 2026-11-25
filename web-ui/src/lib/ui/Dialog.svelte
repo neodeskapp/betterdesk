@@ -18,6 +18,14 @@
   another dialog replaces it), not when the page sets `open` to false.
   `beforeclose` can refuse a close (return false), e.g. to ask "Discard
   changes?".
+
+  Sizes (`size`): small (400 px) for a confirmation or one question,
+  default (520 px) for a short form or a result, large (760 px) for two
+  blocks side by side (put them in a `.dialog-cols` grid; it stacks when
+  there is no room). The body scrolls; header and footer stay. At 640 px
+  and below the dialog fills the screen: a full-height sheet with its
+  footer at the bottom, clear of the phone's rounded corners and home bar,
+  and a focused field scrolls into the part the on-screen keyboard leaves.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -25,6 +33,7 @@
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
 	import IconButton from './IconButton.svelte';
 	import { focusInitial, trapTab } from './focus.ts';
+	import { keepFocusInView } from './keep-in-view.ts';
 	import { openLayer } from './layers.ts';
 	import { portal } from './portal.ts';
 
@@ -33,7 +42,7 @@
 		title: string;
 		message?: string;
 		blocking?: boolean;
-		size?: 'default' | 'large';
+		size?: 'small' | 'default' | 'large';
 		class?: string;
 		onclose?: () => void;
 		beforeclose?: () => boolean | Promise<boolean>;
@@ -96,7 +105,9 @@
 			layer.addEventListener('click', click);
 			el.addEventListener('keydown', key);
 			focusInitial(el);
+			const unkeep = keepFocusInView(el);
 			return () => {
+				unkeep();
 				layer.removeEventListener('pointerdown', down);
 				layer.removeEventListener('click', click);
 				el.removeEventListener('keydown', key);
@@ -110,7 +121,7 @@
 	<div class="modal-overlay" bind:this={overlay} {@attach portal}>
 		<div
 			bind:this={element}
-			class={['modal', size === 'large' && 'modal-lg', cls]}
+			class={['modal', size === 'large' && 'modal-lg', size === 'small' && 'modal-sm', cls]}
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="{uid}-title"
@@ -177,6 +188,9 @@
 	.modal:focus {
 		outline: none;
 	}
+	.modal-sm {
+		max-width: 400px;
+	}
 	.modal-lg {
 		max-width: 760px;
 	}
@@ -226,15 +240,43 @@
 	.modal-footer :global(:is(.btn-danger-quiet, .modal-footer-start)) {
 		margin-inline-end: auto;
 	}
+	/* A phone: the whole screen, like a sheet; the footer stays at the bottom */
 	@media (max-width: 640px) {
 		.modal-overlay {
-			align-items: flex-end;
+			align-items: stretch;
 			padding: 0;
 		}
-		.modal {
+		.modal,
+		.modal-sm,
+		.modal-lg {
 			max-width: none;
-			max-height: 92dvh;
-			border-radius: var(--radius) var(--radius) 0 0;
+			height: 100vh;
+			height: 100dvh;
+			max-height: none;
+			border: 0;
+			border-radius: 0;
+		}
+		.modal-header {
+			padding-top: calc(var(--space-3) + env(safe-area-inset-top, 0px));
+			padding-inline: var(--space-4) var(--space-2);
+		}
+		.modal-body {
+			flex: 1;
+			padding: var(--space-4);
+			overscroll-behavior: contain;
+		}
+		.modal-footer {
+			padding: var(--space-3) var(--space-4);
+			padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+		}
+		/* Buttons share the row and are easy to hit */
+		.modal-footer > :global(*) {
+			flex: 1 1 auto;
+			min-height: 44px;
+		}
+		.modal-footer :global(:is(.btn-danger-quiet, .modal-footer-start)) {
+			flex-basis: 100%;
+			margin-inline-end: 0;
 		}
 	}
 </style>

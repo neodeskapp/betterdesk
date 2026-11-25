@@ -28,7 +28,7 @@
 
 {#each dialogRequests.items as d (d.id)}
 	{#if d.kind === 'confirm'}
-		<Dialog title={d.options.title} message={d.options.message} onclose={() => cancel(d)}>
+		<Dialog title={d.options.title} message={d.options.message} size="small" onclose={() => cancel(d)}>
 			{#snippet footer()}
 				<Button onclick={() => d.settle(false)}>{d.options.cancelLabel ?? cancelText()}</Button>
 				<Button

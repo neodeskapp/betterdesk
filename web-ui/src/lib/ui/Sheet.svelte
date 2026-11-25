@@ -41,6 +41,7 @@
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
 	import IconButton from './IconButton.svelte';
 	import { focusInitial, trapTab } from './focus.ts';
+	import { keepFocusInView } from './keep-in-view.ts';
 	import { openLayer } from './layers.ts';
 	import { portal } from './portal.ts';
 
@@ -124,7 +125,9 @@
 			back.addEventListener('click', click);
 			el.addEventListener('keydown', key);
 			focusInitial(el);
+			const unkeep = keepFocusInView(el);
 			return () => {
+				unkeep();
 				back.removeEventListener('pointerdown', down);
 				back.removeEventListener('click', click);
 				el.removeEventListener('keydown', key);
@@ -320,6 +323,11 @@
 		}
 		.sheet > :global(.sheet-header) {
 			padding-top: calc(var(--space-4) + env(safe-area-inset-top, 0px));
+		}
+		/* Buttons share the footer row and are easy to hit */
+		.sheet :global(.sheet-footer > :not(.sheet-status)) {
+			flex: 1 1 auto;
+			min-height: 44px;
 		}
 	}
 	@media (forced-colors: active) {

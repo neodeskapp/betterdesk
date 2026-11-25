@@ -493,3 +493,12 @@ input[type='radio'] {
 		padding-top: var(--space-1);
 	}
 }
+
+/* Two blocks side by side in a dialog or sheet when there is room (a link
+   and its QR code, a form and its preview); one under the other on a phone */
+.dialog-cols {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+	gap: var(--space-5);
+	align-items: start;
+}
