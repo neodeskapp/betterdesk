@@ -13,15 +13,15 @@ import (
 // the shapes the real files have.
 func versionTree(v string) map[string]string {
 	return map[string]string{
-		"VERSION":                v + "\n",
-		"install/neodesk.sh":             "#!/bin/bash\n#   NeoDesk Console Manager v" + v + "\nVERSION=\"" + v + "\"\necho \"NeoDesk Console Manager v$VERSION\"\n",
-		"install/neodesk.ps1":            "<#\n    NeoDesk Console Manager v" + v + " - All-in-One\n#>\n$script:VERSION = \"" + v + "\"\n",
-		"install/neodesk-docker.sh":      "#   NeoDesk Console Manager v" + v + " (Docker)\nVERSION=\"" + v + "\"\n",
-		"docker/Dockerfile":             "FROM alpine\nLABEL version=\"" + v + "\"\n",
-		"docker/Dockerfile.server":      "FROM alpine\nLABEL version=\"" + v + "\"\n",
-		"install/install.sh":             "#   --version TAG   Docker image tag / release baseline (default: " + v + ")\nNEODESK_VERSION=\"${NEODESK_VERSION:-" + v + "}\"\n",
-		"docker/entrypoint.sh":   "echo \"  Version: ${NEODESK_IMAGE_VERSION:-" + v + "}\"\n",
-		"neodesk-server/VERSION": v + "\n",
+		"VERSION":                                        v + "\n",
+		"install/neodesk.sh":                             "#!/bin/bash\n#   NeoDesk Console Manager v" + v + "\nVERSION=\"" + v + "\"\necho \"NeoDesk Console Manager v$VERSION\"\n",
+		"install/neodesk.ps1":                            "<#\n    NeoDesk Console Manager v" + v + " - All-in-One\n#>\n$script:VERSION = \"" + v + "\"\n",
+		"install/neodesk-docker.sh":                      "#   NeoDesk Console Manager v" + v + " (Docker)\nVERSION=\"" + v + "\"\n",
+		"docker/Dockerfile":                              "FROM alpine\nLABEL version=\"" + v + "\"\n",
+		"docker/Dockerfile.server":                       "FROM alpine\nLABEL version=\"" + v + "\"\n",
+		"install/install.sh":                             "#   --version TAG   Docker image tag / release baseline (default: " + v + ")\nNEODESK_VERSION=\"${NEODESK_VERSION:-" + v + "}\"\n",
+		"docker/entrypoint.sh":                           "echo \"  Version: ${NEODESK_IMAGE_VERSION:-" + v + "}\"\n",
+		"neodesk-server/VERSION":                         v + "\n",
 		"neodesk-server/internal/productversion/VERSION": v + "\n",
 		"CHANGELOG.md": "## [Unreleased]\n\n### Changed\n- _(none yet)_\n\n---\n\n## [" + v + "] — 2026-11-21\n\n- x\n\n" +
 			"[" + v + "]: https://github.com/neodeskapp/neodesk/compare/v3.5.269...v" + v + "\n",
@@ -62,12 +62,12 @@ func TestBumpVersionVerify(t *testing.T) {
 	runCommand(bumpVersion, root, "--verify").want(t, 0, "All Tier 1/2 version files match VERSION (3.5.270).\n", "")
 
 	writeTree(t, root, map[string]string{
-		"docker/Dockerfile":             "LABEL version=\"3.5.1\"\n",
-		"install/neodesk.ps1":            "$script:VERSION = \"3.5.2\"\n",
-		"install/neodesk-docker.sh":      "  VERSION=\"3.5.3\"\n",
-		"neodesk-server/VERSION": "  3.5.270 \n",
+		"docker/Dockerfile":         "LABEL version=\"3.5.1\"\n",
+		"install/neodesk.ps1":       "$script:VERSION = \"3.5.2\"\n",
+		"install/neodesk-docker.sh": "  VERSION=\"3.5.3\"\n",
+		"neodesk-server/VERSION":    "  3.5.270 \n",
 		// README.md and the quick-start compose files are not version files
-		"README.md":                       "img.shields.io/badge/version-1.0.0-blue",
+		"README.md": "img.shields.io/badge/version-1.0.0-blue",
 		"install/docker-compose.quick.single.yml": "image: x:${NEODESK_IMAGE_TAG:-latest}\n",
 	})
 	if err := os.Remove(filepath.Join(root, "install/install.sh")); err != nil {
@@ -129,9 +129,9 @@ func TestBumpVersionManagerScripts(t *testing.T) {
 	}
 	got := readTree(t, root)
 	for name, want := range map[string]string{
-		"install/neodesk.sh":           "VERSION=\"4.0.0\"\nVERSION=\"4.0.0\"\n# NeoDesk Console Manager v4.0.0 x Console Manager v3.5.270\n",
-		"docker/Dockerfile":           "LABEL version=\"4.0.0\"\nLABEL version=\"3.5.270\"\n",
-		"install/install.sh":           "#   --version TAG  Docker image tag / release baseline (default: 4.0.0)\nNEODESK_VERSION=\"${NEODESK_VERSION:-4.0.0}\"\nNEODESK_VERSION=\"${NEODESK_VERSION:-3.5.270}\"\n",
+		"install/neodesk.sh":   "VERSION=\"4.0.0\"\nVERSION=\"4.0.0\"\n# NeoDesk Console Manager v4.0.0 x Console Manager v3.5.270\n",
+		"docker/Dockerfile":    "LABEL version=\"4.0.0\"\nLABEL version=\"3.5.270\"\n",
+		"install/install.sh":   "#   --version TAG  Docker image tag / release baseline (default: 4.0.0)\nNEODESK_VERSION=\"${NEODESK_VERSION:-4.0.0}\"\nNEODESK_VERSION=\"${NEODESK_VERSION:-3.5.270}\"\n",
 		"docker/entrypoint.sh": "a ${NEODESK_IMAGE_VERSION:-4.0.0} b ${NEODESK_IMAGE_VERSION:-3.5.270}\n",
 	} {
 		if got[name] != want {
