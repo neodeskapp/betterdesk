@@ -5602,7 +5602,8 @@
     "server_settings": "Ustawienia czatu tego serwera",
     "computers": "Czat z komputerami",
     "computers_hint": "Wyłączone: aplikacja NeoDesk na komputerach nie może otworzyć czatu, a konsola nie dotrze do ich użytkowników przez czat. Czat między współpracownikami działa dalej.",
-    "computers_off": "Czat z komputerami jest wyłączony: aplikacja NeoDesk na komputerach nie może otworzyć czatu. Administrator może go włączyć w menu czatu w Ustawieniach czatu tego serwera."
+    "computers_off": "Czat z komputerami jest wyłączony: aplikacja NeoDesk na komputerach nie może otworzyć czatu. Administrator może go włączyć w menu czatu w Ustawieniach czatu tego serwera.",
+    "mail_footer": "Otrzymujesz tę wiadomość, ponieważ odpowiadasz na czacie {app}. Wyłącz te wiadomości w menu czatu w Powiadomieniach czatu."
   },
   "toast": {
     "device_connected": "Urządzenie połączone",

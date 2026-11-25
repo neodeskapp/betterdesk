@@ -5469,7 +5469,8 @@
     "server_settings": "Chatinnstillinger for denne serveren",
     "computers": "Chat med datamaskiner",
     "computers_hint": "Av: NeoDesk-appen på datamaskiner kan ikke åpne chatten, og konsollen kan ikke nå personene ved dem med chat. Chat mellom kolleger fungerer fortsatt.",
-    "computers_off": "Chat med datamaskiner er slått av: NeoDesk-appen på datamaskiner kan ikke åpne chatten. En administrator kan slå den på i chattens meny under Chatinnstillinger for denne serveren."
+    "computers_off": "Chat med datamaskiner er slått av: NeoDesk-appen på datamaskiner kan ikke åpne chatten. En administrator kan slå den på i chattens meny under Chatinnstillinger for denne serveren.",
+    "mail_footer": "Du får denne e-posten fordi du svarer i chatten i {app}. Slå av disse e-postene i chattens meny under Chatvarsler."
   },
   "toast": {
     "device_connected": "Enhet tilkoblet",

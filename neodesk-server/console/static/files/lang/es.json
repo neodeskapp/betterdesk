@@ -5463,7 +5463,8 @@
     "server_settings": "Ajustes del chat de este servidor",
     "computers": "Chat con los equipos",
     "computers_hint": "Desactivado: la aplicación NeoDesk de los equipos no puede abrir el chat y la consola no puede contactar por chat con las personas que los usan. El chat entre compañeros sigue funcionando.",
-    "computers_off": "El chat con los equipos está desactivado: la aplicación NeoDesk de los equipos no puede abrir el chat. Un administrador puede activarlo en el menú del chat, en Ajustes del chat de este servidor."
+    "computers_off": "El chat con los equipos está desactivado: la aplicación NeoDesk de los equipos no puede abrir el chat. Un administrador puede activarlo en el menú del chat, en Ajustes del chat de este servidor.",
+    "mail_footer": "Recibe este correo porque responde en el chat de {app}. Desactive estos correos en el menú del chat, en Notificaciones del chat."
   },
   "toast": {
     "device_connected": "Dispositivo conectado",

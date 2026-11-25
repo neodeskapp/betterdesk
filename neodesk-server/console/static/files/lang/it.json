@@ -5463,7 +5463,8 @@
     "server_settings": "Impostazioni della chat di questo server",
     "computers": "Chat con i computer",
     "computers_hint": "Disattivata: l'app NeoDesk sui computer non può aprire la chat e la console non raggiunge via chat le persone che li usano. La chat tra colleghi continua a funzionare.",
-    "computers_off": "La chat con i computer è disattivata: l'app NeoDesk sui computer non può aprire la chat. Un amministratore può attivarla dal menu della chat, in Impostazioni della chat di questo server."
+    "computers_off": "La chat con i computer è disattivata: l'app NeoDesk sui computer non può aprire la chat. Un amministratore può attivarla dal menu della chat, in Impostazioni della chat di questo server.",
+    "mail_footer": "Ricevi questa mail perché rispondi nella chat di {app}. Disattiva queste mail dal menu della chat, in Notifiche della chat."
   },
   "toast": {
     "device_connected": "Dispositivo connesso",

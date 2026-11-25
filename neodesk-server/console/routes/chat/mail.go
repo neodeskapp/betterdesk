@@ -3,12 +3,12 @@ package chat
 import (
 	"context"
 	"database/sql"
-	"html"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/chatstore"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
@@ -57,18 +57,15 @@ func RunWaitMail(ctx context.Context, d *kit.Deps) {
 		if d.Mail == nil || d.I18n == nil || d.I18n.Bundle == nil {
 			continue
 		}
-		appName := "NeoDesk"
-		if d.Branding != nil {
-			appName = d.Branding.AppName("NeoDesk")
-		}
-		if err := hub.mailWaiting(ctx, d.Mail, appName, d.I18n.Bundle, time.Now()); err != nil {
+		brand := brandmail.Of(d.Branding, d.Mail.GetPanelBaseURL())
+		if err := hub.mailWaiting(ctx, d.Mail, brand, d.I18n.Bundle, time.Now()); err != nil {
 			logging.Logf("console", "WARN: [Chat] mail about waiting people: %v", err)
 		}
 	}
 }
 
 // mailWaiting sends the mails that are due at now.
-func (h *Hub) mailWaiting(ctx context.Context, mailer waitMailer, appName string, texts mailTexts, now time.Time) error {
+func (h *Hub) mailWaiting(ctx context.Context, mailer waitMailer, brand brandmail.Branding, texts mailTexts, now time.Time) error {
 	st := h.opts.Store
 	settings := LoadServerSettings(ctx, st)
 	if settings.MailAfterMinutes <= 0 {
@@ -94,7 +91,7 @@ func (h *Hub) mailWaiting(ctx context.Context, mailer waitMailer, appName string
 		}
 		for _, lang := range langs {
 			t := func(key string, pairs ...any) string { return texts.Translate(lang, "chat."+key, i18n.V(pairs...)) }
-			subject, text, body := h.waitMail(ctx, c, appName, mailer.GetPanelBaseURL(), settings.MailPreview, t, now)
+			subject, text, body := h.waitMail(ctx, c, brand, mailer.GetPanelBaseURL(), settings.MailPreview, t, now)
 			if _, err := mailer.SendEmail(ctx, mail.Email{To: byLang[lang], ToList: true, Subject: subject, Text: &text, HTML: &body}); err != nil {
 				return err
 			}
@@ -165,8 +162,9 @@ func (h *Hub) waitRecipients(ctx context.Context, c chatstore.Conversation) ([]a
 }
 
 // waitMail is the subject and bodies of a waiting conversation's mail, in
-// the language of t (a chat text by its key under "chat.").
-func (h *Hub) waitMail(ctx context.Context, c chatstore.Conversation, appName, baseURL string, preview bool,
+// the language of t (a chat text by its key under "chat.") and the
+// server's branded layout (brandmail, as the invite mail).
+func (h *Hub) waitMail(ctx context.Context, c chatstore.Conversation, brand brandmail.Branding, baseURL string, preview bool,
 	t func(key string, pairs ...any) string, now time.Time) (subject, text, body string) {
 	name := c.ID
 	if h.opts.Scope.Device != nil {
@@ -179,10 +177,11 @@ func (h *Hub) waitMail(ctx context.Context, c chatstore.Conversation, appName, b
 			}
 		}
 	}
+	app := brand.Server
 	minutes := int(now.Sub(time.UnixMilli(c.WaitingSinceMs)).Minutes())
-	subject = t("mail_subject", "app", appName, "name", name)
-	heading := t("mail_heading", "name", name)
+	subject = t("mail_subject", "app", app, "name", name)
 	waited := t("mail_waited", "name", name, "id", c.ID, "minutes", strconv.Itoa(minutes))
+	footer := t("mail_footer", "app", app)
 	lines := []string{waited}
 	quote := ""
 	if preview {
@@ -196,21 +195,15 @@ func (h *Hub) waitMail(ctx context.Context, c chatstore.Conversation, appName, b
 	if quote != "" {
 		lines = append(lines, "", t("mail_quote", "quote", quote))
 	}
-	link := ""
+	link, button := "", ""
 	if baseURL != "" {
 		link = strings.TrimRight(baseURL, "/") + "/chat?c=" + url.QueryEscape(c.ID)
+		button = t("mail_button", "app", app)
 		lines = append(lines, "", t("mail_open", "link", link))
 	}
-	text = strings.Join(lines, "\n")
-	body = `<div style="font-family: sans-serif; max-width: 600px;">` +
-		`<h2 style="font-size: 18px;">` + html.EscapeString(heading) + `</h2>` +
-		`<p>` + html.EscapeString(waited) + `</p>`
-	if quote != "" {
-		body += `<blockquote style="margin: 12px 0; padding: 8px 12px; border-left: 3px solid #2563eb; color: #333;">` + html.EscapeString(quote) + `</blockquote>`
-	}
-	if link != "" {
-		body += `<p><a href="` + html.EscapeString(link) + `">` + html.EscapeString(t("mail_button", "app", appName)) + `</a></p>`
-	}
-	body += `</div>`
+	lines = append(lines, "", "--", footer)
+	text = strings.Join(lines, "\n") + "\n"
+	body = brandmail.HTML(brandmail.Page{Branding: brand, Heading: t("mail_heading", "name", name), Lead: waited,
+		Quote: quote, Button: button, Link: link, Footer: footer})
 	return subject, text, body
 }

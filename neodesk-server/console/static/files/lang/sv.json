@@ -5469,7 +5469,8 @@
     "server_settings": "Chattinställningar för den här servern",
     "computers": "Chatt med datorer",
     "computers_hint": "Av: NeoDesk-appen på datorer kan inte öppna chatten, och konsolen når inte personerna vid dem via chatt. Chatt mellan kollegor fungerar fortfarande.",
-    "computers_off": "Chatt med datorer är avstängd: NeoDesk-appen på datorer kan inte öppna chatten. En administratör kan slå på den i chattens meny under Chattinställningar för den här servern."
+    "computers_off": "Chatt med datorer är avstängd: NeoDesk-appen på datorer kan inte öppna chatten. En administratör kan slå på den i chattens meny under Chattinställningar för den här servern.",
+    "mail_footer": "Du får det här mejlet eftersom du svarar i chatten i {app}. Stäng av mejlen i chattens meny under Chattaviseringar."
   },
   "toast": {
     "device_connected": "Enhet ansluten",

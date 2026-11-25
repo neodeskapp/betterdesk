@@ -5469,7 +5469,8 @@
     "server_settings": "Tämän palvelimen chat-asetukset",
     "computers": "Chat tietokoneiden kanssa",
     "computers_hint": "Pois: tietokoneiden NeoDesk-sovellus ei voi avata chattia, eikä konsoli tavoita niiden käyttäjiä chatilla. Kollegoiden välinen chat toimii edelleen.",
-    "computers_off": "Chat tietokoneiden kanssa on pois päältä: tietokoneiden NeoDesk-sovellus ei voi avata chattia. Ylläpitäjä voi ottaa sen käyttöön chatin valikosta kohdasta Tämän palvelimen chat-asetukset."
+    "computers_off": "Chat tietokoneiden kanssa on pois päältä: tietokoneiden NeoDesk-sovellus ei voi avata chattia. Ylläpitäjä voi ottaa sen käyttöön chatin valikosta kohdasta Tämän palvelimen chat-asetukset.",
+    "mail_footer": "Saat tämän viestin, koska vastaat chatissa palvelussa {app}. Voit poistaa nämä viestit käytöstä chatin valikosta kohdasta Chatin ilmoitukset."
   },
   "toast": {
     "device_connected": "Laite yhdistetty",

@@ -5463,7 +5463,8 @@
     "server_settings": "Chatinstellingen voor deze server",
     "computers": "Chat met computers",
     "computers_hint": "Uit: de NeoDesk-app op computers kan de chat niet openen en de console bereikt de mensen daar niet via chat. Chat tussen collega's blijft werken.",
-    "computers_off": "Chat met computers staat uit: de NeoDesk-app op computers kan de chat niet openen. Een beheerder kan hem aanzetten in het menu van de chat onder Chatinstellingen voor deze server."
+    "computers_off": "Chat met computers staat uit: de NeoDesk-app op computers kan de chat niet openen. Een beheerder kan hem aanzetten in het menu van de chat onder Chatinstellingen voor deze server.",
+    "mail_footer": "Je krijgt deze mail omdat je in de chat van {app} antwoordt. Zet deze mails uit in het menu van de chat onder Chatmeldingen."
   },
   "toast": {
     "device_connected": "Apparaat verbonden",

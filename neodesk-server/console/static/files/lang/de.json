@@ -5463,7 +5463,8 @@
     "server_settings": "Chat-Einstellungen für diesen Server",
     "computers": "Chat mit Computern",
     "computers_hint": "Aus: Die NeoDesk-App auf Computern kann den Chat nicht öffnen, und die Konsole erreicht die Personen dort nicht per Chat. Der Chat zwischen Kollegen funktioniert weiter.",
-    "computers_off": "Der Chat mit Computern ist aus: Die NeoDesk-App auf Computern kann den Chat nicht öffnen. Ein Admin kann ihn im Menü des Chats unter Chat-Einstellungen für diesen Server einschalten."
+    "computers_off": "Der Chat mit Computern ist aus: Die NeoDesk-App auf Computern kann den Chat nicht öffnen. Ein Admin kann ihn im Menü des Chats unter Chat-Einstellungen für diesen Server einschalten.",
+    "mail_footer": "Sie bekommen diese Mail, weil Sie im Chat von {app} antworten. Abschalten können Sie sie im Menü des Chats unter Chat-Benachrichtigungen."
   },
   "toast": {
     "device_connected": "Gerät verbunden",

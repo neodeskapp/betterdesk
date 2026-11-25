@@ -5469,7 +5469,8 @@
     "server_settings": "Cài đặt trò chuyện của máy chủ này",
     "computers": "Trò chuyện với máy tính",
     "computers_hint": "Tắt: ứng dụng NeoDesk trên máy tính không mở được trò chuyện, và bảng điều khiển không liên hệ được người dùng ở đó qua trò chuyện. Trò chuyện giữa đồng nghiệp vẫn hoạt động.",
-    "computers_off": "Trò chuyện với máy tính đang tắt: ứng dụng NeoDesk trên máy tính không mở được trò chuyện. Quản trị viên có thể bật lại trong menu trò chuyện, mục Cài đặt trò chuyện của máy chủ này."
+    "computers_off": "Trò chuyện với máy tính đang tắt: ứng dụng NeoDesk trên máy tính không mở được trò chuyện. Quản trị viên có thể bật lại trong menu trò chuyện, mục Cài đặt trò chuyện của máy chủ này.",
+    "mail_footer": "Bạn nhận email này vì bạn trả lời trò chuyện trong {app}. Tắt các email này trong menu trò chuyện, mục Thông báo trò chuyện."
   },
   "toast": {
     "device_connected": "Đã kết nối thiết bị",
