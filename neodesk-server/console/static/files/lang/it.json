@@ -8408,7 +8408,6 @@
       "finished": "{name} è pronto.",
       "finished_folder": "Lo trovi in Dispositivi, in {folder}.",
       "finished_plain": "Lo trovi in Dispositivi.",
-      "next_computer": "Configura il prossimo computer",
       "key_changed": "Questo computer era già qui con un'altra chiave.",
       "key_changed_hint": "Se è stato reinstallato o ripristinato, approva la nuova chiave. Poi apri di nuovo l'invito sul computer.",
       "approve_key": "Approva nuova chiave",

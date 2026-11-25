@@ -8414,7 +8414,6 @@
       "finished": "{name} on valmis.",
       "finished_folder": "Löydät sen kohdasta Laitteet, kansiosta {folder}.",
       "finished_plain": "Löydät sen kohdasta Laitteet.",
-      "next_computer": "Ota seuraava tietokone käyttöön",
       "key_changed": "Tämä tietokone on ollut täällä aiemmin toisella avaimella.",
       "key_changed_hint": "Jos se on asennettu uudelleen tai palautettu, hyväksy uusi avain. Avaa sitten kutsu tietokoneella uudelleen.",
       "approve_key": "Hyväksy uusi avain",

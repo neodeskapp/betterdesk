@@ -8412,7 +8412,6 @@
       "finished": "{name} 已就緒。",
       "finished_folder": "您可以在「裝置」中的 {folder} 裡找到它。",
       "finished_plain": "您可以在「裝置」中找到它。",
-      "next_computer": "設定下一台電腦",
       "key_changed": "這台電腦以前用另一個金鑰在這裡出現過。",
       "key_changed_hint": "如果它已重新安裝或重設，請核准新金鑰。然後在電腦上再次開啟邀請。",
       "approve_key": "核准新金鑰",

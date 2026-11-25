@@ -8414,7 +8414,6 @@
       "finished": "A(z) {name} készen áll.",
       "finished_folder": "Az Eszközök között találja, itt: {folder}.",
       "finished_plain": "Az Eszközök között találja.",
-      "next_computer": "Következő számítógép beállítása",
       "key_changed": "Ez a számítógép már járt itt egy másik kulccsal.",
       "key_changed_hint": "Ha újratelepítették vagy visszaállították, hagyja jóvá az új kulcsot. Ezután nyissa meg újra a meghívót a számítógépen.",
       "approve_key": "Új kulcs jóváhagyása",

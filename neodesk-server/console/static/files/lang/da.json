@@ -8414,7 +8414,6 @@
       "finished": "{name} er klar.",
       "finished_folder": "Du finder den i Enheder, i {folder}.",
       "finished_plain": "Du finder den i Enheder.",
-      "next_computer": "Konfigurer den næste computer",
       "key_changed": "Denne computer har været her før med en anden nøgle.",
       "key_changed_hint": "Hvis den er blevet geninstalleret eller nulstillet, så godkend den nye nøgle. Åbn derefter invitationen på computeren igen.",
       "approve_key": "Godkend ny nøgle",

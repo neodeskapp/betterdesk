@@ -228,12 +228,18 @@ describe('the invite page', () => {
 });
 
 describe('the welcome page of an invite', () => {
-	const welcome = ['onboard.public.welcome_step_1', 'onboard.public.welcome_step_2', 'onboard.public.welcome_step_3'];
+	const welcome = [
+		'onboard.public.welcome_step_1',
+		'onboard.public.welcome_step_2',
+		'onboard.public.welcome_step_3'
+	];
 
 	test('it says who invited the person and the three steps of the mail, in order', async () => {
 		answer.body = { success: true, ...code({ supporter: 'Linus Rath', company: 'Acme' }) };
 		render(CodePage, { code: 'ABCD2345', kind: 'join' });
-		expect(await screen.findByRole('heading', { level: 1, name: 'onboard.public.welcome_title' })).toBeInTheDocument();
+		expect(
+			await screen.findByRole('heading', { level: 1, name: 'onboard.public.welcome_title' })
+		).toBeInTheDocument();
 		const steps = [...document.querySelectorAll('.welcome-steps li')].map((li) => li.textContent?.trim());
 		expect(steps).toEqual(welcome);
 		// Windows' permission prompt stays explained, below the download
@@ -246,7 +252,9 @@ describe('the welcome page of an invite', () => {
 		ua = MAC;
 		render(CodePage, { code: 'ABCD2345', kind: 'join' });
 		await screen.findByRole('link', { name: 'onboard.public.download_join_macos' });
-		expect([...document.querySelectorAll('.welcome-steps li')].map((li) => li.textContent?.trim())).toEqual(welcome);
+		expect([...document.querySelectorAll('.welcome-steps li')].map((li) => li.textContent?.trim())).toEqual(
+			welcome
+		);
 		expect(screen.getByText('onboard.public.mac_steps_title')).toBeInTheDocument();
 		expect(screen.getByText('onboard.public.join_steps_macos_4')).toBeInTheDocument();
 	});

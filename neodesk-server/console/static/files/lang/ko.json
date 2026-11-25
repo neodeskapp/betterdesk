@@ -8408,7 +8408,6 @@
       "finished": "{name} 준비가 끝났습니다.",
       "finished_folder": "장치의 {folder}에서 찾을 수 있습니다.",
       "finished_plain": "장치에서 찾을 수 있습니다.",
-      "next_computer": "다음 컴퓨터 설정",
       "key_changed": "이 컴퓨터는 이전에 다른 키로 등록된 적이 있습니다.",
       "key_changed_hint": "다시 설치했거나 초기화했다면 새 키를 승인하세요. 그런 다음 컴퓨터에서 초대를 다시 여세요.",
       "approve_key": "새 키 승인",

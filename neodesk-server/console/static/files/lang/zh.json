@@ -8408,7 +8408,6 @@
       "finished": "{name} 已就绪。",
       "finished_folder": "您可以在“设备”中的 {folder} 里找到它。",
       "finished_plain": "您可以在“设备”中找到它。",
-      "next_computer": "设置下一台电脑",
       "key_changed": "这台电脑以前用另一个密钥在这里出现过。",
       "key_changed_hint": "如果它已重新安装或重置，请批准新密钥。然后在电脑上再次打开邀请。",
       "approve_key": "批准新密钥",

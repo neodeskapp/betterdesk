@@ -8414,7 +8414,6 @@
       "finished": "{name} sudah siap.",
       "finished_folder": "Anda menemukannya di Perangkat, di {folder}.",
       "finished_plain": "Anda menemukannya di Perangkat.",
-      "next_computer": "Siapkan komputer berikutnya",
       "key_changed": "Komputer ini pernah ada di sini dengan kunci lain.",
       "key_changed_hint": "Jika komputer ini diinstal ulang atau direset, setujui kunci baru. Lalu buka undangan di komputer lagi.",
       "approve_key": "Setujui kunci baru",

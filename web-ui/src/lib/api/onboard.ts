@@ -138,6 +138,39 @@ export function createInvite(body: InviteRequest): Promise<NewInvite> {
 	return api(NewInvite, '/api/onboard/invites', { method: 'POST', body });
 }
 
+/** A computer that joined with an invite, as the invite sheet's steps start from it */
+export const InviteDevice = v.object({
+	id: Id,
+	name: Text,
+	hostname: Text,
+	platform: Text,
+	folder_id: FolderId,
+	folder_name: Text,
+	online: Bool,
+	joined_at: Text
+});
+export type InviteDevice = v.InferOutput<typeof InviteDevice>;
+
+export const InviteDetail = v.object({
+	invite: Invite,
+	devices: v.optional(v.array(InviteDevice), []),
+	/** The last computer the invite turned away: key_changed (its ID is enrolled with another key) or refused */
+	refused: v.optional(
+		v.nullable(v.object({ device_id: Text, reason: Text, at: Text, key_request: Bool })),
+		null
+	)
+});
+export type InviteDetail = v.InferOutput<typeof InviteDetail>;
+
+/**
+ * An invite and the computers that joined with it, also once they used it
+ * up; the invite sheet polls it to follow the join. An ApiError 404 once the
+ * invite is revoked or past its end.
+ */
+export function getInvite(id: string, signal?: AbortSignal): Promise<InviteDetail> {
+	return api(InviteDetail, `/api/onboard/invites/${enc(id)}`, { signal, activity: false });
+}
+
 export async function revokeInvite(id: string): Promise<void> {
 	await request(`/api/onboard/invites/${enc(id)}`, { method: 'DELETE' });
 }

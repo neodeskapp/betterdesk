@@ -8412,7 +8412,6 @@
       "finished": "{name} est prêt.",
       "finished_folder": "Vous le trouverez dans Appareils, dans {folder}.",
       "finished_plain": "Vous le trouverez dans Appareils.",
-      "next_computer": "Configurer l'ordinateur suivant",
       "key_changed": "Cet ordinateur était déjà enregistré ici avec une autre clé.",
       "key_changed_hint": "S'il a été réinstallé ou réinitialisé, approuvez la nouvelle clé. Ouvrez ensuite de nouveau l'invitation sur l'ordinateur.",
       "approve_key": "Approuver la nouvelle clé",

@@ -8414,7 +8414,6 @@
       "finished": "{name} er klar.",
       "finished_folder": "Du finner den i Enheter, i {folder}.",
       "finished_plain": "Du finner den i Enheter.",
-      "next_computer": "Konfigurer neste datamaskin",
       "key_changed": "Denne datamaskinen har vært her før med en annen nøkkel.",
       "key_changed_hint": "Hvis den er installert på nytt eller tilbakestilt, godkjenner du den nye nøkkelen. Åpne så invitasjonen på datamaskinen igjen.",
       "approve_key": "Godkjenn ny nøkkel",

@@ -8408,7 +8408,6 @@
             "finished": "{name} is ready.",
             "finished_folder": "You find it in Devices, in {folder}.",
             "finished_plain": "You find it in Devices.",
-            "next_computer": "Set up the next computer",
             "key_changed": "This computer was here before with another key.",
             "key_changed_hint": "If it was reinstalled or reset, approve the new key. Then open the invite on the computer again.",
             "approve_key": "Approve new key",

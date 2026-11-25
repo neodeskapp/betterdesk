@@ -8408,7 +8408,6 @@
       "finished": "{name} está listo.",
       "finished_folder": "Lo encontrará en Dispositivos, en {folder}.",
       "finished_plain": "Lo encontrará en Dispositivos.",
-      "next_computer": "Configurar el siguiente equipo",
       "key_changed": "Este equipo ya estuvo aquí con otra clave.",
       "key_changed_hint": "Si se reinstaló o restableció, apruebe la clave nueva. Después vuelva a abrir la invitación en el equipo.",
       "approve_key": "Aprobar clave nueva",

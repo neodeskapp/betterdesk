@@ -8414,7 +8414,6 @@
       "finished": "{name} đã sẵn sàng.",
       "finished_folder": "Bạn sẽ thấy nó trong Thiết bị, trong {folder}.",
       "finished_plain": "Bạn sẽ thấy nó trong Thiết bị.",
-      "next_computer": "Thiết lập máy tính tiếp theo",
       "key_changed": "Máy tính này đã từng ở đây với một khóa khác.",
       "key_changed_hint": "Nếu máy đã được cài đặt lại hoặc đặt lại, hãy phê duyệt khóa mới. Sau đó mở lại lời mời trên máy tính.",
       "approve_key": "Phê duyệt khóa mới",

@@ -8408,7 +8408,6 @@
       "finished": "{name} ist bereit.",
       "finished_folder": "Sie finden ihn in Geräte, im Ordner {folder}.",
       "finished_plain": "Sie finden ihn in Geräte.",
-      "next_computer": "Nächsten Computer einrichten",
       "key_changed": "Dieser Computer war schon einmal hier, mit einem anderen Schlüssel.",
       "key_changed_hint": "Wenn er neu installiert oder zurückgesetzt wurde, genehmigen Sie den neuen Schlüssel. Öffnen Sie dann die Einladung auf dem Computer noch einmal.",
       "approve_key": "Neuen Schlüssel genehmigen",

@@ -8408,7 +8408,6 @@
       "finished": "Počítač {name} je připraven.",
       "finished_folder": "Najdete ho v Zařízení, ve složce {folder}.",
       "finished_plain": "Najdete ho v Zařízení.",
-      "next_computer": "Nastavit další počítač",
       "key_changed": "Tento počítač tu už byl s jiným klíčem.",
       "key_changed_hint": "Pokud byl přeinstalován nebo resetován, schvalte nový klíč. Pak na počítači znovu otevřete pozvánku.",
       "approve_key": "Schválit nový klíč",

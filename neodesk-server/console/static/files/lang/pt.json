@@ -8408,7 +8408,6 @@
       "finished": "{name} está pronto.",
       "finished_folder": "Está em Dispositivos, na pasta {folder}.",
       "finished_plain": "Está em Dispositivos.",
-      "next_computer": "Configurar o próximo computador",
       "key_changed": "Este computador já esteve aqui com outra chave.",
       "key_changed_hint": "Se foi reinstalado ou redefinido, aprove a nova chave. Depois abra o convite no computador outra vez.",
       "approve_key": "Aprovar nova chave",

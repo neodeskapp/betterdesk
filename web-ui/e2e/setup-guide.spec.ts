@@ -222,8 +222,11 @@ test('each step leads to its place and back, and the server ticks it', async ({ 
 		}
 	});
 	expect(joined.status(), await joined.text()).toBe(200);
-	// The sheet now shows the invite under its own title
-	await page.getByRole('dialog').getByRole('button', { name: 'Done' }).click();
+	// The sheet follows the join into the computer's first steps (L483); Skip keeps it as it joined
+	const dialog = page.getByRole('dialog');
+	await expect(dialog.getByRole('heading', { name: 'guide-desk joined' })).toBeVisible({ timeout: 15_000 });
+	await dialog.getByRole('button', { name: 'Skip' }).click();
+	await dialog.getByRole('button', { name: 'Done' }).click();
 	await expect(page.getByRole('dialog')).toHaveCount(0);
 	await expectDone(page, 'computer');
 

@@ -6,18 +6,25 @@
   the link to (only with mail set up), how long it works (7 days) and how
   often (once). Create invite shows the link once (CodeResult); the open
   invites are listed below with Revoke.
+
+  The sheet then follows the join (guide.ts): it says it is still waiting,
+  offers Approve new key for a computer that came back with another key,
+  and once a computer joined walks through its first steps (JoinGuide).
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { Folder } from '#lib/api/devices.ts';
 	import { ApiError } from '#lib/api/client.ts';
+	import { approveDeviceKey } from '#lib/api/devices.ts';
 	import {
 		createInvite,
+		getInvite,
 		getOnboardStatus,
 		listInvites,
 		mailInvite,
 		revokeInvite,
 		type Invite,
+		type InviteDetail,
 		type NewInvite,
 		type OnboardStatus
 	} from '#lib/api/onboard.ts';
@@ -29,12 +36,16 @@
 	import FormSection from '#lib/ui/FormSection.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import ListRow from '#lib/ui/ListRow.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
 	import Select, { type SelectOption } from '#lib/ui/Select.svelte';
 	import Sheet from '#lib/ui/Sheet.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
+	import { poll } from '#lib/state/live.ts';
 	import CodeResult from './CodeResult.svelte';
+	import { deviceLabel, FOLLOW_MS, nextDevice } from './guide.ts';
 	import { inviteBody, LIFETIMES, UNLIMITED_USES, USES } from './invite.ts';
+	import JoinGuide from './JoinGuide.svelte';
 
 	interface Props {
 		folders: readonly Folder[];
@@ -58,6 +69,46 @@
 	let status = $state<OnboardStatus | null>(null);
 	let invites = $state.raw<Invite[]>([]);
 	let revoking = $state('');
+	/** What happened with the made invite, followed while the sheet is open */
+	let detail = $state<InviteDetail | null>(null);
+	/** The computers walked through in this sheet, and the last one's result */
+	let walked = $state<Set<string>>(new Set());
+	let finished = $state<{ name: string; folder: string } | null>(null);
+	let keyApproved = $state('');
+	let approving = $state(false);
+
+	$effect(() => {
+		const id = made?.invite.id;
+		if (!id) return;
+		return poll(
+			async () => {
+				detail = await getInvite(id);
+			},
+			{ every: FOLLOW_MS, immediate: true }
+		);
+	});
+
+	const guiding = $derived(nextDevice(detail, walked));
+	const refused = $derived(detail?.refused ?? null);
+	/** Uses the invite has left; before the first answer, those it was made with */
+	const usesLeft = $derived(detail ? detail.invite.uses_left : (made?.invite.uses_left ?? 0));
+
+	function walkedThrough(device: string, result: { name: string; folder: string }) {
+		walked = new Set([...walked, device]);
+		finished = result;
+	}
+
+	async function approveKey(device: string) {
+		approving = true;
+		try {
+			await approveDeviceKey(device);
+			keyApproved = device;
+		} catch (err) {
+			toast.error(why(err));
+		} finally {
+			approving = false;
+		}
+	}
 
 	const folderOptions = $derived<SelectOption<number>[]>([
 		{ value: 0, label: t('onboard.invite.no_folder') },
@@ -134,6 +185,10 @@
 
 	function another() {
 		made = null;
+		detail = null;
+		walked = new Set();
+		finished = null;
+		keyApproved = '';
 		name = '';
 		email = '';
 	}
@@ -143,11 +198,20 @@
 		onclose();
 	}
 
-	const resultTitle = $derived(
-		made?.invite.name
+	const resultTitle = $derived.by(() => {
+		if (guiding) return t('onboard.guide.joined_title', { name: deviceLabel(guiding) });
+		if (finished) return t('onboard.guide.joined_title', { name: finished.name });
+		return made?.invite.name
 			? t('onboard.invite.result_title_named', { name: made.invite.name })
-			: t('onboard.invite.result_title')
-	);
+			: t('onboard.invite.result_title');
+	});
+	const waitingLine = $derived.by(() => {
+		if (!made || detail?.devices.length) return '';
+		const date = formatDate(made.invite.expires_at);
+		return made.invite.name
+			? t('onboard.guide.waiting_named', { name: made.invite.name, date })
+			: t('onboard.guide.waiting', { date });
+	});
 	const resultText = $derived.by(() => {
 		if (!made) return '';
 		const date = formatDate(made.invite.expires_at);
@@ -173,13 +237,49 @@
 <Sheet
 	bind:open
 	title={made ? resultTitle : t('onboard.invite.title')}
-	subtitle={made ? resultText : t('onboard.invite.subtitle')}
+	subtitle={guiding
+		? t('onboard.guide.joined_lead')
+		: made && !finished
+			? resultText
+			: made
+				? ''
+				: t('onboard.invite.subtitle')}
 	status={error}
 	statusTone={error ? 'error' : 'neutral'}
 	{onclose}
 >
 	<div class="add-computer">
-		{#if made}
+		{#snippet finishedLines(f: { name: string; folder: string })}
+			<p class="finished">{t('onboard.guide.finished', { name: f.name })}</p>
+			<p class="hint">
+				{f.folder
+					? t('onboard.guide.finished_folder', { folder: f.folder })
+					: t('onboard.guide.finished_plain')}
+			</p>
+		{/snippet}
+		{#if made && guiding}
+			{#key guiding.id}
+				<JoinGuide device={guiding} {folders} onfinish={(r) => walkedThrough(guiding.id, r)} />
+			{/key}
+		{:else if made && finished && !usesLeft}
+			{@render finishedLines(finished)}
+		{:else if made}
+			<!-- An invite for more computers keeps its link after the first one joined -->
+			{#if finished}{@render finishedLines(finished)}{/if}
+			{#if refused && refused.reason === 'key_changed'}
+				<Notice tone="warning" title={t('onboard.guide.key_changed')}>
+					{#if keyApproved === refused.device_id || !refused.key_request}
+						<p>{t('onboard.guide.key_approved')}</p>
+					{:else}
+						<p>{t('onboard.guide.key_changed_hint')}</p>
+						<Button size="sm" busy={approving} onclick={() => void approveKey(refused.device_id)}
+							>{t('onboard.guide.approve_key')}</Button
+						>
+					{/if}
+				</Notice>
+			{:else if refused}
+				<Notice tone="warning" message={t('onboard.guide.refused', { id: refused.device_id })} />
+			{/if}
 			<CodeResult
 				link={made.link}
 				displayCode={made.display_code}
@@ -191,6 +291,7 @@
 				onmail={mail}
 			/>
 			<p class="hint">{resultNote}</p>
+			{#if waitingLine}<p class="waiting" role="status">{waitingLine}</p>{/if}
 		{:else}
 			<form id={formId} onsubmit={create} novalidate>
 				<Field label={t('onboard.invite.name')} hint={t('onboard.invite.name_hint')}>
@@ -252,7 +353,9 @@
 		{/if}
 	</div>
 	{#snippet footer()}
-		{#if made}
+		{#if made && guiding}
+			<!-- The guide has its own Back, Skip and Next -->
+		{:else if made}
 			<Button onclick={another}>{t('onboard.invite.another')}</Button>
 			<Button variant="primary" onclick={close}>{t('onboard.invite.done')}</Button>
 		{:else}
@@ -270,8 +373,14 @@
 		flex-direction: column;
 		gap: var(--space-4);
 	}
-	.hint {
+	.hint,
+	.finished,
+	.waiting {
 		margin: 0;
 		color: var(--text-muted);
+	}
+	.finished {
+		color: var(--text);
+		font-weight: 600;
 	}
 </style>

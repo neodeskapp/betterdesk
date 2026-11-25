@@ -8408,7 +8408,6 @@
       "finished": "Komputer {name} jest gotowy.",
       "finished_folder": "Znajdziesz go w Urządzenia, w folderze {folder}.",
       "finished_plain": "Znajdziesz go w Urządzenia.",
-      "next_computer": "Skonfiguruj kolejny komputer",
       "key_changed": "Ten komputer był tu już wcześniej z innym kluczem.",
       "key_changed_hint": "Jeśli został ponownie zainstalowany lub zresetowany, zatwierdź nowy klucz. Potem ponownie otwórz zaproszenie na komputerze.",
       "approve_key": "Zatwierdź nowy klucz",

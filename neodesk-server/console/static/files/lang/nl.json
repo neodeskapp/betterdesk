@@ -8408,7 +8408,6 @@
       "finished": "{name} is klaar.",
       "finished_folder": "U vindt hem in Apparaten, in {folder}.",
       "finished_plain": "U vindt hem in Apparaten.",
-      "next_computer": "Volgende computer instellen",
       "key_changed": "Deze computer was hier al eerder, met een andere sleutel.",
       "key_changed_hint": "Als hij opnieuw is geïnstalleerd of teruggezet, keur dan de nieuwe sleutel goed. Open daarna de uitnodiging opnieuw op de computer.",
       "approve_key": "Nieuwe sleutel goedkeuren",
