@@ -64,7 +64,7 @@ describe('buildNavModel', () => {
 		expect(devices.core.map((i) => i.page.text)).toEqual([
 			'Overview',
 			'All devices',
-			'Enrollment requests',
+			'Join requests',
 			'Remote desktop in browser'
 		]);
 		expect(texts(devices.more)).toEqual([
@@ -73,7 +73,7 @@ describe('buildNavModel', () => {
 			'Network monitoring',
 			'Fleet tasks',
 			'Platform support',
-			'IoT devices (CDAP)'
+			'IoT devices'
 		]);
 		expect(devices.moreCount).toBe(6);
 	});
@@ -92,15 +92,22 @@ describe('buildNavModel', () => {
 		const rows = texts(settings.more);
 		expect(rows.filter((r) => r.startsWith('# '))).toEqual([
 			'# Console',
-			'# Clients and enrollment',
-			'# Rules',
+			'# Clients and joining',
 			'# Server',
 			'# Billing',
 			'# Developer tools'
 		]);
 		// Each heading comes right before the first page of its group, and once
 		expect(rows.slice(0, 3)).toEqual(['# Console', 'Appearance', 'Sign-in']);
-		expect(rows.indexOf('# Clients and enrollment')).toBe(rows.indexOf('Translations') + 1);
+		expect(rows.indexOf('# Clients and joining')).toBe(rows.indexOf('Translations') + 1);
+	});
+
+	test('the rules pages are a section of their own, Policies and Alerts and automation shown', () => {
+		const rules = buildNavModel(admin, 'dataguard').sections.find((s) => s.id === 'rules')!;
+		expect(rules.text).toBe('Rules');
+		expect(rules.core.map((i) => i.page.text)).toEqual(['Policies', 'Alerts and automation']);
+		expect(texts(rules.more)).toEqual(['USB and drive access', 'Data loss prevention', 'Device identity']);
+		expect(rules.moreActive).toBe(true);
 	});
 
 	test('sections and pages are exactly what the server sent', () => {

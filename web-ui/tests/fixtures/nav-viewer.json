@@ -57,7 +57,7 @@
 			{
 				"page": "cdap",
 				"href": "/cdap",
-				"text": "IoT devices (CDAP)",
+				"text": "IoT devices",
 				"group": "",
 				"core": false,
 				"keywords": "cdap iot scada sensors gateway",
@@ -178,7 +178,7 @@
 			{
 				"page": "cdap-studio",
 				"href": "/cdap-studio",
-				"text": "Flow builder (SDK)",
+				"text": "Flow builder",
 				"group": "Developer tools",
 				"core": false,
 				"keywords": "sdk studio flows widgets",

@@ -27,7 +27,7 @@
 			{
 				"page": "registrations",
 				"href": "/registrations",
-				"text": "Enrollment requests",
+				"text": "Join requests",
 				"group": "",
 				"core": true,
 				"keywords": "enrollment approve new device registration pending",
@@ -97,7 +97,7 @@
 			{
 				"page": "cdap",
 				"href": "/cdap",
-				"text": "IoT devices (CDAP)",
+				"text": "IoT devices",
 				"group": "",
 				"core": false,
 				"keywords": "cdap iot scada sensors gateway",
@@ -238,6 +238,63 @@
 		]
 	},
 	{
+		"id": "rules",
+		"icon": "shield",
+		"text": "Rules",
+		"pages": [
+			{
+				"page": "policies",
+				"href": "/policies",
+				"text": "Policies",
+				"group": "",
+				"core": true,
+				"keywords": "policies rules",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "automation",
+				"href": "/automation",
+				"text": "Alerts and automation",
+				"group": "",
+				"core": true,
+				"keywords": "automation alerts commands rules",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "resource-control",
+				"href": "/resource-control",
+				"text": "USB and drive access",
+				"group": "",
+				"core": false,
+				"keywords": "resource control usb drives disks",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "dataguard",
+				"href": "/dataguard",
+				"text": "Data loss prevention",
+				"group": "",
+				"core": false,
+				"keywords": "dataguard dlp data loss",
+				"external": false,
+				"countId": null
+			},
+			{
+				"page": "attestation",
+				"href": "/attestation",
+				"text": "Device identity",
+				"group": "",
+				"core": false,
+				"keywords": "attestation fingerprint hardware identity",
+				"external": false,
+				"countId": null
+			}
+		]
+	},
+	{
 		"id": "settings",
 		"icon": "settings",
 		"text": "Settings",
@@ -305,7 +362,7 @@
 			{
 				"page": "settings:time",
 				"href": "/settings?tab=time",
-				"text": "Time zones",
+				"text": "Time",
 				"group": "Console",
 				"core": false,
 				"keywords": "time zone timezone ntp clock",
@@ -336,7 +393,7 @@
 				"page": "keys",
 				"href": "/keys",
 				"text": "Client setup",
-				"group": "Clients and enrollment",
+				"group": "Clients and joining",
 				"core": true,
 				"keywords": "keys public key qr client setup rustdesk config",
 				"external": false,
@@ -346,7 +403,7 @@
 				"page": "tokens",
 				"href": "/tokens",
 				"text": "Device tokens",
-				"group": "Clients and enrollment",
+				"group": "Clients and joining",
 				"core": false,
 				"keywords": "tokens enrollment mode",
 				"external": false,
@@ -356,7 +413,7 @@
 				"page": "pairing",
 				"href": "/pairing",
 				"text": "Pairing codes",
-				"group": "Clients and enrollment",
+				"group": "Clients and joining",
 				"core": false,
 				"keywords": "pairing code",
 				"external": false,
@@ -366,7 +423,7 @@
 				"page": "agents",
 				"href": "/agents",
 				"text": "Support agents",
-				"group": "Clients and enrollment",
+				"group": "Clients and joining",
 				"core": false,
 				"keywords": "agents installers generator",
 				"external": false,
@@ -376,59 +433,9 @@
 				"page": "client-branding",
 				"href": "/client-branding",
 				"text": "Client app branding",
-				"group": "Clients and enrollment",
+				"group": "Clients and joining",
 				"core": false,
 				"keywords": "client branding white label",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "policies",
-				"href": "/policies",
-				"text": "Policies",
-				"group": "Rules",
-				"core": false,
-				"keywords": "policies rules",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "automation",
-				"href": "/automation",
-				"text": "Alerts and automation",
-				"group": "Rules",
-				"core": false,
-				"keywords": "automation alerts commands",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "resource-control",
-				"href": "/resource-control",
-				"text": "USB and drive access",
-				"group": "Rules",
-				"core": false,
-				"keywords": "resource control usb drives disks",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "dataguard",
-				"href": "/dataguard",
-				"text": "Data loss prevention",
-				"group": "Rules",
-				"core": false,
-				"keywords": "dataguard dlp data loss",
-				"external": false,
-				"countId": null
-			},
-			{
-				"page": "attestation",
-				"href": "/attestation",
-				"text": "Device identity",
-				"group": "Rules",
-				"core": false,
-				"keywords": "attestation fingerprint hardware identity",
 				"external": false,
 				"countId": null
 			},
@@ -495,7 +502,7 @@
 			{
 				"page": "cdap-studio",
 				"href": "/cdap-studio",
-				"text": "Flow builder (SDK)",
+				"text": "Flow builder",
 				"group": "Developer tools",
 				"core": false,
 				"keywords": "sdk studio flows widgets",

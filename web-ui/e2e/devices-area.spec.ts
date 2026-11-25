@@ -108,7 +108,7 @@ for (const role of ROLES) {
 				await expect(page.getByRole('dialog')).toHaveCount(0);
 				return;
 			}
-			await expect(page).toHaveTitle(/^Pair agent/);
+			await expect(page).toHaveTitle(/^Enter a pairing code/);
 			await expect(dialog).toBeVisible();
 			// The client address is filled in; the label is optional
 			await expect(dialog.getByLabel('Server address')).not.toHaveValue('');

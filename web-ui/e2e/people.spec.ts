@@ -150,7 +150,7 @@ for (const role of ROLES) {
 
 			if (!can('user.edit')) {
 				await openFor('More actions for e2e_viewer');
-				await expect(sheet).toContainText('Panel access for e2e_viewer');
+				await expect(sheet).toContainText('Console access for e2e_viewer');
 				await expect(section('devices')).toContainText('Now:');
 				await expect(sheet.getByRole('combobox')).toHaveCount(0);
 				await expect(sheet.locator('[data-access^="group:"]')).toHaveCount(0);
@@ -196,7 +196,7 @@ for (const role of ROLES) {
 				await feature('privacy_mode').getByRole('combobox').selectOption('off');
 				await expectNoAxeViolations(page);
 				await sheet.getByRole('button', { name: 'Save' }).click();
-				await expect(sheet).toContainText('Panel access saved.');
+				await expect(sheet).toContainText('Console access saved.');
 				await expect(section('users')).toContainText('Now: None, set for this person');
 				await page.keyboard.press('Escape');
 				await expect(sheet).toBeHidden();
@@ -226,12 +226,12 @@ for (const role of ROLES) {
 			try {
 				await page.goto(`${UI}/users#user-groups`);
 				await openFor(`More actions for ${name}`);
-				await expect(sheet).toContainText(`Panel access for ${name}`);
+				await expect(sheet).toContainText(`Console access for ${name}`);
 				await section('reports').getByRole('combobox').selectOption('read');
 				await section('group:security').getByRole('combobox').selectOption('none');
 				await feature('tunnel').getByRole('combobox').selectOption('off');
 				await sheet.getByRole('button', { name: 'Save' }).click();
-				await expect(sheet).toContainText('Panel access saved.');
+				await expect(sheet).toContainText('Console access saved.');
 				await expect(section('reports')).toContainText('Now: Read, set for this group');
 				await page.keyboard.press('Escape');
 				await expect(sheet).toBeHidden();
