@@ -19,22 +19,40 @@ import (
 // refused them with 401. The console checks them as on its own port: the
 // device token, "Chat with computers", the socket and frame limits, the
 // rate limits and the origin rule. Nothing else of the console answers
-// here. Without a console (CONSOLE_PORT=0, or a console that did not
-// start) these paths answer 404: this server has no chat.
+// here.
+//
+// The API port listens before the console is up (L536). Until the console
+// is there, and while it stops, these paths answer 503 with Retry-After of
+// a few seconds and X-NeoDesk-Chat: starting, so a computer asks again
+// soon. Only a server without a console (CONSOLE_PORT=0, or a console
+// that could not start) answers 404: it has no chat.
 
 // deviceChatHandler holds the console's handler for a computer's chat.
 type deviceChatHandler struct {
 	h atomic.Pointer[http.Handler]
+	// none: this server has no console
+	none atomic.Bool
 }
 
+// deviceChatRetry is the Retry-After (seconds) while the console starts.
+const deviceChatRetry = "5"
+
 // SetDeviceChat names the handler of a computer's support chat: the
-// console in this process; nil while there is none.
+// console in this process. nil means it is not up (yet, or any more).
 func (s *Server) SetDeviceChat(h http.Handler) {
+	s.deviceChat.none.Store(false)
 	if h == nil {
 		s.deviceChat.h.Store(nil)
 		return
 	}
 	s.deviceChat.h.Store(&h)
+}
+
+// NoDeviceChat says that this server runs without a console: a computer's
+// chat answers 404.
+func (s *Server) NoDeviceChat() {
+	s.deviceChat.h.Store(nil)
+	s.deviceChat.none.Store(true)
 }
 
 // The paths of a computer's chat.
@@ -75,8 +93,14 @@ func (s *Server) deviceChatGate(next http.Handler) http.Handler {
 			return
 		}
 		h := s.deviceChat.h.Load()
-		if h == nil || socket && r.URL.Query().Get("v") != "2" {
+		if socket && r.URL.Query().Get("v") != "2" || h == nil && s.deviceChat.none.Load() {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+			return
+		}
+		if h == nil {
+			w.Header().Set("Retry-After", deviceChatRetry)
+			w.Header().Set("X-NeoDesk-Chat", "starting")
+			writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "starting", "code": "starting"})
 			return
 		}
 		if socket {

@@ -36,6 +36,15 @@ import (
 // and answers the clients' HttpProxyRequest with the handler of its client
 // API port when it has one (setAPIProxy, signal.Server.SetAPIProxy).
 func startConsole(ctx context.Context, cfg *config.Config, database db.Database, apiSrv *api.Server, bus *events.Bus, signalProof func(userID int64, consoleSession string) []byte, setFeatures func(signal.ControllerFeatures), setAPIProxy func(http.Handler), requestRestart func()) (func(), error) {
+	// Until the console runs, a computer's chat at the API port answers
+	// "starting" (503); a server that ends up without one answers 404
+	// (L536)
+	running := false
+	defer func() {
+		if !running {
+			apiSrv.NoDeviceChat()
+		}
+	}()
 	ccfg, err := consoleconfig.LoadEnv()
 	if err != nil {
 		return nil, fmt.Errorf("console configuration: %w", err)
@@ -91,6 +100,7 @@ func startConsole(ctx context.Context, cfg *config.Config, database db.Database,
 	// Computers reach their support chat at the API port, where they send
 	// everything else (L526): the API hands it to the console
 	apiSrv.SetDeviceChat(srv)
+	running = true
 	return func() {
 		apiSrv.SetDeviceChat(nil)
 		setAPIProxy(apiSrv.ListenerHandler())

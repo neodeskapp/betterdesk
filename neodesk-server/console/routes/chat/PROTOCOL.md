@@ -65,6 +65,7 @@ account needs Support chat (`chat.support`) or Team chat (`chat.team`).
 | 401 | a console socket without a signed-in session; a computer that reached an API port without chat (older servers only) | a console user: sign in again; a computer: no chat there, check again after some minutes |
 | 403 | wrong or revoked token, a token for another device, a foreign `Origin`, the id `panel` on `/ws/chat/`, an account without a chat permission | a computer: the token is refused; check again after some minutes, and at once with a new token |
 | 404 | a computer's socket on a server that has no chat of version 2 (also a server whose console is off), or without `v=2` on the API port; a console socket with `v=2` on a room other than `panel` | a computer: no chat on this server, check again after some minutes |
+| 503 with `X-NeoDesk-Chat: starting` | the API port while the server starts or stops and its console isn't up yet | ask again after `Retry-After` seconds (5), with the usual backoff |
 | 503 with `X-NeoDesk-Chat: chat_off` | a computer's socket while an admin has "Chat with computers" off | no chat button; check again after `Retry-After` seconds (600) |
 | 429 | the token already has 4 chat sockets open | close old sockets; retry after 30 s |
 | 500 | the token could not be checked | retry with backoff |
@@ -98,6 +99,8 @@ depend on any account's permissions. What a computer can meet:
   server ignores `v=2` and speaks version 1, starting with `history` or
   `contacts`): close the socket and treat it as no chat; check again after
   some minutes.
+- 503 with `starting`: the server is starting or stopping; ask again
+  after `Retry-After` seconds (a few), not after minutes.
 - 404: no chat of version 2 on this server (or its console is off);
   check again after some minutes.
 - 401: an older server's API port, which had no chat; check again after

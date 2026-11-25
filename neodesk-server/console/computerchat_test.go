@@ -241,9 +241,14 @@ func TestOnlyTheComputersChatOnTheAPIPort(t *testing.T) {
 	if _, status := dialChat(t, addr, "/ws/chat/"+chatDevice+"?token="+chatDeviceToken, nil); status != http.StatusNotFound {
 		t.Errorf("the chat of version 1 on the API port: %d, want 404", status)
 	}
+	// While the console stops the computer asks again soon (L536)
+	apiSrv.SetDeviceChat(nil)
+	if _, status := dialChat(t, addr, "/ws/chat/"+chatDevice+"?v=2&token="+chatDeviceToken, nil); status != http.StatusServiceUnavailable {
+		t.Errorf("while the console stops: %d, want 503", status)
+	}
 	// Without a console (CONSOLE_PORT=0, or a console that did not start)
 	// the computer learns that this server has no chat
-	apiSrv.SetDeviceChat(nil)
+	apiSrv.NoDeviceChat()
 	if _, status := dialChat(t, addr, "/ws/chat/"+chatDevice+"?v=2&token="+chatDeviceToken, nil); status != http.StatusNotFound {
 		t.Errorf("without a console: %d, want 404", status)
 	}
