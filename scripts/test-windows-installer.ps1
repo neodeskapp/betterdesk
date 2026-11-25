@@ -685,6 +685,46 @@ function Test-UpdateMovesTheDefaultConsolePort {
     Remove-Item -Recurse -Force $dir
 }
 
+# -FromSource from a checkout: the script is in its install\ folder, and
+# the source folders (neodesk-server, web-ui, remote-gateway) are the
+# checkout's, one level up. A copy of the script elsewhere has none of
+# them, and says so.
+function Test-FromSourceFindsTheCheckout {
+    $dir = Join-Path ([System.IO.Path]::GetTempPath()) ("nd-ps1-src-" + [guid]::NewGuid().ToString('N'))
+    foreach ($part in 'install', 'neodesk-server', 'web-ui', 'remote-gateway') {
+        New-Item -ItemType Directory -Path (Join-Path $dir $part) -Force | Out-Null
+    }
+    $alone = Join-Path $dir 'downloads'
+    New-Item -ItemType Directory -Path $alone -Force | Out-Null
+    # The installer's own top-level settings that build on its folder
+    $settings = @($ast.EndBlock.Statements | Where-Object {
+            $_ -is [System.Management.Automation.Language.AssignmentStatementAst] -and
+            $_.Left.Extent.Text -eq '$script:GO_SERVER_SOURCE'
+        })
+    if (-not ($settings | Where-Object { $_.Left.Extent.Text -eq '$script:GO_SERVER_SOURCE' })) { Fail 'neodesk.ps1 sets no GO_SERVER_SOURCE' }
+    $script:ScriptDir = Join-Path $dir 'install'
+    foreach ($stmt in $settings) { . ([scriptblock]::Create($stmt.Extent.Text)) }
+    if (-not (Test-Path (Join-Path $script:GO_SERVER_SOURCE 'go.mod') -PathType Leaf) -and -not (Test-Path $script:GO_SERVER_SOURCE -PathType Container)) {
+        Fail "from a checkout's install folder the Go source is $($script:GO_SERVER_SOURCE), which is not there"
+    }
+    foreach ($part in 'web-ui', 'remote-gateway') {
+        if (-not (Get-Command Get-RepoDir -ErrorAction SilentlyContinue) -or -not (Test-Path (Join-Path (Get-RepoDir) $part) -PathType Container)) { Fail "from a checkout's install folder $part is not found" }
+    }
+    # The functions take web-ui, remote-gateway and the old patch folder
+    # from the checkout, not from the script's own folder
+    $text = ($ast.FindAll({ $args[0] -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $false) | ForEach-Object { $_.Extent.Text }) -join "`n"
+    foreach ($part in 'web-ui', 'remote-gateway', 'hbbs-patch-v2') {
+        if ($text -match [regex]::Escape('Join-Path $script:ScriptDir "' + $part)) { Fail "neodesk.ps1 looks for $part next to the script" }
+    }
+    if ($text -match [regex]::Escape('git -C $script:ScriptDir')) { Fail "neodesk.ps1 reads the commit of the script's folder" }
+    # A copy alone: its own folder, without a source
+    $script:ScriptDir = $alone
+    foreach ($stmt in $settings) { . ([scriptblock]::Create($stmt.Extent.Text)) }
+    if ($script:GO_SERVER_SOURCE -ne (Join-Path $alone 'neodesk-server')) { Fail "a copy alone looks for the source at $($script:GO_SERVER_SOURCE)" }
+    if (Test-Path $script:GO_SERVER_SOURCE) { Fail 'a copy alone found a source' }
+    Remove-Item -Recurse -Force $dir
+}
+
 # NeoDesk has no way from the old Node.js console: -RollbackGo and
 # -CleanupNode are gone, and an install or an update on a server that
 # still runs the Node.js console stops with what to do and changes nothing.
@@ -1321,6 +1361,7 @@ Test-CommandLineOnThePath
 Test-NoUpgradeFromTheNodeConsole
 Test-InstallerComesFromTheRelease
 Test-UpdateMovesTheDefaultConsolePort
+Test-FromSourceFindsTheCheckout
 Test-UpdateAsksTheFork
 Test-FirewallPorts
 Test-CertificateFromTheBinary

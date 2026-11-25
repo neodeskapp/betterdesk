@@ -167,6 +167,17 @@ $script:VERSION = "3.6.3"
 # Where people ask for help: the NeoDesk Discord
 $script:HELP_URL = "https://discord.gg/nwERSawufr"
 $script:ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+# The checkout's root when the script runs from a checkout (its install\
+# folder), else the script's own folder: the source folders
+# (neodesk-server, web-ui, remote-gateway) are there. A copy elsewhere has
+# none of them.
+function Get-RepoDir {
+    $dir = $script:ScriptDir
+    if ($dir -and (Split-Path -Leaf $dir) -eq "install" -and (Test-Path (Join-Path (Split-Path -Parent $dir) "neodesk-server"))) {
+        return (Split-Path -Parent $dir)
+    }
+    return $dir
+}
 # This file; empty when the script runs from Invoke-Expression
 $script:SELF_PATH = $MyInvocation.MyCommand.Path
 
@@ -222,7 +233,7 @@ if ($script:RELAY_MODE -eq "wan") { $script:RELAY_MODE = "public" }
 $script:RELAY_SERVERS = if ($RelayServers) { $RelayServers } elseif ($env:RELAY_SERVERS) { $env:RELAY_SERVERS } else { "" }
 
 # Go server configuration
-$script:GO_SERVER_SOURCE = Join-Path $script:ScriptDir "neodesk-server"
+$script:GO_SERVER_SOURCE = Join-Path (Get-RepoDir) "neodesk-server"
 # Must match the toolchain pinned in neodesk-server/go.mod.
 $script:GO_MIN_VERSION = "1.26.11"
 $script:GO_DOWNLOAD_VERSION = "1.26.11"
@@ -1320,7 +1331,7 @@ function Setup-ConsoleHome {
         Set-ConsoleEnvValue -Key "CONSOLE_PORT" -Value "0"
         Print-Info "Minimal installation: the web console stays off (CONSOLE_PORT=0)"
     }
-    $gateway = Join-Path $script:ScriptDir "remote-gateway"
+    $gateway = Join-Path (Get-RepoDir) "remote-gateway"
     if (Test-Path $gateway) {
         $to = Join-Path $script:CONSOLE_PATH "remote-gateway"
         New-Item -ItemType Directory -Path $to -Force | Out-Null
@@ -1753,7 +1764,7 @@ function Compile-GoServer {
 
     # The binary carries the web app: its build goes into the module first.
     # Without web-ui\build it is built here, which needs Node.js 22 and npm.
-    $webUi = Join-Path $script:ScriptDir "web-ui"
+    $webUi = Join-Path (Get-RepoDir) "web-ui"
     $webBuild = Join-Path $webUi "build"
     if (-not (Test-Path (Join-Path $webBuild "index.html"))) {
         if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
@@ -1788,7 +1799,7 @@ function Compile-GoServer {
         $env:GOARCH = "amd64"
         $commit = ""
         if (Get-Command git -ErrorAction SilentlyContinue) {
-            $commit = "$(& git -C $script:ScriptDir rev-parse HEAD 2>$null)".Trim()
+            $commit = "$(& git -C (Get-RepoDir) rev-parse HEAD 2>$null)".Trim()
         }
         & go build -trimpath -ldflags="-s -w -X main.Version=$($script:VERSION) -X main.Commit=$commit" -o "neodesk-server.exe" . 2>&1 | ForEach-Object { Write-Host "  $_" }
     } finally {
@@ -4312,7 +4323,7 @@ function Do-BuildLegacyRust {
 
         Print-Step "Applying NeoDesk modifications..."
 
-        $srcDir = Join-Path $script:ScriptDir "hbbs-patch-v2\src"
+        $srcDir = Join-Path (Get-RepoDir) "hbbs-patch-v2\src"
         if (Test-Path $srcDir) {
             Copy-Item -Path "$srcDir\main.rs" -Destination "src\main.rs" -Force
             Copy-Item -Path "$srcDir\http_api.rs" -Destination "src\http_api.rs" -Force
@@ -4329,7 +4340,7 @@ function Do-BuildLegacyRust {
 
         Print-Step "Copying binaries..."
 
-        $outputDir = Join-Path $script:ScriptDir "hbbs-patch-v2"
+        $outputDir = Join-Path (Get-RepoDir) "hbbs-patch-v2"
         Copy-Item -Path "target\release\hbbs.exe" -Destination "$outputDir\hbbs-windows-x86_64.exe" -Force
         Copy-Item -Path "target\release\hbbr.exe" -Destination "$outputDir\hbbr-windows-x86_64.exe" -Force
 
