@@ -170,12 +170,17 @@
     "oidc_no_account": "Fiókja nem található, és az automatikus regisztráció le van tiltva.",
     "totp_rate_limited": "Túl sok próbálkozás. Kérjük, próbálja újra később.",
     "emergency_mode_banner": "A Go server nem érhető el – vészhelyzeti módban fut (csak rendszergazda, korlátozott funkcionalitás)",
-    "session_expired": "A munkamenet lejárt, vagy új bejelentkezés váltotta fel. Jelentkezzen be újra.",
+    "session_expired": "A munkamenet lejárt. Jelentkezzen be újra.",
     "session_idle_warning_title": "A munkamenet hamarosan lejár",
     "session_idle_warning_body": "Inaktivitás miatt {{seconds}} másodperc múlva kijelentkeztetjük.",
     "session_stay_signed_in": "Maradjon bejelentkezve",
     "show_password": "Jelszó megjelenítése",
-    "sso_redirecting": "Egyszeri bejelentkezés megnyitása…"
+    "sso_redirecting": "Egyszeri bejelentkezés megnyitása…",
+    "signed_out_elsewhere": "Egy másik eszközről kijelentkeztették. Jelentkezzen be újra.",
+    "signed_out_by_admin": "Egy rendszergazda kijelentkeztette. Jelentkezzen be újra.",
+    "signed_out_replaced": "Kijelentkeztették, mert a fiókja egy másik böngészőben jelentkezett be. Ez a szerver fiókonként egy munkamenetet enged.",
+    "signed_out_limit": "Kijelentkeztették, mert a fiókja több böngészőben jelentkezett be, mint amennyit ez a szerver enged. Jelentkezzen be újra.",
+    "signed_out_account_changed": "Kijelentkeztették, mert megváltozott a jelszava, a kétlépcsős bejelentkezése vagy a hozzáférése. Jelentkezzen be újra."
   },
   "dashboard": {
     "title": "Irányítópult",
@@ -1475,7 +1480,10 @@
       "require_2fa": "Kétlépcsős bejelentkezés megkövetelése",
       "require_2fa_hint": "A kétlépcsős bejelentkezés nélküli helyi fiók a következő jelszavas bejelentkezése után azonnal beállítja azt, és addig mást nem tehet; az asztali kliens és az API addig elutasítja. A címtár- és egyszeri bejelentkezéses fiókokat a szolgáltatójuk kezeli.",
       "ldap_enabled_hint": "A címtár felhasználói a címtárbeli felhasználónevükkel és jelszavukkal jelentkeznek be. Minden fiók egyféle bejelentkezést használ, így a címtárfiókok nem használhatnak ebben a konzolban beállított jelszót.",
-      "attrs_note": "Az alapértékek a legtöbb esetben megfelelnek. Csak akkor módosítsa, ha a nevek vagy e-mail-címek hibásan vagy üresen érkeznek."
+      "attrs_note": "Az alapértékek a legtöbb esetben megfelelnek. Csak akkor módosítsa, ha a nevek vagy e-mail-címek hibásan vagy üresen érkeznek.",
+      "single_session": "Fiókonként egy munkamenet",
+      "single_session_hint": "Az új bejelentkezés kijelentkezteti a fiók másik böngészőjét. Kikapcsolva: egy fiók egyszerre legfeljebb {max} böngészőn és eszközön lehet bejelentkezve.",
+      "single_session_env": "A SESSION_MAX_PER_USER értéke a szerver környezetében {value}, és ez dönt a kapcsoló helyett. A kapcsoló használatához távolítsa el onnan."
     },
     "backup_tab": {
       "create_title": "Biztonsági mentés készítése",
@@ -1931,7 +1939,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "API-token lejárt",
-    "action_api_token_deleted": "API-token törölve"
+    "action_api_token_deleted": "API-token törölve",
+    "action_session_signed_out": "Munkamenet kijelentkeztetve egy másik eszközről",
+    "action_session_ended_by_admin": "Munkamenetet egy rendszergazda zárta le",
+    "action_session_limit": "Munkamenetet a munkamenet-korlát zárta le",
+    "action_console_sessions_policy_changed": "Fiókonkénti munkamenetek módosítva"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8606,5 +8618,34 @@
     "switched_to_ux36": "Az UX 3.6 béta engedélyezve ehhez a böngészőhöz.",
     "switched_to_ux35": "Az UX 3.5 visszaállítva ehhez a böngészőhöz.",
     "default_hint": "Alapértelmezett elrendezés. Stabil, teljes funkciókészlet."
+  },
+  "sessions": {
+    "title": "Bejelentkezett eszközök",
+    "user_title": "{username} bejelentkezett eszközei",
+    "user_menu": "Bejelentkezett eszközök…",
+    "subtitle_own": "A böngészők és eszközök, amelyeken a fiókja be van jelentkezve.",
+    "subtitle_user": "A böngészők és eszközök, amelyeken {username} be van jelentkezve.",
+    "this_browser": "Ez a böngésző",
+    "browser_on_system": "{browser}, {system}",
+    "browser_on": "Böngésző, {system}",
+    "unknown_browser": "Ismeretlen böngésző",
+    "address": "Cím",
+    "signed_in": "Bejelentkezés",
+    "last_used": "Utoljára használva",
+    "sign_out": "Kijelentkeztetés",
+    "sign_out_everywhere_else": "Kijelentkeztetés mindenhol máshol",
+    "sign_out_all": "Kijelentkeztetés mindenhol",
+    "confirm_sign_out": "Kijelentkezteti ezt: {device}? Az a böngésző a bejelentkezési oldalra kerül.",
+    "confirm_everywhere_else": "Kijelentkezteti az összes többi böngészőt és eszközt? Ez a böngésző bejelentkezve marad.",
+    "confirm_all_user": "Kijelentkezteti {username} felhasználót minden böngészőn és eszközön?",
+    "signed_out_one": "{device} kijelentkeztetve.",
+    "signed_out_count": "Kijelentkeztetett munkamenetek: {count}",
+    "none": "Egy böngésző sincs bejelentkezve.",
+    "none_other": "Más böngésző vagy eszköz nincs bejelentkezve.",
+    "none_user": "{username} sehol sincs bejelentkezve.",
+    "limit_many": "Egy fiók legfeljebb {max} böngészőn és eszközön lehet bejelentkezve. Az ezen felüli bejelentkezés a legrégebben használtat jelentkezteti ki.",
+    "limit_one": "Ez a szerver fiókonként egy munkamenetet enged: az új bejelentkezés kijelentkezteti a másik böngészőt.",
+    "limit_none": "Ez a szerver nem korlátozza a fiókonkénti munkamenetek számát.",
+    "load_failed": "A bejelentkezett eszközöket nem sikerült betölteni."
   }
 }

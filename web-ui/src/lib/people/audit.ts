@@ -244,7 +244,7 @@ export function hardeningText(
 				max: m[2] ?? ''
 			});
 	} else if (id === 'single_session') {
-		const m = /\(currently (\w+)\)/.exec(item.description);
+		const m = /\(currently (\w+)[;)]/.exec(item.description);
 		if (m) {
 			const value = m[1] ?? '';
 			const limit = value === 'unlimited' ? (known(t, 'security_audit.hardening_unlimited') ?? value) : value;

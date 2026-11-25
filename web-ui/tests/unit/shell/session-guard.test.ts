@@ -36,6 +36,16 @@ describe('session guard', () => {
 		expect(url.searchParams.get('return')).toBe('/app/devices?open=900100001');
 	});
 
+	test('another tab told its session was signed out elsewhere passes the reason on, so this one says the same (A239)', async () => {
+		const g = await import('../../../src/lib/shell/session-guard.svelte.ts');
+		g.startGuard(null);
+		window.dispatchEvent(
+			new StorageEvent('storage', { key: g.EXPIRED_KEY, newValue: '{"at":1,"code":"session_signed_out"}' })
+		);
+		const url = new URL(assign.mock.calls[0]![0] as string, 'http://localhost');
+		expect(url.searchParams.get('reason')).toBe('session_signed_out');
+	});
+
 	test('other storage keys do nothing', async () => {
 		const g = await import('../../../src/lib/shell/session-guard.svelte.ts');
 		g.startGuard(null);

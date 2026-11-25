@@ -168,12 +168,17 @@
     "totp_setup_required": "Ce serveur exige la connexion à deux facteurs. Scannez le code QR avec une application d'authentification, puis saisissez le code à 6 chiffres qu'elle affiche.",
     "passwords_mismatch": "Les mots de passe ne correspondent pas",
     "emergency_mode_banner": "Serveur Go injoignable : mode d'urgence actif (administrateurs uniquement, fonctions limitées)",
-    "session_expired": "Votre session a expiré ou a été remplacée par une nouvelle connexion. Veuillez vous reconnecter.",
+    "session_expired": "Votre session a expiré. Veuillez vous reconnecter.",
     "session_idle_warning_title": "Session bientôt expirée",
     "session_idle_warning_body": "Vous serez déconnecté pour inactivité dans {{seconds}} secondes.",
     "session_stay_signed_in": "Rester connecté",
     "show_password": "Afficher le mot de passe",
-    "sso_redirecting": "Ouverture de l'authentification unique…"
+    "sso_redirecting": "Ouverture de l'authentification unique…",
+    "signed_out_elsewhere": "Vous avez été déconnecté depuis un autre appareil. Veuillez vous reconnecter.",
+    "signed_out_by_admin": "Un administrateur vous a déconnecté. Veuillez vous reconnecter.",
+    "signed_out_replaced": "Vous avez été déconnecté, car votre compte s'est connecté dans un autre navigateur. Ce serveur autorise une session par compte.",
+    "signed_out_limit": "Vous avez été déconnecté, car votre compte s'est connecté dans plus de navigateurs que ce serveur n'autorise. Veuillez vous reconnecter.",
+    "signed_out_account_changed": "Vous avez été déconnecté, car votre mot de passe, votre connexion à deux facteurs ou vos accès ont changé. Veuillez vous reconnecter."
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -1473,7 +1478,10 @@
       "require_2fa": "Exiger la connexion à deux facteurs",
       "require_2fa_hint": "Un compte local sans connexion à deux facteurs la configure juste après sa prochaine connexion par mot de passe et ne peut rien faire d'autre d'ici là ; le client de bureau et l'API le refusent jusque-là. Les comptes de l'annuaire et de l'authentification unique sont laissés à leur fournisseur.",
       "ldap_enabled_hint": "Les personnes de votre annuaire se connectent avec leur identifiant et mot de passe de l'annuaire. Chaque compte utilise une seule méthode de connexion : les comptes de l'annuaire ne peuvent pas utiliser un mot de passe défini dans cette console.",
-      "attrs_note": "Les valeurs par défaut conviennent dans la plupart des cas. Modifiez-les seulement si les noms ou adresses e-mail arrivent faux ou vides."
+      "attrs_note": "Les valeurs par défaut conviennent dans la plupart des cas. Modifiez-les seulement si les noms ou adresses e-mail arrivent faux ou vides.",
+      "single_session": "Une session par compte",
+      "single_session_hint": "Une nouvelle connexion déconnecte l'autre navigateur du compte. Désactivé : un compte peut être connecté sur {max} navigateurs et appareils au plus en même temps.",
+      "single_session_env": "SESSION_MAX_PER_USER vaut {value} dans l'environnement du serveur et décide à la place de ce réglage. Retirez-le pour utiliser ce réglage."
     },
     "backup_tab": {
       "create_title": "Créer une sauvegarde",
@@ -1929,7 +1937,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "Jeton d'API expiré",
-    "action_api_token_deleted": "Jeton d'API supprimé"
+    "action_api_token_deleted": "Jeton d'API supprimé",
+    "action_session_signed_out": "Session déconnectée depuis un autre appareil",
+    "action_session_ended_by_admin": "Session terminée par un administrateur",
+    "action_session_limit": "Session terminée par la limite de sessions",
+    "action_console_sessions_policy_changed": "Sessions par compte modifiées"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8604,5 +8616,34 @@
     "switched_to_ux36": "UX 3.6 bêta activée pour ce navigateur.",
     "switched_to_ux35": "UX 3.5 restaurée pour ce navigateur.",
     "default_hint": "Disposition par défaut. Stable et complète."
+  },
+  "sessions": {
+    "title": "Appareils connectés",
+    "user_title": "Appareils connectés de {username}",
+    "user_menu": "Appareils connectés…",
+    "subtitle_own": "Les navigateurs et appareils sur lesquels votre compte est connecté.",
+    "subtitle_user": "Les navigateurs et appareils sur lesquels {username} est connecté.",
+    "this_browser": "Ce navigateur",
+    "browser_on_system": "{browser} sous {system}",
+    "browser_on": "Un navigateur sous {system}",
+    "unknown_browser": "Navigateur inconnu",
+    "address": "Adresse",
+    "signed_in": "Connecté",
+    "last_used": "Dernière utilisation",
+    "sign_out": "Déconnecter",
+    "sign_out_everywhere_else": "Déconnecter partout ailleurs",
+    "sign_out_all": "Déconnecter partout",
+    "confirm_sign_out": "Déconnecter {device} ? Ce navigateur revient à la page de connexion.",
+    "confirm_everywhere_else": "Déconnecter tous les autres navigateurs et appareils ? Ce navigateur reste connecté.",
+    "confirm_all_user": "Déconnecter {username} sur tous les navigateurs et appareils ?",
+    "signed_out_one": "{device} déconnecté.",
+    "signed_out_count": "Sessions déconnectées : {count}",
+    "none": "Aucun navigateur n'est connecté.",
+    "none_other": "Aucun autre navigateur ni appareil n'est connecté.",
+    "none_user": "{username} n'est connecté nulle part.",
+    "limit_many": "Un compte peut être connecté sur {max} navigateurs et appareils au plus. Une connexion de plus déconnecte celui qui n'a pas servi depuis le plus longtemps.",
+    "limit_one": "Ce serveur autorise une session par compte : une nouvelle connexion déconnecte l'autre navigateur.",
+    "limit_none": "Ce serveur ne limite pas les sessions par compte.",
+    "load_failed": "Impossible de charger les appareils connectés."
   }
 }

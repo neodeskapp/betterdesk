@@ -170,12 +170,17 @@
     "oidc_no_account": "Hesabınız bulunamadı ve otomatik kayıt devre dışı bırakıldı.",
     "totp_rate_limited": "Çok fazla deneme. Lütfen daha sonra tekrar deneyin.",
     "emergency_mode_banner": "Go server erişilemiyor — acil durum modunda çalışıyor (yalnızca yönetici, sınırlı işlevsellik)",
-    "session_expired": "Oturumunuz sona erdi veya yeni bir girişle değiştirildi. Lütfen tekrar oturum açın.",
+    "session_expired": "Oturumunuz sona erdi. Lütfen tekrar oturum açın.",
     "session_idle_warning_title": "Oturum yakında sona erecek",
     "session_idle_warning_body": "Hareketsizlik nedeniyle {{seconds}} saniye içinde oturumunuz kapatılacak.",
     "session_stay_signed_in": "Oturumda kal",
     "show_password": "Şifreyi göster",
-    "sso_redirecting": "Tek oturum açma açılıyor…"
+    "sso_redirecting": "Tek oturum açma açılıyor…",
+    "signed_out_elsewhere": "Oturumunuz başka bir cihazdan kapatıldı. Lütfen tekrar oturum açın.",
+    "signed_out_by_admin": "Bir yönetici oturumunuzu kapattı. Lütfen tekrar oturum açın.",
+    "signed_out_replaced": "Hesabınız başka bir tarayıcıda oturum açtığı için oturumunuz kapatıldı. Bu sunucu hesap başına bir oturuma izin verir.",
+    "signed_out_limit": "Hesabınız bu sunucunun izin verdiğinden fazla tarayıcıda oturum açtığı için oturumunuz kapatıldı. Lütfen tekrar oturum açın.",
+    "signed_out_account_changed": "Parolanız, iki adımlı oturum açmanız veya erişiminiz değiştiği için oturumunuz kapatıldı. Lütfen tekrar oturum açın."
   },
   "dashboard": {
     "title": "Kontrol Paneli",
@@ -1475,7 +1480,10 @@
       "require_2fa": "İki adımlı oturum açmayı zorunlu kıl",
       "require_2fa_hint": "İki adımlı oturum açması olmayan yerel bir hesap, bir sonraki parolalı oturum açışından hemen sonra bunu kurar ve o zamana kadar başka bir şey yapamaz; masaüstü istemcisi ve API o zamana kadar onu reddeder. Dizin ve çoklu oturum açma hesapları kendi sağlayıcılarına bırakılır.",
       "ldap_enabled_hint": "Dizininizdeki kişiler dizin kullanıcı adı ve parolasıyla oturum açar. Her hesap tek bir oturum açma yolu kullanır; bu nedenle dizin hesapları bu konsolda belirlenen parolayı kullanamaz.",
-      "attrs_note": "Varsayılanlar çoğu durumda işe yarar. Yalnızca adlar veya e-posta adresleri yanlış ya da boş geliyorsa değiştirin."
+      "attrs_note": "Varsayılanlar çoğu durumda işe yarar. Yalnızca adlar veya e-posta adresleri yanlış ya da boş geliyorsa değiştirin.",
+      "single_session": "Hesap başına bir oturum",
+      "single_session_hint": "Yeni bir oturum açma, hesabın diğer tarayıcısındaki oturumu kapatır. Kapalı: bir hesap aynı anda en fazla {max} tarayıcı ve cihazda oturum açabilir.",
+      "single_session_env": "SESSION_MAX_PER_USER sunucunun ortamında {value} olarak ayarlı ve bu anahtarın yerine o karar verir. Anahtarı kullanmak için oradan kaldırın."
     },
     "backup_tab": {
       "create_title": "Yedek oluştur",
@@ -1931,7 +1939,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "API belirtecinin süresi doldu",
-    "action_api_token_deleted": "API belirteci silindi"
+    "action_api_token_deleted": "API belirteci silindi",
+    "action_session_signed_out": "Oturum başka bir cihazdan kapatıldı",
+    "action_session_ended_by_admin": "Oturum bir yönetici tarafından sonlandırıldı",
+    "action_session_limit": "Oturum, oturum sınırı nedeniyle sonlandırıldı",
+    "action_console_sessions_policy_changed": "Hesap başına oturumlar değiştirildi"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8606,5 +8618,34 @@
     "switched_to_ux36": "Bu tarayıcı için UX 3.6 beta etkinleştirildi.",
     "switched_to_ux35": "Bu tarayıcı için UX 3.5 geri yüklendi.",
     "default_hint": "Varsayılan düzen. Kararlı ve tüm özelliklerle."
+  },
+  "sessions": {
+    "title": "Oturum açık cihazlar",
+    "user_title": "{username} için oturum açık cihazlar",
+    "user_menu": "Oturum açık cihazlar…",
+    "subtitle_own": "Hesabınızın oturum açık olduğu tarayıcılar ve cihazlar.",
+    "subtitle_user": "{username} kullanıcısının oturum açık olduğu tarayıcılar ve cihazlar.",
+    "this_browser": "Bu tarayıcı",
+    "browser_on_system": "{system} üzerinde {browser}",
+    "browser_on": "{system} üzerinde bir tarayıcı",
+    "unknown_browser": "Bilinmeyen tarayıcı",
+    "address": "Adres",
+    "signed_in": "Oturum açıldı",
+    "last_used": "Son kullanım",
+    "sign_out": "Oturumu kapat",
+    "sign_out_everywhere_else": "Diğer her yerde oturumu kapat",
+    "sign_out_all": "Her yerde oturumu kapat",
+    "confirm_sign_out": "{device} oturumu kapatılsın mı? O tarayıcı oturum açma sayfasına gider.",
+    "confirm_everywhere_else": "Diğer tüm tarayıcı ve cihazlarda oturum kapatılsın mı? Bu tarayıcıda oturum açık kalır.",
+    "confirm_all_user": "{username} tüm tarayıcı ve cihazlarda oturumu kapatılsın mı?",
+    "signed_out_one": "{device} oturumu kapatıldı.",
+    "signed_out_count": "Kapatılan oturumlar: {count}",
+    "none": "Hiçbir tarayıcıda oturum açık değil.",
+    "none_other": "Başka hiçbir tarayıcıda veya cihazda oturum açık değil.",
+    "none_user": "{username} hiçbir yerde oturum açmamış.",
+    "limit_many": "Bir hesap en fazla {max} tarayıcı ve cihazda oturum açabilir. Bunun üzerindeki bir oturum açma, en uzun süredir kullanılmayanı kapatır.",
+    "limit_one": "Bu sunucu hesap başına bir oturuma izin verir: yeni bir oturum açma diğer tarayıcıdaki oturumu kapatır.",
+    "limit_none": "Bu sunucu hesap başına oturum sayısını sınırlamaz.",
+    "load_failed": "Oturum açık cihazlar yüklenemedi."
   }
 }

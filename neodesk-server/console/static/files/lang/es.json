@@ -164,12 +164,17 @@
     "oidc_no_account": "No se encontró tu cuenta y el registro automático está deshabilitado.",
     "totp_rate_limited": "Demasiados intentos. Inténtalo de nuevo más tarde.",
     "emergency_mode_banner": "Servidor Go no disponible — funcionando en modo de emergencia (solo administrador, funcionalidad limitada)",
-    "session_expired": "Su sesión expiró o fue reemplazada por un nuevo inicio de sesión. Inicie sesión de nuevo.",
+    "session_expired": "Su sesión expiró. Inicie sesión de nuevo.",
     "session_idle_warning_title": "La sesión expirará pronto",
     "session_idle_warning_body": "Se cerrará la sesión por inactividad en {{seconds}} segundos.",
     "session_stay_signed_in": "Seguir conectado",
     "show_password": "Mostrar contraseña",
-    "sso_redirecting": "Abriendo el inicio de sesión único…"
+    "sso_redirecting": "Abriendo el inicio de sesión único…",
+    "signed_out_elsewhere": "Se cerró su sesión desde otro dispositivo. Inicie sesión de nuevo.",
+    "signed_out_by_admin": "Un administrador cerró su sesión. Inicie sesión de nuevo.",
+    "signed_out_replaced": "Se cerró su sesión porque su cuenta inició sesión en otro navegador. Este servidor permite una sesión por cuenta.",
+    "signed_out_limit": "Se cerró su sesión porque su cuenta inició sesión en más navegadores de los que permite este servidor. Inicie sesión de nuevo.",
+    "signed_out_account_changed": "Se cerró su sesión porque cambió su contraseña, su inicio de sesión en dos pasos o su acceso. Inicie sesión de nuevo."
   },
   "dashboard": {
     "title": "Panel",
@@ -1469,7 +1474,10 @@
       "require_2fa": "Exigir el inicio de sesión en dos pasos",
       "require_2fa_hint": "Una cuenta local sin inicio de sesión en dos pasos lo configura justo después de su siguiente inicio de sesión con contraseña y no puede hacer nada más hasta entonces; el cliente de escritorio y la API la rechazan hasta que lo haga. Las cuentas del directorio y de inicio de sesión único quedan a cargo de su proveedor.",
       "ldap_enabled_hint": "Las personas de su directorio inician sesión con su usuario y contraseña del directorio. Cada cuenta usa una sola forma de iniciar sesión, así que las cuentas del directorio no pueden usar una contraseña definida en esta consola.",
-      "attrs_note": "Los valores predeterminados sirven en la mayoría de los casos. Cámbielos solo si los nombres o correos llegan mal o vacíos."
+      "attrs_note": "Los valores predeterminados sirven en la mayoría de los casos. Cámbielos solo si los nombres o correos llegan mal o vacíos.",
+      "single_session": "Una sesión por cuenta",
+      "single_session_hint": "Un nuevo inicio de sesión cierra la sesión del otro navegador de la cuenta. Desactivado: una cuenta puede tener la sesión iniciada en hasta {max} navegadores y dispositivos a la vez.",
+      "single_session_env": "SESSION_MAX_PER_USER vale {value} en el entorno del servidor y decide en lugar de este interruptor. Quítelo allí para usar el interruptor."
     },
     "backup_tab": {
       "create_title": "Crear una copia de seguridad",
@@ -1925,7 +1933,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "Token de API caducado",
-    "action_api_token_deleted": "Token de API eliminado"
+    "action_api_token_deleted": "Token de API eliminado",
+    "action_session_signed_out": "Sesión cerrada desde otro dispositivo",
+    "action_session_ended_by_admin": "Sesión terminada por un administrador",
+    "action_session_limit": "Sesión terminada por el límite de sesiones",
+    "action_console_sessions_policy_changed": "Sesiones por cuenta cambiadas"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8600,5 +8612,34 @@
     "switched_to_ux36": "UX 3.6 beta activada para este navegador.",
     "switched_to_ux35": "UX 3.5 restaurada para este navegador.",
     "default_hint": "Diseño predeterminado. Estable y con todas las funciones."
+  },
+  "sessions": {
+    "title": "Dispositivos con sesión iniciada",
+    "user_title": "Dispositivos con sesión iniciada de {username}",
+    "user_menu": "Dispositivos con sesión iniciada…",
+    "subtitle_own": "Los navegadores y dispositivos en los que su cuenta tiene la sesión iniciada.",
+    "subtitle_user": "Los navegadores y dispositivos en los que {username} tiene la sesión iniciada.",
+    "this_browser": "Este navegador",
+    "browser_on_system": "{browser} en {system}",
+    "browser_on": "Un navegador en {system}",
+    "unknown_browser": "Navegador desconocido",
+    "address": "Dirección",
+    "signed_in": "Inicio de sesión",
+    "last_used": "Último uso",
+    "sign_out": "Cerrar sesión",
+    "sign_out_everywhere_else": "Cerrar sesión en todos los demás",
+    "sign_out_all": "Cerrar sesión en todas partes",
+    "confirm_sign_out": "¿Cerrar la sesión de {device}? Ese navegador vuelve a la página de inicio de sesión.",
+    "confirm_everywhere_else": "¿Cerrar la sesión en todos los demás navegadores y dispositivos? Este navegador sigue con la sesión iniciada.",
+    "confirm_all_user": "¿Cerrar la sesión de {username} en todos los navegadores y dispositivos?",
+    "signed_out_one": "Sesión de {device} cerrada.",
+    "signed_out_count": "Sesiones cerradas: {count}",
+    "none": "Ningún navegador tiene la sesión iniciada.",
+    "none_other": "Ningún otro navegador ni dispositivo tiene la sesión iniciada.",
+    "none_user": "{username} no tiene la sesión iniciada en ningún sitio.",
+    "limit_many": "Una cuenta puede tener la sesión iniciada en hasta {max} navegadores y dispositivos. Un inicio de sesión más cierra el que lleva más tiempo sin usarse.",
+    "limit_one": "Este servidor permite una sesión por cuenta: un nuevo inicio de sesión cierra la del otro navegador.",
+    "limit_none": "Este servidor no limita las sesiones por cuenta.",
+    "load_failed": "No se pudieron cargar los dispositivos con sesión iniciada."
   }
 }

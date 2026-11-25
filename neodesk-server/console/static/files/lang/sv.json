@@ -170,12 +170,17 @@
     "oidc_no_account": "Ditt konto hittades inte och automatisk registrering är inaktiverad.",
     "totp_rate_limited": "För många försök. Försök igen senare.",
     "emergency_mode_banner": "Go server går inte att nå — körs i nödläge (endast administratör, begränsad funktionalitet)",
-    "session_expired": "Din session har gått ut eller ersatts av en ny inloggning. Logga in igen.",
+    "session_expired": "Din session har gått ut. Logga in igen.",
     "session_idle_warning_title": "Sessionen går snart ut",
     "session_idle_warning_body": "Du loggas ut på grund av inaktivitet om {{seconds}} sekunder.",
     "session_stay_signed_in": "Förbli inloggad",
     "show_password": "Visa lösenord",
-    "sso_redirecting": "Öppnar enkel inloggning…"
+    "sso_redirecting": "Öppnar enkel inloggning…",
+    "signed_out_elsewhere": "Du har loggats ut från en annan enhet. Logga in igen.",
+    "signed_out_by_admin": "En administratör har loggat ut dig. Logga in igen.",
+    "signed_out_replaced": "Du har loggats ut eftersom ditt konto loggade in i en annan webbläsare. Den här servern tillåter en session per konto.",
+    "signed_out_limit": "Du har loggats ut eftersom ditt konto loggade in i fler webbläsare än den här servern tillåter. Logga in igen.",
+    "signed_out_account_changed": "Du har loggats ut eftersom ditt lösenord, din tvåstegsinloggning eller din åtkomst ändrades. Logga in igen."
   },
   "dashboard": {
     "title": "Instrumentbräda",
@@ -1475,7 +1480,10 @@
       "require_2fa": "Kräv tvåstegsinloggning",
       "require_2fa_hint": "Ett lokalt konto utan tvåstegsinloggning konfigurerar det direkt efter nästa inloggning med lösenord och kan inte göra något annat innan dess; skrivbordsklienten och API:et avvisar det tills dess. Katalog- och enkel inloggning-konton lämnas åt sin leverantör.",
       "ldap_enabled_hint": "Personer från katalogen loggar in med sitt katalogkonto och lösenord. Varje konto använder ett sätt att logga in, så katalogkonton kan inte använda ett lösenord som satts i den här konsolen.",
-      "attrs_note": "Standardvärdena fungerar i de flesta fall. Ändra dem bara om namn eller e-postadresser kommer fel eller tomma."
+      "attrs_note": "Standardvärdena fungerar i de flesta fall. Ändra dem bara om namn eller e-postadresser kommer fel eller tomma.",
+      "single_session": "En session per konto",
+      "single_session_hint": "En ny inloggning loggar ut kontots andra webbläsare. Av: ett konto kan vara inloggat i upp till {max} webbläsare och enheter samtidigt.",
+      "single_session_env": "SESSION_MAX_PER_USER är satt till {value} i serverns miljö och bestämmer i stället för den här brytaren. Ta bort den där för att använda brytaren."
     },
     "backup_tab": {
       "create_title": "Skapa en säkerhetskopia",
@@ -1931,7 +1939,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "API-token har gått ut",
-    "action_api_token_deleted": "API-token borttaget"
+    "action_api_token_deleted": "API-token borttaget",
+    "action_session_signed_out": "Session utloggad från en annan enhet",
+    "action_session_ended_by_admin": "Session avslutad av en administratör",
+    "action_session_limit": "Session avslutad av sessionsgränsen",
+    "action_console_sessions_policy_changed": "Sessioner per konto ändrade"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8606,5 +8618,34 @@
     "switched_to_ux36": "UX 3.6 beta har aktiverats för den här webbläsaren.",
     "switched_to_ux35": "UX 3.5 har återställts för den här webbläsaren.",
     "default_hint": "Standardlayout. Stabil och fullt utrustad."
+  },
+  "sessions": {
+    "title": "Inloggade enheter",
+    "user_title": "Inloggade enheter för {username}",
+    "user_menu": "Inloggade enheter…",
+    "subtitle_own": "Webbläsarna och enheterna där ditt konto är inloggat.",
+    "subtitle_user": "Webbläsarna och enheterna där {username} är inloggad.",
+    "this_browser": "Den här webbläsaren",
+    "browser_on_system": "{browser} på {system}",
+    "browser_on": "En webbläsare på {system}",
+    "unknown_browser": "Okänd webbläsare",
+    "address": "Adress",
+    "signed_in": "Inloggad",
+    "last_used": "Senast använd",
+    "sign_out": "Logga ut",
+    "sign_out_everywhere_else": "Logga ut överallt annars",
+    "sign_out_all": "Logga ut överallt",
+    "confirm_sign_out": "Logga ut {device}? Den webbläsaren går till inloggningssidan.",
+    "confirm_everywhere_else": "Logga ut alla andra webbläsare och enheter? Den här webbläsaren förblir inloggad.",
+    "confirm_all_user": "Logga ut {username} i alla webbläsare och enheter?",
+    "signed_out_one": "{device} utloggad.",
+    "signed_out_count": "Utloggade sessioner: {count}",
+    "none": "Ingen webbläsare är inloggad.",
+    "none_other": "Ingen annan webbläsare eller enhet är inloggad.",
+    "none_user": "{username} är inte inloggad någonstans.",
+    "limit_many": "Ett konto kan vara inloggat i upp till {max} webbläsare och enheter. En inloggning utöver det loggar ut den som varit oanvänd längst.",
+    "limit_one": "Den här servern tillåter en session per konto: en ny inloggning loggar ut den andra webbläsaren.",
+    "limit_none": "Den här servern begränsar inte antalet sessioner per konto.",
+    "load_failed": "De inloggade enheterna kunde inte läsas in."
   }
 }

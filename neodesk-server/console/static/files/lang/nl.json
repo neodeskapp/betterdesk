@@ -164,12 +164,17 @@
     "oidc_no_account": "Uw account is niet gevonden en automatische registratie is uitgeschakeld.",
     "totp_rate_limited": "Te veel pogingen. Probeer het later opnieuw.",
     "emergency_mode_banner": "Go-server onbereikbaar — noodmodus actief (alleen beheerder, beperkte functionaliteit)",
-    "session_expired": "Uw sessie is verlopen of vervangen door een nieuwe login. Meld u opnieuw aan.",
+    "session_expired": "Uw sessie is verlopen. Meld u opnieuw aan.",
     "session_idle_warning_title": "Sessie verloopt binnenkort",
     "session_idle_warning_body": "U wordt over {{seconds}} seconden uitgelogd wegens inactiviteit.",
     "session_stay_signed_in": "Ingelogd blijven",
     "show_password": "Wachtwoord tonen",
-    "sso_redirecting": "Single sign-on wordt geopend…"
+    "sso_redirecting": "Single sign-on wordt geopend…",
+    "signed_out_elsewhere": "U bent vanaf een ander apparaat afgemeld. Meld u opnieuw aan.",
+    "signed_out_by_admin": "Een beheerder heeft u afgemeld. Meld u opnieuw aan.",
+    "signed_out_replaced": "U bent afgemeld omdat uw account zich in een andere browser heeft aangemeld. Deze server staat één sessie per account toe.",
+    "signed_out_limit": "U bent afgemeld omdat uw account zich in meer browsers heeft aangemeld dan deze server toestaat. Meld u opnieuw aan.",
+    "signed_out_account_changed": "U bent afgemeld omdat uw wachtwoord, aanmelden in twee stappen of uw toegang is gewijzigd. Meld u opnieuw aan."
   },
   "dashboard": {
     "title": "Overzicht",
@@ -1469,7 +1474,10 @@
       "require_2fa": "Aanmelden in twee stappen vereisen",
       "require_2fa_hint": "Een lokaal account zonder aanmelden in twee stappen stelt het in direct na de volgende aanmelding met wachtwoord en kan tot die tijd niets anders; de desktopclient en de API weigeren het tot dan. Directory- en eenmalige-aanmeldingsaccounts worden aan hun provider overgelaten.",
       "ldap_enabled_hint": "Mensen uit uw directory melden zich aan met hun directorygebruikersnaam en -wachtwoord. Elk account gebruikt één manier van aanmelden, dus directoryaccounts kunnen geen wachtwoord uit deze console gebruiken.",
-      "attrs_note": "De standaardwaarden werken in de meeste gevallen. Wijzig ze alleen als namen of e-mailadressen verkeerd of leeg binnenkomen."
+      "attrs_note": "De standaardwaarden werken in de meeste gevallen. Wijzig ze alleen als namen of e-mailadressen verkeerd of leeg binnenkomen.",
+      "single_session": "Eén sessie per account",
+      "single_session_hint": "Een nieuwe aanmelding meldt de andere browser van het account af. Uit: een account kan tegelijk op maximaal {max} browsers en apparaten aangemeld zijn.",
+      "single_session_env": "SESSION_MAX_PER_USER staat in de omgeving van de server op {value} en beslist in plaats van deze schakelaar. Verwijder het daar om de schakelaar te gebruiken."
     },
     "backup_tab": {
       "create_title": "Een back-up maken",
@@ -1925,7 +1933,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "API-token verlopen",
-    "action_api_token_deleted": "API-token verwijderd"
+    "action_api_token_deleted": "API-token verwijderd",
+    "action_session_signed_out": "Sessie vanaf een ander apparaat afgemeld",
+    "action_session_ended_by_admin": "Sessie beëindigd door een beheerder",
+    "action_session_limit": "Sessie beëindigd door de sessielimiet",
+    "action_console_sessions_policy_changed": "Sessies per account gewijzigd"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8600,5 +8612,34 @@
     "switched_to_ux36": "UX 3.6 bèta is ingeschakeld voor deze browser.",
     "switched_to_ux35": "UX 3.5 is hersteld voor deze browser.",
     "default_hint": "Standaardlay-out. Stabiel en volledig."
+  },
+  "sessions": {
+    "title": "Aangemelde apparaten",
+    "user_title": "Aangemelde apparaten van {username}",
+    "user_menu": "Aangemelde apparaten…",
+    "subtitle_own": "De browsers en apparaten waarop uw account is aangemeld.",
+    "subtitle_user": "De browsers en apparaten waarop {username} is aangemeld.",
+    "this_browser": "Deze browser",
+    "browser_on_system": "{browser} op {system}",
+    "browser_on": "Een browser op {system}",
+    "unknown_browser": "Onbekende browser",
+    "address": "Adres",
+    "signed_in": "Aangemeld",
+    "last_used": "Laatst gebruikt",
+    "sign_out": "Afmelden",
+    "sign_out_everywhere_else": "Overal elders afmelden",
+    "sign_out_all": "Overal afmelden",
+    "confirm_sign_out": "{device} afmelden? Die browser gaat naar de aanmeldpagina.",
+    "confirm_everywhere_else": "Alle andere browsers en apparaten afmelden? Deze browser blijft aangemeld.",
+    "confirm_all_user": "{username} op alle browsers en apparaten afmelden?",
+    "signed_out_one": "{device} afgemeld.",
+    "signed_out_count": "Afgemelde sessies: {count}",
+    "none": "Er is geen browser aangemeld.",
+    "none_other": "Er is geen andere browser of ander apparaat aangemeld.",
+    "none_user": "{username} is nergens aangemeld.",
+    "limit_many": "Een account kan op maximaal {max} browsers en apparaten aangemeld zijn. Een aanmelding daarboven meldt de langst niet gebruikte af.",
+    "limit_one": "Deze server staat één sessie per account toe: een nieuwe aanmelding meldt de andere browser af.",
+    "limit_none": "Deze server beperkt het aantal sessies per account niet.",
+    "load_failed": "De aangemelde apparaten konden niet worden geladen."
   }
 }

@@ -164,12 +164,17 @@
     "oidc_no_account": "귀하의 계정을 찾을 수 없으며 자동 등록이 비활성화되었습니다.",
     "totp_rate_limited": "시도 횟수가 너무 많습니다. 나중에 다시 시도해 주세요.",
     "emergency_mode_banner": "Go server에 연결할 수 없음 — 비상 모드에서 실행 중(관리자 전용, 제한된 기능)",
-    "session_expired": "세션이 만료되었거나 새 로그인으로 대체되었습니다. 다시 로그인해 주세요.",
+    "session_expired": "세션이 만료되었습니다. 다시 로그인해 주세요.",
     "session_idle_warning_title": "세션이 곧 만료됩니다",
     "session_idle_warning_body": "비활성으로 인해 {{seconds}}초 후 로그아웃됩니다.",
     "session_stay_signed_in": "로그인 유지",
     "show_password": "비밀번호 표시",
-    "sso_redirecting": "통합 로그인을 여는 중…"
+    "sso_redirecting": "통합 로그인을 여는 중…",
+    "signed_out_elsewhere": "다른 기기에서 로그아웃되었습니다. 다시 로그인해 주세요.",
+    "signed_out_by_admin": "관리자가 로그아웃했습니다. 다시 로그인해 주세요.",
+    "signed_out_replaced": "계정이 다른 브라우저에서 로그인하여 로그아웃되었습니다. 이 서버는 계정당 세션 하나만 허용합니다.",
+    "signed_out_limit": "계정이 이 서버가 허용하는 것보다 많은 브라우저에서 로그인하여 로그아웃되었습니다. 다시 로그인해 주세요.",
+    "signed_out_account_changed": "비밀번호, 2단계 로그인 또는 접근 권한이 바뀌어 로그아웃되었습니다. 다시 로그인해 주세요."
   },
   "dashboard": {
     "title": "대시보드",
@@ -1469,7 +1474,10 @@
       "require_2fa": "2단계 로그인 필수",
       "require_2fa_hint": "2단계 로그인이 없는 로컬 계정은 다음 비밀번호 로그인 직후 이를 설정하며 그 전에는 다른 작업을 할 수 없습니다. 설정할 때까지 데스크톱 클라이언트와 API는 이를 거부합니다. 디렉터리 및 SSO 계정은 해당 공급자에 맡깁니다.",
       "ldap_enabled_hint": "디렉터리 사용자는 디렉터리 사용자 이름과 비밀번호로 로그인합니다. 계정마다 로그인 방식은 하나이므로 디렉터리 계정은 이 콘솔에서 설정한 비밀번호를 쓸 수 없습니다.",
-      "attrs_note": "대부분 기본값으로 충분합니다. 이름이나 이메일 주소가 잘못되거나 비어 있을 때만 바꾸세요."
+      "attrs_note": "대부분 기본값으로 충분합니다. 이름이나 이메일 주소가 잘못되거나 비어 있을 때만 바꾸세요.",
+      "single_session": "계정당 세션 하나",
+      "single_session_hint": "새로 로그인하면 계정의 다른 브라우저가 로그아웃됩니다. 끔: 한 계정은 동시에 최대 {max}개의 브라우저와 기기에 로그인할 수 있습니다.",
+      "single_session_env": "서버 환경에서 SESSION_MAX_PER_USER가 {value}(으)로 설정되어 있어 이 스위치 대신 그 값이 적용됩니다. 스위치를 쓰려면 그곳에서 지우세요."
     },
     "backup_tab": {
       "create_title": "백업 만들기",
@@ -1925,7 +1933,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "API 토큰 만료",
-    "action_api_token_deleted": "API 토큰 삭제"
+    "action_api_token_deleted": "API 토큰 삭제",
+    "action_session_signed_out": "다른 기기에서 세션 로그아웃",
+    "action_session_ended_by_admin": "관리자가 세션 종료",
+    "action_session_limit": "세션 제한으로 세션 종료",
+    "action_console_sessions_policy_changed": "계정당 세션 변경"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8600,5 +8612,34 @@
     "switched_to_ux36": "이 브라우저에서 UX 3.6 베타를 사용 설정했습니다.",
     "switched_to_ux35": "이 브라우저에서 UX 3.5를 복원했습니다.",
     "default_hint": "기본 레이아웃입니다. 안정적이며 모든 기능을 제공합니다."
+  },
+  "sessions": {
+    "title": "로그인된 기기",
+    "user_title": "{username}의 로그인된 기기",
+    "user_menu": "로그인된 기기…",
+    "subtitle_own": "계정이 로그인되어 있는 브라우저와 기기입니다.",
+    "subtitle_user": "{username}이(가) 로그인되어 있는 브라우저와 기기입니다.",
+    "this_browser": "이 브라우저",
+    "browser_on_system": "{system}의 {browser}",
+    "browser_on": "{system}의 브라우저",
+    "unknown_browser": "알 수 없는 브라우저",
+    "address": "주소",
+    "signed_in": "로그인",
+    "last_used": "마지막 사용",
+    "sign_out": "로그아웃",
+    "sign_out_everywhere_else": "다른 모든 곳에서 로그아웃",
+    "sign_out_all": "모든 곳에서 로그아웃",
+    "confirm_sign_out": "{device}을(를) 로그아웃할까요? 그 브라우저는 로그인 페이지로 이동합니다.",
+    "confirm_everywhere_else": "다른 모든 브라우저와 기기를 로그아웃할까요? 이 브라우저는 로그인된 상태로 남습니다.",
+    "confirm_all_user": "모든 브라우저와 기기에서 {username}을(를) 로그아웃할까요?",
+    "signed_out_one": "{device}을(를) 로그아웃했습니다.",
+    "signed_out_count": "로그아웃한 세션: {count}",
+    "none": "로그인된 브라우저가 없습니다.",
+    "none_other": "로그인된 다른 브라우저나 기기가 없습니다.",
+    "none_user": "{username}은(는) 어디에도 로그인되어 있지 않습니다.",
+    "limit_many": "한 계정은 최대 {max}개의 브라우저와 기기에 로그인할 수 있습니다. 그보다 많이 로그인하면 가장 오래 사용하지 않은 것이 로그아웃됩니다.",
+    "limit_one": "이 서버는 계정당 세션 하나만 허용합니다: 새로 로그인하면 다른 브라우저가 로그아웃됩니다.",
+    "limit_none": "이 서버는 계정당 세션 수를 제한하지 않습니다.",
+    "load_failed": "로그인된 기기를 불러오지 못했습니다."
   }
 }

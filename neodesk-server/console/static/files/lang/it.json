@@ -164,12 +164,17 @@
     "oidc_no_account": "Account non trovato e registrazione automatica disabilitata.",
     "totp_rate_limited": "Troppi tentativi. Riprova più tardi.",
     "emergency_mode_banner": "Server Go non raggiungibile — modalità di emergenza attiva (solo amministratore, funzionalità limitate)",
-    "session_expired": "La sessione è scaduta o è stata sostituita da un nuovo accesso. Accedi di nuovo.",
+    "session_expired": "La sessione è scaduta. Accedi di nuovo.",
     "session_idle_warning_title": "Sessione in scadenza",
     "session_idle_warning_body": "Verrai disconnesso per inattività tra {{seconds}} secondi.",
     "session_stay_signed_in": "Resta connesso",
     "show_password": "Mostra password",
-    "sso_redirecting": "Apertura del single sign-on…"
+    "sso_redirecting": "Apertura del single sign-on…",
+    "signed_out_elsewhere": "Sei stato disconnesso da un altro dispositivo. Accedi di nuovo.",
+    "signed_out_by_admin": "Un amministratore ti ha disconnesso. Accedi di nuovo.",
+    "signed_out_replaced": "Sei stato disconnesso perché il tuo account ha effettuato l'accesso in un altro browser. Questo server consente una sessione per account.",
+    "signed_out_limit": "Sei stato disconnesso perché il tuo account ha effettuato l'accesso in più browser di quanti questo server ne consenta. Accedi di nuovo.",
+    "signed_out_account_changed": "Sei stato disconnesso perché sono cambiati la password, l'accesso in due passaggi o i tuoi permessi. Accedi di nuovo."
   },
   "dashboard": {
     "title": "Panoramica",
@@ -1469,7 +1474,10 @@
       "require_2fa": "Richiedi l'accesso in due passaggi",
       "require_2fa_hint": "Un account locale senza accesso in due passaggi lo configura subito dopo il prossimo accesso con password e fino ad allora non può fare altro; il client desktop e l'API lo rifiutano finché non l'ha fatto. Gli account della directory e dell'accesso singolo sono lasciati al loro provider.",
       "ldap_enabled_hint": "Le persone della tua directory accedono con nome utente e password della directory. Ogni account usa un solo modo di accesso, quindi gli account della directory non possono usare una password impostata in questa console.",
-      "attrs_note": "I valori predefiniti vanno bene nella maggior parte dei casi. Cambiali solo se nomi o indirizzi email arrivano errati o vuoti."
+      "attrs_note": "I valori predefiniti vanno bene nella maggior parte dei casi. Cambiali solo se nomi o indirizzi email arrivano errati o vuoti.",
+      "single_session": "Una sessione per account",
+      "single_session_hint": "Un nuovo accesso disconnette l'altro browser dell'account. Disattivato: un account può essere connesso su un massimo di {max} browser e dispositivi alla volta.",
+      "single_session_env": "SESSION_MAX_PER_USER è impostato su {value} nell'ambiente del server e decide al posto di questa opzione. Rimuovilo lì per usare l'opzione."
     },
     "backup_tab": {
       "create_title": "Crea un backup",
@@ -1925,7 +1933,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "Token API scaduto",
-    "action_api_token_deleted": "Token API eliminato"
+    "action_api_token_deleted": "Token API eliminato",
+    "action_session_signed_out": "Sessione disconnessa da un altro dispositivo",
+    "action_session_ended_by_admin": "Sessione terminata da un amministratore",
+    "action_session_limit": "Sessione terminata dal limite di sessioni",
+    "action_console_sessions_policy_changed": "Sessioni per account modificate"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8600,5 +8612,34 @@
     "switched_to_ux36": "UX 3.6 beta attivata per questo browser.",
     "switched_to_ux35": "UX 3.5 ripristinata per questo browser.",
     "default_hint": "Layout predefinito. Stabile e completo."
+  },
+  "sessions": {
+    "title": "Dispositivi connessi",
+    "user_title": "Dispositivi connessi di {username}",
+    "user_menu": "Dispositivi connessi…",
+    "subtitle_own": "I browser e i dispositivi su cui il tuo account ha effettuato l'accesso.",
+    "subtitle_user": "I browser e i dispositivi su cui {username} ha effettuato l'accesso.",
+    "this_browser": "Questo browser",
+    "browser_on_system": "{browser} su {system}",
+    "browser_on": "Un browser su {system}",
+    "unknown_browser": "Browser sconosciuto",
+    "address": "Indirizzo",
+    "signed_in": "Accesso",
+    "last_used": "Ultimo utilizzo",
+    "sign_out": "Disconnetti",
+    "sign_out_everywhere_else": "Disconnetti ovunque tranne qui",
+    "sign_out_all": "Disconnetti ovunque",
+    "confirm_sign_out": "Disconnettere {device}? Quel browser torna alla pagina di accesso.",
+    "confirm_everywhere_else": "Disconnettere tutti gli altri browser e dispositivi? Questo browser resta connesso.",
+    "confirm_all_user": "Disconnettere {username} da tutti i browser e dispositivi?",
+    "signed_out_one": "{device} disconnesso.",
+    "signed_out_count": "Sessioni disconnesse: {count}",
+    "none": "Nessun browser è connesso.",
+    "none_other": "Nessun altro browser o dispositivo è connesso.",
+    "none_user": "{username} non è connesso da nessuna parte.",
+    "limit_many": "Un account può essere connesso su un massimo di {max} browser e dispositivi. Un accesso in più disconnette quello non usato da più tempo.",
+    "limit_one": "Questo server consente una sessione per account: un nuovo accesso disconnette l'altro browser.",
+    "limit_none": "Questo server non limita le sessioni per account.",
+    "load_failed": "Impossibile caricare i dispositivi connessi."
   }
 }

@@ -236,6 +236,23 @@ describe('notices, branding and the compact sign-in', () => {
 		expect(screen.queryByText('auth.session_expired')).toBeNull();
 	});
 
+	test('a session ended elsewhere says why: another device, an administrator, one session per account (A239)', async () => {
+		for (const [reason, text] of [
+			['session_signed_out', 'auth.signed_out_elsewhere'],
+			['session_ended_by_admin', 'auth.signed_out_by_admin'],
+			['session_replaced', 'auth.signed_out_replaced'],
+			['session_limit', 'auth.signed_out_limit'],
+			['session_revoked', 'auth.signed_out_account_changed'],
+			['session_idle', 'auth.session_expired'],
+			['made_up', 'auth.session_expired']
+		] as const) {
+			reply('/api/auth/oidc/status', { body: { enabled: false } });
+			render(LoginView, { page: page(), query: readLoginQuery(`?expired=1&reason=${reason}`), go: vi.fn() });
+			expect(screen.getByRole('status')).toHaveTextContent(text);
+			cleanup();
+		}
+	});
+
 	test("the top bar's language menu: the current language as its label; a choice loads, saves and reloads", async () => {
 		const p = page();
 		setStrings('en', 'ltr', {}, p.languages);

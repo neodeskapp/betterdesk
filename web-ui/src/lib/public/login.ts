@@ -15,6 +15,11 @@ export interface LoginQuery {
 	/** ?expired=1: the session ended (the server adds it only then, R4) */
 	expired: boolean;
 	/**
+	 * ?reason=: why it ended, when another browser, an admin, the session
+	 * limit or a change to the account ended it (A239); null otherwise.
+	 */
+	endedBy: EndedBy | null;
+	/**
 	 * ?error=: why a single sign-on did not sign the person in: an oidc_*
 	 * code, username_collision (the name belongs to an account that signs in
 	 * another way) or account_disabled. Null for none or an unknown value.
@@ -28,6 +33,20 @@ export interface LoginQuery {
 	desktop: boolean;
 }
 
+/** The reasons a session ended elsewhere, with the sign-in page's sentence for each */
+export const ENDED_BY = {
+	session_signed_out: 'auth.signed_out_elsewhere',
+	session_ended_by_admin: 'auth.signed_out_by_admin',
+	session_replaced: 'auth.signed_out_replaced',
+	session_limit: 'auth.signed_out_limit',
+	session_revoked: 'auth.signed_out_account_changed'
+} as const;
+export type EndedBy = keyof typeof ENDED_BY;
+
+function endedBy(reason: string | null): EndedBy | null {
+	return reason && Object.hasOwn(ENDED_BY, reason) ? (reason as EndedBy) : null;
+}
+
 /** The codes besides oidc_* that the server's single sign-on sends back */
 const SSO_CODES = ['username_collision', 'account_disabled'];
 
@@ -37,6 +56,7 @@ export function readLoginQuery(search: string): LoginQuery {
 	return {
 		returnPath: safeReturnPath(q.get('return')),
 		expired: q.get('expired') === '1' || q.get('expired') === 'true',
+		endedBy: endedBy(q.get('reason')),
 		oidcError: error && (/^oidc_[a-z_]{1,40}$/.test(error) || SSO_CODES.includes(error)) ? error : null,
 		ssoFailed: error !== null,
 		autoLaunch: q.get('autoLaunch') !== '0',

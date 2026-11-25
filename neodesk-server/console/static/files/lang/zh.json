@@ -164,12 +164,17 @@
     "totp_temporarily_unavailable": "两步验证暂时不可用。请稍后再试。",
     "passwords_mismatch": "两次输入的密码不一致",
     "emergency_mode_banner": "Go 服务器不可达 — 紧急模式运行中（仅管理员，功能受限）",
-    "session_expired": "您的会话已过期或被新的登录替换。请重新登录。",
+    "session_expired": "您的会话已过期。请重新登录。",
     "session_idle_warning_title": "会话即将过期",
     "session_idle_warning_body": "由于无操作，将在 {{seconds}} 秒后退出登录。",
     "session_stay_signed_in": "保持登录",
     "show_password": "显示密码",
-    "sso_redirecting": "正在打开单点登录…"
+    "sso_redirecting": "正在打开单点登录…",
+    "signed_out_elsewhere": "您已从另一台设备被退出登录。请重新登录。",
+    "signed_out_by_admin": "管理员已将您退出登录。请重新登录。",
+    "signed_out_replaced": "由于您的账户在另一个浏览器中登录，您已被退出登录。此服务器每个账户只允许一个会话。",
+    "signed_out_limit": "由于您的账户登录的浏览器超过此服务器允许的数量，您已被退出登录。请重新登录。",
+    "signed_out_account_changed": "由于您的密码、两步登录或访问权限已更改，您已被退出登录。请重新登录。"
   },
   "dashboard": {
     "title": "仪表板",
@@ -1469,7 +1474,10 @@
       "require_2fa": "要求两步登录",
       "require_2fa_hint": "没有两步登录的本地账户会在下次用密码登录后立即设置，在此之前不能做其他操作；桌面客户端和 API 在设置完成前会拒绝它。目录和单点登录账户交由其提供方管理。",
       "ldap_enabled_hint": "目录中的人员使用目录的用户名和密码登录。每个账户只使用一种登录方式，因此目录账户无法使用在此控制台设置的密码。",
-      "attrs_note": "默认值适用于大多数情况。只有在名称或电子邮件地址错误或为空时才需更改。"
+      "attrs_note": "默认值适用于大多数情况。只有在名称或电子邮件地址错误或为空时才需更改。",
+      "single_session": "每个账户一个会话",
+      "single_session_hint": "新的登录会让该账户的另一个浏览器退出登录。关闭时：一个账户最多可同时在 {max} 个浏览器和设备上登录。",
+      "single_session_env": "服务器环境中的 SESSION_MAX_PER_USER 设为 {value}，它取代此开关生效。要使用此开关，请在那里删除它。"
     },
     "backup_tab": {
       "create_title": "创建备份",
@@ -1925,7 +1933,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "API 令牌已过期",
-    "action_api_token_deleted": "API 令牌已删除"
+    "action_api_token_deleted": "API 令牌已删除",
+    "action_session_signed_out": "会话已从另一台设备退出登录",
+    "action_session_ended_by_admin": "会话已被管理员结束",
+    "action_session_limit": "会话因会话上限而结束",
+    "action_console_sessions_policy_changed": "每个账户的会话已更改"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8600,5 +8612,34 @@
     "switched_to_ux36": "已为此浏览器启用 UX 3.6 测试版。",
     "switched_to_ux35": "已为此浏览器恢复 UX 3.5。",
     "default_hint": "默认布局。稳定且功能完整。"
+  },
+  "sessions": {
+    "title": "已登录的设备",
+    "user_title": "{username} 已登录的设备",
+    "user_menu": "已登录的设备…",
+    "subtitle_own": "您的账户已登录的浏览器和设备。",
+    "subtitle_user": "{username} 已登录的浏览器和设备。",
+    "this_browser": "此浏览器",
+    "browser_on_system": "{system} 上的 {browser}",
+    "browser_on": "{system} 上的浏览器",
+    "unknown_browser": "未知浏览器",
+    "address": "地址",
+    "signed_in": "登录时间",
+    "last_used": "上次使用",
+    "sign_out": "退出登录",
+    "sign_out_everywhere_else": "在其他所有地方退出登录",
+    "sign_out_all": "在所有地方退出登录",
+    "confirm_sign_out": "让 {device} 退出登录？该浏览器将转到登录页面。",
+    "confirm_everywhere_else": "让其他所有浏览器和设备退出登录？此浏览器保持登录。",
+    "confirm_all_user": "让 {username} 在所有浏览器和设备上退出登录？",
+    "signed_out_one": "{device} 已退出登录。",
+    "signed_out_count": "已退出登录的会话：{count}",
+    "none": "没有已登录的浏览器。",
+    "none_other": "没有其他已登录的浏览器或设备。",
+    "none_user": "{username} 没有在任何地方登录。",
+    "limit_many": "一个账户最多可在 {max} 个浏览器和设备上登录。超出时，最久未使用的会被退出登录。",
+    "limit_one": "此服务器每个账户只允许一个会话：新的登录会让另一个浏览器退出登录。",
+    "limit_none": "此服务器不限制每个账户的会话数。",
+    "load_failed": "无法加载已登录的设备。"
   }
 }

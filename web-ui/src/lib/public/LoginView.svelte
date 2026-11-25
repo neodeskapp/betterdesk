@@ -40,7 +40,14 @@
 	import LoginBrand from './LoginBrand.svelte';
 	import PromoPanel from './PromoPanel.svelte';
 	import { clientFingerprint } from './fingerprint.ts';
-	import { autoStartsSso, codeDigits, oidcErrorText, signInErrorText, type LoginQuery } from './login.ts';
+	import {
+		autoStartsSso,
+		codeDigits,
+		ENDED_BY,
+		oidcErrorText,
+		signInErrorText,
+		type LoginQuery
+	} from './login.ts';
 	import { safeReturnPath } from './returnUrl.ts';
 
 	interface Props {
@@ -323,7 +330,11 @@
 			{/if}
 
 			{#if query.expired && !error}
-				<Notice class="login-notice" role="status" message={t('auth.session_expired')} />
+				<Notice
+					class="login-notice"
+					role="status"
+					message={t(query.endedBy ? ENDED_BY[query.endedBy] : 'auth.session_expired')}
+				/>
 			{/if}
 			{#if error}
 				<Notice class="login-notice" tone="danger" role="alert" message={error} />

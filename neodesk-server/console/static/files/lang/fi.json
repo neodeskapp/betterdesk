@@ -170,12 +170,17 @@
     "oidc_no_account": "Tiliäsi ei löytynyt, ja automaattinen rekisteröinti on poistettu käytöstä.",
     "totp_rate_limited": "Liikaa yrityksiä. Yritä myöhemmin uudelleen.",
     "emergency_mode_banner": "Go server ei tavoitettavissa – toimii hätätilassa (vain järjestelmänvalvoja, rajoitettu toiminnallisuus)",
-    "session_expired": "Istuntosi vanheni tai korvattiin uudella kirjautumisella. Kirjaudu uudelleen.",
+    "session_expired": "Istuntosi vanheni. Kirjaudu uudelleen.",
     "session_idle_warning_title": "Istunto vanhenee pian",
     "session_idle_warning_body": "Sinut kirjataan ulos käyttämättömyyden vuoksi {{seconds}} sekunnin kuluttua.",
     "session_stay_signed_in": "Pysy kirjautuneena",
     "show_password": "Näytä salasana",
-    "sso_redirecting": "Avataan kertakirjautumista…"
+    "sso_redirecting": "Avataan kertakirjautumista…",
+    "signed_out_elsewhere": "Sinut kirjattiin ulos toiselta laitteelta. Kirjaudu uudelleen.",
+    "signed_out_by_admin": "Ylläpitäjä kirjasi sinut ulos. Kirjaudu uudelleen.",
+    "signed_out_replaced": "Sinut kirjattiin ulos, koska tilisi kirjautui toisella selaimella. Tämä palvelin sallii yhden istunnon tiliä kohden.",
+    "signed_out_limit": "Sinut kirjattiin ulos, koska tilisi kirjautui useammalla selaimella kuin tämä palvelin sallii. Kirjaudu uudelleen.",
+    "signed_out_account_changed": "Sinut kirjattiin ulos, koska salasanasi, kaksivaiheinen kirjautumisesi tai käyttöoikeutesi muuttui. Kirjaudu uudelleen."
   },
   "dashboard": {
     "title": "Kojelauta",
@@ -1475,7 +1480,10 @@
       "require_2fa": "Vaadi kaksivaiheinen kirjautuminen",
       "require_2fa_hint": "Paikallinen tili ilman kaksivaiheista kirjautumista ottaa sen käyttöön heti seuraavan salasanakirjautumisen jälkeen eikä voi sitä ennen tehdä muuta; työpöytäsovellus ja API hylkäävät sen siihen asti. Hakemisto- ja kertakirjautumistilit jätetään niiden palveluntarjoajalle.",
       "ldap_enabled_hint": "Hakemistosi käyttäjät kirjautuvat hakemiston käyttäjätunnuksella ja salasanalla. Jokainen tili käyttää yhtä kirjautumistapaa, joten hakemistotilit eivät voi käyttää tässä konsolissa asetettua salasanaa.",
-      "attrs_note": "Oletukset toimivat useimmiten. Muuta niitä vain, jos nimet tai sähköpostiosoitteet tulevat väärin tai tyhjinä."
+      "attrs_note": "Oletukset toimivat useimmiten. Muuta niitä vain, jos nimet tai sähköpostiosoitteet tulevat väärin tai tyhjinä.",
+      "single_session": "Yksi istunto tiliä kohden",
+      "single_session_hint": "Uusi kirjautuminen kirjaa tilin toisen selaimen ulos. Pois: tili voi olla kirjautuneena samaan aikaan enintään {max} selaimella ja laitteella.",
+      "single_session_env": "SESSION_MAX_PER_USER on palvelimen ympäristössä {value} ja päättää tämän valitsimen sijaan. Poista se sieltä, jotta voit käyttää valitsinta."
     },
     "backup_tab": {
       "create_title": "Luo varmuuskopio",
@@ -1931,7 +1939,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "API-tunnus vanhentui",
-    "action_api_token_deleted": "API-tunnus poistettu"
+    "action_api_token_deleted": "API-tunnus poistettu",
+    "action_session_signed_out": "Istunto kirjattu ulos toiselta laitteelta",
+    "action_session_ended_by_admin": "Ylläpitäjä päätti istunnon",
+    "action_session_limit": "Istuntoraja päätti istunnon",
+    "action_console_sessions_policy_changed": "Istunnot tiliä kohden muutettu"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8606,5 +8618,34 @@
     "switched_to_ux36": "UX 3.6 beta on otettu käyttöön tässä selaimessa.",
     "switched_to_ux35": "UX 3.5 on palautettu tähän selaimeen.",
     "default_hint": "Oletusasettelu. vakaa ja täysin varustettu."
+  },
+  "sessions": {
+    "title": "Kirjautuneet laitteet",
+    "user_title": "Käyttäjän {username} kirjautuneet laitteet",
+    "user_menu": "Kirjautuneet laitteet…",
+    "subtitle_own": "Selaimet ja laitteet, joilla tilisi on kirjautuneena.",
+    "subtitle_user": "Selaimet ja laitteet, joilla {username} on kirjautuneena.",
+    "this_browser": "Tämä selain",
+    "browser_on_system": "{browser} ({system})",
+    "browser_on": "Selain ({system})",
+    "unknown_browser": "Tuntematon selain",
+    "address": "Osoite",
+    "signed_in": "Kirjautunut",
+    "last_used": "Viimeksi käytetty",
+    "sign_out": "Kirjaa ulos",
+    "sign_out_everywhere_else": "Kirjaa ulos kaikkialta muualta",
+    "sign_out_all": "Kirjaa ulos kaikkialta",
+    "confirm_sign_out": "Kirjataanko {device} ulos? Selain siirtyy kirjautumissivulle.",
+    "confirm_everywhere_else": "Kirjataanko kaikki muut selaimet ja laitteet ulos? Tämä selain pysyy kirjautuneena.",
+    "confirm_all_user": "Kirjataanko {username} ulos kaikista selaimista ja laitteista?",
+    "signed_out_one": "{device} kirjattu ulos.",
+    "signed_out_count": "Uloskirjatut istunnot: {count}",
+    "none": "Mikään selain ei ole kirjautuneena.",
+    "none_other": "Muita selaimia tai laitteita ei ole kirjautuneena.",
+    "none_user": "{username} ei ole kirjautuneena missään.",
+    "limit_many": "Tili voi olla kirjautuneena enintään {max} selaimella ja laitteella. Sitä useampi kirjautuminen kirjaa ulos pisimpään käyttämättömänä olleen.",
+    "limit_one": "Tämä palvelin sallii yhden istunnon tiliä kohden: uusi kirjautuminen kirjaa toisen selaimen ulos.",
+    "limit_none": "Tämä palvelin ei rajoita istuntoja tiliä kohden.",
+    "load_failed": "Kirjautuneita laitteita ei voitu ladata."
   }
 }

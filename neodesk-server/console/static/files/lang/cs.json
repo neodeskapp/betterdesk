@@ -164,12 +164,17 @@
     "oidc_no_account": "Váš účet nebyl nalezen a automatická registrace je vypnutá.",
     "totp_rate_limited": "Příliš mnoho pokusů. Zkuste to prosím později.",
     "emergency_mode_banner": "Go server je nedostupný — běží nouzový režim (pouze admin, omezené funkce)",
-    "session_expired": "Vaše relace vypršela nebo byla nahrazena novým přihlášením. Přihlaste se znovu.",
+    "session_expired": "Vaše relace vypršela. Přihlaste se znovu.",
     "session_idle_warning_title": "Relace brzy vyprší",
     "session_idle_warning_body": "Budete odhlášeni kvůli nečinnosti za {{seconds}} s.",
     "session_stay_signed_in": "Zůstat přihlášen",
     "show_password": "Zobrazit heslo",
-    "sso_redirecting": "Otevírá se jednotné přihlášení…"
+    "sso_redirecting": "Otevírá se jednotné přihlášení…",
+    "signed_out_elsewhere": "Byli jste odhlášeni z jiného zařízení. Přihlaste se znovu.",
+    "signed_out_by_admin": "Správce vás odhlásil. Přihlaste se znovu.",
+    "signed_out_replaced": "Byli jste odhlášeni, protože se váš účet přihlásil v jiném prohlížeči. Tento server povoluje jednu relaci na účet.",
+    "signed_out_limit": "Byli jste odhlášeni, protože se váš účet přihlásil ve více prohlížečích, než tento server povoluje. Přihlaste se znovu.",
+    "signed_out_account_changed": "Byli jste odhlášeni, protože se změnilo vaše heslo, dvoufázové přihlášení nebo přístup. Přihlaste se znovu."
   },
   "dashboard": {
     "title": "Nástěnka",
@@ -1469,7 +1474,10 @@
       "require_2fa": "Vyžadovat dvoufázové přihlášení",
       "require_2fa_hint": "Místní účet bez dvoufázového přihlášení si ho nastaví hned po dalším přihlášení heslem a do té doby nemůže dělat nic jiného; desktopový klient a API ho do té doby odmítají. Účty z adresáře a jednotného přihlášení řídí jejich poskytovatel.",
       "ldap_enabled_hint": "Lidé z vašeho adresáře se přihlašují adresářovým jménem a heslem. Každý účet používá jeden způsob přihlášení, takže adresářové účty nemohou použít heslo nastavené v této konzoli.",
-      "attrs_note": "Výchozí hodnoty ve většině případů fungují. Změňte je jen tehdy, když jména nebo e-mailové adresy přicházejí chybně nebo prázdné."
+      "attrs_note": "Výchozí hodnoty ve většině případů fungují. Změňte je jen tehdy, když jména nebo e-mailové adresy přicházejí chybně nebo prázdné.",
+      "single_session": "Jedna relace na účet",
+      "single_session_hint": "Nové přihlášení odhlásí druhý prohlížeč účtu. Vypnuto: účet může být současně přihlášen nejvýše na {max} prohlížečích a zařízeních.",
+      "single_session_env": "SESSION_MAX_PER_USER má v prostředí serveru hodnotu {value} a rozhoduje místo tohoto přepínače. Chcete-li použít přepínač, odstraňte ji tam."
     },
     "backup_tab": {
       "create_title": "Vytvořit zálohu",
@@ -1925,7 +1933,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "Platnost tokenu API vypršela",
-    "action_api_token_deleted": "Token API smazán"
+    "action_api_token_deleted": "Token API smazán",
+    "action_session_signed_out": "Relace odhlášena z jiného zařízení",
+    "action_session_ended_by_admin": "Relace ukončena správcem",
+    "action_session_limit": "Relace ukončena limitem relací",
+    "action_console_sessions_policy_changed": "Relace na účet změněny"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8600,5 +8612,34 @@
     "switched_to_ux36": "UX 3.6 beta je pro tento prohlížeč zapnuto.",
     "switched_to_ux35": "UX 3.5 bylo pro tento prohlížeč obnoveno.",
     "default_hint": "Výchozí rozvržení. Stabilní a plně vybavené."
+  },
+  "sessions": {
+    "title": "Přihlášená zařízení",
+    "user_title": "Přihlášená zařízení uživatele {username}",
+    "user_menu": "Přihlášená zařízení…",
+    "subtitle_own": "Prohlížeče a zařízení, na kterých je váš účet přihlášen.",
+    "subtitle_user": "Prohlížeče a zařízení, na kterých je {username} přihlášen.",
+    "this_browser": "Tento prohlížeč",
+    "browser_on_system": "{browser} v systému {system}",
+    "browser_on": "Prohlížeč v systému {system}",
+    "unknown_browser": "Neznámý prohlížeč",
+    "address": "Adresa",
+    "signed_in": "Přihlášení",
+    "last_used": "Naposledy použito",
+    "sign_out": "Odhlásit",
+    "sign_out_everywhere_else": "Odhlásit všude jinde",
+    "sign_out_all": "Odhlásit všude",
+    "confirm_sign_out": "Odhlásit {device}? Tento prohlížeč přejde na přihlašovací stránku.",
+    "confirm_everywhere_else": "Odhlásit všechny ostatní prohlížeče a zařízení? Tento prohlížeč zůstane přihlášen.",
+    "confirm_all_user": "Odhlásit {username} ve všech prohlížečích a zařízeních?",
+    "signed_out_one": "{device} odhlášen.",
+    "signed_out_count": "Odhlášené relace: {count}",
+    "none": "Žádný prohlížeč není přihlášen.",
+    "none_other": "Žádný jiný prohlížeč ani zařízení není přihlášeno.",
+    "none_user": "{username} není nikde přihlášen.",
+    "limit_many": "Účet může být přihlášen nejvýše na {max} prohlížečích a zařízeních. Další přihlášení odhlásí ten nejdéle nepoužívaný.",
+    "limit_one": "Tento server povoluje jednu relaci na účet: nové přihlášení odhlásí druhý prohlížeč.",
+    "limit_none": "Tento server počet relací na účet neomezuje.",
+    "load_failed": "Přihlášená zařízení se nepodařilo načíst."
   }
 }

@@ -118,12 +118,12 @@ describe('in German', () => {
 				id: 'single_session',
 				name: 'Concurrent Panel Session Limit per Account',
 				description:
-					'A new console login ends the least recently active sessions beyond SESSION_MAX_PER_USER (currently unlimited) and records IP/User-Agent for audit.'
+					'A new console login ends the least recently active sessions beyond the limit per account (currently unlimited; Settings, Sign-in, or SESSION_MAX_PER_USER when set) and records IP/User-Agent for audit.'
 			},
 			t
 		);
 		expect(single.name).toBe('Grenze für Konsolensitzungen pro Konto');
-		expect(single.description).toContain('(derzeit keine Grenze)');
+		expect(single.description).toContain('(derzeit keine Grenze; einzustellen unter Einstellungen, Anmeldung');
 	});
 
 	test('notes of the built-in groups', () => {

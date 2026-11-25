@@ -68,6 +68,7 @@
 		type LdapValues,
 		type OidcValues
 	} from '../signin.ts';
+	import ConsoleSessionsForm from '../ConsoleSessionsForm.svelte';
 	import SettingsGrid from '../SettingsGrid.svelte';
 	import SettingsLayout from '../SettingsLayout.svelte';
 
@@ -981,6 +982,8 @@
 						/>
 						<SaveBar form={twoFactor} label={t('actions.save')} />
 					</form>
+
+					<ConsoleSessionsForm />
 				{/snippet}
 				{#snippet end()}
 					<form id="ldap-form" class="form-column settings-subgroup" onsubmit={submitLdap} novalidate>

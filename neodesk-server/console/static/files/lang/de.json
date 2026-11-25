@@ -164,12 +164,17 @@
     "oidc_no_account": "Ihr Konto wurde nicht gefunden und die automatische Registrierung ist deaktiviert.",
     "totp_rate_limited": "Zu viele Versuche. Bitte versuchen Sie es später erneut.",
     "emergency_mode_banner": "Go-Server nicht erreichbar — Notfallmodus aktiv (nur Admin, eingeschränkte Funktionalität)",
-    "session_expired": "Ihre Sitzung ist abgelaufen oder wurde durch eine neue Anmeldung ersetzt. Bitte melden Sie sich erneut an.",
+    "session_expired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
     "session_idle_warning_title": "Sitzung läuft bald ab",
     "session_idle_warning_body": "Sie werden wegen Inaktivität in {{seconds}} Sekunden abgemeldet.",
     "session_stay_signed_in": "Angemeldet bleiben",
     "show_password": "Passwort anzeigen",
-    "sso_redirecting": "Single Sign-on wird geöffnet…"
+    "sso_redirecting": "Single Sign-on wird geöffnet…",
+    "signed_out_elsewhere": "Sie wurden von einem anderen Gerät aus abgemeldet. Bitte melden Sie sich erneut an.",
+    "signed_out_by_admin": "Ein Administrator hat Sie abgemeldet. Bitte melden Sie sich erneut an.",
+    "signed_out_replaced": "Sie wurden abgemeldet, weil sich Ihr Konto in einem anderen Browser angemeldet hat. Dieser Server erlaubt eine Sitzung pro Konto.",
+    "signed_out_limit": "Sie wurden abgemeldet, weil sich Ihr Konto in mehr Browsern angemeldet hat, als dieser Server erlaubt. Bitte melden Sie sich erneut an.",
+    "signed_out_account_changed": "Sie wurden abgemeldet, weil sich Ihr Passwort, Ihre Zwei-Faktor-Anmeldung oder Ihr Zugriff geändert hat. Bitte melden Sie sich erneut an."
   },
   "dashboard": {
     "title": "Übersicht",
@@ -1469,7 +1474,10 @@
       "require_2fa": "Zwei-Faktor-Anmeldung verlangen",
       "require_2fa_hint": "Ein lokales Konto ohne Zwei-Faktor-Anmeldung richtet sie direkt nach der nächsten Anmeldung mit Passwort ein und kann bis dahin nichts anderes tun; Desktop-Client und API weisen es bis dahin ab. Verzeichnis- und Single-Sign-On-Konten bleiben ihrem Anbieter überlassen.",
       "ldap_enabled_hint": "Personen aus Ihrem Verzeichnis melden sich mit ihrem Verzeichnis-Benutzernamen und -Passwort an. Jedes Konto nutzt eine Anmeldeart, daher können Verzeichniskonten kein in dieser Konsole gesetztes Passwort verwenden.",
-      "attrs_note": "Die Standardwerte passen in den meisten Fällen. Ändern Sie sie nur, wenn Namen oder E-Mail-Adressen falsch oder leer ankommen."
+      "attrs_note": "Die Standardwerte passen in den meisten Fällen. Ändern Sie sie nur, wenn Namen oder E-Mail-Adressen falsch oder leer ankommen.",
+      "single_session": "Eine Sitzung pro Konto",
+      "single_session_hint": "Eine neue Anmeldung meldet den anderen Browser des Kontos ab. Aus: Ein Konto kann gleichzeitig auf bis zu {max} Browsern und Geräten angemeldet sein.",
+      "single_session_env": "SESSION_MAX_PER_USER ist in der Umgebung des Servers auf {value} gesetzt und entscheidet statt dieses Schalters. Entfernen Sie es dort, um den Schalter zu verwenden."
     },
     "backup_tab": {
       "create_title": "Sicherung erstellen",
@@ -1925,7 +1933,11 @@
     "action_signin_use": "Gespeicherte Anmeldung verwendet",
     "action_signin_refused": "Gespeicherte Anmeldung abgelehnt",
     "action_api_token_expired": "API-Token abgelaufen",
-    "action_api_token_deleted": "API-Token gelöscht"
+    "action_api_token_deleted": "API-Token gelöscht",
+    "action_session_signed_out": "Sitzung von einem anderen Gerät abgemeldet",
+    "action_session_ended_by_admin": "Sitzung von einem Administrator beendet",
+    "action_session_limit": "Sitzung durch die Sitzungsgrenze beendet",
+    "action_console_sessions_policy_changed": "Sitzungen pro Konto geändert"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -6408,7 +6420,7 @@
     "hardening_session_timeout": "Leerlauf- und Höchstdauer von Konsolensitzungen",
     "hardening_session_timeout_desc": "Eine Konsolensitzung endet nach {idle} Minuten ohne Anfrage und {max} Minuten nach der Anmeldung (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Grenze für Konsolensitzungen pro Konto",
-    "hardening_single_session_desc": "Eine neue Anmeldung an der Konsole beendet die am längsten ungenutzten Sitzungen über SESSION_MAX_PER_USER hinaus (derzeit {limit}) und speichert Adresse und Browser für das Audit-Protokoll.",
+    "hardening_single_session_desc": "Eine neue Anmeldung an der Konsole beendet die am längsten ungenutzten Sitzungen über die Grenze pro Konto hinaus (derzeit {limit}; einzustellen unter Einstellungen, Anmeldung, oder mit SESSION_MAX_PER_USER) und speichert Adresse und Browser für das Audit-Protokoll.",
     "hardening_unlimited": "keine Grenze"
   },
   "languages": {
@@ -8600,5 +8612,34 @@
     "switched_to_ux36": "UX 3.6 Beta ist für diesen Browser aktiviert.",
     "switched_to_ux35": "UX 3.5 wurde für diesen Browser wiederhergestellt.",
     "default_hint": "Standardlayout. Stabil, voller Funktionsumfang."
+  },
+  "sessions": {
+    "title": "Angemeldete Geräte",
+    "user_title": "Angemeldete Geräte von {username}",
+    "user_menu": "Angemeldete Geräte…",
+    "subtitle_own": "Die Browser und Geräte, auf denen Ihr Konto angemeldet ist.",
+    "subtitle_user": "Die Browser und Geräte, auf denen {username} angemeldet ist.",
+    "this_browser": "Dieser Browser",
+    "browser_on_system": "{browser} unter {system}",
+    "browser_on": "Ein Browser unter {system}",
+    "unknown_browser": "Unbekannter Browser",
+    "address": "Adresse",
+    "signed_in": "Angemeldet",
+    "last_used": "Zuletzt verwendet",
+    "sign_out": "Abmelden",
+    "sign_out_everywhere_else": "Überall sonst abmelden",
+    "sign_out_all": "Überall abmelden",
+    "confirm_sign_out": "{device} abmelden? Dieser Browser kommt zur Anmeldeseite.",
+    "confirm_everywhere_else": "Alle anderen Browser und Geräte abmelden? Dieser Browser bleibt angemeldet.",
+    "confirm_all_user": "{username} auf allen Browsern und Geräten abmelden?",
+    "signed_out_one": "{device} abgemeldet.",
+    "signed_out_count": "Abgemeldete Sitzungen: {count}",
+    "none": "Kein Browser ist angemeldet.",
+    "none_other": "Kein anderer Browser und kein anderes Gerät ist angemeldet.",
+    "none_user": "{username} ist nirgends angemeldet.",
+    "limit_many": "Ein Konto kann auf bis zu {max} Browsern und Geräten angemeldet sein. Eine Anmeldung darüber hinaus meldet den am längsten nicht verwendeten ab.",
+    "limit_one": "Dieser Server erlaubt eine Sitzung pro Konto: Eine neue Anmeldung meldet den anderen Browser ab.",
+    "limit_none": "Dieser Server begrenzt die Sitzungen pro Konto nicht.",
+    "load_failed": "Die angemeldeten Geräte konnten nicht geladen werden."
   }
 }

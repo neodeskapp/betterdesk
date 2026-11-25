@@ -170,12 +170,17 @@
     "oidc_no_account": "Contul dvs. nu a fost găsit și înregistrarea automată este dezactivată.",
     "totp_rate_limited": "Prea multe încercări. Vă rugăm să încercați din nou mai târziu.",
     "emergency_mode_banner": "Go server inaccesibil - rulează în modul de urgență (doar pentru administrator, funcționalitate limitată)",
-    "session_expired": "Sesiunea a expirat sau a fost înlocuită de o autentificare nouă. Autentificați-vă din nou.",
+    "session_expired": "Sesiunea a expirat. Autentificați-vă din nou.",
     "session_idle_warning_title": "Sesiunea expiră în curând",
     "session_idle_warning_body": "Veți fi deconectat din cauza inactivității în {{seconds}} secunde.",
     "session_stay_signed_in": "Rămâneți autentificat",
     "show_password": "Afișează parola",
-    "sso_redirecting": "Se deschide autentificarea unică…"
+    "sso_redirecting": "Se deschide autentificarea unică…",
+    "signed_out_elsewhere": "Ați fost deconectat de pe alt dispozitiv. Autentificați-vă din nou.",
+    "signed_out_by_admin": "Un administrator v-a deconectat. Autentificați-vă din nou.",
+    "signed_out_replaced": "Ați fost deconectat pentru că contul dvs. s-a autentificat în alt browser. Acest server permite o sesiune per cont.",
+    "signed_out_limit": "Ați fost deconectat pentru că contul dvs. s-a autentificat în mai multe browsere decât permite acest server. Autentificați-vă din nou.",
+    "signed_out_account_changed": "Ați fost deconectat pentru că s-a schimbat parola, autentificarea în doi pași sau accesul dvs. Autentificați-vă din nou."
   },
   "dashboard": {
     "title": "Tabloul de bord",
@@ -1475,7 +1480,10 @@
       "require_2fa": "Cere autentificarea în doi pași",
       "require_2fa_hint": "Un cont local fără autentificare în doi pași o configurează imediat după următoarea autentificare cu parolă și nu poate face altceva până atunci; clientul desktop și API-ul îl refuză până atunci. Conturile din director și cele cu autentificare unică rămân în grija furnizorului lor.",
       "ldap_enabled_hint": "Persoanele din director se conectează cu numele de utilizator și parola din director. Fiecare cont folosește un singur mod de conectare, deci conturile din director nu pot folosi o parolă setată în această consolă.",
-      "attrs_note": "Valorile implicite merg în majoritatea cazurilor. Schimbați-le doar dacă numele sau adresele de e-mail ajung greșit sau goale."
+      "attrs_note": "Valorile implicite merg în majoritatea cazurilor. Schimbați-le doar dacă numele sau adresele de e-mail ajung greșit sau goale.",
+      "single_session": "O sesiune per cont",
+      "single_session_hint": "O autentificare nouă deconectează celălalt browser al contului. Oprit: un cont poate fi autentificat simultan pe cel mult {max} browsere și dispozitive.",
+      "single_session_env": "SESSION_MAX_PER_USER are valoarea {value} în mediul serverului și decide în locul acestui comutator. Eliminați-l de acolo pentru a folosi comutatorul."
     },
     "backup_tab": {
       "create_title": "Creați o copie de rezervă",
@@ -1931,7 +1939,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "Token API expirat",
-    "action_api_token_deleted": "Token API șters"
+    "action_api_token_deleted": "Token API șters",
+    "action_session_signed_out": "Sesiune deconectată de pe alt dispozitiv",
+    "action_session_ended_by_admin": "Sesiune încheiată de un administrator",
+    "action_session_limit": "Sesiune încheiată de limita de sesiuni",
+    "action_console_sessions_policy_changed": "Sesiuni per cont modificate"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8606,5 +8618,34 @@
     "switched_to_ux36": "UX 3.6 beta a fost activat pentru acest browser.",
     "switched_to_ux35": "UX 3.5 a fost restaurat pentru acest browser.",
     "default_hint": "Aspect implicit. Stabil și complet funcțional."
+  },
+  "sessions": {
+    "title": "Dispozitive conectate",
+    "user_title": "Dispozitivele conectate ale lui {username}",
+    "user_menu": "Dispozitive conectate…",
+    "subtitle_own": "Browserele și dispozitivele pe care contul dvs. este autentificat.",
+    "subtitle_user": "Browserele și dispozitivele pe care {username} este autentificat.",
+    "this_browser": "Acest browser",
+    "browser_on_system": "{browser} pe {system}",
+    "browser_on": "Un browser pe {system}",
+    "unknown_browser": "Browser necunoscut",
+    "address": "Adresă",
+    "signed_in": "Autentificat",
+    "last_used": "Ultima utilizare",
+    "sign_out": "Deconectează",
+    "sign_out_everywhere_else": "Deconectează peste tot în altă parte",
+    "sign_out_all": "Deconectează peste tot",
+    "confirm_sign_out": "Deconectați {device}? Acel browser ajunge la pagina de autentificare.",
+    "confirm_everywhere_else": "Deconectați toate celelalte browsere și dispozitive? Acest browser rămâne autentificat.",
+    "confirm_all_user": "Deconectați {username} de pe toate browserele și dispozitivele?",
+    "signed_out_one": "{device} deconectat.",
+    "signed_out_count": "Sesiuni deconectate: {count}",
+    "none": "Niciun browser nu este autentificat.",
+    "none_other": "Niciun alt browser sau dispozitiv nu este autentificat.",
+    "none_user": "{username} nu este autentificat nicăieri.",
+    "limit_many": "Un cont poate fi autentificat pe cel mult {max} browsere și dispozitive. O autentificare în plus îl deconectează pe cel nefolosit de cel mai mult timp.",
+    "limit_one": "Acest server permite o sesiune per cont: o autentificare nouă deconectează celălalt browser.",
+    "limit_none": "Acest server nu limitează sesiunile per cont.",
+    "load_failed": "Dispozitivele conectate nu au putut fi încărcate."
   }
 }

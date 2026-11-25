@@ -164,12 +164,17 @@
     "oidc_no_account": "アカウントが見つからなかったため、自動登録が無効になっています。",
     "totp_rate_limited": "試行回数が多すぎます。後でもう一度試してください。",
     "emergency_mode_banner": "Go server 到達不能 — 緊急モードで実行中 (管理者のみ、機能が制限されています)",
-    "session_expired": "セッションの有効期限が切れたか、新しいログインに置き換えられました。再度サインインしてください。",
+    "session_expired": "セッションの有効期限が切れました。再度サインインしてください。",
     "session_idle_warning_title": "セッションまもなく期限切れ",
     "session_idle_warning_body": "操作がないため {{seconds}} 秒後にサインアウトされます。",
     "session_stay_signed_in": "サインインを維持",
     "show_password": "パスワードを表示",
-    "sso_redirecting": "シングルサインオンを開いています…"
+    "sso_redirecting": "シングルサインオンを開いています…",
+    "signed_out_elsewhere": "別のデバイスからサインアウトされました。再度サインインしてください。",
+    "signed_out_by_admin": "管理者によってサインアウトされました。再度サインインしてください。",
+    "signed_out_replaced": "アカウントが別のブラウザーでサインインしたため、サインアウトされました。このサーバーではアカウントごとに 1 セッションです。",
+    "signed_out_limit": "アカウントがこのサーバーで許可された数より多くのブラウザーでサインインしたため、サインアウトされました。再度サインインしてください。",
+    "signed_out_account_changed": "パスワード、2 段階サインイン、またはアクセス権が変更されたため、サインアウトされました。再度サインインしてください。"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -1469,7 +1474,10 @@
       "require_2fa": "2 段階サインインを必須にする",
       "require_2fa_hint": "2 段階サインインのないローカルアカウントは、次にパスワードでサインインした直後に設定し、それまでは他の操作ができません。設定するまでデスクトップクライアントと API は拒否します。ディレクトリとシングルサインオンのアカウントはそのプロバイダーに任せます。",
       "ldap_enabled_hint": "ディレクトリのユーザーは、ディレクトリのユーザー名とパスワードでサインインします。アカウントごとにサインイン方法は 1 つなので、ディレクトリのアカウントはこのコンソールで設定したパスワードを使えません。",
-      "attrs_note": "ほとんどの場合は既定値のままで動きます。名前やメールアドレスが誤って、または空で届く場合だけ変更してください。"
+      "attrs_note": "ほとんどの場合は既定値のままで動きます。名前やメールアドレスが誤って、または空で届く場合だけ変更してください。",
+      "single_session": "アカウントごとに 1 セッション",
+      "single_session_hint": "新しくサインインすると、アカウントのもう一方のブラウザーはサインアウトされます。オフ: 1 つのアカウントは同時に最大 {max} 台のブラウザーとデバイスでサインインできます。",
+      "single_session_env": "サーバーの環境で SESSION_MAX_PER_USER が {value} に設定されており、このスイッチの代わりにそれが使われます。スイッチを使うには、そちらから削除してください。"
     },
     "backup_tab": {
       "create_title": "バックアップを作成",
@@ -1925,7 +1933,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "API トークンの期限切れ",
-    "action_api_token_deleted": "API トークンを削除"
+    "action_api_token_deleted": "API トークンを削除",
+    "action_session_signed_out": "別のデバイスからセッションをサインアウト",
+    "action_session_ended_by_admin": "管理者がセッションを終了",
+    "action_session_limit": "セッション上限によりセッションを終了",
+    "action_console_sessions_policy_changed": "アカウントごとのセッションを変更"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8600,5 +8612,34 @@
     "switched_to_ux36": "このブラウザーで UX 3.6 ベータを有効にしました。",
     "switched_to_ux35": "このブラウザーで UX 3.5 に戻しました。",
     "default_hint": "既定のレイアウト。安定しており全機能を利用できます。"
+  },
+  "sessions": {
+    "title": "サインイン中のデバイス",
+    "user_title": "{username} のサインイン中のデバイス",
+    "user_menu": "サインイン中のデバイス…",
+    "subtitle_own": "アカウントがサインインしているブラウザーとデバイスです。",
+    "subtitle_user": "{username} がサインインしているブラウザーとデバイスです。",
+    "this_browser": "このブラウザー",
+    "browser_on_system": "{system} の {browser}",
+    "browser_on": "{system} のブラウザー",
+    "unknown_browser": "不明なブラウザー",
+    "address": "アドレス",
+    "signed_in": "サインイン",
+    "last_used": "最終使用",
+    "sign_out": "サインアウト",
+    "sign_out_everywhere_else": "ほかのすべてでサインアウト",
+    "sign_out_all": "すべてでサインアウト",
+    "confirm_sign_out": "{device} をサインアウトしますか? そのブラウザーはサインインページに移ります。",
+    "confirm_everywhere_else": "ほかのすべてのブラウザーとデバイスをサインアウトしますか? このブラウザーはサインインしたままです。",
+    "confirm_all_user": "すべてのブラウザーとデバイスで {username} をサインアウトしますか?",
+    "signed_out_one": "{device} をサインアウトしました。",
+    "signed_out_count": "サインアウトしたセッション: {count}",
+    "none": "サインインしているブラウザーはありません。",
+    "none_other": "ほかにサインインしているブラウザーやデバイスはありません。",
+    "none_user": "{username} はどこにもサインインしていません。",
+    "limit_many": "1 つのアカウントは最大 {max} 台のブラウザーとデバイスでサインインできます。それを超えると、最も長く使われていないものがサインアウトされます。",
+    "limit_one": "このサーバーではアカウントごとに 1 セッションです。新しくサインインすると、もう一方のブラウザーはサインアウトされます。",
+    "limit_none": "このサーバーはアカウントごとのセッション数を制限していません。",
+    "load_failed": "サインイン中のデバイスを読み込めませんでした。"
   }
 }

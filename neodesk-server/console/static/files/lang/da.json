@@ -170,12 +170,17 @@
     "oidc_no_account": "Din konto blev ikke fundet, og automatisk registrering er deaktiveret.",
     "totp_rate_limited": "For mange forsøg. Prøv venligst igen senere.",
     "emergency_mode_banner": "Go server utilgængelig — kører i nødtilstand (kun admin, begrænset funktionalitet)",
-    "session_expired": "Din session er udløbet eller erstattet af et nyt login. Log ind igen.",
+    "session_expired": "Din session er udløbet. Log ind igen.",
     "session_idle_warning_title": "Session udløber snart",
     "session_idle_warning_body": "Du logges ud på grund af inaktivitet om {{seconds}} sekunder.",
     "session_stay_signed_in": "Forbliv logget ind",
     "show_password": "Vis adgangskode",
-    "sso_redirecting": "Åbner single sign-on…"
+    "sso_redirecting": "Åbner single sign-on…",
+    "signed_out_elsewhere": "Du er blevet logget ud fra en anden enhed. Log ind igen.",
+    "signed_out_by_admin": "En administrator har logget dig ud. Log ind igen.",
+    "signed_out_replaced": "Du er blevet logget ud, fordi din konto loggede ind i en anden browser. Denne server tillader én session pr. konto.",
+    "signed_out_limit": "Du er blevet logget ud, fordi din konto loggede ind i flere browsere, end denne server tillader. Log ind igen.",
+    "signed_out_account_changed": "Du er blevet logget ud, fordi din adgangskode, dit totrinslogin eller din adgang er ændret. Log ind igen."
   },
   "dashboard": {
     "title": "Oversigt",
@@ -1475,7 +1480,10 @@
       "require_2fa": "Kræv totrinslogin",
       "require_2fa_hint": "En lokal konto uden totrinslogin opsætter det lige efter næste login med adgangskode og kan ikke andet indtil da; skrivebordsklienten og API'et afviser den, indtil det er gjort. Katalog- og single sign-on-konti overlades til deres udbyder.",
       "ldap_enabled_hint": "Personer fra dit katalog logger ind med deres katalogbrugernavn og adgangskode. Hver konto bruger én måde at logge ind på, så katalogkonti kan ikke bruge en adgangskode sat i denne konsol.",
-      "attrs_note": "Standardværdierne passer i de fleste tilfælde. Ændr dem kun, hvis navne eller e-mailadresser kommer forkert eller tomme igennem."
+      "attrs_note": "Standardværdierne passer i de fleste tilfælde. Ændr dem kun, hvis navne eller e-mailadresser kommer forkert eller tomme igennem.",
+      "single_session": "Én session pr. konto",
+      "single_session_hint": "Et nyt login logger kontoens anden browser ud. Fra: en konto kan være logget ind på op til {max} browsere og enheder på én gang.",
+      "single_session_env": "SESSION_MAX_PER_USER er sat til {value} i serverens miljø og bestemmer i stedet for denne kontakt. Fjern den der for at bruge kontakten."
     },
     "backup_tab": {
       "create_title": "Opret en sikkerhedskopi",
@@ -1931,7 +1939,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "API-token udløbet",
-    "action_api_token_deleted": "API-token slettet"
+    "action_api_token_deleted": "API-token slettet",
+    "action_session_signed_out": "Session logget ud fra en anden enhed",
+    "action_session_ended_by_admin": "Session afsluttet af en administrator",
+    "action_session_limit": "Session afsluttet af sessionsgrænsen",
+    "action_console_sessions_policy_changed": "Sessioner pr. konto ændret"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8606,5 +8618,34 @@
     "switched_to_ux36": "UX 3.6 beta er aktiveret for denne browser.",
     "switched_to_ux35": "UX 3.5 er gendannet for denne browser.",
     "default_hint": "Standardlayout. Stabil og fuldt funktionsdygtigt."
+  },
+  "sessions": {
+    "title": "Loggede ind-enheder",
+    "user_title": "Loggede ind-enheder for {username}",
+    "user_menu": "Loggede ind-enheder…",
+    "subtitle_own": "De browsere og enheder, hvor din konto er logget ind.",
+    "subtitle_user": "De browsere og enheder, hvor {username} er logget ind.",
+    "this_browser": "Denne browser",
+    "browser_on_system": "{browser} på {system}",
+    "browser_on": "En browser på {system}",
+    "unknown_browser": "Ukendt browser",
+    "address": "Adresse",
+    "signed_in": "Logget ind",
+    "last_used": "Sidst brugt",
+    "sign_out": "Log ud",
+    "sign_out_everywhere_else": "Log ud alle andre steder",
+    "sign_out_all": "Log ud overalt",
+    "confirm_sign_out": "Log {device} ud? Den browser går til login-siden.",
+    "confirm_everywhere_else": "Log alle andre browsere og enheder ud? Denne browser forbliver logget ind.",
+    "confirm_all_user": "Log {username} ud på alle browsere og enheder?",
+    "signed_out_one": "{device} er logget ud.",
+    "signed_out_count": "Sessioner logget ud: {count}",
+    "none": "Ingen browser er logget ind.",
+    "none_other": "Ingen anden browser eller enhed er logget ind.",
+    "none_user": "{username} er ikke logget ind nogen steder.",
+    "limit_many": "En konto kan være logget ind på op til {max} browsere og enheder. Et login ud over det logger den ud, der har været ubrugt længst.",
+    "limit_one": "Denne server tillader én session pr. konto: et nyt login logger den anden browser ud.",
+    "limit_none": "Denne server begrænser ikke antallet af sessioner pr. konto.",
+    "load_failed": "De loggede ind-enheder kunne ikke indlæses."
   }
 }

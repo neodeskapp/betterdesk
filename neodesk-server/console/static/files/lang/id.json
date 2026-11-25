@@ -170,12 +170,17 @@
     "oidc_no_account": "Akun Anda tidak ditemukan dan pendaftaran otomatis dinonaktifkan.",
     "totp_rate_limited": "Terlalu banyak upaya. Silakan coba lagi nanti.",
     "emergency_mode_banner": "Go server tidak dapat dijangkau — berjalan dalam mode darurat (khusus admin, fungsi terbatas)",
-    "session_expired": "Sesi Anda kedaluwarsa atau digantikan oleh login baru. Silakan masuk lagi.",
+    "session_expired": "Sesi Anda kedaluwarsa. Silakan masuk lagi.",
     "session_idle_warning_title": "Sesi akan segera berakhir",
     "session_idle_warning_body": "Anda akan keluar karena tidak aktif dalam {{seconds}} detik.",
     "session_stay_signed_in": "Tetap masuk",
     "show_password": "Tampilkan kata sandi",
-    "sso_redirecting": "Membuka single sign-on…"
+    "sso_redirecting": "Membuka single sign-on…",
+    "signed_out_elsewhere": "Anda dikeluarkan dari perangkat lain. Silakan masuk lagi.",
+    "signed_out_by_admin": "Seorang administrator mengeluarkan Anda. Silakan masuk lagi.",
+    "signed_out_replaced": "Anda dikeluarkan karena akun Anda masuk di browser lain. Server ini mengizinkan satu sesi per akun.",
+    "signed_out_limit": "Anda dikeluarkan karena akun Anda masuk di lebih banyak browser daripada yang diizinkan server ini. Silakan masuk lagi.",
+    "signed_out_account_changed": "Anda dikeluarkan karena kata sandi, masuk dua langkah, atau akses Anda berubah. Silakan masuk lagi."
   },
   "dashboard": {
     "title": "Dasbor",
@@ -1475,7 +1480,10 @@
       "require_2fa": "Wajibkan masuk dua langkah",
       "require_2fa_hint": "Akun lokal tanpa masuk dua langkah menyiapkannya tepat setelah masuk berikutnya dengan kata sandi dan tidak dapat melakukan hal lain sebelum itu; klien desktop dan API menolaknya sampai selesai. Akun direktori dan single sign-on diserahkan ke penyedianya.",
       "ldap_enabled_hint": "Orang dari direktori Anda masuk dengan nama pengguna dan kata sandi direktori. Setiap akun memakai satu cara masuk, jadi akun direktori tidak bisa memakai kata sandi yang diatur di konsol ini.",
-      "attrs_note": "Nilai bawaan cocok untuk sebagian besar kasus. Ubah hanya jika nama atau alamat email masuk salah atau kosong."
+      "attrs_note": "Nilai bawaan cocok untuk sebagian besar kasus. Ubah hanya jika nama atau alamat email masuk salah atau kosong.",
+      "single_session": "Satu sesi per akun",
+      "single_session_hint": "Masuk yang baru mengeluarkan browser lain dari akun. Nonaktif: satu akun dapat masuk di paling banyak {max} browser dan perangkat sekaligus.",
+      "single_session_env": "SESSION_MAX_PER_USER diatur ke {value} di lingkungan server dan menentukan sebagai ganti sakelar ini. Hapus di sana untuk memakai sakelar."
     },
     "backup_tab": {
       "create_title": "Buat cadangan",
@@ -1931,7 +1939,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "Token API kedaluwarsa",
-    "action_api_token_deleted": "Token API dihapus"
+    "action_api_token_deleted": "Token API dihapus",
+    "action_session_signed_out": "Sesi dikeluarkan dari perangkat lain",
+    "action_session_ended_by_admin": "Sesi diakhiri oleh administrator",
+    "action_session_limit": "Sesi diakhiri oleh batas sesi",
+    "action_console_sessions_policy_changed": "Sesi per akun diubah"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8606,5 +8618,34 @@
     "switched_to_ux36": "UX 3.6 beta diaktifkan untuk peramban ini.",
     "switched_to_ux35": "UX 3.5 dipulihkan untuk peramban ini.",
     "default_hint": "Tata letak default. Stabil dan lengkap."
+  },
+  "sessions": {
+    "title": "Perangkat yang masuk",
+    "user_title": "Perangkat yang masuk milik {username}",
+    "user_menu": "Perangkat yang masuk…",
+    "subtitle_own": "Browser dan perangkat tempat akun Anda masuk.",
+    "subtitle_user": "Browser dan perangkat tempat {username} masuk.",
+    "this_browser": "Browser ini",
+    "browser_on_system": "{browser} di {system}",
+    "browser_on": "Sebuah browser di {system}",
+    "unknown_browser": "Browser tidak dikenal",
+    "address": "Alamat",
+    "signed_in": "Masuk",
+    "last_used": "Terakhir digunakan",
+    "sign_out": "Keluarkan",
+    "sign_out_everywhere_else": "Keluarkan di tempat lain",
+    "sign_out_all": "Keluarkan di semua tempat",
+    "confirm_sign_out": "Keluarkan {device}? Browser itu kembali ke halaman masuk.",
+    "confirm_everywhere_else": "Keluarkan semua browser dan perangkat lain? Browser ini tetap masuk.",
+    "confirm_all_user": "Keluarkan {username} di semua browser dan perangkat?",
+    "signed_out_one": "{device} telah dikeluarkan.",
+    "signed_out_count": "Sesi yang dikeluarkan: {count}",
+    "none": "Tidak ada browser yang masuk.",
+    "none_other": "Tidak ada browser atau perangkat lain yang masuk.",
+    "none_user": "{username} tidak masuk di mana pun.",
+    "limit_many": "Satu akun dapat masuk di paling banyak {max} browser dan perangkat. Masuk lebih dari itu mengeluarkan yang paling lama tidak digunakan.",
+    "limit_one": "Server ini mengizinkan satu sesi per akun: masuk yang baru mengeluarkan browser lainnya.",
+    "limit_none": "Server ini tidak membatasi sesi per akun.",
+    "load_failed": "Perangkat yang masuk tidak dapat dimuat."
   }
 }

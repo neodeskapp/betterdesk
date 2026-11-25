@@ -187,9 +187,25 @@ function readPolicy(raw: Record<string, unknown> | null | undefined): Policy {
 	};
 }
 
+/**
+ * The reason another tab was given, passed on so this one says the same:
+ * a session signed out from another device or by an admin (A239). Its own
+ * sign-out and an unknown text count as a plain end.
+ */
+function codeOf(code: unknown): string {
+	return typeof code === 'string' && /^session_[a-z_]{1,40}$/.test(code) ? code : 'session_expired';
+}
+
 const onActivity = () => markActivity();
 const onStorage = (e: StorageEvent) => {
-	if (e.key === EXPIRED_KEY && e.newValue) goLogin();
+	if (e.key !== EXPIRED_KEY || !e.newValue) return;
+	let code: unknown;
+	try {
+		code = (JSON.parse(e.newValue) as { code?: unknown } | null)?.code;
+	} catch {
+		code = undefined;
+	}
+	goLogin(codeOf(code));
 };
 
 /** Start watching (the shell calls it once the session is known) */
@@ -208,7 +224,7 @@ export function startGuard(sessionPolicy: Record<string, unknown> | null | undef
 		if (channel) {
 			channel.onmessage = (e: MessageEvent<unknown>) => {
 				const msg = e.data as { type?: unknown } | null;
-				if (msg && msg.type === 'expired') goLogin();
+				if (msg && msg.type === 'expired') goLogin(codeOf((msg as { code?: unknown }).code));
 			};
 		}
 	} catch {

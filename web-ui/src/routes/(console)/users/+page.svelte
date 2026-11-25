@@ -11,8 +11,9 @@
   (/effective-scope) and organizations, four at a time; GET
   /api/panel/user-groups beside it. Actions are offered by permission:
   user.create (and a role the signed-in person may give) to add, user.edit
-  to edit, reset passwords, disable and enable accounts and turn off their
-  two-factor sign-in (never yourself) and manage groups, user.delete to
+  to edit, reset passwords, see and end an account's signed-in devices
+  (A239), disable and enable accounts and turn off their two-factor
+  sign-in (never yourself) and manage groups, user.delete to
   delete (never yourself),
   org.manage_users to change organizations.
 
@@ -41,6 +42,7 @@
 	import type { AccessSubject } from '#lib/api/access.ts';
 	import { plural, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
+	import SessionsSheet from '#lib/people/SessionsSheet.svelte';
 	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import {
 		assignableRoles,
@@ -228,6 +230,7 @@
 	let editing = $state<{ user: ConsoleUser | null } | null>(null);
 	let resetFor = $state.raw<ConsoleUser | null>(null);
 	let orgsFor = $state.raw<ConsoleUser | null>(null);
+	let sessionsFor = $state.raw<ConsoleUser | null>(null);
 	let groupDialog = $state<{ group: UserGroupRow | null } | null>(null);
 	let accessFor = $state.raw<{ subject: AccessSubject; name: string; role?: string } | null>(null);
 
@@ -445,6 +448,9 @@
 					>{t('users.reset_password_menu')}</MenuItem
 				>
 			{/if}
+			<MenuItem class="act-sessions" icon="devices" onselect={() => (sessionsFor = u)}
+				>{t('sessions.user_menu')}</MenuItem
+			>
 		{/if}
 		<MenuItem class="act-orgs" icon={ICONS.organization} onselect={() => (orgsFor = u)}
 			>{t('users.organizations_menu')}</MenuItem
@@ -643,6 +649,10 @@
 
 	{#if resetFor}
 		<ResetPasswordDialog user={resetFor} onclose={() => (resetFor = null)} />
+	{/if}
+
+	{#if sessionsFor}
+		<SessionsSheet user={sessionsFor} onclose={() => (sessionsFor = null)} />
 	{/if}
 
 	{#if orgsFor}

@@ -164,12 +164,17 @@
     "oidc_no_account": "Sua conta não foi encontrada e o registro automático está desativado.",
     "totp_rate_limited": "Muitas tentativas. Tente novamente mais tarde.",
     "emergency_mode_banner": "Servidor Go inacessível — executando em modo de emergência (somente administrador, funcionalidade limitada)",
-    "session_expired": "Sua sessão expirou ou foi substituída por um novo login. Entre novamente.",
+    "session_expired": "Sua sessão expirou. Entre novamente.",
     "session_idle_warning_title": "Sessão expirando em breve",
     "session_idle_warning_body": "Você será desconectado por inatividade em {{seconds}} segundos.",
     "session_stay_signed_in": "Permanecer conectado",
     "show_password": "Mostrar senha",
-    "sso_redirecting": "Abrindo o login único…"
+    "sso_redirecting": "Abrindo o login único…",
+    "signed_out_elsewhere": "A sua sessão foi terminada a partir de outro dispositivo. Entre novamente.",
+    "signed_out_by_admin": "Um administrador terminou a sua sessão. Entre novamente.",
+    "signed_out_replaced": "A sua sessão foi terminada porque a sua conta entrou noutro navegador. Este servidor permite uma sessão por conta.",
+    "signed_out_limit": "A sua sessão foi terminada porque a sua conta entrou em mais navegadores do que este servidor permite. Entre novamente.",
+    "signed_out_account_changed": "A sua sessão foi terminada porque a sua senha, o login em duas etapas ou o seu acesso mudaram. Entre novamente."
   },
   "dashboard": {
     "title": "Painel",
@@ -1469,7 +1474,10 @@
       "require_2fa": "Exigir o login em duas etapas",
       "require_2fa_hint": "Uma conta local sem login em duas etapas configura-o logo após o próximo login com senha e não pode fazer mais nada até lá; o cliente de desktop e a API recusam-na até lá. As contas do diretório e de login único ficam a cargo do seu provedor.",
       "ldap_enabled_hint": "As pessoas do seu diretório entram com o nome de utilizador e a palavra-passe do diretório. Cada conta usa uma única forma de entrar, por isso as contas do diretório não podem usar uma palavra-passe definida nesta consola.",
-      "attrs_note": "Os valores predefinidos funcionam na maioria dos casos. Altere-os só se nomes ou endereços de email chegarem errados ou vazios."
+      "attrs_note": "Os valores predefinidos funcionam na maioria dos casos. Altere-os só se nomes ou endereços de email chegarem errados ou vazios.",
+      "single_session": "Uma sessão por conta",
+      "single_session_hint": "Uma nova entrada termina a sessão do outro navegador da conta. Desligado: uma conta pode ter sessão iniciada em até {max} navegadores e dispositivos ao mesmo tempo.",
+      "single_session_env": "SESSION_MAX_PER_USER está definido como {value} no ambiente do servidor e decide em vez desta opção. Remova-o lá para usar a opção."
     },
     "backup_tab": {
       "create_title": "Criar uma cópia de segurança",
@@ -1925,7 +1933,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "Token de API expirado",
-    "action_api_token_deleted": "Token de API eliminado"
+    "action_api_token_deleted": "Token de API eliminado",
+    "action_session_signed_out": "Sessão terminada a partir de outro dispositivo",
+    "action_session_ended_by_admin": "Sessão terminada por um administrador",
+    "action_session_limit": "Sessão terminada pelo limite de sessões",
+    "action_console_sessions_policy_changed": "Sessões por conta alteradas"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8600,5 +8612,34 @@
     "switched_to_ux36": "UX 3.6 beta ativado para este navegador.",
     "switched_to_ux35": "UX 3.5 restaurado para este navegador.",
     "default_hint": "Layout predefinido. Estável e completo."
+  },
+  "sessions": {
+    "title": "Dispositivos conectados",
+    "user_title": "Dispositivos conectados de {username}",
+    "user_menu": "Dispositivos conectados…",
+    "subtitle_own": "Os navegadores e dispositivos em que a sua conta tem sessão iniciada.",
+    "subtitle_user": "Os navegadores e dispositivos em que {username} tem sessão iniciada.",
+    "this_browser": "Este navegador",
+    "browser_on_system": "{browser} no {system}",
+    "browser_on": "Um navegador no {system}",
+    "unknown_browser": "Navegador desconhecido",
+    "address": "Endereço",
+    "signed_in": "Entrada",
+    "last_used": "Último uso",
+    "sign_out": "Terminar sessão",
+    "sign_out_everywhere_else": "Terminar sessão nos outros",
+    "sign_out_all": "Terminar sessão em todos",
+    "confirm_sign_out": "Terminar a sessão de {device}? Esse navegador volta à página de entrada.",
+    "confirm_everywhere_else": "Terminar a sessão em todos os outros navegadores e dispositivos? Este navegador continua com a sessão iniciada.",
+    "confirm_all_user": "Terminar a sessão de {username} em todos os navegadores e dispositivos?",
+    "signed_out_one": "Sessão de {device} terminada.",
+    "signed_out_count": "Sessões terminadas: {count}",
+    "none": "Nenhum navegador tem sessão iniciada.",
+    "none_other": "Nenhum outro navegador ou dispositivo tem sessão iniciada.",
+    "none_user": "{username} não tem sessão iniciada em lado nenhum.",
+    "limit_many": "Uma conta pode ter sessão iniciada em até {max} navegadores e dispositivos. Uma entrada a mais termina a que está há mais tempo sem uso.",
+    "limit_one": "Este servidor permite uma sessão por conta: uma nova entrada termina a do outro navegador.",
+    "limit_none": "Este servidor não limita as sessões por conta.",
+    "load_failed": "Não foi possível carregar os dispositivos conectados."
   }
 }

@@ -170,12 +170,17 @@
     "oidc_no_account": "Kontoen din ble ikke funnet og automatisk registrering er deaktivert.",
     "totp_rate_limited": "For mange forsøk. Vennligst prøv igjen senere.",
     "emergency_mode_banner": "Go server utilgjengelig — kjører i nødmodus (kun admin, begrenset funksjonalitet)",
-    "session_expired": "Økten er utløpt eller erstattet av en ny innlogging. Logg inn på nytt.",
+    "session_expired": "Økten er utløpt. Logg inn på nytt.",
     "session_idle_warning_title": "Økten utløper snart",
     "session_idle_warning_body": "Du logges ut på grunn av inaktivitet om {{seconds}} sekunder.",
     "session_stay_signed_in": "Forbli innlogget",
     "show_password": "Vis passord",
-    "sso_redirecting": "Åpner enkel pålogging…"
+    "sso_redirecting": "Åpner enkel pålogging…",
+    "signed_out_elsewhere": "Du ble logget ut fra en annen enhet. Logg inn på nytt.",
+    "signed_out_by_admin": "En administrator logget deg ut. Logg inn på nytt.",
+    "signed_out_replaced": "Du ble logget ut fordi kontoen din logget inn i en annen nettleser. Denne serveren tillater én økt per konto.",
+    "signed_out_limit": "Du ble logget ut fordi kontoen din logget inn i flere nettlesere enn denne serveren tillater. Logg inn på nytt.",
+    "signed_out_account_changed": "Du ble logget ut fordi passordet, totrinnspåloggingen eller tilgangen din ble endret. Logg inn på nytt."
   },
   "dashboard": {
     "title": "Dashbord",
@@ -1475,7 +1480,10 @@
       "require_2fa": "Krev totrinnspålogging",
       "require_2fa_hint": "En lokal konto uten totrinnspålogging setter det opp rett etter neste pålogging med passord og kan ikke gjøre noe annet før det; skrivebordsklienten og API-et avviser den til da. Katalog- og enkeltpåloggingskontoer overlates til leverandøren.",
       "ldap_enabled_hint": "Personer fra katalogen logger inn med katalogbrukernavn og passord. Hver konto bruker én måte å logge inn på, så katalogkontoer kan ikke bruke et passord satt i denne konsollen.",
-      "attrs_note": "Standardverdiene fungerer i de fleste tilfeller. Endre dem bare hvis navn eller e-postadresser kommer feil eller tomme."
+      "attrs_note": "Standardverdiene fungerer i de fleste tilfeller. Endre dem bare hvis navn eller e-postadresser kommer feil eller tomme.",
+      "single_session": "Én økt per konto",
+      "single_session_hint": "En ny innlogging logger ut kontoens andre nettleser. Av: en konto kan være logget inn på opptil {max} nettlesere og enheter samtidig.",
+      "single_session_env": "SESSION_MAX_PER_USER er satt til {value} i serverens miljø og bestemmer i stedet for denne bryteren. Fjern den der for å bruke bryteren."
     },
     "backup_tab": {
       "create_title": "Lag en sikkerhetskopi",
@@ -1931,7 +1939,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "API-token utløpt",
-    "action_api_token_deleted": "API-token slettet"
+    "action_api_token_deleted": "API-token slettet",
+    "action_session_signed_out": "Økt logget ut fra en annen enhet",
+    "action_session_ended_by_admin": "Økt avsluttet av en administrator",
+    "action_session_limit": "Økt avsluttet av øktgrensen",
+    "action_console_sessions_policy_changed": "Økter per konto endret"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8606,5 +8618,34 @@
     "switched_to_ux36": "UX 3.6 beta er aktivert for denne nettleseren.",
     "switched_to_ux35": "UX 3.5 er gjenopprettet for denne nettleseren.",
     "default_hint": "Standardlayout. Stabilt og fullt funksjonssett."
+  },
+  "sessions": {
+    "title": "Påloggede enheter",
+    "user_title": "Påloggede enheter for {username}",
+    "user_menu": "Påloggede enheter…",
+    "subtitle_own": "Nettleserne og enhetene der kontoen din er logget inn.",
+    "subtitle_user": "Nettleserne og enhetene der {username} er logget inn.",
+    "this_browser": "Denne nettleseren",
+    "browser_on_system": "{browser} på {system}",
+    "browser_on": "En nettleser på {system}",
+    "unknown_browser": "Ukjent nettleser",
+    "address": "Adresse",
+    "signed_in": "Logget inn",
+    "last_used": "Sist brukt",
+    "sign_out": "Logg ut",
+    "sign_out_everywhere_else": "Logg ut alle andre steder",
+    "sign_out_all": "Logg ut overalt",
+    "confirm_sign_out": "Logge ut {device}? Den nettleseren går til innloggingssiden.",
+    "confirm_everywhere_else": "Logge ut alle andre nettlesere og enheter? Denne nettleseren forblir innlogget.",
+    "confirm_all_user": "Logge ut {username} på alle nettlesere og enheter?",
+    "signed_out_one": "{device} er logget ut.",
+    "signed_out_count": "Økter logget ut: {count}",
+    "none": "Ingen nettleser er logget inn.",
+    "none_other": "Ingen annen nettleser eller enhet er logget inn.",
+    "none_user": "{username} er ikke logget inn noe sted.",
+    "limit_many": "En konto kan være logget inn på opptil {max} nettlesere og enheter. En innlogging utover det logger ut den som har vært ubrukt lengst.",
+    "limit_one": "Denne serveren tillater én økt per konto: en ny innlogging logger ut den andre nettleseren.",
+    "limit_none": "Denne serveren begrenser ikke antall økter per konto.",
+    "load_failed": "Kunne ikke laste de påloggede enhetene."
   }
 }

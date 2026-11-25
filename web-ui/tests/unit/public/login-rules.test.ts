@@ -48,10 +48,15 @@ describe('return path (R3, same rules as web-nodejs/lib/returnUrl.js)', () => {
 });
 
 describe('the address', () => {
-	test('reads return, expired, error, autoLaunch and desktop', () => {
-		expect(readLoginQuery('?return=%2Fdevices&expired=1&error=oidc_denied&autoLaunch=0&desktop=1')).toEqual({
+	test('reads return, expired, reason, error, autoLaunch and desktop', () => {
+		expect(
+			readLoginQuery(
+				'?return=%2Fdevices&expired=1&reason=session_signed_out&error=oidc_denied&autoLaunch=0&desktop=1'
+			)
+		).toEqual({
 			returnPath: '/devices',
 			expired: true,
+			endedBy: 'session_signed_out',
 			oidcError: 'oidc_denied',
 			ssoFailed: true,
 			autoLaunch: false,
@@ -60,6 +65,7 @@ describe('the address', () => {
 		expect(readLoginQuery('')).toEqual({
 			returnPath: null,
 			expired: false,
+			endedBy: null,
 			oidcError: null,
 			ssoFailed: false,
 			autoLaunch: true,

@@ -172,12 +172,17 @@
         "totp_setup_required": "This server requires two-factor sign-in. Scan the QR code with an authenticator app, then enter the 6-digit code it shows.",
         "passwords_mismatch": "Passwords do not match",
         "emergency_mode_banner": "Go server unreachable — running in emergency mode (admin-only, limited functionality)",
-        "session_expired": "Your session expired or was replaced by a new login. Please sign in again.",
+        "session_expired": "Your session expired. Please sign in again.",
         "session_idle_warning_title": "Session expiring soon",
         "session_idle_warning_body": "You will be signed out due to inactivity in {{seconds}} seconds.",
         "session_stay_signed_in": "Stay signed in",
         "show_password": "Show password",
-        "sso_redirecting": "Opening single sign-on…"
+        "sso_redirecting": "Opening single sign-on…",
+        "signed_out_elsewhere": "You were signed out from another device. Please sign in again.",
+        "signed_out_by_admin": "An administrator signed you out. Please sign in again.",
+        "signed_out_replaced": "You were signed out because your account signed in on another browser. This server allows one session per account.",
+        "signed_out_limit": "You were signed out because your account signed in on more browsers than this server allows. Please sign in again.",
+        "signed_out_account_changed": "You were signed out because your password, two-factor sign-in or access changed. Please sign in again."
     },
     "dashboard": {
         "title": "Dashboard",
@@ -1477,7 +1482,10 @@
             "require_2fa": "Require two-factor sign-in",
             "require_2fa_hint": "A local account without two-factor sign-in sets it up right after its next password sign-in and can do nothing else until then; the desktop client and the API refuse it until it has. Directory and single sign-on accounts are left to their provider.",
             "ldap_enabled_hint": "People from your directory sign in with their directory user name and password. Each account uses one way to sign in, so directory accounts can't use a password set in this console.",
-            "attrs_note": "The defaults work in most cases. Change them only if names or email addresses arrive wrong or empty."
+            "attrs_note": "The defaults work in most cases. Change them only if names or email addresses arrive wrong or empty.",
+            "single_session": "One session per account",
+            "single_session_hint": "A new sign-in signs out the account's other browser. Off: an account can be signed in on up to {max} browsers and devices at once.",
+            "single_session_env": "SESSION_MAX_PER_USER is set to {value} in the server's environment and decides instead of this switch. Remove it there to use the switch."
         },
         "backup_tab": {
             "create_title": "Create a backup",
@@ -1933,7 +1941,11 @@
         "action_signin_use": "Saved sign-in used",
         "action_signin_refused": "Saved sign-in refused",
         "action_api_token_expired": "API token expired",
-        "action_api_token_deleted": "API token deleted"
+        "action_api_token_deleted": "API token deleted",
+        "action_session_signed_out": "Session signed out from another device",
+        "action_session_ended_by_admin": "Session ended by an administrator",
+        "action_session_limit": "Session ended by the session limit",
+        "action_console_sessions_policy_changed": "Sessions per account changed"
     },
     "generator": {
         "title": "NeoDesk Support Generator",
@@ -6617,7 +6629,7 @@
         "hardening_session_timeout": "Idle and absolute session timeout in the console",
         "hardening_session_timeout_desc": "A console session ends after {idle} minutes without a request and {max} minutes after sign-in (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
         "hardening_single_session": "Limit of console sessions per account",
-        "hardening_single_session_desc": "A new console sign-in ends the least recently used sessions beyond SESSION_MAX_PER_USER (now {limit}) and records address and browser for the audit log.",
+        "hardening_single_session_desc": "A new console sign-in ends the least recently used sessions beyond the limit per account (now {limit}; set under Settings, Sign-in, or by SESSION_MAX_PER_USER) and records address and browser for the audit log.",
         "hardening_unlimited": "no limit"
     },
     "languages": {
@@ -8600,5 +8612,34 @@
         "switched_to_ux36": "UX 3.6 beta enabled for this browser.",
         "switched_to_ux35": "UX 3.5 restored for this browser.",
         "default_hint": "Default layout. Stable, fully featured."
+    },
+    "sessions": {
+        "title": "Signed-in devices",
+        "user_title": "Signed-in devices of {username}",
+        "user_menu": "Signed-in devices…",
+        "subtitle_own": "The browsers and devices where your account is signed in.",
+        "subtitle_user": "The browsers and devices where {username} is signed in.",
+        "this_browser": "This browser",
+        "browser_on_system": "{browser} on {system}",
+        "browser_on": "A browser on {system}",
+        "unknown_browser": "Unknown browser",
+        "address": "Address",
+        "signed_in": "Signed in",
+        "last_used": "Last used",
+        "sign_out": "Sign out",
+        "sign_out_everywhere_else": "Sign out everywhere else",
+        "sign_out_all": "Sign out everywhere",
+        "confirm_sign_out": "Sign out {device}? That browser goes to the sign-in page.",
+        "confirm_everywhere_else": "Sign out every other browser and device? This browser stays signed in.",
+        "confirm_all_user": "Sign out {username} on every browser and device?",
+        "signed_out_one": "Signed out {device}.",
+        "signed_out_count": "Sessions signed out: {count}",
+        "none": "No browser is signed in.",
+        "none_other": "No other browser or device is signed in.",
+        "none_user": "{username} is not signed in anywhere.",
+        "limit_many": "An account can be signed in on up to {max} browsers and devices. A sign-in beyond that signs out the one used longest ago.",
+        "limit_one": "This server allows one session per account: a new sign-in signs out the other browser.",
+        "limit_none": "This server sets no limit on sessions per account.",
+        "load_failed": "Could not load the signed-in devices."
     }
 }

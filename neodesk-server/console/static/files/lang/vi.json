@@ -170,12 +170,17 @@
     "oidc_no_account": "Không tìm thấy tài khoản của bạn và tính năng đăng ký tự động bị tắt.",
     "totp_rate_limited": "Quá nhiều nỗ lực. Vui lòng thử lại sau.",
     "emergency_mode_banner": "Go server không thể truy cập được - đang chạy ở chế độ khẩn cấp (chỉ dành cho quản trị viên, chức năng hạn chế)",
-    "session_expired": "Phiên của bạn đã hết hạn hoặc bị thay bằng lần đăng nhập mới. Vui lòng đăng nhập lại.",
+    "session_expired": "Phiên của bạn đã hết hạn. Vui lòng đăng nhập lại.",
     "session_idle_warning_title": "Phiên sắp hết hạn",
     "session_idle_warning_body": "Bạn sẽ bị đăng xuất do không hoạt động sau {{seconds}} giây.",
     "session_stay_signed_in": "Giữ đăng nhập",
     "show_password": "Hiện mật khẩu",
-    "sso_redirecting": "Đang mở đăng nhập một lần…"
+    "sso_redirecting": "Đang mở đăng nhập một lần…",
+    "signed_out_elsewhere": "Bạn đã bị đăng xuất từ một thiết bị khác. Vui lòng đăng nhập lại.",
+    "signed_out_by_admin": "Một quản trị viên đã đăng xuất bạn. Vui lòng đăng nhập lại.",
+    "signed_out_replaced": "Bạn đã bị đăng xuất vì tài khoản của bạn đăng nhập trên một trình duyệt khác. Máy chủ này cho phép một phiên cho mỗi tài khoản.",
+    "signed_out_limit": "Bạn đã bị đăng xuất vì tài khoản của bạn đăng nhập trên nhiều trình duyệt hơn mức máy chủ này cho phép. Vui lòng đăng nhập lại.",
+    "signed_out_account_changed": "Bạn đã bị đăng xuất vì mật khẩu, đăng nhập hai bước hoặc quyền truy cập của bạn đã thay đổi. Vui lòng đăng nhập lại."
   },
   "dashboard": {
     "title": "Trang tổng quan",
@@ -1475,7 +1480,10 @@
       "require_2fa": "Bắt buộc đăng nhập hai bước",
       "require_2fa_hint": "Tài khoản cục bộ chưa có đăng nhập hai bước sẽ thiết lập ngay sau lần đăng nhập bằng mật khẩu tiếp theo và không làm được gì khác trước đó; ứng dụng máy tính và API từ chối nó cho đến khi thiết lập xong. Tài khoản thư mục và đăng nhập một lần do nhà cung cấp của chúng quản lý.",
       "ldap_enabled_hint": "Người trong thư mục của bạn đăng nhập bằng tên người dùng và mật khẩu thư mục. Mỗi tài khoản dùng một cách đăng nhập, nên tài khoản thư mục không thể dùng mật khẩu đặt trong bảng điều khiển này.",
-      "attrs_note": "Giá trị mặc định dùng được trong hầu hết trường hợp. Chỉ đổi khi tên hoặc địa chỉ email nhận về bị sai hoặc trống."
+      "attrs_note": "Giá trị mặc định dùng được trong hầu hết trường hợp. Chỉ đổi khi tên hoặc địa chỉ email nhận về bị sai hoặc trống.",
+      "single_session": "Một phiên cho mỗi tài khoản",
+      "single_session_hint": "Lần đăng nhập mới sẽ đăng xuất trình duyệt kia của tài khoản. Tắt: một tài khoản có thể đăng nhập cùng lúc trên tối đa {max} trình duyệt và thiết bị.",
+      "single_session_env": "SESSION_MAX_PER_USER được đặt là {value} trong môi trường của máy chủ và quyết định thay cho công tắc này. Hãy xóa nó ở đó để dùng công tắc."
     },
     "backup_tab": {
       "create_title": "Tạo bản sao lưu",
@@ -1931,7 +1939,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "Token API đã hết hạn",
-    "action_api_token_deleted": "Đã xóa token API"
+    "action_api_token_deleted": "Đã xóa token API",
+    "action_session_signed_out": "Phiên bị đăng xuất từ thiết bị khác",
+    "action_session_ended_by_admin": "Phiên bị quản trị viên kết thúc",
+    "action_session_limit": "Phiên bị kết thúc do giới hạn phiên",
+    "action_console_sessions_policy_changed": "Đã thay đổi số phiên cho mỗi tài khoản"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -8606,5 +8618,34 @@
     "switched_to_ux36": "Đã bật UX 3.6 beta cho trình duyệt này.",
     "switched_to_ux35": "Đã khôi phục UX 3.5 cho trình duyệt này.",
     "default_hint": "Bố cục mặc định. Ổn định và đầy đủ tính năng."
+  },
+  "sessions": {
+    "title": "Thiết bị đã đăng nhập",
+    "user_title": "Thiết bị đã đăng nhập của {username}",
+    "user_menu": "Thiết bị đã đăng nhập…",
+    "subtitle_own": "Các trình duyệt và thiết bị mà tài khoản của bạn đang đăng nhập.",
+    "subtitle_user": "Các trình duyệt và thiết bị mà {username} đang đăng nhập.",
+    "this_browser": "Trình duyệt này",
+    "browser_on_system": "{browser} trên {system}",
+    "browser_on": "Một trình duyệt trên {system}",
+    "unknown_browser": "Trình duyệt không xác định",
+    "address": "Địa chỉ",
+    "signed_in": "Đăng nhập",
+    "last_used": "Dùng lần cuối",
+    "sign_out": "Đăng xuất",
+    "sign_out_everywhere_else": "Đăng xuất ở mọi nơi khác",
+    "sign_out_all": "Đăng xuất ở mọi nơi",
+    "confirm_sign_out": "Đăng xuất {device}? Trình duyệt đó sẽ về trang đăng nhập.",
+    "confirm_everywhere_else": "Đăng xuất mọi trình duyệt và thiết bị khác? Trình duyệt này vẫn đăng nhập.",
+    "confirm_all_user": "Đăng xuất {username} trên mọi trình duyệt và thiết bị?",
+    "signed_out_one": "Đã đăng xuất {device}.",
+    "signed_out_count": "Phiên đã đăng xuất: {count}",
+    "none": "Không có trình duyệt nào đang đăng nhập.",
+    "none_other": "Không có trình duyệt hay thiết bị nào khác đang đăng nhập.",
+    "none_user": "{username} không đăng nhập ở đâu cả.",
+    "limit_many": "Một tài khoản có thể đăng nhập trên tối đa {max} trình duyệt và thiết bị. Đăng nhập vượt quá sẽ đăng xuất phiên lâu không dùng nhất.",
+    "limit_one": "Máy chủ này cho phép một phiên cho mỗi tài khoản: lần đăng nhập mới sẽ đăng xuất trình duyệt kia.",
+    "limit_none": "Máy chủ này không giới hạn số phiên cho mỗi tài khoản.",
+    "load_failed": "Không tải được các thiết bị đã đăng nhập."
   }
 }

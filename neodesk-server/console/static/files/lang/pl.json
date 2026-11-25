@@ -164,12 +164,17 @@
     "totp_setup_required": "Ten serwer wymaga logowania dwuetapowego. Zeskanuj kod QR aplikacją uwierzytelniającą, a potem wpisz wyświetlony 6-cyfrowy kod.",
     "passwords_mismatch": "Hasła nie są identyczne",
     "emergency_mode_banner": "Serwer Go jest nieosiągalny — tryb awaryjny (tylko admin, ograniczona funkcjonalność)",
-    "session_expired": "Twoja sesja wygasła lub została zastąpiona nowym logowaniem. Zaloguj się ponownie.",
+    "session_expired": "Twoja sesja wygasła. Zaloguj się ponownie.",
     "session_idle_warning_title": "Sesja wkrótce wygaśnie",
     "session_idle_warning_body": "Zostaniesz wylogowany z powodu bezczynności za {{seconds}} s.",
     "session_stay_signed_in": "Pozostań zalogowany",
     "show_password": "Pokaż hasło",
-    "sso_redirecting": "Otwieranie logowania jednokrotnego…"
+    "sso_redirecting": "Otwieranie logowania jednokrotnego…",
+    "signed_out_elsewhere": "Wylogowano Cię z innego urządzenia. Zaloguj się ponownie.",
+    "signed_out_by_admin": "Administrator Cię wylogował. Zaloguj się ponownie.",
+    "signed_out_replaced": "Wylogowano Cię, bo Twoje konto zalogowało się w innej przeglądarce. Ten serwer pozwala na jedną sesję na konto.",
+    "signed_out_limit": "Wylogowano Cię, bo Twoje konto zalogowało się w większej liczbie przeglądarek, niż pozwala ten serwer. Zaloguj się ponownie.",
+    "signed_out_account_changed": "Wylogowano Cię, bo zmieniło się Twoje hasło, logowanie dwuetapowe lub dostęp. Zaloguj się ponownie."
   },
   "dashboard": {
     "title": "Panel",
@@ -1469,7 +1474,10 @@
       "require_2fa": "Wymagaj logowania dwuetapowego",
       "require_2fa_hint": "Konto lokalne bez logowania dwuetapowego konfiguruje je zaraz po następnym logowaniu hasłem i do tego czasu nie może robić nic innego; klient na komputer i API odrzucają je do tego czasu. Konta z katalogu i logowania jednokrotnego zostają w gestii ich dostawcy.",
       "ldap_enabled_hint": "Osoby z katalogu logują się nazwą użytkownika i hasłem z katalogu. Każde konto używa jednego sposobu logowania, więc konta z katalogu nie mogą używać hasła ustawionego w tej konsoli.",
-      "attrs_note": "Wartości domyślne działają w większości przypadków. Zmień je tylko wtedy, gdy nazwy lub adresy e-mail przychodzą błędne lub puste."
+      "attrs_note": "Wartości domyślne działają w większości przypadków. Zmień je tylko wtedy, gdy nazwy lub adresy e-mail przychodzą błędne lub puste.",
+      "single_session": "Jedna sesja na konto",
+      "single_session_hint": "Nowe logowanie wylogowuje drugą przeglądarkę konta. Wyłączone: konto może być zalogowane jednocześnie na maksymalnie {max} przeglądarkach i urządzeniach.",
+      "single_session_env": "SESSION_MAX_PER_USER ma w środowisku serwera wartość {value} i decyduje zamiast tego przełącznika. Usuń je tam, aby używać przełącznika."
     },
     "backup_tab": {
       "create_title": "Utwórz kopię zapasową",
@@ -1925,7 +1933,11 @@
     "action_signin_use": "Saved sign-in used",
     "action_signin_refused": "Saved sign-in refused",
     "action_api_token_expired": "Token API wygasł",
-    "action_api_token_deleted": "Usunięto token API"
+    "action_api_token_deleted": "Usunięto token API",
+    "action_session_signed_out": "Sesja wylogowana z innego urządzenia",
+    "action_session_ended_by_admin": "Sesja zakończona przez administratora",
+    "action_session_limit": "Sesja zakończona przez limit sesji",
+    "action_console_sessions_policy_changed": "Zmieniono sesje na konto"
   },
   "generator": {
     "title": "Generator NeoDesk Support",
@@ -8600,5 +8612,34 @@
     "switched_to_ux36": "Włączono UX 3.6 beta dla tej przeglądarki.",
     "switched_to_ux35": "Przywrócono UX 3.5 dla tej przeglądarki.",
     "default_hint": "Układ domyślny. Stabilny, pełny zestaw funkcji."
+  },
+  "sessions": {
+    "title": "Zalogowane urządzenia",
+    "user_title": "Zalogowane urządzenia użytkownika {username}",
+    "user_menu": "Zalogowane urządzenia…",
+    "subtitle_own": "Przeglądarki i urządzenia, na których Twoje konto jest zalogowane.",
+    "subtitle_user": "Przeglądarki i urządzenia, na których {username} jest zalogowany.",
+    "this_browser": "Ta przeglądarka",
+    "browser_on_system": "{browser} w systemie {system}",
+    "browser_on": "Przeglądarka w systemie {system}",
+    "unknown_browser": "Nieznana przeglądarka",
+    "address": "Adres",
+    "signed_in": "Zalogowano",
+    "last_used": "Ostatnie użycie",
+    "sign_out": "Wyloguj",
+    "sign_out_everywhere_else": "Wyloguj wszędzie indziej",
+    "sign_out_all": "Wyloguj wszędzie",
+    "confirm_sign_out": "Wylogować {device}? Ta przeglądarka przejdzie do strony logowania.",
+    "confirm_everywhere_else": "Wylogować wszystkie inne przeglądarki i urządzenia? Ta przeglądarka pozostanie zalogowana.",
+    "confirm_all_user": "Wylogować {username} na wszystkich przeglądarkach i urządzeniach?",
+    "signed_out_one": "Wylogowano {device}.",
+    "signed_out_count": "Wylogowane sesje: {count}",
+    "none": "Żadna przeglądarka nie jest zalogowana.",
+    "none_other": "Żadna inna przeglądarka ani urządzenie nie jest zalogowane.",
+    "none_user": "{username} nie jest nigdzie zalogowany.",
+    "limit_many": "Konto może być zalogowane na maksymalnie {max} przeglądarkach i urządzeniach. Kolejne logowanie wylogowuje to, którego najdłużej nie używano.",
+    "limit_one": "Ten serwer pozwala na jedną sesję na konto: nowe logowanie wylogowuje drugą przeglądarkę.",
+    "limit_none": "Ten serwer nie ogranicza liczby sesji na konto.",
+    "load_failed": "Nie udało się wczytać zalogowanych urządzeń."
   }
 }
