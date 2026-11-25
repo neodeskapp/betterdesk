@@ -110,10 +110,40 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
+   "volatile": [
+    {
+     "path": "messages[*].created_at",
+     "integer": true
+    }
+   ],
    "body": {
     "kind": "json",
     "json": {
-     "messages": [],
+     "conversations": {
+      "900100008": {
+       "id": "900100008",
+       "kind": "support",
+       "name": "demo-warehouse-pc"
+      }
+     },
+     "messages": [
+      {
+       "attachments": [],
+       "conversation_id": "900100008",
+       "created_at": 0,
+       "deleted": false,
+       "edited_at": null,
+       "from": {
+        "id": "900100008",
+        "kind": "device",
+        "name": "demo.stock"
+       },
+       "id": "6",
+       "reactions": {},
+       "reply_to": null,
+       "text": "Hello, the label program closes as soon as I open it."
+      }
+     ],
      "success": true
     }
    }

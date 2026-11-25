@@ -72,6 +72,7 @@
    "body": {
     "kind": "json",
     "json": {
+     "conversations": {},
      "messages": [],
      "success": true
     }
