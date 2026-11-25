@@ -77,7 +77,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "TOTP not set up",
+     "error": "Two-factor sign-in is not set up",
      "success": false
     }
    }

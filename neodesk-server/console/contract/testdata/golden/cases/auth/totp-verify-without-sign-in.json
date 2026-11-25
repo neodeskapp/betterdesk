@@ -36,7 +36,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Session expired. Please log in again.",
+     "error": "Session expired. Sign in again.",
      "success": false
     }
    }
@@ -70,7 +70,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Session expired. Please log in again.",
+     "error": "Session expired. Sign in again.",
      "success": false
     }
    }

@@ -40,7 +40,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "Enter a whole number of archives from 1 to 365.",
+     "error": "Enter a whole number of backups from 1 to 365.",
      "success": false
     }
    }
