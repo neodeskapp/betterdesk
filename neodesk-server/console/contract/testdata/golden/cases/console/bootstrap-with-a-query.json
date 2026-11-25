@@ -148,8 +148,13 @@
        },
        {
         "key": "chat",
-        "read": "chat.access",
-        "write": "chat.access"
+        "read": "chat.support",
+        "write": "chat.support"
+       },
+       {
+        "key": "team-chat",
+        "read": "chat.team",
+        "write": "chat.team"
        },
        {
         "key": "activity",
@@ -412,6 +417,7 @@
        "settings": "none",
        "strategies": "read",
        "system": "none",
+       "team-chat": "write",
        "tickets": "read",
        "toolkit": "none",
        "users": "none"
@@ -622,7 +628,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=0ee5e6d509f23a26"
+      "stringsUrl": "/api/console/strings/en?v=be04565a3192e809"
      },
      "nav": [
       {
@@ -871,7 +877,8 @@
       "audit.view",
       "metrics.view",
       "remote_target.view",
-      "chat.access",
+      "chat.support",
+      "chat.team",
       "cdap.view"
      ],
      "sessionPolicy": {
@@ -999,8 +1006,13 @@
        },
        {
         "key": "chat",
-        "read": "chat.access",
-        "write": "chat.access"
+        "read": "chat.support",
+        "write": "chat.support"
+       },
+       {
+        "key": "team-chat",
+        "read": "chat.team",
+        "write": "chat.team"
        },
        {
         "key": "activity",
@@ -1263,6 +1275,7 @@
        "settings": "write",
        "strategies": "write",
        "system": "write",
+       "team-chat": "write",
        "tickets": "write",
        "toolkit": "write",
        "users": "write"
@@ -1473,7 +1486,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=0ee5e6d509f23a26"
+      "stringsUrl": "/api/console/strings/en?v=be04565a3192e809"
      },
      "nav": [
       {
@@ -2054,7 +2067,10 @@
       "remote_target.connect",
       "remote_target.test",
       "guest.create",
-      "chat.access",
+      "chat.support",
+      "chat.team",
+      "chat.assign",
+      "chat.canned_manage",
       "cdap.view",
       "cdap.command",
       "cdap.terminal",
