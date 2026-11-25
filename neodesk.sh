@@ -42,6 +42,8 @@ set -e
 VERSION="3.6.2"
 # Bump when installer control-flow changes must apply mid-session after Update.
 NEODESK_SH_REVISION="20261124-neodesk-setup-307"
+# Where people ask for help: the NeoDesk Discord
+NEODESK_HELP_URL="https://discord.gg/nwERSawufr"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # This file; empty when the script is piped into bash
 NEODESK_SELF="${BASH_SOURCE[0]:-}"
@@ -5035,6 +5037,7 @@ print_install_summary() {
     if binary_hands_over "$(server_binary_path)"; then
         echo "  Command line:  sudo neodesk --help"
     fi
+    echo "  Help:          $NEODESK_HELP_URL"
     echo ""
 }
 

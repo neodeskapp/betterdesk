@@ -21,6 +21,9 @@ console for the devices you look after. Your data stays on your server: the
 project sends no analytics, crash reports or usage data anywhere
 ([Privacy](https://neode.sk/docs/project/privacy)).
 
+Getting help: ask on the [NeoDesk Discord](https://discord.gg/nwERSawufr) or in
+[GitHub Discussions](https://github.com/neodeskapp/neodesk/discussions).
+
 ## One binary on your server
 
 <picture>

@@ -21,6 +21,8 @@ fi
 set -Eeuo pipefail
 
 VERSION="3.6.2"
+# Where people ask for help: the NeoDesk Discord
+NEODESK_HELP_URL="https://discord.gg/nwERSawufr"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || pwd)"
 
 # Settings: flags win over these variables, which win over the defaults
@@ -1302,6 +1304,7 @@ print_summary() {
     say "Logs:            cd $NEODESK_DIR && docker compose logs -f neodesk"
     say "Update:          sudo bash neodesk-docker.sh   (or: cd $NEODESK_DIR && docker compose pull && docker compose up -d)"
     say "Settings:        $(env_file)   (then: cd $NEODESK_DIR && docker compose up -d)"
+    say "Help:            $NEODESK_HELP_URL"
 }
 
 #===============================================================================

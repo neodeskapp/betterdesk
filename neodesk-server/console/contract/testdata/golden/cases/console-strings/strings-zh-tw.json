@@ -3693,7 +3693,7 @@
      "help": {
       "panel": {
        "close": "關閉",
-       "link_issues": "Issues 與回饋",
+       "link_discord": "在 Discord 上取得協助",
        "link_repo": "GitHub 儲存庫",
        "links": "實用連結"
       }

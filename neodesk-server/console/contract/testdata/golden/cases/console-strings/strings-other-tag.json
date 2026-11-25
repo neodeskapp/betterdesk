@@ -3696,7 +3696,7 @@
      "help": {
       "panel": {
        "close": "Schließen",
-       "link_issues": "Issues & Feedback",
+       "link_discord": "Hilfe auf Discord",
        "link_repo": "GitHub-Repository",
        "links": "Nützliche Links"
       }

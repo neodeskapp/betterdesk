@@ -164,6 +164,8 @@ if ($Help) {
 #===============================================================================
 
 $script:VERSION = "3.6.2"
+# Where people ask for help: the NeoDesk Discord
+$script:HELP_URL = "https://discord.gg/nwERSawufr"
 $script:ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 # This file; empty when the script runs from Invoke-Expression
 $script:SELF_PATH = $MyInvocation.MyCommand.Path
@@ -2209,6 +2211,7 @@ function Show-InstallSummary {
     Write-Host "  Update:        & '$manager' -Update"
     Write-Host "  Uninstall:     & '$manager' -Uninstall"
     Write-Host "  Command line:  neodesk --help (in a new terminal)"
+    Write-Host "  Help:          $($script:HELP_URL)"
     Write-Host ""
 }
 

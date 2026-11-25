@@ -66,8 +66,13 @@ func writeRootHelp(w io.Writer, t *Table, env *Env) {
 		"  neodesk audit list --limit 20",
 		"  neodesk devices get 123456789 --json",
 		"",
-		"Every command needs the permission it names in its help, in the account and in the token.")
+		"Every command needs the permission it names in its help, in the account and in the token.",
+		"",
+		"Help: "+helpURL)
 }
+
+// helpURL is where people ask for help: the NeoDesk Discord.
+const helpURL = "https://discord.gg/nwERSawufr"
 
 // writeGroupHelp is `neodesk <group> --help`.
 func writeGroupHelp(w io.Writer, t *Table, group string) {

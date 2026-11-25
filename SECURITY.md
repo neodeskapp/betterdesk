@@ -17,8 +17,8 @@ discretion.
 
 ## Reporting a vulnerability
 
-Please don't open a public GitHub issue for a security problem. Report it
-privately through GitHub:
+Please don't post a security problem in public, on Discord or in GitHub
+Discussions. Report it privately through GitHub:
 <https://github.com/neodeskapp/neodesk/security/advisories/new>, or by
 email to security@neode.sk.
 
@@ -39,9 +39,9 @@ Please include, where you can:
   shorter if the issue is being exploited.
 - **Credit:** if you want it, in the release notes or the advisory.
 
-If you get no acknowledgement within 7 days, open a public issue that
-says only that you are waiting for an answer to a security report, with
-no details.
+If you get no acknowledgement within 7 days, write on the
+[NeoDesk Discord](https://discord.gg/nwERSawufr) only that you are waiting
+for an answer to a security report, with no details.
 
 ## Scope
 
@@ -65,7 +65,10 @@ Out of scope:
 
 - The NeoDesk desktop client. It is built in
   [neodeskapp/neodesk-client](https://github.com/neodeskapp/neodesk-client);
-  report its issues there.
+  report its security problems privately to security@neode.sk, as that
+  repository's SECURITY.md says. Other questions about the client go to
+  the [NeoDesk Discord](https://discord.gg/nwERSawufr) or to this
+  repository's [Discussions](https://github.com/neodeskapp/neodesk/discussions).
 - Issues that need an attacker who already controls the host's operating
   system, the database file, or an administrator's browser session.
 - Denial of service from plain network flooding without an amplification

@@ -12,9 +12,11 @@
 	let { onguide }: { onguide?: () => void } = $props();
 
 	const REPO = 'https://github.com/neodeskapp/neodesk';
+	// Where people ask for help: the NeoDesk Discord
+	const DISCORD = 'https://discord.gg/nwERSawufr';
 	const links = [
 		{ href: REPO, icon: 'code', key: 'help.panel.link_repo' },
-		{ href: `${REPO}/issues`, icon: 'bug_report', key: 'help.panel.link_issues' }
+		{ href: DISCORD, icon: 'chat', key: 'help.panel.link_discord' }
 	];
 </script>
 

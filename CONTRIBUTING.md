@@ -15,8 +15,10 @@ is on the website:
 - [Translations](https://neode.sk/docs/development/translations): how to
   improve or add a language of the console.
 
+Questions go to the [NeoDesk Discord](https://discord.gg/nwERSawufr) or to
+[GitHub Discussions](https://github.com/neodeskapp/neodesk/discussions).
 Report security problems privately, as [SECURITY.md](SECURITY.md) describes,
-not in a public issue.
+not on Discord or in Discussions.
 
 NeoDesk is under [AGPL-3.0](LICENSE). Who keeps the copyright in a
 contribution, and how outside work is credited, is in
