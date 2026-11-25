@@ -16,7 +16,7 @@
 
 {#if file}<img
 		class={['chat-emoji', size === 'large' && 'is-large']}
-		src={asset(`img/emoji/${file}` as 'img/emoji/1f44d.svg')}
+		src={asset(`img/emoji/${file}` as Parameters<typeof asset>[0])}
 		alt={emoji}
 		width="18"
 		height="18"
