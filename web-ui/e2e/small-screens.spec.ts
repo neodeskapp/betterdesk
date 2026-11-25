@@ -433,15 +433,13 @@ test.describe('tab strips on a phone', () => {
 test.describe('chat on a small phone', () => {
 	test.use({ viewport: { width: 360, height: 640 } });
 
-	// Small-screen pass, usability 5: the contact list showed two or three rows in a short box
+	// Small-screen pass, usability 5: the contact list showed two or three rows in a short box.
+	// The chat of A242: the list of conversations and colleagues reaches down to the bottom bar
 	test('the contact list takes the page height instead of a short box', async ({ page }) => {
-		await open(page, '/chat', 'en');
-		const panel = page.locator('.chat-tabs [role="tabpanel"]');
-		await expect(panel.locator('li').nth(3)).toBeAttached();
-		const { scroll, client } = await panel.evaluate((el) => ({
-			scroll: el.scrollHeight,
-			client: el.clientHeight
-		}));
-		expect(scroll, 'height of the contacts in their box').toBeLessThanOrEqual(client + 1);
+		await open(page, '/chat?s=team', 'en');
+		const rows = page.locator('.chat-list .chat-rows');
+		await expect(rows.locator('li').nth(3)).toBeAttached();
+		const box = await rows.boundingBox();
+		expect(box!.y + box!.height, 'bottom of the list').toBeGreaterThan(640 - 100);
 	});
 });
