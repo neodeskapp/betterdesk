@@ -1957,7 +1957,9 @@
     "action_session_ended_by_admin": "Sesión terminada por un administrador",
     "action_session_limit": "Sesión terminada por el límite de sesiones",
     "action_console_sessions_policy_changed": "Sesiones por cuenta cambiadas",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Invitación enviada",
+    "action_user_invite_accepted": "Invitación aceptada"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2541,7 +2543,30 @@
     "access_now_role": "Ahora: {level}, {source}. Límite del rol: {limit}",
     "note_default_user_group": "Grupo de usuarios predeterminado",
     "note_default_device_group": "Grupo de dispositivos predeterminado",
-    "note_org_default_group": "Grupo predeterminado creado con la organización"
+    "note_org_default_group": "Grupo predeterminado creado con la organización",
+    "add_mode_title": "Contraseña",
+    "add_mode_invite": "Enviar una invitación por correo electrónico",
+    "add_mode_invite_desc": "La persona recibe un enlace y elige su propia contraseña. El enlace funciona durante 7 días.",
+    "add_mode_password": "Establecer una contraseña ahora",
+    "add_mode_password_desc": "Usted elige la contraseña y se la pasa usted mismo.",
+    "username_optional_hint": "Opcional. Déjelo vacío para usar {suggestion}.",
+    "username_optional_hint_empty": "Opcional. Déjelo vacío para usar la parte de la dirección de correo antes de la @.",
+    "invite_email_hint": "La invitación se envía a esta dirección. Las notificaciones de solicitudes de ayuda también la usan.",
+    "send_invite": "Enviar invitación",
+    "invite_sent_named": "Invitación enviada a {email}.",
+    "invite_not_sent_named": "Se añadió a {username}, pero la invitación no se envió. Revise los ajustes de correo y luego use Reenviar invitación.",
+    "invited": "Invitado",
+    "invite_expired": "Invitación caducada",
+    "invite_open_until": "El enlace de invitación funciona hasta el {date}.",
+    "invite_expired_on": "El enlace de invitación caducó el {date}.",
+    "resend_invite": "Reenviar invitación",
+    "invite_resent_named": "Se envió una nueva invitación a {username}.",
+    "invite_password_given": "Una persona invitada elige su propia contraseña. Deje la contraseña vacía.",
+    "invite_email_required": "Introduzca la dirección de correo electrónico a la que se envía la invitación.",
+    "invite_needs_email": "Para enviar enlaces por correo hacen falta los ajustes de correo. Configúrelos en Configuración, Correo.",
+    "invite_signed_in": "Esta cuenta ya ha iniciado sesión, así que no necesita invitación.",
+    "link_local_only": "Esta cuenta inicia sesión a través de un directorio o de inicio de sesión único, así que su contraseña no se establece aquí.",
+    "link_mail_failed": "El servidor de correo no aceptó el mensaje. Revise los ajustes de correo."
   },
   "folders": {
     "title": "Carpetas",
@@ -8926,5 +8951,27 @@
     "invites_desc": "Invite a un equipo con un enlace o por correo. El equipo instala NeoDesk y se une a este servidor, con su nombre y en su carpeta.",
     "invite_title": "Invitar a un equipo",
     "invite_note": "El botón de abajo crea un enlace de invitación y muestra las invitaciones que siguen abiertas."
+  },
+  "password_link": {
+    "invite_subject": "{sender} le ha invitado a {server}",
+    "invite_heading": "Bienvenido a {server}",
+    "invite_lead": "{sender} le ha creado una cuenta en {server}. Elija una contraseña para iniciar sesión.",
+    "invite_button": "Elegir su contraseña",
+    "invite_expires": "El enlace funciona una vez, hasta el {expires}.",
+    "mail_username": "Su nombre de usuario: {username}",
+    "mail_link_hint": "Si el botón no funciona, abra este enlace:",
+    "mail_footer": "Enviado por {host} para {server}.",
+    "unusable": "Este enlace ya no funciona. Ya se usó o caducó. Pida uno nuevo.",
+    "page_title_invite": "Elegir su contraseña",
+    "page_intro_invite": "Bienvenido a {server}. Elija una contraseña para su cuenta {username}.",
+    "repeat_password": "Repetir contraseña",
+    "passwords_differ": "Las contraseñas no coinciden.",
+    "save": "Guardar contraseña",
+    "done_title": "Contraseña guardada",
+    "done_text": "Inicie sesión como {username} con su nueva contraseña.",
+    "sign_in": "Iniciar sesión",
+    "invalid_title": "Este enlace no funciona",
+    "no_link": "Abra el enlace de su correo para elegir una contraseña.",
+    "check_failed": "No se pudo comprobar el enlace. Inténtelo de nuevo en un momento."
   }
 }

@@ -7921,6 +7921,82 @@
    ]
   },
   {
+   "name": "users invite",
+   "summary": "Create a console account and mail the person a link to choose their password.",
+   "route": "POST /api/users/invite",
+   "flags": [
+    {
+     "name": "username",
+     "in": "body",
+     "type": "string",
+     "help": "the sign-in name; without it, the part of the email address before the @"
+    },
+    {
+     "name": "role",
+     "in": "body",
+     "type": "string",
+     "help": "the role",
+     "enum": [
+      "super_admin",
+      "admin",
+      "global_admin",
+      "server_admin",
+      "operator",
+      "viewer",
+      "guest_issuer",
+      "pro"
+     ]
+    },
+    {
+     "name": "email",
+     "in": "body",
+     "type": "string",
+     "help": "the address the invite goes to",
+     "required": true
+    },
+    {
+     "name": "group-guids",
+     "in": "body",
+     "type": "list",
+     "help": "user groups to put the account in",
+     "field": "groupGuids"
+    },
+    {
+     "name": "folder-ids",
+     "in": "body",
+     "type": "list",
+     "help": "folders whose devices it may see (restricted scope)",
+     "field": "folderIds"
+    },
+    {
+     "name": "peer-ids",
+     "in": "body",
+     "type": "list",
+     "help": "devices it may see (restricted scope)",
+     "field": "peerIds"
+    }
+   ],
+   "permission": "user.create",
+   "description": "The link works for 7 days and the console needs the email settings. You can only give a role whose permissions you have yourself.",
+   "examples": [
+    "neodesk users invite --email anna@example.com --role operator",
+    "neodesk users invite --email bob@example.com --username bob --role viewer"
+   ]
+  },
+  {
+   "name": "users invites",
+   "summary": "List invites that were not used yet, and whether the console can send mail.",
+   "route": "GET /api/users/invites",
+   "permission": "user.view",
+   "rows": "data.invites",
+   "columns": [
+    "user_id",
+    "expires_at",
+    "expired"
+   ],
+   "description": "An expired invite stays in the list for 30 days. Send a new one with users resend-invite."
+  },
+  {
    "name": "users list",
    "summary": "List console accounts with their role and status.",
    "route": "GET /api/users",
@@ -7963,6 +8039,19 @@
     }
    ],
    "permission": "user.view"
+  },
+  {
+   "name": "users resend-invite",
+   "summary": "Mail a new invite link to an account that has not signed in yet.",
+   "route": "POST /api/users/{id}/invite",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.edit",
+   "description": "The link sent before stops working. The account needs an email address, and the console needs the email settings."
   },
   {
    "name": "users reset-password",
@@ -8835,6 +8924,14 @@
   {
    "route": "POST /api/inventory/telemetry",
    "reason": "Called by NeoDesk agents and clients with a device token, not by people."
+  },
+  {
+   "route": "POST /api/auth/password-link/lookup",
+   "reason": "Used by the person who got an invite or a password reset link, not by an admin."
+  },
+  {
+   "route": "POST /api/auth/password-link/redeem",
+   "reason": "Used by the person who got an invite or a password reset link, not by an admin."
   },
   {
    "route": "POST /api/invitations/lookup",

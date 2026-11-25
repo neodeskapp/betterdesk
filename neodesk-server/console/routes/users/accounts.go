@@ -2,6 +2,8 @@ package users
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"net/http"
 	"regexp"
@@ -14,6 +16,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
@@ -256,6 +259,8 @@ type createdAccount struct {
 	UserGroups []string          `json:"user_groups"`
 	FolderIDs  []int64           `json:"folder_ids"`
 	PeerGrants []string          `json:"peer_grants"`
+	// InviteSent says whether the invite mail went out, for an invite.
+	InviteSent *bool `json:"invite_sent,omitempty"`
 }
 
 var uniqueViolation = regexp.MustCompile(`(?i)unique|users_username_key`)
@@ -278,7 +283,21 @@ func isUniqueViolation(err error) bool {
 // anything written: the account, its groups, its email, its device scope
 // and the audit entry.
 func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
-	created, err := h.createAccount(r)
+	h.createWith(w, r, false)
+}
+
+// invite answers POST /api/users/invite with the body of create without
+// the password and with the email address required: the account gets a
+// password nobody knows, and the address a link to choose one. Without a
+// username the part of the address before the @ gives one. Nothing is
+// written when the console has no mail settings. The answer says in
+// invite_sent whether the mail went out; the account stays either way.
+func (h *handlers) invite(w http.ResponseWriter, r *http.Request) {
+	h.createWith(w, r, true)
+}
+
+func (h *handlers) createWith(w http.ResponseWriter, r *http.Request, inviting bool) {
+	created, err := h.createAccount(r, inviting)
 	if err == nil {
 		answer(w, r, http.StatusOK, struct {
 			Success bool            `json:"success"`
@@ -298,11 +317,36 @@ func (h *handlers) create(w http.ResponseWriter, r *http.Request) {
 	h.clientError(w, r, err)
 }
 
-func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
+func (h *handlers) createAccount(r *http.Request, inviting bool) (*createdAccount, error) {
 	ctx := r.Context()
 	body := kit.Body(r)
 	username, password, role, email := member(body, "username"), member(body, "password"), member(body, "role"), member(body, "email")
-	if !username.Truthy() || !password.Truthy() {
+	// An invite has an email address and no password; the person chooses
+	// one from the mail. Without a username the address gives one.
+	var inviteTo *string
+	if inviting {
+		if password.Truthy() {
+			return nil, sayKey(r, http.StatusBadRequest, "users.invite_password_given")
+		}
+		to, err := normalizeEmail(email)
+		if err != nil {
+			return nil, err
+		}
+		if to == nil || *to == "" {
+			return nil, sayKey(r, http.StatusBadRequest, "users.invite_email_required")
+		}
+		if !h.mailReady(ctx) {
+			return nil, sayKey(r, http.StatusConflict, "users.invite_needs_email")
+		}
+		inviteTo = to
+		if !username.Truthy() {
+			derived, err := h.usernameFromEmail(r, *to)
+			if err != nil {
+				return nil, err
+			}
+			username = jsbind.String(derived)
+		}
+	} else if !username.Truthy() || !password.Truthy() {
 		return nil, sayKey(r, http.StatusBadRequest, "users.fill_required")
 	}
 	if !username.IsString() || !usernamePattern.MatchString(username.Str()) {
@@ -323,8 +367,10 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 	if groups == nil {
 		groups = []string{}
 	}
-	if err := passwordRefusal(r, password); err != nil {
-		return nil, err
+	if !inviting {
+		if err := passwordRefusal(r, password); err != nil {
+			return nil, err
+		}
 	}
 	assigned := "viewer"
 	switch {
@@ -337,7 +383,13 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 	if ok, err := h.canAssignRole(r, assigned); err != nil || !ok {
 		return nil, refusedOr(err)
 	}
-	hash, err := h.hash(ctx, password)
+	var hash string
+	if inviting {
+		// A password nobody knows, until the invite sets one
+		hash, err = h.unusableHash(ctx)
+	} else {
+		hash, err = h.hash(ctx, password)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -380,7 +432,30 @@ func (h *handlers) createAccount(r *http.Request) (*createdAccount, error) {
 	if out.PeerGrants, err = h.d.Access.UserPeerGrantIDs(ctx, id.V); err != nil {
 		return nil, err
 	}
+	if inviting {
+		// The account stays when the mail fails: the users page can send
+		// the invite again
+		delivered, err := h.sendLink(r, id.V, name, *inviteTo, passwordlinks.PurposeInvite)
+		if err != nil {
+			h.log.Error("Invite mail error:", err.Error())
+		}
+		out.InviteSent = &delivered
+		if delivered {
+			if err := h.d.LogAction(r, "user_invite_sent", "Sent an invite to user: "+name); err != nil {
+				return nil, err
+			}
+		}
+	}
 	return out, nil
+}
+
+// unusableHash is the hash of a random password nobody knows.
+func (h *handlers) unusableHash(ctx context.Context) (string, error) {
+	random := make([]byte, 32)
+	if _, err := rand.Read(random); err != nil {
+		return "", err
+	}
+	return h.d.Authn.HashPassword(ctx, hex.EncodeToString(random))
 }
 
 // textOf is the text p points to, "" for nil.
@@ -776,6 +851,10 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Delete user error:", err)
 		return
 	}
+	if err := h.links.Revoke(ctx, user.ID.V); err != nil {
+		h.serverError(w, r, "Delete user error:", err)
+		return
+	}
 	// The list of who has a picture forgets the account now
 	h.d.Avatars.ResetCache()
 	if err := h.d.LogAction(r, "user_deleted", "Deleted user: "+user.username()); err != nil {
@@ -831,6 +910,10 @@ func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 		// The first-run password signs nobody in any more
 		h.d.Authn.FirstPasswordReset(user.username())
 		err = h.endSessions(r, user.ID.V, true)
+	}
+	if err == nil {
+		// A link sent before would replace the password set here
+		err = h.links.Revoke(ctx, user.ID.V)
 	}
 	if err == nil {
 		err = h.d.LogAction(r, "password_reset", "Reset password for user: "+user.username())

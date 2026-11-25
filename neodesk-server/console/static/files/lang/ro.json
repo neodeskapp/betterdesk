@@ -1963,7 +1963,9 @@
     "action_session_ended_by_admin": "Sesiune încheiată de un administrator",
     "action_session_limit": "Sesiune încheiată de limita de sesiuni",
     "action_console_sessions_policy_changed": "Sesiuni per cont modificate",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Invitație trimisă",
+    "action_user_invite_accepted": "Invitație acceptată"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2547,7 +2549,30 @@
     "access_now_role": "Acum: {level}, {source}. Limita rolului: {limit}",
     "note_default_user_group": "Grup de utilizatori implicit",
     "note_default_device_group": "Grup de dispozitive implicit",
-    "note_org_default_group": "Grup implicit creat odată cu organizația"
+    "note_org_default_group": "Grup implicit creat odată cu organizația",
+    "add_mode_title": "Parolă",
+    "add_mode_invite": "Trimiteți o invitație prin e-mail",
+    "add_mode_invite_desc": "Persoana primește un link și își alege singură parola. Linkul funcționează 7 zile.",
+    "add_mode_password": "Setați o parolă acum",
+    "add_mode_password_desc": "Alegeți dvs. parola și o transmiteți personal.",
+    "username_optional_hint": "Opțional. Lăsați gol pentru a folosi {suggestion}.",
+    "username_optional_hint_empty": "Opțional. Lăsați gol pentru a folosi partea adresei de e-mail dinainte de @.",
+    "invite_email_hint": "Invitația ajunge la această adresă. O folosesc și notificările despre cererile de ajutor.",
+    "send_invite": "Trimiteți invitația",
+    "invite_sent_named": "Invitația a fost trimisă la {email}.",
+    "invite_not_sent_named": "{username} a fost adăugat, dar invitația nu a plecat. Verificați setările de e-mail, apoi folosiți Retrimiteți invitația.",
+    "invited": "Invitat",
+    "invite_expired": "Invitație expirată",
+    "invite_open_until": "Linkul de invitație funcționează până la {date}.",
+    "invite_expired_on": "Linkul de invitație a expirat la {date}.",
+    "resend_invite": "Retrimiteți invitația",
+    "invite_resent_named": "O nouă invitație a fost trimisă către {username}.",
+    "invite_password_given": "O persoană invitată își alege singură parola. Nu completați parola.",
+    "invite_email_required": "Introduceți adresa de e-mail la care merge invitația.",
+    "invite_needs_email": "Trimiterea linkurilor prin e-mail necesită setările de e-mail. Configurați-le în Setări, Email.",
+    "invite_signed_in": "Acest cont s-a autentificat deja, deci nu are nevoie de invitație.",
+    "link_local_only": "Acest cont se autentifică printr-un director sau prin autentificare unică, deci parola lui nu se setează aici.",
+    "link_mail_failed": "Serverul de e-mail nu a acceptat mesajul. Verificați setările de e-mail."
   },
   "folders": {
     "title": "Foldere",
@@ -8932,5 +8957,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} v-a invitat pe {server}",
+    "invite_heading": "Bun venit pe {server}",
+    "invite_lead": "{sender} v-a creat un cont pe {server}. Alegeți o parolă pentru a vă autentifica.",
+    "invite_button": "Alegeți-vă parola",
+    "invite_expires": "Linkul funcționează o singură dată, până la {expires}.",
+    "mail_username": "Numele dvs. de utilizator: {username}",
+    "mail_link_hint": "Dacă butonul nu funcționează, deschideți acest link:",
+    "mail_footer": "Trimis de {host} pentru {server}.",
+    "unusable": "Acest link nu mai funcționează. A fost deja folosit sau a expirat. Cereți unul nou.",
+    "page_title_invite": "Alegeți-vă parola",
+    "page_intro_invite": "Bun venit pe {server}. Alegeți o parolă pentru contul dvs. {username}.",
+    "repeat_password": "Parola din nou",
+    "passwords_differ": "Parolele nu se potrivesc.",
+    "save": "Salvați parola",
+    "done_title": "Parola a fost salvată",
+    "done_text": "Autentificați-vă ca {username} cu parola nouă.",
+    "sign_in": "Conectare",
+    "invalid_title": "Acest link nu funcționează",
+    "no_link": "Deschideți linkul din e-mail pentru a alege o parolă.",
+    "check_failed": "Linkul nu a putut fi verificat. Încercați din nou peste câteva momente."
   }
 }

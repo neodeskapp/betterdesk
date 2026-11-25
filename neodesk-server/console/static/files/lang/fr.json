@@ -1961,7 +1961,9 @@
     "action_session_ended_by_admin": "Session terminée par un administrateur",
     "action_session_limit": "Session terminée par la limite de sessions",
     "action_console_sessions_policy_changed": "Sessions par compte modifiées",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Invitation envoyée",
+    "action_user_invite_accepted": "Invitation acceptée"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2563,7 +2565,30 @@
     "access_now_role": "Actuellement : {level}, {source}. Limite du rôle : {limit}",
     "note_default_user_group": "Groupe d'utilisateurs par défaut",
     "note_default_device_group": "Groupe d'appareils par défaut",
-    "note_org_default_group": "Groupe par défaut créé avec l'organisation"
+    "note_org_default_group": "Groupe par défaut créé avec l'organisation",
+    "add_mode_title": "Mot de passe",
+    "add_mode_invite": "Envoyer une invitation par e-mail",
+    "add_mode_invite_desc": "La personne reçoit un lien et choisit elle-même son mot de passe. Le lien fonctionne 7 jours.",
+    "add_mode_password": "Définir un mot de passe maintenant",
+    "add_mode_password_desc": "Vous choisissez le mot de passe et le transmettez vous-même.",
+    "username_optional_hint": "Facultatif. Laissez vide pour utiliser {suggestion}.",
+    "username_optional_hint_empty": "Facultatif. Laissez vide pour utiliser la partie de l'adresse e-mail avant le @.",
+    "invite_email_hint": "L'invitation est envoyée à cette adresse. Les notifications de demande d'aide l'utilisent aussi.",
+    "send_invite": "Envoyer l'invitation",
+    "invite_sent_named": "Invitation envoyée à {email}.",
+    "invite_not_sent_named": "{username} a été ajouté, mais l'invitation n'est pas partie. Vérifiez les paramètres e-mail, puis utilisez Renvoyer l'invitation.",
+    "invited": "Invité",
+    "invite_expired": "Invitation expirée",
+    "invite_open_until": "Le lien d'invitation fonctionne jusqu'au {date}.",
+    "invite_expired_on": "Le lien d'invitation a expiré le {date}.",
+    "resend_invite": "Renvoyer l'invitation",
+    "invite_resent_named": "Nouvelle invitation envoyée à {username}.",
+    "invite_password_given": "Une personne invitée choisit elle-même son mot de passe. Laissez le mot de passe vide.",
+    "invite_email_required": "Saisissez l'adresse e-mail à laquelle envoyer l'invitation.",
+    "invite_needs_email": "L'envoi de liens par e-mail nécessite les paramètres e-mail. Configurez-les dans Paramètres, E-mail.",
+    "invite_signed_in": "Ce compte s'est déjà connecté, il n'a donc pas besoin d'invitation.",
+    "link_local_only": "Ce compte se connecte via un annuaire ou l'authentification unique, son mot de passe n'est donc pas défini ici.",
+    "link_mail_failed": "Le serveur de messagerie n'a pas accepté l'e-mail. Vérifiez les paramètres e-mail."
   },
   "folders": {
     "title": "Dossiers",
@@ -8930,5 +8955,27 @@
     "invites_desc": "Invitez un ordinateur par lien ou par e-mail. L'ordinateur installe NeoDesk et rejoint ce serveur, nommé et dans son dossier.",
     "invite_title": "Inviter un ordinateur",
     "invite_note": "Le bouton ci-dessous crée un lien d'invitation et liste les invitations encore ouvertes."
+  },
+  "password_link": {
+    "invite_subject": "{sender} vous invite à rejoindre {server}",
+    "invite_heading": "Bienvenue sur {server}",
+    "invite_lead": "{sender} vous a créé un compte sur {server}. Choisissez un mot de passe pour vous connecter.",
+    "invite_button": "Choisir votre mot de passe",
+    "invite_expires": "Le lien fonctionne une seule fois, jusqu'au {expires}.",
+    "mail_username": "Votre nom d'utilisateur : {username}",
+    "mail_link_hint": "Si le bouton ne fonctionne pas, ouvrez ce lien :",
+    "mail_footer": "Envoyé par {host} pour {server}.",
+    "unusable": "Ce lien ne fonctionne plus. Il a déjà été utilisé ou il a expiré. Demandez-en un nouveau.",
+    "page_title_invite": "Choisir votre mot de passe",
+    "page_intro_invite": "Bienvenue sur {server}. Choisissez un mot de passe pour votre compte {username}.",
+    "repeat_password": "Confirmer le mot de passe",
+    "passwords_differ": "Les mots de passe ne correspondent pas.",
+    "save": "Enregistrer le mot de passe",
+    "done_title": "Mot de passe enregistré",
+    "done_text": "Connectez-vous en tant que {username} avec votre nouveau mot de passe.",
+    "sign_in": "Se connecter",
+    "invalid_title": "Ce lien ne fonctionne pas",
+    "no_link": "Ouvrez le lien de votre e-mail pour choisir un mot de passe.",
+    "check_failed": "Impossible de vérifier le lien. Réessayez dans un instant."
   }
 }

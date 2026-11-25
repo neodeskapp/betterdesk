@@ -96,6 +96,51 @@ export function createUser(body: UserInput & { username: string; password: strin
 	return api(Ok, '/api/users', { method: 'POST', body });
 }
 
+/** What POST /api/users/invite answers: the account, and whether the mail went out */
+export const InvitedUser = v.looseObject({
+	id: v.union([v.number(), v.string()]),
+	username: Str,
+	invite_sent: v.optional(v.boolean(), false)
+});
+export type InvitedUser = v.InferOutput<typeof InvitedUser>;
+
+/**
+ * Makes an account without a password and mails the address a link to
+ * choose one. Without a username the part of the address before the @
+ * gives one. Needs user.create and the console's email settings (409
+ * without them). The account stays when the mail fails: invite_sent is
+ * false then.
+ */
+export function inviteUser(
+	body: Omit<UserInput, 'password' | 'disabled' | 'totp_enabled'> & { email: string }
+) {
+	return api(wrapped(InvitedUser), '/api/users/invite', { method: 'POST', body });
+}
+
+/** A new invite link for an account that hasn't signed in yet; the old link stops working. Needs user.edit */
+export function resendInvite(id: number | string) {
+	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/invite`, { method: 'POST', body: {} });
+}
+
+export const PendingInvite = v.looseObject({
+	user_id: v.union([v.number(), v.string()]),
+	expires_at: Str,
+	expired: v.optional(v.boolean(), false)
+});
+export type PendingInvite = v.InferOutput<typeof PendingInvite>;
+
+export const InviteList = v.looseObject({
+	invites: v.array(PendingInvite),
+	/** The console has email settings, so invites can go out */
+	mail_ready: v.optional(v.boolean(), false)
+});
+export type InviteList = v.InferOutput<typeof InviteList>;
+
+/** The invites not used yet (expired ones for 30 days). Needs user.view */
+export function listInvites(signal?: AbortSignal): Promise<InviteList> {
+	return api(wrapped(InviteList), '/api/users/invites', { signal });
+}
+
 /** Needs user.edit */
 export function updateUser(id: number | string, body: UserInput) {
 	return api(Ok, `/api/users/${encodeURIComponent(String(id))}`, { method: 'PATCH', body });

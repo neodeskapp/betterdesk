@@ -1963,7 +1963,9 @@
     "action_session_ended_by_admin": "Session avslutad av en administratör",
     "action_session_limit": "Session avslutad av sessionsgränsen",
     "action_console_sessions_policy_changed": "Sessioner per konto ändrade",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Inbjudan skickad",
+    "action_user_invite_accepted": "Inbjudan accepterad"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2547,7 +2549,30 @@
     "access_now_role": "Nu: {level}, {source}. Rollens gräns: {limit}",
     "note_default_user_group": "Standardanvändargrupp",
     "note_default_device_group": "Standardenhetsgrupp",
-    "note_org_default_group": "Standardgrupp som skapades med organisationen"
+    "note_org_default_group": "Standardgrupp som skapades med organisationen",
+    "add_mode_title": "Lösenord",
+    "add_mode_invite": "Skicka en inbjudan via e-post",
+    "add_mode_invite_desc": "Personen får en länk och väljer sitt eget lösenord. Länken fungerar i 7 dagar.",
+    "add_mode_password": "Ange ett lösenord nu",
+    "add_mode_password_desc": "Du väljer lösenordet och lämnar själv över det.",
+    "username_optional_hint": "Valfritt. Lämna tomt för att använda {suggestion}.",
+    "username_optional_hint_empty": "Valfritt. Lämna tomt för att använda delen av e-postadressen före @.",
+    "invite_email_hint": "Inbjudan skickas till den här adressen. Aviseringar om hjälpförfrågningar använder den också.",
+    "send_invite": "Skicka inbjudan",
+    "invite_sent_named": "Inbjudan skickad till {email}.",
+    "invite_not_sent_named": "{username} har lagts till, men inbjudan skickades inte. Kontrollera e-postinställningarna och använd sedan Skicka inbjudan igen.",
+    "invited": "Inbjuden",
+    "invite_expired": "Inbjudan har gått ut",
+    "invite_open_until": "Inbjudningslänken fungerar till {date}.",
+    "invite_expired_on": "Inbjudningslänken gick ut {date}.",
+    "resend_invite": "Skicka inbjudan igen",
+    "invite_resent_named": "En ny inbjudan har skickats till {username}.",
+    "invite_password_given": "En inbjuden person väljer sitt eget lösenord. Lämna lösenordet tomt.",
+    "invite_email_required": "Ange e-postadressen som inbjudan ska skickas till.",
+    "invite_needs_email": "För att skicka länkar via e-post behövs e-postinställningarna. Ställ in dem under Inställningar, Email.",
+    "invite_signed_in": "Det här kontot har redan loggat in, så det behöver ingen inbjudan.",
+    "link_local_only": "Det här kontot loggar in via en katalog eller enkel inloggning, så dess lösenord anges inte här.",
+    "link_mail_failed": "E-postservern tog inte emot meddelandet. Kontrollera e-postinställningarna."
   },
   "folders": {
     "title": "Mappar",
@@ -8932,5 +8957,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} har bjudit in dig till {server}",
+    "invite_heading": "Välkommen till {server}",
+    "invite_lead": "{sender} har skapat ett konto åt dig på {server}. Välj ett lösenord för att logga in.",
+    "invite_button": "Välj ditt lösenord",
+    "invite_expires": "Länken fungerar en gång, till {expires}.",
+    "mail_username": "Ditt användarnamn: {username}",
+    "mail_link_hint": "Om knappen inte fungerar öppnar du den här länken:",
+    "mail_footer": "Skickat av {host} för {server}.",
+    "unusable": "Den här länken fungerar inte längre. Den har redan använts eller gått ut. Be om en ny.",
+    "page_title_invite": "Välj ditt lösenord",
+    "page_intro_invite": "Välkommen till {server}. Välj ett lösenord för ditt konto {username}.",
+    "repeat_password": "Lösenord igen",
+    "passwords_differ": "Lösenorden stämmer inte överens.",
+    "save": "Spara lösenord",
+    "done_title": "Lösenordet har sparats",
+    "done_text": "Logga in som {username} med ditt nya lösenord.",
+    "sign_in": "Logga in",
+    "invalid_title": "Den här länken fungerar inte",
+    "no_link": "Öppna länken i ditt e-postmeddelande för att välja ett lösenord.",
+    "check_failed": "Länken kunde inte kontrolleras. Försök igen om en stund."
   }
 }

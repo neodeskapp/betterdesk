@@ -1963,7 +1963,9 @@
     "action_session_ended_by_admin": "Økt avsluttet av en administrator",
     "action_session_limit": "Økt avsluttet av øktgrensen",
     "action_console_sessions_policy_changed": "Økter per konto endret",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Invitasjon sendt",
+    "action_user_invite_accepted": "Invitasjon godtatt"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2547,7 +2549,30 @@
     "access_now_role": "Nå: {level}, {source}. Rollens grense: {limit}",
     "note_default_user_group": "Standard brukergruppe",
     "note_default_device_group": "Standard enhetsgruppe",
-    "note_org_default_group": "Standardgruppe opprettet sammen med organisasjonen"
+    "note_org_default_group": "Standardgruppe opprettet sammen med organisasjonen",
+    "add_mode_title": "Passord",
+    "add_mode_invite": "Send en invitasjon på e-post",
+    "add_mode_invite_desc": "Personen får en lenke og velger sitt eget passord. Lenken virker i 7 dager.",
+    "add_mode_password": "Angi et passord nå",
+    "add_mode_password_desc": "Du velger passordet og gir det videre selv.",
+    "username_optional_hint": "Valgfritt. La stå tomt for å bruke {suggestion}.",
+    "username_optional_hint_empty": "Valgfritt. La stå tomt for å bruke delen av e-postadressen før @.",
+    "invite_email_hint": "Invitasjonen sendes til denne adressen. Varsler om hjelpeforespørsler bruker den også.",
+    "send_invite": "Send invitasjon",
+    "invite_sent_named": "Invitasjon sendt til {email}.",
+    "invite_not_sent_named": "{username} er lagt til, men invitasjonen ble ikke sendt. Sjekk e-postinnstillingene, og bruk deretter Send invitasjon på nytt.",
+    "invited": "Invitert",
+    "invite_expired": "Invitasjonen er utløpt",
+    "invite_open_until": "Invitasjonslenken virker til {date}.",
+    "invite_expired_on": "Invitasjonslenken utløp {date}.",
+    "resend_invite": "Send invitasjon på nytt",
+    "invite_resent_named": "En ny invitasjon er sendt til {username}.",
+    "invite_password_given": "En invitert person velger sitt eget passord. La passordet stå tomt.",
+    "invite_email_required": "Skriv inn e-postadressen invitasjonen skal sendes til.",
+    "invite_needs_email": "For å sende lenker på e-post trengs e-postinnstillingene. Sett dem opp under Innstillinger, Email.",
+    "invite_signed_in": "Denne kontoen har allerede logget på, så den trenger ingen invitasjon.",
+    "link_local_only": "Denne kontoen logger på via en katalogtjeneste eller enkel pålogging, så passordet angis ikke her.",
+    "link_mail_failed": "E-postserveren tok ikke imot e-posten. Sjekk e-postinnstillingene."
   },
   "folders": {
     "title": "Mapper",
@@ -8932,5 +8957,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} har invitert deg til {server}",
+    "invite_heading": "Velkommen til {server}",
+    "invite_lead": "{sender} har opprettet en konto til deg på {server}. Velg et passord for å logge på.",
+    "invite_button": "Velg passordet ditt",
+    "invite_expires": "Lenken virker én gang, til {expires}.",
+    "mail_username": "Brukernavnet ditt: {username}",
+    "mail_link_hint": "Hvis knappen ikke virker, åpner du denne lenken:",
+    "mail_footer": "Sendt av {host} for {server}.",
+    "unusable": "Denne lenken virker ikke lenger. Den er allerede brukt, eller den er utløpt. Be om en ny.",
+    "page_title_invite": "Velg passordet ditt",
+    "page_intro_invite": "Velkommen til {server}. Velg et passord for kontoen din {username}.",
+    "repeat_password": "Passord igjen",
+    "passwords_differ": "Passordene stemmer ikke.",
+    "save": "Lagre passord",
+    "done_title": "Passordet er lagret",
+    "done_text": "Logg på som {username} med det nye passordet ditt.",
+    "sign_in": "Logg på",
+    "invalid_title": "Denne lenken virker ikke",
+    "no_link": "Åpne lenken i e-posten din for å velge et passord.",
+    "check_failed": "Lenken kunne ikke kontrolleres. Prøv igjen om litt."
   }
 }

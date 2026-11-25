@@ -1957,7 +1957,9 @@
     "action_session_ended_by_admin": "Sessione terminata da un amministratore",
     "action_session_limit": "Sessione terminata dal limite di sessioni",
     "action_console_sessions_policy_changed": "Sessioni per account modificate",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Invito inviato",
+    "action_user_invite_accepted": "Invito accettato"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2541,7 +2543,30 @@
     "access_now_role": "Ora: {level}, {source}. Limite del ruolo: {limit}",
     "note_default_user_group": "Gruppo utenti predefinito",
     "note_default_device_group": "Gruppo di dispositivi predefinito",
-    "note_org_default_group": "Gruppo predefinito creato con l'organizzazione"
+    "note_org_default_group": "Gruppo predefinito creato con l'organizzazione",
+    "add_mode_title": "Parola d’accesso",
+    "add_mode_invite": "Invia un invito via email",
+    "add_mode_invite_desc": "La persona riceve un link e sceglie la propria password. Il link vale 7 giorni.",
+    "add_mode_password": "Imposta ora una password",
+    "add_mode_password_desc": "Scegli tu la password e la comunichi di persona.",
+    "username_optional_hint": "Facoltativo. Lascia vuoto per usare {suggestion}.",
+    "username_optional_hint_empty": "Facoltativo. Lascia vuoto per usare la parte dell'indirizzo email prima della @.",
+    "invite_email_hint": "L'invito va a questo indirizzo. Lo usano anche le notifiche delle richieste di aiuto.",
+    "send_invite": "Invia invito",
+    "invite_sent_named": "Invito inviato a {email}.",
+    "invite_not_sent_named": "{username} è stato aggiunto, ma l'invito non è partito. Controlla le impostazioni email, poi usa Invia di nuovo l'invito.",
+    "invited": "Invitato",
+    "invite_expired": "Invito scaduto",
+    "invite_open_until": "Il link di invito vale fino al {date}.",
+    "invite_expired_on": "Il link di invito è scaduto il {date}.",
+    "resend_invite": "Invia di nuovo l'invito",
+    "invite_resent_named": "Nuovo invito inviato a {username}.",
+    "invite_password_given": "Una persona invitata sceglie la propria password. Lascia vuota la password.",
+    "invite_email_required": "Inserisci l'indirizzo email a cui inviare l'invito.",
+    "invite_needs_email": "Per inviare link via email servono le impostazioni email. Configurale in Impostazioni, Email.",
+    "invite_signed_in": "Questo account ha già effettuato l'accesso, quindi non serve un invito.",
+    "link_local_only": "Questo account accede tramite una directory o il single sign-on, quindi la sua password non si imposta qui.",
+    "link_mail_failed": "Il server di posta non ha accettato l'email. Controlla le impostazioni email."
   },
   "folders": {
     "title": "Cartelle",
@@ -8926,5 +8951,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invita un computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} ti ha invitato su {server}",
+    "invite_heading": "Benvenuto su {server}",
+    "invite_lead": "{sender} ti ha creato un account su {server}. Scegli una password per accedere.",
+    "invite_button": "Scegli la tua password",
+    "invite_expires": "Il link vale una sola volta, fino al {expires}.",
+    "mail_username": "Il tuo nome utente: {username}",
+    "mail_link_hint": "Se il pulsante non funziona, apri questo link:",
+    "mail_footer": "Inviato da {host} per {server}.",
+    "unusable": "Questo link non funziona più. È già stato usato o è scaduto. Chiedine uno nuovo.",
+    "page_title_invite": "Scegli la tua password",
+    "page_intro_invite": "Benvenuto su {server}. Scegli una password per il tuo account {username}.",
+    "repeat_password": "Ripeti la password",
+    "passwords_differ": "Le password non coincidono.",
+    "save": "Salva password",
+    "done_title": "Password salvata",
+    "done_text": "Accedi come {username} con la tua nuova password.",
+    "sign_in": "Accedi",
+    "invalid_title": "Questo link non funziona",
+    "no_link": "Apri il link dalla tua email per scegliere una password.",
+    "check_failed": "Impossibile verificare il link. Riprova tra poco."
   }
 }

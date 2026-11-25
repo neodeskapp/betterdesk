@@ -1964,7 +1964,9 @@
     "action_session_ended_by_admin": "إنهاء جلسة بواسطة مسؤول",
     "action_session_limit": "إنهاء جلسة بسبب حد الجلسات",
     "action_console_sessions_policy_changed": "تغيير الجلسات لكل حساب",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "تم إرسال دعوة",
+    "action_user_invite_accepted": "تم قبول دعوة"
   },
   "generator": {
     "title": "مولّد وكيل الدعم",
@@ -2548,7 +2550,30 @@
     "access_now_role": "الآن: {level}، {source}. حد الدور: {limit}",
     "note_default_user_group": "مجموعة المستخدمين الافتراضية",
     "note_default_device_group": "مجموعة الأجهزة الافتراضية",
-    "note_org_default_group": "المجموعة الافتراضية التي أُنشئت مع المؤسسة"
+    "note_org_default_group": "المجموعة الافتراضية التي أُنشئت مع المؤسسة",
+    "add_mode_title": "كلمة المرور",
+    "add_mode_invite": "إرسال دعوة بالبريد الإلكتروني",
+    "add_mode_invite_desc": "يتلقى الشخص رابطًا ويختار كلمة المرور بنفسه. يعمل الرابط لمدة 7 أيام.",
+    "add_mode_password": "تعيين كلمة مرور الآن",
+    "add_mode_password_desc": "تختار أنت كلمة المرور وتسلّمها بنفسك.",
+    "username_optional_hint": "اختياري. اتركه فارغًا لاستخدام {suggestion}.",
+    "username_optional_hint_empty": "اختياري. اتركه فارغًا لاستخدام الجزء الذي يسبق @ في عنوان البريد الإلكتروني.",
+    "invite_email_hint": "تُرسل الدعوة إلى هذا العنوان. وتستخدمه أيضًا إشعارات طلبات المساعدة.",
+    "send_invite": "إرسال الدعوة",
+    "invite_sent_named": "أُرسلت الدعوة إلى {email}.",
+    "invite_not_sent_named": "تمت إضافة {username}، لكن الدعوة لم تُرسل. تحقق من إعدادات البريد الإلكتروني، ثم استخدم إعادة إرسال الدعوة.",
+    "invited": "مدعو",
+    "invite_expired": "انتهت صلاحية الدعوة",
+    "invite_open_until": "يعمل رابط الدعوة حتى {date}.",
+    "invite_expired_on": "انتهت صلاحية رابط الدعوة في {date}.",
+    "resend_invite": "إعادة إرسال الدعوة",
+    "invite_resent_named": "أُرسلت دعوة جديدة إلى {username}.",
+    "invite_password_given": "الشخص المدعو يختار كلمة المرور بنفسه. اترك كلمة المرور فارغة.",
+    "invite_email_required": "أدخل عنوان البريد الإلكتروني الذي تُرسل إليه الدعوة.",
+    "invite_needs_email": "إرسال الروابط بالبريد الإلكتروني يحتاج إلى إعدادات البريد الإلكتروني. اضبطها من الإعدادات، Email.",
+    "invite_signed_in": "سجّل هذا الحساب الدخول من قبل، لذا لا يحتاج إلى دعوة.",
+    "link_local_only": "يسجّل هذا الحساب الدخول عبر دليل أو تسجيل دخول موحّد، لذا لا تُعيَّن كلمة مروره هنا.",
+    "link_mail_failed": "لم يقبل خادم البريد الرسالة. تحقق من إعدادات البريد الإلكتروني."
   },
   "folders": {
     "title": "المجلدات",
@@ -8933,5 +8958,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "دعاك {sender} إلى {server}",
+    "invite_heading": "مرحبًا بك في {server}",
+    "invite_lead": "أنشأ لك {sender} حسابًا على {server}. اختر كلمة مرور لتسجيل الدخول.",
+    "invite_button": "اختر كلمة المرور",
+    "invite_expires": "يعمل الرابط مرة واحدة، حتى {expires}.",
+    "mail_username": "اسم المستخدم الخاص بك: {username}",
+    "mail_link_hint": "إذا لم يعمل الزر، فافتح هذا الرابط:",
+    "mail_footer": "أرسلها {host} نيابةً عن {server}.",
+    "unusable": "لم يعد هذا الرابط يعمل. فقد استُخدم من قبل أو انتهت صلاحيته. اطلب رابطًا جديدًا.",
+    "page_title_invite": "اختر كلمة المرور",
+    "page_intro_invite": "مرحبًا بك في {server}. اختر كلمة مرور لحسابك {username}.",
+    "repeat_password": "أعد إدخال كلمة المرور",
+    "passwords_differ": "كلمتا المرور غير متطابقتين.",
+    "save": "حفظ كلمة المرور",
+    "done_title": "حُفظت كلمة المرور",
+    "done_text": "سجّل الدخول باسم {username} بكلمة المرور الجديدة.",
+    "sign_in": "تسجيل الدخول",
+    "invalid_title": "هذا الرابط لا يعمل",
+    "no_link": "افتح الرابط من بريدك الإلكتروني لاختيار كلمة مرور.",
+    "check_failed": "تعذّر التحقق من الرابط. حاول مرة أخرى بعد قليل."
   }
 }

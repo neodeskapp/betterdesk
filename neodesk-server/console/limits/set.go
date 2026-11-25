@@ -162,6 +162,9 @@ type Set struct {
 	// Invitation is the limit of looking up and redeeming organization
 	// invitations, signed in or not.
 	Invitation *Limiter
+	// PasswordLink is the limit of looking up and using the links that set
+	// a password (invites and resets by mail), signed in or not.
+	PasswordLink *Limiter
 
 	opts Options
 }
@@ -179,7 +182,8 @@ type Set struct {
 //	FILE_ACCESS_RATE_LIMIT_MAX       120    FileAccess
 //	ND_REGISTER_RATE_LIMIT_MAX       20     Register
 //
-// Invitation allows 20 requests in 15 minutes per address, fixed.
+// Invitation and PasswordLink allow 20 requests in 15 minutes per
+// address, fixed.
 //
 // A value that is not a number, or zero, gives the default; text after
 // the digits is ignored ("7.9" and "7abc" are 7).
@@ -230,6 +234,7 @@ func NewSet(opts Options) *Set {
 	s.FileAccess = limiter("fileAccessLimiter", minute, env("FILE_ACCESS_RATE_LIMIT_MAX", 120), "Too many file requests. Please try again later.", s.addressKey, nil)
 	s.Register = limiter("registerLimiter", minute, env("ND_REGISTER_RATE_LIMIT_MAX", 20), "Too many registration requests. Please slow down.", s.addressKey, nil)
 	s.Invitation = limiter("invitationLimiter", 15*minute, 20, "Too many invitation requests. Please try again later.", s.addressKey, nil)
+	s.PasswordLink = limiter("passwordLinkLimiter", 15*minute, 20, "Too many requests. Please try again later.", s.addressKey, nil)
 	return s
 }
 

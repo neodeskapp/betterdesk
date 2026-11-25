@@ -1957,7 +1957,9 @@
     "action_session_ended_by_admin": "会话已被管理员结束",
     "action_session_limit": "会话因会话上限而结束",
     "action_console_sessions_policy_changed": "每个账户的会话已更改",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "邀请已发送",
+    "action_user_invite_accepted": "邀请已接受"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2541,7 +2543,30 @@
     "access_now_role": "当前：{level}，{source}。角色上限：{limit}",
     "note_default_user_group": "默认用户组",
     "note_default_device_group": "默认设备组",
-    "note_org_default_group": "随组织创建的默认分组"
+    "note_org_default_group": "随组织创建的默认分组",
+    "add_mode_title": "密码",
+    "add_mode_invite": "通过电子邮件发送邀请",
+    "add_mode_invite_desc": "对方会收到一个链接，并自行设置密码。链接 7 天内有效。",
+    "add_mode_password": "现在设置密码",
+    "add_mode_password_desc": "由您设置密码，并亲自转告对方。",
+    "username_optional_hint": "可选。留空则使用 {suggestion}。",
+    "username_optional_hint_empty": "可选。留空则使用电子邮件地址中 @ 之前的部分。",
+    "invite_email_hint": "邀请会发送到此地址。求助请求通知也使用此地址。",
+    "send_invite": "发送邀请",
+    "invite_sent_named": "已向 {email} 发送邀请。",
+    "invite_not_sent_named": "已添加 {username}，但邀请未能发出。请检查电子邮件设置，然后使用“重新发送邀请”。",
+    "invited": "已邀请",
+    "invite_expired": "邀请已过期",
+    "invite_open_until": "邀请链接在 {date} 之前有效。",
+    "invite_expired_on": "邀请链接已于 {date} 过期。",
+    "resend_invite": "重新发送邀请",
+    "invite_resent_named": "已向 {username} 发送新的邀请。",
+    "invite_password_given": "受邀者会自行设置密码。请不要填写密码。",
+    "invite_email_required": "请输入接收邀请的电子邮件地址。",
+    "invite_needs_email": "通过电子邮件发送链接需要先配置电子邮件设置。请在“设置 > Email”中配置。",
+    "invite_signed_in": "此账户已经登录过，因此不需要邀请。",
+    "link_local_only": "此账户通过目录服务或单点登录进行登录，因此不在这里设置密码。",
+    "link_mail_failed": "邮件服务器未接受该邮件。请检查电子邮件设置。"
   },
   "folders": {
     "title": "文件夹",
@@ -8926,5 +8951,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} 邀请您加入 {server}",
+    "invite_heading": "欢迎使用 {server}",
+    "invite_lead": "{sender} 为您在 {server} 上创建了一个账户。请设置密码以登录。",
+    "invite_button": "设置您的密码",
+    "invite_expires": "该链接只能使用一次，在 {expires} 之前有效。",
+    "mail_username": "您的用户名：{username}",
+    "mail_link_hint": "如果按钮无效，请打开此链接：",
+    "mail_footer": "由 {host} 代表 {server} 发送。",
+    "unusable": "此链接已失效。它已被使用或已过期。请索取新的链接。",
+    "page_title_invite": "设置您的密码",
+    "page_intro_invite": "欢迎使用 {server}。请为您的账户 {username} 设置密码。",
+    "repeat_password": "再次输入密码",
+    "passwords_differ": "两次输入的密码不一致。",
+    "save": "保存密码",
+    "done_title": "密码已保存",
+    "done_text": "请使用新密码以 {username} 身份登录。",
+    "sign_in": "登录",
+    "invalid_title": "此链接无效",
+    "no_link": "请打开电子邮件中的链接来设置密码。",
+    "check_failed": "无法检查该链接。请稍后再试。"
   }
 }

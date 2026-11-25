@@ -1963,7 +1963,9 @@
     "action_session_ended_by_admin": "ผู้ดูแลระบบสิ้นสุดเซสชัน",
     "action_session_limit": "เซสชันสิ้นสุดเพราะขีดจำกัดเซสชัน",
     "action_console_sessions_policy_changed": "เปลี่ยนจำนวนเซสชันต่อบัญชี",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "ส่งคำเชิญแล้ว",
+    "action_user_invite_accepted": "ตอบรับคำเชิญแล้ว"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2547,7 +2549,30 @@
     "access_now_role": "ตอนนี้: {level}, {source} ขีดจำกัดของบทบาท: {limit}",
     "note_default_user_group": "กลุ่มผู้ใช้เริ่มต้น",
     "note_default_device_group": "กลุ่มอุปกรณ์เริ่มต้น",
-    "note_org_default_group": "กลุ่มเริ่มต้นที่สร้างพร้อมองค์กร"
+    "note_org_default_group": "กลุ่มเริ่มต้นที่สร้างพร้อมองค์กร",
+    "add_mode_title": "รหัสผ่าน",
+    "add_mode_invite": "ส่งคำเชิญทางอีเมล",
+    "add_mode_invite_desc": "บุคคลนั้นจะได้รับลิงก์และตั้งรหัสผ่านเอง ลิงก์ใช้ได้ 7 วัน",
+    "add_mode_password": "ตั้งรหัสผ่านตอนนี้",
+    "add_mode_password_desc": "คุณเลือกรหัสผ่านและส่งต่อให้เอง",
+    "username_optional_hint": "ไม่บังคับ เว้นว่างไว้เพื่อใช้ {suggestion}",
+    "username_optional_hint_empty": "ไม่บังคับ เว้นว่างไว้เพื่อใช้ส่วนของที่อยู่อีเมลที่อยู่หน้า @",
+    "invite_email_hint": "คำเชิญจะส่งไปที่อยู่นี้ การแจ้งเตือนคำขอความช่วยเหลือก็ใช้ที่อยู่นี้ด้วย",
+    "send_invite": "ส่งคำเชิญ",
+    "invite_sent_named": "ส่งคำเชิญไปที่ {email} แล้ว",
+    "invite_not_sent_named": "เพิ่ม {username} แล้ว แต่ส่งคำเชิญไม่สำเร็จ ตรวจสอบการตั้งค่าอีเมล แล้วใช้ ส่งคำเชิญอีกครั้ง",
+    "invited": "เชิญแล้ว",
+    "invite_expired": "คำเชิญหมดอายุ",
+    "invite_open_until": "ลิงก์คำเชิญใช้ได้ถึง {date}",
+    "invite_expired_on": "ลิงก์คำเชิญหมดอายุเมื่อ {date}",
+    "resend_invite": "ส่งคำเชิญอีกครั้ง",
+    "invite_resent_named": "ส่งคำเชิญใหม่ให้ {username} แล้ว",
+    "invite_password_given": "ผู้ได้รับเชิญจะตั้งรหัสผ่านเอง ไม่ต้องใส่รหัสผ่าน",
+    "invite_email_required": "ป้อนที่อยู่อีเมลที่จะส่งคำเชิญไป",
+    "invite_needs_email": "การส่งลิงก์ทางอีเมลต้องใช้การตั้งค่าอีเมล ตั้งค่าได้ที่ การตั้งค่า, Email",
+    "invite_signed_in": "บัญชีนี้ลงชื่อเข้าใช้แล้ว จึงไม่ต้องใช้คำเชิญ",
+    "link_local_only": "บัญชีนี้ลงชื่อเข้าใช้ผ่านไดเรกทอรีหรือการลงชื่อเข้าใช้ครั้งเดียว จึงไม่ได้ตั้งรหัสผ่านที่นี่",
+    "link_mail_failed": "เซิร์ฟเวอร์อีเมลไม่รับอีเมลนี้ ตรวจสอบการตั้งค่าอีเมล"
   },
   "folders": {
     "title": "โฟลเดอร์",
@@ -8932,5 +8957,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} เชิญคุณเข้าร่วม {server}",
+    "invite_heading": "ยินดีต้อนรับสู่ {server}",
+    "invite_lead": "{sender} สร้างบัญชีให้คุณบน {server} แล้ว เลือกรหัสผ่านเพื่อลงชื่อเข้าใช้",
+    "invite_button": "เลือกรหัสผ่านของคุณ",
+    "invite_expires": "ลิงก์ใช้ได้ครั้งเดียว จนถึง {expires}",
+    "mail_username": "ชื่อผู้ใช้ของคุณ: {username}",
+    "mail_link_hint": "หากปุ่มใช้งานไม่ได้ ให้เปิดลิงก์นี้:",
+    "mail_footer": "ส่งโดย {host} สำหรับ {server}",
+    "unusable": "ลิงก์นี้ใช้ไม่ได้แล้ว อาจถูกใช้ไปแล้วหรือหมดอายุ ขอลิงก์ใหม่",
+    "page_title_invite": "เลือกรหัสผ่านของคุณ",
+    "page_intro_invite": "ยินดีต้อนรับสู่ {server} เลือกรหัสผ่านสำหรับบัญชี {username} ของคุณ",
+    "repeat_password": "ป้อนรหัสผ่านอีกครั้ง",
+    "passwords_differ": "รหัสผ่านไม่ตรงกัน",
+    "save": "บันทึกรหัสผ่าน",
+    "done_title": "บันทึกรหัสผ่านแล้ว",
+    "done_text": "ลงชื่อเข้าใช้ในชื่อ {username} ด้วยรหัสผ่านใหม่ของคุณ",
+    "sign_in": "ลงชื่อเข้าใช้",
+    "invalid_title": "ลิงก์นี้ใช้ไม่ได้",
+    "no_link": "เปิดลิงก์จากอีเมลของคุณเพื่อเลือกรหัสผ่าน",
+    "check_failed": "ตรวจสอบลิงก์ไม่ได้ ลองอีกครั้งในอีกสักครู่"
   }
 }

@@ -133,6 +133,25 @@ export function usernameProblem(username: string): string | null {
 	return null;
 }
 
+/**
+ * The username the server gives an invited account without one: the part
+ * of the address before the @, without what a username may not hold, at
+ * least 3 characters. '' without an @. The server adds -2, -3 … while the
+ * name is taken.
+ */
+export function usernameFromEmail(email: string): string {
+	const at = email.trim().indexOf('@');
+	if (at < 0) return '';
+	let name = email
+		.trim()
+		.slice(0, at)
+		.replace(/[^A-Za-z0-9_.-]+/g, '')
+		.replace(/^[._-]+|[._-]+$/g, '')
+		.slice(0, 60);
+	while (name.length < 3) name += '_';
+	return name;
+}
+
 /** "a, b; c d" → ['a', 'b', 'c', 'd'] (device IDs for direct access) */
 export function splitIds(text: string): string[] {
 	return text

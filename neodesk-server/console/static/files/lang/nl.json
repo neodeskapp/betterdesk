@@ -1957,7 +1957,9 @@
     "action_session_ended_by_admin": "Sessie beëindigd door een beheerder",
     "action_session_limit": "Sessie beëindigd door de sessielimiet",
     "action_console_sessions_policy_changed": "Sessies per account gewijzigd",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "Uitnodiging verstuurd",
+    "action_user_invite_accepted": "Uitnodiging geaccepteerd"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2541,7 +2543,30 @@
     "access_now_role": "Nu: {level}, {source}. Grens van de rol: {limit}",
     "note_default_user_group": "Standaardgebruikersgroep",
     "note_default_device_group": "Standaardapparaatgroep",
-    "note_org_default_group": "Standaardgroep, aangemaakt met de organisatie"
+    "note_org_default_group": "Standaardgroep, aangemaakt met de organisatie",
+    "add_mode_title": "Wachtwoord",
+    "add_mode_invite": "Uitnodiging per e-mail sturen",
+    "add_mode_invite_desc": "De persoon krijgt een link en kiest zelf een wachtwoord. De link werkt 7 dagen.",
+    "add_mode_password": "Nu een wachtwoord instellen",
+    "add_mode_password_desc": "U kiest het wachtwoord en geeft het zelf door.",
+    "username_optional_hint": "Optioneel. Leeg laten om {suggestion} te gebruiken.",
+    "username_optional_hint_empty": "Optioneel. Leeg laten om het deel van het e-mailadres vóór de @ te gebruiken.",
+    "invite_email_hint": "De uitnodiging gaat naar dit adres. Meldingen over hulpverzoeken gebruiken het ook.",
+    "send_invite": "Uitnodiging sturen",
+    "invite_sent_named": "Uitnodiging gestuurd naar {email}.",
+    "invite_not_sent_named": "{username} is toegevoegd, maar de uitnodiging is niet verstuurd. Controleer de e-mailinstellingen en gebruik daarna Uitnodiging opnieuw sturen.",
+    "invited": "Uitgenodigd",
+    "invite_expired": "Uitnodiging verlopen",
+    "invite_open_until": "De uitnodigingslink werkt tot {date}.",
+    "invite_expired_on": "De uitnodigingslink is verlopen op {date}.",
+    "resend_invite": "Uitnodiging opnieuw sturen",
+    "invite_resent_named": "Nieuwe uitnodiging gestuurd naar {username}.",
+    "invite_password_given": "Een uitgenodigde persoon kiest zelf een wachtwoord. Laat het wachtwoord leeg.",
+    "invite_email_required": "Voer het e-mailadres in waar de uitnodiging naartoe gaat.",
+    "invite_needs_email": "Voor links per e-mail zijn de e-mailinstellingen nodig. Stel ze in onder Instellingen, Email.",
+    "invite_signed_in": "Dit account heeft al ingelogd en heeft dus geen uitnodiging nodig.",
+    "link_local_only": "Dit account logt in via een directory of single sign-on, dus het wachtwoord wordt hier niet ingesteld.",
+    "link_mail_failed": "De mailserver heeft de e-mail niet aangenomen. Controleer de e-mailinstellingen."
   },
   "folders": {
     "title": "Mappen",
@@ -8926,5 +8951,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Een computer uitnodigen",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} heeft u uitgenodigd voor {server}",
+    "invite_heading": "Welkom bij {server}",
+    "invite_lead": "{sender} heeft een account voor u gemaakt op {server}. Kies een wachtwoord om in te loggen.",
+    "invite_button": "Kies uw wachtwoord",
+    "invite_expires": "De link werkt één keer, tot {expires}.",
+    "mail_username": "Uw gebruikersnaam: {username}",
+    "mail_link_hint": "Als de knop niet werkt, open dan deze link:",
+    "mail_footer": "Verstuurd door {host} voor {server}.",
+    "unusable": "Deze link werkt niet meer. Hij is al gebruikt of verlopen. Vraag om een nieuwe.",
+    "page_title_invite": "Kies uw wachtwoord",
+    "page_intro_invite": "Welkom bij {server}. Kies een wachtwoord voor uw account {username}.",
+    "repeat_password": "Wachtwoord herhalen",
+    "passwords_differ": "De wachtwoorden komen niet overeen.",
+    "save": "Wachtwoord opslaan",
+    "done_title": "Wachtwoord opgeslagen",
+    "done_text": "Log in als {username} met uw nieuwe wachtwoord.",
+    "sign_in": "Inloggen",
+    "invalid_title": "Deze link werkt niet",
+    "no_link": "Open de link uit uw e-mail om een wachtwoord te kiezen.",
+    "check_failed": "De link kon niet worden gecontroleerd. Probeer het zo opnieuw."
   }
 }

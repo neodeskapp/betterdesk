@@ -1957,7 +1957,9 @@
     "action_session_ended_by_admin": "管理者がセッションを終了",
     "action_session_limit": "セッション上限によりセッションを終了",
     "action_console_sessions_policy_changed": "アカウントごとのセッションを変更",
-    "action_onboard_join_unproved": "Join refused: no proof of the computer's key"
+    "action_onboard_join_unproved": "Join refused: no proof of the computer's key",
+    "action_user_invite_sent": "招待を送信",
+    "action_user_invite_accepted": "招待を承諾"
   },
   "generator": {
     "title": "NeoDesk Support Generator",
@@ -2541,7 +2543,30 @@
     "access_now_role": "現在: {level}（{source}）。ロールの上限: {limit}",
     "note_default_user_group": "既定のユーザーグループ",
     "note_default_device_group": "既定のデバイスグループ",
-    "note_org_default_group": "組織と一緒に作成された既定のグループ"
+    "note_org_default_group": "組織と一緒に作成された既定のグループ",
+    "add_mode_title": "パスワード",
+    "add_mode_invite": "メールで招待を送る",
+    "add_mode_invite_desc": "相手はリンクを受け取り、自分でパスワードを決めます。リンクは 7 日間有効です。",
+    "add_mode_password": "今パスワードを設定する",
+    "add_mode_password_desc": "パスワードを自分で決めて、相手に直接伝えます。",
+    "username_optional_hint": "省略可。空欄のままにすると {suggestion} を使います。",
+    "username_optional_hint_empty": "省略可。空欄のままにすると、メールアドレスの @ より前の部分を使います。",
+    "invite_email_hint": "招待はこのアドレスに届きます。ヘルプリクエストの通知にも使われます。",
+    "send_invite": "招待を送る",
+    "invite_sent_named": "{email} に招待を送りました。",
+    "invite_not_sent_named": "{username} を追加しましたが、招待は送信されませんでした。メール設定を確認してから「招待を再送」を使ってください。",
+    "invited": "招待済み",
+    "invite_expired": "招待の期限切れ",
+    "invite_open_until": "招待リンクは {date} まで有効です。",
+    "invite_expired_on": "招待リンクは {date} に期限が切れました。",
+    "resend_invite": "招待を再送",
+    "invite_resent_named": "{username} に新しい招待を送りました。",
+    "invite_password_given": "招待された人は自分でパスワードを決めます。パスワードは入力しないでください。",
+    "invite_email_required": "招待の送信先メールアドレスを入力してください。",
+    "invite_needs_email": "リンクをメールで送るにはメール設定が必要です。設定 > Email で設定してください。",
+    "invite_signed_in": "このアカウントはすでにサインインしているため、招待は不要です。",
+    "link_local_only": "このアカウントはディレクトリまたはシングルサインオンでサインインするため、パスワードはここでは設定しません。",
+    "link_mail_failed": "メールサーバーがメールを受け付けませんでした。メール設定を確認してください。"
   },
   "folders": {
     "title": "フォルダー",
@@ -8926,5 +8951,27 @@
     "invites_desc": "Invite one computer with a link or a mail. The computer sets up NeoDesk and joins this server, named and in its folder.",
     "invite_title": "Invite a computer",
     "invite_note": "Add a computer makes an invite link and lists the invites that are still open."
+  },
+  "password_link": {
+    "invite_subject": "{sender} さんが {server} にあなたを招待しました",
+    "invite_heading": "{server} へようこそ",
+    "invite_lead": "{sender} さんが {server} にあなたのアカウントを作成しました。サインインするパスワードを決めてください。",
+    "invite_button": "パスワードを決める",
+    "invite_expires": "リンクは 1 回だけ、{expires} まで使えます。",
+    "mail_username": "あなたのユーザー名: {username}",
+    "mail_link_hint": "ボタンが機能しない場合は、このリンクを開いてください:",
+    "mail_footer": "{host} が {server} のために送信しました。",
+    "unusable": "このリンクはもう使えません。すでに使用されたか、期限が切れています。新しいリンクを依頼してください。",
+    "page_title_invite": "パスワードを決める",
+    "page_intro_invite": "{server} へようこそ。アカウント {username} のパスワードを決めてください。",
+    "repeat_password": "パスワード (確認)",
+    "passwords_differ": "パスワードが一致しません。",
+    "save": "パスワードを保存",
+    "done_title": "パスワードを保存しました",
+    "done_text": "新しいパスワードで {username} としてサインインしてください。",
+    "sign_in": "サインイン",
+    "invalid_title": "このリンクは使えません",
+    "no_link": "パスワードを決めるには、メールに記載のリンクを開いてください。",
+    "check_failed": "リンクを確認できませんでした。しばらくしてからもう一度お試しください。"
   }
 }

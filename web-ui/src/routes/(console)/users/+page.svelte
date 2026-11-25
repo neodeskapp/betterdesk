@@ -9,9 +9,10 @@
 
   Data: GET /api/users (one list), then per account its device count
   (/effective-scope) and organizations, four at a time; GET
-  /api/panel/user-groups beside it. Actions are offered by permission:
-  user.create (and a role the signed-in person may give) to add, user.edit
-  to edit, reset passwords, see and end an account's signed-in devices
+  /api/panel/user-groups and GET /api/users/invites (invites not used yet,
+  and whether the console can send mail) beside it. Actions are offered by permission:
+  user.create (and a role the signed-in person may give) to add or invite
+  by email, user.edit to edit, reset passwords, send an invite again, see and end an account's signed-in devices
   (A239), disable and enable accounts and turn off their two-factor
   sign-in (never yourself) and manage groups, user.delete to
   delete (never yourself),
@@ -31,15 +32,19 @@
 		deleteUserGroup,
 		getEffectiveScope,
 		listConsoleUsers,
+		listInvites,
 		listUserGroupRows,
 		listUserOrgs,
+		resendInvite,
 		updateUser,
 		type ConsoleUser,
 		type EffectiveScope,
+		type PendingInvite,
 		type UserGroupRow,
 		type UserOrg
 	} from '#lib/api/users.ts';
 	import type { AccessSubject } from '#lib/api/access.ts';
+	import { formatDate } from '#lib/i18n/format.ts';
 	import { plural, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import SessionsSheet from '#lib/people/SessionsSheet.svelte';
@@ -122,6 +127,10 @@
 	const scopes = new SvelteMap<string, EffectiveScope | 'error'>();
 	/** Per account id: its organizations, or 'error' */
 	const userOrgs = new SvelteMap<string, UserOrg[] | 'error'>();
+	/** Per account id: its invite that was not used yet */
+	let invites = $state.raw(new Map<string, PendingInvite>());
+	/** The console has email settings, so invites can go out */
+	let mailReady = $state(false);
 	let generation = 0;
 	/** The per-account requests of the last load; stopped by a new load or by leaving the page */
 	let rowRequests: AbortController | null = null;
@@ -158,6 +167,16 @@
 		}
 	}
 
+	async function loadInvites() {
+		try {
+			const list = await listInvites();
+			invites = new Map(list.invites.map((i) => [String(i.user_id), i]));
+			mailReady = list.mail_ready;
+		} catch {
+			invites = new Map();
+		}
+	}
+
 	async function loadGroups() {
 		try {
 			groups = await listUserGroupRows();
@@ -173,9 +192,10 @@
 		untrack(() => {
 			void loadUsers();
 			void loadGroups();
+			void loadInvites();
 		});
 		// Others add and change accounts: the list loads again every 30 s while on screen
-		const stop = reloadWhileShown(() => Promise.all([loadUsers(), loadGroups()]));
+		const stop = reloadWhileShown(() => Promise.all([loadUsers(), loadGroups(), loadInvites()]));
 		return () => {
 			stop();
 			rowRequests?.abort();
@@ -240,6 +260,17 @@
 	function openRow(u: ConsoleUser) {
 		if (canEdit && mayChange(u)) editing = { user: u };
 		else orgsFor = u;
+	}
+
+	/** A new invite link by mail; the one before stops working */
+	async function sendInviteAgain(u: ConsoleUser) {
+		try {
+			await resendInvite(u.id);
+			toast.success(t('users.invite_resent_named', { username: u.username }));
+			void loadInvites();
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
+		}
 	}
 
 	async function removeUser(u: ConsoleUser) {
@@ -397,6 +428,16 @@
 	{#if self}<span class="cell-sub">{t('users.this_is_you')}</span>{/if}
 	{#if u.disabled}<span class="cell-sub"><Status tone="warning" label={t('users.account_disabled')} /></span
 		>{/if}
+	{@const invite = invites.get(String(u.id))}
+	{#if invite && !u.last_login}<span class="cell-sub"
+			><Status
+				tone={invite.expired ? 'warning' : 'waiting'}
+				label={invite.expired ? t('users.invite_expired') : t('users.invited')}
+				title={t(invite.expired ? 'users.invite_expired_on' : 'users.invite_open_until', {
+					date: formatDate(invite.expires_at, {}, '')
+				})}
+			/></span
+		>{/if}
 {/snippet}
 
 {#snippet emailCell(u: ConsoleUser)}{#if u.email}{u.email}{:else}<Empty />{/if}{/snippet}
@@ -450,6 +491,11 @@
 				<MenuItem class="act-reset" icon={ICONS.password} onselect={() => (resetFor = u)}
 					>{t('users.reset_password_menu')}</MenuItem
 				>
+				{#if mailReady && u.email && !u.last_login}
+					<MenuItem class="act-resend-invite" icon={ICONS.send} onselect={() => void sendInviteAgain(u)}
+						>{t('users.resend_invite')}</MenuItem
+					>
+				{/if}
 			{/if}
 			<MenuItem class="act-sessions" icon="devices" onselect={() => (sessionsFor = u)}
 				>{t('sessions.user_menu')}</MenuItem
@@ -641,11 +687,13 @@
 			{groups}
 			{roleLabel}
 			{providerLabel}
+			{mailReady}
 			onclose={() => (editing = null)}
 			onsaved={() => {
 				editing = null;
 				void loadUsers();
 				void loadGroups();
+				void loadInvites();
 			}}
 		/>
 	{/if}
