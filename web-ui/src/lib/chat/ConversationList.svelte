@@ -276,9 +276,9 @@
 										{#if c.last_message}<span class="row-time"><Time value={c.last_message.at} /></span>{/if}
 									</span>
 									<span class="row-meta">
-										{#if person}<span>{t(`chat.presence_${status(person)}`)}</span>{:else}<span
-												>{t('chat.member_count', { count: c.people.length })}</span
-											>{/if}
+										{#if person}<span>{t(`chat.presence_${status(person)}`)}</span><span
+												>{t(`users.role_${person.role}`)}</span
+											>{:else}<span>{t('chat.member_count', { count: c.people.length })}</span>{/if}
 									</span>
 									<span class="row-bottom">
 										<span class="row-last">{lastLine(c.last_message, t)}</span>
@@ -309,7 +309,10 @@
 								>
 								<span class="row-main">
 									<span class="row-top"><span class="row-name">{p.name}</span></span>
-									<span class="row-meta"><span>{t(`chat.presence_${status(p)}`)}</span></span>
+									<span class="row-meta"
+										><span>{t(`chat.presence_${status(p)}`)}</span><span>{t(`users.role_${p.role}`)}</span
+										></span
+									>
 								</span>
 							</button>
 						</li>
