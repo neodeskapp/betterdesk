@@ -223,7 +223,8 @@ var nodeNavSections = []NavSection{
 	{ID: "support", Label: "nav.section_support", Icon: "support_agent", Pages: []NavPage{
 		navPage("help-requests", "help support requests", "/help-requests", "nav.help_requests", withPermission("device.view"), core),
 		navPage("tickets", "issues", "/tickets", "nav.tickets", withPermission("device.view"), core),
-		navPage("chat", "messages", "/chat", "nav.chat", withPermission("chat.access"), core),
+		// Node's chat.access is Support chat and Team chat since A242
+		navPage("chat", "messages", "/chat", "nav.chat", withPermission("chat.support", "chat.team"), core),
 		navPage("toolkit", "toolkit ping dns port ssl diagnostics", "/toolkit", "nav.toolkit", withPermission("device.connect")),
 	}},
 	{ID: "people", Label: "nav.section_people", Icon: "group", Pages: []NavPage{
