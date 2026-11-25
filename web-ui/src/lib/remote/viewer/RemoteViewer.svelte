@@ -41,6 +41,7 @@
 	import ClipboardStatus from './ClipboardStatus.svelte';
 	import ControlsRow from './ControlsRow.svelte';
 	import { attachClipboardKeys } from './clipboard-keys.ts';
+	import { claimViewerWindow, releaseViewerWindow, VIEWER_CHANNEL } from '#lib/remote/viewer-window.ts';
 	import SessionPanel from './SessionPanel.svelte';
 	import Sheets from './Sheets.svelte';
 
@@ -365,7 +366,9 @@
 		const onFilesClosed = () => viewer.onFileSheetClosed();
 		// Leaving the page ends the sessions (not when it goes into the back-forward cache)
 		const onPageHide = (e: PageTransitionEvent) => {
-			if (!e.persisted) viewer.teardown();
+			if (e.persisted) return;
+			viewer.teardown();
+			if (!embedded) releaseViewerWindow();
 		};
 		// Displays in windows of their own talk to this window; a hidden page pauses its displays
 		const onMessage = (e: MessageEvent<unknown>) => viewer.onWindowMessage(e);
@@ -390,11 +393,13 @@
 			}
 		}
 
-		// Other console tabs add a session here instead of opening another viewer tab (the console opens its own)
+		// Connect on the remote dashboard adds a session here instead of opening another viewer tab
+		// (viewer-window.ts; the console opens its own sessions in place)
 		let bc: BroadcastChannel | null = null;
 		try {
 			if (embedded) throw new Error('the console opens its sessions in place');
-			bc = new BroadcastChannel('neodesk-remote');
+			claimViewerWindow();
+			bc = new BroadcastChannel(VIEWER_CHANNEL);
 			bc.onmessage = (ev: MessageEvent<unknown>) => {
 				const msg = ev.data as { type?: string; deviceId?: string; deviceName?: string } | null;
 				if (!msg || typeof msg !== 'object') return;
@@ -403,8 +408,7 @@
 					if (phone) return;
 					viewer.open(msg.deviceId, msg.deviceName || '');
 					bc?.postMessage({ type: 'session-added', deviceId: msg.deviceId });
-					window.focus();
-				} else if (msg.type === 'ping') bc?.postMessage({ type: 'pong' });
+				}
 			};
 		} catch {
 			bc = null;
@@ -424,6 +428,7 @@
 			window.removeEventListener('message', onMessage);
 			document.removeEventListener('visibilitychange', onVisibility);
 			bc?.close();
+			if (!embedded) releaseViewerWindow();
 			detachClipboard();
 			// The console's viewer outlives this component's page; the console ends its sessions
 			if (!given) viewer.teardown();
