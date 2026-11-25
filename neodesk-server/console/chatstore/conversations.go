@@ -209,12 +209,14 @@ func (s *Store) apply(ctx context.Context, m Message, old bool) error {
 		return err
 	}
 	c.LastMessageID, c.LastMessageMs = m.ID, m.CreatedMs
+	reopened := false
 	if kind == ConvSupport && !old {
 		switch m.From.Kind {
 		case KindDevice:
 			if c.State == StateClosed {
 				c.State, c.AssigneeID, c.ClosedMs, c.ClosedBy, c.CloseNote = StateOpen, 0, 0, "", ""
 				c.OpenedMs, c.MailSentMs = m.CreatedMs, 0
+				reopened = true
 			}
 			if c.WaitingSinceMs == 0 {
 				c.WaitingSinceMs = m.CreatedMs
@@ -228,7 +230,14 @@ func (s *Store) apply(ctx context.Context, m Message, old bool) error {
 			c.WaitingSinceMs, c.MailSentMs = 0, 0
 		}
 	}
-	return s.save(ctx, c)
+	if err := s.save(ctx, c); err != nil {
+		return err
+	}
+	// Told on a goroutine of its own: the catch-up holds the store's lock
+	if f, _ := s.onReopen.Load().(func(Conversation)); reopened && f != nil {
+		go f(c)
+	}
+	return nil
 }
 
 // The help requests (the API server's table help_requests) that are still

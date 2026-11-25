@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode/utf8"
 
@@ -112,7 +113,15 @@ type Store struct {
 	now func() time.Time
 	// mu keeps one catch-up at a time
 	mu sync.Mutex
+	// onReopen is a func(Conversation) told when a device's message opens
+	// its closed conversation again (OnReopen)
+	onReopen atomic.Value
 }
+
+// OnReopen names what happens when a device's message opens its closed
+// conversation again: the chat tells the console and the device (L538).
+// It runs on a goroutine of its own, after the store wrote the change.
+func (s *Store) OnReopen(f func(c Conversation)) { s.onReopen.Store(f) }
 
 // New returns the store. now is time.Now when nil.
 func New(db *store.DB, now func() time.Time) *Store {

@@ -340,3 +340,34 @@ func (s *testSocket) takeType(typ string) []string {
 	})
 	return s.take()
 }
+
+// TestAMessageThatReopensTellsEveryone: when the computer writes into its
+// closed conversation, the conversation opens again, and the console's
+// sockets get conversation.updated and the computer a helper frame at
+// once, not after a reload or a reconnect (L538).
+func TestAMessageThatReopensTellsEveryone(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		relay, st := hubRelay(t, db)
+		if _, err := st.Post(ctx, chatstore.Message{ConversationID: "dev1", From: chatstore.Device("dev1", "reception-01"), Text: "hello"}, nil); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := st.Close(ctx, "dev1", "admin", "fixed"); err != nil {
+			t.Fatal(err)
+		}
+		admin, dev1 := relay.v2(t, "admin"), relay.v2(t, "dev1")
+		admin.take()
+		dev1.takeAtLeast(2)
+		dev1.take()
+
+		dev1.send(t, `{"type":"send","text":"it broke again","client_id":"c2"}`)
+		got := frames(admin.takeType("conversation.updated"), "conversation.updated")
+		if len(got) != 1 || got[0]["conversation"].(map[string]any)["state"] != "open" {
+			t.Errorf("the console after the reopening message: %v", got)
+		}
+		helper := frames(dev1.takeType("helper"), "helper")
+		if len(helper) != 1 || helper[0]["state"] != "open" {
+			t.Errorf("the computer after its reopening message: %v", helper)
+		}
+	})
+}

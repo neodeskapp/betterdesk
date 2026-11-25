@@ -82,7 +82,13 @@ func NewHub(opts HubOptions) *Hub {
 	if opts.IsAdmin == nil {
 		opts.IsAdmin = func(string) bool { return false }
 	}
-	return &Hub{opts: opts, members: map[*member]struct{}{}}
+	h := &Hub{opts: opts, members: map[*member]struct{}{}}
+	if opts.Store != nil {
+		// A device's message that opens its closed conversation again
+		// reaches the console and the device at once (L538)
+		opts.Store.OnReopen(func(c chatstore.Conversation) { h.ConversationChanged(context.Background(), c, "") })
+	}
+	return h
 }
 
 // member is one socket of the hub: a console user's or a device's.
