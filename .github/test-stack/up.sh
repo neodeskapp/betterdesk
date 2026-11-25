@@ -5,7 +5,9 @@
 # and devseed from <bin dir>; instance.sh runs inside it.
 #
 #   up.sh start <name> <bin dir>   start it and return; STACK_SEED=0 in the
-#                                  environment leaves it without the seed
+#                                  environment leaves it without the seed, and
+#                                  SESSION_MAX_PER_USER (also empty) replaces
+#                                  the instance's limit of one session
 #   up.sh wait <name>              wait until it is seeded, then make
 #                                  http://ndgo-<name>:5000 reachable from the
 #                                  runner and its secrets readable
@@ -32,7 +34,7 @@ case "$cmd" in
         # by name: the update check then asks GitHub with the job's token
         # instead of the runner address's 60 requests an hour
         docker run -d --name "ndgo-$name" --hostname "ndgo-$name" --network ndgo \
-            ${UPDATE_GITHUB_TOKEN:+-e UPDATE_GITHUB_TOKEN} ${STACK_SEED:+-e STACK_SEED} \
+            ${UPDATE_GITHUB_TOKEN:+-e UPDATE_GITHUB_TOKEN} ${STACK_SEED:+-e STACK_SEED} ${SESSION_MAX_PER_USER+-e SESSION_MAX_PER_USER} \
             -v "$GITHUB_WORKSPACE:/repo" --tmpfs /repo/web-nodejs:exec,mode=0755 \
             -v "$dir/secrets:/stack/secrets" -v "$dir/logs:/stack/logs" \
             -v "$bin/neodesk-server:/usr/local/bin/neodesk-server:ro" \

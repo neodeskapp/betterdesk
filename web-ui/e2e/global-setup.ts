@@ -3,8 +3,9 @@ import fs from 'node:fs';
 import { ROLES, authFile, type Role } from './roles.ts';
 
 /**
- * Sign in each e2e account once and keep its session for the tests. Each
- * account allows one session, so tests never sign in themselves.
+ * Sign in each e2e account once and keep its session for the tests. A
+ * server with one session per account would sign the kept session out at
+ * another sign-in, so tests never sign in as these accounts themselves.
  * Accounts missing on the server are skipped; tests for that role skip too.
  */
 export default async function globalSetup(config: FullConfig): Promise<void> {

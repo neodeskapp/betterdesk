@@ -37,7 +37,10 @@ export NEODESK_CLIENT_RELEASE_TAG=contract-no-release
 export RATE_LIMIT_MAX=1000000 PANEL_READ_RATE_LIMIT_MAX=1000000 WIDGET_RATE_LIMIT_MAX=1000000
 export LOGIN_RATE_LIMIT_MAX=1000000 UPLOAD_RATE_LIMIT_MAX=1000000 FILE_ACCESS_RATE_LIMIT_MAX=1000000
 export PANEL_PREFERENCE_RATE_LIMIT_MAX=1000000 RDCLIENT_PAGE_RATE_LIMIT_MAX=1000000 ND_REGISTER_RATE_LIMIT_MAX=1000000
-export SESSION_MAX_PER_USER=1
+# The contract suite's goldens hold one session per account; the e2e
+# instance runs with the product's default (several, SESSION_MAX_PER_USER
+# given empty by up.sh)
+export SESSION_MAX_PER_USER="${SESSION_MAX_PER_USER-1}"
 
 rand() { head -c 24 /dev/urandom | base64 | tr -d '/+=' | head -c 28; }
 [ -f "$SECRETS/admin_password" ] || printf 'Adm1n-%s!x' "$(rand)" > "$SECRETS/admin_password"
