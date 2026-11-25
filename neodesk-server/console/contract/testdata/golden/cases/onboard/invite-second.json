@@ -1,0 +1,214 @@
+{
+ "id": "onboard/invite-second",
+ "request": {
+  "method": "POST",
+  "path": "/api/onboard/invites",
+  "body": {
+   "name": "Second desk"
+  }
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "global_admin"
+   ],
+   "status": 201,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "display_code",
+     "pattern": "^[9aA+/_=-]{9}$"
+    },
+    {
+     "path": "invite.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "invite.expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "invite.id",
+     "pattern": "^[9aA+/_=-]{16}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "{secret:second_code}",
+     "deep_link": "neodesk://join/<host>/{secret:second_code}?http=1",
+     "display_code": "<volatile>",
+     "invite": {
+      "created_at": "<volatile>",
+      "created_by": "e2e_global_admin",
+      "email": "",
+      "expires_at": "<volatile>",
+      "folder_id": null,
+      "folder_name": "",
+      "id": "<volatile>",
+      "max_uses": 1,
+      "name": "Second desk",
+      "uses_left": 1
+     },
+     "link": "<base>/join/{secret:second_code}",
+     "mailed": false,
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin"
+   ],
+   "status": 201,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "display_code",
+     "pattern": "^[9aA+/_=-]{9}$"
+    },
+    {
+     "path": "invite.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "invite.expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "invite.id",
+     "pattern": "^[9aA+/_=-]{16}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "{secret:second_code}",
+     "deep_link": "neodesk://join/<host>/{secret:second_code}?http=1",
+     "display_code": "<volatile>",
+     "invite": {
+      "created_at": "<volatile>",
+      "created_by": "e2e_super_admin",
+      "email": "",
+      "expires_at": "<volatile>",
+      "folder_id": null,
+      "folder_name": "",
+      "id": "<volatile>",
+      "max_uses": 1,
+      "name": "Second desk",
+      "uses_left": 1
+     },
+     "link": "<base>/join/{secret:second_code}",
+     "mailed": false,
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "admin"
+   ],
+   "status": 201,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "volatile": [
+    {
+     "path": "display_code",
+     "pattern": "^[9aA+/_=-]{9}$"
+    },
+    {
+     "path": "invite.created_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "invite.expires_at",
+     "format": "9999-99-99A99:99:99A"
+    },
+    {
+     "path": "invite.id",
+     "pattern": "^[9aA+/_=-]{16}$"
+    }
+   ],
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "{secret:second_code}",
+     "deep_link": "neodesk://join/<host>/{secret:second_code}?http=1",
+     "display_code": "<volatile>",
+     "invite": {
+      "created_at": "<volatile>",
+      "created_by": "e2e_admin",
+      "email": "",
+      "expires_at": "<volatile>",
+      "folder_id": null,
+      "folder_name": "",
+      "id": "<volatile>",
+      "max_uses": 1,
+      "name": "Second desk",
+      "uses_left": 1
+     },
+     "link": "<base>/join/{secret:second_code}",
+     "mailed": false,
+     "success": true
+    }
+   }
+  }
+ ]
+}

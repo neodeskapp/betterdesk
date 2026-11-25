@@ -1,20 +1,18 @@
 {
- "id": "onboard/limit-07",
+ "id": "onboard/invite-second-cleanup",
  "request": {
-  "method": "GET",
-  "path": "/api/onboard/public/ZZZZZZZZ",
-  "notes": [
-   "no CSRF token",
-   "no cookies"
-  ]
+  "method": "DELETE",
+  "path": "/api/onboard/invites/{second}"
  },
  "recordings": 2,
  "answers": [
   {
    "roles": [
+    "global_admin",
+    "super_admin",
     "admin"
    ],
-   "status": 404,
+   "status": 200,
    "headers": {
     "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
@@ -22,12 +20,12 @@
     "cross-origin-resource-policy": "same-origin",
     "etag": "<present>",
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
-    "ratelimit-limit": "20",
-    "ratelimit-policy": "20;w=60",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
     "ratelimit-remaining": "<n>",
     "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "set-cookie": "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax",
     "x-content-type-options": "nosniff",
     "x-dns-prefetch-control": "off",
     "x-download-options": "noopen",
@@ -38,8 +36,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "invalid_or_expired",
-     "success": false
+     "success": true
     }
    }
   }
