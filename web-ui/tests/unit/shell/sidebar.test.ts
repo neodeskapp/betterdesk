@@ -69,14 +69,23 @@ describe('Sidebar', () => {
 	});
 
 	test('More shows the rest of a section with group headings, and the choice is stored', async () => {
-		const { user } = await setup('/devices');
-		const more = screen.getAllByRole('button', { name: /nav\.more/ })[0]!;
+		const { setStrings } = await import('../../../src/lib/i18n/i18n.svelte.ts');
+		setStrings('en', 'ltr', { nav: { more: 'Show {count} more', fewer: 'Show fewer' } });
+		const { user, model } = await setup('/devices');
+		const devices = model.sections.find((s) => s.id === 'devices')!;
+		// The label says how many pages it holds; no number beside it
+		const more = screen.getByRole('button', { name: `Show ${devices.moreCount} more` });
+		expect(more.querySelector('.nav-label')).toHaveTextContent(
+			new RegExp(`^Show ${devices.moreCount} more$`)
+		);
+		expect(more.querySelector('.nav-note')).toBeNull();
 		expect(more).toHaveAttribute('aria-expanded', 'false');
 		const list = document.getElementById(more.getAttribute('aria-controls')!)!;
 		expect(list).not.toBeVisible();
 		await user.click(more);
 		expect(more).toHaveAttribute('aria-expanded', 'true');
-		expect(more).toHaveTextContent('nav.fewer');
+		expect(more.querySelector('.nav-label')).toHaveTextContent(/^Show fewer$/);
+		setStrings('en', 'ltr', {});
 		expect(within(list).getByRole('link', { name: 'Inventory' })).toBeVisible();
 		expect(JSON.parse(localStorage.getItem('nd_nav_more_open')!)).toEqual({ devices: true });
 	});
@@ -93,7 +102,7 @@ describe('Sidebar', () => {
 		const { live } = await import('../../../src/lib/shell/live-events.svelte.ts');
 		live.registrations = 10;
 		await setup('/devices');
-		const link = screen.getByRole('link', { name: /Enrollment requests/ });
+		const link = screen.getByRole('link', { name: /Join requests/ });
 		expect(link.querySelector('.nav-count')).toHaveTextContent(/^10$/);
 		expect(screen.getByRole('link', { name: 'All devices' }).querySelector('.nav-count')).toBeNull();
 		live.registrations = null;

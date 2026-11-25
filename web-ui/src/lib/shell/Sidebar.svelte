@@ -311,8 +311,7 @@
 								aria-controls={`${uid}-m-${s.id}`}
 								onclick={() => toggleMore(s.id, more)}
 							>
-								<span class="nav-label">{more ? t('nav.fewer') : t('nav.more')}</span>
-								<span class="nav-note">{s.moreCount}</span>
+								<span class="nav-label">{more ? t('nav.fewer') : t('nav.more', { count: s.moreCount })}</span>
 								<Icon name={more ? 'expand_less' : 'expand_more'} class="nav-chevron" />
 							</button>
 							<ul class="nav-list nav-more-list" id={`${uid}-m-${s.id}`} hidden={!more}>
