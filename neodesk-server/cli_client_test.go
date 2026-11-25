@@ -150,3 +150,94 @@ func TestAClientOptionWithoutTheClientSaysSo(t *testing.T) {
 		t.Errorf("neodesk --update did not go to neodesk-setup: exit %d", code)
 	}
 }
+
+// A join or support link as the only argument goes to the client when it
+// has exactly the shape the server gives its links (console/onboard):
+// <base>/join/<code> and <base>/s/<code> go as --join <link>, which the
+// client takes for both kinds, and neodesk://join|support/... as it is,
+// which the client takes alone. A code is eight symbols of the codes'
+// alphabet in upper case, as the server writes it. Anything else stays
+// with the command line, and without the client the call ends with exit 2
+// and a message that names neodesk --join and the client.
+func TestABareLinkGoesToTheClient(t *testing.T) {
+	handed := map[string][]string{
+		"https://desk.example.com/join/ABCDEF23":          {"--join", "https://desk.example.com/join/ABCDEF23"},
+		"https://desk.example.com:8443/s/ABCDEF23":        {"--join", "https://desk.example.com:8443/s/ABCDEF23"},
+		"http://192.168.1.10:5000/join/ABCDEF23":          {"--join", "http://192.168.1.10:5000/join/ABCDEF23"},
+		"https://[2001:db8::1]:8443/s/ABCDEF23":           {"--join", "https://[2001:db8::1]:8443/s/ABCDEF23"},
+		"neodesk://join/desk.example.com/ABCDEF23":        {"neodesk://join/desk.example.com/ABCDEF23"},
+		"neodesk://support/desk.lan:5000/ABCDEF23?http=1": {"neodesk://support/desk.lan:5000/ABCDEF23?http=1"},
+	}
+	lookAlikes := []string{
+		"https://desk.example.com/join/ABCDEF23/",
+		"https://desk.example.com/join/ABCDEF23?ref=mail",
+		"https://desk.example.com/join/ABCDEF23#top",
+		"https://desk.example.com/joins/ABCDEF23",
+		"https://desk.example.com/support/ABCDEF23",
+		"https://desk.example.com/console/join/ABCDEF23",
+		"https://desk.example.com/join/ABCDEF21",
+		"https://desk.example.com/join/ABCDEF2",
+		"https://desk.example.com/join/abcdef23",
+		"https://desk.example.com/join/ABCD-EF23",
+		"https://user@desk.example.com/join/ABCDEF23",
+		"https://desk_example.com/join/ABCDEF23",
+		"https://desk.example.com:99999/join/ABCDEF23",
+		"ftp://desk.example.com/join/ABCDEF23",
+		"https:/desk.example.com/join/ABCDEF23",
+		"neodesk://connect/123456789",
+		"neodesk://join/desk.example.com/ABCDEF23?http=0",
+		"neodesk://join/desk.example.com/ABCDEF23/x",
+		"rustdesk://join/desk.example.com/ABCDEF23",
+		"ABCDEF23",
+		"devices",
+	}
+	call := func(args []string, present bool) (code int, handled bool, ran []string, stderr string) {
+		var errOut strings.Builder
+		code, handled = handToClient(args, clientCall{
+			find: func() (string, bool) { return clientCommand, present },
+			run: func(path string, a []string) int {
+				if path != clientCommand {
+					t.Errorf("ran %s", path)
+				}
+				ran = a
+				return 7
+			},
+			stderr: &errOut,
+		})
+		return code, handled, ran, errOut.String()
+	}
+	for link, want := range handed {
+		if code, handled, ran, _ := call([]string{link}, true); !handled || code != 7 || !slices.Equal(ran, want) {
+			t.Errorf("%s: handled %v, exit %d, ran %q, want %q", link, handled, code, ran, want)
+		}
+		code, handled, ran, stderr := call([]string{link}, false)
+		if !handled || code != ndcli.ExitUsage || ran != nil || !strings.Contains(stderr, "neodesk --join") || !strings.Contains(stderr, "desktop client") {
+			t.Errorf("%s without the client: handled %v, exit %d, stderr %q", link, handled, code, stderr)
+		}
+		if code, handled, ran, _ := call([]string{link, "devices"}, true); handled || code != 0 || ran != nil {
+			t.Errorf("%s with another argument went to the client: %q", link, ran)
+		}
+	}
+	for _, link := range lookAlikes {
+		if code, handled, ran, stderr := call([]string{link}, true); handled || code != 0 || ran != nil {
+			t.Errorf("look-alike %s went to the client: exit %d, ran %q, %q", link, code, ran, stderr)
+		}
+	}
+}
+
+// Called as neodesk without the client, a bare support link ends with
+// exit 2 and the message, and a look-alike gets the command line's own
+// answer.
+func TestABareLinkWithoutTheClientSaysSo(t *testing.T) {
+	if _, err := os.Stat(clientCommand); err == nil {
+		t.Skip("this machine has the desktop client at " + clientCommand)
+	}
+	dir, _ := fakeSetup(t)
+	code, _, stderr := runAsNeodesk(t, dir, "https://desk.example.com/s/ABCDEF23")
+	if code != ndcli.ExitUsage || !strings.Contains(stderr, "neodesk --join") || !strings.Contains(stderr, clientCommand) {
+		t.Errorf("a support link without the client: exit %d, %q", code, stderr)
+	}
+	if _, _, stderr := runAsNeodesk(t, dir, "https://desk.example.com/s/ABCDEF23/x"); strings.Contains(stderr, "desktop client") {
+		t.Errorf("a look-alike named the client: %q", stderr)
+	}
+}

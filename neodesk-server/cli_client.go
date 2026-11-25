@@ -3,11 +3,14 @@ package main
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"runtime"
 	"slices"
+	"strings"
 	"syscall"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/onboard"
 	"github.com/neodeskapp/neodesk/neodesk-server/ndcli"
 )
 
@@ -63,9 +66,21 @@ type clientCall struct {
 }
 
 // handToClient runs the desktop client when `neodesk args...` starts with
-// one of its options, and reports whether it did. Without the client the
-// call ends with a message and a non-zero exit.
+// one of its options or is a join or support link alone, and reports
+// whether it did. Without the client the call ends with a message and a
+// non-zero exit.
 func handToClient(args []string, c clientCall) (code int, handled bool) {
+	if len(args) == 1 {
+		if forward, kind, ok := clientLink(args[0]); ok {
+			path, found := c.find()
+			if !found {
+				fmt.Fprintf(c.stderr, "neodesk: this is a NeoDesk %s link for the desktop client, which is not on this machine (%s).\n", kind, clientCommand)
+				fmt.Fprintf(c.stderr, "Install the NeoDesk desktop client, then run: neodesk --join '%s'\n", args[0])
+				return ndcli.ExitUsage, true
+			}
+			return c.run(path, forward), true
+		}
+	}
 	if len(args) == 0 || !slices.Contains(clientFlags, args[0]) {
 		return 0, false
 	}
@@ -76,6 +91,42 @@ func handToClient(args []string, c clientCall) (code int, handled bool) {
 		return ndcli.ExitUsage, true
 	}
 	return c.run(path, args), true
+}
+
+// clientLink returns the arguments the client takes a join or support
+// link with, and the link's kind, when the link has exactly the shape the
+// server gives its links (console/onboard) for a valid code: a link
+// <base>/join/<code> or <base>/s/<code> goes as --join <link>, which the
+// client takes for both kinds, and neodesk://join|support/<host[:port]>/
+// <code>[?http=1] as it is, which the client takes alone. Anything else,
+// a trailing slash, a query, a code in lower case or with a dash, is not
+// one.
+func clientLink(link string) (forward []string, kind string, ok bool) {
+	if rest, deep := strings.CutPrefix(link, "neodesk://"); deep {
+		verb, rest, _ := strings.Cut(rest, "/")
+		hostPort, code, _ := strings.Cut(rest, "/")
+		scheme := "https"
+		if c, plain := strings.CutSuffix(code, "?http=1"); plain {
+			code, scheme = c, "http"
+		}
+		kind = map[string]string{"join": onboard.KindJoin, "support": onboard.KindSupport}[verb]
+		console, valid := onboard.ParseConsole(scheme + "://" + hostPort)
+		if kind == "" || !valid || !onboard.ValidFormat(code) || console.DeepLink(kind, code) != link {
+			return nil, "", false
+		}
+		return []string{link}, kind, true
+	}
+	u, err := url.Parse(link)
+	if err != nil || (u.Scheme != "https" && u.Scheme != "http") {
+		return nil, "", false
+	}
+	console, valid := onboard.ParseConsole(u.Scheme + "://" + u.Host)
+	verb, code, _ := strings.Cut(strings.TrimPrefix(u.EscapedPath(), "/"), "/")
+	kind = map[string]string{"join": onboard.KindJoin, "s": onboard.KindSupport}[verb]
+	if kind == "" || !valid || !onboard.ValidFormat(code) || console.Link(kind, code) != link {
+		return nil, "", false
+	}
+	return []string{"--join", link}, kind, true
 }
 
 // osClientCall is the process's own clientCall.
