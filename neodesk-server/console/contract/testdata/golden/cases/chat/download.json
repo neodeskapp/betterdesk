@@ -51,12 +51,16 @@
    ],
    "status": 403,
    "headers": {
-    "cache-control": "no-store",
+    "cache-control": "no-cache, no-store, must-revalidate",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "application/json; charset=utf-8",
     "cross-origin-resource-policy": "same-origin",
     "etag": "<present>",
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
      "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
@@ -75,8 +79,7 @@
    "body": {
     "kind": "json",
     "json": {
-     "code": "panel_access_denied",
-     "error": "Panel access denied: chat",
+     "error": "Permission denied: chat.support or chat.team",
      "success": false
     }
    }
@@ -89,7 +92,7 @@
    "headers": {
     "accept-ranges": "bytes",
     "cache-control": "no-cache, no-store, must-revalidate",
-    "content-disposition": "attachment; filename=\"9bf9b63a3b1c561550a9673f310835d4.txt\"",
+    "content-disposition": "attachment; filename=\"ad3f2d57dd4283e392b03ac9d1bdfbf0.txt\"",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "text/plain; charset=UTF-8",
     "cross-origin-resource-policy": "same-origin",
@@ -131,7 +134,7 @@
    "headers": {
     "accept-ranges": "bytes",
     "cache-control": "no-cache, no-store, must-revalidate",
-    "content-disposition": "attachment; filename=\"1234490802957894fd749d5deb8a6a35.txt\"",
+    "content-disposition": "attachment; filename=\"3e817a5d61a31593115272d9fbab4120.txt\"",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "text/plain; charset=UTF-8",
     "cross-origin-resource-policy": "same-origin",
@@ -173,7 +176,7 @@
    "headers": {
     "accept-ranges": "bytes",
     "cache-control": "no-cache, no-store, must-revalidate",
-    "content-disposition": "attachment; filename=\"8e27689f27325f334d6dc316761b966e.txt\"",
+    "content-disposition": "attachment; filename=\"a66f6b0bb10b1168e63752711fc19307.txt\"",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "text/plain; charset=UTF-8",
     "cross-origin-resource-policy": "same-origin",
@@ -215,7 +218,7 @@
    "headers": {
     "accept-ranges": "bytes",
     "cache-control": "no-cache, no-store, must-revalidate",
-    "content-disposition": "attachment; filename=\"bbb9dfbccf087835fdfcfbd49ac4821d.txt\"",
+    "content-disposition": "attachment; filename=\"a947efface2de42b15a37b8138b89d00.txt\"",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "text/plain; charset=UTF-8",
     "cross-origin-resource-policy": "same-origin",
@@ -257,7 +260,7 @@
    "headers": {
     "accept-ranges": "bytes",
     "cache-control": "no-cache, no-store, must-revalidate",
-    "content-disposition": "attachment; filename=\"171c851079d6e973a633d117200433c6.txt\"",
+    "content-disposition": "attachment; filename=\"e3356534cdd2511246f4978dc8b911a0.txt\"",
     "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
     "content-type": "text/plain; charset=UTF-8",
     "cross-origin-resource-policy": "same-origin",

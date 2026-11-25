@@ -351,6 +351,10 @@
          "access": "none",
          "source": "unset"
         },
+        "team-chat": {
+         "access": "read",
+         "source": "group"
+        },
         "tickets": {
          "access": "none",
          "source": "group"

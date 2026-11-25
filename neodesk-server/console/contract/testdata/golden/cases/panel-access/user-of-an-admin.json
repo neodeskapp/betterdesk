@@ -236,6 +236,11 @@
          "role_ceiling": "write",
          "source": "role"
         },
+        "team-chat": {
+         "access": "write",
+         "role_ceiling": "write",
+         "source": "role"
+        },
         "tickets": {
          "access": "write",
          "role_ceiling": "write",

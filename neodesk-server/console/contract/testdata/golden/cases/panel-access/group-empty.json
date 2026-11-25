@@ -225,6 +225,10 @@
          "access": "none",
          "source": "unset"
         },
+        "team-chat": {
+         "access": "none",
+         "source": "unset"
+        },
         "tickets": {
          "access": "none",
          "source": "unset"

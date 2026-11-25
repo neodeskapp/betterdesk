@@ -269,6 +269,11 @@
         "role_ceiling": "none",
         "source": "role"
        },
+       "team-chat": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
        "tickets": {
         "access": "read",
         "role_ceiling": "read",
@@ -518,6 +523,11 @@
        "system": {
         "access": "none",
         "role_ceiling": "none",
+        "source": "role"
+       },
+       "team-chat": {
+        "access": "write",
+        "role_ceiling": "write",
         "source": "role"
        },
        "tickets": {
@@ -771,6 +781,11 @@
         "role_ceiling": "none",
         "source": "role"
        },
+       "team-chat": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
        "tickets": {
         "access": "write",
         "role_ceiling": "write",
@@ -1020,6 +1035,11 @@
        "system": {
         "access": "none",
         "role_ceiling": "none",
+        "source": "role"
+       },
+       "team-chat": {
+        "access": "write",
+        "role_ceiling": "write",
         "source": "role"
        },
        "tickets": {
@@ -1273,6 +1293,11 @@
         "role_ceiling": "write",
         "source": "role"
        },
+       "team-chat": {
+        "access": "none",
+        "role_ceiling": "none",
+        "source": "role"
+       },
        "tickets": {
         "access": "read",
         "role_ceiling": "read",
@@ -1524,6 +1549,11 @@
         "role_ceiling": "write",
         "source": "role"
        },
+       "team-chat": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
        "tickets": {
         "access": "write",
         "role_ceiling": "write",
@@ -1771,6 +1801,11 @@
         "source": "role"
        },
        "system": {
+        "access": "write",
+        "role_ceiling": "write",
+        "source": "role"
+       },
+       "team-chat": {
         "access": "write",
         "role_ceiling": "write",
         "source": "role"

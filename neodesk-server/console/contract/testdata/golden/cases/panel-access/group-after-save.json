@@ -214,6 +214,10 @@
          "access": "none",
          "source": "unset"
         },
+        "team-chat": {
+         "access": "none",
+         "source": "unset"
+        },
         "tickets": {
          "access": "none",
          "source": "unset"
@@ -445,6 +449,10 @@
         "system": {
          "access": "none",
          "source": "unset"
+        },
+        "team-chat": {
+         "access": "read",
+         "source": "group"
         },
         "tickets": {
          "access": "none",

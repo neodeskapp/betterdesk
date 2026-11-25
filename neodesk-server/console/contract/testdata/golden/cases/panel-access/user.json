@@ -308,6 +308,11 @@
          "role_ceiling": "none",
          "source": "role"
         },
+        "team-chat": {
+         "access": "write",
+         "role_ceiling": "write",
+         "source": "role"
+        },
         "tickets": {
          "access": "read",
          "role_ceiling": "read",

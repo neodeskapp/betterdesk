@@ -281,9 +281,16 @@
        {
         "group": "operations",
         "key": "chat",
-        "label": "Chat",
-        "readPermission": "chat.access",
-        "writePermission": "chat.access"
+        "label": "Support chat",
+        "readPermission": "chat.support",
+        "writePermission": "chat.support"
+       },
+       {
+        "group": "operations",
+        "key": "team-chat",
+        "label": "Team chat",
+        "readPermission": "chat.team",
+        "writePermission": "chat.team"
        },
        {
         "group": "operations",
