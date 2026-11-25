@@ -71,11 +71,11 @@ Start:
 service neodesk_server start
 ```
 
-The web console then answers on `127.0.0.1:5000`. To reach it from the network, put a reverse proxy with TLS in front of it, or set `HOST=0.0.0.0` in `.env`.
+The web console then answers on `127.0.0.1:3375`. To reach it from the network, put a reverse proxy with TLS in front of it, or set `HOST=0.0.0.0` in `.env`.
 
 ## Firewall (`pf`)
 
-Open at least: TCP `21114`–`21119` and `5000` (web console); UDP `21116`. Adjust if you changed ports in `.env` or flags. See [Ports and firewall](https://neode.sk/docs/operations/ports) for what each port does.
+Open at least: TCP `21114`–`21119` and `3375` (web console); UDP `21116`. Adjust if you changed ports in `.env` or flags. See [Ports and firewall](https://neode.sk/docs/operations/ports) for what each port does.
 
 ## Limits
 

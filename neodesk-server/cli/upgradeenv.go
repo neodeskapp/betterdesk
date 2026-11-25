@@ -168,16 +168,17 @@ func planUpgrade(text, envFile, supervisor string) (upgradePlan, error) {
 		}
 	}
 	if !present["CONSOLE_PORT"] {
-		// The port the old console listened on: parseInt(PORT, 10) || 5000
-		port := int64(5000)
+		// The port the old console listened on, parseInt(PORT, 10), stays
+		// the console's. Without one the server's default applies (3375
+		// since 3.6.0-rc.5, DECISIONS A250): the old console's default,
+		// 5000, is not written down
 		if n, ok := parseIntPrefix(values["PORT"]); ok && n != 0 {
-			port = n
+			if n < 1 || n > 65535 {
+				return upgradePlan{}, fmt.Errorf("PORT=%s: %w", values["PORT"], errNotAPort)
+			}
+			plan.FromPort = strconv.FormatInt(n, 10)
+			add("CONSOLE_PORT", plan.FromPort)
 		}
-		if port < 1 || port > 65535 {
-			return upgradePlan{}, fmt.Errorf("PORT=%s: %w", values["PORT"], errNotAPort)
-		}
-		plan.FromPort = strconv.FormatInt(port, 10)
-		add("CONSOLE_PORT", plan.FromPort)
 	}
 	add("HOST", "127.0.0.1")
 	add("SIGNAL_PORT", "21116")

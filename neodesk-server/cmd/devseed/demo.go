@@ -17,7 +17,7 @@ func runDemo(ctx context.Context, args []string, getenv func(string) string, out
 	}
 	port := getenv("PORT")
 	if port == "" {
-		port = "5000"
+		port = "3375"
 	}
 	goDB := databaseFrom(f.get("go-db", ""), getenv)
 	panel := f.get("panel", "http://127.0.0.1:"+port)

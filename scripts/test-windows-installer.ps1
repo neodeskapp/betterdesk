@@ -658,6 +658,33 @@ function Test-InstallerComesFromTheRelease {
     Remove-Item -Recurse -Force $dir
 }
 
+# A250: the console's default port is 3375. An install whose .env names a
+# port (CONSOLE_PORT or PORT) keeps it; one that names none moves to 3375
+# at its update, which says so with how to keep 5000, and the firewall
+# opens 3375.
+function Test-UpdateMovesTheDefaultConsolePort {
+    $dir = New-TestInstall
+    $envFile = Join-Path $script:CONSOLE_PATH '.env'
+    Set-Content -Path $envFile -Value @('SESSION_SECRET=kept')
+    if (Test-ConsolePortNamed) { Fail 'an install without a port counts as one that names one' }
+    if ((Get-ConsoleHttpPort) -ne '3375') { Fail "the default console port is $(Get-ConsoleHttpPort)" }
+    $script:firewallRan = $false
+    function Configure-Firewall { param([array]$MissingRules = @()) $script:firewallRan = $true }
+    $out = (Show-ConsolePortMove -Named $false 6>&1 3>&1 | Out-String -Width 4096)
+    if ($out -notmatch 'The console now answers on port 3375; it was 5000' -or $out -notmatch 'CONSOLE_PORT=5000') { Fail "the update does not say the console moved: $out" }
+    if (-not $script:firewallRan) { Fail 'the update did not open 3375 in the firewall' }
+    $script:firewallRan = $false
+    $out = (Show-ConsolePortMove -Named $true 6>&1 3>&1 | Out-String -Width 4096)
+    if ($out.Trim()) { Fail "an install that names its port was told it moved: $out" }
+    if ($script:firewallRan) { Fail 'an install that names its port got firewall changes' }
+    foreach ($setting in 'CONSOLE_PORT=5000', 'PORT=5080') {
+        Set-Content -Path $envFile -Value @($setting)
+        if (-not (Test-ConsolePortNamed)) { Fail "$setting does not count as a port the install names" }
+    }
+    if ((Get-ConsoleHttpPort) -ne '5080') { Fail "a configured port does not win: $(Get-ConsoleHttpPort)" }
+    Remove-Item -Recurse -Force $dir
+}
+
 # NeoDesk has no way from the old Node.js console: -RollbackGo and
 # -CleanupNode are gone, and an install or an update on a server that
 # still runs the Node.js console stops with what to do and changes nothing.
@@ -1293,6 +1320,7 @@ Test-WindowsFirstHour
 Test-CommandLineOnThePath
 Test-NoUpgradeFromTheNodeConsole
 Test-InstallerComesFromTheRelease
+Test-UpdateMovesTheDefaultConsolePort
 Test-UpdateAsksTheFork
 Test-FirewallPorts
 Test-CertificateFromTheBinary

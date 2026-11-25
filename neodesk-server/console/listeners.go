@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/discovery"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/listen"
 	"github.com/neodeskapp/neodesk/neodesk-server/logging"
@@ -24,7 +25,7 @@ import (
 //   - HTTPS mode (HTTPS_ENABLED) with a certificate: the console with TLS
 //     on HTTPSPort, and on Port a redirect to it unless
 //     HTTP_REDIRECT_HTTPS is false. Ports below 1024 the process may not
-//     bind become 5443 and 5000.
+//     bind become 5443 and 3375.
 //   - HTTPS mode whose certificate files are missing or unreadable: the
 //     console on Port with plain HTTP. Its session, CSRF and guest cookies
 //     keep their HTTPS names without Secure (server.go).
@@ -154,7 +155,7 @@ func (s *Server) openListeners(ctx context.Context) error {
 		}
 		return listen.ResolvePort(port, fallback, label, canBind, warn)
 	}
-	plainPort := resolve(cfg.Port, 5000, "HTTP")
+	plainPort := resolve(cfg.Port, config.DefaultConsolePort, "HTTP")
 	if s.net.cert == nil {
 		addr, err := s.serve(ctx, plainPort, "HTTP", s, nil)
 		s.net.addr = addr
@@ -225,7 +226,7 @@ func (s *Server) serve(ctx context.Context, port int, label string, h http.Handl
 	case err != nil && listen.Denied(err):
 		logging.Logf("console", "ERROR: Cannot bind %s port %d — permission denied", label, port)
 		logging.Logf("console", "ERROR:   → Ports below 1024 require root or CAP_NET_BIND_SERVICE in the systemd unit")
-		logging.Logf("console", "ERROR:   → Or set HTTPS_PORT=5443 / CONSOLE_PORT=5000 and use a reverse proxy on :443")
+		logging.Logf("console", "ERROR:   → Or set HTTPS_PORT=5443 / CONSOLE_PORT=3375 and use a reverse proxy on :443")
 		return "", fmt.Errorf("console %s listen on %s: %w", label, addr, err)
 	case err != nil && listen.InUse(err):
 		logging.Logf("console", "ERROR: %s port %d is already in use", label, port)

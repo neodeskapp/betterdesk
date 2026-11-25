@@ -899,7 +899,7 @@
     "oidc_redirect_url": "Chuyển hướng URL (Gọi lại)",
     "oidc_redirect_url_hint": "Phải khớp chính xác với IdP. Đường dẫn: /api/auth/oidc/callback (hoặc /api/oidc/callback). Nên dùng URL công khai của panel — console proxy callback tới Go API. Cổng API (:21114 / :21121) cũng được.",
     "oidc_panel_url": "URL bảng điều khiển",
-    "oidc_panel_url_hint": "URL mà người vận hành dùng để mở bảng điều khiển web (cổng 5000 hoặc tên máy chủ reverse proxy). Bắt buộc cho đăng nhập SSO khi callback OIDC chạy trên cổng Go API.",
+    "oidc_panel_url_hint": "URL mà người vận hành dùng để mở bảng điều khiển web (cổng 3375 hoặc tên máy chủ reverse proxy). Bắt buộc cho đăng nhập SSO khi callback OIDC chạy trên cổng Go API.",
     "oidc_scopes": "Phạm vi",
     "oidc_use_pkce": "Sử dụng PKCE (được khuyến nghị)",
     "oidc_auto_discovery": "Tự động phát hiện",

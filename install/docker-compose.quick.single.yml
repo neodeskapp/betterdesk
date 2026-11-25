@@ -34,7 +34,7 @@
 # key reaches the server (Docker Compose 2.24 or newer reads it):
 #   RELAY_SERVERS=203.0.113.10     the address clients reach this server at
 #                                  (found by itself at every start when empty)
-#   NEODESK_CONSOLE_PORT=5080   the host port of the web console (5000)
+#   NEODESK_CONSOLE_PORT=5080   the host port of the web console (3375; 5000 up to 3.6.0-rc.4)
 #   NEODESK_CONSOLE_BIND=127.0.0.1  publish the console on this host
 #                                  address only (behind a reverse proxy)
 #   ADMIN_PASSWORD=...             the admin's password, at the first start only
@@ -55,7 +55,7 @@
 # tests), TRAEFIK_IMAGE_TAG (v3.3). Ports 80 (the certificate's HTTP
 # challenge, then a redirect) and 443 must reach this server.
 #
-# Web console: http://<server>:5000
+# Web console: http://<server>:3375
 # RustDesk clients: ID server and relay <server>, API http://<server>:21121
 # Logs: docker compose logs -f neodesk
 # =============================================================================
@@ -66,7 +66,7 @@ services:
     container_name: neodesk
     hostname: neodesk
     ports:
-      - "${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_PORT:-5000}:5000"  # Web console
+      - "${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_PORT:-3375}:3375"  # Web console
       - "${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_HTTPS_PORT:-5443}:5443"  # Web console with HTTPS_ENABLED=true
       - "21115:21115"           # NAT type test
       - "21116:21116/tcp"       # Signal TCP
@@ -88,7 +88,7 @@ services:
       - NODE_ENV=production
       # Set TRUST_PROXY=1 when the panel is behind one reverse proxy.
       - TRUST_PROXY=${TRUST_PROXY:-}
-      - CONSOLE_PORT=5000
+      - CONSOLE_PORT=3375
       - HOST=0.0.0.0
       - API_HOST=0.0.0.0
       - API_ENABLED=false
@@ -322,7 +322,7 @@ configs:
           neodesk-console:
             loadBalancer:
               servers:
-                - url: "http://neodesk:5000"
+                - url: "http://neodesk:3375"
       tls:
         options:
           default:

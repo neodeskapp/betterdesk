@@ -56,7 +56,7 @@ if ! have ss && ! have netstat; then
   exit 2
 fi
 
-# `ss -ltn` output: "LISTEN 0 4096 127.0.0.1:5000 0.0.0.0:*"
+# `ss -ltn` output: "LISTEN 0 4096 127.0.0.1:3375 0.0.0.0:*"
 listeners() {
   if have ss; then
     ss -ltn 2>/dev/null | awk 'NR > 1 { print $4 }'
@@ -93,7 +93,8 @@ is_loopback() {
 }
 
 # --- Panel must never be WAN-bound ------------------------------------------------------
-for panel_port in 5000 5443; do
+# The console on its default port (3375; 5000 up to 3.6.0-rc.4) or HTTPS
+for panel_port in 3375 5000 5443; do
   bind="$(bind_of "$panel_port")"
   if [ -z "$bind" ]; then
     continue

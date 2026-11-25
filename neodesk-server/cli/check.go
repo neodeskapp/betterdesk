@@ -79,7 +79,7 @@ type portArg struct {
 func parseCheckArgs(args []string) (checkConfig, error) {
 	c := checkConfig{
 		api: "http://127.0.0.1:21121/api/health", hasAPI: true,
-		panel: "http://127.0.0.1:5000/health", hasPanel: true,
+		panel: "http://127.0.0.1:3375/health", hasPanel: true,
 		timeoutMs: 5000,
 	}
 	for i := 0; i < len(args); i++ {

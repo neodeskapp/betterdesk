@@ -569,6 +569,40 @@ test_one_command_install() (
     rm -rf "$TEST_DIR"
 )
 
+# A250: the console's default port is 3375. An install whose settings name
+# a port (CONSOLE_PORT or PORT in .env or the unit) keeps it; one that
+# names none followed the old default, 5000, and moves to 3375 at its
+# update: the update says so at the end, with how to keep 5000, and opens
+# 3375 in the firewall the installer manages.
+test_update_moves_the_default_console_port() (
+    load
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    : > "$SERVER_UNIT"
+    console_port_named && fail "an install without a port counts as one that names one"
+    [ "$(resolve_panel_http_port)" = 3375 ] || fail "the default console port is $(resolve_panel_http_port)"
+    configure_firewall_rules() { echo "firewall $(firewall_ports | tr '\n' ' ')" >> "$TEST_DIR/calls"; }
+    local out
+    out=$(note_console_port_move false 2>&1)
+    case "$out" in
+        *"The console now answers on port 3375; it was 5000"*"CONSOLE_PORT=5000"*"$CONSOLE_PATH/.env"*) ;;
+        *) fail "the update does not say the console moved: $out" ;;
+    esac
+    grep -q 'firewall .*3375/tcp' "$TEST_DIR/calls" || fail "the update did not open 3375 in the firewall: $(cat "$TEST_DIR/calls" 2>&1)"
+    : > "$TEST_DIR/calls"
+    out=$(note_console_port_move true 2>&1)
+    [ -z "$out" ] || fail "an install that names its port was told it moved: $out"
+    [ ! -s "$TEST_DIR/calls" ] || fail "an install that names its port got firewall changes"
+    for setting in 'CONSOLE_PORT=5000' 'CONSOLE_PORT=5080' 'PORT=5080'; do
+        printf '%s\n' "$setting" > "$CONSOLE_PATH/.env"
+        console_port_named || fail "$setting in .env does not count as a port the install names"
+    done
+    [ "$(resolve_panel_http_port)" = 5080 ] || fail "a configured port does not win: $(resolve_panel_http_port)"
+    printf 'SESSION_SECRET=kept\n' > "$CONSOLE_PATH/.env"
+    printf '[Service]\nEnvironment=CONSOLE_PORT=5000\n' > "$SERVER_UNIT"
+    console_port_named || fail "CONSOLE_PORT in the unit does not count as a port the install names"
+    rm -rf "$TEST_DIR"
+)
+
 # Piped from curl, and as the installed neodesk-setup, the installer takes
 # neodesk.sh from the release it installs, never from a branch's raw
 # files: the release folder this run downloaded from, else the release of
@@ -1104,6 +1138,9 @@ test_panel_public_host() (
 # file and the commands for update and uninstall, and shows no password.
 test_install_summary() (
     load
+    printf '[Service]
+Environment=NEODESK_SUPERVISOR=systemd
+' > "$SERVER_UNIT"
     printf 'PANEL_PUBLIC_HOST=desk.example.org\nHTTPS_ENABLED=true\nHTTPS_PORT=5443\nCONSOLE_PORT=5000\nDEFAULT_ADMIN_PASSWORD=\n' > "$CONSOLE_PATH/.env"
     printf 'AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJ=\n' > "$RUSTDESK_PATH/id_ed25519.pub"
     ADMIN_PASSWORD='Summary-Pass-1'
@@ -1186,6 +1223,9 @@ test_update_asks_the_fork() (
 # console's ports unless TLS ends at a reverse proxy.
 test_firewall_ports() (
     load
+    # An install of the server with its console: CONSOLE_PORT is the
+    # console's port, and one set wins over the default (3375)
+    printf '[Service]\nEnvironment=NEODESK_SUPERVISOR=systemd\n' > "$SERVER_UNIT"
     printf 'API_PORT=21121\nCONSOLE_PORT=5000\nHTTPS_ENABLED=true\nHTTPS_PORT=5443\nCDAP_ENABLED=Y\nTRUST_PROXY=false\n' > "$CONSOLE_PATH/.env"
     [ "$(firewall_ports | tr '\n' ' ')" = "21115/tcp 21116/tcp 21116/udp 21117/tcp 21121/tcp 21122/tcp 5000/tcp 5443/tcp " ] \
         || fail "the firewall ports: $(firewall_ports | tr '\n' ' ')"
@@ -1201,6 +1241,9 @@ test_firewall_ports() (
 # them.
 test_reverse_proxy_closes_the_console_ports() (
     load
+    printf '[Service]
+Environment=NEODESK_SUPERVISOR=systemd
+' > "$SERVER_UNIT"
     printf 'CONSOLE_PORT=5000\nHTTPS_ENABLED=true\nHTTPS_PORT=5443\n' > "$CONSOLE_PATH/.env"
     ufw() { printf '%s\n' "$*" >> "$TEST_DIR/ufw"; [ "$1" != status ] || echo "Status: active"; }
     generate_reverse_proxy_config() { REVERSE_PROXY_PANEL_BIND="$BIND"; }
@@ -1221,6 +1264,9 @@ test_reverse_proxy_closes_the_console_ports() (
 # and its diagnostics do not report it as active
 test_inactive_ufw_is_left_alone() (
     load
+    printf '[Service]
+Environment=NEODESK_SUPERVISOR=systemd
+' > "$SERVER_UNIT"
     printf 'CONSOLE_PORT=5000\nHTTPS_ENABLED=false\n' > "$CONSOLE_PATH/.env"
     ufw() { printf '%s\n' "$*" >> "$TEST_DIR/ufw"; [ "$1" != status ] || echo "Status: inactive"; }
     systemctl() { return 3; }
@@ -1254,6 +1300,9 @@ test_inactive_ufw_is_left_alone() (
 # where it is the firewall.
 test_switched_off_firewall_gets_no_iptables_rules() (
     load
+    printf '[Service]
+Environment=NEODESK_SUPERVISOR=systemd
+' > "$SERVER_UNIT"
     printf 'CONSOLE_PORT=5000
 HTTPS_ENABLED=false
 ' > "$CONSOLE_PATH/.env"
@@ -1586,6 +1635,7 @@ test_update_keeps_the_admins_ports
 test_channel_and_download_errors
 test_one_command_install
 test_installer_comes_from_the_release
+test_update_moves_the_default_console_port
 test_install_places_neodesk_setup_and_the_command_line
 test_update_moves_the_old_manager
 test_backups_move_to_the_neodesk_folder

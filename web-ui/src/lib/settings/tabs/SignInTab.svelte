@@ -94,7 +94,7 @@
 		issuer: 'https://login.microsoftonline.com/{tenant}/v2.0',
 		cidrs: '10.20.0.0/16, 192.168.50.10',
 		redirect: 'https://your-server:5443/api/auth/oidc/callback',
-		panel: 'http://your-server:5000',
+		panel: 'http://your-server:3375',
 		scopes: 'openid profile email',
 		authUrl: 'https://idp.example.com/authorize',
 		tokenUrl: 'https://idp.example.com/token',

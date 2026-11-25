@@ -28,7 +28,7 @@ echo "  Version: ${NEODESK_IMAGE_VERSION:-3.6.2}"
 echo "========================================"
 echo ""
 echo "  Server:       $(server_ports)"
-echo "  Web console:  port ${CONSOLE_PORT:-5000}"
+echo "  Web console:  port ${CONSOLE_PORT:-3375}"
 echo "  DATA_DIR:     ${DATA_DIR:-/app/data}"
 echo ""
 
@@ -219,9 +219,9 @@ export RELAY_SERVERS="${RELAY_SERVERS:-}"
 echo ""
 if [ "${HTTPS_ENABLED:-false}" = "true" ]; then
     echo "  Web console:  https://localhost:${HTTPS_PORT:-5443}"
-    echo "  HTTP redirect: http://localhost:${CONSOLE_PORT:-5000} → https://…:${HTTPS_PORT:-5443}"
+    echo "  HTTP redirect: http://localhost:${CONSOLE_PORT:-3375} → https://…:${HTTPS_PORT:-5443}"
 else
-    echo "  Web console:  http://localhost:${CONSOLE_PORT:-5000}"
+    echo "  Web console:  http://localhost:${CONSOLE_PORT:-3375}"
 fi
 echo "  API:          http://localhost:21121/api"
 echo "========================================"

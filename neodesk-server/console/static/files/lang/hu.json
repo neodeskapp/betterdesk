@@ -899,7 +899,7 @@
     "oidc_redirect_url": "URL átirányítása (visszahívás)",
     "oidc_redirect_url_hint": "Pontosan meg kell egyeznie az IdP-vel. Útvonal: /api/auth/oidc/callback (vagy /api/oidc/callback). A panel nyilvános URL-jét részesítse előnyben — a konzol továbbítja a callbacket a Go API-hoz. Az API portok (:21114 / :21121) is működnek.",
     "oidc_panel_url": "Panel URL-címe",
-    "oidc_panel_url_hint": "URL, amelyen az operátorok megnyitják a webes konzolt (5000-es port vagy reverse proxy gazdagép). Szükséges az SSO bejelentkezéshez, ha az OIDC visszahívás a Go API porton fut.",
+    "oidc_panel_url_hint": "URL, amelyen az operátorok megnyitják a webes konzolt (3375-es port vagy reverse proxy gazdagép). Szükséges az SSO bejelentkezéshez, ha az OIDC visszahívás a Go API porton fut.",
     "oidc_scopes": "Hatókör",
     "oidc_use_pkce": "PKCE használata (ajánlott)",
     "oidc_auto_discovery": "Automatikus felfedezés",

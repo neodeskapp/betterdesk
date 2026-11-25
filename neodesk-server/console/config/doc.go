@@ -4,7 +4,7 @@
 // # Settings
 //
 //	Variable                 Default               Meaning
-//	CONSOLE_PORT             5000                  Port the Go console listens on. 0: the Go console does not start.
+//	CONSOLE_PORT             3375                  Port the Go console listens on. 0: the Go console does not start.
 //	HOST                     127.0.0.1             Address the console listens on.
 //	CONSOLE_DEBUG_ROUTING    (off)                 On adds GET /__nd/routing for the contract suite.
 //	TRUST_PROXY              (off)                 Which proxies may speak for the client: off, on (one hop), a hop count,
@@ -32,7 +32,7 @@
 //	                                               certificate the console listens with TLS on HTTPS_PORT; without one
 //	                                               it stays on plain HTTP and keeps all of that (package listen).
 //	HTTPS_PORT               5443                  Port of the TLS listener in HTTPS mode. Below 1024 without the right
-//	                                               to bind it: 5443 (CONSOLE_PORT likewise becomes 5000).
+//	                                               to bind it: 5443 (CONSOLE_PORT likewise becomes 3375).
 //	HTTP_REDIRECT_HTTPS      on                    On: in HTTPS mode CONSOLE_PORT answers every
 //	                                               request with 307 to the same target on HTTPS_PORT.
 //	SSL_CERT_PATH            (none)                Certificate (PEM) of the console and the client API port.

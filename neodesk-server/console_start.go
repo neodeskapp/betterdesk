@@ -23,7 +23,7 @@ import (
 )
 
 // startConsole starts the web console on its own port: CONSOLE_PORT, else
-// 5000, and not at all with CONSOLE_PORT=0. The console works on the
+// 3375, and not at all with CONSOLE_PORT=0. The console works on the
 // server's database: PostgreSQL through the server's pool, SQLite through
 // its own connections to the same file. The returned function stops the
 // console and everything it started. requestRestart ends the process to

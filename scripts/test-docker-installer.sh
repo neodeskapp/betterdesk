@@ -156,7 +156,7 @@ test_fresh_install() (
     grep -qx 'RELAY_SERVERS=203.0.113.10' "$NEODESK_DIR/.env" || fail ".env has no relay address"
     cmp -s "$NEODESK_DIR/docker-compose.yml" "$SCRIPT_ROOT/install/docker-compose.quick.single.yml" || fail "the compose file is not the release's"
     grep -qx 'compose up -d --remove-orphans' "$CALLS" || fail "the container was not started: $(cat "$CALLS")"
-    printf '%s' "$out" | grep -q 'Web console: *http://203.0.113.10:5000' || fail "no console address in: $out"
+    printf '%s' "$out" | grep -q 'Web console: *http://203.0.113.10:3375' || fail "no console address in: $out"
     printf '%s' "$out" | grep -q 'ID server: *203.0.113.10' || fail "no ID server in: $out"
     printf '%s' "$out" | grep -q 'Key: *PUBKEYbase64=' || fail "no key in: $out"
     printf '%s' "$out" | grep -q 'docker compose logs -f neodesk' || fail "no logs hint in: $out"
@@ -447,11 +447,11 @@ test_foreign_install_is_left_alone() (
 test_errors_say_what_to_do() (
     load
     local out
-    printf 'python3\n' > "$TEST_DIR/taken-5000"
-    if out=$(mgr 'COMMAND=install; do_install' 2>&1); then fail "an install with port 5000 taken went on"; fi
-    printf '%s' "$out" | grep -q 'TCP 5000: python3' || fail "the port error does not name the program: $out"
+    printf 'python3\n' > "$TEST_DIR/taken-3375"
+    if out=$(mgr 'COMMAND=install; do_install' 2>&1); then fail "an install with port 3375 taken went on"; fi
+    printf '%s' "$out" | grep -q 'TCP 3375: python3' || fail "the port error does not name the program: $out"
     printf '%s' "$out" | grep -q -- '--console-port' || fail "the port error does not name --console-port: $out"
-    rm -f "$TEST_DIR/taken-5000"
+    rm -f "$TEST_DIR/taken-3375"
     printf 'hbbs\n' > "$TEST_DIR/taken-21116"
     if out=$(mgr 'COMMAND=install; do_install' 2>&1); then fail "an install with 21116 taken went on"; fi
     printf '%s' "$out" | grep -q 'RustDesk server' || fail "the error does not name the RustDesk server: $out"
@@ -672,7 +672,7 @@ test_install_sh_opens_the_published_ports() (
         configure_firewall
     ) > /dev/null 2>&1 || fail "install.sh's firewall step failed"
     local port
-    for port in 5000 5443 21115 21116 21117 21121 21122; do
+    for port in 3375 5443 21115 21116 21117 21121 21122; do
         grep -q "^allow ${port}/tcp" "$dir/ufw" || fail "install.sh does not open ${port}/tcp: $(tr '\n' ';' < "$dir/ufw")"
     done
     grep -q '^allow 21116/udp' "$dir/ufw" || fail "install.sh does not open 21116/udp"
@@ -732,7 +732,7 @@ test_traefik_with_letsencrypt() (
     for line in COMPOSE_PROFILES NEODESK_DOMAIN NEODESK_CONSOLE_BIND TRUST_PROXY PANEL_PUBLIC_URL LETSENCRYPT_CA_SERVER; do
         if grep -q "^$line=" "$NEODESK_DIR/.env"; then fail "--no-traefik left $line: $(cat "$NEODESK_DIR/.env")"; fi
     done
-    printf '%s' "$out" | grep -q 'Web console: *http://203.0.113.10:5000' || fail "no plain console address after --no-traefik: $out"
+    printf '%s' "$out" | grep -q 'Web console: *http://203.0.113.10:3375' || fail "no plain console address after --no-traefik: $out"
     rm -rf "$TEST_DIR"
 )
 
@@ -798,7 +798,7 @@ test_install_sh_passes_the_domain() (
         esac
     done
     case " $(cat "$dir/ports") " in
-        *" 5000 "*|*" 5443 "*) fail "install.sh's firewall opens the console's own ports behind Traefik: $(cat "$dir/ports")" ;;
+        *" 3375 "*|*" 5000 "*|*" 5443 "*) fail "install.sh's firewall opens the console's own ports behind Traefik: $(cat "$dir/ports")" ;;
     esac
     rm -rf "$dir"
 )
@@ -933,6 +933,37 @@ test_install_sh_takes_the_release_files() (
     rm -rf "$dir"
 )
 
+# A250: the console's port is 3375. An install whose compose file
+# published the old default, 5000, and whose .env names no host port
+# moves to 3375 at its update, and the update says so with how to keep
+# 5000; one whose .env names a port keeps it, and nothing is said.
+test_update_moves_the_default_console_port() (
+    load
+    local out
+    out=$(mgr 'COMMAND=install; do_install' 2>&1) || fail "the install failed: $out"
+    # The compose file of 3.6.0-rc.4, which published 5000
+    sed -e 's/NEODESK_CONSOLE_PORT:-3375}:3375/NEODESK_CONSOLE_PORT:-5000}:5000/' "$NEODESK_DIR/docker-compose.yml" > "$TEST_DIR/old.yml"
+    grep -q 'NEODESK_CONSOLE_PORT:-5000}:5000' "$TEST_DIR/old.yml" || fail "the test's old compose file publishes no 5000"
+    cp "$TEST_DIR/old.yml" "$NEODESK_DIR/docker-compose.yml"
+    sha256sum "$NEODESK_DIR/docker-compose.yml" | cut -d' ' -f1 > "$NEODESK_DIR/.compose.sha256"
+    printf 'sha256:new\n' > "$TEST_DIR/pulled"
+    printf 'sha256:new\n' > "$TEST_DIR/good-image"
+    out=$(mgr 'COMMAND=update; do_install' 2>&1) || fail "the update failed: $out"
+    printf '%s' "$out" | grep -q 'The console now answers on port 3375; it was 5000' || fail "the update does not say the console moved: $out"
+    printf '%s' "$out" | grep -q "NEODESK_CONSOLE_PORT=5000 in $NEODESK_DIR/.env" || fail "the update does not say how to keep 5000: $out"
+    grep -q 'NEODESK_CONSOLE_PORT:-3375}:3375' "$NEODESK_DIR/docker-compose.yml" || fail "the update kept the old compose file"
+    # A host port in .env stays, and nothing is said
+    cp "$TEST_DIR/old.yml" "$NEODESK_DIR/docker-compose.yml"
+    sha256sum "$NEODESK_DIR/docker-compose.yml" | cut -d' ' -f1 > "$NEODESK_DIR/.compose.sha256"
+    printf 'NEODESK_CONSOLE_PORT=5000\n' >> "$NEODESK_DIR/.env"
+    printf 'sha256:newer\n' > "$TEST_DIR/pulled"
+    printf 'sha256:newer\n' > "$TEST_DIR/good-image"
+    out=$(mgr 'COMMAND=update; do_install' 2>&1) || fail "the update with a port of its own failed: $out"
+    if printf '%s' "$out" | grep -q 'The console now answers on port'; then fail "an install with a port of its own was told it moved: $out"; fi
+    printf '%s' "$out" | grep -q 'Web console: *http://203.0.113.10:5000' || fail "the port of .env does not win: $out"
+    rm -rf "$TEST_DIR"
+)
+
 test_fresh_install
 test_no_release_image_runs_dev
 test_update_goes_back_when_unhealthy
@@ -960,5 +991,6 @@ test_traefik_errors_say_what_to_do
 test_install_sh_passes_the_domain
 test_files_come_from_the_release
 test_install_sh_takes_the_release_files
+test_update_moves_the_default_console_port
 echo "Docker installer checks passed"
 bash "$SCRIPT_ROOT/scripts/test-docker-entrypoint.sh"

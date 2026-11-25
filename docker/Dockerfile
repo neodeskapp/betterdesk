@@ -10,7 +10,7 @@
 #   docker compose -f install/docker-compose.single.yml up -d
 #
 # Ports:
-#   5000  - Web console (5443 with HTTPS_ENABLED)
+#   3375  - Web console (5443 with HTTPS_ENABLED); 5000 up to 3.6.0-rc.4
 #   21121 - HTTP API (RustDesk client API + REST)
 #   21122 - CDAP gateway (custom devices and agents)
 #   21115 - NAT type test
@@ -103,13 +103,13 @@ COPY docker/bootstrap-admin-credentials.sh /docker/bootstrap-admin-credentials.s
 COPY docker/show-admin-credentials.sh /usr/local/bin/neodesk-show-admin-credentials
 RUN chmod +x /ensure-app-user.sh /entrypoint.sh /docker/bootstrap-admin-credentials.sh /usr/local/bin/neodesk-show-admin-credentials /usr/local/bin/neodesk-healthcheck
 
-# The console on 5000 (DECISIONS A27), the API on 21121. The console's own
+# The console on 3375 (DECISIONS A27, A250), the API on 21121. The console's own
 # client API listener stays off: the API serves RustDesk clients on 21121.
 # NEODESK_SUPERVISOR: Docker's restart policy starts the process again
 # after it ends with status 3 (a restart, an update or a restore from the
 # panel, DECISIONS A30).
 ENV NODE_ENV=production \
-    CONSOLE_PORT=5000 \
+    CONSOLE_PORT=3375 \
     SIGNAL_PORT=21116 \
     SIGNAL_RATE_LIMIT_PER_IP=20 \
     HOST=0.0.0.0 \
@@ -134,7 +134,7 @@ ENV NODE_ENV=production \
     NEODESK_UPDATE_MODE=image \
     NEODESK_SUPERVISOR=docker
 
-EXPOSE 5000 5443 21115 21116/tcp 21116/udp 21117 21118 21119 21121 21122
+EXPOSE 3375 5443 21115 21116/tcp 21116/udp 21117 21118 21119 21121 21122
 
 # The server writes files of its own (mesh_agent_server.pem) in its folder
 WORKDIR /opt/neodesk/data

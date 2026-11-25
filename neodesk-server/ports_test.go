@@ -53,7 +53,7 @@ func TestStartRefusesTwoListenersOnOnePort(t *testing.T) {
 		args       []string
 		first, and string
 	}{
-		{map[string]string{"SIGNAL_PORT": "5000"}, nil, "SIGNAL_PORT", "CONSOLE_PORT"},
+		{map[string]string{"SIGNAL_PORT": "3375"}, nil, "SIGNAL_PORT", "CONSOLE_PORT"},
 		{map[string]string{"CDAP_PORT": "21117"}, nil, "RELAY_PORT", "CDAP_PORT"},
 		{map[string]string{"GO_API_PORT": "21117"}, nil, "RELAY_PORT", "GO_API_PORT"},
 		{nil, []string{"-port", "21118"}, "SIGNAL_PORT-1", "RELAY_PORT"},

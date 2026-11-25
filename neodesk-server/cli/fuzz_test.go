@@ -98,10 +98,15 @@ func FuzzUpgradeEnv(f *testing.F) {
 				t.Fatalf("%q: %s is still set", text, key)
 			}
 		}
-		for _, key := range []string{"CONSOLE_PORT", "HOST", "SIGNAL_PORT", "RELAY_PORT", "GO_API_PORT", "CONSOLE_DIR", "NEODESK_ENV_FILE", "NEODESK_SUPERVISOR"} {
+		for _, key := range []string{"HOST", "SIGNAL_PORT", "RELAY_PORT", "GO_API_PORT", "CONSOLE_DIR", "NEODESK_ENV_FILE", "NEODESK_SUPERVISOR"} {
 			if _, ok := serverinfo.ParseEnvLines(plan.Text).Get(key); !ok {
 				t.Fatalf("%q: no %s after the upgrade", text, key)
 			}
+		}
+		// CONSOLE_PORT comes from a port PORT names; without one the
+		// server's default applies (DECISIONS A250)
+		if _, ok := serverinfo.ParseEnvLines(plan.Text).Get("CONSOLE_PORT"); !ok && plan.FromPort != "" {
+			t.Fatalf("%q: CONSOLE_PORT %s was not written", text, plan.FromPort)
 		}
 		again, err := planUpgrade(plan.Text, "/srv/c/.env", "systemd")
 		if err != nil || again.Changed() || again.Text != plan.Text {

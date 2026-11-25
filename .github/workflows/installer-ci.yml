@@ -345,6 +345,10 @@ jobs:
           compose=install/docker-compose.quick.single.yml
           [ -f "$compose" ] || compose=docker-compose.quick.single.yml
           echo "COMPOSE_FILE=$compose" >> "$GITHUB_ENV"
+          # The console's port: 3375 since 3.6.0-rc.5, 5000 before
+          port=3375
+          grep -q 'NEODESK_CONSOLE_PORT:-3375' "$compose" || port=5000
+          echo "CONSOLE_PORT_OF_IMAGE=$port" >> "$GITHUB_ENV"
       - name: Start official single-container stack
         run: |
           set -euo pipefail
@@ -355,11 +359,11 @@ jobs:
           curl --fail --retry 30 --retry-delay 2 --retry-connrefused \
             http://127.0.0.1:21121/api/health
           curl --fail --retry 30 --retry-delay 2 --retry-connrefused \
-            http://127.0.0.1:5000/health
+            "http://127.0.0.1:${CONSOLE_PORT_OF_IMAGE}/health"
           docker compose -f "$COMPOSE_FILE" exec -T -u neodesk neodesk \
             /usr/local/bin/neodesk-server check \
             --api http://127.0.0.1:21121/api/health \
-            --panel http://127.0.0.1:5000/health \
+            --panel "http://127.0.0.1:${CONSOLE_PORT_OF_IMAGE}/health" \
             --port 127.0.0.1:21121
           docker compose -f "$COMPOSE_FILE" ps
       - name: Tear down smoke stack

@@ -42,7 +42,7 @@
 //	--cookie-file     a Playwright storage state file whose session is used
 //	                  instead of signing in (each account allows one session,
 //	                  so signing in ends the one a browser has)
-//	--panel           the console (default http://127.0.0.1:$PORT, PORT 5000)
+//	--panel           the console (default http://127.0.0.1:$PORT, PORT 3375)
 //	--go-db           the database (see above)
 //	--auth-db         an older install's separate user database (default
 //	                  AUTH_DB_PATH or /app/data/auth.db when it exists)

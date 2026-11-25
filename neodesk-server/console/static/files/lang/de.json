@@ -893,7 +893,7 @@
     "oidc_redirect_url": "Weiterleitungs-URL (Callback)",
     "oidc_redirect_url_hint": "Muss exakt mit dem IdP übereinstimmen. Pfad: /api/auth/oidc/callback (oder /api/oidc/callback). Bevorzugt die öffentliche Panel-URL — die Konsole proxyt den Callback zur Go-API. Auch API-Ports (:21114 / :21121) funktionieren.",
     "oidc_panel_url": "Panel-URL",
-    "oidc_panel_url_hint": "URL, über die Operatoren die Web-Konsole öffnen (Port 5000 oder Reverse-Proxy-Hostname). Erforderlich für SSO-Anmeldung, wenn der OIDC-Callback auf dem Go-API-Port läuft.",
+    "oidc_panel_url_hint": "URL, über die Operatoren die Web-Konsole öffnen (Port 3375 oder Reverse-Proxy-Hostname). Erforderlich für SSO-Anmeldung, wenn der OIDC-Callback auf dem Go-API-Port läuft.",
     "oidc_scopes": "Scopes",
     "oidc_use_pkce": "PKCE verwenden (empfohlen)",
     "oidc_auto_discovery": "Automatische Discovery",

@@ -80,7 +80,9 @@ func TestCheckArgumentsLikeNode(t *testing.T) {
 		var want []string
 		for _, u := range []*string{c.APIURL, c.PanelURL, c.ProxyURL} {
 			if u != nil && *u != "" {
-				want = append(want, *u)
+				// The one difference: the console's default port is 3375
+				// since 3.6.0-rc.5 (DECISIONS A250), 5000 in the script
+				want = append(want, strings.Replace(*u, "http://127.0.0.1:5000/health", "http://127.0.0.1:3375/health", 1))
 			}
 		}
 		if strings.Join(cfg.urls, "\n") != strings.Join(want, "\n") {
@@ -335,6 +337,10 @@ func TestCheckRunsLikeNode(t *testing.T) {
 			run.Stdout, run.Stderr = stdout, ""
 			fixed++
 		}
+		// The console's default port is 3375 since 3.6.0-rc.5 (DECISIONS
+		// A250), 5000 in the script
+		run.Stdout = strings.ReplaceAll(run.Stdout, "127.0.0.1:5000", "127.0.0.1:3375")
+		run.Stderr = strings.ReplaceAll(run.Stderr, "127.0.0.1:5000", "127.0.0.1:3375")
 		args := make([]string, len(run.Args))
 		for i, a := range run.Args {
 			args[i] = fill(a)

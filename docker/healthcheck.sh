@@ -24,7 +24,7 @@ else
     answers "$api_http" || answers "$api_https" || exit 1
 fi
 
-console_port="${CONSOLE_PORT:-5000}"
+console_port="${CONSOLE_PORT:-3375}"
 [ "$console_port" = "0" ] && exit 0
 console_http="http://127.0.0.1:${console_port}/health"
 console_https="https://127.0.0.1:${HTTPS_PORT:-5443}/health"

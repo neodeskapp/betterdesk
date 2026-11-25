@@ -49,7 +49,7 @@ func TestUpgradeEnvOnAnInstallersFile(t *testing.T) {
 	}
 	added := settings(plan.Added)
 	want := map[string]string{
-		"CONSOLE_PORT": "5000", "SIGNAL_PORT": "21116", "RELAY_PORT": "21117",
+		"CONSOLE_PORT": "3375", "SIGNAL_PORT": "21116", "RELAY_PORT": "21117",
 		"CONSOLE_DIR": "/opt/NeoDeskConsole", "NEODESK_ENV_FILE": "/opt/NeoDeskConsole/.env", "NEODESK_SUPERVISOR": "systemd",
 	}
 	if runtime.GOOS == "windows" {
@@ -69,7 +69,7 @@ func TestUpgradeEnvOnAnInstallersFile(t *testing.T) {
 			t.Errorf("%s is not kept", k)
 		}
 	}
-	if plan.FromPort != "5000" {
+	if plan.FromPort != "3375" {
 		t.Errorf("CONSOLE_PORT from PORT: %q", plan.FromPort)
 	}
 	if !slices.Equal(plan.Commented, []string{"WEB_UI_DIR", "GOCACHE"}) {
@@ -111,9 +111,11 @@ func TestUpgradeEnvRules(t *testing.T) {
 		text     string
 	}{
 		{name: "port", in: "PORT=5100\n", port: "5100"},
-		{name: "no port", in: "A=1\n", port: "5000"},
+		// Without a port the server's default applies (3375 since
+		// 3.6.0-rc.5, DECISIONS A250): nothing pins the old console's 5000
+		{name: "no port", in: "A=1\n", port: ""},
 		{name: "port read like parseInt", in: "PORT= 5100abc\n", port: "5100"},
-		{name: "port zero", in: "PORT=0\n", port: "5000"},
+		{name: "port zero", in: "PORT=0\n", port: ""},
 		{name: "port empty then set", in: "PORT=\nPORT=6000\n", port: "6000"},
 		{name: "port twice", in: "PORT=6000\nPORT=7000\n", port: "6000"},
 		{name: "port too big", in: "PORT=70000\n", err: true},
@@ -121,15 +123,15 @@ func TestUpgradeEnvRules(t *testing.T) {
 		{name: "console port kept", in: "PORT=70000\nCONSOLE_PORT=0\n", port: ""},
 		{name: "crlf", in: "PORT=5000\r\nA=1\r\n", port: "5000",
 			text: "PORT=5000\r\nA=1\r\n\r\n# Added by neodesk-server upgrade-env: the console runs inside the server\r\nCONSOLE_PORT=5000\r\nHOST=127.0.0.1\r\n"},
-		{name: "no line end", in: "A=1", port: "5000", text: "A=1\n\n# Added by neodesk-server upgrade-env: the console runs inside the server\nCONSOLE_PORT=5000\n"},
-		{name: "empty", in: "", port: "5000", text: "# Added by neodesk-server upgrade-env: the console runs inside the server\nCONSOLE_PORT=5000\n"},
+		{name: "no line end", in: "A=1", port: "", text: "A=1\n\n# Added by neodesk-server upgrade-env: the console runs inside the server\nHOST=127.0.0.1\n"},
+		{name: "empty", in: "", port: "", text: "# Added by neodesk-server upgrade-env: the console runs inside the server\nHOST=127.0.0.1\n"},
 		{name: "bom", in: byteOrderMark + "PORT=5200\n", port: "5200", text: byteOrderMark + "PORT=5200\n\n# Added"},
-		{name: "bom before a commented key", in: byteOrderMark + "GOCACHE=x\n", port: "5000", text: byteOrderMark + "# Commented out by neodesk-server upgrade-env: "},
-		{name: "bom alone", in: byteOrderMark, port: "5000", text: byteOrderMark + "# Added by neodesk-server upgrade-env: the console runs inside the server\n"},
-		{name: "commented", in: "  GOCACHE=a\nGOCACHE=b\n# GOCACHE=c\n", port: "5000",
+		{name: "bom before a commented key", in: byteOrderMark + "GOCACHE=x\n", port: "", text: byteOrderMark + "# Commented out by neodesk-server upgrade-env: "},
+		{name: "bom alone", in: byteOrderMark, port: "", text: byteOrderMark + "# Added by neodesk-server upgrade-env: the console runs inside the server\n"},
+		{name: "commented", in: "  GOCACHE=a\nGOCACHE=b\n# GOCACHE=c\n", port: "",
 			text: "# Commented out by neodesk-server upgrade-env: only the old console's updater built the server from source\n#   GOCACHE=a\n" +
 				"# Commented out by neodesk-server upgrade-env: only the old console's updater built the server from source\n# GOCACHE=b\n# GOCACHE=c\n"},
-		{name: "removed", in: "NODE_EXTRA_CA_CERTS=x\nA=1\nNODE_EXTRA_CA_CERTS=y", port: "5000", text: "A=1\n\n# Added"},
+		{name: "removed", in: "NODE_EXTRA_CA_CERTS=x\nA=1\nNODE_EXTRA_CA_CERTS=y", port: "", text: "A=1\n\n# Added"},
 	} {
 		plan, err := planUpgrade(c.in, file, "nssm")
 		if c.err {
@@ -141,7 +143,7 @@ func TestUpgradeEnvRules(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s: %v", c.name, err)
 		}
-		if plan.FromPort != c.port || (c.port != "" && settings(plan.Added)["CONSOLE_PORT"] != c.port) {
+		if plan.FromPort != c.port || settings(plan.Added)["CONSOLE_PORT"] != c.port {
 			t.Errorf("%s: console port %q (%v), want %q", c.name, plan.FromPort, plan.Added, c.port)
 		}
 		if c.text != "" && !strings.HasPrefix(plan.Text, c.text) {

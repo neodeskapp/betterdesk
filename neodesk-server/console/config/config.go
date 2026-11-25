@@ -22,7 +22,7 @@ import (
 // Config is the console's configuration.
 type Config struct {
 	// Host and Port are where the console listens (HOST, CONSOLE_PORT;
-	// 5000 when CONSOLE_PORT is unset). Port 0 means the Go console is off.
+	// 3375 when CONSOLE_PORT is unset). Port 0 means the Go console is off.
 	Host string
 	Port int
 	// PortUnset says CONSOLE_PORT was not set: the console is on only
@@ -497,9 +497,13 @@ func apiHost(getenv func(string) string) string {
 	return u.Host
 }
 
-// defaultConsolePort is the console's port when CONSOLE_PORT is unset
-// (DECISIONS A27): the port the old console had.
-const defaultConsolePort = 5000
+// DefaultConsolePort is the console's port when CONSOLE_PORT is unset
+// (DECISIONS A27): 3375, "DESK" on a phone's keys, since 3.6.0-rc.5
+// (DECISIONS A250). Up to 3.6.0-rc.4 it was 5000, the old console's port,
+// which Synology DSM, macOS AirPlay and Flask take as well.
+const DefaultConsolePort = 3375
+
+const defaultConsolePort = DefaultConsolePort
 
 // The API address and port of an install that sets neither.
 const (

@@ -893,7 +893,7 @@
     "oidc_redirect_url": "Omleidings-URL (callback)",
     "oidc_redirect_url_hint": "Moet exact overeenkomen met de IdP. Pad: /api/auth/oidc/callback (of /api/oidc/callback). Gebruik bij voorkeur de openbare panel-URL — de console proxyt de callback naar de Go-API. API-poorten (:21114 / :21121) werken ook.",
     "oidc_panel_url": "Panel-URL",
-    "oidc_panel_url_hint": "URL die operators gebruiken om de webconsole te openen (poort 5000 of reverse-proxy-hostname). Vereist voor SSO-aanmelding wanneer de OIDC-callback op de Go API-poort draait.",
+    "oidc_panel_url_hint": "URL die operators gebruiken om de webconsole te openen (poort 3375 of reverse-proxy-hostname). Vereist voor SSO-aanmelding wanneer de OIDC-callback op de Go API-poort draait.",
     "oidc_scopes": "Scopes",
     "oidc_use_pkce": "PKCE gebruiken (aanbevolen)",
     "oidc_auto_discovery": "Automatische discovery",

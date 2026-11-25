@@ -41,9 +41,13 @@ set -e
 # Version
 VERSION="3.6.2"
 # Bump when installer control-flow changes must apply mid-session after Update.
-NEODESK_SH_REVISION="20261125-release-installers-308"
+NEODESK_SH_REVISION="20261125-console-port-3375-309"
 # Where people ask for help: the NeoDesk Discord
 NEODESK_HELP_URL="https://discord.gg/nwERSawufr"
+# The console's port when the install's settings name none (the server's
+# default): 3375 since 3.6.0-rc.5 (DECISIONS A250), 5000 before
+CONSOLE_DEFAULT_PORT=3375
+CONSOLE_OLD_DEFAULT_PORT=5000
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # The repository's root when this script runs from a checkout (its install/
 # folder), else the script's own folder
@@ -401,7 +405,7 @@ BACKUP_DIR="${BACKUP_DIR:-/opt/neodesk-backups}"
 OLD_BACKUP_DIR="/opt/rustdesk-backups"
 
 # API: the server's own API on GO_API_PORT (21114). The web console inside the
-# server listens on CONSOLE_PORT (5000), and on CLIENT_API_PORT (21121) for
+# server listens on CONSOLE_PORT (3375), and on CLIENT_API_PORT (21121) for
 # RustDesk clients when API_ENABLED is true.
 GO_API_PORT="${GO_API_PORT:-21114}"
 CLIENT_API_PORT="${CLIENT_API_PORT:-21121}"
@@ -1403,8 +1407,8 @@ _hint_panel_privileged_port_mismatch() {
         return 0
     fi
 
-    if [ "$expected_port" = "80" ] && _tcp_port_is_listening 5000; then
-        print_info "  HTTP redirect is on :5000 instead of configured :80 — set PORT=80 and run Repair → Repair permissions"
+    if [ "$expected_port" = "80" ] && _tcp_port_is_listening "$CONSOLE_DEFAULT_PORT"; then
+        print_info "  HTTP redirect is on :$CONSOLE_DEFAULT_PORT instead of configured :80 — set PORT=80 and run Repair → Repair permissions"
     fi
 }
 
@@ -2164,7 +2168,7 @@ generate_reverse_proxy_config() {
                 print_error "LAN IP required when the proxy runs on another host"
                 return 1
             fi
-            print_warning "Panel will listen on 0.0.0.0:5000 — restrict firewall to your proxy host"
+            print_warning "Panel will listen on 0.0.0.0:$(resolve_panel_http_port) — restrict firewall to your proxy host"
         fi
     fi
     [ -z "$upstream_addr" ] && upstream_addr="$panel_bind"
@@ -2211,8 +2215,8 @@ HTTPS_ENABLED=false
 HTTP_REDIRECT_HTTPS=false
 TRUST_PROXY=Y
 TRUSTED_PROXIES=127.0.0.1/32,::1/128
-CONSOLE_PORT=5000
-PORT=5000
+CONSOLE_PORT=$(resolve_panel_http_port)
+PORT=$(resolve_panel_http_port)
 PANEL_PUBLIC_HOST=${panel_host}
 PANEL_PUBLIC_URL=https://${panel_host}
 PUBLIC_SERVER_ID=${server_id}
@@ -2270,7 +2274,7 @@ EOF
         cat >> "$out_dir/nginx.neodesk.conf.snippet" << EOF
 
     location ~ ^/ws/ {
-        proxy_pass http://${upstream_addr}:5000;
+        proxy_pass http://${upstream_addr}:$(resolve_panel_http_port);
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection \$connection_upgrade;
@@ -2286,7 +2290,7 @@ EOF
     }
 
     location / {
-        proxy_pass http://${upstream_addr}:5000;
+        proxy_pass http://${upstream_addr}:$(resolve_panel_http_port);
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -2317,7 +2321,7 @@ EOF
 EOF
         fi
         cat >> "$out_dir/caddy.Caddyfile.snippet" << EOF
-    reverse_proxy ${upstream_addr}:5000
+    reverse_proxy ${upstream_addr}:$(resolve_panel_http_port)
 
     encode gzip zstd
     header {
@@ -2352,12 +2356,12 @@ Client API (needed for branding, enrollment, short-code pairing):
   - 21121/tcp              Legacy compat proxy (existing fleets only)
 
 Through your reverse proxy (HTTPS :443):
-  - Panel + console WebSockets -> http://${upstream_addr}:5000
+  - Panel + console WebSockets -> http://${upstream_addr}:$(resolve_panel_http_port)
 $( [ "$route_wss" = "yes" ] && echo "  - RustDesk WSS /ws/id -> ${upstream_addr}:21118, /ws/relay -> ${upstream_addr}:21119" )
-$( [ "$panel_bind" = "0.0.0.0" ] && echo "  - Panel bind: 0.0.0.0:5000 (remote proxy) — restrict :5000 to proxy IP in firewall" )
+$( [ "$panel_bind" = "0.0.0.0" ] && echo "  - Panel bind: 0.0.0.0:$(resolve_panel_http_port) (remote proxy) — restrict :$(resolve_panel_http_port) to proxy IP in firewall" )
 
 Localhost only (never expose):
-  - 5000/tcp               Console panel
+  - $(resolve_panel_http_port)/tcp               Console panel
   - 5443/tcp               Console panel (native HTTPS mode)
 
 Example (ufw), recommended profile with a reverse proxy:
@@ -2382,7 +2386,7 @@ if [ -z "$PANEL_HOST" ]; then
     exit 1
 fi
 echo "=== Local panel (HTTP) ==="
-curl -sI "http://127.0.0.1:5000/" | head -5 || true
+curl -sI "http://127.0.0.1:$(resolve_panel_http_port)/" | head -5 || true
 echo ""
 echo "=== Public panel (HTTPS via proxy) ==="
 curl -sI "https://${PANEL_HOST}/" | head -5 || true
@@ -2465,11 +2469,12 @@ do_configure_reverse_proxy() {
 }
 
 # The console's HTTP port (the redirect when HTTPS is on): CONSOLE_PORT for
-# the server with its console, PORT for the Node.js console; default 5000.
+# the server with its console, PORT for the Node.js console; default
+# CONSOLE_DEFAULT_PORT (3375 since 3.6.0-rc.5, 5000 before).
 resolve_panel_http_port() {
     local port=""
     is_go_only_install && port=$(read_effective_console_setting CONSOLE_PORT "")
-    [ -n "$port" ] || port=$(read_effective_console_setting PORT 5000)
+    [ -n "$port" ] || port=$(read_effective_console_setting PORT "$CONSOLE_DEFAULT_PORT")
     echo "$port"
 }
 
@@ -2645,7 +2650,7 @@ detect_installation() {
     fi
     
     if [ "$CONSOLE_TYPE" = "go" ]; then
-        if [ "$HBBS_RUNNING" = true ] && [ "$(read_effective_console_setting CONSOLE_PORT 5000)" != "0" ]; then
+        if [ "$HBBS_RUNNING" = true ] && [ "$(read_effective_console_setting CONSOLE_PORT "$CONSOLE_DEFAULT_PORT")" != "0" ]; then
             CONSOLE_RUNNING=true
         fi
     elif systemctl is-active --quiet "$LEGACY_CONSOLE_SERVICE" 2>/dev/null; then
@@ -4883,7 +4888,7 @@ maybe_update_services() {
 console_health_url() {
     local env_file="$CONSOLE_PATH/.env" port https cert key
     port=$(read_effective_console_setting CONSOLE_PORT "")
-    [ -n "$port" ] || port=$(read_effective_console_setting PORT 5000)
+    [ -n "$port" ] || port=$(read_effective_console_setting PORT "$CONSOLE_DEFAULT_PORT")
     [ "$port" = "0" ] && return 0
     https=$(read_effective_console_setting HTTPS_ENABLED false | tr '[:upper:]' '[:lower:]')
     cert=$(env_file_value "$env_file" SSL_CERT_PATH)
@@ -4929,7 +4934,7 @@ verify_go_install() {
     _tcp_port_is_listening "$signal" || { print_error "Signal port $signal is not listening"; return 1; }
     _tcp_port_is_listening "$relay" || { print_error "Relay port $relay is not listening"; return 1; }
     if [ "$(read_effective_console_setting API_ENABLED true | tr '[:upper:]' '[:lower:]')" = "true" ] \
-        && [ "$(read_effective_console_setting CONSOLE_PORT 5000)" != "0" ]; then
+        && [ "$(read_effective_console_setting CONSOLE_PORT "$CONSOLE_DEFAULT_PORT")" != "0" ]; then
         local client_port
         client_port=$(read_effective_console_setting API_PORT "${CLIENT_API_PORT:-21121}")
         _tcp_port_is_listening "$client_port" || print_warning "The client API port $client_port is not listening"
@@ -4962,10 +4967,36 @@ refuse_node_era_install() {
 # update_go_install: the newest release of the update channel (or --binary,
 # --from-source, RELEASE_BASE_URL), the unit written again, a restart and a
 # check. A new binary that does not come up is replaced by the previous one.
+# console_port_named: the install's settings name the console's port
+# (CONSOLE_PORT or PORT in the unit or .env). One that names none follows
+# the server's default, CONSOLE_DEFAULT_PORT.
+console_port_named() {
+    local key
+    for key in CONSOLE_PORT PORT; do
+        [ -n "$(unit_env_value "$SERVER_UNIT" "$key" 2>/dev/null)" ] && return 0
+        [ -n "$(env_file_value "${CONSOLE_PATH:-}/.env" "$key" 2>/dev/null)" ] && return 0
+    done
+    return 1
+}
+
+# note_console_port_move NAMED: after an update of an install that named
+# no port (NAMED false), which ran on the old default: says that the
+# console moved to the new default and how to keep the old port, and
+# opens the new one in the firewall this installer manages.
+note_console_port_move() {
+    [ "$1" = false ] || return 0
+    [ "$(resolve_panel_http_port)" = "$CONSOLE_DEFAULT_PORT" ] || return 0
+    configure_firewall_rules || true
+    print_warning "The console now answers on port $CONSOLE_DEFAULT_PORT; it was $CONSOLE_OLD_DEFAULT_PORT. To keep $CONSOLE_OLD_DEFAULT_PORT set CONSOLE_PORT=$CONSOLE_OLD_DEFAULT_PORT in $CONSOLE_PATH/.env, then: sudo systemctl restart $SERVER_SERVICE"
+}
+
 update_go_install() {
-    local bin before after
+    local bin before after port_named=true
     bin=$(server_binary_path)
     before=$(sha256sum "$bin" 2>/dev/null | awk '{ print $1 }')
+    # Before .env is merged: an install that names no port moves to the
+    # new default port (note_console_port_move)
+    console_port_named || port_named=false
     print_info "Creating backup before update..."
     do_backup_silent
     # The server's updater reads the channel from .env
@@ -5026,6 +5057,7 @@ update_go_install() {
         print_success "Updated to $(timeout 10 "$bin" -version 2>/dev/null)"
     fi
     install_manager_command
+    note_console_port_move "$port_named"
 }
 
 # Shows the admin's first password, once: only when this run made the
@@ -5482,7 +5514,7 @@ do_repair() {
         $'Repair database\tAdd missing columns / run migrations'
         $'Repair services\tRegenerate systemd service units'
         $'Repair permissions\tFix file ownership and permissions'
-        $'Repair HTTPS / TLS\tFix LE certs, signal port :5000 conflict'
+        $'Repair HTTPS / TLS\tFix LE certs, a signal port that takes the console\'s'
         $'Full repair\tRun all repair steps above'
         $'Back\tReturn to the main menu'
     )
@@ -6535,7 +6567,7 @@ do_diagnostics() {
         "21116:TCP:neodesk-serv|neodesk-server|hbbs:ID Server (TCP)"
         "21116:UDP:neodesk-serv|neodesk-server|hbbs:ID Server (UDP)"
         "21117:TCP:neodesk-serv|neodesk-server|hbbr:Relay Server"
-        "5000:TCP:node|MainThread:Web Console"
+        "$(resolve_panel_http_port):TCP:neodesk-serv|neodesk-server|node|MainThread:Web Console"
     )
     
     for entry in "${port_defs[@]}"; do
@@ -6587,7 +6619,7 @@ do_diagnostics() {
     
     local fw_type="none"
     local missing_rules=0
-    local required_ports="${GO_API_PORT:-21114} ${CLIENT_API_PORT:-21121} 21115 21116 21117 5000"
+    local required_ports="${GO_API_PORT:-21114} ${CLIENT_API_PORT:-21121} 21115 21116 21117 $(resolve_panel_http_port)"
     
     if ufw_active; then
         fw_type="ufw"
@@ -6682,8 +6714,8 @@ do_diagnostics() {
         fi
     fi
     
-    printf "  Web Console (5000):    "
-    if curl -sfo /dev/null --connect-timeout 3 "http://127.0.0.1:5000/health" 2>/dev/null; then
+    printf "  Web Console (%s):    " "$(resolve_panel_http_port)"
+    if curl -sfo /dev/null --connect-timeout 3 "http://127.0.0.1:$(resolve_panel_http_port)/health" 2>/dev/null; then
         echo -e "${GREEN}OK${NC}"
     else
         echo -e "${RED}UNREACHABLE${NC}"
@@ -7110,8 +7142,8 @@ run_protocol_tests() {
         _test_ok "Go server service is active"
     else
         _test_fail "Go server service is NOT active (journalctl -u neodesk-server)"
-        if journalctl -u neodesk-server --no-pager -n 40 2>/dev/null | grep -q 'listen tcp :5000'; then
-            echo -e "      ${DIM}Hint: Go tried signal on :5000 — panel PORT in .env leaked; run Repair → Repair HTTPS/TLS${NC}"
+        if journalctl -u neodesk-server --no-pager -n 40 2>/dev/null | grep -q "listen tcp :$(resolve_panel_http_port)"; then
+            echo -e "      ${DIM}Hint: Go tried signal on :$(resolve_panel_http_port) — panel PORT in .env leaked; run Repair → Repair HTTPS/TLS${NC}"
         fi
     fi
     if systemctl is-active --quiet "$(console_service_name)" 2>/dev/null; then
@@ -7124,8 +7156,8 @@ run_protocol_tests() {
     if systemctl is-active --quiet neodesk-server 2>/dev/null; then
         if verify_service_health "neodesk-server" "21116" 15 >/dev/null 2>&1; then
             _test_ok "Go server listening on signal port :21116"
-        elif journalctl -u neodesk-server --no-pager -n 40 2>/dev/null | grep -q 'listen tcp :5000'; then
-            _test_fail "Go server tried signal on :5000 (conflicts with panel redirect) — Repair → Repair HTTPS/TLS"
+        elif journalctl -u neodesk-server --no-pager -n 40 2>/dev/null | grep -q "listen tcp :$(resolve_panel_http_port)"; then
+            _test_fail "Go server tried signal on :$(resolve_panel_http_port) (conflicts with panel redirect) — Repair → Repair HTTPS/TLS"
         else
             _test_fail "Go server not listening on :21116 yet (journalctl -u neodesk-server)"
         fi
@@ -7230,7 +7262,7 @@ run_protocol_tests() {
     if [ "$(echo "$https_enabled" | tr '[:upper:]' '[:lower:]')" = "true" ] \
         && [ "$(echo "$http_redirect" | tr '[:upper:]' '[:lower:]')" = "true" ]; then
         local redirect_hdr _r_elapsed=0 redirect_probe_port="$http_port"
-        # Standard HTTPS on :443 always redirects from :80 — never probe stale :5000.
+        # Standard HTTPS on :443 always redirects from :80 — never probe the default port.
         if [ "$https_port" = "443" ]; then
             redirect_probe_port="80"
         fi

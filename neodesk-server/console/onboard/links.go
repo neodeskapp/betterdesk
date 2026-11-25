@@ -98,7 +98,7 @@ func (c Console) DeepLink(kind, code string) string {
 
 // FileHost is the console as a file name carries it: the host, then
 // _<port> when there is one, then _http for plain HTTP
-// (desk.example.com, desk.example.com_8443, desk.lan_5000_http). A host
+// (desk.example.com, desk.example.com_8443, desk.lan_3375_http). A host
 // name never has "_". An IPv6 address has no form there: "".
 func (c Console) FileHost() string {
 	if net.ParseIP(c.Host) != nil && strings.Contains(c.Host, ":") {

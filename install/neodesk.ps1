@@ -1504,9 +1504,7 @@ function Register-ServerTask {
 # The URL the web console answers /health on: HTTPS_PORT when HTTPS is on
 # and its certificate is there, else CONSOLE_PORT; $null when it is off.
 function Get-ConsoleHealthUrl {
-    $port = Get-ConsoleEnvValue -Key "CONSOLE_PORT"
-    if (-not $port) { $port = Get-ConsoleEnvValue -Key "PORT" }
-    if (-not $port) { $port = "5000" }
+    $port = Get-ConsoleHttpPort
     if ($port -eq "0") { return $null }
     $cert = Get-ConsoleEnvValue -Key "SSL_CERT_PATH"
     $key = Get-ConsoleEnvValue -Key "SSL_KEY_PATH"
@@ -1564,7 +1562,36 @@ function Stop-ServerService {
 # update channel (or -Binary, -FromSource, RELEASE_BASE_URL), the service
 # settings written again, a restart and a check. A new binary that does not
 # come up is replaced by the previous one.
+# The console's plain port: CONSOLE_PORT, else PORT (the old console's,
+# which upgrade-env copies), else the server's default.
+function Get-ConsoleHttpPort {
+    $port = Get-ConsoleEnvValue -Key "CONSOLE_PORT"
+    if (-not $port) { $port = Get-ConsoleEnvValue -Key "PORT" }
+    # The server's default: 3375 since 3.6.0-rc.5 (DECISIONS A250), 5000 before
+    if (-not $port) { $port = "3375" }
+    return "$port"
+}
+
+# True when .env names the console's port (CONSOLE_PORT or PORT). An
+# install that names none follows the server's default.
+function Test-ConsolePortNamed {
+    return [bool]((Get-ConsoleEnvValue -Key "CONSOLE_PORT") -or (Get-ConsoleEnvValue -Key "PORT"))
+}
+
+# After the update of an install that named no port (-Named $false), which
+# ran on the old default: says the console moved and how to keep the old
+# port, and opens the new one in the firewall.
+function Show-ConsolePortMove {
+    param([bool]$Named)
+    if ($Named -or (Get-ConsoleHttpPort) -ne "3375") { return }
+    try { Configure-Firewall } catch { }
+    Print-Warning "The console now answers on port 3375; it was 5000. To keep 5000 set CONSOLE_PORT=5000 in $(Join-Path $script:CONSOLE_PATH '.env'), then: Restart-Service $($script:SERVER_SERVICE)"
+}
+
 function Update-GoInstall {
+    # Before .env is merged: an install that names no port moves to the new
+    # default port (Show-ConsolePortMove)
+    $portNamed = Test-ConsolePortNamed
     $serverExe = Get-ServerBinaryPath
     $before = if (Test-Path $serverExe) { (Get-FileHash $serverExe -Algorithm SHA256).Hash } else { "" }
     Print-Info "Creating backup before update..."
@@ -1624,6 +1651,7 @@ function Update-GoInstall {
     Install-ManagerScript
     Install-CommandLine
     Print-Success "neodesk-server: $(& $serverExe -version 2>$null | Select-Object -First 1)"
+    Show-ConsolePortMove -Named $portNamed
     return $true
 }
 
@@ -3406,7 +3434,7 @@ function Do-Validate {
         @{Port=21115; Desc="NAT Test"; Expected="hbbs"},
         @{Port=21116; Desc="ID Server"; Expected="hbbs"},
         @{Port=21117; Desc="Relay"; Expected="hbbr"},
-        @{Port=5000;  Desc="Web Console"; Expected=$consoleProcess}
+        @{Port=[int](Get-ConsoleHttpPort); Desc="Web Console"; Expected=$consoleProcess}
     )
     foreach ($p in $ports) {
         $status = Check-PortStatus -Port $p.Port -Protocol "TCP" -ExpectedService $p.Expected
@@ -3432,7 +3460,7 @@ function Do-Validate {
     $firewallProfile = Get-NetFirewallProfile -ErrorAction SilentlyContinue
     $activeProfiles = $firewallProfile | Where-Object { $_.Enabled -eq $true }
     if ($activeProfiles) {
-        # Ports that must be reachable for clients. The panel (5000/5443) is deliberately
+        # Ports that must be reachable for clients. The panel (3375/5443) is deliberately
         # absent: it is a local port and exposing it to WAN defeats the reverse-proxy setup.
         # See https://neode.sk/docs/operations/ports.
         $fwPorts = @(21116, 21117, [int]$script:GO_API_PORT)
@@ -3614,7 +3642,7 @@ function Get-FirewallPorts {
     }
     if ((Get-ConsoleEnvValue -Key "TRUST_PROXY") -match '^(?i)(y|yes|1|true|on)$') { return $ports }
     $http = Get-ConsoleEnvValue -Key "CONSOLE_PORT"
-    if (-not $http) { $http = "5000" }
+    if (-not $http) { $http = "3375" }
     if ($http -ne "0") { $ports += @{Port = [int]$http; Proto = "TCP"; Name = "NeoDesk web console"} }
     if ((Get-ConsoleEnvValue -Key "HTTPS_ENABLED") -eq "true") {
         $https = Get-ConsoleEnvValue -Key "HTTPS_PORT"
@@ -3798,7 +3826,7 @@ conn.close()
         @{Port=21116; Proto="TCP"; Expected="neodesk-server"; Desc="ID Server (TCP)"},
         @{Port=21116; Proto="UDP"; Expected="neodesk-server"; Desc="ID Server (UDP)"},
         @{Port=21117; Proto="TCP"; Expected="neodesk-server"; Desc="Relay Server"},
-        @{Port=5000;  Proto="TCP"; Expected=$consoleProcess; Desc="Web Console"}
+        @{Port=[int](Get-ConsoleHttpPort); Proto="TCP"; Expected=$consoleProcess; Desc="Web Console"}
     )
     
     $portIssues = 0
@@ -3826,7 +3854,7 @@ conn.close()
         Write-Host ""
         Print-Warning "$portIssues port conflict(s) detected!"
         Write-Host "  Tip: Stop conflicting processes or change ports in configuration" -ForegroundColor Yellow
-        Write-Host "  Common fix: Ensure no other app uses ports 21115-21117, 5000, $($script:GO_API_PORT), $($script:CLIENT_API_PORT)" -ForegroundColor Yellow
+        Write-Host "  Common fix: Ensure no other app uses ports 21115-21117, $(Get-ConsoleHttpPort), $($script:GO_API_PORT), $($script:CLIENT_API_PORT)" -ForegroundColor Yellow
     }
     
     # --- Firewall diagnostics ---
@@ -3853,13 +3881,13 @@ conn.close()
         Write-Host "UNREACHABLE" -ForegroundColor Red
     }
     
-    $consoleUrl = "http://127.0.0.1:5000/health"
+    $consoleUrl = "http://127.0.0.1:$(Get-ConsoleHttpPort)/health"
     try {
         $response = Invoke-WebRequest -Uri $consoleUrl -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop
-        Write-Host "  Web Console (5000):   " -NoNewline
+        Write-Host "  Web Console ($(Get-ConsoleHttpPort)):   " -NoNewline
         Write-Host "OK (HTTP $($response.StatusCode))" -ForegroundColor Green
     } catch {
-        Write-Host "  Web Console (5000):   " -NoNewline
+        Write-Host "  Web Console ($(Get-ConsoleHttpPort)):   " -NoNewline
         Write-Host "UNREACHABLE" -ForegroundColor Red
     }
     
@@ -4885,7 +4913,7 @@ function Do-ToggleProtocol {
 
             Print-Success "Switched to HTTP mode"
             Write-Host ""
-            Print-Info "  Panel:         HTTP :5000"
+            Print-Info "  Panel:         HTTP :$(Get-ConsoleHttpPort)"
             Print-Info "  Signal:        TCP  :21116"
             Print-Info "  Relay:         TCP  :21117"
             Print-Info "  Go API:        HTTP :$($script:GO_API_PORT) (default)"

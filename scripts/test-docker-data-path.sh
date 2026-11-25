@@ -171,6 +171,11 @@ RELEASE_BASE_URL=http://127.0.0.1:8444 bash "$DIR/neodesk-docker.sh" update --di
 grep -q "^# the release's copy$" "$DIR/docker-compose.yml" || fail "the compose file is not the release's"
 cmp -s "$DIR/neodesk-docker.sh" "$REL/neodesk-docker.sh" || fail "the manager did not update itself from the release"
 grep -q '"GET /SHA256SUMS' "$WORK/release-server.log" || fail "the release's SHA256SUMS was not fetched"
+# $OLD_TAG's install named no host port and ran on the old default, 5000:
+# it moves to 3375 (A250), and the update says so
+grep -q 'The console now answers on port 3375; it was 5000' "$WORK/update.log"     || fail "the update does not say the console moved to 3375: $(tail -n 20 "$WORK/update.log")"
+curl -fs -o /dev/null --retry 30 --retry-delay 2 --retry-connrefused http://127.0.0.1:3375/health     || fail "the console does not answer on 3375 after the update"
+if curl -fs -o /dev/null --max-time 3 http://127.0.0.1:5000/health; then fail "something still answers on 5000 after the update"; fi
 [ "$(data_mount)" = /opt/neodesk/data ] || fail "after the update the data volume is mounted at $(data_mount)"
 if in_container 'test -e /opt/rustdesk || test -L /opt/rustdesk'; then fail "after the update the container has something at /opt/rustdesk"; fi
 [ "$(in_container 'cat /opt/neodesk/data/id_ed25519.pub')" = "$key" ] || fail "the update changed the server's key"

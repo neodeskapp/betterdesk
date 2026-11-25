@@ -22,7 +22,7 @@ func ResolvePort(configured, fallback int, label string, canBindLow func() bool,
 	}
 	if configured <= 1023 && !canBindLow() {
 		logf("WARNING: %s port %d requires root or CAP_NET_BIND_SERVICE; using %d instead", label, configured, fallback)
-		logf("  → Set HTTPS_PORT=5443 (or PORT=5000) in .env, use a reverse proxy on :443, or grant CAP_NET_BIND_SERVICE in the systemd unit")
+		logf("  → Set HTTPS_PORT=5443 (or CONSOLE_PORT=3375) in .env, use a reverse proxy on :443, or grant CAP_NET_BIND_SERVICE in the systemd unit")
 		return fallback
 	}
 	return configured

@@ -444,7 +444,7 @@ func (s *Server) handleOIDCCallback(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect to Node.js session handler with ONLY the auth code.
 	// Use an absolute panel URL when configured so Docker / split-port
-	// deployments reach the console (port 5000), not the Go API port.
+	// deployments reach the console (port 3375), not the Go API port.
 	panelBase := resolvePanelBaseURL(cfg)
 	callbackURL := auth.BuildOIDCSessionURL(panelBase, authCode)
 	if panelBase == "" {

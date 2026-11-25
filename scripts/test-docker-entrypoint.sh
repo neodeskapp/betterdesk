@@ -102,7 +102,7 @@ test_compose_reads_env_file() (
         grep -A2 -E '^[[:space:]]+env_file:' "$f" | grep -qE 'required: false' || fail "$(basename "$f") needs a .env to start"
     done
     for f in install/docker-compose.quick.single.yml install/docker-compose.single.yml; do
-        grep -qF '"${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_PORT:-5000}:5000"' "$SCRIPT_ROOT/$f" || fail "$f fixes the console's bind address"
+        grep -qF '"${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_PORT:-3375}:3375"' "$SCRIPT_ROOT/$f" || fail "$f fixes the console's bind address"
     done
 )
 
@@ -119,7 +119,7 @@ for a in "$@"; do url="$a"; done
 grep -qxF "$url" "$(dirname "$0")/up"
 STUB
     chmod +x "$dir/curl"
-    printf '%s\n' https://127.0.0.1:21121/api/health http://127.0.0.1:5000/health > "$dir/up"
+    printf '%s\n' https://127.0.0.1:21121/api/health http://127.0.0.1:3375/health > "$dir/up"
     PATH="$dir:$PATH" TLS_API=Y sh "$SCRIPT_ROOT/docker/healthcheck.sh" || fail "unhealthy with TLS_API=Y and the API on HTTPS"
     printf '%s\n' http://127.0.0.1:21121/api/health https://127.0.0.1:5443/health > "$dir/up"
     PATH="$dir:$PATH" HTTPS_ENABLED=true sh "$SCRIPT_ROOT/docker/healthcheck.sh" || fail "unhealthy with HTTPS_ENABLED=true and the console on 5443"

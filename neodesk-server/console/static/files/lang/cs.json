@@ -893,7 +893,7 @@
     "oidc_redirect_url": "Adresa URL přesměrování (callback)",
     "oidc_redirect_url_hint": "Musí přesně odpovídat IdP. Cesta: /api/auth/oidc/callback (nebo /api/oidc/callback). Preferujte veřejnou URL panelu — konzole proxuje callback na Go API. Fungují i porty API (:21114 / :21121).",
     "oidc_panel_url": "URL panelu",
-    "oidc_panel_url_hint": "URL, kterou operátoři používají pro otevření webové konzole (port 5000 nebo hostname reverse proxy). Vyžadováno pro SSO přihlášení, když OIDC callback běží na Go API portu.",
+    "oidc_panel_url_hint": "URL, kterou operátoři používají pro otevření webové konzole (port 3375 nebo hostname reverse proxy). Vyžadováno pro SSO přihlášení, když OIDC callback běží na Go API portu.",
     "oidc_scopes": "Rozsahy",
     "oidc_use_pkce": "Použít PKCE (doporučeno)",
     "oidc_auto_discovery": "Automatické zjištění",

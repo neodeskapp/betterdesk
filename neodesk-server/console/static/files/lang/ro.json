@@ -899,7 +899,7 @@
     "oidc_redirect_url": "Redirecționare URL (apel invers)",
     "oidc_redirect_url_hint": "Trebuie să corespundă exact cu IdP. Cale: /api/auth/oidc/callback (sau /api/oidc/callback). Preferă URL-ul public al panoului — consola proxiază callback-ul către API Go. Porturile API (:21114 / :21121) funcționează și ele.",
     "oidc_panel_url": "URL panou",
-    "oidc_panel_url_hint": "URL folosit de operatori pentru a deschide consola web (port 5000 sau nume gazdă reverse proxy). Necesar pentru autentificarea SSO când callback-ul OIDC rulează pe portul API Go.",
+    "oidc_panel_url_hint": "URL folosit de operatori pentru a deschide consola web (port 3375 sau nume gazdă reverse proxy). Necesar pentru autentificarea SSO când callback-ul OIDC rulează pe portul API Go.",
     "oidc_scopes": "Domenii de aplicare",
     "oidc_use_pkce": "Utilizați PKCE (recomandat)",
     "oidc_auto_discovery": "Descoperire automată",

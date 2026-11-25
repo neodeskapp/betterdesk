@@ -893,7 +893,7 @@
     "oidc_redirect_url": "URL リダイレクト (コールバック)",
     "oidc_redirect_url_hint": "IdP の設定と完全一致が必要です。パスは /api/auth/oidc/callback（または /api/oidc/callback）。パネルの公開 URL を推奨 — コンソールがコールバックを Go API に転送します。API ポート（:21114 / :21121）も利用できます。",
     "oidc_panel_url": "パネル URL",
-    "oidc_panel_url_hint": "オペレーターが Web コンソールを開く URL（ポート 5000 またはリバースプロキシのホスト名）。OIDC コールバックが Go API ポートで動作する場合の SSO ログインに必要です。",
+    "oidc_panel_url_hint": "オペレーターが Web コンソールを開く URL（ポート 3375 またはリバースプロキシのホスト名）。OIDC コールバックが Go API ポートで動作する場合の SSO ログインに必要です。",
     "oidc_scopes": "スコープ",
     "oidc_use_pkce": "PKCE を使用します (推奨)",
     "oidc_auto_discovery": "自動検出",

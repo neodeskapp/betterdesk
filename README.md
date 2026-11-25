@@ -100,7 +100,7 @@ docker compose up -d
 docker compose exec neodesk neodesk-show-admin-credentials
 ```
 
-The console is then at `http://your-server:5000`, which is plain HTTP. See
+The console is then at `http://your-server:3375`, which is plain HTTP. See
 [Install with Docker](https://neode.sk/docs/getting-started/docker).
 
 For HTTPS with a certificate that renews by itself, give a DNS name that
@@ -156,7 +156,7 @@ it, as every new install starts in the Managed enrollment mode. See
 
 | Port | Used for |
 |------|----------|
-| 5000 | Web console (HTTP) |
+| 3375 | Web console (HTTP; 5000 up to 3.6.0-rc.4) |
 | 21115 | NAT type test |
 | 21116, TCP and UDP | ID server |
 | 21117 | Relay server |
@@ -165,7 +165,7 @@ it, as every new install starts in the Managed enrollment mode. See
 | 21122 | CDAP gateway for device agents |
 
 Open 21115 to 21117 and 21121 to the networks your devices connect from, and
-21118, 21119 and 21122 only for clients and agents that use them. Keep 5000
+21118, 21119 and 21122 only for clients and agents that use them. Keep 3375
 behind a reverse proxy with TLS if the console is reachable from the internet.
 [Ports and firewall](https://neode.sk/docs/operations/ports) and
 [Reverse proxy and TLS](https://neode.sk/docs/operations/reverse-proxy-tls)

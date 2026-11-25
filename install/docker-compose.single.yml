@@ -26,8 +26,8 @@
 #   Then: docker compose -f install/docker-compose.single.yml --profile postgres up -d --build
 #
 # Access:
-#   Web Console: http://localhost:5000
-#   Client API:  http://localhost:21121  (not panel :5000)
+#   Web Console: http://localhost:3375
+#   Client API:  http://localhost:21121  (not the console, :3375)
 #   Admin password: docker compose -f install/docker-compose.single.yml exec neodesk neodesk-show-admin-credentials
 #   (random unless ADMIN_PASSWORD is set before the first start)
 # =============================================================================
@@ -48,7 +48,7 @@ services:
     container_name: neodesk
     hostname: neodesk
     ports:
-      - "${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_PORT:-5000}:5000"  # Web console
+      - "${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_PORT:-3375}:3375"  # Web console
       - "${NEODESK_CONSOLE_BIND:-0.0.0.0}:${NEODESK_CONSOLE_HTTPS_PORT:-5443}:5443"  # Web console with HTTPS_ENABLED=true
       - "21115:21115"           # NAT type test
       - "21116:21116/tcp"       # Signal TCP
@@ -70,7 +70,7 @@ services:
       - NODE_ENV=production
       # Set TRUST_PROXY=1 when the panel is behind one reverse proxy.
       - TRUST_PROXY=${TRUST_PROXY:-}
-      - CONSOLE_PORT=5000
+      - CONSOLE_PORT=3375
       - HOST=0.0.0.0
       - API_HOST=0.0.0.0
       - API_ENABLED=false

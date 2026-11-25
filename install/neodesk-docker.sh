@@ -23,6 +23,10 @@ set -Eeuo pipefail
 VERSION="3.6.2"
 # Where people ask for help: the NeoDesk Discord
 NEODESK_HELP_URL="https://discord.gg/nwERSawufr"
+# The console's host port when .env names none: 3375 since 3.6.0-rc.5
+# (DECISIONS A250), 5000 before
+CONSOLE_DEFAULT_PORT=3375
+CONSOLE_OLD_DEFAULT_PORT=5000
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd || pwd)"
 
 # Settings: flags win over these variables, which win over the defaults
@@ -203,7 +207,7 @@ Options:
                          or DNS name (RELAY_SERVERS); found by itself when empty
   --relay-mode MODE      How to find it: auto, public or local (RELAY_MODE)
   --console-port PORT    Host port of the web console (NEODESK_CONSOLE_PORT,
-                         5000)
+                         3375; 5000 up to 3.6.0-rc.4)
   --postgres             A new install on PostgreSQL instead of SQLite
                          (NEODESK_POSTGRES=true)
   --domain NAME          HTTPS for the console at this DNS name (NEODESK_DOMAIN):
@@ -458,7 +462,7 @@ image_ref() { printf '%s:%s\n' "$NEODESK_IMAGE" "$(image_tag)"; }
 console_port() {
     local port
     port="${CONSOLE_PORT_SET:-$(env_get NEODESK_CONSOLE_PORT)}"
-    printf '%s\n' "${port:-5000}"
+    printf '%s\n' "${port:-$CONSOLE_DEFAULT_PORT}"
 }
 
 # The host port of the console's HTTPS, which the compose file publishes
@@ -606,6 +610,16 @@ fetch_compose_file() {
         esac
     fi
     grep -q 'ghcr.io/neodeskapp/neodesk' "$1" || die "The downloaded compose file is not NeoDesk's ($from)"
+}
+
+# note_console_port_move MOVED: after the update of an install that ran on
+# the old default port (MOVED true): the console moved, and how to keep the
+# old port
+note_console_port_move() {
+    [ "$1" = true ] || return 0
+    [ "$(console_port)" = "$CONSOLE_DEFAULT_PORT" ] || return 0
+    say ""
+    warn "The console now answers on port $CONSOLE_DEFAULT_PORT; it was $CONSOLE_OLD_DEFAULT_PORT. To keep $CONSOLE_OLD_DEFAULT_PORT set NEODESK_CONSOLE_PORT=$CONSOLE_OLD_DEFAULT_PORT in $(env_file), then: sudo bash neodesk-docker.sh update"
 }
 
 # update_manager_copy: run as the install's own copy
@@ -1314,6 +1328,13 @@ do_update() {
     # The settings, the compose file and the image from before the update:
     # the backup takes these, and the way back puts them back
     before=$(keep_settings)
+    # An install on the old default port (its compose file published
+    # 5000, its .env names no host port) moves to the new one
+    local moved_port=false
+    if [ -z "${CONSOLE_PORT_SET:-}" ] && [ -z "$(env_get NEODESK_CONSOLE_PORT)" ] \
+        && grep -qF "NEODESK_CONSOLE_PORT:-${CONSOLE_OLD_DEFAULT_PORT}}" "$(compose_file)" 2>/dev/null; then
+        moved_port=true
+    fi
     old_image=$(container_image_id)
     old_ref=$(docker container inspect -f '{{.Config.Image}}' "$CONTAINER" 2>/dev/null || true)
     write_settings
@@ -1344,6 +1365,7 @@ do_update() {
         [ "$TRAEFIK_ACTION" != on ] || wait_certificate
         update_manager_copy
         print_summary
+        note_console_port_move "$moved_port"
         return 0
     fi
 

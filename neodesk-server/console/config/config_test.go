@@ -41,7 +41,7 @@ func TestLoadDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Port != 5000 || cfg.Host != "127.0.0.1" || cfg.TrustProxy.Enabled() || cfg.DebugRouting {
+	if cfg.Port != 3375 || cfg.Host != "127.0.0.1" || cfg.TrustProxy.Enabled() || cfg.DebugRouting {
 		t.Errorf("defaults = %+v", cfg)
 	}
 	if cfg.NodeEnv != "development" || cfg.Production || cfg.Docker || cfg.HTTPS || cfg.AllowSelfSignedCerts {
@@ -306,20 +306,24 @@ func TestWebUIDirOnlyFromTheVariable(t *testing.T) {
 	}
 }
 
-// CONSOLE_PORT, else 5000; 0 turns the console off (DECISIONS A27). PORT
-// is the old console's and the signal server's, never the console's.
+// CONSOLE_PORT, else 3375 ("DESK" on a phone's keys, since 3.6.0-rc.5;
+// 5000 before, which Synology DSM, macOS AirPlay and Flask take; DECISIONS
+// A250); 0 turns the console off (DECISIONS A27). A port set wins, 5000
+// too. PORT is the old console's and the signal server's, never the
+// console's.
 func TestConsolePort(t *testing.T) {
 	for _, c := range []struct {
 		env  map[string]string
 		want int
 	}{
-		{nil, 5000},
-		{map[string]string{"CONSOLE_PORT": ""}, 5000},
-		{map[string]string{"CONSOLE_PORT": "  "}, 5000},
+		{nil, 3375},
+		{map[string]string{"CONSOLE_PORT": ""}, 3375},
+		{map[string]string{"CONSOLE_PORT": "  "}, 3375},
+		{map[string]string{"CONSOLE_PORT": "5000"}, 5000},
 		{map[string]string{"CONSOLE_PORT": "0"}, 0},
 		{map[string]string{"CONSOLE_PORT": " 5001 "}, 5001},
 		{map[string]string{"CONSOLE_PORT": "65535"}, 65535},
-		{map[string]string{"PORT": "6000"}, 5000},
+		{map[string]string{"PORT": "6000"}, 3375},
 		{map[string]string{"PORT": "6000", "CONSOLE_PORT": "0"}, 0},
 	} {
 		cfg, err := load(env(c.env), machine())

@@ -95,8 +95,8 @@ RESCUE_ACTION="rescue"
 CHECK_CAPABILITIES=false
 MANAGED_CONFIG_CHANGES=()
 
-# Docker ports: web console 5000 and 5443, API 21121, CDAP 21122, signal and relay
-DOCKER_PORTS="21115 21116 21117 21118 21119 21121 21122 5000 5443"
+# Docker ports: web console 3375 and 5443, API 21121, CDAP 21122, signal and relay
+DOCKER_PORTS="21115 21116 21117 21118 21119 21121 21122 3375 5443"
 # With --domain: Traefik's HTTP (certificate, redirect) and HTTPS instead
 # of the console's own ports, which then answer on this host only
 DOCKER_PORTS_TRAEFIK="21115 21116 21117 21118 21119 21121 21122 80 443"

@@ -158,7 +158,7 @@ export PATH="$WORK/stub:$PATH"
 # console_address: the console's address on this machine, HTTPS or HTTP
 console_address() {
     local a
-    for a in https://127.0.0.1:5443 http://127.0.0.1:5000; do
+    for a in https://127.0.0.1:5443 http://127.0.0.1:3375; do
         if curl -ksf -o /dev/null --max-time 5 "$a/health"; then
             printf '%s\n' "$a"
             return 0
@@ -219,6 +219,11 @@ for f in /install.sh /releases/download/v9.9.9/install.sh /releases/download/v9.
     grep -qxF "$f" "$WORK/served" || fail "the install did not fetch $f: $(tr '\n' ' ' < "$WORK/served")"
 done
 [ ! -e /opt/neodesk/source ] || fail "the install cloned the repository"
+# A fresh install's console is on 3375 (A250), and nothing on 5000
+curl -ksf -o /dev/null --retry 30 --retry-delay 2 --retry-connrefused http://127.0.0.1:3375/health \
+    || curl -ksf -o /dev/null https://127.0.0.1:5443/health || fail "a fresh install's console answers on neither 3375 nor 5443"
+if curl -ksf -o /dev/null --max-time 3 http://127.0.0.1:5000/health; then fail "a fresh install answers on 5000"; fi
+grep -qx 'CONSOLE_PORT=3375' /opt/NeoDeskConsole/.env || fail "a fresh install's .env does not name 3375: $(grep PORT /opt/NeoDeskConsole/.env 2>&1)"
 
 echo "== the command line for every user"
 # The server folder stays closed; the command line is outside it
@@ -234,7 +239,7 @@ out=$(as_user neodesk --update < /dev/null 2>&1) || code=$?
 [ "$code" != 0 ] || fail "neodesk --update as a normal user reported success: $out"
 case "$out" in *"sudo neodesk --update"*) ;; *) fail "neodesk --update as a normal user does not say to run it with sudo: $out" ;; esac
 # An API token, made as the console makes them, signed in with a password
-console=$(console_address) || fail "the console answers neither on https://127.0.0.1:5443 nor on http://127.0.0.1:5000"
+console=$(console_address) || fail "the console answers neither on https://127.0.0.1:5443 nor on http://127.0.0.1:3375"
 make_token "$console" > "$WORK/token" || fail "no API token"
 install -o "$TEST_USER" -m 600 "$WORK/token" "/home/$TEST_USER/token"
 code=0

@@ -899,7 +899,7 @@
     "oidc_redirect_url": "Omdirigere URL (tilbakeringing)",
     "oidc_redirect_url_hint": "Must match your IdP exactly. Path must be /api/auth/oidc/callback (or /api/oidc/callback). Prefer your panel public URL — the console proxies the callback to the Go API. Direct API ports (:21114 / :21121) also work.",
     "oidc_panel_url": "Panel-URL",
-    "oidc_panel_url_hint": "URL operatører bruker for å åpne webkonsollen (port 5000 eller reverse-proxy-vertsnavn). Påkrevd for SSO-innlogging når OIDC-callback kjører på Go API-porten.",
+    "oidc_panel_url_hint": "URL operatører bruker for å åpne webkonsollen (port 3375 eller reverse-proxy-vertsnavn). Påkrevd for SSO-innlogging når OIDC-callback kjører på Go API-porten.",
     "oidc_scopes": "Omfang",
     "oidc_use_pkce": "Bruk PKCE (anbefalt)",
     "oidc_auto_discovery": "Automatisk oppdagelse",

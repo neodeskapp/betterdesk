@@ -899,7 +899,7 @@
     "oidc_redirect_url": "Omdirigera URL (återuppringning)",
     "oidc_redirect_url_hint": "Måste matcha IdP exakt. Sökväg: /api/auth/oidc/callback (eller /api/oidc/callback). Föredra panelens publika URL — konsolen proxar callback till Go-API. API-portar (:21114 / :21121) fungerar också.",
     "oidc_panel_url": "Panel-URL",
-    "oidc_panel_url_hint": "URL som operatörer använder för att öppna webbkonsolen (port 5000 eller reverse-proxy-värdnamn). Krävs för SSO-inloggning när OIDC-callback körs på Go API-porten.",
+    "oidc_panel_url_hint": "URL som operatörer använder för att öppna webbkonsolen (port 3375 eller reverse-proxy-värdnamn). Krävs för SSO-inloggning när OIDC-callback körs på Go API-porten.",
     "oidc_scopes": "Omfattningar",
     "oidc_use_pkce": "Använd PKCE (rekommenderas)",
     "oidc_auto_discovery": "Automatisk upptäckt",
