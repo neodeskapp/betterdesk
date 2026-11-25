@@ -194,3 +194,19 @@ test.describe('sidebar', () => {
 		expect(cut).toEqual([]);
 	});
 });
+
+test.describe('top bar', () => {
+	test.use({ viewport: { width: 1440, height: 900 }, hasTouch: false });
+
+	test('the search field shows its whole label on a wide screen', async ({ page }) => {
+		await page.goto(`${UI}/devices`);
+		const label = page.locator('.search-trigger .search-label');
+		await expect(label).toBeVisible();
+		const cut = await label.evaluate((el) => {
+			const range = document.createRange();
+			range.selectNodeContents(el);
+			return range.getBoundingClientRect().width > el.getBoundingClientRect().width + 1;
+		});
+		expect(cut).toBe(false);
+	});
+});

@@ -283,7 +283,7 @@
 	   button like the others */
 	.search-trigger {
 		display: inline-flex;
-		flex: 0 10 min(320px, 28vw);
+		flex: 0 10 min(380px, 30vw);
 		align-items: center;
 		min-width: var(--control-h);
 		margin-inline-end: var(--space-3);
