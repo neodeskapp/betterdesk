@@ -2869,7 +2869,8 @@
     "clipboard_send_failed": "無法將剪貼簿傳送到遠端電腦。",
     "session_title": "遠端工作階段：{name}",
     "sign_out_ends_sessions": "你開啟的遠端工作階段也會結束（{count}）。",
-    "send_windows_key": "Windows 鍵"
+    "send_windows_key": "Windows 鍵",
+    "cmd_as_ctrl": "常用快速鍵中將 Cmd 作為 Ctrl 傳送"
   },
   "branding": {
     "identity_title": "品牌標識",

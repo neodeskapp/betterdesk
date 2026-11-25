@@ -2847,7 +2847,8 @@
     "clipboard_send_failed": "Não foi possível enviar a área de transferência para o computador remoto.",
     "session_title": "Sessão remota: {name}",
     "sign_out_ends_sessions": "As suas sessões remotas abertas também terminam ({count}).",
-    "send_windows_key": "Tecla Windows"
+    "send_windows_key": "Tecla Windows",
+    "cmd_as_ctrl": "Enviar Cmd como Ctrl nos atalhos comuns"
   },
   "branding": {
     "identity_title": "Identidade da marca",

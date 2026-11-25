@@ -2853,7 +2853,8 @@
     "clipboard_send_failed": "Không thể gửi bộ nhớ tạm tới máy tính từ xa.",
     "session_title": "Phiên từ xa: {name}",
     "sign_out_ends_sessions": "Các phiên từ xa đang mở của bạn cũng kết thúc ({count}).",
-    "send_windows_key": "Phím Windows"
+    "send_windows_key": "Phím Windows",
+    "cmd_as_ctrl": "Gửi Cmd thành Ctrl cho các phím tắt thông dụng"
   },
   "branding": {
     "identity_title": "Nhận diện thương hiệu",

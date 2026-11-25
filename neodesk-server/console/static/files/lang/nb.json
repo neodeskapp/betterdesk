@@ -2853,7 +2853,8 @@
     "clipboard_send_failed": "Utklippstavlen kunne ikke sendes til den eksterne datamaskinen.",
     "session_title": "Ekstern økt: {name}",
     "sign_out_ends_sessions": "De åpne eksterne øktene dine avsluttes også ({count}).",
-    "send_windows_key": "Windows-tast"
+    "send_windows_key": "Windows-tast",
+    "cmd_as_ctrl": "Send Cmd som Ctrl for vanlige snarveier"
   },
   "branding": {
     "identity_title": "Merkeidentitet",

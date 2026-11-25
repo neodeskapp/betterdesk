@@ -2853,7 +2853,8 @@
     "clipboard_send_failed": "क्लिपबोर्ड रिमोट कंप्यूटर पर नहीं भेजा जा सका।",
     "session_title": "रिमोट सत्र: {name}",
     "sign_out_ends_sessions": "आपके खुले रिमोट सत्र भी खत्म होंगे ({count})।",
-    "send_windows_key": "Windows कुंजी"
+    "send_windows_key": "Windows कुंजी",
+    "cmd_as_ctrl": "आम शॉर्टकट में Cmd को Ctrl के रूप में भेजें"
   },
   "branding": {
     "identity_title": "ब्रांड पहचान",

@@ -2847,7 +2847,8 @@
     "clipboard_send_failed": "无法将剪贴板发送到远程计算机。",
     "session_title": "远程会话：{name}",
     "sign_out_ends_sessions": "你打开的远程会话也会结束（{count}）。",
-    "send_windows_key": "Windows 键"
+    "send_windows_key": "Windows 键",
+    "cmd_as_ctrl": "常用快捷键中将 Cmd 作为 Ctrl 发送"
   },
   "branding": {
     "identity_title": "品牌标识",

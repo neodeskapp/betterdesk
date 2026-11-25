@@ -2847,7 +2847,8 @@
     "clipboard_send_failed": "클립보드를 원격 컴퓨터로 보내지 못했습니다.",
     "session_title": "원격 세션: {name}",
     "sign_out_ends_sessions": "열려 있는 원격 세션도 종료됩니다({count}).",
-    "send_windows_key": "Windows 키"
+    "send_windows_key": "Windows 키",
+    "cmd_as_ctrl": "자주 쓰는 단축키에서 Cmd를 Ctrl로 보내기"
   },
   "branding": {
     "identity_title": "브랜드 아이덴티티",

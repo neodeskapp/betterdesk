@@ -2873,7 +2873,8 @@
         "clipboard_send_failed": "The clipboard could not be sent to the remote computer.",
         "session_title": "Remote session: {name}",
         "sign_out_ends_sessions": "Your open remote sessions end too ({count}).",
-        "send_windows_key": "Windows key"
+        "send_windows_key": "Windows key",
+        "cmd_as_ctrl": "Send Cmd as Ctrl for common shortcuts"
     },
     "remote_dashboard": {
         "title": "Remote Desktop Client",

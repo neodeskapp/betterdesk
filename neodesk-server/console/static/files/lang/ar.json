@@ -2854,7 +2854,8 @@
     "clipboard_send_failed": "تعذّر إرسال الحافظة إلى الكمبيوتر البعيد.",
     "session_title": "جلسة عن بُعد: {name}",
     "sign_out_ends_sessions": "تنتهي أيضًا جلساتك المفتوحة عن بُعد ({count}).",
-    "send_windows_key": "مفتاح Windows"
+    "send_windows_key": "مفتاح Windows",
+    "cmd_as_ctrl": "إرسال Cmd كـ Ctrl في الاختصارات الشائعة"
   },
   "branding": {
     "identity_title": "هوية العلامة التجارية",

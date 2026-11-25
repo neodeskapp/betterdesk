@@ -2847,7 +2847,8 @@
     "clipboard_send_failed": "Schránku se nepodařilo odeslat do vzdáleného počítače.",
     "session_title": "Vzdálená relace: {name}",
     "sign_out_ends_sessions": "Ukončí se i vaše otevřené vzdálené relace ({count}).",
-    "send_windows_key": "Klávesa Windows"
+    "send_windows_key": "Klávesa Windows",
+    "cmd_as_ctrl": "Posílat Cmd jako Ctrl u běžných zkratek"
   },
   "branding": {
     "identity_title": "Identita značky",

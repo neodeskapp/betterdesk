@@ -942,6 +942,8 @@ interface MockDeviceState {
 	/** Copies on the device: what Ctrl+C or Ctrl+X there puts on its clipboard (copy() sends any) */
 	copyText?: string;
 	copy?: (text: string, png?: Blob | null) => void;
+	/** The last key presses the device received (code, then +ctrl and +meta) */
+	keys?: string[];
 }
 
 function deviceState(): MockDeviceState {
@@ -1443,6 +1445,11 @@ export class MockRemoteSession implements RemoteClient {
 	/** Keys typed on a screen go to the terminal */
 	_typed(e: KeyboardEvent): void {
 		if (!this._inputAllowed()) return;
+		// What reached the device, for the end-to-end tests: the key with Ctrl and Cmd as they came
+		const dev = deviceState();
+		dev.keys = [...(dev.keys ?? []), e.code + (e.ctrlKey ? '+ctrl' : '') + (e.metaKey ? '+meta' : '')].slice(
+			-40
+		);
 		// F8 and F11 stay with the viewer
 		if (/^F\d+$/.test(e.key)) return;
 		// Paste and copy on the device, as a desktop would do them

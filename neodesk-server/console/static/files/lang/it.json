@@ -2847,7 +2847,8 @@
     "clipboard_send_failed": "Non è stato possibile inviare gli appunti al computer remoto.",
     "session_title": "Sessione remota: {name}",
     "sign_out_ends_sessions": "Terminano anche le tue sessioni remote aperte ({count}).",
-    "send_windows_key": "Tasto Windows"
+    "send_windows_key": "Tasto Windows",
+    "cmd_as_ctrl": "Invia Cmd come Ctrl per le scorciatoie comuni"
   },
   "branding": {
     "identity_title": "Identità del marchio",

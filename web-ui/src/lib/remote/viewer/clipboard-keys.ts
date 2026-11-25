@@ -9,8 +9,11 @@
  * - Ctrl+C or Ctrl+X goes to the remote as usual and arms the copy wait.
  * - Any key or click on the remote screen is a user gesture: content the
  *   remote copied that waits is written to this computer's clipboard then.
+ * - On a Mac, with a remote that isn't one, Cmd with C, V, X, A, Z, S or F
+ *   goes over as Ctrl (cmd-as-ctrl.ts), the paste above first.
  */
 import { PasteGate, isCopyKey, isPasteKey } from '../clipboard-bridge.svelte.ts';
+import { CmdAsCtrl, type KeyOut } from './cmd-as-ctrl.ts';
 import type { Viewer } from '../viewer.svelte.ts';
 
 /** How long the held keys wait for the clipboard to go out once the paste event came */
@@ -41,32 +44,35 @@ export function attachClipboardKeys(viewer: Viewer, opts: ClipboardKeysOptions):
 	const mac = isMacPlatform();
 	let replaying = false;
 	let target: HTMLCanvasElement | null = null;
+	const cmdAsCtrl = new CmdAsCtrl(() => mac && viewer.cmdAsCtrlOn());
 
-	// The held keys go to the screen that had them, as the screen's own handler would have got them
-	const gate = new PasteGate((e) => {
-		const screen = target?.isConnected ? target : null;
-		if (!screen) return;
+	/** Key events to the screen, as its own handler takes them */
+	const send = (screen: HTMLCanvasElement | null, keys: KeyOut[]) => {
+		if (!screen?.isConnected) return;
 		replaying = true;
 		try {
-			screen.dispatchEvent(
-				new KeyboardEvent(e.type, {
-					key: e.key,
-					code: e.code,
-					location: e.location,
-					repeat: e.repeat,
-					ctrlKey: e.ctrlKey,
-					shiftKey: e.shiftKey,
-					altKey: e.altKey,
-					metaKey: e.metaKey,
-					bubbles: true,
-					cancelable: true,
-					composed: true
-				})
-			);
+			for (const { type, ...init } of keys)
+				screen.dispatchEvent(
+					new KeyboardEvent(type, { ...init, bubbles: true, cancelable: true, composed: true })
+				);
 		} finally {
 			replaying = false;
 		}
+	};
+	const asIs = (e: KeyboardEvent): KeyOut => ({
+		type: e.type === 'keyup' ? 'keyup' : 'keydown',
+		key: e.key,
+		code: e.code,
+		location: e.location,
+		repeat: e.repeat,
+		ctrlKey: e.ctrlKey,
+		shiftKey: e.shiftKey,
+		altKey: e.altKey,
+		metaKey: e.metaKey
 	});
+
+	// The held keys go to the screen that had them, Cmd turned into Ctrl where it is for that
+	const gate = new PasteGate((e) => send(target, cmdAsCtrl.handle(e) ?? [asIs(e)]));
 
 	const onKey = (e: KeyboardEvent) => {
 		if (replaying) return;
@@ -76,18 +82,25 @@ export function attachClipboardKeys(viewer: Viewer, opts: ClipboardKeysOptions):
 			e.preventDefault();
 			return;
 		}
-		if (e.type !== 'keydown' || !opts.shown()) return;
+		if (!opts.shown()) return;
 		const screen = focusedScreen(document, opts.root());
 		if (!screen) return;
-		viewer.clipboard.gesture();
-		if (isPasteKey(e, mac) && !viewer.clipboardOff()) {
-			target = screen;
-			gate.hold(e);
-			// Not prevented: the browser fires its paste event with the clipboard
-			e.stopImmediatePropagation();
-			return;
+		if (e.type === 'keydown') {
+			viewer.clipboard.gesture();
+			if (isPasteKey(e, mac) && !viewer.clipboardOff()) {
+				target = screen;
+				gate.hold(e);
+				// Not prevented: the browser fires its paste event with the clipboard
+				e.stopImmediatePropagation();
+				return;
+			}
+			if (isCopyKey(e, mac)) viewer.clipboard.copyKey();
 		}
-		if (isCopyKey(e, mac)) viewer.clipboard.copyKey();
+		const keys = cmdAsCtrl.handle(e);
+		if (keys === null) return;
+		e.stopImmediatePropagation();
+		e.preventDefault();
+		send(screen, keys);
 	};
 
 	const onPaste = (e: ClipboardEvent) => {
@@ -114,6 +127,7 @@ export function attachClipboardKeys(viewer: Viewer, opts: ClipboardKeysOptions):
 	const onBlur = () => {
 		// The keys held for a paste go on: the remote must not keep Ctrl pressed
 		if (gate.held) gate.release();
+		send(focusedScreen(document, opts.root()) ?? target, cmdAsCtrl.reset());
 	};
 
 	window.addEventListener('keydown', onKey, true);

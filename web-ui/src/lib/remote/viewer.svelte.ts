@@ -2152,6 +2152,16 @@ export class Viewer {
 		await this.clipboard.readSilently();
 	}
 
+	/**
+	 * Cmd as Ctrl for common shortcuts (cmd-as-ctrl.ts): the active
+	 * session's remote isn't a Mac and the keyboard menu's switch is on
+	 */
+	cmdAsCtrlOn(): boolean {
+		const s = this.active;
+		if (!s || s.prefs.cmdAsCtrl === false) return false;
+		return !/mac|darwin|os x/i.test(s.platform);
+	}
+
 	/** Why the active session takes no clipboard now, '' when it does */
 	clipboardOff(): ClipboardOffReason {
 		const s = this.active;

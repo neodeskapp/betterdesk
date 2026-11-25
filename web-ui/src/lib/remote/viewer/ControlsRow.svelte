@@ -18,11 +18,14 @@
 	import { openPopup } from '#lib/ui/popups.svelte.ts';
 	import DisplayMenu from './DisplayMenu.svelte';
 	import MenuChoice from './MenuChoice.svelte';
+	import { isMacPlatform } from './clipboard-keys.ts';
 	import ToolMenu from './ToolMenu.svelte';
 
 	let { viewer, id }: { viewer: Viewer; id: string } = $props();
 
 	const uid = $props.id();
+	/** This computer is a Mac: Cmd as Ctrl is offered */
+	const mac = isMacPlatform();
 	const s = $derived(viewer.active);
 	const monitors = $derived(s?.monitors ?? []);
 	const vd = $derived(s?.virtualDisplays ?? { supported: false });
@@ -288,6 +291,14 @@
 								onselect={() => viewer.setPref('keyboardMode', m)}>{keyboardLabel(m)}</MenuChoice
 							>
 						{/each}
+						{#if mac}
+							<MenuChoice
+								kind="checkbox"
+								checked={s?.prefs.cmdAsCtrl ?? true}
+								onselect={() => viewer.setPref('cmdAsCtrl', !(s?.prefs.cmdAsCtrl ?? true))}
+								>{tf('remote.cmd_as_ctrl', 'Send Cmd as Ctrl for common shortcuts')}</MenuChoice
+							>
+						{/if}
 					</div>
 					<div role="group" aria-labelledby="{uid}-codec">
 						<div class="menu-label" id="{uid}-codec">{tf('remote.codec', 'Codec')}</div>

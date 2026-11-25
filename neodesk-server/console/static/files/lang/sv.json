@@ -2853,7 +2853,8 @@
     "clipboard_send_failed": "Urklipp kunde inte skickas till fjärrdatorn.",
     "session_title": "Fjärrsession: {name}",
     "sign_out_ends_sessions": "Dina öppna fjärrsessioner avslutas också ({count}).",
-    "send_windows_key": "Windows-tangent"
+    "send_windows_key": "Windows-tangent",
+    "cmd_as_ctrl": "Skicka Cmd som Ctrl i vanliga kortkommandon"
   },
   "branding": {
     "identity_title": "Varumärkesidentitet",

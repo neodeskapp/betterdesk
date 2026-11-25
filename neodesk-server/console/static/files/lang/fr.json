@@ -2869,7 +2869,8 @@
     "clipboard_send_failed": "Le presse-papiers n'a pas pu être envoyé à l'ordinateur distant.",
     "session_title": "Session à distance : {name}",
     "sign_out_ends_sessions": "Vos sessions à distance ouvertes se terminent aussi ({count}).",
-    "send_windows_key": "Touche Windows"
+    "send_windows_key": "Touche Windows",
+    "cmd_as_ctrl": "Envoyer Cmd comme Ctrl pour les raccourcis courants"
   },
   "branding": {
     "identity_title": "Identité de marque",

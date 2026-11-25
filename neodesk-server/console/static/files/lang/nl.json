@@ -2847,7 +2847,8 @@
     "clipboard_send_failed": "Het klembord kon niet naar de externe computer worden verstuurd.",
     "session_title": "Externe sessie: {name}",
     "sign_out_ends_sessions": "Uw open externe sessies stoppen ook ({count}).",
-    "send_windows_key": "Windows-toets"
+    "send_windows_key": "Windows-toets",
+    "cmd_as_ctrl": "Cmd als Ctrl sturen bij gangbare sneltoetsen"
   },
   "branding": {
     "identity_title": "Merkidentiteit",

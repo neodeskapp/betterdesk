@@ -18,6 +18,8 @@ export interface ViewerPrefs {
 	adaptiveQuality: boolean;
 	backgroundFps: number;
 	keyboardMode: KeyboardMode;
+	/** On a Mac: Cmd with C, V, X, A, Z, S or F goes to a remote that isn't a Mac as Ctrl */
+	cmdAsCtrl: boolean;
 }
 
 export const BACKGROUND_FPS = 1;
@@ -29,7 +31,8 @@ export const DEFAULT_PREFS: Readonly<ViewerPrefs> = Object.freeze({
 	fpsMode: 'adaptive',
 	adaptiveQuality: true,
 	backgroundFps: BACKGROUND_FPS,
-	keyboardMode: 'Auto'
+	keyboardMode: 'Auto',
+	cmdAsCtrl: true
 });
 
 export const QUALITIES: readonly Quality[] = ['Best', 'Balanced', 'Low'];
@@ -60,6 +63,7 @@ export function sanitizePrefs(raw: unknown): ViewerPrefs {
 	const bg = Number(s.backgroundFps);
 	if (Number.isFinite(bg) && bg >= 1 && bg <= 5) clean.backgroundFps = Math.round(bg);
 	if (oneOf(KEYBOARD_MODES, s.keyboardMode)) clean.keyboardMode = s.keyboardMode;
+	if (typeof s.cmdAsCtrl === 'boolean') clean.cmdAsCtrl = s.cmdAsCtrl;
 	return clean;
 }
 

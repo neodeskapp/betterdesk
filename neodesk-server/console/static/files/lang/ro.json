@@ -2853,7 +2853,8 @@
     "clipboard_send_failed": "Clipboardul nu a putut fi trimis la computerul la distanță.",
     "session_title": "Sesiune la distanță: {name}",
     "sign_out_ends_sessions": "Se încheie și sesiunile la distanță deschise ({count}).",
-    "send_windows_key": "Tasta Windows"
+    "send_windows_key": "Tasta Windows",
+    "cmd_as_ctrl": "Trimite Cmd ca Ctrl la comenzile rapide obișnuite"
   },
   "branding": {
     "identity_title": "Identitatea de marcă",

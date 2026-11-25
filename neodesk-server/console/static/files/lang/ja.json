@@ -2847,7 +2847,8 @@
     "clipboard_send_failed": "クリップボードをリモートコンピューターに送信できませんでした。",
     "session_title": "リモートセッション: {name}",
     "sign_out_ends_sessions": "開いているリモートセッションも終了します（{count}）。",
-    "send_windows_key": "Windows キー"
+    "send_windows_key": "Windows キー",
+    "cmd_as_ctrl": "よく使うショートカットで Cmd を Ctrl として送る"
   },
   "branding": {
     "identity_title": "ブランドアイデンティティ",

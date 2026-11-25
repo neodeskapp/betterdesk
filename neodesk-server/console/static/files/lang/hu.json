@@ -2853,7 +2853,8 @@
     "clipboard_send_failed": "A vágólapot nem sikerült elküldeni a távoli számítógépre.",
     "session_title": "Távoli munkamenet: {name}",
     "sign_out_ends_sessions": "A nyitott távoli munkamenetei is véget érnek ({count}).",
-    "send_windows_key": "Windows billentyű"
+    "send_windows_key": "Windows billentyű",
+    "cmd_as_ctrl": "A Cmd küldése Ctrl-ként a gyakori billentyűparancsoknál"
   },
   "branding": {
     "identity_title": "Márkaidentitás",

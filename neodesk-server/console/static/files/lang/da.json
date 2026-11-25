@@ -2853,7 +2853,8 @@
     "clipboard_send_failed": "Udklipsholderen kunne ikke sendes til fjerncomputeren.",
     "session_title": "Fjernsession: {name}",
     "sign_out_ends_sessions": "Dine åbne fjernsessioner slutter også ({count}).",
-    "send_windows_key": "Windows-tast"
+    "send_windows_key": "Windows-tast",
+    "cmd_as_ctrl": "Send Cmd som Ctrl ved almindelige genveje"
   },
   "branding": {
     "identity_title": "Brand Identitet",

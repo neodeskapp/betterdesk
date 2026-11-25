@@ -2853,7 +2853,8 @@
     "clipboard_send_failed": "Papan klip tidak dapat dikirim ke komputer jarak jauh.",
     "session_title": "Sesi jarak jauh: {name}",
     "sign_out_ends_sessions": "Sesi jarak jauh Anda yang terbuka juga berakhir ({count}).",
-    "send_windows_key": "Tombol Windows"
+    "send_windows_key": "Tombol Windows",
+    "cmd_as_ctrl": "Kirim Cmd sebagai Ctrl untuk pintasan umum"
   },
   "branding": {
     "identity_title": "Identitas Merek",

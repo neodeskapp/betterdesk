@@ -2853,7 +2853,8 @@
     "clipboard_send_failed": "Pano uzak bilgisayara gönderilemedi.",
     "session_title": "Uzak oturum: {name}",
     "sign_out_ends_sessions": "Açık uzak oturumlarınız da sona erer ({count}).",
-    "send_windows_key": "Windows tuşu"
+    "send_windows_key": "Windows tuşu",
+    "cmd_as_ctrl": "Yaygın kısayollarda Cmd'yi Ctrl olarak gönder"
   },
   "branding": {
     "identity_title": "Marka Kimliği",

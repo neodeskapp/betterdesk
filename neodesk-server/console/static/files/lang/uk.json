@@ -2853,7 +2853,8 @@
     "clipboard_send_failed": "Не вдалося надіслати буфер обміну на віддалений комп'ютер.",
     "session_title": "Віддалений сеанс: {name}",
     "sign_out_ends_sessions": "Ваші відкриті віддалені сеанси теж завершаться ({count}).",
-    "send_windows_key": "Клавіша Windows"
+    "send_windows_key": "Клавіша Windows",
+    "cmd_as_ctrl": "Надсилати Cmd як Ctrl у поширених сполученнях клавіш"
   },
   "branding": {
     "identity_title": "Ідентичність бренду",

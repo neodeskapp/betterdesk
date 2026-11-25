@@ -2853,7 +2853,8 @@
     "clipboard_send_failed": "ส่งคลิปบอร์ดไปยังคอมพิวเตอร์ระยะไกลไม่ได้",
     "session_title": "เซสชันระยะไกล: {name}",
     "sign_out_ends_sessions": "เซสชันระยะไกลที่เปิดอยู่จะสิ้นสุดด้วย ({count})",
-    "send_windows_key": "ปุ่ม Windows"
+    "send_windows_key": "ปุ่ม Windows",
+    "cmd_as_ctrl": "ส่ง Cmd เป็น Ctrl สำหรับคีย์ลัดที่ใช้บ่อย"
   },
   "branding": {
     "identity_title": "เอกลักษณ์ของแบรนด์",

@@ -2847,7 +2847,8 @@
     "clipboard_send_failed": "Die Zwischenablage konnte nicht an den entfernten Computer gesendet werden.",
     "session_title": "Fernsitzung: {name}",
     "sign_out_ends_sessions": "Ihre offenen Fernsitzungen enden ebenfalls ({count}).",
-    "send_windows_key": "Windows-Taste"
+    "send_windows_key": "Windows-Taste",
+    "cmd_as_ctrl": "Cmd bei gängigen Tastenkürzeln als Strg senden"
   },
   "branding": {
     "identity_title": "Markenidentität",

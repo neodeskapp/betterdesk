@@ -2847,7 +2847,8 @@
     "clipboard_send_failed": "No se pudo enviar el portapapeles al equipo remoto.",
     "session_title": "Sesión remota: {name}",
     "sign_out_ends_sessions": "También terminan tus sesiones remotas abiertas ({count}).",
-    "send_windows_key": "Tecla Windows"
+    "send_windows_key": "Tecla Windows",
+    "cmd_as_ctrl": "Enviar Cmd como Ctrl en los atajos habituales"
   },
   "branding": {
     "identity_title": "Identidad de marca",
