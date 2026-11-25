@@ -2553,7 +2553,6 @@
     "note_default_user_group": "Standaardgebruikersgroep",
     "note_default_device_group": "Standaardapparaatgroep",
     "note_org_default_group": "Standaardgroep, aangemaakt met de organisatie",
-    "add_mode_title": "Wachtwoord",
     "add_mode_invite": "Uitnodiging per e-mail sturen",
     "add_mode_invite_desc": "De persoon krijgt een link en kiest zelf een wachtwoord. De link werkt 7 dagen.",
     "add_mode_password": "Nu een wachtwoord instellen",
@@ -8843,7 +8842,9 @@
     "no_keyboard_lock": "Deze browser houdt enkele sneltoetsen voor zichzelf, ook op volledig scherm: Ctrl+W, Ctrl+T, Ctrl+N, de Windows-toets, en Esc verlaat volledig scherm. Acties stuurt de Windows-toets, Alt+Tab en Ctrl+Alt+Del naar de externe computer.",
     "no_screen_placement": "Deze browser kan geen vensters op uw andere schermen zetten. Sleep het venster van elk beeldscherm naar het scherm waar u het wilt.",
     "phone_turn": "Of draai de telefoon naar liggend: dan opent de sessie hier in de browser.",
-    "no_open_sessions": "Er is geen sessie open. Verbind met een ID of kies hieronder een apparaat."
+    "no_open_sessions": "Er is geen sessie open. Verbind met een ID of kies hieronder een apparaat.",
+    "fail_signin_closed": "{name} sloot de verbinding toen deze browser aanmeldde.",
+    "try_signin_closed": "Het apparaat weigerde de aanmelding. Maak opnieuw verbinding en meld je opnieuw aan. Blijft het gebeuren, vraag dan een beheerder het logboek van NeoDesk op het apparaat te bekijken."
   },
   "diagram": {
     "your_computer": "Uw computer",

@@ -2559,7 +2559,6 @@
     "note_default_user_group": "Alapértelmezett felhasználói csoport",
     "note_default_device_group": "Alapértelmezett eszközcsoport",
     "note_org_default_group": "Alapértelmezett csoport, a szervezettel együtt létrehozva",
-    "add_mode_title": "Jelszó",
     "add_mode_invite": "Meghívó küldése e-mailben",
     "add_mode_invite_desc": "A személy kap egy linket, és maga választja meg a jelszavát. A link 7 napig működik.",
     "add_mode_password": "Jelszó megadása most",
@@ -8849,7 +8848,9 @@
     "no_keyboard_lock": "Ez a böngésző néhány billentyűparancsot megtart magának, teljes képernyőn is: Ctrl+W, Ctrl+T, Ctrl+N, a Windows billentyű, és az Esc kilép a teljes képernyőből. A Műveletek elküldi a Windows billentyűt, az Alt+Tabot és a Ctrl+Alt+Del-t a távoli számítógépre.",
     "no_screen_placement": "Ez a böngésző nem tud ablakot tenni a többi képernyőjére. Húzza az egyes kijelzők ablakát a kívánt képernyőre.",
     "phone_turn": "Vagy fordítsa el a telefont fekvő helyzetbe: így a munkamenet itt, a böngészőben nyílik meg.",
-    "no_open_sessions": "Nincs nyitott munkamenet. Csatlakozzon azonosítóval, vagy válasszon lent egy eszközt."
+    "no_open_sessions": "Nincs nyitott munkamenet. Csatlakozzon azonosítóval, vagy válasszon lent egy eszközt.",
+    "fail_signin_closed": "{name} lezárta a kapcsolatot, amikor ez a böngésző bejelentkezett.",
+    "try_signin_closed": "Az eszköz elutasította a bejelentkezést. Csatlakozzon újra, és jelentkezzen be ismét. Ha ez ismétlődik, kérje meg a rendszergazdát, hogy nézze meg az eszközön a NeoDesk naplóját."
   },
   "diagram": {
     "your_computer": "Az Ön gépe",

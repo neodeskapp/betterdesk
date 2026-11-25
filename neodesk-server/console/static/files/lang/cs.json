@@ -2553,7 +2553,6 @@
     "note_default_user_group": "Výchozí skupina uživatelů",
     "note_default_device_group": "Výchozí skupina zařízení",
     "note_org_default_group": "Výchozí skupina vytvořená s organizací",
-    "add_mode_title": "Heslo",
     "add_mode_invite": "Poslat pozvánku e-mailem",
     "add_mode_invite_desc": "Osoba dostane odkaz a heslo si zvolí sama. Odkaz platí 7 dní.",
     "add_mode_password": "Nastavit heslo hned",
@@ -8843,7 +8842,9 @@
     "no_keyboard_lock": "Tento prohlížeč si některé zkratky nechává pro sebe, i na celé obrazovce: Ctrl+W, Ctrl+T, Ctrl+N, klávesu Windows, a Esc celou obrazovku ukončí. Akce posílají do vzdáleného počítače klávesu Windows, Alt+Tab a Ctrl+Alt+Del.",
     "no_screen_placement": "Tento prohlížeč neumí umístit okna na vaše další obrazovky. Přetáhněte okno každého displeje na obrazovku, kde ho chcete mít.",
     "phone_turn": "Nebo otočte telefon na šířku: na šířku se relace otevře zde v prohlížeči.",
-    "no_open_sessions": "Žádná relace není otevřená. Připojte se podle ID, nebo vyberte zařízení níže."
+    "no_open_sessions": "Žádná relace není otevřená. Připojte se podle ID, nebo vyberte zařízení níže.",
+    "fail_signin_closed": "{name} ukončil připojení, když se tento prohlížeč přihlašoval.",
+    "try_signin_closed": "Zařízení přihlášení odmítlo. Připojte se znovu a znovu se přihlaste. Pokud se to opakuje, požádejte správce, aby se podíval do protokolu NeoDesk na zařízení."
   },
   "diagram": {
     "your_computer": "Váš počítač",

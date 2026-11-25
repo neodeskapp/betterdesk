@@ -30,9 +30,9 @@ func TestAppearanceRefusalsInTheCallersLanguage(t *testing.T) {
 			{"", `{"success":false,"error":"This is not an appearance file of the console."}`, `{"success":false,"error":"Enter a name for the appearance."}`,
 				`{"success":false,"error":"This is not a font file. Upload a .woff2 or .ttf file."}`,
 				`{"success":false,"error":"This is not a picture. Upload a PNG, JPG, GIF or WebP file."}`},
-			{"?lang=de", `{"success":false,"error":"Das ist keine Darstellungsdatei der Konsole."}`, `{"success":false,"error":"Geben Sie einen Namen für die Darstellung ein."}`,
-				`{"success":false,"error":"Das ist keine Schriftdatei. Laden Sie eine .woff2- oder .ttf-Datei hoch."}`,
-				`{"success":false,"error":"Das ist kein Bild. Laden Sie eine PNG-, JPG-, GIF- oder WebP-Datei hoch."}`},
+			{"?lang=de", `{"success":false,"error":"Das ist keine Darstellungsdatei der Konsole."}`, `{"success":false,"error":"Gib einen Namen für die Darstellung ein."}`,
+				`{"success":false,"error":"Das ist keine Schriftdatei. Lade eine .woff2- oder .ttf-Datei hoch."}`,
+				`{"success":false,"error":"Das ist kein Bild. Lade eine PNG-, JPG-, GIF- oder WebP-Datei hoch."}`},
 		} {
 			if res := admin.Do("POST", "/api/settings/branding/import"+lang.query, `{"type":"other"}`); res.Status != http.StatusBadRequest || res.Body != lang.theme {
 				t.Errorf("import %q: %d %s", lang.query, res.Status, res.Body)

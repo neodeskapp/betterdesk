@@ -337,7 +337,7 @@ describe('asking without a password (L515)', () => {
 	/** A client at the device's password question, over an encrypted session, that keeps what it sends */
 	async function atQuestion() {
 		const c = await client();
-		const sent: { loginRequest?: { password?: Uint8Array } }[] = [];
+		const sent: { loginRequest?: { password?: Uint8Array; myId?: string } }[] = [];
 		c._sendPeerMessage = (m: unknown) => void sent.push(m as (typeof sent)[number]);
 		c._keyExchangeDone = true;
 		c._state = 'waiting_password';
@@ -384,6 +384,51 @@ describe('asking without a password (L515)', () => {
 		await typed.c.authenticate('typed');
 		await typed.c.askWithoutPassword();
 		expect(typed.sent).toHaveLength(1);
+	});
+
+	// The desktop client 1.5 latches the first login's scope (my_id and the session's kind) and
+	// closes the connection on a login that differs (L530): every login of a connection is the same caller
+	const latch = (m: { loginRequest?: Record<string, unknown> }) => {
+		const lr = m.loginRequest ?? {};
+		const kinds = Object.keys(lr).filter((k) =>
+			['fileTransfer', 'portForward', 'viewCamera', 'terminal'].includes(k)
+		);
+		return JSON.stringify([lr.myId, lr.myName, String(lr.sessionId), kinds]);
+	};
+
+	test('the typed password after the empty login carries the same caller and session (L530)', async () => {
+		const { c, sent } = await atQuestion();
+		await c.askWithoutPassword();
+		await new Promise((r) => setTimeout(r, 5));
+		await c.authenticate('typed');
+		expect(sent).toHaveLength(2);
+		expect(latch(sent[1]!)).toBe(latch(sent[0]!));
+		expect(String(sent[0]!.loginRequest!.myId)).toMatch(/^neodesk-web-/);
+	});
+
+	test('the server answer after the empty login (an organisation password) carries them too (L530)', async () => {
+		const { c, sent } = await atQuestion();
+		await c.askWithoutPassword();
+		await new Promise((r) => setTimeout(r, 5));
+		expect(await c.authenticateWith(async () => new Uint8Array(32).fill(7))).toBe(true);
+		expect(sent).toHaveLength(2);
+		expect(latch(sent[1]!)).toBe(latch(sent[0]!));
+	});
+
+	test('a close while a login waits for its answer says so; a close after the answer does not (L530)', async () => {
+		const { c } = await atQuestion();
+		const infos: { loginUnanswered?: boolean }[] = [];
+		c.on('disconnected', (_r: unknown, info: { loginUnanswered?: boolean }) => infos.push(info));
+		await c.authenticate('typed');
+		c._handleDisconnect('Connection closed: End', { source: 'peer' });
+		expect(infos[0]!.loginUnanswered).toBe(true);
+		const answered = await atQuestion();
+		const after: { loginUnanswered?: boolean }[] = [];
+		answered.c.on('disconnected', (_r: unknown, info: { loginUnanswered?: boolean }) => after.push(info));
+		await answered.c.authenticate('typed');
+		answered.c._handleLoginResponse(LoginResponse.fromObject({ error: 'Wrong Password' }));
+		answered.c._handleDisconnect('Connection closed: End', { source: 'peer' });
+		expect(after[0]!.loginUnanswered).toBe(false);
 	});
 });
 

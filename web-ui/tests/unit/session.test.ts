@@ -51,6 +51,23 @@ afterEach(() => {
 });
 
 describe('startSession', () => {
+	test('a session ended elsewhere keeps the reason the server gives, so sign-in says why (A239)', async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn((url: string) =>
+				Promise.resolve(
+					url.includes('strings')
+						? ok({})
+						: new Response(JSON.stringify({ success: false, error: 'x', code: 'session_signed_out' }), {
+								status: 401
+							})
+				)
+			)
+		);
+		await expect(startSession()).rejects.toMatchObject({ status: 401, code: 'session_signed_out' });
+		vi.unstubAllGlobals();
+	});
+
 	test('uses the requests the boot script started, and asks again on a second start', async () => {
 		const fetchMock = vi.fn((url: string) => Promise.resolve(ok(url.includes('strings') ? {} : boot)));
 		vi.stubGlobal('fetch', fetchMock);

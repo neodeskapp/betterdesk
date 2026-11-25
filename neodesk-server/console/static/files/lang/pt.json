@@ -2553,7 +2553,6 @@
     "note_default_user_group": "Grupo de utilizadores predefinido",
     "note_default_device_group": "Grupo de dispositivos predefinido",
     "note_org_default_group": "Grupo predefinido criado com a organização",
-    "add_mode_title": "Palavra-passe",
     "add_mode_invite": "Enviar um convite por e-mail",
     "add_mode_invite_desc": "A pessoa recebe um link e escolhe a sua própria palavra-passe. O link funciona durante 7 dias.",
     "add_mode_password": "Definir uma palavra-passe agora",
@@ -8843,7 +8842,9 @@
     "no_keyboard_lock": "Este navegador guarda alguns atalhos para si, também em ecrã inteiro: Ctrl+W, Ctrl+T, Ctrl+N, a tecla Windows, e Esc sai do ecrã inteiro. Ações envia a tecla Windows, Alt+Tab e Ctrl+Alt+Del para o computador remoto.",
     "no_screen_placement": "Este navegador não consegue pôr janelas nos seus outros ecrãs. Arraste a janela de cada ecrã para onde a quiser.",
     "phone_turn": "Ou rode o telefone para a horizontal: assim a sessão abre aqui no navegador.",
-    "no_open_sessions": "Não há nenhuma sessão aberta. Ligue-se por ID ou escolha um dispositivo abaixo."
+    "no_open_sessions": "Não há nenhuma sessão aberta. Ligue-se por ID ou escolha um dispositivo abaixo.",
+    "fail_signin_closed": "{name} fechou a conexão quando este navegador entrou.",
+    "try_signin_closed": "O dispositivo recusou a entrada. Conecte-se de novo e entre outra vez. Se continuar acontecendo, peça a um administrador para ver o registro do NeoDesk no dispositivo."
   },
   "diagram": {
     "your_computer": "O seu computador",

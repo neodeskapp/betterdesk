@@ -2,6 +2,7 @@ package httpx
 
 import (
 	"net/http"
+	"regexp"
 	"strings"
 	"unicode/utf8"
 )
@@ -51,6 +52,27 @@ func SafeReturnPath(raw string) (string, bool) {
 	return path + search + hash, true
 }
 
+// EndedCookie holds, for a few minutes after a browser was first told,
+// why its session was ended elsewhere (session_signed_out and the other
+// codes of session.Notice), so every later answer that sends it to sign-in
+// says the same, whichever request noticed first (A239).
+const EndedCookie = "nd.ended"
+
+var endedCode = regexp.MustCompile(`^session_[a-z_]{1,40}$`)
+
+// EndedReason is the code the request's EndedCookie holds, "" for none.
+func EndedReason(r *http.Request) string {
+	for _, part := range strings.Split(strings.Join(r.Header.Values("Cookie"), "; "), ";") {
+		name, value, _ := strings.Cut(part, "=")
+		if trimHeaderSpace(name) == EndedCookie {
+			if v := trimHeaderSpace(value); endedCode.MatchString(v) {
+				return v
+			}
+		}
+	}
+	return ""
+}
+
 // HadSessionCookie reports whether the request carried a session cookie.
 // On a request without a session that means the session it named has ended.
 func HadSessionCookie(r *http.Request) bool {
@@ -75,8 +97,12 @@ func HadSessionCookie(r *http.Request) bool {
 // refuses is left out.
 func LoginRedirectURL(r *http.Request, returnTo *string) string {
 	var params []string
-	if HadSessionCookie(r) {
+	reason := EndedReason(r)
+	if HadSessionCookie(r) || reason != "" {
 		params = append(params, "expired=1")
+	}
+	if reason != "" {
+		params = append(params, "reason="+reason)
 	}
 	wanted := ""
 	switch {

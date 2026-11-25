@@ -202,7 +202,7 @@
 				<p class="note">{t('users.provider_managed_hint')}</p>
 			{/if}
 		{:else}
-			<FormSection title={t('users.add_mode_title')} id="{uid}-mode">
+			<FormSection title={t('settings.tab_auth')} id="{uid}-mode">
 				<ChoiceList
 					choices={modeChoices}
 					labelledby="{uid}-mode-title"

@@ -2579,7 +2579,6 @@
         "note_default_user_group": "Default user group",
         "note_default_device_group": "Default device group",
         "note_org_default_group": "Default group created with the organization",
-        "add_mode_title": "Password",
         "add_mode_invite": "Send an invite by email",
         "add_mode_invite_desc": "The person gets a link and chooses their own password. The link works for 7 days.",
         "add_mode_password": "Set a password now",
@@ -8843,7 +8842,9 @@
         "no_keyboard_lock": "This browser keeps some shortcuts for itself, also in full screen: Ctrl+W, Ctrl+T, Ctrl+N, the Windows key, and Esc leaves full screen. Actions sends the Windows key, Alt+Tab and Ctrl+Alt+Del to the remote computer.",
         "no_screen_placement": "This browser can't put windows on your other screens. Drag each display's window to the screen you want it on.",
         "phone_turn": "Or turn the phone sideways: in landscape the session opens here in the browser.",
-        "no_open_sessions": "No session is open. Connect by ID, or pick a device below."
+        "no_open_sessions": "No session is open. Connect by ID, or pick a device below.",
+        "fail_signin_closed": "{name} closed the connection when this browser signed in.",
+        "try_signin_closed": "The device refused the sign-in. Reconnect and sign in again. If it keeps happening, ask an administrator to look at the log of NeoDesk on the device."
     },
     "diagram": {
         "your_computer": "Your computer",

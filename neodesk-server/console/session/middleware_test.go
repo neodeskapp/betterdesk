@@ -709,12 +709,14 @@ func TestEstablishWithLanguageAndLimit(t *testing.T) {
 		if row.fp.Valid || row.userAgent.Valid {
 			t.Fatalf("empty details must be NULL: %+v", row)
 		}
-		// The replaced browser is told why at its next page, once: the
-		// sign-in page with the reason, and its cookie cleared (A239)
+		// The replaced browser is told why at its next page: the sign-in
+		// page with the reason, its session cookie cleared, and the reason
+		// kept a few minutes for the answers after this one (A239)
 		var userID int64 = -1
 		rec = f.serve(get("/", first), func(w http.ResponseWriter, r *http.Request) { userID = From(r).UserID() })
+		cookies := setCookies(rec)
 		if userID != -1 || rec.Code != http.StatusFound || !strings.Contains(rec.Header().Get("Location"), "reason=session_replaced") ||
-			len(setCookies(rec)) != 2 {
+			len(cookies) != 3 || cookies[2] != "nd.ended=session_replaced; Max-Age=600; Path=/; HttpOnly; SameSite=Lax" {
 			t.Fatalf("replaced browser: user %d, %d %q, Set-Cookie %q", userID, rec.Code, rec.Header().Get("Location"), setCookies(rec))
 		}
 	})
@@ -1357,4 +1359,40 @@ func TestExpiredAnswerForABackgroundRequest(t *testing.T) {
 			t.Errorf("%s too old: %d %s, want 401 with %s", tc.field, rec.Code, rec.Body.String(), tc.code)
 		}
 	}
+}
+
+// TestTheEndedReasonCookieIsSecureLikeTheSession: the cookie that keeps
+// why a session ended is Secure exactly when the session cookie is: behind
+// a TLS proxy the console trusts, and not over plain HTTP (A239).
+func TestTheEndedReasonCookieIsSecureLikeTheSession(t *testing.T) {
+	storetest.Each(t, func(t *testing.T, db *store.DB) {
+		f := newFixture(t, db, withLimit(1), func(o *Options) {
+			o.TrustProxy, _ = httpx.ParseTrustProxy("loopback")
+		})
+		overHTTPS := func(r *http.Request) {
+			r.RemoteAddr = "127.0.0.1:50000"
+			r.Header.Set("X-Forwarded-Proto", "https")
+		}
+		for _, c := range []struct {
+			name   string
+			change []func(*http.Request)
+			secure bool
+		}{{"plain HTTP", nil, false}, {"through a trusted proxy over HTTPS", []func(*http.Request){overHTTPS}, true}} {
+			first := f.signIn(alice, c.change...)
+			f.signIn(alice, c.change...)
+			r := get("/api/x", first)
+			for _, fn := range c.change {
+				fn(r)
+			}
+			var ended string
+			for _, line := range setCookies(f.serve(r, nil)) {
+				if strings.HasPrefix(line, httpx.EndedCookie+"=") {
+					ended = line
+				}
+			}
+			if ended == "" || strings.Contains(ended, "; Secure") != c.secure || f.m.SecureCookie(r) != c.secure {
+				t.Errorf("%s: %q, want Secure %v as the session cookie", c.name, ended, c.secure)
+			}
+		}
+	})
 }
