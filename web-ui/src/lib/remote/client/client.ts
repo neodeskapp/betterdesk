@@ -1374,6 +1374,12 @@ export class RDClient {
 		this._peerInfo = resp.peerInfo || null;
 		this._debugRelay('[RDClient] Login successful, peerInfo:', this._peerInfo ? 'present' : 'null');
 		this._processPeerInfo(this._peerInfo);
+		// A computer that shares several Windows sessions holds the picture back until the
+		// client picks one (selected_sid; sessions come to clients of 1.2.4 and later): the
+		// current one, as the desktop client keeps it; Actions switches to another
+		const ws = this._windowsSessions;
+		if (ws && ws.sessions.length > 1)
+			this._sendPeerMessage(this.proto.buildMisc('selectedSid', ws.currentSid));
 		this._emit('log', 'Login successful');
 		this._emit('login_success', resp);
 		if (this._peerInfo) this._emit('peer_info', this._peerInfo);
