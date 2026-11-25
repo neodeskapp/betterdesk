@@ -6,8 +6,11 @@
 # only while there is no stable release. A push to main (or a
 # manual run with channel=development) replaces the pre-release tagged "dev",
 # which the development channel installs. Each release holds the binary for
-# linux amd64, arm64 and armv7 and windows amd64, manifest.json, SHA256SUMS
-# (bare file names, for "sha256sum -c") and manifest.sig, signed with the
+# linux amd64, arm64 and armv7 and windows amd64, the installers and
+# compose files of install/ (which neode.sk/install.sh and the like lead
+# to, and which the scripts update themselves from), manifest.json,
+# SHA256SUMS of all of them (bare file names, for "sha256sum -c"),
+# SHA256SUMS.sig, and manifest.sig, signed with the
 # secret RELEASE_SIGNING_KEY (the ed25519 private key as PKCS#8 PEM). The
 # signature is checked against the release key compiled into the updater,
 # and against the variable NEODESK_RELEASE_PUBLIC_KEY when it is set,
@@ -21,6 +24,7 @@ on:
     paths:
       - 'neodesk-server/**'
       - 'web-ui/**'
+      - 'install/**'
       - '.github/workflows/release-go.yml'
   workflow_dispatch:
     inputs:
@@ -172,6 +176,8 @@ jobs:
           pattern: neodesk-server-*
           path: dist
           merge-multiple: true
+      - name: The installers and compose files
+        run: cp install/install.sh install/neodesk.sh install/neodesk.ps1 install/neodesk-docker.sh install/docker-compose*.yml dist/
       - name: Manifest, signature and checksums
         working-directory: ${{ env.SERVER_DIR }}
         env:
@@ -202,8 +208,10 @@ jobs:
           PRERELEASE: ${{ needs.plan.outputs.prerelease }}
         run: |
           set -euo pipefail
-          files=(dist/neodesk-server-* dist/manifest.json dist/SHA256SUMS)
+          files=(dist/neodesk-server-* dist/manifest.json dist/SHA256SUMS
+                 dist/install.sh dist/neodesk.sh dist/neodesk.ps1 dist/neodesk-docker.sh dist/docker-compose*.yml)
           [ -f dist/manifest.sig ] && files+=(dist/manifest.sig)
+          [ -f dist/SHA256SUMS.sig ] && files+=(dist/SHA256SUMS.sig)
           # A new release is made as a draft with all its files and published
           # afterwards: the updater sees no release or a whole one.
           # A tag's notes are release-notes/<tag>.md with every commit since

@@ -1184,6 +1184,8 @@ function Get-ReleaseBinary {
     }
     $target = Join-Path $Dir "neodesk-server.exe"
     Move-Item -Path $file -Destination $target -Force
+    # The installer's copy comes from the same release (Install-ManagerScript)
+    $script:RELEASE_FOLDER_USED = $base
     return $target
 }
 
@@ -2105,20 +2107,99 @@ function Remove-FirstAdminPassword {
     }
 }
 
+# The folder of the release this installer's copy comes from:
+# RELEASE_BASE_URL, else the one this run downloaded the binary from, else
+# the release of the installed binary's version, or the "dev" release on
+# the development channel. $null when none is known.
+function Get-InstallerReleaseBase {
+    if ($env:RELEASE_BASE_URL) { return $env:RELEASE_BASE_URL.TrimEnd('/') }
+    if ($script:RELEASE_FOLDER_USED) { return $script:RELEASE_FOLDER_USED }
+    $releases = "https://github.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/releases/download"
+    Read-UpdateGitHubBranchFromEnv
+    if ($script:UPDATE_GITHUB_BRANCH -eq "dev") { return "$releases/dev" }
+    $line = ""
+    try { $line = "$(& (Get-ServerBinaryPath) -version 2>$null | Select-Object -First 1)" } catch { return $null }
+    if ($line -match '^neodesk-server (\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?) ') { return "$releases/v$($Matches[1])" }
+    return $null
+}
+
+# True when the binary checks a file of a release against the release's
+# signed SHA256SUMS (verify-release --sums).
+function Test-BinaryChecksFileLists {
+    param([string]$Path)
+    if (-not $Path -or -not (Test-Path $Path)) { return $false }
+    return [bool](Select-String -Path $Path -Pattern 'verify-release --sums FILE' -SimpleMatch -Quiet)
+}
+
+# neodesk.ps1 of the release (Get-InstallerReleaseBase) at $Dest, when the
+# release's SHA256SUMS names it and the installed binary verifies the
+# list's signature (verify-release --sums; an older binary or -SkipVerify:
+# the SHA-256 only). Returns "ok", "none" when the release has no
+# neodesk.ps1 (3.6.0-rc.4 and older) or "refused".
+function Get-ReleaseInstaller {
+    param([string]$Dest)
+    $base = Get-InstallerReleaseBase
+    if (-not $base) { return "none" }
+    $dir = Join-Path ([IO.Path]::GetTempPath()) ("neodesk-installer-" + [Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $dir -Force | Out-Null
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $sums = Join-Path $dir "SHA256SUMS"
+        $file = Join-Path $dir "neodesk.ps1"
+        $sig = Join-Path $dir "SHA256SUMS.sig"
+        try {
+            Invoke-WebRequest -Uri "$base/SHA256SUMS" -OutFile $sums -UseBasicParsing -ErrorAction Stop
+        } catch { return "none" }
+        $expected = $null
+        foreach ($line in Get-Content $sums) {
+            $parts = $line.Trim() -split '\s+', 2
+            if ($parts.Count -eq 2 -and ($parts[1] -eq "neodesk.ps1" -or $parts[1] -eq "*neodesk.ps1")) { $expected = $parts[0].ToLower(); break }
+        }
+        if (-not $expected) { return "none" }
+        try {
+            Invoke-WebRequest -Uri "$base/neodesk.ps1" -OutFile $file -UseBasicParsing -ErrorAction Stop
+        } catch { return "none" }
+        try { Invoke-WebRequest -Uri "$base/SHA256SUMS.sig" -OutFile $sig -UseBasicParsing -ErrorAction Stop } catch { }
+        if ((Get-FileHash -Path $file -Algorithm SHA256).Hash.ToLower() -ne $expected) { return "refused" }
+        if (-not (Select-String -Path $file -Pattern 'function Install-ManagerScript' -SimpleMatch -Quiet)) { return "refused" }
+        $exe = Get-ServerBinaryPath
+        if ($script:SKIP_VERIFY) {
+            Print-Warning "The signature of the release's neodesk.ps1 is not checked (-SkipVerify)"
+        } elseif (Test-BinaryChecksFileLists -Path $exe) {
+            if (-not (Test-Path $sig)) { return "refused" }
+            & $exe verify-release --sums $sums --signature $sig --name neodesk.ps1 $file 2>&1 | Out-Null
+            if ($LASTEXITCODE -ne 0) { return "refused" }
+        } else {
+            Print-Warning "The installed neodesk-server cannot check the signature of the release's neodesk.ps1, only its SHA-256"
+        }
+        Copy-Item -Path $file -Destination $Dest -Force -ErrorAction Stop
+        return "ok"
+    } finally {
+        Remove-Item -Path $dir -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
 # This script as C:\NeoDesk\neodesk.ps1, for updates, repairs and the
-# uninstall later. Run from that copy (an update), it takes the newest one
-# of INSTALLER_REF; run from Invoke-Expression, it fetches itself.
+# uninstall later. Run from another file (a download, a checkout), it
+# takes itself. Run from that copy (an update) or from Invoke-Expression,
+# it takes neodesk.ps1 of the release it installs (Get-ReleaseInstaller),
+# and keeps the copy when that release has none or it does not pass the
+# check.
 function Install-ManagerScript {
     $target = Join-Path $script:RUSTDESK_PATH "neodesk.ps1"
     try {
         if ($script:SELF_PATH -and (Test-Path $script:SELF_PATH) -and ((Resolve-Path $script:SELF_PATH).Path -ne $target)) {
             Copy-Item -Path $script:SELF_PATH -Destination $target -Force -ErrorAction Stop
         } else {
-            $url = "https://raw.githubusercontent.com/$($script:UPDATE_GITHUB_OWNER)/$($script:UPDATE_GITHUB_REPO)/$($script:INSTALLER_REF)/install/neodesk.ps1"
             $tmp = "$target.download"
-            Invoke-WebRequest -Uri $url -OutFile $tmp -UseBasicParsing -ErrorAction Stop
-            if (-not (Select-String -Path $tmp -Pattern 'function Install-ManagerScript' -SimpleMatch -Quiet)) { throw "not the installer" }
-            Move-Item -Path $tmp -Destination $target -Force
+            $got = Get-ReleaseInstaller -Dest $tmp
+            if ($got -eq "ok") {
+                Move-Item -Path $tmp -Destination $target -Force
+            } else {
+                Remove-Item -Path $tmp -Force -ErrorAction SilentlyContinue
+                if ($got -eq "refused") { Print-Warning "The release's neodesk.ps1 did not pass its check, so $target stays as it is" }
+                if (-not (Test-Path $target)) { throw "no installer copy" }
+            }
         }
         Print-Info "Manage this install with: & '$target'"
     } catch {
@@ -3087,7 +3168,6 @@ $script:UPDATE_GITHUB_BRANCH = if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { $script
 # The branch the installer itself comes from for its copy in the install
 # folder: the repository's branch, main. The release channel above is
 # separate.
-$script:INSTALLER_REF = if ($env:INSTALLER_REF) { $env:INSTALLER_REF } else { "main" }
 
 function Read-UpdateGitHubBranchFromEnv {
     if ($script:UPDATE_GITHUB_BRANCH_GIVEN) { return }

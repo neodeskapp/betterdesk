@@ -566,21 +566,86 @@ test_one_command_install() (
     install_manager_command >/dev/null
     [ -x "$MANAGER_COMMAND" ] || fail "no neodesk-setup command was left behind"
     cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/install/neodesk.sh" || fail "the neodesk-setup command is not this installer"
-    # Piped from curl, it fetches itself from the repository's branch,
-    # main, whatever the release channel: the development channel's id is
-    # dev, and there is no dev branch
-    rm -f "$MANAGER_COMMAND"
-    NEODESK_SELF=""
-    UPDATE_GITHUB_BRANCH=dev
-    curl() {
-        local a prev="" dest=""
-        for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; done
-        printf '%s\n' "${!#}" > "$TEST_DIR/fetched"
-        cp "$SCRIPT_ROOT/install/neodesk.sh" "$dest"
+    rm -rf "$TEST_DIR"
+)
+
+# Piped from curl, and as the installed neodesk-setup, the installer takes
+# neodesk.sh from the release it installs, never from a branch's raw
+# files: the release folder this run downloaded from, else the release of
+# the installed binary's version, or the "dev" release on the development
+# channel. The release's SHA256SUMS and its signature (SHA256SUMS.sig)
+# check the file; one that fails, or a release without neodesk.sh
+# (3.6.0-rc.4 and older), leaves neodesk-setup as it is.
+test_installer_comes_from_the_release() (
+    load
+    if ! command -v openssl >/dev/null || ! openssl pkeyutl -help 2>&1 | grep -q -- -rawin; then
+        echo "skipped: no OpenSSL 3"
+        exit 0
+    fi
+    commands_in_test_dir
+    mkdir -p "$TEST_DIR/sbin" "$TEST_DIR/bin"
+    openssl genpkey -algorithm ed25519 -out "$TEST_DIR/key.pem" 2>/dev/null
+    openssl genpkey -algorithm ed25519 -out "$TEST_DIR/other.pem" 2>/dev/null
+    RELEASE_PUBLIC_KEY_PEM=$(openssl pkey -in "$TEST_DIR/key.pem" -pubout 2>/dev/null)
+    local rel="$TEST_DIR/release"
+    mkdir -p "$rel"
+    { cat "$SCRIPT_ROOT/install/neodesk.sh"; echo "# the release's copy"; } > "$rel/neodesk.sh"
+    # sign_list KEY: the release's SHA256SUMS and its signature by KEY
+    sign_list() {
+        (cd "$rel" && sha256sum neodesk.sh > SHA256SUMS)
+        { printf 'neodesk-release-files-v1\n'; cat "$rel/SHA256SUMS"; } > "$TEST_DIR/payload"
+        openssl pkeyutl -sign -inkey "$1" -rawin -in "$TEST_DIR/payload" | base64 -w0 > "$rel/SHA256SUMS.sig"
     }
-    install_manager_command >/dev/null
-    [ "$(cat "$TEST_DIR/fetched")" = "https://raw.githubusercontent.com/neodeskapp/neodesk/main/install/neodesk.sh" ] \
-        || fail "the neodesk-setup command came from $(cat "$TEST_DIR/fetched")"
+    sign_list "$TEST_DIR/key.pem"
+    printf '#!/bin/sh\n[ "$1" = -version ] && echo "neodesk-server 3.6.0-rc.5 (built 2026-11-25T10:00:00Z, commit abc1234)"\nexit 0\n' \
+        > "$RUSTDESK_PATH/neodesk-server"
+    chmod +x "$RUSTDESK_PATH/neodesk-server"
+    # curl answers from the release folder by the file's name
+    curl() {
+        local a prev="" dest="" url=""
+        for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; url="$a"; done
+        printf '%s\n' "$url" >> "$TEST_DIR/fetched"
+        if [ -f "$rel/${url##*/}" ]; then cp "$rel/${url##*/}" "$dest"; printf 200; else printf 404; fi
+    }
+    # from URL WHAT: piped from curl, neodesk-setup is the release's
+    # neodesk.sh, fetched from URL
+    from() {
+        : > "$TEST_DIR/fetched"
+        rm -f "$MANAGER_COMMAND"
+        install_manager_command >/dev/null 2>&1
+        grep -qxF -- "$1/neodesk.sh" "$TEST_DIR/fetched" || fail "$2: neodesk.sh came from $(tr '\n' ' ' < "$TEST_DIR/fetched")"
+        cmp -s "$MANAGER_COMMAND" "$rel/neodesk.sh" || fail "$2: neodesk-setup is not the release's neodesk.sh"
+        if grep -q githubusercontent "$TEST_DIR/fetched"; then fail "$2: a raw file was fetched"; fi
+    }
+    NEODESK_SELF=""
+    UPDATE_GITHUB_BRANCH=main
+    from https://github.com/neodeskapp/neodesk/releases/download/v3.6.0-rc.5 "the installed binary's release"
+    UPDATE_GITHUB_BRANCH=dev
+    from https://github.com/neodeskapp/neodesk/releases/download/dev "the development channel"
+    RELEASE_FOLDER_USED=https://example.test/releases/x
+    from https://example.test/releases/x "the folder this run installed from"
+    unset RELEASE_FOLDER_USED
+    UPDATE_GITHUB_BRANCH=main
+
+    # kept WHAT: as the installed neodesk-setup, it stays as it is
+    NEODESK_SELF="$MANAGER_COMMAND"
+    kept() {
+        install -m 0755 "$SCRIPT_ROOT/install/neodesk.sh" "$MANAGER_COMMAND"
+        install_manager_command >/dev/null 2>&1
+        cmp -s "$MANAGER_COMMAND" "$SCRIPT_ROOT/install/neodesk.sh" || fail "$1 replaced neodesk-setup"
+    }
+    printf '# changed\n' >> "$rel/neodesk.sh"
+    kept "a neodesk.sh the release's SHA256SUMS does not name"
+    sign_list "$TEST_DIR/other.pem"
+    kept "a neodesk.sh whose list another key signed"
+    rm -f "$rel/SHA256SUMS.sig"
+    kept "a neodesk.sh without the list's signature"
+    sign_list "$TEST_DIR/key.pem"
+    install -m 0755 "$SCRIPT_ROOT/install/neodesk.sh" "$MANAGER_COMMAND"
+    install_manager_command >/dev/null 2>&1
+    cmp -s "$MANAGER_COMMAND" "$rel/neodesk.sh" || fail "the installed neodesk-setup did not update itself from the release"
+    rm -f "$rel/neodesk.sh" "$rel/SHA256SUMS" "$rel/SHA256SUMS.sig"
+    kept "a release without neodesk.sh"
     unset -f curl
     rm -rf "$TEST_DIR"
 )
@@ -1520,6 +1585,7 @@ test_releases_come_from_the_fork
 test_update_keeps_the_admins_ports
 test_channel_and_download_errors
 test_one_command_install
+test_installer_comes_from_the_release
 test_install_places_neodesk_setup_and_the_command_line
 test_update_moves_the_old_manager
 test_backups_move_to_the_neodesk_folder

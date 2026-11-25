@@ -327,10 +327,14 @@ FAKE_GIT
             || fail "native install from $branch passes update channel '$got', expected '$expected'"
     done
 
-    # Without --branch the default branch's files install and neodesk.sh
+    # Without --branch nothing is cloned: the release's neodesk.sh (here
+    # the one next to install.sh, as in a downloaded release) runs and
     # picks the channel (stable, or dev while there is no stable release);
     # --channel names one
     local args
+    mkdir -p "$temp_dir/release"
+    cp "$SCRIPT_ROOT/install/install.sh" "$temp_dir/release/install.sh"
+    printf '#!/usr/bin/env bash\nNEODESK_SH_REVISION=test\nprintf "%%s" "${UPDATE_GITHUB_BRANCH:-}" > "%s/channel"\n' "$temp_dir" > "$temp_dir/release/neodesk.sh"
     for args in "" "--channel dev" "--channel stable"; do
         case "$args" in
             *dev) expected=dev ;;
@@ -339,15 +343,16 @@ FAKE_GIT
         esac
         rm -f "$temp_dir/channel"
         (
-            unset NEODESK_BRANCH
+            unset NEODESK_BRANCH NEODESK_RAW_BASE
             export INSTALL_DIR="$temp_dir/install-default"
             # shellcheck disable=SC2086
             set -- $args
             # shellcheck disable=SC1091
-            source "$SCRIPT_ROOT/install/install.sh"
-            [ "$NEODESK_BRANCH" = main ] || fail "install.sh installs the files of $NEODESK_BRANCH"
+            source "$temp_dir/release/install.sh"
+            [ -z "$NEODESK_BRANCH" ] || fail "install.sh installs the files of the branch $NEODESK_BRANCH"
             install_native_mode
         ) >/dev/null
+        [ ! -e "$temp_dir/install-default/source" ] || fail "install.sh $args cloned the repository"
         got=$(cat "$temp_dir/channel" 2>/dev/null || echo "(neodesk.sh did not run)")
         [ "$got" = "$expected" ] || fail "install.sh $args passes update channel '$got', expected '$expected'"
     done
@@ -551,38 +556,48 @@ FAKE_SERVER
     [ "$USE_POSTGRESQL" = false ] || fail "without the migrate command the install uses PostgreSQL"
 )
 
-# L31: the one-line installer clones and downloads from the fork.
+# L31: the one-line installer downloads from the fork. The installers
+# take their files from the release they install (neodesk.sh, the Docker
+# manager, the compose file), never from main's raw files; only a branch
+# given for development names one.
 test_install_sh_uses_the_fork() (
-    unset NEODESK_REPO NEODESK_RAW_BASE NEODESK_BRANCH
+    unset NEODESK_REPO NEODESK_RAW_BASE NEODESK_BRANCH RELEASE_BASE_URL NEODESK_VERSION
     set --
     # shellcheck disable=SC1091
     source "$SCRIPT_ROOT/install/install.sh"
-    [ "$NEODESK_REPO" = neodeskapp/neodesk ] || fail "install.sh clones $NEODESK_REPO"
-    case "$NEODESK_RAW_BASE" in
-        https://raw.githubusercontent.com/neodeskapp/neodesk/*) ;;
-        *) fail "install.sh downloads from $NEODESK_RAW_BASE" ;;
-    esac
-    # The one-liners and the installers' own downloads name the only
-    # branch, main; there is no dev branch, and nothing downloads from
-    # upstream's repository
-    [ "$NEODESK_RAW_BASE" = https://raw.githubusercontent.com/neodeskapp/neodesk/main/install ] \
-        || fail "install.sh downloads from $NEODESK_RAW_BASE"
+    [ "$NEODESK_REPO" = neodeskapp/neodesk ] || fail "install.sh downloads from $NEODESK_REPO"
+    [ -z "$NEODESK_RAW_BASE" ] || fail "install.sh takes a branch's files without --branch: $NEODESK_RAW_BASE"
+    local own
+    own=$(sed -n 's/^NEODESK_VERSION="${NEODESK_VERSION:-\(.*\)}"$/\1/p' "$SCRIPT_ROOT/install/install.sh")
+    [ "$(release_base)" = "https://github.com/neodeskapp/neodesk/releases/download/v$own" ] \
+        || fail "install.sh takes the files of $(release_base), not of its own release v$own"
+    NEODESK_VERSION=dev
+    [ "$(release_base)" = https://github.com/neodeskapp/neodesk/releases/download/dev ] || fail "--version dev takes $(release_base)"
+    (
+        set -- --branch feature-x
+        # shellcheck disable=SC1091
+        source "$SCRIPT_ROOT/install/install.sh"
+        [ "$NEODESK_RAW_BASE" = https://raw.githubusercontent.com/neodeskapp/neodesk/feature-x/install ] \
+            || fail "--branch takes $NEODESK_RAW_BASE"
+    )
+    local docker_base
+    docker_base=$(
+        unset NEODESK_RAW_BASE NEODESK_BRANCH RELEASE_BASE_URL
+        NEODESK_DOCKER_SOURCED=1
+        NEODESK_IMAGE_TAG=3.6.0-rc.5
+        # shellcheck disable=SC1091
+        source "$SCRIPT_ROOT/install/neodesk-docker.sh"
+        printf '%s|%s\n' "$NEODESK_RAW_BASE" "$(release_base)"
+    )
+    [ "$docker_base" = "|https://github.com/neodeskapp/neodesk/releases/download/v3.6.0-rc.5" ] \
+        || fail "neodesk-docker.sh takes its files from $docker_base"
     local hits
+    hits=$(cd "$SCRIPT_ROOT" && grep -nE 'raw\.githubusercontent\.com/[^ "]*/(main|\$\{?INSTALLER_REF|\$\(\$script:INSTALLER_REF)|INSTALLER_REF' \
+        install/install.sh install/neodesk.sh install/neodesk.ps1 install/neodesk-docker.sh || true)
+    [ -z "$hits" ] || fail "an installer fetches main's raw files: $hits"
     hits=$(cd "$SCRIPT_ROOT" && grep -nE 'raw\.githubusercontent\.com/(neodeskapp/neodesk/dev/|UNITRONIX/BetterDesk/)|github\.com/neodeskapp/neodesk/(blob|tree)/dev/' \
         install/install.sh install/neodesk.sh install/neodesk.ps1 install/neodesk-docker.sh install/docker-compose*.yml README.md SECURITY.md || true)
     [ -z "$hits" ] || fail "one-liners name a branch without the current installers: $hits"
-    local docker_base
-    docker_base=$(
-        unset NEODESK_RAW_BASE NEODESK_BRANCH
-        NEODESK_DOCKER_SOURCED=1
-        # shellcheck disable=SC1091
-        source "$SCRIPT_ROOT/install/neodesk-docker.sh"
-        printf '%s\n' "$NEODESK_RAW_BASE"
-    )
-    [ "$docker_base" = https://raw.githubusercontent.com/neodeskapp/neodesk/main/install ] \
-        || fail "neodesk-docker.sh downloads from $docker_base"
-    grep -qF '$script:INSTALLER_REF = if ($env:INSTALLER_REF) { $env:INSTALLER_REF } else { "main" }' "$SCRIPT_ROOT/install/neodesk.ps1" \
-        || fail "neodesk.ps1 does not fetch itself from main"
 )
 
 # The public addresses: neode.sk answers with the newest release's

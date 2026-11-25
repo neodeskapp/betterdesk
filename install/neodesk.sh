@@ -41,7 +41,7 @@ set -e
 # Version
 VERSION="3.6.2"
 # Bump when installer control-flow changes must apply mid-session after Update.
-NEODESK_SH_REVISION="20261124-neodesk-setup-307"
+NEODESK_SH_REVISION="20261125-release-installers-308"
 # Where people ask for help: the NeoDesk Discord
 NEODESK_HELP_URL="https://discord.gg/nwERSawufr"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -347,7 +347,7 @@ while [[ $# -gt 0 ]]; do
             echo "  UPDATE_GITHUB_BRANCH=main|dev  Update channel: stable (main) or development (dev)"
             echo "  UPDATE_GITHUB_OWNER=... / UPDATE_GITHUB_REPO=...  Repository the releases come from"
             echo "  RELEASE_BASE_URL=...    Folder URL with the release files (SHA256SUMS, manifest.json,"
-            echo "                          manifest.sig and the binaries)"
+            echo "                          manifest.sig, the binaries and neodesk.sh)"
             echo "  SSL_DOMAIN=...          Host name for the self-signed certificate and the console's address"
             echo "  RUSTDESK_PATH=... / CONSOLE_PATH=... / BACKUP_DIR=...  Install folders"
             echo "                          (default /opt/neodesk, /opt/NeoDeskConsole, /opt/neodesk-backups)"
@@ -726,21 +726,114 @@ default_to_auto_without_terminal() {
     fi
 }
 
+# installer_release_base: the folder of the release neodesk-setup comes
+# from: RELEASE_BASE_URL, else the one this run downloaded the binary from,
+# else the release of the installed binary's version, or the "dev"
+# release on the development channel.
+installer_release_base() {
+    if [ -n "${RELEASE_BASE_URL:-}" ]; then
+        printf '%s\n' "${RELEASE_BASE_URL%/}"
+        return 0
+    fi
+    if [ -n "${RELEASE_FOLDER_USED:-}" ]; then
+        printf '%s\n' "$RELEASE_FOLDER_USED"
+        return 0
+    fi
+    local releases="https://github.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/releases/download" version
+    read_update_github_branch_from_env
+    if [ "$UPDATE_GITHUB_BRANCH" = dev ]; then
+        printf '%s\n' "$releases/dev"
+        return 0
+    fi
+    version=$(timeout 10 "$(server_binary_path)" -version 2>/dev/null | awk 'NR == 1 { print $2 }')
+    [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || return 1
+    printf '%s\n' "$releases/v$version"
+}
+
+# verify_release_list DIR NAME: DIR/NAME is the file of that name the
+# release's SHA256SUMS (DIR/SHA256SUMS) lists, and the list's signature
+# (DIR/SHA256SUMS.sig) verifies: by the installed neodesk-server when it
+# can (verify-release --sums), else by openssl with RELEASE_PUBLIC_KEY_PEM.
+# Returns 0 when checked, 1 when refused, 2 when this machine cannot check
+# an ed25519 signature.
+verify_release_list() {
+    local dir="$1" name="$2" installed work rc=0
+    installed=$(server_binary_path)
+    if [ -x "$installed" ] && grep -a -q -F 'verify-release --sums FILE' "$installed" 2>/dev/null; then
+        "$installed" verify-release --sums "$dir/SHA256SUMS" --signature "$dir/SHA256SUMS.sig" \
+            --name "$name" "$dir/$name" >/dev/null 2>&1 || return 1
+        return 0
+    fi
+    [ -s "$dir/SHA256SUMS.sig" ] || return 1
+    ensure_openssl || return 2
+    openssl pkeyutl -help 2>&1 | grep -q -- '-rawin' || return 2
+    work=$(mktemp -d) || return 1
+    printf '%s\n' "$RELEASE_PUBLIC_KEY_PEM" > "$work/key.pem"
+    { printf 'neodesk-release-files-v1\n'; cat "$dir/SHA256SUMS"; } > "$work/payload"
+    if ! tr -d '[:space:]' < "$dir/SHA256SUMS.sig" | base64 -d > "$work/sig" 2>/dev/null \
+        || ! openssl pkeyutl -verify -pubin -inkey "$work/key.pem" -rawin -in "$work/payload" -sigfile "$work/sig" >/dev/null 2>&1; then
+        rc=1
+    fi
+    rm -rf -- "${work:?}"
+    return "$rc"
+}
+
+# fetch_release_installer DEST: neodesk.sh of the release
+# (installer_release_base) into DEST, when the release's SHA256SUMS names
+# it and the list's signature verifies (verify_release_list; with
+# --skip-verify its SHA-256 only). Returns 1 when the release has no
+# neodesk.sh (3.6.0-rc.4 and older), 2 when a check refused it.
+fetch_release_installer() {
+    local dest="$1" base work code expected rc=0
+    base=$(installer_release_base) || return 1
+    work=$(mktemp -d) || return 1
+    code=$(fetch_release_file "$base" SHA256SUMS "$work/SHA256SUMS")
+    expected=""
+    [ "$code" = 200 ] && expected=$(awk '$2 == "neodesk.sh" || $2 == "*neodesk.sh" { print tolower($1); exit }' "$work/SHA256SUMS")
+    if [ -z "$expected" ] || [ "$(fetch_release_file "$base" neodesk.sh "$work/neodesk.sh")" != 200 ]; then
+        rm -rf -- "${work:?}"
+        return 1
+    fi
+    [ "$(fetch_release_file "$base" SHA256SUMS.sig "$work/SHA256SUMS.sig")" = 200 ] || rm -f -- "$work/SHA256SUMS.sig"
+    if [ "$(sha256sum "$work/neodesk.sh" | awk '{ print $1 }')" != "$expected" ] || ! grep -q '^NEODESK_SH_REVISION=' "$work/neodesk.sh"; then
+        rc=2
+    elif [ "$SKIP_VERIFY" = true ]; then
+        print_warning "The signature of the release's neodesk.sh is not checked (--skip-verify)"
+    else
+        verify_release_list "$work" neodesk.sh || rc=$?
+        if [ "$rc" = 2 ]; then
+            print_warning "The signature of the release's neodesk.sh cannot be checked here (no OpenSSL 3), only its SHA-256"
+            rc=0
+        elif [ "$rc" != 0 ]; then
+            rc=2
+        fi
+    fi
+    [ "$rc" = 0 ] && cp "$work/neodesk.sh" "$dest"
+    rm -rf -- "${work:?}"
+    return "$rc"
+}
+
 # install_manager_command: this installer as the command neodesk-setup,
 # for updates, repairs and the uninstall later, and neodesk as the command
-# line (place_manager_commands). Run from an installed copy (an update),
-# it takes the newest one of INSTALLER_REF, else itself; piped from curl,
-# it fetches itself from the same place.
+# line (place_manager_commands). Run from a file that is not the installed
+# copy (a download, a checkout), it takes itself. Run as neodesk-setup (an
+# update) or piped from curl, it takes neodesk.sh of the release it
+# installs (fetch_release_installer), and keeps itself when that release
+# has none or it does not pass the check.
 install_manager_command() {
-    local self="$NEODESK_SELF" tmp real rc=0
+    local self="$NEODESK_SELF" tmp real rc=0 got=0
     tmp=$(mktemp) || return 0
     real=$(readlink -f "$self" 2>/dev/null || true)
     if [ -n "$self" ] && [ -f "$self" ] && [ "$real" != "$(readlink -f "$MANAGER_COMMAND" 2>/dev/null)" ] \
         && [ "$real" != "$(readlink -f "$OLD_MANAGER_COMMAND" 2>/dev/null)" ]; then
         cp "$self" "$tmp"
-    elif ! curl -fsSL --retry 2 --connect-timeout 20 -o "$tmp" \
-        "https://raw.githubusercontent.com/${UPDATE_GITHUB_OWNER}/${UPDATE_GITHUB_REPO}/${INSTALLER_REF}/install/neodesk.sh" \
-        || ! grep -q '^NEODESK_SH_REVISION=' "$tmp"; then
+    else
+        fetch_release_installer "$tmp" || got=$?
+    fi
+    if [ "$got" != 0 ]; then
+        if [ "$got" = 2 ]; then
+            print_warning "The release's neodesk.sh did not pass its check, so $(basename "$MANAGER_COMMAND") stays as it is"
+        fi
         if [ -n "$self" ] && [ -f "$self" ]; then
             cp "$self" "$tmp"
         else
@@ -4047,6 +4140,8 @@ download_release_binary() {
         esac
     fi
     mv -f "$dir/$asset" "$dir/neodesk-server"
+    # neodesk-setup comes from the same release (install_manager_command)
+    RELEASE_FOLDER_USED="$base"
 }
 
 # binary_verifies_releases [BIN]: true when the binary checks a release's
@@ -5192,9 +5287,6 @@ UPDATE_GITHUB_REPO="${UPDATE_GITHUB_REPO:-neodesk}"
 # channel's id, main for stable and dev for development, not a git branch.
 UPDATE_GITHUB_BRANCH_GIVEN="${UPDATE_GITHUB_BRANCH:-}"
 UPDATE_GITHUB_BRANCH="${UPDATE_GITHUB_BRANCH:-main}"
-# The branch the installer itself comes from for the neodesk-setup command:
-# the repository's branch, main. The release channel above is separate.
-INSTALLER_REF="${INSTALLER_REF:-main}"
 
 # save_given_update_channel: the channel the installer was given goes into
 # .env, where the server's updater reads it

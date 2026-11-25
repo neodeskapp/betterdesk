@@ -30,7 +30,11 @@ NEODESK_DIR="${NEODESK_DIR:-/opt/neodesk/docker}"
 # The image the compose file runs (a mirror goes into docker-compose.override.yml)
 NEODESK_IMAGE="ghcr.io/neodeskapp/neodesk"
 NEODESK_IMAGE_TAG_SET="${NEODESK_IMAGE_TAG:-}"
-NEODESK_RAW_BASE="${NEODESK_RAW_BASE:-https://raw.githubusercontent.com/neodeskapp/neodesk/${NEODESK_BRANCH:-main}/install}"
+# The repository whose releases the compose file and this manager come
+# from. RELEASE_BASE_URL names a release folder instead; NEODESK_BRANCH or
+# NEODESK_RAW_BASE take a branch's files (for development).
+NEODESK_REPO="${NEODESK_REPO:-neodeskapp/neodesk}"
+NEODESK_RAW_BASE="${NEODESK_RAW_BASE:-${NEODESK_BRANCH:+https://raw.githubusercontent.com/${NEODESK_REPO}/${NEODESK_BRANCH}/install}}"
 RELAY_SERVERS_SET="${RELAY_SERVERS:-}"
 RELAY_MODE="${RELAY_MODE:-auto}"
 CONSOLE_PORT_SET="${NEODESK_CONSOLE_PORT:-}"
@@ -245,6 +249,10 @@ Repair and checks:
 Files: <folder>/docker-compose.yml (replaced on update; put your own changes
 into docker-compose.override.yml next to it), <folder>/.env (the settings,
 every KEY=value reaches the server), <folder>/backups.
+The compose file and this script come from the release the image tag names
+(the newest for latest), checked against the release's SHA256SUMS; an
+update replaces <folder>/neodesk-docker.sh with the release's.
+RELEASE_BASE_URL names another release folder.
 HTTPS for the console: --domain and --email (Traefik with Let's Encrypt), a
 reverse proxy of your own with TLS in front (TRUST_PROXY=1 in .env), or
 HTTPS_ENABLED=true with SSL_CERT_PATH and SSL_KEY_PATH naming
@@ -489,18 +497,147 @@ console_domain() {
 
 sha_of() { sha256sum "$1" 2>/dev/null | cut -d' ' -f1; }
 
-# fetch_compose_file DEST: the release's compose file, from this checkout
-# when the script sits in one, else from GitHub
+# newest_release_tag: the tag of the newest published release, a
+# pre-release too, other than the rolling "dev" one; GitHub lists the
+# releases newest first, each with tag_name before draft
+newest_release_tag() {
+    local tag
+    tag=$(curl -fsSL --connect-timeout 15 --max-time 30 -H 'Accept: application/vnd.github+json' \
+        "https://api.github.com/repos/${NEODESK_REPO}/releases?per_page=20" 2>/dev/null \
+        | tr -d '\r\n' \
+        | grep -oE '"(tag_name|draft)"[[:space:]]*:[[:space:]]*("[^"]*"|true|false)' \
+        | sed -E 's/^"([a-z_]+)"[[:space:]]*:[[:space:]]*"?([^"]*)"?$/\1 \2/' \
+        | awk '$1 == "tag_name" { tag = $2 } $1 == "draft" && $2 == "false" && tag != "dev" && tag ~ /^v[0-9][A-Za-z0-9._-]*$/ { print tag; exit }') || true
+    [ -n "$tag" ] || return 1
+    printf '%s\n' "$tag"
+}
+
+# release_tag: the release of the image tag: the newest release for
+# latest, the rolling "dev" one for dev, v<version> for a version; fails
+# for a tag no release has (local, a tag of one's own)
+release_tag() {
+    local tag
+    tag=$(image_tag)
+    case "$tag" in
+        latest) newest_release_tag ;;
+        dev) printf 'dev\n' ;;
+        v[0-9]*) printf '%s\n' "$tag" ;;
+        [0-9]*.[0-9]*.[0-9]*) printf 'v%s\n' "$tag" ;;
+        *) return 1 ;;
+    esac
+}
+
+# release_base: the folder of the release whose files this manager takes
+# (the compose file, its own copy): RELEASE_BASE_URL, else the release of
+# the image tag (release_tag)
+release_base() {
+    if [ -n "${RELEASE_BASE_URL:-}" ]; then
+        printf '%s\n' "${RELEASE_BASE_URL%/}"
+        return 0
+    fi
+    local tag
+    tag=$(release_tag) || return 1
+    printf 'https://github.com/%s/releases/download/%s\n' "$NEODESK_REPO" "$tag"
+}
+
+# tag_has_root_layout TAG: the tag is of 3.6.0-rc.4 or older, whose
+# installers and compose files are at the repository's root; later ones
+# have them in install/
+tag_has_root_layout() {
+    case "${1#v}" in
+        [0-2].*|3.[0-5].*|3.6.0-rc.[1-4]) return 0 ;;
+    esac
+    return 1
+}
+
+# fetch_from_release NAME DEST: the release's file NAME into DEST, checked
+# against the release's SHA256SUMS. Returns 1 when the release has no
+# such file or cannot be reached, 2 when the file does not match.
+fetch_from_release() {
+    local name="$1" dest="$2" base sums expected
+    base=$(release_base) || return 1
+    sums=$(mktemp) || return 1
+    if ! curl -fsSL --connect-timeout 15 --max-time 60 -o "$sums" "$base/SHA256SUMS" 2>/dev/null; then
+        rm -f "$sums"
+        return 1
+    fi
+    expected=$(awk -v n="$name" '$2 == n || $2 == "*" n { print tolower($1); exit }' "$sums")
+    rm -f "$sums"
+    [ -n "$expected" ] || return 1
+    curl -fsSL --connect-timeout 15 --max-time 120 -o "$dest" "$base/$name" 2>/dev/null || return 1
+    if [ "$(sha_of "$dest")" != "$expected" ]; then
+        rm -f "$dest"
+        return 2
+    fi
+}
+
+# fetch_compose_file DEST: the compose file of the release the image tag
+# names: from this checkout when the script sits in one, else the
+# release's own file, checked against its SHA256SUMS. A release from
+# before the files were attached to releases (3.6.0-rc.4 and older) has
+# it at its tag, at the repository's root. NEODESK_RAW_BASE takes a
+# branch's file instead.
 fetch_compose_file() {
-    local src="$SCRIPT_DIR/docker-compose.quick.single.yml"
+    local src="$SCRIPT_DIR/docker-compose.quick.single.yml" name=docker-compose.quick.single.yml from rc=0 tag
     if [ -f "$src" ]; then
         cp "$src" "$1"
         return 0
     fi
-    curl -fsSL --connect-timeout 15 --max-time 60 -o "$1" "$NEODESK_RAW_BASE/docker-compose.quick.single.yml" \
-        || die "Could not download the compose file from $NEODESK_RAW_BASE" \
-            "Check the internet connection, or run the script from a checkout of the repository."
-    grep -q 'ghcr.io/neodeskapp/neodesk' "$1" || die "The downloaded compose file is not NeoDesk's ($NEODESK_RAW_BASE)"
+    if [ -n "$NEODESK_RAW_BASE" ]; then
+        from="$NEODESK_RAW_BASE/$name"
+        curl -fsSL --connect-timeout 15 --max-time 60 -o "$1" "$from" \
+            || die "Could not download the compose file from $from" \
+                "Check the internet connection, or run the script from a checkout of the repository."
+    else
+        from=$(release_base) \
+            || die "No release has the image tag $(image_tag), so there is no compose file for it." \
+                "Run the script from a checkout of the repository, or give a release's tag (--tag)."
+        fetch_from_release "$name" "$1" || rc=$?
+        tag=$(release_tag 2>/dev/null || true)
+        if [ "$rc" = 1 ] && [ -z "${RELEASE_BASE_URL:-}" ] && tag_has_root_layout "$tag"; then
+            from="https://raw.githubusercontent.com/${NEODESK_REPO}/${tag}/$name"
+            curl -fsSL --connect-timeout 15 --max-time 60 -o "$1" "$from" 2>/dev/null && rc=0
+        fi
+        case "$rc" in
+            0) ;;
+            2) die "The compose file of $from does not match the release's SHA256SUMS." "Try again later; nothing was changed." ;;
+            *) die "Could not download the compose file of $from" \
+                "Check the internet connection, or run the script from a checkout of the repository." ;;
+        esac
+    fi
+    grep -q 'ghcr.io/neodeskapp/neodesk' "$1" || die "The downloaded compose file is not NeoDesk's ($from)"
+}
+
+# update_manager_copy: run as the install's own copy
+# ($NEODESK_DIR/neodesk-docker.sh), this manager becomes the one of the
+# release the install moved to, checked against the release's SHA256SUMS.
+# It stays as it is when that release has none (3.6.0-rc.4 and older), and
+# when it takes a branch's files (NEODESK_RAW_BASE). The new copy replaces
+# the file, so this run reads on from the old one.
+update_manager_copy() {
+    local dest="$NEODESK_DIR/neodesk-docker.sh" self new rc=0
+    self=$(readlink -f "${BASH_SOURCE[0]:-$0}" 2>/dev/null || true)
+    [ -n "$self" ] && [ "$self" = "$(readlink -f "$dest" 2>/dev/null || true)" ] || return 0
+    [ -z "$NEODESK_RAW_BASE" ] || return 0
+    new="$dest.new.$$"
+    fetch_from_release neodesk-docker.sh "$new" || rc=$?
+    case "$rc" in
+        0)
+            if grep -q 'NEODESK_DOCKER_SOURCED' "$new" && ! cmp -s "$new" "$dest"; then
+                chmod 0755 "$new"
+                mv -f "$new" "$dest"
+                ok "neodesk-docker.sh is the release's now"
+            else
+                rm -f "$new"
+            fi
+            ;;
+        2)
+            rm -f "$new"
+            warn "The release's neodesk-docker.sh does not match its SHA256SUMS, so $dest stays as it is"
+            ;;
+        *) rm -f "$new" ;;
+    esac
+    return 0
 }
 
 # write_compose_file: docker-compose.yml of this release. A file the user
@@ -1159,6 +1296,7 @@ do_install() {
     remember_applied
     ok "NeoDesk runs ($((SECONDS - started))s)"
     wait_certificate
+    update_manager_copy
     print_summary first
 }
 
@@ -1188,6 +1326,7 @@ do_update() {
         && container_running && wait_healthy; then
         rm -rf "$before"
         ok "NeoDesk is up to date: $(server_version)"
+        update_manager_copy
         print_summary
         return 0
     fi
@@ -1203,6 +1342,7 @@ do_update() {
         remember_applied
         ok "Updated: $(server_version)"
         [ "$TRAEFIK_ACTION" != on ] || wait_certificate
+        update_manager_copy
         print_summary
         return 0
     fi

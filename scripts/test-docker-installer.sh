@@ -781,8 +781,10 @@ test_install_sh_passes_the_domain() (
         source "$SCRIPT_ROOT/install/install.sh" --domain console.example.com --letsencrypt-email admin@example.com --letsencrypt-staging
         require_root() { :; }
         configure_firewall() { printf '%s\n' "$DOCKER_PORTS" > "$dir/ports"; }
-        fetch_url_to_file() {
+        fetch_manager() {
+            mkdir -p "$(dirname "$2")"
             printf '#!/bin/sh\n# NEODESK_DOCKER_SOURCED stand-in\nprintf "%%s\\n" "$*" > "%s/manager-args"\n' "$dir" > "$2"
+            chmod +x "$2"
         }
         main
     ) > "$dir/out" 2>&1 || fail "install.sh with --domain failed: $(cat "$dir/out")"
@@ -798,6 +800,136 @@ test_install_sh_passes_the_domain() (
     case " $(cat "$dir/ports") " in
         *" 5000 "*|*" 5443 "*) fail "install.sh's firewall opens the console's own ports behind Traefik: $(cat "$dir/ports")" ;;
     esac
+    rm -rf "$dir"
+)
+
+# The compose file and the manager's own copy come from the release the
+# image tag names, checked against the release's SHA256SUMS: v<version>
+# for a version, the newest release for latest (a pre-release too, not the
+# rolling dev one), the dev release for dev. A release from before the
+# files were attached (3.6.0-rc.4 and older) has the compose file at its
+# tag, at the root. Nothing comes from a branch's raw files, and a file
+# that does not match stops the run before anything changes.
+test_files_come_from_the_release() (
+    local dir rel
+    dir=$(mktemp -d)
+    rel="$dir/release"
+    mkdir -p "$rel" "$dir/install"
+    # The install's copy of the manager, without a compose file next to it
+    cp "$SCRIPT_ROOT/install/neodesk-docker.sh" "$dir/install/neodesk-docker.sh"
+    { cat "$SCRIPT_ROOT/install/docker-compose.quick.single.yml"; printf "# the release's copy\n"; } > "$rel/docker-compose.quick.single.yml"
+    { cat "$SCRIPT_ROOT/install/neodesk-docker.sh"; printf "# the release's copy\n"; } > "$rel/neodesk-docker.sh"
+    (cd "$rel" && sha256sum docker-compose.quick.single.yml neodesk-docker.sh > SHA256SUMS)
+    cat > "$dir/run.sh" <<'RUN'
+NEODESK_DOCKER_SOURCED=1
+source "$DIR/install/neodesk-docker.sh"
+NEODESK_DIR="$DIR/install"
+curl() {
+    local a prev="" dest="" url=""
+    for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; url="$a"; done
+    printf '%s\n' "$url" >> "$DIR/fetched"
+    case "$url" in
+        https://api.github.com/*)
+            printf '[{"tag_name": "dev", "draft": false}, {"tag_name": "v3.6.0-rc.6", "draft": true}, {"tag_name": "v3.6.0-rc.5", "draft": false}]' ;;
+        https://raw.githubusercontent.com/neodeskapp/neodesk/v3.6.0-rc.4/docker-compose.quick.single.yml)
+            cp "$RELEASE/docker-compose.quick.single.yml" "$dest" ;;
+        https://github.com/neodeskapp/neodesk/releases/download/v3.6.0-rc.5/*|https://github.com/neodeskapp/neodesk/releases/download/dev/*)
+            [ -f "$RELEASE/${url##*/}" ] || return 22
+            cp "$RELEASE/${url##*/}" "$dest" ;;
+        *) return 22 ;;
+    esac
+}
+eval "$CODE"
+RUN
+    # run TAG CODE: CODE in the manager, with the image tag TAG
+    run() { : > "$dir/fetched"; DIR="$dir" RELEASE="$rel" NEODESK_IMAGE_TAG="$1" CODE="$2" bash "$dir/run.sh" > "$dir/out" 2>&1; }
+    # from TAG URL: the compose file of the image tag TAG came from URL
+    from() {
+        rm -f "$dir/compose.yml"
+        run "$1" 'fetch_compose_file "$DIR/compose.yml"' || fail "the compose file of $1: $(cat "$dir/out")"
+        cmp -s "$dir/compose.yml" "$rel/docker-compose.quick.single.yml" || fail "the compose file of $1 is not the release's"
+        grep -qxF "$2" "$dir/fetched" || fail "the compose file of $1 did not come from $2: $(tr '\n' ' ' < "$dir/fetched")"
+        if grep -q 'githubusercontent.com/neodeskapp/neodesk/main' "$dir/fetched"; then fail "a raw file of main was fetched for $1"; fi
+    }
+    local releases=https://github.com/neodeskapp/neodesk/releases/download
+    from 3.6.0-rc.5 "$releases/v3.6.0-rc.5/docker-compose.quick.single.yml"
+    grep -qxF "$releases/v3.6.0-rc.5/SHA256SUMS" "$dir/fetched" || fail "the compose file was not checked against the release's SHA256SUMS"
+    from latest "$releases/v3.6.0-rc.5/docker-compose.quick.single.yml"
+    from dev "$releases/dev/docker-compose.quick.single.yml"
+    from 3.6.0-rc.4 https://raw.githubusercontent.com/neodeskapp/neodesk/v3.6.0-rc.4/docker-compose.quick.single.yml
+    if run local 'fetch_compose_file "$DIR/compose.yml"'; then fail "a local image found a release's compose file"; fi
+
+    # The manager's own copy follows the release
+    run 3.6.0-rc.5 update_manager_copy || fail "the manager's update failed: $(cat "$dir/out")"
+    cmp -s "$dir/install/neodesk-docker.sh" "$rel/neodesk-docker.sh" || fail "the install's manager is not the release's after the update"
+    cp "$SCRIPT_ROOT/install/neodesk-docker.sh" "$dir/install/neodesk-docker.sh"
+    run 3.6.0-rc.4 update_manager_copy || fail "the manager's update failed: $(cat "$dir/out")"
+    cmp -s "$dir/install/neodesk-docker.sh" "$SCRIPT_ROOT/install/neodesk-docker.sh" || fail "a release without the manager replaced it"
+
+    # Files that do not match the release's SHA256SUMS
+    printf '# changed\n' >> "$rel/docker-compose.quick.single.yml"
+    printf '# changed\n' >> "$rel/neodesk-docker.sh"
+    rm -f "$dir/compose.yml"
+    if run 3.6.0-rc.5 'fetch_compose_file "$DIR/compose.yml"'; then fail "a changed compose file was taken"; fi
+    grep -q "does not match" "$dir/out" || fail "a changed compose file says: $(cat "$dir/out")"
+    [ ! -e "$dir/compose.yml" ] || fail "a changed compose file was left in place"
+    run 3.6.0-rc.5 update_manager_copy
+    cmp -s "$dir/install/neodesk-docker.sh" "$SCRIPT_ROOT/install/neodesk-docker.sh" || fail "a changed manager replaced the install's copy"
+    rm -rf "$dir"
+)
+
+# install.sh takes the managers from the release of its own version (or
+# of --version), checked against the release's SHA256SUMS; while its own
+# release is not out (a checkout ahead of the releases) the newest
+# release's. A version given that has no release, or a file that does not
+# match, stops it before anything is installed.
+test_install_sh_takes_the_release_files() (
+    local dir rel
+    dir=$(mktemp -d)
+    rel="$dir/release"
+    mkdir -p "$rel"
+    { printf '#!/bin/sh\n# NEODESK_DOCKER_SOURCED stand-in\n'; head -c 5000 /dev/zero | tr '\0' '#'; printf '\n'; } > "$rel/neodesk-docker.sh"
+    (cd "$rel" && sha256sum neodesk-docker.sh > SHA256SUMS)
+    # fetch ARGS...: install.sh with ARGS fetches the Docker manager
+    fetch() {
+        rm -f "$dir/manager.sh"
+        : > "$dir/fetched"
+        (
+            INSTALL_DIR="$dir/opt"
+            unset NEODESK_RAW_BASE NEODESK_BRANCH RELEASE_BASE_URL NEODESK_VERSION
+            # shellcheck disable=SC1091
+            source "$SCRIPT_ROOT/install/install.sh" "$@"
+            # As piped from curl: no files next to it
+            INSTALLER_FOLDER=""
+            curl() {
+                local a prev="" dest="" url=""
+                for a in "$@"; do [ "$prev" = -o ] && dest="$a"; prev="$a"; url="$a"; done
+                printf '%s\n' "$url" >> "$dir/fetched"
+                case "$url" in
+                    https://api.github.com/*) printf '[{"tag_name": "dev", "draft": false}, {"tag_name": "v3.6.0-rc.5", "draft": false}]' ;;
+                    https://github.com/neodeskapp/neodesk/releases/download/v3.6.0-rc.5/*)
+                        [ -f "$rel/${url##*/}" ] || return 22
+                        cp "$rel/${url##*/}" "$dest" ;;
+                    *) return 22 ;;
+                esac
+            }
+            fetch_docker_manager "$dir/manager.sh"
+        ) > "$dir/out" 2>&1
+    }
+    fetch --version 3.6.0-rc.5 || fail "the manager of --version 3.6.0-rc.5: $(cat "$dir/out")"
+    cmp -s "$dir/manager.sh" "$rel/neodesk-docker.sh" || fail "the manager is not the release's"
+    grep -qx https://github.com/neodeskapp/neodesk/releases/download/v3.6.0-rc.5/SHA256SUMS "$dir/fetched" \
+        || fail "the manager was not checked against the release's SHA256SUMS: $(tr '\n' ' ' < "$dir/fetched")"
+    if grep -q githubusercontent "$dir/fetched"; then fail "a raw file was fetched: $(tr '\n' ' ' < "$dir/fetched")"; fi
+    fetch || fail "the manager of install.sh's own version: $(cat "$dir/out")"
+    cmp -s "$dir/manager.sh" "$rel/neodesk-docker.sh" || fail "without its own release out, install.sh did not take the newest release's manager"
+    grep -q 'taking the files of the newest release, v3.6.0-rc.5' "$dir/out" || fail "install.sh does not say it takes the newest release: $(cat "$dir/out")"
+    if fetch --version 3.6.0-rc.9; then fail "a version without a release installed a manager"; fi
+    [ ! -e "$dir/manager.sh" ] || fail "a version without a release left a manager"
+    printf '# changed\n' >> "$rel/neodesk-docker.sh"
+    if fetch --version 3.6.0-rc.5; then fail "a manager that does not match the release's SHA256SUMS was taken"; fi
+    grep -q 'does not match its SHA256SUMS' "$dir/out" || fail "a changed manager says: $(cat "$dir/out")"
+    [ ! -e "$dir/manager.sh" ] || fail "a changed manager was left in place"
     rm -rf "$dir"
 )
 
@@ -826,5 +958,7 @@ test_install_sh_leaves_an_inactive_ufw_alone
 test_traefik_with_letsencrypt
 test_traefik_errors_say_what_to_do
 test_install_sh_passes_the_domain
+test_files_come_from_the_release
+test_install_sh_takes_the_release_files
 echo "Docker installer checks passed"
 bash "$SCRIPT_ROOT/scripts/test-docker-entrypoint.sh"

@@ -586,6 +586,78 @@ function Test-WindowsFirstHour {
     Remove-Item -Recurse -Force $dir
 }
 
+# The installer's copy (neodesk.ps1 in the server's folder) comes from the
+# release it installs, never from a branch's raw files: the folder this
+# run downloaded from, else the release of the installed binary's version,
+# or the "dev" release on the development channel. The release's
+# SHA256SUMS checks it, and the installed binary the list's signature; a
+# copy that fails, or a release without neodesk.ps1 (3.6.0-rc.4 and
+# older), leaves the copy as it is.
+function Test-InstallerComesFromTheRelease {
+    $dir = New-TestInstall
+    $rel = Join-Path $dir 'release'
+    New-Item -ItemType Directory -Path $rel -Force | Out-Null
+    $copy = Join-Path $script:RUSTDESK_PATH 'neodesk.ps1'
+    $release = Join-Path $rel 'neodesk.ps1'
+    Set-Content -Path $release -Value @('function Install-ManagerScript { }', "# the release's copy")
+    $sum = (Get-FileHash -Path $release -Algorithm SHA256).Hash.ToLower()
+    Set-Content -Path (Join-Path $rel 'SHA256SUMS') -Value "$sum  neodesk.ps1"
+    Set-Content -Path (Join-Path $rel 'SHA256SUMS.sig') -Value 'c2lnbmF0dXJl'
+    function Invoke-WebRequest {
+        param($Uri, $OutFile, [switch]$UseBasicParsing, $ErrorAction)
+        $script:fetched += "$Uri"
+        $from = Join-Path $rel (($Uri -split '/')[-1])
+        if (-not (Test-Path $from)) { throw [System.Net.WebException]::new('The remote server returned an error: (404) Not Found.') }
+        Copy-Item -Path $from -Destination $OutFile -Force
+    }
+    function Get-ServerBinaryPath { 'fake-verify' }
+    function Test-BinaryChecksFileLists { param($Path) $Path -eq 'fake-verify' }
+    function fake-verify {
+        if ($args[0] -eq '-version') { 'neodesk-server 3.6.0-rc.5 (built 2026-11-25T10:00:00Z, commit abc1234)'; return }
+        $script:verifyArgs = @($args | ForEach-Object { "$_" })
+        $global:LASTEXITCODE = if ($script:refuse) { 1 } else { 0 }
+    }
+    $script:SKIP_VERIFY = $false
+    $script:refuse = $false
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = 'main'
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    $env:RELEASE_BASE_URL = $null
+    # As the installed copy (an update)
+    $script:SELF_PATH = $copy
+    $installed = @('function Install-ManagerScript { }', '# the installed copy')
+
+    foreach ($case in @(
+            @{ Folder = 'https://example.test/releases/x'; Branch = 'main'; From = 'https://example.test/releases/x'; What = 'the folder this run installed from' },
+            @{ Folder = ''; Branch = 'main'; From = 'https://github.com/neodeskapp/neodesk/releases/download/v3.6.0-rc.5'; What = "the installed binary's release" },
+            @{ Folder = ''; Branch = 'dev'; From = 'https://github.com/neodeskapp/neodesk/releases/download/dev'; What = 'the development channel' })) {
+        Set-Content -Path $copy -Value $installed
+        $script:RELEASE_FOLDER_USED = $case.Folder
+        $script:UPDATE_GITHUB_BRANCH = $case.Branch
+        $script:UPDATE_GITHUB_BRANCH_GIVEN = $case.Branch
+        $script:fetched = @()
+        Install-ManagerScript 6> $null
+        if ($script:fetched -notcontains "$($case.From)/neodesk.ps1") { Fail "$($case.What): neodesk.ps1 came from $($script:fetched -join ' ')" }
+        if ((Get-FileHash $copy).Hash -ne (Get-FileHash $release).Hash) { Fail "$($case.What): the copy is not the release's neodesk.ps1" }
+        if (($script:fetched -join ' ') -match 'githubusercontent') { Fail "$($case.What): a raw file was fetched" }
+        if ($script:verifyArgs -notcontains '--sums') { Fail "$($case.What): the installed binary did not check the list's signature" }
+    }
+    $script:RELEASE_FOLDER_USED = 'https://example.test/releases/x'
+    $script:UPDATE_GITHUB_BRANCH = 'main'
+    $script:UPDATE_GITHUB_BRANCH_GIVEN = 'main'
+    foreach ($case in @('signature', 'changed', 'none')) {
+        Set-Content -Path $copy -Value $installed
+        $before = (Get-FileHash $copy).Hash
+        $script:refuse = $case -eq 'signature'
+        if ($case -eq 'changed') { Add-Content -Path $release -Value '# changed' }
+        if ($case -eq 'none') { Remove-Item -Path $release, (Join-Path $rel 'SHA256SUMS') -Force }
+        Install-ManagerScript 6> $null
+        if ((Get-FileHash $copy).Hash -ne $before) { Fail "a release copy that fails its check ($case) replaced the installer's copy" }
+    }
+    $script:refuse = $false
+    $script:RELEASE_FOLDER_USED = ''
+    Remove-Item -Recurse -Force $dir
+}
+
 # NeoDesk has no way from the old Node.js console: -RollbackGo and
 # -CleanupNode are gone, and an install or an update on a server that
 # still runs the Node.js console stops with what to do and changes nothing.
@@ -1220,6 +1292,7 @@ Test-PanelPublicHost
 Test-WindowsFirstHour
 Test-CommandLineOnThePath
 Test-NoUpgradeFromTheNodeConsole
+Test-InstallerComesFromTheRelease
 Test-UpdateAsksTheFork
 Test-FirewallPorts
 Test-CertificateFromTheBinary

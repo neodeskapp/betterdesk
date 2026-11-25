@@ -22,6 +22,8 @@ set -euo pipefail
 
 SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OLD_TAG=3.6.0-rc.4
+# 3.6.0-rc.4's files are at its tag's root; since 3.6.0-rc.5 they are in
+# install/ and attached to the release
 OLD_MANAGER_URL="https://raw.githubusercontent.com/neodeskapp/neodesk/v${OLD_TAG}/neodesk-docker.sh"
 IMAGE=ghcr.io/neodeskapp/neodesk
 export NO_COLOR=1 NEODESK_HEALTH_TIMEOUT="${NEODESK_HEALTH_TIMEOUT:-240}"
@@ -120,9 +122,55 @@ docker logs neodesk > "$WORK/start.log" 2>&1
 grep -q 'mounted at /opt/rustdesk' "$WORK/start.log" || fail "the start does not say the data volume is at the old path: $(head -n 20 "$WORK/start.log")"
 cp "$WORK/env-rc4" "$DIR/.env"
 
-echo "== the update with this checkout's manager"
-bash "$SCRIPT_ROOT/install/neodesk-docker.sh" update --dir "$DIR" --tag local --no-pull --yes \
+echo "== $OLD_TAG's own update, with main's raw files gone"
+# Since the files moved into install/, main's raw docker-compose.quick.single.yml,
+# which $OLD_TAG's manager fetches, answers 404 (a stand-in curl here). The
+# update stops before it changes anything.
+mkdir -p "$WORK/stub"
+cat > "$WORK/stub/curl" <<EOF
+#!/bin/bash
+url="\${!#}"
+case "\$url" in
+    https://raw.githubusercontent.com/*/main/*)
+        printf '%s\n' "\$url" >> "$WORK/fetched"
+        echo "curl: (22) The requested URL returned error: 404" >&2
+        exit 22
+        ;;
+esac
+exec "$(command -v curl)" "\$@"
+EOF
+chmod 755 "$WORK/stub/curl"
+compose_before=$(sha256sum "$DIR/docker-compose.yml" | cut -c1-64)
+image_before=$(docker container inspect -f '{{.Image}}' neodesk)
+code=0
+PATH="$WORK/stub:$PATH" bash "$WORK/old-docker.sh" update --dir "$DIR" --yes > "$WORK/old-update.log" 2>&1 || code=$?
+[ "$code" != 0 ] || fail "$OLD_TAG's update without main's raw files reported success"
+grep -q 'raw.githubusercontent.com/neodeskapp/neodesk/main/docker-compose.quick.single.yml' "$WORK/fetched" \
+    || fail "$OLD_TAG's update did not ask for main's raw compose file: $(cat "$WORK/fetched" 2>&1)"
+[ "$(sha256sum "$DIR/docker-compose.yml" | cut -c1-64)" = "$compose_before" ] || fail "$OLD_TAG's failed update changed the compose file"
+[ "$(docker container inspect -f '{{.Image}}' neodesk)" = "$image_before" ] || fail "$OLD_TAG's failed update changed the container"
+wait_up || fail "the server does not answer after $OLD_TAG's failed update"
+
+echo "== the update with this release's manager, from its release"
+# The manager as install.sh leaves it in the install folder, with
+# RELEASE_BASE_URL naming a stand-in for the release on GitHub: the
+# compose file comes from the release, checked against its SHA256SUMS,
+# and the manager replaces itself with the release's
+REL="$WORK/release"
+mkdir -p "$REL"
+{ cat "$SCRIPT_ROOT/install/docker-compose.quick.single.yml"; printf "# the release's copy\n"; } > "$REL/docker-compose.quick.single.yml"
+{ cat "$SCRIPT_ROOT/install/neodesk-docker.sh"; printf "# the release's copy\n"; } > "$REL/neodesk-docker.sh"
+(cd "$REL" && sha256sum docker-compose.quick.single.yml neodesk-docker.sh > SHA256SUMS)
+python3 -m http.server 8444 --bind 127.0.0.1 --directory "$REL" > "$WORK/release-server.log" 2>&1 &
+RELEASE_SERVER=$!
+trap 'kill "$RELEASE_SERVER" 2>/dev/null || true; cleanup' EXIT
+for _ in $(seq 1 50); do curl -fs -o /dev/null http://127.0.0.1:8444/SHA256SUMS && break; sleep 0.2; done
+install -m 0755 "$SCRIPT_ROOT/install/neodesk-docker.sh" "$DIR/neodesk-docker.sh"
+RELEASE_BASE_URL=http://127.0.0.1:8444 bash "$DIR/neodesk-docker.sh" update --dir "$DIR" --tag local --no-pull --yes \
     > "$WORK/update.log" 2>&1 || fail "the update failed: $(tail -n 40 "$WORK/update.log")"
+grep -q "^# the release's copy$" "$DIR/docker-compose.yml" || fail "the compose file is not the release's"
+cmp -s "$DIR/neodesk-docker.sh" "$REL/neodesk-docker.sh" || fail "the manager did not update itself from the release"
+grep -q '"GET /SHA256SUMS' "$WORK/release-server.log" || fail "the release's SHA256SUMS was not fetched"
 [ "$(data_mount)" = /opt/neodesk/data ] || fail "after the update the data volume is mounted at $(data_mount)"
 if in_container 'test -e /opt/rustdesk || test -L /opt/rustdesk'; then fail "after the update the container has something at /opt/rustdesk"; fi
 [ "$(in_container 'cat /opt/neodesk/data/id_ed25519.pub')" = "$key" ] || fail "the update changed the server's key"

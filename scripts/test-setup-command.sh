@@ -3,14 +3,21 @@
 # installer's manager, and neodesk is the command line, a copy of the
 # server binary that is root's own and that every user may run (the
 # server folder stays closed), and that hands the installer's options to
-# neodesk-setup. A fresh install with the server built from this checkout,
+# neodesk-setup. A local stand-in for neode.sk and the GitHub releases
+# serves the installers: a fresh install by the public command (curl
+# https://neode.sk/install.sh | sudo bash -s -- --native) with the server
+# built from this checkout,
 # the command line as a normal user (its help, a list of devices with an
 # API token, and what --update says), the installer's options and a bare
 # `sudo neodesk` through the new name, an update by neodesk-setup of an
 # install whose neodesk is still the link of an earlier build, the update
 # of an install whose /usr/local/sbin/neodesk is the old manager
-# (3.6.0-rc.4), an update whose binary does not start (it goes back to the
-# binary from before), and the uninstall. The backups go to
+# (3.6.0-rc.4) by that manager, which finds main's raw files gone after
+# they moved into install/ and keeps itself, and by the one manual step
+# its release notes give (the new neodesk.sh once, from neode.sk), an
+# update whose binary does not start (it goes back to the binary from
+# before), and the uninstall. neodesk-setup comes from the release each
+# run installs, never from main's raw files. The backups go to
 # /opt/neodesk-backups, and the old manager's backups in
 # /opt/rustdesk-backups move there, with nothing left at the old place
 # (L446).
@@ -69,28 +76,78 @@ else
 fi
 grep -qx 'MANAGER_COMMAND="/usr/local/sbin/neodesk"' "$WORK/old-manager" || fail "$WORK/old-manager is not the old manager"
 
-# What an update saves as the manager: this checkout's neodesk.sh with
-# its top made longer, so a copy written over a running script would
-# break that script's run
+# What the next release has as neodesk.sh: this checkout's with its top
+# made longer, so a copy written over a running script would break that
+# script's run
 {
     head -n 1 "$SCRIPT_ROOT/install/neodesk.sh"
     for _ in $(seq 1 300); do printf '# The newest installer, as the update fetches it\n'; done
     tail -n +2 "$SCRIPT_ROOT/install/neodesk.sh"
 } > "$WORK/newest.sh"
 
-# curl: the newest installer for the address the manager fetches itself
-# from, the real curl for everything else
+# The stand-in: https://127.0.0.1:8443 answers /install.sh and the like
+# with a redirect to the newest release's file, as neode.sk does, and
+# serves two releases as GitHub does under /releases/download/<tag>/:
+# v9.9.9 with this checkout's installers and binary, v9.9.10 with the
+# next neodesk.sh. Each has a SHA256SUMS; the binary of this checkout
+# does not carry the key a test could sign with, so the runs take
+# --skip-verify (the signature checks have tests of their own). curl
+# trusts the stand-in's certificate through CURL_CA_BUNDLE.
+STANDIN=https://127.0.0.1:8443
+FIRST="$STANDIN/releases/download/v9.9.9"
+NEXT="$STANDIN/releases/download/v9.9.10"
+mkdir -p "$WORK/www/releases/download/v9.9.9" "$WORK/www/releases/download/v9.9.10"
+cp "$SCRIPT_ROOT/install/install.sh" "$SCRIPT_ROOT/install/neodesk.sh" "$WORK/www/releases/download/v9.9.9/"
+cp "$WORK/neodesk-server" "$WORK/www/releases/download/v9.9.9/neodesk-server-linux-amd64"
+cp "$WORK/newest.sh" "$WORK/www/releases/download/v9.9.10/neodesk.sh"
+for d in "$WORK"/www/releases/download/*; do (cd "$d" && sha256sum -- * > SHA256SUMS); done
+openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -days 1 -subj /CN=127.0.0.1 \
+    -addext subjectAltName=IP:127.0.0.1 -keyout "$WORK/standin.key" -out "$WORK/standin.crt" >/dev/null 2>&1 \
+    || fail "could not make the stand-in's certificate"
+cat /etc/ssl/certs/ca-certificates.crt "$WORK/standin.crt" > "$WORK/ca-bundle.crt"
+export CURL_CA_BUNDLE="$WORK/ca-bundle.crt"
+cat > "$WORK/standin.py" <<'PY'
+import http.server, os, ssl, sys
+root, log, cert, key = sys.argv[1:5]
+class Handler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *a, **k):
+        super().__init__(*a, directory=root, **k)
+    def log_message(self, fmt, *args):
+        with open(log, 'a') as f:
+            f.write(self.path + '\n')
+    def do_GET(self):
+        name = self.path.lstrip('/')
+        if name in ('install.sh', 'neodesk.sh', 'neodesk.ps1', 'neodesk-docker.sh') or name.startswith('install/'):
+            self.send_response(302)
+            self.send_header('Location', '/releases/download/v9.9.9/' + name.split('/')[-1])
+            self.end_headers()
+            self.log_message('')
+            return
+        super().do_GET()
+server = http.server.ThreadingHTTPServer(('127.0.0.1', 8443), Handler)
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+context.load_cert_chain(cert, key)
+server.socket = context.wrap_socket(server.socket, server_side=True)
+server.serve_forever()
+PY
+python3 "$WORK/standin.py" "$WORK/www" "$WORK/served" "$WORK/standin.crt" "$WORK/standin.key" &
+STANDIN_PID=$!
+trap 'kill "$STANDIN_PID" 2>/dev/null || true' EXIT
+for _ in $(seq 1 50); do curl -fsS -o /dev/null "$FIRST/SHA256SUMS" 2>/dev/null && break; sleep 0.2; done
+curl -fsS -o /dev/null "$FIRST/SHA256SUMS" || fail "the stand-in for neode.sk does not answer"
+
+# curl: main's raw files are gone since they moved into install/, so
+# GitHub answers 404 for the address 3.6.0-rc.4's manager fetches itself
+# from; the real curl for everything else
 mkdir -p "$WORK/stub"
 cat > "$WORK/stub/curl" <<EOF
 #!/bin/bash
 url="\${!#}"
 case "\$url" in
-    https://raw.githubusercontent.com/*/neodesk.sh)
-        dest="" prev=""
-        for a in "\$@"; do [ "\$prev" = -o ] && dest="\$a"; prev="\$a"; done
+    https://raw.githubusercontent.com/*)
         printf '%s\n' "\$url" >> "$WORK/fetched"
-        cp "$WORK/newest.sh" "\$dest"
-        exit 0
+        echo "curl: (22) The requested URL returned error: 404" >&2
+        exit 22
         ;;
 esac
 exec "$(command -v curl)" "\$@"
@@ -152,12 +209,16 @@ new_layout() {
     [ "$(command -v neodesk)" = "$CLI" ] || fail "$1: neodesk is $(command -v neodesk)"
 }
 
-echo "== fresh install"
-RELAY_SERVERS=127.0.0.1 bash "$SCRIPT_ROOT/install/neodesk.sh" --auto --binary "$WORK/neodesk-server" \
-    < /dev/null > "$WORK/install.log" 2>&1 || fail "the install failed: $(tail -n 40 "$WORK/install.log")"
+echo "== fresh install by the public command, through the stand-in for neode.sk"
+curl -fsSL "$STANDIN/install.sh" | RELEASE_BASE_URL="$FIRST" RELAY_SERVERS=127.0.0.1 bash -s -- --native --skip-verify \
+    > "$WORK/install.log" 2>&1 || fail "the install failed: $(tail -n 40 "$WORK/install.log")"
 ran_cleanly "the install" "$WORK/install.log"
 hash -r
 new_layout "after a fresh install" "$SCRIPT_ROOT/install/neodesk.sh"
+for f in /install.sh /releases/download/v9.9.9/install.sh /releases/download/v9.9.9/neodesk.sh /releases/download/v9.9.9/neodesk-server-linux-amd64; do
+    grep -qxF "$f" "$WORK/served" || fail "the install did not fetch $f: $(tr '\n' ' ' < "$WORK/served")"
+done
+[ ! -e /opt/neodesk/source ] || fail "the install cloned the repository"
 
 echo "== the command line for every user"
 # The server folder stays closed; the command line is outside it
@@ -213,8 +274,10 @@ ln -sfn "$BIN" "$CLI"
 cp "$WORK/neodesk-server" "$WORK/neodesk-server-next"
 printf 'the next release\n' >> "$WORK/neodesk-server-next"
 inode=$(stat -c %i "$SETUP")
-neodesk --update --binary "$WORK/neodesk-server-next" < /dev/null > "$WORK/update.log" 2>&1 \
+: > "$WORK/served"
+RELEASE_BASE_URL="$NEXT" neodesk --update --binary "$WORK/neodesk-server-next" --skip-verify < /dev/null > "$WORK/update.log" 2>&1 \
     || fail "neodesk --update failed: $(tail -n 40 "$WORK/update.log")"
+grep -qxF /releases/download/v9.9.10/neodesk.sh "$WORK/served" || fail "neodesk-setup did not come from the release: $(tr '\n' ' ' < "$WORK/served")"
 ran_cleanly "neodesk --update" "$WORK/update.log"
 grep -qE 'neodesk-server is up to date|Updated to' "$WORK/update.log" || fail "the update did not finish: $(tail -n 20 "$WORK/update.log")"
 [ "$(stat -c %i "$SETUP")" != "$inode" ] || fail "neodesk-setup was written over while it ran"
@@ -250,20 +313,30 @@ rm -f "$SETUP" "$CLI"
 install -m 0755 "$WORK/old-manager" "$OLD"
 hash -r
 [ "$(command -v neodesk)" = "$OLD" ] || fail "the old manager is not the neodesk command: $(command -v neodesk)"
+: > "$WORK/fetched"
 neodesk --update --binary "$WORK/neodesk-server" < /dev/null > "$WORK/old-update.log" 2>&1 \
     || fail "the old manager's update failed: $(tail -n 40 "$WORK/old-update.log")"
 ran_cleanly "the old manager's update" "$WORK/old-update.log"
 grep -qE 'neodesk-server is up to date|Updated to' "$WORK/old-update.log" || fail "the old manager's update did not finish"
-cmp -s "$OLD" "$WORK/newest.sh" || fail "the old manager did not save the newest installer"
+# It asked for main's raw neodesk.sh, got the 404 and kept itself
+grep -q '^https://raw.githubusercontent.com/neodeskapp/neodesk/main/neodesk.sh$' "$WORK/fetched" \
+    || fail "the old manager did not ask for main's raw file: $(cat "$WORK/fetched")"
+cmp -s "$OLD" "$WORK/old-manager" || fail "the old manager changed although main's raw file is gone"
+systemctl is-active --quiet neodesk-server || fail "the server does not run after the old manager's update"
 old_backup=$(ls -1t "$OLD_BACKUPS"/neodesk_backup_*.tar.gz 2>/dev/null | head -n 1)
 [ -n "$old_backup" ] || fail "the old manager made no backup in $OLD_BACKUPS"
-# The newest installer at the old place moves itself at its first run and
-# hands the call on: the installer's option to neodesk-setup
+# The one manual step of the release notes: the new neodesk.sh once,
+# from neode.sk. It takes neodesk-setup from the release and moves the
+# old manager and its backups.
+: > "$WORK/served"
+curl -fsSL "$STANDIN/neodesk.sh" | RELEASE_BASE_URL="$NEXT" bash -s -- --update --binary "$WORK/neodesk-server" --skip-verify \
+    > "$WORK/manual-step.log" 2>&1 || fail "the manual step failed: $(tail -n 40 "$WORK/manual-step.log")"
+ran_cleanly "the manual step" "$WORK/manual-step.log"
+grep -qxF /releases/download/v9.9.10/neodesk.sh "$WORK/served" || fail "the manual step did not take neodesk-setup from the release"
 hash -r
-out=$(neodesk --check-permissions < /dev/null 2>&1) || fail "neodesk --check-permissions after the old manager's update: $out"
-case "$out" in *"management capabilities are ready"*) ;; *) fail "the first call after the old manager's update: $out" ;; esac
-hash -r
-new_layout "after the first call" "$WORK/newest.sh"
+new_layout "after the manual step" "$WORK/newest.sh"
+out=$(neodesk --check-permissions < /dev/null 2>&1) || fail "neodesk --check-permissions after the manual step: $out"
+case "$out" in *"management capabilities are ready"*) ;; *) fail "the first call after the manual step: $out" ;; esac
 # The old manager's backups moved, and nothing is left at the old place
 [ ! -e "$OLD_BACKUPS" ] && [ ! -L "$OLD_BACKUPS" ] || fail "$OLD_BACKUPS is still there: $(ls -ld "$OLD_BACKUPS" 2>&1)"
 [ -f "$BACKUPS/$(basename "$old_backup")" ] || fail "the old manager's backup did not move to $BACKUPS"

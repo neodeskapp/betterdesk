@@ -14,9 +14,17 @@
 // checks it. While a key is compiled in, a release without a signing key
 // is refused: no install would take it.
 //
+// The installers and compose files the release workflow puts into the
+// folder (installerFiles) are release files too: SHA256SUMS lists them
+// with the binaries and the manifest, and SHA256SUMS.sig is the release
+// key's signature of that list (updater.SumsPayload), which the scripts
+// check before they update themselves from a release. The manifest names
+// the binaries only, as installed updaters read it.
+//
 // With -check the command writes nothing: it checks an existing release
-// folder (the manifest's form, every binary's SHA-256 and size, and the
-// signature against the compiled keys and -verify-key).
+// folder (the manifest's form, every binary's SHA-256 and size, the
+// signature against the compiled keys and -verify-key, and SHA256SUMS
+// with its signature).
 package main
 
 import (
@@ -105,10 +113,11 @@ func run(args []string, getenv func(string) string, out io.Writer) error {
 	}
 	written := []string{"manifest.json"}
 
+	var key ed25519.PrivateKey
 	payload := updater.CanonicalPayload(manifest.Signed())
 	compiled, extra := updater.CompiledKeys(), updater.ParseKeys(*verifyKey)
 	if seed := strings.TrimSpace(getenv("NEODESK_RELEASE_SIGNING_KEY")); seed != "" {
-		key, err := privateKey(seed)
+		key, err = privateKey(seed)
 		if err != nil {
 			return err
 		}
@@ -130,23 +139,88 @@ func run(args []string, getenv func(string) string, out io.Writer) error {
 		fmt.Fprintln(out, "NEODESK_RELEASE_SIGNING_KEY is not set: the release is not signed")
 	}
 
-	var sums strings.Builder
 	names := append([]string{}, written...)
 	for _, f := range manifest.Files {
 		names = append(names, f.Path)
 	}
+	if err := writeFileList(*dir, names, key); err != nil {
+		return err
+	}
+	fmt.Fprintf(out, "wrote manifest.json (%d binaries), SHA256SUMS%s\n", len(manifest.Files),
+		map[bool]string{true: ", manifest.sig, SHA256SUMS.sig"}[len(written) > 1])
+	return nil
+}
+
+// installerFiles are the files of install/ that the release workflow puts
+// next to the binaries, for the scripts to take from the release.
+var installerFiles = []string{
+	"install.sh", "neodesk.sh", "neodesk.ps1", "neodesk-docker.sh",
+	"docker-compose.single.yml", "docker-compose.quick.single.yml", "docker-compose.quick.single.macvlan.yml",
+}
+
+// writeFileList writes SHA256SUMS for names and the installer files in
+// dir, and SHA256SUMS.sig, the signature of the list with key, unless key
+// is nil.
+func writeFileList(dir string, names []string, key ed25519.PrivateKey) error {
+	names = append([]string{}, names...)
+	for _, name := range installerFiles {
+		if st, err := os.Stat(filepath.Join(dir, name)); err == nil && st.Mode().IsRegular() {
+			names = append(names, name)
+		}
+	}
 	sort.Strings(names)
+	var sums strings.Builder
 	for _, name := range names {
-		sum, _, err := hashFile(filepath.Join(*dir, name))
+		sum, _, err := hashFile(filepath.Join(dir, name))
 		if err != nil {
 			return err
 		}
 		sums.WriteString(sum + "  " + name + "\n")
 	}
-	if err := os.WriteFile(filepath.Join(*dir, "SHA256SUMS"), []byte(sums.String()), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "SHA256SUMS"), []byte(sums.String()), 0o644); err != nil {
 		return err
 	}
-	fmt.Fprintf(out, "wrote manifest.json (%d binaries), SHA256SUMS%s\n", len(manifest.Files), map[bool]string{true: ", manifest.sig"}[len(written) > 1])
+	sigPath := filepath.Join(dir, "SHA256SUMS.sig")
+	if key == nil {
+		if err := os.Remove(sigPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+		return nil
+	}
+	sig := base64.StdEncoding.EncodeToString(ed25519.Sign(key, updater.SumsPayload([]byte(sums.String())))) + "\n"
+	return os.WriteFile(sigPath, []byte(sig), 0o644)
+}
+
+// checkFileList checks the folder's SHA256SUMS: it lists every installer
+// file in dir with the file's SHA-256, and SHA256SUMS.sig verifies against
+// one of the keys (with no keys, the signature is not checked).
+func checkFileList(dir string, keys updater.Keys) error {
+	sums, err := os.ReadFile(filepath.Join(dir, "SHA256SUMS"))
+	if err != nil {
+		return err
+	}
+	for _, name := range installerFiles {
+		if _, err := os.Stat(filepath.Join(dir, name)); err != nil {
+			continue
+		}
+		want := updater.SumOf(sums, name)
+		if want == "" {
+			return fmt.Errorf("SHA256SUMS does not list %s", name)
+		}
+		if got, _, err := hashFile(filepath.Join(dir, name)); err != nil || got != want {
+			return fmt.Errorf("%s does not match SHA256SUMS", name)
+		}
+	}
+	if len(keys) == 0 {
+		return nil
+	}
+	sig, err := os.ReadFile(filepath.Join(dir, "SHA256SUMS.sig"))
+	if err != nil {
+		return fmt.Errorf("the release has no SHA256SUMS.sig: %w", err)
+	}
+	if !updater.VerifySignature(updater.SumsPayload(sums), sig, keys) {
+		return errors.New("SHA256SUMS.sig does not verify against the release key")
+	}
 	return nil
 }
 
@@ -221,6 +295,13 @@ func checkRelease(dir, owner, repo, branch, keys string, out io.Writer) error {
 	}
 	if keys != "" && (sig == nil || !updater.VerifySignature(payload, sig, updater.ParseKeys(keys))) {
 		return errors.New("the signature does not verify against -verify-key")
+	}
+	listKeys := updater.CompiledKeys()
+	if keys != "" {
+		listKeys = append(listKeys, updater.ParseKeys(keys)...)
+	}
+	if err := checkFileList(dir, listKeys); err != nil {
+		return err
 	}
 	fmt.Fprintf(out, "release %s (%s) of %s/%s: %d binaries match, signature: %s\n", m.Version, m.SHA[:7], owner, repo, len(m.Files),
 		map[bool]string{true: "verified", false: "not verified (" + trust.Code + ")"}[trust.Verified])

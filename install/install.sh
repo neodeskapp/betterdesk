@@ -8,8 +8,8 @@
 # Docker, move a two-container (split) install to the one container:
 #   curl -fsSL .../install.sh | sudo bash -s -- --migrate-split
 #
-# Native (git clone + neodesk.sh --auto): the newest stable release, or
-# the development build while the repository has none:
+# Native (neodesk.sh --auto of the release): the newest stable release,
+# or the development build while the repository has none:
 #   curl -fsSL https://neode.sk/install.sh | sudo bash -s -- --native
 # Native, the development build: add --channel dev
 #
@@ -19,7 +19,9 @@
 #                                with the one container, which takes its data over
 #   --install-dir PATH             Install directory (default: /opt/neodesk)
 #   --version TAG                  Docker image tag to pin (default: latest, the newest release)
-#   --branch BRANCH                Git branch of the installer files (default: main)
+#   --branch BRANCH                Take the installer files of a git branch instead of the
+#                                  release's (development; native installs clone it)
+#   --skip-verify                  Native: install a release signed with another key (a fork's)
 #   --channel stable|dev           Native: release channel (default: stable)
 #   --relay-mode auto|local|public Relay auto-detection strategy
 #   --relay-servers IP[:port]      Fixed relay address (overrides --relay-mode)
@@ -43,19 +45,25 @@
 # Environment overrides (same names as flags where applicable):
 #   NEODESK_REPO, NEODESK_BRANCH, NEODESK_VERSION, INSTALL_DIR,
 #   RELAY_MODE, RELAY_SERVERS, ADMIN_PASSWORD, NEODESK_RAW_BASE,
-#   NEODESK_DOMAIN, LETSENCRYPT_EMAIL
+#   NEODESK_DOMAIN, LETSENCRYPT_EMAIL, RELEASE_BASE_URL (a release folder
+#   with the files: SHA256SUMS, neodesk.sh, neodesk-docker.sh, ...)
 # =============================================================================
 
 set -euo pipefail
 
 VERSION="1.0.0"
 NEODESK_REPO="${NEODESK_REPO:-neodeskapp/neodesk}"
-# The branch whose files this installer fetches (neodesk.sh for a native
-# install, neodesk-docker.sh for Docker): the repository's branch, main.
-# Override with --branch / NEODESK_BRANCH. The branch names no release
-# channel; that is --channel.
-NEODESK_INSTALLER_CHANNEL="main"
-NEODESK_BRANCH="${NEODESK_BRANCH:-$NEODESK_INSTALLER_CHANNEL}"
+# Where the managers this installer runs come from (neodesk.sh for a
+# native install, neodesk-docker.sh for Docker), the first that applies:
+# RELEASE_BASE_URL, a release folder; a git branch (--branch /
+# NEODESK_BRANCH, for development: its install/ folder, and a native
+# install clones it); the files next to this installer when it runs from
+# a file that has them (a checkout's install/ folder, a downloaded
+# release); else the release of this installer's version (the default of
+# NEODESK_VERSION), or of --version, checked against the release's
+# SHA256SUMS. The branch names no release channel; that is --channel.
+NEODESK_BRANCH="${NEODESK_BRANCH:-}"
+SKIP_VERIFY=false
 # The release channel of a native install: stable or dev; empty leaves it
 # to neodesk.sh (stable, or dev while there is no stable release)
 RELEASE_CHANNEL=""
@@ -63,7 +71,12 @@ RELEASE_CHANNEL=""
 # the install runs latest, the newest release (DECISIONS A163)
 NEODESK_VERSION_GIVEN="${NEODESK_VERSION:-}"
 NEODESK_VERSION="${NEODESK_VERSION:-3.6.2}"
-NEODESK_RAW_BASE="${NEODESK_RAW_BASE:-https://raw.githubusercontent.com/${NEODESK_REPO}/${NEODESK_BRANCH}/install}"
+NEODESK_RAW_BASE="${NEODESK_RAW_BASE:-${NEODESK_BRANCH:+https://raw.githubusercontent.com/${NEODESK_REPO}/${NEODESK_BRANCH}/install}}"
+# The folder this installer runs from, when it is a file (not piped)
+INSTALLER_FOLDER=""
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+    INSTALLER_FOLDER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
 INSTALL_DIR="${INSTALL_DIR:-/opt/neodesk}"
 INSTALL_MODE="docker"
 MIGRATE_SPLIT=false
@@ -209,6 +222,7 @@ while [ $# -gt 0 ]; do
         --install-dir) INSTALL_DIR="$2"; shift 2 ;;
         --version) NEODESK_VERSION="$2"; NEODESK_VERSION_GIVEN="$2"; shift 2 ;;
         --branch) NEODESK_BRANCH="$2"; NEODESK_RAW_BASE="https://raw.githubusercontent.com/${NEODESK_REPO}/${NEODESK_BRANCH}/install"; shift 2 ;;
+        --skip-verify) SKIP_VERIFY=true; shift ;;
         --channel)
             case "${2:-}" in
                 stable|main|dev|development) RELEASE_CHANNEL="$2" ;;
@@ -403,18 +417,91 @@ is_split_install() {
         || grep -Eqs 'ghcr\.io/[a-z0-9._-]+/neodesk-console' "${compose_dir}/docker-compose.yml"
 }
 
-# fetch_docker_manager DEST: neodesk-docker.sh of this installer's
-# branch, which installs, updates and removes NeoDesk on Docker.
-fetch_docker_manager() {
-    local dest="$1"
+# newest_release_tag: the tag of the newest published release, a
+# pre-release too, other than the rolling "dev" one; GitHub lists the
+# releases newest first, each with tag_name before draft
+newest_release_tag() {
+    local tag
+    tag=$(curl -fsSL --max-time 30 --proto '=https' --tlsv1.2 -H 'Accept: application/vnd.github+json' \
+        "https://api.github.com/repos/${NEODESK_REPO}/releases?per_page=20" 2>/dev/null \
+        | tr -d '\r\n' \
+        | grep -oE '"(tag_name|draft)"[[:space:]]*:[[:space:]]*("[^"]*"|true|false)' \
+        | sed -E 's/^"([a-z_]+)"[[:space:]]*:[[:space:]]*"?([^"]*)"?$/\1 \2/' \
+        | awk '$1 == "tag_name" { tag = $2 } $1 == "draft" && $2 == "false" && tag != "dev" && tag ~ /^v[0-9][A-Za-z0-9._-]*$/ { print tag; exit }') || true
+    [ -n "$tag" ] || return 1
+    printf '%s\n' "$tag"
+}
+
+# release_base: the folder of the release whose managers this installer
+# runs: RELEASE_BASE_URL, else the release of NEODESK_VERSION (this
+# installer's own, or --version): the newest for latest, the rolling one
+# for dev
+release_base() {
+    if [ -n "${RELEASE_BASE_URL:-}" ]; then
+        printf '%s\n' "${RELEASE_BASE_URL%/}"
+        return 0
+    fi
+    local tag
+    case "$NEODESK_VERSION" in
+        latest) tag=$(newest_release_tag) || return 1 ;;
+        dev) tag=dev ;;
+        v[0-9]*) tag="$NEODESK_VERSION" ;;
+        [0-9]*.[0-9]*.[0-9]*) tag="v$NEODESK_VERSION" ;;
+        *) return 1 ;;
+    esac
+    printf 'https://github.com/%s/releases/download/%s\n' "$NEODESK_REPO" "$tag"
+}
+
+# fetch_manager NAME DEST: the manager NAME (neodesk.sh, neodesk-docker.sh)
+# as DEST, from where this installer takes its files (see NEODESK_BRANCH
+# above). A release's file is checked against the release's SHA256SUMS;
+# while this installer's own release is not out (a checkout ahead of the
+# releases), the newest release's is taken.
+fetch_manager() {
+    local name="$1" dest="$2" base sums expected newest
     mkdir -p "$(dirname "$dest")"
-    fetch_url_to_file "${NEODESK_RAW_BASE}/neodesk-docker.sh" "$dest.tmp" 4096 524288
-    if ! grep -q 'NEODESK_DOCKER_SOURCED' "$dest.tmp"; then
-        rm -f "$dest.tmp"
-        die "The downloaded neodesk-docker.sh is not NeoDesk's Docker manager (${NEODESK_RAW_BASE})"
+    if [ -z "${RELEASE_BASE_URL:-}" ] && [ -n "$NEODESK_RAW_BASE" ]; then
+        fetch_url_to_file "${NEODESK_RAW_BASE}/$name" "$dest.tmp" 4096 1048576
+    elif [ -z "${RELEASE_BASE_URL:-}" ] && [ -n "$INSTALLER_FOLDER" ] && [ -f "$INSTALLER_FOLDER/$name" ]; then
+        log "Using ${INSTALLER_FOLDER}/$name"
+        cp "$INSTALLER_FOLDER/$name" "$dest.tmp"
+    else
+        base=$(release_base) || die "There is no release for the version ${NEODESK_VERSION}" \
+            "Give a release's version with --version, or leave it out for this installer's own"
+        sums=$(mktemp)
+        if ! curl -fsSL --max-time 60 --proto '=https' --tlsv1.2 -o "$sums" "$base/SHA256SUMS" 2>/dev/null; then
+            if [ -n "$NEODESK_VERSION_GIVEN" ] || [ -n "${RELEASE_BASE_URL:-}" ] || ! newest=$(newest_release_tag); then
+                rm -f "$sums"
+                die "Failed to download: $base/SHA256SUMS" "Releases from 3.6.0-rc.5 on have their installers attached."
+            fi
+            base="https://github.com/${NEODESK_REPO}/releases/download/${newest}"
+            warn "There is no release ${NEODESK_VERSION} yet: taking the files of the newest release, ${newest}"
+            curl -fsSL --max-time 60 --proto '=https' --tlsv1.2 -o "$sums" "$base/SHA256SUMS" \
+                || { rm -f "$sums"; die "Failed to download: $base/SHA256SUMS"; }
+        fi
+        expected=$(awk -v n="$name" '$2 == n || $2 == "*" n { print tolower($1); exit }' "$sums")
+        rm -f "$sums"
+        [ -n "$expected" ] || die "The release at $base has no $name" "Releases from 3.6.0-rc.5 on have their installers attached."
+        fetch_url_to_file "$base/$name" "$dest.tmp" 4096 1048576
+        if [ "$(sha256sum "$dest.tmp" | cut -d' ' -f1)" != "$expected" ]; then
+            rm -f "$dest.tmp"
+            die "The release's $name does not match its SHA256SUMS ($base); nothing was changed"
+        fi
+        log "$name of the release ${base##*/}, checked against its SHA256SUMS"
     fi
     install -m 0755 "$dest.tmp" "$dest"
     rm -f "$dest.tmp"
+}
+
+# fetch_docker_manager DEST: neodesk-docker.sh, which installs, updates
+# and removes NeoDesk on Docker (fetch_manager).
+fetch_docker_manager() {
+    local dest="$1"
+    fetch_manager neodesk-docker.sh "$dest"
+    if ! grep -q 'NEODESK_DOCKER_SOURCED' "$dest"; then
+        rm -f "$dest"
+        die "The downloaded neodesk-docker.sh is not NeoDesk's Docker manager"
+    fi
 }
 
 # install_docker_mode: neodesk-docker.sh in the compose folder installs
@@ -451,7 +538,11 @@ install_docker_mode() {
 
     fetch_docker_manager "$manager"
     ok "Docker manager: $manager"
-    export ADMIN_PASSWORD NEODESK_RAW_BASE
+    export ADMIN_PASSWORD
+    # The manager takes its compose file and its own copy from the same
+    # place: a release folder given, or the branch's files
+    [ -z "${RELEASE_BASE_URL:-}" ] || export RELEASE_BASE_URL
+    [ -z "$NEODESK_RAW_BASE" ] || export NEODESK_RAW_BASE
     "$manager" "${args[@]}"
     configure_firewall
     log "Later: sudo bash $manager (update), status, logs, backup, uninstall (see --help)"
@@ -572,7 +663,50 @@ native_clone_source() {
     return 0
 }
 
+# native_environment: what neodesk.sh --auto takes from this installer:
+# the relay, the admin password, the release channel (--channel: dev
+# updates from the dev pre-release, stable from the newest release; else
+# neodesk.sh's own choice) and a release folder given
+native_environment() {
+    export RELAY_MODE RELAY_SERVERS="$1"
+    if [ -n "$ADMIN_PASSWORD" ]; then
+        export ADMIN_PASSWORD
+    fi
+    case "$RELEASE_CHANNEL" in
+        stable|main) export UPDATE_GITHUB_BRANCH=main ;;
+        dev|development) export UPDATE_GITHUB_BRANCH=dev ;;
+    esac
+    [ -z "${UPDATE_GITHUB_BRANCH:-}" ] || log "Update channel: ${UPDATE_GITHUB_BRANCH}"
+    [ -z "${RELEASE_BASE_URL:-}" ] || export RELEASE_BASE_URL
+}
+
+# install_native_mode: neodesk.sh of the release (fetch_manager) installs
+# NeoDesk with --auto and leaves itself as neodesk-setup. With --branch the
+# branch is cloned into INSTALL_DIR/source and its neodesk.sh runs there.
 install_native_mode() {
+    if [ -n "$NEODESK_BRANCH" ]; then
+        install_native_from_branch
+        return
+    fi
+    local relay work
+    local args=(--auto)
+    log "NeoDesk native installer v${VERSION}"
+    relay=$(resolve_relay_address)
+    args+=(--relay-servers "$relay")
+    [ "$SKIP_VERIFY" != true ] || args+=(--skip-verify)
+    work=$(mktemp -d)
+    fetch_manager neodesk.sh "$work/neodesk.sh"
+    grep -q '^NEODESK_SH_REVISION=' "$work/neodesk.sh" || { rm -rf "$work"; die "The downloaded neodesk.sh is not NeoDesk's installer"; }
+    native_environment "$relay"
+    log "Running neodesk.sh --auto..."
+    local rc=0
+    bash "$work/neodesk.sh" "${args[@]}" || rc=$?
+    rm -rf "$work"
+    [ "$rc" = 0 ] || die "neodesk.sh --auto failed (exit $rc); its output is above"
+    ok "Native installation finished. Manage it with: sudo neodesk-setup"
+}
+
+install_native_from_branch() {
     local repo_dir="${INSTALL_DIR}/source"
     local relay
     local commit_sha
@@ -580,7 +714,7 @@ install_native_mode() {
     local checkout_error=""
 
     log "NeoDesk native installer v${VERSION}"
-    log "Native install branch: ${NEODESK_BRANCH} (override with --branch)"
+    log "Native install branch: ${NEODESK_BRANCH}"
 
     require_command git
     relay=$(resolve_relay_address)
@@ -635,18 +769,10 @@ install_native_mode() {
     chmod +x "$native_installer"
 
     log "Running neodesk.sh --auto..."
-    export RELAY_MODE RELAY_SERVERS="$relay"
-    if [ -n "$ADMIN_PASSWORD" ]; then
-        export ADMIN_PASSWORD
-    fi
-    # The release channel: --channel (dev updates from the dev pre-release,
-    # stable from the newest release), else neodesk.sh's own choice
-    case "$RELEASE_CHANNEL" in
-        stable|main) export UPDATE_GITHUB_BRANCH=main ;;
-        dev|development) export UPDATE_GITHUB_BRANCH=dev ;;
-    esac
-    [ -z "${UPDATE_GITHUB_BRANCH:-}" ] || log "Update channel: ${UPDATE_GITHUB_BRANCH}"
-    (cd "$repo_dir" && "$native_installer" --auto --relay-servers "$relay")
+    native_environment "$relay"
+    local args=(--auto --relay-servers "$relay")
+    [ "$SKIP_VERIFY" != true ] || args+=(--skip-verify)
+    (cd "$repo_dir" && "$native_installer" "${args[@]}")
 
     ok "Native installation finished. See ${repo_dir} for logs and credentials."
 }
@@ -661,10 +787,23 @@ native_installer_in() {
     fi
 }
 
+# native_manager: the manager of the native install: neodesk-setup, the
+# old manager /usr/local/sbin/neodesk of 3.6.0-rc.4 and older, else
+# neodesk.sh of the checkout an older install.sh cloned
+native_manager() {
+    if [ -x /usr/local/sbin/neodesk-setup ]; then
+        printf '%s\n' /usr/local/sbin/neodesk-setup
+    elif [ -x /usr/local/sbin/neodesk ] && grep -q '^NEODESK_SH_REVISION=' /usr/local/sbin/neodesk 2>/dev/null; then
+        printf '%s\n' /usr/local/sbin/neodesk
+    else
+        native_installer_in "${INSTALL_DIR}/source"
+    fi
+}
+
 uninstall_native_mode() {
     local repo_dir="${INSTALL_DIR}/source"
     local native_installer
-    native_installer=$(native_installer_in "$repo_dir")
+    native_installer=$(native_manager)
 
     require_root
     if [ ! -x "$native_installer" ]; then
@@ -676,13 +815,17 @@ uninstall_native_mode() {
     if [ "$DO_PURGE" = true ]; then
         args+=(--purge)
     fi
-    (cd "$repo_dir" && "$native_installer" "${args[@]}")
+    if [ -d "$repo_dir" ]; then
+        (cd "$repo_dir" && "$native_installer" "${args[@]}")
+    else
+        "$native_installer" "${args[@]}"
+    fi
 }
 
 rescue_native_mode() {
     local repo_dir="${INSTALL_DIR}/source"
     local native_installer
-    native_installer=$(native_installer_in "$repo_dir")
+    native_installer=$(native_manager)
 
     if [ "$RESCUE_ACTION" = "repair-permissions" ] && [ -x "$native_installer" ]; then
         "$native_installer" --repair-permissions
@@ -700,9 +843,8 @@ rescue_native_mode() {
 }
 
 run_native_management_action() {
-    local repo_dir="${INSTALL_DIR}/source"
     local native_installer
-    native_installer=$(native_installer_in "$repo_dir")
+    native_installer=$(native_manager)
     [ -x "$native_installer" ] || die "Native NeoDesk manager not found at ${native_installer}"
     local args=()
     [ "$CHECK_CAPABILITIES" = true ] && args+=(--check-permissions)
