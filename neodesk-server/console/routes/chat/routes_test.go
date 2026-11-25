@@ -233,7 +233,8 @@ func TestRoutesInTheOrderOfTheOldFile(t *testing.T) {
 	for _, route := range d.Router.Routes() {
 		got = append(got, route.Method+" "+route.Path)
 	}
-	want := "POST /api/chat/upload\nGET /api/chat/files/{fileId}\nGET /api/chat/search"
+	// and after them the routes of the device's chat window (A242)
+	want := "POST /api/chat/upload\nGET /api/chat/files/{fileId}\nGET /api/chat/search\nPOST /api/chat/device/files\nGET /api/chat/device/files/{fileId}"
 	if strings.Join(got, "\n") != want {
 		t.Errorf("routes:\n%s\nwant:\n%s", strings.Join(got, "\n"), want)
 	}

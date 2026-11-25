@@ -54,6 +54,10 @@ type RelayOptions struct {
 	// FilesDir is the folder of the chat files (FilesDir), where a file
 	// an operator shares is linked to the conversation. "" links nothing.
 	FilesDir string
+	// Hub is the chat of version 2: the sockets that ask for v=2 go to
+	// it, and the messages of version 1 are stored in its store and
+	// handed to its sockets. nil keeps version 1 alone.
+	Hub *Hub
 }
 
 // Relay is the chat between devices and operators
@@ -95,7 +99,11 @@ func NewRelay(opts RelayOptions) *Relay {
 	if opts.PingInterval <= 0 {
 		opts.PingInterval = PingInterval
 	}
-	return &Relay{opts: opts, rooms: map[string]*room{}}
+	r := &Relay{opts: opts, rooms: map[string]*room{}}
+	if opts.Hub != nil {
+		opts.Hub.relay = r
+	}
+	return r
 }
 
 // Register adds /ws/chat/<device> and /ws/chat-operator/<device>. The id
@@ -144,6 +152,14 @@ func (r *Relay) serveAgent(u *ws.Upgrade) {
 		return
 	}
 	defer r.agentTokens.release(key)
+	if wantsV2(u) {
+		if r.opts.Hub == nil {
+			refuseNoHub(u)
+			return
+		}
+		r.opts.Hub.serveDevice(u, deviceID, r.deviceName(u.R.Context(), deviceID))
+		return
+	}
 	conn, answers, accepted := accept(u)
 	if !accepted {
 		return
@@ -201,6 +217,14 @@ func (r *Relay) serveOperator(u *ws.Upgrade) {
 		return
 	}
 	defer r.operators.release(account)
+	if wantsV2(u) {
+		if r.opts.Hub == nil || u.Param("id") != panelID || session.User() == nil {
+			refuseNoHub(u)
+			return
+		}
+		r.opts.Hub.serveOperator(u, session.User())
+		return
+	}
 	conn, answers, accepted := accept(u)
 	if !accepted {
 		return

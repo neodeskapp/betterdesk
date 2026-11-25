@@ -1549,6 +1549,95 @@
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
   },
   {
+   "name": "chat assign",
+   "summary": "Give a support conversation to a colleague (-F account_id=N, 0 for nobody); needs chat.assign too.",
+   "route": "POST /api/chat/conversations/{id}/assign",
+   "args": [
+    {
+     "name": "id",
+     "help": "The conversation id: a device id, dm:<id>:<id> or group:<id>"
+    }
+   ],
+   "permission": "chat.support",
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
+   "name": "chat canned",
+   "summary": "List the shared canned replies and your own.",
+   "route": "GET /api/chat/canned",
+   "permission": "chat.support or chat.team"
+  },
+  {
+   "name": "chat canned-add",
+   "summary": "Add a canned reply (-f title=..., -f body=..., -F shared=true needs chat.canned_manage).",
+   "route": "POST /api/chat/canned",
+   "permission": "chat.support or chat.team",
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
+   "name": "chat canned-remove",
+   "summary": "Delete a canned reply.",
+   "route": "DELETE /api/chat/canned/{id}",
+   "args": [
+    {
+     "name": "id",
+     "help": "The reply's ID"
+    }
+   ],
+   "permission": "chat.support or chat.team"
+  },
+  {
+   "name": "chat canned-set",
+   "summary": "Change a canned reply.",
+   "route": "PATCH /api/chat/canned/{id}",
+   "args": [
+    {
+     "name": "id",
+     "help": "The reply's ID"
+    }
+   ],
+   "permission": "chat.support or chat.team",
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
+   "name": "chat close",
+   "summary": "Close a support conversation (-f note=..., -F resolve_help_request=true).",
+   "route": "POST /api/chat/conversations/{id}/close",
+   "args": [
+    {
+     "name": "id",
+     "help": "The conversation id: a device id, dm:<id>:<id> or group:<id>"
+    }
+   ],
+   "permission": "chat.support",
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
+   "name": "chat conversation",
+   "summary": "Show a conversation with its computer or its people.",
+   "route": "GET /api/chat/conversations/{id}",
+   "args": [
+    {
+     "name": "id",
+     "help": "The conversation id: a device id, dm:<id>:<id> or group:<id>"
+    }
+   ],
+   "permission": "chat.support or chat.team"
+  },
+  {
+   "name": "chat devices",
+   "summary": "Find computers to start a support conversation with (-f q=name, ID, host name, owner or folder).",
+   "route": "GET /api/chat/devices",
+   "permission": "chat.support"
+  },
+  {
+   "name": "chat direct",
+   "summary": "Open the direct conversation with a colleague (-F account_id=N).",
+   "route": "POST /api/chat/team/direct",
+   "permission": "chat.team",
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
    "name": "chat file",
    "summary": "Download a file sent in a chat (use --output).",
    "route": "GET /api/chat/files/{fileId}",
@@ -1562,10 +1651,111 @@
    "secrets": true
   },
   {
+   "name": "chat group-add",
+   "summary": "Make a group of colleagues (-f title=..., -F members='[2,3]').",
+   "route": "POST /api/chat/team/groups",
+   "permission": "chat.team",
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
+   "name": "chat group-set",
+   "summary": "Rename a group or change its members.",
+   "route": "PATCH /api/chat/team/groups/{id}",
+   "args": [
+    {
+     "name": "id",
+     "help": "The conversation id: a device id, dm:<id>:<id> or group:<id>"
+    }
+   ],
+   "permission": "chat.team",
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
+   "name": "chat inbox",
+   "summary": "List support conversations: open (the default), mine or closed (-f filter=...), optionally matching -f q=...",
+   "route": "GET /api/chat/inbox",
+   "permission": "chat.support"
+  },
+  {
+   "name": "chat link",
+   "summary": "Link a support conversation to a ticket or help request (-F ticket_id=N, -F help_request_id=N).",
+   "route": "POST /api/chat/conversations/{id}/link",
+   "args": [
+    {
+     "name": "id",
+     "help": "The conversation id: a device id, dm:<id>:<id> or group:<id>"
+    }
+   ],
+   "permission": "chat.support",
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
+   "name": "chat notifications",
+   "summary": "Show your chat notifications (browser, sound, mail).",
+   "route": "GET /api/chat/me",
+   "permission": "chat.support or chat.team"
+  },
+  {
+   "name": "chat notifications-set",
+   "summary": "Change your chat notifications (-F browser=true -F sound=false -F mail=true).",
+   "route": "PUT /api/chat/me",
+   "permission": "chat.support or chat.team",
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
+   "name": "chat reopen",
+   "summary": "Open a closed support conversation again.",
+   "route": "POST /api/chat/conversations/{id}/reopen",
+   "args": [
+    {
+     "name": "id",
+     "help": "The conversation id: a device id, dm:<id>:<id> or group:<id>"
+    }
+   ],
+   "permission": "chat.support"
+  },
+  {
    "name": "chat search",
    "summary": "Search chat messages.",
    "route": "GET /api/chat/search",
    "permission": "chat.support or chat.team"
+  },
+  {
+   "name": "chat settings",
+   "summary": "Show when the chat mails about a waiting person and whether the mail quotes it.",
+   "route": "GET /api/chat/settings",
+   "permission": "chat.support or chat.team"
+  },
+  {
+   "name": "chat settings-set",
+   "summary": "Change the chat's mail (-F mail_after_minutes=15, 0 is off; -F mail_preview=false).",
+   "route": "PUT /api/chat/settings",
+   "permission": "server.config",
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
+   "name": "chat summary",
+   "summary": "Count unread support and team messages.",
+   "route": "GET /api/chat/summary",
+   "permission": "chat.support or chat.team"
+  },
+  {
+   "name": "chat team",
+   "summary": "List your direct and group conversations and the colleagues you can write to.",
+   "route": "GET /api/chat/team",
+   "permission": "chat.team"
+  },
+  {
+   "name": "chat trail",
+   "summary": "Show the earlier texts of an edited or deleted chat message.",
+   "route": "GET /api/chat/messages/{id}/trail",
+   "args": [
+    {
+     "name": "id",
+     "help": "The message ID"
+    }
+   ],
+   "permission": "audit.view"
   },
   {
    "name": "client-branding set",
@@ -8589,6 +8779,14 @@
   {
    "route": "POST /api/automation/commands/{id}/result",
    "reason": "Called by NeoDesk agents and clients with a device token, not by people."
+  },
+  {
+   "route": "POST /api/chat/device/files",
+   "reason": "Called by the NeoDesk app's chat window with its device token, not by people."
+  },
+  {
+   "route": "GET /api/chat/device/files/{fileId}",
+   "reason": "Called by the NeoDesk app's chat window with its device token, not by people."
   },
   {
    "route": "POST /api/chat/upload",

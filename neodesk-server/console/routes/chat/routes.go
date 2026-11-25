@@ -13,8 +13,10 @@
 package chat
 
 import (
+	"context"
 	"crypto/rand"
 	"io"
+	"io/fs"
 	"net/http"
 	"path/filepath"
 
@@ -49,6 +51,11 @@ type handlers struct {
 	scope Scope
 	// user is the signed-in account (kit.User).
 	user func(r *http.Request) *session.User
+	// pictures sends a picture to show in the page (inline=1).
+	pictures *httpx.Static
+	// members reports whether an account reads a direct or group
+	// conversation (Hub.MayRead); nil: as before version 2.
+	members func(ctx context.Context, user *session.User, conv string) bool
 }
 
 // FilesDir is the folder of the chat files: <console folder>/data/chat-files.
@@ -63,6 +70,8 @@ var ChatPermissions = []string{"chat.support", "chat.team"}
 func Register(d *kit.Deps) {
 	h := register(d, FilesDir(d.Config))
 	h.scope = ScopeOf(d)
+	h.members = HubOf(d).MayRead
+	registerInbox(d, HubOf(d))
 }
 
 func register(d *kit.Deps, dir string) *handlers {
@@ -86,10 +95,28 @@ func register(d *kit.Deps, dir string) *handlers {
 	// The chat websocket needs Support chat or Team chat; so do the
 	// HTTP routes both use
 	chatAccess := d.RequireAnyPermission(ChatPermissions...)
-	r := d.Router
+	h.pictures = httpx.NewStatic(dir, httpx.StaticOptions{
+		NoIndex:       true,
+		NoFallthrough: true,
+		SetHeaders: func(w http.ResponseWriter, _ string, _ fs.FileInfo) {
+			w.Header().Set("Content-Disposition", "inline")
+			w.Header().Set("Content-Security-Policy", "default-src 'none'; sandbox")
+		},
+		OnError: func(w http.ResponseWriter, r *http.Request, status int, err error) {
+			w.Header().Del("Content-Type")
+			w.Header().Del("Content-Disposition")
+			h.serverError(w, r, err, status)
+		},
+	})
+	// Support chat and Team chat both send files and search: no section
+	r := d.Router.NoSection()
 	r.Post("/api/chat/upload", h.upload, d.Limits.Upload.Middleware, d.RequireAuth, chatAccess)
 	r.Get("/api/chat/files/{fileId}", h.download, d.RequireAuth, chatAccess)
 	r.Get("/api/chat/search", h.search, d.RequireAuth, chatAccess)
+	// A device's chat window sends and fetches files with its device
+	// token (A242)
+	r.Post("/api/chat/device/files", h.deviceUpload, d.Limits.Upload.Middleware, d.RequireDeviceToken)
+	r.Get("/api/chat/device/files/{fileId}", h.deviceDownload, d.RequireDeviceToken)
 	return h
 }
 

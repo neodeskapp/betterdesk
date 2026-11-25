@@ -37,7 +37,9 @@ func registerSockets(d *kit.Deps, signalProof func(userID int64, consoleSession 
 	webClient.Register(d.Sockets)
 	d.Relay.Register(d.Sockets) // services/bdRelay.js: /ws/nd-relay, /ws/nd-signal
 	// services/chatRelay.js: /ws/chat/<id>, /ws/chat-operator/<id>
-	chat.NewRelay(chat.RelayOptions{API: d.GoAPI, VerifyDevice: d.Authn.VerifyDeviceWSAuth, Scope: chat.ScopeOf(d), FilesDir: chat.FilesDir(d.Config)}).Register(d.Sockets)
+	// and the chat of version 2 at the same paths with v=2 (A242)
+	chat.NewRelay(chat.RelayOptions{API: d.GoAPI, VerifyDevice: d.Authn.VerifyDeviceWSAuth, Scope: chat.ScopeOf(d), FilesDir: chat.FilesDir(d.Config),
+		Hub: chat.HubOf(d)}).Register(d.Sockets)
 	d.RemoteRelay.Register(d.Sockets) // services/remoteRelay.js: /ws/remote-agent/<id>, /ws/remote-viewer/<id>
 	// services/cdapTerminalProxy.js, services/cdapMediaProxy.js: /api/cdap/devices/<id>/terminal, desktop, video, files, audio
 	cdapproxy.New(cdapproxy.Options{API: d.GoAPI.Handler(), Devices: d.Backend, CanAccess: d.DeviceGroups.UserCanAccessDevice, FeaturesOff: d.Access.ClientFeaturesOff}).Register(d.Sockets)

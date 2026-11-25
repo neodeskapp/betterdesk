@@ -50,6 +50,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/qr"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/remoterelay"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/restart"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/chat"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/settingsbackup"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/servermgmt"
@@ -389,6 +390,9 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		s.deps.Alerts.Wait()
 	})
 	s.jobs.Add("alert sweep", s.deps.Alerts.Run)
+	// Messages the API server stores for agents reach the chat's sockets
+	s.jobs.Add("chat events", func(ctx context.Context) { chat.HubOf(s.deps).WatchEvents(ctx, api.Events) })
+	s.jobs.Add("chat wait mail", func(ctx context.Context) { chat.RunWaitMail(ctx, s.deps) })
 	s.jobs.Add("help request mail", helpmail.New(helpmail.Options{
 		DB: opts.Store, Mail: s.deps.Mail, Events: api.Events, Logger: s.deps.Log.Child("HelpRequestEmail"),
 	}).Run)

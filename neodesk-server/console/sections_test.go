@@ -47,8 +47,29 @@ func TestRoutesThatDeclareTheirSection(t *testing.T) {
 	}
 	sort.Strings(got)
 	want := []string{
+		// A242: what Support chat and Team chat both use, and Team chat's own
+		"DELETE /api/chat/canned/{id} -> no section",
+		"GET /api/chat/canned -> no section",
+		"GET /api/chat/conversations/{id} -> no section",
+		"GET /api/chat/device/files/{fileId} -> no section",
+		"GET /api/chat/files/{fileId} -> no section",
+		"GET /api/chat/me -> no section",
+		"GET /api/chat/messages/{id}/trail -> no section",
+		"GET /api/chat/search -> no section",
+		"GET /api/chat/settings -> no section",
+		"GET /api/chat/summary -> no section",
+		"GET /api/chat/team -> team-chat",
 		"GET /api/users/{id}/avatar -> no section",
+		"PATCH /api/chat/canned/{id} -> no section",
+		"PATCH /api/chat/team/groups/{id} -> team-chat",
+		"POST /api/chat/canned -> no section",
+		"POST /api/chat/device/files -> no section",
+		"POST /api/chat/team/direct -> team-chat",
+		"POST /api/chat/team/groups -> team-chat",
+		"POST /api/chat/upload -> no section",
 		"POST /api/network/targets/{id}/check -> toolkit",
+		"PUT /api/chat/me -> no section",
+		"PUT /api/chat/settings -> no section",
 	}
 	if strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Errorf("routes with their own section:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))

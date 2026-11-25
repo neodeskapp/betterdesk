@@ -63,6 +63,9 @@ func (r *Relay) fileID(frame jsjson.Value) jsjson.Value {
 // made of it, handed to store (client.later, or a call in the running
 // task).
 func (c *client) persist(store func(func(context.Context)), conversation, from, fromName, toID jsjson.Value, msgText string) {
+	if c.persistV2(store, or(conversation, or(from, text("operator"))), msgText) {
+		return
+	}
 	body := newObject().
 		val("conversation_id", or(conversation, or(from, text("operator")))).
 		val("from_id", or(from, text("unknown"))).
