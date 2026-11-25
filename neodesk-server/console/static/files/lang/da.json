@@ -8831,7 +8831,9 @@
     "no_keyboard_lock": "Denne browser beholder nogle genveje selv, også i fuld skærm: Ctrl+W, Ctrl+T, Ctrl+N, Windows-tasten, og Esc forlader fuld skærm. Handlinger sender Windows-tasten, Alt+Tab og Ctrl+Alt+Del til fjerncomputeren.",
     "no_screen_placement": "Denne browser kan ikke placere vinduer på dine andre skærme. Træk hver skærms vindue hen på den skærm, du vil have det på.",
     "phone_turn": "Eller vend telefonen på tværs: i liggende format åbner sessionen her i browseren.",
-    "no_open_sessions": "Ingen session er åben. Forbind med ID, eller vælg en enhed nedenfor."
+    "no_open_sessions": "Ingen session er åben. Forbind med ID, eller vælg en enhed nedenfor.",
+    "fail_signin_closed": "{name} lukkede forbindelsen, da denne browser loggede ind.",
+    "try_signin_closed": "Enheden afviste login. Opret forbindelse igen, og log ind igen. Hvis det bliver ved, så bed en administrator om at se i NeoDesk-loggen på enheden."
   },
   "diagram": {
     "your_computer": "Din computer",

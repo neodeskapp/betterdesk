@@ -20,6 +20,7 @@
     "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
     "referrer-policy": "strict-origin-when-cross-origin",
     "set-cookie": [
+     "nd.ended=<value>; Max-Age=<n>; Path=/; HttpOnly; SameSite=Lax",
      "nd.sid=; Path=/; Expires=<past>",
      "neodesk.sid=; Path=/; Expires=<past>"
     ],

@@ -8825,7 +8825,9 @@
     "no_keyboard_lock": "Questo browser tiene per sé alcune scorciatoie, anche a schermo intero: Ctrl+W, Ctrl+T, Ctrl+N, il tasto Windows, ed Esc esce dallo schermo intero. Azioni invia il tasto Windows, Alt+Tab e Ctrl+Alt+Canc al computer remoto.",
     "no_screen_placement": "Questo browser non può mettere le finestre sugli altri schermi. Trascina la finestra di ogni display sullo schermo che vuoi.",
     "phone_turn": "Oppure ruota il telefono in orizzontale: così la sessione si apre qui nel browser.",
-    "no_open_sessions": "Nessuna sessione aperta. Collegati con l'ID o scegli un dispositivo qui sotto."
+    "no_open_sessions": "Nessuna sessione aperta. Collegati con l'ID o scegli un dispositivo qui sotto.",
+    "fail_signin_closed": "{name} ha chiuso la connessione quando questo browser ha effettuato l'accesso.",
+    "try_signin_closed": "Il dispositivo ha rifiutato l'accesso. Riconnettiti e accedi di nuovo. Se continua a succedere, chiedi a un amministratore di controllare il registro di NeoDesk sul dispositivo."
   },
   "diagram": {
     "your_computer": "Il suo computer",

@@ -171,7 +171,14 @@ export async function startSession(): Promise<void> {
 		json(early.strings, boot?.stringsUrl ?? `/api/console/strings/${fallbackLang}`),
 		json(early.session, '/api/console/bootstrap')
 	]);
-	if (sess.status === 401) throw new ApiError('Signed out', 401, { code: 'session_required' });
+	if (sess.status === 401) {
+		// A session ended elsewhere says why (session_signed_out, ...): the
+		// sign-in page tells the person, whichever request noticed first
+		const code = (sess.body as { code?: unknown } | null)?.code;
+		throw new ApiError('Signed out', 401, {
+			code: typeof code === 'string' && /^session_[a-z_]{1,40}$/.test(code) ? code : 'session_required'
+		});
+	}
 	if (sess.status !== 200) throw new ApiError(`HTTP ${sess.status}`, sess.status);
 	const parsed = v.safeParse(Bootstrap, sess.body);
 	if (!parsed.success) throw new ApiError(clientMessages.invalid, 200, { code: 'invalid_response' });

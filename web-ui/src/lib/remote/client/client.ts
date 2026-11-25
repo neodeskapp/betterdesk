@@ -12,6 +12,7 @@
  *   // ...session runs...
  *   client.disconnect();
  */
+import { ConnectionLogins } from './login-identity.ts';
 import { RDAudio } from './audio.ts';
 import { RDClipboard } from './clipboard.ts';
 import { RDCliprdr } from './cliprdr.ts';
@@ -121,6 +122,8 @@ export interface RDClientDisconnectInfo {
 	closeReason: string;
 	peerReason: string;
 	error: string;
+	/** The connection closed while a login waited for the device's answer: the device ended it at the sign-in */
+	loginUnanswered: boolean;
 }
 
 /** Where a disconnect came from (the relay socket, the device) */
@@ -230,6 +233,10 @@ export class RDClient {
 	_sessionAnswer: LoginAnswer | null;
 	/** This connection asked the device without a password (askWithoutPassword) */
 	_askedWithoutPassword = false;
+	/** Who this browser is to the device on this connection: the same in every login (L530) */
+	_logins = new ConnectionLogins();
+	/** A login went to the device and its answer hasn't come */
+	_loginOutstanding = false;
 	/** The last login sent had no password: a refusal of it is no wrong password */
 	_emptyLoginOut = false;
 	/**
@@ -322,6 +329,8 @@ export class RDClient {
 		this._sessionAnswer = null;
 		this._askedWithoutPassword = false;
 		this._emptyLoginOut = false;
+		this._logins.reset();
+		this._loginOutstanding = false;
 		this.relayUUID = '';
 		this.fileTransfer = new RDFileTransfer({
 			proto: this.proto,
@@ -822,9 +831,12 @@ export class RDClient {
 
 		// Build and send LoginRequest
 		// username must be set to target device ID (RustDesk validates: is_ip || is_domain_port || == Config::get_id())
+		// Every login of this connection is the same caller: the device latches the first (L530)
+		const identity = this._logins.forLogin();
 		const loginReq = this.proto.buildLoginRequest(hash, {
 			username: this.deviceId,
-			myId: 'neodesk-web-' + Date.now().toString(36),
+			myId: identity.myId,
+			sessionId: identity.sessionId,
 			myName: this.opts.myName || this.opts.myName || 'NeoDesk Web',
 			disableAudio: this.opts.disableAudio || false,
 			fps: this._getInitialStreamFps(),
@@ -843,6 +855,7 @@ export class RDClient {
 				this.conn.relayWs?.readyState
 		);
 		this._sendPeerMessage(loginReq);
+		this._loginOutstanding = true;
 		this._debugRelay('[RDClient] Auth: LoginRequest sent, sendSeq now=' + this.crypto._sendSeq);
 
 		// The response will be handled in _handleRelayMessage
@@ -1362,6 +1375,7 @@ export class RDClient {
 	}
 
 	_handleLoginResponse(resp: LoginResponse): void {
+		this._loginOutstanding = false;
 		this._debugRelay(
 			'[RDClient] LoginResponse:',
 			JSON.stringify(resp, (_k: string, v: unknown) => {
@@ -1964,7 +1978,8 @@ export class RDClient {
 			closeCode: meta.closeCode || null,
 			closeReason: meta.closeReason || '',
 			peerReason: meta.peerReason || '',
-			error: meta.error || ''
+			error: meta.error || '',
+			loginUnanswered: this._loginOutstanding
 		};
 		this._lastDisconnect = info;
 		this._debugRelay('[RDClient] Session disconnect:', JSON.stringify(info));
@@ -2008,6 +2023,8 @@ export class RDClient {
 		this._sessionAnswer = null;
 		this._askedWithoutPassword = false;
 		this._emptyLoginOut = false;
+		this._logins.reset();
+		this._loginOutstanding = false;
 		this.relayUUID = '';
 		this.conn.close();
 		this._codecFallbackDone = false;

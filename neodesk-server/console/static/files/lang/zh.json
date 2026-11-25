@@ -8825,7 +8825,9 @@
     "no_keyboard_lock": "此浏览器在全屏时也会保留一些快捷键：Ctrl+W、Ctrl+T、Ctrl+N、Windows 键，按 Esc 会退出全屏。可在“操作”中向远程计算机发送 Windows 键、Alt+Tab 和 Ctrl+Alt+Del。",
     "no_screen_placement": "此浏览器无法把窗口放到你的其他屏幕上。请把每个显示器的窗口拖到想要的屏幕。",
     "phone_turn": "或者把手机横过来：横屏时会话会在这个浏览器中打开。",
-    "no_open_sessions": "没有打开的会话。按 ID 连接，或在下方选择设备。"
+    "no_open_sessions": "没有打开的会话。按 ID 连接，或在下方选择设备。",
+    "fail_signin_closed": "此浏览器登录时，{name} 关闭了连接。",
+    "try_signin_closed": "设备拒绝了登录。请重新连接并再次登录。如果反复出现，请让管理员查看设备上 NeoDesk 的日志。"
   },
   "diagram": {
     "your_computer": "您的电脑",

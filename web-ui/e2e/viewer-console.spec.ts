@@ -185,3 +185,29 @@ test('Remote sessions in the sidebar opens inside the console: the open sessions
 	await expect(page.locator(`#rd-panel-${A}.streaming`)).toHaveCount(1);
 	await expectNoAxeViolations(page, '.session-bar');
 });
+
+test('a typed password after the login without one connects: both logins name the same caller (L530)', async ({
+	page
+}) => {
+	// The mock device latches the first login's caller and closes on another, as the desktop client 1.5 does
+	await page.goto(`${UI}/remote/${A}?mock=1&scenario=password`);
+	await expect(page).toHaveURL(new RegExp(`/remote/session/${A}`));
+	const password = page.getByLabel('Device password');
+	await expect(password).toBeVisible({ timeout: 60_000 });
+	// The login without a password goes while the form shows
+	await expect
+		.poll(async () =>
+			page.evaluate(
+				() => (Reflect.get(window, '__ndMockDevice') as { logins?: unknown[] }).logins?.length ?? 0
+			)
+		)
+		.toBe(1);
+	await password.fill('demo');
+	await password.press('Enter');
+	await expect(page.locator(`#rd-panel-${A}.streaming`)).toBeVisible({ timeout: 60_000 });
+	const logins = await page.evaluate(
+		() => (Reflect.get(window, '__ndMockDevice') as { logins: { password: boolean; latch: string }[] }).logins
+	);
+	expect(logins.map((l) => l.password)).toEqual([false, true]);
+	expect(logins[1]!.latch).toBe(logins[0]!.latch);
+});

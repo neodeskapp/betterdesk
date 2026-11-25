@@ -8825,7 +8825,9 @@
     "no_keyboard_lock": "Ta przeglądarka zatrzymuje dla siebie niektóre skróty, także na pełnym ekranie: Ctrl+W, Ctrl+T, Ctrl+N, klawisz Windows, a Esc zamyka pełny ekran. Akcje wysyłają klawisz Windows, Alt+Tab i Ctrl+Alt+Del do komputera zdalnego.",
     "no_screen_placement": "Ta przeglądarka nie potrafi umieścić okien na innych ekranach. Przeciągnij okno każdego wyświetlacza na wybrany ekran.",
     "phone_turn": "Albo obróć telefon poziomo: w orientacji poziomej sesja otworzy się tutaj w przeglądarce.",
-    "no_open_sessions": "Żadna sesja nie jest otwarta. Połącz się po ID albo wybierz urządzenie poniżej."
+    "no_open_sessions": "Żadna sesja nie jest otwarta. Połącz się po ID albo wybierz urządzenie poniżej.",
+    "fail_signin_closed": "{name} zamknął połączenie, gdy ta przeglądarka się logowała.",
+    "try_signin_closed": "Urządzenie odrzuciło logowanie. Połącz się ponownie i zaloguj jeszcze raz. Jeśli to się powtarza, poproś administratora o sprawdzenie dziennika NeoDesk na urządzeniu."
   },
   "diagram": {
     "your_computer": "Twój komputer",

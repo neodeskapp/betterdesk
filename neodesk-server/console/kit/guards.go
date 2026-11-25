@@ -120,6 +120,16 @@ func (d *Deps) Refuse(w http.ResponseWriter, r *http.Request, decision access.De
 	}
 	switch decision.Answer {
 	case access.AnswerJSON:
+		// A browser whose session was ended elsewhere is told why by every
+		// signed-out answer for a while, not only the first (A239)
+		if refusal := decision.Body; refusal != nil && refusal.Code == access.CodeSessionRequired {
+			if code := httpx.EndedReason(r); code != "" {
+				if text, known := session.NoticeText(code); known {
+					httpx.WriteJSON(w, r, decision.Status, &access.Refusal{Error: text, Code: code})
+					return
+				}
+			}
+		}
 		httpx.WriteJSON(w, r, decision.Status, decision.Body)
 	case access.AnswerRedirect:
 		Redirect(w, r, decision.Location)
