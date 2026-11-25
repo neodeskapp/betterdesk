@@ -15,7 +15,7 @@ import (
 
 const (
 	secondFactorDue = `{"success":true,"totpRequired":true}`
-	noPendingSignIn = `{"success":false,"error":"Session expired. Please log in again."}`
+	noPendingSignIn = `{"success":false,"error":"Session expired. Sign in again."}`
 	recoveryCodes   = `["3FA9-0C7E","AAAA-BBBB","1234-5678"]`
 )
 
@@ -323,7 +323,7 @@ func TestTwoFactorEnrolment(t *testing.T) {
 		a.signIn("alice")
 		const off, on = `{"success":true,"enabled":false,"disable_with":"password"}`, `{"success":true,"enabled":true,"disable_with":"password"}`
 		want(t, "status before", a.get("/api/auth/totp/status"), http.StatusOK, off)
-		want(t, "enable before set-up", a.post("/api/auth/totp/enable", `{"code":"123456"}`), http.StatusBadRequest, `{"success":false,"error":"TOTP not set up"}`)
+		want(t, "enable before set-up", a.post("/api/auth/totp/enable", `{"code":"123456"}`), http.StatusBadRequest, `{"success":false,"error":"Two-factor sign-in is not set up"}`)
 
 		res := a.post("/api/auth/totp/setup", `{}`)
 		setup := regexp.MustCompile(`^\{"success":true,"qrCode":"(data:image/png;base64,[A-Za-z0-9+/=]+)","secret":"([A-Z2-7]{32})","otpauthUrl":"otpauth://totp/NeoDesk:alice\?secret=([A-Z2-7]{32})&issuer=NeoDesk&digits=6&period=30"\}$`).FindStringSubmatch(res.body)
@@ -373,7 +373,7 @@ func TestTwoFactorEnrolment(t *testing.T) {
 			t.Errorf("the stored codes do not hold the answer's last code: %v, %v", matched, err)
 		}
 		want(t, "status enabled", a.get("/api/auth/totp/status"), http.StatusOK, on)
-		want(t, "set-up when enabled", a.post("/api/auth/totp/setup", `{}`), http.StatusBadRequest, `{"success":false,"error":"Two-factor authentication is already enabled"}`)
+		want(t, "set-up when enabled", a.post("/api/auth/totp/setup", `{}`), http.StatusBadRequest, `{"success":false,"error":"Two-factor sign-in is already on"}`)
 		if stored := w.text(`SELECT totp_secret FROM users WHERE id = ?`, alice); stored != secret {
 			t.Error("a refused set-up replaced the secret")
 		}

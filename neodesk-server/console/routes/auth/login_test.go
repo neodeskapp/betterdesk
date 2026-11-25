@@ -459,7 +459,7 @@ func TestLoginLimiterAndTheOrderOfChecks(t *testing.T) {
 	want(t, "second", a.post("/api/auth/login", `{}`), http.StatusBadRequest, invalidCredentials)
 	want(t, "third", a.post("/api/auth/login", login("alice", password)), http.StatusTooManyRequests, tooMany)
 	// The second factor has a limit of its own (BUGS.md AR4)
-	const noWait = `{"success":false,"error":"Session expired. Please log in again."}`
+	const noWait = `{"success":false,"error":"Session expired. Sign in again."}`
 	want(t, "first code", a.post("/api/auth/totp/verify", `{"code":"123456"}`), http.StatusBadRequest, noWait)
 	want(t, "second code", a.post("/api/auth/totp/verify", `{"code":"123456"}`), http.StatusBadRequest, noWait)
 	want(t, "third code", a.post("/api/auth/totp/verify", `{"code":"123456"}`), http.StatusTooManyRequests,

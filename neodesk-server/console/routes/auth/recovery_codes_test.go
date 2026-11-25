@@ -21,7 +21,7 @@ func TestNewRecoveryCodesWithACurrentCode(t *testing.T) {
 		a.signIn("mia")
 		want(t, "signed out", w.agent().post("/api/auth/totp/recovery-codes", `{"code":"123456"}`), http.StatusUnauthorized, notSignedIn)
 		want(t, "without two-factor sign-in", a.post("/api/auth/totp/recovery-codes", `{"code":"123456"}`),
-			http.StatusBadRequest, `{"success":false,"error":"TOTP not set up"}`)
+			http.StatusBadRequest, `{"success":false,"error":"Two-factor sign-in is not set up"}`)
 		w.exec(`UPDATE users SET totp_enabled = `+w.db.Pick("1", "TRUE")+`, totp_recovery_codes = ? WHERE id = ?`, old, mia)
 		w.exec(`DELETE FROM login_attempts`)
 
