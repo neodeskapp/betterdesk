@@ -192,7 +192,22 @@
 				/>
 			{/if}
 			<div class="state" role="status">
-				<Status tone={stateTone(current.status)} label={line} />
+				<div class="state-line">
+					<Status tone={stateTone(current.status)} label={line} />
+					{#if !isOver(current.status)}
+						<!-- Ends what the line above names, so it sits next to it -->
+						<Button
+							variant="danger-quiet"
+							size="sm"
+							class="end-session"
+							busy={ending}
+							onclick={() => void end()}
+							>{current.status === 'waiting'
+								? t('onboard.support.cancel_link')
+								: t('onboard.support.end')}</Button
+						>
+					{/if}
+				</div>
 				{#if current.status === 'allowed' && current.password_ready}
 					<p class="hint">{t('onboard.support.state_allowed_hint')}</p>
 				{/if}
@@ -213,15 +228,6 @@
 		{/if}
 	</div>
 	{#snippet footer()}
-		{#if current && !isOver(current.status)}
-			<Button
-				variant="danger-quiet"
-				class="modal-footer-start end-session"
-				busy={ending}
-				onclick={() => void end()}
-				>{current.status === 'waiting' ? t('onboard.support.cancel_link') : t('onboard.support.end')}</Button
-			>
-		{/if}
 		{#if current && canConnect(current)}
 			<MenuButton
 				icon={ICONS.connect_app}
@@ -259,6 +265,13 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-2);
+	}
+	.state-line {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-2) var(--space-3);
 	}
 	.facts {
 		display: grid;

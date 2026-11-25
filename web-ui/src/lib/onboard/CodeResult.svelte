@@ -1,10 +1,10 @@
 <!--
   A new invite or quick support link, shown once (the server keeps only a
-  fingerprint): the link with Copy, the short code people type into a
-  NeoDesk that is already installed, the QR code of the link, and Send
-  by email when the console can send mail. A warning when the console is
-  not on HTTPS: the person's computer then trusts whatever answers on the
-  network.
+  fingerprint), in the order people pass it on: the link with Copy, Send
+  by email when the console can send mail, the short code people type into
+  a NeoDesk that is already installed, and last the QR code with its
+  caption beside it. A warning when the console is not on HTTPS: the
+  person's computer then trusts whatever answers on the network.
 -->
 <script lang="ts">
 	import { ApiError } from '#lib/api/client.ts';
@@ -97,19 +97,6 @@
 		<p class="label">{linkLabel}</p>
 		<ValueField value={link} label={linkLabel} />
 	</div>
-	<div class="link-row">
-		{#if showCode}
-			<div class="block code-block">
-				<p class="label">{t('onboard.result.code')}</p>
-				<p class="code" dir="ltr">{displayCode}</p>
-				<p class="hint">{t('onboard.result.code_hint')}</p>
-			</div>
-		{/if}
-		<figure class="qr">
-			<QR text={link} label={t('onboard.result.qr')} size={144} />
-			<figcaption class="hint">{t('onboard.result.qr_caption')}</figcaption>
-		</figure>
-	</div>
 	{#if mail}
 		<form class="mail-form" onsubmit={send} novalidate>
 			<Field label={t('onboard.result.mail_to')}>
@@ -131,6 +118,17 @@
 		</form>
 	{/if}
 	<FormStatus message={status.message} tone={status.tone} />
+	{#if showCode}
+		<div class="block">
+			<p class="label">{t('onboard.result.code')}</p>
+			<p class="code" dir="ltr">{displayCode}</p>
+			<p class="hint">{t('onboard.result.code_hint')}</p>
+		</div>
+	{/if}
+	<figure class="qr">
+		<QR text={link} label={t('onboard.result.qr')} size={128} />
+		<figcaption class="hint">{t('onboard.result.qr_caption')}</figcaption>
+	</figure>
 </div>
 
 <style>
@@ -145,15 +143,6 @@
 		gap: var(--space-1);
 		min-width: 0;
 	}
-	.code-block {
-		flex: 1 1 14rem;
-	}
-	.link-row {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-4);
-		align-items: flex-start;
-	}
 	.label,
 	.hint {
 		margin: 0;
@@ -167,13 +156,23 @@
 		font-weight: 600;
 		letter-spacing: 0.12em;
 	}
+	/* The QR code with its caption beside it, using the row's width */
 	.qr {
 		display: flex;
-		flex: 0 1 12rem;
-		flex-direction: column;
-		gap: var(--space-1);
+		align-items: center;
+		gap: var(--space-4);
 		margin: 0;
+		padding-top: var(--space-3);
+		border-top: 1px solid var(--rule);
 	}
+	.qr :global(:first-child) {
+		flex: none;
+	}
+	.qr figcaption {
+		flex: 1;
+		min-width: 0;
+	}
+	/* The address field takes the row; Send sits at its end */
 	.mail-form {
 		display: flex;
 		flex-wrap: wrap;
@@ -181,6 +180,8 @@
 		gap: var(--space-2) var(--space-3);
 	}
 	.mail-form :global(.form-group) {
+		flex: 1 1 14rem;
+		min-width: 0;
 		margin-bottom: 0;
 	}
 </style>
