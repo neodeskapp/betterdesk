@@ -30,12 +30,12 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    "$"
-   ],
    "body": {
     "kind": "bytes",
-    "type": "application/javascript"
+    "type": "application/javascript",
+    "length": 6636,
+    "sha256": "eca660cc37389caefbd224026da61462748a141a9a76986cb6f56ce3af81c388",
+    "head": "(function (boot) {\n    var root = document.documentElement;\n    var VARS = {\n        bgPrimary: '--bg-primary', bgSecondary: '--bg-secondary', bgTertiary: '--bg-tertiary',\n        bgElevated: '--bg-elevated', textPrimary: '--text-primary', textSecondary: '--text-secondary',\n        accentBlue: '--ac"
    }
   },
   {
@@ -63,12 +63,12 @@
     "x-permitted-cross-domain-policies": "none",
     "x-xss-protection": "0"
    },
-   "volatile": [
-    "$"
-   ],
    "body": {
     "kind": "bytes",
-    "type": "application/javascript"
+    "type": "application/javascript",
+    "length": 6636,
+    "sha256": "eca660cc37389caefbd224026da61462748a141a9a76986cb6f56ce3af81c388",
+    "head": "(function (boot) {\n    var root = document.documentElement;\n    var VARS = {\n        bgPrimary: '--bg-primary', bgSecondary: '--bg-secondary', bgTertiary: '--bg-tertiary',\n        bgElevated: '--bg-elevated', textPrimary: '--text-primary', textSecondary: '--text-secondary',\n        accentBlue: '--ac"
    }
   }
  ]
