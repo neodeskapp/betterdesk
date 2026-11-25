@@ -879,10 +879,13 @@ RUN
 )
 
 # install.sh takes the managers from the release of its own version (or
-# of --version), checked against the release's SHA256SUMS; while its own
-# release is not out (a checkout ahead of the releases) the newest
-# release's. A version given that has no release, or a file that does not
-# match, stops it before anything is installed.
+# of --version), checked against the release's SHA256SUMS: the install.sh
+# neode.sk serves is the newest release's, so it takes that release's.
+# While its own release is not out (a checkout ahead of the releases) it
+# takes the newest release's. A version given that has no release, or a
+# file that does not match, stops it before anything is installed. The
+# test sets install.sh's own version (OWN), so the checkout's version, a
+# release's or a development one, does not decide the outcome.
 test_install_sh_takes_the_release_files() (
     local dir rel
     dir=$(mktemp -d)
@@ -890,7 +893,8 @@ test_install_sh_takes_the_release_files() (
     mkdir -p "$rel"
     { printf '#!/bin/sh\n# NEODESK_DOCKER_SOURCED stand-in\n'; head -c 5000 /dev/zero | tr '\0' '#'; printf '\n'; } > "$rel/neodesk-docker.sh"
     (cd "$rel" && sha256sum neodesk-docker.sh > SHA256SUMS)
-    # fetch ARGS...: install.sh with ARGS fetches the Docker manager
+    # fetch ARGS...: install.sh with ARGS, of the version OWN when set,
+    # fetches the Docker manager
     fetch() {
         rm -f "$dir/manager.sh"
         : > "$dir/fetched"
@@ -899,6 +903,7 @@ test_install_sh_takes_the_release_files() (
             unset NEODESK_RAW_BASE NEODESK_BRANCH RELEASE_BASE_URL NEODESK_VERSION
             # shellcheck disable=SC1091
             source "$SCRIPT_ROOT/install/install.sh" "$@"
+            [ -z "${OWN:-}" ] || NEODESK_VERSION="$OWN"
             # As piped from curl: no files next to it
             INSTALLER_FOLDER=""
             curl() {
@@ -921,9 +926,13 @@ test_install_sh_takes_the_release_files() (
     grep -qx https://github.com/neodeskapp/neodesk/releases/download/v3.6.0-rc.5/SHA256SUMS "$dir/fetched" \
         || fail "the manager was not checked against the release's SHA256SUMS: $(tr '\n' ' ' < "$dir/fetched")"
     if grep -q githubusercontent "$dir/fetched"; then fail "a raw file was fetched: $(tr '\n' ' ' < "$dir/fetched")"; fi
-    fetch || fail "the manager of install.sh's own version: $(cat "$dir/out")"
+    OWN=3.6.0-rc.5 fetch || fail "the manager of install.sh's own release: $(cat "$dir/out")"
+    cmp -s "$dir/manager.sh" "$rel/neodesk-docker.sh" || fail "install.sh of a release did not take its release's manager"
+    if grep -q 'taking the files of the newest release' "$dir/out"; then fail "install.sh of a release looked for another one: $(cat "$dir/out")"; fi
+    OWN=9.9.9 fetch || fail "the manager of a checkout ahead of the releases: $(cat "$dir/out")"
     cmp -s "$dir/manager.sh" "$rel/neodesk-docker.sh" || fail "without its own release out, install.sh did not take the newest release's manager"
-    grep -q 'taking the files of the newest release, v3.6.0-rc.5' "$dir/out" || fail "install.sh does not say it takes the newest release: $(cat "$dir/out")"
+    grep -q 'There is no release 9.9.9 yet: taking the files of the newest release, v3.6.0-rc.5' "$dir/out" \
+        || fail "install.sh does not say it takes the newest release: $(cat "$dir/out")"
     if fetch --version 3.6.0-rc.9; then fail "a version without a release installed a manager"; fi
     [ ! -e "$dir/manager.sh" ] || fail "a version without a release left a manager"
     printf '# changed\n' >> "$rel/neodesk-docker.sh"
