@@ -184,3 +184,51 @@ test.describe('devices links', () => {
 		await expect(page).toHaveURL(new RegExp(`${UI}/devices$`));
 	});
 });
+
+test.describe('device usage (L480)', () => {
+	test.use({ role: 'operator' });
+
+	test('the Metrics tab draws the usage history; a client that sends none says so', async ({ page }) => {
+		await page.goto(`${UI}/devices`);
+		const { withHistory, withoutUsage } = await page.evaluate(async () => {
+			const get = async (url: string) =>
+				(await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } })).json();
+			const list = ((await get('/api/devices')).data?.devices ?? []) as {
+				id: string;
+				soft_deleted?: boolean;
+				remote_target?: unknown;
+				client_type?: string;
+			}[];
+			let withHistory = '';
+			let withoutUsage = '';
+			for (const d of list.filter((x) => !x.soft_deleted && !x.remote_target)) {
+				const detail = (await get(`/api/devices/${encodeURIComponent(d.id)}`)).data ?? {};
+				const history = Array.isArray(detail.metrics_history) ? detail.metrics_history : [];
+				if (!withHistory && history.length >= 2) withHistory = d.id;
+				const neodesk = /neodesk/i.test(String(detail.client_type ?? ''));
+				if (
+					!withoutUsage &&
+					!neodesk &&
+					!history.length &&
+					!detail.metrics &&
+					!detail.telemetry?.snapshots?.metrics
+				)
+					withoutUsage = d.id;
+				if (withHistory && withoutUsage) break;
+			}
+			return { withHistory, withoutUsage };
+		});
+		expect(withHistory, 'a seeded device with a usage history').not.toBe('');
+		expect(withoutUsage, 'a seeded device whose client sends no usage').not.toBe('');
+
+		await page.goto(`${UI}/devices?open=${withHistory}`);
+		const panel = page.getByRole('dialog');
+		await panel.getByRole('tab', { name: 'Metrics' }).click();
+		await expect(panel.getByRole('group', { name: /CPU, memory and disk/ })).toBeVisible({ timeout: 20_000 });
+
+		await page.goto(`${UI}/devices?open=${withoutUsage}`);
+		await expect(
+			panel.getByText("This device's client doesn't send usage data", { exact: false })
+		).toBeVisible({ timeout: 20_000 });
+	});
+});
