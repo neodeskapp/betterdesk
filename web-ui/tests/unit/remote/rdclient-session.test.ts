@@ -333,6 +333,60 @@ describe('sign-in version', () => {
 	});
 });
 
+describe('asking without a password (L515)', () => {
+	/** A client at the device's password question, over an encrypted session, that keeps what it sends */
+	async function atQuestion() {
+		const c = await client();
+		const sent: { loginRequest?: { password?: Uint8Array } }[] = [];
+		c._sendPeerMessage = (m: unknown) => void sent.push(m as (typeof sent)[number]);
+		c._keyExchangeDone = true;
+		c._state = 'waiting_password';
+		const seen: string[] = [];
+		for (const ev of ['approval_wait', 'login_error', 'login_success']) c.on(ev, () => seen.push(ev));
+		return { c, sent, seen };
+	}
+
+	test('the client sends one login without a password, as the desktop client does, and stays at the question', async () => {
+		const { c, sent } = await atQuestion();
+		await c.askWithoutPassword();
+		await c.askWithoutPassword();
+		expect(sent).toHaveLength(1);
+		expect(sent[0]!.loginRequest).toBeTruthy();
+		expect(sent[0]!.loginRequest!.password?.length ?? 0).toBe(0);
+		expect(c._state).toBe('waiting_password');
+	});
+
+	test('a device that accepts by click answers it by waiting for the person there', async () => {
+		const { c, seen } = await atQuestion();
+		await c.askWithoutPassword();
+		c._handleLoginResponse(LoginResponse.fromObject({ error: 'No Password Access' }));
+		expect(seen).toEqual(['approval_wait']);
+	});
+
+	test('a refusal of the empty login is no wrong password; the refusal of a typed one is', async () => {
+		const { c, sent, seen } = await atQuestion();
+		await c.askWithoutPassword();
+		c._handleLoginResponse(LoginResponse.fromObject({ error: 'Wrong Password' }));
+		expect(seen).toEqual([]);
+		expect(c._state).toBe('waiting_password');
+		await c.authenticate('typed');
+		expect(sent).toHaveLength(2);
+		c._handleLoginResponse(LoginResponse.fromObject({ error: 'Wrong Password' }));
+		expect(seen).toEqual(['login_error']);
+	});
+
+	test('nothing goes before the session is encrypted, or once a password is on its way', async () => {
+		const plain = await atQuestion();
+		plain.c._keyExchangeDone = false;
+		await plain.c.askWithoutPassword();
+		expect(plain.sent).toHaveLength(0);
+		const typed = await atQuestion();
+		await typed.c.authenticate('typed');
+		await typed.c.askWithoutPassword();
+		expect(typed.sent).toHaveLength(1);
+	});
+});
+
 describe('Windows sessions', () => {
 	test('a computer that shares several Windows sessions waits for a choice: the current one is chosen at once', async () => {
 		const c = await client();

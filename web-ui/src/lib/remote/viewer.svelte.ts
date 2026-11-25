@@ -801,6 +801,10 @@ export class Viewer {
 					s.password = mine;
 					s.remember = true;
 					s.rememberedPassword = mine;
+				} else {
+					// Nothing to sign in with: ask the device without a password while the form shows,
+					// as the desktop client does, so someone there can accept (L515)
+					void c.askWithoutPassword?.();
 				}
 				if (this.isActive(s)) void tick().then(() => s.focus?.password());
 			});

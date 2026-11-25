@@ -228,6 +228,10 @@ export class RDClient {
 	_sessionPassword: string;
 	/** The answer a session signed in with instead of a password; the file transfer session asks it again */
 	_sessionAnswer: LoginAnswer | null;
+	/** This connection asked the device without a password (askWithoutPassword) */
+	_askedWithoutPassword = false;
+	/** The last login sent had no password: a refusal of it is no wrong password */
+	_emptyLoginOut = false;
 	/**
 	 * The relay session's id once the relay is set up: the server knows it
 	 * as this viewer's open session (saved sign-in is bound to it)
@@ -316,6 +320,8 @@ export class RDClient {
 		this._fileConnection = null;
 		this._sessionPassword = '';
 		this._sessionAnswer = null;
+		this._askedWithoutPassword = false;
+		this._emptyLoginOut = false;
 		this.relayUUID = '';
 		this.fileTransfer = new RDFileTransfer({
 			proto: this.proto,
@@ -724,6 +730,9 @@ export class RDClient {
 			this._emit('log', 'Authenticating...');
 			this._sessionPassword = password != null ? String(password) : '';
 			this._sessionAnswer = null;
+			// A password is on its way: no login without one after it
+			this._askedWithoutPassword = true;
+			this._emptyLoginOut = false;
 
 			// Hash the password
 			const challenge = this._loginChallenge || '';
@@ -760,11 +769,32 @@ export class RDClient {
 			this._emit('log', 'Authenticating...');
 			this._sessionPassword = '';
 			this._sessionAnswer = answer;
+			this._askedWithoutPassword = true;
+			this._emptyLoginOut = false;
 			await this._sendLogin(hash);
 			return true;
 		} catch (err) {
 			this._handleError(err);
 			return false;
+		}
+	}
+
+	/**
+	 * Ask the device without a password while the viewer shows its password
+	 * form, as the desktop client does: a device that accepts by click shows
+	 * its prompt now, and someone there can let this viewer in. Once per
+	 * connection, only over the encrypted session, never after a password
+	 * went. The device's question stays open for a password.
+	 */
+	async askWithoutPassword(): Promise<void> {
+		if (this._askedWithoutPassword || !this._keyExchangeDone || this._state !== 'waiting_password') return;
+		this._askedWithoutPassword = true;
+		this._emptyLoginOut = true;
+		try {
+			await this._sendLogin(new Uint8Array(0));
+		} catch (err) {
+			this._emptyLoginOut = false;
+			this._handleError(err);
 		}
 	}
 
@@ -1364,6 +1394,12 @@ export class RDClient {
 				this._emit('approval_wait');
 				return;
 			}
+			// The answer to the login without a password: nobody typed a wrong one, the form stays
+			if (this._emptyLoginOut) {
+				this._emptyLoginOut = false;
+				this._emit('log', 'The device wants a password');
+				return;
+			}
 
 			this._emit('login_error', resp.error);
 			this._setState('waiting_password');
@@ -1371,6 +1407,7 @@ export class RDClient {
 		}
 
 		// Login successful
+		this._emptyLoginOut = false;
 		this._peerInfo = resp.peerInfo || null;
 		this._debugRelay('[RDClient] Login successful, peerInfo:', this._peerInfo ? 'present' : 'null');
 		this._processPeerInfo(this._peerInfo);
@@ -1969,6 +2006,8 @@ export class RDClient {
 		this.disconnectFileConnection();
 		this._sessionPassword = '';
 		this._sessionAnswer = null;
+		this._askedWithoutPassword = false;
+		this._emptyLoginOut = false;
 		this.relayUUID = '';
 		this.conn.close();
 		this._codecFallbackDone = false;

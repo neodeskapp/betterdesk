@@ -34,6 +34,7 @@ class FakeClient {
 		this.disconnected = true;
 	});
 	authenticate = vi.fn();
+	askWithoutPassword = vi.fn(async () => {});
 	submit2FA = vi.fn();
 	sendChat = vi.fn((t: string) => this.sent.push(t));
 	sendCtrlAltDel = vi.fn();
@@ -153,6 +154,25 @@ describe('remote viewer sessions', () => {
 		expect(s.view).toBe('streaming');
 		expect(s.everStreamed).toBe(true);
 		expect(c.setSessionActive).toHaveBeenLastCalledWith(true);
+	});
+
+	test('with no password at hand the viewer asks the device without one, once, and keeps the form (L515)', async () => {
+		remembered.clear();
+		const { s, c } = setup();
+		c.emit('password_required');
+		await vi.waitFor(() => expect(c.askWithoutPassword).toHaveBeenCalledTimes(1));
+		expect(s.view).toBe('password');
+		expect(c.authenticate).not.toHaveBeenCalled();
+	});
+
+	test('a remembered password goes without asking the device first (L515)', async () => {
+		remembered.clear();
+		remembered.set('900100012', 'old-pw');
+		const { s, c } = setup();
+		c.emit('password_required');
+		// The viewer fills the field and asks in the same step: by now it would have asked
+		await vi.waitFor(() => expect(s.password).toBe('old-pw'));
+		expect(c.askWithoutPassword).not.toHaveBeenCalled();
 	});
 
 	test("a quick support session's password is sent at once and never stored in the browser", async () => {
