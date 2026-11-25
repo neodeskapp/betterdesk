@@ -242,7 +242,9 @@ func darkStyle(accent, onAccent string) string {
 ` + prefixText + `.nd-on { color: ` + onAccent + ` !important; }
 ` + prefixBg + `.nd-rule { border-color: ` + d.rule + ` !important; }
 ` + prefixBg + `.nd-light { display: none !important; }
-` + prefixBg + `.nd-dark { display: block !important; width: auto !important; height: auto !important; max-height: none !important; overflow: visible !important; }
+` + prefixBg + `.nd-dark { display: block !important; max-height: none !important; overflow: visible !important; }
+` + prefixBg + `.nd-dark-logo { width: 136px !important; height: 32px !important; }
+` + prefixBg + `.nd-dark-mark { width: 32px !important; height: 32px !important; }
 `
 	}
 	return `:root { color-scheme: light dark; supported-color-schemes: light dark; }
@@ -286,12 +288,12 @@ func HTML(p Page) string {
 	case ownName:
 		w(`<tr><td style="padding: 24px 28px 0 28px;">`)
 		w(`<img class="nd-light" src="cid:`, cidLogoLight, `" alt="NeoDesk" width="136" height="32" style="display: block; width: 136px; height: 32px; border: 0;">`)
-		w(`<!--[if !mso]><!--><img class="nd-dark" src="cid:`, cidLogoDark, `" alt="NeoDesk" width="136" height="32" style="display: none; width: 0; height: 0; max-height: 0; overflow: hidden; border: 0;"><!--<![endif]-->`)
+		w(`<!--[if !mso]><!--><img class="nd-dark nd-dark-logo" src="cid:`, cidLogoDark, `" alt="NeoDesk" width="136" height="32" style="display: none; width: 0; height: 0; max-height: 0; overflow: hidden; border: 0;"><!--<![endif]-->`)
 		w(`</td></tr>`)
 	default:
 		w(`<tr><td style="padding: 24px 28px 0 28px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td valign="middle" style="padding: 0 10px 0 0;">`)
 		w(`<img class="nd-light" src="cid:`, cidLogoLight, `" alt="" width="32" height="32" style="display: block; width: 32px; height: 32px; border: 0;">`)
-		w(`<!--[if !mso]><!--><img class="nd-dark" src="cid:`, cidLogoDark, `" alt="" width="32" height="32" style="display: none; width: 0; height: 0; max-height: 0; overflow: hidden; border: 0;"><!--<![endif]-->`)
+		w(`<!--[if !mso]><!--><img class="nd-dark nd-dark-mark" src="cid:`, cidLogoDark, `" alt="" width="32" height="32" style="display: none; width: 0; height: 0; max-height: 0; overflow: hidden; border: 0;"><!--<![endif]-->`)
 		w(`</td><td valign="middle" class="nd-name" style="`, font, ` font-size: 18px; font-weight: 700; color: `, l.ink, `;">`, e(p.Server), `</td></tr></table></td></tr>`)
 	}
 	cell("20px 28px 0 28px", "nd-ink", "font-size: 22px; line-height: 1.3; font-weight: 700; color: "+l.ink+";", e(p.Heading))

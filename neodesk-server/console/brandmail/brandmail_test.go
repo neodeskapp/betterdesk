@@ -42,7 +42,7 @@ func TestLogo(t *testing.T) {
 	carried(t, own)
 	html := HTML(own)
 	if !strings.Contains(html, `class="nd-light" src="cid:logo-light@neodesk" alt="NeoDesk" width="136" height="32"`) ||
-		!strings.Contains(html, `<!--[if !mso]><!--><img class="nd-dark" src="cid:logo-dark@neodesk"`) {
+		!strings.Contains(html, `<!--[if !mso]><!--><img class="nd-dark nd-dark-logo" src="cid:logo-dark@neodesk"`) {
 		t.Errorf("no full logo for light and dark:\n%s", html)
 	}
 	if !bytes.Equal(Inline(own)[0].Data, mustRead(t, "logo/logo-on-light-64h.png")) || !bytes.Equal(Inline(own)[1].Data, mustRead(t, "logo/logo-on-dark-64h.png")) {
@@ -93,6 +93,7 @@ func TestDarkMode(t *testing.T) {
 		".nd-on { color: #0c1b1e !important; }",
 		".nd-light { display: none !important; }",
 		".nd-dark { display: block !important;",
+		".nd-dark-logo { width: 136px !important; height: 32px !important; }",
 		"[data-ogsb] .nd-card", "[data-ogsc] .nd-ink",
 	} {
 		if !strings.Contains(head, want) {
