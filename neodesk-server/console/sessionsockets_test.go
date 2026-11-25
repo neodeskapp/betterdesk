@@ -32,7 +32,7 @@ func TestEndingASessionClosesItsSockets(t *testing.T) {
 		t.Cleanup(c.Drop)
 		return c
 	}
-	paths := []string{"/ws/device-status", "/ws/chat-operator/panel"}
+	paths := []string{"/ws/device-status", "/ws/chat-operator/panel", "/ws/chat-operator/panel?v=2"}
 	var kept, ended []*wstest.Client
 	for _, p := range paths {
 		kept = append(kept, open(keep, p))
