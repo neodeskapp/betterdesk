@@ -1,21 +1,21 @@
 NeoDesk self-hosted Material Symbols (Apache-2.0)
 Upstream: https://github.com/google/material-design-icons (variablefont / Google Fonts CSS API)
 License: Apache License 2.0
-Generated: 2026-11-25T01:39:51.925Z
-Icon count: 161
+Generated: 2026-11-25T15:05:50.017Z
+Icon count: 159
 
 File: MaterialSymbolsOutlined.woff2
-  size: 15024
-  sha256: 1c0102751ab8d4a92e1332d54694d38ee1c0450228aa6a6ec8029758ee58c3ac
-  source: https://fonts.gstatic.com/l/font?kit=kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDCvHOejdcFJ80FOurF9-dOV9sW9D-I3cSJDA9HuTiHl2LVxKvxFLtR94Eb16n6FHc7W2qhqdIwawCLtBiPiAKBh1OCkYGozSh7ckQh-G21_kK2XoIJ09OR4NcxJ91keHkV9GfcZ-DyIQ8MaHMtOeHRARtq-L8qZrsbrAn7VZ3CbAqFe9k-F77yiYPB_-Stv3G12GNBFCU66yAFnhq8YSD0ZFnsjmzba_lJjpuXp6w0CGUps&skey=b8dc2088854b122f&v=v387
+  size: 14872
+  sha256: ae8860742cc2a375e81f200c5bb2ec18f2b1b4cd17278de80d46c1bbf672da84
+  source: https://fonts.gstatic.com/l/font?kit=kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDCvHOejdcFJ80FOurF9-dOV9sW9D-I3cSJDA9HuTiHl2LVxKfxFLtR94Eb16m6FHc7W2qhqdIwawCLt9747VbNyNKoDgP50015xONxcHfh81E6pWWcp9OILjPWN91BHBwDdEzLs-HoZQgQbEpoHezdz7xd6KlaTdEIFOoz3NUkyy8Q4lnXZ6Ho1MJBF6ATu__jgGXDUueTLcqKwgv0e22vXYhbDC2rT_pf6Oo9Aew3HE8w&skey=b8dc2088854b122f&v=v387
 
 File: MaterialSymbolsRounded.woff2
-  size: 17668
-  sha256: 02a6fba86fdf7ca2b15b7e20d6ec8f2387a7d10ce7fce36f4bc45371cb74fc89
-  source: https://fonts.gstatic.com/l/font?kit=syl0-zNym6YjUruM-QrEh7-nyTnjDwKNJ_190FjpZIvDmUSVOK7BDB_Qb9vUSzq3wzLK-P0J-V_Zs-QtQth3-jOcbTCVpeRL2w5rwZu2rIelXxeRN6o9eMxp7TMMRixBGFhH6wfacD8dX8NcTrBYuBV2Rg5U3xE6Cyk7YLVuwXbS0UzR16K-UQXUgOykL4ogA8uww6yMSNQXaEJ95_TGDyPCQAwwdu8U8OHSnADE3fEqrNdeO8XayF3MRzFLK9p7oTB9xuvdSKViylpIW34ec8vXagemH9-VirrJJl_pDpLYVUB12KkfwnU7DNAQNXsigiw983MLfaw81lJ1E8eCQEk&skey=70ddea8fe54d532e&v=v388
+  size: 17536
+  sha256: bbadf21da982624ba8f68898b122f35a36ddc06efc609c0f6461fe753c1235d9
+  source: https://fonts.gstatic.com/l/font?kit=syl0-zNym6YjUruM-QrEh7-nyTnjDwKNJ_190FjpZIvDmUSVOK7BDB_Qb9vUSzq3wzLK-P0J-V_Zs-QtQth3-jOcbTCVpeRL2w5rwZu2rIelXxeRN6o9eMxp7TMMRixBGFhH6wfacD8dX8NcTrBYuBV1Rg5U3xE6Cyk7cLVuwXbS0UzR16K-UQUlHTXxPJnASWxQV-sVCHm-vGB7cveC7B07pVEwcJytySXSlVndmFEgaSJefVTbD1zCFnhIaOnSbPR4WuEHzEtaOHgaYtfXFq23UFuh2UjF6oDYCd7KmwTZ9dHFctilYaI_XtaDY7VW78ytr3oLuDWgvPvlEwKIxg&skey=70ddea8fe54d532e&v=v388
 
 Axes instance: opsz=24, wght=400, FILL=0, GRAD=0
 display=block
 
 Icons (alphabetical):
-accessibility_new,add,add_reaction,api,apps,archive,arrow_back,arrow_forward,arrow_upward,attach_file,autorenew,bedtime,block,bug_report,build,business,call_split,cancel,cell_tower,chat,check,check_circle,chevron_left,chevron_right,close,cloud,cloud_off,code,computer,confirmation_number,content_copy,content_paste,contrast,control_point_duplicate,dark_mode,dashboard,delete,delete_forever,delete_outline,description,desktop_windows,developer_board,devices,dns,download,drive_file_rename_outline,drive_folder_upload,edit,edit_note,edit_square,electrical_services,email,error,expand_less,expand_more,fact_check,favorite,fiber_manual_record,filter_alt,fit_screen,folder,folder_open,folder_zip,forum,forward,fullscreen,fullscreen_exit,functions,group,group_add,history,home,hourglass_empty,how_to_reg,http,image,info,insert_drive_file,key,keyboard,language,light_mode,link,link_off,list_alt,lock,lock_open,login,logout,menu,merge,monitor,mood,more_vert,movie,music_note,network_ping,notifications,open_in_full,open_in_new,pan_tool,payments,person,person_remove,photo_camera,pin,play_arrow,power_off,power_settings_new,print,publish,qr_code_2,quickreply,radio_button_unchecked,refresh,remove,remove_circle_outline,replay,reply,restart_alt,restore_from_trash,router,save,screenshot_monitor,search,security,sell,send,settings,settings_backup_restore,settings_ethernet,share,shield,slow_motion_video,stop,stop_circle,storage,summarize,support_agent,swap_horiz,sync,system_update,task_alt,terminal,text_fields,timer,toggle_off,toggle_on,tune,undo,upload,usb,verified_user,visibility,visibility_off,volume_off,volume_up,volunteer_activism,warning,webhook,workspaces
+accessibility_new,add,add_reaction,api,apps,archive,arrow_back,arrow_forward,arrow_upward,attach_file,autorenew,bedtime,block,build,business,call_split,cancel,cell_tower,chat,check,check_circle,chevron_left,chevron_right,close,cloud,cloud_off,code,computer,confirmation_number,content_copy,content_paste,contrast,control_point_duplicate,dashboard,delete,delete_forever,delete_outline,description,desktop_windows,developer_board,devices,dns,download,drive_file_rename_outline,drive_folder_upload,edit,edit_note,edit_square,electrical_services,email,error,expand_less,expand_more,fact_check,favorite,fiber_manual_record,filter_alt,fit_screen,folder,folder_open,folder_zip,forum,forward,fullscreen,fullscreen_exit,functions,group,group_add,history,home,hourglass_empty,how_to_reg,http,image,info,insert_drive_file,key,keyboard,language,link,link_off,list_alt,lock,lock_open,login,logout,menu,menu_book,merge,monitor,mood,more_vert,movie,music_note,network_ping,notifications,open_in_full,open_in_new,pan_tool,payments,person,person_remove,photo_camera,pin,play_arrow,power_off,power_settings_new,print,publish,qr_code_2,quickreply,radio_button_unchecked,refresh,remove,remove_circle_outline,replay,reply,restart_alt,restore_from_trash,router,save,screenshot_monitor,search,security,sell,send,settings,settings_backup_restore,settings_ethernet,share,shield,slow_motion_video,stop,stop_circle,storage,summarize,support_agent,swap_horiz,sync,system_update,task_alt,terminal,text_fields,timer,toggle_off,toggle_on,tune,undo,upload,usb,verified_user,visibility,visibility_off,volume_off,volume_up,volunteer_activism,warning,webhook,workspaces
