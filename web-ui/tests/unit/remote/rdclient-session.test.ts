@@ -337,7 +337,7 @@ describe('asking without a password (L515)', () => {
 	/** A client at the device's password question, over an encrypted session, that keeps what it sends */
 	async function atQuestion() {
 		const c = await client();
-		const sent: { loginRequest?: { password?: Uint8Array } }[] = [];
+		const sent: { loginRequest?: { password?: Uint8Array; myId?: string } }[] = [];
 		c._sendPeerMessage = (m: unknown) => void sent.push(m as (typeof sent)[number]);
 		c._keyExchangeDone = true;
 		c._state = 'waiting_password';
