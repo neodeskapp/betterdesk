@@ -8805,7 +8805,9 @@
     "no_keyboard_lock": "Ce navigateur garde certains raccourcis pour lui, même en plein écran : Ctrl+W, Ctrl+T, Ctrl+N, la touche Windows, et Échap quitte le plein écran. Actions envoie la touche Windows, Alt+Tab et Ctrl+Alt+Suppr à l'ordinateur distant.",
     "no_screen_placement": "Ce navigateur ne peut pas placer les fenêtres sur vos autres écrans. Faites glisser la fenêtre de chaque affichage sur l'écran voulu.",
     "phone_turn": "Ou tournez le téléphone à l'horizontale : en paysage, la session s'ouvre ici dans le navigateur.",
-    "no_open_sessions": "Aucune session n'est ouverte. Connectez-vous par ID ou choisissez un appareil ci-dessous."
+    "no_open_sessions": "Aucune session n'est ouverte. Connectez-vous par ID ou choisissez un appareil ci-dessous.",
+    "fail_signin_closed": "{name} a fermé la connexion lorsque ce navigateur s'est connecté.",
+    "try_signin_closed": "L'appareil a refusé la connexion. Reconnectez-vous et identifiez-vous à nouveau. Si cela se reproduit, demandez à un administrateur de consulter le journal de NeoDesk sur l'appareil."
   },
   "diagram": {
     "your_computer": "Votre ordinateur",

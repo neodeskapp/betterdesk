@@ -8801,7 +8801,9 @@
     "no_keyboard_lock": "Dieser Browser behält einige Tastenkürzel für sich, auch im Vollbild: Strg+W, Strg+T, Strg+N, die Windows-Taste, und Esc beendet das Vollbild. Aktionen sendet die Windows-Taste, Alt+Tab und Strg+Alt+Entf an den entfernten Computer.",
     "no_screen_placement": "Dieser Browser kann keine Fenster auf Ihre anderen Bildschirme legen. Ziehen Sie das Fenster jeder Anzeige auf den gewünschten Bildschirm.",
     "phone_turn": "Oder drehen Sie das Telefon quer: Im Querformat öffnet sich die Sitzung hier im Browser.",
-    "no_open_sessions": "Keine Sitzung ist offen. Verbinden Sie sich per ID oder wählen Sie unten ein Gerät."
+    "no_open_sessions": "Keine Sitzung ist offen. Verbinden Sie sich per ID oder wählen Sie unten ein Gerät.",
+    "fail_signin_closed": "{name} hat die Verbindung bei der Anmeldung dieses Browsers beendet.",
+    "try_signin_closed": "Das Gerät hat die Anmeldung abgelehnt. Verbinde dich neu und melde dich noch einmal an. Wenn das immer wieder passiert, bitte einen Administrator, das Protokoll von NeoDesk auf dem Gerät anzusehen."
   },
   "diagram": {
     "your_computer": "Ihr Computer",
