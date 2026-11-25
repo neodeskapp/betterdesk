@@ -77,7 +77,7 @@ export const TERMS: Readonly<Record<string, string>> = {
 	'branding-profiles': 'profile preset vorlage profil',
 	'branding-import-export': 'import export json',
 	// Sign-in
-	'password-form': 'password change passwort kennwort ändern',
+	'account-password': 'password change passwort kennwort ändern',
 	'current-password': 'password passwort kennwort',
 	'new-password': 'change password passwort ändern kennwort',
 	'confirm-password': 'password repeat passwort wiederholen',
@@ -108,7 +108,7 @@ export const TERMS: Readonly<Record<string, string>> = {
 	'scheduled-backup-path': 'folder path ordner',
 	'backup-restore': 'restore import wiederherstellen zurückspielen',
 	// Updates
-	'update-backup-toggle': 'backup before update sicherung vorher',
+	'update-backups-panel': 'backup before update sicherung vorher',
 	'update-channel-panel': 'beta nightly stable channel kanal',
 	'backup-retention-input': 'retention keep backups aufbewahrung sicherungen',
 	'update-local-version': 'version installed installiert',
