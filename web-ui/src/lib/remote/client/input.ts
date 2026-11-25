@@ -5,6 +5,7 @@
 import type { MessageInit } from './generated/protos.ts';
 import { RDKeyboardEncoder, type RDKeyboardMode } from './keyboard-encoder.ts';
 import { RDKeyboardScancode } from './keyboard-scancode.ts';
+import { WheelAccumulator } from './wheel.ts';
 
 /**
  * What RDInput needs of the renderer (RDRenderer): the remote screen's size,
@@ -86,6 +87,8 @@ export class RDInput {
 	_deadCodes: Set<string>;
 	/** While set, mouse moves, presses and the wheel go nowhere: a local file drag is under way */
 	_mouseSuppressed: boolean;
+	/** Wheel events to notches: a touchpad's small deltas add up (wheel.ts) */
+	_wheel: WheelAccumulator;
 
 	/**
 	 * @param canvas - The canvas element to capture events from
@@ -133,6 +136,7 @@ export class RDInput {
 		this._deadCodes = new Set();
 
 		this._mouseSuppressed = false;
+		this._wheel = new WheelAccumulator();
 	}
 
 	/**
@@ -559,6 +563,7 @@ export class RDInput {
 		}
 	}
 
+	/** One notch on one axis, or null while a touchpad's small deltas add up (wheel.ts) */
 	_normalizeWheelDelta(e: WheelEvent): { dx: number; dy: number } | null {
 		let rawDx = e.deltaX;
 		let rawDy = e.deltaY;
@@ -569,17 +574,7 @@ export class RDInput {
 		}
 
 		if (rawDx === 0 && rawDy === 0) return null;
-
-		let dx = 0;
-		let dy = 0;
-		if (Math.abs(rawDx) > Math.abs(rawDy)) {
-			dx = rawDx > 0 ? -1 : 1;
-		} else if (rawDy !== 0) {
-			dy = rawDy > 0 ? -1 : 1;
-		}
-
-		if (dx === 0 && dy === 0) return null;
-		return { dx, dy };
+		return this._wheel.push(rawDx, rawDy, e.deltaMode, e.timeStamp || performance.now());
 	}
 
 	_handlePointerLockChange(): void {
