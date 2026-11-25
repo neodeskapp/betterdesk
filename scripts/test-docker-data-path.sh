@@ -23,8 +23,12 @@ set -euo pipefail
 SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OLD_TAG=3.6.0-rc.4
 # 3.6.0-rc.4's files are at its tag's root; since 3.6.0-rc.5 they are in
-# install/ and attached to the release
-OLD_MANAGER_URL="https://raw.githubusercontent.com/neodeskapp/neodesk/v${OLD_TAG}/neodesk-docker.sh"
+# install/ and attached to the release. The old install takes every file
+# from its own tag: its manager fetches the compose file from
+# NEODESK_RAW_BASE, which is main's root unless set, and main has no
+# files there any more.
+OLD_RAW_BASE="https://raw.githubusercontent.com/neodeskapp/neodesk/v${OLD_TAG}"
+OLD_MANAGER_URL="$OLD_RAW_BASE/neodesk-docker.sh"
 IMAGE=ghcr.io/neodeskapp/neodesk
 export NO_COLOR=1 NEODESK_HEALTH_TIMEOUT="${NEODESK_HEALTH_TIMEOUT:-240}"
 
@@ -92,7 +96,7 @@ docker run --rm --entrypoint sh "$IMAGE:local" -c 'test ! -e /opt/rustdesk && te
 
 echo "== an install of $OLD_TAG with data"
 curl -fsSL --retry 3 -o "$WORK/old-docker.sh" "$OLD_MANAGER_URL" || fail "could not download $OLD_MANAGER_URL"
-bash "$WORK/old-docker.sh" install --dir "$DIR" --tag "$OLD_TAG" --relay 127.0.0.1 --yes --no-install-docker \
+NEODESK_RAW_BASE="$OLD_RAW_BASE" bash "$WORK/old-docker.sh" install --dir "$DIR" --tag "$OLD_TAG" --relay 127.0.0.1 --yes --no-install-docker \
     > "$WORK/old-install.log" 2>&1 || fail "the install of $OLD_TAG failed: $(tail -n 30 "$WORK/old-install.log")"
 [ "$(data_mount)" = /opt/rustdesk ] || fail "$OLD_TAG mounts its data at $(data_mount)"
 key=$(in_container 'cat /opt/rustdesk/id_ed25519.pub') || fail "$OLD_TAG has no public key"
@@ -100,7 +104,7 @@ files=$(in_container 'cd /opt/rustdesk && sha256sum id_ed25519 .api_key .remote_
 users=$(in_container 'sqlite3 /opt/rustdesk/db_v2.sqlite3 "SELECT COUNT(*) FROM users"') || fail "$OLD_TAG's database cannot be read"
 in_container 'echo before > /opt/rustdesk/marker' || fail "the data volume of $OLD_TAG cannot be written"
 [ -n "$key" ] && [ "$users" -ge 1 ] || fail "the install of $OLD_TAG has no key or no account"
-bash "$WORK/old-docker.sh" backup --dir "$DIR" > "$WORK/old-backup.log" 2>&1 \
+NEODESK_RAW_BASE="$OLD_RAW_BASE" bash "$WORK/old-docker.sh" backup --dir "$DIR" > "$WORK/old-backup.log" 2>&1 \
     || fail "$OLD_TAG's backup failed: $(tail -n 20 "$WORK/old-backup.log")"
 old_backup=$(ls -1t "$DIR"/backups/neodesk-*.tar.gz | head -n 1)
 [ -f "$old_backup" ] || fail "$OLD_TAG's manager left no backup"
