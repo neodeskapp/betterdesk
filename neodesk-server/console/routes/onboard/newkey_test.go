@@ -27,9 +27,9 @@ func TestAnAdminApprovesTheNewKeyOfAResetComputer(t *testing.T) {
 			}
 			return base64.StdEncoding.EncodeToString(pub)
 		}
-		join := func(code, publicKey string) answer {
+		join := func(code, publicKey string, proof ...string) answer {
 			return w.app().do(http.MethodPost, "/api/onboard/join",
-				`{"code":"`+code+`","device_id":"289485454","uuid":"machine-1","hostname":"ndlab-win11","platform":"windows","public_key":"`+publicKey+`"}`)
+				`{"code":"`+code+`","device_id":"289485454","uuid":"machine-1","hostname":"ndlab-win11","platform":"windows","public_key":"`+publicKey+`"}`, proof...)
 		}
 		invite := func() string {
 			return str(admin.do(http.MethodPost, "/api/onboard/invites", `{"name":"Lab","lifetime_hours":24,"uses":1}`).json(t), "code")
@@ -38,7 +38,8 @@ func TestAnAdminApprovesTheNewKeyOfAResetComputer(t *testing.T) {
 			t.Fatalf("first join: %d %s", res.status, res.body)
 		}
 
-		code, newKey := invite(), key()
+		code, newLab := invite(), newLabKey(t)
+		newKey := newLab.b64
 		res := join(code, newKey)
 		if res.status != http.StatusForbidden || !strings.Contains(res.body, "Ask your administrator to approve the new key or to delete the device") {
 			t.Fatalf("rejoin with a new key: %d %s", res.status, res.body)
@@ -56,7 +57,8 @@ func TestAnAdminApprovesTheNewKeyOfAResetComputer(t *testing.T) {
 		if res := admin.do(http.MethodPost, "/api/onboard/devices/289485454/approve-key", `{}`); res.status != http.StatusNotFound {
 			t.Errorf("approving twice: %d %s", res.status, res.body)
 		}
-		if res := join(code, newKey); res.status != http.StatusOK {
+		// A known ID: the computer proves the new key with its join
+		if res := join(code, newKey, proofHeaders(t, newLab, "289485454")...); res.status != http.StatusOK {
 			t.Fatalf("rejoin after the approval: %d %s", res.status, res.body)
 		}
 	})

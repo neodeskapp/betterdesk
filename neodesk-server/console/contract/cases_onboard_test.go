@@ -65,6 +65,16 @@ func init() {
 			CaptureSecret: map[string]string{"joined_token": "device_token"},
 		}),
 		visitor(contract.Case{Name: "join-used", Method: "POST", Path: "/api/onboard/join", Body: map[string]any{"code": "{secret:invite_code}", "device_id": "900200003"}}),
+		// A join with another device's ID and no proof is refused: the ID is
+		// enrolled now, and the join brings neither its key nor the proof of
+		// it. The invite is not spent.
+		{
+			Name: "invite-second", Method: "POST", Path: "/api/onboard/invites", Body: map[string]any{"name": "Second desk"},
+			Capture: map[string]string{"second": "invite.id"}, CaptureSecret: map[string]string{"second_code": "code"},
+			Roles: approvers,
+		},
+		visitor(contract.Case{Name: "join-other-device-no-proof", Method: "POST", Path: "/api/onboard/join", Body: map[string]any{"code": "{secret:second_code}", "device_id": "900400001"}}),
+		{Name: "invite-second-cleanup", Method: "DELETE", Path: "/api/onboard/invites/{second}", Roles: approvers},
 		visitor(contract.Case{Name: "public-used", Path: "/api/onboard/public/{secret:invite_code}"}),
 		visitor(contract.Case{Name: "public-wrong", Path: "/api/onboard/public/ZZZZ-ZZZZ"}),
 		visitor(contract.Case{Name: "join-bad-device", Method: "POST", Path: "/api/onboard/join", Body: map[string]any{"code": "ZZZZZZZZ", "device_id": "no/id"}}),
@@ -121,9 +131,9 @@ func init() {
 		},
 		contract.Case{Name: "session-end-waiting", Method: "DELETE", Path: "/api/support/sessions/{waiting}"},
 	)
-	// Use the rest of the limit: thirteen requests of this turn went through
+	// Use the rest of the limit: fourteen requests of this turn went through
 	// it (the visitor cases above, the app's session routes do not count)
-	for i := 1; i <= 7; i++ {
+	for i := 1; i <= 6; i++ {
 		cases = append(cases, visitor(contract.Case{Name: fmt.Sprintf("limit-%02d", i), Path: "/api/onboard/public/ZZZZZZZZ"}))
 	}
 	cases = append(cases,

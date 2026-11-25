@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 func deviceKey(t *testing.T) (string, []byte) {
@@ -37,7 +38,9 @@ func rejoinWithKey(t *testing.T, srv *Server, code, key string) (int, onboardAns
 func TestAResetComputerRejoinsOnceTheNewKeyIsApproved(t *testing.T) {
 	onboardStores(t, func(t *testing.T, srv *Server) {
 		oldKey, _ := deviceKey(t)
-		newKey, newPK := deviceKey(t)
+		newJoin := newJoinKey(t)
+		newKey := newJoin.b64
+		newPK, _ := base64.StdEncoding.DecodeString(newKey)
 		if status, out := rejoinWithKey(t, srv, makeOnboardCode(t, srv, map[string]any{"kind": "join"}).Code, oldKey); status != http.StatusOK {
 			t.Fatalf("first join: %d %+v", status, out)
 		}
@@ -77,7 +80,12 @@ func TestAResetComputerRejoinsOnceTheNewKeyIsApproved(t *testing.T) {
 			t.Error("the approved request is still there")
 		}
 
-		if status, out := rejoinWithKey(t, srv, code, newKey); status != http.StatusOK || !out.Success {
+		// The computer proves the new key with its join (a known ID)
+		if status, out := onboardCall(t, srv, http.MethodPost, "/api/onboard/codes/redeem", map[string]any{
+			"code": code, "kind": "join",
+			"device": map[string]any{"device_id": "289485454", "uuid": "machine-1", "hostname": "ndlab-win11", "platform": "windows",
+				"public_key": newKey, "proof": proofOf(newJoin, "289485454", joinPath, "rejoin", time.Now())},
+		}); status != http.StatusOK || !out.Success {
 			t.Fatalf("rejoin after the approval: %d %+v", status, out)
 		}
 	})

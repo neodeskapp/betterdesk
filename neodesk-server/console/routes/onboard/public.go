@@ -8,6 +8,7 @@ import (
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/clientrelease"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/onboard"
@@ -224,11 +225,30 @@ type joinAnswer struct {
 	Console     string       `json:"console"`
 }
 
+// joinProofOf is the key proof a join carries in the headers
+// X-ND-Enrollment-Timestamp, -Nonce and -Signature (the proof the client
+// makes for its registration too), nil without them. The API server checks
+// it against the key it bound to a device ID it already knows.
+func joinProofOf(r *http.Request) *onboard.Proof {
+	p := &onboard.Proof{
+		Path:      httpx.RawPath(r),
+		Timestamp: strings.TrimSpace(r.Header.Get("X-ND-Enrollment-Timestamp")),
+		Nonce:     strings.TrimSpace(r.Header.Get("X-ND-Enrollment-Nonce")),
+		Signature: strings.TrimSpace(r.Header.Get("X-ND-Enrollment-Signature")),
+	}
+	if p.Timestamp == "" && p.Nonce == "" && p.Signature == "" {
+		return nil
+	}
+	return p
+}
+
 // join answers POST /api/onboard/join with the body {code, device_id,
 // uuid, hostname, platform, version, public_key}: the client spends one
 // use of an invite, its device is approved with the invite's name and put
 // into its folder, and it gets how to reach the server and a device token,
-// which no account holds (authn.IssueDeviceToken).
+// which no account holds (authn.IssueDeviceToken). A device ID the server
+// knows joins only with the proof of its key (joinProofOf): the ID is no
+// secret, and a join ends the device's earlier tokens.
 func (h *handlers) join(w http.ResponseWriter, r *http.Request) {
 	var body joinDevice
 	if err := kit.Bind(r, &body); err != nil {
@@ -248,7 +268,7 @@ func (h *handlers) join(w http.ResponseWriter, r *http.Request) {
 	ctx := authn.WithClientAddress(r.Context(), kit.ClientIP(r))
 	rec, _, err := h.codes.Redeem(ctx, body.Code, onboard.KindJoin, &onboard.Device{
 		DeviceID: deviceID, UUID: body.UUID, Hostname: body.Hostname, Platform: body.Platform,
-		Version: body.Version, PublicKey: body.PublicKey,
+		Version: body.Version, PublicKey: body.PublicKey, Proof: joinProofOf(r),
 	})
 	var refused *onboard.RefusedError
 	var invalid *onboard.InvalidDeviceError

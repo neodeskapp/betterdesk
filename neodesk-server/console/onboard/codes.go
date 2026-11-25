@@ -88,6 +88,19 @@ type Device struct {
 	PublicKey   string `json:"public_key,omitempty"`
 	DisplayName string `json:"display_name,omitempty"`
 	Temporary   bool   `json:"temporary,omitempty"`
+	// Proof is the key proof the client sent with its join, nil without
+	// one. The API server checks it for a device ID it knows.
+	Proof *Proof `json:"proof,omitempty"`
+}
+
+// Proof is a client's key proof of a join: the headers
+// X-ND-Enrollment-Timestamp, -Nonce and -Signature, and the path the
+// client signed (the request's path as it sent it).
+type Proof struct {
+	Path      string `json:"path"`
+	Timestamp string `json:"timestamp"`
+	Nonce     string `json:"nonce"`
+	Signature string `json:"signature"`
 }
 
 // Codes reaches the API server's routes of join and support codes.

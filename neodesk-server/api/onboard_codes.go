@@ -19,10 +19,12 @@ package api
 // a wrong code from an expired, used or revoked one.
 
 import (
+	"crypto/ed25519"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"sort"
 	"strings"
@@ -47,6 +49,11 @@ const (
 
 // errOnboardRefused is a device the enrollment rules keep out.
 var errOnboardRefused = errors.New("device refused")
+
+// joinProofRefusal is the refusal of a join for an enrolled ID that does
+// not prove the ID's key: an older client, or someone else using the ID.
+// The client shows it after "did not accept this computer:".
+const joinProofRefusal = "This computer's ID is already enrolled on this server. Update NeoDesk on this computer and open the invite again, or ask your administrator to delete the device in the console."
 
 // onboardRoutes adds the routes of join and support codes.
 func (s *Server) onboardRoutes(mux *http.ServeMux) {
@@ -331,6 +338,60 @@ type onboardDevice struct {
 	// Temporary marks a quick support session's device, which the console
 	// removes after the session.
 	Temporary bool `json:"temporary"`
+	// Proof is the key proof the client sent with its join (the headers
+	// X-ND-Enrollment-* of POST /api/onboard/join, handed on by the
+	// console), nil without one.
+	Proof *joinProof `json:"proof,omitempty"`
+}
+
+// joinProof is a client's key proof of a join: the nd-enrollment-v1
+// signature (enrollment_proof.go) over POST, the path the client sent to,
+// its device ID and public key, the timestamp and the nonce.
+type joinProof struct {
+	Path      string `json:"path"`
+	Timestamp string `json:"timestamp"`
+	Nonce     string `json:"nonce"`
+	Signature string `json:"signature"`
+}
+
+// joinPath is the console's join route, the only path a join proof is
+// made for.
+const joinPath = "/api/onboard/join"
+
+// verifyJoinProof checks a join's key proof against the key the server
+// bound to the device ID: the route, the time (five minutes either side),
+// the signature and that the nonce was not used before.
+func (s *Server) verifyJoinProof(deviceID string, bound []byte, p *joinProof) error {
+	if p == nil {
+		return errors.New("no key proof")
+	}
+	timestamp, nonce := strings.TrimSpace(p.Timestamp), strings.TrimSpace(p.Nonce)
+	if !strings.HasSuffix(p.Path, joinPath) {
+		return errors.New("the proof is not for the join route")
+	}
+	if timestamp == "" || nonce == "" || len(nonce) > enrollmentProofNonceMax {
+		return errors.New("the proof has no usable timestamp or nonce")
+	}
+	signedAt, err := time.Parse(time.RFC3339, timestamp)
+	if err != nil {
+		return fmt.Errorf("the proof's timestamp: %w", err)
+	}
+	now := s.now().UTC()
+	if delta := now.Sub(signedAt.UTC()); delta > enrollmentProofClockSkew || delta < -enrollmentProofClockSkew {
+		return errors.New("the proof's timestamp is outside the allowed skew")
+	}
+	signature, err := base64.StdEncoding.DecodeString(strings.TrimSpace(p.Signature))
+	if err != nil || len(signature) != ed25519.SignatureSize || len(bound) != ed25519.PublicKeySize {
+		return errors.New("the proof's signature cannot be read")
+	}
+	payload := enrollmentProofPayload(http.MethodPost, p.Path, deviceID, base64.StdEncoding.EncodeToString(bound), timestamp, nonce)
+	if !ed25519.Verify(ed25519.PublicKey(bound), payload, signature) {
+		return errors.New("the proof's signature is not the device's")
+	}
+	if enrollmentProofNonceCache.markUsed("enrollment:"+deviceID+":"+nonce, now) {
+		return errors.New("the proof was used before")
+	}
+	return nil
 }
 
 func (d *onboardDevice) enrollment() *EnrollmentRequest {
@@ -348,7 +409,15 @@ func (d *onboardDevice) enrollment() *EnrollmentRequest {
 // admissionRefusal answers why the enrollment rules keep a device out, ""
 // when they let it in. A device the server knows must have the same uuid
 // and, when it bound a key, the same key (keyChangedRefusal, device_key.go).
-func (s *Server) admissionRefusal(req *EnrollmentRequest) string {
+//
+// A join (proved true) is stricter for a device the server knows: the ID is
+// no secret, so a join under it must bring the machine's uuid and the key
+// the server bound to the ID, and prove that key (dev.Proof). Without a
+// bound key there is nothing to prove; the key it brings waits for an
+// administrator as a changed key does. A device the server does not know
+// joins without a proof, as older clients do.
+func (s *Server) admissionRefusal(dev *onboardDevice, proved bool) string {
+	req := dev.enrollment()
 	if banned, _ := s.db.IsPeerBanned(req.DeviceID); banned {
 		return "Device is banned"
 	}
@@ -362,15 +431,43 @@ func (s *Server) admissionRefusal(req *EnrollmentRequest) string {
 	if existing == nil {
 		return ""
 	}
+	if proved && existing.DeviceType == onboardDeviceType {
+		// A quick support session's device came in without a key the
+		// server keeps (appDevice), so there is nothing to prove; the
+		// computer that had quick support joins for good with the key it
+		// brings now
+		if bound, err := s.loadNdMgmtPublicKey(req.DeviceID); err != nil || len(bound) == 0 {
+			proved = false
+		}
+	}
+	if proved && (strings.TrimSpace(req.UUID) == "" || strings.TrimSpace(req.PublicKey) == "") {
+		return joinProofRefusal
+	}
 	if req.UUID != "" && existing.UUID != "" && !sameDeviceUUID(existing.UUID, req.UUID) {
 		return "Device ID is already registered to a different machine"
 	}
-	if req.PublicKey != "" {
-		if incoming, err := canonicalizeDevicePublicKey(req.PublicKey); err == nil {
-			if bound, err := s.loadNdMgmtPublicKey(req.DeviceID); err == nil && base64.StdEncoding.EncodeToString(bound) != incoming {
-				return keyChangedRefusal
-			}
+	if req.PublicKey == "" {
+		return ""
+	}
+	incoming, err := canonicalizeDevicePublicKey(req.PublicKey)
+	if err != nil {
+		if proved {
+			return joinProofRefusal
 		}
+		return ""
+	}
+	bound, err := s.loadNdMgmtPublicKey(req.DeviceID)
+	switch {
+	case err == nil && base64.StdEncoding.EncodeToString(bound) != incoming:
+		return keyChangedRefusal
+	case !proved:
+		return ""
+	case err != nil:
+		return keyChangedRefusal
+	}
+	if err := s.verifyJoinProof(req.DeviceID, bound, dev.Proof); err != nil {
+		log.Printf("[API] Join of enrolled device %s refused: %v", req.DeviceID, err)
+		return joinProofRefusal
 	}
 	return ""
 }
@@ -380,10 +477,11 @@ func (s *Server) admissionRefusal(req *EnrollmentRequest) string {
 // the session is the operator's approval). It takes the device out of the
 // queue of pending enrollments and gives it the display name. created
 // reports a new peer. A known device keeps its name when the console
-// gives none and always for a temporary device.
-func (s *Server) admitOnboardDevice(r *http.Request, dev *onboardDevice) (created bool, err error) {
+// gives none and always for a temporary device. proved asks a known device
+// for the proof of its key (a join, admissionRefusal).
+func (s *Server) admitOnboardDevice(r *http.Request, dev *onboardDevice, proved bool) (created bool, err error) {
 	req := dev.enrollment()
-	if reason := s.admissionRefusal(req); reason != "" {
+	if reason := s.admissionRefusal(dev, proved); reason != "" {
 		if reason == keyChangedRefusal {
 			s.storeDeviceKeyRequest(req, s.signInIP(r))
 		}
@@ -462,7 +560,7 @@ func (s *Server) handleOnboardRedeem(w http.ResponseWriter, r *http.Request) {
 			body.Device.DisplayName = record.Name
 		}
 		var err error
-		created, err = s.admitOnboardDevice(r, body.Device)
+		created, err = s.admitOnboardDevice(r, body.Device, record.Kind == onboardKindJoin)
 		if errors.Is(err, errOnboardRefused) {
 			writeJSON(w, http.StatusForbidden, map[string]any{
 				"success": false, "error": "device_refused", "message": strings.TrimPrefix(err.Error(), errOnboardRefused.Error()+": "),
@@ -522,7 +620,7 @@ func (s *Server) handleOnboardAdmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.onboardMu.Lock()
-	created, err := s.admitOnboardDevice(r, &dev)
+	created, err := s.admitOnboardDevice(r, &dev, false)
 	s.onboardMu.Unlock()
 	if errors.Is(err, errOnboardRefused) {
 		writeJSON(w, http.StatusForbidden, map[string]any{
