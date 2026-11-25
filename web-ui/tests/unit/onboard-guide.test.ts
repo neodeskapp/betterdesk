@@ -5,7 +5,7 @@
  * leaves the computer as it joined. A computer that came back with another
  * key gets Approve new key.
  */
-import { cleanup, render, screen, waitFor } from '@testing-library/svelte';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { REACH_OPTIONS } from '../../src/lib/onboard/guide.ts';
@@ -15,6 +15,7 @@ import { session } from '../../src/lib/state/session.svelte.ts';
 vi.mock('$app/paths', () => ({ resolve: (p: string) => p || '/', asset: (p: string) => '/' + p }));
 
 const AddComputerDialog = (await import('../../src/lib/onboard/AddComputerDialog.svelte')).default;
+const DialogHost = (await import('../../src/lib/ui/DialogHost.svelte')).default;
 
 type Call = { method: string; path: string; body: unknown };
 let calls: Call[];
@@ -167,7 +168,8 @@ describe('the guided first join', () => {
 		expect(screen.queryByRole('button', { name: 'onboard.guide.test_start' })).toBeNull();
 	}, 20000);
 
-	test('a computer that was here with another key gets Approve new key', async () => {
+	test('a computer that was here with another key gets Approve new key, after a confirmation', async () => {
+		render(DialogHost);
 		const user = await makeInvite();
 		refused = {
 			device_id: '289485454',
@@ -177,6 +179,13 @@ describe('the guided first join', () => {
 		};
 		await user.click(
 			await screen.findByRole('button', { name: 'onboard.guide.approve_key' }, { timeout: 8000 })
+		);
+		// A new key ends the computer's tokens and sessions: the sheet asks
+		// first, as the device panel does (L522)
+		const ask = await screen.findByRole('dialog', { name: /approve_key_title|Approve new key/ });
+		expect(calls.some((c) => c.path.endsWith('/approve-key'))).toBe(false);
+		await user.click(
+			within(ask).getByRole('button', { name: /^(device_detail.approve_key|Approve new key)$/ })
 		);
 		expect(
 			calls.some((c) => c.method === 'POST' && c.path === '/api/onboard/devices/289485454/approve-key')

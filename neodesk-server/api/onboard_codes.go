@@ -54,6 +54,36 @@ const (
 // errOnboardRefused is a device the enrollment rules keep out.
 var errOnboardRefused = errors.New("device refused")
 
+// refusedJoin is a device the enrollment rules keep out (errOnboardRefused).
+// For a join under a known ID refused for its proof it names why
+// (unproved), and audit says an audit entry is due for it now
+// (auditJoinUnproved), standing for repeats refusals since the last one.
+type refusedJoin struct {
+	reason   string
+	unproved string
+	audit    bool
+	repeats  int
+}
+
+func (e *refusedJoin) Error() string { return errOnboardRefused.Error() + ": " + e.reason }
+func (e *refusedJoin) Unwrap() error { return errOnboardRefused }
+
+// refusalAnswer is the 403 answer of a refused device: for a refused join
+// proof also why, and whether the console writes the audit entry now (its
+// audit list is the one admins read, L522).
+func refusalAnswer(err error) map[string]any {
+	answer := map[string]any{
+		"success": false, "error": "device_refused", "message": strings.TrimPrefix(err.Error(), errOnboardRefused.Error()+": "),
+	}
+	var refused *refusedJoin
+	if errors.As(err, &refused) && refused.unproved != "" {
+		answer["unproved"] = refused.unproved
+		answer["audit"] = refused.audit
+		answer["repeats"] = refused.repeats
+	}
+	return answer
+}
+
 // joinProofRefusal is the refusal of a join for an enrolled ID that does
 // not prove the ID's key: an older client, or someone else using the ID.
 // The client shows it after "did not accept this computer:".
@@ -506,13 +536,14 @@ func (s *Server) admissionRefusal(dev *onboardDevice, proved bool) (refusal, unp
 func (s *Server) admitOnboardDevice(r *http.Request, dev *onboardDevice, proved bool) (created bool, err error) {
 	req := dev.enrollment()
 	if reason, unproved := s.admissionRefusal(dev, proved); reason != "" {
+		refused := &refusedJoin{reason: reason, unproved: unproved}
 		if unproved != "" {
-			s.auditJoinUnproved(req.DeviceID, s.remoteIP(r), unproved)
+			refused.audit, refused.repeats = s.auditJoinUnproved(req.DeviceID, s.remoteIP(r), unproved)
 		}
 		if reason == keyChangedRefusal {
 			s.storeDeviceKeyRequest(req, s.signInIP(r))
 		}
-		return false, fmt.Errorf("%w: %s", errOnboardRefused, reason)
+		return false, refused
 	}
 	existing, _ := s.db.GetPeer(req.DeviceID)
 	switch {
@@ -592,9 +623,7 @@ func (s *Server) handleOnboardRedeem(w http.ResponseWriter, r *http.Request) {
 			if record.Kind == onboardKindJoin {
 				s.noteOnboardJoin(record, strings.TrimSpace(body.Device.DeviceID), strings.TrimPrefix(err.Error(), errOnboardRefused.Error()+": "))
 			}
-			writeJSON(w, http.StatusForbidden, map[string]any{
-				"success": false, "error": "device_refused", "message": strings.TrimPrefix(err.Error(), errOnboardRefused.Error()+": "),
-			})
+			writeJSON(w, http.StatusForbidden, refusalAnswer(err))
 			return
 		}
 		if err != nil {
@@ -723,14 +752,13 @@ type unprovedSeen struct {
 	skipped int
 }
 
-// auditJoinUnproved writes the audit entry of a join under a known ID that
-// did not prove its key: the device, the address and the reason. A device
-// gets one entry per auditUnprovedEvery; the next says how many refusals
-// it stands for (repeats), so a loop can't flood the audit.
-func (s *Server) auditJoinUnproved(deviceID, ip, reason string) {
-	if s.auditLog == nil {
-		return
-	}
+// auditJoinUnproved decides whether the refused join of a known ID that
+// did not prove its key gets an audit entry: one per device and
+// auditUnprovedEvery, the next standing for the refusals in between
+// (repeats), so a loop can't flood the audit. It writes the entry into the
+// server's event log; due tells the console to write it into the audit list
+// admins read (L522).
+func (s *Server) auditJoinUnproved(deviceID, ip, reason string) (due bool, repeats int) {
 	now := s.now()
 	a := &s.joinUnproved
 	a.mu.Lock()
@@ -741,9 +769,8 @@ func (s *Server) auditJoinUnproved(deviceID, ip, reason string) {
 	if seen != nil && now.Sub(seen.at) < auditUnprovedEvery {
 		seen.skipped++
 		a.mu.Unlock()
-		return
+		return false, 0
 	}
-	repeats := 0
 	if seen != nil {
 		repeats = seen.skipped
 	}
@@ -762,5 +789,8 @@ func (s *Server) auditJoinUnproved(deviceID, ip, reason string) {
 	if repeats > 0 {
 		details["repeats"] = strconv.Itoa(repeats)
 	}
-	s.auditLog.Log(actionJoinUnproved, ip, deviceID, details)
+	if s.auditLog != nil {
+		s.auditLog.Log(actionJoinUnproved, ip, deviceID, details)
+	}
+	return true, repeats
 }

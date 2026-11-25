@@ -15,7 +15,6 @@
 	import { onMount } from 'svelte';
 	import type { Folder } from '#lib/api/devices.ts';
 	import { ApiError } from '#lib/api/client.ts';
-	import { approveDeviceKey } from '#lib/api/devices.ts';
 	import {
 		createInvite,
 		getInvite,
@@ -28,6 +27,7 @@
 		type NewInvite,
 		type OnboardStatus
 	} from '#lib/api/onboard.ts';
+	import { approveNewKey } from '#lib/devices/actions.svelte.ts';
 	import { formatDate } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
@@ -98,13 +98,11 @@
 		finished = result;
 	}
 
+	/** The device panel's Approve new key, with its confirmation: the key change ends the computer's tokens */
 	async function approveKey(device: string) {
 		approving = true;
 		try {
-			await approveDeviceKey(device);
-			keyApproved = device;
-		} catch (err) {
-			toast.error(why(err));
+			if (await approveNewKey({ id: device })) keyApproved = device;
 		} finally {
 			approving = false;
 		}
