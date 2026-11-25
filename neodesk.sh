@@ -1,7 +1,7 @@
 #!/bin/bash
 #===============================================================================
 #
-#   NeoDesk Console Manager v3.6.1
+#   NeoDesk Console Manager v3.6.2
 #   All-in-One Interactive Tool for Linux
 #
 #   Features:
@@ -42,7 +42,7 @@
 set -e
 
 # Version
-VERSION="3.6.1"
+VERSION="3.6.2"
 # Bump when installer control-flow changes must apply mid-session after Update.
 NEODESK_SH_REVISION="20260725-console-start-306"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
