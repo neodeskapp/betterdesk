@@ -1210,7 +1210,7 @@
     "page": {
       "general_desc": "Definições de todo o servidor: os endereços que os clientes utilizam, como se ligam e o que os utilizadores veem por predefinição.",
       "general_desc_viewer": "Informações sobre este servidor.",
-      "branding_desc": "O aspeto da consola, da página de início de sessão e da página de transferências para todos.",
+      "branding_desc": "Como a consola fica para todos: o tema e as cores, os tipos de letra e o fundo.",
       "auth_desc": "A sua palavra-passe e o início de sessão em dois passos, e a forma como todos iniciam sessão neste servidor.",
       "auth_desc_viewer": "A sua palavra-passe e o início de sessão em dois passos.",
       "backup_desc": "Transfira uma cópia de tudo o que este servidor precisa, crie cópias de forma agendada ou restaure a partir de uma.",
@@ -1232,7 +1232,8 @@
       "ldap_desc": "Permite iniciar sessão na consola com a conta de um diretório como o Active Directory ou o OpenLDAP.",
       "sso_desc": "Permite iniciar sessão na consola através de um fornecedor de identidade como o Microsoft Entra ID, o Okta ou a Google (OpenID Connect).",
       "joining_desc": "Como um dispositivo novo chega a este servidor e o que as pessoas veem dos dispositivos por predefinição.",
-      "meshcentral_desc": "Ligar agentes MeshCentral a este servidor: o estado, os grupos de dispositivos, o nome no ficheiro .msh e as sessões gravadas."
+      "meshcentral_desc": "Ligar agentes MeshCentral a este servidor: o estado, os grupos de dispositivos, o nome no ficheiro .msh e as sessões gravadas.",
+      "brand_desc": "O seu nome e logótipo, e as páginas que outras pessoas veem: a de início de sessão, a de transferência, o visualizador remoto e a aplicação cliente."
     },
     "general": {
       "endpoint_id_hint": "Nome do anfitrião ou endereço IP do servidor de ID, tal como os clientes na Internet o alcançam.",
@@ -1643,6 +1644,10 @@
       "reason_rolled_back": "Não foi possível reiniciar os serviços, por isso os valores anteriores foram repostos.",
       "reason_rollback_failed": "Não foi possível reiniciar os serviços nem repor os valores anteriores.",
       "changes_label": "Definições alteradas"
+    },
+    "tab_brand": "Marca",
+    "branding": {
+      "client_app": "Aplicação cliente"
     }
   },
   "audit": {

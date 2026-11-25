@@ -362,16 +362,16 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		''
 	],
 	[
-		'branding',
+		'brand',
 		'branding-identity',
 		'settings.appearance.identity',
 		'',
 		['branding.identity_desc', 'branding.logo_desc'],
 		''
 	],
-	['branding', 'brand-name', 'branding.app_name', 'settings.appearance.identity', [], ''],
+	['brand', 'brand-name', 'branding.app_name', 'settings.appearance.identity', [], ''],
 	[
-		'branding',
+		'brand',
 		'branding-identity',
 		'branding.logo_title',
 		'settings.appearance.identity',
@@ -379,7 +379,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		''
 	],
 	[
-		'branding',
+		'brand',
 		'logo-text-input',
 		'branding.logo_text',
 		'settings.appearance.identity',
@@ -387,7 +387,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		''
 	],
 	[
-		'branding',
+		'brand',
 		'logo-text-accent',
 		'branding.logo_text_accent',
 		'settings.appearance.identity',
@@ -395,7 +395,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		''
 	],
 	[
-		'branding',
+		'brand',
 		'logo-icon-name',
 		'branding.logo_icon_name',
 		'settings.appearance.identity',
@@ -403,7 +403,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		''
 	],
 	[
-		'branding',
+		'brand',
 		'logo-svg-input',
 		'branding.logo_svg_code',
 		'settings.appearance.identity',
@@ -411,7 +411,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		''
 	],
 	[
-		'branding',
+		'brand',
 		'logo-image-file',
 		'branding.logo_image_upload',
 		'settings.appearance.identity',
@@ -419,7 +419,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		''
 	],
 	[
-		'branding',
+		'brand',
 		'logo-image-url',
 		'branding.logo_image_url',
 		'settings.appearance.identity',
@@ -454,7 +454,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	['branding', 'font-upload-name', 'branding.font_upload_name', 'branding.typography_title', [], ''],
 	['branding', 'font-upload-file', 'branding.font_upload_choose', 'branding.typography_title', [], ''],
 	[
-		'branding',
+		'brand',
 		'branding-footer',
 		'branding.footer_title',
 		'',
@@ -462,7 +462,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		''
 	],
 	[
-		'branding',
+		'brand',
 		'footer-text',
 		'branding.footer_text',
 		'branding.footer_title',
@@ -470,7 +470,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		''
 	],
 	[
-		'branding',
+		'brand',
 		'show-powered',
 		'branding.show_powered',
 		'branding.footer_title',
@@ -523,17 +523,17 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		''
 	],
 	[
-		'branding',
+		'brand',
 		'branding-login',
 		'branding.login_title',
 		'',
 		['branding.login_desc', 'branding.login_promo_mode_hint'],
 		''
 	],
-	['branding', 'login-title', 'branding.login_heading', 'branding.login_title', [], ''],
-	['branding', 'login-subtitle', 'branding.login_subheading', 'branding.login_title', [], ''],
+	['brand', 'login-title', 'branding.login_heading', 'branding.login_title', [], ''],
+	['brand', 'login-subtitle', 'branding.login_subheading', 'branding.login_title', [], ''],
 	[
-		'branding',
+		'brand',
 		'login-promo-mode-selector',
 		'branding.login_promo_mode',
 		'branding.login_title',
@@ -541,56 +541,56 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		''
 	],
 	[
-		'branding',
+		'brand',
 		'login-slides-panel',
 		'branding.login_slides_title',
 		'',
 		['branding.login_slides_desc', 'branding.login_slides_max'],
 		''
 	],
-	['branding', 'login-bg-config', 'settings.appearance.login_background', '', ['branding.bg_image_hint'], ''],
+	['brand', 'login-bg-config', 'settings.appearance.login_background', '', ['branding.bg_image_hint'], ''],
 	[
-		'branding',
+		'brand',
 		'login-bg-config',
 		'settings.appearance.background_type',
 		'settings.appearance.login_background',
 		[],
 		''
 	],
-	['branding', 'login-bg-color', 'branding.bg_color', 'settings.appearance.login_background', [], ''],
-	['branding', 'login-bg-gradient', 'branding.bg_gradient', 'settings.appearance.login_background', [], ''],
+	['brand', 'login-bg-color', 'branding.bg_color', 'settings.appearance.login_background', [], ''],
+	['brand', 'login-bg-gradient', 'branding.bg_gradient', 'settings.appearance.login_background', [], ''],
 	[
-		'branding',
+		'brand',
 		'login-bg-image-file',
 		'branding.bg_image_upload',
 		'settings.appearance.login_background',
 		['branding.bg_image_hint'],
 		''
 	],
-	['branding', 'login-bg-image-url', 'branding.bg_image_url', 'settings.appearance.login_background', [], ''],
-	['branding', 'login-bg-overlay', 'branding.bg_overlay', 'settings.appearance.login_background', [], ''],
+	['brand', 'login-bg-image-url', 'branding.bg_image_url', 'settings.appearance.login_background', [], ''],
+	['brand', 'login-bg-overlay', 'branding.bg_overlay', 'settings.appearance.login_background', [], ''],
 	[
-		'branding',
+		'brand',
 		'branding-agent',
 		'branding.agent_title',
 		'',
 		['branding.agent_desc', 'branding.bg_image_hint'],
 		''
 	],
-	['branding', 'branding-agent', 'settings.appearance.background_type', 'branding.agent_title', [], ''],
-	['branding', 'agent-bg-color', 'branding.bg_color', 'branding.agent_title', [], ''],
-	['branding', 'agent-bg-gradient', 'branding.bg_gradient', 'branding.agent_title', [], ''],
+	['brand', 'branding-agent', 'settings.appearance.background_type', 'branding.agent_title', [], ''],
+	['brand', 'agent-bg-color', 'branding.bg_color', 'branding.agent_title', [], ''],
+	['brand', 'agent-bg-gradient', 'branding.bg_gradient', 'branding.agent_title', [], ''],
 	[
-		'branding',
+		'brand',
 		'agent-bg-image-file',
 		'branding.bg_image_upload',
 		'branding.agent_title',
 		['branding.bg_image_hint'],
 		''
 	],
-	['branding', 'agent-bg-image-url', 'branding.bg_image_url', 'branding.agent_title', [], ''],
+	['brand', 'agent-bg-image-url', 'branding.bg_image_url', 'branding.agent_title', [], ''],
 	[
-		'branding',
+		'brand',
 		'agent-show-powered',
 		'branding.agent_show_powered',
 		'branding.agent_title',
@@ -598,7 +598,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		''
 	],
 	[
-		'branding',
+		'brand',
 		'branding-rdclient',
 		'settings.appearance.rdclient',
 		'',
@@ -606,27 +606,27 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		''
 	],
 	[
-		'branding',
+		'brand',
 		'branding-rdclient',
 		'settings.appearance.background_type',
 		'settings.appearance.rdclient',
 		[],
 		''
 	],
-	['branding', 'rdclient-bg-color', 'branding.bg_color', 'settings.appearance.rdclient', [], ''],
-	['branding', 'rdclient-bg-gradient', 'branding.bg_gradient', 'settings.appearance.rdclient', [], ''],
+	['brand', 'rdclient-bg-color', 'branding.bg_color', 'settings.appearance.rdclient', [], ''],
+	['brand', 'rdclient-bg-gradient', 'branding.bg_gradient', 'settings.appearance.rdclient', [], ''],
 	[
-		'branding',
+		'brand',
 		'rdclient-bg-image-file',
 		'branding.bg_image_upload',
 		'settings.appearance.rdclient',
 		['branding.bg_image_hint'],
 		''
 	],
-	['branding', 'rdclient-bg-image-url', 'branding.bg_image_url', 'settings.appearance.rdclient', [], ''],
-	['branding', 'rdclient-bg-size', 'branding.bg_size', 'settings.appearance.rdclient', [], ''],
+	['brand', 'rdclient-bg-image-url', 'branding.bg_image_url', 'settings.appearance.rdclient', [], ''],
+	['brand', 'rdclient-bg-size', 'branding.bg_size', 'settings.appearance.rdclient', [], ''],
 	[
-		'branding',
+		'brand',
 		'rdclient-bg-overlay',
 		'branding.bg_overlay',
 		'settings.appearance.rdclient',
@@ -1250,7 +1250,57 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	['time', 'time-clock-ntp-server', 'commercialization.clock.status_server', '', [], 'server.config'],
 	['time', 'time-clock-os-sync', 'commercialization.clock.status_os', '', [], 'server.config'],
 	['time', 'time-clock-last-error', 'commercialization.clock.status_error', '', [], 'server.config'],
-	['server-config-files', 'advanced-title', 'settings.advanced_tab.restart_title', '', [], 'server.config']
+	['server-config-files', 'advanced-title', 'settings.advanced_tab.restart_title', '', [], 'server.config'],
+	[
+		'brand',
+		'client-app',
+		'settings.branding.client_app',
+		'',
+		['client_branding.page_description'],
+		'branding.edit'
+	],
+	[
+		'brand',
+		'client-app-company',
+		'client_branding.company_name',
+		'settings.branding.client_app',
+		['client_branding.company_hint'],
+		'branding.edit'
+	],
+	[
+		'brand',
+		'client-app-support',
+		'client_branding.support_contact',
+		'settings.branding.client_app',
+		['client_branding.support_hint'],
+		'branding.edit'
+	],
+	['brand', 'client-app-phone', 'client_branding.phone', 'settings.branding.client_app', [], 'branding.edit'],
+	['brand', 'client-app-email', 'client_branding.email', 'settings.branding.client_app', [], 'branding.edit'],
+	[
+		'brand',
+		'client-app-website',
+		'client_branding.website',
+		'settings.branding.client_app',
+		[],
+		'branding.edit'
+	],
+	[
+		'brand',
+		'client-app-accent',
+		'client_branding.accent_color',
+		'settings.branding.client_app',
+		['client_branding.accent_hint'],
+		'branding.edit'
+	],
+	[
+		'brand',
+		'client-app-logo',
+		'client_branding.logo',
+		'settings.branding.client_app',
+		['client_branding.logo_hint'],
+		'branding.edit'
+	]
 ];
 
 /** Space-separated element ids per tab or page, for #<id> links into another one */
@@ -1263,7 +1313,9 @@ export const TAB_IDS: Readonly<Record<string, string>> = {
 	joining:
 		'availability-history-enabled availability-history-form availability-history-retention availability-history-settings-panel availability-retention-group availability-title device-scope-form device-scope-open device-scope-restricted device-scope-settings-panel device-scope-title device-scope-warning enrollment-pending-hint enrollment-rich-approve enrollment-settings-section enrollment-tag-picker joining-mode-section joining-mode-title',
 	branding:
-		'agent-bg-color agent-bg-color-panel agent-bg-color-picker agent-bg-file-name agent-bg-gradient agent-bg-gradient-panel agent-bg-image-file agent-bg-image-panel agent-bg-image-url agent-bg-upload-status agent-show-powered bg-blur bg-blur-value bg-color bg-color-panel bg-color-picker bg-effects-group bg-file-name bg-gradient bg-gradient-panel bg-image-file bg-image-library bg-image-panel bg-image-url bg-overlay bg-overlay-group bg-overlay-value bg-size bg-upload-status brand-name branding-agent branding-agent-title branding-background branding-background-title branding-builtin-themes branding-colors-title branding-css branding-css-title branding-custom-colors branding-danger-title branding-export-btn branding-fonts branding-fonts-title branding-footer branding-footer-title branding-form branding-identity branding-identity-title branding-ie-status branding-ie-title branding-import-export branding-import-input branding-login branding-login-title branding-profile-apply-btn branding-profile-delete-btn branding-profile-duplicate-btn branding-profile-menu branding-profile-new-btn branding-profile-save-btn branding-profile-select branding-profile-status branding-profiles branding-profiles-title branding-rdclient branding-rdclient-title branding-readability-alert branding-readability-text branding-reset-btn branding-revert-btn branding-save-btn branding-theme branding-theme-apply branding-theme-gallery branding-theme-select branding-theme-title branding-toc color-accentBlue color-accentGreen color-accentPurple color-accentRed color-accentYellow color-bgElevated color-bgPrimary color-bgSecondary color-bgTertiary color-borderPrimary color-borderSecondary color-textPrimary color-textSecondary custom-css font-body-clear font-body-current font-body-dropdown font-body-search font-body-slot font-body-value font-heading-clear font-heading-current font-heading-dropdown font-heading-search font-heading-slot font-heading-value font-local-count font-local-info font-local-list font-source-google font-source-label font-source-local font-source-upload font-upload-file font-upload-name footer-text login-bg-color login-bg-color-panel login-bg-color-picker login-bg-config login-bg-file-name login-bg-gradient login-bg-gradient-panel login-bg-image-file login-bg-image-panel login-bg-image-url login-bg-overlay login-bg-overlay-group login-bg-overlay-value login-bg-upload-status login-promo-mode-selector login-slides-add login-slides-list login-slides-max-hint login-slides-panel login-slides-restore login-subtitle login-title logo-file-name logo-icon-name logo-icon-panel logo-image-file logo-image-panel logo-image-url logo-svg-input logo-svg-panel logo-text-accent logo-text-input logo-text-panel rdclient-bg-color rdclient-bg-color-panel rdclient-bg-color-picker rdclient-bg-file-name rdclient-bg-gradient rdclient-bg-gradient-panel rdclient-bg-image-file rdclient-bg-image-panel rdclient-bg-image-url rdclient-bg-overlay rdclient-bg-overlay-group rdclient-bg-overlay-value rdclient-bg-size rdclient-bg-upload-status show-powered theme-mode-selector',
+		'bg-blur bg-blur-value bg-color bg-color-panel bg-color-picker bg-effects-group bg-file-name bg-gradient bg-gradient-panel bg-image-file bg-image-library bg-image-panel bg-image-url bg-overlay bg-overlay-group bg-overlay-value bg-size bg-upload-status branding-background branding-background-title branding-builtin-themes branding-colors-title branding-css branding-css-title branding-custom-colors branding-danger-title branding-export-btn branding-fonts branding-fonts-title branding-form branding-ie-status branding-ie-title branding-import-export branding-import-input branding-profile-apply-btn branding-profile-delete-btn branding-profile-duplicate-btn branding-profile-menu branding-profile-new-btn branding-profile-save-btn branding-profile-select branding-profile-status branding-profiles branding-profiles-title branding-readability-alert branding-readability-text branding-reset-btn branding-revert-btn branding-save-btn branding-theme branding-theme-apply branding-theme-gallery branding-theme-select branding-theme-title branding-toc color-accentBlue color-accentGreen color-accentPurple color-accentRed color-accentYellow color-bgElevated color-bgPrimary color-bgSecondary color-bgTertiary color-borderPrimary color-borderSecondary color-textPrimary color-textSecondary custom-css font-body-clear font-body-current font-body-dropdown font-body-search font-body-slot font-body-value font-heading-clear font-heading-current font-heading-dropdown font-heading-search font-heading-slot font-heading-value font-local-count font-local-info font-local-list font-source-google font-source-label font-source-local font-source-upload font-upload-file font-upload-name theme-mode-selector',
+	brand:
+		'agent-bg-color agent-bg-color-panel agent-bg-color-picker agent-bg-file-name agent-bg-gradient agent-bg-gradient-panel agent-bg-image-file agent-bg-image-panel agent-bg-image-url agent-bg-upload-status agent-show-powered brand-name branding-agent branding-agent-title branding-footer branding-footer-title branding-identity branding-identity-title branding-login branding-login-title branding-rdclient branding-rdclient-title cb-contact-title cb-look-title client-app client-app-accent client-app-company client-app-email client-app-logo client-app-phone client-app-support client-app-title client-app-website footer-text login-bg-color login-bg-color-panel login-bg-color-picker login-bg-config login-bg-file-name login-bg-gradient login-bg-gradient-panel login-bg-image-file login-bg-image-panel login-bg-image-url login-bg-overlay login-bg-overlay-group login-bg-overlay-value login-bg-upload-status login-promo-mode-selector login-slides-add login-slides-list login-slides-max-hint login-slides-panel login-slides-restore login-subtitle login-title logo-file-name logo-icon-name logo-icon-panel logo-image-file logo-image-panel logo-image-url logo-svg-input logo-svg-panel logo-text-accent logo-text-input logo-text-panel rdclient-bg-color rdclient-bg-color-panel rdclient-bg-color-picker rdclient-bg-file-name rdclient-bg-gradient rdclient-bg-gradient-panel rdclient-bg-image-file rdclient-bg-image-panel rdclient-bg-image-url rdclient-bg-overlay rdclient-bg-overlay-group rdclient-bg-overlay-value rdclient-bg-size rdclient-bg-upload-status show-powered',
 	email:
 		'email-smtp-alert email-smtp-auth email-smtp-auth-fields email-smtp-form email-smtp-from email-smtp-host email-smtp-pass email-smtp-port email-smtp-save-btn email-smtp-secure email-smtp-user email-title',
 	time: 'time-billing-month-hint time-billing-timezone time-billing-timezone-custom time-check-status time-clock-advanced time-clock-detail time-clock-last-error time-clock-max-skew time-clock-ntp-server time-clock-ntp-servers time-clock-offset time-clock-os-sync time-clock-require-sync time-clock-settings-form time-clock-trust-os time-custom-zone time-detect-timezone-btn time-ntp-title time-save-clock-settings-btn time-side-title time-timesync-check-btn time-zone-now time-zone-title',

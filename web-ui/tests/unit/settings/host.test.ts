@@ -78,6 +78,15 @@ describe('old links into settings', () => {
 		expect(placeOfId('availability-history-enabled')).toBe('joining');
 		expect(placeOfId('mesh-msh-name')).toBe('meshcentral');
 		expect(placeOfId('client-sessions-form')).toBe('auth');
+		// Name, logo and the pages others see are Branding; colours and fonts stay Appearance
+		expect(placeOfId('brand-name')).toBe('brand');
+		expect(placeOfId('logo-text-input')).toBe('brand');
+		expect(placeOfId('login-promo-mode-selector')).toBe('brand');
+		expect(placeOfId('agent-show-powered')).toBe('brand');
+		expect(placeOfId('rdclient-bg-color')).toBe('brand');
+		expect(placeOfId('client-app-accent')).toBe('brand');
+		expect(placeOfId('color-accentBlue')).toBe('branding');
+		expect(placeOfId('font-body-search')).toBe('branding');
 		expect(placeOfId('branding-css')).toBe('branding');
 		expect(placeOfId('color-accentBlue')).toBe('branding');
 		expect(placeOfId('nothing-like-this')).toBeNull();

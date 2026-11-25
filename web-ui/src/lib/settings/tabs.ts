@@ -21,6 +21,7 @@ export const TABS = [
 	'sso',
 	'joining',
 	'branding',
+	'brand',
 	'email',
 	'time',
 	'meshcentral'
@@ -38,6 +39,7 @@ export const TAB_TITLE: Readonly<Record<TabId, string>> = {
 	sso: 'settings.oidc_title',
 	joining: 'settings.enrollment_title',
 	branding: 'settings.tab_branding',
+	brand: 'settings.tab_brand',
 	email: 'settings.tab_email',
 	time: 'settings.tab_time',
 	meshcentral: 'nav.meshcentral'

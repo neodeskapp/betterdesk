@@ -1,15 +1,16 @@
 <!--
-  Client app branding (/client-branding): the name, contact details,
-  accent colour and logo that NeoDesk clients and support agents show.
-  One form with one save; a live preview beside it follows the form as
-  people type. Clients pick changes up when they next check in.
+  Settings › Branding › Client app (#client-app; the page /client-branding
+  before, which leads here): the name, contact details, accent colour and
+  logo that NeoDesk clients and support agents show. Its own form with its
+  own save (POST /api/client-branding); a live preview beside it follows
+  the form as people type. Clients pick changes up when they next check in.
 
-  Needs branding.edit (the route and both calls).
+  Needs branding.edit (both calls): without it the section is left out.
+  The unsaved-changes guard is the Settings page's (trackDirty).
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { getClientBranding, saveClientBranding, type ClientBranding } from '#lib/api/clientBranding.ts';
-	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import {
 		DEFAULT_ACCENT,
 		brandingPayload,
@@ -34,7 +35,8 @@
 	import SaveBar from '#lib/ui/SaveBar.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Time from '#lib/ui/Time.svelte';
-	import { FormError, createForm, warnOnLeave } from '#lib/ui/form.svelte.ts';
+	import { FormError, createForm } from '#lib/ui/form.svelte.ts';
+	import { trackDirty } from './dirty.ts';
 
 	const allowed = can('branding.edit');
 	/** The website field's placeholder: the start of an address, not text to translate */
@@ -103,7 +105,12 @@
 			if (!form.dirty) void load();
 		})
 	);
-	$effect(() => warnOnLeave(() => form.dirty));
+	$effect(() =>
+		trackDirty(
+			() => form.dirty,
+			() => form.busy
+		)
+	);
 
 	/* ── Logo ── */
 
@@ -144,14 +151,10 @@
 	);
 </script>
 
-{#if !allowed}
-	<NoAccess />
-{:else}
-	<div class="page client-branding-page">
-		<div class="page-head">
-			<h1>{t('nav.client_branding')}</h1>
-			<p class="page-description">{t('client_branding.page_description')}</p>
-		</div>
+{#if allowed}
+	<section class="section client-branding-page" id="client-app" aria-labelledby="client-app-title">
+		<h2 id="client-app-title">{t('settings.branding.client_app')}</h2>
+		<p class="section-note">{t('client_branding.page_description')}</p>
 
 		<div class="page-cols">
 			<div class="page-main">
@@ -168,9 +171,10 @@
 					aria-busy={!loaded}
 				>
 					<section class="section" aria-labelledby="cb-contact-title">
-						<h2 id="cb-contact-title">{t('client_branding.contact_title')}</h2>
+						<h3 id="cb-contact-title">{t('client_branding.contact_title')}</h3>
 						<p class="section-note">{t('client_branding.contact_note')}</p>
 						<Field
+							id="client-app-company"
 							label={t('client_branding.company_name')}
 							hint={t('client_branding.company_hint')}
 							class="wide-44"
@@ -180,6 +184,7 @@
 							{/snippet}
 						</Field>
 						<Field
+							id="client-app-support"
 							label={t('client_branding.support_contact')}
 							hint={t('client_branding.support_hint')}
 							class="wide-44"
@@ -188,17 +193,17 @@
 								<Input {...f} maxlength={256} bind:value={form.values.support_contact} />
 							{/snippet}
 						</Field>
-						<Field label={t('client_branding.phone')} width="medium">
+						<Field id="client-app-phone" label={t('client_branding.phone')} width="medium">
 							{#snippet children(f)}
 								<Input {...f} type="tel" maxlength={256} dir="ltr" bind:value={form.values.phone} />
 							{/snippet}
 						</Field>
-						<Field label={t('client_branding.email')} class="wide-44">
+						<Field id="client-app-email" label={t('client_branding.email')} class="wide-44">
 							{#snippet children(f)}
 								<Input {...f} type="email" maxlength={256} dir="ltr" bind:value={form.values.email} />
 							{/snippet}
 						</Field>
-						<Field label={t('client_branding.website')} class="wide-44">
+						<Field id="client-app-website" label={t('client_branding.website')} class="wide-44">
 							{#snippet children(f)}
 								<Input
 									{...f}
@@ -213,8 +218,9 @@
 					</section>
 
 					<section class="section" aria-labelledby="cb-look-title">
-						<h2 id="cb-look-title">{t('client_branding.look_title')}</h2>
+						<h3 id="cb-look-title">{t('client_branding.look_title')}</h3>
 						<Field
+							id="client-app-accent"
 							label={t('client_branding.accent_color')}
 							hint={t('client_branding.accent_hint')}
 							error={form.errors.accent_color}
@@ -230,6 +236,7 @@
 							{/snippet}
 						</Field>
 						<Field
+							id="client-app-logo"
 							label={t('client_branding.logo')}
 							hint={t('client_branding.logo_hint')}
 							error={logoError || undefined}
@@ -268,7 +275,7 @@
 
 			<aside class="page-side is-sticky" aria-labelledby="cb-preview-title">
 				<section class="section">
-					<div class="section-head"><h2 id="cb-preview-title">{t('client_branding.preview_title')}</h2></div>
+					<div class="section-head"><h3 id="cb-preview-title">{t('client_branding.preview_title')}</h3></div>
 					<p class="section-note">{t('client_branding.preview_note')}</p>
 					<div class="cb-preview">
 						<div class="cb-preview-head">
@@ -297,7 +304,7 @@
 				</section>
 			</aside>
 		</div>
-	</div>
+	</section>
 {/if}
 
 <style>

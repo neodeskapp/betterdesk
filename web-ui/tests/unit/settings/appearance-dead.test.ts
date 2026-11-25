@@ -44,7 +44,7 @@ afterEach(() => {
 describe('appearance controls without an effect', () => {
 	test('no glass surfaces and no application description, in the form or in the save', async () => {
 		const user = userEvent.setup();
-		render(AppearanceTab);
+		render(AppearanceTab, { part: 'brand' });
 		const name = await screen.findByLabelText('branding.app_name');
 		expect(document.getElementById('glass-enabled')).toBeNull();
 		expect(document.getElementById('glass-color')).toBeNull();

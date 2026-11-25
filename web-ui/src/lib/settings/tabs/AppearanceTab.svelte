@@ -1,5 +1,5 @@
 <!--
-  Settings › Appearance: how the console, the sign-in page, the download
+  Settings › Appearance and Settings › Branding: how the console, the sign-in page, the download
   page and the web remote client look for everyone. One form, one save
   (POST /api/settings/branding); the preview beside it shows the choices
   before they are saved. Saved appearances, import and export, and reset
@@ -12,6 +12,14 @@
   downloaded or uploaded to the server. An uploaded logo waits for Save.
 
   Element ids are the old page's, for links and the settings search.
+
+  Two tabs of Settings share this form and its one save, by `part`:
+  appearance (Settings › Appearance: theme and colours, fonts, the console
+  background, custom CSS behind its own disclosure, saved appearances,
+  import and export) and brand (Settings › Branding: name and logo, the
+  footer, the sign-in page, the download page, the remote viewer's
+  background, and the client app's branding with its own form,
+  ClientAppBranding).
 -->
 <script lang="ts">
 	import {
@@ -96,7 +104,10 @@
 	import RangeField from '../RangeField.svelte';
 	import SettingsGrid from '../SettingsGrid.svelte';
 	import SettingsLayout from '../SettingsLayout.svelte';
+	import ClientAppBranding from '../ClientAppBranding.svelte';
 	import ThemePreview from '../ThemePreview.svelte';
+
+	let { part = 'appearance' }: { part?: 'appearance' | 'brand' } = $props();
 
 	const canEdit = can('branding.edit');
 
@@ -794,26 +805,32 @@
 		if (canEdit) void loadProfiles();
 	});
 
-	const toc = $derived([
-		{ id: 'branding-theme', label: t('theme.title') },
-		...(v.themeMode === 'custom'
-			? [{ id: 'branding-custom-colors', label: t('settings.appearance.custom_colors') }]
-			: []),
-		{ id: 'branding-identity', label: t('settings.appearance.identity') },
-		{ id: 'branding-fonts', label: t('branding.typography_title') },
-		{ id: 'branding-background', label: t('settings.appearance.console_background') },
-		{ id: 'branding-login', label: t('branding.login_title') },
-		{ id: 'branding-agent', label: t('branding.agent_title') },
-		{ id: 'branding-rdclient', label: t('settings.appearance.rdclient') },
-		{ id: 'branding-footer', label: t('branding.footer_title') },
-		{ id: 'branding-css', label: t('branding.custom_css_title') },
-		...(canEdit
+	const toc = $derived(
+		part === 'brand'
 			? [
-					{ id: 'branding-profiles', label: t('settings.appearance.profiles') },
-					{ id: 'branding-import-export', label: t('branding.import_export_title') }
+					{ id: 'branding-identity', label: t('settings.appearance.identity') },
+					{ id: 'branding-footer', label: t('branding.footer_title') },
+					{ id: 'branding-login', label: t('branding.login_title') },
+					{ id: 'branding-agent', label: t('branding.agent_title') },
+					{ id: 'branding-rdclient', label: t('settings.appearance.rdclient') },
+					...(canEdit ? [{ id: 'client-app', label: t('settings.branding.client_app') }] : [])
 				]
-			: [])
-	]);
+			: [
+					{ id: 'branding-theme', label: t('theme.title') },
+					...(v.themeMode === 'custom'
+						? [{ id: 'branding-custom-colors', label: t('settings.appearance.custom_colors') }]
+						: []),
+					{ id: 'branding-fonts', label: t('branding.typography_title') },
+					{ id: 'branding-background', label: t('settings.appearance.console_background') },
+					{ id: 'branding-css', label: t('branding.custom_css_title') },
+					...(canEdit
+						? [
+								{ id: 'branding-profiles', label: t('settings.appearance.profiles') },
+								{ id: 'branding-import-export', label: t('branding.import_export_title') }
+							]
+						: [])
+				]
+	);
 
 	const FONT_CATEGORIES = $derived([
 		{ value: 'all', label: t('branding.font_cat_all') },
@@ -890,672 +907,696 @@
 
 	<form id={form.id} class="branding-form" onsubmit={form.onsubmit} novalidate aria-busy={!loaded}>
 		<fieldset class="settings-fieldset" disabled={!canEdit}>
-			<legend class="sr-only">{t('settings.tab_branding')}</legend>
+			<legend class="sr-only">{t(part === 'brand' ? 'settings.tab_brand' : 'settings.tab_branding')}</legend>
 			<SettingsGrid>
 				{#snippet start()}
-					<section class="section form-column" id="branding-theme" aria-labelledby="branding-theme-title">
-						<h2 id="branding-theme-title">{t('theme.title')}</h2>
-						<p class="section-note">{t('settings.appearance.theme_note')}</p>
-						<div id="theme-mode-selector">
-							<ChoiceList
-								name="theme-mode"
-								labelledby="branding-theme-title"
-								bind:value={form.values.themeMode}
-								onchange={(mode, checked) => checked && onMode(mode)}
-								choices={[
-									{
-										value: 'system',
-										title: t('theme.auto'),
-										description: t('settings.appearance.mode_system')
-									},
-									{
-										value: 'light',
-										title: t('theme.light'),
-										description: t('settings.appearance.mode_light')
-									},
-									{ value: 'dark', title: t('theme.dark'), description: t('settings.appearance.mode_dark') },
-									{
-										value: 'custom',
-										title: t('theme.custom'),
-										description: t('settings.appearance.mode_custom'),
-										controls: 'branding-custom-colors'
-									}
-								]}
-							/>
-						</div>
-						<p class="field-effect">{t('settings.appearance.save_effect')}</p>
-						<div class="form-group" id="branding-builtin-themes">
-							<label class="form-label" for="branding-theme-select">{t('branding.builtin_themes')}</label>
-							<div class="inline-controls">
-								<Select
-									id="branding-theme-select"
-									bind:element={themeSelect}
-									bind:value={themePick}
-									disabled={themesFailed}
-									describedby="branding-theme-select-hint branding-theme-select-effect"
-									options={[
-										{ value: '', label: t('settings.appearance.pick_theme') },
-										...themes.map((x) => ({ value: x.id, label: x.name || x.id }))
-									]}
-								/>
-								<Button id="branding-theme-apply" busy={themeBusy} onclick={() => void applyPickedTheme()}
-									>{t('settings.appearance.apply_theme')}</Button
-								>
-							</div>
-							<p class="form-hint" id="branding-theme-select-hint">{t('settings.appearance.builtin_hint')}</p>
-							<p class="field-effect" id="branding-theme-select-effect">
-								{t('settings.appearance.builtin_effect')}
-							</p>
-						</div>
-					</section>
-
-					<ShowWhen id="branding-custom-colors" when={v.themeMode === 'custom'}>
-						<section class="section form-column" aria-labelledby="branding-colors-title">
-							<h2 id="branding-colors-title">{t('settings.appearance.custom_colors')}</h2>
-							<p class="section-note">{t('settings.appearance.custom_colors_note')}</p>
-							<div class="inline-controls">
-								<Button size="sm" onclick={() => usePalette(lookPalette('light'))}
-									>{t('settings.appearance.start_light')}</Button
-								>
-								<Button size="sm" onclick={() => usePalette(lookPalette('dark'))}
-									>{t('settings.appearance.start_dark')}</Button
-								>
-							</div>
-							{#each COLOR_GROUPS as group (group.legend)}
-								<fieldset class="color-group">
-									<legend>{t(group.legend)}</legend>
-									{#each group.colors as [key, labelKey] (key)}
-										<Field
-											id="color-{key}"
-											label={t(`settings.appearance.${labelKey}`)}
-											error={refusedAt(`colors.${key}`)}
-										>
-											{#snippet children(f)}
-												<ColorField
-													id={f.id}
-													describedby={f.describedby}
-													invalid={f.invalid}
-													label={t(`settings.appearance.${labelKey}`)}
-													bind:value={form.values.colors[key]}
-												/>
-											{/snippet}
-										</Field>
+					{#if part === 'brand'}
+						<section
+							class="section form-column"
+							id="branding-identity"
+							aria-labelledby="branding-identity-title"
+						>
+							<h2 id="branding-identity-title">{t('settings.appearance.identity')}</h2>
+							<p class="section-note">{t('branding.identity_desc')}</p>
+							<Field id="brand-name" label={t('branding.app_name')}>
+								{#snippet children(f)}<Input
+										{...f}
+										maxlength={50}
+										placeholder={EX.appName}
+										bind:value={form.values.appName}
+									/>{/snippet}
+							</Field>
+							<fieldset class="form-group radio-set">
+								<legend class="form-label">{t('branding.logo_title')}</legend>
+								<p class="form-hint">{t('branding.logo_desc')}</p>
+								<div class="radio-row">
+									{#each LOGO_TYPES_LIST as kind (kind)}
+										<Radio
+											name="logo-type"
+											value={kind}
+											bind:group={form.values.logoType}
+											label={t(LOGO_LABEL[kind])}
+											aria-controls={kind === 'default' ? undefined : `logo-${kind}-panel`}
+										/>
 									{/each}
-								</fieldset>
-							{/each}
-						</section>
-					</ShowWhen>
-
-					<section
-						class="section form-column"
-						id="branding-identity"
-						aria-labelledby="branding-identity-title"
-					>
-						<h2 id="branding-identity-title">{t('settings.appearance.identity')}</h2>
-						<p class="section-note">{t('branding.identity_desc')}</p>
-						<Field id="brand-name" label={t('branding.app_name')}>
-							{#snippet children(f)}<Input
-									{...f}
-									maxlength={50}
-									placeholder={EX.appName}
-									bind:value={form.values.appName}
-								/>{/snippet}
-						</Field>
-						<fieldset class="form-group radio-set">
-							<legend class="form-label">{t('branding.logo_title')}</legend>
-							<p class="form-hint">{t('branding.logo_desc')}</p>
-							<div class="radio-row">
-								{#each LOGO_TYPES_LIST as kind (kind)}
-									<Radio
-										name="logo-type"
-										value={kind}
-										bind:group={form.values.logoType}
-										label={t(LOGO_LABEL[kind])}
-										aria-controls={kind === 'default' ? undefined : `logo-${kind}-panel`}
-									/>
-								{/each}
-							</div>
-						</fieldset>
-						<ShowWhen id="logo-text-panel" when={v.logoType === 'text'}>
-							<Field
-								id="logo-text-input"
-								label={t('branding.logo_text')}
-								hint={t('branding.logo_text_hint')}
-								error={refusedAt('logoText')}
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										maxlength={30}
-										placeholder={EX.logoText}
-										bind:value={form.values.logoText}
-									/>{/snippet}
-							</Field>
-							<Field
-								id="logo-text-accent"
-								label={t('branding.logo_text_accent')}
-								hint={t('branding.logo_text_accent_hint')}
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										maxlength={30}
-										placeholder={EX.logoAccent}
-										bind:value={form.values.logoTextAccent}
-									/>{/snippet}
-							</Field>
-						</ShowWhen>
-						<ShowWhen id="logo-icon-panel" when={v.logoType === 'icon'}>
-							<Field
-								id="logo-icon-name"
-								label={t('branding.logo_icon_name')}
-								hint={t('branding.logo_icon_hint')}
-								error={refusedAt('logoIcon')}
-								width="medium"
-							>
-								{#snippet children(f)}<Select
-										{...f}
-										bind:value={form.values.logoIcon}
-										options={[
-											// A stored name the icon font lacks stays visible, so the refusal can name it
-											...(LOGO_ICONS.includes(v.logoIcon) ? [] : [{ value: v.logoIcon, label: v.logoIcon }]),
-											...LOGO_ICONS.map((name) => ({ value: name, label: name }))
-										]}
-									/>{/snippet}
-							</Field>
-						</ShowWhen>
-						<ShowWhen id="logo-svg-panel" when={v.logoType === 'svg'}>
-							<Field
-								id="logo-svg-input"
-								label={t('branding.logo_svg_code')}
-								hint={t('branding.logo_svg_hint')}
-								error={refusedAt('logoSvg')}
-							>
-								{#snippet children(f)}<Textarea
-										{...f}
-										class="mono"
-										rows={6}
-										placeholder={EX.svg}
-										bind:value={form.values.logoSvg}
-									/>{/snippet}
-							</Field>
-						</ShowWhen>
-						<ShowWhen id="logo-image-panel" when={v.logoType === 'image'}>
-							<div class="form-group">
-								<label class="form-label" for="logo-image-file">{t('branding.logo_image_upload')}</label>
-								<FilePicker
-									id="logo-image-file"
-									accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
-									bind:files={logoFiles}
-									bind:element={logoPicker}
-									describedby="logo-image-file-hint logo-file-name"
-									onchange={onLogoFile}
-								/>
-								<p class="form-hint" id="logo-image-file-hint">{t('branding.logo_image_hint')}</p>
-								<p class={['field-effect', logoProblem && 'is-error']} id="logo-file-name">
-									{logoProblem ||
-										(pendingLogo
-											? t('settings.appearance.logo_pending', { name: pendingLogo.name })
-											: t('settings.appearance.logo_upload_effect'))}
-								</p>
-							</div>
-							<Field
-								id="logo-image-url"
-								label={t('branding.logo_image_url')}
-								hint={t('branding.logo_image_url_hint')}
-								error={refusedAt('logoUrl')}
-							>
-								{#snippet children(f)}<Input
-										{...f}
-										placeholder={EX.logoUrl}
-										bind:value={form.values.logoUrl}
-									/>{/snippet}
-							</Field>
-						</ShowWhen>
-					</section>
-
-					<section class="section form-column" id="branding-fonts" aria-labelledby="branding-fonts-title">
-						<h2 id="branding-fonts-title">{t('branding.typography_title')}</h2>
-						<p class="section-note">{t('branding.typography_desc')}</p>
-						<FontPicker
-							slot="heading"
-							bind:value={form.values.fontHeading}
-							source={fontSource === 'google' ? 'google' : 'local'}
-							category={fontCategory === 'all' ? '' : fontCategory}
-							{canEdit}
-							disabled={!canEdit}
-							ondownload={() => void loadLocalFonts()}
-						/>
-						<FontPicker
-							slot="body"
-							bind:value={form.values.fontBody}
-							source={fontSource === 'google' ? 'google' : 'local'}
-							category={fontCategory === 'all' ? '' : fontCategory}
-							{canEdit}
-							disabled={!canEdit}
-							ondownload={() => void loadLocalFonts()}
-						/>
-						<div class="form-group" id="font-source">
-							<span class="form-label" id="font-source-label">{t('settings.appearance.font_source')}</span>
-							<SegmentedFilter
-								label={t('settings.appearance.font_source')}
-								bind:value={fontSource}
-								options={[
-									{ value: 'google', label: t('branding.font_google') },
-									{ value: 'local', label: t('branding.font_local') },
-									{ value: 'upload', label: t('branding.font_upload') }
-								]}
-							/>
-						</div>
-						{#if fontSource === 'google'}
-							<div id="font-source-google">
-								<SegmentedFilter
-									label={t('settings.appearance.font_category')}
-									bind:value={fontCategory}
-									options={FONT_CATEGORIES}
-								/>
-							</div>
-						{:else if fontSource === 'local'}
-							<div id="font-source-local">
-								{#if localError}
-									<p class="state is-error">{localError}</p>
-								{:else if localFonts && !localFonts.length}
-									<RowList><ListRow empty title={t('branding.font_local_empty')} /></RowList>
-								{:else if localFonts}
-									<RowList label={t('branding.font_local')}>
-										{#each localFonts as font (font.family)}
-											<ListRow title={font.family}>
-												{#snippet actions()}
-													{#if canEdit}
-														<Button
-															size="sm"
-															variant="danger-quiet"
-															onclick={() => void removeFont(font.family)}>{t('branding.font_delete')}</Button
-														>
-													{/if}
-												{/snippet}
-											</ListRow>
-										{/each}
-									</RowList>
-								{/if}
-							</div>
-						{:else}
-							<div id="font-source-upload" class="font-upload">
-								<Field id="font-upload-name" label={t('branding.font_upload_name')}>
-									{#snippet children(f)}<Input {...f} maxlength={80} bind:value={fontUploadName} />{/snippet}
+								</div>
+							</fieldset>
+							<ShowWhen id="logo-text-panel" when={v.logoType === 'text'}>
+								<Field
+									id="logo-text-input"
+									label={t('branding.logo_text')}
+									hint={t('branding.logo_text_hint')}
+									error={refusedAt('logoText')}
+								>
+									{#snippet children(f)}<Input
+											{...f}
+											maxlength={30}
+											placeholder={EX.logoText}
+											bind:value={form.values.logoText}
+										/>{/snippet}
 								</Field>
+								<Field
+									id="logo-text-accent"
+									label={t('branding.logo_text_accent')}
+									hint={t('branding.logo_text_accent_hint')}
+								>
+									{#snippet children(f)}<Input
+											{...f}
+											maxlength={30}
+											placeholder={EX.logoAccent}
+											bind:value={form.values.logoTextAccent}
+										/>{/snippet}
+								</Field>
+							</ShowWhen>
+							<ShowWhen id="logo-icon-panel" when={v.logoType === 'icon'}>
+								<Field
+									id="logo-icon-name"
+									label={t('branding.logo_icon_name')}
+									hint={t('branding.logo_icon_hint')}
+									error={refusedAt('logoIcon')}
+									width="medium"
+								>
+									{#snippet children(f)}<Select
+											{...f}
+											bind:value={form.values.logoIcon}
+											options={[
+												// A stored name the icon font lacks stays visible, so the refusal can name it
+												...(LOGO_ICONS.includes(v.logoIcon)
+													? []
+													: [{ value: v.logoIcon, label: v.logoIcon }]),
+												...LOGO_ICONS.map((name) => ({ value: name, label: name }))
+											]}
+										/>{/snippet}
+								</Field>
+							</ShowWhen>
+							<ShowWhen id="logo-svg-panel" when={v.logoType === 'svg'}>
+								<Field
+									id="logo-svg-input"
+									label={t('branding.logo_svg_code')}
+									hint={t('branding.logo_svg_hint')}
+									error={refusedAt('logoSvg')}
+								>
+									{#snippet children(f)}<Textarea
+											{...f}
+											class="mono"
+											rows={6}
+											placeholder={EX.svg}
+											bind:value={form.values.logoSvg}
+										/>{/snippet}
+								</Field>
+							</ShowWhen>
+							<ShowWhen id="logo-image-panel" when={v.logoType === 'image'}>
 								<div class="form-group">
-									<label class="form-label" for="font-upload-file">{t('branding.font_upload_choose')}</label>
+									<label class="form-label" for="logo-image-file">{t('branding.logo_image_upload')}</label>
 									<FilePicker
-										id="font-upload-file"
-										accept=".woff2,.ttf,font/woff2,font/ttf"
-										bind:files={fontFiles}
-										bind:element={fontPicker}
-										describedby="font-upload-file-effect"
-										onchange={() => void onFontFile()}
+										id="logo-image-file"
+										accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+										bind:files={logoFiles}
+										bind:element={logoPicker}
+										describedby="logo-image-file-hint logo-file-name"
+										onchange={onLogoFile}
 									/>
-									<p class="field-effect" id="font-upload-file-effect">
-										{t('settings.appearance.font_upload_effect')}
+									<p class="form-hint" id="logo-image-file-hint">{t('branding.logo_image_hint')}</p>
+									<p class={['field-effect', logoProblem && 'is-error']} id="logo-file-name">
+										{logoProblem ||
+											(pendingLogo
+												? t('settings.appearance.logo_pending', { name: pendingLogo.name })
+												: t('settings.appearance.logo_upload_effect'))}
 									</p>
 								</div>
-							</div>
-						{/if}
-						<CountLine class="font-local-info">
-							<strong id="font-local-count">{localFonts?.length ?? 0}</strong>
-							{t('branding.font_downloaded_count')}
-						</CountLine>
-					</section>
+								<Field
+									id="logo-image-url"
+									label={t('branding.logo_image_url')}
+									hint={t('branding.logo_image_url_hint')}
+									error={refusedAt('logoUrl')}
+								>
+									{#snippet children(f)}<Input
+											{...f}
+											placeholder={EX.logoUrl}
+											bind:value={form.values.logoUrl}
+										/>{/snippet}
+								</Field>
+							</ShowWhen>
+						</section>
 
-					<section class="section form-column" id="branding-footer" aria-labelledby="branding-footer-title">
-						<h2 id="branding-footer-title">{t('branding.footer_title')}</h2>
-						<p class="section-note">{t('branding.footer_desc')}</p>
-						<Field id="footer-text" label={t('branding.footer_text')} hint={t('branding.footer_text_hint')}>
-							{#snippet children(f)}<Input
-									{...f}
-									maxlength={200}
-									placeholder={EX.footer}
-									bind:value={form.values.footerText}
-								/>{/snippet}
-						</Field>
-						<Checkbox
-							id="show-powered"
-							label={t('branding.show_powered')}
-							hint={t('branding.show_powered_hint')}
-							bind:checked={form.values.showPoweredBy}
-						/>
-					</section>
+						<section class="section form-column" id="branding-footer" aria-labelledby="branding-footer-title">
+							<h2 id="branding-footer-title">{t('branding.footer_title')}</h2>
+							<p class="section-note">{t('branding.footer_desc')}</p>
+							<Field id="footer-text" label={t('branding.footer_text')} hint={t('branding.footer_text_hint')}>
+								{#snippet children(f)}<Input
+										{...f}
+										maxlength={200}
+										placeholder={EX.footer}
+										bind:value={form.values.footerText}
+									/>{/snippet}
+							</Field>
+							<Checkbox
+								id="show-powered"
+								label={t('branding.show_powered')}
+								hint={t('branding.show_powered_hint')}
+								bind:checked={form.values.showPoweredBy}
+							/>
+						</section>
+					{:else}
+						<section class="section form-column" id="branding-theme" aria-labelledby="branding-theme-title">
+							<h2 id="branding-theme-title">{t('theme.title')}</h2>
+							<p class="section-note">{t('settings.appearance.theme_note')}</p>
+							<div id="theme-mode-selector">
+								<ChoiceList
+									name="theme-mode"
+									labelledby="branding-theme-title"
+									bind:value={form.values.themeMode}
+									onchange={(mode, checked) => checked && onMode(mode)}
+									choices={[
+										{
+											value: 'system',
+											title: t('theme.auto'),
+											description: t('settings.appearance.mode_system')
+										},
+										{
+											value: 'light',
+											title: t('theme.light'),
+											description: t('settings.appearance.mode_light')
+										},
+										{
+											value: 'dark',
+											title: t('theme.dark'),
+											description: t('settings.appearance.mode_dark')
+										},
+										{
+											value: 'custom',
+											title: t('theme.custom'),
+											description: t('settings.appearance.mode_custom'),
+											controls: 'branding-custom-colors'
+										}
+									]}
+								/>
+							</div>
+							<p class="field-effect">{t('settings.appearance.save_effect')}</p>
+							<div class="form-group" id="branding-builtin-themes">
+								<label class="form-label" for="branding-theme-select">{t('branding.builtin_themes')}</label>
+								<div class="inline-controls">
+									<Select
+										id="branding-theme-select"
+										bind:element={themeSelect}
+										bind:value={themePick}
+										disabled={themesFailed}
+										describedby="branding-theme-select-hint branding-theme-select-effect"
+										options={[
+											{ value: '', label: t('settings.appearance.pick_theme') },
+											...themes.map((x) => ({ value: x.id, label: x.name || x.id }))
+										]}
+									/>
+									<Button id="branding-theme-apply" busy={themeBusy} onclick={() => void applyPickedTheme()}
+										>{t('settings.appearance.apply_theme')}</Button
+									>
+								</div>
+								<p class="form-hint" id="branding-theme-select-hint">
+									{t('settings.appearance.builtin_hint')}
+								</p>
+								<p class="field-effect" id="branding-theme-select-effect">
+									{t('settings.appearance.builtin_effect')}
+								</p>
+							</div>
+						</section>
+
+						<ShowWhen id="branding-custom-colors" when={v.themeMode === 'custom'}>
+							<section class="section form-column" aria-labelledby="branding-colors-title">
+								<h2 id="branding-colors-title">{t('settings.appearance.custom_colors')}</h2>
+								<p class="section-note">{t('settings.appearance.custom_colors_note')}</p>
+								<div class="inline-controls">
+									<Button size="sm" onclick={() => usePalette(lookPalette('light'))}
+										>{t('settings.appearance.start_light')}</Button
+									>
+									<Button size="sm" onclick={() => usePalette(lookPalette('dark'))}
+										>{t('settings.appearance.start_dark')}</Button
+									>
+								</div>
+								{#each COLOR_GROUPS as group (group.legend)}
+									<fieldset class="color-group">
+										<legend>{t(group.legend)}</legend>
+										{#each group.colors as [key, labelKey] (key)}
+											<Field
+												id="color-{key}"
+												label={t(`settings.appearance.${labelKey}`)}
+												error={refusedAt(`colors.${key}`)}
+											>
+												{#snippet children(f)}
+													<ColorField
+														id={f.id}
+														describedby={f.describedby}
+														invalid={f.invalid}
+														label={t(`settings.appearance.${labelKey}`)}
+														bind:value={form.values.colors[key]}
+													/>
+												{/snippet}
+											</Field>
+										{/each}
+									</fieldset>
+								{/each}
+							</section>
+						</ShowWhen>
+
+						<section class="section form-column" id="branding-fonts" aria-labelledby="branding-fonts-title">
+							<h2 id="branding-fonts-title">{t('branding.typography_title')}</h2>
+							<p class="section-note">{t('branding.typography_desc')}</p>
+							<FontPicker
+								slot="heading"
+								bind:value={form.values.fontHeading}
+								source={fontSource === 'google' ? 'google' : 'local'}
+								category={fontCategory === 'all' ? '' : fontCategory}
+								{canEdit}
+								disabled={!canEdit}
+								ondownload={() => void loadLocalFonts()}
+							/>
+							<FontPicker
+								slot="body"
+								bind:value={form.values.fontBody}
+								source={fontSource === 'google' ? 'google' : 'local'}
+								category={fontCategory === 'all' ? '' : fontCategory}
+								{canEdit}
+								disabled={!canEdit}
+								ondownload={() => void loadLocalFonts()}
+							/>
+							<div class="form-group" id="font-source">
+								<span class="form-label" id="font-source-label">{t('settings.appearance.font_source')}</span>
+								<SegmentedFilter
+									label={t('settings.appearance.font_source')}
+									bind:value={fontSource}
+									options={[
+										{ value: 'google', label: t('branding.font_google') },
+										{ value: 'local', label: t('branding.font_local') },
+										{ value: 'upload', label: t('branding.font_upload') }
+									]}
+								/>
+							</div>
+							{#if fontSource === 'google'}
+								<div id="font-source-google">
+									<SegmentedFilter
+										label={t('settings.appearance.font_category')}
+										bind:value={fontCategory}
+										options={FONT_CATEGORIES}
+									/>
+								</div>
+							{:else if fontSource === 'local'}
+								<div id="font-source-local">
+									{#if localError}
+										<p class="state is-error">{localError}</p>
+									{:else if localFonts && !localFonts.length}
+										<RowList><ListRow empty title={t('branding.font_local_empty')} /></RowList>
+									{:else if localFonts}
+										<RowList label={t('branding.font_local')}>
+											{#each localFonts as font (font.family)}
+												<ListRow title={font.family}>
+													{#snippet actions()}
+														{#if canEdit}
+															<Button
+																size="sm"
+																variant="danger-quiet"
+																onclick={() => void removeFont(font.family)}
+																>{t('branding.font_delete')}</Button
+															>
+														{/if}
+													{/snippet}
+												</ListRow>
+											{/each}
+										</RowList>
+									{/if}
+								</div>
+							{:else}
+								<div id="font-source-upload" class="font-upload">
+									<Field id="font-upload-name" label={t('branding.font_upload_name')}>
+										{#snippet children(f)}<Input
+												{...f}
+												maxlength={80}
+												bind:value={fontUploadName}
+											/>{/snippet}
+									</Field>
+									<div class="form-group">
+										<label class="form-label" for="font-upload-file">{t('branding.font_upload_choose')}</label
+										>
+										<FilePicker
+											id="font-upload-file"
+											accept=".woff2,.ttf,font/woff2,font/ttf"
+											bind:files={fontFiles}
+											bind:element={fontPicker}
+											describedby="font-upload-file-effect"
+											onchange={() => void onFontFile()}
+										/>
+										<p class="field-effect" id="font-upload-file-effect">
+											{t('settings.appearance.font_upload_effect')}
+										</p>
+									</div>
+								</div>
+							{/if}
+							<CountLine class="font-local-info">
+								<strong id="font-local-count">{localFonts?.length ?? 0}</strong>
+								{t('branding.font_downloaded_count')}
+							</CountLine>
+						</section>
+					{/if}
 				{/snippet}
 
 				{#snippet end()}
-					<section
-						class="section form-column"
-						id="branding-background"
-						aria-labelledby="branding-background-title"
-					>
-						<h2 id="branding-background-title">{t('settings.appearance.console_background')}</h2>
-						<p class="section-note">{t('branding.background_desc')}</p>
-						<BackgroundFields
-							prefix="bg"
-							errors={{
-								color: refusedAt('bgColor'),
-								gradient: refusedAt('bgGradient'),
-								imageUrl: refusedAt('bgImageUrl')
-							}}
-							types={['none', 'color', 'gradient', 'image']}
-							bind:type={form.values.bgType}
-							bind:color={form.values.bgColor}
-							bind:gradient={form.values.bgGradient}
-							bind:imageUrl={form.values.bgImageUrl}
-							bind:size={form.values.bgSize}
-							showSize
-							gradientHint
-							gradientPlaceholder="linear-gradient(135deg, #1e293b 0%, #0f172a 100%)"
-							imagePlaceholder="/uploads/wallpaper.jpg"
-							target="bgImageUrl"
-							upload={uploadBg}
-							library={bgLibrary}
-							effects={['bg-effects-group', 'bg-overlay-group']}
-						>
-							<ShowWhen id="bg-effects-group" when={v.bgType !== 'none'}>
-								<RangeField
-									id="bg-blur"
-									label={t('branding.bg_blur')}
-									unit="px"
-									min={0}
-									max={30}
-									bind:value={form.values.bgBlur}
-								/>
-							</ShowWhen>
-							<ShowWhen id="bg-overlay-group" when={v.bgType !== 'none'}>
-								<RangeField
-									id="bg-overlay"
-									label={t('branding.bg_overlay')}
-									unit="%"
-									min={0}
-									max={90}
-									step={5}
-									hint={t('branding.bg_overlay_hint')}
-									bind:value={form.values.bgOverlay}
-								/>
-							</ShowWhen>
-						</BackgroundFields>
-					</section>
-
-					<section class="section form-column" id="branding-login" aria-labelledby="branding-login-title">
-						<h2 id="branding-login-title">{t('branding.login_title')}</h2>
-						<p class="section-note">{t('branding.login_desc')}</p>
-						<Field id="login-title" label={t('branding.login_heading')}>
-							{#snippet children(f)}<Input
-									{...f}
-									maxlength={80}
-									placeholder={t('branding.login_heading_placeholder')}
-									bind:value={form.values.loginTitle}
-								/>{/snippet}
-						</Field>
-						<Field id="login-subtitle" label={t('branding.login_subheading')}>
-							{#snippet children(f)}<Input
-									{...f}
-									maxlength={160}
-									placeholder={t('branding.login_subheading_placeholder')}
-									bind:value={form.values.loginSubtitle}
-								/>{/snippet}
-						</Field>
-						<fieldset class="form-group radio-set" id="login-promo-mode-selector">
-							<legend class="form-label">{t('branding.login_promo_mode')}</legend>
-							<p class="form-hint">{t('branding.login_promo_mode_hint')}</p>
-							<div class="radio-row">
-								{#each PROMO as mode (mode.value)}
-									<Radio
-										name="login-promo-mode"
-										value={mode.value}
-										bind:group={form.values.loginPromoMode}
-										label={t(mode.label)}
-										aria-controls={mode.value === 'slides' ? 'login-slides-panel' : 'login-bg-config'}
-									/>
-								{/each}
-							</div>
-						</fieldset>
-						<ShowWhen id="login-slides-panel" class="settings-subgroup" when={v.loginPromoMode === 'slides'}>
-							<h3>{t('branding.login_slides_title')}</h3>
-							<p class="form-hint">{t('branding.login_slides_desc')}</p>
-							<ol class="slides" id="login-slides-list">
-								{#each form.values.loginSlides as slide, i (slide.id)}
-									{@const p = `login-slide-${i}`}
-									<li class="slide">
-										<div class="slide-head">
-											<h4>{t('settings.appearance.slide_n', { n: i + 1 })}</h4>
-											<div class="inline-controls">
-												<Button size="sm" id="{p}-up" disabled={i === 0} onclick={() => move(i, -1)}
-													>{t('branding.login_slide_move_up')}</Button
-												>
-												<Button
-													size="sm"
-													id="{p}-down"
-													disabled={i >= form.values.loginSlides.length - 1}
-													onclick={() => move(i, 1)}>{t('branding.login_slide_move_down')}</Button
-												>
-												<Button
-													size="sm"
-													variant="danger-quiet"
-													disabled={form.values.loginSlides.length <= 1}
-													onclick={() => removeSlide(i)}>{t('branding.login_slides_remove')}</Button
-												>
+					{#if part === 'brand'}
+						<section class="section form-column" id="branding-login" aria-labelledby="branding-login-title">
+							<h2 id="branding-login-title">{t('branding.login_title')}</h2>
+							<p class="section-note">{t('branding.login_desc')}</p>
+							<Field id="login-title" label={t('branding.login_heading')}>
+								{#snippet children(f)}<Input
+										{...f}
+										maxlength={80}
+										placeholder={t('branding.login_heading_placeholder')}
+										bind:value={form.values.loginTitle}
+									/>{/snippet}
+							</Field>
+							<Field id="login-subtitle" label={t('branding.login_subheading')}>
+								{#snippet children(f)}<Input
+										{...f}
+										maxlength={160}
+										placeholder={t('branding.login_subheading_placeholder')}
+										bind:value={form.values.loginSubtitle}
+									/>{/snippet}
+							</Field>
+							<fieldset class="form-group radio-set" id="login-promo-mode-selector">
+								<legend class="form-label">{t('branding.login_promo_mode')}</legend>
+								<p class="form-hint">{t('branding.login_promo_mode_hint')}</p>
+								<div class="radio-row">
+									{#each PROMO as mode (mode.value)}
+										<Radio
+											name="login-promo-mode"
+											value={mode.value}
+											bind:group={form.values.loginPromoMode}
+											label={t(mode.label)}
+											aria-controls={mode.value === 'slides' ? 'login-slides-panel' : 'login-bg-config'}
+										/>
+									{/each}
+								</div>
+							</fieldset>
+							<ShowWhen
+								id="login-slides-panel"
+								class="settings-subgroup"
+								when={v.loginPromoMode === 'slides'}
+							>
+								<h3>{t('branding.login_slides_title')}</h3>
+								<p class="form-hint">{t('branding.login_slides_desc')}</p>
+								<ol class="slides" id="login-slides-list">
+									{#each form.values.loginSlides as slide, i (slide.id)}
+										{@const p = `login-slide-${i}`}
+										<li class="slide">
+											<div class="slide-head">
+												<h4>{t('settings.appearance.slide_n', { n: i + 1 })}</h4>
+												<div class="inline-controls">
+													<Button size="sm" id="{p}-up" disabled={i === 0} onclick={() => move(i, -1)}
+														>{t('branding.login_slide_move_up')}</Button
+													>
+													<Button
+														size="sm"
+														id="{p}-down"
+														disabled={i >= form.values.loginSlides.length - 1}
+														onclick={() => move(i, 1)}>{t('branding.login_slide_move_down')}</Button
+													>
+													<Button
+														size="sm"
+														variant="danger-quiet"
+														disabled={form.values.loginSlides.length <= 1}
+														onclick={() => removeSlide(i)}>{t('branding.login_slides_remove')}</Button
+													>
+												</div>
 											</div>
-										</div>
-										<div class="form-group">
-											<label class="form-label" for="{p}-file">{t('branding.login_slide_image')}</label>
-											<FilePicker
-												id="{p}-file"
-												accept="image/png,image/jpeg,image/webp,image/gif"
-												onchange={(e) => void onSlideFile(i, e.currentTarget)}
-											/>
-											<label class="sr-only" for="{p}-url">{t('branding.bg_image_url')}</label>
-											<Input
-												id="{p}-url"
-												placeholder={EX.slideImage}
-												invalid={!!refusedAt(`loginSlides.${i}.imageUrl`)}
-												describedby={refusedAt(`loginSlides.${i}.imageUrl`) ? `${p}-url-error` : undefined}
-												bind:value={slide.imageUrl}
-											/>
-											{#if refusedAt(`loginSlides.${i}.imageUrl`)}<p
-													class="form-hint form-error"
-													id="{p}-url-error"
-												>
-													{refusedAt(`loginSlides.${i}.imageUrl`)}
-												</p>{/if}
-										</div>
-										<Field
-											id="{p}-title"
-											label={t('branding.login_slide_title')}
-											error={refusedAt(`loginSlides.${i}.title`)}
-										>
-											{#snippet children(f)}
+											<div class="form-group">
+												<label class="form-label" for="{p}-file">{t('branding.login_slide_image')}</label>
+												<FilePicker
+													id="{p}-file"
+													accept="image/png,image/jpeg,image/webp,image/gif"
+													onchange={(e) => void onSlideFile(i, e.currentTarget)}
+												/>
+												<label class="sr-only" for="{p}-url">{t('branding.bg_image_url')}</label>
 												<Input
-													{...f}
-													maxlength={120}
-													placeholder={slide.slideKey ? t(`login_promo.slides.${slide.slideKey}.title`) : ''}
-													bind:value={slide.title}
+													id="{p}-url"
+													placeholder={EX.slideImage}
+													invalid={!!refusedAt(`loginSlides.${i}.imageUrl`)}
+													describedby={refusedAt(`loginSlides.${i}.imageUrl`) ? `${p}-url-error` : undefined}
+													bind:value={slide.imageUrl}
 												/>
-											{/snippet}
-										</Field>
-										<Field
-											id="{p}-body"
-											label={t('branding.login_slide_body')}
-											error={refusedAt(`loginSlides.${i}.body`)}
-										>
-											{#snippet children(f)}
-												<Textarea
-													{...f}
-													rows={2}
-													maxlength={400}
-													placeholder={slide.slideKey ? t(`login_promo.slides.${slide.slideKey}.body`) : ''}
-													bind:value={slide.body}
-												/>
-											{/snippet}
-										</Field>
+												{#if refusedAt(`loginSlides.${i}.imageUrl`)}<p
+														class="form-hint form-error"
+														id="{p}-url-error"
+													>
+														{refusedAt(`loginSlides.${i}.imageUrl`)}
+													</p>{/if}
+											</div>
+											<Field
+												id="{p}-title"
+												label={t('branding.login_slide_title')}
+												error={refusedAt(`loginSlides.${i}.title`)}
+											>
+												{#snippet children(f)}
+													<Input
+														{...f}
+														maxlength={120}
+														placeholder={slide.slideKey
+															? t(`login_promo.slides.${slide.slideKey}.title`)
+															: ''}
+														bind:value={slide.title}
+													/>
+												{/snippet}
+											</Field>
+											<Field
+												id="{p}-body"
+												label={t('branding.login_slide_body')}
+												error={refusedAt(`loginSlides.${i}.body`)}
+											>
+												{#snippet children(f)}
+													<Textarea
+														{...f}
+														rows={2}
+														maxlength={400}
+														placeholder={slide.slideKey ? t(`login_promo.slides.${slide.slideKey}.body`) : ''}
+														bind:value={slide.body}
+													/>
+												{/snippet}
+											</Field>
+											<RangeField
+												id="{p}-overlay"
+												label={t('branding.bg_overlay')}
+												unit="%"
+												min={0}
+												max={90}
+												step={5}
+												bind:value={slide.overlay}
+											/>
+										</li>
+									{/each}
+								</ol>
+								<div class="inline-controls">
+									<Button
+										icon="add"
+										id="login-slides-add"
+										disabled={v.loginSlides.length >= MAX_SLIDES}
+										onclick={addSlide}>{t('branding.login_slides_add')}</Button
+									>
+									<Button id="login-slides-restore" onclick={restoreSlides}
+										>{t('branding.login_slides_restore')}</Button
+									>
+								</div>
+								{#if v.loginSlides.length >= MAX_SLIDES}<p class="form-hint" id="login-slides-max-hint">
+										{t('branding.login_slides_max')}
+									</p>{/if}
+							</ShowWhen>
+							<ShowWhen id="login-bg-config" class="settings-subgroup" when={v.loginPromoMode !== 'slides'}>
+								<h3>{t('settings.appearance.login_background')}</h3>
+								<BackgroundFields
+									prefix="login-bg"
+									errors={{
+										color: refusedAt('loginBgColor'),
+										gradient: refusedAt('loginBgGradient'),
+										imageUrl: refusedAt('loginBgImageUrl')
+									}}
+									types={['inherit', 'color', 'gradient', 'image']}
+									bind:type={form.values.loginBgType}
+									bind:color={form.values.loginBgColor}
+									bind:gradient={form.values.loginBgGradient}
+									bind:imageUrl={form.values.loginBgImageUrl}
+									gradientPlaceholder="linear-gradient(135deg, #1e293b 0%, #0f172a 100%)"
+									imagePlaceholder="/uploads/login-bg.jpg"
+									target="loginBgImageUrl"
+									upload={uploadBg}
+									fileNote={currentImage(v.loginBgType, v.loginBgImageUrl)}
+									effects={['login-bg-overlay-group']}
+								>
+									<ShowWhen
+										id="login-bg-overlay-group"
+										when={v.loginBgType !== 'inherit' && v.loginBgType !== 'none'}
+									>
 										<RangeField
-											id="{p}-overlay"
+											id="login-bg-overlay"
 											label={t('branding.bg_overlay')}
 											unit="%"
 											min={0}
 											max={90}
 											step={5}
-											bind:value={slide.overlay}
+											bind:value={form.values.loginBgOverlay}
 										/>
-									</li>
-								{/each}
-							</ol>
-							<div class="inline-controls">
-								<Button
-									icon="add"
-									id="login-slides-add"
-									disabled={v.loginSlides.length >= MAX_SLIDES}
-									onclick={addSlide}>{t('branding.login_slides_add')}</Button
-								>
-								<Button id="login-slides-restore" onclick={restoreSlides}
-									>{t('branding.login_slides_restore')}</Button
-								>
-							</div>
-							{#if v.loginSlides.length >= MAX_SLIDES}<p class="form-hint" id="login-slides-max-hint">
-									{t('branding.login_slides_max')}
-								</p>{/if}
-						</ShowWhen>
-						<ShowWhen id="login-bg-config" class="settings-subgroup" when={v.loginPromoMode !== 'slides'}>
-							<h3>{t('settings.appearance.login_background')}</h3>
+									</ShowWhen>
+								</BackgroundFields>
+							</ShowWhen>
+						</section>
+
+						<section class="section form-column" id="branding-agent" aria-labelledby="branding-agent-title">
+							<h2 id="branding-agent-title">{t('branding.agent_title')}</h2>
+							<p class="section-note">{t('branding.agent_desc')}</p>
 							<BackgroundFields
-								prefix="login-bg"
+								prefix="agent-bg"
 								errors={{
-									color: refusedAt('loginBgColor'),
-									gradient: refusedAt('loginBgGradient'),
-									imageUrl: refusedAt('loginBgImageUrl')
+									color: refusedAt('agentBgColor'),
+									gradient: refusedAt('agentBgGradient'),
+									imageUrl: refusedAt('agentBgImageUrl')
 								}}
-								types={['inherit', 'color', 'gradient', 'image']}
-								bind:type={form.values.loginBgType}
-								bind:color={form.values.loginBgColor}
-								bind:gradient={form.values.loginBgGradient}
-								bind:imageUrl={form.values.loginBgImageUrl}
-								gradientPlaceholder="linear-gradient(135deg, #1e293b 0%, #0f172a 100%)"
-								imagePlaceholder="/uploads/login-bg.jpg"
-								target="loginBgImageUrl"
+								types={['none', 'color', 'gradient', 'image']}
+								bind:type={form.values.agentBgType}
+								bind:color={form.values.agentBgColor}
+								bind:gradient={form.values.agentBgGradient}
+								bind:imageUrl={form.values.agentBgImageUrl}
+								gradientPlaceholder="linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)"
+								imagePlaceholder="/uploads/agent-bg.jpg"
+								target="agentBgImageUrl"
 								upload={uploadBg}
-								fileNote={currentImage(v.loginBgType, v.loginBgImageUrl)}
-								effects={['login-bg-overlay-group']}
+								fileNote={currentImage(v.agentBgType, v.agentBgImageUrl)}
+							/>
+							<Checkbox
+								id="agent-show-powered"
+								label={t('branding.agent_show_powered')}
+								hint={t('branding.agent_show_powered_hint')}
+								bind:checked={form.values.agentShowPoweredBy}
+							/>
+						</section>
+
+						<section
+							class="section form-column"
+							id="branding-rdclient"
+							aria-labelledby="branding-rdclient-title"
+						>
+							<h2 id="branding-rdclient-title">{t('settings.appearance.rdclient')}</h2>
+							<p class="section-note">{t('settings.appearance.rdclient_note')}</p>
+							<BackgroundFields
+								prefix="rdclient-bg"
+								errors={{
+									color: refusedAt('rdclientBgColor'),
+									gradient: refusedAt('rdclientBgGradient'),
+									imageUrl: refusedAt('rdclientBgImageUrl')
+								}}
+								types={['inherit', 'none', 'color', 'gradient', 'image']}
+								bind:type={form.values.rdclientBgType}
+								bind:color={form.values.rdclientBgColor}
+								bind:gradient={form.values.rdclientBgGradient}
+								bind:imageUrl={form.values.rdclientBgImageUrl}
+								bind:size={form.values.rdclientBgSize}
+								showSize
+								gradientPlaceholder="linear-gradient(135deg, #0d1117 0%, #172554 100%)"
+								imagePlaceholder="/uploads/rdclient-bg.jpg"
+								target="rdclientBgImageUrl"
+								upload={uploadBg}
+								fileNote={currentImage(v.rdclientBgType, v.rdclientBgImageUrl)}
+								effects={['rdclient-bg-overlay-group']}
 							>
 								<ShowWhen
-									id="login-bg-overlay-group"
-									when={v.loginBgType !== 'inherit' && v.loginBgType !== 'none'}
+									id="rdclient-bg-overlay-group"
+									when={v.rdclientBgType !== 'inherit' && v.rdclientBgType !== 'none'}
 								>
 									<RangeField
-										id="login-bg-overlay"
+										id="rdclient-bg-overlay"
 										label={t('branding.bg_overlay')}
 										unit="%"
 										min={0}
 										max={90}
 										step={5}
-										bind:value={form.values.loginBgOverlay}
+										hint={t('branding.bg_overlay_hint')}
+										bind:value={form.values.rdclientBgOverlay}
 									/>
 								</ShowWhen>
 							</BackgroundFields>
-						</ShowWhen>
-					</section>
-
-					<section class="section form-column" id="branding-agent" aria-labelledby="branding-agent-title">
-						<h2 id="branding-agent-title">{t('branding.agent_title')}</h2>
-						<p class="section-note">{t('branding.agent_desc')}</p>
-						<BackgroundFields
-							prefix="agent-bg"
-							errors={{
-								color: refusedAt('agentBgColor'),
-								gradient: refusedAt('agentBgGradient'),
-								imageUrl: refusedAt('agentBgImageUrl')
-							}}
-							types={['none', 'color', 'gradient', 'image']}
-							bind:type={form.values.agentBgType}
-							bind:color={form.values.agentBgColor}
-							bind:gradient={form.values.agentBgGradient}
-							bind:imageUrl={form.values.agentBgImageUrl}
-							gradientPlaceholder="linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)"
-							imagePlaceholder="/uploads/agent-bg.jpg"
-							target="agentBgImageUrl"
-							upload={uploadBg}
-							fileNote={currentImage(v.agentBgType, v.agentBgImageUrl)}
-						/>
-						<Checkbox
-							id="agent-show-powered"
-							label={t('branding.agent_show_powered')}
-							hint={t('branding.agent_show_powered_hint')}
-							bind:checked={form.values.agentShowPoweredBy}
-						/>
-					</section>
-
-					<section
-						class="section form-column"
-						id="branding-rdclient"
-						aria-labelledby="branding-rdclient-title"
-					>
-						<h2 id="branding-rdclient-title">{t('settings.appearance.rdclient')}</h2>
-						<p class="section-note">{t('settings.appearance.rdclient_note')}</p>
-						<BackgroundFields
-							prefix="rdclient-bg"
-							errors={{
-								color: refusedAt('rdclientBgColor'),
-								gradient: refusedAt('rdclientBgGradient'),
-								imageUrl: refusedAt('rdclientBgImageUrl')
-							}}
-							types={['inherit', 'none', 'color', 'gradient', 'image']}
-							bind:type={form.values.rdclientBgType}
-							bind:color={form.values.rdclientBgColor}
-							bind:gradient={form.values.rdclientBgGradient}
-							bind:imageUrl={form.values.rdclientBgImageUrl}
-							bind:size={form.values.rdclientBgSize}
-							showSize
-							gradientPlaceholder="linear-gradient(135deg, #0d1117 0%, #172554 100%)"
-							imagePlaceholder="/uploads/rdclient-bg.jpg"
-							target="rdclientBgImageUrl"
-							upload={uploadBg}
-							fileNote={currentImage(v.rdclientBgType, v.rdclientBgImageUrl)}
-							effects={['rdclient-bg-overlay-group']}
+						</section>
+					{:else}
+						<section
+							class="section form-column"
+							id="branding-background"
+							aria-labelledby="branding-background-title"
 						>
-							<ShowWhen
-								id="rdclient-bg-overlay-group"
-								when={v.rdclientBgType !== 'inherit' && v.rdclientBgType !== 'none'}
+							<h2 id="branding-background-title">{t('settings.appearance.console_background')}</h2>
+							<p class="section-note">{t('branding.background_desc')}</p>
+							<BackgroundFields
+								prefix="bg"
+								errors={{
+									color: refusedAt('bgColor'),
+									gradient: refusedAt('bgGradient'),
+									imageUrl: refusedAt('bgImageUrl')
+								}}
+								types={['none', 'color', 'gradient', 'image']}
+								bind:type={form.values.bgType}
+								bind:color={form.values.bgColor}
+								bind:gradient={form.values.bgGradient}
+								bind:imageUrl={form.values.bgImageUrl}
+								bind:size={form.values.bgSize}
+								showSize
+								gradientHint
+								gradientPlaceholder="linear-gradient(135deg, #1e293b 0%, #0f172a 100%)"
+								imagePlaceholder="/uploads/wallpaper.jpg"
+								target="bgImageUrl"
+								upload={uploadBg}
+								library={bgLibrary}
+								effects={['bg-effects-group', 'bg-overlay-group']}
 							>
-								<RangeField
-									id="rdclient-bg-overlay"
-									label={t('branding.bg_overlay')}
-									unit="%"
-									min={0}
-									max={90}
-									step={5}
-									hint={t('branding.bg_overlay_hint')}
-									bind:value={form.values.rdclientBgOverlay}
-								/>
-							</ShowWhen>
-						</BackgroundFields>
-					</section>
+								<ShowWhen id="bg-effects-group" when={v.bgType !== 'none'}>
+									<RangeField
+										id="bg-blur"
+										label={t('branding.bg_blur')}
+										unit="px"
+										min={0}
+										max={30}
+										bind:value={form.values.bgBlur}
+									/>
+								</ShowWhen>
+								<ShowWhen id="bg-overlay-group" when={v.bgType !== 'none'}>
+									<RangeField
+										id="bg-overlay"
+										label={t('branding.bg_overlay')}
+										unit="%"
+										min={0}
+										max={90}
+										step={5}
+										hint={t('branding.bg_overlay_hint')}
+										bind:value={form.values.bgOverlay}
+									/>
+								</ShowWhen>
+							</BackgroundFields>
+						</section>
 
-					<div class="section form-column" id="branding-css">
-						<Disclosure title={t('branding.custom_css_title')} bind:open={cssOpen}>
-							<div class="disclosure-body">
-								<p class="section-note">{t('branding.custom_css_desc')}</p>
-								<Field
-									id="custom-css"
-									label={t('branding.custom_css_title')}
-									hint={t('branding.custom_css_hint')}
-									error={refusedAt('customCss')}
-								>
-									{#snippet children(f)}
-										<Textarea
-											{...f}
-											class="mono"
-											rows={10}
-											spellcheck={false}
-											placeholder={EX.css}
-											bind:value={form.values.customCss}
-										/>
-									{/snippet}
-								</Field>
-							</div>
-						</Disclosure>
-					</div>
+						<div class="section form-column" id="branding-css">
+							<Disclosure title={t('branding.custom_css_title')} bind:open={cssOpen}>
+								<div class="disclosure-body">
+									<p class="section-note">{t('branding.custom_css_desc')}</p>
+									<Field
+										id="custom-css"
+										label={t('branding.custom_css_title')}
+										hint={t('branding.custom_css_hint')}
+										error={refusedAt('customCss')}
+									>
+										{#snippet children(f)}
+											<Textarea
+												{...f}
+												class="mono"
+												rows={10}
+												spellcheck={false}
+												placeholder={EX.css}
+												bind:value={form.values.customCss}
+											/>
+										{/snippet}
+									</Field>
+								</div>
+							</Disclosure>
+						</div>
+					{/if}
 				{/snippet}
 			</SettingsGrid>
 		</fieldset>
@@ -1568,7 +1609,9 @@
 		{/if}
 	</form>
 
-	{#if canEdit}
+	{#if part === 'brand'}
+		<ClientAppBranding />
+	{:else if canEdit}
 		<SettingsGrid>
 			{#snippet start()}
 				<section class="section form-column" id="branding-profiles" aria-labelledby="branding-profiles-title">

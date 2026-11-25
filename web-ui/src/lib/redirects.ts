@@ -31,7 +31,9 @@ export const REDIRECTS: readonly Redirect[] = [
 	{ from: '/security-audit', tab: 'overview', to: '/security-checks?tab=checks' },
 	{ from: '/security-audit', tab: 'hardening', to: '/security-checks?tab=hardening' },
 	{ from: '/security-audit', tab: 'vulnerabilities', to: '/security-checks?tab=hardening' },
-	{ from: '/commercialization', to: '/billing' }
+	{ from: '/commercialization', to: '/billing' },
+	// Branding (plan step 5): Client app branding is a part of Settings › Branding
+	{ from: '/client-branding', to: '/settings?tab=brand#client-app' }
 ];
 
 const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();

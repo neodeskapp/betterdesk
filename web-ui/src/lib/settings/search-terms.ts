@@ -12,7 +12,8 @@
 
 export const TAB_TERMS: Readonly<Record<string, string>> = {
 	general: 'server allgemein',
-	branding: 'appearance look branding design aussehen erscheinungsbild marke',
+	branding: 'appearance look theme colours design aussehen erscheinungsbild darstellung farben',
+	brand: 'branding brand white label logo name company firma marke sign-in page download',
 	auth: 'sign-in login security anmeldung sicherheit',
 	ldap: 'ldap active directory ad directory verzeichnis anmeldung',
 	sso: 'sso oidc oauth openid single sign-on azure okta google anmeldung',

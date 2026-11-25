@@ -201,7 +201,9 @@
 					<div class="section-head"><h2 id="agents-branding-title">{t('agents.branding_title')}</h2></div>
 					<p class="section-note">{t('agents.branding_body')}</p>
 					{#if can('branding.edit')}
-						<p class="branding-link"><a href={link('/client-branding')}>{t('nav.client_branding')}</a></p>
+						<p class="branding-link">
+							<a href={link('/settings?tab=brand#client-app')}>{t('nav.client_branding')}</a>
+						</p>
 					{/if}
 				</section>
 			</aside>

@@ -1232,7 +1232,8 @@
       "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
       "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
       "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
-      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions.",
+      "brand_desc": "Your name and logo, and the pages other people see: the sign-in page, the download page, the remote viewer and the client app."
     },
     "general": {
       "endpoint_id_hint": "ID 服务器的主机名或 IP 地址，即互联网上的客户端访问时使用的地址。",
@@ -1643,6 +1644,10 @@
       "reason_rolled_back": "无法重新启动服务，因此已恢复之前的值。",
       "reason_rollback_failed": "无法重新启动服务，也无法恢复之前的值。",
       "changes_label": "已更改的设置"
+    },
+    "tab_brand": "品牌",
+    "branding": {
+      "client_app": "客户端应用"
     }
   },
   "audit": {

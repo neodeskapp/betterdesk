@@ -1210,7 +1210,7 @@
     "page": {
       "general_desc": "Instellingen voor de hele server: de adressen die clients gebruiken, hoe ze verbinding maken en wat gebruikers standaard zien.",
       "general_desc_viewer": "Informatie over deze server.",
-      "branding_desc": "Hoe de console, de aanmeldpagina en de downloadpagina er voor iedereen uitzien.",
+      "branding_desc": "Hoe de console er voor iedereen uitziet: het thema en de kleuren, de lettertypen en de achtergrond.",
       "auth_desc": "Uw eigen wachtwoord en tweestapsaanmelding, en hoe iedereen zich aanmeldt bij deze server.",
       "auth_desc_viewer": "Uw wachtwoord en tweestapsaanmelding.",
       "backup_desc": "Download een kopie van alles wat deze server nodig heeft, maak kopieën volgens een schema of zet een kopie terug.",
@@ -1232,7 +1232,8 @@
       "ldap_desc": "Laat mensen zich bij de console aanmelden met hun account in een directory zoals Active Directory of OpenLDAP.",
       "sso_desc": "Laat mensen zich bij de console aanmelden via een identiteitsprovider zoals Microsoft Entra ID, Okta of Google (OpenID Connect).",
       "joining_desc": "Hoe een nieuw apparaat op deze server komt, en wat mensen standaard van apparaten zien.",
-      "meshcentral_desc": "MeshCentral-agents met deze server verbinden: de status, de apparaatgroepen, de naam in het .msh-bestand en de opgenomen sessies."
+      "meshcentral_desc": "MeshCentral-agents met deze server verbinden: de status, de apparaatgroepen, de naam in het .msh-bestand en de opgenomen sessies.",
+      "brand_desc": "Je naam en logo, en de pagina's die anderen zien: de aanmeldpagina, de downloadpagina, de externe viewer en de client-app."
     },
     "general": {
       "endpoint_id_hint": "Hostnaam of IP-adres van de ID-server, zoals clients op internet die bereiken.",
@@ -1643,6 +1644,10 @@
       "reason_rolled_back": "De diensten konden niet worden herstart, dus de vorige waarden zijn teruggezet.",
       "reason_rollback_failed": "De diensten konden niet worden herstart en de vorige waarden konden niet worden teruggezet.",
       "changes_label": "Gewijzigde instellingen"
+    },
+    "tab_brand": "Huisstijl",
+    "branding": {
+      "client_app": "Client-app"
     }
   },
   "audit": {

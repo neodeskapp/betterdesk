@@ -1214,7 +1214,7 @@
     "page": {
       "general_desc": "Paramètres de l'ensemble du serveur : les adresses utilisées par les clients, leur mode de connexion et ce que les utilisateurs voient par défaut.",
       "general_desc_viewer": "Informations sur ce serveur.",
-      "branding_desc": "L'apparence de la console, de la page de connexion et de la page de téléchargement pour tous.",
+      "branding_desc": "L'apparence de la console pour tous : le thème et ses couleurs, les polices et l'arrière-plan.",
       "auth_desc": "Votre mot de passe et votre connexion à deux facteurs, ainsi que la façon dont chacun se connecte à ce serveur.",
       "auth_desc_viewer": "Votre mot de passe et votre connexion à deux facteurs.",
       "backup_desc": "Téléchargez une copie de tout ce dont ce serveur a besoin, faites des copies selon un planning ou restaurez à partir d'une copie.",
@@ -1236,7 +1236,8 @@
       "ldap_desc": "Permet de se connecter à la console avec un compte d'annuaire comme Active Directory ou OpenLDAP.",
       "sso_desc": "Permet de se connecter à la console via un fournisseur d'identité comme Microsoft Entra ID, Okta ou Google (OpenID Connect).",
       "joining_desc": "Comment un nouvel appareil arrive sur ce serveur, et ce que les personnes voient des appareils par défaut.",
-      "meshcentral_desc": "Relier les agents MeshCentral à ce serveur : son état, les groupes d'appareils, le nom dans le fichier .msh et les sessions enregistrées."
+      "meshcentral_desc": "Relier les agents MeshCentral à ce serveur : son état, les groupes d'appareils, le nom dans le fichier .msh et les sessions enregistrées.",
+      "brand_desc": "Votre nom et votre logo, et les pages que d'autres voient : la page de connexion, la page de téléchargement, la visionneuse à distance et l'application cliente."
     },
     "general": {
       "endpoint_id_hint": "Nom d'hôte ou adresse IP du serveur d'ID, tel que les clients le joignent depuis internet.",
@@ -1647,6 +1648,10 @@
       "reason_rolled_back": "Les services n'ont pas pu redémarrer, les valeurs précédentes ont donc été rétablies.",
       "reason_rollback_failed": "Les services n'ont pas pu redémarrer, et les valeurs précédentes n'ont pas pu être rétablies.",
       "changes_label": "Réglages modifiés"
+    },
+    "tab_brand": "Image de marque",
+    "branding": {
+      "client_app": "Application cliente"
     }
   },
   "audit": {

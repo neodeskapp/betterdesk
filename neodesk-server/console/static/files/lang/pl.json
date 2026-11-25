@@ -1210,7 +1210,7 @@
     "page": {
       "general_desc": "Ustawienia całego serwera: adresy używane przez klientów i sposób łączenia.",
       "general_desc_viewer": "Informacje o tym serwerze.",
-      "branding_desc": "Wygląd konsoli, strony logowania i strony pobierania dla wszystkich.",
+      "branding_desc": "Jak konsola wygląda dla wszystkich: motyw i jego kolory, czcionki i tło.",
       "auth_desc": "Twoje hasło i logowanie dwuskładnikowe oraz zasady logowania dla wszystkich.",
       "auth_desc_viewer": "Hasło i logowanie dwuetapowe.",
       "backup_desc": "Pobieranie kopii wszystkiego, czego potrzebuje ten serwer, tworzenie kopii według harmonogramu i przywracanie z kopii.",
@@ -1232,7 +1232,8 @@
       "ldap_desc": "Użytkownicy logują się do konsoli kontem z katalogu, takiego jak Active Directory lub OpenLDAP.",
       "sso_desc": "Użytkownicy logują się do konsoli przez dostawcę tożsamości, takiego jak Microsoft Entra ID, Okta lub Google (OpenID Connect).",
       "joining_desc": "Jak nowe urządzenie trafia na ten serwer i co użytkownicy domyślnie widzą z urządzeń.",
-      "meshcentral_desc": "Połącz agentów MeshCentral z tym serwerem: stan, grupy urządzeń, nazwa w pliku .msh i nagrane sesje."
+      "meshcentral_desc": "Połącz agentów MeshCentral z tym serwerem: stan, grupy urządzeń, nazwa w pliku .msh i nagrane sesje.",
+      "brand_desc": "Twoja nazwa i logo oraz strony, które widzą inni: strona logowania, strona pobierania, podgląd zdalny i aplikacja kliencka."
     },
     "general": {
       "endpoint_id_hint": "Nazwa hosta lub adres IP serwera ID, pod którym klienci łączą się z internetu.",
@@ -1643,6 +1644,10 @@
       "reason_rolled_back": "Nie udało się zrestartować usług, więc przywrócono poprzednie wartości.",
       "reason_rollback_failed": "Nie udało się zrestartować usług ani przywrócić poprzednich wartości.",
       "changes_label": "Zmienione ustawienia"
+    },
+    "tab_brand": "Marka",
+    "branding": {
+      "client_app": "Aplikacja kliencka"
     }
   },
   "audit": {

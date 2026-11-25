@@ -1238,7 +1238,8 @@
       "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
       "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
       "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
-      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions.",
+      "brand_desc": "Your name and logo, and the pages other people see: the sign-in page, the download page, the remote viewer and the client app."
     },
     "general": {
       "endpoint_id_hint": "Vertsnavn eller IP-adresse til ID-serveren, slik klienter på internett når den.",
@@ -1649,6 +1650,10 @@
       "reason_rolled_back": "Tjenestene kunne ikke startes på nytt, så de forrige verdiene ble satt tilbake.",
       "reason_rollback_failed": "Tjenestene kunne ikke startes på nytt, og de forrige verdiene kunne ikke settes tilbake.",
       "changes_label": "Endrede innstillinger"
+    },
+    "tab_brand": "Merkevare",
+    "branding": {
+      "client_app": "Klientappen"
     }
   },
   "audit": {

@@ -44,9 +44,9 @@ describe('appearance', () => {
 	test('a save while a background uploads carries the uploaded background', async () => {
 		const user = userEvent.setup();
 		render(AppearanceTab);
-		const name = await screen.findByLabelText('branding.app_name');
-		await user.clear(name);
-		await user.type(name, 'Help desk');
+		await vi.waitFor(() =>
+			expect(document.querySelector('.branding-form[aria-busy="false"]')).not.toBeNull()
+		);
 		const file = new File(['x'], 'new.png', { type: 'image/png' });
 		const picker = document.getElementById('bg-image-file') as HTMLInputElement;
 		// A writable files list: the picker sets it back after the upload, which jsdom's getter refuses
@@ -62,7 +62,6 @@ describe('appearance', () => {
 		});
 		await vi.waitFor(() => expect(settingsApi.saveBranding).toHaveBeenCalledTimes(1));
 		expect(vi.mocked(settingsApi.saveBranding).mock.calls[0]![0]).toMatchObject({
-			appName: 'Help desk',
 			bgType: 'image',
 			bgImageUrl: '/uploads/new.png'
 		});

@@ -134,7 +134,9 @@ describe('the Appearance form', () => {
 	test('a colour the server would clean is refused at its field, nothing is saved', async () => {
 		const user = userEvent.setup();
 		render(AppearanceTab);
-		await screen.findByLabelText('branding.app_name');
+		await vi.waitFor(() =>
+			expect(document.querySelector('.branding-form[aria-busy="false"]')).not.toBeNull()
+		);
 		const color = document.getElementById('bg-color') as HTMLInputElement;
 		await fireEvent.input(color, { target: { value: 'red;}' } });
 		await user.click(screen.getByRole('button', { name: 'settings.appearance.save' }));
@@ -148,7 +150,7 @@ describe('the Appearance form', () => {
 
 	test('a slide with a refused address is marked, not dropped', async () => {
 		const user = userEvent.setup();
-		render(AppearanceTab);
+		render(AppearanceTab, { part: 'brand' });
 		await screen.findByLabelText('branding.app_name');
 		const url = document.getElementById('login-slide-1-url') as HTMLInputElement;
 		await fireEvent.input(url, { target: { value: 'javascript:alert(1)' } });
@@ -175,8 +177,12 @@ describe('the Appearance form', () => {
 		);
 		const user = userEvent.setup();
 		render(AppearanceTab);
-		const name = await screen.findByLabelText('branding.app_name');
-		await user.type(name, 'x');
+		await vi.waitFor(() =>
+			expect(document.querySelector('.branding-form[aria-busy="false"]')).not.toBeNull()
+		);
+		await fireEvent.input(document.getElementById('custom-css') as HTMLTextAreaElement, {
+			target: { value: 'body { color: red; }' }
+		});
 		await user.click(screen.getByRole('button', { name: 'settings.appearance.save' }));
 		await vi.waitFor(() => expect(document.getElementById('custom-css-error')?.textContent).toBe('Nope'));
 		expect(screen.getByText('settings.appearance.refused_summary')).toBeTruthy();
@@ -186,7 +192,9 @@ describe('the Appearance form', () => {
 describe('import', () => {
 	test('a file that is no JSON is refused in plain words, not with the parser message (L419)', async () => {
 		render(AppearanceTab);
-		await screen.findByLabelText('branding.app_name');
+		await vi.waitFor(() =>
+			expect(document.querySelector('.branding-form[aria-busy="false"]')).not.toBeNull()
+		);
 		const picker = document.getElementById('branding-import-input') as HTMLInputElement;
 		const file = new File(['not json {'], 'theme.json', { type: 'application/json' });
 		Object.defineProperty(picker, 'files', { value: [file], writable: true, configurable: true });

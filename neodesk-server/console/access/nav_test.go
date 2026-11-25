@@ -148,7 +148,7 @@ func TestNavSettingsTabs(t *testing.T) {
 			tabs = append(tabs, strings.TrimPrefix(page, "settings:"))
 		}
 	}
-	if got := strings.Join(tabs, ","); got != "general,auth,ldap,sso,joining,branding,email,time,meshcentral" {
+	if got := strings.Join(tabs, ","); got != "general,auth,ldap,sso,joining,branding,brand,email,time,meshcentral" {
 		t.Errorf("settings tabs %s", got)
 	}
 	hrefs := map[string]NavPage{}
@@ -162,6 +162,14 @@ func TestNavSettingsTabs(t *testing.T) {
 		if p.Href != "/settings?tab="+tab || p.Label != label {
 			t.Errorf("settings:%s: %+v", tab, p)
 		}
+	}
+	// Plan step 5: Branding is a tab for everyone (edits need branding.edit),
+	// and Client app branding moved into it
+	if p := hrefs["settings:brand"]; p.Href != "/settings?tab=brand" || p.Label != "settings.tab_brand" || p.rule != navAlways {
+		t.Errorf("settings:brand: %+v", p)
+	}
+	if _, ok := hrefs["client-branding"]; ok {
+		t.Error("Client app branding still has its own entry")
 	}
 	viewer := map[string]bool{}
 	for _, section := range BuildNav(NavInput{Can: func(string) bool { return false }, Role: "viewer"}).Sections {
@@ -387,7 +395,7 @@ func TestPageAllowed(t *testing.T) {
 		"dashboard": true, "devices": true,
 		"users": false, // its section is at none
 		// no section since F1: their routes and menu rules decide
-		"settings:general": true, "server-backups": true, "keys": true, "tokens": true, "policies": true, "client-branding": true,
+		"settings:general": true, "server-backups": true, "keys": true, "tokens": true, "policies": true, "settings:brand": true,
 		"registrations":      false,
 		"activate-agent":     false, // its address is the dashboard's, its section is registrations
 		"pairing":            true,  // no rule for its address

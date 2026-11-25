@@ -1210,7 +1210,7 @@
     "page": {
       "general_desc": "Ajustes de todo el servidor: las direcciones que usan los clientes, cómo se conectan y lo que ven los usuarios de forma predeterminada.",
       "general_desc_viewer": "Información sobre este servidor.",
-      "branding_desc": "El aspecto de la consola, la página de inicio de sesión y la página de descargas para todos.",
+      "branding_desc": "Cómo se ve la consola para todos: el tema y sus colores, las fuentes y el fondo.",
       "auth_desc": "Su propia contraseña y el inicio de sesión en dos pasos, y cómo inician sesión todos en este servidor.",
       "auth_desc_viewer": "Su contraseña y el inicio de sesión en dos pasos.",
       "backup_desc": "Descargue una copia de todo lo que necesita este servidor, haga copias de forma programada o restaure a partir de una.",
@@ -1232,7 +1232,8 @@
       "ldap_desc": "Permite iniciar sesión en la consola con la cuenta de un directorio como Active Directory u OpenLDAP.",
       "sso_desc": "Permite iniciar sesión en la consola mediante un proveedor de identidad como Microsoft Entra ID, Okta o Google (OpenID Connect).",
       "joining_desc": "Cómo llega un dispositivo nuevo a este servidor y qué ven las personas de los dispositivos de forma predeterminada.",
-      "meshcentral_desc": "Conecta agentes de MeshCentral a este servidor: su estado, los grupos de dispositivos, el nombre en el archivo .msh y las sesiones grabadas."
+      "meshcentral_desc": "Conecta agentes de MeshCentral a este servidor: su estado, los grupos de dispositivos, el nombre en el archivo .msh y las sesiones grabadas.",
+      "brand_desc": "Tu nombre y logotipo, y las páginas que ven otras personas: la de inicio de sesión, la de descarga, el visor remoto y la aplicación cliente."
     },
     "general": {
       "endpoint_id_hint": "Nombre de host o dirección IP del servidor de ID, tal como lo alcanzan los clientes desde internet.",
@@ -1643,6 +1644,10 @@
       "reason_rolled_back": "No se pudieron reiniciar los servicios, así que se recuperaron los valores anteriores.",
       "reason_rollback_failed": "No se pudieron reiniciar los servicios ni recuperar los valores anteriores.",
       "changes_label": "Ajustes cambiados"
+    },
+    "tab_brand": "Marca",
+    "branding": {
+      "client_app": "Aplicación cliente"
     }
   },
   "audit": {

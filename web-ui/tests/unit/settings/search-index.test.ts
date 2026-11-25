@@ -68,7 +68,8 @@ describe('settingEntries', () => {
 			href: '/settings?tab=ldap#ldap-host'
 		});
 		const name = entries.find((e) => e.id === 'brand-name');
-		expect(name?.where).toBe('Settings, Appearance, Name and logo');
+		expect(name?.where).toBe('Settings, Branding, Name and logo');
+		expect(name?.href).toBe('/settings?tab=brand#brand-name');
 		// General has no ?tab= in its address
 		expect(entries.find((e) => e.id === 'public-server-id')?.href).toBe('/settings#public-server-id');
 		// The server's own settings are on the pages of the Server section
@@ -97,6 +98,8 @@ describe('settingEntries', () => {
 		expect(ids).not.toContain('ldap-host');
 		expect(ids).not.toContain('email-smtp-host');
 		expect(ids).not.toContain('branding-profiles');
+		// The client app's branding needs branding.edit
+		expect(ids).not.toContain('client-app-company');
 		// Each tab of the list that a viewer may open still has its settings
 		const tabs = new Set<string>(entries.map((e) => e.place));
 		for (const tab of TABS.filter((x) => tabAllowed(x, false)))

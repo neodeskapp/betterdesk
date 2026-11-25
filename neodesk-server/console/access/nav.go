@@ -139,7 +139,8 @@ var NavSections = []NavSection{
 		navPage("settings:ldap", "ldap active directory directory sign-in", "/settings?tab=ldap", "settings.ldap_title", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("settings:sso", "sso oidc oauth openid single sign-on", "/settings?tab=sso", "settings.oidc_title", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("settings:joining", "join joining enrollment approval visibility availability history", "/settings?tab=joining", "settings.enrollment_title", withPermission("server.config"), inGroup(groupConsole)),
-		navPage("settings:branding", "appearance theme colours colors fonts dark mode branding logo", "/settings?tab=branding", "settings.tab_branding", withRule(navAlways), inGroup(groupConsole)),
+		navPage("settings:branding", "appearance theme colours colors fonts dark mode", "/settings?tab=branding", "settings.tab_branding", withRule(navAlways), inGroup(groupConsole)),
+		navPage("settings:brand", "branding brand logo name sign-in page download page client app white label", "/settings?tab=brand", "settings.tab_brand", withRule(navAlways), inGroup(groupConsole)),
 		navPage("settings:email", "email smtp mail", "/settings?tab=email", "settings.tab_email", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("settings:time", "time zone timezone ntp clock", "/settings?tab=time", "settings.tab_time", withPermission("server.config"), inGroup(groupConsole)),
 		navPage("settings:meshcentral", "meshcentral mesh meshagent", "/settings?tab=meshcentral", "nav.meshcentral", withPermission("server.config"), inGroup(groupConsole)),
@@ -149,7 +150,6 @@ var NavSections = []NavSection{
 		navPage("pairing", "pairing code", "/pairing", "nav.pairing", withPermission("enrollment.approve"), inGroup(groupClients)),
 		navPage("agents", "agents installers generator", "/agents", "nav.agents", withRule(navAdminRole), inGroup(groupClients),
 			func(p *NavPage) { p.AlsoActiveFor = []string{"generator"} }),
-		navPage("client-branding", "client branding white label", "/client-branding", "nav.client_branding", withPermission("branding.edit"), inGroup(groupClients)),
 		navPage("cdap-studio", "sdk studio flows widgets", "/cdap-studio", "nav.sdk_studio", withRole("operator"), inGroup(groupDeveloper)),
 	}},
 }

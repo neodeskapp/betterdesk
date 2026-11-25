@@ -1,6 +1,7 @@
 <!--
   Settings (/settings). Each tab is a sub-page: ?tab=general (or none),
-  auth, ldap, sso, joining, branding, email, time, meshcentral, listed in
+  auth, ldap, sso, joining, branding (Appearance), brand (Branding), email,
+  time, meshcentral, listed in
   the sidebar; an unknown tab is General. Directory (LDAP), Single sign-on,
   Joining, Email, Time and MeshCentral need server.config; anyone else who
   opens one gets one sentence. Backup, Updates and Advanced are pages of the Server section
@@ -70,6 +71,7 @@
 		ldap: () => import('#lib/settings/tabs/LdapTab.svelte'),
 		sso: () => import('#lib/settings/tabs/SsoTab.svelte'),
 		joining: () => import('#lib/settings/tabs/JoiningTab.svelte'),
+		brand: () => import('#lib/settings/tabs/BrandingTab.svelte'),
 		email: () => import('#lib/settings/tabs/EmailTab.svelte'),
 		time: () => import('#lib/settings/tabs/TimeTab.svelte'),
 		meshcentral: () => import('#lib/settings/tabs/MeshCentralTab.svelte')

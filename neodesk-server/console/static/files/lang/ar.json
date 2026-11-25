@@ -1239,7 +1239,8 @@
       "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
       "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
       "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
-      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions.",
+      "brand_desc": "Your name and logo, and the pages other people see: the sign-in page, the download page, the remote viewer and the client app."
     },
     "general": {
       "endpoint_id_hint": "اسم المضيف أو عنوان IP لخادم المعرّفات، كما يصل إليه العملاء عبر الإنترنت.",
@@ -1650,6 +1651,10 @@
       "reason_rolled_back": "تعذّرت إعادة تشغيل الخدمات، لذا استُعيدت القيم السابقة.",
       "reason_rollback_failed": "تعذّرت إعادة تشغيل الخدمات، وتعذّرت أيضًا استعادة القيم السابقة.",
       "changes_label": "الإعدادات المغيَّرة"
+    },
+    "tab_brand": "العلامة التجارية",
+    "branding": {
+      "client_app": "تطبيق العميل"
     }
   },
   "audit": {

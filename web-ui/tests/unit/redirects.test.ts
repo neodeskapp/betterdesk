@@ -28,6 +28,11 @@ describe('the old addresses', () => {
 		);
 	});
 
+	test('Client app branding is a part of Settings › Branding', () => {
+		expect(go('/client-branding')).toBe('/settings?tab=brand#client-app');
+		expect(go('/Client-Branding#old')).toBe('/settings?tab=brand#client-app');
+	});
+
 	test('the other parameters and the #id come along; the tab is left out', () => {
 		expect(go('/settings?tab=backup&guide=backup#backup-create')).toBe(
 			'/server/backups?guide=backup#backup-create'

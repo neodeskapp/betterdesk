@@ -1232,7 +1232,8 @@
       "ldap_desc": "Let people sign in to the console with their account in a directory such as Active Directory or OpenLDAP.",
       "sso_desc": "Let people sign in to the console through an identity provider such as Microsoft Entra ID, Okta or Google (OpenID Connect).",
       "joining_desc": "How a new device gets onto this server, and what people see of devices by default.",
-      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions."
+      "meshcentral_desc": "Connect MeshCentral agents to this server: its state, the device groups, the name in the .msh file and the recorded sessions.",
+      "brand_desc": "Your name and logo, and the pages other people see: the sign-in page, the download page, the remote viewer and the client app."
     },
     "general": {
       "endpoint_id_hint": "인터넷의 클라이언트가 접속하는 ID 서버의 호스트 이름 또는 IP 주소입니다.",
@@ -1643,6 +1644,10 @@
       "reason_rolled_back": "서비스를 다시 시작하지 못해 이전 값으로 되돌렸습니다.",
       "reason_rollback_failed": "서비스를 다시 시작하지 못했고, 이전 값으로 되돌리지도 못했습니다.",
       "changes_label": "변경된 설정"
+    },
+    "tab_brand": "브랜딩",
+    "branding": {
+      "client_app": "클라이언트 앱"
     }
   },
   "audit": {
