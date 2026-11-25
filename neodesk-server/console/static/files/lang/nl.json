@@ -2544,7 +2544,6 @@
     "note_default_user_group": "Standaardgebruikersgroep",
     "note_default_device_group": "Standaardapparaatgroep",
     "note_org_default_group": "Standaardgroep, aangemaakt met de organisatie",
-    "add_mode_title": "Wachtwoord",
     "add_mode_invite": "Uitnodiging per e-mail sturen",
     "add_mode_invite_desc": "De persoon krijgt een link en kiest zelf een wachtwoord. De link werkt 7 dagen.",
     "add_mode_password": "Nu een wachtwoord instellen",

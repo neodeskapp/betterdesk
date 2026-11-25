@@ -2550,7 +2550,6 @@
     "note_default_user_group": "Oletuskäyttäjäryhmä",
     "note_default_device_group": "Oletuslaiteryhmä",
     "note_org_default_group": "Organisaation kanssa luotu oletusryhmä",
-    "add_mode_title": "Salasana",
     "add_mode_invite": "Lähetä kutsu sähköpostilla",
     "add_mode_invite_desc": "Henkilö saa linkin ja valitsee itse salasanansa. Linkki toimii 7 päivää.",
     "add_mode_password": "Aseta salasana nyt",

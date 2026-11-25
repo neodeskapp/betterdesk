@@ -2550,7 +2550,6 @@
     "note_default_user_group": "Grup de utilizatori implicit",
     "note_default_device_group": "Grup de dispozitive implicit",
     "note_org_default_group": "Grup implicit creat odată cu organizația",
-    "add_mode_title": "Parolă",
     "add_mode_invite": "Trimiteți o invitație prin e-mail",
     "add_mode_invite_desc": "Persoana primește un link și își alege singură parola. Linkul funcționează 7 zile.",
     "add_mode_password": "Setați o parolă acum",

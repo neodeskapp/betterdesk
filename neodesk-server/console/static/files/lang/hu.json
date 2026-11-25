@@ -2550,7 +2550,6 @@
     "note_default_user_group": "Alapértelmezett felhasználói csoport",
     "note_default_device_group": "Alapértelmezett eszközcsoport",
     "note_org_default_group": "Alapértelmezett csoport, a szervezettel együtt létrehozva",
-    "add_mode_title": "Jelszó",
     "add_mode_invite": "Meghívó küldése e-mailben",
     "add_mode_invite_desc": "A személy kap egy linket, és maga választja meg a jelszavát. A link 7 napig működik.",
     "add_mode_password": "Jelszó megadása most",

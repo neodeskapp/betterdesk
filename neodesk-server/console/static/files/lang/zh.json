@@ -2544,7 +2544,6 @@
     "note_default_user_group": "默认用户组",
     "note_default_device_group": "默认设备组",
     "note_org_default_group": "随组织创建的默认分组",
-    "add_mode_title": "密码",
     "add_mode_invite": "通过电子邮件发送邀请",
     "add_mode_invite_desc": "对方会收到一个链接，并自行设置密码。链接 7 天内有效。",
     "add_mode_password": "现在设置密码",

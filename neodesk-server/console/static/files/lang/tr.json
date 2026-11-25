@@ -2550,7 +2550,6 @@
     "note_default_user_group": "Varsayılan kullanıcı grubu",
     "note_default_device_group": "Varsayılan cihaz grubu",
     "note_org_default_group": "Kuruluşla birlikte oluşturulan varsayılan grup",
-    "add_mode_title": "Şifre",
     "add_mode_invite": "E-postayla davet gönder",
     "add_mode_invite_desc": "Kişi bir bağlantı alır ve şifresini kendisi seçer. Bağlantı 7 gün geçerlidir.",
     "add_mode_password": "Şifreyi şimdi belirle",

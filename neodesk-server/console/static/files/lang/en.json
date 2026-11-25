@@ -2570,7 +2570,6 @@
         "note_default_user_group": "Default user group",
         "note_default_device_group": "Default device group",
         "note_org_default_group": "Default group created with the organization",
-        "add_mode_title": "Password",
         "add_mode_invite": "Send an invite by email",
         "add_mode_invite_desc": "The person gets a link and chooses their own password. The link works for 7 days.",
         "add_mode_password": "Set a password now",

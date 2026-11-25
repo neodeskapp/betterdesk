@@ -2550,7 +2550,6 @@
     "note_default_user_group": "डिफ़ॉल्ट उपयोगकर्ता समूह",
     "note_default_device_group": "डिफ़ॉल्ट डिवाइस समूह",
     "note_org_default_group": "संगठन के साथ बनाया गया डिफ़ॉल्ट समूह",
-    "add_mode_title": "पासवर्ड",
     "add_mode_invite": "ईमेल से आमंत्रण भेजें",
     "add_mode_invite_desc": "व्यक्ति को एक लिंक मिलता है और वह अपना पासवर्ड खुद चुनता है। लिंक 7 दिन तक काम करता है।",
     "add_mode_password": "अभी पासवर्ड सेट करें",

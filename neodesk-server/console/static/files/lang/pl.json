@@ -2562,7 +2562,6 @@
     "note_default_user_group": "Domyślna grupa użytkowników",
     "note_default_device_group": "Domyślna grupa urządzeń",
     "note_org_default_group": "Domyślna grupa utworzona wraz z organizacją",
-    "add_mode_title": "Hasło",
     "add_mode_invite": "Wyślij zaproszenie e-mailem",
     "add_mode_invite_desc": "Osoba dostaje link i sama wybiera hasło. Link działa przez 7 dni.",
     "add_mode_password": "Ustaw hasło teraz",

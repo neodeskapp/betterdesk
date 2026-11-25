@@ -2550,7 +2550,6 @@
     "note_default_user_group": "Standardbrugergruppe",
     "note_default_device_group": "Standardenhedsgruppe",
     "note_org_default_group": "Standardgruppe oprettet med organisationen",
-    "add_mode_title": "Adgangskode",
     "add_mode_invite": "Send en invitation via e-mail",
     "add_mode_invite_desc": "Personen får et link og vælger selv sin adgangskode. Linket virker i 7 dage.",
     "add_mode_password": "Angiv en adgangskode nu",

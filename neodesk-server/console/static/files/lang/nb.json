@@ -2550,7 +2550,6 @@
     "note_default_user_group": "Standard brukergruppe",
     "note_default_device_group": "Standard enhetsgruppe",
     "note_org_default_group": "Standardgruppe opprettet sammen med organisasjonen",
-    "add_mode_title": "Passord",
     "add_mode_invite": "Send en invitasjon på e-post",
     "add_mode_invite_desc": "Personen får en lenke og velger sitt eget passord. Lenken virker i 7 dager.",
     "add_mode_password": "Angi et passord nå",

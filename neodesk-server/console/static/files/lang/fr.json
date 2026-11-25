@@ -2566,7 +2566,6 @@
     "note_default_user_group": "Groupe d'utilisateurs par défaut",
     "note_default_device_group": "Groupe d'appareils par défaut",
     "note_org_default_group": "Groupe par défaut créé avec l'organisation",
-    "add_mode_title": "Mot de passe",
     "add_mode_invite": "Envoyer une invitation par e-mail",
     "add_mode_invite_desc": "La personne reçoit un lien et choisit elle-même son mot de passe. Le lien fonctionne 7 jours.",
     "add_mode_password": "Définir un mot de passe maintenant",

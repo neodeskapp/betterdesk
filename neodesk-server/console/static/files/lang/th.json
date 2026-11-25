@@ -2550,7 +2550,6 @@
     "note_default_user_group": "กลุ่มผู้ใช้เริ่มต้น",
     "note_default_device_group": "กลุ่มอุปกรณ์เริ่มต้น",
     "note_org_default_group": "กลุ่มเริ่มต้นที่สร้างพร้อมองค์กร",
-    "add_mode_title": "รหัสผ่าน",
     "add_mode_invite": "ส่งคำเชิญทางอีเมล",
     "add_mode_invite_desc": "บุคคลนั้นจะได้รับลิงก์และตั้งรหัสผ่านเอง ลิงก์ใช้ได้ 7 วัน",
     "add_mode_password": "ตั้งรหัสผ่านตอนนี้",

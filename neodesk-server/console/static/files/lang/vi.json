@@ -2550,7 +2550,6 @@
     "note_default_user_group": "Nhóm người dùng mặc định",
     "note_default_device_group": "Nhóm thiết bị mặc định",
     "note_org_default_group": "Nhóm mặc định được tạo cùng tổ chức",
-    "add_mode_title": "Mật khẩu",
     "add_mode_invite": "Gửi lời mời qua email",
     "add_mode_invite_desc": "Người đó nhận được một liên kết và tự chọn mật khẩu. Liên kết dùng được trong 7 ngày.",
     "add_mode_password": "Đặt mật khẩu ngay",

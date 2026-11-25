@@ -2544,7 +2544,6 @@
     "note_default_user_group": "기본 사용자 그룹",
     "note_default_device_group": "기본 장치 그룹",
     "note_org_default_group": "조직과 함께 생성된 기본 그룹",
-    "add_mode_title": "비밀번호",
     "add_mode_invite": "이메일로 초대 보내기",
     "add_mode_invite_desc": "상대방이 링크를 받아 직접 비밀번호를 정합니다. 링크는 7일 동안 유효합니다.",
     "add_mode_password": "지금 비밀번호 설정",

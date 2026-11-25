@@ -2544,7 +2544,6 @@
     "note_default_user_group": "Standard-Benutzergruppe",
     "note_default_device_group": "Standard-Gerätegruppe",
     "note_org_default_group": "Standardgruppe, mit der Organisation erstellt",
-    "add_mode_title": "Passwort",
     "add_mode_invite": "Einladung per E-Mail senden",
     "add_mode_invite_desc": "Die Person bekommt einen Link und wählt ihr Passwort selbst. Der Link gilt 7 Tage.",
     "add_mode_password": "Passwort jetzt festlegen",

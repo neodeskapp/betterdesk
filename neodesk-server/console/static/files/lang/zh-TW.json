@@ -2566,7 +2566,6 @@
     "note_default_user_group": "預設使用者群組",
     "note_default_device_group": "預設裝置群組",
     "note_org_default_group": "隨組織建立的預設群組",
-    "add_mode_title": "密碼",
     "add_mode_invite": "透過電子郵件寄送邀請",
     "add_mode_invite_desc": "對方會收到一個連結，並自行設定密碼。連結 7 天內有效。",
     "add_mode_password": "現在設定密碼",

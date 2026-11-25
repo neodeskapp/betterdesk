@@ -2550,7 +2550,6 @@
     "note_default_user_group": "Grup pengguna default",
     "note_default_device_group": "Grup perangkat default",
     "note_org_default_group": "Grup default yang dibuat bersama organisasi",
-    "add_mode_title": "Kata sandi",
     "add_mode_invite": "Kirim undangan lewat email",
     "add_mode_invite_desc": "Orang itu mendapat tautan dan memilih kata sandinya sendiri. Tautan berlaku 7 hari.",
     "add_mode_password": "Atur kata sandi sekarang",

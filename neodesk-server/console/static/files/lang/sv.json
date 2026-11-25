@@ -2550,7 +2550,6 @@
     "note_default_user_group": "Standardanvändargrupp",
     "note_default_device_group": "Standardenhetsgrupp",
     "note_org_default_group": "Standardgrupp som skapades med organisationen",
-    "add_mode_title": "Lösenord",
     "add_mode_invite": "Skicka en inbjudan via e-post",
     "add_mode_invite_desc": "Personen får en länk och väljer sitt eget lösenord. Länken fungerar i 7 dagar.",
     "add_mode_password": "Ange ett lösenord nu",

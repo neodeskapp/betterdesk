@@ -2544,7 +2544,6 @@
     "note_default_user_group": "Výchozí skupina uživatelů",
     "note_default_device_group": "Výchozí skupina zařízení",
     "note_org_default_group": "Výchozí skupina vytvořená s organizací",
-    "add_mode_title": "Heslo",
     "add_mode_invite": "Poslat pozvánku e-mailem",
     "add_mode_invite_desc": "Osoba dostane odkaz a heslo si zvolí sama. Odkaz platí 7 dní.",
     "add_mode_password": "Nastavit heslo hned",

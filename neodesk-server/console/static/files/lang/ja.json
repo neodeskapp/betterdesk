@@ -2544,7 +2544,6 @@
     "note_default_user_group": "既定のユーザーグループ",
     "note_default_device_group": "既定のデバイスグループ",
     "note_org_default_group": "組織と一緒に作成された既定のグループ",
-    "add_mode_title": "パスワード",
     "add_mode_invite": "メールで招待を送る",
     "add_mode_invite_desc": "相手はリンクを受け取り、自分でパスワードを決めます。リンクは 7 日間有効です。",
     "add_mode_password": "今パスワードを設定する",
