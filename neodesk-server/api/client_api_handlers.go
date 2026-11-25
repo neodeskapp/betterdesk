@@ -919,10 +919,10 @@ func (s *Server) handleClientGroupPeers(w http.ResponseWriter, r *http.Request) 
 // Request:  { "id": "DEVICE_ID", "uuid": "...", "modified_at": 0, ... }
 // Response: { "modified_at": <i64 ms>, "strategy"?: { "config_options": {...} }, "sysinfo"?: true }
 func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
-	// Rate-limit heartbeat requests per IP
+	// The ceiling of the address first, the one of the device once it is
+	// known (L498)
 	clientIP := s.remoteIP(r)
-	if !s.heartbeatLimiter.Allow(clientIP) {
-		writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
+	if !s.allowClientAPIAddress(w, clientIP, "heartbeat") {
 		return
 	}
 
@@ -956,6 +956,11 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
 		return
 	}
+	// A plain heartbeat proves no more than knowing the id and uuid: it
+	// counts under the id together with its address
+	if len(body.NeoDeskEnvelope) == 0 && !s.allowClientAPIDevice(w, "plain|"+deviceID+"|"+clientIP, clientIP, "heartbeat") {
+		return
+	}
 	banned := func() bool {
 		if peer.Banned {
 			writeJSON(w, http.StatusOK, map[string]any{"error": "BANNED", "modified_at": s.clientBrandingModifiedAt()})
@@ -978,6 +983,10 @@ func (s *Server) handleClientHeartbeat(w http.ResponseWriter, r *http.Request) {
 		if err := json.Unmarshal(opened.Payload, &inner); err != nil || (inner.ID != "" && inner.ID != deviceID) {
 			log.Printf("[api] NeoDesk heartbeat payload rejected for %s", deviceID)
 			writeJSON(w, http.StatusOK, map[string]any{"modified_at": s.clientBrandingModifiedAt()})
+			return
+		}
+		// The device signed it: it counts under its id wherever it sends from
+		if !s.allowClientAPIDevice(w, "device|"+deviceID, clientIP, "heartbeat") {
 			return
 		}
 		if banned() {
@@ -1288,10 +1297,10 @@ func (s *Server) clientBrandingModifiedAt() int64 {
 //
 //	"ID_NOT_FOUND" (client retries), or "ERROR".
 func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
-	// Rate-limit sysinfo requests per IP
-	if !s.heartbeatLimiter.Allow(s.remoteIP(r)) {
-		w.Header().Set("Content-Type", "text/plain")
-		w.Write([]byte("ID_NOT_FOUND")) //nolint:errcheck
+	// The address's ceiling of the client API (L498). The 429 makes a
+	// client try again two minutes later; ID_NOT_FOUND, the answer before,
+	// made it send sysinfo again with its next heartbeat.
+	if !s.allowClientAPIAddress(w, s.remoteIP(r), "sysinfo") {
 		return
 	}
 
@@ -1375,10 +1384,8 @@ func (s *Server) handleClientSysinfo(w http.ResponseWriter, r *http.Request) {
 // POST /api/sysinfo_ver
 // Returns a hash of existing sysinfo; empty response triggers full upload.
 func (s *Server) handleClientSysinfoVer(w http.ResponseWriter, r *http.Request) {
-	// Rate-limit sysinfo_ver requests per IP
-	if !s.heartbeatLimiter.Allow(s.remoteIP(r)) {
-		w.Header().Set("Content-Type", "text/plain")
-		w.Write([]byte("")) //nolint:errcheck
+	// The address's ceiling of the client API (L498)
+	if !s.allowClientAPIAddress(w, s.remoteIP(r), "sysinfo_ver") {
 		return
 	}
 

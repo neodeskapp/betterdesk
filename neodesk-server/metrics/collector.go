@@ -21,6 +21,10 @@ type Collector struct {
 	TotalRelaySessions atomic.Int64
 	ThrottleHits       atomic.Int64
 	AuditEvents        atomic.Int64
+	// Client API calls (heartbeat, sysinfo) refused by the address's or
+	// the device's rate limit
+	ClientAPIDropsAddress atomic.Int64
+	ClientAPIDropsDevice  atomic.Int64
 
 	// Gauges (current values) - set by periodic collection
 	PeersTotal    atomic.Int64
@@ -107,6 +111,11 @@ func (c *Collector) WritePrometheus(w io.Writer) {
 		c.EventSubscribers.Load())
 	writeCounter(w, "neodesk_audit_events_total", "Total audit events logged",
 		c.AuditEvents.Load())
+
+	fmt.Fprintf(w, "# HELP neodesk_client_api_dropped_total Client API calls (heartbeat, sysinfo) refused by a rate limit\n")
+	fmt.Fprintf(w, "# TYPE neodesk_client_api_dropped_total counter\n")
+	fmt.Fprintf(w, "neodesk_client_api_dropped_total{limit=\"address\"} %d\n", c.ClientAPIDropsAddress.Load())
+	fmt.Fprintf(w, "neodesk_client_api_dropped_total{limit=\"device\"} %d\n", c.ClientAPIDropsDevice.Load())
 
 	writeGaugeInt(w, "neodesk_billing_pending_relays", "Billing relay UUIDs awaiting pairing",
 		c.BillingPendingRelays.Load())

@@ -83,18 +83,25 @@ type ldapAuthProvider interface {
 
 // Server is the HTTP API server.
 type Server struct {
-	cfg              *config.Config
-	db               db.Database
-	peers            *peer.Map
-	relay            *relay.Server
-	blocklist        *security.Blocklist
-	bwLimiter        *ratelimit.BandwidthLimiter
-	auditLog         *audit.Logger
-	eventBus         *eventsModule.Bus
-	metrics          *metrics.Collector
-	jwtManager       *auth.JWTManager
-	loginLimiter     *ratelimit.IPLimiter
-	heartbeatLimiter *ratelimit.IPLimiter // rate-limit heartbeat/sysinfo
+	cfg          *config.Config
+	db           db.Database
+	peers        *peer.Map
+	relay        *relay.Server
+	blocklist    *security.Blocklist
+	bwLimiter    *ratelimit.BandwidthLimiter
+	auditLog     *audit.Logger
+	eventBus     *eventsModule.Bus
+	metrics      *metrics.Collector
+	jwtManager   *auth.JWTManager
+	loginLimiter *ratelimit.IPLimiter
+	// heartbeatLimiter is the ceiling per source address of the client
+	// API's heartbeat and sysinfo calls, heartbeatDeviceLimiter the one per
+	// device (L498); see heartbeatsPerAddress.
+	heartbeatLimiter       *ratelimit.WindowCounter
+	heartbeatDeviceLimiter *ratelimit.WindowCounter
+	// heartbeatDropLog is when a drop was last logged, per address and limit
+	heartbeatDropMu  sync.Mutex
+	heartbeatDropLog map[string]time.Time
 	// SECURITY (audit fix M-07, 2026-04-10): rate-limit public enrollment and
 	// branding endpoints to deter device-ID enumeration and config probing.
 	enrollmentLimiter *ratelimit.IPLimiter
@@ -162,16 +169,18 @@ func (s *Server) SetConsoleAuth(c *db.ConsoleAuthDB) {
 // New creates a new API server.
 func New(cfg *config.Config, database db.Database, peerMap *peer.Map, relaySrv *relay.Server, version string) *Server {
 	return &Server{
-		cfg:               cfg,
-		db:                database,
-		peers:             peerMap,
-		relay:             relaySrv,
-		version:           version,
-		loginLimiter:      ratelimit.NewIPLimiter(5, 5*time.Minute, 10*time.Minute),
-		heartbeatLimiter:  ratelimit.NewIPLimiter(20, 60*time.Second, 5*time.Minute), // 20 req/min per IP
-		enrollmentLimiter: ratelimit.NewIPLimiter(20, 1*time.Minute, 5*time.Minute),  // M-07: 20/min per IP, 5-min block
-		brandingLimiter:   ratelimit.NewIPLimiter(60, 1*time.Minute, 5*time.Minute),  // M-07: 60/min per IP
-		auditWriteLimiter: ratelimit.NewIPLimiter(60, 1*time.Minute, 5*time.Minute),  // M6: public audit writes
+		cfg:                    cfg,
+		db:                     database,
+		peers:                  peerMap,
+		relay:                  relaySrv,
+		version:                version,
+		loginLimiter:           ratelimit.NewIPLimiter(5, 5*time.Minute, 10*time.Minute),
+		heartbeatLimiter:       ratelimit.NewWindowCounter(heartbeatsPerAddress, time.Minute),
+		heartbeatDeviceLimiter: ratelimit.NewWindowCounter(heartbeatsPerDevice, time.Minute),
+		heartbeatDropLog:       make(map[string]time.Time),
+		enrollmentLimiter:      ratelimit.NewIPLimiter(20, 1*time.Minute, 5*time.Minute), // M-07: 20/min per IP, 5-min block
+		brandingLimiter:        ratelimit.NewIPLimiter(60, 1*time.Minute, 5*time.Minute), // M-07: 60/min per IP
+		auditWriteLimiter:      ratelimit.NewIPLimiter(60, 1*time.Minute, 5*time.Minute), // M6: public audit writes
 		// 10/min per IP: a person redeems once; a script brute-forcing 30 bits would
 		// need ~10^7 minutes at this rate.
 		pairingLimiter: ratelimit.NewIPLimiter(10, 1*time.Minute, 5*time.Minute),
