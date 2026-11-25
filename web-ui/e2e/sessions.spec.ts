@@ -55,7 +55,10 @@ async function signedInBrowser(browser: Browser, baseURL: string, username: stri
  * request was first.
  */
 async function openAPage(p: Page): Promise<void> {
-	await p.goto(`${UI}/devices`);
+	// The browser's own move to the sign-in page can cut this navigation short
+	await p.goto(`${UI}/devices`).catch((e: unknown) => {
+		if (!/interrupted by another navigation/.test(String(e))) throw e;
+	});
 	await p.waitForURL(/\/login\?/);
 }
 
