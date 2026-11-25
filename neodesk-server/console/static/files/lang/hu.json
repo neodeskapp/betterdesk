@@ -8006,8 +8006,9 @@
     "panel": {
       "links": "Hasznos hivatkozások",
       "link_repo": "GitHub-tárhely",
-      "link_discord": "Segítség a Discordon",
-      "close": "Bezárás"
+      "link_discord": "Közösség a Discordon",
+      "close": "Bezárás",
+      "link_docs": "Dokumentáció"
     }
   },
   "setup_guide": {

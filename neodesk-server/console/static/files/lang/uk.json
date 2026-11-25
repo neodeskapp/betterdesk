@@ -8006,8 +8006,9 @@
     "panel": {
       "links": "Корисні посилання",
       "link_repo": "Репозиторій GitHub",
-      "link_discord": "Допомога в Discord",
-      "close": "Закрити"
+      "link_discord": "Спільнота в Discord",
+      "close": "Закрити",
+      "link_docs": "Документація"
     }
   },
   "setup_guide": {

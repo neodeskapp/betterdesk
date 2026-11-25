@@ -8006,8 +8006,9 @@
     "panel": {
       "links": "Användbara länkar",
       "link_repo": "GitHub-repository",
-      "link_discord": "Hjälp på Discord",
-      "close": "Stäng"
+      "link_discord": "Gemenskap på Discord",
+      "close": "Stäng",
+      "link_docs": "Dokumentation"
     }
   },
   "setup_guide": {

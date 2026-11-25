@@ -8000,8 +8000,9 @@
     "panel": {
       "links": "Užitečné odkazy",
       "link_repo": "Repozitář GitHub",
-      "link_discord": "Pomoc na Discordu",
-      "close": "Zavřít"
+      "link_discord": "Komunita na Discordu",
+      "close": "Zavřít",
+      "link_docs": "Dokumentace"
     }
   },
   "setup_guide": {

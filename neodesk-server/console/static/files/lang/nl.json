@@ -8000,8 +8000,9 @@
     "panel": {
       "links": "Nuttige links",
       "link_repo": "GitHub-repository",
-      "link_discord": "Hulp op Discord",
-      "close": "Sluiten"
+      "link_discord": "Community op Discord",
+      "close": "Sluiten",
+      "link_docs": "Documentatie"
     }
   },
   "setup_guide": {

@@ -8007,8 +8007,9 @@
     "panel": {
       "links": "روابط مفيدة",
       "link_repo": "مستودع GitHub",
-      "link_discord": "المساعدة على Discord",
-      "close": "إغلاق"
+      "link_discord": "المجتمع على Discord",
+      "close": "إغلاق",
+      "link_docs": "الوثائق"
     }
   },
   "setup_guide": {

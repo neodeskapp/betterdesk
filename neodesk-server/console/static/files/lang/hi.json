@@ -8006,8 +8006,9 @@
     "panel": {
       "links": "उपयोगी लिंक",
       "link_repo": "GitHub रिपॉज़िटरी",
-      "link_discord": "Discord पर मदद",
-      "close": "बंद करें"
+      "link_discord": "Discord पर समुदाय",
+      "close": "बंद करें",
+      "link_docs": "दस्तावेज़"
     }
   },
   "setup_guide": {

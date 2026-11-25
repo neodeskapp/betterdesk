@@ -8006,8 +8006,9 @@
     "panel": {
       "links": "Liên kết hữu ích",
       "link_repo": "Kho GitHub",
-      "link_discord": "Trợ giúp trên Discord",
-      "close": "Đóng"
+      "link_discord": "Cộng đồng trên Discord",
+      "close": "Đóng",
+      "link_docs": "Tài liệu"
     }
   },
   "setup_guide": {

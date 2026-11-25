@@ -8006,8 +8006,9 @@
     "panel": {
       "links": "Faydalı bağlantılar",
       "link_repo": "GitHub deposu",
-      "link_discord": "Discord'da yardım",
-      "close": "Kapat"
+      "link_discord": "Discord topluluğu",
+      "close": "Kapat",
+      "link_docs": "Belgeler"
     }
   },
   "setup_guide": {

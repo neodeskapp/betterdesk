@@ -8006,8 +8006,9 @@
     "panel": {
       "links": "ลิงก์ที่เป็นประโยชน์",
       "link_repo": "ที่เก็บ GitHub",
-      "link_discord": "ความช่วยเหลือบน Discord",
-      "close": "ปิด"
+      "link_discord": "ชุมชนบน Discord",
+      "close": "ปิด",
+      "link_docs": "เอกสาร"
     }
   },
   "setup_guide": {

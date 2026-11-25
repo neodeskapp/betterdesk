@@ -8000,8 +8000,9 @@
     "panel": {
       "links": "便利なリンク",
       "link_repo": "GitHub リポジトリ",
-      "link_discord": "Discord でヘルプ",
-      "close": "閉じる"
+      "link_discord": "Discord コミュニティ",
+      "close": "閉じる",
+      "link_docs": "ドキュメント"
     }
   },
   "setup_guide": {

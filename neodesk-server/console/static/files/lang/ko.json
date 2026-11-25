@@ -8000,8 +8000,9 @@
     "panel": {
       "links": "유용한 링크",
       "link_repo": "GitHub 저장소",
-      "link_discord": "Discord에서 도움 받기",
-      "close": "닫기"
+      "link_discord": "Discord 커뮤니티",
+      "close": "닫기",
+      "link_docs": "문서"
     }
   },
   "setup_guide": {

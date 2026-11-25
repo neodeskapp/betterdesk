@@ -8000,8 +8000,9 @@
     "panel": {
       "links": "实用链接",
       "link_repo": "GitHub 仓库",
-      "link_discord": "在 Discord 上获取帮助",
-      "close": "关闭"
+      "link_discord": "Discord 社区",
+      "close": "关闭",
+      "link_docs": "文档"
     }
   },
   "setup_guide": {

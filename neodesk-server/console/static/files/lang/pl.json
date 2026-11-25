@@ -8000,8 +8000,9 @@
     "panel": {
       "links": "Przydatne linki",
       "link_repo": "Repozytorium GitHub",
-      "link_discord": "Pomoc na Discordzie",
-      "close": "Zamknij"
+      "link_discord": "Społeczność na Discordzie",
+      "close": "Zamknij",
+      "link_docs": "Dokumentacja"
     }
   },
   "setup_guide": {

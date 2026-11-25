@@ -8004,8 +8004,9 @@
     "panel": {
       "links": "Liens utiles",
       "link_repo": "Dépôt GitHub",
-      "link_discord": "Aide sur Discord",
-      "close": "Fermer"
+      "link_discord": "Communauté sur Discord",
+      "close": "Fermer",
+      "link_docs": "Documentation"
     }
   },
   "setup_guide": {

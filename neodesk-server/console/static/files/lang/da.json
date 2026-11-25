@@ -8006,8 +8006,9 @@
     "panel": {
       "links": "Nyttige links",
       "link_repo": "GitHub-repository",
-      "link_discord": "Hjælp på Discord",
-      "close": "Luk"
+      "link_discord": "Fællesskab på Discord",
+      "close": "Luk",
+      "link_docs": "Dokumentation"
     }
   },
   "setup_guide": {

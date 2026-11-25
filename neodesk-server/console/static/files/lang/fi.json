@@ -8006,8 +8006,9 @@
     "panel": {
       "links": "Hyödyllisiä linkkejä",
       "link_repo": "GitHub-repositorio",
-      "link_discord": "Apua Discordissa",
-      "close": "Sulje"
+      "link_discord": "Yhteisö Discordissa",
+      "close": "Sulje",
+      "link_docs": "Dokumentaatio"
     }
   },
   "setup_guide": {
