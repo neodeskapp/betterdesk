@@ -5463,7 +5463,9 @@
     "mail_waited": "มีคนที่ {name} (ID {id}) รอคำตอบในแชทมา {minutes} นาทีแล้ว",
     "mail_quote": "ข้อความ: {quote}",
     "mail_open": "เปิดการสนทนา: {link}",
-    "mail_button": "เปิดการสนทนาใน {app}"
+    "mail_button": "เปิดการสนทนาใน {app}",
+    "old_messages": "ข้อความเก่า",
+    "old_messages_hint": "จากแชทก่อนเวอร์ชันนี้ เฉพาะผู้ดูแลระบบเท่านั้นที่เห็น และไม่มีใครเขียนที่นี่ได้"
   },
   "toast": {
     "device_connected": "เชื่อมต่ออุปกรณ์แล้ว",

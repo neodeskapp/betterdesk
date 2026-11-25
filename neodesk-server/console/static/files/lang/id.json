@@ -5463,7 +5463,9 @@
     "mail_waited": "Seseorang di {name} (ID {id}) sudah menunggu jawaban di obrolan selama {minutes} menit.",
     "mail_quote": "Pesannya: {quote}",
     "mail_open": "Buka percakapan: {link}",
-    "mail_button": "Buka percakapan di {app}"
+    "mail_button": "Buka percakapan di {app}",
+    "old_messages": "Pesan lama",
+    "old_messages_hint": "Dari obrolan sebelum versi ini. Hanya admin yang melihatnya, dan tidak ada yang bisa menulis di sini."
   },
   "toast": {
     "device_connected": "Perangkat terhubung",

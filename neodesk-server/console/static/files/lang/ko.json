@@ -5457,7 +5457,9 @@
     "mail_waited": "{name}(ID {id})의 사용자가 채팅에서 {minutes}분 동안 답변을 기다리고 있습니다.",
     "mail_quote": "메시지: {quote}",
     "mail_open": "대화 열기: {link}",
-    "mail_button": "{app}에서 대화 열기"
+    "mail_button": "{app}에서 대화 열기",
+    "old_messages": "이전 메시지",
+    "old_messages_hint": "이 버전 이전의 채팅 메시지입니다. 관리자만 볼 수 있으며 여기에는 아무도 쓸 수 없습니다."
   },
   "toast": {
     "device_connected": "장치가 연결됨",

@@ -41,6 +41,8 @@ const (
 // KindOf is the kind of a conversation by its id.
 func KindOf(id string) string {
 	switch {
+	case strings.HasPrefix(id, "old:"):
+		return ConvOld
 	case strings.HasPrefix(id, "dm:"):
 		return ConvDirect
 	case strings.HasPrefix(id, "group:"):
@@ -312,7 +314,7 @@ func (s *Store) Conversation(ctx context.Context, id string) (Conversation, erro
 			return Conversation{}, ErrNotFound
 		}
 	}
-	if kind == ConvGroup {
+	if kind == ConvGroup || kind == ConvOld {
 		c, err := scanConversation(s.db.QueryRow(ctx, convSelect+` WHERE id = ?`, id))
 		if errors.Is(err, sql.ErrNoRows) {
 			return c, ErrNotFound

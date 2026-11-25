@@ -5464,7 +5464,9 @@
     "mail_waited": "ينتظر شخص على {name} (المعرّف {id}) ردًا في المحادثة منذ {minutes} دقيقة.",
     "mail_quote": "كتب: {quote}",
     "mail_open": "افتح المحادثة: {link}",
-    "mail_button": "افتح المحادثة في {app}"
+    "mail_button": "افتح المحادثة في {app}",
+    "old_messages": "رسائل قديمة",
+    "old_messages_hint": "من المحادثة قبل هذا الإصدار. يراها المسؤولون فقط، ولا يمكن لأحد الكتابة هنا."
   },
   "toast": {
     "device_connected": "الجهاز متصل",

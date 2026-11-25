@@ -52,6 +52,7 @@
 	let counts = $state<InboxCounts>({ open: 0, mine: 0, closed: 0, unassigned: 0 });
 	let team = $state.raw<TeamItem[] | null>(null);
 	let people = $state.raw<Person[]>([]);
+	let old = $state.raw<TeamItem[]>([]);
 	let failed = $state(false);
 
 	async function load() {
@@ -65,6 +66,7 @@
 				const r = await loadTeam();
 				team = r.conversations;
 				people = r.people;
+				old = r.old;
 			}
 		} catch {
 			failed = true;
@@ -100,6 +102,7 @@
 			.filter((p) => !withDirect.has(p.id))
 			.filter((p) => !tq || p.name.toLowerCase().includes(tq) || p.username.toLowerCase().includes(tq));
 	});
+	const oldShown = $derived(old.filter((c) => !tq || (c.title ?? '').toLowerCase().includes(tq)));
 
 	function status(p: Person): Person['status'] {
 		const live = chat.presence[p.id];
@@ -319,7 +322,34 @@
 					{/each}
 				</ul>
 			{/if}
-			{#if !teamShown.length && !others.length}
+			{#if oldShown.length}
+				<h3 class="rows-title">{t('chat.old_messages')}</h3>
+				<ul class="rows" aria-label={t('chat.old_messages')}>
+					{#each oldShown as c (c.id)}
+						<li>
+							<button
+								type="button"
+								class={['row', active === c.id && 'is-current']}
+								aria-current={active === c.id ? 'true' : undefined}
+								onclick={(e) => onopen(c.id, e.currentTarget)}
+							>
+								<span class="row-avatar"
+									><span class="row-icon" aria-hidden="true"><Icon name="history" /></span></span
+								>
+								<span class="row-main">
+									<span class="row-top">
+										<span class="row-name">{c.title || t('chat.old_messages')}</span>
+										{#if c.last_message}<span class="row-time"><Time value={c.last_message.at} /></span>{/if}
+									</span>
+									<span class="row-meta"><span>{t('chat.old_messages')}</span></span>
+									<span class="row-bottom"><span class="row-last">{lastLine(c.last_message, t)}</span></span>
+								</span>
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+			{#if !teamShown.length && !others.length && !oldShown.length}
 				<div class="chat-list-empty">
 					<Icon name="group" />
 					<p>{q.trim() ? t('chat.no_match') : t('chat.empty_team')}</p>

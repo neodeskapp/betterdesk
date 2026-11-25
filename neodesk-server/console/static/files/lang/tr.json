@@ -5463,7 +5463,9 @@
     "mail_waited": "{name} (ID {id}) başındaki biri sohbette {minutes} dakikadır yanıt bekliyor.",
     "mail_quote": "Mesaj: {quote}",
     "mail_open": "Konuşmayı aç: {link}",
-    "mail_button": "Konuşmayı {app} içinde aç"
+    "mail_button": "Konuşmayı {app} içinde aç",
+    "old_messages": "Eski mesajlar",
+    "old_messages_hint": "Bu sürümden önceki sohbetten. Yalnızca yöneticiler görür ve buraya kimse yazamaz."
   },
   "toast": {
     "device_connected": "Cihaz bağlandı",

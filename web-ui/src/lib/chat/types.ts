@@ -58,7 +58,8 @@ export interface Message {
 	pending?: 'sending' | 'failed';
 }
 
-export type ConversationKind = 'support' | 'dm' | 'group';
+/** old: the chat of version 1 that belongs to no two accounts, for admins to read */
+export type ConversationKind = 'support' | 'dm' | 'group' | 'old';
 
 export interface Conversation {
 	id: string;

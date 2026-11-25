@@ -5600,7 +5600,9 @@
     "mail_waited": "{name}（ID {id}）上的使用者已在聊天中等待回覆 {minutes} 分鐘。",
     "mail_quote": "訊息：{quote}",
     "mail_open": "開啟對話：{link}",
-    "mail_button": "在 {app} 中開啟對話"
+    "mail_button": "在 {app} 中開啟對話",
+    "old_messages": "舊訊息",
+    "old_messages_hint": "來自此版本之前的聊天。只有管理員可以看到，任何人都無法在此發言。"
   },
   "toast": {
     "device_connected": "設備已連接",

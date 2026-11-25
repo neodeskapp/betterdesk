@@ -5657,7 +5657,9 @@
         "mail_waited": "Someone at {name} (ID {id}) has waited {minutes} minutes for an answer in the chat.",
         "mail_quote": "They wrote: {quote}",
         "mail_open": "Open the conversation: {link}",
-        "mail_button": "Open the conversation in {app}"
+        "mail_button": "Open the conversation in {app}",
+        "old_messages": "Old messages",
+        "old_messages_hint": "From the chat before this version. Only admins see them, and nobody can write here."
     },
     "toast": {
         "device_connected": "Device connected",

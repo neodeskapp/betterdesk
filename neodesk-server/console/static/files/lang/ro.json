@@ -5463,7 +5463,9 @@
     "mail_waited": "Cineva la {name} (ID {id}) așteaptă de {minutes} minute un răspuns în chat.",
     "mail_quote": "Mesajul: {quote}",
     "mail_open": "Deschideți conversația: {link}",
-    "mail_button": "Deschideți conversația în {app}"
+    "mail_button": "Deschideți conversația în {app}",
+    "old_messages": "Mesaje vechi",
+    "old_messages_hint": "Din chatul de dinaintea acestei versiuni. Doar administratorii le văd și nimeni nu poate scrie aici."
   },
   "toast": {
     "device_connected": "Dispozitiv conectat",

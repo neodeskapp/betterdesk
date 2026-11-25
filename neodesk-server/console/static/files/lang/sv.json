@@ -5463,7 +5463,9 @@
     "mail_waited": "Någon vid {name} (ID {id}) har väntat {minutes} minuter på svar i chatten.",
     "mail_quote": "Meddelandet: {quote}",
     "mail_open": "Öppna konversationen: {link}",
-    "mail_button": "Öppna konversationen i {app}"
+    "mail_button": "Öppna konversationen i {app}",
+    "old_messages": "Gamla meddelanden",
+    "old_messages_hint": "Från chatten före den här versionen. Bara administratörer ser dem, och ingen kan skriva här."
   },
   "toast": {
     "device_connected": "Enhet ansluten",

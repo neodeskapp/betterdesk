@@ -118,9 +118,17 @@ export async function loadSummary(): Promise<Summary> {
 	return obj(await request('/api/chat/summary')) as Summary;
 }
 
-export async function loadTeam(): Promise<{ conversations: TeamItem[]; people: Person[] }> {
+export async function loadTeam(): Promise<{
+	conversations: TeamItem[];
+	people: Person[];
+	old: TeamItem[];
+}> {
 	const data = obj(await request('/api/chat/team'));
-	return { conversations: list<TeamItem>(data.conversations), people: list<Person>(data.people) };
+	return {
+		conversations: list<TeamItem>(data.conversations),
+		people: list<Person>(data.people),
+		old: list<TeamItem>(data.old)
+	};
 }
 
 export async function openDirect(accountId: number): Promise<Conversation> {

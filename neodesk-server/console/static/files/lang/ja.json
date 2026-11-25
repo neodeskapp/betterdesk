@@ -5457,7 +5457,9 @@
     "mail_waited": "{name} (ID {id}) の利用者がチャットで {minutes} 分間返信を待っています。",
     "mail_quote": "メッセージ: {quote}",
     "mail_open": "会話を開く: {link}",
-    "mail_button": "{app} で会話を開く"
+    "mail_button": "{app} で会話を開く",
+    "old_messages": "以前のメッセージ",
+    "old_messages_hint": "このバージョンより前のチャットのメッセージです。管理者だけが表示でき、ここには誰も書き込めません。"
   },
   "toast": {
     "device_connected": "接続されたデバイス",

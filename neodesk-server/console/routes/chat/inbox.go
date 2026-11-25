@@ -24,13 +24,16 @@ import (
 type inboxRoutes struct {
 	d   *kit.Deps
 	hub *Hub
+	// user is the signed-in account of a request (kit.User; tests set
+	// another)
+	user func(r *http.Request) *session.User
 }
 
 // registerInbox adds the routes. Support routes are in the panel section
 // "chat" (the guard's rule for /api/chat), Team chat's in "team-chat";
 // what both use declares no section and asks for either permission.
-func registerInbox(d *kit.Deps, hub *Hub) {
-	h := &inboxRoutes{d: d, hub: hub}
+func registerInbox(d *kit.Deps, hub *Hub) *inboxRoutes {
+	h := &inboxRoutes{d: d, hub: hub, user: kit.User}
 	support := d.RequirePermission(permSupport)
 	team := d.RequirePermission(permTeam)
 	either := d.RequireAnyPermission(ChatPermissions...)
@@ -60,6 +63,7 @@ func registerInbox(d *kit.Deps, hub *Hub) {
 	shared.Get("/api/chat/settings", h.settings, d.RequireAuth, either)
 	shared.Put("/api/chat/settings", h.setSettings, d.RequireAuth, d.RequirePermission("server.config"))
 	shared.Get("/api/chat/messages/{id}/trail", h.trail, d.RequireAuth, d.RequirePermission("audit.view"))
+	return h
 }
 
 func (h *inboxRoutes) store() *chatstore.Store { return h.d.Chat }
@@ -227,7 +231,7 @@ func (h *inboxRoutes) last(ctx context.Context, c chatstore.Conversation) *wireL
 // first. q finds by the device's name, id, host name, owner and folder.
 func (h *inboxRoutes) inbox(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	user := kit.User(r)
+	user := h.user(r)
 	list, err := h.store().List(ctx, chatstore.Filter{Kinds: []string{chatstore.ConvSupport}, WithMessages: true, Limit: 2000})
 	if err != nil {
 		h.fail(w, r, err)
@@ -309,7 +313,7 @@ func matchesDevice(d wireDevice, q string) bool {
 func (h *inboxRoutes) devices(w http.ResponseWriter, r *http.Request) {
 	q := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("q")))
 	var out []wireDevice
-	for _, d := range h.devicesSeen(r.Context(), kit.User(r)) {
+	for _, d := range h.devicesSeen(r.Context(), h.user(r)) {
 		if q == "" || matchesDevice(d, q) {
 			out = append(out, d)
 		}
@@ -334,7 +338,7 @@ func (h *inboxRoutes) devices(w http.ResponseWriter, r *http.Request) {
 func (h *inboxRoutes) conversation(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
-	user := kit.User(r)
+	user := h.user(r)
 	if !h.hub.MayRead(ctx, user, id) {
 		kit.Fail(w, r, http.StatusNotFound, "Conversation not found")
 		return
@@ -385,7 +389,7 @@ func (h *inboxRoutes) conversation(w http.ResponseWriter, r *http.Request) {
 // account reads; it answers 404 otherwise.
 func (h *inboxRoutes) supportConversation(w http.ResponseWriter, r *http.Request) (chatstore.Conversation, bool) {
 	id := r.PathValue("id")
-	if chatstore.KindOf(id) != chatstore.ConvSupport || !h.hub.MayRead(r.Context(), kit.User(r), id) {
+	if chatstore.KindOf(id) != chatstore.ConvSupport || !h.hub.MayRead(r.Context(), h.user(r), id) {
 		kit.Fail(w, r, http.StatusNotFound, "Conversation not found")
 		return chatstore.Conversation{}, false
 	}
@@ -438,7 +442,7 @@ func (h *inboxRoutes) assign(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusBadRequest, "account_id must be a number")
 		return
 	}
-	user := kit.User(r)
+	user := h.user(r)
 	people, err := h.people(ctx)
 	if err != nil {
 		h.fail(w, r, err)
@@ -486,7 +490,7 @@ func (h *inboxRoutes) close(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	user := kit.User(r)
+	user := h.user(r)
 	if c.AssigneeID != user.ID && !kit.Access(r).HasPermission(permAssign) {
 		kit.Fail(w, r, http.StatusForbidden, "Permission denied: "+permAssign)
 		return
@@ -589,7 +593,7 @@ func (h *inboxRoutes) link(w http.ResponseWriter, r *http.Request) {
 // the account's conversations.
 func (h *inboxRoutes) summary(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	user := kit.User(r)
+	user := h.user(r)
 	me := chatstore.User(user.ID, user.Username)
 	out := map[string]any{"success": true}
 	acc := kit.Access(r)
@@ -659,7 +663,7 @@ type wireTeamItem struct {
 // Team chat), with their status.
 func (h *inboxRoutes) teamList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	user := kit.User(r)
+	user := h.user(r)
 	list, err := h.store().List(ctx, chatstore.Filter{Kinds: []string{chatstore.ConvDirect, chatstore.ConvGroup}, Member: user.ID})
 	if err != nil {
 		h.fail(w, r, err)
@@ -707,7 +711,24 @@ func (h *inboxRoutes) teamList(w http.ResponseWriter, r *http.Request) {
 		colleagues = append(colleagues, p)
 	}
 	sort.Slice(colleagues, func(i, j int) bool { return strings.ToLower(colleagues[i].Name) < strings.ToLower(colleagues[j].Name) })
-	kit.JSON(w, r, http.StatusOK, map[string]any{"success": true, "conversations": items, "people": colleagues})
+	out := map[string]any{"success": true, "conversations": items, "people": colleagues}
+	if h.hub.opts.IsAdmin(user.Role) {
+		// The history of version 1 that maps to no two accounts
+		// (chatstore.ImportLegacy), for admins to read
+		list, err := h.store().List(ctx, chatstore.Filter{Kinds: []string{chatstore.ConvOld}, WithMessages: true})
+		if err != nil {
+			h.fail(w, r, err)
+			return
+		}
+		old := make([]wireTeamItem, 0, len(list))
+		for _, c := range list {
+			old = append(old, wireTeamItem{wireConversation: conversationOut(c, ""), People: []wirePerson{}, Last: h.last(ctx, c)})
+		}
+		if len(old) > 0 {
+			out["old"] = old
+		}
+	}
+	kit.JSON(w, r, http.StatusOK, out)
 }
 
 // mayTeam reports whether an account may take part in Team chat.
@@ -736,7 +757,7 @@ func (h *inboxRoutes) direct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	p, ok := people[body.AccountID]
-	user := kit.User(r)
+	user := h.user(r)
 	if !ok || p.ID == user.ID || !h.mayTeam(ctx, p) {
 		kit.Fail(w, r, http.StatusBadRequest, "You can't write to that person")
 		return
@@ -780,7 +801,7 @@ func (h *inboxRoutes) newGroup(w http.ResponseWriter, r *http.Request) {
 func (h *inboxRoutes) editGroup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
-	if chatstore.KindOf(id) != chatstore.ConvGroup || !h.hub.MayRead(ctx, kit.User(r), id) {
+	if chatstore.KindOf(id) != chatstore.ConvGroup || !h.hub.MayRead(ctx, h.user(r), id) {
 		kit.Fail(w, r, http.StatusNotFound, "Conversation not found")
 		return
 	}
@@ -1037,7 +1058,7 @@ func (h *inboxRoutes) setSettings(w http.ResponseWriter, r *http.Request) {
 		h.fail(w, r, err)
 		return
 	}
-	h.hub.audit(ctx, &member{user: kit.User(r)}, "chat_settings_changed", map[string]any{"mail_after_minutes": body.MailAfterMinutes, "mail_preview": body.MailPreview})
+	h.hub.audit(ctx, &member{user: h.user(r)}, "chat_settings_changed", map[string]any{"mail_after_minutes": body.MailAfterMinutes, "mail_preview": body.MailPreview})
 	kit.JSON(w, r, http.StatusOK, map[string]any{"success": true, "settings": body})
 }
 
@@ -1052,7 +1073,7 @@ func (h *inboxRoutes) trail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	msg, err := h.store().Get(ctx, id)
-	if err != nil || !h.hub.MayRead(ctx, kit.User(r), msg.ConversationID) {
+	if err != nil || !h.hub.MayRead(ctx, h.user(r), msg.ConversationID) {
 		kit.Fail(w, r, http.StatusNotFound, "Message not found")
 		return
 	}

@@ -218,3 +218,50 @@ func jsonNumber(n int64) string {
 	b, _ := json.Marshal(n)
 	return string(b)
 }
+
+// TestOldMessagesAreForAdminsToRead: history of version 1 that belongs to
+// no two accounts is kept as old messages (chatstore.ImportLegacy), which
+// admins read and nobody writes in, edits or reacts to.
+func TestOldMessagesAreForAdminsToRead(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		ctx := context.Background()
+		relay, st := hubRelay(t, db)
+		id, err := db.Insert(ctx, `INSERT INTO chat_messages (conversation_id, from_id, from_name, text) VALUES ('operator:ghost', 'operator', 'anna', 'to someone gone')`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := st.ImportLegacy(ctx); err != nil {
+			t.Fatal(err)
+		}
+		anna, admin := relay.v2(t, "anna"), relay.v2(t, "admin")
+		anna.take()
+		admin.take()
+
+		admin.send(t, `{"type":"history","conversation_id":"old:operator:ghost"}`)
+		got := frames(admin.takeAtLeast(1), "history", "error")
+		if len(got) != 1 || got[0]["type"] != "history" || !strings.Contains(asJSON(got[0]), `"text":"to someone gone"`) {
+			t.Errorf("admin reading the old messages: %v", got)
+		}
+		anna.send(t, `{"type":"history","conversation_id":"old:operator:ghost"}`)
+		if got := frames(anna.takeAtLeast(1), "history", "error"); len(got) != 1 || got[0]["code"] != "no_access" {
+			t.Errorf("anna reading the old messages: %v", got)
+		}
+		idText := `"` + strings.TrimSpace(jsonNumber(id)) + `"`
+		for _, f := range []string{
+			`{"type":"send","conversation_id":"old:operator:ghost","text":"hello?"}`,
+			`{"type":"edit","message_id":` + idText + `,"text":"changed"}`,
+			`{"type":"delete","message_id":` + idText + `}`,
+			`{"type":"react","message_id":` + idText + `,"emoji":"👍"}`,
+		} {
+			admin.send(t, f)
+			if got := frames(admin.takeAtLeast(1), "error", "message.new", "message.updated"); len(got) != 1 || got[0]["code"] != "read_only" {
+				t.Errorf("%s: %v", f, got)
+			}
+		}
+	})
+}
+
+func asJSON(v any) string {
+	b, _ := json.Marshal(v)
+	return string(b)
+}

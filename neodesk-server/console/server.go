@@ -420,6 +420,12 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 		return nil, fmt.Errorf("chat: %w", err)
 	}
 	s.deps.Chat = chatstore.New(opts.Store, nil)
+	// Once: the history of the chat of version 1 into its conversations
+	if r, err := s.deps.Chat.ImportLegacy(ctx); err != nil {
+		return nil, fmt.Errorf("chat: import the history of version 1: %w", err)
+	} else if r != (chatstore.LegacyReport{}) {
+		logging.Logf("console", "[Chat] moved the history of version 1: %d direct, %d in groups, %d to their computers, %d to old messages", r.Direct, r.Groups, r.Devices, r.Old)
+	}
 
 	s.tokens, err = admintoken.New(ctx, admintoken.Options{DB: opts.Store})
 	if err != nil {

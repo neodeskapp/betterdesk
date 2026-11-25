@@ -5457,7 +5457,9 @@
     "mail_waited": "Iemand bij {name} (ID {id}) wacht al {minutes} minuten op een antwoord in de chat.",
     "mail_quote": "Bericht: {quote}",
     "mail_open": "Gesprek openen: {link}",
-    "mail_button": "Gesprek openen in {app}"
+    "mail_button": "Gesprek openen in {app}",
+    "old_messages": "Oude berichten",
+    "old_messages_hint": "Uit de chat van vóór deze versie. Alleen beheerders zien ze en niemand kan hier schrijven."
   },
   "toast": {
     "device_connected": "Apparaat verbonden",

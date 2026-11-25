@@ -5578,7 +5578,9 @@
     "mail_waited": "{name}（ID {id}）上的用户已在聊天中等待回复 {minutes} 分钟。",
     "mail_quote": "消息：{quote}",
     "mail_open": "打开会话：{link}",
-    "mail_button": "在 {app} 中打开会话"
+    "mail_button": "在 {app} 中打开会话",
+    "old_messages": "旧消息",
+    "old_messages_hint": "来自此版本之前的聊天。只有管理员可以看到，任何人都不能在此发言。"
   },
   "toast": {
     "device_connected": "设备已连接",

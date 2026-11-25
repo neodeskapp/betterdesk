@@ -17,6 +17,7 @@
 	import ConversationHeader from './ConversationHeader.svelte';
 	import ConversationList from './ConversationList.svelte';
 	import NewConversation from './NewConversation.svelte';
+	import { sectionOf } from './panel.svelte.ts';
 	import Thread from './Thread.svelte';
 	import type { Conversation, InboxFilter, Person, Section } from './types.ts';
 
@@ -31,11 +32,14 @@
 
 	let { section, filter, conv, compact = false, onchange }: Props = $props();
 
-	const kind = $derived(
-		conv ? (conv.startsWith('dm:') || conv.startsWith('group:') ? 'team' : 'support') : null
-	);
+	const kind = $derived(conv ? sectionOf(conv) : null);
+	// Old messages of version 1 are for reading only
 	const writable = $derived(
-		kind === 'team' ? canWrite('chat.team') || can('chat.team') : canWrite('chat.support')
+		conv?.startsWith('old:')
+			? false
+			: kind === 'team'
+				? canWrite('chat.team') || can('chat.team')
+				: canWrite('chat.support')
 	);
 
 	let detail = $state<api.ConversationDetail | null>(null);

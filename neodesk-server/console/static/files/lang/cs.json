@@ -5457,7 +5457,9 @@
     "mail_waited": "Někdo u {name} (ID {id}) čeká v chatu na odpověď už {minutes} min.",
     "mail_quote": "Napsal(a): {quote}",
     "mail_open": "Otevřít konverzaci: {link}",
-    "mail_button": "Otevřít konverzaci v {app}"
+    "mail_button": "Otevřít konverzaci v {app}",
+    "old_messages": "Staré zprávy",
+    "old_messages_hint": "Z chatu před touto verzí. Vidí je jen správci a nikdo sem nemůže psát."
   },
   "toast": {
     "device_connected": "Zařízení připojeno",

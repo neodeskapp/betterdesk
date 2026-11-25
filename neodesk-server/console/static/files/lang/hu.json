@@ -5463,7 +5463,9 @@
     "mail_waited": "Valaki a(z) {name} gépnél (azonosító: {id}) {minutes} perce vár válaszra a csevegésben.",
     "mail_quote": "Az üzenet: {quote}",
     "mail_open": "A beszélgetés megnyitása: {link}",
-    "mail_button": "A beszélgetés megnyitása itt: {app}"
+    "mail_button": "A beszélgetés megnyitása itt: {app}",
+    "old_messages": "Régi üzenetek",
+    "old_messages_hint": "Az ez előtti verzió csevegéséből. Csak a rendszergazdák látják, és ide senki sem írhat."
   },
   "toast": {
     "device_connected": "Eszköz csatlakoztatva",

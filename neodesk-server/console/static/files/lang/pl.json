@@ -5596,7 +5596,9 @@
     "mail_waited": "Ktoś przy {name} (ID {id}) czeka na odpowiedź na czacie od {minutes} min.",
     "mail_quote": "Wiadomość: {quote}",
     "mail_open": "Otwórz rozmowę: {link}",
-    "mail_button": "Otwórz rozmowę w {app}"
+    "mail_button": "Otwórz rozmowę w {app}",
+    "old_messages": "Stare wiadomości",
+    "old_messages_hint": "Z czatu sprzed tej wersji. Widzą je tylko administratorzy i nikt nie może tu pisać."
   },
   "toast": {
     "device_connected": "Urządzenie połączone",

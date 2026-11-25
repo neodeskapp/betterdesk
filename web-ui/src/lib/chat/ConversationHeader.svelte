@@ -198,14 +198,18 @@
 				presence={status(other)}
 			/>
 		{:else}
-			<span class="conv-icon" aria-hidden="true"><Icon name="group" /></span>
+			<span class="conv-icon" aria-hidden="true"><Icon name={c.kind === 'old' ? 'history' : 'group'} /></span>
 		{/if}
 		<div class="conv-who">
-			<h2 class="conv-name">{other ? other.name : c.title || t('chat.group')}</h2>
+			<h2 class="conv-name">
+				{other ? other.name : c.title || t(c.kind === 'old' ? 'chat.old_messages' : 'chat.group')}
+			</h2>
 			<p class="conv-sub">
 				{#if other}
 					<span>{t(`chat.presence_${status(other)}`)}</span>
 					<span>{t(`users.role_${other.role}`)}</span>
+				{:else if c.kind === 'old'}
+					<span>{t('chat.old_messages_hint')}</span>
 				{:else}
 					<span>{people.map((p) => p.name).join(', ')}</span>
 				{/if}

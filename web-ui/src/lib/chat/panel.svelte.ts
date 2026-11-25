@@ -21,7 +21,7 @@ class ChatPanel {
 export const chatPanel = new ChatPanel();
 
 export function sectionOf(conv: string): Section {
-	return conv.startsWith('dm:') || conv.startsWith('group:') ? 'team' : 'support';
+	return conv.startsWith('dm:') || conv.startsWith('group:') || conv.startsWith('old:') ? 'team' : 'support';
 }
 
 /** Opens a conversation (a device id, dm:..., group:...) or just the chat */

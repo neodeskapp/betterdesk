@@ -5457,7 +5457,9 @@
     "mail_waited": "Jemand an {name} (ID {id}) wartet seit {minutes} Minuten im Chat auf eine Antwort.",
     "mail_quote": "Nachricht: {quote}",
     "mail_open": "Unterhaltung öffnen: {link}",
-    "mail_button": "Unterhaltung in {app} öffnen"
+    "mail_button": "Unterhaltung in {app} öffnen",
+    "old_messages": "Alte Nachrichten",
+    "old_messages_hint": "Aus dem Chat vor dieser Version. Nur Admins sehen sie, und hier kann niemand schreiben."
   },
   "toast": {
     "device_connected": "Gerät verbunden",

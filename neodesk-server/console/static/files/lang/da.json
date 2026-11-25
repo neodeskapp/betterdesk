@@ -5463,7 +5463,9 @@
     "mail_waited": "En person ved {name} (ID {id}) har ventet {minutes} minutter på et svar i chatten.",
     "mail_quote": "Beskeden: {quote}",
     "mail_open": "Åbn samtalen: {link}",
-    "mail_button": "Åbn samtalen i {app}"
+    "mail_button": "Åbn samtalen i {app}",
+    "old_messages": "Gamle beskeder",
+    "old_messages_hint": "Fra chatten før denne version. Kun administratorer ser dem, og ingen kan skrive her."
   },
   "toast": {
     "device_connected": "Enhed tilsluttet",

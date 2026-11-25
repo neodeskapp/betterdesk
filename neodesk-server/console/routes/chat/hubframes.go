@@ -92,7 +92,7 @@ func (h *Hub) handle(ctx context.Context, m *member, f map[string]json.RawMessag
 			"reader": map[string]string{"kind": m.party().Kind, "id": m.party().ID}, "up_to": strconv.FormatInt(upTo, 10)}), nil, false)
 	case "typing":
 		conv := conversationOf(m, f)
-		if h.mayRead(ctx, m, conv) {
+		if h.mayRead(ctx, m, conv) && chatstore.KindOf(conv) != chatstore.ConvOld {
 			h.publish(ctx, conv, frame("typing", map[string]any{"conversation_id": conv, "from": partyOut(m.party())}), m, false)
 		}
 	case "history":
@@ -126,6 +126,10 @@ func (h *Hub) send(ctx context.Context, m *member, f map[string]json.RawMessage)
 	conv := conversationOf(m, f)
 	if !h.mayRead(ctx, m, conv) {
 		fail(m, "no_access", f)
+		return
+	}
+	if chatstore.KindOf(conv) == chatstore.ConvOld {
+		fail(m, "read_only", f)
 		return
 	}
 	var ids []string
@@ -248,11 +252,15 @@ func (h *Hub) attachments(ctx context.Context, m *member, conv string, ids []str
 }
 
 // own reads a message the member may change: one of a conversation it
-// reads.
+// reads that is not old messages of version 1.
 func (h *Hub) own(ctx context.Context, m *member, f map[string]json.RawMessage) (chatstore.Message, bool) {
 	msg, err := h.opts.Store.Get(ctx, id64(f, "message_id"))
 	if err != nil || !h.mayRead(ctx, m, msg.ConversationID) {
 		fail(m, "not_found", f)
+		return msg, false
+	}
+	if chatstore.KindOf(msg.ConversationID) == chatstore.ConvOld {
+		fail(m, "read_only", f)
 		return msg, false
 	}
 	return msg, true

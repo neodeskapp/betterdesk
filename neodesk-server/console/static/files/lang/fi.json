@@ -5463,7 +5463,9 @@
     "mail_waited": "Joku laitteella {name} (tunnus {id}) on odottanut vastausta chatissa {minutes} minuuttia.",
     "mail_quote": "Viesti: {quote}",
     "mail_open": "Avaa keskustelu: {link}",
-    "mail_button": "Avaa keskustelu sovelluksessa {app}"
+    "mail_button": "Avaa keskustelu sovelluksessa {app}",
+    "old_messages": "Vanhat viestit",
+    "old_messages_hint": "Tätä versiota edeltäneestä chatista. Vain ylläpitäjät näkevät ne, eikä tänne voi kirjoittaa."
   },
   "toast": {
     "device_connected": "Laite yhdistetty",
