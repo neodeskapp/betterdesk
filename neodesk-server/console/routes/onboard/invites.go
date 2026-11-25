@@ -12,7 +12,7 @@ import (
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
-	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/devicegroups"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
@@ -466,26 +466,6 @@ func (h *handlers) mailBranding(c onboard.Console) (accent, logo string) {
 	if h.d.Branding == nil {
 		return "", ""
 	}
-	appearance, err := h.d.Branding.GetPublicAppearance()
-	if err != nil || appearance == nil {
-		return "", ""
-	}
-	text := func(section, key string) string {
-		obj, _ := appearance.Get(section)
-		o, ok := obj.(*branding.Object)
-		if !ok {
-			return ""
-		}
-		v, _ := o.Get(key)
-		s, _ := v.(string)
-		return strings.TrimSpace(s)
-	}
-	accent = text("palette", "primary")
-	if text("identity", "logoType") == "image" {
-		logo = text("identity", "logoUrl")
-		if strings.HasPrefix(logo, "/") && !strings.HasPrefix(logo, "//") {
-			logo = c.Base() + logo
-		}
-	}
-	return accent, logo
+	b := brandmail.Of(h.d.Branding, c.Base())
+	return b.Accent, b.Logo
 }

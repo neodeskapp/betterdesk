@@ -2,12 +2,9 @@ package onboard
 
 import (
 	"fmt"
-	"html"
-	"math"
-	"net/url"
-	"regexp"
-	"strconv"
 	"strings"
+
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 )
 
 // Translate gives the text of a language key with its placeholders
@@ -44,62 +41,6 @@ type MailFacts struct {
 	// Logo is the address of the branding logo as a PNG, JPEG or GIF over
 	// HTTPS; anything else leaves the logo out for the server's name.
 	Logo string
-}
-
-// defaultAccent is the button colour without a usable branding colour.
-const defaultAccent = "#1d4ed8"
-
-var (
-	hexColour = regexp.MustCompile(`^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$`)
-	rasterExt = regexp.MustCompile(`(?i)\.(png|jpe?g|gif)$`)
-)
-
-// mailAccent is the accent as #rrggbb in lower case, the default for
-// anything that is not a colour.
-func mailAccent(c string) string {
-	c = strings.TrimSpace(c)
-	if !hexColour.MatchString(c) {
-		return defaultAccent
-	}
-	c = strings.ToLower(c)
-	if len(c) == 4 {
-		c = "#" + strings.Repeat(c[1:2], 2) + strings.Repeat(c[2:3], 2) + strings.Repeat(c[3:4], 2)
-	}
-	return c
-}
-
-// buttonText is the text colour on the accent: white where it reads
-// (contrast 4.5:1 or more), else near black.
-func buttonText(accent string) string {
-	lum := 0.0
-	for i, w := range []float64{0.2126, 0.7152, 0.0722} {
-		v, _ := strconv.ParseUint(accent[1+2*i:3+2*i], 16, 8)
-		c := float64(v) / 255
-		if c <= 0.03928 {
-			c /= 12.92
-		} else {
-			c = math.Pow((c+0.055)/1.055, 2.4)
-		}
-		lum += w * c
-	}
-	if 1.05/(lum+0.05) >= 4.5 {
-		return "#ffffff"
-	}
-	return "#111827"
-}
-
-// mailLogo is the logo's address when a mail client can show it: an
-// absolute HTTPS address of a PNG, JPEG or GIF (mail clients drop SVG and
-// many block plain HTTP), else "".
-func mailLogo(logo string) string {
-	if strings.ContainsAny(logo, "\"'<> ") {
-		return ""
-	}
-	u, err := url.Parse(strings.TrimSpace(logo))
-	if err != nil || u.Scheme != "https" || u.Host == "" || u.User != nil || !rasterExt.MatchString(u.Path) {
-		return ""
-	}
-	return u.String()
 }
 
 // BuildMail writes the mail of a code. An invite is the welcome mail:
@@ -161,68 +102,11 @@ func mailText(heading, lead string, steps []string, button, link, expires, code,
 	return strings.Join(lines, "\n") + "\n"
 }
 
-// The mail's colours and fonts, inline on every element.
-const (
-	mailFont  = "font-family: -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;"
-	mailInk   = "#1f2933"
-	mailMuted = "#6b7280"
-	mailRule  = "#e5e7eb"
-	mailPage  = "#f4f5f7"
-)
-
-// mailHTML is the HTML part: one centred table of at most 560 pixels.
+// mailHTML is the HTML part, in the console's branded layout.
 func mailHTML(f MailFacts, heading, lead string, steps []string, button, linkHint, expires, code, footer string) string {
-	e := html.EscapeString
-	accent := mailAccent(f.Accent)
-	onAccent := buttonText(accent)
-	link := e(f.Link)
-	var b strings.Builder
-	w := func(s ...string) {
-		for _, part := range s {
-			b.WriteString(part)
-		}
-	}
-	cell := func(padding, style, content string) {
-		w(`<tr><td style="padding: `, padding, `; `, mailFont, ` `, style, `">`, content, `</td></tr>`)
-	}
-	w(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>`, e(heading), `</title></head>`)
-	w(`<body style="margin: 0; padding: 0; background-color: `, mailPage, `;">`)
-	w(`<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="`, mailPage, `" style="background-color: `, mailPage, `;"><tr><td align="center" style="padding: 24px 12px;">`)
-	w(`<table role="presentation" width="560" cellspacing="0" cellpadding="0" border="0" bgcolor="#ffffff" style="width: 100%; max-width: 560px; background-color: #ffffff; border: 1px solid `, mailRule, `; border-radius: 8px;">`)
-
-	// The server's logo, or its name in the accent colour
-	if logo := mailLogo(f.Logo); logo != "" {
-		w(`<tr><td style="padding: 24px 28px 0 28px;"><img src="`, e(logo), `" alt="`, e(f.Server), `" height="40" style="display: block; height: 40px; width: auto; max-width: 240px; border: 0;"></td></tr>`)
-	} else {
-		cell("24px 28px 0 28px", "font-size: 16px; font-weight: 700; color: "+accent+";", e(f.Server))
-	}
-	cell("16px 28px 0 28px", "font-size: 22px; line-height: 1.3; font-weight: 700; color: "+mailInk+";", e(heading))
-	cell("12px 28px 0 28px", "font-size: 15px; line-height: 1.5; color: "+mailInk+";", e(lead))
-
-	// One button: a cell in the accent colour, so Outlook draws it too
-	w(`<tr><td style="padding: 24px 28px 0 28px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>`)
-	w(`<td bgcolor="`, accent, `" style="border-radius: 6px; background-color: `, accent, `;">`)
-	w(`<a href="`, link, `" target="_blank" style="display: inline-block; padding: 12px 24px; `, mailFont, ` font-size: 16px; font-weight: 600; color: `, onAccent, `; text-decoration: none; border-radius: 6px;">`, e(button), `</a>`)
-	w(`</td></tr></table></td></tr>`)
-
-	if len(steps) > 0 {
-		w(`<tr><td style="padding: 24px 28px 0 28px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">`)
-		for i, step := range steps {
-			w(`<tr><td width="36" valign="top" style="width: 36px; padding: 0 0 10px 0;">`)
-			w(`<table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td align="center" width="24" height="24" bgcolor="`, accent, `" style="width: 24px; height: 24px; border-radius: 12px; background-color: `, accent, `; `, mailFont, ` font-size: 13px; font-weight: 700; line-height: 24px; color: `, onAccent, `;">`, strconv.Itoa(i+1), `</td></tr></table></td>`)
-			w(`<td valign="top" style="padding: 2px 0 10px 0; `, mailFont, ` font-size: 15px; line-height: 1.5; color: `, mailInk, `;">`, e(step), `</td></tr>`)
-		}
-		w(`</table></td></tr>`)
-	}
-
-	small := "font-size: 13px; line-height: 1.5; color: " + mailMuted + ";"
-	cell("16px 28px 0 28px", small, e(linkHint)+`<br><a href="`+link+`" target="_blank" style="color: `+mailInk+`; word-break: break-all;">`+link+`</a>`)
-	cell("12px 28px 0 28px", small, e(expires))
-	if code != "" {
-		cell("12px 28px 0 28px", small, e(code))
-	}
-	w(`<tr><td style="padding: 20px 28px 24px 28px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td style="border-top: 1px solid `, mailRule, `; padding-top: 12px; `, mailFont, ` font-size: 12px; line-height: 1.5; color: `, mailMuted, `;">`, e(footer), `</td></tr></table></td></tr>`)
-
-	w(`</table></td></tr></table></body></html>`)
-	return b.String()
+	return brandmail.HTML(brandmail.Page{
+		Branding: brandmail.Branding{Server: f.Server, Accent: f.Accent, Logo: f.Logo},
+		Heading:  heading, Lead: lead, Button: button, Link: f.Link, Steps: steps,
+		LinkHint: linkHint, Small: []string{expires, code}, Footer: footer,
+	})
 }
