@@ -197,7 +197,7 @@ func TestPasswordChangeOfAnExternalAccount(t *testing.T) {
 				want(t, "change", a.post("/api/auth/password", change(password, otherPassword, otherPassword)), http.StatusBadRequest,
 					`{"success":false,"error":"This account signs in through a directory or single sign-on. Change its password there."}`)
 				want(t, "in German", a.post("/api/auth/password", change(password, otherPassword, otherPassword), "Accept-Language", "de"), http.StatusBadRequest,
-					`{"success":false,"error":"Dieses Konto meldet sich über ein Verzeichnis oder Single Sign-on an. Ändern Sie das Passwort dort."}`)
+					`{"success":false,"error":"Dieses Konto meldet sich über ein Verzeichnis oder Single Sign-on an. Ändere das Passwort dort."}`)
 			})
 		})
 	}
