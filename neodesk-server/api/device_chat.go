@@ -5,6 +5,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	eventsModule "github.com/neodeskapp/neodesk/neodesk-server/events"
 )
 
 // A computer's support chat at the API port (L526). Computers send all
@@ -84,4 +86,18 @@ func (s *Server) deviceChatGate(next http.Handler) http.Handler {
 		}
 		(*h).ServeHTTP(w, r)
 	})
+}
+
+// credentialsEnded tells the console that a device's credentials ended, so
+// it closes the chat sockets that lost theirs (L539). deviceID may be ""
+// when the device is not known.
+func (s *Server) credentialsEnded(deviceID string) {
+	if s.eventBus == nil {
+		return
+	}
+	data := map[string]string{}
+	if deviceID != "" {
+		data["id"] = deviceID
+	}
+	s.eventBus.Publish(eventsModule.Event{Type: eventsModule.EventDeviceCredentialsEnded, Data: data})
 }

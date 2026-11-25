@@ -42,6 +42,9 @@ func HubOf(d *kit.Deps) *Hub {
 		DisplayName: displayNames(d.Store),
 		Audit:       auditTo(d.Audit),
 	})
+	if d.Authn != nil {
+		h.opts.VerifyDevice = d.Authn.VerifyDeviceWSAuth
+	}
 	actual, _ := hubs.LoadOrStore(d, h)
 	return actual.(*Hub)
 }
@@ -256,4 +259,74 @@ func (h *Hub) seenRecently(id int64) bool {
 	defer h.recentMu.Unlock()
 	_, ok := h.recent[id]
 	return ok
+}
+
+// CloseTokenRefused is the close code of a computer's chat socket whose
+// credential ended: its token was revoked or replaced, or the computer was
+// deleted or banned (L539). A client reads it as a refused token.
+const CloseTokenRefused = 4403
+
+// credentialEnds are the events after which a computer's chat socket may
+// have lost its credential.
+var credentialEnds = map[string]bool{
+	"device_credentials_ended": true, "peer_banned": true, "peer_deleted": true, "peer_revoked": true,
+	"peer_id_changed": true, "blocklist_add": true,
+}
+
+// WatchDeviceCredentials rechecks the computers' chat sockets when a
+// device credential ends (L539): the device the event names, all of them
+// when it names none.
+func (h *Hub) WatchDeviceCredentials(ctx context.Context, events func(ctx context.Context, filter string) (<-chan *goapi.Object, error)) {
+	if events == nil {
+		return
+	}
+	frames, err := events(ctx, "")
+	if err != nil {
+		return
+	}
+	for f := range frames {
+		kind, _ := f.Get("type").(string)
+		if !credentialEnds[kind] {
+			continue
+		}
+		only := ""
+		if data, ok := f.Get("data").(*goapi.Object); ok {
+			only, _ = data.Get("id").(string)
+		}
+		h.RecheckDevices(ctx, only)
+	}
+}
+
+// RunDeviceRecheck rechecks every computer's chat socket every minute,
+// for credentials that end without an event (an expiry, a token an
+// ended API token had made).
+func (h *Hub) RunDeviceRecheck(ctx context.Context) {
+	tick := time.NewTicker(time.Minute)
+	defer tick.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-tick.C:
+		}
+		h.RecheckDevices(ctx, "")
+	}
+}
+
+// RecheckDevices closes the chat sockets of computers whose credential no
+// longer holds, with CloseTokenRefused; only names one computer ("" for
+// all). A check that fails keeps the socket.
+func (h *Hub) RecheckDevices(ctx context.Context, only string) {
+	if h.opts.VerifyDevice == nil {
+		return
+	}
+	for _, m := range h.all() {
+		if m.user != nil || only != "" && m.device != only {
+			continue
+		}
+		ok, err := h.opts.VerifyDevice(ctx, m.device, m.token)
+		if err == nil && !ok {
+			m.conn.Close(CloseTokenRefused, "token_refused")
+		}
+	}
 }

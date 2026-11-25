@@ -1646,6 +1646,7 @@ func (s *Server) issueEnrollmentDeviceToken(deviceID string) (string, error) {
 		}
 		return "", fmt.Errorf("end the earlier device tokens of %s: %w", deviceID, err)
 	}
+	s.credentialsEnded(deviceID)
 
 	return plainToken, nil
 }

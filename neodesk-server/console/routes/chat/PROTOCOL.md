@@ -104,6 +104,11 @@ depend on any account's permissions. What a computer can meet:
   some minutes.
 - 403: the token is refused; check again after some minutes, and at once
   when the computer has a new token.
+- An open socket closed with code 4403 and the reason `token_refused`: the
+  computer's credential ended while it was connected (its token revoked
+  or replaced, its key replaced, the computer deleted or banned). Treat it
+  as a 403. The server closes such sockets as soon as it learns of the
+  end, and checks every computer's socket again once a minute.
 - No device token yet (the computer isn't registered or approved): don't
   connect.
 

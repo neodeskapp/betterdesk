@@ -393,6 +393,9 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	s.jobs.Add("alert sweep", s.deps.Alerts.Run)
 	// Messages the API server stores for agents reach the chat's sockets
 	s.jobs.Add("chat events", func(ctx context.Context) { chat.HubOf(s.deps).WatchEvents(ctx, api.Events) })
+	// A computer whose credential ends loses its chat socket (L539)
+	s.jobs.Add("chat device credentials", func(ctx context.Context) { chat.HubOf(s.deps).WatchDeviceCredentials(ctx, api.Events) })
+	s.jobs.Add("chat device recheck", func(ctx context.Context) { chat.HubOf(s.deps).RunDeviceRecheck(ctx) })
 	s.jobs.Add("chat wait mail", func(ctx context.Context) { chat.RunWaitMail(ctx, s.deps) })
 	s.jobs.Add("help request mail", helpmail.New(helpmail.Options{
 		DB: opts.Store, Mail: s.deps.Mail, Events: api.Events, Logger: s.deps.Log.Child("HelpRequestEmail"),
@@ -415,6 +418,13 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("sign-in service: %w", err)
 	}
+	// The console's own revoke of a device's tokens reaches the chat as
+	// the API's does, through the event bus (L539)
+	s.deps.Authn.OnDeviceTokensRevoked(func(deviceID string) {
+		if opts.Events != nil {
+			opts.Events.Publish(events.Event{Type: events.EventDeviceCredentialsEnded, Data: map[string]string{"id": deviceID}})
+		}
+	})
 
 	// The chat's tables beside the messages the API server keeps (A242)
 	if err := chatstore.Ensure(ctx, opts.Store); err != nil {

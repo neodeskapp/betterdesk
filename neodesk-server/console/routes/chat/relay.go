@@ -161,7 +161,7 @@ func (r *Relay) serveAgent(u *ws.Upgrade) {
 			refuseNoHub(u)
 			return
 		}
-		r.opts.Hub.serveDevice(u, deviceID, r.deviceName(u.R.Context(), deviceID))
+		r.opts.Hub.serveDevice(u, deviceID, r.deviceName(u.R.Context(), deviceID), token)
 		return
 	}
 	conn, answers, accepted := accept(u)

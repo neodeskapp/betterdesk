@@ -1586,6 +1586,7 @@ func (s *Server) handleBanPeer(w http.ResponseWriter, r *http.Request) {
 		writeInternalError(w, err, "BanPeer")
 		return
 	}
+	s.credentialsEnded(id)
 
 	// Remove peer from in-memory map to force immediate disconnect.
 	// The peer will be rejected on next RegisterPeer/RegisterPk attempt.

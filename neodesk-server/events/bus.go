@@ -29,6 +29,11 @@ const (
 	EventServerStats       EventType = "server_stats"
 	EventEnrollmentPending EventType = "enrollment_pending"
 	EventHelpRequest       EventType = "help_request"
+	// EventDeviceCredentialsEnded: a device's token was revoked or
+	// replaced, its key replaced or the device banned; data "id" names the
+	// device when it is known. The console closes the device's chat
+	// sockets that lost their credential (L539).
+	EventDeviceCredentialsEnded EventType = "device_credentials_ended"
 )
 
 // Event is a single notification pushed to subscribers.

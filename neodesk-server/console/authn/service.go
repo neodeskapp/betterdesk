@@ -232,7 +232,10 @@ type Service struct {
 	// tokenDays is how many days a new access token lasts. It starts as
 	// Settings.TokenExpiryDays and follows the client session settings.
 	tokenDays atomic.Int64
-	qr        func(text string) (string, error)
+	// onDeviceTokensRevoked is a func(deviceID string) told after
+	// RevokeDeviceTokens (OnDeviceTokensRevoked)
+	onDeviceTokensRevoked atomic.Value
+	qr                    func(text string) (string, error)
 	log       Logger
 	now       func() time.Time
 	rand      io.Reader

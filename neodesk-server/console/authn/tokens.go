@@ -71,7 +71,19 @@ func (s *Service) IssueDeviceToken(ctx context.Context, deviceID, note string) (
 // RevokeDeviceTokens revokes the device tokens issued for the device, for
 // a device that is banned or removed. The tokens of accounts stay.
 func (s *Service) RevokeDeviceTokens(ctx context.Context, deviceID string) error {
-	return revokeDeviceTokens(ctx, s.db, deviceID)
+	if err := revokeDeviceTokens(ctx, s.db, deviceID); err != nil {
+		return err
+	}
+	if f, _ := s.onDeviceTokensRevoked.Load().(func(string)); f != nil {
+		f(deviceID)
+	}
+	return nil
+}
+
+// OnDeviceTokensRevoked names what happens after RevokeDeviceTokens: the
+// console tells its chat, which closes the device's sockets (L539).
+func (s *Service) OnDeviceTokensRevoked(f func(deviceID string)) {
+	s.onDeviceTokensRevoked.Store(f)
 }
 
 // TokenExpiryDays is how many days a new account's token lasts.

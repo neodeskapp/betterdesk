@@ -56,6 +56,9 @@ type HubOptions struct {
 	// Audit notes an edit, a deletion, an assignment and the like, by the
 	// account (0 for a device).
 	Audit func(ctx context.Context, userID int64, action string, details map[string]any)
+	// VerifyDevice checks a device's credential again
+	// (authn.Service.VerifyDeviceWSAuth); nil keeps every socket.
+	VerifyDevice func(ctx context.Context, deviceID, token string) (bool, error)
 }
 
 // Hub is the chat of version 2: the console's and the devices' sockets,
@@ -88,8 +91,10 @@ type member struct {
 	// user is the console user, nil for a device
 	user *session.User
 	name string
-	// device is the device of a device's socket
+	// device is the device of a device's socket, token the credential it
+	// opened the socket with (rechecked when a credential ends, L539)
 	device string
+	token  string
 	// what the user may: Support chat, Team chat, assign, delete anyone's
 	support, team, assign, admin bool
 	status                       string
@@ -148,13 +153,13 @@ func (h *Hub) serveOperator(u *ws.Upgrade, user *session.User) {
 
 // serveDevice runs a device's socket of version 2 once the relay has
 // checked its token.
-func (h *Hub) serveDevice(u *ws.Upgrade, device, name string) {
+func (h *Hub) serveDevice(u *ws.Upgrade, device, name, token string) {
 	conn, ok := u.Accept(ws.AcceptOptions{MaxPayload: MaxFrameBytesV2})
 	if !ok {
 		return
 	}
 	defer conn.Wait()
-	m := &member{conn: conn, device: device, name: name}
+	m := &member{conn: conn, device: device, name: name, token: token}
 	ctx := conn.Context()
 	conn.SendText(frame("welcome", map[string]any{
 		"v": Version2, "capabilities": capabilities2, "server_time": time.Now().UnixMilli(),

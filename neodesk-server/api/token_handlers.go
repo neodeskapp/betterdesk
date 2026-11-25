@@ -300,6 +300,7 @@ func (s *Server) handleRevokeDeviceToken(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
+	s.credentialsEnded(token.PeerID)
 
 	// Audit log
 	if s.auditLog != nil {

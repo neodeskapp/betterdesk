@@ -191,6 +191,7 @@ func (s *Server) replaceDeviceKey(deviceID, key string) error {
 	if err := s.db.EndDeviceTokensExcept(deviceID, 0); err != nil {
 		return err
 	}
+	s.credentialsEnded(deviceID)
 	if err := s.resetSecureDeviceState(deviceID); err != nil {
 		return err
 	}
