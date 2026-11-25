@@ -5,6 +5,7 @@
  * finds nothing on the page or in the dialogs, sheets and menus it opens.
  */
 import type { Page } from '@playwright/test';
+import { addTabs } from '../src/lib/devices-area/add-computers.ts';
 import { test, expect, expectNoAxeViolations } from './fixtures.ts';
 import { UI, type Role } from './roles.ts';
 
@@ -55,12 +56,19 @@ for (const role of ROLES) {
 			await expect(main(page).getByRole('link', { name: 'Open server status' })).toHaveCount(
 				nav.has('server-management:overview') ? 1 : 0
 			);
-			await expect(main(page).getByRole('link', { name: /^Support agents/ })).toHaveCount(
-				nav.has('agents') ? 1 : 0
-			);
-			await expect(main(page).getByRole('link', { name: 'Server key and QR code' })).toHaveCount(
-				nav.has('keys') ? 1 : 0
-			);
+			// Support agents and the server key are tabs of Devices › Add computers;
+			// each link shows when the role gets its tab (agents: the admin roles,
+			// manual setup: everyone)
+			const tabs = addTabs({ can, role });
+			expect(tabs.includes('agents')).toBe(role !== 'operator' && role !== 'viewer');
+			expect(tabs).toContain('manual');
+			const agents = main(page).getByRole('link', { name: /^Support agents/ });
+			await expect(agents).toHaveCount(tabs.includes('agents') ? 1 : 0);
+			if (tabs.includes('agents'))
+				await expect(agents).toHaveAttribute('href', /\/devices\/add\?tab=agents$/);
+			const keys = main(page).getByRole('link', { name: 'Server key and QR code' });
+			await expect(keys).toHaveCount(tabs.includes('manual') ? 1 : 0);
+			if (tabs.includes('manual')) await expect(keys).toHaveAttribute('href', /\/devices\/add\?tab=manual$/);
 			await expect(main(page).getByRole('heading', { name: 'Trends' })).toHaveCount(
 				can('audit.view') ? 1 : 0
 			);
