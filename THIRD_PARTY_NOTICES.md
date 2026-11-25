@@ -103,7 +103,10 @@ The console self-hosts these fonts in `web-ui/static/fonts/`:
   Cyrillic subsets, weights 400 and 600), SIL Open Font License 1.1,
   copyright IBM Corp. License text:
   `web-ui/static/fonts/IBMPlex-OFL.txt`.
-- Material Symbols (subset), Apache License 2.0, see
+- Material Symbols Outlined (subset), Apache License 2.0, from
+  github.com/google/material-design-icons at commit
+  10ecc14790612ca8fd164e3f4ffe9c16fc50d5b7 (font version 2.978), instanced
+  at optical size 20 by `web-ui/scripts/build-material-symbols.py`; see
   `web-ui/static/fonts/MATERIAL_SYMBOLS_VERSION.txt`.
 
 Operating system marks in `web-ui/static/img/os-icons.svg` are from
