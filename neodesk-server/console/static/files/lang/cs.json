@@ -8799,7 +8799,8 @@
     "open_in_new_tab_hint": "Přesunout tuto relaci na vlastní kartu: tam se připojí znovu a zde skončí",
     "no_keyboard_lock": "Tento prohlížeč si některé zkratky nechává pro sebe, i na celé obrazovce: Ctrl+W, Ctrl+T, Ctrl+N, klávesu Windows, a Esc celou obrazovku ukončí. Akce posílají do vzdáleného počítače klávesu Windows, Alt+Tab a Ctrl+Alt+Del.",
     "no_screen_placement": "Tento prohlížeč neumí umístit okna na vaše další obrazovky. Přetáhněte okno každého displeje na obrazovku, kde ho chcete mít.",
-    "phone_turn": "Nebo otočte telefon na šířku: na šířku se relace otevře zde v prohlížeči."
+    "phone_turn": "Nebo otočte telefon na šířku: na šířku se relace otevře zde v prohlížeči.",
+    "no_open_sessions": "Žádná relace není otevřená. Připojte se podle ID, nebo vyberte zařízení níže."
   },
   "diagram": {
     "your_computer": "Váš počítač",

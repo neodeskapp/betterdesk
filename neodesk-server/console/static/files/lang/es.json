@@ -8799,7 +8799,8 @@
     "open_in_new_tab_hint": "Mover esta sesión a una pestaña propia: allí se vuelve a conectar y aquí termina",
     "no_keyboard_lock": "Este navegador se queda con algunos atajos, también a pantalla completa: Ctrl+W, Ctrl+T, Ctrl+N, la tecla Windows, y Esc sale de la pantalla completa. Acciones envía la tecla Windows, Alt+Tab y Ctrl+Alt+Supr al equipo remoto.",
     "no_screen_placement": "Este navegador no puede colocar ventanas en tus otras pantallas. Arrastra la ventana de cada pantalla a la que quieras.",
-    "phone_turn": "O gira el teléfono en horizontal: así la sesión se abre aquí en el navegador."
+    "phone_turn": "O gira el teléfono en horizontal: así la sesión se abre aquí en el navegador.",
+    "no_open_sessions": "No hay ninguna sesión abierta. Conéctate por ID o elige un dispositivo abajo."
   },
   "diagram": {
     "your_computer": "Su equipo",

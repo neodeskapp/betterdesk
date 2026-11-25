@@ -500,3 +500,21 @@ func TestBootstrapNavShape(t *testing.T) {
 		t.Errorf("settings pages carry their group: %+v", last.Pages[0])
 	}
 }
+
+// Remote sessions opens inside the console (the viewer's sessions live
+// there); the standalone /remote stays for guests and Open in new tab.
+func TestNavRemoteSessionsOpenInsideTheConsole(t *testing.T) {
+	nav := BuildNav(NavInput{Can: func(string) bool { return true }, IsSuperAdmin: true, Role: "admin"})
+	for _, section := range nav.Sections {
+		for _, p := range section.Pages {
+			if p.Page != "remote" {
+				continue
+			}
+			if p.Href != "/remote/sessions" || p.External {
+				t.Errorf("remote: href %q, external %v; want /remote/sessions inside the console", p.Href, p.External)
+			}
+			return
+		}
+	}
+	t.Fatal("no remote page in the navigation")
+}

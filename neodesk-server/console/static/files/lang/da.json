@@ -8805,7 +8805,8 @@
     "open_in_new_tab_hint": "Flyt denne session til sin egen fane: den forbinder igen dér og slutter her",
     "no_keyboard_lock": "Denne browser beholder nogle genveje selv, også i fuld skærm: Ctrl+W, Ctrl+T, Ctrl+N, Windows-tasten, og Esc forlader fuld skærm. Handlinger sender Windows-tasten, Alt+Tab og Ctrl+Alt+Del til fjerncomputeren.",
     "no_screen_placement": "Denne browser kan ikke placere vinduer på dine andre skærme. Træk hver skærms vindue hen på den skærm, du vil have det på.",
-    "phone_turn": "Eller vend telefonen på tværs: i liggende format åbner sessionen her i browseren."
+    "phone_turn": "Eller vend telefonen på tværs: i liggende format åbner sessionen her i browseren.",
+    "no_open_sessions": "Ingen session er åben. Forbind med ID, eller vælg en enhed nedenfor."
   },
   "diagram": {
     "your_computer": "Din computer",

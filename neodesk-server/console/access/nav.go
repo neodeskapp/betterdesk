@@ -69,8 +69,7 @@ func navPage(page, keywords, href, label string, check func(*NavPage), more ...f
 	return p
 }
 
-func core(p *NavPage)     { p.Core = true }
-func external(p *NavPage) { p.External = true }
+func core(p *NavPage) { p.Core = true }
 
 func inGroup(group string) func(*NavPage) { return func(p *NavPage) { p.Group = group } }
 func countID(id string) func(*NavPage)    { return func(p *NavPage) { p.CountID = id } }
@@ -90,7 +89,7 @@ var NavSections = []NavSection{
 		// permissions, so the page is for every account (Manual setup is)
 		navPage("devices-add", "add computers install join invite install links client setup keys device tokens pairing codes support agents", "/devices/add", "nav.devices_add", withRule(navAlways), core,
 			func(p *NavPage) { p.AlsoActiveFor = []string{"keys", "tokens", "pairing", "agents", "generator"} }),
-		navPage("remote", "web client browser remote control", "/remote", "nav.remote", withPermission("device.connect"), core, external),
+		navPage("remote", "web client browser remote control sessions", "/remote/sessions", "nav.remote", withPermission("device.connect"), core),
 		navPage("inventory", "hardware software", "/inventory", "nav.inventory", withPermission("device.view")),
 		navPage("network", "ping monitor latency targets", "/network", "nav.network", withPermission("device.view")),
 		navPage("fleet", "fleet bulk tasks workflows compliance", "/fleet", "nav.fleet", withPermission("org.manage_devices")),

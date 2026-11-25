@@ -8805,7 +8805,8 @@
     "open_in_new_tab_hint": "Mută această sesiune într-o filă proprie: acolo se reconectează, aici se încheie",
     "no_keyboard_lock": "Acest browser păstrează unele comenzi rapide pentru el, și pe ecran complet: Ctrl+W, Ctrl+T, Ctrl+N, tasta Windows, iar Esc iese din ecranul complet. Acțiuni trimite tasta Windows, Alt+Tab și Ctrl+Alt+Del la computerul la distanță.",
     "no_screen_placement": "Acest browser nu poate pune ferestre pe celelalte ecrane. Trageți fereastra fiecărui afișaj pe ecranul dorit.",
-    "phone_turn": "Sau rotiți telefonul pe orizontală: așa sesiunea se deschide aici, în browser."
+    "phone_turn": "Sau rotiți telefonul pe orizontală: așa sesiunea se deschide aici, în browser.",
+    "no_open_sessions": "Nicio sesiune nu este deschisă. Conectați-vă după ID sau alegeți un dispozitiv mai jos."
   },
   "diagram": {
     "your_computer": "Computerul dvs.",

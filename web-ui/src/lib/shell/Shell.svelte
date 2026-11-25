@@ -68,7 +68,11 @@
 	let narrow = $state(typeof window !== 'undefined' && window.matchMedia(DRAWER_QUERY).matches);
 	/** The page of a remote session: the viewer fills the main area */
 	const SESSION_ROUTE = '/(console)/remote/session/[deviceId]';
-	const sessionPage = $derived(page.route.id === SESSION_ROUTE);
+	// The route as text: the generated list of route ids is not needed to compare with it
+	const routeId = $derived<string | null>(page.route.id);
+	const sessionPage = $derived(routeId === SESSION_ROUTE);
+	// Remote sessions lists the open sessions itself: no strip above it
+	const sessionsPage = $derived(routeId === '/(console)/remote/sessions');
 	// The sidebar folded away on a session's page (the person's choice) and in full screen opens as a drawer
 	const drawer = $derived(narrow || cs.immersive || (sessionPage && cs.collapsed));
 	let drawerOpen = $state(false);
@@ -137,7 +141,7 @@
 		navigation++;
 		if (type === 'enter' || !from || !to || from.url.pathname === to.url.pathname) return;
 		// A remote session's page: the viewer gives its screen the keyboard itself
-		if (to.route.id === SESSION_ROUTE) return;
+		if ((to.route.id as string | null) === SESSION_ROUTE) return;
 		void tick().then(() => {
 			// A sheet or dialog the new page opened (a device from ?open=) keeps the focus
 			if (openLayers() > 0) return;
@@ -268,7 +272,7 @@
 					onsearch={() => (searchOpen = true)}
 					onhelp={() => (helpOpen = !helpOpen)}
 				/>
-				{#if !sessionPage}<SessionStrip />{/if}
+				{#if !sessionPage && !sessionsPage}<SessionStrip />{/if}
 			{/if}
 			<div class="shell-body">
 				<main

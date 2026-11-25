@@ -8805,7 +8805,8 @@
     "open_in_new_tab_hint": "A munkamenet áthelyezése saját lapra: ott újra csatlakozik, itt pedig véget ér",
     "no_keyboard_lock": "Ez a böngésző néhány billentyűparancsot megtart magának, teljes képernyőn is: Ctrl+W, Ctrl+T, Ctrl+N, a Windows billentyű, és az Esc kilép a teljes képernyőből. A Műveletek elküldi a Windows billentyűt, az Alt+Tabot és a Ctrl+Alt+Del-t a távoli számítógépre.",
     "no_screen_placement": "Ez a böngésző nem tud ablakot tenni a többi képernyőjére. Húzza az egyes kijelzők ablakát a kívánt képernyőre.",
-    "phone_turn": "Vagy fordítsa el a telefont fekvő helyzetbe: így a munkamenet itt, a böngészőben nyílik meg."
+    "phone_turn": "Vagy fordítsa el a telefont fekvő helyzetbe: így a munkamenet itt, a böngészőben nyílik meg.",
+    "no_open_sessions": "Nincs nyitott munkamenet. Csatlakozzon azonosítóval, vagy válasszon lent egy eszközt."
   },
   "diagram": {
     "your_computer": "Az Ön gépe",

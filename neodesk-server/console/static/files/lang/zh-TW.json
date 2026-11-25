@@ -8803,7 +8803,8 @@
     "open_in_new_tab_hint": "將此工作階段移到單獨的分頁：會在那裡重新連線，並在這裡結束",
     "no_keyboard_lock": "此瀏覽器在全螢幕時也會保留一些快速鍵：Ctrl+W、Ctrl+T、Ctrl+N、Windows 鍵，按 Esc 會離開全螢幕。可在「動作」中向遠端電腦傳送 Windows 鍵、Alt+Tab 和 Ctrl+Alt+Del。",
     "no_screen_placement": "此瀏覽器無法把視窗放到你的其他螢幕上。請把每個顯示器的視窗拖到想要的螢幕。",
-    "phone_turn": "或者把手機轉成橫向：橫向時工作階段會在這個瀏覽器中開啟。"
+    "phone_turn": "或者把手機轉成橫向：橫向時工作階段會在這個瀏覽器中開啟。",
+    "no_open_sessions": "沒有開啟的工作階段。依 ID 連線，或在下方選擇裝置。"
   },
   "diagram": {
     "your_computer": "您的電腦",

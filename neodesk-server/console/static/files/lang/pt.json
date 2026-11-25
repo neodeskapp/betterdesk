@@ -8799,7 +8799,8 @@
     "open_in_new_tab_hint": "Mover esta sessão para um separador próprio: aí volta a ligar-se e aqui termina",
     "no_keyboard_lock": "Este navegador guarda alguns atalhos para si, também em ecrã inteiro: Ctrl+W, Ctrl+T, Ctrl+N, a tecla Windows, e Esc sai do ecrã inteiro. Ações envia a tecla Windows, Alt+Tab e Ctrl+Alt+Del para o computador remoto.",
     "no_screen_placement": "Este navegador não consegue pôr janelas nos seus outros ecrãs. Arraste a janela de cada ecrã para onde a quiser.",
-    "phone_turn": "Ou rode o telefone para a horizontal: assim a sessão abre aqui no navegador."
+    "phone_turn": "Ou rode o telefone para a horizontal: assim a sessão abre aqui no navegador.",
+    "no_open_sessions": "Não há nenhuma sessão aberta. Ligue-se por ID ou escolha um dispositivo abaixo."
   },
   "diagram": {
     "your_computer": "O seu computador",

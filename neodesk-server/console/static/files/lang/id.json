@@ -8805,7 +8805,8 @@
     "open_in_new_tab_hint": "Pindahkan sesi ini ke tab tersendiri: sesi tersambung lagi di sana dan berakhir di sini",
     "no_keyboard_lock": "Browser ini menyimpan beberapa pintasan untuk dirinya, juga di layar penuh: Ctrl+W, Ctrl+T, Ctrl+N, tombol Windows, dan Esc keluar dari layar penuh. Tindakan mengirim tombol Windows, Alt+Tab, dan Ctrl+Alt+Del ke komputer jarak jauh.",
     "no_screen_placement": "Browser ini tidak bisa menaruh jendela di layar Anda yang lain. Seret jendela setiap tampilan ke layar yang Anda inginkan.",
-    "phone_turn": "Atau putar ponsel ke samping: dalam mode lanskap sesi terbuka di sini di browser."
+    "phone_turn": "Atau putar ponsel ke samping: dalam mode lanskap sesi terbuka di sini di browser.",
+    "no_open_sessions": "Tidak ada sesi yang terbuka. Sambungkan dengan ID, atau pilih perangkat di bawah."
   },
   "diagram": {
     "your_computer": "Komputer Anda",

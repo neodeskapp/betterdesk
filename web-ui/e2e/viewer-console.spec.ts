@@ -162,3 +162,22 @@ test('phone width: the session stays usable, the sidebar is the drawer', async (
 	// Nothing wider than the screen
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 });
+
+test('Remote sessions in the sidebar opens inside the console: the open sessions, and a new one by ID', async ({
+	page
+}) => {
+	await openSession(page, A);
+	await page.locator('.shell nav a[href$="/remote/sessions"]').click();
+	await expect(page).toHaveURL(/\/remote\/sessions$/);
+	await expect(page.locator('.shell-topbar')).toBeVisible();
+	const list = page.locator('.session-list');
+	await expect(list.getByRole('link')).toHaveCount(1);
+	await expect(list).toContainText('Connected');
+	await expect(page.getByRole('navigation', { name: 'Open sessions' })).toHaveCount(0);
+	await page.getByLabel('Device ID', { exact: true }).fill(B);
+	await page.locator('.quick').getByRole('button', { name: 'Connect', exact: true }).click();
+	await expect(page).toHaveURL(new RegExp(`/remote/session/${B}`));
+	await expect(page.getByRole('tablist', { name: 'Open sessions' }).getByRole('tab')).toHaveCount(2);
+	await expect(page.locator(`#rd-panel-${A}.streaming`)).toHaveCount(1);
+	await expectNoAxeViolations(page, '.session-bar');
+});

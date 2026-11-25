@@ -8805,7 +8805,8 @@
     "open_in_new_tab_hint": "Flytt denne økten til en egen fane: den kobler til på nytt der og avsluttes her",
     "no_keyboard_lock": "Denne nettleseren beholder noen snarveier selv, også i fullskjerm: Ctrl+W, Ctrl+T, Ctrl+N, Windows-tasten, og Esc avslutter fullskjerm. Handlinger sender Windows-tasten, Alt+Tab og Ctrl+Alt+Del til den eksterne datamaskinen.",
     "no_screen_placement": "Denne nettleseren kan ikke legge vinduer på de andre skjermene dine. Dra hver skjerms vindu til skjermen du vil ha det på.",
-    "phone_turn": "Eller snu telefonen på tvers: i liggende format åpnes økten her i nettleseren."
+    "phone_turn": "Eller snu telefonen på tvers: i liggende format åpnes økten her i nettleseren.",
+    "no_open_sessions": "Ingen økt er åpen. Koble til med ID, eller velg en enhet nedenfor."
   },
   "diagram": {
     "your_computer": "Din datamaskin",
