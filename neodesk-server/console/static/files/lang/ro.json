@@ -6430,7 +6430,9 @@
     "hardening_session_timeout_desc": "O sesiune din consolă se încheie după {idle} minute fără nicio cerere și la {max} minute după autentificare (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Limită de sesiuni în consolă per cont",
     "hardening_single_session_desc": "O nouă autentificare în consolă încheie sesiunile nefolosite de cel mai mult timp peste SESSION_MAX_PER_USER (acum {limit}) și înregistrează adresa și browserul în jurnalul de audit.",
-    "hardening_unlimited": "fără limită"
+    "hardening_unlimited": "fără limită",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "Managementul Limbii",
@@ -7463,8 +7465,8 @@
     "alpha_tooltip": "Funcție timpurie — facturarea și pachetele sunt în dezvoltare activă.",
     "tabs": {
       "overview": "Prezentare",
-      "packages": "Pachete de facturare",
-      "sessions": "Sesiuni facturabile",
+      "packages": "Pachete",
+      "sessions": "Sesiuni",
       "reports": "Rapoarte",
       "settings": "Setări avansate",
       "overview_nav": "Billing overview",
@@ -7777,7 +7779,8 @@
       "assignment_edit_desc": "Grupul de dispozitive și pachetul rămân. Modificați timpul rămas luna aceasta, tarifele sau datele.",
       "preview_sheet_desc": "Cât din timpul inclus a folosit pachetul într-o lună și timpul facturat peste el.",
       "save_failed": "Nu s-a putut salva. Încercați din nou.",
-      "error_targets": "Nu s-au putut încărca grupurile de dispozitive: {error}"
+      "error_targets": "Nu s-au putut încărca grupurile de dispozitive: {error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

@@ -6430,7 +6430,9 @@
     "hardening_session_timeout_desc": "Sesi konsol berakhir setelah {idle} menit tanpa permintaan dan {max} menit setelah masuk (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Batas sesi konsol per akun",
     "hardening_single_session_desc": "Proses masuk baru ke konsol mengakhiri sesi yang paling lama tidak dipakai di atas SESSION_MAX_PER_USER (saat ini {limit}) dan mencatat alamat serta peramban untuk log audit.",
-    "hardening_unlimited": "tanpa batas"
+    "hardening_unlimited": "tanpa batas",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "Manajemen Bahasa",
@@ -7463,8 +7465,8 @@
     "alpha_tooltip": "Fitur awal — penagihan dan paket sedang dalam pengembangan aktif.",
     "tabs": {
       "overview": "Ikhtisar",
-      "packages": "Paket penagihan",
-      "sessions": "Sesi yang dapat ditagih",
+      "packages": "Paket",
+      "sessions": "Sesi",
       "reports": "Laporan",
       "settings": "Pengaturan lanjutan",
       "overview_nav": "Billing overview",
@@ -7777,7 +7779,8 @@
       "assignment_edit_desc": "Grup perangkat dan paket tetap. Ubah sisa waktu bulan ini, tarif, atau tanggal.",
       "preview_sheet_desc": "Berapa banyak waktu termasuk yang dipakai paket dalam sebulan, dan waktu yang ditagih di luarnya.",
       "save_failed": "Tidak dapat menyimpan. Coba lagi.",
-      "error_targets": "Tidak dapat memuat grup perangkat: {error}"
+      "error_targets": "Tidak dapat memuat grup perangkat: {error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

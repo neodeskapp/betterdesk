@@ -4,7 +4,7 @@
  */
 import { cleanup, render, screen } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import BillingSettings from '../../../src/routes/(console)/commercialization/BillingSettings.svelte';
+import BillingSettings from '../../../src/routes/(console)/billing/BillingSettings.svelte';
 
 let configStatus = 200;
 

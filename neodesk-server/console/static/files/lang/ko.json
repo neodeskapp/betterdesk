@@ -6424,7 +6424,9 @@
     "hardening_session_timeout_desc": "콘솔 세션은 요청 없이 {idle}분이 지나거나 로그인 후 {max}분이 지나면 종료됩니다(SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "계정당 콘솔 세션 수 제한",
     "hardening_single_session_desc": "새로 콘솔에 로그인하면 SESSION_MAX_PER_USER(현재 {limit})를 넘는 세션 중 가장 오래 사용하지 않은 세션을 종료하고, 감사 로그를 위해 주소와 브라우저를 기록합니다.",
-    "hardening_unlimited": "제한 없음"
+    "hardening_unlimited": "제한 없음",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "언어 관리",
@@ -7457,8 +7459,8 @@
     "alpha_tooltip": "초기 기능 — 결제 및 패키지가 활발히 개발 중입니다.",
     "tabs": {
       "overview": "개요",
-      "packages": "청구 패키지",
-      "sessions": "청구 가능한 세션",
+      "packages": "패키지",
+      "sessions": "세션",
       "reports": "보고서",
       "settings": "고급 설정",
       "overview_nav": "Billing overview",
@@ -7771,7 +7773,8 @@
       "assignment_edit_desc": "장치 그룹과 패키지는 그대로입니다. 이번 달 남은 시간, 요금 또는 날짜를 바꿀 수 있습니다.",
       "preview_sheet_desc": "한 달 동안 패키지가 쓴 포함 시간과 이를 넘어 청구된 시간입니다.",
       "save_failed": "저장하지 못했습니다. 다시 시도하세요.",
-      "error_targets": "장치 그룹을 불러오지 못했습니다: {error}"
+      "error_targets": "장치 그룹을 불러오지 못했습니다: {error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

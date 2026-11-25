@@ -4,6 +4,7 @@ import { listServerEvents, Overview, PanelSession } from '../../../src/lib/api/a
 import {
 	actionLabel,
 	auditTab,
+	checksTab,
 	describeUa,
 	filterAudit,
 	formatDetails,
@@ -63,12 +64,22 @@ const rows = [
 ];
 
 describe('tabs in the URL', () => {
-	test('known tabs, the old "vulnerabilities" name, anything else is the audit log', () => {
+	test('known tabs, anything else is the audit log', () => {
 		expect(auditTab('events')).toBe('events');
-		expect(auditTab('vulnerabilities')).toBe('hardening');
 		expect(auditTab('sessions')).toBe('sessions');
+		// The checks are on Security checks now (lib/redirects.ts sends the old addresses there)
+		expect(auditTab('overview')).toBe('audit');
+		expect(auditTab('hardening')).toBe('audit');
 		expect(auditTab('nonsense')).toBe('audit');
 		expect(auditTab(null)).toBe('audit');
+	});
+
+	test('Security checks: Checks first, then Hardening', () => {
+		expect(checksTab('hardening')).toBe('hardening');
+		expect(checksTab('vulnerabilities')).toBe('hardening');
+		expect(checksTab('checks')).toBe('checks');
+		expect(checksTab('overview')).toBe('checks');
+		expect(checksTab(null)).toBe('checks');
 	});
 });
 

@@ -6633,7 +6633,9 @@
         "hardening_session_timeout_desc": "A console session ends after {idle} minutes without a request and {max} minutes after sign-in (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
         "hardening_single_session": "Limit of console sessions per account",
         "hardening_single_session_desc": "A new console sign-in ends the least recently used sessions beyond the limit per account (now {limit}; set under Settings, Sign-in, or by SESSION_MAX_PER_USER) and records address and browser for the audit log.",
-        "hardening_unlimited": "no limit"
+        "hardening_unlimited": "no limit",
+        "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+        "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
     },
     "languages": {
         "title": "Language Management",
@@ -7530,8 +7532,8 @@
         "alpha_tooltip": "Early feature — billing and packages are under active development.",
         "tabs": {
             "overview": "Overview",
-            "packages": "Billing packages",
-            "sessions": "Billable sessions",
+            "packages": "Packages",
+            "sessions": "Sessions",
             "reports": "Reports",
             "settings": "Advanced settings",
             "overview_nav": "Billing overview",
@@ -7844,7 +7846,8 @@
             "assignment_edit_desc": "The device group and the package stay. Change the time left this month, the rates or the dates.",
             "preview_sheet_desc": "How much of the included time the package used in a month, and the time billed beyond it.",
             "save_failed": "Could not save. Try again.",
-            "error_targets": "Could not load the device groups: {error}"
+            "error_targets": "Could not load the device groups: {error}",
+            "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
         }
     },
     "rdclient_login": {

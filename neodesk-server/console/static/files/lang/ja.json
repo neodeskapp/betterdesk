@@ -6424,7 +6424,9 @@
     "hardening_session_timeout_desc": "コンソールセッションは、リクエストがないまま {idle} 分経過するか、サインインから {max} 分経過すると終了します (SESSION_IDLE_TIMEOUT、SESSION_MAX_AGE)。",
     "hardening_single_session": "アカウントごとのコンソールセッション数の上限",
     "hardening_single_session_desc": "コンソールに新しくサインインすると、SESSION_MAX_PER_USER (現在 {limit}) を超えた分について最も長く使われていないセッションを終了し、監査ログ用にアドレスとブラウザーを記録します。",
-    "hardening_unlimited": "上限なし"
+    "hardening_unlimited": "上限なし",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "言語管理",
@@ -7457,8 +7459,8 @@
     "alpha_tooltip": "初期機能 — 課金とパッケージは開発中です。",
     "tabs": {
       "overview": "概要",
-      "packages": "請求パッケージ",
-      "sessions": "請求対象のセッション",
+      "packages": "パッケージ",
+      "sessions": "セッション",
       "reports": "レポート",
       "settings": "詳細設定",
       "overview_nav": "Billing overview",
@@ -7771,7 +7773,8 @@
       "assignment_edit_desc": "デバイスグループとパッケージはそのままです。今月の残り時間、料金、日付を変更できます。",
       "preview_sheet_desc": "1 か月にパッケージが使った含まれる時間と、それを超えて請求された時間です。",
       "save_failed": "保存できませんでした。もう一度お試しください。",
-      "error_targets": "デバイスグループを読み込めませんでした: {error}"
+      "error_targets": "デバイスグループを読み込めませんでした: {error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

@@ -6424,7 +6424,9 @@
     "hardening_session_timeout_desc": "Una sessione della console termina dopo {idle} minuti senza richieste e {max} minuti dopo l'accesso (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Limite di sessioni della console per account",
     "hardening_single_session_desc": "Un nuovo accesso alla console chiude le sessioni usate meno di recente oltre SESSION_MAX_PER_USER (ora {limit}) e registra indirizzo e browser per il registro di audit.",
-    "hardening_unlimited": "nessun limite"
+    "hardening_unlimited": "nessun limite",
+    "audit_page_description": "Chi ha fatto cosa in questa console, cosa ha registrato il server NeoDesk e dove hai effettuato l'accesso.",
+    "checks_page_description": "Quali controlli di sicurezza supera questo server, cosa fare per gli altri e con quali impostazioni di protezione funziona."
   },
   "languages": {
     "title": "Gestione lingue",
@@ -7457,8 +7459,8 @@
     "alpha_tooltip": "Funzione anticipata — fatturazione e pacchetti in sviluppo attivo.",
     "tabs": {
       "overview": "Panoramica",
-      "packages": "Pacchetti di fatturazione",
-      "sessions": "Sessioni fatturabili",
+      "packages": "Pacchetti",
+      "sessions": "Sessioni",
       "reports": "Report",
       "settings": "Impostazioni avanzate",
       "overview_nav": "Billing overview",
@@ -7771,7 +7773,8 @@
       "assignment_edit_desc": "Il gruppo di dispositivi e il pacchetto restano. Cambia il tempo rimasto questo mese, le tariffe o le date.",
       "preview_sheet_desc": "Quanto del tempo incluso il pacchetto ha usato in un mese e il tempo fatturato oltre.",
       "save_failed": "Impossibile salvare. Riprova.",
-      "error_targets": "Impossibile caricare i gruppi di dispositivi: {error}"
+      "error_targets": "Impossibile caricare i gruppi di dispositivi: {error}",
+      "reports_description": "Le sessioni che attendono ancora un rapporto di lavoro e quanto tempo incluso ha usato ogni assegnazione questo mese. La fatturazione è una funzione recente e può ancora cambiare."
     }
   },
   "remote_dashboard": {

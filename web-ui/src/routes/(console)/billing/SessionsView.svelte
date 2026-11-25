@@ -1,10 +1,11 @@
 <!--
-  Billable sessions (?tab=sessions): what waits for a work report and how
-  much included time each assignment has used this month, above the full
-  list of sessions with its filters (organization, status, device),
-  Refresh and Export (billing.export). A click on a session opens its
-  details; a session waiting for a report opens the report dialog from the
-  list on top (billing.reports), or its details without that permission.
+  Two tabs of Billing. Sessions (?tab=sessions): the full list of
+  sessions with its filters (organization, status, device), Refresh and
+  Export (billing.export); a click on a session opens its details.
+  Reports (?tab=reports, part="reports"): what waits for a work report and
+  how much included time each assignment has used this month; a session
+  waiting for a report opens the report dialog (billing.reports), or its
+  details without that permission.
 
   Older Go servers fail to read a session that is still running, so the
   full list answers 500: then the ended sessions are read by status and a
@@ -64,8 +65,15 @@
 	import ReportDialog from './ReportDialog.svelte';
 	import SessionSheet from './SessionSheet.svelte';
 
-	let { canManage, canWrite, canExport }: { canManage: boolean; canWrite: boolean; canExport: boolean } =
-		$props();
+	interface Props {
+		canManage: boolean;
+		canWrite: boolean;
+		canExport: boolean;
+		/** Which tab of Billing shows: the list of sessions, or the reports still to write and the included time used */
+		part?: 'sessions' | 'reports';
+	}
+
+	let { canManage, canWrite, canExport, part = 'sessions' }: Props = $props();
 
 	const uid = $props.id();
 
@@ -299,160 +307,161 @@
 	>
 {/snippet}
 
-<div class="cols summary">
-	<section class="section" aria-labelledby="{uid}-pending">
-		<div class="section-head"><h2 id="{uid}-pending">{t('commercialization.ui.pending_title')}</h2></div>
-		{#if pending?.length}<p class="section-note">{t('commercialization.ui.pending_note')}</p>{/if}
-		{#if pendingError}
-			<States
-				kind="error"
-				message={t('commercialization.ui.error_sessions')}
-				onretry={() => void loadPending()}
-			/>
-		{:else if pending === null}
-			<States kind="loading" message={t('commercialization.ui.loading_sessions')} />
-		{:else if !pending.length}
-			<p class="muted">{t('commercialization.ui.pending_none')}</p>
-		{:else}
-			<RowList label={t('commercialization.ui.pending_title')}>
-				{#each pending as s (s.id)}
-					{@const parts = around('commercialization.ui.pending_row_sub', 'date', {
-						operator: s.operator_name || s.operator_id
-					})}
-					<ListRow title={s.device_name || s.device_id} chevron onclick={() => openPending(s)}>
-						{#snippet sub()}{parts[0]}<Time value={s.started_at} />{parts[1]}{/snippet}
-					</ListRow>
-				{/each}
-			</RowList>
-		{/if}
-	</section>
+{#if part === 'reports'}
+	<div class="cols summary">
+		<section class="section" aria-labelledby="{uid}-pending">
+			<div class="section-head"><h2 id="{uid}-pending">{t('commercialization.ui.pending_title')}</h2></div>
+			{#if pending?.length}<p class="section-note">{t('commercialization.ui.pending_note')}</p>{/if}
+			{#if pendingError}
+				<States
+					kind="error"
+					message={t('commercialization.ui.error_sessions')}
+					onretry={() => void loadPending()}
+				/>
+			{:else if pending === null}
+				<States kind="loading" message={t('commercialization.ui.loading_sessions')} />
+			{:else if !pending.length}
+				<p class="muted">{t('commercialization.ui.pending_none')}</p>
+			{:else}
+				<RowList label={t('commercialization.ui.pending_title')}>
+					{#each pending as s (s.id)}
+						{@const parts = around('commercialization.ui.pending_row_sub', 'date', {
+							operator: s.operator_name || s.operator_id
+						})}
+						<ListRow title={s.device_name || s.device_id} chevron onclick={() => openPending(s)}>
+							{#snippet sub()}{parts[0]}<Time value={s.started_at} />{parts[1]}{/snippet}
+						</ListRow>
+					{/each}
+				</RowList>
+			{/if}
+		</section>
 
-	<section class="section" aria-labelledby="{uid}-usage">
-		<div class="section-head"><h2 id="{uid}-usage">{t('commercialization.ui.usage_title')}</h2></div>
-		<p class="section-note">{t('commercialization.ui.usage_note')}</p>
-		{#if usageError}
-			<States
-				kind="error"
-				message={t('commercialization.ui.error_assignments')}
-				onretry={() => void loadUsage()}
-			/>
-		{:else if usage === null}
-			<States kind="loading" message={t('commercialization.ui.loading_assignments')} />
-		{:else if !usage.length}
-			<p class="muted">
-				{t('commercialization.ui.usage_empty')}
-				{#if canManage}<a href={link('/commercialization?tab=packages')}
-						>{t('commercialization.contracts.new')}</a
-					>{/if}
-			</p>
-		{:else}
-			<ul class="usage-list">
-				{#each usage as row (row.contract.id)}
-					<li class="usage-row">
-						<span class="usage-main">
-							<span class="cell-title">{row.contract.target_name || row.contract.target_key}</span>
-							<span class="cell-sub">{row.packageName}</span>
-							{#if row.included}
-								<Meter
-									value={row.used}
-									max={row.included}
-									high={80}
-									full={100}
-									text={t('commercialization.ui.used_of_included', {
-										used: formatMinutes(row.used),
-										included: formatMinutes(row.included)
-									})}
-								/>
-							{:else}
-								<span class="cell-sub">{t('commercialization.ui.no_included_time')}</span>
+		<section class="section" aria-labelledby="{uid}-usage">
+			<div class="section-head"><h2 id="{uid}-usage">{t('commercialization.ui.usage_title')}</h2></div>
+			<p class="section-note">{t('commercialization.ui.usage_note')}</p>
+			{#if usageError}
+				<States
+					kind="error"
+					message={t('commercialization.ui.error_assignments')}
+					onretry={() => void loadUsage()}
+				/>
+			{:else if usage === null}
+				<States kind="loading" message={t('commercialization.ui.loading_assignments')} />
+			{:else if !usage.length}
+				<p class="muted">
+					{t('commercialization.ui.usage_empty')}
+					{#if canManage}<a href={link('/billing?tab=packages')}>{t('commercialization.contracts.new')}</a
+						>{/if}
+				</p>
+			{:else}
+				<ul class="usage-list">
+					{#each usage as row (row.contract.id)}
+						<li class="usage-row">
+							<span class="usage-main">
+								<span class="cell-title">{row.contract.target_name || row.contract.target_key}</span>
+								<span class="cell-sub">{row.packageName}</span>
+								{#if row.included}
+									<Meter
+										value={row.used}
+										max={row.included}
+										high={80}
+										full={100}
+										text={t('commercialization.ui.used_of_included', {
+											used: formatMinutes(row.used),
+											included: formatMinutes(row.included)
+										})}
+									/>
+								{:else}
+									<span class="cell-sub">{t('commercialization.ui.no_included_time')}</span>
+								{/if}
+							</span>
+							{#if row.contract.status === 'suspended'}
+								<span class="usage-end"
+									><Status tone="neutral" label={t('commercialization.status.suspended')} /></span
+								>
 							{/if}
-						</span>
-						{#if row.contract.status === 'suspended'}
-							<span class="usage-end"
-								><Status tone="neutral" label={t('commercialization.status.suspended')} /></span
-							>
-						{/if}
-					</li>
-				{/each}
-			</ul>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+		</section>
+	</div>
+{:else}
+	<section class="section" id="tab-sessions" aria-labelledby="{uid}-all">
+		<div class="section-head"><h2 id="{uid}-all">{t('commercialization.ui.all_sessions_title')}</h2></div>
+		<div class="filters">
+			<Field label={t('commercialization.filters.organization')}>
+				{#snippet children(f)}<Select {...f} options={orgOptions} bind:value={orgId} />{/snippet}
+			</Field>
+			<Field label={t('commercialization.contracts.status')}>
+				{#snippet children(f)}<Select {...f} options={statusOptions} bind:value={status} />{/snippet}
+			</Field>
+			<Field label={t('commercialization.sessions.device')}>
+				{#snippet children(f)}<Input
+						{...f}
+						type="search"
+						width="medium"
+						autocomplete="off"
+						bind:value={deviceInput}
+					/>{/snippet}
+			</Field>
+			<div class="filters-end">
+				<Button class="sessions-refresh" icon={ICONS.refresh} busy={loading} onclick={refreshAll}
+					>{t('commercialization.actions.refresh')}</Button
+				>
+				{#if canExport}
+					<MenuButton label={t('commercialization.ui.export')} icon={ICONS.export} align="end">
+						<MenuItem class="export-sessions" icon={ICONS.download} href={sessionsExportUrl(filter)} download
+							>{t('commercialization.ui.export_sessions_csv')}</MenuItem
+						>
+						<MenuItem
+							class="export-reports-csv"
+							icon={ICONS.download}
+							href={reportsExportUrl('csv', orgId)}
+							download>{t('commercialization.ui.export_reports_csv')}</MenuItem
+						>
+						<MenuItem
+							class="export-reports-pdf"
+							icon={ICONS.download}
+							href={reportsExportUrl('pdf', orgId)}
+							download>{t('commercialization.ui.export_reports_pdf')}</MenuItem
+						>
+					</MenuButton>
+				{/if}
+			</div>
+		</div>
+		{#if runningMissing}
+			<Notice tone="warning" message={t('commercialization.ui.running_unreadable')} />
 		{/if}
-	</section>
-</div>
-
-<section class="section" id="tab-sessions" aria-labelledby="{uid}-all">
-	<div class="section-head"><h2 id="{uid}-all">{t('commercialization.ui.all_sessions_title')}</h2></div>
-	<div class="filters">
-		<Field label={t('commercialization.filters.organization')}>
-			{#snippet children(f)}<Select {...f} options={orgOptions} bind:value={orgId} />{/snippet}
-		</Field>
-		<Field label={t('commercialization.contracts.status')}>
-			{#snippet children(f)}<Select {...f} options={statusOptions} bind:value={status} />{/snippet}
-		</Field>
-		<Field label={t('commercialization.sessions.device')}>
-			{#snippet children(f)}<Input
-					{...f}
-					type="search"
-					width="medium"
-					autocomplete="off"
-					bind:value={deviceInput}
-				/>{/snippet}
-		</Field>
-		<div class="filters-end">
-			<Button class="sessions-refresh" icon={ICONS.refresh} busy={loading} onclick={refreshAll}
-				>{t('commercialization.actions.refresh')}</Button
-			>
-			{#if canExport}
-				<MenuButton label={t('commercialization.ui.export')} icon={ICONS.export} align="end">
-					<MenuItem class="export-sessions" icon={ICONS.download} href={sessionsExportUrl(filter)} download
-						>{t('commercialization.ui.export_sessions_csv')}</MenuItem
-					>
-					<MenuItem
-						class="export-reports-csv"
-						icon={ICONS.download}
-						href={reportsExportUrl('csv', orgId)}
-						download>{t('commercialization.ui.export_reports_csv')}</MenuItem
-					>
-					<MenuItem
-						class="export-reports-pdf"
-						icon={ICONS.download}
-						href={reportsExportUrl('pdf', orgId)}
-						download>{t('commercialization.ui.export_reports_pdf')}</MenuItem
-					>
-				</MenuButton>
+		<div class="count" aria-live="polite">
+			{#if sessions?.length}
+				<CountLine
+					text={t('commercialization.ui.sessions_count') +
+						(activeCount
+							? ', ' + t('commercialization.ui.sessions_active').replace('{count}', '{active}')
+							: '')}
+					values={{ count: sessions.length, active: activeCount }}
+				/>
 			{/if}
 		</div>
-	</div>
-	{#if runningMissing}
-		<Notice tone="warning" message={t('commercialization.ui.running_unreadable')} />
-	{/if}
-	<div class="count" aria-live="polite">
-		{#if sessions?.length}
-			<CountLine
-				text={t('commercialization.ui.sessions_count') +
-					(activeCount
-						? ', ' + t('commercialization.ui.sessions_active').replace('{count}', '{active}')
-						: '')}
-				values={{ count: sessions.length, active: activeCount }}
+		<div class="sessions-table">
+			<Table
+				{rows}
+				{columns}
+				key={(s) => s.id}
+				label={t('commercialization.ui.all_sessions_title')}
+				onrowclick={(s) => (detailsFor = s)}
+				loading={sessions === null && !sessionsError}
+				loadingText={t('commercialization.ui.loading_sessions')}
+				error={sessionsError}
+				onretry={() => void loadSessions()}
+				emptyText={filtered
+					? t('commercialization.ui.no_match_sessions')
+					: t('commercialization.empty.sessions')}
 			/>
-		{/if}
-	</div>
-	<div class="sessions-table">
-		<Table
-			{rows}
-			{columns}
-			key={(s) => s.id}
-			label={t('commercialization.ui.all_sessions_title')}
-			onrowclick={(s) => (detailsFor = s)}
-			loading={sessions === null && !sessionsError}
-			loadingText={t('commercialization.ui.loading_sessions')}
-			error={sessionsError}
-			onretry={() => void loadSessions()}
-			emptyText={filtered
-				? t('commercialization.ui.no_match_sessions')
-				: t('commercialization.empty.sessions')}
-		/>
-	</div>
-</section>
+		</div>
+	</section>
+{/if}
 
 {#if detailsFor}
 	{@const s = detailsFor}

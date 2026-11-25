@@ -15,8 +15,9 @@ const ALSO_ACTIVE: Readonly<Record<string, string>> = { generator: 'agents' };
 
 /**
  * The page key for a URL (old path plus query), as lib/consoleNav.js
- * pageKey() makes it: settings, server-management and commercialization
- * split by tab, /?activateAgent=1 is its own page.
+ * pageKey() made it: settings split by tab, /?activateAgent=1 is its own
+ * page. Server status, Billing and the Server section's pages are one
+ * entry each, whatever their tab.
  */
 export function pageKey(path: string, search: { get(name: string): string | null } | string = ''): string {
 	const q = typeof search === 'string' ? new URLSearchParams(search) : search;
@@ -28,10 +29,8 @@ export function pageKey(path: string, search: { get(name: string): string | null
 	if (first === 'server-management') return 'server-management:overview';
 	// The Server section's own pages: /server/backups is server-backups
 	if (first === 'server' && second) return `server-${second}`;
-	if (first === 'commercialization') {
-		const t = tab || 'packages';
-		return 'commercialization:' + (t === 'sessions' || t === 'reports' ? 'sessions' : 'packages');
-	}
+	// Billing is one entry with its tabs (/commercialization before)
+	if (first === 'commercialization') return 'billing';
 	return ALSO_ACTIVE[first] ?? first;
 }
 

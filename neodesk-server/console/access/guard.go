@@ -147,6 +147,10 @@ var RouteRules = []Rule{
 	// The registration routes for people answer at /api/nd too, beside
 	// the two device routes.
 	{Prefix: "/api/nd/api/registrations", Section: "registrations"},
+	// The security checks and billing pages of the Activity section (plan
+	// step 9 of L494) belong to the sections of their old addresses.
+	{Prefix: "/security-checks", Section: "security-audit"},
+	{Prefix: "/billing", Section: "commercialization"},
 }
 
 const apiPrefix = "/api/"

@@ -6542,7 +6542,9 @@
     "hardening_session_timeout_desc": "控制台会话在 {idle} 分钟内没有请求，或登录满 {max} 分钟后结束（SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE）。",
     "hardening_single_session": "每个账号的控制台会话上限",
     "hardening_single_session_desc": "新的控制台登录会结束超出 SESSION_MAX_PER_USER（当前为 {limit}）且最久未使用的会话，并记录地址和浏览器供审计日志使用。",
-    "hardening_unlimited": "无限制"
+    "hardening_unlimited": "无限制",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "语言管理",
@@ -7457,8 +7459,8 @@
     "alpha_tooltip": "早期功能 — 计费和套餐正在积极开发中。",
     "tabs": {
       "overview": "概览",
-      "packages": "计费套餐",
-      "sessions": "可计费会话",
+      "packages": "套餐",
+      "sessions": "会话",
       "reports": "报告",
       "settings": "高级设置",
       "overview_nav": "Billing overview",
@@ -7771,7 +7773,8 @@
       "assignment_edit_desc": "设备组和套餐不变。可更改本月剩余时长、费率或日期。",
       "preview_sheet_desc": "套餐在某个月用掉了多少包含时长，以及超出后计费的时长。",
       "save_failed": "无法保存。请重试。",
-      "error_targets": "无法加载设备组：{error}"
+      "error_targets": "无法加载设备组：{error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

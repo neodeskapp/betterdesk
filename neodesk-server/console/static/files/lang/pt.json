@@ -6424,7 +6424,9 @@
     "hardening_session_timeout_desc": "Uma sessão da consola termina após {idle} minutos sem pedidos e {max} minutos após o início de sessão (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Limite de sessões da consola por conta",
     "hardening_single_session_desc": "Um novo início de sessão na consola termina as sessões usadas há mais tempo além de SESSION_MAX_PER_USER (agora {limit}) e guarda o endereço e o navegador no registo de auditoria.",
-    "hardening_unlimited": "sem limite"
+    "hardening_unlimited": "sem limite",
+    "audit_page_description": "Quem fez o quê nesta consola, o que o servidor NeoDesk registou e onde tem sessão iniciada.",
+    "checks_page_description": "Que verificações de segurança este servidor passa, o que fazer com as outras e com que definições de proteção funciona."
   },
   "languages": {
     "title": "Idiomas",
@@ -7457,8 +7459,8 @@
     "alpha_tooltip": "Recurso inicial — faturação e pacotes em desenvolvimento ativo.",
     "tabs": {
       "overview": "Visão geral",
-      "packages": "Pacotes de faturação",
-      "sessions": "Sessões faturáveis",
+      "packages": "Pacotes",
+      "sessions": "Sessões",
       "reports": "Relatórios",
       "settings": "Definições avançadas",
       "overview_nav": "Billing overview",
@@ -7771,7 +7773,8 @@
       "assignment_edit_desc": "O grupo de dispositivos e o pacote mantêm-se. Altere o tempo restante deste mês, as tarifas ou as datas.",
       "preview_sheet_desc": "Quanto do tempo incluído o pacote usou num mês e o tempo faturado além dele.",
       "save_failed": "Não foi possível guardar. Tente novamente.",
-      "error_targets": "Não foi possível carregar os grupos de dispositivos: {error}"
+      "error_targets": "Não foi possível carregar os grupos de dispositivos: {error}",
+      "reports_description": "Sessões que ainda aguardam um relatório de trabalho e quanto tempo incluído cada atribuição usou este mês. A faturação é uma funcionalidade recente e ainda pode mudar."
     }
   },
   "remote_dashboard": {

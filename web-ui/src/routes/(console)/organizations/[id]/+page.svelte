@@ -387,7 +387,7 @@
 								<ListRow
 									title={c.package_name || t('organizations.billing_package')}
 									sub={contractSub}
-									href={link('/commercialization?tab=packages')}
+									href={link('/billing')}
 								/>
 							{/each}
 						</RowList>

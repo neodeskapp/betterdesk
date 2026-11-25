@@ -6430,7 +6430,9 @@
     "hardening_session_timeout_desc": "Phiên bảng điều khiển kết thúc sau {idle} phút không có yêu cầu và {max} phút sau khi đăng nhập (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Giới hạn phiên bảng điều khiển cho mỗi tài khoản",
     "hardening_single_session_desc": "Một lần đăng nhập mới vào bảng điều khiển sẽ kết thúc các phiên lâu không dùng nhất vượt quá SESSION_MAX_PER_USER (hiện là {limit}) và ghi lại địa chỉ cùng trình duyệt cho nhật ký kiểm tra.",
-    "hardening_unlimited": "không giới hạn"
+    "hardening_unlimited": "không giới hạn",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "Quản lý ngôn ngữ",
@@ -7463,8 +7465,8 @@
     "alpha_tooltip": "Tính năng sớm — hóa đơn và gói đang được phát triển tích cực.",
     "tabs": {
       "overview": "Tổng quan",
-      "packages": "Gói thanh toán",
-      "sessions": "Phiên tính phí",
+      "packages": "Gói",
+      "sessions": "Phiên",
       "reports": "Báo cáo",
       "settings": "Cài đặt nâng cao",
       "overview_nav": "Billing overview",
@@ -7777,7 +7779,8 @@
       "assignment_edit_desc": "Nhóm thiết bị và gói giữ nguyên. Thay đổi thời gian còn lại trong tháng, mức giá hoặc ngày.",
       "preview_sheet_desc": "Gói đã dùng bao nhiêu thời gian bao gồm trong một tháng, và thời gian bị tính phí vượt mức.",
       "save_failed": "Không lưu được. Hãy thử lại.",
-      "error_targets": "Không tải được các nhóm thiết bị: {error}"
+      "error_targets": "Không tải được các nhóm thiết bị: {error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

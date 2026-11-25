@@ -78,7 +78,6 @@ func countID(id string) func(*NavPage)    { return func(p *NavPage) { p.CountID 
 const (
 	groupConsole   = "nav.group_console"
 	groupClients   = "nav.group_clients"
-	groupBilling   = "nav.group_billing"
 	groupDeveloper = "nav.group_developer"
 )
 
@@ -109,10 +108,14 @@ var NavSections = []NavSection{
 		navPage("permissions", "roles rights access", "/permissions", "nav.permissions", withRule(navSuperAdmin)),
 	}},
 	{ID: "activity", Label: "nav.activity", Icon: "history", Pages: []NavPage{
-		navPage("security-audit", "audit log who banned security events", "/security-audit", "nav.security_audit", withPermission("audit.view"), core),
+		navPage("security-audit", "audit log who banned events server events sessions", "/security-audit", "security_audit.tab_audit_log", withPermission("audit.view"), core),
+		navPage("security-checks", "security checks hardening vulnerabilities", "/security-checks", "security_audit.tab_checks", withPermission("audit.view"), core),
 		navPage("activity", "app usage activity monitoring", "/activity", "activity.title", withPermission("audit.view")),
 		navPage("reports", "reports export trends", "/reports", "nav.reports", withPermission("audit.view"), core),
-		navPage("commercialization:sessions", "sessions billing minutes work reports", "/commercialization?tab=sessions", "commercialization.tabs.sessions", withPermission("billing.view")),
+		navPage("billing", "billing commercialization packages contracts sessions minutes work reports", "/billing", "nav.commercialization", withPermission("billing.view"),
+			func(p *NavPage) {
+				p.AlsoActiveFor = []string{"commercialization:packages", "commercialization:sessions"}
+			}),
 	}},
 	{ID: "rules", Label: "nav.section_rules", Icon: "shield", Pages: []NavPage{
 		navPage("policies", "policies rules", "/policies", "nav.policies", withRule(navAdminRole), core),
@@ -143,7 +146,6 @@ var NavSections = []NavSection{
 		navPage("agents", "agents installers generator", "/agents", "nav.agents", withRule(navAdminRole), inGroup(groupClients),
 			func(p *NavPage) { p.AlsoActiveFor = []string{"generator"} }),
 		navPage("client-branding", "client branding white label", "/client-branding", "nav.client_branding", withPermission("branding.edit"), inGroup(groupClients)),
-		navPage("commercialization:packages", "packages contracts billing", "/commercialization?tab=packages", "commercialization.tabs.packages", withPermission("billing.view"), inGroup(groupBilling)),
 		navPage("cdap-studio", "sdk studio flows widgets", "/cdap-studio", "nav.sdk_studio", withRole("operator"), inGroup(groupDeveloper)),
 	}},
 }
@@ -226,6 +228,8 @@ func NavPageKey(currentPage, currentTab string, activateAgentNav bool) string {
 		return "settings:" + orDefault(currentTab, "general")
 	case currentPage == "server-management":
 		return "server-management:" + orDefault(currentTab, "overview")
+	// Billing (/billing) is one page with its tabs; the old commercialization
+	// keys stay for its old address.
 	case currentPage == "commercialization":
 		if tab := orDefault(currentTab, "packages"); tab == "sessions" || tab == "reports" {
 			return "commercialization:sessions"

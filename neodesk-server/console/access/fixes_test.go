@@ -95,6 +95,10 @@ var ruleFixes = []ruleFix{
 	{bug: "DG6", add: Rule{Prefix: "/api/nd/stats", Section: "dataguard"}},
 	// The registration routes for people answer at /api/nd too (I3).
 	{bug: "PA15", add: Rule{Prefix: "/api/nd/api/registrations", Section: "registrations"}},
+	// The Activity section's new pages (L494 plan step 9) belong to the
+	// sections of their old addresses.
+	{bug: "L494", add: Rule{Prefix: "/security-checks", Section: "security-audit"}},
+	{bug: "L494", add: Rule{Prefix: "/billing", Section: "commercialization"}},
 }
 
 // sectionFix is a catalog section whose permissions differ from Node's.

@@ -6431,7 +6431,9 @@
     "hardening_session_timeout_desc": "تنتهي جلسة وحدة التحكم بعد {idle} دقيقة دون أي طلب، وبعد {max} دقيقة من تسجيل الدخول (SESSION_IDLE_TIMEOUT، SESSION_MAX_AGE).",
     "hardening_single_session": "حد جلسات وحدة التحكم لكل حساب",
     "hardening_single_session_desc": "يُنهي تسجيل الدخول الجديد إلى وحدة التحكم الجلسات الأقل استخدامًا مؤخرًا التي تتجاوز SESSION_MAX_PER_USER (حاليًا {limit})، ويسجّل العنوان والمتصفح في سجل التدقيق.",
-    "hardening_unlimited": "بلا حد"
+    "hardening_unlimited": "بلا حد",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "إدارة اللغة",
@@ -7464,8 +7466,8 @@
     "alpha_tooltip": "ميزة مبكرة — وحدة الفوترة والحزم قيد التطوير النشط.",
     "tabs": {
       "overview": "نظرة عامة",
-      "packages": "باقات الفوترة",
-      "sessions": "الجلسات القابلة للفوترة",
+      "packages": "الباقات",
+      "sessions": "الجلسات",
       "reports": "التقارير",
       "settings": "إعدادات متقدمة",
       "overview_nav": "Billing overview",
@@ -7778,7 +7780,8 @@
       "assignment_edit_desc": "تبقى مجموعة الأجهزة والحزمة كما هما. غيّر الوقت المتبقي لهذا الشهر أو الأسعار أو التواريخ.",
       "preview_sheet_desc": "مقدار ما استُخدم من الوقت المشمول في شهر، والوقت المحتسب بعده.",
       "save_failed": "تعذّر الحفظ. حاول مرة أخرى.",
-      "error_targets": "تعذّر تحميل مجموعات الأجهزة: {error}"
+      "error_targets": "تعذّر تحميل مجموعات الأجهزة: {error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

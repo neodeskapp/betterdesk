@@ -37,9 +37,9 @@ describe('pageKey (lib/consoleNav.js pageKey)', () => {
 		['/server/backups', '', 'server-backups'],
 		['/server/updates', '', 'server-updates'],
 		['/server/config-files', '?x=1', 'server-config-files'],
-		['/commercialization', '', 'commercialization:packages'],
-		['/commercialization', '?tab=reports', 'commercialization:sessions'],
-		['/commercialization', '?tab=sessions', 'commercialization:sessions'],
+		['/billing', '?tab=reports', 'billing'],
+		['/commercialization', '?tab=sessions', 'billing'],
+		['/security-checks', '?tab=hardening', 'security-checks'],
 		['/generator', '', 'agents'],
 		['/help-requests', '', 'help-requests']
 	])('%s%s is %s', (path, search, key) => {
@@ -84,9 +84,14 @@ describe('buildNavModel', () => {
 	});
 
 	test('a section with only one extra page shows everything, in order', () => {
-		// Viewer: Activity has two core pages and one other (App usage)
+		// Viewer: Activity has three core pages and one other (App usage)
 		const activity = buildNavModel(viewer, 'reports').sections.find((s) => s.id === 'activity')!;
-		expect(activity.core.map((i) => i.page.text)).toEqual(['Security and audit', 'App usage', 'Reports']);
+		expect(activity.core.map((i) => i.page.text)).toEqual([
+			'Audit log',
+			'Security checks',
+			'App usage',
+			'Reports'
+		]);
 		expect(activity.more).toEqual([]);
 		expect(activity.moreCount).toBe(0);
 	});
@@ -98,7 +103,6 @@ describe('buildNavModel', () => {
 		expect(rows.filter((r) => r.startsWith('# '))).toEqual([
 			'# Console',
 			'# Clients and joining',
-			'# Billing',
 			'# Developer tools'
 		]);
 		// Each heading comes right before the first page of its group, and once

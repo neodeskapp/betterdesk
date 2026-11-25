@@ -439,8 +439,7 @@
 					<p class="hint">{t('settings.time.period_hint')}</p>
 					{#if can('billing.view')}
 						<p class="hint">
-							<a href={link('/commercialization?tab=packages')}>{t('settings.time.commercialization_link')}</a
-							>
+							<a href={link('/billing')}>{t('settings.time.commercialization_link')}</a>
 						</p>
 					{/if}
 				</section>

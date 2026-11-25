@@ -6430,7 +6430,9 @@
     "hardening_session_timeout_desc": "Сеанс консолі завершується після {idle} хв без запитів і через {max} хв після входу (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Ліміт сеансів консолі на обліковий запис",
     "hardening_single_session_desc": "Новий вхід у консоль завершує сеанси понад SESSION_MAX_PER_USER (зараз {limit}), які найдовше не використовувалися, і записує адресу та браузер для журналу аудиту.",
-    "hardening_unlimited": "без обмежень"
+    "hardening_unlimited": "без обмежень",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "Управління мовою",
@@ -7463,8 +7465,8 @@
     "alpha_tooltip": "Рання функція — модуль розрахунків і пакетів у активній розробці.",
     "tabs": {
       "overview": "Огляд",
-      "packages": "Пакети оплати",
-      "sessions": "Сеанси для оплати",
+      "packages": "Пакети",
+      "sessions": "Сеанси",
       "reports": "Звіти",
       "settings": "Розширені налаштування",
       "overview_nav": "Billing overview",
@@ -7777,7 +7779,8 @@
       "assignment_edit_desc": "Група пристроїв і пакет залишаються. Змініть залишок часу цього місяця, тарифи або дати.",
       "preview_sheet_desc": "Скільки включеного часу пакет використав за місяць і скільки часу оплачено понад нього.",
       "save_failed": "Не вдалося зберегти. Спробуйте ще раз.",
-      "error_targets": "Не вдалося завантажити групи пристроїв: {error}"
+      "error_targets": "Не вдалося завантажити групи пристроїв: {error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

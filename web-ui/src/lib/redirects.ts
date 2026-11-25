@@ -25,7 +25,13 @@ export const REDIRECTS: readonly Redirect[] = [
 	// Server section (plan step 6)
 	{ from: '/settings', tab: 'backup', to: '/server/backups' },
 	{ from: '/settings', tab: 'updates', to: '/server/updates' },
-	{ from: '/settings', tab: 'advanced', to: '/server/config-files' }
+	{ from: '/settings', tab: 'advanced', to: '/server/config-files' },
+	// Activity (plan step 9): Security checks leave Security and audit, which
+	// keeps the audit log; Billing is one page with its tabs
+	{ from: '/security-audit', tab: 'overview', to: '/security-checks?tab=checks' },
+	{ from: '/security-audit', tab: 'hardening', to: '/security-checks?tab=hardening' },
+	{ from: '/security-audit', tab: 'vulnerabilities', to: '/security-checks?tab=hardening' },
+	{ from: '/commercialization', to: '/billing' }
 ];
 
 const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();

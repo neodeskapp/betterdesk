@@ -6430,7 +6430,9 @@
     "hardening_session_timeout_desc": "เซสชันคอนโซลจะสิ้นสุดเมื่อไม่มีคำขอเป็นเวลา {idle} นาที และเมื่อครบ {max} นาทีหลังลงชื่อเข้าใช้ (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE)",
     "hardening_single_session": "จำนวนเซสชันคอนโซลสูงสุดต่อบัญชี",
     "hardening_single_session_desc": "การลงชื่อเข้าใช้คอนโซลครั้งใหม่จะปิดเซสชันที่ไม่ได้ใช้นานที่สุดซึ่งเกิน SESSION_MAX_PER_USER (ขณะนี้ {limit}) และบันทึกที่อยู่และเบราว์เซอร์ไว้สำหรับบันทึกการตรวจสอบ",
-    "hardening_unlimited": "ไม่จำกัด"
+    "hardening_unlimited": "ไม่จำกัด",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "การจัดการภาษา",
@@ -7463,8 +7465,8 @@
     "alpha_tooltip": "ฟีเจอร์ช่วงเริ่มต้น — การเรียกเก็บเงินและแพ็กเกจอยู่ระหว่างพัฒนา",
     "tabs": {
       "overview": "ภาพรวม",
-      "packages": "แพ็กเกจการเรียกเก็บเงิน",
-      "sessions": "เซสชันที่เรียกเก็บเงินได้",
+      "packages": "แพ็กเกจ",
+      "sessions": "เซสชัน",
       "reports": "รายงาน",
       "settings": "การตั้งค่าขั้นสูง",
       "overview_nav": "Billing overview",
@@ -7777,7 +7779,8 @@
       "assignment_edit_desc": "กลุ่มอุปกรณ์และแพ็กเกจยังคงเดิม เปลี่ยนเวลาที่เหลือของเดือนนี้ อัตรา หรือวันที่ได้",
       "preview_sheet_desc": "แพ็กเกจใช้เวลาที่รวมอยู่ไปเท่าใดในหนึ่งเดือน และเวลาที่เรียกเก็บเพิ่ม",
       "save_failed": "บันทึกไม่สำเร็จ ลองอีกครั้ง",
-      "error_targets": "โหลดกลุ่มอุปกรณ์ไม่ได้: {error}"
+      "error_targets": "โหลดกลุ่มอุปกรณ์ไม่ได้: {error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

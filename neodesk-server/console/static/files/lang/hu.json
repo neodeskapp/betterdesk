@@ -6430,7 +6430,9 @@
     "hardening_session_timeout_desc": "A konzolmunkamenet {idle} perc kérés nélküli idő után, illetve a bejelentkezés után {max} perccel véget ér (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Konzolmunkamenetek korlátja fiókonként",
     "hardening_single_session_desc": "Egy új konzolbejelentkezés lezárja a SESSION_MAX_PER_USER (jelenleg {limit}) feletti, legrégebben használt munkameneteket, és rögzíti a címet és a böngészőt az auditnaplóhoz.",
-    "hardening_unlimited": "nincs korlát"
+    "hardening_unlimited": "nincs korlát",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "Nyelvkezelés",
@@ -7463,8 +7465,8 @@
     "alpha_tooltip": "Korai funkció — a számlázás és csomagok aktív fejlesztés alatt állnak.",
     "tabs": {
       "overview": "Áttekintés",
-      "packages": "Számlázási csomagok",
-      "sessions": "Számlázható munkamenetek",
+      "packages": "Csomagok",
+      "sessions": "Munkamenetek",
       "reports": "Jelentések",
       "settings": "Speciális beállítások",
       "overview_nav": "Billing overview",
@@ -7777,7 +7779,8 @@
       "assignment_edit_desc": "Az eszközcsoport és a csomag marad. Módosítsa az e havi hátralévő időt, a díjakat vagy a dátumokat.",
       "preview_sheet_desc": "Mennyit használt a csomag egy hónapban a benne foglalt időből, és az ezen felül számlázott idő.",
       "save_failed": "Nem sikerült menteni. Próbálja újra.",
-      "error_targets": "Nem sikerült betölteni az eszközcsoportokat: {error}"
+      "error_targets": "Nem sikerült betölteni az eszközcsoportokat: {error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

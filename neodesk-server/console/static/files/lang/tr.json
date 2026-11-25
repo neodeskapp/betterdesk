@@ -6430,7 +6430,9 @@
     "hardening_session_timeout_desc": "Bir konsol oturumu, {idle} dakika boyunca istek gelmezse ve oturum açıldıktan {max} dakika sonra sona erer (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Hesap başına konsol oturumu sınırı",
     "hardening_single_session_desc": "Konsolda yeni bir oturum açıldığında, SESSION_MAX_PER_USER (şu an {limit}) sınırını aşan ve en uzun süredir kullanılmayan oturumlar sonlandırılır; adres ve tarayıcı denetim günlüğü için kaydedilir.",
-    "hardening_unlimited": "sınır yok"
+    "hardening_unlimited": "sınır yok",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "Dil Yönetimi",
@@ -7463,8 +7465,8 @@
     "alpha_tooltip": "Erken özellik — faturalandırma ve paketler aktif geliştirmede.",
     "tabs": {
       "overview": "Genel bakış",
-      "packages": "Faturalandırma paketleri",
-      "sessions": "Faturalanabilir oturumlar",
+      "packages": "Paketler",
+      "sessions": "Oturumlar",
       "reports": "Raporlar",
       "settings": "Gelişmiş ayarlar",
       "overview_nav": "Billing overview",
@@ -7777,7 +7779,8 @@
       "assignment_edit_desc": "Cihaz grubu ve paket aynı kalır. Bu ayın kalan süresini, ücretleri veya tarihleri değiştirin.",
       "preview_sheet_desc": "Paketin bir ayda dahil süreden ne kadar kullandığı ve bunun dışında faturalanan süre.",
       "save_failed": "Kaydedilemedi. Yeniden deneyin.",
-      "error_targets": "Cihaz grupları yüklenemedi: {error}"
+      "error_targets": "Cihaz grupları yüklenemedi: {error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

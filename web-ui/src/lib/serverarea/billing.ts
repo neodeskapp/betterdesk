@@ -1,5 +1,5 @@
 /**
- * The billing pages (/commercialization) without a DOM: which view the URL
+ * The billing page (/billing, /commercialization before) without a DOM: which tab the URL
  * asks for, how minutes, money and months read, what the included-time
  * list shows, and the bodies the sheets send. Tests:
  * tests/unit/server/billing.test.ts.
@@ -10,13 +10,13 @@ import { formatDuration, formatNumber, parseDate } from '#lib/i18n/format.ts';
 
 /* ── URL ── */
 
-export type BillingTab = 'packages' | 'sessions';
+export const BILLING_TABS = ['packages', 'sessions', 'reports'] as const;
+export type BillingTab = (typeof BILLING_TABS)[number];
 
-/** ?tab= as the server read it: packages and sessions, the old tabs mapped onto them */
+/** ?tab= as a tab: packages, sessions and reports; anything else (the old overview and settings) is packages */
 export function billingTab(raw: string | null | undefined): BillingTab {
 	const v = String(raw ?? '');
-	if (v === 'sessions' || v === 'reports') return 'sessions';
-	return 'packages';
+	return (BILLING_TABS as readonly string[]).includes(v) ? (v as BillingTab) : 'packages';
 }
 
 /** ?tab=settings or ?settings=1 opens the billing settings (on the packages view) */

@@ -48,7 +48,8 @@ const contract = (over: Partial<Contract> = {}): Contract => ({
 describe('billing URL', () => {
 	test('tabs and the old ones mapped onto them', () => {
 		expect(billingTab('sessions')).toBe('sessions');
-		expect(billingTab('reports')).toBe('sessions');
+		expect(billingTab('reports')).toBe('reports');
+		expect(billingTab('packages')).toBe('packages');
 		expect(billingTab('overview')).toBe('packages');
 		expect(billingTab('settings')).toBe('packages');
 		expect(billingTab(null)).toBe('packages');

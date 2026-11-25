@@ -6564,7 +6564,9 @@
     "hardening_session_timeout_desc": "Une session de la console se termine après {idle} minutes sans requête et {max} minutes après la connexion (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Limite de sessions de la console par compte",
     "hardening_single_session_desc": "Une nouvelle connexion à la console ferme les sessions les moins récemment utilisées au-delà de SESSION_MAX_PER_USER (actuellement {limit}) et enregistre l'adresse et le navigateur pour le journal d'audit.",
-    "hardening_unlimited": "aucune limite"
+    "hardening_unlimited": "aucune limite",
+    "audit_page_description": "Qui a fait quoi dans cette console, ce que le serveur NeoDesk a enregistré et où vous êtes connecté.",
+    "checks_page_description": "Les contrôles de sécurité que ce serveur réussit, que faire pour les autres, et les réglages de durcissement qu'il applique."
   },
   "languages": {
     "title": "Gestion des langues",
@@ -7461,8 +7463,8 @@
     "alpha_tooltip": "Fonction précoce : la facturation et les forfaits sont en cours de développement.",
     "tabs": {
       "overview": "Aperçu",
-      "packages": "Forfaits de facturation",
-      "sessions": "Sessions facturables",
+      "packages": "Forfaits",
+      "sessions": "Sessions",
       "reports": "Rapports",
       "settings": "Paramètres avancés",
       "overview_nav": "Billing overview",
@@ -7775,7 +7777,8 @@
       "assignment_edit_desc": "Le groupe d'appareils et le forfait restent. Modifiez le temps restant ce mois-ci, les tarifs ou les dates.",
       "preview_sheet_desc": "La part du temps inclus utilisée par le forfait dans un mois, et le temps facturé au-delà.",
       "save_failed": "Impossible d'enregistrer. Réessayez.",
-      "error_targets": "Impossible de charger les groupes d'appareils : {error}"
+      "error_targets": "Impossible de charger les groupes d'appareils : {error}",
+      "reports_description": "Les sessions qui attendent encore un rapport de travail, et le temps inclus utilisé par chaque attribution ce mois-ci. La facturation est une fonction récente qui peut encore changer."
     }
   },
   "remote_dashboard": {

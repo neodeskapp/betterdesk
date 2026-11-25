@@ -6564,7 +6564,9 @@
     "hardening_session_timeout_desc": "主控台工作階段在 {idle} 分鐘內沒有請求，或登入滿 {max} 分鐘後結束（SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE）。",
     "hardening_single_session": "每個帳戶的主控台工作階段上限",
     "hardening_single_session_desc": "新的主控台登入會結束超出 SESSION_MAX_PER_USER（目前為 {limit}）且最久未使用的工作階段，並記錄位址與瀏覽器供稽核記錄使用。",
-    "hardening_unlimited": "無上限"
+    "hardening_unlimited": "無上限",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "語言管理",
@@ -7461,8 +7463,8 @@
     "alpha_tooltip": "早期功能 — 計費和套餐正在積極開發中。",
     "tabs": {
       "overview": "概覽",
-      "packages": "計費方案",
-      "sessions": "可計費工作階段",
+      "packages": "方案",
+      "sessions": "工作階段",
       "reports": "報告",
       "settings": "進階設定",
       "overview_nav": "Billing overview",
@@ -7775,7 +7777,8 @@
       "assignment_edit_desc": "裝置群組與套件不變。可變更本月剩餘時數、費率或日期。",
       "preview_sheet_desc": "套件在某個月用掉多少包含時數，以及超出後計費的時數。",
       "save_failed": "無法儲存。請再試一次。",
-      "error_targets": "無法載入裝置群組：{error}"
+      "error_targets": "無法載入裝置群組：{error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

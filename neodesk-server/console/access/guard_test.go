@@ -158,8 +158,8 @@ func TestFindRuleLongestMatch(t *testing.T) {
 
 func TestPageRules(t *testing.T) {
 	pages := PageRules()
-	if len(pages) != 31 {
-		t.Fatalf("%d page rules, want 31", len(pages))
+	if len(pages) != 33 {
+		t.Fatalf("%d page rules, want 33", len(pages))
 	}
 	if pages[0] != (Rule{Path: "/", Section: "dashboard"}) {
 		t.Errorf("first page rule is %+v", pages[0])

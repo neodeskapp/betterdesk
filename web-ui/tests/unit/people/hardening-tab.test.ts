@@ -5,7 +5,7 @@
  */
 import { cleanup, render, screen } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import HardeningTab from '../../../src/routes/(console)/security-audit/HardeningTab.svelte';
+import HardeningTab from '../../../src/routes/(console)/security-checks/HardeningTab.svelte';
 
 let requests: string[] = [];
 

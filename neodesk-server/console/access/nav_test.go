@@ -137,6 +137,63 @@ func TestNavRulesSection(t *testing.T) {
 	}
 }
 
+// Plan step 9: Activity splits what happened (Audit log) from what is
+// wrong (Security checks), and Billing is one page there with its tabs.
+func TestNavActivitySection(t *testing.T) {
+	pages, _ := sectionPages("activity")
+	if got := strings.Join(pages, ","); got != "security-audit,security-checks,activity,reports,billing" {
+		t.Errorf("activity section has %s", got)
+	}
+	hrefs := map[string]NavPage{}
+	for _, section := range NavSections {
+		for _, page := range section.Pages {
+			hrefs[page.Page] = page
+		}
+	}
+	if p := hrefs["security-audit"]; p.Label != "security_audit.tab_audit_log" || p.Href != "/security-audit" {
+		t.Errorf("audit log entry: %+v", p)
+	}
+	if p := hrefs["security-checks"]; p.Href != "/security-checks" || p.Label != "security_audit.tab_checks" || !p.Core {
+		t.Errorf("security checks entry: %+v", p)
+	}
+	if p := hrefs["billing"]; p.Href != "/billing" || p.Label != "nav.commercialization" {
+		t.Errorf("billing entry: %+v", p)
+	}
+	for _, gone := range []string{"commercialization:sessions", "commercialization:packages"} {
+		if _, ok := hrefs[gone]; ok {
+			t.Errorf("the navigation still has %s", gone)
+		}
+	}
+	// The checks follow the pages' routes: audit.view and billing.view
+	only := func(permission string) map[string]bool {
+		shown := map[string]bool{}
+		nav := BuildNav(NavInput{Can: func(p string) bool { return p == permission }, Role: "operator"})
+		for _, section := range nav.Sections {
+			for _, page := range section.Pages {
+				shown[page.Page] = true
+			}
+		}
+		return shown
+	}
+	if a := only("audit.view"); !a["security-checks"] || !a["security-audit"] || a["billing"] {
+		t.Errorf("audit.view sees %v", a)
+	}
+	if b := only("billing.view"); !b["billing"] || b["security-checks"] {
+		t.Errorf("billing.view sees %v", b)
+	}
+	// The new addresses belong to the sections of the old ones
+	for path, section := range map[string]string{"/security-checks": "security-audit", "/billing": "commercialization"} {
+		if rule, ok := FindRule(path); !ok || rule.Section != section {
+			t.Errorf("%s: rule %+v, want section %s", path, rule, section)
+		}
+	}
+	for page, key := range map[string]string{"billing": "billing", "security-checks": "security-checks"} {
+		if got := NavPageKey(page, "sessions", false); got != key {
+			t.Errorf("NavPageKey(%s) = %q", page, got)
+		}
+	}
+}
+
 // Plan step 6: what a server admin runs is a section of its own, shown only
 // to server.config (Capacity test: server.attestation). Server status is one
 // entry with Files and Services as its tabs.
@@ -239,8 +296,9 @@ func TestNavSectionsAndActivePage(t *testing.T) {
 		{"settings", "", false, "settings:general", "settings"},
 		{"settings", "branding", false, "settings:branding", "settings"},
 		{"server-management", "", false, "server-management:overview", "server"},
-		{"commercialization", "", false, "commercialization:packages", "settings"},
-		{"commercialization", "reports", false, "commercialization:sessions", "activity"},
+		{"billing", "", false, "billing", "activity"},
+		{"billing", "reports", false, "billing", "activity"},
+		{"security-checks", "", false, "security-checks", "activity"},
 		{"generator", "", false, "agents", "settings"},
 		{"devices", "", true, "activate-agent", "devices"},
 	} {
@@ -293,11 +351,11 @@ func TestPageAllowed(t *testing.T) {
 		"users": false, // its section is at none
 		// no section since F1: their routes and menu rules decide
 		"settings:general": true, "server-backups": true, "keys": true, "tokens": true, "policies": true, "client-branding": true,
-		"registrations":              false,
-		"activate-agent":             false, // its address is the dashboard's, its section is registrations
-		"pairing":                    true,  // no rule for its address
-		"server-attestation":         true,
-		"commercialization:packages": true,
+		"registrations":      false,
+		"activate-agent":     false, // its address is the dashboard's, its section is registrations
+		"pairing":            true,  // no rule for its address
+		"server-attestation": true,
+		"billing":            true,
 	} {
 		if shown[page] != want {
 			t.Errorf("page %s shown %v, want %v", page, shown[page], want)

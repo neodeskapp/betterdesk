@@ -6430,7 +6430,9 @@
     "hardening_session_timeout_desc": "En konsolløkt avsluttes etter {idle} minutter uten forespørsel og {max} minutter etter pålogging (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Grense for konsolløkter per konto",
     "hardening_single_session_desc": "En ny pålogging i konsollen avslutter øktene som har vært ubrukt lengst utover SESSION_MAX_PER_USER (nå {limit}), og lagrer adresse og nettleser for revisjonsloggen.",
-    "hardening_unlimited": "ingen grense"
+    "hardening_unlimited": "ingen grense",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "Språkhåndtering",
@@ -7463,8 +7465,8 @@
     "alpha_tooltip": "Tidlig funksjon — fakturering og pakker er under aktiv utvikling.",
     "tabs": {
       "overview": "Oversikt",
-      "packages": "Faktureringspakker",
-      "sessions": "Fakturerbare økter",
+      "packages": "Pakker",
+      "sessions": "Økter",
       "reports": "Rapporter",
       "settings": "Avanserte innstillinger",
       "overview_nav": "Billing overview",
@@ -7777,7 +7779,8 @@
       "assignment_edit_desc": "Enhetsgruppen og pakken blir. Endre gjenværende tid denne måneden, prisene eller datoene.",
       "preview_sheet_desc": "Hvor mye av den inkluderte tiden pakken brukte i en måned, og tiden fakturert utover den.",
       "save_failed": "Kunne ikke lagre. Prøv igjen.",
-      "error_targets": "Kunne ikke laste inn enhetsgruppene: {error}"
+      "error_targets": "Kunne ikke laste inn enhetsgruppene: {error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

@@ -6424,7 +6424,9 @@
     "hardening_session_timeout_desc": "Una sesión de la consola termina tras {idle} minutos sin solicitudes y {max} minutos después de iniciar sesión (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Límite de sesiones de la consola por cuenta",
     "hardening_single_session_desc": "Un nuevo inicio de sesión en la consola cierra las sesiones usadas hace más tiempo por encima de SESSION_MAX_PER_USER (ahora {limit}) y guarda la dirección y el navegador para el registro de auditoría.",
-    "hardening_unlimited": "sin límite"
+    "hardening_unlimited": "sin límite",
+    "audit_page_description": "Quién hizo qué en esta consola, qué registró el servidor NeoDesk y dónde tienes la sesión iniciada.",
+    "checks_page_description": "Qué comprobaciones de seguridad supera este servidor, qué hacer con las demás y con qué ajustes de refuerzo funciona."
   },
   "languages": {
     "title": "Panel",
@@ -7457,8 +7459,8 @@
     "alpha_tooltip": "Función temprana — facturación y paquetes en desarrollo activo.",
     "tabs": {
       "overview": "Resumen",
-      "packages": "Paquetes de facturación",
-      "sessions": "Sesiones facturables",
+      "packages": "Paquetes",
+      "sessions": "Sesiones",
       "reports": "Informes",
       "settings": "Configuración avanzada",
       "overview_nav": "Billing overview",
@@ -7771,7 +7773,8 @@
       "assignment_edit_desc": "El grupo de dispositivos y el paquete se mantienen. Cambie el tiempo restante de este mes, las tarifas o las fechas.",
       "preview_sheet_desc": "Cuánto del tiempo incluido usó el paquete en un mes y el tiempo facturado aparte.",
       "save_failed": "No se pudo guardar. Vuelva a intentarlo.",
-      "error_targets": "No se pudieron cargar los grupos de dispositivos: {error}"
+      "error_targets": "No se pudieron cargar los grupos de dispositivos: {error}",
+      "reports_description": "Sesiones que aún esperan un informe de trabajo y cuánto tiempo incluido ha usado cada asignación este mes. La facturación es una función temprana y aún puede cambiar."
     }
   },
   "remote_dashboard": {

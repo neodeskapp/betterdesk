@@ -6424,7 +6424,9 @@
     "hardening_session_timeout_desc": "Eine Konsolensitzung endet nach {idle} Minuten ohne Anfrage und {max} Minuten nach der Anmeldung (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Grenze für Konsolensitzungen pro Konto",
     "hardening_single_session_desc": "Eine neue Anmeldung an der Konsole beendet die am längsten ungenutzten Sitzungen über die Grenze pro Konto hinaus (derzeit {limit}; einzustellen unter Einstellungen, Anmeldung, oder mit SESSION_MAX_PER_USER) und speichert Adresse und Browser für das Audit-Protokoll.",
-    "hardening_unlimited": "keine Grenze"
+    "hardening_unlimited": "keine Grenze",
+    "audit_page_description": "Wer in dieser Konsole was getan hat, was der NeoDesk-Server aufgezeichnet hat und wo Sie angemeldet sind.",
+    "checks_page_description": "Welche Sicherheitsprüfungen dieser Server besteht und was bei den anderen zu tun ist, und mit welchen Härtungseinstellungen er läuft."
   },
   "languages": {
     "title": "Dashboard",
@@ -7457,8 +7459,8 @@
     "alpha_tooltip": "Frühe Funktion — Abrechnung und Pakete befinden sich in aktiver Entwicklung.",
     "tabs": {
       "overview": "Übersicht",
-      "packages": "Abrechnungspakete",
-      "sessions": "Abrechenbare Sitzungen",
+      "packages": "Pakete",
+      "sessions": "Sitzungen",
       "reports": "Berichte",
       "settings": "Erweiterte Einstellungen",
       "overview_nav": "Abrechnungsübersicht",
@@ -7771,7 +7773,8 @@
       "assignment_edit_desc": "Gerätegruppe und Paket bleiben. Ändern Sie die restliche Zeit in diesem Monat, die Preise oder die Daten.",
       "preview_sheet_desc": "Wie viel der enthaltenen Zeit das Paket in einem Monat verbraucht hat und welche Zeit darüber hinaus abgerechnet wurde.",
       "save_failed": "Speichern fehlgeschlagen. Versuchen Sie es erneut.",
-      "error_targets": "Die Gerätegruppen konnten nicht geladen werden: {error}"
+      "error_targets": "Die Gerätegruppen konnten nicht geladen werden: {error}",
+      "reports_description": "Sitzungen, die noch auf einen Arbeitsbericht warten, und wie viel enthaltene Zeit jede Zuordnung diesen Monat verbraucht hat. Die Abrechnung ist eine frühe Funktion und kann sich noch ändern."
     }
   },
   "remote_dashboard": {

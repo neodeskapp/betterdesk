@@ -1,5 +1,5 @@
 /**
- * Security and audit without a DOM: the tabs and their URL names, the
+ * The audit log and the security checks without a DOM: the tabs and their URL names, the
  * audit log's filters and search, labels for action codes, the device a
  * log line is about, event details as text, the browser a session used,
  * and the server events per day for the chart.
@@ -13,13 +13,23 @@ import type { AuditRow } from '#lib/api/audit.ts';
 
 type T = (key: string, params?: Record<string, string | number>) => string;
 
-export const AUDIT_TABS = ['audit', 'events', 'overview', 'hardening', 'sessions'] as const;
+/** The audit log page (/security-audit): the log, the server's events and your own sessions */
+export const AUDIT_TABS = ['audit', 'events', 'sessions'] as const;
 export type AuditTab = (typeof AUDIT_TABS)[number];
 
-/** ?tab= as a tab; the old name "vulnerabilities" opens Hardening, anything else the audit log */
+/** ?tab= as a tab, anything else the audit log. The checks moved to /security-checks (lib/redirects.ts) */
 export function auditTab(value: string | null | undefined): AuditTab {
-	const v = value === 'vulnerabilities' ? 'hardening' : (value ?? '');
+	const v = value ?? '';
 	return (AUDIT_TABS as readonly string[]).includes(v) ? (v as AuditTab) : 'audit';
+}
+
+/** The security checks page (/security-checks): the checks and the hardening settings */
+export const CHECKS_TABS = ['checks', 'hardening'] as const;
+export type ChecksTab = (typeof CHECKS_TABS)[number];
+
+/** ?tab= as a tab: hardening (also the old "vulnerabilities"), anything else the checks */
+export function checksTab(value: string | null | undefined): ChecksTab {
+	return value === 'hardening' || value === 'vulnerabilities' ? 'hardening' : 'checks';
 }
 
 /* ── Audit log ── */

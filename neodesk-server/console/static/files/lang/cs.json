@@ -6424,7 +6424,9 @@
     "hardening_session_timeout_desc": "Relace konzole skončí po {idle} minutách bez požadavku a {max} minut po přihlášení (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Limit relací konzole na účet",
     "hardening_single_session_desc": "Nové přihlášení do konzole ukončí nejdéle nepoužívané relace nad limit SESSION_MAX_PER_USER (nyní {limit}) a uloží adresu a prohlížeč do auditního protokolu.",
-    "hardening_unlimited": "bez limitu"
+    "hardening_unlimited": "bez limitu",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "Správa jazyků",
@@ -7457,8 +7459,8 @@
     "alpha_tooltip": "Raná funkce — fakturace a balíčky jsou v aktivním vývoji.",
     "tabs": {
       "overview": "Přehled",
-      "packages": "Fakturační balíčky",
-      "sessions": "Účtovatelné relace",
+      "packages": "Balíčky",
+      "sessions": "Relace",
       "reports": "Reporty",
       "settings": "Pokročilá nastavení",
       "overview_nav": "Billing overview",
@@ -7771,7 +7773,8 @@
       "assignment_edit_desc": "Skupina zařízení a balíček zůstávají. Změňte zbývající čas v tomto měsíci, sazby nebo data.",
       "preview_sheet_desc": "Kolik zahrnutého času balíček v měsíci využil a kolik času se účtovalo navíc.",
       "save_failed": "Uložení se nezdařilo. Zkuste to znovu.",
-      "error_targets": "Skupiny zařízení se nepodařilo načíst: {error}"
+      "error_targets": "Skupiny zařízení se nepodařilo načíst: {error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

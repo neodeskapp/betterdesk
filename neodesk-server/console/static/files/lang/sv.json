@@ -6430,7 +6430,9 @@
     "hardening_session_timeout_desc": "En konsolsession avslutas efter {idle} minuter utan förfrågan och {max} minuter efter inloggningen (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Gräns för konsolsessioner per konto",
     "hardening_single_session_desc": "En ny inloggning i konsolen avslutar de sessioner som använts minst nyligen utöver SESSION_MAX_PER_USER (nu {limit}) och sparar adress och webbläsare i granskningsloggen.",
-    "hardening_unlimited": "ingen gräns"
+    "hardening_unlimited": "ingen gräns",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "Språkhantering",
@@ -7463,8 +7465,8 @@
     "alpha_tooltip": "Tidig funktion — fakturering och paket är under aktiv utveckling.",
     "tabs": {
       "overview": "Översikt",
-      "packages": "Faktureringspaket",
-      "sessions": "Debiterbara sessioner",
+      "packages": "Paket",
+      "sessions": "Sessioner",
       "reports": "Rapporter",
       "settings": "Avancerade inställningar",
       "overview_nav": "Billing overview",
@@ -7777,7 +7779,8 @@
       "assignment_edit_desc": "Enhetsgruppen och paketet ligger kvar. Ändra återstående tid denna månad, priserna eller datumen.",
       "preview_sheet_desc": "Hur mycket av den inkluderade tiden paketet använde under en månad, och tiden som fakturerades utöver den.",
       "save_failed": "Det gick inte att spara. Försök igen.",
-      "error_targets": "Det gick inte att läsa in enhetsgrupperna: {error}"
+      "error_targets": "Det gick inte att läsa in enhetsgrupperna: {error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

@@ -6560,7 +6560,9 @@
     "hardening_session_timeout_desc": "Sesja konsoli kończy się po {idle} min bez żądania i {max} min po zalogowaniu (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Limit sesji konsoli na konto",
     "hardening_single_session_desc": "Nowe logowanie do konsoli kończy najdawniej używane sesje ponad SESSION_MAX_PER_USER (obecnie {limit}) i zapisuje adres oraz przeglądarkę w dzienniku audytu.",
-    "hardening_unlimited": "bez limitu"
+    "hardening_unlimited": "bez limitu",
+    "audit_page_description": "Kto co zrobił w tej konsoli, co zapisał serwer NeoDesk i gdzie jesteś zalogowany.",
+    "checks_page_description": "Które kontrole bezpieczeństwa ten serwer przechodzi, co zrobić z pozostałymi i z jakimi ustawieniami utwardzania działa."
   },
   "languages": {
     "title": "Zarządzanie językami",
@@ -7457,8 +7459,8 @@
     "alpha_tooltip": "Wczesna funkcja — moduł rozliczeń i pakietów jest w aktywnym rozwoju.",
     "tabs": {
       "overview": "Przegląd",
-      "packages": "Pakiety rozliczeniowe",
-      "sessions": "Sesje do rozliczenia",
+      "packages": "Pakiety",
+      "sessions": "Sesje",
       "reports": "Raporty",
       "settings": "Ustawienia zaawansowane",
       "overview_nav": "Przegląd billing",
@@ -7771,7 +7773,8 @@
       "assignment_edit_desc": "Grupa urządzeń i pakiet pozostają. Zmień pozostały czas w tym miesiącu, stawki lub daty.",
       "preview_sheet_desc": "Ile czasu w pakiecie wykorzystano w miesiącu i ile czasu rozliczono ponad niego.",
       "save_failed": "Nie udało się zapisać. Spróbuj ponownie.",
-      "error_targets": "Nie udało się wczytać grup urządzeń: {error}"
+      "error_targets": "Nie udało się wczytać grup urządzeń: {error}",
+      "reports_description": "Sesje, które wciąż czekają na raport z pracy, i ile wliczonego czasu każde przypisanie zużyło w tym miesiącu. Rozliczenia to wczesna funkcja i mogą się jeszcze zmienić."
     }
   },
   "remote_dashboard": {

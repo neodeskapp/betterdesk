@@ -1,10 +1,11 @@
 <!--
-  Security and audit (/security-audit, audit.view): the console audit log,
-  the server's own events, the security checks, the hardening settings and the
-  signed-in person's sessions. Each tab loads when it is first opened.
+  Audit log (/security-audit, audit.view): the console audit log, the
+  server's own events and the signed-in person's sessions. Each tab loads
+  when it is first opened. The security checks and the hardening settings
+  are on Security checks (/security-checks); their old addresses
+  (?tab=overview, hardening, vulnerabilities) lead there (lib/redirects.ts).
 
-  URL: ?tab=audit|events|overview|hardening|sessions (the old
-  "vulnerabilities" opens Hardening) follows the open tab; on the audit log
+  URL: ?tab=audit|events|sessions follows the open tab; on the audit log
   ?q= and ?type= fill the search and the filter and follow them.
 -->
 <script lang="ts">
@@ -19,9 +20,7 @@
 	import { can } from '#lib/state/session.svelte.ts';
 	import Tabs from '#lib/ui/Tabs.svelte';
 	import AuditLogTab from './AuditLogTab.svelte';
-	import ChecksTab from './ChecksTab.svelte';
 	import EventsTab from './EventsTab.svelte';
-	import HardeningTab from './HardeningTab.svelte';
 	import SessionsTab from './SessionsTab.svelte';
 
 	const allowed = can('audit.view');
@@ -68,8 +67,6 @@
 	const tabs = $derived([
 		{ id: 'audit', label: t('security_audit.tab_audit_log') },
 		{ id: 'events', label: t('security_audit.tab_server_events') },
-		{ id: 'overview', label: t('security_audit.tab_checks') },
-		{ id: 'hardening', label: t('security_audit.tab_hardening') },
 		{ id: 'sessions', label: t('security_audit.tab_your_sessions') }
 	]);
 </script>
@@ -79,12 +76,12 @@
 {:else}
 	<div class="page page-wide secaudit-page">
 		<div class="page-head">
-			<h1>{t('nav.security_audit')}</h1>
-			<p class="page-description">{t('security_audit.page_description')}</p>
+			<h1>{t('security_audit.tab_audit_log')}</h1>
+			<p class="page-description">{t('security_audit.audit_page_description')}</p>
 		</div>
 
 		<div class="body">
-			<Tabs {tabs} value={tab} label={t('nav.security_audit')} onchange={pick}>
+			<Tabs {tabs} value={tab} label={t('security_audit.tab_audit_log')} onchange={pick}>
 				{#snippet children(current)}
 					{#key generation}
 						<div class="panels">
@@ -103,12 +100,6 @@
 							{/if}
 							{#if opened.has('events')}
 								<div hidden={current !== 'events'}><EventsTab /></div>
-							{/if}
-							{#if opened.has('overview')}
-								<div hidden={current !== 'overview'}><ChecksTab /></div>
-							{/if}
-							{#if opened.has('hardening')}
-								<div hidden={current !== 'hardening'}><HardeningTab /></div>
 							{/if}
 							{#if opened.has('sessions')}
 								<div hidden={current !== 'sessions'}><SessionsTab /></div>

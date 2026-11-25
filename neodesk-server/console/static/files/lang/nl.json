@@ -6424,7 +6424,9 @@
     "hardening_session_timeout_desc": "Een consolesessie eindigt na {idle} minuten zonder verzoek en {max} minuten na het aanmelden (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Limiet voor consolesessies per account",
     "hardening_single_session_desc": "Een nieuwe aanmelding bij de console beëindigt de langst ongebruikte sessies boven SESSION_MAX_PER_USER (nu {limit}) en legt adres en browser vast voor het auditlogboek.",
-    "hardening_unlimited": "geen limiet"
+    "hardening_unlimited": "geen limiet",
+    "audit_page_description": "Wie wat deed in deze console, wat de NeoDesk-server vastlegde en waar je bent aangemeld.",
+    "checks_page_description": "Welke beveiligingscontroles deze server doorstaat, wat je met de andere doet en met welke hardeningsinstellingen hij draait."
   },
   "languages": {
     "title": "Taalbeheer",
@@ -7457,8 +7459,8 @@
     "alpha_tooltip": "Vroege functie — facturering en pakketten zijn in actieve ontwikkeling.",
     "tabs": {
       "overview": "Overzicht",
-      "packages": "Factuurpakketten",
-      "sessions": "Factureerbare sessies",
+      "packages": "Pakketten",
+      "sessions": "Sessies",
       "reports": "Rapporten",
       "settings": "Geavanceerde instellingen",
       "overview_nav": "Billing overview",
@@ -7771,7 +7773,8 @@
       "assignment_edit_desc": "De apparaatgroep en het pakket blijven. Wijzig de resterende tijd deze maand, de tarieven of de datums.",
       "preview_sheet_desc": "Hoeveel van de inbegrepen tijd het pakket in een maand gebruikte, en de tijd die daarboven is gefactureerd.",
       "save_failed": "Opslaan is mislukt. Probeer het opnieuw.",
-      "error_targets": "De apparaatgroepen konden niet worden geladen: {error}"
+      "error_targets": "De apparaatgroepen konden niet worden geladen: {error}",
+      "reports_description": "Sessies die nog op een werkrapport wachten, en hoeveel inbegrepen tijd elke toewijzing deze maand heeft gebruikt. Facturering is een vroege functie en kan nog veranderen."
     }
   },
   "remote_dashboard": {

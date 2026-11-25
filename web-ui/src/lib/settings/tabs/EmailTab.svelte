@@ -317,7 +317,7 @@
 							<ListRow
 								title={t('nav.help_requests')}
 								sub={t('settings.email.uses_help')}
-								href={link('/commercialization?settings=1#billing-settings-panel')}
+								href={link('/billing?settings=1#billing-settings-panel')}
 							/>
 						{/if}
 					</RowList>

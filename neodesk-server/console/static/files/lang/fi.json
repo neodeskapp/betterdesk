@@ -6430,7 +6430,9 @@
     "hardening_session_timeout_desc": "Konsoli-istunto päättyy, kun {idle} minuuttiin ei ole tullut pyyntöä, ja {max} minuutin kuluttua kirjautumisesta (SESSION_IDLE_TIMEOUT, SESSION_MAX_AGE).",
     "hardening_single_session": "Konsoli-istuntojen enimmäismäärä tiliä kohden",
     "hardening_single_session_desc": "Uusi kirjautuminen konsoliin päättää pisimpään käyttämättä olleet istunnot, jotka ylittävät rajan SESSION_MAX_PER_USER (nyt {limit}), ja tallentaa osoitteen ja selaimen tarkastuslokiin.",
-    "hardening_unlimited": "ei rajaa"
+    "hardening_unlimited": "ei rajaa",
+    "audit_page_description": "Who did what in this console, what the NeoDesk server recorded, and where you are signed in.",
+    "checks_page_description": "Which security checks this server passes and what to do about the others, and the hardening settings it runs with."
   },
   "languages": {
     "title": "Kielenhallinta",
@@ -7463,8 +7465,8 @@
     "alpha_tooltip": "Varhainen ominaisuus — laskutus ja paketit ovat aktiivisessa kehityksessä.",
     "tabs": {
       "overview": "Yleiskatsaus",
-      "packages": "Laskutuspaketit",
-      "sessions": "Laskutettavat istunnot",
+      "packages": "Paketit",
+      "sessions": "Istunnot",
       "reports": "Raportit",
       "settings": "Lisäasetukset",
       "overview_nav": "Billing overview",
@@ -7777,7 +7779,8 @@
       "assignment_edit_desc": "Laiteryhmä ja paketti pysyvät. Muuta tämän kuun jäljellä olevaa aikaa, hintoja tai päivämääriä.",
       "preview_sheet_desc": "Kuinka paljon sisältyvästä ajasta paketti käytti kuukaudessa ja sen yli laskutettu aika.",
       "save_failed": "Tallennus epäonnistui. Yritä uudelleen.",
-      "error_targets": "Laiteryhmiä ei voitu ladata: {error}"
+      "error_targets": "Laiteryhmiä ei voitu ladata: {error}",
+      "reports_description": "Sessions that still wait for a work report, and how much included time each assignment has used this month. Billing is an early feature and may still change."
     }
   },
   "remote_dashboard": {

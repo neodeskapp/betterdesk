@@ -206,7 +206,7 @@
 					{/if}
 				</div>
 				<p class="muted">
-					{restarts[0]}<a href={link('/security-audit')}>{t('nav.security_audit')}</a>{restarts[1]}
+					{restarts[0]}<a href={link('/security-audit')}>{t('security_audit.tab_audit_log')}</a>{restarts[1]}
 				</p>
 			</section>
 

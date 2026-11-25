@@ -13,6 +13,21 @@ describe('the old addresses', () => {
 		expect(go('/settings?tab=advanced')).toBe('/server/config-files');
 	});
 
+	test('Security checks and Billing are pages of Activity now', () => {
+		expect(go('/security-audit?tab=overview')).toBe('/security-checks?tab=checks');
+		expect(go('/security-audit?tab=hardening')).toBe('/security-checks?tab=hardening');
+		expect(go('/security-audit?tab=vulnerabilities')).toBe('/security-checks?tab=hardening');
+		// The audit log, the server events and the own sessions stay
+		expect(go('/security-audit')).toBeNull();
+		expect(go('/security-audit?tab=events')).toBeNull();
+		expect(go('/security-audit?tab=sessions')).toBeNull();
+		expect(go('/commercialization')).toBe('/billing');
+		expect(go('/commercialization?tab=sessions')).toBe('/billing?tab=sessions');
+		expect(go('/commercialization?settings=1#billing-settings-panel')).toBe(
+			'/billing?settings=1#billing-settings-panel'
+		);
+	});
+
 	test('the other parameters and the #id come along; the tab is left out', () => {
 		expect(go('/settings?tab=backup&guide=backup#backup-create')).toBe(
 			'/server/backups?guide=backup#backup-create'
