@@ -449,8 +449,11 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 			Allowed:      ws.ParseAllowedOrigins(getenv("WS_ALLOWED_ORIGINS")),
 			AllowMissing: envvar.SwitchOr(getenv("ND_ALLOW_MISSING_ORIGIN"), false),
 		},
-		ClientIP: cfg.TrustProxy.ClientIP,
+		ClientIP:  cfg.TrustProxy.ClientIP,
+		SessionID: sessions.CookieSessionID,
 	})
+	// A session that ends takes its sockets along (A239)
+	sessions.OnEnd(s.deps.Sockets.EndSessions)
 	s.deps.StatusPush = statuspush.New(statuspush.Options{Events: api.Events, Cascade: s.deps.DeviceGroups.CascadePeerIDChange})
 	s.jobs.Add("device status push", s.deps.StatusPush.Run)
 	s.deps.Relay = ndrelay.New(ndrelay.Options{VerifyDevice: s.deps.Authn.VerifyDeviceWSAuth})

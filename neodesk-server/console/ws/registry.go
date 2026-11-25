@@ -32,6 +32,11 @@ type Options struct {
 	// setting gives it (httpx.TrustProxy.ClientIP, req.ip). nil: the
 	// connection's address.
 	ClientIP func(r *http.Request) string
+	// SessionID is the id of the session the upgrade's cookie names, read
+	// without the store (session.Manager.CookieSessionID); "" for none.
+	// The socket ends when that session ends (EndSessions). nil: sockets
+	// end only with the console.
+	SessionID func(r *http.Request) string
 	// SectionAccess is the panel access guard of the routes for sockets:
 	// whether the account's effective panel access policy reaches level in
 	// section (see SectionAccessOf). err is a failed lookup. nil: no
@@ -101,6 +106,9 @@ type Registry struct {
 	mu      sync.Mutex
 	stopped bool
 	running sync.WaitGroup
+	// bySession are the cancel functions of the running sockets, by the id
+	// of the session their upgrade came with.
+	bySession map[string]map[*context.CancelFunc]struct{}
 }
 
 // New returns a registry without sockets.
@@ -245,9 +253,56 @@ func (g *Registry) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	g.running.Add(1)
+	ctx, cancel := context.WithCancel(g.ctx)
+	sid := ""
+	if g.opts.SessionID != nil {
+		sid = g.opts.SessionID(r)
+	}
+	if sid != "" {
+		if g.bySession == nil {
+			g.bySession = map[string]map[*context.CancelFunc]struct{}{}
+		}
+		if g.bySession[sid] == nil {
+			g.bySession[sid] = map[*context.CancelFunc]struct{}{}
+		}
+		g.bySession[sid][&cancel] = struct{}{}
+	}
 	g.mu.Unlock()
 	defer g.running.Done()
-	route.handler(&Upgrade{W: w, R: r, Path: t.Path, query: t.Query, params: params, reg: g})
+	defer func() {
+		cancel()
+		if sid == "" {
+			return
+		}
+		g.mu.Lock()
+		delete(g.bySession[sid], &cancel)
+		if len(g.bySession[sid]) == 0 {
+			delete(g.bySession, sid)
+		}
+		g.mu.Unlock()
+	}()
+	route.handler(&Upgrade{W: w, R: r, Path: t.Path, query: t.Query, params: params, reg: g, ctx: ctx})
+}
+
+// EndSessions ends the sockets whose upgrade came with one of the
+// sessions, without a closing handshake, as Close does for all: a browser
+// signed out from another one, by an admin or by a change to its account
+// keeps no live socket. Sockets of other sessions go on.
+func (g *Registry) EndSessions(sids []string) {
+	if g == nil {
+		return
+	}
+	g.mu.Lock()
+	var cancels []context.CancelFunc
+	for _, sid := range sids {
+		for c := range g.bySession[sid] {
+			cancels = append(cancels, *c)
+		}
+	}
+	g.mu.Unlock()
+	for _, cancel := range cancels {
+		cancel()
+	}
 }
 
 // Close ends every socket without a closing handshake and waits until

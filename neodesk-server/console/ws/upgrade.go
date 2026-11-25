@@ -26,6 +26,9 @@ type Upgrade struct {
 	params   map[string]string
 	reg      *Registry
 	answered bool
+	// ctx ends when the console stops or the session the upgrade came
+	// with ends (Registry.EndSessions).
+	ctx context.Context
 }
 
 // Param is the parameter segment of the path as it was sent: still
@@ -38,8 +41,14 @@ func (u *Upgrade) SearchParam(name string) (value string, ok bool) {
 	return searchParam(u.query, name)
 }
 
-// Context ends when the console stops.
-func (u *Upgrade) Context() context.Context { return u.reg.ctx }
+// Context ends when the console stops or the session the upgrade's cookie
+// named ends.
+func (u *Upgrade) Context() context.Context {
+	if u.ctx != nil {
+		return u.ctx
+	}
+	return u.reg.ctx
+}
 
 // CheckOrigin is enforceOrigin: it refuses an upgrade from a page the
 // origin policy does not allow with "HTTP/1.1 403 Forbidden" and reports
@@ -196,7 +205,7 @@ func (u *Upgrade) Accept(opts AcceptOptions) (*Conn, bool) {
 	if err != nil {
 		return nil, false
 	}
-	return newConn(u.reg.ctx, c, opts.MaxPayload, h.protocol), true
+	return newConn(u.Context(), c, opts.MaxPayload, h.protocol), true
 }
 
 // ClientIP is the client's address as the console's TRUST_PROXY setting
