@@ -8010,7 +8010,8 @@
     "updated_at": "Zaktualizowano o {time}.",
     "sync_failed_since": "Nie udało się odświeżyć. Lista pochodzi z {time}.",
     "connect_failed": "Nie udało się otworzyć sesji zdalnej.",
-    "popup_blocked": "Przeglądarka zablokowała nową kartę. Zezwól na wyskakujące okna dla tej witryny i spróbuj ponownie."
+    "popup_blocked": "Przeglądarka zablokowała nową kartę. Zezwól na wyskakujące okna dla tej witryny i spróbuj ponownie.",
+    "sessions_description": "Połącz się z urządzeniem po jego ID lub znajdź je na liście. Sesja otworzy się na tej stronie, obok Twoich innych otwartych sesji."
   },
   "rdclient_login": {
     "title": "Klient pulpitu zdalnego",

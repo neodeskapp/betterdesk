@@ -8010,7 +8010,8 @@
     "updated_at": "Aggiornato alle {time}.",
     "sync_failed_since": "Impossibile aggiornare. L'elenco è delle {time}.",
     "connect_failed": "Impossibile aprire la sessione remota.",
-    "popup_blocked": "Il browser ha bloccato la nuova scheda. Consenti i pop-up per questo sito e riprova."
+    "popup_blocked": "Il browser ha bloccato la nuova scheda. Consenti i pop-up per questo sito e riprova.",
+    "sessions_description": "Connettiti a un dispositivo tramite il suo ID o cercalo nell'elenco. La sessione si apre in questa pagina, accanto alle altre sessioni aperte."
   },
   "rdclient_login": {
     "title": "Client desktop remoto",

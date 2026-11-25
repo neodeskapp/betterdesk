@@ -8010,7 +8010,8 @@
     "updated_at": "更新于 {time}。",
     "sync_failed_since": "无法刷新。列表为 {time} 的数据。",
     "connect_failed": "无法打开远程会话。",
-    "popup_blocked": "浏览器拦截了新标签页。请允许此网站的弹出窗口，然后重试。"
+    "popup_blocked": "浏览器拦截了新标签页。请允许此网站的弹出窗口，然后重试。",
+    "sessions_description": "通过 ID 连接设备，或在列表中查找。会话在此页面打开，位于你其他已打开的会话旁边。"
   },
   "rdclient_login": {
     "title": "远程桌面客户端",

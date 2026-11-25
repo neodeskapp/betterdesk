@@ -8016,7 +8016,8 @@
     "updated_at": "Frissítve: {time}.",
     "sync_failed_since": "A frissítés nem sikerült. A lista {time} állapotát mutatja.",
     "connect_failed": "Nem sikerült megnyitni a távoli munkamenetet.",
-    "popup_blocked": "A böngésző letiltotta az új lapot. Engedélyezze a felugró ablakokat ennél a webhelynél, és próbálja újra."
+    "popup_blocked": "A böngésző letiltotta az új lapot. Engedélyezze a felugró ablakokat ennél a webhelynél, és próbálja újra.",
+    "sessions_description": "Csatlakozzon egy eszközhöz az azonosítójával, vagy keresse meg a listában. A munkamenet ezen az oldalon nyílik meg, a többi nyitott munkamenete mellett."
   },
   "rdclient_login": {
     "title": "Távoli asztal kliens",

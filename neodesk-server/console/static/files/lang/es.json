@@ -8010,7 +8010,8 @@
     "updated_at": "Actualizado a las {time}.",
     "sync_failed_since": "No se pudo actualizar. La lista es de las {time}.",
     "connect_failed": "No se pudo abrir la sesión remota.",
-    "popup_blocked": "El navegador bloqueó la pestaña nueva. Permita las ventanas emergentes para este sitio e inténtelo de nuevo."
+    "popup_blocked": "El navegador bloqueó la pestaña nueva. Permita las ventanas emergentes para este sitio e inténtelo de nuevo.",
+    "sessions_description": "Conéctese a un dispositivo por su ID o búsquelo en la lista. La sesión se abre en esta página, junto a sus otras sesiones abiertas."
   },
   "rdclient_login": {
     "title": "Cliente de escritorio remoto",

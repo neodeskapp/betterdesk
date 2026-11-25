@@ -8016,7 +8016,8 @@
     "updated_at": "Actualizat la {time}.",
     "sync_failed_since": "Nu s-a putut reîmprospăta. Lista este de la {time}.",
     "connect_failed": "Sesiunea la distanță nu a putut fi deschisă.",
-    "popup_blocked": "Browserul a blocat fila nouă. Permiteți ferestrele pop-up pentru acest site și încercați din nou."
+    "popup_blocked": "Browserul a blocat fila nouă. Permiteți ferestrele pop-up pentru acest site și încercați din nou.",
+    "sessions_description": "Conectează-te la un dispozitiv după ID sau găsește-l în listă. Sesiunea se deschide pe această pagină, lângă celelalte sesiuni deschise."
   },
   "rdclient_login": {
     "title": "Client desktop la distanță",

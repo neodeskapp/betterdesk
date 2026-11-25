@@ -8016,7 +8016,8 @@
     "updated_at": "Oppdatert {time}.",
     "sync_failed_since": "Kunne ikke oppdatere. Listen er fra {time}.",
     "connect_failed": "Kunne ikke åpne fjernøkten.",
-    "popup_blocked": "Nettleseren blokkerte den nye fanen. Tillat popup-vinduer for dette nettstedet og prøv igjen."
+    "popup_blocked": "Nettleseren blokkerte den nye fanen. Tillat popup-vinduer for dette nettstedet og prøv igjen.",
+    "sessions_description": "Koble til en enhet med ID-en, eller finn den i listen. Økten åpnes på denne siden, ved siden av de andre åpne øktene dine."
   },
   "rdclient_login": {
     "title": "Remote Desktop-klient",

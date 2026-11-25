@@ -8010,7 +8010,8 @@
     "updated_at": "{time}에 업데이트됨.",
     "sync_failed_since": "새로 고치지 못했습니다. 목록은 {time} 기준입니다.",
     "connect_failed": "원격 세션을 열 수 없습니다.",
-    "popup_blocked": "브라우저가 새 탭을 차단했습니다. 이 사이트의 팝업을 허용하고 다시 시도하세요."
+    "popup_blocked": "브라우저가 새 탭을 차단했습니다. 이 사이트의 팝업을 허용하고 다시 시도하세요.",
+    "sessions_description": "ID로 기기에 연결하거나 목록에서 찾으세요. 세션은 이 페이지에서 다른 열린 세션 옆에 열립니다."
   },
   "rdclient_login": {
     "title": "원격 데스크톱 클라이언트",

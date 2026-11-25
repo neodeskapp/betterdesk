@@ -8016,7 +8016,8 @@
     "updated_at": "{time} itibarıyla güncellendi.",
     "sync_failed_since": "Yenilenemedi. Liste {time} tarihli.",
     "connect_failed": "Uzak oturum açılamadı.",
-    "popup_blocked": "Tarayıcı yeni sekmeyi engelledi. Bu site için açılır pencerelere izin verin ve tekrar deneyin."
+    "popup_blocked": "Tarayıcı yeni sekmeyi engelledi. Bu site için açılır pencerelere izin verin ve tekrar deneyin.",
+    "sessions_description": "Bir cihaza kimliğiyle bağlanın veya listede bulun. Oturum bu sayfada, diğer açık oturumlarınızın yanında açılır."
   },
   "rdclient_login": {
     "title": "Uzak Masaüstü İstemcisi",

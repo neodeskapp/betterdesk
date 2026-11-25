@@ -8014,7 +8014,8 @@
     "updated_at": "更新於 {time}。",
     "sync_failed_since": "無法重新整理。清單為 {time} 的資料。",
     "connect_failed": "無法開啟遠端工作階段。",
-    "popup_blocked": "瀏覽器封鎖了新分頁。請允許此網站的彈出式視窗，然後再試一次。"
+    "popup_blocked": "瀏覽器封鎖了新分頁。請允許此網站的彈出式視窗，然後再試一次。",
+    "sessions_description": "透過 ID 連線裝置，或在清單中尋找。工作階段會在此頁面開啟，位於你其他已開啟的工作階段旁邊。"
   },
   "rdclient_login": {
     "title": "遠端桌面用戶端",

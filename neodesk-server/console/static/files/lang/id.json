@@ -8016,7 +8016,8 @@
     "updated_at": "Diperbarui {time}.",
     "sync_failed_since": "Tidak dapat memuat ulang. Daftar dari {time}.",
     "connect_failed": "Tidak dapat membuka sesi jarak jauh.",
-    "popup_blocked": "Browser memblokir tab baru. Izinkan pop-up untuk situs ini lalu coba lagi."
+    "popup_blocked": "Browser memblokir tab baru. Izinkan pop-up untuk situs ini lalu coba lagi.",
+    "sessions_description": "Hubungkan ke perangkat dengan ID-nya, atau cari di daftar. Sesi terbuka di halaman ini, di samping sesi terbuka Anda yang lain."
   },
   "rdclient_login": {
     "title": "Klien Desktop Jarak Jauh",

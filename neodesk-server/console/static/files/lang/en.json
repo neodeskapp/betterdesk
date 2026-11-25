@@ -2927,7 +2927,8 @@
         "updated_at": "Updated {time}.",
         "sync_failed_since": "Could not refresh. The list is from {time}.",
         "connect_failed": "Could not open the remote session.",
-        "popup_blocked": "The browser blocked the new tab. Allow pop-ups for this site and try again."
+        "popup_blocked": "The browser blocked the new tab. Allow pop-ups for this site and try again.",
+        "sessions_description": "Connect to a device by its ID, or find it in the list. The session opens on this page, next to your other open sessions."
     },
     "branding": {
         "identity_title": "Brand Identity",

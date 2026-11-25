@@ -8016,7 +8016,8 @@
     "updated_at": "Opdateret {time}.",
     "sync_failed_since": "Kunne ikke opdatere. Listen er fra {time}.",
     "connect_failed": "Fjernsessionen kunne ikke åbnes.",
-    "popup_blocked": "Browseren blokerede den nye fane. Tillad pop op-vinduer for dette websted, og prøv igen."
+    "popup_blocked": "Browseren blokerede den nye fane. Tillad pop op-vinduer for dette websted, og prøv igen.",
+    "sessions_description": "Opret forbindelse til en enhed med dens ID, eller find den på listen. Sessionen åbner på denne side ved siden af dine andre åbne sessioner."
   },
   "rdclient_login": {
     "title": "Remote Desktop-klient",

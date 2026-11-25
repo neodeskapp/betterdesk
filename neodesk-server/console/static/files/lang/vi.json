@@ -8016,7 +8016,8 @@
     "updated_at": "Cập nhật lúc {time}.",
     "sync_failed_since": "Không thể làm mới. Danh sách từ lúc {time}.",
     "connect_failed": "Không thể mở phiên từ xa.",
-    "popup_blocked": "Trình duyệt đã chặn tab mới. Hãy cho phép cửa sổ bật lên cho trang này và thử lại."
+    "popup_blocked": "Trình duyệt đã chặn tab mới. Hãy cho phép cửa sổ bật lên cho trang này và thử lại.",
+    "sessions_description": "Kết nối với thiết bị bằng ID hoặc tìm trong danh sách. Phiên mở ngay trên trang này, cạnh các phiên đang mở khác của bạn."
   },
   "rdclient_login": {
     "title": "Máy khách Desktop từ xa",

@@ -170,6 +170,10 @@ test('Remote sessions in the sidebar opens inside the console: the open sessions
 	await page.locator('.shell nav a[href$="/remote/sessions"]').click();
 	await expect(page).toHaveURL(/\/remote\/sessions$/);
 	await expect(page.locator('.shell-topbar')).toBeVisible();
+	// The intro says where the session opens: here, not in a new browser tab (L516)
+	await expect(page.locator('.page-description')).toHaveText(
+		'Connect to a device by its ID, or find it in the list. The session opens on this page, next to your other open sessions.'
+	);
 	const list = page.locator('.session-list');
 	await expect(list.getByRole('link')).toHaveCount(1);
 	await expect(list).toContainText('Connected');

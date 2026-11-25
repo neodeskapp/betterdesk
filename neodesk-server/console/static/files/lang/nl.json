@@ -8010,7 +8010,8 @@
     "updated_at": "Bijgewerkt om {time}.",
     "sync_failed_since": "Vernieuwen mislukt. De lijst is van {time}.",
     "connect_failed": "De externe sessie kon niet worden geopend.",
-    "popup_blocked": "De browser heeft het nieuwe tabblad geblokkeerd. Sta pop-ups toe voor deze site en probeer het opnieuw."
+    "popup_blocked": "De browser heeft het nieuwe tabblad geblokkeerd. Sta pop-ups toe voor deze site en probeer het opnieuw.",
+    "sessions_description": "Maak verbinding met een apparaat via de ID of zoek het in de lijst. De sessie opent op deze pagina, naast je andere open sessies."
   },
   "rdclient_login": {
     "title": "Remote Desktop-client",

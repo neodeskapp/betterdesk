@@ -40,7 +40,10 @@
 	<div class="page-head">
 		<h1>{tf('nav.remote', 'Remote sessions')}</h1>
 		<p class="page-description">
-			{tf('remote_dashboard.page_description', 'Connect to a device in this browser.')}
+			{tf(
+				'remote_dashboard.sessions_description',
+				'Connect to a device by its ID, or find it in the list. The session opens on this page, next to your other open sessions.'
+			)}
 		</p>
 	</div>
 

@@ -8014,7 +8014,8 @@
     "updated_at": "Mis à jour à {time}.",
     "sync_failed_since": "Impossible d'actualiser. La liste date de {time}.",
     "connect_failed": "Impossible d'ouvrir la session à distance.",
-    "popup_blocked": "Le navigateur a bloqué le nouvel onglet. Autorisez les fenêtres pop-up pour ce site et réessayez."
+    "popup_blocked": "Le navigateur a bloqué le nouvel onglet. Autorisez les fenêtres pop-up pour ce site et réessayez.",
+    "sessions_description": "Connectez-vous à un appareil par son ID ou trouvez-le dans la liste. La session s'ouvre sur cette page, à côté de vos autres sessions ouvertes."
   },
   "rdclient_login": {
     "title": "Client Bureau à distance",

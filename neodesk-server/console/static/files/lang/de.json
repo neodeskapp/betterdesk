@@ -8010,7 +8010,8 @@
     "updated_at": "Aktualisiert um {time}.",
     "sync_failed_since": "Aktualisieren fehlgeschlagen. Die Liste ist von {time}.",
     "connect_failed": "Die Fernsitzung konnte nicht geöffnet werden.",
-    "popup_blocked": "Der Browser hat den neuen Tab blockiert. Erlauben Sie Pop-ups für diese Seite und versuchen Sie es erneut."
+    "popup_blocked": "Der Browser hat den neuen Tab blockiert. Erlauben Sie Pop-ups für diese Seite und versuchen Sie es erneut.",
+    "sessions_description": "Verbinde dich über die ID eines Geräts oder such es in der Liste. Die Sitzung öffnet sich auf dieser Seite, neben deinen anderen offenen Sitzungen."
   },
   "rdclient_login": {
     "title": "Anmelden für den Remote-Desktop",

@@ -8016,7 +8016,8 @@
     "updated_at": "Päivitetty klo {time}.",
     "sync_failed_since": "Päivitys epäonnistui. Luettelo on ajalta {time}.",
     "connect_failed": "Etäistuntoa ei voitu avata.",
-    "popup_blocked": "Selain esti uuden välilehden. Salli ponnahdusikkunat tälle sivustolle ja yritä uudelleen."
+    "popup_blocked": "Selain esti uuden välilehden. Salli ponnahdusikkunat tälle sivustolle ja yritä uudelleen.",
+    "sessions_description": "Yhdistä laitteeseen sen ID:llä tai etsi se luettelosta. Istunto avautuu tälle sivulle muiden avoimien istuntojesi viereen."
   },
   "rdclient_login": {
     "title": "Etätyöpöytäasiakas",

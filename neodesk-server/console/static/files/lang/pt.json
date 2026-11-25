@@ -8010,7 +8010,8 @@
     "updated_at": "Atualizado às {time}.",
     "sync_failed_since": "Não foi possível atualizar. A lista é das {time}.",
     "connect_failed": "Não foi possível abrir a sessão remota.",
-    "popup_blocked": "O navegador bloqueou a nova aba. Permita pop-ups para este site e tente novamente."
+    "popup_blocked": "O navegador bloqueou a nova aba. Permita pop-ups para este site e tente novamente.",
+    "sessions_description": "Conecte-se a um dispositivo pelo ID ou encontre-o na lista. A sessão abre nesta página, ao lado das suas outras sessões abertas."
   },
   "rdclient_login": {
     "title": "Cliente de ambiente de trabalho remoto",

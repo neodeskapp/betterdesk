@@ -8010,7 +8010,8 @@
     "updated_at": "Aktualizováno v {time}.",
     "sync_failed_since": "Obnovení se nezdařilo. Seznam je z {time}.",
     "connect_failed": "Vzdálenou relaci se nepodařilo otevřít.",
-    "popup_blocked": "Prohlížeč zablokoval novou kartu. Povolte pro tento web vyskakovací okna a zkuste to znovu."
+    "popup_blocked": "Prohlížeč zablokoval novou kartu. Povolte pro tento web vyskakovací okna a zkuste to znovu.",
+    "sessions_description": "Připojte se k zařízení podle jeho ID nebo ho najděte v seznamu. Relace se otevře na této stránce vedle vašich dalších otevřených relací."
   },
   "rdclient_login": {
     "title": "Klient vzdálené plochy",
