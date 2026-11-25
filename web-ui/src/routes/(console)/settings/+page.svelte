@@ -40,6 +40,7 @@
 		onControlChange,
 		whenPresent
 	} from '#lib/settings/reveal.ts';
+	import { REVEAL_EVENT } from '#lib/settings/reveal-event.ts';
 	import { MIN_QUERY, searchSettings, type SearchHit } from '#lib/settings/search.ts';
 	import {
 		TAB_TITLE,
@@ -136,6 +137,17 @@
 	});
 
 	$effect(() => () => following?.abort());
+
+	// The search in the top bar found the setting this address shows already
+	$effect(() => {
+		const again = (e: Event) => {
+			const id = (e as CustomEvent<unknown>).detail;
+			const el = typeof id === 'string' ? findTarget(id) : null;
+			if (el) highlight(el);
+		};
+		window.addEventListener(REVEAL_EVENT, again);
+		return () => window.removeEventListener(REVEAL_EVENT, again);
+	});
 
 	// A switch that changes ends the "shown for the search" state of what it controls
 	$effect(() => {

@@ -14,7 +14,7 @@
 	import { link } from '#lib/nav.ts';
 	import SessionsSheet from '#lib/people/SessionsSheet.svelte';
 	import { mayMakeTokens } from '#lib/people/apiTokens.ts';
-	import { session, clearSession } from '#lib/state/session.svelte.ts';
+	import { session } from '#lib/state/session.svelte.ts';
 	import { myPresence, setPresence, PRESENCE_VALUES } from '#lib/state/presence.svelte.ts';
 	import Avatar from '#lib/ui/Avatar.svelte';
 	import Icon from '#lib/ui/Icon.svelte';
@@ -22,10 +22,7 @@
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import Presence from '#lib/ui/Presence.svelte';
-	import { confirm } from '#lib/ui/dialogs.svelte.ts';
-	import { toast } from '#lib/ui/toasts.svelte.ts';
-	import { logout } from './api.ts';
-	import { broadcastExpired, stopGuard } from './session-guard.svelte.ts';
+	import { signOut } from './sign-out.ts';
 
 	let { place = 'sidebar' }: { place?: 'sidebar' | 'topbar' } = $props();
 
@@ -62,23 +59,6 @@
 
 	function onclose(returnFocus: boolean) {
 		if (returnFocus) button?.focus();
-	}
-
-	async function signOut() {
-		const label = t('user_menu.sign_out');
-		const ok = await confirm({ title: label, message: t('auth.logout_confirm'), confirmLabel: label });
-		if (!ok) return;
-		try {
-			await logout();
-		} catch {
-			toast.error(t('errors.logout_failed'));
-			return;
-		}
-		// The other tabs leave too; this one forgets everything and goes to sign-in
-		stopGuard();
-		broadcastExpired('logout');
-		clearSession();
-		location.assign('/login');
 	}
 </script>
 

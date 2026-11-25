@@ -1,10 +1,14 @@
 <!--
-  Global search (public/js/ui-search.js): one field for pages, devices and
-  people. Opened from the top bar, with Ctrl+K / Cmd+K anywhere, or "/"
-  when focus is not in a field (the shell listens for the keys and sets
-  `open`). Pages come from the navigation the server sent (only pages this
-  person may open); devices and people load on open from the APIs they may
-  call, kept for a minute.
+  Global search (public/js/ui-search.js): one field for pages, things to
+  do, settings, devices and people. Opened from the top bar, with Ctrl+K /
+  Cmd+K anywhere, or "/" when focus is not in a field (the shell listens
+  for the keys and sets `open`). Pages come from the navigation the server
+  sent (only pages this person may open); settings from the Settings page's
+  own list, filtered by the account's permissions (lib/settings/search.ts);
+  actions from actions.ts; devices and people load on open from the APIs
+  they may call, kept for a minute. Each group names how many matched.
+  With the field empty, the account's recent searches show (kept in this
+  browser only); one is picked to search it again.
 
   A modal dialog: combobox field with a listbox of results in groups.
   ArrowUp and ArrowDown move, Enter opens, Escape closes and returns
@@ -16,17 +20,27 @@
 	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { listDevices } from '#lib/api/devices.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { plural, t } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
+	import { mayMakeTokens } from '#lib/people/apiTokens.ts';
+	import { REVEAL_EVENT } from '#lib/settings/reveal-event.ts';
+	import { settingEntries } from '#lib/settings/search.ts';
 	import { can, session } from '#lib/state/session.svelte.ts';
+	import { theme } from '#lib/state/theme.svelte.ts';
 	import Icon from '#lib/ui/Icon.svelte';
 	import { openLayer } from '#lib/ui/layers.ts';
 	import { portal } from '#lib/ui/portal.ts';
+	import { searchActions } from './actions.ts';
 	import { listUsersForSearch } from './api.ts';
 	import { searchPages } from './nav-model.ts';
+	import { runAction } from './run-action.ts';
 	import {
+		addRecent,
 		groupResults,
-		searchAll,
+		readRecent,
+		recentKey,
+		searchGrouped,
+		writeRecent,
 		type ResultKind,
 		type SearchDevice,
 		type SearchResult,
@@ -48,28 +62,75 @@
 	let loadedAt = 0;
 
 	const pages = $derived(searchPages(session.nav));
-	const results = $derived(searchAll(query, { pages, devices, users }));
+	const settings = $derived(settingEntries({ t, can }));
+	const actions = $derived(
+		searchActions({
+			can,
+			mayMakeTokens: mayMakeTokens(session.user?.role),
+			dark: theme.shown === 'dark',
+			t
+		})
+	);
+	const found = $derived(searchGrouped(query, { pages, actions, settings, devices, users }));
+
+	/** Recent searches of this account, in this browser only */
+	const storeKey = $derived(session.user ? recentKey(session.user.id) : '');
+	let recent = $state<string[]>([]);
+	function store(): Storage | null {
+		try {
+			return window.localStorage;
+		} catch {
+			return null;
+		}
+	}
+	const recentResults = $derived(
+		recent.map((q): SearchResult => ({
+			kind: 'recent',
+			title: q,
+			sub: '',
+			href: '',
+			external: false,
+			icon: 'history'
+		}))
+	);
+
+	const typed = $derived(query.trim() !== '');
+	const results = $derived(typed ? found.results : recentResults);
 	const groups = $derived(groupResults(results));
 	const optionId = (i: number) => `${uid}-opt-${i}`;
 
 	const GROUP_KEY: Record<ResultKind, string> = {
+		recent: 'search.group_recent',
 		page: 'search.group_pages',
+		action: 'search.group_actions',
+		setting: 'search.group_settings',
 		device: 'search.group_devices',
 		user: 'search.group_people'
 	};
 	const ICON: Record<ResultKind, string> = {
+		recent: 'history',
 		page: 'arrow_forward',
+		action: 'arrow_forward',
+		setting: 'settings',
 		device: 'desktop_windows',
 		user: 'person'
 	};
 	const STATE_KEY = { online: 'status.online', offline: 'status.offline', banned: 'status.banned' } as const;
 
+	/** "8 of 23" when the list leaves some out */
+	function groupCount(kind: ResultKind, shown: number): string {
+		const total = typed ? found.totals[kind] : shown;
+		return total > shown ? t('search.group_count_of', { shown, total }) : String(shown);
+	}
+
 	const status = $derived(
-		!query.trim()
-			? t('search.hint')
+		!typed
+			? recent.length
+				? ''
+				: t('search.hint')
 			: !results.length
-				? t('search.no_results')
-				: t('search.count', { count: results.length })
+				? t('search.no_results_for', { query: query.trim() })
+				: plural(results.length, { one: t('search.count_one'), other: t('search.count') })
 	);
 
 	/** The highlighted result, kept inside the list when results change */
@@ -104,11 +165,39 @@
 		document.getElementById(optionId(i))?.scrollIntoView({ block: 'nearest' });
 	}
 
+	function remember() {
+		if (!typed || !storeKey) return;
+		recent = addRecent(recent, query);
+		writeRecent(store(), storeKey, recent);
+	}
+
+	function clearRecent() {
+		recent = [];
+		if (storeKey) writeRecent(store(), storeKey, []);
+		input?.focus();
+	}
+
 	async function go(i: number) {
 		const r: SearchResult | undefined = results[i];
 		if (!r) return;
+		if (r.kind === 'recent') {
+			query = r.title;
+			active = 0;
+			input?.focus();
+			return;
+		}
+		remember();
 		close();
+		if (r.kind === 'action') {
+			await runAction(r.id ?? '');
+			return;
+		}
 		const href = link(r.href);
+		// The same setting again on the page that shows it: no navigation for the page to follow
+		if (r.kind === 'setting' && location.pathname + location.search + location.hash === href) {
+			window.dispatchEvent(new CustomEvent(REVEAL_EVENT, { detail: r.id }));
+			return;
+		}
 		if (r.external) {
 			window.open(href, '_blank', 'noopener');
 			return;
@@ -148,6 +237,7 @@
 		return untrack(() => {
 			query = '';
 			active = 0;
+			recent = storeKey ? readRecent(store(), storeKey) : [];
 			const closed = openLayer({
 				kind: 'dialog',
 				element: el,
@@ -203,7 +293,8 @@
 				{#each groups as g (g.kind)}
 					<div role="group" aria-labelledby={`${uid}-g-${g.kind}`}>
 						<div class="search-group" id={`${uid}-g-${g.kind}`} role="presentation">
-							{t(GROUP_KEY[g.kind])}
+							<span>{t(GROUP_KEY[g.kind])}</span>
+							<span class="search-group-count">{groupCount(g.kind, g.items.length)}</span>
 						</div>
 						{#each g.items as { r, index } (index)}
 							<!-- Options are chosen with the keyboard in the field; the mouse picks them here -->
@@ -217,7 +308,7 @@
 								onmousemove={() => (active = index)}
 								onclick={() => go(index)}
 							>
-								<Icon name={ICON[r.kind]} />
+								<Icon name={r.icon ?? ICON[r.kind]} />
 								<span class="search-result-main">
 									<span class="search-result-title">{r.title}</span>
 									{#if r.kind === 'device'}
@@ -235,7 +326,12 @@
 					</div>
 				{/each}
 			</div>
-			<p class="search-status" aria-live="polite">{status}</p>
+			<div class="search-foot">
+				<p class="search-status" role="status">{status}</p>
+				{#if !typed && recent.length}
+					<button type="button" class="search-clear" onclick={clearRecent}>{t('search.clear_recent')}</button>
+				{/if}
+			</div>
 			<p class="search-keys">{t('search.keys')}</p>
 		</div>
 	</div>
@@ -341,9 +437,17 @@
 		display: none;
 	}
 	.search-group {
-		padding: var(--space-2) var(--space-3) var(--space-1);
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-2);
+		padding: var(--space-3) var(--space-3) var(--space-1);
 		color: var(--text-muted);
 		font-size: var(--text-sm);
+		font-weight: 600;
+	}
+	.search-group-count {
+		font-weight: 400;
+		font-variant-numeric: tabular-nums;
 	}
 	.search-result {
 		display: flex;
@@ -383,8 +487,31 @@
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}
-	.search-status {
+	.search-foot {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-2);
 		border-top: 1px solid var(--rule);
+	}
+	.search-clear {
+		flex: none;
+		margin-inline-end: var(--space-2);
+		padding: var(--space-1) var(--space-2);
+		border: 0;
+		border-radius: var(--radius);
+		background: transparent;
+		color: var(--accent);
+		font: inherit;
+		font-size: var(--text-sm);
+		cursor: pointer;
+	}
+	.search-clear:hover {
+		background: var(--hover);
+	}
+	.search-clear:focus-visible {
+		outline: 2px solid var(--focus);
+		outline-offset: 1px;
 	}
 	.search-keys {
 		padding-top: 0;

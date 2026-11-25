@@ -1,4 +1,5 @@
-import { render, screen, cleanup } from '@testing-library/svelte';
+import { render, screen, cleanup, within } from '@testing-library/svelte';
+import enStrings from '../../../../neodesk-server/console/static/files/lang/en.json';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import adminNav from '../../fixtures/nav-admin.json';
@@ -28,6 +29,8 @@ vi.mock('#lib/api/devices.ts', () => ({
 		}
 	])
 }));
+const runAction = vi.fn();
+vi.mock('../../../src/lib/shell/run-action.ts', () => ({ runAction: (...a: unknown[]) => runAction(...a) }));
 vi.mock('../../../src/lib/shell/api.ts', () => ({
 	listUsersForSearch: vi
 		.fn()
@@ -201,7 +204,106 @@ describe('SearchDialog', () => {
 		const { user } = await setup();
 		expect(screen.getByText('search.hint')).toBeInTheDocument();
 		await user.keyboard('zzzz-nothing');
-		expect(screen.getByText('search.no_results')).toBeInTheDocument();
+		expect(screen.getByRole('status')).toHaveTextContent('search.no_results_for');
+	});
+});
+
+describe('SearchDialog: settings, things to do and recent searches', () => {
+	beforeEach(async () => {
+		const { session } = await import('../../../src/lib/state/session.svelte.ts');
+		const { i18n } = await import('../../../src/lib/i18n/i18n.svelte.ts');
+		session.nav = adminNav as NavSection[];
+		session.permissions = ['device.view', 'user.view', 'server.config'];
+		session.user = { id: 7, username: 'e2e_admin', role: 'admin' } as typeof session.user;
+		i18n.strings = enStrings;
+		goto.mockClear();
+		runAction.mockClear();
+		localStorage.clear();
+		Element.prototype.scrollIntoView = vi.fn();
+	});
+	afterEach(async () => {
+		cleanup();
+		const { session } = await import('../../../src/lib/state/session.svelte.ts');
+		const { i18n } = await import('../../../src/lib/i18n/i18n.svelte.ts');
+		session.user = null;
+		i18n.strings = {};
+	});
+
+	async function setup() {
+		const SearchDialog = (await import('../../../src/lib/shell/SearchDialog.svelte')).default;
+		render(SearchDialog, { open: true });
+		const user = userEvent.setup();
+		const box = await screen.findByRole('combobox');
+		return { user, box };
+	}
+
+	test('finds a setting by another word and opens it on its tab', async () => {
+		const { user } = await setup();
+		await user.keyboard('zeitzone');
+		const group = screen.getByRole('group', { name: /^Settings/ });
+		const option = within(group).getByRole('option', { name: /Time zone/ });
+		expect(option).toHaveTextContent('Settings, Time');
+		await user.click(option);
+		expect(goto).toHaveBeenCalledWith('/app/settings?tab=time#time-billing-timezone');
+	});
+
+	test('arrows and Enter reach a setting below the pages', async () => {
+		const { user, box } = await setup();
+		await user.keyboard('ldap host');
+		const options = screen.getAllByRole('option');
+		const host = options.findIndex((o) => /Host/.test(o.textContent ?? ''));
+		expect(host).toBeGreaterThanOrEqual(0);
+		for (let i = 0; i < host; i++) await user.keyboard('{ArrowDown}');
+		expect(box.getAttribute('aria-activedescendant')).toBe(options[host]!.id);
+		await user.keyboard('{Enter}');
+		expect(goto).toHaveBeenCalledWith('/app/settings?tab=auth#ldap-host');
+	});
+
+	test('groups name what they hold and count every match', async () => {
+		const { user } = await setup();
+		await user.keyboard('ldap');
+		const group = screen.getByRole('group', { name: /^Settings/ });
+		expect(within(group).getAllByRole('option')).toHaveLength(8);
+		expect(group.getAttribute('aria-label') ?? group.textContent).toMatch(/8 of \d\d/);
+	});
+
+	test('no setting the account cannot see', async () => {
+		const { session } = await import('../../../src/lib/state/session.svelte.ts');
+		session.permissions = ['device.view'];
+		const { user } = await setup();
+		await user.keyboard('ldap');
+		expect(screen.queryByRole('group', { name: /^Settings/ })).toBeNull();
+	});
+
+	test('things to do run from the list', async () => {
+		const { user } = await setup();
+		await user.keyboard('abmelden');
+		await user.keyboard('{Enter}');
+		expect(runAction).toHaveBeenCalledWith('sign-out');
+		expect(screen.queryByRole('dialog')).toBeNull();
+	});
+
+	test('the empty state names what was typed', async () => {
+		const { user } = await setup();
+		await user.keyboard('zzqx');
+		expect(screen.getByRole('status')).toHaveTextContent('zzqx');
+	});
+
+	test('recent searches show in an empty field, per account, and fill it again', async () => {
+		const first = await setup();
+		await first.user.keyboard('zeitzone{Enter}');
+		cleanup();
+		const again = await setup();
+		const recent = screen.getByRole('group', { name: /Recent/ });
+		const option = within(recent).getByRole('option', { name: /zeitzone/ });
+		await again.user.keyboard('{Enter}');
+		expect(again.box).toHaveValue('zeitzone');
+		void option;
+		cleanup();
+		const { session } = await import('../../../src/lib/state/session.svelte.ts');
+		session.user = { id: 8, username: 'other', role: 'admin' } as typeof session.user;
+		await setup();
+		expect(screen.queryByRole('group', { name: /Recent/ })).toBeNull();
 	});
 });
 

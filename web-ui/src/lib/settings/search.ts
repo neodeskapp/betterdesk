@@ -6,7 +6,8 @@
  */
 
 import { SEARCH_INDEX, type IndexRow } from './search-index.ts';
-import { TAB_TITLE, isTab, type TabId } from './tabs.ts';
+import { TAB_TERMS, TERMS } from './search-terms.ts';
+import { TAB_TITLE, isTab, tabAllowed, tabSearch, type TabId } from './tabs.ts';
 
 export interface SearchHit {
 	tab: TabId;
@@ -37,6 +38,58 @@ export function visibleRows(
 	rows: readonly IndexRow[] = SEARCH_INDEX
 ): IndexRow[] {
 	return rows.filter((r) => isTab(r[0]) && (r[5] === '' || can(r[5])));
+}
+
+/** One setting for the console-wide search (Ctrl K) */
+export interface SettingEntry {
+	tab: TabId;
+	id: string;
+	label: string;
+	/** "Settings, Sign-in" or "Settings, Sign-in, LDAP / Active Directory" */
+	where: string;
+	/** /settings?tab=auth#ldap-host (without the base) */
+	href: string;
+	/** Everything the search looks at: label, section, hints, tab, other words */
+	hay: string;
+}
+
+/**
+ * Every setting this account may see, in the console language, for the
+ * search in the top bar. A setting on a tab the account can't open, or
+ * one that needs a permission it lacks, is not in the list.
+ */
+export function settingEntries(
+	ctx: Pick<SearchContext, 't' | 'can'>,
+	rows: readonly IndexRow[] = SEARCH_INDEX
+): SettingEntry[] {
+	const canConfig = ctx.can('server.config');
+	const settings = clean(ctx.t('nav.settings'));
+	const seen = new Set<string>();
+	const out: SettingEntry[] = [];
+	for (const [tabName, id, labelKey, sectionKey, hintKeys] of visibleRows(ctx.can, rows)) {
+		if (!isTab(tabName) || !tabAllowed(tabName, canConfig)) continue;
+		const label = clean(ctx.t(labelKey));
+		if (!label) continue;
+		const once = `${tabName}#${id}#${label}`;
+		if (seen.has(once)) continue;
+		seen.add(once);
+		const section = sectionKey ? clean(ctx.t(sectionKey)) : '';
+		const tabTitle = clean(ctx.t(TAB_TITLE[tabName]));
+		const where = [settings, tabTitle, section && section !== label ? section : '']
+			.filter(Boolean)
+			.join(', ');
+		out.push({
+			tab: tabName,
+			id,
+			label,
+			where,
+			href: `/settings${tabSearch(tabName)}#${encodeURIComponent(id)}`,
+			hay: [label, section, ...hintKeys.map((k) => ctx.t(k)), tabTitle, TAB_TERMS[tabName], TERMS[id]]
+				.filter(Boolean)
+				.join(' ')
+		});
+	}
+	return out;
 }
 
 export function searchSettings(

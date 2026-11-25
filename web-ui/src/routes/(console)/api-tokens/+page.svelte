@@ -10,6 +10,7 @@
 	import { listApiTokens, revokeApiToken, type ApiToken } from '#lib/api/apiTokens.ts';
 	import { formatNumber } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { takeIntent } from '#lib/shell/intent.svelte.ts';
 	import {
 		filterApiTokens,
 		loginCommand,
@@ -81,6 +82,10 @@
 	]);
 
 	let creating = $state(false);
+	// New API token chosen in the search (Ctrl K)
+	$effect(() => {
+		if (takeIntent('new-api-token') && allowed) creating = true;
+	});
 	let made = $state<{ token: string; name: string } | null>(null);
 
 	async function revoke(tok: ApiToken) {

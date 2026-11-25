@@ -109,11 +109,14 @@ export function initTheme(consoleMode: string, palettes: { light: Palette; dark:
 	applyTheme();
 }
 
-/** Top bar button: console default → light → dark → console default */
-export function cycleTheme(): void {
-	const next: ThemeChoice =
-		theme.choice === 'default' ? 'light' : theme.choice === 'light' ? 'dark' : 'default';
+/** This browser's choice; 'default' follows the console again */
+export function setTheme(next: ThemeChoice): void {
 	theme.choice = next;
 	writePref(PREF.theme, next === 'default' ? null : next);
 	applyTheme();
+}
+
+/** Top bar button: console default → light → dark → console default */
+export function cycleTheme(): void {
+	setTheme(theme.choice === 'default' ? 'light' : theme.choice === 'light' ? 'dark' : 'default');
 }

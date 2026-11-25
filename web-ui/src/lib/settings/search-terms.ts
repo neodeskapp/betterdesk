@@ -1,0 +1,129 @@
+/**
+ * Other words people type for a setting, in English and German, whatever
+ * language the console shows. The search looks at them next to the
+ * setting's label, section and hints in the console language
+ * (search-index.ts). They are never shown, so they need no translation;
+ * other languages find settings by their translated labels.
+ *
+ * Keyed by tab (words for every setting on it) and by element id (words
+ * for that setting). A test checks that every key is a tab or an id of the
+ * index.
+ */
+
+export const TAB_TERMS: Readonly<Record<string, string>> = {
+	general: 'server allgemein',
+	branding: 'appearance look branding design aussehen erscheinungsbild marke',
+	auth: 'sign-in login security anmeldung sicherheit',
+	backup: 'backup sicherung datensicherung',
+	updates: 'update upgrade version aktualisierung',
+	email: 'email e-mail mail smtp',
+	time: 'time zeit uhr clock',
+	advanced: 'advanced erweitert expert config konfiguration'
+};
+
+export const TERMS: Readonly<Record<string, string>> = {
+	// General
+	'public-endpoints': 'address domain hostname adresse domäne host',
+	'public-server-id': 'hbbs id server rendezvous address adresse',
+	'public-relay-server': 'hbbr relay address adresse',
+	'public-api-url': 'api url address adresse',
+	'connection-mode-section': 'p2p direct relay connection verbindung direkt',
+	'conn-mode-p2p': 'p2p peer to peer direkt',
+	'conn-mode-relay': 'force relay always immer erzwingen',
+	'conn-p2p-fallback-ms': 'timeout fallback delay wartezeit verzögerung',
+	'conn-same-nat-relay': 'nat lan same network gleiches netz',
+	'conn-allow-shared-nat-initiator': 'nat lan without login ohne anmeldung',
+	'conn-logged-in-only-initiator': 'hardening login required härtung anmeldung pflicht',
+	'conn-operator-only-outbound': 'hardening operator härtung',
+	'device-scope-settings-panel': 'visibility who sees devices sichtbarkeit wer sieht geräte',
+	'availability-history-settings-panel': 'uptime online history verlauf erreichbarkeit',
+	'availability-history-enabled': 'uptime online history verlauf erreichbarkeit',
+	'availability-history-retention': 'retention keep days aufbewahrung tage',
+	'mesh-settings-panel': 'meshcentral meshagent mesh',
+	'mesh-groups-form': 'meshcentral mesh groups gruppen',
+	'mesh-msh-name': 'msh meshagent',
+	'mesh-recordings': 'recording aufzeichnung',
+	'server-info': 'version about info über',
+	'go-server-version': 'version',
+	'db-path': 'database sqlite datenbank',
+	uptime: 'uptime laufzeit',
+	// Appearance
+	'branding-theme': 'theme dark light mode dunkel hell modus farbschema',
+	'theme-mode-selector': 'dark light mode dunkel hell modus system',
+	'branding-theme-select': 'theme preset vorlage',
+	'branding-custom-colors': 'colors colours palette farben',
+	'color-accentBlue': 'primary brand colour color hauptfarbe markenfarbe',
+	'branding-identity': 'company firm name logo firma name',
+	'brand-name': 'company title product name firmenname titel',
+	'logo-text-input': 'logo wordmark schriftzug',
+	'logo-image-file': 'logo upload png svg hochladen',
+	'logo-image-url': 'logo url link',
+	'branding-fonts': 'font typeface typography schrift schriftart',
+	'font-heading-search': 'font typeface schriftart',
+	'font-body-search': 'font typeface schriftart',
+	'branding-footer': 'footer imprint impressum',
+	'footer-text': 'imprint copyright impressum',
+	'show-powered': 'powered by attribution hinweis',
+	'branding-background': 'wallpaper background image hintergrundbild',
+	'bg-image-file': 'wallpaper hintergrundbild',
+	'bg-blur': 'blur unschärfe',
+	'branding-login': 'login page sign in screen anmeldeseite loginseite',
+	'login-title': 'login heading welcome willkommen',
+	'login-slides-panel': 'slideshow carousel diashow',
+	'login-bg-config': 'login wallpaper hintergrundbild',
+	'branding-agent': 'download page agent installer client download herunterladen',
+	'branding-rdclient': 'web viewer browser remote fernsteuerung',
+	'custom-css': 'css stylesheet style',
+	'branding-profiles': 'profile preset vorlage profil',
+	'branding-import-export': 'import export json',
+	// Sign-in
+	'password-form': 'password change passwort kennwort ändern',
+	'current-password': 'password passwort kennwort',
+	'new-password': 'change password passwort ändern kennwort',
+	'confirm-password': 'password repeat passwort wiederholen',
+	'auth-panel-totp':
+		'2fa mfa totp authenticator otp two factor zwei faktor recovery codes wiederherstellungscodes',
+	'require-two-factor': '2fa mfa enforce force pflicht erzwingen',
+	'enrollment-settings-section':
+		'enrollment registration approve join new devices registrierung freigabe beitreten',
+	'enrollment-rich-approve': 'approve approval freigabe genehmigung',
+	'enrollment-tag-picker': 'tags labels schlagwörter',
+	'client-sessions-form': 'client token session expiry timeout ablauf sitzung',
+	'client-sessions-expiry-days': 'expiry timeout ablauf',
+	'client-sessions-sliding': 'sliding refresh verlängern',
+	'client-sessions-max-days': 'expiry maximum lifetime ablauf',
+	'ldap-form': 'ldap active directory ad directory verzeichnis',
+	'ldap-enabled': 'ldap active directory ad',
+	'ldap-bind-password': 'password passwort',
+	'oidc-form': 'sso single sign-on oidc oauth openid keycloak entra azure google okta authentik',
+	'oidc-enabled': 'sso single sign-on oidc oauth',
+	'oidc-client-secret': 'secret geheimnis',
+	'oidc-redirect-url': 'callback redirect weiterleitung',
+	// Backup
+	'backup-create': 'download backup now export herunterladen sichern',
+	'scheduled-backup-panel': 'schedule automatic cron zeitplan automatisch',
+	'scheduled-backup-enabled': 'schedule automatic zeitplan automatisch',
+	'scheduled-backup-retention': 'retention keep aufbewahrung behalten',
+	'scheduled-backup-destination-type': 'smb nas share network folder netzlaufwerk freigabe',
+	'scheduled-backup-path': 'folder path ordner',
+	'backup-restore': 'restore import wiederherstellen zurückspielen',
+	// Updates
+	'update-backup-toggle': 'backup before update sicherung vorher',
+	'update-channel-panel': 'beta nightly stable channel kanal',
+	'backup-retention-input': 'retention keep backups aufbewahrung sicherungen',
+	'update-local-version': 'version installed installiert',
+	// Email
+	'email-smtp-host': 'smtp mail server host postausgang',
+	'email-smtp-secure': 'tls ssl starttls encryption verschlüsselung',
+	'email-smtp-user': 'smtp login user benutzer',
+	'email-smtp-pass': 'smtp password passwort kennwort',
+	'email-smtp-from': 'sender from absender',
+	'email-smtp-alert': 'alerts notifications warnungen benachrichtigungen',
+	// Time
+	'time-billing-timezone': 'timezone tz zeitzone',
+	'time-clock-ntp-servers': 'ntp clock sync zeitsynchronisation',
+	'time-clock-require-sync': 'billing abrechnung',
+	'time-clock-max-skew': 'skew drift abweichung',
+	// Advanced
+	'advanced-title': 'restart reboot neustart neu starten'
+};

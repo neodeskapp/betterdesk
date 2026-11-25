@@ -13,6 +13,7 @@
 	import { getEnrollmentModeInfo, setEnrollmentMode, type EnrollmentMode } from '#lib/api/enrollment.ts';
 	import { listTokens, revokeToken, type DeviceToken, type NewToken } from '#lib/api/tokens.ts';
 	import NoAccess from '#lib/shell/NoAccess.svelte';
+	import { takeIntent } from '#lib/shell/intent.svelte.ts';
 	import {
 		countTokens,
 		filterTokens,
@@ -175,6 +176,10 @@
 	/* ── Dialogs ── */
 
 	let editing = $state<{ token: DeviceToken | null } | null>(null);
+	// New device token chosen in the search (Ctrl K)
+	$effect(() => {
+		if (takeIntent('new-device-token')) editing = { token: null };
+	});
 	let bulk = $state(false);
 	let created = $state.raw<NewToken[] | null>(null);
 

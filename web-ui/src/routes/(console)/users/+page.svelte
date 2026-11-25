@@ -44,6 +44,7 @@
 	import { link } from '#lib/nav.ts';
 	import SessionsSheet from '#lib/people/SessionsSheet.svelte';
 	import NoAccess from '#lib/shell/NoAccess.svelte';
+	import { takeIntent } from '#lib/shell/intent.svelte.ts';
 	import {
 		assignableRoles,
 		deleteConfirmKey,
@@ -228,6 +229,10 @@
 	/* ── Sheets and dialogs ── */
 
 	let editing = $state<{ user: ConsoleUser | null } | null>(null);
+	// Add user chosen in the search (Ctrl K)
+	$effect(() => {
+		if (takeIntent('add-user') && canCreate) editing = { user: null };
+	});
 	let resetFor = $state.raw<ConsoleUser | null>(null);
 	let orgsFor = $state.raw<ConsoleUser | null>(null);
 	let sessionsFor = $state.raw<ConsoleUser | null>(null);

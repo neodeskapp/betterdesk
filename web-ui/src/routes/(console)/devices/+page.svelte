@@ -79,6 +79,7 @@
 	import type { Column, SortState } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import AddComputerDialog from '#lib/onboard/AddComputerDialog.svelte';
+	import { takeIntent } from '#lib/shell/intent.svelte.ts';
 	import { ICONS } from '#lib/util/display.ts';
 	import { lazy } from '#lib/util/lazy.ts';
 	import { readJsonPref, readPref, writeJsonPref, writePref } from '#lib/util/storage.ts';
@@ -99,6 +100,10 @@
 	let folders = $state.raw<Folder[]>([]);
 	/** The Add a computer dialog is open */
 	let addComputer = $state(false);
+	// Add a computer chosen in the search (Ctrl K)
+	$effect(() => {
+		if (takeIntent('add-computer') && can('enrollment.approve')) addComputer = true;
+	});
 	let groups = $state.raw<DeviceGroup[]>([]);
 	let knownTags = $state.raw<string[]>([]);
 
