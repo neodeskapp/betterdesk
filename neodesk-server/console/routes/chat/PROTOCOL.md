@@ -53,14 +53,41 @@ account needs Support chat (`chat.support`) or Team chat (`chat.team`).
 
 | Status | Why | What the client does |
 |---|---|---|
-| 401 | console socket without a signed-in session | sign in again |
+| 401 | console socket without a signed-in session; **a computer never gets 401** | sign in again |
 | 403 | wrong or revoked token, a token for another device, a foreign `Origin`, the id `panel` on `/ws/chat/`, an account without a chat permission | stop retrying; show "chat not available" |
-| 404 | console socket with `v=2` on a room other than `panel` | fix the address |
-| 429 | the token already has 4 chat sockets open | close old sockets; retry later |
+| 404 | a computer's socket on a server that has no chat of version 2; a console socket with `v=2` on a room other than `panel` | a computer: no chat on this server, check again after some minutes |
+| 429 | the token already has 4 chat sockets open | close old sockets; retry after 30 s |
 | 500 | the token could not be checked | retry with backoff |
 
 Without `v=2` the socket speaks version 1. Every open socket of a computer
 gets every frame of version 2; a second window doesn't push out the first.
+
+**Is there chat on this server?** There is no answer that says "chat is
+off": the server has no setting that turns chat off for computers, and a
+computer's socket doesn't depend on any account's permissions. A computer
+with a valid device token can chat whenever the server has version 2.
+What a computer can meet instead:
+
+- The upgrade succeeds and the first frame is `welcome` with `v: 2`: chat
+  works.
+- The upgrade succeeds but the first frame is anything else (an older
+  server ignores `v=2` and speaks version 1, starting with `history` or
+  `contacts`): close the socket and treat it as no chat; check again after
+  some minutes.
+- 404: no chat of version 2 on this server; check again after some
+  minutes.
+- 403: the token is refused; stop until the computer has a new token.
+- No device token yet (the computer isn't registered or approved): don't
+  connect.
+
+**Staying reachable.** The console shows a computer as reachable for chat
+(the `device` frame's `chat_connected`, "The person sees your messages in
+the NeoDesk app now") only while at least one socket of version 2 of that
+computer is open. A client should hold the socket for as long as it runs,
+also while its chat window is closed, and ideally from a process that runs
+from login on (the service or the tray), so messages reach the person and
+can raise a notification. When no socket is open the console says "not
+reachable" and keeps the messages for later.
 
 **Keepalive.** The server sends a websocket ping every 30 s and closes a
 socket that hasn't answered pings for 60 s. Websocket libraries answer
@@ -109,7 +136,7 @@ name), `system` the console itself.
 | `id` | the stored id; ids grow with time, so a higher id is newer |
 | `conversation_id` | a device id (a computer's conversation), `dm:<lower account id>:<higher>` (two colleagues), `group:<8 hex>` (a group of colleagues) or `old:<id of version 1>` (console only, see below) |
 | `text` | plain text, at most 4096 characters; `""` for a message of files only and for a deleted one |
-| `reply_to` | the message this one answers, or `null`; `preview` is the first 140 characters of its text |
+| `reply_to` | the message this one answers, or `null`; `preview` is the first 140 characters of its text, or the first file's name for a message of files only |
 | `attachments` | files, at most 10; `width` and `height` only for pictures; `url` is for console sessions (a computer uses section 8) |
 | `edited_at` | when the text was last changed, or `null` |
 | `deleted` | `true` keeps the message's place with no text and no files |
@@ -317,11 +344,12 @@ A frame the server can't carry out is answered with `error` to the sender
 only, and changes nothing:
 
 ```json
-{"type": "error", "code": "not_yours", "for": "edit", "client_id": "c-18"}
+{"type": "error", "code": "too_late", "for": "edit", "message_id": "412"}
+{"type": "error", "code": "bad_attachment", "for": "send", "client_id": "c-18"}
 ```
 
-`for` is the type of the frame; `client_id` is there when the frame had
-one, so a client can mark that message as failed.
+`for` is the type of the frame; `client_id` and `message_id` are there when
+the frame had them, so a client knows which message failed.
 
 | Code | When | What the client does |
 |---|---|---|
@@ -344,7 +372,7 @@ frames.
 
 | What | Limit |
 |---|---|
-| One frame | 8192 bytes; a larger one closes the socket with code 1009 |
+| One frame | 32768 bytes on a socket of version 2 (8192 on version 1); a larger one closes the socket with code 1009. A message of 4096 characters always fits |
 | Frames from a computer | 40 at once, then 4 a second; frames over that are dropped without an answer |
 | Text | 4096 characters (longer text is cut) |
 | Files per message | 10 |
@@ -457,6 +485,8 @@ see lines of the system and never see the console's other conversations.
 5. Files: upload, then `send` with the file ids (section 8).
 6. Notify while the window isn't in front (section 9).
 7. On close, reconnect and catch up (section 7).
+8. Keep the socket open while the app runs, also with the window closed,
+   so the console shows the computer as reachable (section 1).
 
 ## 11. What older and other clients see
 
