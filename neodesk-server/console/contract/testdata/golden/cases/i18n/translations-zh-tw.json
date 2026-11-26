@@ -3350,6 +3350,21 @@
         "what": "{person} declined the connection.",
         "why": "The person at {name} clicked Decline or closed the window that asked."
        },
+       "consent_needs_https": {
+        "todo": "Send a new quick support link: its one-time password comes to you and connects you. To accept by click, the console needs HTTPS.",
+        "what": "{name} can't let you in by click.",
+        "why": "This console is not on HTTPS, so quick support takes only the one-time password."
+       },
+       "consent_needs_update": {
+        "todo": "Send a new quick support link: its one-time password comes to you and connects you. Or ask {person} to update NeoDesk.",
+        "what": "{name} can't let you in by click.",
+        "why": "NeoDesk on {name} is too old to accept by click."
+       },
+       "consent_not_allowed": {
+        "todo": "Ask them to click Allow in the quick support window, then connect again.",
+        "what": "{person} has not allowed quick support yet.",
+        "why": "{name} offers to let you in by click only after the person clicked Allow in the quick support window."
+       },
        "consent_scope": {
         "todo": "Ask {person} to allow it in the quick support window.",
         "what": "{person} did not allow this.",
@@ -13251,6 +13266,21 @@
         "todo": "Ask them to try again, then reconnect.",
         "what": "{person} declined the connection.",
         "why": "The person at {name} clicked Decline or closed the window that asked."
+       },
+       "consent_needs_https": {
+        "todo": "Send a new quick support link: its one-time password comes to you and connects you. To accept by click, the console needs HTTPS.",
+        "what": "{name} can't let you in by click.",
+        "why": "This console is not on HTTPS, so quick support takes only the one-time password."
+       },
+       "consent_needs_update": {
+        "todo": "Send a new quick support link: its one-time password comes to you and connects you. Or ask {person} to update NeoDesk.",
+        "what": "{name} can't let you in by click.",
+        "why": "NeoDesk on {name} is too old to accept by click."
+       },
+       "consent_not_allowed": {
+        "todo": "Ask them to click Allow in the quick support window, then connect again.",
+        "what": "{person} has not allowed quick support yet.",
+        "why": "{name} offers to let you in by click only after the person clicked Allow in the quick support window."
        },
        "consent_scope": {
         "todo": "Ask {person} to allow it in the quick support window.",
