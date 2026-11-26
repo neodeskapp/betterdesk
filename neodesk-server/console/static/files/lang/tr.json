@@ -8899,7 +8899,9 @@
   "table": {
     "select_all": "Tümünü seç",
     "select_row": "{name} seç",
-    "columns": "Sütunlar"
+    "columns": "Sütunlar",
+    "rows_one": "{count} satır",
+    "rows_other": "{count} satır"
   },
   "pagination": {
     "showing": "{total} içinden {start}–{end}",

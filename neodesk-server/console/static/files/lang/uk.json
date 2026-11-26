@@ -8899,7 +8899,9 @@
   "table": {
     "select_all": "Вибрати все",
     "select_row": "Вибрати {name}",
-    "columns": "Стовпці"
+    "columns": "Стовпці",
+    "rows_one": "{count} рядок",
+    "rows_other": "{count} рядків"
   },
   "pagination": {
     "showing": "{start}–{end} з {total}",

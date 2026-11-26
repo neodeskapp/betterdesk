@@ -8900,7 +8900,9 @@
   "table": {
     "select_all": "تحديد الكل",
     "select_row": "تحديد {name}",
-    "columns": "الأعمدة"
+    "columns": "الأعمدة",
+    "rows_one": "صف واحد",
+    "rows_other": "{count} صفوف"
   },
   "pagination": {
     "showing": "عرض {start}–{end} من {total}",

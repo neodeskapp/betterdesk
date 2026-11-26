@@ -8,6 +8,7 @@ import { render, screen, cleanup } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test } from 'vitest';
 import Harness from './OverlaysHarness.svelte';
+import Announcer from '../../../src/lib/ui/Announcer.svelte';
 import ToastHost from '../../../src/lib/ui/ToastHost.svelte';
 import { dismissAll } from '../../../src/lib/ui/toasts.svelte.ts';
 
@@ -57,12 +58,14 @@ describe('page behind layers', () => {
 		expect(bodyChild(opener)).not.toHaveAttribute('inert');
 	});
 
-	test('toasts stay announced while a dialog is open', async () => {
+	test('status messages and toasts stay live while a dialog is open', async () => {
 		const user = userEvent.setup();
+		render(Announcer);
 		render(ToastHost);
 		render(Harness, { scene: 'dialog' });
 		await user.click(screen.getByRole('button', { name: 'Open' }));
-		const region = screen.getByRole('status', { hidden: true });
+		const region = document.querySelector('[data-announcer="polite"]')!;
 		expect(region.closest('[inert]')).toBeNull();
+		expect(document.querySelector('.toast-container')!.closest('[inert]')).toBeNull();
 	});
 });

@@ -8899,7 +8899,9 @@
   "table": {
     "select_all": "Velg alle",
     "select_row": "Velg {name}",
-    "columns": "Kolonner"
+    "columns": "Kolonner",
+    "rows_one": "{count} rad",
+    "rows_other": "{count} rader"
   },
   "pagination": {
     "showing": "Viser {start}–{end} av {total}",

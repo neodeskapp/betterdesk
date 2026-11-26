@@ -8893,7 +8893,9 @@
   "table": {
     "select_all": "Alles selecteren",
     "select_row": "{name} selecteren",
-    "columns": "Kolommen"
+    "columns": "Kolommen",
+    "rows_one": "{count} rij",
+    "rows_other": "{count} rijen"
   },
   "pagination": {
     "showing": "{start}–{end} van {total}",

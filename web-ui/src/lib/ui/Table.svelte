@@ -30,8 +30,9 @@
 <script lang="ts" generics="T">
 	import { tick, untrack } from 'svelte';
 	import type { ClassValue } from 'svelte/elements';
-	import { i18n, t, tf } from '#lib/i18n/i18n.svelte.ts';
+	import { i18n, plural, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from './Button.svelte';
+	import { announce } from './announce.svelte.ts';
 	import {
 		ariaSort,
 		isSortable,
@@ -112,6 +113,30 @@
 	}: Props = $props();
 
 	const captionId = $props.id();
+
+	/* When loading ends, screen readers hear the result once: the error,
+	   the empty sentence, or "Devices: 3 rows" (WCAG 4.1.3). Updates while
+	   the table is shown say nothing. */
+	let wasLoading = false;
+	$effect(() => {
+		const now = loading;
+		const failed = error;
+		const count = sorted.length;
+		untrack(() => {
+			if (wasLoading && !now) {
+				if (failed) announce(failed, { assertive: true });
+				else if (count === 0) announce(emptyText);
+				else
+					announce(
+						`${label}: ${plural(count, {
+							one: tf('table.rows_one', '{count} row'),
+							other: tf('table.rows_other', '{count} rows')
+						})}`
+					);
+			}
+			wasLoading = now;
+		});
+	});
 
 	let box = $state<HTMLDivElement | null>(null);
 	let tbody = $state<HTMLTableSectionElement | null>(null);

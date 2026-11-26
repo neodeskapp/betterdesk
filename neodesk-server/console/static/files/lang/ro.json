@@ -8899,7 +8899,9 @@
   "table": {
     "select_all": "Selectează tot",
     "select_row": "Selectează {name}",
-    "columns": "Coloane"
+    "columns": "Coloane",
+    "rows_one": "{count} rând",
+    "rows_other": "{count} rânduri"
   },
   "pagination": {
     "showing": "{start}–{end} din {total}",

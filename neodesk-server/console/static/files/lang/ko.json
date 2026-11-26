@@ -8893,7 +8893,9 @@
   "table": {
     "select_all": "모두 선택",
     "select_row": "{name} 선택",
-    "columns": "열"
+    "columns": "열",
+    "rows_one": "{count}개 행",
+    "rows_other": "{count}개 행"
   },
   "pagination": {
     "showing": "{total}개 중 {start}–{end}",

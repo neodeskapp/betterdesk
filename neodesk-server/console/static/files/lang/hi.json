@@ -8899,7 +8899,9 @@
   "table": {
     "select_all": "सभी चुनें",
     "select_row": "{name} चुनें",
-    "columns": "कॉलम"
+    "columns": "कॉलम",
+    "rows_one": "{count} पंक्ति",
+    "rows_other": "{count} पंक्तियाँ"
   },
   "pagination": {
     "showing": "{total} में से {start}–{end}",

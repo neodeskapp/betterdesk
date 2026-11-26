@@ -8897,7 +8897,9 @@
   "table": {
     "select_all": "Tout sélectionner",
     "select_row": "Sélectionner {name}",
-    "columns": "Colonnes"
+    "columns": "Colonnes",
+    "rows_one": "{count} ligne",
+    "rows_other": "{count} lignes"
   },
   "pagination": {
     "showing": "{start}–{end} sur {total}",

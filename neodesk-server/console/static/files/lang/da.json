@@ -8899,7 +8899,9 @@
   "table": {
     "select_all": "Vælg alle",
     "select_row": "Vælg {name}",
-    "columns": "Kolonner"
+    "columns": "Kolonner",
+    "rows_one": "{count} række",
+    "rows_other": "{count} rækker"
   },
   "pagination": {
     "showing": "Viser {start}–{end} af {total}",

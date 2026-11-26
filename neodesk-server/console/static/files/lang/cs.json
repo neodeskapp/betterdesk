@@ -8893,7 +8893,9 @@
   "table": {
     "select_all": "Vybrat vše",
     "select_row": "Vybrat {name}",
-    "columns": "Sloupce"
+    "columns": "Sloupce",
+    "rows_one": "{count} řádek",
+    "rows_other": "{count} řádků"
   },
   "pagination": {
     "showing": "Zobrazeno {start}–{end} z {total}",

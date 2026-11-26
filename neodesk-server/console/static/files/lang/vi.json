@@ -8899,7 +8899,9 @@
   "table": {
     "select_all": "Chọn tất cả",
     "select_row": "Chọn {name}",
-    "columns": "Cột"
+    "columns": "Cột",
+    "rows_one": "{count} hàng",
+    "rows_other": "{count} hàng"
   },
   "pagination": {
     "showing": "Hiển thị {start}–{end} trên {total}",

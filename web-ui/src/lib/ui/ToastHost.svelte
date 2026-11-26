@@ -1,9 +1,10 @@
 <!--
   Where toasts appear (components.css "Toasts"): the end side of the bottom
   edge, above the mobile tab bar on small screens. The shell mounts it
-  once. Two live regions in one stack: errors are announced right away
-  (role alert), the rest politely (role status). Both exist before any
-  toast, so screen readers hear the first one too.
+  once. Errors sit above the rest. Screen readers hear toasts through the
+  announcer (announce.svelte.ts), not from here, so the close buttons are
+  not read with each message; the toasts themselves can still be reached
+  and closed.
 
   While a menu, dialog or sheet is open the stack goes below it, so a
   toast never covers what the person opened ("Copied" from a sheet then
@@ -23,12 +24,12 @@
 	const under = $derived((overlays.popup || overlays.layers > 0) && errors.length === 0);
 </script>
 
-<!-- Hangs off <body> outside the page, so it stays announced while the page behind a dialog is inert (layers.ts) -->
+<!-- Hangs off <body> outside the page, so its close buttons stay reachable while the page behind a dialog is inert (layers.ts) -->
 <div class={['toast-container', under && 'is-under']} data-layer-live {@attach portal}>
-	<div class="toast-region" role="status" aria-live="polite" aria-atomic="false">
+	<div class="toast-region">
 		{#each polite as t (t.id)}<Toast toast={t} />{/each}
 	</div>
-	<div class="toast-region" role="alert" aria-live="assertive" aria-atomic="false">
+	<div class="toast-region">
 		{#each errors as t (t.id)}<Toast toast={t} />{/each}
 	</div>
 </div>

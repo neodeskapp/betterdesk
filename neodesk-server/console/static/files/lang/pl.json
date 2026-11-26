@@ -8893,7 +8893,9 @@
   "table": {
     "select_all": "Zaznacz wszystko",
     "select_row": "Zaznacz {name}",
-    "columns": "Kolumny"
+    "columns": "Kolumny",
+    "rows_one": "{count} wiersz",
+    "rows_other": "{count} wierszy"
   },
   "pagination": {
     "showing": "{start}–{end} z {total}",

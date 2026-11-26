@@ -8899,7 +8899,9 @@
   "table": {
     "select_all": "Valitse kaikki",
     "select_row": "Valitse {name}",
-    "columns": "Sarakkeet"
+    "columns": "Sarakkeet",
+    "rows_one": "{count} rivi",
+    "rows_other": "{count} riviä"
   },
   "pagination": {
     "showing": "{start}–{end} / {total}",

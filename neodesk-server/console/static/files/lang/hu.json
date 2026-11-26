@@ -8899,7 +8899,9 @@
   "table": {
     "select_all": "Összes kijelölése",
     "select_row": "{name} kijelölése",
-    "columns": "Oszlopok"
+    "columns": "Oszlopok",
+    "rows_one": "{count} sor",
+    "rows_other": "{count} sor"
   },
   "pagination": {
     "showing": "{start}–{end} / {total}",

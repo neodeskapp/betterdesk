@@ -8899,7 +8899,9 @@
   "table": {
     "select_all": "Pilih semua",
     "select_row": "Pilih {name}",
-    "columns": "Kolom"
+    "columns": "Kolom",
+    "rows_one": "{count} baris",
+    "rows_other": "{count} baris"
   },
   "pagination": {
     "showing": "Menampilkan {start}–{end} dari {total}",

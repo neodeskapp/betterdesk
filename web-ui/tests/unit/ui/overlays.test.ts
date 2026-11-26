@@ -405,20 +405,17 @@ describe('Sheet', () => {
 });
 
 describe('toasts', () => {
-	test('messages are text, in a polite region; errors in an assertive one', () => {
+	test('messages are text, in their type; screen readers hear them through the announcer (announce.test.ts)', () => {
 		render(ToastHost);
 		toast.success('<img src=x onerror=alert(1)>');
 		toast.error('Could not save.');
 		flushSync();
 		expect(document.querySelector('img')).toBeNull();
-		const polite = screen.getByRole('status');
-		expect(polite).toHaveAttribute('aria-live', 'polite');
-		expect(within(polite).getByText('<img src=x onerror=alert(1)>').closest('.toast')).toHaveClass('success');
-		const alert = screen.getByRole('alert');
-		expect(within(alert).getByText('Could not save.')).toBeInTheDocument();
+		expect(screen.getByText('<img src=x onerror=alert(1)>').closest('.toast')).toHaveClass('success');
+		expect(screen.getByText('Could not save.').closest('.toast')).toHaveClass('error');
 	});
 
-	test('go away by themselves, errors later; the close button closes one', async () => {
+	test('go away by themselves, errors only when closed; the close button closes one', async () => {
 		vi.useFakeTimers();
 		render(ToastHost);
 		toast.info('Saved.');
@@ -428,7 +425,9 @@ describe('toasts', () => {
 		flushSync();
 		expect(screen.queryByText('Saved.')).toBeNull();
 		expect(screen.getByText('Failed.')).toBeInTheDocument();
-		vi.advanceTimersByTime(3000);
+		vi.advanceTimersByTime(60000);
+		flushSync();
+		screen.getByRole('button', { name: 'Close: Failed.' }).click();
 		flushSync();
 		expect(screen.queryByText('Failed.')).toBeNull();
 
@@ -436,7 +435,7 @@ describe('toasts', () => {
 		flushSync();
 		vi.advanceTimersByTime(60000);
 		flushSync();
-		screen.getByRole('button', { name: 'Close' }).click();
+		screen.getByRole('button', { name: 'Close: Stays.' }).click();
 		flushSync();
 		expect(screen.queryByText('Stays.')).toBeNull();
 	});
@@ -539,7 +538,8 @@ describe('Disclosure, Notice, States', () => {
 	test('an error state has a retry button; a table state is a spanning cell', async () => {
 		const onretry = vi.fn();
 		render(States, { kind: 'error', message: 'Could not load devices.', onretry });
-		expect(screen.getByRole('alert')).toHaveTextContent('Could not load devices.');
+		// Announced through the announcer (announce.test.ts)
+		expect(screen.getByText('Could not load devices.').closest('.state')).toHaveClass('is-error');
 		await userEvent.click(screen.getByRole('button', { name: /retry/i }));
 		expect(onretry).toHaveBeenCalled();
 		cleanup();

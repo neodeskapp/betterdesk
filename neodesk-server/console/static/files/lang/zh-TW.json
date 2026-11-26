@@ -8897,7 +8897,9 @@
   "table": {
     "select_all": "全選",
     "select_row": "選取 {name}",
-    "columns": "欄"
+    "columns": "欄",
+    "rows_one": "{count} 列",
+    "rows_other": "{count} 列"
   },
   "pagination": {
     "showing": "第 {start}–{end} 筆，共 {total} 筆",

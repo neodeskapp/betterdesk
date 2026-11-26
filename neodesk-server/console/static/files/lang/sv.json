@@ -8899,7 +8899,9 @@
   "table": {
     "select_all": "Markera alla",
     "select_row": "Markera {name}",
-    "columns": "Kolumner"
+    "columns": "Kolumner",
+    "rows_one": "{count} rad",
+    "rows_other": "{count} rader"
   },
   "pagination": {
     "showing": "Visar {start}–{end} av {total}",

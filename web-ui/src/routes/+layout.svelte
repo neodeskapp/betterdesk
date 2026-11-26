@@ -7,6 +7,7 @@
 	import { appPath, link } from '#lib/nav.ts';
 	import { redirectTarget } from '#lib/redirects.ts';
 	import A11yEffects from '#lib/shell/A11yEffects.svelte';
+	import Announcer from '#lib/ui/Announcer.svelte';
 	import { revealFocus } from '#lib/ui/reveal-focus.ts';
 
 	let { children }: { children: Snippet } = $props();
@@ -38,4 +39,6 @@
 
 <!-- Colour filters and the reading guide of the accessibility settings, on every page -->
 <A11yEffects />
+<!-- The live regions every status message is read from -->
+<Announcer />
 {@render children()}

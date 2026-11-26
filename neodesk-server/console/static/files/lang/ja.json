@@ -8893,7 +8893,9 @@
   "table": {
     "select_all": "すべて選択",
     "select_row": "{name} を選択",
-    "columns": "列"
+    "columns": "列",
+    "rows_one": "{count} 行",
+    "rows_other": "{count} 行"
   },
   "pagination": {
     "showing": "{total} 件中 {start}–{end} 件",
