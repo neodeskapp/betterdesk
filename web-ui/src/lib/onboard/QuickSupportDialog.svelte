@@ -16,6 +16,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { ApiError } from '#lib/api/client.ts';
+	import { unblockDevice } from '#lib/api/devices.ts';
+	import { describeFailure, isReason } from '#lib/remote/failures.ts';
+	import { can } from '#lib/state/session.svelte.ts';
 	import {
 		createSession,
 		endSession,
@@ -183,10 +186,35 @@
 		current
 			? t(stateKey(current), {
 					time: formatDate(current.expires_at, { year: undefined, month: undefined, day: undefined }),
-					computer
+					computer,
+					name: computer
 				})
 			: ''
 	);
+	// The server refused the person's computer (a revoked or blocked ID, L550): what
+	// happened, why and what to do, as the viewer says it, and Unblock right here
+	let unblocked = $state(false);
+	let unblocking = $state(false);
+	const mayUnblock = $derived(can('device.delete'));
+	const refused = $derived(
+		current?.ended_by === 'refused' && isReason(current.end_reason)
+			? describeFailure(current.end_reason, { name: computer, canUnblock: mayUnblock })
+			: null
+	);
+
+	async function unblock() {
+		if (!current || unblocking) return;
+		unblocking = true;
+		try {
+			await unblockDevice(current.device_id);
+			unblocked = true;
+			toast.success(t('onboard.support.unblocked', { name: computer }));
+		} catch {
+			toast.error(t('onboard.support.unblock_failed', { name: computer }));
+		} finally {
+			unblocking = false;
+		}
+	}
 </script>
 
 <Dialog bind:open title={t('onboard.support.title')} {onclose}>
@@ -244,6 +272,18 @@
 						>
 					{/if}
 				</div>
+				{#if refused}
+					<p class="refused-what">{refused.what}</p>
+					<p class="hint">{refused.why}</p>
+					<p class="hint">{unblocked ? t('onboard.support.unblocked', { name: computer }) : refused.todo}</p>
+					{#if refused.actions.includes('unblock') && !unblocked}
+						<div>
+							<Button icon="lock_open" busy={unblocking} onclick={() => void unblock()}
+								>{t('onboard.support.unblock')}</Button
+							>
+						</div>
+					{/if}
+				{/if}
 				{#if current.status === 'allowed' && current.password_ready}
 					<p class="hint">{t('onboard.support.state_allowed_hint')}</p>
 				{/if}
@@ -327,6 +367,10 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-2) var(--space-3);
+	}
+	.refused-what {
+		margin: 0;
+		font-weight: 600;
 	}
 	.facts {
 		display: grid;
