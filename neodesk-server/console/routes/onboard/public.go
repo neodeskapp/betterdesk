@@ -294,7 +294,7 @@ func (h *handlers) join(w http.ResponseWriter, r *http.Request) {
 		if refused.Audit {
 			h.auditJoinUnproved(r, deviceID, refused)
 		}
-		appFail(w, r, http.StatusForbidden, "device_refused", refused.Reason)
+		kit.JSON(w, r, http.StatusForbidden, refusal{Error: "device_refused", Message: refused.Reason, Reason: refused.Code})
 		return
 	case errors.As(err, &invalid):
 		appFail(w, r, http.StatusBadRequest, "invalid_device", invalid.Reason)
