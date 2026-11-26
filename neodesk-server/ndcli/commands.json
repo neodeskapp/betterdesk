@@ -10081,6 +10081,10 @@
    "reason": "Used by the person who got a link or the device that joins with it, not by an admin."
   },
   {
+   "route": "POST /api/support/session/caller",
+   "reason": "Used by the person who got a link or the device that joins with it, not by an admin."
+  },
+  {
    "route": "POST /api/support/session/consent",
    "reason": "Used by the person who got a link or the device that joins with it, not by an admin."
   },
