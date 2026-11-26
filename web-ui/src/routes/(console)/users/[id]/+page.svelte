@@ -47,7 +47,7 @@
 	import { actionLabel as auditLabel } from '#lib/people/audit.ts';
 	import { runUserAction } from '#lib/people/run-user-action.ts';
 	import { SessionsList } from '#lib/people/sessions-list.svelte.ts';
-	import { actionLabel, userActionGroups, type UserActionId } from '#lib/people/user-actions.ts';
+	import { actionLabel, mayViewAs, userActionGroups, type UserActionId } from '#lib/people/user-actions.ts';
 	import {
 		accessLines,
 		auditHref,
@@ -89,7 +89,7 @@
 	const canDelete = can('user.delete') && sectionWritable();
 	const canSecurity = can('user.security') && sectionWritable();
 	const canWithdraw = can('user.create') && sectionWritable();
-	const canViewAs = can('user.impersonate') && !session.impersonation;
+	const canViewAs = mayViewAs();
 	const canAudit = can('audit.view');
 	const meId = String(session.user?.id ?? '');
 	const rights = {

@@ -82,7 +82,17 @@
    "body": {
     "kind": "json",
     "json": {
-     "error": "The mail server didn't take the confirmation email, so the address stays as it is. Check the email settings.",
+     "avatar": "failed",
+     "avatar_error": "invalid_url",
+     "code": "email_confirmation_not_sent",
+     "error": "Your other changes are saved, only the email address was not changed. The mail server didn't take the confirmation email, so the address stays as it is. Check the email settings.",
+     "saved": [
+      "first_name",
+      "last_name",
+      "phone",
+      "role_display",
+      "avatar_url"
+     ],
      "success": false
     }
    }

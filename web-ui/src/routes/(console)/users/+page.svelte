@@ -20,8 +20,9 @@
   a new password at the next sign-in, unlock, require, reset or turn off
   two-factor sign-in and make recovery codes unusable, user.delete to
   delete (never yourself),
-  org.manage_users to change organizations, user.impersonate to Sign in
-  as an account (read-only; the dialog asks the server who may be viewed).
+  org.manage_users to change organizations, user.impersonate (and the
+  Users section at write, A274) to Sign in as an account (read-only; the
+  dialog asks the server who may be viewed).
 
   Many accounts: the filters (role, organization, state, two-factor
   sign-in, sign-in method, last sign-in), the search and the sort live in
@@ -65,7 +66,7 @@
 	import SessionsSheet from '#lib/people/SessionsSheet.svelte';
 	import UserActionMenuItems from '#lib/people/UserActionMenuItems.svelte';
 	import { runUserAction } from '#lib/people/run-user-action.ts';
-	import { userActionGroups, type UserActionId } from '#lib/people/user-actions.ts';
+	import { mayViewAs, userActionGroups, type UserActionId } from '#lib/people/user-actions.ts';
 	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import { takeIntent } from '#lib/shell/intent.svelte.ts';
 	import {
@@ -139,8 +140,8 @@
 	const canCreate = can('user.create') && sectionWritable() && assignableRoles(session.user?.role).length > 0;
 	const canEdit = can('user.edit');
 	const canDelete = can('user.delete') && sectionWritable();
-	/* Sign in as: the server decides per account and the dialog says why not */
-	const canViewAs = can('user.impersonate') && !session.impersonation;
+	/* Sign in as: the Users section at write too (A274); the server decides per account */
+	const canViewAs = mayViewAs();
 	/** Sign-in security of other accounts */
 	const canSecurity = can('user.security') && sectionWritable();
 	/** Withdrawing an invite undoes Add user, so it asks what adding does */
