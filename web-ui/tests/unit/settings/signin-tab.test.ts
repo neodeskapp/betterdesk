@@ -1,0 +1,155 @@
+/**
+ * Settings › Sign-in on the settings pattern: one save bar for the client
+ * sessions, "Require two-factor sign-in" and "One session per account"
+ * (BUGS L325: Save of the two-factor rule once sent nothing), each part
+ * sent to its own endpoint, Undo in the toast for these sign-in rules,
+ * session days refused at the field (L418), and SESSION_MAX_PER_USER
+ * locking "One session per account" (A239).
+ */
+import { cleanup, render, screen } from '@testing-library/svelte';
+import userEvent from '@testing-library/user-event';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { serve } from './serve.ts';
+
+vi.mock('$app/paths', () => ({ resolve: (p: string) => p || '/', asset: (p: string) => '/' + p }));
+
+import SignInTab from '../../../src/lib/settings/tabs/SignInTab.svelte';
+import { session } from '../../../src/lib/state/session.svelte.ts';
+import { toasts } from '../../../src/lib/ui/toasts.svelte.ts';
+
+const TWO_FACTOR = '/api/settings/two-factor';
+const SESSIONS = '/api/settings/client-sessions';
+const CONSOLE = '/api/settings/console-sessions';
+
+function routes(extra: Record<string, unknown> = {}) {
+	return serve({
+		[`GET ${SESSIONS}`]: { expiry_days: 9, sliding: true, max_days: 30 },
+		[`GET ${TWO_FACTOR}`]: { required: false },
+		[`GET ${CONSOLE}`]: { single_session: false, limit: 10, source: 'default', env_value: null },
+		'GET /api/panel/settings/sources': {
+			'client_sessions.expiry_days': {
+				value_source: 'stored',
+				env_var: 'API_TOKEN_EXPIRY_DAYS',
+				locked: false,
+				default: 7
+			}
+		},
+		...extra
+	});
+}
+
+const save = () => userEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+
+beforeEach(() => {
+	session.permissions = ['server.config'];
+	toasts.items = [];
+});
+
+afterEach(() => {
+	cleanup();
+	vi.unstubAllGlobals();
+	session.permissions = [];
+});
+
+describe('the sign-in rules, one save', () => {
+	test('ticking Require two-factor sign-in and saving sends it; Undo in the toast puts it back', async () => {
+		const server = routes();
+		render(SignInTab);
+		await userEvent.click(await screen.findByRole('checkbox', { name: /settings\.signin\.require_2fa/ }));
+		expect(screen.getByRole('region', { name: 'Unsaved changes' })).toHaveTextContent(
+			'settings.signin.require_2fa: settings.side.off → settings.side.on'
+		);
+		await save();
+		await vi.waitFor(() => expect(server.sent('PUT', TWO_FACTOR)).toEqual([{ required: true }]));
+		expect(server.sent('PUT', SESSIONS)).toEqual([]);
+		expect(server.sent('PUT', CONSOLE)).toEqual([]);
+		const done = await vi.waitFor(() => {
+			const item = toasts.items.find((i) => i.action);
+			if (!item) throw new Error('no toast with Undo');
+			return item;
+		});
+		expect(done.message).toBe('Saved: settings.signin.require_2fa settings.side.on.');
+		done.action!.onclick();
+		await vi.waitFor(() =>
+			expect(server.sent('PUT', TWO_FACTOR)).toEqual([{ required: true }, { required: false }])
+		);
+	});
+
+	test('session days out of range are refused on the field, nothing is sent', async () => {
+		const server = routes();
+		render(SignInTab);
+		const days = await screen.findByRole('spinbutton', { name: 'settings.client_sessions_expiry_days' });
+		await vi.waitFor(() => expect(days).toHaveValue(9));
+		await userEvent.clear(days);
+		await userEvent.type(days, '0');
+		expect(document.getElementById('client-sessions-expiry-days-error')).toHaveTextContent(
+			'settings.signin.check_days_range'
+		);
+		await save();
+		expect(server.sent('PUT', SESSIONS)).toEqual([]);
+
+		await userEvent.clear(days);
+		await userEvent.type(days, '40');
+		expect(document.getElementById('client-sessions-max-days-error')).toHaveTextContent(
+			'settings.signin.check_max_below_duration'
+		);
+		await save();
+		expect(server.sent('PUT', SESSIONS)).toEqual([]);
+	}, 30_000);
+
+	test('the session duration says where it comes from and goes back to its default', async () => {
+		routes();
+		render(SignInTab);
+		await screen.findByRole('spinbutton', { name: 'settings.client_sessions_expiry_days' });
+		expect(document.getElementById('client-sessions-expiry-days')).toHaveTextContent('Set here');
+		await userEvent.click(
+			screen.getByRole('button', { name: 'Reset to default: settings.client_sessions_expiry_days' })
+		);
+		expect(screen.getByRole('spinbutton', { name: 'settings.client_sessions_expiry_days' })).toHaveValue(7);
+	});
+});
+
+describe('One session per account', () => {
+	test('the switch saves with the others', async () => {
+		const server = routes();
+		render(SignInTab);
+		await userEvent.click(await screen.findByRole('checkbox', { name: /settings\.signin\.single_session/ }));
+		await save();
+		await vi.waitFor(() => expect(server.sent('PUT', CONSOLE)).toEqual([{ single_session: true }]));
+	});
+
+	test('SESSION_MAX_PER_USER in the environment decides: said, and the switch is off limits', async () => {
+		routes({
+			[`GET ${CONSOLE}`]: { single_session: false, limit: 1, source: 'env', env_value: '1' },
+			'GET /api/panel/settings/sources': {
+				'console_sessions.single_session': {
+					value_source: 'environment',
+					env_var: 'SESSION_MAX_PER_USER',
+					locked: true,
+					default: false
+				}
+			}
+		});
+		render(SignInTab);
+		const box = await screen.findByRole('checkbox', { name: /settings\.signin\.single_session/ });
+		expect(box).toBeDisabled();
+		expect(screen.getByText(/settings\.signin\.single_session_env/)).toBeInTheDocument();
+		expect(
+			screen.getByText('Set in the environment file (SESSION_MAX_PER_USER), change it there')
+		).toBeInTheDocument();
+		expect(
+			screen.queryByRole('button', { name: /Reset to default: settings\.signin\.single_session/ })
+		).toBeNull();
+	});
+});
+
+test('Sign-in loads only its own settings, nothing of the directory, single sign-on or joining', async () => {
+	const server = routes();
+	render(SignInTab);
+	await screen.findByRole('checkbox', { name: /settings\.signin\.require_2fa/ });
+	const paths = server.calls.map((c) => c.path);
+	for (const gone of ['/api/settings/ldap', '/api/settings/oidc', '/api/settings/enrollment'])
+		expect(paths).not.toContain(gone);
+	for (const gone of ['account-password', 'current-password', 'auth-panel-totp', 'ldap-form', 'oidc-form'])
+		expect(document.getElementById(gone), gone).toBeNull();
+});
