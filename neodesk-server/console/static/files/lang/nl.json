@@ -9609,6 +9609,8 @@
   },
   "live": {
     "last_updated": "Laatst bijgewerkt {time}",
-    "paused": "Live-updates zijn gepauzeerd."
+    "paused": "Live-updates zijn gepauzeerd.",
+    "new_entries": "Nieuwe items, toon ze",
+    "new_entries_waiting": "Er zijn nieuwe items binnengekomen terwijl live-updates zijn gepauzeerd."
   }
 }

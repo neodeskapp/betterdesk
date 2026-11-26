@@ -9615,6 +9615,8 @@
   },
   "live": {
     "last_updated": "Päivitetty viimeksi {time}",
-    "paused": "Reaaliaikaiset päivitykset on keskeytetty."
+    "paused": "Reaaliaikaiset päivitykset on keskeytetty.",
+    "new_entries": "Uusia merkintöjä, näytä ne",
+    "new_entries_waiting": "Uusia merkintöjä tuli, kun reaaliaikaiset päivitykset ovat tauolla."
   }
 }

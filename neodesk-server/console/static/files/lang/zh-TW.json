@@ -9613,6 +9613,8 @@
   },
   "live": {
     "last_updated": "上次更新 {time}",
-    "paused": "即時更新已暫停。"
+    "paused": "即時更新已暫停。",
+    "new_entries": "有新項目，顯示",
+    "new_entries_waiting": "即時更新暫停期間收到了新項目。"
   }
 }

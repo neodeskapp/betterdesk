@@ -9609,6 +9609,8 @@
     },
     "live": {
         "last_updated": "Last updated {time}",
-        "paused": "Live updates are paused."
+        "paused": "Live updates are paused.",
+        "new_entries": "New entries, show them",
+        "new_entries_waiting": "New entries came in while live updates are paused."
     }
 }

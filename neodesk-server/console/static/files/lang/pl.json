@@ -9609,6 +9609,8 @@
   },
   "live": {
     "last_updated": "Ostatnia aktualizacja {time}",
-    "paused": "Aktualizacje na żywo są wstrzymane."
+    "paused": "Aktualizacje na żywo są wstrzymane.",
+    "new_entries": "Nowe wpisy, pokaż je",
+    "new_entries_waiting": "Pojawiły się nowe wpisy, gdy aktualizacje na żywo są wstrzymane."
   }
 }

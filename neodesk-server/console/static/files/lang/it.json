@@ -9609,6 +9609,8 @@
   },
   "live": {
     "last_updated": "Ultimo aggiornamento {time}",
-    "paused": "Gli aggiornamenti in tempo reale sono sospesi."
+    "paused": "Gli aggiornamenti in tempo reale sono sospesi.",
+    "new_entries": "Nuove voci, mostrale",
+    "new_entries_waiting": "Sono arrivate nuove voci mentre gli aggiornamenti in tempo reale sono in pausa."
   }
 }

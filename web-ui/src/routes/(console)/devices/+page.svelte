@@ -87,6 +87,8 @@
 	import ScopeList, { type DropTarget } from './ScopeList.svelte';
 	import TagFilter from './TagFilter.svelte';
 	import LiveStatus from '#lib/ui/LiveStatus.svelte';
+	import NewEntries from '#lib/ui/NewEntries.svelte';
+	import { HeldPushes } from '#lib/state/held-pushes.svelte.ts';
 	import { liveUpdates } from '#lib/state/live-updates.svelte.ts';
 
 	/** Same storage keys as the old page, so switching back and forth keeps the choices */
@@ -126,6 +128,7 @@
 		inflight?.abort();
 		const ctrl = new AbortController();
 		inflight = ctrl;
+		const from = held.begin();
 		try {
 			const list = await first('devices', () => listDevices({ includeDeleted: showDeleted }, ctrl.signal));
 			if (inflight !== ctrl) return;
@@ -133,6 +136,7 @@
 			devices = list;
 			loadError = null;
 			loaded = true;
+			held.loaded(from);
 		} catch (err) {
 			if (err instanceof DOMException && err.name === 'AbortError') return;
 			if (inflight !== ctrl) return;
@@ -143,6 +147,9 @@
 	}
 
 	const quiet = (p: Promise<unknown>) => p.catch(() => undefined);
+	/** Pushes held while live updates are paused: the list stays as it is until shown */
+	const held = new HeldPushes(loadDevices);
+	let listEl = $state<HTMLElement | null>(null);
 	const loadFolders = () => quiet(first('folders', () => listFolders()).then((f) => (folders = f)));
 	const loadGroups = () => quiet(first('groups', () => listDeviceGroups()).then((g) => (groups = g)));
 	const loadTags = () => quiet(first('tags', () => listTags()).then((x) => (knownTags = x)));
@@ -190,6 +197,7 @@
 				// Live updates paused: the list keeps what it shows until Refresh
 				if (liveUpdates.paused) {
 					if (m.kind === 'id-changed' && devicePanel.id === m.oldId) openDevice(m.newId);
+					held.push();
 					return;
 				}
 				if (m.kind === 'status') {
@@ -821,9 +829,11 @@
 				</div>
 			{/if}
 
+			<NewEntries {held} focus={() => listEl} />
 			<!-- Mouse conveniences (drag, right-click); keyboard users have the row menu and the panel -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
+				bind:this={listEl}
 				class={['devices-table', long && 'is-long', shown('tags') && 'has-tags']}
 				onpointerover={onPointerOver}
 				ondragstart={onDragStart}

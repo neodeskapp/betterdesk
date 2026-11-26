@@ -9615,6 +9615,8 @@
   },
   "live": {
     "last_updated": "Senest opdateret {time}",
-    "paused": "Liveopdateringer er sat på pause."
+    "paused": "Liveopdateringer er sat på pause.",
+    "new_entries": "Nye poster, vis dem",
+    "new_entries_waiting": "Der er kommet nye poster, mens liveopdateringer er sat på pause."
   }
 }

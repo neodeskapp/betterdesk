@@ -9609,6 +9609,8 @@
   },
   "live": {
     "last_updated": "上次更新 {time}",
-    "paused": "实时更新已暂停。"
+    "paused": "实时更新已暂停。",
+    "new_entries": "有新条目，显示",
+    "new_entries_waiting": "实时更新暂停期间收到了新条目。"
   }
 }

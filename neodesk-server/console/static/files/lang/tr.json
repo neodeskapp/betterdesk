@@ -9615,6 +9615,8 @@
   },
   "live": {
     "last_updated": "Son güncelleme {time}",
-    "paused": "Canlı güncellemeler duraklatıldı."
+    "paused": "Canlı güncellemeler duraklatıldı.",
+    "new_entries": "Yeni kayıtlar, göster",
+    "new_entries_waiting": "Canlı güncellemeler duraklatılmışken yeni kayıtlar geldi."
   }
 }

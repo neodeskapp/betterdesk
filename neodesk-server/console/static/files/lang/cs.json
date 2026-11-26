@@ -9609,6 +9609,8 @@
   },
   "live": {
     "last_updated": "Naposledy aktualizováno {time}",
-    "paused": "Živé aktualizace jsou pozastavené."
+    "paused": "Živé aktualizace jsou pozastavené.",
+    "new_entries": "Nové položky, zobrazit je",
+    "new_entries_waiting": "Přišly nové položky, zatímco jsou živé aktualizace pozastaveny."
   }
 }

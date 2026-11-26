@@ -9615,6 +9615,8 @@
   },
   "live": {
     "last_updated": "Cập nhật lần cuối {time}",
-    "paused": "Cập nhật trực tiếp đang tạm dừng."
+    "paused": "Cập nhật trực tiếp đang tạm dừng.",
+    "new_entries": "Mục mới, hiển thị",
+    "new_entries_waiting": "Có mục mới trong khi cập nhật trực tiếp đang tạm dừng."
   }
 }

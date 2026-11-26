@@ -9615,6 +9615,8 @@
   },
   "live": {
     "last_updated": "Ultima actualizare {time}",
-    "paused": "Actualizările în timp real sunt întrerupte."
+    "paused": "Actualizările în timp real sunt întrerupte.",
+    "new_entries": "Intrări noi, afișează-le",
+    "new_entries_waiting": "Au sosit intrări noi cât timp actualizările live sunt întrerupte."
   }
 }

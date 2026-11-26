@@ -9615,6 +9615,8 @@
   },
   "live": {
     "last_updated": "Terakhir diperbarui {time}",
-    "paused": "Pembaruan langsung dijeda."
+    "paused": "Pembaruan langsung dijeda.",
+    "new_entries": "Entri baru, tampilkan",
+    "new_entries_waiting": "Entri baru masuk saat pembaruan langsung dijeda."
   }
 }

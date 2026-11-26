@@ -9613,6 +9613,8 @@
   },
   "live": {
     "last_updated": "Dernière mise à jour : {time}",
-    "paused": "Les mises à jour en direct sont suspendues."
+    "paused": "Les mises à jour en direct sont suspendues.",
+    "new_entries": "Nouvelles entrées, les afficher",
+    "new_entries_waiting": "De nouvelles entrées sont arrivées pendant que les mises à jour en direct sont suspendues."
   }
 }

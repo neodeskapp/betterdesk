@@ -94,6 +94,17 @@ describe('Pause live updates', () => {
 		await vi.waitFor(() => expect(listLoads()).toBe(2));
 	});
 
+	test('a push while paused offers New entries, show them, which loads the list', async () => {
+		setLivePaused(true);
+		render(Page, early());
+		await vi.waitFor(() => expect(listLoads()).toBe(1));
+		expect(screen.queryByRole('button', { name: 'live.new_entries' })).toBeNull();
+		push({ type: 'device_id_changed', old_id: 'a', new_id: 'z' });
+		await userEvent.click(await screen.findByRole('button', { name: 'live.new_entries' }));
+		await vi.waitFor(() => expect(listLoads()).toBe(2));
+		await vi.waitFor(() => expect(document.activeElement?.classList.contains('devices-table')).toBe(true));
+	});
+
 	test('without the pause a push loads the list again and there is no Refresh', async () => {
 		render(Page, early());
 		await vi.waitFor(() => expect(listLoads()).toBe(1));

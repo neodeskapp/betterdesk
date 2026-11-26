@@ -9615,6 +9615,8 @@
   },
   "live": {
     "last_updated": "Utoljára frissítve: {time}",
-    "paused": "Az élő frissítések szünetelnek."
+    "paused": "Az élő frissítések szünetelnek.",
+    "new_entries": "Új bejegyzések, mutasd őket",
+    "new_entries_waiting": "Új bejegyzések érkeztek, amíg az élő frissítések szünetelnek."
   }
 }
