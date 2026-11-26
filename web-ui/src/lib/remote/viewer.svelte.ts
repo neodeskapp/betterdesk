@@ -1129,7 +1129,7 @@ export class Viewer {
 			return;
 		}
 		this.clearConsent(s);
-		// The other transports give no reason yet: their messages are still read (L557)
+		// The other transports give no reason yet: their messages are still read (L560)
 		if (this.transport !== 'rd' && !isReason(meta?.reason)) {
 			this.showResult(s, classifyEnd(s.lastError, meta, { name: s.label, everStreamed: s.everStreamed }));
 			return;
