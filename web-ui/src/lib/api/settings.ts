@@ -281,6 +281,23 @@ export function saveTwoFactorPolicy(required: boolean) {
 	return api(Ok, '/api/settings/two-factor', { method: 'PUT', body: { required } });
 }
 
+/** Settings › Sign-in › Security notices: which mails people get about their own account */
+export const SecurityNotices = v.looseObject({
+	new_signin: v.optional(v.boolean(), true),
+	password_changed: v.optional(v.boolean(), true),
+	two_factor_changed: v.optional(v.boolean(), true),
+	email_changed: v.optional(v.boolean(), true)
+});
+export type SecurityNotices = v.InferOutput<typeof SecurityNotices>;
+
+export function getSecurityNotices(signal?: AbortSignal): Promise<SecurityNotices> {
+	return api(wrapped(SecurityNotices), '/api/settings/security-notices', { signal });
+}
+
+export function saveSecurityNotices(body: Partial<SecurityNotices>) {
+	return api(Ok, '/api/settings/security-notices', { method: 'PUT', body });
+}
+
 /* ── Sign-in: for everyone ── */
 
 export const Enrollment = v.looseObject({
