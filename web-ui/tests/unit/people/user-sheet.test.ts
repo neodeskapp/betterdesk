@@ -66,10 +66,14 @@ describe('user sheet', () => {
 		});
 		await user.type(screen.getByLabelText('users.username'), 'helpdesk1');
 		await user.type(screen.getByLabelText('users.password'), 'Strong-Pass-1!');
-		const direct = screen.getByLabelText('users.user_direct_devices');
-		await user.type(direct, '900100001, <script>');
+		// One row per device ID: the wrong one is named under its own row
+		await user.click(screen.getByRole('button', { name: 'Add a device' }));
+		await user.type(screen.getByRole('textbox', { name: 'Device 1' }), '900100001');
+		await user.click(screen.getByRole('button', { name: 'Add a device' }));
+		const wrong = screen.getByRole('textbox', { name: 'Device 2' });
+		await user.type(wrong, '<script>');
 		await user.click(screen.getByRole('button', { name: /users.create|users.add_user|actions.save/ }));
-		await vi.waitFor(() => expect(direct).toHaveAccessibleDescription(/users.invalid_device_id/));
+		await vi.waitFor(() => expect(wrong).toHaveAccessibleDescription(/letters, numbers/));
 		expect(writes).toEqual([]);
-	});
+	}, 20_000);
 });

@@ -2588,7 +2588,19 @@
     "reset_link_no_email": "{username} hat keine E-Mail-Adresse. Füge unter Bearbeiten eine hinzu, um einen Link zum Zurücksetzen zu senden.",
     "send_reset_link": "Link senden",
     "reset_link_sent_named": "Link zum Zurücksetzen an {username} gesendet.",
-    "reset_email_required": "Dieses Konto hat keine E-Mail-Adresse."
+    "reset_email_required": "Dieses Konto hat keine E-Mail-Adresse.",
+    "access_default_is": "{label}: {level}, {source}",
+    "invalid_device_id_one": "Eine Geräte-ID hat nur Buchstaben, Ziffern und . _ - : @.",
+    "access_now_chosen": "Diese Person sieht die Geräte der gewählten Benutzergruppen und Ordner sowie die direkten Geräte.",
+    "access_now_none_restricted": "Nichts gewählt: Diese Person sieht keine Geräte, weil die Gerätesichtbarkeit Eingeschränkt ist.",
+    "access_now_none_open": "Nichts gewählt: Diese Person sieht alle Geräte, weil die Gerätesichtbarkeit Offen ist.",
+    "access_no_effect_admin": "Wirkt nicht, solange die Rolle {role} ist: Diese Rolle sieht immer alle Geräte.",
+    "access_scope_link": "Einstellungen › Allgemein",
+    "user_direct_devices_rows": "Eine Geräte-ID pro Zeile, zum Beispiel 123456789. Die Person sieht diese Geräte unabhängig von Ordnern und Gruppen.",
+    "direct_device_n": "Gerät {n}",
+    "add_direct_device": "Gerät hinzufügen",
+    "group_dialog_intro": "Mitglieder einer Gruppe teilen ihren Konsolenzugriff und die Gerätegruppen, die sie zulassen. Personen fügst du in ihrem Benutzerblatt hinzu; die Gruppe lässt du in den Zugriffseinstellungen einer Gerätegruppe zu.",
+    "group_name_hint": "Steht in der Benutzerliste, im Benutzerblatt jedes Mitglieds und in den Zugriffseinstellungen."
   },
   "folders": {
     "title": "Ordner",
