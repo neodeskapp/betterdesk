@@ -256,6 +256,19 @@ describe('policies page', () => {
 		);
 	});
 
+	test('by keyboard: setting a rule puts the focus on its control, removing it back on the button', async () => {
+		signIn('global_admin', EDITOR);
+		const user = userEvent.setup();
+		await openPage();
+		setHere('policies.connection_mode').focus();
+		await user.keyboard('{Enter}');
+		await vi.waitFor(() => expect(screen.getByLabelText('policies.connection_mode')).toHaveFocus());
+		expect(screen.getByLabelText('policies.connection_mode')).toHaveValue('attended');
+		screen.getByRole('button', { name: 'Remove the rule: policies.connection_mode' }).focus();
+		await user.keyboard('{Enter}');
+		await vi.waitFor(() => expect(setHere('policies.connection_mode')).toHaveFocus());
+	});
+
 	test('changing one setting sends only that group with only its rules', async () => {
 		signIn('global_admin', EDITOR);
 		stored = { connection: { mode: 'unattended' }, update: { channel: 'beta' } };
@@ -287,8 +300,12 @@ describe('policies page', () => {
 		stored = { security: { require_2fa: true, password_min_length: 12 } };
 		const user = userEvent.setup();
 		await openPage();
-		expect(screen.getByRole('button', { name: 'Remove all rules of policies.update_title' })).toBeDisabled();
-		await user.click(screen.getByRole('button', { name: 'Remove all rules of policies.security_title' }));
+		expect(
+			screen.getByRole('button', { name: 'Remove all rules of this group: policies.update_title' })
+		).toBeDisabled();
+		await user.click(
+			screen.getByRole('button', { name: 'Remove all rules of this group: policies.security_title' })
+		);
 		expect(confirm).toHaveBeenCalledOnce();
 		await vi.waitFor(() =>
 			expect(writes).toEqual([{ call: 'DELETE /api/panel/policies/org-1/security', body: undefined }])
