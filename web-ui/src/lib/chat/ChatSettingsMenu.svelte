@@ -17,6 +17,7 @@
 	import * as api from './api.ts';
 	import ChatServerDialog from './ChatServerDialog.svelte';
 	import { chat } from './client.svelte.ts';
+	import TeamsDialog from './TeamsDialog.svelte';
 	import type { AccountSettings } from './types.ts';
 
 	const permission = $derived(typeof Notification === 'undefined' ? 'unsupported' : Notification.permission);
@@ -38,6 +39,7 @@
 		}
 	}
 
+	let teams = $state(false);
 	let editing = $state(false);
 
 	// The top bar search's "Chat settings for this server" opens the dialog
@@ -65,11 +67,20 @@
 	{#if chat.settings.browser && permission === 'denied'}
 		<MenuItem disabled>{t('chat.notify_blocked')}</MenuItem>
 	{/if}
-	{#if can('server.config')}
+	{#if (can('chat.teams_manage') && chat.may.team) || can('server.config')}
 		<MenuDivider />
+	{/if}
+	{#if can('chat.teams_manage') && chat.may.team}
+		<MenuItem icon="workspaces" onselect={() => (teams = true)}>{t('chat.manage_teams')}</MenuItem>
+	{/if}
+	{#if can('server.config')}
 		<MenuItem icon="settings" onselect={() => (editing = true)}>{t('chat.server_settings')}</MenuItem>
 	{/if}
 </MenuButton>
+
+{#if teams}
+	<TeamsDialog onclose={() => (teams = false)} />
+{/if}
 
 {#if editing}
 	<ChatServerDialog onclose={() => (editing = false)} />

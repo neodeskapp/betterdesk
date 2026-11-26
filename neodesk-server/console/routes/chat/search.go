@@ -131,7 +131,7 @@ func (f *finder) check(conv string) bool {
 		}
 		f.names[conv] = wireFoundConversation{ID: conv, Kind: kind, Name: d.Name}
 		return true
-	case chatstore.ConvDirect, chatstore.ConvGroup, chatstore.ConvOld:
+	case chatstore.ConvDirect, chatstore.ConvGroup, chatstore.ConvTeam, chatstore.ConvOld:
 		if f.section == "support" || !f.h.hub.MayRead(f.ctx, f.user, conv) {
 			return false
 		}

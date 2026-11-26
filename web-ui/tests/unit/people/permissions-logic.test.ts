@@ -73,6 +73,7 @@ describe('groups by what a person does', () => {
 		expect(PERMISSION_GROUPS.find((g) => g.permissions.includes('branding.edit'))?.id).toBe('server');
 		for (const p of ['user.security', 'user.impersonate'])
 			expect(PERMISSION_GROUPS.find((g) => g.permissions.includes(p))?.id).toBe('people');
+		expect(PERMISSION_GROUPS.find((g) => g.permissions.includes('chat.teams_manage'))?.id).toBe('support');
 	});
 
 	test('a row id the search and #links can use', () => {

@@ -83,12 +83,13 @@ const (
 	PermEnrollmentApprove = "enrollment.approve"
 
 	// Chat (A242): Support chat with the people at computers, Team chat
-	// between console accounts, assigning support conversations and the
-	// shared canned replies.
+	// between console accounts, assigning support conversations, the
+	// shared canned replies and the teams of Team chat.
 	PermChatSupport      = "chat.support"
 	PermChatTeam         = "chat.team"
 	PermChatAssign       = "chat.assign"
 	PermChatCannedManage = "chat.canned_manage"
+	PermChatTeamsManage  = "chat.teams_manage"
 	// PermChatAccess is the one chat permission before A242. It is no
 	// permission of its own any more: a role override or an API token that
 	// still names it means Support chat and Team chat (LegacyPermissions).
@@ -120,7 +121,7 @@ var AllPermissions = []string{
 	PermMeshTerminal, PermMeshFiles, PermMeshPower,
 	PermAgentTerminal, PermAgentFiles,
 	PermEnrollmentManage, PermEnrollmentApprove,
-	PermChatSupport, PermChatTeam, PermChatAssign, PermChatCannedManage,
+	PermChatSupport, PermChatTeam, PermChatAssign, PermChatCannedManage, PermChatTeamsManage,
 	PermBrandingEdit,
 	PermBillingView, PermBillingManage, PermBillingReports, PermBillingExport,
 }
@@ -167,7 +168,7 @@ var DefaultRolePermissions = map[string]map[string]bool{
 		PermCDAPView, PermCDAPCommand, PermCDAPTerminal, PermCDAPFiles,
 		PermMeshTerminal, PermMeshFiles, PermMeshPower,
 		PermAgentTerminal, PermAgentFiles,
-		PermChatSupport, PermChatTeam, PermChatAssign, PermChatCannedManage,
+		PermChatSupport, PermChatTeam, PermChatAssign, PermChatCannedManage, PermChatTeamsManage,
 		PermEnrollmentManage, PermEnrollmentApprove,
 		PermBrandingEdit,
 		PermBillingView, PermBillingManage, PermBillingReports, PermBillingExport,

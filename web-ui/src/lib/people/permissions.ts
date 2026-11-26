@@ -70,7 +70,10 @@ export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
 		// Letting devices join changes no device: the summary says "manage joining"
 		apart: ['enrollment.manage', 'enrollment.approve']
 	},
-	{ id: 'support', permissions: ['chat.support', 'chat.team', 'chat.assign', 'chat.canned_manage'] },
+	{
+		id: 'support',
+		permissions: ['chat.support', 'chat.team', 'chat.assign', 'chat.canned_manage', 'chat.teams_manage']
+	},
 	{
 		id: 'people',
 		permissions: [

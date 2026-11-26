@@ -58,8 +58,12 @@ export interface Message {
 	pending?: 'sending' | 'failed';
 }
 
-/** old: the chat of version 1 that belongs to no two accounts, for admins to read */
-export type ConversationKind = 'support' | 'dm' | 'group' | 'old';
+/**
+ * group: colleagues one of them picked; team: set up by people with Manage
+ * teams, with people and user groups; old: the chat of version 1 that
+ * belongs to no two accounts, for admins to read
+ */
+export type ConversationKind = 'support' | 'dm' | 'group' | 'team' | 'old';
 
 export interface Conversation {
 	id: string;
@@ -130,6 +134,23 @@ export interface TeamItem extends Conversation {
 	people: Person[];
 	last_message: LastMessage | null;
 	unread: number;
+}
+
+/** A team as the people with Manage teams see it */
+export interface TeamSetup {
+	id: string;
+	title: string;
+	/** Picked by hand */
+	people: number[];
+	/** Guids of the user groups whose members are in it */
+	groups: string[];
+}
+
+/** A user group a team can include, with the accounts in it */
+export interface UserGroupOption {
+	guid: string;
+	name: string;
+	members: number[];
 }
 
 export interface InboxCounts {

@@ -1009,7 +1009,7 @@ func TestOracleBootstrap(t *testing.T) {
 	var nodeUI []string
 	for _, p := range v.UIPermissions {
 		if p == "chat.access" {
-			nodeUI = append(nodeUI, "chat.support", "chat.team", "chat.assign", "chat.canned_manage")
+			nodeUI = append(nodeUI, "chat.support", "chat.team", "chat.assign", "chat.canned_manage", "chat.teams_manage")
 			continue
 		}
 		nodeUI = append(nodeUI, p)
@@ -1049,7 +1049,7 @@ func TestOracleBootstrap(t *testing.T) {
 				wantPerms = append(wantPerms, p)
 				continue
 			}
-			for _, now := range []string{"chat.support", "chat.team", "chat.assign", "chat.canned_manage"} {
+			for _, now := range []string{"chat.support", "chat.team", "chat.assign", "chat.canned_manage", "chat.teams_manage"} {
 				if ctx.HasPermission(now) {
 					wantPerms = append(wantPerms, now)
 				}
