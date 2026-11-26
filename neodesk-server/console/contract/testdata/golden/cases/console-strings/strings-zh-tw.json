@@ -9216,6 +9216,7 @@
       "email_hint": "當使用者被指派到裝置資料夾或群組時，用於求助請求通知。",
       "email_hint_confirm": "A new address gets a confirmation link and changes once it is used. The old address gets a notice.",
       "email_hint_no_mail": "The console can't send email, so a new address takes effect at once, without a confirmation.",
+      "email_not_changed_rest_saved": "Your other changes are saved, only the email address was not changed. {reason}",
       "email_pending": "Waiting for confirmation: {email}",
       "email_pending_expired": "The confirmation link expired. Send it again or cancel the change.",
       "email_pending_until": "The confirmation link works until {date}.",
