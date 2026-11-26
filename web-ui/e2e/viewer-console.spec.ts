@@ -252,7 +252,7 @@ test('quick support without the session password: no password form, the viewer w
 	await expect(page.locator('.overlay-status')).toHaveText('Waiting for Ana to accept on their screen.', {
 		timeout: 60_000
 	});
-	await expect(page.locator('.rd-state-hint').first()).toContainText('Accept and Decline');
+	await expect(page.locator('.rd-state-hint').first()).toContainText('Allow and Decline');
 	await expect(page.getByLabel('Device password')).toHaveCount(0);
 	await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible();
 	await expect.poll(() => asked(page)).toBe(1);

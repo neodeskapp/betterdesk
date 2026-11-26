@@ -1222,12 +1222,12 @@ export class Viewer {
 		s.waitHint = person
 			? tf(
 					'remote_viewer.wait_person_hint',
-					'{person} sees a window that asks to let you connect, with Accept and Decline.',
+					'{person} sees a window that asks to let you connect, with Allow and Decline.',
 					{ person }
 				)
 			: tf(
 					'remote_viewer.wait_someone_hint',
-					'The person there sees a window that asks to let you connect, with Accept and Decline.'
+					'The person there sees a window that asks to let you connect, with Allow and Decline.'
 				);
 		if (s.consentTimer) clearTimeout(s.consentTimer);
 		s.consentTimer = setTimeout(() => {

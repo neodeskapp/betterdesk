@@ -152,7 +152,7 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe('a quick support session never asks the admin for a password (L551)', () => {
-	test('without the session password the viewer waits for the person, who sees Accept', async () => {
+	test('without the session password the viewer waits for the person, who sees Allow', async () => {
 		onboardApi.takeDevicePassword.mockResolvedValue({
 			password: '',
 			session: { name: 'Ana', status: 'allowed' }
@@ -163,7 +163,8 @@ describe('a quick support session never asks the admin for a password (L551)', (
 		expect(s.view).toBe('connecting');
 		expect(s.stepId).toBe('accept');
 		expect(s.statusText).toBe('Waiting for Ana to accept on their screen.');
-		expect(s.waitHint).toMatch(/Accept/);
+		// The consent window's buttons are Allow and Decline
+		expect(s.waitHint).toMatch(/with Allow and Decline/);
 		expect(c.authenticate).not.toHaveBeenCalled();
 	});
 
