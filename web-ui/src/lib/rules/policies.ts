@@ -1,12 +1,16 @@
 /**
- * The policy form without a DOM: the values each group shows (with the
- * old page's defaults for groups never saved), the body each group's PUT
- * sends, the number limits, and which groups changed. The Policies page
- * saves only changed groups, each to its own endpoint, so groups nobody
- * touched stay "Not set".
+ * The policy form without a DOM. The Policies page edits one flat draft of
+ * every setting ("connection.mode", "features.allow_audio"), each either a
+ * value or null: null is "no rule here" (each device keeps its own
+ * setting, or the server's value applies). Nothing is filled in that the
+ * organization did not store.
+ *
+ * Saving writes only the groups that changed: PUT with the settings that
+ * have a rule, DELETE when none is left. Undo writes the previous group
+ * bodies back the same way.
  */
 
-import type { AuditEntry, Policies } from '#lib/api/policies.ts';
+import type { AuditEntry, ResolvedPolicies } from '#lib/api/policies.ts';
 
 export const SECTIONS = ['connection', 'features', 'security', 'network', 'update'] as const;
 export type Section = (typeof SECTIONS)[number];
@@ -20,152 +24,150 @@ export const SECTION_TITLE: Readonly<Record<Section, string>> = {
 	update: 'policies.update_title'
 };
 
-export interface PolicyValues {
+export type FieldKind =
+	| { kind: 'choice'; options: readonly string[] }
+	| { kind: 'whole'; min: number; max: number }
+	| { kind: 'switch' }
+	| { kind: 'list'; entry: 'name' | 'relay' | 'range' };
+
+/**
+ * Every setting of every group, in page order, with what it takes (the
+ * same checks as neodesk-server/api/org_policy_check.go)
+ */
+export const FIELDS: Readonly<Record<Section, Readonly<Record<string, FieldKind>>>> = {
 	connection: {
-		mode: string;
-		max_session_duration: number | null;
-		idle_lock_timeout: number | null;
-		wallpaper: string;
-	};
+		mode: { kind: 'choice', options: ['attended', 'unattended', 'ask_always'] },
+		max_session_duration: { kind: 'whole', min: 0, max: 1440 },
+		idle_lock_timeout: { kind: 'whole', min: 0, max: 120 },
+		wallpaper: { kind: 'choice', options: ['show', 'hide_during_session', 'hide_always'] }
+	},
 	features: {
-		allow_file_transfer: boolean;
-		allow_clipboard: boolean;
-		allow_audio: boolean;
-		allow_recording: boolean;
-	};
+		allow_file_transfer: { kind: 'switch' },
+		allow_clipboard: { kind: 'switch' },
+		allow_audio: { kind: 'switch' },
+		allow_recording: { kind: 'switch' }
+	},
 	security: {
-		require_2fa: boolean;
-		password_min_length: number | null;
-		password_require_special: boolean;
-		password_max_age_days: number | null;
-		/** Comma-separated in the field, a list in the body */
-		allowed_operators: string;
-	};
+		require_2fa: { kind: 'switch' },
+		password_min_length: { kind: 'whole', min: 6, max: 128 },
+		password_require_special: { kind: 'switch' },
+		password_max_age_days: { kind: 'whole', min: 0, max: 365 },
+		allowed_operators: { kind: 'list', entry: 'name' }
+	},
 	network: {
-		block_direct_p2p: boolean;
-		/** One per line in the field, a list in the body */
-		allowed_relay_servers: string;
-		ip_allowlist: string;
-	};
-	update: { auto_update: boolean; channel: string };
+		block_direct_p2p: { kind: 'switch' },
+		allowed_relay_servers: { kind: 'list', entry: 'relay' },
+		ip_allowlist: { kind: 'list', entry: 'range' }
+	},
+	update: {
+		auto_update: { kind: 'switch' },
+		channel: { kind: 'choice', options: ['stable', 'beta', 'dev'] }
+	}
+};
+
+/** "connection.mode" and the rest, in page order */
+export const FIELD_IDS: readonly string[] = SECTIONS.flatMap((s) =>
+	Object.keys(FIELDS[s]).map((name) => `${s}.${name}`)
+);
+
+/** The draft: every field id, a value or null for no rule */
+export type PolicyDraft = Record<string, unknown>;
+
+export function groupFields(group: Section): string[] {
+	return Object.keys(FIELDS[group]).map((name) => `${group}.${name}`);
 }
 
-/** Whole-number fields and their limits (as the old page checked them) */
-export const NUMBER_LIMITS = {
-	'connection.max_session_duration': [0, 1440],
-	'connection.idle_lock_timeout': [0, 120],
-	'security.password_min_length': [6, 128],
-	'security.password_max_age_days': [0, 365]
-} as const satisfies Record<string, readonly [number, number]>;
-export type NumberField = keyof typeof NUMBER_LIMITS;
-
-type Raw = Record<string, unknown> | null | undefined;
-
-/** Keep 0 when it was saved; the default only when the value is missing */
-function num(v: unknown, fallback: number): number {
-	if (v === undefined || v === null || v === '') return fallback;
-	const n = Number(v);
-	return Number.isFinite(n) ? n : fallback;
-}
-const str = (v: unknown, fallback: string): string => (typeof v === 'string' && v ? v : fallback);
-const list = (v: unknown): string[] => (Array.isArray(v) ? v.map((x) => String(x)).filter(Boolean) : []);
-
-/** The form values for a loaded organization (defaults where a group or field was never saved) */
-export function valuesFrom(p: Partial<Record<Section, Raw>>): PolicyValues {
-	const c = p.connection ?? {};
-	const f = p.features ?? {};
-	const s = p.security ?? {};
-	const n = p.network ?? {};
-	const u = p.update ?? {};
-	return {
-		connection: {
-			mode: str(c.mode, 'attended'),
-			max_session_duration: num(c.max_session_duration, 480),
-			idle_lock_timeout: num(c.idle_lock_timeout, 15),
-			wallpaper: str(c.wallpaper, 'show')
-		},
-		features: {
-			allow_file_transfer: f.allow_file_transfer !== false,
-			allow_clipboard: f.allow_clipboard !== false,
-			allow_audio: !!f.allow_audio,
-			allow_recording: f.allow_recording !== false
-		},
-		security: {
-			require_2fa: s.require_2fa !== false,
-			password_min_length: num(s.password_min_length, 12),
-			password_require_special: s.password_require_special !== false,
-			password_max_age_days: num(s.password_max_age_days, 90),
-			allowed_operators: list(s.allowed_operators).join(', ')
-		},
-		network: {
-			block_direct_p2p: !!n.block_direct_p2p,
-			allowed_relay_servers: list(n.allowed_relay_servers).join('\n'),
-			ip_allowlist: list(n.ip_allowlist).join('\n')
-		},
-		update: {
-			auto_update: u.auto_update !== false,
-			channel: str(u.channel, 'stable')
-		}
-	};
+function split(field: string): [Section, string] {
+	const at = field.indexOf('.');
+	return [field.slice(0, at) as Section, field.slice(at + 1)];
 }
 
-/** A group counts as set once it has been saved for the organization */
-export function isSet(group: Raw): boolean {
-	return !!group && typeof group === 'object' && Object.keys(group).length > 0;
+export function kindOf(field: string): FieldKind | undefined {
+	const [group, name] = split(field);
+	return FIELDS[group]?.[name];
 }
 
-export function setCount(p: Policies | null): number {
-	return p ? SECTIONS.filter((s) => isSet(p[s])).length : 0;
+/** The element id of a setting's row: "pol-connection-max-session-duration" */
+export function rowId(field: string): string {
+	return 'pol-' + field.replace(/[._]/g, '-');
 }
 
-const split = (text: string, sep: RegExp | string): string[] =>
-	text
-		.split(sep)
-		.map((x) => x.trim())
-		.filter(Boolean);
+function normalize(kind: FieldKind | undefined, value: unknown): unknown {
+	if (kind?.kind === 'list') return Array.isArray(value) ? value.map((x) => String(x)) : [];
+	return value;
+}
 
-/** What PUT /api/panel/policies/:org/<group> gets (same fields as the old page) */
-export function bodyFor(section: Section, v: PolicyValues): Record<string, unknown> {
-	switch (section) {
-		case 'connection':
-			return { ...v.connection };
-		case 'features':
-			return { ...v.features };
-		case 'security':
-			return { ...v.security, allowed_operators: split(v.security.allowed_operators, ',') };
-		case 'network':
-			return {
-				block_direct_p2p: v.network.block_direct_p2p,
-				allowed_relay_servers: split(v.network.allowed_relay_servers, '\n'),
-				ip_allowlist: split(v.network.ip_allowlist, '\n')
-			};
-		case 'update':
-			return { ...v.update };
+/** The draft as loaded: what the organization stored, null everywhere else */
+export function valuesFromResolved(r: ResolvedPolicies | null): PolicyDraft {
+	const out: PolicyDraft = {};
+	for (const id of FIELD_IDS) {
+		const [group, name] = split(id);
+		const f = r?.[group]?.fields[name];
+		out[id] =
+			f && f.source === 'organization' && f.value !== null && f.value !== undefined
+				? normalize(kindOf(id), f.value)
+				: null;
+	}
+	return out;
+}
+
+/**
+ * Where "Set for this organization" starts when it has no value yet: the
+ * value in force without a rule. The server's own value where there is
+ * one; otherwise the plainest value the setting takes (off, the first
+ * choice, the lowest number, no entries), which the save bar lists as an
+ * unsaved change before anything is written.
+ */
+export function startValue(field: string, r: ResolvedPolicies | null): unknown {
+	const kind = kindOf(field);
+	const [group, name] = split(field);
+	const server = r?.[group]?.fields[name]?.server_value;
+	switch (kind?.kind) {
+		case 'switch':
+			return typeof server === 'boolean' ? server : false;
+		case 'choice':
+			return typeof server === 'string' && kind.options.includes(server) ? server : kind.options[0];
+		case 'whole':
+			return typeof server === 'number' ? server : kind.min;
+		case 'list':
+			return Array.isArray(server) ? server.map(String) : [];
+		default:
+			return null;
 	}
 }
 
-/** Groups whose values differ from what was loaded */
-export function changedSections(v: PolicyValues, loaded: PolicyValues): Section[] {
-	return SECTIONS.filter((s) => JSON.stringify(v[s]) !== JSON.stringify(loaded[s]));
+const same = (a: unknown, b: unknown) => a === b || JSON.stringify(a) === JSON.stringify(b);
+
+/** Groups with a field that differs from what was loaded */
+export function changedGroups(v: PolicyDraft, loaded: PolicyDraft): Section[] {
+	return SECTIONS.filter((s) => groupFields(s).some((f) => !same(v[f] ?? null, loaded[f] ?? null)));
 }
 
-function valueOf(v: PolicyValues, field: NumberField): number | null {
-	const [section, key] = field.split('.') as [Section, string];
-	return (v[section] as Record<string, unknown>)[key] as number | null;
+/** What PUT /api/panel/policies/:org/<group> gets: the settings with a rule; null when none has one */
+export function groupBody(group: Section, v: PolicyDraft): Record<string, unknown> | null {
+	const body: Record<string, unknown> = {};
+	for (const f of groupFields(group)) {
+		const value = v[f];
+		if (value !== null && value !== undefined) body[split(f)[1]] = value;
+	}
+	return Object.keys(body).length ? body : null;
 }
 
-/** Whole numbers out of range in the given groups, in form order */
-export function invalidNumbers(v: PolicyValues, sections: readonly Section[]): NumberField[] {
-	return (Object.keys(NUMBER_LIMITS) as NumberField[]).filter((field) => {
-		if (!sections.includes(field.split('.')[0] as Section)) return false;
-		const [min, max] = NUMBER_LIMITS[field];
-		const n = valueOf(v, field);
-		return n === null || !Number.isInteger(n) || n < min || n > max;
-	});
+export interface GroupWrite {
+	group: Section;
+	/** null: DELETE the group */
+	body: Record<string, unknown> | null;
 }
 
-/** Fields that take one entry per line, with what each line must be */
-export type ListField = 'network.allowed_relay_servers' | 'network.ip_allowlist';
+/** The writes a save makes, one per changed group */
+export function writesFor(v: PolicyDraft, loaded: PolicyDraft): GroupWrite[] {
+	return changedGroups(v, loaded).map((group) => ({ group, body: groupBody(group, v) }));
+}
+
+/** The writes that put the groups back as they were before a save */
+export function undoWrites(before: PolicyDraft, groups: readonly Section[]): GroupWrite[] {
+	return groups.map((group) => ({ group, body: groupBody(group, before) }));
+}
 
 function ipv4(text: string): boolean {
 	const parts = text.split('.');
@@ -214,25 +216,47 @@ export function isRelayAddress(text: string): boolean {
 	return ipv4(host) || (host.length <= 253 && HOST_NAME.test(host));
 }
 
-const LIST_CHECK: Readonly<Record<ListField, (line: string) => boolean>> = {
-	'network.allowed_relay_servers': isRelayAddress,
-	'network.ip_allowlist': isAddressRange
+const ENTRY_CHECK: Readonly<Record<'name' | 'relay' | 'range', (entry: string) => boolean>> = {
+	name: (s) => s.trim() !== '',
+	relay: isRelayAddress,
+	range: isAddressRange
 };
 
-/** The first line of each list field in the given groups that is not what it must be, in form order */
-export function invalidLists(
-	v: PolicyValues,
-	sections: readonly Section[]
-): { field: ListField; entry: string }[] {
-	const out: { field: ListField; entry: string }[] = [];
-	for (const field of Object.keys(LIST_CHECK) as ListField[]) {
-		const [section, key] = field.split('.') as [Section, string];
-		if (!sections.includes(section)) continue;
-		const text = String((v[section] as Record<string, unknown>)[key] ?? '');
-		const entry = split(text, '\n').find((line) => !LIST_CHECK[field](line));
-		if (entry !== undefined) out.push({ field, entry });
+/** Whether one entry of a list setting is what it must be */
+export function entryOk(field: string, entry: string): boolean {
+	const kind = kindOf(field);
+	return kind?.kind !== 'list' || ENTRY_CHECK[kind.entry](entry.trim());
+}
+
+/** Whether a whole-number setting's value is in its range */
+export function wholeOk(field: string, value: unknown): boolean {
+	const kind = kindOf(field);
+	if (kind?.kind !== 'whole') return true;
+	return typeof value === 'number' && Number.isInteger(value) && value >= kind.min && value <= kind.max;
+}
+
+/**
+ * Settings with a rule whose value the server would refuse, in page order:
+ * a number out of range (entry ''), or the first wrong entry of a list
+ */
+export function fieldProblems(v: PolicyDraft): { field: string; entry: string }[] {
+	const out: { field: string; entry: string }[] = [];
+	for (const field of FIELD_IDS) {
+		const value = v[field];
+		if (value === null || value === undefined) continue;
+		const kind = kindOf(field);
+		if (kind?.kind === 'whole' && !wholeOk(field, value)) out.push({ field, entry: '' });
+		if (kind?.kind === 'list' && Array.isArray(value)) {
+			const bad = value.map(String).find((e) => !entryOk(field, e));
+			if (bad !== undefined) out.push({ field, entry: bad });
+		}
 	}
 	return out;
+}
+
+/** Groups the organization stored anything for */
+export function setCount(r: ResolvedPolicies | null): number {
+	return r ? SECTIONS.filter((s) => r[s]?.set).length : 0;
 }
 
 /** The group a change log line is about */
