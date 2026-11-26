@@ -8917,7 +8917,9 @@
     "label": "الصفحات",
     "previous": "الصفحة السابقة",
     "next": "الصفحة التالية",
-    "page": "الصفحة {page}"
+    "page": "الصفحة {page}",
+    "page_of": "الصفحة {page} من {pages}",
+    "pages_of": "صفحات {name}"
   },
   "shell": {
     "skip_to_content": "انتقل إلى المحتوى الرئيسي",

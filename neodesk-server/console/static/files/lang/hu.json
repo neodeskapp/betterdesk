@@ -8916,7 +8916,9 @@
     "label": "Oldalak",
     "previous": "Előző oldal",
     "next": "Következő oldal",
-    "page": "{page}. oldal"
+    "page": "{page}. oldal",
+    "page_of": "{page}. oldal / {pages}",
+    "pages_of": "Oldalak: {name}"
   },
   "shell": {
     "skip_to_content": "Ugrás a fő tartalomhoz",

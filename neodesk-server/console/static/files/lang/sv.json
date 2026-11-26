@@ -8916,7 +8916,9 @@
     "label": "Sidor",
     "previous": "Föregående sida",
     "next": "Nästa sida",
-    "page": "Sida {page}"
+    "page": "Sida {page}",
+    "page_of": "Sida {page} av {pages}",
+    "pages_of": "Sidor i {name}"
   },
   "shell": {
     "skip_to_content": "Hoppa till huvudinnehållet",

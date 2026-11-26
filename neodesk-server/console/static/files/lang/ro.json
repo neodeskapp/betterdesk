@@ -8916,7 +8916,9 @@
     "label": "Pagini",
     "previous": "Pagina anterioară",
     "next": "Pagina următoare",
-    "page": "Pagina {page}"
+    "page": "Pagina {page}",
+    "page_of": "Pagina {page} din {pages}",
+    "pages_of": "Paginile pentru {name}"
   },
   "shell": {
     "skip_to_content": "Salt la conținutul principal",

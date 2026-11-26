@@ -8910,7 +8910,9 @@
     "label": "ページ",
     "previous": "前のページ",
     "next": "次のページ",
-    "page": "{page} ページ"
+    "page": "{page} ページ",
+    "page_of": "{pages} ページ中 {page} ページ",
+    "pages_of": "{name} のページ"
   },
   "shell": {
     "skip_to_content": "メインコンテンツへ移動",

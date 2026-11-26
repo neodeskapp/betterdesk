@@ -8910,7 +8910,9 @@
     "label": "Pagina's",
     "previous": "Vorige pagina",
     "next": "Volgende pagina",
-    "page": "Pagina {page}"
+    "page": "Pagina {page}",
+    "page_of": "Pagina {page} van {pages}",
+    "pages_of": "Pagina's van {name}"
   },
   "shell": {
     "skip_to_content": "Naar de hoofdinhoud",

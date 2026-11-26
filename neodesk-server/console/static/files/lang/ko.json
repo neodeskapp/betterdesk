@@ -8910,7 +8910,9 @@
     "label": "페이지",
     "previous": "이전 페이지",
     "next": "다음 페이지",
-    "page": "{page}페이지"
+    "page": "{page}페이지",
+    "page_of": "{pages}페이지 중 {page}페이지",
+    "pages_of": "{name} 페이지"
   },
   "shell": {
     "skip_to_content": "본문으로 건너뛰기",

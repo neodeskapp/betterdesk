@@ -8916,7 +8916,9 @@
     "label": "Halaman",
     "previous": "Halaman sebelumnya",
     "next": "Halaman berikutnya",
-    "page": "Halaman {page}"
+    "page": "Halaman {page}",
+    "page_of": "Halaman {page} dari {pages}",
+    "pages_of": "Halaman {name}"
   },
   "shell": {
     "skip_to_content": "Langsung ke konten utama",

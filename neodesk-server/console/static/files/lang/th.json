@@ -8916,7 +8916,9 @@
     "label": "หน้า",
     "previous": "หน้าก่อนหน้า",
     "next": "หน้าถัดไป",
-    "page": "หน้า {page}"
+    "page": "หน้า {page}",
+    "page_of": "หน้า {page} จาก {pages}",
+    "pages_of": "หน้าของ {name}"
   },
   "shell": {
     "skip_to_content": "ข้ามไปยังเนื้อหาหลัก",

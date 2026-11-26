@@ -496,7 +496,7 @@ describe('Pagination', () => {
 		render(Pagination, { page: 1, total: 312, pageSize: 25, onchange });
 		expect(screen.getByText('Showing 1–25 of 312')).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: 'Page 1' })).toHaveAttribute('aria-current', 'page');
-		expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled();
+		expect(screen.getByRole('button', { name: 'Previous page' })).toHaveAttribute('aria-disabled', 'true');
 		expect(screen.getByRole('button', { name: 'Page 13' })).toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: 'Page 5' })).toBeNull();
 		await user.click(screen.getByRole('button', { name: 'Next page' }));

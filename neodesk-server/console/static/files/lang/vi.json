@@ -8916,7 +8916,9 @@
     "label": "Trang",
     "previous": "Trang trước",
     "next": "Trang sau",
-    "page": "Trang {page}"
+    "page": "Trang {page}",
+    "page_of": "Trang {page} / {pages}",
+    "pages_of": "Các trang của {name}"
   },
   "shell": {
     "skip_to_content": "Chuyển đến nội dung chính",

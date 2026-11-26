@@ -8916,7 +8916,9 @@
     "label": "Sider",
     "previous": "Forrige side",
     "next": "Neste side",
-    "page": "Side {page}"
+    "page": "Side {page}",
+    "page_of": "Side {page} av {pages}",
+    "pages_of": "Sider i {name}"
   },
   "shell": {
     "skip_to_content": "Gå til hovedinnholdet",

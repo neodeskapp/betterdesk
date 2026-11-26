@@ -8910,7 +8910,9 @@
     "label": "Pagine",
     "previous": "Pagina precedente",
     "next": "Pagina successiva",
-    "page": "Pagina {page}"
+    "page": "Pagina {page}",
+    "page_of": "Pagina {page} di {pages}",
+    "pages_of": "Pagine di {name}"
   },
   "shell": {
     "skip_to_content": "Vai al contenuto principale",

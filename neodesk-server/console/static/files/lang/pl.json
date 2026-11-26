@@ -8910,7 +8910,9 @@
     "label": "Strony",
     "previous": "Poprzednia strona",
     "next": "Następna strona",
-    "page": "Strona {page}"
+    "page": "Strona {page}",
+    "page_of": "Strona {page} z {pages}",
+    "pages_of": "Strony: {name}"
   },
   "shell": {
     "skip_to_content": "Przejdź do głównej treści",

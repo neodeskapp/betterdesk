@@ -8916,7 +8916,9 @@
     "label": "Sivut",
     "previous": "Edellinen sivu",
     "next": "Seuraava sivu",
-    "page": "Sivu {page}"
+    "page": "Sivu {page}",
+    "page_of": "Sivu {page}/{pages}",
+    "pages_of": "Sivut: {name}"
   },
   "shell": {
     "skip_to_content": "Siirry pääsisältöön",

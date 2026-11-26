@@ -8916,7 +8916,9 @@
     "label": "Sayfalar",
     "previous": "Önceki sayfa",
     "next": "Sonraki sayfa",
-    "page": "Sayfa {page}"
+    "page": "Sayfa {page}",
+    "page_of": "Sayfa {page} / {pages}",
+    "pages_of": "{name} sayfaları"
   },
   "shell": {
     "skip_to_content": "Ana içeriğe geç",

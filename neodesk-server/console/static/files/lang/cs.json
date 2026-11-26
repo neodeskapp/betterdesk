@@ -8910,7 +8910,9 @@
     "label": "Stránky",
     "previous": "Předchozí stránka",
     "next": "Další stránka",
-    "page": "Stránka {page}"
+    "page": "Stránka {page}",
+    "page_of": "Stránka {page} z {pages}",
+    "pages_of": "Stránky: {name}"
   },
   "shell": {
     "skip_to_content": "Přejít na hlavní obsah",
