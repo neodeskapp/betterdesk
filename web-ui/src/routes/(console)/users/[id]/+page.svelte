@@ -628,10 +628,6 @@
 							</RowList>
 						{/if}
 					</section>
-
-					{#if dangerRows.length}
-						<DangerZone title={t('users.menu_group_danger')} rows={dangerRows} />
-					{/if}
 				</div>
 
 				{#if sideGroups.length}
@@ -654,6 +650,10 @@
 					</aside>
 				{/if}
 			</div>
+			<!-- After both columns, so it stays the last thing on a phone too -->
+			{#if dangerRows.length}
+				<DangerZone class="user-danger" title={t('users.menu_group_danger')} rows={dangerRows} />
+			{/if}
 		{/if}
 	</div>
 
@@ -731,6 +731,9 @@
 {/if}
 
 <style>
+	.user-page :global(.user-danger) {
+		max-width: var(--measure);
+	}
 	.back {
 		margin: 0;
 		font-size: var(--text-sm);
