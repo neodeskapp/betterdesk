@@ -42,6 +42,19 @@ test.describe('page structure', () => {
 		expect(await page.title()).toContain(h1);
 	});
 
+	test('settings pages reflow at 320 px without scrolling sideways (1.4.10)', async ({ page }) => {
+		await page.setViewportSize({ width: 320, height: 640 });
+		for (const tab of ['general', 'auth', 'joining', 'branding', 'brand', 'email', 'time']) {
+			await page.goto(`${UI}/settings?tab=${tab}`);
+			await expect(page.locator('#main-content h1')).toBeVisible();
+			await page.waitForLoadState('networkidle');
+			const sideways = await page.evaluate(
+				() => document.documentElement.scrollWidth - document.documentElement.clientWidth
+			);
+			expect(sideways, `settings ${tab} scrolls sideways`).toBeLessThanOrEqual(0);
+		}
+	});
+
 	test('the flow builder has a skip link to its content', async ({ page }) => {
 		await page.goto(`${UI}/cdap-studio`);
 		await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
