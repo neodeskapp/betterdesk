@@ -11,6 +11,12 @@
   what the device visibility setting gives (read with server.config); an
   administrator role sees all devices, so the choices say they have no
   effect.
+
+  A new address the server refuses (no email settings for your own, a
+  mail server that doesn't take the confirmation) leaves the other changes
+  saved: the status line says so and why (lib/account/email-refusal.ts),
+  with the way to the email settings for who may open them, and closing
+  the sheet then loads the list again.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -31,6 +37,7 @@
 		type PendingEmail,
 		type UserGroupRow
 	} from '#lib/api/users.ts';
+	import { EMAIL_NEEDS_MAIL, emailRefusal, type EmailRefusal } from '#lib/account/email-refusal.ts';
 	import { formatDate } from '#lib/i18n/format.ts';
 	import PasswordField from '#lib/people/PasswordField.svelte';
 	import {
@@ -58,7 +65,7 @@
 	import Tag from '#lib/ui/Tag.svelte';
 	import User from '#lib/ui/User.svelte';
 	import ListEditor from '#lib/ui/settings/ListEditor.svelte';
-	import { createForm } from '#lib/ui/form.svelte.ts';
+	import { createForm, FormError } from '#lib/ui/form.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 
 	interface Props {
@@ -119,6 +126,11 @@
 		);
 		return () => ctrl.abort();
 	});
+	/** The last save's refused address, when the server refused it */
+	let refusedEmail = $state.raw<EmailRefusal | null>(null);
+	/** A save stored something although its address was refused: closing loads the list again */
+	let partlySaved = false;
+	const close = () => (partlySaved ? onsaved() : onclose());
 
 	const form = createForm({
 		initial: untrack(() => ({
@@ -159,13 +171,22 @@
 				// The role only when it changed: an editor may keep a role they could not give.
 				// A directory or single sign-on gives the address, so it is not sent
 				const { email, ...rest } = common;
-				await updateUser(user.id, {
-					...(isLocal ? common : rest),
-					...(self ? {} : expiryBody(v.expires, user.expires_at)),
-					...(!self && v.exempt !== !!user.inactive_exempt ? { inactive_exempt: v.exempt } : {}),
-					...(provider !== 'ldap' && v.role !== user.role ? { role: v.role } : {}),
-					...(isLocal && v.password ? { password: v.password } : {})
-				});
+				refusedEmail = null;
+				try {
+					await updateUser(user.id, {
+						...(isLocal ? common : rest),
+						...(self ? {} : expiryBody(v.expires, user.expires_at)),
+						...(!self && v.exempt !== !!user.inactive_exempt ? { inactive_exempt: v.exempt } : {}),
+						...(provider !== 'ldap' && v.role !== user.role ? { role: v.role } : {}),
+						...(isLocal && v.password ? { password: v.password } : {})
+					});
+				} catch (err) {
+					const refused = emailRefusal(err);
+					if (!refused) throw err;
+					refusedEmail = refused;
+					if (refused.othersSaved) partlySaved = true;
+					throw new FormError(refused.message);
+				}
 				toast.success(t('users.user_updated_named', { username: user.username }));
 				// A new address waits for its confirmation when mail goes out
 				if (isLocal && mailReady && email && email !== user.email)
@@ -288,7 +309,7 @@
 	status={form.status.message}
 	statusTone={form.status.state === 'error' ? 'error' : 'neutral'}
 	beforeclose={() => !form.busy}
-	{onclose}
+	onclose={close}
 >
 	<form id={form.id} class="user-form" onsubmit={form.onsubmit} novalidate>
 		{#if user}
@@ -402,6 +423,11 @@
 					/>
 				{/snippet}
 			</Field>
+			{#if refusedEmail?.code === EMAIL_NEEDS_MAIL && can('server.config')}
+				<p class="note email-settings">
+					<a href={link('/settings?tab=email')}>{t('account.email_settings_link')}</a>
+				</p>
+			{/if}
 			{#if user && pending}
 				{@const p = pending}
 				{@const id = user.id}
@@ -543,7 +569,7 @@
 		</FormSection>
 	</form>
 	{#snippet footer()}
-		<Button class="sheet-footer-start" onclick={onclose}>{t('actions.cancel')}</Button>
+		<Button class="sheet-footer-start" onclick={close}>{t('actions.cancel')}</Button>
 		<Button variant="primary" type="submit" form={form.id} busy={form.busy}
 			>{user ? t('actions.save') : inviting ? t('users.send_invite') : t('users.create')}</Button
 		>

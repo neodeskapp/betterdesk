@@ -30,7 +30,8 @@
 	import SaveBar from '#lib/ui/SaveBar.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Status from '#lib/ui/Status.svelte';
-	import { createForm } from '#lib/ui/form.svelte.ts';
+	import { createForm, FormError } from '#lib/ui/form.svelte.ts';
+	import { EMAIL_NEEDS_MAIL, emailRefusal } from '#lib/account/email-refusal.ts';
 
 	let current = $state.raw<OwnEmail | null>(null);
 	let loadError = $state('');
@@ -62,7 +63,17 @@
 				v.email.trim() && !/^[^\s@]+@[^\s@]+$/.test(v.email.trim()) ? t('users.invalid_email') : undefined
 		}),
 		submit: async (v) => {
-			const next = await changeOwnEmail(v.email.trim());
+			let next: OwnEmail;
+			try {
+				next = await changeOwnEmail(v.email.trim());
+			} catch (err) {
+				// The text by the refusal's code (A274); the email settings went
+				// away since the page loaded: the part shows why and the way there
+				const refused = emailRefusal(err);
+				if (!refused) throw err;
+				if (refused.code === EMAIL_NEEDS_MAIL) void load();
+				throw new FormError(refused.message);
+			}
 			current = next;
 			line = next.email_pending
 				? { message: t('users.email_change_sent_named', { email: next.email_pending.email }), tone: 'ok' }
