@@ -12,6 +12,8 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/admintoken"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // roleOf is the role the users table has for an account.
@@ -349,4 +351,29 @@ func TestBulkWithAnAPIToken(t *testing.T) {
 	if got := w.SignedOut().Do("POST", "/api/users/bulk/enable", `{"ids":[`+carol+`]}`, "Authorization", "Bearer "+partial); got.Status != http.StatusForbidden {
 		t.Errorf("a token with only some permissions: %d %s", got.Status, got.Body)
 	}
+}
+
+// The queries of the actions and the import run on both databases: the
+// count of Super admins a dry run keeps, and the names and language an
+// import writes.
+func TestBulkAndImportOnEachDatabase(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db})
+		// The test accounts came with their ids: PostgreSQL's counter starts after them
+		exec(t, w, w.DB.Pick(`SELECT 1`, `SELECT setval(pg_get_serial_sequence('users', 'id'), 100)`))
+		admin := w.As("admin")
+		sam := makeAccount(t, w, admin, "sam", "")
+		exec(t, w, `UPDATE users SET role = 'super_admin' WHERE id = ?`, sam)
+		exec(t, w, `UPDATE users SET role = 'viewer' WHERE id = 1`)
+		if got := outcomes(t, admin.Do("POST", "/api/users/bulk/disable", `{"ids":[2,`+sam+`],"dry_run":true}`)); got != "dry | e2e_super_admin:changed | sam:refused:users.last_super_admin" {
+			t.Errorf("dry run: %s", got)
+		}
+		results := importResults(t, admin.Do("POST", "/api/users/import", importBody(t, "username,first name,last name,language\nzoe,Zoe,Zander,DE\n", "none")))
+		if len(results) != 1 || results[0].Outcome != "created" {
+			t.Fatalf("import: %+v", results)
+		}
+		if got := text(t, w, `SELECT first_name || ' ' || last_name || ' ' || preferred_language FROM users WHERE username = 'zoe'`); got != "Zoe Zander de" {
+			t.Errorf("zoe's row: %q", got)
+		}
+	})
 }
