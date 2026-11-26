@@ -46,6 +46,11 @@ func TestStartOpensASeparateSession(t *testing.T) {
 	if strings.Contains(boot.Body, strings.TrimPrefix(adminSID, "s%3A")[:10]) || strings.Contains(boot.Body, "adminSid") {
 		t.Error("the bootstrap names the admin's session")
 	}
+	// The bar names the admin by display name
+	exec(t, w, `UPDATE users SET first_name = 'Sue', last_name = 'Admin' WHERE id = ?`, idSuper)
+	if _, boot := whoAmI(t, a); !strings.Contains(boot.Body, `"adminDisplayName":"Sue Admin"`) {
+		t.Errorf("no display name of the admin: %.200s", boot.Body[strings.Index(boot.Body, `"impersonation"`):])
+	}
 	if active, _, by := impRow(t, w, idOperator); !active || by != idSuper {
 		t.Errorf("the row: active %v, impersonated_by %d", active, by)
 	}

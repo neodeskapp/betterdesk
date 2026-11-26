@@ -28,6 +28,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/accountmail"
 )
 
@@ -312,14 +313,7 @@ func senderName(r *http.Request, d *kit.Deps) string {
 	if u := kit.User(r); u != nil {
 		fallback = u.Username
 	}
-	var first, last sql.NullString
-	if err := d.Store.QueryRow(r.Context(), `SELECT first_name, last_name FROM users WHERE id = ?`, kit.UserID(r)).Scan(&first, &last); err != nil {
-		return fallback
-	}
-	if name := strings.TrimSpace(strings.TrimSpace(first.String) + " " + strings.TrimSpace(last.String)); name != "" {
-		return name
-	}
-	return fallback
+	return people.NameOf(r.Context(), d.Store, kit.UserID(r), fallback)
 }
 
 // Facts are what the mails say.

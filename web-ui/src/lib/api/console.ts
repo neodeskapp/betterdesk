@@ -55,7 +55,9 @@ export const Bootstrap = v.object({
 		username: v.string(),
 		role: v.string(),
 		preferredLanguage: v.nullable(v.string()),
-		avatarVersion: v.nullable(v.union([v.string(), v.number()]))
+		avatarVersion: v.nullable(v.union([v.string(), v.number()])),
+		/** First and last name, else the username (older servers send none) */
+		displayName: v.optional(v.string())
 	}),
 	permissions: v.array(v.string()),
 	/* Older servers send none */
@@ -97,7 +99,9 @@ export const Bootstrap = v.object({
 				startedAt: v.number(),
 				expiresAt: v.number(),
 				canExtend: v.boolean(),
-				serverNow: v.number()
+				serverNow: v.number(),
+				/** The admin's first and last name, else the username (older servers send none) */
+				adminDisplayName: v.optional(v.string())
 			})
 		),
 		null

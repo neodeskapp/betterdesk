@@ -8,12 +8,14 @@ import (
 	"fmt"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/reports"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // auditLogs is getAuditLogs(limit): the newest entries of the audit log
-// with the name of the account, as the JSON of the rows the drivers
+// with the name of the account and its display name (first and last
+// name, "" for none), as the JSON of the rows the drivers
 // returned. limit is bound as the driver bound the JavaScript number, so
 // a negative limit lists everything on SQLite and fails on PostgreSQL,
 // and a limit beyond 64 bits fails on both.
@@ -23,7 +25,8 @@ func auditLogs(ctx context.Context, db *store.DB, limit float64) (json.RawMessag
 		return nil, fmt.Errorf("bind the audit log limit: %w", err)
 	}
 	rows, err := reports.SelectRows(ctx, db, nil, `
-                SELECT a.id, a.user_id, a.action, a.details, a.ip_address, a.created_at, u.username FROM audit_log a
+                SELECT a.id, a.user_id, a.action, a.details, a.ip_address, a.created_at, u.username,
+                       `+people.FullNameSQL("u")+` AS display_name FROM audit_log a
                 LEFT JOIN users u ON a.user_id = u.id
                 ORDER BY a.created_at DESC LIMIT ? OFFSET ?
             `, args...)

@@ -22,7 +22,8 @@
 	import { timeLeft } from './viewing-as.ts';
 
 	const imp = $derived(session.impersonation);
-	const username = $derived(session.user?.username ?? '');
+	/** The person viewed, by display name */
+	const username = $derived(session.user?.displayName || session.user?.username || '');
 	/** The server's clock minus this one's, from the bootstrap */
 	const skew = untrack(() => (imp ? imp.serverNow - Date.now() : 0));
 	let now = $state(Date.now());

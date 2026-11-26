@@ -227,8 +227,18 @@ func TestBootstrap(t *testing.T) {
 		}
 		got := decode(t, res.Body)
 		user, _ := json.Marshal(got["user"])
-		if string(user) != `{"avatarVersion":null,"id":6,"preferredLanguage":null,"role":"viewer","username":"e2e_viewer"}` {
+		if string(user) != `{"avatarVersion":null,"displayName":"e2e_viewer","id":6,"preferredLanguage":null,"role":"viewer","username":"e2e_viewer"}` {
 			t.Errorf("user = %s", user)
+		}
+		// The account menu names the person by first and last name
+		if _, err := db.Exec(ctx, `UPDATE users SET first_name = 'Vic', last_name = 'Viewer' WHERE id = 6`); err != nil {
+			t.Fatal(err)
+		}
+		if body := viewer.Do("GET", "/api/console/bootstrap", "").Body; !strings.Contains(body, `"displayName":"Vic Viewer"`) {
+			t.Errorf("no display name in %.300s", body)
+		}
+		if _, err := db.Exec(ctx, `UPDATE users SET first_name = '', last_name = '' WHERE id = 6`); err != nil {
+			t.Fatal(err)
 		}
 		if got["appVersion"] != "9.8.7" || got["emergencyMode"] != false || got["isSuperAdmin"] != false {
 			t.Errorf("appVersion %v, emergencyMode %v, isSuperAdmin %v", got["appVersion"], got["emergencyMode"], got["isSuperAdmin"])

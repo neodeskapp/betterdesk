@@ -21,7 +21,14 @@
 
 	const user = $derived(session.user);
 	const person = $derived(
-		user ? { id: user.id, username: user.username, avatar_version: user.avatarVersion ?? null } : null
+		user
+			? {
+					id: user.id,
+					username: user.username,
+					display_name: user.displayName,
+					avatar_version: user.avatarVersion ?? null
+				}
+			: null
 	);
 	const role = $derived.by(() => {
 		const r = user?.role ?? '';
@@ -94,7 +101,10 @@
 	<div class="person">
 		<Avatar user={person} size="lg" presence={myPresence.status} />
 		<div class="person-text">
-			<span class="person-name">{user?.username ?? ''}</span>
+			<span class="person-name">{user?.displayName || user?.username || ''}</span>
+			{#if user?.displayName && user.displayName !== user.username}<span class="person-role"
+					>{user.username}</span
+				>{/if}
 			{#if role}<span class="person-role">{role}</span>{/if}
 		</div>
 	</div>

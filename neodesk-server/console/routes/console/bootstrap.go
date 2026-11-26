@@ -9,6 +9,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
@@ -44,6 +45,9 @@ type bootstrapImpersonation struct {
 	ExpiresAt int64 `json:"expiresAt"`
 	CanExtend bool  `json:"canExtend"`
 	ServerNow int64 `json:"serverNow"`
+	// AdminDisplayName is the admin's display name: first and last name,
+	// else the username.
+	AdminDisplayName string `json:"adminDisplayName"`
 }
 
 type bootstrapUser struct {
@@ -54,6 +58,9 @@ type bootstrapUser struct {
 	PreferredLanguage *string `json:"preferredLanguage"`
 	// AvatarVersion is null without a picture: the app shows initials.
 	AvatarVersion store.NullString `json:"avatarVersion"`
+	// DisplayName is first and last name, else the username: the name
+	// the account menu shows.
+	DisplayName string `json:"displayName"`
 }
 
 type bootstrapLang struct {
@@ -96,6 +103,7 @@ func (h *handlers) bootstrap(w http.ResponseWriter, r *http.Request) {
 		User: bootstrapUser{
 			ID:            user.ID,
 			Username:      user.Username,
+			DisplayName:   people.NameOf(ctx, h.d.Store, user.ID, user.Username),
 			Role:          user.Role,
 			AvatarVersion: h.d.Avatars.GetAvatarVersion(ctx, kit.UserID(r)),
 		},
@@ -116,7 +124,8 @@ func (h *handlers) bootstrap(w http.ResponseWriter, r *http.Request) {
 	}
 	if imp := kit.Impersonation(r); imp != nil {
 		answer.Impersonation = &bootstrapImpersonation{AdminUsername: imp.AdminUsername, Reason: imp.Reason,
-			StartedAt: imp.StartedAt, ExpiresAt: imp.ExpiresAt, CanExtend: !imp.Extended, ServerNow: time.Now().UnixMilli()}
+			AdminDisplayName: people.NameOf(ctx, h.d.Store, imp.AdminID, imp.AdminUsername),
+			StartedAt:        imp.StartedAt, ExpiresAt: imp.ExpiresAt, CanExtend: !imp.Extended, ServerNow: time.Now().UnixMilli()}
 	}
 	w.Header().Set("Cache-Control", "no-store")
 	kit.JSON(w, r, http.StatusOK, answer)

@@ -13,6 +13,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/message"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 )
 
 // The notice mail: the person viewed learns who viewed NeoDesk as them,
@@ -32,14 +33,7 @@ func (h *handlers) emailOf(r *http.Request, id int64) string {
 
 // displayName is an account's first and last name, else its username.
 func (h *handlers) displayName(ctx context.Context, a *authn.Account) string {
-	var first, last sql.NullString
-	if err := h.d.Store.QueryRow(ctx, `SELECT first_name, last_name FROM users WHERE id = ?`, a.ID.V).Scan(&first, &last); err != nil {
-		return a.Username
-	}
-	if name := strings.TrimSpace(strings.TrimSpace(first.String) + " " + strings.TrimSpace(last.String)); name != "" {
-		return name
-	}
-	return a.Username
+	return people.NameOf(ctx, h.d.Store, a.ID.V, a.Username)
 }
 
 // consoleBase is the address people reach the console at: the configured

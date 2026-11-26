@@ -38,9 +38,17 @@
 
 	const user = $derived(session.user);
 	const person = $derived(
-		user ? { id: user.id, username: user.username, avatar_version: user.avatarVersion ?? null } : null
+		user
+			? {
+					id: user.id,
+					username: user.username,
+					display_name: user.displayName,
+					avatar_version: user.avatarVersion ?? null
+				}
+			: null
 	);
-	const name = $derived(user?.username ?? '');
+	/** The display name: first and last name, else the username */
+	const name = $derived(user?.displayName || user?.username || '');
 	const role = $derived.by(() => {
 		const r = user?.role ?? '';
 		if (!r) return '';
