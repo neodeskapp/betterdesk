@@ -253,3 +253,66 @@ func TestOnlyTheComputersChatOnTheAPIPort(t *testing.T) {
 		t.Errorf("without a console: %d, want 404", status)
 	}
 }
+
+// TestComputersSeeTheirHelpersPicture: the helper frame names the version
+// of the helper's profile picture, and the computer fetches the picture
+// with its device token at the API port. Without a helper, or a helper
+// without a picture, there is none.
+func TestComputersSeeTheirHelpersPicture(t *testing.T) {
+	w, front, _ := computerChatWorld(t)
+	ctx := context.Background()
+	fetch := func(token string, header ...string) (*http.Response, []byte) {
+		req, _ := http.NewRequest("GET", front.URL+"/api/chat/device/helper/picture", nil)
+		if token != "" {
+			req.Header.Set("Authorization", "Bearer "+token)
+		}
+		for i := 0; i+1 < len(header); i += 2 {
+			req.Header.Set(header[i], header[i+1])
+		}
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer res.Body.Close()
+		data, _ := io.ReadAll(res.Body)
+		return res, data
+	}
+	if res, _ := fetch(chatDeviceToken); res.StatusCode != http.StatusNotFound {
+		t.Errorf("without a helper: %d, want 404", res.StatusCode)
+	}
+
+	// e2e_admin (account 1) takes the conversation; first without a picture
+	if _, err := w.s.Deps().Chat.Assign(ctx, chatDevice, 1); err != nil {
+		t.Fatal(err)
+	}
+	if res, _ := fetch(chatDeviceToken); res.StatusCode != http.StatusNotFound {
+		t.Errorf("a helper without a picture: %d, want 404", res.StatusCode)
+	}
+	picture := append([]byte("\x89PNG\r\n\x1a\n"), bytes.Repeat([]byte{9}, 30)...)
+	if _, err := w.s.Deps().Store.Exec(ctx, `INSERT INTO user_avatars (user_id, mime_type, data, version, source, source_url) VALUES (1, 'image/png', ?, 'pic1', 'upload', '')`, picture); err != nil {
+		t.Fatal(err)
+	}
+	w.s.Deps().Avatars.ResetCache()
+
+	res, data := fetch(chatDeviceToken)
+	if res.StatusCode != http.StatusOK || !bytes.Equal(data, picture) || res.Header.Get("Content-Type") != "image/png" ||
+		res.Header.Get("ETag") != `"pic1"` || res.Header.Get("X-Content-Type-Options") != "nosniff" {
+		t.Errorf("the helper's picture: %d %v, %d bytes", res.StatusCode, res.Header, len(data))
+	}
+	if res, _ := fetch(chatDeviceToken, "If-None-Match", `"pic1"`); res.StatusCode != http.StatusNotModified {
+		t.Errorf("the same version again: %d, want 304", res.StatusCode)
+	}
+	for _, token := range []string{"", "device-token-that-is-wrong"} {
+		if res, _ := fetch(token); res.StatusCode != http.StatusUnauthorized {
+			t.Errorf("with %q: %d, want 401", token, res.StatusCode)
+		}
+	}
+
+	computer, status := dialChat(t, strings.TrimPrefix(front.URL, "http://"), "/ws/chat/"+chatDevice+"?v=2&token="+chatDeviceToken, nil)
+	if computer == nil {
+		t.Fatalf("the computer's socket: %d", status)
+	}
+	if !waitText(computer, `"type":"helper"`, `"name":"e2e_admin"`, `"picture":"pic1"`) {
+		t.Errorf("the helper frame: %v", computer.Frames())
+	}
+}
