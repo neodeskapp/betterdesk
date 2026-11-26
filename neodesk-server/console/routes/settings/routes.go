@@ -76,6 +76,8 @@ func Register(d *kit.Deps) {
 	r.Put("/api/settings/client-sessions", g.setClientSessions, d.RequireAuth, server)
 	r.Get("/api/settings/two-factor", g.getTwoFactor, d.RequireAuth, server)
 	r.Put("/api/settings/two-factor", g.setTwoFactor, d.RequireAuth, server)
+	r.Get("/api/settings/security-notices", g.getSecurityNotices, d.RequireAuth, server)
+	r.Put("/api/settings/security-notices", g.setSecurityNotices, d.RequireAuth, server)
 	r.Get("/api/settings/console-sessions", g.getConsoleSessions, d.RequireAuth, server)
 	r.Put("/api/settings/console-sessions", g.setConsoleSessions, d.RequireAuth, server)
 	r.Get("/api/settings/oidc", g.getOIDC, d.RequireAuth, server)

@@ -15,6 +15,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 )
 
 // Inviting by mail: an account made with POST /api/users/invite gets no
@@ -59,9 +60,10 @@ func (h *handlers) senderName(r *http.Request) string {
 }
 
 // sendLink makes a new link of the purpose for the account, which ends
-// its earlier one, and mails it to the address in the request's language.
-// It reports whether the mail server took the mail.
-func (h *handlers) sendLink(r *http.Request, userID int64, username, to, purpose string) (bool, error) {
+// its earlier one, and mails it to the address in the language given, or
+// in the request's language for "". It reports whether the mail server
+// took the mail, and until when the link works.
+func (h *handlers) sendLink(r *http.Request, userID int64, username, to, purpose, language string) (bool, time.Time, error) {
 	ctx := r.Context()
 	by := ""
 	if u := kit.User(r); u != nil {
@@ -69,29 +71,33 @@ func (h *handlers) sendLink(r *http.Request, userID int64, username, to, purpose
 	}
 	token, expires, err := h.links.Issue(ctx, userID, purpose, by)
 	if err != nil {
-		return false, err
+		return false, time.Time{}, err
 	}
 	base := strings.TrimRight(h.consoleBase(r), "/")
 	host := base
 	if i := strings.Index(host, "://"); i >= 0 {
 		host = host[i+3:]
 	}
-	m := passwordlinks.BuildMail(func(key string, vars map[string]any) string {
+	translate := passwordlinks.Translate(func(key string, vars map[string]any) string {
 		pairs := make([]any, 0, 2*len(vars))
 		for k, v := range vars {
 			pairs = append(pairs, k, v)
 		}
 		return kit.T(r, key, kit.Vars(pairs...))
-	}, passwordlinks.MailFacts{
+	})
+	if language != "" {
+		translate = securitymail.Translator(h.d, language)
+	}
+	m := passwordlinks.BuildMail(translate, passwordlinks.MailFacts{
 		Purpose: purpose, Link: passwordlinks.SetPasswordLink(base, token), Username: username,
 		Sender: h.senderName(r), Host: host, Expires: expires.UTC().Format("2006-01-02 15:04") + " UTC",
 		Branding: brandmail.Of(h.d.Branding, base),
 	})
 	sent, err := h.d.Mail.SendEmail(ctx, mail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline})
 	if err != nil || !sent {
-		return false, err
+		return false, expires, err
 	}
-	return true, nil
+	return true, expires, nil
 }
 
 // usernameChars are the characters a username may have.
@@ -166,7 +172,7 @@ func (h *handlers) resendInvite(w http.ResponseWriter, r *http.Request) {
 		failKey(w, r, http.StatusConflict, "users.invite_needs_email")
 		return
 	}
-	delivered, err := h.sendLink(r, user.ID.V, user.username(), email, passwordlinks.PurposeInvite)
+	delivered, _, err := h.sendLink(r, user.ID.V, user.username(), email, passwordlinks.PurposeInvite, "")
 	if err != nil {
 		h.serverError(w, r, "Resend invite error:", err)
 		return

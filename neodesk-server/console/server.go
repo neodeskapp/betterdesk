@@ -439,6 +439,11 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	if err := passwordlinks.Ensure(ctx, opts.Store); err != nil {
 		return nil, err
 	}
+	// What an admin requires of one account's sign-in, and the browsers
+	// accounts signed in from
+	if err := authn.EnsureAccountTables(ctx, opts.Store); err != nil {
+		return nil, err
+	}
 	// Once: the history of the chat of version 1 into its conversations
 	if r, err := s.deps.Chat.ImportLegacy(ctx); err != nil {
 		return nil, fmt.Errorf("chat: import the history of version 1: %w", err)

@@ -66,7 +66,26 @@ var totpFlag = regexp.MustCompile(`("totp_enabled":(?:true|false))`)
 // factor of every account in it: the list and an update say whether an
 // account is disabled, and no account of the recordings is (L107).
 func withDisabledFlag(answer string) string {
-	return totpFlag.ReplaceAllString(answer, `$1,"disabled":false`)
+	return withSignInState(totpFlag.ReplaceAllString(answer, `$1,"disabled":false`))
+}
+
+// listedPicture is the end of an account as the list sends it in the
+// recordings, with the disabled flag.
+var listedPicture = regexp.MustCompile(`"totp_enabled":(true|false),"disabled":false,"has_avatar":(?:true|false),"avatar_version":(?:null|"[^"]*"|-?[0-9]+)`)
+
+// withSignInState is a recorded list with what it says about each
+// account's sign-in after its picture: no account of the recordings is
+// locked, must change its password or has a reset link waiting, and two-
+// factor sign-in is on where it was, else off.
+func withSignInState(answer string) string {
+	return listedPicture.ReplaceAllStringFunc(answer, func(m string) string {
+		state := "off"
+		if strings.HasPrefix(m, `"totp_enabled":true`) {
+			state = "on"
+		}
+		return m + `,"locked":false,"locked_until":null,"locks":[],"must_change_password":false,"two_factor_required":false,"two_factor_state":"` +
+			state + `","two_factor_due":false,"password_reset_until":null`
+	})
 }
 
 // is answers the same text on every database.
@@ -233,6 +252,13 @@ var fixes = map[string]fix{
 	"480 DELETE /api/users/16": {bug: "US1", status: http.StatusForbidden, answer: is(roleAboveOwn), node: func(n *nodeWrites) {
 		n.deleteAccount(16)
 		n.audit("user_deleted", "Deleted user: target_glob")
+	}},
+
+	// Node set a password on a directory account, which signs in with its
+	// directory's: the Go console refuses and names the provider (PW1)
+	"447 POST /api/users/9/reset-password": {bug: "PW1", status: http.StatusBadRequest, answer: is(`{"success":false,"error":"users.external_password"}`), node: func(n *nodeWrites) {
+		n.exec(`UPDATE users SET password_hash = 'node-hash' WHERE id = 9`)
+		n.audit("password_reset", "Reset password for user: ldap_op")
 	}},
 
 	// A session whose id is text: Node let the admin delete its own

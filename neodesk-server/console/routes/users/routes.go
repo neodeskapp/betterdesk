@@ -21,17 +21,20 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 )
 
 type handlers struct {
 	d     *kit.Deps
 	log   *kit.Logger
 	links *passwordlinks.Store
+	// notices mail a person about changes to how their account signs in
+	notices *securitymail.Notices
 }
 
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
-	h := &handlers{d: d, log: d.Log, links: passwordlinks.New(d.Store, nil)}
+	h := &handlers{d: d, log: d.Log, links: passwordlinks.New(d.Store, nil), notices: securitymail.New(d)}
 	r := d.Router
 	r.Get("/api/users", h.list, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Get("/api/panel/user-groups", h.userGroups, d.RequireAuth, d.RequireAnyPermission("user.view", "device.edit"))
@@ -43,6 +46,15 @@ func Register(d *kit.Deps) {
 	r.Get("/api/users/invites", h.invites, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Post("/api/users/{id}/invite", h.resendInvite, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Post("/api/users/{id}/password-reset-link", h.sendResetLink, d.RequireAuth, d.RequirePermission("user.edit"))
+	r.Delete("/api/users/{id}/password-reset-link", h.cancelResetLink, d.RequireAuth, d.RequirePermission("user.edit"))
+	// Sign-in security of other accounts
+	security := d.RequirePermission("user.security")
+	r.Post("/api/users/{id}/temporary-password", h.temporaryPassword, d.RequireAuth, security)
+	r.Post("/api/users/require-password-change", h.requirePasswordChange, d.RequireAuth, security)
+	r.Post("/api/users/{id}/unlock", h.unlock, d.RequireAuth, security)
+	r.Put("/api/users/{id}/two-factor-required", h.setTwoFactorRequired, d.RequireAuth, security)
+	r.Post("/api/users/{id}/two-factor/reset", h.resetTwoFactor, d.RequireAuth, security)
+	r.Post("/api/users/{id}/recovery-codes/invalidate", h.invalidateRecoveryCodes, d.RequireAuth, security)
 	r.Patch("/api/users/{id}", h.update, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Get("/api/users/{id}/effective-scope", h.effectiveScope, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Delete("/api/users/{id}", h.remove, d.RequireAuth, d.RequirePermission("user.delete"))

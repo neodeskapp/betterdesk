@@ -6570,6 +6570,48 @@
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
   },
   {
+   "name": "settings security-notices",
+   "summary": "Show which security notices people get by mail.",
+   "route": "GET /api/settings/security-notices",
+   "permission": "server.config"
+  },
+  {
+   "name": "settings security-notices-set",
+   "summary": "Turn security notices by mail on or off.",
+   "route": "PUT /api/settings/security-notices",
+   "flags": [
+    {
+     "name": "new-signin",
+     "in": "body",
+     "type": "bool",
+     "help": "a sign-in from a new browser",
+     "field": "new_signin"
+    },
+    {
+     "name": "password-changed",
+     "in": "body",
+     "type": "bool",
+     "help": "a new password",
+     "field": "password_changed"
+    },
+    {
+     "name": "two-factor-changed",
+     "in": "body",
+     "type": "bool",
+     "help": "two-factor sign-in and recovery codes",
+     "field": "two_factor_changed"
+    },
+    {
+     "name": "email-changed",
+     "in": "body",
+     "type": "bool",
+     "help": "a new email address (to the old one)",
+     "field": "email_changed"
+    }
+   ],
+   "permission": "server.config"
+  },
+  {
    "name": "settings server-config",
    "summary": "Show the server settings the console may change.",
    "route": "GET /api/settings/management/config",
@@ -7880,6 +7922,18 @@
    "route": "GET /api/users/avatars"
   },
   {
+   "name": "users cancel-reset-link",
+   "summary": "Make the reset link an account was mailed stop working.",
+   "route": "DELETE /api/users/{id}/password-reset-link",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.edit"
+  },
+  {
    "name": "users create",
    "summary": "Create a console account with a role.",
    "route": "POST /api/users",
@@ -7965,6 +8019,20 @@
    "examples": [
     "neodesk users delete 7 --yes"
    ]
+  },
+  {
+   "name": "users invalidate-recovery-codes",
+   "summary": "Make an account's recovery codes stop working.",
+   "route": "POST /api/users/{id}/recovery-codes/invalidate",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.security",
+   "destructive": true,
+   "description": "The person makes new codes on Your account with their authenticator app. The account's sessions end."
   },
   {
    "name": "users invite",
@@ -8087,6 +8155,53 @@
    "permission": "user.view"
   },
   {
+   "name": "users require-password-change",
+   "summary": "Make accounts choose a new password at their next sign-in.",
+   "route": "POST /api/users/require-password-change",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs",
+     "required": true
+    },
+    {
+     "name": "required",
+     "in": "body",
+     "type": "bool",
+     "help": "false takes the requirement back"
+    }
+   ],
+   "permission": "user.security",
+   "description": "The answer says for each ID what happened: changed, unchanged, or refused with the reason. Their sessions go on until then; the desktop client and the API refuse them until they chose the new password in the web console.",
+   "examples": [
+    "neodesk users require-password-change --ids 12,14"
+   ]
+  },
+  {
+   "name": "users require-two-factor",
+   "summary": "Require two-factor sign-in of one account, or take that back.",
+   "route": "PUT /api/users/{id}/two-factor-required",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "flags": [
+    {
+     "name": "required",
+     "in": "body",
+     "type": "bool",
+     "help": "true: it sets it up at its next sign-in",
+     "required": true
+    }
+   ],
+   "permission": "user.security",
+   "description": "Only for local accounts. The server-wide switch is under settings."
+  },
+  {
    "name": "users resend-invite",
    "summary": "Mail a new invite link to an account that has not signed in yet.",
    "route": "POST /api/users/{id}/invite",
@@ -8122,6 +8237,20 @@
    ],
    "permission": "user.edit",
    "destructive": true
+  },
+  {
+   "name": "users reset-two-factor",
+   "summary": "Clear an account's two-factor sign-in; where it is required, the person sets it up again at the next sign-in.",
+   "route": "POST /api/users/{id}/two-factor/reset",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.security",
+   "destructive": true,
+   "description": "The secret and the recovery codes go and the account's sessions end. Where nothing requires two-factor sign-in, this turns it off."
   },
   {
    "name": "users scope",
@@ -8176,6 +8305,41 @@
    ],
    "permission": "user.edit",
    "description": "The link works once, for 24 hours; the password stays as it is until it is used. The account needs an email address, and the console needs the email settings."
+  },
+  {
+   "name": "users temporary-password",
+   "summary": "Give an account a temporary password; it chooses a new one at its next sign-in.",
+   "route": "POST /api/users/{id}/temporary-password",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "flags": [
+    {
+     "name": "password",
+     "in": "body",
+     "type": "string",
+     "help": "the temporary password; without it one is made up and printed",
+     "secret": true
+    }
+   ],
+   "permission": "user.security",
+   "destructive": true,
+   "description": "The answer holds the password, shown this once. The account's sessions and access tokens end, and a reset link sent before stops working. Not for your own account, nor for LDAP or single sign-on accounts."
+  },
+  {
+   "name": "users unlock",
+   "summary": "End the lock of an account after failed sign-ins.",
+   "route": "POST /api/users/{id}/unlock",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.security"
   },
   {
    "name": "users update",
@@ -8943,6 +9107,10 @@
   },
   {
    "route": "POST /api/auth/totp/required/setup",
+   "reason": "Signing in and out, second factors, passwords and sessions happen in the browser; API tokens cannot use them."
+  },
+  {
+   "route": "POST /api/auth/password/required",
    "reason": "Signing in and out, second factors, passwords and sessions happen in the browser; API tokens cannot use them."
   },
   {

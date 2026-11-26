@@ -17,6 +17,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
@@ -142,11 +143,12 @@ type listedAccount struct {
 }
 
 // withPicture is a listed account with what the list says about its
-// picture.
+// picture and its sign-in (security.go).
 type withPicture struct {
 	listedAccount
 	HasAvatar     bool             `json:"has_avatar"`
 	AvatarVersion store.NullString `json:"avatar_version"`
+	signInState
 }
 
 // cellOr is v || fallback for a column.
@@ -235,10 +237,15 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		versions = nil
 	}
+	facts, err := h.readSignInFacts(r)
+	if err != nil {
+		h.serverError(w, r, "Get users error:", err)
+		return
+	}
 	out := make([]withPicture, len(accounts))
 	for i, a := range accounts {
 		has, version := versions.Fields(a.ID.V)
-		out[i] = withPicture{listedAccount: h.serialize(ctx, a), HasAvatar: has, AvatarVersion: version}
+		out[i] = withPicture{listedAccount: h.serialize(ctx, a), HasAvatar: has, AvatarVersion: version, signInState: facts.of(a)}
 	}
 	answer(w, r, http.StatusOK, accountList{Success: true, Data: accountListData{Users: out, Total: len(out)}})
 }
@@ -435,7 +442,7 @@ func (h *handlers) createAccount(r *http.Request, inviting bool) (*createdAccoun
 	if inviting {
 		// The account stays when the mail fails: the users page can send
 		// the invite again
-		delivered, err := h.sendLink(r, id.V, name, *inviteTo, passwordlinks.PurposeInvite)
+		delivered, _, err := h.sendLink(r, id.V, name, *inviteTo, passwordlinks.PurposeInvite, "")
 		if err != nil {
 			h.log.Error("Invite mail error:", err.Error())
 		}
@@ -716,6 +723,10 @@ func totpOffOf(r *http.Request, body middleware.JSONObject, user *account) (off 
 	if isSessionAccount(r, user.ID.V) {
 		return false, sayKey(r, http.StatusBadRequest, "users.totp_off_own")
 	}
+	// Two-factor sign-in of another account is its sign-in security
+	if !kit.Access(r).HasPermission(auth.PermUserSecurity) {
+		return false, say(http.StatusForbidden, kit.T(r, "users.security_needed", nil))
+	}
 	return totpOn(user.TOTPEnabled), nil
 }
 
@@ -724,13 +735,11 @@ func totpOffOf(r *http.Request, body middleware.JSONObject, user *account) (off 
 // account's sessions end and its access tokens are revoked, and the audit
 // log names the account.
 func (h *handlers) turnOffTOTP(r *http.Request, user *account) error {
-	if err := h.d.Authn.DisableTOTP(r.Context(), user.ID.V); err != nil {
+	again, err := h.d.Authn.TwoFactorDue(r.Context(), user.ID.V, isLocalAccount(user))
+	if err != nil {
 		return err
 	}
-	if err := h.endSessions(r, user.ID.V, false); err != nil {
-		return err
-	}
-	return h.d.LogAction(r, "totp_disabled_by_admin", "Turned off two-factor sign-in for user: "+user.username())
+	return h.clearTwoFactor(r, user, again)
 }
 
 // newUsername is the body's username, trimmed, when it is text and names
@@ -855,6 +864,10 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Delete user error:", err)
 		return
 	}
+	if err := h.d.Authn.ForgetAccount(ctx, user.ID.V); err != nil {
+		h.serverError(w, r, "Delete user error:", err)
+		return
+	}
 	// The list of who has a picture forgets the account now
 	h.d.Avatars.ResetCache()
 	if err := h.d.LogAction(r, "user_deleted", "Deleted user: "+user.username()); err != nil {
@@ -894,6 +907,10 @@ func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 		sent(w, r, errRoleAboveOwn)
 		return
 	}
+	if d := externalPassword(r, user); d != nil {
+		deny(w, r, d)
+		return
+	}
 	if !password.Truthy() {
 		failKey(w, r, http.StatusBadRequest, "users.password_required")
 		return
@@ -916,12 +933,17 @@ func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 		err = h.links.Revoke(ctx, user.ID.V)
 	}
 	if err == nil {
-		err = h.d.LogAction(r, "password_reset", "Reset password for user: "+user.username())
+		err = h.d.LogAccountAction(r, user.ID.V, "password_reset", "Reset password for user: "+user.username())
 	}
 	if err != nil {
 		h.serverError(w, r, "Reset password error:", err)
 		return
 	}
+	how := securitymail.PasswordByAdmin
+	if isSessionAccount(r, user.ID.V) {
+		how = securitymail.PasswordBySelf
+	}
+	h.notices.PasswordChanged(ctx, user.ID.V, how)
 	answer(w, r, http.StatusOK, done{Success: true})
 }
 

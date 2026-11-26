@@ -41,3 +41,30 @@ func TestOperatorLoginWhileTheSetUpIsDue(t *testing.T) {
 		}
 	})
 }
+
+// An account that must choose a new password is refused by the operator
+// sign-in too, with its own code and no token.
+func TestOperatorLoginWhileThePasswordChangeIsDue(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := routetest.New(t, routetest.Options{DB: db, Env: map[string]string{"RATE_LIMIT_MAX": "1000", "LOGIN_RATE_LIMIT_MAX": "1000"}})
+		ctx := context.Background()
+		hash, err := w.Server.Deps().Authn.HashPassword(ctx, "PW-Op-1!x")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := db.Exec(ctx, `UPDATE users SET password_hash = ? WHERE id = 5`, hash); err != nil {
+			t.Fatal(err)
+		}
+		if err := w.Server.Deps().Authn.SetMustChangePassword(ctx, 5, true); err != nil {
+			t.Fatal(err)
+		}
+		got := w.SignedOut().Do("POST", "/api/nd/operator/login", `{"username":"e2e_operator","password":"PW-Op-1!x","device_id":"900100001"}`)
+		if got.Status != 403 || got.Body != `{"error":"This account must choose a new password. Sign in to the web console once to set it.","code":"password_change_required"}` {
+			t.Errorf("operator sign-in: %d %s", got.Status, got.Body)
+		}
+		var tokens int
+		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM access_tokens WHERE user_id = 5`).Scan(&tokens); err != nil || tokens != 0 {
+			t.Errorf("tokens: %d, %v", tokens, err)
+		}
+	})
+}
