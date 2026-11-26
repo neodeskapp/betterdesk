@@ -132,6 +132,14 @@
 			: file;
 	});
 	const here = typeof location === 'undefined' ? '' : location.href;
+	/**
+	 * Open NeoDesk with the join link: on a Mac right after the install
+	 * steps, elsewhere in the box for a NeoDesk that is already there. The
+	 * app (1.5.0 and later) asks before it joins and names the server.
+	 */
+	const macOpen = $derived(
+		!!data && main.kind === 'download' && mine?.platform === 'macos' && data.kind === 'join' && !!data.deep_link
+	);
 
 	// The code and the server address are typed into the app, so a click
 	// copies them. Public pages have no toasts: the icon turns into a tick.
@@ -215,7 +223,7 @@
 					<h2 class="system-steps">{t('onboard.public.mac_steps_title')}</h2>
 				{/if}
 				{#if steps.length}<Steps items={steps} />{/if}
-				{#if mine.platform === 'macos' && data.kind === 'join' && data.deep_link}
+				{#if macOpen}
 					<div class="open-app">
 						<Button href={data.deep_link} class="open-neodesk">{t('onboard.public.open_app')}</Button>
 					</div>
@@ -236,6 +244,11 @@
 						<p class="server-address">
 							{before}{@render copyable(data.server.address, addressCopier)}{after}
 						</p>
+					{/if}
+					{#if data.kind === 'join' && data.deep_link && !macOpen}
+						<div class="open-app">
+							<Button href={data.deep_link} class="open-neodesk">{t('onboard.public.open_app')}</Button>
+						</div>
 					{/if}
 				</div>
 			{/if}
@@ -334,6 +347,9 @@
 	}
 	.short-code .server-address {
 		overflow-wrap: anywhere;
+	}
+	.short-code .open-app {
+		margin-top: var(--space-2);
 	}
 	.copyable {
 		display: inline-flex;
