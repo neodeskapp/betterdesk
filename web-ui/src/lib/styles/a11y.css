@@ -11,27 +11,6 @@
  * gives them an id's weight.
  */
 
-:root {
-	--bd-a11y-font-scale: 1;
-	--bd-a11y-line-height: var(--leading);
-	--bd-a11y-letter-spacing: 0em;
-	--bd-a11y-word-spacing: 0em;
-	--bd-a11y-visual-filter: none;
-}
-
-/* ── Reading ── */
-
-html[data-a11y-active='true'] :is(.main-content, .nd-a11y-modal) {
-	line-height: var(--bd-a11y-line-height, var(--leading));
-}
-
-html[data-a11y-active='true']
-	:is(.main-content, .nd-a11y-modal, .shell-breadcrumb)
-	:not(.material-icons, .material-symbols-outlined):not(#nd-a11y-never) {
-	letter-spacing: var(--bd-a11y-letter-spacing, 0);
-	word-spacing: var(--bd-a11y-word-spacing, 0);
-}
-
 /* Readable font: a plain font and a little more space between letters
    and words, on everything the page shows. Dialogs, sheets, menus and
    toasts hang off <body> outside the main area, and the public pages
@@ -133,15 +112,7 @@ html[data-a11y-readable-font='true']
 	}
 }
 
-/* Colour filters go on the root element: a filter on any other element
-   becomes the containing block of its position: fixed descendants, which
-   pushes dialogs, toasts and the bottom bar off screen once the page is
-   scrolled. The root is exempt from that rule. */
-html[data-a11y-filtered='true'] {
-	filter: var(--bd-a11y-visual-filter, none);
-}
-
-/* ── Visual ── */
+/* ── Underline links ── */
 
 html[data-a11y-underline-links='true'] a:not(#nd-a11y-never) {
 	text-decoration: underline;
@@ -149,51 +120,7 @@ html[data-a11y-underline-links='true'] a:not(#nd-a11y-never) {
 	text-underline-offset: 0.18em;
 }
 
-html[data-a11y-highlight-links='true']
-	:is(.main-content, .shell-sidebar, .shell-topbar, .nd-a11y-modal)
-	:is(a, button):not(#nd-a11y-never) {
-	outline: 2px solid var(--accent);
-	outline-offset: 2px;
-}
-
-html[data-a11y-highlight-headings='true'] :is(h1, h2, h3, h4, h5, h6, .page-title):not(#nd-a11y-never) {
-	border-inline-start: 4px solid var(--accent);
-	padding-inline-start: var(--space-2);
-	background: var(--accent-tint);
-}
-
-html[data-a11y-hide-media='true']
-	:is(img, picture, video, canvas, svg:not(.nd-a11y-filter-defs)):not(#nd-a11y-never) {
-	opacity: 0.08;
-	filter: grayscale(1);
-}
-
-/* ── Interaction ── */
-
-html[data-a11y-strong-focus='true']
-	:is(:focus-visible, button:focus, input:focus, select:focus, textarea:focus, [tabindex]:focus):not(
-		#nd-a11y-never
-	):not(#nd-a11y-never-2) {
-	outline: 4px solid var(--warning);
-	outline-offset: 3px;
-	box-shadow: 0 0 0 7px rgba(210, 153, 34, 0.25);
-}
-
-html[data-a11y-large-cursor='true'],
-html[data-a11y-large-cursor='true'] *:not(#nd-a11y-never) {
-	cursor:
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M5 3 L29 20 L18 22 L13 33 L5 3 Z' fill='%23ffffff' stroke='%23000000' stroke-width='3'/%3E%3C/svg%3E")
-			5 3,
-		auto;
-}
-
-html[data-a11y-large-cursor='true']
-	:is(a, button, [role='button']):not(#nd-a11y-never):not(#nd-a11y-never-2) {
-	cursor:
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M6 4 L32 22 L20 24 L15 36 L6 4 Z' fill='%23fff36d' stroke='%23000000' stroke-width='3'/%3E%3C/svg%3E")
-			6 4,
-		pointer;
-}
+/* ── Reduce motion: on, or the system asks for it and it is not Off ── */
 
 html[data-a11y-reduce-motion='true'] {
 	--motion: 0ms;
@@ -206,46 +133,4 @@ html[data-a11y-reduce-motion='true'] *:not(#nd-a11y-never)::after {
 	animation-iteration-count: 1;
 	scroll-behavior: auto;
 	transition-duration: 0.001ms;
-}
-
-html[data-a11y-pause-animations='true'] *:not(#nd-a11y-never),
-html[data-a11y-pause-animations='true'] *:not(#nd-a11y-never)::before,
-html[data-a11y-pause-animations='true'] *:not(#nd-a11y-never)::after {
-	animation-play-state: paused;
-}
-
-/* ── Reading guide and mask (A11yEffects.svelte moves them with the pointer) ── */
-
-.nd-a11y-reading-guide {
-	position: fixed;
-	inset-inline: 0;
-	z-index: var(--layer-reading);
-	display: none;
-	height: 4px;
-	background: var(--warning);
-	box-shadow:
-		0 0 0 2px rgba(0, 0, 0, 0.45),
-		0 0 18px rgba(210, 153, 34, 0.65);
-	pointer-events: none;
-}
-
-.nd-a11y-reading-mask {
-	position: fixed;
-	inset-inline: 0;
-	z-index: calc(var(--layer-reading) - 1);
-	display: none;
-	background: rgba(0, 0, 0, 0.58);
-	pointer-events: none;
-}
-
-html[data-a11y-reading-guide='true'] .nd-a11y-reading-guide,
-html[data-a11y-reading-mask='true'] .nd-a11y-reading-mask {
-	display: block;
-}
-
-.nd-a11y-filter-defs {
-	position: absolute;
-	width: 0;
-	height: 0;
-	overflow: hidden;
 }

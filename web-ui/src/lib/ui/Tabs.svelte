@@ -182,9 +182,6 @@
 		border-radius: var(--control-radius);
 		pointer-events: none;
 	}
-	:global(html[data-a11y-strong-focus='true']) .tab:focus-visible::after {
-		border-width: 3px;
-	}
 	/* Windows contrast themes make the transparent rule under every tab
 	   visible: only the selected tab keeps one, thicker, in the system's
 	   selection colour */

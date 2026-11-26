@@ -280,10 +280,6 @@ hr {
 	outline-offset: var(--focus-offset);
 }
 
-html[data-a11y-strong-focus='true'] :focus-visible {
-	outline-width: 3px;
-}
-
 /* Hidden wins over any component display rule. The :not(#id) adds an id
    to the specificity, so it needs no important flag (no element has that id). */
 [hidden]:not(#nd-hidden-never),

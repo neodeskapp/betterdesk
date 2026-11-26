@@ -50,14 +50,13 @@
        Plex Mono (dotted zero) is only for values people copy: IDs, keys, addresses. */
 	--font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', sans-serif;
 	--mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Consolas, 'Liberation Mono', monospace;
-	/* --font-scale follows the accessibility panel's text size */
-	--font-scale: 1;
-	--text-xs: calc(0.75rem * var(--font-scale)); /* 12px */
-	--text-sm: calc(0.8125rem * var(--font-scale)); /* 13px */
-	--text-base: calc(0.875rem * var(--font-scale)); /* 14px */
-	--text-md: calc(1rem * var(--font-scale)); /* 16px */
-	--text-lg: calc(1.25rem * var(--font-scale)); /* 20px */
-	--text-xl: calc(1.5rem * var(--font-scale)); /* 24px, page titles */
+	/* In rem: text sizes follow the root font size */
+	--text-xs: 0.75rem; /* 12px */
+	--text-sm: 0.8125rem; /* 13px */
+	--text-base: 0.875rem; /* 14px */
+	--text-md: 1rem; /* 16px */
+	--text-lg: 1.25rem; /* 20px */
+	--text-xl: 1.5rem; /* 24px, page titles */
 	--leading: 1.45;
 
 	/* Space (4px steps) */
@@ -87,7 +86,6 @@
 	--layer-dialog: 1000; /* dialogs and side sheets, the accessibility panel */
 	--layer-search: 1050;
 	--layer-toast: 1100;
-	--layer-reading: 1200; /* reading guide and mask from the accessibility panel */
 
 	/* Controls: one set for buttons, fields, selects, search fields, menu
        buttons and segmented filters. Two sizes: default, and small for dense
@@ -190,13 +188,6 @@
 	--avatar-4: #b9a4f5;
 	--avatar-5: #eb9cc4;
 	--avatar-6: #a9bcc4;
-}
-
-/* Accessibility panel (accessibility.js sets these attributes). Its
-   contrast modes replace the palette variables, so only the colour on
-   top of the accent needs help here. */
-html[data-a11y-font-scaled='true'] {
-	--font-scale: var(--bd-a11y-font-scale, 1);
 }
 
 @media (pointer: coarse) {
