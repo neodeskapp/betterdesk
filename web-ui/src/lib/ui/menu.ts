@@ -19,9 +19,14 @@ export function getMenu(): MenuContext | undefined {
 
 export const ITEM_SELECTOR = '[role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]';
 
-/** Items that arrow keys and typeahead reach (disabled ones are skipped) */
+/**
+ * Items that arrow keys and typeahead reach. Disabled items are among
+ * them (APG menu pattern): they say "unavailable" instead of vanishing.
+ * Only an item with the native disabled attribute can't take focus, so
+ * it is left out.
+ */
 export function menuItems(menu: HTMLElement): HTMLElement[] {
 	return Array.from(menu.querySelectorAll<HTMLElement>(ITEM_SELECTOR)).filter(
-		(el) => !el.matches(':disabled, [aria-disabled="true"]')
+		(el) => !el.matches(':disabled')
 	);
 }

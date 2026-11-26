@@ -47,7 +47,9 @@
     "copy_value": "نسخ {value}",
     "copy_failed": "تعذّر النسخ. حدّد النص وانسخه يدويًا.",
     "read_only_page": "يمكنك عرض هذه الصفحة دون تغييرها.",
-    "opens_in_new_tab": "يفتح في علامة تبويب جديدة"
+    "opens_in_new_tab": "يفتح في علامة تبويب جديدة",
+    "required_mark": "(مطلوب)",
+    "ok": "حسنًا"
   },
   "nav": {
     "main": "القائمة الرئيسية",
@@ -118,7 +120,8 @@
     "server_backups": "النسخ الاحتياطية",
     "server_config_files": "ملفات الإعداد",
     "meshcentral": "MeshCentral",
-    "devices_add": "Add computers"
+    "devices_add": "Add computers",
+    "registrations_waiting": "{count} بانتظار الموافقة"
   },
   "auth": {
     "login": "تسجيل الدخول",
@@ -196,7 +199,14 @@
     "password_same": "Choose a password other than the one you signed in with.",
     "change_required_title": "Choose a new password",
     "change_required": "Your administrator asks you to choose a new password before you go on.",
-    "change_required_save": "Save and sign in"
+    "change_required_save": "Save and sign in",
+    "session_seconds_left": "متبقٍ {seconds} ثانية",
+    "session_end_warning_title": "ستنتهي جلستك قريبًا",
+    "session_end_warning_body": "تنتهي جلستك في {time}. احفظ عملك الآن، ثم سجّل الدخول مرة أخرى.",
+    "enter_username": "أدخل اسم المستخدم.",
+    "enter_password": "أدخل كلمة المرور.",
+    "hide_password": "إخفاء كلمة المرور",
+    "totp_sixth_digit": "يتم تسجيل الدخول فور كتابة الرقم السادس."
   },
   "dashboard": {
     "title": "لوحة القيادة",
@@ -5995,6 +6005,7 @@
     "mail_heading": "{name} ينتظر ردًا",
     "mail_waited": "ينتظر شخص على {name} (المعرّف {id}) ردًا في المحادثة منذ {minutes} دقيقة.",
     "mail_quote": "كتب: {quote}",
+    "mail_quote_label": "كتب:",
     "mail_open": "افتح المحادثة: {link}",
     "mail_button": "افتح المحادثة في {app}",
     "old_messages": "رسائل قديمة",
@@ -6026,7 +6037,8 @@
     "team_groups_line": "مجموعات المستخدمين: {names}",
     "delete_team": "حذف الفريق",
     "delete_team_title": "حذف {name}؟",
-    "delete_team_message": "سيُحذف الفريق وجميع رسائله لكل أعضائه."
+    "delete_team_message": "سيُحذف الفريق وجميع رسائله لكل أعضائه.",
+    "said": "{name}: {text}"
   },
   "toast": {
     "device_connected": "الجهاز متصل",
@@ -7843,6 +7855,10 @@
     "mark_all_read": "تعليم الكل كمقروء",
     "see_all": "شاهد جميع طلبات المساعدة",
     "help_request": "طلب مساعدة",
+    "mail_alert_heading": "تنبيه: {rule}",
+    "mail_help_heading": "طلب مساعدة من {device}",
+    "mail_help_lead": "وصل طلب مساعدة جديد.",
+    "mail_help_button": "افتح طلبات المساعدة في {app}",
     "just_now": "just now",
     "kind_registration": "جهاز جديد يطلب الانضمام",
     "unread": "غير مقروء",
@@ -7852,72 +7868,26 @@
   },
   "accessibility": {
     "title": "إمكانية الوصول",
-    "subtitle": "تُطبَّق تغييرات النص والألوان والحركة فورًا وتُحفظ في هذا المتصفح.",
-    "close": "إغلاق إعدادات إمكانية الوصول",
-    "profiles": "ملفات تعريف سريعة",
-    "profile_low_vision": "ضعف البصر",
-    "profile_low_vision_hint": "نص أكبر وتباين عالٍ وإطار تركيز واضح ومؤشر كبير.",
-    "profile_dyslexia": "راحة القراءة",
-    "profile_dyslexia_hint": "خط سهل القراءة ونص أكبر ومسافات أوسع.",
-    "profile_motion_safe": "حركة أقل",
-    "profile_motion_safe_hint": "يوقف الحركات ويضيف دليل قراءة وإطار تركيز واضحًا.",
-    "profile_color_assist": "دعم اللون",
-    "profile_color_assist_hint": "مرشح ألوان وألوان أقوى وروابط مسطّرة وعناوين مميّزة.",
-    "reading": "القراءة",
-    "font_size": "حجم النص",
-    "line_height": "ارتفاع السطر",
-    "letter_spacing": "تباعد الحروف",
-    "word_spacing": "تباعد الكلمات",
     "readable_font": "خط قابل للقراءة",
-    "readable_font_hint": "يستخدم خطًا عريضًا وبسيطًا مثل Verdana.",
-    "dyslexia_spacing": "تباعد عسر القراءة",
-    "dyslexia_spacing_hint": "يزيد المسافة بين الحروف والكلمات.",
-    "visual": "مرئي",
-    "contrast": "التباين",
-    "contrast_normal": "عادي",
-    "contrast_high_dark": "الظلام عالية التباين",
-    "contrast_high_light": "ضوء عالي التباين",
-    "contrast_yellow_black": "أصفر على أسود",
-    "color_filter": "مرشح رؤية الألوان",
-    "filter_none": "بلا",
-    "filter_protanopia": "عمى اللون الأحمر (Protanopia)",
-    "filter_deuteranopia": "عمى اللون الأخضر (Deuteranopia)",
-    "filter_tritanopia": "عمى اللون الأزرق (Tritanopia)",
-    "filter_achromatopsia": "تدرّج رمادي",
-    "saturation": "تشبع اللون",
+    "readable_font_hint": "خط بسيط مع مسافة أكبر قليلًا بين الحروف والكلمات.",
     "underline_links": "تسطير الروابط",
     "underline_links_hint": "يجعل الروابط مرئية دون الاعتماد على اللون.",
-    "highlight_links": "تسليط الضوء على الإجراءات",
-    "highlight_links_hint": "الخطوط العريضة للروابط والأزرار.",
-    "highlight_headings": "تسليط الضوء على العناوين",
-    "highlight_headings_hint": "وضع علامات على عناوين الأقسام باستخدام شريط الألوان.",
-    "hide_media": "تعتيم الوسائط",
-    "hide_media_hint": "يُخفت الصور ومقاطع الفيديو والمخططات.",
-    "interaction": "التفاعل",
-    "strong_focus": "تركيز قوي",
-    "strong_focus_hint": "يظهر حلقة تركيز كبيرة للوحة المفاتيح.",
-    "large_cursor": "مؤشر كبير",
-    "large_cursor_hint": "يستخدم مؤشرًا أكبر عالي التباين.",
     "reduce_motion": "تقليل الحركة",
-    "reduce_motion_hint": "يوقف الانتقالات والتمرير السلس.",
-    "pause_animations": "وقفة الرسوم المتحركة",
-    "pause_animations_hint": "يجمّد الحركات مثل مؤشرات التحميل الدوّارة.",
-    "reading_guide": "دليل القراءة",
-    "reading_guide_hint": "يتبع خطٌّ المؤشرَ ليساعدك على تتبّع موضعك.",
-    "reading_mask": "قناع القراءة",
-    "reading_mask_hint": "يعتم المحتوى أعلى وأسفل المؤشر.",
-    "preview": "معاينة",
-    "preview_title": "معاينة مساحة عمل المشغل",
-    "preview_text": "تحقق مما إذا كانت النصوص والروابط وعناصر التحكم وتسميات الحالة مريحة للقراءة قبل إغلاق هذه القائمة.",
-    "preview_link": "رابط تفاصيل الجهاز",
-    "preview_status": "متصل",
-    "preview_button": "العمل الأساسي",
-    "preview_secondary": "Secondary",
-    "reset": "إعادة تعيين",
+    "reduce_motion_hint": "يوقف الانتقالات والرسوم المتحركة والشرائح المتحركة.",
     "done": "تم",
-    "profiles_note": "يغيّر كل ملف عدة إعدادات أدناه دفعة واحدة. اختره مرة أخرى للعودة إلى الإعدادات الافتراضية.",
-    "spacing_normal": "عادي",
-    "reset_defaults": "استعادة الإعدادات الافتراضية"
+    "subtitle_account": "تتبع وحدة التحكم إعدادات نظامك افتراضيًا. يُحفظ كل تغيير في حسابك على الفور.",
+    "subtitle_browser": "تتبع وحدة التحكم إعدادات نظامك افتراضيًا. يُحفظ كل تغيير في هذا المتصفح على الفور.",
+    "more_contrast": "تباين أعلى",
+    "more_contrast_hint": "ألوان أقوى للنصوص والخطوط وعناصر التحكم. تكون الأولوية دائمًا لسمة التباين في Windows.",
+    "follow_system": "حسب النظام",
+    "choice_on": "تشغيل",
+    "choice_off": "إيقاف",
+    "single_key_shortcuts": "إيقاف الاختصارات ذات المفتاح الواحد",
+    "single_key_shortcuts_hint": "لن يفتح المفتاح / البحث بعد الآن. يظل Ctrl+K يفتحه.",
+    "pause_live_updates": "إيقاف التحديثات المباشرة مؤقتًا",
+    "pause_live_updates_hint": "لا تحمّل القوائم والصفحات بيانات جديدة من تلقاء نفسها. يحمّلها زر التحديث عندما تريد.",
+    "saved": "تم الحفظ",
+    "save_failed": "تعذّر حفظ الإعداد. حاول مرة أخرى."
   },
   "server_mgmt": {
     "title": "إدارة الخادم",
@@ -8737,7 +8707,8 @@
       "close": "إغلاق",
       "link_docs": "الوثائق",
       "console": "In the console",
-      "shortcuts": "Keyboard shortcuts"
+      "shortcuts": "Keyboard shortcuts",
+      "link_accessibility": "بيان إمكانية الوصول"
     },
     "shortcuts": {
       "search": "Open the search",
@@ -8860,7 +8831,9 @@
     "next": "الشريحة التالية",
     "carousel": "عرض متتابع",
     "slide": "شريحة",
-    "slide_n": "الشريحة {n} من {count}"
+    "slide_n": "الشريحة {n} من {count}",
+    "stop": "إيقاف الشرائح",
+    "start": "تشغيل الشرائح"
   },
   "agents": {
     "title": "وكلاء NeoDesk",
@@ -8952,15 +8925,15 @@
       "invite_intro": "{sender} from {server} invites you to set up NeoDesk on your computer. {server} can then help you on it.",
       "invite_steps": "Open this link on the computer you want to set up:",
       "invite_button": "Set up this computer",
-      "invite_expires": "It works until {expires}.",
-      "invite_code": "Already have NeoDesk? Open Settings, Server, Join a server, and enter the code {code}.",
-      "support_subject": "{sender} from {server} wants to help you",
-      "support_heading": "Your support session is ready",
-      "support_intro": "{sender} from {server} wants to help you.",
-      "support_steps": "Open this link on the computer you need help with. Download the small app, open it and click Allow. Nothing gets installed.",
-      "support_button": "Start the support session",
-      "support_expires": "The link works once, until {expires}.",
-      "footer": "Sent by {host} for {server}. If you didn't expect this email, you can ignore it.",
+      "invite_expires": "يعمل حتى {expires}.",
+      "invite_code": "هل لديك NeoDesk بالفعل؟ افتح الإعدادات، ثم الخادم، ثم الانضمام إلى خادم، وأدخل هذا الرمز:",
+      "support_subject": "{sender} من {server} يريد مساعدتك",
+      "support_heading": "جلسة الدعم جاهزة",
+      "support_intro": "{sender} من {server} يريد مساعدتك.",
+      "support_steps": "افتح هذا الرابط على الكمبيوتر الذي تحتاج المساعدة فيه. نزّل التطبيق الصغير وافتحه وانقر على سماح. لا يُثبَّت أي شيء.",
+      "support_button": "ابدأ جلسة الدعم",
+      "support_expires": "يعمل الرابط مرة واحدة، حتى {expires}.",
+      "footer": "أرسله {host} نيابة عن {server}. إذا لم تكن تتوقع هذه الرسالة، يمكنك تجاهلها.",
       "welcome_subject": "دعاك {sender} إلى {server}",
       "welcome_lead": "قم بإعداد NeoDesk على الكمبيوتر الخاص بك. يستغرق ذلك بضع دقائق.",
       "welcome_button": "إعداد NeoDesk",
@@ -9311,7 +9284,7 @@
     "try_generic": "أعد الاتصال. إذا استمر الفشل، فانسخ التفاصيل أدناه وأرسلها إلى المسؤول.",
     "fail_insecure": "تم إيقاف الاتصال بـ {name} لأنه تعذر تأمينه.",
     "try_insecure": "لم يتم إرسال أي كلمة مرور. ربما يتنصت أحد بين هذا المتصفح والجهاز، أو أن مفتاح الخادم غير مُعد. اطلب من المسؤول فحص الخادم.",
-    "screen_keys": "ضغطات المفاتيح تذهب إلى الجهاز، بما فيها Tab. اضغط F8 لمغادرة الشاشة.",
+    "screen_keys": "ضغطات المفاتيح تذهب إلى الجهاز، بما فيها Tab. اضغط F8 أو Ctrl+Alt+Shift+G لمغادرة الشاشة.",
     "displays": "الشاشات",
     "layout": "التخطيط",
     "layout_single": "واحدة في كل مرة",
@@ -9353,6 +9326,8 @@
     "no_open_sessions": "لا توجد جلسة مفتوحة. اتصل عبر المعرّف، أو اختر جهازًا أدناه.",
     "fail_signin_closed": "أغلق {name} الاتصال عندما سجّل هذا المتصفح الدخول.",
     "try_signin_closed": "رفض الجهاز تسجيل الدخول. أعد الاتصال وسجّل الدخول مرة أخرى. إذا تكرر ذلك، فاطلب من المسؤول الاطلاع على سجل NeoDesk على الجهاز.",
+    "screen_role": "شاشة بعيدة",
+    "tab_close_hint": "اضغط Delete لإغلاق هذه الجلسة.",
     "wait_person": "Waiting for {person} to accept on their screen.",
     "wait_someone": "Waiting for someone at {name} to accept on their screen.",
     "wait_person_hint": "{person} sees a window that asks to let you connect, with Allow and Decline.",
@@ -9408,7 +9383,12 @@
   "table": {
     "select_all": "تحديد الكل",
     "select_row": "تحديد {name}",
-    "columns": "الأعمدة"
+    "columns": "الأعمدة",
+    "rows_one": "صف واحد",
+    "rows_other": "{count} صفوف",
+    "sorted": "مرتّب حسب {column}، {direction}",
+    "ascending": "تصاعدي",
+    "descending": "تنازلي"
   },
   "pagination": {
     "showing": "عرض {start}–{end} من {total}",
@@ -9416,11 +9396,14 @@
     "label": "الصفحات",
     "previous": "الصفحة السابقة",
     "next": "الصفحة التالية",
-    "page": "الصفحة {page}"
+    "page": "الصفحة {page}",
+    "page_of": "الصفحة {page} من {pages}",
+    "pages_of": "صفحات {name}"
   },
   "shell": {
     "skip_to_content": "انتقل إلى المحتوى الرئيسي",
-    "start_failed": "تعذّر بدء تشغيل لوحة التحكم."
+    "start_failed": "تعذّر بدء تشغيل لوحة التحكم.",
+    "loading_console": "جارٍ تحميل وحدة التحكم"
   },
   "ux36": {
     "beta_badge": "BETA",
@@ -9484,8 +9467,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "الحركة والتباين والروابط والخط والاختصارات والتحديثات المباشرة. تُحفظ في حسابك.",
+    "accessibility_on": "بعض إعدادات إمكانية الوصول مفعّلة في حسابك.",
     "accessibility_open": "Accessibility settings",
     "email_title": "Email address",
     "email_none": "No email address yet.",
@@ -9862,5 +9845,18 @@
     "tab_title": "Viewing as {username}",
     "ended": "You are no longer viewing NeoDesk as another account. The page loads again as you.",
     "read_only_hint": "You are viewing NeoDesk as {username}. Nothing can be changed here."
+  },
+  "canvas": {
+    "move_node": "نقل {name}",
+    "move_left": "نقل لليسار",
+    "move_up": "نقل للأعلى",
+    "move_down": "نقل للأسفل",
+    "move_right": "نقل لليمين"
+  },
+  "live": {
+    "last_updated": "آخر تحديث {time}",
+    "paused": "التحديثات المباشرة متوقفة مؤقتًا.",
+    "new_entries": "إدخالات جديدة، اعرضها",
+    "new_entries_waiting": "وصلت إدخالات جديدة أثناء إيقاف التحديثات المباشرة مؤقتًا."
   }
 }

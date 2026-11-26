@@ -582,7 +582,7 @@ func TestAlertMailThroughTheMailService(t *testing.T) {
 		if m.From != "panel@example.com" || len(m.To) != 1 || m.To[0] != "ops@example.com, oncall@example.com" || m.ToList ||
 			m.Subject != "[NeoDesk Alert] CPU <high> — CRITICAL" ||
 			!strings.Contains(*m.Text, "Message: CPU <high>: cpu_usage = 95.5 (gt 80)\n") || !strings.Contains(*m.Text, "\nDevice: dev-1\n") ||
-			!strings.Contains(*m.HTML, "NeoDesk Alert: CPU &lt;high&gt;</h2>") {
+			!strings.Contains(*m.HTML, ">Alert: CPU &lt;high&gt;</h1>") {
 			t.Fatalf("mail from %q to %q subject %q\n%s\n%s", m.From, m.To, m.Subject, *m.Text, *m.HTML)
 		}
 	})

@@ -4,7 +4,8 @@
   answer), danger-quiet (a destructive action on the page), link (an action
   inside running text). size: default or sm. With href it renders a link
   that looks like a button; `download` marks a link to a file (true, or the
-  file name), which the app router then leaves to the browser. icon: a
+  file name), which the app router then leaves to the browser. A disabled
+  link loses its href, so it can't be followed. icon: a
   meaning from ICONS before the label (Connect, Add, Download, Copy,
   Refresh, Approve...; not on Save).
 -->
@@ -63,9 +64,10 @@
 	<a
 		bind:this={element}
 		{...linkAttrs}
-		{href}
-		download={download === true ? '' : download || undefined}
+		href={disabled ? undefined : href}
+		download={disabled ? undefined : download === true ? '' : download || undefined}
 		class={classes}
+		role={disabled ? 'link' : undefined}
 		aria-disabled={disabled || undefined}
 	>
 		{#if icon}<Icon name={icon} />{/if}{@render children()}

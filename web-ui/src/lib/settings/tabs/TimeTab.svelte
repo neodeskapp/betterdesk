@@ -474,10 +474,13 @@
 		gap: var(--space-6);
 		max-width: var(--measure);
 	}
+	/* A select is as wide as its longest zone name unless it may shrink:
+	   on a 320 px screen it fits the row (WCAG 1.4.10) */
 	.time-form :global(.zone-select) {
 		flex: 1 1 260px;
 		width: auto;
-		max-width: 48ch;
+		min-width: 0;
+		max-width: min(48ch, 100%);
 	}
 	.disclosure-body {
 		display: flex;

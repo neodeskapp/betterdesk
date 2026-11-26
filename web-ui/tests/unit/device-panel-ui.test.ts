@@ -281,8 +281,9 @@ describe('loading and polling', () => {
 		routes = {};
 		render(DevicePanelHost);
 		openDevice(ID);
-		expect(await screen.findByRole('alert')).toBeInTheDocument();
-		expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
+		// The error sentence (screen readers hear it through the announcer) with Retry
+		expect(await screen.findByRole('button', { name: /retry/i })).toBeInTheDocument();
+		expect(document.querySelector('.state.is-error')?.textContent?.trim()).not.toBe('');
 	});
 });
 

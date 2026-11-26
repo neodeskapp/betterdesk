@@ -20,6 +20,8 @@ type Mail struct {
 	HTML    string
 	// Inline are the logo images the HTML shows (brandmail.Inline).
 	Inline []message.Inline
+	// Lang is the language the texts are in, for mail.Email.Lang.
+	Lang string
 }
 
 // MailFacts are what a mail says.
@@ -54,8 +56,13 @@ type MailFacts struct {
 // button. Both carry the server's logo or name and its accent colour, in
 // a table layout with inline styles, as mail clients need it; nothing in
 // them but the link opens anything. The keys are below onboard.mail in
-// the language files.
+// the language files; the mail's language is the one whose meta.lang t
+// gives, the one its texts came from.
 func BuildMail(t Translate, f MailFacts) Mail {
+	lang := t("meta.lang", nil)
+	if lang == "meta.lang" {
+		lang = ""
+	}
 	company := f.Company
 	if company == "" {
 		company = f.Server
@@ -83,14 +90,16 @@ func BuildMail(t Translate, f MailFacts) Mail {
 
 	return Mail{
 		Subject: subject,
-		Text:    mailText(heading, lead, steps, button, f.Link, expires, code, footer),
-		HTML:    mailHTML(f, heading, lead, steps, button, linkHint, expires, code, footer),
+		Text:    mailText(heading, lead, steps, button, f.Link, expires, code, f.Code, footer),
+		HTML:    mailHTML(f, lang, heading, lead, steps, button, linkHint, expires, code, footer),
 		Inline:  brandmail.Inline(brandmail.Page{Branding: brandmail.Branding{Server: f.Server, Logo: f.Logo}}),
+		Lang:    lang,
 	}
 }
 
-// mailText is the plain text part.
-func mailText(heading, lead string, steps []string, button, link, expires, code, footer string) string {
+// mailText is the plain text part. codeLead, when set, says where to
+// enter the code, which follows on a line of its own.
+func mailText(heading, lead string, steps []string, button, link, expires, codeLead, code, footer string) string {
 	lines := []string{heading, "", lead, ""}
 	for i, step := range steps {
 		lines = append(lines, fmt.Sprintf("%d. %s", i+1, step))
@@ -99,18 +108,23 @@ func mailText(heading, lead string, steps []string, button, link, expires, code,
 		lines = append(lines, "")
 	}
 	lines = append(lines, button+": "+link, "", expires)
-	if code != "" {
-		lines = append(lines, "", code)
+	if codeLead != "" {
+		lines = append(lines, "", codeLead, code)
 	}
 	lines = append(lines, "", "--", footer)
 	return strings.Join(lines, "\n") + "\n"
 }
 
-// mailHTML is the HTML part, in the console's branded layout.
-func mailHTML(f MailFacts, heading, lead string, steps []string, button, linkHint, expires, code, footer string) string {
-	return brandmail.HTML(brandmail.Page{
-		Branding: brandmail.Branding{Server: f.Server, Accent: f.Accent, Logo: f.Logo},
-		Heading:  heading, Lead: lead, Button: button, Link: f.Link, Steps: steps,
-		LinkHint: linkHint, Small: []string{expires, code}, Footer: footer,
-	})
+// mailHTML is the HTML part, in the console's branded layout. The code
+// is a line of its own below codeLead.
+func mailHTML(f MailFacts, lang, heading, lead string, steps []string, button, linkHint, expires, codeLead, footer string) string {
+	p := brandmail.Page{
+		Branding: brandmail.Branding{Server: f.Server, Accent: f.Accent, Logo: f.Logo}, Lang: lang,
+		Heading: heading, Lead: lead, Button: button, Link: f.Link, Steps: steps,
+		LinkHint: linkHint, Small: []string{expires}, Footer: footer,
+	}
+	if codeLead != "" {
+		p.CodeLead, p.Code = codeLead, f.Code
+	}
+	return brandmail.HTML(p)
 }

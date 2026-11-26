@@ -5,24 +5,32 @@
   marks what is in view read, keeps the scroll at the bottom while it is
   there, and takes files dropped anywhere on it. Used by the chat page,
   the chat panel and a remote session's chat sheet.
+
+  For screen readers the log holds only the messages; "Earlier messages"
+  and the state lines sit before it. The log is not a live region itself
+  (it would read every button of a new message): a new message from
+  someone else is announced once as "<sender>: <text>". While a page of
+  history loads the log is aria-busy, and older messages say nothing.
+  The typing line is plain text.
 -->
 <script lang="ts">
 	import { tick, untrack, type Snippet } from 'svelte';
 	import { formatDate } from '#lib/i18n/format.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Menu from '#lib/ui/Menu.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import Time from '#lib/ui/Time.svelte';
+	import { announce } from '#lib/ui/announce.svelte.ts';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { loadTrail, type TrailStep } from './api.ts';
 	import ChatEmoji from './ChatEmoji.svelte';
 	import { chat } from './client.svelte.ts';
 	import Composer from './Composer.svelte';
 	import { EMOJI_GROUPS, QUICK } from './emoji.ts';
-	import { dayKey, isMine, mayEdit, relativeDay, seen, startsRun, unreadIn } from './logic.ts';
+	import { dayKey, eventText, isMine, mayEdit, relativeDay, seen, startsRun, unreadIn } from './logic.ts';
 	import MessageBubble from './MessageBubble.svelte';
 	import type { Message } from './types.ts';
 
@@ -155,9 +163,54 @@
 		if (atBottom) markIfRead();
 	}
 
+	/** A page of older messages was asked for and hasn't arrived */
+	let loadingEarlier = $state(false);
+
 	function earlier() {
 		const first = messages.find((m) => !m.pending);
-		if (first) chat.history(conv, first.id);
+		if (!first) return;
+		loadingEarlier = true;
+		chat.history(conv, first.id);
+	}
+
+	// The page arrived (or there is nothing more): the log is no longer busy
+	$effect(() => {
+		void messages.length;
+		void thread.more;
+		untrack(() => (loadingEarlier = false));
+	});
+
+	/* New messages at the end, from someone else, are announced once.
+	   Messages that came before the newest one we knew (history) are not. */
+	let newestKnown = '';
+	$effect(() => {
+		const list = messages;
+		const loaded = thread.loaded;
+		void conv;
+		untrack(() => {
+			const newest = list.findLast((m) => !m.pending)?.id ?? '';
+			if (!loaded) {
+				newestKnown = '';
+				return;
+			}
+			const from = newestKnown ? list.findIndex((m) => m.id === newestKnown) : -1;
+			if (from >= 0) {
+				const said = list
+					.slice(from + 1)
+					.filter((m) => !m.pending && !m.deleted && !isMine(m, me))
+					.map(spoken)
+					.filter(Boolean);
+				if (said.length) announce(said.join(' '));
+			}
+			newestKnown = newest;
+		});
+	});
+
+	/** What a screen reader hears for a new message */
+	function spoken(m: Message): string {
+		if (m.event) return eventText(m.event, t);
+		const body = m.text.trim() || m.attachments.map((a) => a.name).join(', ');
+		return body ? tf('chat.said', '{name}: {text}', { name: m.from.name || '?', text: body }) : '';
 	}
 
 	async function showQuoted(id: string, ms = 1600) {
@@ -249,20 +302,27 @@
 >
 	{@render header?.()}
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-	<div class="thread-scroll" bind:this={scroller} {onscroll} tabindex="0" aria-label={t('chat.messages')}>
-		<div class="thread-inner" role="log" aria-live="polite" aria-relevant="additions">
-			{#if thread.more}
-				<div class="thread-more"><Button size="sm" onclick={earlier}>{t('chat.earlier')}</Button></div>
-			{/if}
-			{#if !thread.loaded && !slow}
-				<!-- nothing yet -->
-			{:else if !thread.loaded && chat.status !== 'open'}
-				<p class="thread-state">{t('chat.connecting')}</p>
-			{:else if !thread.loaded}
-				<p class="thread-state">{t('common.loading')}</p>
-			{:else if !messages.length}
-				{#if empty}{@render empty()}{:else}<p class="thread-state">{t('chat.no_messages')}</p>{/if}
-			{/if}
+	<div
+		class="thread-scroll"
+		bind:this={scroller}
+		{onscroll}
+		tabindex="0"
+		role="group"
+		aria-label={t('chat.messages')}
+	>
+		{#if thread.more}
+			<div class="thread-more"><Button size="sm" onclick={earlier}>{t('chat.earlier')}</Button></div>
+		{/if}
+		{#if !thread.loaded && !slow}
+			<!-- nothing yet -->
+		{:else if !thread.loaded && chat.status !== 'open'}
+			<p class="thread-state">{t('chat.connecting')}</p>
+		{:else if !thread.loaded}
+			<p class="thread-state">{t('common.loading')}</p>
+		{:else if !messages.length}
+			{#if empty}{@render empty()}{:else}<p class="thread-state">{t('chat.no_messages')}</p>{/if}
+		{/if}
+		<div class="thread-inner" role="log" aria-live="off" aria-busy={!thread.loaded || loadingEarlier}>
 			{#each messages as m, i (m.id)}
 				{@const prev = messages[i - 1]}
 				{#if !prev || dayKey(prev.created_at) !== dayKey(m.created_at)}
@@ -297,7 +357,7 @@
 			{/each}
 		</div>
 	</div>
-	<p class="thread-typing" aria-live="polite">{typing ? t('chat.typing_name', { name: typing }) : ''}</p>
+	<p class="thread-typing">{typing ? t('chat.typing_name', { name: typing }) : ''}</p>
 	{@render notice?.()}
 	{#if writable}
 		<Composer

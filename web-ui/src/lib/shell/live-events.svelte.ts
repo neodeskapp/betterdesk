@@ -65,7 +65,8 @@ function dispatch(payload: Record<string, unknown>): void {
 /** Start the count and the socket (approvers only; the shell checks the permission) */
 export function startLiveEvents(): void {
 	if (stopCount) return;
-	stopCount = poll(loadRegistrationCount, { every: COUNT_POLL_MS });
+	// A count in the navigation, like the bell's: it keeps coming while live updates are paused
+	stopCount = poll(loadRegistrationCount, { every: COUNT_POLL_MS, essential: true });
 	sock = socket('/ws/panel-events', {
 		onmessage(data) {
 			if (data && typeof data === 'object' && !Array.isArray(data)) dispatch(data as Record<string, unknown>);

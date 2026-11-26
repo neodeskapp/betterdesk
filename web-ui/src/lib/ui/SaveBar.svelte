@@ -103,7 +103,7 @@
 	/* Above the bottom navigation on phones */
 	@media (max-width: 767px) {
 		.save-bar {
-			bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+			bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
 		}
 	}
 </style>

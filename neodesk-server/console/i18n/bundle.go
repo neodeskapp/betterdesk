@@ -24,6 +24,16 @@ import (
 	"syscall"
 )
 
+// RTL reports whether a language of the table is written right to left.
+func RTL(code string) bool {
+	for _, l := range knownLanguages {
+		if l.code == code {
+			return l.rtl
+		}
+	}
+	return false
+}
+
 // knownLanguage is one row of the table of languages the console loads.
 // A file whose code is not in the table is never loaded.
 type knownLanguage struct {

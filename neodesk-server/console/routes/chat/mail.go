@@ -91,8 +91,13 @@ func (h *Hub) mailWaiting(ctx context.Context, mailer waitMailer, brand brandmai
 		}
 		for _, lang := range langs {
 			t := func(key string, pairs ...any) string { return texts.Translate(lang, "chat."+key, i18n.V(pairs...)) }
-			subject, text, body := h.waitMail(ctx, c, brand, mailer.GetPanelBaseURL(), settings.MailPreview, t, now)
-			m := mail.Email{To: byLang[lang], ToList: true, Subject: subject, Text: &text, HTML: &body, Inline: brandmail.Inline(brandmail.Page{Branding: brand})}
+			// The language the texts came from: the account's, or the default one
+			pageLang := texts.Translate(lang, "meta.lang", nil)
+			if pageLang == "meta.lang" {
+				pageLang = ""
+			}
+			subject, text, body := h.waitMail(ctx, c, brand, pageLang, mailer.GetPanelBaseURL(), settings.MailPreview, t, now)
+			m := mail.Email{To: byLang[lang], ToList: true, Subject: subject, Text: &text, HTML: &body, Inline: brandmail.Inline(brandmail.Page{Branding: brand}), Lang: pageLang}
 			if _, err := mailer.SendEmail(ctx, m); err != nil {
 				return err
 			}
@@ -163,9 +168,9 @@ func (h *Hub) waitRecipients(ctx context.Context, c chatstore.Conversation) ([]a
 }
 
 // waitMail is the subject and bodies of a waiting conversation's mail, in
-// the language of t (a chat text by its key under "chat.") and the
-// server's branded layout (brandmail, as the invite mail).
-func (h *Hub) waitMail(ctx context.Context, c chatstore.Conversation, brand brandmail.Branding, baseURL string, preview bool,
+// the language of t (a chat text by its key under "chat."), which is lang,
+// and the server's branded layout (brandmail, as the invite mail).
+func (h *Hub) waitMail(ctx context.Context, c chatstore.Conversation, brand brandmail.Branding, lang, baseURL string, preview bool,
 	t func(key string, pairs ...any) string, now time.Time) (subject, text, body string) {
 	name := c.ID
 	if h.opts.Scope.Device != nil {
@@ -204,7 +209,7 @@ func (h *Hub) waitMail(ctx context.Context, c chatstore.Conversation, brand bran
 	}
 	lines = append(lines, "", "--", footer)
 	text = strings.Join(lines, "\n") + "\n"
-	body = brandmail.HTML(brandmail.Page{Branding: brand, Heading: t("mail_heading", "name", name), Lead: waited,
-		Quote: quote, Button: button, Link: link, Footer: footer})
+	body = brandmail.HTML(brandmail.Page{Branding: brand, Lang: lang, Heading: t("mail_heading", "name", name), Lead: waited,
+		Quote: quote, QuoteLabel: t("mail_quote_label"), Button: button, Link: link, Footer: footer})
 	return subject, text, body
 }

@@ -23,6 +23,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -55,7 +56,14 @@ type Mail struct {
 	// they are ignored, and a mail without them is built as nodemailer
 	// builds it.
 	Inline []Inline
+	// Lang is the language the mail is written in ("de", "zh-TW"), for a
+	// Content-Language header. Empty, or anything that is no language tag,
+	// leaves the header out.
+	Lang string
 }
+
+// langTag is what a Content-Language value may be: a language tag.
+var langTag = regexp.MustCompile(`^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$`)
 
 // Options holds everything the message depends on besides the mail.
 type Options struct {
@@ -223,6 +231,9 @@ func Build(mail Mail, opts Options) (*Message, error) {
 	add("From", fromValue)
 	add("To", toValue)
 	add("Subject", encodeHeaderText(lineBreaksToSpaces(subject)))
+	if langTag.MatchString(mail.Lang) {
+		add("Content-Language", mail.Lang)
+	}
 	add("Message-ID", messageIDHeader(message.MessageID))
 	rootEncoding := ""
 	if root.content != "" {

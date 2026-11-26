@@ -2,11 +2,15 @@
  * Short messages after an action: `toast.success(t('devices.saved'))`,
  * `toast.error(message)`, `toast.info(...)`, `toast.warning(...)`.
  * ToastHost (mounted once by the shell) shows them at the end side of the
- * bottom edge. Like the old console (notifications.js): they go away after
- * 5 seconds, errors after 8; 0 keeps one until it is closed. At most
- * MAX_TOASTS are on screen (the oldest goes first); the same message again
- * restarts its time instead of stacking. Time stops while the pointer or
- * focus is on a toast.
+ * bottom edge. They go away after 5 seconds; an error stays until it is
+ * closed, so nobody misses it (WCAG 2.2.1); 0 keeps any toast until it is
+ * closed. At most MAX_TOASTS are on screen (the oldest goes first); the
+ * same message again restarts its time instead of stacking, and is said
+ * again. Time stops while the pointer or focus is on a toast.
+ *
+ * Screen readers hear every toast through the announcer
+ * (announce.svelte.ts), errors right away, the rest politely; a warning
+ * or an error says so in words, not only by its colour.
  *
  * In a sheet, the result of an action belongs in the sheet's status line;
  * a toast confirms after the sheet has closed (GUIDE section 11).
@@ -29,9 +33,27 @@ export interface ToastOptions {
 	duration?: number;
 }
 
+import { tf } from '#lib/i18n/i18n.svelte.ts';
+import { announce } from './announce.svelte.ts';
+
 export const MAX_TOASTS = 3;
 const DURATION = 5000;
-const ERROR_DURATION = 8000;
+/** Errors stay until closed */
+const ERROR_DURATION = 0;
+
+/** "Warning" or "Error" in words, before the text of those toasts */
+export function tonePrefix(type: ToastType): string {
+	if (type === 'error') return tf('common.error', 'Error');
+	if (type === 'warning') return tf('common.warning', 'Warning');
+	return '';
+}
+
+/** What a screen reader hears for a toast */
+export function spokenText({ type, title, message }: Pick<ToastItem, 'type' | 'title' | 'message'>): string {
+	const prefix = tonePrefix(type);
+	const body = title ? `${title}. ${message}` : message;
+	return prefix ? `${prefix}: ${body}` : body;
+}
 
 class Toasts {
 	items = $state.raw<ToastItem[]>([]);
@@ -78,6 +100,7 @@ export function show({ type = 'info', message, title, duration }: ToastOptions):
 	const timer: Timer = { sticky: ms <= 0, remaining: ms, started: 0, handle: null };
 	timers.set(id, timer);
 	run(id, timer);
+	announce(spokenText({ type, title, message }), { assertive: type === 'error' });
 	return id;
 }
 

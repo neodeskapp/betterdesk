@@ -121,7 +121,7 @@ describe('sort state', () => {
 		expect(nextSort({ column: 'name', dir: 'desc' }, 'name')).toEqual({ column: 'name', dir: 'asc' });
 		expect(nextSort({ column: 'name', dir: 'desc' }, 'id')).toEqual({ column: 'id', dir: 'asc' });
 		expect(ariaSort({ column: 'id', dir: 'desc' }, 'id')).toBe('descending');
-		expect(ariaSort({ column: 'id', dir: 'desc' }, 'name')).toBe('none');
+		expect(ariaSort({ column: 'id', dir: 'desc' }, 'name')).toBeUndefined();
 	});
 });
 

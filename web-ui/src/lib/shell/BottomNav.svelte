@@ -73,7 +73,7 @@
 		justify-content: center;
 		gap: 2px;
 		min-width: 0;
-		min-height: 56px;
+		min-height: var(--bottom-nav-h);
 		padding: var(--space-1) 0;
 		border: 0;
 		border-top: 2px solid transparent;

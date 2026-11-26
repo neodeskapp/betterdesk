@@ -178,6 +178,19 @@ func TestWaitMailSpeaksTheRecipientsLanguage(t *testing.T) {
 				t.Errorf("admin's mail has no %q:\n%s", want, en)
 			}
 		}
+		// Each mail says its language, and the quote is labelled in it
+		for _, m := range sent.list {
+			lang, label := "en", "They wrote:"
+			if strings.Join(m.To, ",") == "anna@example.test" {
+				lang, label = "de", "Nachricht:"
+			}
+			if m.Lang != lang || !strings.Contains(*m.HTML, `<html lang="`+lang+`" dir="ltr">`) {
+				t.Errorf("%v: Lang %q, page starts %.100q", m.To, m.Lang, *m.HTML)
+			}
+			if !strings.Contains(*m.HTML, label+"</p><blockquote") {
+				t.Errorf("%v: the quote is not labelled %q:\n%s", m.To, label, *m.HTML)
+			}
+		}
 	})
 }
 
@@ -210,8 +223,10 @@ func TestWaitMailIsBranded(t *testing.T) {
 			t.Fatalf("%d mails, %v", len(sent.list), err)
 		}
 		m := sent.list[0]
+		// Red with white text is 4.00:1, so the button and the quote's bar are a darker red
+		red, _ := brandmail.Button("#ff0000")
 		for _, want := range []string{`role="presentation"`, `<img src="https://desk.example/logo.png" alt="Acme Desk"`,
-			`bgcolor="#ff0000"`, `href="https://console.example/chat?c=dev1"`, `border-left: 3px solid #ff0000;`, "The printer blinks",
+			`bgcolor="` + red + `"`, `href="https://console.example/chat?c=dev1"`, `border-left: 3px solid ` + red + `;`, "The printer blinks",
 			"Chat notifications"} {
 			if !strings.Contains(*m.HTML, want) {
 				t.Errorf("the mail has no %s", want)

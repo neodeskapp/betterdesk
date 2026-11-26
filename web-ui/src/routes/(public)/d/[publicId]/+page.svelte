@@ -100,7 +100,8 @@
 					}))
 				};
 			},
-			{ every: 8000, immediate: false }
+			// Waits for installers to finish building: it keeps going while live updates are paused
+			{ every: 8000, immediate: false, essential: true }
 		);
 	});
 </script>

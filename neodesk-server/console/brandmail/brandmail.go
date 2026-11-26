@@ -3,20 +3,33 @@
 // unless the server has a logo image of its own), its accent colour on the
 // one button, in a table layout with inline styles as mail clients need
 // it, and in the console's dark theme for clients in dark mode. The invite and
-// quick support mails (onboard) and the chat's mail about a waiting
-// person (routes/chat) use it.
+// quick support mails (onboard), the password links (passwordlinks), the
+// chat's mail about a waiting person (routes/chat) and the alert and help
+// request mails (mail) use it.
+//
+// The page says its language and direction, its heading is a heading and
+// its text paragraphs, and the button's text reaches 4.5:1 on the button
+// for any accent (WCAG 2.2 AA).
 package brandmail
 
 import (
+	"bytes"
 	"embed"
 	"html"
+	"image"
+	"image/color"
+	"image/draw"
+	"image/png"
 	"math"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/message"
 )
 
@@ -36,10 +49,19 @@ type Branding struct {
 // out.
 type Page struct {
 	Branding
+	// Lang is the language the texts are in, a code of the language files
+	// ("de", "ar"). It goes on the page with its direction, right to left
+	// for Arabic and Hebrew.
+	Lang    string
 	Heading string
 	Lead    string
-	// Quote is a text the mail quotes, set off below the lead
-	Quote string
+	// Facts are label and value rows below the lead, such as an alert's
+	// severity and device: a table with the labels as row headers.
+	Facts []Fact
+	// Quote is a text the mail quotes, set off below the lead, with
+	// QuoteLabel ("They wrote:") above it
+	Quote      string
+	QuoteLabel string
 	// Button is the one button's text, Link where it goes
 	Button string
 	Link   string
@@ -49,9 +71,16 @@ type Page struct {
 	// doesn't work
 	LinkHint string
 	// Small are short lines in small type
-	Small  []string
-	Footer string
+	Small []string
+	// Code is a code the reader types, on a line of its own in a monospace
+	// font below CodeLead, which says what to do with it
+	CodeLead string
+	Code     string
+	Footer   string
 }
+
+// Fact is one row of Page.Facts.
+type Fact struct{ Label, Value string }
 
 // DefaultAccent is the button colour without a usable branding colour.
 const DefaultAccent = "#1d4ed8"
@@ -75,24 +104,74 @@ func Accent(c string) string {
 	return c
 }
 
-// OnAccent is the text colour on the accent: white where it reads
-// (contrast 4.5:1 or more), else near black.
-func OnAccent(accent string) string {
+// The two text colours a button can have.
+const (
+	white     = "#ffffff"
+	nearBlack = "#111827"
+)
+
+func rgbOf(c string) [3]float64 {
+	var out [3]float64
+	for i := range out {
+		v, _ := strconv.ParseUint(c[1+2*i:3+2*i], 16, 8)
+		out[i] = float64(v)
+	}
+	return out
+}
+
+func luminance(c string) float64 {
 	lum := 0.0
 	for i, w := range []float64{0.2126, 0.7152, 0.0722} {
-		v, _ := strconv.ParseUint(accent[1+2*i:3+2*i], 16, 8)
-		c := float64(v) / 255
-		if c <= 0.03928 {
-			c /= 12.92
+		v := rgbOf(c)[i] / 255
+		if v <= 0.03928 {
+			v /= 12.92
 		} else {
-			c = math.Pow((c+0.055)/1.055, 2.4)
+			v = math.Pow((v+0.055)/1.055, 2.4)
 		}
-		lum += w * c
+		lum += w * v
 	}
-	if 1.05/(lum+0.05) >= 4.5 {
-		return "#ffffff"
+	return lum
+}
+
+// Contrast is the WCAG contrast ratio of two #rrggbb colours.
+func Contrast(a, b string) float64 {
+	x, y := luminance(a), luminance(b)
+	if x < y {
+		x, y = y, x
 	}
-	return "#111827"
+	return (x + 0.05) / (y + 0.05)
+}
+
+// OnAccent is the text colour on the accent: white or near black,
+// whichever has the higher contrast on it.
+func OnAccent(accent string) string {
+	if Contrast(white, accent) >= Contrast(nearBlack, accent) {
+		return white
+	}
+	return nearBlack
+}
+
+// Button is the button's colour and its text colour for an accent: the
+// accent with OnAccent on it where that reaches 4.5:1, else the accent
+// made darker, step by step, until white on it does. A mid grey such as
+// #7a7a7a reaches 4.29:1 with white and 4.13:1 with near black; its
+// button becomes #767676.
+func Button(accent string) (bg, fg string) {
+	bg = accent
+	if on := OnAccent(bg); Contrast(on, bg) >= 4.5 {
+		return bg, on
+	}
+	rgb := rgbOf(accent)
+	for f := 0.99; f > 0; f -= 0.01 {
+		bg = "#"
+		for _, v := range rgb {
+			bg += strconv.FormatUint(uint64(math.Round(v*f))|0x100, 16)[1:]
+		}
+		if Contrast(white, bg) >= 4.5 {
+			return bg, white
+		}
+	}
+	return "#000000", white
 }
 
 // Logo is the logo's address when a mail client can show it: an absolute
@@ -143,6 +222,27 @@ func Of(b *branding.Service, base string) Branding {
 	return out
 }
 
+// When is a time as a mail says it: in the server's time zone with the
+// zone named and UTC after it ("2026-12-03 16:04 CET (15:04 UTC)"), or in
+// UTC alone where the server runs on UTC. The reader doesn't have to know
+// which zone the server is in.
+func When(t time.Time) string {
+	utc := t.UTC()
+	local := t.In(time.Local)
+	name, offset := local.Zone()
+	if offset == 0 && (name == "UTC" || name == "GMT" || name == "") {
+		return utc.Format("2006-01-02 15:04") + " UTC"
+	}
+	if name == "" {
+		name = local.Format("-07:00")
+	}
+	inUTC := utc.Format("15:04")
+	if utc.Format("2006-01-02") != local.Format("2006-01-02") {
+		inUTC = utc.Format("2006-01-02 15:04")
+	}
+	return local.Format("2006-01-02 15:04") + " " + name + " (" + inUTC + " UTC)"
+}
+
 // The mail's two palettes: the console's light theme, and its dark theme
 // for clients that follow the reader's dark mode (Apple Mail, Outlook on
 // the web, iOS and macOS, Thunderbird). Clients without it show the light
@@ -163,6 +263,7 @@ const (
 	brandDark    = "#58a6ff"
 	onBrandDark  = "#0c1b1e"
 	mailFontList = "'IBM Plex Sans', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+	monoFontList = "'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace"
 )
 
 // defaultAccents are the accent colours of the console's own themes: an
@@ -170,13 +271,15 @@ const (
 var defaultAccents = map[string]bool{"#58a6ff": true, "#1b62cf": true, DefaultAccent: true}
 
 // accents is the button colour and its text colour in light and in dark
-// mode: the branding's own accent in both, else the console's.
+// mode: the branding's own accent in both, made readable by Button, else
+// the console's.
 func accents(c string) (light, onLight, dark, onDark string) {
 	a := Accent(c)
 	if strings.TrimSpace(c) == "" || defaultAccents[a] {
 		return brandLight, OnAccent(brandLight), brandDark, onBrandDark
 	}
-	return a, OnAccent(a), a, OnAccent(a)
+	bg, fg := Button(a)
+	return bg, fg, bg, fg
 }
 
 //go:embed logo/*.png
@@ -200,29 +303,81 @@ func ownLogo(p Page) (own, ownName bool) {
 	return true, name == "" || strings.EqualFold(name, "neodesk")
 }
 
+func readLogo(name string) []byte {
+	data, err := logoFiles.ReadFile(name)
+	if err != nil {
+		panic("brandmail: embedded logo missing: " + name)
+	}
+	return data
+}
+
+// The light logo's plate: 8 pixels of white around it on screen (16 in
+// the image, which is drawn at twice the size), with rounded corners.
+const (
+	platePad    = 16
+	plateRadius = 12
+)
+
+var (
+	plateOnce sync.Once
+	plateData []byte
+)
+
+// platedLogo is NeoDesk's light logo on an opaque white plate. The light
+// logo has a dark wordmark on a transparent ground, which disappears in
+// clients that turn the mail dark by inverting its colours but leave its
+// images as they are (the Gmail apps, Outlook for Windows). On the plate
+// it stays readable there, and in a light mail the plate is the card's own
+// white. The artwork is drawn on the plate pixel for pixel, not changed.
+func platedLogo() []byte {
+	plateOnce.Do(func() {
+		art, err := png.Decode(bytes.NewReader(readLogo("logo/logo-on-light-64h.png")))
+		if err != nil {
+			panic("brandmail: embedded logo is no PNG")
+		}
+		b := art.Bounds()
+		w, h := b.Dx()+2*platePad, b.Dy()+2*platePad
+		out := image.NewNRGBA(image.Rect(0, 0, w, h))
+		r := float64(plateRadius)
+		for y := 0; y < h; y++ {
+			for x := 0; x < w; x++ {
+				// The distance into a corner's rounding, for its edge
+				cx := math.Max(math.Max(r-float64(x)-0.5, float64(x)+0.5-float64(w)+r), 0)
+				cy := math.Max(math.Max(r-float64(y)-0.5, float64(y)+0.5-float64(h)+r), 0)
+				a := math.Min(math.Max(r-math.Hypot(cx, cy)+0.5, 0), 1)
+				if cx == 0 || cy == 0 {
+					a = 1
+				}
+				out.SetNRGBA(x, y, color.NRGBA{255, 255, 255, uint8(math.Round(a * 255))})
+			}
+		}
+		draw.Draw(out, b.Sub(b.Min).Add(image.Pt(platePad, platePad)), art, b.Min, draw.Over)
+		var buf bytes.Buffer
+		if err := png.Encode(&buf, out); err != nil {
+			panic("brandmail: " + err.Error())
+		}
+		plateData = buf.Bytes()
+	})
+	return plateData
+}
+
 // Inline are the images the page's HTML shows by Content-ID: NeoDesk's
-// logo for light and for dark mode, or its mark when the server has a name
-// of its own. A server with a logo image of its own needs none. Pass them
-// with the HTML (mail.Email.Inline), or the logo is missing.
+// logo for light mode on its plate and for dark mode, or its mark when the
+// server has a name of its own. A server with a logo image of its own
+// needs none. Pass them with the HTML (mail.Email.Inline), or the logo is
+// missing.
 func Inline(p Page) []message.Inline {
 	own, ownName := ownLogo(p)
 	if !own {
 		return nil
 	}
-	light, dark := "logo/logo-on-light-64h.png", "logo/logo-on-dark-64h.png"
+	light, dark := platedLogo(), readLogo("logo/logo-on-dark-64h.png")
 	if !ownName {
-		light, dark = "logo/mark-on-light-64.png", "logo/mark-on-dark-64.png"
-	}
-	read := func(name string) []byte {
-		data, err := logoFiles.ReadFile(name)
-		if err != nil {
-			panic("brandmail: embedded logo missing: " + name)
-		}
-		return data
+		light, dark = readLogo("logo/mark-on-light-64.png"), readLogo("logo/mark-on-dark-64.png")
 	}
 	return []message.Inline{
-		{ID: cidLogoLight, ContentType: "image/png", Filename: "neodesk-logo.png", Data: read(light)},
-		{ID: cidLogoDark, ContentType: "image/png", Filename: "neodesk-logo-dark.png", Data: read(dark)},
+		{ID: cidLogoLight, ContentType: "image/png", Filename: "neodesk-logo.png", Data: light},
+		{ID: cidLogoDark, ContentType: "image/png", Filename: "neodesk-logo-dark.png", Data: dark},
 	}
 }
 
@@ -261,53 +416,87 @@ func HTML(p Page) string {
 	l := lightPalette
 	font := "font-family: " + mailFontList + ";"
 	link := e(p.Link)
+	dir, start := "ltr", "left"
+	if i18n.RTL(p.Lang) {
+		dir, start = "rtl", "right"
+	}
+	langAttr := ""
+	if p.Lang != "" {
+		langAttr = ` lang="` + e(p.Lang) + `"`
+	}
 	var b strings.Builder
 	w := func(s ...string) {
 		for _, part := range s {
 			b.WriteString(part)
 		}
 	}
-	cell := func(padding, class, style, content string) {
-		w(`<tr><td class="`, class, `" style="padding: `, padding, `; `, font, ` `, style, `">`, content, `</td></tr>`)
+	// para is a paragraph in its own row of the card
+	para := func(padding, class, style, content string) {
+		w(`<tr><td style="padding: `, padding, `;"><p class="`, class, `" style="margin: 0; `, font, ` `, style, `">`, content, `</p></td></tr>`)
 	}
-	w(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">`)
+	w(`<!DOCTYPE html><html`, langAttr, ` dir="`, dir, `"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">`)
 	w(`<meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><title>`, e(p.Heading), `</title>`)
 	w(`<style>`, darkStyle(darkAccent, onDarkAccent), `</style></head>`)
 	w(`<body class="nd-page" style="margin: 0; padding: 0; background-color: `, l.page, `;">`)
 	w(`<table role="presentation" class="nd-page" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="`, l.page, `" style="background-color: `, l.page, `;"><tr><td align="center" style="padding: 24px 12px;">`)
-	w(`<table role="presentation" class="nd-card" width="560" cellspacing="0" cellpadding="0" border="0" bgcolor="`, l.card, `" style="width: 100%; max-width: 560px; background-color: `, l.card, `; border: 1px solid `, l.rule, `; border-radius: 8px;">`)
+	// dir and lang again on the card, for clients that drop the <html> element
+	w(`<table role="presentation" class="nd-card" dir="`, dir, `"`, langAttr, ` width="560" cellspacing="0" cellpadding="0" border="0" bgcolor="`, l.card, `" style="width: 100%; max-width: 560px; background-color: `, l.card, `; border: 1px solid `, l.rule, `; border-radius: 8px;">`)
 
 	// The logo: the server's own image, else NeoDesk's in a light and a
 	// dark version (the dark one hidden unless the client is in dark mode,
 	// and never in Outlook for Windows), with the server's name after the
-	// mark when it has one of its own
+	// mark when it has one of its own. The light logo has a plate of 8
+	// pixels, so its cell is 8 pixels smaller on each side.
 	own, ownName := ownLogo(p)
 	switch {
 	case !own:
 		w(`<tr><td style="padding: 24px 28px 0 28px;"><img src="`, e(Logo(p.Logo)), `" alt="`, e(p.Server), `" height="40" style="display: block; height: 40px; width: auto; max-width: 240px; border: 0;"></td></tr>`)
 	case ownName:
-		w(`<tr><td style="padding: 24px 28px 0 28px;">`)
-		w(`<img class="nd-light" src="cid:`, cidLogoLight, `" alt="NeoDesk" width="136" height="32" style="display: block; width: 136px; height: 32px; border: 0;">`)
-		w(`<!--[if !mso]><!--><img class="nd-dark nd-dark-logo" src="cid:`, cidLogoDark, `" alt="NeoDesk" width="136" height="32" style="display: none; width: 0; height: 0; max-height: 0; overflow: hidden; border: 0;"><!--<![endif]-->`)
+		w(`<tr><td style="padding: 16px 20px 0 20px;">`)
+		w(`<img class="nd-light" src="cid:`, cidLogoLight, `" alt="NeoDesk" width="152" height="48" style="display: block; width: 152px; height: 48px; border: 0;">`)
+		w(`<!--[if !mso]><!--><img class="nd-dark nd-dark-logo" src="cid:`, cidLogoDark, `" alt="NeoDesk" width="136" height="32" style="display: none; width: 0; height: 0; max-height: 0; overflow: hidden; margin: 8px; border: 0;"><!--<![endif]-->`)
 		w(`</td></tr>`)
 	default:
-		w(`<tr><td style="padding: 24px 28px 0 28px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td valign="middle" style="padding: 0 10px 0 0;">`)
+		w(`<tr><td style="padding: 24px 28px 0 28px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td valign="middle" style="padding: 0 `)
+		if dir == "rtl" {
+			w(`0 0 10px;">`)
+		} else {
+			w(`10px 0 0;">`)
+		}
 		w(`<img class="nd-light" src="cid:`, cidLogoLight, `" alt="" width="32" height="32" style="display: block; width: 32px; height: 32px; border: 0;">`)
 		w(`<!--[if !mso]><!--><img class="nd-dark nd-dark-mark" src="cid:`, cidLogoDark, `" alt="" width="32" height="32" style="display: none; width: 0; height: 0; max-height: 0; overflow: hidden; border: 0;"><!--<![endif]-->`)
 		w(`</td><td valign="middle" class="nd-name" style="`, font, ` font-size: 18px; font-weight: 700; color: `, l.ink, `;">`, e(p.Server), `</td></tr></table></td></tr>`)
 	}
-	cell("20px 28px 0 28px", "nd-ink", "font-size: 22px; line-height: 1.3; font-weight: 700; color: "+l.ink+";", e(p.Heading))
-	cell("12px 28px 0 28px", "nd-ink", "font-size: 15px; line-height: 1.5; color: "+l.ink+";", e(p.Lead))
-	if p.Quote != "" {
-		cell("12px 28px 0 28px", "nd-ink", "font-size: 15px; line-height: 1.5; color: "+l.ink+";",
-			`<div class="nd-quote" style="padding: 8px 12px; border-left: 3px solid `+accent+`; background-color: `+l.quote+`;">`+e(p.Quote)+`</div>`)
+	w(`<tr><td style="padding: 20px 28px 0 28px;"><h1 class="nd-ink" style="margin: 0; `, font, ` font-size: 22px; line-height: 1.3; font-weight: 700; color: `, l.ink, `;">`, e(p.Heading), `</h1></td></tr>`)
+	if p.Lead != "" {
+		para("12px 28px 0 28px", "nd-ink", "font-size: 15px; line-height: 1.5; color: "+l.ink+";", e(p.Lead))
 	}
 
-	// One button: a cell in the accent colour, so Outlook draws it too
+	// Label and value rows: a data table, its labels row headers
+	if len(p.Facts) > 0 {
+		w(`<tr><td style="padding: 16px 28px 0 28px;"><table class="nd-facts" width="100%" cellspacing="0" cellpadding="0" border="0" style="width: 100%; border-collapse: collapse;">`)
+		for _, f := range p.Facts {
+			rule := `border-top: 1px solid ` + l.rule + `;`
+			w(`<tr><th scope="row" class="nd-muted nd-rule" valign="top" style="width: 34%; padding: 8px 12px 8px 0; `, rule, ` text-align: `, start, `; vertical-align: top; `, font, ` font-size: 14px; line-height: 1.5; font-weight: 600; color: `, l.muted, `;">`, e(f.Label), `</th>`)
+			w(`<td class="nd-ink nd-rule" valign="top" style="padding: 8px 0; `, rule, ` text-align: `, start, `; vertical-align: top; `, font, ` font-size: 15px; line-height: 1.5; color: `, l.ink, `; white-space: pre-wrap; word-break: break-word;">`, e(f.Value), `</td></tr>`)
+		}
+		w(`</table></td></tr>`)
+	}
+
+	if p.Quote != "" {
+		w(`<tr><td style="padding: 12px 28px 0 28px;">`)
+		if p.QuoteLabel != "" {
+			w(`<p class="nd-muted" style="margin: 0 0 4px 0; `, font, ` font-size: 13px; line-height: 1.5; color: `, l.muted, `;">`, e(p.QuoteLabel), `</p>`)
+		}
+		w(`<blockquote class="nd-quote nd-ink" style="margin: 0; padding: 8px 12px; border-`, start, `: 3px solid `, accent, `; background-color: `, l.quote, `; `, font, ` font-size: 15px; line-height: 1.5; color: `, l.ink, `;">`, e(p.Quote), `</blockquote></td></tr>`)
+	}
+
+	// One button: a cell in the accent colour, so Outlook draws it too. 14
+	// pixels above and below a 20 pixel line make it 48 pixels high.
 	if p.Button != "" {
 		w(`<tr><td style="padding: 24px 28px 0 28px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>`)
 		w(`<td class="nd-btn" bgcolor="`, accent, `" style="border-radius: 6px; background-color: `, accent, `;">`)
-		w(`<a class="nd-on" href="`, link, `" target="_blank" style="display: inline-block; padding: 12px 24px; `, font, ` font-size: 16px; font-weight: 600; color: `, onAccent, `; text-decoration: none; border-radius: 6px;">`, e(p.Button), `</a>`)
+		w(`<a class="nd-on" href="`, link, `" target="_blank" style="display: inline-block; padding: 14px 24px; `, font, ` font-size: 16px; line-height: 20px; font-weight: 600; color: `, onAccent, `; text-decoration: none; border-radius: 6px;">`, e(p.Button), `</a>`)
 		w(`</td></tr></table></td></tr>`)
 	}
 
@@ -323,15 +512,24 @@ func HTML(p Page) string {
 
 	small := "font-size: 13px; line-height: 1.5; color: " + l.muted + ";"
 	if p.LinkHint != "" {
-		cell("16px 28px 0 28px", "nd-muted", small, e(p.LinkHint)+`<br><a class="nd-ink" href="`+link+`" target="_blank" style="color: `+l.ink+`; word-break: break-all;">`+link+`</a>`)
+		para("16px 28px 0 28px", "nd-muted", small, e(p.LinkHint)+`<br><a class="nd-ink" href="`+link+`" target="_blank" style="color: `+l.ink+`; word-break: break-all;">`+link+`</a>`)
 	}
 	for _, line := range p.Small {
 		if line != "" {
-			cell("12px 28px 0 28px", "nd-muted", small, e(line))
+			para("12px 28px 0 28px", "nd-muted", small, e(line))
 		}
 	}
+	// The code on a line of its own, so a double click or a long press
+	// selects only the code
+	if p.Code != "" {
+		w(`<tr><td style="padding: 12px 28px 0 28px;">`)
+		if p.CodeLead != "" {
+			w(`<p class="nd-muted" style="margin: 0; `, font, ` `, small, `">`, e(p.CodeLead), `</p>`)
+		}
+		w(`<p class="nd-ink" style="margin: 4px 0 0 0; font-family: `, monoFontList, `; font-size: 18px; line-height: 1.4; font-weight: 600; letter-spacing: 0.04em; color: `, l.ink, `;" dir="ltr">`, e(p.Code), `</p></td></tr>`)
+	}
 	if p.Footer != "" {
-		w(`<tr><td style="padding: 20px 28px 24px 28px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td class="nd-muted nd-rule" style="border-top: 1px solid `, l.rule, `; padding-top: 12px; `, font, ` font-size: 12px; line-height: 1.5; color: `, l.muted, `;">`, e(p.Footer), `</td></tr></table></td></tr>`)
+		w(`<tr><td style="padding: 20px 28px 24px 28px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td class="nd-rule" style="border-top: 1px solid `, l.rule, `; padding-top: 12px;"><p class="nd-muted" style="margin: 0; `, font, ` font-size: 12px; line-height: 1.5; color: `, l.muted, `;">`, e(p.Footer), `</p></td></tr></table></td></tr>`)
 	} else {
 		w(`<tr><td style="padding: 0 0 24px 0;"></td></tr>`)
 	}

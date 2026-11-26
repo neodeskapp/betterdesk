@@ -5,6 +5,8 @@
   of the admin's slides, title and text over the picture; it moves on
   every 7 s, stops while the pointer or focus is on it, in hidden tabs and
   when motion is reduced (system setting or the accessibility panel).
+  "Stop slides" comes first in the carousel (APG carousel, WCAG 2.2.2)
+  and stops it until "Start slides", whatever the pointer and focus do.
   Hidden below 900 px, where the form needs the width.
 -->
 <script lang="ts">
@@ -22,10 +24,12 @@
 	let focused = $state(false);
 	let hidden = $state(false);
 	let still = $state(false);
+	/** Stopped with the button: stays so until Start */
+	let stopped = $state(false);
 
 	const count = $derived(slides.length);
 	const current = $derived(count ? ((index % count) + count) % count : 0);
-	const paused = $derived(hovered || focused || hidden || still || count < 2);
+	const paused = $derived(stopped || hovered || focused || hidden || still || count < 2);
 
 	function text(slide: Slide, part: 'title' | 'body'): string {
 		if (slide[part]) return slide[part];
@@ -42,10 +46,10 @@
 		const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
 		const update = () => {
 			hidden = document.hidden;
-			still =
-				!!mq?.matches ||
-				root.dataset.a11yReduceMotion === 'true' ||
-				root.dataset.a11yPauseAnimations === 'true';
+			// The boot script says whether motion is reduced now (the system's
+			// setting or the accessibility option); without it, the system decides
+			const reduce = root.dataset.a11yReduceMotion;
+			still = reduce === undefined ? !!mq?.matches : reduce === 'true';
 		};
 		update();
 		document.addEventListener('visibilitychange', update);
@@ -54,7 +58,7 @@
 		const watch = new MutationObserver(update);
 		watch.observe(root, {
 			attributes: true,
-			attributeFilter: ['data-a11y-reduce-motion', 'data-a11y-pause-animations']
+			attributeFilter: ['data-a11y-reduce-motion']
 		});
 		return () => {
 			document.removeEventListener('visibilitychange', update);
@@ -89,33 +93,15 @@
 			if (!(next instanceof Node) || !e.currentTarget.contains(next)) focused = false;
 		}}
 	>
-		<div class="login-promo-slides" aria-live={paused ? 'polite' : 'off'}>
-			{#each slides as slide, i (slide.id || i)}
-				{@const title = text(slide, 'title')}
-				{@const body = text(slide, 'body')}
-				<div
-					class={['login-promo-slide', slide.imageUrl && 'has-image']}
-					role="group"
-					aria-roledescription={tf('login_promo.slide', 'slide')}
-					aria-label={tf('login_promo.slide_n', 'Slide {n} of {count}', { n: i + 1, count })}
-					hidden={i !== current}
-				>
-					{#if slide.imageUrl}
-						<img class="login-promo-slide-bg" src={slide.imageUrl} alt="" />
-						<div
-							class="login-promo-slide-overlay"
-							style:opacity={Math.min(90, Math.max(0, slide.overlay)) / 100}
-						></div>
-					{/if}
-					<div class="login-promo-copy">
-						{#if title}<h2 class="login-promo-title">{title}</h2>{/if}
-						{#if body}<p class="login-promo-body">{body}</p>{/if}
-					</div>
-				</div>
-			{/each}
-		</div>
 		{#if count > 1}
+			<!-- First in the carousel, so the slides can be stopped before reading them -->
 			<div class="login-promo-controls">
+				<IconButton
+					class="login-promo-nav"
+					icon={stopped ? 'play_arrow' : 'stop'}
+					label={stopped ? tf('login_promo.start', 'Start slides') : tf('login_promo.stop', 'Stop slides')}
+					onclick={() => (stopped = !stopped)}
+				/>
 				<IconButton
 					class="login-promo-nav"
 					icon={rtl ? 'chevron_right' : 'chevron_left'}
@@ -141,6 +127,31 @@
 				/>
 			</div>
 		{/if}
+		<div class="login-promo-slides" aria-live={paused ? 'polite' : 'off'}>
+			{#each slides as slide, i (slide.id || i)}
+				{@const title = text(slide, 'title')}
+				{@const body = text(slide, 'body')}
+				<div
+					class={['login-promo-slide', slide.imageUrl && 'has-image']}
+					role="group"
+					aria-roledescription={tf('login_promo.slide', 'slide')}
+					aria-label={tf('login_promo.slide_n', 'Slide {n} of {count}', { n: i + 1, count })}
+					hidden={i !== current}
+				>
+					{#if slide.imageUrl}
+						<img class="login-promo-slide-bg" src={slide.imageUrl} alt="" />
+						<div
+							class="login-promo-slide-overlay"
+							style:opacity={Math.min(90, Math.max(0, slide.overlay)) / 100}
+						></div>
+					{/if}
+					<div class="login-promo-copy">
+						{#if title}<h2 class="login-promo-title">{title}</h2>{/if}
+						{#if body}<p class="login-promo-body">{body}</p>{/if}
+					</div>
+				</div>
+			{/each}
+		</div>
 	</aside>
 {/if}
 
@@ -187,8 +198,10 @@
 		color: inherit;
 		opacity: 0.9;
 	}
+	/* Before the slides in the page order, still drawn over them */
 	.login-promo-controls {
 		position: absolute;
+		z-index: 1;
 		bottom: var(--space-4);
 		inset-inline-start: var(--space-6);
 		display: flex;

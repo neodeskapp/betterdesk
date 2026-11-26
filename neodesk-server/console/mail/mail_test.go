@@ -11,6 +11,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/brandmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
@@ -269,22 +270,27 @@ func TestTLSVerification(t *testing.T) {
 func TestMailsEscapeWhatTheyPrint(t *testing.T) {
 	hostile := `<script>alert("x")</script>&`
 	escaped := `&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;&amp;`
+	// The branded layout escapes as html.EscapeString does: quotes as &#34;
+	escaped = `&lt;script&gt;alert(&#34;x&#34;)&lt;/script&gt;&amp;`
+	words, brand := New(Options{}).words(), brandmail.Branding{Server: hostile}
 	_, _, html, err := alertMail(
 		Alert{Severity: jsbind.String(hostile), DeviceID: jsbind.String(hostile), Message: jsbind.String(hostile), TriggeredAt: jsbind.String(hostile)},
-		AlertRule{Name: jsbind.String(hostile), Description: jsbind.String(hostile), ConditionValue: jsbind.Number(1)})
+		AlertRule{Name: jsbind.String(hostile), Description: jsbind.String(hostile), ConditionValue: jsbind.Number(1)}, words, brand)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Count(html, escaped) != 6 || strings.Contains(html, "<script>") {
+	// The title and the heading name the rule; severity, device, message and
+	// time are facts, the description a line below them
+	if strings.Count(html, escaped) < 7 || strings.Contains(html, "<script>") {
 		t.Fatalf("alert mail: %s", html)
 	}
 	_, _, html, err = helpRequestMail(HelpRequest{Hostname: jsbind.String(hostile), DeviceID: jsbind.String(hostile), Message: jsbind.String(hostile)},
-		jsbind.String(hostile), `https://panel.example.org/?a="b"&c=<d>`)
+		jsbind.String(hostile), `https://panel.example.org/?a="b"&c=<d>`, words, brand)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Count(html, escaped) != 4 || strings.Contains(html, "<script>") ||
-		!strings.Contains(html, `<a href="https://panel.example.org/?a=&quot;b&quot;&amp;c=&lt;d&gt;/help-requests">`) {
+	if strings.Count(html, escaped) < 6 || strings.Contains(html, "<script>") ||
+		!strings.Contains(html, `href="https://panel.example.org/?a=&#34;b&#34;&amp;c=&lt;d&gt;/help-requests"`) {
 		t.Fatalf("help request mail: %s", html)
 	}
 }
@@ -388,17 +394,17 @@ func TestHelpRequestNotification(t *testing.T) {
 			t.Fatal(ok, err)
 		}
 		m := transport.sends[0].mail
-		// Blank lines set the parts apart (BUGS EM7)
-		wantText := "A new help request was submitted.\n\nDevice: PC-01\nDevice ID: dev-1\nFolder: Support\n\nMessage: Need help\n\nOpen in panel: https://panel.example.org/help-requests"
+		// The heading, the lead, the facts and the link, as the branded page has them (accessibility audit M-B1)
+		wantText := "Help request from PC-01\n\nA new help request was submitted.\n\nDevice: PC-01\nDevice ID: dev-1\nFolder: Support\nMessage: Need help\n\nOpen help requests in NeoDesk: https://panel.example.org/help-requests\n"
 		if m.Subject != "[Support] Help request — PC-01" || !sameStrings(m.To, []string{"alice@example.com"}) || m.ToList || *m.Text != wantText ||
-			m.From != "from@example.com" || !strings.Contains(*m.HTML, `<a href="https://panel.example.org/help-requests">`) {
+			m.From != "from@example.com" || !strings.Contains(*m.HTML, `href="https://panel.example.org/help-requests"`) {
 			t.Fatalf("mail %s", describe(m))
 		}
 		// Without a device id and a folder only their lines go
 		if ok, err := s.SendHelpRequestEmail(ctx, HelpRequestEmail{To: []string{"alice@example.com"}, HelpRequest: HelpRequest{Hostname: jsbind.String("PC-02")}}); !ok || err != nil {
 			t.Fatal(ok, err)
 		}
-		if got, want := *transport.sends[1].mail.Text, "A new help request was submitted.\n\nDevice: PC-02\n\nMessage: \n\nOpen in panel: https://panel.example.org/help-requests"; got != want {
+		if got, want := *transport.sends[1].mail.Text, "Help request from PC-02\n\nA new help request was submitted.\n\nDevice: PC-02\nMessage: \n\nOpen help requests in NeoDesk: https://panel.example.org/help-requests\n"; got != want {
 			t.Fatalf("text %q, want %q", got, want)
 		}
 		for range 2 {

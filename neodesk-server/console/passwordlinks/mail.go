@@ -19,6 +19,8 @@ type Mail struct {
 	HTML    string
 	// Inline are the logo images the HTML shows.
 	Inline []message.Inline
+	// Lang is the language the texts are in, for mail.Email.Lang.
+	Lang string
 }
 
 // MailFacts are what a link's mail says.
@@ -44,6 +46,11 @@ type MailFacts struct {
 // not work, the username and until when the link works. The keys are
 // below password_link in the language files.
 func BuildMail(t Translate, f MailFacts) Mail {
+	// The language the texts came from, as its file names it
+	lang := t("meta.lang", nil)
+	if lang == "meta.lang" {
+		lang = ""
+	}
 	vars := map[string]any{
 		"server": f.Branding.Server, "sender": f.Sender, "username": f.Username,
 		"expires": f.Expires, "host": f.Host,
@@ -70,7 +77,7 @@ func BuildMail(t Translate, f MailFacts) Mail {
 	lines = append(lines, small...)
 	lines = append(lines, "", "--", footer)
 	page := brandmail.Page{
-		Branding: f.Branding, Heading: heading, Lead: lead, Button: button, Link: f.Link,
+		Branding: f.Branding, Lang: lang, Heading: heading, Lead: lead, Button: button, Link: f.Link,
 		LinkHint: linkHint, Small: small, Footer: footer,
 	}
 	return Mail{
@@ -78,5 +85,6 @@ func BuildMail(t Translate, f MailFacts) Mail {
 		Text:    strings.Join(lines, "\n") + "\n",
 		HTML:    brandmail.HTML(page),
 		Inline:  brandmail.Inline(page),
+		Lang:    lang,
 	}
 }

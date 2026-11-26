@@ -84,7 +84,8 @@
 			async () => {
 				detail = await getInvite(id);
 			},
-			{ every: FOLLOW_MS, immediate: true }
+			// The dialog waits for the computer: this keeps going while live updates are paused
+			{ every: FOLLOW_MS, immediate: true, essential: true }
 		);
 	});
 

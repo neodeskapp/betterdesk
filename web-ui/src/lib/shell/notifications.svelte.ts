@@ -56,7 +56,8 @@ export function loadNotifications(): Promise<void> {
 /** Start polling (the shell calls it once) */
 export function startNotifications(): void {
 	if (stopPoll) return;
-	stopPoll = poll(loadNotifications, { every: POLL_MS });
+	// The count on the bell keeps coming while live updates are paused: it moves nothing on the page
+	stopPoll = poll(loadNotifications, { every: POLL_MS, essential: true });
 }
 
 export function stopNotifications(): void {

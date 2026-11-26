@@ -10,6 +10,7 @@ import * as v from 'valibot';
 import { Bootstrap, saveLanguage, type NavSection, type PanelAccess } from '#lib/api/console.ts';
 import { ApiError, clientMessages, setCsrfToken, setViewingAs } from '#lib/api/client.ts';
 import { setStrings, t, has, savedLanguage, switchLanguage } from '#lib/i18n/i18n.svelte.ts';
+import { applyAccountA11y, leaveAccountA11y } from '#lib/shell/a11y.svelte.ts';
 import { PREF, writePref } from '#lib/util/storage.ts';
 
 export type User = Bootstrap['user'];
@@ -125,6 +126,8 @@ export function applyBootstrap(boot: Bootstrap): void {
 	session.impersonation = boot.impersonation ?? null;
 	setViewingAs(!!session.impersonation);
 	setCsrfToken(boot.csrfToken);
+	// The account's accessibility settings win over the browser's copy
+	applyAccountA11y(boot.user.accessibility);
 }
 
 /** Copy the client's own messages from the loaded strings */
@@ -230,4 +233,5 @@ export function clearSession(): void {
 	setViewingAs(false);
 	session.ready = false;
 	setCsrfToken('');
+	leaveAccountA11y();
 }

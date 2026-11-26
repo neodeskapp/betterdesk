@@ -85,11 +85,14 @@
 				style:width="{r.w}px"
 				style:height="{r.h}px"
 			>
+				<!-- svelte-ignore a11y_no_interactive_element_to_noninteractive_role (ARIA in HTML allows any role on canvas; role application makes screen readers pass the keys to the remote computer) -->
 				<canvas
 					{@attach screen(d.idx)}
 					class="tile-canvas"
 					tabindex="0"
 					data-display={d.idx}
+					role="application"
+					aria-roledescription={tf('remote_viewer.screen_role', 'remote screen')}
 					aria-label={tf('remote_viewer.display_of', 'Display {n} of {name}', { n: d.idx + 1, name })}
 					aria-describedby={describedby}
 					onpointerdown={() => {

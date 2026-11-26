@@ -3,6 +3,7 @@ package console
 import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	accessibilityroutes "github.com/neodeskapp/neodesk/neodesk-server/console/routes/accessibility"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/activity"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/apitokens"
 	authroutes "github.com/neodeskapp/neodesk/neodesk-server/console/routes/auth"
@@ -171,4 +172,5 @@ func registerRoutes(d *kit.Deps, backups *backup.Service) {
 	onboard.Register(d)                       // Add a computer and Quick support: invites, sessions, client packages
 	apitokens.Register(d)                     // API tokens for scripts, the command line and its MCP server
 	setupguideroutes.Register(d)              // the first-install guide on the overview
+	accessibilityroutes.Register(d)           // the signed-in account's own accessibility settings
 }

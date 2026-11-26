@@ -17,9 +17,13 @@
   Data: GET /api/auth/login-page (CSRF token, the console's name), POST
   /api/auth/password-link/lookup, POST /api/auth/password-link/redeem, GET
   /api/auth/password-reset/available, POST /api/auth/password-reset/request.
+
+  Screen readers: when the step changes, focus goes to the heading, so the
+  new step is read from its start (the steps with a field focus the field
+  instead). Only the status sentences are live, not the whole form.
 -->
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import { ApiError, setCsrfToken } from '#lib/api/client.ts';
 	import {
 		linkToken,
@@ -50,6 +54,14 @@
 
 	type Phase = 'loading' | 'none' | 'request' | 'requested' | 'form' | 'invalid' | 'failed' | 'done';
 	let phase = $state<Phase>('loading');
+	let heading = $state<HTMLElement | null>(null);
+
+	/* A new step: focus on its heading, unless the step starts in its field */
+	$effect(() => {
+		const p = phase;
+		if (p === 'loading' || p === 'form' || p === 'request') return;
+		untrack(() => void tick().then(() => heading?.focus()));
+	});
 	let token = '';
 	let found = $state.raw<PasswordLink | null>(null);
 	let doneFor = $state('');
@@ -167,10 +179,10 @@
 
 <DownloadFrame>
 	<header class="link-head">
-		<h1>{title}</h1>
+		<h1 bind:this={heading} tabindex="-1">{title}</h1>
 	</header>
 
-	<div class="link-body" aria-live="polite">
+	<div class="link-body">
 		{#if phase === 'loading'}
 			<States kind="loading" />
 		{:else if phase === 'failed'}
@@ -254,7 +266,7 @@
 				</div>
 			</form>
 		{:else if phase === 'done'}
-			<p class="link-done">
+			<p class="link-done" role="status">
 				{t(reset ? 'password_link.done_text_reset' : 'password_link.done_text', { username: doneFor })}
 			</p>
 			<div>
@@ -267,6 +279,10 @@
 <style>
 	.link-head h1 {
 		margin: 0;
+	}
+	/* Focus lands here on a new step to read it, not to act on it */
+	.link-head h1:focus {
+		outline: none;
 	}
 	.link-body {
 		display: flex;

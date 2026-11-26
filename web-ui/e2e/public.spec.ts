@@ -60,7 +60,9 @@ test.describe('sign-in page', () => {
 		// Show reveals the password
 		const toggle = page.locator('.password-toggle');
 		await toggle.click();
-		await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+		// Its name says what the next press does; no aria-pressed beside a changing name
+		await expect(toggle).toHaveAccessibleName('Hide password');
+		await expect(toggle).not.toHaveAttribute('aria-pressed');
 		await expect(page.locator('#password')).toHaveAttribute('type', 'text');
 		expect(problems()).toEqual([]);
 		await ctx.close();

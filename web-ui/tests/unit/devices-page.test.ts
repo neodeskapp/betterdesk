@@ -15,12 +15,19 @@ vi.mock('$app/navigation', () => ({ goto: vi.fn(), pushState: vi.fn(), replaceSt
 import Page from '../../src/routes/(console)/devices/+page.svelte';
 import { session } from '../../src/lib/state/session.svelte.ts';
 import { dismissAll } from '../../src/lib/ui/toasts.svelte.ts';
+import { setLivePaused } from '../../src/lib/state/live-updates.svelte.ts';
 
 let requests: string[] = [];
 let devices: object[] = [];
 
 class QuietSocket extends EventTarget {
+	static last: QuietSocket | null = null;
 	readyState = 0;
+	onmessage: ((e: { data: string }) => void) | null = null;
+	constructor() {
+		super();
+		QuietSocket.last = this;
+	}
 	close() {}
 	send() {}
 }
@@ -47,6 +54,7 @@ afterEach(() => {
 	dismissAll();
 	vi.unstubAllGlobals();
 	session.permissions = [];
+	setLivePaused(false);
 });
 
 const early = () => ({
@@ -67,6 +75,42 @@ describe('device list page head', () => {
 		expect(screen.getByRole('heading', { level: 1, name: 'devices.title' })).toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: 'devices.sync_status' })).toBeNull();
 		expect(requests).not.toContain('POST /api/sync-status');
+	});
+});
+
+describe('Pause live updates', () => {
+	const listLoads = () => requests.filter((r) => r === 'GET /api/devices').length;
+	const push = (data: unknown) => QuietSocket.last?.onmessage?.({ data: JSON.stringify(data) });
+
+	test('the list keeps what it shows until Refresh; the page head says so', async () => {
+		setLivePaused(true);
+		render(Page, early());
+		await vi.waitFor(() => expect(listLoads()).toBe(1));
+		expect(screen.getByText('live.paused')).toBeInTheDocument();
+		push({ type: 'device_id_changed', old_id: 'a', new_id: 'z' });
+		await new Promise((r) => setTimeout(r, 50));
+		expect(listLoads()).toBe(1);
+		await userEvent.click(screen.getByRole('button', { name: 'common.refresh' }));
+		await vi.waitFor(() => expect(listLoads()).toBe(2));
+	});
+
+	test('a push while paused offers New entries, show them, which loads the list', async () => {
+		setLivePaused(true);
+		render(Page, early());
+		await vi.waitFor(() => expect(listLoads()).toBe(1));
+		expect(screen.queryByRole('button', { name: 'live.new_entries' })).toBeNull();
+		push({ type: 'device_id_changed', old_id: 'a', new_id: 'z' });
+		await userEvent.click(await screen.findByRole('button', { name: 'live.new_entries' }));
+		await vi.waitFor(() => expect(listLoads()).toBe(2));
+		await vi.waitFor(() => expect(document.activeElement?.classList.contains('devices-table')).toBe(true));
+	});
+
+	test('without the pause a push loads the list again and there is no Refresh', async () => {
+		render(Page, early());
+		await vi.waitFor(() => expect(listLoads()).toBe(1));
+		expect(screen.queryByRole('button', { name: 'common.refresh' })).toBeNull();
+		push({ type: 'device_id_changed', old_id: 'a', new_id: 'z' });
+		await vi.waitFor(() => expect(listLoads()).toBe(2));
 	});
 });
 
