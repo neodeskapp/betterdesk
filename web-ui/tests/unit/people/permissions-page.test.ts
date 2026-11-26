@@ -137,6 +137,12 @@ describe('edit, then save', () => {
 		render(Page);
 		await waitFor(() => expect(box('device.connect')).toBeEnabled());
 		const sentence = () => document.querySelector('.settings-summary .perm-sentence')?.textContent;
+		// The summary names the role it describes
+		const picked = screen.getAllByRole('radio').find((r) => (r as HTMLInputElement).checked);
+		const pickedName =
+			picked?.closest('label')?.querySelector('.check-label, strong, span')?.textContent?.trim() ?? '';
+		expect(pickedName).not.toBe('');
+		expect(screen.getByRole('heading', { level: 2, name: `What ${pickedName} can do` })).toBeInTheDocument();
 		expect(sentence()).toBe(
 			"People with this role can see and change devices. They can't connect to devices, see people, or change the server."
 		);

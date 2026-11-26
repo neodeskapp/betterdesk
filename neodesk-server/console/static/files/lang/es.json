@@ -6114,7 +6114,8 @@
     "not_applied_yet": "No NeoDesk app applies this group yet. It is saved and handed to devices that ask.",
     "sound_today": "To turn sound off in sessions today, use an access rule with Sound off under Devices, or switch off Sound in a person's console access.",
     "open_access_rules": "Open access rules",
-    "remove_group": "Remove all rules of this group"
+    "remove_group": "Remove all rules of this group",
+    "row_not_applied": "No NeoDesk app applies this yet."
   },
   "attestation": {
     "title": "Panel",
@@ -7740,7 +7741,8 @@
     "help_billing_export": "Download billing data as a file.",
     "sum_guest_create": "make guest links",
     "sum_enrollment_manage": "manage joining",
-    "sum_enrollment_approve": "approve join requests"
+    "sum_enrollment_approve": "approve join requests",
+    "summary_title_named": "What {role} can do"
   },
   "notifications": {
     "title": "Notificaciones",

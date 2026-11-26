@@ -429,7 +429,9 @@
 	{#snippet summary()}
 		{#if current}
 			<div class="perm-summary" aria-live="polite">
-				<h2 class="perm-scope-title">{tf('permissions.summary_title', 'What this role can do')}</h2>
+				<h2 class="perm-scope-title">
+					{tf('permissions.summary_title_named', 'What {role} can do', { role: roleLabel(role, t) })}
+				</h2>
 				{#if current.is_super_admin}
 					<p>{t('permissions.locked_desc')}</p>
 				{:else}

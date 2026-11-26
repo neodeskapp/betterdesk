@@ -6114,7 +6114,8 @@
     "not_applied_yet": "Noch keine NeoDesk-App wendet diese Gruppe an. Sie wird gespeichert und an Geräte gegeben, die danach fragen.",
     "sound_today": "Um den Ton in Sitzungen heute abzuschalten, nimm eine Zugriffsregel mit Ton aus unter Geräte oder schalte Ton im Konsolenzugriff einer Person aus.",
     "open_access_rules": "Zugriffsregeln öffnen",
-    "remove_group": "Alle Regeln dieser Gruppe entfernen"
+    "remove_group": "Alle Regeln dieser Gruppe entfernen",
+    "row_not_applied": "Noch keine NeoDesk-App wendet das an."
   },
   "attestation": {
     "title": "Dashboard",
@@ -7740,7 +7741,8 @@
     "help_billing_export": "Abrechnungsdaten als Datei herunterladen.",
     "sum_guest_create": "Gastlinks erstellen",
     "sum_enrollment_manage": "den Beitritt verwalten",
-    "sum_enrollment_approve": "Beitrittsanfragen genehmigen"
+    "sum_enrollment_approve": "Beitrittsanfragen genehmigen",
+    "summary_title_named": "Was {role} darf"
   },
   "notifications": {
     "title": "Benachrichtigungen",
