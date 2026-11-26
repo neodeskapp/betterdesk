@@ -70,11 +70,11 @@ func TestRoutesThatDeclareTheirSection(t *testing.T) {
 		"POST /api/chat/team/teams -> team-chat",
 		"POST /api/chat/upload -> no section",
 		"POST /api/network/targets/{id}/check -> toolkit",
-		// Sign in as: the users section at read, as for viewing the account,
-		// because it changes no account; the route itself needs
-		// user.impersonate (only super admins by default) and refuses the
-		// caller's own account and any with as many rights or more
-		"POST /api/users/{id}/impersonate -> users at read",
+		// Sign in as: the users section at write (A274), so a row that
+		// leaves an admin's Users at read takes it away; the route itself
+		// also needs user.impersonate (only super admins by default) and
+		// refuses the caller's own account and any with as many rights or more
+		"POST /api/users/{id}/impersonate -> users at write",
 		"PUT /api/chat/me -> no section",
 		"PUT /api/chat/settings -> no section",
 	}

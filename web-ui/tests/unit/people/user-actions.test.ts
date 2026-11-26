@@ -4,9 +4,15 @@
  * sign-in security and the ones that end something, each offered by the
  * signed-in person's permissions and the server's rules.
  */
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
 import type { ConsoleUser } from '../../../src/lib/api/users.ts';
-import { signInLink, userActionGroups, type ActionRights } from '../../../src/lib/people/user-actions.ts';
+import {
+	mayViewAs,
+	signInLink,
+	userActionGroups,
+	type ActionRights
+} from '../../../src/lib/people/user-actions.ts';
+import { session } from '../../../src/lib/state/session.svelte.ts';
 
 function account(over: Partial<ConsoleUser> = {}): ConsoleUser {
 	return {
@@ -167,5 +173,46 @@ describe('the sign-in link', () => {
 		expect(signInLink('https://desk.example/', '/console', 'a b&c@x')).toBe(
 			'https://desk.example/console/login?username=a%20b%26c%40x'
 		);
+	});
+});
+
+describe('Sign in as', () => {
+	const access = (users: 'read' | 'write') => ({
+		sections: { users } as Record<string, 'none' | 'read' | 'write'>,
+		pages: [{ prefix: '/users', section: 'users' }],
+		catalog: [{ key: 'users', read: 'user.view', write: 'user.edit' }]
+	});
+	afterEach(() => {
+		session.permissions = [];
+		session.access = null;
+		session.path = '';
+		session.impersonation = null;
+		session.isSuperAdmin = false;
+	});
+
+	test('needs the Users section at write besides user.impersonate (A274), as the server asks', () => {
+		session.permissions = ['user.view', 'user.edit', 'user.impersonate'];
+		session.path = '/users';
+		session.access = access('write');
+		expect(mayViewAs()).toBe(true);
+		session.path = '/users/5';
+		expect(mayViewAs()).toBe(true);
+		// A panel access row that leaves Users read-only takes it away, like the other writes
+		session.access = access('read');
+		expect(mayViewAs()).toBe(false);
+		session.path = '/users';
+		expect(mayViewAs()).toBe(false);
+		// Without the permission write is no help
+		session.access = access('write');
+		session.permissions = ['user.view', 'user.edit'];
+		expect(mayViewAs()).toBe(false);
+	});
+
+	test('is not offered while viewing as someone', () => {
+		session.permissions = ['user.view', 'user.edit', 'user.impersonate'];
+		session.path = '/users';
+		session.access = access('write');
+		session.impersonation = { active: true } as unknown as typeof session.impersonation;
+		expect(mayViewAs()).toBe(false);
 	});
 });

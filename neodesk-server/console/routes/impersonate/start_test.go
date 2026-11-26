@@ -87,6 +87,37 @@ func TestAGlobalAdminWithThePermissionMayViewAnOperator(t *testing.T) {
 	start(t, w, "global_admin", idOperator)
 }
 
+// A274: a panel access row that leaves an admin's Users section at read
+// takes Sign in as away, though the role has user.impersonate; at write
+// it works. Stopping needs no section: an admin whose row went to read
+// while viewing still gets back.
+func TestSignInAsNeedsTheUsersSectionAtWrite(t *testing.T) {
+	w, _ := newWorld(t, options{roles: routetest.Overrides{"global_admin": {"user.impersonate": true}}})
+	users := func(level string) {
+		t.Helper()
+		body := `{"sections":[{"resource_key":"users","access_level":"` + level + `"}]}`
+		if res := w.As("super_admin").Do("PUT", fmt.Sprintf("/api/panel/access/users/%d", idGlobal), body); res.Status != 200 {
+			t.Fatalf("policy: %d %s", res.Status, res.Body)
+		}
+	}
+	users("read")
+	a := w.As("global_admin")
+	res := a.Do("POST", fmt.Sprintf("/api/users/%d/impersonate", idOperator), startBody("check"))
+	if res.Status != 403 || code(t, res) != "panel_access_denied" {
+		t.Fatalf("users at read: %d %s", res.Status, res.Body)
+	}
+	if a.Cookie(impCookie) != "" {
+		t.Fatal("a refused start set the impersonation cookie")
+	}
+
+	users("write")
+	viewing := start(t, w, "global_admin", idOperator)
+	users("read")
+	if res := viewing.Do("POST", "/api/impersonation/stop", "{}"); res.Status != 200 || !strings.Contains(res.Body, `"stopped":true`) {
+		t.Fatalf("stop with users at read: %d %s", res.Status, res.Body)
+	}
+}
+
 // An admin whose panel access is narrower than the account's in some
 // section may not view it.
 func TestStartRefusesAWiderPanelAccess(t *testing.T) {
@@ -102,10 +133,11 @@ func TestStartRefusesAWiderPanelAccess(t *testing.T) {
 }
 
 // An admin limited to some devices may not view an account that sees a
-// device outside them.
+// device outside them. (The operator gets user.edit too: Sign in as asks
+// the users section at write, A274.)
 func TestStartRefusesAWiderDeviceScope(t *testing.T) {
 	w, _ := newWorld(t, options{
-		roles: routetest.Overrides{"operator": {"user.impersonate": true}},
+		roles: routetest.Overrides{"operator": {"user.impersonate": true, "user.edit": true}},
 		env:   map[string]string{"DEVICE_SCOPE_DEFAULT": "restricted"},
 	})
 	exec(t, w, `INSERT INTO user_peer_grants (user_id, peer_id) VALUES (?, '100100100')`, idOperator)
