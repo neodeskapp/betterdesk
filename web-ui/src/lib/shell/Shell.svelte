@@ -53,6 +53,8 @@
 	import { embedded, pageInfo } from './page.svelte.ts';
 	import { isSearchShortcut } from './search.ts';
 	import { startGuard, stopGuard } from './session-guard.svelte.ts';
+	import { liveUpdates } from '#lib/state/live-updates.svelte.ts';
+	import LiveStatus from '#lib/ui/LiveStatus.svelte';
 
 	let { children }: { children: Snippet } = $props();
 
@@ -274,6 +276,10 @@
 					tabindex="-1"
 				>
 					<GuideReturn />
+					<!-- Live updates paused on a page without its own "Last updated" line: Refresh here -->
+					{#if liveUpdates.paused && liveUpdates.active > 0 && liveUpdates.lines === 0}<LiveStatus
+							fallback
+						/>{/if}
 					{#if cs.count}<ConsoleViewer />{/if}
 					{@render children()}
 				</main>

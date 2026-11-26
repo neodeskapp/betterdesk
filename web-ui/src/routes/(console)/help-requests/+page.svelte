@@ -52,6 +52,7 @@
 	import ShareFilter, { type ShareFilterPart } from '#lib/support/ShareFilter.svelte';
 	import { openQuickSupport } from '#lib/onboard/open.svelte.ts';
 	import QuickSupportSessions from '#lib/onboard/QuickSupportSessions.svelte';
+	import LiveStatus from '#lib/ui/LiveStatus.svelte';
 	import {
 		countWaiting,
 		mergeFresh,
@@ -398,6 +399,7 @@
 <div class="page page-wide help-requests-page">
 	<div class="page-head">
 		<h1>{t('nav.help_requests')}</h1>
+		<LiveStatus />
 		<p class="page-description">
 			{t('help_request.page_description')}
 			{#each t('help_request.page_related').split(/(\{tickets\}|\{chat\})/) as part, i (i)}{#if part === '{tickets}'}<a

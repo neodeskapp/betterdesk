@@ -284,9 +284,10 @@ export function startGuard(sessionPolicy: Record<string, unknown> | null | undef
 	for (const evt of ACTIVITY) document.addEventListener(evt, onActivity, { passive: true });
 	schedule();
 	absoluteEnd = null;
-	// A session with a fixed end under 20 hours: ask now when it ends, not in 5 minutes
+	// A session with a fixed end under 20 hours: ask now when it ends, not in 5 minutes.
+	// The session check, not content: it runs while live updates are paused
 	const short = policy.maxAgeMs > 0 && policy.maxAgeMs < LONG_SESSION_MS;
-	stopSync = poll(() => verifySession().then(applyPolicy), { every: SYNC_MS, immediate: short });
+	stopSync = poll(() => verifySession().then(applyPolicy), { every: SYNC_MS, immediate: short, essential: true });
 }
 
 /** The person saw the warning about the session's end */

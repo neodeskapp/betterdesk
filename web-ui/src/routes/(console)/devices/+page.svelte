@@ -86,6 +86,8 @@
 	import AccessRules from './AccessRules.svelte';
 	import ScopeList, { type DropTarget } from './ScopeList.svelte';
 	import TagFilter from './TagFilter.svelte';
+	import LiveStatus from '#lib/ui/LiveStatus.svelte';
+	import { liveUpdates } from '#lib/state/live-updates.svelte.ts';
 
 	/** Same storage keys as the old page, so switching back and forth keeps the choices */
 	const PREF_COLUMNS = 'devices-visible-columns';
@@ -185,6 +187,11 @@
 			onmessage: (data) => {
 				const m = parseLiveMessage(data);
 				if (!m) return;
+				// Live updates paused: the list keeps what it shows until Refresh
+				if (liveUpdates.paused) {
+					if (m.kind === 'id-changed' && devicePanel.id === m.oldId) openDevice(m.newId);
+					return;
+				}
 				if (m.kind === 'status') {
 					pending.set(m.id, m.status);
 					timer ??= setTimeout(flush, 250);
@@ -668,6 +675,7 @@
 				<CountLine text={t('devices.summary')} values={{ count: liveCount, online: counts.online }} />
 			{/if}
 		</div>
+		<LiveStatus />
 		<div class="page-actions">
 			{#if can('enrollment.approve')}
 				<Button

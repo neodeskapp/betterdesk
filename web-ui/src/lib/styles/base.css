@@ -420,6 +420,12 @@ input[type='radio'] {
 	color: var(--text-muted);
 }
 
+/* "Last updated" and Refresh (ui/LiveStatus.svelte): a line of its own under the title */
+.page-head .live-status {
+	order: 2;
+	flex: 0 0 100%;
+}
+
 .page-actions {
 	display: flex;
 	flex-wrap: wrap;

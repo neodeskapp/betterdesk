@@ -116,7 +116,8 @@
 			async () => {
 				current = await getSession(id);
 			},
-			{ every: POLL_MS, immediate: false }
+			// The dialog follows the session it opened: this keeps going while live updates are paused
+			{ every: POLL_MS, immediate: false, essential: true }
 		);
 	});
 

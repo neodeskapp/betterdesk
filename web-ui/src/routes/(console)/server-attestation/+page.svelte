@@ -95,7 +95,8 @@
 					else toast.warning(t('server_attestation.incomplete'));
 				}
 			},
-			{ every: 2000 }
+			// The progress of a run someone started: it keeps coming while live updates are paused
+			{ every: 2000, essential: true }
 		);
 	}
 
