@@ -31,7 +31,7 @@
     "kind": "bytes",
     "type": "application/javascript",
     "length": 6634,
-    "sha256": "a9a90d56d6b8aeefc18ff9cdfe2e435b409d36ff14aaee92b57a6f7d546c1e6b",
+    "sha256": "e70e30dc8da544ab74ed7ce4b38dc561ad6abc215f4bf4c072e69c5e8faf1924",
     "head": "(function (boot) {\n    var root = document.documentElement;\n    var VARS = {\n        bgPrimary: '--bg-primary', bgSecondary: '--bg-secondary', bgTertiary: '--bg-tertiary',\n        bgElevated: '--bg-elevated', textPrimary: '--text-primary', textSecondary: '--text-secondary',\n        accentBlue: '--ac"
    }
   },
@@ -66,7 +66,7 @@
     "kind": "bytes",
     "type": "application/javascript",
     "length": 6634,
-    "sha256": "a9a90d56d6b8aeefc18ff9cdfe2e435b409d36ff14aaee92b57a6f7d546c1e6b",
+    "sha256": "e70e30dc8da544ab74ed7ce4b38dc561ad6abc215f4bf4c072e69c5e8faf1924",
     "head": "(function (boot) {\n    var root = document.documentElement;\n    var VARS = {\n        bgPrimary: '--bg-primary', bgSecondary: '--bg-secondary', bgTertiary: '--bg-tertiary',\n        bgElevated: '--bg-elevated', textPrimary: '--text-primary', textSecondary: '--text-secondary',\n        accentBlue: '--ac"
    }
   }

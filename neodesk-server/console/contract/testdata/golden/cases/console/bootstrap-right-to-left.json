@@ -597,7 +597,7 @@
       ],
       "code": "ar",
       "dir": "rtl",
-      "stringsUrl": "/api/console/strings/ar?v=61045e3e58458c21"
+      "stringsUrl": "/api/console/strings/ar?v=f111ba7acf3d0adc"
      },
      "nav": [
       {
@@ -1456,7 +1456,7 @@
       ],
       "code": "ar",
       "dir": "rtl",
-      "stringsUrl": "/api/console/strings/ar?v=61045e3e58458c21"
+      "stringsUrl": "/api/console/strings/ar?v=f111ba7acf3d0adc"
      },
      "nav": [
       {
@@ -2041,6 +2041,7 @@
       "chat.team",
       "chat.assign",
       "chat.canned_manage",
+      "chat.teams_manage",
       "cdap.view",
       "cdap.command",
       "cdap.terminal",
