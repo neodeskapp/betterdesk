@@ -9044,5 +9044,12 @@
     "page_title_reset": "Setați o parolă nouă",
     "page_intro_reset": "Alegeți o parolă nouă pentru contul dvs. {username}.",
     "done_text_reset": "Celelalte sesiuni ale dvs. au fost deconectate. Autentificați-vă ca {username} cu parola nouă."
+  },
+  "canvas": {
+    "move_node": "Mută {name}",
+    "move_left": "Mută la stânga",
+    "move_up": "Mută în sus",
+    "move_down": "Mută în jos",
+    "move_right": "Mută la dreapta"
   }
 }

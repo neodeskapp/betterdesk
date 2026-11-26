@@ -9044,5 +9044,12 @@
     "page_title_reset": "Angi et nytt passord",
     "page_intro_reset": "Velg et nytt passord for kontoen din {username}.",
     "done_text_reset": "De andre øktene dine er logget av. Logg på som {username} med det nye passordet ditt."
+  },
+  "canvas": {
+    "move_node": "Flytt {name}",
+    "move_left": "Flytt til venstre",
+    "move_up": "Flytt opp",
+    "move_down": "Flytt ned",
+    "move_right": "Flytt til høyre"
   }
 }

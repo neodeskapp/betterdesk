@@ -9044,5 +9044,12 @@
     "page_title_reset": "Aseta uusi salasana",
     "page_intro_reset": "Valitse uusi salasana tilillesi {username}.",
     "done_text_reset": "Muut istuntosi kirjattiin ulos. Kirjaudu käyttäjänä {username} uudella salasanallasi."
+  },
+  "canvas": {
+    "move_node": "Siirrä: {name}",
+    "move_left": "Siirrä vasemmalle",
+    "move_up": "Siirrä ylös",
+    "move_down": "Siirrä alas",
+    "move_right": "Siirrä oikealle"
   }
 }

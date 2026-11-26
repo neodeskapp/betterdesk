@@ -9044,5 +9044,12 @@
     "page_title_reset": "Atur kata sandi baru",
     "page_intro_reset": "Pilih kata sandi baru untuk akun Anda {username}.",
     "done_text_reset": "Sesi Anda yang lain sudah dikeluarkan. Masuk sebagai {username} dengan kata sandi baru Anda."
+  },
+  "canvas": {
+    "move_node": "Pindahkan {name}",
+    "move_left": "Geser ke kiri",
+    "move_up": "Geser ke atas",
+    "move_down": "Geser ke bawah",
+    "move_right": "Geser ke kanan"
   }
 }

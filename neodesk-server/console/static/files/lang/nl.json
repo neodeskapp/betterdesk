@@ -9038,5 +9038,12 @@
     "page_title_reset": "Nieuw wachtwoord instellen",
     "page_intro_reset": "Kies een nieuw wachtwoord voor uw account {username}.",
     "done_text_reset": "Uw andere sessies zijn afgemeld. Log in als {username} met uw nieuwe wachtwoord."
+  },
+  "canvas": {
+    "move_node": "{name} verplaatsen",
+    "move_left": "Naar links",
+    "move_up": "Omhoog",
+    "move_down": "Omlaag",
+    "move_right": "Naar rechts"
   }
 }

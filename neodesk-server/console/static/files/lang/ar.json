@@ -9045,5 +9045,12 @@
     "page_title_reset": "عيّن كلمة مرور جديدة",
     "page_intro_reset": "اختر كلمة مرور جديدة لحسابك {username}.",
     "done_text_reset": "تم تسجيل الخروج من جلساتك الأخرى. سجّل الدخول باسم {username} بكلمة المرور الجديدة."
+  },
+  "canvas": {
+    "move_node": "نقل {name}",
+    "move_left": "نقل لليسار",
+    "move_up": "نقل للأعلى",
+    "move_down": "نقل للأسفل",
+    "move_right": "نقل لليمين"
   }
 }

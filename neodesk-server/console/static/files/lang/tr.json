@@ -9044,5 +9044,12 @@
     "page_title_reset": "Yeni bir şifre belirleyin",
     "page_intro_reset": "{username} hesabınız için yeni bir şifre seçin.",
     "done_text_reset": "Diğer oturumlarınız kapatıldı. Yeni şifrenizle {username} olarak oturum açın."
+  },
+  "canvas": {
+    "move_node": "{name} öğesini taşı",
+    "move_left": "Sola taşı",
+    "move_up": "Yukarı taşı",
+    "move_down": "Aşağı taşı",
+    "move_right": "Sağa taşı"
   }
 }

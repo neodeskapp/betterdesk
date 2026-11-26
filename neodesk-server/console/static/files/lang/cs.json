@@ -9038,5 +9038,12 @@
     "page_title_reset": "Nastavte si nové heslo",
     "page_intro_reset": "Zvolte nové heslo pro svůj účet {username}.",
     "done_text_reset": "Vaše ostatní relace byly odhlášeny. Přihlaste se jako {username} svým novým heslem."
+  },
+  "canvas": {
+    "move_node": "Přesunout {name}",
+    "move_left": "Posunout doleva",
+    "move_up": "Posunout nahoru",
+    "move_down": "Posunout dolů",
+    "move_right": "Posunout doprava"
   }
 }

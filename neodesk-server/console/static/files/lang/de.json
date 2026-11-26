@@ -9038,5 +9038,12 @@
     "page_title_reset": "Neues Passwort festlegen",
     "page_intro_reset": "Wähle ein neues Passwort für dein Konto {username}.",
     "done_text_reset": "Deine anderen Sitzungen wurden abgemeldet. Melde dich als {username} mit deinem neuen Passwort an."
+  },
+  "canvas": {
+    "move_node": "{name} verschieben",
+    "move_left": "Nach links",
+    "move_up": "Nach oben",
+    "move_down": "Nach unten",
+    "move_right": "Nach rechts"
   }
 }

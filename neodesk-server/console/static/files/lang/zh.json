@@ -9038,5 +9038,12 @@
     "page_title_reset": "设置新密码",
     "page_intro_reset": "请为您的账户 {username} 设置新密码。",
     "done_text_reset": "您的其他会话已退出登录。请使用新密码以 {username} 身份登录。"
+  },
+  "canvas": {
+    "move_node": "移动 {name}",
+    "move_left": "向左移动",
+    "move_up": "向上移动",
+    "move_down": "向下移动",
+    "move_right": "向右移动"
   }
 }

@@ -9038,5 +9038,12 @@
     "page_title_reset": "新しいパスワードを設定",
     "page_intro_reset": "アカウント {username} の新しいパスワードを決めてください。",
     "done_text_reset": "ほかのセッションはサインアウトされました。新しいパスワードで {username} としてサインインしてください。"
+  },
+  "canvas": {
+    "move_node": "{name} を移動",
+    "move_left": "左へ移動",
+    "move_up": "上へ移動",
+    "move_down": "下へ移動",
+    "move_right": "右へ移動"
   }
 }

@@ -9038,5 +9038,12 @@
     "page_title_reset": "Imposta una nuova password",
     "page_intro_reset": "Scegli una nuova password per il tuo account {username}.",
     "done_text_reset": "Le tue altre sessioni sono state chiuse. Accedi come {username} con la tua nuova password."
+  },
+  "canvas": {
+    "move_node": "Sposta {name}",
+    "move_left": "Sposta a sinistra",
+    "move_up": "Sposta in alto",
+    "move_down": "Sposta in basso",
+    "move_right": "Sposta a destra"
   }
 }

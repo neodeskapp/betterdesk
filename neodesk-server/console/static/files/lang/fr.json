@@ -9042,5 +9042,12 @@
     "page_title_reset": "Définir un nouveau mot de passe",
     "page_intro_reset": "Choisissez un nouveau mot de passe pour votre compte {username}.",
     "done_text_reset": "Vos autres sessions ont été déconnectées. Connectez-vous en tant que {username} avec votre nouveau mot de passe."
+  },
+  "canvas": {
+    "move_node": "Déplacer {name}",
+    "move_left": "Déplacer à gauche",
+    "move_up": "Déplacer vers le haut",
+    "move_down": "Déplacer vers le bas",
+    "move_right": "Déplacer à droite"
   }
 }

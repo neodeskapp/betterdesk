@@ -9038,5 +9038,12 @@
     "page_title_reset": "Establecer una nueva contraseña",
     "page_intro_reset": "Elija una nueva contraseña para su cuenta {username}.",
     "done_text_reset": "Se cerraron sus otras sesiones. Inicie sesión como {username} con su nueva contraseña."
+  },
+  "canvas": {
+    "move_node": "Mover {name}",
+    "move_left": "Mover a la izquierda",
+    "move_up": "Mover arriba",
+    "move_down": "Mover abajo",
+    "move_right": "Mover a la derecha"
   }
 }

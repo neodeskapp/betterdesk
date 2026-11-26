@@ -9038,5 +9038,12 @@
     "page_title_reset": "Ustaw nowe hasło",
     "page_intro_reset": "Wybierz nowe hasło do swojego konta {username}.",
     "done_text_reset": "Twoje pozostałe sesje zostały wylogowane. Zaloguj się jako {username} nowym hasłem."
+  },
+  "canvas": {
+    "move_node": "Przesuń: {name}",
+    "move_left": "Przesuń w lewo",
+    "move_up": "Przesuń w górę",
+    "move_down": "Przesuń w dół",
+    "move_right": "Przesuń w prawo"
   }
 }

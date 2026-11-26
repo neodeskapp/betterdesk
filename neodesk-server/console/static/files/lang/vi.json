@@ -9044,5 +9044,12 @@
     "page_title_reset": "Đặt mật khẩu mới",
     "page_intro_reset": "Chọn mật khẩu mới cho tài khoản {username} của bạn.",
     "done_text_reset": "Các phiên khác của bạn đã bị đăng xuất. Đăng nhập với tên {username} bằng mật khẩu mới của bạn."
+  },
+  "canvas": {
+    "move_node": "Di chuyển {name}",
+    "move_left": "Di chuyển sang trái",
+    "move_up": "Di chuyển lên",
+    "move_down": "Di chuyển xuống",
+    "move_right": "Di chuyển sang phải"
   }
 }

@@ -9038,5 +9038,12 @@
     "page_title_reset": "Definir uma nova palavra-passe",
     "page_intro_reset": "Escolha uma nova palavra-passe para a sua conta {username}.",
     "done_text_reset": "As suas outras sessões foram terminadas. Inicie sessão como {username} com a sua nova palavra-passe."
+  },
+  "canvas": {
+    "move_node": "Mover {name}",
+    "move_left": "Mover para a esquerda",
+    "move_up": "Mover para cima",
+    "move_down": "Mover para baixo",
+    "move_right": "Mover para a direita"
   }
 }

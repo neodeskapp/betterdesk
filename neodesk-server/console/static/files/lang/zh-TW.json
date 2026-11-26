@@ -9042,5 +9042,12 @@
     "page_title_reset": "設定新密碼",
     "page_intro_reset": "請為您的帳戶 {username} 設定新密碼。",
     "done_text_reset": "您的其他工作階段已登出。請使用新密碼以 {username} 身分登入。"
+  },
+  "canvas": {
+    "move_node": "移動 {name}",
+    "move_left": "向左移動",
+    "move_up": "向上移動",
+    "move_down": "向下移動",
+    "move_right": "向右移動"
   }
 }

@@ -9044,5 +9044,12 @@
     "page_title_reset": "Ange ett nytt lösenord",
     "page_intro_reset": "Välj ett nytt lösenord för ditt konto {username}.",
     "done_text_reset": "Dina andra sessioner har loggats ut. Logga in som {username} med ditt nya lösenord."
+  },
+  "canvas": {
+    "move_node": "Flytta {name}",
+    "move_left": "Flytta åt vänster",
+    "move_up": "Flytta uppåt",
+    "move_down": "Flytta nedåt",
+    "move_right": "Flytta åt höger"
   }
 }

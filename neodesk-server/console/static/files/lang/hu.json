@@ -9044,5 +9044,12 @@
     "page_title_reset": "Új jelszó beállítása",
     "page_intro_reset": "Válasszon új jelszót a(z) {username} fiókjához.",
     "done_text_reset": "A többi munkamenetéből kijelentkeztettük. Jelentkezzen be {username} néven az új jelszavával."
+  },
+  "canvas": {
+    "move_node": "{name} áthelyezése",
+    "move_left": "Mozgatás balra",
+    "move_up": "Mozgatás fel",
+    "move_down": "Mozgatás le",
+    "move_right": "Mozgatás jobbra"
   }
 }
