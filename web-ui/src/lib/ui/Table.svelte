@@ -143,7 +143,9 @@
 
 	/* A box that scrolls must be reachable with the keyboard (arrow keys
 	   scroll it), also when nothing in the table can take focus: while it
-	   scrolls it is a focusable region named by the caption. */
+	   scrolls it is a focusable group named by the caption. A group, not a
+	   region: the page's section around the table usually has the same
+	   name, and two landmarks with one name can't be told apart. */
 	let scrolls = $state(false);
 	/* The visible width of the box: the loading, empty and error sentence
 	   wraps within it, also when the columns make the table wider */
@@ -408,7 +410,7 @@
 	bind:this={box}
 	class={['table-scroll', height && 'is-box', !scrollX && 'no-scroll-x', cls]}
 	style:max-height={height}
-	role={scrolls ? 'region' : undefined}
+	role={scrolls ? 'group' : undefined}
 	aria-labelledby={scrolls ? captionId : undefined}
 	tabindex={scrolls ? 0 : undefined}
 >

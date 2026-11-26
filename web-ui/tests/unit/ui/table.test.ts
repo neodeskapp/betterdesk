@@ -298,7 +298,7 @@ describe('Table: repeated keys', () => {
 });
 
 describe('Table: scroll box', () => {
-	test('while the table is wider than its box, the box is a focusable region named by the caption', async () => {
+	test('while the table is wider than its box, the box is a focusable group named by the caption (not a landmark: the section around it has that name)', async () => {
 		// jsdom has no layout: report sizes and run the observer by hand
 		let notify: () => void = () => {};
 		vi.stubGlobal(
@@ -323,7 +323,7 @@ describe('Table: scroll box', () => {
 		notify();
 		await tick();
 		expect(box).toHaveAttribute('tabindex', '0');
-		expect(screen.getByRole('region', { name: 'Devices' })).toBe(box);
+		expect(screen.getByRole('group', { name: 'Devices' })).toBe(box);
 
 		wide = false;
 		notify();

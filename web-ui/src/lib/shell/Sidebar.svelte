@@ -347,7 +347,8 @@
 		>
 	</div>
 
-	<div class="sidebar-footer">
+	<!-- Site information: a landmark of its own, like the page footer -->
+	<footer class="sidebar-footer">
 		{#if footerText || showPoweredBy}
 			<div class="sidebar-attribution">
 				{#if footerText}<span>{footerText}</span>{/if}
@@ -361,28 +362,27 @@
 				{/if}
 			</div>
 		{/if}
-	</div>
-
-	{#if !drawer}
-		<!-- A focusable separator is a widget (ARIA): it takes the arrow keys -->
-		<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
-		<div
-			class={['resize-handle', dragging && 'active']}
-			role="separator"
-			aria-orientation="vertical"
-			tabindex="0"
-			aria-label={t('ux35.resize_sidebar')}
-			title={t('ux35.resize_sidebar')}
-			aria-valuemin={WIDTH_MIN}
-			aria-valuemax={WIDTH_MAX}
-			aria-valuenow={width}
-			{onpointerdown}
-			{onpointermove}
-			onpointerup={endDrag}
-			onpointercancel={endDrag}
-			onkeydown={onHandleKey}
-		></div>
-	{/if}
+		{#if !drawer}
+			<!-- A focusable separator is a widget (ARIA): it takes the arrow keys -->
+			<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
+			<div
+				class={['resize-handle', dragging && 'active']}
+				role="separator"
+				aria-orientation="vertical"
+				tabindex="0"
+				aria-label={t('ux35.resize_sidebar')}
+				title={t('ux35.resize_sidebar')}
+				aria-valuemin={WIDTH_MIN}
+				aria-valuemax={WIDTH_MAX}
+				aria-valuenow={width}
+				{onpointerdown}
+				{onpointermove}
+				onpointerup={endDrag}
+				onpointercancel={endDrag}
+				onkeydown={onHandleKey}
+			></div>
+		{/if}
+	</footer>
 </div>
 
 <style>
