@@ -14,6 +14,7 @@ vi.mock('$app/paths', () => ({ resolve: (p: string) => p || '/', asset: (p: stri
 vi.mock('$app/navigation', () => ({ goto: vi.fn(), beforeNavigate: vi.fn(), replaceState: vi.fn() }));
 
 import SettingsFixture from './fixtures/SettingsFixture.svelte';
+import KeepRowFixture from './fixtures/KeepRowFixture.svelte';
 import ListEditor from '../../../src/lib/ui/settings/ListEditor.svelte';
 import KeepCount from '../../../src/lib/ui/settings/KeepCount.svelte';
 import InheritedValue from '../../../src/lib/ui/settings/InheritedValue.svelte';
@@ -21,6 +22,24 @@ import RecordPicker from '../../../src/lib/ui/settings/RecordPicker.svelte';
 import { relayOptions, roleOptions } from '../../../src/lib/ui/settings/pickers.ts';
 
 afterEach(() => cleanup());
+
+describe('a keep count in a setting row', () => {
+	test('the row names the switch and number as one group, its help describes it', () => {
+		render(KeepRowFixture);
+		const group = screen.getByRole('group', { name: 'Keep update backups' });
+		expect(group).toHaveAccessibleDescription('Older ones are deleted after each update.');
+		expect(within(group).getByRole('checkbox', { name: 'Keep all update backups' })).not.toBeChecked();
+		// The row's name is no <label> for a control that is not there
+		expect(document.querySelector('label[for="r-keep-control"]')).toBeNull();
+	});
+
+	test('a refused number is marked and said next to it', () => {
+		render(KeepRowFixture, { error: 'Enter a whole number from 1 to 1000.' });
+		const number = screen.getByRole('spinbutton', { name: 'Keep this many' });
+		expect(number).toHaveAttribute('aria-invalid', 'true');
+		expect(number).toHaveAccessibleDescription('Enter a whole number from 1 to 1000.');
+	});
+});
 
 describe('the settings page template', () => {
 	test('title, purpose and save model come first, the scope picker before the groups', () => {

@@ -3,7 +3,8 @@
   (PATTERN.md rule 4): a switch "Keep all" and, while it is off, the
   number. The value is { all, count }; the page maps it to what the
   server stores (often 0 for all). The number keeps what was typed when
-  the switch goes on and back off.
+  the switch goes on and back off. In a SettingRow with `group`, pass the
+  row's `labelledby` so the row's name names the switch and number.
 -->
 <script lang="ts">
 	import Input from '../Input.svelte';
@@ -22,6 +23,8 @@
 		error?: string;
 		disabled?: boolean;
 		describedby?: string;
+		/** The id of the name of the pair (a SettingRow's `labelledby`) */
+		labelledby?: string;
 	}
 
 	let {
@@ -35,11 +38,12 @@
 		max = 1000,
 		error = '',
 		disabled = false,
-		describedby
+		describedby,
+		labelledby
 	}: Props = $props();
 </script>
 
-<div class="keep-count" role="group" aria-describedby={describedby}>
+<div class="keep-count" role="group" aria-labelledby={labelledby} aria-describedby={describedby}>
 	<Switch
 		id={`${id}-all`}
 		label={allLabel}
