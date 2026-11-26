@@ -10,7 +10,9 @@ import { UI } from './roles.ts';
 async function openSearch(page: import('@playwright/test').Page) {
 	await expect(page.locator('.search-trigger')).toBeVisible();
 	await page.keyboard.press('Control+k');
-	const box = page.getByRole('combobox');
+	// The search's own field: a page can have lists to choose from too (the
+	// role and organization filters of Users)
+	const box = page.getByRole('dialog', { name: 'Search' }).getByRole('combobox');
 	await expect(box).toBeFocused();
 	return box;
 }

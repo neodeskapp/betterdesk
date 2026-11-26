@@ -39,7 +39,7 @@
     "json": {
      "profile": {
       "avatar_url": "not-an-address",
-      "email": "ada@example.test",
+      "email": "",
       "first_name": "Ada",
       "id": 8,
       "last_name": "Lovelace",
@@ -86,7 +86,7 @@
     "json": {
      "profile": {
       "avatar_url": "not-an-address",
-      "email": "ada@example.test",
+      "email": "",
       "first_name": "Ada",
       "id": 5,
       "last_name": "Lovelace",

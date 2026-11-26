@@ -74,10 +74,11 @@ func textOr(v any, fallback string) (string, error) {
 	return branding.ToString(v)
 }
 
-// failure is {success: false, error}.
+// failure is {success: false, error}, with code when the refusal has one.
 type failure struct {
 	Success bool   `json:"success"`
 	Error   string `json:"error"`
+	Code    string `json:"code,omitempty"`
 }
 
 func fail(w http.ResponseWriter, r *http.Request, status int, message string) {
