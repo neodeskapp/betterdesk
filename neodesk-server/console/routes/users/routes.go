@@ -16,24 +16,49 @@
 package users
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 )
 
 type handlers struct {
 	d     *kit.Deps
 	log   *kit.Logger
 	links *passwordlinks.Store
+	// notices mail a person about changes to how their account signs in
+	notices *securitymail.Notices
+	// life holds end dates, inactivity exceptions and address changes.
+	life *lifecycle.Store
 }
+
+// now is the clock of the account routes.
+func (h *handlers) now() time.Time { return h.life.Now() }
 
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
-	h := &handlers{d: d, log: d.Log, links: passwordlinks.New(d.Store, nil)}
+	h := newHandlers(d)
 	r := d.Router
 	r.Get("/api/users", h.list, d.RequireAuth, d.RequirePermission("user.view"))
+	// Several accounts at once (bulk.go), and the import from a CSV file
+	// (importing.go); before the routes of /api/users/{id}, which would
+	// take "bulk" for an id
+	edit := d.RequirePermission("user.edit")
+	r.Post("/api/users/bulk/role", h.bulkRole, d.RequireAuth, edit)
+	r.Post("/api/users/bulk/disable", h.bulkDisabled(true), d.RequireAuth, edit)
+	r.Post("/api/users/bulk/enable", h.bulkDisabled(false), d.RequireAuth, edit)
+	r.Post("/api/users/bulk/password-reset-link", h.bulkResetLinks, d.RequireAuth, edit)
+	r.Post("/api/users/bulk/two-factor-required", h.bulkTwoFactorRequired, d.RequireAuth, d.RequirePermission("user.security"))
+	r.Post("/api/users/bulk/delete", h.bulkDelete, d.RequireAuth, d.RequirePermission("user.delete"))
+	r.Post("/api/users/bulk/organization-add", h.bulkOrganization(true), d.RequireAuth, d.RequirePermission("org.manage_users"))
+	r.Post("/api/users/bulk/organization-remove", h.bulkOrganization(false), d.RequireAuth, d.RequirePermission("org.manage_users"))
+	r.Post("/api/users/import/preview", h.importPreview, d.RequireAuth, d.RequirePermission("user.create"))
+	r.Post("/api/users/import", h.importUsers, d.RequireAuth, d.RequirePermission("user.create"))
 	r.Get("/api/panel/user-groups", h.userGroups, d.RequireAuth, d.RequireAnyPermission("user.view", "device.edit"))
 	r.Post("/api/panel/user-groups", h.createUserGroup, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Patch("/api/panel/user-groups/{guid}", h.updateUserGroup, d.RequireAuth, d.RequirePermission("user.edit"))
@@ -42,16 +67,55 @@ func Register(d *kit.Deps) {
 	r.Post("/api/users/invite", h.invite, d.RequireAuth, d.RequirePermission("user.create"))
 	r.Get("/api/users/invites", h.invites, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Post("/api/users/{id}/invite", h.resendInvite, d.RequireAuth, d.RequirePermission("user.edit"))
+	r.Delete("/api/users/{id}/invite", h.revokeInvite, d.RequireAuth, d.RequirePermission("user.create"))
 	r.Post("/api/users/{id}/password-reset-link", h.sendResetLink, d.RequireAuth, d.RequirePermission("user.edit"))
+	r.Delete("/api/users/{id}/password-reset-link", h.cancelResetLink, d.RequireAuth, d.RequirePermission("user.edit"))
+	// Sign-in security of other accounts
+	security := d.RequirePermission("user.security")
+	r.Post("/api/users/{id}/temporary-password", h.temporaryPassword, d.RequireAuth, security)
+	r.Post("/api/users/require-password-change", h.requirePasswordChange, d.RequireAuth, security)
+	r.Post("/api/users/{id}/unlock", h.unlock, d.RequireAuth, security)
+	r.Put("/api/users/{id}/two-factor-required", h.setTwoFactorRequired, d.RequireAuth, security)
+	r.Post("/api/users/{id}/two-factor/reset", h.resetTwoFactor, d.RequireAuth, security)
+	r.Post("/api/users/{id}/recovery-codes/invalidate", h.invalidateRecoveryCodes, d.RequireAuth, security)
+	// Before the routes of /api/users/{id}, which would take "me" for an id.
+	// The signed-in account's own address (Your account); API tokens are
+	// kept from writes to /api/users/me
+	r.Get("/api/users/me/email", h.ownEmail, d.RequireAuth)
+	r.Post("/api/users/me/email", h.changeOwnEmail, d.RequireAuth)
+	r.Delete("/api/users/me/email-change", h.cancelOwnEmailChange, d.RequireAuth)
+	r.Post("/api/users/me/email-change/resend", h.resendOwnEmailChange, d.RequireAuth)
+	r.Delete("/api/users/{id}/email-change", h.cancelEmailChange, d.RequireAuth, d.RequirePermission("user.edit"))
+	r.Post("/api/users/{id}/email-change/resend", h.resendEmailChange, d.RequireAuth, d.RequirePermission("user.edit"))
+	// The user's page (page.go). The first two pass a path that names no
+	// account by number on, so that /api/users/avatars and
+	// /api/users/me/profile of later groups still answer
+	r.Get("/api/users/{id}", h.one, numericID, d.RequireAuth, d.RequirePermission("user.view"))
+	r.Put("/api/users/{id}/profile", h.saveProfile, numericID, d.RequireAuth, d.RequirePermission("user.edit"))
+	r.Get("/api/users/{id}/activity", h.activity, d.RequireAuth, d.RequirePermission("user.view"), d.RequirePermission("audit.view"))
 	r.Patch("/api/users/{id}", h.update, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Get("/api/users/{id}/effective-scope", h.effectiveScope, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Delete("/api/users/{id}", h.remove, d.RequireAuth, d.RequirePermission("user.delete"))
+	r.Get("/api/users/{id}/delete-preview", h.deletePreview, d.RequireAuth, d.RequirePermission("user.delete"))
 	r.Post("/api/users/{id}/reset-password", h.resetPassword, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Get("/api/users/{id}/sessions", h.userSessions, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Delete("/api/users/{id}/sessions/{sessionId}", h.endUserSession, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Post("/api/users/{id}/sessions/end-all", h.endUserSessions, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Get("/api/users/{id}/organizations", h.organizations, d.RequireAuth, d.RequirePermission("user.view"))
+	// The sign-in history: the account's own, then any account's (securityevents.go)
+	r.Get("/api/users/me/security-events", h.ownSecurityEvents, d.RequireAuth)
+	r.Get("/api/users/{id}/security-events", h.userSecurityEvents, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Post("/api/users/{id}/organizations", h.assignOrganization, d.RequireAuth, d.RequirePermission("org.manage_users"))
+
+	// End dates and the rule for inactive accounts (sweep.go)
+	if d.Jobs != nil {
+		d.Jobs.Add("account life cycle", func(ctx context.Context) { runSweeps(ctx, d) })
+	}
+}
+
+// newHandlers builds the group's handlers on d.
+func newHandlers(d *kit.Deps) *handlers {
+	return &handlers{d: d, log: d.Log, links: passwordlinks.New(d.Store, nil), life: lifecycle.New(d.Store, nil), notices: securitymail.New(d)}
 }
 
 // answer sends a JSON answer written as JSON.stringify writes it.

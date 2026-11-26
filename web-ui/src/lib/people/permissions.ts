@@ -78,6 +78,8 @@ export const PERMISSION_GROUPS: readonly PermissionGroup[] = [
 			'user.create',
 			'user.edit',
 			'user.delete',
+			'user.security',
+			'user.impersonate',
 			'org.create',
 			'org.edit',
 			'org.delete',

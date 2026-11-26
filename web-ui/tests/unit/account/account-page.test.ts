@@ -53,7 +53,15 @@ test('the page links to each of its parts', async () => {
 	const hrefs = within(nav)
 		.getAllByRole('link')
 		.map((a) => a.getAttribute('href'));
-	expect(hrefs).toEqual(['#profile', '#password', '#two-factor', '#sessions', '#preferences']);
+	expect(hrefs).toEqual([
+		'#profile',
+		'#email',
+		'#password',
+		'#two-factor',
+		'#sessions',
+		'#security-events',
+		'#preferences'
+	]);
 	for (const h of hrefs) expect(document.getElementById(h!.slice(1)), h!).not.toBeNull();
 });
 

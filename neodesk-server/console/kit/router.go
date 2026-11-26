@@ -282,6 +282,24 @@ func (rt *Router) Find(r *http.Request) (Route, bool) {
 	return Route{}, false
 }
 
+// FindAll returns every route of the table that fits the request's method
+// and path, in order: Find's first, and the ones behind it that get the
+// request when a route passes it on (PassOn). It runs nothing.
+func (rt *Router) FindAll(r *http.Request) []Route {
+	parts, trailing, ok := splitPath(r)
+	if !ok {
+		return nil
+	}
+	var out []Route
+	for _, entry := range rt.table.routes {
+		if entry.prefix || !entry.matches(parts, trailing) || !entry.allows(r.Method) || !entry.digitsFit(parts) {
+			continue
+		}
+		out = append(out, entry.Route)
+	}
+	return out
+}
+
 // Serve answers the request from the table and reports whether it did. On
 // false nothing was written: no route fits, or every route that fits
 // passed the request on.

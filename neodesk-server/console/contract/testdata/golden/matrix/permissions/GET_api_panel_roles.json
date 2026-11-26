@@ -154,6 +154,8 @@
        "user.create",
        "user.edit",
        "user.delete",
+       "user.security",
+       "user.impersonate",
        "server.config",
        "server.keys",
        "server.attestation",
@@ -365,6 +367,8 @@
          "user.create",
          "user.delete",
          "user.edit",
+         "user.impersonate",
+         "user.security",
          "user.view"
         ]
        },
@@ -424,6 +428,8 @@
          "user.create",
          "user.delete",
          "user.edit",
+         "user.impersonate",
+         "user.security",
          "user.view"
         ]
        },
@@ -499,6 +505,7 @@
          "user.create",
          "user.delete",
          "user.edit",
+         "user.security",
          "user.view"
         ]
        },

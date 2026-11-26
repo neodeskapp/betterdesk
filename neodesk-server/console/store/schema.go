@@ -258,6 +258,7 @@ func sqliteSteps() []step {
 	s = append(s, accessTokenHashes())
 	s = append(s, accessTokenKind(), accessTokensAsHashes(), dropBackupShareLogin(), deviceTokensWithoutExpiry())
 	s = append(s, userDisabled("INTEGER NOT NULL DEFAULT 0"), deviceTokensHeldByNoAccount())
+	s = append(s, auditTargets("INTEGER DEFAULT NULL")...)
 	return s
 }
 
@@ -344,6 +345,7 @@ func postgresSteps() []step {
 	s = append(s, widenConditionValue())
 	s = append(s, accessTokenKind(), accessTokensAsHashes(), dropBackupShareLogin(), deviceTokensWithoutExpiry())
 	s = append(s, userDisabled("BOOLEAN NOT NULL DEFAULT FALSE"), deviceTokensHeldByNoAccount())
+	s = append(s, auditTargets("BIGINT DEFAULT NULL")...)
 	return s
 }
 
@@ -364,6 +366,23 @@ func accessTokenKind() step {
 // the same column when it makes or finds the table first.
 func userDisabled(definition string) step {
 	return addColumn(strict, "users", "disabled", definition)
+}
+
+// auditTargets adds audit_log.target_user_id: the account an entry is
+// about (whose password was reset, who was disabled, who was viewed as),
+// next to user_id, the account that acted. Entries from before have none.
+// The index serves an account's own history and the user page's activity.
+func auditTargets(definition string) []step {
+	return []step{
+		addColumn(strict, "audit_log", "target_user_id", definition),
+		{
+			name: "index audit_log.target_user_id",
+			run: func(ctx context.Context, tx *Tx, _ *migration) error {
+				_, err := tx.Exec(ctx, `CREATE INDEX IF NOT EXISTS idx_audit_log_target ON audit_log(target_user_id)`)
+				return err
+			},
+		},
+	}
 }
 
 // accessTokensAsHashes keeps every access token as its hash only (BUGS

@@ -60,6 +60,8 @@ export const SignInResult = v.looseObject({
 	totpRequired: v.optional(v.boolean(), false),
 	/** Two-factor sign-in is mandatory and the account has none: set it up first */
 	totpSetupRequired: v.optional(v.boolean(), false),
+	/** An admin requires a new password: choose it before the sign-in ends */
+	passwordChangeRequired: v.optional(v.boolean(), false),
 	redirect: v.optional(v.string())
 });
 export type SignInResult = v.InferOutput<typeof SignInResult>;
@@ -83,6 +85,19 @@ export type TotpSignIn = ({ code: string } | { recoveryCode: string }) & {
 
 export function verifyTotp(body: TotpSignIn): Promise<SignInResult> {
 	return api(SignInResult, '/api/auth/totp/verify', { method: 'POST', body, allowAnonymous: true });
+}
+
+/**
+ * The new password an admin asked for, after the password step (and the
+ * code, with a second factor). The answer finishes the sign-in, or asks for
+ * the set-up of a mandatory second factor (totpSetupRequired).
+ */
+export function changeRequiredPassword(body: {
+	newPassword: string;
+	confirmPassword: string;
+	return?: string;
+}): Promise<SignInResult> {
+	return api(SignInResult, '/api/auth/password/required', { method: 'POST', body, allowAnonymous: true });
 }
 
 /** The secret and QR code of the two-factor set-up a mandatory second factor asks for after the password */

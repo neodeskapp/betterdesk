@@ -225,6 +225,7 @@ and does not have the column. Existing rows get the column's default.
 | `add device_groups.tag_filter` | `TEXT DEFAULT ''` | same | tolerated | | 709-717, 4978-4985 |
 | `add access_tokens.token_kind` | `TEXT NOT NULL DEFAULT 'account'` | same | last step | last step | not in Node (BUGS RV1) |
 | `add users.disabled` | `INTEGER NOT NULL DEFAULT 0` | `BOOLEAN NOT NULL DEFAULT FALSE` | after `keep device tokens without an expiry` | after `keep device tokens without an expiry` | not in Node (L107) |
+| `add audit_log.target_user_id` | `INTEGER DEFAULT NULL` | `BIGINT DEFAULT NULL` | after `move device tokens out of access_tokens` | after `move device tokens out of access_tokens` | not in Node: the account an entry is about, next to the account that acted (`user_id`) |
 
 `users.disabled` marks an account that may not sign in and whose tokens are
 refused; the row and its history stay. Every account that is there when the
@@ -262,6 +263,7 @@ release created both tables with the column, so this concerns 2.x files only.
 | `keep access tokens as their hash` | Every row whose `token` holds the token itself gets `token_hash` = the SHA-256 of that token and `token` = `sha256 ` and that hash, so a copy of the database holds no token. Logs `Migration: kept N access tokens as their hash only`. Not in Node (BUGS RV128): the console writes its rows that way, and a Node console after a rollback still finds them by the hash | `token` is not empty and does not start with `sha256 `; runs at every start | last step | last step | |
 | `drop the backup share login` | Deletes the setting `scheduled_backup_smb`, the scheduled backup's network share login with its password in clear, and logs `Migration: deleted the scheduled backup's network share login`. Not in Node (BUGS L123, DECISIONS A155): the console has no share login any more, and nothing writes the setting | the setting is there; runs at every start | after `keep access tokens as their hash` | after `keep access tokens as their hash` | |
 | `move device tokens out of access_tokens` | Every device token (`token_kind` `device`) that is not revoked and names its hash and device goes into the signal server's `device_tokens` (its hash, `peer_id` = `client_id`, `status` `active`, `max_uses` 0, `created_by` `system`, `note` `Issued by the console`; a hash already there is not added again) and leaves `access_tokens`, so deleting the account that admitted the device ends none (BUGS L146, DECISIONS A171). Logs `Migration: moved N device tokens into device_tokens`. Not in Node | `device_tokens` is there and a live device token is in `access_tokens`; runs at every start | after `add users.disabled` | after `add users.disabled` | |
+| `index audit_log.target_user_id` | `CREATE INDEX IF NOT EXISTS idx_audit_log_target ON audit_log(target_user_id)`, for an account's own history and the user page's activity. Not in Node | runs at every start, changes nothing when the index is there | after `add audit_log.target_user_id` | after `add audit_log.target_user_id` | |
 | `keep device tokens without an expiry` | Every device token (`token_kind` `device`) that is not revoked gets `expires_at` = 2999-12-31 23:59:59 UTC, the expiry the console stores with every device token: device tokens do not expire by time, also the ones issued with the lifetime of a sign-in. Logs `Migration: kept N device tokens without an expiry`. Not in Node (L44) | a live device token expires before then; runs at every start | after `drop the backup share login` | after `drop the backup share login` | |
 
 The slug rules are those of `web-nodejs/services/agentBundleService.js`
@@ -356,8 +358,8 @@ PostgreSQL; `users.totp_secret` is `NOT NULL` in Go's PostgreSQL shape.
   `dlp_policies` columns on SQLite, `settings.updated_at` on PostgreSQL).
   Migrate logs a warning for them.
 - Node logged only some added columns. Migrate logs every change.
-- `access_tokens.token_kind` is not in Node (BUGS RV1), nor is `users.disabled`
-  (L107).
+- `access_tokens.token_kind` is not in Node (BUGS RV1), nor are `users.disabled`
+  (L107) and `audit_log.target_user_id` with its index.
 - Access tokens are kept as their hash only: Migrate rewrites `token` of
   every row that holds the token itself (BUGS RV128).
 - The scheduled backup's network share login (`scheduled_backup_smb` in

@@ -2,10 +2,12 @@ package authn
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"math"
 	"net/netip"
 	"regexp"
+	"slices"
 	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
@@ -196,4 +198,80 @@ func (s *Service) CleanupHousekeeping(ctx context.Context) {
 	if err != nil {
 		s.log.Error("Housekeeping error:", err.Error())
 	}
+}
+
+// Lock is a lockout of an account at one address (CheckBruteForce): its
+// failed sign-ins from there locked it until Until.
+type Lock struct {
+	IP       string
+	Until    time.Time
+	Failures int
+}
+
+// AccountLocks returns the lockouts that have not run out, by the user
+// name the failed sign-ins gave, the one that lasts longest first.
+func (s *Service) AccountLocks(ctx context.Context) (map[string][]Lock, error) {
+	query := s.db.Pick(
+		`SELECT DISTINCT username, ip_address FROM login_attempts WHERE success = 0
+			AND created_at > datetime('now', '-' || ? || ' minutes')`,
+		`SELECT DISTINCT username, ip_address FROM login_attempts WHERE NOT success
+			AND created_at > NOW() - INTERVAL '1 minute' * ?`)
+	rows, err := store.Select(ctx, s.db, query, float64(s.set.LockoutMinutes))
+	if err != nil {
+		return nil, fmt.Errorf("read the locked accounts: %w", err)
+	}
+	type pair struct{ name, ip string }
+	var pairs []pair
+	for rows.Next() {
+		var name, ip sql.NullString
+		if err := rows.Scan(&name, &ip); err != nil {
+			rows.Close()
+			return nil, fmt.Errorf("read the locked accounts: %w", err)
+		}
+		if name.Valid && name.String != "" {
+			pairs = append(pairs, pair{name.String, ip.String})
+		}
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read the locked accounts: %w", err)
+	}
+	out := map[string][]Lock{}
+	now := s.now()
+	for _, p := range pairs {
+		answer, err := s.addressLockout(ctx, p.name, p.ip)
+		if err != nil {
+			return nil, err
+		}
+		if !answer.Blocked {
+			continue
+		}
+		until := now.Add(time.Duration(answer.RetryAfter) * time.Second)
+		if answer.RetryUnknown {
+			until = now.Add(time.Duration(s.set.LockoutMinutes) * time.Minute)
+		}
+		out[p.name] = append(out[p.name], Lock{IP: p.ip, Until: until.UTC().Truncate(time.Second), Failures: s.set.MaxFailedAttempts})
+	}
+	for name := range out {
+		slices.SortFunc(out[name], func(a, b Lock) int { return b.Until.Compare(a.Until) })
+	}
+	return out, nil
+}
+
+// Unlock ends every lockout of the account: its failed sign-ins are
+// deleted, from every address, so they count neither for its lockout nor
+// for the limit of the addresses. It returns how many there were.
+func (s *Service) Unlock(ctx context.Context, username string) (int64, error) {
+	query := s.db.Pick(`DELETE FROM login_attempts WHERE username = ? AND success = 0`,
+		`DELETE FROM login_attempts WHERE username = ? AND NOT success`)
+	res, err := s.db.Exec(ctx, query, username)
+	if err != nil {
+		return 0, fmt.Errorf("unlock %s: %w", logName(username), err)
+	}
+	n, _ := res.RowsAffected()
+	// The old console's table of lockouts, which nothing writes any more
+	if _, err := s.db.Exec(ctx, `DELETE FROM account_lockouts WHERE username = ?`, username); err != nil && !noTable(s.db, err) {
+		return 0, fmt.Errorf("unlock %s: %w", logName(username), err)
+	}
+	return n, nil
 }

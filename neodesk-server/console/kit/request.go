@@ -81,6 +81,29 @@ func UserID(r *http.Request) int64 {
 	return 0
 }
 
+// ActorID is the account that acts in the request, for the audit log: the
+// signed-in account (UserID), but the admin while an admin views the
+// console as another account (impersonation).
+func ActorID(r *http.Request) int64 {
+	if s := session.From(r); s != nil {
+		if imp := s.Impersonation(); imp != nil {
+			return imp.AdminID
+		}
+		return s.UserID()
+	}
+	return 0
+}
+
+// Impersonation is what the request's session records about the admin who
+// views the console as its account, nil when the request is no
+// impersonation.
+func Impersonation(r *http.Request) *session.Impersonation {
+	if s := session.From(r); s != nil {
+		return s.Impersonation()
+	}
+	return nil
+}
+
 // Access is the request's permission context: the role's effective
 // permissions, the account's panel access and the section of the path.
 // HasPermission on it is requestHasPermission(req, permission). Before

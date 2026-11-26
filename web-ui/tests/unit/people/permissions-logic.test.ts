@@ -71,6 +71,8 @@ describe('groups by what a person does', () => {
 		for (const p of ['cdap.view', 'enrollment.approve', 'device.signin_manage'])
 			expect(PERMISSION_GROUPS.find((g) => g.permissions.includes(p))?.id).toBe('manage');
 		expect(PERMISSION_GROUPS.find((g) => g.permissions.includes('branding.edit'))?.id).toBe('server');
+		for (const p of ['user.security', 'user.impersonate'])
+			expect(PERMISSION_GROUPS.find((g) => g.permissions.includes(p))?.id).toBe('people');
 	});
 
 	test('a row id the search and #links can use', () => {

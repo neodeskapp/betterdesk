@@ -45,6 +45,10 @@ func (s *Server) steps() []step {
 		{6, "session", s.tokenOrSession},
 		{8, "CSRF token", s.csrfProvider},
 		{9, "static folders", middleware.StaticFolders(middleware.StaticFoldersOptions{PublicDir: cfg.PublicDir, FontsDir: cfg.FontsDir, ProtosDir: cfg.ProtosDir, UploadsDir: cfg.UploadsDir, WallpapersDir: cfg.WallpapersDir, Static: cfg.Static, Production: cfg.Production, OnError: onError})},
+		// Not in the Node console: "Sign in as" is read-only here, before
+		// the panel access guard and either route table, so every refusal
+		// of an impersonation has its one code (package impersonation)
+		{10, "impersonation", s.impersonation.Gate(s.early, s.router)},
 		{10, "permissions and panel access", s.loadAccess},
 		{11, "rate limiters", d.Limits.AppLevel()},
 		{12, "client and device API routes", stage(s.early)},

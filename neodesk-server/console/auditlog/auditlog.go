@@ -32,6 +32,9 @@ type Entry struct {
 	// IP is the client address as the route resolved it. It is stored as
 	// given.
 	IP *string
+	// TargetUserID is the account the entry is about, when it is about
+	// one: whose password was reset, who was disabled. nil stores NULL.
+	TargetUserID *int64
 }
 
 // Write stores an entry for the common call: userID 0 stands for no account
@@ -53,9 +56,12 @@ func (l *Log) WriteEntry(ctx context.Context, e Entry) error {
 	if l == nil || l.db == nil {
 		return fmt.Errorf("write audit entry %q: %w", e.Action, errNoDatabase)
 	}
-	var userID, details, ip any
+	var userID, details, ip, target any
 	if e.UserID != nil {
 		userID = *e.UserID
+	}
+	if e.TargetUserID != nil {
+		target = *e.TargetUserID
 	}
 	if e.Details != nil {
 		details = RedactDetails(*e.Details)
@@ -63,12 +69,29 @@ func (l *Log) WriteEntry(ctx context.Context, e Entry) error {
 	if e.IP != nil {
 		ip = toUTF8(*e.IP)
 	}
-	_, err := l.db.Exec(ctx, `INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)`,
-		userID, toUTF8(e.Action), details, ip)
+	var err error
+	if target == nil {
+		_, err = l.db.Exec(ctx, `INSERT INTO audit_log (user_id, action, details, ip_address) VALUES (?, ?, ?, ?)`,
+			userID, toUTF8(e.Action), details, ip)
+	} else {
+		_, err = l.db.Exec(ctx, `INSERT INTO audit_log (user_id, action, details, ip_address, target_user_id) VALUES (?, ?, ?, ?, ?)`,
+			userID, toUTF8(e.Action), details, ip, target)
+	}
 	if err != nil {
 		return fmt.Errorf("write audit entry %q: %w", e.Action, err)
 	}
 	return nil
+}
+
+// WriteAbout stores an entry like Write that is about the account
+// target: the account that acted is userID (0 for none), the account the
+// action changed or looked at is target.
+func (l *Log) WriteAbout(ctx context.Context, userID, target int64, action, details, ip string) error {
+	e := Entry{Action: action, Details: &details, IP: &ip, TargetUserID: &target}
+	if userID != 0 {
+		e.UserID = &userID
+	}
+	return l.WriteEntry(ctx, e)
 }
 
 var errNoDatabase = errors.New("the audit log has no database")

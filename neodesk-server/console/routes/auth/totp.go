@@ -6,6 +6,7 @@ import (
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 )
 
 // totpCodeLength is the number of digits of a two-factor code.
@@ -78,6 +79,7 @@ func (h *handlers) totpEnable(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "TOTP enable error:", err)
 		return
 	}
+	h.notices.TwoFactorChanged(r.Context(), kit.UserID(r), securitymail.TwoFactorOn)
 	kit.JSON(w, r, http.StatusOK, totpEnabledAnswer{Success: true, RecoveryCodes: codes})
 }
 
@@ -172,6 +174,7 @@ func (h *handlers) totpDisable(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "TOTP disable error:", err)
 		return
 	}
+	h.notices.TwoFactorChanged(r.Context(), userID, securitymail.TwoFactorOff)
 	kit.OK(w, r, nil)
 }
 
@@ -228,6 +231,7 @@ func (h *handlers) totpRecoveryCodes(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "TOTP recovery codes error:", err)
 		return
 	}
+	h.notices.TwoFactorChanged(r.Context(), userID, securitymail.RecoveryCodesRenewed)
 	kit.JSON(w, r, http.StatusOK, totpEnabledAnswer{Success: true, RecoveryCodes: codes})
 }
 

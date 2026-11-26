@@ -153,7 +153,8 @@
 		/* The bar's icon buttons are the default control height, like Help and search */
 		--icon-btn-size: var(--control-h);
 		position: sticky;
-		top: 0;
+		/* Below the Sign in as bar while there is one */
+		top: var(--viewing-banner-h, 0px);
 		z-index: var(--layer-topbar);
 		display: flex;
 		align-items: center;

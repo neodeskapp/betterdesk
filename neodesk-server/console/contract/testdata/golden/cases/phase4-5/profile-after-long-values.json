@@ -46,6 +46,7 @@
       "phone": "  padded  ",
       "role": "global_admin",
       "role_display": "",
+      "time_zone": "",
       "username": "e2e_global_admin"
      },
      "success": true
@@ -92,6 +93,7 @@
       "phone": "  padded  ",
       "role": "admin",
       "role_display": "",
+      "time_zone": "",
       "username": "e2e_admin"
      },
      "success": true

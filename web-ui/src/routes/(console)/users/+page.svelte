@@ -1,8 +1,9 @@
 <!--
   Console users (/users): the accounts that can sign in, their role, which
   devices and organizations each can reach, and the user groups that share
-  device access. A click on a row edits the account (or, without
-  user.edit, shows its organizations). Panel access (which console
+  device access. A click on a row opens the user's page (/users/<id>); the
+  row menu (lib/people/user-actions.ts, the same groups as on that page)
+  keeps the quick edits in sheets. Panel access (which console
   sections an account or a group may read or change, and its client
   features) opens from the row menus in a sheet: read-only with user.view,
   editable with user.edit.
@@ -12,31 +13,43 @@
   /api/panel/user-groups and GET /api/users/invites (invites not used yet,
   and whether the console can send mail) beside it. Actions are offered by permission:
   user.create (and a role the signed-in person may give) to add or invite
-  by email, user.edit to edit, reset passwords, send an invite again, see and end an account's signed-in devices
-  (A239), disable and enable accounts and turn off their two-factor
-  sign-in (never yourself) and manage groups, user.delete to
+  by email and to withdraw an invite (which deletes the account that never
+  signed in), user.edit to edit, reset passwords, send an invite again, see and end an account's signed-in devices
+  (A239), disable and enable accounts and manage groups,
+  user.security (never for yourself) to give a temporary password, ask for
+  a new password at the next sign-in, unlock, require, reset or turn off
+  two-factor sign-in and make recovery codes unusable, user.delete to
   delete (never yourself),
-  org.manage_users to change organizations.
+  org.manage_users to change organizations, user.impersonate to Sign in
+  as an account (read-only; the dialog asks the server who may be viewed).
 
-  URL: ?search= fills the search and follows it; #user-groups goes to the
-  user groups.
+  Many accounts: the filters (role, organization, state, two-factor
+  sign-in, sign-in method, last sign-in), the search and the sort live in
+  the URL (lib/people/userList.ts): a reload or a shared link shows the
+  same list, and Back undoes a filter. Rows can be selected (all shown at
+  once with the header's box) for an action on several accounts
+  (BulkDialog: it shows what happens to each before it runs); Import reads
+  accounts from a CSV file (ImportSheet), Export CSV saves the accounts
+  shown.
+
+  URL: ?search= ?role= ?org=<id or none> ?state= ?2fa= ?method=
+  ?inactive=30|60|90|never ?sort=<column>&dir=asc|desc; #user-groups goes
+  to the user groups.
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { page } from '$app/state';
-	import { replaceState } from '$app/navigation';
+	import { pushState, replaceState } from '$app/navigation';
 	import { ApiError } from '#lib/api/client.ts';
+	import { goto } from '$app/navigation';
 	import {
-		deleteUser,
 		deleteUserGroup,
 		getEffectiveScope,
 		listConsoleUsers,
 		listInvites,
 		listUserGroupRows,
 		listUserOrgs,
-		resendInvite,
-		updateUser,
 		type ConsoleUser,
 		type EffectiveScope,
 		type PendingInvite,
@@ -44,38 +57,62 @@
 		type UserOrg
 	} from '#lib/api/users.ts';
 	import type { AccessSubject } from '#lib/api/access.ts';
+	import { listOrgs, type Organization } from '#lib/api/orgs.ts';
+	import type { BulkKind } from '#lib/api/users.ts';
 	import { formatDate } from '#lib/i18n/format.ts';
 	import { plural, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import SessionsSheet from '#lib/people/SessionsSheet.svelte';
+	import UserActionMenuItems from '#lib/people/UserActionMenuItems.svelte';
+	import { runUserAction } from '#lib/people/run-user-action.ts';
+	import { userActionGroups, type UserActionId } from '#lib/people/user-actions.ts';
 	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import { takeIntent } from '#lib/shell/intent.svelte.ts';
 	import {
 		assignableRoles,
-		deleteConfirmKey,
 		DESCRIBED_ROLES,
 		eachLimited,
-		filterUsers,
 		groupNote,
-		mayChangeUser,
-		mayDisableUser,
 		providerOf,
-		scopeText
+		roleLabel as labelOfRole,
+		ROLE_ORDER,
+		scopeText,
+		signInStates,
+		twoFactorStatus
 	} from '#lib/people/users.ts';
+	import {
+		accountStates,
+		applyView,
+		exportCsv,
+		isFiltered,
+		METHOD_FILTERS,
+		NO_ORG,
+		onlySearchDiffers,
+		sameView,
+		saveCsv,
+		STATE_FILTERS,
+		TWO_FACTOR_FILTERS,
+		twoFactorOf,
+		urlWithView,
+		viewFromParams,
+		withoutFilters,
+		type UserListView
+	} from '#lib/people/userList.ts';
 	import { reloadWhileShown } from '#lib/state/live.ts';
 	import { myPresence } from '#lib/state/presence.svelte.ts';
 	import { can, sectionWritable, session } from '#lib/state/session.svelte.ts';
-	import BooleanStatus from '#lib/ui/BooleanStatus.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
 	import ListRow from '#lib/ui/ListRow.svelte';
 	import MenuButton from '#lib/ui/MenuButton.svelte';
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
+	import MenuGroup from '#lib/ui/MenuGroup.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
+	import Select from '#lib/ui/Select.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Status from '#lib/ui/Status.svelte';
 	import Table from '#lib/ui/Table.svelte';
@@ -86,9 +123,13 @@
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import type { Column, SortState } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
-	import { ICONS } from '#lib/util/display.ts';
+	import { displayName, ICONS } from '#lib/util/display.ts';
 	import AccessSheet from './AccessSheet.svelte';
+	import BulkDialog from './BulkDialog.svelte';
+	import DeleteUserDialog from './DeleteUserDialog.svelte';
+	import ImportSheet from './ImportSheet.svelte';
 	import ResetPasswordDialog from './ResetPasswordDialog.svelte';
+	import SignInAsDialog from './SignInAsDialog.svelte';
 	import UserGroupDialog from './UserGroupDialog.svelte';
 	import UserOrgsSheet from './UserOrgsSheet.svelte';
 	import UserSheet from './UserSheet.svelte';
@@ -98,18 +139,33 @@
 	const canCreate = can('user.create') && sectionWritable() && assignableRoles(session.user?.role).length > 0;
 	const canEdit = can('user.edit');
 	const canDelete = can('user.delete') && sectionWritable();
+	/* Sign in as: the server decides per account and the dialog says why not */
+	const canViewAs = can('user.impersonate') && !session.impersonation;
+	/** Sign-in security of other accounts */
+	const canSecurity = can('user.security') && sectionWritable();
+	/** Withdrawing an invite undoes Add user, so it asks what adding does */
+	const canWithdraw = can('user.create') && sectionWritable();
+	/* Actions on several accounts: each needs the permission of its route for one */
+	const canBulkEdit = canEdit && sectionWritable();
+	const canBulkRole = canBulkEdit && assignableRoles(session.user?.role).length > 0;
+	const canBulkOrgs = can('org.manage_users') && sectionWritable();
+	const selectable = canBulkEdit || canBulkOrgs || canSecurity || canDelete;
 	const meId = String(session.user?.id ?? '');
-	/** The server changes only the person's own account and those whose role they may give */
-	const mayChange = (u: ConsoleUser) => mayChangeUser(session.user?.role, meId, u);
-	const mayDisable = (u: ConsoleUser) => mayDisableUser(session.user?.role, meId, u);
+	/** What the row menu offers (the user's page offers the same) */
+	const rights = {
+		meId,
+		myRole: session.user?.role,
+		canEdit,
+		canDelete,
+		canSecurity,
+		canWithdraw,
+		canViewAs,
+		canTeamChat: can('chat.team')
+	};
 
 	/* ── Labels ── */
 
-	function roleLabel(role: string): string {
-		const key = `users.role_${role}`;
-		const text = t(key);
-		return text === key ? role : text;
-	}
+	const roleLabel = (role: string): string => labelOfRole(role, t);
 	function providerLabel(provider: string): string {
 		const key = `users.provider_${provider}`;
 		const text = t(key);
@@ -202,28 +258,174 @@
 		};
 	});
 
-	/* ── Search, in the URL as ?search= ── */
+	/* ── Organizations, for their filter and the actions ── */
 
-	let searchInput = $state(untrack(() => page.url.searchParams.get('search')?.trim() ?? ''));
-	let query = $state(untrack(() => searchInput));
-
+	let orgList = $state.raw<Organization[]>([]);
 	$effect(() => {
-		const v = searchInput.trim();
-		if (v === untrack(() => query)) return;
-		const timer = setTimeout(() => {
-			query = v;
-			const url = new URL(location.href);
-			if (v) url.searchParams.set('search', v);
-			else url.searchParams.delete('search');
-			// This page's own address with another ?search=
-			// eslint-disable-next-line svelte/no-navigation-without-resolve
-			replaceState(url, page.state);
-		}, 150);
-		return () => clearTimeout(timer);
+		if (!allowed) return;
+		const ctrl = new AbortController();
+		listOrgs(ctrl.signal).then(
+			(list) => (orgList = list),
+			() => (orgList = [])
+		);
+		return () => ctrl.abort();
 	});
 
-	const shown = $derived(filterUsers(users, query, roleLabel));
-	let sort = $state<SortState | null>(null);
+	/* ── The view: search, filters and sort, in the URL (lib/people/userList.ts) ── */
+
+	const startView = untrack(() => viewFromParams(page.url.searchParams));
+	let view = $state<UserListView>(startView);
+	let searchInput = $state(startView.search);
+	let sort = $state<SortState | null>(startView.sort);
+
+	// Typing stays instant; the list follows a moment later
+	$effect(() => {
+		const v = searchInput.trim();
+		if (v === untrack(() => view.search)) return;
+		const timer = setTimeout(() => (view = { ...untrack(() => view), search: v }), 150);
+		return () => clearTimeout(timer);
+	});
+	// A click on a column header sorts: the view follows the table
+	$effect(() => {
+		const s = sort;
+		untrack(() => {
+			if (s?.column !== view.sort?.column || s?.dir !== view.sort?.dir) view = { ...view, sort: s };
+		});
+	});
+
+	// pushState and replaceState change the address bar and page.state but not
+	// page.url, so the view is read from the address bar after each of them
+	const urlView = $derived.by(() => {
+		void page.url;
+		void page.state;
+		return viewFromParams(new URL(location.href).searchParams);
+	});
+	// The URL changed (Back, Forward, a link): the list follows
+	$effect(() => {
+		const u = urlView;
+		untrack(() => {
+			if (sameView(u, view)) return;
+			view = u;
+			searchInput = u.search;
+			sort = u.sort;
+		});
+	});
+	// The view changed: the URL follows, a history entry per filter; typing replaces it
+	$effect(() => {
+		const v = view;
+		untrack(() => {
+			const current = viewFromParams(new URL(location.href).searchParams);
+			if (sameView(v, current)) return;
+			const next = urlWithView(new URL(location.href), v);
+			const state: { usersView?: boolean } = { usersView: true };
+			// This page's own address with another query: resolve() is for route paths
+			/* eslint-disable svelte/no-navigation-without-resolve */
+			if (onlySearchDiffers(v, current)) replaceState(next, page.state);
+			else pushState(next, state);
+			/* eslint-enable svelte/no-navigation-without-resolve */
+		});
+	});
+
+	function setFilter(change: Partial<UserListView>) {
+		view = { ...view, ...change };
+	}
+	function clearFilters() {
+		searchInput = '';
+		view = withoutFilters(view);
+	}
+
+	const viewFacts = $derived({
+		roleLabel,
+		invites,
+		orgsOf: (id: string) => userOrgs.get(id)
+	});
+	const shown = $derived(applyView(users, view, viewFacts));
+	const filtered = $derived(isFiltered(view));
+
+	/* Filter choices: roles and sign-in methods the list has (and the one chosen) */
+	const roleOptions = $derived([
+		{ value: '', label: t('users.filter_role_any') },
+		...ROLE_ORDER.filter((r) => r === view.role || users.some((u) => u.role === r)).map((r) => ({
+			value: r as string,
+			label: roleLabel(r)
+		}))
+	]);
+	const orgOptions = $derived([
+		{ value: '', label: t('users.filter_org_any') },
+		{ value: NO_ORG, label: t('users.filter_org_none') },
+		...orgList.map((o) => ({ value: String(o.id), label: o.name || String(o.id) }))
+	]);
+	const stateOptions = $derived([
+		{ value: '' as const, label: t('users.filter_state_any') },
+		...STATE_FILTERS.map((s) => ({ value: s, label: t(`users.filter_state_${s}`) }))
+	]);
+	const twoFactorOptions = $derived([
+		{ value: '' as const, label: t('users.filter_2fa_any') },
+		...TWO_FACTOR_FILTERS.map((s) => ({ value: s, label: t(`users.filter_2fa_${s}`) }))
+	]);
+	const methodOptions = $derived([
+		{ value: '' as const, label: t('users.filter_method_any') },
+		...METHOD_FILTERS.map((s) => ({ value: s, label: t(`users.filter_method_${s}`) }))
+	]);
+	const showMethods = $derived(!!view.method || users.some((u) => providerOf(u) !== 'local'));
+	const inactiveOptions = $derived([
+		{ value: '' as const, label: t('users.filter_last_any') },
+		{ value: '30' as const, label: t('users.inactive_days', { days: 30 }) },
+		{ value: '60' as const, label: t('users.inactive_days', { days: 60 }) },
+		{ value: '90' as const, label: t('users.inactive_days', { days: 90 }) },
+		{ value: 'never' as const, label: t('users.inactive_never') }
+	]);
+
+	/* ── Selection and actions on several accounts ── */
+
+	let selection = $state.raw(new Set<string>());
+	/** The selected accounts the list shows: a filter that hides one leaves it out */
+	const selected = $derived(selection.size ? shown.filter((u) => selection.has(String(u.id))) : []);
+	let bulkFor = $state.raw<{ kind: BulkKind; users: ConsoleUser[] } | null>(null);
+
+	function clearSelection() {
+		selection = new Set();
+	}
+	function openBulk(kind: BulkKind) {
+		bulkFor = { kind, users: selected };
+	}
+
+	/* ── Import and export ── */
+
+	let importing = $state(false);
+
+	/** The accounts shown, with the columns of the table as plain text */
+	function exportShown() {
+		const date = new Date().toISOString().slice(0, 10);
+		const states = (u: ConsoleUser) =>
+			accountStates(u, invites.get(String(u.id)))
+				.map((s) => t(`users.filter_state_${s}`))
+				.join('; ');
+		const orgsText = (u: ConsoleUser) => {
+			const orgs = userOrgs.get(String(u.id));
+			return Array.isArray(orgs) ? orgs.map((o) => o.name).join('; ') : '';
+		};
+		const scope = (u: ConsoleUser) => {
+			const s = scopeText(scopes.get(String(u.id)));
+			return s.key ? t(s.key, s.params) : '';
+		};
+		saveCsv(
+			`users-${date}.csv`,
+			exportCsv(shown, [
+				{ label: t('users.username'), value: (u) => u.username },
+				{ label: t('users.email'), value: (u) => u.email },
+				{ label: t('users.role'), value: (u) => roleLabel(u.role) },
+				{ label: t('users.export_method'), value: (u) => providerLabel(providerOf(u)) },
+				{ label: t('users.user_groups'), value: (u) => u.user_groups.map(groupName).join('; ') },
+				{ label: t('users.column_devices'), value: scope },
+				{ label: t('users.column_organizations'), value: orgsText },
+				{ label: t('nav.account_2fa'), value: (u) => t(`users.filter_2fa_${twoFactorOf(u)}`) },
+				{ label: t('users.export_state'), value: states },
+				{ label: t('users.last_login'), value: (u) => u.last_login ?? '' },
+				{ label: t('users.created'), value: (u) => u.created_at ?? '' }
+			])
+		);
+	}
 
 	/* ── #user-groups ── */
 
@@ -252,82 +454,54 @@
 		if (takeIntent('add-user') && canCreate) editing = { user: null };
 	});
 	let resetFor = $state.raw<ConsoleUser | null>(null);
+	let deleteFor = $state.raw<ConsoleUser | null>(null);
 	let orgsFor = $state.raw<ConsoleUser | null>(null);
 	let sessionsFor = $state.raw<ConsoleUser | null>(null);
+	let viewAsFor = $state.raw<ConsoleUser | null>(null);
 	let groupDialog = $state<{ group: UserGroupRow | null } | null>(null);
 	let accessFor = $state.raw<{ subject: AccessSubject; name: string; role?: string } | null>(null);
 
+	/** A click on a row: the user's page */
 	function openRow(u: ConsoleUser) {
-		if (canEdit && mayChange(u)) editing = { user: u };
-		else orgsFor = u;
+		// link() adds the base; resolve() is for route paths
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		void goto(link(`/users/${encodeURIComponent(String(u.id))}`));
 	}
 
-	/** A new invite link by mail; the one before stops working */
-	async function sendInviteAgain(u: ConsoleUser) {
-		try {
-			await resendInvite(u.id);
-			toast.success(t('users.invite_resent_named', { username: u.username }));
+	/** An item of the row menu: a sheet or dialog of this page, or runUserAction */
+	async function act(id: UserActionId, u: ConsoleUser) {
+		switch (id) {
+			case 'open':
+				openRow(u);
+				return;
+			case 'edit':
+				editing = { user: u };
+				return;
+			case 'orgs':
+				orgsFor = u;
+				return;
+			case 'access':
+				accessFor = { subject: { kind: 'user', id: u.id }, name: displayName(u), role: u.role };
+				return;
+			case 'sign_in_as':
+				viewAsFor = u;
+				return;
+			case 'reset_password':
+				resetFor = u;
+				return;
+			case 'sessions':
+				sessionsFor = u;
+				return;
+			case 'delete':
+				deleteFor = u;
+				return;
+		}
+		const changed = await runUserAction(id, u);
+		if (changed === 'user') void loadUsers();
+		if (changed === 'invites') void loadInvites();
+		if (changed === 'gone') {
+			void loadUsers();
 			void loadInvites();
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
-		}
-	}
-
-	async function removeUser(u: ConsoleUser) {
-		const ok = await confirm({
-			title: t('users.delete_title'),
-			message: t(deleteConfirmKey(u), { username: u.username }),
-			confirmLabel: t('users.delete_title'),
-			confirmIcon: ICONS.delete,
-			danger: true
-		});
-		if (!ok) return;
-		try {
-			await deleteUser(u.id);
-			toast.success(t('users.deleted_named', { username: u.username }));
-			void loadUsers();
-			void loadGroups();
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
-		}
-	}
-
-	/** Disable (after a confirmation) or enable an account */
-	async function setDisabled(u: ConsoleUser, disabled: boolean) {
-		if (disabled) {
-			const ok = await confirm({
-				title: t('users.disable_title'),
-				message: t('users.disable_confirm', { username: u.username }),
-				confirmLabel: t('users.disable_menu'),
-				confirmIcon: ICONS.disable,
-				danger: true
-			});
-			if (!ok) return;
-		}
-		try {
-			await updateUser(u.id, { disabled });
-			toast.success(t(disabled ? 'users.disabled_named' : 'users.enabled_named', { username: u.username }));
-			void loadUsers();
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
-		}
-	}
-
-	/** Turn off the two-factor sign-in of someone who lost their authenticator */
-	async function turnOffTotp(u: ConsoleUser) {
-		const ok = await confirm({
-			title: t('users.totp_off_title'),
-			message: t('users.totp_off_confirm', { username: u.username }),
-			confirmLabel: t('users.totp_off_menu'),
-			danger: true
-		});
-		if (!ok) return;
-		try {
-			await updateUser(u.id, { totp_enabled: false });
-			toast.success(t('users.totp_off_named', { username: u.username }));
-			void loadUsers();
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
 		}
 	}
 
@@ -364,7 +538,9 @@
 			cell: nameCell,
 			primary: true,
 			sortValue: (u) => u.username.toLowerCase(),
-			class: 'col-name'
+			class: 'col-name',
+			// Room for a name and its state lines, which wrap
+			minWidth: '17rem'
 		},
 		{ id: 'email', label: t('users.email'), cell: emailCell, sortValue: (u) => u.email.toLowerCase() },
 		{
@@ -395,8 +571,10 @@
 			label: t('nav.account_2fa'),
 			cell: twoFactorCell,
 			visible: hasTwoFactor,
-			sortValue: (u) => (u.totp_enabled ? 1 : 0),
-			class: 'col-nowrap'
+			sortValue: (u) =>
+				u.two_factor_state === 'on' || u.totp_enabled ? 2 : u.two_factor_state === 'required' ? 1 : 0,
+			/* "Required, not set up" wraps rather than run under the row menu */
+			minWidth: '8rem'
 		},
 		{
 			id: 'last_login',
@@ -428,25 +606,49 @@
 			presenceLabel={self ? t(`chat.presence_${myPresence.status}`) : undefined}
 		/></span
 	>
+	{#if displayName(u) !== u.username}<span class="cell-sub username">{u.username}</span>{/if}
 	{#if u.user_groups.length}<span class="cell-sub"
 			>{t('users.groups_line', { groups: u.user_groups.map(groupName).join(', ') })}</span
 		>{/if}
 	{#if self}<span class="cell-sub">{t('users.this_is_you')}</span>{/if}
 	{#if u.disabled}<span class="cell-sub"><Status tone="warning" label={t('users.account_disabled')} /></span
 		>{/if}
+	{#each signInStates(u) as state (state.key)}<span class="cell-sub"
+			><Status
+				tone={state.tone}
+				label={t(state.key)}
+				title={state.titleKey ? t(state.titleKey, { date: formatDate(state.date, {}, '') }) : undefined}
+			/></span
+		>{/each}
+	{#if u.expires_at}<span class="cell-sub"
+			>{#if u.expired}<Status
+					tone="warning"
+					label={t('users.expired_status')}
+					title={t('users.expired_on', { date: formatDate(u.expires_at, {}, '') })}
+				/>{:else}{t('users.expires_on', {
+					date: formatDate(u.expires_at, { hour: undefined, minute: undefined }, '')
+				})}{/if}</span
+		>{/if}
 	{@const invite = invites.get(String(u.id))}
 	{#if invite && !u.last_login}<span class="cell-sub"
 			><Status
 				tone={invite.expired ? 'warning' : 'waiting'}
-				label={invite.expired ? t('users.invite_expired') : t('users.invited')}
-				title={t(invite.expired ? 'users.invite_expired_on' : 'users.invite_open_until', {
-					date: formatDate(invite.expires_at, {}, '')
-				})}
+				label={invite.expired ? t('users.invite_expired') : t('users.invite_pending')}
 			/></span
+		><span class="cell-sub invite-until"
+			>{t(invite.expired ? 'users.invite_expired_on' : 'users.invite_open_until', {
+				date: formatDate(invite.expires_at, {}, '')
+			})}</span
 		>{/if}
 {/snippet}
 
-{#snippet emailCell(u: ConsoleUser)}{#if u.email}{u.email}{:else}<Empty />{/if}{/snippet}
+{#snippet emailCell(u: ConsoleUser)}{#if u.email}{u.email}{:else}<Empty />{/if}{#if u.email_pending}<span
+			class="cell-sub email-pending"
+			><Status
+				tone={u.email_pending.expired ? 'warning' : 'waiting'}
+				label={t('users.email_pending', { email: u.email_pending.email })}
+			/></span
+		>{/if}{/snippet}
 
 {#snippet roleCell(u: ConsoleUser)}
 	{@const provider = providerOf(u)}
@@ -474,7 +676,10 @@
 		/>{:else}{orgs.map((o) => o.name).join(', ')}{/if}
 {/snippet}
 
-{#snippet twoFactorCell(u: ConsoleUser)}<BooleanStatus value={!!u.totp_enabled} />{/snippet}
+{#snippet twoFactorCell(u: ConsoleUser)}{@const s = twoFactorStatus(u)}<Status
+		tone={s.tone}
+		label={t(s.key)}
+	/>{/snippet}
 
 {#snippet lastCell(u: ConsoleUser)}<Time value={u.last_login} empty={t('users.never')} />{/snippet}
 
@@ -485,56 +690,14 @@
 	/>{/snippet}
 
 {#snippet actionsCell(u: ConsoleUser)}
-	{@const self = String(u.id) === meId}
-	{@const local = providerOf(u) === 'local'}
-	{@const changeable = mayChange(u)}
-	<MenuButton kebab label={t('users.actions_for', { username: u.username })}>
-		{#if canEdit && changeable}
-			<MenuItem class="act-edit" icon={ICONS.edit} onselect={() => (editing = { user: u })}
-				>{t('users.edit')}</MenuItem
-			>
-			{#if local}
-				<MenuItem class="act-reset" icon={ICONS.password} onselect={() => (resetFor = u)}
-					>{t('users.reset_password_menu')}</MenuItem
-				>
-				{#if mailReady && u.email && !u.last_login}
-					<MenuItem class="act-resend-invite" icon={ICONS.send} onselect={() => void sendInviteAgain(u)}
-						>{t('users.resend_invite')}</MenuItem
-					>
-				{/if}
-			{/if}
-			<MenuItem class="act-sessions" icon="devices" onselect={() => (sessionsFor = u)}
-				>{t('sessions.user_menu')}</MenuItem
-			>
-		{/if}
-		<MenuItem class="act-orgs" icon={ICONS.organization} onselect={() => (orgsFor = u)}
-			>{t('users.organizations_menu')}</MenuItem
-		>
-		<MenuItem
-			class="act-access"
-			icon={ICONS.access_policy}
-			onselect={() => (accessFor = { subject: { kind: 'user', id: u.id }, name: u.username, role: u.role })}
-			>{tf('users.access_menu', 'Panel access…')}</MenuItem
-		>
-		{#if canEdit && mayDisable(u)}
-			<MenuItem
-				class="act-disable"
-				icon={u.disabled ? ICONS.enable : ICONS.disable}
-				onselect={() => void setDisabled(u, !u.disabled)}
-				>{u.disabled ? t('users.enable_menu') : t('users.disable_menu')}</MenuItem
-			>
-			{#if u.totp_enabled}
-				<MenuItem class="act-totp-off" icon={ICONS.password} onselect={() => void turnOffTotp(u)}
-					>{t('users.totp_off_menu')}</MenuItem
-				>
-			{/if}
-		{/if}
-		{#if canDelete && changeable && !self}
-			<MenuDivider />
-			<MenuItem class="act-delete" icon={ICONS.delete} danger onselect={() => void removeUser(u)}
-				>{t('users.delete_menu')}</MenuItem
-			>
-		{/if}
+	{@const groups = userActionGroups(u, rights, {
+		mailReady,
+		invited: invites.has(String(u.id)),
+		withOpen: true
+	})}
+	<!-- Grouped: the account, what it may reach, its sign-in security, and what ends it -->
+	<MenuButton kebab label={t('users.actions_for', { username: displayName(u) })}>
+		<UserActionMenuItems {groups} onselect={(id) => void act(id, u)} />
 	</MenuButton>
 {/snippet}
 
@@ -546,6 +709,9 @@
 			<h1>{t('nav.users')}</h1>
 			{#if canCreate}
 				<div class="page-actions">
+					<Button class="import-users" icon={ICONS.upload} onclick={() => (importing = true)}
+						>{t('users.import_button')}</Button
+					>
 					<Button
 						class="add-user"
 						variant="primary"
@@ -562,23 +728,172 @@
 			<div class="page-main">
 				<section class="section" aria-labelledby="users-list-title">
 					<h2 id="users-list-title" class="sr-only">{t('nav.users')}</h2>
-					<Toolbar>
+					<Toolbar class="users-filters">
 						{#snippet search()}<SearchField
 								label={t('users.search_label')}
 								bind:value={searchInput}
 							/>{/snippet}
+						<Select
+							class="role-filter"
+							aria-label={t('users.filter_role')}
+							options={roleOptions}
+							value={view.role}
+							onchange={(e) => setFilter({ role: e.currentTarget.value })}
+						/>
+						{#if orgList.length}
+							<Select
+								class="org-filter"
+								aria-label={t('users.filter_org')}
+								options={orgOptions}
+								value={view.org}
+								onchange={(e) => setFilter({ org: e.currentTarget.value })}
+							/>
+						{/if}
+						<Select
+							class="state-filter"
+							aria-label={t('users.filter_state')}
+							options={stateOptions}
+							value={view.state}
+							onchange={(e) => setFilter({ state: e.currentTarget.value as UserListView['state'] })}
+						/>
+						{#if hasTwoFactor}
+							<Select
+								class="two-factor-filter"
+								aria-label={t('users.filter_2fa')}
+								options={twoFactorOptions}
+								value={view.twoFactor}
+								onchange={(e) => setFilter({ twoFactor: e.currentTarget.value as UserListView['twoFactor'] })}
+							/>
+						{/if}
+						{#if showMethods}
+							<Select
+								class="method-filter"
+								aria-label={t('users.filter_method')}
+								options={methodOptions}
+								value={view.method}
+								onchange={(e) => setFilter({ method: e.currentTarget.value as UserListView['method'] })}
+							/>
+						{/if}
+						<Select
+							class="inactive-filter"
+							aria-label={t('users.inactive_label')}
+							options={inactiveOptions}
+							value={view.inactive}
+							onchange={(e) => setFilter({ inactive: e.currentTarget.value as UserListView['inactive'] })}
+						/>
+						{#if filtered}
+							<Button class="clear-filters" size="sm" variant="ghost" onclick={clearFilters}
+								>{t('users.filters_clear')}</Button
+							>
+						{/if}
 					</Toolbar>
-					<div class="count-line-row" aria-live="polite">
-						{#if loaded && !loadError}
-							{#if query && shown.length !== users.length}
-								<CountLine
-									text={t('users.count_filtered')}
-									values={{ shown: shown.length, count: users.length }}
-								/>
-							{:else}
-								<CountLine
-									text={plural(users.length, { one: t('users.count_one'), other: t('users.count_many') })}
-								/>
+					<div class="list-head">
+						{#if selected.length}
+							<span aria-live="polite"
+								><CountLine text={t('users.bulk_selected')} values={{ count: selected.length }} /></span
+							>
+							<div class="bulk">
+								<MenuButton class="bulk-actions" size="sm" label={t('users.bulk_actions')}>
+									{#if canBulkRole || canBulkEdit}
+										<MenuGroup label={t('users.menu_group_account')}>
+											{#if canBulkRole}
+												<MenuItem class="bulk-role" icon={ICONS.edit} onselect={() => openBulk('role')}
+													>{t('users.bulk_role_menu')}</MenuItem
+												>
+											{/if}
+											{#if canBulkEdit}
+												<MenuItem class="bulk-enable" icon={ICONS.enable} onselect={() => openBulk('enable')}
+													>{t('users.bulk_enable_menu')}</MenuItem
+												>
+											{/if}
+										</MenuGroup>
+									{/if}
+									{#if canBulkOrgs}
+										<MenuGroup label={t('users.menu_group_access')}>
+											<MenuItem
+												class="bulk-org-add"
+												icon={ICONS.organization}
+												onselect={() => openBulk('organization-add')}>{t('users.bulk_org_add_menu')}</MenuItem
+											>
+											<MenuItem
+												class="bulk-org-remove"
+												icon={ICONS.unlink}
+												onselect={() => openBulk('organization-remove')}
+												>{t('users.bulk_org_remove_menu')}</MenuItem
+											>
+										</MenuGroup>
+									{/if}
+									{#if canSecurity || (canBulkEdit && mailReady)}
+										<MenuGroup label={t('users.menu_group_security')}>
+											{#if canSecurity}
+												<MenuItem
+													class="bulk-two-factor"
+													icon={ICONS.password}
+													onselect={() => openBulk('two-factor-required')}
+													>{t('users.bulk_two_factor_menu')}</MenuItem
+												>
+												<MenuItem
+													class="bulk-password-change"
+													icon={ICONS.password}
+													onselect={() => openBulk('require-password-change')}
+													>{t('users.bulk_password_change_menu')}</MenuItem
+												>
+											{/if}
+											{#if canBulkEdit && mailReady}
+												<MenuItem
+													class="bulk-reset-link"
+													icon={ICONS.send}
+													onselect={() => openBulk('password-reset-link')}
+													>{t('users.bulk_reset_link_menu')}</MenuItem
+												>
+											{/if}
+										</MenuGroup>
+									{/if}
+									{#if canBulkEdit || canDelete}
+										<MenuGroup label={t('users.menu_group_danger')}>
+											{#if canBulkEdit}
+												<MenuItem
+													class="bulk-disable"
+													icon={ICONS.disable}
+													onselect={() => openBulk('disable')}>{t('users.bulk_disable_menu')}</MenuItem
+												>
+											{/if}
+											{#if canDelete}
+												<MenuItem
+													class="bulk-delete"
+													icon={ICONS.delete}
+													danger
+													onselect={() => openBulk('delete')}>{t('users.bulk_delete_menu')}</MenuItem
+												>
+											{/if}
+										</MenuGroup>
+									{/if}
+								</MenuButton>
+								<Button class="bulk-clear" size="sm" variant="ghost" onclick={clearSelection}
+									>{t('users.bulk_clear')}</Button
+								>
+							</div>
+						{:else if loaded && !loadError}
+							<span aria-live="polite">
+								{#if filtered && shown.length !== users.length}
+									<CountLine
+										text={t('users.count_filtered')}
+										values={{ shown: shown.length, count: users.length }}
+									/>
+								{:else}
+									<CountLine
+										text={plural(users.length, { one: t('users.count_one'), other: t('users.count_many') })}
+									/>
+								{/if}
+							</span>
+							{#if shown.length}
+								<Button
+									class="export-users"
+									size="sm"
+									variant="ghost"
+									icon={ICONS.export}
+									onclick={exportShown}>{t('users.export_csv')}</Button
+								>
 							{/if}
 						{/if}
 					</div>
@@ -589,16 +904,21 @@
 							key={(u) => String(u.id)}
 							label={t('nav.users')}
 							bind:sort
+							{selectable}
+							bind:selection
+							selectLabel={(u) => t('table.select_row', { name: u.username })}
 							onrowclick={openRow}
 							loading={!loaded}
 							loadingText={t('users.loading_list')}
 							error={loadError}
 							onretry={() => void loadUsers()}
-							emptyText={users.length ? t('users.no_match', { query }) : t('users.empty_text')}
+							emptyText={!users.length ? t('users.empty_text') : t('users.filters_none_match')}
 						/>
 					</div>
 					{#if loaded && !loadError && users.length && !shown.length}
-						<div><Button size="sm" onclick={() => (searchInput = '')}>{t('users.clear_search')}</Button></div>
+						<div>
+							<Button size="sm" onclick={clearFilters}>{t('users.filters_clear')}</Button>
+						</div>
 					{/if}
 				</section>
 			</div>
@@ -704,12 +1024,66 @@
 		/>
 	{/if}
 
+	{#if bulkFor}
+		<BulkDialog
+			kind={bulkFor.kind}
+			users={bulkFor.users}
+			roles={assignableRoles(session.user?.role)}
+			{roleLabel}
+			orgs={orgList}
+			onclose={() => (bulkFor = null)}
+			ondone={() => {
+				bulkFor = null;
+				clearSelection();
+				void loadUsers();
+				void loadGroups();
+				void loadInvites();
+			}}
+		/>
+	{/if}
+
+	{#if importing}
+		<ImportSheet
+			{mailReady}
+			onclose={() => (importing = false)}
+			ondone={() => {
+				importing = false;
+				void loadUsers();
+				void loadInvites();
+			}}
+		/>
+	{/if}
+
+	{#if deleteFor}
+		<DeleteUserDialog
+			user={deleteFor}
+			{roleLabel}
+			onclose={() => (deleteFor = null)}
+			ondeleted={() => {
+				deleteFor = null;
+				void loadUsers();
+				void loadGroups();
+			}}
+		/>
+	{/if}
+
 	{#if resetFor}
-		<ResetPasswordDialog user={resetFor} {mailReady} onclose={() => (resetFor = null)} />
+		<ResetPasswordDialog
+			user={resetFor}
+			{mailReady}
+			security={canSecurity && String(resetFor.id) !== meId}
+			{providerLabel}
+			onclose={() => (resetFor = null)}
+			onchanged={() => void loadUsers()}
+		/>
 	{/if}
 
 	{#if sessionsFor}
 		<SessionsSheet user={sessionsFor} onclose={() => (sessionsFor = null)} />
+	{/if}
+
+	{#if viewAsFor}
+		<SignInAsDialog user={viewAsFor} onclose={() => (viewAsFor = null)} />
 	{/if}
 
 	{#if orgsFor}
@@ -747,9 +1121,19 @@
 	#user-groups {
 		scroll-margin-top: calc(var(--topbar-h) + var(--space-4));
 	}
-	.count-line-row {
-		min-height: 1.5em;
+	.list-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-2) var(--space-4);
+		min-height: var(--control-h-sm);
 		margin: 0;
+	}
+	.bulk {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
 	}
 	.users-table :global(.user-name) {
 		font-weight: 600;
@@ -761,6 +1145,10 @@
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 		font-weight: 400;
+	}
+	/* The email column has no avatar before it */
+	.users-table :global(.cell-sub.email-pending) {
+		padding-inline-start: 0;
 	}
 	.users-table :global(td.col-nowrap) {
 		white-space: nowrap;
@@ -791,6 +1179,23 @@
 		position: sticky;
 		inset-inline-end: 0;
 		background: var(--bg);
+	}
+	/* The row's tint is see-through: over the page's background, so the
+	   pinned cell neither doubles it nor shows the cells it covers */
+	.users-table :global(tr.selected > td.actions) {
+		background: linear-gradient(var(--accent-tint), var(--accent-tint)), var(--bg);
+	}
+	/* The state lines under a name or an address wrap, so the columns after
+	   them (two-factor sign-in, last sign-in) stay in view */
+	.users-table :global(.cell-sub .status) {
+		white-space: normal;
+	}
+	/* On a phone each filter fills its row instead of leaving ragged gaps */
+	@media (max-width: 640px) {
+		.users-page :global(.users-filters > .form-select) {
+			flex: 1 1 100%;
+			width: 100%;
+		}
 	}
 	.roles {
 		display: flex;

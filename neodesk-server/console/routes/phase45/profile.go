@@ -1,6 +1,7 @@
 package phase45
 
 import (
+	"database/sql"
 	"errors"
 	"net/http"
 	"strings"
@@ -9,6 +10,10 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/emailchange"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
@@ -43,6 +48,8 @@ type profileData struct {
 	Phone       any               `json:"phone"`
 	RoleDisplay any               `json:"role_display"`
 	AvatarURL   any               `json:"avatar_url"`
+	// TimeZone is the person's time zone (an IANA name), "" for none.
+	TimeZone string `json:"time_zone"`
 }
 
 // profile answers GET /api/users/me/profile: the signed-in operator's
@@ -61,6 +68,7 @@ func (h *handlers) profile(w http.ResponseWriter, r *http.Request) {
 		ID: user.ID, Username: user.Username, Role: user.Role,
 		FirstName: orEmpty(user.FirstName), LastName: orEmpty(user.LastName), Email: orEmpty(user.Email),
 		Phone: orEmpty(user.Phone), RoleDisplay: orEmpty(user.RoleDisplay), AvatarURL: orEmpty(user.AvatarURL),
+		TimeZone: people.TimeZone(r.Context(), h.d.Store, kit.UserID(r)),
 	}})
 }
 
@@ -78,7 +86,9 @@ type saved struct {
 // leaves out keeps its value, and a body with none of them changes
 // nothing. An http(s) picture address that changed, or whose picture is
 // missing, is fetched and stored like a picture from the identity
-// provider; a failed fetch does not fail the save.
+// provider; a failed fetch does not fail the save. time_zone is an IANA
+// name the server knows, or "" or null for none; any other is refused
+// with time_zone_invalid before anything is written.
 func (h *handlers) saveProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := kit.UserID(r)
@@ -96,6 +106,21 @@ func (h *handlers) saveProfile(w http.ResponseWriter, r *http.Request) {
 			fail(w, r, http.StatusBadRequest, "email_too_long")
 			return
 		}
+	}
+	// The time zone: an IANA name the server knows, or "" (or null) for none
+	zone, zoneGiven := "", false
+	if v := field(r, "time_zone"); v != branding.Undefined {
+		text, ok := v.(string)
+		if v != nil && !ok {
+			fail(w, r, http.StatusBadRequest, "time_zone_invalid")
+			return
+		}
+		checked, err := people.CheckTimeZone(text)
+		if err != nil {
+			fail(w, r, http.StatusBadRequest, "time_zone_invalid")
+			return
+		}
+		zone, zoneGiven = checked, true
 	}
 	before, err := getUserByID(ctx, h.d.Store, userID)
 	if err != nil {
@@ -115,9 +140,33 @@ func (h *handlers) saveProfile(w http.ResponseWriter, r *http.Request) {
 		}
 		values[name] = goapipath.Slice(text, 200)
 	}
+	// A new address waits for its confirmation like one from Your account
+	// (package emailchange); the same address is written as it was
+	newEmail, emailGiven := values["email"]
+	current := ""
+	if before != nil {
+		current = cellText(before.Email)
+	}
+	if emailGiven && newEmail != current {
+		delete(values, "email")
+	} else {
+		emailGiven = false
+	}
 	if err := updateUserProfile(ctx, h.d.Store, userID, values); err != nil {
 		fail(w, r, http.StatusInternalServerError, jsbind.Message(errors.Unwrap(err)))
 		return
+	}
+	if zoneGiven {
+		if err := people.SetTimeZone(ctx, h.d.Store, userID, zone); err != nil {
+			serverError(err)
+			return
+		}
+	}
+	if emailGiven && before != nil {
+		if code, message := h.changeEmail(r, before, current, newEmail); code != 0 {
+			fail(w, r, code, message)
+			return
+		}
 	}
 	_ = h.d.LogAction(r, "profile_updated", "Updated operator profile")
 
@@ -220,4 +269,27 @@ func (h *handlers) operatorInfo(w http.ResponseWriter, r *http.Request) {
 		DisplayName: display, Username: user.Username, RoleDisplay: roleDisplay,
 		Email: orEmpty(user.Email), Phone: orEmpty(user.Phone), AvatarURL: orEmpty(user.AvatarURL),
 	}})
+}
+
+// changeEmail asks for the account's address to become next. It answers
+// a status and a text when it was refused, 0 otherwise.
+func (h *handlers) changeEmail(r *http.Request, user *userRow, current, next string) (int, string) {
+	var provider sql.NullString
+	_ = h.d.Store.QueryRow(r.Context(), `SELECT auth_provider FROM users WHERE id = ?`, user.ID.V).Scan(&provider)
+	changer := &emailchange.Changer{D: h.d, Life: lifecycle.New(h.d.Store, nil), Links: passwordlinks.New(h.d.Store, nil)}
+	target := emailchange.Target{ID: user.ID.V, Username: cellText(user.Username), Email: current, Provider: provider.String}
+	_, err := changer.Request(r, target, next, true)
+	var refusal *emailchange.Refusal
+	switch {
+	case err == nil:
+		return 0, ""
+	case errors.As(err, &refusal):
+		pairs := make([]any, 0, 2*len(refusal.Vars))
+		for k, v := range refusal.Vars {
+			pairs = append(pairs, k, v)
+		}
+		return refusal.Status, kit.T(r, refusal.Key, kit.Vars(pairs...))
+	}
+	h.d.Log.Error("Profile email change error:", err.Error())
+	return http.StatusInternalServerError, kit.T(r, "errors.server_error", nil)
 }

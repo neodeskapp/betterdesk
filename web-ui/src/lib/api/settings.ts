@@ -324,6 +324,41 @@ export function saveTwoFactorPolicy(required: boolean) {
 	return api(Ok, '/api/settings/two-factor', { method: 'PUT', body: { required } });
 }
 
+/** Settings › Sign-in › Security notices: which mails people get about their own account */
+export const SecurityNotices = v.looseObject({
+	new_signin: v.optional(v.boolean(), true),
+	password_changed: v.optional(v.boolean(), true),
+	two_factor_changed: v.optional(v.boolean(), true),
+	email_changed: v.optional(v.boolean(), true)
+});
+export type SecurityNotices = v.InferOutput<typeof SecurityNotices>;
+
+export function getSecurityNotices(signal?: AbortSignal): Promise<SecurityNotices> {
+	return api(wrapped(SecurityNotices), '/api/settings/security-notices', { signal });
+}
+
+export function saveSecurityNotices(body: Partial<SecurityNotices>) {
+	return api(Ok, '/api/settings/security-notices', { method: 'PUT', body });
+}
+
+/** The rule for inactive accounts: days without a sign-in before an account is disabled, 0 for off */
+export const InactiveAccounts = v.looseObject({
+	days: v.optional(v.number(), 0),
+	notice_days: v.optional(v.number(), 7),
+	min_days: v.optional(v.number(), 14),
+	max_days: v.optional(v.number(), 3650)
+});
+export type InactiveAccounts = v.InferOutput<typeof InactiveAccounts>;
+
+export function getInactiveAccounts(signal?: AbortSignal): Promise<InactiveAccounts> {
+	return api(wrapped(InactiveAccounts), '/api/settings/inactive-accounts', { signal });
+}
+
+/** Needs server.config; 0 turns the rule off */
+export function saveInactiveAccounts(days: number) {
+	return api(Ok, '/api/settings/inactive-accounts', { method: 'PUT', body: { days } });
+}
+
 /* ── Sign-in: for everyone ── */
 
 export const Enrollment = v.looseObject({

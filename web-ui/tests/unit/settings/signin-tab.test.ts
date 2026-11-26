@@ -4,7 +4,9 @@
  * (BUGS L325: Save of the two-factor rule once sent nothing), each part
  * sent to its own endpoint, Undo in the toast for these sign-in rules,
  * session days refused at the field (L418), and SESSION_MAX_PER_USER
- * locking "One session per account" (A239).
+ * locking "One session per account" (A239), and the Sign in as mail,
+ * disabling accounts that don't sign in and the security notices on the
+ * same save bar.
  */
 import { cleanup, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
@@ -20,12 +22,24 @@ import { toasts } from '../../../src/lib/ui/toasts.svelte.ts';
 const TWO_FACTOR = '/api/settings/two-factor';
 const SESSIONS = '/api/settings/client-sessions';
 const CONSOLE = '/api/settings/console-sessions';
+const IMPERSONATION = '/api/settings/impersonation';
+const INACTIVE = '/api/settings/inactive-accounts';
+const NOTICES = '/api/settings/security-notices';
 
 function routes(extra: Record<string, unknown> = {}) {
 	return serve({
 		[`GET ${SESSIONS}`]: { expiry_days: 9, sliding: true, max_days: 30 },
 		[`GET ${TWO_FACTOR}`]: { required: false },
 		[`GET ${CONSOLE}`]: { single_session: false, limit: 10, source: 'default', env_value: null },
+		[`GET ${IMPERSONATION}`]: { notice_mail: true },
+		[`PUT ${IMPERSONATION}`]: (body: unknown) => body,
+		[`GET ${INACTIVE}`]: { days: 0, notice_days: 7, min_days: 14, max_days: 3650 },
+		[`GET ${NOTICES}`]: {
+			new_signin: true,
+			password_changed: false,
+			two_factor_changed: true,
+			email_changed: true
+		},
 		'GET /api/panel/settings/sources': {
 			'client_sessions.expiry_days': {
 				value_source: 'stored',
@@ -184,4 +198,55 @@ test('Sign-in loads only its own settings, nothing of the directory, single sign
 		expect(paths).not.toContain(gone);
 	for (const gone of ['account-password', 'current-password', 'auth-panel-totp', 'ldap-form', 'oidc-form'])
 		expect(document.getElementById(gone), gone).toBeNull();
+});
+
+describe('Sign in as mail, inactive accounts and security notices on the same save bar', () => {
+	test('the notice switches show what the server has and Save sends all four', async () => {
+		const server = routes();
+		render(SignInTab);
+		const changed = await screen.findByRole('checkbox', { name: /settings\.notices\.password_changed/ });
+		expect(changed).not.toBeChecked();
+		const signin = screen.getByRole('checkbox', { name: /settings\.notices\.new_signin/ });
+		expect(signin).toBeChecked();
+		await userEvent.click(signin);
+		await save();
+		await vi.waitFor(() =>
+			expect(server.sent('PUT', NOTICES)).toEqual([
+				{ new_signin: false, password_changed: false, two_factor_changed: true, email_changed: true }
+			])
+		);
+		expect(server.sent('PUT', IMPERSONATION)).toEqual([]);
+		expect(server.sent('PUT', INACTIVE)).toEqual([]);
+	});
+
+	test('the Sign in as mail switch saves its own setting', async () => {
+		const server = routes();
+		render(SignInTab);
+		const mail = await screen.findByRole('checkbox', { name: /settings\.signin\.impersonation_mail/ });
+		expect(mail).toBeChecked();
+		await userEvent.click(mail);
+		await save();
+		await vi.waitFor(() => expect(server.sent('PUT', IMPERSONATION)).toEqual([{ notice_mail: false }]));
+		expect(server.sent('PUT', NOTICES)).toEqual([]);
+	});
+
+	test('inactive accounts: days out of range are refused, then on sends the days', async () => {
+		const server = routes();
+		render(SignInTab);
+		const on = await screen.findByRole('checkbox', { name: /settings\.inactive_label/ });
+		expect(on).not.toBeChecked();
+		await userEvent.click(on);
+		const days = screen.getByRole('spinbutton', { name: 'settings.inactive_days' });
+		await userEvent.clear(days);
+		await userEvent.type(days, '5');
+		expect(document.getElementById('inactive-accounts-days-error')).toHaveTextContent(
+			'settings.inactive_days_invalid'
+		);
+		await save();
+		expect(server.sent('PUT', INACTIVE)).toEqual([]);
+		await userEvent.clear(days);
+		await userEvent.type(days, '60');
+		await save();
+		await vi.waitFor(() => expect(server.sent('PUT', INACTIVE)).toEqual([{ days: 60 }]));
+	}, 30_000);
 });

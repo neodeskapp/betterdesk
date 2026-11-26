@@ -16,15 +16,27 @@
 	import { untrack } from 'svelte';
 	import { listFolders, type Folder } from '#lib/api/devices.ts';
 	import { listStrategies, type Strategy } from '#lib/api/strategies.ts';
-	import { createUser, inviteUser, updateUser, type ConsoleUser, type UserGroupRow } from '#lib/api/users.ts';
 	import { getDeviceScope } from '#lib/api/settings.ts';
 	import { placeHref } from '#lib/settings/tabs.ts';
 	import { isAdminRole } from '#lib/clients/agents.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
+	import {
+		cancelEmailChange,
+		createUser,
+		inviteUser,
+		resendEmailChange,
+		updateUser,
+		type ConsoleUser,
+		type PendingEmail,
+		type UserGroupRow
+	} from '#lib/api/users.ts';
+	import { formatDate } from '#lib/i18n/format.ts';
 	import PasswordField from '#lib/people/PasswordField.svelte';
 	import {
 		deviceIdsOk,
+		expiryBody,
+		localDate,
 		passwordProblem,
 		providerOf,
 		roleChoices,
@@ -39,8 +51,10 @@
 	import Field from '#lib/ui/Field.svelte';
 	import FormSection from '#lib/ui/FormSection.svelte';
 	import Input from '#lib/ui/Input.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
 	import Select from '#lib/ui/Select.svelte';
 	import Sheet from '#lib/ui/Sheet.svelte';
+	import Status from '#lib/ui/Status.svelte';
 	import Tag from '#lib/ui/Tag.svelte';
 	import User from '#lib/ui/User.svelte';
 	import ListEditor from '#lib/ui/settings/ListEditor.svelte';
@@ -63,6 +77,9 @@
 
 	const uid = $props.id();
 	const editing = untrack(() => !!user);
+	/** The signed-in person's own account, which gets no end date */
+	const self = untrack(() => !!user && String(user.id) === String(session.user?.id ?? ''));
+	const today = localDate(new Date().toISOString());
 	const provider = untrack(() => (user ? providerOf(user) : 'local'));
 	const isLocal = provider === 'local';
 	const choices = $derived(
@@ -114,7 +131,10 @@
 			groups: [...(user?.user_groups ?? [])],
 			folders: [...(user?.folder_ids ?? [])],
 			direct: [...(user?.peer_grants ?? [])] as string[],
-			strategy: user?.strategy_guid ?? ''
+			strategy: user?.strategy_guid ?? '',
+			/** The end date as a day in this browser's time zone */
+			expires: localDate(user?.expires_at),
+			exempt: !!user?.inactive_exempt
 		})),
 		validate: (v) => {
 			const inviting = !editing && v.mode === 'invite';
@@ -136,13 +156,20 @@
 				strategyGuid: v.strategy
 			};
 			if (user) {
-				// The role only when it changed: an editor may keep a role they could not give
+				// The role only when it changed: an editor may keep a role they could not give.
+				// A directory or single sign-on gives the address, so it is not sent
+				const { email, ...rest } = common;
 				await updateUser(user.id, {
-					...common,
+					...(isLocal ? common : rest),
+					...(self ? {} : expiryBody(v.expires, user.expires_at)),
+					...(!self && v.exempt !== !!user.inactive_exempt ? { inactive_exempt: v.exempt } : {}),
 					...(provider !== 'ldap' && v.role !== user.role ? { role: v.role } : {}),
 					...(isLocal && v.password ? { password: v.password } : {})
 				});
 				toast.success(t('users.user_updated_named', { username: user.username }));
+				// A new address waits for its confirmation when mail goes out
+				if (isLocal && mailReady && email && email !== user.email)
+					toast.info(t('users.email_change_sent_named', { email }));
 			} else if (v.mode === 'invite') {
 				const username = v.username.trim();
 				const made = await inviteUser({ ...common, ...(username ? { username } : {}), role: v.role });
@@ -214,6 +241,33 @@
 					: ''
 	);
 
+	/** The account's new address that waits for its confirmation */
+	let pending = $state.raw<PendingEmail | null>(untrack(() => user?.email_pending ?? null));
+	let pendingBusy = $state(false);
+
+	async function pendingAction(run: () => Promise<unknown>, done: string, gone: boolean) {
+		pendingBusy = true;
+		try {
+			await run();
+			toast.success(done);
+			if (gone) pending = null;
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
+		} finally {
+			pendingBusy = false;
+		}
+	}
+
+	const emailHint = $derived(
+		!editing
+			? t('users.email_hint')
+			: !isLocal
+				? t('users.email_from_provider_hint', { provider: providerLabel(provider) })
+				: mailReady
+					? t('users.email_hint_confirm')
+					: t('users.email_hint_no_mail')
+	);
+
 	const strategyOptions = $derived([
 		{ value: '', label: t('users.pro_strategy_none') },
 		...strategies.map((s) => ({ value: s.guid, label: s.name || s.guid }))
@@ -242,6 +296,22 @@
 					{ label: t('users.sign_in_with'), value: signIn }
 				]}
 			/>
+			{#if user.locked && user.locks.length}
+				<Notice tone="warning" title={t('users.state_locked')}>
+					<ul class="locks">
+						{#each user.locks as lock (lock.ip)}
+							<li>
+								{t('users.lock_detail', {
+									failures: lock.failures,
+									ip: lock.ip,
+									date: formatDate(lock.until, {}, '')
+								})}
+							</li>
+						{/each}
+					</ul>
+					<p>{t('users.lock_hint')}</p>
+				</Notice>
+			{/if}
 			{#if isLocal}
 				<PasswordField
 					label={t('users.new_password')}
@@ -317,7 +387,7 @@
 			{/if}
 		{/if}
 		{#if !inviting}
-			<Field label={t('users.email')} hint={t('users.email_hint')}>
+			<Field label={t('users.email')} hint={emailHint}>
 				{#snippet children(f)}
 					<Input
 						{...f}
@@ -325,10 +395,61 @@
 						width="host"
 						autocomplete="off"
 						spellcheck="false"
+						readonly={editing && !isLocal}
 						bind:value={form.values.email}
 					/>
 				{/snippet}
 			</Field>
+			{#if user && pending}
+				{@const p = pending}
+				{@const id = user.id}
+				<div class="pending-email">
+					<Status
+						tone={p.expired ? 'warning' : 'waiting'}
+						label={t('users.email_pending', { email: p.email })}
+					/>
+					<p class="note">
+						{p.expired
+							? t('users.email_pending_expired')
+							: t('users.email_pending_until', { date: formatDate(p.expires_at, {}, '') })}
+					</p>
+					<div class="pending-actions">
+						{#if mailReady}
+							<Button
+								size="sm"
+								disabled={pendingBusy}
+								onclick={() =>
+									void pendingAction(
+										() => resendEmailChange(id),
+										t('users.email_change_sent_named', { email: p.email }),
+										false
+									)}>{t('users.email_change_resend')}</Button
+							>
+						{/if}
+						<Button
+							size="sm"
+							variant="danger-quiet"
+							disabled={pendingBusy}
+							onclick={() =>
+								void pendingAction(() => cancelEmailChange(id), t('users.email_change_cancelled'), true)}
+							>{t('users.email_change_cancel')}</Button
+						>
+					</div>
+				</div>
+			{/if}
+		{/if}
+
+		{#if user && !self}
+			<Field label={t('users.expiry_label')} hint={t('users.expiry_hint')}>
+				{#snippet children(f)}
+					<Input {...f} type="date" width="medium" min={today} bind:value={form.values.expires} />
+				{/snippet}
+			</Field>
+			<Checkbox
+				label={t('users.exempt_label')}
+				hint={t('users.exempt_hint')}
+				bind:checked={form.values.exempt}
+			/>
 		{/if}
 
 		<FormSection title={t('users.role')} id="{uid}-role">
@@ -428,6 +549,13 @@
 </Sheet>
 
 <style>
+	.locks {
+		margin: 0 0 var(--space-1);
+		padding-inline-start: var(--space-4);
+	}
+	.locks + p {
+		margin: 0;
+	}
 	.user-form :global(.facts) {
 		grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
 		/* rows hang their padding outside, so the labels line up with the field labels */
@@ -438,6 +566,21 @@
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 		max-width: var(--measure);
+	}
+	.pending-email {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		max-width: var(--measure);
+		margin: 0 0 var(--space-4);
+	}
+	.pending-email .note {
+		margin: 0;
+	}
+	.pending-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
 	}
 	.group {
 		min-width: 0;

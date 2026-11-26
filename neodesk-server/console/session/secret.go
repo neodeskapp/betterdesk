@@ -152,6 +152,32 @@ func unsign(signed, secret string) (string, bool) {
 	return id, true
 }
 
+// impersonationDomain goes in front of the session id in the signature of
+// the impersonation cookie (nd.imp), so a value signed for one cookie never
+// verifies as the other: the impersonation session's id must not work as a
+// session cookie, nor the admin's session id as an impersonation cookie.
+const impersonationDomain = "neodesk impersonation:"
+
+// signImpersonation is sign for the impersonation cookie.
+func signImpersonation(id, secret string) string {
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(impersonationDomain + id))
+	return id + "." + base64.RawStdEncoding.EncodeToString(mac.Sum(nil))
+}
+
+// unsignImpersonation is unsign for the impersonation cookie.
+func unsignImpersonation(signed, secret string) (string, bool) {
+	dot := strings.LastIndexByte(signed, '.')
+	if dot < 0 {
+		return "", false
+	}
+	id := signed[:dot]
+	if subtle.ConstantTimeCompare([]byte(signImpersonation(id, secret)), []byte(signed)) != 1 {
+		return "", false
+	}
+	return id, true
+}
+
 // cookiePrefix marks a signed cookie value.
 const cookiePrefix = "s:"
 

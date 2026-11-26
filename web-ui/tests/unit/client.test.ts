@@ -7,6 +7,8 @@ import {
 	request,
 	setCsrfToken,
 	setUnauthorizedHandler,
+	setViewingAs,
+	setViewingEndedHandler,
 	wrapped,
 	BoolLike,
 	Text
@@ -195,5 +197,35 @@ describe('api with a schema', () => {
 		replies.push(() => json({ success: true, data: { id: 5 } }));
 		await expect(api(wrapped(Device), '/api/devices/5')).rejects.toMatchObject({ code: 'invalid_response' });
 		expect(spy).toHaveBeenCalled();
+	});
+});
+
+describe('Sign in as', () => {
+	afterEach(() => setViewingAs(false));
+
+	test('every request says the console views another account, and only then', async () => {
+		replies.push(
+			() => json({ ok: 1 }),
+			() => json({ ok: 2 })
+		);
+		setViewingAs(true);
+		await request('/api/x');
+		setViewingAs(false);
+		await request('/api/x');
+		expect((calls[0]!.init.headers as Record<string, string>)['X-ND-Impersonating']).toBe('1');
+		expect((calls[1]!.init.headers as Record<string, string>)['X-ND-Impersonating']).toBeUndefined();
+	});
+
+	test('an impersonation that ended loads the console again, it does not go to sign-in', async () => {
+		const ended = vi.fn();
+		const signIn = vi.fn();
+		setViewingEndedHandler(ended);
+		setUnauthorizedHandler(signIn);
+		replies.push(() => json({ success: false, error: 'over', code: 'impersonation_ended' }, 409));
+		await expect(request('/api/x', { method: 'POST', body: {} })).rejects.toMatchObject({
+			code: 'impersonation_ended'
+		});
+		expect(ended).toHaveBeenCalledOnce();
+		expect(signIn).not.toHaveBeenCalled();
 	});
 });

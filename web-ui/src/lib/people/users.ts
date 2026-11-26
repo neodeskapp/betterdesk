@@ -33,6 +33,13 @@ export const DESCRIBED_ROLES = [
 	'pro'
 ] as const;
 
+/** A role's label in the language, else its name as it is (a role the console doesn't know) */
+export function roleLabel(role: string, t: (key: string) => string): string {
+	const key = `users.role_${role}`;
+	const text = t(key);
+	return text === key ? role : text;
+}
+
 const SUPER_ROLES = new Set(['super_admin', 'admin']);
 
 export function isSuperRole(role: string | null | undefined): boolean {
@@ -165,7 +172,7 @@ export function deviceIdsOk(ids: readonly string[]): boolean {
 	return ids.every((id) => /^[A-Za-z0-9._:@-]{1,64}$/.test(id));
 }
 
-/** Users whose username, email or role name contains every word of the search */
+/** Users whose username, display name, email or role name contains every word of the search */
 export function filterUsers(
 	users: readonly ConsoleUser[],
 	query: string,
@@ -174,7 +181,10 @@ export function filterUsers(
 	const words = query.toLowerCase().split(/\s+/).filter(Boolean);
 	if (!words.length) return users as ConsoleUser[];
 	return users.filter((u) => {
-		const text = [u.username, u.email, roleLabel(u.role)].filter(Boolean).join(' ').toLowerCase();
+		const text = [u.username, u.display_name, u.email, roleLabel(u.role)]
+			.filter(Boolean)
+			.join(' ')
+			.toLowerCase();
 		return words.every((w) => text.includes(w));
 	});
 }
@@ -228,4 +238,101 @@ export function groupNote(note: string, t: (key: string) => string): string {
 	const key = GROUP_NOTES[note];
 	const text = key ? t(key) : '';
 	return text && text !== key ? text : note;
+}
+
+/** A state of an account's sign-in the list shows under its name */
+export interface SignInState {
+	key: string;
+	tone: 'danger' | 'warning' | 'waiting';
+	/** The longer text on hover, with the date it names */
+	titleKey?: string;
+	date?: string;
+}
+
+/** What the list says about an account's sign-in: locked, a new password due, a reset link waiting */
+export function signInStates(
+	u: Pick<ConsoleUser, 'locked' | 'locked_until' | 'must_change_password' | 'password_reset_until'>
+): SignInState[] {
+	const out: SignInState[] = [];
+	if (u.locked)
+		out.push({
+			key: 'users.state_locked',
+			tone: 'danger',
+			titleKey: 'users.state_locked_until',
+			date: u.locked_until ?? ''
+		});
+	if (u.must_change_password) out.push({ key: 'users.state_must_change', tone: 'warning' });
+	if (u.password_reset_until)
+		out.push({
+			key: 'users.state_reset_waiting',
+			tone: 'waiting',
+			titleKey: 'users.state_reset_until',
+			date: u.password_reset_until
+		});
+	return out;
+}
+
+/** The two-factor column: on, off, or required and not set up yet */
+export function twoFactorStatus(u: Pick<ConsoleUser, 'two_factor_state' | 'totp_enabled'>): {
+	tone: 'good' | 'neutral' | 'warning';
+	key: string;
+} {
+	const state = u.two_factor_state === 'off' && u.totp_enabled ? 'on' : u.two_factor_state;
+	if (state === 'on') return { tone: 'good', key: 'users.two_factor_on' };
+	if (state === 'required') return { tone: 'warning', key: 'users.two_factor_required_state' };
+	return { tone: 'neutral', key: 'users.two_factor_off' };
+}
+
+/* ── End dates and inactive accounts ── */
+
+/** The day of a time in the browser's time zone, as a date field takes it ('' for none) */
+export function localDate(iso: string | null | undefined): string {
+	if (!iso) return '';
+	const d = new Date(iso);
+	if (Number.isNaN(d.getTime())) return '';
+	const pad = (n: number) => String(n).padStart(2, '0');
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/**
+ * What an edit sends for the End date field: nothing when the day is the
+ * one the account has, null to take the date away, else the start of the
+ * chosen day in the browser's time zone.
+ */
+export function expiryBody(day: string, current: string | null | undefined): { expires_at?: string | null } {
+	if (day === localDate(current)) return {};
+	if (!day) return { expires_at: null };
+	const start = new Date(`${day}T00:00:00`);
+	return Number.isNaN(start.getTime()) ? {} : { expires_at: start.toISOString() };
+}
+
+/** The filter of the users list for accounts that have not signed in: ?inactive=30, 60, 90 or never */
+export const INACTIVE_FILTERS = ['30', '60', '90', 'never'] as const;
+export type InactiveFilter = (typeof INACTIVE_FILTERS)[number];
+
+export function inactiveFilter(value: string | null | undefined): InactiveFilter | '' {
+	return (INACTIVE_FILTERS as readonly string[]).includes(value ?? '') ? (value as InactiveFilter) : '';
+}
+
+/**
+ * The accounts the filter keeps: never signed in, or whose last sign-in
+ * is at least that many days ago (an account that never signed in counts
+ * as inactive for every number of days).
+ */
+export function filterInactive(
+	users: readonly ConsoleUser[],
+	filter: InactiveFilter | '',
+	now = Date.now()
+): ConsoleUser[] {
+	if (!filter) return users as ConsoleUser[];
+	return users.filter((u) => {
+		// SQLite writes "2026-11-26 03:21:04" in UTC
+		const text = u.last_login ?? '';
+		const last = new Date(
+			/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$/.test(text) ? `${text.replace(' ', 'T')}Z` : text
+		).getTime();
+		if (filter === 'never') return !u.last_login;
+		if (Number.isNaN(last)) return true;
+		return now - last >= Number(filter) * 24 * 60 * 60 * 1000;
+	});
 }

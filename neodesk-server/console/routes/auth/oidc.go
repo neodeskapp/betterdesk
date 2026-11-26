@@ -338,7 +338,7 @@ func (h *handlers) oidcSession(w http.ResponseWriter, r *http.Request) {
 	sess.Set("role", who.Role)
 	sess.Set("goToken", data.Get("token"))
 	sess.Set("authMethod", "oidc")
-	h.clearGuestCookie(w, r)
+	h.signedInNotes(w, r, who.id, meta)
 
 	err = h.authn.TouchLastLogin(r.Context(), who.id)
 	if err == nil {
