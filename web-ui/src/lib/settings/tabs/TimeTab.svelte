@@ -331,33 +331,35 @@
 {/snippet}
 
 {#snippet side()}
-	<section class="section" aria-labelledby="time-period-title">
-		<h2 id="time-period-title">{t('settings.time.period_title')}</h2>
-		<Facts items={periodFacts} />
-		<p class="hint">{t('settings.time.period_hint')}</p>
-		{#if can('billing.view')}
-			<p class="hint"><a href={link('/billing')}>{t('settings.time.commercialization_link')}</a></p>
-		{/if}
-	</section>
-	<section class="section" aria-labelledby="time-side-title">
-		<h2 id="time-side-title">{t('settings.side.clock_title')}</h2>
-		{#if sync}
-			<p role="status">
-				{#if sync.synced}
-					<Status tone="good" label={t('commercialization.clock.synced_detail')} />
-				{:else}
-					<Status tone="warning" label={t('commercialization.clock.unsynced')} />
-				{/if}
-			</p>
-		{/if}
-		<IdFacts items={clockFacts} />
-		<div class="inline-controls">
-			<Button id="time-timesync-check-btn" icon="refresh" busy={checking} onclick={checkNow}
-				>{t('commercialization.clock.check_now')}</Button
-			>
-			<FormStatus message={checkLine.message} tone={checkLine.tone} />
-		</div>
-	</section>
+	<div class="summary-stack">
+		<section class="section" aria-labelledby="time-period-title">
+			<h2 id="time-period-title">{t('settings.time.period_title')}</h2>
+			<Facts items={periodFacts} />
+			<p class="hint">{t('settings.time.period_hint')}</p>
+			{#if can('billing.view')}
+				<p class="hint"><a href={link('/billing')}>{t('settings.time.commercialization_link')}</a></p>
+			{/if}
+		</section>
+		<section class="section" aria-labelledby="time-side-title">
+			<h2 id="time-side-title">{t('settings.side.clock_title')}</h2>
+			{#if sync}
+				<p role="status">
+					{#if sync.synced}
+						<Status tone="good" label={t('commercialization.clock.synced_detail')} />
+					{:else}
+						<Status tone="warning" label={t('commercialization.clock.unsynced')} />
+					{/if}
+				</p>
+			{/if}
+			<IdFacts items={clockFacts} />
+			<div class="inline-controls">
+				<Button id="time-timesync-check-btn" icon="refresh" busy={checking} onclick={checkNow}
+					>{t('commercialization.clock.check_now')}</Button
+				>
+				<FormStatus message={checkLine.message} tone={checkLine.tone} />
+			</div>
+		</section>
+	</div>
 {/snippet}
 
 {#snippet bar()}<ChangesBar {draft} onsave={save} />{/snippet}
@@ -515,6 +517,19 @@
 {/if}
 
 <style>
+	/* The summary column is narrow: sections apart, labels take what they need and values the rest */
+	.summary-stack {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-6);
+		min-width: 0;
+	}
+	.summary-stack :global(.facts) {
+		grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+	}
+	.summary-stack :global(.facts > dt) {
+		max-width: 160px;
+	}
 	.hint {
 		color: var(--text-muted);
 		font-size: var(--text-sm);
