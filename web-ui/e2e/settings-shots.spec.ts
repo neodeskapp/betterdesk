@@ -126,8 +126,10 @@ const SURFACES: Surface[] = [
 	{ name: 'server-attestation', path: '/server-attestation' },
 
 	// Permissions
+	// As the page opens: the first role that is no super admin (Server admin)
 	{ name: 'permissions', path: '/permissions' },
-	{ name: 'permissions-server-admin', path: '/permissions?role=server_admin' },
+	// Another role, so the two shots differ
+	{ name: 'permissions-operator', path: '/permissions?role=operator' },
 
 	// Organizations
 	{ name: 'org-settings-tab', path: orgPath('#settings') },
