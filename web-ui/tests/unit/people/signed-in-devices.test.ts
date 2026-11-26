@@ -101,6 +101,14 @@ describe('the own list', () => {
 		expect(mine).toBeTruthy();
 		expect(within(mine!).queryByRole('button', { name: /sessions.sign_out/ })).toBeNull();
 		expect(within(other).getByText(/203.0.113.5/)).toBeInTheDocument();
+		// The address line stays inside its row: the global .facts style (a
+		// table of facts that hangs out of the column with a rule on top)
+		// must not reach it
+		const meta = within(other)
+			.getByText(/203.0.113.5/)
+			.closest('.row-sub')!;
+		expect(meta).not.toBeNull();
+		expect(meta.querySelector('.facts')).toBeNull();
 		await user.click(within(other).getByRole('button', { name: /sessions.sign_out/ }));
 		await waitFor(() => expect(writes()).toEqual(['DELETE /api/users/me/sessions/bbb']));
 		await waitFor(() => expect(screen.getAllByRole('listitem')).toHaveLength(1));
