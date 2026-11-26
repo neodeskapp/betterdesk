@@ -633,7 +633,7 @@
 					<p class="action-help" id="backup-run-help">
 						{tf(
 							'backups_page.run_help',
-							'Saves one on the server, where scheduled backups go ({folder}). The oldest beyond the number to keep are deleted.',
+							'Saves one on the server, in the place for scheduled backups: {folder}. The oldest beyond the number to keep are deleted.',
 							{ folder: savedTo }
 						)}
 					</p>
