@@ -35,7 +35,7 @@ var guardPaths = []struct {
 	{"/api/panel/resource-control", "resource-control"}, {"/api/server-management", "server-management"},
 	{"/api/panel/fleet", "fleet"}, {"/api/chat", "chat"},
 	{"/api/server-attestation", "server-attestation"}, {"/api/registrations", "registrations"},
-	{"/api/settings", "settings"}, {"/settings", ""}, {"/api/panel/billing", "commercialization"},
+	{"/api/settings", "settings"}, {"/api/panel/settings/sources", "settings"}, {"/api/panel/settingsx", ""}, {"/settings", ""}, {"/api/panel/billing", "commercialization"},
 	{"/commercialization", "commercialization"}, {"/activity", "activity"},
 
 	// below a prefix, and with a trailing slash

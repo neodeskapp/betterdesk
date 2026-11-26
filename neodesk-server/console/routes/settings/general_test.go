@@ -50,6 +50,10 @@ func newSite(t *testing.T, db *store.DB, overrides routetest.Overrides, env map[
 		cfg.PubKeyPath = "/srv/id_ed25519.pub"
 		cfg.APIKeyPath = filepath.Join(s.Keys, ".api_key")
 		cfg.NodeEnv = "production"
+		// as config.Load reads it
+		if v := env["DEVICE_SCOPE_DEFAULT"]; v != "" {
+			cfg.DeviceScopeDefault = strings.ToLower(v)
+		}
 	}}
 	if overrides != nil {
 		opts.Roles = overrides
@@ -104,6 +108,7 @@ func TestGuards(t *testing.T) {
 			"GET /api/settings/connection-mode", "PUT /api/settings/connection-mode", "POST /api/settings/connection-mode/restart",
 			"GET /api/settings/public-endpoints", "PUT /api/settings/public-endpoints",
 			"GET /api/settings/email/smtp", "PUT /api/settings/email/smtp", "POST /api/settings/email/smtp/test",
+			"GET /api/panel/settings/sources",
 		}
 		denied := s.As("viewer")
 		admin := s.As("admin")

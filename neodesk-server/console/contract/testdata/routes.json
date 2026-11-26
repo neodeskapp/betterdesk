@@ -711,6 +711,7 @@
   {"id":"GET /branding/favicon.svg","method":"GET","path":"/branding/favicon.svg","app":"console","group":"settings","csrf":"gate","file":"routes/settings.routes.js"},
   {"id":"GET /css/branding.css","method":"GET","path":"/css/branding.css","app":"console","group":"settings","csrf":"gate","file":"routes/settings.routes.js"},
   {"id":"GET /css/theme.css","method":"GET","path":"/css/theme.css","app":"console","group":"settings","csrf":"gate","file":"routes/settings.routes.js"},
+  {"id":"GET /api/panel/settings/sources","method":"GET","path":"/api/panel/settings/sources","app":"console","group":"settings","csrf":"gate","file":"console/routes/settings/sources.go"},
   {"id":"GET /api/database/stats","method":"GET","path":"/api/database/stats","app":"console","group":"system","csrf":"gate","file":"routes/system.routes.js"},
   {"id":"GET /api/docker/containers","method":"GET","path":"/api/docker/containers","app":"console","group":"system","csrf":"gate","file":"routes/system.routes.js"},
   {"id":"GET /api/logs/recent","method":"GET","path":"/api/logs/recent","app":"console","group":"system","csrf":"gate","file":"routes/system.routes.js"},

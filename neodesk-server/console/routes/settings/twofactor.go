@@ -17,7 +17,7 @@ type twoFactorData struct {
 // account must have two-factor sign-in (the server keeps the switch).
 func (g *general) getTwoFactor(w http.ResponseWriter, r *http.Request) {
 	value := sessionConfig(g.d.GoAPI.GetConfig(r.Context(), authn.RequireTwoFactorKey))
-	kit.OK(w, r, twoFactorData{Required: parseSessionBool(value, false)})
+	kit.OK(w, r, twoFactorData{Required: parseSessionBool(value, defaultTwoFactorRequired)})
 }
 
 // setTwoFactor answers PUT /api/settings/two-factor with {required}: true

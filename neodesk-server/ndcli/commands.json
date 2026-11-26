@@ -6433,6 +6433,12 @@
    "permission": "server.config"
   },
   {
+   "name": "settings sources",
+   "summary": "Show where each server setting's value comes from: saved, the environment or the built-in default.",
+   "route": "GET /api/panel/settings/sources",
+   "permission": "server.config"
+  },
+  {
    "name": "settings connection-mode",
    "summary": "Show how clients connect: peer to peer or through the relay.",
    "route": "GET /api/settings/connection-mode",

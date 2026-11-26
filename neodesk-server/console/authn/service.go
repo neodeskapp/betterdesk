@@ -135,7 +135,7 @@ type Settings struct {
 func SettingsFromEnv(getenv func(string) string, dataDir, keysPath string) Settings {
 	s := Settings{
 		AutoCreate:           envvar.SwitchOr(getenv("NEODESK_AUTH_AUTOCREATE"), false),
-		TokenExpiryDays:      intOr(getenv("API_TOKEN_EXPIRY_DAYS"), 7),
+		TokenExpiryDays:      intOr(getenv(TokenExpiryEnv), DefaultTokenExpiryDays),
 		MaxFailedAttempts:    intOr(getenv("API_MAX_FAILED_ATTEMPTS"), 10),
 		LockoutMinutes:       intOr(getenv("API_LOCKOUT_MINUTES"), 15),
 		IPRateLimit:          intOr(getenv("API_IP_RATE_LIMIT"), 30),

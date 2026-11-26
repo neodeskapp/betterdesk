@@ -122,6 +122,38 @@ func TestEnrollmentModeForcedByTheEnvironment(t *testing.T) {
 	}
 }
 
+// A read of the enrollment mode says where the mode in force comes from,
+// as the start resolves it: the environment when it is forced, the mode
+// saved in the console, or the built-in default.
+func TestEnrollmentModeSaysWhereItComesFrom(t *testing.T) {
+	srv, _ := newInternalServer(t, nil)
+	source := func() string {
+		t.Helper()
+		status, body := asConsole(t, srv, http.MethodGet, "/api/enrollment/mode", "")
+		var read struct {
+			Source string `json:"source"`
+		}
+		if err := json.Unmarshal([]byte(body), &read); status != http.StatusOK || err != nil {
+			t.Fatalf("read: %d %s", status, body)
+		}
+		return read.Source
+	}
+	srv.cfg.EnrollmentMode = "open"
+	if got := source(); got != "configuration" {
+		t.Errorf("nothing saved: source %q, want configuration", got)
+	}
+	if status, body := asConsole(t, srv, http.MethodPut, "/api/enrollment/mode", `{"mode":"managed"}`); status != http.StatusOK {
+		t.Fatalf("change: %d %s", status, body)
+	}
+	if got := source(); got != "database" {
+		t.Errorf("saved in the console: source %q, want database", got)
+	}
+	srv.cfg.EnrollmentModeEnvOverride = true
+	if got := source(); got != "environment" {
+		t.Errorf("forced by the environment: source %q, want environment", got)
+	}
+}
+
 // TestDeviceTokenRefusesNegativeUses: Uses allowed below 0 is refused with
 // a reason on create, edit and bulk create, and nothing is stored; an edit
 // keeps the limit it had (BUGS L380).

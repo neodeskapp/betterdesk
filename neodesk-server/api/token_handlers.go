@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 )
 
@@ -484,19 +485,25 @@ func (s *Server) handleBindTokenToPeer(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleGetEnrollmentMode returns the current enrollment mode configuration.
+// handleGetEnrollmentMode returns the current enrollment mode configuration
+// and where it comes from (source: environment, database or
+// configuration, as config.ResolveEnrollmentMode decides at the start).
 // GET /api/enrollment/mode
 func (s *Server) handleGetEnrollmentMode(w http.ResponseWriter, r *http.Request) {
 	mode := s.cfg.EnrollmentMode
 	if mode == "" {
 		mode = "open"
 	}
+	// A stored mode that can't be read counts as none, as at the start
+	stored, _ := s.db.GetConfig("enrollment_mode")
+	_, source := config.ResolveEnrollmentMode(mode, stored, s.cfg.EnrollmentModeEnvOverride)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"mode":         mode,
 		"description":  getEnrollmentModeDescription(mode),
 		"env_override": s.cfg.EnrollmentModeEnvOverride,
+		"source":       source,
 	})
 }
 
