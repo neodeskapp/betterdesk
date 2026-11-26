@@ -293,6 +293,10 @@
 		flex-direction: column;
 		gap: var(--space-4);
 	}
+	/* In a dialog the ID field fills its row (on a phone the app button goes below it) */
+	.quick-support :global(.quick-input) {
+		max-width: none;
+	}
 	/* "or" between the two ways, on a rule */
 	.or {
 		display: flex;
