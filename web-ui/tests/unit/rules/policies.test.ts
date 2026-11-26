@@ -1,126 +1,171 @@
 import { describe, expect, test } from 'vitest';
+import type { ResolvedPolicies } from '../../../src/lib/api/policies.ts';
 import {
 	auditSection,
-	bodyFor,
-	changedSections,
-	invalidLists,
-	invalidNumbers,
+	changedGroups,
+	FIELD_IDS,
+	fieldProblems,
+	groupBody,
+	groupFields,
 	isAddressRange,
 	isRelayAddress,
-	isSet,
 	setCount,
-	valuesFrom
+	startValue,
+	undoWrites,
+	valuesFromResolved,
+	writesFor
 } from '../../../src/lib/rules/policies.ts';
 
-describe('policy values', () => {
-	test('a group never saved shows the old page defaults', () => {
-		const v = valuesFrom({});
-		expect(v.connection).toEqual({
-			mode: 'attended',
-			max_session_duration: 480,
-			idle_lock_timeout: 15,
-			wallpaper: 'show'
+/** A resolved answer as the server gives it: every group, every field, nothing stored */
+function resolved(stored: Record<string, Record<string, unknown>> = {}): ResolvedPolicies {
+	const out: ResolvedPolicies = {};
+	for (const id of FIELD_IDS) {
+		const [group = '', name = ''] = id.split('.');
+		const values = stored[group] ?? {};
+		const g = (out[group] ??= {
+			set: Object.keys(values).length > 0,
+			applied_by: group === 'network' ? 'server' : 'device',
+			device_app_applies: false,
+			timing: group === 'network' ? 'server_minute' : 'device_next_check',
+			fields: {}
 		});
-		expect(v.features).toEqual({
-			allow_file_transfer: true,
-			allow_clipboard: true,
-			allow_audio: false,
-			allow_recording: true
-		});
-		expect(v.security.password_min_length).toBe(12);
-		expect(v.security.password_max_age_days).toBe(90);
-		expect(v.update).toEqual({ auto_update: true, channel: 'stable' });
+		const has = name in values;
+		g.fields[name] = { value: has ? values[name] : null, source: has ? 'organization' : 'none' };
+		if (id === 'network.block_direct_p2p') {
+			g.fields[name] = {
+				...g.fields[name],
+				source: has ? 'organization' : 'server',
+				server_value: true,
+				server_setting: { label_key: 'settings.connection_mode_title', href: '/settings#x' }
+			};
+		}
+	}
+	return out;
+}
+
+describe('values from the policies in force', () => {
+	test('a group never saved has no rule in any field: no defaults are invented', () => {
+		const v = valuesFromResolved(resolved());
+		expect(Object.keys(v).sort()).toEqual([...FIELD_IDS].sort());
+		for (const id of FIELD_IDS) expect(v[id], id).toBeNull();
 	});
 
-	test('a saved 0 stays 0 and saved switches stay off', () => {
-		const v = valuesFrom({
-			connection: { max_session_duration: 0, idle_lock_timeout: 0 },
-			features: { allow_file_transfer: false, allow_audio: true },
-			security: { require_2fa: false, password_max_age_days: 0 },
-			update: { auto_update: false }
-		});
-		expect(v.connection.max_session_duration).toBe(0);
-		expect(v.connection.idle_lock_timeout).toBe(0);
-		expect(v.features.allow_file_transfer).toBe(false);
-		expect(v.features.allow_audio).toBe(true);
-		expect(v.security.require_2fa).toBe(false);
-		expect(v.security.password_max_age_days).toBe(0);
-		expect(v.update.auto_update).toBe(false);
+	test('only what the organization stored becomes a value; 0, off and empty lists stay', () => {
+		const v = valuesFromResolved(
+			resolved({
+				connection: { mode: 'unattended', idle_lock_timeout: 0 },
+				features: { allow_audio: false },
+				security: { allowed_operators: ['remote_operator', 'demo_operator'] },
+				network: { allowed_relay_servers: [] }
+			})
+		);
+		expect(v['connection.mode']).toBe('unattended');
+		expect(v['connection.idle_lock_timeout']).toBe(0);
+		expect(v['connection.max_session_duration']).toBeNull();
+		expect(v['features.allow_audio']).toBe(false);
+		expect(v['features.allow_clipboard']).toBeNull();
+		expect(v['security.allowed_operators']).toEqual(['remote_operator', 'demo_operator']);
+		expect(v['network.allowed_relay_servers']).toEqual([]);
+		// The server's connection strategy is where the value comes from, not a rule here
+		expect(v['network.block_direct_p2p']).toBeNull();
 	});
 
-	test('lists become one entry per line (relays, IP ranges) or comma separated (operators)', () => {
-		const v = valuesFrom({
-			security: { allowed_operators: ['admin', 'helpdesk'] },
-			network: { allowed_relay_servers: ['r1:21117', 'r2:21117'], ip_allowlist: ['10.0.0.0/8'] }
-		});
-		expect(v.security.allowed_operators).toBe('admin, helpdesk');
-		expect(v.network.allowed_relay_servers).toBe('r1:21117\nr2:21117');
-		expect(v.network.ip_allowlist).toBe('10.0.0.0/8');
+	test('setting a rule starts from the server value where there is one, else from a neutral value', () => {
+		const r = resolved();
+		expect(startValue('network.block_direct_p2p', r)).toBe(true);
+		const off = resolved();
+		off.network!.fields.block_direct_p2p!.server_value = false;
+		expect(startValue('network.block_direct_p2p', off)).toBe(false);
+		// The server could not say: neutral
+		const unknown = resolved();
+		unknown.network!.fields.block_direct_p2p!.server_value = null;
+		expect(startValue('network.block_direct_p2p', unknown)).toBe(false);
+		expect(startValue('features.allow_audio', r)).toBe(false);
+		expect(startValue('connection.mode', r)).toBe('attended');
+		expect(startValue('connection.idle_lock_timeout', r)).toBe(0);
+		expect(startValue('security.password_min_length', r)).toBe(6);
+		expect(startValue('network.ip_allowlist', r)).toEqual([]);
+	});
+
+	test('the fields of each group in page order', () => {
+		expect(groupFields('features')).toEqual([
+			'features.allow_file_transfer',
+			'features.allow_clipboard',
+			'features.allow_audio',
+			'features.allow_recording'
+		]);
+		expect(groupFields('update')).toEqual(['update.auto_update', 'update.channel']);
 	});
 });
 
 describe('saving', () => {
-	test('only groups that differ from what was loaded are saved', () => {
-		const loaded = valuesFrom({});
-		const v = valuesFrom({});
-		expect(changedSections(v, loaded)).toEqual([]);
-		v.security.password_min_length = 16;
-		v.update.channel = 'beta';
-		expect(changedSections(v, loaded)).toEqual(['security', 'update']);
-		// Typing and putting it back is not a change
-		v.update.channel = 'stable';
-		expect(changedSections(v, loaded)).toEqual(['security']);
+	test('a group body holds only the fields with a rule; none left means no body (DELETE)', () => {
+		const v = valuesFromResolved(resolved());
+		expect(groupBody('features', v)).toBeNull();
+		v['features.allow_audio'] = false;
+		expect(groupBody('features', v)).toEqual({ allow_audio: false });
+		v['network.ip_allowlist'] = ['10.0.0.0/8'];
+		expect(groupBody('network', v)).toEqual({ ip_allowlist: ['10.0.0.0/8'] });
 	});
 
-	test('the body splits the text fields back into lists, empty lines dropped', () => {
-		const v = valuesFrom({});
-		v.security.allowed_operators = ' admin ,, helpdesk ';
-		v.network.allowed_relay_servers = 'r1:21117\n\n r2:21117 \n';
-		v.network.ip_allowlist = '';
-		expect(bodyFor('security', v).allowed_operators).toEqual(['admin', 'helpdesk']);
-		expect(bodyFor('network', v)).toEqual({
-			block_direct_p2p: false,
-			allowed_relay_servers: ['r1:21117', 'r2:21117'],
-			ip_allowlist: []
-		});
-		expect(bodyFor('connection', v)).toEqual(v.connection);
+	test('only changed groups are written: PUT with the rules, DELETE when the last rule went', () => {
+		const loaded = valuesFromResolved(
+			resolved({ connection: { mode: 'unattended' }, update: { channel: 'beta' } })
+		);
+		const v = { ...loaded };
+		expect(changedGroups(v, loaded)).toEqual([]);
+		expect(writesFor(v, loaded)).toEqual([]);
+		v['connection.mode'] = 'attended';
+		v['update.channel'] = null;
+		expect(changedGroups(v, loaded)).toEqual(['connection', 'update']);
+		expect(writesFor(v, loaded)).toEqual([
+			{ group: 'connection', body: { mode: 'attended' } },
+			{ group: 'update', body: null }
+		]);
+		// Ticking and unticking is no change
+		v['update.channel'] = 'beta';
+		expect(changedGroups(v, loaded)).toEqual(['connection']);
 	});
 
-	test('whole numbers out of range are refused, only in the groups being saved', () => {
-		const v = valuesFrom({});
-		v.connection.max_session_duration = 1441;
-		v.connection.idle_lock_timeout = 1.5;
-		v.security.password_min_length = 5;
-		v.security.password_max_age_days = null;
-		expect(invalidNumbers(v, ['connection'])).toEqual([
-			'connection.max_session_duration',
-			'connection.idle_lock_timeout'
+	test('saving "off" where there was no rule is a change (task 5: "Nothing has changed")', () => {
+		const loaded = valuesFromResolved(resolved());
+		const v = { ...loaded, 'features.allow_audio': false };
+		expect(writesFor(v, loaded)).toEqual([{ group: 'features', body: { allow_audio: false } }]);
+	});
+
+	test('undo writes the previous group bodies back, DELETE for a group that had no rule', () => {
+		const before = valuesFromResolved(resolved({ connection: { mode: 'unattended', wallpaper: 'show' } }));
+		expect(undoWrites(before, ['connection', 'features'])).toEqual([
+			{ group: 'connection', body: { mode: 'unattended', wallpaper: 'show' } },
+			{ group: 'features', body: null }
 		]);
-		expect(invalidNumbers(v, ['security'])).toEqual([
-			'security.password_min_length',
-			'security.password_max_age_days'
+	});
+
+	test('wrong numbers and wrong list entries are named per field, only where a rule is set', () => {
+		const v = valuesFromResolved(resolved());
+		expect(fieldProblems(v)).toEqual([]);
+		v['connection.max_session_duration'] = 1441;
+		v['connection.idle_lock_timeout'] = 1.5;
+		v['security.password_min_length'] = 5;
+		v['network.ip_allowlist'] = ['10.0.0.0/8', 'not-a-cidr'];
+		v['network.allowed_relay_servers'] = ['relay one.example.com'];
+		expect(fieldProblems(v)).toEqual([
+			{ field: 'connection.max_session_duration', entry: '' },
+			{ field: 'connection.idle_lock_timeout', entry: '' },
+			{ field: 'security.password_min_length', entry: '' },
+			{ field: 'network.allowed_relay_servers', entry: 'relay one.example.com' },
+			{ field: 'network.ip_allowlist', entry: 'not-a-cidr' }
 		]);
-		expect(invalidNumbers(v, ['features', 'update'])).toEqual([]);
-		v.connection.max_session_duration = 1440;
-		v.connection.idle_lock_timeout = 0;
-		expect(invalidNumbers(v, ['connection'])).toEqual([]);
+		v['connection.max_session_duration'] = 1440;
+		v['connection.idle_lock_timeout'] = null;
+		expect(fieldProblems(v).map((p) => p.field)).not.toContain('connection.max_session_duration');
+		expect(fieldProblems(v).map((p) => p.field)).not.toContain('connection.idle_lock_timeout');
 	});
 });
 
 describe('group states and the change log', () => {
-	test('a group counts as set once it has keys', () => {
-		expect(isSet({})).toBe(false);
-		expect(isSet(null)).toBe(false);
-		expect(isSet({ mode: 'attended' })).toBe(true);
-		expect(
-			setCount({
-				connection: { mode: 'x' },
-				features: {},
-				security: null,
-				network: {},
-				update: { channel: 'beta' }
-			})
-		).toBe(2);
+	test('groups set counts what the organization stored', () => {
+		expect(setCount(resolved({ connection: { mode: 'x' }, update: { channel: 'beta' } }))).toBe(2);
 		expect(setCount(null)).toBe(0);
 	});
 
@@ -143,7 +188,7 @@ describe('group states and the change log', () => {
 	});
 });
 
-describe('list fields (BUGS L395)', () => {
+describe('list entries (BUGS L395)', () => {
 	test('IP ranges: an address or a CIDR range, IPv4 or IPv6', () => {
 		for (const ok of ['192.168.1.0/24', '10.0.0.5', '0.0.0.0/0', '2001:db8::/32', '::1'])
 			expect(isAddressRange(ok), ok).toBe(true);
@@ -168,13 +213,5 @@ describe('list fields (BUGS L395)', () => {
 			'-x'
 		])
 			expect(isRelayAddress(bad), bad).toBe(false);
-	});
-
-	test('invalidLists names the first wrong line of each changed list', () => {
-		const v = valuesFrom({});
-		v.network.ip_allowlist = '10.0.0.0/8\nnot-a-cidr\nbad2';
-		v.network.allowed_relay_servers = 'relay.example.com';
-		expect(invalidLists(v, ['network'])).toEqual([{ field: 'network.ip_allowlist', entry: 'not-a-cidr' }]);
-		expect(invalidLists(v, ['security'])).toEqual([]);
 	});
 });

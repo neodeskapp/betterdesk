@@ -1,17 +1,30 @@
 <!--
-  Organization policies (/policies, /policies/<orgId>). Five groups of
-  settings per organization (connection, features, security, network,
-  updates), each stored on its own; one Save sends only the groups that
-  changed, so untouched groups stay "Not set". Below the form, the change
-  log; beside it, the organization and the contents with each group's state.
+  Organization policies (/policies, /policies/<orgId>) on the settings
+  template (lib/ui/settings, PATTERN.md). The organization picker comes
+  first, with how many devices it holds: policies reach only devices in an
+  organization. Then five groups (connection, features, security, network,
+  updates), each saying whether the organization set anything, when a
+  change takes effect, and, for the four groups only devices apply, that no
+  NeoDesk app applies them yet (GET /api/panel/policies/<org>/resolved,
+  device_app_applies).
 
-  URL: the organization is in the path. Choosing another one rewrites the
-  address (replaceState), as the old page did; with a single organization
-  it opens without one. An unknown ID in the address says so.
+  Every setting shows what applies now: a rule set for this organization,
+  the server's value (Always connect through a relay: the connection
+  strategy) or no rule. "Set for this organization" and "Remove the rule"
+  are explicit; an unset setting has no value in a control. Edit, then
+  save: Save writes only the groups that changed (PUT with the settings
+  that have a rule, DELETE when none is left), the toast names the changes
+  and offers Undo. "Remove all rules of this group" clears one group at
+  once, after a question.
 
-  Who: the four admin roles (requireAdmin); everyone else gets the 403 text.
-  Saving needs org.edit (the server refuses the write without it); an admin
-  role without it sees the groups read-only and no Save.
+  URL: the organization is in the path; choosing another replaces the
+  address. With a single organization it opens without one. An unknown ID
+  in the address says so.
+
+  Who: the four admin roles (requireAdmin); everyone else gets the 403
+  text. Saving needs org.edit; an admin without it sees everything
+  read-only. Roles for the operator list need user.view, the relay list
+  server.config; without them the lists take typed entries.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -19,62 +32,71 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import {
+		clearPolicyGroup,
 		countOrgDevices,
-		countOrgUsers,
-		getPolicies,
 		getPolicyAudit,
+		getResolvedPolicies,
 		listOrgs,
 		savePolicyGroup,
 		type AuditEntry,
 		type Org,
-		type Policies
+		type ResolvedPolicies
 	} from '#lib/api/policies.ts';
-	import { ApiError } from '#lib/api/client.ts';
-	import { formatNumber } from '#lib/i18n/format.ts';
+	import { listRoles } from '#lib/api/roles.ts';
+	import { listRelays } from '#lib/api/scaling.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import { isAdminRole } from '#lib/rules/access.ts';
-	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import {
 		auditSection,
 		auditTime,
-		bodyFor,
-		changedSections,
-		invalidLists,
-		invalidNumbers,
-		isSet,
-		NUMBER_LIMITS,
+		entryOk,
+		FIELD_IDS,
+		fieldProblems,
+		groupBody,
+		groupFields,
+		kindOf,
+		rowId,
 		SECTION_TITLE,
 		SECTIONS,
-		setCount,
-		valuesFrom,
-		type ListField,
-		type NumberField,
-		type PolicyValues,
+		startValue,
+		undoWrites,
+		valuesFromResolved,
+		wholeOk,
+		writesFor,
+		type GroupWrite,
+		type PolicyDraft,
 		type Section
 	} from '#lib/rules/policies.ts';
-	import { onRefresh, setPageTitle } from '#lib/shell/page.svelte.ts';
+	import { onRefresh } from '#lib/shell/page.svelte.ts';
 	import { can, canWrite, session } from '#lib/state/session.svelte.ts';
-	import Checkbox from '#lib/ui/Checkbox.svelte';
+	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
-	import Facts from '#lib/ui/Facts.svelte';
-	import Field from '#lib/ui/Field.svelte';
 	import Input from '#lib/ui/Input.svelte';
 	import ListRow from '#lib/ui/ListRow.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
-	import SaveBar from '#lib/ui/SaveBar.svelte';
 	import Select from '#lib/ui/Select.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Table from '#lib/ui/Table.svelte';
 	import Tag from '#lib/ui/Tag.svelte';
-	import Textarea from '#lib/ui/Textarea.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import User from '#lib/ui/User.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
-	import { warnOnLeave, type FormStatus } from '#lib/ui/form.svelte.ts';
+	import ChangesBar from '#lib/ui/settings/ChangesBar.svelte';
+	import { SettingsDraft, saveAndConfirm } from '#lib/ui/settings/draft.svelte.ts';
+	import { SettingsFilter } from '#lib/ui/settings/filter.svelte.ts';
+	import InheritedValue from '#lib/ui/settings/InheritedValue.svelte';
+	import ListEditor from '#lib/ui/settings/ListEditor.svelte';
+	import OrgPicker from '#lib/ui/settings/OrgPicker.svelte';
+	import { relayOptions, roleOptions } from '#lib/ui/settings/pickers.ts';
+	import RecordPicker, { type PickOption } from '#lib/ui/settings/RecordPicker.svelte';
+	import SettingRow, { type ValueSource } from '#lib/ui/settings/SettingRow.svelte';
+	import SettingsGroup from '#lib/ui/settings/SettingsGroup.svelte';
+	import SettingsPage from '#lib/ui/settings/SettingsPage.svelte';
+	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import type { Column } from '#lib/ui/table.ts';
 
 	const allowed = $derived(isAdminRole(session.user?.role));
@@ -105,34 +127,170 @@
 		urlOrg ?? (orgsState === 'ready' && orgs.length === 1 ? (orgs[0]?.id ?? null) : null)
 	);
 	const org = $derived(orgs.find((o) => o.id === orgId) ?? null);
-	/* Title and heading name the organization once one is open, so its
-	   policies are not one more page called Policies */
-	const heading = $derived(org?.name ? `${t('nav.policies')}: ${org.name}` : t('nav.policies'));
-	$effect(() => setPageTitle(heading));
 	const notFound = $derived(orgsState === 'ready' && !!urlOrg && !org);
+
+	/* ── Names and words of the settings ── */
+
+	const LABEL: Readonly<Record<string, string>> = {
+		'connection.mode': 'policies.connection_mode',
+		'connection.max_session_duration': 'policies.max_session',
+		'connection.idle_lock_timeout': 'policies.idle_lock',
+		'connection.wallpaper': 'policies.wallpaper_policy',
+		'features.allow_file_transfer': 'policies.allow_file_transfer',
+		'features.allow_clipboard': 'policies.allow_clipboard',
+		'features.allow_audio': 'policies.allow_audio',
+		'features.allow_recording': 'policies.allow_recording',
+		'security.require_2fa': 'policies.require_2fa',
+		'security.password_min_length': 'policies.password_min_length',
+		'security.password_require_special': 'policies.password_require_special',
+		'security.password_max_age_days': 'policies.password_max_age',
+		'security.allowed_operators': 'policies.allowed_operators',
+		'network.block_direct_p2p': 'policies.block_direct_p2p',
+		'network.allowed_relay_servers': 'policies.allowed_relays',
+		'network.ip_allowlist': 'policies.ip_allowlist',
+		'update.auto_update': 'policies.auto_update',
+		'update.channel': 'policies.update_channel'
+	};
+
+	/** One sentence per setting: what it does; examples go here, never into a placeholder */
+	const help = (field: string): string => {
+		switch (field) {
+			case 'connection.mode':
+				return tf('policies.help_mode', 'Whether the person at the device must accept a remote session.');
+			case 'connection.max_session_duration':
+				return tf(
+					'policies.help_max_session',
+					'A remote session ends after this many minutes, from 0 to 1440.'
+				);
+			case 'connection.idle_lock_timeout':
+				return tf(
+					'policies.help_idle_lock',
+					'The device locks after this many minutes without input, from 0 to 120.'
+				);
+			case 'connection.wallpaper':
+				return tf('policies.help_wallpaper', 'Whether the desktop picture shows while someone connects.');
+			case 'features.allow_file_transfer':
+				return tf(
+					'policies.help_file_transfer',
+					'Whether an operator may copy files to and from the device.'
+				);
+			case 'features.allow_clipboard':
+				return tf('policies.help_clipboard', 'Whether copied text moves between the two computers.');
+			case 'features.allow_audio':
+				return tf('policies.help_audio', "Whether the operator hears the device's sound during a session.");
+			case 'features.allow_recording':
+				return tf('policies.help_recording', 'Whether a session may be recorded.');
+			case 'security.require_2fa':
+				return tf('policies.help_2fa', 'Unattended access to these devices needs a second sign-in step.');
+			case 'security.password_min_length':
+				return tf(
+					'policies.help_password_min',
+					'The shortest device password allowed, from 6 to 128 characters.'
+				);
+			case 'security.password_require_special':
+				return tf(
+					'policies.help_password_special',
+					'Device passwords must contain a character such as ! or #.'
+				);
+			case 'security.password_max_age_days':
+				return tf(
+					'policies.help_password_age',
+					'Device passwords must be changed after this many days, from 0 to 365. 0 means never.'
+				);
+			case 'security.allowed_operators':
+				return tf(
+					'policies.help_operators',
+					'Only people with one of these roles may connect to these devices, for example Remote operator.'
+				);
+			case 'network.block_direct_p2p':
+				return tf(
+					'policies.help_block_p2p',
+					'Connections to these devices never go directly between the two computers, only through a relay server.'
+				);
+			case 'network.allowed_relay_servers':
+				return tf(
+					'policies.help_relays',
+					"Connections to these devices use the server's relay when it is in this list, else the first one here. For example relay1.example.com:21117."
+				);
+			case 'network.ip_allowlist':
+				return tf(
+					'policies.help_ip_ranges',
+					'IP addresses or ranges, one per row, for example 192.168.1.0/24.'
+				);
+			case 'update.auto_update':
+				return tf(
+					'policies.help_auto_update',
+					'The desktop app on these devices installs updates by itself.'
+				);
+			case 'update.channel':
+				return tf('policies.update_channel_hint', 'Which releases the devices install.');
+			default:
+				return '';
+		}
+	};
+
+	const CHOICE_LABEL: Readonly<Record<string, string>> = {
+		attended: 'policies.mode_attended',
+		unattended: 'policies.mode_unattended',
+		ask_always: 'policies.mode_ask',
+		show: 'policies.wallpaper_show',
+		hide_during_session: 'policies.wallpaper_hide_session',
+		hide_always: 'policies.wallpaper_hide_always',
+		stable: 'policies.channel_stable',
+		beta: 'policies.channel_beta',
+		dev: 'policies.channel_dev'
+	};
+
+	const choiceLabel = (v: string) => {
+		const key = CHOICE_LABEL[v];
+		return key ? t(key) : v;
+	};
+
+	const onWord = $derived(tf('policies.switch_on', 'On'));
+	const offWord = $derived(tf('policies.switch_off', 'Off'));
+	const noRuleWord = $derived(tf('policies.no_rule_word', 'no rule'));
+
+	/** A value in words, for the list of changes and the toast */
+	function words(field: string, value: unknown): string {
+		if (value === null || value === undefined) return noRuleWord;
+		const kind = kindOf(field);
+		if (kind?.kind === 'switch') return value ? onWord : offWord;
+		if (kind?.kind === 'choice') return choiceLabel(String(value));
+		if (Array.isArray(value)) return value.length ? value.join(', ') : tf('settings_ui.none', 'none');
+		return String(value);
+	}
+
+	const draft = new SettingsDraft<PolicyDraft>(valuesFromResolved(null));
+	$effect(() => {
+		draft.describe(
+			Object.fromEntries(
+				FIELD_IDS.map((f) => [f, { label: t(LABEL[f] ?? f), format: (v: unknown) => words(f, v) }])
+			)
+		);
+	});
+	$effect(() => draft.track());
+	const filter = new SettingsFilter();
 
 	/* ── The open organization's policies ── */
 
-	let policies = $state.raw<Policies | null>(null);
+	let resolved = $state.raw<ResolvedPolicies | null>(null);
 	let loadState = $state<'idle' | 'loading' | 'ready' | 'error'>('idle');
-	let values = $state<PolicyValues>(valuesFrom({}));
-	let loaded = $state.raw<PolicyValues>(valuesFrom({}));
 	let seq = 0;
 
+	/**
+	 * Read the policies in force. A quiet read after a write keeps the
+	 * unsaved changes of the groups it did not touch.
+	 */
 	async function loadPolicies(id: string, quiet = false) {
 		const mine = ++seq;
 		if (!quiet) loadState = 'loading';
 		try {
-			const p = await getPolicies(id);
+			const r = await getResolvedPolicies(id);
 			if (mine !== seq) return;
-			policies = p;
-			if (!quiet) {
-				const v = valuesFrom(p);
-				values = v;
-				loaded = $state.snapshot(v) as PolicyValues;
-				errors = {};
-				status = { state: 'idle', message: '' };
-			}
+			const kept = quiet ? draft.changes.map((c) => [c.field, c.toValue] as const) : [];
+			resolved = r;
+			draft.load(valuesFromResolved(r));
+			for (const [field, value] of kept) draft.set(field, value);
 			loadState = 'ready';
 		} catch {
 			if (mine !== seq || quiet) return;
@@ -145,40 +303,53 @@
 		untrack(() => {
 			if (!id) {
 				seq++;
-				policies = null;
+				resolved = null;
 				loadState = 'idle';
 				audit = null;
+				draft.load(valuesFromResolved(null));
 				return;
 			}
 			void loadPolicies(id);
 			void loadAudit(id);
-			void loadCounts(id);
+			void loadCount(id);
 		});
 	});
 
 	$effect(() =>
 		onRefresh(() => {
 			if (!org) return void loadOrgs();
-			if (!dirty) void loadPolicies(org.id);
+			if (!draft.dirty) void loadPolicies(org.id);
 			void loadAudit(org.id);
-			void loadCounts(org.id);
+			void loadCount(org.id);
 		})
 	);
 
-	const changed = $derived(changedSections(values, loaded));
-	const dirty = $derived(changed.length > 0);
-	$effect(() => warnOnLeave(() => dirty));
+	/* ── Roles and relay servers for the pickers ── */
+
+	let roleOpts = $state.raw<PickOption[] | null>(null);
+	let relayOpts = $state.raw<{ value: string; label: string }[]>([]);
+
+	$effect(() => {
+		if (!allowed) return;
+		const mayRoles = can('user.view');
+		const mayRelays = can('server.config');
+		untrack(() => {
+			if (mayRoles)
+				listRoles()
+					.then((r) => (roleOpts = roleOptions(r.roles, t)))
+					.catch(() => (roleOpts = null));
+			if (mayRelays)
+				listRelays()
+					.then((list) => (relayOpts = relayOptions(list)))
+					.catch(() => (relayOpts = []));
+		});
+	});
 
 	/* ── Choosing an organization ── */
 
-	// Follows the address; set back when a discard is refused
-	let selected = $derived(orgId ?? '');
-	/** Focus goes to the first group after a pick from the list, as before */
-	let focusFirst = false;
-
 	async function pickOrg(next: string) {
 		if (next === (orgId ?? '')) return;
-		if (dirty) {
+		if (draft.dirty) {
 			const ok = await confirm({
 				title: t('policies.discard_title'),
 				message: t('policies.discard_message'),
@@ -186,200 +357,203 @@
 				danger: true
 			});
 			if (!ok) {
-				selected = orgId ?? '';
+				const el = document.getElementById('policy-org') as HTMLSelectElement | null;
+				if (el) el.value = orgId ?? '';
 				return;
 			}
-			values = $state.snapshot(loaded) as PolicyValues;
+			draft.discard();
 		}
-		await goto(
-			next
-				? resolve('/(console)/policies/[[orgId]]', { orgId: next })
-				: resolve('/(console)/policies/[[orgId]]', {}),
-			{ replace: true, reset: false }
-		);
+		// A setting the search opened (#pol-…) stays the target in the organization picked
+		const path = next
+			? resolve('/(console)/policies/[[orgId]]', { orgId: next })
+			: resolve('/(console)/policies/[[orgId]]', {});
+		// The path comes from resolve() above
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		await goto(`${path}${page.url.hash}`, { replace: true, reset: false });
 	}
 
-	$effect(() => {
-		if (loadState !== 'ready' || !focusFirst) return;
-		focusFirst = false;
-		untrack(() => {
-			const h = document.getElementById('pol-connection-title');
-			h?.focus({ preventScroll: true });
-		});
-	});
-
-	/* ── Side column ── */
+	/* ── Devices in the organization ── */
 
 	let deviceCount = $state<number | null | undefined>(undefined);
-	let peopleCount = $state<number | null | undefined>(undefined);
-	const canPeople = $derived(can('user.view') && can('org.manage_users'));
 
-	async function loadCounts(id: string) {
+	async function loadCount(id: string) {
 		deviceCount = undefined;
-		peopleCount = undefined;
-		const [d, p] = await Promise.all([
-			countOrgDevices(id).catch(() => null),
-			canPeople ? countOrgUsers(id).catch(() => null) : Promise.resolve(null)
-		]);
-		if (org?.id !== id) return;
-		deviceCount = d;
-		peopleCount = p;
+		const n = await countOrgDevices(id).catch(() => null);
+		if (org?.id === id) deviceCount = n;
 	}
 
-	const facts = $derived([
-		{
-			label: t('nav.devices'),
-			value:
-				deviceCount === undefined
-					? '…'
-					: deviceCount === null
-						? t('policies.count_unknown')
-						: formatNumber(deviceCount)
-		},
-		...(canPeople && peopleCount !== null
-			? [
-					{
-						label: t('policies.fact_people'),
-						value: peopleCount === undefined ? '…' : formatNumber(peopleCount)
-					}
-				]
-			: []),
-		{
-			label: t('policies.fact_groups_set'),
-			value: t('policies.groups_set_value', { set: setCount(policies), total: SECTIONS.length })
+	const deviceLine = $derived(
+		deviceCount === undefined || deviceCount === null
+			? ''
+			: deviceCount === 1
+				? tf('policies.devices_in_org_one', '1 device is in this organization.')
+				: tf('policies.devices_in_org', '{count} devices are in this organization.', { count: deviceCount })
+	);
+
+	/* ── Writing ── */
+
+	async function runWrites(id: string, writes: readonly GroupWrite[]) {
+		const failed: string[] = [];
+		for (const w of writes) {
+			try {
+				if (w.body) await savePolicyGroup(id, w.group, w.body);
+				else await clearPolicyGroup(id, w.group);
+			} catch (err) {
+				failed.push(
+					`${t(SECTION_TITLE[w.group])}${err instanceof Error && err.message ? ` (${err.message})` : ''}`
+				);
+			}
 		}
+		if (failed.length)
+			throw new Error(
+				tf('policies.save_failed_groups', 'Not saved: {groups}.', { groups: failed.join(', ') })
+			);
+	}
+
+	async function afterWrite(id: string) {
+		await loadPolicies(id, true);
+		void loadAudit(id);
+	}
+
+	function problemText(field: string, entry: string): string {
+		const kind = kindOf(field);
+		if (kind?.kind === 'whole')
+			return t('policies.invalid_number', { field: t(LABEL[field] ?? field), min: kind.min, max: kind.max });
+		if (kind?.kind === 'list' && kind.entry === 'relay') return t('policies.invalid_relay', { entry });
+		if (kind?.kind === 'list' && kind.entry === 'range') return t('policies.invalid_ip_range', { entry });
+		return '';
+	}
+
+	async function save() {
+		if (!org || !canEdit || draft.busy) return;
+		const problems = fieldProblems(draft.values);
+		const first = problems[0];
+		if (first) {
+			draft.error = problemText(first.field, first.entry);
+			document.getElementById(rowId(first.field))?.querySelector<HTMLElement>('input, select')?.focus();
+			return;
+		}
+		const id = org.id;
+		const before = draft.loaded;
+		const writes = writesFor(draft.values, draft.loaded);
+		const groups = writes.map((w) => w.group);
+		await saveAndConfirm(draft, () => runWrites(id, writes), {
+			undo: () => runWrites(id, undoWrites(before, groups)),
+			reload: () => afterWrite(id)
+		});
+	}
+
+	async function removeGroup(group: Section) {
+		if (!org || !canEdit) return;
+		const id = org.id;
+		const name = t(SECTION_TITLE[group]);
+		const ok = await confirm({
+			title: tf('policies.remove_group_title', 'Remove all rules of {group}?', { group: name }),
+			message: tf(
+				'policies.remove_group_message',
+				'Every {group} setting of {org} goes back to no rule. This is saved at once; other unsaved changes stay.',
+				{ group: name, org: org.name || org.id }
+			),
+			confirmLabel: tf('policies.remove_group_confirm', 'Remove the rules'),
+			danger: true
+		});
+		if (!ok) return;
+		const previous = groupBody(group, draft.loaded);
+		try {
+			await clearPolicyGroup(id, group);
+		} catch (err) {
+			toast.error(
+				`${tf('policies.remove_group_failed', 'The rules were not removed.')} ${err instanceof Error ? err.message : ''}`.trim()
+			);
+			return;
+		}
+		// The group's own unsaved changes go with it
+		for (const f of groupFields(group)) draft.reset(f);
+		await afterWrite(id);
+		toast.show({
+			type: 'success',
+			message: tf('policies.remove_group_done', 'Removed the rules of {group}.', { group: name }),
+			action: previous
+				? {
+						label: tf('settings_ui.undo', 'Undo'),
+						onclick: () =>
+							void runWrites(id, [{ group, body: previous }])
+								.then(async () => {
+									await afterWrite(id);
+									toast.success(tf('settings_ui.undone', 'The changes are undone.'));
+								})
+								.catch((err: unknown) =>
+									toast.error(
+										`${tf('settings_ui.undo_failed', 'Undoing did not work.')} ${err instanceof Error ? err.message : ''}`.trim()
+									)
+								)
+					}
+				: undefined
+		});
+	}
+
+	/* ── What applies now ── */
+
+	const fieldOf = (field: string) => {
+		const at = field.indexOf('.');
+		return resolved?.[field.slice(0, at)]?.fields[field.slice(at + 1)];
+	};
+
+	/** The sentence while the organization has no rule: the server's value or none */
+	function inherited(field: string): { text: string; href?: string; linkLabel?: string } {
+		const f = fieldOf(field);
+		if (f?.server_setting) {
+			const value =
+				f.server_value === true
+					? tf('policies.server_relay_only', 'Always through the relay')
+					: f.server_value === false
+						? tf('policies.server_direct_allowed', 'Direct connections allowed')
+						: '';
+			return {
+				text: value
+					? tf('policies.from_server', 'From the server: {value}.', { value })
+					: tf('policies.from_server_unknown', 'From the server.'),
+				href: link(f.server_setting.href),
+				linkLabel: t(f.server_setting.label_key)
+			};
+		}
+		return { text: tf('policies.no_rule', 'No rule: each device keeps its own setting.') };
+	}
+
+	const hasRule = (field: string) => draft.values[field] !== null && draft.values[field] !== undefined;
+
+	function sourceOf(field: string): ValueSource | null {
+		return hasRule(field)
+			? { kind: 'here', text: tf('policies.set_for_org', 'Set for this organization') }
+			: null;
+	}
+
+	const groupStatus = (g: Section) =>
+		resolved?.[g]?.set ? t('policies.configured') : tf('policies.no_rule_here', 'No rule here');
+
+	const groupTiming = (g: Section) =>
+		resolved?.[g]?.timing === 'server_minute'
+			? t('policies.effect_server')
+			: tf('policies.effect_device_next', 'Devices get this when they next ask for their policy.');
+
+	const deviceOnly = (g: Section) =>
+		resolved?.[g]?.applied_by === 'device' && !resolved?.[g]?.device_app_applies;
+
+	/* ── Options ── */
+
+	const choiceOptions = (field: string) => {
+		const kind = kindOf(field);
+		return kind?.kind === 'choice' ? kind.options.map((o) => ({ value: o, label: choiceLabel(o) })) : [];
+	};
+	const switchOptions = $derived([
+		{ value: 'on', label: onWord },
+		{ value: 'off', label: offWord }
 	]);
 
-	/* ── Contents: which group is in view ── */
-
-	let inView = $state<Section | null>(null);
-	$effect(() => {
-		if (loadState !== 'ready' || typeof IntersectionObserver !== 'function') return;
-		const seen: Record<string, boolean> = {};
-		const io = new IntersectionObserver(
-			(entries) => {
-				for (const e of entries) seen[e.target.id] = e.isIntersecting;
-				const first = SECTIONS.find((s) => seen[`pol-${s}-title`]);
-				if (first) inView = first;
-			},
-			{ rootMargin: '-80px 0px -55% 0px' }
-		);
-		for (const s of SECTIONS) {
-			const el = document.getElementById(`pol-${s}-title`);
-			if (el) io.observe(el);
-		}
-		return () => io.disconnect();
-	});
-
-	/* ── Save ── */
-
-	let errors = $state<Partial<Record<NumberField, { message: string; value: unknown }>>>({});
-	let status = $state<FormStatus>({ state: 'idle', message: '' });
-	let saving = $state(false);
-
-	function numberOf(field: NumberField): unknown {
-		const [s, k] = field.split('.') as [Section, string];
-		return (values[s] as Record<string, unknown>)[k];
-	}
-	// An error stays while its field keeps the refused value
-	function errorOf(field: NumberField): string | undefined {
-		const e = errors[field];
-		return e && Object.is(e.value, numberOf(field)) ? e.message : undefined;
-	}
-
-	const LABEL: Readonly<Record<NumberField, string>> = {
-		'connection.max_session_duration': 'policies.max_session',
-		'connection.idle_lock_timeout': 'policies.idle_lock',
-		'security.password_min_length': 'policies.password_min_length',
-		'security.password_max_age_days': 'policies.password_max_age'
-	};
-	const fieldId = (field: NumberField | ListField) => 'pol-' + field.replace(/[._]/g, '-');
-
-	// One entry per line: the first line that is wrong is named next to its field
-	let listErrors = $state<Partial<Record<ListField, { message: string; value: unknown }>>>({});
-	function listOf(field: ListField): unknown {
-		const [s, k] = field.split('.') as [Section, string];
-		return (values[s] as Record<string, unknown>)[k];
-	}
-	function listErrorOf(field: ListField): string | undefined {
-		const e = listErrors[field];
-		return e && Object.is(e.value, listOf(field)) ? e.message : undefined;
-	}
-	const LIST_MESSAGE: Readonly<Record<ListField, string>> = {
-		'network.allowed_relay_servers': 'policies.invalid_relay',
-		'network.ip_allowlist': 'policies.invalid_ip_range'
-	};
-
-	async function save(e: SubmitEvent) {
-		e.preventDefault();
-		if (saving || !org || !canEdit) return;
-		const sections = changed;
-		if (!sections.length) {
-			status = { state: 'saved', message: t('policies.no_changes') };
-			return;
-		}
-		// Check everything first, so a typo doesn't leave the save half done
-		const bad = invalidNumbers(values, sections);
-		const badLists = invalidLists(values, sections);
-		if (bad.length || badLists.length) {
-			const next: typeof errors = {};
-			for (const f of bad) {
-				const [min, max] = NUMBER_LIMITS[f];
-				next[f] = {
-					message: t('policies.invalid_number', { field: t(LABEL[f]), min, max }),
-					value: numberOf(f)
-				};
-			}
-			const nextLists: typeof listErrors = {};
-			for (const { field, entry } of badLists) {
-				nextLists[field] = { message: t(LIST_MESSAGE[field], { entry }), value: listOf(field) };
-			}
-			errors = next;
-			listErrors = nextLists;
-			const first = bad[0] ?? badLists[0]?.field;
-			const message = bad[0]
-				? next[bad[0]]?.message
-				: badLists[0]
-					? nextLists[badLists[0].field]?.message
-					: '';
-			status = { state: 'error', message: message ?? '' };
-			if (first) document.getElementById(fieldId(first))?.focus();
-			return;
-		}
-		errors = {};
-		listErrors = {};
-		saving = true;
-		status = { state: 'saving', message: t('ui_form.saving') };
-		const id = org.id;
-		const snapshot = $state.snapshot(values) as PolicyValues;
-		const failed: string[] = [];
-		const next = $state.snapshot(loaded) as PolicyValues;
-		try {
-			// Each group has its own endpoint: save every changed one, then name the ones that failed
-			for (const s of sections) {
-				try {
-					await savePolicyGroup(id, s, bodyFor(s, snapshot));
-					(next as Record<Section, unknown>)[s] = snapshot[s];
-				} catch (err) {
-					failed.push(`${t(SECTION_TITLE[s])} (${err instanceof ApiError ? err.message : ''})`);
-				}
-			}
-			loaded = next;
-			status = failed.length
-				? {
-						state: 'error',
-						message: `${t('ui_form.save_failed')} ${t('policies.save_failed_groups', { groups: failed.join(', ') })}`
-					}
-				: { state: 'saved', message: t('policies.save_success') };
-			if (failed.length < sections.length) {
-				// The group states and the change log
-				void loadPolicies(id, true);
-				void loadAudit(id);
-			}
-		} finally {
-			saving = false;
-		}
-	}
+	const sections = $derived([
+		...SECTIONS.map((s) => ({ id: `pol-${s}`, label: t(SECTION_TITLE[s]) })),
+		{ id: 'pol-audit', label: t('policies.audit_title') }
+	]);
 
 	/* ── Change log ── */
 
@@ -405,28 +579,6 @@
 		{ id: 'source', label: t('policies.col_source'), cell: sourceCell }
 	]);
 	const auditRows = $derived((audit ?? []).map((e, i) => ({ ...e, key: `${auditTime(e)}-${i}` })));
-
-	/* ── Options ── */
-
-	const modeOptions = $derived([
-		{ value: 'attended', label: t('policies.mode_attended') },
-		{ value: 'unattended', label: t('policies.mode_unattended') },
-		{ value: 'ask_always', label: t('policies.mode_ask') }
-	]);
-	const wallpaperOptions = $derived([
-		{ value: 'show', label: t('policies.wallpaper_show') },
-		{ value: 'hide_during_session', label: t('policies.wallpaper_hide_session') },
-		{ value: 'hide_always', label: t('policies.wallpaper_hide_always') }
-	]);
-	const channelOptions = $derived([
-		{ value: 'stable', label: t('policies.channel_stable') },
-		{ value: 'beta', label: t('policies.channel_beta') },
-		{ value: 'dev', label: t('policies.channel_dev') }
-	]);
-	const orgOptions = $derived([
-		{ value: '', label: t('policies.select_org_placeholder') },
-		...orgs.map((o) => ({ value: o.id, label: o.name || o.id }))
-	]);
 </script>
 
 {#snippet timeCell(e: AuditEntry)}<Time value={auditTime(e)} />{/snippet}
@@ -440,493 +592,319 @@
 {#snippet sourceCell(e: AuditEntry)}{#if e.actor || e.user}<User user={e.actor || e.user} />{:else}<Empty
 		/>{/if}{#if e.target}<span class="cell-sub">{e.target}</span>{/if}{/snippet}
 
-{#snippet sectionState(s: Section)}<span class={['policy-state', isSet(policies?.[s]) && 'is-set']}
-		>{isSet(policies?.[s]) ? t('policies.configured') : t('policies.not_configured')}</span
-	>{/snippet}
-
-{#snippet toc(side: boolean)}
-	<nav class={['policy-toc', side ? 'is-side' : 'is-inline']} aria-label={t('policies.on_this_page')}>
-		<ul class="toc">
-			{#each SECTIONS as s (s)}
-				<li>
-					<a href="#pol-{s}-title" aria-current={inView === s ? 'true' : undefined}>{t(SECTION_TITLE[s])}</a>
-					{#if side}{@render sectionState(s)}{/if}
-				</li>
-			{/each}
-			<li><a href="#pol-audit-title">{t('policies.audit_title')}</a></li>
-		</ul>
-	</nav>
+{#snippet scope()}
+	{#if orgsState === 'ready' && orgs.length}
+		<div class="policy-scope">
+			<OrgPicker
+				id="policy-org"
+				label={t('policies.select_org')}
+				hint={tf('policies.org_hint_only', 'Policies apply only to devices in this organization.')}
+				{orgs}
+				value={org?.id ?? ''}
+				placeholder={org ? undefined : t('policies.select_org_placeholder')}
+				onchange={(id) => void pickOrg(id)}
+			/>
+			{#if org}
+				<p class="scope-line">
+					{#if deviceLine}{deviceLine}{/if}
+					{tf('policies.outside_orgs', 'Devices outside any organization get no policy.')}
+					<a href={link(`/organizations/${encodeURIComponent(org.id)}#devices`)}
+						>{tf('policies.put_devices', 'Put devices into this organization')}</a
+					>
+				</p>
+			{/if}
+		</div>
+	{/if}
 {/snippet}
 
-{#if !allowed}
-	<NoAccess />
-{:else}
-	<div class="page page-wide policy-page">
-		<div class="page-head">
-			<h1>{heading}</h1>
-			<p class="page-description">{t('policies.page_description')}</p>
-		</div>
-		<ReadOnlyHint writes={['org.edit']} />
+{#snippet editor(field: string, f: { id: string; describedby: string | undefined })}
+	{@const kind = kindOf(field)}
+	{@const value = draft.values[field]}
+	{#if kind?.kind === 'switch'}
+		<Select
+			id={f.id}
+			describedby={f.describedby}
+			width="medium"
+			disabled={!canEdit}
+			options={switchOptions}
+			value={value ? 'on' : 'off'}
+			onchange={(e) => draft.set(field, (e.currentTarget as HTMLSelectElement).value === 'on')}
+		/>
+	{:else if kind?.kind === 'choice'}
+		<Select
+			id={f.id}
+			describedby={f.describedby}
+			width="host"
+			disabled={!canEdit}
+			options={choiceOptions(field)}
+			value={String(value)}
+			onchange={(e) => draft.set(field, (e.currentTarget as HTMLSelectElement).value)}
+		/>
+	{:else if kind?.kind === 'whole'}
+		{@const bad = !wholeOk(field, value)}
+		<Input
+			id={f.id}
+			describedby={[f.describedby, bad && `${f.id}-error`].filter(Boolean).join(' ') || undefined}
+			type="number"
+			width="short"
+			min={kind.min}
+			max={kind.max}
+			step={1}
+			inputmode="numeric"
+			invalid={bad}
+			disabled={!canEdit}
+			value={value === '' ? '' : (value as number)}
+			oninput={(e) => {
+				const raw = (e.currentTarget as HTMLInputElement).value;
+				draft.set(field, raw === '' ? '' : Number(raw));
+			}}
+		/>
+		{#if bad}<p class="field-error" id={`${f.id}-error`}>{problemText(field, '')}</p>{/if}
+	{:else if kind?.kind === 'list' && kind.entry === 'name' && roleOpts}
+		<RecordPicker
+			id={f.id}
+			legend={t(LABEL[field] ?? field)}
+			describedby={f.describedby}
+			disabled={!canEdit}
+			options={roleOpts}
+			value={(value as string[]) ?? []}
+			unknownLabel={(name) => tf('policies.not_a_role', '{name} (not a role)', { name })}
+			onchange={(list) => draft.set(field, list)}
+		/>
+	{:else if kind?.kind === 'list'}
+		<ListEditor
+			id={f.id}
+			describedby={f.describedby}
+			disabled={!canEdit}
+			items={(value as string[]) ?? []}
+			onchange={(list) => draft.set(field, list)}
+			itemLabel={(n) =>
+				kind.entry === 'relay'
+					? tf('policies.relay_n', 'Relay server {n}', { n })
+					: kind.entry === 'range'
+						? tf('policies.range_n', 'IP range {n}', { n })
+						: tf('policies.role_n', 'Role {n}', { n })}
+			check={(entry) =>
+				entryOk(field, entry)
+					? ''
+					: kind.entry === 'relay'
+						? tf(
+								'policies.row_bad_relay',
+								'Not a server address. Use a host name or address, with a port if needed.'
+							)
+						: tf('policies.row_bad_range', 'Not an IP address or range.')}
+			addLabel={kind.entry === 'relay'
+				? tf('policies.add_relay', 'Add a relay server')
+				: kind.entry === 'range'
+					? tf('policies.add_range', 'Add an IP range')
+					: tf('policies.add_role', 'Add a role')}
+			quick={kind.entry === 'relay' ? relayOpts : []}
+		/>
+	{/if}
+{/snippet}
 
-		{#if orgsState === 'loading'}
-			<States kind="loading" message={t('policies.loading')} />
-		{:else if orgsState === 'error'}
-			<States kind="error" message={t('policies.orgs_failed')} onretry={() => void loadOrgs()} />
-		{:else if !orgs.length}
-			<States kind="empty" message={t('policies.no_orgs')} />
-		{:else}
-			<div class="form-column org-field">
-				<Field label={t('policies.select_org')} hint={t('policies.org_hint')} width="host">
-					{#snippet children(f)}
-						<Select
-							{...f}
-							options={orgOptions}
-							bind:value={selected}
-							onchange={() => void pickOrg(selected)}
+{#snippet row(field: string)}
+	{@const label = t(LABEL[field] ?? field)}
+	{@const from = inherited(field)}
+	<SettingRow
+		id={rowId(field)}
+		{label}
+		help={help(field)}
+		keyName={field}
+		source={sourceOf(field)}
+		changed={draft.isChanged(field)}
+		noEffect={field === 'network.ip_allowlist'
+			? tf(
+					'policies.ip_ranges_not_applied',
+					'Nothing applies this yet: the server stores the ranges but does not check connections against them.'
+				)
+			: undefined}
+	>
+		{#snippet control(f)}
+			<InheritedValue
+				id={`${rowId(field)}-value`}
+				name={label}
+				overridden={hasRule(field)}
+				inherited={from.text}
+				href={from.href}
+				linkLabel={from.linkLabel}
+				overrideLabel={tf('policies.set_for_org', 'Set for this organization')}
+				inheritLabel={tf('policies.remove_rule', 'Remove the rule')}
+				disabled={!canEdit}
+				onoverride={() => draft.set(field, startValue(field, resolved))}
+				oninherit={() => draft.set(field, null)}
+			>
+				{@render editor(field, f)}
+			</InheritedValue>
+		{/snippet}
+	</SettingRow>
+{/snippet}
+
+<SettingsPage
+	id="policies"
+	title={org?.name ? `${t('nav.policies')}: ${org.name}` : t('nav.policies')}
+	description={t('policies.page_description')}
+	{allowed}
+	saveModel={org && loadState === 'ready' ? 'draft' : 'none'}
+	filter={org && loadState === 'ready' ? filter : undefined}
+	filterLabel={tf('policies.filter', 'Filter policy settings')}
+	sections={org && loadState === 'ready' ? sections : []}
+	{scope}
+>
+	<ReadOnlyHint writes={['org.edit']} />
+
+	{#if orgsState === 'loading'}
+		<States kind="loading" message={t('policies.loading')} />
+	{:else if orgsState === 'error'}
+		<States kind="error" message={t('policies.orgs_failed')} onretry={() => void loadOrgs()} />
+	{:else if !orgs.length}
+		<States kind="empty" message={t('policies.no_orgs')} />
+	{:else if notFound}
+		<Notice tone="danger" role="alert" message={t('policies.org_not_found')} />
+	{/if}
+
+	{#if orgsState === 'ready' && orgs.length && !org}
+		<section class="org-pick" aria-labelledby="policy-org-pick-title">
+			<h2 id="policy-org-pick-title" class="sr-only">{t('policies.select_org')}</h2>
+			{#if !notFound}<p class="state-line">{t('policies.pick_org_state')}</p>{/if}
+			<div class="org-list" data-sveltekit-replacestate data-sveltekit-noscroll>
+				<RowList label={t('policies.select_org')}>
+					{#each orgs as o (o.id)}
+						<ListRow
+							title={o.name || o.id}
+							href={`${resolve('/(console)/policies/[[orgId]]', { orgId: o.id })}${page.url.hash}`}
 						/>
-					{/snippet}
-				</Field>
+					{/each}
+				</RowList>
 			</div>
-
-			{#if notFound}
-				<Notice tone="danger" role="alert" message={t('policies.org_not_found')} />
-			{/if}
-
-			{#if !org}
-				<section class="section org-pick" aria-labelledby="policy-org-pick-title">
-					<h2 id="policy-org-pick-title" class="sr-only">{t('policies.select_org')}</h2>
-					{#if !notFound}<p class="state-line">{t('policies.pick_org_state')}</p>{/if}
-					<!-- Opening one replaces the address, like choosing it in the select -->
-					<div
-						class="org-list"
-						data-sveltekit-replacestate
-						data-sveltekit-noscroll
-						onclickcapture={() => (focusFirst = true)}
-						role="presentation"
-					>
-						<RowList label={t('policies.select_org')}>
-							{#each orgs as o (o.id)}
-								<ListRow
-									title={o.name || o.id}
-									href={resolve('/(console)/policies/[[orgId]]', { orgId: o.id })}
-								/>
-							{/each}
-						</RowList>
-					</div>
-				</section>
-			{:else if loadState === 'loading' || loadState === 'idle'}
-				<States kind="loading" message={t('policies.loading')} />
-			{:else if loadState === 'error'}
-				<States kind="error" message={t('policies.load_failed')} onretry={() => void loadPolicies(org.id)} />
-			{:else}
-				<div class="page-cols policy-cols">
-					<div class="page-main">
-						{@render toc(false)}
-
-						<form class="policy-form" autocomplete="off" novalidate onsubmit={save}>
-							<fieldset class="policy-fieldset" disabled={!canEdit}>
-								<div class="policy-groups">
-									<section class="section" aria-labelledby="pol-connection-title">
-										<div class="section-head">
-											<h2 id="pol-connection-title" tabindex="-1">{t('policies.connection_title')}</h2>
-											{@render sectionState('connection')}
-										</div>
-										<p class="section-note">{t('policies.connection_desc')}</p>
-										<Field label={t('policies.connection_mode')}>
-											{#snippet children(f)}<Select
-													{...f}
-													options={modeOptions}
-													bind:value={values.connection.mode}
-												/>{/snippet}
-										</Field>
-										<Field
-											id={fieldId('connection.max_session_duration')}
-											label={t('policies.max_session')}
-											hint={t('policies.max_session_hint')}
-											error={errorOf('connection.max_session_duration')}
-											width="short"
-										>
-											{#snippet children(f)}<Input
-													{...f}
-													type="number"
-													min={0}
-													max={1440}
-													step={1}
-													inputmode="numeric"
-													bind:value={values.connection.max_session_duration}
-												/>{/snippet}
-										</Field>
-										<Field
-											id={fieldId('connection.idle_lock_timeout')}
-											label={t('policies.idle_lock')}
-											hint={t('policies.idle_lock_hint')}
-											error={errorOf('connection.idle_lock_timeout')}
-											width="short"
-										>
-											{#snippet children(f)}<Input
-													{...f}
-													type="number"
-													min={0}
-													max={120}
-													step={1}
-													inputmode="numeric"
-													bind:value={values.connection.idle_lock_timeout}
-												/>{/snippet}
-										</Field>
-										<Field label={t('policies.wallpaper_policy')}>
-											{#snippet children(f)}<Select
-													{...f}
-													options={wallpaperOptions}
-													bind:value={values.connection.wallpaper}
-												/>{/snippet}
-										</Field>
-										<p class="field-effect">{t('policies.effect_device')}</p>
-									</section>
-
-									<section class="section" aria-labelledby="pol-features-title">
-										<div class="section-head">
-											<h2 id="pol-features-title" tabindex="-1">{t('policies.features_title')}</h2>
-											{@render sectionState('features')}
-										</div>
-										<p class="section-note">{t('policies.features_desc')}</p>
-										<div class="checks">
-											<Checkbox
-												label={t('policies.allow_file_transfer')}
-												bind:checked={values.features.allow_file_transfer}
-											/>
-											<Checkbox
-												label={t('policies.allow_clipboard')}
-												bind:checked={values.features.allow_clipboard}
-											/>
-											<Checkbox
-												label={t('policies.allow_audio')}
-												bind:checked={values.features.allow_audio}
-											/>
-											<Checkbox
-												label={t('policies.allow_recording')}
-												bind:checked={values.features.allow_recording}
-											/>
-										</div>
-										<p class="field-effect">{t('policies.effect_device')}</p>
-									</section>
-
-									<section class="section" aria-labelledby="pol-security-title">
-										<div class="section-head">
-											<h2 id="pol-security-title" tabindex="-1">{t('policies.security_title')}</h2>
-											{@render sectionState('security')}
-										</div>
-										<p class="section-note">{t('policies.security_desc')}</p>
-										<Checkbox label={t('policies.require_2fa')} bind:checked={values.security.require_2fa} />
-										<Field
-											id={fieldId('security.password_min_length')}
-											label={t('policies.password_min_length')}
-											hint={t('policies.password_min_hint')}
-											error={errorOf('security.password_min_length')}
-											width="short"
-										>
-											{#snippet children(f)}<Input
-													{...f}
-													type="number"
-													min={6}
-													max={128}
-													step={1}
-													inputmode="numeric"
-													bind:value={values.security.password_min_length}
-												/>{/snippet}
-										</Field>
-										<Checkbox
-											label={t('policies.password_require_special')}
-											bind:checked={values.security.password_require_special}
-										/>
-										<Field
-											id={fieldId('security.password_max_age_days')}
-											label={t('policies.password_max_age')}
-											hint={t('policies.password_max_age_hint')}
-											error={errorOf('security.password_max_age_days')}
-											width="short"
-										>
-											{#snippet children(f)}<Input
-													{...f}
-													type="number"
-													min={0}
-													max={365}
-													step={1}
-													inputmode="numeric"
-													bind:value={values.security.password_max_age_days}
-												/>{/snippet}
-										</Field>
-										<Field
-											label={t('policies.allowed_operators')}
-											hint={t('policies.allowed_operators_hint')}
-										>
-											{#snippet children(f)}<Input
-													{...f}
-													placeholder={tf('policies.allowed_operators_example', 'admin, helpdesk')}
-													bind:value={values.security.allowed_operators}
-												/>{/snippet}
-										</Field>
-										<p class="field-effect">{t('policies.effect_device')}</p>
-									</section>
-
-									<section class="section" aria-labelledby="pol-network-title">
-										<div class="section-head">
-											<h2 id="pol-network-title" tabindex="-1">{t('policies.network_title')}</h2>
-											{@render sectionState('network')}
-										</div>
-										<p class="section-note">{t('policies.network_desc')}</p>
-										<Checkbox
-											label={t('policies.block_direct_p2p')}
-											hint={t('policies.block_direct_p2p_hint')}
-											effect={t('policies.effect_server')}
-											bind:checked={values.network.block_direct_p2p}
-										/>
-										<Field
-											id={fieldId('network.allowed_relay_servers')}
-											label={t('policies.allowed_relays')}
-											hint={t('policies.allowed_relays_hint')}
-											effect={t('policies.effect_server')}
-											error={listErrorOf('network.allowed_relay_servers')}
-										>
-											{#snippet children(f)}<Textarea
-													{...f}
-													class="mono"
-													rows={3}
-													dir="ltr"
-													spellcheck={false}
-													placeholder={tf('policies.allowed_relays_example', 'relay1.example.com:21117')}
-													bind:value={values.network.allowed_relay_servers}
-												/>{/snippet}
-										</Field>
-										<Field
-											id={fieldId('network.ip_allowlist')}
-											label={t('policies.ip_allowlist')}
-											hint={t('policies.ip_allowlist_hint')}
-											effect={t('policies.effect_device')}
-											error={listErrorOf('network.ip_allowlist')}
-										>
-											{#snippet children(f)}<Textarea
-													{...f}
-													class="mono"
-													rows={3}
-													dir="ltr"
-													spellcheck={false}
-													placeholder={tf('policies.ip_allowlist_example', '192.168.1.0/24')}
-													bind:value={values.network.ip_allowlist}
-												/>{/snippet}
-										</Field>
-									</section>
-
-									<section class="section" aria-labelledby="pol-update-title">
-										<div class="section-head">
-											<h2 id="pol-update-title" tabindex="-1">{t('policies.update_title')}</h2>
-											{@render sectionState('update')}
-										</div>
-										<p class="section-note">{t('policies.update_desc')}</p>
-										<Checkbox label={t('policies.auto_update')} bind:checked={values.update.auto_update} />
-										<Field
-											label={t('policies.update_channel')}
-											hint={t('policies.update_channel_hint')}
-											width="medium"
-										>
-											{#snippet children(f)}<Select
-													{...f}
-													options={channelOptions}
-													bind:value={values.update.channel}
-												/>{/snippet}
-										</Field>
-										<p class="field-effect">{t('policies.effect_device')}</p>
-									</section>
-								</div>
-							</fieldset>
-
-							{#if canEdit}
-								<SaveBar label={t('policies.save_button')} {dirty} busy={saving} {status} />
-							{/if}
-						</form>
-
-						<section class="section" aria-labelledby="pol-audit-title">
-							<h2 id="pol-audit-title">{t('policies.audit_title')}</h2>
-							<p class="section-note">{t('policies.audit_desc')}</p>
-							{#if auditError}
-								<States
-									kind="error"
-									message={t('policies.audit_failed')}
-									onretry={() => void loadAudit(org.id)}
-								/>
-							{:else if audit === null}
-								<States kind="loading" message={t('policies.audit_loading')} />
-							{:else if !audit.length}
-								<States kind="empty" message={t('policies.no_audit')} />
-							{:else}
-								<CountLine text={t('policies.audit_count')} values={{ count: audit.length }} />
-								<Table
-									rows={auditRows}
-									columns={auditColumns}
-									key={(e) => e.key}
-									label={t('policies.audit_title')}
-								/>
-							{/if}
-						</section>
-					</div>
-
-					<aside class="page-side is-sticky policy-side" aria-labelledby="policy-org-name">
-						<section class="section org-summary">
-							<h2 id="policy-org-name">{org.name || org.id}</h2>
-							<Facts items={facts} />
-							<p class="hint">{t('policies.groups_default_hint')}</p>
+		</section>
+	{:else if org && (loadState === 'loading' || loadState === 'idle')}
+		<States kind="loading" message={t('policies.loading')} />
+	{:else if org && loadState === 'error'}
+		<States kind="error" message={t('policies.load_failed')} onretry={() => void loadPolicies(org.id)} />
+	{:else if org}
+		{#each SECTIONS as g (g)}
+			<SettingsGroup
+				id={`pol-${g}`}
+				title={t(SECTION_TITLE[g])}
+				description={t(`policies.${g}_desc`)}
+				consequence={groupTiming(g)}
+				status={groupStatus(g)}
+			>
+				{#snippet note()}
+					{#if deviceOnly(g)}
+						<Notice tone="warning" class="group-notice">
 							<p>
-								<a href={link(`/organizations/${encodeURIComponent(org.id)}`)}>{t('policies.open_org')}</a>
+								{tf(
+									'policies.not_applied_yet',
+									'No NeoDesk app applies this group yet. It is saved and handed to devices that ask.'
+								)}
 							</p>
-						</section>
-						{@render toc(true)}
-					</aside>
-				</div>
+							{#if g === 'features'}
+								<p>
+									{tf(
+										'policies.sound_today',
+										"To turn sound off in sessions today, use an access rule with Sound off under Devices, or switch off Sound in a person's console access."
+									)}
+									<a href={link('/devices')}>{tf('policies.open_access_rules', 'Open access rules')}</a>
+								</p>
+							{/if}
+						</Notice>
+					{/if}
+				{/snippet}
+				{#snippet actions()}
+					{#if canEdit}
+						<Button
+							size="sm"
+							variant="ghost"
+							disabled={!resolved?.[g]?.set}
+							aria-label={tf('policies.remove_group_named', 'Remove all rules of {group}', {
+								group: t(SECTION_TITLE[g])
+							})}
+							onclick={() => void removeGroup(g)}
+							>{tf('policies.remove_group', 'Remove all rules of this group')}</Button
+						>
+					{/if}
+				{/snippet}
+				{#each groupFields(g) as field (field)}{@render row(field)}{/each}
+			</SettingsGroup>
+		{/each}
+
+		<section class="policy-audit" id="pol-audit" aria-labelledby="pol-audit-title">
+			<h2 id="pol-audit-title">{t('policies.audit_title')}</h2>
+			<p class="section-note">{t('policies.audit_desc')}</p>
+			{#if auditError}
+				<States kind="error" message={t('policies.audit_failed')} onretry={() => void loadAudit(org.id)} />
+			{:else if audit === null}
+				<States kind="loading" message={t('policies.audit_loading')} />
+			{:else if !audit.length}
+				<States kind="empty" message={t('policies.no_audit')} />
+			{:else}
+				<CountLine text={t('policies.audit_count')} values={{ count: audit.length }} />
+				<Table rows={auditRows} columns={auditColumns} key={(e) => e.key} label={t('policies.audit_title')} />
 			{/if}
-		{/if}
-	</div>
-{/if}
+		</section>
+	{/if}
+
+	{#snippet bar()}
+		{#if canEdit && org}<ChangesBar {draft} onsave={save} saveLabel={t('policies.save_button')} />{/if}
+	{/snippet}
+</SettingsPage>
 
 <style>
-	/* Addresses, IDs, lists and JSON in the monospace font */
-	.policy-form :global(.form-input.mono) {
-		font-family: var(--mono);
+	.policy-scope {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
 	}
-	.org-field :global(.form-select) {
-		max-width: 40ch;
-	}
+	.scope-line,
 	.state-line {
 		margin: 0;
+		max-width: var(--measure);
 		color: var(--text-muted);
+	}
+	.scope-line a {
+		margin-inline-start: var(--space-1);
 	}
 	.org-list {
 		max-width: var(--measure);
 	}
-
-	.policy-form .section + .section {
-		margin-top: var(--space-6);
+	.org-pick {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
 	}
-	.policy-form {
-		max-width: var(--measure);
+	:global(.group-notice) p {
+		margin: 0;
 	}
-	.policy-fieldset {
+	:global(.group-notice) p + p {
+		margin-top: var(--space-1);
+	}
+	.field-error {
+		margin: var(--space-1) 0 0;
+		color: var(--danger);
+		font-size: var(--text-sm);
+	}
+	.policy-audit {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
 		min-width: 0;
+	}
+	.policy-audit h2 {
 		margin: 0;
-		padding: 0;
-		border: 0;
+		font-size: var(--text-md);
 	}
-	.policy-fieldset:disabled :global(.check-field) {
-		cursor: default;
-	}
-	.checks {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-	}
-	.field-effect {
+	.section-note {
 		margin: 0;
 		color: var(--text-muted);
-		font-size: var(--text-sm);
 	}
-	/* "Set for this organization" / "Not set" next to the heading and in the contents */
-	.policy-state {
-		color: var(--text-muted);
-		font-size: var(--text-sm);
-	}
-	.policy-state.is-set {
-		color: var(--text);
-	}
-	.section-head h2:focus {
-		outline: none;
-	}
-	.policy-form h2[id],
-	.policy-page h2[id] {
-		scroll-margin-top: calc(var(--topbar-h) + var(--space-4));
-	}
-
-	/* Wide screens: the groups sit side by side, each whole in one column,
-	   read top to bottom then across */
-	@media (min-width: 1600px) {
-		.policy-form {
-			max-width: none;
-		}
-		.policy-groups {
-			columns: 440px 3;
-			column-gap: var(--space-7);
-		}
-		.policy-groups > .section {
-			break-inside: avoid;
-			max-width: var(--measure);
-			padding-bottom: var(--space-6);
-		}
-		.policy-form .policy-groups > .section + .section {
-			margin-top: 0;
-		}
-	}
-
-	/* Contents: one row of links above the form; in the side column from 1200 px */
-	.toc {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-1) var(--space-4);
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-	.toc a {
-		display: inline-flex;
-		align-items: center;
-		min-height: var(--control-h-sm);
-		color: var(--text-muted);
-	}
-	.toc a:hover,
-	.toc a[aria-current='true'] {
-		color: var(--text);
-	}
-	.policy-toc.is-side {
-		display: none;
-	}
-	.policy-toc.is-side .toc {
-		flex-direction: column;
-		flex-wrap: nowrap;
-		gap: var(--space-2);
-	}
-	.policy-toc.is-side li {
-		display: flex;
-		flex-direction: column;
-	}
-	.policy-toc.is-side a {
-		font-weight: 600;
-	}
-	@media (min-width: 1200px) {
-		.policy-toc.is-side {
-			display: block;
-		}
-		.policy-toc.is-inline {
-			display: none;
-		}
-	}
-	@media (pointer: coarse) {
-		.toc a {
-			min-height: 44px;
-		}
-	}
-
-	.org-summary h2 {
-		overflow-wrap: anywhere;
-	}
-	.org-summary p {
-		margin: 0;
-	}
-	.hint {
-		color: var(--text-muted);
-		font-size: var(--text-sm);
-	}
-	.policy-page :global(.cell-sub) {
+	.policy-audit :global(.cell-sub) {
 		display: block;
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}
-	.policy-page :global(td.col-time) {
+	.policy-audit :global(td.col-time) {
 		white-space: nowrap;
 	}
 </style>
