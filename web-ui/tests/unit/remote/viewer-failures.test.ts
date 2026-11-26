@@ -230,6 +230,25 @@ describe('a failure says what happened, why and what to do (L556)', () => {
 		expect(s.actions).not.toContain('unblock');
 	});
 
+	test('the server is asked once per failure, also when it agrees and the account may unblock', async () => {
+		devicesApi.getDeviceReach.mockResolvedValue({
+			reason: 'device_offline',
+			last_online: '',
+			can_unblock: true
+		});
+		const { s, c } = setup();
+		c.emit('error', 'Connection refused: Device offline', { reason: 'device_offline' });
+		await vi.waitFor(() => expect(devicesApi.getDeviceReach).toHaveBeenCalled());
+		await new Promise((r) => setTimeout(r, 20));
+		expect(devicesApi.getDeviceReach).toHaveBeenCalledTimes(1);
+		expect(s.statusText).toBe('desktop-3mu2dcg is offline.');
+		devicesApi.getDeviceReach.mockResolvedValue({
+			reason: 'device_offline',
+			last_online: '',
+			can_unblock: false
+		});
+	});
+
 	test('an error without a reason says the cause is unknown and keeps the message for Details', async () => {
 		const { v, s, c } = setup();
 		c.emit('error', 'Connection refused: something new', {});

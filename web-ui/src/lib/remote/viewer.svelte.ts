@@ -1138,7 +1138,7 @@ export class Viewer {
 	}
 
 	/** What happened, why and what to do, from the reason; the message stays for Details */
-	private showFailure(s: ViewerSession, reason: Reason): void {
+	private showFailure(s: ViewerSession, reason: Reason, checked = false): void {
 		const f = describeFailure(reason, {
 			name: s.label,
 			person: s.consentPerson || undefined,
@@ -1152,7 +1152,8 @@ export class Viewer {
 		});
 		s.whyText = f.why;
 		s.actions = f.actions;
-		if (reason === 'device_offline' || reason === 'device_unknown' || reason === 'no_answer')
+		// Once per failure: the server's answer is shown with checked set
+		if (!checked && (reason === 'device_offline' || reason === 'device_unknown' || reason === 'no_answer'))
 			void this.checkReach(s, reason);
 	}
 
@@ -1173,8 +1174,7 @@ export class Viewer {
 			const known = isReason(r.reason) && r.reason !== shown ? r.reason : null;
 			const keeps = ['device_revoked', 'device_blocked', 'key_changed', 'device_banned'];
 			const next = shown === 'no_answer' ? (known && keeps.includes(known) ? known : null) : known;
-			if (next) this.showFailure(s, next);
-			else if (s.canUnblock) this.showFailure(s, shown);
+			if (next) this.showFailure(s, next, true);
 		} catch {
 			/* The first reason stays */
 		}
