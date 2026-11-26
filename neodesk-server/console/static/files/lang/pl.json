@@ -8931,7 +8931,8 @@
   },
   "shell": {
     "skip_to_content": "Przejdź do głównej treści",
-    "start_failed": "Nie udało się uruchomić konsoli."
+    "start_failed": "Nie udało się uruchomić konsoli.",
+    "loading_console": "Wczytywanie konsoli"
   },
   "ux36": {
     "beta_badge": "BETA",

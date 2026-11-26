@@ -8937,7 +8937,8 @@
   },
   "shell": {
     "skip_to_content": "Chuyển đến nội dung chính",
-    "start_failed": "Không thể khởi động bảng điều khiển."
+    "start_failed": "Không thể khởi động bảng điều khiển.",
+    "loading_console": "Đang tải bảng điều khiển"
   },
   "ux36": {
     "beta_badge": "BETA",

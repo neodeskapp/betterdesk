@@ -8937,7 +8937,8 @@
   },
   "shell": {
     "skip_to_content": "Siirry pääsisältöön",
-    "start_failed": "Konsolia ei voitu käynnistää."
+    "start_failed": "Konsolia ei voitu käynnistää.",
+    "loading_console": "Ladataan konsolia"
   },
   "ux36": {
     "beta_badge": "BETA",

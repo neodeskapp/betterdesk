@@ -8931,7 +8931,8 @@
   },
   "shell": {
     "skip_to_content": "Přejít na hlavní obsah",
-    "start_failed": "Konzoli se nepodařilo spustit."
+    "start_failed": "Konzoli se nepodařilo spustit.",
+    "loading_console": "Načítání konzole"
   },
   "ux36": {
     "beta_badge": "BETA",

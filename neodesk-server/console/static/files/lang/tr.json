@@ -8937,7 +8937,8 @@
   },
   "shell": {
     "skip_to_content": "Ana içeriğe geç",
-    "start_failed": "Konsol başlatılamadı."
+    "start_failed": "Konsol başlatılamadı.",
+    "loading_console": "Konsol yükleniyor"
   },
   "ux36": {
     "beta_badge": "BETA",

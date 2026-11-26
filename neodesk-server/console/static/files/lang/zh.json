@@ -8931,7 +8931,8 @@
   },
   "shell": {
     "skip_to_content": "跳到主要内容",
-    "start_failed": "控制台无法启动。"
+    "start_failed": "控制台无法启动。",
+    "loading_console": "正在加载控制台"
   },
   "ux36": {
     "beta_badge": "BETA",

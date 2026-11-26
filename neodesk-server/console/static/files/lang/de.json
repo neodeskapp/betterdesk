@@ -8931,7 +8931,8 @@
   },
   "shell": {
     "skip_to_content": "Zum Hauptinhalt springen",
-    "start_failed": "Die Konsole konnte nicht starten."
+    "start_failed": "Die Konsole konnte nicht starten.",
+    "loading_console": "Die Konsole wird geladen"
   },
   "ux36": {
     "beta_badge": "BETA",

@@ -8931,7 +8931,8 @@
   },
   "shell": {
     "skip_to_content": "Ir para o conteúdo principal",
-    "start_failed": "Não foi possível iniciar a consola."
+    "start_failed": "Não foi possível iniciar a consola.",
+    "loading_console": "A carregar a consola"
   },
   "ux36": {
     "beta_badge": "BETA",

@@ -8931,7 +8931,8 @@
   },
   "shell": {
     "skip_to_content": "본문으로 건너뛰기",
-    "start_failed": "콘솔을 시작할 수 없습니다."
+    "start_failed": "콘솔을 시작할 수 없습니다.",
+    "loading_console": "콘솔을 불러오는 중"
   },
   "ux36": {
     "beta_badge": "BETA",

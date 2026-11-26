@@ -8935,7 +8935,8 @@
   },
   "shell": {
     "skip_to_content": "Aller au contenu principal",
-    "start_failed": "La console n’a pas pu démarrer."
+    "start_failed": "La console n’a pas pu démarrer.",
+    "loading_console": "Chargement de la console"
   },
   "ux36": {
     "beta_badge": "BETA",

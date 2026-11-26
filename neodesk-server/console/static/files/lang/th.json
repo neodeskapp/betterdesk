@@ -8937,7 +8937,8 @@
   },
   "shell": {
     "skip_to_content": "ข้ามไปยังเนื้อหาหลัก",
-    "start_failed": "ไม่สามารถเริ่มคอนโซลได้"
+    "start_failed": "ไม่สามารถเริ่มคอนโซลได้",
+    "loading_console": "กำลังโหลดคอนโซล"
   },
   "ux36": {
     "beta_badge": "BETA",

@@ -8937,7 +8937,8 @@
   },
   "shell": {
     "skip_to_content": "Ugrás a fő tartalomhoz",
-    "start_failed": "A konzol nem tudott elindulni."
+    "start_failed": "A konzol nem tudott elindulni.",
+    "loading_console": "A konzol betöltése"
   },
   "ux36": {
     "beta_badge": "BETA",

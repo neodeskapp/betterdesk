@@ -8937,7 +8937,8 @@
   },
   "shell": {
     "skip_to_content": "Gå til hovedinnholdet",
-    "start_failed": "Konsollen kunne ikke starte."
+    "start_failed": "Konsollen kunne ikke starte.",
+    "loading_console": "Laster inn konsollen"
   },
   "ux36": {
     "beta_badge": "BETA",

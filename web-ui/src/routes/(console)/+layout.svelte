@@ -16,6 +16,7 @@
 	import { initPresence } from '#lib/state/presence.svelte.ts';
 	import { initTheme } from '#lib/state/theme.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
+	import { announce } from '#lib/ui/announce.svelte.ts';
 	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import Shell from '#lib/shell/Shell.svelte';
 	import { goLogin } from '#lib/shell/session-guard.svelte.ts';
@@ -47,7 +48,12 @@
 		}
 	}
 
-	onMount(() => void start());
+	// The start frame is only shapes: screen readers hear that the console loads
+	const loadingText = $derived(tf('shell.loading_console', 'Loading the console'));
+	onMount(() => {
+		announce(loadingText);
+		void start();
+	});
 
 	// The page's panel access section decides can() there and whether it opens
 	// at all, as the server's guard does for a page load
@@ -69,6 +75,7 @@
 	</div>
 {:else}
 	<div class="start-frame" aria-busy="true">
+		<p class="sr-only">{loadingText}</p>
 		<div class="frame-sidebar"></div>
 		<div class="frame-main"><div class="frame-topbar"></div></div>
 	</div>

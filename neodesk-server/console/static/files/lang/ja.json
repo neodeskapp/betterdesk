@@ -8931,7 +8931,8 @@
   },
   "shell": {
     "skip_to_content": "メインコンテンツへ移動",
-    "start_failed": "コンソールを起動できませんでした。"
+    "start_failed": "コンソールを起動できませんでした。",
+    "loading_console": "コンソールを読み込んでいます"
   },
   "ux36": {
     "beta_badge": "BETA",

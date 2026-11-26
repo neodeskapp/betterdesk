@@ -8938,7 +8938,8 @@
   },
   "shell": {
     "skip_to_content": "انتقل إلى المحتوى الرئيسي",
-    "start_failed": "تعذّر بدء تشغيل لوحة التحكم."
+    "start_failed": "تعذّر بدء تشغيل لوحة التحكم.",
+    "loading_console": "جارٍ تحميل وحدة التحكم"
   },
   "ux36": {
     "beta_badge": "BETA",

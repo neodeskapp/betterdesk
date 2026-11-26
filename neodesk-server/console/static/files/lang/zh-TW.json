@@ -8935,7 +8935,8 @@
   },
   "shell": {
     "skip_to_content": "跳至主要內容",
-    "start_failed": "主控台無法啟動。"
+    "start_failed": "主控台無法啟動。",
+    "loading_console": "正在載入主控台"
   },
   "ux36": {
     "beta_badge": "BETA",

@@ -8931,7 +8931,8 @@
   },
   "shell": {
     "skip_to_content": "Naar de hoofdinhoud",
-    "start_failed": "De console kon niet starten."
+    "start_failed": "De console kon niet starten.",
+    "loading_console": "De console wordt geladen"
   },
   "ux36": {
     "beta_badge": "BETA",

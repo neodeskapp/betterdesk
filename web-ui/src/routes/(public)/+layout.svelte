@@ -10,6 +10,7 @@
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
 	import { publicPage, startPublic } from '#lib/public/boot.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
+	import { announce } from '#lib/ui/announce.svelte.ts';
 
 	let { children }: { children: Snippet } = $props();
 
@@ -21,7 +22,15 @@
 		starting = false;
 	}
 
-	onMount(() => void start());
+	// Nothing is drawn until the strings are there: when that takes a moment,
+	// screen readers hear that the page loads
+	onMount(() => {
+		const slow = setTimeout(() => {
+			if (!publicPage.ready) announce(tf('common.loading', 'Loading…'));
+		}, 400);
+		void start();
+		return () => clearTimeout(slow);
+	});
 </script>
 
 {#if publicPage.ready}

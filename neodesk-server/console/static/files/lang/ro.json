@@ -8937,7 +8937,8 @@
   },
   "shell": {
     "skip_to_content": "Salt la conținutul principal",
-    "start_failed": "Consola nu a putut porni."
+    "start_failed": "Consola nu a putut porni.",
+    "loading_console": "Se încarcă consola"
   },
   "ux36": {
     "beta_badge": "BETA",

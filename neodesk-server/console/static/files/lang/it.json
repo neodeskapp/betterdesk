@@ -8931,7 +8931,8 @@
   },
   "shell": {
     "skip_to_content": "Vai al contenuto principale",
-    "start_failed": "Impossibile avviare la console."
+    "start_failed": "Impossibile avviare la console.",
+    "loading_console": "Caricamento della console"
   },
   "ux36": {
     "beta_badge": "BETA",

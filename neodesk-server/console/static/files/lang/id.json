@@ -8937,7 +8937,8 @@
   },
   "shell": {
     "skip_to_content": "Langsung ke konten utama",
-    "start_failed": "Konsol tidak dapat dimulai."
+    "start_failed": "Konsol tidak dapat dimulai.",
+    "loading_console": "Memuat konsol"
   },
   "ux36": {
     "beta_badge": "BETA",
