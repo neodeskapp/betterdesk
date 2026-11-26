@@ -92,10 +92,10 @@ describe('user text stays text', () => {
 });
 
 describe('Tag and TagSet', () => {
-	test('a tag shows its icon and the full text of a long label on hover', () => {
+	test('a tag shows its icon and the full text of a long label in a tooltip', () => {
 		const long = 'a tag that is much longer than the column';
 		const { container } = render(Tag, { label: long, icon: 'tags' });
-		expect(container.querySelector('.tag')).toHaveAttribute('title', long);
+		expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent(long);
 		expect(container.querySelector('.material-icons')?.textContent).toBe('sell');
 	});
 	test('comma text becomes tokens; nothing gives the empty dash', () => {
