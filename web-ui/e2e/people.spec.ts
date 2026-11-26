@@ -64,7 +64,8 @@ for (const role of ROLES) {
 		test.use({ role });
 
 		test('users: actions follow user.create, user.edit, user.delete; ?search= and #user-groups', async ({
-			page
+			page,
+			problems
 		}) => {
 			await page.goto(`${UI}/users`);
 			const me = await who(page);
@@ -110,8 +111,11 @@ for (const role of ROLES) {
 			await expectNoAxeViolations(page);
 			await page.reload();
 			await expect(page.getByRole('heading', { level: 1, name: 'e2e_viewer' })).toBeVisible();
+			// An account that isn't there: the page asks for it, gets 404 and
+			// says so in its content (the toast region is another alert, empty)
+			problems.allow.push(/http 404: GET .*\/api\/users\/999999$/, /status of 404/);
 			await page.goto(`${UI}/users/999999`);
-			await expect(page.getByRole('alert')).toContainText("doesn't exist");
+			await expect(page.locator('main').getByRole('alert')).toContainText("doesn't exist");
 			await page.goto(`${UI}/users?search=e2e_viewer`);
 
 			if (!can('user.create')) expect(await refused(page, me.csrf, 'POST', '/api/users')).toBe(403);
