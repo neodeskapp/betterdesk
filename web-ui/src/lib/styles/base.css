@@ -162,7 +162,9 @@
 }
 
 html {
-	font-size: 16px;
+	/* The browser's font size setting (16px unless the person changed it);
+	   every type token is in rem, so all text follows it */
+	font-size: 100%;
 	-webkit-text-size-adjust: 100%;
 	text-size-adjust: 100%;
 	/* A control that gets focus scrolls clear of the sticky top bar, and of

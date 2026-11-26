@@ -921,7 +921,8 @@
 
 	.devices-layout {
 		display: grid;
-		grid-template-columns: 200px minmax(0, 1fr);
+		/* In rem, so the folder and group names grow with the browser's font size */
+		grid-template-columns: 12.5rem minmax(0, 1fr);
 		grid-template-areas:
 			'. toolbar'
 			'filters list';
