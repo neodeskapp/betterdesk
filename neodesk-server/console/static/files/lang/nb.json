@@ -8809,7 +8809,7 @@
     "try_generic": "Koble til igjen. Hvis det fortsatt ikke virker, kopier detaljene nedenfor og send dem til administratoren din.",
     "fail_insecure": "Tilkoblingen til {name} ble stoppet fordi den ikke kunne sikres.",
     "try_insecure": "Ingen passord ble sendt. Noen mellom denne nettleseren og enheten kan lytte, eller servernøkkelen er ikke satt opp. Be en administrator om å sjekke serveren.",
-    "screen_keys": "Tastene går til enheten, også Tab. Trykk F8 for å forlate skjermen.",
+    "screen_keys": "Tastene går til enheten, også Tab. Trykk F8 eller Ctrl+Alt+Shift+K for å forlate skjermen.",
     "displays": "Skjermer",
     "layout": "Oppsett",
     "layout_single": "Én om gangen",
@@ -8850,7 +8850,8 @@
     "phone_turn": "Eller snu telefonen på tvers: i liggende format åpnes økten her i nettleseren.",
     "no_open_sessions": "Ingen økt er åpen. Koble til med ID, eller velg en enhet nedenfor.",
     "fail_signin_closed": "{name} lukket tilkoblingen da denne nettleseren logget på.",
-    "try_signin_closed": "Enheten avviste påloggingen. Koble til på nytt og logg på igjen. Hvis det fortsetter, be en administrator se i NeoDesk-loggen på enheten."
+    "try_signin_closed": "Enheten avviste påloggingen. Koble til på nytt og logg på igjen. Hvis det fortsetter, be en administrator se i NeoDesk-loggen på enheten.",
+    "screen_role": "ekstern skjerm"
   },
   "diagram": {
     "your_computer": "Din datamaskin",

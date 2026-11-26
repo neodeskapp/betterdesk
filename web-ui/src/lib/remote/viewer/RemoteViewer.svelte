@@ -27,6 +27,7 @@
 	import type { ViewerData } from '#lib/api/remote.ts';
 	import { addFromHash, guestTokenFromSearch, isDeviceId } from '#lib/remote/access.ts';
 	import { isMobileViewer, isPhone, phoneGate } from '#lib/remote/capabilities.ts';
+	import { isReleaseKey } from '#lib/remote/screen-focus.ts';
 	import { tabStatus } from '#lib/remote/states.ts';
 	import { SHEET_BUTTONS, TILES_MIN_WIDTH, Viewer } from '#lib/remote/viewer.svelte.ts';
 	import AddressBook from '#lib/remote/AddressBook.svelte';
@@ -321,7 +322,7 @@
 		window.addEventListener('orientationchange', onOrientation);
 		window.addEventListener('neodesk:posture-change', evaluatePhone);
 
-		// F8 leaves the remote screen (capture phase: the screen keeps every other key)
+		// F8 or Ctrl+Alt+Shift+K leaves the remote screen (capture phase: the screen keeps every other key)
 		const onF8 = (e: KeyboardEvent) => {
 			if (!shown) return;
 			if (displayShortcut(e)) {
@@ -329,7 +330,7 @@
 				e.stopPropagation();
 				return;
 			}
-			if (e.key !== 'F8' || e.ctrlKey || e.altKey || e.metaKey) return;
+			if (!isReleaseKey(e)) return;
 			e.preventDefault();
 			e.stopPropagation();
 			if (viewer.chromeVisible) {

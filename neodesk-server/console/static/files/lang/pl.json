@@ -8803,7 +8803,7 @@
     "try_generic": "Połącz ponownie. Jeśli nadal się nie udaje, skopiuj poniższe szczegóły i wyślij je administratorowi.",
     "fail_insecure": "Połączenie z {name} zostało przerwane, ponieważ nie udało się go zabezpieczyć.",
     "try_insecure": "Nie wysłano żadnego hasła. Ktoś między tą przeglądarką a urządzeniem może podsłuchiwać albo klucz serwera nie jest skonfigurowany. Poproś administratora o sprawdzenie serwera.",
-    "screen_keys": "Klawisze trafiają do urządzenia, także Tab. Naciśnij F8, aby opuścić ekran.",
+    "screen_keys": "Klawisze trafiają do urządzenia, także Tab. Naciśnij F8 lub Ctrl+Alt+Shift+K, aby opuścić ekran.",
     "displays": "Ekrany",
     "layout": "Układ",
     "layout_single": "Po jednym",
@@ -8844,7 +8844,8 @@
     "phone_turn": "Albo obróć telefon poziomo: w orientacji poziomej sesja otworzy się tutaj w przeglądarce.",
     "no_open_sessions": "Żadna sesja nie jest otwarta. Połącz się po ID albo wybierz urządzenie poniżej.",
     "fail_signin_closed": "{name} zamknął połączenie, gdy ta przeglądarka się logowała.",
-    "try_signin_closed": "Urządzenie odrzuciło logowanie. Połącz się ponownie i zaloguj jeszcze raz. Jeśli to się powtarza, poproś administratora o sprawdzenie dziennika NeoDesk na urządzeniu."
+    "try_signin_closed": "Urządzenie odrzuciło logowanie. Połącz się ponownie i zaloguj jeszcze raz. Jeśli to się powtarza, poproś administratora o sprawdzenie dziennika NeoDesk na urządzeniu.",
+    "screen_role": "ekran zdalny"
   },
   "diagram": {
     "your_computer": "Twój komputer",

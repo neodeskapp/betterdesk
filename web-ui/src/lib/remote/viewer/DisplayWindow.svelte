@@ -16,6 +16,7 @@
 	import { onMount, tick } from 'svelte';
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
 	import type { DisplayZoom } from '#lib/remote/rdclient.ts';
+	import { isReleaseKey } from '#lib/remote/screen-focus.ts';
 	import type { DisplayWindowMessage } from '#lib/remote/viewer.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 
@@ -73,7 +74,7 @@
 			send({ type: 'nd-display-visible', visible: document.visibilityState !== 'hidden' });
 		const onHide = () => send({ type: 'nd-display-closed' });
 		const onKey = (e: KeyboardEvent) => {
-			if (e.key === 'F8' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+			if (isReleaseKey(e)) {
 				e.preventDefault();
 				e.stopPropagation();
 				backBtn?.focus();
@@ -127,18 +128,24 @@
 		>
 	</header>
 	<div class="screen">
+		<!-- svelte-ignore a11y_no_interactive_element_to_noninteractive_role (ARIA in HTML allows any role on canvas; role application makes screen readers pass the keys to the remote computer) -->
 		<canvas
 			id="nd-popout-canvas"
 			bind:this={canvas}
 			class="screen-canvas"
 			tabindex="0"
+			role="application"
+			aria-roledescription={tf('remote_viewer.screen_role', 'remote screen')}
 			aria-label={device
 				? tf('remote_viewer.display_of', 'Display {n} of {name}', { n: display + 1, name: device })
 				: title}
 			aria-describedby="{uid}-keys"
 		></canvas>
 		<p id="{uid}-keys" class="sr-only">
-			{tf('remote_viewer.screen_keys', 'Keys go to the device, Tab too. Press F8 to leave the screen.')}
+			{tf(
+				'remote_viewer.screen_keys',
+				'Keys go to the device, Tab too. Press F8 or Ctrl+Alt+Shift+K to leave the screen.'
+			)}
 		</p>
 		{#if orphan}
 			<div class="orphan" role="status">

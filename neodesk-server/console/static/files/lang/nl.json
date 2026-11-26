@@ -8803,7 +8803,7 @@
     "try_generic": "Maak opnieuw verbinding. Als het blijft mislukken, kopieer dan de details hieronder en stuur ze naar je beheerder.",
     "fail_insecure": "De verbinding met {name} is gestopt omdat die niet beveiligd kon worden.",
     "try_insecure": "Er is geen wachtwoord verzonden. Iemand tussen deze browser en het apparaat luistert mogelijk mee, of de serversleutel is niet ingesteld. Vraag een beheerder de server te controleren.",
-    "screen_keys": "Toetsen gaan naar het apparaat, ook Tab. Druk op F8 om het scherm te verlaten.",
+    "screen_keys": "Toetsen gaan naar het apparaat, ook Tab. Druk op F8 of Ctrl+Alt+Shift+K om het scherm te verlaten.",
     "displays": "Schermen",
     "layout": "Indeling",
     "layout_single": "Eén tegelijk",
@@ -8844,7 +8844,8 @@
     "phone_turn": "Of draai de telefoon naar liggend: dan opent de sessie hier in de browser.",
     "no_open_sessions": "Er is geen sessie open. Verbind met een ID of kies hieronder een apparaat.",
     "fail_signin_closed": "{name} sloot de verbinding toen deze browser aanmeldde.",
-    "try_signin_closed": "Het apparaat weigerde de aanmelding. Maak opnieuw verbinding en meld je opnieuw aan. Blijft het gebeuren, vraag dan een beheerder het logboek van NeoDesk op het apparaat te bekijken."
+    "try_signin_closed": "Het apparaat weigerde de aanmelding. Maak opnieuw verbinding en meld je opnieuw aan. Blijft het gebeuren, vraag dan een beheerder het logboek van NeoDesk op het apparaat te bekijken.",
+    "screen_role": "extern scherm"
   },
   "diagram": {
     "your_computer": "Uw computer",

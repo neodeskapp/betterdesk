@@ -8807,7 +8807,7 @@
     "try_generic": "請重新連線。如果仍然失敗，請複製下方的詳細資料並傳送給管理員。",
     "fail_insecure": "無法保護與 {name} 的連線，連線已停止。",
     "try_insecure": "未傳送任何密碼。可能有人在此瀏覽器與裝置之間竊聽，或伺服器金鑰未設定。請管理員檢查伺服器。",
-    "screen_keys": "按鍵會傳送到裝置，包括 Tab。按 F8 離開畫面。",
+    "screen_keys": "按鍵會傳送到裝置，包括 Tab。按 F8 或 Ctrl+Alt+Shift+K 離開畫面。",
     "displays": "顯示器",
     "layout": "版面配置",
     "layout_single": "一次一個",
@@ -8848,7 +8848,8 @@
     "phone_turn": "或者把手機轉成橫向：橫向時工作階段會在這個瀏覽器中開啟。",
     "no_open_sessions": "沒有開啟的工作階段。依 ID 連線，或在下方選擇裝置。",
     "fail_signin_closed": "此瀏覽器登入時，{name} 關閉了連線。",
-    "try_signin_closed": "裝置拒絕了登入。請重新連線並再次登入。如果一再發生，請管理員查看裝置上 NeoDesk 的記錄。"
+    "try_signin_closed": "裝置拒絕了登入。請重新連線並再次登入。如果一再發生，請管理員查看裝置上 NeoDesk 的記錄。",
+    "screen_role": "遠端畫面"
   },
   "diagram": {
     "your_computer": "您的電腦",

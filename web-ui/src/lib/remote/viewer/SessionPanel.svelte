@@ -195,11 +195,14 @@
 	hidden={!active}
 	bind:this={panel}
 >
+	<!-- svelte-ignore a11y_no_interactive_element_to_noninteractive_role (ARIA in HTML allows any role on canvas; role application makes screen readers pass the keys to the remote computer) -->
 	<canvas
 		bind:this={canvas}
 		class="session-canvas"
 		hidden={tiles}
 		tabindex={view === 'streaming' && !tiles ? 0 : -1}
+		role="application"
+		aria-roledescription={tf('remote_viewer.screen_role', 'remote screen')}
 		aria-label={tf('remote_viewer.screen_label', 'Screen of {name}', { name })}
 		aria-describedby="{uid}-keys"
 		onpointerdown={onCanvasPress}
@@ -217,7 +220,10 @@
 		/>
 	{/if}
 	<p id="{uid}-keys" class={['screen-keys', keysHint && view === 'streaming' && 'is-shown']}>
-		{tf('remote_viewer.screen_keys', 'Keys go to the device, Tab too. Press F8 to leave the screen.')}
+		{tf(
+			'remote_viewer.screen_keys',
+			'Keys go to the device, Tab too. Press F8 or Ctrl+Alt+Shift+K to leave the screen.'
+		)}
 	</p>
 
 	{#if overState}

@@ -8809,7 +8809,7 @@
     "try_generic": "Yhdistä uudelleen. Jos yhteys epäonnistuu edelleen, kopioi alla olevat tiedot ja lähetä ne ylläpitäjälle.",
     "fail_insecure": "Yhteys kohteeseen {name} katkaistiin, koska sitä ei voitu suojata.",
     "try_insecure": "Salasanaa ei lähetetty. Joku tämän selaimen ja laitteen välissä saattaa kuunnella, tai palvelimen avainta ei ole määritetty. Pyydä ylläpitäjää tarkistamaan palvelin.",
-    "screen_keys": "Näppäimet menevät laitteelle, myös Tab. Poistu näytöltä painamalla F8.",
+    "screen_keys": "Näppäimet menevät laitteelle, myös Tab. Poistu näytöltä painamalla F8 tai Ctrl+Alt+Vaihto+K.",
     "displays": "Näytöt",
     "layout": "Asettelu",
     "layout_single": "Yksi kerrallaan",
@@ -8850,7 +8850,8 @@
     "phone_turn": "Tai käännä puhelin vaakaan: vaakatilassa istunto avautuu tässä selaimessa.",
     "no_open_sessions": "Yhtään istuntoa ei ole auki. Yhdistä tunnuksella tai valitse laite alta.",
     "fail_signin_closed": "{name} sulki yhteyden, kun tämä selain kirjautui.",
-    "try_signin_closed": "Laite hylkäsi kirjautumisen. Yhdistä uudelleen ja kirjaudu uudelleen. Jos näin käy jatkuvasti, pyydä ylläpitäjää katsomaan laitteen NeoDesk-lokia."
+    "try_signin_closed": "Laite hylkäsi kirjautumisen. Yhdistä uudelleen ja kirjaudu uudelleen. Jos näin käy jatkuvasti, pyydä ylläpitäjää katsomaan laitteen NeoDesk-lokia.",
+    "screen_role": "etänäyttö"
   },
   "diagram": {
     "your_computer": "Tietokoneesi",

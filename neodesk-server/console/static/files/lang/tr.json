@@ -8809,7 +8809,7 @@
     "try_generic": "Yeniden bağlanın. Sorun devam ederse aşağıdaki ayrıntıları kopyalayıp yöneticinize gönderin.",
     "fail_insecure": "{name} bağlantısı güvenli hale getirilemediği için durduruldu.",
     "try_insecure": "Hiçbir parola gönderilmedi. Bu tarayıcı ile cihaz arasında biri dinliyor olabilir veya sunucu anahtarı ayarlanmamış olabilir. Bir yöneticiden sunucuyu kontrol etmesini isteyin.",
-    "screen_keys": "Tuşlar cihaza gider, Tab da. Ekrandan çıkmak için F8'e basın.",
+    "screen_keys": "Tuşlar cihaza gider, Tab da. Ekrandan çıkmak için F8'e veya Ctrl+Alt+Shift+K'ye basın.",
     "displays": "Ekranlar",
     "layout": "Düzen",
     "layout_single": "Teker teker",
@@ -8850,7 +8850,8 @@
     "phone_turn": "Ya da telefonu yan çevirin: yatay görünümde oturum burada, tarayıcıda açılır.",
     "no_open_sessions": "Açık oturum yok. Kimlikle bağlanın ya da aşağıdan bir cihaz seçin.",
     "fail_signin_closed": "Bu tarayıcı oturum açarken {name} bağlantıyı kapattı.",
-    "try_signin_closed": "Cihaz oturum açmayı reddetti. Yeniden bağlanın ve tekrar oturum açın. Bu tekrarlanırsa bir yöneticiden cihazdaki NeoDesk günlüğüne bakmasını isteyin."
+    "try_signin_closed": "Cihaz oturum açmayı reddetti. Yeniden bağlanın ve tekrar oturum açın. Bu tekrarlanırsa bir yöneticiden cihazdaki NeoDesk günlüğüne bakmasını isteyin.",
+    "screen_role": "uzak ekran"
   },
   "diagram": {
     "your_computer": "Bilgisayarınız",

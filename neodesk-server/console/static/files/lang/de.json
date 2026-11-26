@@ -8803,7 +8803,7 @@
     "try_generic": "Verbinde dich erneut. Wenn es weiter fehlschlägt, kopiere die Details unten und sende sie an deinen Administrator.",
     "fail_insecure": "Die Verbindung zu {name} wurde abgebrochen, weil sie nicht abgesichert werden konnte.",
     "try_insecure": "Es wurde kein Passwort gesendet. Jemand zwischen diesem Browser und dem Gerät hört möglicherweise mit, oder der Serverschlüssel ist nicht eingerichtet. Bitte einen Administrator, den Server zu prüfen.",
-    "screen_keys": "Tasten gehen an das Gerät, auch Tab. Mit F8 verlässt du den Bildschirm.",
+    "screen_keys": "Tasten gehen an das Gerät, auch Tab. Mit F8 oder Strg+Alt+Umschalt+K verlässt du den Bildschirm.",
     "displays": "Bildschirme",
     "layout": "Anordnung",
     "layout_single": "Einzeln",
@@ -8844,7 +8844,8 @@
     "phone_turn": "Oder dreh das Telefon quer: Im Querformat öffnet sich die Sitzung hier im Browser.",
     "no_open_sessions": "Keine Sitzung ist offen. Verbinde dich per ID oder wähle unten ein Gerät.",
     "fail_signin_closed": "{name} hat die Verbindung bei der Anmeldung dieses Browsers beendet.",
-    "try_signin_closed": "Das Gerät hat die Anmeldung abgelehnt. Verbinde dich neu und melde dich noch einmal an. Wenn das immer wieder passiert, bitte einen Administrator, das Protokoll von NeoDesk auf dem Gerät anzusehen."
+    "try_signin_closed": "Das Gerät hat die Anmeldung abgelehnt. Verbinde dich neu und melde dich noch einmal an. Wenn das immer wieder passiert, bitte einen Administrator, das Protokoll von NeoDesk auf dem Gerät anzusehen.",
+    "screen_role": "entfernter Bildschirm"
   },
   "diagram": {
     "your_computer": "Dein Computer",

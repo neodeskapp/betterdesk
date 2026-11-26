@@ -8803,7 +8803,7 @@
         "try_generic": "Reconnect. If it keeps failing, copy the details below and send them to your administrator.",
         "fail_insecure": "The connection to {name} was stopped because it could not be secured.",
         "try_insecure": "No password was sent. Someone between this browser and the device may be listening in, or the server key is not set up. Ask an administrator to check the server.",
-        "screen_keys": "Keys go to the device, Tab too. Press F8 to leave the screen.",
+        "screen_keys": "Keys go to the device, Tab too. Press F8 or Ctrl+Alt+Shift+K to leave the screen.",
         "displays": "Displays",
         "layout": "Layout",
         "layout_single": "One at a time",
@@ -8844,7 +8844,8 @@
         "phone_turn": "Or turn the phone sideways: in landscape the session opens here in the browser.",
         "no_open_sessions": "No session is open. Connect by ID, or pick a device below.",
         "fail_signin_closed": "{name} closed the connection when this browser signed in.",
-        "try_signin_closed": "The device refused the sign-in. Reconnect and sign in again. If it keeps happening, ask an administrator to look at the log of NeoDesk on the device."
+        "try_signin_closed": "The device refused the sign-in. Reconnect and sign in again. If it keeps happening, ask an administrator to look at the log of NeoDesk on the device.",
+        "screen_role": "remote screen"
     },
     "diagram": {
         "your_computer": "Your computer",

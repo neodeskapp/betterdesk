@@ -8809,7 +8809,7 @@
     "try_generic": "Hubungkan ulang. Jika terus gagal, salin detail di bawah dan kirimkan ke administrator Anda.",
     "fail_insecure": "Koneksi ke {name} dihentikan karena tidak dapat diamankan.",
     "try_insecure": "Tidak ada kata sandi yang dikirim. Seseorang di antara browser ini dan perangkat mungkin menyadap, atau kunci server belum disiapkan. Minta administrator memeriksa server.",
-    "screen_keys": "Tombol dikirim ke perangkat, termasuk Tab. Tekan F8 untuk keluar dari layar.",
+    "screen_keys": "Tombol dikirim ke perangkat, termasuk Tab. Tekan F8 atau Ctrl+Alt+Shift+K untuk keluar dari layar.",
     "displays": "Layar",
     "layout": "Tata letak",
     "layout_single": "Satu per satu",
@@ -8850,7 +8850,8 @@
     "phone_turn": "Atau putar ponsel ke samping: dalam mode lanskap sesi terbuka di sini di browser.",
     "no_open_sessions": "Tidak ada sesi yang terbuka. Sambungkan dengan ID, atau pilih perangkat di bawah.",
     "fail_signin_closed": "{name} menutup koneksi saat browser ini masuk.",
-    "try_signin_closed": "Perangkat menolak proses masuk. Hubungkan lagi dan masuk kembali. Jika terus terjadi, minta administrator memeriksa log NeoDesk di perangkat."
+    "try_signin_closed": "Perangkat menolak proses masuk. Hubungkan lagi dan masuk kembali. Jika terus terjadi, minta administrator memeriksa log NeoDesk di perangkat.",
+    "screen_role": "layar jarak jauh"
   },
   "diagram": {
     "your_computer": "Komputer Anda",

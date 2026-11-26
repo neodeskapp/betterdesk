@@ -8809,7 +8809,7 @@
     "try_generic": "Forbind igen. Hvis det bliver ved med at mislykkes, så kopiér detaljerne nedenfor, og send dem til din administrator.",
     "fail_insecure": "Forbindelsen til {name} blev stoppet, fordi den ikke kunne sikres.",
     "try_insecure": "Der blev ikke sendt nogen adgangskode. Nogen mellem denne browser og enheden lytter muligvis med, eller servernøglen er ikke sat op. Bed en administrator om at kontrollere serveren.",
-    "screen_keys": "Tasterne går til enheden, også Tab. Tryk på F8 for at forlade skærmen.",
+    "screen_keys": "Tasterne går til enheden, også Tab. Tryk på F8 eller Ctrl+Alt+Shift+K for at forlade skærmen.",
     "displays": "Skærme",
     "layout": "Layout",
     "layout_single": "Én ad gangen",
@@ -8850,7 +8850,8 @@
     "phone_turn": "Eller vend telefonen på tværs: i liggende format åbner sessionen her i browseren.",
     "no_open_sessions": "Ingen session er åben. Forbind med ID, eller vælg en enhed nedenfor.",
     "fail_signin_closed": "{name} lukkede forbindelsen, da denne browser loggede ind.",
-    "try_signin_closed": "Enheden afviste login. Opret forbindelse igen, og log ind igen. Hvis det bliver ved, så bed en administrator om at se i NeoDesk-loggen på enheden."
+    "try_signin_closed": "Enheden afviste login. Opret forbindelse igen, og log ind igen. Hvis det bliver ved, så bed en administrator om at se i NeoDesk-loggen på enheden.",
+    "screen_role": "fjernskærm"
   },
   "diagram": {
     "your_computer": "Din computer",

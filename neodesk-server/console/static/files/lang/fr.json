@@ -8807,7 +8807,7 @@
     "try_generic": "Reconnectez-vous. Si l'échec persiste, copiez les détails ci-dessous et envoyez-les à votre administrateur.",
     "fail_insecure": "La connexion à {name} a été arrêtée, car elle n'a pas pu être sécurisée.",
     "try_insecure": "Aucun mot de passe n'a été envoyé. Quelqu'un entre ce navigateur et l'appareil écoute peut-être, ou la clé du serveur n'est pas configurée. Demandez à un administrateur de vérifier le serveur.",
-    "screen_keys": "Les touches vont à l'appareil, Tab aussi. Appuyez sur F8 pour quitter l'écran.",
+    "screen_keys": "Les touches vont à l'appareil, Tab aussi. Appuyez sur F8 ou Ctrl+Alt+Maj+K pour quitter l'écran.",
     "displays": "Écrans",
     "layout": "Disposition",
     "layout_single": "Un à la fois",
@@ -8848,7 +8848,8 @@
     "phone_turn": "Ou tournez le téléphone à l'horizontale : en paysage, la session s'ouvre ici dans le navigateur.",
     "no_open_sessions": "Aucune session n'est ouverte. Connectez-vous par ID ou choisissez un appareil ci-dessous.",
     "fail_signin_closed": "{name} a fermé la connexion lorsque ce navigateur s'est connecté.",
-    "try_signin_closed": "L'appareil a refusé la connexion. Reconnectez-vous et identifiez-vous à nouveau. Si cela se reproduit, demandez à un administrateur de consulter le journal de NeoDesk sur l'appareil."
+    "try_signin_closed": "L'appareil a refusé la connexion. Reconnectez-vous et identifiez-vous à nouveau. Si cela se reproduit, demandez à un administrateur de consulter le journal de NeoDesk sur l'appareil.",
+    "screen_role": "écran distant"
   },
   "diagram": {
     "your_computer": "Votre ordinateur",

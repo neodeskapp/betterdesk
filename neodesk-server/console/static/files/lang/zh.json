@@ -8803,7 +8803,7 @@
     "try_generic": "请重新连接。如果仍然失败，请复制下方的详细信息并发送给管理员。",
     "fail_insecure": "无法保护与 {name} 的连接，连接已停止。",
     "try_insecure": "未发送任何密码。可能有人在此浏览器与设备之间窃听，或者服务器密钥未设置。请让管理员检查服务器。",
-    "screen_keys": "按键会发送到设备，包括 Tab。按 F8 离开屏幕。",
+    "screen_keys": "按键会发送到设备，包括 Tab。按 F8 或 Ctrl+Alt+Shift+K 离开屏幕。",
     "displays": "显示器",
     "layout": "布局",
     "layout_single": "一次一个",
@@ -8844,7 +8844,8 @@
     "phone_turn": "或者把手机横过来：横屏时会话会在这个浏览器中打开。",
     "no_open_sessions": "没有打开的会话。按 ID 连接，或在下方选择设备。",
     "fail_signin_closed": "此浏览器登录时，{name} 关闭了连接。",
-    "try_signin_closed": "设备拒绝了登录。请重新连接并再次登录。如果反复出现，请让管理员查看设备上 NeoDesk 的日志。"
+    "try_signin_closed": "设备拒绝了登录。请重新连接并再次登录。如果反复出现，请让管理员查看设备上 NeoDesk 的日志。",
+    "screen_role": "远程屏幕"
   },
   "diagram": {
     "your_computer": "您的电脑",

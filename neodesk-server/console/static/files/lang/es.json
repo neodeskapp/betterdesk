@@ -8803,7 +8803,7 @@
     "try_generic": "Vuelva a conectar. Si sigue fallando, copie los detalles de abajo y envíelos a su administrador.",
     "fail_insecure": "La conexión con {name} se detuvo porque no se pudo proteger.",
     "try_insecure": "No se envió ninguna contraseña. Alguien entre este navegador y el dispositivo podría estar escuchando, o la clave del servidor no está configurada. Pide a un administrador que revise el servidor.",
-    "screen_keys": "Las teclas van al dispositivo, también Tab. Pulse F8 para salir de la pantalla.",
+    "screen_keys": "Las teclas van al dispositivo, también Tab. Pulse F8 o Ctrl+Alt+Mayús+K para salir de la pantalla.",
     "displays": "Pantallas",
     "layout": "Disposición",
     "layout_single": "Una a la vez",
@@ -8844,7 +8844,8 @@
     "phone_turn": "O gira el teléfono en horizontal: así la sesión se abre aquí en el navegador.",
     "no_open_sessions": "No hay ninguna sesión abierta. Conéctate por ID o elige un dispositivo abajo.",
     "fail_signin_closed": "{name} cerró la conexión cuando este navegador inició sesión.",
-    "try_signin_closed": "El dispositivo rechazó el inicio de sesión. Vuelva a conectarse e inicie sesión de nuevo. Si sigue ocurriendo, pida a un administrador que revise el registro de NeoDesk en el dispositivo."
+    "try_signin_closed": "El dispositivo rechazó el inicio de sesión. Vuelva a conectarse e inicie sesión de nuevo. Si sigue ocurriendo, pida a un administrador que revise el registro de NeoDesk en el dispositivo.",
+    "screen_role": "pantalla remota"
   },
   "diagram": {
     "your_computer": "Su equipo",
