@@ -70,6 +70,13 @@ func say(status int, message string) error {
 	return &reply{status: status, message: message, write: func(w http.ResponseWriter, r *http.Request) { fail(w, r, status, message) }}
 }
 
+// sayCode is the reply {"success":false,"error":message,"code":code}.
+func sayCode(status int, code, message string) error {
+	return &reply{status: status, message: message, write: func(w http.ResponseWriter, r *http.Request) {
+		answer(w, r, status, failure{Error: message, Code: code})
+	}}
+}
+
 // refusedText is the text a route would answer for err when err is a
 // refusal of the request (a reply, or a refusal with a status below 500):
 // the reason one account of a request for several was left alone. ok is

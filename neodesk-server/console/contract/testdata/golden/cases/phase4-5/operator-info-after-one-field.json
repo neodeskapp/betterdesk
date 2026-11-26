@@ -40,7 +40,7 @@
      "operator": {
       "avatar_url": "not-an-address",
       "display_name": "Ada Lovelace",
-      "email": "ada@example.test",
+      "email": "",
       "phone": "555",
       "role_display": "Engineer",
       "username": "e2e_global_admin"
@@ -84,7 +84,7 @@
      "operator": {
       "avatar_url": "not-an-address",
       "display_name": "Ada Lovelace",
-      "email": "ada@example.test",
+      "email": "",
       "phone": "555",
       "role_display": "Engineer",
       "username": "e2e_admin"
