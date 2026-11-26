@@ -2797,7 +2797,6 @@
     "access_now_none_restricted": "Nothing chosen: this user sees no devices, because device visibility is Restricted.",
     "access_now_none_open": "Nothing chosen: this user sees all devices, because device visibility is Open.",
     "access_no_effect_admin": "Has no effect while the role is {role}: this role always sees all devices.",
-    "access_scope_link": "Settings › General",
     "user_direct_devices_rows": "One device ID per row, for example 123456789. The user sees these devices whatever their folders and groups.",
     "direct_device_n": "Device {n}",
     "add_direct_device": "Add a device",
@@ -2808,7 +2807,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Mappák",

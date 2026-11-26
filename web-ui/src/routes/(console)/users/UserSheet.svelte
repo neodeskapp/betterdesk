@@ -18,6 +18,7 @@
 	import { listStrategies, type Strategy } from '#lib/api/strategies.ts';
 	import { createUser, inviteUser, updateUser, type ConsoleUser, type UserGroupRow } from '#lib/api/users.ts';
 	import { getDeviceScope } from '#lib/api/settings.ts';
+	import { placeHref } from '#lib/settings/tabs.ts';
 	import { isAdminRole } from '#lib/clients/agents.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
@@ -350,8 +351,9 @@
 						{ role: roleLabel(form.values.role) }
 					)}{:else}{accessNow}{/if}
 				{#if !chosen && scope && !seesAll}
-					<a href={link('/settings#device-scope-settings-panel')}
-						>{tf('users.access_scope_link', 'Settings › General')}</a
+					<!-- Device visibility is on Settings › Joining (search-index.ts) -->
+					<a href={link(placeHref('joining', 'device-scope-settings-panel'))}
+						>{tf('users.access_scope_link_joining', 'Settings › Joining')}</a
 					>
 				{/if}
 			</p>
