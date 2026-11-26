@@ -112,7 +112,7 @@ func (h *handlers) notify(r *http.Request, admin, target *authn.Account, reason 
 	}
 	m := buildNotice(h.d.I18n.Bundle, mailLanguage(h.d.I18n.Bundle, target.PreferredLanguage.String), noticeFacts{
 		Admin: h.displayName(ctx, admin), Username: target.Username, Reason: reason,
-		Date: at.UTC().Format("2006-01-02 15:04") + " UTC", Link: link,
+		Date: people.TimeIn(at, people.TimeZone(ctx, h.d.Store, target.ID.V)), Link: link,
 		Branding: brandmail.Of(h.d.Branding, base),
 	})
 	service := h.d.Mail

@@ -14,6 +14,10 @@ func TestTheNoticeMail(t *testing.T) {
 	w, box := newWorld(t, options{})
 	exec(t, w, `UPDATE users SET email = 'olga@example.test', preferred_language = 'de' WHERE id = ?`, idOperator)
 	exec(t, w, `UPDATE users SET first_name = 'Sam', last_name = 'Super' WHERE id = ?`, idSuper)
+	// The reader's time zone gives the time, as in the other security mails
+	if res := w.As("operator").Do("PUT", "/api/users/me/profile", `{"time_zone":"Europe/Berlin"}`); res.Status != 200 {
+		t.Fatalf("time zone: %d %s", res.Status, res.Body)
+	}
 	a := w.As("super_admin")
 	// The admin's request is in English; the mail follows the reader
 	res := a.Do("POST", fmt.Sprintf("/api/users/%d/impersonate", idOperator), startBody("Ticket 4711: the device list is empty"), "Accept-Language", "en")
@@ -24,11 +28,12 @@ func TestTheNoticeMail(t *testing.T) {
 	if len(m.To) != 1 || m.To[0] != "olga@example.test" {
 		t.Fatalf("to: %v", m.To)
 	}
-	day := time.Now().UTC().Format("2006-01-02")
+	berlin, _ := time.LoadLocation("Europe/Berlin")
+	day := time.Now().In(berlin).Format("2006-01-02")
 	if m.Subject != "Sam Super hat NeoDesk mit deinem Konto angesehen" {
 		t.Errorf("subject: %q", m.Subject)
 	}
-	if m.Text == nil || !strings.Contains(*m.Text, "Sam Super hat NeoDesk am "+day) || !strings.Contains(*m.Text, "Ticket 4711: the device list is empty") ||
+	if m.Text == nil || !strings.Contains(*m.Text, "Sam Super hat NeoDesk am "+day) || !strings.Contains(*m.Text, " Europe/Berlin") || !strings.Contains(*m.Text, "Ticket 4711: the device list is empty") ||
 		!strings.Contains(*m.Text, "https://desk.example/account") {
 		t.Errorf("text: %v", textOf(m.Text))
 	}
