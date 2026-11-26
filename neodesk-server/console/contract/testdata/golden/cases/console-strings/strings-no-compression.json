@@ -4339,6 +4339,8 @@
      },
      "live": {
       "last_updated": "Zuletzt aktualisiert {time}",
+      "new_entries": "Neue Einträge, zeig sie an",
+      "new_entries_waiting": "Neue Einträge sind eingegangen, während die Live-Aktualisierung angehalten ist.",
       "paused": "Die Live-Aktualisierung ist angehalten."
      },
      "login_promo": {
@@ -13992,6 +13994,8 @@
      },
      "live": {
       "last_updated": "Zuletzt aktualisiert {time}",
+      "new_entries": "Neue Einträge, zeig sie an",
+      "new_entries_waiting": "Neue Einträge sind eingegangen, während die Live-Aktualisierung angehalten ist.",
       "paused": "Die Live-Aktualisierung ist angehalten."
      },
      "login_promo": {
