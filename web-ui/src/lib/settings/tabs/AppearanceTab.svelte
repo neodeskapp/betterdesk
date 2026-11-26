@@ -575,6 +575,7 @@
 	{sections}
 	summary={preview}
 	summaryLabel={t('settings.side.preview_title')}
+	summaryLast
 	{top}
 	{bar}
 	class="appearance-tab"
