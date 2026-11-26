@@ -6,6 +6,11 @@
   a client policy). A long form, so a side sheet. The role picker shows the roles
   the signed-in person may give, plus the account's current role (locked);
   LDAP accounts take their role from the directory.
+  Device access says what the account sees now (PATTERN.md rules 2, 4
+  and 6): direct devices are one row per device ID; with nothing chosen,
+  what the device visibility setting gives (read with server.config); an
+  administrator role sees all devices, so the choices say they have no
+  effect.
 
   A new address the server refuses (no email settings for your own, a
   mail server that doesn't take the confirmation) leaves the other changes
@@ -17,6 +22,11 @@
 	import { untrack } from 'svelte';
 	import { listFolders, type Folder } from '#lib/api/devices.ts';
 	import { listStrategies, type Strategy } from '#lib/api/strategies.ts';
+	import { getDeviceScope } from '#lib/api/settings.ts';
+	import { placeHref } from '#lib/settings/tabs.ts';
+	import { isAdminRole } from '#lib/clients/agents.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
+	import { link } from '#lib/nav.ts';
 	import {
 		cancelEmailChange,
 		createUser,
@@ -29,8 +39,6 @@
 	} from '#lib/api/users.ts';
 	import { EMAIL_NEEDS_MAIL, emailRefusal, type EmailRefusal } from '#lib/account/email-refusal.ts';
 	import { formatDate } from '#lib/i18n/format.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import { link } from '#lib/nav.ts';
 	import PasswordField from '#lib/people/PasswordField.svelte';
 	import {
 		deviceIdsOk,
@@ -39,7 +47,6 @@
 		passwordProblem,
 		providerOf,
 		roleChoices,
-		splitIds,
 		usernameFromEmail,
 		usernameProblem
 	} from '#lib/people/users.ts';
@@ -57,6 +64,7 @@
 	import Status from '#lib/ui/Status.svelte';
 	import Tag from '#lib/ui/Tag.svelte';
 	import User from '#lib/ui/User.svelte';
+	import ListEditor from '#lib/ui/settings/ListEditor.svelte';
 	import { createForm, FormError } from '#lib/ui/form.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 
@@ -107,6 +115,17 @@
 		return () => ctrl.abort();
 	});
 
+	// The device visibility setting, for what "nothing chosen" gives (server.config reads it)
+	let scope = $state<'open' | 'restricted' | null>(null);
+	$effect(() => {
+		if (!can('server.config')) return;
+		const ctrl = new AbortController();
+		getDeviceScope(ctrl.signal).then(
+			(m) => (scope = m),
+			() => undefined
+		);
+		return () => ctrl.abort();
+	});
 	/** The last save's refused address, when the server refused it */
 	let refusedEmail = $state.raw<EmailRefusal | null>(null);
 	/** A save stored something although its address was refused: closing loads the list again */
@@ -123,7 +142,7 @@
 			role: user?.role ?? 'viewer',
 			groups: [...(user?.user_groups ?? [])],
 			folders: [...(user?.folder_ids ?? [])],
-			direct: (user?.peer_grants ?? []).join(', '),
+			direct: [...(user?.peer_grants ?? [])] as string[],
 			strategy: user?.strategy_guid ?? '',
 			/** The end date as a day in this browser's time zone */
 			expires: localDate(user?.expires_at),
@@ -137,7 +156,7 @@
 				username: name ? t(name) : undefined,
 				password: pw ? t(pw) : undefined,
 				email: inviting && !v.email.trim() ? t('users.invite_email_required') : undefined,
-				direct: deviceIdsOk(splitIds(v.direct)) ? undefined : t('users.invalid_device_id')
+				direct: deviceIdsOk(v.direct) ? undefined : t('users.invalid_device_id')
 			};
 		},
 		submit: async (v) => {
@@ -145,7 +164,7 @@
 				email: v.email.trim(),
 				groupGuids: v.groups,
 				folderIds: v.folders.map((f) => Number.parseInt(f, 10)).filter(Number.isFinite),
-				peerIds: splitIds(v.direct),
+				peerIds: v.direct,
 				strategyGuid: v.strategy
 			};
 			if (user) {
@@ -212,6 +231,36 @@
 		},
 		{ value: 'password', title: t('users.add_mode_password'), description: t('users.add_mode_password_desc') }
 	]);
+
+	/** What a device ID is missing; '' when it is fine */
+	const idProblem = (id: string) =>
+		deviceIdsOk([id])
+			? ''
+			: tf('users.invalid_device_id_one', 'A device ID has only letters, numbers and . _ - : @.');
+
+	const seesAll = $derived(isAdminRole(form.values.role));
+	const chosen = $derived(
+		form.values.groups.length > 0 || form.values.folders.length > 0 || form.values.direct.length > 0
+	);
+	/** What this account sees now with the choices in the sheet */
+	const accessNow = $derived(
+		chosen
+			? tf(
+					'users.access_now_chosen',
+					'This user sees the devices of the chosen user groups and folders, and the direct devices.'
+				)
+			: scope === 'restricted'
+				? tf(
+						'users.access_now_none_restricted',
+						'Nothing chosen: this user sees no devices, because device visibility is Restricted.'
+					)
+				: scope === 'open'
+					? tf(
+							'users.access_now_none_open',
+							'Nothing chosen: this user sees all devices, because device visibility is Open.'
+						)
+					: ''
+	);
 
 	/** The account's new address that waits for its confirmation */
 	let pending = $state.raw<PendingEmail | null>(untrack(() => user?.email_pending ?? null));
@@ -444,6 +493,19 @@
 
 		<FormSection title={t('users.device_access')}>
 			<p class="note">{t('users.scope_hint')}</p>
+			<p class={['note', 'access-now', seesAll && 'is-warning']} aria-live="polite">
+				{#if seesAll}{tf(
+						'users.access_no_effect_admin',
+						'Has no effect while the role is {role}: this role always sees all devices.',
+						{ role: roleLabel(form.values.role) }
+					)}{:else}{accessNow}{/if}
+				{#if !chosen && scope && !seesAll}
+					<!-- Device visibility is on Settings › Joining (search-index.ts) -->
+					<a href={link(placeHref('joining', 'device-scope-settings-panel'))}
+						>{tf('users.access_scope_link_joining', 'Settings › Joining')}</a
+					>
+				{/if}
+			</p>
 			<fieldset class="group">
 				<legend>{t('users.user_groups')}</legend>
 				{#if groups.length}
@@ -482,15 +544,23 @@
 				{/if}
 				<p class="note" id="{uid}-folders-hint">{t('users.user_folders_hint')}</p>
 			</fieldset>
-			<Field
-				label={t('users.user_direct_devices')}
-				hint={t('users.user_direct_devices_hint')}
-				error={form.errors.direct}
-			>
-				{#snippet children(f)}
-					<Input {...f} width="host" spellcheck="false" autocomplete="off" bind:value={form.values.direct} />
-				{/snippet}
-			</Field>
+			<fieldset class="group" aria-describedby="{uid}-direct-hint">
+				<legend>{t('users.user_direct_devices')}</legend>
+				<p class="note" id="{uid}-direct-hint">
+					{tf(
+						'users.user_direct_devices_rows',
+						'One device ID per row, for example 123456789. The user sees these devices whatever their folders and groups.'
+					)}
+				</p>
+				<ListEditor
+					id="{uid}-direct"
+					items={form.values.direct}
+					onchange={(list) => (form.values.direct = list)}
+					itemLabel={(n) => tf('users.direct_device_n', 'Device {n}', { n })}
+					check={idProblem}
+					addLabel={tf('users.add_direct_device', 'Add a device')}
+				/>
+			</fieldset>
 			<Field label={t('users.pro_strategy_label')} hint={t('users.pro_strategy_hint')}>
 				{#snippet children(f)}
 					<Select {...f} width="medium" options={strategyOptions} bind:value={form.values.strategy} />
@@ -553,6 +623,12 @@
 	}
 	.group .note {
 		margin: var(--space-1) 0 0;
+	}
+	.group legend + .note {
+		margin: 0 0 var(--space-2);
+	}
+	.access-now.is-warning {
+		color: var(--warning);
 	}
 	.pick {
 		max-height: 260px;

@@ -44,9 +44,11 @@
 	const uid = $props.id();
 	const id = $derived(givenId ?? `check-${uid}`);
 	const labelId = $derived(`${id}-label`);
+	// An aria-describedby from the caller (a setting row's notes) comes after the box's own
 	const describedby = $derived(
-		[error && `${id}-error`, hint && `${id}-hint`, effect && `${id}-effect`].filter(Boolean).join(' ') ||
-			undefined
+		[error && `${id}-error`, hint && `${id}-hint`, effect && `${id}-effect`, rest['aria-describedby']]
+			.filter(Boolean)
+			.join(' ') || undefined
 	);
 </script>
 
@@ -59,9 +61,9 @@
 		{id}
 		class={inputClass}
 		aria-labelledby={describedby ? labelId : undefined}
-		aria-describedby={describedby}
 		aria-invalid={error ? true : undefined}
 		{...rest}
+		aria-describedby={describedby}
 	/>
 	<span class="check-label" id={labelId}>{label}</span>
 	{#if hint}<span class="form-hint" id="{id}-hint">{hint}</span>{/if}
@@ -82,8 +84,8 @@
 		accent-color: var(--accent);
 		cursor: pointer;
 	}
-	/* Switches render as plain checkboxes */
-	input.toggle-switch {
+	/* Switches render as plain checkboxes; one that can't be changed is drawn by base.css */
+	input.toggle-switch:not(:disabled) {
 		appearance: auto;
 	}
 	.checkbox-row {

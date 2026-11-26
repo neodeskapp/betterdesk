@@ -76,3 +76,28 @@ describe('font picker with the keyboard', () => {
 		expect(field).toHaveAttribute('aria-expanded', 'false');
 	});
 });
+
+describe('font picker in a setting row', () => {
+	test('bare: the row names and describes it; the picker draws no label of its own', () => {
+		const help = document.createElement('p');
+		help.id = 'row-help';
+		help.textContent = 'Used for headings.';
+		document.body.appendChild(help);
+		render(FontPicker, {
+			slot: 'heading',
+			value: '',
+			source: 'google',
+			category: '',
+			canEdit: true,
+			bare: true,
+			inputId: 'row-control',
+			describedby: 'row-help'
+		});
+		const field = screen.getByRole('combobox');
+		expect(field.id).toBe('row-control');
+		expect(field).toHaveAccessibleDescription('Used for headings.');
+		expect(document.querySelector('label')).toBeNull();
+		expect(screen.queryByText('branding.font_heading_hint')).toBeNull();
+		help.remove();
+	});
+});

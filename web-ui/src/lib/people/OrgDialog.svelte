@@ -1,17 +1,21 @@
 <!--
   New or edit an organization: name, slug and logo address (three fields,
   a centred dialog). For a new one the slug follows the name until someone
-  types in the slug field.
+  types in the slug field. A record form with its own Save (PATTERN.md
+  rules 5, 7 and 11): each field says what it is for, a changed slug says
+  what that changes, and the toast after saving an edit names what was
+  saved.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { createOrg, updateOrg, type Organization } from '#lib/api/orgs.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Field from '#lib/ui/Field.svelte';
 	import FormStatus from '#lib/ui/FormStatus.svelte';
 	import Input from '#lib/ui/Input.svelte';
+	import { savedMessage, type Change } from '#lib/ui/settings/draft.svelte.ts';
 	import { createForm } from '#lib/ui/form.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { logoUrlOk, slugify } from './orgs.ts';
@@ -38,12 +42,38 @@
 		},
 		submit: async (v) => {
 			const body = { name: v.name.trim(), slug: v.slug.trim().toLowerCase(), logo_url: v.logo.trim() };
-			if (org) await updateOrg(org.id, body);
-			else await createOrg(body);
-			toast.success(t(org ? 'organizations.org_updated' : 'organizations.org_created'));
+			if (org) {
+				const saved = edits(org, body);
+				await updateOrg(org.id, body);
+				toast.success(saved.length ? savedMessage(saved) : t('organizations.org_updated'));
+			} else {
+				await createOrg(body);
+				toast.success(t('organizations.org_created'));
+			}
 			onsaved();
 		}
 	});
+
+	/** What an edit changes, in the words of the fields, for the toast */
+	function edits(before: Organization, after: { name: string; slug: string; logo_url: string }): Change[] {
+		const fields: [string, string, string][] = [
+			[t('organizations.name'), before.name ?? '', after.name],
+			[t('organizations.slug'), before.slug ?? '', after.slug],
+			[t('organizations.logo_url'), before.logo_url ?? '', after.logo_url]
+		];
+		return fields
+			.filter(([, from, to]) => from !== to)
+			.map(([label, from, to]) => ({
+				field: label,
+				label,
+				from,
+				to: to || tf('settings_ui.empty', 'empty'),
+				fromValue: from,
+				toValue: to
+			}));
+	}
+
+	const slugChanged = $derived(!!org && form.values.slug.trim().toLowerCase() !== (org.slug ?? ''));
 
 	/** A new organization's slug follows the name until the slug is typed in */
 	function onName(e: Event) {
@@ -57,7 +87,11 @@
 	{onclose}
 >
 	<form id={form.id} onsubmit={form.onsubmit} novalidate>
-		<Field label={t('organizations.name')} error={form.errors.name}>
+		<Field
+			label={t('organizations.name')}
+			hint={tf('organizations.name_hint', 'Shown on this organization’s page, in lists and to its members.')}
+			error={form.errors.name}
+		>
 			{#snippet children(f)}
 				<Input
 					{...f}
@@ -83,6 +117,12 @@
 				/>
 			{/snippet}
 		</Field>
+		<p class="slug-effect" aria-live="polite">
+			{#if slugChanged}{tf(
+					'organizations.slug_changed',
+					'Sign-ins that name the organization by its short name need the new one after you save.'
+				)}{/if}
+		</p>
 		<Field
 			label={t('organizations.logo_url')}
 			hint={t('organizations.logo_url_hint')}
@@ -108,3 +148,14 @@
 		>
 	{/snippet}
 </Dialog>
+
+<style>
+	.slug-effect {
+		margin: calc(-1 * var(--space-2)) 0 var(--space-3);
+		color: var(--warning);
+		font-size: var(--text-sm);
+	}
+	.slug-effect:empty {
+		display: none;
+	}
+</style>

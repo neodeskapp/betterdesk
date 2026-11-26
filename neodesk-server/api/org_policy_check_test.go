@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -66,5 +67,26 @@ func TestOrgPolicyIsCheckedBeforeItIsStored(t *testing.T) {
 	// An empty group clears it, as the page's "Not set" needs
 	if status, answer := asConsole(t, srv, http.MethodPut, "/api/org/org-a/policy/update", `{}`); status != http.StatusOK {
 		t.Errorf("empty group: %d %s, want 200", status, answer)
+	}
+}
+
+// TestPolicyFieldsAreTheCheckedSettings: the field list the console's
+// resolved policies answer with is the list the check takes, per group in
+// the order of the categories and sorted within a group.
+func TestPolicyFieldsAreTheCheckedSettings(t *testing.T) {
+	want := []PolicyGroupFields{
+		{"connection", []string{"idle_lock_timeout", "max_session_duration", "mode", "wallpaper"}},
+		{"features", []string{"allow_audio", "allow_clipboard", "allow_file_transfer", "allow_recording"}},
+		{"security", []string{"allowed_operators", "password_max_age_days", "password_min_length", "password_require_special", "require_2fa"}},
+		{"network", []string{"allowed_relay_servers", "block_direct_p2p", "ip_allowlist"}},
+		{"update", []string{"auto_update", "channel"}},
+	}
+	got := PolicyFields()
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("policy fields:\n got  %v\n want %v", got, want)
+	}
+	got[0].Fields[0] = "changed"
+	if PolicyFields()[0].Fields[0] != "idle_lock_timeout" {
+		t.Error("the list handed out is shared")
 	}
 }

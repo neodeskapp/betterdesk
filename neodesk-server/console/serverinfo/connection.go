@@ -640,9 +640,18 @@ func (s *Service) DetectDeploymentSource() string {
 }
 
 func (s *Service) readSystemdSettings() (ConnectionSettings, error) {
+	env, err := s.readSystemdEnv()
+	if err != nil {
+		return ConnectionSettings{}, err
+	}
+	return SettingsFromEnv(env, ConnectionSourceSystemd), nil
+}
+
+// readSystemdEnv is the environment of the unit with its drop-in.
+func (s *Service) readSystemdEnv() (map[string]string, error) {
 	content, err := readText(s.fs, s.opts.SystemdUnit)
 	if err != nil {
-		return ConnectionSettings{}, nodeReadError(err, s.opts.SystemdUnit)
+		return nil, nodeReadError(err, s.opts.SystemdUnit)
 	}
 	env := ParseSystemdEnvironment(content)
 	dropIn, err := readText(s.fs, s.opts.SystemdDropIn)
@@ -652,17 +661,75 @@ func (s *Service) readSystemdSettings() (ConnectionSettings, error) {
 			env[key] = value
 		}
 	case !errors.Is(err, fs.ErrNotExist):
-		return ConnectionSettings{}, nodeReadError(err, s.opts.SystemdDropIn)
+		return nil, nodeReadError(err, s.opts.SystemdDropIn)
 	}
-	return SettingsFromEnv(env, ConnectionSourceSystemd), nil
+	return env, nil
 }
 
 func (s *Service) readDockerSettings() (ConnectionSettings, error) {
+	env, err := s.readDockerEnv()
+	if err != nil {
+		return ConnectionSettings{}, err
+	}
+	return SettingsFromEnv(env, ConnectionSourceDocker), nil
+}
+
+// readDockerEnv is the environment of the compose file.
+func (s *Service) readDockerEnv() (map[string]string, error) {
 	content, err := readText(s.fs, s.opts.ComposePath)
 	if err != nil {
-		return ConnectionSettings{}, nodeReadError(err, s.opts.ComposePath)
+		return nil, nodeReadError(err, s.opts.ComposePath)
 	}
-	return SettingsFromEnv(ParseDockerComposeEnvironment(content), ConnectionSourceDocker), nil
+	return ParseDockerComposeEnvironment(content), nil
+}
+
+// ConnectionModeEnvVars are the variables the connection settings are
+// kept in in a unit or a compose file, by the settings' names in JSON
+// (SettingsFromEnv). The mode is P2P_FIRST with ALWAYS_USE_RELAY.
+var ConnectionModeEnvVars = map[string][]string{
+	"mode":                       {"P2P_FIRST", "ALWAYS_USE_RELAY"},
+	"p2p_fallback_ms":            {"P2P_FALLBACK_MS"},
+	"same_nat_relay":             {"SAME_NAT_RELAY"},
+	"allow_shared_nat_initiator": {"ALLOW_SHARED_NAT_INITIATOR"},
+	"logged_in_only_initiator":   {"LOGGED_IN_ONLY_INITIATOR"},
+	"operator_only_outbound":     {"OPERATOR_ONLY_OUTBOUND"},
+}
+
+// ConnectionModeSources says where the connection settings are kept, as
+// GetConnectionMode reads them (ConnectionSourceGoAPI, Systemd, Docker or
+// Defaults), and for a unit or a compose file which of the settings it
+// sets, by their names in JSON; the others are SettingsFromEnv's
+// defaults. An error is GetConnectionMode's for the same file.
+func (s *Service) ConnectionModeSources() (source string, set map[string]bool, err error) {
+	if s.SavesThroughServer() {
+		return ConnectionSourceGoAPI, nil, nil
+	}
+	s.fileMu.RLock()
+	defer s.fileMu.RUnlock()
+	var env map[string]string
+	switch source = s.DetectDeploymentSource(); source {
+	case ConnectionSourceSystemd:
+		env, err = s.readSystemdEnv()
+	case ConnectionSourceDocker:
+		env, err = s.readDockerEnv()
+	default:
+		return ConnectionSourceDefaults, nil, nil
+	}
+	if errors.Is(err, fs.ErrNotExist) {
+		return ConnectionSourceDefaults, nil, nil
+	}
+	if err != nil {
+		return "", nil, err
+	}
+	set = map[string]bool{}
+	for field, vars := range ConnectionModeEnvVars {
+		for _, v := range vars {
+			if _, ok := env[v]; ok {
+				set[field] = true
+			}
+		}
+	}
+	return source, set, nil
 }
 
 // apiConfig returns the settings object of an answer of the server's

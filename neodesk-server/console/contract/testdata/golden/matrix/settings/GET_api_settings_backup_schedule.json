@@ -110,6 +110,10 @@
     "kind": "json",
     "json": {
      "data": {
+      "next": {
+       "at": null,
+       "timeZone": "UTC"
+      },
       "schedule": {
        "destinationPath": "",
        "destinationType": "local",
@@ -172,6 +176,10 @@
     "kind": "json",
     "json": {
      "data": {
+      "next": {
+       "at": null,
+       "timeZone": "UTC"
+      },
       "schedule": {
        "destinationPath": "",
        "destinationType": "local",

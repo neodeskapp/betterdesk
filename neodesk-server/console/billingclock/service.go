@@ -161,23 +161,72 @@ func boolToEnv(v bool) string {
 // for a missing or empty BILLING_TIMEZONE.
 func (s *Service) SettingsFromEnvContent(content string) (Settings, error) {
 	env := ParseEnvFile(content)
+	d := s.Defaults()
 	raw := goapi.NewObject()
-	raw.Set("ntp_servers", orDefault(env[keyNTPServers], DefaultNTPServers))
+	raw.Set("ntp_servers", orDefault(env[keyNTPServers], d.NTPServers))
 	if skew := env[keyMaxSkewMS]; skew != "" {
 		raw.Set("max_skew_ms", skew)
 	} else {
-		raw.Set("max_skew_ms", float64(DefaultMaxSkewMS))
+		raw.Set("max_skew_ms", d.MaxSkewMS)
 	}
 	required, has := env[keyRequireSyncedClock]
-	raw.Set("require_synced_clock", EnvToBool(required, has, true))
+	raw.Set("require_synced_clock", EnvToBool(required, has, d.RequireSyncedClock))
 	trust, has := env[keyTrustOSNTP]
-	raw.Set("trust_os_ntp", EnvToBool(trust, has, s.opts.Linux))
+	raw.Set("trust_os_ntp", EnvToBool(trust, has, d.TrustOSNTP))
 	zone := env[keyBillingTimezone]
 	if zone == "" {
-		zone = s.DetectOSTimezone()
+		zone = d.BillingTimezone
 	}
 	raw.Set("billing_timezone", zone)
 	return s.NormalizeSettings(raw)
+}
+
+// Defaults are the settings where the .env file sets none: trust_os_ntp
+// is on on Linux, the time zone is the machine's.
+func (s *Service) Defaults() Settings {
+	return Settings{
+		NTPServers:         DefaultNTPServers,
+		MaxSkewMS:          float64(DefaultMaxSkewMS),
+		RequireSyncedClock: true,
+		TrustOSNTP:         s.opts.Linux,
+		BillingTimezone:    s.DetectOSTimezone(),
+	}
+}
+
+// EnvVars are the settings' variables in the .env file, by their names in
+// JSON.
+var EnvVars = map[string]string{
+	"ntp_servers":          keyNTPServers,
+	"max_skew_ms":          keyMaxSkewMS,
+	"require_synced_clock": keyRequireSyncedClock,
+	"trust_os_ntp":         keyTrustOSNTP,
+	"billing_timezone":     keyBillingTimezone,
+}
+
+// SetInFile says which settings the .env file sets, by their names in
+// JSON, as SettingsFromEnvContent reads it (an empty time zone or NTP list
+// is none). In a container (SavesThroughServer) the server keeps them and
+// the file is not what applies: throughServer is true and set is nil.
+func (s *Service) SetInFile() (throughServer bool, set map[string]bool, err error) {
+	if s.SavesThroughServer() {
+		return true, nil, nil
+	}
+	content, err := s.readEnv()
+	if err != nil {
+		return false, nil, err
+	}
+	env := ParseEnvFile(content)
+	set = map[string]bool{}
+	for field, key := range EnvVars {
+		value, has := env[key]
+		switch key {
+		case keyNTPServers, keyMaxSkewMS, keyBillingTimezone:
+			set[field] = value != ""
+		default:
+			set[field] = has
+		}
+	}
+	return false, set, nil
 }
 
 func orDefault(v, fallback string) string {

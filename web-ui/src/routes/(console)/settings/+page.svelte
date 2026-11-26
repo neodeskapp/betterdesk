@@ -20,6 +20,7 @@
   what it saved is not asked about.
 -->
 <script lang="ts">
+	import { isAdminRole } from '#lib/rules/access.ts';
 	import type { Component } from 'svelte';
 	import { tick, untrack } from 'svelte';
 	import { page } from '$app/state';
@@ -29,7 +30,7 @@
 	import { base, link } from '#lib/nav.ts';
 	import { redirectTarget } from '#lib/redirects.ts';
 	import { setPageTitle } from '#lib/shell/page.svelte.ts';
-	import { can } from '#lib/state/session.svelte.ts';
+	import { can, session } from '#lib/state/session.svelte.ts';
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import ListRow from '#lib/ui/ListRow.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
@@ -129,7 +130,14 @@
 		}
 		const id = decodeHash(hash);
 		const owner = placeOfId(id);
-		if (owner && owner !== current && placeAllowed(owner, canConfig)) {
+		if (
+			owner &&
+			owner !== current &&
+			placeAllowed(owner, canConfig, {
+				admin: isAdminRole(session.user?.role),
+				superAdmin: session.isSuperAdmin
+			})
+		) {
 			// A setting on a page of its own (the Server section) is there now
 			await go2(isPage(owner) ? link(placeHref(owner, id)) : tabHref(owner, id), {
 				replace: true,
@@ -182,7 +190,16 @@
 	let query = $state('');
 	const searching = $derived(query.trim().length >= MIN_QUERY);
 	const hits = $derived(
-		searching ? searchSettings(query, { t, can, current: tab, locale: i18n.locale }) : ([] as SearchHit[])
+		searching
+			? searchSettings(query, {
+					t,
+					can,
+					admin: isAdminRole(session.user?.role),
+					superAdmin: session.isSuperAdmin,
+					current: tab,
+					locale: i18n.locale
+				})
+			: ([] as SearchHit[])
 	);
 
 	async function go(hit: SearchHit): Promise<void> {
@@ -380,7 +397,18 @@
 	/* A setting reached from the search or a link: outlined for a moment (reveal.ts).
 	   No background, so text and borders keep the contrast they have at rest. */
 	.settings-page
-		:global(:is(.form-group, .check-field, .choice, .facts, .settings-subgroup, .section, .danger-zone)) {
+		:global(
+			:is(
+				.setting-row,
+				.form-group,
+				.check-field,
+				.choice,
+				.facts,
+				.settings-subgroup,
+				.section,
+				.danger-zone
+			)
+		) {
 		outline: 2px solid transparent;
 		outline-offset: 4px;
 		transition: outline-color var(--motion);

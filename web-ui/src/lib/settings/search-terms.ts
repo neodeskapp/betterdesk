@@ -10,6 +10,8 @@
  * index.
  */
 
+import { PERMISSION_GROUPS, permRowId } from '#lib/people/permissions.ts';
+
 export const TAB_TERMS: Readonly<Record<string, string>> = {
 	account: 'account profile my own konto profil mein eigenes',
 	general: 'server allgemein',
@@ -24,10 +26,21 @@ export const TAB_TERMS: Readonly<Record<string, string>> = {
 	email: 'email e-mail mail smtp',
 	time: 'time zeit uhr clock',
 	meshcentral: 'mesh meshcentral meshagent',
-	'server-config-files': 'server advanced erweitert expert config konfiguration dateien'
+	'server-config-files': 'server advanced erweitert expert config konfiguration dateien',
+	policies: 'policy policies organization richtlinie richtlinien organisation',
+	permissions: 'role roles permission rights access rolle rollen berechtigung rechte zugriff'
 };
 
+/** A permission is also found by its key (device.delete) */
+const PERMISSION_KEYS: Readonly<Record<string, string>> = Object.fromEntries(
+	PERMISSION_GROUPS.flatMap((g) => g.permissions.map((p) => [permRowId(p), p]))
+);
+
 export const TERMS: Readonly<Record<string, string>> = {
+	'pol-features-allow-audio': 'audio sound ton',
+	'pol-connection-mode': 'consent approval accept zustimmung freigabe annehmen',
+	'pol-features-allow-clipboard': 'clipboard zwischenablage',
+	...PERMISSION_KEYS,
 	// General
 	'public-endpoints': 'address domain hostname adresse domäne host',
 	'public-server-id': 'hbbs id server rendezvous address adresse',
@@ -117,7 +130,8 @@ export const TERMS: Readonly<Record<string, string>> = {
 	'backup-create': 'download backup now export herunterladen sichern',
 	'scheduled-backup-panel': 'schedule automatic cron zeitplan automatisch',
 	'scheduled-backup-enabled': 'schedule automatic zeitplan automatisch',
-	'scheduled-backup-retention': 'retention keep aufbewahrung behalten',
+	'scheduled-backup-time': 'night nightly daily time clock hour nachts nächtlich täglich uhrzeit',
+	'scheduled-backup-retention': 'retention keep copies aufbewahrung behalten kopien',
 	'scheduled-backup-destination-type': 'smb nas share network folder netzlaufwerk freigabe',
 	'scheduled-backup-path': 'folder path ordner',
 	'backup-restore': 'restore import wiederherstellen zurückspielen',
@@ -125,6 +139,7 @@ export const TERMS: Readonly<Record<string, string>> = {
 	'update-backups-panel': 'backup before update sicherung vorher',
 	'update-channel-panel': 'beta nightly stable channel kanal',
 	'backup-retention-input': 'retention keep backups aufbewahrung sicherungen',
+	'backup-danger': 'prune delete old update backups aufräumen löschen',
 	'update-local-version': 'version installed installiert',
 	// Email
 	'email-smtp-host': 'smtp mail server host postausgang',
@@ -139,5 +154,5 @@ export const TERMS: Readonly<Record<string, string>> = {
 	'time-clock-require-sync': 'billing abrechnung',
 	'time-clock-max-skew': 'skew drift abweichung',
 	// Advanced
-	'advanced-title': 'restart reboot neustart neu starten'
+	'advanced-config': 'restart reboot neustart neu starten'
 };

@@ -1,18 +1,25 @@
 <!--
   One toast (components.css "Toasts"): a rule on the start side in the
   type's colour, "Warning:" or "Error:" in words for those types, an
-  optional title, the message as text, and a close button. Shown by
-  ToastHost; pages call toast.success() and the like. Time stops while the
-  pointer or focus is on it. Screen readers hear it through the announcer
-  (toasts.svelte.ts); here the text is hidden from them and the close
-  button names the message instead, so browse mode doesn't read it twice.
+  optional title, the message as text, and a close button; with an action
+  (Undo after a save) a button under the message that runs it and closes
+  the toast. Shown by ToastHost; pages call toast.success() and the like.
+  Time stops while the pointer or focus is on it. An undo action names its
+  key (Ctrl+Z, Cmd+Z on a Mac), which ToastHost listens for. Screen
+  readers hear the text through the announcer (toasts.svelte.ts); here the
+  text is hidden from them and the close button names the message
+  instead, so browse mode doesn't read it twice. The action button stays
+  visible to them.
 -->
 <script lang="ts">
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
+	import Button from './Button.svelte';
 	import IconButton from './IconButton.svelte';
 	import { dismiss, pause, resume, tonePrefix, type ToastItem } from './toasts.svelte.ts';
 
 	let { toast }: { toast: ToastItem } = $props();
+
+	const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
 	function holdWhileUsed(node: HTMLElement) {
 		const id = toast.id;
@@ -36,12 +43,28 @@
 </script>
 
 <div class={['toast', toast.type]} {@attach holdWhileUsed}>
-	<div class="toast-content" aria-hidden="true">
-		{#if toast.title}<div class="toast-title">{toast.title}</div>{/if}
-		<div class="toast-message">
+	<div class="toast-content">
+		{#if toast.title}<div class="toast-title" aria-hidden="true">{toast.title}</div>{/if}
+		<div class="toast-message" aria-hidden="true">
 			{#if tonePrefix(toast.type)}<strong class="toast-tone">{tonePrefix(toast.type)}:</strong>{/if}
 			{toast.message}
 		</div>
+		{#if toast.action}
+			{@const action = toast.action}
+			<Button
+				class="toast-action"
+				variant="link"
+				size="sm"
+				aria-keyshortcuts={action.undo ? 'Control+Z Meta+Z' : undefined}
+				onclick={() => {
+					dismiss(toast.id);
+					action.onclick();
+				}}
+				>{action.label}{#if action.undo}<span class="toast-key" aria-hidden="true"
+						>{mac ? 'Cmd+Z' : 'Ctrl+Z'}</span
+					>{/if}</Button
+			>
+		{/if}
 	</div>
 	<IconButton
 		icon="close"
@@ -52,6 +75,12 @@
 </div>
 
 <style>
+	.toast-key {
+		margin-inline-start: var(--space-2);
+		color: var(--text-muted);
+		font-size: var(--text-xs);
+		font-weight: 400;
+	}
 	.toast {
 		display: flex;
 		align-items: flex-start;
@@ -86,6 +115,15 @@
 	.toast-message {
 		color: var(--text);
 		overflow-wrap: anywhere;
+	}
+	.toast-content :global(.toast-action) {
+		margin-top: var(--space-1);
+		font-weight: 600;
+	}
+	@media (pointer: coarse) {
+		.toast-content :global(.toast-action) {
+			min-height: 44px;
+		}
 	}
 	.toast-title + .toast-message {
 		color: var(--text-muted);

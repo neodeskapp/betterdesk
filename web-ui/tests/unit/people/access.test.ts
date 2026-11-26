@@ -275,6 +275,8 @@ describe('the panel access sheet', () => {
 		await waitFor(() => expect(row('devices')).not.toBeNull());
 		expect(calls.map((c) => `${c.method} ${c.path}`).sort()).toEqual([
 			'GET /api/panel/access/catalog',
+			// The person's groups, for what "Role or group default" gives
+			'GET /api/panel/access/groups/g1',
 			'GET /api/panel/access/users/7'
 		]);
 		// Once loaded, focus is on the first setting, not lost with the loading state
@@ -282,13 +284,16 @@ describe('the panel access sheet', () => {
 		expect(document.querySelector('.sheet-body')).not.toHaveAttribute('tabindex');
 		expect(screen.getByText('users.access_policy_hint')).toBeInTheDocument();
 
-		// What applies now and where it comes from, under each section
-		expect(
-			within(row('devices')).getByText('Now: Read, set for this person. Role limit: Full')
-		).toBeInTheDocument();
-		expect(within(row('dashboard')).getByText('Now: Read, from the role')).toBeInTheDocument();
+		// Each row says its value once: the choice shows it, the line under the
+		// name only what the choice does not (who set it, the role's limit)
 		expect(within(row('devices')).getByRole('combobox')).toHaveValue('read');
-		expect(within(row('dashboard')).getByRole('combobox')).toHaveValue('inherit');
+		expect(within(row('devices')).getByText('Set for this person. Role limit: Full')).toBeInTheDocument();
+		expect(within(row('devices')).queryByText(/^Now:/)).toBeNull();
+		const dashboard = within(row('dashboard')).getByRole('combobox') as HTMLSelectElement;
+		expect(dashboard).toHaveValue('inherit');
+		expect(dashboard.selectedOptions[0]).toHaveTextContent('Default: Read, from the role');
+		expect(within(row('dashboard')).queryByText(/^Now:/)).toBeNull();
+		expect(within(feature('terminal')).queryByText(/^Now:/)).toBeNull();
 		expect(row('group:core')).not.toBeNull();
 		// Sections carry the navigation's names
 		expect(within(row('dashboard')).getByText('Overview')).toBeInTheDocument();
@@ -301,6 +306,8 @@ describe('the panel access sheet', () => {
 
 		// Above the role ceiling: a warning that the role still limits it
 		await user.selectOptions(within(row('dashboard')).getByRole('combobox'), 'write');
+		// Changed and not saved: the line says what applies until Save
+		expect(within(row('dashboard')).getByText('Now: Read, from the role')).toBeInTheDocument();
 		const warning = within(row('dashboard')).getByText(/that limit still applies/);
 		expect(within(row('dashboard')).getByRole('combobox').getAttribute('aria-describedby')).toContain(
 			warning.id
@@ -322,7 +329,7 @@ describe('the panel access sheet', () => {
 		});
 		// The answer replaces what applies now
 		await waitFor(() =>
-			expect(within(row('dashboard')).getByText('Now: Read, set for this person')).toBeInTheDocument()
+			expect(within(row('dashboard')).getByText('Set for this person')).toBeInTheDocument()
 		);
 	});
 
@@ -384,8 +391,8 @@ describe('the panel access sheet', () => {
 		);
 		const describedBy =
 			within(feature('remote_control')).getByRole('combobox').getAttribute('aria-describedby') ?? '';
-		expect(describedBy.split(' ')).toContain(hint.id);
-		expect(describedBy.split(' ').length).toBe(2);
+		// The default choice says the value, so the hint is all that describes it
+		expect(describedBy.split(' ')).toEqual([hint.id]);
 		// A plain switch has no hint
 		expect(feature('terminal').querySelector('.hint')).toBeNull();
 	});

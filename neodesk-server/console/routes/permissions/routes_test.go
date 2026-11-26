@@ -14,6 +14,32 @@ const (
 	setBody   = `{"role":"operator","permission":"device.delete","granted":true}`
 )
 
+// requires is what GET /api/panel/roles answers under "requires": for each
+// permission the ones it needs to be of any use, in the order of the
+// permission list (access.PermissionNeeds).
+const requires = `{` +
+	`"guest.create":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"device.edit":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"device.delete":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"device.ban":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"device.change_id":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"device.connection_mode":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"device.signin_use":[{"permission":"device.connect","reason":"signin_use_connects"}],` +
+	`"device.signin_manage":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"remote_target.connect":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"remote_target.edit":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"remote_target.delete":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"remote_target.test":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"user.create":[{"permission":"user.view","reason":"users_page"}],` +
+	`"user.delete":[{"permission":"user.view","reason":"users_page"}],` +
+	`"cdap.terminal":[{"permission":"cdap.command","reason":"cdap_terminal_command"}],` +
+	`"mesh.terminal":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"mesh.files":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"mesh.power":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"agent.files":[{"permission":"device.view","reason":"devices_page"}],` +
+	`"billing.export":[{"permission":"billing.view","reason":"billing_page"}]` +
+	`}`
+
 func TestGuards(t *testing.T) {
 	api := routetest.NewAPI()
 	api.On("GET /api/roles", 200, `{"roles":[],"all_permissions":[]}`)
@@ -97,7 +123,7 @@ func TestCallsAndAnswers(t *testing.T) {
 		calls                []string
 	}{
 		{"roles", "GET", "/api/panel/roles", "", 200,
-			`{"success":true,"data":{"roles":[{"name":"viewer","level":1,"permissions":["device.view"],"fixed":{"user.create":"assigns_no_role","user.delete":"assigns_no_role"}}],"all_permissions":["device.view"]}}`, []string{"GET /api/roles"}},
+			`{"success":true,"data":{"roles":[{"name":"viewer","level":1,"permissions":["device.view"],"fixed":{"user.create":"assigns_no_role","user.delete":"assigns_no_role"}}],"all_permissions":["device.view"],"requires":` + requires + `}}`, []string{"GET /api/roles"}},
 		{"permissions of a role", "GET", "/api/panel/roles/operator/permissions", "", 200,
 			`{"success":true,"data":{"role":"operator","permissions":["device.view"]}}`, []string{"GET /api/roles/operator/permissions"}},
 		{"the role is trimmed", "GET", "/api/panel/roles/%20operator%09/permissions", "", 200,

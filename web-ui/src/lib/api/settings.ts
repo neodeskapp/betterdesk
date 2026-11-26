@@ -25,6 +25,49 @@ function maybeWrapped<S extends v.GenericSchema>(inner: S): v.GenericSchema<unkn
 
 const OptNum = v.optional(v.nullable(NumLike));
 
+/* ── Where each setting's value comes from ── */
+
+/**
+ * Where the value in force of a server setting comes from: saved in the
+ * console (stored), the environment (env_var names the variable; locked
+ * when the environment wins and the console can't change it), or the
+ * built-in default. `default` is the default the server applies, left out
+ * where there is none.
+ */
+export const SettingSource = v.object({
+	value_source: v.picklist(['stored', 'environment', 'default']),
+	env_var: v.optional(v.string()),
+	locked: v.boolean(),
+	default: v.optional(v.unknown())
+});
+export type SettingSource = v.InferOutput<typeof SettingSource>;
+
+/**
+ * The entries by setting key, "<area>.<field>" with the field's name in
+ * its own route's answer: enrollment.mode, device_scope.mode,
+ * client_sessions.*, availability_history.*, two_factor.required,
+ * console_sessions.single_session, public_endpoints.*, connection_mode.*,
+ * smtp.*, clock.*. An entry this console can't read (a source a newer
+ * server added) is left out, so the page shows no source for it.
+ */
+export const SettingSources = v.pipe(
+	v.record(v.string(), v.unknown()),
+	v.transform((raw) => {
+		const out: Record<string, SettingSource> = {};
+		for (const [key, entry] of Object.entries(raw)) {
+			const parsed = v.safeParse(SettingSource, entry);
+			if (parsed.success) out[key] = parsed.output;
+		}
+		return out;
+	})
+);
+export type SettingSources = v.InferOutput<typeof SettingSources>;
+
+/** Where each server setting's value comes from (server.config) */
+export function getSettingSources(signal?: AbortSignal): Promise<SettingSources> {
+	return api(wrapped(SettingSources), '/api/panel/settings/sources', { signal });
+}
+
 /* ── General ── */
 
 export const ServerInfo = v.looseObject({

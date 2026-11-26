@@ -1,8 +1,8 @@
 /**
  * Permissions the code fixes for a role (BUGS L109): the sheet shows them
  * off and locked, with the reason the server names, also when an override
- * was stored for them before; Reset still clears such an override. The
- * other ticks stay as they were.
+ * was stored for them before; Back to the default still clears such an
+ * override. The other ticks stay as they were.
  */
 import { cleanup, render, screen, within } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
@@ -10,7 +10,12 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 const pageState = vi.hoisted(() => ({ url: new URL('http://localhost/permissions?role=pro'), state: {} }));
 vi.mock('$app/state', () => ({ page: pageState }));
 vi.mock('$app/paths', () => ({ resolve: (p: string) => p || '/', asset: (p: string) => '/' + p }));
-vi.mock('$app/navigation', () => ({ goto: vi.fn(), pushState: vi.fn(), replaceState: vi.fn() }));
+vi.mock('$app/navigation', () => ({
+	goto: vi.fn(),
+	pushState: vi.fn(),
+	replaceState: vi.fn(),
+	beforeNavigate: vi.fn()
+}));
 
 import Page from '../../../src/routes/(console)/permissions/+page.svelte';
 import { session } from '../../../src/lib/state/session.svelte.ts';
@@ -59,7 +64,7 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-const row = (perm: string) => document.querySelector(`[data-perm="${perm}"]`) as HTMLElement;
+const row = (perm: string) => document.getElementById(`perm-${perm.replace(/\./g, '-')}`) as HTMLElement;
 
 describe('ticks the code fixes', () => {
 	test('show off and locked with the reason; the others stay as they are', async () => {
@@ -70,7 +75,7 @@ describe('ticks the code fixes', () => {
 		expect(view).not.toBeChecked();
 		expect(within(row('device.view')).getByText('permissions.fixed_pro_devices')).toBeTruthy();
 		// The stored override can still be cleared
-		expect(within(row('device.view')).getByRole('button', { name: /permissions.reset_one/ })).toBeEnabled();
+		expect(within(row('device.view')).getByRole('button', { name: /Back to the default/ })).toBeEnabled();
 
 		const create = within(row('user.create')).getByRole('checkbox');
 		expect(create).toBeDisabled();

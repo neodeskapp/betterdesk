@@ -13,6 +13,10 @@
   and so do a click outside and focus leaving the picker (the fonts are
   not Tab stops, so Tab goes on to the next control). Only one list is
   open at a time (openPopup).
+
+  In a setting row (`bare`) the row names and describes it: the picker
+  draws no label or hint, its field takes the row's id (`inputId`) and
+  description (`describedby`).
 -->
 <script lang="ts">
 	import { searchFonts, downloadFont, listLocalFonts, type FontInfo } from '#lib/api/settings.ts';
@@ -31,6 +35,10 @@
 		disabled?: boolean;
 		/** A font was downloaded to the server */
 		ondownload?: () => void;
+		/** In a setting row: no label or hint of its own */
+		bare?: boolean;
+		inputId?: string;
+		describedby?: string | undefined;
 	}
 
 	let {
@@ -40,10 +48,13 @@
 		category,
 		canEdit,
 		disabled = false,
-		ondownload
+		ondownload,
+		bare = false,
+		inputId,
+		describedby: outer
 	}: Props = $props();
 
-	const id = $derived(`font-${slot}-search`);
+	const id = $derived(inputId ?? `font-${slot}-search`);
 	const listId = $derived(`font-${slot}-dropdown`);
 
 	let query = $state('');
@@ -53,6 +64,10 @@
 	let picking = $state<string | null>(null);
 	/** Why the font picked last is not used */
 	let pickProblem = $state('');
+	const described = $derived(
+		[bare ? outer : `${id}-hint`, pickProblem && `font-${slot}-problem`].filter(Boolean).join(' ') ||
+			undefined
+	);
 	let root = $state<HTMLElement | null>(null);
 	let input = $state<HTMLInputElement | null>(null);
 	/** The font the arrows reached, -1 for none (the caret is in the text) */
@@ -199,8 +214,10 @@
 </script>
 
 <div class="form-group font-slot" id="font-{slot}-slot" bind:this={root} {onfocusout}>
-	<label class="form-label" for={id}>{t(`branding.font_${slot}`)}</label>
-	<p class="form-hint" id="{id}-hint">{t(`branding.font_${slot}_hint`)}</p>
+	{#if !bare}
+		<label class="form-label" for={id}>{t(`branding.font_${slot}`)}</label>
+		<p class="form-hint" id="{id}-hint">{t(`branding.font_${slot}_hint`)}</p>
+	{/if}
 	<p class="font-current-line">
 		{t('settings.appearance.font_current')}
 		<strong id="font-{slot}-current">{value || t('branding.font_system_default')}</strong>
@@ -221,7 +238,7 @@
 			aria-controls={listId}
 			aria-autocomplete="list"
 			aria-activedescendant={open && active >= 0 ? optionId(active) : undefined}
-			describedby={pickProblem ? `${id}-hint font-${slot}-problem` : `${id}-hint`}
+			describedby={described}
 			invalid={!!pickProblem}
 			autocomplete="off"
 			placeholder={t('branding.font_search_placeholder')}

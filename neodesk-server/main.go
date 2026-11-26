@@ -765,16 +765,10 @@ func reloadEnvConfig(cfg *config.Config, database db.Database) error {
 	return nil
 }
 
+// resolveEnrollmentMode is config.ResolveEnrollmentMode, which the API's
+// read of the mode shares.
 func resolveEnrollmentMode(configuredMode, storedMode string, envOverride bool) (string, string) {
-	if envOverride {
-		return configuredMode, "environment"
-	}
-	switch storedMode {
-	case config.EnrollmentModeOpen, config.EnrollmentModeManaged, config.EnrollmentModeLocked:
-		return storedMode, "database"
-	default:
-		return configuredMode, "configuration"
-	}
+	return config.ResolveEnrollmentMode(configuredMode, storedMode, envOverride)
 }
 
 // applyEnrollmentMode sets cfg.EnrollmentMode from the mode the database

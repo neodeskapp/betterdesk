@@ -5,7 +5,7 @@
  */
 
 import type { EffectiveScope, UserDetail, UserOrg } from '#lib/api/users.ts';
-import { CATEGORIES, categoryLabel, permLabel } from './permissions.ts';
+import { PERMISSION_GROUPS, groupTitle, permLabel } from './permissions.ts';
 import { providerOf } from './users.ts';
 
 type T = (key: string, params?: Record<string, string | number>) => string;
@@ -32,13 +32,13 @@ export function permissionSentences(perms: readonly string[], t: T): SentenceGro
 	const held = new Set(perms);
 	const listed = new Set<string>();
 	const out: SentenceGroup[] = [];
-	for (const c of CATEGORIES) {
+	for (const c of PERMISSION_GROUPS) {
 		const mine = c.permissions.filter((p) => held.has(p));
 		mine.forEach((p) => listed.add(p));
 		if (mine.length)
 			out.push({
 				id: c.id,
-				label: categoryLabel(c.id, t),
+				label: groupTitle(c.id, t),
 				sentences: mine.map((p) => permissionSentence(p, t))
 			});
 	}
@@ -46,7 +46,7 @@ export function permissionSentences(perms: readonly string[], t: T): SentenceGro
 	if (rest.length)
 		out.push({
 			id: 'other',
-			label: categoryLabel('other', t),
+			label: groupTitle('other', t),
 			sentences: rest.map((p) => permissionSentence(p, t))
 		});
 	return out;

@@ -17,9 +17,10 @@ const T: Record<string, string> = {
 	'users.can_device_view': 'Can see devices',
 	'users.can_device_connect': 'Can connect to devices',
 	'users.can_user_create': 'Can add users',
-	'permissions.cat_device': 'Devices',
-	'permissions.cat_user': 'Users',
-	'permissions.cat_other': 'Other',
+	'permissions.group_connect': 'Connect and control',
+	'permissions.group_manage': 'Manage devices',
+	'permissions.group_people': 'People and organizations',
+	'permissions.group_other': 'Other',
 	'permissions.perm_chat_team': 'Team chat'
 };
 const t = (key: string, params?: Record<string, string | number>) => {
@@ -30,14 +31,15 @@ const t = (key: string, params?: Record<string, string | number>) => {
 describe('what a role allows', () => {
 	test('sentences in the groups and order of the permissions page, never permission ids', () => {
 		expect(permissionSentences(['user.create', 'device.connect', 'device.view'], t)).toEqual([
-			{ id: 'device', label: 'Devices', sentences: ['Can see devices', 'Can connect to devices'] },
-			{ id: 'user', label: 'Users', sentences: ['Can add users'] }
+			{ id: 'connect', label: 'Connect and control', sentences: ['Can connect to devices'] },
+			{ id: 'manage', label: 'Manage devices', sentences: ['Can see devices'] },
+			{ id: 'people', label: 'People and organizations', sentences: ['Can add users'] }
 		]);
 	});
 
 	test('a permission without a sentence uses its label; one no group names goes under Other', () => {
 		const groups = permissionSentences(['chat.team', 'future.thing'], t);
-		expect(groups.map((g) => g.id)).toEqual(['chat', 'other']);
+		expect(groups.map((g) => g.id)).toEqual(['support', 'other']);
 		expect(groups[0]!.sentences).toEqual(['Team chat']);
 		expect(groups[1]).toEqual({ id: 'other', label: 'Other', sentences: ['future.thing'] });
 	});

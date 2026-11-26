@@ -65,18 +65,25 @@ func (m *Manager) Limit(ctx context.Context) (Limit, error) {
 // SingleSession reads the setting "One session per account". A database
 // without the configuration table has it off.
 func (m *Manager) SingleSession(ctx context.Context) (bool, error) {
+	on, _, err := m.SingleSessionSaved(ctx)
+	return on, err
+}
+
+// SingleSessionSaved is SingleSession and whether the setting is saved at
+// all; without a row the built-in default (off) applies.
+func (m *Manager) SingleSessionSaved(ctx context.Context) (on, saved bool, err error) {
 	db := m.table.db
 	var value sql.NullString
-	err := db.QueryRow(ctx, `SELECT value FROM server_config WHERE key = ?`, SingleSessionKey).Scan(&value)
+	err = db.QueryRow(ctx, `SELECT value FROM server_config WHERE key = ?`, SingleSessionKey).Scan(&value)
 	switch {
 	case err == nil:
-		return strings.EqualFold(strings.TrimSpace(value.String), "true"), nil
+		return strings.EqualFold(strings.TrimSpace(value.String), "true"), true, nil
 	case errors.Is(err, sql.ErrNoRows):
-		return false, nil
+		return false, false, nil
 	case strings.Contains(err.Error(), db.Pick("no such table", "does not exist")):
-		return false, nil
+		return false, false, nil
 	}
-	return false, fmt.Errorf("read %s: %w", SingleSessionKey, err)
+	return false, false, fmt.Errorf("read %s: %w", SingleSessionKey, err)
 }
 
 // SetSingleSession saves the setting "One session per account". It takes

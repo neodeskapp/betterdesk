@@ -75,6 +75,9 @@ type Options struct {
 	Windows *bool
 	// Ticker gives the job its minute; nil is time.NewTicker.
 	Ticker func(d time.Duration) (<-chan time.Time, func())
+	// Location is the server's time zone, in which a time of day is read;
+	// nil is time.Local.
+	Location *time.Location
 }
 
 // Service is the scheduled backup.
@@ -94,6 +97,9 @@ func New(o Options) *Service {
 	if o.Windows == nil {
 		w := runtime.GOOS == "windows"
 		o.Windows = &w
+	}
+	if o.Location == nil {
+		o.Location = time.Local
 	}
 	if o.Ticker == nil {
 		o.Ticker = func(d time.Duration) (<-chan time.Time, func()) {
@@ -261,11 +267,14 @@ type Config struct {
 	RetentionCount  float64 `json:"retentionCount"`
 	DestinationType string  `json:"destinationType"`
 	DestinationPath string  `json:"destinationPath"`
+	TimeOfDay       string  `json:"timeOfDay,omitempty"`
+	ChangedAt       string  `json:"changedAt,omitempty"`
 }
 
 // Normalize is normalizeConfig: the interval in whole hours from 1 to 720
 // (24 when it is no number), the retention from 1 to 365 (7), "local" or
-// "path", and the path only for "path".
+// "path", and the path only for "path". A time of day ("02:00") stays
+// only on an interval of whole days; the old console had none.
 func Normalize(v any) (Config, error) {
 	interval, err := jsNumber(prop(v, "intervalHours"))
 	if err != nil {
@@ -294,8 +303,17 @@ func Normalize(v any) (Config, error) {
 	if !math.IsNaN(retention) && !math.IsInf(retention, 0) {
 		c.RetentionCount = math.Min(maxRetention, math.Max(1, jsRound(retention)))
 	}
+	if at, ok := prop(v, "timeOfDay").(string); ok && clockTime.MatchString(at) && int(c.IntervalHours)%24 == 0 {
+		c.TimeOfDay = at
+		if since, ok := prop(v, "changedAt").(string); ok {
+			c.ChangedAt = since
+		}
+	}
 	return c, nil
 }
+
+// clockTime is a time of day as "HH:MM", 00:00 to 23:59.
+var clockTime = regexp.MustCompile(`^([01][0-9]|2[0-3]):[0-5][0-9]$`)
 
 // ErrRetention refuses a save whose number of archives to keep is not a
 // whole number from 1 to 365, which Normalize would turn into 1, 7 or 365
@@ -386,6 +404,16 @@ func (s *Service) SaveConfig(ctx context.Context, v any) (Config, error) {
 			return Config{}, err
 		}
 	}
+	// A time of day counts from when its timing was last changed: a save
+	// of another setting keeps tonight's backup where it was
+	c.ChangedAt = ""
+	if c.TimeOfDay != "" {
+		c.ChangedAt = s.iso(s.o.Now())
+		if old, err := s.GetConfig(ctx); err == nil && old.ChangedAt != "" &&
+			old.Enabled == c.Enabled && old.IntervalHours == c.IntervalHours && old.TimeOfDay == c.TimeOfDay {
+			c.ChangedAt = old.ChangedAt
+		}
+	}
 	raw := branding.Stringify(configObject(c))
 	if err := s.setSetting(ctx, ConfigKey, raw); err != nil {
 		return Config{}, err
@@ -400,6 +428,12 @@ func configObject(c Config) *branding.Object {
 	o.Set("retentionCount", c.RetentionCount)
 	o.Set("destinationType", c.DestinationType)
 	o.Set("destinationPath", c.DestinationPath)
+	if c.TimeOfDay != "" {
+		o.Set("timeOfDay", c.TimeOfDay)
+		if c.ChangedAt != "" {
+			o.Set("changedAt", c.ChangedAt)
+		}
+	}
 	return o
 }
 
@@ -640,9 +674,9 @@ type Skip struct {
 	Reason string
 }
 
-// RunIfDue runs a backup when the schedule is on and its interval has
-// passed since the last attempt (runIfDue). It returns the skip reason
-// ("running", "disabled", "not_due") or the run's result.
+// RunIfDue runs a backup when the schedule is on and its next run is due
+// (runIfDue, see NextRun). It returns the skip reason ("running",
+// "disabled", "not_due") or the run's result.
 func (s *Service) RunIfDue(ctx context.Context) (*Skip, *Result, error) {
 	if s.running.Load() {
 		return &Skip{"running"}, nil, nil
@@ -658,12 +692,79 @@ func (s *Service) RunIfDue(ctx context.Context) (*Skip, *Result, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	last, ok := parseDate(prop(status, "lastAttemptAt"))
-	if ok && s.o.Now().UnixMilli()-last < int64(schedule.IntervalHours)*3600*1000 {
+	if s.o.Now().Before(s.nextRun(schedule, status)) {
 		return &Skip{"not_due"}, nil, nil
 	}
 	res, err := s.CreateScheduledBackup(ctx)
 	return nil, res, err
+}
+
+// NextRun is when the next scheduled backup is due; on is false while the
+// schedule is off. A time that has passed is due now: the job runs it
+// within a minute.
+func (s *Service) NextRun(ctx context.Context) (next time.Time, on bool, err error) {
+	schedule, err := s.GetConfig(ctx)
+	if err != nil || !schedule.Enabled {
+		return time.Time{}, false, err
+	}
+	status, err := s.GetStatus(ctx)
+	if err != nil {
+		return time.Time{}, false, err
+	}
+	return s.nextRun(schedule, status), true, nil
+}
+
+// nextRun is when a schedule that is on runs next. Without a time of day
+// it is the interval after the last attempt (now when there was none). With
+// one it is that time in the server's zone: the first one after the save
+// that set the timing, and the first one a whole interval less a day after
+// the last attempt.
+func (s *Service) nextRun(c Config, status any) time.Time {
+	last, attempted := parseDate(prop(status, "lastAttemptAt"))
+	if c.TimeOfDay == "" {
+		if !attempted {
+			return s.o.Now()
+		}
+		return time.UnixMilli(last + int64(c.IntervalHours)*3600*1000)
+	}
+	next := time.Time{}
+	if since, ok := parseDate(c.ChangedAt); ok {
+		next = s.slotAfter(time.UnixMilli(since), c.TimeOfDay)
+	} else if !attempted {
+		// stored without the time it was set: from now
+		next = s.slotAfter(s.o.Now(), c.TimeOfDay)
+	}
+	if attempted {
+		gap := time.Duration(c.IntervalHours-24) * time.Hour
+		if after := s.slotAfter(time.UnixMilli(last).Add(gap), c.TimeOfDay); after.After(next) {
+			next = after
+		}
+	}
+	return next
+}
+
+// slotAfter is the first time after t at which a clock in the server's
+// zone shows the time of day.
+func (s *Service) slotAfter(t time.Time, timeOfDay string) time.Time {
+	hour, _ := strconv.Atoi(timeOfDay[:2])
+	minute, _ := strconv.Atoi(timeOfDay[3:])
+	local := t.In(s.o.Location)
+	slot := time.Date(local.Year(), local.Month(), local.Day(), hour, minute, 0, 0, s.o.Location)
+	for !slot.After(t) {
+		local = local.AddDate(0, 0, 1)
+		slot = time.Date(local.Year(), local.Month(), local.Day(), hour, minute, 0, 0, s.o.Location)
+	}
+	return slot
+}
+
+// TimeZone names the server's time zone: its name when one is set
+// (Europe/Berlin), else the abbreviation in force now (UTC, CET).
+func (s *Service) TimeZone() string {
+	if name := s.o.Location.String(); name != "" && name != "Local" {
+		return name
+	}
+	abbr, _ := s.o.Now().In(s.o.Location).Zone()
+	return abbr
 }
 
 // parseDate is Date.parse(v || "") for the times this service writes.

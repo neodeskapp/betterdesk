@@ -330,6 +330,34 @@ input[type='radio'] {
 	cursor: pointer;
 }
 
+/* A box that can't be changed: the browser's own disabled box is a pale
+   grey that hardly shows on white, so the console draws it, in the muted
+   text colour (it reads at 4.5:1 on the page in both themes). Checked, the
+   box is filled and the tick is cut out of it. */
+input[type='checkbox']:disabled:not(:indeterminate),
+input[type='radio']:disabled {
+	appearance: none;
+	box-sizing: border-box;
+	border: 2px solid var(--text-muted);
+	background: transparent;
+	cursor: not-allowed;
+}
+input[type='checkbox']:disabled:not(:indeterminate) {
+	border-radius: 3px;
+}
+input[type='checkbox']:disabled:checked:not(:indeterminate) {
+	border-color: transparent;
+	background: var(--text-muted);
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M3 0h10a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3V3a3 3 0 0 1 3-3zM2.6 8.9l4 4 6.9-7.6-1.5-1.4-5.4 6-2.5-2.4z'/%3E%3C/svg%3E")
+		center / 100% 100% no-repeat;
+}
+input[type='radio']:disabled {
+	border-radius: 50%;
+}
+input[type='radio']:disabled:checked {
+	background: radial-gradient(circle, var(--text-muted) 0 40%, transparent 45%);
+}
+
 /* ── Page column ──
    Every page has one left edge: the content column. Headers, toolbars,
    lists, tables and forms all start there. Sections are separated by

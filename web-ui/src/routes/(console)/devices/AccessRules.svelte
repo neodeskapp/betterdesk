@@ -3,9 +3,12 @@
   folded under the device list: set up rarely. The count shows next to the
   heading; opening the section loads where each rule is applied. With
   device.edit: Add rule, and per rule Apply to…, Edit, Delete (side sheets
-  for the forms, a confirm for delete).
+  for the forms, a confirm for delete). #access-rules in the address opens
+  the section and scrolls to it (the Policies page links here).
 -->
 <script lang="ts">
+	import { tick } from 'svelte';
+	import { page } from '$app/state';
 	import type { Device, DeviceGroup } from '#lib/api/devices.ts';
 	import { deleteStrategy, getStrategy, listStrategies, type Strategy } from '#lib/api/strategies.ts';
 	import { listUserGroups, type UserGroup } from '#lib/api/users.ts';
@@ -31,6 +34,13 @@
 	let loadError = $state<string | null>(null);
 	let open = $state(false);
 	let userGroups = $state.raw<UserGroup[]>([]);
+
+	// A link to #access-rules opens the section and brings it into view
+	$effect(() => {
+		if (page.url.hash !== '#access-rules') return;
+		open = true;
+		void tick().then(() => document.getElementById('access-rules')?.scrollIntoView({ block: 'start' }));
+	});
 	/** "3 devices, 1 user, 0 groups" per rule, loaded when the section is open */
 	let applied = $state.raw<Record<string, string>>({});
 	const strategySheet = lazy(() => import('./StrategySheet.svelte'));
@@ -162,36 +172,38 @@
 			<MenuItem icon={ICONS.delete} danger onselect={() => void remove(r)}>{t('actions.delete')}</MenuItem>
 		</MenuButton>{/if}{/snippet}
 
-<Disclosure title={t('devices.strategies_title')} {meta} bind:open class="access-rules">
-	<div class="rules">
-		<div class="rules-head">
-			<p class="note">{t('devices.strategies_hint')}</p>
-			{#if canEdit}
-				<Button size="sm" icon={ICONS.add} onclick={() => (editing = { rule: null })}
-					>{t('devices.create_strategy')}</Button
-				>
+<div id="access-rules" class="access-rules-anchor">
+	<Disclosure title={t('devices.strategies_title')} {meta} bind:open class="access-rules">
+		<div class="rules">
+			<div class="rules-head">
+				<p class="note">{t('devices.strategies_hint')}</p>
+				{#if canEdit}
+					<Button size="sm" icon={ICONS.add} onclick={() => (editing = { rule: null })}
+						>{t('devices.create_strategy')}</Button
+					>
+				{/if}
+			</div>
+			{#if !loaded}
+				<p class="state">{t('devices.loading_strategies')}</p>
+			{:else if loadError}
+				<p class="state is-error">
+					{loadError}
+					<Button size="sm" icon={ICONS.refresh} onclick={() => void load()}>{t('actions.retry')}</Button>
+				</p>
+			{:else if !rules.length}
+				<p class="state">{t('devices.no_strategies')}</p>
+			{:else}
+				<Table
+					rows={rules}
+					{columns}
+					key={(r) => r.guid}
+					label={t('devices.strategies_title')}
+					rowClass={(r) => !r.enabled && 'is-off'}
+				/>
 			{/if}
 		</div>
-		{#if !loaded}
-			<p class="state">{t('devices.loading_strategies')}</p>
-		{:else if loadError}
-			<p class="state is-error">
-				{loadError}
-				<Button size="sm" icon={ICONS.refresh} onclick={() => void load()}>{t('actions.retry')}</Button>
-			</p>
-		{:else if !rules.length}
-			<p class="state">{t('devices.no_strategies')}</p>
-		{:else}
-			<Table
-				rows={rules}
-				{columns}
-				key={(r) => r.guid}
-				label={t('devices.strategies_title')}
-				rowClass={(r) => !r.enabled && 'is-off'}
-			/>
-		{/if}
-	</div>
-</Disclosure>
+	</Disclosure>
+</div>
 
 <!-- The sheets load when they open, so the device list's first load stays small -->
 {#if editing}

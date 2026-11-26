@@ -19,6 +19,20 @@ const NullableText = v.optional(v.nullable(v.string()), null);
 
 // ── Backup ──
 
+/**
+ * One part of a full backup made now: included or not, and when not, why
+ * (docker, environment, postgres, not_configured, no_server, empty,
+ * missing). The server builds it from the plan the archive follows.
+ */
+export const BackupPart = v.looseObject({
+	id: v.string(),
+	included: BoolLike,
+	reason: v.optional(v.string(), ''),
+	files: Num,
+	secret: BoolLike
+});
+export type BackupPart = v.InferOutput<typeof BackupPart>;
+
 export const BackupStats = v.looseObject({
 	users: Num,
 	settings: Num,
@@ -36,7 +50,8 @@ export const BackupStats = v.looseObject({
 			uploads: Num
 		}),
 		{}
-	)
+	),
+	parts: v.optional(v.array(BackupPart), [])
 });
 export type BackupStats = v.InferOutput<typeof BackupStats>;
 
@@ -52,7 +67,9 @@ export const Schedule = v.looseObject({
 		v.optional(v.nullable(v.string())),
 		v.transform((d): 'local' | 'path' => (d === 'path' ? 'path' : 'local'))
 	),
-	destinationPath: Text
+	destinationPath: Text,
+	/** "02:00": a daily or weekly backup runs at this time in the server's zone; absent: counts from the last one */
+	timeOfDay: Text
 });
 export type Schedule = v.InferOutput<typeof Schedule>;
 
@@ -67,7 +84,9 @@ export type ScheduleStatus = v.InferOutput<typeof ScheduleStatus>;
 const ScheduleInfo = wrapped(
 	v.looseObject({
 		schedule: v.optional(v.nullable(Schedule)),
-		status: v.optional(v.nullable(ScheduleStatus))
+		status: v.optional(v.nullable(ScheduleStatus)),
+		/** When the next scheduled backup runs (null while off) and the server's time zone */
+		next: v.optional(v.nullable(v.looseObject({ at: NullableText, timeZone: Text })))
 	})
 );
 
@@ -78,6 +97,8 @@ export function getBackupSchedule(signal?: AbortSignal) {
 export interface ScheduleInput {
 	enabled: boolean;
 	intervalHours: number;
+	/** "HH:MM" for daily and weekly backups; '' counts from the last backup */
+	timeOfDay: string;
 	retentionCount: number;
 	destinationType: 'local' | 'path';
 	destinationPath: string;

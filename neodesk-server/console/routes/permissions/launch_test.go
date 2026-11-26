@@ -29,7 +29,7 @@ func TestRolesNameTheTicksTheCodeFixes(t *testing.T) {
 	noRole := `{"user.create":"assigns_no_role","user.delete":"assigns_no_role"}`
 	want := `{"success":true,"data":{"roles":[{"name":"super_admin","fixed":{}},{"name":"global_admin","fixed":{}},` +
 		`{"name":"operator","fixed":` + noRole + `},{"name":"guest_issuer","fixed":` + noRole + `},` +
-		`{"name":"pro","fixed":{` + pro + `}},{"name":"nobody","fixed":{}},"odd"],"all_permissions":[]}}`
+		`{"name":"pro","fixed":{` + pro + `}},{"name":"nobody","fixed":{}},"odd"],"all_permissions":[],"requires":` + requires + `}}`
 	if got.Status != http.StatusOK || got.Body != want {
 		t.Errorf("roles: %d\n got  %s\n want %s", got.Status, got.Body, want)
 	}

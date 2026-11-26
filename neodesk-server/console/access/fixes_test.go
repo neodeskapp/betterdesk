@@ -100,6 +100,8 @@ var ruleFixes = []ruleFix{
 	{bug: "L494", add: Rule{Prefix: "/security-checks", Section: "security-audit"}},
 	{bug: "L494", add: Rule{Prefix: "/billing", Section: "commercialization"}},
 	{bug: "L494", add: Rule{Prefix: "/devices/add"}},
+	// The settings sources are a settings read in the panel's API.
+	{bug: "nd-settings", add: Rule{Prefix: "/api/panel/settings", Section: "settings"}},
 }
 
 // sectionFix is a catalog section whose permissions differ from Node's,

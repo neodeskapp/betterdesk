@@ -10,10 +10,13 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/jsreq"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/scheduledbackup"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // schedule answers GET /api/settings/backup/schedule: the stored schedule
-// (a local destination with an empty path) and the state of the last run.
+// (a local destination with an empty path), the state of the last run and
+// when the next one is due ("next": its time, null while the schedule is
+// off, and the server's time zone a time of day is read in).
 func (h *handlers) schedule(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	config, err := h.scheduled.GetConfig(ctx)
@@ -28,7 +31,19 @@ func (h *handlers) schedule(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusInternalServerError, errText(err))
 		return
 	}
-	writeData(w, r, `{"schedule":`+scheduledbackup.ConfigJSON(config)+`,"status":`+branding.Stringify(status)+`}`)
+	at, on, err := h.scheduled.NextRun(ctx)
+	if err != nil {
+		h.log.Error("Scheduled backup settings read error:", err)
+		kit.Fail(w, r, http.StatusInternalServerError, errText(err))
+		return
+	}
+	next := branding.NewObject()
+	next.Set("at", nil)
+	if on {
+		next.Set("at", store.ISOTime(at))
+	}
+	next.Set("timeZone", h.scheduled.TimeZone())
+	writeData(w, r, `{"schedule":`+scheduledbackup.ConfigJSON(config)+`,"status":`+branding.Stringify(status)+`,"next":`+branding.Stringify(next)+`}`)
 }
 
 // scheduleStatus answers GET /api/settings/backup/schedule/status.

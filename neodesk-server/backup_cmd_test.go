@@ -42,7 +42,7 @@ func TestBackupCommand(t *testing.T) {
 		}
 		for key, value := range map[string]string{
 			"KEYS_PATH": keys, "DATA_DIR": data, "CONSOLE_DIR": console,
-			"DATABASE_URL": "", "DB_URL": "", "DB_TYPE": "", "DB_PATH": "",
+			"DATABASE_URL": "", "DB_URL": "", "DB_TYPE": "", "DB_PATH": "", "DOCKER": "false",
 		} {
 			t.Setenv(key, value)
 		}
@@ -76,8 +76,14 @@ func TestBackupCommand(t *testing.T) {
 		dump, _ := files.Get("console/data.json")
 		env, _ := files.Get("console/.env")
 		pub, _ := files.Get("goserver/id_ed25519.pub")
+		// In a container (/.dockerenv, as in the dev image) the console takes its
+		// settings from the environment and the archive holds no .env (L557)
+		wantEnv := "PORT=5000\n"
+		if _, err := os.Stat("/.dockerenv"); err == nil {
+			wantEnv = ""
+		}
 		if !bytes.Contains(manifest, []byte(`"_format": "neodesk-full-backup"`)) || !bytes.Contains(dump, []byte("backup_probe")) ||
-			string(env) != "PORT=5000\n" || string(pub) != "PUBKEY" {
+			string(env) != wantEnv || string(pub) != "PUBKEY" {
 			t.Errorf("archive holds %v; manifest %s", files.Names(), manifest)
 		}
 		file, ok := files.Get("goserver/db_v2.sqlite3")

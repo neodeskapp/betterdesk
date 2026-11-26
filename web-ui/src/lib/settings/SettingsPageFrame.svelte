@@ -29,6 +29,8 @@
 		description: string;
 		/** The permission the page needs; '' for every account (Your account) */
 		need?: string;
+		/** Decides access instead of `need` (Roles and permissions: super admins only) */
+		allowed?: boolean;
 		/** Use the whole width (the configuration file editor) */
 		wide?: boolean;
 		/** A name for the page in tests and styles */
@@ -36,9 +38,17 @@
 		children: Snippet;
 	}
 
-	let { title, description, need = 'server.config', wide = false, id, children }: Props = $props();
+	let {
+		title,
+		description,
+		need = 'server.config',
+		allowed: allowedProp,
+		wide = false,
+		id,
+		children
+	}: Props = $props();
 
-	const allowed = $derived(need === '' || can(need));
+	const allowed = $derived(allowedProp ?? (need === '' || can(need)));
 
 	$effect(() => setPageTitle(title));
 
@@ -145,7 +155,18 @@
 	/* A setting reached from the search or a link: outlined for a moment (reveal.ts),
 	   as on the Settings page */
 	.settings-page
-		:global(:is(.form-group, .check-field, .choice, .facts, .settings-subgroup, .section, .danger-zone)) {
+		:global(
+			:is(
+				.setting-row,
+				.form-group,
+				.check-field,
+				.choice,
+				.facts,
+				.settings-subgroup,
+				.section,
+				.danger-zone
+			)
+		) {
 		outline: 2px solid transparent;
 		outline-offset: 4px;
 		transition: outline-color var(--motion);

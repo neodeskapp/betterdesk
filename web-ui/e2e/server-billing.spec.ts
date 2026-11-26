@@ -92,9 +92,18 @@ for (const role of ROLES) {
 			// ?settings=1 opens the billing settings
 			await page.goto(`${UI}/billing?settings=1`);
 			await expect(page.locator('#billing-settings-panel details')).toHaveAttribute('open', '');
-			await expect(page.locator('#billing-settings-panel .save-bar')).toHaveCount(
-				can('billing.manage') ? 1 : 0
-			);
+			// The options can be changed with billing.manage; a change brings the save bar
+			const helpMail = page.getByRole('checkbox', { name: 'Send email for new help requests' });
+			if (can('billing.manage')) {
+				await expect(helpMail).toBeEnabled();
+				await helpMail.click();
+				const bar = page.getByRole('region', { name: 'Unsaved changes' });
+				await expect(bar).toBeVisible();
+				await bar.getByRole('button', { name: 'Discard' }).click();
+				await expect(bar).toBeHidden();
+			} else {
+				await expect(helpMail).toBeDisabled();
+			}
 			// The page itself was checked above. Scrolled down to the settings, the
 			// buttons at the top sit under the sticky top bar, and axe's target-size
 			// rule counts a covered button as too small: here only the settings

@@ -206,7 +206,7 @@ for (const role of ROLES) {
 				await expectNoAxeViolations(page);
 				await sheet.getByRole('button', { name: 'Save' }).click();
 				await expect(sheet).toContainText('Console access saved.');
-				await expect(section('users')).toContainText('Now: None, set for this person');
+				await expect(section('users')).toContainText('Set for this person');
 				await page.keyboard.press('Escape');
 				await expect(sheet).toBeHidden();
 
@@ -241,7 +241,7 @@ for (const role of ROLES) {
 				await feature('tunnel').getByRole('combobox').selectOption('off');
 				await sheet.getByRole('button', { name: 'Save' }).click();
 				await expect(sheet).toContainText('Console access saved.');
-				await expect(section('reports')).toContainText('Now: Read, set for this group');
+				await expect(section('reports')).toContainText('Set for this group');
 				await page.keyboard.press('Escape');
 				await expect(sheet).toBeHidden();
 
@@ -316,8 +316,12 @@ for (const role of ROLES) {
 				can('org.edit') ? 1 : 0
 			);
 			await page.getByRole('tab', { name: 'Settings' }).click();
-			// A154: the stored settings are read-only; connection rules are on the Policies page
-			await expect(page.getByRole('link', { name: 'Open Policies' })).toBeVisible();
+			// A154: the stored settings are read-only; connection rules are on this organization's
+			// Policies page, linked for the roles that may open it
+			await expect(page.locator('[data-setting="policy_connection"] output')).toBeVisible();
+			await expect(page.getByRole('link', { name: 'Open this organization’s policies' })).toHaveCount(
+				['super_admin', 'admin', 'global_admin', 'server_admin'].includes(me.role) ? 1 : 0
+			);
 			await expect(page.getByRole('button', { name: 'Save settings' })).toHaveCount(0);
 			await expect(page.getByRole('button', { name: 'Delete organization…' })).toHaveCount(
 				can('org.delete') ? 1 : 0
@@ -337,10 +341,11 @@ for (const role of ROLES) {
 				expect(await refused(page, me.csrf, 'POST', '/api/panel/role-permissions')).toBe(403);
 				return;
 			}
-			await expect(page.getByRole('combobox', { name: 'Role' })).toHaveValue('viewer');
-			await expect(page.getByRole('switch').or(page.getByRole('checkbox')).first()).toBeVisible();
+			const picker = page.getByRole('radiogroup', { name: 'Role to change' });
+			await expect(picker.getByRole('radio', { name: 'Viewer' })).toBeChecked();
+			await expect(page.getByRole('checkbox', { name: 'View devices' })).toBeVisible();
 			await expectNoAxeViolations(page);
-			await page.getByRole('combobox', { name: 'Role' }).selectOption('operator');
+			await picker.getByRole('radio', { name: 'Remote operator' }).check();
 			await expect(page).toHaveURL(/[?&]role=operator/);
 		});
 

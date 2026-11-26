@@ -9,6 +9,7 @@ package permissions
 import (
 	"net/http"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
@@ -18,19 +19,22 @@ import (
 type handlers struct {
 	api    *goapi.Client
 	access *access.Service
+	deps   *kit.Deps
+	log    *kit.Logger
 }
 
 // Register adds the group's routes. Changing an override takes the super
 // admin role, not server.config: with that permission alone a server admin
 // could grant its own role anything.
 func Register(d *kit.Deps) {
-	h := &handlers{api: d.GoAPI, access: d.Access}
+	h := &handlers{api: d.GoAPI, access: d.Access, deps: d, log: d.Log}
 	r := d.Router
 	superAdminOnly := d.RequireRole("super_admin")
 	r.Get("/api/panel/roles", h.roles, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Get("/api/panel/roles/{role}/permissions", h.rolePermissions, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Get("/api/panel/role-permissions", h.overrides, d.RequireAuth, d.RequirePermission("server.config"))
 	r.Post("/api/panel/role-permissions", h.setOverride, d.RequireAuth, superAdminOnly)
+	r.Post("/api/panel/role-permissions/batch", h.batch, d.RequireAuth, superAdminOnly)
 	r.Delete("/api/panel/role-permissions/{role}/{permission}", h.deleteOverride, d.RequireAuth, superAdminOnly)
 }
 
@@ -94,7 +98,30 @@ func (h *handlers) roles(w http.ResponseWriter, r *http.Request) {
 			role.Set("fixed", fixed)
 		}
 	}
+	if data, isObject := result.Get("data").(*goapi.Object); isObject && result.Bool("success") {
+		data.Set("requires", requiresObject())
+	}
 	answerRead(w, r, result)
+}
+
+// requiresObject is access.PermissionNeeds as the role list sends it:
+// {permission: [{permission, reason}]}, in the order of the permission
+// list.
+func requiresObject() *goapi.Object {
+	needs := access.PermissionNeeds()
+	out := goapi.NewObject()
+	for _, p := range auth.AllPermissions {
+		list := needs[p]
+		if len(list) == 0 {
+			continue
+		}
+		entries := make([]any, 0, len(list))
+		for _, n := range list {
+			entries = append(entries, goapi.NewObject("permission", n.Permission, "reason", n.Reason))
+		}
+		out.Set(p, entries)
+	}
+	return out
 }
 
 // rolePermissions answers GET /api/panel/roles/{role}/permissions: the

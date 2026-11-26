@@ -10,8 +10,19 @@
  *
  * Each entry: tab, element id it jumps to, label key, section key, up to two
  * hint keys (searched too), and the permission a person needs to see it
- * ('' for everyone who may open the tab).
+ * ('' for everyone who may open the tab, 'super_admin' for Roles and
+ * permissions). The rows of Roles and permissions come from its groups
+ * (lib/people/permissions.ts): one per permission, with its name, group
+ * and sentence.
  */
+
+import {
+	PERMISSION_GROUPS,
+	groupTitleKey,
+	permHelpKey,
+	permLabelKey,
+	permRowId
+} from '#lib/people/permissions.ts';
 
 export type IndexRow = readonly [
 	tab: string,
@@ -19,7 +30,30 @@ export type IndexRow = readonly [
 	label: string,
 	section: string,
 	hints: readonly string[],
-	need: '' | 'server.config' | 'branding.edit'
+	need: '' | 'server.config' | 'branding.edit' | 'super_admin'
+];
+
+/** Roles and permissions: the role picker, the views and one row per permission */
+const PERMISSION_ROWS: readonly IndexRow[] = [
+	['permissions', 'perm-role', 'permissions.pick_role', '', ['permissions.page_description'], 'super_admin'],
+	[
+		'permissions',
+		'perm-views',
+		'permissions.views_title',
+		'',
+		['permissions.diff_only', 'permissions.compare_label'],
+		'super_admin'
+	],
+	...PERMISSION_GROUPS.flatMap((g) =>
+		g.permissions.map((p): IndexRow => [
+			'permissions',
+			permRowId(p),
+			permLabelKey(p),
+			groupTitleKey(g.id),
+			[permHelpKey(p)],
+			'super_admin'
+		])
+	)
 ];
 
 export const SEARCH_INDEX: readonly IndexRow[] = [
@@ -61,6 +95,14 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'settings.connection_mode_title',
 		'',
 		['settings.connection_mode_desc', 'settings.general.conn_p2p_desc'],
+		'server.config'
+	],
+	[
+		'general',
+		'connection-mode',
+		'settings.connection_mode_label',
+		'settings.connection_mode_title',
+		['settings.general.conn_mode_help', 'settings.connection_mode_desc'],
 		'server.config'
 	],
 	[
@@ -125,6 +167,14 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'settings.device_scope_title',
 		'',
 		['settings.general.scope_note', 'settings.general.scope_open_desc'],
+		'server.config'
+	],
+	[
+		'joining',
+		'device-scope',
+		'settings.joining.scope_label',
+		'settings.device_scope_title',
+		['settings.joining.scope_help', 'settings.general.scope_note'],
 		'server.config'
 	],
 	[
@@ -688,6 +738,14 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	['account', 'preferences-accessibility', 'accessibility.title', 'account.preferences', [], ''],
 	[
 		'joining',
+		'enrollment-mode',
+		'tokens.enrollment_mode',
+		'settings.enrollment_title',
+		['settings.joining.mode_note', 'settings.enrollment_mode_link'],
+		'server.config'
+	],
+	[
+		'joining',
 		'enrollment-settings-section',
 		'settings.enrollment_title',
 		'',
@@ -696,25 +754,25 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	],
 	[
 		'joining',
-		'enrollment-settings-section',
+		'enrollment-mode',
 		'tokens.mode_open',
-		'settings.enrollment_title',
+		'tokens.enrollment_mode',
 		['tokens.mode_open_desc'],
 		'server.config'
 	],
 	[
 		'joining',
-		'enrollment-settings-section',
+		'enrollment-mode',
 		'tokens.mode_managed',
-		'settings.enrollment_title',
+		'tokens.enrollment_mode',
 		['tokens.mode_managed_desc'],
 		'server.config'
 	],
 	[
 		'joining',
-		'enrollment-settings-section',
+		'enrollment-mode',
 		'tokens.mode_locked',
-		'settings.enrollment_title',
+		'tokens.enrollment_mode',
 		['tokens.mode_locked_desc'],
 		'server.config'
 	],
@@ -860,15 +918,23 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'auth',
 		'require-two-factor',
 		'settings.signin.require_2fa',
-		'settings.signin.for_everyone',
+		'settings.signin.console_title',
 		['settings.signin.require_2fa_hint'],
+		'server.config'
+	],
+	[
+		'auth',
+		'console-signin-section',
+		'settings.signin.console_title',
+		'',
+		['settings.signin.console_note', 'settings.signin.require_2fa'],
 		'server.config'
 	],
 	[
 		'auth',
 		'single-session',
 		'settings.signin.single_session',
-		'settings.signin.for_everyone',
+		'settings.signin.console_title',
 		['settings.signin.single_session_hint'],
 		'server.config'
 	],
@@ -876,7 +942,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'auth',
 		'impersonation-mail',
 		'settings.signin.impersonation_mail',
-		'settings.signin.for_everyone',
+		'settings.signin.console_title',
 		['settings.signin.impersonation_mail_hint'],
 		'server.config'
 	],
@@ -884,7 +950,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'auth',
 		'inactive-accounts',
 		'settings.inactive_label',
-		'settings.signin.for_everyone',
+		'settings.signin.console_title',
 		['settings.inactive_hint'],
 		'server.config'
 	],
@@ -892,7 +958,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'auth',
 		'inactive-accounts-days',
 		'settings.inactive_days',
-		'settings.signin.for_everyone',
+		'settings.signin.console_title',
 		['settings.inactive_days_hint'],
 		'server.config'
 	],
@@ -1019,57 +1085,65 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	[
 		'server-backups',
 		'backup-create',
-		'settings.backup_tab.create_title',
+		'backups_page.make_title',
 		'',
-		['settings.backup_tab.create_note'],
+		['backups_page.make_note', 'backups_page.download_title'],
 		'server.config'
 	],
 	[
 		'server-backups',
 		'scheduled-backup-panel',
-		'backup.schedule_title',
+		'backups_page.schedule_title',
 		'',
-		['settings.backup_tab.schedule_note', 'settings.backup_tab.schedule_enabled_hint'],
+		['backups_page.schedule_note'],
 		'server.config'
 	],
 	[
 		'server-backups',
 		'scheduled-backup-enabled',
-		'backup.schedule_enabled',
-		'backup.schedule_title',
-		['settings.backup_tab.schedule_enabled_hint'],
+		'backups_page.enabled',
+		'backups_page.schedule_title',
+		['backups_page.schedule_note'],
 		'server.config'
 	],
 	[
 		'server-backups',
 		'scheduled-backup-interval',
-		'backup.schedule_interval',
-		'backup.schedule_title',
-		[],
+		'backups_page.how_often',
+		'backups_page.schedule_title',
+		['backups_page.how_often_help'],
+		'server.config'
+	],
+	[
+		'server-backups',
+		'scheduled-backup-time',
+		'backups_page.time_of_day',
+		'backups_page.schedule_title',
+		['backups_page.how_often_help'],
 		'server.config'
 	],
 	[
 		'server-backups',
 		'scheduled-backup-retention',
 		'backup.schedule_retention',
-		'backup.schedule_title',
-		['settings.backup_tab.retention_hint'],
+		'backups_page.schedule_title',
+		['backups_page.keep_help'],
 		'server.config'
 	],
 	[
 		'server-backups',
 		'scheduled-backup-destination-type',
-		'backup.schedule_destination',
-		'backup.schedule_title',
-		[],
+		'backups_page.where',
+		'backups_page.schedule_title',
+		['backups_page.where_help', 'backups_page.test_folder'],
 		'server.config'
 	],
 	[
 		'server-backups',
 		'scheduled-backup-path',
-		'backup.schedule_destination_path_label',
-		'backup.schedule_title',
-		['backup.schedule_destination_path_hint'],
+		'backups_page.folder',
+		'backups_page.schedule_title',
+		['backups_page.folder_help'],
 		'server.config'
 	],
 	[
@@ -1077,7 +1151,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'backup-restore',
 		'settings.backup_tab.restore_title',
 		'',
-		['settings.backup_tab.restore_note', 'settings.backup_tab.restore_file_hint'],
+		['backups_page.restore_note', 'settings.backup_tab.restore_file_hint'],
 		'server.config'
 	],
 	[
@@ -1142,8 +1216,15 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	],
 	['server-backups', 'backup-stat-backend', 'settings.backup_tab.stat_backend', '', [], 'server.config'],
 	['server-backups', 'backup-stat-database', 'backup.stat_database', '', [], 'server.config'],
-	['server-backups', 'backup-stat-keys', 'backup.stat_keys', '', [], 'server.config'],
-	['server-backups', 'backup-stat-env', 'backup.stat_env', '', [], 'server.config'],
+	[
+		'server-backups',
+		'backup-part-server_keys',
+		'backup.stat_keys',
+		'backups_page.holds_title',
+		[],
+		'server.config'
+	],
+	['server-backups', 'backup-part-env', 'backup.stat_env', 'backups_page.holds_title', [], 'server.config'],
 	['server-backups', 'backup-stat-uploads', 'settings.backup_tab.stat_uploads', '', [], 'server.config'],
 	[
 		'server-updates',
@@ -1156,9 +1237,9 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	[
 		'server-backups',
 		'update-backups-panel',
-		'updates.create_backup',
-		'updates.update_available',
-		[],
+		'backups_page.updates_title',
+		'',
+		['settings.updates_tab.backups_note', 'updates.backups_title'],
 		'server.config'
 	],
 	[
@@ -1197,8 +1278,16 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server-backups',
 		'backup-retention-input',
 		'settings.updates_tab.retention_label',
-		'',
-		['updates.retention_hint'],
+		'backups_page.updates_title',
+		['backups_page.update_keep_help', 'backups_page.keep_all_updates'],
+		'server.config'
+	],
+	[
+		'server-backups',
+		'backup-danger',
+		'backups_page.prune_title',
+		'backups_page.danger_title',
+		['backups_page.prune_action'],
 		'server.config'
 	],
 	['server-updates', 'update-local-version', 'updates.current_version', '', [], 'server.config'],
@@ -1295,7 +1384,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	['time', 'time-clock-ntp-server', 'commercialization.clock.status_server', '', [], 'server.config'],
 	['time', 'time-clock-os-sync', 'commercialization.clock.status_os', '', [], 'server.config'],
 	['time', 'time-clock-last-error', 'commercialization.clock.status_error', '', [], 'server.config'],
-	['server-config-files', 'advanced-title', 'settings.advanced_tab.restart_title', '', [], 'server.config'],
+	['server-config-files', 'advanced-config', 'settings.advanced_tab.restart_title', '', [], 'server.config'],
 	[
 		'brand',
 		'client-app',
@@ -1345,7 +1434,153 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'settings.branding.client_app',
 		['client_branding.logo_hint'],
 		'branding.edit'
-	]
+	],
+	// Rules > Policies: the settings of the organization picked on the page
+	[
+		'policies',
+		'pol-connection-mode',
+		'policies.connection_mode',
+		'policies.connection_title',
+		['policies.help_mode'],
+		''
+	],
+	[
+		'policies',
+		'pol-connection-max-session-duration',
+		'policies.max_session',
+		'policies.connection_title',
+		['policies.help_max_session'],
+		''
+	],
+	[
+		'policies',
+		'pol-connection-idle-lock-timeout',
+		'policies.idle_lock',
+		'policies.connection_title',
+		['policies.help_idle_lock'],
+		''
+	],
+	[
+		'policies',
+		'pol-connection-wallpaper',
+		'policies.wallpaper_policy',
+		'policies.connection_title',
+		['policies.help_wallpaper'],
+		''
+	],
+	[
+		'policies',
+		'pol-features-allow-file-transfer',
+		'policies.allow_file_transfer',
+		'policies.features_title',
+		['policies.help_file_transfer'],
+		''
+	],
+	[
+		'policies',
+		'pol-features-allow-clipboard',
+		'policies.allow_clipboard',
+		'policies.features_title',
+		['policies.help_clipboard'],
+		''
+	],
+	[
+		'policies',
+		'pol-features-allow-audio',
+		'policies.allow_audio',
+		'policies.features_title',
+		['policies.help_audio'],
+		''
+	],
+	[
+		'policies',
+		'pol-features-allow-recording',
+		'policies.allow_recording',
+		'policies.features_title',
+		['policies.help_recording'],
+		''
+	],
+	[
+		'policies',
+		'pol-security-require-2fa',
+		'policies.require_2fa',
+		'policies.security_title',
+		['policies.help_2fa'],
+		''
+	],
+	[
+		'policies',
+		'pol-security-password-min-length',
+		'policies.password_min_length',
+		'policies.security_title',
+		['policies.help_password_min'],
+		''
+	],
+	[
+		'policies',
+		'pol-security-password-require-special',
+		'policies.password_require_special',
+		'policies.security_title',
+		['policies.help_password_special'],
+		''
+	],
+	[
+		'policies',
+		'pol-security-password-max-age-days',
+		'policies.password_max_age',
+		'policies.security_title',
+		['policies.help_password_age'],
+		''
+	],
+	[
+		'policies',
+		'pol-security-allowed-operators',
+		'policies.allowed_operators',
+		'policies.security_title',
+		['policies.help_operators'],
+		''
+	],
+	[
+		'policies',
+		'pol-network-block-direct-p2p',
+		'policies.block_direct_p2p',
+		'policies.network_title',
+		['policies.help_block_p2p'],
+		''
+	],
+	[
+		'policies',
+		'pol-network-allowed-relay-servers',
+		'policies.allowed_relays',
+		'policies.network_title',
+		['policies.help_relays'],
+		''
+	],
+	[
+		'policies',
+		'pol-network-ip-allowlist',
+		'policies.ip_allowlist',
+		'policies.network_title',
+		['policies.help_ip_ranges'],
+		''
+	],
+	[
+		'policies',
+		'pol-update-auto-update',
+		'policies.auto_update',
+		'policies.update_title',
+		['policies.help_auto_update'],
+		''
+	],
+	[
+		'policies',
+		'pol-update-channel',
+		'policies.update_channel',
+		'policies.update_title',
+		['policies.update_channel_hint'],
+		''
+	],
+	...PERMISSION_ROWS
 ];
 
 /** Space-separated element ids per tab or page, for #<id> links into another one */
@@ -1353,25 +1588,28 @@ export const TAB_IDS: Readonly<Record<string, string>> = {
 	account:
 		'api-tokens confirm-password current-password email email-new new-password password password-requirements preferences preferences-accessibility preferences-language preferences-theme preferences-time-zone preferences-time-zone-field profile profile-picture profile-status req-length security-events sessions two-factor',
 	general:
-		'conn-allow-shared-nat-initiator conn-logged-in-only-initiator conn-mode-p2p conn-mode-relay conn-operator-only-outbound conn-p2p-fallback-ms conn-same-nat-relay connection-diagram connection-diagram-title connection-mode-effect connection-mode-fields connection-mode-form connection-mode-info connection-mode-section connection-mode-source connection-mode-title db-path general-form general-save go-server-version public-api-url public-endpoints public-endpoints-form public-endpoints-title public-relay-server public-server-id server-info server-info-title uptime',
-	auth: 'client-sessions-expiry-days client-sessions-form client-sessions-max-days client-sessions-max-group client-sessions-settings-section client-sessions-sliding console-sessions-form for-everyone-title impersonation-mail impersonation-mail-form inactive-accounts inactive-accounts-days inactive-accounts-days-group inactive-accounts-form require-two-factor security-notice-email_changed security-notice-new_signin security-notice-password_changed security-notice-two_factor_changed security-notices security-notices-title single-session two-factor-policy-form',
-	ldap: 'auth-panel-ldap ldap-advanced ldap-allow-signup ldap-attrs ldap-base-dn ldap-bind-dn ldap-bind-password ldap-bind-search-fields ldap-config-fields ldap-conn-timeout ldap-default-role ldap-direct-bind ldap-direct-bind-dn ldap-direct-bind-fields ldap-enabled ldap-form ldap-group-attr-name ldap-group-base-dn ldap-group-filter ldap-group-role-map ldap-host ldap-port ldap-skip-tls-verify ldap-start-tls ldap-test-btn ldap-test-result ldap-use-tls ldap-user-attr-email ldap-user-attr-id ldap-user-attr-name ldap-user-filter',
-	sso: 'auth-panel-oidc oidc-advanced oidc-allow-signup oidc-allowed-private-cidrs oidc-authorization-url oidc-auto-discovery oidc-claim-email oidc-claim-groups oidc-claim-name oidc-claim-username oidc-claims oidc-client-id oidc-client-secret oidc-config-fields oidc-default-role oidc-display-name oidc-enabled oidc-form oidc-group-role-map oidc-issuer-url oidc-manual-endpoints oidc-panel-url oidc-prefer-sso oidc-redirect-url oidc-redirect-url-warning oidc-scopes oidc-test-btn oidc-test-result oidc-token-url oidc-use-pkce oidc-userinfo-url',
+		'conn-allow-shared-nat-initiator conn-logged-in-only-initiator conn-mode-p2p conn-mode-relay conn-operator-only-outbound conn-p2p-fallback-ms conn-same-nat-relay connection-diagram connection-diagram-title connection-mode connection-mode-advanced connection-mode-effect connection-mode-fields connection-mode-form connection-mode-info connection-mode-section connection-mode-source connection-mode-title db-path general-form general-save go-server-version public-api-url public-endpoints public-endpoints-form public-endpoints-title public-relay-server public-server-id server-info server-info-title uptime',
+	auth: 'client-sessions-expiry-days client-sessions-form client-sessions-max-days client-sessions-max-group client-sessions-settings-section client-sessions-sliding console-sessions-form console-signin-section for-everyone-title impersonation-mail inactive-accounts inactive-accounts-days inactive-accounts-days-group require-two-factor security-notice-email_changed security-notice-new_signin security-notice-password_changed security-notice-two_factor_changed security-notices single-session two-factor-policy-form',
+	ldap: 'auth-panel-ldap ldap-advanced ldap-allow-signup ldap-attrs ldap-base-dn ldap-bind ldap-bind-dn ldap-bind-password ldap-bind-search-fields ldap-config-fields ldap-conn-timeout ldap-connection ldap-default-role ldap-direct-bind ldap-direct-bind-dn ldap-direct-bind-fields ldap-enabled ldap-form ldap-group-attr-name ldap-group-base-dn ldap-group-filter ldap-group-role-map ldap-groups ldap-host ldap-port ldap-skip-tls-verify ldap-start-tls ldap-test-btn ldap-test-result ldap-use-tls ldap-user-attr-email ldap-user-attr-id ldap-user-attr-name ldap-user-filter',
+	sso: 'auth-panel-oidc oidc-accounts oidc-advanced oidc-allow-signup oidc-allowed-private-cidrs oidc-authorization-url oidc-auto-discovery oidc-claim-email oidc-claim-groups oidc-claim-name oidc-claim-username oidc-claims oidc-client-id oidc-client-secret oidc-config-fields oidc-default-role oidc-display-name oidc-enabled oidc-form oidc-group-role-map oidc-issuer-url oidc-manual-endpoints oidc-panel-url oidc-prefer-sso oidc-provider oidc-redirect-url oidc-redirect-url-warning oidc-roles oidc-scopes oidc-test-btn oidc-test-result oidc-token-url oidc-use-pkce oidc-userinfo-url',
 	joining:
-		'availability-history-enabled availability-history-form availability-history-retention availability-history-settings-panel availability-retention-group availability-title device-scope-form device-scope-open device-scope-restricted device-scope-settings-panel device-scope-title device-scope-warning enrollment-pending-hint enrollment-rich-approve enrollment-settings-section enrollment-tag-picker joining-mode-section joining-mode-title',
+		'availability-history-enabled availability-history-form availability-history-retention availability-history-settings-panel availability-retention-group availability-title device-scope device-scope-form device-scope-open device-scope-restricted device-scope-settings-panel device-scope-title device-scope-warning enrollment-mode enrollment-pending-hint enrollment-rich-approve enrollment-settings-section enrollment-tag-picker joining-mode-section joining-mode-title',
 	branding:
 		'bg-blur bg-blur-value bg-color bg-color-panel bg-color-picker bg-effects-group bg-file-name bg-gradient bg-gradient-panel bg-image-file bg-image-library bg-image-panel bg-image-url bg-overlay bg-overlay-group bg-overlay-value bg-size bg-upload-status branding-background branding-background-title branding-builtin-themes branding-colors-title branding-css branding-css-title branding-custom-colors branding-danger-title branding-export-btn branding-fonts branding-fonts-title branding-form branding-ie-status branding-ie-title branding-import-export branding-import-input branding-profile-apply-btn branding-profile-delete-btn branding-profile-duplicate-btn branding-profile-menu branding-profile-new-btn branding-profile-save-btn branding-profile-select branding-profile-status branding-profiles branding-profiles-title branding-readability-alert branding-readability-text branding-reset-btn branding-revert-btn branding-save-btn branding-theme branding-theme-apply branding-theme-gallery branding-theme-select branding-theme-title branding-toc color-accentBlue color-accentGreen color-accentPurple color-accentRed color-accentYellow color-bgElevated color-bgPrimary color-bgSecondary color-bgTertiary color-borderPrimary color-borderSecondary color-textPrimary color-textSecondary custom-css font-body-clear font-body-current font-body-dropdown font-body-search font-body-slot font-body-value font-heading-clear font-heading-current font-heading-dropdown font-heading-search font-heading-slot font-heading-value font-local-count font-local-info font-local-list font-source-google font-source-label font-source-local font-source-upload font-upload-file font-upload-name theme-mode-selector',
 	brand:
 		'agent-bg-color agent-bg-color-panel agent-bg-color-picker agent-bg-file-name agent-bg-gradient agent-bg-gradient-panel agent-bg-image-file agent-bg-image-panel agent-bg-image-url agent-bg-upload-status agent-show-powered brand-name branding-agent branding-agent-title branding-footer branding-footer-title branding-identity branding-identity-title branding-login branding-login-title branding-rdclient branding-rdclient-title cb-contact-title cb-look-title client-app client-app-accent client-app-company client-app-email client-app-logo client-app-phone client-app-support client-app-title client-app-website footer-text login-bg-color login-bg-color-panel login-bg-color-picker login-bg-config login-bg-file-name login-bg-gradient login-bg-gradient-panel login-bg-image-file login-bg-image-panel login-bg-image-url login-bg-overlay login-bg-overlay-group login-bg-overlay-value login-bg-upload-status login-promo-mode-selector login-slides-add login-slides-list login-slides-max-hint login-slides-panel login-slides-restore login-subtitle login-title logo-file-name logo-icon-name logo-icon-panel logo-image-file logo-image-panel logo-image-url logo-svg-input logo-svg-panel logo-text-accent logo-text-input logo-text-panel rdclient-bg-color rdclient-bg-color-panel rdclient-bg-color-picker rdclient-bg-file-name rdclient-bg-gradient rdclient-bg-gradient-panel rdclient-bg-image-file rdclient-bg-image-panel rdclient-bg-image-url rdclient-bg-overlay rdclient-bg-overlay-group rdclient-bg-overlay-value rdclient-bg-size rdclient-bg-upload-status show-powered',
 	email:
 		'email-smtp-alert email-smtp-auth email-smtp-auth-fields email-smtp-form email-smtp-from email-smtp-host email-smtp-pass email-smtp-port email-smtp-save-btn email-smtp-secure email-smtp-user email-title',
-	time: 'time-billing-month-hint time-billing-timezone time-billing-timezone-custom time-check-status time-clock-advanced time-clock-detail time-clock-last-error time-clock-max-skew time-clock-ntp-server time-clock-ntp-servers time-clock-offset time-clock-os-sync time-clock-require-sync time-clock-settings-form time-clock-trust-os time-custom-zone time-detect-timezone-btn time-ntp-title time-save-clock-settings-btn time-side-title time-timesync-check-btn time-zone-now time-zone-title',
+	time: 'time-billing-month-hint time-billing-timezone time-billing-timezone-custom time-check-status time-clock-advanced time-clock-detail time-clock-last-error time-clock-max-skew time-clock-ntp-server time-clock-ntp-servers time-clock-offset time-clock-os-sync time-clock-require-sync time-clock-settings-form time-clock-trust-os time-custom-zone time-detect-timezone-btn time-ntp time-ntp-title time-save-clock-settings-btn time-side-title time-timesync-check-btn time-zone time-zone-now time-zone-title',
 	meshcentral:
 		'mesh-agents-online mesh-body mesh-cert-banner mesh-cert-state mesh-copy-server-id mesh-download-msh mesh-group-add mesh-groups-form mesh-groups-list mesh-groups-status mesh-groups-title mesh-install mesh-msh-name mesh-recordings mesh-recordings-table mesh-server-id mesh-settings-panel mesh-state mesh-status-enabled mesh-title',
+	policies:
+		'pol-connection-idle-lock-timeout pol-connection-max-session-duration pol-connection-mode pol-connection-wallpaper pol-features-allow-audio pol-features-allow-clipboard pol-features-allow-file-transfer pol-features-allow-recording pol-network-allowed-relay-servers pol-network-block-direct-p2p pol-network-ip-allowlist pol-security-allowed-operators pol-security-password-max-age-days pol-security-password-min-length pol-security-password-require-special pol-security-require-2fa pol-update-auto-update pol-update-channel',
 	'server-backups':
-		'backup-contents-title backup-create backup-create-title backup-download-btn backup-download-status backup-prune-now backup-restore backup-restore-title backup-retention-input backup-retention-save backup-smb-domain backup-smb-host backup-smb-mount-path backup-smb-password backup-smb-share backup-smb-status backup-smb-test-btn backup-smb-username backup-stat-backend backup-stat-database backup-stat-env backup-stat-folders backup-stat-groups backup-stat-keys backup-stat-settings backup-stat-strategies backup-stat-uploads backup-stat-users backup-stats backup-summary restore-actions restore-database restore-env restore-file-hint restore-file-input restore-godb restore-json-note restore-options restore-options-hint restore-result restore-secrets restore-start-btn restore-status restore-uploads scheduled-backup-destination-type scheduled-backup-details scheduled-backup-enabled scheduled-backup-form scheduled-backup-interval scheduled-backup-panel scheduled-backup-path scheduled-backup-path-group scheduled-backup-retention scheduled-backup-run-btn scheduled-backup-smb-form scheduled-backup-smb-panel scheduled-backup-status scheduled-backup-test-btn scheduled-backup-title smb-title update-backups-list update-backups-panel',
+		'backup-contents-title backup-create backup-create-title backup-danger backup-download-btn backup-download-status backup-part-env backup-part-server_keys backup-prune-now backup-restore backup-restore-title backup-retention-all backup-retention-count backup-retention-input backup-retention-save backup-side-title backup-smb-domain backup-smb-host backup-smb-mount-path backup-smb-password backup-smb-share backup-smb-status backup-smb-test-btn backup-smb-username backup-stat-backend backup-stat-database backup-stat-env backup-stat-folders backup-stat-groups backup-stat-keys backup-stat-settings backup-stat-strategies backup-stat-uploads backup-stat-users backup-stats backup-summary restore-actions restore-database restore-env restore-file-hint restore-file-input restore-godb restore-json-note restore-options restore-options-hint restore-result restore-secrets restore-start-btn restore-status restore-uploads scheduled-backup-destination-type scheduled-backup-details scheduled-backup-enabled scheduled-backup-form scheduled-backup-interval scheduled-backup-panel scheduled-backup-path scheduled-backup-path-group scheduled-backup-retention scheduled-backup-run-btn scheduled-backup-smb-form scheduled-backup-smb-panel scheduled-backup-status scheduled-backup-test-btn scheduled-backup-time scheduled-backup-title smb-title update-backups-list update-backups-panel',
 	'server-updates':
-		'update-alerts update-available-heading update-backup-toggle update-changelog update-channel-active-badge update-channel-branch update-channel-development update-channel-docker-hint update-channel-effect update-channel-panel update-channel-select update-channel-stable update-channel-title update-check-btn update-details-section update-docker-commands update-docker-desc update-docker-images update-docker-info update-docker-install-note update-files-summary update-install-blocked-hint update-install-btn update-local-version update-progress update-progress-fill update-progress-text update-rebuild-server-btn update-remote-version update-stale-detail update-stale-warning update-status-badge update-status-desc update-status-headline update-status-row updates-side-title',
+		'update-alerts update-available-heading update-backup-toggle update-changelog update-channel-active-badge update-channel-branch update-channel-development update-channel-docker-hint update-channel-effect update-channel-panel update-channel-select update-channel-stable update-channel-panel-title update-check-btn update-details-section update-docker-commands update-docker-desc update-docker-images update-docker-info update-docker-install-note update-files-summary update-install-blocked-hint update-install-btn update-local-version update-progress update-progress-fill update-progress-text update-rebuild-server-btn update-remote-version update-stale-detail update-stale-warning update-status-badge update-status-desc update-status-headline update-status-row updates-side-title',
+	permissions: PERMISSION_ROWS.map((r) => r[1]).join(' '),
 	'server-config-files':
-		'advanced-config-file-list advanced-config-meta advanced-config-path advanced-config-placeholder advanced-config-reload advanced-config-restart advanced-config-restart-hint advanced-config-save advanced-config-textarea advanced-config-toolbar advanced-files-label advanced-restart-desc advanced-restart-title advanced-restart-zone advanced-title'
+		'advanced-config-file-list advanced-config-meta advanced-config-path advanced-config-placeholder advanced-config-reload advanced-config-restart advanced-config-restart-hint advanced-config-save advanced-config-textarea advanced-config-toolbar advanced-files-label advanced-restart-desc advanced-restart-title advanced-config advanced-config-title advanced-restart-zone'
 };

@@ -61,7 +61,7 @@ export const TAB_TITLE: Readonly<Record<TabId, string>> = {
  * Pages of settings outside Settings: where they are, their name, the
  * section of the sidebar they are in ('' for none, as Your account, which
  * the account menu opens) and the permission they need ('' for every
- * account)
+ * account, 'super_admin' for Roles and permissions)
  */
 export const PAGES = {
 	account: { href: '/account', title: 'account.title', section: '', need: '' },
@@ -82,10 +82,18 @@ export const PAGES = {
 		title: 'nav.server_config_files',
 		section: 'nav.section_server',
 		need: 'server.config'
+	},
+	/* An organization's policies: the four admin roles (requireAdmin), whatever their permissions */
+	policies: { href: '/policies', title: 'nav.policies', section: 'nav.section_rules', need: 'admin' },
+	permissions: {
+		href: '/permissions',
+		title: 'nav.permissions',
+		section: 'nav.section_people',
+		need: 'super_admin'
 	}
 } as const satisfies Record<
 	string,
-	{ href: string; title: string; section: string; need: '' | 'server.config' }
+	{ href: string; title: string; section: string; need: '' | 'server.config' | 'admin' | 'super_admin' }
 >;
 export type PageId = keyof typeof PAGES;
 
@@ -121,9 +129,22 @@ export function tabAllowed(tab: TabId, canServerConfig: boolean): boolean {
 	return canServerConfig || !ADMIN_TABS.includes(tab);
 }
 
-/** Whether a person may open a place: the pages of the Server section need server.config, Your account nothing */
-export function placeAllowed(place: PlaceId, canServerConfig: boolean): boolean {
-	return isPage(place) ? PAGES[place].need === '' || canServerConfig : tabAllowed(place, canServerConfig);
+/**
+ * Whether a person may open a place: the pages of the Server section need
+ * server.config, Policies an admin role, Roles and permissions a super
+ * admin, Your account nothing
+ */
+export function placeAllowed(
+	place: PlaceId,
+	canServerConfig: boolean,
+	who: { admin?: boolean; superAdmin?: boolean } = {}
+): boolean {
+	if (!isPage(place)) return tabAllowed(place, canServerConfig);
+	const need: string = PAGES[place].need;
+	if (need === '') return true;
+	if (need === 'admin') return !!who.admin || !!who.superAdmin;
+	if (need === 'super_admin') return !!who.superAdmin;
+	return canServerConfig;
 }
 
 /** The place's name: the tab title or the page title */

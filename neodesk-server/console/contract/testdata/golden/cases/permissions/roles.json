@@ -189,6 +189,128 @@
        "billing.reports",
        "billing.export"
       ],
+      "requires": {
+       "agent.files": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "billing.export": [
+        {
+         "permission": "billing.view",
+         "reason": "billing_page"
+        }
+       ],
+       "cdap.terminal": [
+        {
+         "permission": "cdap.command",
+         "reason": "cdap_terminal_command"
+        }
+       ],
+       "device.ban": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "device.change_id": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "device.connection_mode": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "device.delete": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "device.edit": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "device.signin_manage": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "device.signin_use": [
+        {
+         "permission": "device.connect",
+         "reason": "signin_use_connects"
+        }
+       ],
+       "guest.create": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "mesh.files": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "mesh.power": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "mesh.terminal": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "remote_target.connect": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "remote_target.delete": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "remote_target.edit": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "remote_target.test": [
+        {
+         "permission": "device.view",
+         "reason": "devices_page"
+        }
+       ],
+       "user.create": [
+        {
+         "permission": "user.view",
+         "reason": "users_page"
+        }
+       ],
+       "user.delete": [
+        {
+         "permission": "user.view",
+         "reason": "users_page"
+        }
+       ]
+      },
       "roles": [
        {
         "fixed": {},

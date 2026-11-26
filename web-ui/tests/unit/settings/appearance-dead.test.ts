@@ -28,7 +28,7 @@ vi.mock('#lib/api/settings.ts', async (orig) => ({
 }));
 
 import * as settingsApi from '../../../src/lib/api/settings.ts';
-import AppearanceTab from '../../../src/lib/settings/tabs/AppearanceTab.svelte';
+import BrandingTab from '../../../src/lib/settings/tabs/BrandingTab.svelte';
 import { session } from '../../../src/lib/state/session.svelte.ts';
 
 beforeEach(() => {
@@ -44,8 +44,9 @@ afterEach(() => {
 describe('appearance controls without an effect', () => {
 	test('no glass surfaces and no application description, in the form or in the save', async () => {
 		const user = userEvent.setup();
-		render(AppearanceTab, { part: 'brand' });
+		render(BrandingTab);
 		const name = await screen.findByLabelText('branding.app_name');
+		await vi.waitFor(() => expect(name).toHaveValue('Desk'));
 		expect(document.getElementById('glass-enabled')).toBeNull();
 		expect(document.getElementById('glass-color')).toBeNull();
 		expect(document.getElementById('brand-description')).toBeNull();
@@ -53,7 +54,7 @@ describe('appearance controls without an effect', () => {
 
 		await user.clear(name);
 		await user.type(name, 'Help desk');
-		await user.click(screen.getByRole('button', { name: 'settings.appearance.save' }));
+		await user.click(screen.getByRole('button', { name: 'Save changes' }));
 		await vi.waitFor(() => expect(settingsApi.saveBranding).toHaveBeenCalledTimes(1));
 		const sent = vi.mocked(settingsApi.saveBranding).mock.calls[0]![0] as Record<string, unknown>;
 		expect(sent.appName).toBe('Help desk');

@@ -116,7 +116,8 @@
      "data": {
       "description": "All devices can register (backward compatible)",
       "env_override": false,
-      "mode": "open"
+      "mode": "open",
+      "source": "database"
      },
      "success": true
     }

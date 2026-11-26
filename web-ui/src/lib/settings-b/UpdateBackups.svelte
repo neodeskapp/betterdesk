@@ -1,39 +1,44 @@
 <!--
-  Server › Backups › Backups made before updates (old settings.js
-  loadUpdateBackups, retention and prune): the copies of the files each
-  update replaced, to put back or delete, and how many to keep ("Keep
-  update backups").
+  Server › Backups › Before updates: the copies of the files each update
+  replaced (old settings.js loadUpdateBackups), each with Restore these
+  files and Delete. How many to keep and "Delete older update backups now"
+  are the page's (BackupTab: the setting in its draft, the action in its
+  danger zone); the page hears the list through `onlist` and asks for it
+  again by changing `reload`.
 -->
 <script lang="ts">
 	import {
 		deleteUpdateBackup,
 		errorText,
-		getBackupRetention,
 		getConsoleStatus,
 		listUpdateBackups,
-		pruneUpdateBackups,
 		restoreUpdateBackup,
-		setBackupRetention,
 		type UpdateBackup
 	} from '#lib/api/settings-system.ts';
 	import { formatBytes, formatNumber } from '#lib/i18n/format.ts';
 	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
-	import Field from '#lib/ui/Field.svelte';
-	import Input from '#lib/ui/Input.svelte';
 	import ListRow from '#lib/ui/ListRow.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Time from '#lib/ui/Time.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
-	import { awaitRestart, consoleVersionNow, restartBlocked, retentionValid, sleepMs } from './updates.ts';
+	import { awaitRestart, consoleVersionNow, restartBlocked, sleepMs } from './updates.ts';
+
+	interface Props {
+		/** The list as loaded, after every load */
+		onlist?: (backups: UpdateBackup[]) => void;
+		/** Change it to load the list again */
+		reload?: number;
+	}
+
+	let { onlist, reload = 0 }: Props = $props();
 
 	let backups = $state.raw<UpdateBackup[]>([]);
 	let listState = $state<'loading' | 'ready' | 'error'>('loading');
 	let listError = $state('');
-	let keep = $state<number | null>(0);
 	let busy = $state<string | null>(null);
 
 	const total = $derived(backups.reduce((sum, b) => sum + (b.sizeBytes ?? 0), 0));
@@ -42,59 +47,10 @@
 		try {
 			backups = await listUpdateBackups();
 			listState = 'ready';
+			onlist?.(backups);
 		} catch (err) {
 			listError = errorText(err, t('errors.server_error'));
 			listState = 'error';
-		}
-	}
-
-	async function loadRetention() {
-		try {
-			keep = (await getBackupRetention()).count ?? 0;
-		} catch {
-			keep = 0;
-		}
-	}
-
-	async function saveRetention() {
-		const n = Number(keep);
-		if (keep === null || !retentionValid(n)) {
-			toast.error(t('updates.retention_invalid'));
-			return;
-		}
-		busy = 'retention';
-		try {
-			await setBackupRetention(n);
-			toast.success(t('updates.retention_saved'));
-		} catch (err) {
-			toast.error(errorText(err, t('errors.server_error')));
-		} finally {
-			busy = null;
-		}
-	}
-
-	async function prune() {
-		const n = Number(keep);
-		if (!Number.isInteger(n) || n <= 0) {
-			toast.error(t('updates.retention_required_for_prune'));
-			return;
-		}
-		const yes = await confirm({
-			title: t('settings.updates_tab.prune_now'),
-			message: t('updates.prune_confirm', { n }),
-			confirmLabel: t('settings.updates_tab.prune_now'),
-			danger: true
-		});
-		if (!yes) return;
-		busy = 'prune';
-		try {
-			const r = await pruneUpdateBackups(n);
-			toast.success(t('updates.prune_done', { n: r.deleted?.length ?? 0 }));
-			await load();
-		} catch (err) {
-			toast.error(errorText(err, t('errors.server_error')));
-		} finally {
-			busy = null;
 		}
 	}
 
@@ -156,14 +112,12 @@
 	}
 
 	$effect(() => {
+		void reload;
 		void load();
-		void loadRetention();
 	});
 </script>
 
-<section class="section backups" id="update-backups-panel" aria-labelledby="update-backups-title">
-	<h2 id="update-backups-title">{t('updates.backups_title')}</h2>
-	<p class="section-note">{t('settings.updates_tab.backups_note')}</p>
+<div class="update-backups" id="update-backups-list">
 	{#if listState === 'ready' && backups.length}
 		<CountLine
 			text={t('settings.updates_tab.backups_summary', { size: formatBytes(total) })}
@@ -175,7 +129,7 @@
 	{:else if listState === 'error'}
 		<States kind="error" message={listError} onretry={() => void load()} />
 	{:else if !backups.length}
-		<States message={t('updates.no_backups')} />
+		<p class="none">{tf('backups_page.no_update_backups', 'No update backups yet.')}</p>
 	{:else}
 		<RowList>
 			{#each backups as b (b.name)}
@@ -201,36 +155,18 @@
 			{/each}
 		</RowList>
 	{/if}
-	<Field
-		id="backup-retention-input"
-		label={t('settings.updates_tab.retention_label')}
-		hint={t('updates.retention_hint')}
-	>
-		{#snippet children(f)}
-			<div class="settings-inline-controls">
-				<Input {...f} type="number" width="short" min="0" max="1000" step="1" bind:value={keep} />
-				<Button id="backup-retention-save" busy={busy === 'retention'} onclick={saveRetention}
-					>{t('settings.updates_tab.retention_save')}</Button
-				>
-				<Button id="backup-prune-now" busy={busy === 'prune'} onclick={prune}
-					>{t('settings.updates_tab.prune_now')}</Button
-				>
-			</div>
-		{/snippet}
-	</Field>
-</section>
+</div>
 
 <style>
-	.backups {
+	.update-backups {
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-3);
+		padding: var(--space-3) var(--row-pad-x);
 	}
-	.settings-inline-controls {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: var(--space-2);
+	.none {
+		margin: 0;
+		color: var(--text-muted);
 	}
 	.mono {
 		font-family: var(--mono);

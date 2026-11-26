@@ -13,6 +13,18 @@
   full access in every section whatever is set (the server applies no
   section setting to them), so for one the sections give way to a note
   and only the client features show.
+
+  For a user, the "Role or group default" choice names what that default
+  gives right now (PATTERN.md rule 2): where the setting comes from the
+  role or a group, the level in force; where the person has their own
+  setting, what their groups' stored rows and the role would give without
+  it (lib/people/access-inherited.ts, the server's rules).
+
+  Each row says its value once. While a choice is as saved, the choice
+  shows the value ("Default: Read, from the role", or "Read") and the line
+  under the name only what the choice does not: "Set for this person" and
+  the role's limit. A changed choice gets "Now: ..." there, what applies
+  until Save. Without user.edit the line says what applies now.
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
@@ -20,6 +32,7 @@
 		getAccessCatalog,
 		getAccessPolicy,
 		saveAccessPolicy,
+		type AccessLevel,
 		type AccessCatalog,
 		type AccessPolicy,
 		type AccessSubject
@@ -36,6 +49,12 @@
 		toPayload,
 		type Draft
 	} from '#lib/people/access.ts';
+	import {
+		inheritedFeature,
+		inheritedSection,
+		type InheritedFeature,
+		type InheritedLevel
+	} from '#lib/people/access-inherited.ts';
 	import { can, session } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
@@ -73,6 +92,8 @@
 	let effective = $state.raw<AccessPolicy['effective'] | null>(null);
 	let loadError = $state('');
 	let formEl = $state<HTMLFormElement>();
+	/** The choices as loaded or last saved: a row whose choice differs says what applies until Save */
+	let savedChoices = $state.raw<Draft | null>(null);
 
 	const form = createForm<Draft>({
 		initial: { sections: {}, groups: {}, features: {} },
@@ -80,7 +101,8 @@
 			if (!catalog) return;
 			const saved = await saveAccessPolicy(subject, toPayload(catalog, values));
 			effective = saved.effective;
-			return toDraft(catalog, saved);
+			savedChoices = toDraft(catalog, saved);
+			return savedChoices;
 		},
 		savedMessage: tf('users.access_saved', 'Panel access saved.')
 	});
@@ -100,7 +122,9 @@
 			]);
 			catalog = c;
 			effective = p.effective;
-			form.reset(toDraft(c, p));
+			savedChoices = toDraft(c, p);
+			form.reset(savedChoices);
+			if (kind === 'user') void loadGroupRows(p.effective.groups.map((g) => g.guid));
 			// The sheet focused a footer button while loading; the first field is where work starts
 			await tick();
 			const active = document.activeElement;
@@ -119,6 +143,48 @@
 		untrack(() => void load());
 	});
 
+	/** The stored rows of the person's groups, for what their default gives (users only) */
+	let groupRows = $state.raw<{
+		sections: { resource_key: string; access_level: string }[];
+		features: { feature_key: string; enabled: boolean }[];
+	} | null>(null);
+
+	async function loadGroupRows(guids: string[]) {
+		try {
+			const policies = await Promise.all(
+				guids.filter(Boolean).map((guid) => getAccessPolicy({ kind: 'group', guid }, aborter.signal))
+			);
+			groupRows = {
+				sections: policies.flatMap((p) => p.sections),
+				features: policies.flatMap((p) => p.features)
+			};
+		} catch {
+			// Without them the choice keeps its plain name where the person has their own setting
+			groupRows = null;
+		}
+	}
+
+	/** The catalog group the server resolves a section under (its last entry) */
+	const sectionGroup = $derived(new Map((catalog?.sections ?? []).map((s) => [s.key, s.group])));
+
+	function sectionDefault(key: string): InheritedLevel | null {
+		const eff = effective?.sections[key];
+		if (!eff || kind !== 'user') return null;
+		if (eff.source === 'role' || eff.source === 'group')
+			return { level: eff.access as AccessLevel, source: eff.source };
+		if (!groupRows) return null;
+		return inheritedSection(key, sectionGroup.get(key) ?? '', groupRows.sections, eff.role_ceiling);
+	}
+
+	function featureDefault(key: string, hardLock: boolean): InheritedFeature | null {
+		const eff = effective?.features[key];
+		if (!eff || kind !== 'user') return null;
+		if (eff.source === 'default' || eff.source === 'group')
+			return { enabled: eff.enabled, source: eff.source };
+		if (!groupRows) return null;
+		return inheritedFeature(key, groupRows.features, hardLock);
+	}
+
 	const groups = $derived(catalog ? catalogGroups(catalog) : []);
 
 	/** The first of the keys that has a string, else the catalog's label */
@@ -128,19 +194,41 @@
 	}
 
 	const inheritLabel = $derived(
-		kind === 'user' ? t('users.access_policy_inherit') : tf('users.access_not_set', 'Not set')
+		kind === 'user' ? tf('users.access_default_short', 'Default') : tf('users.access_not_set', 'Not set')
 	);
-	const levelOptions = $derived([
-		{ value: 'inherit', label: inheritLabel },
-		{ value: 'none', label: t('users.access_none') },
-		{ value: 'read', label: t('users.access_read') },
-		{ value: 'write', label: t('users.access_write') }
-	]);
-	const featureOptions = $derived([
-		{ value: 'inherit', label: tf('users.access_feature_inherit', 'Default') },
-		{ value: 'on', label: t('common.on') },
-		{ value: 'off', label: t('common.off') }
-	]);
+	/** "Default: On" for the built-in default, else "Default: Read, from the role" */
+	function defaultLabel(label: string, level: string, source: string): string {
+		return source === 'default'
+			? tf('users.access_default_plain', '{label}: {level}', { label, level })
+			: tf('users.access_default_is', '{label}: {level}, {source}', {
+					label,
+					level,
+					source: sourceText(source)
+				});
+	}
+	/** The choices of a section; for a user the default names its level and where it comes from */
+	function levelOptions(def: InheritedLevel | null) {
+		return [
+			{
+				value: 'inherit',
+				label: def ? defaultLabel(inheritLabel, levelText(def.level), def.source) : inheritLabel
+			},
+			{ value: 'none', label: t('users.access_none') },
+			{ value: 'read', label: t('users.access_read') },
+			{ value: 'write', label: t('users.access_write') }
+		];
+	}
+	function featureOptions(def: InheritedFeature | null) {
+		const base = tf('users.access_feature_inherit', 'Default');
+		return [
+			{
+				value: 'inherit',
+				label: def ? defaultLabel(base, def.enabled ? t('common.on') : t('common.off'), def.source) : base
+			},
+			{ value: 'on', label: t('common.on') },
+			{ value: 'off', label: t('common.off') }
+		];
+	}
 
 	/** English for the source words until the server has loaded the new strings */
 	const SOURCE_FALLBACK: Record<string, string> = {
@@ -170,6 +258,39 @@
 			: tf('users.access_now', 'Now: {level}, {source}', params);
 	}
 
+	const ownText = () =>
+		kind === 'user'
+			? tf('users.access_own_user', 'Set for this person')
+			: tf('users.access_own_group', 'Set for this group');
+
+	/**
+	 * The line under a section's name while editing: nothing new beside the
+	 * choice while it is as saved, "Now: ..." once it was changed
+	 */
+	function sectionLine(
+		key: string,
+		eff: { access: string; source: string; role_ceiling?: string },
+		value: string,
+		above: boolean
+	): string {
+		const limit = kind === 'user' && !above && eff.source !== 'role' ? eff.role_ceiling : undefined;
+		const saved = savedChoices?.sections[key] ?? 'inherit';
+		if (value !== saved) return nowLine(eff.access, eff.source, limit);
+		if (value === 'inherit')
+			return limit ? tf('users.access_limit_only', 'Role limit: {limit}', { limit: levelText(limit) }) : '';
+		return limit
+			? tf('users.access_own_user_limit', 'Set for this person. Role limit: {limit}', {
+					limit: levelText(limit)
+				})
+			: ownText();
+	}
+
+	function featureLine(key: string, eff: { enabled: boolean; source: string }, value: string): string {
+		const saved = savedChoices?.features[key] ?? 'inherit';
+		if (value !== saved) return featureNow(eff.enabled, eff.source);
+		return value === 'inherit' ? '' : ownText();
+	}
+
 	function featureNow(enabled: boolean, source: string): string {
 		return tf('users.access_now', 'Now: {level}, {source}', {
 			level: enabled ? t('common.on') : t('common.off'),
@@ -187,6 +308,15 @@
 	{@const eff = isGroup ? null : effective?.sections[key]}
 	{@const value = isGroup ? form.values.groups[key] : form.values.sections[key]}
 	{@const above = !!eff && kind === 'user' && !!value && aboveRole(value, eff.role_ceiling)}
+	{@const line = !eff
+		? ''
+		: editable
+			? sectionLine(key, eff, value ?? 'inherit', above)
+			: nowLine(
+					eff.access,
+					eff.source,
+					kind === 'user' && eff.source !== 'role' ? eff.role_ceiling : undefined
+				)}
 	<li class={['row', isGroup && 'is-group']} data-access={isGroup ? `group:${key}` : key}>
 		<span class="text">
 			{#if editable}
@@ -194,14 +324,8 @@
 			{:else}
 				<span class="name">{text}</span>
 			{/if}
-			{#if eff}
-				<span class="now" id="{uid}-s-{key}-now"
-					>{nowLine(
-						eff.access,
-						eff.source,
-						kind === 'user' && !above && eff.source !== 'role' ? eff.role_ceiling : undefined
-					)}</span
-				>
+			{#if line}
+				<span class="now" id="{uid}-s-{key}-now">{line}</span>
 				{#if above}
 					<span class="warn" id="{uid}-s-{key}-warn"
 						>{tf('users.access_role_limit', 'The role allows {level} here; that limit still applies.', {
@@ -213,13 +337,15 @@
 		</span>
 		{#if editable}
 			{#if isGroup}
-				<Select id="{uid}-g-{key}" small options={levelOptions} bind:value={form.values.groups[key]} />
+				<Select id="{uid}-g-{key}" small options={levelOptions(null)} bind:value={form.values.groups[key]} />
 			{:else}
 				<Select
 					id="{uid}-s-{key}"
 					small
-					options={levelOptions}
-					aria-describedby={eff ? `${uid}-s-${key}-now${above ? ` ${uid}-s-${key}-warn` : ''}` : undefined}
+					options={levelOptions(sectionDefault(key))}
+					aria-describedby={[line && `${uid}-s-${key}-now`, above && `${uid}-s-${key}-warn`]
+						.filter(Boolean)
+						.join(' ') || undefined}
 					bind:value={form.values.sections[key]}
 				/>
 			{/if}
@@ -302,8 +428,13 @@
 						{@const eff = effective?.features[f.key]}
 						{@const text = label(`users.access_feature_${f.key}`, f.label)}
 						{@const hint = FEATURE_HINTS[f.key]}
+						{@const line = !eff
+							? ''
+							: editable
+								? featureLine(f.key, eff, form.values.features[f.key] ?? 'inherit')
+								: featureNow(eff.enabled, eff.source)}
 						{@const described = [
-							eff && !f.hardLock && `${uid}-f-${f.key}-now`,
+							line && !f.hardLock && `${uid}-f-${f.key}-now`,
 							hint && `${uid}-f-${f.key}-hint`
 						]
 							.filter(Boolean)
@@ -317,8 +448,8 @@
 								{/if}
 								{#if f.hardLock}
 									<span class="now">{tf('users.access_locked', 'Always off')}</span>
-								{:else if eff}
-									<span class="now" id="{uid}-f-{f.key}-now">{featureNow(eff.enabled, eff.source)}</span>
+								{:else if line}
+									<span class="now" id="{uid}-f-{f.key}-now">{line}</span>
 								{/if}
 								{#if hint}
 									<span class="hint" id="{uid}-f-{f.key}-hint">{tf(hint.key, hint.text)}</span>
@@ -328,7 +459,7 @@
 								<Select
 									id="{uid}-f-{f.key}"
 									small
-									options={featureOptions}
+									options={featureOptions(featureDefault(f.key, !!f.hardLock))}
 									aria-describedby={described || undefined}
 									bind:value={form.values.features[f.key]}
 								/>
@@ -429,9 +560,11 @@
 		color: var(--warning);
 		font-size: var(--text-sm);
 	}
+	/* As wide as the longest choice, so none is cut off */
 	.row :global(select) {
 		flex: 0 0 auto;
-		width: 14rem;
+		width: auto;
+		min-width: 14rem;
 		max-width: 100%;
 	}
 	@media (max-width: 480px) {

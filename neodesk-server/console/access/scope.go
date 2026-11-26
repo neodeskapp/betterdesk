@@ -357,18 +357,26 @@ func (s *Service) DeviceScopeRestrictedDefault(ctx context.Context) bool {
 	s.scopeMu.Unlock()
 
 	now := s.now()
-	stored, err := s.data.setting(ctx, scopeDefaultSetting)
+	restricted, _, err := s.DeviceScopeDefault(ctx)
 	if err != nil {
-		return s.scopeEnvRestricted
-	}
-	restricted := s.scopeEnvRestricted
-	if stored != "" {
-		restricted = strings.ToLower(stored) == scopeRestricted
+		return restricted
 	}
 	s.scopeMu.Lock()
 	s.scopeCached, s.scopeRestricted, s.scopeAt = true, restricted, now
 	s.scopeMu.Unlock()
 	return restricted
+}
+
+// DeviceScopeDefault reads the device scope default in force, uncached:
+// restricted, and whether the stored setting device_scope_default decides
+// it (else the DEVICE_SCOPE_DEFAULT option does). A failed read answers
+// the option with the error.
+func (s *Service) DeviceScopeDefault(ctx context.Context) (restricted, stored bool, err error) {
+	value, err := s.data.setting(ctx, scopeDefaultSetting)
+	if err != nil || value == "" {
+		return s.scopeEnvRestricted, false, err
+	}
+	return strings.ToLower(value) == scopeRestricted, true, nil
 }
 
 // InvalidateDeviceScopeDefault drops the cached default mode. Call it after

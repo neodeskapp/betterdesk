@@ -71,6 +71,7 @@ func TestEveryAPIRuleMatchesARoute(t *testing.T) {
 func TestClosedSectionsCloseTheirAPI(t *testing.T) {
 	for _, c := range []struct{ method, path, section string }{
 		{"GET", "/api/panel/org", "organizations"}, {"GET", "/api/panel/org/1/peer-credentials", "organizations"},
+		{"GET", "/api/panel/settings/sources", "settings"},
 		{"POST", "/api/panel/org/1/devices", "organizations"},
 		{"GET", "/api/panel/scaling/relays", "scaling"}, {"GET", "/api/nd/api/panel/scaling/relays", "scaling"},
 		{"GET", "/api/panel/cross-platform/distribution", "cross-platform"},

@@ -193,6 +193,38 @@ export function brandingFromServer(d: Record<string, unknown>): BrandingValues {
 	};
 }
 
+/**
+ * The appearance as the fields of a settings draft: one field per setting,
+ * each colour its own ("colors.accentBlue"), so the save bar names what
+ * changed. The slides stay one field, a list.
+ */
+export type FlatBranding = Omit<BrandingValues, 'colors'> & { [K in `colors.${ColorKey}`]: string };
+
+export function flatBranding(v: BrandingValues): FlatBranding {
+	const { colors, ...rest } = v;
+	const out = { ...rest } as FlatBranding;
+	for (const k of COLOR_KEYS) out[`colors.${k}`] = colors[k] ?? '';
+	return out;
+}
+
+const BRANDING_KEYS = Object.keys(brandingFromServer({})).filter((k) => k !== 'colors') as Exclude<
+	keyof BrandingValues,
+	'colors'
+>[];
+
+/** The draft's fields back into the appearance; fields of the draft that are no appearance setting are left out */
+export function nestBranding(flat: Partial<FlatBranding> & Record<string, unknown>): BrandingValues {
+	const out = {} as Record<string, unknown>;
+	for (const k of BRANDING_KEYS) out[k] = flat[k];
+	out.colors = Object.fromEntries(COLOR_KEYS.map((k) => [k, flat[`colors.${k}`] ?? '']));
+	return out as unknown as BrandingValues;
+}
+
+/** The slides by what people recognise them by: the title, the built-in slide's name, or the picture's file name */
+export function slideNames(slides: readonly Slide[]): string[] {
+	return slides.map((s) => s.title.trim() || s.slideKey || s.imageUrl.split('/').pop() || s.id);
+}
+
 /** What POST /api/settings/branding takes: the old page's flat keys, numbers and switches as strings */
 export function brandingPayload(v: BrandingValues): Record<string, unknown> {
 	const colors: Record<string, string> = {};

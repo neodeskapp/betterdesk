@@ -159,3 +159,25 @@ func checkOrgPolicy(category string, body any) string {
 	}
 	return ""
 }
+
+// PolicyGroupFields names the settings of one policy group.
+type PolicyGroupFields struct {
+	Group  string
+	Fields []string
+}
+
+// PolicyFields lists the settings of every policy group, in the order of
+// the categories and sorted within a group: the settings the check takes,
+// so that a list built from it cannot drift from what can be stored.
+func PolicyFields() []PolicyGroupFields {
+	out := make([]PolicyGroupFields, 0, len(policyCategories))
+	for _, group := range policyCategories {
+		fields := make([]string, 0, len(policySettings[group]))
+		for field := range policySettings[group] {
+			fields = append(fields, field)
+		}
+		sort.Strings(fields)
+		out = append(out, PolicyGroupFields{Group: group, Fields: fields})
+	}
+	return out
+}

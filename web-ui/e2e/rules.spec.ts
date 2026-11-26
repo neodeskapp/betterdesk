@@ -81,22 +81,33 @@ for (const role of ROLES) {
 			if (!(b.isSuperAdmin || b.permissions.includes('org.edit'))) {
 				// A83: saving policies needs org.edit (server_admin reads them)
 				await expect(page.getByText('You can view this page but not change it.')).toBeVisible();
-				await expect(page.getByLabel('Longest session (minutes)')).toBeDisabled();
-				await expect(page.getByRole('button', { name: 'Save policies' })).toHaveCount(0);
+				await expect(page.getByLabel('Longest session (minutes)', { exact: true })).toBeDisabled();
+				await expect(
+					page.getByRole('button', { name: 'Set for this organization: Allow sound from the device' })
+				).toBeDisabled();
+				await expect(page.getByRole('button', { name: /^Remove all rules of / })).toHaveCount(0);
 				await expectNoAxeViolations(page);
 				const org = new URL(page.url()).pathname.split('/').pop() ?? 'x';
 				expect(await refused(page, b, 'put', `/api/panel/policies/${org}/connection`, {})).toBe(403);
 				return;
 			}
-			await expect(page.getByRole('button', { name: 'Save policies' })).toBeVisible();
+			// Nothing to save until something changes
+			await expect(page.locator('.changes-bar')).toHaveCount(0);
 			await expectNoAxeViolations(page);
-			// A change marks the form; a refused number says why and keeps the change
-			const minutes = page.getByLabel('Longest session (minutes)');
+			// A change shows the save bar; a refused number says why and keeps the change
+			const minutes = page.getByLabel('Longest session (minutes)', { exact: true });
 			await minutes.fill('5000');
-			await expect(page.locator('.save-bar')).toContainText('Unsaved changes');
-			await page.getByRole('button', { name: 'Save policies' }).click();
 			await expect(minutes).toHaveAttribute('aria-invalid', 'true');
+			const bar = page.locator('.changes-bar');
+			await expect(bar).toContainText('1 unsaved change');
+			await bar.getByRole('button', { name: 'Save policies' }).click();
+			await expect(bar).toContainText(
+				'Not saved: Longest session (minutes): enter a whole number from 0 to 1440.'
+			);
 			await expectNoAxeViolations(page);
+			// Nothing is saved: put the change back
+			await bar.getByRole('button', { name: 'Discard' }).click();
+			await expect(bar).toHaveCount(0);
 		});
 
 		test('alerts and automation', async ({ page }) => {

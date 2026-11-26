@@ -15,7 +15,7 @@
 		latestExpiry,
 		parseAllowList
 	} from '#lib/people/apiTokens.ts';
-	import { categoryLabel, permLabel, permissionGroups } from '#lib/people/permissions.ts';
+	import { groupTitle, permLabel, permissionGroups } from '#lib/people/permissions.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
@@ -142,7 +142,7 @@
 				</div>
 				{#each groups as group (group.id)}
 					<div class="perm-group">
-						<h3>{categoryLabel(group.id, t)}</h3>
+						<h3>{groupTitle(group.id, t)}</h3>
 						{#each group.permissions as perm (perm)}
 							<Checkbox
 								inline

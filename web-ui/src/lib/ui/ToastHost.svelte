@@ -9,7 +9,12 @@
   While a menu, dialog or sheet is open the stack goes below it, so a
   toast never covers what the person opened ("Copied" from a sheet then
   shows as the tick on its button; screen readers still hear the toast).
-  An error stays on top. The container hangs off <body> and is marked
+  An error stays on top.
+
+  An Undo in a toast (action.undo) also runs with Ctrl+Z or Cmd+Z while
+  the toast shows, unless the focus is in a text field: on a long page the
+  keyboard can't reach the toast before it goes.
+  The container hangs off <body> and is marked
   data-layer-live, so the page behind an open dialog can be inert while
   toasts are still read.
 -->
@@ -17,12 +22,43 @@
 	import Toast from './Toast.svelte';
 	import { portal } from './portal.ts';
 	import { overlays } from './popups.svelte.ts';
-	import { toasts } from './toasts.svelte.ts';
+	import { dismiss, toasts } from './toasts.svelte.ts';
 
 	const polite = $derived(toasts.items.filter((t) => t.type !== 'error'));
 	const errors = $derived(toasts.items.filter((t) => t.type === 'error'));
 	const under = $derived((overlays.popup || overlays.layers > 0) && errors.length === 0);
+
+	/** Inputs whose own Ctrl+Z undoes typing */
+	const NO_TEXT = new Set([
+		'checkbox',
+		'radio',
+		'button',
+		'submit',
+		'reset',
+		'range',
+		'color',
+		'file',
+		'image'
+	]);
+
+	function editable(el: EventTarget | null): boolean {
+		if (!(el instanceof HTMLElement)) return false;
+		if (el.isContentEditable || el instanceof HTMLTextAreaElement) return true;
+		return el instanceof HTMLInputElement && !NO_TEXT.has(el.type);
+	}
+
+	function onKey(e: KeyboardEvent) {
+		if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'z') return;
+		if (e.defaultPrevented || editable(e.target)) return;
+		const last = toasts.items.findLast((t) => t.action?.undo);
+		if (!last?.action) return;
+		e.preventDefault();
+		dismiss(last.id);
+		last.action.onclick();
+	}
 </script>
+
+<svelte:window onkeydown={onKey} />
 
 <!-- Hangs off <body> outside the page, so its close buttons stay reachable while the page behind a dialog is inert (layers.ts) -->
 <div class={['toast-container', under && 'is-under']} data-layer-live {@attach portal}>

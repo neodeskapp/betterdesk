@@ -1,15 +1,21 @@
 <!--
   Roles and permissions (/permissions, super admins only, as the server
-  requires since commit 024540ff). Pick a role, then allow or deny each
-  permission: every change is saved right away as an override, the row
-  says "Saving…", then "Saved" or why it failed. Changed permissions are
-  marked with words and can be reset one by one, or all at once from the
-  danger zone. Super admin roles always have everything (a note says so).
-  A permission the code fixes for the role (the server's "fixed") shows
-  off and locked with the reason; an override stored for it before can
-  still be reset.
+  requires since commit 024540ff), on the settings pattern (PATTERN.md):
+  the role is the scope and comes first, a picker with each role's name and
+  sentence; the summary says in one sentence what the role can do, live
+  with the unsaved changes. The permissions are grouped by what a person
+  does, each with its name, one sentence and its key (muted, found by the
+  filter). Edit, then save: the ChangesBar lists every change, Save sends
+  one batch, and the toast names what changed and offers Undo (the batch's
+  `previous` sent back). A permission another one needs says so with a
+  button that turns it on (in the same draft); one others need says which
+  stop working while it is off. Permissions the code fixes for the role
+  show off and locked with the reason. Views: only what differs from the
+  default, a second role to compare with, and per permission which roles
+  have it. Super admin roles always have everything (a note says so).
 
-  URL: ?role= opens that role and follows the picker.
+  URL: ?role= opens that role and follows the picker; #perm-<key> (the
+  settings search) opens a permission's row.
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
@@ -17,26 +23,41 @@
 	import { page } from '$app/state';
 	import { replaceState } from '$app/navigation';
 	import {
-		clearOverride,
 		listOverrides,
 		listRoles,
 		roleEffective,
-		setOverride,
+		saveRoleChanges,
+		type PermissionNeed,
 		type RoleInfo,
 		type RoleOverride
 	} from '#lib/api/roles.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
-	import NoAccess from '#lib/shell/NoAccess.svelte';
+	import { i18n, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import {
-		categoryLabel,
+		batchBody,
+		brokenBy,
+		compareWith,
+		defaultOn,
+		differsFromDefault,
+		draftValues,
+		groupDesc,
+		groupTitle,
+		liveEffective,
+		missingNeeds,
 		overrideMap,
+		permHelp,
 		permissionGroups,
 		permLabel,
-		pickRole
+		permRowId,
+		pickRole,
+		roleSummary,
+		rolesWith,
+		toggleValue,
+		undoBody,
+		type Ovr
 	} from '#lib/people/permissions.ts';
 	import { onRefresh } from '#lib/shell/page.svelte.ts';
 	import { session } from '#lib/state/session.svelte.ts';
-	import Button from '#lib/ui/Button.svelte';
+	import ChoiceList from '#lib/ui/ChoiceList.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import DangerZone from '#lib/ui/DangerZone.svelte';
 	import Field from '#lib/ui/Field.svelte';
@@ -44,354 +65,589 @@
 	import Select from '#lib/ui/Select.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Switch from '#lib/ui/Switch.svelte';
+	import ValueCopy from '#lib/ui/ValueCopy.svelte';
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
+	import ChangesBar from '#lib/ui/settings/ChangesBar.svelte';
+	import SettingRow, { type Dependency } from '#lib/ui/settings/SettingRow.svelte';
+	import SettingsGroup from '#lib/ui/settings/SettingsGroup.svelte';
+	import SettingsPage from '#lib/ui/settings/SettingsPage.svelte';
+	import { SettingsDraft, inWords, saveAndConfirm } from '#lib/ui/settings/draft.svelte.ts';
+	import { SettingsFilter } from '#lib/ui/settings/filter.svelte.ts';
+	import { roleLabel, roleOptions } from '#lib/ui/settings/pickers.ts';
 	import { ICONS } from '#lib/util/display.ts';
 
 	const allowed = session.isSuperAdmin;
 
 	let roles = $state.raw<RoleInfo[]>([]);
 	let all = $state.raw<string[]>([]);
+	let requires = $state.raw<Record<string, PermissionNeed[]>>({});
 	let overrides = $state.raw<RoleOverride[]>([]);
-	let effective = $state.raw(new Set<string>());
+	/** What each role has now, as the server says */
+	const effective = new SvelteMap<string, Set<string>>();
 	let phase = $state<'loading' | 'ok' | 'error'>('loading');
 	let role = $state('');
-	/** Per permission: what its row says after a change */
-	const rowStatus = new SvelteMap<string, { text: string; tone: '' | 'ok' | 'error' }>();
-	const busy = new SvelteMap<string, boolean>();
+	let compareRole = $state('');
+	let diffOnly = $state(false);
 	let resetting = $state(false);
+	/** Draws the role picker again when switching was cancelled */
+	let pickerKey = $state(0);
+
+	const filter = new SettingsFilter();
+	const draft = new SettingsDraft<Record<string, Ovr>>({});
+	$effect(() => draft.track());
 
 	const current = $derived(roles.find((r) => r.name === role) ?? null);
-	const changed = $derived(overrideMap(overrides, role));
 	const groups = $derived(permissionGroups(all));
-	const defaults = $derived(new Set(current?.permissions ?? []));
-	const fixed = $derived(current?.fixed ?? {});
+	const live = $derived(
+		current
+			? liveEffective(current, effective.get(role) ?? new Set(), draft.loaded, draft.values, all)
+			: new Set<string>()
+	);
+	const overridden = $derived(all.filter((p) => (draft.values[p] ?? null) !== null).length);
+	const stored = $derived([...overrideMap(overrides, role).keys()]);
+	const other = $derived(compareRole ? (effective.get(compareRole) ?? new Set<string>()) : null);
+	const otherRole = $derived(roles.find((r) => r.name === compareRole) ?? null);
 
-	function roleLabel(name: string): string {
-		const key = `users.role_${name}`;
-		return t(key) === key ? name : t(key);
+	const yesNo = (on: boolean) =>
+		on ? tf('permissions.allowed', 'allowed') : tf('permissions.not_allowed', 'not allowed');
+
+	function lister(type: 'conjunction' | 'disjunction'): (items: string[]) => string {
+		try {
+			const f = new Intl.ListFormat(i18n.locale ?? 'en', { style: 'long', type });
+			return (items) => f.format(items);
+		} catch {
+			return (items) => items.join(', ');
+		}
 	}
 
-	async function loadRole(name: string) {
-		const [perms, ovr] = await Promise.all([roleEffective(name), listOverrides()]);
-		if (name !== role) return;
-		effective = new Set(perms);
+	const sentence = $derived(
+		current && !current.is_super_admin
+			? roleSummary(live, all, t, lister('conjunction'), lister('disjunction'))
+			: ''
+	);
+
+	/** The draft's words for each permission: its name, and "allowed" or "default (allowed)" */
+	function describe(r: RoleInfo) {
+		draft.describe(
+			Object.fromEntries(
+				all.map((p) => [
+					p,
+					{
+						label: permLabel(p, t),
+						format: (v: unknown) =>
+							v === null || v === undefined
+								? tf('permissions.val_default', 'default ({value})', { value: yesNo(defaultOn(p, r)) })
+								: typeof v === 'boolean'
+									? yesNo(v)
+									: inWords(v)
+					}
+				])
+			)
+		);
+	}
+
+	function openRole(name: string) {
+		const r = roles.find((x) => x.name === name);
+		draft.load(draftValues(all, overrideMap(overrides, name)));
+		if (r) describe(r);
+	}
+
+	async function readRoles() {
+		const [r, ovr] = await Promise.all([listRoles(), listOverrides()]);
+		const perms = await Promise.all(r.roles.map((x) => roleEffective(x.name).catch(() => [] as string[])));
+		roles = r.roles;
+		all = r.all;
+		requires = r.requires;
 		overrides = ovr;
+		effective.clear();
+		r.roles.forEach((x, i) => effective.set(x.name, new Set(perms[i])));
 	}
 
 	async function load() {
 		phase = 'loading';
 		try {
-			const [r, ovr] = await Promise.all([listRoles(), listOverrides()]);
-			roles = r.roles;
-			all = r.all;
-			overrides = ovr;
+			await readRoles();
 			role = pickRole(
-				r.roles,
+				roles,
 				untrack(() => page.url.searchParams.get('role'))
 			);
-			if (role) await loadRole(role);
+			if (compareRole === role || !roles.some((r) => r.name === compareRole)) compareRole = '';
+			openRole(role);
 			phase = 'ok';
 		} catch {
 			phase = 'error';
 		}
 	}
 
+	/** Read one role again after a save, an undo or a reset */
+	async function reloadRole(name: string) {
+		const [ovr, perms] = await Promise.all([listOverrides(), roleEffective(name)]);
+		overrides = ovr;
+		effective.set(name, new Set(perms));
+		if (name === role) openRole(name);
+	}
+
 	$effect(() => {
 		if (!allowed) return;
 		untrack(() => void load());
-		return onRefresh(() => void load());
+		return onRefresh(() => {
+			if (!draft.dirty) void load();
+		});
 	});
 
 	async function selectRole(name: string) {
+		if (name === role) return;
+		if (draft.dirty) {
+			const ok = await confirm({
+				title: tf('settings.page.discard_title', 'Discard unsaved changes?'),
+				message: tf('settings.page.discard_message', 'The changes on this page are not saved yet.'),
+				confirmLabel: tf('settings.page.discard_confirm', 'Discard changes'),
+				danger: true
+			});
+			if (!ok) {
+				pickerKey++;
+				return;
+			}
+		}
 		role = name;
-		rowStatus.clear();
+		if (compareRole === name) compareRole = '';
+		openRole(name);
 		const url = new URL(location.href);
 		url.searchParams.set('role', name);
 		// This page's own address with another ?role=
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		replaceState(url, page.state);
-		try {
-			await loadRole(name);
-		} catch {
-			phase = 'error';
-		}
 	}
 
-	/** Save one change, read the role again, keep focus on the control that was used */
-	async function change(perm: string, work: () => Promise<unknown>, done: string, focus: 'toggle' | 'reset') {
-		busy.set(perm, true);
-		rowStatus.set(perm, { text: t('permissions.saving'), tone: '' });
-		try {
-			await work();
-			await loadRole(role);
-			rowStatus.set(perm, { text: done, tone: 'ok' });
-		} catch (err) {
-			rowStatus.set(perm, {
-				text: `${t('permissions.save_failed')} ${err instanceof Error ? err.message : ''}`.trim(),
-				tone: 'error'
-			});
-		} finally {
-			busy.delete(perm);
-		}
-		await tick();
-		const row = document.querySelector(`[data-perm="${CSS.escape(perm)}"]`);
-		const target =
-			(focus === 'reset' ? row?.querySelector<HTMLElement>('.perm-reset') : null) ??
-			row?.querySelector<HTMLElement>('input');
-		if (target && !row?.contains(document.activeElement)) target.focus({ preventScroll: true });
+	function setPerm(perm: string, on: boolean) {
+		if (!current) return;
+		draft.set(perm, toggleValue(on, draft.loaded[perm] ?? null, defaultOn(perm, current)));
 	}
 
-	function toggle(perm: string, granted: boolean) {
-		void change(perm, () => setOverride(role, perm, granted), t('permissions.saved'), 'toggle');
-	}
-
-	function resetOne(perm: string) {
-		void change(perm, () => clearOverride(role, perm), t('permissions.reverted'), 'toggle');
+	async function save() {
+		const name = role;
+		let previous: { permission: string; granted: boolean | null }[] = [];
+		await saveAndConfirm(
+			draft,
+			async (changes) => {
+				const out = await saveRoleChanges(name, batchBody(changes));
+				previous = out.previous;
+				effective.set(name, new Set(out.permissions));
+			},
+			{
+				undo: () => saveRoleChanges(name, undoBody(previous)),
+				reload: () => reloadRole(name).catch(() => undefined)
+			}
+		);
 	}
 
 	async function resetAll() {
-		if (!current) return;
-		const list = overrides.filter((o) => o.role === role);
-		if (!list.length) return;
+		if (!current || !stored.length) return;
+		const name = role;
+		const count = stored.length;
+		const label = roleLabel(name, t);
+		const message =
+			(count === 1
+				? tf(
+						'permissions.confirm_reset_one',
+						'Put the one changed permission of {role} back to its default? People with this role get the default from the next page they open.',
+						{ role: label }
+					)
+				: tf(
+						'permissions.confirm_reset_count',
+						'Put {count} changed permissions of {role} back to their defaults? People with this role get the defaults from the next page they open.',
+						{ role: label, count }
+					)) +
+			(draft.dirty ? ` ${tf('permissions.reset_unsaved', 'Your unsaved changes are dropped too.')}` : '');
 		const ok = await confirm({
-			title: t('permissions.reset_overrides'),
-			message: t('permissions.confirm_reset_named', { role: roleLabel(role) }),
-			confirmLabel: t('permissions.reset_overrides'),
+			title: tf('permissions.reset_overrides', 'Reset all changes'),
+			message,
+			confirmLabel: tf('permissions.reset_overrides', 'Reset all changes'),
 			confirmIcon: ICONS.reset,
 			danger: true
 		});
 		if (!ok) return;
 		resetting = true;
 		try {
-			for (const o of list) await clearOverride(role, o.permission);
-			toast.success(t('permissions.all_reverted'));
+			const out = await saveRoleChanges(
+				name,
+				stored.map((p) => ({ permission: p, granted: null }))
+			);
+			toast.show({
+				type: 'success',
+				message: tf('permissions.reset_done', '{role}: {count} permissions are back to their defaults.', {
+					role: label,
+					count
+				}),
+				action: {
+					label: tf('settings_ui.undo', 'Undo'),
+					undo: true,
+					onclick: () => {
+						void saveRoleChanges(name, undoBody(out.previous))
+							.then(async () => {
+								await reloadRole(name);
+								toast.success(tf('settings_ui.undone', 'The changes are undone.'));
+							})
+							.catch((err: unknown) =>
+								toast.error(
+									`${tf('settings_ui.undo_failed', 'Undoing did not work.')} ${err instanceof Error ? err.message : ''}`.trim()
+								)
+							);
+					}
+				}
+			});
 		} catch (err) {
-			toast.error(`${t('permissions.save_failed')} ${err instanceof Error ? err.message : ''}`.trim());
+			toast.error(
+				`${tf('permissions.save_failed', 'Could not save.')} ${err instanceof Error ? err.message : ''}`.trim()
+			);
 		} finally {
 			resetting = false;
 		}
-		rowStatus.clear();
 		try {
-			await loadRole(role);
+			await reloadRole(name);
 		} catch {
 			phase = 'error';
 		}
 	}
 
-	const roleOptions = $derived(roles.map((r) => ({ value: r.name, label: roleLabel(r.name) })));
-	const summary = $derived.by(() => {
-		if (!current) return '';
-		const parts = [t('permissions.level_n', { level: current.level })];
-		if (current.is_super_admin) parts.push(t('permissions.tag_full_access'));
-		else if (current.is_server_level) parts.push(t('permissions.tag_server_wide'));
-		return `${parts.join(', ')}.`;
-	});
+	/** The notes under a row: what it needs, what stops working without it, and what the role can't do with it */
+	function notesOf(perm: string, r: RoleInfo): Dependency[] {
+		const out: Dependency[] = [];
+		for (const n of missingNeeds(perm, live, requires, r.fixed)) {
+			const name = permLabel(n.permission, t);
+			const key = `permissions.needs_${n.reason}`;
+			const text =
+				t(key, { name }) === key
+					? tf('permissions.needs_other', 'Needs {name}.', { name })
+					: t(key, { name });
+			out.push(
+				n.fixable
+					? {
+							text,
+							fixLabel: tf('permissions.turn_on', 'Turn on {name}', { name }),
+							onfix: () => void turnOn(n.permission)
+						}
+					: { text: `${text} ${tf('permissions.needs_fixed', "It can't be turned on for this role.")}` }
+			);
+		}
+		const broken = brokenBy(perm, live, requires, all);
+		if (broken.length)
+			out.push({
+				text: tf('permissions.breaks', 'While this is off, these do nothing: {list}.', {
+					list: lister('conjunction')(broken.map((p) => permLabel(p, t)))
+				})
+			});
+		// server.keys creates keys only for a role that can give a role (api/auth_handlers.go handleCreateAPIKey)
+		if (perm === 'server.keys' && live.has(perm) && r.fixed['user.create'] === 'assigns_no_role')
+			out.push({
+				text: tf(
+					'permissions.keys_no_create',
+					'This role can list and delete API keys but not create them: it can give no role.'
+				)
+			});
+		return out;
+	}
+
+	/** Turn on a needed permission and move focus to its switch */
+	async function turnOn(perm: string) {
+		setPerm(perm, true);
+		await tick();
+		document.getElementById(`${permRowId(perm)}-control`)?.focus();
+	}
+
+	function whoLabel(name: string): string {
+		const r = roles.find((x) => x.name === name);
+		const label = roleLabel(name, t);
+		if (r?.is_super_admin) return tf('permissions.who_always', '{role} (always)', { role: label });
+		if (name === role && draft.dirty)
+			return tf('permissions.who_unsaved', '{role} (with your unsaved changes)', { role: label });
+		return label;
+	}
+
+	const pickerChoices = $derived(
+		roleOptions(roles, t).map((o) => ({ value: o.value, title: o.label, description: o.hint }))
+	);
+	const compareOptions = $derived([
+		{ value: '', label: tf('permissions.compare_none', 'No other role') },
+		...roles.filter((r) => r.name !== role).map((r) => ({ value: r.name, label: roleLabel(r.name, t) }))
+	]);
+	const sections = $derived(
+		current && !current.is_super_admin
+			? groups.map((g) => ({ id: `perm-group-${g.id}`, label: groupTitle(g.id, t) }))
+			: []
+	);
+	const shownGroups = $derived(
+		current && !current.is_super_admin
+			? groups
+					.map((g) => ({
+						...g,
+						shown: g.permissions.filter(
+							(p) => !diffOnly || differsFromDefault(p, current, live, draft.values)
+						)
+					}))
+					.filter((g) => g.shown.length)
+			: []
+	);
 </script>
 
-{#if !allowed}
-	<NoAccess />
-{:else}
-	<div class="page page-wide permissions-page">
-		<div class="page-head">
-			<h1>{t('nav.permissions')}</h1>
-			<p class="page-description">{t('permissions.page_description')}</p>
-		</div>
-
-		<div class="page-cols">
-			<div class="page-main">
-				{#if phase === 'loading'}
-					<States kind="loading" message={t('permissions.loading')} />
-				{:else if phase === 'error'}
-					<States kind="error" message={t('permissions.load_failed')} onretry={() => void load()} />
-				{:else if !current}
-					<States message={t('permissions.empty_desc')} />
-				{:else if current.is_super_admin}
-					<Notice message={t('permissions.locked_desc')} />
-				{:else}
-					<div class="matrix">
-						{#each groups as g (g.id)}
-							<section class="section group" aria-labelledby="perm-cat-{g.id}">
-								<h2 id="perm-cat-{g.id}">{categoryLabel(g.id, t)}</h2>
-								<ul class="perm-list">
-									{#each g.permissions as perm (perm)}
-										{@const isChanged = changed.has(perm)}
-										{@const st = rowStatus.get(perm)}
-										{@const fixedBy = fixed[perm]}
-										<li class={['perm-row', isChanged && 'is-changed']} data-perm={perm}>
-											<Switch
-												class="perm-switch"
-												label={permLabel(perm, t)}
-												hint={perm}
-												effect={fixedBy ? t(`permissions.fixed_${fixedBy}`) : undefined}
-												checked={!fixedBy && effective.has(perm)}
-												disabled={!!fixedBy || busy.has(perm)}
-												onchange={(e) => toggle(perm, (e.currentTarget as HTMLInputElement).checked)}
-											/>
-											<span class="row-end">
-												<span class={['perm-status', st?.tone && `is-${st.tone}`]} aria-live="polite"
-													>{st?.text ?? ''}</span
-												>
-												{#if isChanged}
-													<span class="perm-changed"
-														>{defaults.has(perm)
-															? t('permissions.changed_default_on')
-															: t('permissions.changed_default_off')}</span
-													>
-													<Button
-														class="perm-reset"
-														variant="link"
-														size="sm"
-														disabled={busy.has(perm)}
-														aria-label={t('permissions.reset_one', { name: permLabel(perm, t) })}
-														onclick={() => resetOne(perm)}>{t('permissions.reset')}</Button
-													>
-												{/if}
-											</span>
-										</li>
-									{/each}
-								</ul>
-							</section>
-						{/each}
-					</div>
-				{/if}
+<SettingsPage
+	id="permissions"
+	title={t('nav.permissions')}
+	description={tf(
+		'permissions.page_description',
+		'A role is a set of permissions that everyone with that role has. Changes apply from the next page those people open.'
+	)}
+	{allowed}
+	filter={current && !current.is_super_admin ? filter : undefined}
+	filterLabel={tf('permissions.filter_label', 'Filter permissions')}
+	{sections}
+>
+	{#snippet scope()}
+		{#if phase === 'ok' && roles.length}
+			<div id="perm-role" class="perm-role">
+				<h2 id="perm-role-title" class="perm-scope-title">{tf('permissions.pick_role', 'Role to change')}</h2>
+				{#key pickerKey}
+					<ChoiceList
+						choices={pickerChoices}
+						labelledby="perm-role-title"
+						describedby="perm-role-note"
+						name="perm-role"
+						value={role}
+						onchange={(v, on) => {
+							if (on) void selectRole(v);
+						}}
+					/>
+				{/key}
+				<p id="perm-role-note" class="perm-muted">
+					{tf('permissions.role_desc_note', "The sentences describe each role's defaults.")}
+				</p>
 			</div>
+		{/if}
+	{/snippet}
 
-			<aside class="page-side is-sticky" aria-labelledby="perm-role-title">
-				<section class="section" aria-labelledby="perm-role-title">
-					<h2 id="perm-role-title" class="sr-only">{t('permissions.select_role')}</h2>
-					{#if roles.length}
-						<Field label={t('permissions.select_role')}>
-							{#snippet children(f)}
-								<Select
-									{...f}
-									options={roleOptions}
-									value={role}
-									onchange={(e) => void selectRole((e.currentTarget as HTMLSelectElement).value)}
-								/>
-							{/snippet}
-						</Field>
-					{/if}
-					{#if current}
-						<div class="role-info" aria-live="polite">
-							{#if t(`users.role_desc_${current.name}`) !== `users.role_desc_${current.name}`}
-								<p>{t(`users.role_desc_${current.name}`)}</p>
-							{/if}
-							<div class="role-summary">
-								<p>{summary}</p>
-								{#if !current.is_super_admin}
-									<CountLine
-										text={t('permissions.role_summary')}
-										values={{ granted: effective.size, total: all.length, changed: changed.size }}
-									/>
-								{/if}
-							</div>
-						</div>
-					{/if}
-				</section>
-
-				{#if current && !current.is_super_admin}
-					<DangerZone
-						title={t('permissions.danger_title')}
-						rows={[
-							{
-								title: t('permissions.reset_overrides'),
-								consequence: t('permissions.reset_overrides_desc'),
-								action: t('permissions.reset_overrides_button'),
-								onclick: () => void resetAll(),
-								disabled: changed.size === 0,
-								busy: resetting
-							}
-						]}
+	{#snippet summary()}
+		{#if current}
+			<div class="perm-summary" aria-live="polite">
+				<h2 class="perm-scope-title">
+					{tf('permissions.summary_title_named', 'What {role} can do', { role: roleLabel(role, t) })}
+				</h2>
+				{#if current.is_super_admin}
+					<p>{t('permissions.locked_desc')}</p>
+				{:else}
+					<p class="perm-sentence">{sentence}</p>
+					{#if draft.dirty}<p class="perm-muted">
+							{tf('permissions.summary_unsaved', 'With your unsaved changes.')}
+						</p>{/if}
+					<CountLine
+						text={t('permissions.role_summary')}
+						values={{ granted: live.size, total: all.length, changed: overridden }}
 					/>
 				{/if}
-			</aside>
+			</div>
+		{/if}
+	{/snippet}
+
+	{#if phase === 'loading'}
+		<States kind="loading" message={t('permissions.loading')} />
+	{:else if phase === 'error'}
+		<States kind="error" message={t('permissions.load_failed')} onretry={() => void load()} />
+	{:else if !current}
+		<States message={t('permissions.empty_desc')} />
+	{:else if current.is_super_admin}
+		<Notice message={t('permissions.locked_desc')} />
+	{:else}
+		<div id="perm-views" class="perm-views" role="group" aria-labelledby="perm-views-title">
+			<h2 id="perm-views-title" class="sr-only">{tf('permissions.views_title', 'Views')}</h2>
+			<Switch
+				id="perm-diff-only"
+				label={tf('permissions.diff_only', 'Only show what differs from the default')}
+				bind:checked={diffOnly}
+			/>
+			<Field
+				label={tf('permissions.compare_label', 'Compare with')}
+				hint={tf(
+					'permissions.compare_hint',
+					"Shows the other role's value under each permission. It can't be changed from here."
+				)}
+			>
+				{#snippet children(f)}
+					<Select {...f} options={compareOptions} bind:value={compareRole} />
+				{/snippet}
+			</Field>
 		</div>
-	</div>
-{/if}
+
+		{#if diffOnly && !shownGroups.length}
+			<p class="perm-muted">
+				{tf('permissions.diff_none', 'Nothing differs from the default for this role.')}
+			</p>
+		{/if}
+
+		{#each shownGroups as g (g.id)}
+			<SettingsGroup
+				id={`perm-group-${g.id}`}
+				title={groupTitle(g.id, t)}
+				description={groupDesc(g.id, t) || undefined}
+			>
+				{#each g.shown as perm (perm)}
+					{@const fixedBy = current.fixed[perm]}
+					{@const v = draft.values[perm] ?? null}
+					{@const cmp = other ? compareWith(perm, live, other) : null}
+					{@const who = rolesWith(perm, roles, effective, role, live)}
+					<SettingRow
+						id={permRowId(perm)}
+						label={permLabel(perm, t)}
+						help={permHelp(perm, t) || undefined}
+						terms={[perm, groupTitle(g.id, t)]}
+						checked={live.has(perm)}
+						disabled={!!fixedBy}
+						onchange={(on) => setPerm(perm, on)}
+						changed={draft.isChanged(perm)}
+						source={v !== null
+							? {
+									kind: 'here',
+									text: defaultOn(perm, current)
+										? tf('permissions.src_changed_on', 'Changed for this role. The default is allowed.')
+										: tf('permissions.src_changed_off', 'Changed for this role. The default is not allowed.')
+								}
+							: null}
+						onreset={v !== null ? () => draft.set(perm, null) : undefined}
+						resetLabel={tf('permissions.back_default', 'Back to the default')}
+						noEffect={fixedBy ? t(`permissions.fixed_${fixedBy}`) : undefined}
+						needs={notesOf(perm, current)}
+					>
+						<div class="perm-extra">
+							{#if cmp && otherRole}
+								<p class={['perm-compare', cmp.differs && 'is-different']}>
+									<span
+										>{tf('permissions.compare_value', '{role}: {value}', {
+											role: roleLabel(otherRole.name, t),
+											value: yesNo(cmp.other)
+										})}</span
+									>
+									<span class="perm-compare-mark"
+										>{cmp.differs
+											? tf('permissions.compare_differs', 'Differs')
+											: tf('permissions.compare_same', 'Same')}</span
+									>
+								</p>
+							{/if}
+							<details class="perm-who">
+								<summary>{tf('permissions.who_has', 'Which roles have this?')}</summary>
+								{#if who.length}
+									<ul>
+										{#each who as name (name)}<li>{whoLabel(name)}</li>{/each}
+									</ul>
+								{:else}
+									<p>{tf('permissions.who_none', 'No role has it.')}</p>
+								{/if}
+							</details>
+							<!-- The key on this line, not one of its own: it is found by the filter through terms -->
+							<span class="perm-key"
+								><span class="sr-only">{tf('settings_ui.internal_name', 'Internal name')}</span><ValueCopy
+									value={perm}
+									label={perm}
+								/></span
+							>
+						</div>
+					</SettingRow>
+				{/each}
+			</SettingsGroup>
+		{/each}
+
+		<DangerZone
+			title={t('permissions.danger_title')}
+			rows={[
+				{
+					title: tf('permissions.reset_overrides', 'Reset all changes'),
+					consequence: t('permissions.reset_overrides_desc'),
+					action: t('permissions.reset_overrides_button'),
+					onclick: () => void resetAll(),
+					disabled: stored.length === 0,
+					busy: resetting
+				}
+			]}
+		/>
+	{/if}
+
+	{#snippet bar()}<ChangesBar {draft} onsave={save} />{/snippet}
+</SettingsPage>
 
 <style>
-	/* Groups flow down two or three columns on wide screens; a group is never
-	   split, and the reading order is column by column */
-	.matrix {
-		columns: 3 340px;
-		column-gap: var(--space-7);
+	.perm-scope-title {
+		margin: 0 0 var(--space-2);
+		font-size: var(--text-md);
+		font-weight: 600;
 	}
-	.group {
-		break-inside: avoid;
-		margin-bottom: var(--space-6);
+	.perm-role :global(.choice-list) {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+		column-gap: var(--space-4);
 	}
-	.perm-list {
-		margin: 0 calc(-1 * var(--row-pad-x));
-		padding: 0;
-		list-style: none;
-		border-top: 1px solid var(--rule);
+	.perm-muted {
+		margin: var(--space-2) 0 0;
+		color: var(--text-muted);
+		font-size: var(--text-sm);
 	}
-	.perm-row {
+	.perm-summary p {
+		margin: 0 0 var(--space-2);
+	}
+	.perm-sentence {
+		max-width: var(--measure);
+	}
+	.perm-views {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-3);
+	}
+	.perm-views :global(.form-group) {
+		width: min(100%, 360px);
+		margin: 0;
+	}
+	.perm-extra {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: center;
-		gap: var(--space-2) var(--space-3);
-		min-height: var(--row-h);
-		padding: var(--row-pad-y) var(--row-pad-x);
-		border-bottom: 1px solid var(--rule);
+		align-items: baseline;
+		gap: var(--space-1) var(--space-4);
+		padding-inline-start: calc(var(--check-size) + var(--check-gap));
+		font-size: var(--text-sm);
 	}
-	.perm-row :global(.check-field) {
-		flex: 1 1 260px;
-		min-width: 0;
-	}
-	.perm-row :global(.check-field .form-hint) {
-		font-family: var(--mono);
-	}
-	.row-end {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: flex-end;
-		gap: var(--space-1) var(--space-3);
+	.perm-key {
 		margin-inline-start: auto;
+		font-family: var(--mono);
+		font-size: var(--text-xs);
+		color: var(--text-muted);
 	}
-	.perm-status:empty {
-		display: none;
+	.perm-compare {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		margin: 0;
+		color: var(--text-muted);
 	}
-	.perm-status.is-ok {
-		color: var(--success);
-	}
-	.perm-status.is-error {
-		color: var(--danger);
-	}
-	/* A change is marked with words, not only a colour */
-	.perm-changed {
+	/* A difference is said with a word, not only a colour */
+	.perm-compare.is-different .perm-compare-mark {
 		color: var(--text);
 		font-weight: 600;
 	}
-	.role-info {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
+	.perm-who summary {
+		display: inline-flex;
+		align-items: center;
+		min-height: 28px;
+		color: var(--link, var(--accent));
+		cursor: pointer;
 	}
-	.role-info p {
-		margin: 0;
+	.perm-who ul {
+		margin: var(--space-1) 0 0;
+		padding-inline-start: var(--space-5);
 	}
-	.role-info > p:first-child {
-		color: var(--text-muted);
+	.perm-who p {
+		margin: var(--space-1) 0 0;
 	}
 	@media (pointer: coarse) {
-		.perm-row :global(.perm-reset) {
+		.perm-who summary {
 			min-height: 44px;
-		}
-	}
-	/* One column: the role picker first (it decides what the list shows),
-	   the permission groups next, the reset at the end */
-	@media (max-width: 1199px) {
-		.permissions-page .page-side {
-			display: contents;
-		}
-		.permissions-page .page-side > :global(.section) {
-			order: -1;
-		}
-		.permissions-page .page-side > :global(.danger-zone) {
-			order: 1;
 		}
 	}
 </style>

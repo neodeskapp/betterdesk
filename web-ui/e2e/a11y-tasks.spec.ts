@@ -107,7 +107,8 @@ test.describe('keyboard only', () => {
 		const main = page.locator('#main-content');
 		const direct = main.getByRole('radio', { name: /direct first/i });
 		const relay = main.getByRole('radio', { name: /always through the relay/i });
-		const status = page.locator('.save-bar [aria-live="polite"]');
+		// Saving closes the changes bar; the toast's words reach the polite announcer
+		const status = page.locator('[data-announcer="polite"]');
 		const save = page.getByRole('button', { name: 'Save changes' });
 		await expect(direct).toBeChecked({ timeout: 15_000 });
 		try {
@@ -117,7 +118,6 @@ test.describe('keyboard only', () => {
 			await expect(relay).toBeChecked();
 			await tabTo(page, save);
 			await page.keyboard.press('Enter');
-			// The save bar's own status line is a polite live region
 			await expect(status).toContainText(/saved/i, { timeout: 15_000 });
 		} finally {
 			// Back to the default

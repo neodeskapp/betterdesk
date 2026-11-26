@@ -9,15 +9,18 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { getOwnTimeZone, saveOwnTimeZone } from '#lib/api/users.ts';
-	import { i18n, t } from '#lib/i18n/i18n.svelte.ts';
+	import { i18n, t, tf } from '#lib/i18n/i18n.svelte.ts';
+	import { link } from '#lib/nav.ts';
 	import { browserTimeZone, timeZoneOptions } from '#lib/people/time-zones.ts';
 	import { a11y, isDefault } from '#lib/shell/a11y.svelte.ts';
 	import { chooseLanguage } from '#lib/shell/language.ts';
+	import { can } from '#lib/state/session.svelte.ts';
 	import { setTheme, theme, type ThemeChoice } from '#lib/state/theme.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import ChoiceList from '#lib/ui/ChoiceList.svelte';
 	import Field from '#lib/ui/Field.svelte';
 	import Select from '#lib/ui/Select.svelte';
+	import SettingsGroup from '#lib/ui/settings/SettingsGroup.svelte';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 
 	const themes = $derived<{ value: ThemeChoice; title: string }[]>([
@@ -30,6 +33,22 @@
 	);
 	const a11yOn = $derived(!isDefault(a11y.settings));
 
+	/** The console default (Settings › Appearance) in words */
+	const consoleTheme = $derived(
+		theme.consoleMode === 'dark'
+			? tf('theme.dark', 'Dark')
+			: theme.consoleMode === 'light'
+				? tf('theme.light', 'Light')
+				: tf('account.theme_system', 'System (follows this device)')
+	);
+	const themeSource = $derived(
+		theme.choice === 'default'
+			? tf('account.theme_now_default', 'Now: {theme}, the console default.', { theme: consoleTheme })
+			: tf('account.theme_now_own', 'Set in this browser. The console default is {theme}.', {
+					theme: consoleTheme
+				})
+	);
+	const mayOpenAppearance = $derived(can('server.config'));
 	/** The account's time zone; null until it is read, 'error' when that failed */
 	let zone = $state<string | null | 'error'>(null);
 	const zones = $derived(
@@ -59,8 +78,15 @@
 	}
 </script>
 
-<section class="section" id="preferences" aria-labelledby="preferences-title">
-	<h2 id="preferences-title">{t('account.preferences')}</h2>
+<SettingsGroup
+	id="preferences"
+	title={t('account.preferences')}
+	description={tf('account.prefs_description', 'How the console looks and reads for you.')}
+	consequence={`${tf('settings_ui.model_instant', 'Changes here apply at once, only for you.')} ${tf(
+		'account.prefs_where',
+		'Theme and accessibility stay in this browser. The language goes with your account to every device.'
+	)}`}
+>
 	<div class="prefs">
 		<div class="pref" id="preferences-theme">
 			<h3 id="preferences-theme-title">{t('account.theme')}</h3>
@@ -69,12 +95,18 @@
 				choices={themes}
 				name="preferences-theme"
 				labelledby="preferences-theme-title"
-				describedby="preferences-theme-note"
+				describedby="preferences-theme-note preferences-theme-source"
 				value={theme.choice}
 				onchange={(v, checked) => {
 					if (checked) setTheme(v);
 				}}
 			/>
+			<p class="source" id="preferences-theme-source">
+				{themeSource}
+				{#if mayOpenAppearance}<a href={link('/settings?tab=branding')}
+						>{tf('account.theme_source_link', 'Settings › Appearance')}</a
+					>{/if}
+			</p>
 		</div>
 		<div class="pref">
 			<Field id="preferences-language" label={t('settings.language')} hint={t('account.language_note')}>
@@ -123,10 +155,11 @@
 			</p>
 		</div>
 	</div>
-</section>
+</SettingsGroup>
 
 <style>
 	.prefs {
+		padding: var(--space-3) var(--row-pad-x) 0;
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-5);
@@ -148,7 +181,9 @@
 	.line {
 		margin: 0;
 	}
-	.form-hint {
+	.form-hint,
+	.source {
+		margin: 0;
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 	}

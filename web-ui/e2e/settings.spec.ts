@@ -38,9 +38,15 @@ for (const role of ROLES) {
 
 			await expect(page.locator('#server-info')).toBeVisible();
 			await expect(page.locator('#public-server-id')).toHaveCount(config ? 1 : 0);
-			await expect(page.locator('#general-form')).toHaveCount(config ? 1 : 0);
+			await expect(page.locator('#public-endpoints')).toHaveCount(config ? 1 : 0);
+			// One save bar for the whole tab, shown with the first change
+			await expect(page.getByRole('region', { name: 'Unsaved changes' })).toHaveCount(0);
 			// MeshCentral, device visibility and availability left General for tabs of their own
-			for (const id of ['#mesh-settings-panel', '#device-scope-settings-panel', '#availability-history-form'])
+			for (const id of [
+				'#mesh-settings-panel',
+				'#device-scope-settings-panel',
+				'#availability-history-settings-panel'
+			])
 				await expect(page.locator(id)).toHaveCount(0);
 			await expectNoAxeViolations(page);
 
@@ -61,7 +67,7 @@ for (const role of ROLES) {
 
 			await page.goto(`${UI}/settings?tab=brand`);
 			await expect(h1(page)).toHaveText('Branding');
-			const name = page.locator('#brand-name');
+			const name = page.locator('#brand-name-control');
 			if (branding) await expect(name).toBeEnabled();
 			else await expect(name).toBeDisabled();
 			await expect(page.locator('#branding-login')).toBeVisible();
@@ -96,7 +102,7 @@ for (const role of ROLES) {
 					).toBeVisible();
 				if (config && tab === 'joining') {
 					await expect(page.locator('#device-scope-settings-panel')).toBeVisible();
-					await expect(page.locator('#availability-history-form')).toBeVisible();
+					await expect(page.locator('#availability-history-settings-panel')).toBeVisible();
 				}
 				if (config && tab === 'meshcentral')
 					await expect(page.locator('#mesh-settings-panel .state, #mesh-body').first()).toBeVisible();
@@ -180,15 +186,27 @@ test.describe('settings links and search (admin)', () => {
 		await expect(h1(page)).toHaveText('General');
 	});
 
-	test('#<id> on another tab switches there and shows the hidden field with a note', async ({ page }) => {
+	test('#<id> on another tab switches there and lands on the setting', async ({ page }) => {
 		await page.goto(`${UI}/settings#ldap-host`);
 		await expect(page).toHaveURL(/\?tab=ldap#ldap-host$/);
-		const note = page.locator('#ldap-config-fields-note');
-		await expect(note).toBeVisible();
-		await expect(note).toContainText('LDAP');
 		await expect(page.locator('#ldap-host')).toBeVisible();
-		await expect(page.locator('#ldap-enabled')).toBeFocused();
-		await expect(page.locator('#ldap-enabled')).not.toBeChecked();
+		await expect(page.locator('#ldap-host-control')).toBeFocused();
+		await expectNoAxeViolations(page);
+	});
+
+	test('#<id> of a field that shows only after a choice shows it with a note', async ({ page }) => {
+		// The mail server's user name shows only with "The mail server needs a sign-in"
+		await page.goto(`${UI}/settings?tab=email`);
+		const auth = page.locator('#email-smtp-auth-control');
+		await expect(auth).toBeVisible();
+		test.skip(await auth.isChecked(), 'the saved mail server has a sign-in');
+		await page.goto(`${UI}/settings#email-smtp-user`);
+		await expect(page).toHaveURL(/\?tab=email#email-smtp-user$/);
+		const note = page.locator('#email-smtp-auth-fields-note');
+		await expect(note).toBeVisible();
+		await expect(page.locator('#email-smtp-user')).toBeVisible();
+		await expect(auth).toBeFocused();
+		await expect(auth).not.toBeChecked();
 		await expectNoAxeViolations(page);
 	});
 
@@ -198,16 +216,18 @@ test.describe('settings links and search (admin)', () => {
 	});
 
 	test('leaving a tab with unsaved changes asks first', async ({ page }) => {
-		// The form counts changes once its four parts have loaded; wait for them
+		// The form counts changes once its two parts have loaded; wait for them
 		// (listening before the page asks, so no answer is missed)
-		const parts = ['public-endpoints', 'connection-mode', 'device-scope', 'availability-history'].map(
-			(part) => page.waitForResponse((r) => r.url().includes(`/api/settings/${part}`))
+		const parts = ['public-endpoints', 'connection-mode'].map((part) =>
+			page.waitForResponse((r) => r.url().includes(`/api/settings/${part}`))
 		);
 		await page.goto(`${UI}/settings`);
 		await Promise.all(parts);
-		const field = page.locator('#public-server-id');
+		const field = page.locator('#public-server-id-control');
 		await field.fill('changed.example.com');
-		await expect(page.locator('.save-bar.is-dirty')).toBeVisible();
+		const bar = page.getByRole('region', { name: 'Unsaved changes' });
+		await expect(bar).toContainText('1 unsaved change');
+		await expect(bar).toContainText('changed.example.com');
 		// Another tab in the app: Appearance sits under "More" in the sidebar,
 		// so go there through the settings search
 		const search = page.getByRole('searchbox', { name: 'Search all settings' });

@@ -6,6 +6,10 @@
   in the side column. Docker image installs show the host commands
   instead of Install. Old page: views/settings.ejs "Updates", settings.js
   "Self-Update".
+  The channel is the page's one setting (PATTERN.md rule 1): picking one
+  changes a draft, the save bar names the change and Switch channel saves
+  it; under the choice a line says which channel is in force and what it
+  installs (rule 2). Check for updates and Install are actions.
 -->
 <script lang="ts">
 	import {
@@ -55,6 +59,9 @@
 	} from '#lib/settings-b/updates.ts';
 	import { onRefresh } from '#lib/shell/page.svelte.ts';
 	import { can, session } from '#lib/state/session.svelte.ts';
+	import ChangesBar from '#lib/ui/settings/ChangesBar.svelte';
+	import { SettingsDraft, saveAndConfirm } from '#lib/ui/settings/draft.svelte.ts';
+	import SettingsGroup from '#lib/ui/settings/SettingsGroup.svelte';
 	import BooleanStatus from '#lib/ui/BooleanStatus.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
@@ -175,53 +182,61 @@
 	}
 
 	// ── Installed version, channel ──
+	type ChannelName = 'stable' | 'development';
 	let channel = $state.raw<Channel | null>(null);
-	let channelChoice = $state<'stable' | 'development'>('stable');
-	let channelBusy = $state(false);
-	const channelName = (c: string | undefined) =>
+	const channelName = (c: unknown) =>
 		c === 'development'
-			? t('settings.updates_tab.channel_development')
-			: t('settings.updates_tab.channel_stable');
+			? tf('settings.updates_tab.channel_development', 'Development')
+			: tf('settings.updates_tab.channel_stable', 'Stable');
+	const asChannel = (c: string | undefined): ChannelName => (c === 'development' ? 'development' : 'stable');
+
+	const draft = new SettingsDraft<{ channel: ChannelName }>(
+		{ channel: 'stable' },
+		{ channel: { label: t('updates.channel_title'), format: channelName } }
+	);
+	$effect(() => draft.track());
+
+	/** The channel in force (the saved one) and what it installs */
+	const channelSource = $derived.by(() => {
+		if (!channel) return '';
+		const repo = channelRepo(channel);
+		const installs =
+			channelSourceKey(channel) === 'settings.updates_tab.channel_source_development'
+				? tf('settings.updates_tab.channel_source_development', 'Development builds of {repo} on GitHub', {
+						repo
+					})
+				: tf('settings.updates_tab.channel_source_stable', 'Releases of {repo} on GitHub', { repo });
+		return tf('settings.updates_tab.channel_now', 'Now: {channel}. {installs}.', {
+			channel: channelName(channel.channel),
+			installs
+		});
+	});
 
 	async function loadChannel() {
 		try {
 			channel = await getUpdateChannel();
-			channelChoice = channel.channel === 'development' ? 'development' : 'stable';
+			// A refresh keeps a choice that is not saved yet
+			if (!draft.dirty) draft.load({ channel: asChannel(channel.channel) });
 		} catch {
 			channel = null;
 		}
 	}
 
-	async function channelPicked(next: 'stable' | 'development') {
-		const saved = channel?.channel === 'development' ? 'development' : 'stable';
-		if (channelBusy || next === saved) return;
-		const yes = await confirm({
-			title: t('updates.channel_save'),
-			message: t('settings.updates_tab.channel_confirm', { to: channelName(next) }),
-			confirmLabel: t('updates.channel_save')
-		});
-		if (!yes) {
-			channelChoice = saved;
-			return;
-		}
-		channelBusy = true;
-		try {
-			const r = await setUpdateChannel(next);
-			await loadChannel();
-			toast.success(t('updates.channel_saved'));
-			// Another branch: what was checked no longer applies
-			if (r?.previousBranch && r.previousBranch !== r.branch) {
-				phase = 'idle';
-				check = null;
-				changes = null;
-				preflight = null;
-			}
-		} catch (err) {
-			channelChoice = saved;
-			toast.error(errorText(err, t('updates.channel_save_failed')));
-		} finally {
-			channelBusy = false;
-		}
+	async function saveChannel() {
+		await saveAndConfirm(
+			draft,
+			async () => {
+				const r = await setUpdateChannel(draft.values.channel);
+				// Another branch: what was checked no longer applies
+				if (r?.previousBranch && r.previousBranch !== r.branch) {
+					phase = 'idle';
+					check = null;
+					changes = null;
+					preflight = null;
+				}
+			},
+			{ reload: loadChannel }
+		);
 	}
 
 	// ── Server program out of date, last install with errors ──
@@ -635,21 +650,24 @@
 				</div>
 
 				<div class="settings-stack">
-					<section
-						class="section form-column"
+					<SettingsGroup
 						id="update-channel-panel"
-						aria-labelledby="update-channel-title"
+						class="form-column"
+						title={t('updates.channel_title')}
+						description={t('settings.updates_tab.channel_note')}
+						consequence={tf(
+							'settings.updates_tab.channel_applies',
+							'Applies to the next check for updates. Nothing is installed until you click Install.'
+						)}
 					>
-						<h2 id="update-channel-title">{t('updates.channel_title')}</h2>
-						<p class="section-note">{t('settings.updates_tab.channel_note')}</p>
-						<fieldset id="update-channel-select" class="channel" disabled={docker || channelBusy}>
+						<fieldset id="update-channel-select" class="channel" disabled={docker || draft.busy}>
 							<legend class="sr-only">{t('updates.channel_title')}</legend>
 							<ChoiceList
 								name="update-channel"
-								labelledby="update-channel-title"
+								labelledby="update-channel-panel-title"
 								describedby="update-channel-effect"
-								bind:value={channelChoice}
-								onchange={(v, on) => on && void channelPicked(v)}
+								value={draft.values.channel}
+								onchange={(v, on) => on && draft.set('channel', v)}
 								choices={[
 									{
 										value: 'stable' as const,
@@ -663,12 +681,14 @@
 									}
 								]}
 							/>
-							<p class="field-effect" id="update-channel-effect">
-								{t('settings.updates_tab.channel_effect')}
+							<p class="source" id="update-channel-effect">
+								{#if docker}{t('settings.updates_tab.channel_docker_note')}{:else}{channelSource}{/if}
+								{#if draft.isChanged('channel')}<span class="changed"
+										>{tf('settings_ui.changed', 'Changed, not saved')}</span
+									>{/if}
 							</p>
-							{#if docker}<p class="hint">{t('settings.updates_tab.channel_docker_note')}</p>{/if}
 						</fieldset>
-					</section>
+					</SettingsGroup>
 				</div>
 			</div>
 		{/snippet}
@@ -680,6 +700,7 @@
 			</section>
 		{/snippet}
 	</TabCols>
+	<ChangesBar {draft} saveLabel={t('updates.channel_save')} onsave={saveChannel} />
 {/if}
 
 {#if confirmInstall}
@@ -729,9 +750,21 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-3);
+		margin: 0;
+		padding: 0 0 var(--space-3);
+		border: 0;
+		min-width: 0;
 	}
-	.channel :global(.choice-list) {
-		margin-inline: calc(-1 * var(--row-pad-x));
+	.source {
+		margin: 0;
+		padding-inline: var(--row-pad-x);
+		color: var(--text-muted);
+		font-size: var(--text-sm);
+	}
+	.changed {
+		margin-inline-start: var(--space-2);
+		color: var(--accent);
+		font-weight: 600;
 	}
 	/* The files table (components.css .data-table) */
 	.table-scroll {
