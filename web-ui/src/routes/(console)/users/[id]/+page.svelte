@@ -295,7 +295,7 @@
 	};
 	const dangerRows = $derived<DangerRow[]>(
 		(dangerGroup?.actions ?? []).map((a) => ({
-			title: actionLabel(a, t, (k) => t(k)),
+			title: actionLabel(a, t, (k) => t(k)).replace(/…$/, ''),
 			consequence: t(CONSEQUENCE[a.id] ?? '', { username: name }),
 			action: actionLabel(a, t, (k) => t(k)),
 			onclick: () => void act(a.id)

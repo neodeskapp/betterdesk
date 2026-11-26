@@ -107,7 +107,8 @@ describe("the user's page", () => {
 		// Nothing that changes the account
 		expect(screen.queryByRole('button', { name: 'users.edit' })).toBeNull();
 		expect(screen.queryByRole('button', { name: 'users.edit_profile' })).toBeNull();
-		expect(screen.queryByRole('button', { name: 'users.disable_menu' })).toBeNull();
+		expect(screen.queryByRole('button', { name: 'users.disable_menu_ask' })).toBeNull();
+		expect(screen.queryByRole('button', { name: 'users.edit_menu' })).toBeNull();
 		expect(screen.queryByRole('button', { name: 'users.delete_menu' })).toBeNull();
 		expect(screen.queryByRole('button', { name: 'users.reset_password_menu' })).toBeNull();
 		// Showing things stays: the sign-in link and the organizations

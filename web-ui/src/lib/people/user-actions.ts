@@ -126,7 +126,7 @@ export function userActionGroups(
 
 	const account: UserAction[] = [];
 	if (f.withOpen) account.push(A('open', 'act-open', ICONS.user, 'users.open_page'));
-	if (edit) account.push(A('edit', 'act-edit', ICONS.edit, 'users.edit'));
+	if (edit) account.push(A('edit', 'act-edit', ICONS.edit, 'users.edit_menu'));
 	if (resend) account.push(A('resend_invite', 'act-resend-invite', ICONS.send, 'users.resend_invite'));
 	if (disableable && u.disabled) account.push(A('enable', 'act-disable', ICONS.enable, 'users.enable_menu'));
 	if (r.canTeamChat && f.teamChat && !self && !u.disabled)
@@ -160,7 +160,7 @@ export function userActionGroups(
 		security.push(
 			u.two_factor_due
 				? A('reset_2fa', 'act-totp-reset', ICONS.password, 'users.reset_2fa_menu')
-				: A('totp_off', 'act-totp-off', ICONS.password, 'users.totp_off_menu')
+				: A('totp_off', 'act-totp-off', ICONS.password, 'users.totp_off_menu_ask')
 		);
 		security.push(
 			A('invalidate_codes', 'act-codes-invalidate', ICONS.password, 'users.invalidate_codes_menu')
@@ -172,7 +172,7 @@ export function userActionGroups(
 	if (withdraw)
 		danger.push(A('withdraw_invite', 'act-withdraw-invite', ICONS.delete, 'users.revoke_invite_menu', true));
 	if (disableable && !u.disabled)
-		danger.push(A('disable', 'act-disable', ICONS.disable, 'users.disable_menu'));
+		danger.push(A('disable', 'act-disable', ICONS.disable, 'users.disable_menu_ask'));
 	if (deletable) danger.push(A('delete', 'act-delete', ICONS.delete, 'users.delete_menu', true));
 
 	const groups: UserActionGroup[] = [
