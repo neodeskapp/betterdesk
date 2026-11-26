@@ -13,8 +13,10 @@
   and whether the console can send mail) beside it. Actions are offered by permission:
   user.create (and a role the signed-in person may give) to add or invite
   by email, user.edit to edit, reset passwords, send an invite again, see and end an account's signed-in devices
-  (A239), disable and enable accounts and turn off their two-factor
-  sign-in (never yourself) and manage groups, user.delete to
+  (A239), disable and enable accounts and manage groups,
+  user.security (never for yourself) to give a temporary password, ask for
+  a new password at the next sign-in, unlock, require, reset or turn off
+  two-factor sign-in and make recovery codes unusable, user.delete to
   delete (never yourself),
   org.manage_users to change organizations, user.impersonate to Sign in
   as an account (read-only; the dialog asks the server who may be viewed).
@@ -32,11 +34,16 @@
 		deleteUser,
 		deleteUserGroup,
 		getEffectiveScope,
+		invalidateRecoveryCodes,
 		listConsoleUsers,
 		listInvites,
 		listUserGroupRows,
 		listUserOrgs,
+		requirePasswordChange,
 		resendInvite,
+		resetTwoFactor,
+		setTwoFactorRequired,
+		unlockUser,
 		updateUser,
 		type ConsoleUser,
 		type EffectiveScope,
@@ -61,12 +68,13 @@
 		mayChangeUser,
 		mayDisableUser,
 		providerOf,
-		scopeText
+		scopeText,
+		signInStates,
+		twoFactorStatus
 	} from '#lib/people/users.ts';
 	import { reloadWhileShown } from '#lib/state/live.ts';
 	import { myPresence } from '#lib/state/presence.svelte.ts';
 	import { can, sectionWritable, session } from '#lib/state/session.svelte.ts';
-	import BooleanStatus from '#lib/ui/BooleanStatus.svelte';
 	import Button from '#lib/ui/Button.svelte';
 	import CountLine from '#lib/ui/CountLine.svelte';
 	import Empty from '#lib/ui/Empty.svelte';
@@ -103,6 +111,8 @@
 	const canDelete = can('user.delete') && sectionWritable();
 	/* Sign in as: the server decides per account and the dialog says why not */
 	const canViewAs = can('user.impersonate') && !session.impersonation;
+	/** Sign-in security of other accounts */
+	const canSecurity = can('user.security') && sectionWritable();
 	const meId = String(session.user?.id ?? '');
 	/** The server changes only the person's own account and those whose role they may give */
 	const mayChange = (u: ConsoleUser) => mayChangeUser(session.user?.role, meId, u);
@@ -319,6 +329,79 @@
 		}
 	}
 
+	/** Ask for a new password at the next sign-in, or no longer */
+	async function setPasswordChange(u: ConsoleUser, required: boolean) {
+		try {
+			const [result] = await requirePasswordChange([u.id], required);
+			if (result?.outcome === 'refused') {
+				toast.error(result.error || t('errors.server_error'));
+				return;
+			}
+			toast.success(
+				t(required ? 'users.require_change_done' : 'users.require_change_off_done', { username: u.username })
+			);
+			void loadUsers();
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
+		}
+	}
+
+	async function unlock(u: ConsoleUser) {
+		try {
+			await unlockUser(u.id);
+			toast.success(t('users.unlocked_named', { username: u.username }));
+			void loadUsers();
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
+		}
+	}
+
+	async function setTwoFactorRule(u: ConsoleUser, required: boolean) {
+		try {
+			await setTwoFactorRequired(u.id, required);
+			toast.success(
+				t(required ? 'users.require_2fa_done' : 'users.require_2fa_off_done', { username: u.username })
+			);
+			void loadUsers();
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
+		}
+	}
+
+	/** Where a policy requires two-factor sign-in: clear it, so the person sets it up again */
+	async function resetTotp(u: ConsoleUser) {
+		const ok = await confirm({
+			title: t('users.reset_2fa_title'),
+			message: t('users.reset_2fa_confirm', { username: u.username }),
+			confirmLabel: t('users.reset_2fa_button'),
+			danger: true
+		});
+		if (!ok) return;
+		try {
+			await resetTwoFactor(u.id);
+			toast.success(t('users.reset_2fa_done', { username: u.username }));
+			void loadUsers();
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
+		}
+	}
+
+	async function invalidateCodes(u: ConsoleUser) {
+		const ok = await confirm({
+			title: t('users.invalidate_codes_title', { username: u.username }),
+			message: t('users.invalidate_codes_confirm', { username: u.username }),
+			confirmLabel: t('users.invalidate_codes_button'),
+			danger: true
+		});
+		if (!ok) return;
+		try {
+			await invalidateRecoveryCodes(u.id);
+			toast.success(t('users.codes_invalidated_named', { username: u.username }));
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
+		}
+	}
+
 	/** Turn off the two-factor sign-in of someone who lost their authenticator */
 	async function turnOffTotp(u: ConsoleUser) {
 		const ok = await confirm({
@@ -401,7 +484,8 @@
 			label: t('nav.account_2fa'),
 			cell: twoFactorCell,
 			visible: hasTwoFactor,
-			sortValue: (u) => (u.totp_enabled ? 1 : 0),
+			sortValue: (u) =>
+				u.two_factor_state === 'on' || u.totp_enabled ? 2 : u.two_factor_state === 'required' ? 1 : 0,
 			class: 'col-nowrap'
 		},
 		{
@@ -440,6 +524,13 @@
 	{#if self}<span class="cell-sub">{t('users.this_is_you')}</span>{/if}
 	{#if u.disabled}<span class="cell-sub"><Status tone="warning" label={t('users.account_disabled')} /></span
 		>{/if}
+	{#each signInStates(u) as state (state.key)}<span class="cell-sub"
+			><Status
+				tone={state.tone}
+				label={t(state.key)}
+				title={state.titleKey ? t(state.titleKey, { date: formatDate(state.date, {}, '') }) : undefined}
+			/></span
+		>{/each}
 	{@const invite = invites.get(String(u.id))}
 	{#if invite && !u.last_login}<span class="cell-sub"
 			><Status
@@ -480,7 +571,10 @@
 		/>{:else}{orgs.map((o) => o.name).join(', ')}{/if}
 {/snippet}
 
-{#snippet twoFactorCell(u: ConsoleUser)}<BooleanStatus value={!!u.totp_enabled} />{/snippet}
+{#snippet twoFactorCell(u: ConsoleUser)}{@const s = twoFactorStatus(u)}<Status
+		tone={s.tone}
+		label={t(s.key)}
+	/>{/snippet}
 
 {#snippet lastCell(u: ConsoleUser)}<Time value={u.last_login} empty={t('users.never')} />{/snippet}
 
@@ -497,6 +591,8 @@
 	{@const disableable = canEdit && mayDisable(u)}
 	{@const deletable = canDelete && changeable && !self}
 	{@const resend = canEdit && changeable && local && mailReady && !!u.email && !u.last_login}
+	{@const secure = canSecurity && changeable && !self}
+	{@const totpOn = u.two_factor_state === 'on' || !!u.totp_enabled}
 	<!-- Grouped: the account, what it may reach, its sign-in security, and what ends it -->
 	<MenuButton kebab label={t('users.actions_for', { username: u.username })}>
 		{#if (canEdit && changeable) || (disableable && u.disabled)}
@@ -534,21 +630,67 @@
 				>
 			{/if}
 		</MenuGroup>
-		{#if (canEdit && changeable) || (disableable && u.totp_enabled)}
+		{#if (canEdit && changeable) || secure || (canSecurity && changeable && u.locked)}
 			<MenuGroup class="group-security" label={t('users.menu_group_security')}>
-				{#if canEdit && changeable && local}
+				{#if canEdit && changeable}
 					<MenuItem class="act-reset" icon={ICONS.password} onselect={() => (resetFor = u)}
 						>{t('users.reset_password_menu')}</MenuItem
+					>
+				{/if}
+				{#if secure && local}
+					{#if u.must_change_password}
+						<MenuItem
+							class="act-require-change-off"
+							icon={ICONS.password}
+							onselect={() => void setPasswordChange(u, false)}>{t('users.require_change_off_menu')}</MenuItem
+						>
+					{:else}
+						<MenuItem
+							class="act-require-change"
+							icon={ICONS.password}
+							onselect={() => void setPasswordChange(u, true)}>{t('users.require_change_menu')}</MenuItem
+						>
+					{/if}
+				{/if}
+				{#if canSecurity && changeable && u.locked}
+					<MenuItem class="act-unlock" icon={ICONS.enable} onselect={() => void unlock(u)}
+						>{t('users.unlock_menu')}</MenuItem
+					>
+				{/if}
+				{#if secure && local}
+					{#if u.two_factor_required}
+						<MenuItem
+							class="act-require-2fa-off"
+							icon={ICONS.password}
+							onselect={() => void setTwoFactorRule(u, false)}>{t('users.require_2fa_off_menu')}</MenuItem
+						>
+					{:else}
+						<MenuItem
+							class="act-require-2fa"
+							icon={ICONS.password}
+							onselect={() => void setTwoFactorRule(u, true)}>{t('users.require_2fa_menu')}</MenuItem
+						>
+					{/if}
+				{/if}
+				{#if secure && totpOn}
+					{#if u.two_factor_due}
+						<MenuItem class="act-totp-reset" icon={ICONS.password} onselect={() => void resetTotp(u)}
+							>{t('users.reset_2fa_menu')}</MenuItem
+						>
+					{:else}
+						<MenuItem class="act-totp-off" icon={ICONS.password} onselect={() => void turnOffTotp(u)}
+							>{t('users.totp_off_menu')}</MenuItem
+						>
+					{/if}
+					<MenuItem
+						class="act-codes-invalidate"
+						icon={ICONS.password}
+						onselect={() => void invalidateCodes(u)}>{t('users.invalidate_codes_menu')}</MenuItem
 					>
 				{/if}
 				{#if canEdit && changeable}
 					<MenuItem class="act-sessions" icon="devices" onselect={() => (sessionsFor = u)}
 						>{t('sessions.user_menu')}</MenuItem
-					>
-				{/if}
-				{#if disableable && u.totp_enabled}
-					<MenuItem class="act-totp-off" icon={ICONS.password} onselect={() => void turnOffTotp(u)}
-						>{t('users.totp_off_menu')}</MenuItem
 					>
 				{/if}
 			</MenuGroup>
@@ -737,7 +879,14 @@
 	{/if}
 
 	{#if resetFor}
-		<ResetPasswordDialog user={resetFor} {mailReady} onclose={() => (resetFor = null)} />
+		<ResetPasswordDialog
+			user={resetFor}
+			{mailReady}
+			security={canSecurity && String(resetFor.id) !== meId}
+			{providerLabel}
+			onclose={() => (resetFor = null)}
+			onchanged={() => void loadUsers()}
+		/>
 	{/if}
 
 	{#if sessionsFor}

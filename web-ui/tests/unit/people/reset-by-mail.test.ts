@@ -29,7 +29,8 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-const account = (email: string) => v.parse(ConsoleUser, { id: 7, username: 'carol', role: 'viewer', email });
+const account = (email: string, more: Record<string, unknown> = {}) =>
+	v.parse(ConsoleUser, { id: 7, username: 'carol', role: 'viewer', email, ...more });
 
 describe('reset password dialog', () => {
 	test('with an address it sends a link and no password', async () => {
@@ -49,5 +50,64 @@ describe('reset password dialog', () => {
 		await userEvent.click(screen.getByRole('button', { name: 'users.set_password' }));
 		await vi.waitFor(() => expect(closed).toHaveBeenCalled());
 		expect(sent).toEqual([{ path: '/api/users/7/reset-password', body: { newPassword: 'New-Pass-456!' } }]);
+	});
+
+	test('a temporary password is shown once, with a copy button, after it is set', async () => {
+		vi.stubGlobal('fetch', async (input: string, init: RequestInit = {}) => {
+			sent.push({
+				path: new URL(input, location.origin).pathname,
+				body: JSON.parse(String(init.body ?? '{}'))
+			});
+			return new Response('{"success":true,"data":{"password":"Abcd-Efgh-Jkmn-Pqrs"}}', {
+				headers: { 'Content-Type': 'application/json' }
+			});
+		});
+		const changed = vi.fn();
+		render(ResetPasswordDialog, {
+			user: account(''),
+			mailReady: true,
+			security: true,
+			onclose: vi.fn(),
+			onchanged: changed
+		});
+		// Without an address the temporary password comes first
+		expect(screen.getByRole('radio', { name: /users.reset_mode_temp/ })).toBeChecked();
+		await userEvent.click(screen.getByRole('button', { name: 'users.temp_set_button' }));
+		expect(await screen.findByText('Abcd-Efgh-Jkmn-Pqrs')).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /users.temp_password/ })).toBeInTheDocument();
+		expect(sent).toEqual([{ path: '/api/users/7/temporary-password', body: {} }]);
+		expect(changed).toHaveBeenCalled();
+	});
+
+	test('without user.security there is no temporary password', () => {
+		render(ResetPasswordDialog, { user: account(''), mailReady: true, onclose: vi.fn() });
+		expect(screen.queryByRole('radio', { name: /users.reset_mode_temp/ })).toBeNull();
+	});
+
+	test('a waiting reset link is named and can be cancelled', async () => {
+		const changed = vi.fn();
+		render(ResetPasswordDialog, {
+			user: account('carol@example.com', { password_reset_until: '2026-11-27T12:00:00Z' }),
+			mailReady: true,
+			onclose: vi.fn(),
+			onchanged: changed
+		});
+		expect(screen.getByText(/users.reset_pending/)).toBeInTheDocument();
+		await userEvent.click(screen.getByRole('button', { name: 'users.reset_cancel' }));
+		await vi.waitFor(() => expect(changed).toHaveBeenCalled());
+		expect(sent).toEqual([{ path: '/api/users/7/password-reset-link', body: {} }]);
+		expect(screen.queryByText(/users.reset_pending/)).toBeNull();
+	});
+
+	test('an LDAP account is told to reset the password there, with no form', () => {
+		render(ResetPasswordDialog, {
+			user: account('carol@example.com', { auth_provider: 'ldap' }),
+			mailReady: true,
+			security: true,
+			onclose: vi.fn()
+		});
+		expect(screen.getByText('users.reset_external')).toBeInTheDocument();
+		expect(screen.queryByRole('radio')).toBeNull();
+		expect(screen.getByRole('button', { name: 'actions.close' })).toBeInTheDocument();
 	});
 });

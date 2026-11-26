@@ -229,3 +229,46 @@ export function groupNote(note: string, t: (key: string) => string): string {
 	const text = key ? t(key) : '';
 	return text && text !== key ? text : note;
 }
+
+/** A state of an account's sign-in the list shows under its name */
+export interface SignInState {
+	key: string;
+	tone: 'danger' | 'warning' | 'waiting';
+	/** The longer text on hover, with the date it names */
+	titleKey?: string;
+	date?: string;
+}
+
+/** What the list says about an account's sign-in: locked, a new password due, a reset link waiting */
+export function signInStates(
+	u: Pick<ConsoleUser, 'locked' | 'locked_until' | 'must_change_password' | 'password_reset_until'>
+): SignInState[] {
+	const out: SignInState[] = [];
+	if (u.locked)
+		out.push({
+			key: 'users.state_locked',
+			tone: 'danger',
+			titleKey: 'users.state_locked_until',
+			date: u.locked_until ?? ''
+		});
+	if (u.must_change_password) out.push({ key: 'users.state_must_change', tone: 'warning' });
+	if (u.password_reset_until)
+		out.push({
+			key: 'users.state_reset_waiting',
+			tone: 'waiting',
+			titleKey: 'users.state_reset_until',
+			date: u.password_reset_until
+		});
+	return out;
+}
+
+/** The two-factor column: on, off, or required and not set up yet */
+export function twoFactorStatus(u: Pick<ConsoleUser, 'two_factor_state' | 'totp_enabled'>): {
+	tone: 'good' | 'neutral' | 'warning';
+	key: string;
+} {
+	const state = u.two_factor_state === 'off' && u.totp_enabled ? 'on' : u.two_factor_state;
+	if (state === 'on') return { tone: 'good', key: 'users.two_factor_on' };
+	if (state === 'required') return { tone: 'warning', key: 'users.two_factor_required_state' };
+	return { tone: 'neutral', key: 'users.two_factor_off' };
+}

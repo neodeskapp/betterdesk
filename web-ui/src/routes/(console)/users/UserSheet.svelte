@@ -12,6 +12,7 @@
 	import { listFolders, type Folder } from '#lib/api/devices.ts';
 	import { listStrategies, type Strategy } from '#lib/api/strategies.ts';
 	import { createUser, inviteUser, updateUser, type ConsoleUser, type UserGroupRow } from '#lib/api/users.ts';
+	import { formatDate } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import PasswordField from '#lib/people/PasswordField.svelte';
 	import {
@@ -31,6 +32,7 @@
 	import Field from '#lib/ui/Field.svelte';
 	import FormSection from '#lib/ui/FormSection.svelte';
 	import Input from '#lib/ui/Input.svelte';
+	import Notice from '#lib/ui/Notice.svelte';
 	import Select from '#lib/ui/Select.svelte';
 	import Sheet from '#lib/ui/Sheet.svelte';
 	import Tag from '#lib/ui/Tag.svelte';
@@ -191,6 +193,22 @@
 					{ label: t('users.sign_in_with'), value: signIn }
 				]}
 			/>
+			{#if user.locked && user.locks.length}
+				<Notice tone="warning" title={t('users.state_locked')}>
+					<ul class="locks">
+						{#each user.locks as lock (lock.ip)}
+							<li>
+								{t('users.lock_detail', {
+									failures: lock.failures,
+									ip: lock.ip,
+									date: formatDate(lock.until, {}, '')
+								})}
+							</li>
+						{/each}
+					</ul>
+					<p>{t('users.lock_hint')}</p>
+				</Notice>
+			{/if}
 			{#if isLocal}
 				<PasswordField
 					label={t('users.new_password')}
@@ -356,6 +374,13 @@
 </Sheet>
 
 <style>
+	.locks {
+		margin: 0 0 var(--space-1);
+		padding-inline-start: var(--space-4);
+	}
+	.locks + p {
+		margin: 0;
+	}
 	.user-form :global(.facts) {
 		grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
 		/* rows hang their padding outside, so the labels line up with the field labels */

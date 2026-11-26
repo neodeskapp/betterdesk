@@ -65,7 +65,20 @@ export const ConsoleUser = v.looseObject({
 	/** Two-factor sign-in is on (older servers leave it out) */
 	totp_enabled: v.optional(v.nullable(v.union([v.boolean(), v.number()]))),
 	/** The account may not sign in (older servers leave it out: enabled) */
-	disabled: v.optional(v.boolean(), false)
+	disabled: v.optional(v.boolean(), false),
+	/* Sign-in security (older servers leave it out) */
+	/** Failed sign-ins locked the account until locked_until, at the addresses of locks */
+	locked: v.optional(v.boolean(), false),
+	locked_until: v.optional(v.nullable(v.string()), null),
+	locks: v.optional(v.array(v.looseObject({ ip: Str, until: Str, failures: v.optional(v.number(), 0) })), []),
+	/** The next sign-in asks for a new password */
+	must_change_password: v.optional(v.boolean(), false),
+	/** An admin requires two-factor sign-in of this account */
+	two_factor_required: v.optional(v.boolean(), false),
+	/** on, off, or required (by the account's rule or the server's switch) and not set up */
+	two_factor_state: v.optional(v.picklist(['on', 'off', 'required']), 'off'),
+	/** Until when a reset link mailed to the account works */
+	password_reset_until: v.optional(v.nullable(v.string()), null)
 });
 export type ConsoleUser = v.InferOutput<typeof ConsoleUser>;
 
@@ -122,8 +135,89 @@ export function inviteUser(
  * hours. Needs user.edit, an address on the account (400 without) and the
  * console's email settings (409 without).
  */
-export function sendResetLink(id: number | string) {
-	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/password-reset-link`, {
+export async function sendResetLink(id: number | string): Promise<{ expires_at: string }> {
+	// Servers before 3.6 answer without data
+	const out = await api(
+		v.looseObject({ data: v.optional(v.looseObject({ expires_at: Str }), { expires_at: '' }) }),
+		`/api/users/${encodeURIComponent(String(id))}/password-reset-link`,
+		{ method: 'POST', body: {} }
+	);
+	return out.data;
+}
+
+/** Makes the reset link the account was mailed stop working. Needs user.edit; 404 when none waits */
+export function cancelResetLink(id: number | string) {
+	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/password-reset-link`, { method: 'DELETE' });
+}
+
+/* ── Sign-in security of other accounts (user.security) ── */
+
+/**
+ * Gives the account a temporary password (the one given, or one the server
+ * makes up) and answers it, to be shown once. The account chooses a new
+ * one at its next sign-in; its sessions end. Not for your own account nor
+ * for LDAP or single sign-on accounts.
+ */
+export async function setTemporaryPassword(id: number | string, password?: string): Promise<string> {
+	const out = await api(
+		wrapped(v.looseObject({ password: Str })),
+		`/api/users/${encodeURIComponent(String(id))}/temporary-password`,
+		{ method: 'POST', body: password ? { password } : {} }
+	);
+	return out.password;
+}
+
+export const BulkResult = v.looseObject({
+	id: v.union([v.number(), v.string()]),
+	username: v.optional(v.string(), ''),
+	/** changed, unchanged (it was so already) or refused (error says why) */
+	outcome: v.picklist(['changed', 'unchanged', 'refused']),
+	error: v.optional(v.string(), '')
+});
+export type BulkResult = v.InferOutput<typeof BulkResult>;
+
+/** The next sign-in of each account asks for a new password (or no longer, with required false) */
+export async function requirePasswordChange(
+	ids: (number | string)[],
+	required = true
+): Promise<BulkResult[]> {
+	const out = await api(
+		wrapped(v.looseObject({ results: v.array(BulkResult) })),
+		'/api/users/require-password-change',
+		{ method: 'POST', body: { ids, required } }
+	);
+	return out.results;
+}
+
+/** Ends the lock after failed sign-ins */
+export function unlockUser(id: number | string) {
+	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/unlock`, { method: 'POST', body: {} });
+}
+
+/** Requires two-factor sign-in of one local account, or leaves it to the server's switch */
+export function setTwoFactorRequired(id: number | string, required: boolean) {
+	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/two-factor-required`, {
+		method: 'PUT',
+		body: { required }
+	});
+}
+
+/**
+ * Clears the second factor and ends the account's sessions. set_up_again:
+ * a policy requires it, so the person sets it up at the next sign-in; else
+ * it is off.
+ */
+export function resetTwoFactor(id: number | string): Promise<{ set_up_again: boolean }> {
+	return api(
+		wrapped(v.looseObject({ set_up_again: v.optional(v.boolean(), false) })),
+		`/api/users/${encodeURIComponent(String(id))}/two-factor/reset`,
+		{ method: 'POST', body: {} }
+	);
+}
+
+/** The recovery codes stop working; the person makes new ones on Your account */
+export function invalidateRecoveryCodes(id: number | string) {
+	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/recovery-codes/invalidate`, {
 		method: 'POST',
 		body: {}
 	});
