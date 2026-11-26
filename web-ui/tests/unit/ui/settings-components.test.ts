@@ -19,6 +19,7 @@ import ListEditor from '../../../src/lib/ui/settings/ListEditor.svelte';
 import KeepCount from '../../../src/lib/ui/settings/KeepCount.svelte';
 import InheritedValue from '../../../src/lib/ui/settings/InheritedValue.svelte';
 import RecordPicker from '../../../src/lib/ui/settings/RecordPicker.svelte';
+import SettingRow from '../../../src/lib/ui/settings/SettingRow.svelte';
 import { relayOptions, roleOptions } from '../../../src/lib/ui/settings/pickers.ts';
 
 afterEach(() => cleanup());
@@ -53,6 +54,25 @@ describe('a setting row', () => {
 		const row = view.closest('.setting-row') as HTMLElement;
 		expect(within(row).getByText('device.view').closest('.setting-key')).not.toBeNull();
 		expect((view as HTMLInputElement).labels?.[0]?.textContent).not.toContain('device.view');
+	});
+
+	test('a switch that shows other fields points at them and says whether they show', () => {
+		const { rerender } = render(SettingRow, {
+			id: 'auth',
+			label: 'The mail server needs a sign-in',
+			checked: false,
+			controls: 'auth-fields'
+		});
+		const box = screen.getByRole('checkbox', { name: 'The mail server needs a sign-in' });
+		expect(box).toHaveAttribute('aria-controls', 'auth-fields');
+		expect(box).toHaveAttribute('aria-expanded', 'false');
+		rerender({
+			id: 'auth',
+			label: 'The mail server needs a sign-in',
+			checked: true,
+			controls: 'auth-fields'
+		});
+		expect(box).toHaveAttribute('aria-expanded', 'true');
 	});
 
 	test('a dependency says what is needed and its button turns it on', async () => {

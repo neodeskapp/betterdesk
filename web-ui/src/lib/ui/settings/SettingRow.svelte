@@ -15,6 +15,10 @@
         {#snippet control(f)}<Input {...f} type="number" ... />{/snippet}
     </SettingRow>
 
+  An on/off row that shows other fields while on passes `controls`, the
+  id of their ShowWhen block: the switch points at it (aria-controls and
+  aria-expanded), as the settings search expects.
+
   A row of choices (radios, a set of buttons) passes `group`: the name is
   then no <label> but the name of the group, which the control snippet
   gets as `labelledby` (role="radiogroup" aria-labelledby={f.labelledby}).
@@ -72,6 +76,8 @@
 		/** On/off rows: the value, and what a click does */
 		checked?: boolean;
 		onchange?: (on: boolean) => void;
+		/** On/off rows: the id of the block the switch shows while on */
+		controls?: string;
 		disabled?: boolean;
 		control?: Snippet<[RowControl]>;
 		source?: ValueSource | null;
@@ -102,6 +108,7 @@
 		help,
 		checked,
 		onchange,
+		controls,
 		disabled = false,
 		control,
 		source = null,
@@ -164,6 +171,8 @@
 			checked={checked ?? false}
 			{disabled}
 			aria-describedby={hasMeta ? metaId : undefined}
+			aria-controls={controls}
+			aria-expanded={controls ? (checked ?? false) : undefined}
 			onchange={(e) => onchange?.((e.currentTarget as HTMLInputElement).checked)}
 		/>
 	{:else}
