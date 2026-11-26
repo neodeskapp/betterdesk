@@ -108,7 +108,9 @@ for (const lang of LANGS) {
 
 /**
  * Whether a click on each item of the open menu lands on the menu: its
- * start, middle and end, on the item's middle line
+ * start, middle and end, on the item's middle line. A menu taller than
+ * the room it has scrolls (Menu.svelte), so each item is scrolled into the
+ * menu's view first, as a person would scroll to it.
  */
 async function menuCovered(page: Page): Promise<string[]> {
 	const menu = page.getByRole('menu');
@@ -116,6 +118,7 @@ async function menuCovered(page: Page): Promise<string[]> {
 	return menu.evaluate((m) => {
 		const hidden: string[] = [];
 		for (const item of m.querySelectorAll<HTMLElement>('[role="menuitem"]')) {
+			item.scrollIntoView({ block: 'nearest' });
 			const r = item.getBoundingClientRect();
 			for (const x of [r.left + 4, r.left + r.width / 2, r.right - 4]) {
 				const hit = document.elementFromPoint(x, r.top + r.height / 2);

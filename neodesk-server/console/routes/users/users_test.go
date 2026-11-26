@@ -322,7 +322,8 @@ func TestCannotChangeAnAccountAboveYourRole(t *testing.T) {
 
 		// What global_admin may still change
 		expect(t, "operator", global.Do("PATCH", "/api/users/5", `{"role":"viewer","password":`+strong+`}`), 200, "")
-		expect(t, "own account", global.Do("PATCH", "/api/users/4", `{"email":"me@example.invalid"}`), 200, "")
+		// (taking its address away: a new one would wait for mail settings, A272)
+		expect(t, "own account", global.Do("PATCH", "/api/users/4", `{"email":""}`), 200, "")
 		expect(t, "guest_issuer", global.Do("POST", "/api/users/7/reset-password", `{"newPassword":`+strong+`}`, "X-Forwarded-For", "10.3.0.9"), 200, `{"success":true}`)
 		expect(t, "pro", global.Do("DELETE", "/api/users/8", ""), 200, `{"success":true}`)
 		// And the super admin roles may change any account
@@ -392,7 +393,8 @@ func TestSessionAccountWithTextID(t *testing.T) {
 		if err := db.QueryRow(context.Background(), `SELECT role FROM users WHERE id = 1`).Scan(&role); err != nil || role != "admin" {
 			t.Errorf("the admin account: role %q, %v", role, err)
 		}
-		expect(t, "own email", global.Do("PATCH", "/api/users/4", `{"email":"me@example.invalid"}`), 200, "")
+		// (taking its address away: a new one would wait for mail settings, A272)
+		expect(t, "own email", global.Do("PATCH", "/api/users/4", `{"email":""}`), 200, "")
 	})
 }
 

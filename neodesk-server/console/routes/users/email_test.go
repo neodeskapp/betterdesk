@@ -3,6 +3,7 @@ package users_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -204,6 +205,56 @@ func TestEmailChangeRefusalsAndWithoutMail(t *testing.T) {
 		t.Errorf("audit: %v %d %q", found, target, details)
 	}
 	expect(t, "viewer may not cancel", w.As("viewer").Do("DELETE", "/api/users/5/email-change", ""), 403, "")
+}
+
+// A272: without mail settings nothing can confirm a new address, so a
+// person can't change their own: Your account, the operator profile and
+// the admin's own row in Users all refuse with email_change_needs_mail and
+// leave the address. Taking it away still works, and so does a profile
+// save that keeps the address.
+func TestOwnEmailChangeWithoutMailIsRefused(t *testing.T) {
+	w, box := mailWorld(t, false)
+	operatorID := routetest.RoleIDs["operator"]
+	adminID := routetest.RoleIDs["admin"]
+	setColumn(t, w, operatorID, "email", "op@example.test")
+	setColumn(t, w, adminID, "email", "admin@example.test")
+	operator := w.As("operator")
+	refused := func(name string, got routetest.Answer) {
+		t.Helper()
+		var body struct {
+			Success bool   `json:"success"`
+			Error   string `json:"error"`
+			Code    string `json:"code"`
+		}
+		_ = json.Unmarshal([]byte(got.Body), &body)
+		if got.Status != http.StatusConflict || body.Success || body.Code != "email_change_needs_mail" || !strings.Contains(body.Error, "Settings, Email") {
+			t.Errorf("%s: %d %s", name, got.Status, got.Body)
+		}
+	}
+
+	refused("Your account", operator.Do("POST", "/api/users/me/email", `{"email":"mine@example.test"}`))
+	refused("operator profile", operator.Do("PUT", "/api/users/me/profile", `{"email":"profile@example.test","phone":"555"}`))
+	refused("own row in Users", w.As("admin").Do("PATCH", fmt.Sprintf("/api/users/%d", adminID), `{"email":"other@example.test"}`))
+	if e := emailOf(t, w, operatorID); e != "op@example.test" {
+		t.Errorf("the operator's address changed: %q", e)
+	}
+	if e := emailOf(t, w, adminID); e != "admin@example.test" {
+		t.Errorf("the admin's address changed: %q", e)
+	}
+	if _, _, _, found := auditAbout(t, w, "email_changed"); found || box.count() != 0 {
+		t.Errorf("a refused change was audited or mailed: %v, %d mails", found, box.count())
+	}
+	// The profile's other fields are saved
+	var phone string
+	if err := w.DB.QueryRow(context.Background(), `SELECT COALESCE(phone, '') FROM users WHERE id = ?`, operatorID).Scan(&phone); err != nil || phone != "555" {
+		t.Errorf("phone after the refused address: %q %v", phone, err)
+	}
+
+	expect(t, "profile with the same address", operator.Do("PUT", "/api/users/me/profile", `{"email":"op@example.test","phone":"556"}`), 200, "")
+	expectHas(t, "take the address away", operator.Do("POST", "/api/users/me/email", `{"email":""}`), 200, `"email":""`)
+	if e := emailOf(t, w, operatorID); e != "" {
+		t.Errorf("after taking it away: %q", e)
+	}
 }
 
 // A reset link an admin sends is in the language of the account it goes

@@ -69,6 +69,13 @@
 	const uid = $props.id();
 	/** The entry whose menu is open (one popup at a time) */
 	let menuFor = $state<string | null>(null);
+	/** Where the right-click was, so the menu opens there; null: below the menu button */
+	let menuAt = $state<{ x: number; y: number } | null>(null);
+
+	function setMenu(id: string, open: boolean) {
+		if (open) menuAt = null;
+		menuFor = open ? id : null;
+	}
 	let over = $state<string | null>(null);
 
 	const isTagGroup = (g: DeviceGroup) => (g.source_type || 'manual') === 'tag';
@@ -123,6 +130,8 @@
 	function contextmenu(e: MouseEvent, id: string) {
 		if (!canManage) return;
 		e.preventDefault();
+		// The context-menu key can report no position: fall back to the menu button
+		menuAt = e.clientX || e.clientY ? { x: e.clientX, y: e.clientY } : null;
 		menuFor = id;
 	}
 
@@ -185,7 +194,8 @@
 							kebab
 							class="chip-menu"
 							label="{t('devices.actions')}: {f.name}"
-							bind:open={() => menuFor === `f${f.id}`, (v) => (menuFor = v ? `f${f.id}` : null)}
+							at={menuFor === `f${f.id}` ? menuAt : null}
+							bind:open={() => menuFor === `f${f.id}`, (v) => setMenu(`f${f.id}`, v)}
 						>
 							<MenuItem icon={ICONS.edit} onselect={() => oneditfolder(f)}>{t('actions.edit')}</MenuItem>
 							<MenuDivider />
@@ -229,7 +239,8 @@
 							kebab
 							class="chip-menu"
 							label="{t('devices.actions')}: {g.name}"
-							bind:open={() => menuFor === `g${guid}`, (v) => (menuFor = v ? `g${guid}` : null)}
+							at={menuFor === `g${guid}` ? menuAt : null}
+							bind:open={() => menuFor === `g${guid}`, (v) => setMenu(`g${guid}`, v)}
 						>
 							{#if canBilling}
 								<MenuItem icon={ICONS.billing} onselect={() => onbilling(g)}

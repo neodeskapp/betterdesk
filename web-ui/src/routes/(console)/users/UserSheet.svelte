@@ -214,7 +214,9 @@
 				? t('users.email_from_provider_hint', { provider: providerLabel(provider) })
 				: mailReady
 					? t('users.email_hint_confirm')
-					: t('users.email_hint_no_mail')
+					: self
+						? t('users.email_change_needs_mail')
+						: t('users.email_hint_no_mail')
 	);
 
 	const strategyOptions = $derived([

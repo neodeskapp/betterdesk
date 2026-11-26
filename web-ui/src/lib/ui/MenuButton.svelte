@@ -8,7 +8,9 @@
   the last; a click toggles it. See Menu for the keys inside. The button
   has aria-haspopup="menu", aria-expanded, and aria-controls while open.
   `align`: start (default for labelled buttons) or end (default for the row
-  menu, so it opens towards the start of the row). `describedby`: the id
+  menu, so it opens towards the start of the row). `at`: a viewport point
+  to open the menu from instead (set it with `open` on a right-click).
+  `describedby`: the id
   of text that describes the button (aria-describedby).
 -->
 <script lang="ts">
@@ -27,6 +29,7 @@
 		variant?: 'secondary' | 'ghost' | 'primary';
 		size?: 'default' | 'sm';
 		align?: 'start' | 'end';
+		at?: { x: number; y: number } | null;
 		disabled?: boolean;
 		open?: boolean;
 		describedby?: string;
@@ -42,6 +45,7 @@
 		variant = 'secondary',
 		size = 'default',
 		align,
+		at = null,
 		disabled = false,
 		open = $bindable(false),
 		describedby,
@@ -108,6 +112,7 @@
 		bind:open
 		anchor={trigger}
 		align={align ?? (kebab ? 'end' : 'start')}
+		{at}
 		{initialFocus}
 		id={menuId}
 		labelledby={buttonId}
