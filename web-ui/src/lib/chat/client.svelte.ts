@@ -345,6 +345,17 @@ class ChatClient {
 				this.refreshSummary();
 				return;
 			}
+			case 'conversation.removed': {
+				// A team was deleted, or this account is no longer in it
+				const id = String(f.conversation_id ?? '');
+				if (!id) return;
+				this.threads = Object.fromEntries(Object.entries(this.threads).filter(([k]) => k !== id));
+				this.details = Object.fromEntries(Object.entries(this.details).filter(([k]) => k !== id));
+				for (const fn of this.removeListeners) fn(id);
+				this.listVersion++;
+				this.refreshSummary();
+				return;
+			}
 			case 'notice': {
 				this.notices = [
 					...this.notices,
@@ -381,6 +392,13 @@ class ChatClient {
 	}
 	private conversationChanged(c: Conversation) {
 		for (const fn of this.convListeners) fn(c);
+	}
+
+	/** Listeners for a conversation that is gone for this account (a deleted team) */
+	private removeListeners = new Set<(id: string) => void>();
+	onRemoved(fn: (id: string) => void): () => void {
+		this.removeListeners.add(fn);
+		return () => this.removeListeners.delete(fn);
 	}
 
 	/** A message from someone else: notify unless it is in view in a visible tab */

@@ -283,8 +283,8 @@ var errNoAccess = errors.New("chat: no access")
 
 // mayRead reports whether a member reads a conversation: a device its
 // own; a console user a device's with Support chat when it sees the
-// device, a direct or group conversation with Team chat when it is in it,
-// old messages of version 1 when it is an admin.
+// device, a direct, group or team conversation with Team chat when it is
+// in it, old messages of version 1 when it is an admin.
 func (h *Hub) mayRead(ctx context.Context, m *member, conv string) bool {
 	if m.user == nil {
 		return conv == m.device
@@ -292,7 +292,7 @@ func (h *Hub) mayRead(ctx context.Context, m *member, conv string) bool {
 	switch chatstore.KindOf(conv) {
 	case chatstore.ConvSupport:
 		return m.support && h.sees(ctx, m, conv)
-	case chatstore.ConvDirect, chatstore.ConvGroup:
+	case chatstore.ConvDirect, chatstore.ConvGroup, chatstore.ConvTeam:
 		if !m.team || h.opts.Store == nil {
 			return false
 		}

@@ -50,6 +50,11 @@ func registerInbox(d *kit.Deps, hub *Hub) *inboxRoutes {
 	teamRouter.Post("/api/chat/team/direct", h.direct, d.RequireAuth, team)
 	teamRouter.Post("/api/chat/team/groups", h.newGroup, d.RequireAuth, team)
 	teamRouter.Patch("/api/chat/team/groups/{id}", h.editGroup, d.RequireAuth, team)
+	manage := d.RequirePermission(permTeamsManage)
+	teamRouter.Get("/api/chat/team/teams", h.teams, d.RequireAuth, team, manage)
+	teamRouter.Post("/api/chat/team/teams", h.newTeam, d.RequireAuth, team, manage)
+	teamRouter.Patch("/api/chat/team/teams/{id}", h.editTeam, d.RequireAuth, team, manage)
+	teamRouter.Delete("/api/chat/team/teams/{id}", h.deleteTeam, d.RequireAuth, team, manage)
 
 	shared := r.NoSection()
 	shared.Get("/api/chat/summary", h.summary, d.RequireAuth, either)
@@ -377,11 +382,25 @@ func (h *inboxRoutes) conversation(w http.ResponseWriter, r *http.Request) {
 		}
 		list := []wirePerson{}
 		for _, m := range members {
-			if p, ok := people[m]; ok {
+			// A team's user groups may hold people without Team chat,
+			// who don't read it
+			if p, ok := people[m]; ok && (c.Kind != chatstore.ConvTeam || h.mayTeam(ctx, p)) {
 				list = append(list, p)
 			}
 		}
 		out["people"] = list
+		if c.Kind == chatstore.ConvTeam {
+			groups, err := h.store().TeamGroups(ctx, id)
+			if err != nil {
+				h.fail(w, r, err)
+				return
+			}
+			names := []string{}
+			for _, g := range groups {
+				names = append(names, g.Name)
+			}
+			out["groups"] = names
+		}
 	}
 	kit.JSON(w, r, http.StatusOK, out)
 }
@@ -624,7 +643,7 @@ func (h *inboxRoutes) summary(w http.ResponseWriter, r *http.Request) {
 		out["support"] = map[string]any{"unread_conversations": len(unread), "waiting": waiting, "unread": unread}
 	}
 	if acc.HasPermission(permTeam) {
-		list, err := h.store().List(ctx, chatstore.Filter{Kinds: []string{chatstore.ConvDirect, chatstore.ConvGroup}, Member: user.ID})
+		list, err := h.store().List(ctx, chatstore.Filter{Kinds: []string{chatstore.ConvDirect, chatstore.ConvGroup, chatstore.ConvTeam}, Member: user.ID})
 		if err != nil {
 			h.fail(w, r, err)
 			return
@@ -665,7 +684,7 @@ type wireTeamItem struct {
 func (h *inboxRoutes) teamList(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	user := h.user(r)
-	list, err := h.store().List(ctx, chatstore.Filter{Kinds: []string{chatstore.ConvDirect, chatstore.ConvGroup}, Member: user.ID})
+	list, err := h.store().List(ctx, chatstore.Filter{Kinds: []string{chatstore.ConvDirect, chatstore.ConvGroup, chatstore.ConvTeam}, Member: user.ID})
 	if err != nil {
 		h.fail(w, r, err)
 		return
@@ -695,7 +714,7 @@ func (h *inboxRoutes) teamList(w http.ResponseWriter, r *http.Request) {
 		}
 		item := wireTeamItem{wireConversation: conversationOut(c, ""), People: []wirePerson{}, Last: h.last(ctx, c), Unread: unread[c.ID]}
 		for _, m := range members {
-			if p, ok := people[m]; ok && (m != user.ID || c.Kind == chatstore.ConvGroup) {
+			if p, ok := people[m]; ok && (m != user.ID || c.Kind != chatstore.ConvDirect) && (c.Kind != chatstore.ConvTeam || h.mayTeam(ctx, p)) {
 				item.People = append(item.People, p)
 			}
 		}
