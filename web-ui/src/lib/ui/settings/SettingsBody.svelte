@@ -68,7 +68,7 @@
 </script>
 
 {#if modeLine}<p class="save-model">{modeLine}</p>{/if}
-<div class={['settings-body', summary && 'has-summary', cls]}>
+<div class={['settings-body', summary && 'has-summary', scope && 'has-scope', cls]}>
 	{#if scope}<div class="settings-scope">{@render scope()}</div>{/if}
 	{#if summary}<aside
 			class="settings-summary"
@@ -139,6 +139,10 @@
 	@media (min-width: 1200px) {
 		.settings-body.has-summary {
 			grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+			grid-template-areas: 'main summary';
+		}
+		/* The scope above the groups, the summary beside both */
+		.settings-body.has-summary.has-scope {
 			grid-template-areas:
 				'scope summary'
 				'main summary';

@@ -165,17 +165,17 @@ for (const role of ROLES) {
 				await expect(page.locator('#client-app')).toHaveCount(0);
 				return;
 			}
-			const name = page.getByLabel('Company name');
+			const name = page.getByRole('textbox', { name: 'Company name' });
 			await expect(name).not.toHaveValue('');
-			// The preview follows the form; the save bar says there are changes
+			// The preview follows the form; the tab's save bar names the change
 			const before = await name.inputValue();
 			await name.fill('Preview Test');
 			await expect(page.locator('.cb-pv-name')).toHaveText('Preview Test');
-			const bar = page.locator('#client-app .save-bar');
-			await expect(bar).toContainText('Unsaved');
+			const bar = page.getByRole('region', { name: 'Unsaved changes' });
+			await expect(bar).toContainText('Client app: Company name');
 			await expectNoAxeViolations(page);
 			await name.fill(before);
-			await expect(bar).not.toContainText('Unsaved');
+			await expect(bar).toHaveCount(0);
 		});
 	});
 }

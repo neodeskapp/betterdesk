@@ -61,7 +61,7 @@ for (const role of ROLES) {
 
 			await page.goto(`${UI}/settings?tab=brand`);
 			await expect(h1(page)).toHaveText('Branding');
-			const name = page.locator('#brand-name');
+			const name = page.locator('#brand-name-control');
 			if (branding) await expect(name).toBeEnabled();
 			else await expect(name).toBeDisabled();
 			await expect(page.locator('#branding-login')).toBeVisible();
