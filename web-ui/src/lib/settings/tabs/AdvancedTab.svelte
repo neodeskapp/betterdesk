@@ -400,7 +400,8 @@
 		gap: var(--space-2);
 		min-width: 0;
 		padding-block: var(--space-2);
-		padding-inline: var(--space-4) 0;
+		/* The group's rows reach its edges, so the editor keeps the row padding at the end */
+		padding-inline: var(--space-4) var(--row-pad-x);
 	}
 	.editor-toolbar {
 		display: flex;
@@ -454,7 +455,7 @@
 			border-bottom: 1px solid var(--rule);
 		}
 		.editor {
-			padding-inline: 0;
+			padding-inline: var(--row-pad-x);
 		}
 	}
 </style>
