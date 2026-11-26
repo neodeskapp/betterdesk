@@ -465,8 +465,10 @@
 	.state.is-error {
 		color: var(--danger);
 	}
+	/* A host name keeps its line; it doesn't break at its hyphens */
 	.hostname {
 		font-weight: 600;
+		white-space: nowrap;
 	}
 	/* The ID has its own column in the table; under the name only where that column is hidden */
 	.book .row-id.cell-sub {
@@ -496,6 +498,7 @@
 		flex-direction: column;
 		justify-content: space-between;
 		gap: var(--space-3);
+		min-width: 0;
 		padding: var(--space-3);
 		border: 1px solid var(--rule);
 		border-radius: var(--radius);

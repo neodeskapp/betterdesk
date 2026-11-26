@@ -11,7 +11,7 @@
 </script>
 
 {#if p}
-	<span class="platform"><OsIcon platform={p} /><span class="platform-name">{p}</span></span>
+	<span class="platform"><OsIcon platform={p} /><span class="platform-name" title={p}>{p}</span></span>
 {:else}
 	<Empty word={empty} />
 {/if}
@@ -22,9 +22,15 @@
 		align-items: center;
 		gap: var(--space-2);
 		min-width: 0;
+		max-width: 100%;
+		vertical-align: middle;
 		white-space: nowrap;
 	}
+	/* A long name ends in an ellipsis where its box is narrower (a tile, a narrow column) */
 	.platform-name {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
 		unicode-bidi: isolate;
 	}
 </style>
