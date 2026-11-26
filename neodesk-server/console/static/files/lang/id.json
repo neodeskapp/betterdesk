@@ -8207,6 +8207,8 @@
     "help_user_create": "Menambah akun konsol dan mengundang orang lewat email, dengan peran yang boleh diberikan peran ini.",
     "help_user_edit": "Mengubah akun lain dan kelompok penggunanya.",
     "help_user_delete": "Menghapus akun konsol. Orangnya tidak dapat masuk lagi.",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "Menambah organisasi untuk mengelompokkan orang dan perangkat.",
     "help_org_edit": "Mengubah organisasi, termasuk buku alamatnya.",
     "help_org_delete": "Menghapus organisasi.",

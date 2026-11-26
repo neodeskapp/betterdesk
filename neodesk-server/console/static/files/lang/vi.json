@@ -8207,6 +8207,8 @@
     "help_user_create": "Thêm tài khoản bảng điều khiển và mời người qua email, với vai trò mà vai trò này được cấp.",
     "help_user_edit": "Thay đổi tài khoản khác và nhóm người dùng của họ.",
     "help_user_delete": "Xóa tài khoản bảng điều khiển. Người đó không đăng nhập được nữa.",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "Thêm tổ chức để nhóm người và thiết bị.",
     "help_org_edit": "Thay đổi tổ chức, kể cả sổ địa chỉ của tổ chức.",
     "help_org_delete": "Xóa tổ chức.",

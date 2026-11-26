@@ -8208,6 +8208,8 @@
     "help_user_create": "إضافة حسابات إلى وحدة التحكم ودعوة أشخاص بالبريد الإلكتروني، بدور يمكن لهذا الدور منحه.",
     "help_user_edit": "تغيير حسابات أخرى ومجموعات المستخدمين الخاصة بها.",
     "help_user_delete": "حذف حسابات وحدة التحكم. لا يستطيع الشخص تسجيل الدخول بعد ذلك.",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "إضافة مؤسسات لجمع الأشخاص والأجهزة.",
     "help_org_edit": "تغيير المؤسسات، بما في ذلك دفتر عناوينها.",
     "help_org_delete": "حذف المؤسسات.",

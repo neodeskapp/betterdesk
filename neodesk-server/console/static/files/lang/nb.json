@@ -8207,6 +8207,8 @@
     "help_user_create": "Legg til konsollkontoer og inviter folk på e-post, med en rolle denne rollen kan gi.",
     "help_user_edit": "Endre andre kontoer og brukergruppene deres.",
     "help_user_delete": "Slett konsollkontoer. Personen kan ikke logge på lenger.",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "Legg til organisasjoner for å samle personer og enheter.",
     "help_org_edit": "Endre organisasjoner, også adresseboken deres.",
     "help_org_delete": "Slett organisasjoner.",

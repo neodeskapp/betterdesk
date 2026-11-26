@@ -8207,6 +8207,8 @@
     "help_user_create": "कंसोल खाते जोड़ना और लोगों को ईमेल से आमंत्रित करना, ऐसी भूमिका के साथ जो यह भूमिका दे सकती है।",
     "help_user_edit": "दूसरे खाते और उनके उपयोगकर्ता समूह बदलना।",
     "help_user_delete": "कंसोल खाते हटाना। वह व्यक्ति फिर साइन इन नहीं कर सकता।",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "लोगों और डिवाइस को समूहित करने के लिए संगठन जोड़ना।",
     "help_org_edit": "संगठन बदलना, उनकी पता पुस्तिका सहित।",
     "help_org_delete": "संगठन हटाना।",

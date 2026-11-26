@@ -8201,6 +8201,8 @@
     "help_user_create": "コンソールのアカウントを追加し、このロールが付与できるロールでメールで招待します。",
     "help_user_edit": "他のアカウントとそのユーザーグループを変更します。",
     "help_user_delete": "コンソールのアカウントを削除します。その人はもうサインインできません。",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "ユーザーとデバイスをまとめる組織を追加します。",
     "help_org_edit": "組織を変更します。アドレス帳も含みます。",
     "help_org_delete": "組織を削除します。",

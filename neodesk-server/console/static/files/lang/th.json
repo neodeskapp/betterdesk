@@ -8207,6 +8207,8 @@
     "help_user_create": "เพิ่มบัญชีคอนโซลและเชิญผู้คนทางอีเมล ด้วยบทบาทที่บทบาทนี้ให้ได้",
     "help_user_edit": "เปลี่ยนบัญชีอื่นและกลุ่มผู้ใช้ของบัญชีเหล่านั้น",
     "help_user_delete": "ลบบัญชีคอนโซล บุคคลนั้นจะลงชื่อเข้าใช้ไม่ได้อีก",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "เพิ่มองค์กรเพื่อจัดกลุ่มผู้คนและอุปกรณ์",
     "help_org_edit": "เปลี่ยนองค์กร รวมถึงสมุดที่อยู่ขององค์กร",
     "help_org_delete": "ลบองค์กร",

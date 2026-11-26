@@ -8207,6 +8207,8 @@
     "help_user_create": "Konsol hesapları ekleme ve kişileri e-postayla davet etme; bu rolün verebileceği bir rolle.",
     "help_user_edit": "Diğer hesapları ve kullanıcı gruplarını değiştirme.",
     "help_user_delete": "Konsol hesaplarını silme. Kişi artık oturum açamaz.",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "Kişileri ve cihazları gruplamak için kuruluş ekleme.",
     "help_org_edit": "Kuruluşları, adres defterleri dahil değiştirme.",
     "help_org_delete": "Kuruluşları silme.",

@@ -8207,6 +8207,8 @@
     "help_user_create": "Konzolfiókok hozzáadása és emberek meghívása e-mailben, olyan szerepkörrel, amelyet ez a szerepkör adhat.",
     "help_user_edit": "Más fiókok és felhasználói csoportjaik módosítása.",
     "help_user_delete": "Konzolfiókok törlése. A személy többé nem tud bejelentkezni.",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "Szervezetek hozzáadása emberek és eszközök csoportosítására.",
     "help_org_edit": "Szervezetek módosítása, a címjegyzékükkel együtt.",
     "help_org_delete": "Szervezetek törlése.",

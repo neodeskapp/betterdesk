@@ -8207,6 +8207,8 @@
     "help_user_create": "Adăugarea de conturi în consolă și invitarea persoanelor prin e-mail, cu un rol pe care acest rol îl poate acorda.",
     "help_user_edit": "Modificarea altor conturi și a grupurilor lor de utilizatori.",
     "help_user_delete": "Ștergerea conturilor consolei. Persoana nu se mai poate conecta.",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "Adăugarea de organizații pentru gruparea persoanelor și dispozitivelor.",
     "help_org_edit": "Modificarea organizațiilor, inclusiv a agendei lor de adrese.",
     "help_org_delete": "Ștergerea organizațiilor.",

@@ -8201,6 +8201,8 @@
     "help_user_create": "콘솔 계정을 추가하고, 이 역할이 부여할 수 있는 역할로 이메일 초대를 보냅니다.",
     "help_user_edit": "다른 계정과 그 사용자 그룹을 변경합니다.",
     "help_user_delete": "콘솔 계정을 삭제합니다. 그 사람은 더 이상 로그인할 수 없습니다.",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "사람과 장치를 묶는 조직을 추가합니다.",
     "help_org_edit": "조직을 변경합니다. 주소록도 포함합니다.",
     "help_org_delete": "조직을 삭제합니다.",

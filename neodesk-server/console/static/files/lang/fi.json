@@ -8207,6 +8207,8 @@
     "help_user_create": "Lisätä konsolitilejä ja kutsua ihmisiä sähköpostilla roolilla, jonka tämä rooli saa antaa.",
     "help_user_edit": "Muuttaa muita tilejä ja niiden käyttäjäryhmiä.",
     "help_user_delete": "Poistaa konsolitilejä. Henkilö ei voi enää kirjautua sisään.",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "Lisätä organisaatioita ryhmittelemään ihmisiä ja laitteita.",
     "help_org_edit": "Muuttaa organisaatioita, myös niiden osoitekirjaa.",
     "help_org_delete": "Poistaa organisaatioita.",

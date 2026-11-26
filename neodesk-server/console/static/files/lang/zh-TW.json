@@ -5768,6 +5768,8 @@
     "help_user_create": "新增主控台帳戶並以電子郵件邀請他人，使用此角色可授予的角色。",
     "help_user_edit": "變更其他帳戶及其用戶組。",
     "help_user_delete": "刪除主控台帳戶。該使用者將無法再登入。",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "新增組織，將人員和裝置分組。",
     "help_org_edit": "變更組織，包括其通訊錄。",
     "help_org_delete": "刪除組織。",

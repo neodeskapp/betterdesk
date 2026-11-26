@@ -5746,6 +5746,8 @@
     "help_user_create": "添加控制台账户并通过电子邮件邀请他人，使用此角色可以授予的角色。",
     "help_user_edit": "更改其他账户及其用户组。",
     "help_user_delete": "删除控制台账户。该用户将无法再登录。",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "添加组织，将人员和设备分组。",
     "help_org_edit": "更改组织，包括其通讯录。",
     "help_org_delete": "删除组织。",

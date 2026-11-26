@@ -5826,6 +5826,8 @@
         "help_user_create": "Add console accounts and invite people by email, with a role this role may give.",
         "help_user_edit": "Change other accounts and their user groups.",
         "help_user_delete": "Delete console accounts. The person can't sign in any more.",
+        "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+        "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
         "help_org_create": "Add organizations to group people and devices.",
         "help_org_edit": "Change organizations, including their address book.",
         "help_org_delete": "Delete organizations.",

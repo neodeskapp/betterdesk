@@ -8207,6 +8207,8 @@
     "help_user_create": "Додавати облікові записи консолі й запрошувати людей електронною поштою, з роллю, яку ця роль може надати.",
     "help_user_edit": "Змінювати інші облікові записи та їхні групи користувачів.",
     "help_user_delete": "Видаляти облікові записи консолі. Людина більше не може увійти.",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "Додавати організації, щоб групувати людей і пристрої.",
     "help_org_edit": "Змінювати організації, зокрема їхню адресну книгу.",
     "help_org_delete": "Видаляти організації.",

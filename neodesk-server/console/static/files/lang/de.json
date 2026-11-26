@@ -8201,6 +8201,8 @@
     "help_user_create": "Konsolenkonten hinzufügen und Personen per E-Mail einladen, mit einer Rolle, die diese Rolle vergeben darf.",
     "help_user_edit": "Andere Konten und ihre Benutzergruppen ändern.",
     "help_user_delete": "Konsolenkonten löschen. Die Person kann sich nicht mehr anmelden.",
+    "help_user_security": "Anderen Konten ein vorläufiges Passwort geben, ein neues Passwort verlangen, sie entsperren und die Zwei-Faktor-Anmeldung vorschreiben.",
+    "help_user_impersonate": "Die Konsole mit Anmelden als schreibgeschützt so sehen wie ein Konto mit weniger Rechten. Die letzten Anmeldungen des Kontos zeigen das.",
     "help_org_create": "Organisationen anlegen, um Personen und Geräte zu gruppieren.",
     "help_org_edit": "Organisationen ändern, auch ihr Adressbuch.",
     "help_org_delete": "Organisationen löschen.",

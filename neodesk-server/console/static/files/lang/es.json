@@ -8201,6 +8201,8 @@
     "help_user_create": "Añadir cuentas a la consola e invitar a personas por correo, con un rol que este rol pueda otorgar.",
     "help_user_edit": "Cambiar otras cuentas y sus grupos de usuarios.",
     "help_user_delete": "Eliminar cuentas de la consola. La persona ya no puede iniciar sesión.",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "Añadir organizaciones para agrupar personas y dispositivos.",
     "help_org_edit": "Cambiar organizaciones, incluida su libreta de direcciones.",
     "help_org_delete": "Eliminar organizaciones.",

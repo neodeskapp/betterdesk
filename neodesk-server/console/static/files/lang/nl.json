@@ -8201,6 +8201,8 @@
     "help_user_create": "Consoleaccounts toevoegen en mensen per e-mail uitnodigen, met een rol die deze rol mag toekennen.",
     "help_user_edit": "Andere accounts en hun gebruikersgroepen wijzigen.",
     "help_user_delete": "Consoleaccounts verwijderen. De persoon kan dan niet meer inloggen.",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "Organisaties toevoegen om mensen en apparaten te groeperen.",
     "help_org_edit": "Organisaties wijzigen, inclusief hun adresboek.",
     "help_org_delete": "Organisaties verwijderen.",

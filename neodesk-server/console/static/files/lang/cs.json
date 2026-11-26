@@ -8201,6 +8201,8 @@
     "help_user_create": "Přidávat účty konzole a zvát lidi e-mailem, s rolí, kterou tato role smí udělit.",
     "help_user_edit": "Měnit jiné účty a jejich skupiny uživatelů.",
     "help_user_delete": "Mazat účty konzole. Osoba se už nemůže přihlásit.",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "Přidávat organizace, které seskupují lidi a zařízení.",
     "help_org_edit": "Měnit organizace včetně jejich adresáře.",
     "help_org_delete": "Mazat organizace.",

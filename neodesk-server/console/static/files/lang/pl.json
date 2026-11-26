@@ -5764,6 +5764,8 @@
     "help_user_create": "Dodawanie kont konsoli i zapraszanie osób e-mailem, z rolą, którą ta rola może nadać.",
     "help_user_edit": "Zmiana innych kont i ich grup użytkowników.",
     "help_user_delete": "Usuwanie kont konsoli. Osoba nie może się już zalogować.",
+    "help_user_security": "Give other accounts a temporary password, ask for a new password, unlock them and require two-factor sign-in.",
+    "help_user_impersonate": "See the console read-only as an account with fewer rights, with Sign in as. The account's recent sign-ins show it.",
     "help_org_create": "Dodawanie organizacji, aby grupować osoby i urządzenia.",
     "help_org_edit": "Zmiana organizacji, także ich książki adresowej.",
     "help_org_delete": "Usuwanie organizacji.",
