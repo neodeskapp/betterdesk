@@ -7,12 +7,16 @@
   name next to it carries the meaning.
   user: a name or a user object ({ id, username, display_name, first_name,
   last_name, has_avatar, avatar_version }); its picture is used unless
-  `picture` is set ('' for none). presence: puts the presence dot on the
-  bottom end corner; presenceLabel names it for screen readers.
+  `picture` is set ('' for none). A user object with an id but neither
+  has_avatar nor avatar_version (chat people, assignees, senders) takes
+  its picture from the list of who has one (state/avatars). presence:
+  puts the presence dot on the bottom end corner; presenceLabel names it
+  for screen readers.
 -->
 <script lang="ts">
 	import { i18n } from '#lib/i18n/i18n.svelte.ts';
 	import type { Presence as PresenceStatus } from '#lib/state/presence.svelte.ts';
+	import { avatarDirectory, refreshAvatarDirectory } from '#lib/state/avatars.svelte.ts';
 	import { avatarColor, avatarUrl, displayName, initials, type PersonLike } from '#lib/util/display.ts';
 	import Icon from './Icon.svelte';
 	import Presence from './Presence.svelte';
@@ -28,7 +32,25 @@
 	let { user, picture, size = 'sm', presence, presenceLabel }: Props = $props();
 
 	const name = $derived(displayName(user));
-	const src = $derived(picture ?? (user && typeof user === 'object' ? avatarUrl(user) : ''));
+	/** A user object that says nothing about its picture: the list knows */
+	const askList = $derived(
+		picture === undefined &&
+			!!user &&
+			typeof user === 'object' &&
+			user.has_avatar === undefined &&
+			user.avatar_version === undefined &&
+			/^\d+$/.test(String(user.id ?? ''))
+	);
+	$effect(() => {
+		if (askList) refreshAvatarDirectory();
+	});
+	const src = $derived.by(() => {
+		if (picture !== undefined) return picture;
+		if (!user || typeof user !== 'object') return '';
+		if (!askList) return avatarUrl(user);
+		const version = avatarDirectory.versions.get(String(user.id));
+		return version ? avatarUrl({ id: user.id, avatar_version: version }) : '';
+	});
 	const letters = $derived(initials(name, i18n.locale));
 	const color = $derived(avatarColor(name));
 	/** The picture URL that failed to load; a new URL gets a new try */
