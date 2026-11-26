@@ -277,7 +277,7 @@ func TestBootstrap(t *testing.T) {
 		}
 
 		admin := decode(t, w.As("admin").Do("GET", "/api/console/bootstrap", "").Body)
-		if admin["isSuperAdmin"] != true || len(admin["permissions"].([]any)) != 48 {
+		if admin["isSuperAdmin"] != true || len(admin["permissions"].([]any)) != 50 {
 			t.Errorf("admin: isSuperAdmin %v, %d permissions", admin["isSuperAdmin"], len(admin["permissions"].([]any)))
 		}
 	})
@@ -461,14 +461,16 @@ func withoutFixed(part string, raw json.RawMessage) json.RawMessage {
 		return body
 	case "permissions":
 		// A242: Node's chat.access is chat.support, chat.team, chat.assign
-		// and chat.canned_manage now; the chat's own tests pin them
+		// and chat.canned_manage now; the chat's own tests pin them. Node had
+		// no user.security and user.impersonate either (user management of
+		// 26 Nov 2026); TestBootstrap counts them
 		var list []string
 		if json.Unmarshal(raw, &list) != nil {
 			return raw
 		}
 		kept := []string{}
 		for _, p := range list {
-			if !strings.HasPrefix(p, "chat.") {
+			if !strings.HasPrefix(p, "chat.") && p != "user.security" && p != "user.impersonate" {
 				kept = append(kept, p)
 			}
 		}

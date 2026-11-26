@@ -23,7 +23,7 @@ func auditLogs(ctx context.Context, db *store.DB, limit float64) (json.RawMessag
 		return nil, fmt.Errorf("bind the audit log limit: %w", err)
 	}
 	rows, err := reports.SelectRows(ctx, db, nil, `
-                SELECT a.*, u.username FROM audit_log a
+                SELECT a.id, a.user_id, a.action, a.details, a.ip_address, a.created_at, u.username FROM audit_log a
                 LEFT JOIN users u ON a.user_id = u.id
                 ORDER BY a.created_at DESC LIMIT ? OFFSET ?
             `, args...)
