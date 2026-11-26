@@ -15,6 +15,7 @@
 
 import { tf } from '#lib/i18n/i18n.svelte.ts';
 import { trackDirty } from '#lib/settings/dirty.ts';
+import { toast } from '../toasts.svelte.ts';
 
 export type Values = Record<string, unknown>;
 
@@ -43,7 +44,8 @@ export function inWords(value: unknown): string {
 	if (value === true) return tf('settings_ui.on', 'on');
 	if (value === false) return tf('settings_ui.off', 'off');
 	if (value === null || value === undefined || value === '') return tf('settings_ui.empty', 'empty');
-	if (Array.isArray(value)) return value.length ? value.map(String).join(', ') : tf('settings_ui.none', 'none');
+	if (Array.isArray(value))
+		return value.length ? value.map(String).join(', ') : tf('settings_ui.none', 'none');
 	return String(value);
 }
 
@@ -103,7 +105,10 @@ export class SettingsDraft<T extends Values = Values> {
 	}
 
 	get changes(): Change[] {
-		const fields = new Set([...Object.keys(this.loaded), ...Object.keys(this.values)]);
+		const fields = [
+			...Object.keys(this.loaded),
+			...Object.keys(this.values).filter((k) => !(k in this.loaded))
+		];
 		const out: Change[] = [];
 		for (const field of fields) {
 			const fromValue = this.loaded[field];
@@ -143,7 +148,10 @@ export class SettingsDraft<T extends Values = Values> {
 			return true;
 		} catch (err) {
 			this.lastSaved = [];
-			this.error = err instanceof Error && err.message ? err.message : tf('settings_ui.save_failed', 'Saving did not work.');
+			this.error =
+				err instanceof Error && err.message
+					? err.message
+					: tf('settings_ui.save_failed', 'Saving did not work.');
 			return false;
 		} finally {
 			this.busy = false;
@@ -157,4 +165,62 @@ export class SettingsDraft<T extends Values = Values> {
 			() => this.busy
 		);
 	}
+}
+
+/** "Saved: View devices on, Delete devices off and 2 more" for the toast */
+export function savedMessage(changes: readonly Change[], shown = 3): string {
+	const parts = changes.slice(0, shown).map((c) => `${c.label} ${c.to}`);
+	const rest = changes.length - parts.length;
+	const list = parts.join(', ');
+	return rest > 0
+		? tf('settings_ui.saved_list_more', 'Saved: {list} and {count} more.', { list, count: rest })
+		: tf('settings_ui.saved_list', 'Saved: {list}.', { list });
+}
+
+export interface ConfirmOptions {
+	/**
+	 * Puts the saved changes back (each change's fromValue). With it the
+	 * toast offers Undo: for permissions, sign-in rules and policies.
+	 */
+	undo?: (changes: Change[]) => Promise<unknown>;
+	/** After a save or an undo: read the data again */
+	reload?: () => unknown;
+}
+
+/**
+ * Save the draft with `run`, then confirm in a toast that names what
+ * changed (PATTERN.md rule 11), with Undo when `undo` is given. Returns
+ * whether it saved.
+ */
+export async function saveAndConfirm<T extends Values>(
+	draft: SettingsDraft<T>,
+	run: (changes: Change[]) => Promise<unknown>,
+	{ undo, reload }: ConfirmOptions = {}
+): Promise<boolean> {
+	const ok = await draft.save(run);
+	if (!ok) return false;
+	const changes = draft.lastSaved;
+	toast.show({
+		type: 'success',
+		message: savedMessage(changes),
+		action: undo
+			? {
+					label: tf('settings_ui.undo', 'Undo'),
+					onclick: () => {
+						void undo(changes)
+							.then(async () => {
+								await reload?.();
+								toast.success(tf('settings_ui.undone', 'The changes are undone.'));
+							})
+							.catch((err: unknown) =>
+								toast.error(
+									`${tf('settings_ui.undo_failed', 'Undoing did not work.')} ${err instanceof Error ? err.message : ''}`.trim()
+								)
+							);
+					}
+				}
+			: undefined
+	});
+	await reload?.();
+	return true;
 }

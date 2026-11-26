@@ -26,7 +26,14 @@ describe('SettingsDraft', () => {
 		d.set('keep', 7);
 		expect(d.dirty).toBe(true);
 		expect(d.changes).toEqual([
-			{ field: 'device.delete', label: 'Delete devices', from: 'off', to: 'on', fromValue: false, toValue: true },
+			{
+				field: 'device.delete',
+				label: 'Delete devices',
+				from: 'off',
+				to: 'on',
+				fromValue: false,
+				toValue: true
+			},
 			{ field: 'keep', label: 'Keep this many', from: '14 copies', to: '7 copies', fromValue: 14, toValue: 7 }
 		]);
 	});
@@ -94,6 +101,10 @@ describe('SettingsDraft', () => {
 		d.set('ranges', ['10.0.0.0/8']);
 		expect(d.dirty).toBe(false);
 		d.set('ranges', ['10.0.0.0/8', '192.168.0.0/16']);
-		expect(d.changes[0]).toMatchObject({ label: 'ranges', from: '10.0.0.0/8', to: '10.0.0.0/8, 192.168.0.0/16' });
+		expect(d.changes[0]).toMatchObject({
+			label: 'ranges',
+			from: '10.0.0.0/8',
+			to: '10.0.0.0/8, 192.168.0.0/16'
+		});
 	});
 });
