@@ -2813,7 +2813,6 @@
     "access_now_none_restricted": "未選擇任何項目：由於裝置可見度為「受限」，此使用者看不到任何裝置。",
     "access_now_none_open": "未選擇任何項目：由於裝置可見度為「開放」，此使用者可看到所有裝置。",
     "access_no_effect_admin": "角色為 {role} 時沒有作用：此角色一律能看到所有裝置。",
-    "access_scope_link": "設置 › 常規",
     "user_direct_devices_rows": "每列一個裝置 ID，例如 123456789。不論資料夾和群組為何，使用者都能看到這些裝置。",
     "direct_device_n": "裝置 {n}",
     "add_direct_device": "新增裝置",
@@ -2824,7 +2823,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "資料夾",

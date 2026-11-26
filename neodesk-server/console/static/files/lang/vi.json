@@ -2797,7 +2797,6 @@
     "access_now_none_restricted": "Chưa chọn gì: người dùng này không thấy thiết bị nào, vì chế độ hiển thị thiết bị là Hạn chế.",
     "access_now_none_open": "Chưa chọn gì: người dùng này thấy mọi thiết bị, vì chế độ hiển thị thiết bị là Mở.",
     "access_no_effect_admin": "Không có tác dụng khi vai trò là {role}: vai trò này luôn thấy mọi thiết bị.",
-    "access_scope_link": "Cài đặt › Chung",
     "user_direct_devices_rows": "Mỗi dòng một ID thiết bị, ví dụ 123456789. Người dùng thấy các thiết bị này bất kể thư mục và nhóm của họ.",
     "direct_device_n": "Thiết bị {n}",
     "add_direct_device": "Thêm thiết bị",
@@ -2808,7 +2807,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Thư mục",

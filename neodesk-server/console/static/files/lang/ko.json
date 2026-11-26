@@ -2791,7 +2791,6 @@
     "access_now_none_restricted": "선택한 것이 없습니다: 장치 공개 범위가 제한이므로 이 사용자는 장치를 볼 수 없습니다.",
     "access_now_none_open": "선택한 것이 없습니다: 장치 공개 범위가 공개이므로 이 사용자는 모든 장치를 봅니다.",
     "access_no_effect_admin": "역할이 {role}인 동안에는 효과가 없습니다: 이 역할은 항상 모든 장치를 봅니다.",
-    "access_scope_link": "설정 › 일반",
     "user_direct_devices_rows": "한 줄에 장치 ID 하나. 예: 123456789. 사용자는 폴더와 그룹에 관계없이 이 장치들을 봅니다.",
     "direct_device_n": "장치 {n}",
     "add_direct_device": "장치 추가",
@@ -2802,7 +2801,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "폴더",

@@ -2791,7 +2791,6 @@
     "access_now_none_restricted": "未选择任何内容：由于设备可见性为“受限”，此用户看不到任何设备。",
     "access_now_none_open": "未选择任何内容：由于设备可见性为“开放”，此用户可以看到所有设备。",
     "access_no_effect_admin": "角色为 {role} 时无效：此角色始终能看到所有设备。",
-    "access_scope_link": "设置 › 常规",
     "user_direct_devices_rows": "每行一个设备 ID，例如 123456789。无论文件夹和分组如何，用户都能看到这些设备。",
     "direct_device_n": "设备 {n}",
     "add_direct_device": "添加设备",
@@ -2802,7 +2801,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "文件夹",

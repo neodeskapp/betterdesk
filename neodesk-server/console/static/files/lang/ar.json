@@ -2798,7 +2798,6 @@
     "access_now_none_restricted": "لم يُختر شيء: لا يرى هذا المستخدم أي جهاز، لأن رؤية الأجهزة مقيّد.",
     "access_now_none_open": "لم يُختر شيء: يرى هذا المستخدم كل الأجهزة، لأن رؤية الأجهزة مفتوح.",
     "access_no_effect_admin": "لا أثر له ما دام الدور {role}: هذا الدور يرى دائمًا كل الأجهزة.",
-    "access_scope_link": "إعدادات › عام",
     "user_direct_devices_rows": "معرّف جهاز واحد في كل سطر، مثلًا 123456789. يرى المستخدم هذه الأجهزة بغض النظر عن مجلداته ومجموعاته.",
     "direct_device_n": "الجهاز {n}",
     "add_direct_device": "إضافة جهاز",
@@ -2809,7 +2808,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "المجلدات",

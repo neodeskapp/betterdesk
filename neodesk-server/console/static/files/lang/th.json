@@ -2797,7 +2797,6 @@
     "access_now_none_restricted": "ไม่ได้เลือกอะไร: ผู้ใช้นี้ไม่เห็นอุปกรณ์ใดเลย เพราะการมองเห็นอุปกรณ์เป็น จำกัด",
     "access_now_none_open": "ไม่ได้เลือกอะไร: ผู้ใช้นี้เห็นอุปกรณ์ทั้งหมด เพราะการมองเห็นอุปกรณ์เป็น เปิด",
     "access_no_effect_admin": "ไม่มีผลขณะที่บทบาทเป็น {role}: บทบาทนี้เห็นอุปกรณ์ทั้งหมดเสมอ",
-    "access_scope_link": "การตั้งค่า › ทั่วไป",
     "user_direct_devices_rows": "หนึ่ง ID อุปกรณ์ต่อแถว เช่น 123456789 ผู้ใช้เห็นอุปกรณ์เหล่านี้ไม่ว่าโฟลเดอร์และกลุ่มจะเป็นอย่างไร",
     "direct_device_n": "อุปกรณ์ {n}",
     "add_direct_device": "เพิ่มอุปกรณ์",
@@ -2808,7 +2807,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "โฟลเดอร์",

@@ -2791,7 +2791,6 @@
     "access_now_none_restricted": "Nichts gewählt: Diese Person sieht keine Geräte, weil die Gerätesichtbarkeit Eingeschränkt ist.",
     "access_now_none_open": "Nichts gewählt: Diese Person sieht alle Geräte, weil die Gerätesichtbarkeit Offen ist.",
     "access_no_effect_admin": "Wirkt nicht, solange die Rolle {role} ist: Diese Rolle sieht immer alle Geräte.",
-    "access_scope_link": "Einstellungen › Allgemein",
     "user_direct_devices_rows": "Eine Geräte-ID pro Zeile, zum Beispiel 123456789. Die Person sieht diese Geräte unabhängig von Ordnern und Gruppen.",
     "direct_device_n": "Gerät {n}",
     "add_direct_device": "Gerät hinzufügen",
@@ -2802,7 +2801,8 @@
     "access_own_user": "Für diese Person festgelegt",
     "access_own_group": "Für diese Gruppe festgelegt",
     "access_own_user_limit": "Für diese Person festgelegt. Grenze der Rolle: {limit}",
-    "access_limit_only": "Grenze der Rolle: {limit}"
+    "access_limit_only": "Grenze der Rolle: {limit}",
+    "access_scope_link_joining": "Einstellungen › Beitritt"
   },
   "folders": {
     "title": "Ordner",

@@ -2791,7 +2791,6 @@
     "access_now_none_restricted": "Nulla di scelto: questo utente non vede nessun dispositivo, perché la visibilità dei dispositivi è Limitato.",
     "access_now_none_open": "Nulla di scelto: questo utente vede tutti i dispositivi, perché la visibilità dei dispositivi è Aperto.",
     "access_no_effect_admin": "Non ha effetto finché il ruolo è {role}: questo ruolo vede sempre tutti i dispositivi.",
-    "access_scope_link": "Impostazioni › Generale",
     "user_direct_devices_rows": "Un ID dispositivo per riga, per esempio 123456789. L'utente vede questi dispositivi qualunque siano le sue cartelle e i suoi gruppi.",
     "direct_device_n": "Dispositivo {n}",
     "add_direct_device": "Aggiungi un dispositivo",
@@ -2802,7 +2801,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Cartelle",

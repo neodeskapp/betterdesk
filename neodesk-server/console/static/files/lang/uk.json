@@ -2797,7 +2797,6 @@
     "access_now_none_restricted": "Нічого не вибрано: цей користувач не бачить жодного пристрою, бо видимість пристроїв Обмежений.",
     "access_now_none_open": "Нічого не вибрано: цей користувач бачить усі пристрої, бо видимість пристроїв Відкритий.",
     "access_no_effect_admin": "Не діє, поки роль {role}: ця роль завжди бачить усі пристрої.",
-    "access_scope_link": "Налаштування › Загальні",
     "user_direct_devices_rows": "Один ID пристрою на рядок, наприклад 123456789. Користувач бачить ці пристрої незалежно від своїх папок і груп.",
     "direct_device_n": "Пристрій {n}",
     "add_direct_device": "Додати пристрій",
@@ -2808,7 +2807,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Папки",

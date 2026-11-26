@@ -2791,7 +2791,6 @@
     "access_now_none_restricted": "Niets gekozen: deze gebruiker ziet geen apparaten, omdat de zichtbaarheid van apparaten Beperkt is.",
     "access_now_none_open": "Niets gekozen: deze gebruiker ziet alle apparaten, omdat de zichtbaarheid van apparaten Open is.",
     "access_no_effect_admin": "Heeft geen effect zolang de rol {role} is: deze rol ziet altijd alle apparaten.",
-    "access_scope_link": "Instellingen › Algemeen",
     "user_direct_devices_rows": "Eén apparaat-ID per rij, bijvoorbeeld 123456789. De gebruiker ziet deze apparaten, ongeacht zijn mappen en groepen.",
     "direct_device_n": "Apparaat {n}",
     "add_direct_device": "Apparaat toevoegen",
@@ -2802,7 +2801,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Mappen",

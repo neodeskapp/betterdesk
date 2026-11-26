@@ -2797,7 +2797,6 @@
     "access_now_none_restricted": "Inget valt: den här användaren ser inga enheter, eftersom enhetssynligheten är Begränsad.",
     "access_now_none_open": "Inget valt: den här användaren ser alla enheter, eftersom enhetssynligheten är Öppen.",
     "access_no_effect_admin": "Har ingen effekt så länge rollen är {role}: den här rollen ser alltid alla enheter.",
-    "access_scope_link": "Inställningar › Allmänt",
     "user_direct_devices_rows": "Ett enhets-ID per rad, till exempel 123456789. Användaren ser de här enheterna oavsett mappar och grupper.",
     "direct_device_n": "Enhet {n}",
     "add_direct_device": "Lägg till en enhet",
@@ -2808,7 +2807,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Mappar",

@@ -2797,7 +2797,6 @@
     "access_now_none_restricted": "Hiçbir şey seçilmedi: cihaz görünürlüğü Kısıtlı olduğu için bu kullanıcı hiçbir cihaz görmez.",
     "access_now_none_open": "Hiçbir şey seçilmedi: cihaz görünürlüğü Açık olduğu için bu kullanıcı tüm cihazları görür.",
     "access_no_effect_admin": "Rol {role} olduğu sürece etkisi yok: bu rol her zaman tüm cihazları görür.",
-    "access_scope_link": "Ayarlar › Genel",
     "user_direct_devices_rows": "Satır başına bir cihaz kimliği, örneğin 123456789. Kullanıcı klasörlerinden ve gruplarından bağımsız olarak bu cihazları görür.",
     "direct_device_n": "Cihaz {n}",
     "add_direct_device": "Cihaz ekle",
@@ -2808,7 +2807,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Klasörler",

@@ -2797,7 +2797,6 @@
     "access_now_none_restricted": "Intet valgt: denne bruger ser ingen enheder, fordi enhedssynligheden er Begrænset.",
     "access_now_none_open": "Intet valgt: denne bruger ser alle enheder, fordi enhedssynligheden er Åben.",
     "access_no_effect_admin": "Har ingen virkning, så længe rollen er {role}: denne rolle ser altid alle enheder.",
-    "access_scope_link": "Indstillinger › Generelt",
     "user_direct_devices_rows": "Ét enheds-ID pr. række, for eksempel 123456789. Brugeren ser disse enheder uanset sine mapper og grupper.",
     "direct_device_n": "Enhed {n}",
     "add_direct_device": "Tilføj en enhed",
@@ -2808,7 +2807,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Mapper",

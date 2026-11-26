@@ -121,6 +121,9 @@ test('with nothing chosen and visibility Open it says the user sees all devices'
 	expect(
 		await screen.findByText('Nothing chosen: this user sees all devices, because device visibility is Open.')
 	).toBeTruthy();
+	// The setting is on Settings › Joining, its row as the settings search has it
+	const where = screen.getByRole('link', { name: 'Settings › Joining' });
+	expect(where.getAttribute('href')).toBe('/settings?tab=joining#device-scope-settings-panel');
 });
 
 test('an administrator role says the choices have no effect', async () => {

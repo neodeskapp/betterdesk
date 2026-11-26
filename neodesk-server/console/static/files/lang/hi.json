@@ -2797,7 +2797,6 @@
     "access_now_none_restricted": "कुछ नहीं चुना: यह उपयोगकर्ता कोई डिवाइस नहीं देखता, क्योंकि डिवाइस दृश्यता प्रतिबंधित है।",
     "access_now_none_open": "कुछ नहीं चुना: यह उपयोगकर्ता सभी डिवाइस देखता है, क्योंकि डिवाइस दृश्यता खुला है।",
     "access_no_effect_admin": "जब तक भूमिका {role} है, इसका कोई असर नहीं: यह भूमिका हमेशा सभी डिवाइस देखती है।",
-    "access_scope_link": "सेटिंग्स › सामान्य",
     "user_direct_devices_rows": "हर पंक्ति में एक डिवाइस ID, उदाहरण के लिए 123456789। उपयोगकर्ता अपने फ़ोल्डर और समूह चाहे जो हों, ये डिवाइस देखता है।",
     "direct_device_n": "डिवाइस {n}",
     "add_direct_device": "डिवाइस जोड़ें",
@@ -2808,7 +2807,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "फ़ोल्डर",

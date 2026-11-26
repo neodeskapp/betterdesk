@@ -2813,7 +2813,6 @@
     "access_now_none_restricted": "Rien de choisi : cet utilisateur ne voit aucun appareil, car la visibilité des appareils est Restreint.",
     "access_now_none_open": "Rien de choisi : cet utilisateur voit tous les appareils, car la visibilité des appareils est Ouvert.",
     "access_no_effect_admin": "Sans effet tant que le rôle est {role} : ce rôle voit toujours tous les appareils.",
-    "access_scope_link": "Paramètres › Général",
     "user_direct_devices_rows": "Un ID d'appareil par ligne, par exemple 123456789. L'utilisateur voit ces appareils quels que soient ses dossiers et groupes.",
     "direct_device_n": "Appareil {n}",
     "add_direct_device": "Ajouter un appareil",
@@ -2824,7 +2823,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Dossiers",

@@ -2797,7 +2797,6 @@
     "access_now_none_restricted": "Nincs kiválasztva semmi: ez a felhasználó egyetlen eszközt sem lát, mert az eszközök láthatósága Korlátozott.",
     "access_now_none_open": "Nincs kiválasztva semmi: ez a felhasználó minden eszközt lát, mert az eszközök láthatósága Nyitott.",
     "access_no_effect_admin": "Nincs hatása, amíg a szerepkör {role}: ez a szerepkör mindig minden eszközt lát.",
-    "access_scope_link": "Beállítások › Általános",
     "user_direct_devices_rows": "Soronként egy eszközazonosító, például 123456789. A felhasználó ezeket az eszközöket a mappáitól és csoportjaitól függetlenül látja.",
     "direct_device_n": "{n}. eszköz",
     "add_direct_device": "Eszköz hozzáadása",
@@ -2808,7 +2807,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Mappák",

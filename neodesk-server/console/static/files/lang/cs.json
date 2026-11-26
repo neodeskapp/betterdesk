@@ -2791,7 +2791,6 @@
     "access_now_none_restricted": "Nic nevybráno: tento uživatel nevidí žádná zařízení, protože viditelnost zařízení je Omezený.",
     "access_now_none_open": "Nic nevybráno: tento uživatel vidí všechna zařízení, protože viditelnost zařízení je Otevřený.",
     "access_no_effect_admin": "Nemá žádný účinek, dokud je role {role}: tato role vždy vidí všechna zařízení.",
-    "access_scope_link": "Nastavení › Obecné",
     "user_direct_devices_rows": "Jedno ID zařízení na řádek, například 123456789. Uživatel tato zařízení vidí bez ohledu na své složky a skupiny.",
     "direct_device_n": "Zařízení {n}",
     "add_direct_device": "Přidat zařízení",
@@ -2802,7 +2801,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Složky",

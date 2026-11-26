@@ -2791,7 +2791,6 @@
     "access_now_none_restricted": "Nada elegido: este usuario no ve ningún dispositivo, porque la visibilidad de dispositivos es Restringido.",
     "access_now_none_open": "Nada elegido: este usuario ve todos los dispositivos, porque la visibilidad de dispositivos es Abierto.",
     "access_no_effect_admin": "No tiene efecto mientras el rol sea {role}: este rol siempre ve todos los dispositivos.",
-    "access_scope_link": "Configuración › General",
     "user_direct_devices_rows": "Un ID de dispositivo por fila, por ejemplo 123456789. El usuario ve estos dispositivos sean cuales sean sus carpetas y grupos.",
     "direct_device_n": "Dispositivo {n}",
     "add_direct_device": "Añadir un dispositivo",
@@ -2802,7 +2801,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Carpetas",

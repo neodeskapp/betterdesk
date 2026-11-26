@@ -2797,7 +2797,6 @@
     "access_now_none_restricted": "Mitään ei valittu: tämä käyttäjä ei näe yhtään laitetta, koska laitteiden näkyvyys on Rajoitettu.",
     "access_now_none_open": "Mitään ei valittu: tämä käyttäjä näkee kaikki laitteet, koska laitteiden näkyvyys on Avoin.",
     "access_no_effect_admin": "Ei vaikutusta, kun rooli on {role}: tämä rooli näkee aina kaikki laitteet.",
-    "access_scope_link": "Asetukset › Yleiset",
     "user_direct_devices_rows": "Yksi laitetunnus riviä kohden, esimerkiksi 123456789. Käyttäjä näkee nämä laitteet kansioistaan ja ryhmistään riippumatta.",
     "direct_device_n": "Laite {n}",
     "add_direct_device": "Lisää laite",
@@ -2808,7 +2807,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Kansiot",

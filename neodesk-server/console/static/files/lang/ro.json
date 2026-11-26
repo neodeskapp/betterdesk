@@ -2797,7 +2797,6 @@
     "access_now_none_restricted": "Nimic ales: acest utilizator nu vede niciun dispozitiv, pentru că vizibilitatea dispozitivelor este Restricționat.",
     "access_now_none_open": "Nimic ales: acest utilizator vede toate dispozitivele, pentru că vizibilitatea dispozitivelor este Deschis.",
     "access_no_effect_admin": "Nu are efect cât timp rolul este {role}: acest rol vede mereu toate dispozitivele.",
-    "access_scope_link": "Setări › General",
     "user_direct_devices_rows": "Un ID de dispozitiv pe rând, de exemplu 123456789. Utilizatorul vede aceste dispozitive indiferent de dosarele și grupurile lui.",
     "direct_device_n": "Dispozitiv {n}",
     "add_direct_device": "Adăugați un dispozitiv",
@@ -2808,7 +2807,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Foldere",

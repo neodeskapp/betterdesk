@@ -2791,7 +2791,6 @@
     "access_now_none_restricted": "Nada escolhido: este utilizador não vê nenhum dispositivo, porque a visibilidade de dispositivos é Restrito.",
     "access_now_none_open": "Nada escolhido: este utilizador vê todos os dispositivos, porque a visibilidade de dispositivos é Aberto.",
     "access_no_effect_admin": "Não tem efeito enquanto a função for {role}: esta função vê sempre todos os dispositivos.",
-    "access_scope_link": "Configurações › Geral",
     "user_direct_devices_rows": "Um ID de dispositivo por linha, por exemplo 123456789. O utilizador vê estes dispositivos sejam quais forem as suas pastas e grupos.",
     "direct_device_n": "Dispositivo {n}",
     "add_direct_device": "Adicionar um dispositivo",
@@ -2802,7 +2801,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Pastas",

@@ -2797,7 +2797,6 @@
     "access_now_none_restricted": "Tidak ada yang dipilih: pengguna ini tidak melihat perangkat apa pun, karena visibilitas perangkat Terbatas.",
     "access_now_none_open": "Tidak ada yang dipilih: pengguna ini melihat semua perangkat, karena visibilitas perangkat Terbuka.",
     "access_no_effect_admin": "Tidak berpengaruh selama perannya {role}: peran ini selalu melihat semua perangkat.",
-    "access_scope_link": "Pengaturan › Umum",
     "user_direct_devices_rows": "Satu ID perangkat per baris, misalnya 123456789. Pengguna melihat perangkat ini apa pun folder dan grupnya.",
     "direct_device_n": "Perangkat {n}",
     "add_direct_device": "Tambah perangkat",
@@ -2808,7 +2807,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Folder",

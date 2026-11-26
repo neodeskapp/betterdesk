@@ -2809,7 +2809,6 @@
     "access_now_none_restricted": "Nic nie wybrano: ten użytkownik nie widzi żadnych urządzeń, bo widoczność urządzeń to Ograniczony.",
     "access_now_none_open": "Nic nie wybrano: ten użytkownik widzi wszystkie urządzenia, bo widoczność urządzeń to Otwarty.",
     "access_no_effect_admin": "Nie ma znaczenia, dopóki rola to {role}: ta rola zawsze widzi wszystkie urządzenia.",
-    "access_scope_link": "Ustawienia › Ogólne",
     "user_direct_devices_rows": "Jedno ID urządzenia w wierszu, na przykład 123456789. Użytkownik widzi te urządzenia niezależnie od swoich folderów i grup.",
     "direct_device_n": "Urządzenie {n}",
     "add_direct_device": "Dodaj urządzenie",
@@ -2820,7 +2819,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "Foldery",

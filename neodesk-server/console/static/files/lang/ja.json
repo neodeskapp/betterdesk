@@ -2791,7 +2791,6 @@
     "access_now_none_restricted": "何も選択されていません: デバイスの表示範囲が「制限付き」のため、このユーザーにはデバイスが見えません。",
     "access_now_none_open": "何も選択されていません: デバイスの表示範囲が「オープン」のため、このユーザーにはすべてのデバイスが見えます。",
     "access_no_effect_admin": "ロールが {role} の間は効果がありません: このロールには常にすべてのデバイスが見えます。",
-    "access_scope_link": "設定 › 一般",
     "user_direct_devices_rows": "1 行に 1 つのデバイス ID。例: 123456789。ユーザーには、フォルダーやグループにかかわらずこれらのデバイスが見えます。",
     "direct_device_n": "デバイス {n}",
     "add_direct_device": "デバイスを追加",
@@ -2802,7 +2801,8 @@
     "access_own_user": "Set for this person",
     "access_own_group": "Set for this group",
     "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}"
+    "access_limit_only": "Role limit: {limit}",
+    "access_scope_link_joining": "Settings › Joining"
   },
   "folders": {
     "title": "フォルダー",
