@@ -5533,7 +5533,8 @@
     "computers": "Bilgisayarlarla sohbet",
     "computers_hint": "Kapalı: bilgisayarlardaki NeoDesk uygulaması sohbeti açamaz ve konsol başlarındaki kişilere sohbetle ulaşamaz. Çalışma arkadaşları arasındaki sohbet çalışmaya devam eder.",
     "computers_off": "Bilgisayarlarla sohbet kapalı: bilgisayarlardaki NeoDesk uygulaması sohbeti açamaz. Bir yönetici bunu sohbet menüsünde Bu sunucunun sohbet ayarları altından açabilir.",
-    "mail_footer": "Bu e-postayı {app} sohbetinde yanıt verdiğiniz için alıyorsunuz. Bu e-postaları sohbet menüsünde Sohbet bildirimleri altından kapatın."
+    "mail_footer": "Bu e-postayı {app} sohbetinde yanıt verdiğiniz için alıyorsunuz. Bu e-postaları sohbet menüsünde Sohbet bildirimleri altından kapatın.",
+    "said": "{name}: {text}"
   },
   "toast": {
     "device_connected": "Cihaz bağlandı",

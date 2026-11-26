@@ -5533,7 +5533,8 @@
     "computers": "Chat med computere",
     "computers_hint": "Fra: NeoDesk-appen på computere kan ikke åbne chatten, og konsollen kan ikke nå personerne ved dem via chat. Chat mellem kolleger virker stadig.",
     "computers_off": "Chat med computere er slået fra: NeoDesk-appen på computere kan ikke åbne chatten. En administrator kan slå den til i chattens menu under Chatindstillinger for denne server.",
-    "mail_footer": "Du får denne mail, fordi du svarer i chatten i {app}. Slå disse mails fra i chattens menu under Chatmeddelelser."
+    "mail_footer": "Du får denne mail, fordi du svarer i chatten i {app}. Slå disse mails fra i chattens menu under Chatmeddelelser.",
+    "said": "{name}: {text}"
   },
   "toast": {
     "device_connected": "Enhed tilsluttet",

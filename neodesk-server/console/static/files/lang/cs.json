@@ -5527,7 +5527,8 @@
     "computers": "Chat s počítači",
     "computers_hint": "Vypnuto: aplikace NeoDesk na počítačích nemůže otevřít chat a konzole nezastihne lidi u nich chatem. Chat mezi kolegy funguje dál.",
     "computers_off": "Chat s počítači je vypnutý: aplikace NeoDesk na počítačích nemůže otevřít chat. Správce ho může zapnout v nabídce chatu v Nastavení chatu pro tento server.",
-    "mail_footer": "Tento e-mail dostáváte, protože odpovídáte v chatu {app}. Vypnout ho můžete v nabídce chatu v části Oznámení chatu."
+    "mail_footer": "Tento e-mail dostáváte, protože odpovídáte v chatu {app}. Vypnout ho můžete v nabídce chatu v části Oznámení chatu.",
+    "said": "{name}: {text}"
   },
   "toast": {
     "device_connected": "Zařízení připojeno",

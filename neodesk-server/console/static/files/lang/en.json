@@ -5732,7 +5732,8 @@
         "computers": "Chat with computers",
         "computers_hint": "Off: the NeoDesk app on computers can't open the chat, and the console can't reach the people at them by chat. Chat between colleagues keeps working.",
         "computers_off": "Chat with computers is off: the NeoDesk app on computers can't open the chat. An admin can turn it on in the chat's menu under Chat settings for this server.",
-        "mail_footer": "You get this mail because you answer the chat in {app}. Turn these mails off in the chat's menu under Chat notifications."
+        "mail_footer": "You get this mail because you answer the chat in {app}. Turn these mails off in the chat's menu under Chat notifications.",
+        "said": "{name}: {text}"
     },
     "toast": {
         "device_connected": "Device connected",

@@ -5527,7 +5527,8 @@
     "computers": "Chat com os computadores",
     "computers_hint": "Desligado: a aplicação NeoDesk nos computadores não consegue abrir o chat, e a consola não alcança por chat as pessoas que os usam. O chat entre colegas continua a funcionar.",
     "computers_off": "O chat com os computadores está desligado: a aplicação NeoDesk nos computadores não consegue abrir o chat. Um administrador pode ligá-lo no menu do chat, em Configurações do chat deste servidor.",
-    "mail_footer": "Recebe este e-mail porque responde no chat do {app}. Desligue estes e-mails no menu do chat, em Notificações do chat."
+    "mail_footer": "Recebe este e-mail porque responde no chat do {app}. Desligue estes e-mails no menu do chat, em Notificações do chat.",
+    "said": "{name}: {text}"
   },
   "toast": {
     "device_connected": "Dispositivo conectado",

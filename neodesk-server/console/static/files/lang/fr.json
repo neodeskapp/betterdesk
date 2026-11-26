@@ -5674,7 +5674,8 @@
     "computers": "Chat avec les ordinateurs",
     "computers_hint": "Désactivé : l'application NeoDesk des ordinateurs ne peut pas ouvrir le chat, et la console ne peut pas joindre leurs utilisateurs par chat. Le chat entre collègues continue de fonctionner.",
     "computers_off": "Le chat avec les ordinateurs est désactivé : l'application NeoDesk des ordinateurs ne peut pas ouvrir le chat. Un administrateur peut l'activer dans le menu du chat, sous Paramètres du chat de ce serveur.",
-    "mail_footer": "Vous recevez ce mail parce que vous répondez dans le chat de {app}. Désactivez ces mails dans le menu du chat, sous Notifications du chat."
+    "mail_footer": "Vous recevez ce mail parce que vous répondez dans le chat de {app}. Désactivez ces mails dans le menu du chat, sous Notifications du chat.",
+    "said": "{name} : {text}"
   },
   "toast": {
     "device_connected": "Device connected",

@@ -5533,7 +5533,8 @@
     "computers": "Chat cu computerele",
     "computers_hint": "Oprit: aplicația NeoDesk de pe computere nu poate deschide chatul, iar consola nu poate contacta prin chat persoanele de la ele. Chatul dintre colegi funcționează în continuare.",
     "computers_off": "Chatul cu computerele este oprit: aplicația NeoDesk de pe computere nu poate deschide chatul. Un administrator îl poate porni din meniul chatului, la Setările chatului pentru acest server.",
-    "mail_footer": "Primiți acest e-mail pentru că răspundeți în chatul {app}. Opriți aceste e-mailuri din meniul chatului, la Notificări de chat."
+    "mail_footer": "Primiți acest e-mail pentru că răspundeți în chatul {app}. Opriți aceste e-mailuri din meniul chatului, la Notificări de chat.",
+    "said": "{name}: {text}"
   },
   "toast": {
     "device_connected": "Dispozitiv conectat",

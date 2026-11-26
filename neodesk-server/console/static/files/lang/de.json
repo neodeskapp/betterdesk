@@ -5527,7 +5527,8 @@
     "computers": "Chat mit Computern",
     "computers_hint": "Aus: Die NeoDesk-App auf Computern kann den Chat nicht öffnen, und die Konsole erreicht die Personen dort nicht per Chat. Der Chat zwischen Kollegen funktioniert weiter.",
     "computers_off": "Der Chat mit Computern ist aus: Die NeoDesk-App auf Computern kann den Chat nicht öffnen. Ein Admin kann ihn im Menü des Chats unter Chat-Einstellungen für diesen Server einschalten.",
-    "mail_footer": "Du bekommst diese Mail, weil du im Chat von {app} antwortest. Abschalten kannst du sie im Menü des Chats unter Chat-Benachrichtigungen."
+    "mail_footer": "Du bekommst diese Mail, weil du im Chat von {app} antwortest. Abschalten kannst du sie im Menü des Chats unter Chat-Benachrichtigungen.",
+    "said": "{name}: {text}"
   },
   "toast": {
     "device_connected": "Gerät verbunden",

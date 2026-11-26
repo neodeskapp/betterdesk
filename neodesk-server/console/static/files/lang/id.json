@@ -5533,7 +5533,8 @@
     "computers": "Obrolan dengan komputer",
     "computers_hint": "Mati: aplikasi NeoDesk di komputer tidak dapat membuka obrolan, dan konsol tidak dapat menjangkau orang di sana lewat obrolan. Obrolan antarrekan tetap berjalan.",
     "computers_off": "Obrolan dengan komputer mati: aplikasi NeoDesk di komputer tidak dapat membuka obrolan. Admin dapat menyalakannya di menu obrolan pada Pengaturan obrolan untuk server ini.",
-    "mail_footer": "Anda menerima email ini karena Anda menjawab obrolan di {app}. Matikan email ini di menu obrolan pada Pemberitahuan chat."
+    "mail_footer": "Anda menerima email ini karena Anda menjawab obrolan di {app}. Matikan email ini di menu obrolan pada Pemberitahuan chat.",
+    "said": "{name}: {text}"
   },
   "toast": {
     "device_connected": "Perangkat terhubung",

@@ -5533,7 +5533,8 @@
     "computers": "Csevegés a számítógépekkel",
     "computers_hint": "Ki: a számítógépeken futó NeoDesk alkalmazás nem nyithatja meg a csevegést, és a konzol nem éri el csevegésen a gépeknél ülőket. A kollégák közötti csevegés továbbra is működik.",
     "computers_off": "A csevegés a számítógépekkel ki van kapcsolva: a számítógépeken futó NeoDesk alkalmazás nem nyithatja meg a csevegést. Egy rendszergazda a csevegés menüjében, A kiszolgáló csevegési beállításai alatt kapcsolhatja be.",
-    "mail_footer": "Ezt a levelet azért kapja, mert a(z) {app} csevegésében válaszol. A leveleket a csevegés menüjében, a Csevegési értesítések alatt kapcsolhatja ki."
+    "mail_footer": "Ezt a levelet azért kapja, mert a(z) {app} csevegésében válaszol. A leveleket a csevegés menüjében, a Csevegési értesítések alatt kapcsolhatja ki.",
+    "said": "{name}: {text}"
   },
   "toast": {
     "device_connected": "Eszköz csatlakoztatva",
