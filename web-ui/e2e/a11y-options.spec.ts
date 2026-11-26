@@ -80,13 +80,16 @@ test.describe('More contrast', () => {
 		}, name);
 	const text = (page: Page) => token(page, '--text');
 
-	test('follows the system, and On and Off override it', async ({ page }) => {
+	test('follows the system, and On and Off override it', async ({ page, browserName }) => {
 		await page.emulateMedia({ colorScheme: 'light', contrast: 'more' });
 		await page.goto(`${UI}/devices`);
 		await expect(page.locator('html')).toHaveAttribute('data-a11y-more-contrast', 'true');
 		expect(await text(page)).toBe('rgb(0, 0, 0)');
 
 		await page.emulateMedia({ colorScheme: 'light', contrast: 'no-preference' });
+		// Playwright's Firefox sends no change event for an emulated contrast
+		// (seen in CI): there the page reads the new setting on its next load
+		if (browserName === 'firefox') await page.reload();
 		await expect(page.locator('html')).toHaveAttribute('data-a11y-more-contrast', 'false');
 		expect(await text(page)).not.toBe('rgb(0, 0, 0)');
 	});
