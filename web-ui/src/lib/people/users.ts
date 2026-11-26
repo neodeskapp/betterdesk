@@ -33,6 +33,13 @@ export const DESCRIBED_ROLES = [
 	'pro'
 ] as const;
 
+/** A role's label in the language, else its name as it is (a role the console doesn't know) */
+export function roleLabel(role: string, t: (key: string) => string): string {
+	const key = `users.role_${role}`;
+	const text = t(key);
+	return text === key ? role : text;
+}
+
 const SUPER_ROLES = new Set(['super_admin', 'admin']);
 
 export function isSuperRole(role: string | null | undefined): boolean {

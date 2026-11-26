@@ -20,6 +20,7 @@
 	} from '#lib/api/users.ts';
 	import { plural, t } from '#lib/i18n/i18n.svelte.ts';
 	import { importTemplate, saveCsv, toCsv } from '#lib/people/userList.ts';
+	import { roleLabel } from '#lib/people/users.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import ChoiceList from '#lib/ui/ChoiceList.svelte';
 	import Field from '#lib/ui/Field.svelte';
@@ -163,9 +164,17 @@
 			primary: true,
 			sortValue: (r) => r.username
 		},
+		// What is wrong with a line comes right after its name, so a phone shows it without scrolling sideways
+		{
+			id: 'check',
+			label: t('users.import_check'),
+			cell: checkCell,
+			sortValue: (r) => r.problems.length,
+			class: 'col-check',
+			minWidth: '14rem'
+		},
 		{ id: 'email', label: t('users.email'), cell: emailCell },
-		{ id: 'role', label: t('users.role'), cell: roleCell },
-		{ id: 'check', label: t('users.import_check'), cell: checkCell, sortValue: (r) => r.problems.length }
+		{ id: 'role', label: t('users.role'), cell: roleCell }
 	]);
 	const passwordColumns = $derived<Column<ImportResult>[]>([
 		{ id: 'username', label: t('users.username'), cell: madeNameCell, primary: true },
@@ -181,7 +190,7 @@
 			>{[r.first_name, r.last_name].filter(Boolean).join(' ')}</span
 		>{/if}{/snippet}
 {#snippet emailCell(r: ImportRow)}{r.email}{/snippet}
-{#snippet roleCell(r: ImportRow)}{r.role || 'viewer'}{#if r.organization}<span class="cell-sub"
+{#snippet roleCell(r: ImportRow)}{roleLabel(r.role || 'viewer', t)}{#if r.organization}<span class="cell-sub"
 			>{r.organization}</span
 		>{/if}{/snippet}
 {#snippet checkCell(r: ImportRow)}
@@ -345,6 +354,10 @@
 		display: block;
 		color: var(--text-muted);
 		font-size: var(--text-sm);
+	}
+	/* A problem is a sentence: it wraps instead of being cut off */
+	.import-preview :global(td.col-check .status) {
+		white-space: normal;
 	}
 	.passwords code {
 		user-select: all;
