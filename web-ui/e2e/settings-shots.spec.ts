@@ -74,6 +74,16 @@ const orgPath =
 		return `/organizations/${encodeURIComponent(first.id)}${hash}`;
 	};
 
+/** Rules > Policies with an organization open: the named seeded one, or the first */
+const policiesPath = (name?: string) => async (page: Page) => {
+	const r = await page.request.get('/api/panel/org', { headers: { Accept: 'application/json' } });
+	const body = await r.json();
+	const list = (body.organizations ?? body.data ?? body) as { id: string; name?: string }[];
+	const pick = Array.isArray(list) ? (list.find((o) => o.name === name) ?? list[0]) : undefined;
+	if (!pick) throw new Error('no seeded organization');
+	return `/policies/${encodeURIComponent(pick.id)}`;
+};
+
 /* ── The surfaces ── */
 
 const SURFACES: Surface[] = [
@@ -92,6 +102,8 @@ const SURFACES: Surface[] = [
 
 	// Rules
 	{ name: 'rules-policies', path: '/policies' },
+	{ name: 'rules-policies-org', path: policiesPath('Demo Northwind Clinic') },
+	{ name: 'rules-policies-unset', path: policiesPath('Demo Lab Collective') },
 	{ name: 'rules-automation', path: '/automation' },
 	{ name: 'rules-automation-rule-sheet', path: '/automation', open: button('Create rule') },
 	{ name: 'rules-resource-control', path: '/resource-control' },
