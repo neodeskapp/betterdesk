@@ -1,12 +1,14 @@
 /**
  * Your account › Email address: a new address is sent for confirmation,
  * the pending one shows with Send the link again and Cancel the change,
+ * without the email settings there is no form but why and a link to them,
  * and a directory account gets no form.
  */
 import { cleanup, render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import EmailAddress from '../../../src/lib/account/EmailAddress.svelte';
+import { session } from '../../../src/lib/state/session.svelte.ts';
 
 let sent: { method: string; path: string; body: unknown }[] = [];
 let own: Record<string, unknown> = {};
@@ -34,6 +36,8 @@ beforeEach(() => {
 afterEach(() => {
 	cleanup();
 	vi.unstubAllGlobals();
+	session.isSuperAdmin = false;
+	session.permissions = [];
 });
 
 describe('own email address', () => {
@@ -68,6 +72,25 @@ describe('own email address', () => {
 		await vi.waitFor(() =>
 			expect(sent).toEqual([{ method: 'POST', path: '/api/users/me/email-change/resend', body: {} }])
 		);
+	});
+
+	test('without the email settings there is no form, only why and, for who may, the way there', async () => {
+		own = { email: 'old@example.com', auth_provider: 'local', email_pending: null, mail_ready: false };
+		session.isSuperAdmin = false;
+		session.permissions = [];
+		render(EmailAddress);
+		await screen.findByText('old@example.com');
+		expect(screen.getByText('users.email_change_needs_mail')).toBeTruthy();
+		expect(screen.queryByLabelText('account.email_new')).toBeNull();
+		expect(screen.queryByRole('button', { name: 'account.email_change' })).toBeNull();
+		expect(screen.queryByRole('link', { name: 'account.email_settings_link' })).toBeNull();
+		cleanup();
+
+		session.permissions = ['server.config'];
+		render(EmailAddress);
+		const settings = await screen.findByRole('link', { name: 'account.email_settings_link' });
+		expect(settings.getAttribute('href')).toMatch(/\/settings\?tab=email$/);
+		expect(sent).toEqual([]);
 	});
 
 	test('a directory account gets its address from the directory', async () => {

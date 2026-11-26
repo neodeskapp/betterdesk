@@ -962,39 +962,9 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		['settings.inactive_days_hint'],
 		'server.config'
 	],
+	// The four notice switches are one row: their ids name your own
+	// password, which the Sign-in tab has no row for
 	['auth', 'security-notices', 'settings.notices.title', '', ['settings.notices.note'], 'server.config'],
-	[
-		'auth',
-		'security-notice-new_signin',
-		'settings.notices.new_signin',
-		'settings.notices.title',
-		['settings.notices.new_signin_hint'],
-		'server.config'
-	],
-	[
-		'auth',
-		'security-notice-password_changed',
-		'settings.notices.password_changed',
-		'settings.notices.title',
-		['settings.notices.password_changed_hint'],
-		'server.config'
-	],
-	[
-		'auth',
-		'security-notice-two_factor_changed',
-		'settings.notices.two_factor_changed',
-		'settings.notices.title',
-		['settings.notices.two_factor_changed_hint'],
-		'server.config'
-	],
-	[
-		'auth',
-		'security-notice-email_changed',
-		'settings.notices.email_changed',
-		'settings.notices.title',
-		['settings.notices.email_changed_hint'],
-		'server.config'
-	],
 	[
 		'ldap',
 		'ldap-allow-signup',
@@ -1360,6 +1330,16 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server.config'
 	],
 	['time', 'time-billing-timezone', 'settings.time.billing_timezone', '', [], 'server.config'],
+	// Your own time zone (Your account, Preferences) has the same label: it
+	// comes after the console's, so a search for the time zone lists that first
+	[
+		'account',
+		'preferences-time-zone',
+		'users.time_zone',
+		'account.preferences',
+		['account.time_zone_note'],
+		''
+	],
 	[
 		'time',
 		'time-billing-timezone-custom',
@@ -1606,7 +1586,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 /** Space-separated element ids per tab or page, for #<id> links into another one */
 export const TAB_IDS: Readonly<Record<string, string>> = {
 	account:
-		'api-tokens confirm-password current-password email email-new new-password password password-requirements preferences preferences-accessibility preferences-language preferences-theme profile profile-picture profile-status req-length security-events sessions two-factor',
+		'api-tokens confirm-password current-password email email-new new-password password password-requirements preferences preferences-accessibility preferences-language preferences-theme preferences-time-zone preferences-time-zone-field profile profile-picture profile-status req-length security-events sessions two-factor',
 	general:
 		'conn-allow-shared-nat-initiator conn-logged-in-only-initiator conn-mode-p2p conn-mode-relay conn-operator-only-outbound conn-p2p-fallback-ms conn-same-nat-relay connection-diagram connection-diagram-title connection-mode connection-mode-advanced connection-mode-effect connection-mode-fields connection-mode-form connection-mode-info connection-mode-section connection-mode-source connection-mode-title db-path general-form general-save go-server-version public-api-url public-endpoints public-endpoints-form public-endpoints-title public-relay-server public-server-id server-info server-info-title uptime',
 	auth: 'client-sessions-expiry-days client-sessions-form client-sessions-max-days client-sessions-max-group client-sessions-settings-section client-sessions-sliding console-sessions-form console-signin-section for-everyone-title impersonation-mail inactive-accounts inactive-accounts-days inactive-accounts-days-group require-two-factor security-notice-email_changed security-notice-new_signin security-notice-password_changed security-notice-two_factor_changed security-notices single-session two-factor-policy-form',

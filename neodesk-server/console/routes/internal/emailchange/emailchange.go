@@ -7,9 +7,12 @@
 // old address stays, the account shows the pending one, and the old
 // address gets a notice unless the server setting
 // security_notice_email_changed is "false". When the console can't send
-// mail, nothing could be confirmed: the address changes at once, and the
-// audit log says it was not confirmed. Taking the address away, or only
-// changing its case, needs no confirmation either. An account from a
+// mail, nothing could be confirmed: an admin's change of another account
+// takes effect at once, and the audit log says it was not confirmed; a
+// change of one's own address is refused (A272) with the code NeedsMail,
+// so nobody moves their account to an address they haven't shown is
+// theirs. Taking the address away, or only changing its case, needs no
+// confirmation either. An account from a
 // directory or single sign-on gets its address from there and is refused.
 //
 // Every change that takes effect ends the account's other sessions and
@@ -46,12 +49,18 @@ type Target struct {
 	Provider string
 }
 
-// Refusal is a change the route answers with Status and the text of Key.
+// Refusal is a change the route answers with Status and the text of Key,
+// and with Code, when it has one, for the console to tell it apart.
 type Refusal struct {
 	Status int
+	Code   string
 	Key    string
 	Vars   map[string]any
 }
+
+// NeedsMail is the code of a refused change of one's own address on a
+// console without email settings, which can't send the confirmation link.
+const NeedsMail = "email_change_needs_mail"
 
 func (r *Refusal) Error() string { return r.Key }
 
@@ -110,7 +119,12 @@ func (c *Changer) Request(r *http.Request, t Target, email string, self bool) (O
 	if err := Refuse(t, email); err != nil {
 		return Outcome{}, err
 	}
-	if email == "" || strings.EqualFold(email, t.Email) || !accountmail.Ready(ctx, c.D) {
+	ready := accountmail.Ready(ctx, c.D)
+	confirmable := email != "" && !strings.EqualFold(email, t.Email)
+	if self && confirmable && !ready {
+		return Outcome{}, &Refusal{Status: http.StatusConflict, Code: NeedsMail, Key: "users.email_change_needs_mail"}
+	}
+	if !confirmable || !ready {
 		how := "without confirmation, the console can't send mail"
 		switch {
 		case email == "":

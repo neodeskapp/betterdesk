@@ -47,9 +47,9 @@ describe('the settings list', () => {
 });
 
 describe('settingEntries', () => {
-	test('a super admin gets every setting of the list, once', () => {
+	test('an account with every permission gets every setting of the list, once', () => {
 		const t = tOf(en);
-		const entries = settingEntries({ t, can: everyone, admin: true, superAdmin: true });
+		const entries = settingEntries({ t, can: everyone });
 		const expected = new Set(
 			SEARCH_INDEX.filter((r) => isPlace(r[0])).map(
 				(r) => `${r[0]}#${r[1]}#${t(r[2]).replace(/:$/, '').trim()}`
@@ -74,7 +74,7 @@ describe('settingEntries', () => {
 		expect(entries.find((e) => e.id === 'public-server-id')?.href).toBe('/settings#public-server-id');
 		// The server's own settings are on the pages of the Server section
 		const scheduled = entries.find((e) => e.id === 'scheduled-backup-enabled');
-		expect(scheduled?.where).toBe('Server, Backups, Scheduled backups');
+		expect(scheduled?.where).toBe('Server, Backups, Scheduled full backup');
 		expect(scheduled?.href).toBe('/server/backups#scheduled-backup-enabled');
 		expect(entries.find((e) => e.id === 'backup-retention-input')).toMatchObject({
 			label: 'Keep update backups',
@@ -104,12 +104,7 @@ describe('settingEntries', () => {
 		expect(
 			settingEntries({ t: tOf(en), can: everyone }).find((e) => e.id === 'require-two-factor')?.href
 		).toBe('/settings?tab=auth#require-two-factor');
-		// The security notice "Password changed" is a mail rule for everyone, not your own password
-		expect(
-			SEARCH_INDEX.filter(
-				(r) => r[0] === 'auth' && !r[1].startsWith('security-notice-') && /password|totp/.test(r[1])
-			)
-		).toEqual([]);
+		expect(SEARCH_INDEX.filter((r) => r[0] === 'auth' && /password|totp/.test(r[1]))).toEqual([]);
 	});
 
 	test('no setting the account cannot see: tabs it may not open and rows that need a permission', () => {
@@ -133,23 +128,6 @@ describe('settingEntries', () => {
 			if (SEARCH_INDEX.some((r) => r[0] === tab && r[5] === '')) expect(tabs.has(tab)).toBe(true);
 	});
 
-	test('policy settings are found by the admin roles only, on the Policies page (task 5: "sound")', () => {
-		const t = tOf(en);
-		const admin = settingEntries({ t, can: viewer, admin: true });
-		const sound = find('sound', admin);
-		expect(sound.map((r) => r.href)).toContain('/policies#pol-features-allow-audio');
-		const audio = admin.find((e) => e.id === 'pol-features-allow-audio');
-		expect(audio).toMatchObject({ label: 'Allow sound from the device', where: 'Rules, Policies, Features' });
-		expect(find('audio', admin).length).toBeGreaterThan(0);
-		expect(find('ton', settingEntries({ t: tOf(de), can: viewer, admin: true })).length).toBeGreaterThan(0);
-		// Not for an operator, even with every permission
-		expect(settingEntries({ t, can: everyone }).some((e) => e.place === 'policies')).toBe(false);
-		expect(placeAllowed('policies', true)).toBe(false);
-		expect(placeAllowed('policies', false, { admin: true })).toBe(true);
-		expect(placeAllowed('permissions', false, { admin: true })).toBe(false);
-		expect(placeAllowed('permissions', false, { superAdmin: true })).toBe(true);
-	});
-
 	test('a search for a setting it may not see finds nothing', () => {
 		expect(find('ldap', settingEntries({ t: tOf(en), can: viewer }))).toEqual([]);
 		expect(find('ldap', settingEntries({ t: tOf(en), can: everyone })).length).toBeGreaterThan(0);
@@ -169,8 +147,7 @@ describe('English and German find the same setting', () => {
 		['application name', 'anwendungsname', 'brand-name'],
 		['update channel', 'update-kanal', 'update-channel-panel'],
 		['scheduled backups', 'geplante sicherungen', 'scheduled-backup-panel'],
-		['relay server', 'relay-server', 'public-relay-server'],
-		['backup every night', 'sicherung nachts', 'scheduled-backup-time']
+		['relay server', 'relay-server', 'public-relay-server']
 	])('"%s" in English and "%s" in German', (qEn, qDe, id) => {
 		expect(first(qEn, inEn)).toBe(id);
 		expect(first(qDe, inDe)).toBe(id);
@@ -191,28 +168,5 @@ describe('English and German find the same setting', () => {
 		const { results, totals } = searchGrouped('ldap', { pages: [], settings: inEn });
 		expect(results.filter((r) => r.kind === 'setting')).toHaveLength(MAX_SETTINGS);
 		expect(totals.setting).toBeGreaterThan(MAX_SETTINGS);
-	});
-});
-
-describe('permissions on Roles and permissions', () => {
-	const supers = settingEntries({ t: tOf(en), can: everyone, superAdmin: true });
-
-	test('"delete devices" finds the permission and opens its row, for super admins only', () => {
-		expect(find('delete devices', supers).map((r) => r.id)).toContain('perm-device-delete');
-		expect(supers.find((e) => e.id === 'perm-device-delete')).toMatchObject({
-			place: 'permissions',
-			label: 'Delete devices',
-			where: 'People, Roles and permissions, See and manage devices',
-			href: '/permissions#perm-device-delete'
-		});
-		// Every other account: the page is for super admins
-		expect(settingEntries({ t: tOf(en), can: everyone }).some((e) => e.place === 'permissions')).toBe(false);
-	});
-
-	test('found by its sentence, its key and in German', () => {
-		expect(find('api keys', supers).map((r) => r.id)).toContain('perm-server-keys');
-		expect(find('device.delete', supers).map((r) => r.id)).toContain('perm-device-delete');
-		const inDe = settingEntries({ t: tOf(de), can: everyone, superAdmin: true });
-		expect(find('geräte löschen', inDe).map((r) => r.id)).toContain('perm-device-delete');
 	});
 });

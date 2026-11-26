@@ -165,6 +165,18 @@ func refusedCreate(answer string) fix {
 	}}
 }
 
+// ownAddressNeedsMail is the admin's change of its own address on a
+// console without mail settings, which the Go console refuses (A272) and
+// Node stored with its audit entry.
+func ownAddressNeedsMail() fix {
+	return fix{bug: "A272", status: http.StatusConflict,
+		answer: is(`{"success":false,"error":"users.email_change_needs_mail","code":"email_change_needs_mail"}`),
+		node: func(n *nodeWrites) {
+			n.exec(`UPDATE users SET email = 'id@example.invalid' WHERE id = 1`)
+			n.audit("user_updated", "Updated user: e2e_admin")
+		}}
+}
+
 // fixFor is the fix of a step: the one for the recording's shape
 // ("sqlite-go: 509 PATCH ..."), or the one for every shape.
 func fixFor(rec recording, name string) (fix, bool) {
@@ -252,6 +264,10 @@ var fixes = map[string]fix{
 		n.exec(`UPDATE users SET email = 'ldap@example.invalid' WHERE id = 9`)
 		n.audit("user_updated", "Updated user: ldap_op")
 	}},
+	// The admin's own address (1.5 is account 1): without mail settings
+	// nothing can confirm a new one, so the Go console refuses it (A272),
+	// Node stored it. Step 333 sends the same address again.
+	"329 PATCH /api/users/1.5":       ownAddressNeedsMail(),
 	"346 PATCH /api/users/2":         {bug: "S9", endsSessionsOf: []string{"super_admin"}},
 	"348 PATCH /api/users/1":         {bug: "S9", endsSessionsOf: []string{"admin"}},
 	"349 PATCH /api/users/4":         {bug: "S9", endsSessionsOf: []string{"global_admin"}},
