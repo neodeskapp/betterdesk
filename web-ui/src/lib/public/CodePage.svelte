@@ -138,7 +138,11 @@
 	 * app (1.5.0 and later) asks before it joins and names the server.
 	 */
 	const macOpen = $derived(
-		!!data && main.kind === 'download' && mine?.platform === 'macos' && data.kind === 'join' && !!data.deep_link
+		!!data &&
+			main.kind === 'download' &&
+			mine?.platform === 'macos' &&
+			data.kind === 'join' &&
+			!!data.deep_link
 	);
 
 	// The code and the server address are typed into the app, so a click
