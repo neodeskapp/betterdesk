@@ -69,8 +69,9 @@ const orgPath =
 		const r = await page.request.get('/api/panel/org', { headers: { Accept: 'application/json' } });
 		const body = await r.json();
 		const list = (body.organizations ?? body.data ?? body) as { id: string }[];
-		if (!Array.isArray(list) || !list.length) throw new Error('no seeded organization');
-		return `/organizations/${encodeURIComponent(list[0].id)}${hash}`;
+		const first = Array.isArray(list) ? list[0] : undefined;
+		if (!first) throw new Error('no seeded organization');
+		return `/organizations/${encodeURIComponent(first.id)}${hash}`;
 	};
 
 /* ── The surfaces ── */
