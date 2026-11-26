@@ -645,6 +645,10 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	if err != nil {
 		return nil, err
 	}
+	exempt, changeExempt, err := h.exemptOf(r, body, user)
+	if err != nil {
+		return nil, err
+	}
 	totpOff, err := totpOffOf(r, body, user)
 	if err != nil {
 		return nil, err
@@ -693,6 +697,11 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	}
 	if changeExpiry {
 		if err := h.setExpiry(r, user, expiresAt); err != nil {
+			return nil, err
+		}
+	}
+	if changeExempt {
+		if err := h.setExempt(r, user, exempt); err != nil {
 			return nil, err
 		}
 	}

@@ -6503,6 +6503,33 @@
    "permission": "server.config"
   },
   {
+   "name": "settings inactive-accounts",
+   "summary": "Show the rule that disables accounts that don't sign in.",
+   "route": "GET /api/settings/inactive-accounts",
+   "permission": "server.config",
+   "description": "days is 0 while the rule is off."
+  },
+  {
+   "name": "settings inactive-accounts-set",
+   "summary": "Disable accounts that haven't signed in for a number of days, or turn that off with 0.",
+   "route": "PUT /api/settings/inactive-accounts",
+   "permission": "server.config",
+   "flags": [
+    {
+     "name": "days",
+     "in": "body",
+     "type": "int",
+     "help": "days without a sign-in, 14 to 3650; 0 turns the rule off",
+     "required": true
+    }
+   ],
+   "description": "The person gets an email a week before the account is disabled. Accounts with the exception (users update --inactive-exempt true), open invites, pro accounts and the last Super admin are left alone.",
+   "examples": [
+    "neodesk settings inactive-accounts-set --days 90",
+    "neodesk settings inactive-accounts-set --days 0"
+   ]
+  },
+  {
    "name": "settings impersonation",
    "summary": "Show whether people get a mail when an admin views NeoDesk as them.",
    "description": "notice_mail is the switch in Settings, Sign-in. It is on unless it was turned off.",
@@ -8465,6 +8492,13 @@
      "type": "string",
      "help": "end date (2026-12-31 or an RFC 3339 time); the account is disabled then. An empty value removes it",
      "field": "expires_at"
+    },
+    {
+     "name": "inactive-exempt",
+     "in": "body",
+     "type": "bool",
+     "help": "true keeps the account from the rule that disables accounts that don't sign in (for service accounts)",
+     "field": "inactive_exempt"
     },
     {
      "name": "group-guids",

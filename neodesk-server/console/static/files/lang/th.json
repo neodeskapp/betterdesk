@@ -1669,6 +1669,11 @@
     "branding": {
       "client_app": "แอปไคลเอนต์"
     },
+    "inactive_label": "Disable accounts that don't sign in",
+    "inactive_hint": "An account that hasn't signed in for the number of days below is disabled. The person gets an email {notice} days before. Accounts kept in Edit user, open invites, pro accounts and the last Super admin are left alone.",
+    "inactive_days": "Days without a sign-in",
+    "inactive_days_hint": "From {min} to {max} days.",
+    "inactive_days_invalid": "Enter a whole number of days from {min} to {max}.",
     "notices": {
       "title": "Security notices",
       "note": "Mails to people about their own account, in their language. They go out only when email is set up and the account has an address.",
@@ -1999,6 +2004,9 @@
     "action_email_change_cancelled": "Email address change cancelled",
     "action_user_expiry_set": "End date set",
     "action_user_expired": "Account reached its end date",
+    "action_user_disabled_inactive": "Account disabled for inactivity",
+    "action_user_inactive_exempt_set": "Inactivity exception changed",
+    "action_inactive_policy_changed": "Inactive accounts rule changed",
     "action_password_reset_cancelled": "Password reset link cancelled",
     "action_temporary_password_set": "Temporary password set",
     "action_password_change_required": "New password required at next sign-in",
@@ -2690,6 +2698,14 @@
     "handover_invalid": "Choose an account to hand over to.",
     "handover_refused": "You can't hand over to this account. Choose an enabled account you may change.",
     "handed_over_named": "Deleted {username} and handed over to {to}.",
+    "inactive_label": "Last sign-in",
+    "inactive_any": "Any time",
+    "inactive_days": "Not in {days} days",
+    "inactive_never": "Never signed in",
+    "inactive_none": "Every account has signed in within that time.",
+    "exempt_label": "Keep this account even when it isn't used",
+    "exempt_hint": "For service accounts: the rule that disables accounts that don't sign in leaves this one alone.",
+    "exempt_own": "You can't change the exception of your own account.",
     "security_own": "Change your own sign-in on Your account.",
     "external_password": "This account signs in with {provider}. Reset its password there.",
     "external_two_factor": "This account signs in with {provider}. Its two-factor sign-in is set there.",
@@ -9213,7 +9229,12 @@
     "expiry_heading": "An account ends soon",
     "expiry_lead": "The account {username} on {server} has an end date: it is disabled on {date}. To keep it, change or remove the end date under Users.",
     "expiry_why": "You get this because you can change this account.",
-    "open_users": "Open Users"
+    "open_users": "Open Users",
+    "inactive_subject": "Your {server} account will be disabled",
+    "inactive_heading": "Sign in to keep your account",
+    "inactive_lead": "Your account {username} on {server} hasn't been used for a while. It is disabled on {date} unless you sign in before then.",
+    "inactive_button": "Sign in",
+    "inactive_why": "The console disables accounts that haven't signed in for {days} days."
   },
   "security_notice": {
     "button": "Open Your account",

@@ -22,8 +22,9 @@
   org.manage_users to change organizations, user.impersonate to Sign in
   as an account (read-only; the dialog asks the server who may be viewed).
 
-  URL: ?search= fills the search and follows it; #user-groups goes to the
-  user groups.
+  URL: ?search= fills the search and follows it; ?inactive=30, 60, 90 or
+  never shows the accounts that have not signed in for that long (or
+  ever); #user-groups goes to the user groups.
 -->
 <script lang="ts">
 	import { tick, untrack } from 'svelte';
@@ -63,8 +64,11 @@
 		assignableRoles,
 		DESCRIBED_ROLES,
 		eachLimited,
+		filterInactive,
 		filterUsers,
 		groupNote,
+		inactiveFilter,
+		type InactiveFilter,
 		mayChangeUser,
 		mayDisableUser,
 		providerOf,
@@ -86,6 +90,7 @@
 	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
 	import SearchField from '#lib/ui/SearchField.svelte';
+	import Select from '#lib/ui/Select.svelte';
 	import States from '#lib/ui/States.svelte';
 	import Status from '#lib/ui/Status.svelte';
 	import Table from '#lib/ui/Table.svelte';
@@ -240,7 +245,32 @@
 		return () => clearTimeout(timer);
 	});
 
-	const shown = $derived(filterUsers(users, query, roleLabel));
+	/* ── Accounts that have not signed in, in the URL as ?inactive=30, 60, 90 or never ── */
+
+	let inactive = $state<InactiveFilter | ''>(
+		untrack(() => inactiveFilter(page.url.searchParams.get('inactive')))
+	);
+	const inactiveOptions = $derived([
+		{ value: '' as const, label: t('users.inactive_any') },
+		{ value: '30' as const, label: t('users.inactive_days', { days: 30 }) },
+		{ value: '60' as const, label: t('users.inactive_days', { days: 60 }) },
+		{ value: '90' as const, label: t('users.inactive_days', { days: 90 }) },
+		{ value: 'never' as const, label: t('users.inactive_never') }
+	]);
+	$effect(() => {
+		const v = inactive;
+		untrack(() => {
+			const url = new URL(location.href);
+			if ((url.searchParams.get('inactive') ?? '') === v) return;
+			if (v) url.searchParams.set('inactive', v);
+			else url.searchParams.delete('inactive');
+			// This page's own address with another ?inactive=
+			// eslint-disable-next-line svelte/no-navigation-without-resolve
+			replaceState(url, page.state);
+		});
+	});
+
+	const shown = $derived(filterInactive(filterUsers(users, query, roleLabel), inactive));
 	let sort = $state<SortState | null>(null);
 
 	/* ── #user-groups ── */
@@ -771,10 +801,16 @@
 								label={t('users.search_label')}
 								bind:value={searchInput}
 							/>{/snippet}
+						<Select
+							class="inactive-filter"
+							aria-label={t('users.inactive_label')}
+							options={inactiveOptions}
+							bind:value={inactive}
+						/>
 					</Toolbar>
 					<div class="count-line-row" aria-live="polite">
 						{#if loaded && !loadError}
-							{#if query && shown.length !== users.length}
+							{#if (query || inactive) && shown.length !== users.length}
 								<CountLine
 									text={t('users.count_filtered')}
 									values={{ shown: shown.length, count: users.length }}
@@ -798,11 +834,23 @@
 							loadingText={t('users.loading_list')}
 							error={loadError}
 							onretry={() => void loadUsers()}
-							emptyText={users.length ? t('users.no_match', { query }) : t('users.empty_text')}
+							emptyText={!users.length
+								? t('users.empty_text')
+								: query
+									? t('users.no_match', { query })
+									: t('users.inactive_none')}
 						/>
 					</div>
 					{#if loaded && !loadError && users.length && !shown.length}
-						<div><Button size="sm" onclick={() => (searchInput = '')}>{t('users.clear_search')}</Button></div>
+						<div>
+							<Button
+								size="sm"
+								onclick={() => {
+									searchInput = '';
+									inactive = '';
+								}}>{t('users.clear_search')}</Button
+							>
+						</div>
 					{/if}
 				</section>
 			</div>

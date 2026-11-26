@@ -1,8 +1,9 @@
 <!--
   Four tabs of Settings in one component, by `part`:
   - signin (Settings › Sign-in, server.config): the console's client
-    sessions, whether everyone needs two-factor sign-in, and which
-    security notices people get by mail about their own account. Your own
+    sessions, whether everyone needs two-factor sign-in, which security
+    notices people get by mail about their own account, and whether
+    accounts that don't sign in are disabled (InactiveAccountsForm). Your own
     password and two-factor sign-in are on Your account
     (lib/account/PasswordAndTwoFactor.svelte).
   - ldap (Settings › Directory (LDAP), server.config): sign-in with a
@@ -72,6 +73,7 @@
 	} from '../signin.ts';
 	import ConsoleSessionsForm from '../ConsoleSessionsForm.svelte';
 	import ImpersonationMailForm from '../ImpersonationMailForm.svelte';
+	import InactiveAccountsForm from '../InactiveAccountsForm.svelte';
 	import SettingsGrid from '../SettingsGrid.svelte';
 	import SettingsLayout from '../SettingsLayout.svelte';
 
@@ -576,6 +578,8 @@
 						<ConsoleSessionsForm />
 
 						<ImpersonationMailForm />
+
+						<InactiveAccountsForm />
 					{/snippet}
 				</SettingsGrid>
 			</section>

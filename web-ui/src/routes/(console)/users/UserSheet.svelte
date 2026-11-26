@@ -112,7 +112,8 @@
 			direct: (user?.peer_grants ?? []).join(', '),
 			strategy: user?.strategy_guid ?? '',
 			/** The end date as a day in this browser's time zone */
-			expires: localDate(user?.expires_at)
+			expires: localDate(user?.expires_at),
+			exempt: !!user?.inactive_exempt
 		})),
 		validate: (v) => {
 			const inviting = !editing && v.mode === 'invite';
@@ -140,6 +141,7 @@
 				await updateUser(user.id, {
 					...(isLocal ? common : rest),
 					...(self ? {} : expiryBody(v.expires, user.expires_at)),
+					...(!self && v.exempt !== !!user.inactive_exempt ? { inactive_exempt: v.exempt } : {}),
 					...(provider !== 'ldap' && v.role !== user.role ? { role: v.role } : {}),
 					...(isLocal && v.password ? { password: v.password } : {})
 				});
@@ -392,6 +394,11 @@
 					<Input {...f} type="date" width="medium" min={today} bind:value={form.values.expires} />
 				{/snippet}
 			</Field>
+			<Checkbox
+				label={t('users.exempt_label')}
+				hint={t('users.exempt_hint')}
+				bind:checked={form.values.exempt}
+			/>
 		{/if}
 
 		<FormSection title={t('users.role')} id="{uid}-role">

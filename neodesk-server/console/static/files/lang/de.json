@@ -1663,6 +1663,11 @@
     "branding": {
       "client_app": "Client-App"
     },
+    "inactive_label": "Konten deaktivieren, die sich nicht anmelden",
+    "inactive_hint": "Ein Konto, das sich so viele Tage wie unten angegeben nicht angemeldet hat, wird deaktiviert. Die Person bekommt {notice} Tage vorher eine E-Mail. Konten mit Ausnahme in Benutzer bearbeiten, offene Einladungen, Pro-Konten und der letzte Super-Admin bleiben unberührt.",
+    "inactive_days": "Tage ohne Anmeldung",
+    "inactive_days_hint": "Von {min} bis {max} Tagen.",
+    "inactive_days_invalid": "Gib eine ganze Zahl von Tagen zwischen {min} und {max} ein.",
     "notices": {
       "title": "Sicherheitshinweise",
       "note": "E-Mails an Personen über ihr eigenes Konto, in ihrer Sprache. Sie gehen nur raus, wenn E-Mail eingerichtet ist und das Konto eine Adresse hat.",
@@ -1993,6 +1998,9 @@
     "action_email_change_cancelled": "Änderung der E-Mail-Adresse abgebrochen",
     "action_user_expiry_set": "Enddatum festgelegt",
     "action_user_expired": "Konto hat sein Enddatum erreicht",
+    "action_user_disabled_inactive": "Konto wegen Inaktivität deaktiviert",
+    "action_user_inactive_exempt_set": "Ausnahme für Inaktivität geändert",
+    "action_inactive_policy_changed": "Regel für inaktive Konten geändert",
     "action_password_reset_cancelled": "Link zum Zurücksetzen widerrufen",
     "action_temporary_password_set": "Vorläufiges Passwort festgelegt",
     "action_password_change_required": "Neues Passwort bei nächster Anmeldung verlangt",
@@ -2684,6 +2692,14 @@
     "handover_invalid": "Wähle ein Konto, an das übergeben wird.",
     "handover_refused": "An dieses Konto kannst du nicht übergeben. Wähle ein aktives Konto, das du ändern darfst.",
     "handed_over_named": "{username} gelöscht und an {to} übergeben.",
+    "inactive_label": "Letzte Anmeldung",
+    "inactive_any": "Beliebig",
+    "inactive_days": "Nicht in {days} Tagen",
+    "inactive_never": "Nie angemeldet",
+    "inactive_none": "Jedes Konto hat sich in dieser Zeit angemeldet.",
+    "exempt_label": "Dieses Konto behalten, auch wenn es nicht benutzt wird",
+    "exempt_hint": "Für Dienstkonten: Die Regel, die Konten ohne Anmeldung deaktiviert, lässt dieses Konto in Ruhe.",
+    "exempt_own": "Du kannst die Ausnahme für dein eigenes Konto nicht ändern.",
     "security_own": "Deine eigene Anmeldung änderst du unter Dein Konto.",
     "external_password": "Dieses Konto meldet sich mit {provider} an. Setze sein Passwort dort zurück.",
     "external_two_factor": "Dieses Konto meldet sich mit {provider} an. Seine Zwei-Faktor-Anmeldung wird dort festgelegt.",
@@ -9207,7 +9223,12 @@
     "expiry_heading": "Ein Konto endet bald",
     "expiry_lead": "Das Konto {username} auf {server} hat ein Enddatum: Es wird am {date} deaktiviert. Um es zu behalten, ändere oder entferne das Enddatum unter Benutzer.",
     "expiry_why": "Du bekommst diese E-Mail, weil du dieses Konto ändern darfst.",
-    "open_users": "Benutzer öffnen"
+    "open_users": "Benutzer öffnen",
+    "inactive_subject": "Dein Konto bei {server} wird deaktiviert",
+    "inactive_heading": "Melde dich an, um dein Konto zu behalten",
+    "inactive_lead": "Dein Konto {username} auf {server} wurde eine Weile nicht benutzt. Es wird am {date} deaktiviert, wenn du dich nicht vorher anmeldest.",
+    "inactive_button": "Anmelden",
+    "inactive_why": "Die Konsole deaktiviert Konten, die sich {days} Tage nicht angemeldet haben."
   },
   "security_notice": {
     "button": "Dein Konto öffnen",

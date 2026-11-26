@@ -80,6 +80,8 @@ func Register(d *kit.Deps) {
 	r.Put("/api/settings/security-notices", g.setSecurityNotices, d.RequireAuth, server)
 	r.Get("/api/settings/console-sessions", g.getConsoleSessions, d.RequireAuth, server)
 	r.Put("/api/settings/console-sessions", g.setConsoleSessions, d.RequireAuth, server)
+	r.Get("/api/settings/inactive-accounts", g.getInactive, d.RequireAuth, server)
+	r.Put("/api/settings/inactive-accounts", g.setInactive, d.RequireAuth, server)
 	r.Get("/api/settings/oidc", g.getOIDC, d.RequireAuth, server)
 	r.Put("/api/settings/oidc", g.saveOIDC, d.RequireAuth, server)
 	r.Post("/api/settings/oidc/test", g.testOIDC, d.RequireAuth, server)
