@@ -1548,7 +1548,6 @@
       "attrs_note": "ค่าเริ่มต้นใช้ได้ในเกือบทุกกรณี เปลี่ยนเฉพาะเมื่อชื่อหรืออีเมลที่ได้รับไม่ถูกต้องหรือว่างเปล่า",
       "single_session": "หนึ่งเซสชันต่อบัญชี",
       "single_session_hint": "การลงชื่อเข้าใช้ใหม่จะทำให้เบราว์เซอร์อื่นของบัญชีออกจากระบบ ปิด: บัญชีหนึ่งลงชื่อเข้าใช้พร้อมกันได้สูงสุด {max} เบราว์เซอร์และอุปกรณ์",
-      "single_session_env": "SESSION_MAX_PER_USER ถูกตั้งเป็น {value} ในสภาพแวดล้อมของเซิร์ฟเวอร์และใช้แทนสวิตช์นี้ ลบค่านั้นออกเพื่อใช้สวิตช์",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "มีผลตั้งแต่การลงชื่อเข้าใช้ครั้งถัดไปของแอป RustDesk แอปที่ลงชื่อเข้าใช้อยู่ตอนนี้ยังคงเซสชันไว้",
       "expiry_help": "เมื่อปิด ต่ออายุเซสชันเมื่อมีการใช้งาน แอปต้องลงชื่อเข้าใช้อีกครั้งหลังจากจำนวนวันนี้",
@@ -1560,7 +1559,11 @@
       "map_group_n": "กลุ่ม {n}",
       "map_role_n": "บทบาทสำหรับกลุ่ม {n}",
       "map_add": "เพิ่มกลุ่ม",
-      "pick_role": "เลือกบทบาท"
+      "pick_role": "เลือกบทบาท",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "สร้างข้อมูลสำรอง",

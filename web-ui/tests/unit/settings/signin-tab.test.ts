@@ -113,14 +113,14 @@ describe('One session per account', () => {
 	test('the switch saves with the others', async () => {
 		const server = routes();
 		render(SignInTab);
-		await userEvent.click(await screen.findByRole('checkbox', { name: /settings\.signin\.single_session/ }));
+		await userEvent.click(await screen.findByRole('checkbox', { name: /One session per account/ }));
 		await save();
 		await vi.waitFor(() => expect(server.sent('PUT', CONSOLE)).toEqual([{ single_session: true }]));
 	});
 
-	test('SESSION_MAX_PER_USER in the environment decides: said, and the switch is off limits', async () => {
+	function envSays(value: string, limit: number) {
 		routes({
-			[`GET ${CONSOLE}`]: { single_session: false, limit: 1, source: 'env', env_value: '1' },
+			[`GET ${CONSOLE}`]: { single_session: false, limit, source: 'env', env_value: value },
 			'GET /api/panel/settings/sources': {
 				'console_sessions.single_session': {
 					value_source: 'environment',
@@ -131,15 +131,47 @@ describe('One session per account', () => {
 			}
 		});
 		render(SignInTab);
-		const box = await screen.findByRole('checkbox', { name: /settings\.signin\.single_session/ });
+		return screen.findByRole('checkbox', { name: /One session per account/ });
+	}
+	const row = () => document.getElementById('single-session')!;
+	const times = (text: string, part: string) => text.split(part).length - 1;
+
+	test('SESSION_MAX_PER_USER=1 decides: the switch shows on, locked, the variable named once', async () => {
+		const box = await envSays('1', 1);
+		expect(box).toBeChecked();
 		expect(box).toBeDisabled();
-		expect(screen.getByText(/settings\.signin\.single_session_env/)).toBeInTheDocument();
-		expect(
-			screen.getByText('Set in the environment file (SESSION_MAX_PER_USER), change it there')
-		).toBeInTheDocument();
-		expect(
-			screen.queryByRole('button', { name: /Reset to default: settings\.signin\.single_session/ })
-		).toBeNull();
+		expect(row()).toHaveTextContent(
+			'Set in the environment file (SESSION_MAX_PER_USER=1). Remove it there to use this switch.'
+		);
+		expect(times(row().textContent ?? '', 'SESSION_MAX_PER_USER')).toBe(1);
+		expect(row()).not.toHaveTextContent(/up to 1 browsers/);
+		expect(screen.queryByRole('button', { name: /Reset to default: One session per account/ })).toBeNull();
+	});
+
+	test('a limit above one from the environment shows off and says how many', async () => {
+		const box = await envSays('3', 3);
+		expect(box).not.toBeChecked();
+		expect(box).toBeDisabled();
+		expect(row()).toHaveTextContent('An account can be signed in on up to 3 browsers and devices at once.');
+		expect(times(row().textContent ?? '', 'SESSION_MAX_PER_USER')).toBe(1);
+	});
+
+	test('0 from the environment is any number', async () => {
+		await envSays('0', 0);
+		expect(row()).toHaveTextContent(
+			'An account can be signed in on any number of browsers and devices at once.'
+		);
+	});
+
+	test('with the switch on, the help still counts the browsers the switch off allows', async () => {
+		routes({ [`GET ${CONSOLE}`]: { single_session: true, limit: 1, source: 'setting', env_value: null } });
+		render(SignInTab);
+		const box = await screen.findByRole('checkbox', { name: /One session per account/ });
+		expect(box).toBeChecked();
+		expect(row()).toHaveTextContent(
+			'Off: an account can be signed in on up to 10 browsers and devices at once.'
+		);
+		expect(row()).not.toHaveTextContent(/up to 1 browsers/);
 	});
 });
 

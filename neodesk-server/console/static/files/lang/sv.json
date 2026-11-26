@@ -1548,7 +1548,6 @@
       "attrs_note": "Standardvärdena fungerar i de flesta fall. Ändra dem bara om namn eller e-postadresser kommer fel eller tomma.",
       "single_session": "En session per konto",
       "single_session_hint": "En ny inloggning loggar ut kontots andra webbläsare. Av: ett konto kan vara inloggat i upp till {max} webbläsare och enheter samtidigt.",
-      "single_session_env": "SESSION_MAX_PER_USER är satt till {value} i serverns miljö och bestämmer i stället för den här brytaren. Ta bort den där för att använda brytaren.",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "Gäller från nästa inloggning i en RustDesk-app. Appar som är inloggade nu behåller sin session.",
       "expiry_help": "När Förläng session vid aktivitet är av måste appar logga in igen efter så här många dagar.",
@@ -1560,7 +1559,11 @@
       "map_group_n": "Grupp {n}",
       "map_role_n": "Roll för grupp {n}",
       "map_add": "Lägg till en grupp",
-      "pick_role": "Välj en roll"
+      "pick_role": "Välj en roll",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "Skapa en säkerhetskopia",

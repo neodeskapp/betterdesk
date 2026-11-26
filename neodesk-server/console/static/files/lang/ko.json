@@ -1542,7 +1542,6 @@
       "attrs_note": "대부분 기본값으로 충분합니다. 이름이나 이메일 주소가 잘못되거나 비어 있을 때만 바꾸세요.",
       "single_session": "계정당 세션 하나",
       "single_session_hint": "새로 로그인하면 계정의 다른 브라우저가 로그아웃됩니다. 끔: 한 계정은 동시에 최대 {max}개의 브라우저와 기기에 로그인할 수 있습니다.",
-      "single_session_env": "서버 환경에서 SESSION_MAX_PER_USER가 {value}(으)로 설정되어 있어 이 스위치 대신 그 값이 적용됩니다. 스위치를 쓰려면 그곳에서 지우세요.",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "RustDesk 앱의 다음 로그인부터 적용됩니다. 지금 로그인한 앱은 세션을 유지합니다.",
       "expiry_help": "활동 시 세션 연장이 꺼져 있으면 앱은 이 일수가 지나면 다시 로그인해야 합니다.",
@@ -1554,7 +1553,11 @@
       "map_group_n": "그룹 {n}",
       "map_role_n": "그룹 {n}의 역할",
       "map_add": "그룹 추가",
-      "pick_role": "역할 선택"
+      "pick_role": "역할 선택",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "백업 만들기",

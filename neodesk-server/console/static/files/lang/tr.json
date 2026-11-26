@@ -1548,7 +1548,6 @@
       "attrs_note": "Varsayılanlar çoğu durumda işe yarar. Yalnızca adlar veya e-posta adresleri yanlış ya da boş geliyorsa değiştirin.",
       "single_session": "Hesap başına bir oturum",
       "single_session_hint": "Yeni bir oturum açma, hesabın diğer tarayıcısındaki oturumu kapatır. Kapalı: bir hesap aynı anda en fazla {max} tarayıcı ve cihazda oturum açabilir.",
-      "single_session_env": "SESSION_MAX_PER_USER sunucunun ortamında {value} olarak ayarlı ve bu anahtarın yerine o karar verir. Anahtarı kullanmak için oradan kaldırın.",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "Bir RustDesk uygulamasının bir sonraki oturum açışından itibaren geçerlidir. Şu an oturum açmış uygulamalar oturumlarını korur.",
       "expiry_help": "Etkinlikte oturumu uzat kapalıyken uygulamalar bu kadar gün sonra yeniden oturum açmalıdır.",
@@ -1560,7 +1559,11 @@
       "map_group_n": "Grup {n}",
       "map_role_n": "Grup {n} için rol",
       "map_add": "Grup ekle",
-      "pick_role": "Bir rol seçin"
+      "pick_role": "Bir rol seçin",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "Yedek oluştur",

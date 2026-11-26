@@ -1542,7 +1542,6 @@
       "attrs_note": "ほとんどの場合は既定値のままで動きます。名前やメールアドレスが誤って、または空で届く場合だけ変更してください。",
       "single_session": "アカウントごとに 1 セッション",
       "single_session_hint": "新しくサインインすると、アカウントのもう一方のブラウザーはサインアウトされます。オフ: 1 つのアカウントは同時に最大 {max} 台のブラウザーとデバイスでサインインできます。",
-      "single_session_env": "サーバーの環境で SESSION_MAX_PER_USER が {value} に設定されており、このスイッチの代わりにそれが使われます。スイッチを使うには、そちらから削除してください。",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "RustDesk アプリの次回のサインインから適用されます。現在サインインしているアプリはセッションを維持します。",
       "expiry_help": "「利用中にセッションを延長」がオフのとき、アプリはこの日数が過ぎると再度サインインする必要があります。",
@@ -1554,7 +1553,11 @@
       "map_group_n": "グループ {n}",
       "map_role_n": "グループ {n} のロール",
       "map_add": "グループを追加",
-      "pick_role": "ロールを選択"
+      "pick_role": "ロールを選択",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "バックアップを作成",

@@ -1542,7 +1542,6 @@
       "attrs_note": "默认值适用于大多数情况。只有在名称或电子邮件地址错误或为空时才需更改。",
       "single_session": "每个账户一个会话",
       "single_session_hint": "新的登录会让该账户的另一个浏览器退出登录。关闭时：一个账户最多可同时在 {max} 个浏览器和设备上登录。",
-      "single_session_env": "服务器环境中的 SESSION_MAX_PER_USER 设为 {value}，它取代此开关生效。要使用此开关，请在那里删除它。",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "从 RustDesk 应用下次登录起生效。当前已登录的应用保留其会话。",
       "expiry_help": "关闭“活动时延长会话”时，应用在这么多天后必须重新登录。",
@@ -1554,7 +1553,11 @@
       "map_group_n": "分组 {n}",
       "map_role_n": "分组 {n} 的角色",
       "map_add": "添加分组",
-      "pick_role": "选择角色"
+      "pick_role": "选择角色",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "创建备份",

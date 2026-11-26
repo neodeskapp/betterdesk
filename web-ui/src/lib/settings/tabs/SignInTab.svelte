@@ -39,6 +39,8 @@
 	import { sourceInfo, sourceRow, type SourceInfo } from '../sources.ts';
 
 	const canConfig = can('server.config');
+	/** session.DefaultMaxPerUser: sessions per account without the switch or SESSION_MAX_PER_USER */
+	const DEFAULT_MAX_PER_USER = 10;
 	const errText = (err: unknown) =>
 		err instanceof Error && err.message ? err.message : t('errors.server_error');
 
@@ -81,8 +83,12 @@
 	let loaded = $state(false);
 	let loadError = $state('');
 	let sources = $state.raw<SettingSources>({});
-	/** The server's cap on sessions per account, for the hint */
-	let sessionLimit = $state(10);
+	/**
+	 * How many sessions an account may have with the switch off, for the
+	 * help. The server says it only while the switch is off (source
+	 * "default"); otherwise it is session.DefaultMaxPerUser.
+	 */
+	let offLimit = $state(DEFAULT_MAX_PER_USER);
 	/** SESSION_MAX_PER_USER as the older answer says it, for servers without sources */
 	let sessionEnv = $state<{ value: string; limit: number } | null>(null);
 
@@ -105,7 +111,7 @@
 					.then((s) => (sources = s))
 					.catch(() => (sources = {}))
 			]);
-			sessionLimit = consoleSessions.limit;
+			offLimit = consoleSessions.source === 'default' ? consoleSessions.limit : DEFAULT_MAX_PER_USER;
 			sessionEnv =
 				consoleSessions.source === 'env'
 					? { value: String(consoleSessions.env_value ?? ''), limit: consoleSessions.limit }
@@ -175,6 +181,36 @@
 		if (info.lockedBy || !sessionEnv) return info;
 		return { ...info, lockedBy: 'SESSION_MAX_PER_USER' };
 	});
+
+	/**
+	 * With SESSION_MAX_PER_USER set, the row shows what the variable gives:
+	 * on for one session, off for more, and says the number once, with the
+	 * variable named in the source line only
+	 */
+	const envRow = $derived.by(() => {
+		if (!sessionEnv) return null;
+		const { value, limit } = sessionEnv;
+		const help =
+			limit === 1
+				? tf('settings.signin.single_session_on', "A new sign-in signs out the account's other browser.")
+				: limit === 0
+					? tf(
+							'settings.signin.sessions_any',
+							'An account can be signed in on any number of browsers and devices at once.'
+						)
+					: tf(
+							'settings.signin.sessions_up_to',
+							'An account can be signed in on up to {max} browsers and devices at once.',
+							{ max: limit }
+						);
+		const text = tf(
+			'settings.signin.single_session_env_source',
+			'Set in the environment file ({name}={value}). Remove it there to use this switch.',
+			{ name: SESSION_ENV, value }
+		);
+		return { checked: limit === 1, help, source: { kind: 'environment' as const, text } };
+	});
+	const SESSION_ENV = 'SESSION_MAX_PER_USER';
 
 	function days(e: Event): number | null {
 		const raw = (e.currentTarget as HTMLInputElement).value;
@@ -285,17 +321,21 @@
 				{@const single = sourceRow(draft, 'single_session', singleInfo)}
 				<SettingRow
 					id="single-session"
-					label={t('settings.signin.single_session')}
-					help={t('settings.signin.single_session_hint', { max: sessionLimit })}
-					checked={v.single_session}
+					label={tf('settings.signin.single_session', 'One session per account')}
+					help={envRow?.help ??
+						tf(
+							'settings.signin.single_session_hint',
+							"A new sign-in signs out the account's other browser. Off: an account can be signed in on up to {max} browsers and devices at once.",
+							{ max: offLimit }
+						)}
+					checked={envRow ? envRow.checked : v.single_session}
 					onchange={(on) => draft.set('single_session', on)}
 					disabled={singleInfo.lockedBy !== ''}
-					keyName="SESSION_MAX_PER_USER"
+					keyName={envRow ? undefined : SESSION_ENV}
+					terms={[SESSION_ENV]}
 					{...single}
+					source={envRow?.source ?? single.source}
 					onreset={singleInfo.lockedBy ? undefined : single.onreset}
-					noEffect={sessionEnv
-						? t('settings.signin.single_session_env', { value: sessionEnv.value, limit: sessionEnv.limit })
-						: undefined}
 				/>
 			</SettingsGroup>
 		{/if}

@@ -1549,7 +1549,6 @@
       "attrs_note": "القيم الافتراضية تناسب أغلب الحالات. غيّرها فقط إذا وصلت الأسماء أو عناوين البريد خاطئة أو فارغة.",
       "single_session": "جلسة واحدة لكل حساب",
       "single_session_hint": "تسجيل دخول جديد يُخرج المتصفح الآخر للحساب. عند الإيقاف: يمكن أن يكون الحساب مسجّل الدخول على {max} متصفحات وأجهزة كحد أقصى في الوقت نفسه.",
-      "single_session_env": "قيمة SESSION_MAX_PER_USER في بيئة الخادم هي {value} وهي التي تقرّر بدل هذا المفتاح. احذفها هناك لاستخدام المفتاح.",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "يسري من تسجيل الدخول التالي لتطبيق RustDesk. تحتفظ التطبيقات المسجّلة الدخول الآن بجلستها.",
       "expiry_help": "عندما يكون تمديد الجلسة عند النشاط متوقفًا، يجب أن تسجّل التطبيقات الدخول مجددًا بعد هذا العدد من الأيام.",
@@ -1561,7 +1560,11 @@
       "map_group_n": "المجموعة {n}",
       "map_role_n": "الدور للمجموعة {n}",
       "map_add": "إضافة مجموعة",
-      "pick_role": "اختر دورًا"
+      "pick_role": "اختر دورًا",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "إنشاء نسخة احتياطية",

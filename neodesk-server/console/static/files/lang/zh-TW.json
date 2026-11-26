@@ -1546,7 +1546,6 @@
       "attrs_note": "預設值適用於大多數情況。只有在名稱或電子郵件地址錯誤或空白時才需變更。",
       "single_session": "每個帳戶一個工作階段",
       "single_session_hint": "新的登入會讓該帳戶的另一個瀏覽器登出。關閉時：一個帳戶最多可同時在 {max} 個瀏覽器和裝置上登入。",
-      "single_session_env": "伺服器環境中的 SESSION_MAX_PER_USER 設為 {value}，它取代此開關生效。要使用此開關，請在那裡刪除它。",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "從 RustDesk 應用程式下次登入起生效。目前已登入的應用程式保留其工作階段。",
       "expiry_help": "關閉「使用中延長工作階段」時，應用程式在這麼多天後必須重新登入。",
@@ -1558,7 +1557,11 @@
       "map_group_n": "群組 {n}",
       "map_role_n": "群組 {n} 的角色",
       "map_add": "新增群組",
-      "pick_role": "選擇角色"
+      "pick_role": "選擇角色",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "建立備份",

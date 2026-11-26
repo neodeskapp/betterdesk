@@ -1542,7 +1542,6 @@
       "attrs_note": "Die Standardwerte passen in den meisten Fällen. Ändere sie nur, wenn Namen oder E-Mail-Adressen falsch oder leer ankommen.",
       "single_session": "Eine Sitzung pro Konto",
       "single_session_hint": "Eine neue Anmeldung meldet den anderen Browser des Kontos ab. Aus: Ein Konto kann gleichzeitig auf bis zu {max} Browsern und Geräten angemeldet sein.",
-      "single_session_env": "SESSION_MAX_PER_USER ist in der Umgebung des Servers auf {value} gesetzt und entscheidet statt dieses Schalters. Entferne es dort, um den Schalter zu verwenden.",
       "oidc_advanced_note": "Nur nötig, wenn der Anbieter kein Discovery-Dokument hat oder in einem privaten Netz liegt.",
       "client_sessions_next": "Gilt ab der nächsten Anmeldung einer RustDesk-App. Apps, die jetzt angemeldet sind, behalten ihre Sitzung.",
       "expiry_help": "Wenn Sitzung bei Aktivität verlängern aus ist, müssen sich Apps nach so vielen Tagen neu anmelden.",
@@ -1554,7 +1553,11 @@
       "map_group_n": "Gruppe {n}",
       "map_role_n": "Rolle für Gruppe {n}",
       "map_add": "Gruppe hinzufügen",
-      "pick_role": "Rolle wählen"
+      "pick_role": "Rolle wählen",
+      "single_session_on": "Eine neue Anmeldung meldet den anderen Browser des Kontos ab.",
+      "sessions_any": "Ein Konto kann gleichzeitig auf beliebig vielen Browsern und Geräten angemeldet sein.",
+      "sessions_up_to": "Ein Konto kann gleichzeitig auf bis zu {max} Browsern und Geräten angemeldet sein.",
+      "single_session_env_source": "In der Umgebungsdatei gesetzt ({name}={value}). Entferne es dort, um diesen Schalter zu verwenden."
     },
     "backup_tab": {
       "create_title": "Sicherung erstellen",

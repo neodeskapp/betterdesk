@@ -1548,7 +1548,6 @@
       "attrs_note": "Az alapértékek a legtöbb esetben megfelelnek. Csak akkor módosítsa, ha a nevek vagy e-mail-címek hibásan vagy üresen érkeznek.",
       "single_session": "Fiókonként egy munkamenet",
       "single_session_hint": "Az új bejelentkezés kijelentkezteti a fiók másik böngészőjét. Kikapcsolva: egy fiók egyszerre legfeljebb {max} böngészőn és eszközön lehet bejelentkezve.",
-      "single_session_env": "A SESSION_MAX_PER_USER értéke a szerver környezetében {value}, és ez dönt a kapcsoló helyett. A kapcsoló használatához távolítsa el onnan.",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "Egy RustDesk-alkalmazás következő bejelentkezésétől érvényes. A most bejelentkezett alkalmazások megtartják a munkamenetüket.",
       "expiry_help": "Ha a Munkamenet meghosszabbítása aktivitáskor ki van kapcsolva, az alkalmazásoknak ennyi nap után újra be kell jelentkezniük.",
@@ -1560,7 +1559,11 @@
       "map_group_n": "{n}. csoport",
       "map_role_n": "Szerepkör a(z) {n}. csoporthoz",
       "map_add": "Csoport hozzáadása",
-      "pick_role": "Válasszon szerepkört"
+      "pick_role": "Válasszon szerepkört",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "Biztonsági mentés készítése",

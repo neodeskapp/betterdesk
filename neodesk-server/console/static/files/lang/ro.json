@@ -1548,7 +1548,6 @@
       "attrs_note": "Valorile implicite merg în majoritatea cazurilor. Schimbați-le doar dacă numele sau adresele de e-mail ajung greșit sau goale.",
       "single_session": "O sesiune per cont",
       "single_session_hint": "O autentificare nouă deconectează celălalt browser al contului. Oprit: un cont poate fi autentificat simultan pe cel mult {max} browsere și dispozitive.",
-      "single_session_env": "SESSION_MAX_PER_USER are valoarea {value} în mediul serverului și decide în locul acestui comutator. Eliminați-l de acolo pentru a folosi comutatorul.",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "Se aplică de la următoarea conectare a unei aplicații RustDesk. Aplicațiile conectate acum își păstrează sesiunea.",
       "expiry_help": "Când Prelungește sesiunea la activitate este dezactivat, aplicațiile trebuie să se conecteze din nou după acest număr de zile.",
@@ -1560,7 +1559,11 @@
       "map_group_n": "Grupul {n}",
       "map_role_n": "Rolul pentru grupul {n}",
       "map_add": "Adăugați un grup",
-      "pick_role": "Alegeți un rol"
+      "pick_role": "Alegeți un rol",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "Creați o copie de rezervă",

@@ -1548,7 +1548,6 @@
       "attrs_note": "Oletukset toimivat useimmiten. Muuta niitä vain, jos nimet tai sähköpostiosoitteet tulevat väärin tai tyhjinä.",
       "single_session": "Yksi istunto tiliä kohden",
       "single_session_hint": "Uusi kirjautuminen kirjaa tilin toisen selaimen ulos. Pois: tili voi olla kirjautuneena samaan aikaan enintään {max} selaimella ja laitteella.",
-      "single_session_env": "SESSION_MAX_PER_USER on palvelimen ympäristössä {value} ja päättää tämän valitsimen sijaan. Poista se sieltä, jotta voit käyttää valitsinta.",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "Tulee voimaan RustDesk-sovelluksen seuraavasta kirjautumisesta. Nyt kirjautuneet sovellukset säilyttävät istuntonsa.",
       "expiry_help": "Kun Pidennä istuntoa aktiivisuudella on pois päältä, sovellusten on kirjauduttava uudelleen näin monen päivän jälkeen.",
@@ -1560,7 +1559,11 @@
       "map_group_n": "Ryhmä {n}",
       "map_role_n": "Ryhmän {n} rooli",
       "map_add": "Lisää ryhmä",
-      "pick_role": "Valitse rooli"
+      "pick_role": "Valitse rooli",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "Luo varmuuskopio",
