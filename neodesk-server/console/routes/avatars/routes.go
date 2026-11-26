@@ -1,5 +1,6 @@
 // Package avatars serves the profile pictures of console users: the list
-// of who has one and the pictures themselves.
+// of who has one and the pictures themselves, and lets each account
+// upload or remove its own.
 //
 // Anyone signed in to the console may see any user's picture and the
 // list. That is the reach of the names people see next to chat messages
@@ -7,6 +8,8 @@
 package avatars
 
 import (
+	"errors"
+	"io"
 	"math"
 	"net/http"
 	"net/url"
@@ -21,16 +24,83 @@ import (
 type handlers struct {
 	avatars *avatarsvc.Service
 	log     *kit.Logger
+	audit   func(r *http.Request, action, details string) error
 }
 
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
-	h := &handlers{avatars: d.Avatars, log: d.Log.Child("Avatar")}
+	h := &handlers{avatars: d.Avatars, log: d.Log.Child("Avatar"), audit: d.LogAction}
+	if d.Audit == nil {
+		h.audit = func(*http.Request, string, string) error { return nil }
+	}
 	r := d.Router
 	r.Get("/api/users/avatars", h.list, d.RequireAuth, d.Limits.PanelRead.Middleware)
 	// A picture is for every account, like the list: the users section,
 	// which the other routes below /api/users belong to, does not guard it
 	r.NoSection().Get("/api/users/{id}/avatar", h.picture, d.RequireAuth, d.Limits.PanelRead.Middleware)
+	// Everyone changes their own picture, like their profile
+	r.Put("/api/users/me/avatar", h.upload, d.RequireAuth, d.Limits.Upload.Middleware)
+	r.Delete("/api/users/me/avatar", h.remove, d.RequireAuth)
+}
+
+// ownPicture is the answer of an upload or a removal: the new version of
+// the picture, null when there is none.
+type ownPicture struct {
+	AvatarVersion *string `json:"avatar_version"`
+}
+
+// upload answers PUT /api/users/me/avatar. The body is the picture file
+// itself, with its type as Content-Type: PNG, JPEG, WebP or GIF, at most
+// 512 KB. It takes the place of the account's picture, also one from
+// single sign-on, and stays when the account signs in with single
+// sign-on again.
+func (h *handlers) upload(w http.ResponseWriter, r *http.Request) {
+	if r.ContentLength > avatarsvc.MaxAvatarBytes {
+		kit.FailCode(w, r, http.StatusRequestEntityTooLarge, "Picture is too large", "too_large")
+		return
+	}
+	data, err := io.ReadAll(io.LimitReader(r.Body, avatarsvc.MaxAvatarBytes+1))
+	if err != nil {
+		kit.FailCode(w, r, http.StatusBadRequest, "The picture did not arrive", "empty")
+		return
+	}
+	declared := r.Header.Get("Content-Type")
+	if !strings.HasPrefix(lowerASCII(strings.TrimSpace(declared)), "image/") {
+		declared = ""
+	}
+	picture, err := h.avatars.SetUploadedPicture(r.Context(), kit.UserID(r), declared, data)
+	if err != nil {
+		var refusal *avatarsvc.Error
+		if errors.As(err, &refusal) {
+			status := http.StatusBadRequest
+			if refusal.Code == "too_large" {
+				status = http.StatusRequestEntityTooLarge
+			}
+			kit.FailCode(w, r, status, refusal.Message, refusal.Code)
+			return
+		}
+		h.log.Error("upload error:", err)
+		kit.Fail(w, r, http.StatusInternalServerError, "server_error")
+		return
+	}
+	_ = h.audit(r, "profile_updated", "Uploaded a profile picture")
+	kit.OK(w, r, ownPicture{AvatarVersion: &picture.Version})
+}
+
+// remove answers DELETE /api/users/me/avatar: the account's picture goes,
+// wherever it came from. One from single sign-on comes back at the next
+// sign-in when the identity provider still sends it.
+func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
+	removed, err := h.avatars.RemovePicture(r.Context(), kit.UserID(r))
+	if err != nil {
+		h.log.Error("remove error:", err)
+		kit.Fail(w, r, http.StatusInternalServerError, "server_error")
+		return
+	}
+	if removed {
+		_ = h.audit(r, "profile_updated", "Removed the profile picture")
+	}
+	kit.OK(w, r, ownPicture{})
 }
 
 type directory struct {

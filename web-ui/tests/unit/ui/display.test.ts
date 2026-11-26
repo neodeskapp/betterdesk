@@ -4,6 +4,7 @@ import qrcode from 'qrcode-generator';
 import { createRawSnippet, flushSync } from 'svelte';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { setStrings } from '../../../src/lib/i18n/i18n.svelte.ts';
+import { resetAvatarDirectory } from '../../../src/lib/state/avatars.svelte.ts';
 import Avatar from '../../../src/lib/ui/Avatar.svelte';
 import BooleanStatus from '../../../src/lib/ui/BooleanStatus.svelte';
 import CodeBlock from '../../../src/lib/ui/CodeBlock.svelte';
@@ -229,6 +230,47 @@ describe('Avatar', () => {
 		const img = box.querySelector('img')!;
 		expect(img).toHaveAttribute('src', '/api/users/7/avatar?v=3');
 		expect(img).toHaveAttribute('alt', '');
+	});
+	test('a user with only an id takes the picture from the list of who has one', async () => {
+		resetAvatarDirectory();
+		const fetch = vi.fn((input: string) =>
+			Promise.resolve(
+				new Response(
+					JSON.stringify(
+						new URL(input, 'http://localhost').pathname === '/api/users/avatars'
+							? { success: true, data: { users: [{ id: 5, username: 'anna', avatar_version: 'v9' }] } }
+							: { success: false }
+					),
+					{ status: 200, headers: { 'Content-Type': 'application/json' } }
+				)
+			)
+		);
+		vi.stubGlobal('fetch', fetch);
+		try {
+			const { container } = render(Avatar, { user: { id: 5, username: 'anna' }, size: 'md' });
+			const other = render(Avatar, { user: { id: 6, username: 'bert' } });
+			await vi.waitFor(() =>
+				expect(container.querySelector('img')).toHaveAttribute('src', '/api/users/5/avatar?v=v9')
+			);
+			expect(other.container.querySelector('img')).toBeNull();
+			expect(other.container.querySelector('.avatar')?.textContent).toBe('BE');
+			// Two avatars, one read of the list
+			expect(fetch.mock.calls.filter(([u]) => String(u).includes('/api/users/avatars'))).toHaveLength(1);
+		} finally {
+			vi.unstubAllGlobals();
+			resetAvatarDirectory();
+		}
+	});
+	test('a user that says it has no picture does not ask the list', () => {
+		resetAvatarDirectory();
+		const fetch = vi.fn();
+		vi.stubGlobal('fetch', fetch);
+		try {
+			render(Avatar, { user: { id: 5, username: 'anna', avatar_version: null } });
+			expect(fetch).not.toHaveBeenCalled();
+		} finally {
+			vi.unstubAllGlobals();
+		}
 	});
 	test('without a picture: initials in the name colour', () => {
 		const { container } = render(Avatar, { user: 'Linus Rath', size: 'md' });

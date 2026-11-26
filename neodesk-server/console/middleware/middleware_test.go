@@ -257,6 +257,12 @@ func TestCORS(t *testing.T) {
 	}
 }
 
+func put(target, contentType, body string) *http.Request {
+	req := post(target, contentType, body)
+	req.Method = http.MethodPut
+	return req
+}
+
 func post(target, contentType, body string) *http.Request {
 	req := httptest.NewRequest("POST", target, strings.NewReader(body))
 	if contentType != "" {
@@ -318,6 +324,14 @@ func TestRequireJSON(t *testing.T) {
 		{"import path", post("/api/languages/import", multipart, "x"), 200},
 		{"upload in the query only", post("/api/x?y=/upload", "text/plain", "x"), 415},
 		{"Upload in upper case", post("/api/Upload", "text/plain", "x"), 200},
+		{"a picture to the profile picture", put("/api/users/me/avatar", "image/png", "x"), 200},
+		{"a file to the profile picture", put("/api/users/me/avatar", "application/octet-stream", "x"), 200},
+		{"profile picture in upper case", put("/API/Users/Me/Avatar", "IMAGE/JPEG", "x"), 200},
+		{"text to the profile picture", put("/api/users/me/avatar", "text/plain", "x"), 415},
+		{"a form to the profile picture", put("/api/users/me/avatar", "application/x-www-form-urlencoded", "a=1"), 415},
+		{"no type to the profile picture", put("/api/users/me/avatar", "", "x"), 415},
+		{"image/ alone", put("/api/users/me/avatar", "image/", "x"), 415},
+		{"a picture elsewhere", put("/api/users/me/profile", "image/png", "x"), 415},
 	}
 	for _, c := range cases {
 		rec := serve(h, c.req)

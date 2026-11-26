@@ -83,6 +83,7 @@ export const TERMS: Readonly<Record<string, string>> = {
 	'branding-profiles': 'profile preset vorlage profil',
 	'branding-import-export': 'import export json',
 	// Your account
+	'profile-picture': 'profile picture photo avatar image profilbild foto bild',
 	'profile-status': 'status presence online away busy anwesenheit abwesend beschäftigt',
 	password: 'password change passwort kennwort ändern',
 	'current-password': 'password passwort kennwort',
