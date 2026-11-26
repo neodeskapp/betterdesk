@@ -1774,7 +1774,8 @@
       "agent_bg_help": "What shows behind the download page.",
       "rdclient_bg_help": "What shows behind the device list. \"{inherit}\" uses the console background.",
       "picture_kb": "Picture, {kb} KB",
-      "website_help": "A full address, for example https://example.com."
+      "website_help": "A full address, for example https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Which new devices may join this server, and how.",
@@ -8755,10 +8756,10 @@
     "effect": "用戶端下次連線到伺服器時會套用變更。",
     "save": "儲存用戶端品牌",
     "last_saved": "上次儲存於 {date}",
-    "never_saved": "尚未儲存",
     "preview_title": "預覽",
     "preview_note": "用戶端大致會這樣顯示這些值。預覽會隨您在表單中的輸入而更新。",
-    "preview_button": "範例按鈕"
+    "preview_button": "範例按鈕",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

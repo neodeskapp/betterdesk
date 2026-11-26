@@ -1776,7 +1776,8 @@
       "agent_bg_help": "What shows behind the download page.",
       "rdclient_bg_help": "What shows behind the device list. \"{inherit}\" uses the console background.",
       "picture_kb": "Picture, {kb} KB",
-      "website_help": "A full address, for example https://example.com."
+      "website_help": "A full address, for example https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Which new devices may join this server, and how.",
@@ -8757,10 +8758,10 @@
     "effect": "ไคลเอนต์จะรับการเปลี่ยนแปลงเมื่อติดต่อเซิร์ฟเวอร์ครั้งถัดไป",
     "save": "บันทึกแบรนด์ของไคลเอนต์",
     "last_saved": "บันทึกล่าสุด {date}",
-    "never_saved": "ยังไม่ได้บันทึก",
     "preview_title": "ตัวอย่าง",
     "preview_note": "ไคลเอนต์แสดงค่าเหล่านี้โดยประมาณแบบนี้ ตัวอย่างจะเปลี่ยนตามที่คุณพิมพ์ในแบบฟอร์ม",
-    "preview_button": "ปุ่มตัวอย่าง"
+    "preview_button": "ปุ่มตัวอย่าง",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

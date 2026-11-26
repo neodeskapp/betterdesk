@@ -1774,7 +1774,8 @@
       "agent_bg_help": "What shows behind the download page.",
       "rdclient_bg_help": "What shows behind the device list. \"{inherit}\" uses the console background.",
       "picture_kb": "Picture, {kb} KB",
-      "website_help": "A full address, for example https://example.com."
+      "website_help": "A full address, for example https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Which new devices may join this server, and how.",
@@ -8755,10 +8756,10 @@
     "effect": "Les clients appliquent les modifications la prochaine fois qu'ils contactent le serveur.",
     "save": "Enregistrer la personnalisation du client",
     "last_saved": "Dernier enregistrement le {date}",
-    "never_saved": "Pas encore enregistré",
     "preview_title": "Aperçu",
     "preview_note": "À peu près ce que le client affiche avec ces valeurs. L’aperçu suit le formulaire pendant la saisie.",
-    "preview_button": "Bouton d’exemple"
+    "preview_button": "Bouton d’exemple",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

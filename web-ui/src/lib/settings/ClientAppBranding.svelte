@@ -213,7 +213,10 @@
 			<p class="cb-revision">
 				{#if saved}{@const [pre, post] = around(t('client_branding.last_saved'), '{date}')}{pre}<Time
 						value={saved}
-					/>{post}{:else if loaded && !loadError}{t('client_branding.never_saved')}{/if}
+					/>{post}{:else if loaded && !loadError}{tf(
+						'client_branding.defaults_in_use',
+						'Nothing saved here yet: clients show the values below until you save your own.'
+					)}{/if}
 			</p>
 		{/snippet}
 		<h3 class="cb-sub" id="cb-contact-title">{t('client_branding.contact_title')}</h3>

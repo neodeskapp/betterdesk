@@ -1770,7 +1770,8 @@
       "agent_bg_help": "What shows behind the download page.",
       "rdclient_bg_help": "What shows behind the device list. \"{inherit}\" uses the console background.",
       "picture_kb": "Picture, {kb} KB",
-      "website_help": "A full address, for example https://example.com."
+      "website_help": "A full address, for example https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Which new devices may join this server, and how.",
@@ -8751,10 +8752,10 @@
     "effect": "クライアントは、次にサーバーと通信したときに変更を反映します。",
     "save": "クライアントのブランドを保存",
     "last_saved": "最終保存: {date}",
-    "never_saved": "まだ保存されていません",
     "preview_title": "プレビュー",
     "preview_note": "クライアントがこれらの値をおおよそどう表示するかを示します。入力に合わせて更新されます。",
-    "preview_button": "サンプルボタン"
+    "preview_button": "サンプルボタン",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

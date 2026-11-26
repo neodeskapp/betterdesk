@@ -1770,7 +1770,8 @@
       "agent_bg_help": "What shows behind the download page.",
       "rdclient_bg_help": "What shows behind the device list. \"{inherit}\" uses the console background.",
       "picture_kb": "Picture, {kb} KB",
-      "website_help": "A full address, for example https://example.com."
+      "website_help": "A full address, for example https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Which new devices may join this server, and how.",
@@ -8751,10 +8752,10 @@
     "effect": "클라이언트는 다음에 서버에 접속할 때 변경 사항을 적용합니다.",
     "save": "클라이언트 브랜딩 저장",
     "last_saved": "마지막 저장: {date}",
-    "never_saved": "아직 저장하지 않음",
     "preview_title": "미리 보기",
     "preview_note": "클라이언트가 이 값을 대략 이렇게 표시합니다. 입력하는 대로 미리 보기가 바뀝니다.",
-    "preview_button": "예시 버튼"
+    "preview_button": "예시 버튼",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

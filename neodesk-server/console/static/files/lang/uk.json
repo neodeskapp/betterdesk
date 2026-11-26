@@ -1776,7 +1776,8 @@
       "agent_bg_help": "What shows behind the download page.",
       "rdclient_bg_help": "What shows behind the device list. \"{inherit}\" uses the console background.",
       "picture_kb": "Picture, {kb} KB",
-      "website_help": "A full address, for example https://example.com."
+      "website_help": "A full address, for example https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Which new devices may join this server, and how.",
@@ -8757,10 +8758,10 @@
     "effect": "Клієнти отримають зміни наступного разу, коли зв'яжуться із сервером.",
     "save": "Зберегти брендування клієнта",
     "last_saved": "Востаннє збережено {date}",
-    "never_saved": "Ще не збережено",
     "preview_title": "Попередній перегляд",
     "preview_note": "Приблизно так клієнт показує ці значення. Попередній перегляд змінюється, поки ви вводите дані.",
-    "preview_button": "Зразок кнопки"
+    "preview_button": "Зразок кнопки",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {
