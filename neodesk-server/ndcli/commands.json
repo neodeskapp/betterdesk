@@ -8239,6 +8239,23 @@
    "destructive": true
   },
   {
+   "name": "users revoke-invite",
+   "summary": "Withdraw the invite of an account that never signed in, and delete the account.",
+   "route": "DELETE /api/users/{id}/invite",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.create",
+   "destructive": true,
+   "description": "The invite link stops working. The account never signed in, so nothing of its own is lost. An account that signed in already is refused: delete it with users delete.",
+   "examples": [
+    "neodesk users revoke-invite 12 --yes"
+   ]
+  },
+  {
    "name": "users reset-two-factor",
    "summary": "Clear an account's two-factor sign-in; where it is required, the person sets it up again at the next sign-in.",
    "route": "POST /api/users/{id}/two-factor/reset",

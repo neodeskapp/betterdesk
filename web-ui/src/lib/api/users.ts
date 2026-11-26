@@ -228,6 +228,15 @@ export function resendInvite(id: number | string) {
 	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/invite`, { method: 'POST', body: {} });
 }
 
+/**
+ * Withdraws the invite of an account that never signed in: the link stops
+ * working and the account is deleted. Needs user.create; 409 for an
+ * account without an open or expired invite.
+ */
+export function revokeInvite(id: number | string) {
+	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/invite`, { method: 'DELETE' });
+}
+
 export const PendingInvite = v.looseObject({
 	user_id: v.union([v.number(), v.string()]),
 	expires_at: Str,

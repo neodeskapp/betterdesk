@@ -44,6 +44,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/impersonation"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jobs"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/limits"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/listen"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
@@ -442,6 +443,10 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	// What an admin requires of one account's sign-in, and the browsers
 	// accounts signed in from
 	if err := authn.EnsureAccountTables(ctx, opts.Store); err != nil {
+		return nil, err
+	}
+	// End dates, inactivity exceptions and email address changes
+	if err := lifecycle.Ensure(ctx, opts.Store); err != nil {
 		return nil, err
 	}
 	// Once: the history of the chat of version 1 into its conversations

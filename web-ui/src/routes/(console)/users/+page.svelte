@@ -12,7 +12,8 @@
   /api/panel/user-groups and GET /api/users/invites (invites not used yet,
   and whether the console can send mail) beside it. Actions are offered by permission:
   user.create (and a role the signed-in person may give) to add or invite
-  by email, user.edit to edit, reset passwords, send an invite again, see and end an account's signed-in devices
+  by email and to withdraw an invite (which deletes the account that never
+  signed in), user.edit to edit, reset passwords, send an invite again, see and end an account's signed-in devices
   (A239), disable and enable accounts and manage groups,
   user.security (never for yourself) to give a temporary password, ask for
   a new password at the next sign-in, unlock, require, reset or turn off
@@ -44,6 +45,7 @@
 		resetTwoFactor,
 		setTwoFactorRequired,
 		unlockUser,
+		revokeInvite,
 		updateUser,
 		type ConsoleUser,
 		type EffectiveScope,
@@ -113,6 +115,8 @@
 	const canViewAs = can('user.impersonate') && !session.impersonation;
 	/** Sign-in security of other accounts */
 	const canSecurity = can('user.security') && sectionWritable();
+	/** Withdrawing an invite undoes Add user, so it asks what adding does */
+	const canWithdraw = can('user.create') && sectionWritable();
 	const meId = String(session.user?.id ?? '');
 	/** The server changes only the person's own account and those whose role they may give */
 	const mayChange = (u: ConsoleUser) => mayChangeUser(session.user?.role, meId, u);
@@ -283,6 +287,26 @@
 		try {
 			await resendInvite(u.id);
 			toast.success(t('users.invite_resent_named', { username: u.username }));
+			void loadInvites();
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
+		}
+	}
+
+	/** Withdraw an invite: the link stops working and the account, which never signed in, goes */
+	async function withdrawInvite(u: ConsoleUser) {
+		const ok = await confirm({
+			title: t('users.revoke_invite_title'),
+			message: t('users.revoke_invite_confirm', { username: u.username, email: u.email }),
+			confirmLabel: t('users.revoke_invite_action'),
+			confirmIcon: ICONS.delete,
+			danger: true
+		});
+		if (!ok) return;
+		try {
+			await revokeInvite(u.id);
+			toast.success(t('users.invite_revoked_named', { username: u.username }));
+			void loadUsers();
 			void loadInvites();
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
@@ -535,11 +559,12 @@
 	{#if invite && !u.last_login}<span class="cell-sub"
 			><Status
 				tone={invite.expired ? 'warning' : 'waiting'}
-				label={invite.expired ? t('users.invite_expired') : t('users.invited')}
-				title={t(invite.expired ? 'users.invite_expired_on' : 'users.invite_open_until', {
-					date: formatDate(invite.expires_at, {}, '')
-				})}
+				label={invite.expired ? t('users.invite_expired') : t('users.invite_pending')}
 			/></span
+		><span class="cell-sub invite-until"
+			>{t(invite.expired ? 'users.invite_expired_on' : 'users.invite_open_until', {
+				date: formatDate(invite.expires_at, {}, '')
+			})}</span
 		>{/if}
 {/snippet}
 
@@ -593,6 +618,7 @@
 	{@const resend = canEdit && changeable && local && mailReady && !!u.email && !u.last_login}
 	{@const secure = canSecurity && changeable && !self}
 	{@const totpOn = u.two_factor_state === 'on' || !!u.totp_enabled}
+	{@const withdraw = canWithdraw && changeable && !self && !u.last_login && invites.has(String(u.id))}
 	<!-- Grouped: the account, what it may reach, its sign-in security, and what ends it -->
 	<MenuButton kebab label={t('users.actions_for', { username: u.username })}>
 		{#if (canEdit && changeable) || (disableable && u.disabled)}
@@ -695,8 +721,16 @@
 				{/if}
 			</MenuGroup>
 		{/if}
-		{#if (disableable && !u.disabled) || deletable}
+		{#if (disableable && !u.disabled) || deletable || withdraw}
 			<MenuGroup class="group-danger" label={t('users.menu_group_danger')}>
+				{#if withdraw}
+					<MenuItem
+						class="act-withdraw-invite"
+						icon={ICONS.delete}
+						danger
+						onselect={() => void withdrawInvite(u)}>{t('users.revoke_invite_menu')}</MenuItem
+					>
+				{/if}
 				{#if disableable && !u.disabled}
 					<MenuItem class="act-disable" icon={ICONS.disable} onselect={() => void setDisabled(u, true)}
 						>{t('users.disable_menu')}</MenuItem

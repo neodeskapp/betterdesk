@@ -17,9 +17,11 @@ package users
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 )
@@ -30,11 +32,16 @@ type handlers struct {
 	links *passwordlinks.Store
 	// notices mail a person about changes to how their account signs in
 	notices *securitymail.Notices
+	// life holds end dates, inactivity exceptions and address changes.
+	life *lifecycle.Store
 }
+
+// now is the clock of the account routes.
+func (h *handlers) now() time.Time { return h.life.Now() }
 
 // Register adds the group's routes.
 func Register(d *kit.Deps) {
-	h := &handlers{d: d, log: d.Log, links: passwordlinks.New(d.Store, nil), notices: securitymail.New(d)}
+	h := newHandlers(d)
 	r := d.Router
 	r.Get("/api/users", h.list, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Get("/api/panel/user-groups", h.userGroups, d.RequireAuth, d.RequireAnyPermission("user.view", "device.edit"))
@@ -45,6 +52,7 @@ func Register(d *kit.Deps) {
 	r.Post("/api/users/invite", h.invite, d.RequireAuth, d.RequirePermission("user.create"))
 	r.Get("/api/users/invites", h.invites, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Post("/api/users/{id}/invite", h.resendInvite, d.RequireAuth, d.RequirePermission("user.edit"))
+	r.Delete("/api/users/{id}/invite", h.revokeInvite, d.RequireAuth, d.RequirePermission("user.create"))
 	r.Post("/api/users/{id}/password-reset-link", h.sendResetLink, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Delete("/api/users/{id}/password-reset-link", h.cancelResetLink, d.RequireAuth, d.RequirePermission("user.edit"))
 	// Sign-in security of other accounts
@@ -67,6 +75,11 @@ func Register(d *kit.Deps) {
 	r.Get("/api/users/me/security-events", h.ownSecurityEvents, d.RequireAuth)
 	r.Get("/api/users/{id}/security-events", h.userSecurityEvents, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Post("/api/users/{id}/organizations", h.assignOrganization, d.RequireAuth, d.RequirePermission("org.manage_users"))
+}
+
+// newHandlers builds the group's handlers on d.
+func newHandlers(d *kit.Deps) *handlers {
+	return &handlers{d: d, log: d.Log, links: passwordlinks.New(d.Store, nil), life: lifecycle.New(d.Store, nil), notices: securitymail.New(d)}
 }
 
 // answer sends a JSON answer written as JSON.stringify writes it.

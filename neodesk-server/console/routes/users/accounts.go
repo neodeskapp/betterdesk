@@ -848,33 +848,43 @@ func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
 		failKey(w, r, http.StatusBadRequest, "users.last_admin")
 		return
 	}
-	if _, err := h.d.Access.SavePolicy(ctx, access.SubjectUser, jsbind.NumberString(userID), nil, nil); err != nil {
+	if err := h.wipe(r, user); err != nil {
 		h.serverError(w, r, "Delete user error:", err)
 		return
 	}
-	if err := h.endSessions(r, user.ID.V, false); err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	}
-	if err := deleteAccount(ctx, h.d.Store, user.ID.V); err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	}
-	if err := h.links.Revoke(ctx, user.ID.V); err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	}
-	if err := h.d.Authn.ForgetAccount(ctx, user.ID.V); err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	}
-	// The list of who has a picture forgets the account now
-	h.d.Avatars.ResetCache()
 	if err := h.d.LogAction(r, "user_deleted", "Deleted user: "+user.username()); err != nil {
 		h.serverError(w, r, "Delete user error:", err)
 		return
 	}
 	answer(w, r, http.StatusOK, done{Success: true})
+}
+
+// wipe deletes an account the checks let go: its panel access policy, its
+// sessions and access tokens, the account with its user group memberships
+// and picture, its password links, its end date and address change.
+func (h *handlers) wipe(r *http.Request, user *account) error {
+	ctx := r.Context()
+	if _, err := h.d.Access.SavePolicy(ctx, access.SubjectUser, accountIDText(user.ID), nil, nil); err != nil {
+		return err
+	}
+	if err := h.endSessions(r, user.ID.V, false); err != nil {
+		return err
+	}
+	if err := deleteAccount(ctx, h.d.Store, user.ID.V); err != nil {
+		return err
+	}
+	if err := h.links.Revoke(ctx, user.ID.V); err != nil {
+		return err
+	}
+	if err := h.life.Forget(ctx, user.ID.V); err != nil {
+		return err
+	}
+	if err := h.d.Authn.ForgetAccount(ctx, user.ID.V); err != nil {
+		return err
+	}
+	// The list of who has a picture forgets the account now
+	h.d.Avatars.ResetCache()
+	return nil
 }
 
 // ---- Resetting a password ----

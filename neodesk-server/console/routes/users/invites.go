@@ -221,3 +221,58 @@ func (h *handlers) invites(w http.ResponseWriter, r *http.Request) {
 		Data    any  `json:"data"`
 	}{true, map[string]any{"invites": out, "mail_ready": h.mailReady(r.Context())}})
 }
+
+// revokeInvite answers DELETE /api/users/{id}/invite: the invite of an
+// account that never signed in is withdrawn. Its link stops working and
+// the account is deleted: it never signed in, so it holds nothing of its
+// own, only what the admin gave it. An account that has signed in, or has
+// no invite (open or expired), is refused; it is deleted with Delete.
+func (h *handlers) revokeInvite(w http.ResponseWriter, r *http.Request) {
+	userID, ok := pathID(r)
+	if !ok {
+		invalidID(w, r)
+		return
+	}
+	ctx := r.Context()
+	user, err := accountByID(ctx, h.d.Store, userID)
+	if err != nil {
+		h.serverError(w, r, "Revoke invite error:", err)
+		return
+	}
+	if user == nil {
+		failKey(w, r, http.StatusNotFound, "users.not_found")
+		return
+	}
+	if ok, err := h.mayChange(r, user); err != nil {
+		h.serverError(w, r, "Revoke invite error:", err)
+		return
+	} else if !ok {
+		sent(w, r, errRoleAboveOwn)
+		return
+	}
+	pending, err := h.links.Invites(ctx)
+	if err != nil {
+		h.serverError(w, r, "Revoke invite error:", err)
+		return
+	}
+	if _, invited := pending[user.ID.V]; !invited || !user.LastLogin.IsNull() || isSessionAccount(r, user.ID.V) {
+		failKey(w, r, http.StatusConflict, "users.invite_none")
+		return
+	}
+	if last, err := isLastSuperAdmin(ctx, h.d.Store, user.ID.V, user.role(), h.now()); err != nil {
+		h.serverError(w, r, "Revoke invite error:", err)
+		return
+	} else if last {
+		failKey(w, r, http.StatusBadRequest, "users.last_super_admin")
+		return
+	}
+	if err := h.wipe(r, user); err != nil {
+		h.serverError(w, r, "Revoke invite error:", err)
+		return
+	}
+	if err := h.d.LogAccountAction(r, user.ID.V, "user_invite_revoked", "Withdrew the invite of user "+user.username()+" and deleted the account, which never signed in"); err != nil {
+		h.serverError(w, r, "Revoke invite error:", err)
+		return
+	}
+	answer(w, r, http.StatusOK, done{Success: true})
+}
