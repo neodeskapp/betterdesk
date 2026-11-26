@@ -73,7 +73,7 @@
      "operator": {
       "avatar_url": "not-an-address",
       "display_name": "Ada Lovelace",
-      "email": "ada@example.test",
+      "email": "",
       "phone": "+49 30 1234",
       "role_display": "Engineer",
       "username": "e2e_viewer"
@@ -117,7 +117,7 @@
      "operator": {
       "avatar_url": "",
       "display_name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü�",
-      "email": "123456",
+      "email": "",
       "phone": "  padded  ",
       "role_display": "admin",
       "username": "e2e_admin"
