@@ -1376,8 +1376,8 @@
       "conn_no_effect_relay": "Tidak berpengaruh: setiap sesi melewati server relai.",
       "conn_no_effect_operator": "Sudah berlaku: Hanya akun yang boleh terhubung ke perangkat yang dapat memulai sesi sudah mencakup aturan ini.",
       "conn_no_effect_signed_in": "Tidak berpengaruh selama hanya aplikasi yang sudah masuk yang dapat memulai sesi.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Ditemukan otomatis",
+      "endpoint_auto_note": "Kolom kosong memberi klien alamat yang ditemukan otomatis, yang tampil di bawah Yang diterima klien sekarang."
     },
     "appearance": {
       "theme_note": "Tampilan default untuk semua orang yang menggunakan konsol ini.",
@@ -1561,10 +1561,10 @@
       "map_role_n": "Peran untuk grup {n}",
       "map_add": "Tambah grup",
       "pick_role": "Pilih peran",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "Masuk yang baru mengeluarkan browser lain dari akun.",
+      "sessions_any": "Satu akun dapat masuk di berapa pun browser dan perangkat sekaligus.",
+      "sessions_up_to": "Satu akun dapat masuk di paling banyak {max} browser dan perangkat sekaligus.",
+      "single_session_env_source": "Diatur di file environment ({name}={value}). Hapus di sana untuk memakai sakelar ini."
     },
     "backup_tab": {
       "create_title": "Buat cadangan",
@@ -1778,7 +1778,7 @@
       "rdclient_bg_help": "Apa yang tampil di belakang daftar perangkat. \"{inherit}\" memakai latar konsol.",
       "picture_kb": "Gambar, {kb} KB",
       "website_help": "Alamat lengkap, misalnya https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Pratinjau panel"
     },
     "joining": {
       "mode_note": "Perangkat baru mana yang boleh bergabung ke server ini, dan bagaimana caranya.",
@@ -2802,13 +2802,13 @@
     "add_direct_device": "Tambah perangkat",
     "group_dialog_intro": "Anggota grup berbagi akses konsol grup itu dan grup perangkat yang mengizinkannya. Tambahkan orang di lembar penggunanya; izinkan grup di pengaturan akses grup perangkat.",
     "group_name_hint": "Tampil di daftar pengguna, di lembar pengguna setiap anggota, dan di pengaturan akses.",
-    "access_default_short": "Default",
+    "access_default_short": "Bawaan",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "Diatur untuk orang ini",
+    "access_own_group": "Diatur untuk grup ini",
+    "access_own_user_limit": "Diatur untuk orang ini. Batas peran: {limit}",
+    "access_limit_only": "Batas peran: {limit}",
+    "access_scope_link_joining": "Pengaturan › Bergabung"
   },
   "folders": {
     "title": "Folder",
@@ -5536,7 +5536,7 @@
     "danger_zone": "Zona berbahaya",
     "name_hint": "Tampil di halaman organisasi ini, di daftar, dan kepada anggotanya.",
     "slug_changed": "Proses masuk yang menyebut organisasi dengan nama pendeknya memerlukan nama baru setelah Anda menyimpan.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Diatur untuk organisasi ini."
   },
   "chat": {
     "e2e_enabled": "Dienkripsi ujung ke ujung",
@@ -6129,7 +6129,7 @@
     "sound_today": "Untuk mematikan suara dalam sesi sekarang juga, gunakan aturan akses dengan Suara nonaktif di Perangkat, atau matikan Suara di akses konsol seseorang.",
     "open_access_rules": "Buka aturan akses",
     "remove_group": "Hapus semua aturan grup ini",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Belum ada aplikasi NeoDesk yang menerapkan ini."
   },
   "attestation": {
     "title": "Pengesahan Perangkat",
@@ -7005,8 +7005,8 @@
     "page_only_shows": "Halaman ini hanya menampilkan file bahasa; teks diubah di file pada server. Untuk mengubah bahasa yang Anda lihat, buka",
     "page_own_link": "Akun Anda › Preferensi",
     "status_legend": "Bahasa acuan: file yang menjadi pembanding file lain. Perlu ditinjau: file ditandai belum diperiksa oleh orang.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Bahasa acuan: {names}. Setiap file lain diperiksa terhadap teksnya, dan bahasa ini tidak dapat dihapus.",
+    "status_review_legend": "Perlu ditinjau: file ditandai belum diperiksa oleh orang."
   },
   "resource_control": {
     "title": "Kontrol Sumber Daya",
@@ -7758,7 +7758,7 @@
     "sum_guest_create": "membuat tautan tamu",
     "sum_enrollment_manage": "mengelola bergabung",
     "sum_enrollment_approve": "menyetujui permintaan bergabung",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "Yang dapat dilakukan {role}"
   },
   "notifications": {
     "title": "Pemberitahuan",
@@ -8764,7 +8764,7 @@
     "preview_title": "Pratinjau",
     "preview_note": "Kira-kira seperti ini klien menampilkan nilai tersebut. Pratinjau mengikuti formulir saat Anda mengetik.",
     "preview_button": "Tombol contoh",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Belum ada yang disimpan di sini: klien menampilkan nilai di bawah sampai Anda menyimpan nilai Anda sendiri."
   },
   "login_promo": {
     "slides": {

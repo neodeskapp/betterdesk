@@ -1376,8 +1376,8 @@
       "conn_no_effect_relay": "Har ingen virkning: alle sessioner går gennem relæserveren.",
       "conn_no_effect_operator": "Allerede gældende: Kun konti, der må oprette forbindelse til enheder, kan starte sessioner omfatter denne regel.",
       "conn_no_effect_signed_in": "Har ingen virkning, så længe kun indloggede apps kan starte sessioner.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Fundet automatisk",
+      "endpoint_auto_note": "Et tomt felt giver klienterne den adresse, der er fundet automatisk, vist under Hvad klienter får nu."
     },
     "appearance": {
       "theme_note": "Standardudseendet for alle, der bruger denne konsol.",
@@ -1561,10 +1561,10 @@
       "map_role_n": "Rolle for gruppe {n}",
       "map_add": "Tilføj en gruppe",
       "pick_role": "Vælg en rolle",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "Et nyt login logger kontoens anden browser ud.",
+      "sessions_any": "En konto kan være logget ind på et vilkårligt antal browsere og enheder på én gang.",
+      "sessions_up_to": "En konto kan være logget ind på op til {max} browsere og enheder på én gang.",
+      "single_session_env_source": "Sat i miljøfilen ({name}={value}). Fjern det der for at bruge denne kontakt."
     },
     "backup_tab": {
       "create_title": "Opret en sikkerhedskopi",
@@ -1778,7 +1778,7 @@
       "rdclient_bg_help": "Det, der vises bag enhedslisten. \"{inherit}\" bruger konsollens baggrund.",
       "picture_kb": "Billede, {kb} KB",
       "website_help": "En fuld adresse, for eksempel https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Forhåndsvisning af konsollen"
     },
     "joining": {
       "mode_note": "Hvilke nye enheder der må tilslutte sig denne server, og hvordan.",
@@ -2802,13 +2802,13 @@
     "add_direct_device": "Tilføj en enhed",
     "group_dialog_intro": "Medlemmer af en gruppe deler dens konsoladgang og de enhedsgrupper, der tillader den. Tilføj folk i deres brugerark; tillad gruppen i en enhedsgruppes adgangsindstillinger.",
     "group_name_hint": "Vises i brugerlisten, i hvert medlems brugerark og i adgangsindstillingerne.",
-    "access_default_short": "Default",
+    "access_default_short": "Standard",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "Angivet for denne person",
+    "access_own_group": "Angivet for denne gruppe",
+    "access_own_user_limit": "Angivet for denne person. Rollens grænse: {limit}",
+    "access_limit_only": "Rollens grænse: {limit}",
+    "access_scope_link_joining": "Indstillinger › Tilslutning"
   },
   "folders": {
     "title": "Mapper",
@@ -5536,7 +5536,7 @@
     "danger_zone": "Farezone",
     "name_hint": "Vises på denne organisations side, i lister og for dens medlemmer.",
     "slug_changed": "Logins, der angiver organisationen ved dens korte navn, skal bruge det nye, når du har gemt.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Sat for denne organisation."
   },
   "chat": {
     "e2e_enabled": "End-to-end krypteret",
@@ -6129,7 +6129,7 @@
     "sound_today": "For at slå lyd fra i sessioner i dag skal du bruge en adgangsregel med Lyd fra under Enheder eller slå Lyd fra i en persons konsoladgang.",
     "open_access_rules": "Åbn adgangsregler",
     "remove_group": "Fjern alle regler i denne gruppe",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Ingen NeoDesk-app anvender dette endnu."
   },
   "attestation": {
     "title": "Enhedsattest",
@@ -7005,8 +7005,8 @@
     "page_only_shows": "Denne side viser kun sprogfilerne; teksterne ændres i filerne på serveren. For at ændre det sprog, du ser, skal du åbne",
     "page_own_link": "Din konto › Præferencer",
     "status_legend": "Referencesprog: de filer, de andre sammenlignes med. Skal gennemgås: filen er markeret som endnu ikke tjekket af en person.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Referencesprog: {names}. Alle andre filer tjekkes mod deres tekster, og de kan ikke slettes.",
+    "status_review_legend": "Skal gennemgås: filen er markeret som endnu ikke tjekket af en person."
   },
   "resource_control": {
     "title": "Ressourcekontrol",
@@ -7758,7 +7758,7 @@
     "sum_guest_create": "oprette gæstelinks",
     "sum_enrollment_manage": "administrere tilslutning",
     "sum_enrollment_approve": "godkende anmodninger om tilslutning",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "Hvad {role} kan"
   },
   "notifications": {
     "title": "Meddelelser",
@@ -8764,7 +8764,7 @@
     "preview_title": "Forhåndsvisning",
     "preview_note": "Sådan viser klienten omtrent disse værdier. Forhåndsvisningen følger formularen, mens du skriver.",
     "preview_button": "Eksempelknap",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Intet gemt her endnu: klienterne viser værdierne nedenfor, indtil du gemmer dine egne."
   },
   "login_promo": {
     "slides": {

@@ -1376,8 +1376,8 @@
       "conn_no_effect_relay": "Ei vaikutusta: jokainen istunto kulkee välityspalvelimen kautta.",
       "conn_no_effect_operator": "On jo voimassa: Vain tilit, joilla on oikeus muodostaa yhteys laitteisiin, voivat aloittaa istuntoja sisältää tämän säännön.",
       "conn_no_effect_signed_in": "Ei vaikutusta niin kauan kuin vain kirjautuneet sovellukset voivat aloittaa istuntoja.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Löydetty automaattisesti",
+      "endpoint_auto_note": "Tyhjä kenttä antaa asiakkaille automaattisesti löydetyn osoitteen, joka näkyy kohdassa Mitä asiakkaat saavat nyt."
     },
     "appearance": {
       "theme_note": "Oletusulkoasu kaikille tämän konsolin käyttäjille.",
@@ -1561,10 +1561,10 @@
       "map_role_n": "Ryhmän {n} rooli",
       "map_add": "Lisää ryhmä",
       "pick_role": "Valitse rooli",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "Uusi kirjautuminen kirjaa tilin toisen selaimen ulos.",
+      "sessions_any": "Tili voi olla kirjautuneena samaan aikaan millä tahansa määrällä selaimia ja laitteita.",
+      "sessions_up_to": "Tili voi olla kirjautuneena samaan aikaan enintään {max} selaimella ja laitteella.",
+      "single_session_env_source": "Asetettu ympäristötiedostossa ({name}={value}). Poista se sieltä, niin voit käyttää tätä kytkintä."
     },
     "backup_tab": {
       "create_title": "Luo varmuuskopio",
@@ -1778,7 +1778,7 @@
       "rdclient_bg_help": "Mitä laiteluettelon takana näkyy. \"{inherit}\" käyttää konsolin taustaa.",
       "picture_kb": "Kuva, {kb} kt",
       "website_help": "Koko osoite, esimerkiksi https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Konsolin esikatselu"
     },
     "joining": {
       "mode_note": "Mitkä uudet laitteet saavat liittyä tälle palvelimelle ja miten.",
@@ -2802,13 +2802,13 @@
     "add_direct_device": "Lisää laite",
     "group_dialog_intro": "Ryhmän jäsenet jakavat sen konsolipääsyn ja laiteryhmät, jotka sallivat sen. Lisää ihmisiä heidän käyttäjäkortillaan; salli ryhmä laiteryhmän käyttöasetuksissa.",
     "group_name_hint": "Näkyy käyttäjäluettelossa, jokaisen jäsenen käyttäjäkortilla ja käyttöasetuksissa.",
-    "access_default_short": "Default",
+    "access_default_short": "Oletus",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "Asetettu tälle henkilölle",
+    "access_own_group": "Asetettu tälle ryhmälle",
+    "access_own_user_limit": "Asetettu tälle henkilölle. Roolin raja: {limit}",
+    "access_limit_only": "Roolin raja: {limit}",
+    "access_scope_link_joining": "Asetukset › Liittyminen"
   },
   "folders": {
     "title": "Kansiot",
@@ -5536,7 +5536,7 @@
     "danger_zone": "Vaaravyöhyke",
     "name_hint": "Näkyy tämän organisaation sivulla, luetteloissa ja sen jäsenille.",
     "slug_changed": "Kirjautumiset, jotka nimeävät organisaation lyhyellä nimellä, tarvitsevat tallennuksen jälkeen uuden nimen.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Asetettu tälle organisaatiolle."
   },
   "chat": {
     "e2e_enabled": "Päästä päähän salattu",
@@ -6129,7 +6129,7 @@
     "sound_today": "Jos haluat mykistää istunnot jo nyt, käytä käyttösääntöä, jossa Ääni on pois, kohdassa Laitteet, tai kytke Ääni pois henkilön konsolipääsystä.",
     "open_access_rules": "Avaa käyttösäännöt",
     "remove_group": "Poista kaikki tämän ryhmän säännöt",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Mikään NeoDesk-sovellus ei vielä sovella tätä."
   },
   "attestation": {
     "title": "Laitteen todistus",
@@ -7005,8 +7005,8 @@
     "page_only_shows": "Tämä sivu näyttää vain kielitiedostot; tekstejä muutetaan palvelimen tiedostoissa. Jos haluat vaihtaa näkemäsi kielen, avaa",
     "page_own_link": "Oma tili › Asetukset",
     "status_legend": "Viitekieli: tiedostot, joihin muita verrataan. Tarvitsee tarkistuksen: tiedosto on merkitty sellaiseksi, jota kukaan ei ole vielä tarkistanut.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Viitekieli: {names}. Jokaista muuta tiedostoa verrataan niiden teksteihin, eikä niitä voi poistaa.",
+    "status_review_legend": "Tarvitsee tarkistuksen: tiedosto on merkitty sellaiseksi, jota kukaan ei ole vielä tarkistanut."
   },
   "resource_control": {
     "title": "Resurssien hallinta",
@@ -7758,7 +7758,7 @@
     "sum_guest_create": "luoda vieraslinkkejä",
     "sum_enrollment_manage": "hallita liittymistä",
     "sum_enrollment_approve": "hyväksyä liittymispyyntöjä",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "Mitä {role} voi tehdä"
   },
   "notifications": {
     "title": "Ilmoitukset",
@@ -8764,7 +8764,7 @@
     "preview_title": "Esikatselu",
     "preview_note": "Suunnilleen näin asiakasohjelma näyttää nämä arvot. Esikatselu päivittyy, kun kirjoitat lomakkeeseen.",
     "preview_button": "Esimerkkipainike",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Tänne ei ole vielä tallennettu mitään: asiakkaat näyttävät alla olevat arvot, kunnes tallennat omasi."
   },
   "login_promo": {
     "slides": {

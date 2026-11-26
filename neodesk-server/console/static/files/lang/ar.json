@@ -1377,8 +1377,8 @@
       "conn_no_effect_relay": "لا أثر له: كل جلسة تمر عبر خادم الترحيل.",
       "conn_no_effect_operator": "ساري بالفعل: يمكن فقط للحسابات المسموح لها بالاتصال بالأجهزة بدء الجلسات يشمل هذه القاعدة.",
       "conn_no_effect_signed_in": "لا أثر له ما دامت تطبيقات RustDesk المسجّلة الدخول فقط يمكنها بدء الجلسات.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "تم العثور عليه تلقائيًا",
+      "endpoint_auto_note": "الحقل الفارغ يعطي العملاء العنوان الذي تم العثور عليه تلقائيًا، والظاهر تحت ما يحصل عليه العملاء الآن."
     },
     "appearance": {
       "theme_note": "المظهر الافتراضي لكل من يستخدم وحدة التحكم هذه.",
@@ -1562,10 +1562,10 @@
       "map_role_n": "الدور للمجموعة {n}",
       "map_add": "إضافة مجموعة",
       "pick_role": "اختر دورًا",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "تسجيل دخول جديد يُخرج المتصفح الآخر للحساب.",
+      "sessions_any": "يمكن أن يكون الحساب مسجّل الدخول على أي عدد من المتصفحات والأجهزة في الوقت نفسه.",
+      "sessions_up_to": "يمكن أن يكون الحساب مسجّل الدخول على {max} متصفحات وأجهزة كحد أقصى في الوقت نفسه.",
+      "single_session_env_source": "مضبوط في ملف البيئة ({name}={value}). أزله من هناك لتستخدم هذا المفتاح."
     },
     "backup_tab": {
       "create_title": "إنشاء نسخة احتياطية",
@@ -1779,7 +1779,7 @@
       "rdclient_bg_help": "ما يظهر خلف قائمة الأجهزة. \"{inherit}\" يستخدم خلفية وحدة التحكم.",
       "picture_kb": "صورة، {kb} كيلوبايت",
       "website_help": "عنوان كامل، مثلًا https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "معاينة اللوحة"
     },
     "joining": {
       "mode_note": "ما الأجهزة الجديدة التي يمكنها الانضمام إلى هذا الخادم، وكيف.",
@@ -2803,13 +2803,13 @@
     "add_direct_device": "إضافة جهاز",
     "group_dialog_intro": "يتشارك أعضاء المجموعة وصولها إلى وحدة التحكم ومجموعات الأجهزة التي تسمح بها. أضف الأشخاص من بطاقة المستخدم الخاصة بهم؛ واسمح للمجموعة في إعدادات الوصول لمجموعة أجهزة.",
     "group_name_hint": "يظهر في قائمة المستخدمين، وفي بطاقة كل عضو، وفي إعدادات الوصول.",
-    "access_default_short": "Default",
+    "access_default_short": "الافتراضي",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "محدد لهذا الشخص",
+    "access_own_group": "محدد لهذه المجموعة",
+    "access_own_user_limit": "محدد لهذا الشخص. حد الدور: {limit}",
+    "access_limit_only": "حد الدور: {limit}",
+    "access_scope_link_joining": "الإعدادات › الانضمام"
   },
   "folders": {
     "title": "المجلدات",
@@ -5537,7 +5537,7 @@
     "danger_zone": "منطقة الخطر",
     "name_hint": "يظهر في صفحة هذه المؤسسة وفي القوائم ولأعضائها.",
     "slug_changed": "عمليات تسجيل الدخول التي تسمّي المؤسسة باسمها المختصر تحتاج إلى الاسم الجديد بعد الحفظ.",
-    "policy_set": "Set for this organization."
+    "policy_set": "مضبوط لهذه المؤسسة."
   },
   "chat": {
     "e2e_enabled": "مشفرة من طرف إلى طرف",
@@ -6130,7 +6130,7 @@
     "sound_today": "لإيقاف الصوت في الجلسات من الآن، استخدم قاعدة وصول مع إيقاف الصوت تحت الأجهزة، أو أوقف الصوت في وصول الشخص إلى وحدة التحكم.",
     "open_access_rules": "فتح قواعد الوصول",
     "remove_group": "إزالة كل قواعد هذه المجموعة",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "لا يطبّق أي تطبيق من NeoDesk هذا بعد."
   },
   "attestation": {
     "title": "شهادة الجهاز",
@@ -7006,8 +7006,8 @@
     "page_only_shows": "تعرض هذه الصفحة ملفات اللغة فقط؛ تُغيَّر النصوص في الملفات على الخادم. لتغيير اللغة التي تراها، افتح",
     "page_own_link": "حسابك › Preferences",
     "status_legend": "اللغة المرجعية: الملفات التي تُقارن بها الأخرى. تحتاج إلى مراجعة: الملف معلَّم بأنه لم يتحقق منه شخص بعد.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "اللغة المرجعية: {names}. يُقارن كل ملف آخر بنصوصها، ولا يمكن حذفها.",
+    "status_review_legend": "تحتاج إلى مراجعة: الملف معلَّم بأنه لم يتحقق منه شخص بعد."
   },
   "resource_control": {
     "title": "التحكم في الموارد",
@@ -7759,7 +7759,7 @@
     "sum_guest_create": "إنشاء روابط الضيوف",
     "sum_enrollment_manage": "إدارة الانضمام",
     "sum_enrollment_approve": "الموافقة على طلبات الانضمام",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "ما يستطيع {role} فعله"
   },
   "notifications": {
     "title": "إشعارات",
@@ -8765,7 +8765,7 @@
     "preview_title": "معاينة",
     "preview_note": "هكذا تقريبًا يعرض العميل هذه القيم. تتغير المعاينة أثناء الكتابة في النموذج.",
     "preview_button": "زر للمثال",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "لم يُحفظ شيء هنا بعد: يعرض العملاء القيم أدناه حتى تحفظ قيمك الخاصة."
   },
   "login_promo": {
     "slides": {

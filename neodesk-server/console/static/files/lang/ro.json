@@ -1376,8 +1376,8 @@
       "conn_no_effect_relay": "Nu are efect: fiecare sesiune trece prin serverul de releu.",
       "conn_no_effect_operator": "Deja în vigoare: Doar conturile care se pot conecta la dispozitive pot porni sesiuni include această regulă.",
       "conn_no_effect_signed_in": "Nu are efect cât timp doar aplicațiile conectate pot porni sesiuni.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Găsită automat",
+      "endpoint_auto_note": "Un câmp gol le dă clienților adresa găsită automat, afișată sub Ce primesc acum clienții."
     },
     "appearance": {
       "theme_note": "Aspectul implicit pentru toți cei care folosesc această consolă.",
@@ -1561,10 +1561,10 @@
       "map_role_n": "Rolul pentru grupul {n}",
       "map_add": "Adăugați un grup",
       "pick_role": "Alegeți un rol",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "O autentificare nouă deconectează celălalt browser al contului.",
+      "sessions_any": "Un cont poate fi autentificat simultan pe oricâte browsere și dispozitive.",
+      "sessions_up_to": "Un cont poate fi autentificat simultan pe cel mult {max} browsere și dispozitive.",
+      "single_session_env_source": "Setat în fișierul de mediu ({name}={value}). Eliminați-l de acolo pentru a folosi acest comutator."
     },
     "backup_tab": {
       "create_title": "Creați o copie de rezervă",
@@ -1778,7 +1778,7 @@
       "rdclient_bg_help": "Ce se vede în spatele listei de dispozitive. „{inherit}” folosește fundalul consolei.",
       "picture_kb": "Imagine, {kb} KB",
       "website_help": "O adresă completă, de exemplu https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Previzualizare consolă"
     },
     "joining": {
       "mode_note": "Ce dispozitive noi se pot alătura acestui server și cum.",
@@ -2802,13 +2802,13 @@
     "add_direct_device": "Adăugați un dispozitiv",
     "group_dialog_intro": "Membrii unui grup împart accesul lui la consolă și grupurile de dispozitive care îl permit. Adăugați persoane din fișa lor de utilizator; permiteți grupul în setările de acces ale unui grup de dispozitive.",
     "group_name_hint": "Afișat în lista de utilizatori, în fișa fiecărui membru și în setările de acces.",
-    "access_default_short": "Default",
+    "access_default_short": "Implicit",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "Setat pentru această persoană",
+    "access_own_group": "Setat pentru acest grup",
+    "access_own_user_limit": "Setat pentru această persoană. Limita rolului: {limit}",
+    "access_limit_only": "Limita rolului: {limit}",
+    "access_scope_link_joining": "Setări › Alăturare"
   },
   "folders": {
     "title": "Foldere",
@@ -5536,7 +5536,7 @@
     "danger_zone": "Zonă periculoasă",
     "name_hint": "Afișat pe pagina acestei organizații, în liste și membrilor ei.",
     "slug_changed": "Conectările care numesc organizația după numele scurt au nevoie de cel nou după salvare.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Setat pentru această organizație."
   },
   "chat": {
     "e2e_enabled": "Criptat de la capăt la capăt",
@@ -6129,7 +6129,7 @@
     "sound_today": "Pentru a opri sunetul în sesiuni de pe acum, folosiți o regulă de acces cu Sunet dezactivat în Dispozitive sau dezactivați Sunet în accesul la consolă al unei persoane.",
     "open_access_rules": "Deschideți regulile de acces",
     "remove_group": "Eliminați toate regulile acestui grup",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Nicio aplicație NeoDesk nu aplică încă acest lucru."
   },
   "attestation": {
     "title": "Atestarea dispozitivului",
@@ -7005,8 +7005,8 @@
     "page_only_shows": "Această pagină doar afișează fișierele de limbă; textele se modifică în fișierele de pe server. Pentru a schimba limba pe care o vedeți, deschideți",
     "page_own_link": "Contul dvs. › Preferințe",
     "status_legend": "Limbă de referință: fișierele cu care se compară celelalte. Necesită verificare: fișierul este marcat ca neverificat încă de o persoană.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Limbă de referință: {names}. Fiecare alt fișier este comparat cu textele lor, iar acestea nu pot fi șterse.",
+    "status_review_legend": "Necesită verificare: fișierul este marcat ca neverificat încă de o persoană."
   },
   "resource_control": {
     "title": "Controlul resurselor",
@@ -7758,7 +7758,7 @@
     "sum_guest_create": "să creeze linkuri pentru invitați",
     "sum_enrollment_manage": "să gestioneze alăturarea",
     "sum_enrollment_approve": "să aprobe cererile de alăturare",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "Ce poate face {role}"
   },
   "notifications": {
     "title": "Notificări",
@@ -8764,7 +8764,7 @@
     "preview_title": "Previzualizare",
     "preview_note": "Aproximativ așa afișează clientul aceste valori. Previzualizarea urmează formularul pe măsură ce scrieți.",
     "preview_button": "Buton de exemplu",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Nu este încă nimic salvat aici: clienții afișează valorile de mai jos până când le salvați pe ale dvs."
   },
   "login_promo": {
     "slides": {

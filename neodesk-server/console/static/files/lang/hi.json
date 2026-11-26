@@ -1376,8 +1376,8 @@
       "conn_no_effect_relay": "कोई असर नहीं: हर सत्र रिले सर्वर से होकर जाता है।",
       "conn_no_effect_operator": "पहले से लागू: केवल वे खाते सत्र शुरू कर सकते हैं जिन्हें डिवाइस से कनेक्ट करने की अनुमति है में यह नियम शामिल है।",
       "conn_no_effect_signed_in": "जब तक केवल साइन-इन किए गए ऐप सत्र शुरू कर सकते हैं, इसका कोई असर नहीं।",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "अपने आप मिला",
+      "endpoint_auto_note": "खाली फ़ील्ड क्लाइंट को अपने आप मिला पता देता है, जो क्लाइंट को अभी क्या मिलता है के नीचे दिखता है।"
     },
     "appearance": {
       "theme_note": "इस कंसोल का उपयोग करने वाले सभी लोगों के लिए डिफ़ॉल्ट रूप-रंग।",
@@ -1561,10 +1561,10 @@
       "map_role_n": "समूह {n} के लिए भूमिका",
       "map_add": "समूह जोड़ें",
       "pick_role": "भूमिका चुनें",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "नया साइन इन खाते के दूसरे ब्राउज़र को साइन आउट कर देता है।",
+      "sessions_any": "एक खाता एक साथ कितने भी ब्राउज़र और डिवाइस पर साइन इन रह सकता है।",
+      "sessions_up_to": "एक खाता एक साथ अधिकतम {max} ब्राउज़र और डिवाइस पर साइन इन रह सकता है।",
+      "single_session_env_source": "एनवायरनमेंट फ़ाइल ({name}={value}) में सेट। यह स्विच इस्तेमाल करने के लिए इसे वहाँ से हटाएँ।"
     },
     "backup_tab": {
       "create_title": "बैकअप बनाएँ",
@@ -1778,7 +1778,7 @@
       "rdclient_bg_help": "डिवाइस सूची के पीछे क्या दिखता है। \"{inherit}\" कंसोल का बैकग्राउंड इस्तेमाल करता है।",
       "picture_kb": "तस्वीर, {kb} KB",
       "website_help": "पूरा पता, उदाहरण के लिए https://example.com।",
-      "console_preview": "Console preview"
+      "console_preview": "पैनल पूर्वावलोकन"
     },
     "joining": {
       "mode_note": "कौन से नए डिवाइस इस सर्वर से जुड़ सकते हैं, और कैसे।",
@@ -2802,13 +2802,13 @@
     "add_direct_device": "डिवाइस जोड़ें",
     "group_dialog_intro": "समूह के सदस्य उसका कंसोल एक्सेस और उसे अनुमति देने वाले डिवाइस समूह साझा करते हैं। लोगों को उनकी उपयोगकर्ता शीट में जोड़ें; समूह को किसी डिवाइस समूह की एक्सेस सेटिंग्स में अनुमति दें।",
     "group_name_hint": "उपयोगकर्ता सूची में, हर सदस्य की उपयोगकर्ता शीट में और एक्सेस सेटिंग्स में दिखता है।",
-    "access_default_short": "Default",
+    "access_default_short": "डिफ़ॉल्ट",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "इस व्यक्ति के लिए तय",
+    "access_own_group": "इस समूह के लिए तय",
+    "access_own_user_limit": "इस व्यक्ति के लिए तय। भूमिका की सीमा: {limit}",
+    "access_limit_only": "भूमिका की सीमा: {limit}",
+    "access_scope_link_joining": "सेटिंग्स › जुड़ना"
   },
   "folders": {
     "title": "फ़ोल्डर",
@@ -5536,7 +5536,7 @@
     "danger_zone": "खतरे का क्षेत्र",
     "name_hint": "इस संगठन के पेज पर, सूचियों में और उसके सदस्यों को दिखता है।",
     "slug_changed": "जो साइन-इन संगठन को उसके छोटे नाम से बताते हैं, उन्हें सहेजने के बाद नया नाम चाहिए।",
-    "policy_set": "Set for this organization."
+    "policy_set": "इस संगठन के लिए सेट।"
   },
   "chat": {
     "e2e_enabled": "एंड-टू-एंड एन्क्रिप्टेड",
@@ -6129,7 +6129,7 @@
     "sound_today": "आज ही सत्रों में आवाज़ बंद करने के लिए, उपकरण के नीचे ध्वनि बंद वाला एक्सेस नियम इस्तेमाल करें, या किसी व्यक्ति के कंसोल एक्सेस में ध्वनि बंद करें।",
     "open_access_rules": "एक्सेस नियम खोलें",
     "remove_group": "इस समूह के सभी नियम हटाएँ",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "अभी कोई NeoDesk ऐप इसे लागू नहीं करता।"
   },
   "attestation": {
     "title": "डिवाइस सत्यापन",
@@ -7005,8 +7005,8 @@
     "page_only_shows": "यह पेज केवल भाषा फ़ाइलें दिखाता है; टेक्स्ट सर्वर की फ़ाइलों में बदले जाते हैं। जो भाषा आप देखते हैं उसे बदलने के लिए खोलें",
     "page_own_link": "आपका खाता › Preferences",
     "status_legend": "संदर्भ भाषा: वे फ़ाइलें जिनसे बाकी की तुलना होती है। समीक्षा चाहिए: फ़ाइल पर निशान है कि किसी व्यक्ति ने इसे अभी नहीं जाँचा।",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "संदर्भ भाषा: {names}। बाकी हर फ़ाइल की जाँच इनके पाठ से होती है, और इन्हें मिटाया नहीं जा सकता।",
+    "status_review_legend": "समीक्षा चाहिए: फ़ाइल पर निशान है कि किसी व्यक्ति ने इसे अभी नहीं जाँचा।"
   },
   "resource_control": {
     "title": "संसाधन नियंत्रण",
@@ -7758,7 +7758,7 @@
     "sum_guest_create": "अतिथि लिंक बनाना",
     "sum_enrollment_manage": "जुड़ना प्रबंधित करना",
     "sum_enrollment_approve": "जुड़ने के अनुरोध स्वीकृत करना",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "{role} क्या कर सकता है"
   },
   "notifications": {
     "title": "सूचनाएं",
@@ -8764,7 +8764,7 @@
     "preview_title": "पूर्वावलोकन",
     "preview_note": "क्लाइंट इन मानों को लगभग ऐसे दिखाता है। आप टाइप करते हैं तो पूर्वावलोकन फ़ॉर्म के साथ बदलता है।",
     "preview_button": "नमूना बटन",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "यहाँ अभी कुछ सहेजा नहीं गया है: जब तक आप अपने मान नहीं सहेजते, क्लाइंट नीचे दिए मान दिखाते हैं।"
   },
   "login_promo": {
     "slides": {

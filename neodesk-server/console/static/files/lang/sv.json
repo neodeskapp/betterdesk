@@ -1376,8 +1376,8 @@
       "conn_no_effect_relay": "Har ingen effekt: alla sessioner går genom reläservern.",
       "conn_no_effect_operator": "Gäller redan: Bara konton som får ansluta till enheter kan starta sessioner omfattar den här regeln.",
       "conn_no_effect_signed_in": "Har ingen effekt så länge bara inloggade appar kan starta sessioner.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Hittad automatiskt",
+      "endpoint_auto_note": "Ett tomt fält ger klienterna adressen som hittats automatiskt, som visas under Vad klienterna får nu."
     },
     "appearance": {
       "theme_note": "Standardutseendet för alla som använder den här konsolen.",
@@ -1561,10 +1561,10 @@
       "map_role_n": "Roll för grupp {n}",
       "map_add": "Lägg till en grupp",
       "pick_role": "Välj en roll",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "En ny inloggning loggar ut kontots andra webbläsare.",
+      "sessions_any": "Ett konto kan vara inloggat i hur många webbläsare och enheter som helst samtidigt.",
+      "sessions_up_to": "Ett konto kan vara inloggat i upp till {max} webbläsare och enheter samtidigt.",
+      "single_session_env_source": "Satt i miljöfilen ({name}={value}). Ta bort det där för att använda den här brytaren."
     },
     "backup_tab": {
       "create_title": "Skapa en säkerhetskopia",
@@ -1778,7 +1778,7 @@
       "rdclient_bg_help": "Det som syns bakom enhetslistan. ”{inherit}” använder konsolens bakgrund.",
       "picture_kb": "Bild, {kb} kB",
       "website_help": "En fullständig adress, till exempel https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Förhandsvisning av konsolen"
     },
     "joining": {
       "mode_note": "Vilka nya enheter som får ansluta sig till den här servern, och hur.",
@@ -2802,13 +2802,13 @@
     "add_direct_device": "Lägg till en enhet",
     "group_dialog_intro": "Medlemmar i en grupp delar dess konsolåtkomst och de enhetsgrupper som tillåter den. Lägg till personer i deras användarkort; tillåt gruppen i en enhetsgrupps åtkomstinställningar.",
     "group_name_hint": "Visas i användarlistan, i varje medlems användarkort och i åtkomstinställningarna.",
-    "access_default_short": "Default",
+    "access_default_short": "Standard",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "Angiven för den här personen",
+    "access_own_group": "Angiven för den här gruppen",
+    "access_own_user_limit": "Angiven för den här personen. Rollens gräns: {limit}",
+    "access_limit_only": "Rollens gräns: {limit}",
+    "access_scope_link_joining": "Inställningar › Anslutning"
   },
   "folders": {
     "title": "Mappar",
@@ -5536,7 +5536,7 @@
     "danger_zone": "Farozon",
     "name_hint": "Visas på den här organisationens sida, i listor och för dess medlemmar.",
     "slug_changed": "Inloggningar som anger organisationen med dess korta namn behöver det nya när du har sparat.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Satt för den här organisationen."
   },
   "chat": {
     "e2e_enabled": "End-to-end krypterad",
@@ -6129,7 +6129,7 @@
     "sound_today": "För att stänga av ljudet i sessioner redan i dag, använd en åtkomstregel med Ljud av under Enheter, eller stäng av Ljud i en persons konsolåtkomst.",
     "open_access_rules": "Öppna åtkomstregler",
     "remove_group": "Ta bort alla regler i den här gruppen",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Ingen NeoDesk-app tillämpar detta ännu."
   },
   "attestation": {
     "title": "Enhetsbekräftelse",
@@ -7005,8 +7005,8 @@
     "page_only_shows": "Den här sidan visar bara språkfilerna; texterna ändras i filerna på servern. För att ändra språket du ser, öppna",
     "page_own_link": "Ditt konto › Inställningar",
     "status_legend": "Referensspråk: filerna som de andra jämförs med. Behöver granskas: filen är markerad som ännu inte kontrollerad av en person.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Referensspråk: {names}. Alla andra filer kontrolleras mot deras texter, och de kan inte tas bort.",
+    "status_review_legend": "Behöver granskas: filen är markerad som ännu inte kontrollerad av en person."
   },
   "resource_control": {
     "title": "Resurskontroll",
@@ -7758,7 +7758,7 @@
     "sum_guest_create": "skapa gästlänkar",
     "sum_enrollment_manage": "hantera anslutning",
     "sum_enrollment_approve": "godkänna anslutningsförfrågningar",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "Vad {role} kan göra"
   },
   "notifications": {
     "title": "Aviseringar",
@@ -8764,7 +8764,7 @@
     "preview_title": "Förhandsvisning",
     "preview_note": "Ungefär så visar klienten dessa värden. Förhandsvisningen följer formuläret medan du skriver.",
     "preview_button": "Exempelknapp",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Inget sparat här ännu: klienterna visar värdena nedan tills du sparar dina egna."
   },
   "login_promo": {
     "slides": {

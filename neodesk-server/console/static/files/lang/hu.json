@@ -1376,8 +1376,8 @@
       "conn_no_effect_relay": "Nincs hatása: minden munkamenet a továbbító szerveren át megy.",
       "conn_no_effect_operator": "Már érvényben van: a Csak az eszközökhöz csatlakozni jogosult fiókok indíthatnak munkamenetet beállítás ezt a szabályt is magában foglalja.",
       "conn_no_effect_signed_in": "Nincs hatása, amíg csak bejelentkezett alkalmazások indíthatnak munkamenetet.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Automatikusan megtalálva",
+      "endpoint_auto_note": "Üres mező esetén a kliensek az automatikusan megtalált címet kapják, amely az Amit a kliensek most kapnak alatt látható."
     },
     "appearance": {
       "theme_note": "Az alapértelmezett megjelenés mindenkinek, aki ezt a konzolt használja.",
@@ -1561,10 +1561,10 @@
       "map_role_n": "Szerepkör a(z) {n}. csoporthoz",
       "map_add": "Csoport hozzáadása",
       "pick_role": "Válasszon szerepkört",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "Az új bejelentkezés kijelentkezteti a fiók másik böngészőjét.",
+      "sessions_any": "Egy fiók egyszerre tetszőleges számú böngészőn és eszközön lehet bejelentkezve.",
+      "sessions_up_to": "Egy fiók egyszerre legfeljebb {max} böngészőn és eszközön lehet bejelentkezve.",
+      "single_session_env_source": "A környezeti fájlban beállítva ({name}={value}). A kapcsoló használatához ott törölje."
     },
     "backup_tab": {
       "create_title": "Biztonsági mentés készítése",
@@ -1778,7 +1778,7 @@
       "rdclient_bg_help": "Ami az eszközlista mögött látszik. A(z) „{inherit}” a konzol hátterét használja.",
       "picture_kb": "Kép, {kb} KB",
       "website_help": "Teljes cím, például https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Konzol előnézete"
     },
     "joining": {
       "mode_note": "Mely új eszközök csatlakozhatnak ehhez a szerverhez, és hogyan.",
@@ -2802,13 +2802,13 @@
     "add_direct_device": "Eszköz hozzáadása",
     "group_dialog_intro": "Egy csoport tagjai osztoznak a csoport konzolhozzáférésén és az azt engedő eszközcsoportokon. Az embereket a felhasználói lapjukon adja hozzá; a csoportot egy eszközcsoport hozzáférési beállításaiban engedélyezze.",
     "group_name_hint": "Megjelenik a felhasználólistában, minden tag felhasználói lapján és a hozzáférési beállításokban.",
-    "access_default_short": "Default",
+    "access_default_short": "Alapértelmezett",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "Ennek a személynek beállítva",
+    "access_own_group": "Ennek a csoportnak beállítva",
+    "access_own_user_limit": "Ennek a személynek beállítva. A szerepkör korlátja: {limit}",
+    "access_limit_only": "A szerepkör korlátja: {limit}",
+    "access_scope_link_joining": "Beállítások › Csatlakozás"
   },
   "folders": {
     "title": "Mappák",
@@ -5536,7 +5536,7 @@
     "danger_zone": "Veszélyzóna",
     "name_hint": "Megjelenik a szervezet oldalán, a listákban és a tagjainak.",
     "slug_changed": "Azoknak a bejelentkezéseknek, amelyek a rövid nevével nevezik meg a szervezetet, mentés után az új név kell.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Ehhez a szervezethez beállítva."
   },
   "chat": {
     "e2e_enabled": "Végponttól végpontig titkosítva",
@@ -6129,7 +6129,7 @@
     "sound_today": "Ha már most ki akarja kapcsolni a hangot a munkamenetekben, használjon az Eszközök alatt egy hozzáférési szabályt kikapcsolt Hanggal, vagy kapcsolja ki a Hangot egy személy konzolhozzáférésében.",
     "open_access_rules": "Hozzáférési szabályok megnyitása",
     "remove_group": "A csoport minden szabályának eltávolítása",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Még egyetlen NeoDesk-alkalmazás sem alkalmazza."
   },
   "attestation": {
     "title": "Eszköz tanúsítvány",
@@ -7005,8 +7005,8 @@
     "page_only_shows": "Ez az oldal csak a nyelvi fájlokat mutatja; a szövegek a szerveren lévő fájlokban módosíthatók. A látott nyelv módosításához nyissa meg ezt:",
     "page_own_link": "Fiókja › Preferences",
     "status_legend": "Referencianyelv: a fájlok, amelyekhez a többit hasonlítják. Átnézendő: a fájl úgy van megjelölve, hogy ember még nem ellenőrizte.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Referencianyelv: {names}. Minden más fájlt ezek szövegeihez hasonlítanak, és ezek nem törölhetők.",
+    "status_review_legend": "Átnézendő: a fájl úgy van megjelölve, hogy ember még nem ellenőrizte."
   },
   "resource_control": {
     "title": "Erőforrás-szabályozás",
@@ -7758,7 +7758,7 @@
     "sum_guest_create": "vendéghivatkozások készítése",
     "sum_enrollment_manage": "a csatlakozás kezelése",
     "sum_enrollment_approve": "a csatlakozási kérelmek jóváhagyása",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "Mit tehet: {role}"
   },
   "notifications": {
     "title": "Értesítések",
@@ -8764,7 +8764,7 @@
     "preview_title": "Előnézet",
     "preview_note": "Nagyjából így jeleníti meg a kliens ezeket az értékeket. Az előnézet gépelés közben követi az űrlapot.",
     "preview_button": "Mintagomb",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Itt még nincs semmi mentve: a kliensek az alábbi értékeket mutatják, amíg nem menti a sajátjait."
   },
   "login_promo": {
     "slides": {

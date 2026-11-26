@@ -1370,8 +1370,8 @@
       "conn_no_effect_relay": "无效：所有会话都经过中继服务器。",
       "conn_no_effect_operator": "已经生效：“只有可以连接设备的账户才能发起会话”已包含这条规则。",
       "conn_no_effect_signed_in": "只要只有已登录的应用可以发起会话，此项就无效。",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "自动检测",
+      "endpoint_auto_note": "字段留空时，客户端会获得自动检测的地址，显示在“客户端当前获得的值”下。"
     },
     "appearance": {
       "theme_note": "所有使用此控制台的人默认看到的外观。",
@@ -1555,10 +1555,10 @@
       "map_role_n": "分组 {n} 的角色",
       "map_add": "添加分组",
       "pick_role": "选择角色",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "新的登录会让该账户的另一个浏览器退出登录。",
+      "sessions_any": "一个账户可同时在任意数量的浏览器和设备上登录。",
+      "sessions_up_to": "一个账户最多可同时在 {max} 个浏览器和设备上登录。",
+      "single_session_env_source": "在环境文件（{name}={value}）中设置。请在那里删除，才能使用此开关。"
     },
     "backup_tab": {
       "create_title": "创建备份",
@@ -1772,7 +1772,7 @@
       "rdclient_bg_help": "设备列表后面显示的内容。“{inherit}”使用控制台的背景。",
       "picture_kb": "图片，{kb} KB",
       "website_help": "完整地址，例如 https://example.com。",
-      "console_preview": "Console preview"
+      "console_preview": "面板预览"
     },
     "joining": {
       "mode_note": "哪些新设备可以加入此服务器，以及如何加入。",
@@ -2796,13 +2796,13 @@
     "add_direct_device": "添加设备",
     "group_dialog_intro": "分组成员共享该分组的控制台访问权限，以及允许该分组的设备分组。在用户卡片中添加人员；在设备分组的访问设置中允许该分组。",
     "group_name_hint": "显示在用户列表、每个成员的用户卡片和访问设置中。",
-    "access_default_short": "Default",
-    "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_default_short": "默认",
+    "access_default_plain": "{label}：{level}",
+    "access_own_user": "为此人设置",
+    "access_own_group": "为此组设置",
+    "access_own_user_limit": "为此人设置。角色上限：{limit}",
+    "access_limit_only": "角色上限：{limit}",
+    "access_scope_link_joining": "设置 › 加入"
   },
   "folders": {
     "title": "文件夹",
@@ -5297,7 +5297,7 @@
     "sum_guest_create": "创建访客链接",
     "sum_enrollment_manage": "管理加入",
     "sum_enrollment_approve": "批准加入请求",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "{role} 可以做什么"
   },
   "tokens": {
     "title": "设备令牌",
@@ -5788,7 +5788,7 @@
     "danger_zone": "危险区域",
     "name_hint": "显示在此组织的页面、列表中，并向其成员显示。",
     "slug_changed": "用短名称指定组织的登录方式在保存后需要使用新名称。",
-    "policy_set": "Set for this organization."
+    "policy_set": "已为此组织设置。"
   },
   "chat": {
     "e2e_enabled": "端到端加密",
@@ -6381,7 +6381,7 @@
     "sound_today": "如果现在就要关闭会话中的声音，请在“设备”下使用关闭了“声音”的访问规则，或在某人的控制台访问中关闭“声音”。",
     "open_access_rules": "打开访问规则",
     "remove_group": "删除此分组的所有规则",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "还没有 NeoDesk 应用应用此项。"
   },
   "attestation": {
     "title": "设备认证",
@@ -7257,8 +7257,8 @@
     "page_only_shows": "此页面只显示语言文件；文本在服务器上的文件中更改。要更改您看到的语言，请打开",
     "page_own_link": "您的账户 › 偏好设置",
     "status_legend": "参考语言：其他文件与之比较的文件。需要审核：该文件被标记为尚未经人工检查。",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "参考语言：{names}。其他每个文件都会与其文本比对，而且参考语言无法删除。",
+    "status_review_legend": "需要审核：该文件被标记为尚未经人工检查。"
   },
   "resource_control": {
     "title": "资源控制",
@@ -8758,7 +8758,7 @@
     "preview_title": "预览",
     "preview_note": "客户端大致会这样显示这些值。预览会随您在表单中的输入而更新。",
     "preview_button": "示例按钮",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "这里尚未保存任何内容：在您保存自己的值之前，客户端会显示下方的值。"
   },
   "login_promo": {
     "slides": {

@@ -1374,8 +1374,8 @@
       "conn_no_effect_relay": "沒有作用：每個工作階段都經過中繼伺服器。",
       "conn_no_effect_operator": "已經生效：「只有可連線到裝置的帳戶能開始工作階段」已包含這條規則。",
       "conn_no_effect_signed_in": "只要只有已登入的應用程式能開始工作階段，此項就沒有作用。",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "自動偵測",
+      "endpoint_auto_note": "欄位留空時，用戶端會取得自動偵測的位址，顯示在「用戶端目前取得的值」下。"
     },
     "appearance": {
       "theme_note": "所有使用此主控台的人預設看到的外觀。",
@@ -1559,10 +1559,10 @@
       "map_role_n": "群組 {n} 的角色",
       "map_add": "新增群組",
       "pick_role": "選擇角色",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "新的登入會讓該帳戶的另一個瀏覽器登出。",
+      "sessions_any": "一個帳戶可同時在任意數量的瀏覽器和裝置上登入。",
+      "sessions_up_to": "一個帳戶最多可同時在 {max} 個瀏覽器和裝置上登入。",
+      "single_session_env_source": "在環境檔案（{name}={value}）中設定。請在那裡移除，才能使用此開關。"
     },
     "backup_tab": {
       "create_title": "建立備份",
@@ -1776,7 +1776,7 @@
       "rdclient_bg_help": "裝置清單後方顯示的內容。「{inherit}」使用主控台的背景。",
       "picture_kb": "圖片，{kb} KB",
       "website_help": "完整位址，例如 https://example.com。",
-      "console_preview": "Console preview"
+      "console_preview": "面板預覽"
     },
     "joining": {
       "mode_note": "哪些新裝置可以加入這台伺服器，以及如何加入。",
@@ -2818,13 +2818,13 @@
     "add_direct_device": "新增裝置",
     "group_dialog_intro": "群組成員共用該群組的主控台存取權，以及允許該群組的裝置群組。在使用者卡片中新增人員；在裝置群組的存取設定中允許該群組。",
     "group_name_hint": "顯示在使用者清單、每位成員的使用者卡片和存取設定中。",
-    "access_default_short": "Default",
-    "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_default_short": "預設",
+    "access_default_plain": "{label}：{level}",
+    "access_own_user": "為此人設定",
+    "access_own_group": "為此群組設定",
+    "access_own_user_limit": "為此人設定。角色上限：{limit}",
+    "access_limit_only": "角色上限：{limit}",
+    "access_scope_link_joining": "設定 › 加入"
   },
   "folders": {
     "title": "資料夾",
@@ -5319,7 +5319,7 @@
     "sum_guest_create": "建立訪客連結",
     "sum_enrollment_manage": "管理加入",
     "sum_enrollment_approve": "核准加入請求",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "{role} 可以做什麼"
   },
   "tokens": {
     "title": "設備令牌",
@@ -5810,7 +5810,7 @@
     "danger_zone": "危險區域",
     "name_hint": "顯示在此組織的頁面、清單中，並向其成員顯示。",
     "slug_changed": "以簡稱指定組織的登入方式在儲存後需要使用新名稱。",
-    "policy_set": "Set for this organization."
+    "policy_set": "已為此組織設定。"
   },
   "chat": {
     "e2e_enabled": "端到端加密",
@@ -6403,7 +6403,7 @@
     "sound_today": "若要現在就關閉工作階段中的聲音，請在「設備」下使用關閉「聲音」的存取規則，或在某人的主控台存取權中關閉「聲音」。",
     "open_access_rules": "開啟存取規則",
     "remove_group": "移除此群組的所有規則",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "還沒有 NeoDesk 應用程式套用此項。"
   },
   "attestation": {
     "title": "設備認證",
@@ -7279,8 +7279,8 @@
     "page_only_shows": "此頁面只顯示語言檔案；文字在伺服器上的檔案中變更。若要變更您看到的語言，請開啟",
     "page_own_link": "您的帳戶 › 偏好設定",
     "status_legend": "參考語言：其他檔案與之比較的檔案。需要審閱：該檔案被標示為尚未經人工檢查。",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "參考語言：{names}。其他每個檔案都會與其文字比對，而且參考語言無法刪除。",
+    "status_review_legend": "需要審閱：該檔案被標示為尚未經人工檢查。"
   },
   "resource_control": {
     "title": "資源控制",
@@ -8762,7 +8762,7 @@
     "preview_title": "預覽",
     "preview_note": "用戶端大致會這樣顯示這些值。預覽會隨您在表單中的輸入而更新。",
     "preview_button": "範例按鈕",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "這裡尚未儲存任何內容：在您儲存自己的值之前，用戶端會顯示下方的值。"
   },
   "login_promo": {
     "slides": {

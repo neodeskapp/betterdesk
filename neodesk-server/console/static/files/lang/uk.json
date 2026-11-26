@@ -1376,8 +1376,8 @@
       "conn_no_effect_relay": "Не діє: кожен сеанс іде через ретрансляційний сервер.",
       "conn_no_effect_operator": "Уже діє: Лише облікові записи, яким дозволено підключатися до пристроїв, можуть починати сеанси включає це правило.",
       "conn_no_effect_signed_in": "Не діє, поки сеанси можуть починати лише застосунки з виконаним входом.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Знайдено автоматично",
+      "endpoint_auto_note": "Порожнє поле дає клієнтам автоматично знайдену адресу, показану в розділі Що зараз отримують клієнти."
     },
     "appearance": {
       "theme_note": "Стандартний вигляд для всіх, хто користується цією консоллю.",
@@ -1561,10 +1561,10 @@
       "map_role_n": "Роль для групи {n}",
       "map_add": "Додати групу",
       "pick_role": "Виберіть роль",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "Новий вхід завершує сеанс в іншому браузері облікового запису.",
+      "sessions_any": "Обліковий запис може мати вхід одночасно на будь-якій кількості браузерів і пристроїв.",
+      "sessions_up_to": "Обліковий запис може мати вхід одночасно щонайбільше на {max} браузерах і пристроях.",
+      "single_session_env_source": "Задано у файлі середовища ({name}={value}). Видаліть його там, щоб користуватися цим перемикачем."
     },
     "backup_tab": {
       "create_title": "Створити резервну копію",
@@ -1778,7 +1778,7 @@
       "rdclient_bg_help": "Що видно за списком пристроїв. «{inherit}» використовує фон консолі.",
       "picture_kb": "Зображення, {kb} КБ",
       "website_help": "Повна адреса, наприклад https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Попередній перегляд панелі"
     },
     "joining": {
       "mode_note": "Які нові пристрої можуть приєднатися до цього сервера, і як.",
@@ -2802,13 +2802,13 @@
     "add_direct_device": "Додати пристрій",
     "group_dialog_intro": "Учасники групи мають спільний доступ групи до консолі й групи пристроїв, які її дозволяють. Додавайте людей у їхній картці користувача; дозвольте групу в налаштуваннях доступу групи пристроїв.",
     "group_name_hint": "Показується у списку користувачів, у картці кожного учасника та в налаштуваннях доступу.",
-    "access_default_short": "Default",
+    "access_default_short": "Типово",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "Задано для цієї особи",
+    "access_own_group": "Задано для цієї групи",
+    "access_own_user_limit": "Задано для цієї особи. Межа ролі: {limit}",
+    "access_limit_only": "Межа ролі: {limit}",
+    "access_scope_link_joining": "Налаштування › Приєднання"
   },
   "folders": {
     "title": "Папки",
@@ -5536,7 +5536,7 @@
     "danger_zone": "Небезпечна зона",
     "name_hint": "Показується на сторінці цієї організації, у списках і її учасникам.",
     "slug_changed": "Входи, що називають організацію її короткою назвою, після збереження потребуватимуть нової.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Задано для цієї організації."
   },
   "chat": {
     "e2e_enabled": "Наскрізне шифрування",
@@ -6129,7 +6129,7 @@
     "sound_today": "Щоб уже зараз вимкнути звук у сеансах, використайте правило доступу з вимкненим Звуком у Пристрої або вимкніть Звук у доступі людини до консолі.",
     "open_access_rules": "Відкрити правила доступу",
     "remove_group": "Видалити всі правила цієї групи",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Жоден застосунок NeoDesk ще не застосовує це."
   },
   "attestation": {
     "title": "Атестація пристрою",
@@ -7005,8 +7005,8 @@
     "page_only_shows": "Ця сторінка лише показує мовні файли; тексти змінюються у файлах на сервері. Щоб змінити мову, яку ви бачите, відкрийте",
     "page_own_link": "Ваш обліковий запис › Налаштування",
     "status_legend": "Мова-еталон: файли, з якими порівнюють інші. Потребує перевірки: файл позначено як ще не перевірений людиною.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Еталонна мова: {names}. Кожен інший файл звіряють з їхніми текстами, і їх не можна видалити.",
+    "status_review_legend": "Потребує перевірки: файл позначено як ще не перевірений людиною."
   },
   "resource_control": {
     "title": "Контроль ресурсів",
@@ -7758,7 +7758,7 @@
     "sum_guest_create": "створювати гостьові посилання",
     "sum_enrollment_manage": "керувати приєднанням",
     "sum_enrollment_approve": "затверджувати запити на приєднання",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "Що може {role}"
   },
   "notifications": {
     "title": "Сповіщення",
@@ -8764,7 +8764,7 @@
     "preview_title": "Попередній перегляд",
     "preview_note": "Приблизно так клієнт показує ці значення. Попередній перегляд змінюється, поки ви вводите дані.",
     "preview_button": "Зразок кнопки",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Тут ще нічого не збережено: клієнти показують значення нижче, доки ви не збережете власні."
   },
   "login_promo": {
     "slides": {

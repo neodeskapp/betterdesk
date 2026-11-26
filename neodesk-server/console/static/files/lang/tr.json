@@ -1376,8 +1376,8 @@
       "conn_no_effect_relay": "Etkisi yok: her oturum aktarma sunucusundan geçer.",
       "conn_no_effect_operator": "Zaten geçerli: Yalnızca cihazlara bağlanma izni olan hesaplar oturum başlatabilir bu kuralı da kapsar.",
       "conn_no_effect_signed_in": "Yalnızca oturum açmış uygulamalar oturum başlatabildiği sürece etkisi yok.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Otomatik bulundu",
+      "endpoint_auto_note": "Boş bir alan, istemcilere otomatik bulunan adresi verir. Bu adres İstemcilerin şu an aldıkları altında gösterilir."
     },
     "appearance": {
       "theme_note": "Bu konsolu kullanan herkes için varsayılan görünüm.",
@@ -1561,10 +1561,10 @@
       "map_role_n": "Grup {n} için rol",
       "map_add": "Grup ekle",
       "pick_role": "Bir rol seçin",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "Yeni bir oturum açma, hesabın diğer tarayıcısındaki oturumu kapatır.",
+      "sessions_any": "Bir hesap aynı anda istediği sayıda tarayıcı ve cihazda oturum açabilir.",
+      "sessions_up_to": "Bir hesap aynı anda en fazla {max} tarayıcı ve cihazda oturum açabilir.",
+      "single_session_env_source": "Ortam dosyasında ayarlandı ({name}={value}). Bu anahtarı kullanmak için orada kaldırın."
     },
     "backup_tab": {
       "create_title": "Yedek oluştur",
@@ -1778,7 +1778,7 @@
       "rdclient_bg_help": "Cihaz listesinin arkasında görünen. \"{inherit}\" konsolun arka planını kullanır.",
       "picture_kb": "Resim, {kb} KB",
       "website_help": "Tam bir adres, örneğin https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Panel önizlemesi"
     },
     "joining": {
       "mode_note": "Bu sunucuya hangi yeni cihazların ve nasıl katılabileceği.",
@@ -2802,13 +2802,13 @@
     "add_direct_device": "Cihaz ekle",
     "group_dialog_intro": "Bir grubun üyeleri, grubun konsol erişimini ve buna izin veren cihaz gruplarını paylaşır. Kişileri kullanıcı kartlarından ekleyin; grubu bir cihaz grubunun erişim ayarlarında izinli yapın.",
     "group_name_hint": "Kullanıcı listesinde, her üyenin kullanıcı kartında ve erişim ayarlarında gösterilir.",
-    "access_default_short": "Default",
+    "access_default_short": "Varsayılan",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "Bu kişi için ayarlandı",
+    "access_own_group": "Bu grup için ayarlandı",
+    "access_own_user_limit": "Bu kişi için ayarlandı. Rol sınırı: {limit}",
+    "access_limit_only": "Rol sınırı: {limit}",
+    "access_scope_link_joining": "Ayarlar › Katılım"
   },
   "folders": {
     "title": "Klasörler",
@@ -5536,7 +5536,7 @@
     "danger_zone": "Tehlikeli bölge",
     "name_hint": "Bu kuruluşun sayfasında, listelerde ve üyelerine gösterilir.",
     "slug_changed": "Kuruluşu kısa adıyla belirten oturum açmalar, kaydettikten sonra yeni adı gerektirir.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Bu kuruluş için ayarlandı."
   },
   "chat": {
     "e2e_enabled": "Uçtan uca şifrelenmiş",
@@ -6129,7 +6129,7 @@
     "sound_today": "Oturumlarda sesi bugünden kapatmak için Cihazlar altında Ses kapalı olan bir erişim kuralı kullanın veya bir kişinin konsol erişiminde Ses'i kapatın.",
     "open_access_rules": "Erişim kurallarını aç",
     "remove_group": "Bu grubun tüm kurallarını kaldır",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Henüz hiçbir NeoDesk uygulaması bunu uygulamıyor."
   },
   "attestation": {
     "title": "Cihaz Onayı",
@@ -7005,8 +7005,8 @@
     "page_only_shows": "Bu sayfa yalnızca dil dosyalarını gösterir; metinler sunucudaki dosyalarda değiştirilir. Gördüğünüz dili değiştirmek için şunu açın:",
     "page_own_link": "Hesabınız › Tercihler",
     "status_legend": "Referans dil: diğerlerinin karşılaştırıldığı dosyalar. İnceleme gerekiyor: dosya henüz bir kişi tarafından kontrol edilmemiş olarak işaretli.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Referans dil: {names}. Diğer her dosya bunların metinleriyle karşılaştırılır ve bunlar silinemez.",
+    "status_review_legend": "İnceleme gerekiyor: dosya henüz bir kişi tarafından kontrol edilmemiş olarak işaretli."
   },
   "resource_control": {
     "title": "Kaynak Kontrolü",
@@ -7758,7 +7758,7 @@
     "sum_guest_create": "misafir bağlantısı oluşturma",
     "sum_enrollment_manage": "katılımı yönetme",
     "sum_enrollment_approve": "katılma isteklerini onaylama",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "{role} rolünün yapabilecekleri"
   },
   "notifications": {
     "title": "Bildirimler",
@@ -8764,7 +8764,7 @@
     "preview_title": "Önizleme",
     "preview_note": "İstemci bu değerleri yaklaşık olarak böyle gösterir. Önizleme siz yazdıkça formu izler.",
     "preview_button": "Örnek düğme",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Burada henüz kayıtlı bir şey yok: siz kendi değerlerinizi kaydedene kadar istemciler aşağıdaki değerleri gösterir."
   },
   "login_promo": {
     "slides": {
