@@ -3350,6 +3350,21 @@
        "what": "{person} hat die Verbindung abgelehnt.",
        "why": "Die Person an {name} hat auf Ablehnen geklickt oder das Fenster mit der Anfrage geschlossen."
       },
+      "consent_needs_https": {
+       "todo": "Schick einen neuen Schnellhilfe-Link: Sein Einmalpasswort kommt zu dir und verbindet dich. Für Annehmen per Klick braucht die Konsole HTTPS.",
+       "what": "{name} kann dich nicht per Klick hereinlassen.",
+       "why": "Diese Konsole läuft nicht über HTTPS, deshalb nimmt die Schnellhilfe nur das Einmalpasswort."
+      },
+      "consent_needs_update": {
+       "todo": "Schick einen neuen Schnellhilfe-Link: Sein Einmalpasswort kommt zu dir und verbindet dich. Oder bitte {person}, NeoDesk zu aktualisieren.",
+       "what": "{name} kann dich nicht per Klick hereinlassen.",
+       "why": "NeoDesk auf {name} ist zu alt, um per Klick anzunehmen."
+      },
+      "consent_not_allowed": {
+       "todo": "Bitte sie, im Schnellhilfe-Fenster auf Erlauben zu klicken, und verbinde dich dann noch einmal.",
+       "what": "{person} hat die Schnellhilfe noch nicht erlaubt.",
+       "why": "{name} bietet das Hereinlassen per Klick erst an, wenn die Person im Schnellhilfe-Fenster auf Erlauben geklickt hat."
+      },
       "consent_scope": {
        "todo": "Bitte {person}, es im Schnellhilfe-Fenster zu erlauben.",
        "what": "{person} hat das nicht erlaubt.",
@@ -13250,6 +13265,21 @@
        "todo": "Bitte sie, es noch einmal zu versuchen, und verbinde dich dann neu.",
        "what": "{person} hat die Verbindung abgelehnt.",
        "why": "Die Person an {name} hat auf Ablehnen geklickt oder das Fenster mit der Anfrage geschlossen."
+      },
+      "consent_needs_https": {
+       "todo": "Schick einen neuen Schnellhilfe-Link: Sein Einmalpasswort kommt zu dir und verbindet dich. Für Annehmen per Klick braucht die Konsole HTTPS.",
+       "what": "{name} kann dich nicht per Klick hereinlassen.",
+       "why": "Diese Konsole läuft nicht über HTTPS, deshalb nimmt die Schnellhilfe nur das Einmalpasswort."
+      },
+      "consent_needs_update": {
+       "todo": "Schick einen neuen Schnellhilfe-Link: Sein Einmalpasswort kommt zu dir und verbindet dich. Oder bitte {person}, NeoDesk zu aktualisieren.",
+       "what": "{name} kann dich nicht per Klick hereinlassen.",
+       "why": "NeoDesk auf {name} ist zu alt, um per Klick anzunehmen."
+      },
+      "consent_not_allowed": {
+       "todo": "Bitte sie, im Schnellhilfe-Fenster auf Erlauben zu klicken, und verbinde dich dann noch einmal.",
+       "what": "{person} hat die Schnellhilfe noch nicht erlaubt.",
+       "why": "{name} bietet das Hereinlassen per Klick erst an, wenn die Person im Schnellhilfe-Fenster auf Erlauben geklickt hat."
       },
       "consent_scope": {
        "todo": "Bitte {person}, es im Schnellhilfe-Fenster zu erlauben.",

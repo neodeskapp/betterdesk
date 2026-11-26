@@ -78,6 +78,10 @@ const onboardApi = vi.hoisted(() => ({
 	takeDevicePassword: vi.fn(async () => ({
 		password: '',
 		session: null as null | { name: string; status: string }
+	})),
+	supportCaller: vi.fn(async (): Promise<null | { state: string; appHttps: boolean | null }> => ({
+		state: 'vouched',
+		appHttps: true
 	}))
 }));
 vi.mock('../../../src/lib/api/onboard.ts', () => onboardApi);
@@ -148,6 +152,8 @@ beforeEach(() => {
 	devicesApi.getDeviceReach.mockClear();
 	devicesApi.unblockDevice.mockClear();
 	onboardApi.takeDevicePassword.mockResolvedValue({ password: '', session: null });
+	onboardApi.supportCaller.mockReset();
+	onboardApi.supportCaller.mockResolvedValue({ state: 'vouched', appHttps: true });
 });
 afterEach(() => vi.useRealTimers());
 
@@ -202,6 +208,83 @@ describe('a quick support session never asks the admin for a password (L551)', (
 		c.emit('approval_wait');
 		expect(s.view).toBe('connecting');
 		expect(s.statusText).toBe('Waiting for someone at desktop-3mu2dcg to accept on their screen.');
+	});
+});
+
+describe('without the server vouching, the helper hears at once why there is no Allow (A273)', () => {
+	async function waiting(answer: { state: string; appHttps: boolean | null } | null) {
+		vi.useFakeTimers();
+		onboardApi.takeDevicePassword.mockResolvedValue({
+			password: '',
+			session: { name: 'Ana', status: 'allowed' }
+		});
+		onboardApi.supportCaller.mockResolvedValue(answer as never);
+		const t = setup();
+		t.c.emit('password_required');
+		await vi.waitFor(() => expect(t.c.askWithoutPassword).toHaveBeenCalled());
+		return t;
+	}
+
+	test('the person has not clicked Allow in the quick support window yet', async () => {
+		const { s, c } = await waiting({ state: 'not_allowed_yet', appHttps: true });
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(onboardApi.supportCaller).toHaveBeenCalledWith('828416401', 'relay-uuid-1');
+		expect(s.view).toBe('failed');
+		expect(s.statusText).toBe('Ana has not allowed quick support yet.');
+		expect(s.tryText).toBe('Ask them to click Allow in the quick support window, then connect again.');
+		expect(s.actions).toContain('reconnect');
+		expect(c.disconnect).toHaveBeenCalled();
+		shown(s);
+	});
+
+	test('the console is not on HTTPS: the computer asked and was refused', async () => {
+		const { s, c } = await waiting({ state: 'not_https', appHttps: false });
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(s.view).toBe('failed');
+		expect(s.statusText).toBe("desktop-3mu2dcg can't let you in by click.");
+		expect(s.whyText).toBe(
+			'This console is not on HTTPS, so quick support takes only the one-time password.'
+		);
+		expect(s.actions).not.toContain('reconnect');
+		expect(c.disconnect).toHaveBeenCalled();
+		shown(s);
+	});
+
+	test('the console is not on HTTPS: the computer did not even ask', async () => {
+		const { s } = await waiting({ state: 'not_asked', appHttps: false });
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(s.view).toBe('failed');
+		expect(s.whyText).toBe(
+			'This console is not on HTTPS, so quick support takes only the one-time password.'
+		);
+	});
+
+	test('a computer that never asks has a NeoDesk too old to accept by click', async () => {
+		const { s, c } = await waiting({ state: 'not_asked', appHttps: true });
+		await vi.advanceTimersByTimeAsync(5000);
+		// It may still ask: the viewer waits
+		expect(s.view).toBe('connecting');
+		expect(c.disconnect).not.toHaveBeenCalled();
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(onboardApi.supportCaller).toHaveBeenCalledTimes(3);
+		expect(s.view).toBe('failed');
+		expect(s.whyText).toBe('NeoDesk on desktop-3mu2dcg is too old to accept by click.');
+		expect(s.tryText).toMatch(/Or ask Ana to update NeoDesk\.$/);
+		expect(c.disconnect).toHaveBeenCalled();
+		shown(s);
+	});
+
+	test('vouched, or a console that cannot say: the viewer keeps waiting for the person', async () => {
+		for (const answer of [{ state: 'vouched', appHttps: true }, null]) {
+			onboardApi.supportCaller.mockClear();
+			const { s, c } = await waiting(answer);
+			await vi.advanceTimersByTimeAsync(20000);
+			expect(onboardApi.supportCaller).toHaveBeenCalledTimes(1);
+			expect(s.view).toBe('connecting');
+			expect(s.statusText).toBe('Waiting for Ana to accept on their screen.');
+			expect(c.disconnect).not.toHaveBeenCalled();
+			vi.useRealTimers();
+		}
 	});
 });
 
