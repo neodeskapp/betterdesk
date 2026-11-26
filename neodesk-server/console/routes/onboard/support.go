@@ -140,6 +140,18 @@ func (h *handlers) getSession(w http.ResponseWriter, r *http.Request) {
 type passwordAnswer struct {
 	Success  bool   `json:"success"`
 	Password string `json:"password"`
+	// Session is the account's quick support session on the device, for
+	// the viewer: the person accepts on their screen, nobody types a
+	// password
+	Session *deviceSession `json:"session,omitempty"`
+}
+
+// deviceSession is the quick support session on a device as the viewer
+// sees it: the person's name (or the computer's when the link named
+// nobody) and the state.
+type deviceSession struct {
+	Name   string `json:"name"`
+	Status string `json:"status"`
 }
 
 // takePassword answers POST /api/support/sessions/{id}/password: the
@@ -175,7 +187,14 @@ func (h *handlers) devicePassword(w http.ResponseWriter, r *http.Request) {
 	deviceID := strings.TrimSpace(r.PathValue("id"))
 	password, err := h.sessions.TakePasswordForDevice(r.Context(), deviceID, kit.UserID(r))
 	if errors.Is(err, onboard.ErrNoPassword) {
-		kit.JSON(w, r, http.StatusOK, passwordAnswer{Success: true})
+		out := passwordAnswer{Success: true}
+		if sess, ok := h.sessions.OpenOnDevice(r.Context(), deviceID, kit.UserID(r)); ok {
+			out.Session = &deviceSession{Name: sess.Name, Status: sess.Status}
+			if out.Session.Name == "" {
+				out.Session.Name = sess.Hostname
+			}
+		}
+		kit.JSON(w, r, http.StatusOK, out)
 		return
 	}
 	if err != nil {
