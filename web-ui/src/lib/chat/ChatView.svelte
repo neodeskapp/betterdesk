@@ -43,7 +43,8 @@
 				: canWrite('chat.support')
 	);
 
-	let detail = $state<api.ConversationDetail | null>(null);
+	/** The open conversation's facts: the ones loaded last show at once, fresh ones follow */
+	const detail = $derived<api.ConversationDetail | null>((conv && chat.details[conv]) || null);
 	let lastRow: HTMLElement | null = null;
 	/** A found message to show when its conversation opens */
 	let focus = $state<{ conv: string; message: string } | null>(null);
@@ -60,37 +61,25 @@
 	// The open conversation's facts, and again when the server says it changed
 	$effect(() => {
 		const c = conv;
-		detail = null;
 		if (!c) return;
-		let gone = false;
-		api.loadConversation(c).then(
-			(d) => {
-				if (!gone) detail = d;
-			},
-			() => {
-				if (!gone) detail = null;
-			}
-		);
-		const off = chat.onConversation((changed) => {
+		void reload(c, false);
+		return chat.onConversation((changed) => {
 			if (changed.id === c) void reload(c);
 		});
-		return () => {
-			gone = true;
-			off();
-		};
 	});
 
-	async function reload(c: string) {
+	/** fresh: after a change, not the answer of a request that left before it */
+	async function reload(c: string, fresh = true) {
 		try {
-			const d = await api.loadConversation(c);
-			if (conv === c) detail = d;
+			await chat.loadDetail(c, fresh);
 		} catch {
 			/* keeps what it has */
 		}
 	}
 
 	function changed(c: Conversation) {
-		if (detail && detail.conversation.id === c.id) detail = { ...detail, conversation: c };
+		const known = chat.details[c.id];
+		if (known) chat.setDetail(c.id, { ...known, conversation: c });
 		chat.listVersion++;
 		void reload(c.id);
 	}

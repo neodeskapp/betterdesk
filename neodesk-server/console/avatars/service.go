@@ -3,10 +3,12 @@
 // A picture is stored as checked bytes in the table user_avatars and
 // served by GET /api/users/{id}/avatar. It comes from the identity
 // provider's "picture" claim at a single sign-on (source "oidc", refreshed
-// at every sign-in and removed when the claim is gone) or from the avatar
-// address a user saves in their profile (source "profile"). The console
-// fetches the picture once and serves its own copy, so a browser never
-// loads it from somewhere else.
+// at every sign-in and removed when the claim is gone), from the avatar
+// address a user saves in their profile (source "profile") or from a file
+// the user uploads in Your account (source "upload"). An uploaded picture
+// stays until its owner removes or replaces it: single sign-on does not
+// replace it. The console fetches a picture once and serves its own copy,
+// so a browser never loads it from somewhere else.
 //
 // A picture is checked by its type only: the first bytes must be those of
 // a PNG, JPEG, WebP or GIF file, the declared type must agree, and the
@@ -30,6 +32,13 @@ import (
 // write through this service drops it; the time covers writes by another
 // process.
 const directoryTTL = 30 * time.Second
+
+// Where a stored picture came from: Avatar.Source.
+const (
+	SourceOIDC    = "oidc"
+	SourceProfile = "profile"
+	SourceUpload  = "upload"
+)
 
 // syncTimeout is the time a sync started with StartOIDCSync may take,
 // the fetch and the database together.
@@ -155,6 +164,8 @@ type Claims interface {
 //     single sign-on is removed, "cleared"
 //   - an address or a data URL: fetched or decoded and stored, "stored";
 //     when that fails the old picture stays and the result is "failed"
+//   - either of the last two while the user has a picture they uploaded:
+//     nothing changes, "skipped"
 //
 // A failure is logged and never returned as an error: a picture must not
 // stop a sign-in.
@@ -164,14 +175,19 @@ func (s *Service) SyncOIDCPicture(ctx context.Context, userID int64, exchange Cl
 	}
 	picture, _ := exchange.Get("picture").(string)
 	picture = jsTrim(picture)
-	var err error
-	if picture == "" {
-		if _, err = deleteUserAvatar(ctx, s.db, userID, "oidc"); err == nil {
-			s.forget()
-			return Result{Action: "cleared"}
+	current, err := getUserAvatar(ctx, s.db, userID)
+	if err == nil && current != nil && current.Source == SourceUpload {
+		return Result{Action: "skipped"}
+	}
+	if err == nil {
+		if picture == "" {
+			if _, err = deleteUserAvatar(ctx, s.db, userID, SourceOIDC); err == nil {
+				s.forget()
+				return Result{Action: "cleared"}
+			}
+		} else if err = s.storePicture(ctx, userID, picture, SourceOIDC); err == nil {
+			return Result{Action: "stored"}
 		}
-	} else if err = s.storePicture(ctx, userID, picture, "oidc"); err == nil {
-		return Result{Action: "stored"}
 	}
 	result := failed(err)
 	where := "inline picture"
@@ -265,6 +281,47 @@ func (s *Service) SyncProfileAvatarURL(ctx context.Context, userID int64, avatar
 		}
 	}
 	return result
+}
+
+// SetUploadedPicture stores a picture a user uploaded, in place of any
+// picture they had. The bytes are checked like every other picture: PNG,
+// JPEG, WebP or GIF by their first bytes, the declared type (when there
+// is one) the same, at most MaxAvatarBytes. A refusal is an *Error.
+func (s *Service) SetUploadedPicture(ctx context.Context, userID int64, declared string, data []byte) (Picture, error) {
+	if userID <= 0 {
+		return Picture{}, refuse("invalid_user", "No user")
+	}
+	if len(data) == 0 {
+		return Picture{}, refuse("empty", "Empty picture")
+	}
+	if len(data) > MaxAvatarBytes {
+		return Picture{}, refuse("too_large", "Picture is too large")
+	}
+	sniffed := SniffImageType(data)
+	if sniffed == "" {
+		return Picture{}, refuse("not_an_image", "The data is not a PNG, JPEG, WebP or GIF image")
+	}
+	if declared = normalizeMime(declared); declared != "" && declared != "application/octet-stream" && declared != sniffed {
+		return Picture{}, refuse("type_mismatch", "Declared "+declared+" but the data is "+sniffed)
+	}
+	p := Picture{Image: Image{MimeType: sniffed, Data: data}, Version: ImageVersion(data)}
+	if err := setUserAvatar(ctx, s.db, userID, p, SourceUpload); err != nil {
+		return Picture{}, err
+	}
+	s.forget()
+	return p, nil
+}
+
+// RemovePicture removes a user's picture, wherever it came from, and
+// reports whether there was one. A picture from single sign-on comes back
+// at the next sign-in when the provider still sends one.
+func (s *Service) RemovePicture(ctx context.Context, userID int64) (bool, error) {
+	n, err := deleteUserAvatar(ctx, s.db, userID, "")
+	if err != nil {
+		return false, err
+	}
+	s.forget()
+	return n > 0, nil
 }
 
 // GetAvatar returns the stored picture of a user, or nil when there is

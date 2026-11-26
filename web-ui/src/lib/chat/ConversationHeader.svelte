@@ -52,6 +52,15 @@
 	const mine = $derived(!!c && !!me && c.assignee_id === me.id);
 	const mayClose = $derived(!!c && (chat.may.assign || mine));
 
+	// "Loading" only when the facts take a while, not on every quick switch
+	let slow = $state(false);
+	$effect(() => {
+		if (c) return;
+		slow = false;
+		const timer = setTimeout(() => (slow = true), 400);
+		return () => clearTimeout(timer);
+	});
+
 	function status(p: Person): Person['status'] {
 		return (chat.presence[p.id] as Person['status']) || p.status;
 	}
@@ -117,7 +126,7 @@
 		<IconButton class="conv-back" icon="arrow_back" label={t('chat.back_to_list')} onclick={onback} />
 	{/if}
 	{#if !c}
-		<div class="conv-who"><span class="conv-name">{t('common.loading')}</span></div>
+		<div class="conv-who"><span class="conv-name">{slow ? t('common.loading') : ' '}</span></div>
 	{:else if c.kind === 'support'}
 		<span class="conv-icon" aria-hidden="true"><Icon name="computer" /></span>
 		<div class="conv-who">

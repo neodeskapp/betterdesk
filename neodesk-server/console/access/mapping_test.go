@@ -256,6 +256,8 @@ func TestOwnProfileIsForEveryAccount(t *testing.T) {
 		{"GET", "/api/users/me/profile", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
 		{"PUT", "/api/users/me/profile", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
 		{"GET", "/api/users/avatars", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"PUT", "/api/users/me/avatar", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
+		{"DELETE", "/api/users/me/avatar", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
 		{"GET", "/api/panel/access/effective", "", [5]string{"ok", "ok", "ok", "ok", "ok"}},
 		{"GET", "/api/users", "user.view", [5]string{"guard", "ok", "guard", "ok", "ok"}},
 	})

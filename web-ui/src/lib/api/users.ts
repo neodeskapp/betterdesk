@@ -267,3 +267,31 @@ export function saveUserGroup(guid: string | null, body: { name: string; note: s
 export function deleteUserGroup(guid: string) {
 	return api(Ok, `/api/panel/user-groups/${encodeURIComponent(guid)}`, { method: 'DELETE' });
 }
+
+/* ── Your own profile picture ── */
+
+const OwnPicture = wrapped(
+	v.looseObject({
+		avatar_version: v.pipe(
+			v.optional(v.nullable(v.union([v.string(), v.number()])), null),
+			v.transform((x) => (x === null || x === undefined || x === '' ? null : String(x)))
+		)
+	})
+);
+
+/** The largest picture the server takes: 512 KB */
+export const MAX_AVATAR_BYTES = 512 * 1024;
+
+/**
+ * Upload a picture (PNG, JPEG, WebP or GIF, at most 512 KB) as the signed-in
+ * person's profile picture. It replaces a picture from single sign-on and
+ * stays at the next sign-in. Returns the new picture version.
+ */
+export async function uploadMyAvatar(file: Blob): Promise<string | null> {
+	return (await api(OwnPicture, '/api/users/me/avatar', { method: 'PUT', body: file })).avatar_version;
+}
+
+/** Remove the signed-in person's picture; one from single sign-on returns at the next sign-in */
+export async function removeMyAvatar(): Promise<void> {
+	await api(OwnPicture, '/api/users/me/avatar', { method: 'DELETE' });
+}

@@ -179,6 +179,30 @@
 		{ value: 'closed' as const, label: t('chat.filter_closed') }
 	]);
 
+	/**
+	 * A row the pointer rests on, or that has focus or is pressed, loads its
+	 * conversation ahead of the click, so it opens without a "Loading" line
+	 */
+	let resting: ReturnType<typeof setTimeout> | null = null;
+	function ahead(conv: string) {
+		const leave = () => {
+			if (resting) clearTimeout(resting);
+			resting = null;
+		};
+		return {
+			onpointerenter: () => {
+				leave();
+				resting = setTimeout(() => chat.preload(conv), 120);
+			},
+			onpointerleave: leave,
+			onpointerdown: () => chat.preload(conv),
+			onfocus: () => chat.preload(conv)
+		};
+	}
+	$effect(() => () => {
+		if (resting) clearTimeout(resting);
+	});
+
 	function waiting(ms: number | undefined): boolean {
 		return !!ms && Date.now() - ms > 60_000;
 	}
@@ -195,6 +219,7 @@
 						type="button"
 						class="row is-found"
 						onclick={(e) => onopen(m.conversation_id, e.currentTarget, m.id)}
+						{...ahead(m.conversation_id)}
 					>
 						<span class="row-avatar"
 							><span class="row-icon" aria-hidden="true"
@@ -287,6 +312,7 @@
 								class={['row', active === c.id && 'is-current', unread > 0 && 'is-unread']}
 								aria-current={active === c.id ? 'true' : undefined}
 								onclick={(e) => onopen(c.id, e.currentTarget)}
+								{...ahead(c.id)}
 							>
 								<span class="row-icon" aria-hidden="true">
 									<Icon name="computer" />
@@ -347,6 +373,7 @@
 								class={['row', active === c.id && 'is-current', unread > 0 && 'is-unread']}
 								aria-current={active === c.id ? 'true' : undefined}
 								onclick={(e) => onopen(c.id, e.currentTarget)}
+								{...ahead(c.id)}
 							>
 								<span class="row-avatar">
 									{#if person}
@@ -428,6 +455,7 @@
 								class={['row', active === c.id && 'is-current']}
 								aria-current={active === c.id ? 'true' : undefined}
 								onclick={(e) => onopen(c.id, e.currentTarget)}
+								{...ahead(c.id)}
 							>
 								<span class="row-avatar"
 									><span class="row-icon" aria-hidden="true"><Icon name="history" /></span></span

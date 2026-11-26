@@ -442,3 +442,37 @@ func TestVersionFields(t *testing.T) {
 		}
 	}
 }
+
+// A picture the user uploaded stays when they sign in with single sign-on
+// again, with or without a picture claim; once they remove it, the claim
+// fills the place again.
+func TestOIDCSyncKeepsAnUploadedPicture(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		svc, _ := newTestService(t, db, FetchOptions{})
+		ctx := context.Background()
+		user := addUser(t, db, "alice")
+		uploaded := append([]byte("\xff\xd8\xff"), make([]byte, 40)...)
+		if _, err := svc.SetUploadedPicture(ctx, user, "image/jpeg", uploaded); err != nil {
+			t.Fatal(err)
+		}
+		for _, exchange := range []claims{{"picture": pngDataURL}, {"picture": ""}} {
+			if got := svc.SyncOIDCPicture(ctx, user, exchange); got.Action != "skipped" {
+				t.Errorf("sync with %v: %+v, want skipped", exchange, got)
+			}
+			a, err := svc.GetAvatar(ctx, user)
+			if err != nil || a == nil || a.Source != SourceUpload || a.Version != ImageVersion(uploaded) {
+				t.Fatalf("after the sync with %v: %+v, %v", exchange, a, err)
+			}
+		}
+		if removed, err := svc.RemovePicture(ctx, user); err != nil || !removed {
+			t.Fatalf("remove: %v, %v", removed, err)
+		}
+		if got := svc.SyncOIDCPicture(ctx, user, claims{"picture": pngDataURL}); got.Action != "stored" {
+			t.Fatalf("sync after the removal: %+v", got)
+		}
+		a, err := svc.GetAvatar(ctx, user)
+		if err != nil || a == nil || a.Source != SourceOIDC {
+			t.Fatalf("after the removal and a sync: %+v, %v", a, err)
+		}
+	})
+}

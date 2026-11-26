@@ -26,6 +26,9 @@
 	import MessageBubble from './MessageBubble.svelte';
 	import type { Message } from './types.ts';
 
+	/** How long a conversation may take to load before it says so */
+	const SLOW_MS = 400;
+
 	interface Props {
 		conv: string;
 		/** The name of who reads it: a computer or people */
@@ -79,12 +82,20 @@
 			replyTo = null;
 			editing = null;
 			atBottom = true;
-			if (!chat.thread(c).loaded) chat.history(c);
+			chat.ensureHistory(c);
 			chat.setVisible(c, true);
 		});
 		if (!untrack(() => focus)) void scrollToEnd();
 		if (autofocus) void tick().then(() => field?.focus());
 		return () => chat.setVisible(c, false);
+	});
+
+	// "Loading" only when it takes a while: a quick switch shows no line that comes and goes
+	let slow = $state(false);
+	$effect(() => {
+		if (thread.loaded) return;
+		const timer = setTimeout(() => (slow = true), SLOW_MS);
+		return () => clearTimeout(timer);
 	});
 
 	// A found message: older pages until it is loaded (40 at most), then in view
@@ -243,7 +254,9 @@
 			{#if thread.more}
 				<div class="thread-more"><Button size="sm" onclick={earlier}>{t('chat.earlier')}</Button></div>
 			{/if}
-			{#if !thread.loaded && chat.status !== 'open'}
+			{#if !thread.loaded && !slow}
+				<!-- nothing yet -->
+			{:else if !thread.loaded && chat.status !== 'open'}
 				<p class="thread-state">{t('chat.connecting')}</p>
 			{:else if !thread.loaded}
 				<p class="thread-state">{t('common.loading')}</p>
