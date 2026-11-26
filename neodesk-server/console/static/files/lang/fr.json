@@ -7141,7 +7141,11 @@
     "areas_title": "Textes manquants par zone",
     "areas_note": "La première partie de chaque clé indique où le texte apparaît. Choisissez une zone pour n'afficher que ses textes manquants.",
     "area_count": "{n} manquants",
-    "area_show": "Afficher les textes manquants dans {area}"
+    "area_show": "Afficher les textes manquants dans {area}",
+    "page_purpose": "How complete each translation of the console is, and every text next to the English one.",
+    "page_only_shows": "This page only shows the language files; texts are changed in the files on the server. To change the language you see, open",
+    "page_own_link": "Your account › Preferences",
+    "status_legend": "Reference language: the files the others are compared with. Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Contrôle des ressources",

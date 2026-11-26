@@ -6868,7 +6868,11 @@
     "areas_title": "Hiányzó szövegek területenként",
     "areas_note": "Minden kulcs első része megmutatja, hol jelenik meg a szöveg. Válasszon egy területet, hogy csak annak hiányzó szövegeit lássa.",
     "area_count": "{n} hiányzik",
-    "area_show": "Hiányzó szövegek megjelenítése itt: {area}"
+    "area_show": "Hiányzó szövegek megjelenítése itt: {area}",
+    "page_purpose": "How complete each translation of the console is, and every text next to the English one.",
+    "page_only_shows": "This page only shows the language files; texts are changed in the files on the server. To change the language you see, open",
+    "page_own_link": "Your account › Preferences",
+    "status_legend": "Reference language: the files the others are compared with. Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Erőforrás-szabályozás",

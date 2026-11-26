@@ -7211,7 +7211,11 @@
         "areas_title": "Missing texts by area",
         "areas_note": "The first part of each key says where the text appears. Select an area to list only its missing texts.",
         "area_count": "{n} missing",
-        "area_show": "Show missing texts in {area}"
+        "area_show": "Show missing texts in {area}",
+        "page_purpose": "How complete each translation of the console is, and every text next to the English one.",
+        "page_only_shows": "This page only shows the language files; texts are changed in the files on the server. To change the language you see, open",
+        "page_own_link": "Your account › Preferences",
+        "status_legend": "Reference language: the files the others are compared with. Needs review: the file is marked as not yet checked by a person."
     },
     "resource_control": {
         "title": "Resource Control",

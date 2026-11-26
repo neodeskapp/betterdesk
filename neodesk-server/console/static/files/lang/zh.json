@@ -7119,7 +7119,11 @@
     "areas_title": "按区域列出缺少的文本",
     "areas_note": "每个键的第一部分表示文本出现的位置。选择一个区域，只列出其中缺少的文本。",
     "area_count": "缺少 {n} 条",
-    "area_show": "显示 {area} 中缺少的文本"
+    "area_show": "显示 {area} 中缺少的文本",
+    "page_purpose": "How complete each translation of the console is, and every text next to the English one.",
+    "page_only_shows": "This page only shows the language files; texts are changed in the files on the server. To change the language you see, open",
+    "page_own_link": "Your account › Preferences",
+    "status_legend": "Reference language: the files the others are compared with. Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "资源控制",

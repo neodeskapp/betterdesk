@@ -6862,7 +6862,11 @@
     "areas_title": "Chybějící texty podle oblasti",
     "areas_note": "První část každého klíče říká, kde se text zobrazuje. Vyberte oblast a zobrazí se jen její chybějící texty.",
     "area_count": "{n} chybí",
-    "area_show": "Zobrazit chybějící texty v {area}"
+    "area_show": "Zobrazit chybějící texty v {area}",
+    "page_purpose": "How complete each translation of the console is, and every text next to the English one.",
+    "page_only_shows": "This page only shows the language files; texts are changed in the files on the server. To change the language you see, open",
+    "page_own_link": "Your account › Preferences",
+    "status_legend": "Reference language: the files the others are compared with. Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Řízení prostředků",
