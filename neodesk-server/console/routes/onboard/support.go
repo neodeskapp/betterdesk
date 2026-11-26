@@ -25,6 +25,7 @@ type supportSession struct {
 	ConsentAt     string `json:"consent_at"`
 	EndedAt       string `json:"ended_at"`
 	EndedBy       string `json:"ended_by"`
+	EndReason     string `json:"end_reason,omitempty"`
 	DeviceID      string `json:"device_id"`
 	Hostname      string `json:"hostname"`
 	Platform      string `json:"platform"`
@@ -35,7 +36,7 @@ func (h *handlers) sessionView(s onboard.Session) *supportSession {
 	out := &supportSession{
 		ID: s.ID, Status: s.Status, Name: s.Name, Email: s.Email, CreatedBy: s.CreatedBy,
 		CreatedAt: s.CreatedAt, ExpiresAt: s.ExpiresAt, RedeemedAt: s.RedeemedAt, ConsentAt: s.ConsentAt,
-		EndedAt: s.EndedAt, EndedBy: s.EndedBy, DeviceID: s.DeviceID, Hostname: s.Hostname, Platform: s.Platform,
+		EndedAt: s.EndedAt, EndedBy: s.EndedBy, EndReason: s.EndReason, DeviceID: s.DeviceID, Hostname: s.Hostname, Platform: s.Platform,
 		PasswordReady: h.sessions.HasPassword(s.ID),
 	}
 	if s.FolderID > 0 {

@@ -14,6 +14,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/security"
 )
 
 // onboardStores runs a test on a new SQLite database and, when
@@ -405,4 +406,41 @@ func TestTemporaryDeviceIsTakenOverOrKeptForGood(t *testing.T) {
 	if status, out := onboardCall(t, srv, http.MethodDelete, "/api/onboard/devices/600000001", nil); status != http.StatusOK || out.Removed {
 		t.Fatalf("the joined device was removed: %d %+v", status, out)
 	}
+}
+
+// A revoked or blocked ID is refused at the join with a reason the console
+// and the client show, and no device is made for it (L550): the signal
+// server would refuse its registration for ever.
+func TestBlockedIDIsRefusedAtTheJoinWithItsReason(t *testing.T) {
+	onboardStores(t, func(t *testing.T, srv *Server) {
+		bl := security.NewBlocklist()
+		srv.SetBlocklist(bl)
+		if err := bl.BlockID("500000011", "revoked via panel"); err != nil {
+			t.Fatal(err)
+		}
+		if err := bl.BlockID("500000012", "abuse"); err != nil {
+			t.Fatal(err)
+		}
+		for id, want := range map[string]string{"500000011": "device_revoked", "500000012": "device_blocked"} {
+			status, raw := asConsole(t, srv, http.MethodPost, "/api/onboard/devices",
+				`{"device_id":"`+id+`","hostname":"laptop","temporary":true}`)
+			var out struct {
+				Error  string `json:"error"`
+				Reason string `json:"reason"`
+			}
+			_ = json.Unmarshal([]byte(raw), &out)
+			if status != http.StatusForbidden || out.Error != "device_refused" || out.Reason != want {
+				t.Fatalf("%s: %d %s", id, status, raw)
+			}
+			if p, _ := srv.db.GetPeer(id); p != nil {
+				t.Fatalf("%s: a device was made for a blocked ID: %+v", id, p)
+			}
+		}
+		code := makeOnboardCode(t, srv, map[string]any{"kind": "join"}).Code
+		status, raw := asConsole(t, srv, http.MethodPost, "/api/onboard/codes/redeem",
+			`{"code":"`+code+`","kind":"join","device":{"device_id":"500000011"}}`)
+		if status != http.StatusForbidden || !strings.Contains(raw, `"reason":"device_revoked"`) {
+			t.Fatalf("join: %d %s", status, raw)
+		}
+	})
 }

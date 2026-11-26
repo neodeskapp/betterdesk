@@ -231,6 +231,21 @@ func (b *Blocklist) IsIDBlocked(id string) bool {
 	return ok
 }
 
+// IDEntry returns a copy of the entry that blocks a device ID.
+func (b *Blocklist) IDEntry(id string) (BlockEntry, bool) {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+	e, ok := b.ids[id]
+	if !ok {
+		return BlockEntry{}, false
+	}
+	return *e, true
+}
+
+// RevokedReason is the start of the reason of an entry a device revoke
+// made ("revoked via panel", "revoked via cascade").
+const RevokedReason = "revoked"
+
 // BlockIP adds an IP to the blocklist at runtime and to the store. When
 // the store fails, the IP is not blocked.
 func (b *Blocklist) BlockIP(ip, reason string) error {

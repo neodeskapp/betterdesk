@@ -23,6 +23,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 	"github.com/neodeskapp/neodesk/neodesk-server/db"
 	"github.com/neodeskapp/neodesk/neodesk-server/peer"
+	"github.com/neodeskapp/neodesk/neodesk-server/security"
 )
 
 var roleIDs = map[string]int64{
@@ -38,6 +39,8 @@ type world struct {
 	gdb   db.Database
 	deps  *kit.Deps
 	front *httptest.Server
+	// blocklist is the API server's
+	blocklist *security.Blocklist
 }
 
 func newWorld(t *testing.T, sdb *store.DB) *world {
@@ -55,6 +58,8 @@ func newWorld(t *testing.T, sdb *store.DB) *world {
 	cfg := config.DefaultConfig()
 	cfg.EnrollmentMode = config.EnrollmentModeManaged
 	apiSrv := api.New(cfg, gdb, peer.NewMap(), nil, "test")
+	bl := security.NewBlocklist()
+	apiSrv.SetBlocklist(bl)
 
 	packages := t.TempDir()
 	for name, data := range map[string]string{
@@ -95,7 +100,7 @@ func newWorld(t *testing.T, sdb *store.DB) *world {
 	s.Router().Get("/__test/token", func(rw http.ResponseWriter, r *http.Request) {
 		kit.JSON(rw, r, http.StatusOK, map[string]string{"token": kit.CSRFToken(r)})
 	})
-	w := &world{t: t, db: sdb, gdb: gdb, deps: d, front: httptest.NewServer(s)}
+	w := &world{t: t, db: sdb, gdb: gdb, deps: d, front: httptest.NewServer(s), blocklist: bl}
 	t.Cleanup(w.front.Close)
 	return w
 }
@@ -426,6 +431,34 @@ func TestQuickSupportFlow(t *testing.T) {
 			t.Fatalf("after the end: %v", s)
 		}
 	})
+}
+
+// TestQuickSupportOfARevokedID: the app's device is refused at once with
+// the reason, the session ends with it, and the supporter sees why and on
+// which computer (L550).
+func TestQuickSupportOfARevokedID(t *testing.T) {
+	w := newWorld(t, storetest.Migrated(t))
+	if err := w.blocklist.BlockID("828416401", "revoked via panel"); err != nil {
+		t.Fatal(err)
+	}
+	operator := w.browser("operator")
+	made := operator.do(http.MethodPost, "/api/support/sessions", `{"name":"Ana"}`).json(t)
+	code, id := str(made, "code"), str(made, "session", "id")
+	app := w.app()
+	token := str(app.do(http.MethodPost, "/api/support/redeem", `{"code":"`+code+`"}`).json(t), "session_token")
+	res := app.do(http.MethodPost, "/api/support/session/device", `{"device_id":"828416401","hostname":"desktop-3mu2dcg"}`, "Authorization", "Bearer "+token)
+	if res.status != http.StatusForbidden || str(res.json(t), "error") != "device_refused" || str(res.json(t), "reason") != "device_revoked" {
+		t.Fatalf("device: %d %s", res.status, res.body)
+	}
+	s := operator.do(http.MethodGet, "/api/support/sessions/"+id, "").json(t)
+	if str(s, "session", "status") != "ended" || str(s, "session", "ended_by") != "refused" ||
+		str(s, "session", "end_reason") != "device_revoked" || str(s, "session", "device_id") != "828416401" ||
+		str(s, "session", "hostname") != "desktop-3mu2dcg" {
+		t.Fatalf("the supporter sees %v", s)
+	}
+	if p, _ := w.gdb.GetPeer("828416401"); p != nil {
+		t.Fatalf("a device was made for the revoked ID: %+v", p)
+	}
 }
 
 // TestDevicePasswordWithoutAHandedPasswordIsEmpty: the browser viewer asks

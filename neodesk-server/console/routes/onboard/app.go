@@ -157,7 +157,12 @@ func (h *handlers) appDevice(w http.ResponseWriter, r *http.Request) {
 	var invalid *onboard.InvalidDeviceError
 	switch {
 	case errors.As(err, &refused):
-		appFail(w, r, http.StatusForbidden, "device_refused", refused.Reason)
+		// The session ends here: the supporter sees why and on which computer
+		if _, err := h.sessions.Refuse(r.Context(), sess.ID, dev, refused.Code); err != nil {
+			h.log.Warn("End refused quick support session:", err)
+		}
+		h.auditAs(r, 0, "quick_support_refused", "Quick support session "+sess.ID+" of "+sess.CreatedBy+" refused device "+dev.DeviceID+": "+refused.Reason)
+		kit.JSON(w, r, http.StatusForbidden, refusal{Error: "device_refused", Message: refused.Reason, Reason: refused.Code})
 		return
 	case errors.As(err, &invalid):
 		appFail(w, r, http.StatusBadRequest, "invalid_device", invalid.Reason)
