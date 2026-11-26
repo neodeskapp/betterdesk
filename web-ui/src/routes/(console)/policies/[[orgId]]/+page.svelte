@@ -27,7 +27,7 @@
   server.config; without them the lists take typed entries.
 -->
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -520,6 +520,19 @@
 		return { text: tf('policies.no_rule', 'No rule: each device keeps its own setting.') };
 	}
 
+	/**
+	 * The button that was pressed is gone once a rule is set or removed: the
+	 * focus goes to what took its place, the control or "Set for this
+	 * organization"
+	 */
+	async function focusIn(field: string) {
+		await tick();
+		document
+			.getElementById(`${rowId(field)}-value`)
+			?.querySelector<HTMLElement>('input, select, button')
+			?.focus();
+	}
+
 	const hasRule = (field: string) => draft.values[field] !== null && draft.values[field] !== undefined;
 
 	function sourceOf(field: string): ValueSource | null {
@@ -594,7 +607,8 @@
 
 {#snippet scope()}
 	{#if orgsState === 'ready' && orgs.length}
-		<div class="policy-scope">
+		<!-- The organization is the scope, not a setting: the settings list has no row for it -->
+		<div class="policy-scope" data-search-skip>
 			<OrgPicker
 				id="policy-org"
 				label={t('policies.select_org')}
@@ -731,8 +745,14 @@
 				overrideLabel={tf('policies.set_for_org', 'Set for this organization')}
 				inheritLabel={tf('policies.remove_rule', 'Remove the rule')}
 				disabled={!canEdit}
-				onoverride={() => draft.set(field, startValue(field, resolved))}
-				oninherit={() => draft.set(field, null)}
+				onoverride={() => {
+					draft.set(field, startValue(field, resolved));
+					void focusIn(field);
+				}}
+				oninherit={() => {
+					draft.set(field, null);
+					void focusIn(field);
+				}}
 			>
 				{@render editor(field, f)}
 			</InheritedValue>
@@ -765,10 +785,10 @@
 
 	{#if orgsState === 'ready' && orgs.length && !org}
 		<section class="org-pick" aria-labelledby="policy-org-pick-title">
-			<h2 id="policy-org-pick-title" class="sr-only">{t('policies.select_org')}</h2>
+			<h2 id="policy-org-pick-title" class="sr-only">{t('policies.select_org_placeholder')}</h2>
 			{#if !notFound}<p class="state-line">{t('policies.pick_org_state')}</p>{/if}
 			<div class="org-list" data-sveltekit-replacestate data-sveltekit-noscroll>
-				<RowList label={t('policies.select_org')}>
+				<RowList label={t('policies.select_org_placeholder')}>
 					{#each orgs as o (o.id)}
 						<ListRow
 							title={o.name || o.id}
@@ -818,9 +838,7 @@
 							size="sm"
 							variant="ghost"
 							disabled={!resolved?.[g]?.set}
-							aria-label={tf('policies.remove_group_named', 'Remove all rules of {group}', {
-								group: t(SECTION_TITLE[g])
-							})}
+							aria-label={`${tf('policies.remove_group', 'Remove all rules of this group')}: ${t(SECTION_TITLE[g])}`}
 							onclick={() => void removeGroup(g)}
 							>{tf('policies.remove_group', 'Remove all rules of this group')}</Button
 						>
