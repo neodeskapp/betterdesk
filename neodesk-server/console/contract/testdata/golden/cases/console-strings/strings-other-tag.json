@@ -9215,6 +9215,7 @@
       "email_hint": "Für Hilfeanfragen-Benachrichtigungen, wenn der Benutzer Geräteordnern oder -gruppen zugewiesen ist.",
       "email_hint_confirm": "Eine neue Adresse bekommt einen Bestätigungslink und ändert sich erst, wenn er benutzt wird. Die alte Adresse bekommt einen Hinweis.",
       "email_hint_no_mail": "Die Konsole kann keine E-Mails senden, daher gilt eine neue Adresse sofort, ohne Bestätigung.",
+      "email_not_changed_rest_saved": "Deine anderen Änderungen sind gespeichert, nur die E-Mail-Adresse wurde nicht geändert. {reason}",
       "email_pending": "Wartet auf Bestätigung: {email}",
       "email_pending_expired": "Der Bestätigungslink ist abgelaufen. Sende ihn erneut oder brich die Änderung ab.",
       "email_pending_until": "Der Bestätigungslink gilt bis {date}.",

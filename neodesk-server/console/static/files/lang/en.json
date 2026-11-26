@@ -2680,6 +2680,7 @@
         "email_change_none": "This account has no address change waiting for confirmation.",
         "email_confirm_mail_failed": "The mail server didn't take the confirmation email, so the address stays as it is. Check the email settings.",
         "email_change_needs_mail": "Changing your email address needs the email settings, because the console sends a link to the new address to confirm it. Set them up under Settings, Email, or ask an administrator to.",
+        "email_not_changed_rest_saved": "Your other changes are saved, only the email address was not changed. {reason}",
         "email_pending": "Waiting for confirmation: {email}",
         "email_pending_until": "The confirmation link works until {date}.",
         "email_pending_expired": "The confirmation link expired. Send it again or cancel the change.",

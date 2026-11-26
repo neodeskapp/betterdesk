@@ -81,6 +81,19 @@ type saved struct {
 	AvatarError string `json:"avatar_error,omitempty"`
 }
 
+// partlySaved is the answer of a save whose new email address was
+// refused while its other fields were saved: the refusal with its code,
+// the names of the fields saved, and the picture as in saved when the
+// body had one.
+type partlySaved struct {
+	Success     bool     `json:"success"`
+	Error       string   `json:"error"`
+	Code        string   `json:"code,omitempty"`
+	Saved       []string `json:"saved"`
+	Avatar      string   `json:"avatar,omitempty"`
+	AvatarError string   `json:"avatar_error,omitempty"`
+}
+
 // saveProfile answers PUT /api/users/me/profile. The fields the body has
 // are saved, each cut to 200 characters (null as empty); a field the body
 // leaves out keeps its value, and a body with none of them changes
@@ -91,7 +104,10 @@ type saved struct {
 // with time_zone_invalid before anything is written. Another email
 // address waits for its confirmation (package emailchange); when that is
 // refused (no email settings, a mail server that doesn't take the mail)
-// the answer is the refusal and the other fields stay saved.
+// the answer is the refusal with its status and code, and the other
+// fields stay saved: the answer then names them in saved, its text says
+// that only the address was not changed (A274), and the picture is
+// fetched as after a save.
 func (h *handlers) saveProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := kit.UserID(r)
@@ -167,10 +183,17 @@ func (h *handlers) saveProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	// The other fields are saved: a refused address below leaves them so
 	_ = h.d.LogAction(r, "profile_updated", "Updated operator profile")
+	var refused *partlySaved
+	refusedStatus := 0
 	if emailGiven && before != nil {
 		if status, code, message := h.changeEmail(r, before, current, newEmail); status != 0 {
-			kit.JSON(w, r, status, failure{Error: message, Code: code})
-			return
+			names := savedNames(values, zoneGiven)
+			if len(names) == 0 || code == "" {
+				kit.JSON(w, r, status, failure{Error: message, Code: code})
+				return
+			}
+			refused = &partlySaved{Error: emailchange.RestSaved(r, message), Code: code, Saved: names}
+			refusedStatus = status
 		}
 	}
 
@@ -188,7 +211,29 @@ func (h *handlers) saveProfile(w http.ResponseWriter, r *http.Request) {
 			answer.Avatar, answer.AvatarError = result.Action, result.Code
 		}
 	}
+	if refused != nil {
+		if _, given := values["avatar_url"]; given {
+			refused.Avatar, refused.AvatarError = answer.Avatar, answer.AvatarError
+		}
+		kit.JSON(w, r, refusedStatus, refused)
+		return
+	}
 	kit.JSON(w, r, http.StatusOK, answer)
+}
+
+// savedNames are the fields a save wrote besides the address, in the
+// order of profileFields, and time_zone last when it was given.
+func savedNames(values map[string]string, zone bool) []string {
+	names := []string{}
+	for _, name := range profileFields {
+		if _, ok := values[name]; ok {
+			names = append(names, name)
+		}
+	}
+	if zone {
+		names = append(names, "time_zone")
+	}
+	return names
 }
 
 // nullishText is String(v == null ? ” : v).

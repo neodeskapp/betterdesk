@@ -77,6 +77,18 @@ func sayCode(status int, code, message string) error {
 	}}
 }
 
+// sayPartly is the reply of a change whose new email address was refused
+// while the other fields of the request were saved (A274):
+// {"success":false,"error":message,"code":code,"saved":[field names]}.
+func sayPartly(status int, code, message string, saved []string) error {
+	return &reply{status: status, message: message, write: func(w http.ResponseWriter, r *http.Request) {
+		answer(w, r, status, struct {
+			failure
+			Saved []string `json:"saved"`
+		}{failure{Error: message, Code: code}, saved})
+	}}
+}
+
 // refusedText is the text a route would answer for err when err is a
 // refusal of the request (a reply, or a refusal with a status below 500):
 // the reason one account of a request for several was left alone. ok is
@@ -120,6 +132,17 @@ func truthy(v any) bool { return goapi.Truthy(devicegroups.Plain(v)) }
 
 // rowText is String(v) for a value of a row.
 func rowText(v any) string { return jsreq.String(devicegroups.Plain(v)) }
+
+// givenFields are the members of updateFields the body has.
+func givenFields(body middleware.JSONObject) []string {
+	given := []string{}
+	for _, name := range updateFields {
+		if body.Has(name) {
+			given = append(given, name)
+		}
+	}
+	return given
+}
 
 // member is body[name].
 func member(body middleware.JSONObject, name string) jsbind.Value {

@@ -60,6 +60,29 @@ describe('own email address', () => {
 		expect(sent.at(-1)).toEqual({ method: 'DELETE', path: '/api/users/me/email-change', body: null });
 	});
 
+	test('a confirmation the mail server refuses: why, by the code and not the server English (A274)', async () => {
+		own = { email: 'old@example.com', auth_provider: 'local', email_pending: null, mail_ready: true };
+		render(EmailAddress);
+		await screen.findByText('old@example.com');
+		vi.stubGlobal(
+			'fetch',
+			async () =>
+				new Response(
+					JSON.stringify({
+						success: false,
+						error: 'English from the server',
+						code: 'email_confirmation_not_sent'
+					}),
+					{ status: 502, headers: { 'Content-Type': 'application/json' } }
+				)
+		);
+		await userEvent.type(screen.getByLabelText('account.email_new'), 'new@example.com');
+		await userEvent.click(screen.getByRole('button', { name: 'account.email_change' }));
+		expect(await screen.findByText('users.email_confirm_mail_failed')).toBeTruthy();
+		expect(screen.queryByText('English from the server')).toBeNull();
+		expect(screen.getByText('old@example.com')).toBeTruthy();
+	});
+
 	test('a pending address can be sent again', async () => {
 		own = {
 			email: 'old@example.com',
