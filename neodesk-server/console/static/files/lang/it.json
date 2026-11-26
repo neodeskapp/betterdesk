@@ -1359,7 +1359,6 @@
       "running_for": "In esecuzione da",
       "dev_build": "Versione di sviluppo",
       "auto": "found automatically",
-      "endpoint_auto": "Empty: clients get the address found automatically, shown under What clients get now.",
       "endpoint_id_help": "Host name or IP address of the ID server, as clients on the internet reach it. Fill it in when clients reach this server under another address than this console, such as behind a reverse proxy. For example remote.example.com.",
       "endpoint_relay_help": "Host name or IP address of the relay server. Leave it empty to use the ID server address.",
       "endpoint_api_help": "Full address clients use to sign in. The server uses port 21114 unless you changed it. For example https://api.example.com or http://203.0.113.10:21114.",
@@ -1370,7 +1369,9 @@
       "api_url_invalid": "Use a full address that starts with https:// or http://, like https://api.example.com.",
       "conn_no_effect_relay": "Has no effect: every session goes through the relay server.",
       "conn_no_effect_operator": "Already in force: Only accounts that may connect to devices can start sessions includes this rule.",
-      "conn_no_effect_signed_in": "Has no effect while only signed-in apps can start sessions."
+      "conn_no_effect_signed_in": "Has no effect while only signed-in apps can start sessions.",
+      "endpoint_auto_short": "Found automatically",
+      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
     },
     "appearance": {
       "theme_note": "L'aspetto predefinito per tutti coloro che usano questa console.",

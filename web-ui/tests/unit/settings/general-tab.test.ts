@@ -128,7 +128,12 @@ describe('what each row says', () => {
 		const user = userEvent.setup();
 		render(GeneralTab);
 		await idField();
-		expect(document.getElementById('public-server-id')).toHaveTextContent(/found automatically/);
+		expect(document.getElementById('public-server-id')).toHaveTextContent(/found automatically/i);
+		// What an empty address does is said once for the group, not under each of the three
+		const group = document.getElementById('public-endpoints')!;
+		const sentence = 'An empty field gives clients the address found automatically';
+		expect(group.textContent!.split(sentence).length - 1).toBe(1);
+		expect(document.getElementById('public-server-id')).toHaveTextContent('Found automatically');
 		const reset = screen.getByRole('button', { name: 'Reset to default: settings.general.conn_same_nat' });
 		await user.click(reset);
 		expect(screen.getByRole('checkbox', { name: /settings\.general\.conn_same_nat/ })).toBeChecked();

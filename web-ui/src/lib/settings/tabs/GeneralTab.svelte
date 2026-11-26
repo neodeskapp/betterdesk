@@ -133,7 +133,7 @@
 
 	const src = (key: string): SourceInfo => sourceInfo(sources[key]);
 
-	/** A row's source: an empty address is the one found automatically */
+	/** A row's source: an empty address is the one found automatically (the group says what that means) */
 	function endpointRow(field: 'public_server_id' | 'public_relay_server' | 'public_api_url') {
 		const info = src(`public_endpoints.${field}`);
 		const row = sourceRow(draft, field, info);
@@ -141,10 +141,7 @@
 			info.source?.kind === 'default'
 				? {
 						kind: 'default',
-						text: tf(
-							'settings.general.endpoint_auto',
-							'Empty: clients get the address found automatically, shown under What clients get now.'
-						)
+						text: tf('settings.general.endpoint_auto_short', 'Found automatically')
 					}
 				: info.source;
 		const locked = info.lockedBy !== '' || envLocked.includes(field);
@@ -561,6 +558,12 @@
 				consequence={t('settings.general.endpoints_effect')}
 			>
 				{#snippet note()}
+					<p class="endpoints-note">
+						{tf(
+							'settings.general.endpoint_auto_note',
+							'An empty field gives clients the address found automatically, shown under What clients get now.'
+						)}
+					</p>
 					{#if envLocked.length && !Object.keys(sources).some( (k) => k.startsWith('public_endpoints.') )}<Notice
 							id="public-endpoints-env-locked"
 							message={t('settings.public_endpoints_env_locked')}
@@ -721,6 +724,18 @@
 	}
 	.summary-stack :global(.facts > dt) {
 		max-width: 160px;
+	}
+	/* The column is narrow: an address or path wraps instead of being cut off */
+	.summary-stack :global(.value-copy > :first-child),
+	.summary-stack :global(.facts > dd) {
+		white-space: normal;
+		overflow-wrap: anywhere;
+	}
+	.endpoints-note {
+		margin: 0;
+		max-width: var(--measure);
+		color: var(--text-muted);
+		font-size: var(--text-sm);
 	}
 	.advanced {
 		padding: var(--space-2) var(--row-pad-x) 0;
