@@ -90,6 +90,12 @@ func AuthorizeRelayPairForSession(uuid, initiatorID, targetID string, account in
 	return defaultAuthorizationRegistry.AuthorizeForSession(uuid, initiatorID, targetID, account, session)
 }
 
+// RelayPairAdmitted reports whether the signal server already issued the
+// ticket of uuid for this pair, unclaimed or live.
+func RelayPairAdmitted(uuid, initiatorID, targetID string) bool {
+	return defaultAuthorizationRegistry.Admitted(uuid, initiatorID, targetID)
+}
+
 // ClaimRelayPair reserves one of the two connections for a signal-authorized
 // UUID on the shared all-in-one registry (same store Claim uses in hbbr).
 func ClaimRelayPair(uuid string) bool {
@@ -181,6 +187,22 @@ func (r *AuthorizationRegistry) WaitForAuthorization(ctx context.Context, uuid s
 			return false
 		}
 	}
+}
+
+// Admitted reports whether uuid has a ticket for the pair, waiting for its
+// claims or live.
+func (r *AuthorizationRegistry) Admitted(uuid, initiatorID, targetID string) bool {
+	if uuid == "" {
+		return false
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.pruneLocked(r.now())
+	if ticket, ok := r.tickets[uuid]; ok {
+		return ticket.initiatorID == initiatorID && ticket.targetID == targetID
+	}
+	pair, ok := r.live[uuid]
+	return ok && pair.Initiator == initiatorID && pair.Target == targetID
 }
 
 // Claim reserves one of the two connections needed for an authorized relay

@@ -2160,7 +2160,13 @@ func (s *Server) handleRelayResponseForward(msg *pb.RendezvousMessage, senderAdd
 			rr.Uuid, initiatorID, targetID, senderAddr)
 		return
 	}
-	if refuse := s.admitSession(rr.Uuid, initiatorID, targetID, s.panelAccount(initiatorAddr), s.panelSession(initiatorAddr)); refuse != "" {
+	// A session the signal server admitted already (the console's web
+	// client gets its ticket from RequestRelay and closes its socket before
+	// the device answers): admitting it again would name no account, which
+	// the registry refuses, and register it with billing a second time
+	if relay.RelayPairAdmitted(rr.Uuid, initiatorID, targetID) {
+		log.Printf("[signal] RelayResponse forward: uuid=%q initiator=%q target=%q was admitted already", rr.Uuid, initiatorID, targetID)
+	} else if refuse := s.admitSession(rr.Uuid, initiatorID, targetID, s.panelAccount(initiatorAddr), s.panelSession(initiatorAddr)); refuse != "" {
 		log.Printf("[signal] RelayResponse forward: %s (uuid=%q initiator=%q target=%q) — not forwarding",
 			refuse, rr.Uuid, initiatorID, targetID)
 		return
