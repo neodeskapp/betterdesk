@@ -8369,7 +8369,9 @@
     "next": "Další snímek",
     "carousel": "karusel",
     "slide": "snímek",
-    "slide_n": "Snímek {n} z {count}"
+    "slide_n": "Snímek {n} z {count}",
+    "stop": "Zastavit snímky",
+    "start": "Spustit snímky"
   },
   "agents": {
     "title": "Agenti NeoDesk",

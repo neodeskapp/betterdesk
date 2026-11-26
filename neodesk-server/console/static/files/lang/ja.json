@@ -8369,7 +8369,9 @@
     "next": "次のスライド",
     "carousel": "カルーセル",
     "slide": "スライド",
-    "slide_n": "スライド {n}/{count}"
+    "slide_n": "スライド {n}/{count}",
+    "stop": "スライドを停止",
+    "start": "スライドを開始"
   },
   "agents": {
     "title": "NeoDeskエージェント",

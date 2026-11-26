@@ -8373,7 +8373,9 @@
     "next": "下一張投影片",
     "carousel": "輪播",
     "slide": "投影片",
-    "slide_n": "第 {n} 張投影片，共 {count} 張"
+    "slide_n": "第 {n} 張投影片，共 {count} 張",
+    "stop": "停止投影片",
+    "start": "開始投影片"
   },
   "agents": {
     "title": "NeoDesk 代理",

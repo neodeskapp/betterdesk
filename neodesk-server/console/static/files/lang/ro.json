@@ -8375,7 +8375,9 @@
     "next": "Diapozitivul următor",
     "carousel": "carusel",
     "slide": "diapozitiv",
-    "slide_n": "Diapozitivul {n} din {count}"
+    "slide_n": "Diapozitivul {n} din {count}",
+    "stop": "Oprește diapozitivele",
+    "start": "Pornește diapozitivele"
   },
   "agents": {
     "title": "Agenți NeoDesk",

@@ -8375,7 +8375,9 @@
     "next": "Næste dias",
     "carousel": "karrusel",
     "slide": "dias",
-    "slide_n": "Dias {n} af {count}"
+    "slide_n": "Dias {n} af {count}",
+    "stop": "Stop dias",
+    "start": "Start dias"
   },
   "agents": {
     "title": "NeoDesk-agenter",

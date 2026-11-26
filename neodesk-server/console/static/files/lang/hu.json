@@ -8375,7 +8375,9 @@
     "next": "Következő dia",
     "carousel": "körhinta",
     "slide": "dia",
-    "slide_n": "{n}. dia / {count}"
+    "slide_n": "{n}. dia / {count}",
+    "stop": "Diák leállítása",
+    "start": "Diák indítása"
   },
   "agents": {
     "title": "NeoDesk ügynökök",

@@ -8375,7 +8375,9 @@
     "next": "Trang sau",
     "carousel": "băng chuyền",
     "slide": "trang",
-    "slide_n": "Trang {n} trên {count}"
+    "slide_n": "Trang {n} trên {count}",
+    "stop": "Dừng trình chiếu",
+    "start": "Bắt đầu trình chiếu"
   },
   "agents": {
     "title": "Tác nhân NeoDesk",

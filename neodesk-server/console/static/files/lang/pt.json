@@ -8369,7 +8369,9 @@
     "next": "Diapositivo seguinte",
     "carousel": "carrossel",
     "slide": "diapositivo",
-    "slide_n": "Diapositivo {n} de {count}"
+    "slide_n": "Diapositivo {n} de {count}",
+    "stop": "Parar diapositivos",
+    "start": "Iniciar diapositivos"
   },
   "agents": {
     "title": "Agentes NeoDesk",

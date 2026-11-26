@@ -8369,7 +8369,9 @@
     "next": "Następny slajd",
     "carousel": "karuzela",
     "slide": "slajd",
-    "slide_n": "Slajd {n} z {count}"
+    "slide_n": "Slajd {n} z {count}",
+    "stop": "Zatrzymaj slajdy",
+    "start": "Uruchom slajdy"
   },
   "agents": {
     "title": "Agenci NeoDesk",

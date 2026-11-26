@@ -8375,7 +8375,9 @@
     "next": "Nästa bild",
     "carousel": "karusell",
     "slide": "bild",
-    "slide_n": "Bild {n} av {count}"
+    "slide_n": "Bild {n} av {count}",
+    "stop": "Stoppa bilder",
+    "start": "Starta bilder"
   },
   "agents": {
     "title": "NeoDesk-agenter",

@@ -8369,7 +8369,9 @@
     "next": "Volgende dia",
     "carousel": "carrousel",
     "slide": "dia",
-    "slide_n": "Dia {n} van {count}"
+    "slide_n": "Dia {n} van {count}",
+    "stop": "Dia's stoppen",
+    "start": "Dia's starten"
   },
   "agents": {
     "title": "NeoDesk-agents",

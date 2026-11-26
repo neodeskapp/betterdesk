@@ -8375,7 +8375,9 @@
     "next": "Neste lysbilde",
     "carousel": "karusell",
     "slide": "lysbilde",
-    "slide_n": "Lysbilde {n} av {count}"
+    "slide_n": "Lysbilde {n} av {count}",
+    "stop": "Stopp lysbilder",
+    "start": "Start lysbilder"
   },
   "agents": {
     "title": "NeoDesk-agenter",

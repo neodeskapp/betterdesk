@@ -8375,7 +8375,9 @@
     "next": "Slide berikutnya",
     "carousel": "korsel",
     "slide": "slide",
-    "slide_n": "Slide {n} dari {count}"
+    "slide_n": "Slide {n} dari {count}",
+    "stop": "Hentikan slide",
+    "start": "Mulai slide"
   },
   "agents": {
     "title": "Agen NeoDesk",

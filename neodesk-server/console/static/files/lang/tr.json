@@ -8375,7 +8375,9 @@
     "next": "Sonraki slayt",
     "carousel": "döngü",
     "slide": "slayt",
-    "slide_n": "Slayt {n}/{count}"
+    "slide_n": "Slayt {n}/{count}",
+    "stop": "Slaytları durdur",
+    "start": "Slaytları başlat"
   },
   "agents": {
     "title": "NeoDesk Aracıları",

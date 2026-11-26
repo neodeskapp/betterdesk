@@ -8375,7 +8375,9 @@
     "next": "สไลด์ถัดไป",
     "carousel": "ภาพหมุนเวียน",
     "slide": "สไลด์",
-    "slide_n": "สไลด์ {n} จาก {count}"
+    "slide_n": "สไลด์ {n} จาก {count}",
+    "stop": "หยุดสไลด์",
+    "start": "เริ่มสไลด์"
   },
   "agents": {
     "title": "เอเจนต์ NeoDesk",

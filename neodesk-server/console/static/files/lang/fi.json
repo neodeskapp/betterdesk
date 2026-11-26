@@ -8375,7 +8375,9 @@
     "next": "Seuraava dia",
     "carousel": "karuselli",
     "slide": "dia",
-    "slide_n": "Dia {n}/{count}"
+    "slide_n": "Dia {n}/{count}",
+    "stop": "Pysäytä diat",
+    "start": "Käynnistä diat"
   },
   "agents": {
     "title": "NeoDesk-agentit",

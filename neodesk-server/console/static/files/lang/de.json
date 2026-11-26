@@ -8369,7 +8369,9 @@
     "next": "Nächste Folie",
     "carousel": "Karussell",
     "slide": "Folie",
-    "slide_n": "Folie {n} von {count}"
+    "slide_n": "Folie {n} von {count}",
+    "stop": "Folien anhalten",
+    "start": "Folien starten"
   },
   "agents": {
     "title": "NeoDesk-Agenten",

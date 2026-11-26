@@ -8369,7 +8369,9 @@
         "next": "Next slide",
         "carousel": "carousel",
         "slide": "slide",
-        "slide_n": "Slide {n} of {count}"
+        "slide_n": "Slide {n} of {count}",
+        "stop": "Stop slides",
+        "start": "Start slides"
     },
     "agents": {
         "title": "NeoDesk Agents",
