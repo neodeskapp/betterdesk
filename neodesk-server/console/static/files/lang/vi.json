@@ -2663,7 +2663,19 @@
     "reset_link_no_email": "{username} chưa có địa chỉ email. Thêm địa chỉ trong Chỉnh sửa để gửi liên kết đặt lại.",
     "send_reset_link": "Gửi liên kết",
     "reset_link_sent_named": "Đã gửi liên kết đặt lại cho {username}.",
-    "reset_email_required": "Tài khoản này không có địa chỉ email."
+    "reset_email_required": "Tài khoản này không có địa chỉ email.",
+    "access_default_is": "{label}: {level}, {source}",
+    "invalid_device_id_one": "A device ID has only letters, numbers and . _ - : @.",
+    "access_now_chosen": "This user sees the devices of the chosen user groups and folders, and the direct devices.",
+    "access_now_none_restricted": "Nothing chosen: this user sees no devices, because device visibility is Restricted.",
+    "access_now_none_open": "Nothing chosen: this user sees all devices, because device visibility is Open.",
+    "access_no_effect_admin": "Has no effect while the role is {role}: this role always sees all devices.",
+    "access_scope_link": "Settings › General",
+    "user_direct_devices_rows": "One device ID per row, for example 123456789. The user sees these devices whatever their folders and groups.",
+    "direct_device_n": "Device {n}",
+    "add_direct_device": "Add a device",
+    "group_dialog_intro": "Members of a group share its console access and the device groups that allow it. Add people in their user sheet; allow the group in a device group’s access settings.",
+    "group_name_hint": "Shown in the user list, in each member’s user sheet and in access settings."
   },
   "folders": {
     "title": "Thư mục",
