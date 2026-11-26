@@ -317,9 +317,14 @@
 
 	let clientConfig = $state.raw<ClientConfig | null>(null);
 	let clientError = $state('');
-	// The server information waits for the addresses above it, which grow
-	// once they arrive and would push it down (a layout shift)
-	const sideSettled = $derived(!canConfig || ((clientConfig !== null || clientError !== '') && loaded));
+	// The summary shows once the addresses, the form and the server information are in;
+	// parts that grow one after the other would push the rest down (a layout shift)
+	const sideSettled = $derived(
+		!canConfig ||
+			((clientConfig !== null || clientError !== '') &&
+				(loaded || !!loadError) &&
+				(info !== null || infoError !== ''))
+	);
 
 	async function loadClientConfig() {
 		try {
@@ -451,30 +456,33 @@
 {/snippet}
 
 {#snippet side()}
-	<section class="section" aria-labelledby="general-side-title">
-		<h2 id="general-side-title">{t('settings.side.general_title')}</h2>
-		<p class="section-note">{t('settings.side.general_note')}</p>
-		{#if clientError}
-			<States kind="error" message={clientError} onretry={() => void loadClientConfig()} />
-		{:else if !clientConfig}
-			<States kind="loading" />
-		{:else}
-			<Facts
-				items={[
-					{ label: t('dashboard.config_server_id'), value: idValue },
-					{ label: t('dashboard.config_relay_server'), value: relayValue },
-					{ label: t('dashboard.config_api_server'), value: apiValue }
-				]}
-			/>
-			{#if clientConfig.phone_unreachable_host}<Notice
-					tone="warning"
-					message={t('settings.side.local_warning')}
-				/>{/if}
-		{/if}
-		{#if connRuntime}<p class="side-line" id="connection-mode-runtime">{connRuntime}</p>{/if}
-	</section>
-	{#if sideSettled}{@render serverInfo()}{/if}
-	<GuideLink />
+	<!-- All at once when its data is in: parts that grow one after the other would push the rest down -->
+	{#if !sideSettled}
+		<States kind="loading" />
+	{:else}
+		<section class="section" aria-labelledby="general-side-title">
+			<h2 id="general-side-title">{t('settings.side.general_title')}</h2>
+			<p class="section-note">{t('settings.side.general_note')}</p>
+			{#if clientError || !clientConfig}
+				<States kind="error" message={clientError} onretry={() => void loadClientConfig()} />
+			{:else}
+				<Facts
+					items={[
+						{ label: t('dashboard.config_server_id'), value: idValue },
+						{ label: t('dashboard.config_relay_server'), value: relayValue },
+						{ label: t('dashboard.config_api_server'), value: apiValue }
+					]}
+				/>
+				{#if clientConfig.phone_unreachable_host}<Notice
+						tone="warning"
+						message={t('settings.side.local_warning')}
+					/>{/if}
+			{/if}
+			{#if connRuntime}<p class="side-line" id="connection-mode-runtime">{connRuntime}</p>{/if}
+		</section>
+		{@render serverInfo()}
+		<GuideLink />
+	{/if}
 {/snippet}
 
 {#snippet endpoint(
