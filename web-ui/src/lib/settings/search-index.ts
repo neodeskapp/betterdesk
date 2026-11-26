@@ -99,6 +99,14 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	],
 	[
 		'general',
+		'connection-mode',
+		'settings.connection_mode_label',
+		'settings.connection_mode_title',
+		['settings.general.conn_mode_help', 'settings.connection_mode_desc'],
+		'server.config'
+	],
+	[
+		'general',
 		'conn-mode-p2p',
 		'settings.general.conn_p2p',
 		'settings.connection_mode_title',
@@ -159,6 +167,14 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'settings.device_scope_title',
 		'',
 		['settings.general.scope_note', 'settings.general.scope_open_desc'],
+		'server.config'
+	],
+	[
+		'joining',
+		'device-scope',
+		'settings.joining.scope_label',
+		'settings.device_scope_title',
+		['settings.joining.scope_help', 'settings.general.scope_note'],
 		'server.config'
 	],
 	[
@@ -720,6 +736,14 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	['account', 'preferences-accessibility', 'accessibility.title', 'account.preferences', [], ''],
 	[
 		'joining',
+		'enrollment-mode',
+		'tokens.enrollment_mode',
+		'settings.enrollment_title',
+		['settings.joining.mode_note', 'settings.enrollment_mode_link'],
+		'server.config'
+	],
+	[
+		'joining',
 		'enrollment-settings-section',
 		'settings.enrollment_title',
 		'',
@@ -728,25 +752,25 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	],
 	[
 		'joining',
-		'enrollment-settings-section',
+		'enrollment-mode',
 		'tokens.mode_open',
-		'settings.enrollment_title',
+		'tokens.enrollment_mode',
 		['tokens.mode_open_desc'],
 		'server.config'
 	],
 	[
 		'joining',
-		'enrollment-settings-section',
+		'enrollment-mode',
 		'tokens.mode_managed',
-		'settings.enrollment_title',
+		'tokens.enrollment_mode',
 		['tokens.mode_managed_desc'],
 		'server.config'
 	],
 	[
 		'joining',
-		'enrollment-settings-section',
+		'enrollment-mode',
 		'tokens.mode_locked',
-		'settings.enrollment_title',
+		'tokens.enrollment_mode',
 		['tokens.mode_locked_desc'],
 		'server.config'
 	],
@@ -892,15 +916,23 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'auth',
 		'require-two-factor',
 		'settings.signin.require_2fa',
-		'settings.signin.for_everyone',
+		'settings.signin.console_title',
 		['settings.signin.require_2fa_hint'],
+		'server.config'
+	],
+	[
+		'auth',
+		'console-signin-section',
+		'settings.signin.console_title',
+		'',
+		['settings.signin.console_note', 'settings.signin.require_2fa'],
 		'server.config'
 	],
 	[
 		'auth',
 		'single-session',
 		'settings.signin.single_session',
-		'settings.signin.for_everyone',
+		'settings.signin.console_title',
 		['settings.signin.single_session_hint'],
 		'server.config'
 	],
@@ -1517,19 +1549,19 @@ export const TAB_IDS: Readonly<Record<string, string>> = {
 	account:
 		'api-tokens confirm-password current-password new-password password password-requirements preferences preferences-accessibility preferences-language preferences-theme profile profile-status req-length sessions two-factor',
 	general:
-		'conn-allow-shared-nat-initiator conn-logged-in-only-initiator conn-mode-p2p conn-mode-relay conn-operator-only-outbound conn-p2p-fallback-ms conn-same-nat-relay connection-diagram connection-diagram-title connection-mode-effect connection-mode-fields connection-mode-form connection-mode-info connection-mode-section connection-mode-source connection-mode-title db-path general-form general-save go-server-version public-api-url public-endpoints public-endpoints-form public-endpoints-title public-relay-server public-server-id server-info server-info-title uptime',
-	auth: 'client-sessions-expiry-days client-sessions-form client-sessions-max-days client-sessions-max-group client-sessions-settings-section client-sessions-sliding console-sessions-form for-everyone-title require-two-factor single-session two-factor-policy-form',
-	ldap: 'auth-panel-ldap ldap-advanced ldap-allow-signup ldap-attrs ldap-base-dn ldap-bind-dn ldap-bind-password ldap-bind-search-fields ldap-config-fields ldap-conn-timeout ldap-default-role ldap-direct-bind ldap-direct-bind-dn ldap-direct-bind-fields ldap-enabled ldap-form ldap-group-attr-name ldap-group-base-dn ldap-group-filter ldap-group-role-map ldap-host ldap-port ldap-skip-tls-verify ldap-start-tls ldap-test-btn ldap-test-result ldap-use-tls ldap-user-attr-email ldap-user-attr-id ldap-user-attr-name ldap-user-filter',
-	sso: 'auth-panel-oidc oidc-advanced oidc-allow-signup oidc-allowed-private-cidrs oidc-authorization-url oidc-auto-discovery oidc-claim-email oidc-claim-groups oidc-claim-name oidc-claim-username oidc-claims oidc-client-id oidc-client-secret oidc-config-fields oidc-default-role oidc-display-name oidc-enabled oidc-form oidc-group-role-map oidc-issuer-url oidc-manual-endpoints oidc-panel-url oidc-prefer-sso oidc-redirect-url oidc-redirect-url-warning oidc-scopes oidc-test-btn oidc-test-result oidc-token-url oidc-use-pkce oidc-userinfo-url',
+		'conn-allow-shared-nat-initiator conn-logged-in-only-initiator conn-mode-p2p conn-mode-relay conn-operator-only-outbound conn-p2p-fallback-ms conn-same-nat-relay connection-diagram connection-diagram-title connection-mode connection-mode-advanced connection-mode-effect connection-mode-fields connection-mode-form connection-mode-info connection-mode-section connection-mode-source connection-mode-title db-path general-form general-save go-server-version public-api-url public-endpoints public-endpoints-form public-endpoints-title public-relay-server public-server-id server-info server-info-title uptime',
+	auth: 'client-sessions-expiry-days client-sessions-form client-sessions-max-days client-sessions-max-group client-sessions-settings-section client-sessions-sliding console-sessions-form console-signin-section for-everyone-title require-two-factor single-session two-factor-policy-form',
+	ldap: 'auth-panel-ldap ldap-advanced ldap-allow-signup ldap-attrs ldap-base-dn ldap-bind ldap-bind-dn ldap-bind-password ldap-bind-search-fields ldap-config-fields ldap-conn-timeout ldap-connection ldap-default-role ldap-direct-bind ldap-direct-bind-dn ldap-direct-bind-fields ldap-enabled ldap-form ldap-group-attr-name ldap-group-base-dn ldap-group-filter ldap-group-role-map ldap-groups ldap-host ldap-port ldap-skip-tls-verify ldap-start-tls ldap-test-btn ldap-test-result ldap-use-tls ldap-user-attr-email ldap-user-attr-id ldap-user-attr-name ldap-user-filter',
+	sso: 'auth-panel-oidc oidc-accounts oidc-advanced oidc-allow-signup oidc-allowed-private-cidrs oidc-authorization-url oidc-auto-discovery oidc-claim-email oidc-claim-groups oidc-claim-name oidc-claim-username oidc-claims oidc-client-id oidc-client-secret oidc-config-fields oidc-default-role oidc-display-name oidc-enabled oidc-form oidc-group-role-map oidc-issuer-url oidc-manual-endpoints oidc-panel-url oidc-prefer-sso oidc-provider oidc-redirect-url oidc-redirect-url-warning oidc-roles oidc-scopes oidc-test-btn oidc-test-result oidc-token-url oidc-use-pkce oidc-userinfo-url',
 	joining:
-		'availability-history-enabled availability-history-form availability-history-retention availability-history-settings-panel availability-retention-group availability-title device-scope-form device-scope-open device-scope-restricted device-scope-settings-panel device-scope-title device-scope-warning enrollment-pending-hint enrollment-rich-approve enrollment-settings-section enrollment-tag-picker joining-mode-section joining-mode-title',
+		'availability-history-enabled availability-history-form availability-history-retention availability-history-settings-panel availability-retention-group availability-title device-scope device-scope-form device-scope-open device-scope-restricted device-scope-settings-panel device-scope-title device-scope-warning enrollment-mode enrollment-pending-hint enrollment-rich-approve enrollment-settings-section enrollment-tag-picker joining-mode-section joining-mode-title',
 	branding:
 		'bg-blur bg-blur-value bg-color bg-color-panel bg-color-picker bg-effects-group bg-file-name bg-gradient bg-gradient-panel bg-image-file bg-image-library bg-image-panel bg-image-url bg-overlay bg-overlay-group bg-overlay-value bg-size bg-upload-status branding-background branding-background-title branding-builtin-themes branding-colors-title branding-css branding-css-title branding-custom-colors branding-danger-title branding-export-btn branding-fonts branding-fonts-title branding-form branding-ie-status branding-ie-title branding-import-export branding-import-input branding-profile-apply-btn branding-profile-delete-btn branding-profile-duplicate-btn branding-profile-menu branding-profile-new-btn branding-profile-save-btn branding-profile-select branding-profile-status branding-profiles branding-profiles-title branding-readability-alert branding-readability-text branding-reset-btn branding-revert-btn branding-save-btn branding-theme branding-theme-apply branding-theme-gallery branding-theme-select branding-theme-title branding-toc color-accentBlue color-accentGreen color-accentPurple color-accentRed color-accentYellow color-bgElevated color-bgPrimary color-bgSecondary color-bgTertiary color-borderPrimary color-borderSecondary color-textPrimary color-textSecondary custom-css font-body-clear font-body-current font-body-dropdown font-body-search font-body-slot font-body-value font-heading-clear font-heading-current font-heading-dropdown font-heading-search font-heading-slot font-heading-value font-local-count font-local-info font-local-list font-source-google font-source-label font-source-local font-source-upload font-upload-file font-upload-name theme-mode-selector',
 	brand:
 		'agent-bg-color agent-bg-color-panel agent-bg-color-picker agent-bg-file-name agent-bg-gradient agent-bg-gradient-panel agent-bg-image-file agent-bg-image-panel agent-bg-image-url agent-bg-upload-status agent-show-powered brand-name branding-agent branding-agent-title branding-footer branding-footer-title branding-identity branding-identity-title branding-login branding-login-title branding-rdclient branding-rdclient-title cb-contact-title cb-look-title client-app client-app-accent client-app-company client-app-email client-app-logo client-app-phone client-app-support client-app-title client-app-website footer-text login-bg-color login-bg-color-panel login-bg-color-picker login-bg-config login-bg-file-name login-bg-gradient login-bg-gradient-panel login-bg-image-file login-bg-image-panel login-bg-image-url login-bg-overlay login-bg-overlay-group login-bg-overlay-value login-bg-upload-status login-promo-mode-selector login-slides-add login-slides-list login-slides-max-hint login-slides-panel login-slides-restore login-subtitle login-title logo-file-name logo-icon-name logo-icon-panel logo-image-file logo-image-panel logo-image-url logo-svg-input logo-svg-panel logo-text-accent logo-text-input logo-text-panel rdclient-bg-color rdclient-bg-color-panel rdclient-bg-color-picker rdclient-bg-file-name rdclient-bg-gradient rdclient-bg-gradient-panel rdclient-bg-image-file rdclient-bg-image-panel rdclient-bg-image-url rdclient-bg-overlay rdclient-bg-overlay-group rdclient-bg-overlay-value rdclient-bg-size rdclient-bg-upload-status show-powered',
 	email:
 		'email-smtp-alert email-smtp-auth email-smtp-auth-fields email-smtp-form email-smtp-from email-smtp-host email-smtp-pass email-smtp-port email-smtp-save-btn email-smtp-secure email-smtp-user email-title',
-	time: 'time-billing-month-hint time-billing-timezone time-billing-timezone-custom time-check-status time-clock-advanced time-clock-detail time-clock-last-error time-clock-max-skew time-clock-ntp-server time-clock-ntp-servers time-clock-offset time-clock-os-sync time-clock-require-sync time-clock-settings-form time-clock-trust-os time-custom-zone time-detect-timezone-btn time-ntp-title time-save-clock-settings-btn time-side-title time-timesync-check-btn time-zone-now time-zone-title',
+	time: 'time-billing-month-hint time-billing-timezone time-billing-timezone-custom time-check-status time-clock-advanced time-clock-detail time-clock-last-error time-clock-max-skew time-clock-ntp-server time-clock-ntp-servers time-clock-offset time-clock-os-sync time-clock-require-sync time-clock-settings-form time-clock-trust-os time-custom-zone time-detect-timezone-btn time-ntp time-ntp-title time-save-clock-settings-btn time-side-title time-timesync-check-btn time-zone time-zone-now time-zone-title',
 	meshcentral:
 		'mesh-agents-online mesh-body mesh-cert-banner mesh-cert-state mesh-copy-server-id mesh-download-msh mesh-group-add mesh-groups-form mesh-groups-list mesh-groups-status mesh-groups-title mesh-install mesh-msh-name mesh-recordings mesh-recordings-table mesh-server-id mesh-settings-panel mesh-state mesh-status-enabled mesh-title',
 	policies:
