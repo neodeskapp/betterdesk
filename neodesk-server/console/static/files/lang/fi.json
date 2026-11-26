@@ -2705,7 +2705,6 @@
     "access_none": "Ei mitään",
     "access_read": "Luku",
     "access_write": "Täysi",
-    "access_policy_inherit": "Roolin tai ryhmän oletus",
     "access_policy_hint": "Valitse ei käyttöoikeutta, luku tai luku ja kirjoitus. Palvelin valvoo rajoituksia.",
     "loading_access_policy": "Ladataan käyttöoikeuskäytäntöä...",
     "client_features": "Asiakasominaisuudet",
@@ -2801,7 +2800,13 @@
     "direct_device_n": "Laite {n}",
     "add_direct_device": "Lisää laite",
     "group_dialog_intro": "Ryhmän jäsenet jakavat sen konsolipääsyn ja laiteryhmät, jotka sallivat sen. Lisää ihmisiä heidän käyttäjäkortillaan; salli ryhmä laiteryhmän käyttöasetuksissa.",
-    "group_name_hint": "Näkyy käyttäjäluettelossa, jokaisen jäsenen käyttäjäkortilla ja käyttöasetuksissa."
+    "group_name_hint": "Näkyy käyttäjäluettelossa, jokaisen jäsenen käyttäjäkortilla ja käyttöasetuksissa.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Kansiot",

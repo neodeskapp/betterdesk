@@ -2705,7 +2705,6 @@
     "access_none": "Nincs",
     "access_read": "Olvasás",
     "access_write": "Teljes",
-    "access_policy_inherit": "Szerepkör vagy csoport alapértéke",
     "access_policy_hint": "Válasszon: nincs hozzáférés, olvasás, vagy olvasás és írás. A korlátozásokat a kiszolgáló kényszeríti ki.",
     "loading_access_policy": "Hozzáférési szabályzat betöltése...",
     "client_features": "Kliensfunkciók",
@@ -2801,7 +2800,13 @@
     "direct_device_n": "{n}. eszköz",
     "add_direct_device": "Eszköz hozzáadása",
     "group_dialog_intro": "Egy csoport tagjai osztoznak a csoport konzolhozzáférésén és az azt engedő eszközcsoportokon. Az embereket a felhasználói lapjukon adja hozzá; a csoportot egy eszközcsoport hozzáférési beállításaiban engedélyezze.",
-    "group_name_hint": "Megjelenik a felhasználólistában, minden tag felhasználói lapján és a hozzáférési beállításokban."
+    "group_name_hint": "Megjelenik a felhasználólistában, minden tag felhasználói lapján és a hozzáférési beállításokban.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Mappák",

@@ -2699,7 +2699,6 @@
     "access_none": "Geen",
     "access_read": "Lezen",
     "access_write": "Volledig",
-    "access_policy_inherit": "Standaard voor rol of groep",
     "access_policy_hint": "Kies geen toegang, lezen, of lezen en schrijven. Beperkingen worden door de server afgedwongen.",
     "loading_access_policy": "Toegangsbeleid laden...",
     "client_features": "Clientfuncties",
@@ -2795,7 +2794,13 @@
     "direct_device_n": "Apparaat {n}",
     "add_direct_device": "Apparaat toevoegen",
     "group_dialog_intro": "Leden van een groep delen de consoletoegang ervan en de apparaatgroepen die de groep toestaan. Voeg mensen toe in hun gebruikersblad; sta de groep toe in de toegangsinstellingen van een apparaatgroep.",
-    "group_name_hint": "Getoond in de gebruikerslijst, in het gebruikersblad van elk lid en in de toegangsinstellingen."
+    "group_name_hint": "Getoond in de gebruikerslijst, in het gebruikersblad van elk lid en in de toegangsinstellingen.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Mappen",

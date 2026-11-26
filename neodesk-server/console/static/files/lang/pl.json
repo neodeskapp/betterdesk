@@ -2592,7 +2592,6 @@
     "access_policy_title": "Dostęp do panelu i funkcje klienta",
     "access_policy_hint": "Wybierz brak dostępu, odczyt albo odczyt i zapis. Ograniczenia są egzekwowane przez serwer.",
     "loading_access_policy": "Ładowanie polityki dostępu...",
-    "access_policy_inherit": "Domyślne dla roli lub grupy",
     "access_none": "Brak",
     "access_read": "Odczyt",
     "access_write": "Pełny",
@@ -2813,7 +2812,13 @@
     "direct_device_n": "Urządzenie {n}",
     "add_direct_device": "Dodaj urządzenie",
     "group_dialog_intro": "Członkowie grupy dzielą jej dostęp do konsoli i grupy urządzeń, które na to pozwalają. Dodawaj osoby w ich karcie użytkownika; zezwól grupie w ustawieniach dostępu grupy urządzeń.",
-    "group_name_hint": "Widoczna na liście użytkowników, w karcie każdego członka i w ustawieniach dostępu."
+    "group_name_hint": "Widoczna na liście użytkowników, w karcie każdego członka i w ustawieniach dostępu.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Foldery",

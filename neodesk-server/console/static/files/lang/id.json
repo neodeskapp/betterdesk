@@ -2705,7 +2705,6 @@
     "access_none": "Tidak ada",
     "access_read": "Baca",
     "access_write": "Penuh",
-    "access_policy_inherit": "Bawaan peran atau grup",
     "access_policy_hint": "Pilih tanpa akses, baca, atau baca dan tulis. Pembatasan ditegakkan oleh server.",
     "loading_access_policy": "Memuat kebijakan akses...",
     "client_features": "Fitur klien",
@@ -2801,7 +2800,13 @@
     "direct_device_n": "Perangkat {n}",
     "add_direct_device": "Tambah perangkat",
     "group_dialog_intro": "Anggota grup berbagi akses konsol grup itu dan grup perangkat yang mengizinkannya. Tambahkan orang di lembar penggunanya; izinkan grup di pengaturan akses grup perangkat.",
-    "group_name_hint": "Tampil di daftar pengguna, di lembar pengguna setiap anggota, dan di pengaturan akses."
+    "group_name_hint": "Tampil di daftar pengguna, di lembar pengguna setiap anggota, dan di pengaturan akses.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Folder",

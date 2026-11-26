@@ -2699,7 +2699,6 @@
     "access_none": "Nessuno",
     "access_read": "Lettura",
     "access_write": "Completo",
-    "access_policy_inherit": "Predefinito del ruolo o del gruppo",
     "access_policy_hint": "Scegli nessun accesso, lettura oppure lettura e scrittura. Le restrizioni sono applicate dal server.",
     "loading_access_policy": "Caricamento della politica di accesso...",
     "client_features": "Funzioni client",
@@ -2795,7 +2794,13 @@
     "direct_device_n": "Dispositivo {n}",
     "add_direct_device": "Aggiungi un dispositivo",
     "group_dialog_intro": "I membri di un gruppo condividono il suo accesso alla console e i gruppi dispositivi che lo consentono. Aggiungi le persone nella loro scheda utente; consenti il gruppo nelle impostazioni di accesso di un gruppo dispositivi.",
-    "group_name_hint": "Mostrato nell'elenco utenti, nella scheda di ogni membro e nelle impostazioni di accesso."
+    "group_name_hint": "Mostrato nell'elenco utenti, nella scheda di ogni membro e nelle impostazioni di accesso.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Cartelle",

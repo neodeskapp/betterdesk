@@ -2705,7 +2705,6 @@
     "access_none": "Немає",
     "access_read": "Читання",
     "access_write": "Повний",
-    "access_policy_inherit": "Типове для ролі або групи",
     "access_policy_hint": "Виберіть без доступу, читання або читання й запис. Обмеження застосовує сервер.",
     "loading_access_policy": "Завантаження політики доступу...",
     "client_features": "Функції клієнта",
@@ -2801,7 +2800,13 @@
     "direct_device_n": "Пристрій {n}",
     "add_direct_device": "Додати пристрій",
     "group_dialog_intro": "Учасники групи мають спільний доступ групи до консолі й групи пристроїв, які її дозволяють. Додавайте людей у їхній картці користувача; дозвольте групу в налаштуваннях доступу групи пристроїв.",
-    "group_name_hint": "Показується у списку користувачів, у картці кожного учасника та в налаштуваннях доступу."
+    "group_name_hint": "Показується у списку користувачів, у картці кожного учасника та в налаштуваннях доступу.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Папки",

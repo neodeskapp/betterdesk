@@ -2705,7 +2705,6 @@
     "access_none": "ไม่มี",
     "access_read": "อ่าน",
     "access_write": "เต็ม",
-    "access_policy_inherit": "ค่าเริ่มต้นของบทบาทหรือกลุ่ม",
     "access_policy_hint": "เลือกไม่มีการเข้าถึง อ่าน หรืออ่านและเขียน เซิร์ฟเวอร์บังคับใช้ข้อจำกัด",
     "loading_access_policy": "กำลังโหลดนโยบายการเข้าถึง...",
     "client_features": "คุณสมบัติไคลเอนต์",
@@ -2801,7 +2800,13 @@
     "direct_device_n": "อุปกรณ์ {n}",
     "add_direct_device": "เพิ่มอุปกรณ์",
     "group_dialog_intro": "สมาชิกของกลุ่มใช้สิทธิ์เข้าถึงคอนโซลของกลุ่มและกลุ่มอุปกรณ์ที่อนุญาตกลุ่มนั้นร่วมกัน เพิ่มคนในแผ่นข้อมูลผู้ใช้ของเขา และอนุญาตกลุ่มในการตั้งค่าการเข้าถึงของกลุ่มอุปกรณ์",
-    "group_name_hint": "แสดงในรายการผู้ใช้ ในแผ่นข้อมูลผู้ใช้ของสมาชิกแต่ละคน และในการตั้งค่าการเข้าถึง"
+    "group_name_hint": "แสดงในรายการผู้ใช้ ในแผ่นข้อมูลผู้ใช้ของสมาชิกแต่ละคน และในการตั้งค่าการเข้าถึง",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "โฟลเดอร์",

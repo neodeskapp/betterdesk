@@ -2705,7 +2705,6 @@
     "access_none": "Niciunul",
     "access_read": "Citire",
     "access_write": "Complet",
-    "access_policy_inherit": "Implicit pentru rol sau grup",
     "access_policy_hint": "Alegeți fără acces, citire sau citire și scriere. Restricțiile sunt impuse de server.",
     "loading_access_policy": "Se încarcă politica de acces...",
     "client_features": "Funcții client",
@@ -2801,7 +2800,13 @@
     "direct_device_n": "Dispozitiv {n}",
     "add_direct_device": "Adăugați un dispozitiv",
     "group_dialog_intro": "Membrii unui grup împart accesul lui la consolă și grupurile de dispozitive care îl permit. Adăugați persoane din fișa lor de utilizator; permiteți grupul în setările de acces ale unui grup de dispozitive.",
-    "group_name_hint": "Afișat în lista de utilizatori, în fișa fiecărui membru și în setările de acces."
+    "group_name_hint": "Afișat în lista de utilizatori, în fișa fiecărui membru și în setările de acces.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Foldere",

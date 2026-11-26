@@ -2706,7 +2706,6 @@
     "access_none": "لا شيء",
     "access_read": "قراءة",
     "access_write": "كامل",
-    "access_policy_inherit": "الافتراضي للدور أو المجموعة",
     "access_policy_hint": "اختر لا وصول أو قراءة أو قراءة وكتابة. يتم فرض القيود من قبل الخادم.",
     "loading_access_policy": "جارٍ تحميل سياسة الوصول...",
     "client_features": "ميزات العميل",
@@ -2802,7 +2801,13 @@
     "direct_device_n": "الجهاز {n}",
     "add_direct_device": "إضافة جهاز",
     "group_dialog_intro": "يتشارك أعضاء المجموعة وصولها إلى وحدة التحكم ومجموعات الأجهزة التي تسمح بها. أضف الأشخاص من بطاقة المستخدم الخاصة بهم؛ واسمح للمجموعة في إعدادات الوصول لمجموعة أجهزة.",
-    "group_name_hint": "يظهر في قائمة المستخدمين، وفي بطاقة كل عضو، وفي إعدادات الوصول."
+    "group_name_hint": "يظهر في قائمة المستخدمين، وفي بطاقة كل عضو، وفي إعدادات الوصول.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "المجلدات",

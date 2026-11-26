@@ -2699,7 +2699,6 @@
     "access_none": "Žádný",
     "access_read": "Čtení",
     "access_write": "Plný",
-    "access_policy_inherit": "Výchozí pro roli nebo skupinu",
     "access_policy_hint": "Zvolte žádný přístup, čtení nebo čtení a zápis. Omezení vynucuje server.",
     "loading_access_policy": "Načítání zásad přístupu...",
     "client_features": "Funkce klienta",
@@ -2795,7 +2794,13 @@
     "direct_device_n": "Zařízení {n}",
     "add_direct_device": "Přidat zařízení",
     "group_dialog_intro": "Členové skupiny sdílejí její přístup ke konzoli a skupiny zařízení, které ji povolují. Lidi přidávejte v jejich kartě uživatele; skupinu povolte v nastavení přístupu skupiny zařízení.",
-    "group_name_hint": "Zobrazí se v seznamu uživatelů, v kartě každého člena a v nastavení přístupu."
+    "group_name_hint": "Zobrazí se v seznamu uživatelů, v kartě každého člena a v nastavení přístupu.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Složky",

@@ -2699,7 +2699,6 @@
     "access_none": "Ninguno",
     "access_read": "Lectura",
     "access_write": "Completo",
-    "access_policy_inherit": "Predeterminado del rol o grupo",
     "access_policy_hint": "Elija sin acceso, lectura o lectura y escritura. El servidor aplica las restricciones.",
     "loading_access_policy": "Cargando política de acceso...",
     "client_features": "Funciones del cliente",
@@ -2795,7 +2794,13 @@
     "direct_device_n": "Dispositivo {n}",
     "add_direct_device": "Añadir un dispositivo",
     "group_dialog_intro": "Los miembros de un grupo comparten su acceso a la consola y los grupos de dispositivos que lo permiten. Añada personas en su ficha de usuario; permita el grupo en los ajustes de acceso de un grupo de dispositivos.",
-    "group_name_hint": "Se muestra en la lista de usuarios, en la ficha de cada miembro y en los ajustes de acceso."
+    "group_name_hint": "Se muestra en la lista de usuarios, en la ficha de cada miembro y en los ajustes de acceso.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Carpetas",

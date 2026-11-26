@@ -2721,7 +2721,6 @@
     "access_none": "Aucun",
     "access_read": "Lecture",
     "access_write": "Complet",
-    "access_policy_inherit": "Par défaut du rôle ou du groupe",
     "access_policy_hint": "Choisissez aucun accès, lecture, ou lecture et écriture. Les restrictions sont appliquées par le serveur.",
     "loading_access_policy": "Chargement de la politique d'accès...",
     "client_features": "Fonctionnalités du client",
@@ -2817,7 +2816,13 @@
     "direct_device_n": "Appareil {n}",
     "add_direct_device": "Ajouter un appareil",
     "group_dialog_intro": "Les membres d'un groupe partagent son accès à la console et les groupes d'appareils qui l'autorisent. Ajoutez des personnes dans leur fiche utilisateur ; autorisez le groupe dans les réglages d'accès d'un groupe d'appareils.",
-    "group_name_hint": "Affiché dans la liste des utilisateurs, dans la fiche de chaque membre et dans les réglages d'accès."
+    "group_name_hint": "Affiché dans la liste des utilisateurs, dans la fiche de chaque membre et dans les réglages d'accès.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Dossiers",

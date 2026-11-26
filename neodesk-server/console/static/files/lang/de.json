@@ -2699,7 +2699,6 @@
     "access_none": "Keiner",
     "access_read": "Lesen",
     "access_write": "Voll",
-    "access_policy_inherit": "Standard für Rolle oder Gruppe",
     "access_policy_hint": "Wähle keinen Zugriff, Lesen oder Lesen und Schreiben. Einschränkungen werden vom Server durchgesetzt.",
     "loading_access_policy": "Zugriffsrichtlinie wird geladen...",
     "client_features": "Client-Funktionen",
@@ -2795,7 +2794,13 @@
     "direct_device_n": "Gerät {n}",
     "add_direct_device": "Gerät hinzufügen",
     "group_dialog_intro": "Mitglieder einer Gruppe teilen ihren Konsolenzugriff und die Gerätegruppen, die sie zulassen. Personen fügst du in ihrem Benutzerblatt hinzu; die Gruppe lässt du in den Zugriffseinstellungen einer Gerätegruppe zu.",
-    "group_name_hint": "Steht in der Benutzerliste, im Benutzerblatt jedes Mitglieds und in den Zugriffseinstellungen."
+    "group_name_hint": "Steht in der Benutzerliste, im Benutzerblatt jedes Mitglieds und in den Zugriffseinstellungen.",
+    "access_default_short": "Standard",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Für diese Person festgelegt",
+    "access_own_group": "Für diese Gruppe festgelegt",
+    "access_own_user_limit": "Für diese Person festgelegt. Grenze der Rolle: {limit}",
+    "access_limit_only": "Grenze der Rolle: {limit}"
   },
   "folders": {
     "title": "Ordner",

@@ -2705,7 +2705,6 @@
     "access_none": "Ingen",
     "access_read": "Læs",
     "access_write": "Fuld",
-    "access_policy_inherit": "Standard for rolle eller gruppe",
     "access_policy_hint": "Vælg ingen adgang, læs eller læs og skriv. Begrænsninger håndhæves af serveren.",
     "loading_access_policy": "Indlæser adgangspolitik...",
     "client_features": "Klientfunktioner",
@@ -2801,7 +2800,13 @@
     "direct_device_n": "Enhed {n}",
     "add_direct_device": "Tilføj en enhed",
     "group_dialog_intro": "Medlemmer af en gruppe deler dens konsoladgang og de enhedsgrupper, der tillader den. Tilføj folk i deres brugerark; tillad gruppen i en enhedsgruppes adgangsindstillinger.",
-    "group_name_hint": "Vises i brugerlisten, i hvert medlems brugerark og i adgangsindstillingerne."
+    "group_name_hint": "Vises i brugerlisten, i hvert medlems brugerark og i adgangsindstillingerne.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Mapper",

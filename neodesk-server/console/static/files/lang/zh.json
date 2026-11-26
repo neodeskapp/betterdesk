@@ -2699,7 +2699,6 @@
     "access_none": "无",
     "access_read": "读取",
     "access_write": "完整",
-    "access_policy_inherit": "角色或组默认值",
     "access_policy_hint": "选择无访问权限、读取或读取和写入。限制由服务器强制执行。",
     "loading_access_policy": "正在加载访问策略...",
     "client_features": "客户端功能",
@@ -2795,7 +2794,13 @@
     "direct_device_n": "设备 {n}",
     "add_direct_device": "添加设备",
     "group_dialog_intro": "分组成员共享该分组的控制台访问权限，以及允许该分组的设备分组。在用户卡片中添加人员；在设备分组的访问设置中允许该分组。",
-    "group_name_hint": "显示在用户列表、每个成员的用户卡片和访问设置中。"
+    "group_name_hint": "显示在用户列表、每个成员的用户卡片和访问设置中。",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "文件夹",

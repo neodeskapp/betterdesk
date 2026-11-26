@@ -151,27 +151,21 @@ describe('the sheet', () => {
 	test('a section the role decides names the role’s level in the default choice', async () => {
 		show();
 		const row = await rowOf('[data-access="dashboard"]');
-		expect(
-			within(row).getByRole('option', { name: 'Role or group default: Read, from the role' })
-		).toBeTruthy();
+		expect(within(row).getByRole('option', { name: 'Default: Read, from the role' })).toBeTruthy();
 	});
 
 	test('a section set for the person names what the groups would give instead', async () => {
 		show();
 		const row = await rowOf('[data-access="devices"]');
 		await vi.waitFor(() =>
-			expect(
-				within(row).getByRole('option', { name: 'Role or group default: Read, from a group' })
-			).toBeTruthy()
+			expect(within(row).getByRole('option', { name: 'Default: Read, from a group' })).toBeTruthy()
 		);
 	});
 
 	test('a feature set for the person names the default it would go back to', async () => {
 		show();
 		const row = await rowOf('[data-feature="audio"]');
-		await vi.waitFor(() =>
-			expect(within(row).getByRole('option', { name: 'Default: On, default' })).toBeTruthy()
-		);
+		await vi.waitFor(() => expect(within(row).getByRole('option', { name: 'Default: On' })).toBeTruthy());
 		expect(screen.getAllByRole('combobox').length).toBeGreaterThan(0);
 	});
 });

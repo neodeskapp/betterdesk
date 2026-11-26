@@ -2705,7 +2705,6 @@
     "access_none": "कोई नहीं",
     "access_read": "पढ़ें",
     "access_write": "पूर्ण",
-    "access_policy_inherit": "भूमिका या समूह डिफ़ॉल्ट",
     "access_policy_hint": "कोई एक्सेस नहीं, पढ़ें, या पढ़ें और लिखें चुनें। प्रतिबंध सर्वर द्वारा लागू किए जाते हैं।",
     "loading_access_policy": "एक्सेस नीति लोड हो रही है...",
     "client_features": "क्लाइंट सुविधाएँ",
@@ -2801,7 +2800,13 @@
     "direct_device_n": "डिवाइस {n}",
     "add_direct_device": "डिवाइस जोड़ें",
     "group_dialog_intro": "समूह के सदस्य उसका कंसोल एक्सेस और उसे अनुमति देने वाले डिवाइस समूह साझा करते हैं। लोगों को उनकी उपयोगकर्ता शीट में जोड़ें; समूह को किसी डिवाइस समूह की एक्सेस सेटिंग्स में अनुमति दें।",
-    "group_name_hint": "उपयोगकर्ता सूची में, हर सदस्य की उपयोगकर्ता शीट में और एक्सेस सेटिंग्स में दिखता है।"
+    "group_name_hint": "उपयोगकर्ता सूची में, हर सदस्य की उपयोगकर्ता शीट में और एक्सेस सेटिंग्स में दिखता है।",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "फ़ोल्डर",

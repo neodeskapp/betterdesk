@@ -2705,7 +2705,6 @@
     "access_none": "Không",
     "access_read": "Đọc",
     "access_write": "Đầy đủ",
-    "access_policy_inherit": "Mặc định của vai trò hoặc nhóm",
     "access_policy_hint": "Chọn không truy cập, chỉ đọc, hoặc đọc và ghi. Các hạn chế được máy chủ thực thi.",
     "loading_access_policy": "Đang tải chính sách truy cập...",
     "client_features": "Tính năng máy khách",
@@ -2801,7 +2800,13 @@
     "direct_device_n": "Thiết bị {n}",
     "add_direct_device": "Thêm thiết bị",
     "group_dialog_intro": "Thành viên của nhóm dùng chung quyền truy cập bảng điều khiển của nhóm và các nhóm thiết bị cho phép nhóm đó. Thêm người trong thẻ người dùng của họ; cho phép nhóm trong cài đặt truy cập của nhóm thiết bị.",
-    "group_name_hint": "Hiển thị trong danh sách người dùng, trong thẻ người dùng của mỗi thành viên và trong cài đặt truy cập."
+    "group_name_hint": "Hiển thị trong danh sách người dùng, trong thẻ người dùng của mỗi thành viên và trong cài đặt truy cập.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Thư mục",

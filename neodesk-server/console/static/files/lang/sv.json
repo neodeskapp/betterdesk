@@ -2705,7 +2705,6 @@
     "access_none": "Ingen",
     "access_read": "Läs",
     "access_write": "Full",
-    "access_policy_inherit": "Standard för roll eller grupp",
     "access_policy_hint": "Välj ingen åtkomst, läs, eller läs och skriv. Begränsningarna tillämpas av servern.",
     "loading_access_policy": "Läser in åtkomstpolicy...",
     "client_features": "Klientfunktioner",
@@ -2801,7 +2800,13 @@
     "direct_device_n": "Enhet {n}",
     "add_direct_device": "Lägg till en enhet",
     "group_dialog_intro": "Medlemmar i en grupp delar dess konsolåtkomst och de enhetsgrupper som tillåter den. Lägg till personer i deras användarkort; tillåt gruppen i en enhetsgrupps åtkomstinställningar.",
-    "group_name_hint": "Visas i användarlistan, i varje medlems användarkort och i åtkomstinställningarna."
+    "group_name_hint": "Visas i användarlistan, i varje medlems användarkort och i åtkomstinställningarna.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Mappar",

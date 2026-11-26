@@ -2699,7 +2699,6 @@
     "access_none": "Nenhum",
     "access_read": "Leitura",
     "access_write": "Completo",
-    "access_policy_inherit": "Predefinição da função ou grupo",
     "access_policy_hint": "Escolha sem acesso, leitura ou leitura e escrita. As restrições são aplicadas pelo servidor.",
     "loading_access_policy": "A carregar política de acesso...",
     "client_features": "Recursos do cliente",
@@ -2795,7 +2794,13 @@
     "direct_device_n": "Dispositivo {n}",
     "add_direct_device": "Adicionar um dispositivo",
     "group_dialog_intro": "Os membros de um grupo partilham o seu acesso à consola e os grupos de dispositivos que o permitem. Adicione pessoas na ficha de utilizador; permita o grupo nas definições de acesso de um grupo de dispositivos.",
-    "group_name_hint": "Mostrado na lista de utilizadores, na ficha de cada membro e nas definições de acesso."
+    "group_name_hint": "Mostrado na lista de utilizadores, na ficha de cada membro e nas definições de acesso.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Pastas",

@@ -2721,7 +2721,6 @@
     "access_none": "無",
     "access_read": "讀取",
     "access_write": "完整",
-    "access_policy_inherit": "角色或群組預設值",
     "access_policy_hint": "選擇無存取權、讀取或讀取與寫入。限制由伺服器強制執行。",
     "loading_access_policy": "正在載入存取原則...",
     "client_features": "用戶端功能",
@@ -2817,7 +2816,13 @@
     "direct_device_n": "裝置 {n}",
     "add_direct_device": "新增裝置",
     "group_dialog_intro": "群組成員共用該群組的主控台存取權，以及允許該群組的裝置群組。在使用者卡片中新增人員；在裝置群組的存取設定中允許該群組。",
-    "group_name_hint": "顯示在使用者清單、每位成員的使用者卡片和存取設定中。"
+    "group_name_hint": "顯示在使用者清單、每位成員的使用者卡片和存取設定中。",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "資料夾",

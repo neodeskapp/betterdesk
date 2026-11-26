@@ -2705,7 +2705,6 @@
     "access_none": "Yok",
     "access_read": "Okuma",
     "access_write": "Tam",
-    "access_policy_inherit": "Rol veya grup varsayılanı",
     "access_policy_hint": "Erişim yok, okuma veya okuma ve yazma seçin. Kısıtlamalar sunucu tarafından uygulanır.",
     "loading_access_policy": "Erişim ilkesi yükleniyor...",
     "client_features": "İstemci özellikleri",
@@ -2801,7 +2800,13 @@
     "direct_device_n": "Cihaz {n}",
     "add_direct_device": "Cihaz ekle",
     "group_dialog_intro": "Bir grubun üyeleri, grubun konsol erişimini ve buna izin veren cihaz gruplarını paylaşır. Kişileri kullanıcı kartlarından ekleyin; grubu bir cihaz grubunun erişim ayarlarında izinli yapın.",
-    "group_name_hint": "Kullanıcı listesinde, her üyenin kullanıcı kartında ve erişim ayarlarında gösterilir."
+    "group_name_hint": "Kullanıcı listesinde, her üyenin kullanıcı kartında ve erişim ayarlarında gösterilir.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Klasörler",

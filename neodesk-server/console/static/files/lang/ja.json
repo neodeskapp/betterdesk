@@ -2699,7 +2699,6 @@
     "access_none": "なし",
     "access_read": "読み取り",
     "access_write": "フル",
-    "access_policy_inherit": "ロールまたはグループの既定値",
     "access_policy_hint": "アクセスなし、読み取り、または読み取りと書き込みを選択します。制限はサーバーによって適用されます。",
     "loading_access_policy": "アクセスポリシーを読み込み中...",
     "client_features": "クライアント機能",
@@ -2795,7 +2794,13 @@
     "direct_device_n": "デバイス {n}",
     "add_direct_device": "デバイスを追加",
     "group_dialog_intro": "グループのメンバーは、グループのコンソールアクセスと、それを許可するデバイスグループを共有します。ユーザーはユーザーシートで追加し、グループはデバイスグループのアクセス設定で許可します。",
-    "group_name_hint": "ユーザー一覧、各メンバーのユーザーシート、アクセス設定に表示されます。"
+    "group_name_hint": "ユーザー一覧、各メンバーのユーザーシート、アクセス設定に表示されます。",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "フォルダー",
