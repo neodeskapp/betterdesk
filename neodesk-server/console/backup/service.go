@@ -106,6 +106,13 @@ type Options struct {
 	AppVersion string
 	// Now is the clock; nil is time.Now.
 	Now func() time.Time
+	// Docker says the console runs in the Docker image (config.Docker):
+	// its settings come from the container's environment, so a backup
+	// holds no environment file and a restore writes none.
+	Docker bool
+	// SessionSecretFromEnv says SESSION_SECRET is set: the session secret
+	// is the environment's and there is no .session_secret to save.
+	SessionSecretFromEnv bool
 	// Limits cap an archive that is read (a restore and its check):
 	// MaxBytes is BACKUP_MAX_DECOMPRESSED_BYTES, MaxEntries
 	// BACKUP_MAX_ENTRIES, each read with EnvLimit; 0 is the default (2 GiB,
@@ -191,12 +198,31 @@ type Stats struct {
 }
 
 // FullStats is the answer of getFullBackupStats: the counts, the backend,
-// the database and which parts a full backup would find.
+// the database and which parts a full backup would find. Parts is what a
+// backup made now holds, part by part; Components is the older answer,
+// kept for the pages that read it.
 type FullStats struct {
 	Stats
 	Backend    string     `json:"backend"`
 	DBType     string     `json:"dbType"`
 	Components Components `json:"components"`
+	Parts      []Part     `json:"parts"`
+}
+
+// Part is one part of a full backup: whether a backup made now holds it
+// and, when not, why.
+type Part struct {
+	// ID names the part (the Part* constants).
+	ID string `json:"id"`
+	// Included says a backup made now holds at least one file of it.
+	Included bool `json:"included"`
+	// Reason is why it is left out (the Reason* constants), "" when it is
+	// included.
+	Reason string `json:"reason,omitempty"`
+	// Files is how many files of the part the backup holds.
+	Files int `json:"files"`
+	// Secret says the part holds secrets: keys, passwords or their hashes.
+	Secret bool `json:"secret"`
 }
 
 // Components says which files exist, and how many uploads there are.
@@ -227,7 +253,8 @@ func (s *Service) BackupStats(ctx context.Context) (*goapi.Object, error) {
 	return o.Set("backend", "neodesk"), nil
 }
 
-// FullBackupStats is getFullBackupStats.
+// FullBackupStats is getFullBackupStats. Its Parts come from the plan
+// CreateFullBackup follows, so the answer and the archive agree.
 func (s *Service) FullBackupStats(ctx context.Context) FullStats {
 	p := s.paths()
 	exists := func(path string) bool {
@@ -246,7 +273,7 @@ func (s *Service) FullBackupStats(ctx context.Context) FullStats {
 		Backend: "neodesk",
 		DBType:  s.dbType(),
 		Components: Components{
-			Env:           exists(p.env),
+			Env:           !s.o.Docker && exists(p.env),
 			SessionSecret: exists(p.sessionSecret),
 			ConsoleDB:     exists(p.consoleDB),
 			Uploads:       uploads,
@@ -256,6 +283,7 @@ func (s *Service) FullBackupStats(ctx context.Context) FullStats {
 			GoDB:          exists(p.goDB),
 			MeshAgentCert: exists(p.meshAgentCert),
 		},
+		Parts: s.parts(p),
 	}
 }
 
@@ -316,7 +344,7 @@ type Manifest struct {
 //	manifest.json                    format, version, time, product version, backend, database, components
 //	console/data.json                the logical dump of every table (DumpAllTables)
 //	goserver/data.json               devices, blocklist, the last 500 audit events and the health of the API server
-//	console/.env                     the old console's .env
+//	console/.env                     the console's .env, none on Docker
 //	console/.session_secret          DATA_DIR/.session_secret
 //	console/auth.db                  a copy of the SQLite file (DB_PATH), on SQLite only
 //	console/uploads/...              every file below DATA_DIR/uploads
@@ -402,22 +430,14 @@ func (s *Service) CreateFullBackup(ctx context.Context) ([]byte, string, error) 
 			present = append(present, name)
 		})
 	}
-	addFile("console/.env", p.env)
-	addFile("console/.session_secret", p.sessionSecret)
-	addFile("console/auth.db", p.consoleDB)
-	addFolder(uploadsPrefix, p.uploadsDir)
-	addFolder(chatFilesPrefix, p.chatFilesDir)
-	addFolder(attachmentsPrefix, p.attachmentsDir)
-	addFolder(fontsPrefix, p.fontsDir)
-	addFile(endpointsEntry, p.endpointsFile)
-	for _, f := range tlsEntries(p) {
-		addFile(f.name, f.target)
+	// the same plan FullBackupStats counts (parts.go)
+	for _, e := range s.plan(p) {
+		if e.folder {
+			addFolder(e.name, e.path)
+		} else {
+			addFile(e.name, e.path)
+		}
 	}
-	addFile("goserver/id_ed25519", p.goPrivKey)
-	addFile("goserver/id_ed25519.pub", p.goPubKey)
-	addFile("goserver/.api_key", p.goAPIKey)
-	addFile("goserver/db_v2.sqlite3", p.goDB)
-	addFile("goserver/mesh_agent_server.pem", p.meshAgentCert)
 
 	if present == nil {
 		present = []string{}
@@ -601,7 +621,7 @@ func (e *ErrInvalidArchive) Error() string {
 //     data, when it is chosen,
 //  2. the uploads, below DATA_DIR/uploads, and the installed fonts,
 //  3. the secrets, each to its own path, with the console's TLS files,
-//  4. the .env,
+//  4. the .env, not on Docker (a warning there),
 //  5. for an archive whose dump has none of the server's tables (an older
 //     install's), the server's SQLite file, when the server has one
 //     (serverDBFile): checked (SQLite's header, PRAGMA integrity_check)
@@ -707,7 +727,12 @@ func (s *Service) RestoreFullBackup(ctx context.Context, buf []byte, o RestoreOp
 		res.Skipped = append(res.Skipped, "secrets/keys")
 	}
 
-	if data, ok := files.Get("console/.env"); o.Env && ok {
+	if data, ok := files.Get("console/.env"); o.Env && ok && s.o.Docker {
+		// nothing in the container reads a .env: the settings are the
+		// container's environment
+		res.Skipped = append(res.Skipped, ".env")
+		res.Warnings = append(res.Warnings, ".env not restored: a Docker install takes its settings from the container's environment, set them in the .env next to the compose file")
+	} else if o.Env && ok {
 		if err := writeFile(p.env, data, 0o600); err != nil {
 			res.Warnings = append(res.Warnings, ".env restore failed: "+err.Error())
 		} else {

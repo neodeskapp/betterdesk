@@ -19,6 +19,20 @@ const NullableText = v.optional(v.nullable(v.string()), null);
 
 // ── Backup ──
 
+/**
+ * One part of a full backup made now: included or not, and when not, why
+ * (docker, environment, postgres, not_configured, no_server, empty,
+ * missing). The server builds it from the plan the archive follows.
+ */
+export const BackupPart = v.looseObject({
+	id: v.string(),
+	included: BoolLike,
+	reason: v.optional(v.string(), ''),
+	files: Num,
+	secret: BoolLike
+});
+export type BackupPart = v.InferOutput<typeof BackupPart>;
+
 export const BackupStats = v.looseObject({
 	users: Num,
 	settings: Num,
@@ -36,7 +50,8 @@ export const BackupStats = v.looseObject({
 			uploads: Num
 		}),
 		{}
-	)
+	),
+	parts: v.optional(v.array(BackupPart), [])
 });
 export type BackupStats = v.InferOutput<typeof BackupStats>;
 
