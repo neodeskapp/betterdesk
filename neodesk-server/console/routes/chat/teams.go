@@ -3,9 +3,11 @@ package chat
 import (
 	"context"
 	"errors"
+	"maps"
 	"net/http"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/chatstore"
@@ -140,6 +142,8 @@ func (h *inboxRoutes) newTeam(w http.ResponseWriter, r *http.Request) {
 		h.fail(w, r, err)
 		return
 	}
+	people, groups := h.teamState(ctx, c.ID)
+	h.teamAudit(r, "chat_team_created", c, map[string]any{"people": h.peopleText(ctx, people), "groups": groupsText(groups)})
 	h.teamChanged(ctx, c, nil)
 	kit.JSON(w, r, http.StatusOK, map[string]any{"success": true, "conversation": conversationOut(c, "")})
 }
@@ -162,11 +166,23 @@ func (h *inboxRoutes) editTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	before, _ := h.store().Members(ctx, id)
+	old, _ := h.store().Conversation(ctx, id)
+	oldPeople, oldGroups := h.teamState(ctx, id)
 	c, err := h.store().SetTeam(ctx, id, body.Title, body.People, body.Groups)
 	if err != nil {
 		h.fail(w, r, err)
 		return
 	}
+	people, groups := h.teamState(ctx, id)
+	changes := map[string]any{}
+	if old.Title != c.Title {
+		changes["renamed_from"] = old.Title
+	}
+	addChange(changes, "people_added", h.peopleText(ctx, idsWithout(people, oldPeople)))
+	addChange(changes, "people_removed", h.peopleText(ctx, idsWithout(oldPeople, people)))
+	addChange(changes, "groups_added", groupsText(withoutGroups(groups, oldGroups)))
+	addChange(changes, "groups_removed", groupsText(withoutGroups(oldGroups, groups)))
+	h.teamAudit(r, "chat_team_updated", c, changes)
 	h.teamChanged(ctx, c, before)
 	kit.JSON(w, r, http.StatusOK, map[string]any{"success": true, "conversation": conversationOut(c, "")})
 }
@@ -177,10 +193,13 @@ func (h *inboxRoutes) deleteTeam(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id := r.PathValue("id")
 	before, _ := h.store().Members(ctx, id)
+	team, _ := h.store().Conversation(ctx, id)
 	if err := h.store().DeleteTeam(ctx, id); err != nil {
 		h.fail(w, r, err)
 		return
 	}
+	team.ID = id
+	h.teamAudit(r, "chat_team_deleted", team, nil)
 	text := frame("conversation.removed", map[string]any{"conversation_id": id})
 	for _, m := range before {
 		h.hub.toAccount(m, text)
@@ -205,4 +224,77 @@ func (h *inboxRoutes) teamChanged(ctx context.Context, c chatstore.Conversation,
 			h.hub.toAccount(m, gone)
 		}
 	}
+}
+
+// teamAudit writes a team's audit entry by the signed-in account: the
+// team's id and name, and what changed.
+func (h *inboxRoutes) teamAudit(r *http.Request, action string, c chatstore.Conversation, changes map[string]any) {
+	details := map[string]any{"conversation_id": c.ID, "title": c.Title}
+	maps.Copy(details, changes)
+	h.hub.audit(r.Context(), &member{user: h.user(r)}, action, details)
+}
+
+// teamState is who a team names by hand and which user groups it
+// includes, for its audit entries.
+func (h *inboxRoutes) teamState(ctx context.Context, id string) ([]int64, []chatstore.TeamGroup) {
+	people, _ := h.store().TeamPeople(ctx, id)
+	groups, _ := h.store().TeamGroups(ctx, id)
+	return people, groups
+}
+
+// addChange notes a change for an audit entry when there is one.
+func addChange(changes map[string]any, key, text string) {
+	if text != "" {
+		changes[key] = text
+	}
+}
+
+// peopleText is accounts as an audit entry names them: "Ben Becker (6),
+// cleo (8)".
+func (h *inboxRoutes) peopleText(ctx context.Context, ids []int64) string {
+	if len(ids) == 0 {
+		return ""
+	}
+	known, _ := h.people(ctx)
+	parts := make([]string, 0, len(ids))
+	for _, id := range ids {
+		n := strconv.FormatInt(id, 10)
+		if p, ok := known[id]; ok && p.Name != "" {
+			n = p.Name + " (" + n + ")"
+		}
+		parts = append(parts, n)
+	}
+	return strings.Join(parts, ", ")
+}
+
+// groupsText is user groups as an audit entry names them: "Service desk
+// (g-desk)".
+func groupsText(groups []chatstore.TeamGroup) string {
+	parts := make([]string, 0, len(groups))
+	for _, g := range groups {
+		parts = append(parts, g.Name+" ("+g.GUID+")")
+	}
+	return strings.Join(parts, ", ")
+}
+
+// idsWithout are the ids of a that b lacks.
+func idsWithout(a, b []int64) []int64 {
+	var out []int64
+	for _, x := range a {
+		if !slices.Contains(b, x) {
+			out = append(out, x)
+		}
+	}
+	return out
+}
+
+// withoutGroups are the user groups of a that b lacks.
+func withoutGroups(a, b []chatstore.TeamGroup) []chatstore.TeamGroup {
+	var out []chatstore.TeamGroup
+	for _, g := range a {
+		if !slices.ContainsFunc(b, func(k chatstore.TeamGroup) bool { return k.GUID == g.GUID }) {
+			out = append(out, g)
+		}
+	}
+	return out
 }

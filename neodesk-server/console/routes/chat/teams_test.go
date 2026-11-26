@@ -106,3 +106,81 @@ func TestTeams(t *testing.T) {
 		}
 	})
 }
+
+// TestTeamsAudit: making, changing and deleting a team each write one
+// audit entry by the signed-in account that names the team and what
+// changed; a refused or failed request writes none (A268).
+func TestTeamsAudit(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w := newInboxWorld(t, db)
+		ctx := context.Background()
+		if _, err := db.Exec(ctx, `INSERT INTO user_groups (guid, name) VALUES ('g-desk', 'Service desk')`); err != nil {
+			t.Fatal(err)
+		}
+		// one asks and expects the status and the audit entry it writes,
+		// or none for an empty action
+		one := func(what, who, method, target, body string, status int, action string, details map[string]any) map[string]any {
+			t.Helper()
+			before := len(w.auditLog)
+			got, out := w.send(who, method, target, body)
+			if got != status {
+				t.Fatalf("%s: %d %v, want %d", what, got, out, status)
+			}
+			entries := w.auditLog[before:]
+			if action == "" {
+				if len(entries) != 0 {
+					t.Errorf("%s wrote %v, want no audit entry", what, entries)
+				}
+				return out
+			}
+			if len(entries) != 1 {
+				t.Fatalf("%s wrote %v, want one audit entry", what, entries)
+			}
+			e := entries[0]
+			if e.action != action || e.by != scopeAccounts[who].ID {
+				t.Errorf("%s: audit %s by %d, want %s by %d", what, e.action, e.by, action, scopeAccounts[who].ID)
+			}
+			for k, v := range details {
+				if e.details[k] != v {
+					t.Errorf("%s: audit %s=%v, want %v (all: %v)", what, k, e.details[k], v, e.details)
+				}
+			}
+			for _, k := range []string{"renamed_from", "people_added", "people_removed", "groups_added", "groups_removed"} {
+				if _, ok := details[k]; !ok && e.details[k] != nil {
+					t.Errorf("%s: audit has %s=%v, want none", what, k, e.details[k])
+				}
+			}
+			return out
+		}
+
+		one("anna making a team", "anna", "POST", "/api/chat/team/teams", `{"title":"Mine","people":[5]}`, 403, "", nil)
+		one("a team with an unknown user group", "admin", "POST", "/api/chat/team/teams", `{"title":"Desk","groups":["g-nope"]}`, 400, "", nil)
+		one("a team without a name", "admin", "POST", "/api/chat/team/teams", `{"title":" "}`, 400, "", nil)
+
+		made := one("making the team", "admin", "POST", "/api/chat/team/teams", `{"title":"Desk","people":[8,6],"groups":["g-desk"]}`, 200,
+			"chat_team_created", map[string]any{"title": "Desk", "people": "ben (6), cleo (8)", "groups": "Service desk (g-desk)"})
+		id, _ := made["conversation"].(map[string]any)["id"].(string)
+		if e := w.auditLog[len(w.auditLog)-1]; e.details["conversation_id"] != id || id == "" {
+			t.Errorf("the audit entry of the new team names %v, want %q", e.details["conversation_id"], id)
+		}
+		team := "/api/chat/team/teams/" + id
+
+		one("ben changing the team", "ben", "PATCH", team, `{"title":"Ben's"}`, 403, "", nil)
+		one("changing a team that doesn't exist", "admin", "PATCH", "/api/chat/team/teams/team:00000000", `{"title":"Gone"}`, 404, "", nil)
+		one("changing a conversation that is no team", "admin", "PATCH", "/api/chat/team/teams/dev1", `{"title":"Gone"}`, 404, "", nil)
+		one("changing the team to someone unknown", "admin", "PATCH", team, `{"people":[999]}`, 400, "", nil)
+		one("renaming the team", "admin", "PATCH", team, `{"title":"Front desk"}`, 200,
+			"chat_team_updated", map[string]any{"conversation_id": id, "title": "Front desk", "renamed_from": "Desk"})
+		one("adding anna, taking off ben and the user group", "admin", "PATCH", team, `{"people":[5,8],"groups":[]}`, 200,
+			"chat_team_updated", map[string]any{"conversation_id": id, "title": "Front desk", "people_added": "anna (5)",
+				"people_removed": "ben (6)", "groups_removed": "Service desk (g-desk)"})
+		one("adding the user group again", "admin", "PATCH", team, `{"groups":["g-desk"]}`, 200,
+			"chat_team_updated", map[string]any{"conversation_id": id, "title": "Front desk", "groups_added": "Service desk (g-desk)"})
+
+		one("ben deleting the team", "ben", "DELETE", team, ``, 403, "", nil)
+		one("deleting the team", "admin", "DELETE", team, ``, 200,
+			"chat_team_deleted", map[string]any{"conversation_id": id, "title": "Front desk"})
+		one("deleting it again", "admin", "DELETE", team, ``, 404, "", nil)
+		one("deleting a conversation that is no team", "admin", "DELETE", "/api/chat/team/teams/dev1", ``, 404, "", nil)
+	})
+}
