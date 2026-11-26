@@ -5519,9 +5519,6 @@
     "billing_package": "Laskutuspaketti",
     "max_session_invalid": "Anna kokonainen minuuttimäärä, 0 tai enemmän.",
     "policy_none": "Ei sääntöä: jokainen laite pitää oman asetuksensa.",
-    "policy_set_one": "Asetettu tälle organisaatiolle: 1 arvo.",
-    "policy_set_n": "Asetettu tälle organisaatiolle: {count} arvoa.",
-    "stored_value": "Tallennettu arvo",
     "settings_tab_note": "Mitä tähän organisaatioon nyt sovelletaan. Jokainen arvo muutetaan siellä, missä se asetetaan: käytännöt Käytännöt-sivulla, jaettu osoitekirja Osoitekirja-välilehdellä.",
     "policies_group_desc": "Miten etäistunnot toimivat tämän organisaation laitteilla.",
     "policies_group_effect": "Laitteet saavat muutoksen, kun ne seuraavan kerran pyytävät palvelimelta käytäntöään.",
@@ -5536,7 +5533,8 @@
     "other_values_desc": "Tälle organisaatiolle tallennetut arvot, joilla ei ole omaa paikkaa konsolissa.",
     "danger_zone": "Vaaravyöhyke",
     "name_hint": "Näkyy tämän organisaation sivulla, luetteloissa ja sen jäsenille.",
-    "slug_changed": "Kirjautumiset, jotka nimeävät organisaation lyhyellä nimellä, tarvitsevat tallennuksen jälkeen uuden nimen."
+    "slug_changed": "Kirjautumiset, jotka nimeävät organisaation lyhyellä nimellä, tarvitsevat tallennuksen jälkeen uuden nimen.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "Päästä päähän salattu",

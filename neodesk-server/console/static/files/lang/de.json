@@ -5513,9 +5513,6 @@
     "billing_package": "Abrechnungspaket",
     "max_session_invalid": "Gib eine ganze Zahl von Minuten ein, 0 oder mehr.",
     "policy_none": "Keine Regel: Jedes Gerät behält seine eigene Einstellung.",
-    "policy_set_one": "Für diese Organisation festgelegt: 1 Wert.",
-    "policy_set_n": "Für diese Organisation festgelegt: {count} Werte.",
-    "stored_value": "Gespeicherter Wert",
     "settings_tab_note": "Was jetzt für diese Organisation gilt. Jeder Wert wird dort geändert, wo er festgelegt ist: Richtlinien auf der Seite Richtlinien, das gemeinsame Adressbuch im Tab Adressbuch.",
     "policies_group_desc": "Wie Fernsitzungen auf den Geräten dieser Organisation ablaufen.",
     "policies_group_effect": "Geräte bekommen eine Änderung, wenn sie den Server das nächste Mal nach ihrer Richtlinie fragen.",
@@ -5530,7 +5527,8 @@
     "other_values_desc": "Für diese Organisation gespeicherte Werte, die in der Konsole keinen eigenen Platz haben.",
     "danger_zone": "Gefahrenbereich",
     "name_hint": "Steht auf der Seite dieser Organisation, in Listen und bei ihren Mitgliedern.",
-    "slug_changed": "Anmeldungen, die die Organisation über ihren Kurznamen angeben, brauchen nach dem Speichern den neuen."
+    "slug_changed": "Anmeldungen, die die Organisation über ihren Kurznamen angeben, brauchen nach dem Speichern den neuen.",
+    "policy_set": "Für diese Organisation festgelegt."
   },
   "chat": {
     "e2e_enabled": "Ende-zu-Ende verschlüsselt",

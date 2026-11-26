@@ -5519,9 +5519,6 @@
     "billing_package": "Paket penagihan",
     "max_session_invalid": "Masukkan jumlah menit berupa bilangan bulat, 0 atau lebih.",
     "policy_none": "Tanpa aturan: setiap perangkat mempertahankan pengaturannya sendiri.",
-    "policy_set_one": "Diatur untuk organisasi ini: 1 nilai.",
-    "policy_set_n": "Diatur untuk organisasi ini: {count} nilai.",
-    "stored_value": "Nilai tersimpan",
     "settings_tab_note": "Yang berlaku untuk organisasi ini sekarang. Setiap nilai diubah di tempat ia diatur: kebijakan di halaman Kebijakan, buku alamat bersama di tab Buku alamat.",
     "policies_group_desc": "Cara sesi jarak jauh bekerja di perangkat organisasi ini.",
     "policies_group_effect": "Perangkat mendapat perubahan saat berikutnya meminta kebijakannya ke server.",
@@ -5536,7 +5533,8 @@
     "other_values_desc": "Nilai yang disimpan untuk organisasi ini yang tidak punya tempat sendiri di konsol.",
     "danger_zone": "Zona berbahaya",
     "name_hint": "Tampil di halaman organisasi ini, di daftar, dan kepada anggotanya.",
-    "slug_changed": "Proses masuk yang menyebut organisasi dengan nama pendeknya memerlukan nama baru setelah Anda menyimpan."
+    "slug_changed": "Proses masuk yang menyebut organisasi dengan nama pendeknya memerlukan nama baru setelah Anda menyimpan.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "Dienkripsi ujung ke ujung",

@@ -5519,9 +5519,6 @@
     "billing_package": "Faktureringspakke",
     "max_session_invalid": "Skriv inn et helt antall minutter, 0 eller flere.",
     "policy_none": "Ingen regel: hver enhet beholder sin egen innstilling.",
-    "policy_set_one": "Satt for denne organisasjonen: 1 verdi.",
-    "policy_set_n": "Satt for denne organisasjonen: {count} verdier.",
-    "stored_value": "Lagret verdi",
     "settings_tab_note": "Det som gjelder for denne organisasjonen nå. Hver verdi endres der den er satt: retningslinjer på siden Retningslinjer, den delte adresseboken på fanen Adressebok.",
     "policies_group_desc": "Hvordan fjernøkter virker på enhetene til denne organisasjonen.",
     "policies_group_effect": "Enhetene får en endring neste gang de ber serveren om retningslinjen sin.",
@@ -5536,7 +5533,8 @@
     "other_values_desc": "Verdier lagret for denne organisasjonen som ikke har en egen plass i konsollen.",
     "danger_zone": "Faresone",
     "name_hint": "Vises på siden til denne organisasjonen, i lister og for medlemmene.",
-    "slug_changed": "Pålogginger som angir organisasjonen med kortnavnet, trenger det nye etter at du har lagret."
+    "slug_changed": "Pålogginger som angir organisasjonen med kortnavnet, trenger det nye etter at du har lagret.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "Ende-til-ende kryptert",

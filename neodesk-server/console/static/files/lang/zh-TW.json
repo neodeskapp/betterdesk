@@ -5793,9 +5793,6 @@
     "billing_package": "計費方案",
     "max_session_invalid": "請輸入 0 或以上的整數分鐘數。",
     "policy_none": "沒有規則：每台裝置保留自己的設定。",
-    "policy_set_one": "已為此組織設定：1 個值。",
-    "policy_set_n": "已為此組織設定：{count} 個值。",
-    "stored_value": "儲存的值",
     "settings_tab_note": "目前適用於此組織的內容。每個值在設定它的地方變更：策略在「策略」頁面，共用通訊錄在「通訊錄」分頁。",
     "policies_group_desc": "此組織的裝置上遠端工作階段如何運作。",
     "policies_group_effect": "裝置下次向伺服器要求策略時取得變更。",
@@ -5810,7 +5807,8 @@
     "other_values_desc": "為此組織儲存、但在主控台中沒有專屬位置的值。",
     "danger_zone": "危險區域",
     "name_hint": "顯示在此組織的頁面、清單中，並向其成員顯示。",
-    "slug_changed": "以簡稱指定組織的登入方式在儲存後需要使用新名稱。"
+    "slug_changed": "以簡稱指定組織的登入方式在儲存後需要使用新名稱。",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "端到端加密",

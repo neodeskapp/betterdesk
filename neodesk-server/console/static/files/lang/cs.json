@@ -5513,9 +5513,6 @@
     "billing_package": "Fakturační balíček",
     "max_session_invalid": "Zadejte celé číslo minut, 0 nebo více.",
     "policy_none": "Žádné pravidlo: každé zařízení si ponechá vlastní nastavení.",
-    "policy_set_one": "Nastaveno pro tuto organizaci: 1 hodnota.",
-    "policy_set_n": "Nastaveno pro tuto organizaci, počet hodnot: {count}.",
-    "stored_value": "Uložená hodnota",
     "settings_tab_note": "Co teď pro tuto organizaci platí. Každá hodnota se mění tam, kde je nastavena: politiky na stránce Politiky, sdílený adresář na kartě Adresář.",
     "policies_group_desc": "Jak fungují vzdálené relace na zařízeních této organizace.",
     "policies_group_effect": "Zařízení dostanou změnu, až příště požádají server o svou politiku.",
@@ -5530,7 +5527,8 @@
     "other_values_desc": "Hodnoty uložené pro tuto organizaci, které nemají v konzoli vlastní místo.",
     "danger_zone": "Nebezpečná zóna",
     "name_hint": "Zobrazí se na stránce této organizace, v seznamech a jejím členům.",
-    "slug_changed": "Přihlášení, která organizaci označují krátkým názvem, budou po uložení potřebovat nový."
+    "slug_changed": "Přihlášení, která organizaci označují krátkým názvem, budou po uložení potřebovat nový.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "Koncové šifrování aktivní",

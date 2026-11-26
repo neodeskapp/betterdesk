@@ -4,10 +4,10 @@
   they are set (PATTERN.md rule 2): the policy groups on this
   organization's Policies page, the shared address book on the Address
   book tab; this tab says what applies now and where it comes from. Each
-  policy group shows whether it is set for this organization (and how many
-  values it holds) or that no rule applies, with the stored value behind
-  Details (rule 5). Values the console has no words for stay listed with
-  their key. Delete organization is in a danger zone at the end (rule 8).
+  policy group shows whether it is set for this organization, with each
+  value it holds named in the Policies page's words ("Session approval:
+  Attended"), or that no rule applies. Values the console has no words
+  for stay listed with their key. Delete organization is in a danger zone at the end (rule 8).
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -17,6 +17,7 @@
 	import { go } from '#lib/people/go.ts';
 	import { orgSettingsView } from '#lib/people/org-settings.ts';
 	import { SECTION_TITLE } from '#lib/rules/policies.ts';
+	import { fieldLabel, valueWords } from '#lib/rules/policy-words.ts';
 	import { can } from '#lib/state/session.svelte.ts';
 	import DangerZone from '#lib/ui/DangerZone.svelte';
 	import States from '#lib/ui/States.svelte';
@@ -73,12 +74,10 @@
 		}
 	}
 
-	const policyState = (set: boolean, count: number) =>
-		!set
-			? tf('organizations.policy_none', 'No rule: each device keeps its own setting.')
-			: count === 1
-				? tf('organizations.policy_set_one', 'Set for this organization: 1 value.')
-				: tf('organizations.policy_set_n', 'Set for this organization: {count} values.', { count });
+	const policyState = (set: boolean) =>
+		set
+			? tf('organizations.policy_set', 'Set for this organization.')
+			: tf('organizations.policy_none', 'No rule: each device keeps its own setting.');
 
 	const rawColumns = $derived<Column<OrgSetting>[]>([
 		{ id: 'key', label: t('organizations.key'), cell: keyCell, sortValue: (r) => r.key, class: 'col-key' },
@@ -89,11 +88,19 @@
 {#snippet keyCell(r: OrgSetting)}<span class="mono">{r.key}</span>{/snippet}
 {#snippet valueCell(r: OrgSetting)}<span class="mono">{r.value}</span>{/snippet}
 
-{#snippet storedValue(raw: string)}
-	<details class="stored">
-		<summary>{tf('organizations.stored_value', 'Stored value')}</summary>
-		<pre class="mono">{raw}</pre>
-	</details>
+{#snippet storedValues(values: { field: string; known: boolean; value: unknown }[])}
+	<ul class="stored">
+		{#each values as v (v.field)}
+			<li>
+				<span class={['stored-name', !v.known && 'mono']}>{v.known ? fieldLabel(v.field) : v.field}:</span>
+				{v.known
+					? valueWords(v.field, v.value)
+					: typeof v.value === 'string'
+						? v.value
+						: JSON.stringify(v.value)}
+			</li>
+		{/each}
+	</ul>
 {/snippet}
 
 <div class="org-settings">
@@ -138,9 +145,9 @@
 				>
 					{#snippet control(f)}
 						<output id={f.id} aria-describedby={f.describedby} class={['state', p.set && 'is-set']}
-							>{policyState(p.set, p.count)}</output
+							>{policyState(p.set)}</output
 						>
-						{#if p.set}{@render storedValue(p.raw)}{/if}
+						{#if p.values.length}{@render storedValues(p.values)}{/if}
 					{/snippet}
 				</SettingRow>
 			{/each}
@@ -248,28 +255,17 @@
 			min-height: 44px;
 		}
 	}
-	.stored summary {
-		display: inline-flex;
-		align-items: center;
-		min-height: 28px;
-		color: var(--text-muted);
-		font-size: var(--text-sm);
-		cursor: pointer;
-	}
-	@media (pointer: coarse) {
-		.stored summary {
-			min-height: 44px;
-		}
-	}
-	.stored pre {
-		margin: var(--space-1) 0 0;
-		padding: var(--space-2);
-		overflow-x: auto;
-		white-space: pre-wrap;
+	.stored {
+		margin: var(--space-2) 0 0;
+		padding: 0;
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
 		overflow-wrap: anywhere;
-		border-radius: var(--radius);
-		background: var(--bg-sunken, var(--bg-secondary));
-		font-size: var(--text-sm);
+	}
+	.stored-name {
+		color: var(--text-muted);
 	}
 	/* The group's rows already reach its edges; the table's own pull to the edges would go past them */
 	.raw {

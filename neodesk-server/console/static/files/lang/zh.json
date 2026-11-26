@@ -5771,9 +5771,6 @@
     "billing_package": "计费套餐",
     "max_session_invalid": "请输入 0 或以上的整数分钟数。",
     "policy_none": "无规则：每台设备保留自己的设置。",
-    "policy_set_one": "已为此组织设置：1 个值。",
-    "policy_set_n": "已为此组织设置：{count} 个值。",
-    "stored_value": "存储的值",
     "settings_tab_note": "当前适用于此组织的内容。每个值在设置它的地方更改：策略在“策略”页面，共享通讯录在“通讯录”标签页。",
     "policies_group_desc": "此组织的设备上远程会话如何工作。",
     "policies_group_effect": "设备下次向服务器请求策略时获得更改。",
@@ -5788,7 +5785,8 @@
     "other_values_desc": "为此组织保存、但在控制台中没有专门位置的值。",
     "danger_zone": "危险区域",
     "name_hint": "显示在此组织的页面、列表中，并向其成员显示。",
-    "slug_changed": "用短名称指定组织的登录方式在保存后需要使用新名称。"
+    "slug_changed": "用短名称指定组织的登录方式在保存后需要使用新名称。",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "端到端加密",

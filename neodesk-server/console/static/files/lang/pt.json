@@ -5513,9 +5513,6 @@
     "billing_package": "Pacote de faturação",
     "max_session_invalid": "Introduza um número inteiro de minutos, 0 ou mais.",
     "policy_none": "Sem regra: cada dispositivo mantém a sua própria definição.",
-    "policy_set_one": "Definido para esta organização: 1 valor.",
-    "policy_set_n": "Definido para esta organização: {count} valores.",
-    "stored_value": "Valor guardado",
     "settings_tab_note": "O que se aplica agora a esta organização. Cada valor altera-se onde é definido: as políticas na página Políticas, o livro de endereços partilhado no separador Livro de endereços.",
     "policies_group_desc": "Como funcionam as sessões remotas nos dispositivos desta organização.",
     "policies_group_effect": "Os dispositivos recebem uma alteração da próxima vez que pedirem a política ao servidor.",
@@ -5530,7 +5527,8 @@
     "other_values_desc": "Valores guardados para esta organização que não têm lugar próprio na consola.",
     "danger_zone": "Zona de perigo",
     "name_hint": "Mostrado na página desta organização, nas listas e aos seus membros.",
-    "slug_changed": "Os inícios de sessão que indicam a organização pelo nome curto precisam do novo depois de guardar."
+    "slug_changed": "Os inícios de sessão que indicam a organização pelo nome curto precisam do novo depois de guardar.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "Criptografia ponta a ponta",

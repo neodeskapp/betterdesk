@@ -5513,9 +5513,6 @@
     "billing_package": "청구 패키지",
     "max_session_invalid": "0 이상의 정수로 분을 입력하세요.",
     "policy_none": "규칙 없음: 각 장치가 자체 설정을 유지합니다.",
-    "policy_set_one": "이 조직에 설정됨: 값 1개.",
-    "policy_set_n": "이 조직에 설정됨: 값 {count}개.",
-    "stored_value": "저장된 값",
     "settings_tab_note": "지금 이 조직에 적용되는 것. 각 값은 설정된 곳에서 바꿉니다: 정책은 정책 페이지, 공유 주소록은 주소록 탭.",
     "policies_group_desc": "이 조직의 장치에서 원격 세션이 작동하는 방식.",
     "policies_group_effect": "장치는 다음에 서버에 정책을 요청할 때 변경을 받습니다.",
@@ -5530,7 +5527,8 @@
     "other_values_desc": "이 조직에 저장되었지만 콘솔에 따로 자리가 없는 값.",
     "danger_zone": "위험 구역",
     "name_hint": "이 조직 페이지, 목록, 구성원에게 표시됩니다.",
-    "slug_changed": "짧은 이름으로 조직을 지정하는 로그인은 저장 후 새 이름이 필요합니다."
+    "slug_changed": "짧은 이름으로 조직을 지정하는 로그인은 저장 후 새 이름이 필요합니다.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "종단 간 암호화",

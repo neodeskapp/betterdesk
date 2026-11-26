@@ -5513,9 +5513,6 @@
     "billing_package": "請求パッケージ",
     "max_session_invalid": "分を 0 以上の整数で入力してください。",
     "policy_none": "ルールなし: 各デバイスが自身の設定を保ちます。",
-    "policy_set_one": "この組織に設定: 1 件の値。",
-    "policy_set_n": "この組織に設定: {count} 件の値。",
-    "stored_value": "保存されている値",
     "settings_tab_note": "この組織に現在適用されているもの。各値は設定されている場所で変更します: ポリシーは「ポリシー」ページ、共有アドレス帳は「アドレス帳」タブです。",
     "policies_group_desc": "この組織のデバイスでリモートセッションがどう動作するか。",
     "policies_group_effect": "デバイスは、次にサーバーにポリシーを問い合わせたときに変更を受け取ります。",
@@ -5530,7 +5527,8 @@
     "other_values_desc": "この組織用に保存されているが、コンソールに専用の場所がない値。",
     "danger_zone": "危険な操作",
     "name_hint": "この組織のページ、一覧、メンバーに表示されます。",
-    "slug_changed": "短い名前で組織を指定するサインインでは、保存後に新しい名前が必要になります。"
+    "slug_changed": "短い名前で組織を指定するサインインでは、保存後に新しい名前が必要になります。",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "エンドツーエンド暗号化",

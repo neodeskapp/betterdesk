@@ -5519,9 +5519,6 @@
     "billing_package": "Gói thanh toán",
     "max_session_invalid": "Nhập số phút là số nguyên, từ 0 trở lên.",
     "policy_none": "Không có quy tắc: mỗi thiết bị giữ cài đặt riêng.",
-    "policy_set_one": "Đặt cho tổ chức này: 1 giá trị.",
-    "policy_set_n": "Đặt cho tổ chức này: {count} giá trị.",
-    "stored_value": "Giá trị đã lưu",
     "settings_tab_note": "Những gì đang áp dụng cho tổ chức này. Mỗi giá trị được đổi ở nơi nó được đặt: chính sách ở trang Chính sách, sổ địa chỉ chung ở tab Sổ địa chỉ.",
     "policies_group_desc": "Cách phiên từ xa hoạt động trên thiết bị của tổ chức này.",
     "policies_group_effect": "Thiết bị nhận thay đổi vào lần tiếp theo chúng hỏi máy chủ về chính sách.",
@@ -5536,7 +5533,8 @@
     "other_values_desc": "Giá trị lưu cho tổ chức này mà không có chỗ riêng trong bảng điều khiển.",
     "danger_zone": "Vùng nguy hiểm",
     "name_hint": "Hiển thị trên trang của tổ chức này, trong danh sách và cho thành viên.",
-    "slug_changed": "Các lần đăng nhập gọi tổ chức bằng tên ngắn sẽ cần tên mới sau khi bạn lưu."
+    "slug_changed": "Các lần đăng nhập gọi tổ chức bằng tên ngắn sẽ cần tên mới sau khi bạn lưu.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "Mã hóa đầu cuối",

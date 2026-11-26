@@ -5519,9 +5519,6 @@
     "billing_package": "Faturalandırma paketi",
     "max_session_invalid": "0 veya daha büyük, tam sayı olarak dakika girin.",
     "policy_none": "Kural yok: her cihaz kendi ayarını korur.",
-    "policy_set_one": "Bu kuruluş için ayarlandı: 1 değer.",
-    "policy_set_n": "Bu kuruluş için ayarlanan değerler: {count}.",
-    "stored_value": "Saklanan değer",
     "settings_tab_note": "Bu kuruluş için şu an geçerli olanlar. Her değer ayarlandığı yerde değiştirilir: politikalar Politikalar sayfasında, paylaşılan adres defteri Adres defteri sekmesinde.",
     "policies_group_desc": "Bu kuruluşun cihazlarında uzak oturumların nasıl çalıştığı.",
     "policies_group_effect": "Cihazlar, politikalarını sunucudan bir sonraki istediklerinde değişikliği alır.",
@@ -5536,7 +5533,8 @@
     "other_values_desc": "Bu kuruluş için kaydedilmiş, konsolda kendi yeri olmayan değerler.",
     "danger_zone": "Tehlikeli bölge",
     "name_hint": "Bu kuruluşun sayfasında, listelerde ve üyelerine gösterilir.",
-    "slug_changed": "Kuruluşu kısa adıyla belirten oturum açmalar, kaydettikten sonra yeni adı gerektirir."
+    "slug_changed": "Kuruluşu kısa adıyla belirten oturum açmalar, kaydettikten sonra yeni adı gerektirir.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "Uçtan uca şifrelenmiş",

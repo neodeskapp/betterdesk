@@ -5513,9 +5513,6 @@
     "billing_package": "Factureringspakket",
     "max_session_invalid": "Voer een geheel aantal minuten in, 0 of meer.",
     "policy_none": "Geen regel: elk apparaat houdt zijn eigen instelling.",
-    "policy_set_one": "Ingesteld voor deze organisatie: 1 waarde.",
-    "policy_set_n": "Ingesteld voor deze organisatie: {count} waarden.",
-    "stored_value": "Opgeslagen waarde",
     "settings_tab_note": "Wat nu voor deze organisatie geldt. Elke waarde wijzigt u waar die wordt ingesteld: beleid op de pagina Beleid, het gedeelde adresboek op het tabblad Adresboek.",
     "policies_group_desc": "Hoe externe sessies werken op de apparaten van deze organisatie.",
     "policies_group_effect": "Apparaten krijgen een wijziging de volgende keer dat ze de server om hun beleid vragen.",
@@ -5530,7 +5527,8 @@
     "other_values_desc": "Waarden die voor deze organisatie zijn opgeslagen en geen eigen plek in de console hebben.",
     "danger_zone": "Gevarenzone",
     "name_hint": "Getoond op de pagina van deze organisatie, in lijsten en aan de leden.",
-    "slug_changed": "Inlogs die de organisatie met haar korte naam aanduiden, hebben na het opslaan de nieuwe nodig."
+    "slug_changed": "Inlogs die de organisatie met haar korte naam aanduiden, hebben na het opslaan de nieuwe nodig.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "End-to-end versleuteld",

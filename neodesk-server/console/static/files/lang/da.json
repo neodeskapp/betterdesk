@@ -5519,9 +5519,6 @@
     "billing_package": "Faktureringspakke",
     "max_session_invalid": "Angiv et helt antal minutter, 0 eller flere.",
     "policy_none": "Ingen regel: hver enhed beholder sin egen indstilling.",
-    "policy_set_one": "Sat for denne organisation: 1 værdi.",
-    "policy_set_n": "Sat for denne organisation: {count} værdier.",
-    "stored_value": "Gemt værdi",
     "settings_tab_note": "Det, der gælder for denne organisation nu. Hver værdi ændres der, hvor den er sat: politikker på siden Politikker, den delte adressebog på fanen Adressebog.",
     "policies_group_desc": "Hvordan fjernsessioner virker på denne organisations enheder.",
     "policies_group_effect": "Enheder får en ændring, næste gang de beder serveren om deres politik.",
@@ -5536,7 +5533,8 @@
     "other_values_desc": "Værdier gemt for denne organisation, som ikke har deres egen plads i konsollen.",
     "danger_zone": "Farezone",
     "name_hint": "Vises på denne organisations side, i lister og for dens medlemmer.",
-    "slug_changed": "Logins, der angiver organisationen ved dens korte navn, skal bruge det nye, når du har gemt."
+    "slug_changed": "Logins, der angiver organisationen ved dens korte navn, skal bruge det nye, når du har gemt.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "End-to-end krypteret",

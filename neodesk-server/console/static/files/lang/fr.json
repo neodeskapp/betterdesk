@@ -5793,9 +5793,6 @@
     "billing_package": "Forfait de facturation",
     "max_session_invalid": "Saisissez un nombre entier de minutes, 0 ou plus.",
     "policy_none": "Aucune règle : chaque appareil garde son propre réglage.",
-    "policy_set_one": "Défini pour cette organisation : 1 valeur.",
-    "policy_set_n": "Défini pour cette organisation : {count} valeurs.",
-    "stored_value": "Valeur stockée",
     "settings_tab_note": "Ce qui s'applique à cette organisation en ce moment. Chaque valeur se modifie là où elle est définie : les politiques sur la page Politiques, le carnet d'adresses partagé dans l'onglet Carnet d'adresses.",
     "policies_group_desc": "Comment fonctionnent les sessions à distance sur les appareils de cette organisation.",
     "policies_group_effect": "Les appareils reçoivent une modification la prochaine fois qu'ils demandent leur politique au serveur.",
@@ -5810,7 +5807,8 @@
     "other_values_desc": "Valeurs enregistrées pour cette organisation qui n'ont pas leur propre place dans la console.",
     "danger_zone": "Zone de danger",
     "name_hint": "Affiché sur la page de cette organisation, dans les listes et à ses membres.",
-    "slug_changed": "Les connexions qui nomment l'organisation par son nom court ont besoin du nouveau après l'enregistrement."
+    "slug_changed": "Les connexions qui nomment l'organisation par son nom court ont besoin du nouveau après l'enregistrement.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "Chiffré de bout en bout",

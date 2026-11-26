@@ -5789,9 +5789,6 @@
     "billing_package": "Pakiet rozliczeniowy",
     "max_session_invalid": "Wpisz całkowitą liczbę minut, 0 lub więcej.",
     "policy_none": "Brak zasady: każde urządzenie zachowuje własne ustawienie.",
-    "policy_set_one": "Ustawione dla tej organizacji: 1 wartość.",
-    "policy_set_n": "Ustawione dla tej organizacji, liczba wartości: {count}.",
-    "stored_value": "Zapisana wartość",
     "settings_tab_note": "Co teraz dotyczy tej organizacji. Każdą wartość zmienia się tam, gdzie jest ustawiona: polityki na stronie Polityki, wspólną książkę adresową na karcie Książka adresowa.",
     "policies_group_desc": "Jak działają sesje zdalne na urządzeniach tej organizacji.",
     "policies_group_effect": "Urządzenia dostają zmianę, gdy następnym razem poproszą serwer o swoją politykę.",
@@ -5806,7 +5803,8 @@
     "other_values_desc": "Wartości zapisane dla tej organizacji, które nie mają własnego miejsca w konsoli.",
     "danger_zone": "Strefa zagrożenia",
     "name_hint": "Widoczna na stronie tej organizacji, na listach i dla jej członków.",
-    "slug_changed": "Logowania, które wskazują organizację jej krótką nazwą, po zapisaniu potrzebują nowej."
+    "slug_changed": "Logowania, które wskazują organizację jej krótką nazwą, po zapisaniu potrzebują nowej.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "Szyfrowanie end-to-end",

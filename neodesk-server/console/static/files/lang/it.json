@@ -5513,9 +5513,6 @@
     "billing_package": "Pacchetto di fatturazione",
     "max_session_invalid": "Inserisci un numero intero di minuti, 0 o più.",
     "policy_none": "Nessuna regola: ogni dispositivo mantiene la propria impostazione.",
-    "policy_set_one": "Impostato per questa organizzazione: 1 valore.",
-    "policy_set_n": "Impostato per questa organizzazione: {count} valori.",
-    "stored_value": "Valore salvato",
     "settings_tab_note": "Cosa si applica ora a questa organizzazione. Ogni valore si cambia dove è impostato: i criteri nella pagina Criteri, la rubrica condivisa nella scheda Rubrica.",
     "policies_group_desc": "Come funzionano le sessioni remote sui dispositivi di questa organizzazione.",
     "policies_group_effect": "I dispositivi ricevono una modifica la prossima volta che chiedono al server il loro criterio.",
@@ -5530,7 +5527,8 @@
     "other_values_desc": "Valori salvati per questa organizzazione che non hanno un posto proprio nella console.",
     "danger_zone": "Zona pericolosa",
     "name_hint": "Mostrato nella pagina di questa organizzazione, negli elenchi e ai suoi membri.",
-    "slug_changed": "Gli accessi che indicano l'organizzazione con il suo nome breve avranno bisogno di quello nuovo dopo il salvataggio."
+    "slug_changed": "Gli accessi che indicano l'organizzazione con il suo nome breve avranno bisogno di quello nuovo dopo il salvataggio.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "Crittografia end-to-end",

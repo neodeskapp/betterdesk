@@ -1,11 +1,13 @@
 /**
  * The values stored with an organization, sorted for the Settings tab of
  * its page (PATTERN.md rule 2): each policy group the Policies page saves
- * (policy_<group>), whether it is set here and how many values it holds;
- * the shared address book's switch; and everything else as stored.
+ * (policy_<group>), whether it is set here and the values it holds, in
+ * the Policies page's order (fields the console does not know after them,
+ * by their key); the shared address book's switch; and everything else as
+ * stored.
  */
 
-import { SECTIONS, type Section } from '#lib/rules/policies.ts';
+import { FIELDS, SECTIONS, type Section } from '#lib/rules/policies.ts';
 
 export interface StoredSetting {
 	key: string;
@@ -17,8 +19,8 @@ export interface PolicyGroup {
 	key: string;
 	/** Saved for this organization; otherwise no rule applies and each device keeps its own setting */
 	set: boolean;
-	/** How many values the saved group holds */
-	count: number;
+	/** The saved values: field id ("connection.mode") for known ones, else the stored key */
+	values: { field: string; known: boolean; value: unknown }[];
 	raw: string;
 }
 
@@ -31,13 +33,23 @@ export interface OrgSettingsView<R extends StoredSetting = StoredSetting> {
 
 export const ADDRESS_BOOK_KEY = 'shared_address_book_enabled';
 
-function countValues(raw: string): number {
+function storedValues(section: Section, raw: string): PolicyGroup['values'] {
+	let obj: Record<string, unknown> = {};
 	try {
 		const v: unknown = JSON.parse(raw);
-		return v && typeof v === 'object' && !Array.isArray(v) ? Object.keys(v).length : 0;
+		if (v && typeof v === 'object' && !Array.isArray(v)) obj = v as Record<string, unknown>;
 	} catch {
-		return 0;
+		return [];
 	}
+	const names = Object.keys(FIELDS[section]);
+	const known = names
+		.filter((n) => n in obj)
+		.map((n) => ({ field: `${section}.${n}`, known: true, value: obj[n] }));
+	const unknown = Object.keys(obj)
+		.filter((n) => !names.includes(n))
+		.sort()
+		.map((n) => ({ field: n, known: false, value: obj[n] }));
+	return [...known, ...unknown];
 }
 
 export function orgSettingsView<R extends StoredSetting>(rows: readonly R[]): OrgSettingsView<R> {
@@ -49,7 +61,7 @@ export function orgSettingsView<R extends StoredSetting>(rows: readonly R[]): Or
 			section,
 			key,
 			set: raw !== undefined,
-			count: raw === undefined ? 0 : countValues(raw),
+			values: raw === undefined ? [] : storedValues(section, raw),
 			raw: raw ?? ''
 		};
 	});

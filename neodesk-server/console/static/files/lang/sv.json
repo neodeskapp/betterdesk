@@ -5519,9 +5519,6 @@
     "billing_package": "Faktureringspaket",
     "max_session_invalid": "Ange ett helt antal minuter, 0 eller fler.",
     "policy_none": "Ingen regel: varje enhet behåller sin egen inställning.",
-    "policy_set_one": "Satt för den här organisationen: 1 värde.",
-    "policy_set_n": "Satt för den här organisationen: {count} värden.",
-    "stored_value": "Sparat värde",
     "settings_tab_note": "Det som gäller för den här organisationen nu. Varje värde ändras där det är satt: policyer på sidan Policyer, den delade adressboken på fliken Adressbok.",
     "policies_group_desc": "Hur fjärrsessioner fungerar på den här organisationens enheter.",
     "policies_group_effect": "Enheterna får en ändring nästa gång de ber servern om sin policy.",
@@ -5536,7 +5533,8 @@
     "other_values_desc": "Värden sparade för den här organisationen som inte har någon egen plats i konsolen.",
     "danger_zone": "Farozon",
     "name_hint": "Visas på den här organisationens sida, i listor och för dess medlemmar.",
-    "slug_changed": "Inloggningar som anger organisationen med dess korta namn behöver det nya när du har sparat."
+    "slug_changed": "Inloggningar som anger organisationen med dess korta namn behöver det nya när du har sparat.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "End-to-end krypterad",

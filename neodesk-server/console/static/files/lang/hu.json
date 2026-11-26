@@ -5519,9 +5519,6 @@
     "billing_package": "Számlázási csomag",
     "max_session_invalid": "Adjon meg egész számú percet, 0-t vagy többet.",
     "policy_none": "Nincs szabály: minden eszköz megtartja a saját beállítását.",
-    "policy_set_one": "Ehhez a szervezethez beállítva: 1 érték.",
-    "policy_set_n": "Ehhez a szervezethez beállított értékek: {count}.",
-    "stored_value": "Tárolt érték",
     "settings_tab_note": "Ami most erre a szervezetre érvényes. Minden érték ott módosítható, ahol be van állítva: az irányelvek az Irányelvek oldalon, a közös címjegyzék a Címjegyzék lapon.",
     "policies_group_desc": "Hogyan működnek a távoli munkamenetek a szervezet eszközein.",
     "policies_group_effect": "Az eszközök akkor kapják meg a módosítást, amikor legközelebb lekérik a szervertől az irányelvüket.",
@@ -5536,7 +5533,8 @@
     "other_values_desc": "A szervezethez mentett értékek, amelyeknek nincs saját helyük a konzolban.",
     "danger_zone": "Veszélyzóna",
     "name_hint": "Megjelenik a szervezet oldalán, a listákban és a tagjainak.",
-    "slug_changed": "Azoknak a bejelentkezéseknek, amelyek a rövid nevével nevezik meg a szervezetet, mentés után az új név kell."
+    "slug_changed": "Azoknak a bejelentkezéseknek, amelyek a rövid nevével nevezik meg a szervezetet, mentés után az új név kell.",
+    "policy_set": "Set for this organization."
   },
   "chat": {
     "e2e_enabled": "Végponttól végpontig titkosítva",
