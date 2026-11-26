@@ -275,6 +275,8 @@ describe('the panel access sheet', () => {
 		await waitFor(() => expect(row('devices')).not.toBeNull());
 		expect(calls.map((c) => `${c.method} ${c.path}`).sort()).toEqual([
 			'GET /api/panel/access/catalog',
+			// The person's groups, for what "Role or group default" gives
+			'GET /api/panel/access/groups/g1',
 			'GET /api/panel/access/users/7'
 		]);
 		// Once loaded, focus is on the first setting, not lost with the loading state
