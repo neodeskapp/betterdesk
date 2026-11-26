@@ -984,6 +984,10 @@
 </SettingsBody>
 
 <style>
+	/* A changed row is tinted, and so is the picked theme: muted text would lose its contrast on both */
+	:global(.appearance-tab .setting-row.is-changed .choice-desc) {
+		color: var(--text);
+	}
 	.branding-form {
 		display: flex;
 		flex-direction: column;
