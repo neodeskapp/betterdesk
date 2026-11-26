@@ -2,7 +2,7 @@ import * as v from 'valibot';
 import { describe, expect, test } from 'vitest';
 import { RoleInfo, RoleOverride } from '../../../src/lib/api/roles.ts';
 import {
-	categoryLabel,
+	groupTitle,
 	overrideMap,
 	permissionGroups,
 	permLabel,
@@ -12,7 +12,7 @@ import {
 describe('permission groups', () => {
 	test('only the permissions the server knows; unknown ones under Other; empty groups left out', () => {
 		const groups = permissionGroups(['device.view', 'user.view', 'user.delete', 'future.thing']);
-		expect(groups.map((g) => g.id)).toEqual(['device', 'user', 'other']);
+		expect(groups.map((g) => g.id)).toEqual(['manage', 'people', 'other']);
 		expect(groups[0]?.permissions).toEqual(['device.view']);
 		expect(groups[1]?.permissions).toEqual(['user.view', 'user.delete']);
 		expect(groups[2]?.permissions).toEqual(['future.thing']);
@@ -20,7 +20,7 @@ describe('permission groups', () => {
 
 	test('a server that lists nothing gets every known group', () => {
 		const groups = permissionGroups([]);
-		expect(groups.map((g) => g.id)).toContain('mesh');
+		expect(groups.map((g) => g.id)).toEqual(['connect', 'manage', 'support', 'people', 'server', 'billing']);
 		expect(groups.find((g) => g.id === 'other')).toBeUndefined();
 	});
 
@@ -28,7 +28,7 @@ describe('permission groups', () => {
 		const t = (k: string) => ({ 'permissions.perm_device_view': 'View devices' })[k] ?? k;
 		expect(permLabel('device.view', t)).toBe('View devices');
 		expect(permLabel('device.ban', t)).toBe('device.ban');
-		expect(categoryLabel('billing', t)).toBe('Billing');
+		expect(groupTitle('billing', t)).toBe('Billing');
 	});
 });
 
