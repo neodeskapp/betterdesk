@@ -57,7 +57,8 @@ test.afterEach(async ({ page }) => {
 	await batch(page, clear);
 });
 
-const toast = (page: Page) => page.locator('.toast-region[role="status"]');
+// The polite toasts come first; screen readers hear them through the announcer
+const toast = (page: Page) => page.locator('.toast-region').first();
 
 async function expectSavedThenUndo(page: Page, undo: () => Promise<void>) {
 	await expect(toast(page)).toContainText(

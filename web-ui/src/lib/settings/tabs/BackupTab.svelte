@@ -585,7 +585,8 @@
 			{/if}
 		</section>
 		{#if fullBackups}
-			<section class="summary-part" aria-labelledby="backup-side-title">
+			<!-- No landmark: the Scheduled backups group of the page has the same name -->
+			<section class="summary-part">
 				<h2 id="backup-side-title">{tf('backups_page.schedule_title', 'Scheduled backups')}</h2>
 				<Facts items={stateFacts} />
 				{#if scheduleStatus?.lastError}

@@ -51,7 +51,7 @@ test.describe('focus is never hidden under a bar', () => {
 		await field.click();
 		await field.press('End');
 		await field.pressSequentially('x');
-		await expect(page.locator('.save-bar.is-dirty')).toBeVisible();
+		await expect(page.locator('.changes-bar')).toBeVisible();
 		await field.focus();
 		expect(await coveredStops(page, 40)).toEqual([]);
 		expect(await coveredStops(page, 60, true)).toEqual([]);
