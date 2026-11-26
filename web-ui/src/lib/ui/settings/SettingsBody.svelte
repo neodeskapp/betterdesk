@@ -172,6 +172,10 @@
 			grid-area: summary;
 			position: sticky;
 			top: var(--space-5);
+			/* A column taller than the window scrolls on its own, so a link at
+			   its end that gets focus comes into view (WCAG 2.4.11) */
+			max-height: calc(100vh - var(--topbar-h) - 2 * var(--space-5));
+			overflow-y: auto;
 		}
 	}
 </style>
