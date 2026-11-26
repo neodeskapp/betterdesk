@@ -1763,9 +1763,47 @@
   },
   {
    "name": "chat team",
-   "summary": "List your direct and group conversations and the colleagues you can write to.",
+   "summary": "List your direct, group and team conversations and the colleagues you can write to.",
    "route": "GET /api/chat/team",
    "permission": "chat.team"
+  },
+  {
+   "name": "chat team-add",
+   "summary": "Make a team (-f title=..., -F people='[2,3]', -F groups='[\"<user group guid>\"]').",
+   "route": "POST /api/chat/team/teams",
+   "permission": "chat.team and chat.teams_manage",
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
+   "name": "chat team-delete",
+   "summary": "Delete a team with its messages.",
+   "route": "DELETE /api/chat/team/teams/{id}",
+   "args": [
+    {
+     "name": "id",
+     "help": "The team's conversation id, team:<id>"
+    }
+   ],
+   "permission": "chat.team and chat.teams_manage"
+  },
+  {
+   "name": "chat team-set",
+   "summary": "Rename a team or change its people and user groups.",
+   "route": "PATCH /api/chat/team/teams/{id}",
+   "args": [
+    {
+     "name": "id",
+     "help": "The team's conversation id, team:<id>"
+    }
+   ],
+   "permission": "chat.team and chat.teams_manage",
+   "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
+   "name": "chat teams",
+   "summary": "List every team with its people and user groups, and the user groups a team can include.",
+   "route": "GET /api/chat/team/teams",
+   "permission": "chat.team and chat.teams_manage"
   },
   {
    "name": "chat trail",

@@ -21,10 +21,10 @@ class ChatPanel {
 export const chatPanel = new ChatPanel();
 
 export function sectionOf(conv: string): Section {
-	return conv.startsWith('dm:') || conv.startsWith('group:') || conv.startsWith('old:') ? 'team' : 'support';
+	return /^(dm|group|team|old):/.test(conv) ? 'team' : 'support';
 }
 
-/** Opens a conversation (a device id, dm:..., group:...) or just the chat */
+/** Opens a conversation (a device id, dm:..., group:..., team:...) or just the chat */
 export function openChat(conv: string | null = null, opener: HTMLElement | null = null): void {
 	if (typeof location !== 'undefined' && appPath(location.pathname) === '/chat') {
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- read once for an address

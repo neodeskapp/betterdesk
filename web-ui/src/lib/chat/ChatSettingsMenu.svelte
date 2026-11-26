@@ -20,6 +20,7 @@
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import * as api from './api.ts';
 	import { chat } from './client.svelte.ts';
+	import TeamsDialog from './TeamsDialog.svelte';
 	import type { AccountSettings, ServerSettings } from './types.ts';
 
 	const permission = $derived(typeof Notification === 'undefined' ? 'unsupported' : Notification.permission);
@@ -41,6 +42,7 @@
 		}
 	}
 
+	let teams = $state(false);
 	let server = $state<ServerSettings | null>(null);
 	let editing = $state(false);
 	let minutes = $state('15');
@@ -104,11 +106,20 @@
 	{#if chat.settings.browser && permission === 'denied'}
 		<MenuItem disabled>{t('chat.notify_blocked')}</MenuItem>
 	{/if}
-	{#if can('server.config')}
+	{#if (can('chat.teams_manage') && chat.may.team) || can('server.config')}
 		<MenuDivider />
+	{/if}
+	{#if can('chat.teams_manage') && chat.may.team}
+		<MenuItem icon="workspaces" onselect={() => (teams = true)}>{t('chat.manage_teams')}</MenuItem>
+	{/if}
+	{#if can('server.config')}
 		<MenuItem icon="settings" onselect={() => void openServer()}>{t('chat.server_settings')}</MenuItem>
 	{/if}
 </MenuButton>
+
+{#if teams}
+	<TeamsDialog onclose={() => (teams = false)} />
+{/if}
 
 {#if editing}
 	<Dialog open title={t('chat.server_settings')} onclose={() => (editing = false)}>
