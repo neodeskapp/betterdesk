@@ -184,10 +184,16 @@
 		if (!v.panel_url.trim()) set('panel_url', origin);
 	}
 
+	/**
+	 * "Set here" for a value of a provider that was set up (it has a client
+	 * ID). The server fills the claims and scopes with its own values before
+	 * anything is saved, so on a fresh install no row claims to be set here.
+	 */
 	const stored = (f: Field) => {
 		const value = draft.loaded[f];
 		return storedSource(
-			(typeof value === 'string' && value.trim() !== '') || (Array.isArray(value) && value.length > 0)
+			draft.loaded.client_id.trim() !== '' &&
+				((typeof value === 'string' && value.trim() !== '') || (Array.isArray(value) && value.length > 0))
 		);
 	};
 
