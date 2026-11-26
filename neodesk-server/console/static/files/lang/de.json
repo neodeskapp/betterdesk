@@ -2678,7 +2678,7 @@
     "delete_item_organizations": "Mitgliedschaften in Organisationen",
     "delete_item_user_groups": "Mitgliedschaften in Benutzergruppen",
     "delete_item_device_grants": "Einzeln freigegebene Geräte",
-    "delete_item_access": "Ordnerzugriff, Bereichszugriff und das Profilbild",
+    "delete_item_access": "Ordnerzugriff, Konsolenzugriff und das Profilbild",
     "delete_item_saved_reports": "Gespeicherte Berichte",
     "delete_item_open_tickets": "Offene Tickets, die dem Konto zugewiesen sind",
     "delete_item_audit": "Einträge im Audit-Log",
