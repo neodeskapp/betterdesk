@@ -1638,7 +1638,9 @@
       "fact_tools": "Build-Werkzeuge (Go)",
       "tools_system": "Auf dem Server installiert",
       "tools_console": "Von der Konsole heruntergeladen",
-      "tools_missing": "Nicht installiert"
+      "tools_missing": "Nicht installiert",
+      "channel_now": "Jetzt: {channel}. {installs}.",
+      "channel_applies": "Gilt ab der nächsten Suche nach Updates. Installiert wird erst, wenn du auf „Install Update“ klickst."
     },
     "advanced_tab": {
       "note": "Wähle eine Datei, um sie anzusehen und zu bearbeiten. Jedes Speichern behält eine Kopie der vorherigen Version.",

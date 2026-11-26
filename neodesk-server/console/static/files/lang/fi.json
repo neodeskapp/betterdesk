@@ -1644,7 +1644,9 @@
       "fact_tools": "Kokoamistyökalut (Go)",
       "tools_system": "Asennettu palvelimelle",
       "tools_console": "Konsolin lataamat",
-      "tools_missing": "Ei asennettu"
+      "tools_missing": "Ei asennettu",
+      "channel_now": "Now: {channel}. {installs}.",
+      "channel_applies": "Applies to the next check for updates. Nothing is installed until you click Install."
     },
     "advanced_tab": {
       "note": "Valitse tiedosto, jota haluat tarkastella ja muokata. Jokainen tallennus säilyttää kopion edellisestä versiosta.",

@@ -1644,7 +1644,9 @@
       "fact_tools": "Alat build (Go)",
       "tools_system": "Terpasang di server",
       "tools_console": "Diunduh oleh konsol",
-      "tools_missing": "Tidak terpasang"
+      "tools_missing": "Tidak terpasang",
+      "channel_now": "Now: {channel}. {installs}.",
+      "channel_applies": "Applies to the next check for updates. Nothing is installed until you click Install."
     },
     "advanced_tab": {
       "note": "Pilih file untuk melihat dan mengeditnya. Setiap penyimpanan menyimpan salinan versi sebelumnya.",

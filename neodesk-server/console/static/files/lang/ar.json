@@ -1645,7 +1645,9 @@
       "fact_tools": "أدوات البناء (Go)",
       "tools_system": "مثبتة على الخادم",
       "tools_console": "نزّلتها وحدة التحكم",
-      "tools_missing": "غير مثبتة"
+      "tools_missing": "غير مثبتة",
+      "channel_now": "Now: {channel}. {installs}.",
+      "channel_applies": "Applies to the next check for updates. Nothing is installed until you click Install."
     },
     "advanced_tab": {
       "note": "اختر ملفًا لعرضه وتحريره. يحتفظ كل حفظ بنسخة من الإصدار السابق.",

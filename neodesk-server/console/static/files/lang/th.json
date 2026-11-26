@@ -1644,7 +1644,9 @@
       "fact_tools": "เครื่องมือสร้าง (Go)",
       "tools_system": "ติดตั้งบนเซิร์ฟเวอร์",
       "tools_console": "คอนโซลดาวน์โหลดมา",
-      "tools_missing": "ยังไม่ได้ติดตั้ง"
+      "tools_missing": "ยังไม่ได้ติดตั้ง",
+      "channel_now": "Now: {channel}. {installs}.",
+      "channel_applies": "Applies to the next check for updates. Nothing is installed until you click Install."
     },
     "advanced_tab": {
       "note": "เลือกไฟล์เพื่อดูและแก้ไข ทุกครั้งที่บันทึกจะเก็บสำเนาของเวอร์ชันก่อนหน้าไว้",

@@ -1644,7 +1644,9 @@
       "fact_tools": "बिल्ड टूल (Go)",
       "tools_system": "सर्वर पर इंस्टॉल",
       "tools_console": "कंसोल द्वारा डाउनलोड",
-      "tools_missing": "इंस्टॉल नहीं"
+      "tools_missing": "इंस्टॉल नहीं",
+      "channel_now": "Now: {channel}. {installs}.",
+      "channel_applies": "Applies to the next check for updates. Nothing is installed until you click Install."
     },
     "advanced_tab": {
       "note": "देखने और संपादित करने के लिए कोई फ़ाइल चुनें। हर बार सहेजने पर पिछले संस्करण की एक कॉपी रखी जाती है।",

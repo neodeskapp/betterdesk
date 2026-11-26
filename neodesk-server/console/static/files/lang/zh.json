@@ -1638,7 +1638,9 @@
       "fact_tools": "构建工具 (Go)",
       "tools_system": "已安装在服务器上",
       "tools_console": "由控制台下载",
-      "tools_missing": "未安装"
+      "tools_missing": "未安装",
+      "channel_now": "Now: {channel}. {installs}.",
+      "channel_applies": "Applies to the next check for updates. Nothing is installed until you click Install."
     },
     "advanced_tab": {
       "note": "选择文件即可查看和编辑。每次保存都会保留上一版本的副本。",

@@ -1638,7 +1638,9 @@
       "fact_tools": "ビルドツール (Go)",
       "tools_system": "サーバーにインストール済み",
       "tools_console": "コンソールがダウンロード",
-      "tools_missing": "未インストール"
+      "tools_missing": "未インストール",
+      "channel_now": "Now: {channel}. {installs}.",
+      "channel_applies": "Applies to the next check for updates. Nothing is installed until you click Install."
     },
     "advanced_tab": {
       "note": "ファイルを選択すると表示・編集できます。保存するたびに前のバージョンのコピーが残ります。",

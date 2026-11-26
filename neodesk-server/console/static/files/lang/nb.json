@@ -1644,7 +1644,9 @@
       "fact_tools": "Byggeverktøy (Go)",
       "tools_system": "Installert på serveren",
       "tools_console": "Lastet ned av konsollen",
-      "tools_missing": "Ikke installert"
+      "tools_missing": "Ikke installert",
+      "channel_now": "Now: {channel}. {installs}.",
+      "channel_applies": "Applies to the next check for updates. Nothing is installed until you click Install."
     },
     "advanced_tab": {
       "note": "Velg en fil for å se og redigere den. Hver lagring tar vare på en kopi av forrige versjon.",

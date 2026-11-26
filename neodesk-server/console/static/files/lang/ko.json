@@ -1638,7 +1638,9 @@
       "fact_tools": "빌드 도구 (Go)",
       "tools_system": "서버에 설치됨",
       "tools_console": "콘솔이 내려받음",
-      "tools_missing": "설치되지 않음"
+      "tools_missing": "설치되지 않음",
+      "channel_now": "Now: {channel}. {installs}.",
+      "channel_applies": "Applies to the next check for updates. Nothing is installed until you click Install."
     },
     "advanced_tab": {
       "note": "파일을 선택하면 보고 편집할 수 있습니다. 저장할 때마다 이전 버전의 사본이 보관됩니다.",
