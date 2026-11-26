@@ -100,6 +100,11 @@ describe('reasons come from where the failure starts', () => {
 		expect(deviceRefusalReason('Connection not allowed')).toBe('device_not_allowed');
 		expect(deviceRefusalReason('Anything else')).toBeNull();
 	});
+	test('a login refusal that names the IPv6 prefix it counts', () => {
+		expect(deviceRefusalReason('Too many wrong attempts for IPv6 prefix /64')).toBe('rate_limited');
+		expect(deviceRefusalReason('Too many wrong attempts for IPv6 prefix /48')).toBe('rate_limited');
+		expect(deviceRefusalReason('Too many wrong attempts for something else')).toBeNull();
+	});
 	test('an error carries its reason', () => {
 		expect(reasonOf(new ReasonError('device_revoked', 'Connection refused: Device offline'))).toBe(
 			'device_revoked'

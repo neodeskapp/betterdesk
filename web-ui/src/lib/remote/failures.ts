@@ -51,10 +51,17 @@ export function serverRefusalReason(value: string): Reason {
 	return isReason(r) ? r : 'relay_refused';
 }
 
+/** Login refusals whose text carries a number: the client names the IPv6 prefix it counts wrong attempts for */
+const DEVICE_REFUSAL_PATTERNS: [RegExp, Reason][] = [
+	[/^Too many wrong attempts for IPv6 prefix \/\d+$/, 'rate_limited']
+];
+
 /** The reason of a login refusal the device sends (LoginResponse error), null for one it has no code for */
 export function deviceRefusalReason(value: string): Reason | null {
-	const r = DEVICE_REFUSALS[value.trim()];
-	return isReason(r) ? r : null;
+	const text = value.trim();
+	const r = DEVICE_REFUSALS[text];
+	if (isReason(r)) return r;
+	return DEVICE_REFUSAL_PATTERNS.find(([pattern]) => pattern.test(text))?.[1] ?? null;
 }
 
 /** PunchHoleResponse.Failure (rendezvous.proto) to a reason */

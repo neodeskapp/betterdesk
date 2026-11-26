@@ -21,7 +21,9 @@ Where the codes come from:
   their codes in `web-ui/src/lib/remote/server-refusals.json` (a Go test in
   `neodesk-server/signal` fails when a refusal has no code).
 - The computer's login refusals, listed in
-  `web-ui/src/lib/remote/device-refusals.json`.
+  `web-ui/src/lib/remote/device-refusals.json`, and the ones whose text
+  carries a number ("Too many wrong attempts for IPv6 prefix /64") in
+  `web-ui/src/lib/remote/failures.ts`.
 - The viewer's own checks: a connection that could not be secured, HTTPS,
   a close while signing in, a dropped network, and nobody accepting in time.
 
