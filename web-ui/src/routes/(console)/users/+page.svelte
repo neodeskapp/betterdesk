@@ -573,7 +573,8 @@
 			visible: hasTwoFactor,
 			sortValue: (u) =>
 				u.two_factor_state === 'on' || u.totp_enabled ? 2 : u.two_factor_state === 'required' ? 1 : 0,
-			class: 'col-nowrap'
+			/* "Required, not set up" wraps rather than run under the row menu */
+			minWidth: '8rem'
 		},
 		{
 			id: 'last_login',
