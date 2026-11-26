@@ -573,6 +573,9 @@ var fixtureTables = map[string]map[string][]string{
 			`50|'seed_admin'|'$2b$10$abcdefghijklmnopqrstuv'|'admin'|'local'|'JBSWY3DPEHPK3PXP'|1|'["AAAA-BBBB","CCCC-DDDD"]'|'2026-11-10 01:05:50'|''|1795000000|0|0|''|NULL|''|''|'säd😀@example.org'|''|''|''`,
 			`51|'second'|'pbkdf2-sha256$600000$s$h'|'viewer'|'local'|''|0|NULL|'2026-11-18 14:58:36'|''|1795000000|0|0|''|NULL|''|''|''|''|''|''`,
 		},
+		// audit_log.target_user_id, the account an entry is about, came
+		// after the Node console: its entries come back without one
+		"audit_log": {`1|50|'login'|'tab\there'|'127.0.0.1'|'2026-11-18 14:58:36'|NULL`},
 	},
 	"postgres": {
 		// BK8: Node's restore refused dlp_policies
@@ -582,6 +585,8 @@ var fixtureTables = map[string]map[string][]string{
 			`(50,seed_admin,$2b$10$abcdefghijklmnopqrstuv,admin,local,JBSWY3DPEHPK3PXP,t,"[""AAAA-BBBB"",""CCCC-DDDD""]","2026-11-10 01:05:50.694+00",,1795000000,f,f,"",,"","",säd😀@example.org,"","","")`,
 			`(51,second,pbkdf2-sha256$600000$s$h,viewer,local,"",f,,"2026-11-18 14:58:46.491+00",,1795000000,f,f,"",,"","","","","","")`,
 		},
+		// audit_log.target_user_id, as on SQLite
+		"audit_log": {`(1,50,login,"tab\\there",127.0.0.1,"2026-11-18 14:58:46.652+00",)`},
 	},
 }
 
