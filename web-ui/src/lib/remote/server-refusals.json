@@ -1,0 +1,12 @@
+{
+	"Target offline": "device_offline",
+	"Not authorized": "not_authorized",
+	"Billing suspended": "billing_blocked",
+	"Billing blocked": "billing_blocked",
+	"Relay authorization rejected": "relay_refused",
+	"Protocol mismatch: WebSocket and native TCP/UDP cannot share a relay session": "relay_refused",
+	"File transfer is turned off for your account on this server": "feature_off",
+	"TCP tunnels are turned off for your account on this server": "feature_off",
+	"The terminal is turned off for your account on this server": "feature_off",
+	"The person did not allow this in their quick support session": "consent_scope"
+}
