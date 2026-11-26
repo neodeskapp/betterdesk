@@ -98,11 +98,15 @@
 </script>
 
 <div class={['form-group', cls]}>
-	<label class="form-label" for={id}
-		>{label}{#if showRequired}
-			<span class="form-required" aria-hidden="true">{tf('common.required_mark', '(required)')}</span
-			>{/if}</label
-	>
+	{#if showRequired}
+		<!-- Next to the label, not in it: the label stays the control's exact name (voice control) -->
+		<div class="form-label-line">
+			<label class="form-label" for={id}>{label}</label>
+			<span class="form-required" aria-hidden="true">{tf('common.required_mark', '(required)')}</span>
+		</div>
+	{:else}
+		<label class="form-label" for={id}>{label}</label>
+	{/if}
 	{@render children(control)}
 	{#if hint}<p class="form-hint" id={hintId}>{hint}</p>{/if}
 	{#if error}<p class="form-hint form-error" id={errorId}>{error}</p>{/if}
@@ -126,9 +130,14 @@
 		font-weight: 600;
 		color: var(--text);
 	}
+	.form-label-line {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0 var(--space-1);
+	}
 	.form-required {
 		color: var(--text-muted);
-		font-weight: 400;
 	}
 	.form-hint {
 		margin: 0;

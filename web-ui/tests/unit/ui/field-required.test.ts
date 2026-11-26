@@ -16,7 +16,9 @@ describe('required fields', () => {
 		await tick();
 		const input = screen.getByRole('textbox', { name: 'Name' });
 		expect(input).toBeRequired();
-		const mark = document.querySelector('.form-label .form-required');
+		// The label itself stays the exact name
+		expect(screen.getByLabelText('Name')).toBe(input);
+		const mark = document.querySelector('.form-label-line .form-required');
 		expect(mark?.textContent).toBe('(required)');
 		expect(mark).toHaveAttribute('aria-hidden', 'true');
 	});
@@ -25,7 +27,7 @@ describe('required fields', () => {
 		render(Harness, { mode: 'attribute' });
 		await tick();
 		expect(screen.getByRole('textbox', { name: 'Email' })).toBeRequired();
-		expect(document.querySelector('.form-label .form-required')?.textContent).toBe('(required)');
+		expect(document.querySelector('.form-label-line .form-required')?.textContent).toBe('(required)');
 	});
 
 	test('an optional field has no mark', async () => {
