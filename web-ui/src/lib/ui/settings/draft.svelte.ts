@@ -206,6 +206,7 @@ export async function saveAndConfirm<T extends Values>(
 		action: undo
 			? {
 					label: tf('settings_ui.undo', 'Undo'),
+					undo: true,
 					onclick: () => {
 						void undo(changes)
 							.then(async () => {

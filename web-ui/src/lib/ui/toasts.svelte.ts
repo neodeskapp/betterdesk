@@ -26,6 +26,8 @@ export interface ToastItem {
 export interface ToastAction {
 	label: string;
 	onclick: () => void;
+	/** An undo: Ctrl+Z (Cmd+Z) runs it while the toast shows, outside text fields (ToastHost) */
+	undo?: boolean;
 }
 
 export interface ToastOptions {
