@@ -8902,7 +8902,10 @@
     "select_row": "Seleccionar {name}",
     "columns": "Columnas",
     "rows_one": "{count} fila",
-    "rows_other": "{count} filas"
+    "rows_other": "{count} filas",
+    "sorted": "Ordenado por {column}, {direction}",
+    "ascending": "ascendente",
+    "descending": "descendente"
   },
   "pagination": {
     "showing": "Mostrando {start}–{end} de {total}",

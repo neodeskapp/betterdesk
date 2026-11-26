@@ -8902,7 +8902,10 @@
     "select_row": "Seleziona {name}",
     "columns": "Colonne",
     "rows_one": "{count} riga",
-    "rows_other": "{count} righe"
+    "rows_other": "{count} righe",
+    "sorted": "Ordinato per {column}, {direction}",
+    "ascending": "crescente",
+    "descending": "decrescente"
   },
   "pagination": {
     "showing": "{start}–{end} di {total}",

@@ -8908,7 +8908,10 @@
     "select_row": "{name} seç",
     "columns": "Sütunlar",
     "rows_one": "{count} satır",
-    "rows_other": "{count} satır"
+    "rows_other": "{count} satır",
+    "sorted": "{column} sütununa göre sıralandı, {direction}",
+    "ascending": "artan",
+    "descending": "azalan"
   },
   "pagination": {
     "showing": "{total} içinden {start}–{end}",

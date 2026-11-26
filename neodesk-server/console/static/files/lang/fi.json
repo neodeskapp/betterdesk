@@ -8908,7 +8908,10 @@
     "select_row": "Valitse {name}",
     "columns": "Sarakkeet",
     "rows_one": "{count} rivi",
-    "rows_other": "{count} riviä"
+    "rows_other": "{count} riviä",
+    "sorted": "Lajiteltu: {column}, {direction}",
+    "ascending": "nousevasti",
+    "descending": "laskevasti"
   },
   "pagination": {
     "showing": "{start}–{end} / {total}",

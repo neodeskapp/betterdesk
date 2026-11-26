@@ -8908,7 +8908,10 @@
     "select_row": "Selectează {name}",
     "columns": "Coloane",
     "rows_one": "{count} rând",
-    "rows_other": "{count} rânduri"
+    "rows_other": "{count} rânduri",
+    "sorted": "Sortat după {column}, {direction}",
+    "ascending": "crescător",
+    "descending": "descrescător"
   },
   "pagination": {
     "showing": "{start}–{end} din {total}",

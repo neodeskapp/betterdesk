@@ -8909,7 +8909,10 @@
     "select_row": "تحديد {name}",
     "columns": "الأعمدة",
     "rows_one": "صف واحد",
-    "rows_other": "{count} صفوف"
+    "rows_other": "{count} صفوف",
+    "sorted": "مرتّب حسب {column}، {direction}",
+    "ascending": "تصاعدي",
+    "descending": "تنازلي"
   },
   "pagination": {
     "showing": "عرض {start}–{end} من {total}",

@@ -8902,7 +8902,10 @@
     "select_row": "{name} selecteren",
     "columns": "Kolommen",
     "rows_one": "{count} rij",
-    "rows_other": "{count} rijen"
+    "rows_other": "{count} rijen",
+    "sorted": "Gesorteerd op {column}, {direction}",
+    "ascending": "oplopend",
+    "descending": "aflopend"
   },
   "pagination": {
     "showing": "{start}–{end} van {total}",

@@ -8908,7 +8908,10 @@
     "select_row": "{name} चुनें",
     "columns": "कॉलम",
     "rows_one": "{count} पंक्ति",
-    "rows_other": "{count} पंक्तियाँ"
+    "rows_other": "{count} पंक्तियाँ",
+    "sorted": "{column} के अनुसार क्रमबद्ध, {direction}",
+    "ascending": "आरोही",
+    "descending": "अवरोही"
   },
   "pagination": {
     "showing": "{total} में से {start}–{end}",

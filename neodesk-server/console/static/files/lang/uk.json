@@ -8908,7 +8908,10 @@
     "select_row": "Вибрати {name}",
     "columns": "Стовпці",
     "rows_one": "{count} рядок",
-    "rows_other": "{count} рядків"
+    "rows_other": "{count} рядків",
+    "sorted": "Відсортовано за {column}, {direction}",
+    "ascending": "за зростанням",
+    "descending": "за спаданням"
   },
   "pagination": {
     "showing": "{start}–{end} з {total}",

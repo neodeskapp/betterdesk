@@ -37,6 +37,7 @@
 		ariaSort,
 		isSortable,
 		nextSort,
+		sortMessage,
 		sortRows,
 		uniqueKeys,
 		visibleWindow,
@@ -137,6 +138,12 @@
 			wasLoading = now;
 		});
 	});
+
+	/** A header click sorts, and says so: not every screen reader reads an aria-sort change */
+	function sortBy(col: Column<T>) {
+		sort = nextSort(sort, col.id);
+		announce(sortMessage(col.label, sort.dir));
+	}
 
 	let box = $state<HTMLDivElement | null>(null);
 	let tbody = $state<HTMLTableSectionElement | null>(null);
@@ -459,7 +466,7 @@
 						style:min-width={col.minWidth}
 					>
 						{#if sortable}
-							<button type="button" class="sort-btn" onclick={() => (sort = nextSort(sort, col.id))}>
+							<button type="button" class="sort-btn" onclick={() => sortBy(col)}>
 								<span class={col.labelHidden ? 'sr-only' : undefined}>{col.label}</span>
 							</button>
 						{:else if col.labelHidden}

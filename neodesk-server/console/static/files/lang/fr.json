@@ -8906,7 +8906,10 @@
     "select_row": "Sélectionner {name}",
     "columns": "Colonnes",
     "rows_one": "{count} ligne",
-    "rows_other": "{count} lignes"
+    "rows_other": "{count} lignes",
+    "sorted": "Trié par {column}, {direction}",
+    "ascending": "croissant",
+    "descending": "décroissant"
   },
   "pagination": {
     "showing": "{start}–{end} sur {total}",

@@ -8902,7 +8902,10 @@
     "select_row": "Zaznacz {name}",
     "columns": "Kolumny",
     "rows_one": "{count} wiersz",
-    "rows_other": "{count} wierszy"
+    "rows_other": "{count} wierszy",
+    "sorted": "Posortowano według: {column}, {direction}",
+    "ascending": "rosnąco",
+    "descending": "malejąco"
   },
   "pagination": {
     "showing": "{start}–{end} z {total}",

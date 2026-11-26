@@ -8908,7 +8908,10 @@
     "select_row": "{name} kijelölése",
     "columns": "Oszlopok",
     "rows_one": "{count} sor",
-    "rows_other": "{count} sor"
+    "rows_other": "{count} sor",
+    "sorted": "Rendezve: {column}, {direction}",
+    "ascending": "növekvő",
+    "descending": "csökkenő"
   },
   "pagination": {
     "showing": "{start}–{end} / {total}",

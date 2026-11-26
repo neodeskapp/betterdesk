@@ -8906,7 +8906,10 @@
     "select_row": "選取 {name}",
     "columns": "欄",
     "rows_one": "{count} 列",
-    "rows_other": "{count} 列"
+    "rows_other": "{count} 列",
+    "sorted": "依 {column} 排序，{direction}",
+    "ascending": "遞增",
+    "descending": "遞減"
   },
   "pagination": {
     "showing": "第 {start}–{end} 筆，共 {total} 筆",

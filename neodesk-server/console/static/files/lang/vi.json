@@ -8908,7 +8908,10 @@
     "select_row": "Chọn {name}",
     "columns": "Cột",
     "rows_one": "{count} hàng",
-    "rows_other": "{count} hàng"
+    "rows_other": "{count} hàng",
+    "sorted": "Sắp xếp theo {column}, {direction}",
+    "ascending": "tăng dần",
+    "descending": "giảm dần"
   },
   "pagination": {
     "showing": "Hiển thị {start}–{end} trên {total}",

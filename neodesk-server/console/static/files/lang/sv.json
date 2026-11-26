@@ -8908,7 +8908,10 @@
     "select_row": "Markera {name}",
     "columns": "Kolumner",
     "rows_one": "{count} rad",
-    "rows_other": "{count} rader"
+    "rows_other": "{count} rader",
+    "sorted": "Sorterad efter {column}, {direction}",
+    "ascending": "stigande",
+    "descending": "fallande"
   },
   "pagination": {
     "showing": "Visar {start}–{end} av {total}",

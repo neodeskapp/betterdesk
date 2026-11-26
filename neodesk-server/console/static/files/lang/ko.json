@@ -8902,7 +8902,10 @@
     "select_row": "{name} 선택",
     "columns": "열",
     "rows_one": "{count}개 행",
-    "rows_other": "{count}개 행"
+    "rows_other": "{count}개 행",
+    "sorted": "{column} 기준 정렬, {direction}",
+    "ascending": "오름차순",
+    "descending": "내림차순"
   },
   "pagination": {
     "showing": "{total}개 중 {start}–{end}",

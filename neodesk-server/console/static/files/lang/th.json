@@ -8908,7 +8908,10 @@
     "select_row": "เลือก {name}",
     "columns": "คอลัมน์",
     "rows_one": "{count} แถว",
-    "rows_other": "{count} แถว"
+    "rows_other": "{count} แถว",
+    "sorted": "เรียงตาม {column}, {direction}",
+    "ascending": "จากน้อยไปมาก",
+    "descending": "จากมากไปน้อย"
   },
   "pagination": {
     "showing": "แสดง {start}–{end} จาก {total}",

@@ -8902,7 +8902,10 @@
     "select_row": "{name} auswählen",
     "columns": "Spalten",
     "rows_one": "{count} Zeile",
-    "rows_other": "{count} Zeilen"
+    "rows_other": "{count} Zeilen",
+    "sorted": "Sortiert nach {column}, {direction}",
+    "ascending": "aufsteigend",
+    "descending": "absteigend"
   },
   "pagination": {
     "showing": "{start}–{end} von {total}",

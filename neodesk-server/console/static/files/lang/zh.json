@@ -8902,7 +8902,10 @@
     "select_row": "选择 {name}",
     "columns": "列",
     "rows_one": "{count} 行",
-    "rows_other": "{count} 行"
+    "rows_other": "{count} 行",
+    "sorted": "按 {column} 排序，{direction}",
+    "ascending": "升序",
+    "descending": "降序"
   },
   "pagination": {
     "showing": "第 {start}–{end} 条，共 {total} 条",

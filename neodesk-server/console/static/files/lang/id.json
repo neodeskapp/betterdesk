@@ -8908,7 +8908,10 @@
     "select_row": "Pilih {name}",
     "columns": "Kolom",
     "rows_one": "{count} baris",
-    "rows_other": "{count} baris"
+    "rows_other": "{count} baris",
+    "sorted": "Diurutkan menurut {column}, {direction}",
+    "ascending": "naik",
+    "descending": "turun"
   },
   "pagination": {
     "showing": "Menampilkan {start}–{end} dari {total}",

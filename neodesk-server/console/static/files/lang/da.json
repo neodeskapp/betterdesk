@@ -8908,7 +8908,10 @@
     "select_row": "Vælg {name}",
     "columns": "Kolonner",
     "rows_one": "{count} række",
-    "rows_other": "{count} rækker"
+    "rows_other": "{count} rækker",
+    "sorted": "Sorteret efter {column}, {direction}",
+    "ascending": "stigende",
+    "descending": "faldende"
   },
   "pagination": {
     "showing": "Viser {start}–{end} af {total}",

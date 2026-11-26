@@ -8902,7 +8902,10 @@
     "select_row": "{name} を選択",
     "columns": "列",
     "rows_one": "{count} 行",
-    "rows_other": "{count} 行"
+    "rows_other": "{count} 行",
+    "sorted": "{column} で並べ替え（{direction}）",
+    "ascending": "昇順",
+    "descending": "降順"
   },
   "pagination": {
     "showing": "{total} 件中 {start}–{end} 件",

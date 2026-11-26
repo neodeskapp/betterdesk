@@ -8908,7 +8908,10 @@
     "select_row": "Velg {name}",
     "columns": "Kolonner",
     "rows_one": "{count} rad",
-    "rows_other": "{count} rader"
+    "rows_other": "{count} rader",
+    "sorted": "Sortert etter {column}, {direction}",
+    "ascending": "stigende",
+    "descending": "synkende"
   },
   "pagination": {
     "showing": "Viser {start}–{end} av {total}",

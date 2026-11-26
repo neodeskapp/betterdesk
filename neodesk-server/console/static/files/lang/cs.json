@@ -8902,7 +8902,10 @@
     "select_row": "Vybrat {name}",
     "columns": "Sloupce",
     "rows_one": "{count} řádek",
-    "rows_other": "{count} řádků"
+    "rows_other": "{count} řádků",
+    "sorted": "Seřazeno podle {column}, {direction}",
+    "ascending": "vzestupně",
+    "descending": "sestupně"
   },
   "pagination": {
     "showing": "Zobrazeno {start}–{end} z {total}",
