@@ -4,7 +4,8 @@
     title and one-line purpose
     the save-model line ("Changes are saved when you press Save.")
     the scope picker (role, organization), before anything it changes
-    the summary (side column from 1200 px; under the scope before that)
+    the summary (side column from 1200 px; under the scope before that,
+    or after the groups with summaryLast)
     the filter and section links (pages with many settings)
     the groups
     the ChangesBar
@@ -44,6 +45,8 @@
 		sections?: readonly { id: string; label: string }[];
 		scope?: Snippet;
 		summary?: Snippet;
+		/** Below 1200 px the summary follows the groups instead of coming first */
+		summaryLast?: boolean;
 		bar?: Snippet;
 		children: Snippet;
 	}
@@ -60,6 +63,7 @@
 		sections = [],
 		scope,
 		summary,
+		summaryLast = false,
 		bar,
 		children
 	}: Props = $props();
@@ -82,7 +86,9 @@
 
 <SettingsPageFrame {id} {title} {description} {need} {allowed}>
 	{#if modeLine}<p class="save-model">{modeLine}</p>{/if}
-	<div class={['settings-body', summary && 'has-summary']}>
+	<div
+		class={['settings-body', summary && 'has-summary', scope && 'has-scope', summaryLast && 'summary-last']}
+	>
 		{#if scope}<div class="settings-scope">{@render scope()}</div>{/if}
 		{#if summary}<aside class="settings-summary" aria-label={tf('settings_ui.summary', 'Summary')}>
 				{@render summary()}
@@ -145,10 +151,17 @@
 			min-height: 44px;
 		}
 	}
+	.summary-last .settings-summary {
+		order: 1;
+	}
 	/* From 1200 px the summary is a side column next to the groups, beside the scope */
 	@media (min-width: 1200px) {
 		.settings-body.has-summary {
 			grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+			grid-template-areas: 'main summary';
+		}
+		/* The scope above the groups, the summary beside both */
+		.settings-body.has-summary.has-scope {
 			grid-template-areas:
 				'scope summary'
 				'main summary';
