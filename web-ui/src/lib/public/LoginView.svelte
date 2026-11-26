@@ -13,10 +13,11 @@
   ?desktop=1 (or the old desktop mode's cookie) is the compact sign-in:
   no promo panel, no single sign-on, no "Remember me". It no longer lists
   the server's accounts (S4); the browser's saved sign-ins fill the
-  username.
+  username. ?username= fills the username field (the user's page's
+  "Copy sign-in link"); it only fills it.
 -->
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import { setCsrfToken } from '#lib/api/client.ts';
 	import { saveLanguage } from '#lib/api/console.ts';
 	import { passwordResetAvailable } from '#lib/api/passwordlinks.ts';
@@ -92,7 +93,8 @@
 		setup && /^data:image\/(png|svg\+xml|jpeg|gif);base64,/i.test(setup.qrCode) ? setup.qrCode : ''
 	);
 	let useRecovery = $state(false);
-	let username = $state('');
+	/** ?username= fills it (a sign-in link from the user's page) */
+	let username = $state(untrack(() => query.username ?? ''));
 	let password = $state('');
 	let remember = $state(false);
 	let shown = $state(false);
@@ -128,8 +130,8 @@
 
 	onMount(() => {
 		if (query.oidcError) error = oidcErrorText(query.oidcError);
-		// The old page's autofocus: the username first
-		usernameInput?.focus();
+		// The old page's autofocus: the username first, the password when the link filled the name
+		(username ? passwordInput : usernameInput)?.focus();
 		if (compact) return;
 		const ctrl = new AbortController();
 		passwordResetAvailable(ctrl.signal).then(

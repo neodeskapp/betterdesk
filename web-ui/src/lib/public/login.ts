@@ -31,6 +31,20 @@ export interface LoginQuery {
 	autoLaunch: boolean;
 	/** ?desktop=1: the compact sign-in of the old desktop mode */
 	desktop: boolean;
+	/**
+	 * ?username=: fills the username field, as "Copy sign-in link" on the
+	 * user's page makes it. Only fills the field: a name with characters no
+	 * username has, or longer than 200, is left out.
+	 */
+	username: string;
+}
+
+/** ?username= as the field takes it: trimmed, printable, at most 200 characters; '' otherwise */
+export function usernameFromQuery(value: string | null): string {
+	const v = (value ?? '').trim();
+	// eslint-disable-next-line no-control-regex
+	if (!v || v.length > 200 || /[\u0000-\u001f\u007f]/.test(v)) return '';
+	return v;
 }
 
 /** The reasons a session ended elsewhere, with the sign-in page's sentence for each */
@@ -60,7 +74,8 @@ export function readLoginQuery(search: string): LoginQuery {
 		oidcError: error && (/^oidc_[a-z_]{1,40}$/.test(error) || SSO_CODES.includes(error)) ? error : null,
 		ssoFailed: error !== null,
 		autoLaunch: q.get('autoLaunch') !== '0',
-		desktop: q.get('desktop') === '1'
+		desktop: q.get('desktop') === '1',
+		username: usernameFromQuery(q.get('username'))
 	};
 }
 
