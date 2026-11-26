@@ -216,7 +216,14 @@ describe('policies page', () => {
 		// Sound: the place that turns it off today
 		expect(
 			within(group('policies.features_title')).getByRole('link', { name: 'Open access rules' })
-		).toHaveAttribute('href', '/app/devices');
+		).toHaveAttribute('href', '/app/devices#access-rules');
+		// A setting reached from the search says it on its own row too
+		expect(document.getElementById('pol-features-allow-audio')).toHaveTextContent(
+			'No NeoDesk app applies this yet.'
+		);
+		expect(document.getElementById('pol-network-block-direct-p2p')).not.toHaveTextContent(
+			'No NeoDesk app applies this yet.'
+		);
 	});
 
 	test('once an app applies the device groups, the notice is gone', async () => {
@@ -229,6 +236,7 @@ describe('policies page', () => {
 			)
 		).toBeInTheDocument();
 		expect(screen.queryByText(/No NeoDesk app applies this group yet/)).toBeNull();
+		expect(screen.queryByText('No NeoDesk app applies this yet.')).toBeNull();
 	});
 
 	test('task 5: sound off where nothing was set is a change, saved as the only rule of the group, with Undo', async () => {

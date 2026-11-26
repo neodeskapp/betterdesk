@@ -731,7 +731,9 @@
 					'policies.ip_ranges_not_applied',
 					'Nothing applies this yet: the server stores the ranges but does not check connections against them.'
 				)
-			: undefined}
+			: deviceOnly(field.split('.')[0] as Section)
+				? tf('policies.row_not_applied', 'No NeoDesk app applies this yet.')
+				: undefined}
 	>
 		{#snippet control(f)}
 			<InheritedValue
@@ -825,7 +827,9 @@
 										'policies.sound_today',
 										"To turn sound off in sessions today, use an access rule with Sound off under Devices, or switch off Sound in a person's console access."
 									)}
-									<a href={link('/devices')}>{tf('policies.open_access_rules', 'Open access rules')}</a>
+									<a href={link('/devices#access-rules')}
+										>{tf('policies.open_access_rules', 'Open access rules')}</a
+									>
 								</p>
 							{/if}
 						</Notice>
