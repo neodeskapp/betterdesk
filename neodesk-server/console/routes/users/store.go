@@ -31,6 +31,13 @@ type account struct {
 
 const accountColumns = `id, username, role, auth_provider, created_at, last_login, totp_enabled, email, disabled`
 
+// signedIn says the account has signed in once. For an account that never
+// did, the server's own SQLite schema leaves last_login empty and the
+// console's schema leaves it NULL.
+func (a *account) signedIn() bool {
+	return !a.LastLogin.IsNull() && a.LastLogin.String() != ""
+}
+
 // username is the account's username as text, "" for none.
 func (a *account) username() string {
 	if v := a.Username.Value(); v.Truthy() {
@@ -155,8 +162,10 @@ func updateEmail(ctx context.Context, db *store.DB, id int64, email string) erro
 }
 
 // deleteAccount deletes an account with its user group memberships, its
-// places on device group access lists and its picture (deleteUser). Its
-// sessions, grants and strategy assignment stay.
+// places on device group access lists and its picture (deleteUser). The
+// foreign keys take its device grants, access tokens, client sessions and
+// notification reads with it; its ended sessions and strategy assignment
+// stay (deletion.go says what else goes).
 func deleteAccount(ctx context.Context, db *store.DB, id int64) error {
 	for _, query := range []string{
 		`DELETE FROM user_group_members WHERE user_id = ?`,
@@ -311,16 +320,6 @@ func cascadeStep(ctx context.Context, tx *store.Tx, query string, args ...any) e
 		return err
 	}
 	return nil
-}
-
-// countAdmins is the number of accounts with the role admin or
-// super_admin.
-func countAdmins(ctx context.Context, db *store.DB) (int64, error) {
-	var n int64
-	if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE role IN ('admin', 'super_admin')`).Scan(&n); err != nil {
-		return 0, fmt.Errorf("count admins: %w", err)
-	}
-	return n, nil
 }
 
 // newGUID is a random version 4 UUID, as crypto.randomUUID writes it.

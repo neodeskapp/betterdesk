@@ -52,6 +52,9 @@ type Session struct {
 	// notice is the end reason of the session the request's cookie named,
 	// when it was ended elsewhere (Notice); the request goes on without it.
 	notice string
+	// impersonating marks a session an admin opened to view the console
+	// as its account (Impersonate): its cookie is the second one.
+	impersonating bool
 }
 
 // User is the account a session belongs to, as copied at sign-in.
@@ -275,6 +278,9 @@ func (s *Session) Regenerate() error {
 	if s.ephemeral {
 		return ErrEphemeral
 	}
+	if s.impersonating {
+		return ErrImpersonation
+	}
 	id, err := newID()
 	if err != nil {
 		return err
@@ -316,6 +322,9 @@ func (s *Session) EstablishWith(user User, meta Meta) (Established, error) {
 	defer s.mu.Unlock()
 	if s.ephemeral {
 		return Established{}, ErrEphemeral
+	}
+	if s.impersonating {
+		return Established{}, ErrImpersonation
 	}
 	if s.destroyed {
 		return Established{}, errors.New("session: Establish on a destroyed session")
@@ -383,10 +392,14 @@ func (s *Session) End(reason string) {
 }
 
 // ClearCookies makes the browser forget the session cookie under both
-// names it can have, as a sign-out answers.
+// names it can have, and an impersonation's cookie, as a sign-out answers.
 func (s *Session) ClearCookies(w http.ResponseWriter) {
 	clearCookie(w, cookieNameHTTPS)
 	clearCookie(w, cookieNameHTTP)
+	s.mu.Lock()
+	r := s.req
+	s.mu.Unlock()
+	clearImpCookieOf(w, r)
 }
 
 // record is the session as the table stores it.
@@ -421,6 +434,9 @@ func (s *Session) record(now time.Time) record {
 	}
 	if rec.username == "" {
 		rec.username = s.data.str("username")
+	}
+	if imp := s.impersonationLocked(); imp != nil {
+		rec.impersonatedBy = imp.AdminID
 	}
 	return rec
 }

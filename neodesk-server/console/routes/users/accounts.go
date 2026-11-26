@@ -17,6 +17,9 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/emailchange"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
@@ -139,14 +142,26 @@ type listedAccount struct {
 	TOTPEnabled  bool              `json:"totp_enabled"`
 	// Disabled says the account may not sign in.
 	Disabled bool `json:"disabled"`
+	// EmailPending is a new address that waits for its confirmation.
+	EmailPending *pendingEmail `json:"email_pending,omitempty"`
+	// ExpiresAt is the account's end date (RFC 3339), Expired says it
+	// has passed.
+	ExpiresAt string `json:"expires_at,omitempty"`
+	Expired   bool   `json:"expired,omitempty"`
+	// InactiveExempt keeps the rule for inactive accounts away from it.
+	InactiveExempt bool `json:"inactive_exempt,omitempty"`
 }
 
 // withPicture is a listed account with what the list says about its
-// picture.
+// picture and its sign-in (security.go).
 type withPicture struct {
 	listedAccount
+	// DisplayName is the name the console shows: first and last name,
+	// else the username.
+	DisplayName   string           `json:"display_name"`
 	HasAvatar     bool             `json:"has_avatar"`
 	AvatarVersion store.NullString `json:"avatar_version"`
+	signInState
 }
 
 // cellOr is v || fallback for a column.
@@ -235,10 +250,40 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		versions = nil
 	}
+	facts, err := h.readSignInFacts(r)
+	if err != nil {
+		h.serverError(w, r, "Get users error:", err)
+		return
+	}
+	pending, err := h.life.PendingEmails(ctx)
+	if err != nil {
+		h.serverError(w, r, "Get users error:", err)
+		return
+	}
+	states, err := h.life.All(ctx)
+	if err != nil {
+		h.serverError(w, r, "Get users error:", err)
+		return
+	}
+	names, err := displayNames(ctx, h.d.Store)
+	if err != nil {
+		h.serverError(w, r, "Get users error:", err)
+		return
+	}
+	now := h.now()
 	out := make([]withPicture, len(accounts))
 	for i, a := range accounts {
 		has, version := versions.Fields(a.ID.V)
-		out[i] = withPicture{listedAccount: h.serialize(ctx, a), HasAvatar: has, AvatarVersion: version}
+		listed := h.serialize(ctx, a)
+		if c, ok := pending[a.ID.V]; ok {
+			listed.EmailPending = pendingOf(&c)
+		}
+		withLife(&listed, states[a.ID.V], now)
+		name := names[a.ID.V]
+		if name == "" {
+			name = a.username()
+		}
+		out[i] = withPicture{listedAccount: listed, DisplayName: name, HasAvatar: has, AvatarVersion: version, signInState: facts.of(a)}
 	}
 	answer(w, r, http.StatusOK, accountList{Success: true, Data: accountListData{Users: out, Total: len(out)}})
 }
@@ -297,7 +342,7 @@ func (h *handlers) invite(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handlers) createWith(w http.ResponseWriter, r *http.Request, inviting bool) {
-	created, err := h.createAccount(r, inviting)
+	created, err := h.createAccount(r, inviting, nil)
 	if err == nil {
 		answer(w, r, http.StatusOK, struct {
 			Success bool            `json:"success"`
@@ -317,7 +362,11 @@ func (h *handlers) createWith(w http.ResponseWriter, r *http.Request, inviting b
 	h.clientError(w, r, err)
 }
 
-func (h *handlers) createAccount(r *http.Request, inviting bool) (*createdAccount, error) {
+// createAccount makes the account the body describes (see create and
+// invite). extra, when given, writes more about the new account before
+// its invite goes out (an import's names and language, which the invite
+// mail is written in).
+func (h *handlers) createAccount(r *http.Request, inviting bool, extra func(ctx context.Context, id int64) error) (*createdAccount, error) {
 	ctx := r.Context()
 	body := kit.Body(r)
 	username, password, role, email := member(body, "username"), member(body, "password"), member(body, "role"), member(body, "email")
@@ -419,7 +468,12 @@ func (h *handlers) createAccount(r *http.Request, inviting bool) (*createdAccoun
 	if err := h.applyScope(ctx, id.V, name, body, strategy); err != nil {
 		return nil, err
 	}
-	if err := h.d.LogAction(r, "user_created", "Created user: "+name+" ("+assigned+")"); err != nil {
+	if extra != nil {
+		if err := extra(ctx, id.V); err != nil {
+			return nil, err
+		}
+	}
+	if err := h.d.LogAccountAction(r, id.V, "user_created", "Created user: "+name+" ("+assigned+")"); err != nil {
 		return nil, err
 	}
 	out := &createdAccount{ID: id, Username: name, Role: assigned, Email: textOf(saved)}
@@ -435,13 +489,13 @@ func (h *handlers) createAccount(r *http.Request, inviting bool) (*createdAccoun
 	if inviting {
 		// The account stays when the mail fails: the users page can send
 		// the invite again
-		delivered, err := h.sendLink(r, id.V, name, *inviteTo, passwordlinks.PurposeInvite)
+		delivered, _, err := h.sendLink(r, id.V, name, *inviteTo, passwordlinks.PurposeInvite, "")
 		if err != nil {
 			h.log.Error("Invite mail error:", err.Error())
 		}
 		out.InviteSent = &delivered
 		if delivered {
-			if err := h.d.LogAction(r, "user_invite_sent", "Sent an invite to user: "+name); err != nil {
+			if err := h.d.LogAccountAction(r, id.V, "user_invite_sent", "Sent an invite to user: "+name); err != nil {
 				return nil, err
 			}
 		}
@@ -549,24 +603,11 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 			return nil, err
 		}
 	}
-	if isSessionAccount(r, user.ID.V) && role.Truthy() && access.IsSuperAdminRole(callerRole(r)) && !(role.IsString() && access.IsSuperAdminRole(role.Str())) {
-		return nil, sayKey(r, http.StatusBadRequest, "users.cannot_demote_self")
-	}
 	if role.Truthy() {
-		if !validRole(role) {
-			return nil, sayKey(r, http.StatusBadRequest, "users.invalid_role")
-		}
-		if ok, err := h.canAssignRole(r, role.Str()); err != nil || !ok {
-			return nil, refusedOr(err)
-		}
-		if access.IsSuperAdminRole(user.role()) && !access.IsSuperAdminRole(role.Str()) {
-			admins, err := countAdmins(ctx, h.d.Store)
-			if err != nil {
-				return nil, err
-			}
-			if admins <= 1 {
-				return nil, sayKey(r, http.StatusBadRequest, "users.last_admin")
-			}
+		if err := h.checkRole(r, user, role, func() (bool, error) {
+			return isLastSuperAdmin(ctx, h.d.Store, user.ID.V, user.role(), h.now())
+		}); err != nil {
+			return nil, err
 		}
 	}
 	hash := ""
@@ -592,8 +633,27 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		if normalized, err = normalizeEmail(email); err != nil {
 			return nil, err
 		}
+		// A directory or single sign-on gives the address
+		if err := emailchange.Refuse(targetOf(user), textOf(normalized)); err != nil {
+			return nil, changeRefusal(r, err)
+		}
 	}
 	disable, changeDisabled, err := disabledOf(r, body, user)
+	if err != nil {
+		return nil, err
+	}
+	if disable && changeDisabled {
+		if last, err := isLastSuperAdmin(ctx, h.d.Store, user.ID.V, user.role(), h.now()); err != nil {
+			return nil, err
+		} else if last {
+			return nil, sayKey(r, http.StatusBadRequest, "users.last_super_admin")
+		}
+	}
+	expiresAt, changeExpiry, err := h.expiryOf(r, body, user)
+	if err != nil {
+		return nil, err
+	}
+	exempt, changeExempt, err := h.exemptOf(r, body, user)
 	if err != nil {
 		return nil, err
 	}
@@ -628,8 +688,9 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		return nil, err
 	}
 	if !email.IsUndefined() {
-		if err := updateEmail(ctx, h.d.Store, id, textOf(normalized)); err != nil {
-			return nil, err
+		// A new address waits for its confirmation (package emailchange)
+		if _, err := h.changer().Request(r, targetOf(user), textOf(normalized), isSessionAccount(r, id)); err != nil {
+			return nil, changeRefusal(r, err)
 		}
 	}
 	if changeDisabled {
@@ -639,6 +700,16 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 	}
 	if totpOff {
 		if err := h.turnOffTOTP(r, user); err != nil {
+			return nil, err
+		}
+	}
+	if changeExpiry {
+		if err := h.setExpiry(r, user, expiresAt); err != nil {
+			return nil, err
+		}
+	}
+	if changeExempt {
+		if err := h.setExempt(r, user, exempt); err != nil {
 			return nil, err
 		}
 	}
@@ -660,7 +731,45 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		updated = user
 	}
 	out := h.serialize(ctx, updated)
+	pending, err := h.life.PendingEmail(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	out.EmailPending = pendingOf(pending)
+	st, err := h.life.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	withLife(&out, st, h.now())
 	return &out, nil
+}
+
+// checkRole refuses a new role for the account: the caller's own
+// demotion from a super admin role, a role the server doesn't know, one
+// the caller may not give, and a role without super admin rights for the
+// last Super admin that can sign in (last says whether the account is
+// that). nil when the role may be given.
+func (h *handlers) checkRole(r *http.Request, user *account, role jsbind.Value, last func() (bool, error)) error {
+	if isSessionAccount(r, user.ID.V) && access.IsSuperAdminRole(callerRole(r)) && !(role.IsString() && access.IsSuperAdminRole(role.Str())) {
+		return sayKey(r, http.StatusBadRequest, "users.cannot_demote_self")
+	}
+	if !validRole(role) {
+		return sayKey(r, http.StatusBadRequest, "users.invalid_role")
+	}
+	if ok, err := h.canAssignRole(r, role.Str()); err != nil || !ok {
+		return refusedOr(err)
+	}
+	if !access.IsSuperAdminRole(role.Str()) {
+		// The last Super admin that can sign in keeps the role
+		isLast, err := last()
+		if err != nil {
+			return err
+		}
+		if isLast {
+			return sayKey(r, http.StatusBadRequest, "users.last_admin")
+		}
+	}
+	return nil
 }
 
 // disabledOf reads the body's "disabled": change says it is there and
@@ -692,13 +801,19 @@ func (h *handlers) setDisabled(r *http.Request, user *account, disable bool) err
 		return err
 	}
 	action, details := "user_enabled", "Enabled user: "
+	if !disable {
+		// Inactivity counts from now, and an end date that passed goes
+		if err := h.life.Enabled(r.Context(), user.ID.V); err != nil {
+			return err
+		}
+	}
 	if disable {
 		if err := h.endSessions(r, user.ID.V, false); err != nil {
 			return err
 		}
 		action, details = "user_disabled", "Disabled user: "
 	}
-	return h.d.LogAction(r, action, details+user.username())
+	return h.d.LogAccountAction(r, user.ID.V, action, details+user.username())
 }
 
 // totpOffOf reads the body's "totp_enabled": off says it is false and the
@@ -716,6 +831,10 @@ func totpOffOf(r *http.Request, body middleware.JSONObject, user *account) (off 
 	if isSessionAccount(r, user.ID.V) {
 		return false, sayKey(r, http.StatusBadRequest, "users.totp_off_own")
 	}
+	// Two-factor sign-in of another account is its sign-in security
+	if !kit.Access(r).HasPermission(auth.PermUserSecurity) {
+		return false, say(http.StatusForbidden, kit.T(r, "users.security_needed", nil))
+	}
 	return totpOn(user.TOTPEnabled), nil
 }
 
@@ -724,13 +843,11 @@ func totpOffOf(r *http.Request, body middleware.JSONObject, user *account) (off 
 // account's sessions end and its access tokens are revoked, and the audit
 // log names the account.
 func (h *handlers) turnOffTOTP(r *http.Request, user *account) error {
-	if err := h.d.Authn.DisableTOTP(r.Context(), user.ID.V); err != nil {
+	again, err := h.d.Authn.TwoFactorDue(r.Context(), user.ID.V, isLocalAccount(user))
+	if err != nil {
 		return err
 	}
-	if err := h.endSessions(r, user.ID.V, false); err != nil {
-		return err
-	}
-	return h.d.LogAction(r, "totp_disabled_by_admin", "Turned off two-factor sign-in for user: "+user.username())
+	return h.clearTwoFactor(r, user, again)
 }
 
 // newUsername is the body's username, trimmed, when it is text and names
@@ -799,69 +916,78 @@ func providerOf(a *account) (string, error) {
 
 // ---- Deleting ----
 
-// remove answers DELETE /api/users/{id}. An account cannot delete itself
-// or an account it may not change (mayChange), and the last account with
-// the role admin or super_admin cannot be deleted. The account's panel
-// access policy is emptied first.
+// remove answers DELETE /api/users/{id}, with ?handover_to=<id> to give
+// the account's API tokens, organization memberships, saved reports and
+// open tickets to another account first (deletion.go). An account cannot
+// delete itself, an account it may not change (mayChange), or the last
+// Super admin that can sign in. What still points at the account goes
+// with it (leftovers); the audit log keeps its history.
 func (h *handlers) remove(w http.ResponseWriter, r *http.Request) {
-	userID, ok := pathID(r)
-	if !ok {
-		invalidID(w, r)
-		return
-	}
-	ctx := r.Context()
-	user, err := accountByID(ctx, h.d.Store, userID)
-	if err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	}
+	user := h.deletable(w, r)
 	if user == nil {
-		failKey(w, r, http.StatusNotFound, "users.not_found")
 		return
 	}
-	if isSessionAccount(r, user.ID.V) {
-		failKey(w, r, http.StatusBadRequest, "users.cannot_delete_self")
+	to, ok := h.handoverTarget(w, r, user)
+	if !ok {
 		return
 	}
-	if ok, err := h.mayChange(r, user); err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	} else if !ok {
-		sent(w, r, errRoleAboveOwn)
-		return
-	}
-	admins, err := countAdmins(ctx, h.d.Store)
-	if err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	}
-	if access.IsSuperAdminRole(user.role()) && admins <= 1 {
-		failKey(w, r, http.StatusBadRequest, "users.last_admin")
-		return
-	}
-	if _, err := h.d.Access.SavePolicy(ctx, access.SubjectUser, jsbind.NumberString(userID), nil, nil); err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	}
-	if err := h.endSessions(r, user.ID.V, false); err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	}
-	if err := deleteAccount(ctx, h.d.Store, user.ID.V); err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	}
-	if err := h.links.Revoke(ctx, user.ID.V); err != nil {
-		h.serverError(w, r, "Delete user error:", err)
-		return
-	}
-	// The list of who has a picture forgets the account now
-	h.d.Avatars.ResetCache()
-	if err := h.d.LogAction(r, "user_deleted", "Deleted user: "+user.username()); err != nil {
+	if err := h.deleteChecked(r, user, to); err != nil {
 		h.serverError(w, r, "Delete user error:", err)
 		return
 	}
 	answer(w, r, http.StatusOK, done{Success: true})
+}
+
+// deleteChecked deletes an account the delete checks let go, after it
+// gave its things to the account to (nil for none), and notes it in the
+// audit log.
+func (h *handlers) deleteChecked(r *http.Request, user, to *account) error {
+	details := "Deleted user: " + user.username()
+	if to != nil {
+		moved, err := h.handOver(r, user, to)
+		if err != nil {
+			return err
+		}
+		details += "; handed over to " + to.username() + ": " + moved.String()
+	}
+	if err := h.leftovers(r, user); err != nil {
+		return err
+	}
+	if err := h.wipe(r, user); err != nil {
+		return err
+	}
+	return h.d.LogAccountAction(r, user.ID.V, "user_deleted", details)
+}
+
+// wipe deletes an account the checks let go: its panel access policy, its
+// sessions and access tokens, the account with its user group memberships
+// and picture, its password links, its end date and address change.
+func (h *handlers) wipe(r *http.Request, user *account) error {
+	ctx := r.Context()
+	if _, err := h.d.Access.SavePolicy(ctx, access.SubjectUser, accountIDText(user.ID), nil, nil); err != nil {
+		return err
+	}
+	if err := h.endSessions(r, user.ID.V, false); err != nil {
+		return err
+	}
+	if err := deleteAccount(ctx, h.d.Store, user.ID.V); err != nil {
+		return err
+	}
+	if err := h.links.Revoke(ctx, user.ID.V); err != nil {
+		return err
+	}
+	if err := h.life.Forget(ctx, user.ID.V); err != nil {
+		return err
+	}
+	if err := people.Forget(ctx, h.d.Store, user.ID.V); err != nil {
+		return err
+	}
+	if err := h.d.Authn.ForgetAccount(ctx, user.ID.V); err != nil {
+		return err
+	}
+	// The list of who has a picture forgets the account now
+	h.d.Avatars.ResetCache()
+	return nil
 }
 
 // ---- Resetting a password ----
@@ -894,6 +1020,10 @@ func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 		sent(w, r, errRoleAboveOwn)
 		return
 	}
+	if d := externalPassword(r, user); d != nil {
+		deny(w, r, d)
+		return
+	}
 	if !password.Truthy() {
 		failKey(w, r, http.StatusBadRequest, "users.password_required")
 		return
@@ -916,12 +1046,17 @@ func (h *handlers) resetPassword(w http.ResponseWriter, r *http.Request) {
 		err = h.links.Revoke(ctx, user.ID.V)
 	}
 	if err == nil {
-		err = h.d.LogAction(r, "password_reset", "Reset password for user: "+user.username())
+		err = h.d.LogAccountAction(r, user.ID.V, "password_reset", "Reset password for user: "+user.username())
 	}
 	if err != nil {
 		h.serverError(w, r, "Reset password error:", err)
 		return
 	}
+	how := securitymail.PasswordByAdmin
+	if isSessionAccount(r, user.ID.V) {
+		how = securitymail.PasswordBySelf
+	}
+	h.notices.PasswordChanged(ctx, user.ID.V, how)
 	answer(w, r, http.StatusOK, done{Success: true})
 }
 

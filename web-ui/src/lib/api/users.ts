@@ -47,10 +47,20 @@ const StrArray = v.pipe(
 	v.transform((a) => (a ?? []).map(String))
 );
 
+/** An email address that waits for its confirmation link to be used */
+export const PendingEmail = v.looseObject({
+	email: Str,
+	expires_at: Str,
+	expired: v.optional(v.boolean(), false)
+});
+export type PendingEmail = v.InferOutput<typeof PendingEmail>;
+
 /** A console account as GET /api/users lists it */
 export const ConsoleUser = v.looseObject({
 	id: v.union([v.number(), v.string()]),
 	username: Str,
+	/** First and last name, else the username (older servers leave it out) */
+	display_name: Str,
 	role: Str,
 	email: Str,
 	auth_provider: Str,
@@ -65,9 +75,100 @@ export const ConsoleUser = v.looseObject({
 	/** Two-factor sign-in is on (older servers leave it out) */
 	totp_enabled: v.optional(v.nullable(v.union([v.boolean(), v.number()]))),
 	/** The account may not sign in (older servers leave it out: enabled) */
-	disabled: v.optional(v.boolean(), false)
+	disabled: v.optional(v.boolean(), false),
+	/* Sign-in security (older servers leave it out) */
+	/** Failed sign-ins locked the account until locked_until, at the addresses of locks */
+	locked: v.optional(v.boolean(), false),
+	locked_until: v.optional(v.nullable(v.string()), null),
+	locks: v.optional(v.array(v.looseObject({ ip: Str, until: Str, failures: v.optional(v.number(), 0) })), []),
+	/** The next sign-in asks for a new password */
+	must_change_password: v.optional(v.boolean(), false),
+	/** An admin requires two-factor sign-in of this account */
+	two_factor_required: v.optional(v.boolean(), false),
+	/** on, off, or required (by the account's rule or the server's switch) and not set up */
+	two_factor_state: v.optional(v.picklist(['on', 'off', 'required']), 'off'),
+	/** A rule requires two-factor sign-in: a reset makes the person set it up again instead of turning it off */
+	two_factor_due: v.optional(v.boolean(), false),
+	/** Until when a reset link mailed to the account works */
+	password_reset_until: v.optional(v.nullable(v.string()), null),
+	/** A new address that waits for its confirmation; the address above stays until then */
+	email_pending: v.optional(v.nullable(PendingEmail), null),
+	/** The account's end date; expired once it has passed (the job disables it then) */
+	expires_at: v.optional(v.nullable(v.string()), null),
+	expired: v.optional(v.boolean(), false),
+	/** The rule for inactive accounts leaves it alone */
+	inactive_exempt: v.optional(v.boolean(), false)
 });
 export type ConsoleUser = v.InferOutput<typeof ConsoleUser>;
+
+/** One account as the user's page reads it (GET /api/users/{id}) */
+export const UserDetail = v.looseObject({
+	...ConsoleUser.entries,
+	first_name: Str,
+	last_name: Str,
+	/** The language of the console and the mails for the account, '' for the console's default */
+	preferred_language: Str,
+	/** An IANA name such as Europe/Berlin, '' for none (mails in UTC) */
+	time_zone: Str,
+	/** The invite not used yet */
+	invite: v.optional(
+		v.nullable(v.looseObject({ expires_at: Str, expired: v.optional(v.boolean(), false) })),
+		null
+	),
+	/** The role's permissions in effect, overrides included */
+	permissions: StrArray,
+	/** The account may use Team chat and is not disabled */
+	team_chat: v.optional(v.boolean(), false),
+	/** No other super admin could sign in: it cannot be disabled, deleted or demoted */
+	last_super_admin: v.optional(v.boolean(), false)
+});
+export type UserDetail = v.InferOutput<typeof UserDetail>;
+
+/** Needs user.view; 404 for an id without an account */
+export function getUser(id: number | string, signal?: AbortSignal): Promise<UserDetail> {
+	return api(wrapped(UserDetail), `/api/users/${encodeURIComponent(String(id))}`, { signal });
+}
+
+/** First and last name (the display name) and time zone of an account. Needs user.edit */
+export function saveUserProfile(
+	id: number | string,
+	body: { first_name?: string; last_name?: string; time_zone?: string }
+): Promise<UserDetail> {
+	return api(wrapped(UserDetail), `/api/users/${encodeURIComponent(String(id))}/profile`, {
+		method: 'PUT',
+		body
+	});
+}
+
+const ActivityPerson = v.nullable(
+	v.looseObject({ id: v.union([v.number(), v.string()]), username: Str, display_name: Str })
+);
+
+/** An audit entry by the account or about it */
+export const ActivityEntry = v.looseObject({
+	id: v.union([v.number(), v.string()]),
+	action: Str,
+	at: Str,
+	details: Str,
+	ip: Str,
+	actor: v.optional(ActivityPerson, null),
+	target: v.optional(ActivityPerson, null)
+});
+export type ActivityEntry = v.InferOutput<typeof ActivityEntry>;
+
+/** The newest audit entries by and about the account. Needs user.view and audit.view */
+export async function listUserActivity(
+	id: number | string,
+	limit = 50,
+	signal?: AbortSignal
+): Promise<ActivityEntry[]> {
+	const out = await api(
+		wrapped(v.looseObject({ entries: v.array(ActivityEntry) })),
+		`/api/users/${encodeURIComponent(String(id))}/activity`,
+		{ query: { limit }, signal }
+	);
+	return out.entries;
+}
 
 /** Every account with its groups, folders and direct devices. Needs user.view */
 export async function listConsoleUsers(signal?: AbortSignal): Promise<ConsoleUser[]> {
@@ -89,6 +190,10 @@ export interface UserInput {
 	disabled?: boolean;
 	/** false turns off the account's two-factor sign-in; never your own */
 	totp_enabled?: false;
+	/** The end date (RFC 3339), null for none; never your own */
+	expires_at?: string | null;
+	/** Keeps the rule for inactive accounts away from it */
+	inactive_exempt?: boolean;
 }
 
 /** Needs user.create; the role must be one the caller may give */
@@ -122,8 +227,187 @@ export function inviteUser(
  * hours. Needs user.edit, an address on the account (400 without) and the
  * console's email settings (409 without).
  */
-export function sendResetLink(id: number | string) {
-	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/password-reset-link`, {
+export async function sendResetLink(id: number | string): Promise<{ expires_at: string }> {
+	// Servers before 3.6 answer without data
+	const out = await api(
+		v.looseObject({ data: v.optional(v.looseObject({ expires_at: Str }), { expires_at: '' }) }),
+		`/api/users/${encodeURIComponent(String(id))}/password-reset-link`,
+		{ method: 'POST', body: {} }
+	);
+	return out.data;
+}
+
+/** Makes the reset link the account was mailed stop working. Needs user.edit; 404 when none waits */
+export function cancelResetLink(id: number | string) {
+	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/password-reset-link`, { method: 'DELETE' });
+}
+
+/* ── Sign-in security of other accounts (user.security) ── */
+
+/**
+ * Gives the account a temporary password (the one given, or one the server
+ * makes up) and answers it, to be shown once. The account chooses a new
+ * one at its next sign-in; its sessions end. Not for your own account nor
+ * for LDAP or single sign-on accounts.
+ */
+export async function setTemporaryPassword(id: number | string, password?: string): Promise<string> {
+	const out = await api(
+		wrapped(v.looseObject({ password: Str })),
+		`/api/users/${encodeURIComponent(String(id))}/temporary-password`,
+		{ method: 'POST', body: password ? { password } : {} }
+	);
+	return out.password;
+}
+
+export const BulkResult = v.looseObject({
+	id: v.union([v.number(), v.string()]),
+	username: v.optional(v.string(), ''),
+	/**
+	 * changed (with a dry run: would change), unchanged (it was so already),
+	 * refused (error says why) or failed (the server couldn't)
+	 */
+	outcome: v.picklist(['changed', 'unchanged', 'refused', 'failed']),
+	error: v.optional(v.string(), '')
+});
+export type BulkResult = v.InferOutput<typeof BulkResult>;
+
+/** The next sign-in of each account asks for a new password (or no longer, with required false) */
+export async function requirePasswordChange(
+	ids: (number | string)[],
+	required = true
+): Promise<BulkResult[]> {
+	const out = await api(
+		wrapped(v.looseObject({ results: v.array(BulkResult) })),
+		'/api/users/require-password-change',
+		{ method: 'POST', body: { ids, required } }
+	);
+	return out.results;
+}
+
+/**
+ * The actions for several accounts at once. Each has the permission of its
+ * route for one account: role, disable, enable and password-reset-link
+ * user.edit, two-factor-required and require-password-change
+ * user.security, delete user.delete, the organization ones
+ * org.manage_users.
+ */
+export type BulkKind =
+	| 'role'
+	| 'organization-add'
+	| 'organization-remove'
+	| 'two-factor-required'
+	| 'require-password-change'
+	| 'disable'
+	| 'enable'
+	| 'password-reset-link'
+	| 'delete';
+
+/**
+ * Runs an action on up to 500 accounts and answers what happened to each,
+ * in the order given. With dryRun nothing is written: the answer says what
+ * would happen. params are the action's own: { role }, { org_id },
+ * { required }.
+ */
+export async function runBulk(
+	kind: BulkKind,
+	ids: (number | string)[],
+	params: Record<string, unknown> = {},
+	dryRun = false
+): Promise<BulkResult[]> {
+	const path =
+		kind === 'require-password-change' ? '/api/users/require-password-change' : `/api/users/bulk/${kind}`;
+	const out = await api(wrapped(v.looseObject({ results: v.array(BulkResult) })), path, {
+		method: 'POST',
+		body: { ...params, ids, ...(dryRun ? { dry_run: true } : {}) }
+	});
+	return out.results;
+}
+
+/* ── Import from a CSV file (user.create) ── */
+
+/** How the accounts of an import get a password */
+export type ImportMode = 'invite' | 'temporary' | 'none';
+
+export const ImportRow = v.looseObject({
+	line: v.number(),
+	username: Str,
+	email: Str,
+	first_name: Str,
+	last_name: Str,
+	role: Str,
+	organization: Str,
+	language: Str,
+	/** What is wrong with the line, in the console language; empty when it can be imported */
+	problems: v.optional(v.array(v.string()), [])
+});
+export type ImportRow = v.InferOutput<typeof ImportRow>;
+
+export const ImportPreview = v.looseObject({
+	rows: v.array(ImportRow),
+	ready: v.optional(v.number(), 0),
+	ignored_columns: v.optional(v.array(v.string()), []),
+	mail_ready: v.optional(v.boolean(), false)
+});
+export type ImportPreview = v.InferOutput<typeof ImportPreview>;
+
+/** Checks every line of the file; nothing is written */
+export function previewImport(csv: string, mode: ImportMode): Promise<ImportPreview> {
+	return api(wrapped(ImportPreview), '/api/users/import/preview', { method: 'POST', body: { csv, mode } });
+}
+
+export const ImportResult = v.looseObject({
+	line: v.number(),
+	username: Str,
+	/** created, refused (the line has problems), skipped (not chosen) or failed */
+	outcome: Str,
+	error: Str,
+	id: v.optional(v.nullable(v.union([v.number(), v.string()])), null),
+	invite_sent: v.optional(v.nullable(v.boolean()), null),
+	/** The temporary password, shown this once */
+	password: Str,
+	/** What didn't work after the account was made (the invite mail, the organization) */
+	warning: Str
+});
+export type ImportResult = v.InferOutput<typeof ImportResult>;
+
+/** Makes the accounts of the chosen lines that have no problems */
+export async function importUsers(csv: string, mode: ImportMode, lines: number[]): Promise<ImportResult[]> {
+	const out = await api(wrapped(v.looseObject({ results: v.array(ImportResult) })), '/api/users/import', {
+		method: 'POST',
+		body: { csv, mode, lines }
+	});
+	return out.results;
+}
+
+/** Ends the lock after failed sign-ins */
+export function unlockUser(id: number | string) {
+	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/unlock`, { method: 'POST', body: {} });
+}
+
+/** Requires two-factor sign-in of one local account, or leaves it to the server's switch */
+export function setTwoFactorRequired(id: number | string, required: boolean) {
+	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/two-factor-required`, {
+		method: 'PUT',
+		body: { required }
+	});
+}
+
+/**
+ * Clears the second factor and ends the account's sessions. set_up_again:
+ * a policy requires it, so the person sets it up at the next sign-in; else
+ * it is off.
+ */
+export function resetTwoFactor(id: number | string): Promise<{ set_up_again: boolean }> {
+	return api(
+		wrapped(v.looseObject({ set_up_again: v.optional(v.boolean(), false) })),
+		`/api/users/${encodeURIComponent(String(id))}/two-factor/reset`,
+		{ method: 'POST', body: {} }
+	);
+}
+
+/** The recovery codes stop working; the person makes new ones on Your account */
+export function invalidateRecoveryCodes(id: number | string) {
+	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/recovery-codes/invalidate`, {
 		method: 'POST',
 		body: {}
 	});
@@ -132,6 +416,15 @@ export function sendResetLink(id: number | string) {
 /** A new invite link for an account that hasn't signed in yet; the old link stops working. Needs user.edit */
 export function resendInvite(id: number | string) {
 	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/invite`, { method: 'POST', body: {} });
+}
+
+/**
+ * Withdraws the invite of an account that never signed in: the link stops
+ * working and the account is deleted. Needs user.create; 409 for an
+ * account without an open or expired invite.
+ */
+export function revokeInvite(id: number | string) {
+	return api(Ok, `/api/users/${encodeURIComponent(String(id))}/invite`, { method: 'DELETE' });
 }
 
 export const PendingInvite = v.looseObject({
@@ -158,9 +451,49 @@ export function updateUser(id: number | string, body: UserInput) {
 	return api(Ok, `/api/users/${encodeURIComponent(String(id))}`, { method: 'PATCH', body });
 }
 
-/** Needs user.delete; never yourself */
-export function deleteUser(id: number | string) {
-	return api(Ok, `/api/users/${encodeURIComponent(String(id))}`, { method: 'DELETE' });
+/**
+ * Needs user.delete; never yourself. handoverTo gives the account's API
+ * tokens, organization memberships, saved reports and open tickets to
+ * that account first (one the caller may change).
+ */
+export function deleteUser(id: number | string, handoverTo?: number | string) {
+	const query = handoverTo !== undefined ? `?handover_to=${encodeURIComponent(String(handoverTo))}` : '';
+	return api(Ok, `/api/users/${encodeURIComponent(String(id))}${query}`, { method: 'DELETE' });
+}
+
+const Count = v.pipe(
+	v.optional(v.nullable(v.number()), 0),
+	v.transform((n) => n ?? 0)
+);
+
+/** What a delete removes and keeps, counted, and who may take over */
+export const DeletePreview = v.looseObject({
+	id: v.union([v.number(), v.string()]),
+	username: Str,
+	counts: v.looseObject({
+		sessions: Count,
+		client_sign_ins: Count,
+		api_tokens: Count,
+		organizations: Count,
+		user_groups: Count,
+		device_grants: Count,
+		saved_reports: Count,
+		open_tickets: Count,
+		audit_entries: Count,
+		tickets_opened: Count,
+		ticket_comments: Count,
+		chat_messages: Count
+	}),
+	candidates: v.array(v.looseObject({ id: v.union([v.number(), v.string()]), username: Str, role: Str })),
+	organizations_move: v.optional(v.boolean(), false)
+});
+export type DeletePreview = v.InferOutput<typeof DeletePreview>;
+
+/** Needs user.delete */
+export function getDeletePreview(id: number | string, signal?: AbortSignal): Promise<DeletePreview> {
+	return api(wrapped(DeletePreview), `/api/users/${encodeURIComponent(String(id))}/delete-preview`, {
+		signal
+	});
 }
 
 /** Needs user.edit (local accounts) */
@@ -294,4 +627,88 @@ export async function uploadMyAvatar(file: Blob): Promise<string | null> {
 /** Remove the signed-in person's picture; one from single sign-on returns at the next sign-in */
 export async function removeMyAvatar(): Promise<void> {
 	await api(OwnPicture, '/api/users/me/avatar', { method: 'DELETE' });
+}
+
+/* ── Email address changes ── */
+
+/** The signed-in account's address, the one waiting for its confirmation, and whether mail goes out */
+export const OwnEmail = v.looseObject({
+	email: Str,
+	auth_provider: Str,
+	email_pending: v.optional(v.nullable(PendingEmail), null),
+	mail_ready: v.optional(v.boolean(), false)
+});
+export type OwnEmail = v.InferOutput<typeof OwnEmail>;
+
+const userPath = (id: number | string) => `/api/users/${encodeURIComponent(String(id))}`;
+
+/** Ends an account's address change that waits for its confirmation. Needs user.edit */
+export function cancelEmailChange(id: number | string) {
+	return api(Ok, `${userPath(id)}/email-change`, { method: 'DELETE' });
+}
+
+/** Mails a new confirmation link for the pending address; the old link stops working. Needs user.edit */
+export function resendEmailChange(id: number | string) {
+	return api(Ok, `${userPath(id)}/email-change/resend`, { method: 'POST', body: {} });
+}
+
+export function getOwnEmail(signal?: AbortSignal): Promise<OwnEmail> {
+	return api(wrapped(OwnEmail), '/api/users/me/email', { signal });
+}
+
+/**
+ * Asks for a new address for the signed-in account: it gets a link that
+ * confirms it, and the address changes when the link is used. Without the
+ * console's email settings it changes at once. "" takes the address away.
+ */
+export function changeOwnEmail(email: string): Promise<OwnEmail> {
+	return api(wrapped(OwnEmail), '/api/users/me/email', { method: 'POST', body: { email } });
+}
+
+export function cancelOwnEmailChange(): Promise<OwnEmail> {
+	return api(wrapped(OwnEmail), '/api/users/me/email-change', { method: 'DELETE' });
+}
+
+export function resendOwnEmailChange(): Promise<OwnEmail> {
+	return api(wrapped(OwnEmail), '/api/users/me/email-change/resend', { method: 'POST', body: {} });
+}
+
+/** What the confirmation link is for */
+export const EmailChangeLink = v.looseObject({ username: Str, email: Str, expires_at: Str });
+export type EmailChangeLink = v.InferOutput<typeof EmailChangeLink>;
+
+/** Which account and address the link confirms; ApiError 404 for one that cannot be used */
+export function lookupEmailChange(token: string): Promise<EmailChangeLink> {
+	return api(wrapped(EmailChangeLink), '/api/auth/email-change/lookup', {
+		method: 'POST',
+		body: { token },
+		allowAnonymous: true,
+		activity: false
+	});
+}
+
+/** Confirms the address and uses the link up; 404 when it cannot be used (any more) */
+export function confirmEmailChange(token: string): Promise<EmailChangeLink> {
+	return api(wrapped(EmailChangeLink), '/api/auth/email-change/confirm', {
+		method: 'POST',
+		body: { token },
+		allowAnonymous: true
+	});
+}
+
+/* ── The signed-in person's time zone (Your account) ── */
+
+/** '' for none */
+export async function getOwnTimeZone(signal?: AbortSignal): Promise<string> {
+	const out = await api(
+		v.looseObject({ profile: v.optional(v.looseObject({ time_zone: Str }), { time_zone: '' }) }),
+		'/api/users/me/profile',
+		{ signal }
+	);
+	return out.profile.time_zone;
+}
+
+/** An IANA name such as Europe/Berlin, '' for none; the server refuses names it doesn't know */
+export function saveOwnTimeZone(zone: string) {
+	return api(Ok, '/api/users/me/profile', { method: 'PUT', body: { time_zone: zone } });
 }

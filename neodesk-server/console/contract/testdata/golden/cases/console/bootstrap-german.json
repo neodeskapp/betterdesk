@@ -597,7 +597,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=ecda00db10c0ae82"
+      "stringsUrl": "/api/console/strings/de?v=0a8f50ad0b21f32d"
      },
      "nav": [
       {
@@ -860,6 +860,7 @@
      "user": {
       "accessibility": null,
       "avatarVersion": null,
+      "displayName": "e2e_viewer",
       "id": 10,
       "preferredLanguage": null,
       "role": "viewer",
@@ -1456,7 +1457,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=ecda00db10c0ae82"
+      "stringsUrl": "/api/console/strings/de?v=0a8f50ad0b21f32d"
      },
      "nav": [
       {
@@ -1799,6 +1800,7 @@
      "user": {
       "accessibility": null,
       "avatarVersion": null,
+      "displayName": "e2e_operator",
       "id": 9,
       "preferredLanguage": null,
       "role": "operator",
@@ -2395,7 +2397,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=ecda00db10c0ae82"
+      "stringsUrl": "/api/console/strings/de?v=0a8f50ad0b21f32d"
      },
      "nav": [
       {
@@ -2785,7 +2787,8 @@
       "cdap.files",
       "mesh.terminal",
       "mesh.power",
-      "mesh.files"
+      "mesh.files",
+      "user.security"
      ],
      "sessionPolicy": {
       "idleTimeoutMs": 1800000,
@@ -2797,6 +2800,7 @@
      "user": {
       "accessibility": null,
       "avatarVersion": null,
+      "displayName": "e2e_global_admin",
       "id": 8,
       "preferredLanguage": null,
       "role": "global_admin",
@@ -3393,7 +3397,7 @@
       ],
       "code": "de",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/de?v=ecda00db10c0ae82"
+      "stringsUrl": "/api/console/strings/de?v=0a8f50ad0b21f32d"
      },
      "nav": [
       {
@@ -3986,7 +3990,9 @@
       "mesh.power",
       "mesh.files",
       "device.signin_use",
-      "device.signin_manage"
+      "device.signin_manage",
+      "user.security",
+      "user.impersonate"
      ],
      "sessionPolicy": {
       "idleTimeoutMs": 1800000,
@@ -3998,6 +4004,7 @@
      "user": {
       "accessibility": null,
       "avatarVersion": null,
+      "displayName": "e2e_admin",
       "id": 5,
       "preferredLanguage": null,
       "role": "admin",

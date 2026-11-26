@@ -47,7 +47,7 @@ func TestSharedDatabaseStartOrders(t *testing.T) {
 				// On PostgreSQL alert_rules.condition_value is double
 				// precision (BUGS AE4); access_tokens has token_kind (BUGS
 				// RV1)
-				want := readCatalog(t, reference).without(sessionTable).wideConditionValue().withTokenKind(db.IsPostgres())
+				want := readCatalog(t, reference).without(sessionTable).wideConditionValue().withTokenKind(db.IsPostgres()).withLater(db.IsPostgres())
 				if n := len(want.tables()); n != 91+len(goTables) {
 					t.Fatalf("the shared dump and the Go tables are %d tables besides %s, want %d", n, sessionTable, 91+len(goTables))
 				}

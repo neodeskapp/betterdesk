@@ -61,6 +61,16 @@ const errMailDown = mailError("connection refused")
 // an outbox, with SMTP settings when smtp is set.
 func mailWorld(t *testing.T, smtp bool) (*routetest.World, *outbox) {
 	t.Helper()
+	return mailWorldEnv(t, smtp, nil)
+}
+
+// mailWorldEnv is mailWorld with more environment variables.
+func mailWorldEnv(t *testing.T, smtp bool, extra map[string]string) (*routetest.World, *outbox) {
+	t.Helper()
+	env := map[string]string{"PANEL_PUBLIC_URL": "https://desk.example"}
+	for k, v := range extra {
+		env[k] = v
+	}
 	lang, err := filepath.Abs(filepath.Join("..", "..", "static", "files", "lang"))
 	if err != nil {
 		t.Fatal(err)
@@ -70,7 +80,7 @@ func mailWorld(t *testing.T, smtp bool) (*routetest.World, *outbox) {
 		t.Fatal(err)
 	}
 	w := routetest.New(t, routetest.Options{
-		Env: map[string]string{"PANEL_PUBLIC_URL": "https://desk.example"},
+		Env: env,
 		Config: func(cfg *config.Config) {
 			cfg.LangDir = lang
 			cfg.TrustProxy = trust

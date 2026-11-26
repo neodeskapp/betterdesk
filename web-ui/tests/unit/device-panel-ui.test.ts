@@ -147,13 +147,14 @@ describe('footer keeps its slots between view and edit mode', () => {
 		expect(view.active).toEqual(['actions.edit', 'actions.connect', 'actions.close']);
 
 		await userEvent.click(screen.getByRole('button', { name: 'actions.edit' }));
-		await waitFor(() => expect(footer().active).toEqual(['actions.cancel', null, 'actions.save']));
+		await waitFor(() => expect(footer().active).toEqual(['actions.save', 'actions.cancel', null]));
 		const edit = footer();
 		// The very same slot elements and buttons: nothing was re-created or moved
 		edit.slots.forEach((s, i) => expect(s).toBe(view.slots[i]));
 		edit.buttons.forEach((list, i) => list.forEach((b, j) => expect(b).toBe(view.buttons[i]?.[j])));
 		// The inactive buttons are inert (out of the tab order and the accessibility tree)
 		expect(screen.getByRole('button', { name: 'actions.connect' })).toHaveAttribute('inert');
+		expect(within(edit.slots[0]!).getByRole('button', { name: 'actions.edit' })).toHaveAttribute('inert');
 		expect(within(edit.slots[2]!).getByRole('button', { name: 'actions.close' })).toHaveAttribute('inert');
 
 		await userEvent.click(screen.getByRole('button', { name: 'actions.cancel' }));
@@ -169,6 +170,9 @@ describe('footer keeps its slots between view and edit mode', () => {
 		serve(baseDevice());
 		await openPanel();
 		await waitFor(() => expect(footer().active).toEqual(['actions.edit', 'actions.close']));
+
+		await userEvent.click(screen.getByRole('button', { name: 'actions.edit' }));
+		await waitFor(() => expect(footer().active).toEqual(['actions.save', 'actions.cancel']));
 	});
 });
 

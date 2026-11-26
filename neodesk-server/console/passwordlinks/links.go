@@ -266,6 +266,41 @@ func (s *Store) Invites(ctx context.Context) (map[int64]Invite, error) {
 	return out, rows.Err()
 }
 
+// Resets returns, by account, until when its reset link works: the reset
+// links not used yet that have not expired.
+func (s *Store) Resets(ctx context.Context) (map[int64]time.Time, error) {
+	rows, err := s.db.Query(ctx, `SELECT user_id, expires_ms FROM password_links WHERE purpose = ? AND used_ms IS NULL AND expires_ms > ?`,
+		PurposeReset, s.now().UnixMilli())
+	if err != nil {
+		return nil, fmt.Errorf("password links: resets: %w", err)
+	}
+	defer rows.Close()
+	out := map[int64]time.Time{}
+	for rows.Next() {
+		var id, expires int64
+		if err := rows.Scan(&id, &expires); err != nil {
+			return nil, err
+		}
+		out[id] = time.UnixMilli(expires).UTC()
+	}
+	return out, rows.Err()
+}
+
+// CancelReset ends the account's reset link that was not used yet and has
+// not expired, and reports whether there was one. An invite stays.
+func (s *Store) CancelReset(ctx context.Context, userID int64) (bool, error) {
+	res, err := s.db.Exec(ctx, `DELETE FROM password_links WHERE user_id = ? AND purpose = ? AND used_ms IS NULL AND expires_ms > ?`,
+		userID, PurposeReset, s.now().UnixMilli())
+	if err != nil {
+		return false, fmt.Errorf("password links: cancel reset: %w", err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("password links: cancel reset: %w", err)
+	}
+	return n > 0, nil
+}
+
 // SetPasswordLink is the address of a link on the console at base.
 func SetPasswordLink(base, token string) string {
 	return base + "/set-password#" + token

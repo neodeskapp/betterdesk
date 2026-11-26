@@ -73,6 +73,21 @@ export function setCsrfToken(token: string): void {
 	csrfToken = token;
 }
 
+/*
+ * While the console shows another account (Sign in as), every request
+ * says so: a request the server no longer takes as that account (the
+ * impersonation ended) is answered with impersonation_ended instead of
+ * running as the admin, and the console loads again.
+ */
+let viewingAs = false;
+export function setViewingAs(on: boolean): void {
+	viewingAs = on;
+}
+let onViewingEnded: () => void = () => location.assign('/users');
+export function setViewingEndedHandler(fn: () => void): void {
+	onViewingEnded = fn;
+}
+
 type UnauthorizedHandler = (code: string | null) => void;
 let onUnauthorized: UnauthorizedHandler = (code) => {
 	const here = location.pathname + location.search;
@@ -129,6 +144,7 @@ export async function request(path: string, opts: RequestOptions = {}): Promise<
 	const method = opts.method ?? 'GET';
 	const url = safePath(path, opts.query);
 	const headers: Record<string, string> = { Accept: 'application/json', ...opts.headers };
+	if (viewingAs) headers['X-ND-Impersonating'] = '1';
 	if (!(opts.activity ?? method !== 'GET')) headers['X-ND-Background'] = '1';
 	let body: BodyInit | undefined;
 	if (method !== 'GET') {
@@ -193,6 +209,10 @@ export async function request(path: string, opts: RequestOptions = {}): Promise<
 		if (res.ok) return data;
 		const { message, code, permission } = errorMessage(res.status, data);
 		last = new ApiError(message, res.status, { code, permission, data });
+		if (code === 'impersonation_ended') {
+			onViewingEnded();
+			throw last;
+		}
 		if (res.status === 401 && !opts.allowAnonymous) {
 			onUnauthorized(code);
 			throw last;

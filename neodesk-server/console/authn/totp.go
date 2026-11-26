@@ -6,6 +6,7 @@ import (
 	"crypto/sha1"
 	"encoding/base32"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -309,6 +310,27 @@ func (s *Service) VerifyRecoveryCode(ctx context.Context, userID int64, code str
 // recovery codes.
 func (s *Service) DisableTOTP(ctx context.Context, userID int64) error {
 	return disableTOTP(ctx, s.db, userID)
+}
+
+// InvalidateRecoveryCodes makes the account's recovery codes stop
+// working without new ones: the person makes new ones on Your account,
+// with a code of their authenticator. Nobody else sees them.
+func (s *Service) InvalidateRecoveryCodes(ctx context.Context, userID int64) error {
+	return setRecoveryCodes(ctx, s.db, userID, "[]")
+}
+
+// RecoveryCodesLeft is the number of recovery codes the account can still
+// use; 0 without two-factor sign-in or with a stored list that is no list.
+func (s *Service) RecoveryCodesLeft(ctx context.Context, userID int64) (int, error) {
+	user, err := getUserByID(ctx, s.db, userID)
+	if err != nil || user == nil || !user.TOTPEnabled.True() {
+		return 0, err
+	}
+	var codes []any
+	if json.Unmarshal([]byte(user.TOTPRecoveryCodes.String), &codes) != nil {
+		return 0, nil
+	}
+	return len(codes), nil
 }
 
 // IsTOTPEnabled reports whether the account has two-factor sign-in on. An

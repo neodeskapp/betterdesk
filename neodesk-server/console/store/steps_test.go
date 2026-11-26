@@ -118,7 +118,7 @@ func TestMigrateAddsEachMissingColumn(t *testing.T) {
 				requireColumnDefault(t, db, table, col)
 			})
 		}
-		if wantSteps := map[store.Dialect]int{store.SQLite: 39, store.Postgres: 31}[db.Dialect()]; added != wantSteps {
+		if wantSteps := map[store.Dialect]int{store.SQLite: 39 + len(laterColumns), store.Postgres: 31 + len(laterColumns)}[db.Dialect()]; added != wantSteps {
 			t.Errorf("%d column steps on %s, want %d", added, db.Dialect(), wantSteps)
 		}
 	})
@@ -822,8 +822,8 @@ func TestMigrateToleratedFailureKeepsItsNeighbours(t *testing.T) {
 		t.Errorf("no warning about peer.tags:\n%s", out)
 	}
 	shape := db.Shape()
-	if n := len(shape.Tables()); n != 55 {
-		t.Errorf("%d tables after a tolerated failure, want all 55", n)
+	if n := len(shape.Tables()); n != 55+len(goTables) {
+		t.Errorf("%d tables after a tolerated failure, want all %d", n, 55+len(goTables))
 	}
 	for _, table := range []string{"device_inventory", "dlp_events", "users"} {
 		if !shape.Table(table).Exists() {

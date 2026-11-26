@@ -444,6 +444,14 @@ func Body(r *http.Request) JSONObject {
 	return *state.object
 }
 
+// WithJSONBody is r with text as the JSON body its handlers read (Body,
+// BodyValue, Bind), for a route that runs another route's code once per
+// item of its own body. r itself keeps its body.
+func WithJSONBody(r *http.Request, text []byte) *http.Request {
+	state := &bodyState{parsed: true, text: append([]byte(nil), text...)}
+	return r.WithContext(context.WithValue(r.Context(), bodyKey{}, state))
+}
+
 // BodyValue is req.body whatever it is: an object or, for a JSON body,
 // possibly an array. Without a body it is the empty object.
 func BodyValue(r *http.Request) Value {

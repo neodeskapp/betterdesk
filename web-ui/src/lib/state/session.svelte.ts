@@ -8,7 +8,7 @@
 
 import * as v from 'valibot';
 import { Bootstrap, saveLanguage, type NavSection, type PanelAccess } from '#lib/api/console.ts';
-import { ApiError, clientMessages, setCsrfToken } from '#lib/api/client.ts';
+import { ApiError, clientMessages, setCsrfToken, setViewingAs } from '#lib/api/client.ts';
 import { setStrings, t, has, savedLanguage, switchLanguage } from '#lib/i18n/i18n.svelte.ts';
 import { applyAccountA11y, leaveAccountA11y } from '#lib/shell/a11y.svelte.ts';
 import { PREF, writePref } from '#lib/util/storage.ts';
@@ -31,6 +31,8 @@ class Session {
 	ready = $state(false);
 	error = $state<string | null>(null);
 	raw = $state.raw<Bootstrap | null>(null);
+	/** An admin views the console as this account (Sign in as): read-only, null otherwise */
+	impersonation = $state.raw<Bootstrap['impersonation']>(null);
 }
 
 export const session = new Session();
@@ -81,6 +83,7 @@ export function can(permission: string): boolean {
  * the level write there, as the server's guard asks for every write.
  */
 export function canWrite(permission: string): boolean {
+	if (session.impersonation) return false;
 	if (!can(permission)) return false;
 	if (session.isSuperAdmin) return true;
 	const here = sectionHere();
@@ -90,6 +93,7 @@ export function canWrite(permission: string): boolean {
 
 /** The page's panel access section, when it has one, is at write: the guard lets its writes through */
 export function sectionWritable(): boolean {
+	if (session.impersonation) return false;
 	if (session.isSuperAdmin) return true;
 	const here = sectionHere();
 	return !here || here.level === 'write';
@@ -119,6 +123,8 @@ export function applyBootstrap(boot: Bootstrap): void {
 	session.appName = boot.branding.appName;
 	session.appVersion = boot.appVersion;
 	session.emergencyMode = boot.emergencyMode;
+	session.impersonation = boot.impersonation ?? null;
+	setViewingAs(!!session.impersonation);
 	setCsrfToken(boot.csrfToken);
 	// The account's accessibility settings win over the browser's copy
 	applyAccountA11y(boot.user.accessibility);
@@ -223,6 +229,8 @@ export function clearSession(): void {
 	session.isSuperAdmin = false;
 	session.nav = [];
 	session.raw = null;
+	session.impersonation = null;
+	setViewingAs(false);
 	session.ready = false;
 	setCsrfToken('');
 	leaveAccountA11y();

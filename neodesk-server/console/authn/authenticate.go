@@ -69,6 +69,10 @@ type User struct {
 	// sign-in is mandatory (TwoFactorRequired) and this local account has
 	// none, so it sets it up first. It is not part of the JSON.
 	TOTPSetupRequired bool
+	// PasswordChangeRequired says the local account must choose a new
+	// password before it gets a session (an admin required it, or gave it
+	// a temporary password). It is not part of the JSON.
+	PasswordChangeRequired bool
 	// nullPartialToken adds "goPartialToken": null to the JSON. The answer
 	// for a local account with two-factor sign-in carries it, and sessions
 	// that wait for the second factor store it.
@@ -383,7 +387,7 @@ func authSuccessFromUser(user *Account, accept *goAccept) *User {
 // account is the failure FailureAccountDisabled, a pro account the failure
 // FailureProOnly.
 func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (Outcome, error) {
-	if user.Disabled.True() {
+	if s.ended(ctx, user) {
 		s.log.Info(fmt.Sprintf("[AUTH] Login refused: '%s' is disabled", logName(user.Username)))
 		return Outcome{Failure: FailureAccountDisabled}, nil
 	}
@@ -391,14 +395,23 @@ func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (
 	if result == nil {
 		return Outcome{Failure: FailureProOnly}, nil
 	}
-	if !result.TOTPRequired && normalizeAuthProvider(user.AuthProvider.String) == providerLocal {
-		required, err := s.TwoFactorRequired(ctx)
+	if normalizeAuthProvider(user.AuthProvider.String) == providerLocal {
+		policy, err := s.AccountPolicy(ctx, user.ID.V)
 		if err != nil {
 			return Outcome{}, err
 		}
-		result.TOTPSetupRequired = required
+		result.PasswordChangeRequired = policy.MustChangePassword
+		if !result.TOTPRequired {
+			required := policy.TwoFactorRequired
+			if !required {
+				if required, err = s.TwoFactorRequired(ctx); err != nil {
+					return Outcome{}, err
+				}
+			}
+			result.TOTPSetupRequired = required
+		}
 	}
-	if !result.TOTPRequired && !result.TOTPSetupRequired {
+	if !result.TOTPRequired && !result.TOTPSetupRequired && !result.PasswordChangeRequired {
 		if err := touchLastLogin(ctx, s.db, user.ID.V); err != nil {
 			return Outcome{}, err
 		}
@@ -432,9 +445,12 @@ func (s *Service) finish(ctx context.Context, user *Account, accept *goAccept) (
 // An account with the role "pro" is refused: with FailureProOnly when its
 // credentials were accepted, plainly otherwise. So is a disabled account,
 // with FailureAccountDisabled. The outcome's user has
-// TOTPRequired set when the second factor is due, and TOTPSetupRequired
-// when two-factor sign-in is mandatory and the local account has none yet;
-// only otherwise is the sign-in noted on the row (last_login).
+// TOTPRequired set when the second factor is due, TOTPSetupRequired
+// when two-factor sign-in is mandatory (for every local account, or for
+// this one) and the local account has none yet, and
+// PasswordChangeRequired when the local account must choose a new
+// password first; only otherwise is the sign-in noted on the row
+// (last_login).
 //
 // Authenticate does not look at lockouts and does not record the attempt:
 // CheckBruteForce and RecordAttempt are separate calls.

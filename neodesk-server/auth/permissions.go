@@ -34,6 +34,15 @@ const (
 	PermUserCreate = "user.create"
 	PermUserEdit   = "user.edit"
 	PermUserDelete = "user.delete"
+	// PermUserSecurity is the sign-in security of other accounts: a
+	// temporary password, a password change at the next sign-in, unlocking
+	// an account locked after failed sign-ins, requiring or resetting its
+	// two-factor sign-in and new recovery codes.
+	PermUserSecurity = "user.security"
+	// PermUserImpersonate is "Sign in as": looking at the console as an
+	// account with fewer rights, read-only. Only the super admins hold it
+	// unless a role is given it.
+	PermUserImpersonate = "user.impersonate"
 
 	// Server configuration
 	PermServerConfig      = "server.config"      // read/write server_config
@@ -103,6 +112,7 @@ var AllPermissions = []string{
 	PermRemoteTargetView, PermRemoteTargetConnect, PermRemoteTargetEdit,
 	PermRemoteTargetDelete, PermRemoteTargetTest,
 	PermUserView, PermUserCreate, PermUserEdit, PermUserDelete,
+	PermUserSecurity, PermUserImpersonate,
 	PermServerConfig, PermServerKeys, PermServerAttestation,
 	PermOrgCreate, PermOrgEdit, PermOrgDelete, PermOrgManageUsers, PermOrgManageDevices,
 	PermAuditView, PermMetricsView, PermBlocklistEdit,
@@ -146,7 +156,7 @@ var DefaultRolePermissions = map[string]map[string]bool{
 
 	// Global Admin: all user/org management, NO server config/keys.
 	RoleGlobalAdmin: buildPermMap([]string{
-		PermUserView, PermUserCreate, PermUserEdit, PermUserDelete,
+		PermUserView, PermUserCreate, PermUserEdit, PermUserDelete, PermUserSecurity,
 		PermOrgCreate, PermOrgEdit, PermOrgDelete, PermOrgManageUsers, PermOrgManageDevices,
 		PermDeviceView, PermDeviceConnect, PermDeviceEdit, PermDeviceDelete,
 		PermGuestCreate,

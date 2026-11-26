@@ -7,6 +7,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 )
 
 // refusalKeys are the texts of the sign-in service's refusals in the
@@ -18,6 +19,7 @@ var refusalKeys = map[authn.Refusal]string{
 	authn.ErrPasswordTooLong:  "auth.password_max_length",
 	authn.ErrTOTPNotSetUp:     "auth.totp_not_set_up",
 	authn.ErrInvalidTOTPCode:  "auth.totp_code_invalid",
+	authn.ErrSamePassword:     "auth.password_same",
 }
 
 // refuse answers 400 with the text of a refusal of the sign-in service in
@@ -94,12 +96,17 @@ func (h *handlers) changePassword(w http.ResponseWriter, r *http.Request) {
 		err = h.links.Revoke(r.Context(), kit.UserID(r))
 	}
 	if err == nil {
+		// A password change an admin asked for is done
+		err = h.authn.SetMustChangePassword(r.Context(), kit.UserID(r), false)
+	}
+	if err == nil {
 		err = h.audit(r, kit.UserID(r), "password_changed", "Password changed")
 	}
 	if err != nil {
 		h.serverError(w, r, "Password change error:", err)
 		return
 	}
+	h.notices.PasswordChanged(r.Context(), kit.UserID(r), securitymail.PasswordBySelf)
 	kit.OK(w, r, nil)
 }
 

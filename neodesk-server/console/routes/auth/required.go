@@ -8,6 +8,7 @@ import (
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 )
 
@@ -33,12 +34,18 @@ const setupWindow = 15 * time.Minute
 // the set-up of its second factor, and answers the password step with
 // totpSetupRequired.
 func (h *handlers) beginRequiredSetup(w http.ResponseWriter, r *http.Request, user *authn.User, meta session.Meta) {
+	h.holdForSetup(w, r, user.ID, user, meta)
+}
+
+// holdForSetup is beginRequiredSetup for an account's id and the user
+// JSON the session keeps of it.
+func (h *handlers) holdForSetup(w http.ResponseWriter, r *http.Request, id, user any, meta session.Meta) {
 	sess := kit.Session(r)
 	if err := sess.Regenerate(); err != nil {
 		h.sessionFailure(w, r, "Session regeneration error (2FA set-up):", err)
 		return
 	}
-	sess.Set(pendingSetupUserID, user.ID)
+	sess.Set(pendingSetupUserID, id)
 	sess.Set(pendingSetupUser, user)
 	sess.Set(pendingMeta, meta)
 	sess.Set(pendingSetupSince, h.now().UnixMilli())
@@ -182,7 +189,8 @@ func (h *handlers) requiredEnable(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.recordAttempt(r, who.username, true)
-	h.clearGuestCookie(w, r)
+	h.signedInNotes(w, r, who.id, meta)
+	h.notices.TwoFactorChanged(r.Context(), who.id, securitymail.TwoFactorOn)
 	err = h.authn.TouchLastLogin(r.Context(), who.id)
 	if err == nil {
 		err = h.audit(r, who.id, "totp_enabled", "2FA enabled (required at sign-in)")

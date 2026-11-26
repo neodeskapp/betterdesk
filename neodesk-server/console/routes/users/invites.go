@@ -3,7 +3,6 @@ package users
 import (
 	"cmp"
 	"context"
-	"database/sql"
 	"net/http"
 	"regexp"
 	"slices"
@@ -15,6 +14,9 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/accountmail"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 )
 
 // Inviting by mail: an account made with POST /api/users/invite gets no
@@ -48,20 +50,15 @@ func (h *handlers) senderName(r *http.Request) string {
 	if u := kit.User(r); u != nil {
 		fallback = u.Username
 	}
-	var first, last sql.NullString
-	if err := h.d.Store.QueryRow(r.Context(), `SELECT first_name, last_name FROM users WHERE id = ?`, kit.UserID(r)).Scan(&first, &last); err != nil {
-		return fallback
-	}
-	if name := strings.TrimSpace(strings.TrimSpace(first.String) + " " + strings.TrimSpace(last.String)); name != "" {
-		return name
-	}
-	return fallback
+	return people.NameOf(r.Context(), h.d.Store, kit.UserID(r), fallback)
 }
 
 // sendLink makes a new link of the purpose for the account, which ends
-// its earlier one, and mails it to the address in the request's language.
-// It reports whether the mail server took the mail.
-func (h *handlers) sendLink(r *http.Request, userID int64, username, to, purpose string) (bool, error) {
+// its earlier one, and mails it to the address in the language given, or
+// for "" in the recipient's language: the account's preferred language,
+// else the console's default (not the admin's who sends it). It reports
+// whether the mail server took the mail, and until when the link works.
+func (h *handlers) sendLink(r *http.Request, userID int64, username, to, purpose, language string) (bool, time.Time, error) {
 	ctx := r.Context()
 	by := ""
 	if u := kit.User(r); u != nil {
@@ -69,29 +66,27 @@ func (h *handlers) sendLink(r *http.Request, userID int64, username, to, purpose
 	}
 	token, expires, err := h.links.Issue(ctx, userID, purpose, by)
 	if err != nil {
-		return false, err
+		return false, time.Time{}, err
 	}
 	base := strings.TrimRight(h.consoleBase(r), "/")
 	host := base
 	if i := strings.Index(host, "://"); i >= 0 {
 		host = host[i+3:]
 	}
-	m := passwordlinks.BuildMail(func(key string, vars map[string]any) string {
-		pairs := make([]any, 0, 2*len(vars))
-		for k, v := range vars {
-			pairs = append(pairs, k, v)
-		}
-		return kit.T(r, key, kit.Vars(pairs...))
-	}, passwordlinks.MailFacts{
+	translate := accountmail.In(h.d, accountmail.LangOf(ctx, h.d, userID))
+	if language != "" {
+		translate = securitymail.Translator(h.d, language)
+	}
+	m := passwordlinks.BuildMail(translate, passwordlinks.MailFacts{
 		Purpose: purpose, Link: passwordlinks.SetPasswordLink(base, token), Username: username,
 		Sender: h.senderName(r), Host: host, Expires: brandmail.When(expires),
 		Branding: brandmail.Of(h.d.Branding, base),
 	})
 	sent, err := h.d.Mail.SendEmail(ctx, mail.Email{To: []string{to}, Subject: m.Subject, Text: &m.Text, HTML: &m.HTML, Inline: m.Inline, Lang: m.Lang})
 	if err != nil || !sent {
-		return false, err
+		return false, expires, err
 	}
-	return true, nil
+	return true, expires, nil
 }
 
 // usernameChars are the characters a username may have.
@@ -159,14 +154,14 @@ func (h *handlers) resendInvite(w http.ResponseWriter, r *http.Request) {
 	case email == "":
 		failKey(w, r, http.StatusBadRequest, "users.invite_email_required")
 		return
-	case !user.LastLogin.IsNull():
+	case user.signedIn():
 		failKey(w, r, http.StatusConflict, "users.invite_signed_in")
 		return
 	case !h.mailReady(ctx):
 		failKey(w, r, http.StatusConflict, "users.invite_needs_email")
 		return
 	}
-	delivered, err := h.sendLink(r, user.ID.V, user.username(), email, passwordlinks.PurposeInvite)
+	delivered, _, err := h.sendLink(r, user.ID.V, user.username(), email, passwordlinks.PurposeInvite, "")
 	if err != nil {
 		h.serverError(w, r, "Resend invite error:", err)
 		return
@@ -214,4 +209,59 @@ func (h *handlers) invites(w http.ResponseWriter, r *http.Request) {
 		Success bool `json:"success"`
 		Data    any  `json:"data"`
 	}{true, map[string]any{"invites": out, "mail_ready": h.mailReady(r.Context())}})
+}
+
+// revokeInvite answers DELETE /api/users/{id}/invite: the invite of an
+// account that never signed in is withdrawn. Its link stops working and
+// the account is deleted: it never signed in, so it holds nothing of its
+// own, only what the admin gave it. An account that has signed in, or has
+// no invite (open or expired), is refused; it is deleted with Delete.
+func (h *handlers) revokeInvite(w http.ResponseWriter, r *http.Request) {
+	userID, ok := pathID(r)
+	if !ok {
+		invalidID(w, r)
+		return
+	}
+	ctx := r.Context()
+	user, err := accountByID(ctx, h.d.Store, userID)
+	if err != nil {
+		h.serverError(w, r, "Revoke invite error:", err)
+		return
+	}
+	if user == nil {
+		failKey(w, r, http.StatusNotFound, "users.not_found")
+		return
+	}
+	if ok, err := h.mayChange(r, user); err != nil {
+		h.serverError(w, r, "Revoke invite error:", err)
+		return
+	} else if !ok {
+		sent(w, r, errRoleAboveOwn)
+		return
+	}
+	pending, err := h.links.Invites(ctx)
+	if err != nil {
+		h.serverError(w, r, "Revoke invite error:", err)
+		return
+	}
+	if _, invited := pending[user.ID.V]; !invited || user.signedIn() || isSessionAccount(r, user.ID.V) {
+		failKey(w, r, http.StatusConflict, "users.invite_none")
+		return
+	}
+	if last, err := isLastSuperAdmin(ctx, h.d.Store, user.ID.V, user.role(), h.now()); err != nil {
+		h.serverError(w, r, "Revoke invite error:", err)
+		return
+	} else if last {
+		failKey(w, r, http.StatusBadRequest, "users.last_super_admin")
+		return
+	}
+	if err := h.wipe(r, user); err != nil {
+		h.serverError(w, r, "Revoke invite error:", err)
+		return
+	}
+	if err := h.d.LogAccountAction(r, user.ID.V, "user_invite_revoked", "Withdrew the invite of user "+user.username()+" and deleted the account, which never signed in"); err != nil {
+		h.serverError(w, r, "Revoke invite error:", err)
+		return
+	}
+	answer(w, r, http.StatusOK, done{Success: true})
 }

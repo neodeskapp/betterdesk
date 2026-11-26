@@ -66,3 +66,58 @@ func TestMandatoryTwoFactorLeavesProAccounts(t *testing.T) {
 		t.Errorf("client sign-in of the Pro account: %d %s", status, body)
 	}
 }
+
+// rulesDB is a database whose accounts have the sign-in rules of rules,
+// as the web console's table would give them.
+type rulesDB struct {
+	db.Database
+	rules map[string]db.AccountSignInRules
+}
+
+func (r rulesDB) AccountSignInRules(userID int64) (db.AccountSignInRules, error) {
+	users, err := r.ListUsers()
+	if err != nil {
+		return db.AccountSignInRules{}, err
+	}
+	for _, u := range users {
+		if u.ID == userID {
+			return r.rules[u.Username], nil
+		}
+	}
+	return db.AccountSignInRules{}, nil
+}
+
+// TestAccountRulesAtTheAPI: an account the web console's admin required a
+// new password of, or two-factor sign-in of, cannot sign in through the
+// API or the desktop client until it did that in the web console: the
+// answer says so with its own code and carries no token. A directory
+// account is left to its directory.
+func TestAccountRulesAtTheAPI(t *testing.T) {
+	srv, database := newInternalServer(t, nil)
+	srv.SetJWTManager(auth.NewJWTManager("account-rules-test-secret", time.Hour))
+	for _, name := range []string{"pat", "quin", "ron"} {
+		if err := database.CreateUser(&db.User{Username: name, PasswordHash: mustHash(t, name+"-pass-1"), Role: auth.RoleOperator}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	srv.db = rulesDB{Database: database, rules: map[string]db.AccountSignInRules{
+		"pat":  {MustChangePassword: true},
+		"quin": {TwoFactorRequired: true},
+	}}
+	const change = `{"code":"password_change_required","error":"This account must choose a new password. Sign in to the web console once to set it."}`
+	const setup = `{"code":"totp_setup_required","error":"Two-factor sign-in is required for this account. Sign in to the web console once to set it up."}`
+	for _, c := range []struct{ name, want string }{{"pat", change}, {"quin", setup}} {
+		if status, body := listenerCall(t, srv, http.MethodPost, "/api/auth/login", `{"username":"`+c.name+`","password":"`+c.name+`-pass-1"}`, nil); status != http.StatusForbidden || body != c.want {
+			t.Errorf("API sign-in of %s: %d %s", c.name, status, body)
+		}
+		if status, body := listenerCall(t, srv, http.MethodPost, "/api/login", `{"username":"`+c.name+`","password":"`+c.name+`-pass-1","id":"DEV`+c.name+`1","uuid":"uuid-`+c.name+`"}`, nil); status != http.StatusForbidden || body != c.want {
+			t.Errorf("client sign-in of %s: %d %s", c.name, status, body)
+		}
+	}
+	if status, body := listenerCall(t, srv, http.MethodPost, "/api/auth/login", `{"username":"ron","password":"ron-pass-1"}`, nil); status != http.StatusOK {
+		t.Errorf("an account without rules: %d %s", status, body)
+	}
+	if srv.passwordChangeDue(&db.User{Username: "pat", AuthProvider: db.AuthProviderLDAP}) {
+		t.Error("a directory account is held to the rule")
+	}
+}

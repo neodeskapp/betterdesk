@@ -1,7 +1,9 @@
 <!--
   Four tabs of Settings in one component, by `part`:
   - signin (Settings › Sign-in, server.config): the console's client
-    sessions and whether everyone needs two-factor sign-in. Your own
+    sessions, whether everyone needs two-factor sign-in, which security
+    notices people get by mail about their own account, and whether
+    accounts that don't sign in are disabled (InactiveAccountsForm). Your own
     password and two-factor sign-in are on Your account
     (lib/account/PasswordAndTwoFactor.svelte).
   - ldap (Settings › Directory (LDAP), server.config): sign-in with a
@@ -26,11 +28,13 @@
 		getEnrollment,
 		getLdap,
 		getOidc,
+		getSecurityNotices,
 		getTwoFactorPolicy,
 		saveClientSessions,
 		saveEnrollment,
 		saveLdap,
 		saveOidc,
+		saveSecurityNotices,
 		saveTwoFactorPolicy,
 		testLdap,
 		testOidc
@@ -68,6 +72,8 @@
 		type OidcValues
 	} from '../signin.ts';
 	import ConsoleSessionsForm from '../ConsoleSessionsForm.svelte';
+	import ImpersonationMailForm from '../ImpersonationMailForm.svelte';
+	import InactiveAccountsForm from '../InactiveAccountsForm.svelte';
 	import SettingsGrid from '../SettingsGrid.svelte';
 	import SettingsLayout from '../SettingsLayout.svelte';
 
@@ -184,6 +190,44 @@
 			twoFactor.status = { state: 'error', message: errText(err) };
 		}
 	}
+
+	/* ── Security notices by mail ── */
+
+	const notices = createForm({
+		id: 'security-notices-form',
+		initial: { new_signin: true, password_changed: true, two_factor_changed: true, email_changed: true },
+		submit: async (v) => {
+			await saveSecurityNotices(v);
+			return await getSecurityNotices();
+		}
+	});
+
+	async function loadNotices() {
+		try {
+			notices.reset(await getSecurityNotices());
+		} catch (err) {
+			notices.status = { state: 'error', message: errText(err) };
+		}
+	}
+
+	const NOTICE_SWITCHES = [
+		{ key: 'new_signin', label: 'settings.notices.new_signin', hint: 'settings.notices.new_signin_hint' },
+		{
+			key: 'password_changed',
+			label: 'settings.notices.password_changed',
+			hint: 'settings.notices.password_changed_hint'
+		},
+		{
+			key: 'two_factor_changed',
+			label: 'settings.notices.two_factor_changed',
+			hint: 'settings.notices.two_factor_changed_hint'
+		},
+		{
+			key: 'email_changed',
+			label: 'settings.notices.email_changed',
+			hint: 'settings.notices.email_changed_hint'
+		}
+	] as const;
 
 	async function loadSessions() {
 		try {
@@ -402,8 +446,9 @@
 
 	$effect(() =>
 		trackDirty(
-			() => enrollment.dirty || sessions.dirty || twoFactor.dirty || ldap.dirty || oidc.dirty,
-			() => enrollment.busy || sessions.busy || twoFactor.busy || ldap.busy || oidc.busy
+			() =>
+				enrollment.dirty || sessions.dirty || twoFactor.dirty || notices.dirty || ldap.dirty || oidc.dirty,
+			() => enrollment.busy || sessions.busy || twoFactor.busy || notices.busy || ldap.busy || oidc.busy
 		)
 	);
 
@@ -413,6 +458,7 @@
 		if (part === 'signin') {
 			void loadSessions();
 			void loadTwoFactor();
+			void loadNotices();
 		}
 		if (part === 'joining') void loadEnrollment();
 		if (part === 'ldap') void loadLdap();
@@ -423,7 +469,8 @@
 		canConfig && part === 'signin'
 			? [
 					{ id: 'client-sessions-settings-section', label: t('settings.client_sessions_title') },
-					{ id: 'require-two-factor', label: t('settings.signin.require_2fa') }
+					{ id: 'require-two-factor', label: t('settings.signin.require_2fa') },
+					{ id: 'security-notices', label: t('settings.notices.title') }
 				]
 			: undefined
 	);
@@ -529,8 +576,28 @@
 						</form>
 
 						<ConsoleSessionsForm />
+
+						<ImpersonationMailForm />
+
+						<InactiveAccountsForm />
 					{/snippet}
 				</SettingsGrid>
+			</section>
+
+			<section class="section" id="security-notices" aria-labelledby="security-notices-title">
+				<h2 id="security-notices-title">{t('settings.notices.title')}</h2>
+				<p class="section-note">{t('settings.notices.note')}</p>
+				<form id={notices.id} class="form-column settings-subgroup" onsubmit={notices.onsubmit} novalidate>
+					{#each NOTICE_SWITCHES as n (n.key)}
+						<Checkbox
+							id="security-notice-{n.key}"
+							label={t(n.label)}
+							hint={t(n.hint)}
+							bind:checked={notices.values[n.key]}
+						/>
+					{/each}
+					<SaveBar form={notices} label={t('actions.save')} />
+				</form>
 			</section>
 		{/if}
 	{:else if part === 'joining'}

@@ -1,6 +1,7 @@
 <!--
   The console around every page (views/layouts/main.ejs): skip link,
-  sidebar (a drawer below 1100 px), top bar, the page in <main>, the Help
+  the Sign in as bar while an admin views the console as another account
+  (ViewingAsBanner), sidebar (a drawer below 1100 px), top bar, the page in <main>, the Help
   panel, the bottom bar on phones, and once each: the search dialog, the
   accessibility panel, the idle warning, the dialog, toast and device
   panel hosts. Inside a Desktop Mode window (?embed=1) only the page.
@@ -55,6 +56,9 @@
 	import { startGuard, stopGuard } from './session-guard.svelte.ts';
 	import { liveUpdates } from '#lib/state/live-updates.svelte.ts';
 	import LiveStatus from '#lib/ui/LiveStatus.svelte';
+	import ViewingAsBanner from './ViewingAsBanner.svelte';
+	import { viewedName, viewingTitle } from './viewing-as.ts';
+	import { onImpersonationChange } from '#lib/api/impersonation.ts';
 
 	let { children }: { children: Snippet } = $props();
 
@@ -90,7 +94,13 @@
 	const crumbs = $derived(breadcrumb(model, pageInfo.title));
 	const bottom = $derived(bottomItems(session.nav, key));
 	const pageName = $derived(pageInfo.title || model.activePage?.text || '');
-	const docTitle = $derived(pageName ? `${pageName} - ${session.appName}` : session.appName);
+	const baseTitle = $derived(pageName ? `${pageName} - ${session.appName}` : session.appName);
+	// Sign in as: the tab says whose console it is, first
+	const docTitle = $derived(
+		session.impersonation
+			? viewingTitle(t('impersonation.tab_title', { username: viewedName(session.user) }), baseTitle)
+			: baseTitle
+	);
 
 	/* ── Drawer ── */
 
@@ -165,6 +175,8 @@
 
 		startGuard(session.raw?.sessionPolicy);
 		const cleanups: (() => void)[] = [() => mq.removeEventListener('change', onMq), stopGuard];
+		// Another tab started or stopped Sign in as: the cookies changed for this one too
+		cleanups.push(onImpersonationChange(() => location.reload()));
 		if (!embedded) {
 			startNotifications();
 			cleanups.push(stopNotifications);
@@ -233,6 +245,7 @@
 	{#if session.emergencyMode}
 		<div class="emergency-banner" role="alert">{t('auth.emergency_mode_banner')}</div>
 	{/if}
+	{#if session.impersonation}<ViewingAsBanner />{/if}
 	<div class={['shell', sessionPage && 'is-session']}>
 		<Sidebar
 			bind:element={sidebar}

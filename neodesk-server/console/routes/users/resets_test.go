@@ -49,7 +49,7 @@ func TestResetLinkFromAdmin(t *testing.T) {
 		t.Fatalf("sign in: %d %s", got.Status, got.Body)
 	}
 
-	expect(t, "reset link", admin.Do("POST", "/api/users/"+id+"/password-reset-link", "{}"), 200, `{"success":true}`)
+	expect(t, "reset link", admin.Do("POST", "/api/users/"+id+"/password-reset-link", "{}"), 200, "")
 	m := box.last(t)
 	if strings.Join(m.To, ",") != "carol@example.test" || !strings.Contains(m.Subject, "new password") {
 		t.Fatalf("mail to %v, subject %q", m.To, m.Subject)

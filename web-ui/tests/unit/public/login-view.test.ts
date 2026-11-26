@@ -97,6 +97,13 @@ describe('sign-in', () => {
 		expect(body.clientFingerprint).toMatch(/^[0-9a-f]{16}$/);
 	});
 
+	test('a sign-in link fills the username and puts the cursor in the password', async () => {
+		reply('/api/auth/oidc/status', { body: { enabled: false } });
+		render(LoginView, { page: page(), query: readLoginQuery('?username=olga%40example.test'), go: vi.fn() });
+		expect(screen.getByLabelText('auth.username')).toHaveValue('olga@example.test');
+		await waitFor(() => expect(screen.getByLabelText('auth.password')).toHaveFocus());
+	});
+
 	test('the page does not follow an unsafe redirect from the server', async () => {
 		reply('/api/auth/oidc/status', { body: { enabled: false } });
 		reply('/api/auth/login', { body: { success: true, redirect: '//evil.example' } });

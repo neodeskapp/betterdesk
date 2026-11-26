@@ -248,6 +248,89 @@ func (c catalog) withDisabled(postgres bool) catalog {
 	return out
 }
 
+// laterColumn is a column the Go console adds that the Node console never
+// had, with what the catalog says of it on each database. sqliteText is
+// what ALTER TABLE appends to the table's statement text on SQLite.
+type laterColumn struct {
+	table, column      string
+	sqlite, sqliteText string
+	postgres           string
+	// sqliteRow and postgresRow are what an existing row reads in the new
+	// column ("NULL" for none).
+	sqliteRow, postgresRow string
+}
+
+// laterColumns are the columns after users.disabled, in the order Migrate
+// adds them. A step that adds a column to a table Node had adds a line
+// here, and its index (if any) to laterIndexes.
+var laterColumns = []laterColumn{
+	{"audit_log", "target_user_id", "type=INTEGER notnull=0 default=NULL pk=0", "target_user_id INTEGER DEFAULT NULL",
+		`type=bigint notnull=false default=<none> identity="" generated=""`, "NULL", "NULL"},
+}
+
+// withLaterRows is a snapshot's rows as Migrate leaves them: every row of
+// a table in laterColumns gets the new column's value at its end.
+func withLaterRows(rows snapshot, postgres bool) {
+	for _, col := range laterColumns {
+		value := col.sqliteRow
+		if postgres {
+			value = col.postgresRow
+		}
+		for i, row := range rows[col.table] {
+			rows[col.table][i] = row + " | " + value
+		}
+	}
+}
+
+// laterIndexes are the indexes of laterColumns: the catalog key after
+// "index:" and the entry on SQLite and on PostgreSQL.
+var laterIndexes = []struct{ key, sqlite, postgres string }{
+	{"audit_log.idx_audit_log_target",
+		"unique=0 origin=c partial=0 columns=(target_user_id) sql=CREATE INDEX idx_audit_log_target ON audit_log(target_user_id)",
+		"CREATE INDEX idx_audit_log_target ON audit_log USING btree (target_user_id)"},
+}
+
+// withLater is the catalog of a database as the Go console leaves it with
+// laterColumns and laterIndexes added. A table the catalog lacks gets
+// nothing.
+func (c catalog) withLater(postgres bool) catalog {
+	out := catalog{}
+	for k, v := range c {
+		out[k] = v
+	}
+	for _, col := range laterColumns {
+		columns := 0
+		for k := range out {
+			if strings.HasPrefix(k, "column:"+col.table+".") {
+				columns++
+			}
+		}
+		if columns == 0 {
+			continue
+		}
+		key := "column:" + col.table + "." + col.column
+		if postgres {
+			out[key] = fmt.Sprintf("#%d %s", columns, col.postgres)
+			continue
+		}
+		out[key] = fmt.Sprintf("#%d %s", columns, col.sqlite)
+		text := out["table:"+col.table]
+		out["table:"+col.table] = text[:strings.LastIndex(text, ")")] + ", " + col.sqliteText + ")"
+	}
+	for _, idx := range laterIndexes {
+		table, _, _ := strings.Cut(idx.key, ".")
+		if _, ok := out["table:"+table]; !ok && !postgres {
+			continue
+		}
+		if postgres {
+			out["index:"+idx.key] = idx.postgres
+		} else {
+			out["index:"+idx.key] = idx.sqlite
+		}
+	}
+	return out
+}
+
 // diffCatalogs lists what got has differently from want.
 func diffCatalogs(want, got catalog) []string {
 	var out []string

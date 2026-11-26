@@ -629,7 +629,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=25b1acafdab4aec3"
+      "stringsUrl": "/api/console/strings/en?v=27e0bc1214dbb212"
      },
      "nav": [
       {
@@ -892,6 +892,7 @@
      "user": {
       "accessibility": null,
       "avatarVersion": null,
+      "displayName": "e2e_viewer",
       "id": 10,
       "preferredLanguage": null,
       "role": "viewer",
@@ -1486,7 +1487,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=25b1acafdab4aec3"
+      "stringsUrl": "/api/console/strings/en?v=27e0bc1214dbb212"
      },
      "nav": [
       {
@@ -2079,7 +2080,9 @@
       "mesh.power",
       "mesh.files",
       "device.signin_use",
-      "device.signin_manage"
+      "device.signin_manage",
+      "user.security",
+      "user.impersonate"
      ],
      "sessionPolicy": {
       "idleTimeoutMs": 1800000,
@@ -2091,6 +2094,7 @@
      "user": {
       "accessibility": null,
       "avatarVersion": null,
+      "displayName": "e2e_admin",
       "id": 5,
       "preferredLanguage": null,
       "role": "admin",

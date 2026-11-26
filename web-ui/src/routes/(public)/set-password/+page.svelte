@@ -5,8 +5,9 @@
   reads it, keeps it for this tab (so a reload keeps it) and takes it out
   of the address bar.
 
-  The server says which account the link is for, or that it cannot be used
-  (unknown, used and expired look the same). A usable one gets a form:
+  The server says which account the link is for and until when it works,
+  or that it cannot be used (unknown, used and expired look the same). A
+  usable one gets a form:
   password, password again. Saving sets the password, spends the link and
   signs the account out everywhere; the page then sends the person to the
   sign-in. Without a token the page asks for a username or email address
@@ -33,6 +34,7 @@
 		type PasswordLink
 	} from '#lib/api/passwordlinks.ts';
 	import { getLoginPage } from '#lib/api/signin.ts';
+	import { formatDate } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import PasswordField from '#lib/people/PasswordField.svelte';
@@ -224,6 +226,11 @@
 					? t('password_link.page_intro_reset', { username: found.username })
 					: t('password_link.page_intro_invite', { server: appName || 'NeoDesk', username: found.username })}
 			</p>
+			{#if found.expires_at}
+				<p class="link-expires">
+					{t('password_link.page_expires', { date: formatDate(found.expires_at, {}, '') })}
+				</p>
+			{/if}
 			<form id={form.id} class="link-form" onsubmit={form.onsubmit} novalidate>
 				<!-- The username for password managers, which file the new password under it -->
 				<input
@@ -290,6 +297,10 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-2);
+	}
+	.link-body .link-expires {
+		color: var(--text-muted);
+		font-size: var(--text-sm);
 	}
 	.link-form {
 		display: flex;

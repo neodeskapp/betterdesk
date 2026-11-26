@@ -25,8 +25,35 @@ func (s *Server) twoFactorSetupDue(user *db.User) bool {
 	if provider := user.AuthProvider; provider != "" && provider != db.AuthProviderLocal {
 		return false
 	}
+	// The web console's admins can require it of one account
+	if rules, err := s.db.AccountSignInRules(user.ID); err == nil && rules.TwoFactorRequired {
+		return true
+	}
 	value, err := s.db.GetConfig(configRequireTwoFactor)
 	return err == nil && value == "true"
+}
+
+// passwordChangeDue reports whether the account may not sign in here yet:
+// an admin of the web console required a new password of the local
+// account (or gave it a temporary one), which it chooses at its next
+// sign-in to the web console.
+func (s *Server) passwordChangeDue(user *db.User) bool {
+	if user == nil || s.db == nil {
+		return false
+	}
+	if provider := user.AuthProvider; provider != "" && provider != db.AuthProviderLocal {
+		return false
+	}
+	rules, err := s.db.AccountSignInRules(user.ID)
+	return err == nil && rules.MustChangePassword
+}
+
+// writePasswordChangeDue answers a sign-in that passwordChangeDue refuses.
+func writePasswordChangeDue(w http.ResponseWriter) {
+	writeJSON(w, http.StatusForbidden, map[string]string{
+		"error": "This account must choose a new password. Sign in to the web console once to set it.",
+		"code":  "password_change_required",
+	})
 }
 
 // writeTwoFactorSetupDue answers a sign-in that twoFactorSetupDue refuses.

@@ -167,14 +167,15 @@ var (
 )
 
 // Devices lists the account's live sessions, the most recently used
-// first. current is the id of the session that asks ("" for none, as for
+// first. A session an admin opened to view the console as the account
+// (Impersonate) is not one of its devices and is left out. current is the id of the session that asks ("" for none, as for
 // an API token).
 func (m *Manager) Devices(ctx context.Context, userID int64, current string) ([]Device, error) {
 	now := m.now().UnixMilli()
 	rows, err := m.table.db.Query(ctx,
 		`SELECT sid, ip_address, user_agent, created_at, last_activity_at, expires_at, end_reason, `+m.table.sqlActive()+`
 		 FROM panel_sessions
-		 WHERE user_id = ? AND is_active = `+m.table.sqlTrue()+`
+		 WHERE user_id = ? AND is_active = `+m.table.sqlTrue()+` AND impersonated_by IS NULL
 		 ORDER BY COALESCE(last_activity_at, created_at, 0) DESC, sid`, userID)
 	if err != nil {
 		return nil, fmt.Errorf("list sessions: %w", err)

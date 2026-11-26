@@ -676,6 +676,10 @@ type Database interface {
 	DeleteUser(id int64) error
 	// SetUserDisabled disables or enables an account.
 	SetUserDisabled(id int64, disabled bool) error
+	// AccountSignInRules reads what the web console's admins require of
+	// the account's sign-in (a new password, two-factor sign-in); none
+	// where the web console never made its table.
+	AccountSignInRules(userID int64) (AccountSignInRules, error)
 	// UpdateUserFromProvider stores the email address and display name a
 	// directory or single sign-on gave at sign-in in the web console's
 	// profile columns; an empty value leaves its column as it is.

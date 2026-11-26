@@ -248,12 +248,12 @@ export function actionCount(a: PanelActions): number {
 
 /**
  * The footer has three slots that keep their place and size in both modes:
- *   start:  Edit   → Cancel      (Edit opens the RDP/VNC sheet for a target)
- *   second: Connect → (empty, keeps its width)
- *   end:    Close  → Save
+ *   start:  Edit    → Save       (Edit opens the RDP/VNC sheet for a target)
+ *   second: Connect → Cancel
+ *   end:    Close   → (empty; Cancel when there is no Connect slot)
  * A slot is as wide as the wider of its two buttons, so nothing moves when
  * the mode changes. `edit` false leaves the first slot out, `connect` false
- * the second; Close/Save is always there.
+ * the second; the Close slot is always there.
  */
 export interface FooterSlots {
 	/** In-place editing (display name, user, note, folder, tags) */

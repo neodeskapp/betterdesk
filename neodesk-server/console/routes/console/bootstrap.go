@@ -3,12 +3,14 @@ package console
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/accessibility"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
@@ -29,6 +31,24 @@ type bootstrapAnswer struct {
 	SessionPolicy session.Policy               `json:"sessionPolicy"`
 	CSRFToken     string                       `json:"csrfToken"`
 	AppVersion    string                       `json:"appVersion"`
+	// Impersonation is there only while an admin views the console as the
+	// user: the web app shows the banner, and every write is refused.
+	Impersonation *bootstrapImpersonation `json:"impersonation,omitempty"`
+}
+
+// bootstrapImpersonation is what the web app knows of an impersonation.
+// The admin's session stays on the server.
+type bootstrapImpersonation struct {
+	AdminUsername string `json:"adminUsername"`
+	Reason        string `json:"reason"`
+	// StartedAt and ExpiresAt are in milliseconds.
+	StartedAt int64 `json:"startedAt"`
+	ExpiresAt int64 `json:"expiresAt"`
+	CanExtend bool  `json:"canExtend"`
+	ServerNow int64 `json:"serverNow"`
+	// AdminDisplayName is the admin's display name: first and last name,
+	// else the username.
+	AdminDisplayName string `json:"adminDisplayName"`
 }
 
 type bootstrapUser struct {
@@ -42,6 +62,9 @@ type bootstrapUser struct {
 	// Accessibility is the account's own accessibility settings, null
 	// when it never saved any: the browser's copy stays then.
 	Accessibility *accessibility.Settings `json:"accessibility"`
+	// DisplayName is first and last name, else the username: the name
+	// the account menu shows.
+	DisplayName string `json:"displayName"`
 }
 
 type bootstrapLang struct {
@@ -84,6 +107,7 @@ func (h *handlers) bootstrap(w http.ResponseWriter, r *http.Request) {
 		User: bootstrapUser{
 			ID:            user.ID,
 			Username:      user.Username,
+			DisplayName:   people.NameOf(ctx, h.d.Store, user.ID, user.Username),
 			Role:          user.Role,
 			AvatarVersion: h.d.Avatars.GetAvatarVersion(ctx, kit.UserID(r)),
 		},
@@ -108,6 +132,11 @@ func (h *handlers) bootstrap(w http.ResponseWriter, r *http.Request) {
 		h.d.Log.Child("BOOTSTRAP").Warn("Accessibility settings:", err)
 	} else if found {
 		answer.User.Accessibility = &a11y
+	}
+	if imp := kit.Impersonation(r); imp != nil {
+		answer.Impersonation = &bootstrapImpersonation{AdminUsername: imp.AdminUsername, Reason: imp.Reason,
+			AdminDisplayName: people.NameOf(ctx, h.d.Store, imp.AdminID, imp.AdminUsername),
+			StartedAt:        imp.StartedAt, ExpiresAt: imp.ExpiresAt, CanExtend: !imp.Extended, ServerNow: time.Now().UnixMilli()}
 	}
 	w.Header().Set("Cache-Control", "no-store")
 	kit.JSON(w, r, http.StatusOK, answer)

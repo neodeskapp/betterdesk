@@ -343,7 +343,7 @@ func (e *Engine) auditLogs(ctx context.Context, limit, offset int, f Filters) ([
 		return nil, err
 	}
 	rows, err := e.rows(ctx, `
-                SELECT a.*, u.username FROM audit_log a
+                SELECT a.id, a.user_id, a.action, a.details, a.ip_address, a.created_at, u.username FROM audit_log a
                 LEFT JOIN users u ON a.user_id = u.id WHERE 1=1`+period+`
                 ORDER BY a.created_at DESC LIMIT ? OFFSET ?
             `, append(args, limit, offset)...)

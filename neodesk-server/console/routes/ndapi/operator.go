@@ -91,6 +91,10 @@ func (h *handlers) operatorLogin(w http.ResponseWriter, r *http.Request) {
 		kit.JSON(w, r, http.StatusForbidden, goapi.NewObject("error", authn.TOTPSetupDueMessage, "code", authn.TOTPSetupDueCode))
 		return
 	}
+	if user.PasswordChangeRequired {
+		kit.JSON(w, r, http.StatusForbidden, goapi.NewObject("error", authn.PasswordChangeDueMessage, "code", authn.PasswordChangeDueCode))
+		return
+	}
 	device, err := textOr(jsreq.Prop(body, "device_id"), "")
 	if err != nil {
 		h.serverError(w, r, "Operator login error:", err, "Authentication failed")

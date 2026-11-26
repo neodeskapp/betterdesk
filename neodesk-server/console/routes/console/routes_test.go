@@ -227,8 +227,18 @@ func TestBootstrap(t *testing.T) {
 		}
 		got := decode(t, res.Body)
 		user, _ := json.Marshal(got["user"])
-		if string(user) != `{"accessibility":null,"avatarVersion":null,"id":6,"preferredLanguage":null,"role":"viewer","username":"e2e_viewer"}` {
+		if string(user) != `{"accessibility":null,"avatarVersion":null,"displayName":"e2e_viewer","id":6,"preferredLanguage":null,"role":"viewer","username":"e2e_viewer"}` {
 			t.Errorf("user = %s", user)
+		}
+		// The account menu names the person by first and last name
+		if _, err := db.Exec(ctx, `UPDATE users SET first_name = 'Vic', last_name = 'Viewer' WHERE id = 6`); err != nil {
+			t.Fatal(err)
+		}
+		if body := viewer.Do("GET", "/api/console/bootstrap", "").Body; !strings.Contains(body, `"displayName":"Vic Viewer"`) {
+			t.Errorf("no display name in %.300s", body)
+		}
+		if _, err := db.Exec(ctx, `UPDATE users SET first_name = '', last_name = '' WHERE id = 6`); err != nil {
+			t.Fatal(err)
 		}
 		if got["appVersion"] != "9.8.7" || got["emergencyMode"] != false || got["isSuperAdmin"] != false {
 			t.Errorf("appVersion %v, emergencyMode %v, isSuperAdmin %v", got["appVersion"], got["emergencyMode"], got["isSuperAdmin"])
@@ -286,7 +296,7 @@ func TestBootstrap(t *testing.T) {
 		}
 
 		admin := decode(t, w.As("admin").Do("GET", "/api/console/bootstrap", "").Body)
-		if admin["isSuperAdmin"] != true || len(admin["permissions"].([]any)) != 48 {
+		if admin["isSuperAdmin"] != true || len(admin["permissions"].([]any)) != 50 {
 			t.Errorf("admin: isSuperAdmin %v, %d permissions", admin["isSuperAdmin"], len(admin["permissions"].([]any)))
 		}
 	})
@@ -470,14 +480,16 @@ func withoutFixed(part string, raw json.RawMessage) json.RawMessage {
 		return body
 	case "permissions":
 		// A242: Node's chat.access is chat.support, chat.team, chat.assign
-		// and chat.canned_manage now; the chat's own tests pin them
+		// and chat.canned_manage now; the chat's own tests pin them. Node had
+		// no user.security and user.impersonate either (user management of
+		// 26 Nov 2026); TestBootstrap counts them
 		var list []string
 		if json.Unmarshal(raw, &list) != nil {
 			return raw
 		}
 		kept := []string{}
 		for _, p := range list {
-			if !strings.HasPrefix(p, "chat.") {
+			if !strings.HasPrefix(p, "chat.") && p != "user.security" && p != "user.impersonate" {
 				kept = append(kept, p)
 			}
 		}
