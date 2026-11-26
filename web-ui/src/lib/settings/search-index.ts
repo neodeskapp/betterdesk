@@ -667,6 +667,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'branding.edit'
 	],
 	// Your account (/account): the signed-in person's own settings
+	['account', 'profile-picture', 'account.picture_upload', 'account.profile', ['account.picture_note'], ''],
 	['account', 'profile-status', 'chat.my_presence', 'account.profile', ['account.status_note'], ''],
 	['account', 'password', 'account.password', '', ['settings.password_requirements'], ''],
 	['account', 'current-password', 'settings.current_password', 'account.password', [], ''],
@@ -1312,7 +1313,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 /** Space-separated element ids per tab or page, for #<id> links into another one */
 export const TAB_IDS: Readonly<Record<string, string>> = {
 	account:
-		'api-tokens confirm-password current-password new-password password password-requirements preferences preferences-accessibility preferences-language preferences-theme profile profile-status req-length sessions two-factor',
+		'api-tokens confirm-password current-password new-password password password-requirements preferences preferences-accessibility preferences-language preferences-theme profile profile-picture profile-status req-length sessions two-factor',
 	general:
 		'conn-allow-shared-nat-initiator conn-logged-in-only-initiator conn-mode-p2p conn-mode-relay conn-operator-only-outbound conn-p2p-fallback-ms conn-same-nat-relay connection-diagram connection-diagram-title connection-mode-effect connection-mode-fields connection-mode-form connection-mode-info connection-mode-section connection-mode-source connection-mode-title db-path general-form general-save go-server-version public-api-url public-endpoints public-endpoints-form public-endpoints-title public-relay-server public-server-id server-info server-info-title uptime',
 	auth: 'client-sessions-expiry-days client-sessions-form client-sessions-max-days client-sessions-max-group client-sessions-settings-section client-sessions-sliding console-sessions-form for-everyone-title require-two-factor single-session two-factor-policy-form',

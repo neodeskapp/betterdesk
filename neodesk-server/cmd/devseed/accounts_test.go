@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -47,7 +48,10 @@ func TestAccountsMakesOneAccountPerRoleAndTheDeviceTokens(t *testing.T) {
 			t.Fatal(err)
 		}
 		var out bytes.Buffer
-		args := []string{"accounts", "--go-db", testDSN(t, db), "--now", "1795083630456", passwordFile}
+		// Seeded now: the operator token runs out a week after --now, and a
+		// fixed day would make it expired once that week is over
+		seeded := time.UnixMilli(time.Now().UnixMilli())
+		args := []string{"accounts", "--go-db", testDSN(t, db), "--now", strconv.FormatInt(seeded.UnixMilli(), 10), passwordFile}
 		if err := run(ctx, args, func(string) string { return "" }, &out, io.Discard); err != nil {
 			t.Fatal(err)
 		}
@@ -113,7 +117,7 @@ func TestAccountsMakesOneAccountPerRoleAndTheDeviceTokens(t *testing.T) {
 			}
 			return token
 		}
-		week := time.UnixMilli(1795083630456).Add(7 * 24 * time.Hour)
+		week := seeded.Add(7 * 24 * time.Hour)
 		for _, k := range deviceTokens {
 			token := read(k.File)
 			device, err := svc.RequireDeviceToken(ctx, "Bearer "+token)

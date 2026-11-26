@@ -109,6 +109,7 @@ runs before the sign-in check, so requests without a session count too.
 | `RDClientPage` | `POST /api/mesh/devices/:id/desktop`, `GET /api/mesh/share/validate` (`meshcentral.routes.js`) | first |
 | `Upload` | `POST /transfer` (`fileTransfer.routes.js`), `POST /api/panel/languages/:code/fix` (`languages.routes.js`) | first |
 | `Upload` | `POST /`, `DELETE /:id`, `POST /:id/comments`, `POST /:id/attachments` (`tickets.routes.js`) | first |
+| `Upload` | `PUT /api/users/me/avatar` (Go console only) | after the sign-in check |
 | `FileAccess` | `GET /transfers/:id/download` (`fileTransfer.routes.js`), `GET /api/panel/languages`, `GET /api/panel/languages/:code/missing` (`languages.routes.js`) | first |
 | `FileAccess` | `GET /:id/attachments`, `GET /attachments/:aid` (`tickets.routes.js`), `GET /downloads/generic-agent/:tag/:name` (`phase4_5.routes.js`) | first |
 | `API` | `GET /api/logs/recent`, `GET /api/database/stats` (`system.routes.js`). `Set.AppLevel()` has counted them against `API` already, so the route does not count them again | first |
