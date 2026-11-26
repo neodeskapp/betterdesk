@@ -3,6 +3,7 @@
   signed-in person's own things, which sat in Settings and on other pages
   before.
   - Profile: picture, name, role and My status (#profile)
+  - Email address (#email): a new one waits for its confirmation link
   - Password (#password) and Two-factor sign-in (#two-factor), from
     Settings › Sign-in
   - Signed-in devices (#sessions), Audit log › Your sessions before
@@ -19,6 +20,7 @@
 -->
 <script lang="ts">
 	import ApiTokens from '#lib/account/ApiTokens.svelte';
+	import EmailAddress from '#lib/account/EmailAddress.svelte';
 	import PasswordAndTwoFactor from '#lib/account/PasswordAndTwoFactor.svelte';
 	import Preferences from '#lib/account/Preferences.svelte';
 	import Profile from '#lib/account/Profile.svelte';
@@ -33,6 +35,7 @@
 <SettingsPageFrame id="account" need="" title={t('account.title')} description={t('account.description')}>
 	<div class="account-parts">
 		<Profile />
+		<EmailAddress />
 		<PasswordAndTwoFactor />
 		<Sessions />
 		<SecurityEvents />

@@ -47,6 +47,14 @@ const StrArray = v.pipe(
 	v.transform((a) => (a ?? []).map(String))
 );
 
+/** An email address that waits for its confirmation link to be used */
+export const PendingEmail = v.looseObject({
+	email: Str,
+	expires_at: Str,
+	expired: v.optional(v.boolean(), false)
+});
+export type PendingEmail = v.InferOutput<typeof PendingEmail>;
+
 /** A console account as GET /api/users lists it */
 export const ConsoleUser = v.looseObject({
 	id: v.union([v.number(), v.string()]),
@@ -78,7 +86,9 @@ export const ConsoleUser = v.looseObject({
 	/** on, off, or required (by the account's rule or the server's switch) and not set up */
 	two_factor_state: v.optional(v.picklist(['on', 'off', 'required']), 'off'),
 	/** Until when a reset link mailed to the account works */
-	password_reset_until: v.optional(v.nullable(v.string()), null)
+	password_reset_until: v.optional(v.nullable(v.string()), null),
+	/** A new address that waits for its confirmation; the address above stays until then */
+	email_pending: v.optional(v.nullable(PendingEmail), null)
 });
 export type ConsoleUser = v.InferOutput<typeof ConsoleUser>;
 
@@ -397,4 +407,71 @@ export async function uploadMyAvatar(file: Blob): Promise<string | null> {
 /** Remove the signed-in person's picture; one from single sign-on returns at the next sign-in */
 export async function removeMyAvatar(): Promise<void> {
 	await api(OwnPicture, '/api/users/me/avatar', { method: 'DELETE' });
+}
+
+/* ── Email address changes ── */
+
+/** The signed-in account's address, the one waiting for its confirmation, and whether mail goes out */
+export const OwnEmail = v.looseObject({
+	email: Str,
+	auth_provider: Str,
+	email_pending: v.optional(v.nullable(PendingEmail), null),
+	mail_ready: v.optional(v.boolean(), false)
+});
+export type OwnEmail = v.InferOutput<typeof OwnEmail>;
+
+const userPath = (id: number | string) => `/api/users/${encodeURIComponent(String(id))}`;
+
+/** Ends an account's address change that waits for its confirmation. Needs user.edit */
+export function cancelEmailChange(id: number | string) {
+	return api(Ok, `${userPath(id)}/email-change`, { method: 'DELETE' });
+}
+
+/** Mails a new confirmation link for the pending address; the old link stops working. Needs user.edit */
+export function resendEmailChange(id: number | string) {
+	return api(Ok, `${userPath(id)}/email-change/resend`, { method: 'POST', body: {} });
+}
+
+export function getOwnEmail(signal?: AbortSignal): Promise<OwnEmail> {
+	return api(wrapped(OwnEmail), '/api/users/me/email', { signal });
+}
+
+/**
+ * Asks for a new address for the signed-in account: it gets a link that
+ * confirms it, and the address changes when the link is used. Without the
+ * console's email settings it changes at once. "" takes the address away.
+ */
+export function changeOwnEmail(email: string): Promise<OwnEmail> {
+	return api(wrapped(OwnEmail), '/api/users/me/email', { method: 'POST', body: { email } });
+}
+
+export function cancelOwnEmailChange(): Promise<OwnEmail> {
+	return api(wrapped(OwnEmail), '/api/users/me/email-change', { method: 'DELETE' });
+}
+
+export function resendOwnEmailChange(): Promise<OwnEmail> {
+	return api(wrapped(OwnEmail), '/api/users/me/email-change/resend', { method: 'POST', body: {} });
+}
+
+/** What the confirmation link is for */
+export const EmailChangeLink = v.looseObject({ username: Str, email: Str, expires_at: Str });
+export type EmailChangeLink = v.InferOutput<typeof EmailChangeLink>;
+
+/** Which account and address the link confirms; ApiError 404 for one that cannot be used */
+export function lookupEmailChange(token: string): Promise<EmailChangeLink> {
+	return api(wrapped(EmailChangeLink), '/api/auth/email-change/lookup', {
+		method: 'POST',
+		body: { token },
+		allowAnonymous: true,
+		activity: false
+	});
+}
+
+/** Confirms the address and uses the link up; 404 when it cannot be used (any more) */
+export function confirmEmailChange(token: string): Promise<EmailChangeLink> {
+	return api(wrapped(EmailChangeLink), '/api/auth/email-change/confirm', {
+		method: 'POST',
+		body: { token },
+		allowAnonymous: true
+	});
 }

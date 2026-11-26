@@ -15,6 +15,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/accountmail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 )
 
@@ -61,8 +62,9 @@ func (h *handlers) senderName(r *http.Request) string {
 
 // sendLink makes a new link of the purpose for the account, which ends
 // its earlier one, and mails it to the address in the language given, or
-// in the request's language for "". It reports whether the mail server
-// took the mail, and until when the link works.
+// for "" in the recipient's language: the account's preferred language,
+// else the console's default (not the admin's who sends it). It reports
+// whether the mail server took the mail, and until when the link works.
 func (h *handlers) sendLink(r *http.Request, userID int64, username, to, purpose, language string) (bool, time.Time, error) {
 	ctx := r.Context()
 	by := ""
@@ -78,13 +80,7 @@ func (h *handlers) sendLink(r *http.Request, userID int64, username, to, purpose
 	if i := strings.Index(host, "://"); i >= 0 {
 		host = host[i+3:]
 	}
-	translate := passwordlinks.Translate(func(key string, vars map[string]any) string {
-		pairs := make([]any, 0, 2*len(vars))
-		for k, v := range vars {
-			pairs = append(pairs, k, v)
-		}
-		return kit.T(r, key, kit.Vars(pairs...))
-	})
+	translate := accountmail.In(h.d, accountmail.LangOf(ctx, h.d, userID))
 	if language != "" {
 		translate = securitymail.Translator(h.d, language)
 	}

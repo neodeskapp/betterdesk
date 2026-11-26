@@ -63,6 +63,15 @@ func Register(d *kit.Deps) {
 	r.Put("/api/users/{id}/two-factor-required", h.setTwoFactorRequired, d.RequireAuth, security)
 	r.Post("/api/users/{id}/two-factor/reset", h.resetTwoFactor, d.RequireAuth, security)
 	r.Post("/api/users/{id}/recovery-codes/invalidate", h.invalidateRecoveryCodes, d.RequireAuth, security)
+	// Before the routes of /api/users/{id}, which would take "me" for an id.
+	// The signed-in account's own address (Your account); API tokens are
+	// kept from writes to /api/users/me
+	r.Get("/api/users/me/email", h.ownEmail, d.RequireAuth)
+	r.Post("/api/users/me/email", h.changeOwnEmail, d.RequireAuth)
+	r.Delete("/api/users/me/email-change", h.cancelOwnEmailChange, d.RequireAuth)
+	r.Post("/api/users/me/email-change/resend", h.resendOwnEmailChange, d.RequireAuth)
+	r.Delete("/api/users/{id}/email-change", h.cancelEmailChange, d.RequireAuth, d.RequirePermission("user.edit"))
+	r.Post("/api/users/{id}/email-change/resend", h.resendEmailChange, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Patch("/api/users/{id}", h.update, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Get("/api/users/{id}/effective-scope", h.effectiveScope, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Delete("/api/users/{id}", h.remove, d.RequireAuth, d.RequirePermission("user.delete"))

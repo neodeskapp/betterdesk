@@ -228,6 +228,12 @@ var fixes = map[string]fix{
 	// A role change and a deleted account end every session of the
 	// account, which Node's went on with: the test accounts that are
 	// changed sign in again
+	// A directory account gets its address from the directory: the Go
+	// console refuses to change it (the account life cycle), Node stored it
+	"339 PATCH /api/users/9": {bug: "LIFE1", status: http.StatusBadRequest, answer: is(`{"success":false,"error":"users.email_from_provider"}`), node: func(n *nodeWrites) {
+		n.exec(`UPDATE users SET email = 'ldap@example.invalid' WHERE id = 9`)
+		n.audit("user_updated", "Updated user: ldap_op")
+	}},
 	"346 PATCH /api/users/2":         {bug: "S9", endsSessionsOf: []string{"super_admin"}},
 	"348 PATCH /api/users/1":         {bug: "S9", endsSessionsOf: []string{"admin"}},
 	"349 PATCH /api/users/4":         {bug: "S9", endsSessionsOf: []string{"global_admin"}},

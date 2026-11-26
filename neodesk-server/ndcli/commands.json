@@ -7922,6 +7922,19 @@
    "route": "GET /api/users/avatars"
   },
   {
+   "name": "users cancel-email-change",
+   "summary": "Cancel an account's email address change that waits for its confirmation.",
+   "route": "DELETE /api/users/{id}/email-change",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.edit",
+   "description": "The confirmation link stops working and the address stays as it is."
+  },
+  {
    "name": "users cancel-reset-link",
    "summary": "Make the reset link an account was mailed stop working.",
    "route": "DELETE /api/users/{id}/password-reset-link",
@@ -8153,6 +8166,19 @@
     }
    ],
    "permission": "user.view"
+  },
+  {
+   "name": "users resend-email-change",
+   "summary": "Mail a new confirmation link for an account's pending email address.",
+   "route": "POST /api/users/{id}/email-change/resend",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.edit",
+   "description": "The link sent before stops working. The link works once, for 24 hours. Change the address itself with users update --email."
   },
   {
    "name": "users require-password-change",
@@ -8395,7 +8421,7 @@
      "name": "email",
      "in": "body",
      "type": "string",
-     "help": "email address"
+     "help": "new email address; it gets a confirmation link and changes once that is used (at once when the console has no email settings)"
     },
     {
      "name": "password",
@@ -8422,7 +8448,8 @@
    "examples": [
     "neodesk users update 7 --role viewer",
     "neodesk users update 7 --disabled true"
-   ]
+   ],
+   "description": "A new email address waits for its confirmation: see users resend-email-change and users cancel-email-change. Accounts from LDAP or single sign-on keep the address their provider gives."
   }
  ],
  "excluded": [
@@ -9609,6 +9636,30 @@
   {
    "route": "PUT /api/users/me/profile",
    "reason": "Your own profile: change it in the console. API tokens cannot change their account's profile."
+  },
+  {
+   "route": "GET /api/users/me/email",
+   "reason": "The signed-in account's own address on Your account; an API token can't change its own account."
+  },
+  {
+   "route": "POST /api/users/me/email",
+   "reason": "The signed-in account's own address on Your account; an API token can't change its own account."
+  },
+  {
+   "route": "DELETE /api/users/me/email-change",
+   "reason": "The signed-in account's own address on Your account; an API token can't change its own account."
+  },
+  {
+   "route": "POST /api/users/me/email-change/resend",
+   "reason": "The signed-in account's own address on Your account; an API token can't change its own account."
+  },
+  {
+   "route": "POST /api/auth/email-change/lookup",
+   "reason": "The public page a confirmation mail links to, without a session."
+  },
+  {
+   "route": "POST /api/auth/email-change/confirm",
+   "reason": "The public page a confirmation mail links to, without a session."
   },
   {
    "route": "GET /api/users/{id}/impersonation",

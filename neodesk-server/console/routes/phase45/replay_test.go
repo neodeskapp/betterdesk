@@ -55,6 +55,9 @@ func writeReleaseCache(t *testing.T, dataDir string) {
 // with their headers and the portal's installers. The audit log and the
 // stored pictures are compared after the requests.
 //
+// A profile save with another email address notes email_changed in the
+// audit log too, which Node didn't; the comparison leaves those out.
+//
 // A profile save keeps the fields its body leaves out, where Node emptied
 // them (BUGS C3): keptFields checks that at every save and then empties
 // them as Node did, so the steps after it start from Node's profile.
@@ -68,7 +71,16 @@ func TestNodeAnswers(t *testing.T) {
 				t.Error("no profile save left a field out")
 			}
 		}()
-		w.Run(replay.Load(t, db, "node"), func(t *testing.T, step replay.Step, got replay.Answer) bool {
+		rec := replay.Load(t, db, "node")
+		// A profile save with another address changes it as Your account
+		// does (package emailchange), which notes email_changed beside
+		// Node's profile_updated
+		for i, step := range rec.Steps {
+			if step.SQL == "SELECT action, details, user_id FROM audit_log ORDER BY id" {
+				rec.Steps[i].SQL = "SELECT action, details, user_id FROM audit_log WHERE action <> 'email_changed' ORDER BY id"
+			}
+		}
+		w.Run(rec, func(t *testing.T, step replay.Step, got replay.Answer) bool {
 			kept(t, step)
 			// A new template's token is random: 48 hex digits in place of
 			// each other

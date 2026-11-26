@@ -46,7 +46,10 @@ const CATEGORY_TESTS: Record<AuditFilter, (action: string) => boolean> = {
 	signins: (a) => /^(login|logout|auth_|session_|2fa_|password_)/.test(a),
 	failed: (a) => /(login|auth)(_login)?_failed/.test(a),
 	devices: (a) => /^(device_|devices_|enrollment_|folder_|peer_|remote_|registration)/.test(a),
-	people: (a) => /^(user_|role_|permission|group_|org_|organization_|invite|impersonation_)/.test(a),
+	people: (a) =>
+		/^(user_|role_|permission|group_|org_|organization_|invite|impersonation_|email_|password_|temporary_password|two_factor_|recovery_codes_)/.test(
+			a
+		),
 	settings: (a) =>
 		/^(settings|setting_|config|theme_|branding_|backup_|restore|server_|update|smtp|commercialization_|billing_|key_|token_|policy)/.test(
 			a

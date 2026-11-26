@@ -54,7 +54,7 @@ func listedAs(t *testing.T, admin *routetest.Agent, name string) listed {
 
 // auditAbout lists the audit entries about an account as
 // "action|details|actor".
-func auditAbout(t *testing.T, w *routetest.World, id string) []string {
+func auditRowsAbout(t *testing.T, w *routetest.World, id string) []string {
 	t.Helper()
 	rows, err := w.DB.Query(context.Background(), `SELECT action, COALESCE(details, ''), COALESCE(user_id, 0) FROM audit_log WHERE target_user_id = ? ORDER BY id`, id)
 	if err != nil {
@@ -165,7 +165,7 @@ func TestTemporaryPassword(t *testing.T) {
 	if got := signIn(w, "carol", temporary); got.Status != http.StatusUnauthorized {
 		t.Errorf("the temporary password still works: %d", got.Status)
 	}
-	rows := strings.Join(auditAbout(t, w, id), "\n")
+	rows := strings.Join(auditRowsAbout(t, w, id), "\n")
 	if !strings.Contains(rows, "temporary_password_set|Set a temporary password for user: carol|1") ||
 		!strings.Contains(rows, "password_changed|Password changed at sign-in, as required|"+id) {
 		t.Errorf("audit about carol:\n%s", rows)
@@ -231,7 +231,7 @@ func TestRequirePasswordChangeForSeveral(t *testing.T) {
 	if listedAs(t, admin, "carol").MustChangePassword {
 		t.Error("taken back, but listed")
 	}
-	rows := strings.Join(auditAbout(t, w, carol), "\n")
+	rows := strings.Join(auditRowsAbout(t, w, carol), "\n")
 	if !strings.Contains(rows, "password_change_required|Required a new password at the next sign-in of user: carol|1") ||
 		!strings.Contains(rows, "password_change_requirement_removed|No longer requires a new password of user: carol|1") {
 		t.Errorf("audit:\n%s", rows)
@@ -282,7 +282,7 @@ func TestUnlockEndsTheLock(t *testing.T) {
 		t.Error("the list still says locked")
 	}
 	expect(t, "not locked", admin.Do("POST", "/api/users/"+id+"/unlock", `{}`), 200, `{"success":true,"data":{"was_locked":false}}`)
-	if rows := strings.Join(auditAbout(t, w, id), "\n"); !strings.Contains(rows, "user_unlocked|Unlocked user: erin; cleared 10 failed sign-in(s)|1") {
+	if rows := strings.Join(auditRowsAbout(t, w, id), "\n"); !strings.Contains(rows, "user_unlocked|Unlocked user: erin; cleared 10 failed sign-in(s)|1") {
 		t.Errorf("audit:\n%s", rows)
 	}
 	expect(t, "viewer", w.As("viewer").Do("POST", "/api/users/"+id+"/unlock", `{}`), 403, "")

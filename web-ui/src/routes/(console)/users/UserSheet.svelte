@@ -11,7 +11,16 @@
 	import { untrack } from 'svelte';
 	import { listFolders, type Folder } from '#lib/api/devices.ts';
 	import { listStrategies, type Strategy } from '#lib/api/strategies.ts';
-	import { createUser, inviteUser, updateUser, type ConsoleUser, type UserGroupRow } from '#lib/api/users.ts';
+	import {
+		cancelEmailChange,
+		createUser,
+		inviteUser,
+		resendEmailChange,
+		updateUser,
+		type ConsoleUser,
+		type PendingEmail,
+		type UserGroupRow
+	} from '#lib/api/users.ts';
 	import { formatDate } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
 	import PasswordField from '#lib/people/PasswordField.svelte';
@@ -35,6 +44,7 @@
 	import Notice from '#lib/ui/Notice.svelte';
 	import Select from '#lib/ui/Select.svelte';
 	import Sheet from '#lib/ui/Sheet.svelte';
+	import Status from '#lib/ui/Status.svelte';
 	import Tag from '#lib/ui/Tag.svelte';
 	import User from '#lib/ui/User.svelte';
 	import { createForm } from '#lib/ui/form.svelte.ts';
@@ -117,13 +127,18 @@
 				strategyGuid: v.strategy
 			};
 			if (user) {
-				// The role only when it changed: an editor may keep a role they could not give
+				// The role only when it changed: an editor may keep a role they could not give.
+				// A directory or single sign-on gives the address, so it is not sent
+				const { email, ...rest } = common;
 				await updateUser(user.id, {
-					...common,
+					...(isLocal ? common : rest),
 					...(provider !== 'ldap' && v.role !== user.role ? { role: v.role } : {}),
 					...(isLocal && v.password ? { password: v.password } : {})
 				});
 				toast.success(t('users.user_updated_named', { username: user.username }));
+				// A new address waits for its confirmation when mail goes out
+				if (isLocal && mailReady && email && email !== user.email)
+					toast.info(t('users.email_change_sent_named', { email }));
 			} else if (v.mode === 'invite') {
 				const username = v.username.trim();
 				const made = await inviteUser({ ...common, ...(username ? { username } : {}), role: v.role });
@@ -164,6 +179,33 @@
 		},
 		{ value: 'password', title: t('users.add_mode_password'), description: t('users.add_mode_password_desc') }
 	]);
+
+	/** The account's new address that waits for its confirmation */
+	let pending = $state.raw<PendingEmail | null>(untrack(() => user?.email_pending ?? null));
+	let pendingBusy = $state(false);
+
+	async function pendingAction(run: () => Promise<unknown>, done: string, gone: boolean) {
+		pendingBusy = true;
+		try {
+			await run();
+			toast.success(done);
+			if (gone) pending = null;
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
+		} finally {
+			pendingBusy = false;
+		}
+	}
+
+	const emailHint = $derived(
+		!editing
+			? t('users.email_hint')
+			: !isLocal
+				? t('users.email_from_provider_hint', { provider: providerLabel(provider) })
+				: mailReady
+					? t('users.email_hint_confirm')
+					: t('users.email_hint_no_mail')
+	);
 
 	const strategyOptions = $derived([
 		{ value: '', label: t('users.pro_strategy_none') },
@@ -284,7 +326,7 @@
 			{/if}
 		{/if}
 		{#if !inviting}
-			<Field label={t('users.email')} hint={t('users.email_hint')}>
+			<Field label={t('users.email')} hint={emailHint}>
 				{#snippet children(f)}
 					<Input
 						{...f}
@@ -292,10 +334,48 @@
 						width="host"
 						autocomplete="off"
 						spellcheck="false"
+						readonly={editing && !isLocal}
 						bind:value={form.values.email}
 					/>
 				{/snippet}
 			</Field>
+			{#if user && pending}
+				{@const p = pending}
+				{@const id = user.id}
+				<div class="pending-email">
+					<Status
+						tone={p.expired ? 'warning' : 'waiting'}
+						label={t('users.email_pending', { email: p.email })}
+					/>
+					<p class="note">
+						{p.expired
+							? t('users.email_pending_expired')
+							: t('users.email_pending_until', { date: formatDate(p.expires_at, {}, '') })}
+					</p>
+					<div class="pending-actions">
+						{#if mailReady}
+							<Button
+								size="sm"
+								disabled={pendingBusy}
+								onclick={() =>
+									void pendingAction(
+										() => resendEmailChange(id),
+										t('users.email_change_sent_named', { email: p.email }),
+										false
+									)}>{t('users.email_change_resend')}</Button
+							>
+						{/if}
+						<Button
+							size="sm"
+							variant="danger-quiet"
+							disabled={pendingBusy}
+							onclick={() =>
+								void pendingAction(() => cancelEmailChange(id), t('users.email_change_cancelled'), true)}
+							>{t('users.email_change_cancel')}</Button
+						>
+					</div>
+				</div>
+			{/if}
 		{/if}
 
 		<FormSection title={t('users.role')} id="{uid}-role">
@@ -391,6 +471,21 @@
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 		max-width: var(--measure);
+	}
+	.pending-email {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		max-width: var(--measure);
+		margin: 0 0 var(--space-4);
+	}
+	.pending-email .note {
+		margin: 0;
+	}
+	.pending-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
 	}
 	.group {
 		min-width: 0;

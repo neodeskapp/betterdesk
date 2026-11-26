@@ -568,7 +568,13 @@
 		>{/if}
 {/snippet}
 
-{#snippet emailCell(u: ConsoleUser)}{#if u.email}{u.email}{:else}<Empty />{/if}{/snippet}
+{#snippet emailCell(u: ConsoleUser)}{#if u.email}{u.email}{:else}<Empty />{/if}{#if u.email_pending}<span
+			class="cell-sub email-pending"
+			><Status
+				tone={u.email_pending.expired ? 'warning' : 'waiting'}
+				label={t('users.email_pending', { email: u.email_pending.email })}
+			/></span
+		>{/if}{/snippet}
 
 {#snippet roleCell(u: ConsoleUser)}
 	{@const provider = providerOf(u)}
@@ -980,6 +986,10 @@
 		color: var(--text-muted);
 		font-size: var(--text-sm);
 		font-weight: 400;
+	}
+	/* The email column has no avatar before it */
+	.users-table :global(.cell-sub.email-pending) {
+		padding-inline-start: 0;
 	}
 	.users-table :global(td.col-nowrap) {
 		white-space: nowrap;

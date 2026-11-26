@@ -240,7 +240,13 @@ func (p *replayer) run() {
 			if f, fixed := fixFor(p.rec, step.Name); fixed && f.pinnedBy != "" {
 				continue
 			}
-			have := p.rows(step.SQL, step.Params)
+			query := step.SQL
+			if strings.Contains(query, "FROM audit_log") {
+				// A changed email address notes email_changed beside Node's
+				// user_updated (package emailchange)
+				query = strings.Replace(query, "WHERE action <> 'session_ip_change'", "WHERE action NOT IN ('session_ip_change', 'email_changed')", 1)
+			}
+			have := p.rows(query, step.Params)
 			if strings.Contains(step.SQL, "FROM audit_log") {
 				have = nodeLabels(have)
 			}

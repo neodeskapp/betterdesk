@@ -1,6 +1,7 @@
 package phase45
 
 import (
+	"database/sql"
 	"errors"
 	"net/http"
 	"strings"
@@ -9,6 +10,9 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapipath"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/emailchange"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
@@ -115,9 +119,27 @@ func (h *handlers) saveProfile(w http.ResponseWriter, r *http.Request) {
 		}
 		values[name] = goapipath.Slice(text, 200)
 	}
+	// A new address waits for its confirmation like one from Your account
+	// (package emailchange); the same address is written as it was
+	newEmail, emailGiven := values["email"]
+	current := ""
+	if before != nil {
+		current = cellText(before.Email)
+	}
+	if emailGiven && newEmail != current {
+		delete(values, "email")
+	} else {
+		emailGiven = false
+	}
 	if err := updateUserProfile(ctx, h.d.Store, userID, values); err != nil {
 		fail(w, r, http.StatusInternalServerError, jsbind.Message(errors.Unwrap(err)))
 		return
+	}
+	if emailGiven && before != nil {
+		if code, message := h.changeEmail(r, before, current, newEmail); code != 0 {
+			fail(w, r, code, message)
+			return
+		}
 	}
 	_ = h.d.LogAction(r, "profile_updated", "Updated operator profile")
 
@@ -220,4 +242,27 @@ func (h *handlers) operatorInfo(w http.ResponseWriter, r *http.Request) {
 		DisplayName: display, Username: user.Username, RoleDisplay: roleDisplay,
 		Email: orEmpty(user.Email), Phone: orEmpty(user.Phone), AvatarURL: orEmpty(user.AvatarURL),
 	}})
+}
+
+// changeEmail asks for the account's address to become next. It answers
+// a status and a text when it was refused, 0 otherwise.
+func (h *handlers) changeEmail(r *http.Request, user *userRow, current, next string) (int, string) {
+	var provider sql.NullString
+	_ = h.d.Store.QueryRow(r.Context(), `SELECT auth_provider FROM users WHERE id = ?`, user.ID.V).Scan(&provider)
+	changer := &emailchange.Changer{D: h.d, Life: lifecycle.New(h.d.Store, nil), Links: passwordlinks.New(h.d.Store, nil)}
+	target := emailchange.Target{ID: user.ID.V, Username: cellText(user.Username), Email: current, Provider: provider.String}
+	_, err := changer.Request(r, target, next, true)
+	var refusal *emailchange.Refusal
+	switch {
+	case err == nil:
+		return 0, ""
+	case errors.As(err, &refusal):
+		pairs := make([]any, 0, 2*len(refusal.Vars))
+		for k, v := range refusal.Vars {
+			pairs = append(pairs, k, v)
+		}
+		return refusal.Status, kit.T(r, refusal.Key, kit.Vars(pairs...))
+	}
+	h.d.Log.Error("Profile email change error:", err.Error())
+	return http.StatusInternalServerError, kit.T(r, "errors.server_error", nil)
 }

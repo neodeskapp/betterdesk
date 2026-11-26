@@ -8,6 +8,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
@@ -33,6 +34,9 @@ type handlers struct {
 	notices *securitymail.Notices
 	// resetBudget counts the reset requests of each address.
 	resetBudget *addressBudget
+	// life holds address changes that wait for their confirmation and
+	// the accounts' end dates.
+	life *lifecycle.Store
 	// syncPicture brings the account's profile picture in line with the
 	// "picture" of a single sign-on. It returns at once and works in the
 	// background. nil skips it.
@@ -51,6 +55,7 @@ func newHandlers(d *kit.Deps) *handlers {
 		links:       passwordlinks.New(d.Store, nil),
 		notices:     securitymail.New(d),
 		resetBudget: &addressBudget{},
+		life:        lifecycle.New(d.Store, nil),
 	}
 	if d.Config.HTTPS {
 		h.guestCookie = "neodesk.guest"
@@ -94,6 +99,8 @@ func Register(d *kit.Deps) {
 	r.Get("/api/auth/login-page", h.loginPage)
 	r.Post("/api/auth/password-link/lookup", h.passwordLinkLookup, passwordLinkLimit(d)...)
 	r.Post("/api/auth/password-link/redeem", h.passwordLinkRedeem, passwordLinkLimit(d)...)
+	r.Post("/api/auth/email-change/lookup", h.emailChangeLookup, passwordLinkLimit(d)...)
+	r.Post("/api/auth/email-change/confirm", h.emailChangeConfirm, passwordLinkLimit(d)...)
 	r.Get("/api/auth/password-reset/available", h.passwordResetAvailable)
 	r.Post("/api/auth/password-reset/request", h.passwordResetRequest, passwordLinkLimit(d)...)
 

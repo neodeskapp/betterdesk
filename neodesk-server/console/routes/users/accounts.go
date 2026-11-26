@@ -17,6 +17,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/emailchange"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
@@ -140,6 +141,8 @@ type listedAccount struct {
 	TOTPEnabled  bool              `json:"totp_enabled"`
 	// Disabled says the account may not sign in.
 	Disabled bool `json:"disabled"`
+	// EmailPending is a new address that waits for its confirmation.
+	EmailPending *pendingEmail `json:"email_pending,omitempty"`
 }
 
 // withPicture is a listed account with what the list says about its
@@ -242,10 +245,19 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Get users error:", err)
 		return
 	}
+	pending, err := h.life.PendingEmails(ctx)
+	if err != nil {
+		h.serverError(w, r, "Get users error:", err)
+		return
+	}
 	out := make([]withPicture, len(accounts))
 	for i, a := range accounts {
 		has, version := versions.Fields(a.ID.V)
-		out[i] = withPicture{listedAccount: h.serialize(ctx, a), HasAvatar: has, AvatarVersion: version, signInState: facts.of(a)}
+		listed := h.serialize(ctx, a)
+		if c, ok := pending[a.ID.V]; ok {
+			listed.EmailPending = pendingOf(&c)
+		}
+		out[i] = withPicture{listedAccount: listed, HasAvatar: has, AvatarVersion: version, signInState: facts.of(a)}
 	}
 	answer(w, r, http.StatusOK, accountList{Success: true, Data: accountListData{Users: out, Total: len(out)}})
 }
@@ -599,6 +611,10 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		if normalized, err = normalizeEmail(email); err != nil {
 			return nil, err
 		}
+		// A directory or single sign-on gives the address
+		if err := emailchange.Refuse(targetOf(user), textOf(normalized)); err != nil {
+			return nil, changeRefusal(r, err)
+		}
 	}
 	disable, changeDisabled, err := disabledOf(r, body, user)
 	if err != nil {
@@ -635,8 +651,9 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		return nil, err
 	}
 	if !email.IsUndefined() {
-		if err := updateEmail(ctx, h.d.Store, id, textOf(normalized)); err != nil {
-			return nil, err
+		// A new address waits for its confirmation (package emailchange)
+		if _, err := h.changer().Request(r, targetOf(user), textOf(normalized), isSessionAccount(r, id)); err != nil {
+			return nil, changeRefusal(r, err)
 		}
 	}
 	if changeDisabled {
@@ -667,6 +684,11 @@ func (h *handlers) updateAccount(r *http.Request, userID float64) (*listedAccoun
 		updated = user
 	}
 	out := h.serialize(ctx, updated)
+	pending, err := h.life.PendingEmail(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	out.EmailPending = pendingOf(pending)
 	return &out, nil
 }
 

@@ -59,7 +59,7 @@ func TestTwoFactorRequiredForOneAccount(t *testing.T) {
 	if s := listedAs(t, admin, "fred"); s.TwoFactorState != "on" {
 		t.Errorf("set up: %+v", s)
 	}
-	rows := strings.Join(auditAbout(t, w, id), "\n")
+	rows := strings.Join(auditRowsAbout(t, w, id), "\n")
 	if !strings.Contains(rows, "two_factor_required|Requires two-factor sign-in of user: fred|1") ||
 		!strings.Contains(rows, "two_factor_requirement_removed|No longer requires two-factor sign-in of user: fred|1") {
 		t.Errorf("audit:\n%s", rows)
@@ -112,7 +112,7 @@ func TestResetTwoFactor(t *testing.T) {
 	if s := listedAs(t, admin, "gina"); s.TwoFactorState != "off" {
 		t.Errorf("after turning off: %+v", s)
 	}
-	rows := strings.Join(auditAbout(t, w, id), "\n")
+	rows := strings.Join(auditRowsAbout(t, w, id), "\n")
 	for _, want := range []string{
 		"recovery_codes_invalidated|Made the recovery codes of user gina stop working|1",
 		"two_factor_reset|Reset two-factor sign-in for user: gina|1",
@@ -181,7 +181,7 @@ func TestCancelResetLink(t *testing.T) {
 	}
 	expect(t, "cancel again", admin.Do("DELETE", "/api/users/"+id+"/password-reset-link", ""), 404,
 		`{"success":false,"error":"No reset link is waiting for this account."}`)
-	if rows := strings.Join(auditAbout(t, w, id), "\n"); !strings.Contains(rows, "password_reset_cancelled|Cancelled the password reset link of user: hal|1") {
+	if rows := strings.Join(auditRowsAbout(t, w, id), "\n"); !strings.Contains(rows, "password_reset_cancelled|Cancelled the password reset link of user: hal|1") {
 		t.Errorf("audit:\n%s", rows)
 	}
 	expect(t, "viewer", w.As("viewer").Do("DELETE", "/api/users/"+id+"/password-reset-link", ""), 403, "")
