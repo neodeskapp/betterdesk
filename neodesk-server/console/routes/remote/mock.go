@@ -16,7 +16,8 @@ import (
 // ND_DEV_MOCK_REMOTE=1.
 
 // mockScenarios are the scenarios the mock knows (SCENARIOS).
-var mockScenarios = []string{"ok", "slow", "password", "2fa", "fail-relay", "refused", "offline", "timeout", "ended", "dropped", "one-at-a-time"}
+var mockScenarios = []string{"ok", "slow", "password", "2fa", "fail-relay", "refused", "offline", "timeout", "ended", "dropped", "one-at-a-time",
+	"click", "quick-support", "quick-support-decline", "quick-support-timeout", "revoked"}
 
 // seededDevice is a fake device of the dev seed scripts: IDs 900100001 to
 // 900100099 and from 950000000 (isSeededDevice).

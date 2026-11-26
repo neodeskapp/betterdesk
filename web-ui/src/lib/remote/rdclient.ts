@@ -13,6 +13,8 @@
  * the flag the viewer data has no mock and the chunk is never fetched.
  */
 
+import type { DeviceReach } from '#lib/api/devices.ts';
+import type { DeviceSupport } from '#lib/api/onboard.ts';
 import { setCsrfToken } from '#lib/api/client.ts';
 import { t } from '#lib/i18n/i18n.svelte.ts';
 import { installCapabilities } from './capabilities.ts';
@@ -110,6 +112,14 @@ export interface RemoteClient {
 	authenticateWith?(answer: LoginAnswer): Promise<boolean>;
 	/** RDClient: ask the device without a password while the form shows, so someone there can accept (L515) */
 	askWithoutPassword?(): Promise<void>;
+	/** The dev mock: the server's answers it stands in for (reach, unblock, the quick support session) */
+	mockServer?: {
+		reach(): Promise<DeviceReach>;
+		unblock(): Promise<void>;
+		support(): Promise<DeviceSupport>;
+		/** How long the viewer waits for the person to accept, when shorter than CONSENT_WAIT_MS */
+		consentWait?(): number | undefined;
+	};
 	/** RDClient: the relay session's id, which the server knows as this viewer's open session */
 	readonly relayUUID?: string;
 	/** RDClient: what the device said about itself at the sign-in (PeerInfo) */

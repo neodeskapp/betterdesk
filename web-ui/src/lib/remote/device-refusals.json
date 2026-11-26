@@ -1,0 +1,19 @@
+{
+	"Wrong Password": "password_wrong",
+	"Wrong 2FA Code": "tfa_wrong",
+	"Too many wrong attempts": "rate_limited",
+	"Please try 1 minute later": "rate_limited",
+	"Connection not allowed": "device_not_allowed",
+	"Your ip is blocked by the peer": "device_blocks_you",
+	"Your ID is blocked by the peer": "device_blocks_you",
+	"No permission of file transfer": "device_feature_off",
+	"No permission of viewing camera": "device_feature_off",
+	"No permission of terminal": "device_feature_off",
+	"No permission of IP tunneling": "device_feature_off",
+	"Supported only in the installed version.": "device_not_installed",
+	"Wayland login screen is not supported": "login_screen",
+	"Someone turns on privacy mode, exit": "privacy_mode",
+	"The main window is not open": "device_not_ready",
+	"Terminal service user mismatch detected.": "device_not_ready",
+	"Offline": "device_offline"
+}

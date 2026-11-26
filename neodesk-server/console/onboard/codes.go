@@ -47,7 +47,11 @@ var ErrTooManyCodes = errors.New("too_many_codes")
 // bad_proof, replayed, empty_key, empty_uuid), and Audit says the console
 // writes the audit entry now, standing for Repeats refusals since the last.
 type RefusedError struct {
-	Reason   string
+	Reason string
+	// Code is the machine-readable reason (device_revoked, device_blocked,
+	// device_banned, device_removed, device_rejected, other_machine,
+	// key_changed, join_proof), "" from an older API server
+	Code     string
 	Unproved string
 	Audit    bool
 	Repeats  int
@@ -135,10 +139,13 @@ type answer struct {
 	} `json:"device"`
 	Joined []Joined `json:"joined"`
 	// Unproved, Audit and Repeats come with a join refused for its proof
-	Unproved string   `json:"unproved"`
-	Audit    bool     `json:"audit"`
-	Repeats  int      `json:"repeats"`
-	Refused  *Refused `json:"refused"`
+	Unproved string `json:"unproved"`
+	// Reason is the machine-readable reason of a refused device
+	// (device_revoked, device_blocked, device_banned, ...)
+	Reason  string   `json:"reason"`
+	Audit   bool     `json:"audit"`
+	Repeats int      `json:"repeats"`
+	Refused *Refused `json:"refused"`
 }
 
 // Joined is a computer that joined with an invite, and when.
@@ -208,7 +215,7 @@ func failure(what string, status int, out answer) error {
 	case status == http.StatusConflict && out.Error == ErrTooManyCodes.Error():
 		return ErrTooManyCodes
 	case status == http.StatusForbidden && out.Error == "device_refused":
-		return &RefusedError{Reason: out.Message, Unproved: out.Unproved, Audit: out.Audit, Repeats: out.Repeats}
+		return &RefusedError{Reason: out.Message, Code: out.Reason, Unproved: out.Unproved, Audit: out.Audit, Repeats: out.Repeats}
 	}
 	return fmt.Errorf("%s: the API server answered %d %s %s", what, status, out.Error, out.Message)
 }

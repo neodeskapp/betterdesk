@@ -2926,6 +2926,18 @@
    ]
   },
   {
+   "name": "devices reach",
+   "summary": "Say why a session to a device can or cannot start: online, offline, unknown, revoked, blocked, banned, deleted or a changed key.",
+   "route": "GET /api/devices/{id}/reach",
+   "args": [
+    {
+     "name": "id",
+     "help": "The device ID (see devices list)"
+    }
+   ],
+   "permission": "device.view"
+  },
+  {
    "name": "devices rename",
    "summary": "Set a device's display name.",
    "route": "POST /api/devices/{id}/rename",
@@ -3163,6 +3175,18 @@
    ],
    "permission": "device.ban",
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
+   "name": "devices unblock",
+   "summary": "Take a revoked or blocked device ID off the server's blocklist, so the computer can register and join again.",
+   "route": "POST /api/devices/{id}/unblock",
+   "args": [
+    {
+     "name": "id",
+     "help": "The device ID (see devices list)"
+    }
+   ],
+   "permission": "device.delete"
   },
   {
    "name": "devices update",

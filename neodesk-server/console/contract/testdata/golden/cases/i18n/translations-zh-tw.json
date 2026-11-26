@@ -516,6 +516,7 @@
        "action_device_token_issued": "裝置令牌已核發",
        "action_device_unban": "裝置已解除封鎖",
        "action_device_unbanned": "裝置已解除封鎖",
+       "action_device_unblocked": "Device unblocked",
        "action_device_updated": "裝置已變更",
        "action_devices_bulk_deleted": "多台裝置已刪除",
        "action_devices_moved": "裝置已移動",
@@ -608,6 +609,7 @@
        "action_quick_support_ended": "快速支援已結束",
        "action_quick_support_opened": "快速支援連結已開啟",
        "action_quick_support_password_taken": "快速支援密碼已取用",
+       "action_quick_support_refused": "Quick support computer refused",
        "action_recovery_codes_invalidated": "Recovery codes made unusable by an admin",
        "action_registration_approved": "註冊已核准",
        "action_registration_rejected": "註冊已拒絕",
@@ -3228,6 +3230,7 @@
        "unban_effect": "{device} 可以再次連線到此伺服器。",
        "unban_success": "設備解除封禁成功",
        "unban_title": "解除封禁",
+       "unblock_not_blocked": "This computer is not blocked on this server.",
        "username": "用戶名",
        "version": "版本"
       },
@@ -3330,6 +3333,205 @@
        "signed_in_as": "您目前以 {user} 的身分登入，角色為 {role}。",
        "try_again": "重試",
        "unban_failed": "解除封禁失敗"
+      },
+      "failure": {
+       "billing_blocked": {
+        "todo": "Ask an administrator to check the computer's contract.",
+        "what": "The server does not allow sessions to {name} right now.",
+        "why": "The contract of this computer does not allow sessions."
+       },
+       "client_too_old": {
+        "todo": "Update NeoDesk on {name}, then reconnect.",
+        "what": "NeoDesk on {name} is too old for this.",
+        "why": "The version on the computer does not support this connection."
+       },
+       "consent_declined": {
+        "todo": "Ask them to try again, then reconnect.",
+        "what": "{person} declined the connection.",
+        "why": "The person at {name} clicked Decline or closed the window that asked."
+       },
+       "consent_scope": {
+        "todo": "Ask {person} to allow it in the quick support window.",
+        "what": "{person} did not allow this.",
+        "why": "In this quick support session, {person} allowed only some things."
+       },
+       "consent_timeout": {
+        "todo": "Ask them to watch for the window that asks, then reconnect.",
+        "what": "{person} did not answer.",
+        "why": "Nobody accepted the connection on {name} within 3 minutes."
+       },
+       "device_banned": {
+        "todo": "If it should connect again, unban it in the device panel.",
+        "what": "{name} is banned on this server.",
+        "why": "An administrator banned this computer, so the server refuses it."
+       },
+       "device_blocked": {
+        "todo": "If it should connect again, unblock it here. Then reconnect.",
+        "todo_ask": "Ask an administrator to unblock this computer, then reconnect.",
+        "what": "{name} is blocked on this server.",
+        "why": "Its ID is on the server's blocklist, so the server refuses it, even when it is on."
+       },
+       "device_blocks_you": {
+        "todo": "Ask someone at {name} to remove the block in its settings.",
+        "what": "{name} blocks you.",
+        "why": "NeoDesk on {name} has your ID or address on its own blocklist."
+       },
+       "device_feature_off": {
+        "todo": "Ask someone at {name} to allow it under Settings, Security.",
+        "what": "{name} turned this off.",
+        "why": "NeoDesk on {name} does not allow this kind of session."
+       },
+       "device_not_allowed": {
+        "todo": "Ask someone at {name} to set a password or allow connections under Settings, Security.",
+        "what": "{name} does not take this connection.",
+        "why": "NeoDesk on {name} only lets people in with a password, and no password is set there, or its settings turn connections off."
+       },
+       "device_not_installed": {
+        "todo": "Ask someone at {name} to install NeoDesk, then reconnect.",
+        "what": "{name} can't do this without an installed NeoDesk.",
+        "why": "NeoDesk runs there without being installed, and this needs the installed version."
+       },
+       "device_not_ready": {
+        "todo": "Ask someone at {name} to open NeoDesk, then reconnect.",
+        "what": "{name} is not ready for this connection.",
+        "why": "NeoDesk on {name} said it can't take the session now."
+       },
+       "device_offline": {
+        "todo": "Turn it on or wake it up, and check that NeoDesk runs on it. Then reconnect.",
+        "what": "{name} is offline.",
+        "why": "It has not checked in with the server for a while."
+       },
+       "device_rejected": {
+        "todo": "Ask an administrator to allow it under Add computers, then try again.",
+        "what": "This server turned {name} away.",
+        "why": "An administrator rejected this computer when it asked to join."
+       },
+       "device_removed": {
+        "todo": "Restore it in the device panel, or add it again under Add computers.",
+        "what": "{name} was deleted on this server.",
+        "why": "The computer is with the deleted devices."
+       },
+       "device_revoked": {
+        "todo": "If it should connect again, unblock it here. Then reconnect.",
+        "todo_ask": "Ask an administrator to unblock this computer, then reconnect.",
+        "what": "{name} was revoked on this server.",
+        "why": "Someone revoked this computer in the console, so the server refuses it, even when it is on."
+       },
+       "device_unknown": {
+        "todo": "Check the ID. If the computer was removed, add it again under Add computers.",
+        "what": "The server does not know {name}.",
+        "why": "No computer with this ID is registered on this server."
+       },
+       "dropped": {
+        "todo": "Reconnect. If it keeps happening, check the network of the computer.",
+        "what": "The connection to {name} dropped.",
+        "why": "The network between this browser, the server and {name} was interrupted."
+       },
+       "dropped_early": {
+        "todo": "Reconnect. If it keeps happening, check the network of the computer.",
+        "what": "The connection closed before {name} answered.",
+        "why": "The network between this browser, the server and {name} was interrupted while the session started."
+       },
+       "feature_off": {
+        "todo": "Ask an administrator to turn it on.",
+        "what": "This kind of session is turned off for your account.",
+        "why": "An administrator turned it off in your account's client features."
+       },
+       "https_required": {
+        "todo": "Open the console over HTTPS to see its screen.",
+        "what": "{name} can't be shown over plain HTTP.",
+        "why": "This computer sends a video format the browser plays only over HTTPS."
+       },
+       "insecure": {
+        "todo": "No password was sent. Ask an administrator to check the server.",
+        "what": "The connection to {name} was stopped because it could not be secured.",
+        "why": "{name} did not prove its identity or did not encrypt the connection. Someone between this browser and the computer may be listening in, or the server key is not set up."
+       },
+       "join_proof": {
+        "todo": "Update NeoDesk on this computer and open the link again, or ask an administrator to delete the old device in the console.",
+        "what": "{name} could not prove that it is the computer the server knows.",
+        "why": "The ID is enrolled already, and this computer did not sign the join with the key the server has for it."
+       },
+       "key_changed": {
+        "todo": "If you expected the change, approve the new key in the device panel. Then reconnect.",
+        "what": "{name} came back with a new key.",
+        "why": "The server refuses a computer whose key changed until an administrator approves it. This keeps others from taking over its ID."
+       },
+       "license_blocked": {
+        "todo": "Ask an administrator to check the license.",
+        "what": "The server's license does not allow this connection.",
+        "why": "The license key does not match this server."
+       },
+       "login_screen": {
+        "todo": "Sign in on {name} first, or switch its sign-in screen to X11. Then reconnect.",
+        "what": "{name} shows a sign-in screen NeoDesk can't share.",
+        "why": "The sign-in screen of {name} runs on Wayland, which NeoDesk can't capture."
+       },
+       "no_answer": {
+        "todo": "Wake it up or wait a moment, then reconnect.",
+        "what": "{name} did not answer.",
+        "why": "The server asked {name} to connect, and no answer came in time. It may be asleep or busy, or its network may block NeoDesk."
+       },
+       "not_authorized": {
+        "todo": "Ask an administrator to give you access to this computer.",
+        "what": "You can't connect to {name}.",
+        "why": "The server does not let your account start sessions to this computer."
+       },
+       "other_machine": {
+        "todo": "Ask an administrator to delete the old device in the console, then try again.",
+        "what": "Another computer already uses the ID of {name}.",
+        "why": "The server knows this ID from a different machine."
+       },
+       "password_wrong": {
+        "todo": "Enter the password set on {name}. NeoDesk shows it on that computer under Settings, Security.",
+        "what": "The password was not accepted.",
+        "why": "{name} refused the password."
+       },
+       "privacy_mode": {
+        "todo": "Wait until that session ends, then reconnect.",
+        "what": "Someone turned on privacy mode on {name}.",
+        "why": "Another session holds {name} in privacy mode, which lets no second viewer in."
+       },
+       "rate_limited": {
+        "todo": "Wait a minute, then reconnect.",
+        "what": "Too many tries.",
+        "why": "{name} blocks sign-ins for a while after several wrong ones."
+       },
+       "relay_refused": {
+        "todo": "Reconnect. If it keeps happening, copy the details and send them to an administrator.",
+        "what": "The server stopped the connection to {name}.",
+        "why": "The server did not let this session through."
+       },
+       "relay_unreachable": {
+        "todo": "Reconnect. If it keeps failing, ask an administrator to check that the server's ports are open.",
+        "what": "The connection to {name} could not be set up.",
+        "why": "This browser could not reach the part of the server that carries the session."
+       },
+       "server_unreachable": {
+        "todo": "Check your network, then reconnect. If it keeps failing, ask an administrator to check the server.",
+        "what": "This browser can't reach the NeoDesk server.",
+        "why": "The server did not answer when the connection started."
+       },
+       "session_limit": {
+        "todo": "Wait until another session ends, or ask an administrator.",
+        "what": "The server takes no more sessions right now.",
+        "why": "The number of sessions is at the limit of its license."
+       },
+       "signin_closed": {
+        "todo": "Reconnect and sign in again. If it keeps happening, ask an administrator to look at the log of NeoDesk on the computer.",
+        "what": "{name} closed the connection when this browser signed in.",
+        "why": "The computer refused the sign-in."
+       },
+       "tfa_wrong": {
+        "todo": "Enter the current code from the authenticator app linked to {name}.",
+        "what": "The code was not accepted.",
+        "why": "{name} refused the two-factor code."
+       },
+       "unknown": {
+        "todo": "Reconnect. If it keeps failing, copy the details and send them to an administrator.",
+        "what": "Could not connect to {name}.",
+        "why": "The cause is not known. The details below show what this browser saw."
+       }
       },
       "file_transfer": {
        "browse_files": "瀏覽文件",
@@ -4953,12 +5155,16 @@
         "state_ended": "The session has ended.",
         "state_ended_customer": "The session has ended: they closed the app.",
         "state_expired": "The link expired before anyone used it. Make a new link if the person still needs help.",
+        "state_refused": "The server refused {name}.",
         "state_timeout": "The session has ended: the app stopped answering.",
         "state_waiting": "Waiting for the person to open the link. The link expires at {time}.",
         "system": "System",
         "text": "Send this link to the person who needs help. They download a small app and click Allow, then you can connect. The link works once, for one hour.",
         "the_person": "the person",
-        "title": "Quick support"
+        "title": "Quick support",
+        "unblock": "Unblock this computer",
+        "unblock_failed": "Could not unblock {name}. Try again.",
+        "unblocked": "{name} is unblocked. Make a new link and send it again."
        }
       },
       "organizations": {
@@ -6124,7 +6330,15 @@
        "try_relay": "請確認中繼伺服器正在執行，且此瀏覽器可以連到它，然後重新連線。",
        "try_signin_closed": "裝置拒絕了登入。請重新連線並再次登入。如果一再發生，請管理員查看裝置上 NeoDesk 的記錄。",
        "try_timeout": "裝置可能處於睡眠、忙碌或離線狀態。請喚醒裝置或稍候片刻，然後重新連線。",
+       "unblock": "Unblock this computer",
+       "unblock_failed": "Could not unblock {name}. Try again.",
+       "unblocked": "{name} is unblocked.",
+       "unblocked_try": "{name} is unblocked. It checks in with the server within a minute; then reconnect.",
        "unmute": "開啟聲音",
+       "wait_person": "Waiting for {person} to accept on their screen.",
+       "wait_person_hint": "{person} sees a window that asks to let you connect, with Allow and Decline.",
+       "wait_someone": "Waiting for someone at {name} to accept on their screen.",
+       "wait_someone_hint": "The person there sees a window that asks to let you connect, with Allow and Decline.",
        "window_blocked": "瀏覽器封鎖了新視窗。請允許此網站的彈出式視窗，然後再試一次。",
        "window_without_viewer": "此視窗顯示遠端工作階段的一個顯示器。請在檢視器中以「在獨立視窗中開啟」開啟它。",
        "windows": "視窗",
@@ -10204,6 +10418,7 @@
        "action_device_token_issued": "裝置令牌已核發",
        "action_device_unban": "裝置已解除封鎖",
        "action_device_unbanned": "裝置已解除封鎖",
+       "action_device_unblocked": "Device unblocked",
        "action_device_updated": "裝置已變更",
        "action_devices_bulk_deleted": "多台裝置已刪除",
        "action_devices_moved": "裝置已移動",
@@ -10296,6 +10511,7 @@
        "action_quick_support_ended": "快速支援已結束",
        "action_quick_support_opened": "快速支援連結已開啟",
        "action_quick_support_password_taken": "快速支援密碼已取用",
+       "action_quick_support_refused": "Quick support computer refused",
        "action_recovery_codes_invalidated": "Recovery codes made unusable by an admin",
        "action_registration_approved": "註冊已核准",
        "action_registration_rejected": "註冊已拒絕",
@@ -12916,6 +13132,7 @@
        "unban_effect": "{device} 可以再次連線到此伺服器。",
        "unban_success": "設備解除封禁成功",
        "unban_title": "解除封禁",
+       "unblock_not_blocked": "This computer is not blocked on this server.",
        "username": "用戶名",
        "version": "版本"
       },
@@ -13018,6 +13235,205 @@
        "signed_in_as": "您目前以 {user} 的身分登入，角色為 {role}。",
        "try_again": "重試",
        "unban_failed": "解除封禁失敗"
+      },
+      "failure": {
+       "billing_blocked": {
+        "todo": "Ask an administrator to check the computer's contract.",
+        "what": "The server does not allow sessions to {name} right now.",
+        "why": "The contract of this computer does not allow sessions."
+       },
+       "client_too_old": {
+        "todo": "Update NeoDesk on {name}, then reconnect.",
+        "what": "NeoDesk on {name} is too old for this.",
+        "why": "The version on the computer does not support this connection."
+       },
+       "consent_declined": {
+        "todo": "Ask them to try again, then reconnect.",
+        "what": "{person} declined the connection.",
+        "why": "The person at {name} clicked Decline or closed the window that asked."
+       },
+       "consent_scope": {
+        "todo": "Ask {person} to allow it in the quick support window.",
+        "what": "{person} did not allow this.",
+        "why": "In this quick support session, {person} allowed only some things."
+       },
+       "consent_timeout": {
+        "todo": "Ask them to watch for the window that asks, then reconnect.",
+        "what": "{person} did not answer.",
+        "why": "Nobody accepted the connection on {name} within 3 minutes."
+       },
+       "device_banned": {
+        "todo": "If it should connect again, unban it in the device panel.",
+        "what": "{name} is banned on this server.",
+        "why": "An administrator banned this computer, so the server refuses it."
+       },
+       "device_blocked": {
+        "todo": "If it should connect again, unblock it here. Then reconnect.",
+        "todo_ask": "Ask an administrator to unblock this computer, then reconnect.",
+        "what": "{name} is blocked on this server.",
+        "why": "Its ID is on the server's blocklist, so the server refuses it, even when it is on."
+       },
+       "device_blocks_you": {
+        "todo": "Ask someone at {name} to remove the block in its settings.",
+        "what": "{name} blocks you.",
+        "why": "NeoDesk on {name} has your ID or address on its own blocklist."
+       },
+       "device_feature_off": {
+        "todo": "Ask someone at {name} to allow it under Settings, Security.",
+        "what": "{name} turned this off.",
+        "why": "NeoDesk on {name} does not allow this kind of session."
+       },
+       "device_not_allowed": {
+        "todo": "Ask someone at {name} to set a password or allow connections under Settings, Security.",
+        "what": "{name} does not take this connection.",
+        "why": "NeoDesk on {name} only lets people in with a password, and no password is set there, or its settings turn connections off."
+       },
+       "device_not_installed": {
+        "todo": "Ask someone at {name} to install NeoDesk, then reconnect.",
+        "what": "{name} can't do this without an installed NeoDesk.",
+        "why": "NeoDesk runs there without being installed, and this needs the installed version."
+       },
+       "device_not_ready": {
+        "todo": "Ask someone at {name} to open NeoDesk, then reconnect.",
+        "what": "{name} is not ready for this connection.",
+        "why": "NeoDesk on {name} said it can't take the session now."
+       },
+       "device_offline": {
+        "todo": "Turn it on or wake it up, and check that NeoDesk runs on it. Then reconnect.",
+        "what": "{name} is offline.",
+        "why": "It has not checked in with the server for a while."
+       },
+       "device_rejected": {
+        "todo": "Ask an administrator to allow it under Add computers, then try again.",
+        "what": "This server turned {name} away.",
+        "why": "An administrator rejected this computer when it asked to join."
+       },
+       "device_removed": {
+        "todo": "Restore it in the device panel, or add it again under Add computers.",
+        "what": "{name} was deleted on this server.",
+        "why": "The computer is with the deleted devices."
+       },
+       "device_revoked": {
+        "todo": "If it should connect again, unblock it here. Then reconnect.",
+        "todo_ask": "Ask an administrator to unblock this computer, then reconnect.",
+        "what": "{name} was revoked on this server.",
+        "why": "Someone revoked this computer in the console, so the server refuses it, even when it is on."
+       },
+       "device_unknown": {
+        "todo": "Check the ID. If the computer was removed, add it again under Add computers.",
+        "what": "The server does not know {name}.",
+        "why": "No computer with this ID is registered on this server."
+       },
+       "dropped": {
+        "todo": "Reconnect. If it keeps happening, check the network of the computer.",
+        "what": "The connection to {name} dropped.",
+        "why": "The network between this browser, the server and {name} was interrupted."
+       },
+       "dropped_early": {
+        "todo": "Reconnect. If it keeps happening, check the network of the computer.",
+        "what": "The connection closed before {name} answered.",
+        "why": "The network between this browser, the server and {name} was interrupted while the session started."
+       },
+       "feature_off": {
+        "todo": "Ask an administrator to turn it on.",
+        "what": "This kind of session is turned off for your account.",
+        "why": "An administrator turned it off in your account's client features."
+       },
+       "https_required": {
+        "todo": "Open the console over HTTPS to see its screen.",
+        "what": "{name} can't be shown over plain HTTP.",
+        "why": "This computer sends a video format the browser plays only over HTTPS."
+       },
+       "insecure": {
+        "todo": "No password was sent. Ask an administrator to check the server.",
+        "what": "The connection to {name} was stopped because it could not be secured.",
+        "why": "{name} did not prove its identity or did not encrypt the connection. Someone between this browser and the computer may be listening in, or the server key is not set up."
+       },
+       "join_proof": {
+        "todo": "Update NeoDesk on this computer and open the link again, or ask an administrator to delete the old device in the console.",
+        "what": "{name} could not prove that it is the computer the server knows.",
+        "why": "The ID is enrolled already, and this computer did not sign the join with the key the server has for it."
+       },
+       "key_changed": {
+        "todo": "If you expected the change, approve the new key in the device panel. Then reconnect.",
+        "what": "{name} came back with a new key.",
+        "why": "The server refuses a computer whose key changed until an administrator approves it. This keeps others from taking over its ID."
+       },
+       "license_blocked": {
+        "todo": "Ask an administrator to check the license.",
+        "what": "The server's license does not allow this connection.",
+        "why": "The license key does not match this server."
+       },
+       "login_screen": {
+        "todo": "Sign in on {name} first, or switch its sign-in screen to X11. Then reconnect.",
+        "what": "{name} shows a sign-in screen NeoDesk can't share.",
+        "why": "The sign-in screen of {name} runs on Wayland, which NeoDesk can't capture."
+       },
+       "no_answer": {
+        "todo": "Wake it up or wait a moment, then reconnect.",
+        "what": "{name} did not answer.",
+        "why": "The server asked {name} to connect, and no answer came in time. It may be asleep or busy, or its network may block NeoDesk."
+       },
+       "not_authorized": {
+        "todo": "Ask an administrator to give you access to this computer.",
+        "what": "You can't connect to {name}.",
+        "why": "The server does not let your account start sessions to this computer."
+       },
+       "other_machine": {
+        "todo": "Ask an administrator to delete the old device in the console, then try again.",
+        "what": "Another computer already uses the ID of {name}.",
+        "why": "The server knows this ID from a different machine."
+       },
+       "password_wrong": {
+        "todo": "Enter the password set on {name}. NeoDesk shows it on that computer under Settings, Security.",
+        "what": "The password was not accepted.",
+        "why": "{name} refused the password."
+       },
+       "privacy_mode": {
+        "todo": "Wait until that session ends, then reconnect.",
+        "what": "Someone turned on privacy mode on {name}.",
+        "why": "Another session holds {name} in privacy mode, which lets no second viewer in."
+       },
+       "rate_limited": {
+        "todo": "Wait a minute, then reconnect.",
+        "what": "Too many tries.",
+        "why": "{name} blocks sign-ins for a while after several wrong ones."
+       },
+       "relay_refused": {
+        "todo": "Reconnect. If it keeps happening, copy the details and send them to an administrator.",
+        "what": "The server stopped the connection to {name}.",
+        "why": "The server did not let this session through."
+       },
+       "relay_unreachable": {
+        "todo": "Reconnect. If it keeps failing, ask an administrator to check that the server's ports are open.",
+        "what": "The connection to {name} could not be set up.",
+        "why": "This browser could not reach the part of the server that carries the session."
+       },
+       "server_unreachable": {
+        "todo": "Check your network, then reconnect. If it keeps failing, ask an administrator to check the server.",
+        "what": "This browser can't reach the NeoDesk server.",
+        "why": "The server did not answer when the connection started."
+       },
+       "session_limit": {
+        "todo": "Wait until another session ends, or ask an administrator.",
+        "what": "The server takes no more sessions right now.",
+        "why": "The number of sessions is at the limit of its license."
+       },
+       "signin_closed": {
+        "todo": "Reconnect and sign in again. If it keeps happening, ask an administrator to look at the log of NeoDesk on the computer.",
+        "what": "{name} closed the connection when this browser signed in.",
+        "why": "The computer refused the sign-in."
+       },
+       "tfa_wrong": {
+        "todo": "Enter the current code from the authenticator app linked to {name}.",
+        "what": "The code was not accepted.",
+        "why": "{name} refused the two-factor code."
+       },
+       "unknown": {
+        "todo": "Reconnect. If it keeps failing, copy the details and send them to an administrator.",
+        "what": "Could not connect to {name}.",
+        "why": "The cause is not known. The details below show what this browser saw."
+       }
       },
       "file_transfer": {
        "browse_files": "瀏覽文件",
@@ -14641,12 +15057,16 @@
         "state_ended": "The session has ended.",
         "state_ended_customer": "The session has ended: they closed the app.",
         "state_expired": "The link expired before anyone used it. Make a new link if the person still needs help.",
+        "state_refused": "The server refused {name}.",
         "state_timeout": "The session has ended: the app stopped answering.",
         "state_waiting": "Waiting for the person to open the link. The link expires at {time}.",
         "system": "System",
         "text": "Send this link to the person who needs help. They download a small app and click Allow, then you can connect. The link works once, for one hour.",
         "the_person": "the person",
-        "title": "Quick support"
+        "title": "Quick support",
+        "unblock": "Unblock this computer",
+        "unblock_failed": "Could not unblock {name}. Try again.",
+        "unblocked": "{name} is unblocked. Make a new link and send it again."
        }
       },
       "organizations": {
@@ -15812,7 +16232,15 @@
        "try_relay": "請確認中繼伺服器正在執行，且此瀏覽器可以連到它，然後重新連線。",
        "try_signin_closed": "裝置拒絕了登入。請重新連線並再次登入。如果一再發生，請管理員查看裝置上 NeoDesk 的記錄。",
        "try_timeout": "裝置可能處於睡眠、忙碌或離線狀態。請喚醒裝置或稍候片刻，然後重新連線。",
+       "unblock": "Unblock this computer",
+       "unblock_failed": "Could not unblock {name}. Try again.",
+       "unblocked": "{name} is unblocked.",
+       "unblocked_try": "{name} is unblocked. It checks in with the server within a minute; then reconnect.",
        "unmute": "開啟聲音",
+       "wait_person": "Waiting for {person} to accept on their screen.",
+       "wait_person_hint": "{person} sees a window that asks to let you connect, with Allow and Decline.",
+       "wait_someone": "Waiting for someone at {name} to accept on their screen.",
+       "wait_someone_hint": "The person there sees a window that asks to let you connect, with Allow and Decline.",
        "window_blocked": "瀏覽器封鎖了新視窗。請允許此網站的彈出式視窗，然後再試一次。",
        "window_without_viewer": "此視窗顯示遠端工作階段的一個顯示器。請在檢視器中以「在獨立視窗中開啟」開啟它。",
        "windows": "視窗",

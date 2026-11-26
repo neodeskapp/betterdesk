@@ -87,6 +87,8 @@ func Register(d *kit.Deps) {
 	r.Patch("/api/devices/{id}", h.update, d.RequireAuth, edit)
 	r.Delete("/api/devices/{id}", h.remove, d.RequireAuth, d.RequirePermission("device.delete"))
 	r.Post("/api/devices/{id}/restore", h.restore, d.RequireAuth, d.RequirePermission("device.delete"))
+	r.Get("/api/devices/{id}/reach", h.reach, d.RequireAuth, view)
+	r.Post("/api/devices/{id}/unblock", h.unblock, d.RequireAuth, d.RequirePermission("device.delete"))
 	r.Post("/api/devices/{id}/connection-mode", h.connectionMode, d.RequireAuth, d.RequirePermission("device.connection_mode"))
 	r.Post("/api/devices/{id}/ban", h.ban, d.RequireAuth, d.RequirePermission("device.ban"))
 	r.Post("/api/devices/{id}/unban", h.unban, d.RequireAuth, d.RequirePermission("device.ban"))

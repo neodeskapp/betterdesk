@@ -159,6 +159,9 @@ type refusal struct {
 	Error   string `json:"error"`
 	Code    string `json:"code,omitempty"`
 	Message string `json:"message,omitempty"`
+	// Reason is the machine-readable reason of a refused device, which
+	// the client shows in its own words
+	Reason string `json:"reason,omitempty"`
 }
 
 // fail answers {success:false, error, code}; error is the text of the

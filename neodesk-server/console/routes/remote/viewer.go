@@ -2,8 +2,10 @@ package remote
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/guestaccess"
@@ -11,6 +13,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/reqquery"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/serverinfo"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // deviceIDPattern is a device id the viewer and the redirects take.
@@ -217,7 +220,8 @@ func (h *handlers) viewer(w http.ResponseWriter, r *http.Request) {
 		answer.Device = viewerDevice{Name: name, Platform: orValue(device.Get("platform"), orValue(device.Get("os"), ""))}
 	}
 	if user := kit.User(r); user != nil {
-		answer.User = &viewerUser{ID: user.ID, Name: user.Username}
+		// The computer shows this name to the person who accepts
+		answer.User = &viewerUser{ID: user.ID, Name: viewerName(r.Context(), h.d.Store, user.ID, user.Username)}
 		answer.WorkReports = kit.HasPermission(r, "billing.reports")
 	}
 	kit.JSON(w, r, http.StatusOK, answer)
@@ -319,4 +323,24 @@ func itoa(i int) string {
 		return digits[i : i+1]
 	}
 	return itoa(i/10) + digits[i%10:i%10+1]
+}
+
+// viewerName is the name the viewer gives the computer: the person's first
+// and last name as the quick support window names the supporter, else the
+// user name, else fallback.
+func viewerName(ctx context.Context, db *store.DB, userID int64, fallback string) string {
+	if db == nil || userID == 0 {
+		return fallback
+	}
+	var first, last, username sql.NullString
+	if err := db.QueryRow(ctx, `SELECT first_name, last_name, username FROM users WHERE id = ?`, userID).Scan(&first, &last, &username); err != nil {
+		return fallback
+	}
+	if name := strings.TrimSpace(strings.TrimSpace(first.String) + " " + strings.TrimSpace(last.String)); name != "" {
+		return name
+	}
+	if username.String != "" {
+		return username.String
+	}
+	return fallback
 }
