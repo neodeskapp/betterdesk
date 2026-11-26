@@ -81,7 +81,9 @@
 		</a>
 	{/if}
 
-	<nav class="shell-breadcrumb" aria-label={t('ux35.breadcrumb')}>
+	<!-- Where the page sits; a section has no page of its own, so nothing here
+	     is a link and it is no navigation landmark, only a named group -->
+	<div class="shell-breadcrumb" role="group" aria-label={t('ux35.breadcrumb')}>
 		{#each crumbs as crumb, i (i)}
 			{#if i > 0}<span class="crumb-sep" aria-hidden="true">/</span>{/if}
 			{#if i === crumbs.length - 1}
@@ -90,7 +92,7 @@
 				<span class="crumb">{crumb}</span>
 			{/if}
 		{/each}
-	</nav>
+	</div>
 
 	<button
 		type="button"
