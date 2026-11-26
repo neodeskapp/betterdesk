@@ -104,7 +104,12 @@ describe('settingEntries', () => {
 		expect(
 			settingEntries({ t: tOf(en), can: everyone }).find((e) => e.id === 'require-two-factor')?.href
 		).toBe('/settings?tab=auth#require-two-factor');
-		expect(SEARCH_INDEX.filter((r) => r[0] === 'auth' && /password|totp/.test(r[1]))).toEqual([]);
+		// The security notice "Password changed" is a mail rule for everyone, not your own password
+		expect(
+			SEARCH_INDEX.filter(
+				(r) => r[0] === 'auth' && !r[1].startsWith('security-notice-') && /password|totp/.test(r[1])
+			)
+		).toEqual([]);
 	});
 
 	test('no setting the account cannot see: tabs it may not open and rows that need a permission', () => {
