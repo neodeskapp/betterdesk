@@ -1443,7 +1443,29 @@
       "font_cat_sans": "Без засічок",
       "font_cat_serif": "Із засічками",
       "font_cat_mono": "Моноширинні",
-      "font_cat_display": "Декоративні"
+      "font_cat_display": "Декоративні",
+      "undo_change": "Undo change",
+      "reset_confirm_title": "Reset the appearance and branding?",
+      "reset_confirm": "Everyone gets the built-in look and name again. Your theme and colours, fonts, backgrounds, custom CSS, name and logo, footer, sign-in page and download page settings are removed, and unsaved changes here too. This cannot be undone. Saved appearances, uploaded pictures and fonts and the client app branding stay.",
+      "reset_confirm_button": "Reset for everyone",
+      "advanced": "Advanced",
+      "library_help": "Pictures uploaded to this server before. Pick one to use it.",
+      "filter": "Filter appearance settings",
+      "theme_default": "Default theme",
+      "theme_default_help": "What everyone sees, unless they pick light or dark for themselves in the top bar.",
+      "bg_type_help": "What shows behind the console pages.",
+      "blur_help": "Blurs the background so the pages stand out.",
+      "advanced_note": "Settings most consoles never change. A wrong value can spoil how the console and the sign-in page look.",
+      "danger_zone": "Danger zone",
+      "reset_row": "Reset appearance and branding",
+      "reset_removes": "Removes your theme and colours, fonts, backgrounds, custom CSS, name and logo, footer, sign-in page and download page settings for everyone. Saved appearances, uploaded pictures and fonts and the client app branding stay.",
+      "bg_uploaded": "{name} is uploaded. It is used once you save.",
+      "color_help": "A colour as #rrggbb, for example #1e293b.",
+      "bg_upload_save": "It is uploaded when you pick it and used once you save.",
+      "image_url_help": "Filled in when you upload or pick a picture. You can also enter an address on this server that starts with /, for example /uploads/wallpaper.jpg. Pictures from other websites don't load.",
+      "size_help": "How the picture fills the space behind the page.",
+      "n_characters": "{count} characters",
+      "logo_file": "Logo file to upload"
     },
     "signin": {
       "your_account": "Ваш обліковий запис",
@@ -1662,6 +1684,21 @@
     "tab_brand": "Брендинг",
     "branding": {
       "client_app": "Клієнтський застосунок"
+    },
+    "brand": {
+      "filter": "Filter branding settings",
+      "name_help": "Shown in the sidebar, the browser tab and on the sign-in page. Empty uses NeoDesk.",
+      "footer_help": "For example a copyright notice or your company name. Empty shows no text.",
+      "login_title_help": "The big line on the sign-in page. Empty shows \"{text}\".",
+      "login_subtitle_help": "A line under the heading. Empty shows none.",
+      "slide_upload_help": "Uploaded when you pick it and used once you save.",
+      "slide_url_help": "Filled in when you upload a picture. An address on this server, for example /img/login-slides/free.jpg.",
+      "slide_empty_shows": "Empty shows \"{text}\".",
+      "login_bg_help": "What shows behind the sign-in form.",
+      "agent_bg_help": "What shows behind the download page.",
+      "rdclient_bg_help": "What shows behind the device list. \"{inherit}\" uses the console background.",
+      "picture_kb": "Picture, {kb} KB",
+      "website_help": "A full address, for example https://example.com."
     }
   },
   "audit": {

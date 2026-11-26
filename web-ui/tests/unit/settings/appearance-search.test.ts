@@ -17,6 +17,7 @@ vi.mock('#lib/api/settings.ts', async (orig) => ({
 }));
 
 import AppearanceTab from '../../../src/lib/settings/tabs/AppearanceTab.svelte';
+import BrandingTab from '../../../src/lib/settings/tabs/BrandingTab.svelte';
 import { session } from '../../../src/lib/state/session.svelte.ts';
 
 beforeEach(() => {
@@ -43,7 +44,7 @@ test('every Appearance entry of the settings search is on the page', async () =>
 }, 20_000);
 
 test('every Branding entry of the settings search is on the Branding part', async () => {
-	render(AppearanceTab, { part: 'brand' });
+	render(BrandingTab);
 	await screen.findByLabelText('branding.app_name');
 	const missing = SEARCH_INDEX.filter((row) => row[0] === 'brand')
 		.map((row) => row[1])

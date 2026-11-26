@@ -40,6 +40,7 @@ vi.mock('#lib/api/settings.ts', async (orig) => ({
 
 import * as settingsApi from '../../../src/lib/api/settings.ts';
 import AppearanceTab from '../../../src/lib/settings/tabs/AppearanceTab.svelte';
+import BrandingTab from '../../../src/lib/settings/tabs/BrandingTab.svelte';
 import { session } from '../../../src/lib/state/session.svelte.ts';
 
 beforeEach(() => {
@@ -137,24 +138,28 @@ describe('the Appearance form', () => {
 		await vi.waitFor(() =>
 			expect(document.querySelector('.branding-form[aria-busy="false"]')).not.toBeNull()
 		);
-		const color = document.getElementById('bg-color') as HTMLInputElement;
+		const color = document.getElementById('bg-color-control') as HTMLInputElement;
 		await fireEvent.input(color, { target: { value: 'red;}' } });
-		await user.click(screen.getByRole('button', { name: 'settings.appearance.save' }));
+		await user.click(screen.getByRole('button', { name: 'Save changes' }));
 		await vi.waitFor(() =>
 			expect(document.getElementById('bg-color-error')?.textContent).toBe('settings.appearance.refused_color')
 		);
 		expect(color.getAttribute('aria-invalid')).toBe('true');
 		expect(settingsApi.saveBranding).not.toHaveBeenCalled();
-		expect(screen.getByText('settings.appearance.refused_summary')).toBeTruthy();
+		// The save bar says why nothing was saved
+		expect(screen.getByRole('region', { name: 'Unsaved changes' })).toHaveTextContent(
+			'Not saved: settings.appearance.refused_summary'
+		);
 	}, 20_000);
 
 	test('a slide with a refused address is marked, not dropped', async () => {
 		const user = userEvent.setup();
-		render(AppearanceTab, { part: 'brand' });
-		await screen.findByLabelText('branding.app_name');
+		render(BrandingTab);
+		const name = await screen.findByLabelText('branding.app_name');
+		await vi.waitFor(() => expect(name).toHaveValue('Desk'));
 		const url = document.getElementById('login-slide-1-url') as HTMLInputElement;
 		await fireEvent.input(url, { target: { value: 'javascript:alert(1)' } });
-		await user.click(screen.getByRole('button', { name: 'settings.appearance.save' }));
+		await user.click(screen.getByRole('button', { name: 'Save changes' }));
 		await vi.waitFor(() =>
 			expect(document.getElementById('login-slide-1-url-error')?.textContent).toBe(
 				'settings.appearance.refused_address'
@@ -180,12 +185,15 @@ describe('the Appearance form', () => {
 		await vi.waitFor(() =>
 			expect(document.querySelector('.branding-form[aria-busy="false"]')).not.toBeNull()
 		);
-		await fireEvent.input(document.getElementById('custom-css') as HTMLTextAreaElement, {
+		await fireEvent.input(document.getElementById('custom-css-control') as HTMLTextAreaElement, {
 			target: { value: 'body { color: red; }' }
 		});
-		await user.click(screen.getByRole('button', { name: 'settings.appearance.save' }));
+		await user.click(screen.getByRole('button', { name: 'Save changes' }));
 		await vi.waitFor(() => expect(document.getElementById('custom-css-error')?.textContent).toBe('Nope'));
-		expect(screen.getByText('settings.appearance.refused_summary')).toBeTruthy();
+		// The save bar says why nothing was saved
+		expect(screen.getByRole('region', { name: 'Unsaved changes' })).toHaveTextContent(
+			'Not saved: settings.appearance.refused_summary'
+		);
 	}, 20_000);
 });
 
