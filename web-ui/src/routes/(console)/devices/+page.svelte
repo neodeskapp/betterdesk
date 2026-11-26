@@ -1138,6 +1138,27 @@
 			overflow: hidden;
 			clip-path: inset(50%);
 		}
+		/* Its controls (Select all, the sort buttons) still take focus:
+		   the header shows as one wrapping line while one of them has it */
+		.devices-table :global(thead:focus-within) {
+			position: static;
+			display: block;
+			width: auto;
+			height: auto;
+			overflow: visible;
+			clip-path: none;
+		}
+		.devices-table :global(thead:focus-within tr) {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 0 var(--space-2);
+		}
+		.devices-table :global(thead:focus-within th) {
+			position: static;
+			width: auto;
+			border: 0;
+		}
 		.devices-table :global(table),
 		.devices-table :global(tbody) {
 			display: block;

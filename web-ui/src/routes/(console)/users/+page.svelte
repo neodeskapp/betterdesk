@@ -786,7 +786,11 @@
 			display: none;
 		}
 	}
-	/* When the table is wider than the page, the row actions stay in view at the end */
+	/* When the table is wider than the page, the row actions stay in view at
+	   the end, and a focused cell scrolls clear of them (WCAG 2.4.11) */
+	.users-table :global(.table-scroll) {
+		scroll-padding-inline-end: calc(var(--icon-btn-size) + 2 * var(--row-pad-x) + var(--space-2));
+	}
 	.users-table :global(:is(td, th).actions) {
 		position: sticky;
 		inset-inline-end: 0;

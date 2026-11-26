@@ -2,13 +2,17 @@
 	import '#lib/styles/tokens.css';
 	import '#lib/styles/base.css';
 	import '#lib/styles/a11y.css';
-	import type { Snippet } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
 	import { appPath, link } from '#lib/nav.ts';
 	import { redirectTarget } from '#lib/redirects.ts';
 	import A11yEffects from '#lib/shell/A11yEffects.svelte';
+	import { revealFocus } from '#lib/ui/reveal-focus.ts';
 
 	let { children }: { children: Snippet } = $props();
+
+	// Keyboard focus never stays half hidden under a bar or a pinned column
+	onMount(() => revealFocus());
 
 	// A link inside the app to an old console address goes to its new place
 	// (lib/redirects.ts). An address the browser loads itself reaches the

@@ -155,6 +155,10 @@
 	/* Layout */
 	--sidebar-w: 232px;
 	--topbar-h: 48px;
+	/* Sticky bars at the bottom: the save bar of a changed form, and the
+	   navigation bar on phones (base.css keeps focus clear of them) */
+	--save-bar-h: 64px;
+	--bottom-nav-h: 56px;
 	--page-pad: var(--space-5);
 	--measure: 640px;
 	--content-max: 1600px;
