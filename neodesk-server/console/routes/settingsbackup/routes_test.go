@@ -13,8 +13,10 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/backup"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
@@ -493,7 +495,7 @@ func contains(list []string, s string) bool {
 func TestSchedule(t *testing.T) {
 	w := newWorld(t, nil, nil)
 	admin := w.As("admin")
-	if got := admin.Do("GET", "/api/settings/backup/schedule", "").Body; got != `{"success":true,"data":{"schedule":{"enabled":false,"intervalHours":24,"retentionCount":7,"destinationType":"local","destinationPath":""},"status":{"lastAttemptAt":null,"lastSuccessAt":null,"lastFile":null,"lastSha256":null,"lastValidation":null,"lastError":null}}}` {
+	if got := admin.Do("GET", "/api/settings/backup/schedule", "").Body; got != `{"success":true,"data":{"schedule":{"enabled":false,"intervalHours":24,"retentionCount":7,"destinationType":"local","destinationPath":""},"status":{"lastAttemptAt":null,"lastSuccessAt":null,"lastFile":null,"lastSha256":null,"lastValidation":null,"lastError":null},"next":{"at":null,"timeZone":`+strconv.Quote(serverZone())+`}}}` {
 		t.Errorf("default: %s", got)
 	}
 	dest := filepath.Join(w.DataDir, "scheduled-backups")
@@ -539,6 +541,53 @@ func TestSchedule(t *testing.T) {
 	}
 	if got := admin.Do("POST", "/api/settings/backup/destination/test", `{}`).Body; got != `{"success":true,"data":{"valid":true,"destination":"`+dest+`"}}` {
 		t.Errorf("destination: %s", got)
+	}
+}
+
+// serverZone names the zone the server reads a time of day in, as the
+// schedule's answer does.
+func serverZone() string {
+	if name := time.Local.String(); name != "Local" {
+		return name
+	}
+	abbr, _ := time.Now().Zone()
+	return abbr
+}
+
+// A schedule with a time of day says when it runs next, in the server's
+// zone: "every day at 02:00" does not count from the save (task 3 of the
+// first-time admin).
+func TestScheduleAtATimeOfDay(t *testing.T) {
+	w := newWorld(t, nil, nil)
+	admin := w.As("admin")
+	before := time.Now()
+	res := admin.Do("PUT", "/api/settings/backup/schedule", `{"enabled":true,"intervalHours":24,"timeOfDay":"02:00","retentionCount":14}`)
+	if res.Status != 200 || !strings.Contains(res.Body, `"retentionCount":14,`) || !strings.Contains(res.Body, `"timeOfDay":"02:00"`) {
+		t.Fatalf("save: %d %s", res.Status, res.Body)
+	}
+	var got struct {
+		Data struct {
+			Schedule struct {
+				TimeOfDay string `json:"timeOfDay"`
+			} `json:"schedule"`
+			Next struct {
+				At       *string `json:"at"`
+				TimeZone string  `json:"timeZone"`
+			} `json:"next"`
+		} `json:"data"`
+	}
+	body := admin.Do("GET", "/api/settings/backup/schedule", "").Body
+	if err := json.Unmarshal([]byte(body), &got); err != nil || got.Data.Next.At == nil {
+		t.Fatalf("schedule: %v %s", err, body)
+	}
+	next, err := time.Parse(time.RFC3339Nano, *got.Data.Next.At)
+	if err != nil {
+		t.Fatal(err)
+	}
+	local := next.In(time.Local)
+	if got.Data.Schedule.TimeOfDay != "02:00" || local.Hour() != 2 || local.Minute() != 0 ||
+		!next.After(before) || next.Sub(before) > 25*time.Hour || got.Data.Next.TimeZone != serverZone() {
+		t.Errorf("next run %s (%s), want 02:00 within a day: %s", local, got.Data.Next.TimeZone, body)
 	}
 }
 
