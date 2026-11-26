@@ -31,7 +31,9 @@ tester.run('named-icon-control', rule, {
 		},
 		// A spread may carry the name: not knowable here
 		{ code: `<button {...rest}><Icon name="add" /></button>`, filename: 'a.svelte' },
-		{ code: `<div><Icon name="info" /></div>`, filename: 'a.svelte' }
+		{ code: `<div><Icon name="info" /></div>`, filename: 'a.svelte' },
+		// Kept out of the accessibility tree on purpose (the remote session tab's x: Delete closes)
+		{ code: `<button tabindex="-1" aria-hidden="true"><Icon name="close" /></button>`, filename: 'a.svelte' }
 	],
 	invalid: [
 		{

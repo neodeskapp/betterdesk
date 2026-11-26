@@ -5,7 +5,9 @@
  * control has nothing to call it by. A title alone is not enough: it
  * shows on hover only. IconButton takes a required label; this is for
  * the hand-made ones. An element with a spread ({...rest}) is left out,
- * since the spread may carry the name.
+ * since the spread may carry the name, and so is one marked
+ * aria-hidden="true": a pointer shortcut kept out of the accessibility
+ * tree on purpose, whose keyboard way must be described elsewhere.
  */
 import type { Rule } from 'eslint';
 
@@ -33,6 +35,13 @@ function names(attr: SvelteNode): boolean {
 	const [first] = parts;
 	if (!first) return false;
 	return !(parts.length === 1 && first.type === 'SvelteLiteral' && String(first.value).trim() === '');
+}
+
+/** aria-hidden="true", written as a literal */
+function hidden(attr: SvelteNode): boolean {
+	if (attr.type !== 'SvelteAttribute' || attr.key?.name !== 'aria-hidden') return false;
+	const [first] = (attr.value as SvelteNode[] | undefined) ?? [];
+	return first?.type === 'SvelteLiteral' && String(first.value) === 'true';
 }
 
 /** Only icon components (and white space or comments) inside */
@@ -67,7 +76,7 @@ const rule = {
 				if (node.kind !== 'html' || !tag || !CONTROLS.has(tag)) return;
 				const attrs = node.startTag?.attributes ?? [];
 				if (attrs.some((a) => a.type === 'SvelteSpreadAttribute')) return;
-				if (attrs.some(names)) return;
+				if (attrs.some(names) || attrs.some(hidden)) return;
 				if (!onlyIcons(node.children ?? [])) return;
 				context.report({ node: node as unknown as Rule.Node, messageId: 'unnamed', data: { tag } });
 			}
