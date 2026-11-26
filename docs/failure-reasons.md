@@ -26,6 +26,10 @@ Where the codes come from:
   `web-ui/src/lib/remote/failures.ts`.
 - The viewer's own checks: a connection that could not be secured, HTTPS,
   a close while signing in, a dropped network, and nobody accepting in time.
+- The console's answer about a quick support computer's caller check
+  (`POST /api/support/devices/{id}/caller`, A273): the person has not
+  clicked Allow yet, the console is not on HTTPS, or the computer's NeoDesk
+  is too old to accept by click.
 
 The texts are the `failure.<reason>.what`, `.why`, `.todo` keys of the
 console's language files (`todo_ask` for someone who may not unblock).
@@ -218,6 +222,30 @@ code and the language files say the same.
 | what | {person} did not answer. | {person} hat nicht geantwortet. |
 | why | Nobody accepted the connection on {name} within 3 minutes. | Niemand hat die Verbindung an {name} innerhalb von 3 Minuten angenommen. |
 | todo | Ask them to watch for the window that asks, then reconnect. | Bitte sie, auf das Fenster mit der Anfrage zu achten, und verbinde dich dann neu. |
+
+## `consent_not_allowed`
+
+| Part | English | German |
+| --- | --- | --- |
+| what | {person} has not allowed quick support yet. | {person} hat die Schnellhilfe noch nicht erlaubt. |
+| why | {name} offers to let you in by click only after the person clicked Allow in the quick support window. | {name} bietet das Hereinlassen per Klick erst an, wenn die Person im Schnellhilfe-Fenster auf Erlauben geklickt hat. |
+| todo | Ask them to click Allow in the quick support window, then connect again. | Bitte sie, im Schnellhilfe-Fenster auf Erlauben zu klicken, und verbinde dich dann noch einmal. |
+
+## `consent_needs_https`
+
+| Part | English | German |
+| --- | --- | --- |
+| what | {name} can't let you in by click. | {name} kann dich nicht per Klick hereinlassen. |
+| why | This console is not on HTTPS, so quick support takes only the one-time password. | Diese Konsole läuft nicht über HTTPS, deshalb nimmt die Schnellhilfe nur das Einmalpasswort. |
+| todo | Send a new quick support link: its one-time password comes to you and connects you. To accept by click, the console needs HTTPS. | Schick einen neuen Schnellhilfe-Link: Sein Einmalpasswort kommt zu dir und verbindet dich. Für Annehmen per Klick braucht die Konsole HTTPS. |
+
+## `consent_needs_update`
+
+| Part | English | German |
+| --- | --- | --- |
+| what | {name} can't let you in by click. | {name} kann dich nicht per Klick hereinlassen. |
+| why | NeoDesk on {name} is too old to accept by click. | NeoDesk auf {name} ist zu alt, um per Klick anzunehmen. |
+| todo | Send a new quick support link: its one-time password comes to you and connects you. Or ask {person} to update NeoDesk. | Schick einen neuen Schnellhilfe-Link: Sein Einmalpasswort kommt zu dir und verbindet dich. Oder bitte {person}, NeoDesk zu aktualisieren. |
 
 ## `password_wrong`
 

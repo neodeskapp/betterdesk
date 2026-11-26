@@ -33,13 +33,15 @@ type relayAuthorization struct {
 }
 
 // LivePair is a relay session that runs: who started it, to which device,
-// the console account signal named for it (0 for none) and the console
-// session of that account whose viewer opened it (a handle, "" for none).
+// the console account signal named for it (0 for none), the console
+// session of that account whose viewer opened it (a handle, "" for none)
+// and when its second side arrived.
 type LivePair struct {
 	Initiator      string
 	Target         string
 	Account        int64
 	ConsoleSession string
+	Since          time.Time
 }
 
 type livePair struct {
@@ -229,7 +231,7 @@ func (r *AuthorizationRegistry) Claim(uuid string) bool {
 			r.live = make(map[string]livePair)
 		}
 		r.live[uuid] = livePair{
-			LivePair: LivePair{Initiator: ticket.initiatorID, Target: ticket.targetID, Account: ticket.account, ConsoleSession: ticket.session},
+			LivePair: LivePair{Initiator: ticket.initiatorID, Target: ticket.targetID, Account: ticket.account, ConsoleSession: ticket.session, Since: now},
 			since:    now,
 		}
 	}

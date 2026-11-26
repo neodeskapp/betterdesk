@@ -10194,7 +10194,15 @@
    "reason": "The RustDesk client API: desktop clients call it with their own sign-in."
   },
   {
+   "route": "POST /api/support/devices/{id}/caller",
+   "reason": "Used by the remote viewer while it waits for the person at a quick support computer, not by an admin."
+  },
+  {
    "route": "POST /api/support/redeem",
+   "reason": "Used by the person who got a link or the device that joins with it, not by an admin."
+  },
+  {
+   "route": "POST /api/support/session/caller",
    "reason": "Used by the person who got a link or the device that joins with it, not by an admin."
   },
   {

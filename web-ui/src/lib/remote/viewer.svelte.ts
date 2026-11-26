@@ -27,8 +27,8 @@ import {
 } from '#lib/api/remote.ts';
 import { getDevice, getDeviceReach, unblockDevice } from '#lib/api/devices.ts';
 import { link } from '#lib/nav.ts';
-import { takeDevicePassword, type DeviceSupport } from '#lib/api/onboard.ts';
-import { describeFailure, isReason, type FailAction, type Reason } from './failures.ts';
+import { supportCaller, takeDevicePassword, type DeviceSupport } from '#lib/api/onboard.ts';
+import { callerFailure, describeFailure, isReason, type FailAction, type Reason } from './failures.ts';
 import { answerConnectPassword } from '#lib/api/connectAnswer.ts';
 import {
 	getSignin,
@@ -117,6 +117,12 @@ function isTouchRenderer(renderer: unknown): renderer is TouchRenderer {
 
 /** How long the viewer waits for the person at the computer to accept */
 export const CONSENT_WAIT_MS = 3 * 60 * 1000;
+
+/**
+ * When the viewer asks the console what a quick support computer was told
+ * about it, after it asked without a password (A273): ms since then
+ */
+export const CALLER_CHECKS_MS = [2000, 5000, 10000];
 
 export type SheetName = 'chat' | 'files' | 'info';
 
@@ -270,6 +276,7 @@ export class ViewerSession {
 	/** The person at the computer (a quick support session's name), '' when unknown */
 	consentPerson = '';
 	consentTimer: ReturnType<typeof setTimeout> | null = null;
+	callerTimer: ReturnType<typeof setTimeout> | null = null;
 	/** A docs page the result points to, '' for none */
 	helpUrl = $state('');
 	endInfo = $state.raw<EndInfo | null>(null);
@@ -825,6 +832,8 @@ export class Viewer {
 				if (support.session) {
 					this.awaitConsent(s, c, support.session.name);
 					void c.askWithoutPassword?.();
+					// Without the server's word the person gets no Allow: say why at once (A273)
+					this.checkCaller(s, c);
 					return;
 				}
 				this.showView(s, 'password');
@@ -1233,21 +1242,63 @@ export class Viewer {
 		s.consentTimer = setTimeout(() => {
 			s.consentTimer = null;
 			if (s.client !== c || s.closed || !s.awaitingConsent) return;
-			s.lastError = 'Nobody accepted the connection in time';
-			s.endInfo = { reason: s.lastError, meta: null, at: Date.now(), step: s.stepId };
-			s.awaitingConsent = false;
-			this.showFailure(s, 'consent_timeout');
-			try {
-				c.disconnect();
-			} catch {
-				/* gone */
-			}
+			this.consentFails(s, c, 'consent_timeout', 'Nobody accepted the connection in time');
 		}, c.mockServer?.consentWait?.() ?? CONSENT_WAIT_MS);
+	}
+
+	/** Waiting for the person ends without them: say why and leave */
+	private consentFails(s: ViewerSession, c: RemoteClient, reason: Reason, message: string): void {
+		s.lastError = message;
+		s.endInfo = { reason: s.lastError, meta: null, at: Date.now(), step: s.stepId };
+		this.clearConsent(s);
+		this.showFailure(s, reason);
+		try {
+			c.disconnect();
+		} catch {
+			/* gone */
+		}
+	}
+
+	/**
+	 * A quick support computer offers Allow only for a viewer its server
+	 * vouches for (A271). Ask the console what the computer was told, at
+	 * CALLER_CHECKS_MS, and say at once why the person sees no Allow: they
+	 * have not clicked Allow in the quick support window yet, the console
+	 * is not on HTTPS, or NeoDesk there is too old. Vouched or refused for
+	 * another reason, the viewer keeps waiting for the person.
+	 */
+	private checkCaller(s: ViewerSession, c: RemoteClient, step = 0): void {
+		const at = CALLER_CHECKS_MS[step];
+		if (at === undefined) return;
+		const wait = at - (CALLER_CHECKS_MS[step - 1] ?? 0);
+		if (s.callerTimer) clearTimeout(s.callerTimer);
+		s.callerTimer = setTimeout(() => {
+			s.callerTimer = null;
+			const relay = c.relayUUID ?? '';
+			if (s.client !== c || s.closed || !s.awaitingConsent || !relay) return;
+			const asked = c.mockServer?.caller ? c.mockServer.caller() : supportCaller(s.deviceId, relay);
+			void asked.then((answer) => {
+				if (s.client !== c || s.closed || !s.awaitingConsent) return;
+				const reason = callerFailure(answer, step === CALLER_CHECKS_MS.length - 1);
+				if (reason) {
+					this.consentFails(
+						s,
+						c,
+						reason,
+						'The computer offers no Allow: caller check ' + (answer?.state ?? '')
+					);
+					return;
+				}
+				if (answer?.state === 'not_asked') this.checkCaller(s, c, step + 1);
+			});
+		}, wait);
 	}
 
 	private clearConsent(s: ViewerSession): void {
 		if (s.consentTimer) clearTimeout(s.consentTimer);
 		s.consentTimer = null;
+		if (s.callerTimer) clearTimeout(s.callerTimer);
+		s.callerTimer = null;
 		s.awaitingConsent = false;
 		s.waitHint = '';
 	}

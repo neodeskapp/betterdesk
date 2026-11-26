@@ -10080,6 +10080,21 @@
       "why": "Nobody accepted the connection on {name} within 3 minutes.",
       "todo": "Ask them to watch for the window that asks, then reconnect."
     },
+    "consent_not_allowed": {
+      "what": "{person} has not allowed quick support yet.",
+      "why": "{name} offers to let you in by click only after the person clicked Allow in the quick support window.",
+      "todo": "Ask them to click Allow in the quick support window, then connect again."
+    },
+    "consent_needs_https": {
+      "what": "{name} can't let you in by click.",
+      "why": "This console is not on HTTPS, so quick support takes only the one-time password.",
+      "todo": "Send a new quick support link: its one-time password comes to you and connects you. To accept by click, the console needs HTTPS."
+    },
+    "consent_needs_update": {
+      "what": "{name} can't let you in by click.",
+      "why": "NeoDesk on {name} is too old to accept by click.",
+      "todo": "Send a new quick support link: its one-time password comes to you and connects you. Or ask {person} to update NeoDesk."
+    },
     "password_wrong": {
       "what": "The password was not accepted.",
       "why": "{name} refused the password.",

@@ -41,6 +41,11 @@ func TestLiveNamesThePairAndItsAccountWhileTheSessionRuns(t *testing.T) {
 	if !ok || pair.Initiator != "panel-web-remote" || pair.Target != "TARGET1" || pair.Account != 7 {
 		t.Fatalf("live pair %+v %v, want panel-web-remote -> TARGET1 for account 7", pair, ok)
 	}
+	// The pair says when its second side arrived: quick support vouches
+	// for a caller only in the first minute (A271)
+	if !pair.Since.Equal(now) {
+		t.Fatalf("live since %v, want %v", pair.Since, now)
+	}
 	// The ticket's own expiry does not end a session that runs
 	now = now.Add(time.Hour)
 	if _, ok := registry.Live("live-uuid"); !ok {
