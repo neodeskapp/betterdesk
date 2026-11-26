@@ -460,28 +460,30 @@
 	{#if !sideSettled}
 		<States kind="loading" />
 	{:else}
-		<section class="section" aria-labelledby="general-side-title">
-			<h2 id="general-side-title">{t('settings.side.general_title')}</h2>
-			<p class="section-note">{t('settings.side.general_note')}</p>
-			{#if clientError || !clientConfig}
-				<States kind="error" message={clientError} onretry={() => void loadClientConfig()} />
-			{:else}
-				<Facts
-					items={[
-						{ label: t('dashboard.config_server_id'), value: idValue },
-						{ label: t('dashboard.config_relay_server'), value: relayValue },
-						{ label: t('dashboard.config_api_server'), value: apiValue }
-					]}
-				/>
-				{#if clientConfig.phone_unreachable_host}<Notice
-						tone="warning"
-						message={t('settings.side.local_warning')}
-					/>{/if}
-			{/if}
-			{#if connRuntime}<p class="side-line" id="connection-mode-runtime">{connRuntime}</p>{/if}
-		</section>
-		{@render serverInfo()}
-		<GuideLink />
+		<div class="summary-stack">
+			<section class="section" aria-labelledby="general-side-title">
+				<h2 id="general-side-title">{t('settings.side.general_title')}</h2>
+				<p class="section-note">{t('settings.side.general_note')}</p>
+				{#if clientError || !clientConfig}
+					<States kind="error" message={clientError} onretry={() => void loadClientConfig()} />
+				{:else}
+					<Facts
+						items={[
+							{ label: t('dashboard.config_server_id'), value: idValue },
+							{ label: t('dashboard.config_relay_server'), value: relayValue },
+							{ label: t('dashboard.config_api_server'), value: apiValue }
+						]}
+					/>
+					{#if clientConfig.phone_unreachable_host}<Notice
+							tone="warning"
+							message={t('settings.side.local_warning')}
+						/>{/if}
+				{/if}
+				{#if connRuntime}<p class="side-line" id="connection-mode-runtime">{connRuntime}</p>{/if}
+			</section>
+			{@render serverInfo()}
+			<GuideLink />
+		</div>
 	{/if}
 {/snippet}
 
@@ -707,6 +709,19 @@
 {/if}
 
 <style>
+	/* The summary column is narrow: sections apart, labels take what they need and values the rest */
+	.summary-stack {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-6);
+		min-width: 0;
+	}
+	.summary-stack :global(.facts) {
+		grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+	}
+	.summary-stack :global(.facts > dt) {
+		max-width: 160px;
+	}
 	.advanced {
 		padding: var(--space-2) var(--row-pad-x) 0;
 	}
