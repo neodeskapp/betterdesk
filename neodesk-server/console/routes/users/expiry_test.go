@@ -130,6 +130,8 @@ func TestEndDateNotice(t *testing.T) {
 	setColumn(t, w, routetest.RoleIDs["global_admin"], "preferred_language", "de")
 	setColumn(t, w, routetest.RoleIDs["viewer"], "email", "viewer@example.test")
 	setColumn(t, w, routetest.RoleIDs["operator"], "email", "operator@example.test")
+	expect(t, "time zone", w.As("admin").Do("PUT", "/api/users/me/profile", `{"time_zone":"Europe/Berlin"}`), 200, "")
+	berlin, _ := time.LoadLocation("Europe/Berlin")
 	end := time.Now().Add(30 * 24 * time.Hour).UTC().Truncate(time.Second)
 	expect(t, "set", w.As("admin").Do("PATCH", "/api/users/5", `{"expires_at":"`+end.Format(time.RFC3339)+`"}`), 200, "")
 
@@ -152,6 +154,13 @@ func TestEndDateNotice(t *testing.T) {
 	}
 	if s := box.mailTo("global@example.test")[0].Subject; !strings.Contains(s, "e2e_operator") || s == box.mailTo("admin@example.test")[0].Subject {
 		t.Errorf("subjects: %q and %q", s, box.mailTo("admin@example.test")[0].Subject)
+	}
+	// Each admin reads the date in their own time zone, UTC without one
+	if s := box.mailTo("admin@example.test")[0].Subject; !strings.Contains(s, end.In(berlin).Format("2006-01-02 15:04")+" Europe/Berlin") {
+		t.Errorf("the date for an admin in Berlin: %q", s)
+	}
+	if s := box.mailTo("global@example.test")[0].Subject; !strings.Contains(s, end.Format("2006-01-02 15:04")+" UTC") {
+		t.Errorf("the date for an admin without a time zone: %q", s)
 	}
 	if err := users.Sweep(ctx, d, end.Add(-5*24*time.Hour)); err != nil {
 		t.Fatal(err)
