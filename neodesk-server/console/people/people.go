@@ -17,12 +17,13 @@ import (
 )
 
 // Name is the display name of an account with the names and the username:
-// first and last name joined by a space, each trimmed, else the username.
+// first and last name joined by a space, each trimmed, else the username
+// as it is.
 func Name(first, last, username string) string {
 	if name := strings.TrimSpace(strings.TrimSpace(first) + " " + strings.TrimSpace(last)); name != "" {
 		return name
 	}
-	return strings.TrimSpace(username)
+	return username
 }
 
 // FullName is first and last name joined as Name joins them, "" when both
