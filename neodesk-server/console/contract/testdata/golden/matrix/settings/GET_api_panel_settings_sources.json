@@ -1,0 +1,474 @@
+{
+ "id": "GET /api/panel/settings/sources",
+ "request": {
+  "method": "GET",
+  "path": "/api/panel/settings/sources"
+ },
+ "recordings": 2,
+ "answers": [
+  {
+   "roles": [
+    "signed-out",
+    "pro"
+   ],
+   "status": 401,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "session_required",
+     "error": "Unauthorized. Please log in.",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "guest_issuer",
+    "viewer",
+    "operator",
+    "global_admin"
+   ],
+   "status": 403,
+   "headers": {
+    "cache-control": "no-store",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "code": "panel_access_denied",
+     "error": "Panel access denied: settings",
+     "success": false
+    }
+   }
+  },
+  {
+   "roles": [
+    "server_admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "availability_history.enabled": {
+       "default": false,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "availability_history.retention_days": {
+       "default": 30,
+       "locked": false,
+       "value_source": "default"
+      },
+      "client_sessions.expiry_days": {
+       "default": 7,
+       "env_var": "API_TOKEN_EXPIRY_DAYS",
+       "locked": false,
+       "value_source": "default"
+      },
+      "client_sessions.max_days": {
+       "default": 30,
+       "locked": false,
+       "value_source": "default"
+      },
+      "client_sessions.sliding": {
+       "default": true,
+       "locked": false,
+       "value_source": "default"
+      },
+      "clock.billing_timezone": {
+       "default": "UTC",
+       "locked": false,
+       "value_source": "stored"
+      },
+      "clock.max_skew_ms": {
+       "default": 2000,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "clock.ntp_servers": {
+       "default": "pool.ntp.org,time.google.com,time.cloudflare.com",
+       "locked": false,
+       "value_source": "stored"
+      },
+      "clock.require_synced_clock": {
+       "default": true,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "clock.trust_os_ntp": {
+       "default": true,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "connection_mode.allow_shared_nat_initiator": {
+       "default": false,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "connection_mode.logged_in_only_initiator": {
+       "default": false,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "connection_mode.mode": {
+       "default": "p2p_first",
+       "locked": false,
+       "value_source": "stored"
+      },
+      "connection_mode.operator_only_outbound": {
+       "default": false,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "connection_mode.p2p_fallback_ms": {
+       "default": 2000,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "connection_mode.same_nat_relay": {
+       "default": true,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "console_sessions.single_session": {
+       "default": false,
+       "env_var": "SESSION_MAX_PER_USER",
+       "locked": true,
+       "value_source": "environment"
+      },
+      "device_scope.mode": {
+       "default": "open",
+       "env_var": "DEVICE_SCOPE_DEFAULT",
+       "locked": false,
+       "value_source": "default"
+      },
+      "enrollment.mode": {
+       "default": "open",
+       "env_var": "ENROLLMENT_MODE",
+       "locked": false,
+       "value_source": "default"
+      },
+      "public_endpoints.public_api_url": {
+       "env_var": "PUBLIC_API_URL",
+       "locked": false,
+       "value_source": "default"
+      },
+      "public_endpoints.public_relay_server": {
+       "env_var": "PUBLIC_RELAY_SERVER",
+       "locked": false,
+       "value_source": "default"
+      },
+      "public_endpoints.public_server_id": {
+       "env_var": "PUBLIC_SERVER_ID",
+       "locked": false,
+       "value_source": "default"
+      },
+      "smtp.alert_email": {
+       "env_var": "SMTP_ALERT_EMAIL",
+       "locked": false,
+       "value_source": "default"
+      },
+      "smtp.from": {
+       "default": "neodesk@localhost",
+       "env_var": "SMTP_FROM",
+       "locked": false,
+       "value_source": "default"
+      },
+      "smtp.host": {
+       "env_var": "SMTP_HOST",
+       "locked": false,
+       "value_source": "default"
+      },
+      "smtp.pass": {
+       "env_var": "SMTP_PASS",
+       "locked": false,
+       "value_source": "default"
+      },
+      "smtp.port": {
+       "default": 587,
+       "env_var": "SMTP_PORT",
+       "locked": false,
+       "value_source": "default"
+      },
+      "smtp.secure": {
+       "default": false,
+       "env_var": "SMTP_SECURE",
+       "locked": false,
+       "value_source": "default"
+      },
+      "smtp.user": {
+       "env_var": "SMTP_USER",
+       "locked": false,
+       "value_source": "default"
+      },
+      "two_factor.required": {
+       "default": false,
+       "locked": false,
+       "value_source": "default"
+      }
+     },
+     "success": true
+    }
+   }
+  },
+  {
+   "roles": [
+    "super_admin",
+    "admin"
+   ],
+   "status": 200,
+   "headers": {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "content-encoding": "gzip",
+    "content-security-policy": "default-src 'self';script-src 'self';script-src-attr 'none';style-src 'self' 'unsafe-inline';font-src 'self';img-src 'self' data: blob:;media-src 'self' blob:;connect-src 'self' ws:;frame-src 'none';object-src 'none';worker-src 'self' blob:;base-uri 'self';form-action 'self';frame-ancestors 'none'",
+    "content-type": "application/json; charset=utf-8",
+    "cross-origin-resource-policy": "same-origin",
+    "etag": "<present>",
+    "permissions-policy": "geolocation=(), microphone=(self), camera=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()",
+    "ratelimit-limit": "1000000",
+    "ratelimit-policy": "1000000;w=60",
+    "ratelimit-remaining": "<n>",
+    "ratelimit-reset": "<n>",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "set-cookie": [
+     "__csrf_h=<value>; Path=/; HttpOnly; SameSite=Lax",
+     "nd.sid=<value>; Path=/; Expires=<date>; HttpOnly; SameSite=Lax"
+    ],
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "off",
+    "x-download-options": "noopen",
+    "x-frame-options": "DENY",
+    "x-permitted-cross-domain-policies": "none",
+    "x-xss-protection": "0"
+   },
+   "body": {
+    "kind": "json",
+    "json": {
+     "data": {
+      "availability_history.enabled": {
+       "default": false,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "availability_history.retention_days": {
+       "default": 30,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "client_sessions.expiry_days": {
+       "default": 7,
+       "env_var": "API_TOKEN_EXPIRY_DAYS",
+       "locked": false,
+       "value_source": "default"
+      },
+      "client_sessions.max_days": {
+       "default": 30,
+       "locked": false,
+       "value_source": "default"
+      },
+      "client_sessions.sliding": {
+       "default": true,
+       "locked": false,
+       "value_source": "default"
+      },
+      "clock.billing_timezone": {
+       "default": "UTC",
+       "locked": false,
+       "value_source": "stored"
+      },
+      "clock.max_skew_ms": {
+       "default": 2000,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "clock.ntp_servers": {
+       "default": "pool.ntp.org,time.google.com,time.cloudflare.com",
+       "locked": false,
+       "value_source": "stored"
+      },
+      "clock.require_synced_clock": {
+       "default": true,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "clock.trust_os_ntp": {
+       "default": true,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "connection_mode.allow_shared_nat_initiator": {
+       "default": false,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "connection_mode.logged_in_only_initiator": {
+       "default": false,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "connection_mode.mode": {
+       "default": "p2p_first",
+       "locked": false,
+       "value_source": "stored"
+      },
+      "connection_mode.operator_only_outbound": {
+       "default": false,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "connection_mode.p2p_fallback_ms": {
+       "default": 2000,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "connection_mode.same_nat_relay": {
+       "default": true,
+       "locked": false,
+       "value_source": "stored"
+      },
+      "console_sessions.single_session": {
+       "default": false,
+       "env_var": "SESSION_MAX_PER_USER",
+       "locked": true,
+       "value_source": "environment"
+      },
+      "device_scope.mode": {
+       "default": "open",
+       "env_var": "DEVICE_SCOPE_DEFAULT",
+       "locked": false,
+       "value_source": "default"
+      },
+      "enrollment.mode": {
+       "default": "open",
+       "env_var": "ENROLLMENT_MODE",
+       "locked": false,
+       "value_source": "default"
+      },
+      "public_endpoints.public_api_url": {
+       "env_var": "PUBLIC_API_URL",
+       "locked": false,
+       "value_source": "default"
+      },
+      "public_endpoints.public_relay_server": {
+       "env_var": "PUBLIC_RELAY_SERVER",
+       "locked": false,
+       "value_source": "default"
+      },
+      "public_endpoints.public_server_id": {
+       "env_var": "PUBLIC_SERVER_ID",
+       "locked": false,
+       "value_source": "default"
+      },
+      "smtp.alert_email": {
+       "env_var": "SMTP_ALERT_EMAIL",
+       "locked": false,
+       "value_source": "default"
+      },
+      "smtp.from": {
+       "default": "neodesk@localhost",
+       "env_var": "SMTP_FROM",
+       "locked": false,
+       "value_source": "default"
+      },
+      "smtp.host": {
+       "env_var": "SMTP_HOST",
+       "locked": false,
+       "value_source": "default"
+      },
+      "smtp.pass": {
+       "env_var": "SMTP_PASS",
+       "locked": false,
+       "value_source": "default"
+      },
+      "smtp.port": {
+       "default": 587,
+       "env_var": "SMTP_PORT",
+       "locked": false,
+       "value_source": "default"
+      },
+      "smtp.secure": {
+       "default": false,
+       "env_var": "SMTP_SECURE",
+       "locked": false,
+       "value_source": "default"
+      },
+      "smtp.user": {
+       "env_var": "SMTP_USER",
+       "locked": false,
+       "value_source": "default"
+      },
+      "two_factor.required": {
+       "default": false,
+       "locked": false,
+       "value_source": "default"
+      }
+     },
+     "success": true
+    }
+   }
+  }
+ ]
+}

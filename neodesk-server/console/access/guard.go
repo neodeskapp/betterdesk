@@ -155,6 +155,9 @@ var RouteRules = []Rule{
 	// account: Manual setup needs a session only, the other tabs and their
 	// calls ask their own permissions.
 	{Prefix: "/devices/add"},
+	// Where each server setting's value comes from, for the settings
+	// pages (GET /api/panel/settings/sources).
+	{Prefix: "/api/panel/settings", Section: "settings"},
 }
 
 const apiPrefix = "/api/"

@@ -93,8 +93,15 @@ func (s *Service) TokenExpiryDays() int { return int(s.tokenDays.Load()) }
 // text of the setting as API_TOKEN_EXPIRY_DAYS is read: its whole number,
 // or 7 when it has none or the number is 0.
 func (s *Service) SetTokenExpiryDays(text string) {
-	s.tokenDays.Store(int64(intOr(text, 7)))
+	s.tokenDays.Store(int64(intOr(text, DefaultTokenExpiryDays)))
 }
+
+// DefaultTokenExpiryDays is how long a token lasts when neither the
+// Session duration nor API_TOKEN_EXPIRY_DAYS says.
+const DefaultTokenExpiryDays = 7
+
+// TokenExpiryEnv is the variable of TokenExpiryDays.
+const TokenExpiryEnv = "API_TOKEN_EXPIRY_DAYS"
 
 // ValidTokenExpiryDays reports whether text is a Session duration the
 // Sign-in tab saves: a whole number of days from 1 to 365.
@@ -114,12 +121,19 @@ const SessionDurationKey = "client_session_expiry_days"
 // saved. Reading it at the start alone left the console's client API at
 // its environment's 7 days after a restart (L354).
 func (s *Service) TokenLifetimeDays(ctx context.Context) int {
+	days, _ := s.TokenLifetimeSaved(ctx)
+	return days
+}
+
+// TokenLifetimeSaved is TokenLifetimeDays and whether the saved Session
+// duration decides it (else TokenExpiryDays does).
+func (s *Service) TokenLifetimeSaved(ctx context.Context) (days int, saved bool) {
 	var value string
 	if err := s.db.QueryRow(ctx, `SELECT value FROM server_config WHERE key = ?`, SessionDurationKey).Scan(&value); err == nil && ValidTokenExpiryDays(value) {
 		n, _ := strconv.Atoi(strings.TrimSpace(value))
-		return n
+		return n, true
 	}
-	return s.TokenExpiryDays()
+	return s.TokenExpiryDays(), false
 }
 
 // IssueAccessToken issues an account's token for a sign-in and revokes

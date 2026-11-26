@@ -116,7 +116,8 @@
      "data": {
       "description": "New devices need to be pre-approved or have a valid token",
       "env_override": false,
-      "mode": "managed"
+      "mode": "managed",
+      "source": "database"
      },
      "success": true
     }

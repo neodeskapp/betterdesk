@@ -24,18 +24,24 @@ type scopeData struct {
 
 // getDeviceScope answers GET /api/settings/device-scope: whether devices
 // nobody was given are hidden from accounts that are not administrators
-// ("restricted") or not ("open").
+// ("restricted") or not ("open"), as the access rules apply it: the saved
+// setting, else DEVICE_SCOPE_DEFAULT. Without a saved setting the page
+// said "open" while DEVICE_SCOPE_DEFAULT=restricted hid the devices.
 func (g *general) getDeviceScope(w http.ResponseWriter, r *http.Request) {
-	stored, _, err := getSetting(r.Context(), g.d.Store, "device_scope_default")
+	restricted, _, err := g.d.Access.DeviceScopeDefault(r.Context())
 	if err != nil {
 		g.serverError(w, r, "Get device scope setting error", err)
 		return
 	}
-	mode := "open"
-	if stored != "" && jsbind.ToLower(stored) == "restricted" {
-		mode = "restricted"
+	kit.OK(w, r, scopeData{Mode: scopeMode(restricted)})
+}
+
+// scopeMode is the device scope as the routes name it.
+func scopeMode(restricted bool) string {
+	if restricted {
+		return "restricted"
 	}
-	kit.OK(w, r, scopeData{Mode: mode})
+	return "open"
 }
 
 // setDeviceScope answers POST /api/settings/device-scope with {mode}: the
@@ -107,10 +113,26 @@ func (g *general) getAvailabilityHistory(w http.ResponseWriter, r *http.Request)
 	enabled := g.d.GoAPI.GetConfig(r.Context(), availabilityEnabledKey)
 	retention := g.d.GoAPI.GetConfig(r.Context(), availabilityRetentionKey)
 	days := float64(defaultRetentionDays)
-	if parsed, ok := jsreq.ParseInt(configValue(retention, nil), 10); ok && !math.IsInf(parsed, 0) && parsed > 0 {
-		days = math.Min(parsed, maxRetentionDays)
+	if parsed, ok := retentionDays(configValue(retention, nil)); ok {
+		days = parsed
 	}
 	kit.OK(w, r, availabilityData{Enabled: parseTruthy(configValue(enabled, "")), RetentionDays: days})
+}
+
+// retentionDays is the saved number of days of the availability history,
+// capped at maxRetentionDays; ok is false when it is none.
+func retentionDays(value any) (float64, bool) {
+	parsed, ok := jsreq.ParseInt(value, 10)
+	if !ok || math.IsInf(parsed, 0) || parsed <= 0 {
+		return 0, false
+	}
+	return math.Min(parsed, maxRetentionDays), true
+}
+
+// savedSwitch says a switch of the server's configuration is saved: the
+// availability history reads any text that is not empty as on or off.
+func savedSwitch(value any) bool {
+	return value != nil && jsreq.String(value) != ""
 }
 
 // setAvailabilityHistory answers POST /api/settings/availability-history
@@ -258,7 +280,7 @@ func modeOf(result *goapi.Object, fallback any) any {
 // enrollment mode, the two switches of the approval dialog and the number
 // of devices that wait.
 func (g *general) getEnrollment(w http.ResponseWriter, r *http.Request) {
-	mode := modeOf(g.d.GoAPI.GetEnrollmentMode(r.Context()), "open")
+	mode := modeOf(g.d.GoAPI.GetEnrollmentMode(r.Context()), defaultEnrollmentMode)
 	rich, tags, err := g.enrollmentToggles(r)
 	if err != nil {
 		g.serverError(w, r, "Get enrollment settings error", err)
@@ -338,12 +360,29 @@ func (g *general) setEnrollment(w http.ResponseWriter, r *http.Request) {
 // clampSessionDays is clampClientSessionDays: whole days from 1 to 365,
 // fallback for anything that is no number or below 1.
 func clampSessionDays(value any, fallback float64) float64 {
+	if n, ok := sessionDays(value); ok {
+		return n
+	}
+	return fallback
+}
+
+// sessionDays is a saved number of days, capped at 365; ok is false when
+// the value is none, so the default applies.
+func sessionDays(value any) (float64, bool) {
 	n, ok := jsreq.ParseInt(value, 10)
 	if !ok || math.IsInf(n, 0) || n < 1 {
-		return fallback
+		return 0, false
 	}
-	return math.Min(n, 365)
+	return math.Min(n, 365), true
 }
+
+// The defaults of the client session settings and of the two-factor rule.
+const (
+	defaultSessionExpiryDays = 7 // authn.DefaultTokenExpiryDays
+	defaultSessionSliding    = true
+	defaultSessionMaxDays    = 30
+	defaultTwoFactorRequired = false
+)
 
 // checkSessionDays refuses client session days a save would otherwise
 // replace: each given one must be a whole number from 1 to 365, and with
@@ -375,16 +414,25 @@ func hasField(body any, name string) bool {
 
 // parseSessionBool is parseClientSessionBool.
 func parseSessionBool(value any, fallback bool) bool {
+	if on, ok := sessionBool(value); ok {
+		return on
+	}
+	return fallback
+}
+
+// sessionBool is a saved switch; ok is false when the value is none or no
+// switch, so the default applies.
+func sessionBool(value any) (on, ok bool) {
 	if value == nil || value == "" {
-		return fallback
+		return false, false
 	}
 	switch jsbind.ToLower(jsreq.String(value)) {
 	case "1", "true", "yes", "on":
-		return true
+		return true, true
 	case "0", "false", "no", "off":
-		return false
+		return false, true
 	}
-	return fallback
+	return false, false
 }
 
 type clientSessionsData struct {
@@ -409,9 +457,9 @@ func (g *general) getClientSessions(w http.ResponseWriter, r *http.Request) {
 	sliding := g.d.GoAPI.GetConfig(r.Context(), "client_session_sliding")
 	maxDays := g.d.GoAPI.GetConfig(r.Context(), "client_session_max_days")
 	kit.OK(w, r, clientSessionsData{
-		ExpiryDays: clampSessionDays(sessionConfig(expiry), 7),
-		Sliding:    parseSessionBool(sessionConfig(sliding), true),
-		MaxDays:    clampSessionDays(sessionConfig(maxDays), 30),
+		ExpiryDays: clampSessionDays(sessionConfig(expiry), defaultSessionExpiryDays),
+		Sliding:    parseSessionBool(sessionConfig(sliding), defaultSessionSliding),
+		MaxDays:    clampSessionDays(sessionConfig(maxDays), defaultSessionMaxDays),
 	})
 }
 

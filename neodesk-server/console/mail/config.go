@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math"
+	"strconv"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/jsbind"
 	"github.com/neodeskapp/neodesk/neodesk-server/internal/envvar"
@@ -89,14 +90,48 @@ func configFromText(text string) *Config {
 // set, else the one of the environment when SMTP_HOST is set. A row that
 // cannot be read or is no such object counts as missing.
 func (s *Service) LoadSMTPConfig(ctx context.Context) *Config {
+	cfg, _ := s.loadSMTP(ctx)
+	return cfg
+}
+
+// Where the SMTP configuration in use comes from (SMTPSource).
+const (
+	SMTPFromStore = "stored"      // saved in the console
+	SMTPFromEnv   = "environment" // SMTP_HOST and the other SMTP_ variables
+	SMTPNone      = ""            // there is none
+)
+
+// SMTPEnvVars are the variables an SMTP configuration from the
+// environment is read from, by the configuration's field.
+var SMTPEnvVars = map[string]string{
+	"host": "SMTP_HOST", "port": "SMTP_PORT", "secure": "SMTP_SECURE", "user": "SMTP_USER",
+	"pass": "SMTP_PASS", "from": "SMTP_FROM", "alert_email": "SMTP_ALERT_EMAIL",
+}
+
+// The defaults of an SMTP configuration from the environment, by field.
+const (
+	DefaultSMTPPort   = 587
+	DefaultSMTPSecure = false
+	DefaultSMTPFrom   = defaultFrom
+)
+
+// SMTPSource says where the SMTP configuration in use comes from, as
+// LoadSMTPConfig picks it: the stored one wins over the environment.
+func (s *Service) SMTPSource(ctx context.Context) string {
+	_, source := s.loadSMTP(ctx)
+	return source
+}
+
+// loadSMTP is LoadSMTPConfig with where the configuration came from.
+func (s *Service) loadSMTP(ctx context.Context) (*Config, string) {
 	if text, ok, err := getSetting(ctx, s.opts.DB, settingKey); err == nil && ok {
 		if cfg := configFromText(text); cfg != nil {
-			return cfg
+			return cfg, SMTPFromStore
 		}
 	}
-	host := s.getenv("SMTP_HOST")
+	host := s.getenv(SMTPEnvVars["host"])
 	if host == "" {
-		return nil
+		return nil, SMTPNone
 	}
 	orDefault := func(name, fallback string) string {
 		if v := s.getenv(name); v != "" {
@@ -106,14 +141,14 @@ func (s *Service) LoadSMTPConfig(ctx context.Context) *Config {
 	}
 	return &Config{doc: objectValue(
 		"host", stringValue(host),
-		"port", numberValue(parseInt10(orDefault("SMTP_PORT", "587"))),
-		"secure", boolValue(envvar.SwitchOr(s.getenv("SMTP_SECURE"), false)),
+		"port", numberValue(parseInt10(orDefault("SMTP_PORT", strconv.Itoa(DefaultSMTPPort)))),
+		"secure", boolValue(envvar.SwitchOr(s.getenv("SMTP_SECURE"), DefaultSMTPSecure)),
 		"user", stringValue(s.getenv("SMTP_USER")),
 		"pass", stringValue(s.getenv("SMTP_PASS")),
 		"from", stringValue(orDefault("SMTP_FROM", defaultFrom)),
 		"alert_email", stringValue(s.getenv("SMTP_ALERT_EMAIL")),
 		"tlsVerify", boolValue(s.opts.TLSVerify),
-	)}
+	)}, SMTPFromEnv
 }
 
 // GetAlertEmail returns the address alerts and warnings go to when nothing

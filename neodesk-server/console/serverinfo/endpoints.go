@@ -454,6 +454,21 @@ func (s *Service) EnvLockedEndpoints() []string {
 	return locked
 }
 
+// PublicEndpointSources says where each public endpoint setting in force
+// comes from, by its name in a request (public_server_id,
+// public_relay_server, public_api_url), as ReadPublicEndpointEnv picks
+// it: SourceEnv, SourceSaved, or "" when none is set.
+func (s *Service) PublicEndpointSources() map[string]string {
+	_, from := s.readPublicEnv().endpoints()
+	return map[string]string{"public_server_id": from.id, "public_relay_server": from.relay, "public_api_url": from.api}
+}
+
+// PublicEndpointEnvVars are the variables of the public endpoint
+// settings, by their names in a request.
+var PublicEndpointEnvVars = map[string]string{
+	"public_server_id": EnvPublicServerID, "public_relay_server": EnvPublicRelayServer, "public_api_url": EnvPublicAPIURL,
+}
+
 // field is one of the three addresses by its name in a request.
 func (p PublicEndpoints) field(name string) string {
 	switch name {
