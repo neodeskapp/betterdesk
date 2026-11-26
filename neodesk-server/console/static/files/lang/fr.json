@@ -5705,7 +5705,14 @@
     "computers": "Chat avec les ordinateurs",
     "computers_hint": "Désactivé : l'application NeoDesk des ordinateurs ne peut pas ouvrir le chat, et la console ne peut pas joindre leurs utilisateurs par chat. Le chat entre collègues continue de fonctionner.",
     "computers_off": "Le chat avec les ordinateurs est désactivé : l'application NeoDesk des ordinateurs ne peut pas ouvrir le chat. Un administrateur peut l'activer dans le menu du chat, sous Paramètres du chat de ce serveur.",
-    "mail_footer": "Vous recevez ce mail parce que vous répondez dans le chat de {app}. Désactivez ces mails dans le menu du chat, sous Notifications du chat."
+    "mail_footer": "Vous recevez ce mail parce que vous répondez dans le chat de {app}. Désactivez ces mails dans le menu du chat, sous Notifications du chat.",
+    "mail_waiting": "Mail when a person waits for an answer",
+    "mail_waiting_hint": "The mail goes to whoever has the conversation, else to everyone who may assign it, sees the computer and has chat mails on.",
+    "mail_minutes": "Minutes to wait",
+    "mail_minutes_hint": "How long a message waits for an answer before the mail goes out.",
+    "mail_minutes_invalid": "Enter a number of minutes from 1 to 10080.",
+    "mail_preview_no_effect": "Has no effect while no mail is sent.",
+    "server_settings_effect": "These apply to everyone on this server, from the next message."
   },
   "toast": {
     "device_connected": "Device connected",
@@ -7877,7 +7884,13 @@
       "fallback_alert_email": "Utiliser l'e-mail d'alerte si aucune adresse opérateur n'est disponible",
       "include_folder_in_subject": "Inclure le nom du dossier dans l'objet de l'e-mail",
       "save": "Enregistrer les paramètres de notification",
-      "saved": "Paramètres de notification enregistrés"
+      "saved": "Paramètres de notification enregistrés",
+      "help_requests_hint": "A mail goes out when a device asks for help.",
+      "notify_assigned_hint": "The mail goes to the operators who have the device’s folder or group.",
+      "fallback_hint": "When no operator gets the mail, it goes to the alert address in Settings › Email.",
+      "folder_subject_hint": "The subject names the device’s folder, so mails can be sorted by it.",
+      "no_smtp_effect": "Has no effect until email sending is set up in Settings › Email.",
+      "no_recipient": "Has no effect: nobody gets the mail while both options below are off."
     },
     "targets": {
       "org": "Organisation",

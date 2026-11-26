@@ -5562,7 +5562,14 @@
     "computers": "Chat mit Computern",
     "computers_hint": "Aus: Die NeoDesk-App auf Computern kann den Chat nicht öffnen, und die Konsole erreicht die Personen dort nicht per Chat. Der Chat zwischen Kollegen funktioniert weiter.",
     "computers_off": "Der Chat mit Computern ist aus: Die NeoDesk-App auf Computern kann den Chat nicht öffnen. Ein Admin kann ihn im Menü des Chats unter Chat-Einstellungen für diesen Server einschalten.",
-    "mail_footer": "Du bekommst diese Mail, weil du im Chat von {app} antwortest. Abschalten kannst du sie im Menü des Chats unter Chat-Benachrichtigungen."
+    "mail_footer": "Du bekommst diese Mail, weil du im Chat von {app} antwortest. Abschalten kannst du sie im Menü des Chats unter Chat-Benachrichtigungen.",
+    "mail_waiting": "Mail, wenn jemand auf eine Antwort wartet",
+    "mail_waiting_hint": "Die Mail geht an die Person, die das Gespräch hat, sonst an alle, die es zuweisen dürfen, den Computer sehen und Chat-Mails eingeschaltet haben.",
+    "mail_minutes": "Minuten bis zur Mail",
+    "mail_minutes_hint": "Wie lange eine Nachricht auf eine Antwort wartet, bevor die Mail rausgeht.",
+    "mail_minutes_invalid": "Gib eine Zahl von 1 bis 10080 Minuten ein.",
+    "mail_preview_no_effect": "Wirkt nicht, solange keine Mail verschickt wird.",
+    "server_settings_effect": "Das gilt für alle auf diesem Server, ab der nächsten Nachricht."
   },
   "toast": {
     "device_connected": "Gerät verbunden",
@@ -7873,7 +7880,13 @@
       "fallback_alert_email": "Warn-E-Mail verwenden, wenn keine Operator-Adresse verfügbar ist",
       "include_folder_in_subject": "Ordnernamen in den E-Mail-Betreff aufnehmen",
       "save": "Benachrichtigungseinstellungen speichern",
-      "saved": "Benachrichtigungseinstellungen gespeichert"
+      "saved": "Benachrichtigungseinstellungen gespeichert",
+      "help_requests_hint": "Eine Mail geht raus, wenn ein Gerät um Hilfe bittet.",
+      "notify_assigned_hint": "Die Mail geht an die Operatoren, die den Ordner oder die Gruppe des Geräts haben.",
+      "fallback_hint": "Bekommt kein Operator die Mail, geht sie an die Alarmadresse unter Einstellungen › E-Mail.",
+      "folder_subject_hint": "Der Betreff nennt den Ordner des Geräts, damit sich Mails danach sortieren lassen.",
+      "no_smtp_effect": "Wirkt erst, wenn der E-Mail-Versand unter Einstellungen › E-Mail eingerichtet ist.",
+      "no_recipient": "Wirkt nicht: Niemand bekommt die Mail, solange beide Optionen darunter aus sind."
     },
     "targets": {
       "org": "Organisation",

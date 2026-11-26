@@ -5562,7 +5562,14 @@
     "computers": "Chat s počítači",
     "computers_hint": "Vypnuto: aplikace NeoDesk na počítačích nemůže otevřít chat a konzole nezastihne lidi u nich chatem. Chat mezi kolegy funguje dál.",
     "computers_off": "Chat s počítači je vypnutý: aplikace NeoDesk na počítačích nemůže otevřít chat. Správce ho může zapnout v nabídce chatu v Nastavení chatu pro tento server.",
-    "mail_footer": "Tento e-mail dostáváte, protože odpovídáte v chatu {app}. Vypnout ho můžete v nabídce chatu v části Oznámení chatu."
+    "mail_footer": "Tento e-mail dostáváte, protože odpovídáte v chatu {app}. Vypnout ho můžete v nabídce chatu v části Oznámení chatu.",
+    "mail_waiting": "Mail when a person waits for an answer",
+    "mail_waiting_hint": "The mail goes to whoever has the conversation, else to everyone who may assign it, sees the computer and has chat mails on.",
+    "mail_minutes": "Minutes to wait",
+    "mail_minutes_hint": "How long a message waits for an answer before the mail goes out.",
+    "mail_minutes_invalid": "Enter a number of minutes from 1 to 10080.",
+    "mail_preview_no_effect": "Has no effect while no mail is sent.",
+    "server_settings_effect": "These apply to everyone on this server, from the next message."
   },
   "toast": {
     "device_connected": "Zařízení připojeno",
@@ -7873,7 +7880,13 @@
       "fallback_alert_email": "Použít e-mail pro upozornění, když není k dispozici adresa operátora",
       "include_folder_in_subject": "Uvádět název složky v předmětu e-mailu",
       "save": "Uložit nastavení oznámení",
-      "saved": "Nastavení oznámení uloženo"
+      "saved": "Nastavení oznámení uloženo",
+      "help_requests_hint": "A mail goes out when a device asks for help.",
+      "notify_assigned_hint": "The mail goes to the operators who have the device’s folder or group.",
+      "fallback_hint": "When no operator gets the mail, it goes to the alert address in Settings › Email.",
+      "folder_subject_hint": "The subject names the device’s folder, so mails can be sorted by it.",
+      "no_smtp_effect": "Has no effect until email sending is set up in Settings › Email.",
+      "no_recipient": "Has no effect: nobody gets the mail while both options below are off."
     },
     "targets": {
       "org": "Organizace",

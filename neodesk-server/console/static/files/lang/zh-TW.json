@@ -5705,7 +5705,14 @@
     "computers": "與電腦聊天",
     "computers_hint": "關閉後：電腦上的 NeoDesk 應用程式無法開啟聊天，主控台也無法透過聊天聯絡這些電腦前的使用者。同事之間的聊天不受影響。",
     "computers_off": "與電腦聊天已關閉：電腦上的 NeoDesk 應用程式無法開啟聊天。管理員可以在聊天選單的「此伺服器的聊天設定」中開啟。",
-    "mail_footer": "你收到這封郵件是因為你在 {app} 的聊天中回覆。可在聊天選單的「聊天通知」中關閉這些郵件。"
+    "mail_footer": "你收到這封郵件是因為你在 {app} 的聊天中回覆。可在聊天選單的「聊天通知」中關閉這些郵件。",
+    "mail_waiting": "Mail when a person waits for an answer",
+    "mail_waiting_hint": "The mail goes to whoever has the conversation, else to everyone who may assign it, sees the computer and has chat mails on.",
+    "mail_minutes": "Minutes to wait",
+    "mail_minutes_hint": "How long a message waits for an answer before the mail goes out.",
+    "mail_minutes_invalid": "Enter a number of minutes from 1 to 10080.",
+    "mail_preview_no_effect": "Has no effect while no mail is sent.",
+    "server_settings_effect": "These apply to everyone on this server, from the next message."
   },
   "toast": {
     "device_connected": "設備已連接",
@@ -7877,7 +7884,13 @@
       "fallback_alert_email": "沒有操作員地址時使用警示電子郵件",
       "include_folder_in_subject": "在電子郵件主旨中加入資料夾名稱",
       "save": "儲存通知設定",
-      "saved": "通知設定已儲存"
+      "saved": "通知設定已儲存",
+      "help_requests_hint": "A mail goes out when a device asks for help.",
+      "notify_assigned_hint": "The mail goes to the operators who have the device’s folder or group.",
+      "fallback_hint": "When no operator gets the mail, it goes to the alert address in Settings › Email.",
+      "folder_subject_hint": "The subject names the device’s folder, so mails can be sorted by it.",
+      "no_smtp_effect": "Has no effect until email sending is set up in Settings › Email.",
+      "no_recipient": "Has no effect: nobody gets the mail while both options below are off."
     },
     "targets": {
       "org": "組織",

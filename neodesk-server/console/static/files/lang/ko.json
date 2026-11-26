@@ -5562,7 +5562,14 @@
     "computers": "컴퓨터와 채팅",
     "computers_hint": "끄면: 컴퓨터의 NeoDesk 앱이 채팅을 열 수 없고 콘솔도 채팅으로 그 사용자에게 연락할 수 없습니다. 동료 간 채팅은 계속 됩니다.",
     "computers_off": "컴퓨터와 채팅이 꺼져 있습니다: 컴퓨터의 NeoDesk 앱이 채팅을 열 수 없습니다. 관리자는 채팅 메뉴의 이 서버의 채팅 설정에서 켤 수 있습니다.",
-    "mail_footer": "{app}의 채팅에서 답변하고 있어 이 메일을 받았습니다. 채팅 메뉴의 채팅 알림에서 이 메일을 끌 수 있습니다."
+    "mail_footer": "{app}의 채팅에서 답변하고 있어 이 메일을 받았습니다. 채팅 메뉴의 채팅 알림에서 이 메일을 끌 수 있습니다.",
+    "mail_waiting": "Mail when a person waits for an answer",
+    "mail_waiting_hint": "The mail goes to whoever has the conversation, else to everyone who may assign it, sees the computer and has chat mails on.",
+    "mail_minutes": "Minutes to wait",
+    "mail_minutes_hint": "How long a message waits for an answer before the mail goes out.",
+    "mail_minutes_invalid": "Enter a number of minutes from 1 to 10080.",
+    "mail_preview_no_effect": "Has no effect while no mail is sent.",
+    "server_settings_effect": "These apply to everyone on this server, from the next message."
   },
   "toast": {
     "device_connected": "장치가 연결됨",
@@ -7873,7 +7880,13 @@
       "fallback_alert_email": "운영자 주소가 없으면 경고 알림용 이메일 주소 사용",
       "include_folder_in_subject": "이메일 제목에 폴더 이름 포함",
       "save": "알림 설정 저장",
-      "saved": "알림 설정이 저장되었습니다"
+      "saved": "알림 설정이 저장되었습니다",
+      "help_requests_hint": "A mail goes out when a device asks for help.",
+      "notify_assigned_hint": "The mail goes to the operators who have the device’s folder or group.",
+      "fallback_hint": "When no operator gets the mail, it goes to the alert address in Settings › Email.",
+      "folder_subject_hint": "The subject names the device’s folder, so mails can be sorted by it.",
+      "no_smtp_effect": "Has no effect until email sending is set up in Settings › Email.",
+      "no_recipient": "Has no effect: nobody gets the mail while both options below are off."
     },
     "targets": {
       "org": "조직",
