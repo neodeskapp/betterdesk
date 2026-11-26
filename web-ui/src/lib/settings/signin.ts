@@ -5,6 +5,8 @@
  * isValidOidcRedirectUrlClient).
  */
 
+import { tf } from '#lib/i18n/i18n.svelte.ts';
+
 export interface PasswordRule {
 	id: 'length';
 	met: boolean;
@@ -239,4 +241,251 @@ export function validOidcRedirect(raw: string): boolean {
 	} catch {
 		return false;
 	}
+}
+
+/* ── Checks per field, as the server makes them (auth/settings_check.go) ── */
+
+/** The server's text for a refusal code (settings.signin.check_<code>), with {line} and {text} filled */
+function check(code: string, fallback: string, params: Record<string, string | number> = {}): string {
+	return tf(`settings.signin.check_${code}`, fallback, params);
+}
+
+/** One entry of a group to role map */
+export interface RoleMapRow {
+	group: string;
+	role: string;
+}
+
+/**
+ * A stored map as rows: entries separated by | or lines, each group=role
+ * with the last = splitting them, so a DN keeps its own = and commas
+ * (parseGroupRoleMap).
+ */
+export function parseRoleMap(raw: string): RoleMapRow[] {
+	return String(raw || '')
+		.replace(/\r\n/g, '\n')
+		.split(/[|\n]/)
+		.map((e) => e.trim())
+		.filter(Boolean)
+		.map((entry) => {
+			const i = entry.lastIndexOf('=');
+			return i <= 0
+				? { group: entry, role: '' }
+				: { group: entry.slice(0, i).trim(), role: entry.slice(i + 1).trim() };
+		});
+}
+
+/** Rows back as the server stores them: LDAP joins with |, single sign-on with lines */
+export function formatRoleMap(rows: readonly RoleMapRow[], separator: '|' | '\n'): string {
+	return rows
+		.filter((r) => r.group.trim() || r.role.trim())
+		.map((r) => `${r.group.trim()}=${r.role.trim()}`)
+		.join(separator);
+}
+
+/** What is wrong with each row ('' when nothing); an empty row is left out when saving */
+export function roleMapProblems(rows: readonly RoleMapRow[], roles: readonly string[]): string[] {
+	return rows.map((r, i) => {
+		const group = r.group.trim();
+		const role = r.role.trim();
+		if (!group && !role) return '';
+		const text = `${group}=${role}`;
+		if (!group || !role)
+			return check('map_line', 'Entry {line} of the role map needs a group and a role: {text}', {
+				line: i + 1,
+				text
+			});
+		if (!roles.includes(role))
+			return check('map_role', 'Entry {line} of the role map names a role that does not exist: {text}', {
+				line: i + 1,
+				text
+			});
+		return '';
+	});
+}
+
+function roleProblem(role: string, roles: readonly string[]): string | undefined {
+	const r = role.trim();
+	return r && !roles.includes(r)
+		? check('role_invalid', 'This role does not exist: {text}', { text: r })
+		: undefined;
+}
+
+function mapProblem(raw: string, roles: readonly string[]): string | undefined {
+	return roleMapProblems(parseRoleMap(raw), roles).find(Boolean) || undefined;
+}
+
+/** A host name or address alone: no scheme, no port, no path, no spaces (validLDAPHost) */
+function ldapHostProblem(raw: string): string | undefined {
+	const host = raw.trim();
+	if (!host) return check('host_required', "Enter the directory's host name or address.");
+	const extra = check(
+		'host_invalid',
+		'Enter only the host name or address, without ldap:// and without a port.'
+	);
+	if (/[\s/\\@]/.test(host)) return extra;
+	if (host.includes(':')) {
+		try {
+			new URL(`ldap://[${host.replace(/^\[|\]$/g, '')}]/`);
+			return undefined;
+		} catch {
+			return extra;
+		}
+	}
+	return undefined;
+}
+
+export type Problems<T> = Partial<Record<keyof T & string, string>>;
+
+/**
+ * What is wrong with directory settings that are switched on, by field.
+ * The DN and filter syntax is the server's to check; its refusal names
+ * the field too.
+ */
+export function ldapProblems(v: LdapValues, roles: readonly string[]): Problems<LdapValues> {
+	if (!v.enabled) return {};
+	const out: Problems<LdapValues> = {};
+	const host = ldapHostProblem(v.host);
+	if (host) out.host = host;
+	const numbers = ldapNumberProblems(v);
+	if (numbers.port) out.port = check('port_range', 'Enter a port from 1 to 65535.');
+	if (numbers.conn_timeout_sec)
+		out.conn_timeout_sec = check('timeout_range', 'Enter a whole number of seconds from 1 to 120.');
+	if (v.direct_bind) {
+		const template = v.direct_bind_dn.trim();
+		if (!template)
+			out.direct_bind_dn = check(
+				'template_required',
+				'Enter the DN template, with {{username}} where the name goes.'
+			);
+		else if (!template.includes('{{username}}'))
+			out.direct_bind_dn = check(
+				'template_placeholder',
+				'The template needs {{username}} where the name goes.'
+			);
+	} else {
+		if (!v.base_dn.trim())
+			out.base_dn = check('base_dn_required', 'Enter the Base DN under which people are searched.');
+		const filter = v.user_filter.trim();
+		if (filter && !filter.includes('{{username}}'))
+			out.user_filter = check(
+				'user_filter_username',
+				'The user filter needs {{username}} where the name goes.'
+			);
+	}
+	const role = roleProblem(v.default_role, roles);
+	if (role) out.default_role = role;
+	const map = mapProblem(v.group_role_map, roles);
+	if (map) out.group_role_map = map;
+	return out;
+}
+
+/** 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 as first address and prefix */
+const PRIVATE_V4: readonly [number, number][] = [
+	[0x0a000000, 8],
+	[0xac100000, 12],
+	[0xc0a80000, 16]
+];
+
+function v4(text: string): number | null {
+	const parts = text.split('.');
+	if (parts.length !== 4 || parts.some((p) => !/^\d{1,3}$/.test(p) || Number(p) > 255)) return null;
+	return parts.reduce((n, p) => n * 256 + Number(p), 0);
+}
+
+function prefixOf(bits: string | undefined, max: number): number {
+	if (bits === undefined) return max;
+	return /^\d+$/.test(bits) && Number(bits) <= max ? Number(bits) : -1;
+}
+
+/**
+ * What is wrong with one entry of the private networks single sign-on may
+ * reach ('' when nothing): an address or a range inside 10.0.0.0/8,
+ * 172.16.0.0/12, 192.168.0.0/16 or fc00::/7, as the server takes them.
+ */
+export function privateNetworkProblem(entry: string): string {
+	const e = entry.trim();
+	if (!e) return '';
+	const wrong = check(
+		'network_invalid',
+		'This is not a private network: {text}. Use addresses or ranges in 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 or fc00::/7.',
+		{ text: e }
+	);
+	const [addr = '', bits, extra] = e.split('/');
+	if (extra !== undefined) return wrong;
+	if (addr.includes(':')) {
+		let host: string;
+		try {
+			host = new URL(`http://[${addr}]/`).hostname.replace(/^\[|\]$/g, '');
+		} catch {
+			return wrong;
+		}
+		const prefix = prefixOf(bits, 128);
+		return /^f[cd]/i.test(host) && prefix >= 7 ? '' : wrong;
+	}
+	const n = v4(addr);
+	const prefix = prefixOf(bits, 32);
+	if (n === null || prefix < 0) return wrong;
+	const inside = PRIVATE_V4.some(
+		([net, size]) => prefix >= size && Math.floor(n / 2 ** (32 - size)) === Math.floor(net / 2 ** (32 - size))
+	);
+	return inside ? '' : wrong;
+}
+
+/** The stored private networks as a list (the server splits at commas and spaces) */
+export function splitNetworks(raw: string): string[] {
+	return String(raw || '')
+		.split(/[\s,]+/)
+		.map((e) => e.trim())
+		.filter(Boolean);
+}
+
+function urlProblem(raw: string): string | undefined {
+	const v = raw.trim();
+	if (!v) return undefined;
+	const wrong = check('url_invalid', 'Enter a full address that starts with https:// or http://.');
+	if (!/^https?:\/\//i.test(v) || /\s/.test(v)) return wrong;
+	try {
+		return new URL(v).hostname ? undefined : wrong;
+	} catch {
+		return wrong;
+	}
+}
+
+/** What is wrong with single sign-on settings, by field; the networks are checked also while it is off */
+export function oidcProblems(v: OidcValues, roles: readonly string[]): Problems<OidcValues> {
+	const out: Problems<OidcValues> = {};
+	const network = splitNetworks(v.allowed_private_cidrs).map(privateNetworkProblem).find(Boolean);
+	if (network) out.allowed_private_cidrs = network;
+	if (!v.enabled) return out;
+	if (!v.client_id.trim())
+		out.client_id = check('client_id_required', 'Enter the client ID from your identity provider.');
+	const issuer = v.issuer_url.trim();
+	const manual = !!v.authorization_url.trim() && !!v.token_url.trim();
+	if (v.auto_discovery) {
+		if (!issuer && !manual)
+			out.issuer_url = check(
+				'issuer_required',
+				'Enter the issuer URL, or turn off Auto-discovery and enter the endpoints.'
+			);
+	} else {
+		for (const f of ['authorization_url', 'token_url'] as const)
+			if (!v[f].trim()) out[f] = check('endpoint_required', 'Without Auto-discovery, enter this endpoint.');
+	}
+	for (const f of ['issuer_url', 'authorization_url', 'token_url', 'userinfo_url', 'panel_url'] as const) {
+		const p = urlProblem(v[f]);
+		if (p && !out[f]) out[f] = p;
+	}
+	if (!validOidcRedirect(v.redirect_url))
+		out.redirect_url = v.redirect_url.trim()
+			? tf(
+					'settings.oidc_redirect_url_invalid',
+					'The redirect URL must be an http or https address ending in /api/auth/oidc/callback.'
+				)
+			: check('redirect_url_required', 'Enter the redirect URL.');
+	const role = roleProblem(v.default_role, roles);
+	if (role) out.default_role = role;
+	const map = mapProblem(v.group_role_map, roles);
+	if (map) out.group_role_map = map;
+	return out;
 }
