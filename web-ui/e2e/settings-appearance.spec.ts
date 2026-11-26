@@ -54,19 +54,31 @@ test('Branding: leaving with an unsaved change asks first', async ({ page }) => 
 	await expect(name).toHaveValue(`${before} test`);
 });
 
-for (const tab of ['branding', 'brand'] as const) {
-	test(`${tab} at phone width: one column, the console preview apart from the client app's, no sideways scrolling`, async ({
-		page
-	}) => {
-		await page.setViewportSize({ width: 390, height: 844 });
-		await open(page, tab);
-		const wide = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-		expect(wide).toBeLessThanOrEqual(0);
-		// The console preview comes before the groups; at the end it would sit
-		// right after the client app's own preview, two previews back to back
-		const preview = await page.getByRole('complementary', { name: 'Console preview' }).boundingBox();
-		const firstGroup = await page.locator('.settings-group').first().boundingBox();
-		expect(preview!.y).toBeLessThan(firstGroup!.y);
-		await expectNoAxeViolations(page);
-	});
-}
+test('appearance at phone width: one column, settings before the preview, no sideways scrolling', async ({
+	page
+}) => {
+	await page.setViewportSize({ width: 390, height: 844 });
+	await open(page, 'branding');
+	const wide = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+	expect(wide).toBeLessThanOrEqual(0);
+	// The preview follows the settings it shows, so they come first on a phone
+	const preview = await page.getByRole('complementary', { name: 'Preview' }).boundingBox();
+	const firstGroup = await page.locator('.settings-group').first().boundingBox();
+	expect(preview!.y).toBeGreaterThan(firstGroup!.y);
+	await expectNoAxeViolations(page);
+});
+
+test("branding at phone width: one column, the console preview apart from the client app's, no sideways scrolling", async ({
+	page
+}) => {
+	await page.setViewportSize({ width: 390, height: 844 });
+	await open(page, 'brand');
+	const wide = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+	expect(wide).toBeLessThanOrEqual(0);
+	// The console preview comes before the groups; at the end it would sit
+	// right after the client app's own preview, two previews back to back
+	const preview = await page.getByRole('complementary', { name: 'Console preview' }).boundingBox();
+	const firstGroup = await page.locator('.settings-group').first().boundingBox();
+	expect(preview!.y).toBeLessThan(firstGroup!.y);
+	await expectNoAxeViolations(page);
+});
