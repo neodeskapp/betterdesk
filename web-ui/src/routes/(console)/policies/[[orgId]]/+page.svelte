@@ -648,7 +648,6 @@
 		<Select
 			id={f.id}
 			describedby={f.describedby}
-			width="host"
 			disabled={!canEdit}
 			options={choiceOptions(field)}
 			value={String(value)}
