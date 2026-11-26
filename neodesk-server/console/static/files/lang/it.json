@@ -1370,8 +1370,8 @@
       "conn_no_effect_relay": "Non ha effetto: ogni sessione passa dal server di inoltro.",
       "conn_no_effect_operator": "Già in vigore: Solo gli account che possono connettersi ai dispositivi possono avviare sessioni include questa regola.",
       "conn_no_effect_signed_in": "Non ha effetto finché solo le app con accesso effettuato possono avviare sessioni.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Trovato automaticamente",
+      "endpoint_auto_note": "Un campo vuoto dà ai client l'indirizzo trovato automaticamente, mostrato in Cosa ricevono ora i client."
     },
     "appearance": {
       "theme_note": "L'aspetto predefinito per tutti coloro che usano questa console.",
@@ -1555,10 +1555,10 @@
       "map_role_n": "Ruolo per il gruppo {n}",
       "map_add": "Aggiungi un gruppo",
       "pick_role": "Scegli un ruolo",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "Un nuovo accesso disconnette l'altro browser dell'account.",
+      "sessions_any": "Un account può essere connesso su un numero qualsiasi di browser e dispositivi alla volta.",
+      "sessions_up_to": "Un account può essere connesso su un massimo di {max} browser e dispositivi alla volta.",
+      "single_session_env_source": "Impostato nel file di ambiente ({name}={value}). Rimuovilo lì per usare questo interruttore."
     },
     "backup_tab": {
       "create_title": "Crea un backup",
@@ -1772,7 +1772,7 @@
       "rdclient_bg_help": "Cosa si vede dietro l'elenco dei dispositivi. \"{inherit}\" usa lo sfondo della console.",
       "picture_kb": "Immagine, {kb} KB",
       "website_help": "Un indirizzo completo, per esempio https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Anteprima della console"
     },
     "joining": {
       "mode_note": "Quali nuovi dispositivi possono unirsi a questo server, e come.",
@@ -2796,13 +2796,13 @@
     "add_direct_device": "Aggiungi un dispositivo",
     "group_dialog_intro": "I membri di un gruppo condividono il suo accesso alla console e i gruppi dispositivi che lo consentono. Aggiungi le persone nella loro scheda utente; consenti il gruppo nelle impostazioni di accesso di un gruppo dispositivi.",
     "group_name_hint": "Mostrato nell'elenco utenti, nella scheda di ogni membro e nelle impostazioni di accesso.",
-    "access_default_short": "Default",
+    "access_default_short": "Predefinito",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "Impostato per questa persona",
+    "access_own_group": "Impostato per questo gruppo",
+    "access_own_user_limit": "Impostato per questa persona. Limite del ruolo: {limit}",
+    "access_limit_only": "Limite del ruolo: {limit}",
+    "access_scope_link_joining": "Impostazioni › Adesione"
   },
   "folders": {
     "title": "Cartelle",
@@ -5530,7 +5530,7 @@
     "danger_zone": "Zona pericolosa",
     "name_hint": "Mostrato nella pagina di questa organizzazione, negli elenchi e ai suoi membri.",
     "slug_changed": "Gli accessi che indicano l'organizzazione con il suo nome breve avranno bisogno di quello nuovo dopo il salvataggio.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Impostato per questa organizzazione."
   },
   "chat": {
     "e2e_enabled": "Crittografia end-to-end",
@@ -6123,7 +6123,7 @@
     "sound_today": "Per disattivare l'audio nelle sessioni oggi, usa una regola di accesso con Audio disattivato in Dispositivi, o disattiva Audio nell'accesso alla console di una persona.",
     "open_access_rules": "Apri le regole di accesso",
     "remove_group": "Rimuovi tutte le regole di questo gruppo",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Nessuna app NeoDesk lo applica ancora."
   },
   "attestation": {
     "title": "Attestazione dispositivi",
@@ -6999,8 +6999,8 @@
     "page_only_shows": "Questa pagina mostra solo i file di lingua; i testi si cambiano nei file sul server. Per cambiare la lingua che vedi, apri",
     "page_own_link": "Il tuo account › Preferenze",
     "status_legend": "Lingua di riferimento: i file con cui si confrontano gli altri. Da rivedere: il file è segnato come non ancora controllato da una persona.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Lingua di riferimento: {names}. Ogni altro file viene confrontato con i loro testi, e non si possono eliminare.",
+    "status_review_legend": "Da rivedere: il file è segnato come non ancora controllato da una persona."
   },
   "resource_control": {
     "title": "Controllo risorse",
@@ -7752,7 +7752,7 @@
     "sum_guest_create": "creare link ospite",
     "sum_enrollment_manage": "gestire l'adesione",
     "sum_enrollment_approve": "approvare le richieste di adesione",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "Cosa può fare {role}"
   },
   "notifications": {
     "title": "Notifiche",
@@ -8758,7 +8758,7 @@
     "preview_title": "Anteprima",
     "preview_note": "Più o meno come il client mostra questi valori. L’anteprima segue il modulo mentre scrive.",
     "preview_button": "Pulsante di esempio",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Qui non è ancora salvato nulla: i client mostrano i valori qui sotto finché non salvi i tuoi."
   },
   "login_promo": {
     "slides": {

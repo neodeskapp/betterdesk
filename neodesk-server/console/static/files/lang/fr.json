@@ -1374,8 +1374,8 @@
       "conn_no_effect_relay": "Sans effet : chaque session passe par le serveur relais.",
       "conn_no_effect_operator": "Déjà en vigueur : Seuls les comptes autorisés à se connecter aux appareils peuvent lancer des sessions inclut cette règle.",
       "conn_no_effect_signed_in": "Sans effet tant que seules les applis connectées peuvent lancer des sessions.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Trouvée automatiquement",
+      "endpoint_auto_note": "Un champ vide donne aux clients l'adresse trouvée automatiquement, affichée sous Ce que reçoivent les clients."
     },
     "appearance": {
       "theme_note": "L'apparence par défaut pour tous ceux qui utilisent cette console.",
@@ -1559,10 +1559,10 @@
       "map_role_n": "Rôle pour le groupe {n}",
       "map_add": "Ajouter un groupe",
       "pick_role": "Choisir un rôle",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "Une nouvelle connexion déconnecte l'autre navigateur du compte.",
+      "sessions_any": "Un compte peut être connecté sur autant de navigateurs et d'appareils que nécessaire en même temps.",
+      "sessions_up_to": "Un compte peut être connecté sur {max} navigateurs et appareils au plus en même temps.",
+      "single_session_env_source": "Défini dans le fichier d'environnement ({name}={value}). Supprimez-le là-bas pour utiliser cet interrupteur."
     },
     "backup_tab": {
       "create_title": "Créer une sauvegarde",
@@ -1776,7 +1776,7 @@
       "rdclient_bg_help": "Ce qui s'affiche derrière la liste des appareils. « {inherit} » utilise l'arrière-plan de la console.",
       "picture_kb": "Image, {kb} Ko",
       "website_help": "Une adresse complète, par exemple https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Aperçu de la console"
     },
     "joining": {
       "mode_note": "Quels nouveaux appareils peuvent rejoindre ce serveur, et comment.",
@@ -2818,13 +2818,13 @@
     "add_direct_device": "Ajouter un appareil",
     "group_dialog_intro": "Les membres d'un groupe partagent son accès à la console et les groupes d'appareils qui l'autorisent. Ajoutez des personnes dans leur fiche utilisateur ; autorisez le groupe dans les réglages d'accès d'un groupe d'appareils.",
     "group_name_hint": "Affiché dans la liste des utilisateurs, dans la fiche de chaque membre et dans les réglages d'accès.",
-    "access_default_short": "Default",
-    "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_default_short": "Par défaut",
+    "access_default_plain": "{label} : {level}",
+    "access_own_user": "Défini pour cette personne",
+    "access_own_group": "Défini pour ce groupe",
+    "access_own_user_limit": "Défini pour cette personne. Limite du rôle : {limit}",
+    "access_limit_only": "Limite du rôle : {limit}",
+    "access_scope_link_joining": "Paramètres › Adhésion"
   },
   "folders": {
     "title": "Dossiers",
@@ -5319,7 +5319,7 @@
     "sum_guest_create": "créer des liens invités",
     "sum_enrollment_manage": "gérer l'adhésion",
     "sum_enrollment_approve": "approuver les demandes d'adhésion",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "Ce que {role} peut faire"
   },
   "tokens": {
     "title": "Jetons d'appareil",
@@ -5810,7 +5810,7 @@
     "danger_zone": "Zone de danger",
     "name_hint": "Affiché sur la page de cette organisation, dans les listes et à ses membres.",
     "slug_changed": "Les connexions qui nomment l'organisation par son nom court ont besoin du nouveau après l'enregistrement.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Défini pour cette organisation."
   },
   "chat": {
     "e2e_enabled": "Chiffré de bout en bout",
@@ -6403,7 +6403,7 @@
     "sound_today": "Pour couper le son des sessions dès aujourd'hui, utilisez une règle d'accès avec Son désactivé sous Appareils, ou désactivez Son dans l'accès console d'une personne.",
     "open_access_rules": "Ouvrir les règles d'accès",
     "remove_group": "Supprimer toutes les règles de ce groupe",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Aucune appli NeoDesk n'applique encore ce réglage."
   },
   "attestation": {
     "title": "Attestation des appareils",
@@ -7279,8 +7279,8 @@
     "page_only_shows": "Cette page montre seulement les fichiers de langue ; les textes se modifient dans les fichiers sur le serveur. Pour changer la langue que vous voyez, ouvrez",
     "page_own_link": "Votre compte › Préférences",
     "status_legend": "Langue de référence : les fichiers auxquels les autres sont comparés. À relire : le fichier est marqué comme pas encore vérifié par une personne.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Langue de référence : {names}. Tous les autres fichiers sont comparés à leurs textes, et elles ne peuvent pas être supprimées.",
+    "status_review_legend": "À relire : le fichier est marqué comme pas encore vérifié par une personne."
   },
   "resource_control": {
     "title": "Contrôle des ressources",
@@ -8762,7 +8762,7 @@
     "preview_title": "Aperçu",
     "preview_note": "À peu près ce que le client affiche avec ces valeurs. L’aperçu suit le formulaire pendant la saisie.",
     "preview_button": "Bouton d’exemple",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Rien n'est encore enregistré ici : les clients affichent les valeurs ci-dessous jusqu'à ce que vous enregistriez les vôtres."
   },
   "login_promo": {
     "slides": {

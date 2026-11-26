@@ -1370,8 +1370,8 @@
       "conn_no_effect_relay": "効果はありません: すべてのセッションがリレーサーバーを経由します。",
       "conn_no_effect_operator": "すでに有効です: 「デバイスへの接続が許可されたアカウントだけがセッションを開始できる」がこのルールを含んでいます。",
       "conn_no_effect_signed_in": "サインイン済みのアプリだけがセッションを開始できる間は効果がありません。",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "自動検出",
+      "endpoint_auto_note": "空欄の場合、クライアントには自動検出したアドレスが渡されます。このアドレスは「クライアントに今渡している値」に表示されます。"
     },
     "appearance": {
       "theme_note": "このコンソールを使う全員に適用される既定の見た目です。",
@@ -1555,10 +1555,10 @@
       "map_role_n": "グループ {n} のロール",
       "map_add": "グループを追加",
       "pick_role": "ロールを選択",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "新しくサインインすると、アカウントのもう一方のブラウザーはサインアウトされます。",
+      "sessions_any": "1 つのアカウントは同時にいくつのブラウザーとデバイスでもサインインできます。",
+      "sessions_up_to": "1 つのアカウントは同時に最大 {max} 台のブラウザーとデバイスでサインインできます。",
+      "single_session_env_source": "環境ファイル ({name}={value}) で設定されています。このスイッチを使うには、そちらから削除してください。"
     },
     "backup_tab": {
       "create_title": "バックアップを作成",
@@ -1772,7 +1772,7 @@
       "rdclient_bg_help": "デバイス一覧の背後に表示されるものです。「{inherit}」はコンソールの背景を使います。",
       "picture_kb": "画像、{kb} KB",
       "website_help": "完全なアドレス。例: https://example.com。",
-      "console_preview": "Console preview"
+      "console_preview": "パネルのプレビュー"
     },
     "joining": {
       "mode_note": "どの新しいデバイスがどのようにこのサーバーに参加できるか。",
@@ -2796,13 +2796,13 @@
     "add_direct_device": "デバイスを追加",
     "group_dialog_intro": "グループのメンバーは、グループのコンソールアクセスと、それを許可するデバイスグループを共有します。ユーザーはユーザーシートで追加し、グループはデバイスグループのアクセス設定で許可します。",
     "group_name_hint": "ユーザー一覧、各メンバーのユーザーシート、アクセス設定に表示されます。",
-    "access_default_short": "Default",
+    "access_default_short": "既定",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "この人に設定",
+    "access_own_group": "このグループに設定",
+    "access_own_user_limit": "この人に設定。ロールの上限: {limit}",
+    "access_limit_only": "ロールの上限: {limit}",
+    "access_scope_link_joining": "設定 › 参加"
   },
   "folders": {
     "title": "フォルダー",
@@ -5530,7 +5530,7 @@
     "danger_zone": "危険な操作",
     "name_hint": "この組織のページ、一覧、メンバーに表示されます。",
     "slug_changed": "短い名前で組織を指定するサインインでは、保存後に新しい名前が必要になります。",
-    "policy_set": "Set for this organization."
+    "policy_set": "この組織に設定されています。"
   },
   "chat": {
     "e2e_enabled": "エンドツーエンド暗号化",
@@ -6123,7 +6123,7 @@
     "sound_today": "今すぐセッションの音をオフにするには、「デバイス」でサウンドをオフにしたアクセスルールを使うか、その人のコンソールアクセスでサウンドをオフにしてください。",
     "open_access_rules": "アクセスルールを開く",
     "remove_group": "このグループのルールをすべて削除",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "これを適用する NeoDesk アプリはまだありません。"
   },
   "attestation": {
     "title": "デバイス証明",
@@ -6999,8 +6999,8 @@
     "page_only_shows": "このページは言語ファイルを表示するだけです。テキストはサーバー上のファイルで変更します。表示する言語を変えるには、次を開いてください:",
     "page_own_link": "アカウント › 個人設定",
     "status_legend": "基準言語: 他のファイルの比較対象となるファイル。要確認: まだ人が確認していないと印が付いたファイル。",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "基準言語: {names}。他のすべてのファイルはこのテキストと照合され、基準言語は削除できません。",
+    "status_review_legend": "要確認: まだ人が確認していないと印が付いたファイル。"
   },
   "resource_control": {
     "title": "リソース制御",
@@ -7752,7 +7752,7 @@
     "sum_guest_create": "ゲストリンクを作成する",
     "sum_enrollment_manage": "参加を管理する",
     "sum_enrollment_approve": "参加リクエストを承認する",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "{role} でできること"
   },
   "notifications": {
     "title": "通知",
@@ -8758,7 +8758,7 @@
     "preview_title": "プレビュー",
     "preview_note": "クライアントがこれらの値をおおよそどう表示するかを示します。入力に合わせて更新されます。",
     "preview_button": "サンプルボタン",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "ここにはまだ何も保存されていません。独自の値を保存するまで、クライアントには下の値が表示されます。"
   },
   "login_promo": {
     "slides": {

@@ -1370,8 +1370,8 @@
       "conn_no_effect_relay": "Nemá žádný účinek: každá relace jde přes přenosový server.",
       "conn_no_effect_operator": "Už platí: Relace mohou zahájit jen účty, které se smějí připojovat k zařízením zahrnuje toto pravidlo.",
       "conn_no_effect_signed_in": "Nemá žádný účinek, dokud relace mohou zahájit jen přihlášené aplikace.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Zjištěno automaticky",
+      "endpoint_auto_note": "Prázdné pole dá klientům automaticky zjištěnou adresu, zobrazenou v části Co teď klienti dostávají."
     },
     "appearance": {
       "theme_note": "Výchozí vzhled pro všechny, kdo tuto konzoli používají.",
@@ -1555,10 +1555,10 @@
       "map_role_n": "Role pro skupinu {n}",
       "map_add": "Přidat skupinu",
       "pick_role": "Vyberte roli",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "Nové přihlášení odhlásí druhý prohlížeč účtu.",
+      "sessions_any": "Účet může být současně přihlášen na libovolném počtu prohlížečů a zařízení.",
+      "sessions_up_to": "Účet může být současně přihlášen nejvýše na {max} prohlížečích a zařízeních.",
+      "single_session_env_source": "Nastaveno v souboru prostředí ({name}={value}). Pokud chcete použít tento přepínač, odstraňte to tam."
     },
     "backup_tab": {
       "create_title": "Vytvořit zálohu",
@@ -1772,7 +1772,7 @@
       "rdclient_bg_help": "Co je vidět za seznamem zařízení. „{inherit}“ použije pozadí konzole.",
       "picture_kb": "Obrázek, {kb} KB",
       "website_help": "Celá adresa, například https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Náhled konzole"
     },
     "joining": {
       "mode_note": "Která nová zařízení se smějí připojit k tomuto serveru, a jak.",
@@ -2796,13 +2796,13 @@
     "add_direct_device": "Přidat zařízení",
     "group_dialog_intro": "Členové skupiny sdílejí její přístup ke konzoli a skupiny zařízení, které ji povolují. Lidi přidávejte v jejich kartě uživatele; skupinu povolte v nastavení přístupu skupiny zařízení.",
     "group_name_hint": "Zobrazí se v seznamu uživatelů, v kartě každého člena a v nastavení přístupu.",
-    "access_default_short": "Default",
+    "access_default_short": "Výchozí",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "Nastaveno pro tuto osobu",
+    "access_own_group": "Nastaveno pro tuto skupinu",
+    "access_own_user_limit": "Nastaveno pro tuto osobu. Limit role: {limit}",
+    "access_limit_only": "Limit role: {limit}",
+    "access_scope_link_joining": "Nastavení › Připojování"
   },
   "folders": {
     "title": "Složky",
@@ -5530,7 +5530,7 @@
     "danger_zone": "Nebezpečná zóna",
     "name_hint": "Zobrazí se na stránce této organizace, v seznamech a jejím členům.",
     "slug_changed": "Přihlášení, která organizaci označují krátkým názvem, budou po uložení potřebovat nový.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Nastaveno pro tuto organizaci."
   },
   "chat": {
     "e2e_enabled": "Koncové šifrování aktivní",
@@ -6123,7 +6123,7 @@
     "sound_today": "Chcete-li už teď vypnout zvuk v relacích, použijte pravidlo přístupu s vypnutým Zvukem v Zařízení, nebo vypněte Zvuk v přístupu dané osoby ke konzoli.",
     "open_access_rules": "Otevřít pravidla přístupu",
     "remove_group": "Odebrat všechna pravidla této skupiny",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Žádná aplikace NeoDesk to zatím neuplatňuje."
   },
   "attestation": {
     "title": "Atestace zařízení",
@@ -6999,8 +6999,8 @@
     "page_only_shows": "Tato stránka jen zobrazuje jazykové soubory; texty se mění v souborech na serveru. Chcete-li změnit jazyk, který vidíte, otevřete",
     "page_own_link": "Váš účet › Předvolby",
     "status_legend": "Referenční jazyk: soubory, se kterými se ostatní porovnávají. Potřebuje kontrolu: soubor je označen jako dosud nezkontrolovaný člověkem.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Referenční jazyk: {names}. Každý další soubor se porovnává s jejich texty a nelze je smazat.",
+    "status_review_legend": "Potřebuje kontrolu: soubor je označen jako dosud nezkontrolovaný člověkem."
   },
   "resource_control": {
     "title": "Řízení prostředků",
@@ -7752,7 +7752,7 @@
     "sum_guest_create": "vytvářet odkazy pro hosty",
     "sum_enrollment_manage": "spravovat připojování",
     "sum_enrollment_approve": "schvalovat žádosti o připojení",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "Co může {role}"
   },
   "notifications": {
     "title": "Oznámení",
@@ -8758,7 +8758,7 @@
     "preview_title": "Náhled",
     "preview_note": "Přibližně takto klient tyto hodnoty zobrazí. Náhled se mění podle toho, co píšete do formuláře.",
     "preview_button": "Ukázkové tlačítko",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Zatím tu není nic uloženo: klienti zobrazují hodnoty níže, dokud neuložíte vlastní."
   },
   "login_promo": {
     "slides": {

@@ -1370,8 +1370,8 @@
       "conn_no_effect_relay": "Nie ma znaczenia: każda sesja przechodzi przez serwer przekaźnikowy.",
       "conn_no_effect_operator": "Już obowiązuje: Sesje mogą rozpoczynać tylko konta, które mogą łączyć się z urządzeniami obejmuje tę zasadę.",
       "conn_no_effect_signed_in": "Nie ma znaczenia, dopóki sesje mogą rozpoczynać tylko zalogowane aplikacje.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Wykryty automatycznie",
+      "endpoint_auto_note": "Puste pole daje klientom adres wykryty automatycznie, widoczny w sekcji Co teraz dostają klienci."
     },
     "appearance": {
       "theme_note": "Domyślny wygląd dla wszystkich użytkowników tej konsoli.",
@@ -1555,10 +1555,10 @@
       "map_role_n": "Rola dla grupy {n}",
       "map_add": "Dodaj grupę",
       "pick_role": "Wybierz rolę",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "Nowe logowanie wylogowuje drugą przeglądarkę konta.",
+      "sessions_any": "Konto może być zalogowane jednocześnie na dowolnej liczbie przeglądarek i urządzeń.",
+      "sessions_up_to": "Konto może być zalogowane jednocześnie na maksymalnie {max} przeglądarkach i urządzeniach.",
+      "single_session_env_source": "Ustawione w pliku środowiskowym ({name}={value}). Usuń je tam, aby użyć tego przełącznika."
     },
     "backup_tab": {
       "create_title": "Utwórz kopię zapasową",
@@ -1772,7 +1772,7 @@
       "rdclient_bg_help": "Co widać za listą urządzeń. „{inherit}” używa tła konsoli.",
       "picture_kb": "Obraz, {kb} KB",
       "website_help": "Pełny adres, na przykład https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Podgląd konsoli"
     },
     "joining": {
       "mode_note": "Które nowe urządzenia mogą dołączyć do tego serwera i jak.",
@@ -2814,13 +2814,13 @@
     "add_direct_device": "Dodaj urządzenie",
     "group_dialog_intro": "Członkowie grupy dzielą jej dostęp do konsoli i grupy urządzeń, które na to pozwalają. Dodawaj osoby w ich karcie użytkownika; zezwól grupie w ustawieniach dostępu grupy urządzeń.",
     "group_name_hint": "Widoczna na liście użytkowników, w karcie każdego członka i w ustawieniach dostępu.",
-    "access_default_short": "Default",
+    "access_default_short": "Domyślnie",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "Ustawione dla tej osoby",
+    "access_own_group": "Ustawione dla tej grupy",
+    "access_own_user_limit": "Ustawione dla tej osoby. Limit roli: {limit}",
+    "access_limit_only": "Limit roli: {limit}",
+    "access_scope_link_joining": "Ustawienia › Dołączanie"
   },
   "folders": {
     "title": "Foldery",
@@ -5315,7 +5315,7 @@
     "sum_guest_create": "tworzyć linki gościa",
     "sum_enrollment_manage": "zarządzać dołączaniem",
     "sum_enrollment_approve": "zatwierdzać prośby o dołączenie",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "Co może {role}"
   },
   "tokens": {
     "title": "Tokeny urządzeń",
@@ -5806,7 +5806,7 @@
     "danger_zone": "Strefa zagrożenia",
     "name_hint": "Widoczna na stronie tej organizacji, na listach i dla jej członków.",
     "slug_changed": "Logowania, które wskazują organizację jej krótką nazwą, po zapisaniu potrzebują nowej.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Ustawione dla tej organizacji."
   },
   "chat": {
     "e2e_enabled": "Szyfrowanie end-to-end",
@@ -6399,7 +6399,7 @@
     "sound_today": "Aby już teraz wyłączyć dźwięk w sesjach, użyj reguły dostępu z wyłączonym Dźwiękiem w Urządzenia albo wyłącz Dźwięk w dostępie do konsoli danej osoby.",
     "open_access_rules": "Otwórz reguły dostępu",
     "remove_group": "Usuń wszystkie zasady tej grupy",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Żadna aplikacja NeoDesk jeszcze tego nie stosuje."
   },
   "attestation": {
     "title": "Atestacja urządzeń",
@@ -7275,8 +7275,8 @@
     "page_only_shows": "Ta strona tylko pokazuje pliki językowe; teksty zmienia się w plikach na serwerze. Aby zmienić język, który widzisz, otwórz",
     "page_own_link": "Twoje konto › Preferencje",
     "status_legend": "Język odniesienia: pliki, z którymi porównuje się pozostałe. Wymaga przeglądu: plik jest oznaczony jako jeszcze niesprawdzony przez człowieka.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Język wzorcowy: {names}. Każdy inny plik jest porównywany z ich tekstami i nie można ich usunąć.",
+    "status_review_legend": "Wymaga przeglądu: plik jest oznaczony jako jeszcze niesprawdzony przez człowieka."
   },
   "resource_control": {
     "title": "Kontrola zasobów",
@@ -8758,7 +8758,7 @@
     "preview_title": "Podgląd",
     "preview_note": "Mniej więcej tak klient pokazuje te wartości. Podgląd zmienia się w trakcie wpisywania.",
     "preview_button": "Przykładowy przycisk",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Nic tu jeszcze nie zapisano: klienci pokazują poniższe wartości, dopóki nie zapiszesz własnych."
   },
   "login_promo": {
     "slides": {

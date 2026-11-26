@@ -1370,8 +1370,8 @@
       "conn_no_effect_relay": "No tiene efecto: todas las sesiones pasan por el servidor de retransmisión.",
       "conn_no_effect_operator": "Ya está en vigor: Solo las cuentas que pueden conectarse a dispositivos pueden iniciar sesiones incluye esta regla.",
       "conn_no_effect_signed_in": "No tiene efecto mientras solo las apps con sesión iniciada puedan iniciar sesiones.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Detectada automáticamente",
+      "endpoint_auto_note": "Un campo vacío da a los clientes la dirección detectada automáticamente, que se muestra en Lo que reciben ahora los clientes."
     },
     "appearance": {
       "theme_note": "La apariencia predeterminada para todos los que usan esta consola.",
@@ -1555,10 +1555,10 @@
       "map_role_n": "Rol para el grupo {n}",
       "map_add": "Añadir un grupo",
       "pick_role": "Elija un rol",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "Un nuevo inicio de sesión cierra la sesión del otro navegador de la cuenta.",
+      "sessions_any": "Una cuenta puede tener la sesión iniciada en cualquier número de navegadores y dispositivos a la vez.",
+      "sessions_up_to": "Una cuenta puede tener la sesión iniciada en hasta {max} navegadores y dispositivos a la vez.",
+      "single_session_env_source": "Definido en el archivo de entorno ({name}={value}). Quítelo de allí para usar este interruptor."
     },
     "backup_tab": {
       "create_title": "Crear una copia de seguridad",
@@ -1772,7 +1772,7 @@
       "rdclient_bg_help": "Lo que se ve detrás de la lista de dispositivos. \"{inherit}\" usa el fondo de la consola.",
       "picture_kb": "Imagen, {kb} KB",
       "website_help": "Una dirección completa, por ejemplo https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Vista previa de la consola"
     },
     "joining": {
       "mode_note": "Qué dispositivos nuevos pueden unirse a este servidor, y cómo.",
@@ -2796,13 +2796,13 @@
     "add_direct_device": "Añadir un dispositivo",
     "group_dialog_intro": "Los miembros de un grupo comparten su acceso a la consola y los grupos de dispositivos que lo permiten. Añada personas en su ficha de usuario; permita el grupo en los ajustes de acceso de un grupo de dispositivos.",
     "group_name_hint": "Se muestra en la lista de usuarios, en la ficha de cada miembro y en los ajustes de acceso.",
-    "access_default_short": "Default",
+    "access_default_short": "Predeterminado",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "Definido para esta persona",
+    "access_own_group": "Definido para este grupo",
+    "access_own_user_limit": "Definido para esta persona. Límite del rol: {limit}",
+    "access_limit_only": "Límite del rol: {limit}",
+    "access_scope_link_joining": "Configuración › Unión"
   },
   "folders": {
     "title": "Carpetas",
@@ -5530,7 +5530,7 @@
     "danger_zone": "Zona de peligro",
     "name_hint": "Se muestra en la página de esta organización, en las listas y a sus miembros.",
     "slug_changed": "Los inicios de sesión que nombran la organización por su nombre corto necesitan el nuevo después de guardar.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Definido para esta organización."
   },
   "chat": {
     "e2e_enabled": "Cifrado de extremo a extremo",
@@ -6123,7 +6123,7 @@
     "sound_today": "Para quitar el sonido en las sesiones hoy, use una regla de acceso con Sonido desactivado en Dispositivos, o desactive Sonido en el acceso a la consola de una persona.",
     "open_access_rules": "Abrir reglas de acceso",
     "remove_group": "Eliminar todas las reglas de este grupo",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Ninguna app de NeoDesk aplica esto todavía."
   },
   "attestation": {
     "title": "Panel",
@@ -6999,8 +6999,8 @@
     "page_only_shows": "Esta página solo muestra los archivos de idioma; los textos se cambian en los archivos del servidor. Para cambiar el idioma que ve, abra",
     "page_own_link": "Su cuenta › Preferencias",
     "status_legend": "Idioma de referencia: los archivos con los que se comparan los demás. Necesita revisión: el archivo está marcado como aún no revisado por una persona.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Idioma de referencia: {names}. Todos los demás archivos se comparan con sus textos, y no se pueden eliminar.",
+    "status_review_legend": "Necesita revisión: el archivo está marcado como aún no revisado por una persona."
   },
   "resource_control": {
     "title": "Panel",
@@ -7752,7 +7752,7 @@
     "sum_guest_create": "crear enlaces de invitado",
     "sum_enrollment_manage": "gestionar la unión",
     "sum_enrollment_approve": "aprobar solicitudes de unión",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "Lo que puede hacer {role}"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -8758,7 +8758,7 @@
     "preview_title": "Vista previa",
     "preview_note": "Así muestra el cliente, aproximadamente, estos valores. La vista previa sigue al formulario mientras escribe.",
     "preview_button": "Botón de ejemplo",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Aún no hay nada guardado aquí: los clientes muestran los valores de abajo hasta que guarde los suyos."
   },
   "login_promo": {
     "slides": {

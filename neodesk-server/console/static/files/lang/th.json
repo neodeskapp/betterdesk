@@ -1376,8 +1376,8 @@
       "conn_no_effect_relay": "ไม่มีผล: ทุกเซสชันผ่านเซิร์ฟเวอร์รีเลย์",
       "conn_no_effect_operator": "มีผลอยู่แล้ว: เฉพาะบัญชีที่ได้รับอนุญาตให้เชื่อมต่ออุปกรณ์เท่านั้นที่เริ่มเซสชันได้ ครอบคลุมกฎนี้แล้ว",
       "conn_no_effect_signed_in": "ไม่มีผลตราบใดที่มีเพียงแอปที่ลงชื่อเข้าใช้แล้วเท่านั้นที่เริ่มเซสชันได้",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "พบโดยอัตโนมัติ",
+      "endpoint_auto_note": "ช่องที่เว้นว่างจะให้ไคลเอนต์ใช้ที่อยู่ที่พบโดยอัตโนมัติ ซึ่งแสดงอยู่ใต้ สิ่งที่ไคลเอนต์ได้รับตอนนี้"
     },
     "appearance": {
       "theme_note": "รูปลักษณ์เริ่มต้นสำหรับทุกคนที่ใช้คอนโซลนี้",
@@ -1561,10 +1561,10 @@
       "map_role_n": "บทบาทสำหรับกลุ่ม {n}",
       "map_add": "เพิ่มกลุ่ม",
       "pick_role": "เลือกบทบาท",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "การลงชื่อเข้าใช้ใหม่จะทำให้เบราว์เซอร์อื่นของบัญชีออกจากระบบ",
+      "sessions_any": "บัญชีหนึ่งลงชื่อเข้าใช้พร้อมกันได้ในเบราว์เซอร์และอุปกรณ์กี่เครื่องก็ได้",
+      "sessions_up_to": "บัญชีหนึ่งลงชื่อเข้าใช้พร้อมกันได้สูงสุด {max} เบราว์เซอร์และอุปกรณ์",
+      "single_session_env_source": "ตั้งค่าในไฟล์สภาพแวดล้อม ({name}={value}) ให้ลบออกที่นั่นเพื่อใช้สวิตช์นี้"
     },
     "backup_tab": {
       "create_title": "สร้างข้อมูลสำรอง",
@@ -1778,7 +1778,7 @@
       "rdclient_bg_help": "สิ่งที่แสดงอยู่หลังรายการอุปกรณ์ \"{inherit}\" ใช้พื้นหลังของคอนโซล",
       "picture_kb": "รูปภาพ {kb} KB",
       "website_help": "ที่อยู่เต็ม เช่น https://example.com",
-      "console_preview": "Console preview"
+      "console_preview": "ตัวอย่างแผงควบคุม"
     },
     "joining": {
       "mode_note": "อุปกรณ์ใหม่ใดเข้าร่วมเซิร์ฟเวอร์นี้ได้ และเข้าร่วมอย่างไร",
@@ -2802,13 +2802,13 @@
     "add_direct_device": "เพิ่มอุปกรณ์",
     "group_dialog_intro": "สมาชิกของกลุ่มใช้สิทธิ์เข้าถึงคอนโซลของกลุ่มและกลุ่มอุปกรณ์ที่อนุญาตกลุ่มนั้นร่วมกัน เพิ่มคนในแผ่นข้อมูลผู้ใช้ของเขา และอนุญาตกลุ่มในการตั้งค่าการเข้าถึงของกลุ่มอุปกรณ์",
     "group_name_hint": "แสดงในรายการผู้ใช้ ในแผ่นข้อมูลผู้ใช้ของสมาชิกแต่ละคน และในการตั้งค่าการเข้าถึง",
-    "access_default_short": "Default",
+    "access_default_short": "ค่าเริ่มต้น",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "ตั้งค่าไว้สำหรับบุคคลนี้",
+    "access_own_group": "ตั้งค่าไว้สำหรับกลุ่มนี้",
+    "access_own_user_limit": "ตั้งค่าไว้สำหรับบุคคลนี้ ขีดจำกัดของบทบาท: {limit}",
+    "access_limit_only": "ขีดจำกัดของบทบาท: {limit}",
+    "access_scope_link_joining": "การตั้งค่า › การเข้าร่วม"
   },
   "folders": {
     "title": "โฟลเดอร์",
@@ -5536,7 +5536,7 @@
     "danger_zone": "โซนอันตราย",
     "name_hint": "แสดงในหน้าขององค์กรนี้ ในรายการ และต่อสมาชิก",
     "slug_changed": "การลงชื่อเข้าใช้ที่ระบุองค์กรด้วยชื่อย่อจะต้องใช้ชื่อใหม่หลังจากบันทึก",
-    "policy_set": "Set for this organization."
+    "policy_set": "ตั้งค่าสำหรับองค์กรนี้แล้ว"
   },
   "chat": {
     "e2e_enabled": "เข้ารหัสตั้งแต่ต้นทางถึงปลายทาง",
@@ -6129,7 +6129,7 @@
     "sound_today": "หากต้องการปิดเสียงในเซสชันตั้งแต่วันนี้ ให้ใช้กฎการเข้าถึงที่ปิด เสียง ไว้ใน อุปกรณ์ หรือปิด เสียง ในสิทธิ์เข้าถึงคอนโซลของบุคคลนั้น",
     "open_access_rules": "เปิดกฎการเข้าถึง",
     "remove_group": "ลบกฎทั้งหมดของกลุ่มนี้",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "ยังไม่มีแอป NeoDesk ใดนำสิ่งนี้ไปใช้"
   },
   "attestation": {
     "title": "การรับรองอุปกรณ์",
@@ -7005,8 +7005,8 @@
     "page_only_shows": "หน้านี้แสดงเฉพาะไฟล์ภาษา ข้อความเปลี่ยนได้ในไฟล์บนเซิร์ฟเวอร์ หากต้องการเปลี่ยนภาษาที่คุณเห็น ให้เปิด",
     "page_own_link": "บัญชีของคุณ › Preferences",
     "status_legend": "ภาษาอ้างอิง: ไฟล์ที่ใช้เปรียบเทียบไฟล์อื่น ต้องตรวจทาน: ไฟล์ถูกทำเครื่องหมายว่ายังไม่มีคนตรวจ",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "ภาษาอ้างอิง: {names} ไฟล์อื่นทุกไฟล์จะตรวจเทียบกับข้อความของภาษาเหล่านี้ และลบภาษาเหล่านี้ไม่ได้",
+    "status_review_legend": "ต้องตรวจทาน: ไฟล์ถูกทำเครื่องหมายว่ายังไม่มีคนตรวจ"
   },
   "resource_control": {
     "title": "การควบคุมทรัพยากร",
@@ -7758,7 +7758,7 @@
     "sum_guest_create": "สร้างลิงก์ผู้เยี่ยมชม",
     "sum_enrollment_manage": "จัดการการเข้าร่วม",
     "sum_enrollment_approve": "อนุมัติคำขอเข้าร่วม",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "สิ่งที่ {role} ทำได้"
   },
   "notifications": {
     "title": "การแจ้งเตือน",
@@ -8764,7 +8764,7 @@
     "preview_title": "ตัวอย่าง",
     "preview_note": "ไคลเอนต์แสดงค่าเหล่านี้โดยประมาณแบบนี้ ตัวอย่างจะเปลี่ยนตามที่คุณพิมพ์ในแบบฟอร์ม",
     "preview_button": "ปุ่มตัวอย่าง",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "ยังไม่มีอะไรบันทึกไว้ที่นี่ ไคลเอนต์จะแสดงค่าด้านล่างจนกว่าคุณจะบันทึกค่าของคุณเอง"
   },
   "login_promo": {
     "slides": {

@@ -1370,8 +1370,8 @@
       "conn_no_effect_relay": "Heeft geen effect: elke sessie loopt via de relayserver.",
       "conn_no_effect_operator": "Al van kracht: Alleen accounts die met apparaten mogen verbinden, kunnen sessies starten omvat deze regel.",
       "conn_no_effect_signed_in": "Heeft geen effect zolang alleen ingelogde apps sessies kunnen starten.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Automatisch gevonden",
+      "endpoint_auto_note": "Een leeg veld geeft clients het automatisch gevonden adres, te zien onder Wat clients nu krijgen."
     },
     "appearance": {
       "theme_note": "De standaardweergave voor iedereen die deze console gebruikt.",
@@ -1555,10 +1555,10 @@
       "map_role_n": "Rol voor groep {n}",
       "map_add": "Groep toevoegen",
       "pick_role": "Kies een rol",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "Een nieuwe aanmelding meldt de andere browser van het account af.",
+      "sessions_any": "Een account kan tegelijk op een onbeperkt aantal browsers en apparaten aangemeld zijn.",
+      "sessions_up_to": "Een account kan tegelijk op maximaal {max} browsers en apparaten aangemeld zijn.",
+      "single_session_env_source": "Ingesteld in het omgevingsbestand ({name}={value}). Verwijder het daar om deze schakelaar te gebruiken."
     },
     "backup_tab": {
       "create_title": "Een back-up maken",
@@ -1772,7 +1772,7 @@
       "rdclient_bg_help": "Wat achter de apparatenlijst te zien is. \"{inherit}\" gebruikt de achtergrond van de console.",
       "picture_kb": "Afbeelding, {kb} KB",
       "website_help": "Een volledig adres, bijvoorbeeld https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Voorbeeld van de console"
     },
     "joining": {
       "mode_note": "Welke nieuwe apparaten aan deze server mogen deelnemen, en hoe.",
@@ -2796,13 +2796,13 @@
     "add_direct_device": "Apparaat toevoegen",
     "group_dialog_intro": "Leden van een groep delen de consoletoegang ervan en de apparaatgroepen die de groep toestaan. Voeg mensen toe in hun gebruikersblad; sta de groep toe in de toegangsinstellingen van een apparaatgroep.",
     "group_name_hint": "Getoond in de gebruikerslijst, in het gebruikersblad van elk lid en in de toegangsinstellingen.",
-    "access_default_short": "Default",
+    "access_default_short": "Standaard",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "Ingesteld voor deze persoon",
+    "access_own_group": "Ingesteld voor deze groep",
+    "access_own_user_limit": "Ingesteld voor deze persoon. Grens van de rol: {limit}",
+    "access_limit_only": "Grens van de rol: {limit}",
+    "access_scope_link_joining": "Instellingen › Deelname"
   },
   "folders": {
     "title": "Mappen",
@@ -5530,7 +5530,7 @@
     "danger_zone": "Gevarenzone",
     "name_hint": "Getoond op de pagina van deze organisatie, in lijsten en aan de leden.",
     "slug_changed": "Inlogs die de organisatie met haar korte naam aanduiden, hebben na het opslaan de nieuwe nodig.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Ingesteld voor deze organisatie."
   },
   "chat": {
     "e2e_enabled": "End-to-end versleuteld",
@@ -6123,7 +6123,7 @@
     "sound_today": "Om het geluid in sessies nu al uit te zetten, gebruikt u een toegangsregel met Geluid uit onder Apparaten, of zet u Geluid uit in iemands consoletoegang.",
     "open_access_rules": "Toegangsregels openen",
     "remove_group": "Alle regels van deze groep verwijderen",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Nog geen NeoDesk-app past dit toe."
   },
   "attestation": {
     "title": "Apparaatattestatie",
@@ -6999,8 +6999,8 @@
     "page_only_shows": "Deze pagina toont alleen de taalbestanden; teksten wijzigt u in de bestanden op de server. Om de taal te wijzigen die u ziet, opent u",
     "page_own_link": "Uw account › Voorkeuren",
     "status_legend": "Referentietaal: de bestanden waarmee de andere worden vergeleken. Controle nodig: het bestand is gemarkeerd als nog niet door een persoon nagekeken.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Referentietaal: {names}. Elk ander bestand wordt met hun teksten vergeleken, en ze kunnen niet worden verwijderd.",
+    "status_review_legend": "Controle nodig: het bestand is gemarkeerd als nog niet door een persoon nagekeken."
   },
   "resource_control": {
     "title": "Resourcebeheer",
@@ -7752,7 +7752,7 @@
     "sum_guest_create": "gastlinks maken",
     "sum_enrollment_manage": "deelname beheren",
     "sum_enrollment_approve": "deelnameverzoeken goedkeuren",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "Wat {role} kan"
   },
   "notifications": {
     "title": "Meldingen",
@@ -8758,7 +8758,7 @@
     "preview_title": "Voorbeeld",
     "preview_note": "Ongeveer zo toont de client deze waarden. Het voorbeeld volgt het formulier terwijl u typt.",
     "preview_button": "Voorbeeldknop",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Hier is nog niets opgeslagen: clients tonen de waarden hieronder tot u uw eigen waarden opslaat."
   },
   "login_promo": {
     "slides": {

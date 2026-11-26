@@ -1376,8 +1376,8 @@
       "conn_no_effect_relay": "Không có tác dụng: mọi phiên đều đi qua máy chủ chuyển tiếp.",
       "conn_no_effect_operator": "Đã có hiệu lực: Chỉ tài khoản được phép kết nối tới thiết bị mới bắt đầu được phiên đã bao gồm quy tắc này.",
       "conn_no_effect_signed_in": "Không có tác dụng khi chỉ ứng dụng đã đăng nhập mới bắt đầu được phiên.",
-      "endpoint_auto_short": "Found automatically",
-      "endpoint_auto_note": "An empty field gives clients the address found automatically, shown under What clients get now."
+      "endpoint_auto_short": "Tìm tự động",
+      "endpoint_auto_note": "Để trống thì máy khách nhận địa chỉ tìm tự động, hiển thị trong Những gì máy khách nhận lúc này."
     },
     "appearance": {
       "theme_note": "Giao diện mặc định cho mọi người dùng bảng điều khiển này.",
@@ -1561,10 +1561,10 @@
       "map_role_n": "Vai trò cho nhóm {n}",
       "map_add": "Thêm nhóm",
       "pick_role": "Chọn vai trò",
-      "single_session_on": "A new sign-in signs out the account's other browser.",
-      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
-      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
-      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
+      "single_session_on": "Lần đăng nhập mới sẽ đăng xuất trình duyệt kia của tài khoản.",
+      "sessions_any": "Một tài khoản có thể đăng nhập cùng lúc trên bao nhiêu trình duyệt và thiết bị cũng được.",
+      "sessions_up_to": "Một tài khoản có thể đăng nhập cùng lúc trên tối đa {max} trình duyệt và thiết bị.",
+      "single_session_env_source": "Đặt trong tệp môi trường ({name}={value}). Hãy xóa ở đó để dùng công tắc này."
     },
     "backup_tab": {
       "create_title": "Tạo bản sao lưu",
@@ -1778,7 +1778,7 @@
       "rdclient_bg_help": "Những gì hiện phía sau danh sách thiết bị. \"{inherit}\" dùng hình nền của bảng điều khiển.",
       "picture_kb": "Hình ảnh, {kb} KB",
       "website_help": "Địa chỉ đầy đủ, ví dụ https://example.com.",
-      "console_preview": "Console preview"
+      "console_preview": "Xem trước bảng điều khiển"
     },
     "joining": {
       "mode_note": "Thiết bị mới nào được tham gia máy chủ này, và bằng cách nào.",
@@ -2802,13 +2802,13 @@
     "add_direct_device": "Thêm thiết bị",
     "group_dialog_intro": "Thành viên của nhóm dùng chung quyền truy cập bảng điều khiển của nhóm và các nhóm thiết bị cho phép nhóm đó. Thêm người trong thẻ người dùng của họ; cho phép nhóm trong cài đặt truy cập của nhóm thiết bị.",
     "group_name_hint": "Hiển thị trong danh sách người dùng, trong thẻ người dùng của mỗi thành viên và trong cài đặt truy cập.",
-    "access_default_short": "Default",
+    "access_default_short": "Mặc định",
     "access_default_plain": "{label}: {level}",
-    "access_own_user": "Set for this person",
-    "access_own_group": "Set for this group",
-    "access_own_user_limit": "Set for this person. Role limit: {limit}",
-    "access_limit_only": "Role limit: {limit}",
-    "access_scope_link_joining": "Settings › Joining"
+    "access_own_user": "Đặt cho người này",
+    "access_own_group": "Đặt cho nhóm này",
+    "access_own_user_limit": "Đặt cho người này. Giới hạn của vai trò: {limit}",
+    "access_limit_only": "Giới hạn của vai trò: {limit}",
+    "access_scope_link_joining": "Cài đặt › Tham gia"
   },
   "folders": {
     "title": "Thư mục",
@@ -5536,7 +5536,7 @@
     "danger_zone": "Vùng nguy hiểm",
     "name_hint": "Hiển thị trên trang của tổ chức này, trong danh sách và cho thành viên.",
     "slug_changed": "Các lần đăng nhập gọi tổ chức bằng tên ngắn sẽ cần tên mới sau khi bạn lưu.",
-    "policy_set": "Set for this organization."
+    "policy_set": "Đặt cho tổ chức này."
   },
   "chat": {
     "e2e_enabled": "Mã hóa đầu cuối",
@@ -6129,7 +6129,7 @@
     "sound_today": "Để tắt âm thanh trong phiên ngay hôm nay, dùng quy tắc truy cập có Âm thanh tắt trong Thiết bị, hoặc tắt Âm thanh trong quyền truy cập bảng điều khiển của một người.",
     "open_access_rules": "Mở quy tắc truy cập",
     "remove_group": "Xóa mọi quy tắc của nhóm này",
-    "row_not_applied": "No NeoDesk app applies this yet."
+    "row_not_applied": "Chưa ứng dụng NeoDesk nào áp dụng mục này."
   },
   "attestation": {
     "title": "Chứng thực thiết bị",
@@ -7005,8 +7005,8 @@
     "page_only_shows": "Trang này chỉ hiển thị các tệp ngôn ngữ; văn bản được đổi trong các tệp trên máy chủ. Để đổi ngôn ngữ bạn thấy, mở",
     "page_own_link": "Tài khoản của bạn › Preferences",
     "status_legend": "Ngôn ngữ tham chiếu: các tệp mà những tệp khác được so sánh với. Cần xem lại: tệp được đánh dấu là chưa được người kiểm tra.",
-    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
-    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
+    "reference_legend": "Ngôn ngữ tham chiếu: {names}. Mọi tệp khác được kiểm tra theo văn bản của chúng, và không thể xóa chúng.",
+    "status_review_legend": "Cần xem lại: tệp được đánh dấu là chưa được người kiểm tra."
   },
   "resource_control": {
     "title": "Kiểm soát tài nguyên",
@@ -7758,7 +7758,7 @@
     "sum_guest_create": "tạo liên kết khách",
     "sum_enrollment_manage": "quản lý việc tham gia",
     "sum_enrollment_approve": "phê duyệt yêu cầu tham gia",
-    "summary_title_named": "What {role} can do"
+    "summary_title_named": "{role} làm được gì"
   },
   "notifications": {
     "title": "Thông báo",
@@ -8764,7 +8764,7 @@
     "preview_title": "Xem trước",
     "preview_note": "Đại khái ứng dụng hiển thị các giá trị này như sau. Bản xem trước thay đổi theo những gì bạn nhập.",
     "preview_button": "Nút mẫu",
-    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
+    "defaults_in_use": "Chưa lưu gì ở đây: máy khách hiển thị các giá trị bên dưới cho đến khi bạn lưu giá trị của mình."
   },
   "login_promo": {
     "slides": {
