@@ -1,10 +1,17 @@
 /**
- * Backup tab: what a chosen file is, which parts can be restored, and when
+ * Server › Backups: what a backup holds, the page's settings as one draft
+ * (the schedule and "Keep update backups"), the restore's steps, and when
  * the next scheduled backup runs (old settings.js initRestoreSection,
  * renderBackupSide). No DOM.
  */
 
-import type { BackupPart, BackupStats, Schedule, ScheduleStatus } from '#lib/api/settings-system.ts';
+import type {
+	BackupPart,
+	BackupStats,
+	Schedule,
+	ScheduleInput,
+	ScheduleStatus
+} from '#lib/api/settings-system.ts';
 
 type Translate = (key: string, params?: Record<string, string | number>) => string;
 
@@ -79,6 +86,26 @@ export function partState(
 	const key = `settings.backup_tab.reason_${part.reason || 'missing'}`;
 	const reason = t(key);
 	return { included: false, reason: reason === key ? t('settings.backup_tab.reason_missing') : reason };
+}
+
+export interface PartRow {
+	id: string;
+	label: string;
+	included: boolean;
+	/** Why it is left out; '' when included */
+	reason: string;
+	secret: boolean;
+}
+
+/** Every part the server names, in its order, for the summary "What a backup holds now" */
+export function partRows(stats: BackupStats | null | undefined, t: Translate): PartRow[] {
+	return (stats?.parts ?? []).map((p) => ({
+		id: p.id,
+		label: label(t, 'part', p.id),
+		included: !!p.included,
+		reason: partState(stats, p.id, t)?.reason ?? '',
+		secret: !!p.secret
+	}));
 }
 
 export type FileKind = '' | 'archive' | 'json' | 'invalid';
@@ -211,18 +238,26 @@ export function restoreNeedsRestart(kind: FileKind, picked: ReadonlySet<RestoreP
 export type NextBackup = { kind: 'unknown' } | { kind: 'off' } | { kind: 'soon' } | { kind: 'at'; at: Date };
 
 /**
- * When the next scheduled backup runs. The server checks once a minute
- * whether one is due, so anything due within a minute is "soon".
+ * When the next scheduled backup runs: the time the server names
+ * (`serverNext`, which knows a time of day), else counted from the last
+ * attempt as a server without that answer does. The server checks once a
+ * minute whether one is due, so anything due within a minute is "soon".
  */
 export function nextBackup(
 	schedule: Schedule | null | undefined,
 	status: ScheduleStatus | null | undefined,
-	now: number = Date.now()
+	now: number = Date.now(),
+	serverNext?: string | null
 ): NextBackup {
 	if (!schedule) return { kind: 'unknown' };
 	if (!schedule.enabled) return { kind: 'off' };
+	const named = Date.parse(serverNext ?? '');
 	const last = Date.parse(status?.lastAttemptAt ?? '');
-	const due = Number.isFinite(last) ? last + (Number(schedule.intervalHours) || 24) * 3600 * 1000 : now;
+	const due = Number.isFinite(named)
+		? named
+		: Number.isFinite(last)
+			? last + (Number(schedule.intervalHours) || 24) * 3600 * 1000
+			: now;
 	return due <= now + 60 * 1000 ? { kind: 'soon' } : { kind: 'at', at: new Date(due) };
 }
 
@@ -234,3 +269,137 @@ export const INTERVALS = [
 	{ value: 24, label: 'backup.schedule_interval_24h' },
 	{ value: 168, label: 'backup.schedule_interval_weekly' }
 ] as const;
+
+// ── The page's settings as one draft ──
+
+/** "Keep all" or a number, for "Keep update backups" (the server stores 0 for all) */
+export interface KeepValue {
+	all: boolean;
+	count: number;
+}
+
+/** The number shown when "Keep all update backups" is switched off for the first time */
+export const UPDATE_KEEP_DEFAULT = 5;
+
+export function updateKeepFromStored(n: number | null | undefined): KeepValue {
+	const count = Number(n);
+	return Number.isInteger(count) && count > 0
+		? { all: false, count }
+		: { all: true, count: UPDATE_KEEP_DEFAULT };
+}
+
+export function updateKeepToStored(k: KeepValue): number {
+	return k.all ? 0 : k.count;
+}
+
+/** Every setting on the page, flat, for the SettingsDraft */
+export interface BackupValues {
+	[field: string]: unknown;
+	enabled: boolean;
+	intervalHours: number;
+	timeOfDay: string;
+	retentionCount: number | null;
+	destinationType: 'local' | 'path';
+	destinationPath: string;
+	updateKeep: KeepValue;
+}
+
+export function backupValues(
+	schedule: (Partial<Schedule> & { timeOfDay?: string }) | null | undefined,
+	updateKeep: number | null | undefined
+): BackupValues {
+	return {
+		enabled: !!schedule?.enabled,
+		intervalHours: Number(schedule?.intervalHours) || 24,
+		timeOfDay: schedule?.timeOfDay ?? '',
+		retentionCount: Number(schedule?.retentionCount) || 7,
+		destinationType: schedule?.destinationType === 'path' ? 'path' : 'local',
+		destinationPath: schedule?.destinationPath ?? '',
+		updateKeep: updateKeepFromStored(updateKeep)
+	};
+}
+
+/** The fields the schedule's save carries */
+export const SCHEDULE_FIELDS = [
+	'enabled',
+	'intervalHours',
+	'timeOfDay',
+	'retentionCount',
+	'destinationType',
+	'destinationPath'
+] as const;
+
+/** Which of the two saves the changed fields need */
+export function savePlan(changed: readonly string[]): { schedule: boolean; updateKeep: boolean } {
+	return {
+		schedule: changed.some((f) => (SCHEDULE_FIELDS as readonly string[]).includes(f)),
+		updateKeep: changed.includes('updateKeep')
+	};
+}
+
+/** Daily, weekly and every other whole number of days can run at a time of day */
+export function takesTimeOfDay(intervalHours: number): boolean {
+	return Number.isInteger(intervalHours) && intervalHours > 0 && intervalHours % 24 === 0;
+}
+
+/** A new interval; an interval of hours has no time of day */
+export function withInterval(
+	timeOfDay: string,
+	intervalHours: number
+): { intervalHours: number; timeOfDay: string } {
+	return { intervalHours, timeOfDay: takesTimeOfDay(intervalHours) ? timeOfDay : '' };
+}
+
+const CLOCK = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/** The times of day offered: every full hour, and a stored time between them */
+export function timeOfDayOptions(current: string): string[] {
+	const hours = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, '0')}:00`);
+	if (CLOCK.test(current) && !hours.includes(current)) hours.push(current);
+	return hours.sort();
+}
+
+export function scheduleBody(v: BackupValues): ScheduleInput {
+	return {
+		enabled: v.enabled,
+		intervalHours: v.intervalHours,
+		timeOfDay: takesTimeOfDay(v.intervalHours) ? v.timeOfDay : '',
+		retentionCount: Number(v.retentionCount),
+		destinationType: v.destinationType,
+		destinationPath: v.destinationPath
+	};
+}
+
+type Say = (key: string, fallback: string, params?: Record<string, string | number>) => string;
+
+const whole = (n: unknown, min: number, max: number): boolean =>
+	typeof n === 'number' && Number.isInteger(n) && n >= min && n <= max;
+
+export type BackupErrors = Partial<Record<'retentionCount' | 'destinationPath' | 'updateKeep', string>>;
+
+/** Why a value is refused, by field; a schedule that is off is not checked */
+export function backupErrors(v: BackupValues, say: Say): BackupErrors {
+	const out: BackupErrors = {};
+	if (v.enabled && !whole(v.retentionCount, 1, 365))
+		out.retentionCount = say('settings.backup_tab.retention_error', 'Enter a whole number from 1 to 365.');
+	if (v.enabled && v.destinationType === 'path' && !v.destinationPath.trim())
+		out.destinationPath = say('backups_page.path_required', 'Enter the folder on the server.');
+	if (!v.updateKeep.all && !whole(v.updateKeep.count, 1, 1000))
+		out.updateKeep = say('backups_page.update_keep_error', 'Enter a whole number from 1 to 1000.');
+	return out;
+}
+
+/** How many update backups "Delete older update backups now" removes, with the saved number */
+export function pruneCount(total: number, keep: KeepValue): number {
+	return keep.all ? 0 : Math.max(0, total - keep.count);
+}
+
+// ── Restore in three steps ──
+
+export type RestoreStep = 'file' | 'parts' | 'confirm';
+
+/** 1 choose a file, 2 see what is in it and pick, 3 confirm (the only red step) */
+export function restoreStep(kind: FileKind, confirming: boolean): RestoreStep {
+	if (kind !== 'archive' && kind !== 'json') return 'file';
+	return confirming ? 'confirm' : 'parts';
+}

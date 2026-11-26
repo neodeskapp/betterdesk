@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 import * as v from 'valibot';
 
 import { BackupStats } from '../../../src/lib/api/settings-system.ts';
-import { createNote, partState, securityWarning } from '../../../src/lib/settings-b/backup.ts';
+import { createNote, partRows, partState, securityWarning } from '../../../src/lib/settings-b/backup.ts';
 
 /** Keys as <key>, parameters filled in: the text built from the parts is visible */
 const t = (key: string, params?: Record<string, string | number>) => {
@@ -92,5 +92,19 @@ describe('backup contents', () => {
 		expect(partState(docker, 'server_keys', t)).toEqual({ included: true, reason: '' });
 		expect(partState(docker, 'no_such_part', t)).toBeUndefined();
 		expect(partState(null, 'env', t)).toBeUndefined();
+	});
+
+	test('the summary lists every part once: what is in, and what is left out with why', () => {
+		const rows = partRows(docker, t);
+		expect(rows.map((r) => r.id)).toEqual(docker.parts.map((p) => p.id));
+		expect(rows.find((r) => r.id === 'env')).toEqual({
+			id: 'env',
+			label: part('env'),
+			included: false,
+			reason: '<settings.backup_tab.reason_docker>',
+			secret: true
+		});
+		expect(rows.find((r) => r.id === 'uploads')).toMatchObject({ included: true, reason: '' });
+		expect(partRows(null, t)).toEqual([]);
 	});
 });

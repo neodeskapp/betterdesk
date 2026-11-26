@@ -1024,57 +1024,65 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	[
 		'server-backups',
 		'backup-create',
-		'settings.backup_tab.create_title',
+		'backups_page.make_title',
 		'',
-		['settings.backup_tab.create_note_plain'],
+		['backups_page.make_note', 'backups_page.download_title'],
 		'server.config'
 	],
 	[
 		'server-backups',
 		'scheduled-backup-panel',
-		'backup.schedule_title',
+		'backups_page.schedule_title',
 		'',
-		['settings.backup_tab.schedule_note', 'settings.backup_tab.schedule_enabled_hint'],
+		['backups_page.schedule_note'],
 		'server.config'
 	],
 	[
 		'server-backups',
 		'scheduled-backup-enabled',
-		'backup.schedule_enabled',
-		'backup.schedule_title',
-		['settings.backup_tab.schedule_enabled_hint'],
+		'backups_page.enabled',
+		'backups_page.schedule_title',
+		['backups_page.schedule_note'],
 		'server.config'
 	],
 	[
 		'server-backups',
 		'scheduled-backup-interval',
-		'backup.schedule_interval',
-		'backup.schedule_title',
-		[],
+		'backups_page.how_often',
+		'backups_page.schedule_title',
+		['backups_page.how_often_help'],
+		'server.config'
+	],
+	[
+		'server-backups',
+		'scheduled-backup-time',
+		'backups_page.time_of_day',
+		'backups_page.schedule_title',
+		['backups_page.how_often_help'],
 		'server.config'
 	],
 	[
 		'server-backups',
 		'scheduled-backup-retention',
 		'backup.schedule_retention',
-		'backup.schedule_title',
-		['settings.backup_tab.retention_hint'],
+		'backups_page.schedule_title',
+		['backups_page.keep_help'],
 		'server.config'
 	],
 	[
 		'server-backups',
 		'scheduled-backup-destination-type',
-		'backup.schedule_destination',
-		'backup.schedule_title',
-		[],
+		'backups_page.where',
+		'backups_page.schedule_title',
+		['backups_page.where_help', 'backups_page.test_folder'],
 		'server.config'
 	],
 	[
 		'server-backups',
 		'scheduled-backup-path',
-		'backup.schedule_destination_path_label',
-		'backup.schedule_title',
-		['backup.schedule_destination_path_hint'],
+		'backups_page.folder',
+		'backups_page.schedule_title',
+		['backups_page.folder_help'],
 		'server.config'
 	],
 	[
@@ -1082,7 +1090,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'backup-restore',
 		'settings.backup_tab.restore_title',
 		'',
-		['settings.backup_tab.restore_note', 'settings.backup_tab.restore_file_hint'],
+		['backups_page.restore_note', 'settings.backup_tab.restore_file_hint'],
 		'server.config'
 	],
 	[
@@ -1147,8 +1155,15 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	],
 	['server-backups', 'backup-stat-backend', 'settings.backup_tab.stat_backend', '', [], 'server.config'],
 	['server-backups', 'backup-stat-database', 'backup.stat_database', '', [], 'server.config'],
-	['server-backups', 'backup-stat-keys', 'backup.stat_keys', '', [], 'server.config'],
-	['server-backups', 'backup-stat-env', 'backup.stat_env', '', [], 'server.config'],
+	[
+		'server-backups',
+		'backup-part-server_keys',
+		'backup.stat_keys',
+		'backups_page.holds_title',
+		[],
+		'server.config'
+	],
+	['server-backups', 'backup-part-env', 'backup.stat_env', 'backups_page.holds_title', [], 'server.config'],
 	['server-backups', 'backup-stat-uploads', 'settings.backup_tab.stat_uploads', '', [], 'server.config'],
 	[
 		'server-updates',
@@ -1161,9 +1176,9 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	[
 		'server-backups',
 		'update-backups-panel',
-		'updates.create_backup',
-		'updates.update_available',
-		[],
+		'backups_page.updates_title',
+		'',
+		['settings.updates_tab.backups_note', 'updates.backups_title'],
 		'server.config'
 	],
 	[
@@ -1202,8 +1217,16 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'server-backups',
 		'backup-retention-input',
 		'settings.updates_tab.retention_label',
-		'',
-		['updates.retention_hint'],
+		'backups_page.updates_title',
+		['backups_page.update_keep_help', 'backups_page.keep_all_updates'],
+		'server.config'
+	],
+	[
+		'server-backups',
+		'backup-danger',
+		'backups_page.prune_title',
+		'backups_page.danger_title',
+		['backups_page.prune_action'],
 		'server.config'
 	],
 	['server-updates', 'update-local-version', 'updates.current_version', '', [], 'server.config'],
@@ -1512,7 +1535,7 @@ export const TAB_IDS: Readonly<Record<string, string>> = {
 	policies:
 		'pol-connection-idle-lock-timeout pol-connection-max-session-duration pol-connection-mode pol-connection-wallpaper pol-features-allow-audio pol-features-allow-clipboard pol-features-allow-file-transfer pol-features-allow-recording pol-network-allowed-relay-servers pol-network-block-direct-p2p pol-network-ip-allowlist pol-security-allowed-operators pol-security-password-max-age-days pol-security-password-min-length pol-security-password-require-special pol-security-require-2fa pol-update-auto-update pol-update-channel',
 	'server-backups':
-		'backup-contents-title backup-create backup-create-title backup-download-btn backup-download-status backup-prune-now backup-restore backup-restore-title backup-retention-input backup-retention-save backup-smb-domain backup-smb-host backup-smb-mount-path backup-smb-password backup-smb-share backup-smb-status backup-smb-test-btn backup-smb-username backup-stat-backend backup-stat-database backup-stat-env backup-stat-folders backup-stat-groups backup-stat-keys backup-stat-settings backup-stat-strategies backup-stat-uploads backup-stat-users backup-stats backup-summary restore-actions restore-database restore-env restore-file-hint restore-file-input restore-godb restore-json-note restore-options restore-options-hint restore-result restore-secrets restore-start-btn restore-status restore-uploads scheduled-backup-destination-type scheduled-backup-details scheduled-backup-enabled scheduled-backup-form scheduled-backup-interval scheduled-backup-panel scheduled-backup-path scheduled-backup-path-group scheduled-backup-retention scheduled-backup-run-btn scheduled-backup-smb-form scheduled-backup-smb-panel scheduled-backup-status scheduled-backup-test-btn scheduled-backup-title smb-title update-backups-list update-backups-panel',
+		'backup-contents-title backup-create backup-create-title backup-danger backup-download-btn backup-download-status backup-part-env backup-part-server_keys backup-prune-now backup-restore backup-restore-title backup-retention-all backup-retention-count backup-retention-input backup-retention-save backup-side-title backup-smb-domain backup-smb-host backup-smb-mount-path backup-smb-password backup-smb-share backup-smb-status backup-smb-test-btn backup-smb-username backup-stat-backend backup-stat-database backup-stat-env backup-stat-folders backup-stat-groups backup-stat-keys backup-stat-settings backup-stat-strategies backup-stat-uploads backup-stat-users backup-stats backup-summary restore-actions restore-database restore-env restore-file-hint restore-file-input restore-godb restore-json-note restore-options restore-options-hint restore-result restore-secrets restore-start-btn restore-status restore-uploads scheduled-backup-destination-type scheduled-backup-details scheduled-backup-enabled scheduled-backup-form scheduled-backup-interval scheduled-backup-panel scheduled-backup-path scheduled-backup-path-group scheduled-backup-retention scheduled-backup-run-btn scheduled-backup-smb-form scheduled-backup-smb-panel scheduled-backup-status scheduled-backup-test-btn scheduled-backup-time scheduled-backup-title smb-title update-backups-list update-backups-panel',
 	'server-updates':
 		'update-alerts update-available-heading update-backup-toggle update-changelog update-channel-active-badge update-channel-branch update-channel-development update-channel-docker-hint update-channel-effect update-channel-panel update-channel-select update-channel-stable update-channel-title update-check-btn update-details-section update-docker-commands update-docker-desc update-docker-images update-docker-info update-docker-install-note update-files-summary update-install-blocked-hint update-install-btn update-local-version update-progress update-progress-fill update-progress-text update-rebuild-server-btn update-remote-version update-stale-detail update-stale-warning update-status-badge update-status-desc update-status-headline update-status-row updates-side-title',
 	permissions: PERMISSION_ROWS.map((r) => r[1]).join(' '),

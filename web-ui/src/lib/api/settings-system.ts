@@ -67,7 +67,9 @@ export const Schedule = v.looseObject({
 		v.optional(v.nullable(v.string())),
 		v.transform((d): 'local' | 'path' => (d === 'path' ? 'path' : 'local'))
 	),
-	destinationPath: Text
+	destinationPath: Text,
+	/** "02:00": a daily or weekly backup runs at this time in the server's zone; absent: counts from the last one */
+	timeOfDay: Text
 });
 export type Schedule = v.InferOutput<typeof Schedule>;
 
@@ -82,7 +84,9 @@ export type ScheduleStatus = v.InferOutput<typeof ScheduleStatus>;
 const ScheduleInfo = wrapped(
 	v.looseObject({
 		schedule: v.optional(v.nullable(Schedule)),
-		status: v.optional(v.nullable(ScheduleStatus))
+		status: v.optional(v.nullable(ScheduleStatus)),
+		/** When the next scheduled backup runs (null while off) and the server's time zone */
+		next: v.optional(v.nullable(v.looseObject({ at: NullableText, timeZone: Text })))
 	})
 );
 
@@ -93,6 +97,8 @@ export function getBackupSchedule(signal?: AbortSignal) {
 export interface ScheduleInput {
 	enabled: boolean;
 	intervalHours: number;
+	/** "HH:MM" for daily and weekly backups; '' counts from the last backup */
+	timeOfDay: string;
 	retentionCount: number;
 	destinationType: 'local' | 'path';
 	destinationPath: string;
