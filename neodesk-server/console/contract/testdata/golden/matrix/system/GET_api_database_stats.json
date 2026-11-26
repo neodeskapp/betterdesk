@@ -142,7 +142,19 @@
       },
       {
        "count": 0,
+       "name": "account_lifecycle"
+      },
+      {
+       "count": 0,
        "name": "account_lockouts"
+      },
+      {
+       "count": 0,
+       "name": "account_profile"
+      },
+      {
+       "count": 0,
+       "name": "account_security"
       },
       {
        "count": 0,
@@ -350,6 +362,10 @@
       },
       {
        "count": 0,
+       "name": "email_changes"
+      },
+      {
+       "count": 0,
        "name": "email_notification_log"
       },
       {
@@ -363,6 +379,10 @@
       {
        "count": 0,
        "name": "id_change_history"
+      },
+      {
+       "count": 0,
+       "name": "known_browsers"
       },
       {
        "count": 0,

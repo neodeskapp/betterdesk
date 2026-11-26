@@ -81,6 +81,7 @@
       "phone": "",
       "role": "guest_issuer",
       "role_display": "",
+      "time_zone": "",
       "username": "e2e_guest_issuer"
      },
      "success": true
@@ -127,6 +128,7 @@
       "phone": "",
       "role": "viewer",
       "role_display": "",
+      "time_zone": "",
       "username": "e2e_viewer"
      },
      "success": true
@@ -173,6 +175,7 @@
       "phone": "",
       "role": "operator",
       "role_display": "",
+      "time_zone": "",
       "username": "e2e_operator"
      },
      "success": true
@@ -219,6 +222,7 @@
       "phone": "",
       "role": "global_admin",
       "role_display": "",
+      "time_zone": "",
       "username": "e2e_global_admin"
      },
      "success": true
@@ -265,6 +269,7 @@
       "phone": "",
       "role": "server_admin",
       "role_display": "",
+      "time_zone": "",
       "username": "e2e_server_admin"
      },
      "success": true
@@ -311,6 +316,7 @@
       "phone": "",
       "role": "super_admin",
       "role_display": "",
+      "time_zone": "",
       "username": "e2e_super_admin"
      },
      "success": true
@@ -357,6 +363,7 @@
       "phone": "",
       "role": "admin",
       "role_display": "",
+      "time_zone": "",
       "username": "e2e_admin"
      },
      "success": true

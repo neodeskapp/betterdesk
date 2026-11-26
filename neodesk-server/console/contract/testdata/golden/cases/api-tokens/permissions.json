@@ -163,6 +163,8 @@
        "user.create",
        "user.delete",
        "user.edit",
+       "user.impersonate",
+       "user.security",
        "user.view"
       ],
       "permissions": [
@@ -183,6 +185,7 @@
        "user.create",
        "user.edit",
        "user.delete",
+       "user.security",
        "org.create",
        "org.edit",
        "org.delete",
@@ -300,6 +303,8 @@
        "user.create",
        "user.delete",
        "user.edit",
+       "user.impersonate",
+       "user.security",
        "user.view"
       ],
       "permissions": [
@@ -404,6 +409,8 @@
        "user.create",
        "user.delete",
        "user.edit",
+       "user.impersonate",
+       "user.security",
        "user.view"
       ],
       "permissions": [
@@ -426,6 +433,8 @@
        "user.create",
        "user.edit",
        "user.delete",
+       "user.security",
+       "user.impersonate",
        "server.config",
        "server.keys",
        "server.attestation",
