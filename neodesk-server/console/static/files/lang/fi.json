@@ -7004,7 +7004,9 @@
     "page_purpose": "How complete each translation of the console is, and every text next to the English one.",
     "page_only_shows": "This page only shows the language files; texts are changed in the files on the server. To change the language you see, open",
     "page_own_link": "Your account › Preferences",
-    "status_legend": "Reference language: the files the others are compared with. Needs review: the file is marked as not yet checked by a person."
+    "status_legend": "Reference language: the files the others are compared with. Needs review: the file is marked as not yet checked by a person.",
+    "reference_legend": "Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+    "status_review_legend": "Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "Resurssien hallinta",

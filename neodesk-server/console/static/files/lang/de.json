@@ -6998,7 +6998,9 @@
     "page_purpose": "Wie vollständig jede Übersetzung der Konsole ist, und jeder Text neben dem englischen.",
     "page_only_shows": "Diese Seite zeigt die Sprachdateien nur an; Texte werden in den Dateien auf dem Server geändert. Deine eigene Sprache änderst du unter",
     "page_own_link": "Dein Konto › Persönliche Einstellungen",
-    "status_legend": "Referenzsprache: die Dateien, mit denen die anderen verglichen werden. Zu prüfen: Die Datei ist als noch nicht von einem Menschen geprüft markiert."
+    "status_legend": "Referenzsprache: die Dateien, mit denen die anderen verglichen werden. Zu prüfen: Die Datei ist als noch nicht von einem Menschen geprüft markiert.",
+    "reference_legend": "Referenzsprache: {names}. Jede andere Datei wird mit ihren Texten verglichen, und sie können nicht gelöscht werden.",
+    "status_review_legend": "Zu prüfen: Die Datei ist als noch nicht von einem Menschen geprüft markiert."
   },
   "resource_control": {
     "title": "Dashboard",

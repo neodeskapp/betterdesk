@@ -69,6 +69,30 @@
 	}
 
 	const nameOf = (l: Pick<LanguageRow, 'code' | 'name'>) => languageName(l.code, l.name ?? '', i18n.lang);
+
+	/**
+	 * The legend names the reference languages: the server compares every
+	 * file with the keys of English and Polish together and keeps both from
+	 * being deleted (console/i18n/languages.go), so Polish shows that status too
+	 */
+	const legend = $derived.by(() => {
+		const refs = languages.filter((l) => l.is_reference).map(nameOf);
+		const review = tf(
+			'languages.status_review_legend',
+			'Needs review: the file is marked as not yet checked by a person.'
+		);
+		if (!refs.length)
+			return tf(
+				'languages.status_legend',
+				'Reference language: the files the others are compared with. Needs review: the file is marked as not yet checked by a person.'
+			);
+		const names = new Intl.ListFormat(i18n.lang || 'en', { type: 'conjunction' }).format(refs);
+		return `${tf(
+			'languages.reference_legend',
+			"Reference language: {names}. Every other file is checked against their texts, and they can't be deleted.",
+			{ names }
+		)} ${review}`;
+	});
 	const reviewCount = $derived(languages.filter((l) => l.needs_review).length);
 
 	// ── One language ──
@@ -320,12 +344,7 @@
 						/>
 					{/if}
 				</div>
-				<p class="status-legend">
-					{tf(
-						'languages.status_legend',
-						'Reference language: the files the others are compared with. Needs review: the file is marked as not yet checked by a person.'
-					)}
-				</p>
+				<p class="status-legend">{legend}</p>
 				<Table
 					rows={languages}
 					columns={listColumns}

@@ -28,6 +28,7 @@ beforeEach(() => {
 			success: true,
 			languages: [
 				{ code: 'en', name: 'English', native: 'English', coverage: 100, is_reference: true },
+				{ code: 'pl', name: 'Polish', native: 'Polski', coverage: 100, is_reference: true },
 				{ code: 'de', name: 'German', native: 'Deutsch', coverage: 100, needs_review: true, missing_keys: 0 }
 			],
 			refKeyCount: 10
@@ -67,11 +68,13 @@ test('it says it only shows the files and where to change your own language', ()
 	);
 });
 
-test('it says what the statuses mean', () => {
+test('it says what the statuses mean, and names the reference languages the server compares with', async () => {
 	render(Page);
+	// Polish is a reference next to English on the server (console/i18n/languages.go): its keys
+	// count for every other file and it can't be deleted
 	expect(
-		screen.getByText(
-			'Reference language: the files the others are compared with. Needs review: the file is marked as not yet checked by a person.'
+		await screen.findByText(
+			"Reference language: English and Polish. Every other file is checked against their texts, and they can't be deleted. Needs review: the file is marked as not yet checked by a person."
 		)
 	).toBeTruthy();
 });
