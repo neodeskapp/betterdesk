@@ -10,6 +10,8 @@
  * index.
  */
 
+import { PERMISSION_GROUPS, permRowId } from '#lib/people/permissions.ts';
+
 export const TAB_TERMS: Readonly<Record<string, string>> = {
 	account: 'account profile my own konto profil mein eigenes',
 	general: 'server allgemein',
@@ -24,10 +26,17 @@ export const TAB_TERMS: Readonly<Record<string, string>> = {
 	email: 'email e-mail mail smtp',
 	time: 'time zeit uhr clock',
 	meshcentral: 'mesh meshcentral meshagent',
-	'server-config-files': 'server advanced erweitert expert config konfiguration dateien'
+	'server-config-files': 'server advanced erweitert expert config konfiguration dateien',
+	permissions: 'role roles permission rights access rolle rollen berechtigung rechte zugriff'
 };
 
+/** A permission is also found by its key (device.delete) */
+const PERMISSION_KEYS: Readonly<Record<string, string>> = Object.fromEntries(
+	PERMISSION_GROUPS.flatMap((g) => g.permissions.map((p) => [permRowId(p), p]))
+);
+
 export const TERMS: Readonly<Record<string, string>> = {
+	...PERMISSION_KEYS,
 	// General
 	'public-endpoints': 'address domain hostname adresse domäne host',
 	'public-server-id': 'hbbs id server rendezvous address adresse',

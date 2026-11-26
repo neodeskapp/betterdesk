@@ -47,9 +47,9 @@ describe('the settings list', () => {
 });
 
 describe('settingEntries', () => {
-	test('an account with every permission gets every setting of the list, once', () => {
+	test('a super admin gets every setting of the list, once', () => {
 		const t = tOf(en);
-		const entries = settingEntries({ t, can: everyone });
+		const entries = settingEntries({ t, can: everyone, superAdmin: true });
 		const expected = new Set(
 			SEARCH_INDEX.filter((r) => isPlace(r[0])).map(
 				(r) => `${r[0]}#${r[1]}#${t(r[2]).replace(/:$/, '').trim()}`
@@ -168,5 +168,28 @@ describe('English and German find the same setting', () => {
 		const { results, totals } = searchGrouped('ldap', { pages: [], settings: inEn });
 		expect(results.filter((r) => r.kind === 'setting')).toHaveLength(MAX_SETTINGS);
 		expect(totals.setting).toBeGreaterThan(MAX_SETTINGS);
+	});
+});
+
+describe('permissions on Roles and permissions', () => {
+	const supers = settingEntries({ t: tOf(en), can: everyone, superAdmin: true });
+
+	test('"delete devices" finds the permission and opens its row, for super admins only', () => {
+		expect(find('delete devices', supers).map((r) => r.id)).toContain('perm-device-delete');
+		expect(supers.find((e) => e.id === 'perm-device-delete')).toMatchObject({
+			place: 'permissions',
+			label: 'Delete devices',
+			where: 'People, Roles and permissions, See and manage devices',
+			href: '/permissions#perm-device-delete'
+		});
+		// Every other account: the page is for super admins
+		expect(settingEntries({ t: tOf(en), can: everyone }).some((e) => e.place === 'permissions')).toBe(false);
+	});
+
+	test('found by its sentence, its key and in German', () => {
+		expect(find('api keys', supers).map((r) => r.id)).toContain('perm-server-keys');
+		expect(find('device.delete', supers).map((r) => r.id)).toContain('perm-device-delete');
+		const inDe = settingEntries({ t: tOf(de), can: everyone, superAdmin: true });
+		expect(find('geräte löschen', inDe).map((r) => r.id)).toContain('perm-device-delete');
 	});
 });

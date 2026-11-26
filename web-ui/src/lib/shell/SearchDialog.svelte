@@ -62,7 +62,7 @@
 	let loadedAt = 0;
 
 	const pages = $derived(searchPages(session.nav));
-	const settings = $derived(settingEntries({ t, can }));
+	const settings = $derived(settingEntries({ t, can, superAdmin: session.isSuperAdmin }));
 	const actions = $derived(
 		searchActions({
 			can,
