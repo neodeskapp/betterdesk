@@ -98,7 +98,7 @@
 			{#if role}<span class="person-role">{role}</span>{/if}
 		</div>
 	</div>
-	<div class="picture">
+	<div class="picture" id="profile-picture">
 		<div class="picture-actions">
 			<input
 				bind:this={input}

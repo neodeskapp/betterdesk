@@ -667,6 +667,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'branding.edit'
 	],
 	// Your account (/account): the signed-in person's own settings
+	['account', 'profile-picture', 'account.picture_upload', 'account.profile', ['account.picture_note'], ''],
 	['account', 'profile-status', 'chat.my_presence', 'account.profile', ['account.status_note'], ''],
 	['account', 'password', 'account.password', '', ['settings.password_requirements'], ''],
 	['account', 'current-password', 'settings.current_password', 'account.password', [], ''],
