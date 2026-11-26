@@ -66,12 +66,30 @@ var totpFlag = regexp.MustCompile(`("totp_enabled":(?:true|false))`)
 // factor of every account in it: the list and an update say whether an
 // account is disabled, and no account of the recordings is (L107).
 func withDisabledFlag(answer string) string {
-	return withSignInState(totpFlag.ReplaceAllString(answer, `$1,"disabled":false`))
+	return withSignInState(withDisplayName(totpFlag.ReplaceAllString(answer, `$1,"disabled":false`)))
+}
+
+// listedName is an account of the list in the recordings from its
+// username to its picture, with the disabled flag.
+var listedName = regexp.MustCompile(`"username":("(?:[^"\\]|\\.)*"|[^,"]*),(.*?"totp_enabled":(?:true|false),"disabled":false),"has_avatar"`)
+
+// withDisplayName is a recorded list with the display name of each
+// account before its picture: no account of the recordings has a first
+// or last name, so it is the username, as text.
+func withDisplayName(answer string) string {
+	return listedName.ReplaceAllStringFunc(answer, func(m string) string {
+		parts := listedName.FindStringSubmatch(m)
+		name := parts[1]
+		if !strings.HasPrefix(name, `"`) {
+			name = `"` + name + `"`
+		}
+		return `"username":` + parts[1] + "," + parts[2] + `,"display_name":` + name + `,"has_avatar"`
+	})
 }
 
 // listedPicture is the end of an account as the list sends it in the
 // recordings, with the disabled flag.
-var listedPicture = regexp.MustCompile(`"totp_enabled":(true|false),"disabled":false,"has_avatar":(?:true|false),"avatar_version":(?:null|"[^"]*"|-?[0-9]+)`)
+var listedPicture = regexp.MustCompile(`"totp_enabled":(true|false),"disabled":false,(?:"display_name":"(?:[^"\\]|\\.)*",)?"has_avatar":(?:true|false),"avatar_version":(?:null|"[^"]*"|-?[0-9]+)`)
 
 // withSignInState is a recorded list with what it says about each
 // account's sign-in after its picture: no account of the recordings is
