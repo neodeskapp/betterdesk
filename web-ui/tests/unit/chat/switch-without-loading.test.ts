@@ -171,6 +171,16 @@ describe('switching conversations', () => {
 		expect(pane.getAllByText('Loading…')).toHaveLength(2);
 	});
 
+	test('a page asked for ahead is asked for again when the socket broke before it came', () => {
+		chat.preload('500');
+		expect(histories('500')).toBe(1);
+		// The answer went with the old socket
+		onstatus?.('closed');
+		onstatus?.('open');
+		chat.ensureHistory('500');
+		expect(histories('500')).toBe(2);
+	});
+
 	test('the facts loaded after a change win over an older answer still on its way', async () => {
 		const pending: ((d: unknown) => void)[] = [];
 		answer = () => new Promise((ok) => pending.push(ok));

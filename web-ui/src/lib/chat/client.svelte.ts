@@ -103,6 +103,8 @@ class ChatClient {
 			onstatus: (s) => {
 				this.status = s;
 				if (s === 'open') {
+					// Pages asked for on the old socket won't come
+					this.historyAsked.clear();
 					this.refreshSummary();
 					// Back after a break: the conversations in view again
 					for (const c of this.visible) this.history(c);
