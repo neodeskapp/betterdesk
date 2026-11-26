@@ -9,7 +9,8 @@
   form: display name, user, note, folder, tags, one Save that sends only
   what changed. The footer has three slots that keep their place and size:
       view:  [Edit]   [Connect]  ...........  [Close]
-      edit:  [Cancel] [       ]  ...........  [Save]
+      edit:  [Save]   [Cancel ]  ...........  [     ]
+  Without a Connect slot, Cancel takes Close's place instead.
   Each slot holds both of its buttons on top of each other; the one that
   doesn't apply is inert and invisible, so the slot is as wide as the
   wider label in either mode.
@@ -368,6 +369,12 @@
 	</div>
 {/snippet}
 
+{#snippet cancelButton()}
+	<Button inert={!editing || undefined} disabled={form?.busy} onclick={() => cancelEdit(false)}
+		>{t('actions.cancel')}</Button
+	>
+{/snippet}
+
 {#snippet footer()}
 	<div class="dp-footer-start">
 		{#if slots.edit || slots.editTarget}
@@ -380,8 +387,8 @@
 					onclick={slots.edit ? startEdit : editTarget}>{t('actions.edit')}</Button
 				>
 				{#if slots.edit}
-					<Button inert={!editing || undefined} disabled={form?.busy} onclick={() => cancelEdit(false)}
-						>{t('actions.cancel')}</Button
+					<Button variant="primary" inert={!editing || undefined} busy={form?.busy} onclick={save}
+						>{t('actions.save')}</Button
 					>
 				{/if}
 			</span>
@@ -391,6 +398,9 @@
 				<Button variant="primary" icon="connect" inert={editing || undefined} onclick={connect}
 					>{t('actions.connect')}</Button
 				>
+				{#if slots.edit}
+					{@render cancelButton()}
+				{/if}
 			</span>
 		{/if}
 		{#if device && can('chat.support')}
@@ -405,10 +415,9 @@
 	</div>
 	<span class="dp-slot" data-slot="close">
 		<Button variant="ghost" inert={editing || undefined} onclick={requestClose}>{t('actions.close')}</Button>
-		{#if slots.edit}
-			<Button variant="primary" inert={!editing || undefined} busy={form?.busy} onclick={save}
-				>{t('actions.save')}</Button
-			>
+		{#if slots.edit && !slots.connect}
+			<!-- No Connect slot to take Cancel: it stands in for Close -->
+			{@render cancelButton()}
 		{/if}
 	</span>
 {/snippet}
