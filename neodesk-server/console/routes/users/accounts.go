@@ -17,6 +17,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/emailchange"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
@@ -155,6 +156,9 @@ type listedAccount struct {
 // picture and its sign-in (security.go).
 type withPicture struct {
 	listedAccount
+	// DisplayName is the name the console shows: first and last name,
+	// else the username.
+	DisplayName   string           `json:"display_name"`
 	HasAvatar     bool             `json:"has_avatar"`
 	AvatarVersion store.NullString `json:"avatar_version"`
 	signInState
@@ -261,6 +265,11 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 		h.serverError(w, r, "Get users error:", err)
 		return
 	}
+	names, err := displayNames(ctx, h.d.Store)
+	if err != nil {
+		h.serverError(w, r, "Get users error:", err)
+		return
+	}
 	now := h.now()
 	out := make([]withPicture, len(accounts))
 	for i, a := range accounts {
@@ -270,7 +279,11 @@ func (h *handlers) list(w http.ResponseWriter, r *http.Request) {
 			listed.EmailPending = pendingOf(&c)
 		}
 		withLife(&listed, states[a.ID.V], now)
-		out[i] = withPicture{listedAccount: listed, HasAvatar: has, AvatarVersion: version, signInState: facts.of(a)}
+		name := names[a.ID.V]
+		if name == "" {
+			name = a.username()
+		}
+		out[i] = withPicture{listedAccount: listed, DisplayName: name, HasAvatar: has, AvatarVersion: version, signInState: facts.of(a)}
 	}
 	answer(w, r, http.StatusOK, accountList{Success: true, Data: accountListData{Users: out, Total: len(out)}})
 }
@@ -964,6 +977,9 @@ func (h *handlers) wipe(r *http.Request, user *account) error {
 		return err
 	}
 	if err := h.life.Forget(ctx, user.ID.V); err != nil {
+		return err
+	}
+	if err := people.Forget(ctx, h.d.Store, user.ID.V); err != nil {
 		return err
 	}
 	if err := h.d.Authn.ForgetAccount(ctx, user.ID.V); err != nil {

@@ -59,6 +59,8 @@ export type PendingEmail = v.InferOutput<typeof PendingEmail>;
 export const ConsoleUser = v.looseObject({
 	id: v.union([v.number(), v.string()]),
 	username: Str,
+	/** First and last name, else the username (older servers leave it out) */
+	display_name: Str,
 	role: Str,
 	email: Str,
 	auth_provider: Str,
@@ -85,6 +87,8 @@ export const ConsoleUser = v.looseObject({
 	two_factor_required: v.optional(v.boolean(), false),
 	/** on, off, or required (by the account's rule or the server's switch) and not set up */
 	two_factor_state: v.optional(v.picklist(['on', 'off', 'required']), 'off'),
+	/** A rule requires two-factor sign-in: a reset makes the person set it up again instead of turning it off */
+	two_factor_due: v.optional(v.boolean(), false),
 	/** Until when a reset link mailed to the account works */
 	password_reset_until: v.optional(v.nullable(v.string()), null),
 	/** A new address that waits for its confirmation; the address above stays until then */
@@ -96,6 +100,75 @@ export const ConsoleUser = v.looseObject({
 	inactive_exempt: v.optional(v.boolean(), false)
 });
 export type ConsoleUser = v.InferOutput<typeof ConsoleUser>;
+
+/** One account as the user's page reads it (GET /api/users/{id}) */
+export const UserDetail = v.looseObject({
+	...ConsoleUser.entries,
+	first_name: Str,
+	last_name: Str,
+	/** The language of the console and the mails for the account, '' for the console's default */
+	preferred_language: Str,
+	/** An IANA name such as Europe/Berlin, '' for none (mails in UTC) */
+	time_zone: Str,
+	/** The invite not used yet */
+	invite: v.optional(
+		v.nullable(v.looseObject({ expires_at: Str, expired: v.optional(v.boolean(), false) })),
+		null
+	),
+	/** The role's permissions in effect, overrides included */
+	permissions: StrArray,
+	/** The account may use Team chat and is not disabled */
+	team_chat: v.optional(v.boolean(), false),
+	/** No other super admin could sign in: it cannot be disabled, deleted or demoted */
+	last_super_admin: v.optional(v.boolean(), false)
+});
+export type UserDetail = v.InferOutput<typeof UserDetail>;
+
+/** Needs user.view; 404 for an id without an account */
+export function getUser(id: number | string, signal?: AbortSignal): Promise<UserDetail> {
+	return api(wrapped(UserDetail), `/api/users/${encodeURIComponent(String(id))}`, { signal });
+}
+
+/** First and last name (the display name) and time zone of an account. Needs user.edit */
+export function saveUserProfile(
+	id: number | string,
+	body: { first_name?: string; last_name?: string; time_zone?: string }
+): Promise<UserDetail> {
+	return api(wrapped(UserDetail), `/api/users/${encodeURIComponent(String(id))}/profile`, {
+		method: 'PUT',
+		body
+	});
+}
+
+const ActivityPerson = v.nullable(
+	v.looseObject({ id: v.union([v.number(), v.string()]), username: Str, display_name: Str })
+);
+
+/** An audit entry by the account or about it */
+export const ActivityEntry = v.looseObject({
+	id: v.union([v.number(), v.string()]),
+	action: Str,
+	at: Str,
+	details: Str,
+	ip: Str,
+	actor: v.optional(ActivityPerson, null),
+	target: v.optional(ActivityPerson, null)
+});
+export type ActivityEntry = v.InferOutput<typeof ActivityEntry>;
+
+/** The newest audit entries by and about the account. Needs user.view and audit.view */
+export async function listUserActivity(
+	id: number | string,
+	limit = 50,
+	signal?: AbortSignal
+): Promise<ActivityEntry[]> {
+	const out = await api(
+		wrapped(v.looseObject({ entries: v.array(ActivityEntry) })),
+		`/api/users/${encodeURIComponent(String(id))}/activity`,
+		{ query: { limit }, signal }
+	);
+	return out.entries;
+}
 
 /** Every account with its groups, folders and direct devices. Needs user.view */
 export async function listConsoleUsers(signal?: AbortSignal): Promise<ConsoleUser[]> {
@@ -621,4 +694,21 @@ export function confirmEmailChange(token: string): Promise<EmailChangeLink> {
 		body: { token },
 		allowAnonymous: true
 	});
+}
+
+/* ── The signed-in person's time zone (Your account) ── */
+
+/** '' for none */
+export async function getOwnTimeZone(signal?: AbortSignal): Promise<string> {
+	const out = await api(
+		v.looseObject({ profile: v.optional(v.looseObject({ time_zone: Str }), { time_zone: '' }) }),
+		'/api/users/me/profile',
+		{ signal }
+	);
+	return out.profile.time_zone;
+}
+
+/** An IANA name such as Europe/Berlin, '' for none; the server refuses names it doesn't know */
+export function saveOwnTimeZone(zone: string) {
+	return api(Ok, '/api/users/me/profile', { method: 'PUT', body: { time_zone: zone } });
 }

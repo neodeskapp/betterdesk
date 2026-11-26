@@ -28,6 +28,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail/message"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
@@ -80,6 +81,8 @@ func Enabled(ctx context.Context, db *store.DB, key string) bool {
 // recipient is who a notice goes to.
 type recipient struct {
 	username, email, language string
+	// zone is the person's time zone, "" for none (UTC)
+	zone string
 }
 
 // recipientOf reads the account's name, address and preferred language;
@@ -93,7 +96,8 @@ func (n *Notices) recipientOf(ctx context.Context, userID int64) (*recipient, er
 	if err != nil {
 		return nil, err
 	}
-	return &recipient{username: name.String, email: strings.TrimSpace(email.String), language: strings.TrimSpace(language.String)}, nil
+	return &recipient{username: name.String, email: strings.TrimSpace(email.String), language: strings.TrimSpace(language.String),
+		zone: people.TimeZone(ctx, n.d.Store, userID)}, nil
 }
 
 // Language is the language a mail to the account is written in: its
@@ -135,8 +139,9 @@ type notice struct {
 	// below security_notice.
 	key                    string
 	subject, heading, lead string
-	// facts are lines below the lead, already in the mail's language
-	facts func(t func(string, map[string]any) string) []string
+	// facts are lines below the lead, already in the mail's language;
+	// when writes a time in the recipient's time zone
+	facts func(t func(string, map[string]any) string, when func(time.Time) string) []string
 	// notYou is the key of what to do when it was not them
 	notYou string
 	// to is the address when it is not the account's own
@@ -211,7 +216,7 @@ func (n *Notices) build(who *recipient, nt notice) built {
 	lead := t("security_notice."+nt.lead, vars)
 	var facts []string
 	if nt.facts != nil {
-		facts = nt.facts(t)
+		facts = nt.facts(t, func(at time.Time) string { return people.TimeIn(at, who.zone) })
 	}
 	notYou := t("security_notice."+nt.notYou, vars)
 	footer := t("security_notice.footer", vars)

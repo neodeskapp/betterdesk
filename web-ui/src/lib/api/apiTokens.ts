@@ -135,3 +135,27 @@ export async function revokeApiToken(id: string): Promise<Made> {
 	);
 	return out.data?.ended ?? NOTHING_MADE;
 }
+
+/* ── Another account's tokens, on the user's page ── */
+
+/** The tokens the account made. Needs user.view */
+export async function listUserApiTokens(userId: number | string, signal?: AbortSignal): Promise<ApiToken[]> {
+	const out = await api(
+		v.object({
+			data: v.optional(v.nullable(v.object({ tokens: v.optional(v.nullable(v.array(ApiToken))) })))
+		}),
+		`/api/users/${encodeURIComponent(String(userId))}/api-tokens`,
+		{ signal }
+	);
+	return out.data?.tokens ?? [];
+}
+
+/** Revokes one of the account's tokens. Needs user.security and an account the caller may change */
+export async function revokeUserApiToken(userId: number | string, id: string): Promise<Made> {
+	const out = await api(
+		v.object({ data: v.optional(v.nullable(v.object({ ended: v.optional(Made, NOTHING_MADE) }))) }),
+		`/api/users/${encodeURIComponent(String(userId))}/api-tokens/${encodeURIComponent(id)}`,
+		{ method: 'DELETE' }
+	);
+	return out.data?.ended ?? NOTHING_MADE;
+}

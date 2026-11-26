@@ -87,6 +87,12 @@ func Register(d *kit.Deps) {
 	r.Post("/api/users/me/email-change/resend", h.resendOwnEmailChange, d.RequireAuth)
 	r.Delete("/api/users/{id}/email-change", h.cancelEmailChange, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Post("/api/users/{id}/email-change/resend", h.resendEmailChange, d.RequireAuth, d.RequirePermission("user.edit"))
+	// The user's page (page.go). The first two pass a path that names no
+	// account by number on, so that /api/users/avatars and
+	// /api/users/me/profile of later groups still answer
+	r.Get("/api/users/{id}", h.one, numericID, d.RequireAuth, d.RequirePermission("user.view"))
+	r.Put("/api/users/{id}/profile", h.saveProfile, numericID, d.RequireAuth, d.RequirePermission("user.edit"))
+	r.Get("/api/users/{id}/activity", h.activity, d.RequireAuth, d.RequirePermission("user.view"), d.RequirePermission("audit.view"))
 	r.Patch("/api/users/{id}", h.update, d.RequireAuth, d.RequirePermission("user.edit"))
 	r.Get("/api/users/{id}/effective-scope", h.effectiveScope, d.RequireAuth, d.RequirePermission("user.view"))
 	r.Delete("/api/users/{id}", h.remove, d.RequireAuth, d.RequirePermission("user.delete"))

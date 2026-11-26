@@ -50,6 +50,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/ndrelay"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/qr"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/remoterelay"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/restart"
@@ -447,6 +448,10 @@ func New(ctx context.Context, opts Options) (*Server, error) {
 	}
 	// End dates, inactivity exceptions and email address changes
 	if err := lifecycle.Ensure(ctx, opts.Store); err != nil {
+		return nil, err
+	}
+	// The time zones of the people (the user's page, Your account)
+	if err := people.Ensure(ctx, opts.Store); err != nil {
 		return nil, err
 	}
 	// Once: the history of the chat of version 1 into its conversations

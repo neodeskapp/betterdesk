@@ -1,8 +1,9 @@
 <!--
   Console users (/users): the accounts that can sign in, their role, which
   devices and organizations each can reach, and the user groups that share
-  device access. A click on a row edits the account (or, without
-  user.edit, shows its organizations). Panel access (which console
+  device access. A click on a row opens the user's page (/users/<id>); the
+  row menu (lib/people/user-actions.ts, the same groups as on that page)
+  keeps the quick edits in sheets. Panel access (which console
   sections an account or a group may read or change, and its client
   features) opens from the row menus in a sheet: read-only with user.view,
   editable with user.edit.
@@ -41,21 +42,14 @@
 	import { page } from '$app/state';
 	import { pushState, replaceState } from '$app/navigation';
 	import { ApiError } from '#lib/api/client.ts';
+	import { goto } from '$app/navigation';
 	import {
 		deleteUserGroup,
 		getEffectiveScope,
-		invalidateRecoveryCodes,
 		listConsoleUsers,
 		listInvites,
 		listUserGroupRows,
 		listUserOrgs,
-		requirePasswordChange,
-		resendInvite,
-		resetTwoFactor,
-		setTwoFactorRequired,
-		unlockUser,
-		revokeInvite,
-		updateUser,
 		type ConsoleUser,
 		type EffectiveScope,
 		type PendingInvite,
@@ -69,6 +63,9 @@
 	import { plural, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import SessionsSheet from '#lib/people/SessionsSheet.svelte';
+	import UserActionMenuItems from '#lib/people/UserActionMenuItems.svelte';
+	import { runUserAction } from '#lib/people/run-user-action.ts';
+	import { userActionGroups, type UserActionId } from '#lib/people/user-actions.ts';
 	import NoAccess from '#lib/shell/NoAccess.svelte';
 	import { takeIntent } from '#lib/shell/intent.svelte.ts';
 	import {
@@ -76,8 +73,6 @@
 		DESCRIBED_ROLES,
 		eachLimited,
 		groupNote,
-		mayChangeUser,
-		mayDisableUser,
 		providerOf,
 		ROLE_ORDER,
 		scopeText,
@@ -111,7 +106,6 @@
 	import ListRow from '#lib/ui/ListRow.svelte';
 	import MenuButton from '#lib/ui/MenuButton.svelte';
 	import MenuDivider from '#lib/ui/MenuDivider.svelte';
-	import MenuGroup from '#lib/ui/MenuGroup.svelte';
 	import MenuItem from '#lib/ui/MenuItem.svelte';
 	import ReadOnlyHint from '#lib/ui/ReadOnlyHint.svelte';
 	import RowList from '#lib/ui/RowList.svelte';
@@ -127,7 +121,7 @@
 	import { confirm } from '#lib/ui/dialogs.svelte.ts';
 	import type { Column, SortState } from '#lib/ui/table.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
-	import { ICONS } from '#lib/util/display.ts';
+	import { displayName, ICONS } from '#lib/util/display.ts';
 	import AccessSheet from './AccessSheet.svelte';
 	import BulkDialog from './BulkDialog.svelte';
 	import DeleteUserDialog from './DeleteUserDialog.svelte';
@@ -155,9 +149,17 @@
 	const canBulkOrgs = can('org.manage_users') && sectionWritable();
 	const selectable = canBulkEdit || canBulkOrgs || canSecurity || canDelete;
 	const meId = String(session.user?.id ?? '');
-	/** The server changes only the person's own account and those whose role they may give */
-	const mayChange = (u: ConsoleUser) => mayChangeUser(session.user?.role, meId, u);
-	const mayDisable = (u: ConsoleUser) => mayDisableUser(session.user?.role, meId, u);
+	/** What the row menu offers (the user's page offers the same) */
+	const rights = {
+		meId,
+		myRole: session.user?.role,
+		canEdit,
+		canDelete,
+		canSecurity,
+		canWithdraw,
+		canViewAs,
+		canTeamChat: can('chat.team')
+	};
 
 	/* ── Labels ── */
 
@@ -461,151 +463,47 @@
 	let groupDialog = $state<{ group: UserGroupRow | null } | null>(null);
 	let accessFor = $state.raw<{ subject: AccessSubject; name: string; role?: string } | null>(null);
 
+	/** A click on a row: the user's page */
 	function openRow(u: ConsoleUser) {
-		if (canEdit && mayChange(u)) editing = { user: u };
-		else orgsFor = u;
+		// link() adds the base; resolve() is for route paths
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		void goto(link(`/users/${encodeURIComponent(String(u.id))}`));
 	}
 
-	/** A new invite link by mail; the one before stops working */
-	async function sendInviteAgain(u: ConsoleUser) {
-		try {
-			await resendInvite(u.id);
-			toast.success(t('users.invite_resent_named', { username: u.username }));
-			void loadInvites();
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
-		}
-	}
-
-	/** Withdraw an invite: the link stops working and the account, which never signed in, goes */
-	async function withdrawInvite(u: ConsoleUser) {
-		const ok = await confirm({
-			title: t('users.revoke_invite_title'),
-			message: t('users.revoke_invite_confirm', { username: u.username, email: u.email }),
-			confirmLabel: t('users.revoke_invite_action'),
-			confirmIcon: ICONS.delete,
-			danger: true
-		});
-		if (!ok) return;
-		try {
-			await revokeInvite(u.id);
-			toast.success(t('users.invite_revoked_named', { username: u.username }));
-			void loadUsers();
-			void loadInvites();
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
-		}
-	}
-
-	/** Disable (after a confirmation) or enable an account */
-	async function setDisabled(u: ConsoleUser, disabled: boolean) {
-		if (disabled) {
-			const ok = await confirm({
-				title: t('users.disable_title'),
-				message: t('users.disable_confirm', { username: u.username }),
-				confirmLabel: t('users.disable_menu'),
-				confirmIcon: ICONS.disable,
-				danger: true
-			});
-			if (!ok) return;
-		}
-		try {
-			await updateUser(u.id, { disabled });
-			toast.success(t(disabled ? 'users.disabled_named' : 'users.enabled_named', { username: u.username }));
-			void loadUsers();
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
-		}
-	}
-
-	/** Ask for a new password at the next sign-in, or no longer */
-	async function setPasswordChange(u: ConsoleUser, required: boolean) {
-		try {
-			const [result] = await requirePasswordChange([u.id], required);
-			if (result?.outcome === 'refused') {
-				toast.error(result.error || t('errors.server_error'));
+	/** An item of the row menu: a sheet or dialog of this page, or runUserAction */
+	async function act(id: UserActionId, u: ConsoleUser) {
+		switch (id) {
+			case 'open':
+				openRow(u);
 				return;
-			}
-			toast.success(
-				t(required ? 'users.require_change_done' : 'users.require_change_off_done', { username: u.username })
-			);
-			void loadUsers();
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
+			case 'edit':
+				editing = { user: u };
+				return;
+			case 'orgs':
+				orgsFor = u;
+				return;
+			case 'access':
+				accessFor = { subject: { kind: 'user', id: u.id }, name: displayName(u), role: u.role };
+				return;
+			case 'sign_in_as':
+				viewAsFor = u;
+				return;
+			case 'reset_password':
+				resetFor = u;
+				return;
+			case 'sessions':
+				sessionsFor = u;
+				return;
+			case 'delete':
+				deleteFor = u;
+				return;
 		}
-	}
-
-	async function unlock(u: ConsoleUser) {
-		try {
-			await unlockUser(u.id);
-			toast.success(t('users.unlocked_named', { username: u.username }));
+		const changed = await runUserAction(id, u);
+		if (changed === 'user') void loadUsers();
+		if (changed === 'invites') void loadInvites();
+		if (changed === 'gone') {
 			void loadUsers();
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
-		}
-	}
-
-	async function setTwoFactorRule(u: ConsoleUser, required: boolean) {
-		try {
-			await setTwoFactorRequired(u.id, required);
-			toast.success(
-				t(required ? 'users.require_2fa_done' : 'users.require_2fa_off_done', { username: u.username })
-			);
-			void loadUsers();
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
-		}
-	}
-
-	/** Where a policy requires two-factor sign-in: clear it, so the person sets it up again */
-	async function resetTotp(u: ConsoleUser) {
-		const ok = await confirm({
-			title: t('users.reset_2fa_title'),
-			message: t('users.reset_2fa_confirm', { username: u.username }),
-			confirmLabel: t('users.reset_2fa_button'),
-			danger: true
-		});
-		if (!ok) return;
-		try {
-			await resetTwoFactor(u.id);
-			toast.success(t('users.reset_2fa_done', { username: u.username }));
-			void loadUsers();
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
-		}
-	}
-
-	async function invalidateCodes(u: ConsoleUser) {
-		const ok = await confirm({
-			title: t('users.invalidate_codes_title', { username: u.username }),
-			message: t('users.invalidate_codes_confirm', { username: u.username }),
-			confirmLabel: t('users.invalidate_codes_button'),
-			danger: true
-		});
-		if (!ok) return;
-		try {
-			await invalidateRecoveryCodes(u.id);
-			toast.success(t('users.codes_invalidated_named', { username: u.username }));
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
-		}
-	}
-
-	/** Turn off the two-factor sign-in of someone who lost their authenticator */
-	async function turnOffTotp(u: ConsoleUser) {
-		const ok = await confirm({
-			title: t('users.totp_off_title'),
-			message: t('users.totp_off_confirm', { username: u.username }),
-			confirmLabel: t('users.totp_off_menu'),
-			danger: true
-		});
-		if (!ok) return;
-		try {
-			await updateUser(u.id, { totp_enabled: false });
-			toast.success(t('users.totp_off_named', { username: u.username }));
-			void loadUsers();
-		} catch (err) {
-			toast.error(err instanceof Error ? err.message : t('errors.server_error'));
+			void loadInvites();
 		}
 	}
 
@@ -707,6 +605,7 @@
 			presenceLabel={self ? t(`chat.presence_${myPresence.status}`) : undefined}
 		/></span
 	>
+	{#if displayName(u) !== u.username}<span class="cell-sub username">{u.username}</span>{/if}
 	{#if u.user_groups.length}<span class="cell-sub"
 			>{t('users.groups_line', { groups: u.user_groups.map(groupName).join(', ') })}</span
 		>{/if}
@@ -790,139 +689,14 @@
 	/>{/snippet}
 
 {#snippet actionsCell(u: ConsoleUser)}
-	{@const self = String(u.id) === meId}
-	{@const local = providerOf(u) === 'local'}
-	{@const changeable = mayChange(u)}
-	{@const disableable = canEdit && mayDisable(u)}
-	{@const deletable = canDelete && changeable && !self}
-	{@const resend = canEdit && changeable && local && mailReady && !!u.email && !u.last_login}
-	{@const secure = canSecurity && changeable && !self}
-	{@const totpOn = u.two_factor_state === 'on' || !!u.totp_enabled}
-	{@const withdraw = canWithdraw && changeable && !self && !u.last_login && invites.has(String(u.id))}
+	{@const groups = userActionGroups(u, rights, {
+		mailReady,
+		invited: invites.has(String(u.id)),
+		withOpen: true
+	})}
 	<!-- Grouped: the account, what it may reach, its sign-in security, and what ends it -->
-	<MenuButton kebab label={t('users.actions_for', { username: u.username })}>
-		{#if (canEdit && changeable) || (disableable && u.disabled)}
-			<MenuGroup class="group-account" label={t('users.menu_group_account')}>
-				{#if canEdit && changeable}
-					<MenuItem class="act-edit" icon={ICONS.edit} onselect={() => (editing = { user: u })}
-						>{t('users.edit')}</MenuItem
-					>
-				{/if}
-				{#if resend}
-					<MenuItem class="act-resend-invite" icon={ICONS.send} onselect={() => void sendInviteAgain(u)}
-						>{t('users.resend_invite')}</MenuItem
-					>
-				{/if}
-				{#if disableable && u.disabled}
-					<MenuItem class="act-disable" icon={ICONS.enable} onselect={() => void setDisabled(u, false)}
-						>{t('users.enable_menu')}</MenuItem
-					>
-				{/if}
-			</MenuGroup>
-		{/if}
-		<MenuGroup class="group-access" label={t('users.menu_group_access')}>
-			<MenuItem class="act-orgs" icon={ICONS.organization} onselect={() => (orgsFor = u)}
-				>{t('users.organizations_menu')}</MenuItem
-			>
-			<MenuItem
-				class="act-access"
-				icon={ICONS.access_policy}
-				onselect={() => (accessFor = { subject: { kind: 'user', id: u.id }, name: u.username, role: u.role })}
-				>{tf('users.access_menu', 'Panel access…')}</MenuItem
-			>
-			{#if canViewAs && !self && !u.disabled}
-				<MenuItem class="act-sign-in-as" icon={ICONS.view} onselect={() => (viewAsFor = u)}
-					>{t('users.sign_in_as_menu')}</MenuItem
-				>
-			{/if}
-		</MenuGroup>
-		{#if (canEdit && changeable) || secure || (canSecurity && changeable && u.locked)}
-			<MenuGroup class="group-security" label={t('users.menu_group_security')}>
-				{#if canEdit && changeable}
-					<MenuItem class="act-reset" icon={ICONS.password} onselect={() => (resetFor = u)}
-						>{t('users.reset_password_menu')}</MenuItem
-					>
-				{/if}
-				{#if secure && local}
-					{#if u.must_change_password}
-						<MenuItem
-							class="act-require-change-off"
-							icon={ICONS.password}
-							onselect={() => void setPasswordChange(u, false)}>{t('users.require_change_off_menu')}</MenuItem
-						>
-					{:else}
-						<MenuItem
-							class="act-require-change"
-							icon={ICONS.password}
-							onselect={() => void setPasswordChange(u, true)}>{t('users.require_change_menu')}</MenuItem
-						>
-					{/if}
-				{/if}
-				{#if canSecurity && changeable && u.locked}
-					<MenuItem class="act-unlock" icon={ICONS.enable} onselect={() => void unlock(u)}
-						>{t('users.unlock_menu')}</MenuItem
-					>
-				{/if}
-				{#if secure && local}
-					{#if u.two_factor_required}
-						<MenuItem
-							class="act-require-2fa-off"
-							icon={ICONS.password}
-							onselect={() => void setTwoFactorRule(u, false)}>{t('users.require_2fa_off_menu')}</MenuItem
-						>
-					{:else}
-						<MenuItem
-							class="act-require-2fa"
-							icon={ICONS.password}
-							onselect={() => void setTwoFactorRule(u, true)}>{t('users.require_2fa_menu')}</MenuItem
-						>
-					{/if}
-				{/if}
-				{#if secure && totpOn}
-					{#if u.two_factor_due}
-						<MenuItem class="act-totp-reset" icon={ICONS.password} onselect={() => void resetTotp(u)}
-							>{t('users.reset_2fa_menu')}</MenuItem
-						>
-					{:else}
-						<MenuItem class="act-totp-off" icon={ICONS.password} onselect={() => void turnOffTotp(u)}
-							>{t('users.totp_off_menu')}</MenuItem
-						>
-					{/if}
-					<MenuItem
-						class="act-codes-invalidate"
-						icon={ICONS.password}
-						onselect={() => void invalidateCodes(u)}>{t('users.invalidate_codes_menu')}</MenuItem
-					>
-				{/if}
-				{#if canEdit && changeable}
-					<MenuItem class="act-sessions" icon="devices" onselect={() => (sessionsFor = u)}
-						>{t('sessions.user_menu')}</MenuItem
-					>
-				{/if}
-			</MenuGroup>
-		{/if}
-		{#if (disableable && !u.disabled) || deletable || withdraw}
-			<MenuGroup class="group-danger" label={t('users.menu_group_danger')}>
-				{#if withdraw}
-					<MenuItem
-						class="act-withdraw-invite"
-						icon={ICONS.delete}
-						danger
-						onselect={() => void withdrawInvite(u)}>{t('users.revoke_invite_menu')}</MenuItem
-					>
-				{/if}
-				{#if disableable && !u.disabled}
-					<MenuItem class="act-disable" icon={ICONS.disable} onselect={() => void setDisabled(u, true)}
-						>{t('users.disable_menu')}</MenuItem
-					>
-				{/if}
-				{#if deletable}
-					<MenuItem class="act-delete" icon={ICONS.delete} danger onselect={() => (deleteFor = u)}
-						>{t('users.delete_menu')}</MenuItem
-					>
-				{/if}
-			</MenuGroup>
-		{/if}
+	<MenuButton kebab label={t('users.actions_for', { username: displayName(u) })}>
+		<UserActionMenuItems {groups} onselect={(id) => void act(id, u)} />
 	</MenuButton>
 {/snippet}
 

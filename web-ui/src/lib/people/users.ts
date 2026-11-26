@@ -165,7 +165,7 @@ export function deviceIdsOk(ids: readonly string[]): boolean {
 	return ids.every((id) => /^[A-Za-z0-9._:@-]{1,64}$/.test(id));
 }
 
-/** Users whose username, email or role name contains every word of the search */
+/** Users whose username, display name, email or role name contains every word of the search */
 export function filterUsers(
 	users: readonly ConsoleUser[],
 	query: string,
@@ -174,7 +174,10 @@ export function filterUsers(
 	const words = query.toLowerCase().split(/\s+/).filter(Boolean);
 	if (!words.length) return users as ConsoleUser[];
 	return users.filter((u) => {
-		const text = [u.username, u.email, roleLabel(u.role)].filter(Boolean).join(' ').toLowerCase();
+		const text = [u.username, u.display_name, u.email, roleLabel(u.role)]
+			.filter(Boolean)
+			.join(' ')
+			.toLowerCase();
 		return words.every((w) => text.includes(w));
 	});
 }

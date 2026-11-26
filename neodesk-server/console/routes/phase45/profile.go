@@ -12,6 +12,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/people"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/emailchange"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
@@ -47,6 +48,8 @@ type profileData struct {
 	Phone       any               `json:"phone"`
 	RoleDisplay any               `json:"role_display"`
 	AvatarURL   any               `json:"avatar_url"`
+	// TimeZone is the person's time zone (an IANA name), "" for none.
+	TimeZone string `json:"time_zone"`
 }
 
 // profile answers GET /api/users/me/profile: the signed-in operator's
@@ -65,6 +68,7 @@ func (h *handlers) profile(w http.ResponseWriter, r *http.Request) {
 		ID: user.ID, Username: user.Username, Role: user.Role,
 		FirstName: orEmpty(user.FirstName), LastName: orEmpty(user.LastName), Email: orEmpty(user.Email),
 		Phone: orEmpty(user.Phone), RoleDisplay: orEmpty(user.RoleDisplay), AvatarURL: orEmpty(user.AvatarURL),
+		TimeZone: people.TimeZone(r.Context(), h.d.Store, kit.UserID(r)),
 	}})
 }
 
@@ -82,7 +86,9 @@ type saved struct {
 // leaves out keeps its value, and a body with none of them changes
 // nothing. An http(s) picture address that changed, or whose picture is
 // missing, is fetched and stored like a picture from the identity
-// provider; a failed fetch does not fail the save.
+// provider; a failed fetch does not fail the save. time_zone is an IANA
+// name the server knows, or "" or null for none; any other is refused
+// with time_zone_invalid before anything is written.
 func (h *handlers) saveProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := kit.UserID(r)
@@ -100,6 +106,21 @@ func (h *handlers) saveProfile(w http.ResponseWriter, r *http.Request) {
 			fail(w, r, http.StatusBadRequest, "email_too_long")
 			return
 		}
+	}
+	// The time zone: an IANA name the server knows, or "" (or null) for none
+	zone, zoneGiven := "", false
+	if v := field(r, "time_zone"); v != branding.Undefined {
+		text, ok := v.(string)
+		if v != nil && !ok {
+			fail(w, r, http.StatusBadRequest, "time_zone_invalid")
+			return
+		}
+		checked, err := people.CheckTimeZone(text)
+		if err != nil {
+			fail(w, r, http.StatusBadRequest, "time_zone_invalid")
+			return
+		}
+		zone, zoneGiven = checked, true
 	}
 	before, err := getUserByID(ctx, h.d.Store, userID)
 	if err != nil {
@@ -134,6 +155,12 @@ func (h *handlers) saveProfile(w http.ResponseWriter, r *http.Request) {
 	if err := updateUserProfile(ctx, h.d.Store, userID, values); err != nil {
 		fail(w, r, http.StatusInternalServerError, jsbind.Message(errors.Unwrap(err)))
 		return
+	}
+	if zoneGiven {
+		if err := people.SetTimeZone(ctx, h.d.Store, userID, zone); err != nil {
+			serverError(err)
+			return
+		}
 	}
 	if emailGiven && before != nil {
 		if code, message := h.changeEmail(r, before, current, newEmail); code != 0 {

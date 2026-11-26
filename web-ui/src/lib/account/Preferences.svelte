@@ -1,13 +1,16 @@
 <!--
   Your account › Preferences (#preferences): the theme of this browser
   (Console default follows Settings › Appearance; Light and Dark are this
-  browser's own), the console language of the account, and the
-  accessibility panel. The account menu has the same three under
+  browser's own), the console language of the account, its time zone
+  (the security mails give times in it), and the accessibility panel. The account menu has the same three under
   Preferences. Settings › Appearance › Theme is the console's default for
   everyone, which is something else.
 -->
 <script lang="ts">
+	import { untrack } from 'svelte';
+	import { getOwnTimeZone, saveOwnTimeZone } from '#lib/api/users.ts';
 	import { i18n, t } from '#lib/i18n/i18n.svelte.ts';
+	import { browserTimeZone, timeZoneOptions } from '#lib/people/time-zones.ts';
 	import { a11y, isDefault } from '#lib/shell/a11y.svelte.ts';
 	import { chooseLanguage } from '#lib/shell/language.ts';
 	import { setTheme, theme, type ThemeChoice } from '#lib/state/theme.svelte.ts';
@@ -15,6 +18,7 @@
 	import ChoiceList from '#lib/ui/ChoiceList.svelte';
 	import Field from '#lib/ui/Field.svelte';
 	import Select from '#lib/ui/Select.svelte';
+	import { toast } from '#lib/ui/toasts.svelte.ts';
 
 	const themes = $derived<{ value: ThemeChoice; title: string }[]>([
 		{ value: 'default', title: t('theme.console_default') },
@@ -25,6 +29,34 @@
 		i18n.available.map((l) => ({ value: l.code, label: l.native || l.name || l.code }))
 	);
 	const a11yOn = $derived(!isDefault(a11y.settings));
+
+	/** The account's time zone; null until it is read, 'error' when that failed */
+	let zone = $state<string | null | 'error'>(null);
+	const zones = $derived(
+		timeZoneOptions(t('users.time_zone_none'), typeof zone === 'string' && zone !== 'error' ? zone : '')
+	);
+	const browserZone = browserTimeZone();
+
+	$effect(() => {
+		untrack(() => {
+			getOwnTimeZone().then(
+				(z) => (zone = z),
+				() => (zone = 'error')
+			);
+		});
+	});
+
+	async function pickZone(next: string) {
+		const before = zone;
+		zone = next;
+		try {
+			await saveOwnTimeZone(next);
+			toast.success(t('account.time_zone_saved'));
+		} catch (err) {
+			zone = before;
+			toast.error(err instanceof Error && err.message ? err.message : t('account.time_zone_failed'));
+		}
+	}
 </script>
 
 <section class="section" id="preferences" aria-labelledby="preferences-title">
@@ -56,6 +88,30 @@
 					/>
 				{/snippet}
 			</Field>
+		</div>
+		<div class="pref" id="preferences-time-zone">
+			{#if zone === 'error'}
+				<p class="form-hint">{t('account.time_zone_load_failed')}</p>
+			{:else}
+				<Field
+					id="preferences-time-zone-field"
+					label={t('users.time_zone')}
+					hint={browserZone && zone !== browserZone
+						? t('account.time_zone_note_browser', { zone: browserZone })
+						: t('account.time_zone_note')}
+				>
+					{#snippet children(f)}
+						<Select
+							{...f}
+							width="medium"
+							options={zones}
+							value={zone ?? ''}
+							disabled={zone === null}
+							onchange={(e) => void pickZone(e.currentTarget.value)}
+						/>
+					{/snippet}
+				</Field>
+			{/if}
 		</div>
 		<div class="pref" id="preferences-accessibility">
 			<h3>{t('accessibility.title')}</h3>

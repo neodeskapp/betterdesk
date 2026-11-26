@@ -25,8 +25,8 @@ func (n *Notices) NewSignIn(ctx context.Context, userID int64, s SignIn) {
 	n.send(ctx, userID, notice{
 		key: KeyNewSignIn, subject: "new_signin_subject", heading: "new_signin_heading", lead: "new_signin_lead",
 		notYou: "not_you_signin",
-		facts: func(t func(string, map[string]any) string) []string {
-			out := []string{t("security_notice.fact_time", map[string]any{"time": at.UTC().Format("2006-01-02 15:04") + " UTC"})}
+		facts: func(t func(string, map[string]any) string, when func(time.Time) string) []string {
+			out := []string{t("security_notice.fact_time", map[string]any{"time": when(at)})}
 			if s.IP != "" {
 				out = append(out, t("security_notice.fact_address", map[string]any{"address": s.IP}))
 			}
@@ -103,19 +103,19 @@ func (n *Notices) EmailChanged(ctx context.Context, userID int64, oldAddress, ne
 	n.send(ctx, userID, notice{
 		key: KeyEmailChanged, subject: "email_subject", heading: "email_heading", lead: "email_lead",
 		notYou: "not_you_email", to: oldAddress,
-		facts: func(t func(string, map[string]any) string) []string {
+		facts: func(t func(string, map[string]any) string, when func(time.Time) string) []string {
 			return []string{
 				t("security_notice.fact_new_address", map[string]any{"address": newAddress}),
-				t("security_notice.fact_time", map[string]any{"time": n.now().UTC().Format("2006-01-02 15:04") + " UTC"}),
+				t("security_notice.fact_time", map[string]any{"time": when(n.now())}),
 			}
 		},
 	})
 }
 
 // timeFact is the line that says when a change happened.
-func (n *Notices) timeFact() func(t func(string, map[string]any) string) []string {
+func (n *Notices) timeFact() func(t func(string, map[string]any) string, when func(time.Time) string) []string {
 	at := n.now()
-	return func(t func(string, map[string]any) string) []string {
-		return []string{t("security_notice.fact_time", map[string]any{"time": at.UTC().Format("2006-01-02 15:04") + " UTC"})}
+	return func(t func(string, map[string]any) string, when func(time.Time) string) []string {
+		return []string{t("security_notice.fact_time", map[string]any{"time": when(at)})}
 	}
 }

@@ -82,6 +82,7 @@ var deniedRoutes = map[string]string{
 	"/api/panel/api-tokens":             "API tokens",
 	"/api/panel/api-tokens/current":     "API tokens",
 	"/api/panel/api-tokens/permissions": "API tokens",
+	"/api/users/{id}/api-tokens":        "API tokens",
 	// Saved sign-in and what asks the device (the agent's tools)
 	"/api/devices/{id}/signin":    "saved sign-in",
 	"/api/devices/{id}/clipboard": "the device's clipboard",

@@ -101,14 +101,18 @@ for (const role of ROLES) {
 			await page.keyboard.press('Escape');
 			await expect(menu).toBeHidden();
 
-			// A click on the row: the edit sheet, or the organizations sheet without user.edit
+			// A click on the row: the user's page, which a reload keeps
 			await row.locator('.row-open').click();
-			const sheet = page.getByRole('dialog');
-			await expect(sheet).toBeVisible();
-			await expect(sheet).toContainText(can('user.edit') ? 'Edit e2e_viewer' : 'e2e_viewer');
+			await expect(page).toHaveURL(/\/users\/\d+$/);
+			await expect(page.getByRole('heading', { level: 1, name: 'e2e_viewer' })).toBeVisible();
+			await expect(page.locator('#role li').first()).toBeVisible();
+			await expect(page.locator('.edit-user')).toHaveCount(can('user.edit') ? 1 : 0);
 			await expectNoAxeViolations(page);
-			await page.keyboard.press('Escape');
-			await expect(sheet).toBeHidden();
+			await page.reload();
+			await expect(page.getByRole('heading', { level: 1, name: 'e2e_viewer' })).toBeVisible();
+			await page.goto(`${UI}/users/999999`);
+			await expect(page.getByRole('alert')).toContainText("doesn't exist");
+			await page.goto(`${UI}/users?search=e2e_viewer`);
 
 			if (!can('user.create')) expect(await refused(page, me.csrf, 'POST', '/api/users')).toBe(403);
 			if (!can('user.edit')) expect(await refused(page, me.csrf, 'POST', '/api/panel/user-groups')).toBe(403);
