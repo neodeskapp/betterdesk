@@ -1550,7 +1550,6 @@
             "attrs_note": "The defaults work in most cases. Change them only if names or email addresses arrive wrong or empty.",
             "single_session": "One session per account",
             "single_session_hint": "A new sign-in signs out the account's other browser. Off: an account can be signed in on up to {max} browsers and devices at once.",
-            "single_session_env": "SESSION_MAX_PER_USER is set to {value} in the server's environment and decides instead of this switch. Remove it there to use the switch.",
             "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
             "client_sessions_next": "Applies from the next sign-in of a RustDesk app. Apps signed in now keep their session.",
             "expiry_help": "When Extend session on activity is off, apps must sign in again after this many days.",
@@ -1562,7 +1561,11 @@
             "map_group_n": "Group {n}",
             "map_role_n": "Role for group {n}",
             "map_add": "Add a group",
-            "pick_role": "Pick a role"
+            "pick_role": "Pick a role",
+            "single_session_on": "A new sign-in signs out the account's other browser.",
+            "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+            "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+            "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
         },
         "backup_tab": {
             "create_title": "Create a backup",

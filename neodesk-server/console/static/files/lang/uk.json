@@ -1548,7 +1548,6 @@
       "attrs_note": "Типові значення підходять у більшості випадків. Змінюйте їх, лише якщо імена чи адреси електронної пошти надходять неправильні або порожні.",
       "single_session": "Один сеанс на обліковий запис",
       "single_session_hint": "Новий вхід завершує сеанс в іншому браузері облікового запису. Вимкнено: обліковий запис може мати вхід одночасно щонайбільше на {max} браузерах і пристроях.",
-      "single_session_env": "SESSION_MAX_PER_USER має в середовищі сервера значення {value} і вирішує замість цього перемикача. Приберіть його там, щоб користуватися перемикачем.",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "Applies from the next sign-in of a RustDesk app. Apps signed in now keep their session.",
       "expiry_help": "When Extend session on activity is off, apps must sign in again after this many days.",
@@ -1560,7 +1559,11 @@
       "map_group_n": "Group {n}",
       "map_role_n": "Role for group {n}",
       "map_add": "Add a group",
-      "pick_role": "Pick a role"
+      "pick_role": "Pick a role",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "Створити резервну копію",

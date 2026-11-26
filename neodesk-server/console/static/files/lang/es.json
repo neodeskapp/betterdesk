@@ -1542,7 +1542,6 @@
       "attrs_note": "Los valores predeterminados sirven en la mayoría de los casos. Cámbielos solo si los nombres o correos llegan mal o vacíos.",
       "single_session": "Una sesión por cuenta",
       "single_session_hint": "Un nuevo inicio de sesión cierra la sesión del otro navegador de la cuenta. Desactivado: una cuenta puede tener la sesión iniciada en hasta {max} navegadores y dispositivos a la vez.",
-      "single_session_env": "SESSION_MAX_PER_USER vale {value} en el entorno del servidor y decide en lugar de este interruptor. Quítelo allí para usar el interruptor.",
       "oidc_advanced_note": "Solo hace falta si el proveedor no tiene documento de descubrimiento o está en una red privada.",
       "client_sessions_next": "Applies from the next sign-in of a RustDesk app. Apps signed in now keep their session.",
       "expiry_help": "When Extend session on activity is off, apps must sign in again after this many days.",
@@ -1554,7 +1553,11 @@
       "map_group_n": "Group {n}",
       "map_role_n": "Role for group {n}",
       "map_add": "Add a group",
-      "pick_role": "Pick a role"
+      "pick_role": "Pick a role",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "Crear una copia de seguridad",

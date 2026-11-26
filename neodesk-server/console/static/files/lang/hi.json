@@ -1548,7 +1548,6 @@
       "attrs_note": "ज़्यादातर मामलों में डिफ़ॉल्ट ठीक रहते हैं। इन्हें तभी बदलें जब नाम या ईमेल पते गलत या खाली आएँ।",
       "single_session": "हर खाते के लिए एक सत्र",
       "single_session_hint": "नया साइन इन खाते के दूसरे ब्राउज़र को साइन आउट कर देता है। बंद होने पर: एक खाता एक साथ अधिकतम {max} ब्राउज़र और डिवाइस पर साइन इन रह सकता है।",
-      "single_session_env": "सर्वर के वातावरण में SESSION_MAX_PER_USER का मान {value} है और यह इस स्विच की जगह तय करता है। स्विच इस्तेमाल करने के लिए इसे वहाँ से हटाएँ।",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "Applies from the next sign-in of a RustDesk app. Apps signed in now keep their session.",
       "expiry_help": "When Extend session on activity is off, apps must sign in again after this many days.",
@@ -1560,7 +1559,11 @@
       "map_group_n": "Group {n}",
       "map_role_n": "Role for group {n}",
       "map_add": "Add a group",
-      "pick_role": "Pick a role"
+      "pick_role": "Pick a role",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "बैकअप बनाएँ",

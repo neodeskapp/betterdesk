@@ -1542,7 +1542,6 @@
       "attrs_note": "Wartości domyślne działają w większości przypadków. Zmień je tylko wtedy, gdy nazwy lub adresy e-mail przychodzą błędne lub puste.",
       "single_session": "Jedna sesja na konto",
       "single_session_hint": "Nowe logowanie wylogowuje drugą przeglądarkę konta. Wyłączone: konto może być zalogowane jednocześnie na maksymalnie {max} przeglądarkach i urządzeniach.",
-      "single_session_env": "SESSION_MAX_PER_USER ma w środowisku serwera wartość {value} i decyduje zamiast tego przełącznika. Usuń je tam, aby używać przełącznika.",
       "oidc_advanced_note": "Potrzebne tylko wtedy, gdy dostawca nie ma dokumentu discovery albo działa w sieci prywatnej.",
       "client_sessions_next": "Applies from the next sign-in of a RustDesk app. Apps signed in now keep their session.",
       "expiry_help": "When Extend session on activity is off, apps must sign in again after this many days.",
@@ -1554,7 +1553,11 @@
       "map_group_n": "Group {n}",
       "map_role_n": "Role for group {n}",
       "map_add": "Add a group",
-      "pick_role": "Pick a role"
+      "pick_role": "Pick a role",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "Utwórz kopię zapasową",

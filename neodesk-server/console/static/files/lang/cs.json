@@ -1542,7 +1542,6 @@
       "attrs_note": "Výchozí hodnoty ve většině případů fungují. Změňte je jen tehdy, když jména nebo e-mailové adresy přicházejí chybně nebo prázdné.",
       "single_session": "Jedna relace na účet",
       "single_session_hint": "Nové přihlášení odhlásí druhý prohlížeč účtu. Vypnuto: účet může být současně přihlášen nejvýše na {max} prohlížečích a zařízeních.",
-      "single_session_env": "SESSION_MAX_PER_USER má v prostředí serveru hodnotu {value} a rozhoduje místo tohoto přepínače. Chcete-li použít přepínač, odstraňte ji tam.",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "Applies from the next sign-in of a RustDesk app. Apps signed in now keep their session.",
       "expiry_help": "When Extend session on activity is off, apps must sign in again after this many days.",
@@ -1554,7 +1553,11 @@
       "map_group_n": "Group {n}",
       "map_role_n": "Role for group {n}",
       "map_add": "Add a group",
-      "pick_role": "Pick a role"
+      "pick_role": "Pick a role",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "Vytvořit zálohu",

@@ -1548,7 +1548,6 @@
       "attrs_note": "Standardverdiene fungerer i de fleste tilfeller. Endre dem bare hvis navn eller e-postadresser kommer feil eller tomme.",
       "single_session": "Én økt per konto",
       "single_session_hint": "En ny innlogging logger ut kontoens andre nettleser. Av: en konto kan være logget inn på opptil {max} nettlesere og enheter samtidig.",
-      "single_session_env": "SESSION_MAX_PER_USER er satt til {value} i serverens miljø og bestemmer i stedet for denne bryteren. Fjern den der for å bruke bryteren.",
       "oidc_advanced_note": "Needed only when the provider has no discovery document, or sits in a private network.",
       "client_sessions_next": "Applies from the next sign-in of a RustDesk app. Apps signed in now keep their session.",
       "expiry_help": "When Extend session on activity is off, apps must sign in again after this many days.",
@@ -1560,7 +1559,11 @@
       "map_group_n": "Group {n}",
       "map_role_n": "Role for group {n}",
       "map_add": "Add a group",
-      "pick_role": "Pick a role"
+      "pick_role": "Pick a role",
+      "single_session_on": "A new sign-in signs out the account's other browser.",
+      "sessions_any": "An account can be signed in on any number of browsers and devices at once.",
+      "sessions_up_to": "An account can be signed in on up to {max} browsers and devices at once.",
+      "single_session_env_source": "Set in the environment file ({name}={value}). Remove it there to use this switch."
     },
     "backup_tab": {
       "create_title": "Lag en sikkerhetskopi",
