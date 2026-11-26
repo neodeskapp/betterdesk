@@ -6766,7 +6766,11 @@
     "areas_title": "क्षेत्र के अनुसार छूटे पाठ",
     "areas_note": "हर कुंजी का पहला भाग बताता है कि पाठ कहाँ दिखता है। केवल उसके छूटे पाठ देखने के लिए कोई क्षेत्र चुनें।",
     "area_count": "{n} छूटे",
-    "area_show": "{area} में छूटे पाठ दिखाएँ"
+    "area_show": "{area} में छूटे पाठ दिखाएँ",
+    "page_purpose": "How complete each translation of the console is, and every text next to the English one.",
+    "page_only_shows": "This page only shows the language files; texts are changed in the files on the server. To change the language you see, open",
+    "page_own_link": "Your account › Preferences",
+    "status_legend": "Reference language: the files the others are compared with. Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "संसाधन नियंत्रण",

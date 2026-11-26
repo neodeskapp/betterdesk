@@ -4,13 +4,18 @@
   that language; Back and the browser's back return to the list). Read
   only: texts are changed in lang/<code>.json on the server. Old page:
   views/languages.ejs, public/js/languages.js.
+  The one settings template (SettingsPage, full width, no save line: the
+  page only shows): it says where your own language is changed (Your
+  account › Preferences) and what the statuses mean (PATTERN.md rules 5
+  and 10).
 -->
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { page } from '$app/state';
 	import { getMissing, getTexts, listLanguages, type LanguageRow, type Missing } from '#lib/api/languages.ts';
 	import { formatNumber } from '#lib/i18n/format.ts';
-	import { i18n, t } from '#lib/i18n/i18n.svelte.ts';
+	import { i18n, t, tf } from '#lib/i18n/i18n.svelte.ts';
+	import { link } from '#lib/nav.ts';
 	import {
 		SHOW_LIMIT,
 		buildRows,
@@ -41,6 +46,7 @@
 	import Table from '#lib/ui/Table.svelte';
 	import Toolbar from '#lib/ui/Toolbar.svelte';
 	import ValueCopy from '#lib/ui/ValueCopy.svelte';
+	import SettingsPage from '#lib/ui/settings/SettingsPage.svelte';
 	import type { Column } from '#lib/ui/table.ts';
 
 	const allowed = can('server.config');
@@ -283,148 +289,173 @@
 {/snippet}
 {#snippet fileFact()}<ValueCopy value={`lang/${lang.code}.json`} copy={false} />{/snippet}
 
-<div class="page page-wide languages-page">
-	<div class="page-head">
-		<h1>{t('nav.languages')}</h1>
-		<p class="page-description">{t('languages.page_description')}</p>
-	</div>
-
-	{#if !allowed}
-		<section class="section" aria-labelledby="forbidden-title">
-			<h2 id="forbidden-title">{t('errors.forbidden_title')}</h2>
-			<p class="section-note">{t('errors.forbidden_message')}</p>
-		</section>
-	{:else if !code}
-		<section class="section" id="lang-grid" aria-label={t('nav.languages')}>
-			<!-- Its line is kept while the list loads, so the table doesn't move down -->
-			<div class="count-line-row">
-				{#if listState === 'ready' && languages.length}
-					<CountLine
-						text={t('languages.count_line')}
-						values={{ total: languages.length, review: reviewCount, keys: refKeyCount }}
-					/>
-				{/if}
-			</div>
-			<Table
-				rows={languages}
-				columns={listColumns}
-				key={(l) => l.code}
-				label={t('nav.languages')}
-				loading={listState === 'loading'}
-				loadingText={t('languages.loading')}
-				error={listState === 'error' ? t('languages.load_error') : null}
-				onretry={() => void loadLanguages()}
-				emptyText={t('languages.no_languages')}
-				onrowclick={(l) => show(l.code)}
-				class="languages-table"
-			/>
-		</section>
-	{:else}
-		<section class="section lang-detail" aria-labelledby="lang-detail-title">
-			<p><a class="back" href={page.url.pathname + page.url.search}>{t('languages.back')}</a></p>
-			<h2 id="lang-detail-title" tabindex="-1" bind:this={titleEl}>{nameOf(lang)} ({code})</h2>
-			<p class="section-note">
-				{t('languages.detail_note', { language: nameOf(lang), file: `lang/${code}.json` })}
-			</p>
-
-			<div class="page-cols">
-				<div class="page-main">
-					<Toolbar>
-						{#snippet search()}
-							<SearchField
-								label={t('languages.search_texts')}
-								placeholder={t('languages.search_texts')}
-								bind:value={query}
-							/>
-						{/snippet}
-						<SegmentedFilter
-							label={t('languages.col_status')}
-							options={[
-								{ value: 'all' as const, label: t('languages.filter_all') },
-								{ value: 'missing' as const, label: t('languages.filter_missing') }
-							]}
-							bind:value={filter}
+<SettingsPage
+	id="languages"
+	wide
+	saveModel="none"
+	title={t('nav.languages')}
+	description={tf(
+		'languages.page_purpose',
+		'How complete each translation of the console is, and every text next to the English one.'
+	)}
+>
+	<div class="languages-page">
+		<p class="page-note">
+			{tf(
+				'languages.page_only_shows',
+				'This page only shows the language files; texts are changed in the files on the server. To change the language you see, open'
+			)}
+			<a href={link('/account#preferences-language')}
+				>{tf('languages.page_own_link', 'Your account › Preferences')}</a
+			>.
+		</p>
+		{#if !code}
+			<section class="section" id="lang-grid" aria-label={t('nav.languages')}>
+				<!-- Its line is kept while the list loads, so the table doesn't move down -->
+				<div class="count-line-row">
+					{#if listState === 'ready' && languages.length}
+						<CountLine
+							text={t('languages.count_line')}
+							values={{ total: languages.length, review: reviewCount, keys: refKeyCount }}
 						/>
-					</Toolbar>
-					{#if detailState === 'loading'}
-						<States kind="loading" message={t('languages.detail_loading')} />
-					{:else if detailState === 'error'}
-						<States
-							kind="error"
-							message={t('languages.detail_error')}
-							retryLabel={t('languages.try_again')}
-							onretry={() => code && void openDetail(code)}
-						/>
-					{:else if detail}
-						<p class="count-line" role="status">
-							<CountLine
-								text={!query.trim() && filter === 'all'
-									? t('languages.detail_total')
-									: t('languages.detail_matches')}
-								values={{ n: matching.length }}
-							/>
-							{#if matching.length > SHOW_LIMIT}{t('languages.detail_limit', {
-									n: formatNumber(SHOW_LIMIT)
-								})}{/if}
-							{#if !detail.missingKnown}{t('languages.missing_unknown')}{/if}
-						</p>
-						{#if !matching.length}
-							<States
-								message={filter === 'missing' && !query.trim()
-									? t('languages.none_missing')
-									: t('languages.no_match')}
-							/>
-						{:else}
-							<Table
-								rows={shown}
-								columns={textColumns}
-								key={(r) => r.key}
-								label={t('languages.col_key')}
-								class={isEn ? 'texts-table is-single' : 'texts-table'}
-							/>
-						{/if}
 					{/if}
 				</div>
+				<p class="status-legend">
+					{tf(
+						'languages.status_legend',
+						'Reference language: the files the others are compared with. Needs review: the file is marked as not yet checked by a person.'
+					)}
+				</p>
+				<Table
+					rows={languages}
+					columns={listColumns}
+					key={(l) => l.code}
+					label={t('nav.languages')}
+					loading={listState === 'loading'}
+					loadingText={t('languages.loading')}
+					error={listState === 'error' ? t('languages.load_error') : null}
+					onretry={() => void loadLanguages()}
+					emptyText={t('languages.no_languages')}
+					onrowclick={(l) => show(l.code)}
+					class="languages-table"
+				/>
+			</section>
+		{:else}
+			<section class="section lang-detail" aria-labelledby="lang-detail-title">
+				<p><a class="back" href={page.url.pathname + page.url.search}>{t('languages.back')}</a></p>
+				<h2 id="lang-detail-title" tabindex="-1" bind:this={titleEl}>{nameOf(lang)} ({code})</h2>
+				<p class="section-note">
+					{t('languages.detail_note', { language: nameOf(lang), file: `lang/${code}.json` })}
+				</p>
 
-				<aside class="page-side is-sticky" aria-labelledby="lang-summary-title">
-					<section class="section" aria-labelledby="lang-summary-title">
-						<h3 id="lang-summary-title">{t('languages.summary_title')}</h3>
-						<Facts items={summary} />
-					</section>
-					{#if !lang.is_reference && !isEn}
-						<section class="section" aria-labelledby="lang-areas-title">
-							<h3 id="lang-areas-title">{t('languages.areas_title')}</h3>
-							<p class="section-note">{t('languages.areas_note')}</p>
-							{#if detailState === 'loading'}
-								<States kind="loading" message={t('languages.detail_loading')} />
-							{:else if detail && !detail.missingKnown}
-								<States message={t('languages.missing_unknown')} />
-							{:else if detail && !areas.length}
-								<States message={t('languages.none_missing')} />
-							{:else if detail}
-								<RowList>
-									{#each areas as a (a.area)}
-										<ListRow title={a.area} sub={t('languages.area_count', { n: formatNumber(a.count) })}>
-											{#snippet end()}
-												<Button
-													size="sm"
-													aria-label={t('languages.area_show', { area: a.area })}
-													onclick={() => showArea(a.area)}>{t('languages.show_texts')}</Button
-												>
-											{/snippet}
-										</ListRow>
-									{/each}
-								</RowList>
+				<div class="page-cols">
+					<div class="page-main">
+						<Toolbar>
+							{#snippet search()}
+								<SearchField
+									label={t('languages.search_texts')}
+									placeholder={t('languages.search_texts')}
+									bind:value={query}
+								/>
+							{/snippet}
+							<SegmentedFilter
+								label={t('languages.col_status')}
+								options={[
+									{ value: 'all' as const, label: t('languages.filter_all') },
+									{ value: 'missing' as const, label: t('languages.filter_missing') }
+								]}
+								bind:value={filter}
+							/>
+						</Toolbar>
+						{#if detailState === 'loading'}
+							<States kind="loading" message={t('languages.detail_loading')} />
+						{:else if detailState === 'error'}
+							<States
+								kind="error"
+								message={t('languages.detail_error')}
+								retryLabel={t('languages.try_again')}
+								onretry={() => code && void openDetail(code)}
+							/>
+						{:else if detail}
+							<p class="count-line" role="status">
+								<CountLine
+									text={!query.trim() && filter === 'all'
+										? t('languages.detail_total')
+										: t('languages.detail_matches')}
+									values={{ n: matching.length }}
+								/>
+								{#if matching.length > SHOW_LIMIT}{t('languages.detail_limit', {
+										n: formatNumber(SHOW_LIMIT)
+									})}{/if}
+								{#if !detail.missingKnown}{t('languages.missing_unknown')}{/if}
+							</p>
+							{#if !matching.length}
+								<States
+									message={filter === 'missing' && !query.trim()
+										? t('languages.none_missing')
+										: t('languages.no_match')}
+								/>
+							{:else}
+								<Table
+									rows={shown}
+									columns={textColumns}
+									key={(r) => r.key}
+									label={t('languages.col_key')}
+									class={isEn ? 'texts-table is-single' : 'texts-table'}
+								/>
 							{/if}
+						{/if}
+					</div>
+
+					<aside class="page-side is-sticky" aria-labelledby="lang-summary-title">
+						<section class="section" aria-labelledby="lang-summary-title">
+							<h3 id="lang-summary-title">{t('languages.summary_title')}</h3>
+							<Facts items={summary} />
 						</section>
-					{/if}
-				</aside>
-			</div>
-		</section>
-	{/if}
-</div>
+						{#if !lang.is_reference && !isEn}
+							<section class="section" aria-labelledby="lang-areas-title">
+								<h3 id="lang-areas-title">{t('languages.areas_title')}</h3>
+								<p class="section-note">{t('languages.areas_note')}</p>
+								{#if detailState === 'loading'}
+									<States kind="loading" message={t('languages.detail_loading')} />
+								{:else if detail && !detail.missingKnown}
+									<States message={t('languages.missing_unknown')} />
+								{:else if detail && !areas.length}
+									<States message={t('languages.none_missing')} />
+								{:else if detail}
+									<RowList>
+										{#each areas as a (a.area)}
+											<ListRow title={a.area} sub={t('languages.area_count', { n: formatNumber(a.count) })}>
+												{#snippet end()}
+													<Button
+														size="sm"
+														aria-label={t('languages.area_show', { area: a.area })}
+														onclick={() => showArea(a.area)}>{t('languages.show_texts')}</Button
+													>
+												{/snippet}
+											</ListRow>
+										{/each}
+									</RowList>
+								{/if}
+							</section>
+						{/if}
+					</aside>
+				</div>
+			</section>
+		{/if}
+	</div>
+</SettingsPage>
 
 <style>
+	.page-note,
+	.status-legend {
+		margin: 0 0 var(--space-3);
+		max-width: var(--measure);
+		color: var(--text-muted);
+	}
+	.status-legend {
+		font-size: var(--text-sm);
+	}
 	.lang-cell {
 		display: inline-flex;
 		align-items: center;

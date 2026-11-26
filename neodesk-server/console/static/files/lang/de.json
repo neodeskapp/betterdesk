@@ -6760,7 +6760,11 @@
     "areas_title": "Fehlende Texte nach Bereich",
     "areas_note": "Der erste Teil jedes Schlüssels sagt, wo der Text erscheint. Wähle einen Bereich, um nur dessen fehlende Texte aufzulisten.",
     "area_count": "{n} fehlen",
-    "area_show": "Fehlende Texte in {area} anzeigen"
+    "area_show": "Fehlende Texte in {area} anzeigen",
+    "page_purpose": "Wie vollständig jede Übersetzung der Konsole ist, und jeder Text neben dem englischen.",
+    "page_only_shows": "Diese Seite zeigt die Sprachdateien nur an; Texte werden in den Dateien auf dem Server geändert. Deine eigene Sprache änderst du unter",
+    "page_own_link": "Dein Konto › Persönliche Einstellungen",
+    "status_legend": "Referenzsprache: die Dateien, mit denen die anderen verglichen werden. Zu prüfen: Die Datei ist als noch nicht von einem Menschen geprüft markiert."
   },
   "resource_control": {
     "title": "Dashboard",

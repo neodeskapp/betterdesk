@@ -6903,7 +6903,11 @@
     "areas_title": "依區域列出缺少的文字",
     "areas_note": "每個鍵的第一部分表示文字出現的位置。選擇一個區域，只列出其中缺少的文字。",
     "area_count": "缺少 {n} 則",
-    "area_show": "顯示 {area} 中缺少的文字"
+    "area_show": "顯示 {area} 中缺少的文字",
+    "page_purpose": "How complete each translation of the console is, and every text next to the English one.",
+    "page_only_shows": "This page only shows the language files; texts are changed in the files on the server. To change the language you see, open",
+    "page_own_link": "Your account › Preferences",
+    "status_legend": "Reference language: the files the others are compared with. Needs review: the file is marked as not yet checked by a person."
   },
   "resource_control": {
     "title": "資源控制",
