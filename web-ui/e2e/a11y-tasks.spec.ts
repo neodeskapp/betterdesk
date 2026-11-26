@@ -96,7 +96,8 @@ test.describe('keyboard only', () => {
 		const text = `Keyboard check ${Date.now()}`;
 		await page.keyboard.type(text);
 		await page.keyboard.press('Enter');
-		await expect(main.getByText(text)).toBeVisible({ timeout: 10_000 });
+		// The message itself, not the preview line in the list
+		await expect(main.getByText(text, { exact: true })).toBeVisible({ timeout: 10_000 });
 		// The attach button is a named button, so a file goes without dragging
 		await expect(main.getByRole('button', { name: /attach|file/i }).first()).toBeVisible();
 	});
