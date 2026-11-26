@@ -130,6 +130,19 @@ describe('isSearchShortcut', () => {
 		editable.setAttribute('contenteditable', 'true');
 		expect(isSearchShortcut(key('/', {}, editable))).toBe(false);
 	});
+
+	test('Turn off single-key shortcuts leaves only Ctrl+K (WCAG 2.1.4)', async () => {
+		const { a11y, DEFAULTS } = await import('../../../src/lib/shell/a11y.svelte.ts');
+		a11y.settings = { ...DEFAULTS, noSingleKeyShortcuts: true };
+		try {
+			expect(isSearchShortcut(key('/'))).toBe(false);
+			expect(isSearchShortcut(key('k', { ctrlKey: true }))).toBe(true);
+			expect(isSearchShortcut(key('K', { metaKey: true }, input))).toBe(true);
+		} finally {
+			a11y.settings = { ...DEFAULTS };
+		}
+		expect(isSearchShortcut(key('/'))).toBe(true);
+	});
 });
 
 describe('SearchDialog', () => {
