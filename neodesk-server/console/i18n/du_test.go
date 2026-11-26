@@ -15,8 +15,8 @@ import (
 // Lowercase sie and ihr are third person and never match.
 var formalAddress = regexp.MustCompile(`(?:^|[^\p{L}])(Sie|Ihr|Ihre|Ihren|Ihrem|Ihrer|Ihres|Ihnen)(?:[^\p{L}]|$)`)
 
-// theyNotYou lists the German texts where a capitalised Sie starts a
-// sentence and means they or it, not you. Each entry is the key and the
+// theyNotYou lists the German texts where a capitalised Sie or Ihre starts
+// a sentence and means they, it or their, not you. Each entry is the key and the
 // words of its text that hold the Sie, with what Sie stands for.
 var theyNotYou = []struct{ key, words, reason string }{
 	{"settings.public_endpoints_desc", "Sie erscheinen in der Client-Einrichtung", "the addresses"},
@@ -46,6 +46,16 @@ var theyNotYou = []struct{ key, words, reason string }{
 	{"onboard.support.text", "Sie lädt eine kleine App herunter", "the person who needs help"},
 	{"onboard.public.support_steps_macos_1", "Sie läuft aus deinem Download-Ordner", "the downloaded file"},
 	{"remote_viewer.open_in_new_tab_hint", "Sie verbindet sich dort neu", "the session"},
+	{"email_change.notice_lead", "Sie ändert sich, sobald", "the address"},
+	{"settings.notices.note", "Sie gehen nur raus", "the mails"},
+	{"users.bulk_delete_effect", "Ihre API-Token werden widerrufen", "the accounts"},
+	{"users.bulk_disable_effect", "Ihre Sitzungen und Zugriffstoken enden", "the accounts"},
+	{"users.bulk_password_change_effect", "Ihre Sitzungen laufen bis dahin weiter", "the accounts"},
+	{"users.bulk_role_effect", "Ihre Sitzungen und Zugriffstoken enden", "the accounts"},
+	{"users.delete_handover_hint_no_orgs", "Sie zu übergeben", "the memberships"},
+	{"users.import_invites_sent", "Ihre Einladungen gingen", "the imported accounts"},
+	{"users.import_mode_none_hint", "Sie können sich erst anmelden", "the imported accounts"},
+	{"users.import_none_next", "Sie können sich noch nicht anmelden", "the imported accounts"},
 }
 
 // germanTexts reads the console's German language file as key to text.
