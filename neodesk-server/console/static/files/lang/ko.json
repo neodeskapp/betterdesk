@@ -7381,7 +7381,7 @@
     "letter_spacing": "문자 간격",
     "word_spacing": "단어 간격",
     "readable_font": "읽을 수 있는 글꼴",
-    "readable_font_hint": "Verdana 같은 넓고 단순한 글꼴을 사용합니다.",
+    "readable_font_hint": "글자와 단어 사이 간격을 조금 넓힌 단순한 글꼴입니다.",
     "dyslexia_spacing": "난독증 간격",
     "dyslexia_spacing_hint": "글자와 단어 사이 간격을 넓힙니다.",
     "visual": "시각",
@@ -7411,7 +7411,7 @@
     "large_cursor": "큰 커서",
     "large_cursor_hint": "더 큰 고대비 포인터를 사용합니다.",
     "reduce_motion": "움직임 줄이기",
-    "reduce_motion_hint": "전환 효과와 부드러운 스크롤을 끕니다.",
+    "reduce_motion_hint": "전환 효과, 애니메이션, 움직이는 슬라이드를 끕니다.",
     "pause_animations": "애니메이션 일시중지",
     "pause_animations_hint": "로딩 표시 같은 애니메이션을 멈춥니다.",
     "reading_guide": "독서 가이드",
@@ -7429,7 +7429,20 @@
     "done": "완료",
     "profiles_note": "각 프로필은 아래의 여러 설정을 한 번에 바꿉니다. 다시 선택하면 기본값으로 돌아갑니다.",
     "spacing_normal": "보통",
-    "reset_defaults": "기본값으로 재설정"
+    "reset_defaults": "기본값으로 재설정",
+    "subtitle_account": "기본적으로 콘솔은 시스템 설정을 따릅니다. 변경 사항은 바로 계정에 저장됩니다.",
+    "subtitle_browser": "기본적으로 콘솔은 시스템 설정을 따릅니다. 변경 사항은 바로 이 브라우저에 저장됩니다.",
+    "more_contrast": "대비 높이기",
+    "more_contrast_hint": "텍스트, 선, 컨트롤의 색을 더 진하게 합니다. Windows 대비 테마가 항상 우선합니다.",
+    "follow_system": "시스템 설정 따르기",
+    "choice_on": "켜기",
+    "choice_off": "끄기",
+    "single_key_shortcuts": "단일 키 단축키 끄기",
+    "single_key_shortcuts_hint": "/ 키로 더 이상 검색이 열리지 않습니다. Ctrl+K는 계속 작동합니다.",
+    "pause_live_updates": "실시간 업데이트 일시 중지",
+    "pause_live_updates_hint": "목록과 페이지가 새 데이터를 스스로 불러오지 않습니다. 원할 때 새로고침으로 불러오세요.",
+    "saved": "저장됨",
+    "save_failed": "설정을 저장하지 못했습니다. 다시 시도하세요."
   },
   "server_mgmt": {
     "title": "서버 관리",
@@ -8997,8 +9010,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "움직임, 대비, 링크, 글꼴, 단축키, 실시간 업데이트. 계정에 저장됩니다.",
+    "accessibility_on": "계정에서 일부 접근성 설정이 켜져 있습니다.",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9046,5 +9059,9 @@
     "move_up": "위로 이동",
     "move_down": "아래로 이동",
     "move_right": "오른쪽으로 이동"
+  },
+  "live": {
+    "last_updated": "마지막 업데이트 {time}",
+    "paused": "실시간 업데이트가 일시 중지되었습니다."
   }
 }

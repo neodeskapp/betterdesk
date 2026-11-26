@@ -7381,7 +7381,7 @@
     "letter_spacing": "Letterspatiëring",
     "word_spacing": "Woordspatiëring",
     "readable_font": "Leesbaar lettertype",
-    "readable_font_hint": "Gebruikt een breed, eenvoudig lettertype zoals Verdana.",
+    "readable_font_hint": "Een eenvoudig lettertype met iets meer ruimte tussen letters en woorden.",
     "dyslexia_spacing": "Dyslexiespatiëring",
     "dyslexia_spacing_hint": "Voegt ruimte toe tussen letters en woorden.",
     "visual": "Visueel",
@@ -7411,7 +7411,7 @@
     "large_cursor": "Grote cursor",
     "large_cursor_hint": "Vergroot de cursorindicatoren in interactieve weergaven.",
     "reduce_motion": "Beweging verminderen",
-    "reduce_motion_hint": "Zet overgangen en vloeiend scrollen uit.",
+    "reduce_motion_hint": "Zet overgangen, animaties en wisselende dia's uit.",
     "pause_animations": "Animaties pauzeren",
     "pause_animations_hint": "Bevriest animaties zoals laadindicatoren.",
     "reading_guide": "Leesliniaal",
@@ -7429,7 +7429,20 @@
     "done": "Gereed",
     "profiles_note": "Elk profiel wijzigt meerdere instellingen hieronder tegelijk. Kies het opnieuw om terug te gaan naar de standaardwaarden.",
     "spacing_normal": "Normaal",
-    "reset_defaults": "Standaardwaarden herstellen"
+    "reset_defaults": "Standaardwaarden herstellen",
+    "subtitle_account": "Standaard volgt de console de instellingen van je systeem. Elke wijziging wordt meteen voor je account opgeslagen.",
+    "subtitle_browser": "Standaard volgt de console de instellingen van je systeem. Elke wijziging wordt meteen in deze browser opgeslagen.",
+    "more_contrast": "Meer contrast",
+    "more_contrast_hint": "Sterkere kleuren voor tekst, lijnen en bedieningselementen. Een contrastthema van Windows gaat altijd voor.",
+    "follow_system": "Systeem volgen",
+    "choice_on": "Aan",
+    "choice_off": "Uit",
+    "single_key_shortcuts": "Sneltoetsen met één toets uitzetten",
+    "single_key_shortcuts_hint": "De toets / opent het zoeken niet meer. Ctrl+K doet dat nog wel.",
+    "pause_live_updates": "Live-updates pauzeren",
+    "pause_live_updates_hint": "Lijsten en pagina's laden niet meer zelf nieuwe gegevens. Met Vernieuwen laad je ze wanneer je wilt.",
+    "saved": "Opgeslagen",
+    "save_failed": "De instelling kon niet worden opgeslagen. Probeer het opnieuw."
   },
   "server_mgmt": {
     "title": "Serverbeheer",
@@ -8997,8 +9010,8 @@
     "theme": "Thema voor deze browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Beweging, contrast, links, lettertype, sneltoetsen en live-updates. Opgeslagen voor je account.",
+    "accessibility_on": "Sommige toegankelijkheidsinstellingen staan aan voor je account.",
     "accessibility_open": "Toegankelijkheid instellen"
   },
   "devices_add": {
@@ -9046,5 +9059,9 @@
     "move_up": "Omhoog",
     "move_down": "Omlaag",
     "move_right": "Naar rechts"
+  },
+  "live": {
+    "last_updated": "Laatst bijgewerkt {time}",
+    "paused": "Live-updates zijn gepauzeerd."
   }
 }

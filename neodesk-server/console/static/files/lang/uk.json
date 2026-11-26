@@ -7387,7 +7387,7 @@
     "letter_spacing": "Інтервал між літерами",
     "word_spacing": "Інтервал між словами",
     "readable_font": "Читабельний шрифт",
-    "readable_font_hint": "Використовує широкий простий шрифт, наприклад Verdana.",
+    "readable_font_hint": "Простий шрифт із трохи більшими проміжками між літерами та словами.",
     "dyslexia_spacing": "Дислексія інтервал",
     "dyslexia_spacing_hint": "Збільшує відстань між літерами та словами.",
     "visual": "Візуальне",
@@ -7417,7 +7417,7 @@
     "large_cursor": "Великий курсор",
     "large_cursor_hint": "Використовує більший висококонтрастний покажчик.",
     "reduce_motion": "Зменшити рух",
-    "reduce_motion_hint": "Вимикає переходи та плавне прокручування.",
+    "reduce_motion_hint": "Вимикає переходи, анімації та слайди, що змінюються.",
     "pause_animations": "Призупинити анімації",
     "pause_animations_hint": "Зупиняє анімацію, наприклад індикатори завантаження.",
     "reading_guide": "Посібник з читання",
@@ -7435,7 +7435,20 @@
     "done": "Готово",
     "profiles_note": "Кожен профіль змінює одразу кілька налаштувань нижче. Виберіть його ще раз, щоб повернутися до стандартних значень.",
     "spacing_normal": "Звичайний",
-    "reset_defaults": "Скинути до стандартних"
+    "reset_defaults": "Скинути до стандартних",
+    "subtitle_account": "Типово консоль дотримується налаштувань вашої системи. Кожна зміна одразу зберігається у вашому обліковому записі.",
+    "subtitle_browser": "Типово консоль дотримується налаштувань вашої системи. Кожна зміна одразу зберігається в цьому браузері.",
+    "more_contrast": "Більше контрасту",
+    "more_contrast_hint": "Насиченіші кольори тексту, ліній і елементів керування. Контрастна тема Windows завжди має перевагу.",
+    "follow_system": "Як у системі",
+    "choice_on": "Увімкнено",
+    "choice_off": "Вимкнено",
+    "single_key_shortcuts": "Вимкнути скорочення однією клавішею",
+    "single_key_shortcuts_hint": "Клавіша / більше не відкриває пошук. Ctrl+K і далі працює.",
+    "pause_live_updates": "Призупинити оновлення наживо",
+    "pause_live_updates_hint": "Списки та сторінки не завантажують нові дані самі. Оновити завантажує їх, коли вам потрібно.",
+    "saved": "Збережено",
+    "save_failed": "Не вдалося зберегти налаштування. Спробуйте ще раз."
   },
   "server_mgmt": {
     "title": "Керування сервером",
@@ -9003,8 +9016,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Рух, контраст, посилання, шрифт, скорочення та оновлення наживо. Зберігається у вашому обліковому записі.",
+    "accessibility_on": "Деякі налаштування доступності увімкнено для вашого облікового запису.",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9052,5 +9065,9 @@
     "move_up": "Перемістити вгору",
     "move_down": "Перемістити вниз",
     "move_right": "Перемістити праворуч"
+  },
+  "live": {
+    "last_updated": "Останнє оновлення {time}",
+    "paused": "Оновлення наживо призупинено."
   }
 }

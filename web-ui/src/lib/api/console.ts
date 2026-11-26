@@ -55,7 +55,9 @@ export const Bootstrap = v.object({
 		username: v.string(),
 		role: v.string(),
 		preferredLanguage: v.nullable(v.string()),
-		avatarVersion: v.nullable(v.union([v.string(), v.number()]))
+		avatarVersion: v.nullable(v.union([v.string(), v.number()])),
+		/* The account's accessibility settings, null when it never saved any (older servers send none) */
+		accessibility: v.optional(v.nullable(v.looseObject({})))
 	}),
 	permissions: v.array(v.string()),
 	/* Older servers send none */

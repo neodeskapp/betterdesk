@@ -7387,7 +7387,7 @@
     "letter_spacing": "Bokstavsavstånd",
     "word_spacing": "Ordavstånd",
     "readable_font": "Läsbart typsnitt",
-    "readable_font_hint": "Använder ett brett, enkelt typsnitt som Verdana.",
+    "readable_font_hint": "Ett enkelt typsnitt med lite mer luft mellan bokstäver och ord.",
     "dyslexia_spacing": "Dyslexiavstånd",
     "dyslexia_spacing_hint": "Ger mer luft mellan bokstäver och ord.",
     "visual": "Visuellt",
@@ -7417,7 +7417,7 @@
     "large_cursor": "Stor markör",
     "large_cursor_hint": "Använder en större pekare med hög kontrast.",
     "reduce_motion": "Minska rörelse",
-    "reduce_motion_hint": "Stänger av övergångar och mjuk rullning.",
+    "reduce_motion_hint": "Stänger av övergångar, animationer och bilder som byts.",
     "pause_animations": "Pausa animationer",
     "pause_animations_hint": "Fryser animationer som laddningssnurror.",
     "reading_guide": "Läsguide",
@@ -7435,7 +7435,20 @@
     "done": "Klar",
     "profiles_note": "Varje profil ändrar flera av inställningarna nedan på en gång. Välj den igen för att gå tillbaka till standard.",
     "spacing_normal": "Normal",
-    "reset_defaults": "Återställ standard"
+    "reset_defaults": "Återställ standard",
+    "subtitle_account": "Som standard följer konsolen systemets inställningar. Varje ändring sparas direkt för ditt konto.",
+    "subtitle_browser": "Som standard följer konsolen systemets inställningar. Varje ändring sparas direkt i den här webbläsaren.",
+    "more_contrast": "Mer kontrast",
+    "more_contrast_hint": "Starkare färger för text, linjer och kontroller. Ett kontrasttema i Windows går alltid före.",
+    "follow_system": "Följ systemet",
+    "choice_on": "På",
+    "choice_off": "Av",
+    "single_key_shortcuts": "Stäng av kortkommandon med en tangent",
+    "single_key_shortcuts_hint": "Tangenten / öppnar inte längre sökningen. Ctrl+K gör det fortfarande.",
+    "pause_live_updates": "Pausa liveuppdateringar",
+    "pause_live_updates_hint": "Listor och sidor hämtar inte nya data av sig själva. Uppdatera hämtar dem när du vill.",
+    "saved": "Sparat",
+    "save_failed": "Inställningen kunde inte sparas. Försök igen."
   },
   "server_mgmt": {
     "title": "Serverhantering",
@@ -9003,8 +9016,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Rörelse, kontrast, länkar, typsnitt, kortkommandon och liveuppdateringar. Sparas för ditt konto.",
+    "accessibility_on": "Vissa tillgänglighetsinställningar är på för ditt konto.",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9052,5 +9065,9 @@
     "move_up": "Flytta uppåt",
     "move_down": "Flytta nedåt",
     "move_right": "Flytta åt höger"
+  },
+  "live": {
+    "last_updated": "Senast uppdaterad {time}",
+    "paused": "Liveuppdateringar är pausade."
   }
 }

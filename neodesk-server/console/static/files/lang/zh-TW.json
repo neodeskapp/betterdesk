@@ -7403,7 +7403,7 @@
     "letter_spacing": "字母間距",
     "word_spacing": "單詞間距",
     "readable_font": "易讀字體",
-    "readable_font_hint": "使用 Verdana 等寬大、簡潔的字型。",
+    "readable_font_hint": "使用簡潔的字體，字母和字詞之間的間距稍大。",
     "dyslexia_spacing": "閱讀障礙間距",
     "dyslexia_spacing_hint": "加大字母與單字之間的間距。",
     "visual": "視覺",
@@ -7433,7 +7433,7 @@
     "large_cursor": "大光標",
     "large_cursor_hint": "使用更大的高對比度指針。",
     "reduce_motion": "減少動態效果",
-    "reduce_motion_hint": "關閉轉場效果與平滑捲動。",
+    "reduce_motion_hint": "關閉轉場、動畫和自動切換的投影片。",
     "pause_animations": "暫停動畫",
     "pause_animations_hint": "凍結動畫，例如載入中的轉圈圖示。",
     "reading_guide": "閱讀引導線",
@@ -7451,7 +7451,20 @@
     "done": "完成",
     "profiles_note": "每個設定檔會一次變更下方的多項設定。再選一次即可回到預設值。",
     "spacing_normal": "標準",
-    "reset_defaults": "重設為預設值"
+    "reset_defaults": "重設為預設值",
+    "subtitle_account": "主控台預設遵循您的系統設定。每項變更都會立即儲存到您的帳戶。",
+    "subtitle_browser": "主控台預設遵循您的系統設定。每項變更都會立即儲存在此瀏覽器中。",
+    "more_contrast": "提高對比度",
+    "more_contrast_hint": "讓文字、線條和控制項的顏色更鮮明。Windows 對比佈景主題一律優先。",
+    "follow_system": "跟隨系統",
+    "choice_on": "開啟",
+    "choice_off": "關閉",
+    "single_key_shortcuts": "關閉單鍵快速鍵",
+    "single_key_shortcuts_hint": "按 / 鍵不再開啟搜尋。Ctrl+K 仍可開啟。",
+    "pause_live_updates": "暫停即時更新",
+    "pause_live_updates_hint": "清單和頁面不會自行載入新資料。需要時按「重新整理」載入。",
+    "saved": "已儲存",
+    "save_failed": "無法儲存設定。請再試一次。"
   },
   "server_mgmt": {
     "title": "服務器管理",
@@ -9001,8 +9014,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "動態效果、對比度、連結、字體、快速鍵和即時更新。儲存在您的帳戶中。",
+    "accessibility_on": "您的帳戶已開啟部分無障礙設定。",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9050,5 +9063,9 @@
     "move_up": "向上移動",
     "move_down": "向下移動",
     "move_right": "向右移動"
+  },
+  "live": {
+    "last_updated": "上次更新 {time}",
+    "paused": "即時更新已暫停。"
   }
 }

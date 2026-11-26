@@ -40,14 +40,12 @@
 	import { closePopups } from '#lib/ui/popups.svelte.ts';
 	import { toast } from '#lib/ui/toasts.svelte.ts';
 	import { lazy } from '#lib/util/lazy.ts';
-	import A11yPanel from './A11yPanel.svelte';
 	import BottomNav from './BottomNav.svelte';
 	import HelpPanel from './HelpPanel.svelte';
 	import IdleWarning from './IdleWarning.svelte';
 	import SearchDialog from './SearchDialog.svelte';
 	import Sidebar from './Sidebar.svelte';
 	import Topbar from './Topbar.svelte';
-	import { a11y } from './a11y.svelte.ts';
 	import { brandingExtras } from './api.ts';
 	import { onPanelEvents, startLiveEvents, stopLiveEvents } from './live-events.svelte.ts';
 	import { bottomItems, breadcrumb, buildNavModel, pageKey } from './nav-model.ts';
@@ -285,7 +283,6 @@
 		{#if !sessionPage}<BottomNav items={bottom} drawerId={sidebarId} {drawerOpen} onmore={openDrawer} />{/if}
 	</div>
 	<SearchDialog bind:open={searchOpen} />
-	<A11yPanel bind:open={a11y.open} />
 {/if}
 <IdleWarning />
 <DialogHost />

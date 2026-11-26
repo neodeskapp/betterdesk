@@ -7399,7 +7399,7 @@
     "letter_spacing": "Odstępy liter",
     "word_spacing": "Odstępy słów",
     "readable_font": "Czytelna czcionka",
-    "readable_font_hint": "Używa szerokiej, prostej czcionki, np. Verdana.",
+    "readable_font_hint": "Prosta czcionka z nieco większymi odstępami między literami i słowami.",
     "dyslexia_spacing": "Odstępy dla dysleksji",
     "dyslexia_spacing_hint": "Zwiększa odstępy między literami i słowami.",
     "visual": "Widoczność",
@@ -7429,7 +7429,7 @@
     "large_cursor": "Duży kursor",
     "large_cursor_hint": "Używa większego kursora o wysokim kontraście.",
     "reduce_motion": "Ogranicz ruch",
-    "reduce_motion_hint": "Wyłącza przejścia i płynne przewijanie.",
+    "reduce_motion_hint": "Wyłącza przejścia, animacje i zmieniające się slajdy.",
     "pause_animations": "Pauzuj animacje",
     "pause_animations_hint": "Zatrzymuje animacje, np. wskaźniki ładowania.",
     "reading_guide": "Prowadnica czytania",
@@ -7447,7 +7447,20 @@
     "done": "Gotowe",
     "profiles_note": "Każdy profil zmienia naraz kilka ustawień poniżej. Wybierz go ponownie, aby wrócić do ustawień domyślnych.",
     "spacing_normal": "Normalny",
-    "reset_defaults": "Przywróć domyślne"
+    "reset_defaults": "Przywróć domyślne",
+    "subtitle_account": "Domyślnie konsola stosuje ustawienia Twojego systemu. Każda zmiana jest od razu zapisywana na Twoim koncie.",
+    "subtitle_browser": "Domyślnie konsola stosuje ustawienia Twojego systemu. Każda zmiana jest od razu zapisywana w tej przeglądarce.",
+    "more_contrast": "Większy kontrast",
+    "more_contrast_hint": "Mocniejsze kolory tekstu, linii i elementów sterujących. Motyw kontrastowy systemu Windows ma zawsze pierwszeństwo.",
+    "follow_system": "Jak w systemie",
+    "choice_on": "Włączone",
+    "choice_off": "Wyłączone",
+    "single_key_shortcuts": "Wyłącz skróty jednoklawiszowe",
+    "single_key_shortcuts_hint": "Klawisz / nie otwiera już wyszukiwania. Ctrl+K nadal działa.",
+    "pause_live_updates": "Wstrzymaj aktualizacje na żywo",
+    "pause_live_updates_hint": "Listy i strony nie wczytują same nowych danych. Odśwież wczytuje je wtedy, gdy chcesz.",
+    "saved": "Zapisano",
+    "save_failed": "Nie udało się zapisać ustawienia. Spróbuj ponownie."
   },
   "server_mgmt": {
     "title": "Zarządzanie serwerem",
@@ -8997,8 +9010,8 @@
     "theme": "Motyw dla tej przeglądarki",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Ruch, kontrast, linki, czcionka, skróty i aktualizacje na żywo. Zapisywane na Twoim koncie.",
+    "accessibility_on": "Niektóre ustawienia dostępności są włączone na Twoim koncie.",
     "accessibility_open": "Ustawienia dostępności"
   },
   "devices_add": {
@@ -9046,5 +9059,9 @@
     "move_up": "Przesuń w górę",
     "move_down": "Przesuń w dół",
     "move_right": "Przesuń w prawo"
+  },
+  "live": {
+    "last_updated": "Ostatnia aktualizacja {time}",
+    "paused": "Aktualizacje na żywo są wstrzymane."
   }
 }

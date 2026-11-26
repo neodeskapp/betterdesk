@@ -1,14 +1,14 @@
 /*
- * Effects of the accessibility panel's settings (shell/a11y.svelte.ts and
- * /console-boot.js put data-a11y-* attributes and --bd-a11y-* variables on
- * <html>). Ported from web-nodejs/public/css/accessibility.css.
+ * Effects of the accessibility settings. shell/a11y.svelte.ts and
+ * /console-boot.js put data-a11y-* on <html>: data-a11y-reduce-motion and
+ * data-a11y-more-contrast say whether the option applies now (the
+ * system's setting already worked in), data-a11y-underline-links and
+ * data-a11y-readable-font the two switches.
  *
  * These are the person's own overrides, so they must win over component
  * styles. Instead of important flags, the rules that compete with
  * components add :not(#nd-a11y-never) (no element has that id), which
- * gives them an id's weight; strong focus adds it twice so it also wins
- * over "Highlight actions". Font size needs nothing here: --font-scale in
- * tokens.css follows --bd-a11y-font-scale.
+ * gives them an id's weight.
  */
 
 :root {
@@ -32,132 +32,105 @@ html[data-a11y-active='true']
 	word-spacing: var(--bd-a11y-word-spacing, 0);
 }
 
+/* Readable font: a plain font and a little more space between letters
+   and words, on everything the page shows. Dialogs, sheets, menus and
+   toasts hang off <body> outside the main area, and the public pages
+   have no main area, so the rule takes every element. Icons keep their
+   spacing: the icon font draws a name as one glyph only without it. */
 html[data-a11y-readable-font='true'] {
 	--font: Verdana, Tahoma, Arial, sans-serif;
 }
 
-html[data-a11y-readable-font='true'] :is(body, button, input, select, textarea):not(#nd-a11y-never) {
-	font-family: Verdana, Tahoma, Arial, sans-serif;
+html[data-a11y-readable-font='true'] :is(button, input, select, textarea) {
+	font-family: var(--font);
 }
 
-html[data-a11y-dyslexia='true'] {
-	--font: 'Trebuchet MS', Verdana, Arial, sans-serif;
+html[data-a11y-readable-font='true'] body,
+html[data-a11y-readable-font='true']
+	body
+	*:not(.material-icons, code, kbd, samp, pre, .mono):not(#nd-a11y-never) {
+	letter-spacing: 0.035em;
+	word-spacing: 0.08em;
 }
 
-html[data-a11y-dyslexia='true'] :is(body, button, input, select, textarea):not(#nd-a11y-never) {
-	font-family: 'Trebuchet MS', Verdana, Arial, sans-serif;
-}
+/* ── More contrast: the high-contrast palette of the theme in use. The
+   console's tokens (tokens.css) and the palette variables behind them are
+   both set, so a palette written inline on <html> (the per-browser theme
+   choice) cannot win. A Windows contrast theme (forced colours) always
+   wins: then the system's colours apply and these stay out. ── */
 
-html[data-a11y-dyslexia='true']
-	:is(.main-content, .nd-a11y-modal, .shell-breadcrumb)
-	:not(.material-icons, .material-symbols-outlined):not(#nd-a11y-never) {
-	letter-spacing: max(var(--bd-a11y-letter-spacing, 0em), 0.035em);
-	word-spacing: max(var(--bd-a11y-word-spacing, 0em), 0.08em);
-}
+@media (forced-colors: none) {
+	:root[data-a11y-more-contrast='true'][data-theme='dark'] {
+		--bg-primary: #000000;
+		--bg-secondary: #050505;
+		--bg-tertiary: #111111;
+		--bg-elevated: #1c1c1c;
+		--text-primary: #ffffff;
+		--text-secondary: #f2f2f2;
+		--border-primary: #ffffff;
+		--border-secondary: #bdbdbd;
+		--accent-blue: #80d4ff;
+		--accent-blue-hover: #bdefff;
+		--accent-green: #7cff95;
+		--accent-yellow: #ffe66d;
+		--accent-red: #ff8585;
 
-/* ── Contrast modes: the console's tokens (tokens.css) and the palette
-   variables behind them. Setting the tokens themselves means a palette
-   written inline on <html> (the per-browser theme choice) cannot win over
-   the mode. ── */
+		--bg: #000000;
+		--bg-subtle: #050505;
+		--hover: rgba(255, 255, 255, 0.18);
+		--bg-float: #1c1c1c;
+		--text: #ffffff;
+		--text-muted: #f2f2f2;
+		--border: #ffffff;
+		--rule: #bdbdbd;
+		--accent: #80d4ff;
+		--accent-hover: #bdefff;
+		--success: #7cff95;
+		--warning: #ffe66d;
+		--danger: #ff8585;
+		--danger-hover: #ffb3b3;
+		--accent-purple: #d0dde2;
+		--info: #d0dde2;
+		--on-accent: #000000;
+	}
 
-:root[data-a11y-contrast='high-dark'] {
-	--bg-primary: #000000;
-	--bg-secondary: #050505;
-	--bg-tertiary: #111111;
-	--bg-elevated: #1c1c1c;
-	--text-primary: #ffffff;
-	--text-secondary: #f2f2f2;
-	--border-primary: #ffffff;
-	--border-secondary: #bdbdbd;
-	--accent-blue: #80d4ff;
-	--accent-blue-hover: #bdefff;
-	--accent-green: #7cff95;
-	--accent-yellow: #ffe66d;
-	--accent-red: #ff8585;
+	:root[data-a11y-more-contrast='true'][data-theme='light'] {
+		--bg-primary: #ffffff;
+		--bg-secondary: #ffffff;
+		--bg-tertiary: #f2f4f7;
+		--bg-elevated: #e5e7eb;
+		--text-primary: #000000;
+		--text-secondary: #1f2937;
+		--border-primary: #000000;
+		--border-secondary: #4b5563;
+		--accent-blue: #003f9e;
+		--accent-blue-hover: #002a6b;
+		--accent-green: #006b2e;
+		--accent-yellow: #8a5a00;
+		--accent-red: #a40000;
 
-	--bg: #000000;
-	--bg-subtle: #050505;
-	--hover: rgba(255, 255, 255, 0.18);
-	--bg-float: #1c1c1c;
-	--text: #ffffff;
-	--text-muted: #f2f2f2;
-	--border: #ffffff;
-	--rule: #bdbdbd;
-	--accent: #80d4ff;
-	--accent-hover: #bdefff;
-	--success: #7cff95;
-	--warning: #ffe66d;
-	--danger: #ff8585;
-	--danger-hover: #ffb3b3;
-	--accent-purple: #d0dde2;
-	--info: #d0dde2;
-}
-
-:root[data-a11y-contrast='high-light'] {
-	--bg-primary: #ffffff;
-	--bg-secondary: #ffffff;
-	--bg-tertiary: #f2f4f7;
-	--bg-elevated: #e5e7eb;
-	--text-primary: #000000;
-	--text-secondary: #1f2937;
-	--border-primary: #000000;
-	--border-secondary: #4b5563;
-	--accent-blue: #003f9e;
-	--accent-blue-hover: #002a6b;
-	--accent-green: #006b2e;
-	--accent-yellow: #8a5a00;
-	--accent-red: #a40000;
-
-	--bg: #ffffff;
-	--bg-subtle: #ffffff;
-	--hover: rgba(0, 0, 0, 0.08);
-	--bg-float: #e5e7eb;
-	--text: #000000;
-	--text-muted: #1f2937;
-	--border: #000000;
-	--rule: #4b5563;
-	--accent: #003f9e;
-	--accent-hover: #002a6b;
-	--success: #006b2e;
-	--warning: #8a5a00;
-	--danger: #a40000;
-	--danger-hover: #7a0000;
-	--accent-purple: #1f2937;
-	--info: #1f2937;
-	--presence-away: #8a5a00;
-}
-
-:root[data-a11y-contrast='yellow-black'] {
-	--bg-primary: #000000;
-	--bg-secondary: #000000;
-	--bg-tertiary: #161200;
-	--bg-elevated: #241f00;
-	--text-primary: #fff36d;
-	--text-secondary: #ffe66d;
-	--border-primary: #fff36d;
-	--border-secondary: #d9c957;
-	--accent-blue: #00e5ff;
-	--accent-blue-hover: #8ef5ff;
-	--accent-green: #8dff8d;
-	--accent-yellow: #fff36d;
-	--accent-red: #ff8a80;
-
-	--bg: #000000;
-	--bg-subtle: #000000;
-	--hover: rgba(255, 243, 109, 0.16);
-	--bg-float: #241f00;
-	--text: #fff36d;
-	--text-muted: #ffe66d;
-	--border: #fff36d;
-	--rule: #d9c957;
-	--accent: #00e5ff;
-	--accent-hover: #8ef5ff;
-	--success: #8dff8d;
-	--warning: #fff36d;
-	--danger: #ff8a80;
-	--danger-hover: #ffb3ad;
-	--accent-purple: #ffe66d;
-	--info: #ffe66d;
+		--bg: #ffffff;
+		--bg-subtle: #ffffff;
+		--hover: rgba(0, 0, 0, 0.08);
+		--bg-float: #e5e7eb;
+		--text: #000000;
+		--text-muted: #1f2937;
+		--border: #000000;
+		--rule: #4b5563;
+		--accent: #003f9e;
+		--accent-hover: #002a6b;
+		--success: #006b2e;
+		--warning: #8a5a00;
+		--danger: #a40000;
+		--danger-hover: #7a0000;
+		--accent-purple: #1f2937;
+		--info: #1f2937;
+		--presence-away: #8a5a00;
+		--on-accent: #ffffff;
+		--logo-square: #1f6feb;
+		--logo-circle: #4d8f06;
+		--logo-overlap: #0f9e96;
+	}
 }
 
 /* Colour filters go on the root element: a filter on any other element

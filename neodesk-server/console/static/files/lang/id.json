@@ -7387,7 +7387,7 @@
     "letter_spacing": "Spasi huruf",
     "word_spacing": "Spasi kata",
     "readable_font": "Font yang dapat dibaca",
-    "readable_font_hint": "Memakai huruf lebar dan sederhana seperti Verdana.",
+    "readable_font_hint": "Font sederhana dengan jarak sedikit lebih lebar antara huruf dan kata.",
     "dyslexia_spacing": "Jarak disleksia",
     "dyslexia_spacing_hint": "Menambah jarak antarhuruf dan antarkata.",
     "visual": "Tampilan",
@@ -7417,7 +7417,7 @@
     "large_cursor": "Kursor besar",
     "large_cursor_hint": "Menggunakan penunjuk kontras tinggi yang lebih besar.",
     "reduce_motion": "Kurangi gerakan",
-    "reduce_motion_hint": "Mematikan transisi dan gulir halus.",
+    "reduce_motion_hint": "Mematikan transisi, animasi, dan slide yang bergerak.",
     "pause_animations": "Jeda animasi",
     "pause_animations_hint": "Membekukan animasi seperti ikon pemuatan.",
     "reading_guide": "Panduan membaca",
@@ -7435,7 +7435,20 @@
     "done": "Selesai",
     "profiles_note": "Setiap profil mengubah beberapa pengaturan di bawah sekaligus. Pilih lagi untuk kembali ke bawaan.",
     "spacing_normal": "Normal",
-    "reset_defaults": "Kembalikan ke bawaan"
+    "reset_defaults": "Kembalikan ke bawaan",
+    "subtitle_account": "Secara bawaan, konsol mengikuti pengaturan sistem Anda. Setiap perubahan langsung disimpan untuk akun Anda.",
+    "subtitle_browser": "Secara bawaan, konsol mengikuti pengaturan sistem Anda. Setiap perubahan langsung disimpan di browser ini.",
+    "more_contrast": "Kontras lebih tinggi",
+    "more_contrast_hint": "Warna lebih kuat untuk teks, garis, dan kontrol. Tema kontras Windows selalu diutamakan.",
+    "follow_system": "Ikuti sistem",
+    "choice_on": "Aktif",
+    "choice_off": "Nonaktif",
+    "single_key_shortcuts": "Matikan pintasan satu tombol",
+    "single_key_shortcuts_hint": "Tombol / tidak lagi membuka pencarian. Ctrl+K tetap membukanya.",
+    "pause_live_updates": "Jeda pembaruan langsung",
+    "pause_live_updates_hint": "Daftar dan halaman tidak memuat data baru dengan sendirinya. Muat ulang memuatnya kapan pun Anda mau.",
+    "saved": "Tersimpan",
+    "save_failed": "Pengaturan tidak dapat disimpan. Coba lagi."
   },
   "server_mgmt": {
     "title": "Manajemen Server",
@@ -9003,8 +9016,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Gerakan, kontras, tautan, font, pintasan, dan pembaruan langsung. Disimpan untuk akun Anda.",
+    "accessibility_on": "Beberapa pengaturan aksesibilitas aktif untuk akun Anda.",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9052,5 +9065,9 @@
     "move_up": "Geser ke atas",
     "move_down": "Geser ke bawah",
     "move_right": "Geser ke kanan"
+  },
+  "live": {
+    "last_updated": "Terakhir diperbarui {time}",
+    "paused": "Pembaruan langsung dijeda."
   }
 }

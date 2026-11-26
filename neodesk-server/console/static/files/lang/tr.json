@@ -7387,7 +7387,7 @@
     "letter_spacing": "Harf aralığı",
     "word_spacing": "Kelime aralığı",
     "readable_font": "Okunabilir yazı tipi",
-    "readable_font_hint": "Verdana gibi geniş ve sade bir yazı tipi kullanır.",
+    "readable_font_hint": "Harfler ve sözcükler arasında biraz daha fazla boşluk bırakan sade bir yazı tipi.",
     "dyslexia_spacing": "Disleksi aralığı",
     "dyslexia_spacing_hint": "Harfler ve kelimeler arasına boşluk ekler.",
     "visual": "Görsel",
@@ -7417,7 +7417,7 @@
     "large_cursor": "Büyük imleç",
     "large_cursor_hint": "Daha büyük, yüksek kontrastlı bir işaretçi kullanır.",
     "reduce_motion": "Hareketi azalt",
-    "reduce_motion_hint": "Geçişleri ve yumuşak kaydırmayı kapatır.",
+    "reduce_motion_hint": "Geçişleri, animasyonları ve kendiliğinden değişen slaytları kapatır.",
     "pause_animations": "Animasyonları duraklat",
     "pause_animations_hint": "Yükleme göstergeleri gibi animasyonları dondurur.",
     "reading_guide": "Okuma kılavuzu",
@@ -7435,7 +7435,20 @@
     "done": "Bitti",
     "profiles_note": "Her profil aşağıdaki birkaç ayarı aynı anda değiştirir. Varsayılanlara dönmek için profili yeniden seçin.",
     "spacing_normal": "Normal",
-    "reset_defaults": "Varsayılanlara sıfırla"
+    "reset_defaults": "Varsayılanlara sıfırla",
+    "subtitle_account": "Konsol varsayılan olarak sisteminizin ayarlarını izler. Her değişiklik hemen hesabınıza kaydedilir.",
+    "subtitle_browser": "Konsol varsayılan olarak sisteminizin ayarlarını izler. Her değişiklik hemen bu tarayıcıya kaydedilir.",
+    "more_contrast": "Daha fazla kontrast",
+    "more_contrast_hint": "Metin, çizgi ve denetimler için daha güçlü renkler. Windows karşıtlık teması her zaman önceliklidir.",
+    "follow_system": "Sistemi izle",
+    "choice_on": "Açık",
+    "choice_off": "Kapalı",
+    "single_key_shortcuts": "Tek tuşlu kısayolları kapat",
+    "single_key_shortcuts_hint": "/ tuşu artık aramayı açmaz. Ctrl+K hâlâ açar.",
+    "pause_live_updates": "Canlı güncellemeleri duraklat",
+    "pause_live_updates_hint": "Listeler ve sayfalar yeni verileri kendiliğinden yüklemez. Yenile, istediğiniz zaman yükler.",
+    "saved": "Kaydedildi",
+    "save_failed": "Ayar kaydedilemedi. Yeniden deneyin."
   },
   "server_mgmt": {
     "title": "Sunucu Yönetimi",
@@ -9003,8 +9016,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Hareket, kontrast, bağlantılar, yazı tipi, kısayollar ve canlı güncellemeler. Hesabınıza kaydedilir.",
+    "accessibility_on": "Hesabınızda bazı erişilebilirlik ayarları açık.",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9052,5 +9065,9 @@
     "move_up": "Yukarı taşı",
     "move_down": "Aşağı taşı",
     "move_right": "Sağa taşı"
+  },
+  "live": {
+    "last_updated": "Son güncelleme {time}",
+    "paused": "Canlı güncellemeler duraklatıldı."
   }
 }

@@ -6,7 +6,8 @@
 	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
 	import { appPath, link } from '#lib/nav.ts';
 	import { redirectTarget } from '#lib/redirects.ts';
-	import A11yEffects from '#lib/shell/A11yEffects.svelte';
+	import A11yPanel from '#lib/shell/A11yPanel.svelte';
+	import { a11y, initA11y } from '#lib/shell/a11y.svelte.ts';
 	import Announcer from '#lib/ui/Announcer.svelte';
 	import { revealFocus } from '#lib/ui/reveal-focus.ts';
 
@@ -14,6 +15,8 @@
 
 	// Keyboard focus never stays half hidden under a bar or a pinned column
 	onMount(() => revealFocus());
+	// The accessibility settings this browser keeps (the boot script applied them before the first paint)
+	onMount(() => initA11y());
 
 	// A link inside the app to an old console address goes to its new place
 	// (lib/redirects.ts). An address the browser loads itself reaches the
@@ -37,8 +40,8 @@
 	});
 </script>
 
-<!-- Colour filters and the reading guide of the accessibility settings, on every page -->
-<A11yEffects />
+<!-- One accessibility panel for every page, signed in or not -->
+<A11yPanel bind:open={a11y.open} />
 <!-- The live regions every status message is read from -->
 <Announcer />
 {@render children()}

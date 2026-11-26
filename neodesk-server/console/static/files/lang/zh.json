@@ -7381,7 +7381,7 @@
     "letter_spacing": "字母间距",
     "word_spacing": "单词间距",
     "readable_font": "易读字体",
-    "readable_font_hint": "使用 Verdana 等宽大、简洁的字体。",
+    "readable_font_hint": "使用简洁的字体，字母和单词之间的间距稍大。",
     "dyslexia_spacing": "阅读障碍间距",
     "dyslexia_spacing_hint": "加大字母和单词之间的间距。",
     "visual": "视觉",
@@ -7411,7 +7411,7 @@
     "large_cursor": "大光标",
     "large_cursor_hint": "使用更大的高对比度指针。",
     "reduce_motion": "减少动态效果",
-    "reduce_motion_hint": "关闭过渡效果和平滑滚动。",
+    "reduce_motion_hint": "关闭过渡效果、动画和自动切换的幻灯片。",
     "pause_animations": "暂停动画",
     "pause_animations_hint": "冻结动画，例如加载中的转圈图标。",
     "reading_guide": "阅读引导线",
@@ -7429,7 +7429,20 @@
     "done": "完成",
     "profiles_note": "每个配置会一次更改下方的多项设置。再次选择即可恢复默认值。",
     "spacing_normal": "标准",
-    "reset_defaults": "恢复默认设置"
+    "reset_defaults": "恢复默认设置",
+    "subtitle_account": "控制台默认遵循你的系统设置。每项更改都会立即保存到你的账户。",
+    "subtitle_browser": "控制台默认遵循你的系统设置。每项更改都会立即保存在此浏览器中。",
+    "more_contrast": "提高对比度",
+    "more_contrast_hint": "让文字、线条和控件的颜色更鲜明。Windows 对比度主题始终优先。",
+    "follow_system": "跟随系统",
+    "choice_on": "开启",
+    "choice_off": "关闭",
+    "single_key_shortcuts": "关闭单键快捷键",
+    "single_key_shortcuts_hint": "按 / 键不再打开搜索。Ctrl+K 仍可打开。",
+    "pause_live_updates": "暂停实时更新",
+    "pause_live_updates_hint": "列表和页面不会自行加载新数据。需要时点击“刷新”加载。",
+    "saved": "已保存",
+    "save_failed": "无法保存设置。请重试。"
   },
   "server_mgmt": {
     "title": "服务器管理",
@@ -8997,8 +9010,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "动态效果、对比度、链接、字体、快捷键和实时更新。保存在你的账户中。",
+    "accessibility_on": "你的账户已开启部分无障碍设置。",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9046,5 +9059,9 @@
     "move_up": "向上移动",
     "move_down": "向下移动",
     "move_right": "向右移动"
+  },
+  "live": {
+    "last_updated": "上次更新 {time}",
+    "paused": "实时更新已暂停。"
   }
 }

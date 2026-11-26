@@ -7381,7 +7381,7 @@
     "letter_spacing": "Buchstabenabstand",
     "word_spacing": "Wortabstand",
     "readable_font": "Lesbare Schrift",
-    "readable_font_hint": "Verwendet eine breite, schlichte Schrift wie Verdana.",
+    "readable_font_hint": "Eine schlichte Schrift mit etwas mehr Abstand zwischen Buchstaben und Wörtern.",
     "dyslexia_spacing": "Abstand für Dyslexie",
     "dyslexia_spacing_hint": "Vergrößert den Abstand zwischen Buchstaben und Wörtern.",
     "visual": "Visuell",
@@ -7411,7 +7411,7 @@
     "large_cursor": "Großer Cursor",
     "large_cursor_hint": "Verwendet einen größeren Zeiger mit hohem Kontrast.",
     "reduce_motion": "Bewegung reduzieren",
-    "reduce_motion_hint": "Schaltet Übergänge und weiches Scrollen aus.",
+    "reduce_motion_hint": "Schaltet Übergänge, Animationen und wechselnde Folien aus.",
     "pause_animations": "Animationen pausieren",
     "pause_animations_hint": "Hält Animationen an, etwa Ladekreise.",
     "reading_guide": "Lesehilfe",
@@ -7429,7 +7429,20 @@
     "done": "Fertig",
     "profiles_note": "Jedes Profil ändert mehrere der folgenden Einstellungen auf einmal. Wähle es erneut, um zu den Standardwerten zurückzukehren.",
     "spacing_normal": "Normal",
-    "reset_defaults": "Auf Standard zurücksetzen"
+    "reset_defaults": "Auf Standard zurücksetzen",
+    "subtitle_account": "Standardmäßig folgt die Konsole den Einstellungen deines Systems. Jede Änderung wird sofort für dein Konto gespeichert.",
+    "subtitle_browser": "Standardmäßig folgt die Konsole den Einstellungen deines Systems. Jede Änderung wird sofort in diesem Browser gespeichert.",
+    "more_contrast": "Mehr Kontrast",
+    "more_contrast_hint": "Kräftigere Farben für Text, Linien und Bedienelemente. Ein Kontrastdesign von Windows hat immer Vorrang.",
+    "follow_system": "Wie im System",
+    "choice_on": "An",
+    "choice_off": "Aus",
+    "single_key_shortcuts": "Kurzbefehle mit einer Taste ausschalten",
+    "single_key_shortcuts_hint": "Die Taste / öffnet die Suche dann nicht mehr. Strg+K funktioniert weiter.",
+    "pause_live_updates": "Live-Aktualisierung anhalten",
+    "pause_live_updates_hint": "Listen und Seiten laden neue Daten nicht mehr von selbst. Mit Aktualisieren lädst du sie, wann du willst.",
+    "saved": "Gespeichert",
+    "save_failed": "Die Einstellung konnte nicht gespeichert werden. Versuch es noch einmal."
   },
   "server_mgmt": {
     "title": "Serververwaltung",
@@ -8997,8 +9010,8 @@
     "theme": "Design für diesen Browser",
     "theme_note": "Standard der Konsole folgt dem Design unter Einstellungen › Darstellung. Hell und Dunkel gelten nur für diesen Browser.",
     "language_note": "Die Sprache der Konsole für dein Konto, auf jedem Gerät.",
-    "accessibility_note": "Kontrast, Textgröße, Bewegung und Farbfilter für diesen Browser.",
-    "accessibility_on": "In diesem Browser sind Einstellungen zur Barrierefreiheit an.",
+    "accessibility_note": "Bewegung, Kontrast, Links, Schrift, Kurzbefehle und Live-Aktualisierung. Für dein Konto gespeichert.",
+    "accessibility_on": "Einige Einstellungen zur Barrierefreiheit sind für dein Konto an.",
     "accessibility_open": "Barrierefreiheit einstellen"
   },
   "devices_add": {
@@ -9046,5 +9059,9 @@
     "move_up": "Nach oben",
     "move_down": "Nach unten",
     "move_right": "Nach rechts"
+  },
+  "live": {
+    "last_updated": "Zuletzt aktualisiert {time}",
+    "paused": "Die Live-Aktualisierung ist angehalten."
   }
 }

@@ -7387,7 +7387,7 @@
     "letter_spacing": "Bogstavafstand",
     "word_spacing": "Ordafstand",
     "readable_font": "Læsbar skrifttype",
-    "readable_font_hint": "Bruger en bred, enkel skrift som Verdana.",
+    "readable_font_hint": "En enkel skrifttype med lidt mere luft mellem bogstaver og ord.",
     "dyslexia_spacing": "Ordblindhedsafstand",
     "dyslexia_spacing_hint": "Giver mere plads mellem bogstaver og ord.",
     "visual": "Visuelt",
@@ -7417,7 +7417,7 @@
     "large_cursor": "Stor markør",
     "large_cursor_hint": "Bruger en større højkontrastmarkør.",
     "reduce_motion": "Reducer bevægelse",
-    "reduce_motion_hint": "Slår overgange og blød rulning fra.",
+    "reduce_motion_hint": "Slår overgange, animationer og skiftende dias fra.",
     "pause_animations": "Sæt animationer på pause",
     "pause_animations_hint": "Fryser animationer som indlæsningshjul.",
     "reading_guide": "Læsevejledning",
@@ -7435,7 +7435,20 @@
     "done": "Færdig",
     "profiles_note": "Hver profil ændrer flere af indstillingerne nedenfor på én gang. Vælg den igen for at gå tilbage til standardindstillingerne.",
     "spacing_normal": "Normal",
-    "reset_defaults": "Nulstil til standard"
+    "reset_defaults": "Nulstil til standard",
+    "subtitle_account": "Som standard følger konsollen dit systems indstillinger. Hver ændring gemmes med det samme på din konto.",
+    "subtitle_browser": "Som standard følger konsollen dit systems indstillinger. Hver ændring gemmes med det samme i denne browser.",
+    "more_contrast": "Mere kontrast",
+    "more_contrast_hint": "Kraftigere farver til tekst, linjer og kontroller. Et kontrasttema i Windows har altid forrang.",
+    "follow_system": "Følg systemet",
+    "choice_on": "Til",
+    "choice_off": "Fra",
+    "single_key_shortcuts": "Slå genveje med én tast fra",
+    "single_key_shortcuts_hint": "Tasten / åbner ikke længere søgning. Ctrl+K gør det stadig.",
+    "pause_live_updates": "Sæt liveopdateringer på pause",
+    "pause_live_updates_hint": "Lister og sider henter ikke nye data af sig selv. Opdater henter dem, når du vil.",
+    "saved": "Gemt",
+    "save_failed": "Indstillingen kunne ikke gemmes. Prøv igen."
   },
   "server_mgmt": {
     "title": "Serveradministration",
@@ -9003,8 +9016,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Bevægelse, kontrast, links, skrifttype, genveje og liveopdateringer. Gemmes på din konto.",
+    "accessibility_on": "Nogle tilgængelighedsindstillinger er slået til for din konto.",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9052,5 +9065,9 @@
     "move_up": "Flyt op",
     "move_down": "Flyt ned",
     "move_right": "Flyt til højre"
+  },
+  "live": {
+    "last_updated": "Senest opdateret {time}",
+    "paused": "Liveopdateringer er sat på pause."
   }
 }

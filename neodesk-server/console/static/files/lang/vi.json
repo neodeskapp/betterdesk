@@ -7387,7 +7387,7 @@
     "letter_spacing": "Khoảng cách chữ",
     "word_spacing": "Khoảng cách từ",
     "readable_font": "Phông chữ có thể đọc được",
-    "readable_font_hint": "Dùng phông chữ rộng, đơn giản như Verdana.",
+    "readable_font_hint": "Phông chữ đơn giản, giãn cách chữ và từ rộng hơn một chút.",
     "dyslexia_spacing": "Khoảng cách chứng khó đọc",
     "dyslexia_spacing_hint": "Tăng khoảng cách giữa các chữ cái và các từ.",
     "visual": "Hiển thị",
@@ -7417,7 +7417,7 @@
     "large_cursor": "Con trỏ lớn",
     "large_cursor_hint": "Sử dụng con trỏ có độ tương phản cao lớn hơn.",
     "reduce_motion": "Giảm chuyển động",
-    "reduce_motion_hint": "Tắt hiệu ứng chuyển cảnh và cuộn mượt.",
+    "reduce_motion_hint": "Tắt hiệu ứng chuyển cảnh, hoạt ảnh và trang chiếu tự chuyển.",
     "pause_animations": "Tạm dừng hoạt ảnh",
     "pause_animations_hint": "Dừng các hoạt ảnh như biểu tượng đang tải.",
     "reading_guide": "Hướng dẫn đọc",
@@ -7435,7 +7435,20 @@
     "done": "Xong",
     "profiles_note": "Mỗi hồ sơ thay đổi cùng lúc nhiều cài đặt bên dưới. Chọn lại để quay về mặc định.",
     "spacing_normal": "Bình thường",
-    "reset_defaults": "Đặt lại mặc định"
+    "reset_defaults": "Đặt lại mặc định",
+    "subtitle_account": "Theo mặc định, bảng điều khiển làm theo cài đặt của hệ thống. Mỗi thay đổi được lưu ngay vào tài khoản của bạn.",
+    "subtitle_browser": "Theo mặc định, bảng điều khiển làm theo cài đặt của hệ thống. Mỗi thay đổi được lưu ngay trong trình duyệt này.",
+    "more_contrast": "Tăng độ tương phản",
+    "more_contrast_hint": "Màu đậm hơn cho chữ, đường kẻ và các nút điều khiển. Chủ đề tương phản của Windows luôn được ưu tiên.",
+    "follow_system": "Theo hệ thống",
+    "choice_on": "Bật",
+    "choice_off": "Tắt",
+    "single_key_shortcuts": "Tắt phím tắt một phím",
+    "single_key_shortcuts_hint": "Phím / không còn mở tìm kiếm nữa. Ctrl+K vẫn mở được.",
+    "pause_live_updates": "Tạm dừng cập nhật trực tiếp",
+    "pause_live_updates_hint": "Danh sách và trang không tự tải dữ liệu mới. Làm mới sẽ tải khi bạn muốn.",
+    "saved": "Đã lưu",
+    "save_failed": "Không lưu được cài đặt. Hãy thử lại."
   },
   "server_mgmt": {
     "title": "Quản lý máy chủ",
@@ -9003,8 +9016,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Chuyển động, độ tương phản, liên kết, phông chữ, phím tắt và cập nhật trực tiếp. Được lưu vào tài khoản của bạn.",
+    "accessibility_on": "Một số cài đặt trợ năng đang bật cho tài khoản của bạn.",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9052,5 +9065,9 @@
     "move_up": "Di chuyển lên",
     "move_down": "Di chuyển xuống",
     "move_right": "Di chuyển sang phải"
+  },
+  "live": {
+    "last_updated": "Cập nhật lần cuối {time}",
+    "paused": "Cập nhật trực tiếp đang tạm dừng."
   }
 }

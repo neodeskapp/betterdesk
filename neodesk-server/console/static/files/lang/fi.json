@@ -7387,7 +7387,7 @@
     "letter_spacing": "Kirjainvälit",
     "word_spacing": "Sanavälit",
     "readable_font": "Luettava fontti",
-    "readable_font_hint": "Käyttää leveää, selkeää fonttia, kuten Verdanaa.",
+    "readable_font_hint": "Selkeä fontti ja hieman enemmän tilaa kirjainten ja sanojen välissä.",
     "dyslexia_spacing": "Lukihäiriövälit",
     "dyslexia_spacing_hint": "Lisää tilaa kirjainten ja sanojen väliin.",
     "visual": "Ulkoasu",
@@ -7417,7 +7417,7 @@
     "large_cursor": "Suuri kursori",
     "large_cursor_hint": "Käyttää suurempaa korkeakontrastista osoitinta.",
     "reduce_motion": "Vähennä liikettä",
-    "reduce_motion_hint": "Poistaa siirtymät ja pehmeän vierityksen.",
+    "reduce_motion_hint": "Poistaa käytöstä siirtymät, animaatiot ja vaihtuvat diat.",
     "pause_animations": "Keskeytä animaatiot",
     "pause_animations_hint": "Pysäyttää animaatiot, kuten latausikonit.",
     "reading_guide": "Lukuopas",
@@ -7435,7 +7435,20 @@
     "done": "Valmis",
     "profiles_note": "Jokainen profiili muuttaa kerralla useita alla olevia asetuksia. Valitse se uudelleen palataksesi oletuksiin.",
     "spacing_normal": "Normaali",
-    "reset_defaults": "Palauta oletukset"
+    "reset_defaults": "Palauta oletukset",
+    "subtitle_account": "Oletuksena konsoli noudattaa järjestelmäsi asetuksia. Jokainen muutos tallennetaan heti tilillesi.",
+    "subtitle_browser": "Oletuksena konsoli noudattaa järjestelmäsi asetuksia. Jokainen muutos tallennetaan heti tähän selaimeen.",
+    "more_contrast": "Enemmän kontrastia",
+    "more_contrast_hint": "Voimakkaammat värit tekstille, viivoille ja säätimille. Windowsin kontrastiteema on aina etusijalla.",
+    "follow_system": "Järjestelmän mukaan",
+    "choice_on": "Käytössä",
+    "choice_off": "Pois käytöstä",
+    "single_key_shortcuts": "Poista yhden näppäimen pikanäppäimet käytöstä",
+    "single_key_shortcuts_hint": "Näppäin / ei enää avaa hakua. Ctrl+K avaa sen edelleen.",
+    "pause_live_updates": "Keskeytä reaaliaikaiset päivitykset",
+    "pause_live_updates_hint": "Luettelot ja sivut eivät lataa uusia tietoja itsestään. Päivitä lataa ne, kun haluat.",
+    "saved": "Tallennettu",
+    "save_failed": "Asetusta ei voitu tallentaa. Yritä uudelleen."
   },
   "server_mgmt": {
     "title": "Palvelimen hallinta",
@@ -9003,8 +9016,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Liike, kontrasti, linkit, fontti, pikanäppäimet ja reaaliaikaiset päivitykset. Tallennetaan tilillesi.",
+    "accessibility_on": "Joitakin saavutettavuusasetuksia on käytössä tililläsi.",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9052,5 +9065,9 @@
     "move_up": "Siirrä ylös",
     "move_down": "Siirrä alas",
     "move_right": "Siirrä oikealle"
+  },
+  "live": {
+    "last_updated": "Päivitetty viimeksi {time}",
+    "paused": "Reaaliaikaiset päivitykset on keskeytetty."
   }
 }

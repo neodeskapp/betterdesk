@@ -7403,7 +7403,7 @@
     "letter_spacing": "Espacement des lettres",
     "word_spacing": "Espacement des mots",
     "readable_font": "Police lisible",
-    "readable_font_hint": "Utilise une police large et simple, comme Verdana.",
+    "readable_font_hint": "Une police simple, avec un peu plus d'espace entre les lettres et les mots.",
     "dyslexia_spacing": "Espacement pour la dyslexie",
     "dyslexia_spacing_hint": "Ajoute de l'espace entre les lettres et les mots.",
     "visual": "Visuel",
@@ -7433,7 +7433,7 @@
     "large_cursor": "Grand curseur",
     "large_cursor_hint": "Utilise un pointeur plus grand à contraste élevé.",
     "reduce_motion": "Réduire les mouvements",
-    "reduce_motion_hint": "Désactive les transitions et le défilement fluide.",
+    "reduce_motion_hint": "Désactive les transitions, les animations et les diapositives qui défilent.",
     "pause_animations": "Mettre les animations en pause",
     "pause_animations_hint": "Fige les animations, comme les indicateurs de chargement.",
     "reading_guide": "Guide de lecture",
@@ -7451,7 +7451,20 @@
     "done": "Terminé",
     "profiles_note": "Chaque profil modifie d'un coup plusieurs réglages ci-dessous. Choisissez-le à nouveau pour revenir aux valeurs par défaut.",
     "spacing_normal": "Normal",
-    "reset_defaults": "Rétablir les valeurs par défaut"
+    "reset_defaults": "Rétablir les valeurs par défaut",
+    "subtitle_account": "Par défaut, la console suit les réglages de votre système. Chaque modification est enregistrée aussitôt pour votre compte.",
+    "subtitle_browser": "Par défaut, la console suit les réglages de votre système. Chaque modification est enregistrée aussitôt dans ce navigateur.",
+    "more_contrast": "Plus de contraste",
+    "more_contrast_hint": "Des couleurs plus marquées pour le texte, les traits et les commandes. Un thème de contraste Windows a toujours la priorité.",
+    "follow_system": "Comme le système",
+    "choice_on": "Activé",
+    "choice_off": "Désactivé",
+    "single_key_shortcuts": "Désactiver les raccourcis à une seule touche",
+    "single_key_shortcuts_hint": "La touche / n'ouvre plus la recherche. Ctrl+K continue de l'ouvrir.",
+    "pause_live_updates": "Suspendre les mises à jour en direct",
+    "pause_live_updates_hint": "Les listes et les pages ne chargent plus de nouvelles données d'elles-mêmes. Actualiser les charge quand vous le voulez.",
+    "saved": "Enregistré",
+    "save_failed": "Le réglage n'a pas pu être enregistré. Réessayez."
   },
   "server_mgmt": {
     "title": "Gestion du serveur",
@@ -9001,8 +9014,8 @@
     "theme": "Thème pour ce navigateur",
     "theme_note": "Par défaut de la console suit le thème défini dans Paramètres › Apparence. Clair et Sombre ne valent que pour ce navigateur.",
     "language_note": "La langue de la console pour votre compte, sur chaque appareil.",
-    "accessibility_note": "Contraste, taille du texte, animations et filtres de couleur pour ce navigateur.",
-    "accessibility_on": "Certains réglages d'accessibilité sont activés dans ce navigateur.",
+    "accessibility_note": "Mouvements, contraste, liens, police, raccourcis et mises à jour en direct. Enregistré pour votre compte.",
+    "accessibility_on": "Certains réglages d'accessibilité sont activés pour votre compte.",
     "accessibility_open": "Réglages d'accessibilité"
   },
   "devices_add": {
@@ -9050,5 +9063,9 @@
     "move_up": "Déplacer vers le haut",
     "move_down": "Déplacer vers le bas",
     "move_right": "Déplacer à droite"
+  },
+  "live": {
+    "last_updated": "Dernière mise à jour : {time}",
+    "paused": "Les mises à jour en direct sont suspendues."
   }
 }

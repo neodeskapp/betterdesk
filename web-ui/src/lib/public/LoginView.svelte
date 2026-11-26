@@ -33,6 +33,7 @@
 	import { i18n, switchLanguage, t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import { link } from '#lib/nav.ts';
 	import LanguageMenu from '#lib/shell/LanguageMenu.svelte';
+	import { a11y } from '#lib/shell/a11y.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Checkbox from '#lib/ui/Checkbox.svelte';
 	import Field from '#lib/ui/Field.svelte';
@@ -538,7 +539,17 @@
 		<footer class="login-footer">
 			<div class="login-footer-row">
 				<!-- The top bar's language menu, opening above when there is no room below -->
-				<LanguageMenu trigger="label" align="start" onchoose={changeLanguage} />
+				<div class="login-footer-tools">
+					<LanguageMenu trigger="label" align="start" onchoose={changeLanguage} />
+					<!-- The accessibility panel, before sign-in too -->
+					<Button
+						variant="ghost"
+						size="sm"
+						icon="accessibility_new"
+						aria-haspopup="dialog"
+						onclick={() => (a11y.open = true)}>{t('accessibility.title')}</Button
+					>
+				</div>
 				{#if page.branding.showPoweredBy}
 					<p class="login-version">
 						{t('branding.powered_by')} <span translate="no">NeoDesk</span>
@@ -707,6 +718,12 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--space-2) var(--space-4);
+	}
+	.login-footer-tools {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2);
 	}
 	.login-footer p {
 		margin: 0;

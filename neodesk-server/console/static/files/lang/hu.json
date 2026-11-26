@@ -7387,7 +7387,7 @@
     "letter_spacing": "Betűköz",
     "word_spacing": "Szóköz",
     "readable_font": "Olvasható betűtípus",
-    "readable_font_hint": "Széles, egyszerű betűtípust használ, például Verdanát.",
+    "readable_font_hint": "Egyszerű betűtípus, kicsit nagyobb betű- és szóközzel.",
     "dyslexia_spacing": "Diszlexia távolság",
     "dyslexia_spacing_hint": "Növeli a betűk és szavak közötti távolságot.",
     "visual": "Megjelenés",
@@ -7417,7 +7417,7 @@
     "large_cursor": "Nagy kurzor",
     "large_cursor_hint": "Nagyobb, nagy kontrasztú mutatót használ.",
     "reduce_motion": "Csökkentse a mozgást",
-    "reduce_motion_hint": "Kikapcsolja az átmeneteket és a finom görgetést.",
+    "reduce_motion_hint": "Kikapcsolja az áttűnéseket, az animációkat és a váltakozó diákat.",
     "pause_animations": "Animációk szüneteltetése",
     "pause_animations_hint": "Megállítja az animációkat, például a betöltésjelzőket.",
     "reading_guide": "Olvasási útmutató",
@@ -7435,7 +7435,20 @@
     "done": "Kész",
     "profiles_note": "Minden profil egyszerre több lenti beállítást módosít. Válassza ki újra az alapértékek visszaállításához.",
     "spacing_normal": "Normál",
-    "reset_defaults": "Alapértékek visszaállítása"
+    "reset_defaults": "Alapértékek visszaállítása",
+    "subtitle_account": "Alapértelmezés szerint a konzol a rendszer beállításait követi. Minden módosítás azonnal mentésre kerül a fiókjában.",
+    "subtitle_browser": "Alapértelmezés szerint a konzol a rendszer beállításait követi. Minden módosítás azonnal mentésre kerül ebben a böngészőben.",
+    "more_contrast": "Nagyobb kontraszt",
+    "more_contrast_hint": "Erősebb színek a szövegnek, a vonalaknak és a vezérlőknek. A Windows kontrasztos témája mindig elsőbbséget élvez.",
+    "follow_system": "Rendszer szerint",
+    "choice_on": "Be",
+    "choice_off": "Ki",
+    "single_key_shortcuts": "Egybillentyűs billentyűparancsok kikapcsolása",
+    "single_key_shortcuts_hint": "A / billentyű többé nem nyitja meg a keresést. A Ctrl+K továbbra is megnyitja.",
+    "pause_live_updates": "Élő frissítések szüneteltetése",
+    "pause_live_updates_hint": "A listák és oldalak nem töltenek be maguktól új adatokat. A Frissítés akkor tölti be őket, amikor szeretné.",
+    "saved": "Mentve",
+    "save_failed": "A beállítást nem sikerült menteni. Próbálja újra."
   },
   "server_mgmt": {
     "title": "Kiszolgáló-kezelés",
@@ -9003,8 +9016,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Mozgás, kontraszt, hivatkozások, betűtípus, billentyűparancsok és élő frissítések. A fiókjában tárolva.",
+    "accessibility_on": "Néhány akadálymentességi beállítás be van kapcsolva a fiókjában.",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9052,5 +9065,9 @@
     "move_up": "Mozgatás fel",
     "move_down": "Mozgatás le",
     "move_right": "Mozgatás jobbra"
+  },
+  "live": {
+    "last_updated": "Utoljára frissítve: {time}",
+    "paused": "Az élő frissítések szünetelnek."
   }
 }

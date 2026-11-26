@@ -7381,7 +7381,7 @@
     "letter_spacing": "Espaciado de letras",
     "word_spacing": "Espaciado de palabras",
     "readable_font": "Fuente legible",
-    "readable_font_hint": "Usa una fuente ancha y sencilla, como Verdana.",
+    "readable_font_hint": "Una fuente sencilla con un poco más de espacio entre letras y palabras.",
     "dyslexia_spacing": "Espaciado para dislexia",
     "dyslexia_spacing_hint": "Añade espacio entre letras y palabras.",
     "visual": "Visual",
@@ -7411,7 +7411,7 @@
     "large_cursor": "Cursor grande",
     "large_cursor_hint": "Usa un puntero más grande con alto contraste.",
     "reduce_motion": "Reducir movimiento",
-    "reduce_motion_hint": "Desactiva las transiciones y el desplazamiento suave.",
+    "reduce_motion_hint": "Desactiva las transiciones, las animaciones y las diapositivas que se mueven.",
     "pause_animations": "Pausar animaciones",
     "pause_animations_hint": "Congela animaciones como los indicadores de carga.",
     "reading_guide": "Guía de lectura",
@@ -7429,7 +7429,20 @@
     "done": "Listo",
     "profiles_note": "Cada perfil cambia a la vez varios de los ajustes de abajo. Elígelo otra vez para volver a los valores predeterminados.",
     "spacing_normal": "Normal",
-    "reset_defaults": "Restablecer valores predeterminados"
+    "reset_defaults": "Restablecer valores predeterminados",
+    "subtitle_account": "De forma predeterminada, la consola sigue la configuración de tu sistema. Cada cambio se guarda al instante en tu cuenta.",
+    "subtitle_browser": "De forma predeterminada, la consola sigue la configuración de tu sistema. Cada cambio se guarda al instante en este navegador.",
+    "more_contrast": "Más contraste",
+    "more_contrast_hint": "Colores más intensos para el texto, las líneas y los controles. Un tema de contraste de Windows siempre tiene prioridad.",
+    "follow_system": "Según el sistema",
+    "choice_on": "Activado",
+    "choice_off": "Desactivado",
+    "single_key_shortcuts": "Desactivar los atajos de una sola tecla",
+    "single_key_shortcuts_hint": "La tecla / ya no abre la búsqueda. Ctrl+K sí lo sigue haciendo.",
+    "pause_live_updates": "Pausar las actualizaciones en directo",
+    "pause_live_updates_hint": "Las listas y las páginas no cargan datos nuevos por sí solas. Actualizar los carga cuando quieras.",
+    "saved": "Guardado",
+    "save_failed": "No se pudo guardar el ajuste. Inténtalo de nuevo."
   },
   "server_mgmt": {
     "title": "Gestión del servidor",
@@ -8997,8 +9010,8 @@
     "theme": "Tema para este navegador",
     "theme_note": "Predeterminado de la consola sigue el tema de Ajustes › Apariencia. Claro y Oscuro solo valen para este navegador.",
     "language_note": "El idioma de la consola para su cuenta, en todos los dispositivos.",
-    "accessibility_note": "Contraste, tamaño del texto, movimiento y filtros de color para este navegador.",
-    "accessibility_on": "Algunos ajustes de accesibilidad están activados en este navegador.",
+    "accessibility_note": "Movimiento, contraste, enlaces, fuente, atajos y actualizaciones en directo. Se guarda en tu cuenta.",
+    "accessibility_on": "Algunos ajustes de accesibilidad están activados en tu cuenta.",
     "accessibility_open": "Ajustes de accesibilidad"
   },
   "devices_add": {
@@ -9046,5 +9059,9 @@
     "move_up": "Mover arriba",
     "move_down": "Mover abajo",
     "move_right": "Mover a la derecha"
+  },
+  "live": {
+    "last_updated": "Última actualización: {time}",
+    "paused": "Las actualizaciones en directo están en pausa."
   }
 }

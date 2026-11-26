@@ -7381,7 +7381,7 @@
     "letter_spacing": "Espaçamento entre letras",
     "word_spacing": "Espaçamento entre palavras",
     "readable_font": "Fonte legível",
-    "readable_font_hint": "Usa uma fonte larga e simples, como Verdana.",
+    "readable_font_hint": "Uma fonte simples com um pouco mais de espaço entre letras e palavras.",
     "dyslexia_spacing": "Espaçamento para dislexia",
     "dyslexia_spacing_hint": "Acrescenta espaço entre letras e palavras.",
     "visual": "Visual",
@@ -7411,7 +7411,7 @@
     "large_cursor": "Cursor grande",
     "large_cursor_hint": "Usa um ponteiro maior com alto contraste.",
     "reduce_motion": "Reduzir movimento",
-    "reduce_motion_hint": "Desliga as transições e o deslocamento suave.",
+    "reduce_motion_hint": "Desativa transições, animações e slides em movimento.",
     "pause_animations": "Pausar animações",
     "pause_animations_hint": "Congela animações, como indicadores de carregamento.",
     "reading_guide": "Guia de leitura",
@@ -7429,7 +7429,20 @@
     "done": "Concluído",
     "profiles_note": "Cada perfil altera de uma vez várias definições abaixo. Escolha-o de novo para voltar aos valores padrão.",
     "spacing_normal": "Normal",
-    "reset_defaults": "Repor valores padrão"
+    "reset_defaults": "Repor valores padrão",
+    "subtitle_account": "Por padrão, o console segue as configurações do seu sistema. Cada alteração é salva na sua conta na hora.",
+    "subtitle_browser": "Por padrão, o console segue as configurações do seu sistema. Cada alteração é salva neste navegador na hora.",
+    "more_contrast": "Mais contraste",
+    "more_contrast_hint": "Cores mais fortes para texto, linhas e controles. Um tema de contraste do Windows sempre tem prioridade.",
+    "follow_system": "Seguir o sistema",
+    "choice_on": "Ativado",
+    "choice_off": "Desativado",
+    "single_key_shortcuts": "Desativar atalhos de uma tecla",
+    "single_key_shortcuts_hint": "A tecla / não abre mais a pesquisa. Ctrl+K continua abrindo.",
+    "pause_live_updates": "Pausar atualizações ao vivo",
+    "pause_live_updates_hint": "Listas e páginas não carregam dados novos sozinhas. Atualizar carrega quando você quiser.",
+    "saved": "Salvo",
+    "save_failed": "Não foi possível salvar a configuração. Tente de novo."
   },
   "server_mgmt": {
     "title": "Gestão do servidor",
@@ -8997,8 +9010,8 @@
     "theme": "Tema para este navegador",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Movimento, contraste, links, fonte, atalhos e atualizações ao vivo. Salvo na sua conta.",
+    "accessibility_on": "Algumas configurações de acessibilidade estão ativadas na sua conta.",
     "accessibility_open": "Definições de acessibilidade"
   },
   "devices_add": {
@@ -9046,5 +9059,9 @@
     "move_up": "Mover para cima",
     "move_down": "Mover para baixo",
     "move_right": "Mover para a direita"
+  },
+  "live": {
+    "last_updated": "Última atualização: {time}",
+    "paused": "As atualizações ao vivo estão pausadas."
   }
 }

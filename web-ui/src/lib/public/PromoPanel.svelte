@@ -46,10 +46,10 @@
 		const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
 		const update = () => {
 			hidden = document.hidden;
-			still =
-				!!mq?.matches ||
-				root.dataset.a11yReduceMotion === 'true' ||
-				root.dataset.a11yPauseAnimations === 'true';
+			// The boot script says whether motion is reduced now (the system's
+			// setting or the accessibility option); without it, the system decides
+			const reduce = root.dataset.a11yReduceMotion;
+			still = reduce === undefined ? !!mq?.matches : reduce === 'true';
 		};
 		update();
 		document.addEventListener('visibilitychange', update);
@@ -58,7 +58,7 @@
 		const watch = new MutationObserver(update);
 		watch.observe(root, {
 			attributes: true,
-			attributeFilter: ['data-a11y-reduce-motion', 'data-a11y-pause-animations']
+			attributeFilter: ['data-a11y-reduce-motion']
 		});
 		return () => {
 			document.removeEventListener('visibilitychange', update);

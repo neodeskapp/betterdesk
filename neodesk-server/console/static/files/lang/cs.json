@@ -7381,7 +7381,7 @@
     "letter_spacing": "Prokládání znaků",
     "word_spacing": "Mezery mezi slovy",
     "readable_font": "Čitelné písmo",
-    "readable_font_hint": "Použije široké, jednoduché písmo, například Verdana.",
+    "readable_font_hint": "Jednoduché písmo s trochu větší mezerou mezi písmeny a slovy.",
     "dyslexia_spacing": "Dyslektické rozestupy",
     "dyslexia_spacing_hint": "Zvětší mezery mezi písmeny a slovy.",
     "visual": "Vizuální",
@@ -7411,7 +7411,7 @@
     "large_cursor": "Velký kurzor",
     "large_cursor_hint": "Používá větší, vysoce kontrastní ukazatel.",
     "reduce_motion": "Omezit pohyb",
-    "reduce_motion_hint": "Vypne přechody a plynulé posouvání.",
+    "reduce_motion_hint": "Vypne přechody, animace a pohyblivé snímky.",
     "pause_animations": "Pozastavit animace",
     "pause_animations_hint": "Zastaví animace, například ukazatele načítání.",
     "reading_guide": "Vodítko pro čtení",
@@ -7429,7 +7429,20 @@
     "done": "Hotovo",
     "profiles_note": "Každý profil změní najednou několik nastavení níže. Dalším výběrem se vrátíte k výchozím hodnotám.",
     "spacing_normal": "Normální",
-    "reset_defaults": "Obnovit výchozí"
+    "reset_defaults": "Obnovit výchozí",
+    "subtitle_account": "Ve výchozím stavu se konzole řídí nastavením vašeho systému. Každá změna se hned uloží k vašemu účtu.",
+    "subtitle_browser": "Ve výchozím stavu se konzole řídí nastavením vašeho systému. Každá změna se hned uloží v tomto prohlížeči.",
+    "more_contrast": "Vyšší kontrast",
+    "more_contrast_hint": "Výraznější barvy textu, čar a ovládacích prvků. Kontrastní motiv systému Windows má vždy přednost.",
+    "follow_system": "Podle systému",
+    "choice_on": "Zapnuto",
+    "choice_off": "Vypnuto",
+    "single_key_shortcuts": "Vypnout zkratky jedné klávesy",
+    "single_key_shortcuts_hint": "Klávesa / už neotevře hledání. Ctrl+K funguje dál.",
+    "pause_live_updates": "Pozastavit živé aktualizace",
+    "pause_live_updates_hint": "Seznamy a stránky nenačítají nová data samy. Obnovit je načte, kdy chcete.",
+    "saved": "Uloženo",
+    "save_failed": "Nastavení se nepodařilo uložit. Zkuste to znovu."
   },
   "server_mgmt": {
     "title": "Správa serveru",
@@ -8997,8 +9010,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Pohyb, kontrast, odkazy, písmo, zkratky a živé aktualizace. Ukládá se k vašemu účtu.",
+    "accessibility_on": "Některá nastavení usnadnění jsou pro váš účet zapnutá.",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9046,5 +9059,9 @@
     "move_up": "Posunout nahoru",
     "move_down": "Posunout dolů",
     "move_right": "Posunout doprava"
+  },
+  "live": {
+    "last_updated": "Naposledy aktualizováno {time}",
+    "paused": "Živé aktualizace jsou pozastavené."
   }
 }

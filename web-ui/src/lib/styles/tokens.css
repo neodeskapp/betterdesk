@@ -174,9 +174,7 @@
 	--shadow-float: 0 8px 28px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
-:root[data-theme='dark'],
-html[data-a11y-contrast='high-dark'],
-html[data-a11y-contrast='yellow-black'] {
+:root[data-theme='dark'] {
 	--logo-square: #58a6ff;
 	--logo-circle: #a3e635;
 	--logo-overlap: #3fd0c4;
@@ -194,28 +192,11 @@ html[data-a11y-contrast='yellow-black'] {
 	--avatar-6: #a9bcc4;
 }
 
-html[data-a11y-contrast='high-light'] {
-	--logo-square: #1f6feb;
-	--logo-circle: #4d8f06;
-	--logo-overlap: #0f9e96;
-}
-
 /* Accessibility panel (accessibility.js sets these attributes). Its
    contrast modes replace the palette variables, so only the colour on
    top of the accent needs help here. */
 html[data-a11y-font-scaled='true'] {
 	--font-scale: var(--bd-a11y-font-scale, 1);
-}
-
-/* :root[...] so a contrast mode wins over :root[data-theme="dark"] above
-   (high-light on a dark theme otherwise kept the dark text colour) */
-:root[data-a11y-contrast='high-dark'],
-:root[data-a11y-contrast='yellow-black'] {
-	--on-accent: #000000;
-}
-
-:root[data-a11y-contrast='high-light'] {
-	--on-accent: #ffffff;
 }
 
 @media (pointer: coarse) {
@@ -233,8 +214,10 @@ html[data-a11y-font-scaled='true'] {
 	}
 }
 
+/* Less motion when the system asks for it, unless Reduce motion is Off in
+   the accessibility settings (styles/a11y.css has the rest) */
 @media (prefers-reduced-motion: reduce) {
-	:root {
+	:root:not([data-a11y-reduce-motion='false']) {
 		--motion: 0ms;
 	}
 }

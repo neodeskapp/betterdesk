@@ -7381,7 +7381,7 @@
     "letter_spacing": "文字間隔",
     "word_spacing": "単語の間隔",
     "readable_font": "読みやすいフォント",
-    "readable_font_hint": "Verdana などの幅広でシンプルなフォントを使います。",
+    "readable_font_hint": "シンプルなフォントで、文字と単語の間隔を少し広げます。",
     "dyslexia_spacing": "ディスレクシアの間隔",
     "dyslexia_spacing_hint": "文字と単語の間隔を広げます。",
     "visual": "表示",
@@ -7411,7 +7411,7 @@
     "large_cursor": "大きなカーソル",
     "large_cursor_hint": "より大きなハイコントラスト ポインターを使用します。",
     "reduce_motion": "動きを減らす",
-    "reduce_motion_hint": "切り替え効果となめらかなスクロールをオフにします。",
+    "reduce_motion_hint": "トランジション、アニメーション、自動で切り替わるスライドをオフにします。",
     "pause_animations": "アニメーションを一時停止する",
     "pause_animations_hint": "読み込み中の回転表示などのアニメーションを止めます。",
     "reading_guide": "読書ガイド",
@@ -7429,7 +7429,20 @@
     "done": "完了",
     "profiles_note": "各プロファイルは下の複数の設定をまとめて変更します。もう一度選ぶと既定値に戻ります。",
     "spacing_normal": "標準",
-    "reset_defaults": "既定値に戻す"
+    "reset_defaults": "既定値に戻す",
+    "subtitle_account": "既定では、コンソールはシステムの設定に従います。変更するとすぐにアカウントに保存されます。",
+    "subtitle_browser": "既定では、コンソールはシステムの設定に従います。変更するとすぐにこのブラウザーに保存されます。",
+    "more_contrast": "コントラストを上げる",
+    "more_contrast_hint": "文字、線、コントロールの色を濃くします。Windows のコントラスト テーマが常に優先されます。",
+    "follow_system": "システムに合わせる",
+    "choice_on": "オン",
+    "choice_off": "オフ",
+    "single_key_shortcuts": "1 キーのショートカットをオフにする",
+    "single_key_shortcuts_hint": "/ キーで検索が開かなくなります。Ctrl+K では引き続き開きます。",
+    "pause_live_updates": "ライブ更新を一時停止する",
+    "pause_live_updates_hint": "一覧やページが新しいデータを自動で読み込まなくなります。読み込みたいときは［更新］を使います。",
+    "saved": "保存しました",
+    "save_failed": "設定を保存できませんでした。もう一度お試しください。"
   },
   "server_mgmt": {
     "title": "サーバー管理",
@@ -8997,8 +9010,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "動き、コントラスト、リンク、フォント、ショートカット、ライブ更新。アカウントに保存されます。",
+    "accessibility_on": "アカウントで一部のアクセシビリティ設定がオンになっています。",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9046,5 +9059,9 @@
     "move_up": "上へ移動",
     "move_down": "下へ移動",
     "move_right": "右へ移動"
+  },
+  "live": {
+    "last_updated": "最終更新 {time}",
+    "paused": "ライブ更新は一時停止中です。"
   }
 }

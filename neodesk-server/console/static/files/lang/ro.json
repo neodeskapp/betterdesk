@@ -7387,7 +7387,7 @@
     "letter_spacing": "Spațiere între litere",
     "word_spacing": "Spațierea cuvintelor",
     "readable_font": "Font care poate fi citit",
-    "readable_font_hint": "Folosește un font lat și simplu, cum ar fi Verdana.",
+    "readable_font_hint": "Un font simplu, cu puțin mai mult spațiu între litere și cuvinte.",
     "dyslexia_spacing": "Dislexie spațiere",
     "dyslexia_spacing_hint": "Adaugă spațiu între litere și cuvinte.",
     "visual": "Aspect vizual",
@@ -7417,7 +7417,7 @@
     "large_cursor": "Cursor mare",
     "large_cursor_hint": "Utilizează un indicator mai mare, cu contrast ridicat.",
     "reduce_motion": "Reduceți mișcarea",
-    "reduce_motion_hint": "Dezactivează tranzițiile și derularea lină.",
+    "reduce_motion_hint": "Dezactivează tranzițiile, animațiile și diapozitivele care se schimbă.",
     "pause_animations": "Întrerupeți animațiile",
     "pause_animations_hint": "Îngheață animațiile, cum ar fi indicatorii de încărcare.",
     "reading_guide": "Ghid de lectură",
@@ -7435,7 +7435,20 @@
     "done": "Gata",
     "profiles_note": "Fiecare profil schimbă deodată mai multe setări de mai jos. Alegeți-l din nou pentru a reveni la valorile implicite.",
     "spacing_normal": "Normal",
-    "reset_defaults": "Revino la valorile implicite"
+    "reset_defaults": "Revino la valorile implicite",
+    "subtitle_account": "Implicit, consola urmează setările sistemului tău. Fiecare modificare se salvează imediat în contul tău.",
+    "subtitle_browser": "Implicit, consola urmează setările sistemului tău. Fiecare modificare se salvează imediat în acest browser.",
+    "more_contrast": "Contrast mai mare",
+    "more_contrast_hint": "Culori mai puternice pentru text, linii și comenzi. O temă de contrast din Windows are mereu prioritate.",
+    "follow_system": "Ca în sistem",
+    "choice_on": "Activat",
+    "choice_off": "Dezactivat",
+    "single_key_shortcuts": "Dezactivează comenzile rapide cu o singură tastă",
+    "single_key_shortcuts_hint": "Tasta / nu mai deschide căutarea. Ctrl+K o deschide în continuare.",
+    "pause_live_updates": "Întrerupe actualizările în timp real",
+    "pause_live_updates_hint": "Listele și paginile nu mai încarcă singure date noi. Reîmprospătează le încarcă atunci când vrei.",
+    "saved": "Salvat",
+    "save_failed": "Setarea nu a putut fi salvată. Încearcă din nou."
   },
   "server_mgmt": {
     "title": "Gestionare server",
@@ -9003,8 +9016,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Mișcare, contrast, linkuri, font, comenzi rapide și actualizări în timp real. Salvate în contul tău.",
+    "accessibility_on": "Unele setări de accesibilitate sunt activate pentru contul tău.",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9052,5 +9065,9 @@
     "move_up": "Mută în sus",
     "move_down": "Mută în jos",
     "move_right": "Mută la dreapta"
+  },
+  "live": {
+    "last_updated": "Ultima actualizare {time}",
+    "paused": "Actualizările în timp real sunt întrerupte."
   }
 }

@@ -7387,7 +7387,7 @@
     "letter_spacing": "Bokstavavstand",
     "word_spacing": "Ordavstand",
     "readable_font": "Lesbar skrift",
-    "readable_font_hint": "Bruker en bred, enkel skrift som Verdana.",
+    "readable_font_hint": "En enkel skrift med litt mer luft mellom bokstaver og ord.",
     "dyslexia_spacing": "Dysleksiavstand",
     "dyslexia_spacing_hint": "Gir mer plass mellom bokstaver og ord.",
     "visual": "Visuelt",
@@ -7417,7 +7417,7 @@
     "large_cursor": "Stor markør",
     "large_cursor_hint": "Bruker en større peker med høy kontrast.",
     "reduce_motion": "Reduser bevegelse",
-    "reduce_motion_hint": "Slår av overganger og myk rulling.",
+    "reduce_motion_hint": "Slår av overganger, animasjoner og skiftende lysbilder.",
     "pause_animations": "Sett animasjoner på pause",
     "pause_animations_hint": "Fryser animasjoner som lastehjul.",
     "reading_guide": "Leseveiledning",
@@ -7435,7 +7435,20 @@
     "done": "Ferdig",
     "profiles_note": "Hver profil endrer flere av innstillingene nedenfor på én gang. Velg den igjen for å gå tilbake til standard.",
     "spacing_normal": "Normal",
-    "reset_defaults": "Tilbakestill til standard"
+    "reset_defaults": "Tilbakestill til standard",
+    "subtitle_account": "Som standard følger konsollen innstillingene i systemet ditt. Hver endring lagres med en gang på kontoen din.",
+    "subtitle_browser": "Som standard følger konsollen innstillingene i systemet ditt. Hver endring lagres med en gang i denne nettleseren.",
+    "more_contrast": "Mer kontrast",
+    "more_contrast_hint": "Sterkere farger på tekst, linjer og kontroller. Et kontrasttema i Windows går alltid foran.",
+    "follow_system": "Følg systemet",
+    "choice_on": "På",
+    "choice_off": "Av",
+    "single_key_shortcuts": "Slå av snarveier med én tast",
+    "single_key_shortcuts_hint": "Tasten / åpner ikke lenger søket. Ctrl+K gjør det fortsatt.",
+    "pause_live_updates": "Sett direkteoppdateringer på pause",
+    "pause_live_updates_hint": "Lister og sider laster ikke inn nye data av seg selv. Oppdater laster dem inn når du vil.",
+    "saved": "Lagret",
+    "save_failed": "Innstillingen kunne ikke lagres. Prøv igjen."
   },
   "server_mgmt": {
     "title": "Serveradministrasjon",
@@ -9003,8 +9016,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "Bevegelse, kontrast, lenker, skrift, snarveier og direkteoppdateringer. Lagres på kontoen din.",
+    "accessibility_on": "Noen tilgjengelighetsinnstillinger er slått på for kontoen din.",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9052,5 +9065,9 @@
     "move_up": "Flytt opp",
     "move_down": "Flytt ned",
     "move_right": "Flytt til høyre"
+  },
+  "live": {
+    "last_updated": "Sist oppdatert {time}",
+    "paused": "Direkteoppdateringer er satt på pause."
   }
 }

@@ -7388,7 +7388,7 @@
     "letter_spacing": "تباعد الحروف",
     "word_spacing": "تباعد الكلمات",
     "readable_font": "خط قابل للقراءة",
-    "readable_font_hint": "يستخدم خطًا عريضًا وبسيطًا مثل Verdana.",
+    "readable_font_hint": "خط بسيط مع مسافة أكبر قليلًا بين الحروف والكلمات.",
     "dyslexia_spacing": "تباعد عسر القراءة",
     "dyslexia_spacing_hint": "يزيد المسافة بين الحروف والكلمات.",
     "visual": "مرئي",
@@ -7418,7 +7418,7 @@
     "large_cursor": "مؤشر كبير",
     "large_cursor_hint": "يستخدم مؤشرًا أكبر عالي التباين.",
     "reduce_motion": "تقليل الحركة",
-    "reduce_motion_hint": "يوقف الانتقالات والتمرير السلس.",
+    "reduce_motion_hint": "يوقف الانتقالات والرسوم المتحركة والشرائح المتحركة.",
     "pause_animations": "وقفة الرسوم المتحركة",
     "pause_animations_hint": "يجمّد الحركات مثل مؤشرات التحميل الدوّارة.",
     "reading_guide": "دليل القراءة",
@@ -7436,7 +7436,20 @@
     "done": "تم",
     "profiles_note": "يغيّر كل ملف عدة إعدادات أدناه دفعة واحدة. اختره مرة أخرى للعودة إلى الإعدادات الافتراضية.",
     "spacing_normal": "عادي",
-    "reset_defaults": "استعادة الإعدادات الافتراضية"
+    "reset_defaults": "استعادة الإعدادات الافتراضية",
+    "subtitle_account": "تتبع وحدة التحكم إعدادات نظامك افتراضيًا. يُحفظ كل تغيير في حسابك على الفور.",
+    "subtitle_browser": "تتبع وحدة التحكم إعدادات نظامك افتراضيًا. يُحفظ كل تغيير في هذا المتصفح على الفور.",
+    "more_contrast": "تباين أعلى",
+    "more_contrast_hint": "ألوان أقوى للنصوص والخطوط وعناصر التحكم. تكون الأولوية دائمًا لسمة التباين في Windows.",
+    "follow_system": "حسب النظام",
+    "choice_on": "تشغيل",
+    "choice_off": "إيقاف",
+    "single_key_shortcuts": "إيقاف الاختصارات ذات المفتاح الواحد",
+    "single_key_shortcuts_hint": "لن يفتح المفتاح / البحث بعد الآن. يظل Ctrl+K يفتحه.",
+    "pause_live_updates": "إيقاف التحديثات المباشرة مؤقتًا",
+    "pause_live_updates_hint": "لا تحمّل القوائم والصفحات بيانات جديدة من تلقاء نفسها. يحمّلها زر التحديث عندما تريد.",
+    "saved": "تم الحفظ",
+    "save_failed": "تعذّر حفظ الإعداد. حاول مرة أخرى."
   },
   "server_mgmt": {
     "title": "إدارة الخادم",
@@ -9004,8 +9017,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "الحركة والتباين والروابط والخط والاختصارات والتحديثات المباشرة. تُحفظ في حسابك.",
+    "accessibility_on": "بعض إعدادات إمكانية الوصول مفعّلة في حسابك.",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9053,5 +9066,9 @@
     "move_up": "نقل للأعلى",
     "move_down": "نقل للأسفل",
     "move_right": "نقل لليمين"
+  },
+  "live": {
+    "last_updated": "آخر تحديث {time}",
+    "paused": "التحديثات المباشرة متوقفة مؤقتًا."
   }
 }

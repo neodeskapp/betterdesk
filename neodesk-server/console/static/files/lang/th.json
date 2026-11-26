@@ -7387,7 +7387,7 @@
     "letter_spacing": "ระยะห่างระหว่างตัวอักษร",
     "word_spacing": "ระยะห่างระหว่างคำ",
     "readable_font": "แบบอักษรที่อ่านได้",
-    "readable_font_hint": "ใช้ฟอนต์กว้างและเรียบ เช่น Verdana",
+    "readable_font_hint": "แบบอักษรเรียบง่าย เว้นระยะระหว่างตัวอักษรและคำมากขึ้นเล็กน้อย",
     "dyslexia_spacing": "ระยะห่างดิสเล็กเซีย",
     "dyslexia_spacing_hint": "เพิ่มระยะห่างระหว่างตัวอักษรและคำ",
     "visual": "การแสดงผล",
@@ -7417,7 +7417,7 @@
     "large_cursor": "เคอร์เซอร์ขนาดใหญ่",
     "large_cursor_hint": "ใช้ตัวชี้คอนทราสต์สูงที่ใหญ่กว่า",
     "reduce_motion": "ลดการเคลื่อนไหว",
-    "reduce_motion_hint": "ปิดเอฟเฟกต์การเปลี่ยนและการเลื่อนแบบนุ่มนวล",
+    "reduce_motion_hint": "ปิดการเปลี่ยนภาพ ภาพเคลื่อนไหว และสไลด์ที่เลื่อนเอง",
     "pause_animations": "หยุดภาพเคลื่อนไหวชั่วคราว",
     "pause_animations_hint": "หยุดภาพเคลื่อนไหว เช่น ไอคอนกำลังโหลด",
     "reading_guide": "คู่มือการอ่าน",
@@ -7435,7 +7435,20 @@
     "done": "เสร็จสิ้น",
     "profiles_note": "แต่ละโปรไฟล์จะเปลี่ยนการตั้งค่าด้านล่างหลายรายการพร้อมกัน เลือกอีกครั้งเพื่อกลับไปใช้ค่าเริ่มต้น",
     "spacing_normal": "ปกติ",
-    "reset_defaults": "รีเซ็ตเป็นค่าเริ่มต้น"
+    "reset_defaults": "รีเซ็ตเป็นค่าเริ่มต้น",
+    "subtitle_account": "โดยค่าเริ่มต้น คอนโซลจะใช้การตั้งค่าของระบบของคุณ ทุกการเปลี่ยนแปลงจะบันทึกลงในบัญชีของคุณทันที",
+    "subtitle_browser": "โดยค่าเริ่มต้น คอนโซลจะใช้การตั้งค่าของระบบของคุณ ทุกการเปลี่ยนแปลงจะบันทึกในเบราว์เซอร์นี้ทันที",
+    "more_contrast": "เพิ่มคอนทราสต์",
+    "more_contrast_hint": "สีที่เข้มขึ้นสำหรับข้อความ เส้น และตัวควบคุม ธีมคอนทราสต์ของ Windows จะมีผลก่อนเสมอ",
+    "follow_system": "ตามระบบ",
+    "choice_on": "เปิด",
+    "choice_off": "ปิด",
+    "single_key_shortcuts": "ปิดทางลัดแบบปุ่มเดียว",
+    "single_key_shortcuts_hint": "ปุ่ม / จะไม่เปิดการค้นหาอีกต่อไป แต่ Ctrl+K ยังเปิดได้",
+    "pause_live_updates": "หยุดการอัปเดตแบบสดชั่วคราว",
+    "pause_live_updates_hint": "รายการและหน้าต่าง ๆ จะไม่โหลดข้อมูลใหม่เอง ใช้รีเฟรชเพื่อโหลดเมื่อต้องการ",
+    "saved": "บันทึกแล้ว",
+    "save_failed": "บันทึกการตั้งค่าไม่ได้ ลองอีกครั้ง"
   },
   "server_mgmt": {
     "title": "จัดการเซิร์ฟเวอร์",
@@ -9003,8 +9016,8 @@
     "theme": "Theme for this browser",
     "theme_note": "Console default follows the theme set under Settings › Appearance. Light and Dark apply to this browser only.",
     "language_note": "The language of the console for your account, on every device.",
-    "accessibility_note": "Contrast, text size, motion and colour filters for this browser.",
-    "accessibility_on": "Some accessibility settings are on in this browser.",
+    "accessibility_note": "การเคลื่อนไหว คอนทราสต์ ลิงก์ แบบอักษร ทางลัด และการอัปเดตแบบสด บันทึกไว้ในบัญชีของคุณ",
+    "accessibility_on": "การตั้งค่าการช่วยการเข้าถึงบางรายการเปิดอยู่สำหรับบัญชีของคุณ",
     "accessibility_open": "Accessibility settings"
   },
   "devices_add": {
@@ -9052,5 +9065,9 @@
     "move_up": "ย้ายขึ้น",
     "move_down": "ย้ายลง",
     "move_right": "ย้ายไปทางขวา"
+  },
+  "live": {
+    "last_updated": "อัปเดตล่าสุด {time}",
+    "paused": "การอัปเดตแบบสดหยุดชั่วคราวอยู่"
   }
 }

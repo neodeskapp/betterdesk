@@ -195,16 +195,6 @@ html:has(.save-bar.is-dirty) {
 	color-scheme: dark;
 }
 
-/* The accessibility panel's contrast modes choose their own background */
-:root[data-a11y-contrast='high-light'] {
-	color-scheme: light;
-}
-
-:root[data-a11y-contrast='high-dark'],
-:root[data-a11y-contrast='yellow-black'] {
-	color-scheme: dark;
-}
-
 body {
 	margin: 0;
 	background: var(--bg);
