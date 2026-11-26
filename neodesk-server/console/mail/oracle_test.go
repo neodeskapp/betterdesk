@@ -849,7 +849,7 @@ func (r *replay) run(i int, step oracleStep) {
 			// in place of Node's fragment, and its text with them; the subject
 			// stays Node's
 			if _, text, html, err := alertMail(alert, rule, r.service.words(), r.service.brand()); err == nil {
-				r.counts["EM10: an alert or help request mail in the branded layout"]++
+				r.counts["accessibility M-B1: an alert or help request mail in the branded layout"]++
 				step.Sent = append(step.Sent[:0:0], step.Sent...)
 				step.Sent[0].Text = marshal(t, text)
 				step.Sent[0].HTML = marshal(t, html)
@@ -881,9 +881,9 @@ func (r *replay) run(i int, step oracleStep) {
 			}
 		}
 		if len(step.Sent) > 0 {
-			// The help request mail in the branded layout (EM10, as the alert)
+			// The help request mail in the branded layout (accessibility M-B1, as the alert)
 			if _, text, html, err := helpRequestMail(help, bindValue(t, step.Folder), r.service.GetPanelBaseURL(), r.service.words(), r.service.brand()); err == nil {
-				r.counts["EM10: an alert or help request mail in the branded layout"]++
+				r.counts["accessibility M-B1: an alert or help request mail in the branded layout"]++
 				step.Sent = append(step.Sent[:0:0], step.Sent...)
 				step.Sent[0].Text = marshal(t, text)
 				step.Sent[0].HTML = marshal(t, html)
@@ -1143,7 +1143,7 @@ func TestNodeRecording(t *testing.T) {
 			"EM7: a help request mail with its blank lines", "EM4: a stored configuration that is invalid",
 			"EM5: a save with a member of the wrong type", "EM5: a read after a refused save",
 			"EM8: no address without a public URL", "EM8: a help request mail without a link", "EM9: a save without a sender",
-			"EM10: an alert or help request mail in the branded layout",
+			"accessibility M-B1: an alert or help request mail in the branded layout",
 			"RV33: the stored password kept for another account", "RV40: an empty password removes the stored one"} {
 			if r.counts[name] == 0 {
 				t.Errorf("the recording has no %q", name)

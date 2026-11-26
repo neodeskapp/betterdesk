@@ -394,7 +394,7 @@ func TestHelpRequestNotification(t *testing.T) {
 			t.Fatal(ok, err)
 		}
 		m := transport.sends[0].mail
-		// The heading, the lead, the facts and the link, as the branded page has them (EM10)
+		// The heading, the lead, the facts and the link, as the branded page has them (accessibility audit M-B1)
 		wantText := "Help request from PC-01\n\nA new help request was submitted.\n\nDevice: PC-01\nDevice ID: dev-1\nFolder: Support\nMessage: Need help\n\nOpen help requests in NeoDesk: https://panel.example.org/help-requests\n"
 		if m.Subject != "[Support] Help request — PC-01" || !sameStrings(m.To, []string{"alice@example.com"}) || m.ToList || *m.Text != wantText ||
 			m.From != "from@example.com" || !strings.Contains(*m.HTML, `href="https://panel.example.org/help-requests"`) {
