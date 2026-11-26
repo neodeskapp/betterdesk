@@ -21,6 +21,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/mail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
 )
 
 // The test accounts by role (routetest.RoleIDs).
@@ -79,6 +80,8 @@ func waitForMails(t *testing.T, box *outbox, n int) []mail.Outgoing {
 type options struct {
 	roles routetest.Overrides
 	env   map[string]string
+	// db is the database to run on; nil is a new SQLite one.
+	db *store.DB
 }
 
 // newWorld is a console with the real language files, a made-up mail
@@ -110,6 +113,7 @@ func newWorld(t *testing.T, o options) (*routetest.World, *outbox) {
 	if o.roles != nil {
 		opts.Roles = o.roles
 	}
+	opts.DB = o.db
 	w := routetest.New(t, opts)
 	box := &outbox{}
 	w.Server.Deps().Mail = mail.New(mail.Options{DB: w.DB, Transport: box, Getenv: func(name string) string { return env[name] }})

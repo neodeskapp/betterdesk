@@ -12,6 +12,8 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/routes/internal/routetest"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/store/storetest"
 )
 
 // The start opens a session of its own: the browser sees the console as
@@ -298,4 +300,29 @@ func TestATabThatStillViewsRunsNothingAsTheAdmin(t *testing.T) {
 	if res.Status != http.StatusConflict || code(t, res) != "impersonation_ended" {
 		t.Fatalf("%d %s", res.Status, res.Body)
 	}
+}
+
+// The whole round on both databases: start, read, a refused write, the
+// person's history, stop.
+func TestOnBothDatabases(t *testing.T) {
+	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {
+		w, _ := newWorld(t, options{db: db})
+		a := start(t, w, "super_admin", idOperator)
+		if res := a.Do("GET", "/api/devices", ""); res.Status != 200 {
+			t.Fatalf("read: %d %s", res.Status, res.Body)
+		}
+		if res := a.Do("DELETE", "/api/devices/1", ""); res.Status != 403 || code(t, res) != "impersonation_read_only" {
+			t.Fatalf("write: %d %s", res.Status, res.Body)
+		}
+		if active, _, by := impRow(t, w, idOperator); !active || by != idSuper {
+			t.Fatalf("row: %v %d", active, by)
+		}
+		if res := a.Do("POST", "/api/impersonation/stop", "{}"); res.Status != 200 {
+			t.Fatalf("stop: %d %s", res.Status, res.Body)
+		}
+		res := w.As("operator").Do("GET", "/api/users/me/security-events", "")
+		if res.Status != 200 || !strings.Contains(res.Body, `"action":"impersonation_started","at":`) || !strings.Contains(res.Body, `"actor":"e2e_super_admin"`) {
+			t.Fatalf("history: %d %s", res.Status, res.Body)
+		}
+	})
 }
