@@ -1,11 +1,13 @@
 <!--
   New or edit a user group: a name and a note (two fields, a centred
-  dialog). Groups limit which devices their members see.
+  dialog). Groups limit which devices their members see. The dialog says
+  what a group does and where its members and access are set (PATTERN.md
+  rules 5 and 6).
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { saveUserGroup, type UserGroupRow } from '#lib/api/users.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Dialog from '#lib/ui/Dialog.svelte';
 	import Field from '#lib/ui/Field.svelte';
@@ -41,7 +43,20 @@
 	{onclose}
 >
 	<form id={form.id} onsubmit={form.onsubmit} novalidate>
-		<Field label={t('users.group_name')} error={form.errors.name}>
+		<p class="intro">
+			{tf(
+				'users.group_dialog_intro',
+				'Members of a group share its console access and the device groups that allow it. Add people in their user sheet; allow the group in a device group’s access settings.'
+			)}
+		</p>
+		<Field
+			label={t('users.group_name')}
+			hint={tf(
+				'users.group_name_hint',
+				'Shown in the user list, in each member’s user sheet and in access settings.'
+			)}
+			error={form.errors.name}
+		>
 			{#snippet children(f)}
 				<Input {...f} maxlength={80} autocomplete="off" required bind:value={form.values.name} />
 			{/snippet}
@@ -60,3 +75,11 @@
 		>
 	{/snippet}
 </Dialog>
+
+<style>
+	.intro {
+		margin: 0 0 var(--space-4);
+		max-width: var(--measure);
+		color: var(--text-muted);
+	}
+</style>
