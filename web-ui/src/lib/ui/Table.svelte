@@ -558,7 +558,11 @@
 		overflow-x: auto;
 		min-width: 0;
 		margin-inline: calc(-1 * var(--row-pad-x));
+		/* A control that gets focus scrolls in with room for its focus ring
+		   (2px and 2px off), which the box would cut at its edge */
+		scroll-padding: var(--space-2);
 	}
+
 	.table-scroll.is-box {
 		overflow: auto;
 		overscroll-behavior: contain;

@@ -244,3 +244,50 @@ test('the focus ring reaches 3:1 against every surface, in every palette', async
 	}
 	expect(results).toEqual([]);
 });
+
+test.describe('the focus ring is never clipped', () => {
+	test.describe.configure({ timeout: 120_000 });
+	for (const path of ['/devices', '/settings', '/account', '/help-requests']) {
+		test(path, async ({ page }) => {
+			await page.setViewportSize({ width: 1280, height: 800 });
+			await page.goto(`${UI}${path}`);
+			await expect(page.locator('#main-content').getByRole('heading', { level: 1 })).toBeVisible();
+			const clipped = new Set<string>();
+			for (let i = 0; i < 60; i++) {
+				await page.keyboard.press('Tab');
+				await page.waitForTimeout(60);
+				const hit = await page.evaluate(() => {
+					const el = document.activeElement as HTMLElement | null;
+					if (!el || el === document.body) return null;
+					const cs = getComputedStyle(el);
+					if (cs.outlineStyle === 'none') return null;
+					// The ring: outline width plus offset around the box (an inset ring has a negative offset)
+					const grow = Math.max(0, parseFloat(cs.outlineWidth) + parseFloat(cs.outlineOffset));
+					const r = el.getBoundingClientRect();
+					const ring = { l: r.left - grow, t: r.top - grow, r: r.right + grow, b: r.bottom + grow };
+					for (let p = el.parentElement; p && p !== document.documentElement; p = p.parentElement) {
+						const ps = getComputedStyle(p);
+						if (ps.overflowX === 'visible' && ps.overflowY === 'visible') continue;
+						const pr = p.getBoundingClientRect();
+						// Only the edges the box clips: a scrolled-away part is not a clipped ring
+						const left = pr.left + p.clientLeft;
+						const top = pr.top + p.clientTop;
+						const right = left + p.clientWidth;
+						const bottom = top + p.clientHeight;
+						const inside = r.left >= left && r.right <= right && r.top >= top && r.bottom <= bottom;
+						if (!inside) continue;
+						if (ring.l < left - 0.5 || ring.t < top - 0.5 || ring.r > right + 0.5 || ring.b > bottom + 0.5) {
+							const name = (el.getAttribute('aria-label') || el.textContent || el.tagName)
+								.trim()
+								.slice(0, 40);
+							return `${name} in ${p.tagName.toLowerCase()}.${[...p.classList].join('.')}`;
+						}
+					}
+					return null;
+				});
+				if (hit) clipped.add(hit);
+			}
+			expect([...clipped]).toEqual([]);
+		});
+	}
+});

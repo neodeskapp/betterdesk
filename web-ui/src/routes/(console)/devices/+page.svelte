@@ -968,6 +968,10 @@
 		max-height: calc(100vh - var(--topbar-h, 56px) - var(--space-6));
 		overflow-y: auto;
 		min-width: 0;
+		/* The scroll box cuts what sticks out of it: room for the focus ring
+		   (2px and 2px off) of the buttons on its edges, the layout unchanged */
+		padding: var(--space-1);
+		margin: calc(-1 * var(--space-1));
 	}
 	.devices-list {
 		grid-area: list;
