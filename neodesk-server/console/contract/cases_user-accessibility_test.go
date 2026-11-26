@@ -12,13 +12,15 @@ import "github.com/neodeskapp/neodesk/neodesk-server/console/contract"
 // out and pro get the sign-in refusal. Each role changes two settings,
 // reads them back, sends a change the server refuses, and puts the
 // defaults back, so the instance is left with every account at the
-// defaults (a row each, which the bootstrap of the later groups shows).
+// defaults. The group's name sorts it after the groups that record the
+// bootstrap (auth-basics, branding-saved-in-node, console): those find no
+// saved settings, and their answers carry "accessibility": null.
 func init() {
 	defaults := map[string]any{
 		"reduceMotion": "system", "moreContrast": "system", "underlineLinks": false,
 		"readableFont": false, "noSingleKeyShortcuts": false, "pauseLiveUpdates": false,
 	}
-	contract.Group("accessibility",
+	contract.Group("user-accessibility",
 		contract.Case{Name: "read", Path: "/api/accessibility"},
 		contract.Case{Name: "change", Method: "PUT", Path: "/api/accessibility", Body: map[string]any{"moreContrast": "on", "pauseLiveUpdates": true}},
 		contract.Case{Name: "read-after-change", Path: "/api/accessibility"},

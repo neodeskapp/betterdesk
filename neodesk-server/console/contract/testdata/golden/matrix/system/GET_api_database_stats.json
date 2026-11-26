@@ -534,6 +534,10 @@
       },
       {
        "count": 0,
+       "name": "user_preferences"
+      },
+      {
+       "count": 0,
        "name": "users"
       }
      ],
