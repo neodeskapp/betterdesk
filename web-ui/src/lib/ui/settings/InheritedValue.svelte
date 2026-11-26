@@ -3,6 +3,8 @@
   it inherits, it shows what applies and where that is set, and a button
   to set it here; once set here, the control and a button to go back.
   Both are explicit actions; nothing is overridden by touching a field.
+  `name` (the setting's name) goes into each button's accessible name,
+  for pages with many such rows: "Set for this organization: Allow sound".
 
     <InheritedValue id="pol-relay" overridden={has} inherited={t('...server: Direct first')}
         href="/settings#..." linkLabel={t('...Settings, General')}
@@ -17,6 +19,8 @@
 
 	interface Props {
 		id: string;
+		/** The setting's name, for the buttons' accessible names */
+		name?: string;
 		overridden: boolean;
 		/** What applies while nothing is set here, as a sentence */
 		inherited: string;
@@ -32,6 +36,7 @@
 
 	let {
 		id,
+		name,
 		overridden,
 		inherited,
 		href,
@@ -43,12 +48,16 @@
 		disabled = false,
 		children
 	}: Props = $props();
+
+	const named = (words: string) => (name ? `${words}: ${name}` : undefined);
 </script>
 
 <div class={['inherited-value', overridden && 'is-overridden']} {id}>
 	{#if overridden}
 		<div class="inherited-control">{@render children()}</div>
-		<Button variant="link" size="sm" {disabled} onclick={oninherit}>{inheritLabel}</Button>
+		<Button variant="link" size="sm" {disabled} aria-label={named(inheritLabel)} onclick={oninherit}
+			>{inheritLabel}</Button
+		>
 	{:else}
 		<p class="inherited-text">
 			{inherited}
@@ -56,7 +65,9 @@
 			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 			{#if href}<a {href}>{linkLabel}</a>{/if}
 		</p>
-		<Button size="sm" {disabled} onclick={onoverride}>{overrideLabel}</Button>
+		<Button size="sm" {disabled} aria-label={named(overrideLabel)} onclick={onoverride}
+			>{overrideLabel}</Button
+		>
 	{/if}
 </div>
 

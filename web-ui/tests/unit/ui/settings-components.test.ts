@@ -19,6 +19,7 @@ import ListEditor from '../../../src/lib/ui/settings/ListEditor.svelte';
 import KeepCount from '../../../src/lib/ui/settings/KeepCount.svelte';
 import InheritedValue from '../../../src/lib/ui/settings/InheritedValue.svelte';
 import RecordPicker from '../../../src/lib/ui/settings/RecordPicker.svelte';
+import OrgPicker from '../../../src/lib/ui/settings/OrgPicker.svelte';
 import { relayOptions, roleOptions } from '../../../src/lib/ui/settings/pickers.ts';
 
 afterEach(() => cleanup());
@@ -223,6 +224,26 @@ describe('an inherited value', () => {
 		await userEvent.click(screen.getByRole('button', { name: "Use the server's value" }));
 		expect(oninherit).toHaveBeenCalledOnce();
 	});
+	test('with a name, each button says which setting it is for', async () => {
+		const props = {
+			id: 'iv2',
+			name: 'Allow sound',
+			overridden: false,
+			inherited: 'No rule.',
+			overrideLabel: 'Set for this organization',
+			inheritLabel: 'Remove the rule',
+			onoverride: vi.fn(),
+			oninherit: vi.fn(),
+			children: control
+		};
+		const { rerender } = render(InheritedValue, props);
+		expect(
+			screen.getByRole('button', { name: 'Set for this organization: Allow sound' })
+		).toBeInTheDocument();
+		await rerender({ ...props, overridden: true });
+		flushSync();
+		expect(screen.getByRole('button', { name: 'Remove the rule: Allow sound' })).toBeInTheDocument();
+	});
 });
 
 describe('the record picker', () => {
@@ -246,5 +267,39 @@ describe('the record picker', () => {
 		expect(gone).toBeChecked();
 		await userEvent.click(gone);
 		expect(onchange).toHaveBeenLastCalledWith(['operator']);
+	});
+});
+
+describe('the record picker with values that are no record', () => {
+	test('a stored value that never was a record is named as the page says', () => {
+		render(RecordPicker, {
+			id: 'ops2',
+			legend: 'Allowed operator roles',
+			options: [{ value: 'operator', label: 'Operator' }],
+			value: ['demo_operator'],
+			onchange: vi.fn(),
+			unknownLabel: (v: string) => `${v} (not a role)`
+		});
+		expect(screen.getByRole('checkbox', { name: 'demo_operator (not a role)' })).toBeChecked();
+	});
+});
+
+describe('the organization picker', () => {
+	test('with nothing chosen it says so instead of showing the first organization', async () => {
+		const onchange = vi.fn();
+		render(OrgPicker, {
+			label: 'Organization',
+			orgs: [
+				{ id: 'o1', name: 'Front office' },
+				{ id: 'o2', name: 'Lab' }
+			],
+			value: '',
+			placeholder: 'Choose an organization',
+			onchange
+		});
+		const select = screen.getByLabelText('Organization') as HTMLSelectElement;
+		expect(select.selectedOptions[0]?.textContent).toBe('Choose an organization');
+		await userEvent.selectOptions(select, 'Lab');
+		expect(onchange).toHaveBeenLastCalledWith('o2');
 	});
 });

@@ -2,7 +2,9 @@
   Choose several existing records (PATTERN.md rule 4): one checkbox per
   record with its name and, when given, a sentence. A stored value that no
   record has any more stays in the list as "(no longer exists)" so saving
-  never drops it unseen; unticking it removes it. RolePicker is this with
+  never drops it unseen; unticking it removes it. `unknownLabel` names such
+  a value when "no longer exists" is not true (a stored account name in a
+  list of roles: "demo (not a role)"). RolePicker is this with
   the server's roles
   (pickers.ts roleOptions); RelayPicker is ListEditor with relayOptions as
   its one-click records.
@@ -29,9 +31,20 @@
 		onchange: (value: string[]) => void;
 		describedby?: string;
 		disabled?: boolean;
+		/** The words for a stored value that is no record; "{name} (no longer exists)" by default */
+		unknownLabel?: (value: string) => string;
 	}
 
-	let { id, legend, options, value, onchange, describedby, disabled = false }: Props = $props();
+	let {
+		id,
+		legend,
+		options,
+		value,
+		onchange,
+		describedby,
+		disabled = false,
+		unknownLabel = (name: string) => tf('settings_ui.gone_record', '{name} (no longer exists)', { name })
+	}: Props = $props();
 
 	const known = $derived(new Set(options.map((o) => o.value)));
 	const all = $derived([
@@ -40,7 +53,7 @@
 			.filter((v) => !known.has(v))
 			.map((v) => ({
 				value: v,
-				label: tf('settings_ui.gone_record', '{name} (no longer exists)', { name: v }),
+				label: unknownLabel(v),
 				hint: undefined
 			}))
 	]);
