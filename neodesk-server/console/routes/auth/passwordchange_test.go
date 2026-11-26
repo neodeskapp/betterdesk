@@ -112,7 +112,13 @@ func (nowhere) Verify(context.Context, mail.Settings) error              { retur
 // answer's time doesn't tell known from unknown.
 func TestForgotPasswordAnswersFirst(t *testing.T) {
 	w := newWorld(t, nil, setup{})
-	w.s.Deps().Mail = mail.New(mail.Options{DB: w.db, Transport: nowhere{}})
+	// The console's address is set: without it no reset goes out
+	w.s.Deps().Mail = mail.New(mail.Options{DB: w.db, Transport: nowhere{}, Getenv: func(key string) string {
+		if key == "PANEL_PUBLIC_URL" {
+			return "https://desk.example"
+		}
+		return ""
+	}})
 	w.exec(`INSERT INTO settings (key, value) VALUES ('smtp_config', '{"host":"smtp.example.test","port":25,"from":"desk@example.test"}')`)
 	id := w.addUser(user{name: "tom"})
 	w.exec(`UPDATE users SET email = 'tom@example.test' WHERE id = ?`, id)

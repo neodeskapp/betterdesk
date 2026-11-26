@@ -40,9 +40,10 @@ func (h *handlers) mailReady(ctx context.Context) bool {
 }
 
 // passwordResetAvailable answers GET /api/auth/password-reset/available:
-// whether the sign-in page offers "Forgot password?".
+// whether the sign-in page offers "Forgot password?": with mail settings
+// and a known address of the console.
 func (h *handlers) passwordResetAvailable(w http.ResponseWriter, r *http.Request) {
-	kit.OK(w, r, map[string]bool{"available": h.mailReady(r.Context())})
+	kit.OK(w, r, map[string]bool{"available": h.mailReady(r.Context()) && h.consoleBase() != ""})
 }
 
 // resetTarget is an account a reset link goes to.
@@ -80,17 +81,12 @@ func (h *handlers) resetTargets(ctx context.Context, login string) ([]resetTarge
 	return out, rows.Err()
 }
 
-// consoleBase is the address people reach the console at: the configured
-// public address, else the address of the request.
-func (h *handlers) consoleBase(r *http.Request) string {
-	if base := h.d.Mail.GetPanelBaseURL(); base != "" {
-		return strings.TrimRight(base, "/")
-	}
-	scheme := "http"
-	if kit.Secure(r) {
-		scheme = "https"
-	}
-	return scheme + "://" + r.Host
+// consoleBase is the address people reach the console at, as configured
+// (PANEL_PUBLIC_URL, PUBLIC_URL or the panel's public host), "" when none
+// is. Never the request's Host header: whoever asks for a reset would
+// choose where the link in the person's mail leads, with a working token.
+func (h *handlers) consoleBase() string {
+	return strings.TrimRight(h.d.Mail.GetPanelBaseURL(), "/")
 }
 
 // passwordResetRequest answers POST /api/auth/password-reset/request
@@ -103,12 +99,13 @@ func (h *handlers) passwordResetRequest(w http.ResponseWriter, r *http.Request) 
 	ctx := r.Context()
 	login, _ := kit.Body(r).Get("login").Str()
 	login = strings.TrimSpace(login)
-	if login == "" || len(login) > 200 || !h.mailReady(ctx) || !h.resetBudget.take(kit.ClientIP(r), h.now()) {
+	base := h.consoleBase()
+	if login == "" || len(login) > 200 || base == "" || !h.mailReady(ctx) || !h.resetBudget.take(kit.ClientIP(r), h.now()) {
 		kit.OK(w, r, nil)
 		return
 	}
 	job := resetJob{
-		login: login, ip: kit.ClientIP(r), base: h.consoleBase(r),
+		login: login, ip: kit.ClientIP(r), base: base,
 	}
 	kit.OK(w, r, nil)
 	resetWork(func() {
