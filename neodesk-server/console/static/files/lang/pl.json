@@ -1770,7 +1770,8 @@
       "agent_bg_help": "Co widać za stroną pobierania.",
       "rdclient_bg_help": "Co widać za listą urządzeń. „{inherit}” używa tła konsoli.",
       "picture_kb": "Obraz, {kb} KB",
-      "website_help": "Pełny adres, na przykład https://example.com."
+      "website_help": "Pełny adres, na przykład https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Które nowe urządzenia mogą dołączyć do tego serwera i jak.",
@@ -8751,10 +8752,10 @@
     "effect": "Klienci przejmą zmiany, gdy następnym razem połączą się z serwerem.",
     "save": "Zapisz wygląd klienta",
     "last_saved": "Ostatnio zapisano {date}",
-    "never_saved": "Jeszcze nie zapisano",
     "preview_title": "Podgląd",
     "preview_note": "Mniej więcej tak klient pokazuje te wartości. Podgląd zmienia się w trakcie wpisywania.",
-    "preview_button": "Przykładowy przycisk"
+    "preview_button": "Przykładowy przycisk",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

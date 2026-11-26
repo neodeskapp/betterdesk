@@ -1776,7 +1776,8 @@
       "agent_bg_help": "Det som syns bakom nedladdningssidan.",
       "rdclient_bg_help": "Det som syns bakom enhetslistan. ”{inherit}” använder konsolens bakgrund.",
       "picture_kb": "Bild, {kb} kB",
-      "website_help": "En fullständig adress, till exempel https://example.com."
+      "website_help": "En fullständig adress, till exempel https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Vilka nya enheter som får ansluta sig till den här servern, och hur.",
@@ -8757,10 +8758,10 @@
     "effect": "Klienterna får ändringarna nästa gång de hör av sig till servern.",
     "save": "Spara klientens varumärke",
     "last_saved": "Senast sparat {date}",
-    "never_saved": "Inte sparat än",
     "preview_title": "Förhandsvisning",
     "preview_note": "Ungefär så visar klienten dessa värden. Förhandsvisningen följer formuläret medan du skriver.",
-    "preview_button": "Exempelknapp"
+    "preview_button": "Exempelknapp",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

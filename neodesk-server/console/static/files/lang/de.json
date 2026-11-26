@@ -1770,7 +1770,8 @@
       "agent_bg_help": "Was hinter der Downloadseite zu sehen ist.",
       "rdclient_bg_help": "Was hinter der Geräteliste zu sehen ist. „{inherit}“ nimmt den Konsolenhintergrund.",
       "picture_kb": "Bild, {kb} KB",
-      "website_help": "Eine vollständige Adresse, zum Beispiel https://example.com."
+      "website_help": "Eine vollständige Adresse, zum Beispiel https://example.com.",
+      "console_preview": "Vorschau der Konsole"
     },
     "joining": {
       "mode_note": "Welche neuen Geräte diesem Server beitreten dürfen, und wie.",
@@ -8751,10 +8752,10 @@
     "effect": "Clients übernehmen Änderungen, wenn sie sich das nächste Mal beim Server melden.",
     "save": "Client-Branding speichern",
     "last_saved": "Zuletzt gespeichert am {date}",
-    "never_saved": "Noch nicht gespeichert",
     "preview_title": "Vorschau",
     "preview_note": "Ungefähr so zeigt der Client diese Werte an. Die Vorschau folgt dem Formular, während du tippst.",
-    "preview_button": "Beispiel-Schaltfläche"
+    "preview_button": "Beispiel-Schaltfläche",
+    "defaults_in_use": "Hier ist noch nichts gespeichert: Clients zeigen die Werte unten, bis du eigene speicherst."
   },
   "login_promo": {
     "slides": {

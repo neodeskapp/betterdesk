@@ -1776,7 +1776,8 @@
       "agent_bg_help": "Mitä lataussivun takana näkyy.",
       "rdclient_bg_help": "Mitä laiteluettelon takana näkyy. \"{inherit}\" käyttää konsolin taustaa.",
       "picture_kb": "Kuva, {kb} kt",
-      "website_help": "Koko osoite, esimerkiksi https://example.com."
+      "website_help": "Koko osoite, esimerkiksi https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Mitkä uudet laitteet saavat liittyä tälle palvelimelle ja miten.",
@@ -8757,10 +8758,10 @@
     "effect": "Asiakasohjelmat ottavat muutokset käyttöön, kun ne seuraavan kerran ottavat yhteyttä palvelimeen.",
     "save": "Tallenna asiakasohjelman brändäys",
     "last_saved": "Tallennettu viimeksi {date}",
-    "never_saved": "Ei vielä tallennettu",
     "preview_title": "Esikatselu",
     "preview_note": "Suunnilleen näin asiakasohjelma näyttää nämä arvot. Esikatselu päivittyy, kun kirjoitat lomakkeeseen.",
-    "preview_button": "Esimerkkipainike"
+    "preview_button": "Esimerkkipainike",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

@@ -1770,7 +1770,8 @@
       "agent_bg_help": "Co je vidět za stránkou ke stažení.",
       "rdclient_bg_help": "Co je vidět za seznamem zařízení. „{inherit}“ použije pozadí konzole.",
       "picture_kb": "Obrázek, {kb} KB",
-      "website_help": "Celá adresa, například https://example.com."
+      "website_help": "Celá adresa, například https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Která nová zařízení se smějí připojit k tomuto serveru, a jak.",
@@ -8751,10 +8752,10 @@
     "effect": "Klienti převezmou změny, až se příště ozvou serveru.",
     "save": "Uložit vzhled klienta",
     "last_saved": "Naposledy uloženo {date}",
-    "never_saved": "Zatím neuloženo",
     "preview_title": "Náhled",
     "preview_note": "Přibližně takto klient tyto hodnoty zobrazí. Náhled se mění podle toho, co píšete do formuláře.",
-    "preview_button": "Ukázkové tlačítko"
+    "preview_button": "Ukázkové tlačítko",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

@@ -1770,7 +1770,8 @@
       "agent_bg_help": "O que aparece atrás da página de transferência.",
       "rdclient_bg_help": "O que aparece atrás da lista de dispositivos. \"{inherit}\" usa o fundo da consola.",
       "picture_kb": "Imagem, {kb} KB",
-      "website_help": "Um endereço completo, por exemplo https://example.com."
+      "website_help": "Um endereço completo, por exemplo https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Que dispositivos novos podem aderir a este servidor, e como.",
@@ -8751,10 +8752,10 @@
     "effect": "Os clientes aplicam as alterações da próxima vez que contactarem o servidor.",
     "save": "Guardar a marca do cliente",
     "last_saved": "Guardado pela última vez a {date}",
-    "never_saved": "Ainda não guardado",
     "preview_title": "Pré-visualização",
     "preview_note": "Aproximadamente como o cliente mostra estes valores. A pré-visualização acompanha o formulário enquanto escreve.",
-    "preview_button": "Botão de exemplo"
+    "preview_button": "Botão de exemplo",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

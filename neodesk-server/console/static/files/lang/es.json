@@ -1770,7 +1770,8 @@
       "agent_bg_help": "Lo que se ve detrás de la página de descarga.",
       "rdclient_bg_help": "Lo que se ve detrás de la lista de dispositivos. \"{inherit}\" usa el fondo de la consola.",
       "picture_kb": "Imagen, {kb} KB",
-      "website_help": "Una dirección completa, por ejemplo https://example.com."
+      "website_help": "Una dirección completa, por ejemplo https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Qué dispositivos nuevos pueden unirse a este servidor, y cómo.",
@@ -8751,10 +8752,10 @@
     "effect": "Los clientes aplican los cambios la próxima vez que contactan con el servidor.",
     "save": "Guardar la marca del cliente",
     "last_saved": "Guardado por última vez el {date}",
-    "never_saved": "Aún no se ha guardado",
     "preview_title": "Vista previa",
     "preview_note": "Así muestra el cliente, aproximadamente, estos valores. La vista previa sigue al formulario mientras escribe.",
-    "preview_button": "Botón de ejemplo"
+    "preview_button": "Botón de ejemplo",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

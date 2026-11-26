@@ -1776,7 +1776,8 @@
       "agent_bg_help": "Những gì hiện phía sau trang tải xuống.",
       "rdclient_bg_help": "Những gì hiện phía sau danh sách thiết bị. \"{inherit}\" dùng hình nền của bảng điều khiển.",
       "picture_kb": "Hình ảnh, {kb} KB",
-      "website_help": "Địa chỉ đầy đủ, ví dụ https://example.com."
+      "website_help": "Địa chỉ đầy đủ, ví dụ https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Thiết bị mới nào được tham gia máy chủ này, và bằng cách nào.",
@@ -8757,10 +8758,10 @@
     "effect": "Ứng dụng khách nhận thay đổi vào lần kết nối tiếp theo với máy chủ.",
     "save": "Lưu thương hiệu ứng dụng khách",
     "last_saved": "Lưu lần cuối {date}",
-    "never_saved": "Chưa lưu",
     "preview_title": "Xem trước",
     "preview_note": "Đại khái ứng dụng hiển thị các giá trị này như sau. Bản xem trước thay đổi theo những gì bạn nhập.",
-    "preview_button": "Nút mẫu"
+    "preview_button": "Nút mẫu",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

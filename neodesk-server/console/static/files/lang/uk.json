@@ -1776,7 +1776,8 @@
       "agent_bg_help": "Що видно за сторінкою завантаження.",
       "rdclient_bg_help": "Що видно за списком пристроїв. «{inherit}» використовує фон консолі.",
       "picture_kb": "Зображення, {kb} КБ",
-      "website_help": "Повна адреса, наприклад https://example.com."
+      "website_help": "Повна адреса, наприклад https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Які нові пристрої можуть приєднатися до цього сервера, і як.",
@@ -8757,10 +8758,10 @@
     "effect": "Клієнти отримають зміни наступного разу, коли зв'яжуться із сервером.",
     "save": "Зберегти брендування клієнта",
     "last_saved": "Востаннє збережено {date}",
-    "never_saved": "Ще не збережено",
     "preview_title": "Попередній перегляд",
     "preview_note": "Приблизно так клієнт показує ці значення. Попередній перегляд змінюється, поки ви вводите дані.",
-    "preview_button": "Зразок кнопки"
+    "preview_button": "Зразок кнопки",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

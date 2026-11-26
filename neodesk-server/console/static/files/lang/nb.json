@@ -1776,7 +1776,8 @@
       "agent_bg_help": "Det som vises bak nedlastingssiden.",
       "rdclient_bg_help": "Det som vises bak enhetslisten. «{inherit}» bruker konsollens bakgrunn.",
       "picture_kb": "Bilde, {kb} KB",
-      "website_help": "En full adresse, for eksempel https://example.com."
+      "website_help": "En full adresse, for eksempel https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Hvilke nye enheter som kan knyttes til denne serveren, og hvordan.",
@@ -8757,10 +8758,10 @@
     "effect": "Klientene tar i bruk endringene neste gang de melder seg hos serveren.",
     "save": "Lagre merkevaren for klienten",
     "last_saved": "Sist lagret {date}",
-    "never_saved": "Ikke lagret ennå",
     "preview_title": "Forhåndsvisning",
     "preview_note": "Omtrent slik viser klienten disse verdiene. Forhåndsvisningen følger skjemaet mens du skriver.",
-    "preview_button": "Eksempelknapp"
+    "preview_button": "Eksempelknapp",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

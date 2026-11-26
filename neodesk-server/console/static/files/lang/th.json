@@ -1776,7 +1776,8 @@
       "agent_bg_help": "สิ่งที่แสดงอยู่หลังหน้าดาวน์โหลด",
       "rdclient_bg_help": "สิ่งที่แสดงอยู่หลังรายการอุปกรณ์ \"{inherit}\" ใช้พื้นหลังของคอนโซล",
       "picture_kb": "รูปภาพ {kb} KB",
-      "website_help": "ที่อยู่เต็ม เช่น https://example.com"
+      "website_help": "ที่อยู่เต็ม เช่น https://example.com",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "อุปกรณ์ใหม่ใดเข้าร่วมเซิร์ฟเวอร์นี้ได้ และเข้าร่วมอย่างไร",
@@ -8757,10 +8758,10 @@
     "effect": "ไคลเอนต์จะรับการเปลี่ยนแปลงเมื่อติดต่อเซิร์ฟเวอร์ครั้งถัดไป",
     "save": "บันทึกแบรนด์ของไคลเอนต์",
     "last_saved": "บันทึกล่าสุด {date}",
-    "never_saved": "ยังไม่ได้บันทึก",
     "preview_title": "ตัวอย่าง",
     "preview_note": "ไคลเอนต์แสดงค่าเหล่านี้โดยประมาณแบบนี้ ตัวอย่างจะเปลี่ยนตามที่คุณพิมพ์ในแบบฟอร์ม",
-    "preview_button": "ปุ่มตัวอย่าง"
+    "preview_button": "ปุ่มตัวอย่าง",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

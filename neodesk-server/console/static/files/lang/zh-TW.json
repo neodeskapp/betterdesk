@@ -1774,7 +1774,8 @@
       "agent_bg_help": "下載頁後方顯示的內容。",
       "rdclient_bg_help": "裝置清單後方顯示的內容。「{inherit}」使用主控台的背景。",
       "picture_kb": "圖片，{kb} KB",
-      "website_help": "完整位址，例如 https://example.com。"
+      "website_help": "完整位址，例如 https://example.com。",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "哪些新裝置可以加入這台伺服器，以及如何加入。",
@@ -8755,10 +8756,10 @@
     "effect": "用戶端下次連線到伺服器時會套用變更。",
     "save": "儲存用戶端品牌",
     "last_saved": "上次儲存於 {date}",
-    "never_saved": "尚未儲存",
     "preview_title": "預覽",
     "preview_note": "用戶端大致會這樣顯示這些值。預覽會隨您在表單中的輸入而更新。",
-    "preview_button": "範例按鈕"
+    "preview_button": "範例按鈕",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

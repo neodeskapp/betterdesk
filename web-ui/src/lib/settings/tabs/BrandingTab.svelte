@@ -209,10 +209,13 @@
 		{ id: 'branding-rdclient', label: t('settings.appearance.rdclient') },
 		...(canEdit ? [{ id: 'client-app', label: t('settings.branding.client_app') }] : [])
 	]);
+	const consolePreview = $derived(tf('settings.brand.console_preview', 'Console preview'));
 </script>
 
+<!-- Below 1200 px the preview comes first: at the end it would sit right
+     after the client app's own preview -->
 {#snippet preview()}
-	<h2 class="preview-title" id="branding-preview-title">{t('settings.side.preview_title')}</h2>
+	<h2 class="preview-title" id="branding-preview-title">{consolePreview}</h2>
 	<p class="preview-note">{t('settings.side.preview_note')}</p>
 	<ThemePreview
 		palette={previewPalette}
@@ -248,8 +251,7 @@
 	filterLabel={tf('settings.brand.filter', 'Filter branding settings')}
 	{sections}
 	summary={preview}
-	summaryLabel={t('settings.side.preview_title')}
-	summaryLast
+	summaryLabel={consolePreview}
 	{top}
 	{bar}
 	class="branding-tab"

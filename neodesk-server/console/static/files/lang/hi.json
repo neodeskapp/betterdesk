@@ -1776,7 +1776,8 @@
       "agent_bg_help": "डाउनलोड पेज के पीछे क्या दिखता है।",
       "rdclient_bg_help": "डिवाइस सूची के पीछे क्या दिखता है। \"{inherit}\" कंसोल का बैकग्राउंड इस्तेमाल करता है।",
       "picture_kb": "तस्वीर, {kb} KB",
-      "website_help": "पूरा पता, उदाहरण के लिए https://example.com।"
+      "website_help": "पूरा पता, उदाहरण के लिए https://example.com।",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "कौन से नए डिवाइस इस सर्वर से जुड़ सकते हैं, और कैसे।",
@@ -8757,10 +8758,10 @@
     "effect": "क्लाइंट अगली बार सर्वर से संपर्क करने पर बदलाव ले लेते हैं।",
     "save": "क्लाइंट ब्रांडिंग सहेजें",
     "last_saved": "आख़िरी बार सहेजा गया {date}",
-    "never_saved": "अभी तक सहेजा नहीं गया",
     "preview_title": "पूर्वावलोकन",
     "preview_note": "क्लाइंट इन मानों को लगभग ऐसे दिखाता है। आप टाइप करते हैं तो पूर्वावलोकन फ़ॉर्म के साथ बदलता है।",
-    "preview_button": "नमूना बटन"
+    "preview_button": "नमूना बटन",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

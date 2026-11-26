@@ -1770,7 +1770,8 @@
       "agent_bg_help": "Wat achter de downloadpagina te zien is.",
       "rdclient_bg_help": "Wat achter de apparatenlijst te zien is. \"{inherit}\" gebruikt de achtergrond van de console.",
       "picture_kb": "Afbeelding, {kb} KB",
-      "website_help": "Een volledig adres, bijvoorbeeld https://example.com."
+      "website_help": "Een volledig adres, bijvoorbeeld https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Welke nieuwe apparaten aan deze server mogen deelnemen, en hoe.",
@@ -8751,10 +8752,10 @@
     "effect": "Clients nemen wijzigingen over zodra ze zich de volgende keer bij de server melden.",
     "save": "Huisstijl van de client opslaan",
     "last_saved": "Laatst opgeslagen op {date}",
-    "never_saved": "Nog niet opgeslagen",
     "preview_title": "Voorbeeld",
     "preview_note": "Ongeveer zo toont de client deze waarden. Het voorbeeld volgt het formulier terwijl u typt.",
-    "preview_button": "Voorbeeldknop"
+    "preview_button": "Voorbeeldknop",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

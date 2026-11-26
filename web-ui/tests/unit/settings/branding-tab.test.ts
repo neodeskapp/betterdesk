@@ -72,6 +72,23 @@ async function loaded() {
 }
 
 describe('Settings › Branding', () => {
+	test('never saved: the client app says its values are the ones clients use, not "Not saved yet"', async () => {
+		await loaded();
+		const group = document.getElementById('client-app')!;
+		expect(group).not.toHaveTextContent('client_branding.never_saved');
+		expect(group).toHaveTextContent(
+			'Nothing saved here yet: clients show the values below until you save your own.'
+		);
+	});
+
+	test('the console preview comes before the groups on a narrow screen, not next to the client app preview', async () => {
+		await loaded();
+		const body = document.querySelector('.settings-body')!;
+		expect(body).not.toHaveClass('summary-last');
+		expect(screen.getByRole('heading', { name: 'Console preview' })).toBeInTheDocument();
+		expect(screen.getByRole('complementary', { name: 'Console preview' })).toBeInTheDocument();
+	});
+
 	test('one save bar lists the name and the client app change, and one Save sends both', async () => {
 		const user = userEvent.setup();
 		await loaded();

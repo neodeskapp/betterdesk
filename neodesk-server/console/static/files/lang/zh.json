@@ -1770,7 +1770,8 @@
       "agent_bg_help": "下载页后面显示的内容。",
       "rdclient_bg_help": "设备列表后面显示的内容。“{inherit}”使用控制台的背景。",
       "picture_kb": "图片，{kb} KB",
-      "website_help": "完整地址，例如 https://example.com。"
+      "website_help": "完整地址，例如 https://example.com。",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "哪些新设备可以加入此服务器，以及如何加入。",
@@ -8751,10 +8752,10 @@
     "effect": "客户端下次连接服务器时会应用更改。",
     "save": "保存客户端品牌",
     "last_saved": "上次保存于 {date}",
-    "never_saved": "尚未保存",
     "preview_title": "预览",
     "preview_note": "客户端大致会这样显示这些值。预览会随您在表单中的输入而更新。",
-    "preview_button": "示例按钮"
+    "preview_button": "示例按钮",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

@@ -1776,7 +1776,8 @@
       "agent_bg_help": "İndirme sayfasının arkasında görünen.",
       "rdclient_bg_help": "Cihaz listesinin arkasında görünen. \"{inherit}\" konsolun arka planını kullanır.",
       "picture_kb": "Resim, {kb} KB",
-      "website_help": "Tam bir adres, örneğin https://example.com."
+      "website_help": "Tam bir adres, örneğin https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Bu sunucuya hangi yeni cihazların ve nasıl katılabileceği.",
@@ -8757,10 +8758,10 @@
     "effect": "İstemciler değişiklikleri sunucuyla bir sonraki iletişimlerinde alır.",
     "save": "İstemci markasını kaydet",
     "last_saved": "Son kayıt: {date}",
-    "never_saved": "Henüz kaydedilmedi",
     "preview_title": "Önizleme",
     "preview_note": "İstemci bu değerleri yaklaşık olarak böyle gösterir. Önizleme siz yazdıkça formu izler.",
-    "preview_button": "Örnek düğme"
+    "preview_button": "Örnek düğme",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

@@ -1776,7 +1776,8 @@
       "agent_bg_help": "Apa yang tampil di belakang halaman unduhan.",
       "rdclient_bg_help": "Apa yang tampil di belakang daftar perangkat. \"{inherit}\" memakai latar konsol.",
       "picture_kb": "Gambar, {kb} KB",
-      "website_help": "Alamat lengkap, misalnya https://example.com."
+      "website_help": "Alamat lengkap, misalnya https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Perangkat baru mana yang boleh bergabung ke server ini, dan bagaimana caranya.",
@@ -8757,10 +8758,10 @@
     "effect": "Klien menerapkan perubahan saat berikutnya menghubungi server.",
     "save": "Simpan branding klien",
     "last_saved": "Terakhir disimpan {date}",
-    "never_saved": "Belum disimpan",
     "preview_title": "Pratinjau",
     "preview_note": "Kira-kira seperti ini klien menampilkan nilai tersebut. Pratinjau mengikuti formulir saat Anda mengetik.",
-    "preview_button": "Tombol contoh"
+    "preview_button": "Tombol contoh",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

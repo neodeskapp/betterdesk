@@ -1770,7 +1770,8 @@
       "agent_bg_help": "Cosa si vede dietro la pagina di download.",
       "rdclient_bg_help": "Cosa si vede dietro l'elenco dei dispositivi. \"{inherit}\" usa lo sfondo della console.",
       "picture_kb": "Immagine, {kb} KB",
-      "website_help": "Un indirizzo completo, per esempio https://example.com."
+      "website_help": "Un indirizzo completo, per esempio https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Quali nuovi dispositivi possono unirsi a questo server, e come.",
@@ -8751,10 +8752,10 @@
     "effect": "I client applicano le modifiche la prossima volta che contattano il server.",
     "save": "Salva la personalizzazione del client",
     "last_saved": "Ultimo salvataggio il {date}",
-    "never_saved": "Non ancora salvato",
     "preview_title": "Anteprima",
     "preview_note": "Più o meno come il client mostra questi valori. L’anteprima segue il modulo mentre scrive.",
-    "preview_button": "Pulsante di esempio"
+    "preview_button": "Pulsante di esempio",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

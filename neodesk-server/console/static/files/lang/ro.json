@@ -1776,7 +1776,8 @@
       "agent_bg_help": "Ce se vede în spatele paginii de descărcare.",
       "rdclient_bg_help": "Ce se vede în spatele listei de dispozitive. „{inherit}” folosește fundalul consolei.",
       "picture_kb": "Imagine, {kb} KB",
-      "website_help": "O adresă completă, de exemplu https://example.com."
+      "website_help": "O adresă completă, de exemplu https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "Ce dispozitive noi se pot alătura acestui server și cum.",
@@ -8757,10 +8758,10 @@
     "effect": "Clienții preiau modificările data viitoare când contactează serverul.",
     "save": "Salvează personalizarea clientului",
     "last_saved": "Salvat ultima dată pe {date}",
-    "never_saved": "Nesalvat încă",
     "preview_title": "Previzualizare",
     "preview_note": "Aproximativ așa afișează clientul aceste valori. Previzualizarea urmează formularul pe măsură ce scrieți.",
-    "preview_button": "Buton de exemplu"
+    "preview_button": "Buton de exemplu",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

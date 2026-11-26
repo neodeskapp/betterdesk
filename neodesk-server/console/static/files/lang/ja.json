@@ -1770,7 +1770,8 @@
       "agent_bg_help": "ダウンロードページの背後に表示されるものです。",
       "rdclient_bg_help": "デバイス一覧の背後に表示されるものです。「{inherit}」はコンソールの背景を使います。",
       "picture_kb": "画像、{kb} KB",
-      "website_help": "完全なアドレス。例: https://example.com。"
+      "website_help": "完全なアドレス。例: https://example.com。",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "どの新しいデバイスがどのようにこのサーバーに参加できるか。",
@@ -8751,10 +8752,10 @@
     "effect": "クライアントは、次にサーバーと通信したときに変更を反映します。",
     "save": "クライアントのブランドを保存",
     "last_saved": "最終保存: {date}",
-    "never_saved": "まだ保存されていません",
     "preview_title": "プレビュー",
     "preview_note": "クライアントがこれらの値をおおよそどう表示するかを示します。入力に合わせて更新されます。",
-    "preview_button": "サンプルボタン"
+    "preview_button": "サンプルボタン",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {

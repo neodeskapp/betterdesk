@@ -1777,7 +1777,8 @@
       "agent_bg_help": "ما يظهر خلف صفحة التنزيل.",
       "rdclient_bg_help": "ما يظهر خلف قائمة الأجهزة. \"{inherit}\" يستخدم خلفية وحدة التحكم.",
       "picture_kb": "صورة، {kb} كيلوبايت",
-      "website_help": "عنوان كامل، مثلًا https://example.com."
+      "website_help": "عنوان كامل، مثلًا https://example.com.",
+      "console_preview": "Console preview"
     },
     "joining": {
       "mode_note": "ما الأجهزة الجديدة التي يمكنها الانضمام إلى هذا الخادم، وكيف.",
@@ -8758,10 +8759,10 @@
     "effect": "تحصل العملاء على التغييرات في المرة التالية التي تتصل فيها بالخادم.",
     "save": "حفظ علامة العميل",
     "last_saved": "آخر حفظ {date}",
-    "never_saved": "لم يُحفظ بعد",
     "preview_title": "معاينة",
     "preview_note": "هكذا تقريبًا يعرض العميل هذه القيم. تتغير المعاينة أثناء الكتابة في النموذج.",
-    "preview_button": "زر للمثال"
+    "preview_button": "زر للمثال",
+    "defaults_in_use": "Nothing saved here yet: clients show the values below until you save your own."
   },
   "login_promo": {
     "slides": {
