@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/neodeskapp/neodesk/neodesk-server/console/avatars"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/config"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
@@ -57,6 +58,11 @@ type handlers struct {
 	// members reports whether an account reads a direct or group
 	// conversation (Hub.MayRead); nil: as before version 2.
 	members func(ctx context.Context, user *session.User, conv string) bool
+	// helper is the account that took a device's conversation, 0 for
+	// none; nil: no helper pictures.
+	helper func(ctx context.Context, device string) (int64, error)
+	// avatarStore keeps the profile pictures.
+	avatarStore *avatars.Service
 }
 
 // FilesDir is the folder of the chat files: <console folder>/data/chat-files.
@@ -77,6 +83,13 @@ func Register(d *kit.Deps) {
 
 func register(d *kit.Deps, dir string) *handlers {
 	h := &handlers{api: d.GoAPI, dir: dir, maxFolder: maxFolderSize, random: rand.Reader, errors: d.WebUI, user: kit.User}
+	h.avatarStore = d.Avatars
+	if d.Chat != nil {
+		h.helper = func(ctx context.Context, device string) (int64, error) {
+			c, err := d.Chat.Conversation(ctx, device)
+			return c.AssigneeID, err
+		}
+	}
 	if h.errors == nil {
 		// Without the web app the error handler is the one of production
 		h.errors = webui.New(webui.Options{Production: true})
@@ -120,6 +133,7 @@ func register(d *kit.Deps, dir string) *handlers {
 	if d.Early != nil {
 		d.Early.Post("/api/chat/device/files", h.deviceUpload, d.Limits.Upload.Middleware, d.RequireDeviceToken)
 		d.Early.Get("/api/chat/device/files/{fileId}", h.deviceDownload, d.RequireDeviceToken)
+		d.Early.Get("/api/chat/device/helper/picture", h.helperPicture, d.RequireDeviceToken)
 	}
 	return h
 }

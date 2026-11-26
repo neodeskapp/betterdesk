@@ -22,7 +22,7 @@ func TestComputersChatWhileTheConsoleStarts(t *testing.T) {
 		h.ServeHTTP(rec, httptest.NewRequest("GET", path, nil))
 		return rec
 	}
-	for _, path := range []string{"/ws/chat/900100001?v=2", "/api/chat/device/files/0123456789abcdef0123456789abcdef"} {
+	for _, path := range []string{"/ws/chat/900100001?v=2", "/api/chat/device/files/0123456789abcdef0123456789abcdef", "/api/chat/device/helper/picture"} {
 		rec := ask(path)
 		if rec.Code != http.StatusServiceUnavailable || rec.Header().Get("Retry-After") != "5" || rec.Header().Get("X-NeoDesk-Chat") != "starting" {
 			t.Errorf("%s before the console: %d %v", path, rec.Code, rec.Header())
@@ -30,8 +30,10 @@ func TestComputersChatWhileTheConsoleStarts(t *testing.T) {
 	}
 
 	srv.SetDeviceChat(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusTeapot) }))
-	if rec := ask("/ws/chat/900100001?v=2"); rec.Code != http.StatusTeapot {
-		t.Errorf("with the console: %d", rec.Code)
+	for _, path := range []string{"/ws/chat/900100001?v=2", "/api/chat/device/helper/picture"} {
+		if rec := ask(path); rec.Code != http.StatusTeapot {
+			t.Errorf("%s with the console: %d", path, rec.Code)
+		}
 	}
 
 	// A console that stops (the server shuts down or restarts) comes back

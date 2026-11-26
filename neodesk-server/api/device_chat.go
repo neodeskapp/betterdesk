@@ -13,7 +13,8 @@ import (
 // their calls to the server's API port (api-server, or the API port next
 // to the ID server), but the chat lives in the console: the chat socket of
 // version 2 (/ws/chat/<id>?v=2) and the computer's chat files
-// (/api/chat/device/files, /api/chat/device/files/<id>). The API's
+// (/api/chat/device/files, /api/chat/device/files/<id>) and the picture
+// of the person who helps (/api/chat/device/helper/picture). The API's
 // listener hands exactly these requests to the console in this process,
 // before its own credential check, which knows no device tokens and
 // refused them with 401. The console checks them as on its own port: the
@@ -59,6 +60,7 @@ func (s *Server) NoDeviceChat() {
 const (
 	deviceChatSocket = "/ws/chat/"
 	deviceChatFiles  = "/api/chat/device/files"
+	deviceChatHelper = "/api/chat/device/helper/picture"
 )
 
 // oneSegment reports whether rest is one non-empty path segment.
@@ -73,7 +75,7 @@ func deviceChatRequest(r *http.Request) (chat, socket bool) {
 	if rest, ok := strings.CutPrefix(path, deviceChatSocket); ok && oneSegment(rest) {
 		return true, true
 	}
-	if path == deviceChatFiles {
+	if path == deviceChatFiles || path == deviceChatHelper {
 		return true, false
 	}
 	if rest, ok := strings.CutPrefix(path, deviceChatFiles+"/"); ok && oneSegment(rest) {
