@@ -24,6 +24,7 @@
 	import { link } from '#lib/nav.ts';
 	import { mayMakeTokens } from '#lib/people/apiTokens.ts';
 	import { REVEAL_EVENT } from '#lib/settings/reveal-event.ts';
+	import { isAdminRole } from '#lib/rules/access.ts';
 	import { settingEntries } from '#lib/settings/search.ts';
 	import { can, session } from '#lib/state/session.svelte.ts';
 	import { theme } from '#lib/state/theme.svelte.ts';
@@ -62,7 +63,7 @@
 	let loadedAt = 0;
 
 	const pages = $derived(searchPages(session.nav));
-	const settings = $derived(settingEntries({ t, can }));
+	const settings = $derived(settingEntries({ t, can, admin: isAdminRole(session.user?.role) }));
 	const actions = $derived(
 		searchActions({
 			can,
