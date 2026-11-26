@@ -18,7 +18,8 @@ const sessionTable = "panel_sessions"
 // up: same tables, columns, defaults, constraints and indexes, and on
 // SQLite the same stored statement text. On PostgreSQL
 // alert_rules.condition_value is double precision (BUGS AE4), access_tokens
-// has token_kind (BUGS RV1) and users has disabled (L107).
+// has token_kind (BUGS RV1) and users has disabled (L107). The Go console
+// adds the tables of goTables.
 func TestMigrateFreshEqualsNodeDump(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		mustMigrate(t, db)
@@ -29,10 +30,11 @@ func TestMigrateFreshEqualsNodeDump(t *testing.T) {
 			node = storetest.Postgres(t)
 		}
 		storetest.NodeSchema(t, node)
+		createGoTables(t, node)
 		want := readCatalog(t, node).without(sessionTable).wideConditionValue().withTokenKind(db.IsPostgres()).withDisabled(db.IsPostgres())
 
-		if n := len(want.tables()); n != 55 {
-			t.Fatalf("the Node dump has %d tables besides %s, want 55", n, sessionTable)
+		if n := len(want.tables()); n != 55+len(goTables) {
+			t.Fatalf("the Node dump and the Go tables are %d tables besides %s, want %d", n, sessionTable, 55+len(goTables))
 		}
 		requireSameCatalog(t, "fresh database against the Node dump", want, got)
 
@@ -50,8 +52,8 @@ func TestMigrateFreshEqualsNodeDump(t *testing.T) {
 // done, but for widening alert_rules.condition_value on PostgreSQL (BUGS
 // AE4), adding access_tokens.token_kind, "account" in every row (BUGS
 // RV1), keeping each access token as its hash only (BUGS RV128), and
-// adding users.disabled, every account enabled (L107).
-// Running it again changes nothing.
+// adding users.disabled, every account enabled (L107), and creating the
+// tables of goTables. Running it again changes nothing.
 func TestMigrateLeavesNodeDatabaseAlone(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		storetest.NodeSchema(t, db)
@@ -92,7 +94,7 @@ func TestMigrateLeavesNodeDatabaseAlone(t *testing.T) {
 		for run := 1; run <= 2; run++ {
 			out := captureLog(t, func() { mustMigrate(t, db) })
 			if run == 1 {
-				want := []string{"[DB] Migration: added access_tokens.token_kind", "[DB] Migration: kept 2 access tokens as their hash only", "[DB] Migration: added users.disabled"}
+				want := []string{"[DB] Migration: added access_tokens.token_kind", "[DB] Migration: kept 2 access tokens as their hash only", "[DB] Migration: added users.disabled", "[DB] Migration: created 1 tables: user_preferences"}
 				if db.IsPostgres() {
 					want = append([]string{"[DB] Migration: widened alert_rules.condition_value to double precision"}, want...)
 				}
@@ -109,7 +111,7 @@ func TestMigrateLeavesNodeDatabaseAlone(t *testing.T) {
 			if out != "" {
 				t.Errorf("run %d: Migrate found something to do on a Node database:\n%s", run, out)
 			}
-			requireSameCatalog(t, "catalog of a Node database after Migrate", catalogBefore.wideConditionValue().withTokenKind(db.IsPostgres()).withDisabled(db.IsPostgres()), readCatalog(t, db))
+			requireSameCatalog(t, "catalog of a Node database after Migrate", catalogBefore.withGoTables(t, db).wideConditionValue().withTokenKind(db.IsPostgres()).withDisabled(db.IsPostgres()), readCatalog(t, db))
 			requireSameSnapshot(t, "rows of a Node database after Migrate", rowsAfter, readSnapshot(t, db, tables))
 		}
 	})
@@ -136,8 +138,8 @@ func TestMigrateTwiceChangesNothing(t *testing.T) {
 // The databases storetest hands to other packages have the console's
 // schema and a shape to ask.
 func TestStoretestMigratedDatabases(t *testing.T) {
-	if n := len(storetest.Migrated(t).Shape().Tables()); n != 55 {
-		t.Errorf("storetest.Migrated has %d tables, want 55", n)
+	if n := len(storetest.Migrated(t).Shape().Tables()); n != 55+len(goTables) {
+		t.Errorf("storetest.Migrated has %d tables, want %d", n, 55+len(goTables))
 	}
 	ran := map[store.Dialect]bool{}
 	storetest.EachMigrated(t, func(t *testing.T, db *store.DB) {

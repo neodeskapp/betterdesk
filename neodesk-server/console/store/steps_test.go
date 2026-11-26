@@ -662,8 +662,8 @@ func TestMigrateWaitsForTheSchemaLock(t *testing.T) {
 	if err := <-migrated; err != nil {
 		t.Fatalf("Migrate after the lock was released: %v", err)
 	}
-	if tables := readCatalog(t, db).tables(); len(tables) != 55 {
-		t.Errorf("%d tables after Migrate, want 55", len(tables))
+	if tables := readCatalog(t, db).tables(); len(tables) != 55+len(goTables) {
+		t.Errorf("%d tables after Migrate, want %d", len(tables), 55+len(goTables))
 	}
 }
 
@@ -684,7 +684,7 @@ func TestMigrateReportsWhatItDid(t *testing.T) {
 	storetest.Each(t, func(t *testing.T, db *store.DB) {
 		first := captureLog(t, func() { mustMigrate(t, db) })
 		for _, want := range []string{
-			"[DB] Migration: created 55 tables: peer, ",
+			"[DB] Migration: created 56 tables: peer, ",
 			"[DB] Migration: added users.first_name\n",
 			"[DB] Migration: added the default row to user_groups\n",
 		} {

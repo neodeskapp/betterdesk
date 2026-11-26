@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/neodeskapp/neodesk/neodesk-server/console/access"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/accessibility"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/branding"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/i18n"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
@@ -38,6 +39,9 @@ type bootstrapUser struct {
 	PreferredLanguage *string `json:"preferredLanguage"`
 	// AvatarVersion is null without a picture: the app shows initials.
 	AvatarVersion store.NullString `json:"avatarVersion"`
+	// Accessibility is the account's own accessibility settings, null
+	// when it never saved any: the browser's copy stays then.
+	Accessibility *accessibility.Settings `json:"accessibility"`
 }
 
 type bootstrapLang struct {
@@ -97,6 +101,13 @@ func (h *handlers) bootstrap(w http.ResponseWriter, r *http.Request) {
 	}
 	if user.PreferredLanguage != "" {
 		answer.User.PreferredLanguage = &user.PreferredLanguage
+	}
+	// The settings only change how the app looks: a failed read leaves the
+	// browser's copy and must not keep the account out
+	if a11y, found, err := accessibility.Load(ctx, h.d.Store, user.ID); err != nil {
+		h.d.Log.Child("BOOTSTRAP").Warn("Accessibility settings:", err)
+	} else if found {
+		answer.User.Accessibility = &a11y
 	}
 	w.Header().Set("Cache-Control", "no-store")
 	kit.JSON(w, r, http.StatusOK, answer)

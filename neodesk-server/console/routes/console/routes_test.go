@@ -227,7 +227,7 @@ func TestBootstrap(t *testing.T) {
 		}
 		got := decode(t, res.Body)
 		user, _ := json.Marshal(got["user"])
-		if string(user) != `{"avatarVersion":null,"id":6,"preferredLanguage":null,"role":"viewer","username":"e2e_viewer"}` {
+		if string(user) != `{"accessibility":null,"avatarVersion":null,"id":6,"preferredLanguage":null,"role":"viewer","username":"e2e_viewer"}` {
 			t.Errorf("user = %s", user)
 		}
 		if got["appVersion"] != "9.8.7" || got["emergencyMode"] != false || got["isSuperAdmin"] != false {
@@ -268,6 +268,15 @@ func TestBootstrap(t *testing.T) {
 		}
 		if branding["revision"] != "95f662d6" {
 			t.Errorf("revision = %v", branding["revision"])
+		}
+
+		// The accessibility settings the account saved
+		if res := viewer.Do("PUT", "/api/accessibility", `{"moreContrast":"on","pauseLiveUpdates":true}`); res.Status != http.StatusOK {
+			t.Fatalf("save the accessibility settings: %d %s", res.Status, res.Body)
+		}
+		saved, _ := json.Marshal(decode(t, viewer.Do("GET", "/api/console/bootstrap", "").Body)["user"].(map[string]any)["accessibility"])
+		if string(saved) != `{"moreContrast":"on","noSingleKeyShortcuts":false,"pauseLiveUpdates":true,"readableFont":false,"reduceMotion":"system","underlineLinks":false}` {
+			t.Errorf("accessibility = %s", saved)
 		}
 
 		german := w.SignedOut()
