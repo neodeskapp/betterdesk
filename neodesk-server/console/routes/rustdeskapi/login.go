@@ -187,6 +187,12 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		kit.JSON(w, r, http.StatusForbidden, collisionAnswer{Error: authn.TOTPSetupDueMessage, Code: authn.TOTPSetupDueCode})
 		return
 	}
+	// The new password an admin asked for is chosen in the web console
+	if user.PasswordChangeRequired {
+		_ = h.d.Authn.RecordAttempt(ctx, username, ip, false)
+		kit.JSON(w, r, http.StatusForbidden, collisionAnswer{Error: authn.PasswordChangeDueMessage, Code: authn.PasswordChangeDueCode})
+		return
+	}
 	userID := user.ID.V
 	if user.TOTPRequired && !h.totpBypass {
 		secret, err := randomSecret()

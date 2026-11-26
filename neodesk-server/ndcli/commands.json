@@ -253,6 +253,28 @@
    "route": "GET /api/users/me/profile"
   },
   {
+   "name": "account security-events",
+   "summary": "List your account's recent sign-ins and security events.",
+   "description": "Sign-ins, password and two-factor changes, and each time an admin viewed NeoDesk as you, with who and why. Newest first; --limit up to 200.",
+   "route": "GET /api/users/me/security-events",
+   "flags": [
+    {
+     "name": "limit",
+     "in": "query",
+     "type": "int",
+     "help": "how many, at most 200 (default 50)"
+    }
+   ],
+   "rows": "data.events",
+   "columns": [
+    "at",
+    "action",
+    "actor",
+    "reason",
+    "ip"
+   ]
+  },
+  {
    "name": "account verify",
    "summary": "Check that the token works and show the account it signs in as.",
    "route": "GET /api/auth/verify",
@@ -6519,6 +6541,57 @@
    "permission": "server.config"
   },
   {
+   "name": "settings inactive-accounts",
+   "summary": "Show the rule that disables accounts that don't sign in.",
+   "route": "GET /api/settings/inactive-accounts",
+   "permission": "server.config",
+   "description": "days is 0 while the rule is off."
+  },
+  {
+   "name": "settings inactive-accounts-set",
+   "summary": "Disable accounts that haven't signed in for a number of days, or turn that off with 0.",
+   "route": "PUT /api/settings/inactive-accounts",
+   "permission": "server.config",
+   "flags": [
+    {
+     "name": "days",
+     "in": "body",
+     "type": "int",
+     "help": "days without a sign-in, 14 to 3650; 0 turns the rule off",
+     "required": true
+    }
+   ],
+   "description": "The person gets an email a week before the account is disabled. Accounts with the exception (users update --inactive-exempt true), open invites, pro accounts and the last Super admin are left alone.",
+   "examples": [
+    "neodesk settings inactive-accounts-set --days 90",
+    "neodesk settings inactive-accounts-set --days 0"
+   ]
+  },
+  {
+   "name": "settings impersonation",
+   "summary": "Show whether people get a mail when an admin views NeoDesk as them.",
+   "description": "notice_mail is the switch in Settings, Sign-in. It is on unless it was turned off.",
+   "route": "GET /api/settings/impersonation",
+   "permission": "server.config"
+  },
+  {
+   "name": "settings impersonation-set",
+   "summary": "Turn the mail about Sign in as on or off.",
+   "description": "On (the default): a person gets a mail with who viewed NeoDesk as them, when and why. Their recent sign-ins show it either way.",
+   "route": "PUT /api/settings/impersonation",
+   "flags": [
+    {
+     "name": "notice-mail",
+     "in": "body",
+     "type": "bool",
+     "help": "mail the person viewed",
+     "required": true,
+     "field": "notice_mail"
+    }
+   ],
+   "permission": "server.config"
+  },
+  {
    "name": "settings ldap",
    "summary": "Show the LDAP sign-in settings.",
    "route": "GET /api/settings/ldap",
@@ -6560,6 +6633,48 @@
    "route": "POST /api/settings/oidc/test",
    "permission": "server.config",
    "description": "Give the request body with -f key=value (text), -F key=json (numbers, true or false, lists) or --data JSON (or --data @file.json). The answer to a wrong body names what is missing."
+  },
+  {
+   "name": "settings security-notices",
+   "summary": "Show which security notices people get by mail.",
+   "route": "GET /api/settings/security-notices",
+   "permission": "server.config"
+  },
+  {
+   "name": "settings security-notices-set",
+   "summary": "Turn security notices by mail on or off.",
+   "route": "PUT /api/settings/security-notices",
+   "flags": [
+    {
+     "name": "new-signin",
+     "in": "body",
+     "type": "bool",
+     "help": "a sign-in from a new browser",
+     "field": "new_signin"
+    },
+    {
+     "name": "password-changed",
+     "in": "body",
+     "type": "bool",
+     "help": "a new password",
+     "field": "password_changed"
+    },
+    {
+     "name": "two-factor-changed",
+     "in": "body",
+     "type": "bool",
+     "help": "two-factor sign-in and recovery codes",
+     "field": "two_factor_changed"
+    },
+    {
+     "name": "email-changed",
+     "in": "body",
+     "type": "bool",
+     "help": "a new email address (to the old one)",
+     "field": "email_changed"
+    }
+   ],
+   "permission": "server.config"
   },
   {
    "name": "settings server-config",
@@ -7872,6 +7987,269 @@
    "route": "GET /api/users/avatars"
   },
   {
+   "name": "users bulk-delete",
+   "summary": "Delete several accounts. Their history stays in the audit log.",
+   "route": "POST /api/users/bulk/delete",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "user.delete",
+   "destructive": true,
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out. Nothing is handed over: their API tokens are revoked and their organization memberships go. To hand them over, delete one account at a time with users delete --handover-to.",
+   "examples": [
+    "neodesk users bulk-delete --ids 12,14 --dry-run true",
+    "neodesk users bulk-delete --ids 12,14 --yes"
+   ]
+  },
+  {
+   "name": "users bulk-disable",
+   "summary": "Disable several accounts.",
+   "route": "POST /api/users/bulk/disable",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "user.edit",
+   "destructive": true,
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out. Their sessions and access tokens end. The last Super admin that can sign in stays enabled.",
+   "examples": [
+    "neodesk users bulk-disable --ids 12,14 --yes"
+   ]
+  },
+  {
+   "name": "users bulk-enable",
+   "summary": "Enable several disabled accounts.",
+   "route": "POST /api/users/bulk/enable",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "user.edit",
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out."
+  },
+  {
+   "name": "users bulk-org-add",
+   "summary": "Add several accounts to an organization.",
+   "route": "POST /api/users/bulk/organization-add",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "org-id",
+     "in": "body",
+     "type": "string",
+     "help": "the organization's ID (see organizations list)",
+     "required": true,
+     "field": "org_id"
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "org.manage_users",
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out."
+  },
+  {
+   "name": "users bulk-org-remove",
+   "summary": "Remove several accounts from an organization.",
+   "route": "POST /api/users/bulk/organization-remove",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "org-id",
+     "in": "body",
+     "type": "string",
+     "help": "the organization's ID (see organizations list)",
+     "required": true,
+     "field": "org_id"
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "org.manage_users",
+   "destructive": true,
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out."
+  },
+  {
+   "name": "users bulk-require-two-factor",
+   "summary": "Require two-factor sign-in of several accounts, or take that back.",
+   "route": "POST /api/users/bulk/two-factor-required",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "required",
+     "in": "body",
+     "type": "bool",
+     "help": "true: they set it up at their next sign-in",
+     "required": true
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "user.security",
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out. Only for local accounts."
+  },
+  {
+   "name": "users bulk-role",
+   "summary": "Give several accounts a role.",
+   "route": "POST /api/users/bulk/role",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "role",
+     "in": "body",
+     "type": "string",
+     "help": "the role",
+     "required": true,
+     "enum": [
+      "viewer",
+      "guest_issuer",
+      "operator",
+      "pro",
+      "global_admin",
+      "server_admin",
+      "super_admin",
+      "admin"
+     ]
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "user.edit",
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out. The same rules as users update --role: only roles you may give, LDAP accounts keep their directory's role, and the last Super admin keeps the role. Their sessions and access tokens end.",
+   "examples": [
+    "neodesk users bulk-role --ids 12,14 --role operator --dry-run true",
+    "neodesk users bulk-role --ids 12,14 --role operator"
+   ]
+  },
+  {
+   "name": "users bulk-send-reset-link",
+   "summary": "Mail several accounts a link to set a new password.",
+   "route": "POST /api/users/bulk/password-reset-link",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs, up to 500",
+     "required": true
+    },
+    {
+     "name": "dry-run",
+     "in": "body",
+     "type": "bool",
+     "help": "only say what would happen to each account",
+     "field": "dry_run"
+    }
+   ],
+   "permission": "user.edit",
+   "description": "The answer says for each ID what happened: changed, unchanged, refused with the reason, or failed. Your own account is always left out. Each link works once, for 24 hours. Needs the email settings; LDAP and single sign-on accounts and accounts without an address are refused."
+  },
+  {
+   "name": "users cancel-email-change",
+   "summary": "Cancel an account's email address change that waits for its confirmation.",
+   "route": "DELETE /api/users/{id}/email-change",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.edit",
+   "description": "The confirmation link stops working and the address stays as it is."
+  },
+  {
+   "name": "users cancel-reset-link",
+   "summary": "Make the reset link an account was mailed stop working.",
+   "route": "DELETE /api/users/{id}/password-reset-link",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.edit"
+  },
+  {
    "name": "users create",
    "summary": "Create a console account with a role.",
    "route": "POST /api/users",
@@ -7955,8 +8333,128 @@
    "permission": "user.delete",
    "destructive": true,
    "examples": [
-    "neodesk users delete 7 --yes"
+    "neodesk users delete 7 --yes",
+    "neodesk users delete 7 --handover-to 3 --yes"
+   ],
+   "flags": [
+    {
+     "name": "handover-to",
+     "in": "query",
+     "type": "string",
+     "help": "an account ID that gets the account's API tokens, organization memberships, saved reports and open tickets first",
+     "field": "handover_to"
+    }
+   ],
+   "description": "Without --handover-to the account's API tokens are revoked and its organization memberships go; open tickets become unassigned. A handed-over API token keeps only the permissions its new owner has. See users delete-preview for what goes and what stays."
+  },
+  {
+   "name": "users delete-preview",
+   "summary": "Show what deleting an account removes and what stays, as counts, and who it can hand over to.",
+   "route": "GET /api/users/{id}/delete-preview",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.delete"
+  },
+  {
+   "name": "users import",
+   "summary": "Make accounts from a CSV file.",
+   "route": "POST /api/users/import",
+   "flags": [
+    {
+     "name": "csv",
+     "in": "body",
+     "type": "string",
+     "help": "the file's content",
+     "required": true
+    },
+    {
+     "name": "mode",
+     "in": "body",
+     "type": "string",
+     "help": "invite: mail each an invite (default); temporary: a temporary password each, printed once; none: no password yet",
+     "enum": [
+      "invite",
+      "temporary",
+      "none"
+     ]
+    },
+    {
+     "name": "lines",
+     "in": "body",
+     "type": "json",
+     "help": "only these lines of the file, as a JSON list ([2,5])"
+    }
+   ],
+   "permission": "user.create",
+   "secrets": true,
+   "rows": "data.results",
+   "columns": [
+    "line",
+    "username",
+    "outcome",
+    "error",
+    "password"
+   ],
+   "description": "The lines with problems (see users import-preview) are refused, the others become accounts with the role rules of users create. With --mode temporary the answer holds each password, shown this once; they choose a new one at their first sign-in.",
+   "examples": [
+    "neodesk users import --csv \"$(cat people.csv)\" --mode temporary"
    ]
+  },
+  {
+   "name": "users import-preview",
+   "summary": "Check a CSV file of accounts before importing it. Nothing is written.",
+   "route": "POST /api/users/import/preview",
+   "flags": [
+    {
+     "name": "csv",
+     "in": "body",
+     "type": "string",
+     "help": "the file's content",
+     "required": true
+    },
+    {
+     "name": "mode",
+     "in": "body",
+     "type": "string",
+     "help": "how the accounts get a password (default invite)",
+     "enum": [
+      "invite",
+      "temporary",
+      "none"
+     ]
+    }
+   ],
+   "permission": "user.create",
+   "rows": "data.rows",
+   "columns": [
+    "line",
+    "username",
+    "email",
+    "role",
+    "problems"
+   ],
+   "description": "Columns: username (required), email (required for invites), first name, last name, role (default viewer), organization (name or ID), language. Commas or semicolons, up to 1000 accounts and 1 MB.",
+   "examples": [
+    "neodesk users import-preview --csv \"$(cat people.csv)\""
+   ]
+  },
+  {
+   "name": "users invalidate-recovery-codes",
+   "summary": "Make an account's recovery codes stop working.",
+   "route": "POST /api/users/{id}/recovery-codes/invalidate",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.security",
+   "destructive": true,
+   "description": "The person makes new codes on Your account with their authenticator app. The account's sessions end."
   },
   {
    "name": "users invite",
@@ -8079,6 +8577,66 @@
    "permission": "user.view"
   },
   {
+   "name": "users resend-email-change",
+   "summary": "Mail a new confirmation link for an account's pending email address.",
+   "route": "POST /api/users/{id}/email-change/resend",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.edit",
+   "description": "The link sent before stops working. The link works once, for 24 hours. Change the address itself with users update --email."
+  },
+  {
+   "name": "users require-password-change",
+   "summary": "Make accounts choose a new password at their next sign-in.",
+   "route": "POST /api/users/require-password-change",
+   "flags": [
+    {
+     "name": "ids",
+     "in": "body",
+     "type": "list",
+     "help": "the account IDs",
+     "required": true
+    },
+    {
+     "name": "required",
+     "in": "body",
+     "type": "bool",
+     "help": "false takes the requirement back"
+    }
+   ],
+   "permission": "user.security",
+   "description": "The answer says for each ID what happened: changed, unchanged, or refused with the reason. Their sessions go on until then; the desktop client and the API refuse them until they chose the new password in the web console.",
+   "examples": [
+    "neodesk users require-password-change --ids 12,14"
+   ]
+  },
+  {
+   "name": "users require-two-factor",
+   "summary": "Require two-factor sign-in of one account, or take that back.",
+   "route": "PUT /api/users/{id}/two-factor-required",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "flags": [
+    {
+     "name": "required",
+     "in": "body",
+     "type": "bool",
+     "help": "true: it sets it up at its next sign-in",
+     "required": true
+    }
+   ],
+   "permission": "user.security",
+   "description": "Only for local accounts. The server-wide switch is under settings."
+  },
+  {
    "name": "users resend-invite",
    "summary": "Mail a new invite link to an account that has not signed in yet.",
    "route": "POST /api/users/{id}/invite",
@@ -8116,6 +8674,37 @@
    "destructive": true
   },
   {
+   "name": "users revoke-invite",
+   "summary": "Withdraw the invite of an account that never signed in, and delete the account.",
+   "route": "DELETE /api/users/{id}/invite",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.create",
+   "destructive": true,
+   "description": "The invite link stops working. The account never signed in, so nothing of its own is lost. An account that signed in already is refused: delete it with users delete.",
+   "examples": [
+    "neodesk users revoke-invite 12 --yes"
+   ]
+  },
+  {
+   "name": "users reset-two-factor",
+   "summary": "Clear an account's two-factor sign-in; where it is required, the person sets it up again at the next sign-in.",
+   "route": "POST /api/users/{id}/two-factor/reset",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.security",
+   "destructive": true,
+   "description": "The secret and the recovery codes go and the account's sessions end. Where nothing requires two-factor sign-in, this turns it off."
+  },
+  {
    "name": "users scope",
    "summary": "Show which devices an account may see.",
    "route": "GET /api/users/{id}/effective-scope",
@@ -8124,6 +8713,35 @@
      "name": "id",
      "help": "The account ID"
     }
+   ],
+   "permission": "user.view"
+  },
+  {
+   "name": "users security-events",
+   "summary": "List an account's recent sign-ins and security events.",
+   "description": "The same list the account sees on Your account: sign-ins, password and two-factor changes, and each time an admin viewed NeoDesk as the account.",
+   "route": "GET /api/users/{id}/security-events",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID (see users list)"
+    }
+   ],
+   "flags": [
+    {
+     "name": "limit",
+     "in": "query",
+     "type": "int",
+     "help": "how many, at most 200 (default 50)"
+    }
+   ],
+   "rows": "data.events",
+   "columns": [
+    "at",
+    "action",
+    "actor",
+    "reason",
+    "ip"
    ],
    "permission": "user.view"
   },
@@ -8139,6 +8757,41 @@
    ],
    "permission": "user.edit",
    "description": "The link works once, for 24 hours; the password stays as it is until it is used. The account needs an email address, and the console needs the email settings."
+  },
+  {
+   "name": "users temporary-password",
+   "summary": "Give an account a temporary password; it chooses a new one at its next sign-in.",
+   "route": "POST /api/users/{id}/temporary-password",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "flags": [
+    {
+     "name": "password",
+     "in": "body",
+     "type": "string",
+     "help": "the temporary password; without it one is made up and printed",
+     "secret": true
+    }
+   ],
+   "permission": "user.security",
+   "destructive": true,
+   "description": "The answer holds the password, shown this once. The account's sessions and access tokens end, and a reset link sent before stops working. Not for your own account, nor for LDAP or single sign-on accounts."
+  },
+  {
+   "name": "users unlock",
+   "summary": "End the lock of an account after failed sign-ins.",
+   "route": "POST /api/users/{id}/unlock",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID"
+    }
+   ],
+   "permission": "user.security"
   },
   {
    "name": "users update",
@@ -8177,7 +8830,7 @@
      "name": "email",
      "in": "body",
      "type": "string",
-     "help": "email address"
+     "help": "new email address; it gets a confirmation link and changes once that is used (at once when the console has no email settings)"
     },
     {
      "name": "password",
@@ -8193,6 +8846,20 @@
      "help": "true stops the account from signing in, false lets it again"
     },
     {
+     "name": "expires-at",
+     "in": "body",
+     "type": "string",
+     "help": "end date (2026-12-31 or an RFC 3339 time); the account is disabled then. An empty value removes it",
+     "field": "expires_at"
+    },
+    {
+     "name": "inactive-exempt",
+     "in": "body",
+     "type": "bool",
+     "help": "true keeps the account from the rule that disables accounts that don't sign in (for service accounts)",
+     "field": "inactive_exempt"
+    },
+    {
      "name": "group-guids",
      "in": "body",
      "type": "list",
@@ -8203,8 +8870,129 @@
    "permission": "user.edit",
    "examples": [
     "neodesk users update 7 --role viewer",
-    "neodesk users update 7 --disabled true"
+    "neodesk users update 7 --disabled true",
+    "neodesk users update 7 --expires-at 2026-12-31"
+   ],
+   "description": "A new email address waits for its confirmation: see users resend-email-change and users cancel-email-change. Accounts from LDAP or single sign-on keep the address their provider gives."
+  },
+  {
+   "name": "users show",
+   "summary": "Show one account: profile, sign-in state, role and what it allows.",
+   "route": "GET /api/users/{id}",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID (see users list)"
+    }
+   ],
+   "permission": "user.view",
+   "description": "The same account the users list has, with its display name, language, time zone, the invite that waits, the permissions its role holds in effect and whether it can use Team chat."
+  },
+  {
+   "name": "users set-profile",
+   "summary": "Set an account's first and last name, which make its display name, and its time zone.",
+   "route": "PUT /api/users/{id}/profile",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID (see users list)"
+    }
+   ],
+   "flags": [
+    {
+     "name": "first-name",
+     "in": "body",
+     "type": "string",
+     "help": "first name; \"\" takes it away",
+     "field": "first_name"
+    },
+    {
+     "name": "last-name",
+     "in": "body",
+     "type": "string",
+     "help": "last name; \"\" takes it away",
+     "field": "last_name"
+    },
+    {
+     "name": "time-zone",
+     "in": "body",
+     "type": "string",
+     "help": "an IANA time zone such as Europe/Berlin, \"\" for none; mails to the person give times in it",
+     "field": "time_zone"
+    }
+   ],
+   "permission": "user.edit",
+   "description": "Give only what changes. For an LDAP or single sign-on account the directory or the identity provider sets the name again at its next sign-in.",
+   "examples": [
+    "neodesk users set-profile 12 --first-name Ada --last-name Lovelace",
+    "neodesk users set-profile 12 --time-zone Europe/Berlin"
    ]
+  },
+  {
+   "name": "users activity",
+   "summary": "List the audit log entries by an account and about it.",
+   "route": "GET /api/users/{id}/activity",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID (see users list)"
+    }
+   ],
+   "flags": [
+    {
+     "name": "limit",
+     "in": "query",
+     "type": "int",
+     "help": "how many, at most 200 (default 50)"
+    }
+   ],
+   "rows": "data.entries",
+   "columns": [
+    "at",
+    "action",
+    "details",
+    "ip"
+   ],
+   "permission": "user.view and audit.view",
+   "description": "What the account did and what others did to it, newest first."
+  },
+  {
+   "name": "users api-tokens",
+   "summary": "List the API tokens an account made.",
+   "route": "GET /api/users/{id}/api-tokens",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID (see users list)"
+    }
+   ],
+   "rows": "data.tokens",
+   "columns": [
+    "id",
+    "name",
+    "state",
+    "expires_at",
+    "last_used_at"
+   ],
+   "permission": "user.view",
+   "description": "Names, hints, permissions and use; never the token itself."
+  },
+  {
+   "name": "users revoke-api-token",
+   "summary": "Revoke an API token of an account.",
+   "route": "DELETE /api/users/{id}/api-tokens/{tokenId}",
+   "args": [
+    {
+     "name": "id",
+     "help": "The account ID (see users list)"
+    },
+    {
+     "name": "tokenId",
+     "help": "The token's ID (see users api-tokens)"
+    }
+   ],
+   "permission": "user.security",
+   "description": "What the token made that is still open ends with it. Only for an account you may change."
   }
  ],
  "excluded": [
@@ -8909,6 +9697,10 @@
    "reason": "Signing in and out, second factors, passwords and sessions happen in the browser; API tokens cannot use them."
   },
   {
+   "route": "POST /api/auth/password/required",
+   "reason": "Signing in and out, second factors, passwords and sessions happen in the browser; API tokens cannot use them."
+  },
+  {
    "route": "POST /api/auth/totp/setup",
    "reason": "Signing in and out, second factors, passwords and sessions happen in the browser; API tokens cannot use them."
   },
@@ -9387,6 +10179,50 @@
   {
    "route": "PUT /api/users/me/profile",
    "reason": "Your own profile: change it in the console. API tokens cannot change their account's profile."
+  },
+  {
+   "route": "GET /api/users/me/email",
+   "reason": "The signed-in account's own address on Your account; an API token can't change its own account."
+  },
+  {
+   "route": "POST /api/users/me/email",
+   "reason": "The signed-in account's own address on Your account; an API token can't change its own account."
+  },
+  {
+   "route": "DELETE /api/users/me/email-change",
+   "reason": "The signed-in account's own address on Your account; an API token can't change its own account."
+  },
+  {
+   "route": "POST /api/users/me/email-change/resend",
+   "reason": "The signed-in account's own address on Your account; an API token can't change its own account."
+  },
+  {
+   "route": "POST /api/auth/email-change/lookup",
+   "reason": "The public page a confirmation mail links to, without a session."
+  },
+  {
+   "route": "POST /api/auth/email-change/confirm",
+   "reason": "The public page a confirmation mail links to, without a session."
+  },
+  {
+   "route": "GET /api/users/{id}/impersonation",
+   "reason": "Sign in as happens in a browser, with the admin's password: API tokens and the command line cannot view NeoDesk as another account."
+  },
+  {
+   "route": "POST /api/users/{id}/impersonate",
+   "reason": "Sign in as happens in a browser, with the admin's password: API tokens and the command line cannot view NeoDesk as another account."
+  },
+  {
+   "route": "GET /api/impersonation",
+   "reason": "Sign in as happens in a browser, with the admin's password: API tokens and the command line cannot view NeoDesk as another account."
+  },
+  {
+   "route": "POST /api/impersonation/extend",
+   "reason": "Sign in as happens in a browser, with the admin's password: API tokens and the command line cannot view NeoDesk as another account."
+  },
+  {
+   "route": "POST /api/impersonation/stop",
+   "reason": "Sign in as happens in a browser, with the admin's password: API tokens and the command line cannot view NeoDesk as another account."
   }
  ]
 }

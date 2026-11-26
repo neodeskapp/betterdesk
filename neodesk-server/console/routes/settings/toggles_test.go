@@ -540,8 +540,14 @@ func TestAuditLimit(t *testing.T) {
 		if row["username"] != "e2e_admin" || row["action"] != "a104" || row["user_id"] != 1.0 {
 			t.Errorf("row %v", row)
 		}
-		if keys := keyOrder(t, mustRow(t, body)); keys != "id,user_id,action,details,ip_address,created_at,username" {
+		if keys := keyOrder(t, mustRow(t, body)); keys != "id,user_id,action,details,ip_address,created_at,username,display_name" {
 			t.Errorf("keys %s in %s", keys, mustRow(t, body))
+		}
+		// The display name of the account that acted: first and last name
+		exec(t, db, "UPDATE users SET first_name = 'Ada', last_name = 'Admin' WHERE id = 1")
+		_, body = count("?limit=1")
+		if row := decode(t, body)["data"].([]any)[0].(map[string]any); row["display_name"] != "Ada Admin" {
+			t.Errorf("display name in %v", row)
 		}
 	})
 }

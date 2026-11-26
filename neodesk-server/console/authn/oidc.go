@@ -104,7 +104,7 @@ func (s *Service) OIDCUser(ctx context.Context, username, role string) (*Account
 			logName(username), normalizeAuthProvider(user.AuthProvider.String)))
 		return nil, ErrUsernameCollision
 	}
-	if user != nil && user.Disabled.True() {
+	if user != nil && s.ended(ctx, user) {
 		s.log.Info(fmt.Sprintf("[OIDC] Login refused: '%s' is disabled", logName(username)))
 		return nil, ErrAccountDisabled
 	}

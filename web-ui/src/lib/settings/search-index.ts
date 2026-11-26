@@ -682,6 +682,7 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 	['account', 'confirm-password', 'settings.confirm_password', 'account.password', [], ''],
 	['account', 'two-factor', 'settings.totp_title', '', ['settings.signin.totp_note'], ''],
 	['account', 'sessions', 'account.sessions', '', ['security_audit.sessions_hint'], ''],
+	['account', 'email-new', 'account.email_new', 'account.email_title', ['account.email_note'], ''],
 	['account', 'preferences-theme', 'account.theme', 'account.preferences', ['account.theme_note'], ''],
 	['account', 'preferences-language', 'settings.language', 'account.preferences', [], ''],
 	['account', 'preferences-accessibility', 'accessibility.title', 'account.preferences', [], ''],
@@ -869,6 +870,30 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 		'settings.signin.single_session',
 		'settings.signin.for_everyone',
 		['settings.signin.single_session_hint'],
+		'server.config'
+	],
+	[
+		'auth',
+		'impersonation-mail',
+		'settings.signin.impersonation_mail',
+		'settings.signin.for_everyone',
+		['settings.signin.impersonation_mail_hint'],
+		'server.config'
+	],
+	[
+		'auth',
+		'inactive-accounts',
+		'settings.inactive_label',
+		'settings.signin.for_everyone',
+		['settings.inactive_hint'],
+		'server.config'
+	],
+	[
+		'auth',
+		'inactive-accounts-days',
+		'settings.inactive_days',
+		'settings.signin.for_everyone',
+		['settings.inactive_days_hint'],
 		'server.config'
 	],
 	[
@@ -1313,10 +1338,10 @@ export const SEARCH_INDEX: readonly IndexRow[] = [
 /** Space-separated element ids per tab or page, for #<id> links into another one */
 export const TAB_IDS: Readonly<Record<string, string>> = {
 	account:
-		'api-tokens confirm-password current-password new-password password password-requirements preferences preferences-accessibility preferences-language preferences-theme profile profile-picture profile-status req-length sessions two-factor',
+		'api-tokens confirm-password current-password email email-new new-password password password-requirements preferences preferences-accessibility preferences-language preferences-theme profile profile-picture profile-status req-length security-events sessions two-factor',
 	general:
 		'conn-allow-shared-nat-initiator conn-logged-in-only-initiator conn-mode-p2p conn-mode-relay conn-operator-only-outbound conn-p2p-fallback-ms conn-same-nat-relay connection-diagram connection-diagram-title connection-mode-effect connection-mode-fields connection-mode-form connection-mode-info connection-mode-section connection-mode-source connection-mode-title db-path general-form general-save go-server-version public-api-url public-endpoints public-endpoints-form public-endpoints-title public-relay-server public-server-id server-info server-info-title uptime',
-	auth: 'client-sessions-expiry-days client-sessions-form client-sessions-max-days client-sessions-max-group client-sessions-settings-section client-sessions-sliding console-sessions-form for-everyone-title require-two-factor single-session two-factor-policy-form',
+	auth: 'client-sessions-expiry-days client-sessions-form client-sessions-max-days client-sessions-max-group client-sessions-settings-section client-sessions-sliding console-sessions-form for-everyone-title impersonation-mail impersonation-mail-form inactive-accounts inactive-accounts-days inactive-accounts-days-group inactive-accounts-form require-two-factor single-session two-factor-policy-form',
 	ldap: 'auth-panel-ldap ldap-advanced ldap-allow-signup ldap-attrs ldap-base-dn ldap-bind-dn ldap-bind-password ldap-bind-search-fields ldap-config-fields ldap-conn-timeout ldap-default-role ldap-direct-bind ldap-direct-bind-dn ldap-direct-bind-fields ldap-enabled ldap-form ldap-group-attr-name ldap-group-base-dn ldap-group-filter ldap-group-role-map ldap-host ldap-port ldap-skip-tls-verify ldap-start-tls ldap-test-btn ldap-test-result ldap-use-tls ldap-user-attr-email ldap-user-attr-id ldap-user-attr-name ldap-user-filter',
 	sso: 'auth-panel-oidc oidc-advanced oidc-allow-signup oidc-allowed-private-cidrs oidc-authorization-url oidc-auto-discovery oidc-claim-email oidc-claim-groups oidc-claim-name oidc-claim-username oidc-claims oidc-client-id oidc-client-secret oidc-config-fields oidc-default-role oidc-display-name oidc-enabled oidc-form oidc-group-role-map oidc-issuer-url oidc-manual-endpoints oidc-panel-url oidc-prefer-sso oidc-redirect-url oidc-redirect-url-warning oidc-scopes oidc-test-btn oidc-test-result oidc-token-url oidc-use-pkce oidc-userinfo-url',
 	joining:

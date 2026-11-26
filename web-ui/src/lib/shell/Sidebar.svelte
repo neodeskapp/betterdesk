@@ -388,13 +388,14 @@
 <style>
 	.shell-sidebar {
 		position: sticky;
-		top: 0;
+		/* Below the Sign in as bar while there is one */
+		top: var(--viewing-banner-h, 0px);
 		display: flex;
 		flex-direction: column;
 		box-sizing: border-box;
 		width: var(--sidebar-w);
-		height: 100vh;
-		height: 100dvh;
+		height: calc(100vh - var(--viewing-banner-h, 0px));
+		height: calc(100dvh - var(--viewing-banner-h, 0px));
 		border-inline-end: 1px solid var(--rule);
 		background: var(--bg-subtle);
 		color: var(--text);

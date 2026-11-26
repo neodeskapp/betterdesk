@@ -60,7 +60,8 @@ describe('the address', () => {
 			oidcError: 'oidc_denied',
 			ssoFailed: true,
 			autoLaunch: false,
-			desktop: true
+			desktop: true,
+			username: ''
 		});
 		expect(readLoginQuery('')).toEqual({
 			returnPath: null,
@@ -69,8 +70,16 @@ describe('the address', () => {
 			oidcError: null,
 			ssoFailed: false,
 			autoLaunch: true,
-			desktop: false
+			desktop: false,
+			username: ''
 		});
+	});
+
+	test('?username= only fills the field: trimmed, without control characters, at most 200 long', () => {
+		expect(readLoginQuery('?username=%20olga%40example.test%20').username).toBe('olga@example.test');
+		expect(readLoginQuery('?username=a%0Ab').username).toBe('');
+		expect(readLoginQuery('?username=' + 'x'.repeat(201)).username).toBe('');
+		expect(readLoginQuery('?username=' + 'x'.repeat(200)).username).toBe('x'.repeat(200));
 	});
 
 	test('an unsafe return and an error that is not an SSO code are dropped', () => {

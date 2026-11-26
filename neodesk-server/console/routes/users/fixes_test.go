@@ -66,7 +66,44 @@ var totpFlag = regexp.MustCompile(`("totp_enabled":(?:true|false))`)
 // factor of every account in it: the list and an update say whether an
 // account is disabled, and no account of the recordings is (L107).
 func withDisabledFlag(answer string) string {
-	return totpFlag.ReplaceAllString(answer, `$1,"disabled":false`)
+	return withSignInState(withDisplayName(totpFlag.ReplaceAllString(answer, `$1,"disabled":false`)))
+}
+
+// listedName is an account of the list in the recordings from its
+// username to its picture, with the disabled flag.
+var listedName = regexp.MustCompile(`"username":("(?:[^"\\]|\\.)*"|[^,"]*),(.*?"totp_enabled":(?:true|false),"disabled":false),"has_avatar"`)
+
+// withDisplayName is a recorded list with the display name of each
+// account before its picture: no account of the recordings has a first
+// or last name, so it is the username, as text.
+func withDisplayName(answer string) string {
+	return listedName.ReplaceAllStringFunc(answer, func(m string) string {
+		parts := listedName.FindStringSubmatch(m)
+		name := parts[1]
+		if !strings.HasPrefix(name, `"`) {
+			name = `"` + name + `"`
+		}
+		return `"username":` + parts[1] + "," + parts[2] + `,"display_name":` + name + `,"has_avatar"`
+	})
+}
+
+// listedPicture is the end of an account as the list sends it in the
+// recordings, with the disabled flag.
+var listedPicture = regexp.MustCompile(`"totp_enabled":(true|false),"disabled":false,(?:"display_name":"(?:[^"\\]|\\.)*",)?"has_avatar":(?:true|false),"avatar_version":(?:null|"[^"]*"|-?[0-9]+)`)
+
+// withSignInState is a recorded list with what it says about each
+// account's sign-in after its picture: no account of the recordings is
+// locked, must change its password or has a reset link waiting, and two-
+// factor sign-in is on where it was, else off.
+func withSignInState(answer string) string {
+	return listedPicture.ReplaceAllStringFunc(answer, func(m string) string {
+		state := "off"
+		if strings.HasPrefix(m, `"totp_enabled":true`) {
+			state = "on"
+		}
+		return m + `,"locked":false,"locked_until":null,"locks":[],"must_change_password":false,"two_factor_required":false,"two_factor_state":"` +
+			state + `","two_factor_due":false,"password_reset_until":null`
+	})
 }
 
 // is answers the same text on every database.
@@ -209,6 +246,12 @@ var fixes = map[string]fix{
 	// A role change and a deleted account end every session of the
 	// account, which Node's went on with: the test accounts that are
 	// changed sign in again
+	// A directory account gets its address from the directory: the Go
+	// console refuses to change it (the account life cycle), Node stored it
+	"339 PATCH /api/users/9": {bug: "LIFE1", status: http.StatusBadRequest, answer: is(`{"success":false,"error":"users.email_from_provider"}`), node: func(n *nodeWrites) {
+		n.exec(`UPDATE users SET email = 'ldap@example.invalid' WHERE id = 9`)
+		n.audit("user_updated", "Updated user: ldap_op")
+	}},
 	"346 PATCH /api/users/2":         {bug: "S9", endsSessionsOf: []string{"super_admin"}},
 	"348 PATCH /api/users/1":         {bug: "S9", endsSessionsOf: []string{"admin"}},
 	"349 PATCH /api/users/4":         {bug: "S9", endsSessionsOf: []string{"global_admin"}},
@@ -233,6 +276,13 @@ var fixes = map[string]fix{
 	"480 DELETE /api/users/16": {bug: "US1", status: http.StatusForbidden, answer: is(roleAboveOwn), node: func(n *nodeWrites) {
 		n.deleteAccount(16)
 		n.audit("user_deleted", "Deleted user: target_glob")
+	}},
+
+	// Node set a password on a directory account, which signs in with its
+	// directory's: the Go console refuses and names the provider (PW1)
+	"447 POST /api/users/9/reset-password": {bug: "PW1", status: http.StatusBadRequest, answer: is(`{"success":false,"error":"users.external_password"}`), node: func(n *nodeWrites) {
+		n.exec(`UPDATE users SET password_hash = 'node-hash' WHERE id = 9`)
+		n.audit("password_reset", "Reset password for user: ldap_op")
 	}},
 
 	// A session whose id is text: Node let the admin delete its own

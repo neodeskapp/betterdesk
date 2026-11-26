@@ -34,7 +34,10 @@ export const CATEGORIES: readonly { id: string; permissions: readonly string[] }
 			'remote_target.test'
 		]
 	},
-	{ id: 'user', permissions: ['user.view', 'user.create', 'user.edit', 'user.delete'] },
+	{
+		id: 'user',
+		permissions: ['user.view', 'user.create', 'user.edit', 'user.delete', 'user.security', 'user.impersonate']
+	},
 	{
 		id: 'org',
 		permissions: ['org.create', 'org.edit', 'org.delete', 'org.manage_users', 'org.manage_devices']

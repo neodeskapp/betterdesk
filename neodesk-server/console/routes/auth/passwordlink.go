@@ -8,6 +8,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/auth"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 )
 
 // The page /set-password, where a link from an invite or a password reset
@@ -93,6 +94,10 @@ func (h *handlers) passwordLinkRedeem(w http.ResponseWriter, r *http.Request) {
 		err = h.authn.RevokeClientTokens(ctx, link.UserID, "", "")
 	}
 	if err == nil {
+		// A password change an admin asked for is done
+		err = h.authn.SetMustChangePassword(ctx, link.UserID, false)
+	}
+	if err == nil {
 		action, details := "password_reset_by_link", "Password set from a reset link"
 		if link.Purpose == passwordlinks.PurposeInvite {
 			action, details = "user_invite_accepted", "Password set from the invite"
@@ -102,6 +107,9 @@ func (h *handlers) passwordLinkRedeem(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.serverError(w, r, "Password link error:", err)
 		return
+	}
+	if link.Purpose == passwordlinks.PurposeReset {
+		h.notices.PasswordChanged(ctx, link.UserID, securitymail.PasswordByLink)
 	}
 	kit.OK(w, r, map[string]string{"username": link.Username})
 }

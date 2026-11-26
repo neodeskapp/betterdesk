@@ -7,6 +7,8 @@
 //	GET    /api/panel/api-tokens/permissions  what a new token may be given: the caller's permissions
 //	GET    /api/panel/api-tokens/current      the token the request came with
 //	DELETE /api/panel/api-tokens/{id}         revoke (one's own; super admins any)
+//	GET    /api/users/{id}/api-tokens         an account's tokens (user.view), for the user's page
+//	DELETE /api/users/{id}/api-tokens/{tokenId}  revoke one of them (user.security, an account the caller may change)
 //
 // Making a token needs a browser session: a token never makes another,
 // so a stolen token cannot outlive its own revocation. What a token made
@@ -42,6 +44,9 @@ func Register(d *kit.Deps) {
 	r.Get("/api/panel/api-tokens/permissions", h.permissions, d.RequireAuth, h.admin)
 	r.Get("/api/panel/api-tokens/current", h.current, d.RequireAuth)
 	r.Delete("/api/panel/api-tokens/{id}", h.revoke, d.RequireAuth, h.admin)
+	// Another account's tokens on the user's page (account.go)
+	r.Get("/api/users/{id}/api-tokens", h.accountTokens, d.RequireAuth, d.RequirePermission("user.view"))
+	r.Delete("/api/users/{id}/api-tokens/{tokenId}", h.revokeAccountToken, d.RequireAuth, d.RequirePermission("user.security"))
 }
 
 // admin lets the four admin roles through, by the account's role: a

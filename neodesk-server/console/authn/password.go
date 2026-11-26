@@ -167,6 +167,48 @@ func (s *Service) ChangePassword(ctx context.Context, userID int64, currentPassw
 	return nil
 }
 
+// ErrSamePassword refuses a new password that is the one the account has.
+const ErrSamePassword Refusal = "Choose a password other than the one you signed in with"
+
+// SetNewPassword gives an account a new password it chose at sign-in, in
+// place of one an admin set (a temporary password, or one an admin wants
+// changed): the password rule applies, and the password it has is
+// refused. It returns ErrUserNotFound, ErrSamePassword,
+// ErrPasswordTooShort or ErrPasswordTooLong when it refuses.
+func (s *Service) SetNewPassword(ctx context.Context, userID int64, newPassword string) error {
+	user, err := getUserByID(ctx, s.db, userID)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return ErrUserNotFound
+	}
+	switch auth.CheckNewPassword(newPassword) {
+	case auth.ErrPasswordTooShort:
+		return ErrPasswordTooShort
+	case auth.ErrPasswordTooLong:
+		return ErrPasswordTooLong
+	}
+	if user.PasswordHash.Valid {
+		same, err := s.VerifyPassword(ctx, newPassword, user.PasswordHash.String)
+		if err != nil {
+			return err
+		}
+		if same {
+			return ErrSamePassword
+		}
+	}
+	hash, err := s.HashPassword(ctx, newPassword)
+	if err != nil {
+		return err
+	}
+	if err := updateUserPassword(ctx, s.db, user.ID.V, hash); err != nil {
+		return err
+	}
+	s.removeFirstPassword(user.Username)
+	return nil
+}
+
 // verifyStored checks a password against the hash column of a row. A row
 // without a hash cannot be checked at all.
 func (s *Service) verifyStored(ctx context.Context, password string, hash nullText) (bool, error) {

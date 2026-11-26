@@ -629,7 +629,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=e81a13e5e5b8d4b5"
+      "stringsUrl": "/api/console/strings/en?v=cb8a64ff1a435b78"
      },
      "nav": [
       {
@@ -819,6 +819,7 @@
      "success": true,
      "user": {
       "avatarVersion": null,
+      "displayName": "e2e_guest_issuer",
       "id": 11,
       "preferredLanguage": null,
       "role": "guest_issuer",
@@ -1415,7 +1416,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=e81a13e5e5b8d4b5"
+      "stringsUrl": "/api/console/strings/en?v=cb8a64ff1a435b78"
      },
      "nav": [
       {
@@ -1677,6 +1678,7 @@
      "success": true,
      "user": {
       "avatarVersion": null,
+      "displayName": "e2e_viewer",
       "id": 10,
       "preferredLanguage": null,
       "role": "viewer",
@@ -2273,7 +2275,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=e81a13e5e5b8d4b5"
+      "stringsUrl": "/api/console/strings/en?v=cb8a64ff1a435b78"
      },
      "nav": [
       {
@@ -2615,6 +2617,7 @@
      "success": true,
      "user": {
       "avatarVersion": null,
+      "displayName": "e2e_operator",
       "id": 9,
       "preferredLanguage": null,
       "role": "operator",
@@ -3211,7 +3214,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=e81a13e5e5b8d4b5"
+      "stringsUrl": "/api/console/strings/en?v=cb8a64ff1a435b78"
      },
      "nav": [
       {
@@ -3595,14 +3598,14 @@
       "chat.team",
       "chat.assign",
       "chat.canned_manage",
-      "chat.teams_manage",
       "cdap.view",
       "cdap.command",
       "cdap.terminal",
       "cdap.files",
       "mesh.terminal",
       "mesh.power",
-      "mesh.files"
+      "mesh.files",
+      "user.security"
      ],
      "sessionPolicy": {
       "idleTimeoutMs": 1800000,
@@ -3613,6 +3616,7 @@
      "success": true,
      "user": {
       "avatarVersion": null,
+      "displayName": "e2e_global_admin",
       "id": 8,
       "preferredLanguage": null,
       "role": "global_admin",
@@ -4209,7 +4213,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=e81a13e5e5b8d4b5"
+      "stringsUrl": "/api/console/strings/en?v=cb8a64ff1a435b78"
      },
      "nav": [
       {
@@ -4675,6 +4679,7 @@
      "success": true,
      "user": {
       "avatarVersion": null,
+      "displayName": "e2e_server_admin",
       "id": 7,
       "preferredLanguage": null,
       "role": "server_admin",
@@ -5271,7 +5276,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=e81a13e5e5b8d4b5"
+      "stringsUrl": "/api/console/strings/en?v=cb8a64ff1a435b78"
      },
      "nav": [
       {
@@ -5856,7 +5861,6 @@
       "chat.team",
       "chat.assign",
       "chat.canned_manage",
-      "chat.teams_manage",
       "cdap.view",
       "cdap.command",
       "cdap.terminal",
@@ -5865,7 +5869,9 @@
       "mesh.power",
       "mesh.files",
       "device.signin_use",
-      "device.signin_manage"
+      "device.signin_manage",
+      "user.security",
+      "user.impersonate"
      ],
      "sessionPolicy": {
       "idleTimeoutMs": 1800000,
@@ -5876,6 +5882,7 @@
      "success": true,
      "user": {
       "avatarVersion": null,
+      "displayName": "e2e_super_admin",
       "id": 6,
       "preferredLanguage": null,
       "role": "super_admin",
@@ -6472,7 +6479,7 @@
       ],
       "code": "en",
       "dir": "ltr",
-      "stringsUrl": "/api/console/strings/en?v=e81a13e5e5b8d4b5"
+      "stringsUrl": "/api/console/strings/en?v=cb8a64ff1a435b78"
      },
      "nav": [
       {
@@ -7057,7 +7064,6 @@
       "chat.team",
       "chat.assign",
       "chat.canned_manage",
-      "chat.teams_manage",
       "cdap.view",
       "cdap.command",
       "cdap.terminal",
@@ -7066,7 +7072,9 @@
       "mesh.power",
       "mesh.files",
       "device.signin_use",
-      "device.signin_manage"
+      "device.signin_manage",
+      "user.security",
+      "user.impersonate"
      ],
      "sessionPolicy": {
       "idleTimeoutMs": 1800000,
@@ -7077,6 +7085,7 @@
      "success": true,
      "user": {
       "avatarVersion": null,
+      "displayName": "e2e_admin",
       "id": 5,
       "preferredLanguage": null,
       "role": "admin",

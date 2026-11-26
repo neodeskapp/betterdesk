@@ -97,6 +97,8 @@
        "user.create",
        "user.delete",
        "user.edit",
+       "user.impersonate",
+       "user.security",
        "user.view"
       ],
       "role": "super_admin"

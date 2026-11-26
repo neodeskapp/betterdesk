@@ -54,6 +54,9 @@ func (t *table) ensureSchema(ctx context.Context) error {
 		{"ended_at", "INTEGER", "BIGINT"},
 		{"end_reason", "TEXT", "TEXT"},
 		{"is_active", "INTEGER NOT NULL DEFAULT 1", "BOOLEAN NOT NULL DEFAULT TRUE"},
+		// The account that opened the session to view the console as its
+		// user ("Sign in as"); NULL for the account's own sessions
+		{"impersonated_by", "INTEGER", "INTEGER"},
 	}
 	existing := map[string]bool{}
 	if !t.db.IsPostgres() {
@@ -242,19 +245,22 @@ type record struct {
 	ip             string
 	userAgent      string
 	fingerprint    string
+	// impersonatedBy is the admin of an impersonation session, nil for
+	// any other session.
+	impersonatedBy any
 }
 
 // set writes a session: a new row, or new values for an existing one. On
 // an existing row the account, the address, the user agent and the
 // fingerprint are only replaced by values that are not empty, created_at
-// stays once set, and an ended row stays ended.
+// and impersonated_by stay once set, and an ended row stays ended.
 func (t *table) set(ctx context.Context, sid string, rec record) error {
 	_, err := t.db.Exec(ctx,
 		`INSERT INTO panel_sessions (
 			sid, session_json, expires_at, updated_at,
 			user_id, username, ip_address, user_agent, client_fingerprint,
-			created_at, last_activity_at, ended_at, end_reason, is_active
-		) VALUES (?, ?, `+t.sqlTime()+`, `+t.sqlNow()+`, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, `+t.sqlTrue()+`)
+			created_at, last_activity_at, ended_at, end_reason, is_active, impersonated_by
+		) VALUES (?, ?, `+t.sqlTime()+`, `+t.sqlNow()+`, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, `+t.sqlTrue()+`, ?)
 		ON CONFLICT(sid) DO UPDATE SET
 			session_json = excluded.session_json,
 			expires_at = excluded.expires_at,
@@ -266,13 +272,14 @@ func (t *table) set(ctx context.Context, sid string, rec record) error {
 			client_fingerprint = COALESCE(NULLIF(excluded.client_fingerprint, ''), panel_sessions.client_fingerprint),
 			created_at = COALESCE(panel_sessions.created_at, excluded.created_at),
 			last_activity_at = excluded.last_activity_at,
+			impersonated_by = COALESCE(panel_sessions.impersonated_by, excluded.impersonated_by),
 			is_active = CASE
 				WHEN panel_sessions.is_active = `+t.sqlFalse()+` THEN `+t.sqlFalse()+`
 				ELSE `+t.sqlTrue()+`
 			END`,
 		sid, rec.json, rec.expiresAt, rec.userID, nullIfEmpty(rec.username),
 		nullIfEmpty(rec.ip), nullIfEmpty(rec.userAgent), nullIfEmpty(rec.fingerprint),
-		rec.createdAt, rec.lastActivityAt)
+		rec.createdAt, rec.lastActivityAt, rec.impersonatedBy)
 	if err != nil {
 		return fmt.Errorf("save session: %w", err)
 	}
@@ -380,7 +387,8 @@ func (t *table) endSessions(ctx context.Context, userID int64, sids []string, ke
 // per-account limit, in one transaction. With a limit of N, this session
 // and the N-1 other sessions of the account that were active most recently
 // stay; the rest end with the reason "replaced" for a limit of one and
-// "limit" for more. A limit of 0 ends none.
+// "limit" for more. A limit of 0 ends none. Sessions an admin opened to
+// view the console as the account (impersonated_by) don't count and stay.
 func (t *table) activate(ctx context.Context, sid string, userID int64, username string, meta Meta, at int64, limit int) ([]Device, error) {
 	now := t.nowMs()
 	expiresAt := min(at+t.policy.MaxAgeMs, now+t.policy.IdleTimeoutMs)
@@ -394,7 +402,7 @@ func (t *table) activate(ctx context.Context, sid string, userID int64, username
 		rows, err := tx.Query(ctx,
 			`SELECT sid, ip_address, user_agent, created_at, last_activity_at
 			 FROM panel_sessions
-			 WHERE user_id = ? AND is_active = `+t.sqlTrue()+` AND sid <> ?
+			 WHERE user_id = ? AND is_active = `+t.sqlTrue()+` AND sid <> ? AND impersonated_by IS NULL
 			 ORDER BY COALESCE(last_activity_at, created_at, 0) DESC, sid`+t.db.Pick("", " FOR UPDATE"),
 			userID, sid)
 		if err != nil {
@@ -498,7 +506,8 @@ func (t *table) list(ctx context.Context, userID int64, includeEnded bool, limit
 		limit = 50
 	}
 	limit = min(200, limit)
-	where := "user_id = ?"
+	// Sessions an admin opened as the account are not the account's own
+	where := "user_id = ? AND impersonated_by IS NULL"
 	if !includeEnded {
 		where += " AND is_active = " + t.sqlTrue()
 	}

@@ -46,6 +46,7 @@
       "phone": "+49 30 1234",
       "role": "global_admin",
       "role_display": "Engineer",
+      "time_zone": "",
       "username": "e2e_global_admin"
      },
      "success": true
@@ -92,6 +93,7 @@
       "phone": "+49 30 1234",
       "role": "admin",
       "role_display": "Engineer",
+      "time_zone": "",
       "username": "e2e_admin"
      },
      "success": true

@@ -5,12 +5,13 @@
 	import DialogHost from '../../../src/lib/ui/DialogHost.svelte';
 	import MenuButton from '../../../src/lib/ui/MenuButton.svelte';
 	import MenuDivider from '../../../src/lib/ui/MenuDivider.svelte';
+	import MenuGroup from '../../../src/lib/ui/MenuGroup.svelte';
 	import MenuItem from '../../../src/lib/ui/MenuItem.svelte';
 	import Sheet from '../../../src/lib/ui/Sheet.svelte';
 	import { confirm } from '../../../src/lib/ui/dialogs.svelte.ts';
 
 	interface Props {
-		scene: 'menus' | 'radio' | 'dialog' | 'sheet' | 'sheets';
+		scene: 'menus' | 'groups' | 'radio' | 'dialog' | 'sheet' | 'sheets';
 		blocking?: boolean;
 		onselect?: (what: string) => void;
 		onanswer?: (answer: boolean) => void;
@@ -56,6 +57,16 @@
 		<MenuItem icon="copy" onselect={() => onselect?.('copy')}>Copy ID</MenuItem>
 	</MenuButton>
 	<button type="button">After</button>
+{:else if scene === 'groups'}
+	<MenuButton label="Account actions">
+		<MenuGroup label="Account">
+			<MenuItem icon="edit" onselect={() => onselect?.('edit')}>Edit</MenuItem>
+		</MenuGroup>
+		<MenuGroup label="Disable or delete">
+			<MenuItem icon="block" onselect={() => onselect?.('disable')}>Disable account</MenuItem>
+			<MenuItem icon="delete" danger onselect={() => onselect?.('delete')}>Delete…</MenuItem>
+		</MenuGroup>
+	</MenuButton>
 {:else if scene === 'radio'}
 	<MenuButton label="Language">
 		{#each [['en', 'English'], ['de', 'Deutsch']] as [code, name] (code)}

@@ -14,6 +14,7 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/httpx"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/middleware"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session/cookie"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/store"
@@ -305,8 +306,14 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 	// The sign-in of an account with a second factor counts as a success
 	// only once the code is right (finishSecondFactor): until then the
 	// failed attempts before it, and wrong codes, keep counting
-	if !user.TOTPRequired && !user.TOTPSetupRequired {
+	if !user.TOTPRequired && !user.TOTPSetupRequired && !user.PasswordChangeRequired {
 		h.recordAttempt(r, name, true)
+	}
+	// A new password first, then the set-up of a second factor; an account
+	// with a second factor gives its code before the new password
+	if user.PasswordChangeRequired && !user.TOTPRequired {
+		h.beginPasswordChange(w, r, accountOf(user), meta)
+		return
 	}
 	if user.TOTPSetupRequired {
 		h.beginRequiredSetup(w, r, user, meta)
@@ -336,7 +343,7 @@ func (h *handlers) login(w http.ResponseWriter, r *http.Request) {
 		h.sessionFailure(w, r, "Session establish error:", err)
 		return
 	}
-	h.clearGuestCookie(w, r)
+	h.signedInNotes(w, r, who.id, meta)
 
 	fingerprint := meta.Fingerprint
 	if fingerprint == "" {
@@ -507,6 +514,12 @@ func (h *handlers) totpVerify(w http.ResponseWriter, r *http.Request) {
 		kit.Fail(w, r, http.StatusUnauthorized, kit.T(r, "auth.totp_invalid_code", nil))
 		return
 	}
+	if method == "recovery" {
+		// The last code is gone: the person makes new ones on Your account
+		if left, err := h.authn.RecoveryCodesLeft(r.Context(), userID); err == nil && left == 0 {
+			h.notices.TwoFactorChanged(r.Context(), userID, securitymail.RecoveryCodesUsedUp)
+		}
+	}
 	h.finishSecondFactor(w, r, who, method+" (local)")
 }
 
@@ -605,6 +618,17 @@ func (h *handlers) finishSecondFactor(w http.ResponseWriter, r *http.Request, wh
 	if kit.Session(r).Get(pendingMeta, &rawMeta); !jsonTruthy(rawMeta) || json.Unmarshal(rawMeta, &meta) != nil {
 		meta = h.clientMeta(r, body)
 	}
+	// An account that must choose a new password does that now, with its
+	// second factor given
+	if due, err := h.passwordChangeDue(r, who.id); err != nil {
+		h.serverError(w, r, "TOTP verify error:", err)
+		return
+	} else if due {
+		h.recordAttempt(r, who.username, true)
+		endPending(kit.Session(r))
+		h.beginPasswordChange(w, r, who, meta)
+		return
+	}
 
 	est, err := h.establish(r, who, meta)
 	replaced := len(est.Ended)
@@ -613,7 +637,7 @@ func (h *handlers) finishSecondFactor(w http.ResponseWriter, r *http.Request, wh
 		return
 	}
 	h.recordAttempt(r, who.username, true)
-	h.clearGuestCookie(w, r)
+	h.signedInNotes(w, r, who.id, meta)
 
 	err = h.authn.TouchLastLogin(r.Context(), who.id)
 	if err == nil {

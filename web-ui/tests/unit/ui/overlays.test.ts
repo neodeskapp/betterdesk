@@ -22,6 +22,30 @@ afterEach(() => {
 	vi.useRealTimers();
 });
 
+describe('MenuGroup', () => {
+	test('groups are named for screen readers and the arrow keys move across them', async () => {
+		render(Harness, { scene: 'groups' });
+		const user = userEvent.setup();
+		const trigger = screen.getByRole('button', { name: 'Account actions' });
+		trigger.focus();
+		await user.keyboard('{Enter}');
+		const menu = screen.getByRole('menu');
+		const groups = within(menu).getAllByRole('group');
+		expect(groups.map((g) => g.getAttribute('aria-label'))).toEqual(['Account', 'Disable or delete']);
+		expect(
+			within(groups[1]!)
+				.getAllByRole('menuitem')
+				.map((i) => i.textContent?.trim())
+		).toEqual([expect.stringContaining('Disable account'), expect.stringContaining('Delete…')]);
+		const name = () => document.activeElement?.querySelector('.menu-item-label')?.textContent;
+		expect(name()).toBe('Edit');
+		await user.keyboard('{ArrowDown}');
+		expect(name()).toBe('Disable account');
+		await user.keyboard('{End}');
+		expect(name()).toBe('Delete…');
+	});
+});
+
 describe('Menu', () => {
 	function setup() {
 		const onselect = vi.fn();

@@ -55,7 +55,9 @@ export const Bootstrap = v.object({
 		username: v.string(),
 		role: v.string(),
 		preferredLanguage: v.nullable(v.string()),
-		avatarVersion: v.nullable(v.union([v.string(), v.number()]))
+		avatarVersion: v.nullable(v.union([v.string(), v.number()])),
+		/** First and last name, else the username (older servers send none) */
+		displayName: v.optional(v.string())
 	}),
 	permissions: v.array(v.string()),
 	/* Older servers send none */
@@ -87,7 +89,23 @@ export const Bootstrap = v.object({
 	palettes: v.object({ light: Palette, dark: Palette }),
 	sessionPolicy: v.nullable(v.looseObject({})),
 	csrfToken: v.string(),
-	appVersion: v.string()
+	appVersion: v.string(),
+	/* Only while an admin views the console as this account (Sign in as) */
+	impersonation: v.optional(
+		v.nullable(
+			v.object({
+				adminUsername: v.string(),
+				reason: v.string(),
+				startedAt: v.number(),
+				expiresAt: v.number(),
+				canExtend: v.boolean(),
+				serverNow: v.number(),
+				/** The admin's first and last name, else the username (older servers send none) */
+				adminDisplayName: v.optional(v.string())
+			})
+		),
+		null
+	)
 });
 export type Bootstrap = v.InferOutput<typeof Bootstrap>;
 

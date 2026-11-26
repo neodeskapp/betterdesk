@@ -251,6 +251,8 @@ var LaterUIPermissions = []string{
 	// Saved sign-in (L469): the device panel offers its sheet and the
 	// viewer its Sign in button by them
 	"device.signin_use", "device.signin_manage",
+	// User management: sign-in security of other accounts and "Sign in as"
+	"user.security", "user.impersonate",
 }
 
 // GrantedConsolePermissions returns GrantedUIPermissions and then the

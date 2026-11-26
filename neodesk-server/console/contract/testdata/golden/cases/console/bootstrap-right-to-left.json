@@ -597,7 +597,7 @@
       ],
       "code": "ar",
       "dir": "rtl",
-      "stringsUrl": "/api/console/strings/ar?v=d814326611bd863e"
+      "stringsUrl": "/api/console/strings/ar?v=8477211f6b40dcc8"
      },
      "nav": [
       {
@@ -859,6 +859,7 @@
      "success": true,
      "user": {
       "avatarVersion": null,
+      "displayName": "e2e_viewer",
       "id": 10,
       "preferredLanguage": null,
       "role": "viewer",
@@ -1455,7 +1456,7 @@
       ],
       "code": "ar",
       "dir": "rtl",
-      "stringsUrl": "/api/console/strings/ar?v=d814326611bd863e"
+      "stringsUrl": "/api/console/strings/ar?v=8477211f6b40dcc8"
      },
      "nav": [
       {
@@ -2040,7 +2041,6 @@
       "chat.team",
       "chat.assign",
       "chat.canned_manage",
-      "chat.teams_manage",
       "cdap.view",
       "cdap.command",
       "cdap.terminal",
@@ -2049,7 +2049,9 @@
       "mesh.power",
       "mesh.files",
       "device.signin_use",
-      "device.signin_manage"
+      "device.signin_manage",
+      "user.security",
+      "user.impersonate"
      ],
      "sessionPolicy": {
       "idleTimeoutMs": 1800000,
@@ -2060,6 +2062,7 @@
      "success": true,
      "user": {
       "avatarVersion": null,
+      "displayName": "e2e_admin",
       "id": 5,
       "preferredLanguage": null,
       "role": "admin",

@@ -8,7 +8,9 @@ import (
 	"github.com/neodeskapp/neodesk/neodesk-server/console/authn"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/goapi"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/kit"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/lifecycle"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/passwordlinks"
+	"github.com/neodeskapp/neodesk/neodesk-server/console/securitymail"
 	"github.com/neodeskapp/neodesk/neodesk-server/console/session"
 )
 
@@ -28,6 +30,13 @@ type handlers struct {
 	appVersion string
 	// links are the links that set a password (invites, resets by mail).
 	links *passwordlinks.Store
+	// notices mail the person about changes to how their account signs in.
+	notices *securitymail.Notices
+	// resetBudget counts the reset requests of each address.
+	resetBudget *addressBudget
+	// life holds address changes that wait for their confirmation and
+	// the accounts' end dates.
+	life *lifecycle.Store
 	// syncPicture brings the account's profile picture in line with the
 	// "picture" of a single sign-on. It returns at once and works in the
 	// background. nil skips it.
@@ -44,6 +53,9 @@ func newHandlers(d *kit.Deps) *handlers {
 		now:         time.Now,
 		appVersion:  d.Config.Version,
 		links:       passwordlinks.New(d.Store, nil),
+		notices:     securitymail.New(d),
+		resetBudget: &addressBudget{},
+		life:        lifecycle.New(d.Store, nil),
 	}
 	if d.Config.HTTPS {
 		h.guestCookie = "neodesk.guest"
@@ -83,9 +95,12 @@ func Register(d *kit.Deps) {
 	r.Post("/api/auth/totp/recovery-codes", h.totpRecoveryCodes, d.RequireAuth, d.Limits.TOTPVerify.Middleware)
 	r.Post("/api/auth/totp/required/setup", h.requiredSetup, d.Limits.TOTPVerify.Middleware)
 	r.Post("/api/auth/totp/required/enable", h.requiredEnable, d.Limits.TOTPVerify.Middleware)
+	r.Post("/api/auth/password/required", h.requiredPassword, d.Limits.TOTPVerify.Middleware)
 	r.Get("/api/auth/login-page", h.loginPage)
 	r.Post("/api/auth/password-link/lookup", h.passwordLinkLookup, passwordLinkLimit(d)...)
 	r.Post("/api/auth/password-link/redeem", h.passwordLinkRedeem, passwordLinkLimit(d)...)
+	r.Post("/api/auth/email-change/lookup", h.emailChangeLookup, passwordLinkLimit(d)...)
+	r.Post("/api/auth/email-change/confirm", h.emailChangeConfirm, passwordLinkLimit(d)...)
 	r.Get("/api/auth/password-reset/available", h.passwordResetAvailable)
 	r.Post("/api/auth/password-reset/request", h.passwordResetRequest, passwordLinkLimit(d)...)
 

@@ -238,6 +238,10 @@ func (s *Server) handleClientLogin(w http.ResponseWriter, r *http.Request) {
 		writeTwoFactorSetupDue(w)
 		return
 	}
+	if s.passwordChangeDue(user) {
+		writePasswordChangeDue(w)
+		return
+	}
 
 	// Check if TOTP 2FA is required
 	if user.TOTPEnabled && user.TOTPSecret != "" {
