@@ -74,8 +74,18 @@
 </form>
 
 <style>
-	/* The width of the other forms of the tab */
+	/* The Sign-in tab's scoped layout doesn't reach into this component:
+	   the same reading width and spacing as the tab's other forms */
 	.form-column {
 		max-width: var(--measure);
+	}
+	.settings-subgroup {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+		min-width: 0;
+	}
+	.settings-subgroup > :global(.form-group) {
+		margin-bottom: 0;
 	}
 </style>
