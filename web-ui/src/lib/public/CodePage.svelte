@@ -16,10 +16,12 @@
 	import { ApiError } from '#lib/api/client.ts';
 	import { getPublicCode, type PublicCode } from '#lib/api/onboard.ts';
 	import { formatBytes, formatDate } from '#lib/i18n/format.ts';
-	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { t, tf } from '#lib/i18n/i18n.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
+	import { Copier } from '#lib/ui/clipboard.svelte.ts';
 	import CodeBlock from '#lib/ui/CodeBlock.svelte';
 	import Disclosure from '#lib/ui/Disclosure.svelte';
+	import Icon from '#lib/ui/Icon.svelte';
 	import ListRow from '#lib/ui/ListRow.svelte';
 	import Notice from '#lib/ui/Notice.svelte';
 	import OsIcon from '#lib/ui/OsIcon.svelte';
@@ -130,7 +132,40 @@
 			: file;
 	});
 	const here = typeof location === 'undefined' ? '' : location.href;
+	/**
+	 * Open NeoDesk with the join link: on a Mac right after the install
+	 * steps, elsewhere in the box for a NeoDesk that is already there. The
+	 * app (1.5.0 and later) asks before it joins and names the server.
+	 */
+	const macOpen = $derived(
+		!!data &&
+			main.kind === 'download' &&
+			mine?.platform === 'macos' &&
+			data.kind === 'join' &&
+			!!data.deep_link
+	);
+
+	// The code and the server address are typed into the app, so a click
+	// copies them. Public pages have no toasts: the icon turns into a tick.
+	const codeCopier = new Copier();
+	const addressCopier = new Copier();
+	$effect(() => () => {
+		codeCopier.dispose();
+		addressCopier.dispose();
+	});
+	/** Stands in for the address so the sentence can be split around it */
+	const MARK = '\u0001';
 </script>
+
+{#snippet copyable(value: string, copier: Copier)}
+	<button
+		type="button"
+		class={['copyable', copier.copied && 'copied']}
+		title={tf('common.copy_value', 'Copy {value}', { value })}
+		onclick={() => void copier.copy(value)}
+		><span dir="ltr">{value}</span><Icon name={copier.copied ? 'check' : 'copy'} /></button
+	>
+{/snippet}
 
 <svelte:head>
 	{#if data}<title>{heading}</title>{/if}
@@ -192,7 +227,7 @@
 					<h2 class="system-steps">{t('onboard.public.mac_steps_title')}</h2>
 				{/if}
 				{#if steps.length}<Steps items={steps} />{/if}
-				{#if mine.platform === 'macos' && data.kind === 'join' && data.deep_link}
+				{#if macOpen}
 					<div class="open-app">
 						<Button href={data.deep_link} class="open-neodesk">{t('onboard.public.open_app')}</Button>
 					</div>
@@ -207,11 +242,17 @@
 			{#if mine}
 				<div class="short-code">
 					<p>{t(`onboard.public.code_hint_${data.kind}`)}</p>
-					<p class="code" dir="ltr">{data.display_code}</p>
+					<p class="code">{@render copyable(data.display_code, codeCopier)}</p>
 					{#if data.kind === 'join' && data.server.address}
+						{@const [before, after = ''] = t('onboard.public.server_address', { address: MARK }).split(MARK)}
 						<p class="server-address">
-							{t('onboard.public.server_address', { address: data.server.address })}
+							{before}{@render copyable(data.server.address, addressCopier)}{after}
 						</p>
+					{/if}
+					{#if data.kind === 'join' && data.deep_link && !macOpen}
+						<div class="open-app">
+							<Button href={data.deep_link} class="open-neodesk">{t('onboard.public.open_app')}</Button>
+						</div>
 					{/if}
 				</div>
 			{/if}
@@ -310,5 +351,43 @@
 	}
 	.short-code .server-address {
 		overflow-wrap: anywhere;
+	}
+	.short-code .open-app {
+		margin-top: var(--space-2);
+	}
+	.copyable {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35em;
+		max-width: 100%;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		border-radius: var(--control-radius);
+		background: none;
+		color: inherit;
+		font: inherit;
+		letter-spacing: inherit;
+		text-align: start;
+		cursor: pointer;
+	}
+	.copyable span {
+		min-width: 0;
+		overflow-wrap: anywhere;
+		text-decoration: underline dotted;
+		text-decoration-color: var(--text-muted);
+		text-underline-offset: 0.2em;
+	}
+	.copyable :global(svg) {
+		flex: none;
+		width: 1em;
+		height: 1em;
+		color: var(--text-muted);
+	}
+	.copyable:hover span {
+		text-decoration-style: solid;
+	}
+	.copyable.copied :global(svg) {
+		color: var(--success);
 	}
 </style>
