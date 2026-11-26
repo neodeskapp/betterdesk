@@ -87,7 +87,21 @@ export const Bootstrap = v.object({
 	palettes: v.object({ light: Palette, dark: Palette }),
 	sessionPolicy: v.nullable(v.looseObject({})),
 	csrfToken: v.string(),
-	appVersion: v.string()
+	appVersion: v.string(),
+	/* Only while an admin views the console as this account (Sign in as) */
+	impersonation: v.optional(
+		v.nullable(
+			v.object({
+				adminUsername: v.string(),
+				reason: v.string(),
+				startedAt: v.number(),
+				expiresAt: v.number(),
+				canExtend: v.boolean(),
+				serverNow: v.number()
+			})
+		),
+		null
+	)
 });
 export type Bootstrap = v.InferOutput<typeof Bootstrap>;
 

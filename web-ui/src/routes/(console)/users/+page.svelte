@@ -16,7 +16,8 @@
   (A239), disable and enable accounts and turn off their two-factor
   sign-in (never yourself) and manage groups, user.delete to
   delete (never yourself),
-  org.manage_users to change organizations.
+  org.manage_users to change organizations, user.impersonate to Sign in
+  as an account (read-only; the dialog asks the server who may be viewed).
 
   URL: ?search= fills the search and follows it; #user-groups goes to the
   user groups.
@@ -90,6 +91,7 @@
 	import { ICONS } from '#lib/util/display.ts';
 	import AccessSheet from './AccessSheet.svelte';
 	import ResetPasswordDialog from './ResetPasswordDialog.svelte';
+	import SignInAsDialog from './SignInAsDialog.svelte';
 	import UserGroupDialog from './UserGroupDialog.svelte';
 	import UserOrgsSheet from './UserOrgsSheet.svelte';
 	import UserSheet from './UserSheet.svelte';
@@ -99,6 +101,8 @@
 	const canCreate = can('user.create') && sectionWritable() && assignableRoles(session.user?.role).length > 0;
 	const canEdit = can('user.edit');
 	const canDelete = can('user.delete') && sectionWritable();
+	/* Sign in as: the server decides per account and the dialog says why not */
+	const canViewAs = can('user.impersonate') && !session.impersonation;
 	const meId = String(session.user?.id ?? '');
 	/** The server changes only the person's own account and those whose role they may give */
 	const mayChange = (u: ConsoleUser) => mayChangeUser(session.user?.role, meId, u);
@@ -255,6 +259,7 @@
 	let resetFor = $state.raw<ConsoleUser | null>(null);
 	let orgsFor = $state.raw<ConsoleUser | null>(null);
 	let sessionsFor = $state.raw<ConsoleUser | null>(null);
+	let viewAsFor = $state.raw<ConsoleUser | null>(null);
 	let groupDialog = $state<{ group: UserGroupRow | null } | null>(null);
 	let accessFor = $state.raw<{ subject: AccessSubject; name: string; role?: string } | null>(null);
 
@@ -523,6 +528,11 @@
 				onselect={() => (accessFor = { subject: { kind: 'user', id: u.id }, name: u.username, role: u.role })}
 				>{tf('users.access_menu', 'Panel access…')}</MenuItem
 			>
+			{#if canViewAs && !self && !u.disabled}
+				<MenuItem class="act-sign-in-as" icon={ICONS.view} onselect={() => (viewAsFor = u)}
+					>{t('users.sign_in_as_menu')}</MenuItem
+				>
+			{/if}
 		</MenuGroup>
 		{#if (canEdit && changeable) || (disableable && u.totp_enabled)}
 			<MenuGroup class="group-security" label={t('users.menu_group_security')}>
@@ -732,6 +742,10 @@
 
 	{#if sessionsFor}
 		<SessionsSheet user={sessionsFor} onclose={() => (sessionsFor = null)} />
+	{/if}
+
+	{#if viewAsFor}
+		<SignInAsDialog user={viewAsFor} onclose={() => (viewAsFor = null)} />
 	{/if}
 
 	{#if orgsFor}

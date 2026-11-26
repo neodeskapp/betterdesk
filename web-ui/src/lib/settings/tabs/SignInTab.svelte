@@ -68,6 +68,7 @@
 		type OidcValues
 	} from '../signin.ts';
 	import ConsoleSessionsForm from '../ConsoleSessionsForm.svelte';
+	import ImpersonationMailForm from '../ImpersonationMailForm.svelte';
 	import SettingsGrid from '../SettingsGrid.svelte';
 	import SettingsLayout from '../SettingsLayout.svelte';
 
@@ -529,6 +530,8 @@
 						</form>
 
 						<ConsoleSessionsForm />
+
+						<ImpersonationMailForm />
 					{/snippet}
 				</SettingsGrid>
 			</section>
