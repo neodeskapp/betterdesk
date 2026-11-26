@@ -37,6 +37,8 @@
 		description: string;
 		need?: string;
 		allowed?: boolean;
+		/** Use the whole width (the configuration file editor) */
+		wide?: boolean;
 		saveModel?: 'draft' | 'instant' | 'none';
 		/** A filter for the rows; pages with more than about 15 settings */
 		filter?: Filter;
@@ -54,6 +56,7 @@
 		description,
 		need,
 		allowed,
+		wide = false,
 		saveModel = 'draft',
 		filter,
 		filterLabel,
@@ -80,7 +83,7 @@
 	);
 </script>
 
-<SettingsPageFrame {id} {title} {description} {need} {allowed}>
+<SettingsPageFrame {id} {title} {description} {need} {allowed} {wide}>
 	{#if modeLine}<p class="save-model">{modeLine}</p>{/if}
 	<div class={['settings-body', summary && 'has-summary']}>
 		{#if scope}<div class="settings-scope">{@render scope()}</div>{/if}
