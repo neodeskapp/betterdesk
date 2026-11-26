@@ -271,6 +271,10 @@
 		background: var(--bg-sunken, var(--bg-secondary));
 		font-size: var(--text-sm);
 	}
+	/* The group's rows already reach its edges; the table's own pull to the edges would go past them */
+	.raw {
+		margin-inline: var(--row-pad-x);
+	}
 	.raw :global(td.col-value) {
 		overflow-wrap: anywhere;
 	}
