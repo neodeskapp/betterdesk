@@ -88,7 +88,10 @@ type saved struct {
 // missing, is fetched and stored like a picture from the identity
 // provider; a failed fetch does not fail the save. time_zone is an IANA
 // name the server knows, or "" or null for none; any other is refused
-// with time_zone_invalid before anything is written.
+// with time_zone_invalid before anything is written. Another email
+// address waits for its confirmation (package emailchange); when that is
+// refused (no email settings, a mail server that doesn't take the mail)
+// the answer is the refusal and the other fields stay saved.
 func (h *handlers) saveProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := kit.UserID(r)
@@ -162,13 +165,14 @@ func (h *handlers) saveProfile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	// The other fields are saved: a refused address below leaves them so
+	_ = h.d.LogAction(r, "profile_updated", "Updated operator profile")
 	if emailGiven && before != nil {
-		if code, message := h.changeEmail(r, before, current, newEmail); code != 0 {
-			fail(w, r, code, message)
+		if status, code, message := h.changeEmail(r, before, current, newEmail); status != 0 {
+			kit.JSON(w, r, status, failure{Error: message, Code: code})
 			return
 		}
 	}
-	_ = h.d.LogAction(r, "profile_updated", "Updated operator profile")
 
 	answer := saved{Success: true, Avatar: "unchanged"}
 	if avatarURL := field(r, "avatar_url"); avatarURL != branding.Undefined {
@@ -272,8 +276,10 @@ func (h *handlers) operatorInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 // changeEmail asks for the account's address to become next. It answers
-// a status and a text when it was refused, 0 otherwise.
-func (h *handlers) changeEmail(r *http.Request, user *userRow, current, next string) (int, string) {
+// a status, a code (when the refusal has one) and a text when it was
+// refused, status 0 otherwise. Without email settings the change is
+// refused with emailchange.NeedsMail (A272).
+func (h *handlers) changeEmail(r *http.Request, user *userRow, current, next string) (int, string, string) {
 	var provider sql.NullString
 	_ = h.d.Store.QueryRow(r.Context(), `SELECT auth_provider FROM users WHERE id = ?`, user.ID.V).Scan(&provider)
 	changer := &emailchange.Changer{D: h.d, Life: lifecycle.New(h.d.Store, nil), Links: passwordlinks.New(h.d.Store, nil)}
@@ -282,14 +288,14 @@ func (h *handlers) changeEmail(r *http.Request, user *userRow, current, next str
 	var refusal *emailchange.Refusal
 	switch {
 	case err == nil:
-		return 0, ""
+		return 0, "", ""
 	case errors.As(err, &refusal):
 		pairs := make([]any, 0, 2*len(refusal.Vars))
 		for k, v := range refusal.Vars {
 			pairs = append(pairs, k, v)
 		}
-		return refusal.Status, kit.T(r, refusal.Key, kit.Vars(pairs...))
+		return refusal.Status, refusal.Code, kit.T(r, refusal.Key, kit.Vars(pairs...))
 	}
 	h.d.Log.Error("Profile email change error:", err.Error())
-	return http.StatusInternalServerError, kit.T(r, "errors.server_error", nil)
+	return http.StatusInternalServerError, "", kit.T(r, "errors.server_error", nil)
 }

@@ -76,7 +76,7 @@ func targetOf(a *account) emailchange.Target {
 func changeRefusal(r *http.Request, err error) error {
 	var refusal *emailchange.Refusal
 	if errors.As(err, &refusal) {
-		return say(refusal.Status, kit.T(r, refusal.Key, kit.Vars(varPairs(refusal.Vars)...)))
+		return sayCode(refusal.Status, refusal.Code, kit.T(r, refusal.Key, kit.Vars(varPairs(refusal.Vars)...)))
 	}
 	return err
 }

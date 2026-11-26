@@ -4,9 +4,11 @@
   gets a confirmation link and changes once it is used; until then the
   old one stays, the part shows the new one as Waiting for confirmation,
   with Send the link again and Cancel the change. Without the console's
-  email settings a new address takes effect at once. A directory or
-  single sign-on account gets its address from there: the part says so
-  and has no form.
+  email settings nothing could confirm a new address: the part says so,
+  with a link to the email settings for those who may open them, and has
+  no form (the server refuses the change with email_change_needs_mail,
+  A272). A directory or single sign-on account gets its address from
+  there: the part says so and has no form.
 -->
 <script lang="ts">
 	import { untrack } from 'svelte';
@@ -19,6 +21,8 @@
 	} from '#lib/api/users.ts';
 	import { formatDate } from '#lib/i18n/format.ts';
 	import { t } from '#lib/i18n/i18n.svelte.ts';
+	import { link } from '#lib/nav.ts';
+	import { can } from '#lib/state/session.svelte.ts';
 	import Button from '#lib/ui/Button.svelte';
 	import Field from '#lib/ui/Field.svelte';
 	import FormStatus from '#lib/ui/FormStatus.svelte';
@@ -131,12 +135,19 @@
 					provider: t(`users.provider_${current.auth_provider.trim().toLowerCase()}`)
 				})}
 			</p>
+		{:else if !current.mail_ready}
+			<!-- The settings list's row for a new address (email-new) lands here then -->
+			<p class="form-hint email-needs-mail" id="email-new">
+				{t('users.email_change_needs_mail')}
+				{#if can('server.config')}<a href={link('/settings?tab=email')}>{t('account.email_settings_link')}</a
+					>{/if}
+			</p>
 		{:else}
 			<form id={form.id} class="email-form" onsubmit={form.onsubmit} novalidate>
 				<Field
 					id="email-new"
 					label={t('account.email_new')}
-					hint={current.mail_ready ? t('users.email_hint_confirm') : t('users.email_hint_no_mail')}
+					hint={t('users.email_hint_confirm')}
 					error={form.errors.email}
 				>
 					{#snippet children(f)}
@@ -188,5 +199,8 @@
 	.form-hint {
 		color: var(--text-muted);
 		font-size: var(--text-sm);
+	}
+	.email-needs-mail {
+		max-width: var(--measure);
 	}
 </style>
