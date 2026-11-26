@@ -3,7 +3,8 @@
   type's colour, an optional title, the message as text, and a close
   button; with an action (Undo after a save) a button under the message
   that runs it and closes the toast. Shown by ToastHost; pages call toast.success() and the like.
-  Time stops while the pointer or focus is on it.
+  Time stops while the pointer or focus is on it. An undo action names its
+  key (Ctrl+Z, Cmd+Z on a Mac), which ToastHost listens for.
 -->
 <script lang="ts">
 	import { tf } from '#lib/i18n/i18n.svelte.ts';
@@ -12,6 +13,8 @@
 	import { dismiss, pause, resume, type ToastItem } from './toasts.svelte.ts';
 
 	let { toast }: { toast: ToastItem } = $props();
+
+	const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
 	function holdWhileUsed(node: HTMLElement) {
 		const id = toast.id;
@@ -44,10 +47,14 @@
 				class="toast-action"
 				variant="link"
 				size="sm"
+				aria-keyshortcuts={action.undo ? 'Control+Z Meta+Z' : undefined}
 				onclick={() => {
 					dismiss(toast.id);
 					action.onclick();
-				}}>{action.label}</Button
+				}}
+				>{action.label}{#if action.undo}<span class="toast-key" aria-hidden="true"
+						>{mac ? 'Cmd+Z' : 'Ctrl+Z'}</span
+					>{/if}</Button
 			>
 		{/if}
 	</div>
@@ -60,6 +67,12 @@
 </div>
 
 <style>
+	.toast-key {
+		margin-inline-start: var(--space-2);
+		color: var(--text-muted);
+		font-size: var(--text-xs);
+		font-weight: 400;
+	}
 	.toast {
 		display: flex;
 		align-items: flex-start;
