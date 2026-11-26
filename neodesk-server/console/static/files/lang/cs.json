@@ -2699,7 +2699,6 @@
     "access_none": "Žádný",
     "access_read": "Čtení",
     "access_write": "Plný",
-    "access_policy_inherit": "Výchozí pro roli nebo skupinu",
     "access_policy_hint": "Zvolte žádný přístup, čtení nebo čtení a zápis. Omezení vynucuje server.",
     "loading_access_policy": "Načítání zásad přístupu...",
     "client_features": "Funkce klienta",
@@ -2795,7 +2794,13 @@
     "direct_device_n": "Device {n}",
     "add_direct_device": "Add a device",
     "group_dialog_intro": "Members of a group share its console access and the device groups that allow it. Add people in their user sheet; allow the group in a device group’s access settings.",
-    "group_name_hint": "Shown in the user list, in each member’s user sheet and in access settings."
+    "group_name_hint": "Shown in the user list, in each member’s user sheet and in access settings.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "Složky",

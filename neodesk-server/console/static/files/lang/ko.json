@@ -2699,7 +2699,6 @@
     "access_none": "없음",
     "access_read": "읽기",
     "access_write": "전체",
-    "access_policy_inherit": "역할 또는 그룹 기본값",
     "access_policy_hint": "액세스 없음, 읽기 또는 읽기 및 쓰기를 선택하세요. 제한은 서버에서 적용됩니다.",
     "loading_access_policy": "액세스 정책을 불러오는 중...",
     "client_features": "클라이언트 기능",
@@ -2795,7 +2794,13 @@
     "direct_device_n": "Device {n}",
     "add_direct_device": "Add a device",
     "group_dialog_intro": "Members of a group share its console access and the device groups that allow it. Add people in their user sheet; allow the group in a device group’s access settings.",
-    "group_name_hint": "Shown in the user list, in each member’s user sheet and in access settings."
+    "group_name_hint": "Shown in the user list, in each member’s user sheet and in access settings.",
+    "access_default_short": "Default",
+    "access_default_plain": "{label}: {level}",
+    "access_own_user": "Set for this person",
+    "access_own_group": "Set for this group",
+    "access_own_user_limit": "Set for this person. Role limit: {limit}",
+    "access_limit_only": "Role limit: {limit}"
   },
   "folders": {
     "title": "폴더",

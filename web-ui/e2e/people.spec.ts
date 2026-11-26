@@ -197,7 +197,7 @@ for (const role of ROLES) {
 				await expectNoAxeViolations(page);
 				await sheet.getByRole('button', { name: 'Save' }).click();
 				await expect(sheet).toContainText('Console access saved.');
-				await expect(section('users')).toContainText('Now: None, set for this person');
+				await expect(section('users')).toContainText('Set for this person');
 				await page.keyboard.press('Escape');
 				await expect(sheet).toBeHidden();
 
@@ -232,7 +232,7 @@ for (const role of ROLES) {
 				await feature('tunnel').getByRole('combobox').selectOption('off');
 				await sheet.getByRole('button', { name: 'Save' }).click();
 				await expect(sheet).toContainText('Console access saved.');
-				await expect(section('reports')).toContainText('Now: Read, set for this group');
+				await expect(section('reports')).toContainText('Set for this group');
 				await page.keyboard.press('Escape');
 				await expect(sheet).toBeHidden();
 
